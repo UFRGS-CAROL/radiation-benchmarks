@@ -1,10 +1,10 @@
 CC=g++
 NVCC=nvcc
 
-NVIDIA_INC=/usr/local/cuda/include/
-NVIDIA_LIB=/usr/local/cuda/lib64/
-LOGHELPER_INC=../../include/
-LOGHELPER_LIB=../../include/
+NVIDIA_INC=/usr/local/cuda/include
+NVIDIA_LIB=/usr/local/cuda/lib64
+LOGHELPER_INC=../../include
+LOGHELPER_LIB=../../include
 
 SOURCES=cudaMxM.cu
 SOURCES_GEN=generateMatrices.cu
@@ -17,7 +17,7 @@ MATRIX_NAMES=Double_*.matrix
 all: mxm gen
 
 mxm: cudaMxM.cu
-	$(NVCC) -I$(LOGHELPER_INC) cudaMxM.cu -L$(LOGHELPER_LIB) -lLogHelper -o $(RUN_EXEC)
+	$(NVCC) -I$(LOGHELPER_INC) cudaMxM.cu -L$(LOGHELPER_LIB) -lLogHelperCuda $(NVCCFLAGS)  -o $(RUN_EXEC)
 
 gen: generateMatrices.cu
 	$(NVCC) generateMatrices.cu -I$(NVIDIA_INC) -o $(GEN_EXEC)
