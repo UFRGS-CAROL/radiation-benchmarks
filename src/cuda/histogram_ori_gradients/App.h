@@ -135,8 +135,8 @@ void App::run() {
 	//================== Init logs
 #ifdef LOGS
 	char test_info[90];
-	snprintf(test_info, 90, "HOG GOLD TEXT FILE");
-	start_log_file("HOG", test_info);
+	snprintf(test_info, 90, "size:unknown, repetition:unknown");
+	start_log_file("Histogram oriented gradients", test_info);
 #endif
 	//====================================
 	if (!input_file.is_open()) {
@@ -217,7 +217,6 @@ void App::run() {
 						string("can't open image file: " + args.src));
 			}
 			//fault injection
-			fault_size /= (((i + 1) == iteractions) ? fault_size : (i + 1));
 			fault_injection(&frame, fault_size / (i + 1));
 			//--------------------
 			Mat img_aux, img, img_to_show;
@@ -270,7 +269,7 @@ void App::run() {
 
 //-----------------Lucas Aproach
 			bool log_all_rectangles = false;
-			bool stop_logging = false;
+			//bool stop_logging = false;
 
 #ifdef LOGS
 			int rectangles_logged = 0;
@@ -279,11 +278,11 @@ void App::run() {
 				if(found.size() < gold.size()) // log all rectangles to check which were missed
 				log_all_rectangles = true;
 				char message[120];
-				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).", found.size(), gold.size());
+				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).\n", found.size(), gold.size());
 				log_error_detail(message);
 				if(found.size() > 500) { // inform that only 500 rectangles will be logged
 					char msg[100];
-					snprintf(msg, 100, "Unreasonable to log all %lu rectangles. Logging the first 500 only.", found.size());
+					snprintf(msg, 100, "Unreasonable to log all %lu rectangles. Logging the first 500 only.\n", found.size());
 					log_error_detail(msg);
 				}
 				//corrupted = true;
@@ -308,7 +307,7 @@ void App::run() {
 				//data.push_back(vector_found);
 				bool diff = set_countains(vf, gold);
 
-				if ((diff || log_all_rectangles) && !stop_logging) {
+				if (diff || log_all_rectangles) {
 					/*
 					 error_detail << "SDC: " << s << " Height: " << vf[0]
 					 << " width: " << vf[1] << " X: " << vf[2] << " Y: "
@@ -322,12 +321,13 @@ void App::run() {
 					 * */
 #ifdef LOGS
 					char str[150];
-					snprintf(str, 150, "%d,%d,%d,%d,%d,%d", r.height, r.width, r.x,
+					snprintf(str, 150, "%d,%d,%d,%d,%d,%d\n", r.height, r.width, r.x,
 							r.y, r.br().x, r.br().y);
 					log_error_detail(str);
-					rectangles_logged++;
-					if(rectangles_logged > 500)
-					stop_logging = true;
+					//rectangles_logged++;
+					log_error_count(rectangles_logged++);
+					//if(rectangles_logged > 500)
+					//stop_logging = true;
 #endif
 				}
 				//if (gold_iterator < gold.size())
