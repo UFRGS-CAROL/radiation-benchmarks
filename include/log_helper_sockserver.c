@@ -17,7 +17,7 @@ void *handle_client(void *sock) {
         {
             printf("filename: '%s'\n",filename);
             printf("message: '%s'\n",message);
-	    FILE *fp = fopen(filename, "a");
+	    FILE *fp = fopen(filename, "a+");
 	    if(fp != NULL){
 	    	fprintf(fp, "%s", message);
 		fclose(fp);
