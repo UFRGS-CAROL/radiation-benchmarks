@@ -11,7 +11,7 @@ cuda: log_helper.cu
 	ar cvr libLogHelperCuda.a log_helper.o
 
 server: log_helper_sockserver.c
-	gcc log_helper_sockserver.c -o server -lpthreads
+	gcc log_helper_sockserver.c -o server -lpthread
 
 clean:
 	rm -rf libLogHelper.a libLogHelperCuda.a *.o
