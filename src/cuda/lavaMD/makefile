@@ -7,12 +7,9 @@ LOGHELPER_LIB=../../include/
 RUN_EXEC=lava
 GEN_EXEC=lava_generate
 
-MATRIX_NAMES=output_* input_distances_* input_charges_*
+MATRIX_NAMES=output_gold_* input_distances_* input_charges_*
 
-ALL: lava lava_generate
-
-lava_generate: lava_generate.cu
-	$(NVCC) lava_generate.cu -o lava_generate
+ALL: lava
 
 lava: lava.cu
 	$(NVCC) $(NVCCFLAGS) lava.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -Xcompiler " -fopenmp" -o lava

@@ -6,13 +6,24 @@ Generate larger input files for Hotspot by expanding smaller versions
 
 */
 
-
-//#include "64_128.h"
-//#include "64_256.h"
-//#include "1024_2048.h"
-//#include "1024_4096.h"
-//#include "1024_8192.h"
+#ifdef __128__
+#include "64_128.h"
+#endif
+#ifdef __256__
+#include "64_256.h"
+#endif
+#ifdef __2048__
+#include "1024_2048.h"
+#endif
+#ifdef __4096__
+#include "1024_4096.h"
+#endif
+#ifdef __8192__
+#include "1024_8192.h"
+#endif
+#ifdef __16384__
 #include "1024_16384.h"
+#endif
 
 #include <iostream>
 #include <fstream>
