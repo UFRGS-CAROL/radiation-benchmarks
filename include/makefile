@@ -10,13 +10,10 @@ cuda: log_helper.cu
 	nvcc -c log_helper.cu
 	ar cvr libLogHelperCuda.a log_helper.o
 
-<<<<<<< HEAD
 cuda_remote: log_helper_sockclient.cu
 	nvcc -c log_helper_sockclient.cu
 	ar cvr libLogHelperCuda.a log_helper_sockclient.o
 
 
-=======
->>>>>>> 17d8ccaaf5750e2a5f908317006d531d8570e960
 clean:
 	rm -rf libLogHelper.a libLogHelperCuda.a *.o
