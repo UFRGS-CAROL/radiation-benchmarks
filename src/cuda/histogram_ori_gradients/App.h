@@ -129,7 +129,6 @@ void fault_injection(Mat *src, int max_change) {
 }
 
 void App::run() {
-//	Mat gold = imread(args.dst_video);
 	vector < vector<int> > gold;
 	ifstream input_file(args.dst_video.c_str());
 	//================== Init logs
@@ -160,13 +159,13 @@ void App::run() {
 					string("wrong parameters on gold file: " + args.dst_video));
 		}
 		//vector<int> header_out;
-		(this->make_gray = (bool) atoi(sep_line[0].c_str()));
-		(this->scale = atof(sep_line[1].c_str()));
-		(this->gamma_corr = (bool) atoi(sep_line[2].c_str()));
-		(this->gr_threshold = atoi(sep_line[3].c_str()));
-		(args.win_width = atoi(sep_line[4].c_str()));
-		(this->hit_threshold = atof(sep_line[5].c_str()));
-		(this->nlevels = atoi(sep_line[6].c_str()));
+		this->make_gray = (bool) atoi(sep_line[0].c_str());
+		this->scale = atof(sep_line[1].c_str());
+		this->gamma_corr = (bool) atoi(sep_line[2].c_str());
+		this->gr_threshold = atoi(sep_line[3].c_str());
+		args.win_width = atoi(sep_line[4].c_str());
+		this->hit_threshold = atof(sep_line[5].c_str());
+		this->nlevels = atoi(sep_line[6].c_str());
 		//data.push_back(header_out);
 	}
 
@@ -181,7 +180,7 @@ void App::run() {
 
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
-	int fault_size = 100000;
+	//int fault_size = 100000;
 // Create HOG descriptors and detectors here
 	vector<float> detector;
 	if (win_size == Size(64, 128))
@@ -197,13 +196,13 @@ void App::run() {
 				gamma_corr, cv::gpu::HOGDescriptor::DEFAULT_NLEVELS);
 		//====================================================
 		//CPU ------------------------------------------------
-		cv::HOGDescriptor cpu_hog(win_size, Size(16, 16), Size(8, 8),
-				Size(8, 8), 9, 1, -1, HOGDescriptor::L2Hys, 0.2, gamma_corr,
-				cv::HOGDescriptor::DEFAULT_NLEVELS);
+		//cv::HOGDescriptor cpu_hog(win_size, Size(16, 16), Size(8, 8),
+		//		Size(8, 8), 9, 1, -1, HOGDescriptor::L2Hys, 0.2, gamma_corr,
+		//		cv::HOGDescriptor::DEFAULT_NLEVELS);
 		//====================================================
 
 		gpu_hog.setSVMDetector(detector);
-		cpu_hog.setSVMDetector(detector);
+		//cpu_hog.setSVMDetector(detector);
 		for (int i = 0; i < iteractions; i++) {
 			Mat frame;
 
@@ -217,7 +216,7 @@ void App::run() {
 						string("can't open image file: " + args.src));
 			}
 			//fault injection
-			fault_injection(&frame, fault_size / (i + 1));
+			//fault_injection(&frame, fault_size / (i + 1));
 			//--------------------
 			Mat img_aux, img, img_to_show;
 			gpu::GpuMat gpu_img;
@@ -231,7 +230,7 @@ void App::run() {
 			img_to_show = img;
 
 			gpu_hog.nlevels = nlevels;
-			cpu_hog.nlevels = nlevels;
+			//cpu_hog.nlevels = nlevels;
 
 			vector < Rect > found;
 
@@ -295,7 +294,7 @@ void App::run() {
 			//vector < vector<int> > data;
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
-				vector<int> vf(GOLD_LINE_SIZE,0);
+				vector<int> vf(GOLD_LINE_SIZE, 0);
 				vf[0] = r.height;
 				vf[1] = r.width;
 				vf[2] = r.x;
@@ -303,8 +302,7 @@ void App::run() {
 				vf[4] = r.br().x;
 				vf[5] = r.br().y;
 
-				//vector<int> vector_found(vf, (vf + sizeof(vf) / sizeof(int)));
-				//data.push_back(vector_found);
+				rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 				bool diff = set_countains(vf, gold);
 
 				if (diff || log_all_rectangles) {
@@ -337,7 +335,7 @@ void App::run() {
 			cout << "Verification time " << mysecond() - time << endl;
 			//dump_output(i, "./output", any_error, data);
 			stringstream ss;
-			ss << fault_size / (i + 1);
+			ss << (i + 1);
 			imwrite(ss.str() + "_out.jpg", img_to_show);
 		}
 		//===============================================================
