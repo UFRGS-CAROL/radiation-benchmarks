@@ -120,8 +120,10 @@ void fault_injection(Mat *src, int max_change) {
 		int rand_col = rand() % src->cols;
 		Vec4b& rgba = src->at < Vec4b > (rand_row, rand_col);
 		rgba[0] = UCHAR_MAX;
-		rgba[1] = saturate_cast <uchar> ((float(src->rows)) / ((float) src->cols) * UCHAR_MAX);
-		rgba[2] = saturate_cast <uchar> ((float(src->cols)) / ((float) src->rows) * UCHAR_MAX);
+		rgba[1] = saturate_cast < uchar
+				> ((float(src->rows)) / ((float) src->cols) * UCHAR_MAX);
+		rgba[2] = saturate_cast < uchar
+				> ((float(src->cols)) / ((float) src->rows) * UCHAR_MAX);
 		rgba[3] = saturate_cast < uchar > (0.5 * (rgba[1] + rgba[2]));
 	}
 }
@@ -215,7 +217,7 @@ void App::run() {
 						string("can't open image file: " + args.src));
 			}
 			//fault injection
-			fault_size /= ( ((i + 1) == iteractions) ? fault_size : (i + 1) );
+			fault_size /= (((i + 1) == iteractions) ? fault_size : (i + 1));
 			fault_injection(&frame, fault_size / (i + 1));
 			//--------------------
 			Mat img_aux, img, img_to_show;
@@ -239,18 +241,18 @@ void App::run() {
 #ifdef LOGS
 			start_iteration();
 #endif
-			if (use_gpu) {
-				gpu_img.upload(img);
-				time = mysecond();
-				gpu_hog.detectMultiScale(gpu_img, found, hit_threshold,
-						win_stride, Size(0, 0), scale, gr_threshold);
-				time = mysecond() - time;
-			} else {
-				time = mysecond();
-				cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
-						Size(0, 0), scale, gr_threshold);
-				time = mysecond() - time;
-			}
+			//	if (use_gpu) {
+			gpu_img.upload(img);
+			time = mysecond();
+			gpu_hog.detectMultiScale(gpu_img, found, hit_threshold, win_stride,
+					Size(0, 0), scale, gr_threshold);
+			time = mysecond() - time;
+			/*	} else {
+			 time = mysecond();
+			 cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
+			 Size(0, 0), scale, gr_threshold);
+			 time = mysecond() - time;
+			 }*/
 #ifdef LOGS
 			end_iteration();
 #endif
@@ -264,9 +266,34 @@ void App::run() {
 			ostringstream error_detail;
 			time = mysecond();
 			//size_t gold_iterator = 0;
-			bool any_error = false;
+			//bool any_error = false;
 
-			vector < vector<int> > data;
+//-----------------Lucas Aproach
+			bool log_all_rectangles = false;
+			bool stop_logging = false;
+
+#ifdef LOGS
+			int rectangles_logged = 0;
+
+			if(found.size() != gold.size()) {
+				if(found.size() < gold.size()) // log all rectangles to check which were missed
+				log_all_rectangles = true;
+				char message[120];
+				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).", found.size(), gold.size());
+				log_error_detail(message);
+				if(found.size() > 500) { // inform that only 500 rectangles will be logged
+					char msg[100];
+					snprintf(msg, 100, "Unreasonable to log all %lu rectangles. Logging the first 500 only.", found.size());
+					log_error_detail(msg);
+				}
+				//corrupted = true;
+			}
+
+#endif
+
+//------------------------------
+
+			//vector < vector<int> > data;
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
 				int vf[GOLD_LINE_SIZE];
@@ -278,26 +305,37 @@ void App::run() {
 				vf[5] = r.br().y;
 
 				vector<int> vector_found(vf, (vf + sizeof(vf) / sizeof(int)));
-				data.push_back(vector_found);
+				//data.push_back(vector_found);
 				bool diff = set_countains(vector_found, gold);
 
-				if (diff) {
-					error_detail << "SDC: " << s << " Height: " << vf[0]
-							<< " width: " << vf[1] << " X: " << vf[2]
-							<< " Y: " << vf[3] << endl;
+				if ((diff || log_all_rectangles) && !stop_logging) {
+					/*
+					 error_detail << "SDC: " << s << " Height: " << vf[0]
+					 << " width: " << vf[1] << " X: " << vf[2] << " Y: "
+					 << vf[3] << endl;
+					 #ifdef LOGS
+					 char *str = const_cast<char*>(error_detail.str().c_str());
+					 log_error_detail(str);
+					 #endif
+					 any_error = true;
+					 //s--;
+					 * */
 #ifdef LOGS
-					char *str = const_cast<char*>(error_detail.str().c_str());
+					char str[150];
+					snprintf(str, 150, "%d,%d,%d,%d,%d,%d", r.height, r.width, r.x,
+							r.y, r.br().x, r.br().y);
 					log_error_detail(str);
+					rectangles_logged++;
+					if(rectangles_logged > 500)
+					stop_logging = true;
 #endif
-					any_error = true;
-					//s--;
 				}
 				//if (gold_iterator < gold.size())
 				//	gold_iterator++;
-				rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
+				//rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 			}
 			cout << "Verification time " << mysecond() - time << endl;
-			dump_output(i, "./output", any_error, data);
+			//dump_output(i, "./output", any_error, data);
 			//stringstream ss;
 			//ss << fault_size / (i + 1);
 			//imwrite(ss.str() + "_out.jpg", img_to_show);

@@ -113,7 +113,7 @@ App::App(CommandLineParser& cmd) {
 	//cout << endl;
 }
 
-void write_output_image(vector<Rect> found, Mat img_to_show, string output){
+void write_output_image(vector<Rect> found, Mat img_to_show, string output) {
 	// Draw positive classified windows
 	for (size_t i = 0; i < found.size(); i++) {
 		Rect r = found[i];
@@ -145,7 +145,7 @@ void App::run() {
 	string line;
 
 	if (getline(input_file, line)) {
-		vector<string> sep_line = split(line, ',');
+		vector < string > sep_line = split(line, ',');
 		if (sep_line.size() != 7) {
 #ifdef LOGS	
 			log_error_detail((char*)"Wrong parameters on gold file.");
@@ -166,7 +166,7 @@ void App::run() {
 	}
 
 	while (getline(input_file, line)) {
-		vector<string> sep_line = split(line, ',');
+		vector < string > sep_line = split(line, ',');
 		vector<int> values;
 		for (int i = 0; i < GOLD_LINE_SIZE; i++) {
 			values.push_back(atoi(sep_line[i].c_str()));
@@ -196,10 +196,8 @@ void App::run() {
 			log_error_detail((char*)"Cant open matrix frame.");
 			end_log_file();
 #endif
-			throw runtime_error(
-					string("can't open image file: " + img_source));
+			throw runtime_error(string("can't open image file: " + img_source));
 		}
-		
 
 		UMat img_aux, img;
 		Mat img_to_show;
@@ -230,19 +228,19 @@ void App::run() {
 #endif
 			cout << "Total time: " << mysecond() - time << endl;
 			//verify the output----------------------------------------------
-			ostringstream error_detail;
+			//ostringstream error_detail;
 			time = mysecond();
-			size_t gold_iterator = 0;
+			//size_t gold_iterator = 0;
 			//bool corrupted = false;
 			bool log_all_rectangles = false;
 			bool stop_logging = false;
-			
+
 #ifdef LOGS
 			int rectangles_logged = 0;
 
 			if(found.size() != gold.size()) {
 				if(found.size() < gold.size()) // log all rectangles to check which were missed
-					log_all_rectangles = true;
+				log_all_rectangles = true;
 				char message[120];
 				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).", found.size(), gold.size());
 				log_error_detail(message);
@@ -251,7 +249,7 @@ void App::run() {
 					snprintf(msg, 100, "Unreasonable to log all %lu rectangles. Logging the first 500 only.", found.size());
 					log_error_detail(msg);
 				}
-			//corrupted = true;
+				//corrupted = true;
 			}
 
 #endif
@@ -274,16 +272,16 @@ void App::run() {
 #ifdef LOGS 
 					char str[150];
 					snprintf(str, 150, "%d,%d,%d,%d,%d,%d", r.height, r.width, r.x,
-											 r.y, r.br().x, r.br().y);							      log_error_detail(str);
+							r.y, r.br().x, r.br().y); log_error_detail(str);
 					rectangles_logged++;
 					if(rectangles_logged > 500)
-						stop_logging = true;						
+					stop_logging = true;
 #endif
-				//corrupted = true;
+					//corrupted = true;
 				}
-				if(gold_iterator < gold.size())
-					gold_iterator ++;
-			}		
+				//if (gold_iterator < gold.size())
+				//	gold_iterator++;
+			}
 			//dump_output(j, "./output", corrupted, data);
 			cout << "Verification time " << mysecond() - time << endl;
 		}
