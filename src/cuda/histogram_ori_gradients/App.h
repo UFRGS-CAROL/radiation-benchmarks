@@ -13,12 +13,14 @@
 
 #define MAX_ERROR 0.001
 #include <list>
+#include <unistd.h>
+
 #include "Helpful.h"
 #ifdef LOGS
 #include "log_helper.h"
 #endif
 
-int iteractions = 5; // global loop iteracion
+int iteractions = 1; // global loop iteracion
 
 class App {
 public:
@@ -37,7 +39,6 @@ public:
 
 	string message() const;
 	friend ostream &operator <<(ostream &os, const App &app);
-
 
 private:
 	App operator=(App&);
@@ -60,7 +61,7 @@ private:
 	double work_fps;
 };
 
-ostream &operator <<(ostream &os, const App &app){
+ostream &operator <<(ostream &os, const App &app) {
 	os << "running " << app.running << endl;
 	os << "make gray " << app.use_gpu << endl;
 	os << "scale " << app.scale << endl;
@@ -70,7 +71,6 @@ ostream &operator <<(ostream &os, const App &app){
 	os << "gamma corr " << app.gamma_corr << endl;
 	return os;
 }
-
 
 App::App(const Args& s) {
 	cv::gpu::printShortCudaDeviceInfo(cv::gpu::getDevice());
@@ -113,10 +113,22 @@ App::App(const Args& s) {
 //	cout << endl;
 }
 
+void fault_injection(Mat *src, int max_change) {
+	cout << max_change;
+	while (max_change--) {
+		int rand_row = rand() % src->rows;
+		int rand_col = rand() % src->cols;
+		Vec4b& rgba = src->at < Vec4b > (rand_row, rand_col);
+		rgba[0] = UCHAR_MAX;
+		rgba[1] = saturate_cast <uchar> ((float(src->rows)) / ((float) src->cols) * UCHAR_MAX);
+		rgba[2] = saturate_cast <uchar> ((float(src->cols)) / ((float) src->rows) * UCHAR_MAX);
+		rgba[3] = saturate_cast < uchar > (0.5 * (rgba[1] + rgba[2]));
+	}
+}
 
 void App::run() {
 //	Mat gold = imread(args.dst_video);
-	vector<vector<int> > gold;
+	vector < vector<int> > gold;
 	ifstream input_file(args.dst_video.c_str());
 	//================== Init logs
 #ifdef LOGS
@@ -136,7 +148,7 @@ void App::run() {
 	string line;
 
 	if (getline(input_file, line)) {
-		vector<string> sep_line = split(line, ',');
+		vector < string > sep_line = split(line, ',');
 		if (sep_line.size() != 7) {
 #ifdef LOGS
 			log_error_detail("wrong parameters on gold file");
@@ -146,18 +158,18 @@ void App::run() {
 					string("wrong parameters on gold file: " + args.dst_video));
 		}
 		//vector<int> header_out;
-		(this->make_gray =	(bool)atoi(sep_line[0].c_str()));
-		(this->scale = 		      atof(sep_line[1].c_str()));
-		(this->gamma_corr = 	(bool)atoi(sep_line[2].c_str()));
-		(this->gr_threshold =	  atoi(sep_line[3].c_str()));
-		(args.win_width =		  atoi(sep_line[4].c_str()));
-		(this->hit_threshold = 	  atof(sep_line[5].c_str()));
-		(this->nlevels = 		  atoi(sep_line[6].c_str()));
+		(this->make_gray = (bool) atoi(sep_line[0].c_str()));
+		(this->scale = atof(sep_line[1].c_str()));
+		(this->gamma_corr = (bool) atoi(sep_line[2].c_str()));
+		(this->gr_threshold = atoi(sep_line[3].c_str()));
+		(args.win_width = atoi(sep_line[4].c_str()));
+		(this->hit_threshold = atof(sep_line[5].c_str()));
+		(this->nlevels = atoi(sep_line[6].c_str()));
 		//data.push_back(header_out);
 	}
 
 	while (getline(input_file, line)) {
-		vector<string> sep_line = split(line, ',');
+		vector < string > sep_line = split(line, ',');
 		vector<int> values;
 		for (int i = 0; i < GOLD_LINE_SIZE; i++) {
 			values.push_back(atoi(sep_line[i].c_str()));
@@ -167,7 +179,7 @@ void App::run() {
 
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
-
+	int fault_size = 100000;
 // Create HOG descriptors and detectors here
 	vector<float> detector;
 	if (win_size == Size(64, 128))
@@ -190,7 +202,6 @@ void App::run() {
 
 		gpu_hog.setSVMDetector(detector);
 		cpu_hog.setSVMDetector(detector);
-
 		for (int i = 0; i < iteractions; i++) {
 			Mat frame;
 
@@ -203,7 +214,10 @@ void App::run() {
 				throw runtime_error(
 						string("can't open image file: " + args.src));
 			}
-
+			//fault injection
+			fault_size /= ( ((i + 1) == iteractions) ? fault_size : (i + 1) );
+			fault_injection(&frame, fault_size / (i + 1));
+			//--------------------
 			Mat img_aux, img, img_to_show;
 			gpu::GpuMat gpu_img;
 
@@ -218,7 +232,7 @@ void App::run() {
 			gpu_hog.nlevels = nlevels;
 			cpu_hog.nlevels = nlevels;
 
-			vector<Rect> found;
+			vector < Rect > found;
 
 			// Perform HOG classification
 			double time;
@@ -252,42 +266,41 @@ void App::run() {
 			//size_t gold_iterator = 0;
 			bool any_error = false;
 
-			vector<vector<int> > data;
+			vector < vector<int> > data;
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
 				int vf[GOLD_LINE_SIZE];
-				vf[0] = r.height; vf[1] = r.width;
-				vf[2] = r.x; vf[3] = r.y;
-				vf[4] = r.tl().x; vf[5] = r.tl().y;
-				//vf[6] = r.br().x; vf[7] = r.br().y;
-				//vector<int> values = gold[gold_iterator];
-				
+				vf[0] = r.height;
+				vf[1] = r.width;
+				vf[2] = r.x;
+				vf[3] = r.y;
+				vf[4] = r.br().x;
+				vf[5] = r.br().y;
+
 				vector<int> vector_found(vf, (vf + sizeof(vf) / sizeof(int)));
 				data.push_back(vector_found);
 				bool diff = set_countains(vector_found, gold);
-				/*if ((vf[0] != values[0]) || (vf[1] != values[1])
-						|| (vf[2] != values[2])
-						|| (vf[3] != values[3])
-						|| (vf[4] != values[4])
-						|| (vf[5] != values[5])){
-						//|| (vf[6] != values[6])
-						//|| (vf[7] != values[7])) {*/
-				if(diff){
-					error_detail << "SDC: " << s << ", Height: " << vf[0]
-							<< ", width: " << vf[1] << ", X: " << vf[2]
-							<< ", Y: " << vf[3] << endl;
+
+				if (diff) {
+					error_detail << "SDC: " << s << " Height: " << vf[0]
+							<< " width: " << vf[1] << " X: " << vf[2]
+							<< " Y: " << vf[3] << endl;
 #ifdef LOGS
 					char *str = const_cast<char*>(error_detail.str().c_str());
 					log_error_detail(str);
 #endif
 					any_error = true;
-					s--;
+					//s--;
 				}
 				//if (gold_iterator < gold.size())
 				//	gold_iterator++;
+				rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 			}
-			dump_output(i, "./output", any_error, data);
 			cout << "Verification time " << mysecond() - time << endl;
+			dump_output(i, "./output", any_error, data);
+			//stringstream ss;
+			//ss << fault_size / (i + 1);
+			//imwrite(ss.str() + "_out.jpg", img_to_show);
 		}
 		//===============================================================
 	} catch (cv::Exception &e) {
@@ -303,8 +316,5 @@ void App::run() {
 	end_log_file();
 #endif
 }
-
-
-
 
 #endif /* APP_H_ */
