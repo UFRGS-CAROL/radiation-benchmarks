@@ -18,4 +18,4 @@ gold_generator: GoldGenerator.cpp
 	g++ GoldGenerator.cpp -Wall  -o3 $(OPENCV_LIBS) -o gold_gen
 
 clean:
-	rm -rf hog gold_gen *~ *data*
+	rm -rf hog gold_gen *~ *.data *.jpg ./output/*

@@ -122,20 +122,20 @@ void write_output_image(vector<Rect> found, Mat img_to_show, string output){
 	imwrite(output, img_to_show);
 }
 
-bool set_countains(vector<int> check, vector< vector<int> > src){
-	unsigned char cont = 0;	
-	for(size_t i = 0; i < src.size(); i++){
-		vector<int> temp = src[i];
-		for(size_t j = 0; j < temp.size(); j++){
-			if(temp[j] == check[j])
-				cont++;						
-		}
-		if(cont == temp.size())
-			return true;
-		cont = 0;
-	}
-	return false;
-}
+//bool set_countains(vector<int> check, vector< vector<int> > src){
+//	unsigned char cont = 0;
+//	for(size_t i = 0; i < src.size(); i++){
+//		vector<int> temp = src[i];
+//		for(size_t j = 0; j < temp.size(); j++){
+//			if(temp[j] == check[j])
+//				cont++;
+//		}
+//		if(cont == temp.size())
+//			return true;
+//		cont = 0;
+//	}
+//	return false;
+//}
 
 void App::run() {
 	//running = true;
@@ -258,8 +258,8 @@ void App::run() {
 				vf[1] = r.width;
 				vf[2] = r.x;
 				vf[3] = r.y;
-				vf[4] = r.tl().x;
-				vf[5] = r.tl().y;
+				vf[4] = r.br().x;
+				vf[5] = r.br().y;
 
 				vector<int> vector_found(vf, (vf + sizeof(vf) / sizeof(int)));
 				data.push_back(vector_found);
