@@ -9,16 +9,13 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <time.h>
-#include <string.h>
 
-#define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 #include <CL/cl.h>
 #include <CL/cl_gl.h>
 #include <CL/cl_gl_ext.h>
 #include <CL/cl_ext.h>
 
 #include "fftlib.h"
-#include "kernel_fft.h"
 
 #define AVOIDZERO 1e-6
 #define AVOIDZERON -1e-6
@@ -31,7 +28,7 @@ cl_command_queue        command_queue;
 cl_program              program;
 
 int sizeIndex;
-//char *kernel_file;
+char *kernel_file;
 
 using namespace std;
 
@@ -75,10 +72,8 @@ template <class T2> void dump(cl_device_id id,
     cl_kernel fftKrnl, ifftKrnl, chkKrnl, goldChkKrnl;
 
 
-    char * kernel_source = (char *)malloc(sizeof(char)*strlen(kernel_fft_ocl)+2);
-    strcpy(kernel_source,kernel_fft_ocl);
-    init(do_dp, kernel_source, id, ctx, queue, fftProg, fftKrnl,
-         ifftKrnl);//, chkKrnl, goldChkKrnl);
+    init(do_dp, kernel_file, id, ctx, queue, fftProg, fftKrnl,
+         ifftKrnl, chkKrnl, goldChkKrnl);
 
     // now determine how much available memory will be used
     int half_n_ffts = bytes / (512*sizeof(T2)*2);
@@ -209,7 +204,7 @@ template <class T2> void dump(cl_device_id id,
     freeDeviceBuffer(work, ctx, queue);
     freeHostBuffer(source, ctx, queue);
     freeHostBuffer(result, ctx, queue);
-    //deinit(queue, fftProg, fftKrnl, ifftKrnl, chkKrnl);
+    deinit(queue, fftProg, fftKrnl, ifftKrnl, chkKrnl);
 }
 
 
@@ -304,7 +299,7 @@ void getDevices(cl_device_type deviceType) {
 }
 
 void usage(){
-	printf("Usage: fft <input_size> <cl_device_tipe> \n");
+	printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file> \n");
 	printf("  input size range from 0 to 5\n");
 	printf("  cl_device_types\n");
 	printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
@@ -317,10 +312,10 @@ void usage(){
 int main(int argc, char** argv) {
 
     int devType;
-    if(argc == 3) {
+    if(argc == 4) {
         sizeIndex = atoi(argv[1]);
         devType = atoi(argv[2]);
-        //kernel_file = argv[3];
+        kernel_file = argv[3];
     } else {
         usage();
         exit(1);

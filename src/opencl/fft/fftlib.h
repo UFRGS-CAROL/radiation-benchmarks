@@ -18,16 +18,17 @@ struct cplxdbl
     double y;
 };
 
-void init(bool _do_dp,
-          char * kernel_file,
+void init(bool do_dp,
+          char * source_str,
           cl_device_id fftDev,
           cl_context fftCtx,
           cl_command_queue fftQueue,
           cl_program& fftProg,
           cl_kernel& fftKrnl,
-          cl_kernel& ifftKrnl,
-          cl_kernel& chkKrnl,
-	  cl_kernel& goldChkKrnl);
+          cl_kernel& ifftKrnl//,
+          //cl_kernel& chkKrnl,
+	  //cl_kernel& goldChkKrnl
+);
 
 void deinit(cl_command_queue fftQueue,
             cl_program& fftProg,

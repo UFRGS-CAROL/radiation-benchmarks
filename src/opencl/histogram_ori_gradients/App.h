@@ -131,7 +131,7 @@ void App::run() {
 #ifdef LOGS
 	char test_info[90];
 	snprintf(test_info, 90, "HOG GOLD TEXT FILE");
-	start_log_file((char*)"HOG", test_info);
+	start_log_file((char*)"HOG_OCL", test_info);
 #endif
 	//====================================
 	if (!input_file.is_open()) {
@@ -228,32 +228,19 @@ void App::run() {
 #endif
 			cout << "Total time: " << mysecond() - time << endl;
 			//verify the output----------------------------------------------
-			//ostringstream error_detail;
 			time = mysecond();
-			//size_t gold_iterator = 0;
-			//bool corrupted = false;
-			bool log_all_rectangles = false;
-			bool stop_logging = false;
+
+			unsigned long int error_counter = 0;
 
 #ifdef LOGS
-			int rectangles_logged = 0;
 
 			if(found.size() != gold.size()) {
-				if(found.size() < gold.size()) // log all rectangles to check which were missed
-				log_all_rectangles = true;
 				char message[120];
 				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).", found.size(), gold.size());
 				log_error_detail(message);
-				if(found.size() > 500) { // inform that only 500 rectangles will be logged
-					char msg[100];
-					snprintf(msg, 100, "Unreasonable to log all %lu rectangles. Logging the first 500 only.", found.size());
-					log_error_detail(msg);
-				}
-				//corrupted = true;
+				error_counter++;
 			}
-
 #endif
-			//vector < vector<int> > data;
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
 				vector<int> vf(GOLD_LINE_SIZE, 0);
@@ -264,27 +251,23 @@ void App::run() {
 				vf[4] = r.br().x;
 				vf[5] = r.br().y;
 
-				//vector<int> vector_found(vf, (vf + sizeof(vf) / sizeof(int)));
 
 				bool diff = set_countains(vf, gold);
-
-				if ((diff || log_all_rectangles) && !stop_logging) {
-#ifdef LOGS 
-					char str[150];
-					snprintf(str, 150, "%d,%d,%d,%d,%d,%d", r.height, r.width, r.x,
-							r.y, r.br().x, r.br().y); log_error_detail(str);
-					rectangles_logged++;
-					if(rectangles_logged > 500)
-					stop_logging = true;
-#endif
-					//corrupted = true;
-				}
-				//if (gold_iterator < gold.size())
-				//	gold_iterator++;
+				if (diff) error_counter++;
 			}
-			//dump_output(j, "./output", corrupted, data);
+#ifdef LOGS
+
+			if (error_counter) { 
+				for(size_t g = 0; g < found.size(); g++) {
+					Rect r = found[g];
+					char str[150];
+					snprintf(str, 150, "%d,%d,%d,%d,%d,%d", r.height, r.width, r.x,	r.y, r.br().x, r.br().y); log_error_detail(str);
+				}
+			}
 			cout << "Verification time " << mysecond() - time << endl;
+			log_error_count(error_counter);
 		}
+#endif
 	} catch (cv::Exception &e) {
 		char *str = const_cast<char*>(e.what());
 		string err_msg(str);

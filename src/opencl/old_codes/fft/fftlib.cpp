@@ -16,7 +16,6 @@
 #include "ResultDatabase.h"
 #include "support.h"
 */
-#define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 #include <CL/cl.h>
 #include <CL/cl_gl.h>
 #include <CL/cl_gl_ext.h>
@@ -194,33 +193,32 @@ static map<void*, cl_mem> memobjmap;
 
 void
 init(bool do_dp,
-     char * source_str,
+     char * kernel_file,
      cl_device_id fftDev,
      cl_context fftCtx,
      cl_command_queue fftQueue,
      cl_program& fftProg,
      cl_kernel& fftKrnl,
-     cl_kernel& ifftKrnl//,
-     //cl_kernel& chkKrnl,
-     //cl_kernel& goldChkKrnl
-     ) {
+     cl_kernel& ifftKrnl,
+     cl_kernel& chkKrnl,
+     cl_kernel& goldChkKrnl) {
     cl_int err;
 
-    //FILE*  theFile = fopen(kernel_file, "r");
-    //if (!theFile) {
-    //    fprintf(stderr, "Failed to load kernel file.\n");
-    //    exit(1);
-    //}
-    //char* source_str;
-    //// Obtain length of source file.
-    //fseek(theFile, 0, SEEK_END);
-    //size_t source_size = ftell(theFile);
-    //rewind(theFile);
-    //// Read in the file.
-    //source_str = (char*) malloc(sizeof(char) * source_size);
-    //fread(source_str, 1, source_size, theFile);
-    //fclose(theFile);
-    //source_str[source_size] = '\0';
+    FILE*  theFile = fopen(kernel_file, "r");
+    if (!theFile) {
+        fprintf(stderr, "Failed to load kernel file.\n");
+        exit(1);
+    }
+    char* source_str;
+    // Obtain length of source file.
+    fseek(theFile, 0, SEEK_END);
+    size_t source_size = ftell(theFile);
+    rewind(theFile);
+    // Read in the file.
+    source_str = (char*) malloc(sizeof(char) * source_size);
+    fread(source_str, 1, source_size, theFile);
+    fclose(theFile);
+    source_str[source_size] = '\0';
 
     // create the program...
     fftProg = clCreateProgramWithSource(fftCtx, 1, (const char **) &source_str, NULL, &err);
@@ -267,15 +265,15 @@ init(bool do_dp,
     // Create kernel for inverse FFT
     ifftKrnl = clCreateKernel(fftProg, "ifft1D_512", &err);
     CL_CHECK_ERROR(err);
-    //// Create kernel for check
-    //chkKrnl = clCreateKernel(fftProg, "chk1D_512", &err);
-    //CL_CHECK_ERROR(err);
-    //// Create kernel for efective gold check
-    //goldChkKrnl = clCreateKernel(fftProg, "GoldChk", &err);
-    //CL_CHECK_ERROR(err);
+    // Create kernel for check
+    chkKrnl = clCreateKernel(fftProg, "chk1D_512", &err);
+    CL_CHECK_ERROR(err);
+    // Create kernel for efective gold check
+    goldChkKrnl = clCreateKernel(fftProg, "GoldChk", &err);
+    CL_CHECK_ERROR(err);
 }
 
-/*
+
 int ocl_exec_gchk(cplxdbl *gold, cl_command_queue& fftQueue, cl_context& context, void* d_odata, cl_kernel& gchk_kernel, int n, int mem_size, size_t thread_per_block, double avoidzero, double acceptdiff)
 {
 	cl_int err;
@@ -330,8 +328,8 @@ int ocl_exec_gchk(cplxdbl *gold, cl_command_queue& fftQueue, cl_context& context
 
 	return *kerrors;
 }
-*/
-/*
+
+
 void deinit(cl_command_queue fftQueue,
             cl_program& fftProg,
             cl_kernel& fftKrnl,
@@ -347,7 +345,7 @@ void deinit(cl_command_queue fftQueue,
     clReleaseKernel(chkKrnl);
     clReleaseProgram(fftProg);
 }
-*/
+
 
 void
 transform(void* workp,
@@ -369,7 +367,7 @@ transform(void* workp,
 
 }
 
-/*
+
 int check(const void* workp,
           const void* checkp,
           const int half_n_ffts,
@@ -395,7 +393,7 @@ int check(const void* workp,
     CL_CHECK_ERROR(err);
     return result;
 }
-*/
+
 
 void allocHostBuffer(void** bufp,
                      const unsigned long bytes,
