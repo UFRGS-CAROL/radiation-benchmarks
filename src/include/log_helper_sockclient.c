@@ -48,7 +48,7 @@ char message[2000];
 
 //code to send signal to server that controls switch PING
 #define PORT "8888" // the port client will be connecting to 
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "143.54.10.183" //"127.0.0.1"
 // get sockaddr, IPv4 or IPv6:
 
 void *get_in_addr(struct sockaddr *sa)
