@@ -4,6 +4,7 @@
 #include <math.h>
 #include <sys/time.h>
 #include <string>
+#include <omp.h>
 // helper functions
 #include "helper_string.h"
 #include "helper_cuda.h"
@@ -194,7 +195,7 @@ __global__ void GoldChkKernel (double *gk, double *ck, int n)//, int *kerrors)
 }
 
 void usage() {
-    printf("Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose]\n");
+    printf("Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
 int main( int argc, char* argv[] )
@@ -208,8 +209,8 @@ int main( int argc, char* argv[] )
 	int i, j, loop2;
 	int kernel_errors=0;
 	int zero = 0;
-	int ea=0; //wrong integers in the current loop
 	double time, kernel_time, global_time;
+	int device_warmup = 1;
 //====================================
 
 //================== Read test parameters
@@ -282,6 +283,12 @@ int main( int argc, char* argv[] )
 		fault_injection = 1;
         printf("!! Will be injected an input error\n");
     }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "no-warmup"))
+    {
+		device_warmup = 0;
+        printf("!! The first iteration may not reflect real timing information\n");
+    }
 //====================================
 
 //================== Set block and grid size for GoldChk kernel
@@ -331,6 +338,8 @@ int main( int argc, char* argv[] )
 	for(loop2=0; loop2<iterations; loop2++)
 	{//================== Global test loop
 
+if (!loop2 && device_warmup) printf("First iteration: device warmup. Please wait...\n");
+
 // Timer...
 global_time = mysecond();
 
@@ -338,7 +347,8 @@ cudaMemset(d_C, 0, sizea * sizeof (double));
 
 kernel_time = mysecond();
 #ifdef LOGS
-		start_iteration();
+if (loop2 || !device_warmup)
+	start_iteration();
 #endif
 //================== Device computation, GEMM
 		cublasDgemm( (cublasOperation_t)transa, (cublasOperation_t)transb,
@@ -351,10 +361,12 @@ kernel_time = mysecond();
 		cudaDeviceSynchronize();
 //====================================
 #ifdef LOGS
+if (loop2 || !device_warmup)
 		end_iteration();
 #endif
 kernel_time = mysecond() - kernel_time;
 
+if (loop2 || !device_warmup)
 		if (verbose) printf("Device kernel time for iteration %d: %.3fs\n", loop2, kernel_time);
 
 // Timer...
@@ -382,12 +394,12 @@ time = mysecond();
 		cudaMemcpyFromSymbol(&kernel_errors, kerrors, sizeof(unsigned int));
 //====================================
 
+if (loop2 || !device_warmup)
 		if (verbose) printf("Device gold check kernel time for iteration %d: %.3fs\n", loop2, mysecond() - time);
 		
-#ifdef LOGS
-		log_error_count(kernel_errors);
-#endif
 //================== If there are errors, check on host (increased reliability)
+
+if (loop2 || !device_warmup)
 		if (kernel_errors!=0)
 		{
 
@@ -401,24 +413,33 @@ time = mysecond();
 #endif
 			return 1;} //mem allocate failure
 			char error_detail[150];
+			int host_errors = 0;
 
-			for(i=0; (i<k) && (ea < 500); i++)
+			#pragma omp parallel for
+			for(i=0; (i<k); i++)
 			{
-				for(j=0; (j<k) && (ea < 500); j++)
+				for(j=0; (j<k); j++)
 				{
 					if ((fabs((A[i+ldc*j]-GOLD[i+ldc*j])/A[i+ldc*j]) > 0.0000000001)||(fabs((A[i+ldc*j]-GOLD[i+ldc*j])/GOLD[i+ldc*j]) > 0.0000000001))
+					#pragma omp critical
 					{
+
 						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + ldc * j], GOLD[i + ldc * j]);
 						//printf("%s\n", error_detail);
 #ifdef LOGS
 						log_error_detail(error_detail);
 #endif
+						host_errors++;
 						//ea++;			
 						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + ldc * j], GOLD[i + ldc * j], t_ea);
 										
 					}
 				}
 			}
+
+			#ifdef LOGS
+					log_error_count(host_errors);
+			#endif
 //================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
 			cudaFree( d_A );
 			cudaFree( d_B );
@@ -456,6 +477,7 @@ time = mysecond();
 			return 1;} //mem allocate failure
 //===================================
 
+if (loop2 || !device_warmup)
 		if (verbose)
 		{
 			/////////// PERF
@@ -465,6 +487,8 @@ time = mysecond();
 			printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",k, outputpersec, gflops, gflops/1000000000);
 			///////////
 		}
+
+if (loop2 || !device_warmup)
 		if (verbose) printf("Iteration #%d time: %.3fs\n\n\n", loop2, mysecond() - global_time);
 	}
 
