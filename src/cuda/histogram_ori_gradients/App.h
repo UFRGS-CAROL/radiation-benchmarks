@@ -296,7 +296,7 @@ void App::run() {
 			//vector < vector<int> > data;
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
-				int vf[GOLD_LINE_SIZE];
+				vector<int> vf(GOLD_LINE_SIZE,0);
 				vf[0] = r.height;
 				vf[1] = r.width;
 				vf[2] = r.x;
@@ -304,9 +304,9 @@ void App::run() {
 				vf[4] = r.br().x;
 				vf[5] = r.br().y;
 
-				vector<int> vector_found(vf, (vf + sizeof(vf) / sizeof(int)));
+				//vector<int> vector_found(vf, (vf + sizeof(vf) / sizeof(int)));
 				//data.push_back(vector_found);
-				bool diff = set_countains(vector_found, gold);
+				bool diff = set_countains(vf, gold);
 
 				if ((diff || log_all_rectangles) && !stop_logging) {
 					/*
@@ -336,9 +336,9 @@ void App::run() {
 			}
 			cout << "Verification time " << mysecond() - time << endl;
 			//dump_output(i, "./output", any_error, data);
-			//stringstream ss;
-			//ss << fault_size / (i + 1);
-			//imwrite(ss.str() + "_out.jpg", img_to_show);
+			stringstream ss;
+			ss << fault_size / (i + 1);
+			imwrite(ss.str() + "_out.jpg", img_to_show);
 		}
 		//===============================================================
 	} catch (cv::Exception &e) {
