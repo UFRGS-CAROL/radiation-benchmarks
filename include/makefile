@@ -10,6 +10,13 @@ cuda: log_helper.cu
 	nvcc -c log_helper.cu
 	ar cvr libLogHelperCuda.a log_helper.o
 
+client: log_helper.cu
+	rm -f log_helper.o
+	rm -f log_helper.cu
+	ln -s log_helper_sockclient.c log_helper.cu
+	nvcc -c log_helper.cu
+	ar cvr libLogHelperCuda.a log_helper.o
+
 server: log_helper_sockserver.c
 	gcc log_helper_sockserver.c -o server -lpthread
 
