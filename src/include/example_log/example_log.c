@@ -4,9 +4,10 @@
 
 int main(){
 
-	// Optional, default is /home/carol/logs/
-	set_absolute_path("");
-	start_log_file("my_benchmark", "size:x repetition:y");
+	if(!start_log_file("my_benchmark", "size:x repetition:y")){
+		fprintf(stderr,"Could not start log file");
+		exit(1);
+	}
 	set_max_errors_iter(32);
 	set_iter_interval_print(5);
 	

@@ -5,7 +5,10 @@
 #ifdef MIC_NATIVE
 char timestamp_watchdog[200] = "/micNfs/carol/watchdog/timestamp.txt";
 #else
-char timestamp_watchdog[200] = "/home/carol/watchdog/timestamp.txt";
+//char timestamp_watchdog[200] = "/home/carol/watchdog/timestamp.txt";
+char *timestamp_watchdog;
+char timestamp_file[] = "timestamp.txt";
+char vardir_key[]="vardir";
 #endif
 // Max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
@@ -15,7 +18,10 @@ unsigned long int max_errors_per_iter = 5000;
 #ifdef MIC_NATIVE
 char absolute_path[200] = "/micNfs/carol/logs/";
 #else
-char absolute_path[200] = "/home/carol/logs/";
+//char absolute_path[200] = "/home/carol/logs/";
+char *absolute_path;
+char logdir_key[]="logdir";
+char config_file="/etc/radiation-benchmarks.conf"
 #endif
 
 // Used to print the log only for some iterations, equal 1 means print every iteration
@@ -86,6 +92,70 @@ void set_absolute_path(char *path){
 };
 
 // ~ ===========================================================================
+// Read config file to get the value of a 'key = value' pair
+char * getValueConfig(char * key){
+	FILE * fp;
+	char * line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	char value[200];
+	int i,j;
+	int key_not_match;
+	
+	fp = fopen(config_file, "r");
+	if (fp == NULL)
+		return NULL;
+	
+	while ((read = getline(&line, &len, fp)) != -1) {
+		// ignore comments and sections in config file
+		if(line[0] == '#' || line[0] == '[')
+			continue;
+
+		// remove white spaces
+		for(i=0;line[i]==' '; i++);
+		// check if key of this line is the key we are looking for
+		j=0;
+		key_not_match=0;
+		for(; line[i]!= ' ' && line[i] != '=' && key[j]!= '\0'; i++){
+			if(key[j]!=line[i]){
+				key_not_match=1;
+				break;
+			}
+			j++;
+		}
+		// Key not matched
+		if(key_not_match)
+			continue;
+		// key of line is a substring of the key we are looking for
+		if(key[j]!='\0')
+			continue;
+		// key matched but is a substring of current key
+		if(line[i] !=' ' && line[i]!='=')
+			continue;
+		// ignore spaces and '=' to go the the frist character of value
+		for(;line[i]==' '||line[i] == '='; i++);
+		j=0;
+		// copy value to buffer until end of line or '#' is found
+		for(;line[i]!='\0'&&line[i]!='#'&&line[i]!='\n';i++){
+			value[j]=line[i];
+			j++;
+		}
+		value[j]='\0';
+		char *v = (char *)malloc(sizeof(char)*strlen(value)+2);
+		strcpy(v, value);
+		fclose(fp);
+		if (line)
+			free(line);
+		return v;
+	}
+	
+	fclose(fp);
+	if (line)
+		free(line);
+	return NULL;
+};
+
+// ~ ===========================================================================
 // Return the name of the log file generated
 char * get_log_file_name(){
     return full_log_file_name;
@@ -95,6 +165,18 @@ char * get_log_file_name(){
 // Generate the log file name, log info from user about the test to be executed and reset log variables
 int start_log_file(char *benchmark_name, char *test_info){
 
+#ifndef MIC_NATIVE
+    char *var_dir=getValueConfig(vardir_key);
+    if(!var_dir){
+        fprintf(stderr, "[ERROR] Could not read var dir in config file '%s'\n",config_file);
+	return 1;//exit(1);
+    }
+    timestamp_watchdog = (char *)malloc(sizeof(char)* (strlen(var_dir)+strlen(timestamp_file)+4) );
+    strcat(timestamp_watchdog, var_dir);
+    if(strlen(timestamp_watchdog) > 0 && timestamp_watchdog[strlen(timestamp_watchdog)-1] != '/' )
+        strcat(timestamp_watchdog, "/");
+    strcat(timestamp_watchdog, timestamp_file);
+#endif
     update_timestamp();
 
     time_t file_time;
@@ -134,7 +216,17 @@ int start_log_file(char *benchmark_name, char *test_info){
     strcat(log_file_name, host);
     strcat(log_file_name, ".log");
 
-
+#ifndef MIC_NATIVE
+    absolute_path=getValueConfig(logdir_key);
+    if(!absolute_path){
+        fprintf(stderr, "[ERROR] Could not read log dir in config file '%s'\n",config_file);
+	return 1;//exit(1);
+    }
+    if(!absolute_path){
+        absolute_path = (char *)malloc(sizeof(char));
+        absolute_path[0]='\0';
+    }
+#endif
     strcpy(full_log_file_name, absolute_path);
     if(strlen(absolute_path) > 0 && absolute_path[strlen(absolute_path)-1] != '/' )
         strcat(full_log_file_name, "/");

@@ -42,7 +42,7 @@ config = ConfigParser.ConfigParser()
 
 config.set("DEFAULT", "installdir", installPath)
 config.set("DEFAULT", "vardir", varDir)
-config.set("DEFAULT", "Logdir", logDir)
+config.set("DEFAULT", "logdir", logDir)
 config.set("DEFAULT", "tmpdir", "/tmp")
 try:
 	if not os.path.isdir(varDir):
