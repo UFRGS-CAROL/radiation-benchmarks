@@ -1,0 +1,12 @@
+﻿Build started 7/2/2015 11:03:56 PM.
+     1>Project "C:\Repositories\valar-bench-read-only\particles\TestBed\TestBed.vcxproj" on node 2 (Build target(s)).
+     1>Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Repositories\valar-bench-read-only\particles\Release\TestBed.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:"C:\Program Files (x86)\AMD APP SDK\2.9-1\\lib\x86" /LIBPATH:../lib /LIBPATH:/Lib/x86 OpenCL.lib glut32.lib Common32.lib d3dx11.lib d3d11.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Repositories\valar-bench-read-only\particles\Release\TestBed.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Repositories\valar-bench-read-only\particles\Release\TestBed.lib" /MACHINE:X86 /SAFESEH Release\Dem2Demo.obj
+         Release\main.obj
+         "C:\Repositories\valar-bench-read-only\particles\Release\Common32.lib"
+     1>LINK : fatal error LNK1181: cannot open input file 'd3dx11.lib'
+     1>Done Building Project "C:\Repositories\valar-bench-read-only\particles\TestBed\TestBed.vcxproj" (Build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:00.12
