@@ -44,10 +44,10 @@ int main(int argc, char *argv[])
         initDemo(numL, numS, numF);
 	
         m_pDemo->resetDemo();
-        for (int i = 0; i < FINAL_STATE_ITERATIONS; i++)
+        /*for (int i = 0; i < FINAL_STATE_ITERATIONS; i++)
 	{
 		m_pDemo->stepDemo();
-    	}
+    	}*/
 
        	return 0;
 }
@@ -216,13 +216,21 @@ void Dem2Demo::reset()
 	}
 
         //GENERATE INPUT FILES (LARGE PARTICLES).
+	char cur_file[256];
+	
+	sprintf(cur_file, "inputs/posL_input_%d_%d_%d", 
+			m_numLParticles, m_numSParticles, m_numFParticles);
+
 	ofstream o_posL_input;
-	o_posL_input.open("inputs/posL_input", ios::binary);
+	o_posL_input.open(cur_file, ios::binary);
 	o_posL_input.write((char*)m_posL, (m_numLParticles + m_numFParticles)*sizeof(float4));
 	o_posL_input.close();
 	
+	sprintf(cur_file, "inputs/velL_input_%d_%d_%d",
+			m_numLParticles, m_numSParticles, m_numFParticles);
+
 	ofstream o_velL_input;
-	o_velL_input.open("inputs/velL_input", ios::binary);
+	o_velL_input.open(cur_file, ios::binary);
 	o_velL_input.write((char*)m_velL, (m_numLParticles + m_numFParticles)*sizeof(float4));
 	o_velL_input.close();
 
@@ -237,13 +245,19 @@ void Dem2Demo::reset()
 	}
 
         //GENERATE INPUT FILES (SMALL PARTICLES).
+	sprintf(cur_file, "inputs/posS_input_%d_%d_%d",
+			m_numLParticles, m_numSParticles, m_numFParticles);
+
 	ofstream o_posS_input;
-	o_posS_input.open("inputs/posS_input", ios::binary);
+	o_posS_input.open(cur_file, ios::binary);
 	o_posS_input.write((char*)m_posS, m_numSParticles*sizeof(float4));
 	o_posS_input.close();
 
+	sprintf(cur_file, "inputs/velS_input_%d_%d_%d",
+			m_numLParticles, m_numSParticles, m_numFParticles);
+
 	ofstream o_velS_input;
-	o_velS_input.open("inputs/velS_input", ios::binary);
+	o_velS_input.open(cur_file, ios::binary);
 	o_velS_input.write((char*)m_velS, m_numSParticles*sizeof(float4));
 	o_velS_input.close();
 	
