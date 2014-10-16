@@ -16,7 +16,7 @@
 
 
 //define some integer as refword
-#define REFWORD 0x00000000
+#define REFWORD 0x55555555
 // number of tests
 #define NREPS 1
 
