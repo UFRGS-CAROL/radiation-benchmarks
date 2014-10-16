@@ -18,7 +18,7 @@
 
 #define ITERACTIONS 1
 
-#define KERNEL_FILE "/home/daniel/Dropbox/opencl/opencl_mul/mul_kernel.cl"
+#define KERNEL_FILE "/home/daniel/Dropbox/ufrgs/radiation-benchmarks/opencl/mul/mul_kernel.cl"
 
 #define CL_CHECK_ERROR(err) \
 	{ \
