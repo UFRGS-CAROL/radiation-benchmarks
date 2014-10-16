@@ -3,8 +3,7 @@
 #define TEST_ARRAY_SIZE 15*1024*10
 
 // OpenCL Kernel
-__kernel void
-testCache(__global int* g_test_array,
+__kernel void testCache(__global int* g_test_array,
 __global int* g_output_array,
 int stride,
 int refword,
@@ -29,16 +28,22 @@ __global int *kernel_errors
 
 		for (int j=tx; j<TEST_ARRAY_SIZE; j+=stride)
 		{
+	
 			int temp = g_test_array[j];
+
+//injecting errors to test collected info
+if (i==0 && j==1024)
+	temp=refword+1;
 			if (temp != refword) {
 				// store old values of kernel_errors in idx
 				__private int idx = atomic_inc(kernel_errors);
 
 				//saves iteration, position and xor of error found
-				idx = (idx) * 3;
+				idx = (idx) * 4;
 				g_output_array[idx] = i;
 				g_output_array[idx+1] = j;
-				g_output_array[idx+2] = temp ^ refword;
+				g_output_array[idx+2] = tx;
+				g_output_array[idx+3] = temp ^ refword;
 
 				g_test_array[j] = refword;
 			}

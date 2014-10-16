@@ -22,7 +22,7 @@
 
 #define TEST_ARRAY_SIZE 15*10*1024 // keep the same number in the define of file => KERNEL_FILE "cache_kernel.cl"
 
-#define OUTPUT_ARRAY_SIZE 3*10 // stores 10 errors details (3 infos for each error)
+#define OUTPUT_ARRAY_SIZE 4*50 // stores 10 errors details (4 infos for each error)
 
 #define CTAS 10 // define how many blocks we will have
 // these two defines below cannot be change because of HW limitation
@@ -228,8 +228,7 @@ void getDevices(cl_device_type deviceType)
 // Program main
 /////////////////////////////////////////////////////////
 
-int
-main(int argc, char** argv)
+int main(int argc, char** argv)
 {
 
 
@@ -242,6 +241,10 @@ main(int argc, char** argv)
 	cl_int errcode;
 
 	int * h_output_array = (int *)malloc(sizeof(int)*OUTPUT_ARRAY_SIZE);
+	if(h_output_array==NULL){
+		printf("Error allocating h_output_array\n");
+		return 1;
+	}
 //printf("cl_mem...\n");
 	// OpenCL device memory for matrices
 	cl_mem d_test_array;
@@ -337,15 +340,15 @@ main(int argc, char** argv)
 	int stride = STRIDE;
 	errcode |= clSetKernelArg(clKernel, 0,
 		sizeof(cl_mem), (void *)&d_test_array);
-	errcode |= clSetKernelArg(clKernel, 0,
-		sizeof(cl_mem), (void *)&d_output_array);
 	errcode |= clSetKernelArg(clKernel, 1,
-		sizeof(int), (void *)&stride);
+		sizeof(cl_mem), (void *)&d_output_array);
 	errcode |= clSetKernelArg(clKernel, 2,
-		sizeof(int), (void *)&refword);
+		sizeof(int), (void *)&stride);
 	errcode |= clSetKernelArg(clKernel, 3,
-		sizeof(int), (void *)&nreps);
+		sizeof(int), (void *)&refword);
 	errcode |= clSetKernelArg(clKernel, 4,
+		sizeof(int), (void *)&nreps);
+	errcode |= clSetKernelArg(clKernel, 5,
 		sizeof(cl_mem), (void *)&d_num_errors);
 
 	CL_CHECK_ERROR(errcode);
@@ -380,11 +383,11 @@ main(int argc, char** argv)
 	if(kernel_errors > 0){
 		errcode = clEnqueueReadBuffer(command_queue,
 			d_output_array, CL_TRUE, 0, OUTPUT_ARRAY_SIZE*sizeof(int),
-			&h_output_array, 0, NULL, NULL);
+			h_output_array, 0, NULL, NULL);
 		CL_CHECK_ERROR(errcode);
 		int i;
-		for(i = 0; i < kernel_errors*3; i=i+3){
-			printf("%d it, %d pos, 0x%08x syndrome\n",h_output_array[i],h_output_array[i+1],h_output_array[i+2]);
+		for(i = 0; i < kernel_errors*4; i=i+4){
+			printf("%d it, %d pos, %d thread, 0x%08x syndrome\n",h_output_array[i],h_output_array[i+1],h_output_array[i+2],h_output_array[i+3]);
 		}
 	}
 
