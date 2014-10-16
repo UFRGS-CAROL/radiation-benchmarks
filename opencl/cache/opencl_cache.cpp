@@ -12,7 +12,7 @@
 #include <CL/cl_gl_ext.h>
 #include <CL/cl_ext.h>
 
-#define KERNEL_FILE "/home/daniel/Dropbox/opencl/opencl_cache/cache_kernel.cl"
+#define KERNEL_FILE "/home/daniel/Dropbox/ufrgs/radiation-benchmarks/opencl/cache/cache_kernel.cl"
 
 
 //define some integer as refword
