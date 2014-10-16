@@ -394,6 +394,8 @@ int main(int argc, char** argv)
 	// 10. clean up memory
 
 	clReleaseMemObject(d_num_errors);
+	clReleaseMemObject(d_test_array);
+	clReleaseMemObject(d_output_array);
 
 	clReleaseContext(context);
 	clReleaseKernel(clKernel);
