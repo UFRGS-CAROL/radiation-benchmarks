@@ -46,7 +46,7 @@ int main (int argc, char *argv[]) {
             }
 // injecting one error
 //		if(j == 1)
-//			arrayB[j] = 1;
+//			value = 1;
             if(arrayA[j]+(arrayB[j]*repetitions) != value){
                 error_count++;
             }
