@@ -2,11 +2,19 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <math.h>
 
 // Xeon Phi total cores = 57. 1 core probably runs de OS.
 #define MIC_NUM_CORES 56000
 #define ARRAY_SIZE 56000
 #define MAX 32000
+
+double fRand(double fmin, double fmax) {
+
+    double f = (double) rand() / RAND_MAX;
+
+    return (double )fmin + f * (fmax - fmin);
+}
 
 ///=============================================================================
 int main (int argc, char *argv[]) {
@@ -23,13 +31,13 @@ int main (int argc, char *argv[]) {
 
     uint64_t i = 0;
     uint64_t j = 0;
-    uint64_t arrayA[ARRAY_SIZE];
-    uint64_t arrayB[ARRAY_SIZE];
+    double arrayA[ARRAY_SIZE];
+    double arrayB[ARRAY_SIZE];
     uint64_t error_count = 0;
 
     for (i = 0; i < ARRAY_SIZE; i++) {
-        arrayA[i] = rand() % MAX;
-	arrayB[i] = rand() % MAX;
+        arrayA[i] = fRand(-1590.35, 1987.59);
+	arrayB[i] = fRand(-15.65, 15.68);
     }
 
     #pragma offload target(mic) in(arrayA, arrayB) reduction(+:error_count)
@@ -40,14 +48,15 @@ int main (int argc, char *argv[]) {
             asm volatile ("nop");
             asm volatile ("nop");
             asm volatile ("nop");
-            int value=arrayA[j];
+            double value=arrayA[j];
             for (i = 0; i < repetitions; i++) {
-                value += arrayB[j];
+                value /= arrayB[j];
             }
 // injecting one error
 //		if(j == 1)
 //			value = 1;
-            if(arrayA[j]+(arrayB[j]*repetitions) != value){
+            double gold = arrayA[j] / pow(arrayB[j],repetitions);
+            if((fabs((float)(value- gold )/value) > 0.00000001)||(fabs((float)(value-gold)/gold) > 0.00000001)){
                 error_count++;
             }
             asm volatile ("nop");

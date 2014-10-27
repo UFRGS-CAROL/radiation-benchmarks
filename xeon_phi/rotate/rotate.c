@@ -2,11 +2,16 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <math.h>
 
 // Xeon Phi total cores = 57. 1 core probably runs de OS.
 #define MIC_NUM_CORES 56000
 #define ARRAY_SIZE 56000
 #define MAX 32000
+#define refword 0x55555555
+
+//#define rotate(inout) ({ asm ("rol #1,%0" : "=d" (inout)); })
+
 
 ///=============================================================================
 int main (int argc, char *argv[]) {
@@ -23,16 +28,10 @@ int main (int argc, char *argv[]) {
 
     uint64_t i = 0;
     uint64_t j = 0;
-    uint64_t arrayA[ARRAY_SIZE];
-    uint64_t arrayB[ARRAY_SIZE];
     uint64_t error_count = 0;
 
-    for (i = 0; i < ARRAY_SIZE; i++) {
-        arrayA[i] = rand() % MAX;
-	arrayB[i] = rand() % MAX;
-    }
 
-    #pragma offload target(mic) in(arrayA, arrayB) reduction(+:error_count)
+    #pragma offload target(mic) reduction(+:error_count)
     {
         #pragma omp parallel for
         for(j = 0; j < MIC_NUM_CORES; j++)
@@ -40,15 +39,17 @@ int main (int argc, char *argv[]) {
             asm volatile ("nop");
             asm volatile ("nop");
             asm volatile ("nop");
-            int value=arrayA[j];
+            uint64_t value=refword;
             for (i = 0; i < repetitions; i++) {
-                value += arrayB[j];
-            }
+                //rotate(value);
+                asm ("rol %0,#1" : "=d" (value));
 // injecting one error
-//		if(j == 1)
+//		if(i == 1)
 //			value = 1;
-            if(arrayA[j]+(arrayB[j]*repetitions) != value){
-                error_count++;
+		if ( i % 32 == 0 && value != refword) {
+//			error_count++;
+			value = refword;
+		}
             }
             asm volatile ("nop");
             asm volatile ("nop");
