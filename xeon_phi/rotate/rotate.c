@@ -10,9 +10,6 @@
 #define MAX 32000
 #define refword 1//0x55555555
 
-//#define rotate(inout) ({ asm ("rol #1,%0" : "=d" (inout)); })
-
-
 ///=============================================================================
 int main (int argc, char *argv[]) {
     uint64_t size=0;
@@ -40,14 +37,48 @@ int main (int argc, char *argv[]) {
             asm volatile ("nop");
             uint32_t value=refword;
             uint64_t i;
+	    #pragma unroll
             for (i = 0; i < repetitions; i++) {
-                //rotate(value);
+
+                // execute 32 times the rotate operation
                 asm volatile ("roll %0" : "+r" (value) : "0" (value) );
-                printf("%"PRIu64" => %d\n", i, value);
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+//                printf("%"PRIu64" => %d\n", i, value);
+
 // injecting one error
 //		if(i == 1)
-//			value = 1;
-		if ( i % 32 == 0 && value != refword) {
+//			value = 0;
+		if ( value != refword) {
 			error_count++;
 			value = refword;
 		}
