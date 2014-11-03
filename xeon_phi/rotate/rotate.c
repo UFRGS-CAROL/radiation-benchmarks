@@ -5,10 +5,10 @@
 #include <math.h>
 
 // Xeon Phi total cores = 57. 1 core probably runs de OS.
-#define MIC_NUM_CORES 56000
+#define MIC_NUM_CORES 1
 #define ARRAY_SIZE 56000
 #define MAX 32000
-#define refword 0x55555555
+#define refword 1//0x55555555
 
 //#define rotate(inout) ({ asm ("rol #1,%0" : "=d" (inout)); })
 
@@ -26,7 +26,6 @@ int main (int argc, char *argv[]) {
 
     printf("Repetitions:%"PRIu64"\n", repetitions);
 
-    uint64_t i = 0;
     uint64_t j = 0;
     uint64_t error_count = 0;
 
@@ -39,15 +38,17 @@ int main (int argc, char *argv[]) {
             asm volatile ("nop");
             asm volatile ("nop");
             asm volatile ("nop");
-            uint64_t value=refword;
+            uint32_t value=refword;
+            uint64_t i;
             for (i = 0; i < repetitions; i++) {
                 //rotate(value);
-                asm ("rol %0,#1" : "=d" (value));
+                asm volatile ("roll %0" : "+r" (value) : "0" (value) );
+                printf("%"PRIu64" => %d\n", i, value);
 // injecting one error
 //		if(i == 1)
 //			value = 1;
 		if ( i % 32 == 0 && value != refword) {
-//			error_count++;
+			error_count++;
 			value = refword;
 		}
             }
