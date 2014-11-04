@@ -19,18 +19,18 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define MIC_NUM_CORES 57
+#define MIC_NUM_CORES 1
 
 struct list {
-    uint64_t value;
-    char pad[56];
+    uint32_t value;
+    char pad[60];
 };
 typedef struct list element;
 
 ///=============================================================================
 int main (int argc, char *argv[]) {
-    uint64_t size=0;
-    uint64_t repetitions=0;
+    uint32_t size=0;
+    uint32_t repetitions=0;
     if(argc != 3) {
         printf("Please provide the number of repetitions and array size.\n");
         exit(EXIT_FAILURE);
@@ -43,14 +43,14 @@ int main (int argc, char *argv[]) {
         printf("The array size needs to be divisible by 32 (due to unrolling).\n");
         exit(EXIT_FAILURE);
     }
-    printf("Struct size %"PRIu64"\n", (uint64_t)sizeof(element));
-    printf("Repetitions:%"PRIu64" Size:%"PRIu64"\n", repetitions, size);
-    printf("Memory to be accessed: %"PRIu64"KB\n", (uint64_t)(size * sizeof(element)) / 1024);
+    printf("Struct size %"PRIu32"\n", (uint32_t)sizeof(element));
+    printf("Repetitions:%"PRIu32" Size:%"PRIu32"\n", repetitions, size);
+    printf("Memory to be accessed: %"PRIu32"KB\n", (uint32_t)(size * sizeof(element)) / 1024);
 
-    uint64_t i = 0;
-    uint64_t j = 0;
-    uint64_t jump = 0;
-    uint64_t count = 0;
+    uint32_t i = 0;
+    uint32_t j = 0;
+    uint32_t jump = 0;
+    uint32_t count = 0;
 
     element *ptr_vector;
     ptr_vector = (element *)valloc(sizeof(element) * size);
@@ -61,7 +61,7 @@ int main (int argc, char *argv[]) {
 
     #pragma offload target(mic) in(ptr_vector:length(sizeof(element) * size)) inout(count)
     {
-        #pragma omp parallel for
+        #pragma omp parallel for private(i, j)
         for(j = 0; j < MIC_NUM_CORES; j++)
         {
             asm volatile ("nop");
@@ -113,6 +113,6 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    printf("%"PRIu64"\n", count);
+    printf("%"PRIu32"\n", count);
     exit(EXIT_SUCCESS);
 }
