@@ -10,9 +10,6 @@
 #define MAX 32000
 #define refword 1 //  0x55555555
 
-//#define rotate(inout) ({ asm ("rol #1,%0" : "=d" (inout)); })
-
-
 ///=============================================================================
 int main (int argc, char *argv[]) {
     uint64_t size=0;
@@ -26,7 +23,6 @@ int main (int argc, char *argv[]) {
 
     printf("Repetitions:%"PRIu64"\n", repetitions);
 
- 
     uint32_t i = 0;
     uint32_t error_count = 0;
 
@@ -39,6 +35,7 @@ int main (int argc, char *argv[]) {
             asm volatile ("nop");
             asm volatile ("nop");
             uint32_t value=refword;
+<<<<<<< HEAD
             uint32_t j;
             for (j = 1; j <= repetitions; j++) {
                 
@@ -75,13 +72,15 @@ int main (int argc, char *argv[]) {
 	    	asm ("roll %0" : "+r" (value) : "0" (value) );
 	    	asm ("roll %0" : "+r" (value) : "0" (value) );
 
-                printf("%"PRIu64" => %d\n", j, value);
+		// DEBUG
+		// printf("%"PRIu64" => %d\n", j, value);
 
-               // Injecting one error
+               // DEBUG: Injecting one error
                // if(i == 1)
                // 	value = 1;
 
 		if ( value != refword) {
+			// DEBUG
                 	// printf("Error found!\n");
 			error_count++;
 			value = refword;
