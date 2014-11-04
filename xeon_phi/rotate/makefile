@@ -1,3 +1,3 @@
 
 all:
-	icc -vec-report2 -openmp rotate.c -o rotate 
+	icc -vec-report2 -masm=att -openmp rotate.c -o rotate 

@@ -5,10 +5,10 @@
 #include <math.h>
 
 // Xeon Phi total cores = 57. 1 core probably runs de OS.
-#define MIC_NUM_CORES 56000
+#define MIC_NUM_CORES 1
 #define ARRAY_SIZE 56000
 #define MAX 32000
-#define refword 0x55555555
+#define refword 1 //  0x55555555
 
 //#define rotate(inout) ({ asm ("rol #1,%0" : "=d" (inout)); })
 
@@ -26,28 +26,64 @@ int main (int argc, char *argv[]) {
 
     printf("Repetitions:%"PRIu64"\n", repetitions);
 
-    uint64_t i = 0;
-    uint64_t j = 0;
-    uint64_t error_count = 0;
-
+ 
+    uint32_t i = 0;
+    uint32_t error_count = 0;
 
     #pragma offload target(mic) reduction(+:error_count)
     {
         #pragma omp parallel for
-        for(j = 0; j < MIC_NUM_CORES; j++)
+        for(i = 0; i < MIC_NUM_CORES; i++)
         {
             asm volatile ("nop");
             asm volatile ("nop");
             asm volatile ("nop");
-            uint64_t value=refword;
-            for (i = 0; i < repetitions; i++) {
-                //rotate(value);
-                asm ("rol %0,#1" : "=d" (value));
-// injecting one error
-//		if(i == 1)
-//			value = 1;
-		if ( i % 32 == 0 && value != refword) {
-//			error_count++;
+            uint32_t value=refword;
+            uint32_t j;
+            for (j = 1; j <= repetitions; j++) {
+                
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+	    	asm ("roll %0" : "+r" (value) : "0" (value) );
+
+                printf("%"PRIu64" => %d\n", j, value);
+
+               // Injecting one error
+               // if(i == 1)
+               // 	value = 1;
+
+		if ( value != refword) {
+                	// printf("Error found!\n");
+			error_count++;
 			value = refword;
 		}
             }
@@ -57,6 +93,6 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    printf("%"PRIu64"\n", error_count);
+    printf("Errors: %"PRIu32"\n", error_count);
     exit(EXIT_SUCCESS);
 }
