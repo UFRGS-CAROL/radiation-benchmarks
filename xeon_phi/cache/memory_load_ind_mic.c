@@ -76,6 +76,11 @@ int main (int argc, char *argv[]) {
 	    uint32_t th_id = omp_get_thread_num();
             for (i = 0; i < repetitions; i++) {
                 for (jump = slice * th_id; jump < slice * (th_id + 1) ;){
+
+		    // DEBUG: injecting one error
+		    //if(j == 0 && i == 0 && jump == 0)
+		    //    ptr_vector[jump] = 0;
+
 		    if ((ptr_vector[jump] ^ REFWORD)) {
 			count++;
 			printf("%d it, %d pos, %d thread, 0x%08x syndrome\n", i, jump, j, ptr_vector[jump] ^ REFWORD);
