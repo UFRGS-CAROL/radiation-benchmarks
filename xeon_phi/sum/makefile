@@ -1,3 +1,3 @@
 
 all:
-	icc -vec-report2 -openmp sum.c -o sum 
+	icc -vec-report3 -no-vec -openmp sum.c -o sum 

@@ -1,3 +1,3 @@
 
 all:
-	icc -vec-report2 -openmp mul.c -o mul 
+	icc -vec-report3 -no-vec -openmp mul.c -o mul 

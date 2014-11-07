@@ -1,3 +1,3 @@
 
 all:
-	icc -vec-report2 -openmp div.c -o div 
+	icc -vec-report3 -no-vec -openmp div.c -o div 
