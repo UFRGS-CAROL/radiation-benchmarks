@@ -220,7 +220,7 @@ void runTest(int test_number) {
         } else if (even && gpu_work > 0) {
             err = clEnqueueWriteBuffer(command_queue[1], cpu_d_odata, true, 0, bytes, h_odata, 0, NULL, NULL);
         } else {
-            err = clEnqueueWriteBuffer(command_queue[1], cpu_d_odata, true, 0, bytes, h_idata, 0, NULL, NULL);
+            err = clEnqueueWriteBuffer(command_queue[1], cpu_d_idata, true, 0, bytes, h_idata, 0, NULL, NULL);
         }
         CL_CHECK_ERROR(err);
         err = clFinish(command_queue[1]);
