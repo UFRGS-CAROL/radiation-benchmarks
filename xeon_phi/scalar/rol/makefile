@@ -1,3 +1,3 @@
 
 all:
-	icc -vec-report3 -no-vec -masm=att -openmp rotate.c -o rotate -O2
+	icc -vec-report3 -no-vec -masm=att -openmp rol.c -o rol -O2
