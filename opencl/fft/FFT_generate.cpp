@@ -104,7 +104,7 @@ template <class T2> void dump(cl_device_id id,
 
         printf("generating input and checkin output\n");
 
-        if( (fp = fopen("/home/carol/daniel/opencl_fft/input_fft", "wb" )) == 0 )
+        if( (fp = fopen("/home/carol/daniel/fft/input_fft", "wb" )) == 0 )
             printf( "The file input_fft was not opened\n");
 
         //saving input
@@ -123,7 +123,7 @@ template <class T2> void dump(cl_device_id id,
         //printf("\nkernel time: %.12f\n", kernel_time);
         copyFromDevice(result, work, used_bytes, queue);
 
-        if( (fp = fopen("/home/carol/daniel/opencl_fft/output_fft", "wb" )) == 0 )
+        if( (fp = fopen("/home/carol/daniel/fft/output_fft", "wb" )) == 0 )
             printf( "The file output_fft was not opened\n");
         //saving output
 

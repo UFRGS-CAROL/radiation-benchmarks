@@ -22,7 +22,7 @@
 //////////
 // LOOPS
 //////////
-#define ITERACTIONS 10
+#define ITERACTIONS 1
 
 #define AVOIDZERO 1e-200
 #define ACCEPTDIFF 1e-5
@@ -107,6 +107,9 @@ template <class T2> void dump(cl_device_id id,
 
     clFinish(queue[0]);
     time1 = get_time();
+    double kernel_time = (double) (time1-time0) / 1000000;
+    if(distribution == 3)
+	kernel_time = 0;
 
     T2 *workT = (T2*) malloc(used_bytes);
     if(workT == NULL)
@@ -132,7 +135,14 @@ template <class T2> void dump(cl_device_id id,
     copyToDevice(workCPU, workT, used_bytes, queue[1]);
     clFinish(queue[1]);
 
+    time0 = get_time();
     transform(workCPU, n_ffts, kernelIndex == 0 ? cpuFftKrnl : cpuIfftKrnl, queue[1], distribution, 0);
+    clFinish(queue[1]);
+
+    time1 = get_time();
+    double cpu_kernel_time = (double) (time1-time0) / 1000000;
+    if(distribution == 0)
+	cpu_kernel_time = 0;
 
     copyFromDevice(resultCPU, workCPU, used_bytes, queue[1]);
     clFinish(queue[1]);
@@ -150,8 +160,6 @@ template <class T2> void dump(cl_device_id id,
     	}
     */
     /// PROBABLY NOT NEEDED, OR CAN BE REDUCED
-    double kernel_time = (double) (time1-time0) / 1000000;
-    total_kernel_time += kernel_time;
 
     int num_errors = 0;
     int num_errors_i = 0; //complex
@@ -198,8 +206,9 @@ template <class T2> void dump(cl_device_id id,
 
     //if(num_errors > 0 || (test_number % 10 == 0)) {
         printf("\ntest number: %d", test_number);
-        printf("\nkernel time: %.12f", kernel_time);
-        printf("\naccumulated kernel time: %f", total_kernel_time);
+        printf("\nGPU kernel time: %.12f", kernel_time);
+        printf("\nCPU kernel time: %f", cpu_kernel_time);
+        printf("\nTotal kernel time: %f", kernel_time+cpu_kernel_time);
         printf("\namount of errors: %d", num_errors);
         printf("\ntotal runs with errors: %d\n", t_ea);
 
@@ -227,6 +236,20 @@ void getDevices(cl_device_type deviceType) {
         exit(1);
     }
 
+        printf("Using the default platform (platform 0)...\n\n");
+        printf("=== %d OpenCL device(s) found on platform:\n", devices_n);
+        for (int i = 0; i < devices_n; i++) {
+            char buffer[10240];
+            cl_uint buf_uint;
+            cl_ulong buf_ulong;
+            printf("  -- %d --\n", i);
+            clGetDeviceInfo(device_id[i], CL_DEVICE_NAME, sizeof(buffer), buffer,
+                            NULL);
+            printf("  DEVICE_NAME = %s\n", buffer);
+            clGetDeviceInfo(device_id[i], CL_DEVICE_VENDOR, sizeof(buffer), buffer,
+                            NULL);
+            printf("  DEVICE_VENDOR = %s\n", buffer);
+	}
     // Create a command queue.
     command_queue[0] = clCreateCommandQueue(context, device_id[0], 0, &ret);
     if (ret != CL_SUCCESS) {
@@ -261,11 +284,11 @@ int main(int argc, char** argv) {
 
     FILE *fp, *fp_gold;
     // init host memory...
-    if( (fp = fopen("/home/carol/daniel/opencl_fft/input_fft", "rb" )) == 0 ) {
+    if( (fp = fopen("/home/carol/daniel/fft/input_fft", "rb" )) == 0 ) {
         printf( "error file input_fft was not opened\n");
         return 0;
     }
-    if( (fp_gold = fopen("/home/carol/daniel/opencl_fft/output_fft", "rb" )) == 0 ) {
+    if( (fp_gold = fopen("/home/carol/daniel/fft/output_fft", "rb" )) == 0 ) {
         printf( "error file output_fft was not opened\n");
         return 0;
     }
