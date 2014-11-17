@@ -13,8 +13,9 @@
 #define BLOCK_SIZE 8
 
 // 2^16 = 65535 -> size of fft_ideal.txt
+// 2^20 = 1048576
 // 2^25 = 33554432
-#define N 65535 // Number of Complex numbers for the FFT
+#define N 1048576 // Number of Complex numbers for the FFT
 
 
 int padComplex(int n, Complex* idata, Complex** pad_idata);
@@ -54,7 +55,7 @@ int main(int argc, char** argv) {
     int count_do_while = 0;
     int errors_count = 0, sum_zeros = 0;
     do{
-        printf("Generating new input and output files\n");
+        printf("\n\tGenerating new input and output files\n");
         printf("FFT number of points: %d\n", N);
         count_do_while++;
         
@@ -122,8 +123,8 @@ int main(int argc, char** argv) {
 	    free(host_pad_idata);
 	    free(host_pad_odata);
 
-	    printf("\nNumber of zeros in output: %d\n",sum_zeros);
-	    printf("Number of error executing inverse FFT: %d\n",errors_count);
+	    printf("\n\tNumber of zeros in output: %d\n",sum_zeros);
+	    printf("\tNumber of error executing inverse FFT: %d\n",errors_count);
 
     }while((sum_zeros > 0 || errors_count > 0) && count_do_while < 10);
     

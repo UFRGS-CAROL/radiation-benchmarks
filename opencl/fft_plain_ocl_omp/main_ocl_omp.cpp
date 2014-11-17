@@ -13,8 +13,9 @@
 #define BLOCK_SIZE 8
 
 // 2^16 = 65535 -> size of fft_ideal.txt
+// 2^20 = 1048576
 // 2^25 = 33554432
-#define N 65535 // Number of Complex numbers for the FFT
+#define N 1048576 // Number of Complex numbers for the FFT
 
 
 int padComplex(int n, Complex* idata, Complex** pad_idata);
@@ -38,147 +39,75 @@ int main(int argc, char** argv) {
 	int i;
 
 	int errors_count_r, errors_count_i;
-	errors_count_r = errors_count_i = 0;
-
 
 	Complex *host_pad_idata, *host_pad_odata;
 
 	FILE *ideal_values;
 
 
-/*
----------------------------------------------------------------------
-	code aimed at the golden file creation ("fft_ideal.txt");
----------------------------------------------------------------------
-*/
+    FILE *fp, *fp_gold;
+    if( (fp = fopen("input", "rb" )) == 0 ) {
+        printf( "error file input was not opened\n");
+        exit(1);
+    }
+    if( (fp_gold = fopen("output", "rb" )) == 0 ) {
+        printf( "error file output was not opened\n");
+        exit(1);
+    }
 
-/*
-	FILE * out_ideal_values;
-	out_ideal_values = fopen("fft_ideal_NEW.txt","w");
-*/
+	Complex *gold = (Complex *)malloc(N*sizeof(Complex));
+	Complex *idata = (Complex *)malloc(N * sizeof(Complex));
+	Complex *odata = (Complex *)malloc(N * sizeof(Complex));
 
-/*
----------------------------------------------------------------------
-	Ideal values are read by an external file and are saved in an array of Complex
----------------------------------------------------------------------
-*/
-	ideal_values = fopen("./fft_ideal.txt", "r");
-	if (ideal_values == NULL){
-		printf ("Unable to open ideal values file\n");
-		exit (-1);
-	}
-
-	double real,imag;
-	int temp;
-	Complex *ideal_data = (Complex *)malloc(N*sizeof(Complex));
-	char line[4096];
-
+    int return_value, return_value2, return_value3, return_value4;
 	for(i = 0; i < N; i++){
-		
-		fgets (line,sizeof(line),ideal_values);
-		sscanf(line,"%d %lf %lf",&temp,&real,&imag);
-
-		ideal_data[i].real = real;
-		ideal_data[i].imag = imag;
-		
-		//printf ("%s | %f | %f\n\n", line, real,imag);
+        return_value = fread(&(idata[i].real), 1, sizeof(double), fp);
+        return_value2 = fread(&(idata[i].imag), 1, sizeof(double), fp);
+        return_value3 = fread(&(gold[i].real), 1, sizeof(double), fp_gold);
+        return_value4 = fread(&(gold[i].imag), 1, sizeof(double), fp_gold);
+        if(return_value == 0 || return_value2 == 0 || return_value3 == 0 || return_value4 == 0) {
+            printf("error reading input or output\n");
+            exit(1);
+        }
 	}
 
-	fclose (ideal_values);
-
-		// data in host memory
-		Complex *idata, *odata;
-		idata = (Complex *)malloc(N * sizeof(Complex));
-		odata = (Complex *)malloc(N * sizeof(Complex));
-
-		for(i = 0; i < N; i++) {
-			idata[i].real = i;
-			idata[i].imag = i;
-		}
-
-		NFFT = padComplex(N, idata, &host_pad_idata);
-		padComplex(N, odata, &host_pad_odata);
-		printf("NFFT = %d\n", NFFT);
+	fclose(fp);
+	fclose(fp_gold);
 
 
-		fft_ocl_omp(NFFT, host_pad_idata, host_pad_odata, FORWARD, gpu_workload);
-
-		//data check
-		errors_count_r = errors_count_i = 0;
-
-		for(i = 0; i < N; i++) {
-		        if ((fabs(ideal_data[i].real)>AVOIDZERO)&&
-                ((fabs((host_pad_odata[i].real-ideal_data[i].real)/host_pad_odata[i].real)>ACCEPTDIFF)||
-                 (fabs((host_pad_odata[i].real-ideal_data[i].real)/ideal_data[i].real)>ACCEPTDIFF))) {
-				    errors_count_r++;
-				    if(errors_count_r < 10){
-				        printf("[%d] Error real, e(%f) r(%f)\n", i, ideal_data[i].real, host_pad_odata[i].real);
-				    }
-			    }			
-
-		        if ((fabs(ideal_data[i].imag)>AVOIDZERO)&&
-                ((fabs((host_pad_odata[i].imag-ideal_data[i].imag)/host_pad_odata[i].imag)>ACCEPTDIFF)||
-                 (fabs((host_pad_odata[i].imag-ideal_data[i].imag)/ideal_data[i].imag)>ACCEPTDIFF))) {
-				errors_count_i++;
-				if(errors_count_i < 10){
-				    printf("[%d] Error imag, e(%f) r(%f)\n", i, ideal_data[i].imag, host_pad_odata[i].imag);
-				}
-			}
-		}
+	NFFT = padComplex(N, idata, &host_pad_idata);
+	padComplex(N, odata, &host_pad_odata);
+	printf("NFFT = %d\n", NFFT);
 
 
-		printf("Execution completed\n");
-		printf("errors: %d\n", errors_count_i+errors_count_r);
+	fft_ocl_omp(NFFT, host_pad_idata, host_pad_odata, FORWARD, gpu_workload);
 
-		free(idata);
-		free(odata);
-		free(host_pad_idata);
-		free(host_pad_odata);
+	//data check
+	errors_count_r = errors_count_i = 0;
 
-	
+	for(i = 0; i < N; i++) {
+        if ((fabs(gold[i].real)>AVOIDZERO)&&
+        ((fabs((host_pad_odata[i].real-gold[i].real)/host_pad_odata[i].real)>ACCEPTDIFF)||
+         (fabs((host_pad_odata[i].real-gold[i].real)/gold[i].real)>ACCEPTDIFF))) {
+		    errors_count_r++;
+	    }
 
-
-/*
---------------------------------------------------------------------
-	code aimed at the golden file creation ("fft_ideal.txt");
---------------------------------------------------------------------
-*/
- 
-
-/*
-	//printf("Transformed data:\n");
-	for(i = 0; i < NFFT; i++)
-	{
-		fprintf(out_ideal_values,"%d %a %a\n",i,host_pad_odata[i].real,host_pad_odata[i].imag);
-		host_pad_odata[i].print(i);
+        if ((fabs(gold[i].imag)>AVOIDZERO)&&
+        ((fabs((host_pad_odata[i].imag-gold[i].imag)/host_pad_odata[i].imag)>ACCEPTDIFF)||
+         (fabs((host_pad_odata[i].imag-gold[i].imag)/gold[i].imag)>ACCEPTDIFF))) {
+		    errors_count_i++;
+	    }
 	}
 
-	fclose (out_ideal_values);
 
-*/
+	printf("Execution completed\n");
+	printf("errors: %d\n", errors_count_i+errors_count_r);
 
-/*
-	printf("\nTransforming data INVERSE <<<===\n");
-	cuFFT(NFFT, host_pad_odata, host_pad_idata, INVERSE);
+	free(idata);
+	free(odata);
+	free(host_pad_idata);
+	free(host_pad_odata);
 
-
-	printf("inverse data:\n");
-
-	for(int i=0; i<N; i++)
-	{
-		idata[i] = host_pad_idata[i]/NFFT;
-		idata[i].print(i);
-	}
-
-	for(i = 0; i < N; i++)
-	{
-		fprintf(output, "%lf\t%lf\n", idata[i].real, idata[i].imag);
-	}
-
-	fclose(input);
-	fclose(output);
-
-*/
 
 	return 0;
 }
