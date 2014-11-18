@@ -7,6 +7,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <iostream>
+#include <sys/time.h>
+#include <time.h>
 
 #include <stdio.h>
 
@@ -31,6 +33,13 @@ static const double  domainEdge   = 20.0; // Edge length of the cubic domain
 static const double  lj1          = 1.5;  // LJ constants
 static const double  lj2          = 2.0;
 static const double  EPSILON      = 0.1f; // Relative Error between CPU/GPU
+
+// Returns the current system time in microseconds
+inline long long get_time() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000000) + tv.tv_usec;
+}
 
 void ocl_alloc_buffers(int nAtom, int maxNeighbors);
 void ocl_release_buffers();
