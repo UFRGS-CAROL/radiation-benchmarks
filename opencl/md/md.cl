@@ -1,18 +1,9 @@
-#ifdef SINGLE_PRECISION
-#define POSVECTYPE float4
-#define FORCEVECTYPE float4
-#define FPTYPE float
-#elif K_DOUBLE_PRECISION
-#pragma OPENCL EXTENSION cl_khr_fp64: enable
-#define POSVECTYPE double4
-#define FORCEVECTYPE double4
-#define FPTYPE double
-#elif AMD_DOUBLE_PRECISION
+//#pragma OPENCL EXTENSION cl_khr_fp64: enable
 #pragma OPENCL EXTENSION cl_amd_fp64: enable
 #define POSVECTYPE double4
 #define FORCEVECTYPE double4
 #define FPTYPE double
-#endif
+
 
 __kernel void compute_lj_force(__global FORCEVECTYPE *force,
                                __global POSVECTYPE *position,
