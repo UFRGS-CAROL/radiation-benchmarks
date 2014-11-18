@@ -64,7 +64,7 @@ int main (int argc, char *argv[]) {
     //==================================================================
     // Benchmark variables
     uint32_t th_id = 0;
-    uint32_t i = 0;
+    uint64_t i = 0;
     uint32_t jump = 0;
     uint32_t slice = (size / sizeof(uint32_t)) / MIC_NUM_THREADS ;
     uint32_t error_count = 0;

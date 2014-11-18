@@ -21,7 +21,7 @@
 //======================================================================
 int main (int argc, char *argv[]) {
 
-    uint32_t repetitions = 0;
+    uint64_t repetitions = 0;
     uint32_t ref_word = 0;
 
     if(argc != 3) {
@@ -30,7 +30,7 @@ int main (int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    repetitions = atoi(argv[1]);
+    repetitions = string_to_uint64(argv[1]);
     ref_word = get_refword(atoi(argv[2]));
 
     printf("Repetitions:%"PRIu32"\n",           repetitions);
@@ -42,7 +42,7 @@ int main (int argc, char *argv[]) {
     //==================================================================
     // Benchmark variables
     uint32_t th_id = 0;
-    uint32_t i = 0;
+    uint64_t i = 0;
     uint32_t error_count = 0;
     uint32_t final_ref_word = ref_word * 33;
 

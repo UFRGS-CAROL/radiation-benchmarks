@@ -50,7 +50,7 @@ int main (int argc, char *argv[]) {
     //==================================================================
     // Benchmark variables
     uint32_t th_id = 0;
-    uint32_t i = 0;
+    uint64_t i = 0;
     uint32_t error_count = 0;
     uint32_t final_ref_word = ref_word / repetitions * pow(ref_word, 32);
 
