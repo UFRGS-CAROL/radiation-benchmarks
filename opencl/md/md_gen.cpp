@@ -1,5 +1,5 @@
+#include <omp.h>
 #include "md.h"
-
 
 using namespace std;
 
@@ -74,8 +74,8 @@ extern const char *cl_source_md;
 int main() {
 
     // Problem Parameters
-    const int probSizes[4] = { 12288, 24576, 36864, 73728 };
-    int sizeClass = 1;
+    const int probSizes[6] = { 12288, 24576, 36864, 73728, 147456, 294912 };
+    int sizeClass = 6;
     int nAtom = probSizes[sizeClass - 1];
 
 	cout << "#Atons = " << nAtom << "\n";
@@ -100,14 +100,24 @@ int main() {
     // Seed random number generator
     srand48(8650341L);
 
+    FILE *fp = fopen("position", "wb" );
+    if(fp == NULL){
+        printf("Cant open position file\n");
+        exit(1);
+    }
     // Initialize positions -- random distribution in cubic domain
     for (int i = 0; i < nAtom; i++)
     {
         position[i].x = (drand48() * domainEdge);
         position[i].y = (drand48() * domainEdge);
         position[i].z = (drand48() * domainEdge);
+        fwrite(&position[i].x, 1, sizeof(double), fp);
+        fwrite(&position[i].y, 1, sizeof(double), fp);
+        fwrite(&position[i].z, 1, sizeof(double), fp);
     }
-
+    fclose(fp);
+	cout << "position file saved\n";
+	
     ocl_write_position_buffer(nAtom, position);
 
 	int totalPairs = buildNeighborList(nAtom, position,
@@ -120,7 +130,19 @@ int main() {
 
 	
 	ocl_write_neighborList_buffer(maxNeighbors, nAtom, neighborList);
- 
+
+    fp = fopen("neighborList", "wb" );
+    if(fp == NULL){
+        printf("Cant open neighborList file\n");
+        exit(1);
+    }
+    
+    for(int i = 0; i < maxNeighbors * nAtom; i++) {
+        fwrite(&neighborList[i], 1, sizeof(int), fp);
+    }
+    fclose(fp);
+	cout << "neighborList file saved\n";
+
 	ocl_set_kernel_args(maxNeighbors, nAtom);
 
 	ocl_exec_kernel(globalSize, localSize);
@@ -136,6 +158,20 @@ int main() {
     }
 
 	cout << "Results check\n";
+	
+    fp = fopen("gold", "wb" );
+    if(fp == NULL){
+        printf("Cant open gold file\n");
+        exit(1);
+    }
+    for(int i = 0; i < nAtom; i++) {
+        fwrite(&force[i].x, 1, sizeof(double), fp);
+        fwrite(&force[i].y, 1, sizeof(double), fp);
+        fwrite(&force[i].z, 1, sizeof(double), fp);
+    }
+    fclose(fp);
+
+	cout << "gold file saved\n";
 
     ocl_release_buffers();
     deinitOpenCL();
@@ -193,6 +229,8 @@ inline int buildNeighborList(const int nAtom, const double4* position,
     int totalPairs = 0;
     // Build Neighbor List
     // Find the nearest N atoms to each other atom, where N = maxNeighbors
+    omp_set_num_threads(8);
+    #pragma omp parallel for reduction(+: totalPairs)
     for (int i = 0; i < nAtom; i++)
     {
         // Current neighbor list for atom i, initialized to -1
