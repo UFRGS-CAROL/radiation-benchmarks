@@ -29,7 +29,7 @@
 //======================================================================
 int main (int argc, char *argv[]) {
 
-    uint32_t repetitions = 0;
+    uint64_t repetitions = 0;
     uint32_t ref_word = 0;
 
     if(argc != 3) {
@@ -38,10 +38,10 @@ int main (int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    repetitions = atoi(argv[1]);
+    repetitions = string_to_uint64(argv[1]);
     ref_word = get_refword(atoi(argv[2]));
 
-    printf("Repetitions:%"PRIu32"\n",           repetitions);
+    printf("Repetitions:%"PRIu64"\n",           repetitions);
     printf("Ref Word:0x%08x\n",                 ref_word);
 
     omp_set_num_threads(MIC_NUM_THREADS);
@@ -86,7 +86,7 @@ int main (int argc, char *argv[]) {
                 asm volatile("movl %%eax, %0" : "=r" (value_a) : : "eax");
                 printf("%d %d\n",value_a, value_b );
 
-                if (value_a != 2) {
+                if (value_a != value_b / pow(value_b, 4)) {
                     error_count++;
                     printf("%d it, %d pos, %d thread, 0x%08x syndrome\n", i, 0, th_id, value_a); \
                 }

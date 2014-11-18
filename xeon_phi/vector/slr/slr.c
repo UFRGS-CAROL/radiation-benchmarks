@@ -1,3 +1,4 @@
+#include "../../refword.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -11,26 +12,27 @@
 #define MIC_NUM_THREADS     4*MIC_NUM_CORES         // Max. 4 Threads per Core.
 #define MAX_SIZE            512*1024*MIC_NUM_CORES  // Max. 512KB per L2
 
-
-#define SIZE 8
-// 56 cores * 4 threads = 224
-// ITER multiple of 224 to equally schedule threads among cores
-#define ITER 22400000
+#define ELEMENTS 16     // 64 bytes (512bits) ZMM register / element size
 
 extern double elapsedTime (void);
 
 //======================================================================
 int main(int argc, char *argv[]) {
 
-    uint32_t repetitions=0;
+    uint64_t repetitions = 0;
+    uint32_t ref_word = 0;
 
-    if(argc != 2) {
-        printf("Please provide the number of <repetitions>.\n");
+    if(argc != 3) {
+        printf("Please provide the number of <repetitions> and <refword option>.\n");
+        print_refword();
         exit(EXIT_FAILURE);
     }
 
-    repetitions = atoi(argv[1]);
-    printf("Repetitions:%"PRIu32"\n",           repetitions);
+    repetitions = string_to_uint64(argv[1]);
+    ref_word = get_refword(atoi(argv[2]));
+
+    printf("Repetitions:%"PRIu64"\n",           repetitions);
+    printf("Ref Word:0x%08x\n",                 ref_word);
 
     omp_set_num_threads(MIC_NUM_THREADS);
     printf("Threads:%"PRIu32"\n",               MIC_NUM_THREADS);
@@ -51,28 +53,29 @@ int main(int argc, char *argv[]) {
             asm volatile ("nop");
             asm volatile ("nop");
 
-            __declspec(aligned(64)) double a[SIZE],b[SIZE],c[SIZE];
+            __declspec(aligned(64)) uint32_t a[ELEMENTS] ,b[ELEMENTS];
 
-            for (i=0; i<SIZE;i++) {
-                c[i]=b[i]=a[i]=(double)rand();
+            for (i=0; i<ELEMENTS; i++) {
+                b[i] = a[i] = (uint32_t)ref_word;
+            }
+
+            #pragma vector aligned (a,b)
+            for(i = 1; i < repetitions; i++) {
+                a[0:ELEMENTS] = b[0:ELEMENTS] << 1;
+                a[0:ELEMENTS] >>= 2;
+                a[0:ELEMENTS] <<= 1;
+            }
+
+            for(i = 0; i<ELEMENTS; i++) {
+                if (a[i] != ((ref_word << 1) >> 2) << 1) {
+                    error_count++;
+                    printf("%d it, %d pos, %d thread, 0x%08x syndrome\n", i, 0, th_id, a[i]); \
+                }
             }
 
             asm volatile ("nop");
             asm volatile ("nop");
             asm volatile ("nop");
-
-            #pragma vector aligned (a,b,c)
-            for(i=0; i<ITER;i++) {
-                a[0:SIZE]=b[0:SIZE]*c[0:SIZE]+a[0:SIZE];
-            }
-
-            asm volatile ("nop");
-            asm volatile ("nop");
-            asm volatile ("nop");
-
-
-        // need the gold output to chech errors
-        // count++;???
         }
     }
 

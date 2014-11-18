@@ -23,7 +23,7 @@
 int main (int argc, char *argv[]) {
 
     uint32_t size = 0;
-    uint32_t repetitions = 0;
+    uint64_t repetitions = 0;
     uint32_t ref_word = 0;
 
     if(argc != 4) {
@@ -32,7 +32,7 @@ int main (int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    repetitions = atoi(argv[1]);
+    repetitions = string_to_uint64(argv[1]);
     size = atoi(argv[2]);
     ref_word = get_refword(atoi(argv[3]));
 
@@ -55,7 +55,7 @@ int main (int argc, char *argv[]) {
     printf("Element size: %"PRIu32" bytes\n",   (uint32_t)sizeof(uint32_t));
     printf("Total elements: %"PRIu32"\n",     (uint32_t)(size / sizeof(uint32_t)));
     printf("Total size:%"PRIu32" KB (%"PRIu32" KB/Thread)\n",     size / 1024, (size / 1024) / MIC_NUM_THREADS);
-    printf("Repetitions:%"PRIu32"\n",           repetitions);
+    printf("Repetitions:%"PRIu64"\n",           repetitions);
     printf("Ref Word:0x%08x\n",                 ref_word);
 
     omp_set_num_threads(MIC_NUM_THREADS);
