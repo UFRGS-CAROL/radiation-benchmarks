@@ -1,0 +1,129 @@
+#include "../../refword.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <math.h>
+
+// Xeon Phi Configuration
+#define MIC_NUM_CORES       (56)                      // Max. 56 Cores (+1 core runs de OS)
+#define MIC_NUM_THREADS     (4*MIC_NUM_CORES)         // Max. 4 Threads per Core.
+
+//======================================================================
+#define LOOP_BLOCK(V) {\
+                        if (count##V != ref_word){ \
+                            error_count++; \
+                            printf("%d it, %d pos, %d thread, 0x%08x syndrome\n", i, 0, th_id, value); \
+                            asm volatile("mov %1, %0" : "=r" (count##V) : "r" (value) : ); \
+                        } \
+                    }
+
+//======================================================================
+int main (int argc, char *argv[]) {
+
+    uint32_t repetitions = 0;
+    uint32_t ref_word = 0;
+
+    if(argc != 3) {
+        printf("Please provide the number of <repetitions> and <refword option>.\n");
+        print_refword();
+        exit(EXIT_FAILURE);
+    }
+
+    repetitions = atoi(argv[1]);
+    ref_word = get_refword(atoi(argv[2]));
+
+    printf("Repetitions:%"PRIu32"\n",           repetitions);
+    printf("Ref Word:0x%08x\n",                 ref_word);
+
+    omp_set_num_threads(MIC_NUM_THREADS);
+    printf("Threads:%"PRIu32"\n",               MIC_NUM_THREADS);
+
+    //==================================================================
+    // Benchmark variables
+    uint32_t th_id = 0;
+    uint32_t i = 0;
+    uint32_t error_count = 0;
+    uint32_t final_ref_word = ref_word * 33;
+
+    #pragma offload target(mic)
+    {
+        #pragma omp parallel for private(th_id, i) reduction(+:error_count)
+        for(th_id = 0; th_id < MIC_NUM_THREADS; th_id++)
+        {
+            asm volatile ("nop");
+            asm volatile ("nop");
+            asm volatile ("nop");
+
+            uint32_t value = ref_word;
+
+            uint32_t count0  = 0 ;
+            uint32_t count1  = 0 ;
+            uint32_t count2  = 0 ;
+            uint32_t count3  = 0 ;
+            uint32_t count4  = 0 ;
+            uint32_t count5  = 0 ;
+            uint32_t count6  = 0 ;
+            uint32_t count7  = 0 ;
+
+            asm volatile("mov %1, %0" : "=r" (count0) : "r" (value) : );
+            asm volatile("mov %1, %0" : "=r" (count1) : "r" (value) : );
+            asm volatile("mov %1, %0" : "=r" (count2) : "r" (value) : );
+            asm volatile("mov %1, %0" : "=r" (count3) : "r" (value) : );
+            asm volatile("mov %1, %0" : "=r" (count4) : "r" (value) : );
+            asm volatile("mov %1, %0" : "=r" (count5) : "r" (value) : );
+            asm volatile("mov %1, %0" : "=r" (count6) : "r" (value) : );
+            asm volatile("mov %1, %0" : "=r" (count7) : "r" (value) : );
+
+            for (i = 1; i <= repetitions; i++) {
+
+                // DEBUG: injecting one error
+                //if(th_id == 0 && i == 0)
+                    //value = ~ref_word; // Bit-wise not
+
+                LOOP_BLOCK(0)
+                LOOP_BLOCK(1)
+                LOOP_BLOCK(2)
+                LOOP_BLOCK(3)
+                LOOP_BLOCK(4)
+                LOOP_BLOCK(5)
+                LOOP_BLOCK(6)
+                LOOP_BLOCK(7)
+
+                LOOP_BLOCK(0)
+                LOOP_BLOCK(1)
+                LOOP_BLOCK(2)
+                LOOP_BLOCK(3)
+                LOOP_BLOCK(4)
+                LOOP_BLOCK(5)
+                LOOP_BLOCK(6)
+                LOOP_BLOCK(7)
+
+                LOOP_BLOCK(0)
+                LOOP_BLOCK(1)
+                LOOP_BLOCK(2)
+                LOOP_BLOCK(3)
+                LOOP_BLOCK(4)
+                LOOP_BLOCK(5)
+                LOOP_BLOCK(6)
+                LOOP_BLOCK(7)
+
+
+                LOOP_BLOCK(0)
+                LOOP_BLOCK(1)
+                LOOP_BLOCK(2)
+                LOOP_BLOCK(3)
+                LOOP_BLOCK(4)
+                LOOP_BLOCK(5)
+                LOOP_BLOCK(6)
+                LOOP_BLOCK(7)
+            }
+            asm volatile ("nop");
+            asm volatile ("nop");
+            asm volatile ("nop");
+        }
+    }
+
+    printf("Errors: %"PRIu32"\n", error_count);
+    exit(EXIT_SUCCESS);
+}

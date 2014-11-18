@@ -1,75 +1,116 @@
+#include "../../refword.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <math.h>
 
 // Xeon Phi Configuration
-#define MIC_NUM_CORES       1                      // Max. 56 Cores (+1 core runs de OS)
-#define MIC_NUM_THREADS     4*MIC_NUM_CORES         // Max. 4 Threads per Core.
-#define MAX_SIZE            512*1024*MIC_NUM_CORES  // Max. 512KB per L2
+#define MIC_NUM_CORES       (56)                      // Max. 56 Cores (+1 core runs de OS)
+#define MIC_NUM_THREADS     (4*MIC_NUM_CORES)         // Max. 4 Threads per Core.
 
-#define ARRAY_SIZE 56000
-#define MAX 32000
+//======================================================================
+#define LOOP_BLOCK {\
+                        asm ("addl %1, %0" : "+r" (value) : "r" (ref_word));\
+                    }
 
 //======================================================================
 int main (int argc, char *argv[]) {
 
-    uint32_t repetitions=0;
+    uint32_t repetitions = 0;
+    uint32_t ref_word = 0;
 
-    if(argc != 2) {
-        printf("Please provide the number of <repetitions>.\n");
+    if(argc != 3) {
+        printf("Please provide the number of <repetitions> and <refword option>.\n");
+        print_refword();
         exit(EXIT_FAILURE);
     }
 
     repetitions = atoi(argv[1]);
+    ref_word = get_refword(atoi(argv[2]));
 
     printf("Repetitions:%"PRIu32"\n",           repetitions);
+    printf("Ref Word:0x%08x\n",                 ref_word);
 
     omp_set_num_threads(MIC_NUM_THREADS);
     printf("Threads:%"PRIu32"\n",               MIC_NUM_THREADS);
 
     //==================================================================
     // Benchmark variables
-    uint64_t i = 0;
-    uint64_t j = 0;
-    uint64_t arrayA[ARRAY_SIZE];
-    uint64_t arrayB[ARRAY_SIZE];
-    uint64_t error_count = 0;
+    uint32_t th_id = 0;
+    uint32_t i = 0;
+    uint32_t error_count = 0;
+    uint32_t final_ref_word = ref_word * 33;
 
-    for (i = 0; i < ARRAY_SIZE; i++) {
-        arrayA[i] = rand() % MAX;
-        arrayB[i] = rand() % MAX;
-    }
-
-    #pragma offload target(mic) in(arrayA, arrayB) reduction(+:error_count)
+    #pragma offload target(mic)
     {
-        #pragma omp parallel for
-        for(j = 0; j < MIC_NUM_CORES; j++)
+        #pragma omp parallel for private(th_id, i) reduction(+:error_count)
+        for(th_id = 0; th_id < MIC_NUM_THREADS; th_id++)
         {
             asm volatile ("nop");
             asm volatile ("nop");
             asm volatile ("nop");
 
-            int value=arrayA[j];
+            uint32_t value = ref_word;
 
-            for (i = 0; i < repetitions; i++) {
-                value += arrayB[j];
+            for (i = 1; i <= repetitions; i++) {
+
+                // DEBUG: injecting one error
+                //if(th_id == 0 && i == 0)
+                    //value = ~ref_word; // Bit-wise not
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                if (value != final_ref_word) {
+                    error_count++;
+                    printf("%d it, %d pos, %d thread, 0x%08x syndrome\n", i, 0, th_id, value); \
+                }
+                value = ref_word;
             }
-
-            // injecting one error
-            //      if(j == 1)
-            //          value = 1;
-
-            if(arrayA[j]+(arrayB[j]*repetitions) != value){
-                error_count++;
-            }
-
             asm volatile ("nop");
             asm volatile ("nop");
             asm volatile ("nop");
         }
     }
 
-    printf("%"PRIu64"\n", error_count);
+    printf("Errors: %"PRIu32"\n", error_count);
     exit(EXIT_SUCCESS);
 }
