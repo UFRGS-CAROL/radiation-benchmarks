@@ -1,65 +1,64 @@
-#include "../refword.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <inttypes.h>
+#include <stdint.h>     // uint32_t
+#include <inttypes.h>   // %"PRIu32"
+#include <unistd.h>     // Sleep
+#include <time.h>       // Time
+#include <omp.h>        // OpenMP
 
 // Xeon Phi Configuration
-#define MIC_NUM_CORES       (56)                      // Max. 56 Cores (+1 core runs de OS)
+#define MIC_NUM_CORES       (56)                       // Max. 56 Cores (+1 core runs de OS)
 #define MIC_NUM_THREADS     (1*MIC_NUM_CORES)         // Max. 4 Threads per Core.
-#define MAX_SIZE            (512*1024*MIC_NUM_CORES)  // Max. 512KB per L2
 
-//======================================================================
-#define LOOP_BLOCK {\
-                        if ((ptr_vector[jump] ^ ref_word)) { \
-                            error_count++; \
-                            printf("%d it, %d pos, %d thread, 0x%08x syndrome\n", i, jump, th_id, ptr_vector[jump] ^ ref_word); \
-                            ptr_vector[jump] = ref_word; \
-                        } \
-                        jump++; \
-                    }
+// =============================================================================
+uint64_t string_to_uint64(char *string) {
+    uint64_t result = 0;
+    char c;
 
-//======================================================================
+    for (  ; (c = *string ^ '0') <= 9 && c >= 0; ++string) {
+        result = result * 10 + c;
+    }
+    return result;
+}
+
+// =============================================================================
 int main (int argc, char *argv[]) {
 
     uint32_t size = 0;
     uint64_t repetitions = 0;
-    uint32_t ref_word = 0;
 
-    if(argc != 4) {
-        printf("Please provide the number of <repetitions> and <array size> and <refword option>.\n");
-        print_refword();
+    if(argc != 3) {
+        printf("Please provide the number of <repetitions> and <array size>.\n");
         exit(EXIT_FAILURE);
     }
 
     repetitions = string_to_uint64(argv[1]);
     size = atoi(argv[2]);
-    ref_word = get_refword(atoi(argv[3]));
 
-    if (size % 32 != 0) {
-        printf("The array size needs to be divisible by 32 (due to unrolling).\n");
+    if (size % (MIC_NUM_THREADS * sizeof(uint32_t)) != 0) {
+        printf("The array size needs divisible by %ld (#threads * element size).\n", MIC_NUM_THREADS * sizeof(uint32_t));
         exit(EXIT_FAILURE);
     }
 
-    if (size > MAX_SIZE) {
-        printf("The array size needs to be equal or smaller than %d (due to L2 cache size).\n", MAX_SIZE);
-        exit(EXIT_FAILURE);
-    }
-
-    if (size % (MIC_NUM_THREADS * 32 * sizeof(uint32_t)) != 0) {
-        printf("The array size needs divisible by %d (due to num. threads, unrolling and element size).\n", MIC_NUM_THREADS * 32 * sizeof(uint32_t));
-        exit(EXIT_FAILURE);
-    }
-
-
-    printf("Element size: %"PRIu32" bytes\n",   (uint32_t)sizeof(uint32_t));
-    printf("Total elements: %"PRIu32"\n",     (uint32_t)(size / sizeof(uint32_t)));
-    printf("Total size:%"PRIu32" KB (%"PRIu32" KB/Thread)\n",     size / 1024, (size / 1024) / MIC_NUM_THREADS);
-    printf("Repetitions:%"PRIu64"\n",           repetitions);
-    printf("Ref Word:0x%08x\n",                 ref_word);
-
+    if (repetitions == 0)       repetitions -= 1;   // MAX UINT64_T = 18446744073709551615
     omp_set_num_threads(MIC_NUM_THREADS);
-    printf("Threads:%"PRIu32"\n",               MIC_NUM_THREADS);
+
+    printf("#HEADER Elem.Size:%"PRIu32"B ", (uint32_t)sizeof(uint32_t));
+    printf("Elements:%"PRIu32" ",           (uint32_t)(size / sizeof(uint32_t)));
+    printf("ArraySize:%"PRIu32"KB ",        (uint32_t)(size / 1024));
+    printf("SizePerThread:%"PRIu32"KB ",    (uint32_t)(size / 1024) / MIC_NUM_THREADS);
+    printf("Repetitions:%"PRIu64" ",        repetitions);
+    printf("Threads:%"PRIu32"\n",           MIC_NUM_THREADS);
+
+    //==================================================================
+    // Time stamp
+    {
+        time_t     now = time(0);
+        struct tm  tstruct = *localtime(&now);
+        char       buffer[100];
+        strftime(buffer, sizeof(buffer), "#BEGIN Y:%Y M:%m D:%d Time:%X\n", &tstruct);
+        printf("%s", buffer);
+    }
 
     //==================================================================
     // Benchmark variables
@@ -73,12 +72,6 @@ int main (int argc, char *argv[]) {
     ptr_vector = (uint32_t *)valloc(size);
 
     //==================================================================
-    // Initialize the vector
-    for (i = 0; i < (size / sizeof(uint32_t)); i++) {
-        ptr_vector[i] = ref_word;
-    }
-
-    //==================================================================
     // Start the parallel region
     #pragma offload target(mic) in(ptr_vector:length(size / sizeof(uint32_t)))
     {
@@ -87,62 +80,67 @@ int main (int argc, char *argv[]) {
         {
             asm volatile ("nop");
             asm volatile ("nop");
-            asm volatile ("nop");
+
+            uint32_t ref_word = 0;
 
             for (i = 0; i < repetitions; i++) {
-                for (jump = slice * th_id; jump < slice * (th_id + 1); ) {
 
-                    // DEBUG: injecting one error
-                    //if(th_id == 0 && i == 0 && jump == 0)
-                        //ptr_vector[jump] = ~ref_word; // Bit-wise not
+                //==============================================================
+                // Initialize the vector with a new REFWORD
+                if ((i % 3) == 0)
+                    asm volatile("movl $0x0, %0" : "=r" (ref_word));
+                else if ((i % 3) == 1)
+                    asm volatile("movl $0xFFFFFFFF, %0" : "=r" (ref_word));
+                else
+                    asm volatile("movl $0x55555555, %0" : "=r" (ref_word));
 
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
-                    LOOP_BLOCK
+                for (jump = slice * th_id; jump < slice * (th_id + 1); jump++) {
+                    ptr_vector[jump] = ref_word;
                 }
+
+                //==============================================================
+                // Real work
+                sleep(1);
+
+                for (jump = slice * th_id; jump < slice * (th_id + 1); jump++) {
+
+                    //==========================================================
+                    // DEBUG: injecting one error (Bit-wise not RefWord)
+                    //if(th_id == 0 && i == 0 && jump == 0)
+                        //ptr_vector[jump] = ~ref_word;
+
+                    if (ptr_vector[jump] != ref_word) {
+                        //======================================================
+                        // Time stamp
+                        time_t     now = time(0);
+                        struct tm  tstruct = *localtime(&now);
+                        char       buffer[100];
+                        strftime(buffer, sizeof(buffer), "#ERROR Y:%Y M:%m D:%d Time:%X ", &tstruct);
+                        printf("%s", buffer);
+
+                        //======================================================
+                        // Error log
+                        error_count++;
+                        printf("IT:%"PRIu64" POS:%d THREAD:%d, REF:0x%08x FOUND:0x%08x\n", i, jump, th_id, ref_word, ptr_vector[jump]);
+                    }
+
+                }
+
             }
-            asm volatile ("nop");
             asm volatile ("nop");
             asm volatile ("nop");
         }
     }
 
-    printf("Errors: %"PRIu32"\n", error_count);
+    //==================================================================
+    // Time stamp
+    {
+        time_t     now = time(0);
+        struct tm  tstruct = *localtime(&now);
+        char       buffer[100];
+        strftime(buffer, sizeof(buffer), "#FINAL Y:%Y M:%m D:%d Time:%X ", &tstruct);
+        printf("%s", buffer);
+        printf("TotalErrors:%"PRIu32"\n", error_count);
+    }
     exit(EXIT_SUCCESS);
 }

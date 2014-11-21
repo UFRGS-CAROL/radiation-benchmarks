@@ -8,7 +8,7 @@
 // Xeon Phi Configuration
 #define MIC_NUM_CORES       (56)                      // Max. 56 Cores (+1 core runs de OS)
 #define MIC_NUM_THREADS     (4*MIC_NUM_CORES)         // Max. 4 Threads per Core.
-
+#define INNER               3000                       // Inner repetitions before test and change the refword
 //======================================================================
 #define LOOP_BLOCK {\
                         asm ("addl %1, %0" : "+r" (value) : "r" (ref_word));\
@@ -31,6 +31,7 @@ int main (int argc, char *argv[]) {
 
     printf("Repetitions:%"PRIu64"\n",           repetitions);
     printf("Ref Word:0x%08x\n",                 ref_word);
+    printf("Inner repetitions:%d\n",           INNER * 32);
 
     omp_set_num_threads(MIC_NUM_THREADS);
     printf("Threads:%"PRIu32"\n",               MIC_NUM_THREADS);

@@ -1,10 +1,9 @@
 #include <inttypes.h>
 
 #define REFWORD0            0
-#define REFWORD1            1
-#define REFWORD2            0x55555555
-#define REFWORD3            0xFFFFFFFF
-
+#define REFWORD1            0xFFFFFFFF
+#define REFWORD2            1
+#define REFWORD3            0x55555555
 
 // =============================================================================
 uint64_t string_to_uint64(char *string) {
