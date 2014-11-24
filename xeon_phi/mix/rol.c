@@ -1,18 +1,22 @@
-#include "../../refword.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include <omp.h>
-
-//https://software.intel.com/en-us/articles/using-intel-avx-without-writing-avx
+#include <stdint.h>     // uint32_t
+#include <inttypes.h>   // %"PRIu32"
+#include <unistd.h>     // Sleep
+#include <time.h>       // Time
+#include <omp.h>        // OpenMP
 
 // Xeon Phi Configuration
-#define MIC_CORES       1                      // Max. 56 Cores (+1 core runs de OS)
-#define MIC_THREADS     4*MIC_CORES         // Max. 4 Threads per Core.
-#define MAX_SIZE            512*1024*MIC_CORES  // Max. 512KB per L2
+#define MIC_CORES       (56)            // Max. 56 Cores (+1 core runs de OS)
+#define MIC_THREADS     (4*MIC_CORES)   // Max. 4 Threads per Core.
+#define MAX_ERROR       32              // Max. number of errors per repetition
+#define LOG_SIZE        128             // Line size per error
+#define BUSY            10000000         // Repetitions in the busy wait
 
-#define ITEMS 16     // 64 bytes (512bits) ZMM register / element size
+//======================================================================
+#define LOOP_BLOCK {\
+                        asm ("rol %0" : "+r" (value) : "0" (value) );\
+                    }
 
 // =============================================================================
 uint64_t string_to_uint64(char *string) {
@@ -26,7 +30,7 @@ uint64_t string_to_uint64(char *string) {
 }
 
 //======================================================================
-int main(int argc, char *argv[]) {
+int main (int argc, char *argv[]) {
 
     uint64_t repetitions = 0;
 
@@ -90,26 +94,61 @@ int main(int argc, char *argv[]) {
                 asm volatile ("nop");
                 asm volatile ("nop");
 
-                __declspec(aligned(64)) uint32_t a[ITEMS] ,b[ITEMS];
+                uint32_t value = refw;
 
-                for (i=0; i<ITEMS; i++) {
-                    b[i] = a[i] = (uint32_t)refw;
+                // DEBUG: injecting one error
+                //if(th_id == 0 && i == 0)
+                    //value = ~refw; // Bit-wise not
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+                LOOP_BLOCK
+
+                if (value != refw) {
+                    errors++;
+                    fprintf(stderr,"%d it, %d pos, %d thread, 0x%08x syndrome\n", i, 0, th_id, value ^ refw); \
+                    value = refw;
                 }
-
-                #pragma vector aligned (a,b)
-                a[0:ITEMS] *= b[0:ITEMS];
-
-                for(i = 0; i<ITEMS; i++) {
-                    if (a[i] != pow(refw, repetitions)) {
-                        errors++;
-                        fprintf(stderr,"%d it, %d pos, %d thread, 0x%08x syndrome\n", i, 0, th_id, a[i]); \
-                    }
-                }
-
-                asm volatile ("nop");
-                asm volatile ("nop");
-                asm volatile ("nop");
             }
+            asm volatile ("nop");
+            asm volatile ("nop");
+            asm volatile ("nop");
         }
     }
 

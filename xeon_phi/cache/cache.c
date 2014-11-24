@@ -11,7 +11,10 @@
 #define MIC_THREADS     (1*MIC_CORES)   // Max. 4 Threads per Core.
 #define MAX_ERROR       32              // Max. number of errors per repetition
 #define LOG_SIZE        128             // Line size per error
-#define BUSY            5000000         // Repetitions in the busy wait
+#define BUSY            10000000         // Repetitions in the busy wait
+
+// ~ #define DEBUG       if (i==0 && j==0 && errors==0) asm volatile("movl %1, %0" : "=r" (ptr_vector[j]) : "r" (~ptr_vector[j]));
+#define DEBUG /*OFF*/
 
 // =============================================================================
 uint64_t string_to_uint64(char *string) {
@@ -47,7 +50,7 @@ int main (int argc, char *argv[]) {
     omp_set_num_threads(MIC_THREADS);
 
     fprintf(stderr,"#HEADER Elem.Size:%"PRIu32"B ", (uint32_t)sizeof(uint32_t));
-    fprintf(stderr,"ITEMS:%"PRIu32" ",           (uint32_t)(size / sizeof(uint32_t)));
+    fprintf(stderr,"ITEMS:%"PRIu32" ",              (uint32_t)(size / sizeof(uint32_t)));
     fprintf(stderr,"ArraySize:%"PRIu32"KB ",        (uint32_t)(size / 1024));
     fprintf(stderr,"SizePerThread:%"PRIu32"KB ",    (uint32_t)(size / 1024) / MIC_THREADS);
     fprintf(stderr,"Repetitions:%"PRIu64" ",        repetitions);
@@ -67,7 +70,7 @@ int main (int argc, char *argv[]) {
     // Benchmark variables
     uint32_t th_id = 0;
     uint64_t i = 0;
-    uint32_t jump = 0;
+    uint32_t j = 0;
     uint32_t slice = (size / sizeof(uint32_t)) / MIC_THREADS ;
     uint32_t errors = 0;
 
@@ -99,7 +102,7 @@ int main (int argc, char *argv[]) {
         // Parallel region
         #pragma offload target(mic) in(ptr_vector:length(size / sizeof(uint32_t)))  inout(log)
         {
-            #pragma omp parallel for private(th_id, jump) reduction(+:errors)
+            #pragma omp parallel for private(th_id, j) reduction(+:errors)
             for(th_id = 0; th_id < MIC_THREADS; th_id++)
             {
                 asm volatile ("nop");
@@ -116,8 +119,8 @@ int main (int argc, char *argv[]) {
                 else
                     asm volatile("movl $0x55555555, %0" : "=r" (refw));
 
-                for (jump = slice * th_id; jump < slice * (th_id + 1); jump++) {
-                    ptr_vector[jump] = refw;
+                for (j = slice * th_id; j < slice * (th_id + 1); j++) {
+                    ptr_vector[j] = refw;
                 }
 
                 //==============================================================
@@ -130,16 +133,12 @@ int main (int argc, char *argv[]) {
                     asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
                 }
 
-                for (jump = slice * th_id; jump < slice * (th_id + 1); jump++) {
+                for (j = slice * th_id; j < slice * (th_id + 1); j++) {
+                    DEBUG
 
-                    //==========================================================
-                    // DEBUG: injecting one error (Bit-wise not RefWord)
-                    //if(th_id == 0 && i == 0 && jump == 0)
-                        //ptr_vector[jump] = ~refw;
-
-                    if (ptr_vector[jump] != refw) {
+                    if (ptr_vector[j] != refw) {
                         snprintf(log[th_id][errors++], LOG_SIZE,
-                                 "%s IT:%"PRIu64" POS:%d TH:%d, REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, refw, ptr_vector[jump]);
+                                 "%s IT:%"PRIu64" POS:%d TH:%d REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, refw, ptr_vector[j]);
                     }
 
                 }

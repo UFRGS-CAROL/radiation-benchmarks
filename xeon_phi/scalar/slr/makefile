@@ -1,4 +1,5 @@
-
+# make sure you source the compilervars of intel
+#   source /opt/intel/composerxe/bin/compilervars.sh intel64;
 all:
-	icc -vec-report3 -no-vec -masm=att -openmp slr.c -o slr -O2
+	icc -O2 -vec-report3 -masm=att -openmp -no-vec slr.c -o slr
 

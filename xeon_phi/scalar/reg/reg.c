@@ -11,21 +11,17 @@
 #define MIC_THREADS     (4*MIC_CORES)   // Max. 4 Threads per Core.
 #define MAX_ERROR       32              // Max. number of errors per repetition
 #define LOG_SIZE        128             // Line size per error
-#define BUSY            5000000         // Repetitions in the busy wait
+#define BUSY            10000000         // Repetitions in the busy wait
+
+// ~ #define DEBUG           if (i==0 && errors==0) asm volatile("movl %1, %0" : "=r" (count0) : "r" (~count0));
+#define DEBUG /*OFF*/
 
 //======================================================================
 #define LOOP_BLOCK(V) {\
-                        if (count##V != refw) { \
-                            /* Time stamp */ \
-                            time_t     now = time(0); \
-                            struct tm  tstruct = *localtime(&now); \
-                            char       buffer[100]; \
-                            strftime(buffer, sizeof(buffer), "#ERROR Y:%Y M:%m D:%d Time:%X ", &tstruct); \
-                            fprintf(stderr,"%s", buffer); \
-                            /* Error log */ \
-                            errors++; \
-                            fprintf(stderr,"IT:%"PRIu64" POS:%d THREAD:%d, REF:0x%08x WAS:0x%08x\n", i, 0, th_id, refw, count##V); \
-                        } \
+        DEBUG \
+        if (count##V != refw) { \
+            snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, refw, count##V); \
+        } \
                     }
 
 // =============================================================================
@@ -53,8 +49,8 @@ int main (int argc, char *argv[]) {
     if (repetitions == 0)       repetitions -= 1;   // MAX UINT64_T = 18446744073709551615
     omp_set_num_threads(MIC_THREADS);
 
-    fprintf(stderr,"#HEADER Repetitions:%"PRIu64" ",        repetitions);
-    fprintf(stderr,"Threads:%"PRIu32"\n",           MIC_THREADS);
+    fprintf(stderr,"#HEADER Repetitions:%"PRIu64" ",    repetitions);
+    fprintf(stderr,"Threads:%"PRIu32"\n",               MIC_THREADS);
 
     //==================================================================
     // Time stamp

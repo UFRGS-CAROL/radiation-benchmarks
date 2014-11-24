@@ -11,7 +11,7 @@
 #define MIC_THREADS     (4*MIC_CORES)   // Max. 4 Threads per Core.
 #define MAX_ERROR       32              // Max. number of errors per repetition
 #define LOG_SIZE        128             // Line size per error
-#define BUSY            5000000         // Repetitions in the busy wait
+#define BUSY            10000000         // Repetitions in the busy wait
 
 #define ITEMS           16              // 64 bytes (512bits) ZMM register / element size
 
@@ -20,7 +20,7 @@
             asm volatile("vmovdqa32 %%zmm"#V", %0" : "=m" (vec[0]) : : "zmm"#V); \
             for(j = 0; j < ITEMS; j++) { \
                 if (vec[j] != refw) \
-                    snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d, REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, refw, vec[j]); \
+                    snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, refw, vec[j]); \
             } \
         }
 
