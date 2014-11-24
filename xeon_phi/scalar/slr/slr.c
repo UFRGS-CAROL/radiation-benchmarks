@@ -6,8 +6,8 @@
 #include <math.h>
 
 // Xeon Phi Configuration
-#define MIC_NUM_CORES       (56)                      // Max. 56 Cores (+1 core runs de OS)
-#define MIC_NUM_THREADS     (4*MIC_NUM_CORES)         // Max. 4 Threads per Core.
+#define MIC_CORES       (56)                      // Max. 56 Cores (+1 core runs de OS)
+#define MIC_THREADS     (4*MIC_CORES)         // Max. 4 Threads per Core.
 
 //======================================================================
 #define LOOP_BLOCK {\
@@ -21,46 +21,46 @@
 int main (int argc, char *argv[]) {
 
     uint64_t repetitions = 0;
-    uint32_t ref_word = 0;
+    uint32_t refw = 0;
 
     if(argc != 3) {
-        printf("Please provide the number of <repetitions> and <refword option>.\n");
+        fprintf(stderr,"Please provide the number of <repetitions> and <refword option>.\n");
         print_refword();
         exit(EXIT_FAILURE);
     }
 
     repetitions = string_to_uint64(argv[1]);
-    ref_word = get_refword(atoi(argv[2]));
+    refw = get_refword(atoi(argv[2]));
 
-    printf("Repetitions:%"PRIu64"\n",           repetitions);
-    printf("Ref Word:0x%08x\n",                 ref_word);
+    fprintf(stderr,"Repetitions:%"PRIu64"\n",           repetitions);
+    fprintf(stderr,"Ref Word:0x%08x\n",                 refw);
 
-    omp_set_num_threads(MIC_NUM_THREADS);
-    printf("Threads:%"PRIu32"\n",               MIC_NUM_THREADS);
+    omp_set_num_threads(MIC_THREADS);
+    fprintf(stderr,"Threads:%"PRIu32"\n",               MIC_THREADS);
 
     //==================================================================
     // Benchmark variables
     uint32_t th_id = 0;
     uint64_t i = 0;
-    uint32_t error_count = 0;
-    uint32_t final_ref_word = ((ref_word << 1) >> 2) << 1;
+    uint32_t errors = 0;
+    uint32_t final_refw = ((refw << 1) >> 2) << 1;
 
     #pragma offload target(mic)
     {
-        #pragma omp parallel for private(th_id, i) reduction(+:error_count)
-        for(th_id = 0; th_id < MIC_NUM_THREADS; th_id++)
+        #pragma omp parallel for private(th_id, i) reduction(+:errors)
+        for(th_id = 0; th_id < MIC_THREADS; th_id++)
         {
             asm volatile ("nop");
             asm volatile ("nop");
             asm volatile ("nop");
 
-            uint32_t value = ref_word;
+            uint32_t value = refw;
 
             for (i = 1; i <= repetitions; i++) {
 
                 // DEBUG: injecting one error
                 //if(th_id == 0 && i == 0)
-                    //value = ~ref_word; // Bit-wise not
+                    //value = ~refw; // Bit-wise not
 
                 LOOP_BLOCK
                 LOOP_BLOCK
@@ -102,10 +102,10 @@ int main (int argc, char *argv[]) {
                 LOOP_BLOCK
                 LOOP_BLOCK
 
-                if (value != final_ref_word) {
-                    error_count++;
-                    printf("%d it, %d pos, %d thread, 0x%08x syndrome\n", i, 0, th_id, value ^ final_ref_word); \
-                    value = ref_word;
+                if (value != final_refw) {
+                    errors++;
+                    fprintf(stderr,"%d it, %d pos, %d thread, 0x%08x syndrome\n", i, 0, th_id, value ^ final_refw); \
+                    value = refw;
                 }
             }
             asm volatile ("nop");
@@ -114,6 +114,6 @@ int main (int argc, char *argv[]) {
         }
     }
 
-    printf("Errors: %"PRIu32"\n", error_count);
+    fprintf(stderr,"Errors: %"PRIu32"\n", errors);
     exit(EXIT_SUCCESS);
 }

@@ -8,11 +8,11 @@
 //https://software.intel.com/en-us/articles/using-intel-avx-without-writing-avx
 
 // Xeon Phi Configuration
-#define MIC_NUM_CORES       1                      // Max. 56 Cores (+1 core runs de OS)
-#define MIC_NUM_THREADS     4*MIC_NUM_CORES         // Max. 4 Threads per Core.
-#define MAX_SIZE            512*1024*MIC_NUM_CORES  // Max. 512KB per L2
+#define MIC_CORES       1                      // Max. 56 Cores (+1 core runs de OS)
+#define MIC_THREADS     4*MIC_CORES         // Max. 4 Threads per Core.
+#define MAX_SIZE            512*1024*MIC_CORES  // Max. 512KB per L2
 
-#define ELEMENTS 16     // 64 bytes (512bits) ZMM register / element size
+#define ITEMS 16     // 64 bytes (512bits) ZMM register / element size
 
 extern double elapsedTime (void);
 
@@ -20,58 +20,58 @@ extern double elapsedTime (void);
 int main(int argc, char *argv[]) {
 
     uint64_t repetitions = 0;
-    uint32_t ref_word = 0;
+    uint32_t refw = 0;
 
     if(argc != 3) {
-        printf("Please provide the number of <repetitions> and <refword option>.\n");
+        fprintf(stderr,"Please provide the number of <repetitions> and <refword option>.\n");
         print_refword();
         exit(EXIT_FAILURE);
     }
 
     repetitions = string_to_uint64(argv[1]);
-    ref_word = get_refword(atoi(argv[2]));
+    refw = get_refword(atoi(argv[2]));
 
-    printf("Repetitions:%"PRIu64"\n",           repetitions);
-    printf("Ref Word:0x%08x\n",                 ref_word);
+    fprintf(stderr,"Repetitions:%"PRIu64"\n",           repetitions);
+    fprintf(stderr,"Ref Word:0x%08x\n",                 refw);
 
-    omp_set_num_threads(MIC_NUM_THREADS);
-    printf("Threads:%"PRIu32"\n",               MIC_NUM_THREADS);
+    omp_set_num_threads(MIC_THREADS);
+    fprintf(stderr,"Threads:%"PRIu32"\n",               MIC_THREADS);
 
     //==================================================================
     // Benchmark variables
     double startTime,  duration;
     uint32_t th_id = 0;
     uint64_t i = 0;
-    uint32_t error_count = 0;
+    uint32_t errors = 0;
     uint32_t ones;
 
     asm volatile("movl $0xFFFFFFFF, %0" : "=r" (ones));
 
     #pragma offload target(mic)
     {
-        #pragma omp parallel for private(th_id, i) reduction(+:error_count)
-        for(th_id = 0; th_id < MIC_NUM_THREADS; th_id++)
+        #pragma omp parallel for private(th_id, i) reduction(+:errors)
+        for(th_id = 0; th_id < MIC_THREADS; th_id++)
         {
             asm volatile ("nop");
             asm volatile ("nop");
             asm volatile ("nop");
 
-            __declspec(aligned(64)) uint32_t a[ELEMENTS] ,b[ELEMENTS];
+            __declspec(aligned(64)) uint32_t a[ITEMS] ,b[ITEMS];
 
-            for (i=0; i<ELEMENTS; i++) {
-                b[i] = a[i] = (uint32_t)ref_word;
+            for (i=0; i<ITEMS; i++) {
+                b[i] = a[i] = (uint32_t)refw;
             }
 
             #pragma vector aligned (a,b)
             for(i = 1; i < repetitions; i++) {
-                a[0:ELEMENTS] = b[0:ELEMENTS] & ones;
-                b[0:ELEMENTS] = a[0:ELEMENTS] & ones;
+                a[0:ITEMS] = b[0:ITEMS] & ones;
+                b[0:ITEMS] = a[0:ITEMS] & ones;
             }
 
-            for(i = 0; i<ELEMENTS; i++) {
-                if (a[i] != ref_word) {
-                    error_count++;
-                    printf("%d it, %d pos, %d thread, 0x%08x syndrome\n", i, 0, th_id, a[i]); \
+            for(i = 0; i<ITEMS; i++) {
+                if (a[i] != refw) {
+                    errors++;
+                    fprintf(stderr,"%d it, %d pos, %d thread, 0x%08x syndrome\n", i, 0, th_id, a[i]); \
                 }
             }
 
@@ -81,6 +81,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("Errors: %"PRIu32"\n", error_count);
+    fprintf(stderr,"Errors: %"PRIu32"\n", errors);
     exit(EXIT_SUCCESS);
 }

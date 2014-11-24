@@ -33,12 +33,12 @@ uint32_t lfsr(){
 
 //======================================================================
 inline void print_refword() {
-    printf("Refword option:\n");
-    printf("\t 0 = 0x%08x\n", REFWORD0);
-    printf("\t 1 = 0x%08x\n", REFWORD1);
-    printf("\t 2 = 0x%08x\n", REFWORD2);
-    printf("\t 3 = 0x%08x\n", REFWORD3);
-    printf("\t 4 = LFSR (RANDOM)\n");
+    fprintf(stderr,"Refword option:\n");
+    fprintf(stderr,"\t 0 = 0x%08x\n", REFWORD0);
+    fprintf(stderr,"\t 1 = 0x%08x\n", REFWORD1);
+    fprintf(stderr,"\t 2 = 0x%08x\n", REFWORD2);
+    fprintf(stderr,"\t 3 = 0x%08x\n", REFWORD3);
+    fprintf(stderr,"\t 4 = LFSR (RANDOM)\n");
 };
 
 //======================================================================
