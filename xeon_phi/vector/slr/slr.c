@@ -17,8 +17,8 @@
 
 #define ITEMS_INT           16              // 64 bytes (512bits) ZMM register / element size
 
-// ~ #define DEBUG           if (i==0 && j==0 && errors==0) asm volatile("movl %1, %0" : "=r" (value_int) : "r" (~value_int));
-#define DEBUG /*OFF*/
+// ~ #define DEBUG_INT           if (i==0 && j==0 && errors==0) vec_int[0] = ~vec_int[0];
+#define DEBUG_INT /*OFF*/
 
 //======================================================================
 #define LOOP_SLR {\
@@ -40,11 +40,11 @@
         asm volatile("vpslld $0x02, %%zmm0, %%zmm0" : : : "zmm0");\
         asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
         \
-        DEBUG \
         asm volatile("vmovdqa32 %%zmm0, %0" : "=m" (vec_int[0]) : : "zmm0"); \
+        DEBUG_INT \
         for(k = 0; k < ITEMS_INT; k++) { \
             if (vec_int[k] != (((ref_int1 >> 1) << 2 ) >> 1)) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x\n", i, k, th_id, (((ref_int1 >> 1) << 2 ) >> 1), vec_int[k]); \
+                snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x", i, k, th_id, (((ref_int1 >> 1) << 2 ) >> 1), vec_int[k]); \
         } \
                 }
 
@@ -71,11 +71,11 @@
         asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
         asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
         \
-        DEBUG \
         asm volatile("vmovdqa32 %%zmm3, %0" : "=m" (vec_int[0]) : : "zmm3"); \
+        DEBUG_INT \
         for(k = 0; k < ITEMS_INT; k++) { \
             if (vec_int[k] != (ref_int2 << 4)) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x\n", i, k, th_id, (ref_int2 << 4), vec_int[k]); \
+                snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x", i, k, th_id, (ref_int2 << 4), vec_int[k]); \
         } \
                 }
 
@@ -93,11 +93,11 @@
         asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
         asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
         \
-        DEBUG \
         asm volatile("vmovdqa32 %%zmm5, %0" : "=m" (vec_int[0]) : : "zmm5"); \
+        DEBUG_INT \
         for(k = 0; k < ITEMS_INT; k++) { \
             if (vec_int[k] != (ref_int3 << 8)) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x\n", i, k, th_id, (ref_int3 << 8), vec_int[k]); \
+                snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x", i, k, th_id, (ref_int3 << 8), vec_int[k]); \
         } \
                 }
 

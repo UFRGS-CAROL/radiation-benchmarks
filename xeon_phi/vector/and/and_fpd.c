@@ -49,7 +49,7 @@
         asm volatile("vmovdqa32 %%zmm0, %0" : "=m" (vec_int[0]) : : "zmm0"); \
         for(k = 0; k < ITEMS_INT; k++) { \
             if (vec_int[k] != ref_int1) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x\n", i, k, th_id, ref_int1, vec_int[k]); \
+                snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x", i, k, th_id, ref_int1, vec_int[k]); \
         } \
                 }
 

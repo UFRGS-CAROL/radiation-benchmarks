@@ -42,7 +42,7 @@
         asm ("shl %0" : "+r" (value_int) : "0" (value_int) );\
         \
         if (value_int != (((ref_int1 << 1) >> 2) << 1)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:SLR REF:0x%08x WAS:0x%08x\n", i, j, th_id,  (((ref_int1 << 1) >> 2) << 1), value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:SLR REF:0x%08x WAS:0x%08x", i, j, th_id,  (((ref_int1 << 1) >> 2) << 1), value_int); \
                 }
 
 #define LOOP_ADD {\
@@ -66,7 +66,7 @@
         asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
         \
         if (value_int != (ref_int2 << 4)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x\n", i, j, th_id, (ref_int2 << 4), value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int2 << 4), value_int); \
                 }
 
 #define LOOP_MUL {\
@@ -81,7 +81,7 @@
         asm volatile("imul $0x2, %0" : "+r" (value_int));\
         \
         if (value_int != (ref_int3 << 8)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x\n", i, j, th_id, (ref_int3 << 8), value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int3 << 8), value_int); \
                 }
 
 #define LOOP_DIV {\
@@ -101,7 +101,7 @@
         /* Copy back the operands to check the division */ \
         asm volatile("movl %%eax, %0" : "=r" (value_int) : : "eax"); \
         if (value_int != (ref_int1 >> 4)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:DIV REF:0x%08x WAS:0x%08x\n", i, j, th_id, (ref_int1 >> 4), value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:DIV REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int1 >> 4), value_int); \
                 }
 
 //======================================================================

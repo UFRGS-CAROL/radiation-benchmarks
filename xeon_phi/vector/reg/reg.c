@@ -21,7 +21,7 @@
             asm volatile("vmovdqa32 %%zmm"#V", %0" : "=m" (vec_int[0]) : : "zmm"#V); \
             for(j = 0; j < ITEMS_INT; j++) { \
                 if (vec_int[j] != ref_int) \
-                    snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:REG REF:0x%08x WAS:0x%08x\n", i, j, th_id, ref_int, vec_int[j]); \
+                    snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:REG REF:0x%08x WAS:0x%08x", i, j, th_id, ref_int, vec_int[j]); \
             } \
         }
 

@@ -130,7 +130,7 @@ int main (int argc, char *argv[]) {
 
                     if (ptr_vector[j] != ref_int) {
                         snprintf(log[th_id][errors++], LOG_SIZE,
-                                 "IT:%"PRIu64" POS:%d TH:%d OP:MEM REF:0x%08x WAS:0x%08x\n", i, j, th_id, ref_int, ptr_vector[j]);
+                                 "IT:%"PRIu64" POS:%d TH:%d OP:MEM REF:0x%08x WAS:0x%08x", i, j, th_id, ref_int, ptr_vector[j]);
                     }
 
                 }

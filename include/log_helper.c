@@ -74,18 +74,18 @@ int start_log_file(char *benchmark_name, char *test_info){
     file_time = time(NULL);
     ptm = gmtime(&file_time);
 
-    snprintf(day, sizeof(day + 1), "%d", ptm->tm_mday);
-    snprintf(month, sizeof(month + 1), "%d", ptm->tm_mon+1);
-    snprintf(year, sizeof(year + 1), "%d", ptm->tm_year+1900);
-    snprintf(hour, sizeof(hour + 1), "%d", ptm->tm_hour);
-    snprintf(minute, sizeof(minute + 1), "%d", ptm->tm_min);
-    snprintf(second, sizeof(second + 1), "%d", ptm->tm_sec);
-    strcpy(log_file_name,day);strcat(log_file_name,"_");
-    strcat(log_file_name,month);strcat(log_file_name,"_");
-    strcat(log_file_name,year);strcat(log_file_name,"_");
-    strcat(log_file_name,hour);strcat(log_file_name,"_");
-    strcat(log_file_name,minute);strcat(log_file_name,"_");
-    strcat(log_file_name,second);strcat(log_file_name,"_");
+    snprintf(day,       sizeof(day + 1),    "%02d", ptm->tm_mday);
+    snprintf(month,     sizeof(month + 1),  "%02d", ptm->tm_mon+1);
+    snprintf(year,      sizeof(year + 1),   "%04d", ptm->tm_year+1900);
+    snprintf(hour,      sizeof(hour + 1),   "%02d", ptm->tm_hour);
+    snprintf(minute,    sizeof(minute + 1), "%02d", ptm->tm_min);
+    snprintf(second,    sizeof(second + 1), "%02d", ptm->tm_sec);
+    strcpy(log_file_name,day);      strcat(log_file_name,"_");
+    strcat(log_file_name,month);    strcat(log_file_name,"_");
+    strcat(log_file_name,year);     strcat(log_file_name,"_");
+    strcat(log_file_name,hour);     strcat(log_file_name,"_");
+    strcat(log_file_name,minute);   strcat(log_file_name,"_");
+    strcat(log_file_name,second);   strcat(log_file_name,"_");
     strcat(log_file_name,benchmark_name);
     strcat(log_file_name,".log");
 

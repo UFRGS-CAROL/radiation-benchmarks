@@ -41,7 +41,7 @@
         \
         DEBUG \
         if (value_int != ref_int1) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ROL REF:0x%08x WAS:0x%08x\n", i, j, th_id, ref_int1, value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ROL REF:0x%08x WAS:0x%08x", i, j, th_id, ref_int1, value_int); \
                 }
 
 #define LOOP_ADD {\
@@ -66,7 +66,7 @@
         \
         DEBUG \
         if (value_int != (ref_int2 << 4)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x\n", i, j, th_id, (ref_int2 << 4), value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int2 << 4), value_int); \
                 }
 
 #define LOOP_MUL {\
@@ -82,7 +82,7 @@
         \
         DEBUG \
         if (value_int != (ref_int3 << 8)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x\n", i, j, th_id, (ref_int3 << 8), value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int3 << 8), value_int); \
                 }
 
 #define LOOP_DIV {\
@@ -104,7 +104,7 @@
         \
         DEBUG \
         if (value_int != (ref_int1 >> 4)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:DIV REF:0x%08x WAS:0x%08x\n", i, j, th_id, (ref_int1 >> 4), value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:DIV REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int1 >> 4), value_int); \
                 }
 
 //======================================================================
