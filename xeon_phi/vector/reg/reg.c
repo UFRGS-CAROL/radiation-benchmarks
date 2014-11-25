@@ -13,14 +13,14 @@
 #define LOG_SIZE        128             // Line size per error
 #define BUSY            10000000         // Repetitions in the busy wait
 
-#define ITEMS           16              // 64 bytes (512bits) ZMM register / element size
+#define ITEMS_INT           16              // 64 bytes (512bits) ZMM register / element size
 
 #define LOOP_BLOCK(V) \
         {\
-            asm volatile("vmovdqa32 %%zmm"#V", %0" : "=m" (vec[0]) : : "zmm"#V); \
-            for(j = 0; j < ITEMS; j++) { \
-                if (vec[j] != refw) \
-                    snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, refw, vec[j]); \
+            asm volatile("vmovdqa32 %%zmm"#V", %0" : "=m" (vec_int[0]) : : "zmm"#V); \
+            for(j = 0; j < ITEMS_INT; j++) { \
+                if (vec_int[j] != ref_int) \
+                    snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:REG REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, ref_int, vec_int[j]); \
             } \
         }
 
@@ -102,54 +102,54 @@ int main(int argc, char *argv[]) {
                 asm volatile ("nop");
 
                 // Portion of memory with 512 bits
-                __declspec(aligned(64)) uint32_t vec[ITEMS];
+                __declspec(aligned(64)) uint32_t vec_int[ITEMS_INT];
 
-                uint32_t refw = 0;
+                uint32_t ref_int = 0;
                 //==============================================================
                 // Initialize the variables with a new REFWORD
                 if ((i % 3) == 0)
-                    refw = 0x0;
+                    ref_int = 0x0;
                 else if ((i % 3) == 1)
-                    refw = 0xFFFFFFFF;
+                    ref_int = 0xFFFFFFFF;
                 else
-                    refw = 0x55555555;
+                    ref_int = 0x55555555;
 
-                asm volatile("vpbroadcastd %0, %%zmm0" :  : "m" (refw) : "zmm0");
-                asm volatile("vpbroadcastd %0, %%zmm1" :  : "m" (refw) : "zmm1");
-                asm volatile("vpbroadcastd %0, %%zmm2" :  : "m" (refw) : "zmm2");
-                asm volatile("vpbroadcastd %0, %%zmm3" :  : "m" (refw) : "zmm3");
-                asm volatile("vpbroadcastd %0, %%zmm4" :  : "m" (refw) : "zmm4");
-                asm volatile("vpbroadcastd %0, %%zmm5" :  : "m" (refw) : "zmm5");
-                asm volatile("vpbroadcastd %0, %%zmm6" :  : "m" (refw) : "zmm6");
-                asm volatile("vpbroadcastd %0, %%zmm7" :  : "m" (refw) : "zmm7");
+                asm volatile("vpbroadcastd %0, %%zmm0" :  : "m" (ref_int) : "zmm0");
+                asm volatile("vpbroadcastd %0, %%zmm1" :  : "m" (ref_int) : "zmm1");
+                asm volatile("vpbroadcastd %0, %%zmm2" :  : "m" (ref_int) : "zmm2");
+                asm volatile("vpbroadcastd %0, %%zmm3" :  : "m" (ref_int) : "zmm3");
+                asm volatile("vpbroadcastd %0, %%zmm4" :  : "m" (ref_int) : "zmm4");
+                asm volatile("vpbroadcastd %0, %%zmm5" :  : "m" (ref_int) : "zmm5");
+                asm volatile("vpbroadcastd %0, %%zmm6" :  : "m" (ref_int) : "zmm6");
+                asm volatile("vpbroadcastd %0, %%zmm7" :  : "m" (ref_int) : "zmm7");
 
-                asm volatile("vpbroadcastd %0, %%zmm8" :  : "m" (refw) : "zmm8");
-                asm volatile("vpbroadcastd %0, %%zmm9" :  : "m" (refw) : "zmm9");
-                asm volatile("vpbroadcastd %0, %%zmm10" :  : "m" (refw) : "zmm10");
-                asm volatile("vpbroadcastd %0, %%zmm11" :  : "m" (refw) : "zmm11");
-                asm volatile("vpbroadcastd %0, %%zmm12" :  : "m" (refw) : "zmm12");
-                asm volatile("vpbroadcastd %0, %%zmm13" :  : "m" (refw) : "zmm13");
-                asm volatile("vpbroadcastd %0, %%zmm14" :  : "m" (refw) : "zmm14");
-                asm volatile("vpbroadcastd %0, %%zmm15" :  : "m" (refw) : "zmm15");
+                asm volatile("vpbroadcastd %0, %%zmm8" :  : "m" (ref_int) : "zmm8");
+                asm volatile("vpbroadcastd %0, %%zmm9" :  : "m" (ref_int) : "zmm9");
+                asm volatile("vpbroadcastd %0, %%zmm10" :  : "m" (ref_int) : "zmm10");
+                asm volatile("vpbroadcastd %0, %%zmm11" :  : "m" (ref_int) : "zmm11");
+                asm volatile("vpbroadcastd %0, %%zmm12" :  : "m" (ref_int) : "zmm12");
+                asm volatile("vpbroadcastd %0, %%zmm13" :  : "m" (ref_int) : "zmm13");
+                asm volatile("vpbroadcastd %0, %%zmm14" :  : "m" (ref_int) : "zmm14");
+                asm volatile("vpbroadcastd %0, %%zmm15" :  : "m" (ref_int) : "zmm15");
 
-                asm volatile("vpbroadcastd %0, %%zmm15" :  : "m" (refw) : "zmm15");
-                asm volatile("vpbroadcastd %0, %%zmm16" :  : "m" (refw) : "zmm16");
-                asm volatile("vpbroadcastd %0, %%zmm17" :  : "m" (refw) : "zmm17");
-                asm volatile("vpbroadcastd %0, %%zmm18" :  : "m" (refw) : "zmm18");
-                asm volatile("vpbroadcastd %0, %%zmm19" :  : "m" (refw) : "zmm19");
-                asm volatile("vpbroadcastd %0, %%zmm20" :  : "m" (refw) : "zmm20");
-                asm volatile("vpbroadcastd %0, %%zmm21" :  : "m" (refw) : "zmm21");
-                asm volatile("vpbroadcastd %0, %%zmm22" :  : "m" (refw) : "zmm22");
-                asm volatile("vpbroadcastd %0, %%zmm23" :  : "m" (refw) : "zmm23");
+                asm volatile("vpbroadcastd %0, %%zmm15" :  : "m" (ref_int) : "zmm15");
+                asm volatile("vpbroadcastd %0, %%zmm16" :  : "m" (ref_int) : "zmm16");
+                asm volatile("vpbroadcastd %0, %%zmm17" :  : "m" (ref_int) : "zmm17");
+                asm volatile("vpbroadcastd %0, %%zmm18" :  : "m" (ref_int) : "zmm18");
+                asm volatile("vpbroadcastd %0, %%zmm19" :  : "m" (ref_int) : "zmm19");
+                asm volatile("vpbroadcastd %0, %%zmm20" :  : "m" (ref_int) : "zmm20");
+                asm volatile("vpbroadcastd %0, %%zmm21" :  : "m" (ref_int) : "zmm21");
+                asm volatile("vpbroadcastd %0, %%zmm22" :  : "m" (ref_int) : "zmm22");
+                asm volatile("vpbroadcastd %0, %%zmm23" :  : "m" (ref_int) : "zmm23");
 
-                asm volatile("vpbroadcastd %0, %%zmm24" :  : "m" (refw) : "zmm24");
-                asm volatile("vpbroadcastd %0, %%zmm25" :  : "m" (refw) : "zmm25");
-                asm volatile("vpbroadcastd %0, %%zmm26" :  : "m" (refw) : "zmm26");
-                asm volatile("vpbroadcastd %0, %%zmm27" :  : "m" (refw) : "zmm27");
-                asm volatile("vpbroadcastd %0, %%zmm28" :  : "m" (refw) : "zmm28");
-                asm volatile("vpbroadcastd %0, %%zmm29" :  : "m" (refw) : "zmm29");
-                asm volatile("vpbroadcastd %0, %%zmm30" :  : "m" (refw) : "zmm30");
-                asm volatile("vpbroadcastd %0, %%zmm31" :  : "m" (refw) : "zmm31");
+                asm volatile("vpbroadcastd %0, %%zmm24" :  : "m" (ref_int) : "zmm24");
+                asm volatile("vpbroadcastd %0, %%zmm25" :  : "m" (ref_int) : "zmm25");
+                asm volatile("vpbroadcastd %0, %%zmm26" :  : "m" (ref_int) : "zmm26");
+                asm volatile("vpbroadcastd %0, %%zmm27" :  : "m" (ref_int) : "zmm27");
+                asm volatile("vpbroadcastd %0, %%zmm28" :  : "m" (ref_int) : "zmm28");
+                asm volatile("vpbroadcastd %0, %%zmm29" :  : "m" (ref_int) : "zmm29");
+                asm volatile("vpbroadcastd %0, %%zmm30" :  : "m" (ref_int) : "zmm30");
+                asm volatile("vpbroadcastd %0, %%zmm31" :  : "m" (ref_int) : "zmm31");
 
                 //==============================================================
                 // Busy wait
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
                 //==========================================================
                 // DEBUG: injecting one error (Bit-wise not RefWord)
                 //if(th_id == 0 && i == 0)
-                    //asm volatile("vpbroadcastd %0, %%zmm0" :  : "m" (~refw) : "zmm0");
+                    //asm volatile("vpbroadcastd %0, %%zmm0" :  : "m" (~ref_int) : "zmm0");
 
                 LOOP_BLOCK(0)
                 LOOP_BLOCK(1)

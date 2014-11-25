@@ -50,7 +50,7 @@ int main (int argc, char *argv[]) {
     omp_set_num_threads(MIC_THREADS);
 
     fprintf(stderr,"#HEADER Elem.Size:%"PRIu32"B ", (uint32_t)sizeof(uint32_t));
-    fprintf(stderr,"ITEMS:%"PRIu32" ",              (uint32_t)(size / sizeof(uint32_t)));
+    fprintf(stderr,"ITEMS_INT:%"PRIu32" ",              (uint32_t)(size / sizeof(uint32_t)));
     fprintf(stderr,"ArraySize:%"PRIu32"KB ",        (uint32_t)(size / 1024));
     fprintf(stderr,"SizePerThread:%"PRIu32"KB ",    (uint32_t)(size / 1024) / MIC_THREADS);
     fprintf(stderr,"Repetitions:%"PRIu64" ",        repetitions);
@@ -108,19 +108,19 @@ int main (int argc, char *argv[]) {
                 asm volatile ("nop");
                 asm volatile ("nop");
 
-                uint32_t refw = 0;
+                uint32_t ref_int = 0;
 
                 //==============================================================
                 // Initialize the variables with a new REFWORD
                 if ((i % 3) == 0)
-                    asm volatile("movl $0x0, %0" : "=r" (refw));
+                    asm volatile("movl $0x0, %0" : "=r" (ref_int));
                 else if ((i % 3) == 1)
-                    asm volatile("movl $0xFFFFFFFF, %0" : "=r" (refw));
+                    asm volatile("movl $0xFFFFFFFF, %0" : "=r" (ref_int));
                 else
-                    asm volatile("movl $0x55555555, %0" : "=r" (refw));
+                    asm volatile("movl $0x55555555, %0" : "=r" (ref_int));
 
                 for (j = slice * th_id; j < slice * (th_id + 1); j++) {
-                    ptr_vector[j] = refw;
+                    ptr_vector[j] = ref_int;
                 }
 
                 //==============================================================
@@ -136,9 +136,9 @@ int main (int argc, char *argv[]) {
                 for (j = slice * th_id; j < slice * (th_id + 1); j++) {
                     DEBUG
 
-                    if (ptr_vector[j] != refw) {
+                    if (ptr_vector[j] != ref_int) {
                         snprintf(log[th_id][errors++], LOG_SIZE,
-                                 "%s IT:%"PRIu64" POS:%d TH:%d REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, refw, ptr_vector[j]);
+                                 "%s IT:%"PRIu64" POS:%d TH:%d OP:MEM REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, ref_int, ptr_vector[j]);
                     }
 
                 }

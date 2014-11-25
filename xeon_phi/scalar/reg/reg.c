@@ -19,8 +19,8 @@
 //======================================================================
 #define LOOP_BLOCK(V) {\
         DEBUG \
-        if (count##V != refw) { \
-            snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, refw, count##V); \
+        if (count##V != ref_int) { \
+            snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:REG REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, ref_int, count##V); \
         } \
                     }
 
@@ -100,7 +100,7 @@ int main (int argc, char *argv[]) {
                 asm volatile ("nop");
                 asm volatile ("nop");
 
-                uint32_t refw = 0;
+                uint32_t ref_int = 0;
 
                 uint32_t count0  = 0 ;
                 uint32_t count1  = 0 ;
@@ -114,20 +114,20 @@ int main (int argc, char *argv[]) {
                 //==============================================================
                 // Initialize the variables with a new REFWORD
                 if ((i % 3) == 0)
-                    asm volatile("movl $0x0, %0" : "=r" (refw));
+                    asm volatile("movl $0x0, %0" : "=r" (ref_int));
                 else if ((i % 3) == 1)
-                    asm volatile("movl $0xFFFFFFFF, %0" : "=r" (refw));
+                    asm volatile("movl $0xFFFFFFFF, %0" : "=r" (ref_int));
                 else
-                    asm volatile("movl $0x55555555, %0" : "=r" (refw));
+                    asm volatile("movl $0x55555555, %0" : "=r" (ref_int));
 
-                asm volatile("mov %1, %0" : "=r" (count0) : "r" (refw) : );
-                asm volatile("mov %1, %0" : "=r" (count1) : "r" (refw) : );
-                asm volatile("mov %1, %0" : "=r" (count2) : "r" (refw) : );
-                asm volatile("mov %1, %0" : "=r" (count3) : "r" (refw) : );
-                asm volatile("mov %1, %0" : "=r" (count4) : "r" (refw) : );
-                asm volatile("mov %1, %0" : "=r" (count5) : "r" (refw) : );
-                asm volatile("mov %1, %0" : "=r" (count6) : "r" (refw) : );
-                asm volatile("mov %1, %0" : "=r" (count7) : "r" (refw) : );
+                asm volatile("mov %1, %0" : "=r" (count0) : "r" (ref_int) : );
+                asm volatile("mov %1, %0" : "=r" (count1) : "r" (ref_int) : );
+                asm volatile("mov %1, %0" : "=r" (count2) : "r" (ref_int) : );
+                asm volatile("mov %1, %0" : "=r" (count3) : "r" (ref_int) : );
+                asm volatile("mov %1, %0" : "=r" (count4) : "r" (ref_int) : );
+                asm volatile("mov %1, %0" : "=r" (count5) : "r" (ref_int) : );
+                asm volatile("mov %1, %0" : "=r" (count6) : "r" (ref_int) : );
+                asm volatile("mov %1, %0" : "=r" (count7) : "r" (ref_int) : );
 
                 //==============================================================
                 // Busy wait
@@ -142,7 +142,7 @@ int main (int argc, char *argv[]) {
                 //==========================================================
                 // DEBUG: injecting one error (Bit-wise not RefWord)
                 //if(th_id == 0 && i == 0)
-                    //count0 = ~refw;
+                    //count0 = ~ref_int;
 
                 LOOP_BLOCK(0)
                 LOOP_BLOCK(1)

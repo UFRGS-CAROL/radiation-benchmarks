@@ -8,98 +8,103 @@
 #include <math.h>       // pow
 
 // Xeon Phi Configuration
-#define MIC_CORES       (1)             // Max. 56 Cores (+1 core runs de OS)
+#define MIC_CORES       (56)            // Max. 56 Cores (+1 core runs de OS)
 #define MIC_THREADS     (4*MIC_CORES)   // Max. 4 Threads per Core.
-#define MAX_ERROR       1024            // Max. number of errors per repetition
+#define MAX_ERROR       32              // Max. number of errors per repetition
 #define LOG_SIZE        128             // Line size per error
-#define BUSY            1//300000          // Repetitions in the busy wait
-
-#define ITEMS_INT           16              // 64 bytes (512bits) ZMM register / element size
+#define BUSY            300000          // Repetitions in the busy wait
 
 // ~ #define DEBUG           if (i==0 && j==0 && errors==0) asm volatile("movl %1, %0" : "=r" (value_int) : "r" (~value_int));
 #define DEBUG /*OFF*/
 
 //======================================================================
-#define LOOP_SLR {\
-        asm volatile("vpbroadcastd %0, %%zmm0" :  : "m" (ref_int1) : "zmm0"); \
+#define LOOP_ROL {\
+        value_int = ref_int1; \
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
         \
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpslld $0x02, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        \
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpslld $0x02, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        \
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpslld $0x02, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        \
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpslld $0x02, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
+        asm volatile("rol %0" : "+r" (value_int) : "0" (value_int) );\
         \
         DEBUG \
-        asm volatile("vmovdqa32 %%zmm0, %0" : "=m" (vec_int[0]) : : "zmm0"); \
-        for(k = 0; k < ITEMS_INT; k++) { \
-            if (vec_int[k] != (((ref_int1 >> 1) << 2 ) >> 1)) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x\n", time, i, k, th_id, (((ref_int1 >> 1) << 2 ) >> 1), vec_int[k]); \
-        } \
+        if (value_int != ref_int1) \
+            snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:ROL REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, ref_int1, value_int); \
                 }
 
 #define LOOP_ADD {\
         value_int = 0; \
-        asm volatile("vpbroadcastd %0, %%zmm2" :  : "m" (ref_int2) : "zmm2"); \
-        asm volatile("vpbroadcastd %0, %%zmm3" :  : "m" (value_int) : "zmm3"); \
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
         \
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        \
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
         \
         DEBUG \
-        asm volatile("vmovdqa32 %%zmm3, %0" : "=m" (vec_int[0]) : : "zmm3"); \
-        for(k = 0; k < ITEMS_INT; k++) { \
-            if (vec_int[k] != (ref_int2 << 4)) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x\n", time, i, k, th_id, (ref_int2 << 4), vec_int[k]); \
-        } \
+        if (value_int != (ref_int2 << 4)) \
+            snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, (ref_int2 << 4), value_int); \
                 }
 
 #define LOOP_MUL {\
-        value_int = 0x2; \
-        asm volatile("vpbroadcastd %0, %%zmm4" :  : "m" (value_int) : "zmm4"); \
-        asm volatile("vpbroadcastd %0, %%zmm5" :  : "m" (ref_int3) : "zmm5"); \
-        \
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
+        value_int = ref_int3; \
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
         \
         DEBUG \
-        asm volatile("vmovdqa32 %%zmm5, %0" : "=m" (vec_int[0]) : : "zmm5"); \
-        for(k = 0; k < ITEMS_INT; k++) { \
-            if (vec_int[k] != (ref_int3 << 8)) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x\n", time, i, k, th_id, (ref_int3 << 8), vec_int[k]); \
-        } \
+        if (value_int != (ref_int3 << 8)) \
+            snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, (ref_int3 << 8), value_int); \
                 }
 
+#define LOOP_DIV {\
+        value_int = ref_int1; \
+        /* Copy the operands to perform the division */ \
+        asm volatile("movl $0x0, %%edx" : : : ); \
+        asm volatile("movl %0, %%eax" : : "r" (value_int) : "eax"); \
+        asm volatile("movl $0x2, %%ebx" : : : ); \
+        /* Perform the division */ \
+        asm volatile("divl %%ebx" : : : "eax", "edx", "ebx"); \
+        asm volatile("movl $0x0, %%edx" : : : ); \
+        asm volatile("divl %%ebx" : : : "eax", "edx", "ebx"); \
+        asm volatile("movl $0x0, %%edx" : : : ); \
+        asm volatile("divl %%ebx" : : : "eax", "edx", "ebx"); \
+        asm volatile("movl $0x0, %%edx" : : : ); \
+        asm volatile("divl %%ebx" : : : "eax", "edx", "ebx"); \
+        /* Copy back the operands to check the division */ \
+        asm volatile("movl %%eax, %0" : "=r" (value_int) : : "eax"); \
+        \
+        DEBUG \
+        if (value_int != (ref_int1 >> 4)) \
+            snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:DIV REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, (ref_int1 >> 4), value_int); \
+                }
 
 //======================================================================
 // Linear Feedback Shift Register using 32 bits and XNOR. Details at:
@@ -215,7 +220,6 @@ int main (int argc, char *argv[]) {
     uint32_t th_id = 0;
     uint64_t i = 0;
     uint64_t j = 0;
-    uint64_t k = 0;
     uint32_t errors = 0;
 
     uint32_t x;
@@ -248,37 +252,33 @@ int main (int argc, char *argv[]) {
         // Parallel region
         #pragma offload target(mic) inout(log)
         {
-            #pragma omp parallel for private(th_id, j, k) firstprivate(ref_int1, ref_int2, ref_int3) reduction(+:errors)
+            #pragma omp parallel for private(th_id, j) firstprivate(ref_int1, ref_int2, ref_int3) reduction(+:errors)
             for(th_id = 0; th_id < MIC_THREADS; th_id++)
             {
                 asm volatile ("nop");
                 asm volatile ("nop");
                 asm volatile ("nop");
 
-                // Portion of memory with 512 bits
-                uint32_t value_int;
-                __declspec(aligned(64)) uint32_t vec_int[ITEMS_INT];
-
-
+                uint32_t value_int = 0;
                 //==============================================================
                 // AND
-                if (th_id % 3 == 0) {
+                if (th_id % 4 == 0) {
                     for(j = (repetitions == 0); j < BUSY; j++) {
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
+                        LOOP_ROL
+                        LOOP_ROL
+                        LOOP_ROL
+                        LOOP_ROL
+                        LOOP_ROL
+                        LOOP_ROL
+                        LOOP_ROL
+                        LOOP_ROL
                     }
                 }
 
 
                 //==============================================================
                 // ADD
-                else if (th_id % 3 == 1) {
+                else if (th_id % 4 == 1) {
                     for(j = (repetitions == 0); j < BUSY; j++) {
                         LOOP_ADD
                         LOOP_ADD
@@ -293,7 +293,7 @@ int main (int argc, char *argv[]) {
 
                 //==============================================================
                 // MUL
-                else if (th_id % 3 == 2) {
+                else if (th_id % 4 == 2) {
                     for(j = (repetitions == 0); j < BUSY; j++) {
                         LOOP_MUL
                         LOOP_MUL
@@ -306,6 +306,20 @@ int main (int argc, char *argv[]) {
                     }
                 }
 
+                //==============================================================
+                // DIV
+                else if (th_id % 4 == 3) {
+                    for(j = (repetitions == 0); j < BUSY; j++) {
+                        LOOP_DIV
+                        LOOP_DIV
+                        LOOP_DIV
+                        LOOP_DIV
+                        LOOP_DIV
+                        LOOP_DIV
+                        LOOP_DIV
+                        LOOP_DIV
+                    }
+                }
 
             }
             asm volatile ("nop");

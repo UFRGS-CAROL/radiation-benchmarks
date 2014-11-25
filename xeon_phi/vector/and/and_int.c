@@ -20,30 +20,34 @@
 #define DEBUG /*OFF*/
 
 //======================================================================
-#define LOOP_SLR {\
+#define LOOP_AND {\
+        value_int = 0xFFFFFFFF; \
         asm volatile("vpbroadcastd %0, %%zmm0" :  : "m" (ref_int1) : "zmm0"); \
+        asm volatile("vpbroadcastd %0, %%zmm1" :  : "m" (value_int) : "zmm1"); \
         \
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpslld $0x02, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
         \
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpslld $0x02, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        \
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpslld $0x02, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        \
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpslld $0x02, %%zmm0, %%zmm0" : : : "zmm0");\
-        asm volatile("vpsrld $0x01, %%zmm0, %%zmm0" : : : "zmm0");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
         \
         DEBUG \
         asm volatile("vmovdqa32 %%zmm0, %0" : "=m" (vec_int[0]) : : "zmm0"); \
         for(k = 0; k < ITEMS_INT; k++) { \
-            if (vec_int[k] != (((ref_int1 >> 1) << 2 ) >> 1)) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x\n", time, i, k, th_id, (((ref_int1 >> 1) << 2 ) >> 1), vec_int[k]); \
+            if (vec_int[k] != ref_int1) \
+                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x\n", time, i, k, th_id, ref_int1, vec_int[k]); \
         } \
                 }
 
@@ -264,14 +268,14 @@ int main (int argc, char *argv[]) {
                 // AND
                 if (th_id % 3 == 0) {
                     for(j = (repetitions == 0); j < BUSY; j++) {
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
-                        LOOP_SLR
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
                     }
                 }
 

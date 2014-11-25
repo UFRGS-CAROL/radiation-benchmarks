@@ -15,93 +15,94 @@
 #define BUSY            1//300000          // Repetitions in the busy wait
 
 #define ITEMS_INT           16              // 64 bytes (512bits) ZMM register / element size
+#define ITEMS_FPD           8              // 64 bytes (512bits) ZMM register / element size
 
 // ~ #define DEBUG           if (i==0 && j==0 && errors==0) asm volatile("movl %1, %0" : "=r" (value_int) : "r" (~value_int));
 #define DEBUG /*OFF*/
 
 //======================================================================
-#define LOOP_OR {\
+#define LOOP_AND {\
         value_int = 0xFFFFFFFF; \
         asm volatile("vpbroadcastd %0, %%zmm0" :  : "m" (ref_int1) : "zmm0"); \
         asm volatile("vpbroadcastd %0, %%zmm1" :  : "m" (value_int) : "zmm1"); \
         \
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
         \
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
-        asm volatile("vpord %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
+        asm volatile("vpandd %%zmm1, %%zmm0, %%zmm0" : : : "zmm0", "zmm1");\
         \
         DEBUG \
         asm volatile("vmovdqa32 %%zmm0, %0" : "=m" (vec_int[0]) : : "zmm0"); \
         for(k = 0; k < ITEMS_INT; k++) { \
             if (vec_int[k] != ref_int1) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:OR REF:0x%08x WAS:0x%08x\n", time, i, k, th_id, ref_int1, vec_int[k]); \
+                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x\n", time, i, k, th_id, ref_int1, vec_int[k]); \
         } \
                 }
 
 #define LOOP_ADD {\
-        value_int = 0; \
-        asm volatile("vpbroadcastd %0, %%zmm2" :  : "m" (ref_int2) : "zmm2"); \
-        asm volatile("vpbroadcastd %0, %%zmm3" :  : "m" (value_int) : "zmm3"); \
+        value_fpd = 0.0; \
+        asm volatile("vbroadcastsd %0, %%zmm2" :  : "m" (ref_fpd2) : "zmm2"); \
+        asm volatile("vbroadcastsd %0, %%zmm3" :  : "m" (value_fpd) : "zmm3"); \
         \
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
         \
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
-        asm volatile("vpaddd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
+        asm volatile("vaddpd %%zmm3, %%zmm2, %%zmm3" : : : "zmm2", "zmm3");\
         \
         DEBUG \
-        asm volatile("vmovdqa32 %%zmm3, %0" : "=m" (vec_int[0]) : : "zmm3"); \
-        for(k = 0; k < ITEMS_INT; k++) { \
-            if (vec_int[k] != (ref_int2 << 4)) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x\n", time, i, k, th_id, (ref_int2 << 4), vec_int[k]); \
-        } \
+        asm volatile("vmovapd %%zmm3, %0" : "=m" (vec_fpd[0]) : : "zmm3"); \
+        /*for(k = 0; k < ITEMS_INT; k++) { \
+            if (vec_fpd[k] != (ref_fpd2 << 4)) \
+                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:%f WAS:%f\n", time, i, k, th_id, (ref_fpd2 << 4), vec_fpd[k]); \
+        } */\
                 }
 
 #define LOOP_MUL {\
-        value_int = 0x2; \
-        asm volatile("vpbroadcastd %0, %%zmm4" :  : "m" (value_int) : "zmm4"); \
-        asm volatile("vpbroadcastd %0, %%zmm5" :  : "m" (ref_int3) : "zmm5"); \
+        value_fpd = 2.0; \
+        asm volatile("vbroadcastsd %0, %%zmm4" :  : "m" (value_fpd) : "zmm4"); \
+        asm volatile("vbroadcastsd %0, %%zmm5" :  : "m" (ref_fpd3) : "zmm5"); \
         \
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
-        asm volatile("vpmulld %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
+        asm volatile("vmulpd %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
+        asm volatile("vmulpd %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
+        asm volatile("vmulpd %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
+        asm volatile("vmulpd %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
+        asm volatile("vmulpd %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
+        asm volatile("vmulpd %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
+        asm volatile("vmulpd %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
+        asm volatile("vmulpd %%zmm5, %%zmm4, %%zmm5" : : : "zmm4", "zmm5");\
         \
         DEBUG \
-        asm volatile("vmovdqa32 %%zmm5, %0" : "=m" (vec_int[0]) : : "zmm5"); \
-        for(k = 0; k < ITEMS_INT; k++) { \
-            if (vec_int[k] != (ref_int3 << 8)) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x\n", time, i, k, th_id, (ref_int3 << 8), vec_int[k]); \
-        } \
+        asm volatile("vmovapd %%zmm5, %0" : "=m" (vec_fpd[0]) : : "zmm5");\
+        /*for(k = 0; k < ITEMS_INT; k++) { \
+            if (vec_fpd[k] != (ref_fpd3 << 8)) \
+                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:%f WAS:%f\n", time, i, k, th_id, (ref_fpd3 << 8), vec_fpd[k]); \
+        } */\
                 }
 
 
@@ -109,68 +110,88 @@
 // Linear Feedback Shift Register using 32 bits and XNOR. Details at:
 // http://www.xilinx.com/support/documentation/application_notes/xapp052.pdf
 // http://www.ece.cmu.edu/~koopman/lfsr/index.html
-void ref_word(uint32_t *ref_int1, uint32_t *ref_int2, uint32_t *ref_int3){
+void ref_word(uint32_t *ref_int1, double *ref_fpd1, double *ref_fpd2, double *ref_fpd3){
     static uint32_t counter = 0;
 
     counter++;
     if (counter == 1){
         *ref_int1  = 0xCCCCCCCC;   // 1100 1100 1100 1100 | 1100 1100 1100 1100 (3435973836)
-        *ref_int2  = 0x0CCCCCCC;   // 0000 1100 1100 1100 | 1100 1100 1100 1100
-        *ref_int3  = 0x00CCCCCC;   // 0000 0000 1100 1100 | 1100 1100 1100 1100
+
+        *ref_fpd1  = 0xCCCCCCCC;   // 1100 1100 1100 1100 | 1100 1100 1100 1100 (3435973836)
+        *ref_fpd2  = 0x0CCCCCCC;   // 0000 1100 1100 1100 | 1100 1100 1100 1100
+        *ref_fpd3  = 0x00CCCCCC;   // 0000 0000 1100 1100 | 1100 1100 1100 1100
         return;
     }
     else if (counter == 2){
         *ref_int1  = 0x66666666;   // 0110 0110 0110 0110 | 0110 0110 0110 0110
-        *ref_int2  = 0x06666666;   // 0000 0110 0110 0110 | 0110 0110 0110 0110
-        *ref_int3  = 0x06666666;   // 0000 0000 0110 0110 | 0110 0110 0110 0110
+
+        *ref_fpd1  = 0x66666666;   // 0110 0110 0110 0110 | 0110 0110 0110 0110
+        *ref_fpd2  = 0x06666666;   // 0000 0110 0110 0110 | 0110 0110 0110 0110
+        *ref_fpd3  = 0x06666666;   // 0000 0000 0110 0110 | 0110 0110 0110 0110
         return;
     }
     else if (counter == 3){
         *ref_int1  = 0x33333333;   // 0011 0011 0011 0011 | 0011 0011 0011 0011
-        *ref_int2  = 0x03333333;   // 0000 0011 0011 0011 | 0011 0011 0011 0011
-        *ref_int3  = 0x00333333;   // 0000 0000 0011 0011 | 0011 0011 0011 0011
+
+        *ref_fpd1  = 0x33333333;   // 0011 0011 0011 0011 | 0011 0011 0011 0011
+        *ref_fpd2  = 0x03333333;   // 0000 0011 0011 0011 | 0011 0011 0011 0011
+        *ref_fpd3  = 0x00333333;   // 0000 0000 0011 0011 | 0011 0011 0011 0011
         return;
     }
     else if (counter == 4){
         *ref_int1  = 0xAAAAAAAA;   // 1010 1010 1010 1010 | 1010 1010 1010 1010
-        *ref_int2  = 0x0AAAAAAA;   // 0000 1010 1010 1010 | 1010 1010 1010 1010
-        *ref_int3  = 0x00AAAAAA;   // 0000 0000 1010 1010 | 1010 1010 1010 1010
+
+        *ref_fpd1  = 0xAAAAAAAA;   // 1010 1010 1010 1010 | 1010 1010 1010 1010
+        *ref_fpd2  = 0x0AAAAAAA;   // 0000 1010 1010 1010 | 1010 1010 1010 1010
+        *ref_fpd3  = 0x00AAAAAA;   // 0000 0000 1010 1010 | 1010 1010 1010 1010
         return;
     }
     else if (counter == 5){
         *ref_int1  = 0x55555555;   // 0101 0101 0101 0101 | 0101 0101 0101 0101
-        *ref_int2  = 0x05555555;   // 0000 0101 0101 0101 | 0101 0101 0101 0101
-        *ref_int3  = 0x00555555;   // 0000 0000 0101 0101 | 0101 0101 0101 0101
+
+        *ref_fpd1  = 0x55555555;   // 0101 0101 0101 0101 | 0101 0101 0101 0101
+        *ref_fpd2  = 0x05555555;   // 0000 0101 0101 0101 | 0101 0101 0101 0101
+        *ref_fpd3  = 0x00555555;   // 0000 0000 0101 0101 | 0101 0101 0101 0101
         return;
     }
     else if (counter == 6) {
         *ref_int1  = 0x99999999;   // 1001 1001 1001 1001 | 1001 1001 1001 1001
-        *ref_int2  = 0x09999999;   // 0000 1001 1001 1001 | 1001 1001 1001 1001
-        *ref_int3  = 0x00999999;   // 0000 0000 1001 1001 | 1001 1001 1001 1001
+
+        *ref_fpd1  = 0x99999999;   // 1001 1001 1001 1001 | 1001 1001 1001 1001
+        *ref_fpd2  = 0x09999999;   // 0000 1001 1001 1001 | 1001 1001 1001 1001
+        *ref_fpd3  = 0x00999999;   // 0000 0000 1001 1001 | 1001 1001 1001 1001
         return;
     }
     else if (counter == 7){
         *ref_int1  = 0x88888888;   // 1000 1000 1000 1000 | 1000 1000 1000 1000
-        *ref_int2  = 0x08888888;   // 0000 1000 1000 1000 | 1000 1000 1000 1000
-        *ref_int3  = 0x00888888;   // 0000 0000 1000 1000 | 1000 1000 1000 1000
+
+        *ref_fpd1  = 0x88888888;   // 1000 1000 1000 1000 | 1000 1000 1000 1000
+        *ref_fpd2  = 0x08888888;   // 0000 1000 1000 1000 | 1000 1000 1000 1000
+        *ref_fpd3  = 0x00888888;   // 0000 0000 1000 1000 | 1000 1000 1000 1000
         return;
     }
     else if (counter == 8){
         *ref_int1  = 0x44444444;   // 0100 0100 0100 0100 | 0100 0100 0100 0100
-        *ref_int2  = 0x04444444;   // 0000 0100 0100 0100 | 0100 0100 0100 0100
-        *ref_int3  = 0x00444444;   // 0000 0000 0100 0100 | 0100 0100 0100 0100
+
+        *ref_fpd1  = 0x44444444;   // 0100 0100 0100 0100 | 0100 0100 0100 0100
+        *ref_fpd2  = 0x04444444;   // 0000 0100 0100 0100 | 0100 0100 0100 0100
+        *ref_fpd3  = 0x00444444;   // 0000 0000 0100 0100 | 0100 0100 0100 0100
         return;
     }
     else if (counter == 9){
         *ref_int1  = 0x22222222;   // 0010 0010 0010 0010 | 0010 0010 0010 0010
-        *ref_int2  = 0x02222222;   // 0000 0010 0010 0010 | 0010 0010 0010 0010
-        *ref_int3  = 0x00222222;   // 0000 0000 0010 0010 | 0010 0010 0010 0010
+
+        *ref_fpd1  = 0x22222222;   // 0010 0010 0010 0010 | 0010 0010 0010 0010
+        *ref_fpd2  = 0x02222222;   // 0000 0010 0010 0010 | 0010 0010 0010 0010
+        *ref_fpd3  = 0x00222222;   // 0000 0000 0010 0010 | 0010 0010 0010 0010
         return;
     }
     else {
         *ref_int1  = 0x11111111;  // 0001 0001 0001 0001 | 0001 0001 0001 0001
-        *ref_int2  = 0x01111111;  // 0000 0001 0001 0001 | 0001 0001 0001 0001
-        *ref_int3  = 0x00111111;  // 0000 0000 0001 0001 | 0001 0001 0001 0001
+
+        *ref_fpd1  = 0x11111111;  // 0001 0001 0001 0001 | 0001 0001 0001 0001
+        *ref_fpd2  = 0x01111111;  // 0000 0001 0001 0001 | 0001 0001 0001 0001
+        *ref_fpd3  = 0x00111111;  // 0000 0000 0001 0001 | 0001 0001 0001 0001
         counter = 0;
         return;
     }
@@ -245,14 +266,15 @@ int main (int argc, char *argv[]) {
 
         //==============================================================
         // Initialize the variables with a new REFWORD
-        uint32_t ref_int1, ref_int2, ref_int3;
-        ref_word(&ref_int1, &ref_int2, &ref_int3);
+        uint32_t ref_int1;
+        double ref_fpd1, ref_fpd2, ref_fpd3;
+        ref_word(&ref_int1, &ref_fpd1, &ref_fpd2, &ref_fpd3);
 
         //======================================================================P
         // Parallel region
         #pragma offload target(mic) inout(log)
         {
-            #pragma omp parallel for private(th_id, j, k) firstprivate(ref_int1, ref_int2, ref_int3) reduction(+:errors)
+            #pragma omp parallel for private(th_id, j, k) firstprivate(ref_int1, ref_fpd1, ref_fpd2, ref_fpd3) reduction(+:errors)
             for(th_id = 0; th_id < MIC_THREADS; th_id++)
             {
                 asm volatile ("nop");
@@ -263,19 +285,34 @@ int main (int argc, char *argv[]) {
                 uint32_t value_int;
                 __declspec(aligned(64)) uint32_t vec_int[ITEMS_INT];
 
+                double value_fpd;
+                __declspec(aligned(64)) double vec_fpd[ITEMS_FPD], a[ITEMS_FPD], b[ITEMS_FPD];
+
+                for(j = 0; j < ITEMS_FPD; j++) {
+                    a[j] = 0;
+                    b[j] = j;
+                }
+
+
+                #pragma vector aligned(a,b)
+                for(j = (repetitions == 0); j < BUSY; j++) {
+                    a[:] += b[:];
+                }
+
+                printf("%f %f %f %f", a[0], a[1], a[2], a[3]);
 
                 //==============================================================
                 // AND
                 if (th_id % 3 == 0) {
                     for(j = (repetitions == 0); j < BUSY; j++) {
-                        LOOP_OR
-                        LOOP_OR
-                        LOOP_OR
-                        LOOP_OR
-                        LOOP_OR
-                        LOOP_OR
-                        LOOP_OR
-                        LOOP_OR
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
+                        LOOP_AND
                     }
                 }
 
