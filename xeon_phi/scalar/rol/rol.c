@@ -195,7 +195,7 @@ int main (int argc, char *argv[]) {
     uint64_t repetitions = 0;
 
     if(argc != 2) {
-        fprintf(stderr,"Please provide the number of <repetitions>.\n");
+        fprintf(stderr,"Please provide the number of <repetitions> (0 for MAX).\n");
         exit(EXIT_FAILURE);
     }
 
