@@ -1,3 +1,4 @@
+#include "../../../include/log_helper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>     // uint32_t
@@ -48,7 +49,7 @@
         asm volatile("vmovdqa32 %%zmm0, %0" : "=m" (vec_int[0]) : : "zmm0"); \
         for(k = 0; k < ITEMS_INT; k++) { \
             if (vec_int[k] != ref_int1) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x\n", time, i, k, th_id, ref_int1, vec_int[k]); \
+                snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x\n", i, k, th_id, ref_int1, vec_int[k]); \
         } \
                 }
 
@@ -77,10 +78,10 @@
         \
         DEBUG \
         asm volatile("vmovapd %%zmm3, %0" : "=m" (vec_fpd[0]) : : "zmm3"); \
-        /*for(k = 0; k < ITEMS_INT; k++) { \
-            if (vec_fpd[k] != (ref_fpd2 << 4)) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:%f WAS:%f\n", time, i, k, th_id, (ref_fpd2 << 4), vec_fpd[k]); \
-        } */\
+        for(k = 0; k < ITEMS_FPD; k++) { \
+            if (fabs(vec_fpd[k]) - fabs(ref_fpd2 * 16) > 0.00000001) \
+                snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:%f WAS:%f\n", i, k, th_id, (ref_fpd2 * 16), vec_fpd[k]); \
+        } \
                 }
 
 #define LOOP_MUL {\
@@ -99,9 +100,9 @@
         \
         DEBUG \
         asm volatile("vmovapd %%zmm5, %0" : "=m" (vec_fpd[0]) : : "zmm5");\
-        /*for(k = 0; k < ITEMS_INT; k++) { \
+        /*for(k = 0; k < ITEMS_FPD; k++) { \
             if (vec_fpd[k] != (ref_fpd3 << 8)) \
-                snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:%f WAS:%f\n", time, i, k, th_id, (ref_fpd3 << 8), vec_fpd[k]); \
+                snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:%f WAS:%f\n", i, k, th_id, (ref_fpd3 << 8), vec_fpd[k]); \
         } */\
                 }
 
@@ -222,18 +223,10 @@ int main (int argc, char *argv[]) {
     if (repetitions == 0)       repetitions -= 1;   // MAX UINT64_T = 18446744073709551615
     omp_set_num_threads(MIC_THREADS);
 
-    fprintf(stderr,"#HEADER Repetitions:%"PRIu64" ",    repetitions);
-    fprintf(stderr,"Threads:%"PRIu32"\n",               MIC_THREADS);
-
-    //==================================================================
-    // Time stamp
-    {
-        time_t     now = time(0);
-        struct tm  tstruct = *localtime(&now);
-        char       time[64];
-        strftime(time, sizeof(time), "#BEGIN Y:%Y M:%m D:%d Time:%X", &tstruct);
-        fprintf(stderr,"%s\n", time);
-    }
+    char msg[LOG_SIZE];
+    snprintf(msg, sizeof(msg), "Repetitions:%"PRIu64" Threads:%"PRIu32"", repetitions, MIC_THREADS);
+    start_log_file("vector_and_fpd", msg);
+    set_max_errors_iter(MAX_ERROR);
 
     //==================================================================
     // Benchmark variables
@@ -259,17 +252,13 @@ int main (int argc, char *argv[]) {
 
         errors = 0;
 
-        time_t     now = time(0);
-        struct tm  tstruct = *localtime(&now);
-        char       time[64];
-        strftime(time, sizeof(time), "#ERROR Y:%Y M:%m D:%d Time:%X", &tstruct);
-
         //==============================================================
         // Initialize the variables with a new REFWORD
         uint32_t ref_int1;
         double ref_fpd1, ref_fpd2, ref_fpd3;
         ref_word(&ref_int1, &ref_fpd1, &ref_fpd2, &ref_fpd3);
 
+        start_iteration();
         //======================================================================P
         // Parallel region
         #pragma offload target(mic) inout(log)
@@ -279,27 +268,13 @@ int main (int argc, char *argv[]) {
             {
                 asm volatile ("nop");
                 asm volatile ("nop");
-                asm volatile ("nop");
 
                 // Portion of memory with 512 bits
                 uint32_t value_int;
                 __declspec(aligned(64)) uint32_t vec_int[ITEMS_INT];
 
                 double value_fpd;
-                __declspec(aligned(64)) double vec_fpd[ITEMS_FPD], a[ITEMS_FPD], b[ITEMS_FPD];
-
-                for(j = 0; j < ITEMS_FPD; j++) {
-                    a[j] = 0;
-                    b[j] = j;
-                }
-
-
-                #pragma vector aligned(a,b)
-                for(j = (repetitions == 0); j < BUSY; j++) {
-                    a[:] += b[:];
-                }
-
-                printf("%f %f %f %f", a[0], a[1], a[2], a[3]);
+                __declspec(aligned(64)) double vec_fpd[ITEMS_FPD];
 
                 //==============================================================
                 // AND
@@ -351,27 +326,20 @@ int main (int argc, char *argv[]) {
             }
             asm volatile ("nop");
             asm volatile ("nop");
-            asm volatile ("nop");
         }
+        end_iteration();
 
         //======================================================================
         // Write the log if exists
         for (x = 0; x < MIC_THREADS; x++)
             for (y = 0; y < MAX_ERROR; y++)
                 if (log[x][y][0] != '\0')
-                    fprintf(stderr,"%s", log[x][y]);
+                    log_error_detail(log[x][y]);
+
+        log_error_count(errors);
 
     }
 
-    //==================================================================
-    // Time stamp
-    {
-        time_t     now = time(0);
-        struct tm  tstruct = *localtime(&now);
-        char       time[64];
-        strftime(time, sizeof(time), "#FINAL Y:%Y M:%m D:%d Time:%X", &tstruct);
-        fprintf(stderr,"%s\n", time);
-    }
-
+    end_log_file();
     exit(EXIT_SUCCESS);
 }

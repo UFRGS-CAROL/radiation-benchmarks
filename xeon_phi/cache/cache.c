@@ -1,3 +1,4 @@
+#include "../../include/log_helper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>     // uint32_t
@@ -49,22 +50,17 @@ int main (int argc, char *argv[]) {
     if (repetitions == 0)       repetitions -= 1;   // MAX UINT64_T = 18446744073709551615
     omp_set_num_threads(MIC_THREADS);
 
-    fprintf(stderr,"#HEADER Elem.Size:%"PRIu32"B ", (uint32_t)sizeof(uint32_t));
-    fprintf(stderr,"ITEMS_INT:%"PRIu32" ",              (uint32_t)(size / sizeof(uint32_t)));
-    fprintf(stderr,"ArraySize:%"PRIu32"KB ",        (uint32_t)(size / 1024));
-    fprintf(stderr,"SizePerThread:%"PRIu32"KB ",    (uint32_t)(size / 1024) / MIC_THREADS);
-    fprintf(stderr,"Repetitions:%"PRIu64" ",        repetitions);
-    fprintf(stderr,"Threads:%"PRIu32"\n",           MIC_THREADS);
+    char msg[LOG_SIZE];
+    snprintf(msg, sizeof(msg),
+            "Repetitions:%"PRIu64" Threads:%"PRIu32" Elem.Size:%"PRIu32"B ArraySize:%"PRIu32"KB SizePerThread:%"PRIu32"KB",
+            repetitions,
+            MIC_THREADS,
+            (uint32_t)sizeof(uint32_t),
+            (uint32_t)(size / sizeof(uint32_t)),
+            (uint32_t)(size / 1024) / MIC_THREADS);
+    start_log_file("cache_mem", msg);
+    set_max_errors_iter(MAX_ERROR);
 
-    //==================================================================
-    // Time stamp
-    {
-        time_t     now = time(0);
-        struct tm  tstruct = *localtime(&now);
-        char       time[64];
-        strftime(time, sizeof(time), "#BEGIN Y:%Y M:%m D:%d Time:%X", &tstruct);
-        fprintf(stderr,"%s\n", time);
-    }
 
     //==================================================================
     // Benchmark variables
@@ -93,11 +89,7 @@ int main (int argc, char *argv[]) {
 
         errors = 0;
 
-        time_t     now = time(0);
-        struct tm  tstruct = *localtime(&now);
-        char       time[64];
-        strftime(time, sizeof(time), "#ERROR Y:%Y M:%m D:%d Time:%X", &tstruct);
-
+        start_iteration();
         //======================================================================P
         // Parallel region
         #pragma offload target(mic) in(ptr_vector:length(size / sizeof(uint32_t)))  inout(log)
@@ -138,7 +130,7 @@ int main (int argc, char *argv[]) {
 
                     if (ptr_vector[j] != ref_int) {
                         snprintf(log[th_id][errors++], LOG_SIZE,
-                                 "%s IT:%"PRIu64" POS:%d TH:%d OP:MEM REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, ref_int, ptr_vector[j]);
+                                 "IT:%"PRIu64" POS:%d TH:%d OP:MEM REF:0x%08x WAS:0x%08x\n", i, j, th_id, ref_int, ptr_vector[j]);
                     }
 
                 }
@@ -147,25 +139,19 @@ int main (int argc, char *argv[]) {
             asm volatile ("nop");
             asm volatile ("nop");
         }
+        end_iteration();
 
         //======================================================================
         // Write the log if exists
         for (x = 0; x < MIC_THREADS; x++)
             for (y = 0; y < MAX_ERROR; y++)
                 if (log[x][y][0] != '\0')
-                    fprintf(stderr,"%s", log[x][y]);
+                    log_error_detail(log[x][y]);
+
+        log_error_count(errors);
 
     }
 
-    //==================================================================
-    // Time stamp
-    {
-        time_t     now = time(0);
-        struct tm  tstruct = *localtime(&now);
-        char       time[64];
-        strftime(time, sizeof(time), "#FINAL Y:%Y M:%m D:%d Time:%X", &tstruct);
-        fprintf(stderr,"%s\n", time);
-    }
-
+    end_log_file();
     exit(EXIT_SUCCESS);
 }

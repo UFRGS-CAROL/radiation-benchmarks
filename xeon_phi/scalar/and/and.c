@@ -1,3 +1,4 @@
+#include "../../../include/log_helper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>     // uint32_t
@@ -40,7 +41,7 @@
         \
         DEBUG \
         if (value_int != ref_int1) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, ref_int1, value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:AND REF:0x%08x WAS:0x%08x\n", i, j, th_id, ref_int1, value_int); \
                 }
 
 #define LOOP_ADD {\
@@ -65,7 +66,7 @@
         \
         DEBUG \
         if (value_int != (ref_int2 << 4)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, (ref_int2 << 4), value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x\n", i, j, th_id, (ref_int2 << 4), value_int); \
                 }
 
 #define LOOP_MUL {\
@@ -81,7 +82,7 @@
         \
         DEBUG \
         if (value_int != (ref_int3 << 8)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, (ref_int3 << 8), value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x\n", i, j, th_id, (ref_int3 << 8), value_int); \
                 }
 
 #define LOOP_DIV {\
@@ -103,7 +104,7 @@
         \
         DEBUG \
         if (value_int != (ref_int1 >> 4)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "%s IT:%"PRIu64" POS:%d TH:%d OP:DIV REF:0x%08x WAS:0x%08x\n", time, i, j, th_id, (ref_int1 >> 4), value_int); \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:DIV REF:0x%08x WAS:0x%08x\n", i, j, th_id, (ref_int1 >> 4), value_int); \
                 }
 
 //======================================================================
@@ -202,18 +203,10 @@ int main (int argc, char *argv[]) {
     if (repetitions == 0)       repetitions -= 1;   // MAX UINT64_T = 18446744073709551615
     omp_set_num_threads(MIC_THREADS);
 
-    fprintf(stderr,"#HEADER Repetitions:%"PRIu64" ",    repetitions);
-    fprintf(stderr,"Threads:%"PRIu32"\n",               MIC_THREADS);
-
-    //==================================================================
-    // Time stamp
-    {
-        time_t     now = time(0);
-        struct tm  tstruct = *localtime(&now);
-        char       time[64];
-        strftime(time, sizeof(time), "#BEGIN Y:%Y M:%m D:%d Time:%X", &tstruct);
-        fprintf(stderr,"%s\n", time);
-    }
+    char msg[LOG_SIZE];
+    snprintf(msg, sizeof(msg), "Repetitions:%"PRIu64" Threads:%"PRIu32"", repetitions, MIC_THREADS);
+    start_log_file("scalar_and", msg);
+    set_max_errors_iter(MAX_ERROR);
 
     //==================================================================
     // Benchmark variables
@@ -238,16 +231,12 @@ int main (int argc, char *argv[]) {
 
         errors = 0;
 
-        time_t     now = time(0);
-        struct tm  tstruct = *localtime(&now);
-        char       time[64];
-        strftime(time, sizeof(time), "#ERROR Y:%Y M:%m D:%d Time:%X", &tstruct);
-
         //==============================================================
         // Initialize the variables with a new REFWORD
         uint32_t ref_int1, ref_int2, ref_int3;
         ref_word(&ref_int1, &ref_int2, &ref_int3);
 
+        start_iteration();
         //======================================================================P
         // Parallel region
         #pragma offload target(mic) inout(log)
@@ -257,7 +246,7 @@ int main (int argc, char *argv[]) {
             {
                 asm volatile ("nop");
                 asm volatile ("nop");
-                asm volatile ("nop");
+
 
                 uint32_t value_int = 0;
                 //==============================================================
@@ -324,27 +313,20 @@ int main (int argc, char *argv[]) {
             }
             asm volatile ("nop");
             asm volatile ("nop");
-            asm volatile ("nop");
         }
+        end_iteration();
 
         //======================================================================
         // Write the log if exists
         for (x = 0; x < MIC_THREADS; x++)
             for (y = 0; y < MAX_ERROR; y++)
                 if (log[x][y][0] != '\0')
-                    fprintf(stderr,"%s", log[x][y]);
+                    log_error_detail(log[x][y]);
+
+        log_error_count(errors);
 
     }
 
-    //==================================================================
-    // Time stamp
-    {
-        time_t     now = time(0);
-        struct tm  tstruct = *localtime(&now);
-        char       time[64];
-        strftime(time, sizeof(time), "#FINAL Y:%Y M:%m D:%d Time:%X", &tstruct);
-        fprintf(stderr,"%s\n", time);
-    }
-
+    end_log_file();
     exit(EXIT_SUCCESS);
 }
