@@ -3,6 +3,13 @@
 // where the log must be generated
 void set_absolute_path(char *path);
 
+// Set the max errors that can be found for a single iteration
+// If more than max errors is found, exit the program
+unsigned long int set_max_errors_iter(unsigned long int max_errors);
+
+// Update with current timestamp the file where the software watchdog watchs
+void update_timestamp();
+
 // Return the name of the log file generated
 char * get_log_file_name();
 

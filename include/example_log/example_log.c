@@ -7,6 +7,10 @@ int main(){
 	// Optional
 	//set_absolute_path("/home/daniel/blabla/");
 	start_log_file("my_benchmark", "size:x repetition:y");
+	set_max_errors_iter(32);
+	
+	printf("log file is %s\n",get_log_file_name());
+	
 	int i;
 	for(i = 0; i < 10; i++){
 
@@ -29,5 +33,6 @@ int main(){
 		}
 	}
 
-	printf("log file written in %s\n",get_log_file_name());
+    end_log_file();
+    
 }

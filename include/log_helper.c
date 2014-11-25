@@ -1,11 +1,27 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
 
-char log_file_name[100] = "";
+// Location of timetamp file for software watchdog
+char timestamp_watchdog[200] = "/home/carol/TestGPU/timestamp.txt";
+
+// Max errors that can be found for a single iteration
+// If more than max errors is found, exit the program
+unsigned long int max_errors_per_iter = 5000;
+
+// Absolute path for log file, if needed
 char absolute_path[200] = "";
+
+
+char log_file_name[100] = "";
 char full_log_file_name[300] = "";
+
+// Saves the last amount of error found for a specific iteration
+unsigned long int last_iter_errors = 0;
+// Saves the last iteration index that had an error
+unsigned long int last_iter_with_errors = 0;
 
 unsigned long int kernels_total_errors = 0;
 unsigned long int iteration_number = 0;
@@ -17,6 +33,23 @@ inline long long get_time() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_sec * 1000000) + tv.tv_usec;
+}
+
+unsigned long int set_max_errors_iter(unsigned long int max_errors){
+     max_errors_per_iter = max_errors;
+     return max_errors_per_iter;
+}
+
+// Update with current timestamp the file where the software watchdog watchs
+void update_timestamp() {
+	time_t timestamp = time(NULL);
+	char time_s[50];
+	sprintf(time_s, "%d", (int) timestamp);
+	char string[100] = "echo ";
+	strcat(string, time_s);
+	strcat(string, " > ");
+	strcat(string, timestamp_watchdog);
+	system(string);
 }
 
 // In case the user needs the log to be generated in some exact absolute path
@@ -31,6 +64,8 @@ char * get_log_file_name(){
 
 // Generate the log file name, log info from user about the test to be executed and reset log variables
 int start_log_file(char *benchmark_name, char *test_info){
+
+    update_timestamp();
 
 	time_t file_time;
 	struct tm *ptm;
@@ -105,6 +140,8 @@ int end_log_file(){
 // Start time to measure kernel time, also update iteration number and log to file
 int start_iteration(){
 
+    update_timestamp();
+    
 	FILE *file = fopen(full_log_file_name, "a");
 
 	if (file == NULL){
@@ -124,6 +161,8 @@ int start_iteration(){
 // Finish the measured kernel time log both time (total time and kernel time)
 int end_iteration(){
 
+    update_timestamp();
+    
 	double kernel_time = (double) (get_time() - it_time_start) / 1000000;
 	kernel_time_acc += kernel_time;
 
@@ -145,6 +184,8 @@ int end_iteration(){
 // Update total errors variable and log both errors(total errors and kernel errors)
 int log_error_count(unsigned long int kernel_errors){
 
+    update_timestamp();
+    
 	kernels_total_errors += kernel_errors;
 
 	FILE *file = fopen(full_log_file_name, "a");
@@ -157,7 +198,30 @@ int log_error_count(unsigned long int kernel_errors){
 	fprintf(file, "#SDC kernel_errors:%lu\n", kernel_errors);
 	fprintf(file, "#TOTAL_SDC total_errors:%lu\n", kernels_total_errors);
 	fflush(file);
-	close(file);
+
+	
+	if(kernel_errors > max_errors_per_iter){
+        fprintf(file, "#ABORT too many errors per iteration\n");
+    	fflush(file);
+    	close(file);
+	    end_log_file();
+	    exit(1);
+	}
+
+
+    if(kernel_errors == last_iter_errors && kernel_errors != 0){
+        fprintf(file, "#ABORT amount of errors equals of teh last iteration\n");
+    	fflush(file);
+	    close(file);
+	    end_log_file();
+	    exit(1);
+    }
+    
+    close(file);
+    
+    last_iter_errors = kernel_errors;
+    last_iter_with_errors = iteration_number;
+    
 	return 0;
 
 }
