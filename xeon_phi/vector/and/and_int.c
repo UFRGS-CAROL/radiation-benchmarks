@@ -9,11 +9,11 @@
 #include <math.h>       // pow
 
 // Xeon Phi Configuration
-#define MIC_CORES       (1)             // Max. 56 Cores (+1 core runs de OS)
+#define MIC_CORES       (56)             // Max. 56 Cores (+1 core runs de OS)
 #define MIC_THREADS     (4*MIC_CORES)   // Max. 4 Threads per Core.
-#define MAX_ERROR       1024            // Max. number of errors per repetition
+#define MAX_ERROR       32            // Max. number of errors per repetition
 #define LOG_SIZE        128             // Line size per error
-#define BUSY            1//300000          // Repetitions in the busy wait
+#define BUSY            300000          // Repetitions in the busy wait
 
 #define ITEMS_INT           16              // 64 bytes (512bits) ZMM register / element size
 
