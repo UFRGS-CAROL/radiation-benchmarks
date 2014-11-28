@@ -208,8 +208,8 @@ int log_error_count(unsigned long int kernel_errors){
     }
 
 
-    if(kernel_errors == last_iter_errors && kernel_errors != 0){
-        fprintf(file, "#ABORT amount of errors equals of teh last iteration\n");
+    if(kernel_errors == last_iter_errors && (last_iter_with_errors+1) == iteration_number && kernel_errors != 0){
+        fprintf(file, "#ABORT amount of errors equals of the last iteration\n");
         fflush(file);
         fclose(file);
         end_log_file();
