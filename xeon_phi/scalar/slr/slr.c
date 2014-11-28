@@ -15,8 +15,13 @@
 #define LOG_SIZE        128             // Line size per error
 #define BUSY            300000          // Repetitions in the busy wait
 
-// ~ #define DEBUG           if (i==0 && j==0 && errors==0) asm volatile("movl %1, %0" : "=r" (value_int) : "r" (~value_int));
-#define DEBUG /*OFF*/
+//#define ALL_DEBUG
+#ifdef ALL_DEBUG
+    #define DEBUG   if (i==0 && j==0 && errors==0) \
+                        asm volatile("movl %1, %0" : "=r" (value_int) : "r" (~value_int));
+#else
+    #define DEBUG /*OFF*/
+#endif
 
 //======================================================================
 #define LOOP_SLR {\

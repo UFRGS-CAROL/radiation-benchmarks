@@ -16,9 +16,18 @@
 
 #define ITEMS_INT           16              // 64 bytes (512bits) ZMM register / element size
 
+//#define ALL_DEBUG
+#ifdef ALL_DEBUG
+    #define DEBUG   if (i==0 && j==0 && errors==0) vec_int[0] = ~vec_int[0];
+#else
+    #define DEBUG /*OFF*/
+#endif
+
+//======================================================================
 #define LOOP_BLOCK(V) \
         {\
             asm volatile("vmovdqa32 %%zmm"#V", %0" : "=m" (vec_int[0]) : : "zmm"#V); \
+            DEBUG \
             for(j = 0; j < ITEMS_INT; j++) { \
                 if (vec_int[j] != ref_int) \
                     snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:REG REF:0x%08x WAS:0x%08x", i, j, th_id, ref_int, vec_int[j]); \

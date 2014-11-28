@@ -3,3 +3,5 @@
 all:
 	icc -O2 -vec-report3 -masm=att -openmp -no-vec ../../../include/log_helper.c slr_int.c -o slr_int
 	icc -O2 -vec-report3 -masm=att -openmp -no-vec ../../../include/log_helper.c slr_fpd.c -o slr_fpd
+	icc -DALL_DEBUG=1 -O2 -vec-report3 -masm=att -openmp -no-vec ../../../include/log_helper.c slr_int.c -o slr_int_debug
+	icc -DALL_DEBUG=1 -O2 -vec-report3 -masm=att -openmp -no-vec ../../../include/log_helper.c slr_fpd.c -o slr_fpd_debug

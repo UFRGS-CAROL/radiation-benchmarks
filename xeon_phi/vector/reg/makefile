@@ -2,3 +2,4 @@
 #   source /opt/intel/composerxe/bin/compilervars.sh intel64;
 all:
 	icc -O2 -vec-report3 -masm=att -openmp -no-vec ../../../include/log_helper.c reg.c -o reg
+	icc -DALL_DEBUG=1 -O2 -vec-report3 -masm=att -openmp -no-vec ../../../include/log_helper.c reg.c -o reg_debug

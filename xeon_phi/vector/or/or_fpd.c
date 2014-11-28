@@ -18,11 +18,14 @@
 #define ITEMS_INT           16              // 64 bytes (512bits) ZMM register / element size
 #define ITEMS_FPD           8              // 64 bytes (512bits) ZMM register / element size
 
-// ~ #define DEBUG_INT           if (i==0 && j==0 && errors==0) vec_int[0] = ~vec_int[0];
-#define DEBUG_INT /*OFF*/
-
-// ~ #define DEBUG_FPD           if (i==0 && j==0 && errors==0) vec_fpd[0] = vec_fpd[0]-1;
-#define DEBUG_FPD /*OFF*/
+//#define ALL_DEBUG
+#ifdef ALL_DEBUG
+    #define DEBUG_INT   if (i==0 && j==0 && errors==0) vec_int[0] = ~vec_int[0];
+    #define DEBUG_FPD   if (i==0 && j==0 && errors==0) vec_fpd[0] = vec_fpd[0]-1;
+#else
+    #define DEBUG_INT /*OFF*/
+    #define DEBUG_FPD /*OFF*/
+#endif
 
 //======================================================================
 #define LOOP_OR {\

@@ -12,10 +12,15 @@
 #define MIC_THREADS     (1*MIC_CORES)   // Max. 4 Threads per Core.
 #define MAX_ERROR       32              // Max. number of errors per repetition
 #define LOG_SIZE        128             // Line size per error
-#define BUSY            10000000         // Repetitions in the busy wait
+#define BUSY            20000000        // Repetitions in the busy wait
 
-// ~ #define DEBUG       if (i==0 && j==0 && errors==0) asm volatile("movl %1, %0" : "=r" (ptr_vector[j]) : "r" (~ptr_vector[j]));
-#define DEBUG /*OFF*/
+//#define ALL_DEBUG
+#ifdef ALL_DEBUG
+    #define DEBUG   if (i==0 && j==0 && errors==0) \
+                        asm volatile("movl %1, %0" : "=r" (ptr_vector[j]) : "r" (~ptr_vector[j]));
+#else
+    #define DEBUG /*OFF*/
+#endif
 
 // =============================================================================
 uint64_t string_to_uint64(char *string) {
@@ -117,7 +122,7 @@ int main (int argc, char *argv[]) {
 
                 //==============================================================
                 // Busy wait
-                for(j = (repetitions == 0); j < 5000000; j++) {
+                for(j = (repetitions == 0); j < BUSY; j++) {
                     asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
                     asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
                     asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
