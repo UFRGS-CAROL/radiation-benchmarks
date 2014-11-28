@@ -44,6 +44,7 @@
         asm volatile("or $0x0, %0" : "+r" (value_int));\
         asm volatile("or $0x0, %0" : "+r" (value_int));\
         \
+        DEBUG \
         if (value_int != ref_int1) \
             snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:OR REF:0x%08x WAS:0x%08x", i, j, th_id, ref_int1, value_int); \
                 }
@@ -68,6 +69,7 @@
         asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
         asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
         \
+        DEBUG \
         if (value_int != (ref_int2 << 4)) \
             snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int2 << 4), value_int); \
                 }
@@ -83,6 +85,7 @@
         asm volatile("imul $0x2, %0" : "+r" (value_int));\
         asm volatile("imul $0x2, %0" : "+r" (value_int));\
         \
+        DEBUG \
         if (value_int != (ref_int3 << 8)) \
             snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int3 << 8), value_int); \
                 }
@@ -103,6 +106,8 @@
         asm volatile("divl %%ebx" : : : "eax", "edx", "ebx"); \
         /* Copy back the operands to check the division */ \
         asm volatile("movl %%eax, %0" : "=r" (value_int) : : "eax"); \
+        \
+        DEBUG \
         if (value_int != (ref_int1 >> 4)) \
             snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:DIV REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int1 >> 4), value_int); \
                 }

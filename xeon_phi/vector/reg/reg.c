@@ -18,7 +18,7 @@
 
 //#define ALL_DEBUG
 #ifdef ALL_DEBUG
-    #define DEBUG   if (i==0 && j==0 && errors==0) vec_int[0] = ~vec_int[0];
+    #define DEBUG   if (i==0 && errors==0) vec_int[0] = ~vec_int[0];
 #else
     #define DEBUG /*OFF*/
 #endif
