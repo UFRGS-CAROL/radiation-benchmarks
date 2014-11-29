@@ -7,6 +7,10 @@ void set_absolute_path(char *path);
 // If more than max errors is found, exit the program
 unsigned long int set_max_errors_iter(unsigned long int max_errors);
 
+// Set the interval the program must print log details, 
+// default is 1 (each iteration)
+int set_iter_interval_print(int interval);
+
 // Update with current timestamp the file where the software watchdog watchs
 void update_timestamp();
 
