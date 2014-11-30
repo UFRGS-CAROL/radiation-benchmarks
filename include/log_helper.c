@@ -80,18 +80,18 @@ int start_log_file(char *benchmark_name, char *test_info){
 
     time_t file_time;
     struct tm *ptm;
-    char day[3], month[3], year[5], hour[3], second[3], minute[3];
+    char day[10], month[10], year[15], hour[10], second[10], minute[10];
     char log_file_name[80];
 
     file_time = time(NULL);
     ptm = gmtime(&file_time);
 
-    snprintf(day,       sizeof(day + 1),    "%02d", ptm->tm_mday);
-    snprintf(month,     sizeof(month + 1),  "%02d", ptm->tm_mon+1);
-    snprintf(year,      sizeof(year + 1),   "%04d", ptm->tm_year+1900);
-    snprintf(hour,      sizeof(hour + 1),   "%02d", ptm->tm_hour);
-    snprintf(minute,    sizeof(minute + 1), "%02d", ptm->tm_min);
-    snprintf(second,    sizeof(second + 1), "%02d", ptm->tm_sec);
+    snprintf(day,       sizeof(day),    "%02d", ptm->tm_mday);
+    snprintf(month,     sizeof(month),  "%02d", ptm->tm_mon+1);
+    snprintf(year,      sizeof(year),   "%04d", ptm->tm_year+1900);
+    snprintf(hour,      sizeof(hour),   "%02d", ptm->tm_hour);
+    snprintf(minute,    sizeof(minute), "%02d", ptm->tm_min);
+    snprintf(second,    sizeof(second), "%02d", ptm->tm_sec);
     strcpy(log_file_name,day);      strcat(log_file_name,"_");
     strcat(log_file_name,month);    strcat(log_file_name,"_");
     strcat(log_file_name,year);     strcat(log_file_name,"_");
