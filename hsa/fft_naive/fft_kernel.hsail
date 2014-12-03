@@ -1,0 +1,136 @@
+version 0:20140528:$full:$large;
+extension "amd:gcn";
+extension "IMAGE";
+
+decl prog function &abort()();
+
+prog kernel &__OpenCL_fft_unit_kernel(
+	kernarg_u64 %global_offset_0,
+	kernarg_u64 %global_offset_1,
+	kernarg_u64 %global_offset_2,
+	kernarg_u64 %printf_buffer,
+	kernarg_u64 %vqueue_pointer,
+	kernarg_u64 %aqlwrap_pointer,
+	kernarg_u64 %unit,
+	kernarg_u64 %factor,
+	kernarg_u64 %odata)
+{
+	pragma  "AMD RTI", "ARGSTART:__OpenCL_fft_unit_kernel";
+	pragma  "AMD RTI", "version:3:1:104";
+	pragma  "AMD RTI", "device:generic";
+	pragma  "AMD RTI", "uniqueid:1028";
+	pragma  "AMD RTI", "memory:private:0";
+	pragma  "AMD RTI", "memory:region:0";
+	pragma  "AMD RTI", "memory:local:0";
+	pragma  "AMD RTI", "value:global_offset_0:u64:1:1:0";
+	pragma  "AMD RTI", "value:global_offset_1:u64:1:1:16";
+	pragma  "AMD RTI", "value:global_offset_2:u64:1:1:32";
+	pragma  "AMD RTI", "pointer:printf_buffer:u8:1:1:48:uav:8:1:RW:0:0:0";
+	pragma  "AMD RTI", "value:vqueue_pointer:u64:1:1:64";
+	pragma  "AMD RTI", "value:aqlwrap_pointer:u64:1:1:80";
+	pragma  "AMD RTI", "pointer:unit:struct:1:1:96:uav:8:16:RW:0:0:0";
+	pragma  "AMD RTI", "pointer:factor:struct:1:1:112:uav:8:16:RW:0:0:0";
+	pragma  "AMD RTI", "pointer:odata:struct:1:1:128:uav:8:16:RW:0:0:0";
+	pragma  "AMD RTI", "function:1:0";
+	pragma  "AMD RTI", "memory:64bitABI";
+	pragma  "AMD RTI", "uavid:8";
+	pragma  "AMD RTI", "privateid:8";
+	pragma  "AMD RTI", "enqueue_kernel:0";
+	pragma  "AMD RTI", "kernel_index:0";
+	pragma  "AMD RTI", "reflection:0:size_t";
+	pragma  "AMD RTI", "reflection:1:size_t";
+	pragma  "AMD RTI", "reflection:2:size_t";
+	pragma  "AMD RTI", "reflection:3:size_t";
+	pragma  "AMD RTI", "reflection:4:size_t";
+	pragma  "AMD RTI", "reflection:5:size_t";
+	pragma  "AMD RTI", "reflection:6:Cal_Unit*";
+	pragma  "AMD RTI", "reflection:7:Complex*";
+	pragma  "AMD RTI", "reflection:8:Complex*";
+	pragma  "AMD RTI", "ARGEND:__OpenCL_fft_unit_kernel";
+
+@__OpenCL_fft_unit_kernel_entry:
+	// BB#0:                                // %entry
+	ld_kernarg_align(8)_width(all)_u64	$d0, [%unit];
+	ld_v2_global_align(4)_const_width(all)_u32	($s0, $s4), [$d0+4];
+	cmp_lt_b1_s32	$c0, $s4, 1;
+	cbr_b1	$c0, @BB0_6;
+	// BB#1:                                // %for.cond3.preheader.lr.ph
+	workitemabsid_u32	$s1, 0;
+	cvt_u64_u32	$d3, $s1;
+	ld_kernarg_align(8)_width(all)_u64	$d4, [0];
+	add_u64	$d1, $d3, $d4;
+	cvt_u32_u64	$s2, $d1;
+	shl_u32	$s0, 1, $s0;
+	mad_u32	$s1, $s2, $s4, $s4;
+	mul_u32	$s2, $s2, $s4;
+	shr_s32	$s3, $s0, 1;
+	ld_kernarg_align(8)_width(all)_u64	$d1, [%odata];
+	ld_kernarg_align(8)_width(all)_u64	$d2, [%factor];
+	add_u64	$d3, $d4, $d3;
+	cvt_u32_u64	$s5, $d3;
+	mul_u32	$s6, $s4, $s5;
+	cvt_s64_s32	$d3, $s6;
+	mad_u32	$s4, $s4, $s5, $s3;
+	shl_u64	$d3, $d3, 4;
+	add_u64	$d3, $d1, $d3;
+	cvt_s64_s32	$d4, $s0;
+	shl_u64	$d4, $d4, 4;
+
+@BB0_2:
+	// %for.cond3.preheader
+	cmp_lt_b1_s32	$c0, $s3, 1;
+	cbr_b1	$c0, @BB0_5;
+	// BB#3:
+	add_u32	$s5, $s2, $s3;
+	mov_b32	$s7, $s4;
+	mov_b64	$d5, $d3;
+	mov_b32	$s6, $s2;
+
+@BB0_4:
+	// %for.body7
+	rem_s32	$s8, $s6, $s0;
+	ld_global_align(4)_const_width(all)_u32	$s9, [$d0];
+	div_s32	$s9, $s9, $s0;
+	mul_u32	$s8, $s8, $s9;
+	cvt_s64_s32	$d6, $s8;
+	shl_u64	$d6, $d6, 4;
+	add_u64	$d9, $d2, $d6;
+	add_u32	$s8, $s7, 1;
+	add_u64	$d6, $d5, 16;
+	add_u32	$s6, $s6, 1;
+	ld_v2_global_align(8)_f64	($d10, $d7), [$d5];
+	ld_v2_global_align(8)_f64	($d8, $d11), [$d9];
+	cvt_s64_s32	$d9, $s7;
+	shl_u64	$d9, $d9, 4;
+	add_u64	$d9, $d1, $d9;
+	ld_v2_global_align(8)_f64	($d14, $d13), [$d9];
+	mul_f64	$d12, $d11, $d13;
+	mul_f64	$d15, $d8, $d14;
+	sub_f64	$d12, $d15, $d12;
+	sub_f64	$d10, $d10, $d12;
+	mul_f64	$d11, $d11, $d14;
+	mul_f64	$d8, $d8, $d13;
+	add_f64	$d8, $d8, $d11;
+	sub_f64	$d7, $d7, $d8;
+	st_v2_global_align(8)_f64	($d10, $d7), [$d9];
+	ld_v2_global_align(8)_f64	($d9, $d7), [$d5];
+	add_f64	$d9, $d12, $d9;
+	add_f64	$d7, $d8, $d7;
+	st_v2_global_align(8)_f64	($d9, $d7), [$d5];
+	cmp_lt_b1_s32	$c0, $s6, $s5;
+	mov_b32	$s7, $s8;
+	mov_b64	$d5, $d6;
+	cbr_b1	$c0, @BB0_4;
+
+@BB0_5:
+	// %for.inc61
+	add_u32	$s4, $s4, $s0;
+	add_u64	$d3, $d3, $d4;
+	add_u32	$s2, $s2, $s0;
+	cmp_lt_b1_s32	$c0, $s2, $s1;
+	cbr_b1	$c0, @BB0_2;
+
+@BB0_6:
+	// %for.end63
+	ret;
+};
