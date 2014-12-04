@@ -9,6 +9,16 @@ fi
 FILES=$1
 OUT=$2
 
+if [ -e $OUT ]; then
+	echo "File $OUT exist. Do you really want to OVERWRITE the file?"
+	select yn in "Yes" "No"; do
+		case $yn in
+			Yes ) break;;
+			No ) exit 1;;
+		esac
+	done
+fi
+
 echo ""
 echo " Output=$OUT"
 echo " files to parser:$FILES"
