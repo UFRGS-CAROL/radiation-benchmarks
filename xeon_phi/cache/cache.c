@@ -6,6 +6,7 @@
 #include <unistd.h>     // Sleep
 #include <time.h>       // Time
 #include <omp.h>        // OpenMP
+#include "offload.h"    // omp_set_num_threads_target
 
 // Xeon Phi Configuration
 #define MIC_CORES       (56)            // Max. 56 Cores (+1 core runs de OS)
@@ -53,7 +54,7 @@ int main (int argc, char *argv[]) {
     }
 
     if (repetitions == 0)       repetitions -= 1;   // MAX UINT64_T = 18446744073709551615
-    omp_set_num_threads(MIC_THREADS);
+    omp_set_num_threads_target(TARGET_MIC, 0, MIC_THREADS);
 
     char msg[LOG_SIZE];
     snprintf(msg, sizeof(msg),
