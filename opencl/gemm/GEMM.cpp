@@ -30,6 +30,11 @@ char kernel_gemmN_path [] = "/home/carol/DSN15_codes/openclgemm/gemmN.cl";
 
 using namespace std;
 
+inline long long get_time() {
+     struct timeval tv;
+     gettimeofday(&tv, NULL);
+     return (tv.tv_sec * 1000000) + tv.tv_usec;
+}
 
 void ReadMatrixFromFile(double *h_A, double *h_B, double *h_GOLD)
 {
@@ -437,6 +442,8 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         start_iteration();
 #endif /* LOGS */
 
+	long long k_start = get_time();
+
         //Launch Kernels
         err = clEnqueueNDRangeKernel(queue, sgemmNN, 2, NULL, globalWorkSize,
                                      localWorkSize, 0, NULL, NULL);
@@ -444,10 +451,15 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         clFinish(queue);
         CL_BAIL_ON_ERROR(err);
 
+
+	double kernel_time = (double) (get_time() - it_time_start) / 1000000;
+	double flops = 2.0*(double)N*N*N;
+	double gflops = flops / kernel_time;
+	printf("GFLOPS: %lf\n",gflops);
+
 #ifdef LOGS
         end_iteration();
 #endif /* LOGS */
-
 
         // Check Gold
         *kerrors = 0;
@@ -480,7 +492,6 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         CL_BAIL_ON_ERROR(err);
 
         if (it==1) cout << "Errors : " << *kerrors << "\n";
-
 
         ea = 0;
         t_ea += *kerrors;
