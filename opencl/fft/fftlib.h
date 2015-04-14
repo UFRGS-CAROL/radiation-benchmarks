@@ -25,7 +25,8 @@ void init(bool _do_dp,
           cl_program& fftProg,
           cl_kernel& fftKrnl,
           cl_kernel& ifftKrnl,
-          cl_kernel& chkKrnl);
+          cl_kernel& chkKrnl,
+	  cl_kernel& goldChkKrnl);
 
 void deinit(cl_command_queue fftQueue,
             cl_program& fftProg,
@@ -72,6 +73,8 @@ void copyToDevice(void* to_device, void* from_host,
 
 void copyFromDevice(void* to_host, void* from_device,
                     const unsigned long bytes, cl_command_queue fftQueue);
+
+int ocl_exec_gchk(cplxdbl *gold, cl_command_queue& fftQueue, cl_context& context, void* d_odata, cl_kernel& gchk_kernel, int n, int mem_size, size_t thread_per_block, double avoidzero, double acceptdiff);
 
 cl_device_id ListDevicesAndGetDevice(int platform, int device, bool output);
 #endif							 // FFTLIB_H

@@ -199,10 +199,11 @@ init(bool do_dp,
      cl_program& fftProg,
      cl_kernel& fftKrnl,
      cl_kernel& ifftKrnl,
-     cl_kernel& chkKrnl) {
+     cl_kernel& chkKrnl,
+     cl_kernel& goldChkKrnl) {
     cl_int err;
 
-    FILE*  theFile = fopen("/home/carol/daniel/opencl_fft/fftDISTR.cl", "r");
+    FILE*  theFile = fopen("/home/carol/DSN15_codes/openclfft/fftDISTR.cl", "r");
     if (!theFile) {
         fprintf(stderr, "Failed to load kernel file.\n");
         exit(1);
@@ -223,6 +224,7 @@ init(bool do_dp,
 
     free(source_str);
 
+//    err = clBuildProgram(fftProg, 0, NULL, "-cl-nv-arch sm_35", NULL, NULL);
     err = clBuildProgram(fftProg, 0, NULL, NULL, NULL, NULL);
     {
         char* log = NULL;
@@ -250,6 +252,7 @@ init(bool do_dp,
         err = clGetProgramBuildInfo(fftProg, fftDev, CL_PROGRAM_BUILD_LOG,
                                     50000*sizeof(char),  log, &retsize);
         CL_CHECK_ERROR(err);
+	cout << "BUILD LOG:\n";
         cout << "Retsize: " << retsize << endl;
         cout << "Log: " << log << endl;
         exit(-1);
@@ -264,6 +267,65 @@ init(bool do_dp,
     // Create kernel for check
     chkKrnl = clCreateKernel(fftProg, "chk1D_512", &err);
     CL_CHECK_ERROR(err);
+    // Create kernel for efective gold check
+    goldChkKrnl = clCreateKernel(fftProg, "GoldChk", &err);
+    CL_CHECK_ERROR(err);
+}
+
+
+int ocl_exec_gchk(cplxdbl *gold, cl_command_queue& fftQueue, cl_context& context, void* d_odata, cl_kernel& gchk_kernel, int n, int mem_size, size_t thread_per_block, double avoidzero, double acceptdiff)
+{
+	cl_int err;
+	// Prepare GoldChk on GPU...
+	int *kerrors=(int*)malloc(sizeof(int));
+	cl_mem d_gold;
+	cl_mem d_kerrors;
+	d_gold = clCreateBuffer(context, CL_MEM_READ_WRITE, mem_size, NULL, &err);
+	CL_CHECK_ERROR(err);
+	d_kerrors = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(int), NULL, &err);
+	CL_CHECK_ERROR(err);
+
+	*kerrors=0;
+	err = clEnqueueWriteBuffer(fftQueue, d_kerrors, CL_TRUE, 0, sizeof(int), kerrors, 0, NULL, NULL);
+	CL_CHECK_ERROR(err);
+	err = clEnqueueWriteBuffer(fftQueue, d_gold, CL_TRUE, 0, mem_size, gold, 0, NULL, NULL);
+	CL_CHECK_ERROR(err);
+	
+	int *size=(int*)malloc(sizeof(int));
+	*size=n;
+	err = clSetKernelArg(gchk_kernel, 0, sizeof(cl_mem), (void*)&d_gold);
+        CL_CHECK_ERROR(err);
+        err = clSetKernelArg(gchk_kernel, 1, sizeof(cl_mem), (void*)d_odata);
+        CL_CHECK_ERROR(err);
+        err = clSetKernelArg(gchk_kernel, 2, sizeof(int), (void*)&size);
+	CL_CHECK_ERROR(err);
+	err = clSetKernelArg(gchk_kernel, 3, sizeof(cl_mem), (void*)&d_kerrors);
+	CL_CHECK_ERROR(err);
+	err = clSetKernelArg(gchk_kernel, 4, sizeof(double), (void*)&acceptdiff);
+	CL_CHECK_ERROR(err);
+	err = clSetKernelArg(gchk_kernel, 5, sizeof(double), (void*)&avoidzero);
+	CL_CHECK_ERROR(err);
+
+
+
+	// Run GoldChk on GPU...
+	size_t gchk_wgsize = n;
+	size_t  gchk_lgsize = thread_per_block;
+	err = clEnqueueNDRangeKernel(fftQueue, gchk_kernel, 1, NULL, (size_t*)&gchk_wgsize, (size_t*)&gchk_lgsize, 0, NULL, NULL);
+	CL_CHECK_ERROR(err);
+	err = clFinish(fftQueue);
+	CL_CHECK_ERROR(err);	
+
+	// Retrieve kerrors...
+	err = clEnqueueReadBuffer(fftQueue, d_kerrors, CL_TRUE, 0, sizeof(int), kerrors, 0, NULL, NULL);
+	CL_CHECK_ERROR(err);
+	// Release GoldChk GPU resources...
+	clReleaseMemObject(d_gold);
+	clReleaseMemObject(d_kerrors);
+
+	//printf("kerrors = %i\n", *kerrors);
+
+	return *kerrors;
 }
 
 

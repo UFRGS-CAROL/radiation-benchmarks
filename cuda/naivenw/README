@@ -1,0 +1,2 @@
+This is a naive version of Needleman Wunsch implementations. 
+This version traverses the main matrix strip by strip along the diagonal. 

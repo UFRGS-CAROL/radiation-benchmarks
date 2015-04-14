@@ -63,11 +63,11 @@ template <class T2> void dump(cl_device_id id,
 
     bool do_dp = dp<T2>();
     cl_program fftProg;
-    cl_kernel fftKrnl, ifftKrnl, chkKrnl;
+    cl_kernel fftKrnl, ifftKrnl, chkKrnl, goldChkKrnl;
 
 
     init(do_dp, id, ctx, queue, fftProg, fftKrnl,
-         ifftKrnl, chkKrnl);
+         ifftKrnl, chkKrnl, goldChkKrnl);
 
     // now determine how much available memory will be used
     int half_n_ffts = bytes / (512*sizeof(T2)*2);
@@ -104,7 +104,7 @@ template <class T2> void dump(cl_device_id id,
 
         printf("generating input and checkin output\n");
 
-        if( (fp = fopen("/home/carol/daniel/fft/input_fft", "wb" )) == 0 )
+        if( (fp = fopen("/home/carol/DSN15_codes/openclfft/input_fft", "wb" )) == 0 )
             printf( "The file input_fft was not opened\n");
 
         //saving input
@@ -123,7 +123,7 @@ template <class T2> void dump(cl_device_id id,
         //printf("\nkernel time: %.12f\n", kernel_time);
         copyFromDevice(result, work, used_bytes, queue);
 
-        if( (fp = fopen("/home/carol/daniel/fft/output_fft", "wb" )) == 0 )
+        if( (fp = fopen("/home/carol/DSN15_codes/openclfft/output_fft", "wb" )) == 0 )
             printf( "The file output_fft was not opened\n");
         //saving output
 
@@ -270,7 +270,7 @@ void getDevices(cl_device_type deviceType) {
             printf("  CL_DEVICE_MAX_MEM_ALLOC_SIZE = %llu\n",
                    (unsigned long long) buf_ulong);
         }
-        printf("\n");
+        //printf("\n");
     }
 
     // Create an OpenCL context.
@@ -292,20 +292,20 @@ void getDevices(cl_device_type deviceType) {
 int main(int argc, char** argv) {
 
     int devType;
-    if(argc > 2)
+    if(argc > 1)
     {
         sizeIndex = atoi(argv[1]);
-        devType = atoi(argv[2]);
+        devType = 1;//atoi(argv[2]);
     }
 
     else
     {
-        printf("ERROR! enter input size (0 to 5) and device type (0 - CPU; 1 - GPU)\n\n");
+        printf("ERROR! enter input size (0 to 2)\n\n");
         exit(1);
     }
 
     printf("Generating with %s...\n\n", devType == 0 ? "CPU" : "GPU");
-    getDevices(devType == 0 ? CL_DEVICE_TYPE_CPU : CL_DEVICE_TYPE_GPU);
+    getDevices(CL_DEVICE_TYPE_GPU);
 
     dump<cplxdbl>(device_id[0], context, command_queue);
 }
