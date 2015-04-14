@@ -74,7 +74,7 @@ extern const char *cl_source_md;
 int main() {
 
     // Problem Parameters
-    const int probSizes[6] = { 12288, 24576, 36864, 73728, 147456, 294912 };
+    const int probSizes[6] = { 12288, 24576, 36864, 73728, 147456, 1048576 };
     int sizeClass = 6;
     int nAtom = probSizes[sizeClass - 1];
 

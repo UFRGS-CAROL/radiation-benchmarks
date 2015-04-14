@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
         gpu_workload = 100;
     
     // Problem Parameters
-    const int probSizes[6] = { 12288, 24576, 36864, 73728, 147456 , 294912};
+    const int probSizes[6] = { 12288, 24576, 36864, 73728, 147456 , 1048576};
     int sizeClass = 6;
     int nAtom = probSizes[sizeClass - 1];
 
@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
     }
 	double total_time = 0;
 	double gpu_kernel_time = 0, cpu_kernel_time = 0;
-	long long time0, time1, total_time0, total_time1;
+	long long total_time0, total_time1;
 	
 	total_time0 = get_time();
 
@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
                 
                 int localSize  = 128;
                 int globalSize = ocl_nAtom;
-                
+                long long time0, time1;
                 time0 = get_time();
 	            ocl_exec_kernel(globalSize, localSize);
                 time1 = get_time();
@@ -188,6 +188,7 @@ int main(int argc, char** argv) {
 	    #pragma omp section
         {
             if(ocl_nAtom < nAtom){
+                long long time0, time1;
                 time0 = get_time();
                 omp_kernel(force, position, neighborList, ocl_nAtom, nAtom);
                 time1 = get_time();
