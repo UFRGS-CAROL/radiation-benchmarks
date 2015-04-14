@@ -39,7 +39,7 @@ do
 		SDC_ERROR_RATE=`echo "$ERRORS_COUNT/$ACC_KERNEL_TIME" | bc -l | awk '{printf "%.8f", $0}'`
 		FI_ERROR_RATE=`echo "1/$LAST_ACC_KERNEL_TIME" | bc -l | awk '{printf "%.8f", $0}'`
 
-		ACC_ERR=`grep acc_err $FILE| tail -1 |awk '{print $5}' | awk -F : '{print $2}'`
+		ACC_ERR=`grep acc_err $FILE| tail -1 |awk '{print $6}' | awk -F : '{print $2}'`
 	else
 		ACC_KERNEL_TIME=0
 		#LAST_ACC_KERNEL_TIME=`grep acc_time $FILE | tail -1 | awk '{print $4}' | awk -F : '{print $2}'`
