@@ -12,7 +12,9 @@
 
 #include "support.h"
 
+#ifdef LOGS
 #include "/home/carol/log_helper/log_helper.h"
+#endif /* LOGS */
 
 #define N 1024
 
@@ -28,97 +30,29 @@ char kernel_gemmN_path [] = "/home/carol/DSN15_codes/openclgemm/gemmN.cl";
 
 using namespace std;
 
-//double mysecond()
-//{
-//	struct timeval tp;
-//	struct timezone tzp;
-//	int i = gettimeofday(&tp, &tzp);
-//	return ((double)tp.tv_sec + (double)tp.tv_usec * 1.e-6);
-//}
-//
-//void UpdateTimestamp(){
-//	time_t timestamp = time(NULL);
-//	char time_s[50];
-//	sprintf(time_s, "%d", int(timestamp));
-//
-//	char string[100] = "echo ";
-//	strcat(string, time_s);
-//	strcat(string, " > /home/carol/TestGPU/timestamp.txt");
-//	system(string);
-//}
 
 void ReadMatrixFromFile(double *h_A, double *h_B, double *h_GOLD)
 {
-	FILE *f_A, *f_B, *f_GOLD;
+    FILE *f_A, *f_B, *f_GOLD;
 
-	printf("open matrix...");
-	//f_A = fopen("matriceID4096.matrix", "rb");
-	f_A = fopen("/home/carol/TestGPU/GenerateGoldMatrix/Double_B_8192.matrix", "rb");
-	f_B = fopen("/home/carol/TestGPU/GenerateGoldMatrix/Double_A_8192.matrix", "rb");
-	f_GOLD = fopen(GOLD_MATRIX_PATH, "rb");
+    f_A = fopen("/home/carol/TestGPU/GenerateGoldMatrix/Double_B_8192.matrix", "rb");
+    f_B = fopen("/home/carol/TestGPU/GenerateGoldMatrix/Double_A_8192.matrix", "rb");
+    f_GOLD = fopen(GOLD_MATRIX_PATH, "rb");
 
-	if (!(f_A && f_B && f_GOLD)) { printf("Error opening matrix.\n"); exit(-1); }
+    if (!(f_A && f_B && f_GOLD)) {
+        printf("Error opening matrix.\n");
+        exit(-1);
+    }
 
-	printf("read...");
-	fread(h_A, sizeof(double)*N*N, 1, f_A);
-	fread(h_B, sizeof(double)*N*N, 1, f_B);
-	fread(h_GOLD, sizeof(double)*N*N, 1, f_GOLD);
+    printf("read...");
+    fread(h_A, sizeof(double)*N*N, 1, f_A);
+    fread(h_B, sizeof(double)*N*N, 1, f_B);
+    fread(h_GOLD, sizeof(double)*N*N, 1, f_GOLD);
 
-	fclose(f_A);
-	fclose(f_B);
-	fclose(f_GOLD);
+    fclose(f_A);
+    fclose(f_B);
+    fclose(f_GOLD);
 
-	/*printf("transpose A and GOLD...");
-	// transpose A
-	double temp=0;
-	for (int i=0; i<N; i++)
-		for (int j=0; j<i; j++)
-			{
-				temp=h_A[i*N+j];
-				h_A[i*N+j]=h_A[j*N+i];
-				h_A[j*N+i]=temp;
-				temp=h_GOLD[i*N+j];
-				h_GOLD[i*N+j]=h_GOLD[j*N+i];
-				h_GOLD[j*N+i]=temp;
-			}
-	printf("ok.\n");*/
-	/*h_A[0 * 4096 + 0] = 1.3;
-	h_A[0 * 4096 + 1] = 2.3;
-	h_A[0 * 4096 + 2] = 4.3;
-	h_A[0 * 4096 + 3] = 3.3;
-	h_A[1 * 4096 + 0] = 3.3;
-	h_A[2 * 4096 + 0] = 2.3;
-	h_A[3 * 4096 + 0] = 1.3;
-	h_A[1 * 4096 + 1] = 2.3;
-	h_A[1 * 4096 + 2] = 4.3;
-	h_A[1 * 4096 + 3] = 3.3;
-	h_A[2 * 4096 + 2] = 2.3;
-	h_A[2 * 4096 + 3] = 3.3;
-	h_A[3 * 4096 + 3] = 1.3;
-	h_A[2 * 4096 + 1] = 4.3;
-	h_A[3 * 4096 + 1] = 3.3;
-	h_A[3 * 4096 + 2] = 2.3;
-
-	h_B[0 * 4096 + 0] = 1.3;
-	h_B[0 * 4096 + 1] = 2.3;
-	h_B[0 * 4096 + 2] = 4.3;
-	h_B[0 * 4096 + 3] = 3.3;
-	h_B[1 * 4096 + 0] = 3.3;
-	h_B[2 * 4096 + 0] = 2.3;
-	h_B[3 * 4096 + 0] = 1.3;
-	h_B[1 * 4096 + 1] = 2.3;
-	h_B[1 * 4096 + 2] = 4.3;
-	h_B[1 * 4096 + 3] = 3.3;
-	h_B[2 * 4096 + 2] = 2.3;
-	h_B[2 * 4096 + 3] = 3.3;
-	h_B[3 * 4096 + 3] = 1.3;
-	h_B[2 * 4096 + 1] = 4.3;
-	h_B[3 * 4096 + 1] = 3.3;
-	h_B[3 * 4096 + 2] = 2.3;
-	//1 1 1 1
-	//1 1 1 1
-	//1 1 1 1
-	//1 1 1 1*/
 
 }
 
@@ -130,7 +64,7 @@ void ReadMatrixFromFile(double *h_A, double *h_B, double *h_GOLD)
 }
 
 // Forward declaration
-template <class T> inline std::string toString (const T& t){
+template <class T> inline std::string toString (const T& t) {
     std::stringstream ss;
     ss << t;
     return ss.str();
@@ -138,77 +72,77 @@ template <class T> inline std::string toString (const T& t){
 
 template <class T>
 void runTest(const string& testName, cl_device_id dev, cl_context ctx,
-        cl_command_queue queue, const string& compileFlags);
+             cl_command_queue queue, const string& compileFlags);
 
 void
 RunBenchmark(cl_device_id dev, cl_context ctx, cl_command_queue queue);
 
 int main()
 {
-	// =========> OpenCl vars
-	cl_context clGPUContext;
-	cl_command_queue clCommandQue;
-	cl_int numplat;
-	cl_platform_id platforms[5];
-	cl_int errcode;
+    // =========> OpenCl vars
+    cl_context clGPUContext;
+    cl_command_queue clCommandQue;
+    cl_int numplat;
+    cl_platform_id platforms[5];
+    cl_int errcode;
 
-	size_t dataBytes;
+    size_t dataBytes;
 
-	clGetPlatformIDs(2, platforms, (cl_uint*)&numplat);
-	std::cout << "OpenCL Platforms available  : " << numplat << "\n";
-	// This returns a platform list available on the system, on my system this means:
-	//	[0] = Intel Core i7 (4Cores, 8Logical threads) / OpenCL1.2
-	//			Intel HD4600 Integrated Graphics / OpenCL1.2
-	//	[1] = NVIDIA GTX850m Dedicated Graphics / CUDA 6.5 / OpenCL1.1
+    clGetPlatformIDs(2, platforms, (cl_uint*)&numplat);
+    std::cout << "OpenCL Platforms available  : " << numplat << "\n";
+    // This returns a platform list available on the system, on my system this means:
+    //	[0] = Intel Core i7 (4Cores, 8Logical threads) / OpenCL1.2
+    //			Intel HD4600 Integrated Graphics / OpenCL1.2
+    //	[1] = NVIDIA GTX850m Dedicated Graphics / CUDA 6.5 / OpenCL1.1
 
 
-	// Setup OpenCL context and device for NVIDIA GTX850m
-	cl_context_properties props[3];
-	props[0] = (cl_context_properties)CL_CONTEXT_PLATFORM;  // indicates that next element is platform
-	props[1] = (cl_context_properties)platforms[numplat - 1];  // platform is of type cl_platform_id
-	props[2] = (cl_context_properties)0;   // last element must be 0
+    // Setup OpenCL context and device for NVIDIA GTX850m
+    cl_context_properties props[3];
+    props[0] = (cl_context_properties)CL_CONTEXT_PLATFORM;  // indicates that next element is platform
+    props[1] = (cl_context_properties)platforms[numplat - 1];  // platform is of type cl_platform_id
+    props[2] = (cl_context_properties)0;   // last element must be 0
 
-	clGPUContext = clCreateContextFromType(props,
-		CL_DEVICE_TYPE_GPU,				// It could be CL_DEVICE_TYPE_ALL as on the selected platform this is the only computing device, btw...
-		NULL, NULL, &errcode);
-	if (errcode != CL_SUCCESS) std::cout << "error clCreateContextFromType : " << errcode << "\n";
+    clGPUContext = clCreateContextFromType(props,
+                                           CL_DEVICE_TYPE_GPU,				// It could be CL_DEVICE_TYPE_ALL as on the selected platform this is the only computing device, btw...
+                                           NULL, NULL, &errcode);
+    if (errcode != CL_SUCCESS) std::cout << "error clCreateContextFromType : " << errcode << "\n";
 
-	// get the list of GPU devices associated 
-	// with context
+    // get the list of GPU devices associated
+    // with context
 
-	cl_int num_devices;
-	errcode = clGetContextInfo(clGPUContext, // This just to show how many devices are avail on the platform
-		CL_CONTEXT_NUM_DEVICES, sizeof(cl_int),
-		&num_devices, NULL);
-	std::cout << "Number of devices: " << num_devices << "\n";
-	errcode = clGetContextInfo(clGPUContext,
-		CL_CONTEXT_DEVICES, 0, NULL,
-		&dataBytes);
-	cl_device_id *clDevices = (cl_device_id *)
-		malloc(dataBytes);
-	errcode |= clGetContextInfo(clGPUContext,
-		CL_CONTEXT_DEVICES, dataBytes,
-		clDevices, NULL);
+    cl_int num_devices;
+    errcode = clGetContextInfo(clGPUContext, // This just to show how many devices are avail on the platform
+                               CL_CONTEXT_NUM_DEVICES, sizeof(cl_int),
+                               &num_devices, NULL);
+    std::cout << "Number of devices: " << num_devices << "\n";
+    errcode = clGetContextInfo(clGPUContext,
+                               CL_CONTEXT_DEVICES, 0, NULL,
+                               &dataBytes);
+    cl_device_id *clDevices = (cl_device_id *)
+                              malloc(dataBytes);
+    errcode |= clGetContextInfo(clGPUContext,
+                                CL_CONTEXT_DEVICES, dataBytes,
+                                clDevices, NULL);
 
-	if (errcode != CL_SUCCESS) std::cout << "error clGetContextInfo : " << errcode << "\n";
+    if (errcode != CL_SUCCESS) std::cout << "error clGetContextInfo : " << errcode << "\n";
 
-	char clName[50];
+    char clName[50];
 
-	errcode = clGetDeviceInfo(clDevices[DEVICE_ID],
-		CL_DEVICE_NAME,
-		sizeof(char) * 50,
-		clName,
-		NULL);
-	if (errcode != CL_SUCCESS) std::cout << "error clGetDeviceInfo : " << errcode << "\n";
-	std::cout << "Device name : " << clName << "\n";
+    errcode = clGetDeviceInfo(clDevices[DEVICE_ID],
+                              CL_DEVICE_NAME,
+                              sizeof(char) * 50,
+                              clName,
+                              NULL);
+    if (errcode != CL_SUCCESS) std::cout << "error clGetDeviceInfo : " << errcode << "\n";
+    std::cout << "Device name : " << clName << "\n";
 
-	clCommandQue = clCreateCommandQueue(clGPUContext,
-		clDevices[DEVICE_ID], 0, &errcode);
-	if (errcode != CL_SUCCESS) std::cout << "error clCommandQue : " << errcode << "\n";
+    clCommandQue = clCreateCommandQueue(clGPUContext,
+                                        clDevices[DEVICE_ID], 0, &errcode);
+    if (errcode != CL_SUCCESS) std::cout << "error clCommandQue : " << errcode << "\n";
 
-	std::cout << "Now calling RunBenchmark\n";
+    std::cout << "Now calling RunBenchmark\n";
 
-	RunBenchmark(clDevices[DEVICE_ID], clGPUContext, clCommandQue);
+    RunBenchmark(clDevices[DEVICE_ID], clGPUContext, clCommandQue);
 
 }
 
@@ -245,22 +179,21 @@ int main()
 
 void
 RunBenchmark(cl_device_id dev,
-                  cl_context ctx,
-                  cl_command_queue queue)
+             cl_context ctx,
+             cl_command_queue queue)
 {
     // OpenCL doesn't support templated kernels, so we have to use macros
 
-   
     runTest<double>("DGEMM", dev, ctx, queue,
-            "-DK_DOUBLE_PRECISION ");
+                    "-DK_DOUBLE_PRECISION ");
 }
 
 template <class T>
 void runTest(const string& testName, cl_device_id dev, cl_context ctx,
-        cl_command_queue queue, const string& compileFlags)
+             cl_command_queue queue, const string& compileFlags)
 {
 
-	double timeG;
+    double timeG;
 
     cl_int err;
     int waitForEvents = 1;
@@ -272,34 +205,36 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
     lda = ldb = ldc = N;
 
-	// Log files
-	FILE* file;
-	FILE* log_file;
-	FILE* timefile;
+#ifdef LOGS
+    // Log files
+    FILE* file;
+    FILE* log_file;
+    FILE* timefile;
+#endif /* LOGS */
 
-	int loop2;
+    int loop2;
 
-	int ea = 0; //wrong integers in the current loop
-	int t_ea = 0; //total number of wrong integers
-	int old_ea = 0;
+    int ea = 0; //wrong integers in the current loop
+    int t_ea = 0; //total number of wrong integers
+    int old_ea = 0;
 
-	double total_time = 0.0;
+    double total_time = 0.0;
 
 
 
-	char test_info[100];
-	snprintf(test_info, 100, "size:%dx%d",N,N);
-	start_log_file(LOGFILE_MATRIXNAME, test_info);
-	set_max_errors_iter(200);
-	set_iter_interval_print(5);
+    char test_info[100];
+    snprintf(test_info, 100, "size:%dx%d",N,N);
+    start_log_file(LOGFILE_MATRIXNAME, test_info);
+    set_max_errors_iter(200);
+    set_iter_interval_print(5);
 
-	// check 
+    // check
     cl_uint numDimensions = 0;
     clGetDeviceInfo (dev, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,
-                             sizeof(cl_uint), &numDimensions, NULL);
+                     sizeof(cl_uint), &numDimensions, NULL);
     size_t *maxWorkSizes = new size_t[numDimensions];
     clGetDeviceInfo (dev, CL_DEVICE_MAX_WORK_ITEM_SIZES,
-                       sizeof(size_t)*numDimensions, maxWorkSizes, NULL);
+                     sizeof(size_t)*numDimensions, maxWorkSizes, NULL);
 
     if (numDimensions<2 || maxWorkSizes[0]<16 || maxWorkSizes[1] < 4)
     {
@@ -309,39 +244,39 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
     size_t localWorkSize[2] = {16,4};
 
-	cout << "Ready, build program...";
+    cout << "Ready, build program...";
 
-	std::ifstream kernelfile(kernel_gemmN_path); // This will read the file to the memory as OpenCL needs to compile it from there
-	std::string kernelstr((std::istreambuf_iterator<char>(kernelfile)),
-		std::istreambuf_iterator<char>());
-	const char* cl_source_gemmN = kernelstr.c_str();
+    std::ifstream kernelfile(kernel_gemmN_path); // This will read the file to the memory as OpenCL needs to compile it from there
+    std::string kernelstr((std::istreambuf_iterator<char>(kernelfile)),
+                          std::istreambuf_iterator<char>());
+    const char* cl_source_gemmN = kernelstr.c_str();
 
-	const size_t kernelLength=kernelstr.length();
-	cout << "L:" << kernelLength << endl; //kernelstr.size() << " ";
+    const size_t kernelLength=kernelstr.length();
+    cout << "L:" << kernelLength << endl; //kernelstr.size() << " ";
     // Create program object
     cl_program prog = clCreateProgramWithSource(ctx, 1,
-                                 &cl_source_gemmN, &kernelLength, &err);
+                      &cl_source_gemmN, &kernelLength, &err);
     CL_CHECK_ERROR(err);
 
     //string flags = compileFlags + " -cl-mad-enable";
     err = clBuildProgram(prog, 0, NULL, "-DK_DOUBLE_PRECISION", NULL,
-            NULL);
+                         NULL);
     //CL_CHECK_ERROR(err);
 
     // If compilation fails, print error messages and return
-   if (err == CL_BUILD_PROGRAM_FAILURE) {
-    //if (err != CL_SUCCESS) {
+    if (err == CL_BUILD_PROGRAM_FAILURE) {
+        //if (err != CL_SUCCESS) {
         char log[5000];
         size_t retsize = 0;
         err =  clGetProgramBuildInfo (prog, dev, CL_PROGRAM_BUILD_LOG,
-                5000*sizeof(char),  log, &retsize);
+                                      5000*sizeof(char),  log, &retsize);
 
         CL_CHECK_ERROR(err);
         cout << "Retsize: " << retsize << endl;
         cout << "Log: " << log << endl;
         exit(-1);
     }
-	cout << "Ok\n";
+    cout << "Ok\n";
 
     // Generate the kernel objects
     cl_kernel sgemmNN = clCreateKernel(prog, "sgemmNN", &err);
@@ -350,69 +285,69 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     cl_kernel sgemmNT = clCreateKernel(prog, "sgemmNT", &err);
     CL_CHECK_ERROR(err);
 
-	cl_kernel goldChk = clCreateKernel(prog, "GoldChk", &err);
-	CL_CHECK_ERROR(err);
+    cl_kernel goldChk = clCreateKernel(prog, "GoldChk", &err);
+    CL_CHECK_ERROR(err);
 
     // Allocate memory for the matrices
     T *A, *B, *C, *GOLD;
-	int *kerrors;
+    int *kerrors;
     cl_mem Aobj, Bobj, Cobj, GOLDobj, kerrorsobj;
     if (true) // pinned
     {
         Aobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-			       sizeof(T)*N*N, NULL, &err);
+                              sizeof(T)*N*N, NULL, &err);
         CL_CHECK_ERROR(err);
         A =(T*)clEnqueueMapBuffer(queue,Aobj,true,CL_MAP_READ|CL_MAP_WRITE,
-				       0,sizeof(T)*N*N,0, NULL,NULL,&err);
+                                  0,sizeof(T)*N*N,0, NULL,NULL,&err);
         CL_CHECK_ERROR(err);
 
         Bobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-			       sizeof(T)*N*N, NULL, &err);
+                              sizeof(T)*N*N, NULL, &err);
         CL_CHECK_ERROR(err);
         B =(T*)clEnqueueMapBuffer(queue,Bobj,true,CL_MAP_READ|CL_MAP_WRITE,
-				       0,sizeof(T)*N*N,0, NULL,NULL,&err);
+                                  0,sizeof(T)*N*N,0, NULL,NULL,&err);
         CL_CHECK_ERROR(err);
 
         Cobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-			       sizeof(T)*N*N, NULL, &err);
+                              sizeof(T)*N*N, NULL, &err);
         CL_CHECK_ERROR(err);
         C =(T*)clEnqueueMapBuffer(queue,Cobj,true,CL_MAP_READ|CL_MAP_WRITE,
-				       0,sizeof(T)*N*N,0, NULL,NULL,&err);
+                                  0,sizeof(T)*N*N,0, NULL,NULL,&err);
         CL_CHECK_ERROR(err);
 
-		GOLDobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-			sizeof(T)*N*N, NULL, &err);
-		CL_CHECK_ERROR(err);
-		GOLD = (T*)clEnqueueMapBuffer(queue, GOLDobj, true, CL_MAP_READ | CL_MAP_WRITE,
-			0, sizeof(T)*N*N, 0, NULL, NULL, &err);
-		CL_CHECK_ERROR(err);
+        GOLDobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+                                 sizeof(T)*N*N, NULL, &err);
+        CL_CHECK_ERROR(err);
+        GOLD = (T*)clEnqueueMapBuffer(queue, GOLDobj, true, CL_MAP_READ | CL_MAP_WRITE,
+                                      0, sizeof(T)*N*N, 0, NULL, NULL, &err);
+        CL_CHECK_ERROR(err);
 
-		kerrorsobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-			sizeof(int), NULL, &err);
-		CL_CHECK_ERROR(err);
-		kerrors = (int*)clEnqueueMapBuffer(queue, kerrorsobj, true, CL_MAP_READ | CL_MAP_WRITE,
-			0, sizeof(int), 0, NULL, NULL, &err);
-		CL_CHECK_ERROR(err)
+        kerrorsobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+                                    sizeof(int), NULL, &err);
+        CL_CHECK_ERROR(err);
+        kerrors = (int*)clEnqueueMapBuffer(queue, kerrorsobj, true, CL_MAP_READ | CL_MAP_WRITE,
+                                           0, sizeof(int), 0, NULL, NULL, &err);
+        CL_CHECK_ERROR(err)
     }
     else
     {
-	A = (T*)malloc( N*N*sizeof( T ) );
-	B = (T*)malloc( N*N*sizeof( T ) );
-	C = (T*)malloc( N*N*sizeof( T ) );
+        A = (T*)malloc( N*N*sizeof( T ) );
+        B = (T*)malloc( N*N*sizeof( T ) );
+        C = (T*)malloc( N*N*sizeof( T ) );
     }
 
-	cout << "Allocating GPU and Host memory...";
-	clFinish(queue);
-	cout << "Done\n";
+    cout << "Allocating GPU and Host memory...";
+    clFinish(queue);
+    cout << "Done\n";
 
-	ReadMatrixFromFile(A, B, GOLD);
-	
-	// clean C
-	for (i = 0; i<m; ++i){
-		for (j = 0; j<n; ++j){
-			C[i*n + j] = 0.0;
-		}
-	}
+    ReadMatrixFromFile(A, B, GOLD);
+
+    // clean C
+    for (i = 0; i<m; ++i) {
+        for (j = 0; j<n; ++j) {
+            C[i*n + j] = 0.0;
+        }
+    }
 
     // Pass A and B to the GPU and create a GPU buffer for C
     cl_mem Agpu = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
@@ -424,9 +359,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     cl_mem Cgpu = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
                                  m*n * sizeof(T), NULL, &err);
     CL_BAIL_ON_ERROR(err);
-	cl_mem kerrorsgpu = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
-		sizeof(int), NULL, &err);
-	CL_BAIL_ON_ERROR(err);
+    cl_mem kerrorsgpu = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+                                       sizeof(int), NULL, &err);
+    CL_BAIL_ON_ERROR(err);
 
 
     // Set arguments to the sgemmNN kernel
@@ -469,37 +404,39 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     err = clSetKernelArg(sgemmNT, 8, sizeof(T), (void*)&beta);
     CL_BAIL_ON_ERROR(err);
 
-	// Pass arguments to the goldChk kernel
-	err = clSetKernelArg(goldChk, 0, sizeof(cl_mem), (void*)&Agpu);
-	CL_BAIL_ON_ERROR(err);
-	err = clSetKernelArg(goldChk, 1, sizeof(cl_mem), (void*)&Cgpu);
-	CL_BAIL_ON_ERROR(err);
-	err = clSetKernelArg(goldChk, 2, sizeof(int), (void*)&m);
-	CL_BAIL_ON_ERROR(err);
-	err = clSetKernelArg(goldChk, 3, sizeof(cl_mem), (void*)&kerrorsgpu);
-	CL_BAIL_ON_ERROR(err);
+    // Pass arguments to the goldChk kernel
+    err = clSetKernelArg(goldChk, 0, sizeof(cl_mem), (void*)&Agpu);
+    CL_BAIL_ON_ERROR(err);
+    err = clSetKernelArg(goldChk, 1, sizeof(cl_mem), (void*)&Cgpu);
+    CL_BAIL_ON_ERROR(err);
+    err = clSetKernelArg(goldChk, 2, sizeof(int), (void*)&m);
+    CL_BAIL_ON_ERROR(err);
+    err = clSetKernelArg(goldChk, 3, sizeof(cl_mem), (void*)&kerrorsgpu);
+    CL_BAIL_ON_ERROR(err);
 
     const size_t globalWorkSize[2] = {m/4,n/4};
 
-	
+
     // Run NN
     for (int it = 0; it < ITERATIONS; it++) {
 
 
         err = clEnqueueWriteBuffer(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
-                A, 0, NULL, NULL);
+                                   A, 0, NULL, NULL);
         err = clEnqueueWriteBuffer(queue, Bgpu, CL_TRUE, 0, m*n*sizeof(T),
-                B, 0, NULL, NULL);
+                                   B, 0, NULL, NULL);
         err = clEnqueueWriteBuffer(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
-                C, 0, NULL, NULL);
+                                   C, 0, NULL, NULL);
 
 
         clFinish(queue);
         CL_BAIL_ON_ERROR(err);
 
 
+#ifdef LOGS
+        start_iteration();
+#endif /* LOGS */
 
-	start_iteration();
         //Launch Kernels
         err = clEnqueueNDRangeKernel(queue, sgemmNN, 2, NULL, globalWorkSize,
                                      localWorkSize, 0, NULL, NULL);
@@ -507,160 +444,89 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         clFinish(queue);
         CL_BAIL_ON_ERROR(err);
 
-	end_iteration();
+#ifdef LOGS
+        end_iteration();
+#endif /* LOGS */
 
 
-		// Check Gold
-		*kerrors = 0;
-
-		err = clEnqueueWriteBuffer(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
-			GOLD, 0, NULL, NULL);
-		CL_BAIL_ON_ERROR(err);
-		err = clEnqueueWriteBuffer(queue, kerrorsgpu, CL_TRUE, 0, sizeof(int),
-			kerrors, 0, NULL, NULL);
-		CL_BAIL_ON_ERROR(err);
-
-
-		clFinish(queue);
-		CL_BAIL_ON_ERROR(err);
-
-
-		//Launch Kernels
-		err = clEnqueueNDRangeKernel(queue, goldChk, 2, NULL, globalWorkSize,
-			localWorkSize, 0, NULL, NULL);
-
-		clFinish(queue);
-		CL_BAIL_ON_ERROR(err);
-
-
-
-		err = clEnqueueReadBuffer(queue, kerrorsgpu, CL_TRUE, 0, sizeof(int),
-			kerrors, 0, NULL, NULL);
-		CL_BAIL_ON_ERROR(err);
-	        clFinish(queue);
-        	CL_BAIL_ON_ERROR(err);
-
-		if (it==1) cout << "Errors : " << *kerrors << "\n";
-
-
-		ea = 0;
-		t_ea += *kerrors;
-
-		log_error_count(*kerrors);
-
-		if (*kerrors>0)
-		{
-			std::cout << "Error detected! kerrors = " << *kerrors << "\n";
-
-			err = clEnqueueReadBuffer(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
-				C, 0, NULL, NULL);
-			CL_BAIL_ON_ERROR(err);
-			clFinish(queue);
-			CL_BAIL_ON_ERROR(err);
-
-			char error_detail[150];
-			for (int i = 0; (i<N) && (ea < N_ERRORS_LOG); i++)
-			{
-				for (int j = 0; (j<N) && (ea < N_ERRORS_LOG); j++)
-				{
-					if ((fabs((C[i + N*j] - GOLD[i + N*j]) / C[i + N*j]) > 0.0000000001) || (fabs((C[i + N*j] - GOLD[i + N*j]) / GOLD[i + N*j]) > 0.0000000001))
-					{
-						//ea++;
-						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, C[i + N * j], GOLD[i + N * j], ea);
-						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + N * j], GOLD[i + N * j]);
-						log_error_detail(error_detail);
-					}
-				}
-			}
-
-
-			ReadMatrixFromFile(A, B, GOLD);
-		}
-		if(*kerrors > 0 || (it % 10 == 0))
-                {
-                        printf("\ntest number: %d", it);
-                        printf("\nerrors: %d", *kerrors);
-                }
-    }
-	
-    end_log_file();
-
-    // Run NT
-    /*for (int i = 0; i < ITERATIONS; i++) {
-
-		std::cout << "Writting buffers... ";
+        // Check Gold
+        *kerrors = 0;
 
         err = clEnqueueWriteBuffer(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
-                A, 0, NULL, NULL);
-        err = clEnqueueWriteBuffer(queue, Bgpu, CL_TRUE, 0, m*n*sizeof(T),
-                B, 0, NULL, NULL);
-        err = clEnqueueWriteBuffer(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
-                C, 0, NULL, NULL);
+                                   GOLD, 0, NULL, NULL);
+        CL_BAIL_ON_ERROR(err);
+        err = clEnqueueWriteBuffer(queue, kerrorsgpu, CL_TRUE, 0, sizeof(int),
+                                   kerrors, 0, NULL, NULL);
+        CL_BAIL_ON_ERROR(err);
 
-		timeG = mysecond();
 
-		clFinish(queue);
-		CL_BAIL_ON_ERROR(err);
+        clFinish(queue);
+        CL_BAIL_ON_ERROR(err);
 
-		timeG = mysecond() - timeG;
-
-		std::cout << "Done in " << timeG << "s. Running gemmNT...";
 
         //Launch Kernels
-        err = clEnqueueNDRangeKernel(queue, sgemmNT, 2, NULL, globalWorkSize,
+        err = clEnqueueNDRangeKernel(queue, goldChk, 2, NULL, globalWorkSize,
                                      localWorkSize, 0, NULL, NULL);
-		timeG = mysecond();
 
-		clFinish(queue);
-		CL_BAIL_ON_ERROR(err);
+        clFinish(queue);
+        CL_BAIL_ON_ERROR(err);
 
-		timeG = mysecond() - timeG;
 
-		std::cout << "Done in " << timeG << "s.\n";
 
-		// Check Gold
-		*kerrors = 0;
-		std::cout << "Writting buffers... ";
+        err = clEnqueueReadBuffer(queue, kerrorsgpu, CL_TRUE, 0, sizeof(int),
+                                  kerrors, 0, NULL, NULL);
+        CL_BAIL_ON_ERROR(err);
+        clFinish(queue);
+        CL_BAIL_ON_ERROR(err);
 
-		err = clEnqueueWriteBuffer(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
-			GOLD, 0, NULL, NULL);
-		CL_BAIL_ON_ERROR(err);
-		err = clEnqueueWriteBuffer(queue, kerrorsgpu, CL_TRUE, 0, sizeof(int),
-			kerrors, 0, NULL, NULL);
-		CL_BAIL_ON_ERROR(err);
+        if (it==1) cout << "Errors : " << *kerrors << "\n";
 
-		timeG = mysecond();
 
-		clFinish(queue);
-		CL_BAIL_ON_ERROR(err);
+        ea = 0;
+        t_ea += *kerrors;
 
-		timeG = mysecond() - timeG;
+        log_error_count(*kerrors);
 
-		std::cout << "Done in " << timeG << "s. Running goldChk...";
+        if (*kerrors>0)
+        {
+            std::cout << "Error detected! kerrors = " << *kerrors << "\n";
 
-		//Launch Kernels
-		err = clEnqueueNDRangeKernel(queue, goldChk, 2, NULL, globalWorkSize,
-			localWorkSize, 0, NULL, NULL);
-		timeG = mysecond();
+            err = clEnqueueReadBuffer(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
+                                      C, 0, NULL, NULL);
+            CL_BAIL_ON_ERROR(err);
+            clFinish(queue);
+            CL_BAIL_ON_ERROR(err);
 
-		clFinish(queue);
-		CL_BAIL_ON_ERROR(err);
+            char error_detail[150];
+            for (int i = 0; (i<N) && (ea < N_ERRORS_LOG); i++)
+            {
+                for (int j = 0; (j<N) && (ea < N_ERRORS_LOG); j++)
+                {
+                    if ((fabs((C[i + N*j] - GOLD[i + N*j]) / C[i + N*j]) > 0.0000000001) || (fabs((C[i + N*j] - GOLD[i + N*j]) / GOLD[i + N*j]) > 0.0000000001))
+                    {
+                        //fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, C[i + N * j], GOLD[i + N * j], ea);
+                        snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + N * j], GOLD[i + N * j]);
+#ifdef LOGS
+                        log_error_detail(error_detail);
+#endif /* LOGS */
+                    }
+                }
+            }
 
-		timeG = mysecond() - timeG;
 
-		std::cout << "Done in " << timeG << "s. ";
+            ReadMatrixFromFile(A, B, GOLD);
+        }
+        if(*kerrors > 0 || (it % 10 == 0))
+        {
+            printf("\ntest number: %d", it);
+            printf("\nerrors: %d", *kerrors);
+        }
+    }
 
-		err = clEnqueueReadBuffer(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
-			C, 0, NULL, NULL);
-		CL_BAIL_ON_ERROR(err);
-		err = clEnqueueReadBuffer(queue, kerrorsgpu, CL_TRUE, 0, sizeof(int),
-			kerrors, 0, NULL, NULL);
-		CL_BAIL_ON_ERROR(err);
-		clFinish(queue);
-		CL_BAIL_ON_ERROR(err);
+#ifdef LOGS
+    end_log_file();
+#endif /* LOGS */
 
-		cout << "Errors : " << *kerrors << "\n";
-	}*/
 
     if (true) // pinned
     {
@@ -670,14 +536,14 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         CL_CHECK_ERROR(err);
         err = clReleaseMemObject(Cobj);
         CL_CHECK_ERROR(err);
-		err = clReleaseMemObject(kerrorsobj);
-		CL_CHECK_ERROR(err);
+        err = clReleaseMemObject(kerrorsobj);
+        CL_CHECK_ERROR(err);
     }
     else
     {
-	free(A);
-	free(B);
-	free(C);
+        free(A);
+        free(B);
+        free(C);
     }
 
     err = clReleaseProgram(prog);
@@ -686,8 +552,8 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     CL_CHECK_ERROR(err);
     err = clReleaseKernel(sgemmNT);
     CL_CHECK_ERROR(err);
-	err = clReleaseKernel(goldChk);
-	CL_CHECK_ERROR(err);
+    err = clReleaseKernel(goldChk);
+    CL_CHECK_ERROR(err);
 
     err = clReleaseMemObject(Agpu);
     CL_CHECK_ERROR(err);
@@ -695,7 +561,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     CL_CHECK_ERROR(err);
     err = clReleaseMemObject(Cgpu);
     CL_CHECK_ERROR(err);
-	err = clReleaseMemObject(kerrorsgpu);
-	CL_CHECK_ERROR(err);
+    err = clReleaseMemObject(kerrorsgpu);
+    CL_CHECK_ERROR(err);
 
 }
