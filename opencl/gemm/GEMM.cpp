@@ -12,6 +12,7 @@
 
 #include "support.h"
 
+//#define LOGS 1
 #ifdef LOGS
 #include "/home/carol/log_helper/log_helper.h"
 #endif /* LOGS */
@@ -455,6 +456,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 	double kernel_time = (double) (get_time() - it_time_start) / 1000000;
 	double flops = 2.0*(double)N*N*N;
 	double gflops = flops / kernel_time;
+	printf("kernel time: %lf\n",kernel_time);
 	printf("GFLOPS: %lf\n",gflops);
 
 #ifdef LOGS
@@ -515,6 +517,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
                 {
                     if ((fabs((C[i + N*j] - GOLD[i + N*j]) / C[i + N*j]) > 0.0000000001) || (fabs((C[i + N*j] - GOLD[i + N*j]) / GOLD[i + N*j]) > 0.0000000001))
                     {
+		    	//ea++;
                         //fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, C[i + N * j], GOLD[i + N * j], ea);
                         snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + N * j], GOLD[i + N * j]);
 #ifdef LOGS
