@@ -88,7 +88,7 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
     local_work_size[0] = BLOCK_SIZE;
     local_work_size[1] = BLOCK_SIZE;
 
-
+    long long flops = 0;
     long long start_time = get_time();
 
     for (t = 0; t < total_iterations; t += num_iterations) {
@@ -120,6 +120,9 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
         // Swap input and output GPU matrices
         src = 1 - src;
         dst = 1 - dst;
+
+	// Daniel: Rough approximation I think
+	flops += col * row * iter * 15;
     }
 
     // Wait for all operations to finish
@@ -128,8 +131,9 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
 
     long long end_time = get_time();
     long long total_time = (end_time - start_time);
-    printf("\nKernel time: %.3f seconds\n", ((float) total_time) / (1000*1000));
-
+    double kernel_time = ((float) total_time) / (1000*1000);
+    printf("\nKernel time: %.3f seconds\n", kernel_time);
+    printf("FLOPS: %f\n",(double)flops/kernel_time);
     return src;
 }
 
