@@ -143,7 +143,9 @@ template <class T2> void dump(cl_device_id id,
     kerrors = ocl_exec_gchk(gold, queue[0], ctx, work, goldChkKrnl, N, sizeof(cplxdbl)*N, 64, AVOIDZERO, ACCEPTDIFF);
     int num_errors = 0;
     int num_errors_i = 0; //complex
+#ifdef LOGS
     log_error_count(kerrors);
+#endif /* LOGS */
     if (kerrors!=0)
     {
 
