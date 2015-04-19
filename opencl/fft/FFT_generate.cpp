@@ -54,7 +54,6 @@ template <class T2> void dump(cl_device_id id,
     unsigned long bytes = 0;
 
     int probSizes[6] = { 1, 8, 96, 256, 512, 1024};
-    //int sizeIndex = 5;
 
     bytes = probSizes[sizeIndex];
 
@@ -288,24 +287,34 @@ void getDevices(cl_device_type deviceType) {
     }
 }
 
+void usage(){
+	printf("Usage: fft <input_size> <cl_device_tipe>\n");
+	printf("  input size range frm 0 to 2\n");
+	printf("  cl_device_types:\n");
+	printf("    Default:%d\n",CL_DEVICE_TYPE_DEFAULT);
+	printf("    CPU:%d\n",CL_DEVICE_TYPE_CPU);
+	printf("    GPU:%d\n",CL_DEVICE_TYPE_GPU);
+	printf("    ACCELERATOR:%d\n",CL_DEVICE_TYPE_ACCELERATOR);
+	printf("    ALL:%d\n",CL_DEVICE_TYPE_ALL);
+}
 
 int main(int argc, char** argv) {
 
     int devType;
-    if(argc > 1)
+    if(argc == 3)
     {
         sizeIndex = atoi(argv[1]);
-        devType = 1;//atoi(argv[2]);
+        devType = atoi(argv[2]);
     }
 
     else
     {
-        printf("ERROR! enter input size (0 to 2)\n\n");
+        usage();
         exit(1);
     }
 
-    printf("Generating with %s...\n\n", devType == 0 ? "CPU" : "GPU");
-    getDevices(CL_DEVICE_TYPE_GPU);
+
+    getDevices(devType);
 
     dump<cplxdbl>(device_id[0], context, command_queue);
 }
