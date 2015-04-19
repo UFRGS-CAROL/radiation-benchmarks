@@ -265,11 +265,13 @@ void usage(){
 int main(int argc, char** argv) {
 
     int devType;
-    char *kernel_file;
+    char *kernel_file, *input, *output;
     if(argc == 6) {
         sizeIndex = atoi(argv[1]);
         devType = atoi(argv[2]);
         kernel_file = argv[3];
+        input = argv[4];
+        output = argv[5];
         distribution = 0;//atoi(argv[2]);
     } else {
         usage();
@@ -280,11 +282,11 @@ int main(int argc, char** argv) {
 
     FILE *fp, *fp_gold;
     // init host memory...
-    if( (fp = fopen("/home/carol/DSN15_codes/openclfft/input_fft", "rb" )) == 0 ) {
+    if( (fp = fopen(input, "rb" )) == 0 ) {
         printf( "error file input_fft was not opened\n");
         return 0;
     }
-    if( (fp_gold = fopen("/home/carol/DSN15_codes/openclfft/output_fft", "rb" )) == 0 ) {
+    if( (fp_gold = fopen(output, "rb" )) == 0 ) {
         printf( "error file output_fft was not opened\n");
         return 0;
     }
