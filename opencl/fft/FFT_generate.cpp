@@ -26,7 +26,9 @@ cl_device_id            device_id[100];
 cl_context              context;
 cl_command_queue        command_queue;
 cl_program              program;
+
 int sizeIndex;
+char *kernel_file;
 
 using namespace std;
 
@@ -65,7 +67,7 @@ template <class T2> void dump(cl_device_id id,
     cl_kernel fftKrnl, ifftKrnl, chkKrnl, goldChkKrnl;
 
 
-    init(do_dp, id, ctx, queue, fftProg, fftKrnl,
+    init(do_dp, kernel_file, id, ctx, queue, fftProg, fftKrnl,
          ifftKrnl, chkKrnl, goldChkKrnl);
 
     // now determine how much available memory will be used
@@ -288,23 +290,24 @@ void getDevices(cl_device_type deviceType) {
 }
 
 void usage(){
-	printf("Usage: fft <input_size> <cl_device_tipe>\n");
-	printf("  input size range frm 0 to 2\n");
-	printf("  cl_device_types:\n");
-	printf("    Default:%d\n",CL_DEVICE_TYPE_DEFAULT);
-	printf("    CPU:%d\n",CL_DEVICE_TYPE_CPU);
-	printf("    GPU:%d\n",CL_DEVICE_TYPE_GPU);
-	printf("    ACCELERATOR:%d\n",CL_DEVICE_TYPE_ACCELERATOR);
-	printf("    ALL:%d\n",CL_DEVICE_TYPE_ALL);
+	printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file>\n");
+	printf("  input size range from 0 to 2\n");
+	printf("  cl_device_types\n");
+	printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
+	printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
+	printf("    GPU: %d\n",CL_DEVICE_TYPE_GPU);
+	printf("    ACCELERATOR: %d\n",CL_DEVICE_TYPE_ACCELERATOR);
+	printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
 }
 
 int main(int argc, char** argv) {
 
     int devType;
-    if(argc == 3)
+    if(argc == 4)
     {
         sizeIndex = atoi(argv[1]);
         devType = atoi(argv[2]);
+        kernel_file = argv[3];
     }
 
     else

@@ -193,6 +193,7 @@ static map<void*, cl_mem> memobjmap;
 
 void
 init(bool do_dp,
+     char * kernel_file,
      cl_device_id fftDev,
      cl_context fftCtx,
      cl_command_queue fftQueue,
@@ -203,7 +204,7 @@ init(bool do_dp,
      cl_kernel& goldChkKrnl) {
     cl_int err;
 
-    FILE*  theFile = fopen("/home/carol/DSN15_codes/openclfft/fftDISTR.cl", "r");
+    FILE*  theFile = fopen(kernel_file, "r");
     if (!theFile) {
         fprintf(stderr, "Failed to load kernel file.\n");
         exit(1);

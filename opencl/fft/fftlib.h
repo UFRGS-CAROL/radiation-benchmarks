@@ -19,6 +19,7 @@ struct cplxdbl
 };
 
 void init(bool _do_dp,
+          char * kernel_file,
           cl_device_id fftDev,
           cl_context fftCtx,
           cl_command_queue fftQueue,
