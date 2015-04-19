@@ -122,6 +122,7 @@ template <class T2> void dump(cl_device_id id,
     double kernel_time = (double) (time1-time0) / 1000000;
     double fftsz = 512;
     double Gflops = n_ffts*(5*fftsz*log2(fftsz))/kernel_time;
+    printf("GFLOPS: %f\n",Gflops);
 
     if(distribution == 3)
         kernel_time = 0;
