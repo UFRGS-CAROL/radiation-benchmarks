@@ -22,7 +22,7 @@ nvidia_chk_gold: $(SOURCES)
 	$(CC) $(SOURCES) $(NVIDIA_INC) $(NVIDIA_LIB) -lOpenCL  -o $(CHK_EXEC)
 
 intel_generate: $(SOURCES_GEN)
-	$(CC) $(SOURCES) $(INTEL_INC) $(INTEL_LIB) -lOpenCL -o $(GEN_EXEC)
+	$(CC) $(SOURCES_GEN) $(INTEL_INC) $(INTEL_LIB) -lOpenCL -o $(GEN_EXEC)
 
 intel_chk_gold: $(SOURCES)
 	$(CC) $(SOURCES) $(INTEL_INC) $(INTEL_LIB) -lOpenCL  -o $(CHK_EXEC)
