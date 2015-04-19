@@ -250,14 +250,29 @@ void getDevices(cl_device_type deviceType) {
 
 }
 
+void usage(){
+        printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file>\n");
+        printf("  input size range from 0 to 2\n");
+        printf("  cl_device_types\n");
+        printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
+        printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
+        printf("    GPU: %d\n",CL_DEVICE_TYPE_GPU);
+        printf("    ACCELERATOR: %d\n",CL_DEVICE_TYPE_ACCELERATOR);
+        printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
+}
+
 
 int main(int argc, char** argv) {
 
-    if(argc > 1) {
+    int devType;
+    char *kernel_file;
+    if(argc == 4) {
         sizeIndex = atoi(argv[1]);
+        devType = atoi(argv[2]);
+        kernel_file = argv[3];
         distribution = 0;//atoi(argv[2]);
     } else {
-        printf("ERROR! enter input size (0 to 3)\n");
+        usage();
         exit(1);
     }
 
@@ -317,9 +332,9 @@ int main(int argc, char** argv) {
     CL_DEVICE_TYPE_ACCELERATOR
     CL_DEVICE_TYPE_ALL
     */
-    getDevices(CL_DEVICE_TYPE_GPU);
+    getDevices(devType);
 
-    init(true, device_id[0], context, command_queue[0], fftProg, fftKrnl,
+    init(true, kernel_file, device_id[0], context, command_queue[0], fftProg, fftKrnl,
          ifftKrnl, chkKrnl, goldChkKrnl);
 
     //init(true, device_id[1], context, command_queue[1], cpufftProg, cpuFftKrnl,
