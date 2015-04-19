@@ -251,7 +251,7 @@ void getDevices(cl_device_type deviceType) {
 }
 
 void usage(){
-        printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file>\n");
+        printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file> <input_file> <output_gold_file>\n");
         printf("  input size range from 0 to 2\n");
         printf("  cl_device_types\n");
         printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
@@ -266,7 +266,7 @@ int main(int argc, char** argv) {
 
     int devType;
     char *kernel_file;
-    if(argc == 4) {
+    if(argc == 6) {
         sizeIndex = atoi(argv[1]);
         devType = atoi(argv[2]);
         kernel_file = argv[3];
