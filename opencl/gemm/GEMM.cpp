@@ -17,9 +17,9 @@
 #include "/home/carol/log_helper/log_helper.h"
 #endif /* LOGS */
 
-#define N 1024
+//#define N 1024
 
-#define GOLD_MATRIX_PATH "/home/carol/TestGPU/GenerateGoldMatrix/Double_GOLD_1024.matrix"
+//#define GOLD_MATRIX_PATH "/home/carol/TestGPU/GenerateGoldMatrix/Double_GOLD_1024.matrix"
 #define LOGFILE_MATRIXNAME "openclGEMM1024"
 // #define PLATFORM_ID 0
 #define DEVICE_ID 0
@@ -27,7 +27,10 @@
 #define N_ERRORS_LOG 500
 #define ITERATIONS 1000000000000
 
-char kernel_gemmN_path [] = "/home/carol/DSN15_codes/openclgemm/gemmN.cl";
+//char kernel_gemmN_path [] = "/home/carol/DSN15_codes/openclgemm/gemmN.cl";
+char *kernel_gemmN_path;
+char *gold_matrix, a_matrix, b_matrix;
+int input_size;
 
 using namespace std;
 
@@ -41,9 +44,9 @@ void ReadMatrixFromFile(double *h_A, double *h_B, double *h_GOLD)
 {
     FILE *f_A, *f_B, *f_GOLD;
 
-    f_A = fopen("/home/carol/TestGPU/GenerateGoldMatrix/Double_B_8192.matrix", "rb");
-    f_B = fopen("/home/carol/TestGPU/GenerateGoldMatrix/Double_A_8192.matrix", "rb");
-    f_GOLD = fopen(GOLD_MATRIX_PATH, "rb");
+    f_A = fopen(a_matrix, "rb");
+    f_B = fopen(b_matrix, "rb");
+    f_GOLD = fopen(gold_matrix, "rb");
 
     if (!(f_A && f_B && f_GOLD)) {
         printf("Error opening matrix.\n");
@@ -51,9 +54,9 @@ void ReadMatrixFromFile(double *h_A, double *h_B, double *h_GOLD)
     }
 
     printf("read...");
-    fread(h_A, sizeof(double)*N*N, 1, f_A);
-    fread(h_B, sizeof(double)*N*N, 1, f_B);
-    fread(h_GOLD, sizeof(double)*N*N, 1, f_GOLD);
+    fread(h_A, sizeof(double)*input_size*input_size, 1, f_A);
+    fread(h_B, sizeof(double)*input_size*input_size, 1, f_B);
+    fread(h_GOLD, sizeof(double)*input_size*input_size, 1, f_GOLD);
 
     fclose(f_A);
     fclose(f_B);
@@ -83,8 +86,31 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 void
 RunBenchmark(cl_device_id dev, cl_context ctx, cl_command_queue queue);
 
+void usage(){
+        printf("Usage: gemm <input_size> <cl_device_type> <kernel_file> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX> \n");
+        printf("  cl_device_types\n");
+        printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
+        printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
+        printf("    GPU: %d\n",CL_DEVICE_TYPE_GPU);
+        printf("    ACCELERATOR: %d\n",CL_DEVICE_TYPE_ACCELERATOR);
+        printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
+}
+
 int main()
 {
+    int devType;
+    if(argc == 7) {
+        input_size = atoi(argv[1]);
+        devType = atoi(argv[2]);
+        kernel_gemmN_path = argv[3];
+        a_matrix = argv[4];
+        b_matrix = argv[5];
+        gold_matrix = argv[6];
+    } else {
+        usage();
+        exit(1);
+    }
+
     // =========> OpenCl vars
     cl_context clGPUContext;
     cl_command_queue clCommandQue;
@@ -109,7 +135,7 @@ int main()
     props[2] = (cl_context_properties)0;   // last element must be 0
 
     clGPUContext = clCreateContextFromType(props,
-                                           CL_DEVICE_TYPE_GPU,				// It could be CL_DEVICE_TYPE_ALL as on the selected platform this is the only computing device, btw...
+                                           devType,				// It could be CL_DEVICE_TYPE_ALL as on the selected platform this is the only computing device, btw...
                                            NULL, NULL, &errcode);
     if (errcode != CL_SUCCESS) std::cout << "error clCreateContextFromType : " << errcode << "\n";
 
@@ -203,13 +229,13 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
     cl_int err;
     int waitForEvents = 1;
-    size_t m = N, n = N, k = N;
+    size_t m = input_size, n = input_size, k = input_size;
     size_t lda, ldb, ldc;
     const T alpha = 1;
     const T beta = -1;
     int i, j;
 
-    lda = ldb = ldc = N;
+    lda = ldb = ldc = input_size;
 
 #ifdef LOGS
     // Log files
@@ -228,11 +254,13 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
 
 
+#ifdef LOGS
     char test_info[100];
-    snprintf(test_info, 100, "size:%dx%d",N,N);
+    snprintf(test_info, 100, "size:%dx%d",input_size,input_size);
     start_log_file(LOGFILE_MATRIXNAME, test_info);
     set_max_errors_iter(200);
     set_iter_interval_print(5);
+#endif /* LOGS */
 
     // check
     cl_uint numDimensions = 0;
@@ -301,31 +329,31 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     if (true) // pinned
     {
         Aobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                              sizeof(T)*N*N, NULL, &err);
+                              sizeof(T)*input_size*input_size, NULL, &err);
         CL_CHECK_ERROR(err);
         A =(T*)clEnqueueMapBuffer(queue,Aobj,true,CL_MAP_READ|CL_MAP_WRITE,
-                                  0,sizeof(T)*N*N,0, NULL,NULL,&err);
+                                  0,sizeof(T)*input_size*input_size,0, NULL,NULL,&err);
         CL_CHECK_ERROR(err);
 
         Bobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                              sizeof(T)*N*N, NULL, &err);
+                              sizeof(T)*input_size*input_size, NULL, &err);
         CL_CHECK_ERROR(err);
         B =(T*)clEnqueueMapBuffer(queue,Bobj,true,CL_MAP_READ|CL_MAP_WRITE,
-                                  0,sizeof(T)*N*N,0, NULL,NULL,&err);
+                                  0,sizeof(T)*input_size*input_size,0, NULL,NULL,&err);
         CL_CHECK_ERROR(err);
 
         Cobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                              sizeof(T)*N*N, NULL, &err);
+                              sizeof(T)*input_size*input_size, NULL, &err);
         CL_CHECK_ERROR(err);
         C =(T*)clEnqueueMapBuffer(queue,Cobj,true,CL_MAP_READ|CL_MAP_WRITE,
-                                  0,sizeof(T)*N*N,0, NULL,NULL,&err);
+                                  0,sizeof(T)*input_size*input_size,0, NULL,NULL,&err);
         CL_CHECK_ERROR(err);
 
         GOLDobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                                 sizeof(T)*N*N, NULL, &err);
+                                 sizeof(T)*input_size*input_size, NULL, &err);
         CL_CHECK_ERROR(err);
         GOLD = (T*)clEnqueueMapBuffer(queue, GOLDobj, true, CL_MAP_READ | CL_MAP_WRITE,
-                                      0, sizeof(T)*N*N, 0, NULL, NULL, &err);
+                                      0, sizeof(T)*input_size*input_size, 0, NULL, NULL, &err);
         CL_CHECK_ERROR(err);
 
         kerrorsobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
@@ -337,9 +365,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     }
     else
     {
-        A = (T*)malloc( N*N*sizeof( T ) );
-        B = (T*)malloc( N*N*sizeof( T ) );
-        C = (T*)malloc( N*N*sizeof( T ) );
+        A = (T*)malloc( input_size*input_size*sizeof( T ) );
+        B = (T*)malloc( input_size*input_size*sizeof( T ) );
+        C = (T*)malloc( input_size*input_size*sizeof( T ) );
     }
 
     cout << "Allocating GPU and Host memory...";
@@ -454,10 +482,10 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
 
 	double kernel_time = (double) (get_time() - it_time_start) / 1000000;
-	double flops = 2.0*(double)N*N*N;
+	double flops = 2.0*(double)input_size*input_size*input_size;
 	double gflops = flops / kernel_time;
 	printf("kernel time: %lf\n",kernel_time);
-	printf("GFLOPS: %lf\n",gflops);
+	printf("FLOPS: %lf\n",gflops);
 
 #ifdef LOGS
         end_iteration();
@@ -497,9 +525,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
         ea = 0;
         t_ea += *kerrors;
-
+#ifdef LOGS
         log_error_count(*kerrors);
-
+#endif /* LOGS */
         if (*kerrors>0)
         {
             std::cout << "Error detected! kerrors = " << *kerrors << "\n";
@@ -511,15 +539,15 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
             CL_BAIL_ON_ERROR(err);
 
             char error_detail[150];
-            for (int i = 0; (i<N) && (ea < N_ERRORS_LOG); i++)
+            for (int i = 0; (i<input_size) && (ea < N_ERRORS_LOG); i++)
             {
-                for (int j = 0; (j<N) && (ea < N_ERRORS_LOG); j++)
+                for (int j = 0; (j<input_size) && (ea < N_ERRORS_LOG); j++)
                 {
-                    if ((fabs((C[i + N*j] - GOLD[i + N*j]) / C[i + N*j]) > 0.0000000001) || (fabs((C[i + N*j] - GOLD[i + N*j]) / GOLD[i + N*j]) > 0.0000000001))
+                    if ((fabs((C[i + input_size*j] - GOLD[i + input_size*j]) / C[i + input_size*j]) > 0.0000000001) || (fabs((C[i + input_size*j] - GOLD[i + input_size*j]) / GOLD[i + input_size*j]) > 0.0000000001))
                     {
 		    	//ea++;
-                        //fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, C[i + N * j], GOLD[i + N * j], ea);
-                        snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + N * j], GOLD[i + N * j]);
+                        //fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, C[i + input_size * j], GOLD[i + input_size * j], ea);
+                        snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + input_size * j], GOLD[i + input_size * j]);
 #ifdef LOGS
                         log_error_detail(error_detail);
 #endif /* LOGS */
