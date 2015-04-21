@@ -235,7 +235,7 @@ int	kmeansOCL(float **feature,    /* in: [npoints][nfeatures] */
 	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer d_cluster (size:%d) => %d\n", n_points, err); return -1; }
 
 
-	long long start_time = get_time();
+	//long long start_time = get_time();
 
 	int size = 0; int offset = 0;
 					
@@ -254,11 +254,11 @@ int	kmeansOCL(float **feature,    /* in: [npoints][nfeatures] */
 	err = clEnqueueReadBuffer(cmd_queue, d_membership, 1, 0, n_points * sizeof(int), membership_OCL, 0, 0, 0);
 	if(err != CL_SUCCESS) { printf("ERROR: Memcopy Out\n"); return -1; }
 	
-	long long end_time = get_time();
-	double kernel_time = (float)(end_time - start_time)/(1000*1000);
-	double flops = n_points * n_clusters * n_features * 3;
-	printf("Kernel time: %f\n",kernel_time);
-	printf("FLOPS: %f",flops/kernel_time);
+	//long long end_time = get_time();
+	//double kernel_time = (float)(end_time - start_time)/(1000*1000);
+	//double flops = n_points * n_clusters * n_features * 3;
+	//printf("Kernel time: %f\n",kernel_time);
+	//printf("FLOPS: %f",flops/kernel_time);
 
 	delta = 0;
 	for (i = 0; i < n_points; i++)

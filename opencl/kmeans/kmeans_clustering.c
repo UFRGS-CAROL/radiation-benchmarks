@@ -67,8 +67,16 @@
 #include <math.h>
 #include <omp.h>
 #include "kmeans.h"
+#include <sys/time.h>
+#include <time.h>
 
 #define RANDOM_MAX 2147483647
+
+long long get_time() {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        return (tv.tv_sec * 1000000) + tv.tv_usec;
+}
 
 extern double wtime(void);
 
@@ -142,9 +150,13 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
         new_centers[i] = new_centers[i-1] + nfeatures;
 
 	/* iterate until convergence */
+	double flops = 0;
+	double kernel_time=0;
+	long long start_time, end_time;
 	do {
         delta = 0.0;
 		// CUDA
+		start_time = get_time();
 		delta = (float) kmeansOCL(feature,			/* in: [npoints][nfeatures] */
 								   nfeatures,		/* number of attributes for each point */
 								   npoints,			/* number of data points */
@@ -155,6 +167,9 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 								   new_centers		/* sum of points in each cluster */
 								   );
 
+		long long end_time = get_time();
+	        kernel_time += (float)(end_time - start_time)/(1000*1000);
+		flops += n_points * n_clusters * n_features * 3;
 		/* replace old cluster centers with new_centers */
 		/* CPU side of reduction */
 		for (i=0; i<nclusters; i++) {
@@ -167,7 +182,9 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 		}	 
 		c++;
     } while ((delta > threshold) && (loop++ < 500));	/* makes sure loop terminates */
-	printf("iterated %d times\n", c);
+    printf("Kernel time: %f\n",kernel_time);
+    printf("FLOPS: %f\n",flops/kernel_time);
+    printf("iterated %d times\n", c);
     free(new_centers[0]);
     free(new_centers);
     free(new_centers_len);
