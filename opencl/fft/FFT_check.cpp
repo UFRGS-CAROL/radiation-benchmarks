@@ -26,7 +26,7 @@
 //////////
 // LOOPS
 //////////
-#define ITERACTIONS 10000000
+//#define ITERACTIONS 10000000
 
 #define AVOIDZERO 1e-200
 #define ACCEPTDIFF 1e-5
@@ -252,7 +252,7 @@ void getDevices(cl_device_type deviceType) {
 }
 
 void usage(){
-        printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file> <input_file> <output_gold_file>\n");
+        printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file> <input_file> <output_gold_file> <#iterations>\n");
         printf("  input size range from 0 to 2\n");
         printf("  cl_device_types\n");
         printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
@@ -265,14 +265,15 @@ void usage(){
 
 int main(int argc, char** argv) {
 
-    int devType;
+    int devType, iterations=1;
     char *kernel_file, *input, *output;
-    if(argc == 6) {
+    if(argc == 7) {
         sizeIndex = atoi(argv[1]);
         devType = atoi(argv[2]);
         kernel_file = argv[3];
         input = argv[4];
         output = argv[5];
+        iterations = argv[6];
         distribution = 0;//atoi(argv[2]);
     } else {
         usage();
@@ -346,8 +347,8 @@ int main(int argc, char** argv) {
 
     //LOOP START
     int loop;
-    printf("%d ITERACTIONS\n", ITERACTIONS);
-    for(loop=0; loop<ITERACTIONS; loop++) {
+    //printf("%d ITERACTIONS\n", ITERACTIONS);
+    for(loop=0; loop<iterations; loop++) {
         dump<cplxdbl>(device_id[0], context, command_queue, loop);
     }
     free(source);
