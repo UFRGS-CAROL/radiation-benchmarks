@@ -169,7 +169,7 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 
 		long long end_time = get_time();
 	        kernel_time += (float)(end_time - start_time)/(1000*1000);
-		flops += n_points * n_clusters * n_features * 3;
+		flops += npoints * nclusters * nfeatures * 3;
 		/* replace old cluster centers with new_centers */
 		/* CPU side of reduction */
 		for (i=0; i<nclusters; i++) {
