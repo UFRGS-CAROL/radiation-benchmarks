@@ -55,7 +55,7 @@ cl_kernel kernel;
 void writeoutput(float *, int, int);
 void readinput(float *, int, int, char *);
 int compute_tran_temp(cl_mem, cl_mem[2], int, int, int, int, int, int, int, int, float *, float *);
-void usage(int, char **);
+//void usage(int, char **);
 void run(int, char **);
 
 
