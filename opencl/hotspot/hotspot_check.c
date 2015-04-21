@@ -1,9 +1,9 @@
 #include "hotspot.h"
 
-#define IMPUT_TEMPE "input_temp"
-#define IMPUT_POWER "input_power"
-#define OUTPUT_GOLD "output"
-#define ALGORITHM_ITERATIONS 1000
+//#define IMPUT_TEMPE "input_temp"
+//#define IMPUT_POWER "input_power"
+//#define OUTPUT_GOLD "output"
+//#define ALGORITHM_ITERATIONS 1000
 
 int check_output(float *vect, int grid_rows, int grid_cols, float *gold) {
 
@@ -137,7 +137,32 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
     return src;
 }
 
+void usage(){
+        printf("Usage: hotspot_check <#iterations> <cl_device_tipe> <ocl_kernel_file> <input_temp_file> <input_power_file> <output_gold_file>\n");
+        printf("  cl_device_types\n");
+        printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
+        printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
+        printf("    GPU: %d\n",CL_DEVICE_TYPE_GPU);
+        printf("    ACCELERATOR: %d\n",CL_DEVICE_TYPE_ACCELERATOR);
+        printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
+}
+
+
 int main(int argc, char** argv) {
+
+    int iterations, devType;
+    char *kernel_file, *input_temp, *input_power, *output;
+    if(argc == 7) {
+        iterations = atoi(argv[1]);
+        devType = atoi(argv[2]);
+        kernel_file = argv[3];
+        input_temp = argv[4];
+        input_power = argv[5];
+        output = argv[6];
+    } else {
+        usage();
+        exit(1);
+    }
 
     printf("WG size of kernel = %d X %d\n", BLOCK_SIZE, BLOCK_SIZE);
 
@@ -162,7 +187,7 @@ int main(int argc, char** argv) {
 
     // Create a GPU context
     cl_context_properties context_properties[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platform, 0};
-    context = clCreateContextFromType(context_properties, CL_DEVICE_TYPE_ALL, NULL, NULL, &error);
+    context = clCreateContextFromType(context_properties, devType, NULL, NULL, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
     // Get and print the chosen device (if there are multiple devices, choose the first one)
@@ -187,7 +212,7 @@ int main(int argc, char** argv) {
     int grid_rows,grid_cols = 0;
     float *FilesavingTemp,*FilesavingPower, *gold;
     int pyramid_height = 1;
-    int total_iterations= ALGORITHM_ITERATIONS;
+    int total_iterations= iterations;
     grid_rows = grid_cols = 1024;
 
     size=grid_rows*grid_cols;
@@ -209,11 +234,11 @@ int main(int argc, char** argv) {
         fatal("unable to allocate memory");
 
     // Read input data from disk
-    readinput(FilesavingTemp, grid_rows, grid_cols, IMPUT_TEMPE);
-    readinput(FilesavingPower, grid_rows, grid_cols, IMPUT_POWER);
-    readinput(gold, grid_rows, grid_cols, OUTPUT_GOLD);
+    readinput(FilesavingTemp, grid_rows, grid_cols, input_temp);
+    readinput(FilesavingPower, grid_rows, grid_cols, input_power);
+    readinput(gold, grid_rows, grid_cols, output);
     // Load kernel source from file
-    const char *source = load_kernel_source("hotspot_kernel.cl");
+    const char *source = load_kernel_source(kernel_file);
     size_t sourceSize = strlen(source);
 
     // Compile the kernel

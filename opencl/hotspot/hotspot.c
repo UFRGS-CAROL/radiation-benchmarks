@@ -5,19 +5,19 @@
 #define POWER_FILE "power_1024"
 
 // files generate in binary
-#define IMPUT_TEMPE "input_temp"
-#define IMPUT_POWER "input_power"
-#define OUTPUT_GOLD "output"
-
-
-#define ALGORITHM_ITERATIONS 1000
+//#define IMPUT_TEMPE "input_temp"
+//#define IMPUT_POWER "input_power"
+//#define OUTPUT_GOLD "output"
+//#define ALGORITHM_ITERATIONS 1000
+int iterations, devType;
+char *kernel_file, *input_temp, *input_power, *output;
 
 void writeoutput(float *vect, int grid_rows, int grid_cols) {
 
     int i,j, index=0;
     FILE *fp;
 
-    if( (fp = fopen(OUTPUT_GOLD, "wb" )) == 0 )
+    if( (fp = fopen(output, "wb" )) == 0 )
         printf( "The file OUTPUT_GOLD not opened\n" );
 
 
@@ -45,7 +45,7 @@ void readinput2(float *vect, int grid_rows, int grid_cols, char *file) {
     if( (fp  = fopen(file, "r" )) ==0 )
         fatal( "The file in input2(power) was not opened");
 
-    if( (fpw  = fopen(IMPUT_POWER, "wb" )) ==0 )
+    if( (fpw  = fopen(input_power, "wb" )) ==0 )
         fatal( "The file IMPUT_POWER was not opened" );
 
 
@@ -77,7 +77,7 @@ void readinput(float *vect, int grid_rows, int grid_cols, char *file) {
     if( (fp  = fopen(file, "r" )) ==0 )
         fatal( "The file in input(temp) was not opened");
 
-    if( (fpw  = fopen(IMPUT_TEMPE, "wb" )) ==0 )
+    if( (fpw  = fopen(input_temp, "wb" )) ==0 )
         fatal( "The file IMPUT_TEMPE was not opened" );
 
 
@@ -178,19 +178,29 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
     return src;
 }
 
-void usage(int argc, char **argv) {
-    fprintf(stderr, "Usage: %s <grid_rows/grid_cols> <pyramid_height> <sim_time> <temp_file> <power_file> <output_file>\n", argv[0]);
-    fprintf(stderr, "\t<grid_rows/grid_cols>  - number of rows/cols in the grid (positive integer)\n");
-    fprintf(stderr, "\t<pyramid_height> - pyramid heigh(positive integer)\n");
-    fprintf(stderr, "\t<sim_time>   - number of iterations\n");
-    fprintf(stderr, "\t<temp_file>  - name of the file containing the initial temperature values of each cell\n");
-    fprintf(stderr, "\t<power_file> - name of the file containing the dissipated power values of each cell\n");
-    fprintf(stderr, "\t<output_file> - name of the output file\n");
-    exit(1);
+usage(){
+        printf("Usage: hotspot_gen <#iterations> <cl_device_tipe> <ocl_kernel_file> <input_temp_file> <input_power_file> <output_gold_file>\n");
+        printf("  cl_device_types\n");
+        printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
+        printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
+        printf("    GPU: %d\n",CL_DEVICE_TYPE_GPU);
+        printf("    ACCELERATOR: %d\n",CL_DEVICE_TYPE_ACCELERATOR);
+        printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
 }
 
 int main(int argc, char** argv) {
 
+    if(argc == 7) {
+        iterations = atoi(argv[1]);
+        devType = atoi(argv[2]);
+        kernel_file = argv[3];
+        input_temp = argv[4];
+        input_power = argv[5];
+        output = argv[6];
+    } else {
+        usage();
+        exit(1);
+    }
     printf("WG size of kernel = %d X %d\n", BLOCK_SIZE, BLOCK_SIZE);
 
     cl_int error;
@@ -214,7 +224,7 @@ int main(int argc, char** argv) {
 
     // Create a GPU context
     cl_context_properties context_properties[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platform, 0};
-    context = clCreateContextFromType(context_properties, CL_DEVICE_TYPE_ALL, NULL, NULL, &error);
+    context = clCreateContextFromType(context_properties, devType, NULL, NULL, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
     // Get and print the chosen device (if there are multiple devices, choose the first one)
@@ -240,7 +250,7 @@ int main(int argc, char** argv) {
     float *FilesavingTemp,*FilesavingPower; //,*MatrixOut;
 
     int pyramid_height = 1;
-    int total_iterations= ALGORITHM_ITERATIONS;
+    int total_iterations= iterations;
     grid_rows = grid_cols = 1024;
 
 
@@ -266,7 +276,7 @@ int main(int argc, char** argv) {
     readinput2(FilesavingPower, grid_rows, grid_cols, POWER_FILE);
 
     // Load kernel source from file
-    const char *source = load_kernel_source("hotspot_kernel.cl");
+    const char *source = load_kernel_source(kernel_file);
     size_t sourceSize = strlen(source);
 
     // Compile the kernel
