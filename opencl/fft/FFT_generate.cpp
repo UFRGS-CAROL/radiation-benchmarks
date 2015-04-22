@@ -117,7 +117,7 @@ template <class T2> void dump(cl_device_id id,
 
         //long long time0, time1;
         //time0 = get_time();
-        transform(work, n_ffts, fftKrnl, queue, 0, 1);
+        transform(work, n_ffts, fftKrnl, queue, 0, 1, 64);
         clFinish(queue);
         //time1 = get_time();
         //double kernel_time = (double) (time1-time0) / 1000000;
@@ -158,7 +158,7 @@ template <class T2> void dump(cl_device_id id,
     } while (sum_zeros > 0 && count_do_while < 10);
 
 
-    transform(work, n_ffts, ifftKrnl, queue, 0, 1);
+    transform(work, n_ffts, ifftKrnl, queue, 0, 1, 64);
     copyFromDevice(result, work, used_bytes, queue);
 
     //checking inverse

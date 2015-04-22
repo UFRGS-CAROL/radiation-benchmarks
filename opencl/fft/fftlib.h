@@ -42,7 +42,7 @@ void transform(void* workp,
                cl_kernel& fftKrnl,
                cl_command_queue& fftQueue,
                int distr,
-               int fromGPU);
+               int fromGPU, int block_size);
 
 int check(const void* work,
           const void* check,

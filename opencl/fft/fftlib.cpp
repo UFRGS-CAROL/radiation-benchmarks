@@ -353,9 +353,9 @@ transform(void* workp,
           cl_kernel& fftKrnl,
           cl_command_queue& fftQueue,
           int distr,
-          int fromGPU) {
+          int fromGPU, int block_size) {
     cl_int err;
-    size_t localsz = 64;
+    size_t localsz = block_size;
     size_t globalsz = localsz * n_ffts;
 
     clSetKernelArg(fftKrnl, 0, sizeof(cl_mem), workp);
