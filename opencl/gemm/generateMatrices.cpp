@@ -178,7 +178,7 @@ int main(int argc, char ** argv)
     cl_int                  ret;
 
     clGetPlatformIDs(100, platform_id, &platforms_n);
-    clGetDeviceIDs(platform_id[0], deviceType, 100, device_id, &devices_n);
+    clGetDeviceIDs(platform_id[0], devType, 100, device_id, &devices_n);
 
     // Create an OpenCL context.
     context = clCreateContext(NULL, devices_n, device_id, NULL, NULL, &ret);
@@ -207,7 +207,7 @@ int main(int argc, char ** argv)
         printf("\nError at clCreateCommandQueue! Error code %i\n\n", ret);
         exit(1);
     }
-    RunBenchmark(device_ide[0], context, command_queue);
+    RunBenchmark(device_id[0], context, command_queue);
 
 }
 
