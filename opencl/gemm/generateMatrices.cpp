@@ -45,6 +45,7 @@ void ReadMatrixFromFile(double *h_A, double *h_B)
 }
 void GenerateInputMatrices()
 {
+    int i, j;
     FILE *f_A, *f_B;
 
     f_A = fopen("Double_A_16384.matrix", "wb");
@@ -181,7 +182,7 @@ RunBenchmark(cl_device_id dev,
     // OpenCL doesn't support templated kernels, so we have to use macros
 
     input_size = 16384;
-    GenerateInputMatrices(A, B);
+    GenerateInputMatrices();
     runTest<double>("DGEMM", dev, ctx, queue,
                     "-DK_DOUBLE_PRECISION ");
     input_size = 8192;
@@ -326,7 +327,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     clFinish(queue);
     cout << "Done\n";
 
-    ReadMatrixFromFile(A, B)
+    ReadMatrixFromFile(A, B);
 
     // clean C
     for (i = 0; i<m; ++i) {
