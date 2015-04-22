@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
         kernel_file = argv[3];
         input = argv[4];
         output = argv[5];
-        iterations = argv[6];
+        iterations = atoi(argv[6]);
         distribution = 0;//atoi(argv[2]);
     } else {
         usage();
