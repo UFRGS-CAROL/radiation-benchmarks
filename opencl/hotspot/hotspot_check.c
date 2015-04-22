@@ -133,7 +133,7 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
     long long total_time = (end_time - start_time);
     double kernel_time = ((float) total_time) / (1000*1000);
     printf("\nKernel time: %.3f seconds\n", kernel_time);
-    printf("FLOPS: %f\n",(double)flops/kernel_time);
+    printf("C:%d R:%d ITER:%d FLOPS:%f\n",col, row, total_iterations,(double)flops/kernel_time);
     return src;
 }
 

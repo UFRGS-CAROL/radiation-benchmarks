@@ -485,7 +485,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 	double flops = 2.0*(double)input_size*input_size*input_size;
 	double gflops = flops / kernel_time;
 	printf("kernel time: %lf\n",kernel_time);
-	printf("FLOPS: %lf\n",gflops);
+	printf("SIZE:%d FLOPS:%f\n",input_size, gflops);
 
 #ifdef LOGS
         end_iteration();
