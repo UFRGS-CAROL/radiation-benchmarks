@@ -96,7 +96,7 @@ void usage(){
         printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
 }
 
-int main()
+int main(int argc, char ** argv)
 {
     int devType;
     if(argc == 7) {
