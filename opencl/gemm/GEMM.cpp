@@ -29,7 +29,7 @@
 
 //char kernel_gemmN_path [] = "/home/carol/DSN15_codes/openclgemm/gemmN.cl";
 char *kernel_gemmN_path;
-char *gold_matrix, a_matrix, b_matrix;
+char *gold_matrix, *a_matrix, *b_matrix;
 int input_size;
 
 using namespace std;
@@ -481,7 +481,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         CL_BAIL_ON_ERROR(err);
 
 
-	double kernel_time = (double) (get_time() - it_time_start) / 1000000;
+	double kernel_time = (double) (get_time() - k_time_start) / 1000000;
 	double flops = 2.0*(double)input_size*input_size*input_size;
 	double gflops = flops / kernel_time;
 	printf("kernel time: %lf\n",kernel_time);
