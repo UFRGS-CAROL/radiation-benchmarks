@@ -449,9 +449,6 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     			{
     			    for(j=0; j<input_size; j++){
     			        fwrite( &C[i + input_size*j], sizeof(double), 1, f_A );
-    			    		        
-    			        value= (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.4e16))+4.1e16;
-    			        fwrite( &value, sizeof(double), 1, f_B );
     			    }
     			}
     			fclose(f_A);
