@@ -14,7 +14,7 @@
 
 
 
-#define DEVICE_ID 0
+//#define DEVICE_ID 0
 
 //char kernel_gemmN_path [] = "/home/carol/DSN15_codes/openclgemm/gemmN.cl";
 char *kernel_gemmN_path;
@@ -105,69 +105,12 @@ int main(int argc, char ** argv)
 {
     int devType;
     if(argc == 3) {
-        devType = atoi(argv[2]);
-        kernel_gemmN_path = argv[3];
+        devType = atoi(argv[1]);
+        kernel_gemmN_path = argv[2];
     } else {
         usage();
         exit(1);
     }
-
-    // =========> OpenCl vars
-//    cl_context clGPUContext;
-//    cl_command_queue clCommandQue;
-//    cl_int numplat;
-//    cl_platform_id platforms[5];
-//    cl_int errcode;
-//
-//    size_t dataBytes;
-//
-//    clGetPlatformIDs(2, platforms, (cl_uint*)&numplat);
-//    std::cout << "OpenCL Platforms available  : " << numplat << "\n";
-//
-//    // Setup OpenCL context and device for NVIDIA GTX850m
-//    cl_context_properties props[3];
-//    props[0] = (cl_context_properties)CL_CONTEXT_PLATFORM;  // indicates that next element is platform
-//    props[1] = (cl_context_properties)platforms[numplat - 1];  // platform is of type cl_platform_id
-//    props[2] = (cl_context_properties)0;   // last element must be 0
-//
-//    clGPUContext = clCreateContextFromType(props,
-//                                           devType,				// It could be CL_DEVICE_TYPE_ALL as on the selected platform this is the only computing device, btw...
-//                                           NULL, NULL, &errcode);
-//    if (errcode != CL_SUCCESS) std::cout << "error clCreateContextFromType : " << errcode << "\n";
-//
-//    // get the list of GPU devices associated
-//    // with context
-//    cl_int num_devices;
-//    errcode = clGetContextInfo(clGPUContext, // This just to show how many devices are avail on the platform
-//                               CL_CONTEXT_NUM_DEVICES, sizeof(cl_int),
-//                               &num_devices, NULL);
-//    std::cout << "Number of devices: " << num_devices << "\n";
-//    errcode = clGetContextInfo(clGPUContext,
-//                               CL_CONTEXT_DEVICES, 0, NULL,
-//                               &dataBytes);
-//    cl_device_id *clDevices = (cl_device_id *)
-//                              malloc(dataBytes);
-//    errcode |= clGetContextInfo(clGPUContext,
-//                                CL_CONTEXT_DEVICES, dataBytes,
-//                                clDevices, NULL);
-//
-//    if (errcode != CL_SUCCESS) std::cout << "error clGetContextInfo : " << errcode << "\n";
-//
-//    char clName[50];
-//
-//    errcode = clGetDeviceInfo(clDevices[DEVICE_ID],
-//                              CL_DEVICE_NAME,
-//                              sizeof(char) * 50,
-//                              clName,
-//                              NULL);
-//    if (errcode != CL_SUCCESS) std::cout << "error clGetDeviceInfo : " << errcode << "\n";
-//    std::cout << "Device name : " << clName << "\n";
-//
-//    clCommandQue = clCreateCommandQueue(clGPUContext,
-//                                        clDevices[DEVICE_ID], 0, &errcode);
-//    if (errcode != CL_SUCCESS) std::cout << "error clCommandQue : " << errcode << "\n";
-//
-//    std::cout << "Now calling RunBenchmark\n";
 
     cl_platform_id          platform_id[100];
     cl_device_id            device_id[100];
