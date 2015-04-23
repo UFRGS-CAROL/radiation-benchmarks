@@ -260,49 +260,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     T *A, *B, *C, *GOLD;
     int *kerrors;
     cl_mem Aobj, Bobj, Cobj, GOLDobj, kerrorsobj;
-    if (true) // pinned
-    {
-        Aobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                              sizeof(T)*input_size*input_size, NULL, &err);
-        CL_CHECK_ERROR(err);
-        A =(T*)clEnqueueMapBuffer(queue,Aobj,true,CL_MAP_READ|CL_MAP_WRITE,
-                                  0,sizeof(T)*input_size*input_size,0, NULL,NULL,&err);
-        CL_CHECK_ERROR(err);
-
-        Bobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                              sizeof(T)*input_size*input_size, NULL, &err);
-        CL_CHECK_ERROR(err);
-        B =(T*)clEnqueueMapBuffer(queue,Bobj,true,CL_MAP_READ|CL_MAP_WRITE,
-                                  0,sizeof(T)*input_size*input_size,0, NULL,NULL,&err);
-        CL_CHECK_ERROR(err);
-
-        Cobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                              sizeof(T)*input_size*input_size, NULL, &err);
-        CL_CHECK_ERROR(err);
-        C =(T*)clEnqueueMapBuffer(queue,Cobj,true,CL_MAP_READ|CL_MAP_WRITE,
-                                  0,sizeof(T)*input_size*input_size,0, NULL,NULL,&err);
-        CL_CHECK_ERROR(err);
-
-        GOLDobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                                 sizeof(T)*input_size*input_size, NULL, &err);
-        CL_CHECK_ERROR(err);
-        GOLD = (T*)clEnqueueMapBuffer(queue, GOLDobj, true, CL_MAP_READ | CL_MAP_WRITE,
-                                      0, sizeof(T)*input_size*input_size, 0, NULL, NULL, &err);
-        CL_CHECK_ERROR(err);
-
-        kerrorsobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                                    sizeof(int), NULL, &err);
-        CL_CHECK_ERROR(err);
-        kerrors = (int*)clEnqueueMapBuffer(queue, kerrorsobj, true, CL_MAP_READ | CL_MAP_WRITE,
-                                           0, sizeof(int), 0, NULL, NULL, &err);
-        CL_CHECK_ERROR(err)
-    }
-    else
-    {
         A = (T*)malloc( input_size*input_size*sizeof( T ) );
         B = (T*)malloc( input_size*input_size*sizeof( T ) );
         C = (T*)malloc( input_size*input_size*sizeof( T ) );
-    }
 
     cout << "Allocating GPU and Host memory...";
     clFinish(queue);
@@ -436,23 +396,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
                 }
             }
 
-    if (true) // pinned
-    {
-        err = clReleaseMemObject(Aobj);
-        CL_CHECK_ERROR(err);
-        err = clReleaseMemObject(Bobj);
-        CL_CHECK_ERROR(err);
-        err = clReleaseMemObject(Cobj);
-        CL_CHECK_ERROR(err);
-        err = clReleaseMemObject(kerrorsobj);
-        CL_CHECK_ERROR(err);
-    }
-    else
-    {
         free(A);
         free(B);
         free(C);
-    }
 
     err = clReleaseProgram(prog);
     CL_CHECK_ERROR(err);
