@@ -7,6 +7,7 @@
 #include <time.h>       // Time
 #include <math.h>       // pow
 #include <omp.h>        // OpenMP
+#include <sched.h>      // sched_getcpu
 #include "offload.h"    // omp_set_num_threads_target
 
 // Xeon Phi Configuration
@@ -23,6 +24,10 @@
     #define DEBUG_INT   if (i==0 && j==0 && errors==0) vec_int[0] = ~vec_int[0];
 #else
     #define DEBUG_INT /*OFF*/
+#endif
+
+#ifdef ALL_DEBUG
+    __declspec(target(mic)) sched_getcpu();
 #endif
 
 //======================================================================
@@ -224,6 +229,10 @@ int main (int argc, char *argv[]) {
     uint32_t y;
     char log[MIC_THREADS][MAX_ERROR][LOG_SIZE];
 
+    #ifdef ALL_DEBUG
+        printf("Before offload (local processor): Thread %d, on cpu %d.\n", omp_get_thread_num(), sched_getcpu());
+    #endif
+
     //==================================================================
     // Benchmark
     for (i = 0; i <= repetitions; i++) {
@@ -252,6 +261,13 @@ int main (int argc, char *argv[]) {
                 asm volatile ("nop");
                 asm volatile ("nop");
 
+                #ifdef ALL_DEBUG
+                    if (omp_get_thread_num() + 1 != sched_getcpu()) {
+                        printf("ERROR After offload: Thread %d, on cpu %d.\n", omp_get_thread_num(), sched_getcpu());
+                        printf("Should be:  Thread %d, on cpu %d.\n", omp_get_thread_num(), omp_get_thread_num() + 1 );
+                        printf("Try to use:\n export MIC_ENV_PREFIX=PHI\n export PHI_KMP_AFFINITY='granularity=fine,compact'\n");
+                    }
+                #endif
 
                 // Portion of memory with 512 bits
                 uint32_t value_int;

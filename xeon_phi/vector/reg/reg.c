@@ -6,6 +6,7 @@
 #include <unistd.h>     // Sleep
 #include <time.h>       // Time
 #include <omp.h>        // OpenMP
+#include <sched.h>      // sched_getcpu
 #include "offload.h"    // omp_set_num_threads_target
 
 
@@ -23,6 +24,10 @@
     #define DEBUG   if (i==0 && errors==0) vec_int[0] = ~vec_int[0];
 #else
     #define DEBUG /*OFF*/
+#endif
+
+#ifdef ALL_DEBUG
+    __declspec(target(mic)) sched_getcpu();
 #endif
 
 //======================================================================
@@ -78,6 +83,10 @@ int main(int argc, char *argv[]) {
     uint32_t y;
     char log[MIC_THREADS][MAX_ERROR][LOG_SIZE];
 
+    #ifdef ALL_DEBUG
+        printf("Before offload (local processor): Thread %d, on cpu %d.\n", omp_get_thread_num(), sched_getcpu());
+    #endif
+
     //==================================================================
     // Benchmark
     for(i = 0; i < repetitions; i++) {
@@ -100,6 +109,10 @@ int main(int argc, char *argv[]) {
             {
                 asm volatile ("nop");
                 asm volatile ("nop");
+
+                #ifdef ALL_DEBUG
+                    printf("After offload: Thread %d, on cpu %d.\n", omp_get_thread_num(), sched_getcpu());
+                #endif
 
                 // Portion of memory with 512 bits
                 __declspec(aligned(64)) uint32_t vec_int[ITEMS_INT];
