@@ -3,7 +3,8 @@
 // This code uses algorithm described in:
 // "Fitting FFT onto G80 Architecture". Vasily Volkov and Brian Kazian, UC Berkeley CS258 project report. May 2008.
 #pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable
-#pragma OPENCL EXTENSION cl_amd_fp64: enable
+#pragma OPENCL EXTENSION cl_khr_fp64: enable
+#pragma OPENCL EXTENSION cl_nv_compiler_options: enable
 
 #ifndef M_PI
 # define M_PI 3.14159265358979323846f
@@ -340,4 +341,24 @@ chk1D_512(__global double2* work, int half_n_cmplx, __global int* fail)
             *fail = 1;
         }
     }
+}
+
+__kernel void
+GoldChk(__global double2* gold, __global double2* resultCPU, int N, __global int* kerrors, double AVOIDZERO, double ACCEPTDIFF)
+{
+        int i = get_global_id(0);
+
+	
+        if ((fabs(gold[i].x)>AVOIDZERO)&&
+        ((fabs((resultCPU[i].x-gold[i].x)/resultCPU[i].x)>ACCEPTDIFF)||
+         (fabs((resultCPU[i].x-gold[i].x)/gold[i].x)>ACCEPTDIFF))) {
+		    atomic_inc(kerrors);
+	    }
+
+        if ((fabs(gold[i].y)>AVOIDZERO)&&
+        ((fabs((resultCPU[i].y-gold[i].y)/resultCPU[i].y)>ACCEPTDIFF)||
+         (fabs((resultCPU[i].y-gold[i].y)/gold[i].y)>ACCEPTDIFF))) {
+		    atomic_inc(kerrors);
+	    }
+
 }

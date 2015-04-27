@@ -19,10 +19,14 @@
 
 #include "fftlib.h"
 
+#ifdef LOGS
+#include "/home/carol/log_helper/log_helper.h"
+#endif /* LOGS */
+
 //////////
 // LOOPS
 //////////
-#define ITERACTIONS 1
+//#define ITERACTIONS 10000000
 
 #define AVOIDZERO 1e-200
 #define ACCEPTDIFF 1e-5
@@ -44,11 +48,13 @@ template <> inline bool dp<cplxdbl>(void) {
     return true;
 }
 
+int ocl_exec_gchk(cplxdbl *gold, int n, int mem_size, size_t thread_per_block, double avoidzero, double acceptdiff);
+
 int t_ea = 0;
 int last_num_errors = 0;
 int last_num_errors_i = 0;
 double total_kernel_time = 0;
-int sizeIndex;
+int sizeIndex, block_size;
 
 // Returns the current system time in microseconds
 long long get_time() {
@@ -62,7 +68,7 @@ cplxdbl* source, * gold;
 
 cl_program fftProg;
 cl_program cpufftProg;
-cl_kernel fftKrnl, ifftKrnl, chkKrnl;
+cl_kernel fftKrnl, ifftKrnl, chkKrnl, goldChkKrnl;
 cl_kernel cpuFftKrnl, cpuIfftKrnl, cpuChkKrnl;
 int distribution;
 
@@ -103,13 +109,23 @@ template <class T2> void dump(cl_device_id id,
 
     time0 = get_time();
 
-    transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1);
+#ifdef LOGS
+    start_iteration();
+#endif /* LOGS */
+    transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, block_size);
+#ifdef LOGS
+    end_iteration();
+#endif /* LOGS */
 
     clFinish(queue[0]);
     time1 = get_time();
     double kernel_time = (double) (time1-time0) / 1000000;
+    double fftsz = 512;
+    double Gflops = n_ffts*(5*fftsz*log2(fftsz))/kernel_time;
+    printf("NFFT:%d GFLOPS:%f\n",n_ffts,Gflops);
+
     if(distribution == 3)
-	kernel_time = 0;
+        kernel_time = 0;
 
     T2 *workT = (T2*) malloc(used_bytes);
     if(workT == NULL)
@@ -121,105 +137,81 @@ template <class T2> void dump(cl_device_id id,
     copyFromDevice(workT, work, used_bytes, queue[0]);
     clFinish(queue[0]);
 
-    freeDeviceBuffer(work, ctx, queue[0]);
-    void *workCPU;
-    T2* resultCPU;
-    // allocate host memory
-    allocHostBuffer((void**)&resultCPU, used_bytes, ctx, queue[1]);
+    T2* resultCPU = workT;
 
-    // alloc device memory
-    allocDeviceBuffer(&workCPU, used_bytes, ctx, queue[1]);
-
-    clFinish(queue[1]);
-
-    copyToDevice(workCPU, workT, used_bytes, queue[1]);
-    clFinish(queue[1]);
-
-    time0 = get_time();
-    transform(workCPU, n_ffts, kernelIndex == 0 ? cpuFftKrnl : cpuIfftKrnl, queue[1], distribution, 0);
-    clFinish(queue[1]);
-
-    time1 = get_time();
-    double cpu_kernel_time = (double) (time1-time0) / 1000000;
-    if(distribution == 0)
-	cpu_kernel_time = 0;
-
-    copyFromDevice(resultCPU, workCPU, used_bytes, queue[1]);
-    clFinish(queue[1]);
-
-    freeDeviceBuffer(workCPU, ctx, queue[1]);
-    free(workT);
-
-    cout << "\n\n\n";
-
-    //imprime os primeiros 20 valores do vetor resultado e do gold, para comparação. PROBLEMA: mesmo com valores iguais, indica erro! WHYYYYYYYYY?
-    /*	int c;
-    	for(c = 0; c < 20; c++)
-    	{
-    		printf("[%d]:\nr.x - %le g.x - %le\nr.y - %le g.y - %le\n",c, resultCPU[c].x, gold[c].x, resultCPU[c].y, gold[c].y);
-    	}
-    */
-    /// PROBABLY NOT NEEDED, OR CAN BE REDUCED
-
+    int kerrors=0;
+    //gold[323].x=2;
+    kerrors = ocl_exec_gchk(gold, queue[0], ctx, work, goldChkKrnl, N, sizeof(cplxdbl)*N, 64, AVOIDZERO, ACCEPTDIFF);
     int num_errors = 0;
     int num_errors_i = 0; //complex
+#ifdef LOGS
+    log_error_count(kerrors);
+#endif /* LOGS */
+    if (kerrors!=0)
+    {
 
-    #pragma omp parallel for reduction(+:num_errors)
-    for (i = 0; i < N/2; i++) {
+        #pragma omp parallel for reduction(+:num_errors)
+        for (i = 0; i < N/2; i++) {
 
-        if ((fabs(gold[i].x)>AVOIDZERO)&&
-                ((fabs((resultCPU[i].x-gold[i].x)/resultCPU[i].x)>ACCEPTDIFF)||
-                 (fabs((resultCPU[i].x-gold[i].x)/gold[i].x)>ACCEPTDIFF))) {
-            if(num_errors < 20)
-            printf("Error [%d]\ne (%f, %f)\nr (%f, %f)\n", i, gold[i].x, gold[i].y, resultCPU[i].x, resultCPU[i].y);
-            num_errors++;
-        }
-        if ((fabs(gold[i].y)>AVOIDZERO)&&
-                ((fabs((resultCPU[i].y-gold[i].y)/resultCPU[i].y)>ACCEPTDIFF)||
-                 (fabs((resultCPU[i].y-gold[i].y)/gold[i].y)>ACCEPTDIFF))) {
-            if(num_errors < 20)
-            printf("Error [%d]\ne (%f, %f)\nr (%f, %f)\n", i, gold[i].x, gold[i].y, resultCPU[i].x, resultCPU[i].y);
-            num_errors++;
+            char error_detail[150];
+
+            if ((fabs(gold[i].x)>AVOIDZERO)&&
+                    ((fabs((resultCPU[i].x-gold[i].x)/resultCPU[i].x)>ACCEPTDIFF)||
+                     (fabs((resultCPU[i].x-gold[i].x)/gold[i].x)>ACCEPTDIFF))) {
+                num_errors++;
+#ifdef LOGS
+                snprintf(error_detail, 150, "pos:%d real r:%1.16e e:%1.16e",i, resultCPU[i].x, gold[i].x);
+                log_error_detail(error_detail);
+#endif /* LOGS */
+                //log_error_detail("pos:%d real r:%1.16e e:%1.16e",i, resultCPU[i].x, gold[i].x);
+            }
+            if ((fabs(gold[i].y)>AVOIDZERO)&&
+                    ((fabs((resultCPU[i].y-gold[i].y)/resultCPU[i].y)>ACCEPTDIFF)||
+                     (fabs((resultCPU[i].y-gold[i].y)/gold[i].y)>ACCEPTDIFF))) {
+                num_errors++;
+#ifdef LOGS
+                snprintf(error_detail, 150, "pos:%d real r:%1.16e e:%1.16e",i, resultCPU[i].y, gold[i].y);
+                log_error_detail(error_detail);
+#endif /* LOGS */
+                //log_error_detail("pos:%d real r:%1.16e e:%1.16e",i, resultCPU[i].y, gold[i].y);
+            }
+
+            if ((fabs(gold[i + (int) N/2].x)>AVOIDZERO)&&
+                    ((fabs((resultCPU[i + (int)N/2].x-gold[i +(int) N/2].x)/resultCPU[i+(int) N/2].x)>ACCEPTDIFF)||
+                     (fabs((resultCPU[i +(int) N/2].x-gold[i +(int) N/2].x)/gold[i +(int) N/2].x)>ACCEPTDIFF))) {
+                num_errors_i++;
+#ifdef LOGS
+                snprintf(error_detail, 150, "pos:%d imag r:%1.16e e:%1.16e",i, resultCPU[i+ (int)N/2].x, gold[i + (int)N/2].x);
+                log_error_detail(error_detail);
+#endif /* LOGS */
+                //log_error_detail("pos:%d imag r:%1.16e e:%1.16e",i, resultCPU[i+ (int)N/2].x, gold[i + (int)N/2].x);
+            }
+            if ((fabs(gold[i + (int) N/2].y)>AVOIDZERO)&&
+                    ((fabs((resultCPU[i + (int)N/2].y-gold[i + (int)N/2].y)/resultCPU[i +(int) N/2].y)>ACCEPTDIFF)||
+                     (fabs((resultCPU[i +(int) N/2].y-gold[i +(int) N/2].y)/gold[i + (int) N/2].y)>ACCEPTDIFF))) {
+                num_errors_i++;
+#ifdef LOGS
+                snprintf(error_detail, 150, "pos:%d imag r:%1.16e e:%1.16e",i, resultCPU[i+ (int)N/2].y, gold[i + (int)N/2].y);
+                log_error_detail(error_detail);
+#endif /* LOGS */
+                //log_error_detail("pos:%d imag r:%1.16e e:%1.16e",i, resultCPU[i+ (int)N/2].y, gold[i + (int)N/2].y);
+            }
+
+
         }
 
-        if ((fabs(gold[i + (int) N/2].x)>AVOIDZERO)&&
-                ((fabs((resultCPU[i + (int)N/2].x-gold[i +(int) N/2].x)/resultCPU[i+(int) N/2].x)>ACCEPTDIFF)||
-                 (fabs((resultCPU[i +(int) N/2].x-gold[i +(int) N/2].x)/gold[i +(int) N/2].x)>ACCEPTDIFF))) {
-            if(num_errors < 20)
-            printf("Error [%d]\ne (%f, %f)\nr (%f, %f)\n", i, gold[i].x, gold[i].y, resultCPU[i].x, resultCPU[i].y);
-            num_errors_i++;
-        }
-        if ((fabs(gold[i + (int) N/2].y)>AVOIDZERO)&&
-                ((fabs((resultCPU[i + (int)N/2].y-gold[i + (int)N/2].y)/resultCPU[i +(int) N/2].y)>ACCEPTDIFF)||
-                 (fabs((resultCPU[i +(int) N/2].y-gold[i +(int) N/2].y)/gold[i + (int) N/2].y)>ACCEPTDIFF))) {
-            if(num_errors < 20)
-            printf("Error [%d]\ne (%f, %f)\nr (%f, %f)\n", i, gold[i].x, gold[i].y, resultCPU[i].x, resultCPU[i].y);
-            num_errors_i++;
-        }
 
     }
 
-    if(num_errors > 0 || num_errors_i > 0) {
-        t_ea++;
-    }
+    if (test_number % 15 == 0)
+        printf ("it:%d. cpu errors check: r=%d i=%d\n", test_number, num_errors, num_errors_i);
+
+    freeDeviceBuffer(work, ctx, queue[0]);
 
 
-    //if(num_errors > 0 || (test_number % 10 == 0)) {
-        printf("\ntest number: %d", test_number);
-        printf("\nGPU kernel time: %.12f", kernel_time);
-        printf("\nCPU kernel time: %f", cpu_kernel_time);
-        printf("\nTotal kernel time: %f", kernel_time+cpu_kernel_time);
-        printf("\namount of errors: %d", num_errors);
-        printf("\ntotal runs with errors: %d\n", t_ea);
+    free(resultCPU);
 
-    //}
-    //else {
-    //    printf(".");
-    //}
-
-    freeHostBuffer(resultCPU, ctx, queue[1]);
 }
-
 
 void getDevices(cl_device_type deviceType) {
     cl_uint         platforms_n = 0;
@@ -236,20 +228,20 @@ void getDevices(cl_device_type deviceType) {
         exit(1);
     }
 
-        printf("Using the default platform (platform 0)...\n\n");
-        printf("=== %d OpenCL device(s) found on platform:\n", devices_n);
-        for (int i = 0; i < devices_n; i++) {
-            char buffer[10240];
-            cl_uint buf_uint;
-            cl_ulong buf_ulong;
-            printf("  -- %d --\n", i);
-            clGetDeviceInfo(device_id[i], CL_DEVICE_NAME, sizeof(buffer), buffer,
-                            NULL);
-            printf("  DEVICE_NAME = %s\n", buffer);
-            clGetDeviceInfo(device_id[i], CL_DEVICE_VENDOR, sizeof(buffer), buffer,
-                            NULL);
-            printf("  DEVICE_VENDOR = %s\n", buffer);
-	}
+    printf("Using the default platform (platform 0)...\n\n");
+    printf("=== %d OpenCL device(s) found on platform:\n", devices_n);
+    for (int i = 0; i < devices_n; i++) {
+        char buffer[10240];
+        cl_uint buf_uint;
+        cl_ulong buf_ulong;
+        printf("  -- %d --\n", i);
+        clGetDeviceInfo(device_id[i], CL_DEVICE_NAME, sizeof(buffer), buffer,
+                        NULL);
+        printf("  DEVICE_NAME = %s\n", buffer);
+        clGetDeviceInfo(device_id[i], CL_DEVICE_VENDOR, sizeof(buffer), buffer,
+                        NULL);
+        printf("  DEVICE_VENDOR = %s\n", buffer);
+    }
     // Create a command queue.
     command_queue[0] = clCreateCommandQueue(context, device_id[0], 0, &ret);
     if (ret != CL_SUCCESS) {
@@ -257,26 +249,35 @@ void getDevices(cl_device_type deviceType) {
         exit(1);
     }
 
-    // Create a command queue.
-    command_queue[1] = clCreateCommandQueue(context, device_id[1], 0, &ret);
-    if (ret != CL_SUCCESS) {
-        printf("\nError at clCreateCommandQueue! Error code %i\n\n", ret);
-        exit(1);
-    }
+}
+
+void usage(){
+        printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file> <input_file> <output_gold_file> <#iterations> <workgroup_block_size>\n");
+        printf("  input size range from 0 to 2\n");
+        printf("  cl_device_types\n");
+        printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
+        printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
+        printf("    GPU: %d\n",CL_DEVICE_TYPE_GPU);
+        printf("    ACCELERATOR: %d\n",CL_DEVICE_TYPE_ACCELERATOR);
+        printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
 }
 
 
 int main(int argc, char** argv) {
 
-    if(argc > 2){
+    int devType, iterations=1;
+    char *kernel_file, *input, *output;
+    if(argc == 8) {
         sizeIndex = atoi(argv[1]);
-        distribution = atoi(argv[2]);
+        devType = atoi(argv[2]);
+        kernel_file = argv[3];
+        input = argv[4];
+        output = argv[5];
+        iterations = atoi(argv[6]);
+        block_size = atoi(argv[7]);
+        distribution = 0;//atoi(argv[2]);
     } else {
-        printf("ERROR! enter input size (0 to 5) and work distribution \
-\ndistr = 0,   0%%  cpu | gpu 100%%\
-\ndistr = 1,  33%%  cpu | gpu  66%%\
-\ndistr = 2,  66%%  cpu | gpu  33%%\
-\ndistr = 3, 100%%  cpu | gpu   0%%\n\n");
+        usage();
         exit(1);
     }
 
@@ -284,11 +285,11 @@ int main(int argc, char** argv) {
 
     FILE *fp, *fp_gold;
     // init host memory...
-    if( (fp = fopen("/home/carol/daniel/fft/input_fft", "rb" )) == 0 ) {
+    if( (fp = fopen(input, "rb" )) == 0 ) {
         printf( "error file input_fft was not opened\n");
         return 0;
     }
-    if( (fp_gold = fopen("/home/carol/daniel/fft/output_fft", "rb" )) == 0 ) {
+    if( (fp_gold = fopen(output, "rb" )) == 0 ) {
         printf( "error file output_fft was not opened\n");
         return 0;
     }
@@ -305,6 +306,13 @@ int main(int argc, char** argv) {
     int half_n_cmplx = half_n_ffts * 512;
     double N = half_n_cmplx*2;
 
+#ifdef LOGS
+    char test_info[100];
+    snprintf(test_info, 100, "size:%d",(int)N);
+    start_log_file("openclfft", test_info);
+    set_max_errors_iter(100);
+    set_iter_interval_print(15);
+#endif /* LOGS */
     source = (cplxdbl*)malloc(N*sizeof(cplxdbl));
     gold = (cplxdbl*)malloc(N*sizeof(cplxdbl));
 
@@ -329,21 +337,26 @@ int main(int argc, char** argv) {
     CL_DEVICE_TYPE_ACCELERATOR
     CL_DEVICE_TYPE_ALL
     */
-    getDevices(CL_DEVICE_TYPE_ALL);
+    getDevices(devType);
 
-    init(true, device_id[0], context, command_queue[0], fftProg, fftKrnl,
-         ifftKrnl, chkKrnl);
+    init(true, kernel_file, device_id[0], context, command_queue[0], fftProg, fftKrnl,
+         ifftKrnl, chkKrnl, goldChkKrnl);
 
-    init(true, device_id[1], context, command_queue[1], cpufftProg, cpuFftKrnl,
-         cpuIfftKrnl, cpuChkKrnl);
+    //init(true, device_id[1], context, command_queue[1], cpufftProg, cpuFftKrnl,
+    //     cpuIfftKrnl, cpuChkKrnl);
 
 
     //LOOP START
     int loop;
-    printf("%d ITERACTIONS\n", ITERACTIONS);
-    for(loop=0; loop<ITERACTIONS; loop++) {
+    //printf("%d ITERACTIONS\n", ITERACTIONS);
+    for(loop=0; loop<iterations; loop++) {
         dump<cplxdbl>(device_id[0], context, command_queue, loop);
     }
     free(source);
     free(gold);
+#ifdef LOGS
+    end_log_file();
+#endif /* LOGS */
+
 }
+

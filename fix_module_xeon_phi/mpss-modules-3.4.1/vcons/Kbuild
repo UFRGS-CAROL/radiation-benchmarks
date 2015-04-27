@@ -1,3 +1,0 @@
-michvc-objs := hvc_mic.o
-
-obj-m := michvc.o

@@ -19,21 +19,23 @@ int main(){
 		// Execute the test (ONLY THE KERNEL), log functions will measure kernel time
 		sleep(1);
 		end_iteration();
+
+
+		int error_count = 0;
 		
 		if(i%8==0){
 		// Testing with error_count > 0 for some iterations
 			// You can call as many log_error_detail(str) as you need
 			log_error_detail("detail of error x");
-			log_error_detail("detail of error y");
 
 			// Tell log how many errors the iteration had
-			log_error_count(i+1);
-		} else{
-			// If you have no errors you should tell. Really needed???
-			log_error_count(0);
+			error_count = i+1;
 		}
+
+		// log how many errors the iteration had
+		log_error_count(error_count);
 	}
 
-    end_log_file();
+	end_log_file();
     
 }
