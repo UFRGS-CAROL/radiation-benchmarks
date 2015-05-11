@@ -21,25 +21,9 @@
 #define FLT_MAX 3.40282347e+38
 #endif
 
-#ifdef RD_WG_SIZE_0_0
-        #define BLOCK_SIZE RD_WG_SIZE_0_0
-#elif defined(RD_WG_SIZE_0)
-        #define BLOCK_SIZE RD_WG_SIZE_0
-#elif defined(RD_WG_SIZE)
-        #define BLOCK_SIZE RD_WG_SIZE
-#else
-        #define BLOCK_SIZE 256
-#endif
 
-#ifdef RD_WG_SIZE_1_0
-     #define BLOCK_SIZE2 RD_WG_SIZE_1_0
-#elif defined(RD_WG_SIZE_1)
-     #define BLOCK_SIZE2 RD_WG_SIZE_1
-#elif defined(RD_WG_SIZE)
-     #define BLOCK_SIZE2 RD_WG_SIZE
-#else
-     #define BLOCK_SIZE2 256
-#endif
+int workgroup_blocksize = 256;
+int devType;
 
 //long long get_time() {
 //        struct timeval tv; 
@@ -65,7 +49,7 @@ static int initialize(int use_gpu)
 	cl_platform_id platform_id;
 	if (clGetPlatformIDs(1, &platform_id, NULL) != CL_SUCCESS) { printf("ERROR: clGetPlatformIDs(1,*,0) failed\n"); return -1; }
 	cl_context_properties ctxprop[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platform_id, 0};
-	device_type = CL_DEVICE_TYPE_ACCELERATOR;//use_gpu ? CL_DEVICE_TYPE_GPU : CL_DEVICE_TYPE_CPU;
+	device_type = devType;
 	context = clCreateContextFromType( ctxprop, device_type, NULL, NULL, NULL );
 	if( !context ) { printf("ERROR: clCreateContextFromType(%s) failed\n", use_gpu ? "GPU" : "CPU"); return -1; }
 
@@ -118,6 +102,8 @@ float *feature_d;
 float *clusters_d;
 float *center_d;
 
+char *kernel_file;
+
 int allocate(int n_points, int n_features, int n_clusters, float **feature)
 {
 
@@ -126,7 +112,7 @@ int allocate(int n_points, int n_features, int n_clusters, float **feature)
 	if(!source) { printf("ERROR: calloc(%d) failed\n", sourcesize); return -1; }
 
 	// read the kernel core source
-	char * tempchar = "./kmeans.cl";
+	char * tempchar = kernel_file;//"./kmeans.cl";
 	FILE * fp = fopen(tempchar, "rb"); 
 	if(!fp) { printf("ERROR: unable to open '%s'\n", tempchar); return -1; }
 	fread(source + strlen(source), sourcesize, 1, fp);
@@ -181,7 +167,7 @@ int allocate(int n_points, int n_features, int n_clusters, float **feature)
 	
 	size_t global_work[3] = { n_points, 1, 1 };
 	/// Ke Wang adjustable local group size 2013/08/07 10:37:33
-	size_t local_work_size= BLOCK_SIZE; // work group size is defined by RD_WG_SIZE_0 or RD_WG_SIZE_0_0 2014/06/10 17:00:51
+	size_t local_work_size= workgroup_blocksize; // work group size is defined by RD_WG_SIZE_0 or RD_WG_SIZE_0_0 2014/06/10 17:00:51
 	if(global_work[0]%local_work_size !=0)
 	  global_work[0]=(global_work[0]/local_work_size+1)*local_work_size;
 
@@ -201,12 +187,132 @@ void deallocateMemory()
 
 }
 
+void usage(char *argv0) {
+        printf("Usage: %s <cl_device_tipe> <ocl_kernel_file> <input_file> <output_gold_file> <#iterations> <workgroup_block_size>\n", argv0);
+        printf("  cl_device_types\n");
+        printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
+        printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
+        printf("    GPU: %d\n",CL_DEVICE_TYPE_GPU);
+        printf("    ACCELERATOR: %d\n",CL_DEVICE_TYPE_ACCELERATOR);
+        printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
+}
+
 
 int main( int argc, char** argv) 
 {
-	printf("WG size of kernel_swap = %d, WG size of kernel_kmeans = %d \n", BLOCK_SIZE, BLOCK_SIZE2);
 
-	setup(argc, argv);
+		char   *input_filename = 0;
+		float  *buf;
+		char	line[1024];
+		float	threshold = 0.001;		/* default value */
+		int		max_nclusters=5;		/* default value */
+		int		min_nclusters=5;		/* default value */
+		int		nfeatures = 0;
+		int		npoints = 0;
+		float	len;
+		         
+		float **features;
+		float **cluster_centres=NULL;
+		int		i, j;
+		int		nloops = 1;				/* default value */
+		int		isOutput = 0;
+		//float	cluster_timing, io_timing;		
+
+    char *output;
+    if(argc == 7) {
+        devType = atoi(argv[1]);
+        kernel_file = argv[2];
+        input_filename = argv[3];
+        output = argv[4];
+        nloops = atoi(argv[5]);
+        workgroup_blocksize = atoi(argv[6]);
+    } else {
+        usage(argv[0]);
+        exit(1);
+    }
+	printf("WG size of kernel_swap = %d, WG size of kernel_kmeans = %d \n", workgroup_blocksize, workgroup_blocksize);
+
+isOutput = 1;
+
+    if (input_filename == 0) usage(argv[0]);
+		
+	/* ============== I/O begin ==============*/
+    /* get nfeatures and npoints */
+        FILE *infile;
+        if ((infile = fopen(input_filename, "r")) == NULL) {
+            fprintf(stderr, "Error: no such file (%s)\n", input_filename);
+            exit(1);
+		}		
+        while (fgets(line, 1024, infile) != NULL)
+			if (strtok(line, " \t\n") != 0)
+                npoints++;			
+        rewind(infile);
+        while (fgets(line, 1024, infile) != NULL) {
+            if (strtok(line, " \t\n") != 0) {
+                /* ignore the id (first attribute): nfeatures = 1; */
+                while (strtok(NULL, " ,\t\n") != NULL) nfeatures++;
+                break;
+            }
+        }        
+
+        /* allocate space for features[] and read attributes of all objects */
+        buf         = (float*) malloc(npoints*nfeatures*sizeof(float));
+        features    = (float**)malloc(npoints*          sizeof(float*));
+        features[0] = (float*) malloc(npoints*nfeatures*sizeof(float));
+        for (i=1; i<npoints; i++)
+            features[i] = features[i-1] + nfeatures;
+        rewind(infile);
+        i = 0;
+        while (fgets(line, 1024, infile) != NULL) {
+            if (strtok(line, " \t\n") == NULL) continue;            
+            for (j=0; j<nfeatures; j++) {
+                buf[i] = atof(strtok(NULL, " ,\t\n"));             
+                i++;
+            }            
+        }
+        fclose(infile);
+	
+	printf("\nI/O completed\n");
+	printf("\nNumber of objects: %d\n", npoints);
+	printf("Number of features: %d\n", nfeatures);	
+	/* ============== I/O end ==============*/
+
+	// error check for clusters
+	if (npoints < min_nclusters)
+	{
+		printf("Error: min_nclusters(%d) > npoints(%d) -- cannot proceed\n", min_nclusters, npoints);
+		exit(0);
+	}
+
+	srand(7);												/* seed for future random number generator */	
+	memcpy(features[0], buf, npoints*nfeatures*sizeof(float)); /* now features holds 2-dimensional array of features */
+	free(buf);
+
+	/* ======================= core of the clustering ===================*/
+
+	cluster_centres = NULL;
+	cluster(npoints, nfeatures, features, min_nclusters, max_nclusters, threshold, &cluster_centres, nloops);
+
+	/* =============== Command Line Output =============== */
+	/* cluster center coordinates
+	   :displayed only for when k=1*/
+	if((min_nclusters == max_nclusters) && (isOutput == 1)) {
+		printf("\n================= Centroid Coordinates =================\n");
+		for(i = 0; i < max_nclusters; i++){
+			printf("%d:", i);
+			for(j = 0; j < nfeatures; j++){
+				printf(" %.2f", cluster_centres[i][j]);
+			}
+			printf("\n\n");
+		}
+	}
+	
+	len = (float) ((max_nclusters - min_nclusters + 1)*nloops);
+
+	printf("Number of Iteration: %d\n", nloops);
+	
+	free(features[0]);
+	free(features);    
 	shutdown();
 }
 
@@ -227,7 +333,7 @@ int	kmeansOCL(float **feature,    /* in: [npoints][nfeatures] */
 	size_t global_work[3] = { n_points, 1, 1 }; 
 
 	/// Ke Wang adjustable local group size 2013/08/07 10:37:33
-	size_t local_work_size=BLOCK_SIZE2; // work group size is defined by RD_WG_SIZE_1 or RD_WG_SIZE_1_0 2014/06/10 17:00:41
+	size_t local_work_size=workgroup_blocksize; // work group size is defined by RD_WG_SIZE_1 or RD_WG_SIZE_1_0 2014/06/10 17:00:41
 	if(global_work[0]%local_work_size !=0)
 	  global_work[0]=(global_work[0]/local_work_size+1)*local_work_size;
 	
