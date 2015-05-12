@@ -3,16 +3,11 @@ extern "C" {
 #endif
 
 
-#include <stdio.h>					// (in path known to compiler)			needed by printf
-#include <stdlib.h>					// (in path known to compiler)			needed by malloc
-#include <stdbool.h>				// (in path known to compiler)			needed by true/false
+#include <stdio.h> // (in path known to compiler)			needed by printf
+#include <stdlib.h> // (in path known to compiler)			needed by malloc
+#include <stdbool.h> // (in path known to compiler)			needed by true/false
 
-
-#include "./util/timer/timer.h"			// (in path specified here)
-#include "./util/num/num.h"				// (in path specified here)
-
-
-#include "./main.h"						// (in the current directory)
+#include "./main.h" // (in the current directory)
 
 #include "./kernel/kernel_gpu_opencl_wrapper.h"	// (in library path specified here)
 
@@ -23,28 +18,11 @@ extern "C" {
 // input size
 #define BOXES 15
 
-int
-main(	int argc,
-        char *argv [])
-{
+int main(int argc, char *argv []){
 
     //====================================================================
     //	CPU/MCPU VARIABLES
     //=====================================================================
-
-    // timer
-    long long time0;
-
-    time0 = get_time();
-
-    // timer
-    long long time1;
-    long long time2;
-    long long time3;
-    long long time4;
-    long long time5;
-    long long time6;
-    long long time7;
 
     // counters
     int i, j, k, l, m, n;
@@ -61,7 +39,6 @@ main(	int argc,
 
     printf("WG size of kernel = %d \n", NUMBER_THREADS);
 
-    time1 = get_time();
 
     //=====================================================================
     //	CHECK INPUT ARGUMENTS
@@ -72,7 +49,6 @@ main(	int argc,
     dim_cpu.cores_arg = 1;
     dim_cpu.boxes1d_arg = BOXES;
 
-    time2 = get_time();
 
     //=====================================================================
     //	INPUTS
@@ -80,7 +56,6 @@ main(	int argc,
 
     par_cpu.alpha = 0.5;
 
-    time3 = get_time();
 
     //=====================================================================
     //	DIMENSIONS
@@ -97,7 +72,6 @@ main(	int argc,
     // box array
     dim_cpu.box_mem = dim_cpu.number_boxes * sizeof(box_str);
 
-    time4 = get_time();
 
     //=====================================================================
     //	SYSTEM MEMORY
@@ -182,14 +156,10 @@ main(	int argc,
     // input (distances)
     rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
     for(i=0; i<dim_cpu.space_elem; i=i+1) {
-        rv_cpu[i].v = (rand()%10 + 1) / 10.0;			// get a number in the range 0.1 - 1.0
-        // rv_cpu[i].v = 0.1;			// get a number in the range 0.1 - 1.0
-        rv_cpu[i].x = (rand()%10 + 1) / 10.0;			// get a number in the range 0.1 - 1.0
-        // rv_cpu[i].x = 0.2;			// get a number in the range 0.1 - 1.0
-        rv_cpu[i].y = (rand()%10 + 1) / 10.0;			// get a number in the range 0.1 - 1.0
-        // rv_cpu[i].y = 0.3;			// get a number in the range 0.1 - 1.0
-        rv_cpu[i].z = (rand()%10 + 1) / 10.0;			// get a number in the range 0.1 - 1.0
-        // rv_cpu[i].z = 0.4;			// get a number in the range 0.1 - 1.0
+        rv_cpu[i].v = (rand()%10 + 1) / 10.0; // get a number in the range 0.1 - 1.0
+        rv_cpu[i].x = (rand()%10 + 1) / 10.0; // get a number in the range 0.1 - 1.0
+        rv_cpu[i].y = (rand()%10 + 1) / 10.0; // get a number in the range 0.1 - 1.0
+        rv_cpu[i].z = (rand()%10 + 1) / 10.0; // get a number in the range 0.1 - 1.0
         fwrite(&(rv_cpu[i].v), 1, sizeof(double), file);
         fwrite(&(rv_cpu[i].x), 1, sizeof(double), file);
         fwrite(&(rv_cpu[i].y), 1, sizeof(double), file);
@@ -203,8 +173,7 @@ main(	int argc,
         printf( "The file 'input_charges' was not opened\n" );
     qv_cpu = (fp*)malloc(dim_cpu.space_mem2);
     for(i=0; i<dim_cpu.space_elem; i=i+1) {
-        qv_cpu[i] = (rand()%10 + 1) / 10.0;			// get a number in the range 0.1 - 1.0
-        // qv_cpu[i] = 0.5;			// get a number in the range 0.1 - 1.0
+        qv_cpu[i] = (rand()%10 + 1) / 10.0; // get a number in the range 0.1 - 1.0
         fwrite(&(qv_cpu[i]), 1, sizeof(double), file);
     }
     fclose(file);
@@ -212,13 +181,12 @@ main(	int argc,
     // output (forces)
     fv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
     for(i=0; i<dim_cpu.space_elem; i=i+1) {
-        fv_cpu[i].v = 0;								// set to 0, because kernels keeps adding to initial value
-        fv_cpu[i].x = 0;								// set to 0, because kernels keeps adding to initial value
-        fv_cpu[i].y = 0;								// set to 0, because kernels keeps adding to initial value
-        fv_cpu[i].z = 0;								// set to 0, because kernels keeps adding to initial value
+        fv_cpu[i].v = 0; // set to 0, because kernels keeps adding to initial value
+        fv_cpu[i].x = 0; // set to 0, because kernels keeps adding to initial value
+        fv_cpu[i].y = 0; // set to 0, because kernels keeps adding to initial value
+        fv_cpu[i].z = 0; // set to 0, because kernels keeps adding to initial value
     }
 
-    time5 = get_time();
 
     //=====================================================================
     //	KERNEL
@@ -235,7 +203,6 @@ main(	int argc,
                                 qv_cpu,
                                 fv_cpu);
 
-    time6 = get_time();
 
     //=====================================================================
     //	SYSTEM MEMORY DEALLOCATION
@@ -291,38 +258,10 @@ main(	int argc,
     free(fv_cpu);
     free(box_cpu);
 
-    time7 = get_time();
 
-    //=====================================================================
-    //	DISPLAY TIMING
-    //=====================================================================
-
-    // printf("Time spent in different stages of the application:\n");
-
-    // printf("%15.12f s, %15.12f % : VARIABLES\n",						(float) (time1-time0) / 1000000, (float) (time1-time0) / (float) (time7-time0) * 100);
-    // printf("%15.12f s, %15.12f % : INPUT ARGUMENTS\n", 					(float) (time2-time1) / 1000000, (float) (time2-time1) / (float) (time7-time0) * 100);
-    // printf("%15.12f s, %15.12f % : INPUTS\n",							(float) (time3-time2) / 1000000, (float) (time3-time2) / (float) (time7-time0) * 100);
-    // printf("%15.12f s, %15.12f % : dim_cpu\n", 							(float) (time4-time3) / 1000000, (float) (time4-time3) / (float) (time7-time0) * 100);
-    // printf("%15.12f s, %15.12f % : SYS MEM: ALO\n",						(float) (time5-time4) / 1000000, (float) (time5-time4) / (float) (time7-time0) * 100);
-
-    // printf("%15.12f s, %15.12f % : KERNEL: COMPUTE\n",					(float) (time6-time5) / 1000000, (float) (time6-time5) / (float) (time7-time0) * 100);
-
-    // printf("%15.12f s, %15.12f % : SYS MEM: FRE\n", 					(float) (time7-time6) / 1000000, (float) (time7-time6) / (float) (time7-time0) * 100);
-
-    // printf("Total time:\n");
-    // printf("%.12f s\n", 												(float) (time7-time0) / 1000000);
-
-    //=====================================================================
-    //	RETURN
-    //=====================================================================
-
-    return 0.0;																					// always returns 0.0
-
+    return 0;	
 }
 
-//=============================================================================
-//	END
-//=============================================================================
 
 #ifdef __cplusplus
 }
