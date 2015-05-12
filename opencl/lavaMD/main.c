@@ -30,6 +30,7 @@ void usage(){
         printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
 }
 
+int number_nn=0; // total number of neighbors
 int main(int argc, char *argv []){
 
     int boxes = 15;
@@ -112,7 +113,6 @@ int main(int argc, char *argv []){
 
     // initialize number of home boxes
     nh = 0;
-
     // home boxes in z direction
     for(i=0; i<dim_cpu.boxes1d_arg; i++) {
         // home boxes in y direction
@@ -152,7 +152,7 @@ int main(int argc, char *argv []){
 
                                 // increment neighbor box
                                 box_cpu[nh].nn = box_cpu[nh].nn + 1;
-
+number_nn += box_cpu[nh].nn;
                             }
 
                         } // neighbor boxes in x direction
@@ -165,7 +165,7 @@ int main(int argc, char *argv []){
             } // home boxes in x direction
         } // home boxes in y direction
     } // home boxes in z direction
-
+printf("\n#nn : %d\n",number_nn);
     //=====================================================================
     //	PARAMETERS, DISTANCE, CHARGE AND FORCE
     //=====================================================================
@@ -470,6 +470,11 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
     global_work_size[0] = dim_cpu.number_boxes * local_work_size[0];
 
     printf("# of blocks = %d, # of threads/block = %d (ensure that device can handle)\n", global_work_size[0]/local_work_size[0], local_work_size[0]);
+
+// Kernel, for each box (dim_cpu.number_boxes), iterate for each neighbor of that box (number_nn), while(wtx<NUMBER_PAR_PER_BOX) -> iterate (NUMBER_PAR_PER_BOX/block_size) times, finally the last for iterate NUMBER_PAR_PER_BOX times 
+flop = dim_cpu.number_boxes * number_nn * (NUMBER_PAR_PER_BOX/block_size) * NUMBER_PAR_PER_BOX;
+// the last for uses 46 operations plus 2 exp() functions
+flop *=46;
 
     time1 = get_time();
 
