@@ -3,22 +3,23 @@
 #include <string.h>
 #include <math.h>
 #include <sys/time.h>
-#include <string.h>
+#include <string>
 
-#include "log_helper.h"
+//#include "log_helper.h"
 
 #include "cuda.h"
 #include "cublas.h"
 
-#define N 4096 
-#define SWITCH_CHAR  '-'
-#define GOLD_MATRIX_PATH "/home/carol/TestGPU/GenerateGoldMatrix/Double_GOLD_4096.matrix"
-#define LOGFILE_MATRIXNAME "cudaMxM4096"
+#define MATRIX_PATH "/home/carol/TestGPU/GenerateGoldMatrix/Double_"
 
 #define N_ERRORS_LOG 500
 #define BLOCK_SIZE 32
 
-#define ITERACTIONS 1
+#ifndef ITERACTIONS
+#define ITERACTIONS 100000000000000000
+#endif
+
+int k=0; // N will be received on runtime
 
 double *h_A;
 double *h_B;
@@ -34,17 +35,15 @@ FILE* file;
 FILE* log_file;
 FILE* timefile;
 
-//void UpdateTimestamp(){
-//	time_t timestamp = time(NULL);
-//	char time_s[50];
-//	sprintf(time_s, "%d", int(timestamp));
-//
-//	char string[100] = "echo ";
-//	strcat(string, time_s);
-//	strcat(string, " > /home/carol/TestGPU/timestamp.txt");
-////	system(string);
-//	}
+using namespace std;
 
+string gold_matrix_path, a_matrix_path, b_matrix_path;
+
+void log_error_detail(char* err)
+{printf(err);
+return;}
+
+void end_log_file(){return;}
 
 void GetDevice(){
 
@@ -82,14 +81,14 @@ void ReadMatrixFromFile(){
 
 		
 printf("open matrix...");
-        f_A = fopen("/home/carol/TestGPU/GenerateGoldMatrix/Double_A_8192.matrix","rb");
-        f_B = fopen("/home/carol/TestGPU/GenerateGoldMatrix/Double_B_8192.matrix","rb");
-        f_GOLD = fopen(GOLD_MATRIX_PATH,"rb");
+	f_A = fopen(a_matrix_path.c_str(),"rb");
+	f_B = fopen(b_matrix_path.c_str(),"rb");
+	f_GOLD = fopen(gold_matrix_path.c_str(),"rb");
 	if (!(f_A && f_B && f_GOLD)) { printf ("Error opening matrix.\n"); getchar(); exit(-1); }
 printf("read...");
-        fread(h_A,sizeof(double)*N*N, 1, f_A);
-        fread(h_B,sizeof(double)*N*N, 1, f_B);
-        fread(h_GOLD,sizeof(double)*N*N, 1, f_GOLD);
+        fread(h_A,sizeof(double)*k*k, 1, f_A);
+        fread(h_B,sizeof(double)*k*k, 1, f_B);
+        fread(h_GOLD,sizeof(double)*k*k, 1, f_GOLD);
 printf("ok in %f\n", mysecond() - time);
 
 
@@ -131,10 +130,6 @@ int main( int argc, char* argv[] )
 
 
 	int ea=0; //wrong integers in the current loop
-	int t_ea=0; //total number of wrong integers
-	int old_ea = 0;
-
-	double total_time = 0.0;
 
 	int i, j, loop2;
 
@@ -142,51 +137,39 @@ int main( int argc, char* argv[] )
 	int zero = 0;
 
 
-	double timeG;
+	////////////////////////////////////////////////////
+	////////////////////GET PARAM///////////////////////
+	if (argc!=2) {
+		printf ("Enter the required input. (1024/2048/4096/8192)\n");
+		exit (-1);
+	}
+	k = atoi (argv[1]);
+	if (((k%32)!=0)||(k<0)){
+		printf ("Enter a valid input. (k=%i)\n", k);
+		exit (-1);
+	}
+	string matrix_size_str(argv[1]);
+
+	a_matrix_path = MATRIX_PATH;
+	b_matrix_path = MATRIX_PATH;
+	gold_matrix_path = MATRIX_PATH;
+	a_matrix_path += "A_8192.matrix";
+	b_matrix_path += "B_8192.matrix";
+	gold_matrix_path += "GOLD_" + matrix_size_str + ".matrix";
 
 	//////////BLOCK and GRID size///////////////////////
-	int gridsize = N/BLOCK_SIZE < 1 ? 1 : N/BLOCK_SIZE;
-	int blocksize = N/BLOCK_SIZE < 1 ? N : BLOCK_SIZE;
+	int gridsize = k/BLOCK_SIZE < 1 ? 1 : k/BLOCK_SIZE;
+	int blocksize = k/BLOCK_SIZE < 1 ? k : BLOCK_SIZE;
 	dim3 dimBlock(blocksize,blocksize);
 	dim3 dimGrid(gridsize,gridsize);
 	////////////////////////////////////////////////////
 
 
-	///////////////////////////////////////////////////////
-	////////////////FILE NAME//////////////////////////////
-//	time_t file_time;
-//	struct tm *ptm;
-//	char day[2], month[2], year[4], hour[2], second[2], minute[2];
-//	char file_name[60];
-//	char file_name_log[60];
-//	
-//	file_time = time(NULL);
-//	ptm = gmtime(&file_time);
-//
-//	snprintf(day, sizeof(day + 1), "%d", ptm->tm_mday);
-//	snprintf(month, sizeof(month + 1), "%d", ptm->tm_mon+1);
-//	snprintf(year, sizeof(year + 1), "%d", ptm->tm_year+1900);
-//	snprintf(hour, sizeof(hour + 1), "%d", ptm->tm_hour);
-//	snprintf(minute, sizeof(minute + 1), "%d", ptm->tm_min);
-//	snprintf(second, sizeof(second + 1), "%d", ptm->tm_sec);
-//	strcpy(file_name,day);strcat(file_name,"_");
-//	strcat(file_name,month);strcat(file_name,"_");
-//	strcat(file_name,year);strcat(file_name,"_");
-//	strcat(file_name,hour);strcat(file_name,"_");
-//	strcat(file_name,minute);strcat(file_name,"_");
-//	strcat(file_name,second);strcat(file_name,"_");
-//	strcat(file_name,LOGFILE_MATRIXNAME);
-//	strcpy(file_name_log, file_name);
-//	
-//	strcat(file_name,".txt");
-//	strcat(file_name_log,"log.txt");
-	///////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////
 	char test_info[100];
-	snprintf(test_info, 100, "size:%d",N);
-	start_log_file(LOGFILE_MATRIXNAME, test_info);
+	snprintf(test_info, 100, "size:%d",k);
+	//start_log_file(LOGFILE_MATRIXNAME, test_info);
 
-	int size = N*N;
+	int size = k*k;
 
 	h_A = ( double* ) malloc( size * sizeof( double ) );
 	h_B = ( double* ) malloc( size * sizeof( double ) );
@@ -199,7 +182,7 @@ int main( int argc, char* argv[] )
 	
 	GetDevice();
 
-	printf( "Cuda MxM Not optimized - %ix%i\n", N, N );
+	printf( "Cuda MxM Not optimized - %ix%i\n", k, k );
 
 
 	for(loop2=0; loop2<ITERACTIONS; loop2++)
@@ -238,10 +221,10 @@ int main( int argc, char* argv[] )
 		kernel_errors=0;
 	
 		//timeG = mysecond();
-		start_iteration();
-		MatrixMulKernel<<<dimGrid,dimBlock>>>(d_A, d_B, d_C, N);
+		//start_iteration();
+		MatrixMulKernel<<<dimGrid,dimBlock>>>(d_A, d_B, d_C, k);
 		cudaDeviceSynchronize();
-		end_iteration();
+		//end_iteration();
 		//timeG = mysecond() - timeG;
 
 		//total_time += timeG;
@@ -254,7 +237,7 @@ int main( int argc, char* argv[] )
 
 		cudaMemcpyToSymbol(kerrors, &zero, sizeof(int));
 
-		GoldChkKernel<<<dimGrid,dimBlock>>>(d_A, d_C, N);
+		GoldChkKernel<<<dimGrid,dimBlock>>>(d_A, d_C, k);
 
 
 		cudaMemcpyFromSymbol(&kernel_errors, kerrors, sizeof(unsigned int));
@@ -276,7 +259,7 @@ int main( int argc, char* argv[] )
 	//	UpdateTimestamp(); // UNCOMENT THIS AFTER
 		////////////////////////////////////////////////
 		
-		log_error_count(kernel_errors);
+		//log_error_count(kernel_errors);
 
 		if (kernel_errors!=0)
 		{
@@ -290,16 +273,16 @@ int main( int argc, char* argv[] )
 			if(strcmp(erro_malloc, "no error") != 0)
 				{printf("error mem load MEMDUMP %s", erro_malloc); fprintf(file, "error mem load MEMDUMP %s", erro_malloc); return 1;}
 
-			for(i=0; (i<N) && (ea < N_ERRORS_LOG); i++)
+			for(i=0; (i<k) && (ea < N_ERRORS_LOG); i++)
 			{
-				for(j=0; (j<N) && (ea < N_ERRORS_LOG); j++)
+				for(j=0; (j<k) && (ea < N_ERRORS_LOG); j++)
 				{
-					if ((fabs((h_A[i+N*j]-h_GOLD[i+N*j])/h_A[i+N*j]) > 0.0000000001)||(fabs((h_A[i+N*j]-h_GOLD[i+N*j])/h_GOLD[i+N*j]) > 0.0000000001))
+					if ((fabs((h_A[i+k*j]-h_GOLD[i+k*j])/h_A[i+k*j]) > 0.0000000001)||(fabs((h_A[i+k*j]-h_GOLD[i+k*j])/h_GOLD[i+k*j]) > 0.0000000001))
 					{
-						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, h_A[i + N * j], h_GOLD[i + N * j]);
+						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, h_A[i + k * j], h_GOLD[i + k * j]);
 						log_error_detail(error_detail);
 						//ea++;
-						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, h_A[i + N * j], h_GOLD[i + N * j], ea);
+						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, h_A[i + k * j], h_GOLD[i + k * j], ea);
 										
 					}
 				}
