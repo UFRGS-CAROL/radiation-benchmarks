@@ -9,7 +9,7 @@ INTEL_LIB=-L/opt/intel/opencl-1.2-4.5.0.8/lib64/
 AMD_INC=-I/opt/AMDAPPSDK-3.0-0-Beta/include/
 AMD_LIB=-L/opt/AMDAPPSDK-3.0-0-Beta/lib/x86_64/
 
-SOURCES_GEN=main.c  ./util/timer/timer.c ./util/opencl/opencl.c
+SOURCES_GEN=main.c  ./util/opencl/opencl.c
 
 
 amd: amd_gen

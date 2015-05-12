@@ -4,6 +4,8 @@
 
 #include <CL/cl.h>
 #include <string.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include "./main.h" // (in the current directory)
 
@@ -19,6 +21,13 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
                             FOUR_VECTOR* rv_cpu,
                             fp* qv_cpu,
                             FOUR_VECTOR* fv_cpu);
+
+long long get_time() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000000) + tv.tv_usec;
+}
+
 void usage(){
         printf("Usage: lavamd_gen <input_size> <cl_device_tipe> <ocl_kernel_file> <workgroup_block_size>\n");
         printf("  input size is the number of boxes, 15 is a reasonable number\n");
@@ -31,9 +40,10 @@ void usage(){
 }
 
 int number_nn=0; // total number of neighbors
+int boxes = 15;
+
 int main(int argc, char *argv []){
 
-    int boxes = 15;
     if(argc == 5) {
         boxes = atoi(argv[1]);
         devType = atoi(argv[2]);
@@ -300,13 +310,6 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
     // timer
     long long time0;
     long long time1;
-    long long time2;
-    long long time3;
-    long long time4;
-    long long time5;
-    long long time6;
-
-    time0 = get_time();
 
 
     // common variables
@@ -423,16 +426,6 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
     char clOptions[110];
     //  sprintf(clOptions,"-I../../src");
     sprintf(clOptions,"-I.");
-#ifdef RD_WG_SIZE
-    sprintf(clOptions + strlen(clOptions), " -DRD_WG_SIZE=%d", RD_WG_SIZE);
-#endif
-#ifdef RD_WG_SIZE_0
-    sprintf(clOptions + strlen(clOptions), " -DRD_WG_SIZE_0=%d", RD_WG_SIZE_0);
-#endif
-#ifdef RD_WG_SIZE_0_0
-    sprintf(clOptions + strlen(clOptions), " -DRD_WG_SIZE_0_0=%d", RD_WG_SIZE_0_0);
-#endif
-
 
     // Compile the program
     error = clBuildProgram(	program,
@@ -471,12 +464,15 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
     printf("# of blocks = %d, # of threads/block = %d (ensure that device can handle)\n", global_work_size[0]/local_work_size[0], local_work_size[0]);
 
-// Kernel, for each box (dim_cpu.number_boxes), iterate for each neighbor of that box (number_nn), while(wtx<NUMBER_PAR_PER_BOX) -> iterate (NUMBER_PAR_PER_BOX/block_size) times, finally the last for iterate NUMBER_PAR_PER_BOX times 
-flop = dim_cpu.number_boxes * number_nn * (NUMBER_PAR_PER_BOX/block_size) * NUMBER_PAR_PER_BOX;
+// Kernel, for each box (dim_cpu.number_boxes) 
+//double flop = dim_cpu.number_boxes;
+//printf("flop: %f\n",flop);
+// iterate for each neighbor of a box (number_nn)
+double flop =  number_nn;
+// The last for iterate NUMBER_PAR_PER_BOX times 
+flop *= NUMBER_PAR_PER_BOX;
 // the last for uses 46 operations plus 2 exp() functions
 flop *=46;
-
-    time1 = get_time();
 
 
     cl_mem d_box_gpu;
@@ -518,8 +514,6 @@ flop *=46;
                                 &error );
     if (error != CL_SUCCESS)
         fatal_CL(error, __LINE__);
-
-    time2 = get_time();
 
 
     error = clEnqueueWriteBuffer(	command_queue, d_box_gpu, 1,0,dim_cpu.box_mem,box_cpu,0,NULL,NULL);
@@ -565,7 +559,6 @@ flop *=46;
     if (error != CL_SUCCESS)
         fatal_CL(error, __LINE__);
 
-    time3 = get_time();
 
     clSetKernelArg(kernel, 0, sizeof(par_str), (void *) &par_cpu);
     clSetKernelArg(kernel, 1, sizeof(dim_str), (void *) &dim_cpu);
@@ -575,6 +568,7 @@ flop *=46;
     clSetKernelArg(kernel, 5, sizeof(cl_mem), (void *) &d_fv_gpu);
     clSetKernelArg(kernel, 6, sizeof(int), (void *) &block_size);
     // launch kernel - all boxes
+    time0 = get_time();
     error = clEnqueueNDRangeKernel(	command_queue,
                                     kernel,
                                     1,
@@ -592,15 +586,16 @@ flop *=46;
     if (error != CL_SUCCESS)
         fatal_CL(error, __LINE__);
 
-    time4 = get_time();
+    time1 = get_time();
 
+    double kernel_time = (double) (time1-time0) / 1000000;
+    double flops = (double)flop/kernel_time;
+    printf("BOXES:%d BLOCK:%d FLOPS:%f\n",boxes,block_size,flops);
+    printf("kernel_time:%f\n",kernel_time);
 
     error = clEnqueueReadBuffer(command_queue,d_fv_gpu,CL_TRUE,0,dim_cpu.space_mem,fv_cpu,0,NULL,NULL);
     if (error != CL_SUCCESS)
         fatal_CL(error, __LINE__);
-
-
-    time5 = get_time();
 
 
     // Release kernels...
@@ -625,22 +620,5 @@ flop *=46;
 
     // ???
     clReleaseContext(context);
-
-    time6 = get_time();
-
-
-    printf("Time spent in different stages of GPU_CUDA KERNEL:\n");
-
-    printf("%15.12f s, %15.12f % : GPU: SET DEVICE / DRIVER INIT\n",	(float) (time1-time0) / 1000000, (float) (time1-time0) / (float) (time6-time0) * 100);
-    printf("%15.12f s, %15.12f % : GPU MEM: ALO\n", 					(float) (time2-time1) / 1000000, (float) (time2-time1) / (float) (time6-time0) * 100);
-    printf("%15.12f s, %15.12f % : GPU MEM: COPY IN\n",					(float) (time3-time2) / 1000000, (float) (time3-time2) / (float) (time6-time0) * 100);
-
-    printf("%15.12f s, %15.12f % : GPU: KERNEL\n",						(float) (time4-time3) / 1000000, (float) (time4-time3) / (float) (time6-time0) * 100);
-
-    printf("%15.12f s, %15.12f % : GPU MEM: COPY OUT\n",				(float) (time5-time4) / 1000000, (float) (time5-time4) / (float) (time6-time0) * 100);
-    printf("%15.12f s, %15.12f % : GPU MEM: FRE\n", 					(float) (time6-time5) / 1000000, (float) (time6-time5) / (float) (time6-time0) * 100);
-
-    printf("Total time:\n");
-    printf("%.12f s\n", 												(float) (time6-time0) / 1000000);
 
 }
