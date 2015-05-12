@@ -54,7 +54,7 @@ int t_ea = 0;
 int last_num_errors = 0;
 int last_num_errors_i = 0;
 double total_kernel_time = 0;
-int sizeIndex, block_size;
+int sizeIndex;
 
 // Returns the current system time in microseconds
 long long get_time() {
@@ -112,7 +112,7 @@ template <class T2> void dump(cl_device_id id,
 #ifdef LOGS
     start_iteration();
 #endif /* LOGS */
-    transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, block_size);
+    transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, 64);
 #ifdef LOGS
     end_iteration();
 #endif /* LOGS */
@@ -122,10 +122,9 @@ template <class T2> void dump(cl_device_id id,
     double kernel_time = (double) (time1-time0) / 1000000;
     double fftsz = 512;
     double Gflops = n_ffts*(5*fftsz*log2(fftsz))/kernel_time;
-    printf("NFFT:%d GFLOPS:%f\n",n_ffts,Gflops);
+    printf("NFFT:%d FLOPS:%f\n",n_ffts,Gflops);
+    printf("\nkernel time: %.12f\n", kernel_time);
 
-    if(distribution == 3)
-        kernel_time = 0;
 
     T2 *workT = (T2*) malloc(used_bytes);
     if(workT == NULL)
@@ -252,8 +251,8 @@ void getDevices(cl_device_type deviceType) {
 }
 
 void usage(){
-        printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file> <input_file> <output_gold_file> <#iterations> <workgroup_block_size>\n");
-        printf("  input size range from 0 to 2\n");
+        printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file> <input_file> <output_gold_file> <#iterations>\n");
+        printf("  input size range from 0 to 5\n");
         printf("  cl_device_types\n");
         printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
         printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
@@ -267,14 +266,13 @@ int main(int argc, char** argv) {
 
     int devType, iterations=1;
     char *kernel_file, *input, *output;
-    if(argc == 8) {
+    if(argc == 7) {
         sizeIndex = atoi(argv[1]);
         devType = atoi(argv[2]);
         kernel_file = argv[3];
         input = argv[4];
         output = argv[5];
         iterations = atoi(argv[6]);
-        block_size = atoi(argv[7]);
         distribution = 0;//atoi(argv[2]);
     } else {
         usage();

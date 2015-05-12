@@ -50,6 +50,11 @@ long long get_time() {
 
 template <class T2> void dump(cl_device_id id,
                               cl_context ctx, cl_command_queue queue) {
+
+    char input_fft[150], output_fft[150];
+    snprintf(input_fft, 150, "input_fft_size_%d", sizeIndex);
+    snprintf(output_fft, 150, "output_fft_size_%d", sizeIndex);
+
     int i;
     void* work;
     T2* source, * result;
@@ -105,8 +110,8 @@ template <class T2> void dump(cl_device_id id,
 
         printf("generating input and checkin output\n");
 
-        if( (fp = fopen("input_fft", "wb" )) == 0 )
-            printf( "The file input_fft was not opened\n");
+        if( (fp = fopen(input_fft, "wb" )) == 0 )
+            printf( "The file %s was not opened\n",input_fft);
 
         //saving input
         for (i = 0; i < N; i++) {
@@ -115,17 +120,20 @@ template <class T2> void dump(cl_device_id id,
         }
         fclose(fp);
 
-        //long long time0, time1;
-        //time0 = get_time();
+        long long time0, time1;
+        time0 = get_time();
         transform(work, n_ffts, fftKrnl, queue, 0, 1, 64);
         clFinish(queue);
-        //time1 = get_time();
-        //double kernel_time = (double) (time1-time0) / 1000000;
-        //printf("\nkernel time: %.12f\n", kernel_time);
+        time1 = get_time();
+        double kernel_time = (double) (time1-time0) / 1000000;
+        double fftsz = 512;
+        double Gflops = n_ffts*(5*fftsz*log2(fftsz))/kernel_time;
+        printf("NFFT:%d GFLOPS:%f\n",n_ffts,Gflops);
+        printf("\nkernel time: %.12f\n", kernel_time);
         copyFromDevice(result, work, used_bytes, queue);
 
-        if( (fp = fopen("output_fft", "wb" )) == 0 )
-            printf( "The file output_fft was not opened\n");
+        if( (fp = fopen(output_fft, "wb" )) == 0 )
+            printf( "The file %s was not opened\n", output_fft);
         //saving output
 
         for (i = 0; i < N; i++) {
@@ -162,8 +170,8 @@ template <class T2> void dump(cl_device_id id,
     copyFromDevice(result, work, used_bytes, queue);
 
     //checking inverse
-    if( (fp = fopen("input_fft", "rb" )) == 0 ) {
-        printf( "The file input_fft was not opened\n");
+    if( (fp = fopen(input_fft, "rb" )) == 0 ) {
+        printf( "The file %s was not opened\n",input_fft);
     }
     double x, y;
 
@@ -290,8 +298,8 @@ void getDevices(cl_device_type deviceType) {
 }
 
 void usage(){
-	printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file>\n");
-	printf("  input size range from 0 to 2\n");
+	printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file> \n");
+	printf("  input size range from 0 to 5\n");
 	printf("  cl_device_types\n");
 	printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
 	printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);

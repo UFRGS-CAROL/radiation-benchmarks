@@ -40,4 +40,4 @@ amd_chk_gold: $(SOURCES)
 	$(CC) $(SOURCES) $(AMD_INC) $(AMD_LIB) -lOpenCL  -o $(CHK_EXEC)
 
 clean:
-	rm $(GEN_EXEC) $(CHK_EXEC) 
+	rm $(GEN_EXEC) $(CHK_EXEC) input_fft_* output_fft_*
