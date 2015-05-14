@@ -6,18 +6,29 @@
 #include <string>
 #include <sys/time.h>
 
-#include<cublas.h>
-
 #define MATRIX_PATH "./Double_"
 #define INMATRIXSIZE 8192
+
+#define BLOCK_SIZE 32
 using namespace std;
 
 int k=0;
-int lda, ldb, ldc;
-int sizea, sizeb, sizec;	
+int size;	
 double *A, *B, *GOLD;
 
 string gold_matrix_path, a_matrix_path, b_matrix_path;
+
+__global__ void MatrixMulKernel (double *d_A, double *d_B, double *d_C, int n)
+{
+	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;                                                      
+	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y; 
+	int k;
+	
+	d_C[ty*n + tx] = 0.0;
+	for (k = 0;  k < n; k++)
+	  d_C[ty*n + tx] += d_A[ty*n + k]*d_B[k*n + tx];
+
+}
 
 void generateInputMatrices()
 {
@@ -51,9 +62,8 @@ void generateInputMatrices()
 	return;
 }
 
-void ReadMatrixFromFile(){	
-	
-	int i;
+void ReadMatrixFromFile()
+{	
 	FILE *f_A, *f_B;
 
 	f_A = fopen(a_matrix_path.c_str(),"rb");
@@ -63,15 +73,21 @@ void ReadMatrixFromFile(){
 		printf("Error opening matrices A, B.\n");
 		exit(-1);
 	}
-	for(i=0; i<k; i++)
-	{
-		fread (&A[ lda * i ], sizeof(double)*k, 1, f_A);
-		fread (&B[ lda * i ], sizeof(double)*k, 1, f_B);
-	}
-printf("Done reading matrices\n");
+	fread(A,sizeof(double)*size, 1, f_A);
+    fread(B,sizeof(double)*size, 1, f_B);
+
+	printf("Done reading matrices\n");
 
 	fclose(f_A);
 	fclose(f_B);
+}
+
+double mysecond()
+{
+   struct timeval tp;
+   struct timezone tzp;
+   int i = gettimeofday(&tp,&tzp);
+   return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
 }
 
 void GetDevice(){
@@ -95,21 +111,14 @@ void GetDevice(){
 
 }
 
-double mysecond()
-{
-   struct timeval tp;
-   struct timezone tzp;
-   int i = gettimeofday(&tp,&tzp);
-   return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
-}
-
 void generateGoldMatrix()
 {
 	////////////////////////////////////////////////////
-	/////////////CUBLAS GEMM VARS///////////////////////
-	const double alpha = 1.0;
-	const double beta = 1.0;
-	char transa = 't', transb = 't';
+	/////////////KERNELMXM VARS/////////////////////////
+	int gridsize = k/BLOCK_SIZE < 1 ? 1 : k/BLOCK_SIZE;
+	int blocksize = k/BLOCK_SIZE < 1 ? k : BLOCK_SIZE;
+	dim3 dimBlock(blocksize,blocksize);
+	dim3 dimGrid(gridsize,gridsize);
 	////////////////////////////////////////////////////
 	
 	////////////////////////////////////////////////////
@@ -122,55 +131,48 @@ void generateGoldMatrix()
 	double *d_C;
 	////////////////////////////////////////////////////
 
-	A = ( double* ) malloc( sizea * sizeof( double ) );
-	B = ( double* ) malloc( sizeb * sizeof( double ) );
-	GOLD = ( double* ) malloc( sizec * sizeof( double ) );
+	A = ( double* ) malloc( size * sizeof( double ) );
+	B = ( double* ) malloc( size * sizeof( double ) );
+	GOLD = ( double* ) malloc( size * sizeof( double ) );
 
 	GetDevice();
 	
 	ReadMatrixFromFile();
 
-	cumalloc_err = cudaMalloc( ( void** ) &d_A, sizea * sizeof( double ) );
+	cumalloc_err = cudaMalloc( ( void** ) &d_A, size * sizeof( double ) );
 	cumalloc_err_str = cudaGetErrorString(cumalloc_err);
 	if(strcmp(cumalloc_err_str, "no error") != 0) {exit(-3);} //mem allocate failure
 
-	cumalloc_err = cudaMalloc( ( void** ) &d_B, sizea * sizeof( double ) );
+	cumalloc_err = cudaMalloc( ( void** ) &d_B, size * sizeof( double ) );
 	cumalloc_err_str = cudaGetErrorString(cumalloc_err);
 	if(strcmp(cumalloc_err_str, "no error") != 0) {exit(-3);}
 
-	cumalloc_err = cudaMalloc( ( void** ) &d_C, sizea * sizeof( double ) );
+	cumalloc_err = cudaMalloc( ( void** ) &d_C, size * sizeof( double ) );
 	cumalloc_err_str = cudaGetErrorString(cumalloc_err);
 	if(strcmp(cumalloc_err_str, "no error") != 0) {exit(-3);}
 
 
-	cumalloc_err = cudaMemcpy( d_C, A, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // ZERA C
+	cumalloc_err = cudaMemcpy( d_C, A, size * sizeof( double ), cudaMemcpyHostToDevice ); // ZERA C
 	cumalloc_err_str = cudaGetErrorString(cumalloc_err);
 	if(strcmp(cumalloc_err_str, "no error") != 0) {exit(-3);}
 
-	cumalloc_err = cudaMemcpy( d_A, A, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH A
+	cumalloc_err = cudaMemcpy( d_A, A, size * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH A
 	cumalloc_err_str = cudaGetErrorString(cumalloc_err);
 	if(strcmp(cumalloc_err_str, "no error") != 0) {exit(-3);}
 
-	cumalloc_err = cudaMemcpy( d_B, B, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH B
+	cumalloc_err = cudaMemcpy( d_B, B, size * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH B
 	cumalloc_err_str = cudaGetErrorString(cumalloc_err);
 	if(strcmp(cumalloc_err_str, "no error") != 0) {exit(-3);}
 
-	printf("cublasDgemm... k=%d transa=%c transb=%c lda=%d ldb=%d ldc=%d\n", k, transa, transb, lda, ldb, ldc);
+	printf("cudaMxM... k=%d", k);
 	double time = mysecond();
 
-
-	cublasDgemm( (cublasOperation_t)transa, (cublasOperation_t)transb,
-			   k, k, k,
-			   alpha,
-			   d_A, lda,
-			   d_B, ldb,
-			   beta,
-			   d_C, ldc );
+	MatrixMulKernel<<<dimGrid,dimBlock>>>(d_A, d_B, d_C, k);
 	cudaDeviceSynchronize();
-
+	
 	printf("\nend in %f\n", mysecond()-time);
 
-	cumalloc_err = cudaMemcpy(GOLD, d_C, sizec * sizeof( double ), cudaMemcpyDeviceToHost);
+	cumalloc_err = cudaMemcpy(GOLD, d_C, size * sizeof( double ), cudaMemcpyDeviceToHost);
 	cumalloc_err_str = cudaGetErrorString(cumalloc_err);
 	if(strcmp(cumalloc_err_str, "no error") != 0) {exit(-3);}
 
@@ -178,17 +180,13 @@ void generateGoldMatrix()
 	cudaFree( d_B );
 	cudaFree( d_C );
 
-	int i;
 	FILE *f_GOLD;
 
 	f_GOLD = fopen(gold_matrix_path.c_str(), "wb");
 
 	//printf("-------------------------\n%.10f\n%.10f\n%.10f\n", GOLD[0], GOLD[1], GOLD[2]);
 
-	for(i=0; i<k; i++)
-	{
-		fwrite( &GOLD[i * lda], sizeof(double)*k, 1, f_GOLD );
-	}
+	fwrite(GOLD, sizeof(double)*size, 1, f_GOLD );
 
 	fclose(f_GOLD);
 
@@ -218,12 +216,7 @@ int main (int argc, char** argv)
 	gold_matrix_path += "GOLD_" + matrix_size_str + ".matrix";
 	////////////////////////////////////////////////////
 
-	lda = max( 1, k + 16 );
-	sizea = lda * k;
-	ldb = max( 1, k + 16 );
-	sizeb = ldb * k;
-	ldc = max( 1, k + 16 );
-	sizec = ldc * k;
+	size = k*k;
 	
 	FILE *test_file;
 	test_file=fopen(a_matrix_path.c_str(), "rb");

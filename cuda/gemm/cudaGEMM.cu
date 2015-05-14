@@ -51,19 +51,6 @@ FILE* file;
 FILE* log_file;
 FILE* timefile;
 
-void UpdateTimestamp(){
-	time_t timestamp = time(NULL);
-	char time_s[50];
-	sprintf(time_s, "%d", int(timestamp));
-
-	char string[100] = "echo ";
-	strcat(string, time_s);
-	strcat(string, " > /home/carol/TestGPU/timestamp.txt");
-	system(string);
-
-//	printf("\n%s\n", string);
-}
-
 void GetDevice(){
 
     cudaDeviceProp prop;
@@ -81,7 +68,7 @@ void GetDevice(){
     
     cudaSetDevice(0);
         cudaGetDeviceProperties( &prop, 0 );
-	printf("\ndevice: %d %s", *ndevice, prop.name);
+	printf("\ndevice: %d %s\n", *ndevice, prop.name);
 
 }
 
@@ -96,15 +83,13 @@ double mysecond()
 void ReadMatrixFromFile(){	
 	
 	int i;
-	int j;
-	double temp=0;
 	double time = mysecond();
 	f_A = fopen(a_matrix_path.c_str(),"rb");
 	f_B = fopen(b_matrix_path.c_str(),"rb");
 	f_GOLD = fopen(gold_matrix_path.c_str(),"rb");
 	if (!(f_A&&f_B&&f_GOLD))
 	{
-		printf ("\nCant open matrices.\n");
+		printf ("Cant open matrices.\n");
 		exit(-3);
 	}
 	for(i=0; i<k; i++)
@@ -112,17 +97,8 @@ void ReadMatrixFromFile(){
 		fread (&A[ lda * i ], sizeof(double)*k, 1, f_A);
 		fread (&B[ lda * i ], sizeof(double)*k, 1, f_B);
 		fread (&GOLD[ lda * i ], sizeof(double)*k, 1, f_GOLD);
-	}	printf("\n");
-	/*for (i=0; i<k; i++)
-	{ 
-		for (j=0; (j<k)&&(j<i); j++)
-		{
-			temp = GOLD [i + ldc * j];
-			GOLD [i + ldc * j] = GOLD [j + ldc * i];
-			GOLD [j + ldc * i] = temp;
-		}
-	}*/
-	printf("\nDone reading matrices in %f\n", mysecond() - time);
+	}
+	printf("Done reading matrices in %f\n", mysecond() - time);
 
 	fclose(f_A);
 	fclose(f_B);
@@ -254,7 +230,7 @@ int main( int argc, char* argv[] )
 		erro_malloc = cudaGetErrorString(malloc_mem1);
 		if(strcmp(erro_malloc, "no error") != 0) {
 #ifdef LOGS
-			log_error_detail("error mem load a"); end_log_file(); 
+			log_error_detail("error mem load c"); end_log_file(); 
 #endif
 			return 1;} //mem allocate failure
 	
@@ -270,7 +246,7 @@ int main( int argc, char* argv[] )
 		erro_malloc = cudaGetErrorString(malloc_mem1);
 		if(strcmp(erro_malloc, "no error") != 0) {
 #ifdef LOGS
-			log_error_detail("error mem load c"); end_log_file(); 
+			log_error_detail("error mem load b"); end_log_file(); 
 #endif
 			return 1;} //mem allocate failure
 
@@ -298,7 +274,11 @@ int main( int argc, char* argv[] )
 
 		malloc_mem1 = cudaMemcpy(d_A, GOLD, sizea * sizeof( double ), cudaMemcpyHostToDevice );
 		erro_malloc = cudaGetErrorString(malloc_mem1);
-		if(strcmp(erro_malloc, "no error") != 0) {printf("error mem load a %s", erro_malloc); fprintf(file, "error mem load a %s", erro_malloc); return 1;}
+		if(strcmp(erro_malloc, "no error") != 0) {
+#ifdef LOGS
+			log_error_detail("error mem load gold"); end_log_file(); 
+#endif
+			return 1;} //mem allocate failure
 
 		cudaMemcpyToSymbol(kerrors, &zero, sizeof(int));
 
@@ -318,8 +298,11 @@ int main( int argc, char* argv[] )
 
 			malloc_mem1 = cudaMemcpy(A, d_C, sizec * sizeof( double ), cudaMemcpyDeviceToHost);
 			erro_malloc = cudaGetErrorString(malloc_mem1);
-			if(strcmp(erro_malloc, "no error") != 0)
-				{printf("error mem load a %s", erro_malloc); fprintf(file, "error mem load a %s", erro_malloc); return 1;}
+			if(strcmp(erro_malloc, "no error") != 0) {
+#ifdef LOGS
+				log_error_detail("error mem load c"); end_log_file(); 
+#endif
+			return 1;} //mem allocate failure
 			char error_detail[150];
 
 			for(i=0; (i<k) && (ea < 500); i++)
