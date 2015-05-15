@@ -27,7 +27,6 @@
 #define N_ERRORS_LOG 500
 #define ITERATIONS 1000000000000
 
-//char kernel_gemmN_path [] = "/home/carol/DSN15_codes/openclgemm/gemmN.cl";
 char *kernel_gemmN_path;
 char *gold_matrix, *a_matrix, *b_matrix;
 int input_size;

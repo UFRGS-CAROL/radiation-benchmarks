@@ -22,13 +22,14 @@ int input_size;
 
 using namespace std;
 
+char a_matrix[150], b_matrix[150];
 
 void ReadMatrixFromFile(double *h_A, double *h_B)
 {
     FILE *f_A, *f_B;
 
-    f_A = fopen("Double_A_16384.matrix", "rb");
-    f_B = fopen("Double_B_16384.matrix", "rb");
+    f_A = fopen(a_matrix, "rb");
+    f_B = fopen(b_matrix, "rb");
 
     if (!(f_A && f_B)) {
         printf("Error opening matrix.\n");
@@ -48,8 +49,10 @@ void GenerateInputMatrices()
     int i, j;
     FILE *f_A, *f_B;
 
-    f_A = fopen("Double_A_16384.matrix", "wb");
-    f_B = fopen("Double_B_16384.matrix", "wb");
+    snprintf(a_matrix, 150, "Double_A_%d.matrix",input_size);
+    snprintf(b_matrix, 150, "Double_B_%d.matrix",input_size);
+    f_A = fopen(a_matrix, "wb");
+    f_B = fopen(b_matrix, "wb");
 
 
     srand ( time(NULL) );
@@ -162,22 +165,23 @@ RunBenchmark(cl_device_id dev,
 {
     // OpenCL doesn't support templated kernels, so we have to use macros
 
-    input_size = 16384;
+//    input_size = 16384;
+//    GenerateInputMatrices();
+//    runTest<double>("DGEMM", dev, ctx, queue,
+//                    "-DK_DOUBLE_PRECISION ");
+//    input_size = 8192;
+//    runTest<double>("DGEMM", dev, ctx, queue,
+//                    "-DK_DOUBLE_PRECISION ");
+    input_size = 4096;
     GenerateInputMatrices();
     runTest<double>("DGEMM", dev, ctx, queue,
                     "-DK_DOUBLE_PRECISION ");
-    input_size = 8192;
-    runTest<double>("DGEMM", dev, ctx, queue,
-                    "-DK_DOUBLE_PRECISION ");
-    input_size = 4096;
-    runTest<double>("DGEMM", dev, ctx, queue,
-                    "-DK_DOUBLE_PRECISION ");
-    input_size = 2048;
-    runTest<double>("DGEMM", dev, ctx, queue,
-                    "-DK_DOUBLE_PRECISION ");
-    input_size = 1024;
-    runTest<double>("DGEMM", dev, ctx, queue,
-                    "-DK_DOUBLE_PRECISION ");
+//    input_size = 2048;
+//    runTest<double>("DGEMM", dev, ctx, queue,
+//                    "-DK_DOUBLE_PRECISION ");
+//    input_size = 1024;
+//    runTest<double>("DGEMM", dev, ctx, queue,
+//                    "-DK_DOUBLE_PRECISION ");
 }
 
 template <class T>
