@@ -7,7 +7,7 @@ NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-MATRIX_NAMES=input_power1024 input_temp1024 output_1024
+MATRIX_NAMES=input_power_1024 input_temp_1024 output_1024
 
 ALL: gen hotspot ecc hard_thread
 
