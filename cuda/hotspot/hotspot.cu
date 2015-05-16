@@ -4,15 +4,21 @@
 #include <time.h>
 #include <assert.h>
 
-#define INPUT_TEMP "/home/carol/TestGPU/hotspot/input_temp_1024"
-#define INPUT_POWER "/home/carol/TestGPU/hotspot/input_power_1024"
-#define OUTPUT_GOLD "/home/carol/TestGPU/hotspot/output_1024"
+#ifdef LOGS
+#include "log_helper.h"
+#endif
+
+#define INPUT_TEMP "./input_temp_1024"
+#define INPUT_POWER "./input_power_1024"
+#define OUTPUT_GOLD "./output_1024"
 
 
 #define BLOCK_SIZE_X 14
 #define BLOCK_SIZE_Y 14
 
-#define ITERACTIONS 10000		 //first loop, killed when there is a cuda malloc error, cuda thread sync error, too many output error
+#ifndef ITERACTIONS
+#define ITERACTIONS 100000000000000000
+#endif //first loop, killed when there is a cuda malloc error, cuda thread sync error, too many output error
 
 /* maximum power density possible (say 300W for a 10mm x 10mm chip)	*/
 #define MAX_PD  (3.0e6)
@@ -227,62 +233,25 @@ int main(int argc, char** argv) {
 	float *inputTemp,*inputPower,*MatrixOut,*output_GOLD;
 	int pyramid_height, total_iterations;
 	long long time0, time1;
+	int t_ea;
 
-	int t_ea = 0;
-	double total_kernel_time = 0;
+	grid_rows = 1024;
+	grid_cols = grid_rows;
+	pyramid_height = 1;
+	total_iterations = 20000;
 
-	///////////////////////////////////////////////////////
-	////////////////FILE NAME//////////////////////////////
-	///////////////////////////////////////////////////////
-	// infos : dd_mm_yyyy_hh_mm_ss_LavaMD_192_13
+	size=grid_rows*grid_cols;
 
-	// to be modified if you have better ideas
-
-	time_t file_time;
-	struct tm *ptm;
-	char day[2], month[2], year[4], hour[2], second[2], minute[2];
-	char file_name[60];
-	char file_name_log[60];
-
-	file_time = time(NULL);
-	ptm = gmtime(&file_time);
-
-	snprintf(day, sizeof(day + 1), "%d", ptm->tm_mday);
-	snprintf(month, sizeof(month + 1), "%d", ptm->tm_mon+1);
-	snprintf(year, sizeof(year + 1), "%d", ptm->tm_year+1900);
-	snprintf(hour, sizeof(hour + 1), "%d", ptm->tm_hour);
-	snprintf(minute, sizeof(minute + 1), "%d", ptm->tm_min);
-	snprintf(second, sizeof(second + 1), "%d", ptm->tm_sec);
-	strcpy(file_name,day);strcat(file_name,"_");
-	strcat(file_name,month);strcat(file_name,"_");
-	strcat(file_name,year);strcat(file_name,"_");
-	strcat(file_name,hour);strcat(file_name,"_");
-	strcat(file_name,minute);strcat(file_name,"_");
-	strcat(file_name,second);strcat(file_name,"_");
-	strcat(file_name,"_Hotspotx20");
-	strcpy(file_name_log, file_name);
-
-	strcat(file_name,".txt");
-	strcat(file_name_log,"_log.txt");
+#ifdef LOGS
+	char test_info[90];
+	snprintf(test_info, 90, "size:%d", grid_rows);
+	start_log_file("cudaHotspot", test_info);
+#endif
 
 	//LOOP START
 	int loop;
 
 	for(loop=0; loop<ITERACTIONS; loop++) {
-
-		FILE *file;
-		file = fopen(file_name, "a");
-		if(file == NULL) {
-			printf("error to open file '%s'\n",file_name);
-			return 0;
-		}
-
-		grid_rows = 1024;
-		grid_cols = grid_rows;
-		pyramid_height = 1;
-		total_iterations = 20000;
-
-		size=grid_rows*grid_cols;
 
 		/* --------------- pyramid parameters --------------- */
 		# define EXPAND_RATE 2	 // add one iteration will extend the pyramid base by 2 per each borderline
@@ -300,8 +269,9 @@ int main(int argc, char** argv) {
 
 		if( !inputPower || !inputTemp || !output_GOLD || !MatrixOut) {
 			printf("error unable to allocate CPU memory\n");
-			fprintf(file, "error unable to allocate CPU memory\n");
-			fflush(file); fclose(file);
+#ifdef LOGS
+			log_error_detail("error : unable to allocate CPU memory"); end_log_file(); 
+#endif
 			return 0;
 		}
 
@@ -312,8 +282,9 @@ int main(int argc, char** argv) {
 		int i, j, return_value;
 
 		if( (fp = fopen(INPUT_TEMP, "rb" )) == 0 ) {
-			printf("error the file 'input_temp_1024' was not opened\n");
-			fprintf(file, "error the file 'input_temp_1024' was not opened\n");
+#ifdef LOGS
+			log_error_detail("error the file 'input_temp_1024' was not opened"); end_log_file(); 
+#endif
 			return 0;
 		}
 		for (i=0; i <= grid_rows-1; i++)
@@ -321,8 +292,9 @@ int main(int argc, char** argv) {
 			return_value = fread(&(inputTemp[i*grid_cols+j]), 1, sizeof(float), fp);
 			if(return_value == 0) {
 				printf("error reading input_temp\n");
-				fprintf(file, "error reading input_temp\n");
-				fflush(file); fclose(file);
+#ifdef LOGS
+				log_error_detail("error reading the input file"); end_log_file(); 
+#endif
 				return 0;
 			}
 		}
@@ -330,7 +302,9 @@ int main(int argc, char** argv) {
 
 		if( (fp = fopen(INPUT_POWER, "rb" )) == 0 ) {
 			printf("error the file 'input_power_1024' was not opened\n");
-			fprintf(file, "error the file 'input_power_1024' was not opened\n");
+#ifdef LOGS
+			log_error_detail("error the file input_power_1024 was not opened"); end_log_file(); 
+#endif
 			return 0;
 		}
 		for (i=0; i <= grid_rows-1; i++)
@@ -338,8 +312,9 @@ int main(int argc, char** argv) {
 			return_value = fread(&(inputPower[i*grid_cols+j]), 1, sizeof(float), fp);
 			if(return_value == 0) {
 				printf("error reading input_power\n");
-				fprintf(file, "error reading input_power\n");
-				fflush(file); fclose(file);
+#ifdef LOGS
+				log_error_detail("error reading the input power"); end_log_file(); 
+#endif
 				return 0;
 			}
 		}
@@ -347,8 +322,9 @@ int main(int argc, char** argv) {
 
 		if( (fp = fopen(OUTPUT_GOLD, "rb" )) == 0 ) {
 			printf("error the file 'output_1024' was not opened\n");
-			fprintf(file, "error the file 'output_1024' was not opened\n");
-			fflush(file); fclose(file);
+#ifdef LOGS
+				log_error_detail("error the file 'output_1024' was not opened"); end_log_file(); 
+#endif
 			return 0;
 		}
 		for (i=0; i <= grid_rows-1; i++)
@@ -356,8 +332,9 @@ int main(int argc, char** argv) {
 			return_value = fread(&(output_GOLD[i*grid_cols+j]), 1, sizeof(float), fp);
 			if(return_value == 0) {
 				printf("error reading gold output\n");
-				fprintf(file, "error reading gold output\n");
-				fflush(file); fclose(file);
+#ifdef LOGS
+				log_error_detail("error reading gold output"); end_log_file(); 
+#endif
 				return 0;
 			}
 		}
@@ -371,56 +348,83 @@ int main(int argc, char** argv) {
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error MatrixTemp[0] cudaMalloc\n");
-			fprintf(file, "error MatrixTemp[0] cudaMalloc\n");fflush(file); fclose(file); return 0;
+#ifdef LOGS
+			log_error_detail("error cudaMalloc MatrixTemp[0]"); end_log_file();
+#endif
+			return 0;
 		}
 
 		cuda_error = cudaMalloc((void**)&MatrixTemp[1], sizeof(float)*size);
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error MatrixTemp[1] cudaMalloc\n");
-			fprintf(file, "error MatrixTemp[1] cudaMalloc\n");fflush(file); fclose(file); return 0;
+#ifdef LOGS
+			log_error_detail("error cudaMalloc MatrixTemp[1]"); end_log_file();
+#endif
+			return 0;
 		}
 
 		cuda_error = cudaMemcpy(MatrixTemp[0], inputTemp, sizeof(float)*size, cudaMemcpyHostToDevice);
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error MatrixTemp[0] cudaMemcpy\n");
-			fprintf(file, "error MatrixTemp[0] cudaMemcpy\n");fflush(file); fclose(file); return 0;
+#ifdef LOGS
+			log_error_detail("error cudaMemcpy MatrixTemp[0]"); end_log_file(); 
+#endif
+			return 0;
 		}
 
 		cuda_error = cudaMalloc((void**)&MatrixPower, sizeof(float)*size);
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error MatrixPower cudaMalloc\n");
-			fprintf(file, "error MatrixPower cudaMalloc\n");fflush(file); fclose(file); return 0;
+#ifdef LOGS
+			log_error_detail("error cudaMalloc MatrixPower"); end_log_file(); 
+#endif
+			return 0;
 		}
 
 		cuda_error = cudaMemcpy(MatrixPower, inputPower, sizeof(float)*size, cudaMemcpyHostToDevice);
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error MatrixPower cudaMemcpy\n");
-			fprintf(file, "error MatrixPower cudaMemcpy\n");fflush(file); fclose(file); return 0;
+#ifdef LOGS
+			log_error_detail("error cudaMemcpy MatrixPower"); end_log_file(); 
+#endif
+			return 0;
 		}
 
 		time0 = get_time();
-
+#ifdef LOGS
+		start_iteration();
+#endif
 		int ret = compute_tran_temp(MatrixPower,MatrixTemp,grid_cols,grid_rows, \
 			total_iterations,pyramid_height, blockCols, blockRows, borderCols, borderRows);
 
 		cuda_error = cudaThreadSynchronize();
+#ifdef LOGS
+		end_iteration();
+#endif
+
+		time1 = get_time();
+
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error logic: %s\n",error_string);
-			fprintf(file, "error logic: %s\n",error_string);fflush(file); fclose(file); return 0;
+#ifdef LOGS
+			log_error_detail("error logic:"); log_error_detail("error_string"); end_log_file(); 
+#endif
+			return 0;
 		}
-
-		time1 = get_time();
 
 		cuda_error = cudaMemcpy(MatrixOut, MatrixTemp[ret], sizeof(float)*size, cudaMemcpyDeviceToHost);
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error download MatrixOut cudaMemcpy\n");
-			fprintf(file, "error download MatrixOut cudaMemcpy\n");fflush(file); fclose(file); return 0;
+#ifdef LOGS
+			log_error_detail("error download MatrixOut cudaMemcpy"); end_log_file(); 
+#endif
+			return 0;
 		}
 
 		int num_errors = 0;
@@ -433,42 +437,13 @@ int main(int argc, char** argv) {
 		if(num_errors > 0) {
 			t_ea++;
 		}
+		if (num_errors!=0) printf("Errors: %d\n", num_errors);
+#ifdef LOGS
+		log_error_count(num_errors);
+#endif
 
-		///////////UPDATE LOG FILE//////////////////////
-		/// PROBABLY NOT NEEDED, OR CAN BE REDUCED
-		double kernel_time = (double) (time1-time0) / 1000000;
-		total_kernel_time += kernel_time;
-		FILE *log_file;
-		log_file = fopen(file_name_log, "a");
-		if(log_file == NULL) {
-			printf("error to open file '%s'\n",file_name_log);
-			fprintf(file,"error to open file '%s'\n",file_name_log);
-			fflush(file); fclose(file);
-			return 0;
-		}
-		fprintf(log_file, "\ntest number: %d", loop);
-		fprintf(log_file, "\nkernel time: %.12f", kernel_time);
-		fprintf(log_file, "\naccumulated kernel time: %.12f", total_kernel_time);
-		//fprintf(log_file, "\nerrors: %d", ea);
-		fprintf(log_file, "\namount of errors in the matrix: %d", num_errors);
-		fprintf(log_file, "\ntotal matrix with errors: %d", t_ea);
-		//printf("\ntest number: %d", loop);
-		//printf("\nkernel time: %.12f", kernel_time);
-		//printf("\naccumulated kernel time: %.12f", total_kernel_time);
-		////fprintf(log_file, "\nerrors: %d", ea);
-		//printf("\namount of errors in the matrix: %d", num_errors);
-		//printf("\ntotal matrix with errors: %d", t_ea);
-
-		fclose(file);
-		fclose(log_file);
-
-		/////////////UPDATE TIMESTAMP///////////////////
-		UpdateTimestamp();
-		////////////////////////////////////////////////
-
-		//if(num_errors > 0 || (loop % 10 == 0)) {
+		if(num_errors > 0 || (loop % 10 == 0)) {
 			printf("\ntest number: %d", loop);
-			printf("\naccumulated kernel time: %f", total_kernel_time);
 			printf("\namount of errors in the matrix: %d", num_errors);
 			printf("\ntotal matrices with errors: %d", t_ea);
 
@@ -477,10 +452,11 @@ int main(int argc, char** argv) {
 			}
 			last_num_errors = num_errors;
 
-		//}
-		//else {
-		//	printf(".");
-		//}
+		}
+		else {
+			printf(".");
+			fflush(stdout);
+		}
 
 		cudaFree(MatrixPower);
 		cudaFree(MatrixTemp[0]);

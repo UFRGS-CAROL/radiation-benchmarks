@@ -4,9 +4,9 @@
 #include <assert.h>
 
 
-#define INPUT_TEMP "/home/carol/TestGPU/hotspot/input_temp_1024"
-#define INPUT_POWER "/home/carol/TestGPU/hotspot/input_power_1024"
-#define OUTPUT_GOLD "/home/carol/TestGPU/hotspot/output_1024"
+#define INPUT_TEMP "./input_temp_1024"
+#define INPUT_POWER "./input_power_1024"
+#define OUTPUT_GOLD "./output_1024"
 
 
 #define BLOCK_SIZE 13
@@ -253,7 +253,7 @@ int main(int argc, char** argv) {
 	int total_iterations = 20000;
 	tfile = "temp_1024";
 	pfile = "power_1024";
-	ofile = "output_1024.txt";
+	ofile = OUTPUT_GOLD;
 
 	size=grid_rows*grid_cols;
 
