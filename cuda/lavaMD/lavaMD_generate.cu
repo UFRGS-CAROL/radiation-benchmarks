@@ -12,9 +12,9 @@
 //=============================================================================
 //	DEFINE / INCLUDE
 //=============================================================================
-#define INPUT_DISTANCE "/home/carol/TestGPU/lavaMD/input_distances_192_13"
-#define INPUT_CHARGES "/home/carol/TestGPU/lavaMD/input_charges_192_13"
-#define OUTPUT_GOLD "/home/carol/TestGPU/lavaMD/output_forces_192_13"
+#define INPUT_DISTANCE "./input_distances_192_13"
+#define INPUT_CHARGES "./input_charges_192_13"
+#define OUTPUT_GOLD "./output_forces_192_13"
 
 
 #define NUMBER_PAR_PER_BOX 192	 // keep this low to allow more blocks that share shared memory to run concurrently, code does not work for larger than 110, more speedup can be achieved with larger number and no shared memory used

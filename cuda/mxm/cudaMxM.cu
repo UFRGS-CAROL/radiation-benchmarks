@@ -166,7 +166,7 @@ int main( int argc, char* argv[] )
 #ifdef LOGS
 	char test_info[100];
 	snprintf(test_info, 100, "size:%d",k);
-	start_log_file(LOGFILE_MATRIXNAME, test_info);
+	start_log_file("cudaMxM", test_info);
 #endif
 
 	int size = k*k;

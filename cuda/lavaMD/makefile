@@ -1,15 +1,28 @@
+CC=g++
+NVCC=nvcc
+NVCC_FLAGS=-arch sm_35
 
-ALL: generate chk_gold ecc
+LOGHELPER_INC=../../include/
+LOGHELPER_LIB=../../include/
 
-generate: lavaMD_generate.cu
-	nvcc -arch sm_35 lavaMD_generate.cu -o lava_gen
+SOURCES=lavaMD_192_13.cu
+SOURCES_GEN=lavaMD_generate.cu
+RUN_EXEC=lava
+GEN_EXEC=lava_generate
 
-chk_gold: lavaMD_192_13.cu
-	nvcc -arch sm_35 lavaMD_192_13.cu -o lava
+MATRIX_NAMES=output_forces_192_13
+
+ALL: gen lava ecc
+
+gen: lavaMD_generate.cu
+	$(NVCC) $(NVCC_FLAGS) lavaMD_generate.cu -o lava_generate
+
+lava: lavaMD_192_13.cu
+	$(NVCC) $(NVCC_FLAGS) lavaMD_192_13.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -o lava
 
 ecc: lavaMD_192_13_ecc.cu
-	nvcc -arch sm_35 lavaMD_192_13_ecc.cu -o lava_ecc
+	$(NVCC) $(NVCC_FLAGS) lavaMD_192_13_ecc.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -o lava_ecc
 
 clean:
-	rm lava_gen lava lava_ecc
+	rm lava_generate lava lava_ecc $(MATRIX_NAMES)
 

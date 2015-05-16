@@ -9,14 +9,20 @@
 #include <sys/time.h>
 #include <stdbool.h>			 // (in path known to compiler) needed by true/false
 
+#ifdef LOGS
+#include "log_helper.h"
+#endif
+
 //=============================================================================
 //	DEFINE / INCLUDE
 //=============================================================================
-#define INPUT_DISTANCE "/home/carol/TestGPU/lavaMD/input_distances_192_13"
-#define INPUT_CHARGES "/home/carol/TestGPU/lavaMD/input_charges_192_13"
-#define OUTPUT_GOLD "/home/carol/TestGPU/lavaMD/output_forces_192_13"
+#define INPUT_DISTANCE "./input_distances_192_13"
+#define INPUT_CHARGES "./input_charges_192_13"
+#define OUTPUT_GOLD "./output_forces_192_13"
 
-#define ITERACTIONS 10000		 //first loop, killed when there is a cuda malloc error, cuda thread sync error, too many output error
+#ifndef ITERACTIONS
+#define ITERACTIONS 100000000000000000
+#endif		 //first loop, killed when there is a cuda malloc error, cuda thread sync error, too many output error
 
 #define NUMBER_PAR_PER_BOX 192	 // keep this low to allow more blocks that share shared memory to run concurrently, code does not work for larger than 110, more speedup can be achieved with larger number and no shared memory used
 
@@ -85,18 +91,6 @@ long long get_time() {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return (tv.tv_sec * 1000000) + tv.tv_usec;
-}
-
-
-void UpdateTimestamp() {
-	time_t timestamp = time(NULL);
-	char time_s[50];
-	sprintf(time_s, "%d", int(timestamp));
-
-	char string[100] = "echo ";
-	strcat(string, time_s);
-	strcat(string, " > /home/carol/TestGPU/timestamp.txt");
-	system(string);
 }
 
 
@@ -294,7 +288,6 @@ int main(int argc, char *argv []) {
 	int t_ea = 0;
 	int old_ea = 0;
 
-	double total_kernel_time = 0;
 	// system memory
 	par_str par_cpu;
 	dim_str dim_cpu;
@@ -305,56 +298,20 @@ int main(int argc, char *argv []) {
 	FOUR_VECTOR* fv_cpu_GOLD;
 	int nh;
 
-	FILE *log_file;
-	FILE *fp;
-	FILE *file;
-
 	cudaError_t cuda_error;
 	const char *error_string;
 
-	///////////////////////////////////////////////////////
-	////////////////FILE NAME//////////////////////////////
-	///////////////////////////////////////////////////////
-	// infos : dd_mm_yyyy_hh_mm_ss_LavaMD_192_13
+	FILE *fp;
 
-	// to be modified if you have better ideas
-
-	time_t file_time;
-	struct tm *ptm;
-	char day[2], month[2], year[4], hour[2], second[2], minute[2];
-	char file_name[60];
-	char file_name_log[60];
-
-	file_time = time(NULL);
-	ptm = gmtime(&file_time);
-
-	snprintf(day, sizeof(day + 1), "%d", ptm->tm_mday);
-	snprintf(month, sizeof(month + 1), "%d", ptm->tm_mon+1);
-	snprintf(year, sizeof(year + 1), "%d", ptm->tm_year+1900);
-	snprintf(hour, sizeof(hour + 1), "%d", ptm->tm_hour);
-	snprintf(minute, sizeof(minute + 1), "%d", ptm->tm_min);
-	snprintf(second, sizeof(second + 1), "%d", ptm->tm_sec);
-	strcpy(file_name,day);strcat(file_name,"_");
-	strcat(file_name,month);strcat(file_name,"_");
-	strcat(file_name,year);strcat(file_name,"_");
-	strcat(file_name,hour);strcat(file_name,"_");
-	strcat(file_name,minute);strcat(file_name,"_");
-	strcat(file_name,second);strcat(file_name,"_");
-	strcat(file_name,"_LavaMD_192_13");
-	strcpy(file_name_log, file_name);
-
-	strcat(file_name,".txt");
-	strcat(file_name_log,"_log.txt");
+#ifdef LOGS
+	char test_info[100];
+	snprintf(test_info, 100, "size:%d",k);
+	start_log_file(LOGFILE_MATRIXNAME, test_info);
+#endif
 
 	//LOOP START
 	int loop;
 	for(loop=0; loop<ITERACTIONS; loop++) {
-
-		file = fopen(file_name, "a");
-		if(file == NULL) {
-			printf("error to open file '%s'\n",file_name);
-			break;
-		}
 
 		//=====================================================================
 		//	CHECK INPUT ARGUMENTS
@@ -392,10 +349,11 @@ int main(int argc, char *argv []) {
 		box_cpu = (box_str*)malloc(dim_cpu.box_mem);
 		if(box_cpu == NULL) {
 			printf("error box_cpu malloc\n");
-			fprintf(file, "error box_cpu malloc\n");
+#ifdef LOGS
+			log_error_detail("error box_cpu malloc"); end_log_file(); 
+#endif
 			break;
 		}
-		fclose(file);
 
 		// initialize number of home boxes
 		nh = 0;
@@ -456,12 +414,6 @@ int main(int argc, char *argv []) {
 		//	PARAMETERS, DISTANCE, CHARGE AND FORCE
 		//=====================================================================
 
-		file = fopen(file_name, "a");
-		if(file == NULL) {
-			printf("error to open file '%s'\n",file_name);
-			break;
-		}
-
 		size_t return_value[4];
 		// input (distances)
 		if( (fp = fopen(INPUT_DISTANCE, "rb" )) == 0 )
@@ -469,7 +421,9 @@ int main(int argc, char *argv []) {
 		rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
 		if(rv_cpu == NULL) {
 			printf("error rv_cpu malloc\n");
-			fprintf(file, "error rv_cpu malloc\n");
+#ifdef LOGS
+			log_error_detail("error rv_cpu malloc"); end_log_file(); 
+#endif
 			break;
 		}
 		for(i=0; i<dim_cpu.space_elem; i=i+1) {
@@ -479,7 +433,9 @@ int main(int argc, char *argv []) {
 			return_value[3] = fread(&(rv_cpu[i].z), 1, sizeof(double), fp);
 			if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
 				printf("error reading rv_cpu from file\n");
-				fprintf(file, "error reading rv_cpu from file\n");
+#ifdef LOGS
+				log_error_detail("error reading rv_cpu from file"); end_log_file(); 
+#endif
 				break;
 			}
 		}
@@ -491,14 +447,18 @@ int main(int argc, char *argv []) {
 		qv_cpu = (double*)malloc(dim_cpu.space_mem2);
 		if(qv_cpu == NULL) {
 			printf("error qv_cpu malloc\n");
-			fprintf(file, "error qv_cpu malloc\n");
+#ifdef LOGS
+			log_error_detail("error qv_cpu malloc"); end_log_file(); 
+#endif
 			break;
 		}
 		for(i=0; i<dim_cpu.space_elem; i=i+1) {
 			return_value[0] = fread(&(qv_cpu[i]), 1, sizeof(double), fp);
 			if (return_value[0] == 0) {
 				printf("error reading qv_cpu from file\n");
-				fprintf(file, "error reading qv_cpu from file\n");
+#ifdef LOGS
+				log_error_detail("error reading qv_cpu from file"); end_log_file(); 
+#endif
 				break;
 			}
 		}
@@ -510,7 +470,9 @@ int main(int argc, char *argv []) {
 		fv_cpu_GOLD = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
 		if(fv_cpu_GOLD == NULL) {
 			printf("error fv_cpu_GOLD malloc\n");
-			fprintf(file, "error fv_cpu_GOLD malloc\n");
+#ifdef LOGS
+			log_error_detail("error fv_cpu_GOLD malloc"); end_log_file(); 
+#endif
 			break;
 		}
 		for(i=0; i<dim_cpu.space_elem; i=i+1) {
@@ -520,7 +482,9 @@ int main(int argc, char *argv []) {
 			return_value[3] = fread(&(fv_cpu_GOLD[i].z), 1, sizeof(double), fp);
 			if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
 				printf("error reading rv_cpu from file\n");
-				fprintf(file, "error reading rv_cpu from file\n");
+#ifdef LOGS
+				log_error_detail("error reading rv_cpu from file"); end_log_file(); 
+#endif
 				break;
 			}
 		}
@@ -530,7 +494,9 @@ int main(int argc, char *argv []) {
 		fv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
 		if(fv_cpu == NULL) {
 			printf("error fv_cpu malloc\n");
-			fprintf(file, "error fv_cpu malloc\n");
+#ifdef LOGS
+			log_error_detail("error fv_cpu malloc"); end_log_file(); 
+#endif
 			break;
 		}
 		for(i=0; i<dim_cpu.space_elem; i=i+1) {
@@ -540,8 +506,6 @@ int main(int argc, char *argv []) {
 			fv_cpu[i].y = 0;
 			fv_cpu[i].z = 0;
 		}
-
-		fclose(file);
 
 		//=====================================================================
 		//	GPU_CUDA
@@ -581,17 +545,14 @@ int main(int argc, char *argv []) {
 		//	boxes
 		//==================================================
 
-		file = fopen(file_name, "a");
-		if(file == NULL) {
-			printf("error to open file '%s'\n",file_name);
-			break;
-		}
-
 		cuda_error = cudaMalloc( (void **)&d_box_gpu, dim_cpu.box_mem);
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error d_box_gpu cudaMalloc\n");
-			fprintf(file, "error d_box_gpu cudaMalloc\n"); break;
+#ifdef LOGS
+			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
+#endif			
+			break;
 		}
 		//==================================================
 		//	rv
@@ -601,7 +562,10 @@ int main(int argc, char *argv []) {
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error d_rv_gpu cudaMalloc\n");
-			fprintf(file, "error d_box_gpu cudaMalloc\n"); break;
+#ifdef LOGS
+			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
+#endif			
+			break;
 		}
 		//==================================================
 		//	qv
@@ -611,7 +575,10 @@ int main(int argc, char *argv []) {
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error d_qv_gpu cudaMalloc\n");
-			fprintf(file, "error d_box_gpu cudaMalloc\n"); break;
+#ifdef LOGS
+			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
+#endif			
+			break;
 		}
 		//==================================================
 		//	fv
@@ -621,7 +588,10 @@ int main(int argc, char *argv []) {
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error d_fv_gpu cudaMalloc\n");
-			fprintf(file, "error d_box_gpu cudaMalloc\n"); break;
+#ifdef LOGS
+			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
+#endif			
+			break;
 		}
 
 		//=====================================================================
@@ -636,7 +606,10 @@ int main(int argc, char *argv []) {
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error load d_boc_gpu\n");
-			fprintf(file, "error load d_box_gpu\n"); break;
+#ifdef LOGS
+			log_error_detail("error load d_box_gpu"); end_log_file(); 
+#endif			
+			break;
 		}
 		//==================================================
 		//	rv
@@ -646,7 +619,10 @@ int main(int argc, char *argv []) {
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error load d_rv_gpu\n");
-			fprintf(file, "error load d_box_gpu\n"); break;
+#ifdef LOGS
+			log_error_detail("error load d_box_gpu"); end_log_file(); 
+#endif			
+			break;
 		}
 		//==================================================
 		//	qv
@@ -656,7 +632,10 @@ int main(int argc, char *argv []) {
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error load d_qv_gpu\n");
-			fprintf(file, "error load d_box_gpu\n"); break;
+#ifdef LOGS
+			log_error_detail("error load d_box_gpu"); end_log_file(); 
+#endif			
+			break;
 		}
 		//==================================================
 		//	fv
@@ -666,7 +645,10 @@ int main(int argc, char *argv []) {
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error load d_fv_gpu\n");
-			fprintf(file, "error load d_box_gpu\n"); break;
+#ifdef LOGS
+			log_error_detail("error load d_box_gpu"); end_log_file(); 
+#endif			
+			break;
 		}
 
 		//=====================================================================
@@ -682,7 +664,10 @@ int main(int argc, char *argv []) {
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error logic: %s\n",error_string);
-			fprintf(file, "error logic: %s\n",error_string); break;
+#ifdef LOGS
+			log_error_detail("error logic:"); log_error_detail(error_string); end_log_file(); 
+#endif			
+			break;
 		}
 
 		time1 = get_time();
@@ -695,13 +680,15 @@ int main(int argc, char *argv []) {
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error download fv_cpu\n");
-			fprintf(file, "error download fv_cpu\n"); break;
+#ifdef LOGS
+			log_error_detail("error download fv_cpu"); end_log_file(); 
+#endif			
+			break;
 		}
 
 		//=====================================================================
 		//	GPU MEMORY DEALLOCATION
 		//=====================================================================
-		fclose(file);
 
 		cudaFree(d_rv_gpu);
 		cudaFree(d_qv_gpu);
@@ -711,32 +698,10 @@ int main(int argc, char *argv []) {
 		//	COMPARE OUTPUTS
 		//=====================================================================
 
-		///////////UPDATE FILE//////////////////////
-
-		file = fopen(file_name, "a");
-		if(file == NULL) {
-			printf("error to open file '%s'\n",file_name);
-			break;
-		}
-
-		file_time = time(NULL);
-		ptm = gmtime(&file_time);
-		snprintf(hour, sizeof(hour + 1), "%d", ptm->tm_hour);
-		snprintf(minute, sizeof(minute + 1), "%d", ptm->tm_min);
-		snprintf(second, sizeof(second + 1), "%d", ptm->tm_sec);
-								 //write the starting time
-		fprintf(file, "\n start time: %s/%s_%s:%s:%s", day,month,hour,minute,second);
-		fclose(file);
-
 		//int ea = 0;
 		int part_error = 0;
 		int thread_error = 0;
-
-		file = fopen(file_name, "a");
-		if(file == NULL) {
-			printf("error to open file '%s'\n",file_name);
-			break;
-		}
+		char error_detail[150];
 
 		for(i=0; i<dim_cpu.space_elem; i=i+1) {
 			if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
@@ -766,53 +731,21 @@ int main(int argc, char *argv []) {
 			if (thread_error  > 0) {
 				t_ea++;
 				part_error++;
-				fprintf(file, "\np: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e, error: %d\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);
+			
+			snprintf(error_detail, 150, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e, error: %d\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);
+#ifdef LOGS
+			log_error_detail(error_detail);
+#endif
+				//fprintf(file, "\np: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e, error: %d\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);
 				thread_error = 0;
 			}
 		}
 
-		fclose(file);
-
-		///////////UPDATE LOG FILE//////////////////////
-		/// PROBABLY NOT NEEDED, OR CAN BE REDUCED
-		double kernel_time = (double) (time1-time0) / 1000000;
-		total_kernel_time += kernel_time;
-
-		log_file = fopen(file_name_log, "a");
-		if(log_file == NULL) {
-			printf("error to open file '%s'\n",file_name_log);
-			fprintf(file,"error to open file '%s'\n",file_name_log);
-			break;
-		}
-		fprintf(log_file, "\ntest number: %d", loop);
-		fclose(log_file);
-
-		/////////////UPDATE TIMESTAMP///////////////////
-		UpdateTimestamp();
-		////////////////////////////////////////////////
+		if (part_error>0) printf("part_error=%d\n", part_error);
 
 		if(part_error > 0 || (loop % 10 == 0)) {
 
-			log_file = fopen(file_name_log, "a");
-			if(log_file == NULL) {
-				printf("error to open file '%s'\n",file_name_log);
-				fprintf(file,"error to open file '%s'\n",file_name_log);
-				break;
-			}
-
-			fprintf(log_file, "\ntest number: %d", loop);
-			fprintf(log_file, "\nkernel time: %.12f", kernel_time);
-			fprintf(log_file, "\naccumulated kernel time: %.12f", total_kernel_time);
-			fprintf(log_file, "\nparticles with errors: %d", part_error);
-			fprintf(log_file, "\ntotal errors: %d", t_ea);
-
-			//fclose(file);
-			fclose(log_file);
-
 			printf("\ntest number: %d", loop);
-			printf("\naccumulated kernel time: %f", total_kernel_time);
-			printf("\nparticles with errors: %d", part_error);
-			printf("\ntotal errors: %d", t_ea);
 
 								 //we NEED this, beause at times the GPU get stuck and it gives a huge amount of error, we cannot let it write a stream of data on the HDD
 			if(part_error > 500) break;
@@ -831,6 +764,7 @@ int main(int argc, char *argv []) {
 		}
 		else {
 			printf(".");
+			fflush(stdout);
 		}
 		//=====================================================================
 		//	SYSTEM MEMORY DEALLOCATION
