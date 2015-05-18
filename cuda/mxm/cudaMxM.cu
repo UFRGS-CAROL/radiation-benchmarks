@@ -242,7 +242,7 @@ int main( int argc, char* argv[] )
 			return 1;} //mem allocate failure
 
 		kernel_errors=0;
-	
+double time = mysecond();
 #ifdef LOGS
 		start_iteration();
 #endif
@@ -251,6 +251,7 @@ int main( int argc, char* argv[] )
 #ifdef LOGS
 		end_iteration();
 #endif
+time = mysecond() - time;
 
 
 		malloc_mem1 = cudaMemcpy(d_A, h_GOLD, size * sizeof( double ), cudaMemcpyHostToDevice );
@@ -313,6 +314,7 @@ int main( int argc, char* argv[] )
 		{
 			printf("\ntest number: %d", loop2);
 			printf("\nerrors: %d", kernel_errors);
+			printf(" time: %f\n", time);
 		}
 		else
 		{

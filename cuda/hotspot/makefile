@@ -1,3 +1,7 @@
+ifeq ($(SINGLEITERACTION), 1)  #at this point, the makefile checks if FEATURE is enabled
+ITER = -DITERACTIONS=1 #variable passed to g++
+endif
+
 CC=g++
 NVCC=nvcc
 NVCC_FLAGS=-arch=sm_35
@@ -15,7 +19,7 @@ gen: hotspot_generate.cu
 	$(NVCC) $(NVCC_FLAGS) hotspot_generate.cu -o hotspot_generate
 
 hotspot: hotspot.cu
-	$(NVCC) $(NVCC_FLAGS) hotspot.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -o hotspot
+	$(NVCC) $(NVCC_FLAGS) hotspot.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) $(ITER) -lLogHelper -o hotspot
 
 ecc: hotspot_ecc.cu
 	$(NVCC) $(NVCC_FLAGS) hotspot_ecc.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -o hotspot_ecc

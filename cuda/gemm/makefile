@@ -1,3 +1,7 @@
+ifeq ($(SINGLEITERACTION), 1)  #at this point, the makefile checks if FEATURE is enabled
+ITER = -DITERACTIONS=1 #variable passed to g++
+endif
+
 CC=g++
 NVCC=nvcc
 
@@ -17,7 +21,7 @@ MATRIX_NAMES=Double_A_8192.matrix Double_B_8192.matrix Double_GOLD_1024.matrix D
 all: gemm gen
 
 gemm: cudaGEMM.cu
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) cudaGEMM.cu -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -lLogHelper -lcublas -o $(RUN_EXEC)
+	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) cudaGEMM.cu -L$(NVIDIA_LIB),$(LOGHELPER_LIB) $(ITER) -lLogHelper -lcublas -o $(RUN_EXEC)
 
 gen: generateMatrices.cu
 	$(NVCC) generateMatrices.cu -I$(NVIDIA_INC) -L$(NVIDIA_LIB) -lcublas -o $(GEN_EXEC)

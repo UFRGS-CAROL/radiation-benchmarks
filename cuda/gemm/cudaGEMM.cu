@@ -255,6 +255,7 @@ int main( int argc, char* argv[] )
 		//cublasCreate(&blashandle);
 	
 		//printf("cublasDgemm... k=%d transa=%c transb=%c lda=%d ldb=%d ldc=%d\n", k, transa, transb, lda, ldb, ldc);
+double time = mysecond();
 #ifdef LOGS
 		start_iteration();
 #endif
@@ -271,6 +272,7 @@ int main( int argc, char* argv[] )
 #ifdef LOGS
 		end_iteration();
 #endif
+time = mysecond() - time;
 
 		malloc_mem1 = cudaMemcpy(d_A, GOLD, sizea * sizeof( double ), cudaMemcpyHostToDevice );
 		erro_malloc = cudaGetErrorString(malloc_mem1);
@@ -330,6 +332,7 @@ int main( int argc, char* argv[] )
 		if(kernel_errors > 0 || (loop2 % 10 == 0))
 		{
 			printf("\ntest number: %d", loop2);
+			printf(" time: %f\n", time);
 		}
 		else
 		{

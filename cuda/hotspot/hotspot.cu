@@ -45,6 +45,14 @@ long long get_time() {
 	return (tv.tv_sec * 1000000) + tv.tv_usec;
 }
 
+double mysecond()
+{
+   struct timeval tp;
+   struct timezone tzp;
+   int i = gettimeofday(&tp,&tzp);
+   return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
+}
+
 
 void UpdateTimestamp() {
 	time_t timestamp = time(NULL);
@@ -395,6 +403,7 @@ int main(int argc, char** argv) {
 		}
 
 		time0 = get_time();
+double time=mysecond();
 #ifdef LOGS
 		start_iteration();
 #endif
@@ -405,6 +414,7 @@ int main(int argc, char** argv) {
 #ifdef LOGS
 		end_iteration();
 #endif
+time = mysecond()-time;
 
 		time1 = get_time();
 
@@ -446,6 +456,7 @@ int main(int argc, char** argv) {
 			printf("\ntest number: %d", loop);
 			printf("\namount of errors in the matrix: %d", num_errors);
 			printf("\ntotal matrices with errors: %d", t_ea);
+			printf(" time: %f\n", time);
 
 			if(num_errors > 0 && num_errors == last_num_errors){
 				exit(1);

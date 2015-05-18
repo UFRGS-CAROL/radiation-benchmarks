@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include <sys/time.h>
 
 #include <omp.h>
 
@@ -117,6 +118,13 @@ void deallocateMemory()
 }
 /* -------------- deallocateMemory() end ------------------- */
 
+double mysecond()
+{
+   struct timeval tp;
+   struct timezone tzp;
+   int i = gettimeofday(&tp,&tzp);
+   return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,6 +201,8 @@ kmeansCuda(float  **feature,				/* in: [npoints][nfeatures] */
 	   changed to 2d (source code on NVIDIA CUDA Programming Guide) */
     dim3  grid( num_blocks_perdim, num_blocks_perdim );
     dim3  threads( num_threads_perdim*num_threads_perdim );
+
+double time = mysecond();
     
 	/* execute the kernel */
     kmeansPoint<<< grid, threads >>>( feature_d,
@@ -205,6 +215,8 @@ kmeansCuda(float  **feature,				/* in: [npoints][nfeatures] */
 									  block_deltas_d);
 
 	cudaThreadSynchronize();
+
+printf("time: %f\n", mysecond()-time);
 
 	/* copy back membership (device to host) */
 	cudaMemcpy(membership_new, membership_d, npoints*sizeof(int), cudaMemcpyDeviceToHost);	

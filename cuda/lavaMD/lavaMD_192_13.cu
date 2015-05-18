@@ -268,6 +268,13 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 	}
 }
 
+double mysecond()
+{
+   struct timeval tp;
+   struct timezone tzp;
+   int i = gettimeofday(&tp,&tzp);
+   return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
+}
 
 //=============================================================================
 //	MAIN FUNCTION
@@ -656,11 +663,17 @@ int main(int argc, char *argv []) {
 		//=====================================================================
 
 		time0 = get_time();
-
+		double time=mysecond();
+#ifdef LOGS
+		start_iteration();
+#endif
 		// launch kernel - all boxes
 		kernel_gpu_cuda<<<blocks, threads>>>( par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
-
 		cuda_error = cudaThreadSynchronize();
+#ifdef LOGS
+		end_iteration();
+#endif
+		time = mysecond()-time;
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error logic: %s\n",error_string);
@@ -746,6 +759,7 @@ int main(int argc, char *argv []) {
 		if(part_error > 0 || (loop % 10 == 0)) {
 
 			printf("\ntest number: %d", loop);
+			printf(" time: %f\n", time);
 
 								 //we NEED this, beause at times the GPU get stuck and it gives a huge amount of error, we cannot let it write a stream of data on the HDD
 			if(part_error > 500) break;
