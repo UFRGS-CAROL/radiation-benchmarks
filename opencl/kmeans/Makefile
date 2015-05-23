@@ -1,8 +1,8 @@
 CC = g++
 CC_FLAGS = -g -O2 
 
-NVIDIA_INC=-I/usr/local/cuda-6.5/include/
-NVIDIA_LIB=-L/usr/local/cuda-6.5/lib64
+NVIDIA_INC=-I/usr/local/cuda/include/
+NVIDIA_LIB=-L/usr/local/cuda/lib64/
 
 INTEL_INC=-I/opt/intel/opencl-1.2-sdk-4.6.0.92/include/
 INTEL_LIB=-L/opt/intel/opencl-1.2-4.5.0.8/lib64/
@@ -22,7 +22,7 @@ intel: $(SOURCES_GEN)
 	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -lOpenCL $(SOURCES_GEN) $(INTEL_INC) $(INTEL_LIB) -o kmeans_gen 
                                                                                                      
 nvidia: $(SOURCES_GEN)                                                                               
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -lOpenCL $(SOURCES_GEN) $(NVIDIA_INC) $(NVIDIA_LIB) -o kmeans_gen
+	$(CC) $(KERNEL_DIM) $(CC_FLAGS) $(SOURCES_GEN) $(NVIDIA_INC) $(NVIDIA_LIB) -lOpenCL -o kmeans_gen
 
 clean:
 	rm -f *.o *~ kmeans  kmeans_gen input_* output_*
