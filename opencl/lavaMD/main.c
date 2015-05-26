@@ -590,7 +590,8 @@ flop *=46;
 
     double kernel_time = (double) (time1-time0) / 1000000;
     double flops = (double)flop/kernel_time;
-    printf("BOXES:%d BLOCK:%d FLOPS:%f\n",boxes,block_size,flops);
+    double outputpersec = (double)dim_cpu.space_elem * 4 / kernel_time;
+    printf("BOXES:%d BLOCK:%d OUTPUT/S:%f FLOPS:%f\n",boxes,block_size,outputpersec,flops);
     printf("kernel_time:%f\n",kernel_time);
 
     error = clEnqueueReadBuffer(command_queue,d_fv_gpu,CL_TRUE,0,dim_cpu.space_mem,fv_cpu,0,NULL,NULL);
