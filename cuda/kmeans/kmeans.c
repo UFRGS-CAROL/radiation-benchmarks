@@ -195,7 +195,6 @@ int setup(int argc, char **argv) {
                 break;
             }
         }        
-
         /* allocate space for features[] and read attributes of all objects */
         buf         = (float*) malloc(npoints*nfeatures*sizeof(float));
         features    = (float**)malloc(npoints*          sizeof(float*));
