@@ -382,8 +382,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     double kernel_time = (double) (get_time() - k_start) / 1000000;
     double flops = 2.0*(double)input_size*input_size*input_size;
     double gflops = flops / kernel_time;
+    double outputpersec = (double)input_size*input_size/kernel_time;
     printf("kernel time: %lf\n",kernel_time);
-    printf("SIZE:%d FLOPS:%f\n",input_size, gflops);
+    printf("SIZE:%d OUTPUT/S:%f FLOPS:%f\n",input_size, outputpersec, gflops);
 
 
 
