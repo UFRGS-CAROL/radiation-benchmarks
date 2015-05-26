@@ -47,7 +47,7 @@ FILE* log_file;
 FILE* timefile;
 
 void usage() {
-    printf("Usage: cudaGemm <input_size> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX>\n");
+    printf("Usage: cudaGemm <input_size> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX> <#ITERACTIONS>\n");
 }
 
 void GetDevice(){
@@ -145,12 +145,13 @@ int main( int argc, char* argv[] )
 
 	////////////////////////////////////////////////////
 	////////////////////GET PARAM///////////////////////
-	if (argc!=5) {
+	if (argc!=6) {
 		usage();
 		exit (-1);
 	}
 
 	k = atoi (argv[1]);
+	iteractions = atoi (argv[5]);
 	if (((k%32)!=0)||(k<0)){
 		printf ("Enter a valid input. (k=%i)\n", k);
 		exit (-1);
