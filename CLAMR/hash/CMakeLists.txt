@@ -77,17 +77,18 @@ set(hash_LIB_SRCS ${C_SRCS} ${H_SRCS})
 
 ########### embed source target ###############
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/hashlib_kern.inc
-                  COMMAND ${CMAKE_SOURCE_DIR}/embed_source.pl hashlib_kern.cl > hashlib_kern.inc
-                  DEPENDS hashlib_kern.cl ${CMAKE_SOURCE_DIR}/embed_source.pl)
+                  COMMAND ${CMAKE_SOURCE_DIR}/embed_source.pl ${CMAKE_CURRENT_LIST_DIR}/hashlib_kern.cl > ${CMAKE_CURRENT_BINARY_DIR}/hashlib_kern.inc
+                  DEPENDS ${CMAKE_CURRENT_LIST_DIR}/hashlib_kern.cl ${CMAKE_SOURCE_DIR}/embed_source.pl)
 add_custom_target(hashlib_kernel_source ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/hashlib_kern.inc)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/hashlib_source_kern.inc
-                  COMMAND ${CMAKE_SOURCE_DIR}/embed_source.pl hashlib_source_kern.cl > hashlib_source_kern.inc
-                  DEPENDS hashlib_source_kern.cl ${CMAKE_SOURCE_DIR}/embed_source.pl)
+                  COMMAND ${CMAKE_SOURCE_DIR}/embed_source.pl ${CMAKE_CURRENT_LIST_DIR}/hashlib_source_kern.cl > ${CMAKE_CURRENT_BINARY_DIR}/hashlib_source_kern.inc
+                  DEPENDS ${CMAKE_CURRENT_LIST_DIR}/hashlib_source_kern.cl ${CMAKE_SOURCE_DIR}/embed_source.pl)
 add_custom_target(hashlib_source_kernel_source ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/hashlib_source_kern.inc)
 
 ########### hash target ###############
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_library(hash STATIC ${hash_LIB_SRCS})
 
 set_target_properties(hash PROPERTIES VERSION ${HASH_VERSION} SOVERSION ${HASH_VERSION_MAJOR})

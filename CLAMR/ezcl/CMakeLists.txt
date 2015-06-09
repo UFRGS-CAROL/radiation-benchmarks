@@ -116,7 +116,10 @@ set(pezcl_LIB_SRCS ${C_SRCS} ${H_SRCS})
 add_library(pezcl SHARED ${pezcl_LIB_SRCS})
 
 set_target_properties(pezcl PROPERTIES VERSION ${EZCL_VERSION} SOVERSION ${EZCL_VERSION_MAJOR})
-set_target_properties(pezcl PROPERTIES COMPILE_DEFINITIONS HAVE_MPI)
+if(MPI_FOUND)
+	set_target_properties(pezcl PROPERTIES COMPILE_DEFINITIONS HAVE_MPI)
+endif()
+
 target_link_libraries(pezcl ${OPENCL_LIBRARIES})
 target_link_libraries(pezcl ${MPI_LIBRARIES})
 install(TARGETS pezcl DESTINATION lib)

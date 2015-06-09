@@ -78,6 +78,7 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g -O3")
 #set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -pedantic")
 
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(hash)
 
 if (NOT MIC_NATIVE)
    find_package(OpenCL)
@@ -250,55 +251,31 @@ add_definitions(-DHAVE_CONFIG_H)
 # so that we will find config.h
 include_directories("${PROJECT_BINARY_DIR}")
 
-if (EXISTS "mesh" AND IS_DIRECTORY "mesh")
    add_subdirectory(mesh)
-endif (EXISTS "mesh" AND IS_DIRECTORY "mesh")
 
-if (EXISTS "s7" AND IS_DIRECTORY "s7")
    add_subdirectory(s7)
-endif (EXISTS "s7" AND IS_DIRECTORY "s7")
 
-if (EXISTS "l7" AND IS_DIRECTORY "l7")
    add_subdirectory(l7)
-endif (EXISTS "l7" AND IS_DIRECTORY "l7")
 
-if (EXISTS "graphics" AND IS_DIRECTORY "graphics")
    add_subdirectory(graphics)
-endif (EXISTS "graphics" AND IS_DIRECTORY "graphics")
 
-if (EXISTS "timer" AND IS_DIRECTORY "timer")
    add_subdirectory(timer)
-endif (EXISTS "timer" AND IS_DIRECTORY "timer")
 
-if (EXISTS "memstats" AND IS_DIRECTORY "memstats")
    add_subdirectory(memstats)
-endif (EXISTS "memstats" AND IS_DIRECTORY "memstats")
 
 if (OPENCL_FOUND)
-   if (EXISTS "ezcl" AND IS_DIRECTORY "ezcl")
       add_subdirectory(ezcl)
-   endif (EXISTS "ezcl" AND IS_DIRECTORY "ezcl")
 endif (OPENCL_FOUND)
 
-if (EXISTS "genmalloc" AND IS_DIRECTORY "genmalloc")
    add_subdirectory(genmalloc)
-endif (EXISTS "genmalloc" AND IS_DIRECTORY "genmalloc")
 
-if (EXISTS "MallocPlus" AND IS_DIRECTORY "MallocPlus")
    add_subdirectory(MallocPlus)
-endif (EXISTS "MallocPlus" AND IS_DIRECTORY "MallocPlus")
 
-if (EXISTS "hash" AND IS_DIRECTORY "hash")
    add_subdirectory(hash)
-endif (EXISTS "hash" AND IS_DIRECTORY "hash")
 
-if (EXISTS "crux" AND IS_DIRECTORY "crux")
    add_subdirectory(crux)
-endif (EXISTS "crux" AND IS_DIRECTORY "crux")
 
-if (EXISTS "PowerParser" AND IS_DIRECTORY "PowerParser")
    add_subdirectory(PowerParser)
-endif (EXISTS "PowerParser" AND IS_DIRECTORY "PowerParser")
 
 ########### embed source target ###############
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/state_kernel.inc

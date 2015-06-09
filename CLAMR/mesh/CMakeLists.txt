@@ -143,13 +143,13 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 ########### embed source target ###############
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mesh_kernel.inc
-                  COMMAND ${CMAKE_SOURCE_DIR}/embed_source.pl mesh_kern.cl > mesh_kernel.inc
-                  DEPENDS mesh_kern.cl ${CMAKE_SOURCE_DIR}/embed_source.pl)
+                  COMMAND ${CMAKE_SOURCE_DIR}/embed_source.pl ${CMAKE_CURRENT_LIST_DIR}/mesh_kern.cl > ${CMAKE_CURRENT_BINARY_DIR}/mesh_kernel.inc
+                  DEPENDS ${CMAKE_CURRENT_LIST_DIR}/mesh_kern.cl ${CMAKE_SOURCE_DIR}/embed_source.pl)
 add_custom_target(mesh_kernel_source ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/mesh_kernel.inc)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reduce_kernel.inc
-                  COMMAND ${CMAKE_SOURCE_DIR}/embed_source.pl reduce.cl > reduce_kernel.inc
-                  DEPENDS reduce.cl ${CMAKE_SOURCE_DIR}/embed_source.pl)
+                  COMMAND ${CMAKE_SOURCE_DIR}/embed_source.pl ${CMAKE_CURRENT_LIST_DIR}/reduce.cl > ${CMAKE_CURRENT_BINARY_DIR}/reduce_kernel.inc
+                  DEPENDS ${CMAKE_CURRENT_LIST_DIR}/reduce.cl ${CMAKE_SOURCE_DIR}/embed_source.pl)
 add_custom_target(reduce_kernel_source ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reduce_kernel.inc)
 
 ########### mesh target ###############
@@ -231,7 +231,7 @@ if (OPENCL_FOUND)
 endif (OPENCL_FOUND)
 
 ########### dpmesh target ###############
-if (OPENCL_FOUND)
+if(OPENCL_FOUND AND MPI_FOUND)
    set(dpmesh_LIB_SRCS ${CXX_SRCS} ${C_SRCS} ${H_SRCS})
 
    add_library(dpmesh STATIC ${dpmesh_LIB_SRCS})
@@ -246,7 +246,7 @@ if (OPENCL_FOUND)
    add_dependencies(dpmesh mesh_kernel_source)
    add_dependencies(dpmesh reduce_kernel_source)
    install(TARGETS dpmesh DESTINATION lib)
-endif (OPENCL_FOUND)
+endif (OPENCL_FOUND AND MPI_FOUND)
 
 ########### install files ###############
 
