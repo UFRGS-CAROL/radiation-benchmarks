@@ -12,16 +12,10 @@
 #include "cuda.h"
 #include "cublas.h"
 
-#define MATRIX_PATH "./Double_"
-
 #define N_ERRORS_LOG 500
 #define BLOCK_SIZE 32
-
-#ifndef ITERACTIONS
-#define ITERACTIONS 100000000000000000
-#endif
-
 int k=0; // N will be received on runtime
+int iteractions=1; // iteractions will be received on runtime
 
 double *h_A;
 double *h_B;
@@ -40,6 +34,10 @@ FILE* timefile;
 using namespace std;
 
 string gold_matrix_path, a_matrix_path, b_matrix_path;
+
+void usage() {
+    printf("Usage: cudaMxM <input_size> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX> <#iteractions>\n");
+}
 
 void GetDevice(){
 
@@ -138,23 +136,21 @@ int main( int argc, char* argv[] )
 
 	////////////////////////////////////////////////////
 	////////////////////GET PARAM///////////////////////
-	if (argc!=2) {
-		printf ("Enter the required input. (1024/2048/4096/8192)\n");
+	if (argc!=6) {
+		usage();
 		exit (-1);
 	}
+
 	k = atoi (argv[1]);
+	iteractions = atoi (argv[5]);
 	if (((k%32)!=0)||(k<0)){
 		printf ("Enter a valid input. (k=%i)\n", k);
 		exit (-1);
 	}
-	string matrix_size_str(argv[1]);
 
-	a_matrix_path = MATRIX_PATH;
-	b_matrix_path = MATRIX_PATH;
-	gold_matrix_path = MATRIX_PATH;
-	a_matrix_path += "A_8192.matrix";
-	b_matrix_path += "B_8192.matrix";
-	gold_matrix_path += "GOLD_" + matrix_size_str + ".matrix";
+	a_matrix_path = argv[2];
+	b_matrix_path = argv[3];
+	gold_matrix_path = argv[4];
 
 	//////////BLOCK and GRID size///////////////////////
 	int gridsize = k/BLOCK_SIZE < 1 ? 1 : k/BLOCK_SIZE;
@@ -185,7 +181,7 @@ int main( int argc, char* argv[] )
 	printf( "Cuda MxM Not optimized - %ix%i\n", k, k );
 
 
-	for(loop2=0; loop2<ITERACTIONS; loop2++)
+	for(loop2=0; loop2<iteractions; loop2++)
 	{
 
 	//	file = fopen(file_name, "a");	

@@ -155,6 +155,8 @@ int allocate(int n_points, int n_features, int n_clusters, float **feature)
         return -1;
     }
     err = clBuildProgram(prog, 0, NULL, NULL, NULL, NULL);
+// If compilation fails, print error messages and return
+    //if (err != CL_SUCCESS) {
     {   // show warnings/errors
         //	static char log[65536]; memset(log, 0, sizeof(log));
         //	cl_device_id device_id = 0;
@@ -164,6 +166,13 @@ int allocate(int n_points, int n_features, int n_clusters, float **feature)
     }
     if(err != CL_SUCCESS) {
         printf("ERROR: clBuildProgram() => %d\n", err);
+	char log[5000];memset(log, 0, sizeof(log));
+        size_t retsize = 0;
+        err =  clGetProgramBuildInfo (prog, device_list[0], CL_PROGRAM_BUILD_LOG,
+                                      5000*sizeof(char),  log, &retsize);
+
+        printf("Retsize: %d\n", retsize);
+        printf("Log: %s\n", log);
         return -1;
     }
 

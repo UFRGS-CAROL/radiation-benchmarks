@@ -13,20 +13,15 @@
 #include "cublas.h"
 //#include "cublas_v2.h"
 
-#define MATRIX_PATH "./Double_"
-
-#define BLOCK_SIZE 32
-
-#ifndef ITERACTIONS
-#define ITERACTIONS 100000000000000000
-#endif
-
 #undef min
 #define min( x, y ) ( (x) < (y) ? (x) : (y) )
 #undef max
 #define max( x, y ) ( (x) > (y) ? (x) : (y) )
 
+#define BLOCK_SIZE 32
+
 int k=0; // N will be received on runtime
+int iteractions=1; // iteractions will be received on runtime
 
 using namespace std;
 
@@ -50,6 +45,10 @@ FILE* f_GOLD;
 FILE* file;
 FILE* log_file;
 FILE* timefile;
+
+void usage() {
+    printf("Usage: cudaGemm <input_size> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX> <#ITERACTIONS>\n");
+}
 
 void GetDevice(){
 
@@ -90,6 +89,9 @@ void ReadMatrixFromFile(){
 	if (!(f_A&&f_B&&f_GOLD))
 	{
 		printf ("Cant open matrices.\n");
+#ifdef LOGS
+		log_error_detail("Cant open matrices"); end_log_file(); 
+#endif
 		exit(-3);
 	}
 	for(i=0; i<k; i++)
@@ -143,23 +145,21 @@ int main( int argc, char* argv[] )
 
 	////////////////////////////////////////////////////
 	////////////////////GET PARAM///////////////////////
-	if (argc!=2) {
-		printf ("Enter the required input. (1024/2048/4096/8192)\n");
+	if (argc!=6) {
+		usage();
 		exit (-1);
 	}
+
 	k = atoi (argv[1]);
+	iteractions = atoi (argv[5]);
 	if (((k%32)!=0)||(k<0)){
 		printf ("Enter a valid input. (k=%i)\n", k);
 		exit (-1);
 	}
-	string matrix_size_str(argv[1]);
 
-	a_matrix_path = MATRIX_PATH;
-	b_matrix_path = MATRIX_PATH;
-	gold_matrix_path = MATRIX_PATH;
-	a_matrix_path += "A_8192.matrix";
-	b_matrix_path += "B_8192.matrix";
-	gold_matrix_path += "GOLD_" + matrix_size_str + ".matrix";
+	a_matrix_path = argv[2];
+	b_matrix_path = argv[3];
+	gold_matrix_path = argv[4];
 
 	//////////BLOCK and GRID size///////////////////////
 	int gridsize = k/BLOCK_SIZE < 1 ? 1 : k/BLOCK_SIZE;
@@ -197,7 +197,7 @@ int main( int argc, char* argv[] )
 	printf( "cublasDGEMM\n" );
 
    
-	for(loop2=0; loop2<ITERACTIONS; loop2++)
+	for(loop2=0; loop2<iteractions; loop2++)
 	{
 
 
