@@ -148,7 +148,7 @@ set(graphics_LIB_SRCS ${C_SRCS} ${H_SRCS})
 
 ########### graphics target ###############
 
-add_library(graphics SHARED ${graphics_LIB_SRCS})
+add_library(graphics STATIC ${graphics_LIB_SRCS})
 
 set_target_properties(graphics PROPERTIES VERSION ${GRAPHICS_VERSION} SOVERSION ${GRAPHICS_VERSION_MAJOR})
 
@@ -162,7 +162,7 @@ install(TARGETS graphics DESTINATION lib)
 
 ########### pgraphics target ###############
 if (MPI_FOUND)
-   add_library(pgraphics SHARED ${graphics_LIB_SRCS})
+   add_library(pgraphics STATIC ${graphics_LIB_SRCS})
 
    set_target_properties(pgraphics PROPERTIES VERSION ${GRAPHICS_VERSION} SOVERSION ${GRAPHICS_VERSION_MAJOR})
    set_target_properties(pgraphics PROPERTIES COMPILE_DEFINITIONS HAVE_MPI)

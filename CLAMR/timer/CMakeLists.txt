@@ -39,7 +39,7 @@ set(C_SRCS timer.c)
 set(timer_LIB_SRCS ${C_SRCS} ${H_SRCS})
 
 ########### timer target ###############
-add_library(timer SHARED ${timer_LIB_SRCS})
+add_library(timer STATIC ${timer_LIB_SRCS})
 
 set_target_properties(timer PROPERTIES VERSION ${TIMER_VERSION} SOVERSION ${TIMER_VERSION_MAJOR})
 install(TARGETS timer DESTINATION lib)

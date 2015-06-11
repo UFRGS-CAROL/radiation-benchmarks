@@ -5,7 +5,7 @@ set(C_SRCS zorder.c)
 set(zorder_LIB_SRCS ${C_SRCS} ${H_SRCS})
 
 ########### zorder target ###############
-add_library(zorder SHARED ${zorder_LIB_SRCS})
+add_library(zorder STATIC ${zorder_LIB_SRCS})
 
 set_target_properties(zorder PROPERTIES VERSION 2.0.0 SOVERSION 2)
 target_link_libraries(zorder s7)

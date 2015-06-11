@@ -7,7 +7,7 @@ set(hsfc_LIB_SRCS ${C_SRCS} ${H_SRCS})
 
 ########### hsfc target ###############
 
-add_library(hsfc SHARED ${hsfc_LIB_SRCS})
+add_library(hsfc STATIC ${hsfc_LIB_SRCS})
 
 set_target_properties(hsfc PROPERTIES VERSION 2.0.0 SOVERSION 2)
 install(TARGETS hsfc DESTINATION lib)

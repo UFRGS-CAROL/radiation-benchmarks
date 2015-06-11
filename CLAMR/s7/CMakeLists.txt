@@ -49,7 +49,7 @@ set(C_SRCS s7.c)
 set(s7_LIB_SRCS ${C_SRCS} ${H_SRCS})
 
 ########### s7 target ###############
-add_library(s7 SHARED ${s7_LIB_SRCS})
+add_library(s7 STATIC ${s7_LIB_SRCS})
 
 set_target_properties(s7 PROPERTIES VERSION ${S7_VERSION} SOVERSION ${S7_VERSION_MAJOR})
 install(TARGETS s7 DESTINATION lib)

@@ -49,7 +49,7 @@ set(C_SRCS memstats.c)
 set(memstats_LIB_SRCS ${C_SRCS} ${H_SRCS})
 
 ########### memstats target ###############
-add_library(memstats SHARED ${memstats_LIB_SRCS})
+add_library(memstats STATIC ${memstats_LIB_SRCS})
 
 set_target_properties(memstats PROPERTIES VERSION ${MEMSTATS_VERSION} SOVERSION ${MEMSTATS_VERSION_MAJOR})
 install(TARGETS memstats DESTINATION lib)

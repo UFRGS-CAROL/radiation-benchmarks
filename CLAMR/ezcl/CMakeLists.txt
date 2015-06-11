@@ -103,7 +103,7 @@ set(C_SRCS ezcl.c)
 ########### ezcl target ###############
 set(ezcl_LIB_SRCS ${C_SRCS} ${H_SRCS})
 
-add_library(ezcl SHARED ${ezcl_LIB_SRCS})
+add_library(ezcl STATIC ${ezcl_LIB_SRCS})
 
 set_target_properties(ezcl PROPERTIES VERSION ${EZCL_VERSION} SOVERSION ${EZCL_VERSION_MAJOR})
 target_link_libraries(ezcl ${OPENCL_LIBRARIES})
@@ -113,7 +113,7 @@ install(TARGETS ezcl DESTINATION lib)
 
 set(pezcl_LIB_SRCS ${C_SRCS} ${H_SRCS})
 
-add_library(pezcl SHARED ${pezcl_LIB_SRCS})
+add_library(pezcl STATIC ${pezcl_LIB_SRCS})
 
 set_target_properties(pezcl PROPERTIES VERSION ${EZCL_VERSION} SOVERSION ${EZCL_VERSION_MAJOR})
 if(MPI_FOUND)

@@ -50,7 +50,7 @@ set(genmalloc_LIB_SRCS ${C_SRCS} ${H_SRCS})
 
 ########### genmalloc target ###############
 
-add_library(genmalloc SHARED ${genmalloc_LIB_SRCS})
+add_library(genmalloc STATIC ${genmalloc_LIB_SRCS})
 
 set_target_properties(genmalloc PROPERTIES VERSION ${GENMALLOC_VERSION} SOVERSION ${GENMALLOC_VERSION_MAJOR})
 install(TARGETS genmalloc DESTINATION lib)

@@ -7,7 +7,7 @@ set(kdtree_LIB_SRCS ${C_SRCS} ${H_SRCS})
 
 ########### kdtree target ###############
 
-add_library(kdtree SHARED ${kdtree_LIB_SRCS})
+add_library(kdtree STATIC ${kdtree_LIB_SRCS})
 
 set_target_properties(kdtree PROPERTIES VERSION 2.0.0 SOVERSION 2)
 install(TARGETS kdtree DESTINATION lib)
