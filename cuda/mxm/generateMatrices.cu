@@ -18,6 +18,10 @@ double *A, *B, *GOLD;
 
 string gold_matrix_path, a_matrix_path, b_matrix_path;
 
+void usage() {
+    printf("Usage: generateMatrices <input_size> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX>\n");
+}
+
 __global__ void MatrixMulKernel (double *d_A, double *d_B, double *d_C, int n)
 {
 	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;                                                      
@@ -170,7 +174,15 @@ void generateGoldMatrix()
 	MatrixMulKernel<<<dimGrid,dimBlock>>>(d_A, d_B, d_C, k);
 	cudaDeviceSynchronize();
 	
-	printf("\nend in %f\n", mysecond()-time);
+	time=mysecond()-time;
+
+	/////////// PERF
+    double flops = 2.0*(double)k*k*k;
+    double gflops = flops / time;
+    double outputpersec = (double)k*k/time;
+    printf("kernel time: %lf\n",time);
+    printf("SIZE:%d OUTPUT/S:%f FLOPS:%f\n",k, outputpersec, gflops);
+	///////////
 
 	cumalloc_err = cudaMemcpy(GOLD, d_C, size * sizeof( double ), cudaMemcpyDeviceToHost);
 	cumalloc_err_str = cudaGetErrorString(cumalloc_err);
@@ -197,24 +209,20 @@ int main (int argc, char** argv)
 {
 	////////////////////////////////////////////////////
 	////////////////////GET PARAM///////////////////////
-	if (argc!=2) {
-		printf ("Enter the required input. (1024/2048/4096/8192)\n");
+	if (argc!=5) {
+		usage();
 		exit (-1);
 	}
+
 	k = atoi (argv[1]);
 	if (((k%32)!=0)||(k<0)){
 		printf ("Enter a valid input. (k=%i)\n", k);
 		exit (-1);
 	}
-	string matrix_size_str(argv[1]);
 
-	a_matrix_path = MATRIX_PATH;
-	b_matrix_path = MATRIX_PATH;
-	gold_matrix_path = MATRIX_PATH;
-	a_matrix_path += "A_8192.matrix";
-	b_matrix_path += "B_8192.matrix";
-	gold_matrix_path += "GOLD_" + matrix_size_str + ".matrix";
-	////////////////////////////////////////////////////
+	a_matrix_path = argv[2];
+	b_matrix_path = argv[3];
+	gold_matrix_path = argv[4];
 
 	size = k*k;
 	
