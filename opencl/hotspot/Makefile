@@ -36,3 +36,5 @@ amd_generate: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.
 amd_check: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h
 	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -o hotspot_check $(AMD_INC) OpenCL_helper_library.c hotspot_check.c $(AMD_LIB) -lOpenCL
 	
+clean:
+	rm hotspot_gen hotspot_check
