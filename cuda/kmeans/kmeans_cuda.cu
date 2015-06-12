@@ -216,7 +216,10 @@ double time = mysecond();
 
 	cudaThreadSynchronize();
 
-printf("time: %f\n", mysecond()-time);
+double kernel_time = mysecond()-time;
+    double outputpersec = (double)npoints/kernel_time;
+    printf("Kernel time: %f\n",kernel_time);
+    printf("P:%d F:%d C:%d OUTPUT/S:%f FLOPS:NOT IMPLEMENTED\n",npoints, nfeatures, nclusters, outputpersec);//, flops/kernel_time);
 
 	/* copy back membership (device to host) */
 	cudaMemcpy(membership_new, membership_d, npoints*sizeof(int), cudaMemcpyDeviceToHost);	
