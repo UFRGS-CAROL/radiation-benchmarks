@@ -153,7 +153,8 @@ kmeansCuda(float  **feature,				/* in: [npoints][nfeatures] */
            int     *membership,				/* which cluster the point belongs to */
 		   float  **clusters,				/* coordinates of cluster centers */
 		   int     *new_centers_len,		/* number of elements in each cluster */
-           float  **new_centers				/* sum of elements in each cluster */
+           float  **new_centers,			/* sum of elements in each cluster */
+			double *kernel_time
 		   )
 {
 	int delta = 0;			/* if point has moved */
@@ -216,10 +217,8 @@ double time = mysecond();
 
 	cudaThreadSynchronize();
 
-double kernel_time = mysecond()-time;
-    double outputpersec = (double)npoints/kernel_time;
-    printf("Kernel time: %f\n",kernel_time);
-    printf("P:%d F:%d C:%d OUTPUT/S:%f FLOPS:NOT IMPLEMENTED\n",npoints, nfeatures, nclusters, outputpersec);//, flops/kernel_time);
+	*kernel_time = mysecond()-time;
+
 
 	/* copy back membership (device to host) */
 	cudaMemcpy(membership_new, membership_d, npoints*sizeof(int), cudaMemcpyDeviceToHost);	

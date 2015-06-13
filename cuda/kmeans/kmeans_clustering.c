@@ -141,7 +141,8 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
     new_centers[0] = (float*)  calloc(nclusters * nfeatures, sizeof(float));
     for (i=1; i<nclusters; i++)
         new_centers[i] = new_centers[i-1] + nfeatures;
-
+	
+	double flops=0, kernel_time=0, time=0;
 	/* iterate until convergence */
 	do {
         delta = 0.0;
@@ -153,9 +154,12 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 								   membership,		/* which cluster the point belongs to */
 								   clusters,		/* out: [nclusters][nfeatures] */
 								   new_centers_len,	/* out: number of points in each cluster */
-								   new_centers		/* sum of points in each cluster */
+								   new_centers,		/* sum of points in each cluster */
+								   &time
 								   );
 
+		kernel_time += time;
+		flops += npoints * nclusters * nfeatures * 3;
 		/* replace old cluster centers with new_centers */
 		/* CPU side of reduction */
 		for (i=0; i<nclusters; i++) {
@@ -169,6 +173,9 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 		c++;
     } while ((delta > threshold) && (loop++ < 500));	/* makes sure loop terminates */
 	printf("iterated %d times\n", c);
+	double outputpersec = (double)npoints/kernel_time;
+    printf("Kernel time: %f\n",kernel_time);
+    printf("P:%d F:%d C:%d OUTPUT/S:%f FLOPS:%f\n",npoints, nfeatures, nclusters, outputpersec, flops/kernel_time);
     free(new_centers[0]);
     free(new_centers);
     free(new_centers_len);
