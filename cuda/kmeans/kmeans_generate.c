@@ -110,7 +110,7 @@ void generateInput(char *input_file, int npoints, int nfeatures)
 	fclose(finput);
 }
 
-void readInput(char *input_file, int *ptrnpoints, int *ptrnfeatures, float **features, float *buf)
+void readSize(char *input_file, int *ptrnpoints, int *ptrnfeatures)
 {
 	FILE *infile;
 	int i, ret;
@@ -120,9 +120,20 @@ void readInput(char *input_file, int *ptrnpoints, int *ptrnfeatures, float **fea
         exit(1);
     }
     ret=fread(ptrnpoints,   1, sizeof(int), infile);
-    ret=fread(ptrnfeatures, 1, sizeof(int), infile);        
-	int npoints = *ptrnpoints;
-	int nfeatures = *ptrnfeatures;
+    ret=fread(ptrnfeatures, 1, sizeof(int), infile);
+
+    fclose(infile);
+}
+
+void readInput(char *input_file, int npoints, int nfeatures, float **features, float *buf)
+{
+	FILE *infile;
+	int i, ret;
+
+    if ((infile = fopen(input_file, "rb")) == NULL) {
+        fprintf(stderr, "Error: no such file (%s)\n", input_file);
+        exit(1);
+    }
 
     for (i=1; i<npoints; i++)
         features[i] = features[i-1] + nfeatures;
@@ -175,6 +186,8 @@ int setup(int argc, char **argv) {
 
 	char *input_file, *output_file;
 
+	int enable_perfmeasure=1;
+
 	if (argc!=5)
 	{	usage(argv[0]);
 		exit(-1);	}
@@ -194,13 +207,17 @@ srand(7);												/* seed for future random number generator */
 		generateInput(input_file, npoints, nfeatures);
 		printf("Done.\n");
 	}
+	else
+	{	fclose(finput);		}
 	printf("Input %s exists. Reading...\n", input_file);fflush(stdout);
+
+	readSize(input_file, &npoints, &nfeatures);
 
 /* allocate space for features[][] and read attributes of all objects */
     buf         = (float*) malloc(npoints*nfeatures*sizeof(float));
     features    = (float**)malloc(npoints*          sizeof(float*));
     features[0] = (float*) malloc(npoints*nfeatures*sizeof(float));
-	readInput(input_file, &npoints, &nfeatures, features, buf);
+	readInput(input_file, npoints, nfeatures, features, buf);
 
 	// error check for clusters
 	if (npoints < min_nclusters)
@@ -226,7 +243,8 @@ srand(7);												/* seed for future random number generator */
 				   &cluster_centres,		/* return: [best_nclusters][nfeatures] */  
 				   &rmse,					/* Root Mean Squared Error */
 					isRMSE,					/* calculate RMSE */
-					nloops);				/* number of iteration for each number of clusters */		
+					nloops,					/* number of iteration for each number of clusters */		
+					enable_perfmeasure);
     
 	//cluster_timing = omp_get_wtime() - cluster_timing;
 

@@ -89,7 +89,8 @@ int cluster(int      npoints,				/* number of data points */
             float ***cluster_centres,		/* out: [best_nclusters][nfeatures] */
 			float	*min_rmse,				/* out: minimum RMSE */
 			int		 isRMSE,				/* calculate RMSE */
-			int		 nloops					/* number of iteration for each number of clusters */
+			int		 nloops,				/* number of iteration for each number of clusters */
+			int 	enable_perfmeasure
 			)
 {    
 	int		nclusters;						/* number of clusters k */	
@@ -119,7 +120,8 @@ int cluster(int      npoints,				/* number of data points */
 													npoints,
 													nclusters,
 													threshold,
-													membership);
+													membership,
+													enable_perfmeasure);
 
 			if (*cluster_centres) {
 				free((*cluster_centres)[0]);

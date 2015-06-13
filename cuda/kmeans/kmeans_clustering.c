@@ -79,7 +79,8 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
                           int     npoints,
                           int     nclusters,
                           float   threshold,
-                          int    *membership) /* out: [npoints] */
+                          int    *membership, /* out: [npoints] */
+							int 	enable_perfmeasure)
 {    
     int      i, j, n = 0;				/* counters */
 	int		 loop=0, temp;
@@ -172,10 +173,12 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 		}	 
 		c++;
     } while ((delta > threshold) && (loop++ < 500));	/* makes sure loop terminates */
-	printf("iterated %d times\n", c);
-	double outputpersec = (double)npoints/kernel_time;
-    printf("Kernel time: %f\n",kernel_time);
-    printf("P:%d F:%d C:%d OUTPUT/S:%f FLOPS:%f\n",npoints, nfeatures, nclusters, outputpersec, flops/kernel_time);
+	if (enable_perfmeasure) {
+		printf("iterated %d times\n", c);
+		double outputpersec = (double)npoints/kernel_time;
+		printf("Kernel time: %f\n",kernel_time);
+		printf("P:%d F:%d C:%d OUTPUT/S:%f FLOPS:%f\n",npoints, nfeatures, nclusters, outputpersec, flops/kernel_time);
+	}
     free(new_centers[0]);
     free(new_centers);
     free(new_centers_len);
