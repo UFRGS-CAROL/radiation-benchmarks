@@ -151,12 +151,11 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 
     /* iterate until convergence */
     double flops = 0;
-    double kernel_time=0;
+    double kernel_time=0, time=0;
     long long start_time, end_time;
     do {
         delta = 0.0;
         // CUDA
-        start_time = get_time();
         delta = (float) kmeansOCL(feature,			/* in: [npoints][nfeatures] */
                                   nfeatures,		/* number of attributes for each point */
                                   npoints,			/* number of data points */
@@ -164,11 +163,11 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
                                   membership,		/* which cluster the point belongs to */
                                   clusters,		/* out: [nclusters][nfeatures] */
                                   new_centers_len,	/* out: number of points in each cluster */
-                                  new_centers		/* sum of points in each cluster */
+                                  new_centers,		/* sum of points in each cluster */
+								  &time
                                  );
 
-        long long end_time = get_time();
-        kernel_time += (float)(end_time - start_time)/(1000*1000);
+        kernel_time += time;
         flops += npoints * nclusters * nfeatures * 3;
         /* replace old cluster centers with new_centers */
         /* CPU side of reduction */

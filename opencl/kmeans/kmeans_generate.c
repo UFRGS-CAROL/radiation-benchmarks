@@ -122,6 +122,14 @@ float *center_d;
 
 char *kernel_file;
 
+double mysecond()
+{
+   struct timeval tp;
+   struct timezone tzp;
+   int i = gettimeofday(&tp,&tzp);
+   return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
+}
+
 int allocate(int n_points, int n_features, int n_clusters, float **feature)
 {
 
@@ -171,7 +179,7 @@ int allocate(int n_points, int n_features, int n_clusters, float **feature)
         err =  clGetProgramBuildInfo (prog, device_list[0], CL_PROGRAM_BUILD_LOG,
                                       5000*sizeof(char),  log, &retsize);
 
-        printf("Retsize: %d\n", retsize);
+        printf("Retsize: %d\n", (int)retsize);
         printf("Log: %s\n", log);
         return -1;
     }
@@ -387,7 +395,8 @@ int	kmeansOCL(float **feature,    /* in: [npoints][nfeatures] */
               int    *membership,
               float **clusters,
               int     *new_centers_len,
-              float  **new_centers)
+              float  **new_centers,
+			  	double *kernel_time)
 {
 
     int delta = 0;
@@ -422,6 +431,7 @@ int	kmeansOCL(float **feature,    /* in: [npoints][nfeatures] */
     clSetKernelArg(kernel_s, 6, sizeof(cl_int), (void*) &offset);
     clSetKernelArg(kernel_s, 7, sizeof(cl_int), (void*) &size);
 
+	*kernel_time = mysecond();
     err = clEnqueueNDRangeKernel(cmd_queue, kernel_s, 1, NULL, global_work, &local_work_size, 0, 0, 0);
     if(err != CL_SUCCESS) {
         printf("ERROR: clEnqueueNDRangeKernel()=>%d failed\n", err);
@@ -433,6 +443,7 @@ int	kmeansOCL(float **feature,    /* in: [npoints][nfeatures] */
         printf("ERROR: Memcopy Out\n");
         return -1;
     }
+	*kernel_time = mysecond() - *kernel_time;
 
     //long long end_time = get_time();
     //double kernel_time = (float)(end_time - start_time)/(1000*1000);

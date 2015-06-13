@@ -52,7 +52,7 @@ int     cluster(int, int, float**, int, int, float, float***, int);
 int setup(int argc, char** argv);
 int allocate(int npoints, int nfeatures, int nclusters, float **feature);
 void deallocateMemory();
-int	kmeansOCL(float **feature, int nfeatures, int npoints, int nclusters, int *membership, float **clusters, int *new_centers_len, float  **new_centers);
+int	kmeansOCL(float **feature, int nfeatures, int npoints, int nclusters, int *membership, float **clusters, int *new_centers_len, float  **new_centers, double *kernel_time);
 float** kmeans_clustering(float **feature, int nfeatures, int npoints, int nclusters, float threshold, int *membership); 
 
 #endif
