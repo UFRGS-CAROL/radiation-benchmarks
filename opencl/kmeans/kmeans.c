@@ -271,6 +271,8 @@ int main( int argc, char** argv)
     int		nloops = 1;				/* default value */
     int		isOutput = 0;
 
+	int enable_perfmeasure = 0;
+
     char *output;
     if(argc == 7) {
         devType = atoi(argv[1]);
@@ -338,19 +340,19 @@ int main( int argc, char** argv)
     /* ======================= core of the clustering ===================*/
 
     cluster_centres = NULL;
-    cluster(npoints, nfeatures, features, min_nclusters, max_nclusters, threshold, &cluster_centres, nloops);
+    cluster(npoints, nfeatures, features, min_nclusters, max_nclusters, threshold, &cluster_centres, nloops, enable_perfmeasure);
 
     /* =============== Command Line Output =============== */
     /* cluster center coordinates
        :displayed only for when k=1*/
     if((min_nclusters == max_nclusters) && (isOutput == 1)) {
-        printf("\n================= Centroid Coordinates =================\n");
+        //printf("\n================= Centroid Coordinates =================\n");
         for(i = 0; i < max_nclusters; i++) {
-            printf("%d:", i);
+            //printf("%d:", i);
             for(j = 0; j < nfeatures; j++) {
-                printf(" %.2f", cluster_centres[i][j]);
+                //printf(" %.2f", cluster_centres[i][j]);
             }
-            printf("\n\n");
+            //printf("\n\n");
         }
     }
 

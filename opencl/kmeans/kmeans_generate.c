@@ -290,6 +290,8 @@ int main( int argc, char** argv)
     int		nloops = 1;				/* default value */
     int		isOutput = 0;
 
+	int enable_perfmeasure = 1;
+
     if(argc == 6) {
         devType = atoi(argv[1]);
         kernel_file = argv[2];
@@ -356,7 +358,7 @@ int main( int argc, char** argv)
     /* ======================= core of the clustering ===================*/
 
     cluster_centres = NULL;
-    cluster(npoints, nfeatures, features, min_nclusters, max_nclusters, threshold, &cluster_centres, nloops);
+    cluster(npoints, nfeatures, features, min_nclusters, max_nclusters, threshold, &cluster_centres, nloops, enable_perfmeasure);
 
     /* =============== Command Line Output =============== */
     /* cluster center coordinates

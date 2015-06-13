@@ -15,7 +15,8 @@ int cluster(int      npoints,				/* number of data points */
             int		 max_nclusters,
             float    threshold,				/* loop terminating factor */
             float ***cluster_centres,		/* out: [best_nclusters][nfeatures] */
-            int		 nloops					/* number of iteration for each number of clusters */
+            int		 nloops,				/* number of iteration for each number of clusters */
+			int		enable_perfmeasure
            )
 {
     int	nclusters; /* number of clusters k */
@@ -37,7 +38,7 @@ int cluster(int      npoints,				/* number of data points */
         for(i = 0; i < nloops; i++)
         {
             /* initialize initial cluster centers, CUDA calls (@ kmeans_cuda.cu) */
-            tmp_cluster_centres = kmeans_clustering(features, nfeatures, npoints, nclusters, threshold, membership);
+            tmp_cluster_centres = kmeans_clustering(features, nfeatures, npoints, nclusters, threshold, membership, enable_perfmeasure);
             if (*cluster_centres) {
                 free((*cluster_centres)[0]);
                 free(*cluster_centres);
