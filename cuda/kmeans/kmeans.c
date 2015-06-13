@@ -79,6 +79,10 @@
 #include <omp.h>
 #include "kmeans.h"
 
+#ifdef LOGS
+#include "log_helper.h"
+#endif
+
 extern double wtime(void);
 
 void usage(char *argv0) {
@@ -94,6 +98,9 @@ void readSize(char *input_file, int *ptrnpoints, int *ptrnfeatures)
 
     if ((infile = fopen(input_file, "rb")) == NULL) {
         fprintf(stderr, "Error: no such file (%s)\n", input_file);
+#ifdef LOGS
+		log_error_detail("Cant open input"); end_log_file(); 
+#endif
         exit(1);
     }
     ret=fread(ptrnpoints,   1, sizeof(int), infile);
@@ -109,6 +116,9 @@ void readInput(char *input_file, int npoints, int nfeatures, float **features, f
 
     if ((infile = fopen(input_file, "rb")) == NULL) {
         fprintf(stderr, "Error: no such file (%s)\n", input_file);
+#ifdef LOGS
+		log_error_detail("Cant open input"); end_log_file(); 
+#endif
         exit(1);
     }
 
@@ -125,6 +135,9 @@ void readGold(char *gold_file, int max_nclusters, int nfeatures, float **gold_cl
 	FILE *fgold;
 	if ((fgold=fopen(gold_file, "rb"))==NULL)
 	{	fprintf(stderr, "Error: no such file (%s)\n", gold_file);
+#ifdef LOGS
+		log_error_detail("Cant open gold"); end_log_file(); 
+#endif
         exit(1);
     }	
 	for (i=1; i<max_nclusters; i++)
@@ -197,6 +210,9 @@ int setup(int argc, char **argv) {
 		if (npoints < min_nclusters)
 		{
 			printf("Error: min_nclusters(%d) > npoints(%d) -- cannot proceed\n", min_nclusters, npoints);
+#ifdef LOGS
+			log_error_detail("min_nclusters > npoits. aborting..."); end_log_file(); 
+#endif
 			exit(0);
 		}
 
@@ -221,25 +237,22 @@ int setup(int argc, char **argv) {
 						nloops,					/* number of iteration for each number of clusters */	
 						enable_perfmeasure);	
 		
-		//cluster_timing = omp_get_wtime() - cluster_timing;
-
-
-		/* =============== Command Line Output =============== */
-
-		/* cluster center coordinates
-		   :displayed only for when k=1*/
-		//printf("\n================= Centroid Coordinates =================\n");
+		char error_detail[150];
+		int kernel_errors=0;
 		for(i = 0; i < max_nclusters; i++){
-			//printf("%d:", i);
 			for(j = 0; j < nfeatures; j++){
-				//printf(" %.2f", cluster_centres[i][j]);
 				if (gold_cluster_centres[i][j]!=cluster_centres[i][j])
-					printf("ERROR(e:%f r:%f)", gold_cluster_centres[i][j], cluster_centres[i][j]);
+					kernel_errors++;
+					snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, cluster_centres[i][j], gold_cluster_centres[i][j]);
+#ifdef LOGS
+					log_error_detail(error_detail); end_log_file(); 
+#endif
 			}
-			//printf("\n\n");
 		}
-
-		printf(".");fflush(stdout);
+		if (kernel_errors>0)
+			printf("\nERROR FOUND. Test number: %d\n", loop1);
+		printf(".");
+		fflush(stdout);
 
 		/* free up memory */
 		free(features[0]);
