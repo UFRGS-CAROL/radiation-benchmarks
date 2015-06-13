@@ -15,14 +15,17 @@ SOURCES=cluster.c  kmeans.c  kmeans_clustering.c
 SOURCES_GEN=cluster.c  kmeans_clustering.c  kmeans_generate.c
 
 
-amd: $(SOURCES_GEN)
+amd: $(SOURCES_GEN) $(SOURCES)
 	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -lOpenCL $(SOURCES_GEN) $(AMD_INC) $(AMD_LIB) -o kmeans_gen
+	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -lOpenCL $(SOURCES) $(AMD_INC) $(AMD_LIB) -o kmeans
                                                                                                      
-intel: $(SOURCES_GEN)                                                                                
+intel: $(SOURCES_GEN) $(SOURCES)                                                                                
 	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -lOpenCL $(SOURCES_GEN) $(INTEL_INC) $(INTEL_LIB) -o kmeans_gen 
+	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -lOpenCL $(SOURCES) $(INTEL_INC) $(INTEL_LIB) -o kmeans
                                                                                                      
-nvidia: $(SOURCES_GEN)                                                                               
+nvidia: $(SOURCES_GEN) $(SOURCES)                                                                         
 	$(CC) $(KERNEL_DIM) $(CC_FLAGS) $(SOURCES_GEN) $(NVIDIA_INC) $(NVIDIA_LIB) -lOpenCL -o kmeans_gen
+	$(CC) $(KERNEL_DIM) $(CC_FLAGS) $(SOURCES) $(NVIDIA_INC) $(NVIDIA_LIB) -lOpenCL -o kmeans
 
 clean:
 	rm -f *.o *~ kmeans  kmeans_gen input_* output_*
