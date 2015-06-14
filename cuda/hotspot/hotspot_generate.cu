@@ -60,7 +60,7 @@ void writeoutput(float *vect, int grid_rows, int grid_cols, char *file){
 	 for (j=0; j < grid_cols; j++)
 	 {
 
-		 sprintf(str, "%d\t%g\n", index, vect[i*grid_cols+j]);
+		 sprintf(str, "%f\n", vect[i*grid_cols+j]);
 		 fputs(str,fp);
 		 index++;
 	 }

@@ -7,16 +7,16 @@ NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-MATRIX_NAMES=input_power_1024 input_temp_1024 output_1024
+MATRIX_NAMES=output_*
 
-ALL: gen hotspot
+all: hotspot hotspot_generate
 
-gen: hotspot_generate.cu
+hotspot_generate: hotspot_generate.cu
 	$(NVCC) $(NVCC_FLAGS) hotspot_generate.cu -o hotspot_generate
 
 hotspot: hotspot.cu
 	$(NVCC) $(NVCC_FLAGS) hotspot.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) $(ITER) -lLogHelper -o hotspot
 
 clean:
-	rm hotspot_generate hotspot hotspot_ecc hotspot_thread $(MATRIX_NAMES)
+	rm -f hotspot_generate hotspot $(MATRIX_NAMES)
 
