@@ -246,6 +246,7 @@ int compute_tran_temp(float *MatrixPower,float *MatrixTemp[2], int col, int row,
             calculate_temp<<<dimGrid, dimBlock>>>(MIN(num_iterations, total_iterations-t), MatrixPower,MatrixTemp[src],MatrixTemp[dst],\
 		col,row,borderCols, borderRows, Cap,Rx,Ry,Rz,step,time_elapsed);
 	}
+	cudaDeviceSynchronize();
         return dst;
 }
 

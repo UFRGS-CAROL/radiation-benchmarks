@@ -223,6 +223,7 @@ int compute_tran_temp(float *MatrixPower,float *MatrixTemp[2], int col, int row,
             calculate_temp<<<dimGrid, dimBlock>>>(MIN(num_iterations, total_iterations-t), MatrixPower,MatrixTemp[src],MatrixTemp[dst],\
 		col,row,borderCols, borderRows, Cap,Rx,Ry,Rz,step,time_elapsed);
 	}
+	cudaDeviceSynchronize();
         return dst;
 }
 
@@ -298,7 +299,6 @@ void run(int argc, char** argv)
 	readinput(GoldMatrix, grid_rows, grid_cols, ofile);
 	for ( loop1=0 ; loop1<iteractions ; loop1++)
 	{
-		printf("start ok\n");fflush(stdout);
 
 		float *MatrixTemp[2], *MatrixPower;
 		cudaMalloc((void**)&MatrixTemp[0], sizeof(float)*size);
@@ -308,13 +308,10 @@ void run(int argc, char** argv)
 		cudaMalloc((void**)&MatrixPower, sizeof(float)*size);
 		cudaMemcpy(MatrixPower, FilesavingPower, sizeof(float)*size, cudaMemcpyHostToDevice);
 		//printf("Start computing the transient temperature\n");
-		printf("alloc ok\n");fflush(stdout);
 		int ret = compute_tran_temp(MatrixPower,MatrixTemp,grid_cols,grid_rows, \
 		 total_iterations,pyramid_height, blockCols, blockRows, borderCols, borderRows);
 		//printf("Ending simulation\n");
-		printf("run ok\n");fflush(stdout);
 		cudaMemcpy(MatrixOut, MatrixTemp[ret], sizeof(float)*size, cudaMemcpyDeviceToHost);
-		printf("start check\n");fflush(stdout);
 		char error_detail[150]; int kernel_errors=0;
 		for (int i=0; i<grid_rows; i++){
 			for (int j=0 ; j<grid_cols; j++)
@@ -340,7 +337,6 @@ void run(int argc, char** argv)
 		cudaFree(MatrixPower);
 		cudaFree(MatrixTemp[0]);
 		cudaFree(MatrixTemp[1]);
-		free(MatrixOut);
-		printf("free ok\n");fflush(stdout);
 	}
+	free(MatrixOut);
 }
