@@ -12,14 +12,10 @@
 //=============================================================================
 //	DEFINE / INCLUDE
 //=============================================================================
-#define INPUT_DISTANCE "./input_distances_192_13"
-#define INPUT_CHARGES "./input_charges_192_13"
-#define OUTPUT_GOLD "./output_forces_192_13"
 
+#define NUMBER_PAR_PER_BOX 256	 // keep this low to allow more blocks that share shared memory to run concurrently, code does not work for larger than 110, more speedup can be achieved with larger number and no shared memory used
 
-#define NUMBER_PAR_PER_BOX 192	 // keep this low to allow more blocks that share shared memory to run concurrently, code does not work for larger than 110, more speedup can be achieved with larger number and no shared memory used
-
-#define NUMBER_THREADS 192		 // this should be roughly equal to NUMBER_PAR_PER_BOX for best performance
+#define NUMBER_THREADS 256		 // this should be roughly equal to NUMBER_PAR_PER_BOX for best performance
 
 								 // STABLE
 #define DOT(A,B) ((A.x)*(B.x)+(A.y)*(B.y)+(A.z)*(B.z))
@@ -92,6 +88,11 @@ void checkCUDAError(const char *msg) {
 		fflush(NULL);
 		exit(EXIT_FAILURE);
 	}
+}
+
+void usage(char *argv0) {
+    printf("Usage: %s <#boxes> <input_distances> <input_charges> <gold_output>\n", argv0);
+    printf("  #boxes: number of boxes to handle (a good value is 13)\n");
 }
 
 
@@ -296,12 +297,21 @@ int main(int argc, char *argv []) {
 	FOUR_VECTOR* fv_cpu;
 	int nh;
 
+	char *input_distances, *input_charges, *output_gold;
+
 	//=====================================================================
 	//	INPUT ARGUMENTS
 	//=====================================================================
 
-	dim_cpu.boxes1d_arg = 13;
-	printf("Configuration used: boxes1d = %d\n", dim_cpu.boxes1d_arg);
+	if (argc!=5)
+	{	usage(argv[0]);
+		exit(-1);	}
+	dim_cpu.boxes1d_arg  = atoi(argv[1]);
+	input_distances = argv[2];
+	input_charges = argv[3];
+	output_gold = argv[4];
+
+	printf("cudaLavaMD. nboxes=%d blocksize=%d\n", dim_cpu.boxes1d_arg, NUMBER_THREADS);
 
 	//=====================================================================
 	//	INPUTS
@@ -400,7 +410,7 @@ int main(int argc, char *argv []) {
 	FILE *fp;
 
 	// input (distances)
-	if( (fp = fopen(INPUT_DISTANCE, "wb" )) == 0 )
+	if( (fp = fopen(input_distances, "wb" )) == 0 )
 		printf( "The file 'input_distances' was not opened\n" );
 	rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
@@ -420,7 +430,7 @@ int main(int argc, char *argv []) {
 	fclose(fp);
 
 	// input (charge)
-	if( (fp = fopen(INPUT_CHARGES, "wb" )) == 0 )
+	if( (fp = fopen(input_charges, "wb" )) == 0 )
 		printf( "The file 'input_charges' was not opened\n" );
 	qv_cpu = (double*)malloc(dim_cpu.space_mem2);
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
@@ -558,7 +568,7 @@ int main(int argc, char *argv []) {
 
 	cudaMemcpy( fv_cpu, d_fv_gpu, dim_cpu.space_mem, cudaMemcpyDeviceToHost);
 
-	if( (fp = fopen(OUTPUT_GOLD, "wb" )) == 0 )
+	if( (fp = fopen(output_gold, "wb" )) == 0 )
 		printf( "The file 'output_forces' was not opened\n" );
 	int number_zeros = 0;
 	int higher_zero = 0;
