@@ -3,6 +3,9 @@
 #include <sys/time.h>
 #include <assert.h>
 
+#ifdef LOGS
+#include "log_helper.h"
+#endif
 
 #define BLOCK_SIZE 16                                                                                   
 
@@ -43,7 +46,10 @@ void
 fatal(char *s)
 {
 	fprintf(stderr, "error: %s\n", s);
-
+#ifdef LOGS
+	log_error_detail(s); end_log_file(); 
+#endif
+	exit(1);
 }
 
 void readinput(float *vect, int grid_rows, int grid_cols, char *file){
@@ -294,6 +300,12 @@ void run(int argc, char** argv)
     printf("pyramidHeight: %d\ngridSize: [%d, %d]\nborder:[%d, %d]\nblockGrid:[%d, %d]\ntargetBlock:[%d, %d]\n",\
 	pyramid_height, grid_cols, grid_rows, borderCols, borderRows, blockCols, blockRows, smallBlockCol, smallBlockRow);
 
+#ifdef LOGS
+	char test_info[90];
+	snprintf(test_info, 90, "size:%d pyramidHeight:%d simTime:%d", grid_rows, pyramid_height, iteractions);
+	start_log_file("cudaHotspot", test_info);
+#endif
+
 	readinput(FilesavingTemp, grid_rows, grid_cols, tfile);
 	readinput(FilesavingPower, grid_rows, grid_cols, pfile);
 	readinput(GoldMatrix, grid_rows, grid_cols, ofile);
@@ -308,8 +320,14 @@ void run(int argc, char** argv)
 		cudaMalloc((void**)&MatrixPower, sizeof(float)*size);
 		cudaMemcpy(MatrixPower, FilesavingPower, sizeof(float)*size, cudaMemcpyHostToDevice);
 		//printf("Start computing the transient temperature\n");
+#ifdef LOGS
+		start_iteration();
+#endif
 		int ret = compute_tran_temp(MatrixPower,MatrixTemp,grid_cols,grid_rows, \
 		 total_iterations,pyramid_height, blockCols, blockRows, borderCols, borderRows);
+#ifdef LOGS
+		end_iteration();
+#endif
 		//printf("Ending simulation\n");
 		cudaMemcpy(MatrixOut, MatrixTemp[ret], sizeof(float)*size, cudaMemcpyDeviceToHost);
 		char error_detail[150]; int kernel_errors=0;
