@@ -13,9 +13,9 @@
 //	DEFINE / INCLUDE
 //=============================================================================
 
-#define NUMBER_PAR_PER_BOX 256	 // keep this low to allow more blocks that share shared memory to run concurrently, code does not work for larger than 110, more speedup can be achieved with larger number and no shared memory used
+#define NUMBER_PAR_PER_BOX 192	 // keep this low to allow more blocks that share shared memory to run concurrently, code does not work for larger than 110, more speedup can be achieved with larger number and no shared memory used
 
-#define NUMBER_THREADS 256		 // this should be roughly equal to NUMBER_PAR_PER_BOX for best performance
+#define NUMBER_THREADS 192		 // this should be roughly equal to NUMBER_PAR_PER_BOX for best performance
 
 								 // STABLE
 #define DOT(A,B) ((A.x)*(B.x)+(A.y)*(B.y)+(A.z)*(B.z))
@@ -299,6 +299,8 @@ int main(int argc, char *argv []) {
 
 	char *input_distances, *input_charges, *output_gold;
 
+	int number_nn = 0;
+
 	//=====================================================================
 	//	INPUT ARGUMENTS
 	//=====================================================================
@@ -310,6 +312,8 @@ int main(int argc, char *argv []) {
 	input_distances = argv[2];
 	input_charges = argv[3];
 	output_gold = argv[4];
+
+	int boxes = dim_cpu.boxes1d_arg;
 
 	printf("cudaLavaMD. nboxes=%d blocksize=%d\n", dim_cpu.boxes1d_arg, NUMBER_THREADS);
 
@@ -386,7 +390,7 @@ int main(int argc, char *argv []) {
 
 								// increment neighbor box
 								box_cpu[nh].nn = box_cpu[nh].nn + 1;
-
+number_nn += box_cpu[nh].nn;
 							}
 
 						}		 // neighbor boxes in x direction
@@ -561,6 +565,20 @@ int main(int argc, char *argv []) {
 	cudaThreadSynchronize();
 
 	time1 = get_time();
+
+// iterate for each neighbor of a box (number_nn)
+double flop =  number_nn;
+// The last for iterate NUMBER_PAR_PER_BOX times 
+flop *= NUMBER_PAR_PER_BOX;
+// the last for uses 46 operations plus 2 exp() functions
+flop *=46;
+
+    double kernel_time = (double) (time1-time0) / 1000000;
+    double flops = (double)flop/kernel_time;
+    double outputpersec = (double)dim_cpu.space_elem * 4 / kernel_time;
+    printf("BOXES:%d BLOCK:%d OUTPUT/S:%f FLOPS:%f\n",boxes,NUMBER_THREADS,outputpersec,flops);
+    printf("kernel_time:%f\n",kernel_time);
+
 
 	//=====================================================================
 	//	GPU MEMORY			COPY BACK

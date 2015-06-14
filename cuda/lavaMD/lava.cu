@@ -16,14 +16,6 @@
 //=============================================================================
 //	DEFINE / INCLUDE
 //=============================================================================
-#define INPUT_DISTANCE "./input_distances_192_13"
-#define INPUT_CHARGES "./input_charges_192_13"
-#define OUTPUT_GOLD "./output_forces_192_13"
-
-#ifndef ITERACTIONS
-#define ITERACTIONS 100000000000000000
-#endif		 //first loop, killed when there is a cuda malloc error, cuda thread sync error, too many output error
-
 #define NUMBER_PAR_PER_BOX 192	 // keep this low to allow more blocks that share shared memory to run concurrently, code does not work for larger than 110, more speedup can be achieved with larger number and no shared memory used
 
 #define NUMBER_THREADS 192		 // this should be roughly equal to NUMBER_PAR_PER_BOX for best performance
@@ -93,6 +85,10 @@ long long get_time() {
 	return (tv.tv_sec * 1000000) + tv.tv_usec;
 }
 
+void usage(char *argv0) {
+    printf("Usage: %s <#boxes> <input_distances> <input_charges> <gold_output> <#iteractions>\n", argv0);
+    printf("  #boxes: number of boxes to handle (a good value is 13)\n");
+}
 
 //-----------------------------------------------------------------------------
 //	plasmaKernel_gpu_2
@@ -294,6 +290,7 @@ int main(int argc, char *argv []) {
 	int i, j, k, l, m, n;
 	int t_ea = 0;
 	int old_ea = 0;
+	int iteractions;
 
 	// system memory
 	par_str par_cpu;
@@ -310,201 +307,210 @@ int main(int argc, char *argv []) {
 
 	FILE *fp;
 
+	char *input_distances, *input_charges, *output_gold;
+
+	//=====================================================================
+	//	CHECK INPUT ARGUMENTS
+	//=====================================================================
+	if (argc!=6)
+	{	usage(argv[0]);
+		exit(-1);	}
+	dim_cpu.boxes1d_arg  = atoi(argv[1]);
+	input_distances = argv[2];
+	input_charges = argv[3];
+	output_gold = argv[4];
+	iteractions = atoi(argv[5]);
+
+	int boxes = dim_cpu.boxes1d_arg;
+
+	printf("cudaLavaMD. nboxes=%d blocksize=%d\n", dim_cpu.boxes1d_arg, NUMBER_THREADS);
+
+	//=====================================================================
+	//	INPUTS
+	//=====================================================================
+	par_cpu.alpha = 0.5;
+	//=====================================================================
+	//	DIMENSIONS
+	//=====================================================================
+
+	// total number of boxes
+	dim_cpu.number_boxes = dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg;
+
+	// how many particles space has in each direction
+	dim_cpu.space_elem = dim_cpu.number_boxes * NUMBER_PAR_PER_BOX;
+	dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR);
+	dim_cpu.space_mem2 = dim_cpu.space_elem * sizeof(double);
+
+	// box array
+	dim_cpu.box_mem = dim_cpu.number_boxes * sizeof(box_str);
+
+	//=====================================================================
+	//	SYSTEM MEMORY
+	//=====================================================================
+
+	//=====================================================================
+	//	BOX
+	//=====================================================================
+
+	// allocate boxes
+	box_cpu = (box_str*)malloc(dim_cpu.box_mem);
+	if(box_cpu == NULL) {
+		printf("error box_cpu malloc\n");
 #ifdef LOGS
-	char test_info[100];
-	snprintf(test_info, 100, "size:%d",k);
-	start_log_file(LOGFILE_MATRIXNAME, test_info);
+		log_error_detail("error box_cpu malloc"); end_log_file(); 
 #endif
+		exit(1);
+	}
+
+	// initialize number of home boxes
+	nh = 0;
+
+	// home boxes in z direction
+	for(i=0; i<dim_cpu.boxes1d_arg; i++) {
+		// home boxes in y direction
+		for(j=0; j<dim_cpu.boxes1d_arg; j++) {
+			// home boxes in x direction
+			for(k=0; k<dim_cpu.boxes1d_arg; k++) {
+
+				// current home box
+				box_cpu[nh].x = k;
+				box_cpu[nh].y = j;
+				box_cpu[nh].z = i;
+				box_cpu[nh].number = nh;
+				box_cpu[nh].offset = nh * NUMBER_PAR_PER_BOX;
+
+				// initialize number of neighbor boxes
+				box_cpu[nh].nn = 0;
+
+				// neighbor boxes in z direction
+				for(l=-1; l<2; l++) {
+					// neighbor boxes in y direction
+					for(m=-1; m<2; m++) {
+						// neighbor boxes in x direction
+						for(n=-1; n<2; n++) {
+
+							 // check if (this neighbor exists) and (it is not the same as home box)
+							if(     (((i+l)>=0 && (j+m)>=0 && (k+n)>=0)==true && ((i+l)<dim_cpu.boxes1d_arg && (j+m)<dim_cpu.boxes1d_arg && (k+n)<dim_cpu.boxes1d_arg)==true)   &&
+							(l==0 && m==0 && n==0)==false   ) {
+
+								// current neighbor box
+								box_cpu[nh].nei[box_cpu[nh].nn].x = (k+n);
+								box_cpu[nh].nei[box_cpu[nh].nn].y = (j+m);
+								box_cpu[nh].nei[box_cpu[nh].nn].z = (i+l);
+								box_cpu[nh].nei[box_cpu[nh].nn].number = (box_cpu[nh].nei[box_cpu[nh].nn].z * dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg) +
+									(box_cpu[nh].nei[box_cpu[nh].nn].y * dim_cpu.boxes1d_arg) + box_cpu[nh].nei[box_cpu[nh].nn].x;
+								box_cpu[nh].nei[box_cpu[nh].nn].offset = box_cpu[nh].nei[box_cpu[nh].nn].number * NUMBER_PAR_PER_BOX;
+
+								// increment neighbor box
+								box_cpu[nh].nn = box_cpu[nh].nn + 1;
+
+							}
+
+						}	 // neighbor boxes in x direction
+					}		 // neighbor boxes in y direction
+				}			 // neighbor boxes in z direction
+
+				// increment home box
+				nh = nh + 1;
+
+			}				 // home boxes in x direction
+		}					 // home boxes in y direction
+	}						 // home boxes in z direction
+
+	//=====================================================================
+	//	PARAMETERS, DISTANCE, CHARGE AND FORCE
+	//=====================================================================
+
+	size_t return_value[4];
+	// input (distances)
+	if( (fp = fopen(input_distances, "rb" )) == 0 )
+		printf( "The file 'input_distances' was not opened\n" );
+	rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
+	if(rv_cpu == NULL) {
+		printf("error rv_cpu malloc\n");
+#ifdef LOGS
+		log_error_detail("error rv_cpu malloc"); end_log_file(); 
+#endif
+		exit(1);
+	}
+	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+		return_value[0] = fread(&(rv_cpu[i].v), 1, sizeof(double), fp);
+		return_value[1] = fread(&(rv_cpu[i].x), 1, sizeof(double), fp);
+		return_value[2] = fread(&(rv_cpu[i].y), 1, sizeof(double), fp);
+		return_value[3] = fread(&(rv_cpu[i].z), 1, sizeof(double), fp);
+		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
+			printf("error reading rv_cpu from file\n");
+#ifdef LOGS
+			log_error_detail("error reading rv_cpu from file"); end_log_file(); 
+#endif
+			exit(1);
+		}
+	}
+	fclose(fp);
+
+	// input (charge)
+	if( (fp = fopen(input_charges, "rb" )) == 0 )
+		printf( "The file 'input_charges' was not opened\n" );
+	qv_cpu = (double*)malloc(dim_cpu.space_mem2);
+	if(qv_cpu == NULL) {
+		printf("error qv_cpu malloc\n");
+#ifdef LOGS
+		log_error_detail("error qv_cpu malloc"); end_log_file(); 
+#endif
+		exit(1);
+	}
+	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+		return_value[0] = fread(&(qv_cpu[i]), 1, sizeof(double), fp);
+		if (return_value[0] == 0) {
+			printf("error reading qv_cpu from file\n");
+#ifdef LOGS
+			log_error_detail("error reading qv_cpu from file"); end_log_file(); 
+#endif
+			exit(1);
+		}
+	}
+	fclose(fp);
+
+	// GOLD output (forces)
+	if( (fp = fopen(output_gold, "rb" )) == 0 )
+		printf( "The file 'output_forces' was not opened\n" );
+	fv_cpu_GOLD = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
+	if(fv_cpu_GOLD == NULL) {
+		printf("error fv_cpu_GOLD malloc\n");
+#ifdef LOGS
+		log_error_detail("error fv_cpu_GOLD malloc"); end_log_file(); 
+#endif
+		exit(1);
+	}
+	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+		return_value[0] = fread(&(fv_cpu_GOLD[i].v), 1, sizeof(double), fp);
+		return_value[1] = fread(&(fv_cpu_GOLD[i].x), 1, sizeof(double), fp);
+		return_value[2] = fread(&(fv_cpu_GOLD[i].y), 1, sizeof(double), fp);
+		return_value[3] = fread(&(fv_cpu_GOLD[i].z), 1, sizeof(double), fp);
+		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
+			printf("error reading rv_cpu from file\n");
+#ifdef LOGS
+			log_error_detail("error reading rv_cpu from file"); end_log_file(); 
+#endif
+			exit(1);
+		}
+	}
+	fclose(fp);
+	
 
 	//LOOP START
 	int loop;
-	for(loop=0; loop<ITERACTIONS; loop++) {
+	for(loop=0; loop<iteractions; loop++) {
 
-		//=====================================================================
-		//	CHECK INPUT ARGUMENTS
-		//=====================================================================
-		// assing default values
-		dim_cpu.boxes1d_arg = 13;
-		//=====================================================================
-		//	INPUTS
-		//=====================================================================
-		par_cpu.alpha = 0.5;
-		//=====================================================================
-		//	DIMENSIONS
-		//=====================================================================
-
-		// total number of boxes
-		dim_cpu.number_boxes = dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg;
-
-		// how many particles space has in each direction
-		dim_cpu.space_elem = dim_cpu.number_boxes * NUMBER_PAR_PER_BOX;
-		dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR);
-		dim_cpu.space_mem2 = dim_cpu.space_elem * sizeof(double);
-
-		// box array
-		dim_cpu.box_mem = dim_cpu.number_boxes * sizeof(box_str);
-
-		//=====================================================================
-		//	SYSTEM MEMORY
-		//=====================================================================
-
-		//=====================================================================
-		//	BOX
-		//=====================================================================
-
-		// allocate boxes
-		box_cpu = (box_str*)malloc(dim_cpu.box_mem);
-		if(box_cpu == NULL) {
-			printf("error box_cpu malloc\n");
-#ifdef LOGS
-			log_error_detail("error box_cpu malloc"); end_log_file(); 
-#endif
-			break;
-		}
-
-		// initialize number of home boxes
-		nh = 0;
-
-		// home boxes in z direction
-		for(i=0; i<dim_cpu.boxes1d_arg; i++) {
-			// home boxes in y direction
-			for(j=0; j<dim_cpu.boxes1d_arg; j++) {
-				// home boxes in x direction
-				for(k=0; k<dim_cpu.boxes1d_arg; k++) {
-
-					// current home box
-					box_cpu[nh].x = k;
-					box_cpu[nh].y = j;
-					box_cpu[nh].z = i;
-					box_cpu[nh].number = nh;
-					box_cpu[nh].offset = nh * NUMBER_PAR_PER_BOX;
-
-					// initialize number of neighbor boxes
-					box_cpu[nh].nn = 0;
-
-					// neighbor boxes in z direction
-					for(l=-1; l<2; l++) {
-						// neighbor boxes in y direction
-						for(m=-1; m<2; m++) {
-							// neighbor boxes in x direction
-							for(n=-1; n<2; n++) {
-
-								 // check if (this neighbor exists) and (it is not the same as home box)
-								if(     (((i+l)>=0 && (j+m)>=0 && (k+n)>=0)==true && ((i+l)<dim_cpu.boxes1d_arg && (j+m)<dim_cpu.boxes1d_arg && (k+n)<dim_cpu.boxes1d_arg)==true)   &&
-								(l==0 && m==0 && n==0)==false   ) {
-
-									// current neighbor box
-									box_cpu[nh].nei[box_cpu[nh].nn].x = (k+n);
-									box_cpu[nh].nei[box_cpu[nh].nn].y = (j+m);
-									box_cpu[nh].nei[box_cpu[nh].nn].z = (i+l);
-									box_cpu[nh].nei[box_cpu[nh].nn].number = (box_cpu[nh].nei[box_cpu[nh].nn].z * dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg) +
-										(box_cpu[nh].nei[box_cpu[nh].nn].y * dim_cpu.boxes1d_arg) + box_cpu[nh].nei[box_cpu[nh].nn].x;
-									box_cpu[nh].nei[box_cpu[nh].nn].offset = box_cpu[nh].nei[box_cpu[nh].nn].number * NUMBER_PAR_PER_BOX;
-
-									// increment neighbor box
-									box_cpu[nh].nn = box_cpu[nh].nn + 1;
-
-								}
-
-							}	 // neighbor boxes in x direction
-						}		 // neighbor boxes in y direction
-					}			 // neighbor boxes in z direction
-
-					// increment home box
-					nh = nh + 1;
-
-				}				 // home boxes in x direction
-			}					 // home boxes in y direction
-		}						 // home boxes in z direction
-
-		//=====================================================================
-		//	PARAMETERS, DISTANCE, CHARGE AND FORCE
-		//=====================================================================
-
-		size_t return_value[4];
-		// input (distances)
-		if( (fp = fopen(INPUT_DISTANCE, "rb" )) == 0 )
-			printf( "The file 'input_distances' was not opened\n" );
-		rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
-		if(rv_cpu == NULL) {
-			printf("error rv_cpu malloc\n");
-#ifdef LOGS
-			log_error_detail("error rv_cpu malloc"); end_log_file(); 
-#endif
-			break;
-		}
-		for(i=0; i<dim_cpu.space_elem; i=i+1) {
-			return_value[0] = fread(&(rv_cpu[i].v), 1, sizeof(double), fp);
-			return_value[1] = fread(&(rv_cpu[i].x), 1, sizeof(double), fp);
-			return_value[2] = fread(&(rv_cpu[i].y), 1, sizeof(double), fp);
-			return_value[3] = fread(&(rv_cpu[i].z), 1, sizeof(double), fp);
-			if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
-				printf("error reading rv_cpu from file\n");
-#ifdef LOGS
-				log_error_detail("error reading rv_cpu from file"); end_log_file(); 
-#endif
-				break;
-			}
-		}
-		fclose(fp);
-
-		// input (charge)
-		if( (fp = fopen(INPUT_CHARGES, "rb" )) == 0 )
-			printf( "The file 'input_charges' was not opened\n" );
-		qv_cpu = (double*)malloc(dim_cpu.space_mem2);
-		if(qv_cpu == NULL) {
-			printf("error qv_cpu malloc\n");
-#ifdef LOGS
-			log_error_detail("error qv_cpu malloc"); end_log_file(); 
-#endif
-			break;
-		}
-		for(i=0; i<dim_cpu.space_elem; i=i+1) {
-			return_value[0] = fread(&(qv_cpu[i]), 1, sizeof(double), fp);
-			if (return_value[0] == 0) {
-				printf("error reading qv_cpu from file\n");
-#ifdef LOGS
-				log_error_detail("error reading qv_cpu from file"); end_log_file(); 
-#endif
-				break;
-			}
-		}
-		fclose(fp);
-
-		// GOLD output (forces)
-		if( (fp = fopen(OUTPUT_GOLD, "rb" )) == 0 )
-			printf( "The file 'output_forces' was not opened\n" );
-		fv_cpu_GOLD = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
-		if(fv_cpu_GOLD == NULL) {
-			printf("error fv_cpu_GOLD malloc\n");
-#ifdef LOGS
-			log_error_detail("error fv_cpu_GOLD malloc"); end_log_file(); 
-#endif
-			break;
-		}
-		for(i=0; i<dim_cpu.space_elem; i=i+1) {
-			return_value[0] = fread(&(fv_cpu_GOLD[i].v), 1, sizeof(double), fp);
-			return_value[1] = fread(&(fv_cpu_GOLD[i].x), 1, sizeof(double), fp);
-			return_value[2] = fread(&(fv_cpu_GOLD[i].y), 1, sizeof(double), fp);
-			return_value[3] = fread(&(fv_cpu_GOLD[i].z), 1, sizeof(double), fp);
-			if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
-				printf("error reading rv_cpu from file\n");
-#ifdef LOGS
-				log_error_detail("error reading rv_cpu from file"); end_log_file(); 
-#endif
-				break;
-			}
-		}
-		fclose(fp);
-
+		// prepare host memory to receive kernel output
 		// output (forces)
 		fv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
 		if(fv_cpu == NULL) {
 			printf("error fv_cpu malloc\n");
-#ifdef LOGS
+	#ifdef LOGS
 			log_error_detail("error fv_cpu malloc"); end_log_file(); 
-#endif
-			break;
+	#endif
+			exit(1);
 		}
 		for(i=0; i<dim_cpu.space_elem; i=i+1) {
 			// set to 0, because kernels keeps adding to initial value
@@ -544,6 +550,12 @@ int main(int argc, char *argv []) {
 		threads.x = NUMBER_THREADS;
 		threads.y = 1;
 
+	#ifdef LOGS
+		char test_info[100];
+		snprintf(test_info, 100, "boxes:%d block_size:%d", boxes, NUMBER_THREADS);
+		start_log_file("cudaLavaMD", test_info);
+	#endif
+
 		//=====================================================================
 		//	GPU MEMORY				(MALLOC)
 		//=====================================================================
@@ -559,7 +571,7 @@ int main(int argc, char *argv []) {
 #ifdef LOGS
 			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
 #endif			
-			break;
+			exit(1);
 		}
 		//==================================================
 		//	rv
@@ -572,7 +584,7 @@ int main(int argc, char *argv []) {
 #ifdef LOGS
 			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
 #endif			
-			break;
+			exit(1);
 		}
 		//==================================================
 		//	qv
@@ -585,7 +597,7 @@ int main(int argc, char *argv []) {
 #ifdef LOGS
 			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
 #endif			
-			break;
+			exit(1);
 		}
 		//==================================================
 		//	fv
@@ -598,7 +610,7 @@ int main(int argc, char *argv []) {
 #ifdef LOGS
 			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
 #endif			
-			break;
+			exit(1);
 		}
 
 		//=====================================================================
@@ -616,7 +628,7 @@ int main(int argc, char *argv []) {
 #ifdef LOGS
 			log_error_detail("error load d_box_gpu"); end_log_file(); 
 #endif			
-			break;
+			exit(1);
 		}
 		//==================================================
 		//	rv
@@ -629,7 +641,7 @@ int main(int argc, char *argv []) {
 #ifdef LOGS
 			log_error_detail("error load d_box_gpu"); end_log_file(); 
 #endif			
-			break;
+			exit(1);
 		}
 		//==================================================
 		//	qv
@@ -642,7 +654,7 @@ int main(int argc, char *argv []) {
 #ifdef LOGS
 			log_error_detail("error load d_box_gpu"); end_log_file(); 
 #endif			
-			break;
+			exit(1);
 		}
 		//==================================================
 		//	fv
@@ -655,7 +667,7 @@ int main(int argc, char *argv []) {
 #ifdef LOGS
 			log_error_detail("error load d_box_gpu"); end_log_file(); 
 #endif			
-			break;
+			exit(1);
 		}
 
 		//=====================================================================
@@ -680,7 +692,7 @@ int main(int argc, char *argv []) {
 #ifdef LOGS
 			log_error_detail("error logic:"); log_error_detail(error_string); end_log_file(); 
 #endif			
-			break;
+			exit(1);
 		}
 
 		time1 = get_time();
@@ -696,7 +708,7 @@ int main(int argc, char *argv []) {
 #ifdef LOGS
 			log_error_detail("error download fv_cpu"); end_log_file(); 
 #endif			
-			break;
+			exit(1);
 		}
 
 		//=====================================================================
@@ -762,10 +774,10 @@ int main(int argc, char *argv []) {
 			printf(" time: %f\n", time);
 
 								 //we NEED this, beause at times the GPU get stuck and it gives a huge amount of error, we cannot let it write a stream of data on the HDD
-			if(part_error > 500) break;
+			if(part_error > 500) exit(1);
 			if(part_error > 0 && part_error == old_ea) {
 				old_ea = 0;
-				break;
+				exit(1);
 			}
 
 			old_ea = part_error;
@@ -783,14 +795,13 @@ int main(int argc, char *argv []) {
 		//=====================================================================
 		//	SYSTEM MEMORY DEALLOCATION
 		//=====================================================================
-
-		free(fv_cpu_GOLD);
-		free(rv_cpu);
-		free(qv_cpu);
 		free(fv_cpu);
-		free(box_cpu);
 
 	}
+	free(fv_cpu_GOLD);
+	free(rv_cpu);
+	free(qv_cpu);
+	free(box_cpu);
 	printf("\n");
 
 	return 0;
