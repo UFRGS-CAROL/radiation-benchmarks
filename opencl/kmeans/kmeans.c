@@ -251,6 +251,63 @@ void usage(char *argv0) {
     printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
 }
 
+void readSize(char *input_file, int *ptrnpoints, int *ptrnfeatures)
+{
+	FILE *infile;
+	int i, ret;
+
+    if ((infile = fopen(input_file, "rb")) == NULL) {
+        fprintf(stderr, "Error: no such file (%s)\n", input_file);
+#ifdef LOGS
+		log_error_detail("Cant open input"); end_log_file(); 
+#endif
+        exit(1);
+    }
+    ret=fread(ptrnpoints,   1, sizeof(int), infile);
+    ret=fread(ptrnfeatures, 1, sizeof(int), infile);
+
+    fclose(infile);
+}
+
+void readInput(char *input_file, int npoints, int nfeatures, float **features, float *buf)
+{
+	FILE *infile;
+	int i, ret;
+
+    if ((infile = fopen(input_file, "rb")) == NULL) {
+        fprintf(stderr, "Error: no such file (%s)\n", input_file);
+#ifdef LOGS
+		log_error_detail("Cant open input"); end_log_file(); 
+#endif
+        exit(1);
+    }
+
+    for (i=1; i<npoints; i++)
+        features[i] = features[i-1] + nfeatures;
+    ret=fread(buf, 1, npoints*nfeatures*sizeof(float), infile);
+
+    fclose(infile);
+}
+
+void readGold(char *gold_file, int max_nclusters, int nfeatures, float **gold_cluster_centres)
+{
+	int i, j;
+	FILE *fgold;
+	if ((fgold=fopen(gold_file, "rb"))==NULL)
+	{	fprintf(stderr, "Error: no such file (%s)\n", gold_file);
+#ifdef LOGS
+		log_error_detail("Cant open gold"); end_log_file(); 
+#endif
+        exit(1);
+    }	
+	for (i=1; i<max_nclusters; i++)
+		gold_cluster_centres[i]=gold_cluster_centres[i-1]+nfeatures;
+
+	int ret = fread(gold_cluster_centres[0], 1, max_nclusters*nfeatures*sizeof(float), fgold);
+	printf("Got %d gold entries.\n", ret);
+	fclose(fgold);
+}
+
 
 int main( int argc, char** argv)
 {
@@ -267,11 +324,13 @@ int main( int argc, char** argv)
 
     float **features;
     float **cluster_centres=NULL;
+	float **gold_cluster_centres;
     int		i, j;
     int		nloops = 1;				/* default value */
     int		isOutput = 0;
+	int 	loop1, iteractions;
 
-	int enable_perfmeasure = 0;
+	int enable_perfmeasure = 1;
 
     char *output;
     if(argc == 7) {
@@ -279,7 +338,7 @@ int main( int argc, char** argv)
         kernel_file = argv[2];
         input_filename = argv[3];
         output = argv[4];
-        nloops = atoi(argv[5]);
+        iteractions = atoi(argv[5]);
         workgroup_blocksize = atoi(argv[6]);
     } else {
         usage(argv[0]);
@@ -293,75 +352,62 @@ int main( int argc, char** argv)
 
     /* ============== I/O begin ==============*/
     /* get nfeatures and npoints */
-    FILE *infile;
-    if ((infile = fopen(input_filename, "rb")) == NULL) {
-        fprintf(stderr, "Error: no such file (%s)\n", input_filename);
-        exit(1);
-    }
+    readSize(input_filename, &npoints, &nfeatures);
 
-    fread(&npoints, 1, sizeof(int), infile);
-    fread(&nfeatures, 1, sizeof(int), infile);
+	gold_cluster_centres    = (float**)malloc(max_nclusters*          sizeof(float*));
+	gold_cluster_centres[0] = (float*) malloc(max_nclusters*nfeatures*sizeof(float));
+	readGold(output, max_nclusters, nfeatures, gold_cluster_centres);
 
-    /* allocate space for features[] and read attributes of all objects */
-    buf         = (float*) malloc(npoints*nfeatures*sizeof(float));
-    features    = (float**)malloc(npoints*          sizeof(float*));
-    features[0] = (float*) malloc(npoints*nfeatures*sizeof(float));
-    int k = 0;
-    for (i=1; i<npoints; i++){
-        features[i] = features[i-1] + nfeatures;
-        for (j=0; j<nfeatures; j++) {
-            fread(&buf[k], 1, sizeof(float), infile);
-            k++;
-        }
-    }
-    for (j=0; j<nfeatures; j++) {
-        fread(&buf[k], 1, sizeof(float), infile);
-        k++;
-    }
-    fclose(infile);
+    printf("clKmeans. npoints=%d nfeatures=%d threshold=%f clusters=%d ITERACTIONS=%d\n", npoints, nfeatures, threshold, max_nclusters, iteractions);fflush(stdout);
+	for (loop1=0; loop1<iteractions; loop1++)
+	{
+		/* ============== I/O begin ==============*/
+		/* allocate space for features[][] and read attributes of all objects */
+		buf         = (float*) malloc(npoints*nfeatures*sizeof(float));
+		features    = (float**)malloc(npoints*          sizeof(float*));
+		features[0] = (float*) malloc(npoints*nfeatures*sizeof(float));
+		readInput(input_filename, npoints, nfeatures, features, buf);
+	
+		/* ============== I/O end ==============*/
 
+		// error check for clusters
+		if (npoints < min_nclusters)
+		{
+		    printf("Error: min_nclusters(%d) > npoints(%d) -- cannot proceed\n", min_nclusters, npoints);
+		    exit(0);
+		}
 
-    printf("\nI/O completed\n");
-    printf("\nNumber of objects: %d\n", npoints);
-    printf("Number of features: %d\n", nfeatures);
-    /* ============== I/O end ==============*/
+		srand(7);												/* seed for future random number generator */
+		memcpy(features[0], buf, npoints*nfeatures*sizeof(float)); /* now features holds 2-dimensional array of features */
+		free(buf);
 
-    // error check for clusters
-    if (npoints < min_nclusters)
-    {
-        printf("Error: min_nclusters(%d) > npoints(%d) -- cannot proceed\n", min_nclusters, npoints);
-        exit(0);
-    }
+		/* ======================= core of the clustering ===================*/
 
-    srand(7);												/* seed for future random number generator */
-    memcpy(features[0], buf, npoints*nfeatures*sizeof(float)); /* now features holds 2-dimensional array of features */
-    free(buf);
+		cluster_centres = NULL;
+		cluster(npoints, nfeatures, features, min_nclusters, max_nclusters, threshold, &cluster_centres, nloops, enable_perfmeasure);
 
-    /* ======================= core of the clustering ===================*/
+		/* =============== Command Line Output =============== */
+		char error_detail[150];
+		int kernel_errors=0;
+		for(i = 0; i < max_nclusters; i++){
+			for(j = 0; j < nfeatures; j++){
+				if (gold_cluster_centres[i][j]!=cluster_centres[i][j])
+					kernel_errors++;
+					snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, cluster_centres[i][j], gold_cluster_centres[i][j]);
+					printf("%s\n", error_detail);
+#ifdef LOGS
+					log_error_detail(error_detail); end_log_file(); 
+#endif
+			}
+		}
+		if (kernel_errors>0)
+			printf("\nERROR FOUND. Test number: %d\n", loop1);
+		printf(".");
+		fflush(stdout);
 
-    cluster_centres = NULL;
-    cluster(npoints, nfeatures, features, min_nclusters, max_nclusters, threshold, &cluster_centres, nloops, enable_perfmeasure);
-
-    /* =============== Command Line Output =============== */
-    /* cluster center coordinates
-       :displayed only for when k=1*/
-    if((min_nclusters == max_nclusters) && (isOutput == 1)) {
-        //printf("\n================= Centroid Coordinates =================\n");
-        for(i = 0; i < max_nclusters; i++) {
-            //printf("%d:", i);
-            for(j = 0; j < nfeatures; j++) {
-                //printf(" %.2f", cluster_centres[i][j]);
-            }
-            //printf("\n\n");
-        }
-    }
-
-    len = (float) ((max_nclusters - min_nclusters + 1)*nloops);
-
-    printf("Number of Iteration: %d\n", nloops);
-
-    free(features[0]);
-    free(features);
+		free(features[0]);
+		free(features);
+	}
     shutdown();
 }
 
