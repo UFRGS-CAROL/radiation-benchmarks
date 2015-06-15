@@ -52,7 +52,7 @@ cl_command_queue command_queue;
 cl_device_id device;
 cl_kernel kernel;
 
-void writeoutput(float *, int, int);
+void writeoutput(float *, int, int, char *);
 void readinput(float *, int, int, char *);
 int compute_tran_temp(cl_mem, cl_mem[2], int, int, int, int, int, int, int, int, float *, float *);
 //void usage(int, char **);

@@ -1,8 +1,6 @@
 #include "hotspot.h"
 
 // files to read input
-#define TEMP_FILE "temp_1024"
-#define POWER_FILE "power_1024"
 
 // files generate in binary
 //#define IMPUT_TEMPE "input_temp"
@@ -12,90 +10,52 @@
 int iterations, devType;
 char *kernel_file, *input_temp, *input_power, *output;
 
-void writeoutput(float *vect, int grid_rows, int grid_cols) {
+void writeoutput(float *vect, int grid_rows, int grid_cols, char *file){
 
-    int i,j, index=0;
-    FILE *fp;
+	int i,j, index=0;
+	FILE *fp;
+	char str[STR_SIZE];
 
-    if( (fp = fopen(output, "wb" )) == 0 )
-        printf( "The file OUTPUT_GOLD not opened\n" );
+	if( (fp = fopen(file, "w" )) == 0 )
+          printf( "The file was not opened\n" );
 
 
-    for (i=0; i < grid_rows; i++)
-        for (j=0; j < grid_cols; j++)
-        {
+	for (i=0; i < grid_rows; i++) 
+	 for (j=0; j < grid_cols; j++)
+	 {
 
-            fwrite(&(vect[i*grid_cols+j]), 1, sizeof(float), fp);
-            //sprintf(str, "%d\t%g\n", index, vect[i*grid_cols+j]);
-            //fputs(str,fp);
-            index++;
-        }
-
-    fclose(fp);
+		 sprintf(str, "%f\n", vect[i*grid_cols+j]);
+		 fputs(str,fp);
+		 index++;
+	 }
+		
+      fclose(fp);	
 }
 
+void readinput(float *vect, int grid_rows, int grid_cols, char *file){
 
-void readinput2(float *vect, int grid_rows, int grid_cols, char *file) {
+  	int i,j;
+	FILE *fp;
+	char str[STR_SIZE];
+	float val;
 
-    int i,j;
-    FILE *fp, *fpw;
-    char str[STR_SIZE];
-    float val;
-
-    if( (fp  = fopen(file, "r" )) ==0 )
-        fatal( "The file in input2(power) was not opened");
-
-    if( (fpw  = fopen(input_power, "wb" )) ==0 )
-        fatal( "The file IMPUT_POWER was not opened" );
+	if( (fp  = fopen(file, "r" )) ==0 )
+            printf( "The file was not opened\n" );
 
 
-    for (i=0; i <= grid_rows-1; i++)
-        for (j=0; j <= grid_cols-1; j++)
-        {
-            if (fgets(str, STR_SIZE, fp) == NULL) fatal("Error reading file\n");
-            if (feof(fp))
-                fatal("not enough lines in file");
-            //if ((sscanf(str, "%d%f", &index, &val) != 2) || (index != ((i-1)*(grid_cols-2)+j-1)))
-            if ((sscanf(str, "%f", &val) != 1))
-                fatal("invalid file format");
-            vect[i*grid_cols+j] = val;
-            fwrite(&(vect[i*grid_cols+j]), 1, sizeof(float), fpw);
-        }
+	for (i=0; i <= grid_rows-1; i++) 
+	 for (j=0; j <= grid_cols-1; j++)
+	 {
+		fgets(str, STR_SIZE, fp);
+		if (feof(fp))
+			fatal("not enough lines in file");
+		//if ((sscanf(str, "%d%f", &index, &val) != 2) || (index != ((i-1)*(grid_cols-2)+j-1)))
+		if ((sscanf(str, "%f", &val) != 1))
+			fatal("invalid file format");
+		vect[i*grid_cols+j] = val;
+	}
 
-    fclose(fp);
-    fclose(fpw);
-
-}
-
-void readinput(float *vect, int grid_rows, int grid_cols, char *file) {
-
-    int i,j;
-    FILE *fp, *fpw;
-    char str[STR_SIZE];
-    float val;
-
-    if( (fp  = fopen(file, "r" )) ==0 )
-        fatal( "The file in input(temp) was not opened");
-
-    if( (fpw  = fopen(input_temp, "wb" )) ==0 )
-        fatal( "The file IMPUT_TEMPE was not opened" );
-
-
-    for (i=0; i <= grid_rows-1; i++)
-        for (j=0; j <= grid_cols-1; j++)
-        {
-            if (fgets(str, STR_SIZE, fp) == NULL) fatal("Error reading file\n");
-            if (feof(fp))
-                fatal("not enough lines in file");
-            //if ((sscanf(str, "%d%f", &index, &val) != 2) || (index != ((i-1)*(grid_cols-2)+j-1)))
-            if ((sscanf(str, "%f", &val) != 1))
-                fatal("invalid file format");
-            vect[i*grid_cols+j] = val;
-            fwrite(&(vect[i*grid_cols+j]), 1, sizeof(float), fpw);
-        }
-
-    fclose(fp);
-    fclose(fpw);
+	fclose(fp);	
 
 }
 
@@ -272,8 +232,8 @@ int main(int argc, char** argv) {
         fatal("unable to allocate memory");
 
     // Read input data from disk
-    readinput(FilesavingTemp, grid_rows, grid_cols, TEMP_FILE);
-    readinput2(FilesavingPower, grid_rows, grid_cols, POWER_FILE);
+    readinput(FilesavingTemp, grid_rows, grid_cols, input_temp);
+    readinput(FilesavingPower, grid_rows, grid_cols, input_power);
 
     // Load kernel source from file
     const char *source = load_kernel_source(kernel_file);
@@ -328,7 +288,7 @@ int main(int argc, char** argv) {
     printf("Total time: %.3f seconds\n", ((float) (end_time - start_time)) / (1000*1000));
 
     // Write final output to output file
-    writeoutput(MatrixOut, grid_rows, grid_cols);
+    writeoutput(MatrixOut, grid_rows, grid_cols, output);
 
     error = clEnqueueUnmapMemObject(command_queue, MatrixTemp[ret], (void *) MatrixOut, 0, NULL, NULL);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
