@@ -216,6 +216,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 /*
    compute N time steps
 */
+long long int flops = 0;
 
 int compute_tran_temp(float *MatrixPower,float *MatrixTemp[2], int col, int row, \
 		int total_iterations, int num_iterations, int blockCols, int blockRows, int borderCols, int borderRows) 
@@ -245,6 +246,8 @@ int compute_tran_temp(float *MatrixPower,float *MatrixTemp[2], int col, int row,
             dst = temp;
             calculate_temp<<<dimGrid, dimBlock>>>(MIN(num_iterations, total_iterations-t), MatrixPower,MatrixTemp[src],MatrixTemp[dst],\
 		col,row,borderCols, borderRows, Cap,Rx,Ry,Rz,step,time_elapsed);
+// Daniel: Rough approximation I think
+flops += col * row * MIN(num_iterations, total_iterations-t) * 15;
 	}
 	cudaDeviceSynchronize();
         return dst;
@@ -324,6 +327,7 @@ void run(int argc, char** argv)
     cudaMalloc((void**)&MatrixPower, sizeof(float)*size);
     cudaMemcpy(MatrixPower, FilesavingPower, sizeof(float)*size, cudaMemcpyHostToDevice);
     printf("Start computing the transient temperature\n");
+flops=0;
 kernel_time = mysecond();
     int ret = compute_tran_temp(MatrixPower,MatrixTemp,grid_cols,grid_rows, \
 	 total_iterations,pyramid_height, blockCols, blockRows, borderCols, borderRows);
@@ -336,7 +340,7 @@ kernel_time = mysecond() - kernel_time;
 	/////////// PERF
     double outputpersec = (double)((grid_rows*grid_rows)/kernel_time);
     printf("kernel time: %lf\n",kernel_time);
-    printf("SIZE:%d OUTPUT/S:%f FLOPS: NOPE\n",grid_rows, outputpersec);//, gflops);
+    printf("SIZE:%d OUTPUT/S:%f FLOPS: %f",grid_rows, outputpersec, (double)flops / kernel_time);
 	///////////
 
     cudaFree(MatrixPower);
