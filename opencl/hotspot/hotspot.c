@@ -10,6 +10,14 @@
 int iterations, devType;
 char *kernel_file, *input_temp, *input_power, *output;
 
+double mysecond()
+{
+   struct timeval tp;
+   struct timezone tzp;
+   int i = gettimeofday(&tp,&tzp);
+   return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
+}
+
 void writeoutput(float *vect, int grid_rows, int grid_cols, char *file){
 
 	int i,j, index=0;
@@ -149,6 +157,7 @@ usage(){
 }
 
 int main(int argc, char** argv) {
+	double kernel_time=0;
 
     if(argc == 7) {
         iterations = atoi(argv[1]);
@@ -276,10 +285,11 @@ int main(int argc, char** argv) {
     cl_mem MatrixPower = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingPower, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
+kernel_time = mysecond();
     // Perform the computation
     int ret = compute_tran_temp(MatrixPower, MatrixTemp, grid_cols, grid_rows, total_iterations, pyramid_height,
                                 blockCols, blockRows, borderCols, borderRows, FilesavingTemp, FilesavingPower);
-
+kernel_time = mysecond() - kernel_time;
     // Copy final temperature data back
     cl_float *MatrixOut = (cl_float *) clEnqueueMapBuffer(command_queue, MatrixTemp[ret], CL_TRUE, CL_MAP_READ, 0, sizeof(float) * size, 0, NULL, NULL, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
@@ -289,6 +299,12 @@ int main(int argc, char** argv) {
 
     // Write final output to output file
     writeoutput(MatrixOut, grid_rows, grid_cols, output);
+
+	/////////// PERF
+    double outputpersec = (double)((grid_rows*grid_rows)/kernel_time);
+    printf("kernel time: %lf\n",kernel_time);
+    printf("SIZE:%d OUTPUT/S:%f FLOPS: NOPE\n",grid_rows, outputpersec);//, gflops);
+	///////////
 
     error = clEnqueueUnmapMemObject(command_queue, MatrixTemp[ret], (void *) MatrixOut, 0, NULL, NULL);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
