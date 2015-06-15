@@ -10,12 +10,14 @@ int check_output(float *vect, int grid_rows, int grid_cols, float *gold) {
     int i;
     int errors = 0;
 
-    #pragma omp parallel for reduction(+:errors)
+    //#pragma omp parallel for reduction(+:errors)
     for (i=0; i < grid_rows; i++) {
         int j;
         for (j=0; j < grid_cols; j++) {
             if(vect[i*grid_cols+j] != gold[i*grid_cols+j] ) {
                 errors++;
+				printf("r:%f e:%f [%d,%d]\n", vect[i*grid_cols+j], gold[i*grid_cols+j], i, j);
+				if (errors == 500) exit(0);
             }
         }
     }
@@ -25,32 +27,30 @@ int check_output(float *vect, int grid_rows, int grid_cols, float *gold) {
 }
 
 
-void readinput(float *vect, int grid_rows, int grid_cols, char *file) {
+void readinput(float *vect, int grid_rows, int grid_cols, char *file){
 
-    int i,j;
-    FILE *fp;
-    char str[STR_SIZE];
-    float val;
+  	int i,j;
+	FILE *fp;
+	char str[STR_SIZE];
+	float val;
 
-    if( (fp  = fopen(file, "rb" )) ==0 )
-        fatal( "The file was not opened" );
+	if( (fp  = fopen(file, "r" )) ==0 )
+            printf( "The file was not opened\n" );
 
 
-    for (i=0; i <= grid_rows-1; i++)
-        for (j=0; j <= grid_cols-1; j++)
-        {
-            /*if (fgets(str, STR_SIZE, fp) == NULL) fatal("Error reading file\n");
-            if (feof(fp))
-            	fatal("not enough lines in file");
-            //if ((sscanf(str, "%d%f", &index, &val) != 2) || (index != ((i-1)*(grid_cols-2)+j-1)))
-            if ((sscanf(str, "%f", &val) != 1))
-            	fatal("invalid file format");
-            vect[i*grid_cols+j] = val;
-            */
-            fread(&(vect[i*grid_cols+j]), 1, sizeof(float), fp);
-        }
+	for (i=0; i <= grid_rows-1; i++) 
+	 for (j=0; j <= grid_cols-1; j++)
+	 {
+		fgets(str, STR_SIZE, fp);
+		if (feof(fp))
+			fatal("not enough lines in file");
+		//if ((sscanf(str, "%d%f", &index, &val) != 2) || (index != ((i-1)*(grid_cols-2)+j-1)))
+		if ((sscanf(str, "%f", &val) != 1))
+			fatal("invalid file format");
+		vect[i*grid_cols+j] = val;
+	}
 
-    fclose(fp);
+	fclose(fp);	
 
 }
 
@@ -60,8 +60,7 @@ void readinput(float *vect, int grid_rows, int grid_cols, char *file) {
 */
 
 int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row, \
-                      int total_iterations, int num_iterations, int blockCols, int blockRows, int borderCols, int borderRows,
-                      float *TempCPU, float *PowerCPU)
+                      int total_iterations, int num_iterations, int blockCols, int blockRows, int borderCols, int borderRows)
 {
 
     float grid_height = chip_height / row;
@@ -120,25 +119,16 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
         // Swap input and output GPU matrices
         src = 1 - src;
         dst = 1 - dst;
-
-	// Daniel: Rough approximation I think
-	flops += col * row * iter * 15;
     }
 
     // Wait for all operations to finish
     error = clFinish(command_queue);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
-
-    long long end_time = get_time();
-    long long total_time = (end_time - start_time);
-    double kernel_time = ((float) total_time) / (1000*1000);
-    printf("\nKernel time: %.3f seconds\n", kernel_time);
-    printf("C:%d R:%d ITER:%d FLOPS:%f\n",col, row, total_iterations,(double)flops/kernel_time);
     return src;
 }
 
 void usage(){
-        printf("Usage: hotspot_check <#iterations> <cl_device_tipe> <ocl_kernel_file> <input_temp_file> <input_power_file> <output_gold_file>\n");
+        printf("Usage: hotspot_check <sim_iter> <input_size> <cl_device_tipe> <ocl_kernel_file> <input_temp_file> <input_power_file> <output_gold_file> <#iterations>\n");
         printf("  cl_device_types\n");
         printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
         printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
@@ -151,19 +141,23 @@ void usage(){
 int main(int argc, char** argv) {
 
     int iterations, devType;
+    int grid_rows,grid_cols = 0;
+	int tot_iterations=1;
     char *kernel_file, *input_temp, *input_power, *output;
-    if(argc == 7) {
+    if(argc == 9) {
         iterations = atoi(argv[1]);
-        devType = atoi(argv[2]);
-        kernel_file = argv[3];
-        input_temp = argv[4];
-        input_power = argv[5];
-        output = argv[6];
+		grid_rows = atoi(argv[2]);
+        devType = atoi(argv[3]);
+        kernel_file = argv[4];
+        input_temp = argv[5];
+        input_power = argv[6];
+        output = argv[7];
+		tot_iterations = atoi(argv[8]);
     } else {
         usage();
         exit(1);
     }
-
+	grid_cols = grid_rows;
     printf("WG size of kernel = %d X %d\n", BLOCK_SIZE, BLOCK_SIZE);
 
     cl_int error;
@@ -209,11 +203,9 @@ int main(int argc, char** argv) {
 
 
     int size;
-    int grid_rows,grid_cols = 0;
     float *FilesavingTemp,*FilesavingPower, *gold;
     int pyramid_height = 1;
     int total_iterations= iterations;
-    grid_rows = grid_cols = 1024;
 
     size=grid_rows*grid_cols;
 
@@ -262,44 +254,55 @@ int main(int argc, char** argv) {
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
     kernel = clCreateKernel(program, "hotspot", &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
+	
+	int loop1;
+	for (loop1=0; loop1 < tot_iterations; loop1++)
+	{
 
+		// Create two temperature matrices and copy the temperature input data
+		cl_mem MatrixTemp[2];
+		// Create input memory buffers on device
+		MatrixTemp[0] = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingTemp, &error);
+		if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
+		MatrixTemp[1] = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float) * size, NULL, &error);
+		if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
-    long long start_time = get_time();
+		// Copy the power input data
+		cl_mem MatrixPower = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingPower, &error);
+		if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
-    // Create two temperature matrices and copy the temperature input data
-    cl_mem MatrixTemp[2];
-    // Create input memory buffers on device
-    MatrixTemp[0] = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingTemp, &error);
-    if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
-    MatrixTemp[1] = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float) * size, NULL, &error);
-    if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
+		// Perform the computation
+		int ret = compute_tran_temp(MatrixPower, MatrixTemp, grid_cols, grid_rows, total_iterations, pyramid_height,
+		                            blockCols, blockRows, borderCols, borderRows);
 
-    // Copy the power input data
-    cl_mem MatrixPower = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingPower, &error);
-    if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
+		// Copy final temperature data back
+		cl_float *MatrixOut = (cl_float *) clEnqueueMapBuffer(command_queue, MatrixTemp[ret], CL_TRUE, CL_MAP_READ, 0, sizeof(float) * size, 0, NULL, NULL, &error);
+		if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
-    // Perform the computation
-    int ret = compute_tran_temp(MatrixPower, MatrixTemp, grid_cols, grid_rows, total_iterations, pyramid_height,
-                                blockCols, blockRows, borderCols, borderRows, FilesavingTemp, FilesavingPower);
+		// Write final output to output file
+		int errors = check_output(MatrixOut, grid_rows, grid_cols, gold);
 
-    // Copy final temperature data back
-    cl_float *MatrixOut = (cl_float *) clEnqueueMapBuffer(command_queue, MatrixTemp[ret], CL_TRUE, CL_MAP_READ, 0, sizeof(float) * size, 0, NULL, NULL, &error);
-    if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
+		if (errors!=0) 
+		{
+			printf("kernel errors: %d\n", errors);
+		}
+		else
+		{
+			printf(".");
+		}
+		fflush(stdout);
 
-    long long end_time = get_time();
-    printf("Total time: %.3f seconds\n", ((float) (end_time - start_time)) / (1000*1000));
+		error = clEnqueueUnmapMemObject(command_queue, MatrixTemp[ret], (void *) MatrixOut, 0, NULL, NULL);
+		if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
+		clFinish(command_queue);
 
-    // Write final output to output file
-    int errors = check_output(MatrixOut, grid_rows, grid_cols, gold);
+		clReleaseMemObject(MatrixTemp[0]);
+		clReleaseMemObject(MatrixTemp[1]);
+		clReleaseMemObject(MatrixPower);
 
-    printf("kernel errors: %d\n", errors);
-
-    error = clEnqueueUnmapMemObject(command_queue, MatrixTemp[ret], (void *) MatrixOut, 0, NULL, NULL);
-    if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
-
-    clReleaseMemObject(MatrixTemp[0]);
-    clReleaseMemObject(MatrixTemp[1]);
-    clReleaseMemObject(MatrixPower);
+		readinput(FilesavingTemp, grid_rows, grid_cols, input_temp); // Reload inputs from disk.
+    	readinput(FilesavingPower, grid_rows, grid_cols, input_power);
+	}
 
     clReleaseContext(context);
 

@@ -71,10 +71,10 @@ void readinput(float *vect, int grid_rows, int grid_cols, char *file){
 /*
    compute N time steps
 */
+long long int flops=0;
 
 int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row, \
-                      int total_iterations, int num_iterations, int blockCols, int blockRows, int borderCols, int borderRows,
-                      float *TempCPU, float *PowerCPU)
+                      int total_iterations, int num_iterations, int blockCols, int blockRows, int borderCols, int borderRows)
 {
 
     float grid_height = chip_height / row;
@@ -133,6 +133,8 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
         // Swap input and output GPU matrices
         src = 1 - src;
         dst = 1 - dst;
+// Daniel: Rough approximation I think
+flops += col * row * iter * 15;
     }
 
     // Wait for all operations to finish
@@ -147,7 +149,7 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
 }
 
 usage(){
-        printf("Usage: hotspot_gen <#iterations> <cl_device_tipe> <ocl_kernel_file> <input_temp_file> <input_power_file> <output_gold_file>\n");
+        printf("Usage: hotspot_gen <sim_iter> <input_size> <cl_device_tipe> <ocl_kernel_file> <input_temp_file> <input_power_file> <output_gold_file>\n");
         printf("  cl_device_types\n");
         printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
         printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
@@ -158,18 +160,21 @@ usage(){
 
 int main(int argc, char** argv) {
 	double kernel_time=0;
+    int grid_rows,grid_cols = 0;
 
-    if(argc == 7) {
+    if(argc == 8) {
         iterations = atoi(argv[1]);
-        devType = atoi(argv[2]);
-        kernel_file = argv[3];
-        input_temp = argv[4];
-        input_power = argv[5];
-        output = argv[6];
+		grid_rows = atoi(argv[2]);
+        devType = atoi(argv[3]);
+        kernel_file = argv[4];
+        input_temp = argv[5];
+        input_power = argv[6];
+        output = argv[7];
     } else {
         usage();
         exit(1);
     }
+	grid_cols = grid_rows;
     printf("WG size of kernel = %d X %d\n", BLOCK_SIZE, BLOCK_SIZE);
 
     cl_int error;
@@ -215,12 +220,10 @@ int main(int argc, char** argv) {
 
 
     int size;
-    int grid_rows,grid_cols = 0;
     float *FilesavingTemp,*FilesavingPower; //,*MatrixOut;
 
     int pyramid_height = 1;
     int total_iterations= iterations;
-    grid_rows = grid_cols = 1024;
 
 
     size=grid_rows*grid_cols;
@@ -285,10 +288,11 @@ int main(int argc, char** argv) {
     cl_mem MatrixPower = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingPower, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
+flops=0;
 kernel_time = mysecond();
     // Perform the computation
     int ret = compute_tran_temp(MatrixPower, MatrixTemp, grid_cols, grid_rows, total_iterations, pyramid_height,
-                                blockCols, blockRows, borderCols, borderRows, FilesavingTemp, FilesavingPower);
+                                blockCols, blockRows, borderCols, borderRows);
 kernel_time = mysecond() - kernel_time;
     // Copy final temperature data back
     cl_float *MatrixOut = (cl_float *) clEnqueueMapBuffer(command_queue, MatrixTemp[ret], CL_TRUE, CL_MAP_READ, 0, sizeof(float) * size, 0, NULL, NULL, &error);
@@ -303,7 +307,7 @@ kernel_time = mysecond() - kernel_time;
 	/////////// PERF
     double outputpersec = (double)((grid_rows*grid_rows)/kernel_time);
     printf("kernel time: %lf\n",kernel_time);
-    printf("SIZE:%d OUTPUT/S:%f FLOPS: NOPE\n",grid_rows, outputpersec);//, gflops);
+    printf("SIZE:%d OUTPUT/S:%f FLOPS: %f\n",grid_rows, outputpersec, (double)flops/kernel_time);
 	///////////
 
     error = clEnqueueUnmapMemObject(command_queue, MatrixTemp[ret], (void *) MatrixOut, 0, NULL, NULL);
