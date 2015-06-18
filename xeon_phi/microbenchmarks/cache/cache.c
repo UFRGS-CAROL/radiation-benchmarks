@@ -1,4 +1,4 @@
-#include "../../include/log_helper.h"
+#include "../../../include/log_helper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>     // uint32_t
@@ -19,7 +19,8 @@
 //#define ALL_DEBUG
 #ifdef ALL_DEBUG
     #define DEBUG   if (i==0 && j==0 && errors==0) \
-                        asm volatile("movl %1, %0" : "=r" (ptr_vector[j]) : "r" (~ptr_vector[j]));
+                        asm volatile("movl %1, %0" : "=r" (ptr_vector[j]) : "r" (~ptr_vector[j]));\
+                    if (i == 10) while(1);
 #else
     #define DEBUG /*OFF*/
 #endif
@@ -63,13 +64,16 @@ int main (int argc, char *argv[]) {
 
     char msg[LOG_SIZE];
     snprintf(msg, sizeof(msg),
-            "Repetitions:%"PRIu64" Threads:%"PRIu32" Elem.Size:%"PRIu32"B ArraySize:%"PRIu32"KB SizePerThread:%"PRIu32"KB",
+            "Loop:%"PRIu64" Threads:%"PRIu32" Elem.Size:%"PRIu32"B ArraySize:%"PRIu32"KB SizePerThread:%"PRIu32"KB",
             repetitions,
             MIC_THREADS,
             (uint32_t)sizeof(uint32_t),
             (uint32_t)(size / sizeof(uint32_t)),
             (uint32_t)(size / 1024) / MIC_THREADS);
-    start_log_file("cache_mem", msg);
+    if (start_log_file("cache_mem", msg) != 0) {
+        exit(EXIT_FAILURE);
+    }
+
     set_max_errors_iter(MAX_ERROR);
 
 
@@ -122,6 +126,7 @@ int main (int argc, char *argv[]) {
                         printf("Should be:  Thread %d, on cpu %d.\n", omp_get_thread_num(), (omp_get_thread_num() * 4)+1 );
                         printf("Try to use:\n export MIC_ENV_PREFIX=PHI\n export PHI_KMP_AFFINITY='granularity=fine,scatter'\n");
                     }
+
                 #endif
 
                 uint32_t ref_int = 0;

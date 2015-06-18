@@ -1,4 +1,4 @@
-#include "../../../include/log_helper.h"
+#include "../../../../include/log_helper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>     // uint32_t
@@ -20,7 +20,8 @@
 //#define ALL_DEBUG
 #ifdef ALL_DEBUG
     #define DEBUG   if (i==0 && j==0 && errors==0) \
-                        asm volatile("movl %1, %0" : "=r" (value_int) : "r" (~value_int));
+                        asm volatile("movl %1, %0" : "=r" (value_int) : "r" (~value_int));\
+                    if (i == 10) while(1);
 #else
     #define DEBUG /*OFF*/
 #endif
@@ -215,8 +216,10 @@ int main (int argc, char *argv[]) {
     omp_set_num_threads_target(TARGET_MIC, 0, MIC_THREADS);
 
     char msg[LOG_SIZE];
-    snprintf(msg, sizeof(msg), "Repetitions:%"PRIu64" Threads:%"PRIu32"", repetitions, MIC_THREADS);
-    start_log_file("scalar_or", msg);
+    snprintf(msg, sizeof(msg), "Loop:%"PRIu64" Threads:%"PRIu32"", repetitions, MIC_THREADS);
+    if (start_log_file("scalar_or", msg) != 0) {
+        exit(EXIT_FAILURE);
+    }
     set_max_errors_iter(MAX_ERROR);
 
     //==================================================================

@@ -1,4 +1,4 @@
-#include "../../../include/log_helper.h"
+#include "../../../../include/log_helper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>     // uint32_t
@@ -22,8 +22,10 @@
 
 //#define ALL_DEBUG
 #ifdef ALL_DEBUG
-    #define DEBUG_INT   if (i==0 && j==0 && errors==0) vec_int[0] = ~vec_int[0];
-    #define DEBUG_FPD   if (i==0 && j==0 && errors==0) vec_fpd[0] = vec_fpd[0]-1;
+    #define DEBUG_INT   if (i==0 && j==0 && errors==0) vec_int[0] = ~vec_int[0];\
+                    if (i == 10) while(1);
+    #define DEBUG_FPD   if (i==0 && j==0 && errors==0) vec_fpd[0] = vec_fpd[0]-1;\
+                    if (i == 10) while(1);
 #else
     #define DEBUG_INT /*OFF*/
     #define DEBUG_FPD /*OFF*/
@@ -205,8 +207,10 @@ int main (int argc, char *argv[]) {
     omp_set_num_threads_target(TARGET_MIC, 0, MIC_THREADS);
 
     char msg[LOG_SIZE];
-    snprintf(msg, sizeof(msg), "Repetitions:%"PRIu64" Threads:%"PRIu32"", repetitions, MIC_THREADS);
-    start_log_file("vector_slr_fpd", msg);
+    snprintf(msg, sizeof(msg), "Loop:%"PRIu64" Threads:%"PRIu32"", repetitions, MIC_THREADS);
+    if (start_log_file("vector_slr_fpd", msg) != 0) {
+        exit(EXIT_FAILURE);
+    }
     set_max_errors_iter(MAX_ERROR);
 
     //==================================================================
