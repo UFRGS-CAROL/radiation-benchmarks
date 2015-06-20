@@ -58,6 +58,12 @@
 #include <sys/stat.h>
 #include "graphics.h"
 
+/*
+ * Includ time libraries to dump corrupted output
+ */
+#include <time.h>
+#include <sys/time.h>
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -885,7 +891,7 @@ void check_md5(int graph_num, int ncycle, double simTime) {
                 error = 1;
             }
         }
-        if(error){
+        if(error) {
             printf("\nGOLD CHECK FAILED!\n\n");
             dump_corrupted_output(graph_num, ncycle, simTime);
         }
@@ -912,91 +918,120 @@ void check_md5(int graph_num, int ncycle, double simTime) {
  * Save corrupted graph
  */
 void dump_corrupted_output(int graph_num, int ncycle, double simTime) {
-        double scaleMax = 25.0, scaleMin = 0.0;
-        int i;
-        int color;
-        char filename[100], filename2[100];
+    double scaleMax = 25.0, scaleMin = 0.0;
+    int i;
+    int color;
+    char filename[100], filename2[100];
 
-        sprintf(filename,"%s/graph%05d_corrupted.data", graphics_directory, graph_num);
-        sprintf(filename2,"%s/outline%05d_corrupted.lin",graphics_directory, graph_num);
+    time_t file_time;
+    struct tm *ptm;
+    char day[10], month[10], year[15], hour[10], second[10], minute[10];
+    char str_file_time[80] = "";
 
-        FILE *fp = fopen(filename,"w");
-        FILE *fp2 = fopen(filename2,"w");
-        if(fp && fp2) {
-            fprintf(fp,"%d,%lf\n",ncycle,simTime);
-            if (autoscale) {
-                scaleMax=-1.0e30;
-                scaleMin=1.0e30;
-                if (data_type == DATA_DOUBLE) {
-                    for(i = 0; i<graphics_mysize; i++) {
-                        if (data_double[i] > scaleMax) scaleMax = data_double[i];
-                        if (data_double[i] < scaleMin) scaleMin = data_double[i];
-                    }
-                } else {
-                    for(i = 0; i<graphics_mysize; i++) {
-                        if (data_float[i] > scaleMax) scaleMax = data_float[i];
-                        if (data_float[i] < scaleMin) scaleMin = data_float[i];
-                    }
+    file_time = time(NULL);
+    ptm = gmtime(&file_time);
+
+    snprintf(day,       sizeof(day),    "%02d", ptm->tm_mday);
+    snprintf(month,     sizeof(month),  "%02d", ptm->tm_mon+1);
+    snprintf(year,      sizeof(year),   "%04d", ptm->tm_year+1900);
+    snprintf(hour,      sizeof(hour),   "%02d", ptm->tm_hour);
+    snprintf(minute,    sizeof(minute), "%02d", ptm->tm_min);
+    snprintf(second,    sizeof(second), "%02d", ptm->tm_sec);
+
+    strcpy(str_file_time, year);
+    strcat(str_file_time, "_");
+    strcat(str_file_time, month);
+    strcat(str_file_time, "_");
+    strcat(str_file_time, day);
+    strcat(str_file_time, "_");
+
+    strcat(str_file_time, hour);
+    strcat(str_file_time, "_");
+    strcat(str_file_time, minute);
+    strcat(str_file_time, "_");
+    strcat(str_file_time, second);
+    strcat(str_file_time, "_");
+
+    sprintf(filename,"%s/graph%05d_corrupted_%s.data", graphics_directory, graph_num, str_file_time);
+    sprintf(filename2,"%s/outline%05d_corrupted_%s.lin",graphics_directory, graph_num, str_file_time);
+
+    FILE *fp = fopen(filename,"w");
+    FILE *fp2 = fopen(filename2,"w");
+    if(fp && fp2) {
+        fprintf(fp,"%d,%lf\n",ncycle,simTime);
+        if (autoscale) {
+            scaleMax=-1.0e30;
+            scaleMin=1.0e30;
+            if (data_type == DATA_DOUBLE) {
+                for(i = 0; i<graphics_mysize; i++) {
+                    if (data_double[i] > scaleMax) scaleMax = data_double[i];
+                    if (data_double[i] < scaleMin) scaleMin = data_double[i];
+                }
+            } else {
+                for(i = 0; i<graphics_mysize; i++) {
+                    if (data_float[i] > scaleMax) scaleMax = data_float[i];
+                    if (data_float[i] < scaleMin) scaleMin = data_float[i];
                 }
             }
+        }
 
 
-            double step = Ncolors/(scaleMax - scaleMin);
-            int xloc, xwid, yloc, ywid;
-            int xloc1, xloc2, yloc1, yloc2;
-            for(i = 0; i < graphics_mysize; i++) {
-                if (data_type == DATA_DOUBLE) {
-                    color = (int)(data_double[i]-scaleMin)*step;
-                } else {
-                    color = (int)(data_float[i]-scaleMin)*step;
-                }
-                color = Ncolors-color;
-                if (color < 0) {
-                    color=0;
-                }
-                if (color >= Ncolors) color = Ncolors-1;
-
-                if (data_type == DATA_DOUBLE) {
-                    xloc = (int)((x_double[i]-graphics_xmin)*xconversion);
-                    xwid = (int)((x_double[i]+dx_double[i]-graphics_xmin)*xconversion-xloc);
-                    yloc = (int)((graphics_ymax-(y_double[i]+dy_double[i]))*yconversion);
-                    ywid = (int)((graphics_ymax-y_double[i])*yconversion);
-                    ywid -= yloc;
-
-                    xloc1 = (int)((x_double[i]-graphics_xmin)*xconversion);
-                    xloc2 = (int)((x_double[i]+dx_double[i]-graphics_xmin)*xconversion);
-                    yloc1 = (int)((graphics_ymax-y_double[i])*yconversion);
-                    yloc2 = (int)((graphics_ymax-(y_double[i]+dy_double[i]))*yconversion);
-                } else {
-                    xloc = (int)((x_float[i]-graphics_xmin)*xconversion);
-                    xwid = (int)((x_float[i]+dx_float[i]-graphics_xmin)*xconversion-xloc);
-                    yloc = (int)((graphics_ymax-(y_float[i]+dy_float[i]))*yconversion);
-                    ywid = (int)((graphics_ymax-y_float[i])*yconversion);
-                    ywid -= yloc;
-
-                    xloc1 = (int)((x_float[i]-graphics_xmin)*xconversion);
-                    xloc2 = (int)((x_float[i]+dx_float[i]-graphics_xmin)*xconversion);
-                    yloc1 = (int)((graphics_ymax-y_float[i])*yconversion);
-                    yloc2 = (int)((graphics_ymax-(y_float[i]+dy_float[i]))*yconversion);
-                }
-                    fprintf(fp,"%d,%d,%d,%d,%d\n",xloc,yloc,xwid,ywid,color);
-
-                    fprintf(fp2,"%d,%d,%d,%d\n",xloc1,yloc2,xloc2,yloc2);
-                    fprintf(fp2,"%d,%d,%d,%d\n",xloc1,yloc1,xloc2,yloc1);
-                    fprintf(fp2,"%d,%d,%d,%d\n",xloc1,yloc1,xloc1,yloc2);
-                    fprintf(fp2,"%d,%d,%d,%d\n",xloc2,yloc1,xloc2,yloc2);
+        double step = Ncolors/(scaleMax - scaleMin);
+        int xloc, xwid, yloc, ywid;
+        int xloc1, xloc2, yloc1, yloc2;
+        for(i = 0; i < graphics_mysize; i++) {
+            if (data_type == DATA_DOUBLE) {
+                color = (int)(data_double[i]-scaleMin)*step;
+            } else {
+                color = (int)(data_float[i]-scaleMin)*step;
             }
-            fclose(fp);
-            fclose(fp2);
+            color = Ncolors-color;
+            if (color < 0) {
+                color=0;
+            }
+            if (color >= Ncolors) color = Ncolors-1;
+
+            if (data_type == DATA_DOUBLE) {
+                xloc = (int)((x_double[i]-graphics_xmin)*xconversion);
+                xwid = (int)((x_double[i]+dx_double[i]-graphics_xmin)*xconversion-xloc);
+                yloc = (int)((graphics_ymax-(y_double[i]+dy_double[i]))*yconversion);
+                ywid = (int)((graphics_ymax-y_double[i])*yconversion);
+                ywid -= yloc;
+
+                xloc1 = (int)((x_double[i]-graphics_xmin)*xconversion);
+                xloc2 = (int)((x_double[i]+dx_double[i]-graphics_xmin)*xconversion);
+                yloc1 = (int)((graphics_ymax-y_double[i])*yconversion);
+                yloc2 = (int)((graphics_ymax-(y_double[i]+dy_double[i]))*yconversion);
+            } else {
+                xloc = (int)((x_float[i]-graphics_xmin)*xconversion);
+                xwid = (int)((x_float[i]+dx_float[i]-graphics_xmin)*xconversion-xloc);
+                yloc = (int)((graphics_ymax-(y_float[i]+dy_float[i]))*yconversion);
+                ywid = (int)((graphics_ymax-y_float[i])*yconversion);
+                ywid -= yloc;
+
+                xloc1 = (int)((x_float[i]-graphics_xmin)*xconversion);
+                xloc2 = (int)((x_float[i]+dx_float[i]-graphics_xmin)*xconversion);
+                yloc1 = (int)((graphics_ymax-y_float[i])*yconversion);
+                yloc2 = (int)((graphics_ymax-(y_float[i]+dy_float[i]))*yconversion);
+            }
+            fprintf(fp,"%d,%d,%d,%d,%d\n",xloc,yloc,xwid,ywid,color);
+
+            fprintf(fp2,"%d,%d,%d,%d\n",xloc1,yloc2,xloc2,yloc2);
+            fprintf(fp2,"%d,%d,%d,%d\n",xloc1,yloc1,xloc2,yloc1);
+            fprintf(fp2,"%d,%d,%d,%d\n",xloc1,yloc1,xloc1,yloc2);
+            fprintf(fp2,"%d,%d,%d,%d\n",xloc2,yloc1,xloc2,yloc2);
+        }
+        fclose(fp);
+        fclose(fp2);
+    }
+    else {
+        if(fp == NULL) {
+            printf("Could not open %s in save_corrupted_output()\n", filename);
         }
         else {
-            if(fp == NULL) {
-                printf("Could not open %s in save_corrupted_output()\n", filename);
-            }
-            else {
-                printf("Could not open %s in save_corrupted_output()\n", filename2);
-            }
+            printf("Could not open %s in save_corrupted_output()\n", filename2);
         }
+    }
 }
 
 /*
