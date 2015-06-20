@@ -145,8 +145,14 @@ void MD5Final ();
  ******************************* (cut) ********************************
  */
 
-void gen_md5(int graph_num, int ncycle, double simTime, int rollback_img, int rollback_num);
-void check_md5(int graph_num, int ncycle, double simTime, int rollback_img, int rollback_num);
+/*
+ * Author: Daniel (UFRGS - Brazil)
+ * Functions created to perform md5sum during execution
+ */
+void gen_md5(int graph_num);
+void check_md5(int graph_num, int ncycle, double simTime);
+void dump_corrupted_output(int graph_num, int ncycle, double simTime);
+
 
 #define WINSIZE 800
 
@@ -737,11 +743,11 @@ void write_graphics_info(int graph_num, int ncycle, double simTime, int rollback
         DrawSquaresToFile(graph_num, ncycle, simTime, rollback_img, rollback_num);
     } else {
         if(graphics_md5 == GRAPHICS_CHECK_MD5) {
-            check_md5(graph_num, ncycle, simTime, rollback_img, rollback_num);
+            check_md5(graph_num, ncycle, simTime);
         } else {
             DisplayStateToFile(graph_num, ncycle, simTime, rollback_img, rollback_num);
             if(graphics_md5 == GRAPHICS_GEN_MD5 ) {
-                gen_md5(graph_num, ncycle, simTime, rollback_img, rollback_num);
+                gen_md5(graph_num);
             }
         }
     }
@@ -782,7 +788,7 @@ void Magick_Scale() {
  * Author: Daniel (UFRGS - Brazil)
  * Generate md5 of output and save to file
  */
-void gen_md5(int graph_num, int ncycle, double simTime, int rollback_img, int rollback_num) {
+void gen_md5(int graph_num) {
 
     MD5_CTX mdContext;
     MD5Init (&mdContext);
@@ -829,7 +835,7 @@ void gen_md5(int graph_num, int ncycle, double simTime, int rollback_img, int ro
  * Author: Daniel (UFRGS - Brazil)
  * Check output against saved md5sum
  */
-void check_md5(int graph_num, int ncycle, double simTime, int rollback_img, int rollback_num) {
+void check_md5(int graph_num, int ncycle, double simTime) {
 
     double scaleMax = 25.0, scaleMin = 0.0;
     int i;
@@ -879,10 +885,13 @@ void check_md5(int graph_num, int ncycle, double simTime, int rollback_img, int 
                 error = 1;
             }
         }
-        if(error)
+        if(error){
             printf("\nGOLD CHECK FAILED!\n\n");
+            dump_corrupted_output(graph_num, ncycle, simTime);
+        }
         else
             printf("\nGOLD CHECK PASSED!\n\n");
+
         printf("\nmd5:\n");
         for(i=0; i<16; i++)
             printf ("%02x", mdContext.digest[i]);
@@ -891,10 +900,103 @@ void check_md5(int graph_num, int ncycle, double simTime, int rollback_img, int 
         for(i=0; i<16; i++)
             printf ("%02x", gold_md5[i]);
         printf("\n\n");
+
     } else {
         printf("Could not open %s in check_md5()\n", md5_filename);
     }
 
+}
+
+/*
+ * Author: Daniel (UFRGS - Brazil)
+ * Save corrupted graph
+ */
+void dump_corrupted_output(int graph_num, int ncycle, double simTime) {
+        double scaleMax = 25.0, scaleMin = 0.0;
+        int i;
+        int color;
+        char filename[100], filename2[100];
+
+        sprintf(filename,"%s/graph%05d_corrupted.data", graphics_directory, graph_num);
+        sprintf(filename2,"%s/outline%05d_corrupted.lin",graphics_directory, graph_num);
+
+        FILE *fp = fopen(filename,"w");
+        FILE *fp2 = fopen(filename2,"w");
+        if(fp && fp2) {
+            fprintf(fp,"%d,%lf\n",ncycle,simTime);
+            if (autoscale) {
+                scaleMax=-1.0e30;
+                scaleMin=1.0e30;
+                if (data_type == DATA_DOUBLE) {
+                    for(i = 0; i<graphics_mysize; i++) {
+                        if (data_double[i] > scaleMax) scaleMax = data_double[i];
+                        if (data_double[i] < scaleMin) scaleMin = data_double[i];
+                    }
+                } else {
+                    for(i = 0; i<graphics_mysize; i++) {
+                        if (data_float[i] > scaleMax) scaleMax = data_float[i];
+                        if (data_float[i] < scaleMin) scaleMin = data_float[i];
+                    }
+                }
+            }
+
+
+            double step = Ncolors/(scaleMax - scaleMin);
+            int xloc, xwid, yloc, ywid;
+            int xloc1, xloc2, yloc1, yloc2;
+            for(i = 0; i < graphics_mysize; i++) {
+                if (data_type == DATA_DOUBLE) {
+                    color = (int)(data_double[i]-scaleMin)*step;
+                } else {
+                    color = (int)(data_float[i]-scaleMin)*step;
+                }
+                color = Ncolors-color;
+                if (color < 0) {
+                    color=0;
+                }
+                if (color >= Ncolors) color = Ncolors-1;
+
+                if (data_type == DATA_DOUBLE) {
+                    xloc = (int)((x_double[i]-graphics_xmin)*xconversion);
+                    xwid = (int)((x_double[i]+dx_double[i]-graphics_xmin)*xconversion-xloc);
+                    yloc = (int)((graphics_ymax-(y_double[i]+dy_double[i]))*yconversion);
+                    ywid = (int)((graphics_ymax-y_double[i])*yconversion);
+                    ywid -= yloc;
+
+                    xloc1 = (int)((x_double[i]-graphics_xmin)*xconversion);
+                    xloc2 = (int)((x_double[i]+dx_double[i]-graphics_xmin)*xconversion);
+                    yloc1 = (int)((graphics_ymax-y_double[i])*yconversion);
+                    yloc2 = (int)((graphics_ymax-(y_double[i]+dy_double[i]))*yconversion);
+                } else {
+                    xloc = (int)((x_float[i]-graphics_xmin)*xconversion);
+                    xwid = (int)((x_float[i]+dx_float[i]-graphics_xmin)*xconversion-xloc);
+                    yloc = (int)((graphics_ymax-(y_float[i]+dy_float[i]))*yconversion);
+                    ywid = (int)((graphics_ymax-y_float[i])*yconversion);
+                    ywid -= yloc;
+
+                    xloc1 = (int)((x_float[i]-graphics_xmin)*xconversion);
+                    xloc2 = (int)((x_float[i]+dx_float[i]-graphics_xmin)*xconversion);
+                    yloc1 = (int)((graphics_ymax-y_float[i])*yconversion);
+                    yloc2 = (int)((graphics_ymax-(y_float[i]+dy_float[i]))*yconversion);
+                }
+                    fprintf(fp,"%d,%d,%d,%d,%d\n",xloc,yloc,xwid,ywid,color);
+
+                    fprintf(fp2,"%d,%d,%d,%d\n",xloc1,yloc2,xloc2,yloc2);
+                    fprintf(fp2,"%d,%d,%d,%d\n",xloc1,yloc1,xloc2,yloc1);
+                    fprintf(fp2,"%d,%d,%d,%d\n",xloc1,yloc1,xloc1,yloc2);
+                    fprintf(fp2,"%d,%d,%d,%d\n",xloc2,yloc1,xloc2,yloc2);
+            }
+            fclose(fp);
+            fclose(fp2);
+        }
+        else {
+            if(fp == NULL) {
+                printf("Could not open %s in save_corrupted_output()\n", filename);
+            }
+            else {
+                printf("Could not open %s in save_corrupted_output()\n", filename2);
+            }
+        }
 }
 
 /*
