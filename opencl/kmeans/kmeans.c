@@ -392,12 +392,14 @@ int main( int argc, char** argv)
 		for(i = 0; i < max_nclusters; i++){
 			for(j = 0; j < nfeatures; j++){
 				if (gold_cluster_centres[i][j]!=cluster_centres[i][j])
+				{
 					kernel_errors++;
 					snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, cluster_centres[i][j], gold_cluster_centres[i][j]);
 					printf("%s\n", error_detail);
 #ifdef LOGS
 					log_error_detail(error_detail); end_log_file(); 
 #endif
+				}
 			}
 		}
 		if (kernel_errors>0)

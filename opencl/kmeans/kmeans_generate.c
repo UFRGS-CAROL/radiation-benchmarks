@@ -270,6 +270,23 @@ void usage(char *argv0) {
     printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
 }
 
+void readInput(char *input_file, int npoints, int nfeatures, float **features, float *buf)
+{
+	FILE *infile;
+	int i, ret;
+
+    if ((infile = fopen(input_file, "rb")) == NULL) {
+        fprintf(stderr, "Error: no such file (%s)\n", input_file);
+        exit(1);
+    }
+
+    for (i=1; i<npoints; i++)
+        features[i] = features[i-1] + nfeatures;
+    ret=fread(buf, 1, npoints*nfeatures*sizeof(float), infile);
+
+    fclose(infile);
+}
+
 
 int main( int argc, char** argv)
 {
@@ -338,6 +355,7 @@ int main( int argc, char** argv)
     }
     fclose(fout);
 
+	readInput(input_file, npoints, nfeatures, features, buf);
 
     printf("\nI/O completed\n");
     printf("\nNumber of objects: %d\n", npoints);
