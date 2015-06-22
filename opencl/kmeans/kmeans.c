@@ -40,6 +40,41 @@ static cl_device_type   device_type;
 static cl_device_id   * device_list;
 static cl_int           num_devices;
 
+
+static int shutdown()
+{
+    // release resources
+    if( cmd_queue ) clReleaseCommandQueue( cmd_queue );
+    if( context ) clReleaseContext( context );
+    if( device_list ) delete device_list;
+
+    // reset all variables
+    cmd_queue = 0;
+    context = 0;
+    device_list = 0;
+    num_devices = 0;
+    device_type = 0;
+
+    return 0;
+}
+
+cl_mem d_feature;
+cl_mem d_feature_swap;
+cl_mem d_cluster;
+cl_mem d_membership;
+
+cl_kernel kernel;
+cl_kernel kernel_s;
+cl_kernel kernel2;
+
+int   *membership_OCL;
+int   *membership_d;
+float *feature_d;
+float *clusters_d;
+float *center_d;
+
+char *kernel_file;
+
 static int initialize(int use_gpu)
 {
     cl_int result;
@@ -85,47 +120,7 @@ static int initialize(int use_gpu)
         return -1;
     }
 
-    return 0;
-}
-
-static int shutdown()
-{
-    // release resources
-    if( cmd_queue ) clReleaseCommandQueue( cmd_queue );
-    if( context ) clReleaseContext( context );
-    if( device_list ) delete device_list;
-
-    // reset all variables
-    cmd_queue = 0;
-    context = 0;
-    device_list = 0;
-    num_devices = 0;
-    device_type = 0;
-
-    return 0;
-}
-
-cl_mem d_feature;
-cl_mem d_feature_swap;
-cl_mem d_cluster;
-cl_mem d_membership;
-
-cl_kernel kernel;
-cl_kernel kernel_s;
-cl_kernel kernel2;
-
-int   *membership_OCL;
-int   *membership_d;
-float *feature_d;
-float *clusters_d;
-float *center_d;
-
-char *kernel_file;
-
-int allocate(int n_points, int n_features, int n_clusters, float **feature)
-{
-
-    int sourcesize = 1024*1024;
+int sourcesize = 1024*1024;
     char * source = (char *)calloc(sourcesize, sizeof(char));
     if(!source) {
         printf("ERROR: calloc(%d) failed\n", sourcesize);
@@ -141,10 +136,6 @@ int allocate(int n_points, int n_features, int n_clusters, float **feature)
     }
     fread(source + strlen(source), sourcesize, 1, fp);
     fclose(fp);
-
-    // OpenCL initialization
-    int use_gpu = 1;
-    if(initialize(use_gpu)) return -1;
 
     // compile kernel
     cl_int err = 0;
@@ -182,6 +173,15 @@ int allocate(int n_points, int n_features, int n_clusters, float **feature)
     }
 
     clReleaseProgram(prog);
+
+    return 0;
+}
+
+
+int allocate(int n_points, int n_features, int n_clusters, float **feature)
+{
+	cl_int err = 0;
+   
 
     d_feature = clCreateBuffer(context, CL_MEM_READ_WRITE, n_points * n_features * sizeof(float), NULL, &err );
     if(err != CL_SUCCESS) {
@@ -358,6 +358,10 @@ int main( int argc, char** argv)
 	gold_cluster_centres[0] = (float*) malloc(max_nclusters*nfeatures*sizeof(float));
 	readGold(output, max_nclusters, nfeatures, gold_cluster_centres);
 
+	// OpenCL initialization
+    int use_gpu = 1;
+    if(initialize(use_gpu)) return -1;
+
     printf("clKmeans. npoints=%d nfeatures=%d threshold=%f clusters=%d ITERACTIONS=%d\n", npoints, nfeatures, threshold, max_nclusters, iteractions);fflush(stdout);
 	for (loop1=0; loop1<iteractions; loop1++)
 	{
@@ -392,19 +396,24 @@ int main( int argc, char** argv)
 		for(i = 0; i < max_nclusters; i++){
 			for(j = 0; j < nfeatures; j++){
 				if (gold_cluster_centres[i][j]!=cluster_centres[i][j])
+				{
 					kernel_errors++;
 					snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, cluster_centres[i][j], gold_cluster_centres[i][j]);
 					printf("%s\n", error_detail);
 #ifdef LOGS
 					log_error_detail(error_detail); end_log_file(); 
 #endif
+exit(0);
+				}
 			}
 		}
 		if (kernel_errors>0)
 			printf("\nERROR FOUND. Test number: %d\n", loop1);
 		printf(".");
 		fflush(stdout);
-
+		
+		free(cluster_centres[0]);
+		free(cluster_centres);
 		free(features[0]);
 		free(features);
 	}

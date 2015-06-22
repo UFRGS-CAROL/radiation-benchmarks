@@ -1,0 +1,10 @@
+Ele gera o md5 com o parametro -J somente ao fim de -t <X> iterações, será que o comportamento do -j que compara as md5 é o mesmo?
+carol@carol1:~/radiation-benchmarks/CLAMR$ ./clamr_gpuonly -g 100 -G data -n 512 -o -t 1000 -J md5_output
+Nao consegue gerar o md5 ao fim das -t <X> iterações.
+carol@carol1:~/radiation-benchmarks/CLAMR$ ./clamr_gpuonly -g 100 -G data -n 512 -o -t 1000 -J md5_output
+case J, md5_file: md5_output
+...
+Iteration 900 timestep 0.000330 Sim Time 0.293606 cells 268884 Mass Sum  2003285.27745 Mass Change            0
+Iteration 1000 timestep 0.000341 Sim Time 0.326940 cells 268728 Mass Sum  2003285.27745 Mass Change  2.32831e-10
+Segmentation fault (core dumped)
+
