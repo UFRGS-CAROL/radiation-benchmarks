@@ -277,6 +277,8 @@ endif (OPENCL_FOUND)
 
    add_subdirectory(PowerParser)
 
+add_subdirectory(logHelper)
+
 ########### embed source target ###############
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/state_kernel.inc
                   COMMAND ${CMAKE_SOURCE_DIR}/embed_source.pl ${CMAKE_SOURCE_DIR}/state_kern.cl > state_kernel.inc
@@ -319,6 +321,11 @@ set(clamr_cpuonly_SRCS ${clamr_cpuonly_CXX_SRCS} ${clamr_cpuonly_C_SRCS} ${clamr
 
 add_executable(clamr_cpuonly ${clamr_cpuonly_SRCS})
 
+if(LOG)
+   set_target_properties(clamr_cpuonly PROPERTIES COMPILE_DEFINITIONS "LOG=1")
+   target_link_libraries(clamr_cpuonly logHelper)
+endif(LOG)
+
 target_link_libraries(clamr_cpuonly PowerParser mesh hsfc kdtree zorder crux hash graphics timer memstats genmalloc MallocPlus m)
 if (REPROBLAS_FOUND)
    target_link_libraries(clamr_cpuonly ${REPROBLAS_LIBRARIES})
@@ -336,6 +343,11 @@ if (OPENCL_FOUND)
    add_executable(clamr_gpuonly ${clamr_gpuonly_SRCS})
 
    set_target_properties(clamr_gpuonly PROPERTIES COMPILE_DEFINITIONS HAVE_OPENCL)
+
+#if(LOG)
+#   set_target_properties(clamr_gpuonly PROPERTIES COMPILE_DEFINITIONS "LOG=1")
+#   target_link_libraries(clamr_gpuonly logHelper)
+#endif(LOG)
 
    target_link_libraries(clamr_gpuonly PowerParser dmesh hsfc kdtree zorder crux dhash ezcl graphics timer memstats genmalloc dMallocPlus m)
    target_link_libraries(clamr_gpuonly ${OPENCL_LIBRARIES})
@@ -384,6 +396,11 @@ if(OPENMP_FOUND)
    set(clamr_openmponly_SRCS ${clamr_openmponly_CXX_SRCS} ${clamr_openmponly_C_SRCS} ${clamr_openmponly_H_SRCS})
 
    add_executable(clamr_openmponly ${clamr_openmponly_SRCS})
+
+if(LOG)
+   set_target_properties(clamr_openmponly PROPERTIES COMPILE_DEFINITIONS "LOG=1")
+   target_link_libraries(clamr_openmponly logHelper)
+endif(LOG)
 
    set_target_properties(clamr_openmponly PROPERTIES COMPILE_FLAGS ${OpenMP_C_FLAGS})
    set_target_properties(clamr_openmponly PROPERTIES COMPILE_FLAGS ${OpenMP_CXX_FLAGS})

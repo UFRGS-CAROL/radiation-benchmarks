@@ -61,6 +61,12 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <vector>
+
+extern "C"
+{
+#include "logHelper/logHelper.h"
+}
+
 #include "graphics/display.h"
 #include "graphics/graphics.h"
 #include "input.h"
@@ -183,6 +189,22 @@ int main(int argc, char **argv) {
 
    //  Process command-line arguments, if any.
    parseInput(argc, argv);
+
+#ifdef LOG
+    char input_line[200] = "";
+    int iterate_args;
+    for(iterate_args=1; iterate_args<argc; iterate_args++)
+        strcat(input_line, argv[iterate_args]);
+
+#ifdef _OPENMP
+    start_log_file("clamr_openmponly", input_line);
+#else
+    start_log_file("clamr_cpuonly", input_line);
+#endif
+
+    set_iter_interval_print(5);
+    printf("log file is %s\n",get_log_file_name());
+#endif
 
 #ifdef _OPENMP
    int nt = 0;
@@ -371,6 +393,9 @@ extern "C" void do_calc(void)
 
    cpu_timer_start(&tstart_cpu);
 
+#ifdef LOG
+    start_iteration();
+#endif
    for (int nburst = ncycle % outputInterval; nburst < outputInterval && ncycle < endcycle; nburst++, ncycle++) {
 
       //  Calculate the real time step for the current discrete time step.
@@ -427,6 +452,9 @@ extern "C" void do_calc(void)
    //cpu_time_check += cpu_timer_stop(tstart_check);
       
    } // End burst loop
+#ifdef LOG
+    end_iteration();
+#endif
 
    cpu_time_calcs += cpu_timer_stop(tstart_cpu);
 
