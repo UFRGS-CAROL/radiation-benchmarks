@@ -138,7 +138,7 @@ int start_log_file(char *benchmark_name, char *test_info){
     if(strlen(absolute_path) > 0 && absolute_path[strlen(absolute_path)-1] != '/' )
         strcat(full_log_file_name, "/");
     strcat(full_log_file_name, log_file_name);
-printf("%s\n", full_log_file_name);
+// ~ printf("%s\n", full_log_file_name);
 
     struct stat buf;
     if (stat(full_log_file_name, &buf) == 0) {
