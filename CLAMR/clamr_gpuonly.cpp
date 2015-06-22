@@ -471,7 +471,7 @@ extern "C" void do_calc(void)
       if(graphic_outputInterval < niter){
          cpu_timer_start(&tstart_cpu);
 
-         mesh->calc_spatial_coordinates(0);
+         //mesh->calc_spatial_coordinates(0);
 #ifdef HAVE_GRAPHICS
          set_display_mysize(ncells);
          set_display_viewmode(view_mode);
