@@ -366,7 +366,7 @@ if (OPENCL_FOUND)
    set_target_properties(clamr_gpuonly PROPERTIES COMPILE_DEFINITIONS HAVE_OPENCL)
 
 if(LOG)
-   set_target_properties(clamr_gpuonly PROPERTIES COMPILE_DEFINITIONS "LOG=1")
+   set_target_properties(clamr_gpuonly PROPERTIES COMPILE_DEFINITIONS "LOG=1;HAVE_OPENCL=1")
    target_link_libraries(clamr_gpuonly logHelper)
 endif(LOG)
 
@@ -394,7 +394,7 @@ if (OPENCL_FOUND)
    set_target_properties(clamr_gpuonly_debug PROPERTIES COMPILE_DEFINITIONS HAVE_OPENCL)
 
 
-   set_target_properties(clamr_gpuonly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1;ALL_DEBUG=1")
+   set_target_properties(clamr_gpuonly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1;ALL_DEBUG=1;HAVE_OPENCL=1")
    target_link_libraries(clamr_gpuonly_debug logHelper)
 
 
