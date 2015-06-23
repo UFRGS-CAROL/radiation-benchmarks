@@ -392,11 +392,7 @@ extern "C" void do_calc(void)
         printf("\nChange values to generate errors!!!\n");
         deltaT = state->gpu_set_timestep(sigma);
         //  Execute main kernel
-        if (face_based) {
-           state->calc_finite_difference_via_faces(deltaT);
-        } else {
-           state->calc_finite_difference(deltaT);
-        }
+        state->gpu_calc_finite_difference(deltaT);
     }
 #endif
    for (int nburst = ncycle % outputInterval; nburst < outputInterval && ncycle < endcycle; nburst++, ncycle++) {
