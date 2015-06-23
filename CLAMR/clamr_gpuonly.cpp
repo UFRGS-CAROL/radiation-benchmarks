@@ -391,6 +391,7 @@ extern "C" void do_calc(void)
     if(next_graphics_cycle == graphic_outputInterval){
         printf("\nChange values to generate errors!!!\n");
         deltaT = state->gpu_set_timestep(sigma);
+        mesh->gpu_calc_neighbors();
         //  Execute main kernel
         state->gpu_calc_finite_difference(deltaT);
 	sigma/=2;
