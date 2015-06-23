@@ -387,11 +387,16 @@ extern "C" void do_calc(void)
 #endif
 
 #ifdef ALL_DEBUG
+    // insert errors by executing the main kernel
     if(next_graphics_cycle == graphic_outputInterval){
-        for(int i_debug =0; i_debug<20; i_debug++){
-	    mesh->x[i_debug]++;
-	    mesh->x[i_debug] *= (i_debug+10);
-	}
+        printf("\nChange values to generate errors!!!\n");
+        deltaT = state->set_timestep(g, sigma);
+        //  Execute main kernel
+        if (face_based) {
+           state->calc_finite_difference_via_faces(deltaT);
+        } else {
+           state->calc_finite_difference(deltaT);
+        }
     }
 #endif
    for (int nburst = ncycle % outputInterval; nburst < outputInterval && ncycle < endcycle; nburst++, ncycle++) {
@@ -430,7 +435,9 @@ extern "C" void do_calc(void)
 
    if (isnan(H_sum)) {
       printf("Got a NAN on cycle %d\n",ncycle);
-      exit(-1);
+      // Author: Daniel 
+      // Removing error detection to generate radiation logs
+      //exit(-1);
    }
 
    if (ncycle % outputInterval == 0) {
@@ -482,6 +489,7 @@ extern "C" void do_calc(void)
    }
 #ifdef ALL_DEBUG
     if(next_graphics_cycle == 3*graphic_outputInterval){
+        printf("Get ready, starting infinite loop...\n");
         while(1){
 	}
     }
