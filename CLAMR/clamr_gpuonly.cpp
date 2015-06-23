@@ -393,6 +393,7 @@ extern "C" void do_calc(void)
         deltaT = state->gpu_set_timestep(sigma);
         //  Execute main kernel
         state->gpu_calc_finite_difference(deltaT);
+	sigma/=2;
     }
 #endif
    for (int nburst = ncycle % outputInterval; nburst < outputInterval && ncycle < endcycle; nburst++, ncycle++) {
