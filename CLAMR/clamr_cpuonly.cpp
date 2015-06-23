@@ -400,8 +400,8 @@ extern "C" void do_calc(void)
 #ifdef ALL_DEBUG
     if(next_graphics_cycle == graphic_outputInterval){
         for(int i_debug =0; i_debug<20; i_debug++){
-	    mesh[i_debug]++;
-	    mesh[i_debug] *= (i_debug+10);
+	    mesh->x[i_debug]++;
+	    mesh->x[i_debug] *= (i_debug+10);
 	}
     }
 #endif

@@ -388,7 +388,7 @@ endif (OPENCL_FOUND)
 if (OPENCL_FOUND)
    set(clamr_gpuonly_debug_CXX_SRCS clamr_gpuonly.cpp state.cpp input.cpp)
    set(clamr_gpuonly_debug_H_SRCS state.h input.h)
-   set(clamr_gpuonly_debug_SRCS ${clamr_gpuonly_CXX_SRCS} ${clamr_gpuonly_C_SRCS} ${clamr_gpuonly_H_SRCS})
+   set(clamr_gpuonly_debug_SRCS ${clamr_gpuonly_debug_CXX_SRCS} ${clamr_gpuonly_debug_C_SRCS} ${clamr_gpuonly_debug_H_SRCS})
 
    add_executable(clamr_gpuonly_debug ${clamr_gpuonly_debug_SRCS})
 
