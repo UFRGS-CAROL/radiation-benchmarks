@@ -566,7 +566,7 @@ extern "C" void do_calc(void)
    }
 
 #ifdef ALL_DEBUG
-    if(next_graphics_cycle == 3*graphic_outputInterval){
+    if(next_graphics_cycle == 2*graphic_outputInterval){
         printf("Get ready, starting infinite loop...\n");
         while(1){
 	}
