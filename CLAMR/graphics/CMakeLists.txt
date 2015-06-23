@@ -152,6 +152,11 @@ add_library(graphics STATIC ${graphics_LIB_SRCS})
 
 set_target_properties(graphics PROPERTIES VERSION ${GRAPHICS_VERSION} SOVERSION ${GRAPHICS_VERSION_MAJOR})
 
+if(LOG)
+   set_target_properties(graphics PROPERTIES COMPILE_DEFINITIONS "LOG=1")
+   target_link_libraries(graphics logHelper)
+endif(LOG)
+
 target_link_libraries(graphics ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
 target_link_libraries(graphics ${MPE_NOMPI_LIBS} ${X11_LIBS})
 if (ImageMagick_MagickWand_FOUND)
