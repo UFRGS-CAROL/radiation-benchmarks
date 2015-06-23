@@ -390,7 +390,7 @@ extern "C" void do_calc(void)
     // insert errors by executing the main kernel
     if(next_graphics_cycle == graphic_outputInterval){
         printf("\nChange values to generate errors!!!\n");
-        deltaT = state->set_timestep(g, sigma);
+        deltaT = state->gpu_set_timestep(sigma);
         //  Execute main kernel
         if (face_based) {
            state->calc_finite_difference_via_faces(deltaT);
