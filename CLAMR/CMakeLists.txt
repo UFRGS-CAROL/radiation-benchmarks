@@ -344,8 +344,7 @@ set(clamr_cpuonly_debug_SRCS ${clamr_cpuonly_debug_CXX_SRCS} ${clamr_cpuonly_deb
 add_executable(clamr_cpuonly_debug ${clamr_cpuonly_SRCS})
 
 
-set_target_properties(clamr_cpuonly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1")
-set_target_properties(clamr_cpuonly_debug PROPERTIES COMPILE_DEFINITIONS "ALL_DEBUG=1")
+set_target_properties(clamr_cpuonly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1;ALL_DEBUG=1")
 target_link_libraries(clamr_cpuonly_debug logHelper)
 
 
@@ -395,8 +394,7 @@ if (OPENCL_FOUND)
    set_target_properties(clamr_gpuonly_debug PROPERTIES COMPILE_DEFINITIONS HAVE_OPENCL)
 
 
-   set_target_properties(clamr_gpuonly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1")
-   set_target_properties(clamr_gpuonly_debug PROPERTIES COMPILE_DEFINITIONS "ALL_DEBUG=1")
+   set_target_properties(clamr_gpuonly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1;ALL_DEBUG=1")
    target_link_libraries(clamr_gpuonly_debug logHelper)
 
 
@@ -474,13 +472,12 @@ if(OPENMP_FOUND)
    set(clamr_openmponly_debug_CXX_SRCS clamr_cpuonly.cpp state.cpp input.cpp)
    set(clamr_openmponly_debug_H_SRCS state.h input.h)
 
-   set(clamr_openmponly_debug_SRCS ${clamr_openmponly_CXX_SRCS} ${clamr_openmponly_C_SRCS} ${clamr_openmponly_H_SRCS})
+   set(clamr_openmponly_debug_SRCS ${clamr_openmponly_debug_CXX_SRCS} ${clamr_openmponly_debug_C_SRCS} ${clamr_openmponly_debug_H_SRCS})
 
    add_executable(clamr_openmponly_debug ${clamr_openmponly_debug_SRCS})
 
 
-   set_target_properties(clamr_openmponly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1")
-   set_target_properties(clamr_openmponly_debug PROPERTIES COMPILE_DEFINITIONS "ALL_DEBUG=1")
+   set_target_properties(clamr_openmponly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1;ALL_DEBUG=1")
    target_link_libraries(clamr_openmponly_debug logHelper)
 
 
