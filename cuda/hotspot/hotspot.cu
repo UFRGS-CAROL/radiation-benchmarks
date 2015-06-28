@@ -230,7 +230,7 @@ int compute_tran_temp(float *MatrixPower,float *MatrixTemp[2], int col, int row,
             //printf("[%d]", omp_get_thread_num());
             calculate_temp<<<dimGrid, dimBlock, 0, stream>>>(MIN(num_iterations, total_iterations-t), MatrixPower,MatrixTemp[src],MatrixTemp[dst],\
 		col,row,borderCols, borderRows, Cap,Rx,Ry,Rz,step,time_elapsed);
-flops += col * row * MIN(num_iterations, total_iterations-t) * 15;
+//flops += col * row * MIN(num_iterations, total_iterations-t) * 15;
 	}
 	cudaStreamSynchronize(stream);
         return dst;
@@ -334,7 +334,7 @@ void run(int argc, char** argv)
       cudaMalloc((void**)&(MatrixPower[streamIdx]), sizeof(float)*size);
       cudaMemcpy(MatrixPower[streamIdx], FilesavingPower, sizeof(float)*size, cudaMemcpyHostToDevice);
     }
-    printf("GPU prepare time: %f\n", mysecond()-timestamp);
+    //printf("GPU prepare time: %f\n", mysecond()-timestamp);
 
 		//printf("Start computing the transient temperature\n");
     double kernel_time = mysecond();
@@ -356,8 +356,8 @@ void run(int argc, char** argv)
 
 /////////// PERF
   double outputpersec = (double)((grid_rows*grid_rows*nstreams)/kernel_time);
-  printf("kernel time: %lf\n",kernel_time);
-  printf("SIZE:%d OUTPUT/S:%f FLOPS: %f\n",grid_rows, outputpersec, (double)flops / kernel_time);
+//  printf("kernel time: %lf\n",kernel_time);
+//  printf("SIZE:%d OUTPUT/S:%f FLOPS: %f\n",grid_rows, outputpersec, (double)flops / kernel_time);
 ///////////
 flops = 0;
 
@@ -365,6 +365,7 @@ flops = 0;
     timestamp = mysecond();
     int kernel_errors=0;
     for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+      memset(MatrixOut, 0, sizeof(float)*size);
       cudaMemcpy(MatrixOut, MatrixTemp[streamIdx][ret[streamIdx]], sizeof(float)*size, cudaMemcpyDeviceToHost);
       char error_detail[150];
       #pragma omp parallel for
@@ -381,13 +382,13 @@ flops = 0;
 #ifdef LOGS
     					log_error_detail(error_detail);
 #endif
-    					if (kernel_errors>20) exit(0);
+    					if (kernel_errors>500) exit(0);
             }
   				}
   			}
   		}
     }
-    printf("Gold check time: %f\n", mysecond() - timestamp);
+    //printf("Gold check time: %f\n", mysecond() - timestamp);
 		if (kernel_errors!=0)
 			printf("ERROR detected.\n");
 		else
@@ -395,12 +396,11 @@ flops = 0;
 		fflush(stdout);
 
     for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+  		cudaFree(MatrixPower[streamIdx]);
+  		cudaFree(MatrixTemp[streamIdx][0]);
+  		cudaFree(MatrixTemp[streamIdx][1]);
       cudaStreamDestroy(streams[streamIdx]);
     }
-
-		cudaFree(MatrixPower);
-		cudaFree(MatrixTemp[0]);
-		cudaFree(MatrixTemp[1]);
 	}
 	free(MatrixOut);
 }
