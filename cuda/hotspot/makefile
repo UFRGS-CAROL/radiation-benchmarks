@@ -15,8 +15,7 @@ hotspot_generate: hotspot_generate.cu
 	$(NVCC) $(NVCC_FLAGS) hotspot_generate.cu -o hotspot_generate
 
 hotspot: hotspot.cu
-	$(NVCC) $(NVCC_FLAGS) hotspot.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) $(ITER) -lLogHelper -o hotspot
+	$(NVCC) $(NVCC_FLAGS) hotspot.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) $(ITER) -lLogHelper -Xcompiler " -fopenmp" -o hotspot
 
 clean:
 	rm -f hotspot_generate hotspot $(MATRIX_NAMES)
-
