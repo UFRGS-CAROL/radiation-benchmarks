@@ -230,7 +230,7 @@ int compute_tran_temp(float *MatrixPower,float *MatrixTemp[2], int col, int row,
             //printf("[%d]", omp_get_thread_num());
             calculate_temp<<<dimGrid, dimBlock, 0, stream>>>(MIN(num_iterations, total_iterations-t), MatrixPower,MatrixTemp[src],MatrixTemp[dst],\
 		col,row,borderCols, borderRows, Cap,Rx,Ry,Rz,step,time_elapsed);
-//flops += col * row * MIN(num_iterations, total_iterations-t) * 15;
+flops += col * row * MIN(num_iterations, total_iterations-t) * 15;
 	}
 	cudaStreamSynchronize(stream);
         return dst;
@@ -238,7 +238,7 @@ int compute_tran_temp(float *MatrixPower,float *MatrixTemp[2], int col, int row,
 
 void usage(int argc, char **argv)
 {
-	fprintf(stderr, "Usage: %s <size> <sim_time> <temp_file> <power_file> <gold_file> <#iteractions>\n", argv[0]);
+	fprintf(stderr, "Usage: %s <size> <sim_time> <temp_file> <power_file> <gold_file> <#iteractions> <#streams>\n", argv[0]);
 	fprintf(stderr, "\t<grid_rows/grid_cols>  - number of rows/cols in the grid (positive integer)\n");
 	fprintf(stderr, "\t<sim_time>   - number of iterations (simulation time, hotspot internal)\n");
 	fprintf(stderr, "\t<temp_file>  - name of the file containing the initial temperature values of each cell\n");
@@ -356,8 +356,8 @@ void run(int argc, char** argv)
 
 /////////// PERF
   double outputpersec = (double)((grid_rows*grid_rows*nstreams)/kernel_time);
-//  printf("kernel time: %lf\n",kernel_time);
-//  printf("SIZE:%d OUTPUT/S:%f FLOPS: %f\n",grid_rows, outputpersec, (double)flops / kernel_time);
+  printf("kernel time: %lf\n",kernel_time);
+  printf("SIZE:%d OUTPUT/S:%f FLOPS: %f\n",grid_rows, outputpersec, (double)flops / kernel_time);
 ///////////
 flops = 0;
 
