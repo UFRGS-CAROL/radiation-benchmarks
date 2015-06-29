@@ -43,8 +43,7 @@ double mysecond()
    return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
 }
 
-void
-fatal(char *s)
+void fatal(char *s)
 {
 	fprintf(stderr, "error: %s\n", s);
 #ifdef LOGS
@@ -55,25 +54,24 @@ fatal(char *s)
 
 void readinput(float *vect, int grid_rows, int grid_cols, char *file){
 
-  	int i,j;
+	int i,j;
 	FILE *fp;
 	char str[STR_SIZE];
 	float val;
 
 	if( (fp  = fopen(file, "r" )) ==0 )
-            printf( "The file was not opened\n" );
+    printf( "The file was not opened\n" );
 
 
-	for (i=0; i <= grid_rows-1; i++)
-	 for (j=0; j <= grid_cols-1; j++)
-	 {
-		fgets(str, STR_SIZE, fp);
-		if (feof(fp))
-			fatal("not enough lines in file");
-		//if ((sscanf(str, "%d%f", &index, &val) != 2) || (index != ((i-1)*(grid_cols-2)+j-1)))
-		if ((sscanf(str, "%f", &val) != 1))
-			fatal("invalid file format");
-		vect[i*grid_cols+j] = val;
+	for (i=0; i <= grid_rows-1; i++) {
+    for (j=0; j <= grid_cols-1; j++) {
+    fgets(str, STR_SIZE, fp);
+    if (feof(fp))
+    	fatal("not enough lines in file");
+    //if ((sscanf(str, "%d%f", &index, &val) != 2) || (index != ((i-1)*(grid_cols-2)+j-1)))
+    if ((sscanf(str, "%f", &val) != 1))
+    	fatal("invalid file format");
+    vect[i*grid_cols+j] = val;
 	}
 
 	fclose(fp);
@@ -90,8 +88,8 @@ __global__ void calculate_temp(int iteration,  //number of iteration
                                float *temp_dst,    //temperature input/output
                                int grid_cols,  //Col of grid
                                int grid_rows,  //Row of grid
-							   int border_cols,  // border offset
-							   int border_rows,  // border offset
+              							   int border_cols,  // border offset
+              							   int border_rows,  // border offset
                                float Cap,      //Capacitance
                                float Rx,
                                float Ry,
@@ -99,16 +97,16 @@ __global__ void calculate_temp(int iteration,  //number of iteration
                                float step,
                                float time_elapsed){
 
-        __shared__ float temp_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
-        __shared__ float power_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
-        __shared__ float temp_t[BLOCK_SIZE][BLOCK_SIZE]; // saving temparary temperature result
+  __shared__ float temp_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
+  __shared__ float power_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
+  __shared__ float temp_t[BLOCK_SIZE][BLOCK_SIZE]; // saving temparary temperature result
 
 	float amb_temp = 80.0;
-        float step_div_Cap;
-        float Rx_1,Ry_1,Rz_1;
+  float step_div_Cap;
+  float Rx_1,Ry_1,Rz_1;
 
 	int bx = blockIdx.x;
-        int by = blockIdx.y;
+  int by = blockIdx.y;
 
 	int tx=threadIdx.x;
 	int ty=threadIdx.y;
@@ -119,82 +117,82 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	Ry_1=1/Ry;
 	Rz_1=1/Rz;
 
-        // each block finally computes result for a small block
-        // after N iterations.
-        // it is the non-overlapping small blocks that cover
-        // all the input data
+  // each block finally computes result for a small block
+  // after N iterations.
+  // it is the non-overlapping small blocks that cover
+  // all the input data
 
-        // calculate the small block size
+  // calculate the small block size
 	int small_block_rows = BLOCK_SIZE-iteration*2;//EXPAND_RATE
 	int small_block_cols = BLOCK_SIZE-iteration*2;//EXPAND_RATE
 
-        // calculate the boundary for the block according to
-        // the boundary of its small block
-        int blkY = small_block_rows*by-border_rows;
-        int blkX = small_block_cols*bx-border_cols;
-        int blkYmax = blkY+BLOCK_SIZE-1;
-        int blkXmax = blkX+BLOCK_SIZE-1;
+  // calculate the boundary for the block according to
+  // the boundary of its small block
+  int blkY = small_block_rows*by-border_rows;
+  int blkX = small_block_cols*bx-border_cols;
+  int blkYmax = blkY+BLOCK_SIZE-1;
+  int blkXmax = blkX+BLOCK_SIZE-1;
 
-        // calculate the global thread coordination
+  // calculate the global thread coordination
 	int yidx = blkY+ty;
 	int xidx = blkX+tx;
 
-        // load data if it is within the valid input range
+  // load data if it is within the valid input range
 	int loadYidx=yidx, loadXidx=xidx;
-        int index = grid_cols*loadYidx+loadXidx;
+  int index = grid_cols*loadYidx+loadXidx;
 
 	if(IN_RANGE(loadYidx, 0, grid_rows-1) && IN_RANGE(loadXidx, 0, grid_cols-1)){
-            temp_on_cuda[ty][tx] = temp_src[index];  // Load the temperature data from global memory to shared memory
-            power_on_cuda[ty][tx] = power[index];// Load the power data from global memory to shared memory
+    temp_on_cuda[ty][tx] = temp_src[index];  // Load the temperature data from global memory to shared memory
+    power_on_cuda[ty][tx] = power[index];// Load the power data from global memory to shared memory
 	}
-	__syncthreads();
+  __syncthreads();
 
-        // effective range within this block that falls within
-        // the valid range of the input data
-        // used to rule out computation outside the boundary.
-        int validYmin = (blkY < 0) ? -blkY : 0;
-        int validYmax = (blkYmax > grid_rows-1) ? BLOCK_SIZE-1-(blkYmax-grid_rows+1) : BLOCK_SIZE-1;
-        int validXmin = (blkX < 0) ? -blkX : 0;
-        int validXmax = (blkXmax > grid_cols-1) ? BLOCK_SIZE-1-(blkXmax-grid_cols+1) : BLOCK_SIZE-1;
+  // effective range within this block that falls within
+  // the valid range of the input data
+  // used to rule out computation outside the boundary.
+  int validYmin = (blkY < 0) ? -blkY : 0;
+  int validYmax = (blkYmax > grid_rows-1) ? BLOCK_SIZE-1-(blkYmax-grid_rows+1) : BLOCK_SIZE-1;
+  int validXmin = (blkX < 0) ? -blkX : 0;
+  int validXmax = (blkXmax > grid_cols-1) ? BLOCK_SIZE-1-(blkXmax-grid_cols+1) : BLOCK_SIZE-1;
 
-        int N = ty-1;
-        int S = ty+1;
-        int W = tx-1;
-        int E = tx+1;
+  int N = ty-1;
+  int S = ty+1;
+  int W = tx-1;
+  int E = tx+1;
 
-        N = (N < validYmin) ? validYmin : N;
-        S = (S > validYmax) ? validYmax : S;
-        W = (W < validXmin) ? validXmin : W;
-        E = (E > validXmax) ? validXmax : E;
+  N = (N < validYmin) ? validYmin : N;
+  S = (S > validYmax) ? validYmax : S;
+  W = (W < validXmin) ? validXmin : W;
+  E = (E > validXmax) ? validXmax : E;
 
-        bool computed;
-        for (int i=0; i<iteration ; i++){
-            computed = false;
-            if( IN_RANGE(tx, i+1, BLOCK_SIZE-i-2) &&  \
-                  IN_RANGE(ty, i+1, BLOCK_SIZE-i-2) &&  \
-                  IN_RANGE(tx, validXmin, validXmax) && \
-                  IN_RANGE(ty, validYmin, validYmax) ) {
-                  computed = true;
-                  temp_t[ty][tx] =   temp_on_cuda[ty][tx] + step_div_Cap * (power_on_cuda[ty][tx] +
-	       	         (temp_on_cuda[S][tx] + temp_on_cuda[N][tx] - 2.0*temp_on_cuda[ty][tx]) * Ry_1 +
-		             (temp_on_cuda[ty][E] + temp_on_cuda[ty][W] - 2.0*temp_on_cuda[ty][tx]) * Rx_1 +
-		             (amb_temp - temp_on_cuda[ty][tx]) * Rz_1);
+  bool computed;
+  for (int i=0; i<iteration ; i++){
+    computed = false;
+    if( IN_RANGE(tx, i+1, BLOCK_SIZE-i-2) &&  \
+          IN_RANGE(ty, i+1, BLOCK_SIZE-i-2) &&  \
+          IN_RANGE(tx, validXmin, validXmax) && \
+          IN_RANGE(ty, validYmin, validYmax) ) {
+      computed = true;
+      temp_t[ty][tx] =   temp_on_cuda[ty][tx] + step_div_Cap * (power_on_cuda[ty][tx] +
+         (temp_on_cuda[S][tx] + temp_on_cuda[N][tx] - 2.0*temp_on_cuda[ty][tx]) * Ry_1 +
+      (temp_on_cuda[ty][E] + temp_on_cuda[ty][W] - 2.0*temp_on_cuda[ty][tx]) * Rx_1 +
+      (amb_temp - temp_on_cuda[ty][tx]) * Rz_1);
 
-            }
-            __syncthreads();
-            if(i==iteration-1)
-                break;
-            if(computed)	 //Assign the computation range
-                temp_on_cuda[ty][tx]= temp_t[ty][tx];
-            __syncthreads();
-          }
+    }
+    __syncthreads();
+    if(i==iteration-1)
+      break;
+    if(computed)	 //Assign the computation range
+      temp_on_cuda[ty][tx]= temp_t[ty][tx];
+    __syncthreads();
+  }
 
-      // update the global memory
-      // after the last iteration, only threads coordinated within the
-      // small block perform the calculation and switch on ``computed''
-      if (computed){
-          temp_dst[index]= temp_t[ty][tx];
-      }
+  // update the global memory
+  // after the last iteration, only threads coordinated within the
+  // small block perform the calculation and switch on ``computed''
+  if (computed){
+    temp_dst[index]= temp_t[ty][tx];
+  }
 }
 
 /*
@@ -205,35 +203,35 @@ long long int flops = 0;
 int compute_tran_temp(float *MatrixPower,float *MatrixTemp[2], int col, int row, \
 		int total_iterations, int num_iterations, int blockCols, int blockRows, int borderCols, int borderRows, cudaStream_t stream)
 {
-        dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-        dim3 dimGrid(blockCols, blockRows);
+  dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+  dim3 dimGrid(blockCols, blockRows);
 
-	float grid_height = chip_height / row;
-	float grid_width = chip_width / col;
+  float grid_height = chip_height / row;
+  float grid_width = chip_width / col;
 
-	float Cap = FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width * grid_height;
-	float Rx = grid_width / (2.0 * K_SI * t_chip * grid_height);
-	float Ry = grid_height / (2.0 * K_SI * t_chip * grid_width);
-	float Rz = t_chip / (K_SI * grid_height * grid_width);
+  float Cap = FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width * grid_height;
+  float Rx = grid_width / (2.0 * K_SI * t_chip * grid_height);
+  float Ry = grid_height / (2.0 * K_SI * t_chip * grid_width);
+  float Rz = t_chip / (K_SI * grid_height * grid_width);
 
-	float max_slope = MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI);
-	float step = PRECISION / max_slope;
-	float t;
-        float time_elapsed;
-	time_elapsed=0.001;
+  float max_slope = MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI);
+  float step = PRECISION / max_slope;
+  float t;
+  float time_elapsed;
+  time_elapsed=0.001;
 
-        int src = 1, dst = 0;
-	for (t = 0; t < total_iterations; t+=num_iterations) {
-            int temp = src;
-            src = dst;
-            dst = temp;
-            //printf("[%d]", omp_get_thread_num());
-            calculate_temp<<<dimGrid, dimBlock, 0, stream>>>(MIN(num_iterations, total_iterations-t), MatrixPower,MatrixTemp[src],MatrixTemp[dst],\
-		col,row,borderCols, borderRows, Cap,Rx,Ry,Rz,step,time_elapsed);
-//flops += col * row * MIN(num_iterations, total_iterations-t) * 15;
-	}
-	cudaStreamSynchronize(stream);
-        return dst;
+  int src = 1, dst = 0;
+  for (t = 0; t < total_iterations; t+=num_iterations) {
+    int temp = src;
+    src = dst;
+    dst = temp;
+    //printf("[%d]", omp_get_thread_num());
+    calculate_temp<<<dimGrid, dimBlock, 0, stream>>>(MIN(num_iterations, total_iterations-t), MatrixPower,MatrixTemp[src],MatrixTemp[dst],\
+    col,row,borderCols, borderRows, Cap,Rx,Ry,Rz,step,time_elapsed);
+    //flops += col * row * MIN(num_iterations, total_iterations-t) * 15;
+  }
+  cudaStreamSynchronize(stream);
+  return dst;
 }
 
 void usage(int argc, char **argv)
@@ -253,9 +251,9 @@ int main(int argc, char** argv)
 {
   printf("WG size of kernel = %d X %d\n", BLOCK_SIZE, BLOCK_SIZE);
 
-    run(argc,argv);
+  run(argc,argv);
 
-    return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }
 
 void run(int argc, char** argv)
@@ -273,16 +271,16 @@ void run(int argc, char** argv)
   int pyramid_height = 1; // number of iterations
   int iteractions = 1;
 
-	if (argc != 8)
-		usage(argc, argv);
-	if((grid_rows = atoi(argv[1]))<=0||
-        (grid_cols = atoi(argv[1]))<=0||
-        (total_iterations = atoi(argv[2]))<=0||
-        (iteractions = atoi(argv[6]))<=0||
-        (nstreams = atoi(argv[7]))<=0)
-		usage(argc, argv);
+  if (argc != 8)
+  usage(argc, argv);
+  if((grid_rows = atoi(argv[1]))<=0||
+  (grid_cols = atoi(argv[1]))<=0||
+  (total_iterations = atoi(argv[2]))<=0||
+  (iteractions = atoi(argv[6]))<=0||
+  (nstreams = atoi(argv[7]))<=0)
+  usage(argc, argv);
 
-	tfile=argv[3];
+  tfile=argv[3];
   pfile=argv[4];
   ofile=argv[5];
 
@@ -303,23 +301,23 @@ void run(int argc, char** argv)
   GoldMatrix = (float *) calloc (size, sizeof(float));
 
   if( !FilesavingPower || !FilesavingTemp || !MatrixOut)
-      fatal("unable to allocate memory");
+  fatal("unable to allocate memory");
 
   printf("pyramidHeight: %d\ngridSize: [%d, %d]\nborder:[%d, %d]\nblockGrid:[%d, %d]\ntargetBlock:[%d, %d]\n",\
-	pyramid_height, grid_cols, grid_rows, borderCols, borderRows, blockCols, blockRows, smallBlockCol, smallBlockRow);
+  pyramid_height, grid_cols, grid_rows, borderCols, borderRows, blockCols, blockRows, smallBlockCol, smallBlockRow);
 
-#ifdef LOGS
-	char test_info[90];
-	snprintf(test_info, 90, "streams:%d size:%d pyramidHeight:%d simTime:%d", nstreams, grid_rows, pyramid_height, iteractions);
-	start_log_file("cudaHotspot", test_info);
-#endif
+  #ifdef LOGS
+  char test_info[90];
+  snprintf(test_info, 90, "streams:%d size:%d pyramidHeight:%d simTime:%d", nstreams, grid_rows, pyramid_height, iteractions);
+  start_log_file("cudaHotspot", test_info);
+  #endif
 
-	readinput(FilesavingTemp, grid_rows, grid_cols, tfile);
-	readinput(FilesavingPower, grid_rows, grid_cols, pfile);
-	readinput(GoldMatrix, grid_rows, grid_cols, ofile);
+  readinput(FilesavingTemp, grid_rows, grid_cols, tfile);
+  readinput(FilesavingPower, grid_rows, grid_cols, pfile);
+  readinput(GoldMatrix, grid_rows, grid_cols, ofile);
   cudaStream_t *streams = (cudaStream_t *) malloc(nstreams * sizeof(cudaStream_t));
-	for ( loop1=0 ; loop1<iteractions ; loop1++)
-	{
+  for ( loop1=0 ; loop1<iteractions ; loop1++)
+  {
     int ret[nstreams];
     float *MatrixTemp[nstreams][2], *MatrixPower[nstreams];
 
@@ -336,71 +334,71 @@ void run(int argc, char** argv)
     }
     //printf("GPU prepare time: %f\n", mysecond()-timestamp);
 
-		//printf("Start computing the transient temperature\n");
+    //printf("Start computing the transient temperature\n");
     double kernel_time = mysecond();
-#ifdef LOGS
-		start_iteration();
-#endif
+    #ifdef LOGS
+    start_iteration();
+    #endif
     #pragma omp parallel for
     for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-  		ret[streamIdx] = compute_tran_temp(MatrixPower[streamIdx],MatrixTemp[streamIdx],grid_cols,grid_rows, \
-  		 total_iterations,pyramid_height, blockCols, blockRows, borderCols, borderRows, streams[streamIdx]);
-    }
-    for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-      cudaStreamSynchronize(streams[streamIdx]);
-    }
-#ifdef LOGS
-		end_iteration();
-#endif
-    kernel_time = mysecond() - kernel_time;
+      ret[streamIdx] = compute_tran_temp(MatrixPower[streamIdx],MatrixTemp[streamIdx],grid_cols,grid_rows, \
+        total_iterations,pyramid_height, blockCols, blockRows, borderCols, borderRows, streams[streamIdx]);
+      }
+      for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+        cudaStreamSynchronize(streams[streamIdx]);
+      }
+      #ifdef LOGS
+      end_iteration();
+      #endif
+      kernel_time = mysecond() - kernel_time;
 
-/////////// PERF
-  double outputpersec = (double)((grid_rows*grid_rows*nstreams)/kernel_time);
-//  printf("kernel time: %lf\n",kernel_time);
-//  printf("SIZE:%d OUTPUT/S:%f FLOPS: %f\n",grid_rows, outputpersec, (double)flops / kernel_time);
-///////////
-flops = 0;
+      /////////// PERF
+      double outputpersec = (double)((grid_rows*grid_rows*nstreams)/kernel_time);
+      //  printf("kernel time: %lf\n",kernel_time);
+      //  printf("SIZE:%d OUTPUT/S:%f FLOPS: %f\n",grid_rows, outputpersec, (double)flops / kernel_time);
+      ///////////
+      flops = 0;
 
-		//printf("Ending simulation\n");
-    timestamp = mysecond();
-    int kernel_errors=0;
-    for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-      memset(MatrixOut, 0, sizeof(float)*size);
-      cudaMemcpy(MatrixOut, MatrixTemp[streamIdx][ret[streamIdx]], sizeof(float)*size, cudaMemcpyDeviceToHost);
-      char error_detail[150];
-      #pragma omp parallel for
-  		for (int i=0; i<grid_rows; i++){
-  			for (int j=0 ; j<grid_cols; j++)
-  			{
-  				if (GoldMatrix[i*grid_rows+j]!=MatrixOut[i*grid_rows+j])
-  				{
-            #pragma omp critical
+      //printf("Ending simulation\n");
+      timestamp = mysecond();
+      int kernel_errors=0;
+      for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+        memset(MatrixOut, 0, sizeof(float)*size);
+        cudaMemcpy(MatrixOut, MatrixTemp[streamIdx][ret[streamIdx]], sizeof(float)*size, cudaMemcpyDeviceToHost);
+        char error_detail[150];
+        #pragma omp parallel for
+        for (int i=0; i<grid_rows; i++){
+          for (int j=0 ; j<grid_cols; j++)
+          {
+            if (GoldMatrix[i*grid_rows+j]!=MatrixOut[i*grid_rows+j])
             {
-    					kernel_errors++;
-    					snprintf(error_detail, 150, "stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e", streamIdx, i, j, GoldMatrix[i*grid_rows+j], MatrixOut[i*grid_rows+j]);
-    					printf("stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e\n", streamIdx, i, j, GoldMatrix[i*grid_rows+j], MatrixOut[i*grid_rows+j]);
-#ifdef LOGS
-    					log_error_detail(error_detail);
-#endif
-    					if (kernel_errors>500) exit(0);
+              #pragma omp critical
+              {
+                kernel_errors++;
+                snprintf(error_detail, 150, "stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e", streamIdx, i, j, GoldMatrix[i*grid_rows+j], MatrixOut[i*grid_rows+j]);
+                printf("stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e\n", streamIdx, i, j, GoldMatrix[i*grid_rows+j], MatrixOut[i*grid_rows+j]);
+                #ifdef LOGS
+                log_error_detail(error_detail);
+                #endif
+                if (kernel_errors>500) exit(0);
+              }
             }
-  				}
-  			}
-  		}
-    }
-    //printf("Gold check time: %f\n", mysecond() - timestamp);
-		if (kernel_errors!=0)
-			printf("ERROR detected.\n");
-		else
-			printf(".");
-		fflush(stdout);
+          }
+        }
+      }
+      //printf("Gold check time: %f\n", mysecond() - timestamp);
+      if (kernel_errors!=0)
+      printf("ERROR detected.\n");
+      else
+      printf(".");
+      fflush(stdout);
 
-    for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-  		cudaFree(MatrixPower[streamIdx]);
-  		cudaFree(MatrixTemp[streamIdx][0]);
-  		cudaFree(MatrixTemp[streamIdx][1]);
-      cudaStreamDestroy(streams[streamIdx]);
+      for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+        cudaFree(MatrixPower[streamIdx]);
+        cudaFree(MatrixTemp[streamIdx][0]);
+        cudaFree(MatrixTemp[streamIdx][1]);
+        cudaStreamDestroy(streams[streamIdx]);
+      }
     }
-	}
-	free(MatrixOut);
-}
+    free(MatrixOut);
+  }
