@@ -1,6 +1,6 @@
 CC=g++
 NVCC=nvcc
-NVCC_FLAGS=-arch sm_50
+NVCC_FLAGS=-arch sm_35
 
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/

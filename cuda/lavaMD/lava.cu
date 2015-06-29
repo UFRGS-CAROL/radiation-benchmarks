@@ -676,7 +676,7 @@ number_nn += box_cpu[nh].nn;
 				exit(1);
 			}
 		}
-    printf("GPU prepare time: %f\n", mysecond()-timestamp);
+    //printf("GPU prepare time: %f\n", mysecond()-timestamp);
 
 		//=====================================================================
 		//	KERNEL
@@ -691,7 +691,7 @@ number_nn += box_cpu[nh].nn;
 			kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx]>>>( par_cpu, dim_cpu, \
 				d_box_gpu[streamIdx], d_rv_gpu[streamIdx], d_qv_gpu[streamIdx], d_fv_gpu[streamIdx]);
 		}
-		printf("All kernels were commited.\n");
+		//printf("All kernels were commited.\n");
 		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
 			cuda_error = cudaStreamSynchronize(streams[streamIdx]);
 		}
@@ -777,21 +777,20 @@ number_nn += box_cpu[nh].nn;
 				}
 			}
 		}
-		printf("Gold check time: %f\n", mysecond() - timestamp);
-
-		// iterate for each neighbor of a box (number_nn)
+		//printf("Gold check time: %f\n", mysecond() - timestamp);
+		//////////////////////// PERF
+		/*// iterate for each neighbor of a box (number_nn)
 		double flop =  number_nn;
 		// The last for iterate NUMBER_PAR_PER_BOX times
 		flop *= NUMBER_PAR_PER_BOX;
 		// the last for uses 46 operations plus 2 exp() functions
 		flop *=46;
-
 		flop *= nstreams;
-
     double flops = (double)flop/kernel_time;
     double outputpersec = (double)dim_cpu.space_elem * 4 * nstreams / kernel_time;
     printf("BOXES:%d BLOCK:%d OUTPUT/S:%f FLOPS:%f\n",dim_cpu.boxes1d_arg,NUMBER_THREADS,outputpersec,flops);
     printf("kernel_time:%f\n",kernel_time);
+		*//////////////////////////////
 
 		if (part_error>0) printf("part_error=%d\n", part_error);
 
