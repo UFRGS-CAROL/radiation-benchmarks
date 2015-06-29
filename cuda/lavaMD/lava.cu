@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <stdbool.h>			 // (in path known to compiler) needed by true/false
+#include <omp.h>
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -86,8 +87,9 @@ long long get_time() {
 }
 
 void usage(char *argv0) {
-    printf("Usage: %s <#boxes> <input_distances> <input_charges> <gold_output> <#iteractions>\n", argv0);
+    printf("Usage: %s <#boxes> <input_distances> <input_charges> <gold_output> <#iteractions> <#streams>\n", argv0);
     printf("  #boxes: number of boxes to handle (a good value is 13)\n");
+    printf("  #streams: number of concurrent kernel launches (cuda HyperQ)\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -283,8 +285,7 @@ int main(int argc, char *argv []) {
 	//=====================================================================
 
 	// timer
-	long long time0;
-	long long time1;
+	double timestamp;
 
 	// counters
 	int i, j, k, l, m, n;
@@ -301,6 +302,7 @@ int main(int argc, char *argv []) {
 	FOUR_VECTOR* fv_cpu;
 	FOUR_VECTOR* fv_cpu_GOLD;
 	int nh;
+	int nstreams, streamIdx;
 
 	cudaError_t cuda_error;
 	const char *error_string;
@@ -309,10 +311,12 @@ int main(int argc, char *argv []) {
 
 	char *input_distances, *input_charges, *output_gold;
 
+	int number_nn = 0;
+
 	//=====================================================================
 	//	CHECK INPUT ARGUMENTS
 	//=====================================================================
-	if (argc!=6)
+	if (argc!=7)
 	{	usage(argv[0]);
 		exit(-1);	}
 	dim_cpu.boxes1d_arg  = atoi(argv[1]);
@@ -320,10 +324,15 @@ int main(int argc, char *argv []) {
 	input_charges = argv[3];
 	output_gold = argv[4];
 	iteractions = atoi(argv[5]);
-
-	int boxes = dim_cpu.boxes1d_arg;
+	nstreams = atoi(argv[6]);
 
 	printf("cudaLavaMD. nboxes=%d blocksize=%d\n", dim_cpu.boxes1d_arg, NUMBER_THREADS);
+
+	#ifdef LOGS
+	char test_info[100];
+	snprintf(test_info, 100, "streams: %d boxes:%d block_size:%d", nstreams, dim_cpu.boxes1d_arg, NUMBER_THREADS);
+	start_log_file("cudaLavaMD", test_info);
+	#endif
 
 	//=====================================================================
 	//	INPUTS
@@ -356,9 +365,9 @@ int main(int argc, char *argv []) {
 	box_cpu = (box_str*)malloc(dim_cpu.box_mem);
 	if(box_cpu == NULL) {
 		printf("error box_cpu malloc\n");
-#ifdef LOGS
-		log_error_detail("error box_cpu malloc"); end_log_file(); 
-#endif
+		#ifdef LOGS
+		log_error_detail("error box_cpu malloc"); end_log_file();
+		#endif
 		exit(1);
 	}
 
@@ -389,7 +398,7 @@ int main(int argc, char *argv []) {
 						// neighbor boxes in x direction
 						for(n=-1; n<2; n++) {
 
-							 // check if (this neighbor exists) and (it is not the same as home box)
+							// check if (this neighbor exists) and (it is not the same as home box)
 							if(     (((i+l)>=0 && (j+m)>=0 && (k+n)>=0)==true && ((i+l)<dim_cpu.boxes1d_arg && (j+m)<dim_cpu.boxes1d_arg && (k+n)<dim_cpu.boxes1d_arg)==true)   &&
 							(l==0 && m==0 && n==0)==false   ) {
 
@@ -398,11 +407,12 @@ int main(int argc, char *argv []) {
 								box_cpu[nh].nei[box_cpu[nh].nn].y = (j+m);
 								box_cpu[nh].nei[box_cpu[nh].nn].z = (i+l);
 								box_cpu[nh].nei[box_cpu[nh].nn].number = (box_cpu[nh].nei[box_cpu[nh].nn].z * dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg) +
-									(box_cpu[nh].nei[box_cpu[nh].nn].y * dim_cpu.boxes1d_arg) + box_cpu[nh].nei[box_cpu[nh].nn].x;
+								(box_cpu[nh].nei[box_cpu[nh].nn].y * dim_cpu.boxes1d_arg) + box_cpu[nh].nei[box_cpu[nh].nn].x;
 								box_cpu[nh].nei[box_cpu[nh].nn].offset = box_cpu[nh].nei[box_cpu[nh].nn].number * NUMBER_PAR_PER_BOX;
 
 								// increment neighbor box
 								box_cpu[nh].nn = box_cpu[nh].nn + 1;
+number_nn += box_cpu[nh].nn;
 
 							}
 
@@ -424,13 +434,13 @@ int main(int argc, char *argv []) {
 	size_t return_value[4];
 	// input (distances)
 	if( (fp = fopen(input_distances, "rb" )) == 0 )
-		printf( "The file 'input_distances' was not opened\n" );
+	printf( "The file 'input_distances' was not opened\n" );
 	rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
 	if(rv_cpu == NULL) {
 		printf("error rv_cpu malloc\n");
-#ifdef LOGS
-		log_error_detail("error rv_cpu malloc"); end_log_file(); 
-#endif
+		#ifdef LOGS
+		log_error_detail("error rv_cpu malloc"); end_log_file();
+		#endif
 		exit(1);
 	}
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
@@ -440,9 +450,9 @@ int main(int argc, char *argv []) {
 		return_value[3] = fread(&(rv_cpu[i].z), 1, sizeof(double), fp);
 		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
 			printf("error reading rv_cpu from file\n");
-#ifdef LOGS
-			log_error_detail("error reading rv_cpu from file"); end_log_file(); 
-#endif
+			#ifdef LOGS
+			log_error_detail("error reading rv_cpu from file"); end_log_file();
+			#endif
 			exit(1);
 		}
 	}
@@ -450,22 +460,22 @@ int main(int argc, char *argv []) {
 
 	// input (charge)
 	if( (fp = fopen(input_charges, "rb" )) == 0 )
-		printf( "The file 'input_charges' was not opened\n" );
+	printf( "The file 'input_charges' was not opened\n" );
 	qv_cpu = (double*)malloc(dim_cpu.space_mem2);
 	if(qv_cpu == NULL) {
 		printf("error qv_cpu malloc\n");
-#ifdef LOGS
-		log_error_detail("error qv_cpu malloc"); end_log_file(); 
-#endif
+		#ifdef LOGS
+		log_error_detail("error qv_cpu malloc"); end_log_file();
+		#endif
 		exit(1);
 	}
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
 		return_value[0] = fread(&(qv_cpu[i]), 1, sizeof(double), fp);
 		if (return_value[0] == 0) {
 			printf("error reading qv_cpu from file\n");
-#ifdef LOGS
-			log_error_detail("error reading qv_cpu from file"); end_log_file(); 
-#endif
+			#ifdef LOGS
+			log_error_detail("error reading qv_cpu from file"); end_log_file();
+			#endif
 			exit(1);
 		}
 	}
@@ -473,13 +483,13 @@ int main(int argc, char *argv []) {
 
 	// GOLD output (forces)
 	if( (fp = fopen(output_gold, "rb" )) == 0 )
-		printf( "The file 'output_forces' was not opened\n" );
+	printf( "The file 'output_forces' was not opened\n" );
 	fv_cpu_GOLD = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
 	if(fv_cpu_GOLD == NULL) {
 		printf("error fv_cpu_GOLD malloc\n");
-#ifdef LOGS
-		log_error_detail("error fv_cpu_GOLD malloc"); end_log_file(); 
-#endif
+		#ifdef LOGS
+		log_error_detail("error fv_cpu_GOLD malloc"); end_log_file();
+		#endif
 		exit(1);
 	}
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
@@ -489,14 +499,28 @@ int main(int argc, char *argv []) {
 		return_value[3] = fread(&(fv_cpu_GOLD[i].z), 1, sizeof(double), fp);
 		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
 			printf("error reading rv_cpu from file\n");
-#ifdef LOGS
-			log_error_detail("error reading rv_cpu from file"); end_log_file(); 
-#endif
+			#ifdef LOGS
+			log_error_detail("error reading rv_cpu from file"); end_log_file();
+			#endif
 			exit(1);
 		}
 	}
 	fclose(fp);
-	
+
+	//=====================================================================
+	//	EXECUTION PARAMETERS
+	//=====================================================================
+
+	dim3 threads;
+	dim3 blocks;
+
+	blocks.x = dim_cpu.number_boxes;
+	blocks.y = 1;
+	// define the number of threads in the block
+	threads.x = NUMBER_THREADS;
+	threads.y = 1;
+
+	cudaStream_t *streams = (cudaStream_t *) malloc(nstreams * sizeof(cudaStream_t));
 
 	//LOOP START
 	int loop;
@@ -507,9 +531,9 @@ int main(int argc, char *argv []) {
 		fv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
 		if(fv_cpu == NULL) {
 			printf("error fv_cpu malloc\n");
-	#ifdef LOGS
-			log_error_detail("error fv_cpu malloc"); end_log_file(); 
-	#endif
+			#ifdef LOGS
+			log_error_detail("error fv_cpu malloc"); end_log_file();
+			#endif
 			exit(1);
 		}
 		for(i=0; i<dim_cpu.space_elem; i=i+1) {
@@ -525,200 +549,166 @@ int main(int argc, char *argv []) {
 		//=====================================================================
 
 		//=====================================================================
-		//	GPU SETUP
-		//=====================================================================
-
-		//=====================================================================
 		//	VARIABLES
 		//=====================================================================
 
-		box_str* d_box_gpu;
-		FOUR_VECTOR* d_rv_gpu;
-		double* d_qv_gpu;
-		FOUR_VECTOR* d_fv_gpu;
+		box_str* d_box_gpu[nstreams];
+		FOUR_VECTOR* d_rv_gpu[nstreams];
+		double* d_qv_gpu[nstreams];
+		FOUR_VECTOR* d_fv_gpu[nstreams];
 
-		dim3 threads;
-		dim3 blocks;
 
 		//=====================================================================
-		//	EXECUTION PARAMETERS
+		//	GPU SETUP
 		//=====================================================================
 
-		blocks.x = dim_cpu.number_boxes;
-		blocks.y = 1;
-								 // define the number of threads in the block
-		threads.x = NUMBER_THREADS;
-		threads.y = 1;
+		timestamp = mysecond();
+		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+      cudaStreamCreateWithFlags(&(streams[streamIdx]), cudaStreamNonBlocking);
 
-	#ifdef LOGS
-		char test_info[100];
-		snprintf(test_info, 100, "boxes:%d block_size:%d", boxes, NUMBER_THREADS);
-		start_log_file("cudaLavaMD", test_info);
-	#endif
+			//==================================================
+			//	boxes
+			//==================================================
 
-		//=====================================================================
-		//	GPU MEMORY				(MALLOC)
-		//=====================================================================
+			cuda_error = cudaMalloc( (void **)&(d_box_gpu[streamIdx]), dim_cpu.box_mem);
+			error_string = cudaGetErrorString(cuda_error);
+			if(strcmp(error_string, "no error") != 0) {
+				printf("error d_box_gpu cudaMalloc\n");
+				#ifdef LOGS
+				log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
+				#endif
+				exit(1);
+			}
+			//==================================================
+			//	rv
+			//==================================================
 
-		//==================================================
-		//	boxes
-		//==================================================
+			cuda_error = cudaMalloc( (void **)&(d_rv_gpu[streamIdx]), dim_cpu.space_mem);
+			error_string = cudaGetErrorString(cuda_error);
+			if(strcmp(error_string, "no error") != 0) {
+				printf("error d_rv_gpu cudaMalloc\n");
+				#ifdef LOGS
+				log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
+				#endif
+				exit(1);
+			}
+			//==================================================
+			//	qv
+			//==================================================
 
-		cuda_error = cudaMalloc( (void **)&d_box_gpu, dim_cpu.box_mem);
-		error_string = cudaGetErrorString(cuda_error);
-		if(strcmp(error_string, "no error") != 0) {
-			printf("error d_box_gpu cudaMalloc\n");
-#ifdef LOGS
-			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
-#endif			
-			exit(1);
+			cuda_error = cudaMalloc( (void **)&(d_qv_gpu[streamIdx]), dim_cpu.space_mem2);
+			error_string = cudaGetErrorString(cuda_error);
+			if(strcmp(error_string, "no error") != 0) {
+				printf("error d_qv_gpu cudaMalloc\n");
+				#ifdef LOGS
+				log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
+				#endif
+				exit(1);
+			}
+			//==================================================
+			//	fv
+			//==================================================
+
+			cuda_error = cudaMalloc( (void **)&(d_fv_gpu[streamIdx]), dim_cpu.space_mem);
+			error_string = cudaGetErrorString(cuda_error);
+			if(strcmp(error_string, "no error") != 0) {
+				printf("error d_fv_gpu cudaMalloc\n");
+				#ifdef LOGS
+				log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
+				#endif
+				exit(1);
+			}
+
+			//=====================================================================
+			//	GPU MEMORY			COPY
+			//=====================================================================
+
+			//==================================================
+			//	boxes
+			//==================================================
+
+			cuda_error = cudaMemcpy(d_box_gpu[streamIdx], box_cpu, dim_cpu.box_mem, cudaMemcpyHostToDevice);
+			error_string = cudaGetErrorString(cuda_error);
+			if(strcmp(error_string, "no error") != 0) {
+				printf("error load d_boc_gpu\n");
+				#ifdef LOGS
+				log_error_detail("error load d_box_gpu"); end_log_file();
+				#endif
+				exit(1);
+			}
+			//==================================================
+			//	rv
+			//==================================================
+
+			cuda_error = cudaMemcpy( d_rv_gpu[streamIdx], rv_cpu, dim_cpu.space_mem, cudaMemcpyHostToDevice);
+			error_string = cudaGetErrorString(cuda_error);
+			if(strcmp(error_string, "no error") != 0) {
+				printf("error load d_rv_gpu\n");
+				#ifdef LOGS
+				log_error_detail("error load d_box_gpu"); end_log_file();
+				#endif
+				exit(1);
+			}
+			//==================================================
+			//	qv
+			//==================================================
+
+			cuda_error = cudaMemcpy( d_qv_gpu[streamIdx], qv_cpu, dim_cpu.space_mem2, cudaMemcpyHostToDevice);
+			error_string = cudaGetErrorString(cuda_error);
+			if(strcmp(error_string, "no error") != 0) {
+				printf("error load d_qv_gpu\n");
+				#ifdef LOGS
+				log_error_detail("error load d_box_gpu"); end_log_file();
+				#endif
+				exit(1);
+			}
+			//==================================================
+			//	fv
+			//==================================================
+
+			cuda_error = cudaMemcpy( d_fv_gpu[streamIdx], fv_cpu, dim_cpu.space_mem, cudaMemcpyHostToDevice);
+			error_string = cudaGetErrorString(cuda_error);
+			if(strcmp(error_string, "no error") != 0) {
+				printf("error load d_fv_gpu\n");
+				#ifdef LOGS
+				log_error_detail("error load d_box_gpu"); end_log_file();
+				#endif
+				exit(1);
+			}
 		}
-		//==================================================
-		//	rv
-		//==================================================
-
-		cuda_error = cudaMalloc( (void **)&d_rv_gpu, dim_cpu.space_mem);
-		error_string = cudaGetErrorString(cuda_error);
-		if(strcmp(error_string, "no error") != 0) {
-			printf("error d_rv_gpu cudaMalloc\n");
-#ifdef LOGS
-			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
-#endif			
-			exit(1);
-		}
-		//==================================================
-		//	qv
-		//==================================================
-
-		cuda_error = cudaMalloc( (void **)&d_qv_gpu, dim_cpu.space_mem2);
-		error_string = cudaGetErrorString(cuda_error);
-		if(strcmp(error_string, "no error") != 0) {
-			printf("error d_qv_gpu cudaMalloc\n");
-#ifdef LOGS
-			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
-#endif			
-			exit(1);
-		}
-		//==================================================
-		//	fv
-		//==================================================
-
-		cuda_error = cudaMalloc( (void **)&d_fv_gpu, dim_cpu.space_mem);
-		error_string = cudaGetErrorString(cuda_error);
-		if(strcmp(error_string, "no error") != 0) {
-			printf("error d_fv_gpu cudaMalloc\n");
-#ifdef LOGS
-			log_error_detail("error d_box_gpu cudamalloc"); end_log_file(); 
-#endif			
-			exit(1);
-		}
-
-		//=====================================================================
-		//	GPU MEMORY			COPY
-		//=====================================================================
-
-		//==================================================
-		//	boxes
-		//==================================================
-
-		cuda_error = cudaMemcpy(d_box_gpu, box_cpu, dim_cpu.box_mem, cudaMemcpyHostToDevice);
-		error_string = cudaGetErrorString(cuda_error);
-		if(strcmp(error_string, "no error") != 0) {
-			printf("error load d_boc_gpu\n");
-#ifdef LOGS
-			log_error_detail("error load d_box_gpu"); end_log_file(); 
-#endif			
-			exit(1);
-		}
-		//==================================================
-		//	rv
-		//==================================================
-
-		cuda_error = cudaMemcpy( d_rv_gpu, rv_cpu, dim_cpu.space_mem, cudaMemcpyHostToDevice);
-		error_string = cudaGetErrorString(cuda_error);
-		if(strcmp(error_string, "no error") != 0) {
-			printf("error load d_rv_gpu\n");
-#ifdef LOGS
-			log_error_detail("error load d_box_gpu"); end_log_file(); 
-#endif			
-			exit(1);
-		}
-		//==================================================
-		//	qv
-		//==================================================
-
-		cuda_error = cudaMemcpy( d_qv_gpu, qv_cpu, dim_cpu.space_mem2, cudaMemcpyHostToDevice);
-		error_string = cudaGetErrorString(cuda_error);
-		if(strcmp(error_string, "no error") != 0) {
-			printf("error load d_qv_gpu\n");
-#ifdef LOGS
-			log_error_detail("error load d_box_gpu"); end_log_file(); 
-#endif			
-			exit(1);
-		}
-		//==================================================
-		//	fv
-		//==================================================
-
-		cuda_error = cudaMemcpy( d_fv_gpu, fv_cpu, dim_cpu.space_mem, cudaMemcpyHostToDevice);
-		error_string = cudaGetErrorString(cuda_error);
-		if(strcmp(error_string, "no error") != 0) {
-			printf("error load d_fv_gpu\n");
-#ifdef LOGS
-			log_error_detail("error load d_box_gpu"); end_log_file(); 
-#endif			
-			exit(1);
-		}
+    printf("GPU prepare time: %f\n", mysecond()-timestamp);
 
 		//=====================================================================
 		//	KERNEL
 		//=====================================================================
 
-		time0 = get_time();
-		double time=mysecond();
-#ifdef LOGS
+		double kernel_time=mysecond();
+		#ifdef LOGS
 		start_iteration();
-#endif
+		#endif
 		// launch kernel - all boxes
-		kernel_gpu_cuda<<<blocks, threads>>>( par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
-		cuda_error = cudaThreadSynchronize();
-#ifdef LOGS
+		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+			kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx]>>>( par_cpu, dim_cpu, \
+				d_box_gpu[streamIdx], d_rv_gpu[streamIdx], d_qv_gpu[streamIdx], d_fv_gpu[streamIdx]);
+		}
+		printf("All kernels were commited.\n");
+		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+			cuda_error = cudaStreamSynchronize(streams[streamIdx]);
+		}
+		#ifdef LOGS
 		end_iteration();
-#endif
-		time = mysecond()-time;
+		#endif
+		kernel_time = mysecond()-kernel_time;
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error logic: %s\n",error_string);
-#ifdef LOGS
-			log_error_detail("error logic:"); log_error_detail(error_string); end_log_file(); 
-#endif			
+			#ifdef LOGS
+			log_error_detail("error logic:"); log_error_detail(error_string); end_log_file();
+			#endif
 			exit(1);
 		}
 
-		time1 = get_time();
 
-		//=====================================================================
-		//	GPU MEMORY			COPY BACK
-		//=====================================================================
-
-		cuda_error = cudaMemcpy( fv_cpu, d_fv_gpu, dim_cpu.space_mem, cudaMemcpyDeviceToHost);
-		error_string = cudaGetErrorString(cuda_error);
-		if(strcmp(error_string, "no error") != 0) {
-			printf("error download fv_cpu\n");
-#ifdef LOGS
-			log_error_detail("error download fv_cpu"); end_log_file(); 
-#endif			
-			exit(1);
-		}
-
-		//=====================================================================
-		//	GPU MEMORY DEALLOCATION
-		//=====================================================================
-
-		cudaFree(d_rv_gpu);
-		cudaFree(d_qv_gpu);
-		cudaFree(d_fv_gpu);
-		cudaFree(d_box_gpu);
 		//=====================================================================
 		//	COMPARE OUTPUTS
 		//=====================================================================
@@ -727,53 +717,90 @@ int main(int argc, char *argv []) {
 		int part_error = 0;
 		int thread_error = 0;
 		char error_detail[150];
+		timestamp = mysecond();
+		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
 
-		for(i=0; i<dim_cpu.space_elem; i=i+1) {
-			if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
-				thread_error++;
-				/*ea++;
-				t_ea++;
-				fprintf(file, "\n fv.v position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].v, fv_cpu_GOLD[i].v, t_ea);*/
+			//=====================================================================
+			//	GPU MEMORY			COPY BACK
+			//=====================================================================
+
+			cuda_error = cudaMemcpy( fv_cpu, d_fv_gpu[streamIdx], dim_cpu.space_mem, cudaMemcpyDeviceToHost);
+			error_string = cudaGetErrorString(cuda_error);
+			if(strcmp(error_string, "no error") != 0) {
+				printf("error download fv_cpu\n");
+				#ifdef LOGS
+				log_error_detail("error download fv_cpu"); end_log_file();
+				#endif
+				exit(1);
 			}
-			if(fv_cpu_GOLD[i].x != fv_cpu[i].x) {
-				thread_error++;
-				/*ea++;
-				t_ea++;
-				fprintf(file, "\n fv.x position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].x, fv_cpu_GOLD[i].x, t_ea);*/
-			}
-			if(fv_cpu_GOLD[i].y != fv_cpu[i].y) {
-				thread_error++;
-				/*ea++;
-				t_ea++;
-				fprintf(file, "\n fv.y position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].y, fv_cpu_GOLD[i].y, t_ea);*/
-			}
-			if(fv_cpu_GOLD[i].z != fv_cpu[i].z) {
-				thread_error++;
-				/*ea++;
-				t_ea++;
-				fprintf(file, "\n fv.z position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);*/
-			}
-			if (thread_error  > 0) {
-				t_ea++;
-				part_error++;
-			
-			snprintf(error_detail, 150, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e, error: %d\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);
-#ifdef LOGS
-			log_error_detail(error_detail);
-#endif
-				//fprintf(file, "\np: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e, error: %d\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);
-				thread_error = 0;
+
+			#pragma omp parallel for
+			for(i=0; i<dim_cpu.space_elem; i=i+1) {
+				if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
+					thread_error++;
+					/*ea++;
+					t_ea++;
+					fprintf(file, "\n fv.v position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].v, fv_cpu_GOLD[i].v, t_ea);*/
+				}
+				if(fv_cpu_GOLD[i].x != fv_cpu[i].x) {
+					thread_error++;
+					/*ea++;
+					t_ea++;
+					fprintf(file, "\n fv.x position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].x, fv_cpu_GOLD[i].x, t_ea);*/
+				}
+				if(fv_cpu_GOLD[i].y != fv_cpu[i].y) {
+					thread_error++;
+					/*ea++;
+					t_ea++;
+					fprintf(file, "\n fv.y position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].y, fv_cpu_GOLD[i].y, t_ea);*/
+				}
+				if(fv_cpu_GOLD[i].z != fv_cpu[i].z) {
+					thread_error++;
+					/*ea++;
+					t_ea++;
+					fprintf(file, "\n fv.z position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);*/
+				}
+				if (thread_error  > 0) {
+					#pragma omp critical
+					{
+						t_ea++;
+						part_error++;
+
+						snprintf(error_detail, 150, "stream: %d, p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e, error: %d\n", streamIdx, \
+							i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);
+						#ifdef LOGS
+						log_error_detail(error_detail);
+						#endif
+						//fprintf(file, "\np: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e, error: %d\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);
+						thread_error = 0;
+					}
+				}
 			}
 		}
+		printf("Gold check time: %f\n", mysecond() - timestamp);
+
+		// iterate for each neighbor of a box (number_nn)
+		double flop =  number_nn;
+		// The last for iterate NUMBER_PAR_PER_BOX times
+		flop *= NUMBER_PAR_PER_BOX;
+		// the last for uses 46 operations plus 2 exp() functions
+		flop *=46;
+
+		flop *= nstreams;
+
+    double flops = (double)flop/kernel_time;
+    double outputpersec = (double)dim_cpu.space_elem * 4 * nstreams / kernel_time;
+    printf("BOXES:%d BLOCK:%d OUTPUT/S:%f FLOPS:%f\n",dim_cpu.boxes1d_arg,NUMBER_THREADS,outputpersec,flops);
+    printf("kernel_time:%f\n",kernel_time);
 
 		if (part_error>0) printf("part_error=%d\n", part_error);
 
 		if(part_error > 0 || (loop % 10 == 0)) {
 
 			printf("\ntest number: %d", loop);
-			printf(" time: %f\n", time);
+			printf(" time: %f\n", kernel_time);
 
-								 //we NEED this, beause at times the GPU get stuck and it gives a huge amount of error, we cannot let it write a stream of data on the HDD
+			//we NEED this, beause at times the GPU get stuck and it gives a huge amount of error, we cannot let it write a stream of data on the HDD
 			if(part_error > 500) exit(1);
 			if(part_error > 0 && part_error == old_ea) {
 				old_ea = 0;
@@ -792,6 +819,16 @@ int main(int argc, char *argv []) {
 			printf(".");
 			fflush(stdout);
 		}
+		//=====================================================================
+		//	GPU MEMORY DEALLOCATION
+		//=====================================================================
+		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+			cudaFree(d_rv_gpu[streamIdx]);
+			cudaFree(d_qv_gpu[streamIdx]);
+			cudaFree(d_fv_gpu[streamIdx]);
+			cudaFree(d_box_gpu[streamIdx]);
+		}
+
 		//=====================================================================
 		//	SYSTEM MEMORY DEALLOCATION
 		//=====================================================================
