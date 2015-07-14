@@ -3,3 +3,7 @@
 all: log_helper.c
 	gcc -c log_helper.c
 	ar cvr libLogHelper.a log_helper.o
+
+cuda: log_helper.c
+	nvcc -c log_helper.c
+	ar cvr libLogHelperCuda.a log_helper.o
