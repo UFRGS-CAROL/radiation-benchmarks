@@ -369,7 +369,11 @@ int main(int argc, char **argv) {
       do_calc();
    }
 #endif
-   
+
+#ifdef LOG
+ end_log_file();
+#endif
+
    return 0;
 }
 
