@@ -14,22 +14,22 @@
 
 //#define LOGS 1
 #ifdef LOGS
-#include "/home/carol/log_helper/log_helper.h"
+#include "/home/carol/radiation-benchmarks/include/log_helper.h"
 #endif /* LOGS */
 
 //#define N 1024
 
 //#define GOLD_MATRIX_PATH "/home/carol/TestGPU/GenerateGoldMatrix/Double_GOLD_1024.matrix"
-#define LOGFILE_MATRIXNAME "openclGEMM1024"
+#define LOGFILE_MATRIXNAME "openclGEMM"
 // #define PLATFORM_ID 0
 #define DEVICE_ID 0
 #define SWITCH_CHAR  '-'
 #define N_ERRORS_LOG 500
-#define ITERATIONS 1
 
 char *kernel_gemmN_path;
 char *gold_matrix, *a_matrix, *b_matrix;
 int input_size;
+int iteractions;
 
 using namespace std;
 
@@ -86,7 +86,7 @@ void
 RunBenchmark(cl_device_id dev, cl_context ctx, cl_command_queue queue);
 
 void usage() {
-    printf("Usage: gemm <input_size> <cl_device_type> <kernel_file> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX> \n");
+    printf("Usage: gemm <input_size> <cl_device_type> <kernel_file> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX> <#iteractions>\n");
     printf("  cl_device_types\n");
     printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
     printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
@@ -98,13 +98,14 @@ void usage() {
 int main(int argc, char ** argv)
 {
     int devType;
-    if(argc == 7) {
+    if(argc == 8) {
         input_size = atoi(argv[1]);
         devType = atoi(argv[2]);
         kernel_gemmN_path = argv[3];
         a_matrix = argv[4];
         b_matrix = argv[5];
         gold_matrix = argv[6];
+        iteractions = atoi(argv[1]);
     } else {
         usage();
         exit(1);
@@ -236,12 +237,6 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
     lda = ldb = ldc = input_size;
 
-#ifdef LOGS
-    // Log files
-    FILE* file;
-    FILE* log_file;
-    FILE* timefile;
-#endif /* LOGS */
 
     int loop2;
 
@@ -451,7 +446,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
 
     // Run NN
-    for (int it = 0; it < ITERATIONS; it++) {
+    for (int it = 0; it < iteractions; it++) {
 
 
         err = clEnqueueWriteBuffer(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
