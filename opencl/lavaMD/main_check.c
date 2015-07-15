@@ -28,7 +28,7 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
                                 fp* qv_cpu,
                                 FOUR_VECTOR* fv_cpu);
 
-long long get_time() {
+long long get_time2() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_sec * 1000000) + tv.tv_usec;
