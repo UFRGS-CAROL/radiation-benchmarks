@@ -448,6 +448,9 @@ if(OPENMP_FOUND)
 
 if(LOG)
    set_target_properties(clamr_openmponly PROPERTIES COMPILE_DEFINITIONS "LOG=1")
+   if (MIC_NATIVE)
+      set_target_properties(clamr_openmponly PROPERTIES COMPILE_DEFINITIONS "LOG=1;MIC_NATIVE=1")
+   endif(MIC_NATIVE)
    target_link_libraries(clamr_openmponly logHelper)
 endif(LOG)
 
@@ -478,6 +481,9 @@ if(OPENMP_FOUND)
 
 
    set_target_properties(clamr_openmponly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1;ALL_DEBUG=1")
+   if (MIC_NATIVE)
+      set_target_properties(clamr_openmponly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1;ALL_DEBUG=1;MIC_NATIVE=1")
+   endif(MIC_NATIVE)
    target_link_libraries(clamr_openmponly_debug logHelper)
 
 
