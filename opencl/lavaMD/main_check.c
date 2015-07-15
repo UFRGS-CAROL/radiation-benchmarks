@@ -265,50 +265,6 @@ int main(int argc, char *argv []) {
     //	SYSTEM MEMORY DEALLOCATION
     //=====================================================================
 
-    /*    // dump results
-        if( (file = fopen(output_gold, "wb" )) == 0 )
-            printf( "The file 'output_forces' was not opened\n" );
-        int number_zeros = 0;
-        int higher_zero = 0;
-        int lower_zero = 0;
-        for(i=0; i<dim_cpu.space_elem; i=i+1) {
-            if(fv_cpu[i].v == 0.0)
-                number_zeros++;
-            if(fv_cpu[i].v > 0.0)
-                higher_zero++;
-            if(fv_cpu[i].v < 0.0)
-                lower_zero++;
-
-            if(fv_cpu[i].x == 0.0)
-                number_zeros++;
-            if(fv_cpu[i].x > 0.0)
-                higher_zero++;
-            if(fv_cpu[i].x < 0.0)
-                lower_zero++;
-
-            if(fv_cpu[i].y == 0.0)
-                number_zeros++;
-            if(fv_cpu[i].y > 0.0)
-                higher_zero++;
-            if(fv_cpu[i].y < 0.0)
-                lower_zero++;
-
-            if(fv_cpu[i].z == 0.0)
-                number_zeros++;
-            if(fv_cpu[i].z > 0.0)
-                higher_zero++;
-            if(fv_cpu[i].z < 0.0)
-                lower_zero++;
-
-            fwrite(&(fv_cpu[i].v), 1, sizeof(double), file);
-            fwrite(&(fv_cpu[i].x), 1, sizeof(double), file);
-            fwrite(&(fv_cpu[i].y), 1, sizeof(double), file);
-            fwrite(&(fv_cpu[i].z), 1, sizeof(double), file);
-        }
-        fclose(file);
-
-        printf("Total Number of zeros in the output is %d, from %ld numbers\n",number_zeros, (dim_cpu.space_elem*4));
-    */
 
 #ifdef LOGS
     end_log_file();
@@ -660,6 +616,9 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
         }
 
+        if(loop%5==0) {
+            printf("errors:%f\n",part_error);
+        }
 #ifdef LOGS
         log_error_count(part_error);
 #endif /* LOGS */
