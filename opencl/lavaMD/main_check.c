@@ -617,7 +617,7 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
         }
 
         if(loop%5==0) {
-            printf("errors:%f\n",part_error);
+            printf("errors:%d\n",part_error);
         }
 #ifdef LOGS
         log_error_count(part_error);
