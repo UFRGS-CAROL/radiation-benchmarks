@@ -14,9 +14,9 @@
 #endif /* LOGS */
 
 
-char input_distance[150];
-char input_charges[150];
-char output_gold[150];
+char *input_distance;
+char *input_charges;
+char *output_gold;
 char *kernel_file;
 int block_size;
 int devType;
@@ -48,6 +48,7 @@ void usage() {
 int number_nn=0; // total number of neighbors
 int boxes = 15;
 int iteractions = 100000;
+FOUR_VECTOR *fv_cpu, *fv_cpu_GOLD;
 int main(int argc, char *argv []) {
 
     if(argc == 9) {
@@ -77,7 +78,6 @@ int main(int argc, char *argv []) {
     box_str* box_cpu;
     FOUR_VECTOR* rv_cpu;
     fp* qv_cpu;
-    FOUR_VECTOR* fv_cpu;
     int nh;
 
 
@@ -627,8 +627,9 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
             fatal_CL(error, __LINE__);
 
         int part_error=0;
+	int i, thread_error=0;
         #pragma omp parallel for
-        for(i=0; i<dim_cpu.space_elem; i=++) {
+        for(i=0; i<dim_cpu.space_elem; i++) {
 
             if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
                 thread_error++;
@@ -646,8 +647,9 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
                 #pragma omp critical
                 {
                     part_error++;
+		    char error_detail[200];
 
-                    snprintf(error_detail, 150, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z);
+                    snprintf(error_detail, 200, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z);
 #ifdef LOGS
                     log_error_detail(error_detail);
 #endif
