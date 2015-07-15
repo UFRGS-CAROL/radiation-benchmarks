@@ -308,7 +308,7 @@ int main(int argc, char** argv) {
 		{
 			printf("kernel errors: %d\n", errors);
 #ifdef LOGS
-    log_error_count(kerrors);
+    log_error_count(errors);
 #endif /* LOGS */
 		}
 		else
