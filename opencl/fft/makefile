@@ -16,11 +16,11 @@ CHK_EXEC=fft_check
 CHK_EXEC_NOLOGS=fft_check_nologs
 GEN_EXEC=fft_gen
 
-intel: intel_generate intel_chk_gold 
+intel: intel_generate intel_chk_gold intel_chk_gold_nologs 
 
-nvidia: nvidia_generate nvidia_chk_gold 
+nvidia: nvidia_generate nvidia_chk_gold nvidia_chk_gold_nologs
 
-amd: amd_generate amd_chk_gold 
+amd: amd_generate amd_chk_gold amd_chk_gold_nologs
 
 nvidia_generate: $(SOURCES_GEN)
 	$(CC) $(SOURCES_GEN) $(NVIDIA_INC) $(NVIDIA_LIB) -lOpenCL -o $(GEN_EXEC)
@@ -28,7 +28,7 @@ nvidia_generate: $(SOURCES_GEN)
 nvidia_chk_gold: $(SOURCES)
 	$(CC) $(SOURCES) $(NVIDIA_INC) $(NVIDIA_LIB) -lOpenCL -DLOGS=1  -o $(CHK_EXEC)
 
-nvidia_chk_gold: $(SOURCES)
+nvidia_chk_gold_nologs: $(SOURCES)
 	$(CC) $(SOURCES) $(NVIDIA_INC) $(NVIDIA_LIB) -lOpenCL  -o $(CHK_EXEC_NOLOGS)
 
 intel_generate: $(SOURCES_GEN)
@@ -37,7 +37,7 @@ intel_generate: $(SOURCES_GEN)
 intel_chk_gold: $(SOURCES)
 	$(CC) $(SOURCES) $(INTEL_INC) $(INTEL_LIB) -lOpenCL -DLOGS=1 -o $(CHK_EXEC)
 
-intel_chk_gold: $(SOURCES)
+intel_chk_gold_nologs: $(SOURCES)
 	$(CC) $(SOURCES) $(INTEL_INC) $(INTEL_LIB) -lOpenCL  -o $(CHK_EXEC_NOLOGS)
 
 amd_generate: $(SOURCES_GEN)
@@ -46,7 +46,7 @@ amd_generate: $(SOURCES_GEN)
 amd_chk_gold: $(SOURCES)
 	$(CC) $(SOURCES) $(AMD_INC) $(AMD_LIB) -lOpenCL -DLOGS=1  -o $(CHK_EXEC)
 
-amd_chk_gold: $(SOURCES)
+amd_chk_gold_nologs: $(SOURCES)
 	$(CC) $(SOURCES) $(AMD_INC) $(AMD_LIB) -lOpenCL  -o $(CHK_EXEC_NOLOGS)
 
 clean:
