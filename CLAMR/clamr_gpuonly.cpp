@@ -565,6 +565,9 @@ extern "C" void do_calc(void)
 
       ezcl_mem_walk_all();
 
+#ifdef LOG
+ end_log_file();
+#endif
       exit(0);
    }  //  Complete final output.
 }

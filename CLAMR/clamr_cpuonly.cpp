@@ -654,6 +654,9 @@ extern "C" void do_calc(void)
       FILE *fp = fopen(total_sim_time_log,"w");
       fprintf(fp,"The total execution time of the program was %g seconds\n", total_program_time);
       fclose(fp);
+#ifdef LOG
+ end_log_file();
+#endif
       exit(0);
    }  //  Complete final output.
    
