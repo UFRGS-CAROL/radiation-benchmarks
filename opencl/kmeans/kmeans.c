@@ -25,7 +25,7 @@
 #endif
 
 #define AVOIDZERO 1e-200
-#define ACCEPTDIFF 1e-5
+#define ACCEPTDIFF 1e-3
 
 int workgroup_blocksize = 256;
 int devType = 1;
