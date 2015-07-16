@@ -23,5 +23,5 @@ gen: generateMatrices.cu
 	$(NVCC) -I$(NVIDIA_INC) -L$(NVIDIA_LIB) -lcublas generateMatrices.cu -o $(GEN_EXEC)
 	
 clean:
-	rm $(RUN_EXEC) $(GEN_EXEC) $(MATRIX_NAMES)
+	rm -rf $(RUN_EXEC) $(GEN_EXEC) $(MATRIX_NAMES)
 

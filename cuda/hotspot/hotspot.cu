@@ -356,8 +356,8 @@ void run(int argc, char** argv)
 
 /////////// PERF
   double outputpersec = (double)((grid_rows*grid_rows*nstreams)/kernel_time);
-  printf("kernel time: %lf\n",kernel_time);
-  printf("SIZE:%d OUTPUT/S:%f FLOPS: %f\n",grid_rows, outputpersec, (double)flops / kernel_time);
+  //printf("kernel time: %lf\n",kernel_time);
+  //printf("SIZE:%d OUTPUT/S:%f FLOPS: %f\n",grid_rows, outputpersec, (double)flops / kernel_time);
 ///////////
 flops = 0;
 
