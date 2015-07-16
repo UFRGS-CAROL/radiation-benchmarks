@@ -24,6 +24,8 @@
 #define FLT_MAX 3.40282347e+38
 #endif
 
+#define AVOIDZERO 1e-200
+#define ACCEPTDIFF 1e-5
 
 int workgroup_blocksize = 256;
 int devType = 1;
@@ -413,15 +415,17 @@ int main( int argc, char** argv)
 		int kernel_errors=0;
 		for(i = 0; i < max_nclusters; i++){
 			for(j = 0; j < nfeatures; j++){
-				if (gold_cluster_centres[i][j]!=cluster_centres[i][j])
-				{
+            if ((fabs(gold_cluster_centres[i][j])>AVOIDZERO)&&
+                    ((fabs((cluster_centres[i][j]-gold_cluster_centres[i][j])/cluster_centres[i][j])>ACCEPTDIFF)||
+                     (fabs((cluster_centres[i][j]-gold_cluster_centres[i][j])/gold_cluster_centres[i][j])>ACCEPTDIFF))) {
+				//if (gold_cluster_centres[i][j]!=cluster_centres[i][j])
+				//{
 					kernel_errors++;
 					snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, cluster_centres[i][j], gold_cluster_centres[i][j]);
 					printf("%s\n", error_detail);
 #ifdef LOGS
 					log_error_detail(error_detail); 
 #endif
-exit(0);
 				}
 			}
 		}
