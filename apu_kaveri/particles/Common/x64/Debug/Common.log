@@ -1,0 +1,18 @@
+﻿Build started 7/8/2015 2:03:02 PM.
+     1>Project "C:\Repositories\valar-bench-read-only\particles\Common\Common.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /I./ /I\include /I../ /Zi /nologo /W3 /WX- /Od /D WIN32 /D _DEBUG /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug\\" /Fd"x64\Debug\vc120.pdb" /Gd /TP /errorReport:prompt Math\RadixSortHost.cpp Base\ThreadPool.cpp
+         ThreadPool.cpp
+         RadixSortHost.cpp
+         Generating Code...
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(1361,5): warning MSB8012: TargetPath(C:\Repositories\valar-bench-read-only\particles\x64\Debug\Common.lib) does not match the Library's OutputFile property value (C:\Repositories\valar-bench-read-only\particles\x64\Debug\Common64D.lib). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Lib.OutputFile).
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(1363,5): warning MSB8012: TargetName(Common) does not match the Library's OutputFile property value (Common64D). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Lib.OutputFile).
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\Lib.exe /OUT:"C:\Repositories\valar-bench-read-only\particles\x64\Debug\Common64D.lib" OpenCL.lib /LIBPATH:\lib\x86_64 /LIBPATH:../lib /NOLOGO /MACHINE:X64 x64\Debug\RadixSortHost.obj
+         x64\Debug\ThreadPool.obj
+     1>LINK : fatal error LNK1181: cannot open input file 'OpenCL.lib'
+     1>Done Building Project "C:\Repositories\valar-bench-read-only\particles\Common\Common.vcxproj" (Build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:01.58
