@@ -10,6 +10,9 @@
 #include <sys/time.h>
 #include <time.h>
 
+#ifdef LOGS
+#include "/home/carol/radiation-benchmarks/include/log_helper.h"
+#endif /* LOGS */
 
 #ifdef NV
 #include <oclUtils.h>
@@ -330,7 +333,7 @@ int main( int argc, char** argv)
     int		isOutput = 0;
 	int 	loop1, iteractions;
 
-	int enable_perfmeasure = 1;
+	int enable_perfmeasure = 0;
 
     char *output;
     if(argc == 7) {
@@ -363,6 +366,13 @@ int main( int argc, char** argv)
     if(initialize(use_gpu)) return -1;
 
     printf("clKmeans. npoints=%d nfeatures=%d threshold=%f clusters=%d ITERACTIONS=%d\n", npoints, nfeatures, threshold, max_nclusters, iteractions);fflush(stdout);
+#ifdef LOGS
+    char test_info[100];
+    snprintf(test_info, 100, "npoints:%d nfeatures:%d threshold:%f clusters:%d", npoints, nfeatures, threshold, max_nclusters);
+    start_log_file("openclKmeans", test_info);
+    set_max_errors_iter(500);
+    set_iter_interval_print(10);
+#endif /* LOGS */
 	for (loop1=0; loop1<iteractions; loop1++)
 	{
 		/* ============== I/O begin ==============*/
@@ -388,7 +398,13 @@ int main( int argc, char** argv)
 		/* ======================= core of the clustering ===================*/
 
 		cluster_centres = NULL;
+#ifdef LOGS
+        start_iteration();
+#endif /* LOGS */
 		cluster(npoints, nfeatures, features, min_nclusters, max_nclusters, threshold, &cluster_centres, nloops, enable_perfmeasure);
+#ifdef LOGS
+        end_iteration();
+#endif /* LOGS */
 
 		/* =============== Command Line Output =============== */
 		char error_detail[150];
@@ -407,6 +423,9 @@ exit(0);
 				}
 			}
 		}
+#ifdef LOGS
+        log_error_count(kernel_errors);
+#endif /* LOGS */
 		if (kernel_errors>0)
 			printf("\nERROR FOUND. Test number: %d\n", loop1);
 		printf(".");
@@ -417,6 +436,9 @@ exit(0);
 		free(features[0]);
 		free(features);
 	}
+#ifdef LOGS
+    end_log_file();
+#endif /* LOGS */
     shutdown();
 }
 
