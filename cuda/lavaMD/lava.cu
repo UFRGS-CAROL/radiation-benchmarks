@@ -703,7 +703,7 @@ number_nn += box_cpu[nh].nn;
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error logic: %s\n",error_string);
 			#ifdef LOGS
-			log_error_detail("error logic:"); log_error_detail(error_string); end_log_file();
+			log_error_detail("error logic:"); end_log_file();
 			#endif
 			exit(1);
 		}
