@@ -2,13 +2,21 @@
 
 
 // Location of timetamp file for software watchdog
+#ifdef MIC_NATIVE
+char timestamp_watchdog[200] = "/micNfs/carol/watchdog/timestamp.txt";
+#else
 char timestamp_watchdog[200] = "/home/carol/watchdog/timestamp.txt";
+#endif
 // Max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
 unsigned long int max_errors_per_iter = 5000;
 
 // Absolute path for log file, if needed
+#ifdef MIC_NATIVE
+char absolute_path[200] = "/micNfs/carol/logs/";
+#else
 char absolute_path[200] = "/home/carol/logs/";
+#endif
 
 // Used to print the log only for some iterations, equal 1 means print every iteration
 int iter_interval_print = 1;
