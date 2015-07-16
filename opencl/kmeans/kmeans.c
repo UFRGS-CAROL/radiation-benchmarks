@@ -245,7 +245,7 @@ void deallocateMemory()
 }
 
 void usage(char *argv0) {
-    printf("Usage: %s <cl_device_tipe> <ocl_kernel_file> <input_file> <output_gold_file> <#iterations> <workgroup_block_size>\n", argv0);
+    printf("Usage: %s <cl_device_tipe> <ocl_kernel_file> <#points> <#features> <input_file> <output_gold_file> <#iterations> <workgroup_block_size>\n", argv0);
     printf("  cl_device_types\n");
     printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
     printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
@@ -336,13 +336,15 @@ int main( int argc, char** argv)
 	int enable_perfmeasure = 0;
 
     char *output;
-    if(argc == 7) {
+    if(argc == 9) {
         devType = atoi(argv[1]);
         kernel_file = argv[2];
-        input_filename = argv[3];
-        output = argv[4];
-        iteractions = atoi(argv[5]);
-        workgroup_blocksize = atoi(argv[6]);
+        npoints = atoi(argv[3]);
+        nfeatures = atoi(argv[4]);
+        input_filename = argv[5];
+        output = argv[6];
+        iteractions = atoi(argv[7]);
+        workgroup_blocksize = atoi(argv[8]);
     } else {
         usage(argv[0]);
         exit(1);
