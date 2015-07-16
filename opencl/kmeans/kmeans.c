@@ -401,11 +401,11 @@ int main( int argc, char** argv)
 
 		cluster_centres = NULL;
 #ifdef LOGS
-        start_iteration();
+//        start_iteration();
 #endif /* LOGS */
 		cluster(npoints, nfeatures, features, min_nclusters, max_nclusters, threshold, &cluster_centres, nloops, enable_perfmeasure);
 #ifdef LOGS
-        end_iteration();
+//        end_iteration();
 #endif /* LOGS */
 
 		/* =============== Command Line Output =============== */
@@ -419,7 +419,7 @@ int main( int argc, char** argv)
 					snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, cluster_centres[i][j], gold_cluster_centres[i][j]);
 					printf("%s\n", error_detail);
 #ifdef LOGS
-					log_error_detail(error_detail); end_log_file(); 
+					log_error_detail(error_detail); 
 #endif
 exit(0);
 				}
