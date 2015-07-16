@@ -72,11 +72,15 @@
 
 #define RANDOM_MAX 2147483647
 
-long long get_time() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (tv.tv_sec * 1000000) + tv.tv_usec;
-}
+#ifdef LOGS
+#include "/home/carol/radiation-benchmarks/include/log_helper.h"
+#endif /* LOGS */
+
+//long long get_time() {
+//    struct timeval tv;
+//    gettimeofday(&tv, NULL);
+//    return (tv.tv_sec * 1000000) + tv.tv_usec;
+//}
 
 extern double wtime(void);
 
