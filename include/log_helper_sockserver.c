@@ -17,6 +17,13 @@ void *handle_client(void *sock) {
         {
             printf("filename: '%s'\n",filename);
             printf("message: '%s'\n",message);
+	    FILE *fp = fopen(filename, "a");
+	    if(fp != NULL){
+	    	fprintf(fp, "%s", message);
+		fclose(fp);
+	    }else{
+	    	fprintf(stderr, "cannot open file %s\n",filename);
+	    }
         }
         if (read == -1) {
             perror("Failed to receive message\n");

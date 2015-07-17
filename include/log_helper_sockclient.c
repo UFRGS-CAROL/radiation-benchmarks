@@ -19,13 +19,13 @@
 unsigned long int max_errors_per_iter = 5000;
 
 // Absolute path for log file, if needed
-//char absolute_path[200] = "/home/carol/logs/";
+char absolute_path[200] = "/home/carol/logs/";
 
 // Used to print the log only for some iterations, equal 1 means print every iteration
 int iter_interval_print = 1;
 
 char log_file_name[200] = "";
-//char full_log_file_name[300] = "";
+char full_log_file_name[500] = "";
 
 // Saves the last amount of error found for a specific iteration
 unsigned long int last_iter_errors = 0;
@@ -100,11 +100,11 @@ void send_message(char * message){
         
 	freeaddrinfo(servinfo); // all done with this structure
 
-        if( send(sockfd , log_file_name , strlen(log_file_name) , 0) < 0)
+        if( send(sockfd , full_log_file_name , 500 , 0) < 0)
         {
             fprintf(stderr, "Send message failed");
         }else{
-		send(sockfd , message, strlen(message) , 0);
+		send(sockfd , message, 2000 , 0);
 	}
 
 	close(sockfd);
@@ -175,7 +175,7 @@ int start_log_file(char *benchmark_name, char *test_info){
     time_t file_time;
     struct tm *ptm;
     char day[10], month[10], year[15], hour[10], second[10], minute[10];
-    char log_file_name[180] = "";
+    //char log_file_name[180] = "";
 
     file_time = time(NULL);
     ptm = gmtime(&file_time);
@@ -210,10 +210,10 @@ int start_log_file(char *benchmark_name, char *test_info){
     strcat(log_file_name, ".log");
 
 
-    //strcpy(full_log_file_name, absolute_path);
-    //if(strlen(absolute_path) > 0 && absolute_path[strlen(absolute_path)-1] != '/' )
-    //    strcat(full_log_file_name, "/");
-    //strcat(full_log_file_name, log_file_name);
+    strcpy(full_log_file_name, absolute_path);
+    if(strlen(absolute_path) > 0 && absolute_path[strlen(absolute_path)-1] != '/' )
+        strcat(full_log_file_name, "/");
+    strcat(full_log_file_name, log_file_name);
 // ~ printf("%s\n", full_log_file_name);
 
     //struct stat buf;
