@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
 
     start_log_file("clamr_gpuonly", input_line);
 
-    set_iter_interval_print(1);
+    set_iter_interval_print(10);
     printf("log file is %s\n",get_log_file_name());
 #endif
 
