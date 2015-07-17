@@ -16,7 +16,17 @@
 
 #include <limits>
 
+/* LOGS */
+#ifdef LOGS
+#include "/home/carol/radiation-benchmarks/include/log_helper.h"
+#endif	/* LOGS */
+
 using namespace std;
+
+int error_count;
+
+float4* back_posS;
+float4* back_posL;
 
 Demo* m_pDemo;
 DeviceDataBase* deviceData = NULL;
@@ -41,21 +51,38 @@ int main(int argc, char *argv[])
 		numIter = atoi(argv[4]);
 	}
 
+#ifdef LOGS
+	char test_info[100];
+	snprintf(test_info, 100, "size: N_L=%d, N_S=%d, N_F=%d",
+			numL, numS, numF);
+	start_log_file("openclParticles", test_info);
+	set_max_errors_iter(200);
+	set_iter_interval_print(1000);
+#endif	/* LOGS */
+
 	initDemo(numL, numS, numF);
-	
+
 	printf("Running iterations (N_LARGE=%d, N_SMALL=%d, N_FIXED=%d N_ITER=%d):\n", numL, numS, numF, numIter);
 	for (int iter = 0; iter < numIter; iter++)
         {
+		error_count = 0;
+
 	       if (iter % 10 == 0)
                     printf("iteration %d of %d\n", iter+1, numIter);
 		    
                     m_pDemo->resetDemo();
 		    m_pDemo->reset();
-                    for (int i = 0; i < FINAL_STATE_ITERATIONS; i++)
+//                    for (int i = 0; i < FINAL_STATE_ITERATIONS; i++)
 		    {
 			    m_pDemo->stepDemo();
 		    }
+
 	}
+
+#ifdef LOGS
+	end_log_file();
+#endif	/* LOGS */
+
 
 	return 0;
 }
@@ -671,7 +698,6 @@ struct CPUIntegrateTask : public ThreadPool::Task
 
 void Dem2Demo::step( float dt )
 {
-	int nIter = 1;
 
 	float e = 0.85f;
 	float4 g = make_float4(0.f, -9.8f, 0.f, 0.f) * 0.5f;
@@ -690,8 +716,14 @@ void Dem2Demo::step( float dt )
 		cBuffer.m_gridScale = m_grid->m_gProps.m_gridScale;
 	}
 
-	for(int iter=0; iter<nIter; iter++)
+
+	for(int iter=0; iter<FINAL_STATE_ITERATIONS; iter++)
 	{
+
+#ifdef LOGS
+	start_iteration();
+#endif	/* LOGS */
+
 		//	this shouldn't be here
 		if( m_gridIsDirty )
 		{
@@ -817,46 +849,71 @@ void Dem2Demo::step( float dt )
 			
 			//	4. sync GPU and CPU
 		}
-	}
+	
+#ifdef LOGS
+	end_iteration();
+#endif	/* LOGS */		
 
-	{
 		m_posD.read<float4>( m_deviceData, m_numSParticles, m_posS, &m_sBuffer );
 		m_velD.read<float4>( m_deviceData, m_numSParticles, m_velS, &m_sBuffer );
 		DUtils::waitForCompletion( m_deviceData );
-	}
 	
-	int error_count = 0;
-	int i;
-	for(i = 0; i < m_numLParticles; i++)
-	{
-		if((abs(m_posL[i].x) >= 1.5 ||
-			abs(m_posL[i].y) >= 1.5 ||
-			abs(m_posL[i].z) >= 1.5) &&
-			(!isnan(m_posL[i].x) && !isnan(m_posL[i].y) &&
-			!isnan(m_posL[i].z) && !isnan(m_posL[i].z)))
+	if(iter_count == 0 )m_posS[9].x = 15.12;
+	iter_count++;
+		int i;
+		char error_detail[256];
+		
+		for(i = 0; i < m_numLParticles; i++)
 		{
-			error_count++;
-			printf("ERROR: posL[%d]: (%f, %f, %f, %f)\n",
-				       	i, m_posL[i].x, m_posL[i].y, m_posL[i].z, m_posL[i].w);
+			if((abs(m_posL[i].x) >= 1.5 ||
+				abs(m_posL[i].y) >= 1.5 ||
+				abs(m_posL[i].z) >= 1.5) &&
+				(!isnan(m_posL[i].x) && !isnan(m_posL[i].y) &&
+				!isnan(m_posL[i].z) && !isnan(m_posL[i].z)))
+			{
+				error_count++;
+				snprintf(error_detail, 256, "ERROR: posL[%d]: (%f, %f, %f, %f)\n",
+					       	i, m_posL[i].x, m_posL[i].y, m_posL[i].z, m_posL[i].w);
+				printf("ERROR: posL[%d]: (%f, %f, %f, %f)\n",
+					       	i, m_posL[i].x, m_posL[i].y, m_posL[i].z, m_posL[i].w);
+		
+#ifdef LOGS
+	log_error_detail(error_detail);
+#endif	/* LOGS */
+	
+	
+			}	
+		}
+	
+		for(i = 0; i < m_numSParticles; i++)
+		{
+			if((abs(m_posS[i].x) >= 1.5 ||
+				abs(m_posS[i].y) >= 1.5 ||
+				abs(m_posS[i].z) >= 1.5) &&
+				(!isnan(m_posS[i].x) && !isnan(m_posS[i].y) &&
+				 !isnan(m_posS[i].z) && !isnan(m_posS[i].z)))
+			{
+				error_count++;
+				snprintf(error_detail, 256, "ERROR: posS[%d]: (%f, %f, %f, %f)\n",
+					       	i, m_posS[i].x, m_posS[i].y, m_posS[i].z, m_posS[i].w);
+				printf("ERROR: posS[%d]: (%f, %f, %f, %f)\n",
+					       	i, m_posS[i].x, m_posS[i].y, m_posS[i].z, m_posS[i].w);
+	
+	
+#ifdef LOGS
+	log_error_detail(error_detail);
+#endif	/* LOGS */
+			
+			}
 		}	
 	}
 
-	for(i = 0; i < m_numSParticles; i++)
-	{
-		if((abs(m_posS[i].x) >= 1.5 ||
-			abs(m_posS[i].y) >= 1.5 ||
-			abs(m_posS[i].z) >= 1.5) &&
-			(!isnan(m_posS[i].x) && !isnan(m_posS[i].y) &&
-			 !isnan(m_posS[i].z) && !isnan(m_posS[i].z)))
-		{
-			error_count++;
-			printf("ERROR: posS[%d]: (%f, %f, %f, %f)\n",
-				       	i, m_posS[i].x, m_posS[i].y, m_posS[i].z, m_posS[i].w);
-			
-		}
-	}
+#ifdef LOGS
+	log_error_count(error_count);
+#endif	/* LOGS */
+	
 }			
-
+	
 float abs(float val)
 {
 	float abs_val;
