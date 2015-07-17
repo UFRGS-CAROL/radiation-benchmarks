@@ -3,8 +3,8 @@ CC = gcc
 CC_FLAGS = -g -fopenmp -O2 
 
 CUDA_LIB_DIR=/usr/local/cuda/lib64
-LOGHELPER_INC=../../include/
-LOGHELPER_LIB=../../include/
+LOGHELPER_INC=../../include
+LOGHELPER_LIB=../../include
 
 # CUDA compiler
 NVCC = nvcc
@@ -13,7 +13,7 @@ NVCC_FLAGS = -arch=sm_35
 all : kmeans kmeans_generate
 
 kmeans: cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o
-	$(CC) $(CC_FLAGS) cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o -o kmeans -L$(CUDA_LIB_DIR) -L$(LOGHELPER_LIB) -lLogHelper -lcudart -lm
+	$(CC) $(CC_FLAGS) cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o -o kmeans -L$(CUDA_LIB_DIR) -L$(LOGHELPER_LIB) $(NVCCFLAGS) -lLogHelperCuda -lcudart -lm
 
 kmeans_generate: cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o kmeans_generate.o
 	$(CC) $(CC_FLAGS) cluster.o getopt.o kmeans_generate.o kmeans_clustering.o kmeans_cuda.o rmse.o -o kmeans_generate -L$(CUDA_LIB_DIR) -lcudart -lm
