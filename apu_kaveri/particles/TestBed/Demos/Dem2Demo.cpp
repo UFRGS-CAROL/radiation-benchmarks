@@ -858,8 +858,6 @@ void Dem2Demo::step( float dt )
 		m_velD.read<float4>( m_deviceData, m_numSParticles, m_velS, &m_sBuffer );
 		DUtils::waitForCompletion( m_deviceData );
 	
-	if(iter_count == 0 )m_posS[9].x = 15.12;
-	iter_count++;
 		int i;
 		char error_detail[256];
 		
