@@ -18,21 +18,6 @@
 
 using namespace std;
 
-//#define EPSILON_POS_L 0.15
-//#define EPSILON_VEL_L 15000
-#define EPSILON_FORCE_L 1
-//#define EPSILON_POS_S 0.15
-//#define EPSILON_VEL_S 15000
-#define EPSILON_FORCE_S 1
-
-float4* gold_posL;
-float4* gold_velL;
-float4* gold_forceL;
-	
-float4* gold_posS;
-float4* gold_velS;
-float4* gold_forceS;
-	
 Demo* m_pDemo;
 DeviceDataBase* deviceData = NULL;
 
@@ -56,20 +41,12 @@ int main(int argc, char *argv[])
 		numIter = atoi(argv[4]);
 	}
 
-	gold_posL = (float4*) malloc(numL*sizeof(float4));
-	gold_velL = (float4*) malloc(numL*sizeof(float4));
-	gold_forceL = (float4*) malloc(numL*sizeof(float4));
-	
-	gold_posS = (float4*) malloc(numS*sizeof(float4));
-	gold_velS = (float4*) malloc(numS*sizeof(float4));
-	gold_forceS = (float4*) malloc(numS*sizeof(float4));
-
 	initDemo(numL, numS, numF);
 	
 	printf("Running iterations (N_LARGE=%d, N_SMALL=%d, N_FIXED=%d N_ITER=%d):\n", numL, numS, numF, numIter);
 	for (int iter = 0; iter < numIter; iter++)
         {
-		//       if (iter % 10 == 0)
+	       if (iter % 10 == 0)
                     printf("iteration %d of %d\n", iter+1, numIter);
 		    
                     m_pDemo->resetDemo();
@@ -79,13 +56,6 @@ int main(int argc, char *argv[])
 			    m_pDemo->stepDemo();
 		    }
 	}
-
- 	free(gold_posL);
-	free(gold_velL);
-	free(gold_forceL);
-	free(gold_posS);
-	free(gold_velS);
-	free(gold_forceS);
 
 	return 0;
 }
@@ -238,24 +208,38 @@ void Dem2Demo::reset()
 	rS /= 2.5f;
 
 	//READ PRE-GENERATED INPUTS (LARGE PARTICLES).
+	char cur_file[256];
+
+	sprintf(cur_file, "inputs/posL_input_%d_%d_%d",
+			m_numLParticles, m_numSParticles, m_numFParticles);
+
 	ifstream posL_input;
-	posL_input.open("inputs/posL_input", ios::binary);
+	posL_input.open(cur_file, ios::binary);
 	posL_input.read((char*)m_posL, (m_numLParticles + m_numFParticles)*sizeof(float4));
 	posL_input.close();
 
+	sprintf(cur_file, "inputs/velL_input_%d_%d_%d",
+			m_numLParticles, m_numSParticles, m_numFParticles);
+
 	ifstream velL_input;
-	velL_input.open("inputs/velL_input", ios::binary);
+	velL_input.open(cur_file, ios::binary);
 	velL_input.read((char*)m_velL, (m_numLParticles + m_numFParticles)*sizeof(float4));
 	velL_input.close();
 
 	//READ PRE-GENERATED INPUTS (SMALL PARTICLES).
+	sprintf(cur_file, "inputs/posS_input_%d_%d_%d",
+			m_numLParticles, m_numSParticles, m_numFParticles);
+	
 	ifstream posS_input;
-	posS_input.open("inputs/posS_input", ios::binary);
+	posS_input.open(cur_file, ios::binary);
 	posS_input.read((char*)m_posS, m_numSParticles*sizeof(float4));
 	posS_input.close();
 
+	sprintf(cur_file, "inputs/velS_input_%d_%d_%d",
+			m_numLParticles, m_numSParticles, m_numFParticles);
+
 	ifstream velS_input;
-	velS_input.open("inputs/velS_input", ios::binary);
+	velS_input.open(cur_file, ios::binary);
 	velS_input.read((char*)m_velS, m_numSParticles*sizeof(float4));
 	velS_input.close();
 
@@ -687,22 +671,6 @@ struct CPUIntegrateTask : public ThreadPool::Task
 
 void Dem2Demo::step( float dt )
 {
-	//printf("%f \n", m_posL[15].x);
-
-	float EPSILON_POS_L = m_numLParticles*0.0005;
-	float EPSILON_VEL_L = m_numLParticles*80;
-	float EPSILON_POS_S = m_numSParticles*0.0005;
-	float EPSILON_VEL_S = m_numSParticles*80;
-
-	//printf("EPS: %f %f %f %f\n", EPSILON_POS_L, EPSILON_VEL_L, EPSILON_POS_S, EPSILON_VEL_S);
-	memcpy(gold_posL, m_posL, m_numLParticles*sizeof(float4));
-	memcpy(gold_velL, m_velL, m_numLParticles*sizeof(float4));
-	memcpy(gold_forceL, m_forceL, m_numLParticles*sizeof(float4));
-	
-	memcpy(gold_posS, m_posS, m_numSParticles*sizeof(float4));
-	memcpy(gold_velS, m_velS, m_numSParticles*sizeof(float4));
-	memcpy(gold_forceS, m_forceS, m_numSParticles*sizeof(float4));	
-	
 	int nIter = 1;
 
 	float e = 0.85f;
@@ -856,153 +824,37 @@ void Dem2Demo::step( float dt )
 		m_velD.read<float4>( m_deviceData, m_numSParticles, m_velS, &m_sBuffer );
 		DUtils::waitForCompletion( m_deviceData );
 	}
-
-//	if(iter_count == FINAL_STATE_ITERATIONS - 1)
-//	{
-//		printf("last positions (%f, %f, %f, %f) (%f, %f, %f, %f)\n", 
-//				m_posL[0].x, m_posL[0].y, m_posL[0].z, m_posL[0].w,
-//				m_posS[0].x, m_posS[0].y, m_posS[0].z, m_posS[0].w);
-
-/*		float4* gold_posL = (float4*) malloc(m_numLParticles*sizeof(float4));
-		float4* gold_velL = (float4*) malloc(m_numLParticles*sizeof(float4));
-		float4* gold_forceL = (float4*) malloc(m_numLParticles*sizeof(float4));
 	
-		float4* gold_posS = (float4*) malloc(m_numSParticles*sizeof(float4));
-		float4* gold_velS = (float4*) malloc(m_numSParticles*sizeof(float4));
-		float4* gold_forceS = (float4*) malloc(m_numSParticles*sizeof(float4));
-	
-		ifstream gold;
-		gold.open("golds/gold", ios::binary);
-	
-		gold.read((char*)gold_posL, m_numLParticles*sizeof(float4));
-		gold.read((char*)gold_velL, m_numLParticles*sizeof(float4));
-		gold.read((char*)gold_forceL, m_numLParticles*sizeof(float4));
-	
-		gold.read((char*)gold_posS, m_numSParticles*sizeof(float4));
-		gold.read((char*)gold_velS, m_numSParticles*sizeof(float4));
-		gold.read((char*)gold_forceS, m_numSParticles*sizeof(float4));
-	
-		gold.close();
-*/
-	m_posL[0].x = 0;
 	int error_count = 0;
 	int i;
 	for(i = 0; i < m_numLParticles; i++)
 	{
-		if((abs(m_posL[i].x - gold_posL[i].x) >= EPSILON_POS_L ||
-			abs(m_posL[i].y - gold_posL[i].y) >= EPSILON_POS_L ||
-			abs(m_posL[i].z - gold_posL[i].z) >= EPSILON_POS_L ||
-			abs(m_posL[i].w - gold_posL[i].w) >= EPSILON_POS_L) &&
-			isfinite(m_posL[i].x) && isfinite(m_posL[i].y) &&
-			isfinite(m_posL[i].z) && isfinite(m_posL[i].z) &&
-			!isnan(m_posL[i].x) && !isnan(m_posL[i].y) &&
-			!isnan(m_posL[i].z) && !isnan(m_posL[i].z))
+		if((abs(m_posL[i].x) >= 1.5 ||
+			abs(m_posL[i].y) >= 1.5 ||
+			abs(m_posL[i].z) >= 1.5) &&
+			(!isnan(m_posL[i].x) && !isnan(m_posL[i].y) &&
+			!isnan(m_posL[i].z) && !isnan(m_posL[i].z)))
 		{
 			error_count++;
-			printf("ERROR: posL[%d]: (%f, %f, %f, %f)   gold_posL[%d]: (%f, %f, %f, %f)\n",
-				       	i, m_posL[i].x, m_posL[i].y, m_posL[i].z, m_posL[i].w,
-					i, gold_posL[i].x, gold_posL[i].y, gold_posL[i].z, gold_posL[i].w);
-		
-			printf("\n%f %f %f %f\n", 
-					abs(m_posL[i].x - gold_posL[i].x),
-					abs(m_posL[i].y - gold_posL[i].y),
-					abs(m_posL[i].z - gold_posL[i].z),
-					abs(m_posL[i].w - gold_posL[i].w));
-
-		
-		}
-
-		else if((abs(m_velL[i].x - gold_velL[i].x) >= EPSILON_VEL_L ||
-			abs(m_velL[i].y - gold_velL[i].y) >= EPSILON_VEL_L ||
-			abs(m_velL[i].z - gold_velL[i].z) >= EPSILON_VEL_L ||
-			abs(m_velL[i].w - gold_velL[i].w) >= EPSILON_VEL_L) &&
-			isfinite(m_velL[i].x) && isfinite(m_velL[i].y) &&
-			isfinite(m_velL[i].z) && isfinite(m_velL[i].z) &&
-			!isnan(m_velL[i].x) && !isnan(m_velL[i].y) &&
-			!isnan(m_velL[i].z) && !isnan(m_velL[i].z))
-		{
-			error_count++;
-			printf("ERROR: velL[%d]: (%f, %f, %f, %f)   gold_velL[%d]: (%f, %f, %f, %f)\n",
-				       	i, m_velL[i].x, m_velL[i].y, m_velL[i].z, m_velL[i].w,
-					i, gold_velL[i].x, gold_velL[i].y, gold_velL[i].z, gold_velL[i].w);
-			printf("\n%f %f %f %f\n", 
-					abs(m_velL[i].x - gold_velL[i].x),
-					abs(m_velL[i].y - gold_velL[i].y),
-					abs(m_velL[i].z - gold_velL[i].z),
-					abs(m_velL[i].w - gold_velL[i].w));
-		}
-	
-		else if(abs(m_forceL[i].x - gold_forceL[i].x) >= EPSILON_FORCE_L ||
-			abs(m_forceL[i].y - gold_forceL[i].y) >= EPSILON_FORCE_L ||
-			abs(m_forceL[i].z - gold_forceL[i].z) >= EPSILON_FORCE_L ||
-			abs(m_forceL[i].w - gold_forceL[i].w) >= EPSILON_FORCE_L)
-		{
-			error_count++;
-			printf("ERROR: forceL[%d]: (%f, %f, %f, %f)   gold_forceL[%d]: (%f, %f, %f, %f)\n",
-				       	i, m_forceL[i].x, m_forceL[i].y, m_forceL[i].z, m_forceL[i].w,
-					i, gold_forceL[i].x, gold_forceL[i].y, gold_forceL[i].z, gold_forceL[i].w);
+			printf("ERROR: posL[%d]: (%f, %f, %f, %f)\n",
+				       	i, m_posL[i].x, m_posL[i].y, m_posL[i].z, m_posL[i].w);
 		}	
-}
+	}
 
 	for(i = 0; i < m_numSParticles; i++)
 	{
-		if(abs(m_posS[i].x - gold_posS[i].x) >= EPSILON_POS_S ||
-			abs(m_posS[i].y - gold_posS[i].y) >= EPSILON_POS_S ||
-			abs(m_posS[i].z - gold_posS[i].z) >= EPSILON_POS_S ||
-			abs(m_posS[i].w - gold_posS[i].w) >= EPSILON_POS_S)
+		if((abs(m_posS[i].x) >= 1.5 ||
+			abs(m_posS[i].y) >= 1.5 ||
+			abs(m_posS[i].z) >= 1.5) &&
+			(!isnan(m_posS[i].x) && !isnan(m_posS[i].y) &&
+			 !isnan(m_posS[i].z) && !isnan(m_posS[i].z)))
 		{
 			error_count++;
-			printf("ERROR: posS[%d]: (%f, %f, %f, %f)   gold_posS[%d]: (%f, %f, %f, %f)\n",
-				       	i, m_posS[i].x, m_posS[i].y, m_posS[i].z, m_posS[i].w,
-					i, gold_posS[i].x, gold_posS[i].y, gold_posS[i].z, gold_posS[i].w);
+			printf("ERROR: posS[%d]: (%f, %f, %f, %f)\n",
+				       	i, m_posS[i].x, m_posS[i].y, m_posS[i].z, m_posS[i].w);
 			
-			printf("\n%f %f %f %f\n", 
-					abs(m_posS[i].x - gold_posS[i].x),
-					abs(m_posS[i].y - gold_posS[i].y),
-					abs(m_posS[i].z - gold_posS[i].z),
-					abs(m_posS[i].w - gold_posS[i].w));
-
-		
 		}
-
-		else if(abs(m_velS[i].x - gold_velS[i].x) >= EPSILON_VEL_S ||
-			abs(m_velS[i].y - gold_velS[i].y) >= EPSILON_VEL_S ||
-			abs(m_velS[i].z - gold_velS[i].z) >= EPSILON_VEL_S ||
-			abs(m_velS[i].w - gold_velS[i].w) >= EPSILON_VEL_S)
-		{
-			error_count++;
-			printf("ERROR: velS[%d]: (%f, %f, %f, %f)   gold_velS[%d]: (%f, %f, %f, %f)\n",
-				       	i, m_velS[i].x, m_velS[i].y, m_velS[i].z, m_velS[i].w,
-					i, gold_velS[i].x, gold_velS[i].y, gold_velS[i].z, gold_velS[i].w);
-			
-			printf("\n%f %f %f %f\n", 
-					abs(m_velS[i].x - gold_velS[i].x),
-					abs(m_velS[i].y - gold_velS[i].y),
-					abs(m_velS[i].z - gold_velS[i].z),
-					abs(m_velS[i].w - gold_velS[i].w));
-
-		
-		}
-	
-		else if(abs(m_forceS[i].x - gold_forceS[i].x) >= EPSILON_FORCE_S ||
-			abs(m_forceS[i].y - gold_forceS[i].y) >= EPSILON_FORCE_S ||
-			abs(m_forceS[i].z - gold_forceS[i].z) >= EPSILON_FORCE_S ||
-			abs(m_forceS[i].w - gold_forceS[i].w) >= EPSILON_FORCE_S)
-		{
-			error_count++;
-			printf("ERROR: forceS[%d]: (%f, %f, %f, %f)   gold_forceS[%d]: (%f, %f, %f, %f)\n",
-				       	i, m_forceS[i].x, m_forceS[i].y, m_forceS[i].z, m_forceS[i].w,
-					i, gold_forceS[i].x, gold_forceS[i].y, gold_forceS[i].z, gold_forceS[i].w);
-		}
-	
 	}
-
-	//iter_count = 0;
-
-	//}
-
-//	else
-//		iter_count++;
 }			
 
 float abs(float val)

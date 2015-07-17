@@ -8,7 +8,7 @@
 #include <Common/DeviceUtils/DeviceUtils.h>
 #include <Demos/UniformGrid.h>
 
-#define FINAL_STATE_ITERATIONS 100
+#define FINAL_STATE_ITERATIONS 1000
 
 class Dem2Demo : public Demo
 {
