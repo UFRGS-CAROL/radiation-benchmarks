@@ -1,0 +1,20 @@
+﻿Build started 7/2/2015 10:55:45 PM.
+     1>Project "C:\Repositories\valar-bench-read-only\particles\Common\Common.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I./ /I"C:\Program Files (x86)\AMD APP SDK\2.9-1\\include" /I../ /I/Include /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /D WIN32 /D NDEBUG /D _LIB /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /arch:SSE2 /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Math\RadixSortHost.cpp Base\ThreadPool.cpp
+         RadixSortHost.cpp
+         ThreadPool.cpp
+         Generating Code...
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"C:\Repositories\valar-bench-read-only\particles\Release\Common32.lib" OpenCL.lib /LIBPATH:"C:\Program Files (x86)\AMD APP SDK\2.9-1\\lib\x86" /LIBPATH:../ /LIBPATH:/Lib/x86 /NOLOGO /LTCG Release\RadixSortHost.obj
+         Release\ThreadPool.obj
+         Common.vcxproj -> C:\Repositories\valar-bench-read-only\particles\Release\Common32.lib
+       PostBuildEvent:
+         copy C:\Repositories\valar-bench-read-only\particles\Release\Common32.lib ..\lib\
+         :VCEnd
+                 1 file(s) copied.
+     1>Done Building Project "C:\Repositories\valar-bench-read-only\particles\Common\Common.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:01.39

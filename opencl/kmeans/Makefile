@@ -17,9 +17,9 @@ SOURCES_GEN=cluster.c  kmeans_clustering.c  kmeans_generate.c
 
 
 amd: $(SOURCES_GEN) $(SOURCES)
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -lOpenCL $(SOURCES_GEN) $(AMD_INC) $(AMD_LIB) -o kmeans_gen
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -lOpenCL $(SOURCES) $(AMD_INC) $(AMD_LIB) -o kmeans_nologs
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -lOpenCL -DLOGS=1 $(SOURCES_LOGS) $(AMD_INC) $(AMD_LIB) -o kmeans
+	$(CC) $(KERNEL_DIM) $(CC_FLAGS) $(SOURCES_GEN) $(AMD_INC) $(AMD_LIB) -o kmeans_gen -lOpenCL
+	$(CC) $(KERNEL_DIM) $(CC_FLAGS) $(SOURCES) $(AMD_INC) $(AMD_LIB) -o kmeans_nologs -lOpenCL
+	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -DLOGS=1 $(SOURCES_LOGS) $(AMD_INC) $(AMD_LIB) -o kmeans -lOpenCL
                                                                                                      
 intel: $(SOURCES_GEN) $(SOURCES)                                                                                
 	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -lOpenCL $(SOURCES_GEN) $(INTEL_INC) $(INTEL_LIB) -o kmeans_gen 

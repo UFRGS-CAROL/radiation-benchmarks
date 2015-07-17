@@ -4,7 +4,7 @@
 // "Fitting FFT onto G80 Architecture". Vasily Volkov and Brian Kazian, UC Berkeley CS258 project report. May 2008.
 #pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable
 #pragma OPENCL EXTENSION cl_khr_fp64: enable
-#pragma OPENCL EXTENSION cl_nv_compiler_options: enable
+//#pragma OPENCL EXTENSION cl_nv_compiler_options: enable
 
 #ifndef M_PI
 # define M_PI 3.14159265358979323846f
