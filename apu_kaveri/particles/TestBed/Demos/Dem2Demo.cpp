@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 			numL, numS, numF);
 	start_log_file("openclParticles", test_info);
 	set_max_errors_iter(200);
-	set_iter_interval_print(1000);
+	set_iter_interval_print(10);
 #endif	/* LOGS */
 
 	initDemo(numL, numS, numF);
@@ -716,13 +716,14 @@ void Dem2Demo::step( float dt )
 		cBuffer.m_gridScale = m_grid->m_gProps.m_gridScale;
 	}
 
-
-	for(int iter=0; iter<FINAL_STATE_ITERATIONS; iter++)
-	{
+	int err_occ = 0;
 
 #ifdef LOGS
 	start_iteration();
 #endif	/* LOGS */
+
+	for(int iter=0; iter<FINAL_STATE_ITERATIONS; iter++)
+	{
 
 		//	this shouldn't be here
 		if( m_gridIsDirty )
@@ -850,10 +851,6 @@ void Dem2Demo::step( float dt )
 			//	4. sync GPU and CPU
 		}
 	
-#ifdef LOGS
-	end_iteration();
-#endif	/* LOGS */		
-
 		m_posD.read<float4>( m_deviceData, m_numSParticles, m_posS, &m_sBuffer );
 		m_velD.read<float4>( m_deviceData, m_numSParticles, m_velS, &m_sBuffer );
 		DUtils::waitForCompletion( m_deviceData );
@@ -869,6 +866,66 @@ void Dem2Demo::step( float dt )
 				(!isnan(m_posL[i].x) && !isnan(m_posL[i].y) &&
 				!isnan(m_posL[i].z) && !isnan(m_posL[i].z)))
 			{
+				err_occ = 1;
+				break;
+
+/*				error_count++;
+				snprintf(error_detail, 256, "ERROR: posL[%d]: (%f, %f, %f, %f)\n",
+					       	i, m_posL[i].x, m_posL[i].y, m_posL[i].z, m_posL[i].w);
+				printf("ERROR: posL[%d]: (%f, %f, %f, %f)\n",
+					       	i, m_posL[i].x, m_posL[i].y, m_posL[i].z, m_posL[i].w);
+		
+#ifdef LOGS
+	log_error_detail(error_detail);
+#endif	*/	/* LOGS */
+	
+	
+			}	
+		}
+	
+		for(i = 0; i < m_numSParticles; i++)
+		{
+			if((abs(m_posS[i].x) >= 1.5 ||
+				abs(m_posS[i].y) >= 1.5 ||
+				abs(m_posS[i].z) >= 1.5) &&
+				(!isnan(m_posS[i].x) && !isnan(m_posS[i].y) &&
+				 !isnan(m_posS[i].z) && !isnan(m_posS[i].z)))
+			{
+				err_occ = 1;
+				break;
+
+/*				error_count++;
+				snprintf(error_detail, 256, "ERROR: posS[%d]: (%f, %f, %f, %f)\n",
+					       	i, m_posS[i].x, m_posS[i].y, m_posS[i].z, m_posS[i].w);
+				printf("ERROR: posS[%d]: (%f, %f, %f, %f)\n",
+					       	i, m_posS[i].x, m_posS[i].y, m_posS[i].z, m_posS[i].w);
+	
+	
+#ifdef LOGS
+	log_error_detail(error_detail);
+#endif*/	/* LOGS */
+			
+			}
+		}	
+	}
+
+#ifdef LOGS
+	end_iteration();
+#endif	/* LOGS */		
+
+	if(err_occ == 1)
+	{
+	int i;
+		char error_detail[256];
+		
+		for(i = 0; i < m_numLParticles; i++)
+		{
+			if((abs(m_posL[i].x) >= 1.5 ||
+				abs(m_posL[i].y) >= 1.5 ||
+				abs(m_posL[i].z) >= 1.5) &&
+				(!isnan(m_posL[i].x) && !isnan(m_posL[i].y) &&
+				!isnan(m_posL[i].z) && !isnan(m_posL[i].z)))
+			{			
 				error_count++;
 				snprintf(error_detail, 256, "ERROR: posL[%d]: (%f, %f, %f, %f)\n",
 					       	i, m_posL[i].x, m_posL[i].y, m_posL[i].z, m_posL[i].w);
@@ -897,19 +954,16 @@ void Dem2Demo::step( float dt )
 				printf("ERROR: posS[%d]: (%f, %f, %f, %f)\n",
 					       	i, m_posS[i].x, m_posS[i].y, m_posS[i].z, m_posS[i].w);
 	
-	
 #ifdef LOGS
 	log_error_detail(error_detail);
 #endif	/* LOGS */
-			
 			}
 		}	
-	}
 
 #ifdef LOGS
 	log_error_count(error_count);
 #endif	/* LOGS */
-	
+	}
 }			
 	
 float abs(float val)
