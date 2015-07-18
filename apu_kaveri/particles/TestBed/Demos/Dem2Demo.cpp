@@ -882,8 +882,7 @@ void Dem2Demo::step( float dt )
 	
 			}	
 		}
-iter_count++;
-	if(iter_count == 1) m_posS[0].x = 123123.5;
+
 		for(i = 0; i < m_numSParticles; i++)
 		{
 			if((abs(m_posS[i].x) >= 1.5 ||
