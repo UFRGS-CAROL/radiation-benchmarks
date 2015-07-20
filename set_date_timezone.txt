@@ -1,0 +1,36 @@
+****Ubuntu distros****
+run command: 
+	$ sudo dpkg-reconfigure tzdata
+
+It will apper a screen to choose 'Geographic area", do as follows:
+	1- Choose option: "None of the above"
+	2- Choose option: "GMT-0"
+
+Set the time whith the command "date -s", for example:
+	$ date -s "19 JUL 2015 19:50:00"
+
+Now you are good to go, or at least you should be
+Check with commands:
+	$ date
+and
+	$ date -u
+The output should be the same time
+
+****************************
+***Red Hat/CentOS/Fedora****
+****************************
+You can find timezone files in directory "/usr/share/zoneinfo/"
+
+The file "/etc/localtime" sets the time zone, therefore, change this file to link to the correct file in the timezone files directory
+	$ sudo unlink /etc/localtime 
+	$ sudo ln -s /usr/share/zoneinfo/Etc/GMT-0 /etc/localtime
+
+Set the time whith the command "date -s", for example:
+	$ date -s "19 JUL 2015 19:50:00"
+
+Now you are good to go, or at least you should be
+Check with commands:
+	$ date
+and
+	$ date -u
+The output should be the same time
