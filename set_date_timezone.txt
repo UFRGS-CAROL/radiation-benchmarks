@@ -19,13 +19,26 @@ The output should be the same time
 ****************************
 ***Red Hat/CentOS/Fedora****
 ****************************
-You can find timezone files in directory "/usr/share/zoneinfo/"
+You can use timedatectl, to set timezone name run command
+	$ sudo timedatectl list-timezones
+To set new timezone
+	$ sudo timedatectl set-timezone <timezone name>
+Probably you will want UTC timezone
+
+Check also the command timedatectl
+	$ sudo timedatectl
+if local time, univeral time and RTC time is not correct, set time with timedatectl command:
+	$ sudo timedatectl set-time <YYYY-MM-DD>
+	$ sudo timedatectl set-time HH:MM:SS
+
+
+Alternativelly, you can find timezone files in directory "/usr/share/zoneinfo/"
 
 The file "/etc/localtime" sets the time zone, therefore, change this file to link to the correct file in the timezone files directory
 	$ sudo unlink /etc/localtime 
 	$ sudo ln -s /usr/share/zoneinfo/Etc/GMT-0 /etc/localtime
 
-Set the time whith the command "date -s", for example:
+Set the time whith the timedatectl command or "date -s", for example:
 	$ sudo date -s "19 JUL 2015 19:50:00"
 
 
@@ -34,10 +47,7 @@ Check with commands:
 	$ date
 and
 	$ date -u
+and
+	$ sudo timedatectl
 The output should be the same time
 
-Check also the command timedatectl
-	$ sudo timedatectl
-if local time, univeral time and RTC time is not correct, set time with timedatectl command:
-	$ sudo timedatectl set-time <YYYY-MM-DD>
-	$ sudo timedatectl set-time HH:MM:SS
