@@ -28,9 +28,16 @@ The file "/etc/localtime" sets the time zone, therefore, change this file to lin
 Set the time whith the command "date -s", for example:
 	$ sudo date -s "19 JUL 2015 19:50:00"
 
+
 Now you are good to go, or at least you should be
 Check with commands:
 	$ date
 and
 	$ date -u
 The output should be the same time
+
+Check also the command timedatectl
+	$ sudo timedatectl
+if local time, univeral time and RTC time is not correct, set time with timedatectl command:
+	$ sudo timedatectl set-time <YYYY-MM-DD>
+	$ sudo timedatectl set-time HH:MM:SS
