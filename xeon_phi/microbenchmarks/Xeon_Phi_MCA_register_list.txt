@@ -1,0 +1,142 @@
+================================================================================
+Summary of Machine Check Registers
+================================================================================
+The MCi_CTL MSR controls error reporting for specific errors produced by a particular hardware unit (or group of
+hardware units).
+================================================================================
+Address | Register Name | Size (bits) | Description
+================================================================================
+Core MCA Registers
+179H MCG_CAP 64 Core machine check capability register
+17AH MCG_STATUS 64 Core machine check Status register ++
+>> 17BH MCG_CTL 64 Core machine check control register ++
+>> 400H MC0_CTL 64 Core machine check control register ++
+401H MC0_STATUS 64 Core machine check status register
+402H MC0_ADDR 64 Core machine check address register (Not Implemented)
+403H MC0_MISC 32 Core machine check miscellaneous register (Not Implemented)
+
+Intel® Xeon Phi™ coprocessor MCA Registers
+>> 404H MC1_CTL 32 L2 Cache machine check control register ++
+405H MC1_STATUS 64 L2 Cache machine check status register
+406H MC1_ADDR 64 L2 Cache machine check address register
+407H MC1_MISC 32 L2 Cache machine check Misc register
+
+TAG Directory MCA Registers
+>> 408H MC2_CTL 32 TAG Directory machine check control register ++
+409H MC2_STATUS 64 TAG Directory machine check status register
+40AH MC2_ADDR 64 TAG Directory machine check address register
+40BH MC2_MISC 32 TAG Directory (Not Implemented)
+
+================================================================================
+Uncore MCA Registers (#18 MCA interrupt not generated. Signalling via local interrupt controller)
+
+SBox MCA Registers
+>> 0x8007D3090 MCX_CTL_LO 32 SBox machine check control register
+>> 0x8007D3094 MCX_CTL_HI 32 SBox machine check control register (Not implemented)
+0x8007D3098 MCX_STATUS_LO 32 SBox machine check status register
+0x8007D309C MCX_STATUS_HI 32 SBox machine check status register
+0x8007D30A0 MCX_ADDR_LO 32 SBox machine check address register
+0x8007D30A4 MCX_ADDR_HI 32 SBox machine check address register
+0x8007D30A8 MCX_MISC 32 SBox Misc (timeout TID register)
+0x8007D30AC MCX_MISC2 32 SBox Misc (timeout address register)
+0x8007DAB00 MCA_INT_STAT 32 SBox MCA Interrupt Status Register (Not retained on warm reset)
+0x8007DAB04 MCA_INT_EN 32 SBox MCA Interrupt Enable Register (Not retained on warm reset)
+
+Standalone TAG Directory 0 MCA Registers
+>> 0x8007C0340 RTD_MCX_CTL 32 TAG Directory machine check control register
+0x8007C0348 RTD_MCX_STATUS 64 TAG Directory machine check status register
+0x8007C0350 RTD_MCX_ADDR 64 TAG Directory machine check address register
+
+Standalone TAG Directory 1 MCA Registers
+>> 0x800620340 RTD_MCX_CTL 32 TAG Directory machine check control register
+0x800620348 RTD_MCX_STATUS 64 TAG Directory machine check status register
+0x800620350 RTD_MCX_ADDR 64 TAG Directory machine check address register
+
+================================================================================
+Memory Controller (Gbox0) MCA Registers
+>> 0x8007A005C MCX_CTL_LO 32 Gbox0 Fbox machine check control register
+>> 0x8007A0060 MCX_CTL_HI 32 Gbox0 Fbox machine check control register
+0x8007A0064 MCX_STATUS_LO 32 Gbox0 Fbox machine check status register
+0x8007A0068 MCX_STATUS_HI 32 Gbox0 Fbox machine check status register
+0x8007A006C MCX_ADDR_LO 32 Gbox0 Fbox machine check address register
+0x8007A0070 MCX_ADDR_HI 32 Gbox0 Fbox machine check address register
+0x8007A0074 MCX_MISC 32 Gbox0 Fbox Misc (Transaction timeout register)
+0x8007A017C MCA_CRC0_ADDR 32 Gbox0 Mbox0 CRC address capture register
+0x8007A097C MCA_CRC1_ADDR 32 Gbox0 Mbox1 CRC address capture register
+
+Memory Controller (Gbox1) MCA Registers
+>> 0x80079005C MCX_CTL_LO 32 Gbox1 Fbox machine check control register
+>> 0x800790060 MCX_CTL_HI 32 Gbox1 Fbox machine check control register
+0x800790064 MCX_STATUS_LO 32 Gbox1 Fbox machine check status register
+0x800790068 MCX_STATUS_HI 32 Gbox1 Fbox machine check status register
+0x80079006C MCX_ADDR_LO 32 Gbox1 Fbox machine check address register
+0x800790070 MCX_ADDR_HI 32 Gbox1 Fbox machine check address register
+0x800790074 MCX_MISC 32 Gbox1 Fbox Misc (Transaction timeout register)
+0x80079017C MCA_CRC0_ADDR 32 Gbox1 Mbox0 CRC address capture register
+0x80079097C MCA_CRC1_ADDR 32 Gbox1 Mbox1 CRC address capture register
+
+Memory Controller (Gbox2) MCA Registers
+>> 0x80070005C MCX_CTL_LO 32 Gbox2 Fbox machine check control register
+>> 0x800700060 MCX_CTL_HI 32 Gbox2 Fbox machine check control register
+0x800700064 MCX_STATUS_LO 32 Gbox2 Fbox machine check status register
+0x800700068 MCX_STATUS_HI 32 Gbox2 Fbox machine check status register
+0x80070006C MCX_ADDR_LO 32 Gbox2 Fbox machine check address register
+0x800700070 MCX_ADDR_HI 32 Gbox2 Fbox machine check address register
+0x800700074 MCX_MISC 32 Gbox2 Fbox Misc (Transaction timeout register)
+0x80070017C MCA_CRC0_ADDR 32 Gbox2 Mbox0 CRC address capture register
+0x80070097C MCA_CRC1_ADDR 32 Gbox2 Mbox1 CRC address capture register
+
+Memory Controller (Gbox3) MCA Registers
+>> 0x8006F005C MCX_CTL_LO 32 Gbox3 Fbox machine check control register
+>> 0x8006F0060 MCX_CTL_HI 32 Gbox3 Fbox machine check control register
+0x8006F0064 MCX_STATUS_LO 32 Gbox3 Fbox machine check status register
+0x8006F0068 MCX_STATUS_HI 32 Gbox3 Fbox machine check status register
+0x8006F006C MCX_ADDR_LO 32 Gbox3 Fbox machine check address register
+0x8006F0070 MCX_ADDR_HI 32 Gbox3 Fbox machine check address register
+0x8006F0074 MCX_MISC 32 Gbox3 Fbox Misc (Transaction timeout register)
+0x8006F017C MCA_CRC0_ADDR 32 Gbox3 Mbox0 CRC address capture register
+0x8006F097C MCA_CRC1_ADDR 32 Gbox3 Mbox1 CRC address capture register
+
+Memory Controller (Gbox4) MCA Registers
+>> 0x8006D005C MCX_CTL_LO 32 Gbox4 Fbox machine check control register
+>> 0x8006D0060 MCX_CTL_HI 32 Gbox4 Fbox machine check control register
+0x8006D0064 MCX_STATUS_LO 32 Gbox4 Fbox machine check status register
+0x8006D0068 MCX_STATUS_HI 32 Gbox4 Fbox machine check status register
+0x8006D006C MCX_ADDR_LO 32 Gbox4 Fbox machine check address register
+0x8006D0070 MCX_ADDR_HI 32 Gbox4 Fbox machine check address register
+0x8006D0074 MCX_MISC 32 Gbox4 Fbox Misc (Transaction timeout register)
+0x8006D017C MCA_CRC0_ADDR 32 Gbox4 Mbox0 CRC address capture register
+0x8006D097C MCA_CRC1_ADDR 32 Gbox4 Mbox1 CRC address capture register
+
+Memory Controller (Gbox5) MCA Registers
+>> 0x8006C005C MCX_CTL_LO 32 Gbox5 Fbox machine check control register
+>> 0x8006C0060 MCX_CTL_HI 32 Gbox5 Fbox machine check control register
+0x8006C0064 MCX_STATUS_LO 32 Gbox5 Fbox machine check status register
+0x8006C0068 MCX_STATUS_HI 32 Gbox5 Fbox machine check status register
+0x8006C006C MCX_ADDR_LO 32 Gbox5 Fbox machine check address register
+0x8006C0070 MCX_ADDR_HI 32 Gbox5 Fbox machine check address register
+0x8006C0074 MCX_MISC 32 Gbox5 Fbox Misc (Transaction timeout register)
+0x8006C017C MCA_CRC0_ADDR 32 Gbox5 Mbox0 CRC address capture register
+0x8006C097C MCA_CRC1_ADDR 32 Gbox5 Mbox1 CRC address capture register
+
+Memory Controller (Gbox6) MCA Registers
+>> 0x8006B005C MCX_CTL_LO 32 Gbox6 Fbox machine check control register
+>> 0x8006B0060 MCX_CTL_HI 32 Gbox6 Fbox machine check control register
+0x8006B0064 MCX_STATUS_LO 32 Gbox6 Fbox machine check status register
+0x8006B0068 MCX_STATUS_HI 32 Gbox6 Fbox machine check status register
+0x8006B006C MCX_ADDR_LO 32 Gbox6 Fbox machine check address register
+0x8006B0070 MCX_ADDR_HI 32 Gbox6 Fbox machine check address register
+0x8006B0074 MCX_MISC 32 Gbox6 Fbox Misc (Transaction timeout register)
+0x8006B017C MCA_CRC0_ADDR 32 Gbox6 Mbox0 CRC address capture register
+0x8006B097C MCA_CRC1_ADDR 32 Gbox6 Mbox1 CRC address capture register
+
+Memory Controller (Gbox7) MCA Registers
+>> 0x8006A005C MCX_CTL_LO 32 Gbox7 Fbox machine check control register
+>> 0x8006A0060 MCX_CTL_HI 32 Gbox7 Fbox machine check control register
+0x8006A0064 MCX_STATUS_LO 32 Gbox7 Fbox machine check status register
+0x8006A0068 MCX_STATUS_HI 32 Gbox7 Fbox machine check status register
+0x8006A006C MCX_ADDR_LO 32 Gbox7 Fbox machine check address register
+0x8006A0070 MCX_ADDR_HI 32 Gbox7 Fbox machine check address register
+0x8006A0074 MCX_MISC 32 Gbox7 Fbox Misc (Transaction timeout register)
+0x8006A017C MCA_CRC0_ADDR 32 Gbox7 Mbox0 CRC address capture register
+0x8006A097C MCA_CRC1_ADDR 32 Gbox7 Mbox1 CRC address capture register
