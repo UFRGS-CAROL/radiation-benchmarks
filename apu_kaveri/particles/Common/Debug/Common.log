@@ -1,0 +1,14 @@
+﻿Build started 7/8/2015 4:20:50 PM.
+     1>Project "C:\Repositories\valar-bench-read-only\particles\Common\Common.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"c:\program files\microsoft sdks\windows\v7.0a\include" /I./ /I"C:\Program Files (x86)\AMD APP SDK\2.9-1\\include" /I../ /I/Include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /arch:SSE2 /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Math\RadixSortHost.cpp
+         RadixSortHost.cpp
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(1361,5): warning MSB8012: TargetPath(C:\Repositories\valar-bench-read-only\particles\Debug\Common32D.lib) does not match the Library's OutputFile property value (C:\Repositories\valar-bench-read-only\particles\lib\Common32D.lib). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Lib.OutputFile).
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"C:\Repositories\valar-bench-read-only\particles\lib\Common32D.lib" OpenCL.lib /LIBPATH:"C:\Program Files (x86)\AMD APP SDK\2.9-1\\lib\x86" /LIBPATH:../ /LIBPATH:/Lib/x86 /NOLOGO Debug\RadixSortHost.obj
+         Common.vcxproj -> C:\Repositories\valar-bench-read-only\particles\Debug\Common32D.lib
+     1>Done Building Project "C:\Repositories\valar-bench-read-only\particles\Common\Common.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.35

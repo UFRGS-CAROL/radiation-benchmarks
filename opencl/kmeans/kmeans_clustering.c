@@ -72,11 +72,15 @@
 
 #define RANDOM_MAX 2147483647
 
-long long get_time() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (tv.tv_sec * 1000000) + tv.tv_usec;
-}
+#ifdef LOGS
+#include "/home/carol/radiation-benchmarks/include/log_helper.h"
+#endif /* LOGS */
+
+//long long get_time() {
+//    struct timeval tv;
+//    gettimeofday(&tv, NULL);
+//    return (tv.tv_sec * 1000000) + tv.tv_usec;
+//}
 
 extern double wtime(void);
 
@@ -154,6 +158,9 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
     double flops = 0;
     double kernel_time=0, time=0;
     long long start_time, end_time;
+#ifdef LOGS
+        start_iteration();
+#endif /* LOGS */
     do {
         delta = 0.0;
         // CUDA
@@ -182,6 +189,12 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
         }
         c++;
     } while ((delta > threshold) && (loop++ < 500));	/* makes sure loop terminates */
+#ifdef LOGS
+        end_iteration();
+	char ktime_s[150];
+	snprintf(ktime_s, 150, "ktime_s:%f", kernel_time);
+	log_error_detail(ktime_s);
+#endif /* LOGS */
     if (enable_perfmeasure) {
 		double outputpersec = (double)npoints/kernel_time;
 		printf("Kernel time: %f\n",kernel_time);

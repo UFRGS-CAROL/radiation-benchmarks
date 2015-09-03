@@ -102,7 +102,7 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
     local_work_size[1] = BLOCK_SIZE;
 
 
-    long long start_time = get_time();
+    long long start_time = get_time_helper();
 
     for (t = 0; t < total_iterations; t += num_iterations) {
 
@@ -141,7 +141,7 @@ flops += col * row * iter * 15;
     error = clFinish(command_queue);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
-    long long end_time = get_time();
+    long long end_time = get_time_helper();
     long long total_time = (end_time - start_time);
     printf("\nKernel time: %.3f seconds\n", ((float) total_time) / (1000*1000));
 
@@ -274,7 +274,7 @@ int main(int argc, char** argv) {
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
 
-    long long start_time = get_time();
+    long long start_time = get_time_helper();
 
     // Create two temperature matrices and copy the temperature input data
     cl_mem MatrixTemp[2];
@@ -298,7 +298,7 @@ kernel_time = mysecond() - kernel_time;
     cl_float *MatrixOut = (cl_float *) clEnqueueMapBuffer(command_queue, MatrixTemp[ret], CL_TRUE, CL_MAP_READ, 0, sizeof(float) * size, 0, NULL, NULL, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
-    long long end_time = get_time();
+    long long end_time = get_time_helper();
     printf("Total time: %.3f seconds\n", ((float) (end_time - start_time)) / (1000*1000));
 
     // Write final output to output file

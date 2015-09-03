@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Math">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Geometry">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Base">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="DeviceUtils">
+      <UniqueIdentifier>{6cfe8c29-6de9-4d0c-9da9-2c2f4aac5a43}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Math\Array.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Math.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Matrix3x3.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Quaternion.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\RadixSortHost.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Geometry\Aabb.h">
+      <Filter>Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceUtils\DeviceUtils.h">
+      <Filter>DeviceUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceUtils\DeviceUtilsSelector.h">
+      <Filter>DeviceUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="Base\ThreadPool.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Base\Error.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceUtils\DeviceDraw.h">
+      <Filter>DeviceUtils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Math\float4.inl">
+      <Filter>Math</Filter>
+    </None>
+    <None Include="DeviceUtils\DeviceUtilsCL.inl">
+      <Filter>DeviceUtils</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Math\RadixSortHost.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

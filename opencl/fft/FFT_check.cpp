@@ -20,7 +20,7 @@
 #include "fftlib.h"
 
 #ifdef LOGS
-#include "/home/carol/log_helper/log_helper.h"
+#include "/home/carol/radiation-benchmarks/include/log_helper.h"
 #endif /* LOGS */
 
 //////////

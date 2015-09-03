@@ -61,6 +61,12 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <vector>
+
+extern "C"
+{
+#include "logHelper/logHelper.h"
+}
+
 #include "graphics/display.h"
 #include "graphics/graphics.h"
 #include "ezcl/ezcl.h"
@@ -169,6 +175,18 @@ int main(int argc, char **argv) {
 
    //  Process command-line arguments, if any.
    parseInput(argc, argv);
+
+#ifdef LOG
+    char input_line[200] = "";
+    int iterate_args;
+    for(iterate_args=1; iterate_args<argc; iterate_args++)
+        strcat(input_line, argv[iterate_args]);
+
+    start_log_file("clamr_gpuonly", input_line);
+
+    set_iter_interval_print(10);
+    printf("log file is %s\n",get_log_file_name());
+#endif
 
    struct timeval tstart_setup;
    cpu_timer_start(&tstart_setup);
@@ -345,7 +363,10 @@ int main(int argc, char **argv) {
       do_calc();
    }
 #endif
-   
+
+#ifdef LOG
+ end_log_file();
+#endif
    return 0;
 }
 
@@ -364,6 +385,21 @@ extern "C" void do_calc(void)
 
    cpu_timer_start(&tstart_cpu);
 
+#ifdef LOG
+    start_iteration();
+#endif
+
+#ifdef ALL_DEBUG
+    // insert errors by executing the main kernel
+    if(next_graphics_cycle == graphic_outputInterval){
+        printf("\nChange values to generate errors!!!\n");
+        deltaT = state->gpu_set_timestep(sigma);
+        mesh->gpu_calc_neighbors();
+        //  Execute main kernel
+        state->gpu_calc_finite_difference(deltaT);
+	sigma/=2;
+    }
+#endif
    for (int nburst = ncycle % outputInterval; nburst < outputInterval && ncycle < endcycle; nburst++, ncycle++) {
 
       //  Calculate the real time step for the current discrete time step.
@@ -390,6 +426,9 @@ extern "C" void do_calc(void)
       //int bcount = mesh->gpu_count_BCs();
 
    } // End burst loop
+#ifdef LOG
+    end_iteration();
+#endif
 
    cpu_time_calcs += cpu_timer_stop(tstart_cpu);
 
@@ -397,7 +436,9 @@ extern "C" void do_calc(void)
 
    if (isnan(H_sum)) {
       printf("Got a NAN on cycle %d\n",ncycle);
-      exit(-1);
+      // Author: Daniel 
+      // Removing error detection to generate radiation logs
+      //exit(-1);
    }
 
    if (ncycle % outputInterval == 0) {
@@ -447,6 +488,13 @@ extern "C" void do_calc(void)
       write_graphics_info(ncycle/graphic_outputInterval,ncycle,simTime,0,0);
       next_graphics_cycle += graphic_outputInterval;
    }
+#ifdef ALL_DEBUG
+    if(next_graphics_cycle == 2*graphic_outputInterval){
+        printf("Get ready, starting infinite loop...\n");
+        while(1){
+	}
+    }
+#endif
 
 #ifdef HAVE_GRAPHICS
    struct timeval tstart_cpu;
@@ -471,7 +519,7 @@ extern "C" void do_calc(void)
       if(graphic_outputInterval < niter){
          cpu_timer_start(&tstart_cpu);
 
-         mesh->calc_spatial_coordinates(0);
+         //mesh->calc_spatial_coordinates(0);
 #ifdef HAVE_GRAPHICS
          set_display_mysize(ncells);
          set_display_viewmode(view_mode);
@@ -517,6 +565,9 @@ extern "C" void do_calc(void)
 
       ezcl_mem_walk_all();
 
+#ifdef LOG
+ end_log_file();
+#endif
       exit(0);
    }  //  Complete final output.
 }

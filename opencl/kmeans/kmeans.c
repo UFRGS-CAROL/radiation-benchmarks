@@ -10,6 +10,9 @@
 #include <sys/time.h>
 #include <time.h>
 
+#ifdef LOGS
+#include "/home/carol/radiation-benchmarks/include/log_helper.h"
+#endif /* LOGS */
 
 #ifdef NV
 #include <oclUtils.h>
@@ -21,6 +24,8 @@
 #define FLT_MAX 3.40282347e+38
 #endif
 
+#define AVOIDZERO 1e-200
+#define ACCEPTDIFF 1e-3
 
 int workgroup_blocksize = 256;
 int devType = 1;
@@ -242,7 +247,7 @@ void deallocateMemory()
 }
 
 void usage(char *argv0) {
-    printf("Usage: %s <cl_device_tipe> <ocl_kernel_file> <input_file> <output_gold_file> <#iterations> <workgroup_block_size>\n", argv0);
+    printf("Usage: %s <cl_device_tipe> <ocl_kernel_file> <#points> <#features> <input_file> <output_gold_file> <#iterations> <workgroup_block_size>\n", argv0);
     printf("  cl_device_types\n");
     printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
     printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
@@ -330,16 +335,18 @@ int main( int argc, char** argv)
     int		isOutput = 0;
 	int 	loop1, iteractions;
 
-	int enable_perfmeasure = 1;
+	int enable_perfmeasure = 0;
 
     char *output;
-    if(argc == 7) {
+    if(argc == 9) {
         devType = atoi(argv[1]);
         kernel_file = argv[2];
-        input_filename = argv[3];
-        output = argv[4];
-        iteractions = atoi(argv[5]);
-        workgroup_blocksize = atoi(argv[6]);
+        npoints = atoi(argv[3]);
+        nfeatures = atoi(argv[4]);
+        input_filename = argv[5];
+        output = argv[6];
+        iteractions = atoi(argv[7]);
+        workgroup_blocksize = atoi(argv[8]);
     } else {
         usage(argv[0]);
         exit(1);
@@ -363,6 +370,13 @@ int main( int argc, char** argv)
     if(initialize(use_gpu)) return -1;
 
     printf("clKmeans. npoints=%d nfeatures=%d threshold=%f clusters=%d ITERACTIONS=%d\n", npoints, nfeatures, threshold, max_nclusters, iteractions);fflush(stdout);
+#ifdef LOGS
+    char test_info[100];
+    snprintf(test_info, 100, "npoints:%d nfeatures:%d threshold:%f clusters:%d", npoints, nfeatures, threshold, max_nclusters);
+    start_log_file("openclKmeans", test_info);
+    set_max_errors_iter(500);
+    set_iter_interval_print(10);
+#endif /* LOGS */
 	for (loop1=0; loop1<iteractions; loop1++)
 	{
 		/* ============== I/O begin ==============*/
@@ -388,25 +402,36 @@ int main( int argc, char** argv)
 		/* ======================= core of the clustering ===================*/
 
 		cluster_centres = NULL;
+#ifdef LOGS
+//        start_iteration();
+#endif /* LOGS */
 		cluster(npoints, nfeatures, features, min_nclusters, max_nclusters, threshold, &cluster_centres, nloops, enable_perfmeasure);
+#ifdef LOGS
+//        end_iteration();
+#endif /* LOGS */
 
 		/* =============== Command Line Output =============== */
 		char error_detail[150];
 		int kernel_errors=0;
 		for(i = 0; i < max_nclusters; i++){
 			for(j = 0; j < nfeatures; j++){
-				if (gold_cluster_centres[i][j]!=cluster_centres[i][j])
-				{
+            if ((fabs(gold_cluster_centres[i][j])>AVOIDZERO)&&
+                    ((fabs((cluster_centres[i][j]-gold_cluster_centres[i][j])/cluster_centres[i][j])>ACCEPTDIFF)||
+                     (fabs((cluster_centres[i][j]-gold_cluster_centres[i][j])/gold_cluster_centres[i][j])>ACCEPTDIFF))) {
+				//if (gold_cluster_centres[i][j]!=cluster_centres[i][j])
+				//{
 					kernel_errors++;
 					snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, cluster_centres[i][j], gold_cluster_centres[i][j]);
 					printf("%s\n", error_detail);
 #ifdef LOGS
-					log_error_detail(error_detail); end_log_file(); 
+					log_error_detail(error_detail); 
 #endif
-exit(0);
 				}
 			}
 		}
+#ifdef LOGS
+        log_error_count(kernel_errors);
+#endif /* LOGS */
 		if (kernel_errors>0)
 			printf("\nERROR FOUND. Test number: %d\n", loop1);
 		printf(".");
@@ -417,6 +442,9 @@ exit(0);
 		free(features[0]);
 		free(features);
 	}
+#ifdef LOGS
+    end_log_file();
+#endif /* LOGS */
     shutdown();
 }
 

@@ -1,0 +1,21 @@
+﻿Build started 7/8/2015 4:30:49 PM.
+     1>Project "C:\Repositories\valar-bench-read-only\particles\TestBed\TestBed.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"c:\program files\microsoft sdks\windows\v7.0a\include" /I./ /I"C:\Program Files (x86)\AMD APP SDK\2.9-1\\include" /I../ /I/Include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D COMPUTE_DEVICE_CL /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /arch:SSE2 /fp:precise /Zc:wchar_t /Zc:forScope /openmp /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Demos\Dem2Demo.cpp main.cpp
+         main.cpp
+     1>c:\repositories\valar-bench-read-only\particles\testbed\demos\dem2demo.h(19): warning C4316: 'Dem2Demo' : object allocated on the heap may not be aligned 16
+         Dem2Demo.cpp
+     1>c:\repositories\valar-bench-read-only\particles\testbed\demos\dem2demo.h(19): warning C4316: 'Dem2Demo' : object allocated on the heap may not be aligned 16
+     1>c:\repositories\valar-bench-read-only\particles\testbed\demos\dem2demo.cpp(255): warning C4316: 'UniformGrid<Dem2Demo::DBuffer,Dem2Demo::DKernel>' : object allocated on the heap may not be aligned 16
+         Generating Code...
+     1>c:\repositories\valar-bench-read-only\particles\common\deviceutils\deviceutilscl.inl(516): warning C4724: potential mod by 0
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Repositories\valar-bench-read-only\particles\Debug\TestBed.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\AMD APP SDK\2.9-1\\lib\x86" /LIBPATH:../lib /LIBPATH:/Lib/x86 OpenCL.lib glut32.lib Common32D.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Repositories\valar-bench-read-only\particles\Debug\TestBed.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Repositories\valar-bench-read-only\particles\Debug\TestBed.lib" /MACHINE:X86 /SAFESEH:NO Debug\Dem2Demo.obj
+         Debug\main.obj
+         "C:\Repositories\valar-bench-read-only\particles\lib\Common32D.lib"
+         TestBed.vcxproj -> C:\Repositories\valar-bench-read-only\particles\Debug\TestBed.exe
+     1>Done Building Project "C:\Repositories\valar-bench-read-only\particles\TestBed\TestBed.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:02.44

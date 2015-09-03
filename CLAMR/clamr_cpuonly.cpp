@@ -61,6 +61,12 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <vector>
+
+extern "C"
+{
+#include "logHelper/logHelper.h"
+}
+
 #include "graphics/display.h"
 #include "graphics/graphics.h"
 #include "input.h"
@@ -183,6 +189,22 @@ int main(int argc, char **argv) {
 
    //  Process command-line arguments, if any.
    parseInput(argc, argv);
+
+#ifdef LOG
+    char input_line[200] = "";
+    int iterate_args;
+    for(iterate_args=1; iterate_args<argc; iterate_args++)
+        strcat(input_line, argv[iterate_args]);
+
+#ifdef _OPENMP
+    start_log_file("clamr_openmponly", input_line);
+#else
+    start_log_file("clamr_cpuonly", input_line);
+#endif
+
+    set_iter_interval_print(10);
+    printf("log file is %s\n",get_log_file_name());
+#endif
 
 #ifdef _OPENMP
    int nt = 0;
@@ -347,7 +369,11 @@ int main(int argc, char **argv) {
       do_calc();
    }
 #endif
-   
+
+#ifdef LOG
+ end_log_file();
+#endif
+
    return 0;
 }
 
@@ -371,6 +397,23 @@ extern "C" void do_calc(void)
 
    cpu_timer_start(&tstart_cpu);
 
+#ifdef LOG
+    start_iteration();
+#endif
+
+#ifdef ALL_DEBUG
+    // insert errors by executing the main kernel
+    if(next_graphics_cycle == graphic_outputInterval){
+        printf("\nChange values to generate errors!!!\n");
+        deltaT = state->set_timestep(g, sigma);
+        //  Execute main kernel
+        if (face_based) {
+           state->calc_finite_difference_via_faces(deltaT);
+        } else {
+           state->calc_finite_difference(deltaT);
+        }
+    }
+#endif
    for (int nburst = ncycle % outputInterval; nburst < outputInterval && ncycle < endcycle; nburst++, ncycle++) {
 
       //  Calculate the real time step for the current discrete time step.
@@ -427,6 +470,9 @@ extern "C" void do_calc(void)
    //cpu_time_check += cpu_timer_stop(tstart_check);
       
    } // End burst loop
+#ifdef LOG
+    end_iteration();
+#endif
 
    cpu_time_calcs += cpu_timer_stop(tstart_cpu);
 
@@ -436,13 +482,17 @@ extern "C" void do_calc(void)
 
    if (isnan(H_sum)) {
       printf("Got a NAN on cycle %d\n",ncycle);
-      error_status = STATUS_NAN;
+      // Author: Daniel 
+      // Removing error detection to generate radiation logs
+      //error_status = STATUS_NAN;
    }
 
    double percent_mass_diff = fabs(H_sum - H_sum_initial)/H_sum_initial * 100.0;
    if (percent_mass_diff >= upper_mass_diff_percentage) {
       printf("Mass difference outside of acceptable range on cycle %d percent_mass_diff %lg upper limit %lg\n",ncycle,percent_mass_diff, upper_mass_diff_percentage);
-      error_status = STATUS_MASS_LOSS;
+      // Author: Daniel 
+      // Removing error detection to generate radiation logs
+      //error_status = STATUS_MASS_LOSS;
    }
 
    if (error_status != STATUS_OK){
@@ -518,6 +568,14 @@ extern "C" void do_calc(void)
       write_graphics_info(ncycle/graphic_outputInterval,ncycle,simTime,0,0);
       next_graphics_cycle += graphic_outputInterval;
    }
+
+#ifdef ALL_DEBUG
+    if(next_graphics_cycle == 2*graphic_outputInterval){
+        printf("Get ready, starting infinite loop...\n");
+        while(1){
+	}
+    }
+#endif
 
 #ifdef HAVE_GRAPHICS
    if(ncycle % outputInterval == 0){
@@ -596,6 +654,9 @@ extern "C" void do_calc(void)
       FILE *fp = fopen(total_sim_time_log,"w");
       fprintf(fp,"The total execution time of the program was %g seconds\n", total_program_time);
       fclose(fp);
+#ifdef LOG
+ end_log_file();
+#endif
       exit(0);
    }  //  Complete final output.
    

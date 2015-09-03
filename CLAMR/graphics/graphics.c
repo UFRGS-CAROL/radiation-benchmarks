@@ -58,6 +58,8 @@
 #include <sys/stat.h>
 #include "graphics.h"
 
+#include "../logHelper/logHelper.h"
+
 /*
  * Includ time libraries to dump corrupted output
  */
@@ -894,6 +896,9 @@ void check_md5(int graph_num, int ncycle, double simTime) {
         if(error) {
             printf("\nGOLD CHECK FAILED!\n\n");
             dump_corrupted_output(graph_num, ncycle, simTime);
+#ifdef LOG
+            log_error_count(1);
+#endif
         }
         else
             printf("\nGOLD CHECK PASSED!\n\n");
@@ -1023,6 +1028,12 @@ void dump_corrupted_output(int graph_num, int ncycle, double simTime) {
         }
         fclose(fp);
         fclose(fp2);
+	
+#ifdef LOG
+        char error_detail[200] = "";
+	sprintf(error_detail,"#DUMP corrupted files dumped to %s and %s", filename, filename2);
+        log_error_detail(error_detail);
+#endif
     }
     else {
         if(fp == NULL) {

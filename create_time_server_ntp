@@ -1,0 +1,13 @@
+Install ntp:
+	$ sudo apt-get install ntp
+
+modify file /etc/ntp.conf, add lines:
+	server 127.127.1.0
+	fudge 127.127.1.0 stratum 10
+To use localtime if the server computer has no internet
+
+restart ntp server
+
+
+Cliente should be able to sync with command:
+	$sudo ntpdate -u <server_ip>

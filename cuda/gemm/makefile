@@ -17,11 +17,11 @@ MATRIX_NAMES=Double_*.matrix
 all: gemm gen
 
 gemm: cudaGEMM.cu
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) cudaGEMM.cu -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -lLogHelper -lcublas -o $(RUN_EXEC)
+	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -lLogHelperCuda -lcublas $(NVCCFLAGS) cudaGEMM.cu -o $(RUN_EXEC)
 
 gen: generateMatrices.cu
-	$(NVCC) generateMatrices.cu -I$(NVIDIA_INC) -L$(NVIDIA_LIB) -lcublas -o $(GEN_EXEC)
+	$(NVCC) -I$(NVIDIA_INC) -L$(NVIDIA_LIB) -lcublas generateMatrices.cu -o $(GEN_EXEC)
 	
 clean:
-	rm $(RUN_EXEC) $(GEN_EXEC) $(MATRIX_NAMES)
+	rm -rf $(RUN_EXEC) $(GEN_EXEC) $(MATRIX_NAMES)
 

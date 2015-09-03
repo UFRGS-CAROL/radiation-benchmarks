@@ -1,5 +1,9 @@
 #include "hotspot.h"
 
+#ifdef LOGS
+#include "/home/carol/radiation-benchmarks/include/log_helper.h"
+#endif /* LOGS */
+
 //#define IMPUT_TEMPE "input_temp"
 //#define IMPUT_POWER "input_power"
 //#define OUTPUT_GOLD "output"
@@ -16,8 +20,14 @@ int check_output(float *vect, int grid_rows, int grid_cols, float *gold) {
         for (j=0; j < grid_cols; j++) {
             if(vect[i*grid_cols+j] != gold[i*grid_cols+j] ) {
                 errors++;
-				printf("r:%f e:%f [%d,%d]\n", vect[i*grid_cols+j], gold[i*grid_cols+j], i, j);
-				if (errors == 500) exit(0);
+#ifdef LOGS
+		char error_detail[150];
+                snprintf(error_detail, 150, "r:%f e:%f [%d,%d]\n", vect[i*grid_cols+j], gold[i*grid_cols+j], i, j);
+                log_error_detail(error_detail);
+#else
+		printf("r:%f e:%f [%d,%d]\n", vect[i*grid_cols+j], gold[i*grid_cols+j], i, j);
+		if (errors == 500) exit(0);
+#endif /* LOGS */
             }
         }
     }
@@ -87,9 +97,10 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
     local_work_size[0] = BLOCK_SIZE;
     local_work_size[1] = BLOCK_SIZE;
 
-    long long flops = 0;
-    long long start_time = get_time();
 
+#ifdef LOGS
+    start_iteration();
+#endif /* LOGS */
     for (t = 0; t < total_iterations; t += num_iterations) {
 
         // Specify kernel arguments
@@ -123,6 +134,10 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
 
     // Wait for all operations to finish
     error = clFinish(command_queue);
+#ifdef LOGS
+    end_iteration();
+#endif /* LOGS */
+
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
     return src;
 }
@@ -142,22 +157,22 @@ int main(int argc, char** argv) {
 
     int iterations, devType;
     int grid_rows,grid_cols = 0;
-	int tot_iterations=1;
+    int tot_iterations=1;
     char *kernel_file, *input_temp, *input_power, *output;
     if(argc == 9) {
         iterations = atoi(argv[1]);
-		grid_rows = atoi(argv[2]);
+	grid_rows = atoi(argv[2]);
         devType = atoi(argv[3]);
         kernel_file = argv[4];
         input_temp = argv[5];
         input_power = argv[6];
         output = argv[7];
-		tot_iterations = atoi(argv[8]);
+	tot_iterations = atoi(argv[8]);
     } else {
         usage();
         exit(1);
     }
-	grid_cols = grid_rows;
+    grid_cols = grid_rows;
     printf("WG size of kernel = %d X %d\n", BLOCK_SIZE, BLOCK_SIZE);
 
     cl_int error;
@@ -255,6 +270,13 @@ int main(int argc, char** argv) {
     kernel = clCreateKernel(program, "hotspot", &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 	
+#ifdef LOGS
+    char test_info[100];
+    snprintf(test_info, 100, "simIter:%d gridSize:%dx%d",iterations, grid_rows, grid_rows);
+    start_log_file("openclHotspot", test_info);
+    set_max_errors_iter(100);
+    set_iter_interval_print(10);
+#endif /* LOGS */
 	int loop1;
 	for (loop1=0; loop1 < tot_iterations; loop1++)
 	{
@@ -285,6 +307,9 @@ int main(int argc, char** argv) {
 		if (errors!=0) 
 		{
 			printf("kernel errors: %d\n", errors);
+#ifdef LOGS
+    log_error_count(errors);
+#endif /* LOGS */
 		}
 		else
 		{
@@ -304,6 +329,9 @@ int main(int argc, char** argv) {
     	readinput(FilesavingPower, grid_rows, grid_cols, input_power);
 	}
 
+#ifdef LOGS
+    end_log_file();
+#endif /* LOGS */
     clReleaseContext(context);
 
     return 0;

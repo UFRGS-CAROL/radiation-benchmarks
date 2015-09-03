@@ -8,10 +8,10 @@
 #ifdef LOGS
 #include "log_helper.h"
 #endif
+// The timestamp is updated on every log_helper function call.
 
 #include "cuda.h"
 #include "cublas.h"
-//#include "cublas_v2.h"
 
 #undef min
 #define min( x, y ) ( (x) < (y) ? (x) : (y) )
@@ -20,38 +20,36 @@
 
 #define BLOCK_SIZE 32
 
-int k=0; // N will be received on runtime
-int iteractions=1; // iteractions will be received on runtime
+int k=0; // k x k matrix size
+int iteractions=1; // global loop iteracion
 
+//================== Input paths
 using namespace std;
-
 string gold_matrix_path, a_matrix_path, b_matrix_path;
-
-double *A;
-double *B;
-double *d_A;
-double *d_B;
-double *d_C;
-
-   int lda, ldb, ldc;
-
-double *GOLD;
-
 
 FILE* f_A;
 FILE* f_B;
 FILE* f_GOLD;
+//====================================
 
-FILE* file;
-FILE* log_file;
-FILE* timefile;
+//================== Host and device matrix ptr's
+double *A;
+double *B;
+double *GOLD;
+
+double *d_A;
+double *d_B;
+double *d_C;
+//====================================
+
+int lda, ldb, ldc;
 
 void usage() {
     printf("Usage: cudaGemm <input_size> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX> <#ITERACTIONS>\n");
 }
 
 void GetDevice(){
-
+//================== Retrieve and set the default CUDA device
     cudaDeviceProp prop;
     cudaError_t teste;
     int count=0;
@@ -66,7 +64,7 @@ void GetDevice(){
     cudaGetDevice(ndevice);
     
     cudaSetDevice(0);
-        cudaGetDeviceProperties( &prop, 0 );
+       cudaGetDeviceProperties( &prop, 0 );
 	printf("\ndevice: %d %s\n", *ndevice, prop.name);
 
 }
@@ -80,7 +78,7 @@ double mysecond()
 }
 
 void ReadMatrixFromFile(){	
-	
+//================== Read inputs to HOST memory
 	int i;
 	double time = mysecond();
 	f_A = fopen(a_matrix_path.c_str(),"rb");
@@ -111,7 +109,7 @@ __device__ int kerrors;
 
 __global__ void GoldChkKernel (double *gk, double *ck, int n)//, int *kerrors)
 {
-	//ck[4] = 4.5;
+//================== HW Accelerated output validation
 	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;                                                      
 	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y; 
 	if ((fabs((gk[ty*n+tx]-ck[ty*n+tx])/gk[ty*n+tx]) > 0.0000000001)||(fabs((gk[ty*n+tx]-ck[ty*n+tx])/ck[ty*n+tx]) > 0.0000000001))
@@ -124,83 +122,82 @@ __global__ void GoldChkKernel (double *gk, double *ck, int n)//, int *kerrors)
 int main( int argc, char* argv[] )
 {
 
-	
+//================== CUDA error handlers
 	cudaError_t malloc_mem1;
 	cudaError_t malloc_a;
 	const char *erro_malloc;
+//==================================== 
 
-	int ea=0; //wrong integers in the current loop
-
-	const double alpha = 1.0;
-	const double beta = 1.0;
-
-	char transa = 't', transb = 't';
+//================== Test vars
 	int i, j, loop2;
-
 	int kernel_errors=0;
 	int zero = 0;
+	int ea=0; //wrong integers in the current loop
+//====================================
 
-
-	int sizea, sizeb, sizec;
-
-	////////////////////////////////////////////////////
-	////////////////////GET PARAM///////////////////////
+//================== Read test parameters
 	if (argc!=6) {
 		usage();
 		exit (-1);
 	}
-
 	k = atoi (argv[1]);
 	iteractions = atoi (argv[5]);
 	if (((k%32)!=0)||(k<0)){
 		printf ("Enter a valid input. (k=%i)\n", k);
 		exit (-1);
 	}
-
 	a_matrix_path = argv[2];
 	b_matrix_path = argv[3];
 	gold_matrix_path = argv[4];
+//====================================
 
-	//////////BLOCK and GRID size///////////////////////
+//================== Set block and grid size for GoldChk kernel
 	int gridsize = k/BLOCK_SIZE < 1 ? 1 : k/BLOCK_SIZE;
 	int blocksize = k/BLOCK_SIZE < 1 ? k : BLOCK_SIZE;
 	dim3 dimBlock(blocksize,blocksize);
 	dim3 dimGrid(gridsize,gridsize);
-	////////////////////////////////////////////////////
+//====================================
 
+//================== Init logs
 #ifdef LOGS
 	char test_info[90];
 	snprintf(test_info, 90, "size:%d", k);
 	start_log_file("cudaGEMM", test_info);
 #endif
+//====================================
 
+//================== cublas GEMM parameters
+	const double alpha = 1.0;
+	const double beta = 1.0;
+	char transa = 't', transb = 't';
+	int sizea, sizeb, sizec;
 	lda = max( 1, k + 16 );
 	sizea = lda * k;
 	ldb = max( 1, k + 16 );
 	sizeb = ldb * k;
 	ldc = max( 1, k + 16 );
 	sizec = ldc * k;
+//====================================
 
+//================== Alloc HOST memory
 	A = ( double* ) malloc( sizea * sizeof( double ) );
 	B = ( double* ) malloc( sizeb * sizeof( double ) );
 
 	GOLD = ( double* ) malloc( sizec * sizeof( double ) );
+//====================================
 
+//================== Init test environment
 	kernel_errors=0;
-	
 	GetDevice();
-	
 	ReadMatrixFromFile();
-
-	//A[72] = 7.2;
-
 	printf( "cublasDGEMM\n" );
+//====================================
 
    
 	for(loop2=0; loop2<iteractions; loop2++)
-	{
+	{//================== Global test loop
 
-
+//================== Init DEVICE memory
 		malloc_a = cudaMalloc( ( void** ) &d_A, sizea * sizeof( double ) );
 		erro_malloc = cudaGetErrorString(malloc_a);
 		if(strcmp(erro_malloc, "no error") != 0) {
@@ -208,7 +205,6 @@ int main( int argc, char* argv[] )
 			log_error_detail("error a"); end_log_file(); 
 #endif
 			return 1;} //mem allocate failure
-
 		malloc_a = cudaMalloc( ( void** ) &d_B, sizea * sizeof( double ) );
 		erro_malloc = cudaGetErrorString(malloc_a);
 		if(strcmp(erro_malloc, "no error") != 0) {
@@ -216,7 +212,6 @@ int main( int argc, char* argv[] )
 			log_error_detail("error b"); end_log_file(); 
 #endif
 			return 1;} //mem allocate failure
-
 		malloc_a = cudaMalloc( ( void** ) &d_C, sizea * sizeof( double ) );
 		erro_malloc = cudaGetErrorString(malloc_a);
 		if(strcmp(erro_malloc, "no error") != 0) {
@@ -224,8 +219,6 @@ int main( int argc, char* argv[] )
 			log_error_detail("error c"); end_log_file(); 
 #endif
 			return 1;} //mem allocate failure
-
-
 		malloc_mem1 = cudaMemcpy( d_C, A, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // ZERA C
 		erro_malloc = cudaGetErrorString(malloc_mem1);
 		if(strcmp(erro_malloc, "no error") != 0) {
@@ -233,7 +226,6 @@ int main( int argc, char* argv[] )
 			log_error_detail("error mem load c"); end_log_file(); 
 #endif
 			return 1;} //mem allocate failure
-	
 		malloc_mem1 = cudaMemcpy( d_A, A, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH A
 		erro_malloc = cudaGetErrorString(malloc_mem1);
 		if(strcmp(erro_malloc, "no error") != 0) {
@@ -241,7 +233,6 @@ int main( int argc, char* argv[] )
 			log_error_detail("error mem load b"); end_log_file(); 
 #endif
 			return 1;} //mem allocate failure
-
 		malloc_mem1 = cudaMemcpy( d_B, B, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH B
 		erro_malloc = cudaGetErrorString(malloc_mem1);
 		if(strcmp(erro_malloc, "no error") != 0) {
@@ -249,17 +240,16 @@ int main( int argc, char* argv[] )
 			log_error_detail("error mem load b"); end_log_file(); 
 #endif
 			return 1;} //mem allocate failure
+//====================================
 
 		kernel_errors=0;
-		//cublasHandle_t blashandle;
-		//cublasCreate(&blashandle);
-	
-		//printf("cublasDgemm... k=%d transa=%c transb=%c lda=%d ldb=%d ldc=%d\n", k, transa, transb, lda, ldb, ldc);
+
+// Timer...
 double time = mysecond();
 #ifdef LOGS
 		start_iteration();
 #endif
-		//cublasDgemm( blashandle, (cublasOperation_t)transa, (cublasOperation_t)transb,
+//================== Device computation, GEMM
 		cublasDgemm( (cublasOperation_t)transa, (cublasOperation_t)transb,
 			   k, k, k,
 			   alpha,
@@ -267,13 +257,14 @@ double time = mysecond();
 			   d_B, ldb,
 			   beta,
 			   d_C, ldc );
-		//printf("\nend\n");
 		cudaDeviceSynchronize();
+//====================================
 #ifdef LOGS
 		end_iteration();
 #endif
 time = mysecond() - time;
 
+//================== Send GOLD to device, to perform HW output validation
 		malloc_mem1 = cudaMemcpy(d_A, GOLD, sizea * sizeof( double ), cudaMemcpyHostToDevice );
 		erro_malloc = cudaGetErrorString(malloc_mem1);
 		if(strcmp(erro_malloc, "no error") != 0) {
@@ -281,18 +272,22 @@ time = mysecond() - time;
 			log_error_detail("error mem load gold"); end_log_file(); 
 #endif
 			return 1;} //mem allocate failure
-
 		cudaMemcpyToSymbol(kerrors, &zero, sizeof(int));
+//====================================
 
+//================== Device computation, output validation
 		GoldChkKernel<<<dimGrid,dimBlock>>>(d_A, d_C, ldc);
+		cudaDeviceSynchronize();
+//====================================
 
-
+//================== Retrieve output mismatchs
 		cudaMemcpyFromSymbol(&kernel_errors, kerrors, sizeof(unsigned int));
+//====================================
 		
 #ifdef LOGS
 		log_error_count(kernel_errors);
 #endif
-
+//================== If there are errors, check on host (increased reliability)
 		if (kernel_errors!=0)
 		{
 
@@ -326,9 +321,9 @@ time = mysecond() - time;
 
 				ReadMatrixFromFile();	
 		}
+//====================================
 
-
-
+//================== Console hearthbeat
 		if(kernel_errors > 0 || (loop2 % 10 == 0))
 		{
 			printf("\ntest number: %d", loop2);
@@ -339,12 +334,14 @@ time = mysecond() - time;
 			printf(".");
 			fflush(stdout);
 		}
+//====================================
 
 
-
+//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
 		cudaFree( d_A );
 		cudaFree( d_B );
 		cudaFree( d_C );
+//====================================
 	}
 
 	free( A );
