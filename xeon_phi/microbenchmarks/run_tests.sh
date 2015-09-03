@@ -4,28 +4,36 @@
 ##
 ################################################################################
 source /opt/intel/composerxe/bin/compilervars.sh intel64
-#make
+make
 ################################################################################
 ##
 ##      Infinite repetitions
 ##
 ################################################################################
+export MIC_ENV_PREFIX=PHI
+export PHI_KMP_AFFINITY='granularity=fine,scatter'
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/cache/cache 0 $((28672 * 56))     # L1 Cache (28KB per core)
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/cache/cache 0 $((491520 * 56))    # L2 Cache (480KB per core)
 ###############################################
-/home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/scalar/reg/reg 0      # Scalar registers
+export MIC_ENV_PREFIX=PHI
+export PHI_KMP_AFFINITY='granularity=fine,compact'
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/scalar/and/and 0      # Scalar AND + ADD + MUL + DIV
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/scalar/or/or   0      # Scalar OR  + ADD + MUL + DIV
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/scalar/slr/slr 0      # Scalar SLR + ADD + MUL + DIV
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/scalar/rol/rol 0      # Scalar ROL + ADD + MUL + DIV
+#
+/home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/scalar/reg/reg 0      # Scalar registers
 ###############################################
-/home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/vector/reg/reg     0      # Vectorial registers:  32x ZMM#
+export MIC_ENV_PREFIX=PHI
+export PHI_KMP_AFFINITY='granularity=fine,compact'
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/vector/and/and_int 0      # Vectorial Integer:    AND + ADD + MUL
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/vector/and/and_fpd 0      # Vectorial FP Double:  AND + ADD + MUL
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/vector/or/or_int   0      # Vectorial Integer:    OR  + ADD + MUL
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/vector/or/or_fpd   0      # Vectorial FP Double:  OR  + ADD + MUL
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/vector/slr/slr_int 0      # Vectorial Integer:    SLR + ADD + MUL
 /home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/vector/slr/slr_fpd 0      # Vectorial FP Double:  SLR + ADD + MUL
+#
+/home/carol/radiation-benchmarks/xeon_phi/microbenchmarks/vector/reg/reg     0      # Vectorial registers:  32x ZMM#
 ################################################################################
 ##
 ##      10 repetitions only
