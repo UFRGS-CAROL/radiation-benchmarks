@@ -123,15 +123,17 @@ void App::run() {
 				throw runtime_error(
 						string("can't open video file: " + args.src));
 			vc >> frame;
-		} else if (args.src_is_camera) {
-			vc.open(args.camera_id);
-			if (!vc.isOpened()) {
-				stringstream msg;
-				msg << "can't open camera: " << args.camera_id;
-				throw runtime_error(msg.str());
-			}
-			vc >> frame;
-		} else {
+		}
+//		else if (args.src_is_camera) {
+//			vc.open(args.camera_id);
+//			if (!vc.isOpened()) {
+//				stringstream msg;
+//				msg << "can't open camera: " << args.camera_id;
+//				throw runtime_error(msg.str());
+//			}
+//			vc >> frame;
+//		}
+		else {
 			frame = imread(args.src);
 			if (frame.empty())
 				throw runtime_error(
