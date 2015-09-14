@@ -1,10 +1,22 @@
 //new classes
 #include "App.h"
+//for radiation test verification
+#ifdef LOGS
+#include "log_helper.h"
+#endif
+#include <sys/time.h>
 
-//using namespace std;
-//using namespace cv;
+/**
+ Mysecond function
+ for time verification
+ */
 
-
+double mysecond() {
+	struct timeval tp;
+	struct timezone tzp;
+	int i = gettimeofday(&tp, &tzp);
+	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
+}
 
 int main(int argc, char** argv) {
 	try {
