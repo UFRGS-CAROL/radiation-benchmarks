@@ -115,6 +115,7 @@ void App::run() {
 	cpu_hog.setSVMDetector(detector);
 
 	//executes while there is an input to show
+//	while (running) {
 	VideoCapture vc;
 	Mat frame;
 
@@ -124,6 +125,15 @@ void App::run() {
 			throw runtime_error(string("can't open video file: " + args.src));
 		vc >> frame;
 	}
+//		else if (args.src_is_camera) {
+//			vc.open(args.camera_id);
+//			if (!vc.isOpened()) {
+//				stringstream msg;
+//				msg << "can't open camera: " << args.camera_id;
+//				throw runtime_error(msg.str());
+//			}
+//			vc >> frame;
+//		}
 	//if it is an image
 	else {
 		frame = imread(args.src);
@@ -133,14 +143,9 @@ void App::run() {
 
 	Mat img_aux, img, img_to_show;
 	gpu::GpuMat gpu_img;
-	int ex = static_cast<int>(vc.get(CV_CAP_PROP_FOURCC));
-	output_video.open(NAME, ex, vc.get(CV_CAP_PROP_FPS), S, true);
-	if (!output_video.isOpened()) {
-		cout << "Could not open the output video for write: " << endl;
-		return;
-	}
+
 	// Iterate over all frames
-	while (!frame.empty()) {
+	while (/*running && */!frame.empty()) {
 //			workBegin();
 
 		// Change format of the image
@@ -165,6 +170,7 @@ void App::run() {
 		vector<Rect> found;
 
 		// Perform HOG classification
+//			hogWorkBegin();
 		if (use_gpu) {
 			gpu_img.upload(img);
 			gpu_hog.detectMultiScale(gpu_img, found, hit_threshold, win_stride,
@@ -172,6 +178,7 @@ void App::run() {
 		} else
 			cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
 					Size(0, 0), scale, gr_threshold);
+//			hogWorkEnd();
 
 		// Draw positive classified windows
 		for (size_t i = 0; i < found.size(); i++) {
@@ -179,14 +186,57 @@ void App::run() {
 			rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 		}
 
+//			cout << "FPS(hog only): " << hogWorkFps() << "FPS total "
+//					<< workFps() << endl;
+//			if (use_gpu)
+//				putText(img_to_show, "Mode: GPU", Point(5, 25),
+//						FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
+//			else
+//				putText(img_to_show, "Mode: CPU", Point(5, 25),
+//						FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
+//			putText(img_to_show, "FPS (HOG only): " + hogWorkFps(),
+//					Point(5, 65), FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0),
+//					2);
+//			putText(img_to_show, "FPS (total): " + workFps(), Point(5, 105),
+//					FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
+//			imshow("opencv_gpu_hog", img_to_show);
+
 		if (args.src_is_video || args.src_is_camera) {
 			//output
 			vc >> frame;
 		}
+
+//			workEnd();
 		//gold creation---------------------------------------------------
+		int ex = static_cast<int>(vc.get(CV_CAP_PROP_FOURCC));
+		output_video.open(NAME, ex, vc.get(CV_CAP_PROP_FPS), S, true);
+		if (!output_video.isOpened()) {
+			cout << "Could not open the output video for write: " << endl;
+			return;
+		}
 		output_video.write(img_to_show);
 		//----------------------------------------------------------------
+//
+//			if (args.write_video) {
+//				cout << "passou aqui\n";
+//				if (!video_writer.isOpened()) {
+//					video_writer.open(args.dst_video,
+//							CV_FOURCC('x', 'v', 'i', 'd'), args.dst_video_fps,
+//							img_to_show.size(), true);
+//					if (!video_writer.isOpened())
+//						throw std::runtime_error("can't create video writer");
+//				}
+//
+//				if (make_gray)
+//					cvtColor(img_to_show, img, CV_GRAY2BGR);
+//				else
+//					cvtColor(img_to_show, img, CV_BGRA2BGR);
+//
+//				video_writer << img;
+//			}
+//			handleKey((char) waitKey(3));
 	}
+//	}
 }
 
 void App::handleKey(char key) {
