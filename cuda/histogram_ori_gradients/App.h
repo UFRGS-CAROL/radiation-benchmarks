@@ -201,28 +201,30 @@ void App::run() {
 //					FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
 //			imshow("opencv_gpu_hog", img_to_show);
 
-			if (args.src_is_video || args.src_is_camera)
+			if (args.src_is_video || args.src_is_camera){
+				cout << "passou aqui\n";
 				vc >> frame;
+			}
 
 			workEnd();
 
-			if (args.write_video) {
-				cout << "passou aqui\n";
-				if (!video_writer.isOpened()) {
-					video_writer.open(args.dst_video,
-							CV_FOURCC('x', 'v', 'i', 'd'), args.dst_video_fps,
-							img_to_show.size(), true);
-					if (!video_writer.isOpened())
-						throw std::runtime_error("can't create video writer");
-				}
-
-				if (make_gray)
-					cvtColor(img_to_show, img, CV_GRAY2BGR);
-				else
-					cvtColor(img_to_show, img, CV_BGRA2BGR);
-
-				video_writer << img;
-			}
+//			if (args.write_video) {
+//				cout << "passou aqui\n";
+//				if (!video_writer.isOpened()) {
+//					video_writer.open(args.dst_video,
+//							CV_FOURCC('x', 'v', 'i', 'd'), args.dst_video_fps,
+//							img_to_show.size(), true);
+//					if (!video_writer.isOpened())
+//						throw std::runtime_error("can't create video writer");
+//				}
+//
+//				if (make_gray)
+//					cvtColor(img_to_show, img, CV_GRAY2BGR);
+//				else
+//					cvtColor(img_to_show, img, CV_BGRA2BGR);
+//
+//				video_writer << img;
+//			}
 
 			handleKey((char) waitKey(3));
 		}
