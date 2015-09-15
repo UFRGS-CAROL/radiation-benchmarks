@@ -113,6 +113,7 @@ void App::run() {
 	gpu_hog.setSVMDetector(detector);
 	cpu_hog.setSVMDetector(detector);
 
+	//executes while there is an input to show
 	while (running) {
 		VideoCapture vc;
 		Mat frame;
@@ -133,6 +134,7 @@ void App::run() {
 //			}
 //			vc >> frame;
 //		}
+		//if it is an image
 		else {
 			frame = imread(args.src);
 			if (frame.empty())
@@ -184,7 +186,8 @@ void App::run() {
 				rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 			}
 
-			cout << "FPS(hog only): " << hogWorkFps() << "FPS total " << workFps() << endl;
+			cout << "FPS(hog only): " << hogWorkFps() << "FPS total "
+					<< workFps() << endl;
 //			if (use_gpu)
 //				putText(img_to_show, "Mode: GPU", Point(5, 25),
 //						FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
@@ -196,7 +199,7 @@ void App::run() {
 //					2);
 //			putText(img_to_show, "FPS (total): " + workFps(), Point(5, 105),
 //					FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
-			imshow("opencv_gpu_hog", img_to_show);
+//			imshow("opencv_gpu_hog", img_to_show);
 
 			if (args.src_is_video || args.src_is_camera)
 				vc >> frame;
