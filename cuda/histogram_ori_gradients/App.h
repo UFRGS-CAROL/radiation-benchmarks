@@ -116,7 +116,7 @@ void App::run() {
 	cpu_hog.setSVMDetector(detector);
 
 	//executes while there is an input to show
-	while (running) {
+//	while (running) {
 		VideoCapture vc;
 		Mat frame;
 
@@ -241,7 +241,7 @@ void App::run() {
 //			}
 //			handleKey((char) waitKey(3));
 		}
-	}
+//	}
 }
 
 void App::handleKey(char key) {
