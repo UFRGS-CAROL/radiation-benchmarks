@@ -186,8 +186,8 @@ void App::run() {
 				rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 			}
 
-			cout << "FPS(hog only): " << hogWorkFps() << "FPS total "
-					<< workFps() << endl;
+//			cout << "FPS(hog only): " << hogWorkFps() << "FPS total "
+//					<< workFps() << endl;
 //			if (use_gpu)
 //				putText(img_to_show, "Mode: GPU", Point(5, 25),
 //						FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
@@ -207,6 +207,7 @@ void App::run() {
 			workEnd();
 
 			if (args.write_video) {
+				cout << "passou aqui\n";
 				if (!video_writer.isOpened()) {
 					video_writer.open(args.dst_video,
 							CV_FOURCC('x', 'v', 'i', 'd'), args.dst_video_fps,
