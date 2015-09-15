@@ -91,8 +91,9 @@ App::App(const Args& s) {
 }
 
 void App::run() {
-//	running = true;
 	cv::VideoWriter video_writer;
+	args.write_video = true;
+	args.dst_video = "output.avi";
 
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
@@ -113,7 +114,6 @@ void App::run() {
 	gpu_hog.setSVMDetector(detector);
 	cpu_hog.setSVMDetector(detector);
 
-//	while (running) {
 	VideoCapture vc;
 	Mat frame;
 
@@ -172,16 +172,13 @@ void App::run() {
 			rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 		}
 
-		cout << "FPS(hog only): " << hogWorkFps() << "FPS total " << workFps()
-				<< endl;
-
 		imshow("opencv_gpu_hog", img_to_show);
 
 		if (args.src_is_video || args.src_is_camera)
 			vc >> frame;
 
 		workEnd();
-
+		args.dst_video_fps = vc.get(CV_CAP_PROP_FPS);
 		if (args.write_video) {
 			if (!video_writer.isOpened()) {
 				video_writer.open(args.dst_video, CV_FOURCC('x', 'v', 'i', 'd'),
@@ -200,8 +197,6 @@ void App::run() {
 
 		handleKey((char) waitKey(3));
 	}
-//	}
-
 }
 
 void App::handleKey(char key) {
