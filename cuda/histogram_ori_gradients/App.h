@@ -131,23 +131,41 @@ void App::run() {
 	Mat img_aux, img, img_to_show;
 	gpu::GpuMat gpu_img;
 
+	//added for output
+	args.dst_video_fps = vc.get(CV_CAP_PROP_FPS);
+	if (args.write_video) {
+		if (!video_writer.isOpened()) {
+			video_writer.open(args.dst_video, CV_FOURCC('x', 'v', 'i', 'd'),
+					args.dst_video_fps, img_to_show.size(), true);
+			if (!video_writer.isOpened())
+				throw std::runtime_error("can't create video writer");
+		}
+
+		if (make_gray)
+			cvtColor(img_to_show, img, CV_GRAY2BGR);
+		else
+			cvtColor(img_to_show, img, CV_BGRA2BGR);
+
+		video_writer << img;
+	}
 	// Iterate over all frames
 	while (!frame.empty()) {
-		workBegin();
+//		workBegin();
 
 		// Change format of the image
-		if (make_gray)
-			cvtColor(frame, img_aux, CV_BGR2GRAY);
-		else if (use_gpu)
+//		if (make_gray)
+//			cvtColor(frame, img_aux, CV_BGR2GRAY);
+//		else
+		if (use_gpu)
 			cvtColor(frame, img_aux, CV_BGR2BGRA);
 		else
 			frame.copyTo(img_aux);
 
 		// Resize image
-		if (args.resize_src)
-			resize(img_aux, img, Size(args.width, args.height));
-		else
-			img = img_aux;
+//		if (args.resize_src)
+//			resize(img_aux, img, Size(args.width, args.height));
+//		else
+		img = img_aux;
 		img_to_show = img;
 
 		gpu_hog.nlevels = nlevels;
@@ -156,7 +174,7 @@ void App::run() {
 		vector<Rect> found;
 
 		// Perform HOG classification
-		hogWorkBegin();
+//		hogWorkBegin();
 		if (use_gpu) {
 			gpu_img.upload(img);
 			gpu_hog.detectMultiScale(gpu_img, found, hit_threshold, win_stride,
@@ -164,7 +182,7 @@ void App::run() {
 		} else
 			cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
 					Size(0, 0), scale, gr_threshold);
-		hogWorkEnd();
+//		hogWorkEnd();
 
 		// Draw positive classified windows
 		for (size_t i = 0; i < found.size(); i++) {
@@ -172,30 +190,29 @@ void App::run() {
 			rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 		}
 
-		imshow("opencv_gpu_hog", img_to_show);
+		//imshow("opencv_gpu_hog", img_to_show);
 
-		if (args.src_is_video || args.src_is_camera)
-			vc >> frame;
+//		if (args.src_is_video || args.src_is_camera)
+		vc >> frame;
 
-		workEnd();
-		args.dst_video_fps = vc.get(CV_CAP_PROP_FPS);
-		if (args.write_video) {
-			if (!video_writer.isOpened()) {
-				video_writer.open(args.dst_video, CV_FOURCC('x', 'v', 'i', 'd'),
-						args.dst_video_fps, img_to_show.size(), true);
-				if (!video_writer.isOpened())
-					throw std::runtime_error("can't create video writer");
-			}
+//		workEnd();
+//		args.dst_video_fps = vc.get(CV_CAP_PROP_FPS);
+//		if (args.write_video) {
+//			if (!video_writer.isOpened()) {
+//				video_writer.open(args.dst_video, CV_FOURCC('x', 'v', 'i', 'd'),
+//						args.dst_video_fps, img_to_show.size(), true);
+//				if (!video_writer.isOpened())
+//					throw std::runtime_error("can't create video writer");
+//			}
+//
+//			if (make_gray)
+//				cvtColor(img_to_show, img, CV_GRAY2BGR);
+//			else
+		cvtColor(img_to_show, img, CV_BGRA2BGR);
+		video_writer << img;
+//		}
 
-			if (make_gray)
-				cvtColor(img_to_show, img, CV_GRAY2BGR);
-			else
-				cvtColor(img_to_show, img, CV_BGRA2BGR);
-
-			video_writer << img;
-		}
-
-		handleKey((char) waitKey(3));
+//		handleKey((char) waitKey(3));
 	}
 }
 
