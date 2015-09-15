@@ -148,7 +148,7 @@ void App::run() {
 
 		// Iterate over all frames
 		while (/*running && */!frame.empty()) {
-//			workBegin();
+			workBegin();
 
 			// Change format of the image
 			if (make_gray)
@@ -172,7 +172,7 @@ void App::run() {
 			vector<Rect> found;
 
 			// Perform HOG classification
-//			hogWorkBegin();
+			hogWorkBegin();
 			if (use_gpu) {
 				gpu_img.upload(img);
 				gpu_hog.detectMultiScale(gpu_img, found, hit_threshold,
@@ -180,24 +180,13 @@ void App::run() {
 			} else
 				cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
 						Size(0, 0), scale, gr_threshold);
-//			hogWorkEnd();
+			hogWorkEnd();
 
 			// Draw positive classified windows
 			for (size_t i = 0; i < found.size(); i++) {
 				Rect r = found[i];
 				rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 			}
-
-			//gold creation---------------------------------------------------
-			int ex = static_cast<int>(vc.get(CV_CAP_PROP_FOURCC));
-			output_video.open(NAME, ex, vc.get(CV_CAP_PROP_FPS), S, true);
-		    if (!output_video.isOpened())
-		    {
-		        cout  << "Could not open the output video for write: " << endl;
-		        return;
-		    }
-		    output_video += img_to_show;
-		    //----------------------------------------------------------------
 
 //			cout << "FPS(hog only): " << hogWorkFps() << "FPS total "
 //					<< workFps() << endl;
@@ -219,7 +208,17 @@ void App::run() {
 				vc >> frame;
 			}
 
-//			workEnd();
+			workEnd();
+			//gold creation---------------------------------------------------
+			int ex = static_cast<int>(vc.get(CV_CAP_PROP_FOURCC));
+			output_video.open(NAME, ex, work_fps, S, true);
+		    if (!output_video.isOpened())
+		    {
+		        cout  << "Could not open the output video for write: " << endl;
+		        return;
+		    }
+		    output_video.write(img_to_show);
+		    //----------------------------------------------------------------
 //
 //			if (args.write_video) {
 //				cout << "passou aqui\n";
