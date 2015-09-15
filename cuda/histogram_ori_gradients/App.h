@@ -91,9 +91,8 @@ App::App(const Args& s) {
 }
 
 void App::run() {
-	//running = true;
-	cv::VideoWriter output_video;
-	const string NAME = "output.avi";
+//	running = true;
+	cv::VideoWriter video_writer;
 
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
@@ -114,7 +113,7 @@ void App::run() {
 	gpu_hog.setSVMDetector(detector);
 	cpu_hog.setSVMDetector(detector);
 
-	//executes while there is an input to show
+//	while (running) {
 	VideoCapture vc;
 	Mat frame;
 
@@ -123,7 +122,7 @@ void App::run() {
 		if (!vc.isOpened())
 			throw runtime_error(string("can't open video file: " + args.src));
 		vc >> frame;
-	} else {	//if it is an image
+	} else {
 		frame = imread(args.src);
 		if (frame.empty())
 			throw runtime_error(string("can't open image file: " + args.src));
@@ -131,23 +130,25 @@ void App::run() {
 
 	Mat img_aux, img, img_to_show;
 	gpu::GpuMat gpu_img;
-	int ex = static_cast<int>(vc.get(CV_CAP_PROP_FOURCC));
-	Size S = Size(args.width, args.height);
-	output_video.open(NAME, ex, vc.get(CV_CAP_PROP_FPS), S, true);
-	if (!output_video.isOpened()) {
-		cout << "Could not open the output video for write: " << endl;
-		return;
-	}
+
 	// Iterate over all frames
 	while (!frame.empty()) {
+		workBegin();
+
 		// Change format of the image
-		if (use_gpu)
+		if (make_gray)
+			cvtColor(frame, img_aux, CV_BGR2GRAY);
+		else if (use_gpu)
 			cvtColor(frame, img_aux, CV_BGR2BGRA);
 		else
 			frame.copyTo(img_aux);
 
-		img = img_aux;
-		img_to_show = img_aux;
+		// Resize image
+		if (args.resize_src)
+			resize(img_aux, img, Size(args.width, args.height));
+		else
+			img = img_aux;
+		img_to_show = img;
 
 		gpu_hog.nlevels = nlevels;
 		cpu_hog.nlevels = nlevels;
@@ -155,6 +156,7 @@ void App::run() {
 		vector<Rect> found;
 
 		// Perform HOG classification
+		hogWorkBegin();
 		if (use_gpu) {
 			gpu_img.upload(img);
 			gpu_hog.detectMultiScale(gpu_img, found, hit_threshold, win_stride,
@@ -162,6 +164,7 @@ void App::run() {
 		} else
 			cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
 					Size(0, 0), scale, gr_threshold);
+		hogWorkEnd();
 
 		// Draw positive classified windows
 		for (size_t i = 0; i < found.size(); i++) {
@@ -169,15 +172,36 @@ void App::run() {
 			rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 		}
 
-		if (args.src_is_video || args.src_is_camera) {
-			//output
-			vc >> frame;
-		}
+		cout << "FPS(hog only): " << hogWorkFps() << "FPS total " << workFps()
+				<< endl;
+
 		imshow("opencv_gpu_hog", img_to_show);
-		//gold creation---------------------------------------------------
-		output_video << img_to_show;
-		//----------------------------------------------------------------
+
+		if (args.src_is_video || args.src_is_camera)
+			vc >> frame;
+
+		workEnd();
+
+		if (args.write_video) {
+			if (!video_writer.isOpened()) {
+				video_writer.open(args.dst_video, CV_FOURCC('x', 'v', 'i', 'd'),
+						args.dst_video_fps, img_to_show.size(), true);
+				if (!video_writer.isOpened())
+					throw std::runtime_error("can't create video writer");
+			}
+
+			if (make_gray)
+				cvtColor(img_to_show, img, CV_GRAY2BGR);
+			else
+				cvtColor(img_to_show, img, CV_BGRA2BGR);
+
+			video_writer << img;
+		}
+
+		handleKey((char) waitKey(3));
 	}
+//	}
+
 }
 
 void App::handleKey(char key) {
