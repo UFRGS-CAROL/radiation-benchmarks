@@ -92,7 +92,9 @@ App::App(const Args& s) {
 
 void App::run() {
 	running = true;
-	cv::VideoWriter video_writer;
+	cv::VideoWriter output_video;
+	const string NAME = "output.avi";
+
 
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
@@ -146,8 +148,8 @@ void App::run() {
 		gpu::GpuMat gpu_img;
 
 		// Iterate over all frames
-		while (running && !frame.empty()) {
-			workBegin();
+		while (/*running && */!frame.empty()) {
+//			workBegin();
 
 			// Change format of the image
 			if (make_gray)
@@ -158,8 +160,9 @@ void App::run() {
 				frame.copyTo(img_aux);
 
 			// Resize image
+			Size S = Size(args.width, args.height);
 			if (args.resize_src)
-				resize(img_aux, img, Size(args.width, args.height));
+				resize(img_aux, img, S);
 			else
 				img = img_aux;
 			img_to_show = img;
@@ -170,7 +173,7 @@ void App::run() {
 			vector<Rect> found;
 
 			// Perform HOG classification
-			hogWorkBegin();
+//			hogWorkBegin();
 			if (use_gpu) {
 				gpu_img.upload(img);
 				gpu_hog.detectMultiScale(gpu_img, found, hit_threshold,
@@ -178,7 +181,7 @@ void App::run() {
 			} else
 				cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
 						Size(0, 0), scale, gr_threshold);
-			hogWorkEnd();
+//			hogWorkEnd();
 
 			// Draw positive classified windows
 			for (size_t i = 0; i < found.size(); i++) {
@@ -186,8 +189,19 @@ void App::run() {
 				rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 			}
 
-			cout << "FPS(hog only): " << hogWorkFps() << "FPS total "
-					<< workFps() << endl;
+			//gold creation---------------------------------------------------
+			int ex = static_cast<int>(vc.get(CV_CAP_PROP_FOURCC));
+			output_video.open(NAME, ex, vc.get(CV_CAP_PROP_FPS), S, true);
+		    if (!output_video.isOpened())
+		    {
+		        cout  << "Could not open the output video for write: " << endl;
+		        return;
+		    }
+		    output_video << img_to_show;
+		    //----------------------------------------------------------------
+
+//			cout << "FPS(hog only): " << hogWorkFps() << "FPS total "
+//					<< workFps() << endl;
 //			if (use_gpu)
 //				putText(img_to_show, "Mode: GPU", Point(5, 25),
 //						FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
@@ -199,15 +213,15 @@ void App::run() {
 //					2);
 //			putText(img_to_show, "FPS (total): " + workFps(), Point(5, 105),
 //					FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
-			imshow("opencv_gpu_hog", img_to_show);
+//			imshow("opencv_gpu_hog", img_to_show);
 
-			if (args.src_is_video || args.src_is_camera){
+			if (args.src_is_video || args.src_is_camera) {
 				//output
 				vc >> frame;
 			}
 
-			workEnd();
-
+//			workEnd();
+//
 //			if (args.write_video) {
 //				cout << "passou aqui\n";
 //				if (!video_writer.isOpened()) {
@@ -225,8 +239,7 @@ void App::run() {
 //
 //				video_writer << img;
 //			}
-
-			handleKey((char) waitKey(3));
+//			handleKey((char) waitKey(3));
 		}
 	}
 }
