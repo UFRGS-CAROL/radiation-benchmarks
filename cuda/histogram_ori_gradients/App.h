@@ -123,9 +123,7 @@ void App::run() {
 		if (!vc.isOpened())
 			throw runtime_error(string("can't open video file: " + args.src));
 		vc >> frame;
-	}
-	//if it is an image
-	else {
+	} else {	//if it is an image
 		frame = imread(args.src);
 		if (frame.empty())
 			throw runtime_error(string("can't open image file: " + args.src));
@@ -134,30 +132,22 @@ void App::run() {
 	Mat img_aux, img, img_to_show;
 	gpu::GpuMat gpu_img;
 	int ex = static_cast<int>(vc.get(CV_CAP_PROP_FOURCC));
-	output_video.open(NAME, ex, vc.get(CV_CAP_PROP_FPS),  Size(args.width, args.height), true);
+	Size S = Size(args.width, args.height);
+	output_video.open(NAME, ex, vc.get(CV_CAP_PROP_FPS), S, true);
 	if (!output_video.isOpened()) {
 		cout << "Could not open the output video for write: " << endl;
 		return;
 	}
 	// Iterate over all frames
 	while (!frame.empty()) {
-//			workBegin();
-
 		// Change format of the image
-		if (make_gray)
-			cvtColor(frame, img_aux, CV_BGR2GRAY);
-		else if (use_gpu)
+		if (use_gpu)
 			cvtColor(frame, img_aux, CV_BGR2BGRA);
 		else
 			frame.copyTo(img_aux);
 
-		// Resize image
-		Size S = Size(args.width, args.height);
-		if (args.resize_src)
-			resize(img_aux, img, S);
-		else
-			img = img_aux;
-		img_to_show = img;
+		img = img_aux;
+		img_to_show = img_aux;
 
 		gpu_hog.nlevels = nlevels;
 		cpu_hog.nlevels = nlevels;
@@ -183,8 +173,9 @@ void App::run() {
 			//output
 			vc >> frame;
 		}
+		imshow("opencv_gpu_hog", img_to_show);
 		//gold creation---------------------------------------------------
-		output_video.write(img_to_show);
+		output_video << img_to_show;
 		//----------------------------------------------------------------
 	}
 }
