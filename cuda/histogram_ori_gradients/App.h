@@ -134,7 +134,7 @@ void App::run() {
 	Mat img_aux, img, img_to_show;
 	gpu::GpuMat gpu_img;
 	int ex = static_cast<int>(vc.get(CV_CAP_PROP_FOURCC));
-	output_video.open(NAME, ex, vc.get(CV_CAP_PROP_FPS), S, true);
+	output_video.open(NAME, ex, vc.get(CV_CAP_PROP_FPS),  Size(args.width, args.height), true);
 	if (!output_video.isOpened()) {
 		cout << "Could not open the output video for write: " << endl;
 		return;
