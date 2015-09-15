@@ -95,7 +95,6 @@ void App::run() {
 	cv::VideoWriter output_video;
 	const string NAME = "output.avi";
 
-
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
 
@@ -197,7 +196,7 @@ void App::run() {
 		        cout  << "Could not open the output video for write: " << endl;
 		        return;
 		    }
-		    output_video << img_to_show;
+		    output_video += img_to_show;
 		    //----------------------------------------------------------------
 
 //			cout << "FPS(hog only): " << hogWorkFps() << "FPS total "
