@@ -91,9 +91,8 @@ App::App(const Args& s) {
 }
 
 void App::run() {
+	running = true;
 	cv::VideoWriter video_writer;
-	args.write_video = true;
-	args.dst_video = "output.avi";
 
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
@@ -114,108 +113,118 @@ void App::run() {
 	gpu_hog.setSVMDetector(detector);
 	cpu_hog.setSVMDetector(detector);
 
-	VideoCapture vc;
-	Mat frame;
+	while (running) {
+		VideoCapture vc;
+		Mat frame;
 
-	if (args.src_is_video) {
-		vc.open(args.src.c_str());
-		if (!vc.isOpened())
-			throw runtime_error(string("can't open video file: " + args.src));
-		vc >> frame;
-	} else {
-		frame = imread(args.src);
-		if (frame.empty())
-			throw runtime_error(string("can't open image file: " + args.src));
-	}
-
-	Mat img_aux, img, img_to_show;
-	gpu::GpuMat gpu_img;
-
-	//added for output
-	args.dst_video_fps = vc.get(CV_CAP_PROP_FPS);
-	if (args.write_video) {
-		if (!video_writer.isOpened()) {
-			video_writer.open(args.dst_video, CV_FOURCC('x', 'v', 'i', 'd'),
-					args.dst_video_fps, img_to_show.size(), true);
-			if (!video_writer.isOpened())
-				throw std::runtime_error("can't create video writer");
+		if (args.src_is_video) {
+			vc.open(args.src.c_str());
+			if (!vc.isOpened())
+				throw runtime_error(
+						string("can't open video file: " + args.src));
+			vc >> frame;
+		}
+		//		else if (args.src_is_camera) {
+		//			vc.open(args.camera_id);
+		//			if (!vc.isOpened()) {
+		//				stringstream msg;
+		//				msg << "can't open camera: " << args.camera_id;
+		//				throw runtime_error(msg.str());
+		//			}
+		//			vc >> frame;
+		//		}
+		else {
+			frame = imread(args.src);
+			if (frame.empty())
+				throw runtime_error(
+						string("can't open image file: " + args.src));
 		}
 
-		if (make_gray)
-			cvtColor(img_to_show, img, CV_GRAY2BGR);
-		else
-			cvtColor(img_to_show, img, CV_BGRA2BGR);
+		Mat img_aux, img, img_to_show;
+		gpu::GpuMat gpu_img;
 
-		video_writer << img;
-	}
-	// Iterate over all frames
-	while (!frame.empty()) {
-//		workBegin();
+		// Iterate over all frames
+		while (running && !frame.empty()) {
+			workBegin();
 
-		// Change format of the image
-//		if (make_gray)
-//			cvtColor(frame, img_aux, CV_BGR2GRAY);
-//		else
-		if (use_gpu)
-			cvtColor(frame, img_aux, CV_BGR2BGRA);
-		else
-			frame.copyTo(img_aux);
+			// Change format of the image
+			if (make_gray)
+				cvtColor(frame, img_aux, CV_BGR2GRAY);
+			else if (use_gpu)
+				cvtColor(frame, img_aux, CV_BGR2BGRA);
+			else
+				frame.copyTo(img_aux);
 
-		// Resize image
-//		if (args.resize_src)
-//			resize(img_aux, img, Size(args.width, args.height));
-//		else
-		img = img_aux;
-		img_to_show = img;
+			// Resize image
+			if (args.resize_src)
+				resize(img_aux, img, Size(args.width, args.height));
+			else
+				img = img_aux;
+			img_to_show = img;
 
-		gpu_hog.nlevels = nlevels;
-		cpu_hog.nlevels = nlevels;
+			gpu_hog.nlevels = nlevels;
+			cpu_hog.nlevels = nlevels;
 
-		vector<Rect> found;
+			vector<Rect> found;
 
-		// Perform HOG classification
-//		hogWorkBegin();
-		if (use_gpu) {
-			gpu_img.upload(img);
-			gpu_hog.detectMultiScale(gpu_img, found, hit_threshold, win_stride,
-					Size(0, 0), scale, gr_threshold);
-		} else
-			cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
-					Size(0, 0), scale, gr_threshold);
-//		hogWorkEnd();
+			// Perform HOG classification
+			hogWorkBegin();
+			if (use_gpu) {
+				gpu_img.upload(img);
+				gpu_hog.detectMultiScale(gpu_img, found, hit_threshold,
+						win_stride, Size(0, 0), scale, gr_threshold);
+			} else
+				cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
+						Size(0, 0), scale, gr_threshold);
+			hogWorkEnd();
 
-		// Draw positive classified windows
-		for (size_t i = 0; i < found.size(); i++) {
-			Rect r = found[i];
-			rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
+			// Draw positive classified windows
+			for (size_t i = 0; i < found.size(); i++) {
+				Rect r = found[i];
+				rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
+			}
+
+			cout << "FPS(hog only): " << hogWorkFps() << "FPS total "
+					<< workFps() << endl;
+			//			if (use_gpu)
+			//				putText(img_to_show, "Mode: GPU", Point(5, 25),
+			//						FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
+			//			else
+			//				putText(img_to_show, "Mode: CPU", Point(5, 25),
+			//						FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
+			//			putText(img_to_show, "FPS (HOG only): " + hogWorkFps(),
+			//					Point(5, 65), FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0),
+			//					2);
+			//			putText(img_to_show, "FPS (total): " + workFps(), Point(5, 105),
+			//					FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
+			imshow("opencv_gpu_hog", img_to_show);
+
+			if (args.src_is_video || args.src_is_camera)
+				vc >> frame;
+
+			workEnd();
+
+			if (args.write_video) {
+				if (!video_writer.isOpened()) {
+					video_writer.open(args.dst_video,
+							CV_FOURCC('x', 'v', 'i', 'd'), args.dst_video_fps,
+							img_to_show.size(), true);
+					if (!video_writer.isOpened())
+						throw std::runtime_error("can't create video writer");
+				}
+
+				if (make_gray)
+					cvtColor(img_to_show, img, CV_GRAY2BGR);
+				else
+					cvtColor(img_to_show, img, CV_BGRA2BGR);
+
+				video_writer << img;
+			}
+
+			handleKey((char) waitKey(3));
 		}
-
-		//imshow("opencv_gpu_hog", img_to_show);
-
-//		if (args.src_is_video || args.src_is_camera)
-		vc >> frame;
-
-//		workEnd();
-//		args.dst_video_fps = vc.get(CV_CAP_PROP_FPS);
-//		if (args.write_video) {
-//			if (!video_writer.isOpened()) {
-//				video_writer.open(args.dst_video, CV_FOURCC('x', 'v', 'i', 'd'),
-//						args.dst_video_fps, img_to_show.size(), true);
-//				if (!video_writer.isOpened())
-//					throw std::runtime_error("can't create video writer");
-//			}
-//
-//			if (make_gray)
-//				cvtColor(img_to_show, img, CV_GRAY2BGR);
-//			else
-		cvtColor(img_to_show, img, CV_BGRA2BGR);
-		video_writer << img;
-//		}
-
-//		handleKey((char) waitKey(3));
 	}
 }
-
 void App::handleKey(char key) {
 	switch (key) {
 	case 27:
