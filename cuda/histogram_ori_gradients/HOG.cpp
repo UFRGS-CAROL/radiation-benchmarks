@@ -1,10 +1,6 @@
 //new classes
 #include "App.h"
 //for radiation test verification
-#ifdef LOGS
-#include "log_helper.h"
-#endif
-
 
 int main(int argc, char** argv) {
 	try {
