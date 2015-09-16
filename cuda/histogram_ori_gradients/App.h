@@ -11,7 +11,7 @@
 //new classes
 #include "Args.h"
 #include <sys/time.h>
-#define MAX_ERROR 0.0000000001
+#define MAX_ERROR 0.001
 #ifdef LOGS
 #include "log_helper.h"
 #endif
@@ -99,15 +99,23 @@ App::App(const Args& s) {
 }
 
 void App::run() {
-	Mat gold = imread(args.dst_video);
 	//================== Init logs
 #ifdef LOGS
 	char test_info[90];
-	snprintf(test_info, 90, "size:%d", k);
+	snprintf(test_info, 90, "size:%d", gold.rows * gold.cols);
 	start_log_file("HOG", test_info);
 #endif
 	//====================================
 
+	Mat gold = imread(args.dst_video);
+	if (gold.empty()) {
+#ifdef LOGS
+		log_error_detail("Cant open gold matrix");
+		end_log_file();
+#endif
+		throw runtime_error(
+				string("can't open image file: " + args.dst_videoF));
+	}
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
 
@@ -136,9 +144,14 @@ void App::run() {
 			Mat frame;
 
 			frame = imread(args.src);
-			if (frame.empty())
+			if (frame.empty()) {
+#ifdef LOGS
+				log_error_detail("Cant open matrix Frame");
+				end_log_file();
+#endif
 				throw runtime_error(
 						string("can't open image file: " + args.src));
+			}
 
 			Mat img_aux, img, img_to_show;
 			gpu::GpuMat gpu_img;
@@ -171,7 +184,7 @@ void App::run() {
 				time = mysecond() - time;
 			}
 
-			cout << "Iteration: " << i << "Time: " << time << endl;
+			cout << "Iteration: " << i << " Time: " << time << " ";
 			// Draw positive classified windows
 			for (size_t i = 0; i < found.size(); i++) {
 				Rect r = found[i];
@@ -180,25 +193,31 @@ void App::run() {
 
 			//verify the output----------------------------------------------
 			ostringstream error_detail;
+			time = mysecond();
 			int x_gold, x_frame;
-			for(int j = 0; j < gold.rows; j++){
-				for(int k = 0; k < gold.cols; k++){
+			for (int j = 0; j < gold.rows; j++) {
+				for (int k = 0; k < gold.cols; k++) {
 					x_gold = gold.at<int>(j, k);
 					x_frame = frame.at<int>(j, k);
-					if((fabs((x_frame - x_gold) / x_frame) > MAX_ERROR) || (fabs((x_frame - x_gold) / x_gold) > MAX_ERROR)){
-						error_detail << "p: [" << j << "," << k << "], r: " << x_frame << ", e: " << x_gold;
+					if ((fabs(x_gold) - fabs(x_frame)) > MAX_ERROR) {
+						error_detail << "p: [" << j << "," << k << "], r: "
+								<< x_frame << ", e: " << x_gold;
 #ifdef LOGS
 						log_error_detail(error_detail.c_str);
 #endif
 					}
 				}
-				cout << endl;
 			}
+			cout << "Verification time " << mysecond() - time << endl;
 			//===============================================================
 		}
 	} catch (cv::Exception &e) {
-		const char *err_msg = e.what();
-
+		string err_msg(e.what());
+#ifdef LOGS
+		log_error_detail(err_msg.c_str);
+		end_log_file();
+#endif
+		throw runtime_error(string("error: " + err_msg));
 	}
 }
 
