@@ -203,7 +203,7 @@ void App::run() {
 				vc >> frame;
 
 			//workEnd();
-
+            cout << "FOi aqui\n";
 			if (args.write_video) {
 				if (!video_writer.isOpened()) {
 					video_writer.open(args.dst_video,
