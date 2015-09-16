@@ -48,7 +48,6 @@ public:
 
 	int win_width;
 	int win_stride_width, win_stride_height;
-
 	bool gamma_corr;
 
 	void printHelp() {

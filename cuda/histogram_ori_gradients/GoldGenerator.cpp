@@ -1,10 +1,6 @@
-//new classes
-#include "App.h"
-//for radiation test verification
-#ifdef LOGS
-#include "log_helper.h"
-#endif
-
+#include <stdio.h>
+#include <stdlib.h>
+#include "GoldGenerator.h"
 
 int main(int argc, char** argv) {
 	try {

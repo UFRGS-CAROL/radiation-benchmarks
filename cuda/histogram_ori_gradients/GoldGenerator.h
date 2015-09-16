@@ -1,16 +1,14 @@
 /*
- * App.h
+ * GoldGenerator.h
  *
- *  Created on: Sep 9, 2015
+ *  Created on: Sep 16, 2015
  *      Author: fernando
  */
 
-#ifndef APP_H_
-#define APP_H_
-
+#ifndef GOLDGENERATOR_H_
+#define GOLDGENERATOR_H_
 //new classes
 #include "Args.h"
-#include <sys/time.h>
 
 class App {
 public:
@@ -28,7 +26,6 @@ public:
 	string workFps() const;
 
 	string message() const;
-	double mysecond();
 
 private:
 	App operator=(App&);
@@ -55,13 +52,13 @@ App::App(const Args& s) {
 	cv::gpu::printShortCudaDeviceInfo(cv::gpu::getDevice());
 
 	args = s;
-	cout << "\nControls:\n" << "\tESC - exit\n"
-			<< "\tm - change mode GPU <-> CPU\n"
-			<< "\tg - convert image to gray or not\n"
-			<< "\t1/q - increase/decrease HOG scale\n"
-			<< "\t2/w - increase/decrease levels count\n"
-			<< "\t3/e - increase/decrease HOG group threshold\n"
-			<< "\t4/r - increase/decrease hit threshold\n" << endl;
+//	cout << "\nControls:\n" << "\tESC - exit\n"
+//			<< "\tm - change mode GPU <-> CPU\n"
+//			<< "\tg - convert image to gray or not\n"
+//			<< "\t1/q - increase/decrease HOG scale\n"
+//			<< "\t2/w - increase/decrease levels count\n"
+//			<< "\t3/e - increase/decrease HOG group threshold\n"
+//			<< "\t4/r - increase/decrease hit threshold\n" << endl;
 
 	use_gpu = true;
 	make_gray = args.make_gray;
@@ -93,6 +90,8 @@ App::App(const Args& s) {
 }
 
 void App::run() {
+	if(args.dst_video.empty())
+		throw runtime_error(string("No output path. [--dst_video <path>] # output video path\n"));
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
 
@@ -119,7 +118,6 @@ void App::run() {
 	if (frame.empty())
 		throw runtime_error(string("can't open image file: " + args.src));
 
-
 	Mat img_aux, img, img_to_show;
 	gpu::GpuMat gpu_img;
 
@@ -137,21 +135,17 @@ void App::run() {
 	vector<Rect> found;
 
 	// Perform HOG classification
+	cout << "Generating gold image\n";
 	double time;
 	if (use_gpu) {
 		gpu_img.upload(img);
-		time = mysecond();
 		gpu_hog.detectMultiScale(gpu_img, found, hit_threshold, win_stride,
 				Size(0, 0), scale, gr_threshold);
-		time = mysecond() - time;
-	} else{
-		time = mysecond();
+	} else {
 		cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
 				Size(0, 0), scale, gr_threshold);
-		time = mysecond() - time;
 	}
-
-	cout << "Time: " << time << endl;
+	cout << "Gold generated with success\n";
 	// Draw positive classified windows
 	for (size_t i = 0; i < found.size(); i++) {
 		Rect r = found[i];
@@ -159,47 +153,7 @@ void App::run() {
 	}
 	//save the output
 	cvtColor(img_to_show, img, CV_BGRA2BGR);
-	imwrite("output.bmp", img);
+	imwrite(args.dst_video, img);
 }
 
-
-inline void App::hogWorkBegin() {
-	hog_work_begin = getTickCount();
-}
-
-inline void App::hogWorkEnd() {
-	int64 delta = getTickCount() - hog_work_begin;
-	double freq = getTickFrequency();
-	hog_work_fps = freq / delta;
-}
-
-inline string App::hogWorkFps() const {
-	stringstream ss;
-	ss << hog_work_fps;
-	return ss.str();
-}
-
-inline void App::workBegin() {
-	work_begin = getTickCount();
-}
-
-inline void App::workEnd() {
-	int64 delta = getTickCount() - work_begin;
-	double freq = getTickFrequency();
-	work_fps = freq / delta;
-}
-
-inline string App::workFps() const {
-	stringstream ss;
-	ss << work_fps;
-	return ss.str();
-}
-
-double App::mysecond() {
-	struct timeval tp;
-	struct timezone tzp;
-	int i = gettimeofday(&tp, &tzp);
-	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
-}
-
-#endif /* APP_H_ */
+#endif /* GOLDGENERATOR_H_ */
