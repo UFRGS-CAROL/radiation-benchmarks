@@ -123,17 +123,7 @@ void App::run() {
 				throw runtime_error(
 						string("can't open video file: " + args.src));
 			vc >> frame;
-		}
-		//		else if (args.src_is_camera) {
-		//			vc.open(args.camera_id);
-		//			if (!vc.isOpened()) {
-		//				stringstream msg;
-		//				msg << "can't open camera: " << args.camera_id;
-		//				throw runtime_error(msg.str());
-		//			}
-		//			vc >> frame;
-		//		}
-		else {
+		} else {
 			frame = imread(args.src);
 			if (frame.empty())
 				throw runtime_error(
@@ -148,17 +138,18 @@ void App::run() {
 			//workBegin();
 
 			// Change format of the image
-			if (make_gray)
-				cvtColor(frame, img_aux, CV_BGR2GRAY);
-			else if (use_gpu)
+	//		if (make_gray)
+	//			cvtColor(frame, img_aux, CV_BGR2GRAY);
+	//		else
+			if (use_gpu)
 				cvtColor(frame, img_aux, CV_BGR2BGRA);
 			else
 				frame.copyTo(img_aux);
 
 			// Resize image
-			if (args.resize_src)
-				resize(img_aux, img, Size(args.width, args.height));
-			else
+	//		if (args.resize_src)
+	//			resize(img_aux, img, Size(args.width, args.height));
+	//		else
 				img = img_aux;
 			img_to_show = img;
 
@@ -203,7 +194,6 @@ void App::run() {
 				vc >> frame;
 
 			//workEnd();
-            cout << "FOi aqui\n";
 			if (args.write_video) {
 				if (!video_writer.isOpened()) {
 					video_writer.open(args.dst_video,
@@ -213,9 +203,9 @@ void App::run() {
 						throw std::runtime_error("can't create video writer");
 				}
 
-				if (make_gray)
-					cvtColor(img_to_show, img, CV_GRAY2BGR);
-				else
+	//			if (make_gray)
+	//				cvtColor(img_to_show, img, CV_GRAY2BGR);
+	//			else
 					cvtColor(img_to_show, img, CV_BGRA2BGR);
 
 				video_writer << img;
