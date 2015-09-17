@@ -23,8 +23,19 @@
 #include "cdp_lu.h"
 #include "cdp_lu_utils.h"
 
+#include <sys/time.h>
+#include <omp.h>
+
 #define WILL_REUSE true
 #define WILL_NOT_REUSE false
+
+double mysecond()
+{
+   struct timeval tp;
+   struct timezone tzp;
+   int i = gettimeofday(&tp,&tzp);
+   return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
+}
 
 void memsetup(Parameters &host_params)
 {
@@ -284,6 +295,11 @@ bool checkresult(Parameters &host_params)
     return ok;
 }
 
+void test_check(Parameters &host_params)
+{
+  for (unsigned int i=0; i<)
+}
+
 bool launch_test(Parameters &host_params)
 {
     for (unsigned int i=1; i<=host_params.reps; i++)
@@ -296,6 +312,7 @@ bool launch_test(Parameters &host_params)
         finalize(host_params, WILL_NOT_REUSE);
         return result;
       }
+      test_check(host_params);
       finalize(host_params, WILL_REUSE);
     }
     finalize(host_params, WILL_NOT_REUSE);
