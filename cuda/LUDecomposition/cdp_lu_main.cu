@@ -297,26 +297,67 @@ bool checkresult(Parameters &host_params)
 
 void test_check(Parameters &host_params)
 {
-  for (unsigned int i=0; i<)
+  int nerrors=0;
+
+  {
+    double *ptr = host_params.host_LU;
+    double *goldptr = host_params.gold_LU;
+
+    #pragma omp parallel for
+    for (int i=0; i<host_params.data_len; i++)
+    {
+          if (ptr[i]!=goldptr[i])
+          {
+            printf("CHECK: Error detected: LU[%d] read: %lf expected: %lf\n", i, ptr[i], goldptr[i]);
+            nerrors++;
+            if (nerrors>=20) exit(EXIT_FAILURE);
+          }
+    }
+  }
+
+  {
+    int *ptr = host_params.host_piv;
+    int *goldptr = host_params.gold_piv;
+
+    #pragma omp parallel for
+    for (int i=0; i<host_params.piv_len; i++)
+    {
+          if (ptr[i]!=goldptr[i])
+          {
+            printf("CHECK: Error detected: piv[%d] read: %d expected: %d\n", i, ptr[i], goldptr[i]);
+            nerrors++;
+            if (nerrors>=20) exit(EXIT_FAILURE);
+          }
+    }
+  }
 }
 
 bool launch_test(Parameters &host_params)
 {
-    for (unsigned int i=1; i<=host_params.reps; i++)
+  double globaltimer, timer;
+  for (unsigned int i=1; i<=host_params.reps; i++)
+  {
+    globaltimer = mysecond();
+    timer = mysecond();
+    memsetup(host_params);
+    printf("Setup time: %.2f\n", mysecond() - timer);
+    timer = mysecond();
+    launch(host_params);
+    printf("EXECUTION time: %.2f\n", mysecond() - timer);
+    if (host_params.generate)
     {
-      memsetup(host_params);
-      launch(host_params);
-      if (host_params.generate)
-      {
-        bool result = checkresult(host_params);
-        finalize(host_params, WILL_NOT_REUSE);
-        return result;
-      }
-      test_check(host_params);
-      finalize(host_params, WILL_REUSE);
+      bool result = checkresult(host_params);
+      finalize(host_params, WILL_NOT_REUSE);
+      return result;
     }
-    finalize(host_params, WILL_NOT_REUSE);
-    return true;
+    timer = mysecond();
+    test_check(host_params);
+    printf("Check time: %.2f\n", mysecond() - timer);
+    finalize(host_params, WILL_REUSE);
+    printf("Total time: %.2f\n", mysecond() - globaltimer);
+  }
+  finalize(host_params, WILL_NOT_REUSE);
+  return true;
 }
 
 void print_usage(const char *exec_name)
