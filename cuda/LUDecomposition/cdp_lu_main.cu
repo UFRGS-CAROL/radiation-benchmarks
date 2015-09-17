@@ -275,41 +275,55 @@ bool checkresult(Parameters &host_params)
     checkCudaErrors(cudaFree(device_I));
     checkCudaErrors(cudaFree(device_result));
     printf("done\n");
-
-    if (ok&&(host_params.generate))
-    {
-      printf("Writing gold to file...");
-      FILE *fgold;
-      if (fgold = fopen(host_params.goldName, "wb"))
-      {
-        fwrite(host_params.host_LU, len, 1, fgold);
-        fwrite(host_params.host_piv, piv_len, 1, fgold);
-        fclose(fgold);
-      }
-      else
-      {
-        printf("Warning: Could not open gold file in wb mode. %s\n", host_params.goldName);
-      }
-      printf("Done.\n");
-    }
     return ok;
+}
+
+void gold_write(Parameters &host_params)
+{
+  // Copy device_LU to host_LU.
+  checkCudaErrors(cudaMemcpy(host_params.gold_LU, host_params.device_LU, host_params.data_len * host_params.data_size, cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaMemcpy(host_params.gold_piv, host_params.device_piv, host_params.piv_len * sizeof(int), cudaMemcpyDeviceToHost));
+
+  if (host_params.generate)
+  {
+    printf("Writing gold to file...");
+    FILE *fgold;
+    if (fgold = fopen(host_params.goldName, "wb"))
+    {
+      fwrite(host_params.gold_LU, host_params.data_len, host_params.data_size, fgold);
+      fwrite(host_params.gold_piv, host_params.piv_len, sizeof(int), fgold);
+      fclose(fgold);
+    }
+    else
+    {
+      printf("Warning: Could not open gold file in wb mode. %s\n", host_params.goldName);
+    }
+    printf("Done.\n");
+  }
 }
 
 void test_check(Parameters &host_params)
 {
+  // Copy device_LU to host_LU.
+  checkCudaErrors(cudaMemcpy(host_params.host_LU, host_params.device_LU, host_params.data_len * host_params.data_size, cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaMemcpy(host_params.host_piv, host_params.device_piv, host_params.piv_len * sizeof(int), cudaMemcpyDeviceToHost));
+
   int nerrors=0;
 
   {
     double *ptr = host_params.host_LU;
     double *goldptr = host_params.gold_LU;
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int i=0; i<host_params.data_len; i++)
     {
           if (ptr[i]!=goldptr[i])
           {
             printf("CHECK: Error detected: LU[%d] read: %lf expected: %lf\n", i, ptr[i], goldptr[i]);
-            nerrors++;
+            #pragma omp critical
+            {
+              nerrors++;
+            }
             if (nerrors>=20) exit(EXIT_FAILURE);
           }
     }
@@ -319,13 +333,16 @@ void test_check(Parameters &host_params)
     int *ptr = host_params.host_piv;
     int *goldptr = host_params.gold_piv;
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int i=0; i<host_params.piv_len; i++)
     {
           if (ptr[i]!=goldptr[i])
           {
             printf("CHECK: Error detected: piv[%d] read: %d expected: %d\n", i, ptr[i], goldptr[i]);
-            nerrors++;
+            #pragma omp critical
+            {
+              nerrors++;
+            }
             if (nerrors>=20) exit(EXIT_FAILURE);
           }
     }
@@ -346,7 +363,9 @@ bool launch_test(Parameters &host_params)
     printf("EXECUTION time: %.2f\n", mysecond() - timer);
     if (host_params.generate)
     {
+      gold_write(host_params);
       bool result = checkresult(host_params);
+      if (!result) remove(host_params.goldName);
       finalize(host_params, WILL_NOT_REUSE);
       return result;
     }
