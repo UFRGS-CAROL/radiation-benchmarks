@@ -12,6 +12,8 @@
 #include "Args.h"
 #include <sys/time.h>
 #define MAX_ERROR 0.001
+#include <list>
+#include "Helpful.h"
 #ifdef LOGS
 #include "log_helper.h"
 #endif
@@ -34,7 +36,6 @@ public:
 	string workFps() const;
 
 	string message() const;
-	double mysecond();
 
 private:
 	App operator=(App&);
@@ -98,22 +99,48 @@ App::App(const Args& s) {
 	cout << endl;
 }
 
+vector<string> &split(const string &s, char delim, vector<string> &elems) {
+	std::stringstream ss(s);
+	std::string item;
+	while (getline(ss, item, delim)) {
+		elems.push_back(item);
+	}
+	return elems;
+}
+
+vector<string> split(const string &s, char delim) {
+	std::vector<string> elems;
+	split(s, delim, elems);
+	return elems;
+}
+
 void App::run() {
-	Mat gold = imread(args.dst_video);
+//	Mat gold = imread(args.dst_video);
+	vector<vector<int> > gold;
+	ifstream input_file(args.dst_video.c_str());
 	//================== Init logs
 #ifdef LOGS
 	char test_info[90];
-	snprintf(test_info, 90, "size:%d", gold.rows * gold.cols);
+	snprintf(test_info, 90, "HOG GOLD TEXT FILE");
 	start_log_file("HOG", test_info);
 #endif
 	//====================================
-	if (gold.empty()) {
+	if (!input_file.is_open()) {
 #ifdef LOGS
-		log_error_detail("Cant open gold matrix");
+		log_error_detail("Cant open gold file");
 		end_log_file();
 #endif
-		throw runtime_error(
-				string("can't open image file: " + args.dst_video));
+		throw runtime_error(string("can't open image file: " + args.dst_video));
+	}
+	//get file data
+	string line;
+	while (getline(input_file, line)) {
+		vector<string> sep_line = split(line, ',');
+		vector<int> values;
+		for (int i = 0; i < GOLD_LINE_SIZE; i++) {
+			values.push_back(atoi(sep_line[i].c_str()));
+		}
+		gold.push_back(values);
 	}
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
@@ -171,7 +198,7 @@ void App::run() {
 			// Perform HOG classification
 			double time;
 #ifdef LOGS
-		start_iteration();
+			start_iteration();
 #endif
 			if (use_gpu) {
 				gpu_img.upload(img);
@@ -186,87 +213,67 @@ void App::run() {
 				time = mysecond() - time;
 			}
 #ifdef LOGS
-		end_iteration();
+			end_iteration();
 #endif
 			cout << "Iteration: " << i << " Time: " << time << " ";
 			// Draw positive classified windows
-			for (size_t i = 0; i < found.size(); i++) {
-				Rect r = found[i];
-				rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
-			}
-
+//			for (size_t t = 0; t < found.size(); t++) {
+//				Rect r = found[t];
+//				rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
+//			}
 			//verify the output----------------------------------------------
 			ostringstream error_detail;
 			time = mysecond();
-			int x_gold, x_frame;
-			for (int j = 0; j < gold.rows; j++) {
-				for (int k = 0; k < gold.cols; k++) {
-					x_gold = gold.at<int>(j, k);
-					x_frame = frame.at<int>(j, k);
-					if ((fabs(x_gold) - fabs(x_frame)) > MAX_ERROR) {
-						error_detail << "p: [" << j << "," << k << "], r: "
-								<< x_frame << ", e: " << x_gold;
+			size_t gold_iterator = 0;
+			bool any_error = false;
+			vector<vector<int> > data;
+			for (size_t s = 0; s < found.size(); s++) {
+				Rect r = found[s];
+				int vf[8];
+				vf[0] = r.height, vf[1] = r.width;
+				vf[2] = r.x, vf[3] = r.y;
+				vf[4] = r.tl().x, vf[5] = r.tl().y;
+				vf[6] = r.br().x, vf[7] = r.br().y;
+				vector<int> values = gold[gold_iterator];
+				int val_it = 0;
+				data.push_back(vector<int>(vf, (vf + sizeof(vf) / sizeof(int))));
+						if ((vf[0] != values[val_it])
+								|| (vf[1] != values[val_it++])
+								|| (vf[2] != values[val_it++])
+								|| (vf[3] != values[val_it++])
+								|| (vf[4] != values[val_it++])
+								|| (vf[5] != values[val_it++])
+								|| (vf[6] != values[val_it++])
+								|| (vf[7] != values[val_it++])) {
+							error_detail << "SDC: " << s << ", Height: "
+									<< vf[0] << ", width: " << vf[1] << ", X: "
+									<< vf[2] << ", Y: " << vf[3] << endl;
 #ifdef LOGS
-						char *str = const_cast<char*>(error_detail.str().c_str());
-						log_error_detail(str);
+							char *str = const_cast<char*>(error_detail.str().c_str());
+							log_error_detail(str);
 #endif
+							any_error = true;
+						}
+						dump_output(i, "./output", any_error, data);
+						if (gold_iterator < gold.size())
+							gold_iterator++;
 					}
+
+					cout << "Verification time " << mysecond() - time << endl;
 				}
+				//===============================================================
+			} catch (cv::Exception &e) {
+				char *str = const_cast<char*>(e.what());
+				string err_msg(str);
+#ifdef LOGS
+				log_error_detail(str);
+				end_log_file();
+#endif
+				throw runtime_error(string("error: " + err_msg));
 			}
-			cout << "Verification time " << mysecond() - time << endl;
-			//===============================================================
+#ifdef LOGS
+			end_log_file();
+#endif
 		}
-	} catch (cv::Exception &e) {
-		char *str = const_cast<char*>(e.what());
-		string err_msg(str);
-#ifdef LOGS
-		log_error_detail(str);
-		end_log_file();
-#endif
-		throw runtime_error(string("error: " + err_msg));
-	}
-#ifdef LOGS
-		end_log_file();
-#endif
-}
-
-inline void App::hogWorkBegin() {
-	hog_work_begin = getTickCount();
-}
-
-inline void App::hogWorkEnd() {
-	int64 delta = getTickCount() - hog_work_begin;
-	double freq = getTickFrequency();
-	hog_work_fps = freq / delta;
-}
-
-inline string App::hogWorkFps() const {
-	stringstream ss;
-	ss << hog_work_fps;
-	return ss.str();
-}
-
-inline void App::workBegin() {
-	work_begin = getTickCount();
-}
-
-inline void App::workEnd() {
-	int64 delta = getTickCount() - work_begin;
-	double freq = getTickFrequency();
-	work_fps = freq / delta;
-}
-
-inline string App::workFps() const {
-	stringstream ss;
-	ss << work_fps;
-	return ss.str();
-}
-
-double App::mysecond() {
-	struct timeval tp;
-	struct timezone tzp;
-	gettimeofday(&tp, &tzp);
-	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
-}
 
 #endif /* APP_H_ */

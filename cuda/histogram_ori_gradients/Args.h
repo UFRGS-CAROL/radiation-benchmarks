@@ -16,7 +16,7 @@
 #include <stdexcept>
 #include "opencv2/gpu/gpu.hpp"
 #include "opencv2/highgui/highgui.hpp"
-
+#define GOLD_LINE_SIZE 8
 using namespace std;
 using namespace cv;
 
@@ -132,7 +132,7 @@ Args Args::read(int argc, char** argv) {
 			args.gamma_corr = (string(argv[++i]) == "true");
 		else if (string(argv[i]) == "--write_video")
 			args.write_video = (string(argv[++i]) == "true");
-		else if (string(argv[i]) == "--dst_video")
+		else if (string(argv[i]) == "--dst_data")
 			args.dst_video = argv[++i];
 		else if (string(argv[i]) == "--dst_video_fps")
 			args.dst_video_fps = atof(argv[++i]);

@@ -90,8 +90,9 @@ App::App(const Args& s) {
 }
 
 void App::run() {
-	if(args.dst_video.empty())
-		throw runtime_error(string("No output path. [--dst_video <path>] # output video path\n"));
+	if (args.dst_video.empty())
+		throw runtime_error(
+				string("No output path. [--dst_data <path>] # output data\n"));
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
 
@@ -136,7 +137,6 @@ void App::run() {
 
 	// Perform HOG classification
 	cout << "Generating gold image\n";
-	double time;
 	if (use_gpu) {
 		gpu_img.upload(img);
 		gpu_hog.detectMultiScale(gpu_img, found, hit_threshold, win_stride,
@@ -146,14 +146,27 @@ void App::run() {
 				Size(0, 0), scale, gr_threshold);
 	}
 	cout << "Gold generated with success\n";
-	// Draw positive classified windows
-	for (size_t i = 0; i < found.size(); i++) {
-		Rect r = found[i];
-		rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
+	// Draw positive classified windows (OLD)
+	//save the data on the *.data file
+	ofstream output_file;
+	output_file.open(args.dst_video.c_str());
+	if (output_file.is_open()) {
+		for (size_t i = 0; i < found.size(); i++) {
+			Rect r = found[i];
+			//rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
+			//new approach
+			output_file << r.height << "," << r.width << "," << r.x << ","
+					<< r.y << "," << r.tl().x << "," << r.tl().y << "," << r.br().x << ","
+					<< r.br().y << endl;
+		}
+		output_file.close();
+	} else {
+		throw runtime_error(
+				string("can't create output file: " + args.dst_video));
 	}
 	//save the output
-	cvtColor(img_to_show, img, CV_BGRA2BGR);
-	imwrite(args.dst_video, img);
+	//cvtColor(img_to_show, img, CV_BGRA2BGR);
+	//imwrite(args.dst_video, img);
 }
 
 #endif /* GOLDGENERATOR_H_ */
