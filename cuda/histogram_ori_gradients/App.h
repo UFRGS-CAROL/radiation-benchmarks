@@ -99,6 +99,7 @@ App::App(const Args& s) {
 }
 
 void App::run() {
+	Mat gold = imread(args.dst_video);
 	//================== Init logs
 #ifdef LOGS
 	char test_info[90];
@@ -106,15 +107,13 @@ void App::run() {
 	start_log_file("HOG", test_info);
 #endif
 	//====================================
-
-	Mat gold = imread(args.dst_video);
 	if (gold.empty()) {
 #ifdef LOGS
 		log_error_detail("Cant open gold matrix");
 		end_log_file();
 #endif
 		throw runtime_error(
-				string("can't open image file: " + args.dst_videoF));
+				string("can't open image file: " + args.dst_video));
 	}
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
@@ -171,6 +170,9 @@ void App::run() {
 
 			// Perform HOG classification
 			double time;
+#ifdef LOGS
+		start_iteration();
+#endif
 			if (use_gpu) {
 				gpu_img.upload(img);
 				time = mysecond();
@@ -183,7 +185,9 @@ void App::run() {
 						Size(0, 0), scale, gr_threshold);
 				time = mysecond() - time;
 			}
-
+#ifdef LOGS
+		end_iteration();
+#endif
 			cout << "Iteration: " << i << " Time: " << time << " ";
 			// Draw positive classified windows
 			for (size_t i = 0; i < found.size(); i++) {
@@ -203,7 +207,8 @@ void App::run() {
 						error_detail << "p: [" << j << "," << k << "], r: "
 								<< x_frame << ", e: " << x_gold;
 #ifdef LOGS
-						log_error_detail(error_detail.c_str);
+						char *str = const_cast<char*>(error_detail.str().c_str());
+						log_error_detail(str);
 #endif
 					}
 				}
@@ -212,13 +217,17 @@ void App::run() {
 			//===============================================================
 		}
 	} catch (cv::Exception &e) {
-		string err_msg(e.what());
+		char *str = const_cast<char*>(e.what());
+		string err_msg(str);
 #ifdef LOGS
-		log_error_detail(err_msg.c_str);
+		log_error_detail(str);
 		end_log_file();
 #endif
 		throw runtime_error(string("error: " + err_msg));
 	}
+#ifdef LOGS
+		end_log_file();
+#endif
 }
 
 inline void App::hogWorkBegin() {
