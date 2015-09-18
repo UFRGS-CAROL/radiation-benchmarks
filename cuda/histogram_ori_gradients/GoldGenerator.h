@@ -115,7 +115,10 @@ void App::run() {
 
 	VideoCapture vc;
 	Mat frame;
-
+	cout << "width " << args.win_width << endl;
+	cout << "height " << args.win_stride_width << endl;
+	cout << "win stride height "<< args.win_stride_height << endl;
+	cout << "win stride width " << args.win_stride_width << endl;
 	frame = imread(args.src);
 	if (frame.empty())
 		throw runtime_error(string("can't open image file: " + args.src));
@@ -156,7 +159,7 @@ void App::run() {
 	output_file << args.scale << ",";
 	output_file << args.gamma_corr << ",";
 	output_file << args.gr_threshold << ",";
-	output_file << args.width << ",";
+	output_file << args.win_width << ",";
 	output_file << args.hit_threshold << ",";
 	output_file << args.nlevels << endl;
 

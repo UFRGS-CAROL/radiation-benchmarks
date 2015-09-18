@@ -36,7 +36,7 @@ public:
 	string workFps() const;
 
 	string message() const;
-
+	friend ostream &operator <<(ostream &os, const App &app);
 
 
 private:
@@ -59,6 +59,18 @@ private:
 	int64 work_begin;
 	double work_fps;
 };
+
+ostream &operator <<(ostream &os, const App &app){
+	os << "running " << app.running << endl;
+	os << "make gray " << app.use_gpu << endl;
+	os << "scale " << app.scale << endl;
+	os << "gr threshold " << app.gr_threshold << endl;
+	os << "nlevels " << app.nlevels << endl;
+	os << "hit threshold " << app.hit_threshold << endl;
+	os << "gamma corr " << app.gamma_corr << endl;
+	return os;
+}
+
 
 App::App(const Args& s) {
 	cv::gpu::printShortCudaDeviceInfo(cv::gpu::getDevice());
@@ -124,7 +136,7 @@ void App::run() {
 	string line;
 	if (getline(input_file, line)) {
 		vector<string> sep_line = split(line, ',');
-		if (sep_line.size() != 5) {
+		if (sep_line.size() != 7) {
 #ifdef LOGS
 			log_error_detail("wrong parameters on gold file");
 			end_log_file();
@@ -132,15 +144,19 @@ void App::run() {
 			throw runtime_error(
 					string("wrong parameters on gold file: " + args.dst_video));
 		}
-		this->make_gray = ((sep_line[0].compare("true") == 0) ? true : false);
-		this->scale =  atof(sep_line[1].c_str());;
-		this->gamma_corr = ((sep_line[2].compare("true") == 0) ? true : false);
-		this->gr_threshold = atoi(sep_line[3].c_str());
-		args.win_width = atoi(sep_line[4].c_str());
-		this->hit_threshold = atof(sep_line[5].c_str());
-		this->nlevels = atoi(sep_line[6].c_str());
+		this->make_gray =	(bool)atoi(sep_line[0].c_str());
+		this->scale = 		      atof(sep_line[1].c_str());
+		this->gamma_corr = 	(bool)atoi(sep_line[2].c_str());
+		this->gr_threshold =	  atoi(sep_line[3].c_str());
+		args.win_width =		  atoi(sep_line[4].c_str());
+		this->hit_threshold = 	  atof(sep_line[5].c_str());
+		this->nlevels = 		  atoi(sep_line[6].c_str());
 	}
-
+	//cout << *this;
+//	cout << "width " << args.win_width << endl;
+//	cout << "height " << args.win_stride_width << endl;
+//	cout << "win stride height "<< args.win_stride_height << endl;
+//	cout << "win stride width " << args.win_stride_width << endl;
 	while (getline(input_file, line)) {
 		vector<string> sep_line = split(line, ',');
 		vector<int> values;
@@ -149,6 +165,7 @@ void App::run() {
 		}
 		gold.push_back(values);
 	}
+
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
 
@@ -158,7 +175,9 @@ void App::run() {
 		detector = cv::gpu::HOGDescriptor::getPeopleDetector64x128();
 	else
 		detector = cv::gpu::HOGDescriptor::getPeopleDetector48x96();
+
 	try {
+
 		//gpu --------------------------------------------
 		cv::gpu::HOGDescriptor gpu_hog(win_size, Size(16, 16), Size(8, 8),
 				Size(8, 8), 9, cv::gpu::HOGDescriptor::DEFAULT_WIN_SIGMA, 0.2,
@@ -201,6 +220,7 @@ void App::run() {
 			cpu_hog.nlevels = nlevels;
 
 			vector<Rect> found;
+			cout << "PAssou aqui\n";
 
 			// Perform HOG classification
 			double time;
