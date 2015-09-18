@@ -62,13 +62,13 @@ App::App(const Args& s) {
 	cv::gpu::printShortCudaDeviceInfo(cv::gpu::getDevice());
 
 	args = s;
-	cout << "\nControls:\n" << "\tESC - exit\n"
-			<< "\tm - change mode GPU <-> CPU\n"
-			<< "\tg - convert image to gray or not\n"
-			<< "\t1/q - increase/decrease HOG scale\n"
-			<< "\t2/w - increase/decrease levels count\n"
-			<< "\t3/e - increase/decrease HOG group threshold\n"
-			<< "\t4/r - increase/decrease hit threshold\n" << endl;
+//	cout << "\nControls:\n" << "\tESC - exit\n"
+//			<< "\tm - change mode GPU <-> CPU\n"
+//			<< "\tg - convert image to gray or not\n"
+//			<< "\t1/q - increase/decrease HOG scale\n"
+//			<< "\t2/w - increase/decrease levels count\n"
+//			<< "\t3/e - increase/decrease HOG group threshold\n"
+//			<< "\t4/r - increase/decrease hit threshold\n" << endl;
 
 	use_gpu = true;
 	make_gray = args.make_gray;
@@ -85,18 +85,18 @@ App::App(const Args& s) {
 	if (args.win_width != 64 && args.win_width != 48)
 		args.win_width = 64;
 
-	cout << "Scale: " << scale << endl;
-	if (args.resize_src)
-		cout << "Resized source: (" << args.width << ", " << args.height
-				<< ")\n";
-	cout << "Group threshold: " << gr_threshold << endl;
-	cout << "Levels number: " << nlevels << endl;
-	cout << "Win width: " << args.win_width << endl;
-	cout << "Win stride: (" << args.win_stride_width << ", "
-			<< args.win_stride_height << ")\n";
-	cout << "Hit threshold: " << hit_threshold << endl;
-	cout << "Gamma correction: " << gamma_corr << endl;
-	cout << endl;
+//	cout << "Scale: " << scale << endl;
+//	if (args.resize_src)
+//		cout << "Resized source: (" << args.width << ", " << args.height
+//				<< ")\n";
+//	cout << "Group threshold: " << gr_threshold << endl;
+//	cout << "Levels number: " << nlevels << endl;
+//	cout << "Win width: " << args.win_width << endl;
+//	cout << "Win stride: (" << args.win_stride_width << ", "
+//			<< args.win_stride_height << ")\n";
+//	cout << "Hit threshold: " << hit_threshold << endl;
+//	cout << "Gamma correction: " << gamma_corr << endl;
+//	cout << endl;
 }
 
 vector<string> &split(const string &s, char delim, vector<string> &elems) {
@@ -134,6 +134,23 @@ void App::run() {
 	}
 	//get file data
 	string line;
+	if (getline(input_file, line)) {
+		vector<string> sep_line = split(line, ',');
+		if (sep_line.size() != 5) {
+#ifdef LOGS
+			log_error_detail("wrong parameters on gold file");
+			end_log_file();
+#endif
+			throw runtime_error(
+					string("wrong parameters on gold file: " + args.dst_video));
+		}
+		args.gamma_corr = ((sep_line[0].compare("true") == 0) ? true : false);
+		args.gr_threshold = atoi(sep_line[1].c_str());
+		args.height = atoi(sep_line[2].c_str());
+		args.hit_threshold = atof(sep_line[3].c_str());
+		args.nlevels = atoi(sep_line[4].c_str());
+	}
+
 	while (getline(input_file, line)) {
 		vector<string> sep_line = split(line, ',');
 		vector<int> values;
@@ -145,7 +162,7 @@ void App::run() {
 	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
 	Size win_stride(args.win_stride_width, args.win_stride_height);
 
-	// Create HOG descriptors and detectors here
+// Create HOG descriptors and detectors here
 	vector<float> detector;
 	if (win_size == Size(64, 128))
 		detector = cv::gpu::HOGDescriptor::getPeopleDetector64x128();
@@ -227,6 +244,7 @@ void App::run() {
 			size_t gold_iterator = 0;
 			bool any_error = false;
 			vector<vector<int> > data;
+			cout << found.size();
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
 				int vf[8];

@@ -150,6 +150,12 @@ void App::run() {
 	//save the data on the *.data file
 	ofstream output_file;
 	output_file.open(args.dst_video.c_str());
+	output_file << args.gamma_corr << ",";
+	output_file << args.gr_threshold << ",";
+	output_file << args.height << ",";
+	output_file << args.hit_threshold << ",";
+	output_file << args.nlevels << endl;
+
 	if (output_file.is_open()) {
 		for (size_t i = 0; i < found.size(); i++) {
 			Rect r = found[i];
