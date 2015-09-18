@@ -18,7 +18,7 @@
 #include "log_helper.h"
 #endif
 
-int iteractions = 1; // global loop iteracion
+int iteractions = 5; // global loop iteracion
 
 class App {
 public:
@@ -101,20 +101,6 @@ App::App(const Args& s) {
 //	cout << endl;
 }
 
-vector<string> &split(const string &s, char delim, vector<string> &elems) {
-	std::stringstream ss(s);
-	std::string item;
-	while (getline(ss, item, delim)) {
-		elems.push_back(item);
-	}
-	return elems;
-}
-
-vector<string> split(const string &s, char delim) {
-	std::vector<string> elems;
-	split(s, delim, elems);
-	return elems;
-}
 
 void App::run() {
 //	Mat gold = imread(args.dst_video);

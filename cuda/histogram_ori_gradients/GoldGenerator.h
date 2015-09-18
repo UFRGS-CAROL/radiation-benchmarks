@@ -9,6 +9,7 @@
 #define GOLDGENERATOR_H_
 //new classes
 #include "Args.h"
+#include "Helpful.h"
 
 class App {
 public:
@@ -171,8 +172,8 @@ void App::run() {
 				string("can't create output file: " + args.dst_video));
 	}
 	//save the output
-	//cvtColor(img_to_show, img, CV_BGRA2BGR);
-	//imwrite(args.dst_video, img);
+	cvtColor(img_to_show, img, CV_BGRA2BGR);
+	imwrite(string("output_" + args.src, img);
 }
 
 #endif /* GOLDGENERATOR_H_ */
