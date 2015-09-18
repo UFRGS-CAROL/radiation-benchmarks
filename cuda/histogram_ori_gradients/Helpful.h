@@ -8,7 +8,7 @@
 #ifndef HELPFUL_H_
 #define HELPFUL_H_
 
-void dump_output(int iteration_num, char *directory, bool corrupted,
+void dump_output(int iteration_num, string directory, bool corrupted,
 		vector<vector<int> > data) {
 	char filename[100];
 
@@ -42,10 +42,10 @@ void dump_output(int iteration_num, char *directory, bool corrupted,
 	strcat(str_file_time, "_");
 
 	if (corrupted)
-		sprintf(filename, "%s/graph%05d_corrupted_%s.data", directory,
+		sprintf(filename, "%s/graph%05d_corrupted_%s.data", directory.c_str(),
 				iteration_num, str_file_time);
 	else
-		sprintf(filename, "%s/graph%05d_%s.data", directory, iteration_num,
+		sprintf(filename, "%s/graph%05d_%s.data", directory.c_str(), iteration_num,
 				str_file_time);
 	ofstream fp;
 	fp.open(filename);

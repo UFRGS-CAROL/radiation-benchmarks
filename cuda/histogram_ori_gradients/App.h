@@ -236,44 +236,44 @@ void App::run() {
 				vf[6] = r.br().x, vf[7] = r.br().y;
 				vector<int> values = gold[gold_iterator];
 				int val_it = 0;
-				data.push_back(vector<int>(vf, (vf + sizeof(vf) / sizeof(int))));
-						if ((vf[0] != values[val_it])
-								|| (vf[1] != values[val_it++])
-								|| (vf[2] != values[val_it++])
-								|| (vf[3] != values[val_it++])
-								|| (vf[4] != values[val_it++])
-								|| (vf[5] != values[val_it++])
-								|| (vf[6] != values[val_it++])
-								|| (vf[7] != values[val_it++])) {
-							error_detail << "SDC: " << s << ", Height: "
-									<< vf[0] << ", width: " << vf[1] << ", X: "
-									<< vf[2] << ", Y: " << vf[3] << endl;
+				data.push_back(
+						vector<int>(vf, (vf + sizeof(vf) / sizeof(int))));
+				if ((vf[0] != values[val_it]) || (vf[1] != values[val_it++])
+						|| (vf[2] != values[val_it++])
+						|| (vf[3] != values[val_it++])
+						|| (vf[4] != values[val_it++])
+						|| (vf[5] != values[val_it++])
+						|| (vf[6] != values[val_it++])
+						|| (vf[7] != values[val_it++])) {
+					error_detail << "SDC: " << s << ", Height: " << vf[0]
+							<< ", width: " << vf[1] << ", X: " << vf[2]
+							<< ", Y: " << vf[3] << endl;
 #ifdef LOGS
-							char *str = const_cast<char*>(error_detail.str().c_str());
-							log_error_detail(str);
+					char *str = const_cast<char*>(error_detail.str().c_str());
+					log_error_detail(str);
 #endif
-							any_error = true;
-						}
-						dump_output(i, "./output", any_error, data);
-						if (gold_iterator < gold.size())
-							gold_iterator++;
-					}
-
-					cout << "Verification time " << mysecond() - time << endl;
+					any_error = true;
 				}
-				//===============================================================
-			} catch (cv::Exception &e) {
-				char *str = const_cast<char*>(e.what());
-				string err_msg(str);
-#ifdef LOGS
-				log_error_detail(str);
-				end_log_file();
-#endif
-				throw runtime_error(string("error: " + err_msg));
+				dump_output(i, "./output", any_error, data);
+				if (gold_iterator < gold.size())
+					gold_iterator++;
 			}
-#ifdef LOGS
-			end_log_file();
-#endif
+
+			cout << "Verification time " << mysecond() - time << endl;
 		}
+		//===============================================================
+	} catch (cv::Exception &e) {
+		char *str = const_cast<char*>(e.what());
+		string err_msg(str);
+#ifdef LOGS
+		log_error_detail(str);
+		end_log_file();
+#endif
+		throw runtime_error(string("error: " + err_msg));
+	}
+#ifdef LOGS
+	end_log_file();
+#endif
+}
 
 #endif /* APP_H_ */
