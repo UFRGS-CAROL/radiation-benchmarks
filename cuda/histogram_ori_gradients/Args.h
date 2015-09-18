@@ -71,6 +71,8 @@ public:
 				<< "  [--dst_video_fps <double>] # output video fps\n";
 		help_showed = true;
 	}
+
+	friend ostream &operator <<(ostream &os, const Args &dt);
 };
 
 
@@ -150,6 +152,22 @@ Args Args::read(int argc, char** argv) {
 			throw runtime_error((string("unknown key: ") + argv[i]));
 	}
 	return args;
+}
+
+ostream &operator<<(ostream &os, const Args &args){
+		os << "Scale: " << args.scale << endl;
+		if (args.resize_src)
+			os << "Resized source: (" << args.width << ", " << args.height
+					<< ")\n";
+		os << "Group threshold: " << args.gr_threshold << endl;
+		os << "Levels number: " << args.nlevels << endl;
+		os << "Win width: " << args.win_width << endl;
+		os << "Win stride: (" << args.win_stride_width << ", "
+				<< args.win_stride_height << ")\n";
+		os << "Hit threshold: " << args.hit_threshold << endl;
+		os << "Gamma correction: " << args.gamma_corr << endl;
+		os << endl;
+		return os;
 }
 
 #endif /* ARGS_H_ */

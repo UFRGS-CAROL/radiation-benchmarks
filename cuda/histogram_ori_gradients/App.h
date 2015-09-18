@@ -37,6 +37,8 @@ public:
 
 	string message() const;
 
+
+
 private:
 	App operator=(App&);
 
@@ -150,7 +152,7 @@ void App::run() {
 		args.hit_threshold = atof(sep_line[3].c_str());
 		args.nlevels = atoi(sep_line[4].c_str());
 	}
-
+	cout << args;
 	while (getline(input_file, line)) {
 		vector<string> sep_line = split(line, ',');
 		vector<int> values;
@@ -293,5 +295,8 @@ void App::run() {
 	end_log_file();
 #endif
 }
+
+
+
 
 #endif /* APP_H_ */
