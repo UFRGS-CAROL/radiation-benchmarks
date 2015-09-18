@@ -10,7 +10,7 @@
 
 //new classes
 #include "Args.h"
-#include <sys/time.h>
+
 #define MAX_ERROR 0.001
 #include <list>
 #include "Helpful.h"

@@ -7,7 +7,7 @@
 
 #ifndef HELPFUL_H_
 #define HELPFUL_H_
-
+#include <sys/time.h>
 void dump_output(int iteration_num, string directory, bool corrupted,
 		vector<vector<int> > data) {
 	char filename[100];
