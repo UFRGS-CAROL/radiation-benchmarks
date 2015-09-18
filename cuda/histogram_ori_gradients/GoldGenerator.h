@@ -151,9 +151,12 @@ void App::run() {
 	//save the data on the *.data file
 	ofstream output_file;
 	output_file.open(args.dst_video.c_str());
+
+	output_file << args.make_gray << ",";
+	output_file << args.scale << ",";
 	output_file << args.gamma_corr << ",";
 	output_file << args.gr_threshold << ",";
-	output_file << args.height << ",";
+	output_file << args.width << ",";
 	output_file << args.hit_threshold << ",";
 	output_file << args.nlevels << endl;
 
@@ -171,9 +174,16 @@ void App::run() {
 		throw runtime_error(
 				string("can't create output file: " + args.dst_video));
 	}
+
+	// Draw positive classified windows
+	for (size_t i = 0; i < found.size(); i++) {
+		Rect r = found[i];
+		rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
+	}
+
 	//save the output
 	cvtColor(img_to_show, img, CV_BGRA2BGR);
-	imwrite(string("output_" + args.src, img);
+	imwrite(string("output_") + args.src, img);
 }
 
 #endif /* GOLDGENERATOR_H_ */

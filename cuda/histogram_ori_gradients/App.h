@@ -132,13 +132,15 @@ void App::run() {
 			throw runtime_error(
 					string("wrong parameters on gold file: " + args.dst_video));
 		}
-		args.gamma_corr = ((sep_line[0].compare("true") == 0) ? true : false);
-		args.gr_threshold = atoi(sep_line[1].c_str());
-		args.height = atoi(sep_line[2].c_str());
-		args.hit_threshold = atof(sep_line[3].c_str());
-		args.nlevels = atoi(sep_line[4].c_str());
+		this->make_gray = ((sep_line[0].compare("true") == 0) ? true : false);
+		this->scale =  atof(sep_line[1].c_str());;
+		this->gamma_corr = ((sep_line[2].compare("true") == 0) ? true : false);
+		this->gr_threshold = atoi(sep_line[3].c_str());
+		args.win_width = atoi(sep_line[4].c_str());
+		this->hit_threshold = atof(sep_line[5].c_str());
+		this->nlevels = atoi(sep_line[6].c_str());
 	}
-	cout << args;
+
 	while (getline(input_file, line)) {
 		vector<string> sep_line = split(line, ',');
 		vector<int> values;
@@ -232,7 +234,7 @@ void App::run() {
 			size_t gold_iterator = 0;
 			bool any_error = false;
 			vector<vector<int> > data;
-			cout << found.size();
+
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
 				int vf[8];
