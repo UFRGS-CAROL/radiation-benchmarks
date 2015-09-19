@@ -134,7 +134,6 @@ void App::run() {
 	}
 	//get file data
 	string line;
-	vector<vector<int> > data;
 
 	if (getline(input_file, line)) {
 		vector<string> sep_line = split(line, ',');
@@ -146,15 +145,15 @@ void App::run() {
 			throw runtime_error(
 					string("wrong parameters on gold file: " + args.dst_video));
 		}
-		vector<int> header_out;
-		header_out.push_back(this->make_gray =	(bool)atoi(sep_line[0].c_str()));
-		header_out.push_back(this->scale = 		      atof(sep_line[1].c_str()));
-		header_out.push_back(this->gamma_corr = 	(bool)atoi(sep_line[2].c_str()));
-		header_out.push_back(this->gr_threshold =	  atoi(sep_line[3].c_str()));
-		header_out.push_back(args.win_width =		  atoi(sep_line[4].c_str()));
-		header_out.push_back(this->hit_threshold = 	  atof(sep_line[5].c_str()));
-		header_out.push_back(this->nlevels = 		  atoi(sep_line[6].c_str()));
-		data.push_back(header_out);
+		//vector<int> header_out;
+		(this->make_gray =	(bool)atoi(sep_line[0].c_str()));
+		(this->scale = 		      atof(sep_line[1].c_str()));
+		(this->gamma_corr = 	(bool)atoi(sep_line[2].c_str()));
+		(this->gr_threshold =	  atoi(sep_line[3].c_str()));
+		(args.win_width =		  atoi(sep_line[4].c_str()));
+		(this->hit_threshold = 	  atof(sep_line[5].c_str()));
+		(this->nlevels = 		  atoi(sep_line[6].c_str()));
+		//data.push_back(header_out);
 	}
 
 	while (getline(input_file, line)) {
@@ -253,25 +252,34 @@ void App::run() {
 			size_t gold_iterator = 0;
 			bool any_error = false;
 
-
+			vector<vector<int> > data;
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
 				int vf[8];
-				vf[0] = r.height, vf[1] = r.width;
-				vf[2] = r.x, vf[3] = r.y;
-				vf[4] = r.tl().x, vf[5] = r.tl().y;
-				vf[6] = r.br().x, vf[7] = r.br().y;
+				vf[0] = r.height; vf[1] = r.width;
+				vf[2] = r.x; vf[3] = r.y;
+				vf[4] = r.tl().x; vf[5] = r.tl().y;
+				vf[6] = r.br().x; vf[7] = r.br().y;
 				vector<int> values = gold[gold_iterator];
-				int val_it = 0;
+
 				data.push_back(
 						vector<int>(vf, (vf + sizeof(vf) / sizeof(int))));
-				if ((vf[0] != values[val_it]) || (vf[1] != values[val_it++])
-						|| (vf[2] != values[val_it++])
-						|| (vf[3] != values[val_it++])
-						|| (vf[4] != values[val_it++])
-						|| (vf[5] != values[val_it++])
-						|| (vf[6] != values[val_it++])
-						|| (vf[7] != values[val_it++])) {
+				cout << "vf[0] " << vf[0] - values[0] << endl;
+				cout << "vf[1] " << vf[1] - values[1] << endl;
+				cout << "vf[2] " << vf[2] - values[2] << endl;
+				cout << "vf[3] " << vf[3] - values[3] << endl;
+				cout << "vf[4] " << vf[4] - values[4] << endl;
+				cout << "vf[5] " << vf[5] - values[5] << endl;
+				cout << "vf[6] " << vf[6] - values[6] << endl;
+				cout << "vf[7] " << vf[7] - values[7] << endl;
+
+				if ((vf[0] != values[0]) || (vf[1] != values[1])
+						|| (vf[2] != values[2])
+						|| (vf[3] != values[3])
+						|| (vf[4] != values[4])
+						|| (vf[5] != values[5])
+						|| (vf[6] != values[6])
+						|| (vf[7] != values[7])) {
 					error_detail << "SDC: " << s << ", Height: " << vf[0]
 							<< ", width: " << vf[1] << ", X: " << vf[2]
 							<< ", Y: " << vf[3] << endl;
