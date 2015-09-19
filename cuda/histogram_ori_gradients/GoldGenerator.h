@@ -166,8 +166,7 @@ void App::run() {
 			//rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 			//new approach
 			output_file << r.height << "," << r.width << "," << r.x << ","
-					<< r.y << "," << r.tl().x << "," << r.tl().y << "," << r.br().x << ","
-					<< r.br().y << endl;
+					<< r.y << "," << r.br().x << "," << r.br().y << endl;
 		}
 		output_file.close();
 	} else {
