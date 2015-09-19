@@ -134,6 +134,8 @@ void App::run() {
 	}
 	//get file data
 	string line;
+	vector<vector<int> > data;
+
 	if (getline(input_file, line)) {
 		vector<string> sep_line = split(line, ',');
 		if (sep_line.size() != 7) {
@@ -144,19 +146,17 @@ void App::run() {
 			throw runtime_error(
 					string("wrong parameters on gold file: " + args.dst_video));
 		}
-		this->make_gray =	(bool)atoi(sep_line[0].c_str());
-		this->scale = 		      atof(sep_line[1].c_str());
-		this->gamma_corr = 	(bool)atoi(sep_line[2].c_str());
-		this->gr_threshold =	  atoi(sep_line[3].c_str());
-		args.win_width =		  atoi(sep_line[4].c_str());
-		this->hit_threshold = 	  atof(sep_line[5].c_str());
-		this->nlevels = 		  atoi(sep_line[6].c_str());
+		vector<int> header_out;
+		header_out.push_back(this->make_gray =	(bool)atoi(sep_line[0].c_str()));
+		header_out.push_back(this->scale = 		      atof(sep_line[1].c_str()));
+		header_out.push_back(this->gamma_corr = 	(bool)atoi(sep_line[2].c_str()));
+		header_out.push_back(this->gr_threshold =	  atoi(sep_line[3].c_str()));
+		header_out.push_back(args.win_width =		  atoi(sep_line[4].c_str()));
+		header_out.push_back(this->hit_threshold = 	  atof(sep_line[5].c_str()));
+		header_out.push_back(this->nlevels = 		  atoi(sep_line[6].c_str()));
+		data.push_back(header_out);
 	}
-	//cout << *this;
-//	cout << "width " << args.win_width << endl;
-//	cout << "height " << args.win_stride_width << endl;
-//	cout << "win stride height "<< args.win_stride_height << endl;
-//	cout << "win stride width " << args.win_stride_width << endl;
+
 	while (getline(input_file, line)) {
 		vector<string> sep_line = split(line, ',');
 		vector<int> values;
@@ -220,7 +220,6 @@ void App::run() {
 			cpu_hog.nlevels = nlevels;
 
 			vector<Rect> found;
-			cout << "PAssou aqui\n";
 
 			// Perform HOG classification
 			double time;
@@ -253,7 +252,7 @@ void App::run() {
 			time = mysecond();
 			size_t gold_iterator = 0;
 			bool any_error = false;
-			vector<vector<int> > data;
+
 
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];

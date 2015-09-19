@@ -115,10 +115,7 @@ void App::run() {
 
 	VideoCapture vc;
 	Mat frame;
-	cout << "width " << args.win_width << endl;
-	cout << "height " << args.win_stride_width << endl;
-	cout << "win stride height "<< args.win_stride_height << endl;
-	cout << "win stride width " << args.win_stride_width << endl;
+
 	frame = imread(args.src);
 	if (frame.empty())
 		throw runtime_error(string("can't open image file: " + args.src));
