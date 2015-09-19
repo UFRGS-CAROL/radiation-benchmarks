@@ -281,11 +281,10 @@ void App::run() {
 #endif
 					any_error = true;
 				}
-				dump_output(i, "./output", any_error, data);
 				if (gold_iterator < gold.size())
 					gold_iterator++;
 			}
-
+			dump_output(i, "./output", any_error, data);
 			cout << "Verification time " << mysecond() - time << endl;
 		}
 		//===============================================================

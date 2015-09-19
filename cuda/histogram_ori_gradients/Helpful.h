@@ -62,7 +62,7 @@ void dump_output(int iteration_num, string directory, bool corrupted,
 		if (corrupted) {
 #ifdef LOG
 			char error_detail[200] = "";
-			sprintf(error_detail,"#DUMP corrupted files dumped to %s and %s", filename, filename2);
+			sprintf(error_detail,"#DUMP corrupted files dumped to %s", filename);
 			log_error_detail(error_detail);
 #endif
 		}
