@@ -264,14 +264,6 @@ void App::run() {
 
 				data.push_back(
 						vector<int>(vf, (vf + sizeof(vf) / sizeof(int))));
-				cout << "vf[0] " << vf[0] - values[0] << endl;
-				cout << "vf[1] " << vf[1] - values[1] << endl;
-				cout << "vf[2] " << vf[2] - values[2] << endl;
-				cout << "vf[3] " << vf[3] - values[3] << endl;
-				cout << "vf[4] " << vf[4] - values[4] << endl;
-				cout << "vf[5] " << vf[5] - values[5] << endl;
-				cout << "vf[6] " << vf[6] - values[6] << endl;
-				cout << "vf[7] " << vf[7] - values[7] << endl;
 
 				if ((vf[0] != values[0]) || (vf[1] != values[1])
 						|| (vf[2] != values[2])
@@ -288,6 +280,7 @@ void App::run() {
 					log_error_detail(str);
 #endif
 					any_error = true;
+					s--;
 				}
 				if (gold_iterator < gold.size())
 					gold_iterator++;
