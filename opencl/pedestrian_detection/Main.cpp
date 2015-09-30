@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
 		cmd.printMessage();
 		return EXIT_SUCCESS;
 	}
-
+	
 	App app(cmd);
 	try {
 		app.run();
