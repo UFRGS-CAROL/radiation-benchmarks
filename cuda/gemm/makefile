@@ -1,7 +1,7 @@
 CC=g++
 NVCC=nvcc
 
-NVIDIA_INC=/usr/local/cuda/include/
+NVIDIA_INC=/usr/local/cuda/include/,./
 NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
@@ -11,7 +11,7 @@ SOURCES_GEN=generateMatrices.cu
 RUN_EXEC=cudaGEMM
 GEN_EXEC=generateMatrices
 
-MATRIX_NAMES=Double_*.matrix 
+MATRIX_NAMES=dgemm_* 
 
 
 all: gemm gen

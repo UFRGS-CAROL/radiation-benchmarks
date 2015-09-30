@@ -5,22 +5,24 @@
 #include <unistd.h>
 #include <string>
 #include <sys/time.h>
+// helper functions
+#include "helper_string.h"
+#include "helper_cuda.h"
 
 #include<cublas.h>
 
 #define MATRIX_PATH "./Double_"
-#define INMATRIXSIZE 8192
-using namespace std;
+#define DEFAULT_INPUT_SIZE 8192
 
 int k=0;
 int lda, ldb, ldc;
 int sizea, sizeb, sizec;	
 double *A, *B, *GOLD;
 
-string gold_matrix_path, a_matrix_path, b_matrix_path;
+char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
 
 void usage() {
-    printf("Usage: generateMatrices <input_size> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX>\n");
+    printf("Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
 }
 
 void generateInputMatrices()
@@ -29,15 +31,15 @@ void generateInputMatrices()
 	int i, j;
 	FILE *f_A, *f_B;
 
-	f_A = fopen(a_matrix_path.c_str(), "wb");
-	f_B = fopen(b_matrix_path.c_str(), "wb");
+	f_A = fopen(a_matrix_path, "wb");
+	f_B = fopen(b_matrix_path, "wb");
 
 
 	srand ( time(NULL) );
 
-	for(i=0; i<INMATRIXSIZE; i++)
+	for(i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		for(j=0; j<INMATRIXSIZE; j++){
+		for(j=0; j<DEFAULT_INPUT_SIZE; j++){
 			temp = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.0004e16))+4.1e16;
 			fwrite( &temp, sizeof(double), 1, f_A );
 		
@@ -60,8 +62,8 @@ void ReadMatrixFromFile(){
 	int i;
 	FILE *f_A, *f_B;
 
-	f_A = fopen(a_matrix_path.c_str(),"rb");
-	f_B = fopen(b_matrix_path.c_str(),"rb");
+	f_A = fopen(a_matrix_path,"rb");
+	f_B = fopen(b_matrix_path,"rb");
 	if (!(f_A&&f_B))
 	{
 		printf("Error opening matrices A, B.\n");
@@ -147,7 +149,7 @@ void generateGoldMatrix()
 	if(strcmp(cumalloc_err_str, "no error") != 0) {exit(-3);}
 
 
-	cumalloc_err = cudaMemcpy( d_C, A, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // ZERA C
+	cumalloc_err = cudaMemset( d_C, 0, sizeb * sizeof( double )); // ZERA C
 	cumalloc_err_str = cudaGetErrorString(cumalloc_err);
 	if(strcmp(cumalloc_err_str, "no error") != 0) {exit(-3);}
 
@@ -193,7 +195,7 @@ void generateGoldMatrix()
 	int i;
 	FILE *f_GOLD;
 
-	f_GOLD = fopen(gold_matrix_path.c_str(), "wb");
+	f_GOLD = fopen(gold_matrix_path, "wb");
 
 	//printf("-------------------------\n%.10f\n%.10f\n%.10f\n", GOLD[0], GOLD[1], GOLD[2]);
 
@@ -209,22 +211,62 @@ void generateGoldMatrix()
 
 int main (int argc, char** argv)
 {
-	////////////////////////////////////////////////////
-	////////////////////GET PARAM///////////////////////
-	if (argc!=5) {
+//====================================
+//================== Read parameters
+	if (argc<2) {
 		usage();
 		exit (-1);
 	}
 
-	k = atoi (argv[1]);
-	if (((k%32)!=0)||(k<0)){
-		printf ("Enter a valid input. (k=%i)\n", k);
-		exit (-1);
+	if (checkCmdLineFlag(argc, (const char **)argv, "size"))
+    {
+        k = getCmdLineArgumentInt(argc, (const char **)argv, "size");
+
+        if ((k <= 0)||(k % 16 != 0))
+        {
+            printf("Invalid input size given on the command-line: %d\n", k);
+            exit(EXIT_FAILURE);
+        }
+    }
+	else
+	{
+		usage();
+		exit(EXIT_FAILURE);
 	}
 
-	a_matrix_path = argv[2];
-	b_matrix_path = argv[3];
-	gold_matrix_path = argv[4];
+	if (checkCmdLineFlag(argc, (const char **)argv, "input_a"))
+    {
+        getCmdLineArgumentString(argc, (const char **)argv, "input_a", &a_matrix_path);
+    }
+    else
+    {
+        a_matrix_path = new char[100];
+        snprintf(a_matrix_path, 100, "dgemm_a_%i", (signed int)DEFAULT_INPUT_SIZE);
+        printf("Using default input_a path: %s\n", a_matrix_path);
+    }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "input_b"))
+    {
+        getCmdLineArgumentString(argc, (const char **)argv, "input_b", &b_matrix_path);
+    }
+    else
+    {
+        b_matrix_path = new char[100];
+        snprintf(b_matrix_path, 100, "dgemm_b_%i", (signed int)DEFAULT_INPUT_SIZE);
+        printf("Using default input_a path: %s\n", b_matrix_path);
+    }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "gold"))
+    {
+        getCmdLineArgumentString(argc, (const char **)argv, "gold", &gold_matrix_path);
+    }
+    else
+    {
+        gold_matrix_path = new char[100];
+        snprintf(gold_matrix_path, 100, "dgemm_gold_%i", (signed int)k);
+        printf("Using default gold path: %s\n", gold_matrix_path);
+    }
+//====================================
 
 	lda = max( 1, k + 16 );
 	sizea = lda * k;
@@ -234,7 +276,7 @@ int main (int argc, char** argv)
 	sizec = ldc * k;
 	
 	FILE *test_file;
-	test_file=fopen(a_matrix_path.c_str(), "rb");
+	test_file=fopen(a_matrix_path, "rb");
 	if (!test_file)
 	{ 
 		printf("Generating input matrices...\n");

@@ -4,6 +4,9 @@
 #include <math.h>
 #include <sys/time.h>
 #include <string>
+// helper functions
+#include "helper_string.h"
+#include "helper_cuda.h"
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -20,12 +23,16 @@
 
 #define BLOCK_SIZE 32
 
+#define DEFAULT_INPUT_SIZE 8192
+
+int verbose = 0;
+int fault_injection = 0;
+
 int k=0; // k x k matrix size
-int iteractions=1; // global loop iteracion
+int iterations=100000000; // global loop iteracion
 
 //================== Input paths
-using namespace std;
-string gold_matrix_path, a_matrix_path, b_matrix_path;
+char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
 
 FILE* f_A;
 FILE* f_B;
@@ -42,11 +49,12 @@ double *d_B;
 double *d_C;
 //====================================
 
+//================== cublas GEMM parameters
+const double alpha = 1.0;
+const double beta = 1.0;
+char transa = 't', transb = 't';
+int sizea, sizeb, sizec;
 int lda, ldb, ldc;
-
-void usage() {
-    printf("Usage: cudaGemm <input_size> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX> <#ITERACTIONS>\n");
-}
 
 void GetDevice(){
 //================== Retrieve and set the default CUDA device
@@ -77,13 +85,75 @@ double mysecond()
    return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
 }
 
+void allocCudaMemory()
+{
+//================== CUDA error handlers
+	cudaError_t malloc;
+	const char *erro;
+//==================================== 
+	malloc = cudaMalloc( ( void** ) &d_A, sizea * sizeof( double ) );
+	erro = cudaGetErrorString(malloc);
+	if(strcmp(erro, "no error") != 0) {
+#ifdef LOGS
+		log_error_detail("error a"); end_log_file(); 
+#endif
+		exit(EXIT_FAILURE);} //mem allocate failure
+
+	malloc = cudaMalloc( ( void** ) &d_B, sizea * sizeof( double ) );
+	erro = cudaGetErrorString(malloc);
+	if(strcmp(erro, "no error") != 0) {
+#ifdef LOGS
+		log_error_detail("error b"); end_log_file(); 
+#endif
+		exit(EXIT_FAILURE);} //mem allocate failure
+
+	malloc = cudaMalloc( ( void** ) &d_C, sizea * sizeof( double ) );
+	erro = cudaGetErrorString(malloc);
+	if(strcmp(erro, "no error") != 0) {
+#ifdef LOGS
+		log_error_detail("error c"); end_log_file(); 
+#endif
+		exit(EXIT_FAILURE);} //mem allocate failure
+}
+
+void copyCudaMemory()
+{
+//================== CUDA error handlers
+	cudaError_t mcpy;
+	const char *erro;
+//==================================== 
+	mcpy = cudaMemset(d_C, 0, sizea * sizeof (double));
+	erro = cudaGetErrorString(mcpy);
+	if(strcmp(erro, "no error") != 0) {
+#ifdef LOGS
+		log_error_detail("error gpu load c"); end_log_file(); 
+#endif
+		exit(EXIT_FAILURE);} //mem allocate failure
+
+	mcpy = cudaMemcpy( d_A, A, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH A
+	erro = cudaGetErrorString(mcpy);
+	if(strcmp(erro, "no error") != 0) {
+#ifdef LOGS
+		log_error_detail("error gpu load b"); end_log_file(); 
+#endif
+		exit(EXIT_FAILURE);} //mem allocate failure
+
+	mcpy = cudaMemcpy( d_B, B, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH B
+	erro = cudaGetErrorString(mcpy);
+	if(strcmp(erro, "no error") != 0) {
+#ifdef LOGS
+		log_error_detail("error gpu load b"); end_log_file(); 
+#endif
+		exit(EXIT_FAILURE);} //mem allocate failure
+}
+
 void ReadMatrixFromFile(){	
 //================== Read inputs to HOST memory
 	int i;
 	double time = mysecond();
-	f_A = fopen(a_matrix_path.c_str(),"rb");
-	f_B = fopen(b_matrix_path.c_str(),"rb");
-	f_GOLD = fopen(gold_matrix_path.c_str(),"rb");
+	f_A = fopen(a_matrix_path,"rb");
+	f_B = fopen(b_matrix_path,"rb");
+	f_GOLD = fopen(gold_matrix_path,"rb");
 	if (!(f_A&&f_B&&f_GOLD))
 	{
 		printf ("Cant open matrices.\n");
@@ -98,11 +168,17 @@ void ReadMatrixFromFile(){
 		fread (&B[ lda * i ], sizeof(double)*k, 1, f_B);
 		fread (&GOLD[ lda * i ], sizeof(double)*k, 1, f_GOLD);
 	}
-	printf("Done reading matrices in %f\n", mysecond() - time);
+	if (verbose) printf("Done reading matrices in %.2fs\n", mysecond() - time);
 
 	fclose(f_A);
 	fclose(f_B);
 	fclose(f_GOLD);
+
+	if (fault_injection)
+	{
+		A[3] = 6.0;
+		printf("!! Injected 6.0 on position A[3]\n");
+	}
 }
 
 __device__ int kerrors;
@@ -117,15 +193,15 @@ __global__ void GoldChkKernel (double *gk, double *ck, int n)//, int *kerrors)
 
 }
 
-
+void usage() {
+    printf("Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose]\n");
+}
 
 int main( int argc, char* argv[] )
 {
-
 //================== CUDA error handlers
-	cudaError_t malloc_mem1;
-	cudaError_t malloc_a;
-	const char *erro_malloc;
+	cudaError_t mcpy;
+	const char *erro;
 //==================================== 
 
 //================== Test vars
@@ -133,22 +209,79 @@ int main( int argc, char* argv[] )
 	int kernel_errors=0;
 	int zero = 0;
 	int ea=0; //wrong integers in the current loop
+	double time, kernel_time, global_time;
 //====================================
 
 //================== Read test parameters
-	if (argc!=6) {
+	if (argc<2) {
 		usage();
 		exit (-1);
 	}
-	k = atoi (argv[1]);
-	iteractions = atoi (argv[5]);
-	if (((k%32)!=0)||(k<0)){
-		printf ("Enter a valid input. (k=%i)\n", k);
-		exit (-1);
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "size"))
+    {
+        k = getCmdLineArgumentInt(argc, (const char **)argv, "size");
+
+        if ((k <= 0)||(k % 16 != 0))
+        {
+            printf("Invalid input size given on the command-line: %d\n", k);
+            exit(EXIT_FAILURE);
+        }
+    }
+	else
+	{
+		usage();
+		exit(EXIT_FAILURE);
 	}
-	a_matrix_path = argv[2];
-	b_matrix_path = argv[3];
-	gold_matrix_path = argv[4];
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "input_a"))
+    {
+        getCmdLineArgumentString(argc, (const char **)argv, "input_a", &a_matrix_path);
+    }
+    else
+    {
+        a_matrix_path = new char[100];
+        snprintf(a_matrix_path, 100, "dgemm_a_%i", (signed int)DEFAULT_INPUT_SIZE);
+        printf("Using default input_a path: %s\n", a_matrix_path);
+    }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "input_b"))
+    {
+        getCmdLineArgumentString(argc, (const char **)argv, "input_b", &b_matrix_path);
+    }
+    else
+    {
+        b_matrix_path = new char[100];
+        snprintf(b_matrix_path, 100, "dgemm_b_%i", (signed int)DEFAULT_INPUT_SIZE);
+        printf("Using default input_a path: %s\n", b_matrix_path);
+    }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "gold"))
+    {
+        getCmdLineArgumentString(argc, (const char **)argv, "gold", &gold_matrix_path);
+    }
+    else
+    {
+        gold_matrix_path = new char[100];
+        snprintf(gold_matrix_path, 100, "dgemm_gold_%i", (signed int)k);
+        printf("Using default gold path: %s\n", gold_matrix_path);
+    }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "iterations"))
+    {
+        iterations = getCmdLineArgumentInt(argc, (const char **)argv, "iterations");
+    }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "verbose"))
+    {
+        verbose = 1;
+    }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "debug"))
+    {
+		fault_injection = 1;
+        printf("!! Will be injected an input error\n");
+    }
 //====================================
 
 //================== Set block and grid size for GoldChk kernel
@@ -167,10 +300,6 @@ int main( int argc, char* argv[] )
 //====================================
 
 //================== cublas GEMM parameters
-	const double alpha = 1.0;
-	const double beta = 1.0;
-	char transa = 't', transb = 't';
-	int sizea, sizeb, sizec;
 	lda = max( 1, k + 16 );
 	sizea = lda * k;
 	ldb = max( 1, k + 16 );
@@ -193,59 +322,21 @@ int main( int argc, char* argv[] )
 	printf( "cublasDGEMM\n" );
 //====================================
 
-   
-	for(loop2=0; loop2<iteractions; loop2++)
-	{//================== Global test loop
-
 //================== Init DEVICE memory
-		malloc_a = cudaMalloc( ( void** ) &d_A, sizea * sizeof( double ) );
-		erro_malloc = cudaGetErrorString(malloc_a);
-		if(strcmp(erro_malloc, "no error") != 0) {
-#ifdef LOGS
-			log_error_detail("error a"); end_log_file(); 
-#endif
-			return 1;} //mem allocate failure
-		malloc_a = cudaMalloc( ( void** ) &d_B, sizea * sizeof( double ) );
-		erro_malloc = cudaGetErrorString(malloc_a);
-		if(strcmp(erro_malloc, "no error") != 0) {
-#ifdef LOGS
-			log_error_detail("error b"); end_log_file(); 
-#endif
-			return 1;} //mem allocate failure
-		malloc_a = cudaMalloc( ( void** ) &d_C, sizea * sizeof( double ) );
-		erro_malloc = cudaGetErrorString(malloc_a);
-		if(strcmp(erro_malloc, "no error") != 0) {
-#ifdef LOGS
-			log_error_detail("error c"); end_log_file(); 
-#endif
-			return 1;} //mem allocate failure
-		malloc_mem1 = cudaMemcpy( d_C, A, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // ZERA C
-		erro_malloc = cudaGetErrorString(malloc_mem1);
-		if(strcmp(erro_malloc, "no error") != 0) {
-#ifdef LOGS
-			log_error_detail("error mem load c"); end_log_file(); 
-#endif
-			return 1;} //mem allocate failure
-		malloc_mem1 = cudaMemcpy( d_A, A, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH A
-		erro_malloc = cudaGetErrorString(malloc_mem1);
-		if(strcmp(erro_malloc, "no error") != 0) {
-#ifdef LOGS
-			log_error_detail("error mem load b"); end_log_file(); 
-#endif
-			return 1;} //mem allocate failure
-		malloc_mem1 = cudaMemcpy( d_B, B, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH B
-		erro_malloc = cudaGetErrorString(malloc_mem1);
-		if(strcmp(erro_malloc, "no error") != 0) {
-#ifdef LOGS
-			log_error_detail("error mem load b"); end_log_file(); 
-#endif
-			return 1;} //mem allocate failure
+	allocCudaMemory();
+	copyCudaMemory();
 //====================================
 
-		kernel_errors=0;
+   
+	for(loop2=0; loop2<iterations; loop2++)
+	{//================== Global test loop
 
 // Timer...
-double time = mysecond();
+global_time = mysecond();
+
+cudaMemset(d_C, 0, sizea * sizeof (double));
+
+kernel_time = mysecond();
 #ifdef LOGS
 		start_iteration();
 #endif
@@ -262,12 +353,18 @@ double time = mysecond();
 #ifdef LOGS
 		end_iteration();
 #endif
-time = mysecond() - time;
+kernel_time = mysecond() - kernel_time;
+
+		if (verbose) printf("Device kernel time for iteration %d: %.3fs\n", loop2, kernel_time);
+
+// Timer...
+time = mysecond();
 
 //================== Send GOLD to device, to perform HW output validation
-		malloc_mem1 = cudaMemcpy(d_A, GOLD, sizea * sizeof( double ), cudaMemcpyHostToDevice );
-		erro_malloc = cudaGetErrorString(malloc_mem1);
-		if(strcmp(erro_malloc, "no error") != 0) {
+		mcpy = cudaMemcpy(d_A, GOLD, sizea * sizeof( double ), cudaMemcpyHostToDevice );
+		erro = cudaGetErrorString(mcpy);
+		if(strcmp(erro, "no error") != 0) {
+			printf("error mem load gold\n");
 #ifdef LOGS
 			log_error_detail("error mem load gold"); end_log_file(); 
 #endif
@@ -280,9 +377,12 @@ time = mysecond() - time;
 		cudaDeviceSynchronize();
 //====================================
 
-//================== Retrieve output mismatchs
+//================== Retrieve output mismatchs	
+		kernel_errors=0;
 		cudaMemcpyFromSymbol(&kernel_errors, kerrors, sizeof(unsigned int));
 //====================================
+
+		if (verbose) printf("Device gold check kernel time for iteration %d: %.3fs\n", loop2, mysecond() - time);
 		
 #ifdef LOGS
 		log_error_count(kernel_errors);
@@ -291,13 +391,13 @@ time = mysecond() - time;
 		if (kernel_errors!=0)
 		{
 
-			printf("\n kernel error: %d\n", kernel_errors);
+			printf(" kernel error: %d\n", kernel_errors);
 
-			malloc_mem1 = cudaMemcpy(A, d_C, sizec * sizeof( double ), cudaMemcpyDeviceToHost);
-			erro_malloc = cudaGetErrorString(malloc_mem1);
-			if(strcmp(erro_malloc, "no error") != 0) {
+			mcpy = cudaMemcpy(A, d_C, sizec * sizeof( double ), cudaMemcpyDeviceToHost);
+			erro = cudaGetErrorString(mcpy);
+			if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-				log_error_detail("error mem load c"); end_log_file(); 
+				log_error_detail("error mem down c"); end_log_file(); 
 #endif
 			return 1;} //mem allocate failure
 			char error_detail[150];
@@ -309,6 +409,7 @@ time = mysecond() - time;
 					if ((fabs((A[i+ldc*j]-GOLD[i+ldc*j])/A[i+ldc*j]) > 0.0000000001)||(fabs((A[i+ldc*j]-GOLD[i+ldc*j])/GOLD[i+ldc*j]) > 0.0000000001))
 					{
 						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + ldc * j], GOLD[i + ldc * j]);
+						//printf("%s\n", error_detail);
 #ifdef LOGS
 						log_error_detail(error_detail);
 #endif
@@ -318,16 +419,24 @@ time = mysecond() - time;
 					}
 				}
 			}
-
-				ReadMatrixFromFile();	
+//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
+			cudaFree( d_A );
+			cudaFree( d_B );
+			cudaFree( d_C );
+//====================================
+			ReadMatrixFromFile();	
+//================== Init DEVICE memory
+			allocCudaMemory();
+			copyCudaMemory();
+//====================================
 		}
 //====================================
 
 //================== Console hearthbeat
 		if(kernel_errors > 0 || (loop2 % 10 == 0))
 		{
-			printf("\ntest number: %d", loop2);
-			printf(" time: %f\n", time);
+			printf("test number: %d\n", loop2);
+			printf(" kernel time: %f\n", kernel_time);
 		}
 		else
 		{
@@ -336,13 +445,34 @@ time = mysecond() - time;
 		}
 //====================================
 
+//================== Send A back to the device
+		mcpy = cudaMemcpy(d_A, A, sizea * sizeof( double ), cudaMemcpyHostToDevice );
+		erro = cudaGetErrorString(mcpy);
+		if(strcmp(erro, "no error") != 0) {
+			printf("error mem load A\n");
+#ifdef LOGS
+			log_error_detail("error mem load A"); end_log_file(); 
+#endif
+			return 1;} //mem allocate failure
+//===================================
 
-//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
-		cudaFree( d_A );
-		cudaFree( d_B );
-		cudaFree( d_C );
-//====================================
+		if (verbose)
+		{
+			/////////// PERF
+			double flops = 2.0*(double)k*k*k;
+			double gflops = flops / kernel_time;
+			double outputpersec = (double)k*k/kernel_time;
+			printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",k, outputpersec, gflops, gflops/1000000000);
+			///////////
+		}
+		if (verbose) printf("Iteration #%d time: %.3fs\n\n\n", loop2, mysecond() - global_time);
 	}
+
+//================== Release device memory
+	cudaFree( d_A );
+	cudaFree( d_B );
+	cudaFree( d_C );
+//====================================
 
 	free( A );
 	free( B );
