@@ -1,3 +1,8 @@
+NVIDIA_INC=/usr/local/cuda/include/
+NVIDIA_LIB=/usr/local/cuda/lib64/
+LOGHELPER_INC=../../include/
+LOGHELPER_LIB=../../include/
+
 CPP = Main
 OPENCV_LIBS= `pkg-config --libs opencv`
 ifeq ($(LOGS), 1)
@@ -7,7 +12,7 @@ endif
 all: clean hog
 
 hog: $(CPP).cpp
-	g++ $(OPTS) $(CPP).cpp -Wall -o3  $(OPENCV_LIBS) -o hog
+	g++ $(OPTS) $(CPP).cpp $(LOGHELPER_INC)log_helper.c -I$(LOGHELPER_LIB) -Wall -o3 $(OPENCV_LIBS) -o hog
 
 gold_generator: GoldGenerator.cpp
 	g++ GoldGenerator.cpp -Wall  -o3 -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_calib3d -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_legacy -lopencv_ml -l$
