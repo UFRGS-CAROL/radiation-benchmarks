@@ -16,7 +16,7 @@
 #include <stdexcept>
 #include "opencv2/gpu/gpu.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#define GOLD_LINE_SIZE 8
+
 using namespace std;
 using namespace cv;
 

@@ -249,29 +249,30 @@ void App::run() {
 			//verify the output----------------------------------------------
 			ostringstream error_detail;
 			time = mysecond();
-			size_t gold_iterator = 0;
+			//size_t gold_iterator = 0;
 			bool any_error = false;
 
 			vector<vector<int> > data;
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
-				int vf[8];
+				int vf[GOLD_LINE_SIZE];
 				vf[0] = r.height; vf[1] = r.width;
 				vf[2] = r.x; vf[3] = r.y;
 				vf[4] = r.tl().x; vf[5] = r.tl().y;
-				vf[6] = r.br().x; vf[7] = r.br().y;
-				vector<int> values = gold[gold_iterator];
-
-				data.push_back(
-						vector<int>(vf, (vf + sizeof(vf) / sizeof(int))));
-
-				if ((vf[0] != values[0]) || (vf[1] != values[1])
+				//vf[6] = r.br().x; vf[7] = r.br().y;
+				//vector<int> values = gold[gold_iterator];
+				
+				vector<int> vector_found(vf, (vf + sizeof(vf) / sizeof(int)));
+				data.push_back(vector_found);
+				bool diff = set_countains(vector_found, gold);
+				/*if ((vf[0] != values[0]) || (vf[1] != values[1])
 						|| (vf[2] != values[2])
 						|| (vf[3] != values[3])
 						|| (vf[4] != values[4])
-						|| (vf[5] != values[5])
-						|| (vf[6] != values[6])
-						|| (vf[7] != values[7])) {
+						|| (vf[5] != values[5])){
+						//|| (vf[6] != values[6])
+						//|| (vf[7] != values[7])) {*/
+				if(diff){
 					error_detail << "SDC: " << s << ", Height: " << vf[0]
 							<< ", width: " << vf[1] << ", X: " << vf[2]
 							<< ", Y: " << vf[3] << endl;
@@ -282,8 +283,8 @@ void App::run() {
 					any_error = true;
 					s--;
 				}
-				if (gold_iterator < gold.size())
-					gold_iterator++;
+				//if (gold_iterator < gold.size())
+				//	gold_iterator++;
 			}
 			dump_output(i, "./output", any_error, data);
 			cout << "Verification time " << mysecond() - time << endl;
