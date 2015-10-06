@@ -8,6 +8,9 @@
 #ifndef HELPFUL_H_
 #define HELPFUL_H_
 #include <sys/time.h>
+
+#define GOLD_LINE_SIZE 6
+using namespace std;
 void dump_output(int iteration_num, string directory, bool corrupted,
 		vector<vector<int> > data) {
 	char filename[100];
@@ -91,6 +94,21 @@ vector<string> split(const string &s, char delim) {
 	std::vector<string> elems;
 	split(s, delim, elems);
 	return elems;
+}
+
+bool set_countains(vector<int> check, vector< vector<int> > src){
+	unsigned char cont = 0;	
+	for(size_t i = 0; i < src.size(); i++){
+		vector<int> temp = src[i];
+		for(size_t j = 0; j < temp.size(); j++){
+			if(temp[j] == check[j])
+				cont++;						
+		}
+		if(cont == temp.size())
+			return true;
+		cont = 0;
+	}
+	return false;
 }
 
 #endif /* HELPFUL_H_ */

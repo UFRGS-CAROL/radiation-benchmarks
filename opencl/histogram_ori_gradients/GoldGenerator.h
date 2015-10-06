@@ -124,14 +124,13 @@ App::App(CommandLineParser& cmd) {
 }
 
 void App::run() {
-	//running = true;
 //for gold verification---------
-	vector < vector<int> > gold;
-	ifstream input_file(output.c_str());
+	/*vector < vector<int> > gold;
+	//ifstream input_file(img_source.c_str());
 
 	if (!input_file.is_open()) {
 		throw runtime_error(string("can't open image file: " + output));
-	}
+	}*/
 
 //------------------------------
 	VideoWriter video_writer;
@@ -199,32 +198,32 @@ void App::run() {
 		cout << "Total time: " << mysecond() - time << endl;
 		// Draw positive classified windows
 		/*for (size_t i = 0; i < found.size(); i++) {
-		 Rect r = found[i];
-		 rectangle(img_to_show, r.tl(), r.br(), Scalar(0, 255, 0), 3);
-		 }
-		 if (img_source != ""){     // wirte image
+			Rect r = found[i];
+			rectangle(img_to_show, r.tl(), r.br(), Scalar(0, 255, 0), 3);
+		}
+		if (img_source != ""){     // wirte image
 		 write_once = false;
 		 imwrite(output, img_to_show);
 		 } */
 		//record the gold data----------------------------------------------
 		cout << "Gold generated with success\n";
-		// Draw positive classified windows (OLD)
 		//save the data on the *.data file
 		ofstream output_file;
-		output_file.open(args.dst_video.c_str());
+		output_file.open(string(output + string(".data")).c_str());
 
-		output_file << args.make_gray << ",";
-		output_file << args.scale << ",";
-		output_file << args.gamma_corr << ",";
-		output_file << args.gr_threshold << ",";
-		output_file << args.win_width << ",";
-		output_file << args.hit_threshold << ",";
-		output_file << args.nlevels << endl;
+		output_file << make_gray << ",";
+		output_file << scale << ",";
+		output_file << gamma_corr << ",";
+		output_file << gr_threshold << ",";
+		output_file << win_width << ",";
+		output_file << hit_threshold << ",";
+		output_file << nlevels << endl;
 
 		if (output_file.is_open()) {
 			for (size_t i = 0; i < found.size(); i++) {
+				// Draw positive classified windows
 				Rect r = found[i];
-				//rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
+				rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 				//new approach
 				output_file << r.height << "," << r.width << "," << r.x << ","
 						<< r.y << "," << r.br().x << "," << r.br().y << endl;
@@ -232,18 +231,12 @@ void App::run() {
 			output_file.close();
 		} else {
 			throw runtime_error(
-					string("can't create output file: " + args.dst_video));
-		}
-
-		// Draw positive classified windows
-		for (size_t i = 0; i < found.size(); i++) {
-			Rect r = found[i];
-			rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
+					string("can't create output file: " + output));
 		}
 
 		//save the output
 		cvtColor(img_to_show, img, CV_BGRA2BGR);
-		imwrite(string("output_") + args.src, img);
+		imwrite(string("output_") + output, img_to_show);
 
 	} catch (cv::Exception &e) {
 		char *str = const_cast<char*>(e.what());

@@ -28,7 +28,7 @@
 #endif
 using namespace std;
 using namespace cv;
-int iteractions = 5; //global loop iteration
+int iteractions = 1; //global loop iteration
 
 class App {
 public:
@@ -113,6 +113,30 @@ App::App(CommandLineParser& cmd) {
 	//cout << endl;
 }
 
+void write_output_image(vector<Rect> found, Mat img_to_show, string output){
+	// Draw positive classified windows
+	for (size_t i = 0; i < found.size(); i++) {
+		Rect r = found[i];
+		rectangle(img_to_show, r.tl(), r.br(), Scalar(0, 255, 0), 3);
+	}
+	imwrite(output, img_to_show);
+}
+
+bool set_countains(vector<int> check, vector< vector<int> > src){
+	unsigned char cont = 0;	
+	for(size_t i = 0; i < src.size(); i++){
+		vector<int> temp = src[i];
+		for(size_t j = 0; j < temp.size(); j++){
+			if(temp[j] == check[j])
+				cont++;						
+		}
+		if(cont == temp.size())
+			return true;
+		cont = 0;
+	}
+	return false;
+}
+
 void App::run() {
 	//running = true;
 //for gold verification---------
@@ -164,6 +188,7 @@ void App::run() {
 		}
 		gold.push_back(values);
 	}
+
 //------------------------------
 	VideoWriter video_writer;
 
@@ -180,34 +205,16 @@ void App::run() {
 		VideoCapture vc;
 		UMat frame;
 
-		if (vdo_source != "") {
-			vc.open(vdo_source.c_str());
-			if (!vc.isOpened()) {
-				throw runtime_error(
-						string("can't open video file: " + vdo_source));
-			}
-			vc >> frame;
-		}
-		/*else if (camera_id != -1) {
-		 vc.open(camera_id);
-		 if (!vc.isOpened()) {
-		 stringstream msg;
-		 msg << "can't open camera: " << camera_id;
-		 throw runtime_error(msg.str());
-		 }
-		 vc >> frame;
-		 }*/
-		else {
-			imread(img_source).copyTo(frame);
-			if (frame.empty()) {
+		imread(img_source).copyTo(frame);
+		if (frame.empty()) {
 #ifdef LOGS
-				log_error_detail("Cant open matrix Frame");
-				end_log_file();
+			log_error_detail("Cant open matrix Frame");
+			end_log_file();
 #endif
-				throw runtime_error(
-						string("can't open image file: " + img_source));
-			}
+			throw runtime_error(
+					string("can't open image file: " + img_source));
 		}
+		
 
 		UMat img_aux, img;
 		Mat img_to_show;
@@ -226,7 +233,6 @@ void App::run() {
 			img.copyTo(img_to_show);
 			hog.nlevels = nlevels;
 			vector < Rect > found;
-
 			// Perform HOG classification
 #ifdef LOGS
 			start_iteration();
@@ -238,15 +244,6 @@ void App::run() {
 			end_iteration();
 #endif
 			cout << "Total time: " << mysecond() - time << endl;
-			// Draw positive classified windows
-			/*for (size_t i = 0; i < found.size(); i++) {
-			 Rect r = found[i];
-			 rectangle(img_to_show, r.tl(), r.br(), Scalar(0, 255, 0), 3);
-			 }
-			 if (img_source != ""){     // wirte image
-			 write_once = false;
-			 imwrite(output, img_to_show);
-			 } */
 			//verify the output----------------------------------------------
 			ostringstream error_detail;
 			time = mysecond();
@@ -256,24 +253,19 @@ void App::run() {
 			vector < vector<int> > data;
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
-				int vf[8];
+				int vf[GOLD_LINE_SIZE];
 				vf[0] = r.height;
 				vf[1] = r.width;
 				vf[2] = r.x;
 				vf[3] = r.y;
 				vf[4] = r.tl().x;
 				vf[5] = r.tl().y;
-				vf[6] = r.br().x;
-				vf[7] = r.br().y;
-				vector<int> values = gold[gold_iterator];
 
-				data.push_back(
-						vector<int>(vf, (vf + sizeof(vf) / sizeof(int))));
+				vector<int> vector_found(vf, (vf + sizeof(vf) / sizeof(int)));
+				data.push_back(vector_found);
+				bool diff = set_countains(vector_found, gold);
 
-				if ((vf[0] != values[0]) || (vf[1] != values[1])
-						|| (vf[2] != values[2]) || (vf[3] != values[3])
-						|| (vf[4] != values[4]) || (vf[5] != values[5])
-						|| (vf[6] != values[6]) || (vf[7] != values[7])) {
+				if (diff){
 					error_detail << "SDC: " << s << ", Height: " << vf[0]
 							<< ", width: " << vf[1] << ", X: " << vf[2]
 							<< ", Y: " << vf[3] << endl;
@@ -303,6 +295,5 @@ void App::run() {
 	end_log_file();
 #endif
 }
-
 #endif /* APP_H_ */
 
