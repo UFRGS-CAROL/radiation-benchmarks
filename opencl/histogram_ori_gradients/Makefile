@@ -9,13 +9,13 @@ ifeq ($(LOGS), 1)
 OPTS = -DLOGS
 endif
 
-all: clean hog
+all: clean hog gold_generator
 
 hog: $(CPP).cpp
 	g++ $(OPTS) $(CPP).cpp $(LOGHELPER_INC)log_helper.c -I$(LOGHELPER_LIB) -Wall -o3 $(OPENCV_LIBS) -o hog
 
 gold_generator: GoldGenerator.cpp
-	g++ GoldGenerator.cpp -Wall  -o3 -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_calib3d -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_legacy -lopencv_ml -l$
+	g++ GoldGenerator.cpp -Wall  -o3 $(OPENCV_LIBS) -o gold_gen
 
 clean:
-	rm -rf hog gold_gen *~
+	rm -rf hog gold_gen *~ *data*
