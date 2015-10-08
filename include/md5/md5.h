@@ -37,6 +37,10 @@
  **********************************************************************
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 /* typedef a 32 bit type */
 typedef unsigned long int UINT4;
 
@@ -48,9 +52,13 @@ typedef struct {
   unsigned char digest[16];     /* actual digest after MD5Final call */
 } MD5_CTX;
 
-void MD5Init ();
-void MD5Update ();
-void MD5Final ();
+void MD5Init (MD5_CTX *mdContext);
+void MD5Update (MD5_CTX *mdContext, unsigned char *inBuf, unsigned int inLen);
+void MD5Final (MD5_CTX *mdContext);
+char* generate_gold_md5(char* gold_filename);
+char* generate_md5(char* output, int size);
+int compare_md5(char* md5_a, char* md5_b);
+void print_md5(char* md5);
 
 /*
  **********************************************************************

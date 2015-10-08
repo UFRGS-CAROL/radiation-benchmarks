@@ -35,7 +35,7 @@
 #include "md5.h"
 
 /* forward declaration */
-static void Transform ();
+static void Transform (UINT4 *buf, UINT4 *in);
 
 static unsigned char PADDING[64] = {
   0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -80,8 +80,7 @@ static unsigned char PADDING[64] = {
    (a) += (b); \
   }
 
-void MD5Init (mdContext)
-MD5_CTX *mdContext;
+void MD5Init (MD5_CTX *mdContext)
 {
   mdContext->i[0] = mdContext->i[1] = (UINT4)0;
 
@@ -93,10 +92,7 @@ MD5_CTX *mdContext;
   mdContext->buf[3] = (UINT4)0x10325476;
 }
 
-void MD5Update (mdContext, inBuf, inLen)
-MD5_CTX *mdContext;
-unsigned char *inBuf;
-unsigned int inLen;
+void MD5Update (MD5_CTX *mdContext, unsigned char *inBuf, unsigned int inLen)
 {
   UINT4 in[16];
   int mdi;
@@ -128,8 +124,7 @@ unsigned int inLen;
   }
 }
 
-void MD5Final (mdContext)
-MD5_CTX *mdContext;
+void MD5Final (MD5_CTX *mdContext)
 {
   UINT4 in[16];
   int mdi;
@@ -169,9 +164,7 @@ MD5_CTX *mdContext;
 
 /* Basic MD5 step. Transform buf based on in.
  */
-static void Transform (buf, in)
-UINT4 *buf;
-UINT4 *in;
+static void Transform (UINT4 *buf, UINT4 *in)
 {
   UINT4 a = buf[0], b = buf[1], c = buf[2], d = buf[3];
 
@@ -269,6 +262,96 @@ UINT4 *in;
   buf[3] += d;
 }
 
+char* generate_gold_md5(char* gold_filename)
+{
+        FILE *inFile = fopen (gold_filename, "rb");
+        MD5_CTX mdContext;
+        int bytes;
+        unsigned char data[1024];
+
+        char* ret_md5 = (char*) malloc(16 * sizeof(char));
+
+        if (inFile == NULL) {
+        printf ("%s can't be opened.\n", gold_filename);
+        return NULL;
+        }
+
+        MD5Init (&mdContext);
+        while ((bytes = fread (data, 1, 1024, inFile)) != 0)
+                MD5Update (&mdContext, data, bytes);
+        MD5Final (&mdContext);
+
+        for(int i = 0; i < 16; i++) {
+                ret_md5[i] = mdContext.digest[i];
+        }
+
+        fclose (inFile);
+
+        return ret_md5;
+}
+
+char* generate_md5(char* output, int size)
+{
+        MD5_CTX mdContext;
+        int bytes;
+        unsigned char data[1024];
+
+        char* ret_md5 = (char*) malloc(16 * sizeof(char));
+
+	int count = 0;
+	int even_c = size / 1024;
+	int last_step = size % 1024;
+
+        MD5Init (&mdContext);
+        while (count != even_c)
+	{
+        	bytes = 1024;
+		memcpy(data, output + count*1024, 1024);
+ 
+	        MD5Update (&mdContext, data, bytes);
+
+		count++;
+        }
+
+	if(last_step != 0)
+	{
+		bytes = last_step;
+		memcpy(data, output + count*1024, last_step);
+
+		MD5Update( &mdContext, data, bytes);
+	}
+
+	MD5Final (&mdContext);
+
+        for(int i = 0; i < 16; i++) {
+                ret_md5[i] = mdContext.digest[i];
+        }
+
+        return ret_md5;
+
+}
+
+int compare_md5(char* md5_a, char* md5_b)
+{
+	int are_diff = 0;
+
+	for(int i = 0; i < 16; i++)
+	{
+		if(md5_a[i] != md5_b[i])
+		{ 
+			are_diff = 1;
+			break;
+		}
+	}
+
+	return are_diff;
+}
+
+void print_md5(char* md5)
+{
+	for(int i = 0; i < 16; i++)
+		printf("%02x ", (unsigned char) md5[i]);
+}
 /*
  **********************************************************************
  ** End of md5.c                                                     **
