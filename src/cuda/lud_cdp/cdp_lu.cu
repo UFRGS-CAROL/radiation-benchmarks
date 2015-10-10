@@ -44,5 +44,5 @@ void dgetrf_test(Parameters *host_params, Parameters *device_params)
     } */
 
     double flop_count = (double) host_params->flop_count;
-    if (host_params.verbose) printf("GPU perf(dgetrf)= %.3f Gflops\n", flop_count / (1000000000.*gpu_sec));
+    if (host_params -> verbose) printf("GPU perf(dgetrf)= %.3f Gflops\n", flop_count / (1000000000.*gpu_sec));
 }
