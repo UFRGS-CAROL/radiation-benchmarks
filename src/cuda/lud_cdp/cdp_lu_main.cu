@@ -41,6 +41,8 @@ void memsetup(Parameters &host_params)
 {
     srand(host_params.seed);
 
+	host_params.flop_count = 0;
+
     // Initialise with the base params, and do any necessary randomisation
     unsigned long long lda_ull = (unsigned long long) host_params.lda;
     host_params.flop_count += lda_ull*lda_ull*lda_ull * 2ull / 3ull;
@@ -156,7 +158,7 @@ void finalize(Parameters &host_params, bool reuse)
 }
 
 // Figure out the command line
-void set_defaults(Parameters &host_params, int matrix_size, char *inputName, char *goldName, int generate, int reps)
+void set_defaults(Parameters &host_params, int matrix_size, char *inputName, char *goldName, int generate, int reps, int verbose)
 {
     // Set default params
     host_params.seed = 4321;
@@ -165,6 +167,7 @@ void set_defaults(Parameters &host_params, int matrix_size, char *inputName, cha
     host_params.goldName = goldName;
     host_params.generate = generate;
     host_params.reps = reps;
+    host_params.verbose = verbose;
 }
 
 // This is the main launch entry point. We have to package up our pointers
@@ -357,10 +360,11 @@ bool launch_test(Parameters &host_params)
     globaltimer = mysecond();
     timer = mysecond();
     memsetup(host_params);
-    printf("Setup time: %.2f\n", mysecond() - timer);
+	if (host_params.verbose) printf("------------------------------\n");
+    if (host_params.verbose) printf("Setup time: %.2f\n", mysecond() - timer);
     timer = mysecond();
     launch(host_params);
-    printf("EXECUTION time: %.2f\n", mysecond() - timer);
+    if (host_params.verbose) printf("EXECUTION time: %.2f\n", mysecond() - timer);
     if (host_params.generate)
     {
       gold_write(host_params);
@@ -371,9 +375,10 @@ bool launch_test(Parameters &host_params)
     }
     timer = mysecond();
     test_check(host_params);
-    printf("Check time: %.2f\n", mysecond() - timer);
+    if (host_params.verbose) printf("Check time: %.2f\n", mysecond() - timer);
     finalize(host_params, WILL_REUSE);
-    printf("Total time: %.2f\n", mysecond() - globaltimer);
+    if (host_params.verbose) printf("Total time: %.2f\n", mysecond() - globaltimer);
+	printf(".");
   }
   finalize(host_params, WILL_NOT_REUSE);
   return true;
@@ -381,7 +386,7 @@ bool launch_test(Parameters &host_params)
 
 void print_usage(const char *exec_name)
 {
-    printf("Usage: %s -matrix_size=N <-device=N> <-reps=N> <-generate> <-generategold> <-input=inputpath> <-gold=goldpath> (optional)\n", exec_name);
+    printf("Usage: %s -matrix_size=N <-device=N> <-reps=N> <-generate> <-verbose> <-generategold> <-input=inputpath> <-gold=goldpath> (optional)\n", exec_name);
     printf("  matrix_size: the size of a NxN matrix. It must be greater than 0.\n");
 }
 
@@ -401,6 +406,7 @@ int main(int argc, char **argv)
 
     int reps=1;
     int matrix_size = 1024;
+	int verbose=0;
 
     if (checkCmdLineFlag(argc, (const char **)argv, "help") ||
         checkCmdLineFlag(argc, (const char **)argv, "h"))
@@ -439,6 +445,11 @@ int main(int argc, char **argv)
     if (checkCmdLineFlag(argc, (const char **)argv, "generate"))
     {
         generate = 1;
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "generate"))
+    {
+        verbose = 1;
     }
 
     if (checkCmdLineFlag(argc, (const char **)argv, "gold"))
@@ -487,10 +498,10 @@ int main(int argc, char **argv)
 
     Parameters host_params;
     memset(&host_params, 0, sizeof(Parameters));
-    set_defaults(host_params, matrix_size, inputName, goldName, generate, reps);
+    set_defaults(host_params, matrix_size, inputName, goldName, generate, reps, verbose);
 
-    printf("Compute LU decomposition of a random %dx%d matrix using CUDA Dynamic Parallelism\n", matrix_size, matrix_size);
-    printf("Launching single task from device...\n");
+    //printf("Compute LU decomposition of a random %dx%d matrix using CUDA Dynamic Parallelism\n", matrix_size, matrix_size);
+    //printf("Launching single task from device...\n");
     bool result = launch_test(host_params);
 
     // cudaDeviceReset causes the driver to clean up all state. While

@@ -40,6 +40,7 @@ extern "C" {
         int generate;
         int reps;
         int hostmem_ready;
+		int verbose;
 
     } Parameters;
 
