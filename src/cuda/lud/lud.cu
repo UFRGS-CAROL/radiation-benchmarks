@@ -50,7 +50,7 @@ typedef struct parameters {
 
 void print_usage(const char *exec_name)
 {
-    printf("Usage: %s -matrix_size=N <-device=N> <-reps=N> <-generate> <-generategold> <-input=inputpath> <-gold=goldpath> (optional)\n", exec_name);
+    printf("Usage: %s -matrix_size=N <-reps=N> <-generate> <-generategold> <-input=inputpath> <-gold=goldpath> (optional)\n", exec_name);
     printf("  matrix_size: the size of a NxN matrix. It must be greater than 0.\n");
 }
 
