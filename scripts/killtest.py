@@ -4,6 +4,8 @@ import threading
 import socket
 import time
 import os.path
+import ConfigParser
+import sys
 from datetime import datetime
 from subprocess import call
 from subprocess import Popen
@@ -24,13 +26,6 @@ commandList = [
 	["comando 3", 5]
 ]
 
-baseDir = "/var/radiation-benchmarks/"
-varDir = baseDir+"var/"
-logDir = varDir+"log/"
-tmpDir = varDir+"tmp/"
-
-logFile = logDir+"killtest.log"
-timestampFile = tmpDir+"timestamp.txt"
 
 timestampMaxDiff = 20 # Time in seconds
 maxConsecKill = 2 # Max number of consective kills allowed
@@ -140,6 +135,34 @@ def execCommand(command):
 ################################################
 # KillTest Main Execution
 ################################################
+confFile = '/etc/radiation-benchmarks.conf'
+
+if not os.path.isfile(confFile):
+	print >> sys.stderr, "Configuration file not found!("+confFile+")"
+	sys.exit(1)
+
+try:
+	config = ConfigParser.RawConfigParser()
+	config.read(confFile)
+	
+	installDir = config.get('DEFAULT', 'installdir')+"/"
+	varDir =  config.get('DEFAULT', 'vardir')+"/"
+	tmpDir =  config.get('DEFAULT', 'tmpdir')+"/"
+	
+	logDir = varDir+"log/"
+	
+	if not os.path.isdir(logDir):
+		os.mkdir(logDir, 0777)
+		os.chmod(logDir, 0777)
+	
+except IOError as e:
+	print >> sys.stderr, "Configuration setup error: "+str(e)
+	sys.exit(1)
+	
+logFile = logDir+"killtest.log"
+timestampFile = tmpDir+"timestamp.txt"
+
+
 proc = None
 try:
 	consecKillCount = 0 # Counts how many consecutive kills to reboot machine
