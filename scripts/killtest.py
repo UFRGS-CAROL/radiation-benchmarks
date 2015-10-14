@@ -66,27 +66,27 @@ def cleanCommandExecLogs():
 
 # Return True if the variable commandList from this file changed from the 
 # last time it was executed. If the file was never executed returns False
-def checkCommandListChanges():
-	curList = tmpDir+"currentCommandList"
-	lastList = tmpDir+"lastCommandList"
-	fp = open(curList,'w')
-	print >>fp, commandList
-	fp.close()
-	if not os.path.isfile(lastList):
-		fp = open(lastList,'w')
-		print >>fp, commandList
-		fp.close()
-		return False
-
-	if filecmp.cmp(curList, lastList, shallow=False):
-		return False
-	else:
-		return True
+#def checkCommandListChanges():
+#	curList = tmpDir+"currentCommandList"
+#	lastList = tmpDir+"lastCommandList"
+#	fp = open(curList,'w')
+#	print >>fp, commandList
+#	fp.close()
+#	if not os.path.isfile(lastList):
+#		fp = open(lastList,'w')
+#		print >>fp, commandList
+#		fp.close()
+#		return False
+#
+#	if filecmp.cmp(curList, lastList, shallow=False):
+#		return False
+#	else:
+#		return True
 
 # Select the correct command to be executed from the commandList variable
 def selectCommand():
-	if checkCommandListChanges():
-		cleanCommandExecLogs()
+#	if checkCommandListChanges():
+#		cleanCommandExecLogs()
 
 	# Get the index of last existent file	
 	i=0
