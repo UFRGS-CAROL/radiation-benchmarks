@@ -1,7 +1,7 @@
 
 // Optional, in case user want to specify tha absolute path 
 // where the log must be generated
-void set_absolute_path(char *path);
+//void set_absolute_path(char *path);
 
 // Set the max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
