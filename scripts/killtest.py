@@ -60,15 +60,15 @@ def updateTimestamp():
 def cleanCommandExecLogs():
 	i=len(commandList)
 	while i >= 0:
-		if os.path.isfile(tmpDir+"command_execstart_"+i):
-			os.remove(tmpDir+"command_execstart_"+i)
+		if os.path.isfile(varDir+"command_execstart_"+i):
+			os.remove(varDir+"command_execstart_"+i)
 		i -= 1
 
 # Return True if the variable commandList from this file changed from the 
 # last time it was executed. If the file was never executed returns False
 #def checkCommandListChanges():
-#	curList = tmpDir+"currentCommandList"
-#	lastList = tmpDir+"lastCommandList"
+#	curList = varDir+"currentCommandList"
+#	lastList = varDir+"lastCommandList"
 #	fp = open(curList,'w')
 #	print >>fp, commandList
 #	fp.close()
@@ -90,20 +90,20 @@ def selectCommand():
 
 	# Get the index of last existent file	
 	i=0
-	while os.path.isfile(tmpDir+"command_execstart_"+i):
+	while os.path.isfile(varDir+"command_execstart_"+i):
 		i += 1
 	i -= 1
 
 	# If there is no file, create the first file with current timestamp
 	# and return the first command of commandList
 	if i == -1:
-		call("echo "+str(time.time())+" > "+tmpDir+"command_execstart_0" , shell=True)
+		call("echo "+str(time.time())+" > "+varDir+"command_execstart_0" , shell=True)
 		return commandList[0][0]
 
 	# Check if last command executed is still in its execution time window
 	# and return it
 	timeWindow = commandList[i][1] * 60 * 60 # Time window in seconds
-	fp = open(tmpDir+"command_execstart_"+i,'r')
+	fp = open(varDir+"command_execstart_"+i,'r')
 	timestamp = int(fp.readline())
 	fp.close()
 	now = time.time()
@@ -113,12 +113,12 @@ def selectCommand():
 	# If all commands executed their time window, start all over again
 	if i >= len(commandList):
 		cleanCommandExecLogs()
-		call("echo "+str(time.time())+" > "+tmpDir+"command_execstart_0" , shell=True)
+		call("echo "+str(time.time())+" > "+varDir+"command_execstart_0" , shell=True)
 		return commandList[0][0]
 
 	# Finally, select the next command not executed so far
 	i += 1
-	call("echo "+str(time.time())+" > "+tmpDir+"command_execstart_"+i , shell=True)
+	call("echo "+str(time.time())+" > "+varDir+"command_execstart_"+i , shell=True)
 	return commandList[i][0]
 
 
@@ -147,9 +147,10 @@ try:
 	
 	installDir = config.get('DEFAULT', 'installdir')+"/"
 	varDir =  config.get('DEFAULT', 'vardir')+"/"
+	logDir =  config.get('DEFAULT', 'logdir')+"/"
 	tmpDir =  config.get('DEFAULT', 'tmpdir')+"/"
 	
-	logDir = varDir+"log/"
+	#logDir = varDir+"log/"
 	
 	if not os.path.isdir(logDir):
 		os.mkdir(logDir, 0777)
@@ -160,7 +161,7 @@ except IOError as e:
 	sys.exit(1)
 	
 logFile = logDir+"killtest.log"
-timestampFile = tmpDir+"timestamp.txt"
+timestampFile = varDir+"timestamp.txt"
 
 
 proc = None
