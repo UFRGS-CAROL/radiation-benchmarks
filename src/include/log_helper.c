@@ -12,7 +12,7 @@
 //char timestamp_watchdog[200] = "/home/carol/watchdog/timestamp.txt";
 char *timestamp_watchdog;
 char timestamp_file[] = "timestamp.txt";
-char tmpdir_key[]="tmpdir";
+char vardir_key[]="vardir";
 
 // Max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
@@ -165,13 +165,13 @@ char * get_log_file_name(){
 // Generate the log file name, log info from user about the test to be executed and reset log variables
 int start_log_file(char *benchmark_name, char *test_info){
 
-    char *tmp_dir=getValueConfig(tmpdir_key);
-    if(!tmp_dir){
-        fprintf(stderr, "[ERROR] Could not read tmp dir in config file '%s'\n",config_file);
+    char *var_dir=getValueConfig(vardir_key);
+    if(!var_dir){
+        fprintf(stderr, "[ERROR] Could not read var dir in config file '%s'\n",config_file);
 	return 1;//exit(1);
     }
-    timestamp_watchdog = (char *)malloc(sizeof(char)* (strlen(tmp_dir)+strlen(timestamp_file)+4) );
-    strcat(timestamp_watchdog, tmp_dir);
+    timestamp_watchdog = (char *)malloc(sizeof(char)* (strlen(var_dir)+strlen(timestamp_file)+4) );
+    strcat(timestamp_watchdog, var_dir);
     if(strlen(timestamp_watchdog) > 0 && timestamp_watchdog[strlen(timestamp_watchdog)-1] != '/' )
         strcat(timestamp_watchdog, "/");
     strcat(timestamp_watchdog, timestamp_file);
