@@ -163,6 +163,8 @@ except IOError as e:
 logFile = logDir+"killtest.log"
 timestampFile = varDir+"timestamp.txt"
 
+# Start last kill timestamo with an old enough timestamp
+lastKillTimestamp = time.time() - 120
 
 proc = None
 try:
@@ -183,6 +185,16 @@ try:
 		if (now - time) > timestampMaxDiff:
 			if proc is not None:
 				proc.kill() # Kill current command
+
+				# Check if last kill was in the last 60 seconds and reboot
+				now = time.time()
+				if (now - lastKillTimestamp) < 60:
+					logMsg("Rebooting, current command:"+curCommand)
+					sockConnect()
+					call("sudo shutdown -r now",Shell=True)
+				else:
+					lastKillTimestamp = now
+					
 			logMsg("timestampMaxDiff kill command '"+curCommand+"'")
 			curCommand = selectCommand() # select properly the current command to be executed
 			proc = execCommand(curCommand) # start the command
