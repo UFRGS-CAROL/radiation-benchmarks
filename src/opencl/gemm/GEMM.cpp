@@ -7,7 +7,9 @@
 #include <fstream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <omp.h>
 
+#define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 #include <CL/cl.h>
 
 #include "support.h"
@@ -18,27 +20,25 @@
 #include "../../include/log_helper.h"
 #endif /* LOGS */
 
-//#define N 1024
-
-//#define GOLD_MATRIX_PATH "/home/carol/TestGPU/GenerateGoldMatrix/Double_GOLD_1024.matrix"
+#define NPROCESSORS 8 // OMP threads
 #define LOGFILE_MATRIXNAME "openclGEMM"
-// #define PLATFORM_ID 0
 #define DEVICE_ID 0
 #define SWITCH_CHAR  '-'
 #define N_ERRORS_LOG 500
 
-//char *kernel_gemmN_path;
 char *gold_matrix, *a_matrix, *b_matrix;
 int input_size;
 int iteractions;
 
 using namespace std;
 
-inline long long get_time() {
+#ifdef TIMING
+inline long long timing_get_time() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_sec * 1000000) + tv.tv_usec;
 }
+#endif
 
 void ReadMatrixFromFile(double *h_A, double *h_B, double *h_GOLD)
 {
@@ -73,15 +73,14 @@ void ReadMatrixFromFile(double *h_A, double *h_B, double *h_GOLD)
 }
 
 // Forward declaration
-template <class T> inline std::string toString (const T& t) {
-    std::stringstream ss;
-    ss << t;
-    return ss.str();
-}
+//template <class T> inline std::string toString (const T& t) {
+//    std::stringstream ss;
+//    ss << t;
+//    return ss.str();
+//}
 
 template <class T>
-void runTest(const string& testName, cl_device_id dev, cl_context ctx,
-             cl_command_queue queue, const string& compileFlags);
+void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue);
 
 void
 RunBenchmark(cl_device_id dev, cl_context ctx, cl_command_queue queue);
@@ -106,9 +105,9 @@ void usage() {
 int main(int argc, char ** argv)
 {
 #ifdef TIMING
-	setup_start = get_time();
+	setup_start = timing_get_time();
 #endif
-
+	omp_set_num_threads(NPROCESSORS);
     int devType;
     if(argc == 7) {
         input_size = atoi(argv[1]);
@@ -221,26 +220,17 @@ int main(int argc, char ** argv)
 //
 // ****************************************************************************
 
-void
-RunBenchmark(cl_device_id dev,
-             cl_context ctx,
-             cl_command_queue queue)
+void RunBenchmark(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 {
     // OpenCL doesn't support templated kernels, so we have to use macros
-
-    runTest<double>("DGEMM", dev, ctx, queue,
-                    "-DK_DOUBLE_PRECISION ");
+    runTest<double>(dev, ctx, queue);
 }
 
 template <class T>
-void runTest(const string& testName, cl_device_id dev, cl_context ctx,
-             cl_command_queue queue, const string& compileFlags)
+void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 {
 
-    double timeG;
-
     cl_int err;
-    int waitForEvents = 1;
     size_t m = input_size, n = input_size, k = input_size;
     size_t lda, ldb, ldc;
     const T alpha = 1;
@@ -250,15 +240,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     lda = ldb = ldc = input_size;
 
 
-    int loop2;
-
     int ea = 0; //wrong integers in the current loop
     int t_ea = 0; //total number of wrong integers
     int old_ea = 0;
-
-    double total_time = 0.0;
-
-
 
 #ifdef LOGS
     char test_info[100];
@@ -286,26 +270,21 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
     cout << "Ready, build program...";
 
-//    std::ifstream kernelfile(kernel_gemmN_path); // This will read the file to the memory as OpenCL needs to compile it from there
-//    std::string kernelstr((std::istreambuf_iterator<char>(kernelfile)),
-//                          std::istreambuf_iterator<char>());
-    const char* cl_source_gemmN = kernel_gemm_ocl;//kernelstr.c_str();
+    const char* cl_source_gemmN = kernel_gemm_ocl;
 
-    const size_t kernelLength= strlen(cl_source_gemmN);//kernelstr.length();
-    cout << "L:" << kernelLength << endl; //kernelstr.size() << " ";
+    const size_t kernelLength= strlen(cl_source_gemmN);
+    cout << "L:" << kernelLength << endl; 
     // Create program object
     cl_program prog = clCreateProgramWithSource(ctx, 1,
                       &cl_source_gemmN, &kernelLength, &err);
     CL_CHECK_ERROR(err);
 
-    //string flags = compileFlags + " -cl-mad-enable";
     err = clBuildProgram(prog, 0, NULL, "-DK_DOUBLE_PRECISION", NULL,
                          NULL);
     //CL_CHECK_ERROR(err);
 
     // If compilation fails, print error messages and return
     if (err == CL_BUILD_PROGRAM_FAILURE) {
-        //if (err != CL_SUCCESS) {
         char log[5000];
         size_t retsize = 0;
         err =  clGetProgramBuildInfo (prog, dev, CL_PROGRAM_BUILD_LOG,
@@ -325,12 +304,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     cl_kernel sgemmNT = clCreateKernel(prog, "sgemmNT", &err);
     CL_CHECK_ERROR(err);
 
-    cl_kernel goldChk = clCreateKernel(prog, "GoldChk", &err);
-    CL_CHECK_ERROR(err);
 
     // Allocate memory for the matrices
     T *A, *B, *C, *GOLD;
-    int *kerrors;
     cl_mem Aobj, Bobj, Cobj, GOLDobj, kerrorsobj;
     if (true) // pinned
     {
@@ -365,9 +341,6 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         kerrorsobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                                     sizeof(int), NULL, &err);
         CL_CHECK_ERROR(err);
-        kerrors = (int*)clEnqueueMapBuffer(queue, kerrorsobj, true, CL_MAP_READ | CL_MAP_WRITE,
-                                           0, sizeof(int), 0, NULL, NULL, &err);
-        CL_CHECK_ERROR(err)
     }
     else
     {
@@ -398,9 +371,6 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     CL_BAIL_ON_ERROR(err);
     cl_mem Cgpu = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
                                  m*n * sizeof(T), NULL, &err);
-    CL_BAIL_ON_ERROR(err);
-    cl_mem kerrorsgpu = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
-                                       sizeof(int), NULL, &err);
     CL_BAIL_ON_ERROR(err);
 
 
@@ -444,25 +414,15 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     err = clSetKernelArg(sgemmNT, 8, sizeof(T), (void*)&beta);
     CL_BAIL_ON_ERROR(err);
 
-    // Pass arguments to the goldChk kernel
-    err = clSetKernelArg(goldChk, 0, sizeof(cl_mem), (void*)&Agpu);
-    CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(goldChk, 1, sizeof(cl_mem), (void*)&Cgpu);
-    CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(goldChk, 2, sizeof(int), (void*)&m);
-    CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(goldChk, 3, sizeof(cl_mem), (void*)&kerrorsgpu);
-    CL_BAIL_ON_ERROR(err);
-
     const size_t globalWorkSize[2] = {m/4,n/4};
 
 #ifdef TIMING
-	setup_end = get_time();
+	setup_end = timing_get_time();
 #endif
     // Run NN
     for (int it = 0; it < iteractions; it++) {
 #ifdef TIMING
-	loop_start = get_time();
+	loop_start = timing_get_time();
 #endif
 
 #ifdef ERR_INJ
@@ -490,10 +450,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         start_iteration();
 #endif /* LOGS */
 
-        long long k_start = get_time();
 
 #ifdef TIMING
-	kernel_start = get_time();
+	kernel_start = timing_get_time();
 #endif
         //Launch Kernels
         err = clEnqueueNDRangeKernel(queue, sgemmNN, 2, NULL, globalWorkSize,
@@ -503,98 +462,61 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         CL_BAIL_ON_ERROR(err);
 
 #ifdef TIMING
-	kernel_end = get_time();
+	kernel_end = timing_get_time();
 #endif
 
-        double kernel_time = (double) (get_time() - k_start) / 1000000;
-        double flops = 2.0*(double)input_size*input_size*input_size;
-        double gflops = flops / kernel_time;
-        //printf("kernel time: %lf\n",kernel_time);
-        //printf("SIZE:%d FLOPS:%f\n",input_size, gflops);
 
 #ifdef LOGS
         end_iteration();
 #endif /* LOGS */
 
 #ifdef TIMING
-	check_start = get_time();
+	check_start = timing_get_time();
 #endif
         // Check Gold
-        *kerrors = 0;
+	err = clEnqueueReadBuffer(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
+	                          C, 0, NULL, NULL);
+	CL_BAIL_ON_ERROR(err);
+	clFinish(queue);
+	CL_BAIL_ON_ERROR(err);
 
-        err = clEnqueueWriteBuffer(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
-                                   GOLD, 0, NULL, NULL);
-        CL_BAIL_ON_ERROR(err);
-        err = clEnqueueWriteBuffer(queue, kerrorsgpu, CL_TRUE, 0, sizeof(int),
-                                   kerrors, 0, NULL, NULL);
-        CL_BAIL_ON_ERROR(err);
-
-
-        clFinish(queue);
-        CL_BAIL_ON_ERROR(err);
-
-
-        //Launch Kernels
-        err = clEnqueueNDRangeKernel(queue, goldChk, 2, NULL, globalWorkSize,
-                                     localWorkSize, 0, NULL, NULL);
-
-        clFinish(queue);
-        CL_BAIL_ON_ERROR(err);
-
-
-
-        err = clEnqueueReadBuffer(queue, kerrorsgpu, CL_TRUE, 0, sizeof(int),
-                                  kerrors, 0, NULL, NULL);
-        CL_BAIL_ON_ERROR(err);
-        clFinish(queue);
-        CL_BAIL_ON_ERROR(err);
-
-        if (it==0) cout << "Errors : " << *kerrors << "\n";
-
-        ea = 0;
-        t_ea += *kerrors;
+	ea=0;
 #ifdef LOGS
-        log_error_count(*kerrors);
-#endif /* LOGS */
-        if (*kerrors>0)
-        {
-            std::cout << "Error detected! kerrors = " << *kerrors << "\n";
-
-            err = clEnqueueReadBuffer(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
-                                      C, 0, NULL, NULL);
-            CL_BAIL_ON_ERROR(err);
-            clFinish(queue);
-            CL_BAIL_ON_ERROR(err);
-
-            char error_detail[150];
-            for (int i = 0; (i<input_size) && (ea < N_ERRORS_LOG); i++)
-            {
-                for (int j = 0; (j<input_size) && (ea < N_ERRORS_LOG); j++)
-                {
-                    if ((fabs((C[i + input_size*j] - GOLD[i + input_size*j]) / C[i + input_size*j]) > 0.0000000001) || (fabs((C[i + input_size*j] - GOLD[i + input_size*j]) / GOLD[i + input_size*j]) > 0.0000000001))
-                    {
-                        //ea++;
-                        //fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, C[i + input_size * j], GOLD[i + input_size * j], ea);
-                        snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + input_size * j], GOLD[i + input_size * j]);
+	char error_detail[150];
+#endif
+	#pragma omp parallel for reduction(+:ea)
+	for (int i = 0; (i<input_size) ; i++)
+	{
+	    for (int j = 0; (j<input_size) ; j++)
+	    {
+	        if ((fabs((C[i + input_size*j] - GOLD[i + input_size*j]) / C[i + input_size*j]) > 0.0000000001) || (fabs((C[i + input_size*j] - GOLD[i + input_size*j]) / GOLD[i + input_size*j]) > 0.0000000001))
+	        {
+			//#pragma omp atomic update
+			ea++;
 #ifdef LOGS
-                        log_error_detail(error_detail);
+			//if(ea<N_ERRORS_LOG)
+				snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + input_size * j], GOLD[i + input_size * j]);
+			log_error_detail(error_detail);
 #endif /* LOGS */
                     }
                 }
             }
 
-
-            ReadMatrixFromFile(A, B, GOLD);
-        }
-        if(*kerrors > 0 || (it % 10 == 0))
+#ifdef LOGS
+        log_error_count(ea);
+#endif /* LOGS */
+	if(ea>0){
+		ReadMatrixFromFile(A, B, GOLD);
+	}
+        if(ea > 0 || (it % 10 == 0))
         {
             printf("\ntest number: %d", it);
-            printf("\nerrors: %d", *kerrors);
+            printf("\nerrors: %d", ea);
         }
 
 #ifdef TIMING
-	check_end = get_time();
-	loop_end = get_time();
+	check_end = timing_get_time();
+	loop_end = timing_get_time();
 	double setup_timing = (double) (setup_end - setup_start) / 1000000;
 	double loop_timing = (double) (loop_end - loop_start) / 1000000;
 	double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
@@ -604,7 +526,12 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 	printf("loop: %f\n",loop_timing);
 	printf("kernel: %f\n",kernel_timing);
 	printf("check: %f\n",check_timing);
+        //double flops = 2.0*(double)input_size*input_size*input_size;
+        //double gflops = flops / kernel_time;
+        //printf("kernel time: %lf\n",kernel_time);
+        //printf("SIZE:%d FLOPS:%f\n",input_size, gflops);
 #endif
+
     }
 
 #ifdef LOGS
@@ -636,16 +563,12 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     CL_CHECK_ERROR(err);
     err = clReleaseKernel(sgemmNT);
     CL_CHECK_ERROR(err);
-    err = clReleaseKernel(goldChk);
-    CL_CHECK_ERROR(err);
 
     err = clReleaseMemObject(Agpu);
     CL_CHECK_ERROR(err);
     err = clReleaseMemObject(Bgpu);
     CL_CHECK_ERROR(err);
     err = clReleaseMemObject(Cgpu);
-    CL_CHECK_ERROR(err);
-    err = clReleaseMemObject(kerrorsgpu);
     CL_CHECK_ERROR(err);
 
 }
