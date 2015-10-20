@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
+#include <string.h>
 
 #include "./main.h" // (in the current directory)
 #include "kernel_lavamd.h"
@@ -233,7 +234,7 @@ printf("\n#nn : %d\n",number_nn);
     //=====================================================================
     //	GPU_OPENCL
     //=====================================================================
-
+    printf("executin kernel\n");
     kernel_gpu_opencl_wrapper(	par_cpu,
                                 dim_cpu,
                                 box_cpu,
@@ -246,6 +247,7 @@ printf("\n#nn : %d\n",number_nn);
     //	SYSTEM MEMORY DEALLOCATION
     //=====================================================================
 
+    printf("saving results\n");
     // dump results
     if( (file = fopen(output_gold, "wb" )) == 0 )
         printf( "The file 'output_forces' was not opened\n" );
@@ -413,12 +415,12 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
     // Load kernel source code from file
     //const char *source = load_kernel_source(kernel_file);
-    size_t sourceSize = strlen(kernel_fft_ocl);
+    size_t sourceSize = strlen(kernel_lavamd_ocl);
 
     // Create the program
     cl_program program = clCreateProgramWithSource(	context,
                          1,
-                         kernel_fft_ocl,
+                         &kernel_lavamd_ocl,
                          &sourceSize,
                          &error);
     if (error != CL_SUCCESS)

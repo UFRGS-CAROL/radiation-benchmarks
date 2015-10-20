@@ -7,9 +7,10 @@
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
+#include <string.h>
 
 #include "./main.h" // (in the current directory)
-#include "kernel_fft.h"
+#include "kernel_lavamd.h"
 
 #ifdef LOGS
 #include "../../include/log_helper.h"
@@ -404,12 +405,12 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
     // Load kernel source code from file
     //const char *source = load_kernel_source(kernel_file);    
-    size_t sourceSize = strlen(kernel_fft_ocl);
+    size_t sourceSize = strlen(kernel_lavamd_ocl);
 
     // Create the program
     cl_program program = clCreateProgramWithSource(	context,
                          1,
-                         kernel_fft_ocl,
+                         &kernel_lavamd_ocl,
                          &sourceSize,
                          &error);
     if (error != CL_SUCCESS)
@@ -610,29 +611,34 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
             fatal_CL(error, __LINE__);
 
         int part_error=0;
-	int i, thread_error=0;
-        #pragma omp parallel for private(thread_error) reduction(+:part_error)
+	int i;
+        #pragma omp parallel for  reduction(+:part_error)
         for(i=0; i<dim_cpu.space_elem; i++) {
-
-            if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
+		int thread_error=0;
+	    if ((fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu_GOLD[i].v) > 0.0000000001)){
+            //if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
                 thread_error++;
             }
-            if(fv_cpu_GOLD[i].x != fv_cpu[i].x) {
+	    if ((fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu_GOLD[i].x) > 0.0000000001)){
+            //if(fv_cpu_GOLD[i].x != fv_cpu[i].x) {
                 thread_error++;
             }
-            if(fv_cpu_GOLD[i].y != fv_cpu[i].y) {
+	    if ((fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu_GOLD[i].y) > 0.0000000001)){
+            //if(fv_cpu_GOLD[i].y != fv_cpu[i].y) {
                 thread_error++;
             }
-            if(fv_cpu_GOLD[i].z != fv_cpu[i].z) {
+	    if ((fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu_GOLD[i].z) > 0.0000000001)){
+            //if(fv_cpu_GOLD[i].z != fv_cpu[i].z) {
                 thread_error++;
             }
             if (thread_error  > 0) {
                // #pragma omp critical
                 {
                     part_error++;
-		    char error_detail[200];
+		    char error_detail[300];
 
-                    snprintf(error_detail, 200, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z);
+                    snprintf(error_detail, 300, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z);
+			printf("ERROR: %s\n",error_detail);
 #ifdef LOGS
                     log_error_detail(error_detail);
 #endif
