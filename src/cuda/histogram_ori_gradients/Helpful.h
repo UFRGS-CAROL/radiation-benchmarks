@@ -105,10 +105,10 @@ bool set_countains(vector<int> check, vector< vector<int> > src){
 				cont++;						
 		}
 		if(cont == temp.size())
-			return true;
+			return false;
 		cont = 0;
 	}
-	return false;
+	return true;
 }
 
 #endif /* HELPFUL_H_ */

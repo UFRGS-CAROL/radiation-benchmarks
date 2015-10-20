@@ -7,15 +7,16 @@ CPP = Main
 OPENCV_LIBS= `pkg-config --libs opencv`
 ifeq ($(LOGS), 1)
 OPTS = -DLOGS
+LOG_FLAGS = $(LOGHELPER_INC)log_helper.c -I$(LOGHELPER_LIB)
 endif
 
 all: clean hog gold_generator
 
 hog: $(CPP).cpp
-	g++ $(OPTS) $(CPP).cpp $(LOGHELPER_INC)log_helper.c -I$(LOGHELPER_LIB) -Wall -o3 $(OPENCV_LIBS) -o hog
+	g++ $(OPTS) $(CPP).cpp $(LOG_FLAGS) -Wall -o3 $(OPENCV_LIBS) -o hog
 
 gold_generator: GoldGenerator.cpp
 	g++ GoldGenerator.cpp -Wall  -o3 $(OPENCV_LIBS) -o gold_gen
 
 clean:
-	rm -rf hog gold_gen *~ *data*
+	rm -rf hog gold_gen *~ *.data *.jpg ./output/*
