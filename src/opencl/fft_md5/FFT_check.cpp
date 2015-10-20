@@ -18,16 +18,13 @@
 #include <CL/cl_ext.h>
 
 #include "fftlib.h"
-#include "/home/carol/radiation-benchmarks/include/md5/md5.h"
+#include "kernel_fft.h"
+
+#include "../../include/md5/md5.h"
 
 #ifdef LOGS
-#include "/home/carol/radiation-benchmarks/include/log_helper.h"
+#include "../../include/log_helper.h"
 #endif /* LOGS */
-
-//////////
-// LOOPS
-//////////
-//#define ITERACTIONS 10000000
 
 #define AVOIDZERO 1e-200
 #define ACCEPTDIFF 1e-5
@@ -51,18 +48,20 @@ template <> inline bool dp<cplxdbl>(void) {
 
 int ocl_exec_gchk(cplxdbl *gold, int n, int mem_size, size_t thread_per_block, double avoidzero, double acceptdiff);
 
-int t_ea = 0;
-int last_num_errors = 0;
-int last_num_errors_i = 0;
-double total_kernel_time = 0;
 int sizeIndex;
 
-// Returns the current system time in microseconds
-long long get_time() {
+#ifdef TIMING
+inline long long timing_get_time() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_sec * 1000000) + tv.tv_usec;
 }
+
+long long setup_start, setup_end;
+long long loop_start, loop_end;
+long long kernel_start, kernel_end;
+long long check_start, check_end;
+#endif
 
 
 cplxdbl* source, * gold;
@@ -111,23 +110,36 @@ template <class T2> void dump(cl_device_id id,
 
     time0 = get_time();
 
+#ifdef TIMING
+	kernel_start = get_time();
+#endif
+
 #ifdef LOGS
     start_iteration();
 #endif /* LOGS */
+
     transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, 64);
+
 #ifdef LOGS
     end_iteration();
 #endif /* LOGS */
 
+#ifdef TIMING
+	kernel_end = get_time();
+#endif
+
     clFinish(queue[0]);
-    time1 = get_time();
-    double kernel_time = (double) (time1-time0) / 1000000;
-    double fftsz = 512;
-    double Gflops = n_ffts*(5*fftsz*log2(fftsz))/kernel_time;
-    printf("NFFT:%d FLOPS:%f\n",n_ffts,Gflops);
-    printf("\nkernel time: %.12f\n", kernel_time);
+    //time1 = get_time();
+    //double kernel_time = (double) (time1-time0) / 1000000;
+    //double fftsz = 512;
+    //double Gflops = n_ffts*(5*fftsz*log2(fftsz))/kernel_time;
+    //printf("NFFT:%d FLOPS:%f\n",n_ffts,Gflops);
+    //printf("\nkernel time: %.12f\n", kernel_time);
 
 
+#ifdef TIMING
+	check_start = get_time();
+#endif
     T2 *workT = (T2*) malloc(used_bytes);
     if(workT == NULL)
     {
@@ -140,17 +152,17 @@ template <class T2> void dump(cl_device_id id,
 
     T2* resultCPU = workT;
 
-    double check_time = get_time();
+    //double check_time = get_time();
     
     //FAULT INJECTION
-    resultCPU[225].x = 1;
+    //resultCPU[225].x = 1;
     //kerrors = 1;
 
     
     char* output_md5 = generate_md5((char*)resultCPU, used_bytes);
-    printf("Output MD5: ");
-    print_md5(output_md5);
-    printf("\n");	
+    //printf("Output MD5: ");
+    //print_md5(output_md5);
+    //printf("\n");	
   
     int num_errors = 0;
     int num_errors_i = 0; //complex
@@ -159,13 +171,10 @@ template <class T2> void dump(cl_device_id id,
     { 
     int kerrors=0;
     
-    kerrors = ocl_exec_gchk(gold, queue[0], ctx, work, goldChkKrnl, N, sizeof(cplxdbl)*N, 64, AVOIDZERO, ACCEPTDIFF);
-    #ifdef LOGS
-    log_error_count(kerrors);
-#endif /* LOGS */
+    //kerrors = ocl_exec_gchk(gold, queue[0], ctx, work, goldChkKrnl, N, sizeof(cplxdbl)*N, 64, AVOIDZERO, ACCEPTDIFF);
     
-    if (kerrors!=0)
-    {
+//    if (kerrors!=0)
+//    {
 
         #pragma omp parallel for reduction(+:num_errors)
         for (i = 0; i < N/2; i++) {
@@ -215,17 +224,22 @@ template <class T2> void dump(cl_device_id id,
 
 
         }
-      }
+#ifdef LOGS
+    log_error_count(kerrors);
+#endif /* LOGS */
+//      }
     }
 
-    check_time = (double) (get_time() - check_time)/1000000;
-    printf("Gold check time: %lf\n\n", check_time);
+#ifdef TIMING
+	check_end = get_time();
+#endif
+    //check_time = (double) (get_time() - check_time)/1000000;
+    //printf("Gold check time: %lf\n\n", check_time);
 	
-    if (test_number % 15 == 0)
+    if (test_number % 15 == 0 || num_errors>0 || num_errors_i>0)
         printf ("it:%d. cpu errors check: r=%d i=%d\n", test_number, num_errors, num_errors_i);
 
     freeDeviceBuffer(work, ctx, queue[0]);
-
 
     free(resultCPU);
 }
@@ -270,7 +284,7 @@ void getDevices(cl_device_type deviceType) {
 }
 
 void usage(){
-        printf("Usage: fft <input_size> <cl_device_tipe> <ocl_kernel_file> <input_file> <output_gold_file> <#iterations>\n");
+        printf("Usage: fft <input_size> <cl_device_tipe> <input_file> <output_gold_file> <#iterations>\n");
         printf("  input size range from 0 to 5\n");
         printf("  cl_device_types\n");
         printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
@@ -281,16 +295,20 @@ void usage(){
 }
 
 int main(int argc, char** argv) {
+#ifdef TIMING
+	setup_start = get_time();
+#endif
 
     int devType, iterations=1;
-    char *kernel_file, *input, *output;
-    if(argc == 7) {
+    //char *kernel_file;
+    char *input, *output;
+    if(argc == 6) {
         sizeIndex = atoi(argv[1]);
         devType = atoi(argv[2]);
-        kernel_file = argv[3];
-        input = argv[4];
-        output = argv[5];
-        iterations = atoi(argv[6]);
+        //kernel_file = argv[3];
+        input = argv[3];
+        output = argv[4];
+        iterations = atoi(argv[5]);
         distribution = 0;//atoi(argv[2]);
     } else {
         usage();
@@ -300,9 +318,9 @@ int main(int argc, char** argv) {
 
     gold_md5 = generate_gold_md5(output);
     
-    printf("Gold MD5: ");
-    print_md5(gold_md5);
-    printf("\n");
+    //printf("Gold MD5: ");
+    //print_md5(gold_md5);
+    //printf("\n");
 
     
     FILE *fp, *fp_gold;
@@ -352,27 +370,38 @@ int main(int argc, char** argv) {
     fclose(fp_gold);
 
 
-    /*
-    CL_DEVICE_TYPE_DEFAULT
-    CL_DEVICE_TYPE_CPU
-    CL_DEVICE_TYPE_GPU
-    CL_DEVICE_TYPE_ACCELERATOR
-    CL_DEVICE_TYPE_ALL
-    */
     getDevices(devType);
 
-    init(true, kernel_file, device_id[0], context, command_queue[0], fftProg, fftKrnl,
-         ifftKrnl, chkKrnl, goldChkKrnl);
+    init(true, kernel_fft_ocl, device_id[0], context, command_queue[0], fftProg, fftKrnl,
+         ifftKrnl);//, chkKrnl, goldChkKrnl);
 
     //init(true, device_id[1], context, command_queue[1], cpufftProg, cpuFftKrnl,
     //     cpuIfftKrnl, cpuChkKrnl);
 
 
+#ifdef TIMING
+	setup_end = get_time();
+#endif
     //LOOP START
     int loop;
     //printf("%d ITERACTIONS\n", ITERACTIONS);
     for(loop=0; loop<iterations; loop++) {
+#ifdef TIMING
+	loop_start = get_time();
+#endif
         dump<cplxdbl>(device_id[0], context, command_queue, loop);
+#ifdef TIMING
+	loop_end = get_time();
+	double setup_timing = (double) (setup_end - setup_start) / 1000000;
+	double loop_timing = (double) (loop_end - loop_start) / 1000000;
+	double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
+	double check_timing = (double) (check_end - check_start) / 1000000;
+	printf("\n\tTIMING:\n");
+	printf("setup: %f\n",setup_timing);
+	printf("loop: %f\n",loop_timing);
+	printf("kernel: %f\n",kernel_timing);
+	printf("check: %f\n",check_timing);
+#endif
     }
     free(source);
     free(gold);
