@@ -188,7 +188,7 @@ try:
 
 				# Check if last kill was in the last 60 seconds and reboot
 				now = time.time()
-				if (now - lastKillTimestamp) < 60:
+				if (now - lastKillTimestamp) < 3*timestampMaxDiff:
 					logMsg("Rebooting, current command:"+curCommand)
 					sockConnect()
 					call("sudo shutdown -r now",Shell=True)
