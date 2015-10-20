@@ -95,8 +95,18 @@ void usage() {
     printf("    ALL: %d\n",CL_DEVICE_TYPE_ALL);
 }
 
+#ifdef TIMING
+	long long setup_start, setup_end;
+	long long loop_start, loop_end;
+	long long kernel_start, kernel_end;
+	long long check_start, check_end;
+#endif
 int main(int argc, char ** argv)
 {
+#ifdef TIMING
+	setup_start = get_time();
+#endif
+
     int devType;
     if(argc == 8) {
         input_size = atoi(argv[1]);
@@ -444,11 +454,24 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
     const size_t globalWorkSize[2] = {m/4,n/4};
 
-
+#ifdef TIMING
+	setup_end = get_time();
+#endif
     // Run NN
     for (int it = 0; it < iteractions; it++) {
+#ifdef TIMING
+	loop_start = get_time();
+#endif
 
-
+#ifdef ERR_INJ
+	if(it == 2){
+		printf("injecting error, changing input!\n");
+		A[0] = A[0]*2;
+	} else if (it == 3){
+		printf("get ready, infinite loop...");
+		while(1){}
+	}
+#endif
         err = clEnqueueWriteBuffer(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
                                    A, 0, NULL, NULL);
         err = clEnqueueWriteBuffer(queue, Bgpu, CL_TRUE, 0, m*n*sizeof(T),
@@ -467,6 +490,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
         long long k_start = get_time();
 
+#ifdef TIMING
+	kernel_start = get_time();
+#endif
         //Launch Kernels
         err = clEnqueueNDRangeKernel(queue, sgemmNN, 2, NULL, globalWorkSize,
                                      localWorkSize, 0, NULL, NULL);
@@ -474,6 +500,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         clFinish(queue);
         CL_BAIL_ON_ERROR(err);
 
+#ifdef TIMING
+	kernel_end = get_time();
+#endif
 
         double kernel_time = (double) (get_time() - k_start) / 1000000;
         double flops = 2.0*(double)input_size*input_size*input_size;
@@ -485,6 +514,9 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         end_iteration();
 #endif /* LOGS */
 
+#ifdef TIMING
+	check_start = get_time();
+#endif
         // Check Gold
         *kerrors = 0;
 
@@ -557,6 +589,20 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
             printf("\ntest number: %d", it);
             printf("\nerrors: %d", *kerrors);
         }
+
+#ifdef TIMING
+	check_end = get_time();
+	loop_end = get_time();
+	double setup_timing = (double) (setup_end - setup_start) / 1000000;
+	double loop_timing = (double) (loop_end - loop_start) / 1000000;
+	double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
+	double check_timing = (double) (check_end - check_start) / 1000000;
+	printf("\n\tTIMING:\n");
+	printf("setup: %f\n",setup_timing);
+	printf("loop: %f\n",loop_timing);
+	printf("kernel: %f\n",kernel_timing);
+	printf("check: %f\n",check_timing);
+#endif
     }
 
 #ifdef LOGS
