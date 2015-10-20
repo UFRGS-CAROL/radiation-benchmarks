@@ -14,7 +14,7 @@
 
 //#define LOGS 1
 #ifdef LOGS
-#include "/home/carol/radiation-benchmarks/include/log_helper.h"
+#include "../../include/log_helper.h"
 #endif /* LOGS */
 
 //#define N 1024
