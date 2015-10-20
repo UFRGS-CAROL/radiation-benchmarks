@@ -2,22 +2,24 @@
 #include <stdlib.h> // (in path known to compiler)			needed by malloc
 #include <stdbool.h> // (in path known to compiler)			needed by true/false
 
+#define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 #include <CL/cl.h>
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
 
 #include "./main.h" // (in the current directory)
+#include "kernel_fft.h"
 
 #ifdef LOGS
-#include "/home/carol/radiation-benchmarks/include/log_helper.h"
+#include "../../include/log_helper.h"
 #endif /* LOGS */
 
 
 char *input_distance;
 char *input_charges;
 char *output_gold;
-char *kernel_file;
+//char *kernel_file;
 int block_size;
 int devType;
 
@@ -28,14 +30,21 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
                                 fp* qv_cpu,
                                 FOUR_VECTOR* fv_cpu);
 
-long long get_time2() {
+#ifdef TIMING
+inline long long timing_get_time() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_sec * 1000000) + tv.tv_usec;
 }
 
+long long setup_start, setup_end;
+long long loop_start, loop_end;
+long long kernel_start, kernel_end;
+long long check_start, check_end;
+#endif
+
 void usage() {
-    printf("Usage: lavamd_gen <input_size> <cl_device_tipe> <ocl_kernel_file> <workgroup_block_size> <input_distances> <input_charges> <gold_output> <#iteractions>\n");
+    printf("Usage: lavamd_gen <input_size> <cl_device_tipe> <workgroup_block_size> <input_distances> <input_charges> <gold_output> <#iteractions>\n");
     printf("  input size is the number of boxes, 15 is a reasonable number\n");
     printf("  cl_device_types\n");
     printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
@@ -51,15 +60,18 @@ int iteractions = 100000;
 FOUR_VECTOR *fv_cpu, *fv_cpu_GOLD;
 int main(int argc, char *argv []) {
 
-    if(argc == 9) {
+#ifdef TIMING
+	setup_start = timing_get_time();
+#endif
+    if(argc == 8) {
         boxes = atoi(argv[1]);
         devType = atoi(argv[2]);
-        kernel_file = argv[3];
-        block_size = atoi(argv[4]);
-        input_distance = argv[5];
-        input_charges = argv[6];
-        output_gold = argv[7];
-        iteractions = atoi(argv[8]);
+        //kernel_file = argv[3];
+        block_size = atoi(argv[3]);
+        input_distance = argv[4];
+        input_charges = argv[5];
+        output_gold = argv[6];
+        iteractions = atoi(argv[7]);
     } else {
         usage();
         exit(1);
@@ -391,13 +403,13 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
 
     // Load kernel source code from file
-    const char *source = load_kernel_source(kernel_file);
-    size_t sourceSize = strlen(source);
+    //const char *source = load_kernel_source(kernel_file);    
+    size_t sourceSize = strlen(kernel_fft_ocl);
 
     // Create the program
     cl_program program = clCreateProgramWithSource(	context,
                          1,
-                         &source,
+                         kernel_fft_ocl,
                          &sourceSize,
                          &error);
     if (error != CL_SUCCESS)
@@ -487,8 +499,14 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
     if (error != CL_SUCCESS)
         fatal_CL(error, __LINE__);
 
+#ifdef TIMING
+	setup_end = timing_get_time();
+#endif
     int loop;
     for(loop=0; loop<iteractions; loop++) {
+#ifdef TIMING
+	loop_start = timing_get_time();
+#endif
 
         memset(fv_cpu, 0, dim_cpu.space_mem);
 
@@ -544,7 +562,11 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
         clSetKernelArg(kernel, 5, sizeof(cl_mem), (void *) &d_fv_gpu);
         clSetKernelArg(kernel, 6, sizeof(int), (void *) &block_size);
         // launch kernel - all boxes
-        time0 = get_time2();
+        //time0 = get_time2();
+
+#ifdef TIMING
+	kernel_start = timing_get_time();
+#endif
 #ifdef LOGS
         start_iteration();
 #endif /* LOGS */
@@ -568,23 +590,28 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 #ifdef LOGS
         end_iteration();
 #endif /* LOGS */
-        time1 = get_time2();
+#ifdef TIMING
+	kernel_end = timing_get_time();
+#endif
+        //time1 = get_time2();
+        //if(loop%5==0) {
+        //    double kernel_time = (double) (time1-time0) / 1000000;
+        //    printf("kernel_time:%f\n",kernel_time);
+        //} else {
+        //    printf(".");
+        //}
 
-        if(loop%5==0) {
-            double kernel_time = (double) (time1-time0) / 1000000;
-            printf("kernel_time:%f\n",kernel_time);
-        } else {
-            printf(".");
-        }
 
-
+#ifdef TIMING
+	check_start = timing_get_time();
+#endif
         error = clEnqueueReadBuffer(command_queue,d_fv_gpu,CL_TRUE,0,dim_cpu.space_mem,fv_cpu,0,NULL,NULL);
         if (error != CL_SUCCESS)
             fatal_CL(error, __LINE__);
 
         int part_error=0;
 	int i, thread_error=0;
-        #pragma omp parallel for
+        #pragma omp parallel for private(thread_error) reduction(+:part_error)
         for(i=0; i<dim_cpu.space_elem; i++) {
 
             if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
@@ -600,7 +627,7 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
                 thread_error++;
             }
             if (thread_error  > 0) {
-                #pragma omp critical
+               // #pragma omp critical
                 {
                     part_error++;
 		    char error_detail[200];
@@ -616,12 +643,25 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
         }
 
-        if(loop%5==0) {
+        if(loop%5==0||part_error>0) {
             printf("errors:%d\n",part_error);
         }
 #ifdef LOGS
         log_error_count(part_error);
 #endif /* LOGS */
+#ifdef TIMING
+	check_end = timing_get_time();
+	loop_end = timing_get_time();
+	double setup_timing = (double) (setup_end - setup_start) / 1000000;
+	double loop_timing = (double) (loop_end - loop_start) / 1000000;
+	double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
+	double check_timing = (double) (check_end - check_start) / 1000000;
+	printf("\n\tTIMING:\n");
+	printf("setup: %f\n",setup_timing);
+	printf("loop: %f\n",loop_timing);
+	printf("kernel: %f\n",kernel_timing);
+	printf("check: %f\n",check_timing);
+#endif
 
     }
 

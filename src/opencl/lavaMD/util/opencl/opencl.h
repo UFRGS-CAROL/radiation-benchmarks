@@ -5,6 +5,7 @@ extern "C" {
 
 #include <stdio.h>					// (in library path known to compiler)		needed by printf
 
+#define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 #include <CL/cl.h>					// (in library path provided to compiler)	needed by OpenCL types
 
 

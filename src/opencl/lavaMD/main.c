@@ -2,17 +2,19 @@
 #include <stdlib.h> // (in path known to compiler)			needed by malloc
 #include <stdbool.h> // (in path known to compiler)			needed by true/false
 
+#define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 #include <CL/cl.h>
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
 
 #include "./main.h" // (in the current directory)
+#include "kernel_lavamd.h"
 
 char input_distance[150];
 char input_charges[150];
 char output_gold[150];
-char *kernel_file;
+//char *kernel_file;
 int block_size;
 int devType;
 void kernel_gpu_opencl_wrapper(	par_str par_cpu,
@@ -29,7 +31,7 @@ long long get_time() {
 }
 
 void usage(){
-        printf("Usage: lavamd_gen <input_size> <cl_device_tipe> <ocl_kernel_file> <workgroup_block_size>\n");
+        printf("Usage: lavamd_gen <input_size> <cl_device_tipe> <workgroup_block_size>\n");
         printf("  input size is the number of boxes, 15 is a reasonable number\n");
         printf("  cl_device_types\n");
         printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
@@ -44,11 +46,11 @@ int boxes = 15;
 
 int main(int argc, char *argv []){
 
-    if(argc == 5) {
+    if(argc == 4) {
         boxes = atoi(argv[1]);
         devType = atoi(argv[2]);
-        kernel_file = argv[3];
-        block_size = atoi(argv[4]);
+        //kernel_file = argv[3];
+        block_size = atoi(argv[3]);
     } else {
         usage();
         exit(1);
@@ -410,13 +412,13 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
 
     // Load kernel source code from file
-    const char *source = load_kernel_source(kernel_file);
-    size_t sourceSize = strlen(source);
+    //const char *source = load_kernel_source(kernel_file);
+    size_t sourceSize = strlen(kernel_fft_ocl);
 
     // Create the program
     cl_program program = clCreateProgramWithSource(	context,
                          1,
-                         &source,
+                         kernel_fft_ocl,
                          &sourceSize,
                          &error);
     if (error != CL_SUCCESS)
