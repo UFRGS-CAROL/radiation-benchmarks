@@ -12,6 +12,7 @@
 #include <sys/time.h>
 #include <time.h>
 
+#define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 #include <CL/cl.h>
 #include <CL/cl_gl.h>
 #include <CL/cl_gl_ext.h>
@@ -108,10 +109,10 @@ template <class T2> void dump(cl_device_id id,
 
     copyToDevice(work, source, used_bytes, queue[0]);
 
-    time0 = get_time();
+    //time0 = get_time();
 
 #ifdef TIMING
-	kernel_start = get_time();
+	kernel_start = timing_get_time();
 #endif
 
 #ifdef LOGS
@@ -119,16 +120,16 @@ template <class T2> void dump(cl_device_id id,
 #endif /* LOGS */
 
     transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, 64);
+    clFinish(queue[0]);
 
 #ifdef LOGS
     end_iteration();
 #endif /* LOGS */
 
 #ifdef TIMING
-	kernel_end = get_time();
+	kernel_end = timing_get_time();
 #endif
 
-    clFinish(queue[0]);
     //time1 = get_time();
     //double kernel_time = (double) (time1-time0) / 1000000;
     //double fftsz = 512;
@@ -137,9 +138,6 @@ template <class T2> void dump(cl_device_id id,
     //printf("\nkernel time: %.12f\n", kernel_time);
 
 
-#ifdef TIMING
-	check_start = get_time();
-#endif
     T2 *workT = (T2*) malloc(used_bytes);
     if(workT == NULL)
     {
@@ -159,6 +157,9 @@ template <class T2> void dump(cl_device_id id,
     //kerrors = 1;
 
     
+#ifdef TIMING
+	check_start = timing_get_time();
+#endif
     char* output_md5 = generate_md5((char*)resultCPU, used_bytes);
     //printf("Output MD5: ");
     //print_md5(output_md5);
@@ -169,7 +170,7 @@ template <class T2> void dump(cl_device_id id,
 
     if(compare_md5(output_md5, gold_md5)) 
     { 
-    int kerrors=0;
+    //int kerrors=0;
     
     //kerrors = ocl_exec_gchk(gold, queue[0], ctx, work, goldChkKrnl, N, sizeof(cplxdbl)*N, 64, AVOIDZERO, ACCEPTDIFF);
     
@@ -225,13 +226,13 @@ template <class T2> void dump(cl_device_id id,
 
         }
 #ifdef LOGS
-    log_error_count(kerrors);
+    log_error_count(num_errors + num_errors_i);
 #endif /* LOGS */
 //      }
     }
 
 #ifdef TIMING
-	check_end = get_time();
+	check_end = timing_get_time();
 #endif
     //check_time = (double) (get_time() - check_time)/1000000;
     //printf("Gold check time: %lf\n\n", check_time);
@@ -296,7 +297,7 @@ void usage(){
 
 int main(int argc, char** argv) {
 #ifdef TIMING
-	setup_start = get_time();
+	setup_start = timing_get_time();
 #endif
 
     int devType, iterations=1;
@@ -372,7 +373,9 @@ int main(int argc, char** argv) {
 
     getDevices(devType);
 
-    init(true, kernel_fft_ocl, device_id[0], context, command_queue[0], fftProg, fftKrnl,
+    char * kernel_source = (char *)malloc(sizeof(char)*strlen(kernel_fft_ocl)+2);
+    strcpy(kernel_source,kernel_fft_ocl);
+    init(true, kernel_source, device_id[0], context, command_queue[0], fftProg, fftKrnl,
          ifftKrnl);//, chkKrnl, goldChkKrnl);
 
     //init(true, device_id[1], context, command_queue[1], cpufftProg, cpuFftKrnl,
@@ -380,18 +383,18 @@ int main(int argc, char** argv) {
 
 
 #ifdef TIMING
-	setup_end = get_time();
+	setup_end = timing_get_time();
 #endif
     //LOOP START
     int loop;
     //printf("%d ITERACTIONS\n", ITERACTIONS);
     for(loop=0; loop<iterations; loop++) {
 #ifdef TIMING
-	loop_start = get_time();
+	loop_start = timing_get_time();
 #endif
         dump<cplxdbl>(device_id[0], context, command_queue, loop);
 #ifdef TIMING
-	loop_end = get_time();
+	loop_end = timing_get_time();
 	double setup_timing = (double) (setup_end - setup_start) / 1000000;
 	double loop_timing = (double) (loop_end - loop_start) / 1000000;
 	double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
