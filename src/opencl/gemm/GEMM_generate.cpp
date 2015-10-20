@@ -11,11 +11,12 @@
 #include <CL/cl.h>
 
 #include "support.h"
+#include "kernel_gemm.h"
 
 #define DEVICE_ID 0
 #define ITERATIONS 1000000000000
 
-char *kernel_gemmN_path;
+//char *kernel_gemmN_path;
 char *gold_matrix, *a_matrix, *b_matrix;
 int input_size;
 
@@ -69,7 +70,8 @@ void
 RunBenchmark(cl_device_id dev, cl_context ctx, cl_command_queue queue);
 
 void usage() {
-    printf("Usage: gemm <input_size> <cl_device_type> <kernel_file> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX_TO_GENERATE> \n");
+    //printf("Usage: gemm <input_size> <cl_device_type> <kernel_file> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX_TO_GENERATE> \n");
+    printf("Usage: gemm <input_size> <cl_device_type> <A_MATRIX> <B_MATRIX> <GOLD_MATRIX_TO_GENERATE> \n");
     printf("  cl_device_types\n");
     printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
     printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
@@ -81,13 +83,13 @@ void usage() {
 int main(int argc, char ** argv)
 {
     int devType;
-    if(argc == 7) {
+    if(argc == 6) {
         input_size = atoi(argv[1]);
         devType = atoi(argv[2]);
-        kernel_gemmN_path = argv[3];
-        a_matrix = argv[4];
-        b_matrix = argv[5];
-        gold_matrix = argv[6];
+        //kernel_gemmN_path = argv[3];
+        a_matrix = argv[3];
+        b_matrix = argv[4];
+        gold_matrix = argv[5];
     } else {
         usage();
         exit(1);
@@ -197,12 +199,12 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
     cout << "Ready, build program...";
 
-    std::ifstream kernelfile(kernel_gemmN_path); // This will read the file to the memory as OpenCL needs to compile it from there
-    std::string kernelstr((std::istreambuf_iterator<char>(kernelfile)),
-                          std::istreambuf_iterator<char>());
-    const char* cl_source_gemmN = kernelstr.c_str();
+//    std::ifstream kernelfile(kernel_gemmN_path); // This will read the file to the memory as OpenCL needs to compile it from there
+//    std::string kernelstr((std::istreambuf_iterator<char>(kernelfile)),
+//                          std::istreambuf_iterator<char>());
+    const char* cl_source_gemmN = kernel_gemm_ocl;//kernelstr.c_str();
 
-    const size_t kernelLength=kernelstr.length();
+    const size_t kernelLength = strlen(cl_source_gemmN);//kernelstr.length();
     cout << "L:" << kernelLength << endl; //kernelstr.size() << " ";
     // Create program object
     cl_program prog = clCreateProgramWithSource(ctx, 1,
