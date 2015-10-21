@@ -31,5 +31,5 @@ lavamd_err_inj: $(SOURCES_CHECK)
 	$(CC) $(SOURCES_CHECK) -lm $(OMP) -lOpenCL -DLOGS -DERR_INJ $(LIB) $(INC) -o $(APP_NAME)_err_inj
 
 clean:
-	rm -f $(APP_NAME)_check $(APP_NAME)_err_inj $(APP_NAME)_nologs_timing $(APP_NAME)_genGold
+	rm -f $(APP_NAME) $(APP_NAME)_check $(APP_NAME)_err_inj $(APP_NAME)_nologs_timing $(APP_NAME)_genGold
 

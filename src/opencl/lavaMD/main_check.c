@@ -514,11 +514,15 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 #ifdef ERR_INJ
 	if(loop == 2){
 		printf("injecting error, changing input!\n");
-		rv_cpu[0] = rv_cpu[0]*2;
+		rv_cpu[0].v = rv_cpu[0].v*2;
+		rv_cpu[0].x = rv_cpu[0].x*-1;
+		rv_cpu[0].y = rv_cpu[0].y*6;
+		rv_cpu[0].z = rv_cpu[0].z*-3;
 		qv_cpu[0] = qv_cpu[0]*-2;
-	} else if (it == 3){
-		printf("get ready, infinite loop...");
-		while(1){}
+	} else if (loop == 3){
+		printf("get ready, infinite loop...\n");
+		fflush(stdout);
+		while(1){sleep(100);}
 	}
 #endif
 
