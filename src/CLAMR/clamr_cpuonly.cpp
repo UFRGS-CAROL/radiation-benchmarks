@@ -197,9 +197,9 @@ int main(int argc, char **argv) {
         strcat(input_line, argv[iterate_args]);
 
 #ifdef _OPENMP
-    start_log_file("clamr_openmponly", input_line);
+    start_log_file((char *)"clamr_openmponly", input_line);
 #else
-    start_log_file("clamr_cpuonly", input_line);
+    start_log_file((char *)"clamr_cpuonly", input_line);
 #endif
 
     set_iter_interval_print(10);

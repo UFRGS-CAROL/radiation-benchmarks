@@ -373,7 +373,7 @@ int main( int argc, char** argv)
 #ifdef LOGS
     char test_info[100];
     snprintf(test_info, 100, "npoints:%d nfeatures:%d threshold:%f clusters:%d", npoints, nfeatures, threshold, max_nclusters);
-    start_log_file("openclKmeans", test_info);
+    start_log_file((char *)"openclKmeans", test_info);
     set_max_errors_iter(500);
     set_iter_interval_print(10);
 #endif /* LOGS */

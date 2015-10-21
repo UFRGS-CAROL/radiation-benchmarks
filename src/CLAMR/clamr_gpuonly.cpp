@@ -182,7 +182,7 @@ int main(int argc, char **argv) {
     for(iterate_args=1; iterate_args<argc; iterate_args++)
         strcat(input_line, argv[iterate_args]);
 
-    start_log_file("clamr_gpuonly", input_line);
+    start_log_file((char *)"clamr_gpuonly", input_line);
 
     set_iter_interval_print(10);
     printf("log file is %s\n",get_log_file_name());

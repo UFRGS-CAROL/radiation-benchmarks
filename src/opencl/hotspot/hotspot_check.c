@@ -292,7 +292,7 @@ int main(int argc, char** argv) {
 #ifdef LOGS
     char test_info[100];
     snprintf(test_info, 100, "simIter:%d gridSize:%dx%d",iterations, grid_rows, grid_rows);
-    start_log_file("openclHotspot", test_info);
+    start_log_file((char *)"openclHotspot", test_info);
     set_max_errors_iter(100);
     set_iter_interval_print(10);
 #endif /* LOGS */

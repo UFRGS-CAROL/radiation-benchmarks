@@ -307,7 +307,7 @@ int main(int argc, char** argv) {
 #ifdef LOGS
     char test_info[100];
     snprintf(test_info, 100, "size:%d",(int)N);
-    start_log_file("openclfft", test_info);
+    start_log_file((char *)"openclfft", test_info);
     set_max_errors_iter(100);
     set_iter_interval_print(15);
 #endif /* LOGS */

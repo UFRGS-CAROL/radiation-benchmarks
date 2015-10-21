@@ -247,7 +247,7 @@ void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 #ifdef LOGS
     char test_info[100];
     snprintf(test_info, 100, "size:%dx%d",input_size,input_size);
-    start_log_file(LOGFILE_MATRIXNAME, test_info);
+    start_log_file((char *)LOGFILE_MATRIXNAME, test_info);
     set_max_errors_iter(200);
     set_iter_interval_print(5);
 #endif /* LOGS */

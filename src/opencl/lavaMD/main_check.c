@@ -254,7 +254,7 @@ int main(int argc, char *argv []) {
 #ifdef LOGS
     char test_info[100];
     snprintf(test_info, 100, "box:%d spaceElem:%d", dim_cpu.boxes1d_arg,dim_cpu.space_elem);
-    start_log_file("openclLavaMD", test_info);
+    start_log_file((char *)"openclLavaMD", test_info);
     set_max_errors_iter(500);
     set_iter_interval_print(10);
 #endif /* LOGS */
