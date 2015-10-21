@@ -21,7 +21,7 @@ char absolute_path[200] = "/micNfs/carol/logs/";
 //char absolute_path[200] = "/home/carol/logs/";
 char *absolute_path;
 char logdir_key[]="logdir";
-char config_file="/etc/radiation-benchmarks.conf"
+char config_file[]="/etc/radiation-benchmarks.conf";
 #endif
 
 // Used to print the log only for some iterations, equal 1 means print every iteration
