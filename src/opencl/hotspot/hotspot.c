@@ -1,14 +1,9 @@
 #include "hotspot.h"
+#include "kernel_hotspot.h"
 
-// files to read input
-
-// files generate in binary
-//#define IMPUT_TEMPE "input_temp"
-//#define IMPUT_POWER "input_power"
-//#define OUTPUT_GOLD "output"
-//#define ALGORITHM_ITERATIONS 1000
 int iterations, devType;
-char *kernel_file, *input_temp, *input_power, *output;
+//char *kernel_file;
+char *input_temp, *input_power, *output;
 
 double mysecond()
 {
@@ -149,7 +144,7 @@ flops += col * row * iter * 15;
 }
 
 usage(){
-        printf("Usage: hotspot_gen <sim_iter> <input_size> <cl_device_tipe> <ocl_kernel_file> <input_temp_file> <input_power_file> <output_gold_file>\n");
+        printf("Usage: hotspot_gen <sim_iter> <input_size> <cl_device_tipe> <input_temp_file> <input_power_file> <output_gold_file>\n");
         printf("  cl_device_types\n");
         printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
         printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
@@ -162,19 +157,19 @@ int main(int argc, char** argv) {
 	double kernel_time=0;
     int grid_rows,grid_cols = 0;
 
-    if(argc == 8) {
+    if(argc == 7) {
         iterations = atoi(argv[1]);
-		grid_rows = atoi(argv[2]);
+	grid_rows = atoi(argv[2]);
         devType = atoi(argv[3]);
-        kernel_file = argv[4];
-        input_temp = argv[5];
-        input_power = argv[6];
-        output = argv[7];
+        //kernel_file = argv[4];
+        input_temp = argv[4];
+        input_power = argv[5];
+        output = argv[6];
     } else {
         usage();
         exit(1);
     }
-	grid_cols = grid_rows;
+    grid_cols = grid_rows;
     printf("WG size of kernel = %d X %d\n", BLOCK_SIZE, BLOCK_SIZE);
 
     cl_int error;
@@ -248,11 +243,11 @@ int main(int argc, char** argv) {
     readinput(FilesavingPower, grid_rows, grid_cols, input_power);
 
     // Load kernel source from file
-    const char *source = load_kernel_source(kernel_file);
-    size_t sourceSize = strlen(source);
+    //const char *source = load_kernel_source(kernel_file);
+    size_t sourceSize = strlen(kernel_hotspot_ocl);
 
     // Compile the kernel
-    cl_program program = clCreateProgramWithSource(context, 1, &source, &sourceSize, &error);
+    cl_program program = clCreateProgramWithSource(context, 1, &kernel_hotspot_ocl, &sourceSize, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
     char clOptions[110];

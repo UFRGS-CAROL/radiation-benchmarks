@@ -1,6 +1,7 @@
 #ifndef HOTSPOT_H
 #define HOTSPOT_H
 
+#define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 #include "OpenCL_helper_library.h"
 
 #include <CL/cl.h>

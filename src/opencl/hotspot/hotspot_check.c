@@ -1,13 +1,22 @@
 #include "hotspot.h"
+#include "kernel_hotspot.h"
 
 #ifdef LOGS
-#include "/home/carol/radiation-benchmarks/include/log_helper.h"
+#include "../../include/log_helper.h"
 #endif /* LOGS */
 
-//#define IMPUT_TEMPE "input_temp"
-//#define IMPUT_POWER "input_power"
-//#define OUTPUT_GOLD "output"
-//#define ALGORITHM_ITERATIONS 1000
+#ifdef TIMING
+inline long long timing_get_time() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000000) + tv.tv_usec;
+}
+
+long long setup_start, setup_end;
+long long loop_start, loop_end;
+long long kernel_start, kernel_end;
+long long check_start, check_end;
+#endif
 
 int check_output(float *vect, int grid_rows, int grid_cols, float *gold) {
 
@@ -98,6 +107,9 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
     local_work_size[1] = BLOCK_SIZE;
 
 
+#ifdef TIMING
+	kernel_start = timing_get_time();
+#endif
 #ifdef LOGS
     start_iteration();
 #endif /* LOGS */
@@ -137,13 +149,16 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
 #ifdef LOGS
     end_iteration();
 #endif /* LOGS */
+#ifdef TIMING
+	kernel_end = timing_get_time();
+#endif
 
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
     return src;
 }
 
 void usage(){
-        printf("Usage: hotspot_check <sim_iter> <input_size> <cl_device_tipe> <ocl_kernel_file> <input_temp_file> <input_power_file> <output_gold_file> <#iterations>\n");
+        printf("Usage: hotspot_check <sim_iter> <input_size> <cl_device_tipe> <input_temp_file> <input_power_file> <output_gold_file> <#iterations>\n");
         printf("  cl_device_types\n");
         printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
         printf("    CPU: %d\n",CL_DEVICE_TYPE_CPU);
@@ -155,19 +170,23 @@ void usage(){
 
 int main(int argc, char** argv) {
 
+#ifdef TIMING
+	setup_start = timing_get_time();
+#endif
     int iterations, devType;
     int grid_rows,grid_cols = 0;
     int tot_iterations=1;
-    char *kernel_file, *input_temp, *input_power, *output;
-    if(argc == 9) {
+    //char *kernel_file;
+    char *input_temp, *input_power, *output;
+    if(argc == 8) {
         iterations = atoi(argv[1]);
 	grid_rows = atoi(argv[2]);
         devType = atoi(argv[3]);
-        kernel_file = argv[4];
-        input_temp = argv[5];
-        input_power = argv[6];
-        output = argv[7];
-	tot_iterations = atoi(argv[8]);
+        //kernel_file = argv[4];
+        input_temp = argv[4];
+        input_power = argv[5];
+        output = argv[6];
+	tot_iterations = atoi(argv[7]);
     } else {
         usage();
         exit(1);
@@ -245,11 +264,11 @@ int main(int argc, char** argv) {
     readinput(FilesavingPower, grid_rows, grid_cols, input_power);
     readinput(gold, grid_rows, grid_cols, output);
     // Load kernel source from file
-    const char *source = load_kernel_source(kernel_file);
-    size_t sourceSize = strlen(source);
+    //const char *source = load_kernel_source(kernel_file);
+    size_t sourceSize = strlen(kernel_hotspot_ocl);
 
     // Compile the kernel
-    cl_program program = clCreateProgramWithSource(context, 1, &source, &sourceSize, &error);
+    cl_program program = clCreateProgramWithSource(context, 1, &kernel_hotspot_ocl, &sourceSize, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
     char clOptions[110];
@@ -277,9 +296,25 @@ int main(int argc, char** argv) {
     set_max_errors_iter(100);
     set_iter_interval_print(10);
 #endif /* LOGS */
+#ifdef TIMING
+	setup_end = timing_get_time();
+#endif
 	int loop1;
 	for (loop1=0; loop1 < tot_iterations; loop1++)
 	{
+#ifdef TIMING
+	loop_start = timing_get_time();
+#endif
+#ifdef ERR_INJ
+	if(loop1 == 2){
+		printf("injecting error, changing input!\n");
+		FilesavingTemp[0] = FilesavingTemp[0]*2;
+		FilesavingPower[0] = FilesavingPower[0]*5;
+	} else if (loop1 == 3){
+		printf("get ready, infinite loop...");
+		while(1){sleep(1000);}
+	}
+#endif
 
 		// Create two temperature matrices and copy the temperature input data
 		cl_mem MatrixTemp[2];
@@ -297,6 +332,9 @@ int main(int argc, char** argv) {
 		int ret = compute_tran_temp(MatrixPower, MatrixTemp, grid_cols, grid_rows, total_iterations, pyramid_height,
 		                            blockCols, blockRows, borderCols, borderRows);
 
+#ifdef TIMING
+	check_start = timing_get_time();
+#endif
 		// Copy final temperature data back
 		cl_float *MatrixOut = (cl_float *) clEnqueueMapBuffer(command_queue, MatrixTemp[ret], CL_TRUE, CL_MAP_READ, 0, sizeof(float) * size, 0, NULL, NULL, &error);
 		if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
@@ -304,6 +342,9 @@ int main(int argc, char** argv) {
 		// Write final output to output file
 		int errors = check_output(MatrixOut, grid_rows, grid_cols, gold);
 
+#ifdef TIMING
+	check_end = timing_get_time();
+#endif
 		if (errors!=0) 
 		{
 			printf("kernel errors: %d\n", errors);
@@ -327,6 +368,18 @@ int main(int argc, char** argv) {
 
 		readinput(FilesavingTemp, grid_rows, grid_cols, input_temp); // Reload inputs from disk.
     	readinput(FilesavingPower, grid_rows, grid_cols, input_power);
+#ifdef TIMING
+	loop_end = timing_get_time();
+	double setup_timing = (double) (setup_end - setup_start) / 1000000;
+	double loop_timing = (double) (loop_end - loop_start) / 1000000;
+	double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
+	double check_timing = (double) (check_end - check_start) / 1000000;
+	printf("\n\tTIMING:\n");
+	printf("setup: %f\n",setup_timing);
+	printf("loop: %f\n",loop_timing);
+	printf("kernel: %f\n",kernel_timing);
+	printf("check: %f\n",check_timing);
+#endif
 	}
 
 #ifdef LOGS

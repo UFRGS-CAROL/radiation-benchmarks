@@ -1,49 +1,35 @@
 CC=g++
 
-NVIDIA_INC=-I/usr/local/cuda/include/
-NVIDIA_LIB=-L/usr/local/cuda/lib64
+nvidia:INC=-I/usr/local/cuda/include/
+nvidia:LIB=-L/usr/local/cuda/lib64
 
-INTEL_INC=-I/opt/intel/opencl-1.2-sdk-4.6.0.92/include/
-INTEL_LIB=-L/opt/intel/opencl-1.2-4.5.0.8/lib64/
+intel:INC=-I/opt/intel/opencl-1.2-sdk-4.6.0.92/include/
+intel:LIB=-L/opt/intel/opencl-1.2-4.5.0.8/lib64/
 
-AMD_INC=-I/opt/AMDAPPSDK-3.0-0-Beta/include/
-AMD_LIB=-L/opt/AMDAPPSDK-3.0-0-Beta/lib/x86_64/
+amd:INC=-I/opt/AMDAPPSDK-3.0-0-Beta/include/
+amd:LIB=-L/opt/AMDAPPSDK-3.0-0-Beta/lib/x86_64/
 
 CC = gcc
 CC_FLAGS = -O3
+APP_NAME=hotspot
 
-nvidia: nvidia_generate nvidia_check nvidia_check_nologs
+nvidia: generate hotspot hotspot_err_inj hotspot_timing
 
-nvidia_generate: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -o hotspot_gen $(NVIDIA_INC) OpenCL_helper_library.c hotspot.c $(NVIDIA_LIB) -lOpenCL
+intel: generate hotspot hotspot_err_inj hotspot_timing
 
-nvidia_check_nologs: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -o hotspot_check_nologs $(NVIDIA_INC) OpenCL_helper_library.c hotspot_check.c $(NVIDIA_LIB) -lOpenCL
+amd: generate hotspot hotspot_err_inj hotspot_timing
 
-nvidia_check: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h ../../include/log_helper.c
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -o hotspot_check $(NVIDIA_INC) ../../include/log_helper.c OpenCL_helper_library.c hotspot_check.c $(NVIDIA_LIB) -DLOGS=1 -lOpenCL
-	
-intel: intel_generate intel_check intel_check_nologs
+generate: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h
+	$(CC) $(CC_FLAGS) $(INC) OpenCL_helper_library.c hotspot.c $(LIB) -lOpenCL -o $(APP_NAME)_genGold
 
-intel_generate: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -o hotspot_gen $(INTEL_INC) OpenCL_helper_library.c hotspot.c $(INTEL_LIB) -lOpenCL
+hotspot: hotspot_check.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h ../../include/log_helper.c
+	$(CC) $(CC_FLAGS) $(INC) ../../include/log_helper.c OpenCL_helper_library.c hotspot_check.c $(LIB) -DLOGS -lOpenCL -o $(APP_NAME)
 
-intel_check_nologs: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -o hotspot_check_nologs $(INTEL_INC) OpenCL_helper_library.c hotspot_check.c $(INTEL_LIB) -lOpenCL
+hotspot_err_inj: hotspot_check.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h ../../include/log_helper.c
+	$(CC) $(CC_FLAGS) $(INC) ../../include/log_helper.c OpenCL_helper_library.c hotspot_check.c $(LIB) -DLOGS -DERR_INJ -lOpenCL -o $(APP_NAME)_err_inj
 
-intel_check: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h ../../include/log_helper.c
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -o hotspot_check $(INTEL_INC) ../../include/log_helper.c OpenCL_helper_library.c hotspot_check.c $(INTEL_LIB) -DLOGS=1 -lOpenCL
-	
-amd: amd_generate amd_check amd_check_nologs
+hotspot_timing: hotspot_check.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h
+	$(CC) $(CC_FLAGS) $(INC) OpenCL_helper_library.c hotspot_check.c $(LIB) -DTIMING -lOpenCL -o $(APP_NAME)_nologs_timing
 
-amd_generate: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -o hotspot_gen $(AMD_INC) OpenCL_helper_library.c hotspot.c $(AMD_LIB) -lOpenCL
-
-amd_check_nologs: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -o hotspot_check_nologs $(AMD_INC) OpenCL_helper_library.c hotspot_check.c $(AMD_LIB) -lOpenCL
-
-amd_check: hotspot.c hotspot.h OpenCL_helper_library.c OpenCL_helper_library.h ../../include/log_helper.c
-	$(CC) $(KERNEL_DIM) $(CC_FLAGS) -o hotspot_check $(AMD_INC) ../../include/log_helper.c OpenCL_helper_library.c hotspot_check.c $(AMD_LIB) -DLOGS=1 -lOpenCL
-	
 clean:
-	rm -f hotspot_gen hotspot_check output_*
+	rm -f $(APP_NAME) $(APP_NAME)_genGold $(APP_NAME)_err_inj $(APP_NAME)_nologs_timing

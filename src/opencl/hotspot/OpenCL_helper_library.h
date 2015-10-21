@@ -1,6 +1,7 @@
 #ifndef OPENCL_HELPER_LIBRARY_H
 #define OPENCL_HELPER_LIBRARY_H
 
+#define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 #include <CL/cl.h>
 
 #include <stdio.h>
