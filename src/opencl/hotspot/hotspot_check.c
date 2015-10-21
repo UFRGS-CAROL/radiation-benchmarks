@@ -311,7 +311,8 @@ int main(int argc, char** argv) {
 		FilesavingTemp[0] = FilesavingTemp[0]*2;
 		FilesavingPower[0] = FilesavingPower[0]*5;
 	} else if (loop1 == 3){
-		printf("get ready, infinite loop...");
+		printf("get ready, infinite loop...\n");
+		fflush(stdout);
 		while(1){sleep(1000);}
 	}
 #endif
