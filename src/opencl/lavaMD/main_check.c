@@ -301,10 +301,6 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
                                 FOUR_VECTOR* fv_cpu)
 {
 
-    // timer
-    long long time0;
-    long long time1;
-
 
     // common variables
     cl_int error;
@@ -515,6 +511,16 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
         if (error != CL_SUCCESS)
             fatal_CL(error, __LINE__);
 
+#ifdef ERR_INJ
+	if(loop == 2){
+		printf("injecting error, changing input!\n");
+		rv_cpu[0] = rv_cpu[0]*2;
+		qv_cpu[0] = qv_cpu[0]*-2;
+	} else if (it == 3){
+		printf("get ready, infinite loop...");
+		while(1){}
+	}
+#endif
 
         error = clEnqueueWriteBuffer(	command_queue,
                                         d_rv_gpu,
@@ -562,8 +568,6 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
         clSetKernelArg(kernel, 4, sizeof(cl_mem), (void *) &d_qv_gpu);
         clSetKernelArg(kernel, 5, sizeof(cl_mem), (void *) &d_fv_gpu);
         clSetKernelArg(kernel, 6, sizeof(int), (void *) &block_size);
-        // launch kernel - all boxes
-        //time0 = get_time2();
 
 #ifdef TIMING
 	kernel_start = timing_get_time();
@@ -594,13 +598,6 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 #ifdef TIMING
 	kernel_end = timing_get_time();
 #endif
-        //time1 = get_time2();
-        //if(loop%5==0) {
-        //    double kernel_time = (double) (time1-time0) / 1000000;
-        //    printf("kernel_time:%f\n",kernel_time);
-        //} else {
-        //    printf(".");
-        //}
 
 
 #ifdef TIMING
