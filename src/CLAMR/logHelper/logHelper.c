@@ -172,7 +172,7 @@ int start_log_file(char *benchmark_name, char *test_info){
 	return 1;//exit(1);
     }
     timestamp_watchdog = (char *)malloc(sizeof(char)* (strlen(var_dir)+strlen(timestamp_file)+4) );
-    strcat(timestamp_watchdog, var_dir);
+    strcpy(timestamp_watchdog, var_dir);
     if(strlen(timestamp_watchdog) > 0 && timestamp_watchdog[strlen(timestamp_watchdog)-1] != '/' )
         strcat(timestamp_watchdog, "/");
     strcat(timestamp_watchdog, timestamp_file);
