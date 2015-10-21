@@ -171,7 +171,7 @@ int start_log_file(char *benchmark_name, char *test_info){
 	return 1;//exit(1);
     }
     timestamp_watchdog = (char *)malloc(sizeof(char)* (strlen(var_dir)+strlen(timestamp_file)+4) );
-    strcat(timestamp_watchdog, var_dir);
+    strcpy(timestamp_watchdog, var_dir);
     if(strlen(timestamp_watchdog) > 0 && timestamp_watchdog[strlen(timestamp_watchdog)-1] != '/' )
         strcat(timestamp_watchdog, "/");
     strcat(timestamp_watchdog, timestamp_file);
@@ -370,11 +370,15 @@ int log_error_count(unsigned long int kernel_errors){
 
 
     if(kernel_errors > max_errors_per_iter){
+#ifdef ERR_INJ
+        fprintf(file, "#ERR_INJ not aborting, we would abort otherwise\n");
+#else
         fprintf(file, "#ABORT too many errors per iteration\n");
         fflush(file);
         fclose(file);
         end_log_file();
         exit(1);
+#endif
     }
 
 
