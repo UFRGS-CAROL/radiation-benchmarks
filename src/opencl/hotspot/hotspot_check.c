@@ -60,7 +60,8 @@ void readinput(float *vect, int grid_rows, int grid_cols, char *file){
 	for (i=0; i <= grid_rows-1; i++) 
 	 for (j=0; j <= grid_cols-1; j++)
 	 {
-		fgets(str, STR_SIZE, fp);
+		if(fgets(str, STR_SIZE, fp)==NULL)
+			fatal("Error readin input");
 		if (feof(fp))
 			fatal("not enough lines in file");
 		//if ((sscanf(str, "%d%f", &index, &val) != 2) || (index != ((i-1)*(grid_cols-2)+j-1)))
