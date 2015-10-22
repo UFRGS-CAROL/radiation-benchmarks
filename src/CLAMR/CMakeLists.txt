@@ -334,26 +334,26 @@ endif (REPROBLAS_FOUND)
 
 install(TARGETS clamr_cpuonly DESTINATION bin)
 
-########### clamr_cpuonly_debug target ###############
+########### clamr_cpuonly_err_inj target ###############
 
-set(clamr_cpuonly_debug_CXX_SRCS clamr_cpuonly.cpp state.cpp input.cpp)
-set(clamr_cpuonly_debug_H_SRCS state.h input.h)
+set(clamr_cpuonly_err_inj_CXX_SRCS clamr_cpuonly.cpp state.cpp input.cpp)
+set(clamr_cpuonly_err_inj_H_SRCS state.h input.h)
 
-set(clamr_cpuonly_debug_SRCS ${clamr_cpuonly_debug_CXX_SRCS} ${clamr_cpuonly_debug_C_SRCS} ${clamr_cpuonly_debug_H_SRCS})
+set(clamr_cpuonly_err_inj_SRCS ${clamr_cpuonly_err_inj_CXX_SRCS} ${clamr_cpuonly_err_inj_C_SRCS} ${clamr_cpuonly_err_inj_H_SRCS})
 
-add_executable(clamr_cpuonly_debug ${clamr_cpuonly_SRCS})
-
-
-set_target_properties(clamr_cpuonly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1;ALL_DEBUG=1")
-target_link_libraries(clamr_cpuonly_debug logHelper)
+add_executable(clamr_cpuonly_err_inj ${clamr_cpuonly_SRCS})
 
 
-target_link_libraries(clamr_cpuonly_debug PowerParser mesh hsfc kdtree zorder crux hash graphics timer memstats genmalloc MallocPlus m)
+set_target_properties(clamr_cpuonly_err_inj PROPERTIES COMPILE_DEFINITIONS "LOG=1;ERR_INJ=1")
+target_link_libraries(clamr_cpuonly_err_inj logHelper)
+
+
+target_link_libraries(clamr_cpuonly_err_inj PowerParser mesh hsfc kdtree zorder crux hash graphics timer memstats genmalloc MallocPlus m)
 if (REPROBLAS_FOUND)
-   target_link_libraries(clamr_cpuonly_debug ${REPROBLAS_LIBRARIES})
+   target_link_libraries(clamr_cpuonly_err_inj ${REPROBLAS_LIBRARIES})
 endif (REPROBLAS_FOUND)
 
-install(TARGETS clamr_cpuonly_debug DESTINATION bin)
+install(TARGETS clamr_cpuonly_err_inj DESTINATION bin)
 
 ########### clamr_gpuonly target ###############
 if (OPENCL_FOUND)
@@ -383,32 +383,32 @@ endif(LOG)
    install(TARGETS clamr_gpuonly DESTINATION bin)
 endif (OPENCL_FOUND)
 
-########### clamr_gpuonly_debug target ###############
+########### clamr_gpuonly_err_inj target ###############
 if (OPENCL_FOUND)
-   set(clamr_gpuonly_debug_CXX_SRCS clamr_gpuonly.cpp state.cpp input.cpp)
-   set(clamr_gpuonly_debug_H_SRCS state.h input.h)
-   set(clamr_gpuonly_debug_SRCS ${clamr_gpuonly_debug_CXX_SRCS} ${clamr_gpuonly_debug_C_SRCS} ${clamr_gpuonly_debug_H_SRCS})
+   set(clamr_gpuonly_err_inj_CXX_SRCS clamr_gpuonly.cpp state.cpp input.cpp)
+   set(clamr_gpuonly_err_inj_H_SRCS state.h input.h)
+   set(clamr_gpuonly_err_inj_SRCS ${clamr_gpuonly_err_inj_CXX_SRCS} ${clamr_gpuonly_err_inj_C_SRCS} ${clamr_gpuonly_err_inj_H_SRCS})
 
-   add_executable(clamr_gpuonly_debug ${clamr_gpuonly_debug_SRCS})
+   add_executable(clamr_gpuonly_err_inj ${clamr_gpuonly_err_inj_SRCS})
 
-   set_target_properties(clamr_gpuonly_debug PROPERTIES COMPILE_DEFINITIONS HAVE_OPENCL)
-
-
-   set_target_properties(clamr_gpuonly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1;ALL_DEBUG=1;HAVE_OPENCL=1")
-   target_link_libraries(clamr_gpuonly_debug logHelper)
+   set_target_properties(clamr_gpuonly_err_inj PROPERTIES COMPILE_DEFINITIONS HAVE_OPENCL)
 
 
-   target_link_libraries(clamr_gpuonly_debug PowerParser dmesh hsfc kdtree zorder crux dhash ezcl graphics timer memstats genmalloc dMallocPlus m)
-   target_link_libraries(clamr_gpuonly_debug ${OPENCL_LIBRARIES})
+   set_target_properties(clamr_gpuonly_err_inj PROPERTIES COMPILE_DEFINITIONS "LOG=1;ERR_INJ=1;HAVE_OPENCL=1")
+   target_link_libraries(clamr_gpuonly_err_inj logHelper)
+
+
+   target_link_libraries(clamr_gpuonly_err_inj PowerParser dmesh hsfc kdtree zorder crux dhash ezcl graphics timer memstats genmalloc dMallocPlus m)
+   target_link_libraries(clamr_gpuonly_err_inj ${OPENCL_LIBRARIES})
    if (REPROBLAS_FOUND)
-      target_link_libraries(clamr_gpuonly_debug ${REPROBLAS_LIBRARIES})
+      target_link_libraries(clamr_gpuonly_err_inj ${REPROBLAS_LIBRARIES})
    endif (REPROBLAS_FOUND)
    if (MIC_NATIVE)
-      target_link_libraries(clamr_gpuonly_debug iomp5 cilkrts)
+      target_link_libraries(clamr_gpuonly_err_inj iomp5 cilkrts)
    endif (MIC_NATIVE)
-   add_dependencies(clamr_gpuonly_debug state_kernel_source)
+   add_dependencies(clamr_gpuonly_err_inj state_kernel_source)
 
-   install(TARGETS clamr_gpuonly_debug DESTINATION bin)
+   install(TARGETS clamr_gpuonly_err_inj DESTINATION bin)
 endif (OPENCL_FOUND)
 
 ########### clamr_mpionly target ###############
@@ -469,37 +469,37 @@ endif(LOG)
    install(TARGETS clamr_openmponly DESTINATION bin)
 endif(OPENMP_FOUND)
 
-########### clamr_openmponly_debug target ###############
+########### clamr_openmponly_err_inj target ###############
 # This shares the clamr_cpuonly.cpp source file
 if(OPENMP_FOUND)
-   set(clamr_openmponly_debug_CXX_SRCS clamr_cpuonly.cpp state.cpp input.cpp)
-   set(clamr_openmponly_debug_H_SRCS state.h input.h)
+   set(clamr_openmponly_err_inj_CXX_SRCS clamr_cpuonly.cpp state.cpp input.cpp)
+   set(clamr_openmponly_err_inj_H_SRCS state.h input.h)
 
-   set(clamr_openmponly_debug_SRCS ${clamr_openmponly_debug_CXX_SRCS} ${clamr_openmponly_debug_C_SRCS} ${clamr_openmponly_debug_H_SRCS})
+   set(clamr_openmponly_err_inj_SRCS ${clamr_openmponly_err_inj_CXX_SRCS} ${clamr_openmponly_err_inj_C_SRCS} ${clamr_openmponly_err_inj_H_SRCS})
 
-   add_executable(clamr_openmponly_debug ${clamr_openmponly_debug_SRCS})
+   add_executable(clamr_openmponly_err_inj ${clamr_openmponly_err_inj_SRCS})
 
 
-   set_target_properties(clamr_openmponly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1;ALL_DEBUG=1")
+   set_target_properties(clamr_openmponly_err_inj PROPERTIES COMPILE_DEFINITIONS "LOG=1;ERR_INJ=1")
    if (MIC_NATIVE)
-      set_target_properties(clamr_openmponly_debug PROPERTIES COMPILE_DEFINITIONS "LOG=1;ALL_DEBUG=1;MIC_NATIVE=1")
+      set_target_properties(clamr_openmponly_err_inj PROPERTIES COMPILE_DEFINITIONS "LOG=1;ERR_INJ=1;MIC_NATIVE=1")
    endif(MIC_NATIVE)
-   target_link_libraries(clamr_openmponly_debug logHelper)
+   target_link_libraries(clamr_openmponly_err_inj logHelper)
 
 
-   set_target_properties(clamr_openmponly_debug PROPERTIES COMPILE_FLAGS ${OpenMP_C_FLAGS})
-   set_target_properties(clamr_openmponly_debug PROPERTIES COMPILE_FLAGS ${OpenMP_CXX_FLAGS})
-   set_target_properties(clamr_openmponly_debug PROPERTIES LINK_FLAGS "${OpenMP_C_FLAGS}")
+   set_target_properties(clamr_openmponly_err_inj PROPERTIES COMPILE_FLAGS ${OpenMP_C_FLAGS})
+   set_target_properties(clamr_openmponly_err_inj PROPERTIES COMPILE_FLAGS ${OpenMP_CXX_FLAGS})
+   set_target_properties(clamr_openmponly_err_inj PROPERTIES LINK_FLAGS "${OpenMP_C_FLAGS}")
 
-   target_link_libraries(clamr_openmponly_debug PowerParser mpmesh hsfc kdtree zorder crux mphash graphics timer memstats genmalloc mpMallocPlus m)
+   target_link_libraries(clamr_openmponly_err_inj PowerParser mpmesh hsfc kdtree zorder crux mphash graphics timer memstats genmalloc mpMallocPlus m)
    if (REPROBLAS_FOUND)
-      target_link_libraries(clamr_openmponly_debug ${REPROBLAS_LIBRARIES})
+      target_link_libraries(clamr_openmponly_err_inj ${REPROBLAS_LIBRARIES})
    endif (REPROBLAS_FOUND)
    if (MIC_NATIVE)
-      target_link_libraries(clamr_openmponly_debug iomp5 cilkrts)
+      target_link_libraries(clamr_openmponly_err_inj iomp5 cilkrts)
    endif (MIC_NATIVE)
 
-   install(TARGETS clamr_openmponly_debug DESTINATION bin)
+   install(TARGETS clamr_openmponly_err_inj DESTINATION bin)
 endif(OPENMP_FOUND)
 
 ########### clamr_mpiopenmponly target ###############

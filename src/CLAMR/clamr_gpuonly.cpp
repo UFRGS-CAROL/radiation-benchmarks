@@ -389,7 +389,7 @@ extern "C" void do_calc(void)
     start_iteration();
 #endif
 
-#ifdef ALL_DEBUG
+#ifdef ERR_INJ
     // insert errors by executing the main kernel
     if(next_graphics_cycle == graphic_outputInterval){
         printf("\nChange values to generate errors!!!\n");
@@ -488,7 +488,7 @@ extern "C" void do_calc(void)
       write_graphics_info(ncycle/graphic_outputInterval,ncycle,simTime,0,0);
       next_graphics_cycle += graphic_outputInterval;
    }
-#ifdef ALL_DEBUG
+#ifdef ERR_INJ
     if(next_graphics_cycle == 2*graphic_outputInterval){
         printf("Get ready, starting infinite loop...\n");
         while(1){
