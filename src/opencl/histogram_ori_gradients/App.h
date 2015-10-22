@@ -122,21 +122,6 @@ void write_output_image(vector<Rect> found, Mat img_to_show, string output){
 	imwrite(output, img_to_show);
 }
 
-//bool set_countains(vector<int> check, vector< vector<int> > src){
-//	unsigned char cont = 0;
-//	for(size_t i = 0; i < src.size(); i++){
-//		vector<int> temp = src[i];
-//		for(size_t j = 0; j < temp.size(); j++){
-//			if(temp[j] == check[j])
-//				cont++;
-//		}
-//		if(cont == temp.size())
-//			return true;
-//		cont = 0;
-//	}
-//	return false;
-//}
-
 void App::run() {
 	//running = true;
 //for gold verification---------
@@ -146,12 +131,12 @@ void App::run() {
 #ifdef LOGS
 	char test_info[90];
 	snprintf(test_info, 90, "HOG GOLD TEXT FILE");
-	start_log_file("HOG", test_info);
+	start_log_file((char*)"HOG", test_info);
 #endif
 	//====================================
 	if (!input_file.is_open()) {
 #ifdef LOGS
-		log_error_detail("Cant open gold file");
+		log_error_detail((char*)"Cant open gold file.");
 		end_log_file();
 #endif
 		throw runtime_error(string("can't open image file: " + output));
@@ -162,8 +147,8 @@ void App::run() {
 	if (getline(input_file, line)) {
 		vector<string> sep_line = split(line, ',');
 		if (sep_line.size() != 7) {
-#ifdef LOGS
-			log_error_detail("wrong parameters on gold file");
+#ifdef LOGS	
+			log_error_detail((char*)"Wrong parameters on gold file.");
 			end_log_file();
 #endif
 			throw runtime_error(
@@ -208,7 +193,7 @@ void App::run() {
 		imread(img_source).copyTo(frame);
 		if (frame.empty()) {
 #ifdef LOGS
-			log_error_detail("Cant open matrix Frame");
+			log_error_detail((char*)"Cant open matrix frame.");
 			end_log_file();
 #endif
 			throw runtime_error(
@@ -248,9 +233,29 @@ void App::run() {
 			ostringstream error_detail;
 			time = mysecond();
 			size_t gold_iterator = 0;
-			bool any_error = false;
+			//bool corrupted = false;
+			bool log_all_rectangles = false;
+			bool stop_logging = false;
+			
+#ifdef LOGS
+			int rectangles_logged = 0;
 
-			vector < vector<int> > data;
+			if(found.size() != gold.size()) {
+				if(found.size() < gold.size()) // log all rectangles to check which were missed
+					log_all_rectangles = true;
+				char message[120];
+				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).", found.size(), gold.size());
+				log_error_detail(message);
+				if(found.size() > 500) { // inform that only 500 rectangles will be logged
+					char msg[100];
+					snprintf(msg, 100, "Unreasonable to log all %lu rectangles. Logging the first 500 only.", found.size());
+					log_error_detail(msg);
+				}
+			//corrupted = true;
+			}
+
+#endif
+			//vector < vector<int> > data;
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
 				int vf[GOLD_LINE_SIZE];
@@ -262,24 +267,24 @@ void App::run() {
 				vf[5] = r.br().y;
 
 				vector<int> vector_found(vf, (vf + sizeof(vf) / sizeof(int)));
-				data.push_back(vector_found);
+				//data.push_back(vector_found); 
 				bool diff = set_countains(vector_found, gold);
 
-				if (diff){
-					error_detail << "SDC: " << s << ", Height: " << vf[0]
-							<< ", width: " << vf[1] << ", X: " << vf[2]
-							<< ", Y: " << vf[3] << endl;
-#ifdef LOGS
-					char *str = const_cast<char*>(error_detail.str().c_str());
-					log_error_detail(str);
+				if ((diff || log_all_rectangles) && !stop_logging) {
+#ifdef LOGS 
+					char str[150];
+					snprintf(str, 150, "%d,%d,%d,%d,%d,%d", r.height, r.width, r.x,
+											 r.y, r.br().x, r.br().y);							      log_error_detail(str);
+					rectangles_logged++;
+					if(rectangles_logged > 500)
+						stop_logging = true;						
 #endif
-					any_error = true;
-					//s--;
+				//corrupted = true;
 				}
-				if (gold_iterator < gold.size())
-					gold_iterator++;
-			}
-			dump_output(j, "./output", any_error, data);
+				if(gold_iterator < gold.size())
+					gold_iterator ++;
+			}		
+			//dump_output(j, "./output", corrupted, data);
 			cout << "Verification time " << mysecond() - time << endl;
 		}
 	} catch (cv::Exception &e) {
