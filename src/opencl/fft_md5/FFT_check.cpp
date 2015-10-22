@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <time.h>
+#include <omp.h>
 
 #define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 #include <CL/cl.h>
@@ -26,6 +27,8 @@
 #endif /* LOGS */
 
 #define MAX_ERR_ITER_LOG 500
+
+#define NPROCESSORS 8 // OMP num threads
 
 #define AVOIDZERO 1e-200
 #define ACCEPTDIFF 1e-5
@@ -166,9 +169,9 @@ template <class T2> void dump(cl_device_id id,
   
 	int num_errors = 0;
 	int num_errors_i = 0; //complex
-
+	omp_set_num_threads(NPROCESSORS);
         #pragma omp parallel for reduction(+:num_errors,num_errors_i)
-        for (i = 0; i < N/2; i++) {
+        for (i = 0; i < (int)N/2; i++) {
             if ((fabs(gold[i].x)>AVOIDZERO)&&
                     ((fabs((resultCPU[i].x-gold[i].x)/resultCPU[i].x)>ACCEPTDIFF)||
                      (fabs((resultCPU[i].x-gold[i].x)/gold[i].x)>ACCEPTDIFF))) {
@@ -196,7 +199,7 @@ template <class T2> void dump(cl_device_id id,
 	log_error_count(num_errors_total);
 	if(num_errors_total>0){
 		int err_loged=0;
-		for (i = 0; i < N/2 && err_loged < MAX_ERR_ITER_LOG && err_log < num_errors_total; i++) {
+		for (i = 0; i < N/2 && err_loged < MAX_ERR_ITER_LOG && err_loged < num_errors_total; i++) {
 
 			char error_detail[150];
 	
