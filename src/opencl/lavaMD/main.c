@@ -466,7 +466,7 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
     size_t global_work_size[1];
     global_work_size[0] = dim_cpu.number_boxes * local_work_size[0];
 
-    printf("# of blocks = %d, # of threads/block = %d (ensure that device can handle)\n", global_work_size[0]/local_work_size[0], local_work_size[0]);
+    printf("# of blocks = %d, # of threads/block = %d (ensure that device can handle)\n", (int)(global_work_size[0]/local_work_size[0]), (int)local_work_size[0]);
 
 // Kernel, for each box (dim_cpu.number_boxes) 
 //double flop = dim_cpu.number_boxes;

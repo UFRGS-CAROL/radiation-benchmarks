@@ -8,6 +8,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <string.h>
+#include <math.h>
 
 #include "./main.h" // (in the current directory)
 #include "kernel_lavamd.h"
@@ -254,7 +255,7 @@ int main(int argc, char *argv []) {
 
 #ifdef LOGS
     char test_info[100];
-    snprintf(test_info, 100, "box:%d spaceElem:%d", dim_cpu.boxes1d_arg,dim_cpu.space_elem);
+    snprintf(test_info, 100, "box:%d spaceElem:%ld", dim_cpu.boxes1d_arg,dim_cpu.space_elem);
     start_log_file((char *)"openclLavaMD", test_info);
     set_max_errors_iter(MAX_ERR_ITER_LOG);
     set_iter_interval_print(10);
@@ -453,7 +454,7 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
     size_t global_work_size[1];
     global_work_size[0] = dim_cpu.number_boxes * local_work_size[0];
 
-    printf("# of blocks = %d, # of threads/block = %d (ensure that device can handle)\n", global_work_size[0]/local_work_size[0], local_work_size[0]);
+    printf("# of blocks = %d, # of threads/block = %d (ensure that device can handle)\n", (int)(global_work_size[0]/local_work_size[0]),(int) local_work_size[0]);
 
 
 
@@ -617,20 +618,20 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
         #pragma omp parallel for  reduction(+:part_error)
         for(i=0; i<dim_cpu.space_elem; i++) {
 		int thread_error=0;
-	    if ((fabs((fv_cpu[i].v - fv_cpu_gold[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_gold[i].v) / fv_cpu_gold[i].v) > 0.0000000001)){
-            //if(fv_cpu_gold[i].v != fv_cpu[i].v) {
+	    if ((fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu_GOLD[i].v) > 0.0000000001)){
+            //if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].x - fv_cpu_gold[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_gold[i].x) / fv_cpu_gold[i].x) > 0.0000000001)){
-            //if(fv_cpu_gold[i].x != fv_cpu[i].x) {
+	    if ((fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu_GOLD[i].x) > 0.0000000001)){
+            //if(fv_cpu_GOLD[i].x != fv_cpu[i].x) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].y - fv_cpu_gold[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_gold[i].y) / fv_cpu_gold[i].y) > 0.0000000001)){
-            //if(fv_cpu_gold[i].y != fv_cpu[i].y) {
+	    if ((fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu_GOLD[i].y) > 0.0000000001)){
+            //if(fv_cpu_GOLD[i].y != fv_cpu[i].y) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].z - fv_cpu_gold[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_gold[i].z) / fv_cpu_gold[i].z) > 0.0000000001)){
-            //if(fv_cpu_gold[i].z != fv_cpu[i].z) {
+	    if ((fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu_GOLD[i].z) > 0.0000000001)){
+            //if(fv_cpu_GOLD[i].z != fv_cpu[i].z) {
                 thread_error++;
             }
             if (thread_error  > 0) {
@@ -639,7 +640,7 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
                     part_error++;
 		    char error_detail[300];
 
-                    snprintf(error_detail, 300, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_gold[i].v, fv_cpu[i].x, fv_cpu_gold[i].x, fv_cpu[i].y, fv_cpu_gold[i].y, fv_cpu[i].z, fv_cpu_gold[i].z);
+                    snprintf(error_detail, 300, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z);
 			printf("error: %s\n",error_detail);
 #ifdef logs
                     log_error_detail(error_detail);
@@ -660,21 +661,21 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	char error_detail[300];
         for(i=0; i<dim_cpu.space_elem && err_loged < MAX_ERR_ITER_LOG && err_loged<part_error; i++) {
 	    int thread_error=0;
-	    if ((fabs((fv_cpu[i].v - fv_cpu_gold[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_gold[i].v) / fv_cpu_gold[i].v) > 0.0000000001)){
+	    if ((fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu_GOLD[i].v) > 0.0000000001)){
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].x - fv_cpu_gold[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_gold[i].x) / fv_cpu_gold[i].x) > 0.0000000001)){
+	    if ((fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu_GOLD[i].x) > 0.0000000001)){
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].y - fv_cpu_gold[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_gold[i].y) / fv_cpu_gold[i].y) > 0.0000000001)){
+	    if ((fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu_GOLD[i].y) > 0.0000000001)){
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].z - fv_cpu_gold[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_gold[i].z) / fv_cpu_gold[i].z) > 0.0000000001)){
+	    if ((fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu_GOLD[i].z) > 0.0000000001)){
                 thread_error++;
             }
             if (thread_error  > 0) {
                     err_loged++;
-                    snprintf(error_detail, 300, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_gold[i].v, fv_cpu[i].x, fv_cpu_gold[i].x, fv_cpu[i].y, fv_cpu_gold[i].y, fv_cpu[i].z, fv_cpu_gold[i].z);
+                    snprintf(error_detail, 300, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z);
                     log_error_detail(error_detail);
                     thread_error = 0;
             }
@@ -701,7 +702,7 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	// the last for uses 46 operations plus 2 exp() functions
 	flop *=46;
 	double flops = (double)flop/kernel_timing;
-	double outputpersec = (double)dim_cpu.space_elem * 4 / kernel_time;
+	double outputpersec = (double)dim_cpu.space_elem * 4 / kernel_timing;
 	printf("boxes:%d\nblock_size:%d\noutput/s:%f\nflops:%f\n",boxes,block_size,outputpersec,flops);
 #endif
 
