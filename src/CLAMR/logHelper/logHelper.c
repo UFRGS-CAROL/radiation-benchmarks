@@ -82,13 +82,7 @@ void update_timestamp() {
     strcat(string, time_s);
     strcat(string, " > ");
     strcat(string, timestamp_watchdog);
-    system(string);
-};
-
-// ~ ===========================================================================
-// In case the user needs the log to be generated in some exact absolute path
-void set_absolute_path(char *path){
-    strcpy(absolute_path, path);
+    int res = system(string);
 };
 
 // ~ ===========================================================================
@@ -373,11 +367,15 @@ int log_error_count(unsigned long int kernel_errors){
 
 
     if(kernel_errors > max_errors_per_iter){
+#ifdef ERR_INJ
+        fprintf(file, "#ERR_INJ not aborting, we would abort otherwise\n");
+#else
         fprintf(file, "#ABORT too many errors per iteration\n");
         fflush(file);
         fclose(file);
         end_log_file();
         exit(1);
+#endif
     }
 
 

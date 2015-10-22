@@ -14,12 +14,13 @@
 
 // Location of timetamp file for software watchdog
 //char timestamp_watchdog[200] = "/home/carol/watchdog/timestamp.txt";
+char *timestamp_watchdog;
+char timestamp_file[] = "timestamp.txt";
+char vardir_key[]="vardir";
+
 // Max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
 unsigned long int max_errors_per_iter = 500;
-
-// Absolute path for log file, if needed
-char absolute_path[200] = "/home/carol/logs/";
 
 // Used to print the log only for some iterations, equal 1 means print every iteration
 int iter_interval_print = 1;
@@ -37,7 +38,6 @@ unsigned long int iteration_number = 0;
 double kernel_time_acc = 0;
 double kernel_time = 0;
 long long it_time_start;
-
 
 char message[2000];
 
@@ -141,19 +141,83 @@ int set_iter_interval_print(int interval){
 
 // ~ ===========================================================================
 // Update with current timestamp the file where the software watchdog watchs
-//void update_timestamp() {
-//    time_t timestamp = time(NULL);
-//    char time_s[50];
-//    char string[100] = "echo ";
-//
-//    sprintf(time_s, "%d", (int) timestamp);
-//
-//    strcat(string, time_s);
-//    strcat(string, " > ");
-//    strcat(string, timestamp_watchdog);
-//    system(string);
-//};
+void update_timestamp() {
+    time_t timestamp = time(NULL);
+    char time_s[50];
+    char string[100] = "echo ";
 
+    sprintf(time_s, "%d", (int) timestamp);
+
+    strcat(string, time_s);
+    strcat(string, " > ");
+    strcat(string, timestamp_watchdog);
+    system(string);
+    int res = system(string);
+};
+
+// ~ ===========================================================================
+// Read config file to get the value of a 'key = value' pair
+char * getValueConfig(char * key){
+	FILE * fp;
+	char * line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	char value[200];
+	int i,j;
+	int key_not_match;
+	
+	fp = fopen(config_file, "r");
+	if (fp == NULL)
+		return NULL;
+	
+	while ((read = getline(&line, &len, fp)) != -1) {
+		// ignore comments and sections in config file
+		if(line[0] == '#' || line[0] == '[')
+			continue;
+
+		// remove white spaces
+		for(i=0;line[i]==' '; i++);
+		// check if key of this line is the key we are looking for
+		j=0;
+		key_not_match=0;
+		for(; line[i]!= ' ' && line[i] != '=' && key[j]!= '\0'; i++){
+			if(key[j]!=line[i]){
+				key_not_match=1;
+				break;
+			}
+			j++;
+		}
+		// Key not matched
+		if(key_not_match)
+			continue;
+		// key of line is a substring of the key we are looking for
+		if(key[j]!='\0')
+			continue;
+		// key matched but is a substring of current key
+		if(line[i] !=' ' && line[i]!='=')
+			continue;
+		// ignore spaces and '=' to go the the frist character of value
+		for(;line[i]==' '||line[i] == '='; i++);
+		j=0;
+		// copy value to buffer until end of line or '#' is found
+		for(;line[i]!='\0'&&line[i]!='#'&&line[i]!='\n';i++){
+			value[j]=line[i];
+			j++;
+		}
+		value[j]='\0';
+		char *v = (char *)malloc(sizeof(char)*strlen(value)+2);
+		strcpy(v, value);
+		fclose(fp);
+		if (line)
+			free(line);
+		return v;
+	}
+	
+	fclose(fp);
+	if (line)
+		free(line);
+	return NULL;
+};
 
 // ~ ===========================================================================
 // Return the name of the log file generated
@@ -165,7 +229,18 @@ char * get_log_file_name(){
 // Generate the log file name, log info from user about the test to be executed and reset log variables
 int start_log_file(char *benchmark_name, char *test_info){
 
-    //update_timestamp();
+    char *var_dir=getValueConfig(vardir_key);
+    if(!var_dir){
+        fprintf(stderr, "[ERROR] Could not read var dir in config file '%s'\n",config_file);
+	return 1;//exit(1);
+    }
+    timestamp_watchdog = (char *)malloc(sizeof(char)* (strlen(var_dir)+strlen(timestamp_file)+4) );
+    strcpy(timestamp_watchdog, var_dir);
+    if(strlen(timestamp_watchdog) > 0 && timestamp_watchdog[strlen(timestamp_watchdog)-1] != '/' )
+        strcat(timestamp_watchdog, "/");
+    strcat(timestamp_watchdog, timestamp_file);
+
+    update_timestamp();
 
     time_t file_time;
     struct tm *ptm;
@@ -227,24 +302,13 @@ int start_log_file(char *benchmark_name, char *test_info){
 // ~ ===========================================================================
 // Log the string "#END" and reset global variables
 int end_log_file(){
-    //FILE *file = NULL;
-
-    //file = fopen(full_log_file_name, "a");
-    //if (file == NULL){
-    //    fprintf(stderr, "[ERROR in log_string(char *)] Unable to open file %s\n",full_log_file_name);
-    //    return 1;
-    //}
 
     send_message("#END");
-    //fprintf(file, "#END");
-    //fflush(file);
-    //fclose(file);
     kernels_total_errors = 0;
     iteration_number = 0;
     kernel_time_acc = 0;
     strcpy(log_file_name, "");
-    //strcpy(absolute_path, "");
-    //strcpy(full_log_file_name, "");
+    strcpy(full_log_file_name, "");
 
     return 0;
 };
@@ -253,21 +317,8 @@ int end_log_file(){
 // Start time to measure kernel time, also update iteration number and log to file
 int start_iteration(){
 
-    //update_timestamp();
+    update_timestamp();
 
-/*
-    FILE *file = fopen(full_log_file_name, "a");
-
-    if (file == NULL){
-        fprintf(stderr, "[ERROR in log_string(char *)] Unable to open file %s\n",full_log_file_name);
-        return 1;
-    }
-
-    fprintf(file, "#ITER it:%lu\n", iteration_number);
-    fflush(file);
-    fclose(file);
-    iteration_number++;
-*/
     it_time_start = get_time();
     return 0;
 
@@ -277,7 +328,7 @@ int start_iteration(){
 // Finish the measured kernel time log both time (total time and kernel time)
 int end_iteration(){
 
-    //update_timestamp();
+    update_timestamp();
 
     kernel_time = (double) (get_time() - it_time_start) / 1000000;
     kernel_time_acc += kernel_time;
@@ -285,21 +336,8 @@ int end_iteration(){
 
 
     if(iteration_number % iter_interval_print == 0) {
-
-        //FILE *file = fopen(full_log_file_name, "a");
-
-        //if (file == NULL){
-        //    fprintf(stderr, "[ERROR in log_string(char *)] Unable to open file %s\n",full_log_file_name);
-        //    return 1;
-        //}
-
         snprintf(message, sizeof(message),"#IT Ite:%lu KerTime:%f AccTime:%f\n", iteration_number, kernel_time, kernel_time_acc);
 	send_message(message);
-        //fprintf(file,"#IT Ite:%lu KerTime:%f AccTime:%f\n", iteration_number, kernel_time, kernel_time_acc);
-        //fprintf(file, "#TIME kernel_time:%f\n", kernel_time);
-        //fprintf(file, "#ACC_TIME total_time:%f\n", kernel_time_acc);
-        //fflush(file);
-        //fclose(file);
     }
 
     iteration_number++;
@@ -312,7 +350,7 @@ int end_iteration(){
 // Update total errors variable and log both errors(total errors and kernel errors)
 int log_error_count(unsigned long int kernel_errors){
 
-    //update_timestamp();
+    update_timestamp();
 
     if(kernel_errors < 1) {
         return 0;
@@ -320,28 +358,14 @@ int log_error_count(unsigned long int kernel_errors){
 
     kernels_total_errors += kernel_errors;
 
-    //FILE *file = NULL;
-    //file = fopen(full_log_file_name, "a");
-
-    //if (file == NULL){
-    //    fprintf(stderr, "[ERROR in log_string(char *)] Unable to open file %s\n",full_log_file_name);
-    //    return 1;
-    //}
 
     // (iteration_number-1) because this function is called after end_iteration() that increments iteration_number
     snprintf(message, sizeof(message),"#SDC Ite:%lu KerTime:%f AccTime:%f KerErr:%lu AccErr:%lu\n", iteration_number-1, kernel_time, kernel_time_acc, kernel_errors, kernels_total_errors);
     send_message(message);
-    //fprintf(file, "#SDC Ite:%lu KerTime:%f AccTime:%f KerErr:%lu AccErr:%lu\n", iteration_number-1, kernel_time, kernel_time_acc, kernel_errors, kernels_total_errors);
-    //fprintf(file, "#SDC kernel_errors:%lu\n", kernel_errors);
-    //fprintf(file, "#TOTAL_SDC total_errors:%lu\n", kernels_total_errors);
-    //fflush(file);
 
 
     if(kernel_errors > max_errors_per_iter){
 	send_message("#ABORT too many errors per iteration\n");
-        //fprintf(file, "#ABORT too many errors per iteration\n");
-        //fflush(file);
-        //fclose(file);
         end_log_file();
         exit(1);
     }
@@ -349,14 +373,9 @@ int log_error_count(unsigned long int kernel_errors){
 
     if(kernel_errors == last_iter_errors && (last_iter_with_errors+1) == iteration_number && kernel_errors != 0){
 	send_message("#ABORT amount of errors equals of the last iteration\n");
-        //fprintf(file, "#ABORT amount of errors equals of the last iteration\n");
-        //fflush(file);
-        //fclose(file);
         end_log_file();
         exit(1);
     }
-
-    //fclose(file);
 
     last_iter_errors = kernel_errors;
     last_iter_with_errors = iteration_number;
@@ -368,21 +387,11 @@ int log_error_count(unsigned long int kernel_errors){
 // ~ ===========================================================================
 // Print some string with the detail of an error to log file
 int log_error_detail(char *string){
-    //FILE *file = NULL;
-
-    //file = fopen(full_log_file_name, "a");
-    //if (file == NULL){
-    //    fprintf(stderr, "[ERROR in log_string(char *)] Unable to open file %s\n",full_log_file_name);
-    //    return 1;
-    //}
 
     snprintf(message, sizeof(message),"#ERR %s\n", string);
     send_message(message);
-    //fputs("#ERR ", file);
-    //fputs(string, file);
-    //fprintf(file, "\n");
-    //fflush(file);
-    //fclose(file);
+
     return 0;
+
 };
 

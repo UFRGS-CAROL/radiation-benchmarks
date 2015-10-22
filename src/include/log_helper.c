@@ -86,12 +86,6 @@ void update_timestamp() {
 };
 
 // ~ ===========================================================================
-// In case the user needs the log to be generated in some exact absolute path
-//void set_absolute_path(char *path){
-//    strcpy(absolute_path, path);
-//};
-
-// ~ ===========================================================================
 // Read config file to get the value of a 'key = value' pair
 char * getValueConfig(char * key){
 	FILE * fp;
