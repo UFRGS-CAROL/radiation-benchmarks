@@ -1,8 +1,4 @@
 
-// Optional, in case user want to specify tha absolute path 
-// where the log must be generated
-//void set_absolute_path(char *path);
-
 // Set the max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
 unsigned long int set_max_errors_iter(unsigned long int max_errors);
@@ -38,3 +34,4 @@ int log_error_count(unsigned long int kernel_errors);
 
 // Print some string with the detail of an error to log file
 int log_error_detail(char *string);
+
