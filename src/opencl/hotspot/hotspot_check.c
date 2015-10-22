@@ -5,6 +5,8 @@
 #include "../../include/log_helper.h"
 #endif /* LOGS */
 
+#define MAX_ERR_ITER_LOG 500
+
 #ifdef TIMING
 inline long long timing_get_time() {
     struct timeval tv;
@@ -16,6 +18,7 @@ long long setup_start, setup_end;
 long long loop_start, loop_end;
 long long kernel_start, kernel_end;
 long long check_start, check_end;
+long long int flops=0;
 #endif
 
 int check_output(float *vect, int grid_rows, int grid_cols, float *gold) {
@@ -143,6 +146,9 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
         // Swap input and output GPU matrices
         src = 1 - src;
         dst = 1 - dst;
+
+	// Daniel: Rough approximation I think
+	flops += col * row * iter * 15;
     }
 
     // Wait for all operations to finish
@@ -294,7 +300,7 @@ int main(int argc, char** argv) {
     char test_info[100];
     snprintf(test_info, 100, "simIter:%d gridSize:%dx%d",iterations, grid_rows, grid_rows);
     start_log_file((char *)"openclHotspot", test_info);
-    set_max_errors_iter(100);
+    set_max_errors_iter(MAX_ERR_ITER_LOG);
     set_iter_interval_print(10);
 #endif /* LOGS */
 #ifdef TIMING
@@ -329,29 +335,51 @@ int main(int argc, char** argv) {
 		// Copy the power input data
 		cl_mem MatrixPower = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingPower, &error);
 		if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
-
+		flops=0;
 		// Perform the computation
 		int ret = compute_tran_temp(MatrixPower, MatrixTemp, grid_cols, grid_rows, total_iterations, pyramid_height,
 		                            blockCols, blockRows, borderCols, borderRows);
 
 #ifdef TIMING
-	check_start = timing_get_time();
+		check_start = timing_get_time();
 #endif
 		// Copy final temperature data back
 		cl_float *MatrixOut = (cl_float *) clEnqueueMapBuffer(command_queue, MatrixTemp[ret], CL_TRUE, CL_MAP_READ, 0, sizeof(float) * size, 0, NULL, NULL, &error);
 		if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 
 		// Write final output to output file
-		int errors = check_output(MatrixOut, grid_rows, grid_cols, gold);
+    		int i;
+		int errors = 0;
+		#pragma omp parallel for reduction(+:errors)
+		for (i=0; i < grid_rows; i++) {
+			int j;
+			for (j=0; j < grid_cols; j++) {
+				if(MatrixOut[i*grid_cols+j] != gold[i*grid_cols+j] ) {
+					errors++;
+				}
+			}
+		}
 
 #ifdef TIMING
-	check_end = timing_get_time();
+		check_end = timing_get_time();
 #endif
 		if (errors!=0) 
 		{
 			printf("kernel errors: %d\n", errors);
 #ifdef LOGS
-    log_error_count(errors);
+			log_error_count(errors);
+			int err_loged=0;
+			for (i=0; i < grid_rows && err_loged < MAX_ERR_ITER_LOG && err_loged < errors; i++) {
+				int j;
+				for (j=0; j < grid_cols && err_loged < MAX_ERR_ITER_LOG && err_loged < errors; j++) {
+					if(MatrixOut[i*grid_cols+j] != gold[i*grid_cols+j] ) {
+						err_loged++;
+						char error_detail[150];
+						snprintf(error_detail, 150, "r:%f e:%f [%d,%d]\n", MatrixOut[i*grid_cols+j], gold[i*grid_cols+j], i, j);
+						log_error_detail(error_detail);
+					}
+				}
+			}
 #endif /* LOGS */
 		}
 		else
@@ -369,18 +397,20 @@ int main(int argc, char** argv) {
 		clReleaseMemObject(MatrixPower);
 
 		readinput(FilesavingTemp, grid_rows, grid_cols, input_temp); // Reload inputs from disk.
-    	readinput(FilesavingPower, grid_rows, grid_cols, input_power);
+		readinput(FilesavingPower, grid_rows, grid_cols, input_power);
 #ifdef TIMING
-	loop_end = timing_get_time();
-	double setup_timing = (double) (setup_end - setup_start) / 1000000;
-	double loop_timing = (double) (loop_end - loop_start) / 1000000;
-	double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
-	double check_timing = (double) (check_end - check_start) / 1000000;
-	printf("\n\tTIMING:\n");
-	printf("setup: %f\n",setup_timing);
-	printf("loop: %f\n",loop_timing);
-	printf("kernel: %f\n",kernel_timing);
-	printf("check: %f\n",check_timing);
+		loop_end = timing_get_time();
+		double setup_timing = (double) (setup_end - setup_start) / 1000000;
+		double loop_timing = (double) (loop_end - loop_start) / 1000000;
+		double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
+		double check_timing = (double) (check_end - check_start) / 1000000;
+		printf("\n\tTIMING:\n");
+		printf("setup: %f\n",setup_timing);
+		printf("loop: %f\n",loop_timing);
+		printf("kernel: %f\n",kernel_timing);
+		printf("check: %f\n",check_timing);
+    		double outputpersec = (double)((grid_rows*grid_rows)/kernel_timing);
+    		printf("size: %d\noutput/s: %f\nflops: %f\n",grid_rows, outputpersec, (double)flops/kernel_timing);
 #endif
 	}
 
@@ -388,6 +418,6 @@ int main(int argc, char** argv) {
     end_log_file();
 #endif /* LOGS */
     clReleaseContext(context);
-
     return 0;
 }
+
