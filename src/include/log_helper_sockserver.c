@@ -1,39 +1,48 @@
-#include<stdio.h>
-#include<string.h>
-#include<sys/socket.h>
-#include<arpa/inet.h>
-#include<unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 #include <pthread.h>
 
 void *handle_client(void *sock) {
     char message[2000];
     char filename[500];
+    char full_message[2500];
     int read;
     int socket = (int) sock;
 
-    while( recv(socket , filename , 500 , 0) > 0 )
-    {
-        if ((read = recv(socket, message, 2000, 0)) > 1)
-        {
-            printf("filename: '%s'\n",filename);
-            printf("message: '%s'\n",message);
-	    FILE *fp = fopen(filename, "a+");
-	    if(fp != NULL){
-	    	fprintf(fp, "%s", message);
+    if(recv(socket , full_message , 2500 , 0) > 0){
+	int i=0;
+	while(full_message[i]!='|'&&i<500){
+		filename[i]=full_message[i];
+		i++;
+	}
+	if(i>499){
+		close(socket);
+		pthread_exit(NULL);
+	}
+	filename[i]='\0';
+	i++;
+	int j=0;
+	while(full_message[i]!='\0'&&i<2500&&j<1999){
+		message[j] = full_message[i];
+		i++;
+		j++;
+	}
+	message[j]='\0';
+	printf("filename: '%s'\n",filename);
+	printf("message: '%s'\n",message);
+	FILE *fp = fopen(filename, "a+");
+	if(fp != NULL){
+		fprintf(fp, "%s", message);
 		fclose(fp);
-	    }else{
-	    	fprintf(stderr, "cannot open file %s\n",filename);
-	    }
-        }
-        if (read == -1) {
-            perror("Failed to receive message\n");
-        }
-        if (read == 0) {
-            perror("Closing socket with unexpected way\n");
-            break;
-        }
-
+	}else{
+		fprintf(stderr, "cannot open file %s\n",filename);
+	}
+	
     }
+    close(socket);
     pthread_exit(NULL);
 }
 
@@ -41,7 +50,6 @@ int main(int argc , char *argv[])
 {
     int socket_desc , client_sock , c , read_size;
     struct sockaddr_in server , client;
-    char client_message[2000];
 
     //Create socket
     socket_desc = socket(AF_INET , SOCK_STREAM , 0);

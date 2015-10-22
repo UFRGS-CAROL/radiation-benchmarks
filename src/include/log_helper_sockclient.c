@@ -16,7 +16,7 @@
 //char timestamp_watchdog[200] = "/home/carol/watchdog/timestamp.txt";
 // Max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
-unsigned long int max_errors_per_iter = 5000;
+unsigned long int max_errors_per_iter = 500;
 
 // Absolute path for log file, if needed
 char absolute_path[200] = "/home/carol/logs/";
@@ -60,6 +60,7 @@ void send_message(char * message){
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	char s[INET6_ADDRSTRLEN];
+	char full_message[2500]="";
 
 
 	memset(&hints, 0, sizeof hints);
@@ -95,18 +96,17 @@ void send_message(char * message){
 
 	inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
 			s, sizeof s);
-	//printf("client: connecting to %s\n", s);
 
         
 	freeaddrinfo(servinfo); // all done with this structure
 
-        if( send(sockfd , full_log_file_name , 500 , 0) < 0)
+	strcpy(full_message, full_log_file_name);
+	strcat(full_message, "|");
+	strcat(full_message, message);
+	if(send(sockfd , full_message, 2500 , 0)<0)
         {
-            fprintf(stderr, "Send message failed");
-        }else{
-		send(sockfd , message, 2000 , 0);
-	}
-
+            fprintf(stderr, "Send log message failed");
+        }
 	close(sockfd);
 }
 
@@ -154,16 +154,11 @@ int set_iter_interval_print(int interval){
 //    system(string);
 //};
 
-// ~ ===========================================================================
-// In case the user needs the log to be generated in some exact absolute path
-void set_absolute_path(char *path){
-    //strcpy(absolute_path, path);
-};
 
 // ~ ===========================================================================
 // Return the name of the log file generated
 char * get_log_file_name(){
-    return "";//return full_log_file_name;
+    return full_log_file_name;
 };
 
 // ~ ===========================================================================
@@ -210,41 +205,17 @@ int start_log_file(char *benchmark_name, char *test_info){
     strcat(log_file_name, ".log");
 
 
-    strcpy(full_log_file_name, absolute_path);
-    if(strlen(absolute_path) > 0 && absolute_path[strlen(absolute_path)-1] != '/' )
-        strcat(full_log_file_name, "/");
-    strcat(full_log_file_name, log_file_name);
-// ~ printf("%s\n", full_log_file_name);
-
-    //struct stat buf;
-    //if (stat(full_log_file_name, &buf) == 0) {
-    //    fprintf(stderr, "[ERROR in create_log_file(char *)] File already exists %s\n",full_log_file_name);
-    //    return 1;
-    //}
-
-    //FILE *file = NULL;
-
-    //file = fopen(full_log_file_name, "a");
-    //if (file == NULL){
-    //    fprintf(stderr, "[ERROR in create_log_file(char *)] Unable to open file %s\n",full_log_file_name);
-    //    return 1;
-    //}
-    //else 
+    strcpy(full_log_file_name, log_file_name);
     if(test_info != NULL) {
-        //fprintf(file, "#HEADER %s\n",test_info);
         snprintf(message, sizeof(message),"#HEADER %s\n", test_info);
 	send_message(message);
     }
     else {
-        //fprintf(file, "#HEADER\n");
 	send_message("#HEADER\n");
     }
 
     snprintf(message, sizeof(message),"#BEGIN Y:%s M:%s D:%s Time:%s:%s:%s\n", year, month, day, hour, minute, second);
     send_message(message);
-    //fprintf(file, "#BEGIN Y:%s M:%s D:%s Time:%s:%s:%s\n", year, month, day, hour, minute, second);
-    //fflush(file);
-    //fclose(file);
 
     kernels_total_errors = 0;
     iteration_number = 0;
