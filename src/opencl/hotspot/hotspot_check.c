@@ -146,9 +146,10 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
         // Swap input and output GPU matrices
         src = 1 - src;
         dst = 1 - dst;
-
+#ifdef TIMING
 	// Daniel: Rough approximation I think
 	flops += col * row * iter * 15;
+#endif
     }
 
     // Wait for all operations to finish
@@ -335,7 +336,9 @@ int main(int argc, char** argv) {
 		// Copy the power input data
 		cl_mem MatrixPower = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingPower, &error);
 		if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
+#ifdef TIMING
 		flops=0;
+#endif
 		// Perform the computation
 		int ret = compute_tran_temp(MatrixPower, MatrixTemp, grid_cols, grid_rows, total_iterations, pyramid_height,
 		                            blockCols, blockRows, borderCols, borderRows);
