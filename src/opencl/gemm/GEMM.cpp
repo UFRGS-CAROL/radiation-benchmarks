@@ -24,7 +24,7 @@
 #define LOGFILE_MATRIXNAME "openclGEMM"
 #define DEVICE_ID 0
 #define SWITCH_CHAR  '-'
-#define N_ERRORS_LOG 500
+#define MAX_ERR_ITER_LOG 500
 
 char *gold_matrix, *a_matrix, *b_matrix;
 int input_size;
@@ -248,7 +248,7 @@ void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
     char test_info[100];
     snprintf(test_info, 100, "size:%dx%d",input_size,input_size);
     start_log_file((char *)LOGFILE_MATRIXNAME, test_info);
-    set_max_errors_iter(200);
+    set_max_errors_iter(MAX_ERR_ITER_LOG);
     set_iter_interval_print(5);
 #endif /* LOGS */
 
@@ -481,9 +481,6 @@ void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 	CL_BAIL_ON_ERROR(err);
 
 	ea=0;
-#ifdef LOGS
-	char error_detail[150];
-#endif
 	#pragma omp parallel for reduction(+:ea)
 	for (int i = 0; (i<input_size) ; i++)
 	{
@@ -491,20 +488,29 @@ void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 	    {
 	        if ((fabs((C[i + input_size*j] - GOLD[i + input_size*j]) / C[i + input_size*j]) > 0.0000000001) || (fabs((C[i + input_size*j] - GOLD[i + input_size*j]) / GOLD[i + input_size*j]) > 0.0000000001))
 	        {
-			//#pragma omp atomic update
 			ea++;
-#ifdef LOGS
-			//if(ea<N_ERRORS_LOG)
-				snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + input_size * j], GOLD[i + input_size * j]);
-			log_error_detail(error_detail);
-#endif /* LOGS */
-                    }
                 }
             }
+	}
 
 #ifdef LOGS
         log_error_count(ea);
+	int err_loged=0
+	char error_detail[150];
+	for (int i = 0; (i<input_size) && (err_loged<MAX_ERR_ITER_LOG) && (err_loged<ea) ; i++)
+	{
+	    for (int j = 0; (j<input_size) && (err_loged<MAX_ERR_ITER_LOG) && (err_loged<ea); j++)
+	    {
+	        if ((fabs((C[i + input_size*j] - GOLD[i + input_size*j]) / C[i + input_size*j]) > 0.0000000001) || (fabs((C[i + input_size*j] - GOLD[i + input_size*j]) / GOLD[i + input_size*j]) > 0.0000000001))
+	        {
+			err_loged++;
+			snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + input_size * j], GOLD[i + input_size * j]);
+			log_error_detail(error_detail);
+	        }
+	    }
+	}
 #endif /* LOGS */
+
 	if(ea>0){
 		ReadMatrixFromFile(A, B, GOLD);
 	}
@@ -526,10 +532,9 @@ void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 	printf("loop: %f\n",loop_timing);
 	printf("kernel: %f\n",kernel_timing);
 	printf("check: %f\n",check_timing);
-        //double flops = 2.0*(double)input_size*input_size*input_size;
-        //double gflops = flops / kernel_time;
-        //printf("kernel time: %lf\n",kernel_time);
-        //printf("SIZE:%d FLOPS:%f\n",input_size, gflops);
+        double flops = 2.0*(double)input_size*input_size*input_size;
+        double gflops = flops / kernel_timing;
+        printf("input:%d\ngflops:%f\n",input_size, gflops);
 #endif
 
     }

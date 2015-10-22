@@ -16,6 +16,7 @@
 #include "../../include/log_helper.h"
 #endif /* LOGS */
 
+#define MAX_ERR_ITER_LOG 500
 
 char *input_distance;
 char *input_charges;
@@ -255,7 +256,7 @@ int main(int argc, char *argv []) {
     char test_info[100];
     snprintf(test_info, 100, "box:%d spaceElem:%d", dim_cpu.boxes1d_arg,dim_cpu.space_elem);
     start_log_file((char *)"openclLavaMD", test_info);
-    set_max_errors_iter(500);
+    set_max_errors_iter(MAX_ERR_ITER_LOG);
     set_iter_interval_print(10);
 #endif /* LOGS */
     //=====================================================================
@@ -616,20 +617,20 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
         #pragma omp parallel for  reduction(+:part_error)
         for(i=0; i<dim_cpu.space_elem; i++) {
 		int thread_error=0;
-	    if ((fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu_GOLD[i].v) > 0.0000000001)){
-            //if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
+	    if ((fabs((fv_cpu[i].v - fv_cpu_gold[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_gold[i].v) / fv_cpu_gold[i].v) > 0.0000000001)){
+            //if(fv_cpu_gold[i].v != fv_cpu[i].v) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu_GOLD[i].x) > 0.0000000001)){
-            //if(fv_cpu_GOLD[i].x != fv_cpu[i].x) {
+	    if ((fabs((fv_cpu[i].x - fv_cpu_gold[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_gold[i].x) / fv_cpu_gold[i].x) > 0.0000000001)){
+            //if(fv_cpu_gold[i].x != fv_cpu[i].x) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu_GOLD[i].y) > 0.0000000001)){
-            //if(fv_cpu_GOLD[i].y != fv_cpu[i].y) {
+	    if ((fabs((fv_cpu[i].y - fv_cpu_gold[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_gold[i].y) / fv_cpu_gold[i].y) > 0.0000000001)){
+            //if(fv_cpu_gold[i].y != fv_cpu[i].y) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu_GOLD[i].z) > 0.0000000001)){
-            //if(fv_cpu_GOLD[i].z != fv_cpu[i].z) {
+	    if ((fabs((fv_cpu[i].z - fv_cpu_gold[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_gold[i].z) / fv_cpu_gold[i].z) > 0.0000000001)){
+            //if(fv_cpu_gold[i].z != fv_cpu[i].z) {
                 thread_error++;
             }
             if (thread_error  > 0) {
@@ -638,9 +639,9 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
                     part_error++;
 		    char error_detail[300];
 
-                    snprintf(error_detail, 300, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z);
-			printf("ERROR: %s\n",error_detail);
-#ifdef LOGS
+                    snprintf(error_detail, 300, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_gold[i].v, fv_cpu[i].x, fv_cpu_gold[i].x, fv_cpu[i].y, fv_cpu_gold[i].y, fv_cpu[i].z, fv_cpu_gold[i].z);
+			printf("error: %s\n",error_detail);
+#ifdef logs
                     log_error_detail(error_detail);
 #endif
                     thread_error = 0;
@@ -655,7 +656,31 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
         }
 #ifdef LOGS
         log_error_count(part_error);
+	int err_loged=0;
+	char error_detail[300];
+        for(i=0; i<dim_cpu.space_elem && err_loged < MAX_ERR_ITER_LOG && err_loged<part_error; i++) {
+	    int thread_error=0;
+	    if ((fabs((fv_cpu[i].v - fv_cpu_gold[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_gold[i].v) / fv_cpu_gold[i].v) > 0.0000000001)){
+                thread_error++;
+            }
+	    if ((fabs((fv_cpu[i].x - fv_cpu_gold[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_gold[i].x) / fv_cpu_gold[i].x) > 0.0000000001)){
+                thread_error++;
+            }
+	    if ((fabs((fv_cpu[i].y - fv_cpu_gold[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_gold[i].y) / fv_cpu_gold[i].y) > 0.0000000001)){
+                thread_error++;
+            }
+	    if ((fabs((fv_cpu[i].z - fv_cpu_gold[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_gold[i].z) / fv_cpu_gold[i].z) > 0.0000000001)){
+                thread_error++;
+            }
+            if (thread_error  > 0) {
+                    err_loged++;
+                    snprintf(error_detail, 300, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_gold[i].v, fv_cpu[i].x, fv_cpu_gold[i].x, fv_cpu[i].y, fv_cpu_gold[i].y, fv_cpu[i].z, fv_cpu_gold[i].z);
+                    log_error_detail(error_detail);
+                    thread_error = 0;
+            }
+        }
 #endif /* LOGS */
+
 #ifdef TIMING
 	check_end = timing_get_time();
 	loop_end = timing_get_time();
@@ -668,6 +693,16 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	printf("loop: %f\n",loop_timing);
 	printf("kernel: %f\n",kernel_timing);
 	printf("check: %f\n",check_timing);
+	// Kernel, for each box (dim_cpu.number_boxes) 
+	// iterate for each neighbor of a box (number_nn)
+	double flop =  number_nn;
+	// The last for iterate NUMBER_PAR_PER_BOX times 
+	flop *= NUMBER_PAR_PER_BOX;
+	// the last for uses 46 operations plus 2 exp() functions
+	flop *=46;
+	double flops = (double)flop/kernel_timing;
+	double outputpersec = (double)dim_cpu.space_elem * 4 / kernel_time;
+	printf("boxes:%d\nblock_size:%d\noutput/s:%f\nflops:%f\n",boxes,block_size,outputpersec,flops);
 #endif
 
     }
