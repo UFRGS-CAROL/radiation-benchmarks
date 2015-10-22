@@ -495,7 +495,7 @@ void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 
 #ifdef LOGS
         log_error_count(ea);
-	int err_loged=0
+	int err_loged=0;
 	char error_detail[150];
 	for (int i = 0; (i<input_size) && (err_loged<MAX_ERR_ITER_LOG) && (err_loged<ea) ; i++)
 	{
