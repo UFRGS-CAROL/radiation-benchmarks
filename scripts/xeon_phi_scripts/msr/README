@@ -1,0 +1,9 @@
+To copy binaries to mic0:
+
+$./cpToMic0.sh
+
+To execute a command remotely:
+
+$./execAtMic0.sh "rsmsr 0"
+
+NOTE: you need to quote the remote command.
