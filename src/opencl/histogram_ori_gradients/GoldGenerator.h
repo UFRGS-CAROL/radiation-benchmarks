@@ -235,8 +235,8 @@ void App::run() {
 		}
 
 		//save the output
-		cvtColor(img_to_show, img, CV_BGRA2BGR);
-		imwrite(string("output_") + output, img_to_show);
+		//cvtColor(img_to_show, img, CV_BGRA2BGR);
+		//imwrite(string("output_") + output, img_to_show);
 
 	} catch (cv::Exception &e) {
 		char *str = const_cast<char*>(e.what());
