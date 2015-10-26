@@ -16,7 +16,7 @@ char vardir_key[]="vardir";
 
 // Max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
-unsigned long int max_errors_per_iter = 5000;
+unsigned long int max_errors_per_iter = 500;
 
 // Absolute path for log file, if needed
 //char absolute_path[200] = "/home/carol/logs/";
@@ -26,6 +26,9 @@ char config_file[]="/etc/radiation-benchmarks.conf";
 
 // Used to print the log only for some iterations, equal 1 means print every iteration
 int iter_interval_print = 1;
+
+// Used to log max_error_per_iter details each iteration
+int log_error_detail_count = 0;
 
 char log_file_name[200] = "";
 char full_log_file_name[300] = "";
@@ -84,12 +87,6 @@ void update_timestamp() {
     strcat(string, timestamp_watchdog);
     int res = system(string);
 };
-
-// ~ ===========================================================================
-// In case the user needs the log to be generated in some exact absolute path
-//void set_absolute_path(char *path){
-//    strcpy(absolute_path, path);
-//};
 
 // ~ ===========================================================================
 // Read config file to get the value of a 'key = value' pair
@@ -304,6 +301,7 @@ int start_iteration(){
     fclose(file);
     iteration_number++;
 */
+    log_error_detail_count=0;
     it_time_start = get_time();
     return 0;
 
@@ -318,7 +316,7 @@ int end_iteration(){
     kernel_time = (double) (get_time() - it_time_start) / 1000000;
     kernel_time_acc += kernel_time;
 
-
+    log_error_detail_count=0;
 
     if(iteration_number % iter_interval_print == 0) {
 
@@ -403,6 +401,16 @@ int log_error_count(unsigned long int kernel_errors){
 // Print some string with the detail of an error to log file
 int log_error_detail(char *string){
     FILE *file = NULL;
+
+    #pragma omp parallel shared(log_error_detail_count) 
+    {
+        #pragma omp critical 
+        log_error_detail_count++;
+    }
+    // Limits the number of lines written to logfile so that 
+    // HD space will not explode
+    if(log_error_detail_count > max_error_per_iter)
+        return 0;
 
     file = fopen(full_log_file_name, "a");
     if (file == NULL){
