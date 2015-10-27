@@ -318,11 +318,7 @@ int main(int argc, char** argv) {
 		printf("injecting error, changing input!\n");
 		FilesavingTemp[0] = FilesavingTemp[0]*2;
 		FilesavingPower[0] = FilesavingPower[0]*5;
-	} else if(loop1 == 3){
-		printf("injecting error, restoring input!\n");
-		FilesavingTemp[0] = FilesavingTemp[0]/2;
-		FilesavingPower[0] = FilesavingPower[0]/5;
-	} else if (loop1 == 4){
+	} else if (loop1 == 3){
 		printf("get ready, infinite loop...\n");
 		fflush(stdout);
 		while(1){sleep(1000);}

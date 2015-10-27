@@ -433,7 +433,8 @@ void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 		printf("injecting error, restoring input!\n");
 		A[0] = A[0]/2;
 	} else if (it == 4){
-		printf("get ready, infinite loop...");
+		printf("\nget ready, infinite loop...\n");
+		fflush(stdout);
 		while(1){}
 	}
 #endif

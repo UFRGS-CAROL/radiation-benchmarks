@@ -522,7 +522,7 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 		rv_cpu[0].z = rv_cpu[0].z*-3;
 		qv_cpu[0] = qv_cpu[0]*-2;
 	}else if(loop == 3){
-		printf("injecting error, changing input!\n");
+		printf("injecting error, restoring input!\n");
 		rv_cpu[0].v = rv_cpu[0].v/2;
 		rv_cpu[0].x = rv_cpu[0].x/-1;
 		rv_cpu[0].y = rv_cpu[0].y/6;
