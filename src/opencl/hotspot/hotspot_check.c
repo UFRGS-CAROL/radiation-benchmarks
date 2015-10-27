@@ -318,7 +318,11 @@ int main(int argc, char** argv) {
 		printf("injecting error, changing input!\n");
 		FilesavingTemp[0] = FilesavingTemp[0]*2;
 		FilesavingPower[0] = FilesavingPower[0]*5;
-	} else if (loop1 == 3){
+	} else if(loop1 == 3){
+		printf("injecting error, restoring input!\n");
+		FilesavingTemp[0] = FilesavingTemp[0]/2;
+		FilesavingPower[0] = FilesavingPower[0]/5;
+	} else if (loop1 == 4){
 		printf("get ready, infinite loop...\n");
 		fflush(stdout);
 		while(1){sleep(1000);}
@@ -370,7 +374,6 @@ int main(int argc, char** argv) {
 		{
 			printf("kernel errors: %d\n", errors);
 #ifdef LOGS
-			log_error_count(errors);
 			int err_loged=0;
 			for (i=0; i < grid_rows && err_loged < MAX_ERR_ITER_LOG && err_loged < errors; i++) {
 				int j;
@@ -383,6 +386,7 @@ int main(int argc, char** argv) {
 					}
 				}
 			}
+			log_error_count(errors);
 #endif /* LOGS */
 		}
 		else

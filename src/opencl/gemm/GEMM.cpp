@@ -429,7 +429,10 @@ void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 	if(it == 2){
 		printf("injecting error, changing input!\n");
 		A[0] = A[0]*2;
-	} else if (it == 3){
+	} else if(it == 3){
+		printf("injecting error, restoring input!\n");
+		A[0] = A[0]/2;
+	} else if (it == 4){
 		printf("get ready, infinite loop...");
 		while(1){}
 	}
@@ -494,7 +497,6 @@ void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 	}
 
 #ifdef LOGS
-        log_error_count(ea);
 	int err_loged=0;
 	char error_detail[150];
 	for (int i = 0; (i<input_size) && (err_loged<MAX_ERR_ITER_LOG) && (err_loged<ea) ; i++)
@@ -509,6 +511,7 @@ void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 	        }
 	    }
 	}
+        log_error_count(ea);
 #endif /* LOGS */
 
 	if(ea>0){

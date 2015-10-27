@@ -521,7 +521,14 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 		rv_cpu[0].y = rv_cpu[0].y*6;
 		rv_cpu[0].z = rv_cpu[0].z*-3;
 		qv_cpu[0] = qv_cpu[0]*-2;
-	} else if (loop == 3){
+	}else if(loop == 3){
+		printf("injecting error, changing input!\n");
+		rv_cpu[0].v = rv_cpu[0].v/2;
+		rv_cpu[0].x = rv_cpu[0].x/-1;
+		rv_cpu[0].y = rv_cpu[0].y/6;
+		rv_cpu[0].z = rv_cpu[0].z/-3;
+		qv_cpu[0] = qv_cpu[0]/-2;
+	} else if (loop == 4){
 		printf("get ready, infinite loop...\n");
 		fflush(stdout);
 		while(1){sleep(100);}
@@ -656,7 +663,6 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
             printf("errors:%d\n",part_error);
         }
 #ifdef LOGS
-        log_error_count(part_error);
 	int err_loged=0;
 	char error_detail[300];
         for(i=0; i<dim_cpu.space_elem && err_loged < MAX_ERR_ITER_LOG && err_loged<part_error; i++) {
@@ -680,6 +686,7 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
                     thread_error = 0;
             }
         }
+        log_error_count(part_error);
 #endif /* LOGS */
 
 #ifdef TIMING
