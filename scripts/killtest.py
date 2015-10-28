@@ -36,12 +36,15 @@ sockServerPORT = 8080
 
 # Connect to server and close connection, kind of ping
 def sockConnect():
-	#create an INET, STREAMing socket
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	# Now, connect with IP (or hostname) and PORT
-	# s.connect(("feliz", 8080)) or s.connect(("143.54.10.100", 8080))
-	s.connect((sockServerIP, sockServerPORT))
-	s.close()
+	try:
+		#create an INET, STREAMing socket
+		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		# Now, connect with IP (or hostname) and PORT
+		# s.connect(("feliz", 8080)) or s.connect(("143.54.10.100", 8080))
+		s.connect((sockServerIP, sockServerPORT))
+		s.close()
+	except socket.error:
+		print "could not connect to remote server, socket error"
 
 # Log messages adding timestamp before the message
 def logMsg(msg):
@@ -60,8 +63,8 @@ def updateTimestamp():
 def cleanCommandExecLogs():
 	i=len(commandList)
 	while i >= 0:
-		if os.path.isfile(varDir+"command_execstart_"+i):
-			os.remove(varDir+"command_execstart_"+i)
+		if os.path.isfile(varDir+"command_execstart_"+str(i)):
+			os.remove(varDir+"command_execstart_"+str(i))
 		i -= 1
 
 # Return True if the variable commandList from this file changed from the 
@@ -90,7 +93,7 @@ def selectCommand():
 
 	# Get the index of last existent file	
 	i=0
-	while os.path.isfile(varDir+"command_execstart_"+i):
+	while os.path.isfile(varDir+"command_execstart_"+str(i)):
 		i += 1
 	i -= 1
 
@@ -103,12 +106,12 @@ def selectCommand():
 	# Check if last command executed is still in its execution time window
 	# and return it
 	timeWindow = commandList[i][1] * 60 * 60 # Time window in seconds
-	fp = open(varDir+"command_execstart_"+i,'r')
-	timestamp = int(fp.readline())
+	fp = open(varDir+"command_execstart_"+str(i),'r')
+	timestamp = int(float(fp.readline().strip()))
 	fp.close()
 	now = time.time()
-	if (now - time) < timeWindow:
-		return commandLost[i][0]
+	if (now - timestamp) < timeWindow:
+		return commandList[i][0]
 
 	# If all commands executed their time window, start all over again
 	if i >= len(commandList):
@@ -118,7 +121,7 @@ def selectCommand():
 
 	# Finally, select the next command not executed so far
 	i += 1
-	call("echo "+str(time.time())+" > "+varDir+"command_execstart_"+i , shell=True)
+	call("echo "+str(time.time())+" > "+varDir+"command_execstart_"+str(i) , shell=True)
 	return commandList[i][0]
 
 
@@ -176,13 +179,13 @@ try:
 		sockConnect()
 		# Read the timestamp file
 		fp = open(timestampFile, 'r')
-		timestamp = int(fp.readline())
+		timestamp = int(float(fp.readline().strip()))
 		fp.close()
 		# Get the current timestamp
 		now = time.time()
 	
 		# If timestamp was not update properly
-		if (now - time) > timestampMaxDiff:
+		if (now - timestamp) > timestampMaxDiff:
 			if proc is not None:
 				proc.kill() # Kill current command
 
@@ -191,7 +194,7 @@ try:
 				if (now - lastKillTimestamp) < 3*timestampMaxDiff:
 					logMsg("Rebooting, current command:"+curCommand)
 					sockConnect()
-					call("sudo shutdown -r now",Shell=True)
+					call("sudo shutdown -r now",shell=True)
 				else:
 					lastKillTimestamp = now
 					
@@ -207,7 +210,7 @@ try:
 		if consecKillCount >= maxConsecKill or killCount >= maxKill:
 			logMsg("Rebooting, current command:"+curCommand)
 			sockConnect()
-			call("sudo shutdown -r now",Shell=True)
+			call("sudo shutdown -r now",shell=True)
 	
 		time.sleep(timestampMaxDiff)	
 except KeyboardInterrupt: # Ctrl+c
