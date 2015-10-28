@@ -6,6 +6,7 @@ import time
 import os.path
 import ConfigParser
 import sys
+import filecmp
 from datetime import datetime
 from subprocess import call
 from subprocess import Popen
@@ -31,7 +32,7 @@ timestampMaxDiff = 20 # Time in seconds
 maxConsecKill = 2 # Max number of consective kills allowed
 maxKill = 5 # Max number of kills allowed
 
-sockServerIP = "143.54.10.104"
+sockServerIP = "192.168.1.5"
 sockServerPORT = 8080
 
 # Connect to server and close connection, kind of ping
@@ -51,8 +52,8 @@ def logMsg(msg):
 	now = datetime.now()
 	fp = open(logFile, 'a')
 	print >>fp, now.ctime()+": "+str(msg)
-	print now.ctime()+": "+str(msg)
 	fp.close()
+	print now.ctime()+": "+str(msg)
 
 # Update the timestamp file with machine current timestamp
 def updateTimestamp():
@@ -70,27 +71,27 @@ def cleanCommandExecLogs():
 
 # Return True if the variable commandList from this file changed from the 
 # last time it was executed. If the file was never executed returns False
-#def checkCommandListChanges():
-#	curList = varDir+"currentCommandList"
-#	lastList = varDir+"lastCommandList"
-#	fp = open(curList,'w')
-#	print >>fp, commandList
-#	fp.close()
-#	if not os.path.isfile(lastList):
-#		fp = open(lastList,'w')
-#		print >>fp, commandList
-#		fp.close()
-#		return False
-#
-#	if filecmp.cmp(curList, lastList, shallow=False):
-#		return False
-#	else:
-#		return True
+def checkCommandListChanges():
+	curList = varDir+"currentCommandList"
+	lastList = varDir+"lastCommandList"
+	fp = open(curList,'w')
+	print >>fp, commandList
+	fp.close()
+	if not os.path.isfile(lastList):
+		fp = open(lastList,'w')
+		print >>fp, commandList
+		fp.close()
+		return True
+
+	if filecmp.cmp(curList, lastList, shallow=False):
+		return False
+	else:
+		return True
 
 # Select the correct command to be executed from the commandList variable
 def selectCommand():
-#	if checkCommandListChanges():
-#		cleanCommandExecLogs()
+	if checkCommandListChanges():
+		cleanCommandExecLogs()
 
 	# Get the index of last existent file	
 	i=0
