@@ -2,14 +2,18 @@
 import threading
 import socket
 import time
+import os
 from datetime import datetime
 import sys
 #datetime.fromtimestamp(time.time())
 
 socketPort = 8080 # PORT the socket will listen to
 sleepTime = 5 # Time between checks
-timeDiffReboot = 15 # Time in seconds since last connection to reboot machine
-timeDiffBootProblem = 40 # Time in seconds since last connection to stop trying to reboot machine
+timeDiffReboot = 20 # Time in seconds since last connection to reboot machine
+timeDiffBootProblem = 45 # Time in seconds since last connection to stop trying to reboot machine
+
+serverIP = "192.168.1.5" # IP of the remote socket server (hardware watchdog)
+#serverIP = socket.gethostbyname(socket.gethostname())
 
 # Set the machines IP to check
 IPmachines = [
@@ -128,7 +132,7 @@ class RebootMachine(threading.Thread):
 	def run(self):
 		port = IPtoSwitchPort[self.address]
 		switchIP = IPtoSwitchIP[self.address]
-		print "\tRebooting machine: "+self.address+", switch IP: "+switchIP+", switch port: "+port
+		print "\tRebooting machine: "+self.address+", switch IP: "+str(switchIP)+", switch port: "+str(port)
 		setIPSwitch(port, "Off", switchIP)
 		time.sleep(10)
 		setIPSwitch(port, "On", switchIP)
@@ -137,12 +141,12 @@ class RebootMachine(threading.Thread):
 ################################################
 # Socket server
 ################################################
+# Create an INET, STREAMing socket
+serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 def startSocket():
-	# Create an INET, STREAMing socket
-	serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	# Bind the socket to a public host, and a well-known port
-	serverSocket.bind((socket.gethostbyname(socket.gethostname()), socketPort))
-	print "\tServer bind to: ",socket.gethostbyname(socket.gethostname())
+	serverSocket.bind((serverIP, socketPort))
+	print "\tServer bind to: ",serverIP
 	# Become a server socket
 	serverSocket.listen(15)
 	
