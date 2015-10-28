@@ -51,6 +51,7 @@ def logMsg(msg):
 	now = datetime.now()
 	fp = open(logFile, 'a')
 	print >>fp, now.ctime()+": "+str(msg)
+	print now.ctime()+": "+str(msg)
 	fp.close()
 
 # Update the timestamp file with machine current timestamp

@@ -215,6 +215,9 @@ try:
 		rebooting[ip]=time.time()
 		IPLastConn[ip]=time.time() # Current timestamp
 		IPActiveTest[ip]=True
+		port = IPtoSwitchPort[ip]
+		switchIP = IPtoSwitchIP[ip]
+		setIPSwitch(port, "On", switchIP)
 	
 	handle = handleMachines()
 	handle.setDaemon(True)
