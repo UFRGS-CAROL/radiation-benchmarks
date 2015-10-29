@@ -66,8 +66,9 @@ long long loop_start, loop_end;
 long long kernel_start, kernel_end;
 long long check_start, check_end;
 int NFFT;
-int loops_fft_iter;
 #endif
+
+int loops_fft_iter;
 
 
 cplxdbl* source, * gold;
@@ -330,7 +331,7 @@ int main(int argc, char** argv) {
         exit(1);
     }
     if(loops_fft_iter<1){
-        printf("<FFT_kernel_repetitions> should be greater than 1\n")
+        printf("<FFT_kernel_repetitions> should be greater than 1\n");
         usage();
         exit(1);
     }
