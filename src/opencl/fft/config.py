@@ -47,9 +47,9 @@ os.system("sudo chmod 777 input_fft_* output_fft_* ");
 os.system("mv input_fft_* output_fft_* "+data_path);
 os.system("mv ./fft_genGold ./fft_nologs_timing ./fft_err_inj ./fft "+bin_path)
 
-fp = open(installDir+"scripts/fft_how_to_run", 'w')
+fp = open(installDir+"scripts/fft_ocl_how_to_run", 'w')
 print >>fp, "sudo "+bin_path+"/fft 4 "+str(deviceType)+" 10 "+data_path+"/input_fft_size_4 "+data_path+"/output_fft_size_4 10000000"
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/fft_how_to_run\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/fft_ocl_how_to_run\n"
 
 sys.exit(0)

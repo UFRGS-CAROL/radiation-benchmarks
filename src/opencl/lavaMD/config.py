@@ -35,13 +35,13 @@ except IOError as e:
 
 data_path=installDir+"data/lavamd"
 bin_path=installDir+"bin"
-src_fft = installDir+"src/opencl/lavamd"
+src_lavamd = installDir+"src/opencl/lavamd"
 
 if not os.path.isdir(data_path):
 	os.mkdir(data_path, 0777)
 	os.chmod(data_path, 0777)
 
-os.system("cd "+src_fft)
+os.system("cd "+src_lavamd)
 os.system("sudo ./lavamd_genGold 13 "+str(deviceType)+" 64")
 os.system("sudo ./lavamd_genGold 15 "+str(deviceType)+" 64")
 os.system("sudo ./lavamd_genGold 19 "+str(deviceType)+" 64")
@@ -51,13 +51,13 @@ os.system("mv input_* output_* "+data_path)
 os.system("mv ./lavamd_genGold ./lavamd_nologs_timing ./lavamd_err_inj ./lavamd "+bin_path)
 
 
-fp = open(installDir+"scripts/lavamd_how_to_run", 'w')
+fp = open(installDir+"scripts/lavamd_ocl_how_to_run", 'w')
 print >>fp, "sudo "+bin_path+"/lavamd 13 "+str(deviceType)+" 64 "+data_path+"/input_distance_13_64 "+data_path+"/input_charges_13_64 "+data_path+"/output_gold_13_64 10000000"
 print >>fp, "sudo "+bin_path+"/lavamd 15 "+str(deviceType)+" 64 "+data_path+"/input_distance_15_64 "+data_path+"/input_charges_15_64 "+data_path+"/output_gold_15_64 10000000"
 print >>fp, "sudo "+bin_path+"/lavamd 19 "+str(deviceType)+" 64 "+data_path+"/input_distance_19_64 "+data_path+"/input_charges_19_64 "+data_path+"/output_gold_19_64 10000000"
 print >>fp, "sudo "+bin_path+"/lavamd 23 "+str(deviceType)+" 64 "+data_path+"/input_distance_23_64 "+data_path+"/input_charges_23_64 "+data_path+"/output_gold_23_64 10000000"
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/lavamd_how_to_run\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/lavamd_ocl_how_to_run\n"
 
 sys.exit(0)
 

@@ -25,7 +25,7 @@ generate: GEMM_generate.cpp generateMatrices.cpp
 	$(CC) GEMM_generate.cpp $(INC) $(LIB) -lOpenCL -o $(APP_NAME)_genGold
 
 gemm: GEMM.cpp ../../include/log_helper.c
-	$(CC) GEMM.cpp ../../include/log_helper.c $(INC) $(LIB) -DLOGS $(OMP) -lOpenCL -o $(APP_NAME)_check
+	$(CC) GEMM.cpp ../../include/log_helper.c $(INC) $(LIB) -DLOGS $(OMP) -lOpenCL -o $(APP_NAME)
 
 gemm_timing: GEMM.cpp ../../include/log_helper.c
 	$(CC) GEMM.cpp ../../include/log_helper.c $(INC) $(LIB) -DTIMING $(OMP) -lOpenCL -o $(APP_NAME)_nologs_timing
@@ -34,5 +34,5 @@ gemm_err_inj: GEMM.cpp ../../include/log_helper.c
 	$(CC) GEMM.cpp ../../include/log_helper.c $(INC) $(LIB) -DLOGS -DERR_INJ $(OMP) -lOpenCL -o $(APP_NAME)_err_inj
 
 clean:
-	rm -f $(APP_NAME)_check $(APP_NAME)_err_inj $(APP_NAME)_nologs_timing $(APP_NAME)_genGold $(GEN_IN_EXEC) 
+	rm -f $(APP_NAME) $(APP_NAME)_err_inj $(APP_NAME)_nologs_timing $(APP_NAME)_genGold $(GEN_IN_EXEC) 
 
