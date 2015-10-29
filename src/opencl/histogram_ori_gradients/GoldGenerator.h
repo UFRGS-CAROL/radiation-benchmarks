@@ -87,15 +87,6 @@ private:
 };
 
 App::App(CommandLineParser& cmd) {
-	/*cout << "\nControls:\n" << "\tESC - exit\n"
-	 << "\tm - change mode GPU <-> CPU\n"
-	 << "\tg - convert image to gray or not\n"
-	 << "\to - save output image once, or switch on/off video save\n"
-	 << "\t1/q - increase/decrease HOG scale\n"
-	 << "\t2/w - increase/decrease levels count\n"
-	 << "\t3/e - increase/decrease HOG group threshold\n"
-	 << "\t4/r - increase/decrease hit threshold\n" << endl;*/
-
 	make_gray = cmd.has("gray");
 	resize_scale = cmd.get<double>("s");
 	vdo_source = ""; //cmd.get < string > ("v");
@@ -112,27 +103,9 @@ App::App(CommandLineParser& cmd) {
 	scale = 1.05;
 	gamma_corr = true;
 	write_once = false;
-
-	/*cout << "Group threshold: " << gr_threshold << endl;
-	 cout << "Levels number: " << nlevels << endl;
-	 cout << "Win width: " << win_width << endl;
-	 cout << "Win stride: (" << win_stride_width << ", " << win_stride_height
-	 << ")\n";
-	 cout << "Hit threshold: " << hit_threshold << endl;
-	 cout << "Gamma correction: " << gamma_corr << endl;*/
-	//cout << endl;
 }
 
 void App::run() {
-//for gold verification---------
-	/*vector < vector<int> > gold;
-	//ifstream input_file(img_source.c_str());
-
-	if (!input_file.is_open()) {
-		throw runtime_error(string("can't open image file: " + output));
-	}*/
-
-//------------------------------
 	VideoWriter video_writer;
 
 	Size win_size(win_width, win_width * 2);
@@ -148,29 +121,10 @@ void App::run() {
 		VideoCapture vc;
 		UMat frame;
 
-		if (vdo_source != "") {
-			vc.open(vdo_source.c_str());
-			if (!vc.isOpened()) {
-				throw runtime_error(
-						string("can't open video file: " + vdo_source));
-			}
-			vc >> frame;
-		}
-		/*else if (camera_id != -1) {
-		 vc.open(camera_id);
-		 if (!vc.isOpened()) {
-		 stringstream msg;
-		 msg << "can't open camera: " << camera_id;
-		 throw runtime_error(msg.str());
-		 }
-		 vc >> frame;
-		 }*/
-		else {
-			imread(img_source).copyTo(frame);
-			if (frame.empty()) {
-				throw runtime_error(
-						string("can't open image file: " + img_source));
-			}
+		imread(img_source).copyTo(frame);
+		if (frame.empty()) {
+			throw runtime_error(
+					string("can't open image file: " + img_source));
 		}
 
 		UMat img_aux, img;
@@ -196,15 +150,6 @@ void App::run() {
 				scale, gr_threshold);
 
 		cout << "Total time: " << mysecond() - time << endl;
-		// Draw positive classified windows
-		/*for (size_t i = 0; i < found.size(); i++) {
-			Rect r = found[i];
-			rectangle(img_to_show, r.tl(), r.br(), Scalar(0, 255, 0), 3);
-		}
-		if (img_source != ""){     // wirte image
-		 write_once = false;
-		 imwrite(output, img_to_show);
-		 } */
 		//record the gold data----------------------------------------------
 		cout << "Gold generated with success\n";
 		//save the data on the *.data file
