@@ -141,8 +141,8 @@ template <class T2> void dump(cl_device_id id,
     start_iteration();
 #endif /* LOGS */
     int loop_ffts;
+    transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, 64);
     for(loop_ffts=0;loop_ffts<loops_fft_iter;loop_ffts++){
-        transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, 64);
         transform(work, n_ffts, kernelIndex == 1 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, 64);
         transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, 64);
     }
