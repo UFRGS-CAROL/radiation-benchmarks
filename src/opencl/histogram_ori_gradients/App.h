@@ -131,7 +131,7 @@ void App::run() {
 #ifdef LOGS
 	char test_info[90];
 	snprintf(test_info, 90, "HOG GOLD TEXT FILE");
-	start_log_file((char*)"HOG_OCL", test_info);
+	start_log_file((char*)"openclHOG", test_info);
 #endif
 	//====================================
 	if (!input_file.is_open()) {
