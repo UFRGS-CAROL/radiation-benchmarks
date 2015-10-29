@@ -30,6 +30,8 @@ cl_context              context;
 cl_command_queue        command_queue;
 cl_program              program;
 
+int loops_fft_iter;
+
 int sizeIndex;
 //char *kernel_file;
 
@@ -304,7 +306,7 @@ void getDevices(cl_device_type deviceType) {
 }
 
 void usage(){
-	printf("Usage: fft <input_size> <cl_device_tipe> \n");
+	printf("Usage: fft <input_size> <cl_device_tipe> <FFT_kernel_repetitions> \n");
 	printf("  input size range from 0 to 5\n");
 	printf("  cl_device_types\n");
 	printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
@@ -317,11 +319,17 @@ void usage(){
 int main(int argc, char** argv) {
 
     int devType;
-    if(argc == 3) {
+    if(argc == 4) {
         sizeIndex = atoi(argv[1]);
         devType = atoi(argv[2]);
+        loops_fft_iter = argv[3];
         //kernel_file = argv[3];
     } else {
+        usage();
+        exit(1);
+    }
+    if(loops_fft_iter<1){
+        printf("<FFT_kernel_repetitions> should be greater than 1\n")
         usage();
         exit(1);
     }

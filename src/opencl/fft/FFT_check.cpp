@@ -66,6 +66,7 @@ long long loop_start, loop_end;
 long long kernel_start, kernel_end;
 long long check_start, check_end;
 int NFFT;
+int loops_fft_iter;
 #endif
 
 
@@ -138,8 +139,12 @@ template <class T2> void dump(cl_device_id id,
 #ifdef LOGS
     start_iteration();
 #endif /* LOGS */
-
-    transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, 64);
+    int loop_ffts;
+    for(loop_ffts=0;loop_ffts<loops_fft_iter;loop_ffts++){
+        transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, 64);
+        transform(work, n_ffts, kernelIndex == 1 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, 64);
+        transform(work, n_ffts, kernelIndex == 0 ? fftKrnl : ifftKrnl, queue[0], distribution, 1, 64);
+    }
     clFinish(queue[0]);
 
 #ifdef LOGS
@@ -294,7 +299,7 @@ void getDevices(cl_device_type deviceType) {
 }
 
 void usage(){
-        printf("Usage: fft <input_size> <cl_device_tipe> <input_file> <output_gold_file> <#iterations>\n");
+        printf("Usage: fft <input_size> <cl_device_tipe> <FFT_kernel_repetitions> <input_file> <output_gold_file> <#iterations>\n");
         printf("  input size range from 0 to 5\n");
         printf("  cl_device_types\n");
         printf("    Default: %d\n",CL_DEVICE_TYPE_DEFAULT);
@@ -312,14 +317,20 @@ int main(int argc, char** argv) {
     int devType, iterations=1;
     //char *kernel_file;
     char *input, *output;
-    if(argc == 6) {
+    if(argc == 7) {
         sizeIndex = atoi(argv[1]);
         devType = atoi(argv[2]);
-        input = argv[3];
-        output = argv[4];
-        iterations = atoi(argv[5]);
+        loops_fft_iter = argv[3];
+        input = argv[4];
+        output = argv[5];
+        iterations = atoi(argv[6]);
         distribution = 0;//atoi(argv[2]);
     } else {
+        usage();
+        exit(1);
+    }
+    if(loops_fft_iter<1){
+        printf("<FFT_kernel_repetitions> should be greater than 1\n")
         usage();
         exit(1);
     }
