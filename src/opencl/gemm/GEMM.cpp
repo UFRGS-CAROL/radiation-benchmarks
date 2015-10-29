@@ -438,6 +438,12 @@ void runTest(cl_device_id dev, cl_context ctx, cl_command_queue queue)
 		while(1){}
 	}
 #endif
+        // clean C
+        for (i = 0; i<m; ++i) {
+                for (j = 0; j<n; ++j) {
+                        C[i*n + j] = 0.0;
+                }
+        }
         err = clEnqueueWriteBuffer(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
                                    A, 0, NULL, NULL);
         err = clEnqueueWriteBuffer(queue, Bgpu, CL_TRUE, 0, m*n*sizeof(T),
