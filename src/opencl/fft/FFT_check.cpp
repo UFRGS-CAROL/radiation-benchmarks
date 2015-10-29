@@ -321,7 +321,7 @@ int main(int argc, char** argv) {
     if(argc == 7) {
         sizeIndex = atoi(argv[1]);
         devType = atoi(argv[2]);
-        loops_fft_iter = argv[3];
+        loops_fft_iter = atoi(argv[3]);
         input = argv[4];
         output = argv[5];
         iterations = atoi(argv[6]);
