@@ -415,7 +415,9 @@ int main(int argc, char** argv) {
 	printf("kernel: %f\n",kernel_timing);
 	printf("check: %f\n",check_timing);
 	double fftsz = 512;
-	double Gflops = NFFT*(5*fftsz*log2(fftsz))/kernel_timing;
+	double Gflops = NFFT*(5*fftsz*log2(fftsz));
+	Gflops = Gflops + Gflops*loops_fft_iter;
+	Gflops /= kernel_timing;
 	printf("nfft:%d\ngflops:%f\n",NFFT,Gflops);
 #endif
     }
