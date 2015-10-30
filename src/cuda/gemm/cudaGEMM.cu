@@ -195,7 +195,7 @@ __global__ void GoldChkKernel (double *gk, double *ck, int n)//, int *kerrors)
 }
 
 void usage() {
-    printf("Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose]\n");
+    printf("Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
 int main( int argc, char* argv[] )
@@ -210,6 +210,7 @@ int main( int argc, char* argv[] )
 	int kernel_errors=0;
 	int zero = 0;
 	double time, kernel_time, global_time;
+	int device_warmup = 1;
 //====================================
 
 //================== Read test parameters
@@ -282,6 +283,12 @@ int main( int argc, char* argv[] )
 		fault_injection = 1;
         printf("!! Will be injected an input error\n");
     }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "no-warmup"))
+    {
+		device_warmup = 0;
+        printf("!! The first iteration may not reflect real timing information\n");
+    }
 //====================================
 
 //================== Set block and grid size for GoldChk kernel
@@ -331,6 +338,8 @@ int main( int argc, char* argv[] )
 	for(loop2=0; loop2<iterations; loop2++)
 	{//================== Global test loop
 
+if (!loop2 && device_warmup) printf("First iteration: device warmup. Please wait...\n");
+
 // Timer...
 global_time = mysecond();
 
@@ -338,7 +347,8 @@ cudaMemset(d_C, 0, sizea * sizeof (double));
 
 kernel_time = mysecond();
 #ifdef LOGS
-		start_iteration();
+if (loop2 || !device_warmup)
+	start_iteration();
 #endif
 //================== Device computation, GEMM
 		cublasDgemm( (cublasOperation_t)transa, (cublasOperation_t)transb,
@@ -351,10 +361,12 @@ kernel_time = mysecond();
 		cudaDeviceSynchronize();
 //====================================
 #ifdef LOGS
+if (loop2 || !device_warmup)
 		end_iteration();
 #endif
 kernel_time = mysecond() - kernel_time;
 
+if (loop2 || !device_warmup)
 		if (verbose) printf("Device kernel time for iteration %d: %.3fs\n", loop2, kernel_time);
 
 // Timer...
@@ -382,9 +394,12 @@ time = mysecond();
 		cudaMemcpyFromSymbol(&kernel_errors, kerrors, sizeof(unsigned int));
 //====================================
 
+if (loop2 || !device_warmup)
 		if (verbose) printf("Device gold check kernel time for iteration %d: %.3fs\n", loop2, mysecond() - time);
 		
 //================== If there are errors, check on host (increased reliability)
+
+if (loop2 || !device_warmup)
 		if (kernel_errors!=0)
 		{
 
@@ -462,6 +477,7 @@ time = mysecond();
 			return 1;} //mem allocate failure
 //===================================
 
+if (loop2 || !device_warmup)
 		if (verbose)
 		{
 			/////////// PERF
@@ -471,6 +487,8 @@ time = mysecond();
 			printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",k, outputpersec, gflops, gflops/1000000000);
 			///////////
 		}
+
+if (loop2 || !device_warmup)
 		if (verbose) printf("Iteration #%d time: %.3fs\n\n\n", loop2, mysecond() - global_time);
 	}
 
