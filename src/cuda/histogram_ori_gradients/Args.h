@@ -49,6 +49,7 @@ public:
 	int win_width;
 	int win_stride_width, win_stride_height;
 	bool gamma_corr;
+	int iterations;
 
 	void printHelp() {
 		cout << "Histogram of Oriented Gradients descriptor and detector sample.\n"
@@ -100,7 +101,7 @@ Args::Args() {
 	win_width = 48;
 	win_stride_width = 8;
 	win_stride_height = 8;
-
+        iterations = 0;
 	gamma_corr = true;
 }
 
@@ -111,6 +112,8 @@ Args Args::read(int argc, char** argv) {
 			args.make_gray = (string(argv[++i]) == "true");
 		else if (string(argv[i]) == "--resize_src")
 			args.resize_src = (string(argv[++i]) == "true");
+		else if (string(argv[i]) == "--iterations")
+		        args.iterations = atoi(argv[++i]);
 		else if (string(argv[i]) == "--width")
 			args.width = atoi(argv[++i]);
 		else if (string(argv[i]) == "--height")

@@ -11,7 +11,6 @@
 //new classes
 #include "Args.h"
 
-#define MAX_ERROR 0.001
 #include <list>
 #include <unistd.h>
 
@@ -20,7 +19,6 @@
 #include "log_helper.h"
 #endif
 
-int iteractions = 1; // global loop iteracion
 
 class App {
 public:
@@ -180,7 +178,7 @@ void App::run() {
 
 		gpu_hog.setSVMDetector(detector);
 		//cpu_hog.setSVMDetector(detector);
-		for (int i = 0; i < iteractions; i++) {
+		for (int i = 0; i < args.iterations; i++) {
 			Mat frame;
 
 			frame = imread(args.src);
@@ -235,7 +233,7 @@ void App::run() {
 
 			if(found.size() != gold.size()) {
 				if(found.size() < gold.size()) // log all rectangles to check which were missed
-				log_all_rectangles = true;
+				        log_all_rectangles = true;
 				char message[120];
 				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).\n", found.size(), gold.size());
 				log_error_detail(message);
