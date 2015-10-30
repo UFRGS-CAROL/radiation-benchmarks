@@ -71,7 +71,7 @@ void GetDevice(){
     int *ndevice; int dev = 0;
     ndevice = &dev;
     cudaGetDevice(ndevice);
-    
+
     cudaSetDevice(0);
        cudaGetDeviceProperties( &prop, 0 );
 	printf("\ndevice: %d %s\n", *ndevice, prop.name);
@@ -91,12 +91,12 @@ void allocCudaMemory()
 //================== CUDA error handlers
 	cudaError_t malloc;
 	const char *erro;
-//==================================== 
+//====================================
 	malloc = cudaMalloc( ( void** ) &d_A, sizea * sizeof( double ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error a"); end_log_file(); 
+		log_error_detail("error a"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
@@ -104,7 +104,7 @@ void allocCudaMemory()
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error b"); end_log_file(); 
+		log_error_detail("error b"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
@@ -112,7 +112,7 @@ void allocCudaMemory()
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error c"); end_log_file(); 
+		log_error_detail("error c"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 }
@@ -122,12 +122,12 @@ void copyCudaMemory()
 //================== CUDA error handlers
 	cudaError_t mcpy;
 	const char *erro;
-//==================================== 
+//====================================
 	mcpy = cudaMemset(d_C, 0, sizea * sizeof (double));
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error gpu load c"); end_log_file(); 
+		log_error_detail("error gpu load c"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
@@ -135,7 +135,7 @@ void copyCudaMemory()
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error gpu load b"); end_log_file(); 
+		log_error_detail("error gpu load b"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
@@ -143,12 +143,12 @@ void copyCudaMemory()
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error gpu load b"); end_log_file(); 
+		log_error_detail("error gpu load b"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 }
 
-void ReadMatrixFromFile(){	
+void ReadMatrixFromFile(){
 //================== Read inputs to HOST memory
 	int i;
 	double time = mysecond();
@@ -159,7 +159,7 @@ void ReadMatrixFromFile(){
 	{
 		printf ("Cant open matrices.\n");
 #ifdef LOGS
-		log_error_detail("Cant open matrices"); end_log_file(); 
+		log_error_detail("Cant open matrices"); end_log_file();
 #endif
 		exit(-3);
 	}
@@ -187,8 +187,8 @@ __device__ int kerrors;
 __global__ void GoldChkKernel (double *gk, double *ck, int n)//, int *kerrors)
 {
 //================== HW Accelerated output validation
-	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;                                                      
-	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y; 
+	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	if ((fabs((gk[ty*n+tx]-ck[ty*n+tx])/gk[ty*n+tx]) > 0.0000000001)||(fabs((gk[ty*n+tx]-ck[ty*n+tx])/ck[ty*n+tx]) > 0.0000000001))
 		atomicAdd(&kerrors, 1);
 
@@ -203,7 +203,7 @@ int main( int argc, char* argv[] )
 //================== CUDA error handlers
 	cudaError_t mcpy;
 	const char *erro;
-//==================================== 
+//====================================
 
 //================== Test vars
 	int i, j, loop2;
@@ -334,7 +334,7 @@ int main( int argc, char* argv[] )
 	copyCudaMemory();
 //====================================
 
-   
+
 	for(loop2=0; loop2<iterations; loop2++)
 	{//================== Global test loop
 
@@ -378,7 +378,7 @@ time = mysecond();
 		if(strcmp(erro, "no error") != 0) {
 			printf("error mem load gold\n");
 #ifdef LOGS
-			log_error_detail("error mem load gold"); end_log_file(); 
+			log_error_detail("error mem load gold"); end_log_file();
 #endif
 			return 1;} //mem allocate failure
 		cudaMemcpyToSymbol(kerrors, &zero, sizeof(int));
@@ -389,14 +389,14 @@ time = mysecond();
 		cudaDeviceSynchronize();
 //====================================
 
-//================== Retrieve output mismatchs	
+//================== Retrieve output mismatchs
 		kernel_errors=0;
 		cudaMemcpyFromSymbol(&kernel_errors, kerrors, sizeof(unsigned int));
 //====================================
 
 if (loop2 || !device_warmup)
 		if (verbose) printf("Device gold check kernel time for iteration %d: %.3fs\n", loop2, mysecond() - time);
-		
+
 //================== If there are errors, check on host (increased reliability)
 
 if (loop2 || !device_warmup)
@@ -409,7 +409,7 @@ if (loop2 || !device_warmup)
 			erro = cudaGetErrorString(mcpy);
 			if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-				log_error_detail("error mem down c"); end_log_file(); 
+				log_error_detail("error mem down c"); end_log_file();
 #endif
 			return 1;} //mem allocate failure
 			char error_detail[150];
@@ -430,9 +430,9 @@ if (loop2 || !device_warmup)
 						log_error_detail(error_detail);
 #endif
 						host_errors++;
-						//ea++;			
+						//ea++;
 						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + ldc * j], GOLD[i + ldc * j], t_ea);
-										
+
 					}
 				}
 			}
@@ -445,7 +445,7 @@ if (loop2 || !device_warmup)
 			cudaFree( d_B );
 			cudaFree( d_C );
 //====================================
-			ReadMatrixFromFile();	
+			ReadMatrixFromFile();
 //================== Init DEVICE memory
 			allocCudaMemory();
 			copyCudaMemory();
@@ -454,16 +454,16 @@ if (loop2 || !device_warmup)
 //====================================
 
 //================== Console hearthbeat
-		if(kernel_errors > 0 || (loop2 % 10 == 0))
+		/*if(kernel_errors > 0 || (loop2 % 10 == 0))
 		{
 			printf("test number: %d\n", loop2);
 			printf(" kernel time: %f\n", kernel_time);
 		}
 		else
-		{
+		{*/
 			printf(".");
 			fflush(stdout);
-		}
+		//}
 //====================================
 
 //================== Send A back to the device
@@ -472,7 +472,7 @@ if (loop2 || !device_warmup)
 		if(strcmp(erro, "no error") != 0) {
 			printf("error mem load A\n");
 #ifdef LOGS
-			log_error_detail("error mem load A"); end_log_file(); 
+			log_error_detail("error mem load A"); end_log_file();
 #endif
 			return 1;} //mem allocate failure
 //===================================
