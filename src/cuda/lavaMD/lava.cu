@@ -10,6 +10,10 @@
 #include <stdbool.h>			 // (in path known to compiler) needed by true/false
 #include <omp.h>
 
+// Helper functions
+#include "helper_cuda.h"
+#include "helper_string.h"
+
 #ifdef LOGS
 #include "log_helper.h"
 #endif
@@ -77,8 +81,6 @@ typedef struct dim_str
 	long space_mem2;
 } dim_str;
 
-int last_part_errors = 0;
-
 // Returns the current system time in microseconds
 long long get_time() {
 	struct timeval tv;
@@ -86,10 +88,98 @@ long long get_time() {
 	return (tv.tv_sec * 1000000) + tv.tv_usec;
 }
 
-void usage(char *argv0) {
-    printf("Usage: %s <#boxes> <input_distances> <input_charges> <gold_output> <#iteractions> <#streams>\n", argv0);
-    printf("  #boxes: number of boxes to handle (a good value is 13)\n");
-    printf("  #streams: number of concurrent kernel launches (cuda HyperQ)\n");
+void usage(int argc, char** argv) {
+    printf("Usage: %s -boxes=N [-generate] [-input_distances=<path>] [-input_charges=<path>] [-output_gold=<path>] [-iterations=N] [-streams=N] [-debug] [-verbose]\n", argv[0]);
+}
+
+void getParams(int argc, char** argv, int *boxes, int *generate, char **input_distances, char **input_charges, char **output_gold, int *iterations, int *verbose, int *fault_injection, int *nstreams)
+{
+	if (argc<2) {
+		usage(argc, argv);
+		exit(EXIT_FAILURE);
+	}
+
+	*generate = 0;
+	*iterations = 1000000;
+	*nstreams = 1;
+	*fault_injection = 0;
+	*verbose = 0;
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "boxes"))
+    {
+        *boxes  = getCmdLineArgumentInt(argc, (const char **)argv, "boxes");
+
+        if (*boxes <= 0)
+        {
+            printf("Invalid input size given on the command-line: %d\n", *boxes);
+            exit(EXIT_FAILURE);
+        }
+    }
+    else
+    {
+        usage(argc, argv);
+        exit(EXIT_FAILURE);
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "generate"))
+    {
+        *generate = 1;
+        printf(">> Output will be written to file. Only stream #0 output will be considered.\n");
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "input_distances"))
+    {
+        getCmdLineArgumentString(argc, (const char **)argv, "input_distances", input_distances);
+    }
+    else
+    {
+        *input_distances = new char[100];
+        snprintf(*input_distances, 100, "input_distances_%i", *boxes);
+        printf("Using default input_distances path: %s\n", *input_distances);
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "input_charges"))
+    {
+        getCmdLineArgumentString(argc, (const char **)argv, "input_charges", input_charges);
+    }
+    else
+    {
+        *input_charges = new char[100];
+        snprintf(*input_charges, 100, "input_charges_%i", *boxes);
+        printf("Using default input_charges path: %s\n", *input_charges);
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "output_gold"))
+    {
+        getCmdLineArgumentString(argc, (const char **)argv, "output_gold", output_gold);
+    }
+    else
+    {
+        *output_gold = new char[100];
+        snprintf(*output_gold, 100, "output_gold_%i", *boxes);
+        printf("Using default output_gold path: %s\n", *output_gold);
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "iterations"))
+    {
+        *iterations = getCmdLineArgumentInt(argc, (const char **)argv, "iterations");
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "streams"))
+    {
+        *nstreams = getCmdLineArgumentInt(argc, (const char **)argv, "streams");
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "verbose"))
+    {
+        *verbose = 1;
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "debug"))
+    {
+        *fault_injection = 1;
+        printf("!! Will be injected an input error\n");
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -274,6 +364,178 @@ double mysecond()
    return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
 }
 
+void generateInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, char *input_charges, double **qv_cpu)
+{
+	// random generator seed set to random value - time in this case
+	FILE *fp;
+	int i;
+
+	srand(time(NULL));
+
+	// input (distances)
+	if( (fp = fopen(input_distances, "wb" )) == 0 ) {
+		printf( "The file 'input_distances' was not opened\n" ); exit(EXIT_FAILURE);
+	}
+	*rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
+	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+								 // get a number in the range 0.1 - 1.0
+		(*rv_cpu)[i].v = (double)(rand()%10 + 1) / 10.0;
+		fwrite(&((*rv_cpu)[i].v), 1, sizeof(double), fp);
+								 // get a number in the range 0.1 - 1.0
+		(*rv_cpu)[i].x = (double)(rand()%10 + 1) / 10.0;
+		fwrite(&((*rv_cpu)[i].x), 1, sizeof(double), fp);
+								 // get a number in the range 0.1 - 1.0
+		(*rv_cpu)[i].y = (double)(rand()%10 + 1) / 10.0;
+		fwrite(&((*rv_cpu)[i].y), 1, sizeof(double), fp);
+								 // get a number in the range 0.1 - 1.0
+		(*rv_cpu)[i].z = (double)(rand()%10 + 1) / 10.0;
+		fwrite(&((*rv_cpu)[i].z), 1, sizeof(double), fp);
+	}
+	fclose(fp);
+
+	// input (charge)
+	if( (fp = fopen(input_charges, "wb" )) == 0 ) {
+		printf( "The file 'input_charges' was not opened\n" ); exit(EXIT_FAILURE);
+	}
+
+	*qv_cpu = (double*)malloc(dim_cpu.space_mem2);
+	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+								 // get a number in the range 0.1 - 1.0
+		(*qv_cpu)[i] = (double)(rand()%10 + 1) / 10.0;
+		fwrite(&((*qv_cpu)[i]), 1, sizeof(double), fp);
+	}
+	fclose(fp);
+}
+
+void readInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, char *input_charges, double **qv_cpu, int fault_injection)
+{
+	FILE *fp;
+	int i;
+	size_t return_value[4];
+
+	// input (distances)
+	if( (fp = fopen(input_distances, "rb" )) == 0 ) {
+		printf( "The file 'input_distances' was not opened\n" ); exit(EXIT_FAILURE);
+	}
+
+	*rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
+	if(*rv_cpu == NULL) {
+		printf("error rv_cpu malloc\n");
+		#ifdef LOGS
+			log_error_detail("error rv_cpu malloc"); end_log_file();
+		#endif
+		exit(1);
+	}
+	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+		return_value[0] = fread(&((*rv_cpu)[i].v), 1, sizeof(double), fp);
+		return_value[1] = fread(&((*rv_cpu)[i].x), 1, sizeof(double), fp);
+		return_value[2] = fread(&((*rv_cpu)[i].y), 1, sizeof(double), fp);
+		return_value[3] = fread(&((*rv_cpu)[i].z), 1, sizeof(double), fp);
+		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
+			printf("error reading rv_cpu from file\n");
+			#ifdef LOGS
+				log_error_detail("error reading rv_cpu from file"); end_log_file();
+			#endif
+			exit(1);
+		}
+	}
+	fclose(fp);
+
+	// input (charge)
+	if( (fp = fopen(input_charges, "rb" )) == 0 ) {
+		printf( "The file 'input_charges' was not opened\n" ); exit(EXIT_FAILURE);
+	}
+
+	*qv_cpu = (double*)malloc(dim_cpu.space_mem2);
+	if(*qv_cpu == NULL) {
+		printf("error qv_cpu malloc\n");
+		#ifdef LOGS
+			log_error_detail("error qv_cpu malloc"); end_log_file();
+		#endif
+		exit(1);
+	}
+	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+		return_value[0] = fread(&((*qv_cpu)[i]), 1, sizeof(double), fp);
+		if (return_value[0] == 0) {
+			printf("error reading qv_cpu from file\n");
+			#ifdef LOGS
+				log_error_detail("error reading qv_cpu from file"); end_log_file();
+			#endif
+			exit(1);
+		}
+	}
+	fclose(fp);
+
+	// =============== Fault injection
+	if (fault_injection) {
+		(*qv_cpu)[2] = 0.732637263; // must be in range 0.1 - 1.0
+		printf("!!> Fault injection: qv_cpu[2]=%f\n", (*qv_cpu)[2]);
+	}
+	// ========================
+}
+
+void readGold(dim_str dim_cpu, char *output_gold, FOUR_VECTOR **fv_cpu_GOLD)
+{
+	FILE *fp;
+	size_t return_value[4];
+	int i;
+
+	if( (fp = fopen(output_gold, "rb" )) == 0 )
+	{
+		printf( "The file 'output_forces' was not opened\n" ); exit(EXIT_FAILURE);
+	}
+
+	*fv_cpu_GOLD = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
+	if(*fv_cpu_GOLD == NULL) {
+		printf("error fv_cpu_GOLD malloc\n");
+		#ifdef LOGS
+			log_error_detail("error fv_cpu_GOLD malloc"); end_log_file();
+		#endif
+		exit(1);
+	}
+	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+		return_value[0] = fread(&((*fv_cpu_GOLD)[i].v), 1, sizeof(double), fp);
+		return_value[1] = fread(&((*fv_cpu_GOLD)[i].x), 1, sizeof(double), fp);
+		return_value[2] = fread(&((*fv_cpu_GOLD)[i].y), 1, sizeof(double), fp);
+		return_value[3] = fread(&((*fv_cpu_GOLD)[i].z), 1, sizeof(double), fp);
+		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
+			printf("error reading rv_cpu from file\n");
+			#ifdef LOGS
+				log_error_detail("error reading rv_cpu from file"); end_log_file();
+			#endif
+			exit(1);
+		}
+	}
+	fclose(fp);
+}
+
+void writeGold(dim_str dim_cpu, char *output_gold, FOUR_VECTOR **fv_cpu)
+{
+	FILE *fp;
+	int i;
+
+	if( (fp = fopen(output_gold, "wb" )) == 0 ) {
+		printf( "The file 'output_forces' was not opened\n" ); exit(EXIT_FAILURE);
+	}
+	int number_zeros = 0;
+	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+		if((*fv_cpu)[i].v == 0.0)
+			number_zeros++;
+		if((*fv_cpu)[i].x == 0.0)
+			number_zeros++;
+		if((*fv_cpu)[i].y == 0.0)
+			number_zeros++;
+		if((*fv_cpu)[i].z == 0.0)
+			number_zeros++;
+
+		fwrite(&((*fv_cpu)[i].v), 1, sizeof(double), fp);
+		fwrite(&((*fv_cpu)[i].x), 1, sizeof(double), fp);
+		fwrite(&((*fv_cpu)[i].y), 1, sizeof(double), fp);
+		fwrite(&((*fv_cpu)[i].z), 1, sizeof(double), fp);
+	}
+	fclose(fp);
+}
+
 //=============================================================================
 //	MAIN FUNCTION
 //=============================================================================
@@ -289,9 +551,9 @@ int main(int argc, char *argv []) {
 
 	// counters
 	int i, j, k, l, m, n;
-	int t_ea = 0;
-	int old_ea = 0;
-	int iteractions;
+	int iterations;
+
+	int generate, verbose, fault_injection;
 
 	// system memory
 	par_str par_cpu;
@@ -307,8 +569,6 @@ int main(int argc, char *argv []) {
 	cudaError_t cuda_error;
 	const char *error_string;
 
-	FILE *fp;
-
 	char *input_distances, *input_charges, *output_gold;
 
 	int number_nn = 0;
@@ -316,22 +576,15 @@ int main(int argc, char *argv []) {
 	//=====================================================================
 	//	CHECK INPUT ARGUMENTS
 	//=====================================================================
-	if (argc!=7)
-	{	usage(argv[0]);
-		exit(-1);	}
-	dim_cpu.boxes1d_arg  = atoi(argv[1]);
-	input_distances = argv[2];
-	input_charges = argv[3];
-	output_gold = argv[4];
-	iteractions = atoi(argv[5]);
-	nstreams = atoi(argv[6]);
 
-	printf("cudaLavaMD. nboxes=%d blocksize=%d\n", dim_cpu.boxes1d_arg, NUMBER_THREADS);
+	getParams(argc, argv, &dim_cpu.boxes1d_arg, &generate, &input_distances, &input_charges, &output_gold, &iterations, &verbose, &fault_injection, &nstreams);
+
+	printf("streams: %d boxes:%d block_size:%d\n", nstreams, dim_cpu.boxes1d_arg, NUMBER_THREADS);
 
 	#ifdef LOGS
-	char test_info[100];
-	snprintf(test_info, 100, "streams: %d boxes:%d block_size:%d", nstreams, dim_cpu.boxes1d_arg, NUMBER_THREADS);
-	start_log_file("cudaLavaMD", test_info);
+		char test_info[100];
+		snprintf(test_info, 100, "streams: %d boxes:%d block_size:%d", nstreams, dim_cpu.boxes1d_arg, NUMBER_THREADS);
+		if (!generate) start_log_file("cudaLavaMD", test_info);
 	#endif
 
 	//=====================================================================
@@ -366,7 +619,7 @@ int main(int argc, char *argv []) {
 	if(box_cpu == NULL) {
 		printf("error box_cpu malloc\n");
 		#ifdef LOGS
-		log_error_detail("error box_cpu malloc"); end_log_file();
+			if (!generate) log_error_detail("error box_cpu malloc"); end_log_file();
 		#endif
 		exit(1);
 	}
@@ -412,7 +665,7 @@ int main(int argc, char *argv []) {
 
 								// increment neighbor box
 								box_cpu[nh].nn = box_cpu[nh].nn + 1;
-number_nn += box_cpu[nh].nn;
+								number_nn += box_cpu[nh].nn;
 
 							}
 
@@ -431,81 +684,12 @@ number_nn += box_cpu[nh].nn;
 	//	PARAMETERS, DISTANCE, CHARGE AND FORCE
 	//=====================================================================
 
-	size_t return_value[4];
-	// input (distances)
-	if( (fp = fopen(input_distances, "rb" )) == 0 )
-	printf( "The file 'input_distances' was not opened\n" );
-	rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
-	if(rv_cpu == NULL) {
-		printf("error rv_cpu malloc\n");
-		#ifdef LOGS
-		log_error_detail("error rv_cpu malloc"); end_log_file();
-		#endif
-		exit(1);
+	if (generate) {
+		generateInput(dim_cpu, input_distances, &rv_cpu, input_charges, &qv_cpu);
+	} else {
+		readInput(dim_cpu, input_distances, &rv_cpu, input_charges, &qv_cpu, fault_injection);
+		readGold(dim_cpu, output_gold, &fv_cpu_GOLD);
 	}
-	for(i=0; i<dim_cpu.space_elem; i=i+1) {
-		return_value[0] = fread(&(rv_cpu[i].v), 1, sizeof(double), fp);
-		return_value[1] = fread(&(rv_cpu[i].x), 1, sizeof(double), fp);
-		return_value[2] = fread(&(rv_cpu[i].y), 1, sizeof(double), fp);
-		return_value[3] = fread(&(rv_cpu[i].z), 1, sizeof(double), fp);
-		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
-			printf("error reading rv_cpu from file\n");
-			#ifdef LOGS
-			log_error_detail("error reading rv_cpu from file"); end_log_file();
-			#endif
-			exit(1);
-		}
-	}
-	fclose(fp);
-
-	// input (charge)
-	if( (fp = fopen(input_charges, "rb" )) == 0 )
-	printf( "The file 'input_charges' was not opened\n" );
-	qv_cpu = (double*)malloc(dim_cpu.space_mem2);
-	if(qv_cpu == NULL) {
-		printf("error qv_cpu malloc\n");
-		#ifdef LOGS
-		log_error_detail("error qv_cpu malloc"); end_log_file();
-		#endif
-		exit(1);
-	}
-	for(i=0; i<dim_cpu.space_elem; i=i+1) {
-		return_value[0] = fread(&(qv_cpu[i]), 1, sizeof(double), fp);
-		if (return_value[0] == 0) {
-			printf("error reading qv_cpu from file\n");
-			#ifdef LOGS
-			log_error_detail("error reading qv_cpu from file"); end_log_file();
-			#endif
-			exit(1);
-		}
-	}
-	fclose(fp);
-
-	// GOLD output (forces)
-	if( (fp = fopen(output_gold, "rb" )) == 0 )
-	printf( "The file 'output_forces' was not opened\n" );
-	fv_cpu_GOLD = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
-	if(fv_cpu_GOLD == NULL) {
-		printf("error fv_cpu_GOLD malloc\n");
-		#ifdef LOGS
-		log_error_detail("error fv_cpu_GOLD malloc"); end_log_file();
-		#endif
-		exit(1);
-	}
-	for(i=0; i<dim_cpu.space_elem; i=i+1) {
-		return_value[0] = fread(&(fv_cpu_GOLD[i].v), 1, sizeof(double), fp);
-		return_value[1] = fread(&(fv_cpu_GOLD[i].x), 1, sizeof(double), fp);
-		return_value[2] = fread(&(fv_cpu_GOLD[i].y), 1, sizeof(double), fp);
-		return_value[3] = fread(&(fv_cpu_GOLD[i].z), 1, sizeof(double), fp);
-		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
-			printf("error reading rv_cpu from file\n");
-			#ifdef LOGS
-			log_error_detail("error reading rv_cpu from file"); end_log_file();
-			#endif
-			exit(1);
-		}
-	}
-	fclose(fp);
 
 	//=====================================================================
 	//	EXECUTION PARAMETERS
@@ -524,7 +708,14 @@ number_nn += box_cpu[nh].nn;
 
 	//LOOP START
 	int loop;
-	for(loop=0; loop<iteractions; loop++) {
+	for(loop=0; loop<iterations; loop++) {
+
+		if (verbose) {
+			printf("[Iteration #%i]=====================================\n", loop); fflush(stdout);
+		}
+
+		double globaltimer = mysecond();
+		timestamp = mysecond();
 
 		// prepare host memory to receive kernel output
 		// output (forces)
@@ -532,7 +723,7 @@ number_nn += box_cpu[nh].nn;
 		if(fv_cpu == NULL) {
 			printf("error fv_cpu malloc\n");
 			#ifdef LOGS
-			log_error_detail("error fv_cpu malloc"); end_log_file();
+				if (!generate) log_error_detail("error fv_cpu malloc"); end_log_file();
 			#endif
 			exit(1);
 		}
@@ -561,10 +752,8 @@ number_nn += box_cpu[nh].nn;
 		//=====================================================================
 		//	GPU SETUP
 		//=====================================================================
-
-		timestamp = mysecond();
 		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-      cudaStreamCreateWithFlags(&(streams[streamIdx]), cudaStreamNonBlocking);
+      		cudaStreamCreateWithFlags(&(streams[streamIdx]), cudaStreamNonBlocking);
 
 			//==================================================
 			//	boxes
@@ -575,7 +764,7 @@ number_nn += box_cpu[nh].nn;
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error d_box_gpu cudaMalloc\n");
 				#ifdef LOGS
-				log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
+					if (!generate) log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
 				#endif
 				exit(1);
 			}
@@ -588,7 +777,7 @@ number_nn += box_cpu[nh].nn;
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error d_rv_gpu cudaMalloc\n");
 				#ifdef LOGS
-				log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
+					if (!generate) log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
 				#endif
 				exit(1);
 			}
@@ -601,7 +790,7 @@ number_nn += box_cpu[nh].nn;
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error d_qv_gpu cudaMalloc\n");
 				#ifdef LOGS
-				log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
+					if (!generate) log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
 				#endif
 				exit(1);
 			}
@@ -614,7 +803,7 @@ number_nn += box_cpu[nh].nn;
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error d_fv_gpu cudaMalloc\n");
 				#ifdef LOGS
-				log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
+					if (!generate) log_error_detail("error d_box_gpu cudamalloc"); end_log_file();
 				#endif
 				exit(1);
 			}
@@ -632,7 +821,7 @@ number_nn += box_cpu[nh].nn;
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error load d_boc_gpu\n");
 				#ifdef LOGS
-				log_error_detail("error load d_box_gpu"); end_log_file();
+					if (!generate) log_error_detail("error load d_box_gpu"); end_log_file();
 				#endif
 				exit(1);
 			}
@@ -645,7 +834,7 @@ number_nn += box_cpu[nh].nn;
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error load d_rv_gpu\n");
 				#ifdef LOGS
-				log_error_detail("error load d_box_gpu"); end_log_file();
+					if (!generate) log_error_detail("error load d_box_gpu"); end_log_file();
 				#endif
 				exit(1);
 			}
@@ -658,7 +847,7 @@ number_nn += box_cpu[nh].nn;
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error load d_qv_gpu\n");
 				#ifdef LOGS
-				log_error_detail("error load d_box_gpu"); end_log_file();
+					if (!generate) log_error_detail("error load d_box_gpu"); end_log_file();
 				#endif
 				exit(1);
 			}
@@ -671,12 +860,12 @@ number_nn += box_cpu[nh].nn;
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error load d_fv_gpu\n");
 				#ifdef LOGS
-				log_error_detail("error load d_box_gpu"); end_log_file();
+					if (!generate) log_error_detail("error load d_box_gpu"); end_log_file();
 				#endif
 				exit(1);
 			}
 		}
-    //printf("GPU prepare time: %f\n", mysecond()-timestamp);
+    	if (verbose) printf("[Iteration #%i] Setup prepare time: %.4fs\n", loop, mysecond()-timestamp);
 
 		//=====================================================================
 		//	KERNEL
@@ -684,7 +873,7 @@ number_nn += box_cpu[nh].nn;
 
 		double kernel_time=mysecond();
 		#ifdef LOGS
-		start_iteration();
+			if (!generate) start_iteration();
 		#endif
 		// launch kernel - all boxes
 		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
@@ -696,128 +885,107 @@ number_nn += box_cpu[nh].nn;
 			cuda_error = cudaStreamSynchronize(streams[streamIdx]);
 		}
 		#ifdef LOGS
-		end_iteration();
+			if (!generate) end_iteration();
 		#endif
 		kernel_time = mysecond()-kernel_time;
 		error_string = cudaGetErrorString(cuda_error);
 		if(strcmp(error_string, "no error") != 0) {
 			printf("error logic: %s\n",error_string);
 			#ifdef LOGS
-			log_error_detail("error logic:"); end_log_file();
+				if (!generate) log_error_detail("error logic:"); end_log_file();
 			#endif
 			exit(1);
 		}
 
 
 		//=====================================================================
-		//	COMPARE OUTPUTS
+		//	COMPARE OUTPUTS / WRITE GOLD
 		//=====================================================================
-
-		//int ea = 0;
-		int part_error = 0;
-		int thread_error = 0;
-		char error_detail[150];
-		timestamp = mysecond();
-		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-
-			//=====================================================================
-			//	GPU MEMORY			COPY BACK
-			//=====================================================================
-
-			cuda_error = cudaMemcpy( fv_cpu, d_fv_gpu[streamIdx], dim_cpu.space_mem, cudaMemcpyDeviceToHost);
+		if (generate){
+			cuda_error = cudaMemcpy( fv_cpu, d_fv_gpu[0], dim_cpu.space_mem, cudaMemcpyDeviceToHost);
 			error_string = cudaGetErrorString(cuda_error);
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error download fv_cpu\n");
-				#ifdef LOGS
-				log_error_detail("error download fv_cpu"); end_log_file();
-				#endif
 				exit(1);
 			}
+			writeGold(dim_cpu, output_gold, &fv_cpu);
+		} else { // Check gold
+			//int ea = 0;
+			int thread_error = 0;
+			int kernel_errors = 0;
+			char error_detail[300];
+			timestamp = mysecond();
+			for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
 
-			#pragma omp parallel for
-			for(i=0; i<dim_cpu.space_elem; i=i+1) {
-				if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
-					thread_error++;
-					/*ea++;
-					t_ea++;
-					fprintf(file, "\n fv.v position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].v, fv_cpu_GOLD[i].v, t_ea);*/
-				}
-				if(fv_cpu_GOLD[i].x != fv_cpu[i].x) {
-					thread_error++;
-					/*ea++;
-					t_ea++;
-					fprintf(file, "\n fv.x position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].x, fv_cpu_GOLD[i].x, t_ea);*/
-				}
-				if(fv_cpu_GOLD[i].y != fv_cpu[i].y) {
-					thread_error++;
-					/*ea++;
-					t_ea++;
-					fprintf(file, "\n fv.y position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].y, fv_cpu_GOLD[i].y, t_ea);*/
-				}
-				if(fv_cpu_GOLD[i].z != fv_cpu[i].z) {
-					thread_error++;
-					/*ea++;
-					t_ea++;
-					fprintf(file, "\n fv.z position: [%d], read: %1.16e, expected: %1.16e, error: %d\n", i, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);*/
-				}
-				if (thread_error  > 0) {
-					#pragma omp critical
-					{
-						t_ea++;
-						part_error++;
+				//=====================================================================
+				//	GPU MEMORY			COPY BACK
+				//=====================================================================
 
-						snprintf(error_detail, 150, "stream: %d, p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e, error: %d\n", streamIdx, \
-							i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);
-						#ifdef LOGS
-						log_error_detail(error_detail);
-						#endif
-						//fprintf(file, "\np: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e, error: %d\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z, t_ea);
-						thread_error = 0;
+				cuda_error = cudaMemcpy( fv_cpu, d_fv_gpu[streamIdx], dim_cpu.space_mem, cudaMemcpyDeviceToHost);
+				error_string = cudaGetErrorString(cuda_error);
+				if(strcmp(error_string, "no error") != 0) {
+					printf("error download fv_cpu\n");
+					#ifdef LOGS
+						if (!generate) log_error_detail("error download fv_cpu"); end_log_file();
+					#endif
+					exit(1);
+				}
+
+				#pragma omp parallel for
+				for(i=0; i<dim_cpu.space_elem; i=i+1) {
+					if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
+						thread_error++;
+					}
+					if(fv_cpu_GOLD[i].x != fv_cpu[i].x) {
+						thread_error++;
+					}
+					if(fv_cpu_GOLD[i].y != fv_cpu[i].y) {
+						thread_error++;
+					}
+					if(fv_cpu_GOLD[i].z != fv_cpu[i].z) {
+						thread_error++;
+					}
+					if (thread_error  > 0) {
+						#pragma omp critical
+						{
+							kernel_errors++;
+
+							snprintf(error_detail, 300, "stream: %d, p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", streamIdx, \
+								i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z);
+							if (kernel_errors<25) printf("ERROR: %s\n", error_detail);
+							if (kernel_errors>=25) printf("!");
+							#ifdef LOGS
+								if (!generate) log_error_detail(error_detail);
+							#endif
+							thread_error = 0;
+						}
 					}
 				}
 			}
+			#ifdef LOGS
+				if (!generate) log_error_count(kernel_errors);
+			#endif
+
+			if (verbose) printf("[Iteration #%i] Gold check time: %f\n", loop, mysecond() - timestamp);
 		}
-		//printf("Gold check time: %f\n", mysecond() - timestamp);
-		//////////////////////// PERF
-		/*// iterate for each neighbor of a box (number_nn)
+
+		//================= PERF
+		// iterate for each neighbor of a box (number_nn)
 		double flop =  number_nn;
 		// The last for iterate NUMBER_PAR_PER_BOX times
 		flop *= NUMBER_PAR_PER_BOX;
 		// the last for uses 46 operations plus 2 exp() functions
 		flop *=46;
 		flop *= nstreams;
-    double flops = (double)flop/kernel_time;
-    double outputpersec = (double)dim_cpu.space_elem * 4 * nstreams / kernel_time;
-    printf("BOXES:%d BLOCK:%d OUTPUT/S:%f FLOPS:%f\n",dim_cpu.boxes1d_arg,NUMBER_THREADS,outputpersec,flops);
-    printf("kernel_time:%f\n",kernel_time);
-		*//////////////////////////////
+	    double flops = (double)flop/kernel_time;
+	    double outputpersec = (double)dim_cpu.space_elem * 4 * nstreams / kernel_time;
+	    if (verbose) printf("[Iteration #%i] BOXES:%d BLOCK:%d OUTPUT/S:%.2f FLOPS:%.2f (GFLOPS:%.2f)\n", loop, dim_cpu.boxes1d_arg, NUMBER_THREADS, outputpersec, flops, flops/1000000000);
+	    if (verbose) printf("[Iteration #%i] kernel_time:%f\n", loop, kernel_time);
+		//=====================
 
-		if (part_error>0) printf("part_error=%d\n", part_error);
 
-		if(part_error > 0 || (loop % 10 == 0)) {
-
-			printf("\ntest number: %d", loop);
-			printf(" time: %f\n", kernel_time);
-
-			//we NEED this, beause at times the GPU get stuck and it gives a huge amount of error, we cannot let it write a stream of data on the HDD
-			if(part_error > 500) exit(1);
-			if(part_error > 0 && part_error == old_ea) {
-				old_ea = 0;
-				exit(1);
-			}
-
-			old_ea = part_error;
-
-			if(part_error > 0 && part_error == last_part_errors){
-				exit(1);
-			}
-			last_part_errors = part_error;
-
-		}
-		else {
-			printf(".");
-			fflush(stdout);
-		}
+		printf(".");
+		fflush(stdout);
 		//=====================================================================
 		//	GPU MEMORY DEALLOCATION
 		//=====================================================================
@@ -833,8 +1001,9 @@ number_nn += box_cpu[nh].nn;
 		//=====================================================================
 		free(fv_cpu);
 
+		if (verbose) printf("[Iteration #%i] Elapsed time: %.4fs\n", loop, mysecond()-globaltimer);
 	}
-	free(fv_cpu_GOLD);
+	if (!generate) free(fv_cpu_GOLD);
 	free(rv_cpu);
 	free(qv_cpu);
 	free(box_cpu);
