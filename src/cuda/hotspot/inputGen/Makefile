@@ -9,7 +9,7 @@ hotspotver: hotspotver.cpp
 	g++ $(FLAGS) -D__$(SIZE)__ -o $@ $<
 
 clean:
-	rm hotspotex hotspotver
+	rm -rf hotspotex hotspotver
 
 run: clean hotspotex hotspotver
 	./hotspotex
