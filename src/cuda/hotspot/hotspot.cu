@@ -89,8 +89,8 @@ void readInput(parameters *params)
     for (i=0; i <= (params->grid_rows)-1; i++) {
         for (j=0; j <= (params->grid_cols)-1; j++) {
             fgets(str, STR_SIZE, ftemp);
-            if (feof(ftemp))
-                fatal("not enough lines in temp file");
+            if (feof(ftemp)) { printf("[%d,%d] size: %d ", i, j, params->grid_rows);
+                fatal("not enough lines in temp file"); }
             if ((sscanf(str, "%f", &val) != 1))
                 fatal("invalid temp file format");
             params->FilesavingTemp[i*(params->grid_cols)+j] = val;
@@ -386,7 +386,7 @@ void getParams(int argc, char** argv, parameters *params)
     else
     {
         params -> ofile = new char[100];
-        snprintf(params -> ofile, 100, "hotspot_gold_%i_%i", params -> grid_rows, params -> sim_time);
+        snprintf(params -> ofile, 100, "gold_%i_%i", params -> grid_rows, params -> sim_time);
         printf("Using default gold path: %s\n", params -> ofile);
     }
 

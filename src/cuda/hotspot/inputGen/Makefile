@@ -3,11 +3,14 @@ FLAGS := -Wno-write-strings
 all: hotspotex hotspotver
 
 hotspotex: hotspotex.cpp
-	g++ $(FLAGS) -o $@ $<
+	g++ $(FLAGS) -D__$(SIZE)__ -o $@ $<
 
 hotspotver: hotspotver.cpp
-	g++ $(FLAGS) -o $@ $<
+	g++ $(FLAGS) -D__$(SIZE)__ -o $@ $<
 
 clean:
 	rm hotspotex hotspotver
 
+run: clean hotspotex hotspotver
+	./hotspotex
+	./hotspotver
