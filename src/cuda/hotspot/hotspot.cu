@@ -64,7 +64,7 @@ void fatal(const char *s)
 {
     fprintf(stderr, "error: %s\n", s);
     #ifdef LOGS
-    log_error_detail(s); end_log_file();
+    if (!(setupParams->generate)) { log_error_detail(s); end_log_file(); }
     #endif
     exit(1);
 }
@@ -457,7 +457,7 @@ void run(int argc, char** argv)
     #ifdef LOGS
         char test_info[90];
         snprintf(test_info, 90, "streams:%d size:%d pyramidHeight:%d simTime:%d", setupParams -> nstreams, setupParams -> grid_rows, setupParams -> pyramid_height, setupParams -> sim_time);
-        start_log_file("cudaHotspot", test_info);
+        if (!(setupParams->generate)) start_log_file("cudaHotspot", test_info);
     #endif
 
     timestamp = mysecond();
@@ -488,7 +488,7 @@ void run(int argc, char** argv)
         //printf("Start computing the transient temperature\n");
         double kernel_time = mysecond();
         #ifdef LOGS
-            start_iteration();
+            if (!(setupParams->generate)) start_iteration();
         #endif
         #pragma omp parallel for
         for (streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
@@ -499,7 +499,7 @@ void run(int argc, char** argv)
             cudaStreamSynchronize(streams[streamIdx]);
         }
         #ifdef LOGS
-            end_iteration();
+            if (!(setupParams->generate)) end_iteration();
         #endif
         kernel_time = mysecond() - kernel_time;
 
@@ -536,14 +536,14 @@ void run(int argc, char** argv)
                             snprintf(error_detail, 150, "stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e", streamIdx, i, j, setupParams->GoldMatrix[i*(setupParams->grid_rows)+j], setupParams->MatrixOut[i*(setupParams->grid_rows)+j]);
                             printf("stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e\n", streamIdx, i, j, setupParams->GoldMatrix[i*(setupParams->grid_rows)+j], setupParams->MatrixOut[i*(setupParams->grid_rows)+j]);
                             #ifdef LOGS
-                                log_error_detail(error_detail);
+                                if (!(setupParams->generate)) log_error_detail(error_detail);
                             #endif
                         }
                     }
                 }
             }
             #ifdef LOGS
-                log_error_count(kernel_errors);
+                if (!(setupParams->generate)) log_error_count(kernel_errors);
             #endif
         }
 
@@ -564,6 +564,6 @@ void run(int argc, char** argv)
         if (setupParams->verbose) printf("[Iteration #%i] elapsed time: %.4fs\n", loop1, mysecond() - globaltime);
     }
     #ifdef LOGS
-    	end_log_file();
+    	if (!(setupParams->generate)) end_log_file();
     #endif
 }

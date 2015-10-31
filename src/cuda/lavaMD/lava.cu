@@ -1009,5 +1009,9 @@ int main(int argc, char *argv []) {
 	free(box_cpu);
 	printf("\n");
 
+	#ifdef LOGS
+    	if (!generate) end_log_file();
+    #endif
+
 	return 0;
 }
