@@ -76,6 +76,8 @@ void readInput(parameters *params)
     FILE *ftemp, *fpower, *fgold;
     char str[STR_SIZE];
     float val;
+	int num_zeros = 0;
+	int num_nans = 0;
 
     if( (ftemp  = fopen(params->tfile, "r" )) ==0 )
         fatal( "The temp file was not opened" );
@@ -94,6 +96,8 @@ void readInput(parameters *params)
             if ((sscanf(str, "%f", &val) != 1))
                 fatal("invalid temp file format");
             params->FilesavingTemp[i*(params->grid_cols)+j] = val;
+			if (val==0) num_zeros++;
+			if (isnan(val)) num_nans++;
 
             fgets(str, STR_SIZE, fpower);
             if (feof(fpower))
@@ -101,6 +105,8 @@ void readInput(parameters *params)
             if ((sscanf(str, "%f", &val) != 1))
                 fatal("invalid power file format");
             params->FilesavingPower[i*(params->grid_cols)+j] = val;
+			if (val==0) num_zeros++;
+			if (isnan(val)) num_nans++;
 
             if (!(params->generate)) {
                 fgets(str, STR_SIZE, fgold);
@@ -112,6 +118,9 @@ void readInput(parameters *params)
             }
         }
     }
+
+	printf("Zeros in the input: %d\n", num_zeros);
+	printf("NaNs in the input: %d\n", num_nans);
 
     // =================== FAULT INJECTION
     if (params->fault_injection) {
@@ -133,17 +142,23 @@ void writeOutput(parameters *params)
     int i,j;
     FILE *fgold;
     char str[STR_SIZE];
+	int num_zeros = 0;
+	int num_nans = 0;
 
     if( (fgold  = fopen(params->ofile, "w" )) ==0 )
         fatal( "The gold was not opened" );
 
     for (i=0; i <= (params->grid_rows)-1; i++) {
         for (j=0; j <= (params->grid_cols)-1; j++) {
+			if (params->MatrixOut[i*(params->grid_cols)+j] == 0) num_zeros++;
+			if (isnan(params->MatrixOut[i*(params->grid_cols)+j])) num_nans++;
             sprintf(str, "%f\n", params->MatrixOut[i*(params->grid_cols)+j]);
             fputs(str,fgold);
         }
     }
     fclose(fgold);
+	printf("Zeros in the output: %d\n", num_zeros);
+	printf("NaNs in the output: %d\n", num_nans);
 }
 
 #define IN_RANGE(x, min, max)   ((x)>=(min) && (x)<=(max))
@@ -311,7 +326,7 @@ void usage(int argc, char** argv) {
 void getParams(int argc, char** argv, parameters *params)
 {
     params -> nstreams = 1;
-    params -> sim_time = 10000;
+    params -> sim_time = 1000;
     params -> pyramid_height = 1;
     params -> setup_loops = 10000000;
     params -> verbose = 0;
@@ -474,13 +489,14 @@ void run(int argc, char** argv)
 
         timestamp = mysecond();
         for (streamIdx = 0; streamIdx < (setupParams-> nstreams); streamIdx++) {
-            cudaStreamCreateWithFlags(&(streams[streamIdx]), cudaStreamNonBlocking);
+            checkCudaErrors( cudaStreamCreateWithFlags(&(streams[streamIdx]), cudaStreamNonBlocking) );
 
-            cudaMalloc((void**)&(MatrixTemp[streamIdx][0]), sizeof(float)*size);
-            cudaMalloc((void**)&(MatrixTemp[streamIdx][1]), sizeof(float)*size);
+            checkCudaErrors( cudaMalloc((void**)&(MatrixTemp[streamIdx][0]), sizeof(float)*size) );
+            checkCudaErrors( cudaMalloc((void**)&(MatrixTemp[streamIdx][1]), sizeof(float)*size) );
             cudaMemcpy(MatrixTemp[streamIdx][0], setupParams->FilesavingTemp, sizeof(float)*size, cudaMemcpyHostToDevice);
+			cudaMemset(MatrixTemp[streamIdx][1], 0.0, sizeof(float)*size);
 
-            cudaMalloc((void**)&(MatrixPower[streamIdx]), sizeof(float)*size);
+            checkCudaErrors( cudaMalloc((void**)&(MatrixPower[streamIdx]), sizeof(float)*size) );
             cudaMemcpy(MatrixPower[streamIdx], setupParams->FilesavingPower, sizeof(float)*size, cudaMemcpyHostToDevice);
         }
         if (setupParams->verbose) printf("[Iteration #%i] GPU prepare time: %.4fs\n", loop1, mysecond()-timestamp);
@@ -527,9 +543,11 @@ void run(int argc, char** argv)
                 #pragma omp parallel for
                 for (int i=0; i<(setupParams->grid_rows); i++)
                 {
+					register float *ptrGold = &(setupParams->GoldMatrix[i*(setupParams->grid_rows)+0]);
+					register float *ptrOut = &(setupParams->MatrixOut[i*(setupParams->grid_rows)+0]);
                     for (int j=0 ; j<(setupParams->grid_cols); j++)
                     {
-                        if (setupParams->GoldMatrix[i*(setupParams->grid_rows)+j]!=setupParams->MatrixOut[i*(setupParams->grid_rows)+j])
+                        if (ptrGold[j]!=ptrOut[j])
                         #pragma omp critical
                         {
                             kernel_errors++;
