@@ -540,24 +540,27 @@ void run(int argc, char** argv)
                 memset(setupParams->MatrixOut, 0, sizeof(float)*size);
                 cudaMemcpy(setupParams->MatrixOut, MatrixTemp[streamIdx][ret[streamIdx]], sizeof(float)*size, cudaMemcpyDeviceToHost);
                 char error_detail[150];
-                #pragma omp parallel for
-                for (int i=0; i<(setupParams->grid_rows); i++)
-                {
-					register float *ptrGold = &(setupParams->GoldMatrix[i*(setupParams->grid_rows)+0]);
-					register float *ptrOut = &(setupParams->MatrixOut[i*(setupParams->grid_rows)+0]);
-                    for (int j=0 ; j<(setupParams->grid_cols); j++)
-                    {
-                        if (ptrGold[j]!=ptrOut[j])
-                        #pragma omp critical
-                        {
-                            kernel_errors++;
-                            snprintf(error_detail, 150, "stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e", streamIdx, i, j, setupParams->GoldMatrix[i*(setupParams->grid_rows)+j], setupParams->MatrixOut[i*(setupParams->grid_rows)+j]);
-                            printf("stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e\n", streamIdx, i, j, setupParams->GoldMatrix[i*(setupParams->grid_rows)+j], setupParams->MatrixOut[i*(setupParams->grid_rows)+j]);
-                            #ifdef LOGS
-                                if (!(setupParams->generate)) log_error_detail(error_detail);
-                            #endif
-                        }
-                    }
+				if (memcmp(setupParams->GoldMatrix, setupParams->MatrixOut, sizeof(float)*size))
+				{
+		            #pragma omp parallel for
+		            for (int i=0; i<(setupParams->grid_rows); i++)
+		            {
+						register float *ptrGold = &(setupParams->GoldMatrix[i*(setupParams->grid_rows)+0]);
+						register float *ptrOut = &(setupParams->MatrixOut[i*(setupParams->grid_rows)+0]);
+		                for (int j=0 ; j<(setupParams->grid_cols); j++)
+		                {
+		                    if (ptrGold[j]!=ptrOut[j])
+		                    #pragma omp critical
+		                    {
+		                        kernel_errors++;
+		                        snprintf(error_detail, 150, "stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e", streamIdx, i, j, setupParams->GoldMatrix[i*(setupParams->grid_rows)+j], setupParams->MatrixOut[i*(setupParams->grid_rows)+j]);
+		                        printf("stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e\n", streamIdx, i, j, setupParams->GoldMatrix[i*(setupParams->grid_rows)+j], setupParams->MatrixOut[i*(setupParams->grid_rows)+j]);
+		                        #ifdef LOGS
+		                            if (!(setupParams->generate)) log_error_detail(error_detail);
+		                        #endif
+		                    }
+		                }
+					}
                 }
             }
             #ifdef LOGS
