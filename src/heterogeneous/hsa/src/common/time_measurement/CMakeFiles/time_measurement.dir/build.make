@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # Include any dependencies generated for this target.
 include src/common/time_measurement/CMakeFiles/time_measurement.dir/depend.make
@@ -51,17 +51,17 @@ include src/common/time_measurement/CMakeFiles/time_measurement.dir/flags.make
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.o: src/common/time_measurement/CMakeFiles/time_measurement.dir/flags.make
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.o: src/common/time_measurement/time_keeper_impl.cc
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.o"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/time_measurement.dir/time_keeper_impl.cc.o -c /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_keeper_impl.cc
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/time_measurement.dir/time_keeper_impl.cc.o -c /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_keeper_impl.cc
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/time_measurement.dir/time_keeper_impl.cc.i"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_keeper_impl.cc > CMakeFiles/time_measurement.dir/time_keeper_impl.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_keeper_impl.cc > CMakeFiles/time_measurement.dir/time_keeper_impl.cc.i
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/time_measurement.dir/time_keeper_impl.cc.s"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_keeper_impl.cc -o CMakeFiles/time_measurement.dir/time_keeper_impl.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_keeper_impl.cc -o CMakeFiles/time_measurement.dir/time_keeper_impl.cc.s
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.o.requires:
 .PHONY : src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.o.requires
@@ -74,17 +74,17 @@ src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.o: src/common/time_measurement/CMakeFiles/time_measurement.dir/flags.make
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.o: src/common/time_measurement/time_keeper_summary_printer.cc
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_2)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles $(CMAKE_PROGRESS_2)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.o"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.o -c /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_keeper_summary_printer.cc
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.o -c /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_keeper_summary_printer.cc
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.i"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_keeper_summary_printer.cc > CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_keeper_summary_printer.cc > CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.i
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.s"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_keeper_summary_printer.cc -o CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_keeper_summary_printer.cc -o CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.s
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.o.requires:
 .PHONY : src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.o.requires
@@ -97,17 +97,17 @@ src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.o: src/common/time_measurement/CMakeFiles/time_measurement.dir/flags.make
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.o: src/common/time_measurement/time_measurement_impl.cc
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_3)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles $(CMAKE_PROGRESS_3)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.o"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/time_measurement.dir/time_measurement_impl.cc.o -c /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_measurement_impl.cc
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/time_measurement.dir/time_measurement_impl.cc.o -c /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_measurement_impl.cc
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/time_measurement.dir/time_measurement_impl.cc.i"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_measurement_impl.cc > CMakeFiles/time_measurement.dir/time_measurement_impl.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_measurement_impl.cc > CMakeFiles/time_measurement.dir/time_measurement_impl.cc.i
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/time_measurement.dir/time_measurement_impl.cc.s"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_measurement_impl.cc -o CMakeFiles/time_measurement.dir/time_measurement_impl.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_measurement_impl.cc -o CMakeFiles/time_measurement.dir/time_measurement_impl.cc.s
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.o.requires:
 .PHONY : src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.o.requires
@@ -120,17 +120,17 @@ src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_imp
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.o: src/common/time_measurement/CMakeFiles/time_measurement.dir/flags.make
 src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.o: src/common/time_measurement/timer_impl.cc
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_4)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles $(CMAKE_PROGRESS_4)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.o"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/time_measurement.dir/timer_impl.cc.o -c /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/timer_impl.cc
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/time_measurement.dir/timer_impl.cc.o -c /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/timer_impl.cc
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/time_measurement.dir/timer_impl.cc.i"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/timer_impl.cc > CMakeFiles/time_measurement.dir/timer_impl.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/timer_impl.cc > CMakeFiles/time_measurement.dir/timer_impl.cc.i
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/time_measurement.dir/timer_impl.cc.s"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/timer_impl.cc -o CMakeFiles/time_measurement.dir/timer_impl.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/timer_impl.cc -o CMakeFiles/time_measurement.dir/timer_impl.cc.s
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.o.requires:
 .PHONY : src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.o.requires
@@ -158,8 +158,8 @@ src/common/time_measurement/libtime_measurement.a: src/common/time_measurement/C
 src/common/time_measurement/libtime_measurement.a: src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make
 src/common/time_measurement/libtime_measurement.a: src/common/time_measurement/CMakeFiles/time_measurement.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --red --bold "Linking CXX static library libtime_measurement.a"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && $(CMAKE_COMMAND) -P CMakeFiles/time_measurement.dir/cmake_clean_target.cmake
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/time_measurement.dir/link.txt --verbose=$(VERBOSE)
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && $(CMAKE_COMMAND) -P CMakeFiles/time_measurement.dir/cmake_clean_target.cmake
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/time_measurement.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 src/common/time_measurement/CMakeFiles/time_measurement.dir/build: src/common/time_measurement/libtime_measurement.a
@@ -172,10 +172,10 @@ src/common/time_measurement/CMakeFiles/time_measurement.dir/requires: src/common
 .PHONY : src/common/time_measurement/CMakeFiles/time_measurement.dir/requires
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/clean:
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement && $(CMAKE_COMMAND) -P CMakeFiles/time_measurement.dir/cmake_clean.cmake
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement && $(CMAKE_COMMAND) -P CMakeFiles/time_measurement.dir/cmake_clean.cmake
 .PHONY : src/common/time_measurement/CMakeFiles/time_measurement.dir/clean
 
 src/common/time_measurement/CMakeFiles/time_measurement.dir/depend:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/HSA_BENCH/Hetero-Mark /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement /home/carol/HSA_BENCH/Hetero-Mark /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/CMakeFiles/time_measurement.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/radiation-benchmarks/src/heterogeneous/hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement /home/carol/radiation-benchmarks/src/heterogeneous/hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/CMakeFiles/time_measurement.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/common/time_measurement/CMakeFiles/time_measurement.dir/depend
 

@@ -1,4 +1,4 @@
-# Install script for directory: /home/carol/HSA_BENCH/Hetero-Mark/src/hsa
+# Install script for directory: /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,10 +34,8 @@ ENDIF(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 
 IF(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  INCLUDE("/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/cmake_install.cmake")
-  INCLUDE("/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/hmm_hsa/cmake_install.cmake")
-  INCLUDE("/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/kmeans_hsa/cmake_install.cmake")
-  INCLUDE("/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/page_rank_hsa/cmake_install.cmake")
+  INCLUDE("/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa/cmake_install.cmake")
+  INCLUDE("/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/page_rank_hsa/cmake_install.cmake")
 
 ENDIF(NOT CMAKE_INSTALL_LOCAL_ONLY)
 

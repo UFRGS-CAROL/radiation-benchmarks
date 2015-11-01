@@ -39,10 +39,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -69,14 +69,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles /home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/CMakeFiles/progress.marks
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles 0
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/CMakeFiles/progress.marks
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/clean
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/clean
 .PHONY : clean
 
 # The main clean target
@@ -85,22 +85,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/preinstall
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/preinstall
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 src/common/time_measurement/CMakeFiles/time_measurement.dir/rule:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/CMakeFiles/time_measurement.dir/rule
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/CMakeFiles/time_measurement.dir/rule
 .PHONY : src/common/time_measurement/CMakeFiles/time_measurement.dir/rule
 
 # Convenience name for target.
@@ -109,12 +109,12 @@ time_measurement: src/common/time_measurement/CMakeFiles/time_measurement.dir/ru
 
 # fast build rule for target.
 time_measurement/fast:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/build
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/build
 .PHONY : time_measurement/fast
 
 # Convenience name for target.
 src/common/time_measurement/CMakeFiles/time_measurement_check.dir/rule:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/CMakeFiles/time_measurement_check.dir/rule
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/common/time_measurement/CMakeFiles/time_measurement_check.dir/rule
 .PHONY : src/common/time_measurement/CMakeFiles/time_measurement_check.dir/rule
 
 # Convenience name for target.
@@ -123,7 +123,7 @@ time_measurement_check: src/common/time_measurement/CMakeFiles/time_measurement_
 
 # fast build rule for target.
 time_measurement_check/fast:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement_check.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement_check.dir/build
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement_check.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement_check.dir/build
 .PHONY : time_measurement_check/fast
 
 time_keeper_impl.o: time_keeper_impl.cc.o
@@ -131,7 +131,7 @@ time_keeper_impl.o: time_keeper_impl.cc.o
 
 # target to build an object file
 time_keeper_impl.cc.o:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.o
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.o
 .PHONY : time_keeper_impl.cc.o
 
 time_keeper_impl.i: time_keeper_impl.cc.i
@@ -139,7 +139,7 @@ time_keeper_impl.i: time_keeper_impl.cc.i
 
 # target to preprocess a source file
 time_keeper_impl.cc.i:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.i
 .PHONY : time_keeper_impl.cc.i
 
 time_keeper_impl.s: time_keeper_impl.cc.s
@@ -147,7 +147,7 @@ time_keeper_impl.s: time_keeper_impl.cc.s
 
 # target to generate assembly for a file
 time_keeper_impl.cc.s:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_impl.cc.s
 .PHONY : time_keeper_impl.cc.s
 
 time_keeper_summary_printer.o: time_keeper_summary_printer.cc.o
@@ -155,7 +155,7 @@ time_keeper_summary_printer.o: time_keeper_summary_printer.cc.o
 
 # target to build an object file
 time_keeper_summary_printer.cc.o:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.o
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.o
 .PHONY : time_keeper_summary_printer.cc.o
 
 time_keeper_summary_printer.i: time_keeper_summary_printer.cc.i
@@ -163,7 +163,7 @@ time_keeper_summary_printer.i: time_keeper_summary_printer.cc.i
 
 # target to preprocess a source file
 time_keeper_summary_printer.cc.i:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.i
 .PHONY : time_keeper_summary_printer.cc.i
 
 time_keeper_summary_printer.s: time_keeper_summary_printer.cc.s
@@ -171,7 +171,7 @@ time_keeper_summary_printer.s: time_keeper_summary_printer.cc.s
 
 # target to generate assembly for a file
 time_keeper_summary_printer.cc.s:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_keeper_summary_printer.cc.s
 .PHONY : time_keeper_summary_printer.cc.s
 
 time_measurement_impl.o: time_measurement_impl.cc.o
@@ -179,7 +179,7 @@ time_measurement_impl.o: time_measurement_impl.cc.o
 
 # target to build an object file
 time_measurement_impl.cc.o:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.o
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.o
 .PHONY : time_measurement_impl.cc.o
 
 time_measurement_impl.i: time_measurement_impl.cc.i
@@ -187,7 +187,7 @@ time_measurement_impl.i: time_measurement_impl.cc.i
 
 # target to preprocess a source file
 time_measurement_impl.cc.i:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.i
 .PHONY : time_measurement_impl.cc.i
 
 time_measurement_impl.s: time_measurement_impl.cc.s
@@ -195,7 +195,7 @@ time_measurement_impl.s: time_measurement_impl.cc.s
 
 # target to generate assembly for a file
 time_measurement_impl.cc.s:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/time_measurement_impl.cc.s
 .PHONY : time_measurement_impl.cc.s
 
 timer_impl.o: timer_impl.cc.o
@@ -203,7 +203,7 @@ timer_impl.o: timer_impl.cc.o
 
 # target to build an object file
 timer_impl.cc.o:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.o
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.o
 .PHONY : timer_impl.cc.o
 
 timer_impl.i: timer_impl.cc.i
@@ -211,7 +211,7 @@ timer_impl.i: timer_impl.cc.i
 
 # target to preprocess a source file
 timer_impl.cc.i:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.i
 .PHONY : timer_impl.cc.i
 
 timer_impl.s: timer_impl.cc.s
@@ -219,7 +219,7 @@ timer_impl.s: timer_impl.cc.s
 
 # target to generate assembly for a file
 timer_impl.cc.s:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/common/time_measurement/CMakeFiles/time_measurement.dir/build.make src/common/time_measurement/CMakeFiles/time_measurement.dir/timer_impl.cc.s
 .PHONY : timer_impl.cc.s
 
 # Help Target
@@ -255,6 +255,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

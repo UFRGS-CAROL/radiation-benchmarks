@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # Utility rule file for common_check.
 
@@ -56,10 +56,10 @@ src/common/CMakeFiles/common_check.dir/build: common_check
 .PHONY : src/common/CMakeFiles/common_check.dir/build
 
 src/common/CMakeFiles/common_check.dir/clean:
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/common && $(CMAKE_COMMAND) -P CMakeFiles/common_check.dir/cmake_clean.cmake
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common && $(CMAKE_COMMAND) -P CMakeFiles/common_check.dir/cmake_clean.cmake
 .PHONY : src/common/CMakeFiles/common_check.dir/clean
 
 src/common/CMakeFiles/common_check.dir/depend:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/HSA_BENCH/Hetero-Mark /home/carol/HSA_BENCH/Hetero-Mark/src/common /home/carol/HSA_BENCH/Hetero-Mark /home/carol/HSA_BENCH/Hetero-Mark/src/common /home/carol/HSA_BENCH/Hetero-Mark/src/common/CMakeFiles/common_check.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/radiation-benchmarks/src/heterogeneous/hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common /home/carol/radiation-benchmarks/src/heterogeneous/hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/CMakeFiles/common_check.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/common/CMakeFiles/common_check.dir/depend
 

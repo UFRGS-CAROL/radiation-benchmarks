@@ -20,8 +20,6 @@ SET(CMAKE_MAKEFILE_DEPENDS
   "src/common/time_measurement/CMakeLists.txt"
   "src/hsa/CMakeLists.txt"
   "src/hsa/fir_hsa/CMakeLists.txt"
-  "src/hsa/hmm_hsa/CMakeLists.txt"
-  "src/hsa/kmeans_hsa/CMakeLists.txt"
   "src/hsa/page_rank_hsa/CMakeLists.txt"
   "src/logHelper/CMakeLists.txt"
   "/usr/share/cmake-2.8/Modules/CMakeCInformation.cmake"
@@ -62,8 +60,6 @@ SET(CMAKE_MAKEFILE_PRODUCTS
   "src/common/clUtil/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/hsa/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/hsa/fir_hsa/CMakeFiles/CMakeDirectoryInformation.cmake"
-  "src/hsa/hmm_hsa/CMakeFiles/CMakeDirectoryInformation.cmake"
-  "src/hsa/kmeans_hsa/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/hsa/page_rank_hsa/CMakeFiles/CMakeDirectoryInformation.cmake"
   )
 
@@ -83,10 +79,6 @@ SET(CMAKE_DEPEND_INFO_FILES
   "src/hsa/CMakeFiles/hsa_check.dir/DependInfo.cmake"
   "src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/DependInfo.cmake"
   "src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir/DependInfo.cmake"
-  "src/hsa/hmm_hsa/CMakeFiles/hmm_hsa.dir/DependInfo.cmake"
-  "src/hsa/hmm_hsa/CMakeFiles/hmm_hsa_check.dir/DependInfo.cmake"
-  "src/hsa/kmeans_hsa/CMakeFiles/kmeans_hsa.dir/DependInfo.cmake"
-  "src/hsa/kmeans_hsa/CMakeFiles/kmeans_hsa_check.dir/DependInfo.cmake"
   "src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/DependInfo.cmake"
   "src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa_check.dir/DependInfo.cmake"
   )

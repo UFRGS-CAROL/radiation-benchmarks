@@ -39,10 +39,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -69,14 +69,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/page_rank_hsa/CMakeFiles/progress.marks
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles 0
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/page_rank_hsa/CMakeFiles/progress.marks
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/clean
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/clean
 .PHONY : clean
 
 # The main clean target
@@ -85,22 +85,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/preinstall
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/preinstall
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/rule:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/rule
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/rule
 .PHONY : src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/rule
 
 # Convenience name for target.
@@ -109,12 +109,12 @@ page_rank_hsa: src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/rule
 
 # fast build rule for target.
 page_rank_hsa/fast:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build
 .PHONY : page_rank_hsa/fast
 
 # Convenience name for target.
 src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa_check.dir/rule:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa_check.dir/rule
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa_check.dir/rule
 .PHONY : src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa_check.dir/rule
 
 # Convenience name for target.
@@ -123,7 +123,7 @@ page_rank_hsa_check: src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa_check.dir/ru
 
 # fast build rule for target.
 page_rank_hsa_check/fast:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa_check.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa_check.dir/build
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa_check.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa_check.dir/build
 .PHONY : page_rank_hsa_check/fast
 
 main.o: main.cc.o
@@ -131,7 +131,7 @@ main.o: main.cc.o
 
 # target to build an object file
 main.cc.o:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/main.cc.o
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/main.cc.o
 .PHONY : main.cc.o
 
 main.i: main.cc.i
@@ -139,7 +139,7 @@ main.i: main.cc.i
 
 # target to preprocess a source file
 main.cc.i:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/main.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/main.cc.i
 .PHONY : main.cc.i
 
 main.s: main.cc.s
@@ -147,7 +147,7 @@ main.s: main.cc.s
 
 # target to generate assembly for a file
 main.cc.s:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/main.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/main.cc.s
 .PHONY : main.cc.s
 
 page_rank_benchmark.o: page_rank_benchmark.cc.o
@@ -155,7 +155,7 @@ page_rank_benchmark.o: page_rank_benchmark.cc.o
 
 # target to build an object file
 page_rank_benchmark.cc.o:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/page_rank_benchmark.cc.o
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/page_rank_benchmark.cc.o
 .PHONY : page_rank_benchmark.cc.o
 
 page_rank_benchmark.i: page_rank_benchmark.cc.i
@@ -163,7 +163,7 @@ page_rank_benchmark.i: page_rank_benchmark.cc.i
 
 # target to preprocess a source file
 page_rank_benchmark.cc.i:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/page_rank_benchmark.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/page_rank_benchmark.cc.i
 .PHONY : page_rank_benchmark.cc.i
 
 page_rank_benchmark.s: page_rank_benchmark.cc.s
@@ -171,7 +171,7 @@ page_rank_benchmark.s: page_rank_benchmark.cc.s
 
 # target to generate assembly for a file
 page_rank_benchmark.cc.s:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/page_rank_benchmark.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/build.make src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir/page_rank_benchmark.cc.s
 .PHONY : page_rank_benchmark.cc.s
 
 # Help Target
@@ -201,6 +201,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

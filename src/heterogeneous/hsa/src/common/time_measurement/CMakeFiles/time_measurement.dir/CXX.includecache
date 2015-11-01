@@ -6,35 +6,35 @@
 
 #IncludeRegexTransform: 
 
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_keeper_impl.cc
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_keeper_impl.cc
 stdexcept
 -
 memory
 -
 src/common/time_measurement/time_keeper_impl.h
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/src/common/time_measurement/time_keeper_impl.h
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/src/common/time_measurement/time_keeper_impl.h
 
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_keeper_summary_printer.cc
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_keeper_summary_printer.cc
 src/common/time_measurement/time_keeper.h
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/src/common/time_measurement/time_keeper.h
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/src/common/time_measurement/time_keeper.h
 src/common/time_measurement/time_keeper_summary_printer.h
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/src/common/time_measurement/time_keeper_summary_printer.h
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/src/common/time_measurement/time_keeper_summary_printer.h
 
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/time_measurement_impl.cc
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/time_measurement_impl.cc
 src/common/time_measurement/time_measurement_impl.h
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/src/common/time_measurement/time_measurement_impl.h
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/src/common/time_measurement/time_measurement_impl.h
 src/common/time_measurement/time_keeper_impl.h
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/src/common/time_measurement/time_keeper_impl.h
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/src/common/time_measurement/time_keeper_impl.h
 src/common/time_measurement/timer_impl.h
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/src/common/time_measurement/timer_impl.h
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/src/common/time_measurement/timer_impl.h
 src/common/time_measurement/time_keeper_summary_printer.h
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/src/common/time_measurement/time_keeper_summary_printer.h
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/src/common/time_measurement/time_keeper_summary_printer.h
 
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/timer_impl.cc
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/timer_impl.cc
 time.h
 -
 src/common/time_measurement/timer_impl.h
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/time_measurement/src/common/time_measurement/timer_impl.h
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement/src/common/time_measurement/timer_impl.h
 
 src/common/time_measurement/time_keeper.h
 string

@@ -9,8 +9,8 @@ set( FOLDER_GROUP ${FOLDER_GROUP}/${FOLDER_NAME} )
 set( FOLDER_NAME hsa )
 set( SUBDIRECTORIES 
   fir_hsa
-  hmm_hsa
-  kmeans_hsa
+#  hmm_hsa
+#  kmeans_hsa
   page_rank_hsa
 )
 

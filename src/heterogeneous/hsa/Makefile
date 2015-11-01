@@ -39,10 +39,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -69,9 +69,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -281,58 +281,6 @@ fir_hsa_check/fast:
 .PHONY : fir_hsa_check/fast
 
 #=============================================================================
-# Target rules for targets named hmm_hsa
-
-# Build rule for target.
-hmm_hsa: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 hmm_hsa
-.PHONY : hmm_hsa
-
-# fast build rule for target.
-hmm_hsa/fast:
-	$(MAKE) -f src/hsa/hmm_hsa/CMakeFiles/hmm_hsa.dir/build.make src/hsa/hmm_hsa/CMakeFiles/hmm_hsa.dir/build
-.PHONY : hmm_hsa/fast
-
-#=============================================================================
-# Target rules for targets named hmm_hsa_check
-
-# Build rule for target.
-hmm_hsa_check: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 hmm_hsa_check
-.PHONY : hmm_hsa_check
-
-# fast build rule for target.
-hmm_hsa_check/fast:
-	$(MAKE) -f src/hsa/hmm_hsa/CMakeFiles/hmm_hsa_check.dir/build.make src/hsa/hmm_hsa/CMakeFiles/hmm_hsa_check.dir/build
-.PHONY : hmm_hsa_check/fast
-
-#=============================================================================
-# Target rules for targets named kmeans_hsa
-
-# Build rule for target.
-kmeans_hsa: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 kmeans_hsa
-.PHONY : kmeans_hsa
-
-# fast build rule for target.
-kmeans_hsa/fast:
-	$(MAKE) -f src/hsa/kmeans_hsa/CMakeFiles/kmeans_hsa.dir/build.make src/hsa/kmeans_hsa/CMakeFiles/kmeans_hsa.dir/build
-.PHONY : kmeans_hsa/fast
-
-#=============================================================================
-# Target rules for targets named kmeans_hsa_check
-
-# Build rule for target.
-kmeans_hsa_check: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 kmeans_hsa_check
-.PHONY : kmeans_hsa_check
-
-# fast build rule for target.
-kmeans_hsa_check/fast:
-	$(MAKE) -f src/hsa/kmeans_hsa/CMakeFiles/kmeans_hsa_check.dir/build.make src/hsa/kmeans_hsa/CMakeFiles/kmeans_hsa_check.dir/build
-.PHONY : kmeans_hsa_check/fast
-
-#=============================================================================
 # Target rules for targets named page_rank_hsa
 
 # Build rule for target.
@@ -380,10 +328,6 @@ help:
 	@echo "... hsa_check"
 	@echo "... fir_hsa"
 	@echo "... fir_hsa_check"
-	@echo "... hmm_hsa"
-	@echo "... hmm_hsa_check"
-	@echo "... kmeans_hsa"
-	@echo "... kmeans_hsa_check"
 	@echo "... page_rank_hsa"
 	@echo "... page_rank_hsa_check"
 .PHONY : help

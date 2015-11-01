@@ -6,9 +6,9 @@
 
 #IncludeRegexTransform: 
 
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/benchmark/benchmark_runner.cc
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/benchmark/benchmark_runner.cc
 src/common/benchmark/benchmark_runner.h
-/home/carol/HSA_BENCH/Hetero-Mark/src/common/benchmark/src/common/benchmark/benchmark_runner.h
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/benchmark/src/common/benchmark/benchmark_runner.h
 
 src/common/benchmark/benchmark.h
 

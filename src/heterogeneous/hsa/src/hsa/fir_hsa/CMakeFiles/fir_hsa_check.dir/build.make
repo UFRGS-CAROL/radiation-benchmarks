@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # Utility rule file for fir_hsa_check.
 
@@ -48,9 +48,9 @@ include src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir/progress.make
 src/hsa/fir_hsa/CMakeFiles/fir_hsa_check: src/hsa/fir_hsa/main.cc
 src/hsa/fir_hsa/CMakeFiles/fir_hsa_check: src/hsa/fir_hsa/fir_benchmark.h
 src/hsa/fir_hsa/CMakeFiles/fir_hsa_check: src/hsa/fir_hsa/fir_benchmark.cc
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold "Linting fir_hsa_check"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa && /usr/bin/cmake -E chdir /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa cpplint.py main.cc fir_benchmark.h fir_benchmark.cc
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa && /usr/bin/cmake -E chdir /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa cpplint.py main.cc fir_benchmark.h fir_benchmark.cc
 
 fir_hsa_check: src/hsa/fir_hsa/CMakeFiles/fir_hsa_check
 fir_hsa_check: src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir/build.make
@@ -61,10 +61,10 @@ src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir/build: fir_hsa_check
 .PHONY : src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir/build
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir/clean:
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa && $(CMAKE_COMMAND) -P CMakeFiles/fir_hsa_check.dir/cmake_clean.cmake
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa && $(CMAKE_COMMAND) -P CMakeFiles/fir_hsa_check.dir/cmake_clean.cmake
 .PHONY : src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir/clean
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir/depend:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/HSA_BENCH/Hetero-Mark /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa /home/carol/HSA_BENCH/Hetero-Mark /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/radiation-benchmarks/src/heterogeneous/hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir/depend
 

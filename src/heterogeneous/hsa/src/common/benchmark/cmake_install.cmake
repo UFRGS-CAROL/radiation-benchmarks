@@ -1,4 +1,4 @@
-# Install script for directory: /home/carol/HSA_BENCH/Hetero-Mark/src/common/benchmark
+# Install script for directory: /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/benchmark
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)

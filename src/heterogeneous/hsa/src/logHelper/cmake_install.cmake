@@ -1,4 +1,4 @@
-# Install script for directory: /home/carol/HSA_BENCH/Hetero-Mark/src/logHelper
+# Install script for directory: /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/logHelper
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)

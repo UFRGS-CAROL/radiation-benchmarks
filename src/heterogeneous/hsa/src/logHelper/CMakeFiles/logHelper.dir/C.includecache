@@ -6,11 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/carol/HSA_BENCH/Hetero-Mark/src/logHelper/logHelper.c
-logHelper.h
-/home/carol/HSA_BENCH/Hetero-Mark/src/logHelper/logHelper.h
-
-/home/carol/HSA_BENCH/Hetero-Mark/src/logHelper/logHelper.h
+/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/logHelper/logHelper.c
 stdio.h
 -
 stdlib.h

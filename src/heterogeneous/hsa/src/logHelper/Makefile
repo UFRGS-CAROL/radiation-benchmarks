@@ -39,10 +39,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -69,14 +69,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles /home/carol/HSA_BENCH/Hetero-Mark/src/logHelper/CMakeFiles/progress.marks
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/logHelper/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles 0
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/logHelper/CMakeFiles/progress.marks
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/logHelper/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/logHelper/clean
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/logHelper/clean
 .PHONY : clean
 
 # The main clean target
@@ -85,22 +85,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/logHelper/preinstall
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/logHelper/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/logHelper/preinstall
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/logHelper/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 src/logHelper/CMakeFiles/logHelper.dir/rule:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/logHelper/CMakeFiles/logHelper.dir/rule
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f CMakeFiles/Makefile2 src/logHelper/CMakeFiles/logHelper.dir/rule
 .PHONY : src/logHelper/CMakeFiles/logHelper.dir/rule
 
 # Convenience name for target.
@@ -109,7 +109,7 @@ logHelper: src/logHelper/CMakeFiles/logHelper.dir/rule
 
 # fast build rule for target.
 logHelper/fast:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/logHelper/CMakeFiles/logHelper.dir/build.make src/logHelper/CMakeFiles/logHelper.dir/build
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/logHelper/CMakeFiles/logHelper.dir/build.make src/logHelper/CMakeFiles/logHelper.dir/build
 .PHONY : logHelper/fast
 
 logHelper.o: logHelper.c.o
@@ -117,7 +117,7 @@ logHelper.o: logHelper.c.o
 
 # target to build an object file
 logHelper.c.o:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/logHelper/CMakeFiles/logHelper.dir/build.make src/logHelper/CMakeFiles/logHelper.dir/logHelper.c.o
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/logHelper/CMakeFiles/logHelper.dir/build.make src/logHelper/CMakeFiles/logHelper.dir/logHelper.c.o
 .PHONY : logHelper.c.o
 
 logHelper.i: logHelper.c.i
@@ -125,7 +125,7 @@ logHelper.i: logHelper.c.i
 
 # target to preprocess a source file
 logHelper.c.i:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/logHelper/CMakeFiles/logHelper.dir/build.make src/logHelper/CMakeFiles/logHelper.dir/logHelper.c.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/logHelper/CMakeFiles/logHelper.dir/build.make src/logHelper/CMakeFiles/logHelper.dir/logHelper.c.i
 .PHONY : logHelper.c.i
 
 logHelper.s: logHelper.c.s
@@ -133,7 +133,7 @@ logHelper.s: logHelper.c.s
 
 # target to generate assembly for a file
 logHelper.c.s:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(MAKE) -f src/logHelper/CMakeFiles/logHelper.dir/build.make src/logHelper/CMakeFiles/logHelper.dir/logHelper.c.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(MAKE) -f src/logHelper/CMakeFiles/logHelper.dir/build.make src/logHelper/CMakeFiles/logHelper.dir/logHelper.c.s
 .PHONY : logHelper.c.s
 
 # Help Target
@@ -159,6 +159,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

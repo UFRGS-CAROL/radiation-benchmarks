@@ -4,7 +4,7 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_C
-  "/home/carol/HSA_BENCH/Hetero-Mark/src/logHelper/logHelper.c" "/home/carol/HSA_BENCH/Hetero-Mark/src/logHelper/CMakeFiles/logHelper.dir/logHelper.c.o"
+  "/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/logHelper/logHelper.c" "/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/logHelper/CMakeFiles/logHelper.dir/logHelper.c.o"
   )
 SET(CMAKE_C_COMPILER_ID "GNU")
 

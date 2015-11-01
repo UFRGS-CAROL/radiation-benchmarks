@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/HSA_BENCH/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/radiation-benchmarks/src/heterogeneous/hsa
 
 # Include any dependencies generated for this target.
 include src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/depend.make
@@ -50,25 +50,25 @@ include src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/progress.make
 include src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/flags.make
 
 src/hsa/fir_hsa/kernels.o: src/hsa/fir_hsa/kernels.cl
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold "Using snack to generate kernel library"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa && snack.sh -c kernels.cl
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa && snack.sh -c kernels.cl
 
 src/hsa/fir_hsa/kernels.h: src/hsa/fir_hsa/kernels.o
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/main.cc.o: src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/flags.make
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/main.cc.o: src/hsa/fir_hsa/main.cc
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_2)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles $(CMAKE_PROGRESS_2)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/main.cc.o"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/fir_hsa.dir/main.cc.o -c /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/main.cc
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/fir_hsa.dir/main.cc.o -c /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa/main.cc
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/main.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/fir_hsa.dir/main.cc.i"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/main.cc > CMakeFiles/fir_hsa.dir/main.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa/main.cc > CMakeFiles/fir_hsa.dir/main.cc.i
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/main.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/fir_hsa.dir/main.cc.s"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/main.cc -o CMakeFiles/fir_hsa.dir/main.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa/main.cc -o CMakeFiles/fir_hsa.dir/main.cc.s
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/main.cc.o.requires:
 .PHONY : src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/main.cc.o.requires
@@ -81,17 +81,17 @@ src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/main.cc.o.provides.build: src/hsa/fir_hsa
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/fir_benchmark.cc.o: src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/flags.make
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/fir_benchmark.cc.o: src/hsa/fir_hsa/fir_benchmark.cc
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/HSA_BENCH/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_3)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/radiation-benchmarks/src/heterogeneous/hsa/CMakeFiles $(CMAKE_PROGRESS_3)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/fir_benchmark.cc.o"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/fir_hsa.dir/fir_benchmark.cc.o -c /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/fir_benchmark.cc
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/fir_hsa.dir/fir_benchmark.cc.o -c /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa/fir_benchmark.cc
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/fir_benchmark.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/fir_hsa.dir/fir_benchmark.cc.i"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/fir_benchmark.cc > CMakeFiles/fir_hsa.dir/fir_benchmark.cc.i
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa/fir_benchmark.cc > CMakeFiles/fir_hsa.dir/fir_benchmark.cc.i
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/fir_benchmark.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/fir_hsa.dir/fir_benchmark.cc.s"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/fir_benchmark.cc -o CMakeFiles/fir_hsa.dir/fir_benchmark.cc.s
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa/fir_benchmark.cc -o CMakeFiles/fir_hsa.dir/fir_benchmark.cc.s
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/fir_benchmark.cc.o.requires:
 .PHONY : src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/fir_benchmark.cc.o.requires
@@ -109,7 +109,7 @@ fir_hsa_OBJECTS = \
 
 # External object files for target fir_hsa
 fir_hsa_EXTERNAL_OBJECTS = \
-"/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/kernels.o"
+"/home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa/kernels.o"
 
 src/hsa/fir_hsa/fir_hsa: src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/main.cc.o
 src/hsa/fir_hsa/fir_hsa: src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/fir_benchmark.cc.o
@@ -122,7 +122,7 @@ src/hsa/fir_hsa/fir_hsa: src/logHelper/liblogHelper.a
 src/hsa/fir_hsa/fir_hsa: /opt/hsa/lib/libhsa-runtime64.so
 src/hsa/fir_hsa/fir_hsa: src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --red --bold "Linking CXX executable fir_hsa"
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/fir_hsa.dir/link.txt --verbose=$(VERBOSE)
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/fir_hsa.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/build: src/hsa/fir_hsa/fir_hsa
@@ -133,11 +133,11 @@ src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/requires: src/hsa/fir_hsa/CMakeFiles/fir_
 .PHONY : src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/requires
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/clean:
-	cd /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa && $(CMAKE_COMMAND) -P CMakeFiles/fir_hsa.dir/cmake_clean.cmake
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa && $(CMAKE_COMMAND) -P CMakeFiles/fir_hsa.dir/cmake_clean.cmake
 .PHONY : src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/clean
 
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/depend: src/hsa/fir_hsa/kernels.o
 src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/depend: src/hsa/fir_hsa/kernels.h
-	cd /home/carol/HSA_BENCH/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/HSA_BENCH/Hetero-Mark /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa /home/carol/HSA_BENCH/Hetero-Mark /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa /home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/carol/radiation-benchmarks/src/heterogeneous/hsa && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/radiation-benchmarks/src/heterogeneous/hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir/depend
 
