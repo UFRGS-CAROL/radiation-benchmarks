@@ -1,0 +1,42 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark/benchmark_runner.cc
+src/common/benchmark/benchmark_runner.h
+/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark/src/common/benchmark/benchmark_runner.h
+
+src/common/benchmark/benchmark.h
+
+src/common/benchmark/benchmark_runner.h
+src/common/benchmark/benchmark.h
+src/common/benchmark/src/common/benchmark/benchmark.h
+src/common/time_measurement/time_measurement.h
+src/common/benchmark/src/common/time_measurement/time_measurement.h
+
+src/common/time_measurement/time_keeper.h
+string
+-
+utility
+-
+memory
+-
+
+src/common/time_measurement/time_measurement.h
+iostream
+-
+memory
+-
+initializer_list
+-
+src/common/time_measurement/timer.h
+src/common/time_measurement/src/common/time_measurement/timer.h
+src/common/time_measurement/time_keeper.h
+src/common/time_measurement/src/common/time_measurement/time_keeper.h
+
+src/common/time_measurement/timer.h
+
