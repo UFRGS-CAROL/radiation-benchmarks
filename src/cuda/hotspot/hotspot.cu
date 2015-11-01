@@ -26,11 +26,11 @@
 #define FACTOR_CHIP	0.5
 
 /* chip parameters	*/
-float t_chip = 0.0005;
-float chip_height = 0.016;
-float chip_width = 0.016;
+#define t_chip 0.0005
+#define chip_height 0.016
+#define chip_width 0.016
 /* ambient temperature, assuming no package at all	*/
-float amb_temp = 80.0;
+#define amb_temp 80.0
 
 void run(int argc, char** argv);
 
@@ -50,6 +50,7 @@ typedef struct parameters_t {
     int verbose;
     int fault_injection;
     int generate;
+    int cdp;
 } parameters;
 
 double mysecond()
@@ -76,8 +77,6 @@ void readInput(parameters *params)
     FILE *ftemp, *fpower, *fgold;
     char str[STR_SIZE];
     float val;
-	int num_zeros = 0;
-	int num_nans = 0;
 
     if( (ftemp  = fopen(params->tfile, "r" )) ==0 )
         fatal( "The temp file was not opened" );
@@ -96,8 +95,6 @@ void readInput(parameters *params)
             if ((sscanf(str, "%f", &val) != 1))
                 fatal("invalid temp file format");
             params->FilesavingTemp[i*(params->grid_cols)+j] = val;
-			if (val==0) num_zeros++;
-			if (isnan(val)) num_nans++;
 
             fgets(str, STR_SIZE, fpower);
             if (feof(fpower))
@@ -105,8 +102,6 @@ void readInput(parameters *params)
             if ((sscanf(str, "%f", &val) != 1))
                 fatal("invalid power file format");
             params->FilesavingPower[i*(params->grid_cols)+j] = val;
-			if (val==0) num_zeros++;
-			if (isnan(val)) num_nans++;
 
             if (!(params->generate)) {
                 fgets(str, STR_SIZE, fgold);
@@ -118,9 +113,6 @@ void readInput(parameters *params)
             }
         }
     }
-
-	printf("Zeros in the input: %d\n", num_zeros);
-	printf("NaNs in the input: %d\n", num_nans);
 
     // =================== FAULT INJECTION
     if (params->fault_injection) {
@@ -185,7 +177,7 @@ float time_elapsed)
     __shared__ float power_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
     __shared__ float temp_t[BLOCK_SIZE][BLOCK_SIZE]; // saving temparary temperature result
 
-    float amb_temp = 80.0;
+    //float amb_temp = 80.0; // define resolved this
     float step_div_Cap;
     float Rx_1,Ry_1,Rz_1;
 
@@ -300,7 +292,7 @@ int sim_time, int num_iterations, int blockCols, int blockRows, int borderCols, 
 
     float max_slope = MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI);
     float step = PRECISION / max_slope;
-    float t;
+    int t;
     float time_elapsed;
     time_elapsed=0.001;
 
@@ -310,17 +302,61 @@ int sim_time, int num_iterations, int blockCols, int blockRows, int borderCols, 
         int temp = src;
         src = dst;
         dst = temp;
-        //printf("[%d]", omp_get_thread_num());
         calculate_temp<<<dimGrid, dimBlock, 0, stream>>>(MIN(num_iterations, sim_time-t), MatrixPower,MatrixTemp[src],MatrixTemp[dst],\
-        col,row,borderCols, borderRows, Cap,Rx,Ry,Rz,step,time_elapsed);
+            col,row,borderCols, borderRows, Cap,Rx,Ry,Rz,step,time_elapsed);
         flops += col * row * MIN(num_iterations, sim_time-t) * 15;
     }
     cudaStreamSynchronize(stream);
     return dst;
 }
 
+typedef struct kernel_ret_t {
+    int dst;
+    long long int flops;
+} kernel_ret;
+
+__global__ void dev_compute_tran_temp(kernel_ret *kret, float *MatrixPower,float *MatrixTemp0, float *MatrixTemp1, int col, int row, \
+int sim_time, int num_iterations, int blockCols, int blockRows, int borderCols, int borderRows)
+{
+    dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
+    dim3 dimGrid(blockCols, blockRows);
+
+    float grid_height = chip_height / row;
+    float grid_width = chip_width / col;
+
+    float Cap = FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width * grid_height;
+    float Rx = grid_width / (2.0 * K_SI * t_chip * grid_height);
+    float Ry = grid_height / (2.0 * K_SI * t_chip * grid_width);
+    float Rz = t_chip / (K_SI * grid_height * grid_width);
+
+    float max_slope = MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI);
+    float step = PRECISION / max_slope;
+    int t;
+    float time_elapsed;
+    float *MatrixTemp[2];
+
+    time_elapsed=0.001;
+
+    MatrixTemp[0] = MatrixTemp0;
+    MatrixTemp[1] = MatrixTemp1;
+
+    int src = 1;
+    kret->dst = 0;
+    kret->flops = 0;
+    for (t = 0; t < sim_time; t+=num_iterations)
+    {
+        int temp = src;
+        src = kret->dst;
+        kret->dst = temp;
+        calculate_temp<<<dimGrid, dimBlock>>>(MIN(num_iterations, sim_time-t), MatrixPower,MatrixTemp[src],MatrixTemp[kret->dst],\
+            col,row,borderCols, borderRows, Cap,Rx,Ry,Rz,step,time_elapsed);
+        kret->flops += col * row * MIN(num_iterations, sim_time-t) * 15;
+    }
+    cudaDeviceSynchronize();
+}
+
 void usage(int argc, char** argv) {
-    printf("Usage: %s -size=N [-generate] [-sim_time=N] [-temp_file=<path>] [-power_file=<path>] [-gold_file=<path>] [-iterations=N] [-streams=N] [-debug] [-verbose]\n", argv[0]);
+    printf("Usage: %s -size=N [-generate] [-sim_time=N] [-temp_file=<path>] [-power_file=<path>] [-gold_file=<path>] [-iterations=N] [-streams=N] [-cdp] [-debug] [-verbose]\n", argv[0]);
 }
 
 void getParams(int argc, char** argv, parameters *params)
@@ -332,6 +368,7 @@ void getParams(int argc, char** argv, parameters *params)
     params -> verbose = 0;
     params -> fault_injection = 0;
     params -> generate = 0;
+    params -> cdp = 0;
 
     if (argc<2) {
         usage(argc, argv);
@@ -420,6 +457,11 @@ void getParams(int argc, char** argv, parameters *params)
         params -> verbose = 1;
     }
 
+    if (checkCmdLineFlag(argc, (const char **)argv, "cdp"))
+    {
+        params -> cdp = 1;
+    }
+
     if (checkCmdLineFlag(argc, (const char **)argv, "debug"))
     {
         params -> fault_injection = 1;
@@ -467,7 +509,7 @@ void run(int argc, char** argv)
     if( !(setupParams -> FilesavingPower) || !(setupParams -> FilesavingTemp) || !(setupParams -> MatrixOut) || !(setupParams -> GoldMatrix))
         fatal("unable to allocate memory");
 
-    printf("cudaHOTSPOT\nstreams:%d size:%d pyramidHeight:%d simTime:%d\n", setupParams -> nstreams, setupParams -> grid_rows, setupParams -> pyramid_height, setupParams -> sim_time);
+    printf("\ncudaHOTSPOT\nstreams:%d size:%d pyramidHeight:%d simTime:%d\n\n", setupParams -> nstreams, setupParams -> grid_rows, setupParams -> pyramid_height, setupParams -> sim_time);
 
     #ifdef LOGS
         char test_info[90];
@@ -485,16 +527,22 @@ void run(int argc, char** argv)
         globaltime = mysecond();
 
         int ret[setupParams->nstreams];
+        kernel_ret kret[setupParams->nstreams], *dev_kret[setupParams->nstreams]; // Preparing if -cdp is enabled
         float *MatrixTemp[setupParams->nstreams][2], *MatrixPower[setupParams->nstreams];
 
         timestamp = mysecond();
         for (streamIdx = 0; streamIdx < (setupParams-> nstreams); streamIdx++) {
+            kret[streamIdx].flops = 0;
+            kret[streamIdx].dst = 0;
+
             checkCudaErrors( cudaStreamCreateWithFlags(&(streams[streamIdx]), cudaStreamNonBlocking) );
 
             checkCudaErrors( cudaMalloc((void**)&(MatrixTemp[streamIdx][0]), sizeof(float)*size) );
             checkCudaErrors( cudaMalloc((void**)&(MatrixTemp[streamIdx][1]), sizeof(float)*size) );
+            checkCudaErrors( cudaMalloc((void**)&(dev_kret[streamIdx]), sizeof(kernel_ret)) );
             cudaMemcpy(MatrixTemp[streamIdx][0], setupParams->FilesavingTemp, sizeof(float)*size, cudaMemcpyHostToDevice);
 			cudaMemset(MatrixTemp[streamIdx][1], 0.0, sizeof(float)*size);
+            cudaMemcpy(dev_kret[streamIdx], &(kret[streamIdx]), sizeof(kernel_ret), cudaMemcpyHostToDevice);
 
             checkCudaErrors( cudaMalloc((void**)&(MatrixPower[streamIdx]), sizeof(float)*size) );
             cudaMemcpy(MatrixPower[streamIdx], setupParams->FilesavingPower, sizeof(float)*size, cudaMemcpyHostToDevice);
@@ -508,11 +556,22 @@ void run(int argc, char** argv)
         #endif
         #pragma omp parallel for
         for (streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
-            ret[streamIdx] = compute_tran_temp(MatrixPower[streamIdx],MatrixTemp[streamIdx],setupParams->grid_cols,setupParams->grid_rows, \
-            setupParams->sim_time,setupParams->pyramid_height, blockCols, blockRows, borderCols, borderRows, streams[streamIdx]);
+            if (setupParams->cdp) {
+                dev_compute_tran_temp<<<1, 1, 0, streams[streamIdx]>>>(dev_kret[streamIdx], MatrixPower[streamIdx],MatrixTemp[streamIdx][0],MatrixTemp[streamIdx][1],setupParams->grid_cols,setupParams->grid_rows, \
+                    setupParams->sim_time,setupParams->pyramid_height, blockCols, blockRows, borderCols, borderRows);
+                checkCudaErrors(cudaGetLastError());
+            } else {
+                ret[streamIdx] = compute_tran_temp(MatrixPower[streamIdx],MatrixTemp[streamIdx],setupParams->grid_cols,setupParams->grid_rows, \
+                    setupParams->sim_time,setupParams->pyramid_height, blockCols, blockRows, borderCols, borderRows, streams[streamIdx]);
+            }
         }
         for (streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
-            cudaStreamSynchronize(streams[streamIdx]);
+            checkCudaErrors( cudaStreamSynchronize(streams[streamIdx]) );
+            if (setupParams->cdp) {
+                cudaMemcpy(&(kret[streamIdx]), dev_kret[streamIdx], sizeof(kernel_ret), cudaMemcpyDeviceToHost);
+                ret[streamIdx] = kret[streamIdx].dst;
+                flops += kret[streamIdx].flops;
+            }
         }
         #ifdef LOGS
             if (!(setupParams->generate)) end_iteration();
