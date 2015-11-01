@@ -1,0 +1,11 @@
+/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/CMakeFiles/fir_hsa.dir
+/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/fir_hsa/CMakeFiles/fir_hsa_check.dir
+/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/hmm_hsa/CMakeFiles/hmm_hsa.dir
+/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/hmm_hsa/CMakeFiles/hmm_hsa_check.dir
+/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/CMakeFiles/hsa_check.dir
+/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/iir_cl12_hsa/CMakeFiles/iir_cl12_hsa.dir
+/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/iir_cl12_hsa/CMakeFiles/iir_cl12_hsa_check.dir
+/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/kmeans_hsa/CMakeFiles/kmeans_hsa.dir
+/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/kmeans_hsa/CMakeFiles/kmeans_hsa_check.dir
+/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa.dir
+/home/carol/HSA_BENCH/Hetero-Mark/src/hsa/page_rank_hsa/CMakeFiles/page_rank_hsa_check.dir

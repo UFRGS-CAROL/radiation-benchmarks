@@ -1,0 +1,2 @@
+/usr/bin/ar cr libbenchmark.a  CMakeFiles/benchmark.dir/benchmark_runner.cc.o
+/usr/bin/ranlib libbenchmark.a

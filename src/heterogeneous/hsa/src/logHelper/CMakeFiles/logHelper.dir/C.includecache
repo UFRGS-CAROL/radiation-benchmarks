@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/carol/HSA_BENCH/Hetero-Mark/src/logHelper/logHelper.c
+logHelper.h
+/home/carol/HSA_BENCH/Hetero-Mark/src/logHelper/logHelper.h
+
+/home/carol/HSA_BENCH/Hetero-Mark/src/logHelper/logHelper.h
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+time.h
+-
+sys/time.h
+-
+sys/types.h
+-
+sys/stat.h
+-
+unistd.h
+-
+

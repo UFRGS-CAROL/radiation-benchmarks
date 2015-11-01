@@ -1,0 +1,2 @@
+/usr/bin/ar cr liblogHelper.a  CMakeFiles/logHelper.dir/logHelper.c.o
+/usr/bin/ranlib liblogHelper.a
