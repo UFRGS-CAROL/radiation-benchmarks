@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # Include any dependencies generated for this target.
 include src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/depend.make
@@ -51,17 +51,17 @@ include src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/flags.make
 
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.o: src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/flags.make
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.o: src/opencl20/pagerank_cl20/main.cc
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.o"
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/pagerank_cl20.dir/main.cc.o -c /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/main.cc
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/pagerank_cl20.dir/main.cc.o -c /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/main.cc
 
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/pagerank_cl20.dir/main.cc.i"
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/main.cc > CMakeFiles/pagerank_cl20.dir/main.cc.i
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/main.cc > CMakeFiles/pagerank_cl20.dir/main.cc.i
 
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/pagerank_cl20.dir/main.cc.s"
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/main.cc -o CMakeFiles/pagerank_cl20.dir/main.cc.s
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/main.cc -o CMakeFiles/pagerank_cl20.dir/main.cc.s
 
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.o.requires:
 .PHONY : src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.o.requires
@@ -74,17 +74,17 @@ src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.o.provides.build
 
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.o: src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/flags.make
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.o: src/opencl20/pagerank_cl20/pagerank_cl20.cc
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_2)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles $(CMAKE_PROGRESS_2)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.o"
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.o -c /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/pagerank_cl20.cc
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.o -c /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/pagerank_cl20.cc
 
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.i"
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/pagerank_cl20.cc > CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.i
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/pagerank_cl20.cc > CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.i
 
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.s"
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/pagerank_cl20.cc -o CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.s
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/pagerank_cl20.cc -o CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.s
 
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.o.requires:
 .PHONY : src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.o.requires
@@ -111,12 +111,12 @@ src/opencl20/pagerank_cl20/bin/x86_64/Release/pagerank_cl20: src/common/time_mea
 src/opencl20/pagerank_cl20/bin/x86_64/Release/pagerank_cl20: src/common/command_line_option/libcommand_line_option.a
 src/opencl20/pagerank_cl20/bin/x86_64/Release/pagerank_cl20: src/common/benchmark/libbenchmark.a
 src/opencl20/pagerank_cl20/bin/x86_64/Release/pagerank_cl20: src/logHelper/liblogHelper.a
-src/opencl20/pagerank_cl20/bin/x86_64/Release/pagerank_cl20: /usr/lib/x86_64/libOpenCL.so
+src/opencl20/pagerank_cl20/bin/x86_64/Release/pagerank_cl20: /opt/AMDAPPSDK-3.0-0-Beta/lib/x86_64/libOpenCL.so
 src/opencl20/pagerank_cl20/bin/x86_64/Release/pagerank_cl20: src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --red --bold "Linking CXX executable bin/x86_64/Release/pagerank_cl20"
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/pagerank_cl20.dir/link.txt --verbose=$(VERBOSE)
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 && /usr/bin/cmake -E copy_if_different /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/pagerank_cl20_kernel.cl /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/bin/x86_64/Release/.
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 && /usr/bin/cmake -E copy_if_different /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/pagerank_cl20_kernel.cl ./
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/pagerank_cl20.dir/link.txt --verbose=$(VERBOSE)
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 && /usr/bin/cmake -E copy_if_different /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/pagerank_cl20_kernel.cl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/bin/x86_64/Release/.
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 && /usr/bin/cmake -E copy_if_different /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/pagerank_cl20_kernel.cl ./
 
 # Rule to build all files generated by this target.
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build: src/opencl20/pagerank_cl20/bin/x86_64/Release/pagerank_cl20
@@ -127,10 +127,10 @@ src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/requires: src/opencl20/p
 .PHONY : src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/requires
 
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/clean:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 && $(CMAKE_COMMAND) -P CMakeFiles/pagerank_cl20.dir/cmake_clean.cmake
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 && $(CMAKE_COMMAND) -P CMakeFiles/pagerank_cl20.dir/cmake_clean.cmake
 .PHONY : src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/clean
 
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/depend:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20 /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20 /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/depend
 

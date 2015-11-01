@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # Utility rule file for src_check.
 
@@ -56,10 +56,10 @@ src/CMakeFiles/src_check.dir/build: src_check
 .PHONY : src/CMakeFiles/src_check.dir/build
 
 src/CMakeFiles/src_check.dir/clean:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src && $(CMAKE_COMMAND) -P CMakeFiles/src_check.dir/cmake_clean.cmake
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src && $(CMAKE_COMMAND) -P CMakeFiles/src_check.dir/cmake_clean.cmake
 .PHONY : src/CMakeFiles/src_check.dir/clean
 
 src/CMakeFiles/src_check.dir/depend:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src /home/carol/heterogeneous_benchs/Hetero-Mark/src/CMakeFiles/src_check.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/CMakeFiles/src_check.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/CMakeFiles/src_check.dir/depend
 

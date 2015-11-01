@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # Utility rule file for benchmark_check.
 
@@ -49,10 +49,10 @@ src/common/benchmark/CMakeFiles/benchmark_check: src/common/benchmark/benchmark_
 src/common/benchmark/CMakeFiles/benchmark_check: src/common/benchmark/benchmark.h
 src/common/benchmark/CMakeFiles/benchmark_check: src/common/benchmark/benchmark_runner.h
 src/common/benchmark/CMakeFiles/benchmark_check: src/common/benchmark/benchmark_runner_test.cc
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold "Linting benchmark_check"
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark && /usr/bin/cmake -E chdir /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark clang-format -style=Google -i benchmark_runner.cc benchmark.h benchmark_runner.h benchmark_runner_test.cc
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark && /usr/bin/cmake -E chdir /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark cpplint.py benchmark_runner.cc benchmark.h benchmark_runner.h benchmark_runner_test.cc
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark && /usr/bin/cmake -E chdir /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark clang-format -style=Google -i benchmark_runner.cc benchmark.h benchmark_runner.h benchmark_runner_test.cc
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark && /usr/bin/cmake -E chdir /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark cpplint.py benchmark_runner.cc benchmark.h benchmark_runner.h benchmark_runner_test.cc
 
 benchmark_check: src/common/benchmark/CMakeFiles/benchmark_check
 benchmark_check: src/common/benchmark/CMakeFiles/benchmark_check.dir/build.make
@@ -63,10 +63,10 @@ src/common/benchmark/CMakeFiles/benchmark_check.dir/build: benchmark_check
 .PHONY : src/common/benchmark/CMakeFiles/benchmark_check.dir/build
 
 src/common/benchmark/CMakeFiles/benchmark_check.dir/clean:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark && $(CMAKE_COMMAND) -P CMakeFiles/benchmark_check.dir/cmake_clean.cmake
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark && $(CMAKE_COMMAND) -P CMakeFiles/benchmark_check.dir/cmake_clean.cmake
 .PHONY : src/common/benchmark/CMakeFiles/benchmark_check.dir/clean
 
 src/common/benchmark/CMakeFiles/benchmark_check.dir/depend:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark/CMakeFiles/benchmark_check.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark/CMakeFiles/benchmark_check.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/common/benchmark/CMakeFiles/benchmark_check.dir/depend
 

@@ -39,10 +39,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -69,14 +69,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/CMakeFiles/progress.marks
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles 0
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/CMakeFiles/progress.marks
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/clean
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/clean
 .PHONY : clean
 
 # The main clean target
@@ -85,22 +85,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/preinstall
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/preinstall
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/rule:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/rule
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/rule
 .PHONY : src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/rule
 
 # Convenience name for target.
@@ -109,12 +109,12 @@ pagerank_cl20: src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/rule
 
 # fast build rule for target.
 pagerank_cl20/fast:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build
 .PHONY : pagerank_cl20/fast
 
 # Convenience name for target.
 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20_check.dir/rule:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20_check.dir/rule
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20_check.dir/rule
 .PHONY : src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20_check.dir/rule
 
 # Convenience name for target.
@@ -123,7 +123,7 @@ pagerank_cl20_check: src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20_check.d
 
 # fast build rule for target.
 pagerank_cl20_check/fast:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20_check.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20_check.dir/build
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20_check.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20_check.dir/build
 .PHONY : pagerank_cl20_check/fast
 
 main.o: main.cc.o
@@ -131,7 +131,7 @@ main.o: main.cc.o
 
 # target to build an object file
 main.cc.o:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.o
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.o
 .PHONY : main.cc.o
 
 main.i: main.cc.i
@@ -139,7 +139,7 @@ main.i: main.cc.i
 
 # target to preprocess a source file
 main.cc.i:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.i
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.i
 .PHONY : main.cc.i
 
 main.s: main.cc.s
@@ -147,7 +147,7 @@ main.s: main.cc.s
 
 # target to generate assembly for a file
 main.cc.s:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.s
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.s
 .PHONY : main.cc.s
 
 pagerank_cl20.o: pagerank_cl20.cc.o
@@ -155,7 +155,7 @@ pagerank_cl20.o: pagerank_cl20.cc.o
 
 # target to build an object file
 pagerank_cl20.cc.o:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.o
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.o
 .PHONY : pagerank_cl20.cc.o
 
 pagerank_cl20.i: pagerank_cl20.cc.i
@@ -163,7 +163,7 @@ pagerank_cl20.i: pagerank_cl20.cc.i
 
 # target to preprocess a source file
 pagerank_cl20.cc.i:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.i
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.i
 .PHONY : pagerank_cl20.cc.i
 
 pagerank_cl20.s: pagerank_cl20.cc.s
@@ -171,7 +171,7 @@ pagerank_cl20.s: pagerank_cl20.cc.s
 
 # target to generate assembly for a file
 pagerank_cl20.cc.s:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.s
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.s
 .PHONY : pagerank_cl20.cc.s
 
 # Help Target
@@ -201,6 +201,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

@@ -1,4 +1,4 @@
-# Install script for directory: /home/carol/heterogeneous_benchs/Hetero-Mark/src/logHelper
+# Install script for directory: /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/logHelper
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)

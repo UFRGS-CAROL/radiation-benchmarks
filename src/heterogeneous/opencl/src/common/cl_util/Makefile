@@ -39,10 +39,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -69,14 +69,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util/CMakeFiles/progress.marks
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles 0
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util/CMakeFiles/progress.marks
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/clean
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/clean
 .PHONY : clean
 
 # The main clean target
@@ -85,22 +85,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/preinstall
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/preinstall
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 src/common/cl_util/CMakeFiles/cl_util.dir/rule:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/CMakeFiles/cl_util.dir/rule
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/CMakeFiles/cl_util.dir/rule
 .PHONY : src/common/cl_util/CMakeFiles/cl_util.dir/rule
 
 # Convenience name for target.
@@ -109,12 +109,12 @@ cl_util: src/common/cl_util/CMakeFiles/cl_util.dir/rule
 
 # fast build rule for target.
 cl_util/fast:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/build
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/build
 .PHONY : cl_util/fast
 
 # Convenience name for target.
 src/common/cl_util/CMakeFiles/cl_util_check.dir/rule:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/CMakeFiles/cl_util_check.dir/rule
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/common/cl_util/CMakeFiles/cl_util_check.dir/rule
 .PHONY : src/common/cl_util/CMakeFiles/cl_util_check.dir/rule
 
 # Convenience name for target.
@@ -123,7 +123,7 @@ cl_util_check: src/common/cl_util/CMakeFiles/cl_util_check.dir/rule
 
 # fast build rule for target.
 cl_util_check/fast:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util_check.dir/build.make src/common/cl_util/CMakeFiles/cl_util_check.dir/build
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util_check.dir/build.make src/common/cl_util/CMakeFiles/cl_util_check.dir/build
 .PHONY : cl_util_check/fast
 
 cl_error.o: cl_error.cc.o
@@ -131,7 +131,7 @@ cl_error.o: cl_error.cc.o
 
 # target to build an object file
 cl_error.cc.o:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_error.cc.o
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_error.cc.o
 .PHONY : cl_error.cc.o
 
 cl_error.i: cl_error.cc.i
@@ -139,7 +139,7 @@ cl_error.i: cl_error.cc.i
 
 # target to preprocess a source file
 cl_error.cc.i:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_error.cc.i
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_error.cc.i
 .PHONY : cl_error.cc.i
 
 cl_error.s: cl_error.cc.s
@@ -147,7 +147,7 @@ cl_error.s: cl_error.cc.s
 
 # target to generate assembly for a file
 cl_error.cc.s:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_error.cc.s
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_error.cc.s
 .PHONY : cl_error.cc.s
 
 cl_file.o: cl_file.cc.o
@@ -155,7 +155,7 @@ cl_file.o: cl_file.cc.o
 
 # target to build an object file
 cl_file.cc.o:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_file.cc.o
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_file.cc.o
 .PHONY : cl_file.cc.o
 
 cl_file.i: cl_file.cc.i
@@ -163,7 +163,7 @@ cl_file.i: cl_file.cc.i
 
 # target to preprocess a source file
 cl_file.cc.i:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_file.cc.i
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_file.cc.i
 .PHONY : cl_file.cc.i
 
 cl_file.s: cl_file.cc.s
@@ -171,7 +171,7 @@ cl_file.s: cl_file.cc.s
 
 # target to generate assembly for a file
 cl_file.cc.s:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_file.cc.s
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_file.cc.s
 .PHONY : cl_file.cc.s
 
 cl_profiler.o: cl_profiler.cc.o
@@ -179,7 +179,7 @@ cl_profiler.o: cl_profiler.cc.o
 
 # target to build an object file
 cl_profiler.cc.o:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_profiler.cc.o
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_profiler.cc.o
 .PHONY : cl_profiler.cc.o
 
 cl_profiler.i: cl_profiler.cc.i
@@ -187,7 +187,7 @@ cl_profiler.i: cl_profiler.cc.i
 
 # target to preprocess a source file
 cl_profiler.cc.i:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_profiler.cc.i
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_profiler.cc.i
 .PHONY : cl_profiler.cc.i
 
 cl_profiler.s: cl_profiler.cc.s
@@ -195,7 +195,7 @@ cl_profiler.s: cl_profiler.cc.s
 
 # target to generate assembly for a file
 cl_profiler.cc.s:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_profiler.cc.s
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_profiler.cc.s
 .PHONY : cl_profiler.cc.s
 
 cl_runtime.o: cl_runtime.cc.o
@@ -203,7 +203,7 @@ cl_runtime.o: cl_runtime.cc.o
 
 # target to build an object file
 cl_runtime.cc.o:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_runtime.cc.o
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_runtime.cc.o
 .PHONY : cl_runtime.cc.o
 
 cl_runtime.i: cl_runtime.cc.i
@@ -211,7 +211,7 @@ cl_runtime.i: cl_runtime.cc.i
 
 # target to preprocess a source file
 cl_runtime.cc.i:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_runtime.cc.i
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_runtime.cc.i
 .PHONY : cl_runtime.cc.i
 
 cl_runtime.s: cl_runtime.cc.s
@@ -219,7 +219,7 @@ cl_runtime.s: cl_runtime.cc.s
 
 # target to generate assembly for a file
 cl_runtime.cc.s:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_runtime.cc.s
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_runtime.cc.s
 .PHONY : cl_runtime.cc.s
 
 cl_util.o: cl_util.cc.o
@@ -227,7 +227,7 @@ cl_util.o: cl_util.cc.o
 
 # target to build an object file
 cl_util.cc.o:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_util.cc.o
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_util.cc.o
 .PHONY : cl_util.cc.o
 
 cl_util.i: cl_util.cc.i
@@ -235,7 +235,7 @@ cl_util.i: cl_util.cc.i
 
 # target to preprocess a source file
 cl_util.cc.i:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_util.cc.i
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_util.cc.i
 .PHONY : cl_util.cc.i
 
 cl_util.s: cl_util.cc.s
@@ -243,7 +243,7 @@ cl_util.s: cl_util.cc.s
 
 # target to generate assembly for a file
 cl_util.cc.s:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_util.cc.s
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/cl_util/CMakeFiles/cl_util.dir/build.make src/common/cl_util/CMakeFiles/cl_util.dir/cl_util.cc.s
 .PHONY : cl_util.cc.s
 
 # Help Target
@@ -282,6 +282,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # Utility rule file for cl_util_check.
 
@@ -50,10 +50,10 @@ src/common/cl_util/CMakeFiles/cl_util_check: src/common/cl_util/cl_file.h
 src/common/cl_util/CMakeFiles/cl_util_check: src/common/cl_util/cl_profiler.h
 src/common/cl_util/CMakeFiles/cl_util_check: src/common/cl_util/cl_runtime.h
 src/common/cl_util/CMakeFiles/cl_util_check: src/common/cl_util/cl_util.h
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold "Linting cl_util_check"
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util && /usr/bin/cmake -E chdir /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util clang-format -style=Google -i cl_error.h cl_file.h cl_profiler.h cl_runtime.h cl_util.h
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util && /usr/bin/cmake -E chdir /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util cpplint.py cl_error.h cl_file.h cl_profiler.h cl_runtime.h cl_util.h
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util && /usr/bin/cmake -E chdir /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util clang-format -style=Google -i cl_error.h cl_file.h cl_profiler.h cl_runtime.h cl_util.h
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util && /usr/bin/cmake -E chdir /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util cpplint.py cl_error.h cl_file.h cl_profiler.h cl_runtime.h cl_util.h
 
 cl_util_check: src/common/cl_util/CMakeFiles/cl_util_check
 cl_util_check: src/common/cl_util/CMakeFiles/cl_util_check.dir/build.make
@@ -64,10 +64,10 @@ src/common/cl_util/CMakeFiles/cl_util_check.dir/build: cl_util_check
 .PHONY : src/common/cl_util/CMakeFiles/cl_util_check.dir/build
 
 src/common/cl_util/CMakeFiles/cl_util_check.dir/clean:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util && $(CMAKE_COMMAND) -P CMakeFiles/cl_util_check.dir/cmake_clean.cmake
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util && $(CMAKE_COMMAND) -P CMakeFiles/cl_util_check.dir/cmake_clean.cmake
 .PHONY : src/common/cl_util/CMakeFiles/cl_util_check.dir/clean
 
 src/common/cl_util/CMakeFiles/cl_util_check.dir/depend:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util/CMakeFiles/cl_util_check.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util/CMakeFiles/cl_util_check.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/common/cl_util/CMakeFiles/cl_util_check.dir/depend
 

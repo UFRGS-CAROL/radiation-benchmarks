@@ -39,10 +39,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -69,14 +69,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/CMakeFiles/progress.marks
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles 0
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -E cmake_progress_start /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/CMakeFiles/progress.marks
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/common/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/clean
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/common/clean
 .PHONY : clean
 
 # The main clean target
@@ -85,22 +85,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/preinstall
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/common/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/preinstall
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/common/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 src/common/CMakeFiles/common_check.dir/rule:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f CMakeFiles/Makefile2 src/common/CMakeFiles/common_check.dir/rule
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f CMakeFiles/Makefile2 src/common/CMakeFiles/common_check.dir/rule
 .PHONY : src/common/CMakeFiles/common_check.dir/rule
 
 # Convenience name for target.
@@ -109,7 +109,7 @@ common_check: src/common/CMakeFiles/common_check.dir/rule
 
 # fast build rule for target.
 common_check/fast:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(MAKE) -f src/common/CMakeFiles/common_check.dir/build.make src/common/CMakeFiles/common_check.dir/build
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(MAKE) -f src/common/CMakeFiles/common_check.dir/build.make src/common/CMakeFiles/common_check.dir/build
 .PHONY : common_check/fast
 
 # Help Target
@@ -132,6 +132,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

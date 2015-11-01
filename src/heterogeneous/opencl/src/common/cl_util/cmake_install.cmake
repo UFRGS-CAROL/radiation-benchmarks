@@ -1,4 +1,4 @@
-# Install script for directory: /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util
+# Install script for directory: /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)

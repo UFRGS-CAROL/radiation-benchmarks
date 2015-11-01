@@ -10,6 +10,7 @@ SET(CMAKE_TARGET_LINKED_INFO_FILES
 # The include file search paths:
 SET(CMAKE_C_TARGET_INCLUDE_PATH
   "."
+  "/opt/AMDAPPSDK-3.0-0-Beta/include"
   "src/opencl20/pagerank_cl20/../../include/clUtil"
   )
 SET(CMAKE_CXX_TARGET_INCLUDE_PATH ${CMAKE_C_TARGET_INCLUDE_PATH})

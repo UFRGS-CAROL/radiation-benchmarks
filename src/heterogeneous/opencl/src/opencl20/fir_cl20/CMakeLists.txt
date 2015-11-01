@@ -1,7 +1,7 @@
 set( BENCHMARK_NAME fir_cl20 )
 set( SOURCE_FILES fir_cl20.cc main.cc )
 set( HEADER_FILES include/fir_cl20.h )
-set( EXTRA_FILES fir_cl20_kernel.cl input/temp.dat )
+set( EXTRA_FILES fir_cl20_kernel.cl )#input/temp.dat )
 
 ############################################################################
 

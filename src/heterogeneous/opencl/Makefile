@@ -39,10 +39,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -69,9 +69,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -268,32 +268,6 @@ opencl20_check/fast:
 .PHONY : opencl20_check/fast
 
 #=============================================================================
-# Target rules for targets named aes_cl20
-
-# Build rule for target.
-aes_cl20: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 aes_cl20
-.PHONY : aes_cl20
-
-# fast build rule for target.
-aes_cl20/fast:
-	$(MAKE) -f src/opencl20/aes_cl20/CMakeFiles/aes_cl20.dir/build.make src/opencl20/aes_cl20/CMakeFiles/aes_cl20.dir/build
-.PHONY : aes_cl20/fast
-
-#=============================================================================
-# Target rules for targets named aes_cl20_check
-
-# Build rule for target.
-aes_cl20_check: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 aes_cl20_check
-.PHONY : aes_cl20_check
-
-# fast build rule for target.
-aes_cl20_check/fast:
-	$(MAKE) -f src/opencl20/aes_cl20/CMakeFiles/aes_cl20_check.dir/build.make src/opencl20/aes_cl20/CMakeFiles/aes_cl20_check.dir/build
-.PHONY : aes_cl20_check/fast
-
-#=============================================================================
 # Target rules for targets named fir_cl20
 
 # Build rule for target.
@@ -318,84 +292,6 @@ fir_cl20_check: cmake_check_build_system
 fir_cl20_check/fast:
 	$(MAKE) -f src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/build.make src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/build
 .PHONY : fir_cl20_check/fast
-
-#=============================================================================
-# Target rules for targets named hmm_cl20
-
-# Build rule for target.
-hmm_cl20: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 hmm_cl20
-.PHONY : hmm_cl20
-
-# fast build rule for target.
-hmm_cl20/fast:
-	$(MAKE) -f src/opencl20/hmm_cl20/CMakeFiles/hmm_cl20.dir/build.make src/opencl20/hmm_cl20/CMakeFiles/hmm_cl20.dir/build
-.PHONY : hmm_cl20/fast
-
-#=============================================================================
-# Target rules for targets named hmm_cl20_check
-
-# Build rule for target.
-hmm_cl20_check: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 hmm_cl20_check
-.PHONY : hmm_cl20_check
-
-# fast build rule for target.
-hmm_cl20_check/fast:
-	$(MAKE) -f src/opencl20/hmm_cl20/CMakeFiles/hmm_cl20_check.dir/build.make src/opencl20/hmm_cl20/CMakeFiles/hmm_cl20_check.dir/build
-.PHONY : hmm_cl20_check/fast
-
-#=============================================================================
-# Target rules for targets named iir_cl20
-
-# Build rule for target.
-iir_cl20: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 iir_cl20
-.PHONY : iir_cl20
-
-# fast build rule for target.
-iir_cl20/fast:
-	$(MAKE) -f src/opencl20/iir_cl20/CMakeFiles/iir_cl20.dir/build.make src/opencl20/iir_cl20/CMakeFiles/iir_cl20.dir/build
-.PHONY : iir_cl20/fast
-
-#=============================================================================
-# Target rules for targets named iir_cl20_check
-
-# Build rule for target.
-iir_cl20_check: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 iir_cl20_check
-.PHONY : iir_cl20_check
-
-# fast build rule for target.
-iir_cl20_check/fast:
-	$(MAKE) -f src/opencl20/iir_cl20/CMakeFiles/iir_cl20_check.dir/build.make src/opencl20/iir_cl20/CMakeFiles/iir_cl20_check.dir/build
-.PHONY : iir_cl20_check/fast
-
-#=============================================================================
-# Target rules for targets named kmeans_cl20
-
-# Build rule for target.
-kmeans_cl20: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 kmeans_cl20
-.PHONY : kmeans_cl20
-
-# fast build rule for target.
-kmeans_cl20/fast:
-	$(MAKE) -f src/opencl20/kmeans_cl20/CMakeFiles/kmeans_cl20.dir/build.make src/opencl20/kmeans_cl20/CMakeFiles/kmeans_cl20.dir/build
-.PHONY : kmeans_cl20/fast
-
-#=============================================================================
-# Target rules for targets named kmeans_cl20_check
-
-# Build rule for target.
-kmeans_cl20_check: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 kmeans_cl20_check
-.PHONY : kmeans_cl20_check
-
-# fast build rule for target.
-kmeans_cl20_check/fast:
-	$(MAKE) -f src/opencl20/kmeans_cl20/CMakeFiles/kmeans_cl20_check.dir/build.make src/opencl20/kmeans_cl20/CMakeFiles/kmeans_cl20_check.dir/build
-.PHONY : kmeans_cl20_check/fast
 
 #=============================================================================
 # Target rules for targets named pagerank_cl20
@@ -423,32 +319,6 @@ pagerank_cl20_check/fast:
 	$(MAKE) -f src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20_check.dir/build.make src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20_check.dir/build
 .PHONY : pagerank_cl20_check/fast
 
-#=============================================================================
-# Target rules for targets named sw_cl20
-
-# Build rule for target.
-sw_cl20: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 sw_cl20
-.PHONY : sw_cl20
-
-# fast build rule for target.
-sw_cl20/fast:
-	$(MAKE) -f src/opencl20/sw_cl20/CMakeFiles/sw_cl20.dir/build.make src/opencl20/sw_cl20/CMakeFiles/sw_cl20.dir/build
-.PHONY : sw_cl20/fast
-
-#=============================================================================
-# Target rules for targets named sw_cl20_check
-
-# Build rule for target.
-sw_cl20_check: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 sw_cl20_check
-.PHONY : sw_cl20_check
-
-# fast build rule for target.
-sw_cl20_check/fast:
-	$(MAKE) -f src/opencl20/sw_cl20/CMakeFiles/sw_cl20_check.dir/build.make src/opencl20/sw_cl20/CMakeFiles/sw_cl20_check.dir/build
-.PHONY : sw_cl20_check/fast
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -470,20 +340,10 @@ help:
 	@echo "... cl_util"
 	@echo "... cl_util_check"
 	@echo "... opencl20_check"
-	@echo "... aes_cl20"
-	@echo "... aes_cl20_check"
 	@echo "... fir_cl20"
 	@echo "... fir_cl20_check"
-	@echo "... hmm_cl20"
-	@echo "... hmm_cl20_check"
-	@echo "... iir_cl20"
-	@echo "... iir_cl20_check"
-	@echo "... kmeans_cl20"
-	@echo "... kmeans_cl20_check"
 	@echo "... pagerank_cl20"
 	@echo "... pagerank_cl20_check"
-	@echo "... sw_cl20"
-	@echo "... sw_cl20_check"
 .PHONY : help
 
 

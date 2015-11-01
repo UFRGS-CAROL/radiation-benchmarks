@@ -1,4 +1,4 @@
-# Install script for directory: /home/carol/heterogeneous_benchs/Hetero-Mark
+# Install script for directory: /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,7 +34,7 @@ ENDIF(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 
 IF(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/cmake_install.cmake")
+  INCLUDE("/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/cmake_install.cmake")
 
 ENDIF(NOT CMAKE_INSTALL_LOCAL_ONLY)
 
@@ -44,7 +44,7 @@ ELSE(CMAKE_INSTALL_COMPONENT)
   SET(CMAKE_INSTALL_MANIFEST "install_manifest.txt")
 ENDIF(CMAKE_INSTALL_COMPONENT)
 
-FILE(WRITE "/home/carol/heterogeneous_benchs/Hetero-Mark/${CMAKE_INSTALL_MANIFEST}" "")
+FILE(WRITE "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/${CMAKE_INSTALL_MANIFEST}" "")
 FOREACH(file ${CMAKE_INSTALL_MANIFEST_FILES})
-  FILE(APPEND "/home/carol/heterogeneous_benchs/Hetero-Mark/${CMAKE_INSTALL_MANIFEST}" "${file}\n")
+  FILE(APPEND "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/${CMAKE_INSTALL_MANIFEST}" "${file}\n")
 ENDFOREACH(file)

@@ -1,4 +1,4 @@
-# Install script for directory: /home/carol/heterogeneous_benchs/Hetero-Mark/src/common
+# Install script for directory: /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,10 +34,10 @@ ENDIF(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 
 IF(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark/cmake_install.cmake")
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/command_line_option/cmake_install.cmake")
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/time_measurement/cmake_install.cmake")
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util/cmake_install.cmake")
+  INCLUDE("/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark/cmake_install.cmake")
+  INCLUDE("/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/command_line_option/cmake_install.cmake")
+  INCLUDE("/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/time_measurement/cmake_install.cmake")
+  INCLUDE("/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util/cmake_install.cmake")
 
 ENDIF(NOT CMAKE_INSTALL_LOCAL_ONLY)
 

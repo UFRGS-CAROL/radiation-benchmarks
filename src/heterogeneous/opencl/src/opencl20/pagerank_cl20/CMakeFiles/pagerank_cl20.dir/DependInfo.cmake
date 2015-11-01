@@ -4,28 +4,24 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_CXX
-  "/home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/main.cc" "/home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.o"
-  "/home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/pagerank_cl20.cc" "/home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.o"
+  "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/main.cc" "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/main.cc.o"
+  "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/pagerank_cl20.cc" "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/CMakeFiles/pagerank_cl20.dir/pagerank_cl20.cc.o"
   )
 SET(CMAKE_CXX_COMPILER_ID "GNU")
 
-# Preprocessor definitions for this target.
-SET(CMAKE_TARGET_DEFINITIONS
-  "LOGS=1"
-  )
-
 # Targets to which this target links.
 SET(CMAKE_TARGET_LINKED_INFO_FILES
-  "/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/cl_util/CMakeFiles/cl_util.dir/DependInfo.cmake"
-  "/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/time_measurement/CMakeFiles/time_measurement.dir/DependInfo.cmake"
-  "/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/command_line_option/CMakeFiles/command_line_option.dir/DependInfo.cmake"
-  "/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark/CMakeFiles/benchmark.dir/DependInfo.cmake"
-  "/home/carol/heterogeneous_benchs/Hetero-Mark/src/logHelper/CMakeFiles/logHelper.dir/DependInfo.cmake"
+  "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/cl_util/CMakeFiles/cl_util.dir/DependInfo.cmake"
+  "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/time_measurement/CMakeFiles/time_measurement.dir/DependInfo.cmake"
+  "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/command_line_option/CMakeFiles/command_line_option.dir/DependInfo.cmake"
+  "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark/CMakeFiles/benchmark.dir/DependInfo.cmake"
+  "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/logHelper/CMakeFiles/logHelper.dir/DependInfo.cmake"
   )
 
 # The include file search paths:
 SET(CMAKE_C_TARGET_INCLUDE_PATH
   "."
+  "/opt/AMDAPPSDK-3.0-0-Beta/include"
   "src/opencl20/pagerank_cl20/../../include/clUtil"
   )
 SET(CMAKE_CXX_TARGET_INCLUDE_PATH ${CMAKE_C_TARGET_INCLUDE_PATH})

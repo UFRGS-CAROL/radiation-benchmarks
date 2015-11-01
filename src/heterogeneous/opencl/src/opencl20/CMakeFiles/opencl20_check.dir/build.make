@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # Utility rule file for opencl20_check.
 
@@ -56,10 +56,10 @@ src/opencl20/CMakeFiles/opencl20_check.dir/build: opencl20_check
 .PHONY : src/opencl20/CMakeFiles/opencl20_check.dir/build
 
 src/opencl20/CMakeFiles/opencl20_check.dir/clean:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20 && $(CMAKE_COMMAND) -P CMakeFiles/opencl20_check.dir/cmake_clean.cmake
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20 && $(CMAKE_COMMAND) -P CMakeFiles/opencl20_check.dir/cmake_clean.cmake
 .PHONY : src/opencl20/CMakeFiles/opencl20_check.dir/clean
 
 src/opencl20/CMakeFiles/opencl20_check.dir/depend:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20 /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20 /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/CMakeFiles/opencl20_check.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20 /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20 /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/CMakeFiles/opencl20_check.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/opencl20/CMakeFiles/opencl20_check.dir/depend
 

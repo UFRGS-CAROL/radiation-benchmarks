@@ -1,25 +1,34 @@
-#include "logHelper.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 
 // Location of timetamp file for software watchdog
-#ifdef MIC_NATIVE
-char timestamp_watchdog[200] = "/micNfs/carol/watchdog/timestamp.txt";
-#else
-char timestamp_watchdog[200] = "/home/carol/watchdog/timestamp.txt";
-#endif
+//char timestamp_watchdog[200] = "/home/carol/watchdog/timestamp.txt";
+char *timestamp_watchdog;
+char timestamp_file[] = "timestamp.txt";
+char vardir_key[]="vardir";
+
 // Max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
-unsigned long int max_errors_per_iter = 5000;
+unsigned long int max_errors_per_iter = 500;
 
 // Absolute path for log file, if needed
-#ifdef MIC_NATIVE
-char absolute_path[200] = "/micNfs/carol/logs/";
-#else
-char absolute_path[200] = "/home/carol/logs/";
-#endif
+//char absolute_path[200] = "/home/carol/logs/";
+char *absolute_path;
+char logdir_key[]="logdir";
+char config_file[]="/etc/radiation-benchmarks.conf";
 
 // Used to print the log only for some iterations, equal 1 means print every iteration
 int iter_interval_print = 1;
+
+// Used to log max_error_per_iter details each iteration
+int log_error_detail_count = 0;
 
 char log_file_name[200] = "";
 char full_log_file_name[300] = "";
@@ -76,13 +85,71 @@ void update_timestamp() {
     strcat(string, time_s);
     strcat(string, " > ");
     strcat(string, timestamp_watchdog);
-    system(string);
+    int res = system(string);
 };
 
 // ~ ===========================================================================
-// In case the user needs the log to be generated in some exact absolute path
-void set_absolute_path(char *path){
-    strcpy(absolute_path, path);
+// Read config file to get the value of a 'key = value' pair
+char * getValueConfig(char * key){
+	FILE * fp;
+	char * line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	char value[200];
+	int i,j;
+	int key_not_match;
+	
+	fp = fopen(config_file, "r");
+	if (fp == NULL)
+		return NULL;
+	
+	while ((read = getline(&line, &len, fp)) != -1) {
+		// ignore comments and sections in config file
+		if(line[0] == '#' || line[0] == '[')
+			continue;
+
+		// remove white spaces
+		for(i=0;line[i]==' '; i++);
+		// check if key of this line is the key we are looking for
+		j=0;
+		key_not_match=0;
+		for(; line[i]!= ' ' && line[i] != '=' && key[j]!= '\0'; i++){
+			if(key[j]!=line[i]){
+				key_not_match=1;
+				break;
+			}
+			j++;
+		}
+		// Key not matched
+		if(key_not_match)
+			continue;
+		// key of line is a substring of the key we are looking for
+		if(key[j]!='\0')
+			continue;
+		// key matched but is a substring of current key
+		if(line[i] !=' ' && line[i]!='=')
+			continue;
+		// ignore spaces and '=' to go the the frist character of value
+		for(;line[i]==' '||line[i] == '='; i++);
+		j=0;
+		// copy value to buffer until end of line or '#' is found
+		for(;line[i]!='\0'&&line[i]!='#'&&line[i]!='\n';i++){
+			value[j]=line[i];
+			j++;
+		}
+		value[j]='\0';
+		char *v = (char *)malloc(sizeof(char)*strlen(value)+2);
+		strcpy(v, value);
+		fclose(fp);
+		if (line)
+			free(line);
+		return v;
+	}
+	
+	fclose(fp);
+	if (line)
+		free(line);
+	return NULL;
 };
 
 // ~ ===========================================================================
@@ -95,6 +162,17 @@ char * get_log_file_name(){
 // Generate the log file name, log info from user about the test to be executed and reset log variables
 int start_log_file(char *benchmark_name, char *test_info){
 
+    char *var_dir=getValueConfig(vardir_key);
+    if(!var_dir){
+        fprintf(stderr, "[ERROR] Could not read var dir in config file '%s'\n",config_file);
+	return 1;//exit(1);
+    }
+    timestamp_watchdog = (char *)malloc(sizeof(char)* (strlen(var_dir)+strlen(timestamp_file)+4) );
+    strcpy(timestamp_watchdog, var_dir);
+    if(strlen(timestamp_watchdog) > 0 && timestamp_watchdog[strlen(timestamp_watchdog)-1] != '/' )
+        strcat(timestamp_watchdog, "/");
+    strcat(timestamp_watchdog, timestamp_file);
+    
     update_timestamp();
 
     time_t file_time;
@@ -134,7 +212,15 @@ int start_log_file(char *benchmark_name, char *test_info){
     strcat(log_file_name, host);
     strcat(log_file_name, ".log");
 
-
+    absolute_path=getValueConfig(logdir_key);
+    if(!absolute_path){
+        fprintf(stderr, "[ERROR] Could not read log dir in config file '%s'\n",config_file);
+	return 1;//exit(1);
+    }
+    if(!absolute_path){
+        absolute_path = (char *)malloc(sizeof(char));
+        absolute_path[0]='\0';
+    }
     strcpy(full_log_file_name, absolute_path);
     if(strlen(absolute_path) > 0 && absolute_path[strlen(absolute_path)-1] != '/' )
         strcat(full_log_file_name, "/");
@@ -215,6 +301,7 @@ int start_iteration(){
     fclose(file);
     iteration_number++;
 */
+    log_error_detail_count=0;
     it_time_start = get_time();
     return 0;
 
@@ -229,7 +316,7 @@ int end_iteration(){
     kernel_time = (double) (get_time() - it_time_start) / 1000000;
     kernel_time_acc += kernel_time;
 
-
+    log_error_detail_count=0;
 
     if(iteration_number % iter_interval_print == 0) {
 
@@ -281,11 +368,15 @@ int log_error_count(unsigned long int kernel_errors){
 
 
     if(kernel_errors > max_errors_per_iter){
+#ifdef ERR_INJ
+        fprintf(file, "#ERR_INJ not aborting, we would abort otherwise\n");
+#else
         fprintf(file, "#ABORT too many errors per iteration\n");
         fflush(file);
         fclose(file);
         end_log_file();
         exit(1);
+#endif
     }
 
 
@@ -310,6 +401,16 @@ int log_error_count(unsigned long int kernel_errors){
 // Print some string with the detail of an error to log file
 int log_error_detail(char *string){
     FILE *file = NULL;
+
+    #pragma omp parallel shared(log_error_detail_count) 
+    {
+        #pragma omp critical 
+        log_error_detail_count++;
+    }
+    // Limits the number of lines written to logfile so that 
+    // HD space will not explode
+    if((unsigned long)log_error_detail_count > max_errors_per_iter)
+        return 0;
 
     file = fopen(full_log_file_name, "a");
     if (file == NULL){

@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # Utility rule file for common_check.
 
@@ -56,10 +56,10 @@ src/common/CMakeFiles/common_check.dir/build: common_check
 .PHONY : src/common/CMakeFiles/common_check.dir/build
 
 src/common/CMakeFiles/common_check.dir/clean:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/common && $(CMAKE_COMMAND) -P CMakeFiles/common_check.dir/cmake_clean.cmake
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common && $(CMAKE_COMMAND) -P CMakeFiles/common_check.dir/cmake_clean.cmake
 .PHONY : src/common/CMakeFiles/common_check.dir/clean
 
 src/common/CMakeFiles/common_check.dir/depend:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/common /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/common /home/carol/heterogeneous_benchs/Hetero-Mark/src/common/CMakeFiles/common_check.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/CMakeFiles/common_check.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/common/CMakeFiles/common_check.dir/depend
 

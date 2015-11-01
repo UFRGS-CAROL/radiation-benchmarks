@@ -1,4 +1,4 @@
-# Install script for directory: /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20
+# Install script for directory: /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,13 +34,8 @@ ENDIF(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 
 IF(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/aes_cl20/cmake_install.cmake")
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/fir_cl20/cmake_install.cmake")
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/hmm_cl20/cmake_install.cmake")
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/iir_cl20/cmake_install.cmake")
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/kmeans_cl20/cmake_install.cmake")
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/pagerank_cl20/cmake_install.cmake")
-  INCLUDE("/home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/sw_cl20/cmake_install.cmake")
+  INCLUDE("/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/fir_cl20/cmake_install.cmake")
+  INCLUDE("/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/pagerank_cl20/cmake_install.cmake")
 
 ENDIF(NOT CMAKE_INSTALL_LOCAL_ONLY)
 

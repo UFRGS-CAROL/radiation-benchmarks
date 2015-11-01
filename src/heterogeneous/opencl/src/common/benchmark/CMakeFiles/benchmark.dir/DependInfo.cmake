@@ -4,7 +4,7 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_CXX
-  "/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark/benchmark_runner.cc" "/home/carol/heterogeneous_benchs/Hetero-Mark/src/common/benchmark/CMakeFiles/benchmark.dir/benchmark_runner.cc.o"
+  "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark/benchmark_runner.cc" "/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/common/benchmark/CMakeFiles/benchmark.dir/benchmark_runner.cc.o"
   )
 SET(CMAKE_CXX_COMPILER_ID "GNU")
 

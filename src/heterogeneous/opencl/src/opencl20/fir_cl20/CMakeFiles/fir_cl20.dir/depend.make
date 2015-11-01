@@ -3,6 +3,8 @@
 
 src/opencl20/fir_cl20/CMakeFiles/fir_cl20.dir/fir_cl20.cc.o: src/logHelper/logHelper.h
 src/opencl20/fir_cl20/CMakeFiles/fir_cl20.dir/fir_cl20.cc.o: src/opencl20/fir_cl20/fir_cl20.cc
+src/opencl20/fir_cl20/CMakeFiles/fir_cl20.dir/fir_cl20.cc.o: /opt/AMDAPPSDK-3.0-0-Beta/include/CL/cl.h
+src/opencl20/fir_cl20/CMakeFiles/fir_cl20.dir/fir_cl20.cc.o: /opt/AMDAPPSDK-3.0-0-Beta/include/CL/cl_platform.h
 src/opencl20/fir_cl20/CMakeFiles/fir_cl20.dir/fir_cl20.cc.o: src/common/benchmark/benchmark.h
 src/opencl20/fir_cl20/CMakeFiles/fir_cl20.dir/fir_cl20.cc.o: src/common/cl_util/cl_error.h
 src/opencl20/fir_cl20/CMakeFiles/fir_cl20.dir/fir_cl20.cc.o: src/common/cl_util/cl_file.h

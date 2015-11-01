@@ -1,13 +1,13 @@
 include(../../CppLint.cmake)
 set( FOLDER_NAME opencl20 )
 set( SUBDIRECTORIES 
-    aes_cl20
+#    aes_cl20
     fir_cl20
-    hmm_cl20
-    iir_cl20
-    kmeans_cl20
+#    hmm_cl20
+#    iir_cl20
+#    kmeans_cl20
     pagerank_cl20
-    sw_cl20
+#    sw_cl20
 )
 
 set(CMAKE_SUPPRESS_REGENERATION TRUE)

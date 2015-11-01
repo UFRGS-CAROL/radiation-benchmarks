@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_SOURCE_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/carol/heterogeneous_benchs/Hetero-Mark
+CMAKE_BINARY_DIR = /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl
 
 # Utility rule file for fir_cl20_check.
 
@@ -48,10 +48,10 @@ include src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/progress.make
 src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check: src/opencl20/fir_cl20/fir_cl20.cc
 src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check: src/opencl20/fir_cl20/main.cc
 src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check: src/opencl20/fir_cl20/include/fir_cl20.h
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/heterogeneous_benchs/Hetero-Mark/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold "Linting fir_cl20_check"
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/fir_cl20 && /usr/bin/cmake -E chdir /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/fir_cl20 clang-format -style=Google -i fir_cl20.cc main.cc include/fir_cl20.h
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/fir_cl20 && /usr/bin/cmake -E chdir /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/fir_cl20 cpplint.py fir_cl20.cc main.cc include/fir_cl20.h
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/fir_cl20 && /usr/bin/cmake -E chdir /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/fir_cl20 clang-format -style=Google -i fir_cl20.cc main.cc include/fir_cl20.h
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/fir_cl20 && /usr/bin/cmake -E chdir /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/fir_cl20 cpplint.py fir_cl20.cc main.cc include/fir_cl20.h
 
 fir_cl20_check: src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check
 fir_cl20_check: src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/build.make
@@ -62,10 +62,10 @@ src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/build: fir_cl20_check
 .PHONY : src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/build
 
 src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/clean:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/fir_cl20 && $(CMAKE_COMMAND) -P CMakeFiles/fir_cl20_check.dir/cmake_clean.cmake
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/fir_cl20 && $(CMAKE_COMMAND) -P CMakeFiles/fir_cl20_check.dir/cmake_clean.cmake
 .PHONY : src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/clean
 
 src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/depend:
-	cd /home/carol/heterogeneous_benchs/Hetero-Mark && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/fir_cl20 /home/carol/heterogeneous_benchs/Hetero-Mark /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/fir_cl20 /home/carol/heterogeneous_benchs/Hetero-Mark/src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/fir_cl20 /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/fir_cl20 /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/opencl/src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/opencl20/fir_cl20/CMakeFiles/fir_cl20_check.dir/depend
 
