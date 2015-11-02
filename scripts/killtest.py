@@ -27,6 +27,9 @@ commandList = [
 	["comando 3", 5, "nameToKill (exec name)"]
 ]
 
+# Command used to kill application
+killcmd="killall -9 "
+
 
 timestampMaxDiff = 20 # Time in seconds
 maxConsecKill = 2 # Max number of consective kills allowed
@@ -84,6 +87,9 @@ def checkCommandListChanges():
 		return True
 
 	if filecmp.cmp(curList, lastList, shallow=False):
+		fp = open(lastList,'w')
+		print >>fp, commandList
+		fp.close()
 		return False
 	else:
 		return True
@@ -115,6 +121,7 @@ def selectCommand():
 	if (now - timestamp) < timeWindow:
 		return commandList[i][0]
 
+	i += 1
 	# If all commands executed their time window, start all over again
 	if i >= len(commandList):
 		cleanCommandExecLogs()
@@ -122,7 +129,6 @@ def selectCommand():
 		return commandList[0][0]
 
 	# Finally, select the next command not executed so far
-	i += 1
 	os.system("echo "+str(time.time())+" > "+varDir+"command_execstart_"+str(i))
 	return commandList[i][0]
 
@@ -203,7 +209,7 @@ try:
 					
 			# Check if last kill was in the last 60 seconds and reboot
 			for cmd in commandList:
-				os.system(cmd[2])
+				os.system(killcmd+" "+cmd[2])
 			now = time.time()
 			if (now - lastKillTimestamp) < 3*timestampMaxDiff:
 				logMsg("Rebooting, current command:"+curCommand)
@@ -230,5 +236,5 @@ try:
 except KeyboardInterrupt: # Ctrl+c
 	print "\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )"
 	for cmd in commandList:
-		os.system(cmd[2])
+		os.system(killcmd+" "+cmd[2])
 	sys.exit(1)
