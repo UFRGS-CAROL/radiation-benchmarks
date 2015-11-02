@@ -8,23 +8,23 @@ import ConfigParser
 import sys
 import filecmp
 from datetime import datetime
-from subprocess import call
-from subprocess import Popen
+#from subprocess import call
+#from subprocess import Popen
 
 # Commands to be executed by KillTest
 # each command should be in this format:
 # ["command", <hours to be executed>]
 # for example: 
 # commandList = [
-# 	["./lavaMD 15 4 input1 input2 gold 10000", 1],
-# 	["./gemm 1024 4 input1 input2 gold 10000", 2]
+# 	["./lavaMD 15 4 input1 input2 gold 10000", 1, "lavaMD"],
+# 	["./gemm 1024 4 input1 input2 gold 10000", 2, "gemm"]
 # ]
 # will execute lavaMD for about one hour and then execute gemm for two hours
 # When the list finish executing, it start to execute from the beginning
 commandList = [
-	["comando 1", 1],
-	["comando 2", 2],
-	["comando 3", 5]
+	["comando 1", 1, "nameToKill (exec name)"],
+	["comando 2", 2, "nameToKill (exec name)"],
+	["comando 3", 5, "nameToKill (exec name)"]
 ]
 
 
@@ -58,7 +58,7 @@ def logMsg(msg):
 # Update the timestamp file with machine current timestamp
 def updateTimestamp():
 	command = "echo "+str(time.time())+" > "+timestampFile
-	retcode = call(command, shell=True)
+	retcode = os.system(command)
 
 
 # Remove files with start timestamp of commands executing
@@ -102,7 +102,7 @@ def selectCommand():
 	# If there is no file, create the first file with current timestamp
 	# and return the first command of commandList
 	if i == -1:
-		call("echo "+str(time.time())+" > "+varDir+"command_execstart_0" , shell=True)
+		os.system("echo "+str(time.time())+" > "+varDir+"command_execstart_0")
 		return commandList[0][0]
 
 	# Check if last command executed is still in its execution time window
@@ -118,20 +118,21 @@ def selectCommand():
 	# If all commands executed their time window, start all over again
 	if i >= len(commandList):
 		cleanCommandExecLogs()
-		call("echo "+str(time.time())+" > "+varDir+"command_execstart_0" , shell=True)
+		os.system("echo "+str(time.time())+" > "+varDir+"command_execstart_0")
 		return commandList[0][0]
 
 	# Finally, select the next command not executed so far
 	i += 1
-	call("echo "+str(time.time())+" > "+varDir+"command_execstart_"+str(i) , shell=True)
+	os.system("echo "+str(time.time())+" > "+varDir+"command_execstart_"+str(i))
 	return commandList[i][0]
 
 
 def execCommand(command):
 	try:
 		updateTimestamp()
-		procPopen = Popen(command, shell=True)
-		return procPopen
+		return os.system(command)
+		#procPopen = Popen(command, shell=True)
+		#return procPopen
 	except OSError as detail:
 		logMsg("Error launching command '"+command+"'; error detail: "+str(detail))
 		return None
@@ -188,18 +189,29 @@ try:
 	
 		# If timestamp was not update properly
 		if (now - timestamp) > timestampMaxDiff:
-			if proc is not None:
-				proc.kill() # Kill current command
+			#if proc is not None:
+				#proc.kill() # Kill current command
 
 				# Check if last kill was in the last 60 seconds and reboot
-				now = time.time()
-				if (now - lastKillTimestamp) < 3*timestampMaxDiff:
-					logMsg("Rebooting, current command:"+curCommand)
-					sockConnect()
-					call("sudo shutdown -r now",shell=True)
-				else:
-					lastKillTimestamp = now
+				#now = time.time()
+				#if (now - lastKillTimestamp) < 3*timestampMaxDiff:
+				#	logMsg("Rebooting, current command:"+curCommand)
+				#	sockConnect()
+				#	os.system("shutdown -r now")
+				#else:
+				#	lastKillTimestamp = now
 					
+			# Check if last kill was in the last 60 seconds and reboot
+			for cmd in commandList:
+				os.system(cmd[2])
+			now = time.time()
+			if (now - lastKillTimestamp) < 3*timestampMaxDiff:
+				logMsg("Rebooting, current command:"+curCommand)
+				sockConnect()
+				os.system("shutdown -r now")
+			else:
+				lastKillTimestamp = now
+
 			logMsg("timestampMaxDiff kill command '"+curCommand+"'")
 			curCommand = selectCommand() # select properly the current command to be executed
 			proc = execCommand(curCommand) # start the command
@@ -212,7 +224,7 @@ try:
 		if consecKillCount >= maxConsecKill or killCount >= maxKill:
 			logMsg("Rebooting, current command:"+curCommand)
 			sockConnect()
-			call("sudo shutdown -r now",shell=True)
+			os.system("sudo shutdown -r now")
 	
 		time.sleep(timestampMaxDiff)	
 except KeyboardInterrupt: # Ctrl+c
