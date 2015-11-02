@@ -11,11 +11,16 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+#ifdef K1
+#include "lhl/log_helper_local.h"
+#endif
+
 
 // Location of timetamp file for software watchdog
 //char timestamp_watchdog[200] = "/home/carol/watchdog/timestamp.txt";
 char *timestamp_watchdog;
 char timestamp_file[] = "timestamp.txt";
+char config_file[]="/etc/radiation-benchmarks.conf";
 char vardir_key[]="vardir";
 
 // Max errors that can be found for a single iteration
@@ -43,7 +48,7 @@ char message[2000];
 
 //code to send signal to server that controls switch PING
 #define PORT "8888" // the port client will be connecting to 
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "143.54.10.183" //"127.0.0.1"
 // get sockaddr, IPv4 or IPv6:
 
 void *get_in_addr(struct sockaddr *sa)
@@ -56,7 +61,7 @@ void *get_in_addr(struct sockaddr *sa)
 }
 
 void send_message(char * message){
-	int sockfd;  
+	int sockfd;
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	char s[INET6_ADDRSTRLEN];
@@ -97,7 +102,7 @@ void send_message(char * message){
 	inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
 			s, sizeof s);
 
-        
+
 	freeaddrinfo(servinfo); // all done with this structure
 
 	strcpy(full_message, full_log_file_name);
@@ -121,6 +126,9 @@ inline long long get_time() {
 
 // ~ ===========================================================================
 unsigned long int set_max_errors_iter(unsigned long int max_errors){
+#ifdef K1
+	set_max_errors_iter_local(max_errors);
+#endif
      max_errors_per_iter = max_errors;
 
      return max_errors_per_iter;
@@ -129,6 +137,10 @@ unsigned long int set_max_errors_iter(unsigned long int max_errors){
 // ~ ===========================================================================
 // Set the interval the program must print log details, default is 1 (each iteration)
 int set_iter_interval_print(int interval){
+#ifdef K1
+	set_iter_interval_print_local(interval);
+#endif
+
     if(interval < 1) {
         iter_interval_print = 1;
     }
@@ -165,11 +177,11 @@ char * getValueConfig(char * key){
 	char value[200];
 	int i,j;
 	int key_not_match;
-	
+
 	fp = fopen(config_file, "r");
 	if (fp == NULL)
 		return NULL;
-	
+
 	while ((read = getline(&line, &len, fp)) != -1) {
 		// ignore comments and sections in config file
 		if(line[0] == '#' || line[0] == '[')
@@ -212,7 +224,7 @@ char * getValueConfig(char * key){
 			free(line);
 		return v;
 	}
-	
+
 	fclose(fp);
 	if (line)
 		free(line);
@@ -228,6 +240,9 @@ char * get_log_file_name(){
 // ~ ===========================================================================
 // Generate the log file name, log info from user about the test to be executed and reset log variables
 int start_log_file(char *benchmark_name, char *test_info){
+#ifdef K1
+	start_log_file_local(benchmark_name, test_info);
+#endif
 
     char *var_dir=getValueConfig(vardir_key);
     if(!var_dir){
@@ -302,6 +317,9 @@ int start_log_file(char *benchmark_name, char *test_info){
 // ~ ===========================================================================
 // Log the string "#END" and reset global variables
 int end_log_file(){
+#ifdef K1
+	end_log_file_local();
+#endif
 
     send_message("#END");
     kernels_total_errors = 0;
@@ -316,10 +334,12 @@ int end_log_file(){
 // ~ ===========================================================================
 // Start time to measure kernel time, also update iteration number and log to file
 int start_iteration(){
-
     update_timestamp();
 
     it_time_start = get_time();
+#ifdef K1
+	start_iteration_local();
+#endif
     return 0;
 
 };
@@ -341,7 +361,9 @@ int end_iteration(){
     }
 
     iteration_number++;
-
+#ifdef K1
+	end_iteration_local();
+#endif
     return 0;
 
 };
@@ -367,6 +389,10 @@ int log_error_count(unsigned long int kernel_errors){
     if(kernel_errors > max_errors_per_iter){
 	send_message("#ABORT too many errors per iteration\n");
         end_log_file();
+#ifdef K1
+        end_log_file_local();
+#endif
+
         exit(1);
     }
 
@@ -374,12 +400,17 @@ int log_error_count(unsigned long int kernel_errors){
     if(kernel_errors == last_iter_errors && (last_iter_with_errors+1) == iteration_number && kernel_errors != 0){
 	send_message("#ABORT amount of errors equals of the last iteration\n");
         end_log_file();
+#ifdef K1
+        end_log_file_local();
+#endif
         exit(1);
     }
 
     last_iter_errors = kernel_errors;
     last_iter_with_errors = iteration_number;
-
+#ifdef K1
+    log_error_count_local(kernel_errors);
+#endif
     return 0;
 
 };
@@ -390,7 +421,9 @@ int log_error_detail(char *string){
 
     snprintf(message, sizeof(message),"#ERR %s\n", string);
     send_message(message);
-
+#ifdef K1
+    log_error_detail_local(string);
+#endif
     return 0;
 
 };
