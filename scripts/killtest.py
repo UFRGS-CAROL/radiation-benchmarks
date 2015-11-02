@@ -224,7 +224,7 @@ try:
 		if consecKillCount >= maxConsecKill or killCount >= maxKill:
 			logMsg("Rebooting, current command:"+curCommand)
 			sockConnect()
-			os.system("sudo shutdown -r now")
+			os.system("shutdown -r now")
 	
 		time.sleep(timestampMaxDiff)	
 except KeyboardInterrupt: # Ctrl+c
