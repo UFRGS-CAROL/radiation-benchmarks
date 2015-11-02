@@ -229,6 +229,6 @@ try:
 		time.sleep(timestampMaxDiff)	
 except KeyboardInterrupt: # Ctrl+c
 	print "\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )"
-	if proc is not None:
-		proc.kill()
+	for cmd in commandList:
+		os.system(cmd[2])
 	sys.exit(1)
