@@ -88,11 +88,11 @@ def checkCommandListChanges():
 		return True
 
 	if filecmp.cmp(curList, lastList, shallow=False):
+		return False
+	else:
 		fp = open(lastList,'w')
 		print >>fp, commandList
 		fp.close()
-		return False
-	else:
 		return True
 
 # Select the correct command to be executed from the commandList variable
@@ -182,6 +182,7 @@ timestampFile = varDir+"timestamp.txt"
 # Start last kill timestamo with an old enough timestamp
 lastKillTimestamp = time.time() - 120
 
+contTimestampReadError=0
 proc = None
 try:
 	consecKillCount = 0 # Counts how many consecutive kills to reboot machine
@@ -191,9 +192,20 @@ try:
 	while True:
 		sockConnect()
 		# Read the timestamp file
-		fp = open(timestampFile, 'r')
-		timestamp = int(float(fp.readline().strip()))
-		fp.close()
+		try:
+			fp = open(timestampFile, 'r')
+			timestamp = int(float(fp.readline().strip()))
+			fp.close()
+		except ValueError:
+			fp.close()
+			updateTimestamp()
+			contTimestampReadError += 1
+			if contTimestampReadError > 5:
+				logMsg("Rebooting, timestamp read error")
+				sockConnect()
+				os.system("shutdown -r now")
+			timestamp = int(float(time.time()))
+			
 		# Get the current timestamp
 		now = time.time()
 	
