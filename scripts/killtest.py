@@ -7,6 +7,7 @@ import os.path
 import ConfigParser
 import sys
 import filecmp
+import re
 from datetime import datetime
 #from subprocess import call
 #from subprocess import Popen
@@ -136,9 +137,12 @@ def selectCommand():
 def execCommand(command):
 	try:
 		updateTimestamp()
-		return os.system(command)
-		#procPopen = Popen(command, shell=True)
-		#return procPopen
+		if re.match(".*&\s*$", command):
+			#print "command should be ok"
+			return os.system(command)
+		else:
+			#print "command not ok, inserting &"
+			return os.system(command+" &")
 	except OSError as detail:
 		logMsg("Error launching command '"+command+"'; error detail: "+str(detail))
 		return None
