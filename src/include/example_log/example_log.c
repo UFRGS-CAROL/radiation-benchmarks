@@ -6,7 +6,7 @@ int main(){
 
 	// Start the log with filename including "my_benchmark" to its name, and
 	// header inside log file will print the detail "size:x repetition:y"
-	if(!start_log_file((char*)"my_benchmark", (char*)"size:x repetition:y")){
+	if(start_log_file((char*)"my_benchmark", (char*)"size:x repetition:y")){
 		fprintf(stderr,"Could not start log file");
 		exit(1);
 	}
