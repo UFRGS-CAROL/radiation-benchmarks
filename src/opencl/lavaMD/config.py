@@ -35,7 +35,7 @@ except IOError as e:
 
 data_path=installDir+"data/lavamd"
 bin_path=installDir+"bin"
-src_lavamd = installDir+"src/opencl/lavamd"
+src_lavamd = installDir+"src/opencl/lavaMD"
 
 if not os.path.isdir(data_path):
 	os.mkdir(data_path, 0777)
