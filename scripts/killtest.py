@@ -232,7 +232,7 @@ try:
 			sockConnect()
 			os.system("shutdown -r now")
 	
-		time.sleep(timestampMaxDiff)	
+		time.sleep(1)	
 except KeyboardInterrupt: # Ctrl+c
 	print "\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )"
 	for cmd in commandList:
