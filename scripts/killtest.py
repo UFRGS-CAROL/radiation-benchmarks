@@ -9,8 +9,6 @@ import sys
 import filecmp
 import re
 from datetime import datetime
-#from subprocess import call
-#from subprocess import Popen
 
 # Commands to be executed by KillTest
 # each command should be in this format:
@@ -33,7 +31,6 @@ killcmd="killall -9 "
 
 
 timestampMaxDiff = 20 # Time in seconds
-maxConsecKill = 2 # Max number of consective kills allowed
 maxKill = 5 # Max number of kills allowed
 
 sockServerIP = "192.168.1.5"
@@ -48,8 +45,9 @@ def sockConnect():
 		# s.connect(("feliz", 8080)) or s.connect(("143.54.10.100", 8080))
 		s.connect((sockServerIP, sockServerPORT))
 		s.close()
-	except socket.error:
+	except socket.error as eDetail:
 		print "could not connect to remote server, socket error"
+		#logMsg("socket connect error: "+str(eDetail))
 
 # Log messages adding timestamp before the message
 def logMsg(msg):
@@ -61,7 +59,7 @@ def logMsg(msg):
 
 # Update the timestamp file with machine current timestamp
 def updateTimestamp():
-	command = "echo "+str(time.time())+" > "+timestampFile
+	command = "echo "+str(int(time.time()))+" > "+timestampFile
 	retcode = os.system(command)
 
 
@@ -109,16 +107,26 @@ def selectCommand():
 	# If there is no file, create the first file with current timestamp
 	# and return the first command of commandList
 	if i == -1:
-		os.system("echo "+str(time.time())+" > "+varDir+"command_execstart_0")
+		os.system("echo "+str(int(time.time()))+" > "+varDir+"command_execstart_0")
 		return commandList[0][0]
 
 	# Check if last command executed is still in its execution time window
 	# and return it
 	timeWindow = commandList[i][1] * 60 * 60 # Time window in seconds
-	fp = open(varDir+"command_execstart_"+str(i),'r')
-	timestamp = int(float(fp.readline().strip()))
-	fp.close()
-	now = time.time()
+	# Read the timestamp file
+	try:
+		fp = open(varDir+"command_execstart_"+str(i),'r')
+		timestamp = int(float(fp.readline().strip()))
+		fp.close()
+	except ValueError as eDetail:
+		logMsg("Rebooting, command execstart timestamp read error: "+str(eDetail))
+		sockConnect()
+		os.system("shutdown -r now")
+	#fp = open(varDir+"command_execstart_"+str(i),'r')
+	#timestamp = int(float(fp.readline().strip()))
+	#fp.close()
+
+	now = int(time.time())
 	if (now - timestamp) < timeWindow:
 		return commandList[i][0]
 
@@ -126,11 +134,11 @@ def selectCommand():
 	# If all commands executed their time window, start all over again
 	if i >= len(commandList):
 		cleanCommandExecLogs()
-		os.system("echo "+str(time.time())+" > "+varDir+"command_execstart_0")
+		os.system("echo "+str(int(time.time()))+" > "+varDir+"command_execstart_0")
 		return commandList[0][0]
 
 	# Finally, select the next command not executed so far
-	os.system("echo "+str(time.time())+" > "+varDir+"command_execstart_"+str(i))
+	os.system("echo "+str(int(time.time()))+" > "+varDir+"command_execstart_"+str(i))
 	return commandList[i][0]
 
 
@@ -180,15 +188,13 @@ logFile = logDir+"killtest.log"
 timestampFile = varDir+"timestamp.txt"
 
 # Start last kill timestamo with an old enough timestamp
-lastKillTimestamp = time.time() - 120
+lastKillTimestamp = int(time.time()) - 120
 
 contTimestampReadError=0
-proc = None
 try:
-	consecKillCount = 0 # Counts how many consecutive kills to reboot machine
 	killCount = 0 # Counts how many kills were executed throughout execution
 	curCommand = selectCommand()
-	proc = execCommand(curCommand)
+	execCommand(curCommand)
 	while True:
 		sockConnect()
 		# Read the timestamp file
@@ -196,55 +202,40 @@ try:
 			fp = open(timestampFile, 'r')
 			timestamp = int(float(fp.readline().strip()))
 			fp.close()
-		except ValueError:
+		except ValueError as eDetail:
 			fp.close()
 			updateTimestamp()
 			contTimestampReadError += 1
-			if contTimestampReadError > 5:
-				logMsg("Rebooting, timestamp read error")
+			if contTimestampReadError > 2:
+				logMsg("Rebooting, timestamp read error: "+str(eDetail))
 				sockConnect()
 				os.system("shutdown -r now")
 			timestamp = int(float(time.time()))
 			
 		# Get the current timestamp
-		now = time.time()
-	
+		now = int(time.time())
+		timestampDiff = now - timestamp
 		# If timestamp was not update properly
-		if (now - timestamp) > timestampMaxDiff:
-			#if proc is not None:
-				#proc.kill() # Kill current command
-
-				# Check if last kill was in the last 60 seconds and reboot
-				#now = time.time()
-				#if (now - lastKillTimestamp) < 3*timestampMaxDiff:
-				#	logMsg("Rebooting, current command:"+curCommand)
-				#	sockConnect()
-				#	os.system("shutdown -r now")
-				#else:
-				#	lastKillTimestamp = now
-					
+		if timestampDiff > timestampMaxDiff:
 			# Check if last kill was in the last 60 seconds and reboot
 			for cmd in commandList:
 				os.system(killcmd+" "+cmd[2])
-			now = time.time()
+			now = int(time.time())
 			if (now - lastKillTimestamp) < 3*timestampMaxDiff:
-				logMsg("Rebooting, current command:"+curCommand)
+				logMsg("Rebooting, last kill too recent, timestampDiff: "+str(timestampDiff)+", current command:"+curCommand)
 				sockConnect()
 				os.system("shutdown -r now")
 			else:
 				lastKillTimestamp = now
 
-			logMsg("timestampMaxDiff kill command '"+curCommand+"'")
+			logMsg("timestampMaxDiff kill, timestampDiff:"+str(timestampDiff)+" command '"+curCommand+"'")
 			curCommand = selectCommand() # select properly the current command to be executed
-			proc = execCommand(curCommand) # start the command
-			consecKillCount += 1
+			execCommand(curCommand) # start the command
 			killCount += 1
-		else:
-			consecKillCount = 0
 	
 		# Reboot if we reach the max number of kills allowed 
-		if consecKillCount >= maxConsecKill or killCount >= maxKill:
-			logMsg("Rebooting, current command:"+curCommand)
+		if killCount >= maxKill:
+			logMsg("Rebooting, maxKill reached, current command:"+curCommand)
 			sockConnect()
 			os.system("shutdown -r now")
 	
