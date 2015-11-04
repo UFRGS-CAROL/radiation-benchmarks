@@ -228,8 +228,8 @@ try:
 			else:
 				lastKillTimestamp = now
 
-			logMsg("timestampMaxDiff kill, timestampDiff:"+str(timestampDiff)+" command '"+curCommand+"'")
 			killCount += 1
+			logMsg("timestampMaxDiff kill("+str(killCount)+"), timestampDiff:"+str(timestampDiff)+" command '"+curCommand+"'")
 			# Reboot if we reach the max number of kills allowed 
 			if killCount >= maxKill:
 				logMsg("Rebooting, maxKill reached, current command:"+curCommand)
