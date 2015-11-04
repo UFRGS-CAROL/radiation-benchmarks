@@ -65,11 +65,12 @@ def updateTimestamp():
 
 # Remove files with start timestamp of commands executing
 def cleanCommandExecLogs():
-	i=len(commandList)
-	while i >= 0:
-		if os.path.isfile(varDir+"command_execstart_"+str(i)):
-			os.remove(varDir+"command_execstart_"+str(i))
-		i -= 1
+	os.system("rm -f "+varDir+"command_execstart_*")
+#	i=len(commandList)
+#	while i >= 0:
+#		if os.path.isfile(varDir+"command_execstart_"+str(i)):
+#			os.remove(varDir+"command_execstart_"+str(i))
+#		i -= 1
 
 # Return True if the variable commandList from this file changed from the 
 # last time it was executed. If the file was never executed returns False
@@ -122,6 +123,7 @@ def selectCommand():
 		logMsg("Rebooting, command execstart timestamp read error: "+str(eDetail))
 		sockConnect()
 		os.system("shutdown -r now")
+		time.sleep(20)
 	#fp = open(varDir+"command_execstart_"+str(i),'r')
 	#timestamp = int(float(fp.readline().strip()))
 	#fp.close()
@@ -206,10 +208,12 @@ try:
 			fp.close()
 			updateTimestamp()
 			contTimestampReadError += 1
-			if contTimestampReadError > 2:
+			logMsg("timestamp read error(#"+str(contTimestampReadError)+"): "+str(eDetail))
+			if contTimestampReadError > 1:
 				logMsg("Rebooting, timestamp read error: "+str(eDetail))
 				sockConnect()
 				os.system("shutdown -r now")
+				time.sleep(20)
 			timestamp = int(float(time.time()))
 			
 		# Get the current timestamp
@@ -225,16 +229,18 @@ try:
 				logMsg("Rebooting, last kill too recent, timestampDiff: "+str(timestampDiff)+", current command:"+curCommand)
 				sockConnect()
 				os.system("shutdown -r now")
+				time.sleep(20)
 			else:
 				lastKillTimestamp = now
 
 			killCount += 1
-			logMsg("timestampMaxDiff kill("+str(killCount)+"), timestampDiff:"+str(timestampDiff)+" command '"+curCommand+"'")
+			logMsg("timestampMaxDiff kill(#"+str(killCount)+"), timestampDiff:"+str(timestampDiff)+" command '"+curCommand+"'")
 			# Reboot if we reach the max number of kills allowed 
 			if killCount >= maxKill:
 				logMsg("Rebooting, maxKill reached, current command:"+curCommand)
 				sockConnect()
 				os.system("shutdown -r now")
+				time.sleep(20)
 			else:
 				curCommand = selectCommand() # select properly the current command to be executed
 				execCommand(curCommand) # start the command
