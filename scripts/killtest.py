@@ -188,7 +188,7 @@ logFile = logDir+"killtest.log"
 timestampFile = varDir+"timestamp.txt"
 
 # Start last kill timestamo with an old enough timestamp
-lastKillTimestamp = int(time.time()) - 120
+lastKillTimestamp = int(time.time()) - 50*timestampMaxDiff
 
 contTimestampReadError=0
 try:
@@ -229,15 +229,16 @@ try:
 				lastKillTimestamp = now
 
 			logMsg("timestampMaxDiff kill, timestampDiff:"+str(timestampDiff)+" command '"+curCommand+"'")
-			curCommand = selectCommand() # select properly the current command to be executed
-			execCommand(curCommand) # start the command
 			killCount += 1
+			# Reboot if we reach the max number of kills allowed 
+			if killCount >= maxKill:
+				logMsg("Rebooting, maxKill reached, current command:"+curCommand)
+				sockConnect()
+				os.system("shutdown -r now")
+			else:
+				curCommand = selectCommand() # select properly the current command to be executed
+				execCommand(curCommand) # start the command
 	
-		# Reboot if we reach the max number of kills allowed 
-		if killCount >= maxKill:
-			logMsg("Rebooting, maxKill reached, current command:"+curCommand)
-			sockConnect()
-			os.system("shutdown -r now")
 	
 		time.sleep(1)	
 except KeyboardInterrupt: # Ctrl+c
