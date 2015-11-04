@@ -36,6 +36,10 @@ maxKill = 5 # Max number of kills allowed
 sockServerIP = "192.168.1.5"
 sockServerPORT = 8080
 
+curCMDtimeWindow = commandList[0][1] # Uses the hours to be executed from commandList
+# Will hold the timestamp when the current command start executing
+curCMDexecStartTimestamp = int(time.time()) 
+
 # Connect to server and close connection, kind of ping
 def sockConnect():
 	try:
@@ -114,6 +118,7 @@ def selectCommand():
 	# Check if last command executed is still in its execution time window
 	# and return it
 	timeWindow = commandList[i][1] * 60 * 60 # Time window in seconds
+	curCMDtimeWindow = timeWindow
 	# Read the timestamp file
 	try:
 		fp = open(varDir+"command_execstart_"+str(i),'r')
@@ -124,9 +129,7 @@ def selectCommand():
 		sockConnect()
 		os.system("shutdown -r now")
 		time.sleep(20)
-	#fp = open(varDir+"command_execstart_"+str(i),'r')
-	#timestamp = int(float(fp.readline().strip()))
-	#fp.close()
+	curCMDexecStartTimestamp = timestamp
 
 	now = int(time.time())
 	if (now - timestamp) < timeWindow:
@@ -244,6 +247,13 @@ try:
 			else:
 				curCommand = selectCommand() # select properly the current command to be executed
 				execCommand(curCommand) # start the command
+		if (now - curCMDexecStartTimestamp) > curCMDtimeWindow:
+			logMsg("Current command excced its time window, Killing command: "+curCommand)
+			for cmd in commandList:
+				os.system(killcmd+" "+cmd[2])
+			curCommand = selectCommand() # select properly the current command to be executed
+			execCommand(curCommand) # start the command
+
 	
 	
 		time.sleep(1)	
