@@ -51,9 +51,9 @@ os.system("mv GOLD_* Double_* "+data_path);
 os.system("mv ./genInputMatrices ./gemm_genGold ./gemm_nologs_timing ./gemm_err_inj ./gemm "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_gemm_ocl", 'w')
-print >>fp, "sudo "+bin_path+"/gemm 2048 "+str(deviceType)+" "+data_path+"/Double_A_8192.matrix "+data_path+"/Double_B_8192.matrix "+data_path+"/GOLD_2048 10000000"
-print >>fp, "sudo "+bin_path+"/gemm 4096 "+str(deviceType)+" "+data_path+"/Double_A_8192.matrix "+data_path+"/Double_B_8192.matrix "+data_path+"/GOLD_4096 10000000"
-print >>fp, "sudo "+bin_path+"/gemm 8192 "+str(deviceType)+" "+data_path+"/Double_A_8192.matrix "+data_path+"/Double_B_8192.matrix "+data_path+"/GOLD_8192 10000000"
+print >>fp, bin_path+"/gemm 2048 "+str(deviceType)+" "+data_path+"/Double_A_8192.matrix "+data_path+"/Double_B_8192.matrix "+data_path+"/GOLD_2048 10000000"
+print >>fp, bin_path+"/gemm 4096 "+str(deviceType)+" "+data_path+"/Double_A_8192.matrix "+data_path+"/Double_B_8192.matrix "+data_path+"/GOLD_4096 10000000"
+print >>fp, bin_path+"/gemm 8192 "+str(deviceType)+" "+data_path+"/Double_A_8192.matrix "+data_path+"/Double_B_8192.matrix "+data_path+"/GOLD_8192 10000000"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_gemm_ocl\n"
 

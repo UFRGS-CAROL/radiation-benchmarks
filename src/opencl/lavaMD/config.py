@@ -52,10 +52,10 @@ os.system("mv ./lavamd_genGold ./lavamd_nologs_timing ./lavamd_err_inj ./lavamd 
 
 
 fp = open(installDir+"scripts/how_to_run_lavamd_ocl", 'w')
-print >>fp, "sudo "+bin_path+"/lavamd 13 "+str(deviceType)+" 64 "+data_path+"/input_distance_13_64 "+data_path+"/input_charges_13_64 "+data_path+"/output_gold_13_64 10000000"
-print >>fp, "sudo "+bin_path+"/lavamd 15 "+str(deviceType)+" 64 "+data_path+"/input_distance_15_64 "+data_path+"/input_charges_15_64 "+data_path+"/output_gold_15_64 10000000"
-print >>fp, "sudo "+bin_path+"/lavamd 19 "+str(deviceType)+" 64 "+data_path+"/input_distance_19_64 "+data_path+"/input_charges_19_64 "+data_path+"/output_gold_19_64 10000000"
-print >>fp, "sudo "+bin_path+"/lavamd 23 "+str(deviceType)+" 64 "+data_path+"/input_distance_23_64 "+data_path+"/input_charges_23_64 "+data_path+"/output_gold_23_64 10000000"
+print >>fp, bin_path+"/lavamd 13 "+str(deviceType)+" 64 "+data_path+"/input_distance_13_64 "+data_path+"/input_charges_13_64 "+data_path+"/output_gold_13_64 10000000"
+print >>fp, bin_path+"/lavamd 15 "+str(deviceType)+" 64 "+data_path+"/input_distance_15_64 "+data_path+"/input_charges_15_64 "+data_path+"/output_gold_15_64 10000000"
+print >>fp, bin_path+"/lavamd 19 "+str(deviceType)+" 64 "+data_path+"/input_distance_19_64 "+data_path+"/input_charges_19_64 "+data_path+"/output_gold_19_64 10000000"
+print >>fp, bin_path+"/lavamd 23 "+str(deviceType)+" 64 "+data_path+"/input_distance_23_64 "+data_path+"/input_charges_23_64 "+data_path+"/output_gold_23_64 10000000"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_lavamd_ocl\n"
 
