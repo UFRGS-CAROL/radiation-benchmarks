@@ -201,10 +201,11 @@ try:
 		sockConnect()
 		# Read the timestamp file
 		try:
-			fp = open(timestampFile, 'r')
-			timestamp = int(float(fp.readline().strip()))
-			fp.close()
-		except ValueError as eDetail:
+			#fp = open(timestampFile, 'r')
+			#timestamp = int(float(fp.readline().strip()))
+			#fp.close()
+			timestamp = int(os.path.getmtime(timestampFile))
+		except (ValueError, OSError) as eDetail:
 			fp.close()
 			updateTimestamp()
 			contTimestampReadError += 1
