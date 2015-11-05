@@ -32,7 +32,25 @@
 #include <omp.h>
 #include "cdpQuicksort.h"
 
+int generate;
+
+#ifdef LOGS
+#include "log_helper.h"
+#endif
+
 #define INPUTSIZE 100000000
+
+typedef struct parameters_s {
+    int size;
+    int iterations;
+    int verbose;
+    int debug;
+    int generate;
+    int fault_injection;
+    char *goldName, *inputName;
+    unsigned *data, *outdata, *gold;
+    unsigned *gpudata, *scratchdata;
+} parameters_t;
 
 double mysecond()
 {
@@ -40,6 +58,15 @@ double mysecond()
    struct timezone tzp;
    int i = gettimeofday(&tp,&tzp);
    return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
+}
+
+void fatal(const char *str)
+{
+    printf("FATAL: %s\n", str);
+    #ifdef LOGS
+        if (generate) end_log_file();
+    #endif
+    exit(EXIT_FAILURE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -318,8 +345,9 @@ __global__ void qsort_warp(unsigned *indata,
 //  Returns the time elapsed for the sort.
 //
 ////////////////////////////////////////////////////////////////////////////////
-float run_quicksort_cdp(unsigned *gpudata, unsigned *scratchdata, unsigned int count, cudaStream_t stream)
+double run_quicksort_cdp(parameters_t *params, cudaStream_t stream)
 {
+    double timestamp;
     unsigned int stacksize = QSORT_STACK_ELEMS;
 
     // This is the stack, for atomic tracking of each sort's status
@@ -342,37 +370,35 @@ float run_quicksort_cdp(unsigned *gpudata, unsigned *scratchdata, unsigned int c
 
 
     // Timing events...
-    cudaEvent_t ev1, ev2;
-    checkCudaErrors(cudaEventCreate(&ev1));
-    checkCudaErrors(cudaEventCreate(&ev2));
-    checkCudaErrors(cudaEventRecord(ev1));
+    timestamp = mysecond();
+    #ifdef LOGS
+        if (!(params->generate)) start_iteration();
+    #endif
 
     // Now we trivially launch the qsort kernel
-    if (count > BITONICSORT_LEN)
+    if (params->size > BITONICSORT_LEN)
     {
-        unsigned int numblocks = (unsigned int)(count+(QSORT_BLOCKSIZE-1)) >> QSORT_BLOCKSIZE_SHIFT;
-        qsort_warp<<< numblocks, QSORT_BLOCKSIZE, 0, stream >>>(gpudata, scratchdata, 0U, count, gpustack, ringbuf, true, 0);
+        unsigned int numblocks = (unsigned int)(params->size+(QSORT_BLOCKSIZE-1)) >> QSORT_BLOCKSIZE_SHIFT;
+        qsort_warp<<< numblocks, QSORT_BLOCKSIZE, 0, stream >>>(params->gpudata, params->scratchdata, 0U, params->size, gpustack, ringbuf, true, 0);
     }
     else
     {
-        bitonicsort<<< 1, BITONICSORT_LEN >>>(gpudata, gpudata, 0, count);
+        bitonicsort<<< 1, BITONICSORT_LEN >>>(params->gpudata, params->gpudata, 0, params->size);
     }
-
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaEventRecord(ev2));
     checkCudaErrors(cudaDeviceSynchronize());
 
-    float elapse=0.0f;
+    #ifdef LOGS
+        if (!(params->generate)) end_iteration();
+    #endif
+    timestamp = mysecond()-timestamp;
 
     if (cudaPeekAtLastError() != cudaSuccess)
         printf("Launch failure: %s\n", cudaGetErrorString(cudaGetLastError()));
-    else
-        checkCudaErrors(cudaEventElapsedTime(&elapse, ev1, ev2));
 
     // Sanity check that the stack allocator is doing the right thing
     checkCudaErrors(cudaMemcpy(&buf, ringbuf, sizeof(*ringbuf), cudaMemcpyDeviceToHost));
 
-    if (count > BITONICSORT_LEN && buf.head != buf.tail)
+    if (params->size > BITONICSORT_LEN && buf.head != buf.tail)
     {
         printf("Stack allocation error!\nRingbuf:\n");
         printf("\t head = %u\n", buf.head);
@@ -385,265 +411,248 @@ float run_quicksort_cdp(unsigned *gpudata, unsigned *scratchdata, unsigned int c
     checkCudaErrors(cudaFree(ringbuf));
     checkCudaErrors(cudaFree(gpustack));
 
-    return elapse;
+    return timestamp;
 }
 
-int dataRead(unsigned *data, unsigned *gold, unsigned int size, char *inputName, char *goldName, int verbose)
+int dataRead(parameters_t *params)
 {
-  FILE *finput, *fgold;
+    FILE *finput, *fgold;
+    if (finput = fopen(params->inputName, "rb")) { // READ INPUT
+        printf("Reading existing input %s (delete it to generate a new one) ...", params->inputName);
+        double timer = mysecond();
+        fread(params->data, params->size * sizeof(unsigned), 1 , finput);
+        fclose(finput);
+        printf("Done in %.2fs\n", mysecond() - timer);
+    } else if (params->generate) { // GENERATE INPUT
+        unsigned *ndata = new unsigned[INPUTSIZE];
+        printf("Generating input, this will take a long time..."); fflush(stdout);
+        for (unsigned int i=0; i<INPUTSIZE; i++)
+        {
+            // Build data 8 bits at a time
+            ndata[i] = 0;
+            char *ptr = (char *)&(ndata[i]);
 
-  if (!(finput = fopen(inputName, "rb")))
-  { // GENERATE INPUT
-    unsigned *ndata = new unsigned[INPUTSIZE];
-    printf("Input was not detected. Generating, this will take a long time...");
-    for (unsigned int i=0; i<INPUTSIZE; i++)
-    {
-      // Build data 8 bits at a time
-      ndata[i] = 0;
-      char *ptr = (char *)&(ndata[i]);
-
-      for (unsigned j=0; j<sizeof(unsigned); j++)
-      {
-          // Easy-to-read data in debug mode
-          if (verbose)
-          {
-              *ptr++ = (char)(rand() % 10);
-              break;
-          }
-
-          *ptr++ = (char)(rand() & 255);
-      }
+            for (unsigned j=0; j<sizeof(unsigned); j++)
+            {
+                *ptr++ = (char)(rand() & 255);
+            }
+        }
+        if (!(finput = fopen(params->inputName, "wb"))) {
+            printf("Warning! Couldn't write the input to file, proceeding anyway...\n");
+        } else {
+            fwrite(ndata, INPUTSIZE*sizeof(unsigned), 1 , finput);
+            fclose(finput);
+        }
+        memcpy(params->data, ndata, params->size * sizeof(unsigned));
+        printf("Done.\n");
+    } else {
+        fatal("Input file not opened. Use -generate.\n");
     }
-    if (!(finput = fopen(inputName, "wb")))
-    { printf("Warning! Couldn't write the input to file, proceeding anyway...\n"); }
-    else
-    {
-      fwrite(ndata, INPUTSIZE*sizeof(unsigned), 1 , finput);
-      fclose(finput);
+
+    if (!(params->generate)) {
+        if (!(fgold=fopen(params->goldName, "rb")))
+            fatal("Gold file not opened. Use -generate.\n");
+        fread(params->gold, params->size * sizeof(unsigned), 1 , fgold);
+        fclose(fgold);
     }
-    memcpy(data, ndata, size*sizeof(unsigned));
-    printf("Done.\n");
-  }
-  else
-  { // READ INPUT
-    printf("Reading input...");
-    double timer = mysecond();
-    fread(data, size*sizeof(unsigned), 1 , finput);
-    fclose(finput);
-    printf("Done in %.2fs\n", mysecond() - timer);
-  }
 
-  if (verbose)
-  {
-    for (unsigned int i=0; i<size; i++)
-    {
-      if (i && !(i%32))
-          printf("\n        ");
-
-      printf("%u ", data[i]);
+    if (params->fault_injection) {
+        params->data[6]=rand();
+        printf(">>>>>>> Error injection: data[6]=%i\n", params->data[6]);
     }
-  }
-
-  if (!(fgold = fopen(goldName, "rb")))
-  { // Gold does not exist, propagate this information so that gold should be generated.
-    printf("Gold does not exist. yet.\n");
-    return 0;
-  }
-  else
-  {
-    fread(gold, size*sizeof(unsigned), 1 , fgold);
-    fclose(fgold);
-  }
-  return 1;
+    return 1;
 }
 
-void goldWrite(unsigned *gold, unsigned int size, char *goldName)
+void goldWrite(parameters_t *params)
 {
-  FILE *fgold;
-  if (!(fgold = fopen(goldName, "wb")))
-  {
-    printf("Gold file could not be open in wb mode.\n");
-  }
-  else
-  {
-    fwrite(gold, size*sizeof(unsigned), 1, fgold);
-    fclose(fgold);
-  }
+    FILE *fgold;
+    if (!(fgold = fopen(params->goldName, "wb"))) {
+        printf("Gold file could not be open in wb mode.\n");
+    } else {
+        fwrite(params->gold, params->size * sizeof(unsigned), 1, fgold);
+        fclose(fgold);
+    }
+}
+
+void outputWrite(parameters_t *params, char *fname)
+{
+    FILE *fout;
+    if (!(fout = fopen(fname, "wb"))) {
+        printf("Output file could not be open in wb mode.\n");
+    } else {
+        fwrite(params->outdata, params->size * sizeof(unsigned), 1, fout);
+        fclose(fout);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-int run_qsort(unsigned int size, int seed, int loop, int verbose, char *inputName, char *goldName)
+int run_qsort(parameters_t *params)
 {
-    if (seed > 0)
-        srand(seed);
+    srand( time( NULL ) );
+
+    int size = params->size;
 
     // Create and set up our test
-    unsigned *gpudata, *scratchdata;
-    checkCudaErrors(cudaMalloc((void **)&gpudata, size*sizeof(unsigned)));
-    checkCudaErrors(cudaMalloc((void **)&scratchdata, size*sizeof(unsigned)));
-
-    int goldstatus; // Wether gold is ready=1 or not=0
+    checkCudaErrors(cudaMalloc((void **)&(params->gpudata), size*sizeof(unsigned)));
+    checkCudaErrors(cudaMalloc((void **)&(params->scratchdata), size*sizeof(unsigned)));
 
     // Create CPU data.
-    unsigned *data = new unsigned[size];
-    unsigned *outdata = new unsigned[size];
-    unsigned *gold = new unsigned[size];
+    params->data = new unsigned[size];
+    params->outdata = new unsigned[size];
+    params->gold = new unsigned[size];
 
-    goldstatus = dataRead(data, gold, size, inputName, goldName, verbose);
+    dataRead(params); // Read data from files
 
-    unsigned int loop1; // Test loop iterator
-    for (loop1 = 0; loop1 < loop; loop1++)
+    int loop1; // Test loop iterator
+    for (loop1 = 0; loop1 < params->iterations; loop1++)
     {
+        double itertimestamp = mysecond();
+        if (params->verbose) printf("================== [Iteration #%i began]\n", loop1);
 
-        checkCudaErrors(cudaMemcpy(gpudata, data, size*sizeof(unsigned), cudaMemcpyHostToDevice));
+        checkCudaErrors(cudaMemcpy(params->gpudata, params->data, size*sizeof(unsigned), cudaMemcpyHostToDevice));
 
         // So we're now populated and ready to go! We size our launch as
         // blocks of up to BLOCKSIZE threads, and appropriate grid size.
         // One thread is launched per element.
-        float elapse;
-        elapse = run_quicksort_cdp(gpudata, scratchdata, size, NULL);
+        double ktime = run_quicksort_cdp(params, NULL);
 
-        //run_bitonicsort<SORTTYPE>(gpudata, scratchdata, size, verbose);
-        checkCudaErrors(cudaDeviceSynchronize());
+        if (params->verbose) printf("GPU Kernel time: %.4fs\n", ktime);
 
         // Copy back the data and verify correct sort
-        checkCudaErrors(cudaMemcpy(outdata, gpudata, size*sizeof(unsigned), cudaMemcpyDeviceToHost));
+        checkCudaErrors(cudaMemcpy(params->outdata, params->gpudata, params->size * sizeof(unsigned), cudaMemcpyDeviceToHost));
 
-        if (verbose)
-        {
-            printf("Output: ");
-
-            for (unsigned int i=0; i<size; i++)
+        if (params->generate) {// Write gold to file
+            printf("Verify gold consistence...\n");
+            double timer = mysecond();
+            register unsigned *ptr = params->outdata;
+            #pragma omp parallel for
+            for (int check=1; check<size; check++)
             {
-                if (i && !(i%32)) printf("\n        ");
-
-                printf("%u ", outdata[i]);
+                if (ptr[check] < ptr[check-1])
+                {
+                    printf("FAILED at element: %d\n", check);
+                    //break;
+                }
             }
-
-            printf("\n");
-        }
-
-        if (!goldstatus)
-        {// Write gold to file
-          printf("Assuming no errors occurred, i'm writing output to gold file %s...\n", goldName);
-          goldWrite(outdata, size, goldName);
-          memcpy(gold, outdata, size*sizeof(unsigned));
-          goldstatus = 1; // gold ready
-          printf("Done.\n");
-        }
-        double timer;
-        unsigned int check;
-
-        printf("Checking for errors (cpu compute)...");
-        timer = mysecond();
-        #pragma omp parallel for
-        for (check=1; check<size; check++)
-        {
-            if (outdata[check] < outdata[check-1])
-            {
-                printf("FAILED at element: %d\n", check);
-                //break;
+            printf("Done in %.4fs. Writing gold to file %s...\n", mysecond() - timer, params->goldName);
+            memcpy(params->gold, params->outdata, size*sizeof(unsigned));
+            goldWrite(params);
+            printf("Done.\n");
+        } else {
+            char error_detail[150], outName[50];
+            double timer = mysecond();
+            if (memcmp(params->gold, params->outdata, size*sizeof(float))) {
+                snprintf(outName, 50, "quicksort_dump_%i", (int)mysecond());
+                snprintf(error_detail, 150, "Output differs from gold. Dump file: %s", outName);
+                #ifdef LOGS
+                    log_error_detail(error_detail);
+                #endif
+                printf("ERROR (Iteration #%d): %s\n", loop1, error_detail);
+                outputWrite(params, outName);
+                #ifdef LOGS
+                    log_error_count(1);
+                #endif
+            } else {
+                #ifdef LOGS
+                    log_error_count(0);
+                #endif
             }
+            if (params->verbose) printf("Gold check time: %.4fs\n", mysecond() - timer);
         }
-        printf("Done in %.2fs.\n", mysecond() - timer);
-        printf("Checking for errors (gold comparison)...");
-        timer = mysecond();
-        #pragma omp parallel for
-        for (check=0; check<size; check++)
-        {
-            if (gold[check] != outdata[check])
-            {
-                printf("FAILED at element: %d\n", check);
-            }
-        }
-        printf("Done in %.2fs.\n", mysecond() - timer);
-
-      /*  if (check != size)
-        {
-            printf("    cdpAdvancedQuicksort FAILED\n");
-            exit(EXIT_FAILURE);
-        }
-        else
-            printf("    cdpAdvancedQuicksort PASSED\n");*/
 
         // Display the time between event recordings
-        printf("Sorted %u elems in %.3f ms (%.3f Melems/sec)\n", size, elapse, (float)size/(elapse*1000.0f));
+        if (params->verbose) printf("Perf: %.3f Melems/sec\n",(float)size/(ktime*1000.0f));
+        if (params->verbose) {
+            printf("Iteration %d ended. Elapsed time: %.4fs\n", loop1, mysecond()-itertimestamp);
+        } else {
+            printf(".");
+        }
         fflush(stdout);
     }
 
     // Release everything and we're done
-    checkCudaErrors(cudaFree(scratchdata));
-    checkCudaErrors(cudaFree(gpudata));
-    delete(data);
+    checkCudaErrors(cudaFree(params->scratchdata));
+    checkCudaErrors(cudaFree(params->gpudata));
+    delete(params->data);
     return 0;
 }
 
-static void usage()
+static void usage(int argc, char *argv[])
 {
-    printf("Syntax: qsort [-size=<num>] [-seed=<num>] [-verbose] [-input=<inputfile>] [-gold=<goldfile>]\n");
-    printf("If loop_step is non-zero, will run from 1->array_len in steps of loop_step\n");
-    printf("The default goldfile file name is quickSortGold[SIZE], the default inputfile is quickSortInput100000000\n");
-    printf("If goldfile/inputfile does not exist, it will be generated\n");
+    printf("Syntax: %s -size=N [-generate] [-verbose] [-debug] [-input=<path>] [-gold=<path>] [-iterations=N]\n", argv[0]);
+    exit(EXIT_FAILURE);
+}
+
+void getParams(int argc, char *argv[], parameters_t *params)
+{
+    params->size = 5000;
+    params->iterations = 100000000;
+    params->verbose = 0;
+    params->generate = 0;
+    params->fault_injection = 0;
+    generate = 0;
+
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "help") ||
+        checkCmdLineFlag(argc, (const char **)argv, "h"))
+    {
+        usage(argc, argv);
+        printf("&&&& cdpAdvancedQuicksort WAIVED\n");
+        exit(EXIT_WAIVED);
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "size")) {
+        params->size = getCmdLineArgumentInt(argc, (const char **)argv, "size");
+    } else {
+        printf("Missing -size parameter.\n");
+        usage(argc, argv);
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "verbose")) {
+        params->verbose = 1;
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "generate")) {
+        params->generate = 1;
+        generate = 1;
+        params->iterations = 1;
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "iterations")) {
+        params->iterations  = getCmdLineArgumentInt(argc, (const char **)argv, "iterations");
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "debug")) {
+        params->fault_injection = 1;
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "gold")) {
+        getCmdLineArgumentString(argc, (const char **)argv, "gold", &(params->goldName));
+    } else {
+        params->goldName = new char[100];
+        snprintf(params->goldName, 100, "quickSortGold%i", (signed int)params->size);
+        printf("Using default gold filename: %s\n", params->goldName);
+    }
+
+    if (checkCmdLineFlag(argc, (const char **)argv, "input")) {
+        getCmdLineArgumentString(argc, (const char **)argv, "input", &(params->inputName));
+    } else {
+        params->inputName = new char[100];
+        snprintf(params->inputName, 100, "quickSortInput%i", (signed int)INPUTSIZE);
+        printf("Using default input filename: %s\n", params->inputName);
+    }
 }
 
 
 // Host side entry
 int main(int argc, char *argv[])
 {
-    int size = 5000;     // TODO: make this 1e6
-    unsigned int seed = 100;    // TODO: make this 0
-    int loop = 1;
-    int verbose = 0;
-    char *goldName, *inputName;
+    parameters_t *params;
 
-    if (checkCmdLineFlag(argc, (const char **)argv, "help") ||
-        checkCmdLineFlag(argc, (const char **)argv, "h"))
-    {
-        usage();
-        printf("&&&& cdpAdvancedQuicksort WAIVED\n");
-        exit(EXIT_WAIVED);
-    }
+    params = (parameters_t*) malloc(sizeof(parameters_t));
 
-    if (checkCmdLineFlag(argc, (const char **)argv, "size"))
-    {
-        size = getCmdLineArgumentInt(argc, (const char **)argv, "size");
-    }
-
-    if (checkCmdLineFlag(argc, (const char **)argv, "seed"))
-    {
-        seed = getCmdLineArgumentInt(argc, (const char **)argv, "seed");
-    }
-
-    if (checkCmdLineFlag(argc, (const char **)argv, "loop"))
-    {
-        loop = getCmdLineArgumentInt(argc, (const char **)argv, "loop");
-    }
-
-    if (checkCmdLineFlag(argc, (const char **)argv, "verbose"))
-    {
-        verbose = 1;
-    }
-
-    if (checkCmdLineFlag(argc, (const char **)argv, "gold"))
-    {
-        getCmdLineArgumentString(argc, (const char **)argv, "gold", &goldName);
-    }
-    else
-    {
-        goldName = new char[100];
-        snprintf(goldName, 100, "quickSortGold%i", (signed int)size);
-    }
-
-    if (checkCmdLineFlag(argc, (const char **)argv, "input"))
-    {
-        getCmdLineArgumentString(argc, (const char **)argv, "input", &inputName);
-    }
-    else
-    {
-        inputName = new char[100];
-        snprintf(inputName, 100, "quickSortInput%i", (signed int)INPUTSIZE);
-    }
+    getParams(argc, argv, params);
 
     // Get device properties
     int cuda_device = findCudaDevice(argc, (const char **)argv);
@@ -659,9 +668,15 @@ int main(int argc, char *argv[])
         exit(EXIT_WAIVED);
     }
 
-    printf("Running qsort on %d elements with seed %d, on %s\n", size, seed, properties.name);
+    #ifdef LOGS
+        char test_info[90];
+        snprintf(test_info, 90, "size:%d", params->size);
+        if (!(params->generate)) start_log_file("cudaQuickSortCDP", test_info);
+    #endif
 
-    run_qsort(size, seed, loop, verbose, inputName, goldName);
+    printf("Running qsort on %d elements, on %s\n", params->size, properties.name);
+
+    run_qsort(params);
 
     // cudaDeviceReset causes the driver to clean up all state. While
     // not mandatory in normal operation, it is good practice.  It is also
