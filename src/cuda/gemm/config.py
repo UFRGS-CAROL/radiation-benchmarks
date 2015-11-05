@@ -44,7 +44,7 @@ if not os.path.isdir(data_path):
 
 os.system("cd "+src_gemm)
 
-os.system("sudo ./generateMatrices -size=4096 -input_a=Double_A_4096.matrix -input_b=Double_B_4096.matrix -gold=GOLD_4096")
+os.system("sudo ./generateMatrices -size=512 -input_a=Double_A_512.matrix -input_b=Double_B_512.matrix -gold=GOLD_512")
 os.system("sudo ./generateMatrices -size=2048 -input_a=Double_A_2048.matrix -input_b=Double_B_2048.matrix -gold=GOLD_2048")
 os.system("sudo ./generateMatrices -size=1024 -input_a=Double_A_1024.matrix -input_b=Double_B_1024.matrix -gold=GOLD_1024")
 os.system("sudo chmod 777 GOLD_* ");
@@ -53,7 +53,7 @@ os.system("mv ./generateMatrices ./cudaGEMM "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_gemm_cuda", 'w')
 print >>fp, "sudo "+bin_path+"/cudaGEMM -size=2048 -input_a="+data_path+"/Double_A_2048.matrix -input_b="+data_path+"/Double_B_2048.matrix -gold="+data_path+"/GOLD_2048 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/cudaGEMM -size=4096 -input_a="+data_path+"/Double_A_4096.matrix -input_b="+data_path+"/Double_B_4096.matrix -gold="+data_path+"/GOLD_4096 -iterations=10000000"
+print >>fp, "sudo "+bin_path+"/cudaGEMM -size=512 -input_a="+data_path+"/Double_A_512.matrix -input_b="+data_path+"/Double_B_512.matrix -gold="+data_path+"/GOLD_512 -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/cudaGEMM -size=1024 -input_a="+data_path+"/Double_A_1024.matrix -input_b="+data_path+"/Double_B_1024.matrix -gold="+data_path+"/GOLD_1026 -iterations=10000000"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_gemm_cuda\n"
