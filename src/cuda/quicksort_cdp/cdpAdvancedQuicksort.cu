@@ -493,10 +493,6 @@ int run_qsort(parameters_t *params)
 
     int size = params->size;
 
-    // Create and set up our test
-    checkCudaErrors(cudaMalloc((void **)&(params->gpudata), size*sizeof(unsigned)));
-    checkCudaErrors(cudaMalloc((void **)&(params->scratchdata), size*sizeof(unsigned)));
-
     // Create CPU data.
     params->data = new unsigned[size];
     params->outdata = new unsigned[size];
@@ -509,6 +505,11 @@ int run_qsort(parameters_t *params)
     {
         double itertimestamp = mysecond();
         if (params->verbose) printf("================== [Iteration #%i began]\n", loop1);
+
+
+        // Create and set up our test
+        checkCudaErrors(cudaMalloc((void **)&(params->gpudata), size*sizeof(unsigned)));
+        checkCudaErrors(cudaMalloc((void **)&(params->scratchdata), size*sizeof(unsigned)));
 
         checkCudaErrors(cudaMemcpy(params->gpudata, params->data, size*sizeof(unsigned), cudaMemcpyHostToDevice));
 
@@ -561,6 +562,10 @@ int run_qsort(parameters_t *params)
             if (params->verbose) printf("Gold check time: %.4fs\n", mysecond() - timer);
         }
 
+        // Release everything and we're done
+        checkCudaErrors(cudaFree(params->scratchdata));
+        checkCudaErrors(cudaFree(params->gpudata));
+
         // Display the time between event recordings
         if (params->verbose) printf("Perf: %.3f Melems/sec\n",(float)size/(ktime*1000.0f));
         if (params->verbose) {
@@ -570,10 +575,7 @@ int run_qsort(parameters_t *params)
         }
         fflush(stdout);
     }
-
-    // Release everything and we're done
-    checkCudaErrors(cudaFree(params->scratchdata));
-    checkCudaErrors(cudaFree(params->gpudata));
+    
     delete(params->data);
     return 0;
 }
@@ -604,6 +606,9 @@ void getParams(int argc, char *argv[], parameters_t *params)
 
     if (checkCmdLineFlag(argc, (const char **)argv, "size")) {
         params->size = getCmdLineArgumentInt(argc, (const char **)argv, "size");
+        if (params->size > INPUTSIZE) {
+            fatal("Maximum size reached, please increase the input size on the code source and recompile.");
+        }
     } else {
         printf("Missing -size parameter.\n");
         usage(argc, argv);
