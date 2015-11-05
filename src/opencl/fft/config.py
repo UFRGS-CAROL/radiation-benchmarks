@@ -48,7 +48,7 @@ os.system("mv input_fft_* output_fft_* "+data_path);
 os.system("mv ./fft_genGold ./fft_nologs_timing ./fft_err_inj ./fft "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_fft_ocl", 'w')
-print >>fp, "sudo "+bin_path+"/fft 4 "+str(deviceType)+" 10 "+data_path+"/input_fft_size_4 "+data_path+"/output_fft_size_4 10000000"
+print >>fp, bin_path+"/fft 4 "+str(deviceType)+" 10 "+data_path+"/input_fft_size_4 "+data_path+"/output_fft_size_4 10000000"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_fft_ocl\n"
 

@@ -48,7 +48,7 @@ os.system("mv GOLD_* "+data_path);
 os.system("mv ./hotspot_genGold ./hotspot_nologs_timing ./hotspot_err_inj ./hotspot "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_hotspot_ocl", 'w')
-print >>fp, "sudo "+bin_path+"/hotspot 2000 1024 "+str(deviceType)+" "+data_path+"/temp_1024 "+data_path+"/power_1024 "+data_path+"/GOLD_2000_1024 10000000"
+print >>fp, bin_path+"/hotspot 2000 1024 "+str(deviceType)+" "+data_path+"/temp_1024 "+data_path+"/power_1024 "+data_path+"/GOLD_2000_1024 10000000"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_hotspot_ocl\n"
 
