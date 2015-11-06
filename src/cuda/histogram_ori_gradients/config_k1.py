@@ -42,8 +42,8 @@ os.system("mv ./hog ./gold_gen "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_hog_cuda", 'w')
 print >>fp, "sudo "+bin_path+"/hog "+data_path+"/1x_pedestrians.jpg --dst_data "+data_path+"/GOLD_1x.data --iterations 10000000"
-print >>fp, "sudo "+bin_path+"/hog "+data_path+"/4x_pedestrians.jpg --dst_data "+data_path+"/GOLD_1x.data --iterations 10000000"
-print >>fp, "sudo "+bin_path+"/hog "+data_path+"/9x_pedestrians.jpg --dst_data "+data_path+"/GOLD_1x.data --iterations 10000000"
+print >>fp, "sudo "+bin_path+"/hog "+data_path+"/4x_pedestrians.jpg --dst_data "+data_path+"/GOLD_4x.data --iterations 10000000"
+print >>fp, "sudo "+bin_path+"/hog "+data_path+"/9x_pedestrians.jpg --dst_data "+data_path+"/GOLD_9x.data --iterations 10000000"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_hog_cuda\n"
 
