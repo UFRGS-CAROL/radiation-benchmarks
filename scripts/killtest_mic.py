@@ -90,6 +90,7 @@ except IOError as e:
 	
 logFile = micLog+"killtest.log"
 timestampFile = micLog+"timestamp.txt"
+os.chmod(timestampFile, 0777)
 
 # Start last kill timestamo with an old enough timestamp
 lastKillTimestamp = int(time.time()) - 50*timestampMaxDiff
@@ -97,7 +98,6 @@ lastKillTimestamp = int(time.time()) - 50*timestampMaxDiff
 contTimestampReadError=0
 try:
 	killCount = 0 # Counts how many kills were executed throughout execution
-	curCommand = selectCommand()
 	execCommand(startExecCmd) # start the command
 	while True:
 		sockConnect()
@@ -125,7 +125,7 @@ try:
 			# Check if last kill was in the last 60 seconds and reboot
 			now = int(time.time())
 			if (now - lastKillTimestamp) < 3*timestampMaxDiff:
-				logMsg("Rebooting, last kill too recent, timestampDiff: "+str(timestampDiff)+", current command:"+curCommand)
+				logMsg("Rebooting, last kill too recent, timestampDiff: "+str(timestampDiff)+", current command:"+startExecCmd)
 				sockConnect()
 				os.system("shutdown -r now")
 				time.sleep(20)
@@ -133,10 +133,10 @@ try:
 				lastKillTimestamp = now
 
 			killCount += 1
-			logMsg("timestampMaxDiff kill(#"+str(killCount)+"), timestampDiff:"+str(timestampDiff)+" command '"+curCommand+"'")
+			logMsg("timestampMaxDiff kill(#"+str(killCount)+"), timestampDiff:"+str(timestampDiff)+" command '"+startExecCmd+"'")
 			# Reboot if we reach the max number of kills allowed 
 			if killCount >= maxKill:
-				logMsg("Rebooting, maxKill reached, current command:"+curCommand)
+				logMsg("Rebooting, maxKill reached, current command:"+startExecCmd)
 				sockConnect()
 				os.system("shutdown -r now")
 				time.sleep(20)
