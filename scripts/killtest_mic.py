@@ -90,6 +90,7 @@ except IOError as e:
 	
 logFile = micLog+"killtest.log"
 timestampFile = micLog+"timestamp.txt"
+os.chmod(timestampFile, 0777)
 
 # Start last kill timestamo with an old enough timestamp
 lastKillTimestamp = int(time.time()) - 50*timestampMaxDiff
