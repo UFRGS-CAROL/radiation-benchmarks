@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "logHelper.h"
+#include "log_helper.h"
 
 
 #ifdef MIC_NATIVE
