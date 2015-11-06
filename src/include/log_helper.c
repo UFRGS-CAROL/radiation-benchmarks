@@ -1,9 +1,3 @@
-#ifdef MIC_NATIVE
-
-#include "logHelper.h"
-
-#else
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +7,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#endif
+#include "logHelper.h"
 
 
 #ifdef MIC_NATIVE
