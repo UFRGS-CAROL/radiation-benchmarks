@@ -234,7 +234,7 @@ int checkKeys(parameters_t *params, uint numValues)
 
 	register uint index, range;
 	long unsigned int control;
-	range = ((2*numValues*sizeof(unsigned char) > 1024000000) ? 512000000 : numValues); // Avoid more than 1GB of RAM alloc
+	range = ((2*numValues*sizeof(unsigned char) > 2048000000) ? 1024000000 : numValues); // Avoid more than 2GB of RAM alloc
 
 	srcHist = (unsigned char *)malloc(range * sizeof(unsigned char));
 	resHist = (unsigned char *)malloc(range * sizeof(unsigned char));
