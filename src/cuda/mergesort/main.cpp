@@ -284,7 +284,6 @@ int checkKeys(parameters_t *params, uint numValues)
 	free(srcHist);
 
 	//Finally check the ordering
-	register uint *srcKey = params->h_SrcKey;
 	register uint *resKey = params->h_DstKey;
 	#pragma omp parallel for
 	for (uint i = 0; i < params->size - 1; i++)
