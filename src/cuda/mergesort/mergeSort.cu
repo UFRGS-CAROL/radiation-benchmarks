@@ -624,4 +624,3 @@ extern "C" void mergeSort(
         oval = t;
     }
 }
-
