@@ -48,7 +48,7 @@ void fatal(const char *str)
 
 static void usage(int argc, char *argv[])
 {
-	printf("Syntax: %s -size=N [-generate] [-verbose] [-debug] [-inputkey=<path>] [-inputval=<path>] [-gold=<path>] [-iterations=N]\n", argv[0]);
+	printf("Syntax: %s -size=N [-generate] [-verbose] [-debug] [-inputkey=<path>] [-inputval=<path>] [-gold=<path>] [-iterations=N] [-noinputensurance]\n", argv[0]);
 	exit(EXIT_FAILURE);
 }
 
@@ -81,6 +81,10 @@ void getParams(int argc, char *argv[], parameters_t *params)
 
 	if (checkCmdLineFlag(argc, (const char **)argv, "verbose")) {
 		params->verbose = 1;
+	}
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "noinputensurance")) {
+		params->noinputensurance = 1;
 	}
 
 	if (checkCmdLineFlag(argc, (const char **)argv, "generate")) {
@@ -352,6 +356,20 @@ int checkVals(parameters_t *params)
 	return errors;
 }
 
+int compareGoldOutput(parameters_t *params)
+{
+	//return (memcmp(params->h_GoldKey, params->h_DstKey, params->size * sizeof(uint)) || memcmp(params->h_GoldVal, params->h_DstVal, params->size * sizeof(uint)));
+	register unsigned int i;
+	register uint *ptr1 = params->h_GoldKey;
+	register uint *ptr2 = params->h_DstKey;
+	int flag = 0;
+	#pragma omp parallel for
+	for (i=0; i<params->size; i++)
+	{
+		if (ptr1[i] != ptr2[i]) flag=1;
+	}
+	return flag;
+}
 ////////////////////////////////////////////////////////////////////////////////
 // Test driver
 ////////////////////////////////////////////////////////////////////////////////
@@ -451,8 +469,7 @@ int main(int argc, char **argv)
 
 			writeOutput(params);
 		} else {
-			if (memcmp(params->h_GoldKey, params->h_DstKey, params->size * sizeof(uint))
-			|| memcmp(params->h_GoldVal, params->h_DstVal, params->size * sizeof(uint))) {
+			if (compareGoldOutput(params)) {
 
 				printf("Warning! Gold file mismatch detected, proceeding to error analysis...\n");
 
