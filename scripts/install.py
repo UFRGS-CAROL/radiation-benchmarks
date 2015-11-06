@@ -34,7 +34,7 @@ def installPath():
 varDir = "/var/radiation-benchmarks"
 confFile = "/etc/radiation-benchmarks.conf"
 logDir = varDir+"/log"
-
+micLog = "/micNfs/carol/logs"
 
 installPath=installPath()
 
@@ -44,6 +44,7 @@ config.set("DEFAULT", "installdir", installPath)
 config.set("DEFAULT", "vardir", varDir)
 config.set("DEFAULT", "logdir", logDir)
 config.set("DEFAULT", "tmpdir", "/tmp")
+config.set("DEFAULT", "miclogdir", micLog)
 try:
 	if not os.path.isdir(varDir):
 		os.mkdir(varDir, 0777)
