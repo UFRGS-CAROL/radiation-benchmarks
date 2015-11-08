@@ -38,7 +38,7 @@ int generate;
 #include "log_helper.h"
 #endif
 
-#define INPUTSIZE 100000000
+#define INPUTSIZE 134217728
 
 typedef struct parameters_s {
     int size;
@@ -50,6 +50,7 @@ typedef struct parameters_s {
     char *goldName, *inputName;
     unsigned *data, *outdata, *gold;
     unsigned *gpudata, *scratchdata;
+    int noinputensurance;
 } parameters_t;
 
 double mysecond()
@@ -426,15 +427,40 @@ int dataRead(parameters_t *params)
     } else if (params->generate) { // GENERATE INPUT
         unsigned *ndata = new unsigned[INPUTSIZE];
         printf("Generating input, this will take a long time..."); fflush(stdout);
-        for (unsigned int i=0; i<INPUTSIZE; i++)
-        {
-            // Build data 8 bits at a time
-            ndata[i] = 0;
-            char *ptr = (char *)&(ndata[i]);
 
-            for (unsigned j=0; j<sizeof(unsigned); j++)
+        if (!(params->noinputensurance)) {
+		  	printf("Warning: I will alloc %.2fMB of RAM, be ready to crash.", (double)UINT_MAX * sizeof(unsigned char) / 1000000);
+			printf(" If this hangs, it can not ensure the input does not have more than 256 equal entries, which may");
+			printf(" cause really rare issues under radiation tests. Use -noinputensurance in this case.\n");
+
+			unsigned char *srcHist;
+			srcHist = (unsigned char *)malloc(UINT_MAX * sizeof(unsigned char));
+			if (!srcHist)
+				fatal("Could not alloc RAM for histogram. Use -noinputensurance.");
+
+			register unsigned char max = 0;
+			register uint valor;
+			for (uint i = 0; i < INPUTSIZE; i++) {
+				do {
+					valor = rand() % UINT_MAX;
+				} while (srcHist[valor]==UCHAR_MAX);
+				srcHist[valor]++;
+				if (srcHist[valor]>max) max = srcHist[valor];
+			    ndata[i] = valor;
+			}
+			free(srcHist);
+			printf("Maximum repeats of one single key: %d\n", max);
+		} else {
+            for (unsigned int i=0; i<INPUTSIZE; i++)
             {
-                *ptr++ = (char)(rand() & 255);
+                // Build data 8 bits at a time
+                ndata[i] = 0;
+                char *ptr = (char *)&(ndata[i]);
+
+                for (unsigned j=0; j<sizeof(unsigned); j++)
+                {
+                    *ptr++ = (char)(rand() & 255);
+                }
             }
         }
         if (!(finput = fopen(params->inputName, "wb"))) {
@@ -485,6 +511,94 @@ void outputWrite(parameters_t *params, char *fname)
     }
 }
 
+int checkKeys(parameters_t *params)
+{ // Magicas que a semana anterior ao teste proporcionam
+    unsigned char *srcHist;
+    unsigned char *resHist;
+
+    uint numValues = UINT_MAX;
+
+    int flag = 1;
+	int errors = 0;
+
+	register uint index, range;
+	long unsigned int control;
+	range = ((2*numValues*sizeof(unsigned char) > 2048000000) ? 1024000000 : numValues); // Avoid more than 1GB of RAM alloc
+
+	srcHist = (unsigned char *)malloc(range * sizeof(unsigned char));
+	resHist = (unsigned char *)malloc(range * sizeof(unsigned char));
+
+	if (!srcHist || !resHist) fatal("Could not alloc src or res");
+
+    for (index = 0, control = 0; control < numValues; index += range, control += range)
+	{
+		printf("index = %u range = %u alloc=%.2fMB\n", index, range, 2 * (double)range * sizeof(unsigned char) / 1000000);
+
+
+        //Build histograms for keys arrays
+        memset(srcHist, 0, range * sizeof(unsigned char));
+        memset(resHist, 0, range * sizeof(unsigned char));
+
+		register uint indexPLUSrange = index + range;
+		register uint *srcKey = params->data;
+		register uint *resKey = params->outdata;
+		#pragma omp parallel for
+		for (uint i = 0; i < params->size; i++)
+        {
+			//if (index!=0) printf("srcKey[%d]=%d resKey[%d]=%d index=%d indexPLUSrange=%d\n", i, srcKey[i], i, resKey[i], index, indexPLUSrange); fflush(stdout);
+			if ((srcKey[i] >= index) && (srcKey[i] < indexPLUSrange) && (srcKey[i] < numValues))
+            {
+				#pragma omp atomic
+                srcHist[srcKey[i]-index]++;
+            }
+			if ((resKey[i] >= index) && (resKey[i] < indexPLUSrange) && (resKey[i] < numValues))
+            {
+				#pragma omp atomic
+                resHist[resKey[i]-index]++;
+            }
+        }
+		#pragma omp parallel for
+		for (uint i = 0; i < range; i++)
+            if (srcHist[i] != resHist[i])
+			#pragma omp critical
+            {
+				char error_detail[150];
+                snprintf(error_detail, 150, "The histogram from element %d differs. srcHist=%d dstHist=%d\n", i+index, srcHist[i], resHist[i]);
+                #ifdef LOGS
+                    if (!(params->generate)) log_error_detail(error_detail);
+                #endif
+                printf("ERROR : %s\n", error_detail);
+				errors++;
+                flag = 0;
+            }
+
+	}
+	free(resHist);
+	free(srcHist);
+
+	//Finally check the ordering
+	register uint *resKey = params->outdata;
+	#pragma omp parallel for
+	for (uint i = 0; i < params->size - 1; i++)
+		if (resKey[i] > resKey[i + 1])
+		#pragma omp critical
+		{
+			char error_detail[150];
+			snprintf(error_detail, 150, "Elements not ordered. index=%d %d>%d", i, resKey[i], resKey[i + 1]);
+			#ifdef LOGS
+				if (!(params->generate)) log_error_detail(error_detail);
+			#endif
+			printf("ERROR: %s\n", error_detail);
+			errors++;
+			flag = 0;
+		}
+
+    if (flag) printf("OK\n");
+    if (!flag) printf("Errors found.\n");
+
+	return errors;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 int run_qsort(parameters_t *params)
@@ -523,66 +637,52 @@ int run_qsort(parameters_t *params)
         // Copy back the data and verify correct sort
         checkCudaErrors(cudaMemcpy(params->outdata, params->gpudata, params->size * sizeof(unsigned), cudaMemcpyDeviceToHost));
 
+        double timer = mysecond();
+        int errors = 0;
+
         if (params->generate) {// Write gold to file
             printf("Verify gold consistence...\n");
-            double timer = mysecond();
-            register unsigned *ptr = params->outdata;
-            #pragma omp parallel for
-            for (int check=1; check<size; check++)
-            {
-                if (ptr[check] < ptr[check-1])
-                {
-                    printf("FAILED at element: %d\n", check);
-                    //break;
-                }
-            }
-            printf("Done in %.4fs. Writing gold to file %s...\n", mysecond() - timer, params->goldName);
+            errors = checkKeys(params);
+            printf("Writing gold to file %s...\n", params->goldName);
             memcpy(params->gold, params->outdata, size*sizeof(unsigned));
             goldWrite(params);
             printf("Done.\n");
         } else {
-            char error_detail[150], outName[50];
-            double timer = mysecond();
-            if (memcmp(params->gold, params->outdata, size*sizeof(float))) {
-                snprintf(outName, 50, "quicksort_dump_%i", (int)mysecond());
-                snprintf(error_detail, 150, "Output differs from gold. Dump file: %s", outName);
-                #ifdef LOGS
-                    log_error_detail(error_detail);
-                #endif
-                printf("ERROR (Iteration #%d): %s\n", loop1, error_detail);
-                outputWrite(params, outName);
-                #ifdef LOGS
-                    log_error_count(1);
-                #endif
-            } else {
-                #ifdef LOGS
-                    log_error_count(0);
-                #endif
-            }
-            if (params->verbose) printf("Gold check time: %.4fs\n", mysecond() - timer);
-        }
+            if (memcmp(params->gold, params->outdata, size*sizeof(unsigned))) {
+                printf("Warning! Gold file mismatch detected, proceeding to error analysis...\n");
+
+				errors = checkKeys(params);
+			} else {
+				errors = 0;
+			}
+			#ifdef LOGS
+				if (!(params->generate)) log_error_count(errors);
+			#endif
+		}
+
+		if (params->verbose) printf("Gold check/generate time: %.4fs\n", mysecond() - timer);
 
         // Release everything and we're done
         checkCudaErrors(cudaFree(params->scratchdata));
         checkCudaErrors(cudaFree(params->gpudata));
 
         // Display the time between event recordings
-        if (params->verbose) printf("Perf: %.3f Melems/sec\n",(float)size/(ktime*1000.0f));
+        if (params->verbose) printf("Perf: %.3fk elems/sec\n",(float)size/(ktime*1000.0f));
         if (params->verbose) {
-            printf("Iteration %d ended. Elapsed time: %.4fs\n", loop1, mysecond()-itertimestamp);
+            printf("Iteration %d ended (Errors: %d). Elapsed time: %.4fs\n", loop1, errors, mysecond()-itertimestamp);
         } else {
             printf(".");
         }
         fflush(stdout);
     }
-    
+
     delete(params->data);
     return 0;
 }
 
 static void usage(int argc, char *argv[])
 {
-    printf("Syntax: %s -size=N [-generate] [-verbose] [-debug] [-input=<path>] [-gold=<path>] [-iterations=N]\n", argv[0]);
+    printf("Syntax: %s -size=N [-generate] [-verbose] [-debug] [-input=<path>] [-gold=<path>] [-iterations=N] [-noinputensurance]\n", argv[0]);
     exit(EXIT_FAILURE);
 }
 
@@ -593,6 +693,7 @@ void getParams(int argc, char *argv[], parameters_t *params)
     params->verbose = 0;
     params->generate = 0;
     params->fault_injection = 0;
+	params->noinputensurance = 0;
     generate = 0;
 
 
@@ -623,6 +724,10 @@ void getParams(int argc, char *argv[], parameters_t *params)
         generate = 1;
         params->iterations = 1;
     }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "noinputensurance")) {
+		params->noinputensurance = 1;
+	}
 
     if (checkCmdLineFlag(argc, (const char **)argv, "iterations")) {
         params->iterations  = getCmdLineArgumentInt(argc, (const char **)argv, "iterations");

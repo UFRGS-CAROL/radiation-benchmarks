@@ -7,6 +7,14 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "log_helper.h"
+
+
+#ifdef MIC_NATIVE
+
+char timestamp_watchdog[200] = "/micNfs/carol/logs/timestamp.txt";
+
+#else
 
 // Location of timetamp file for software watchdog
 //char timestamp_watchdog[200] = "/home/carol/watchdog/timestamp.txt";
@@ -14,13 +22,24 @@ char *timestamp_watchdog;
 char timestamp_file[] = "timestamp.txt";
 char vardir_key[]="vardir";
 
+#endif
+
 // Max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
 unsigned long int max_errors_per_iter = 500;
 
 // Absolute path for log file, if needed
+#ifdef MIC_NATIVE
+
+char absolute_path[200] = "/micNfs/carol/logs/";
+
+#else
+
 //char absolute_path[200] = "/home/carol/logs/";
 char *absolute_path;
+
+#endif
+
 char logdir_key[]="logdir";
 char config_file[]="/etc/radiation-benchmarks.conf";
 
@@ -162,6 +181,7 @@ char * get_log_file_name(){
 // Generate the log file name, log info from user about the test to be executed and reset log variables
 int start_log_file(char *benchmark_name, char *test_info){
 
+#ifndef MIC_NATIVE
     char *var_dir=getValueConfig(vardir_key);
     if(!var_dir){
         fprintf(stderr, "[ERROR] Could not read var dir in config file '%s'\n",config_file);
@@ -172,7 +192,7 @@ int start_log_file(char *benchmark_name, char *test_info){
     if(strlen(timestamp_watchdog) > 0 && timestamp_watchdog[strlen(timestamp_watchdog)-1] != '/' )
         strcat(timestamp_watchdog, "/");
     strcat(timestamp_watchdog, timestamp_file);
-    
+#endif    
     update_timestamp();
 
     time_t file_time;
@@ -212,6 +232,7 @@ int start_log_file(char *benchmark_name, char *test_info){
     strcat(log_file_name, host);
     strcat(log_file_name, ".log");
 
+#ifndef MIC_NATIVE
     absolute_path=getValueConfig(logdir_key);
     if(!absolute_path){
         fprintf(stderr, "[ERROR] Could not read log dir in config file '%s'\n",config_file);
@@ -221,6 +242,7 @@ int start_log_file(char *benchmark_name, char *test_info){
         absolute_path = (char *)malloc(sizeof(char));
         absolute_path[0]='\0';
     }
+#endif
     strcpy(full_log_file_name, absolute_path);
     if(strlen(absolute_path) > 0 && absolute_path[strlen(absolute_path)-1] != '/' )
         strcat(full_log_file_name, "/");
