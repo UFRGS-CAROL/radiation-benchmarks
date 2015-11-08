@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/hsa_rmt/src/common/benchmark/benchmark.h
+
+/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/hsa_rmt/src/hsa/fir_intra_beam/fir_benchmark.cc
+cstdlib
+-
+cstdio
+-
+cstring
+-
+kernels.h
+/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/hsa_rmt/src/hsa/fir_intra_beam/kernels.h
+fir_benchmark.h
+/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/hsa_rmt/src/hsa/fir_intra_beam/fir_benchmark.h
+
+/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/hsa_rmt/src/hsa/fir_intra_beam/fir_benchmark.h
+../../../src/common/benchmark/benchmark.h
+/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/hsa_rmt/src/common/benchmark/benchmark.h
+
+/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/hsa_rmt/src/hsa/fir_intra_beam/kernels.h
+stdint.h
+-
+

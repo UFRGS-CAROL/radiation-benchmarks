@@ -1,0 +1,42 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/hsa_rmt/src/hsa/page_rank_inter_beam/page_rank_benchmark.cc
+src/hsa/page_rank_inter_beam/page_rank_benchmark.h
+/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/hsa_rmt/src/hsa/page_rank_inter_beam/src/hsa/page_rank_inter_beam/page_rank_benchmark.h
+memory
+-
+
+src/common/benchmark/benchmark.h
+
+src/hsa/page_rank_inter_beam/kernels.h
+stdint.h
+-
+
+src/hsa/page_rank_inter_beam/page_rank_benchmark.h
+stdio.h
+-
+stdint.h
+-
+stdlib.h
+-
+iostream
+-
+fstream
+-
+string
+-
+cstring
+-
+sstream
+-
+src/common/benchmark/benchmark.h
+src/hsa/page_rank_inter_beam/src/common/benchmark/benchmark.h
+src/hsa/page_rank_inter_beam/kernels.h
+src/hsa/page_rank_inter_beam/src/hsa/page_rank_inter_beam/kernels.h
+
