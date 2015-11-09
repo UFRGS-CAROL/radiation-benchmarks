@@ -513,8 +513,8 @@ void outputWrite(parameters_t *params, char *fname)
 
 int checkKeys(parameters_t *params)
 { // Magicas que a semana anterior ao teste proporcionam
-    unsigned char *srcHist;
-    unsigned char *resHist;
+    register unsigned char *srcHist;
+    register unsigned char *resHist;
 
     uint numValues = UINT_MAX;
 
@@ -523,7 +523,7 @@ int checkKeys(parameters_t *params)
 
 	register uint index, range;
 	long unsigned int control;
-	range = ((2*numValues*sizeof(unsigned char) > 2048000000) ? 1024000000 : numValues); // Avoid more than 1GB of RAM alloc
+	range = ((numValues*sizeof(unsigned char) > 2048000000) ? 2048000000 : numValues); // Avoid more than 1GB of RAM alloc
 
 	srcHist = (unsigned char *)malloc(range * sizeof(unsigned char));
 	resHist = (unsigned char *)malloc(range * sizeof(unsigned char));
@@ -542,8 +542,9 @@ int checkKeys(parameters_t *params)
 		register uint indexPLUSrange = index + range;
 		register uint *srcKey = params->data;
 		register uint *resKey = params->outdata;
+		register uint i;
 		#pragma omp parallel for
-		for (uint i = 0; i < params->size; i++)
+		for (i = 0; i < params->size; i++)
         {
 			//if (index!=0) printf("srcKey[%d]=%d resKey[%d]=%d index=%d indexPLUSrange=%d\n", i, srcKey[i], i, resKey[i], index, indexPLUSrange); fflush(stdout);
 			if ((srcKey[i] >= index) && (srcKey[i] < indexPLUSrange) && (srcKey[i] < numValues))
@@ -558,7 +559,7 @@ int checkKeys(parameters_t *params)
             }
         }
 		#pragma omp parallel for
-		for (uint i = 0; i < range; i++)
+		for (i = 0; i < range; i++)
             if (srcHist[i] != resHist[i])
 			#pragma omp critical
             {
@@ -578,8 +579,9 @@ int checkKeys(parameters_t *params)
 
 	//Finally check the ordering
 	register uint *resKey = params->outdata;
+	register uint i;
 	#pragma omp parallel for
-	for (uint i = 0; i < params->size - 1; i++)
+	for (i = 0; i < params->size - 1; i++)
 		if (resKey[i] > resKey[i + 1])
 		#pragma omp critical
 		{

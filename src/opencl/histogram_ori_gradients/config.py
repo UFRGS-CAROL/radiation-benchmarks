@@ -7,8 +7,8 @@ import ConfigParser
 
 print "Gold generating"
 
-#confFile = '/etc/radiation-benchmarks.conf'
-confFile = '/home/carol/lucas/test.conf'
+
+confFile = '/etc/radiation-benchmarks.conf'
 
 try:
         config = ConfigParser.RawConfigParser()
