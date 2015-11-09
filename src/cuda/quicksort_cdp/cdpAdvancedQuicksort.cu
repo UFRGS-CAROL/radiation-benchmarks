@@ -50,6 +50,7 @@ typedef struct parameters_s {
     char *goldName, *inputName;
     unsigned *data, *outdata, *gold;
     unsigned *gpudata, *scratchdata;
+    int noinputensurance;
 } parameters_t;
 
 double mysecond()
@@ -426,15 +427,40 @@ int dataRead(parameters_t *params)
     } else if (params->generate) { // GENERATE INPUT
         unsigned *ndata = new unsigned[INPUTSIZE];
         printf("Generating input, this will take a long time..."); fflush(stdout);
-        for (unsigned int i=0; i<INPUTSIZE; i++)
-        {
-            // Build data 8 bits at a time
-            ndata[i] = 0;
-            char *ptr = (char *)&(ndata[i]);
 
-            for (unsigned j=0; j<sizeof(unsigned); j++)
+        if (!(params->noinputensurance)) {
+		  	printf("Warning: I will alloc %.2fMB of RAM, be ready to crash.", (double)UINT_MAX * sizeof(unsigned char) / 1000000);
+			printf(" If this hangs, it can not ensure the input does not have more than 256 equal entries, which may");
+			printf(" cause really rare issues under radiation tests. Use -noinputensurance in this case.\n");
+
+			unsigned char *srcHist;
+			srcHist = (unsigned char *)malloc(UINT_MAX * sizeof(unsigned char));
+			if (!srcHist)
+				fatal("Could not alloc RAM for histogram. Use -noinputensurance.");
+
+			register unsigned char max = 0;
+			register uint valor;
+			for (uint i = 0; i < INPUTSIZE; i++) {
+				do {
+					valor = rand() % UINT_MAX;
+				} while (srcHist[valor]==UCHAR_MAX);
+				srcHist[valor]++;
+				if (srcHist[valor]>max) max = srcHist[valor];
+			    ndata[i] = valor;
+			}
+			free(srcHist);
+			printf("Maximum repeats of one single key: %d\n", max);
+		} else {
+            for (unsigned int i=0; i<INPUTSIZE; i++)
             {
-                *ptr++ = (char)(rand() & 255);
+                // Build data 8 bits at a time
+                ndata[i] = 0;
+                char *ptr = (char *)&(ndata[i]);
+
+                for (unsigned j=0; j<sizeof(unsigned); j++)
+                {
+                    *ptr++ = (char)(rand() & 255);
+                }
             }
         }
         if (!(finput = fopen(params->inputName, "wb"))) {
@@ -497,7 +523,7 @@ int checkKeys(parameters_t *params)
 
 	register uint index, range;
 	long unsigned int control;
-	range = ((2*numValues*sizeof(unsigned char) > 1024000000) ? 512000000 : numValues); // Avoid more than 1GB of RAM alloc
+	range = ((2*numValues*sizeof(unsigned char) > 2048000000) ? 1024000000 : numValues); // Avoid more than 1GB of RAM alloc
 
 	srcHist = (unsigned char *)malloc(range * sizeof(unsigned char));
 	resHist = (unsigned char *)malloc(range * sizeof(unsigned char));
@@ -641,7 +667,7 @@ int run_qsort(parameters_t *params)
         checkCudaErrors(cudaFree(params->gpudata));
 
         // Display the time between event recordings
-        if (params->verbose) printf("Perf: %.3fk elems/sec\n",(float)size/(ktime*1000.0f));
+        if (params->verbose) printf("Perf: %.3fM elems/sec\n", 1.0e-6f * size / ktime);
         if (params->verbose) {
             printf("Iteration %d ended (Errors: %d). Elapsed time: %.4fs\n", loop1, errors, mysecond()-itertimestamp);
         } else {
@@ -656,7 +682,7 @@ int run_qsort(parameters_t *params)
 
 static void usage(int argc, char *argv[])
 {
-    printf("Syntax: %s -size=N [-generate] [-verbose] [-debug] [-input=<path>] [-gold=<path>] [-iterations=N]\n", argv[0]);
+    printf("Syntax: %s -size=N [-generate] [-verbose] [-debug] [-input=<path>] [-gold=<path>] [-iterations=N] [-noinputensurance]\n", argv[0]);
     exit(EXIT_FAILURE);
 }
 
@@ -667,6 +693,7 @@ void getParams(int argc, char *argv[], parameters_t *params)
     params->verbose = 0;
     params->generate = 0;
     params->fault_injection = 0;
+	params->noinputensurance = 0;
     generate = 0;
 
 
@@ -697,6 +724,10 @@ void getParams(int argc, char *argv[], parameters_t *params)
         generate = 1;
         params->iterations = 1;
     }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "noinputensurance")) {
+		params->noinputensurance = 1;
+	}
 
     if (checkCmdLineFlag(argc, (const char **)argv, "iterations")) {
         params->iterations  = getCmdLineArgumentInt(argc, (const char **)argv, "iterations");

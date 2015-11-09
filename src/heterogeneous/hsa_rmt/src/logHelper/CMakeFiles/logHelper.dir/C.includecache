@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/carol/vinicius/radiation-benchmarks/src/heterogeneous/hsa_rmt/src/logHelper/logHelper.c
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+time.h
+-
+sys/time.h
+-
+sys/types.h
+-
+sys/stat.h
+-
+unistd.h
+-
+

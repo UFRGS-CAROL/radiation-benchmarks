@@ -7,6 +7,8 @@
 #include "mergeSort_common.h"
 #include <sys/time.h>
 
+#include <omp.h>
+
 #define INPUTSIZE 134217728
 
 int generate;
@@ -130,8 +132,8 @@ void writeOutput(parameters_t *params)
 {
 	FILE *fgold;
 	if (fgold = fopen(params->goldName, "wb")) {
-		fwrite(params->h_DstVal, params->size * sizeof(uint), 1, fgold);
 		fwrite(params->h_DstKey, params->size * sizeof(uint), 1, fgold);
+		fwrite(params->h_DstVal, params->size * sizeof(uint), 1, fgold);
 		fclose(fgold);
 	} else {
 		printf("Error: could not open gold file in wb mode.\n");
@@ -208,8 +210,8 @@ void readData(parameters_t *params, const uint numValues)
 
 	if (!(params->generate)) {
 		if (fgold = fopen(params->goldName, "rb")) {
-			fread(params->h_GoldVal, params->size * sizeof(uint), 1, fgold);
 			fread(params->h_GoldKey, params->size * sizeof(uint), 1, fgold);
+			fread(params->h_GoldVal, params->size * sizeof(uint), 1, fgold);
 			fclose(fgold);
 		} else {
 			fatal("Could not open gold file. Use -generate");
@@ -226,15 +228,15 @@ void readData(parameters_t *params, const uint numValues)
 
 int checkKeys(parameters_t *params, uint numValues)
 { // Magicas que a semana anterior ao teste proporcionam
-    unsigned char *srcHist;
-    unsigned char *resHist;
+    register unsigned char *srcHist;
+    register unsigned char *resHist;
 
     int flag = 1;
 	int errors = 0;
 
 	register uint index, range;
 	long unsigned int control;
-	range = ((2*numValues*sizeof(unsigned char) > 1024000000) ? 512000000 : numValues); // Avoid more than 1GB of RAM alloc
+	range = ((2*numValues*sizeof(unsigned char) > 2048000000) ? 1024000000 : numValues); // Avoid more than 2GB of RAM alloc
 
 	srcHist = (unsigned char *)malloc(range * sizeof(unsigned char));
 	resHist = (unsigned char *)malloc(range * sizeof(unsigned char));
@@ -253,8 +255,9 @@ int checkKeys(parameters_t *params, uint numValues)
 		register uint indexPLUSrange = index + range;
 		register uint *srcKey = params->h_SrcKey;
 		register uint *resKey = params->h_DstKey;
+		register uint i;
 		#pragma omp parallel for
-		for (uint i = 0; i < params->size; i++)
+		for (i = 0; i < params->size; i++)
         {
 			//if (index!=0) printf("srcKey[%d]=%d resKey[%d]=%d index=%d indexPLUSrange=%d\n", i, srcKey[i], i, resKey[i], index, indexPLUSrange); fflush(stdout);
 			if ((srcKey[i] >= index) && (srcKey[i] < indexPLUSrange) && (srcKey[i] < numValues))
@@ -269,7 +272,7 @@ int checkKeys(parameters_t *params, uint numValues)
             }
         }
 		#pragma omp parallel for
-		for (uint i = 0; i < range; i++)
+		for (i = 0; i < range; i++)
             if (srcHist[i] != resHist[i])
 			#pragma omp critical
             {
@@ -289,8 +292,9 @@ int checkKeys(parameters_t *params, uint numValues)
 
 	//Finally check the ordering
 	register uint *resKey = params->h_DstKey;
+	register uint i;
 	#pragma omp parallel for
-	for (uint i = 0; i < params->size - 1; i++)
+	for (i = 0; i < params->size - 1; i++)
 		if (resKey[i] > resKey[i + 1])
 		#pragma omp critical
 		{
@@ -320,8 +324,9 @@ int checkVals(parameters_t *params)
 	register uint *resKey = params->h_DstKey;
 	register uint *srcKey = params->h_SrcKey;
 	register uint *resVal = params->h_DstVal;
+	register uint j;
 	#pragma omp parallel for
-    for (uint j = 0; j < params->size; j++)
+    for (j = 0; j < params->size; j++)
     {
         if (resKey[j] != srcKey[resVal[j]])
 		#pragma omp critical
@@ -359,17 +364,32 @@ int checkVals(parameters_t *params)
 int compareGoldOutput(parameters_t *params)
 {
 	//return (memcmp(params->h_GoldKey, params->h_DstKey, params->size * sizeof(uint)) || memcmp(params->h_GoldVal, params->h_DstVal, params->size * sizeof(uint)));
-	register unsigned int i;
-	register uint *ptr1 = params->h_GoldKey;
-	register uint *ptr2 = params->h_DstKey;
 	int flag = 0;
-	#pragma omp parallel for
-	for (i=0; i<params->size; i++)
+	register uint *h_kOut = params->h_DstKey;
+	register uint *h_kGold = params->h_GoldKey;
+	register uint *h_vOut = params->h_DstVal;
+	register uint *h_vGold = params->h_GoldVal;
+	#pragma omp parallel num_threads(2) shared(flag)
 	{
-		if (ptr1[i] != ptr2[i]) flag=1;
+		if (omp_get_thread_num() == 0) { // Thread 0
+			register unsigned int i;
+			#pragma omp parallel for
+			for (i=0; i<params->size; i++)
+			{
+				if (h_kOut[i] != h_kGold[i]) flag=1;
+			}
+		} else { // Thread 1
+			register unsigned int i;
+			#pragma omp parallel for
+			for (i=0; i<params->size; i++)
+			{
+				if (h_vOut[i] != h_vGold[i]) flag=1;
+			}
+		}
 	}
 	return flag;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 // Test driver
 ////////////////////////////////////////////////////////////////////////////////
@@ -451,10 +471,10 @@ int main(int argc, char **argv)
 
         if (params->verbose) printf("GPU Kernel time: %.4fs\n", kernel_time);
 
-		timestamp = mysecond();
-
 		checkCudaErrors(cudaMemcpy(params->h_DstKey, params->d_DstKey, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
 		checkCudaErrors(cudaMemcpy(params->h_DstVal, params->d_DstVal, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
+
+		timestamp = mysecond();
 
 		int errors = 0;
 
@@ -488,7 +508,7 @@ int main(int argc, char **argv)
 		closeMergeSort(); // Dealloc some gpu data
 
         // Display the time between event recordings
-        if (params->verbose) printf("Perf: %.3fk elems/sec\n",(float)params->size/(kernel_time*1000.0f));
+        if (params->verbose) printf("Perf: %.3fM elems/sec\n", 1.0e-6f * params->size / kernel_time);
         if (params->verbose) {
             printf("Iteration %d ended. Elapsed time: %.4fs\n", loop1, mysecond()-globaltimestamp);
         } else {

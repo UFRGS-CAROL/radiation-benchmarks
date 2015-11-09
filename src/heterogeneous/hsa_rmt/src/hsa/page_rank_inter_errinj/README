@@ -1,0 +1,2 @@
+To run page rank, you need to pass a parameter containing the name of a input vector (inputs folder) with -i. For example,
+
