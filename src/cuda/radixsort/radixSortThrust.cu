@@ -43,7 +43,7 @@ typedef struct parameters_s {
 	int generate;
 	int fault_injection;
 	char *goldName, *inputName;
-    int keysOnly;
+    	int keysOnly;
 } parameters_t;
 
 double mysecond()
@@ -134,9 +134,11 @@ void getParams(int argc, char *argv[], parameters_t *params)
 	}
 }
 
-void readData(parameters_t *params, uint *h_keys, uint *h_keysGold, uint *h_values, uint *h_valuesGold)
+void readData(parameters_t *params, uint *h_keys, uint *h_keysGold, uint *h_values, uint *h_valuesGold, int onlygold = 0)
 {
     FILE *finput, *fgold;
+    if (!onlygold)
+    {
     if (finput = fopen(params->inputName, "rb")) {
 		fread(h_keys, params->numElements * sizeof(uint), 1, finput);
 	} else if (params->generate) {
@@ -169,6 +171,13 @@ void readData(parameters_t *params, uint *h_keys, uint *h_keysGold, uint *h_valu
 			ptr[i] = i;
 	}
 
+	if (params->fault_injection) {
+		h_keys[5] = rand() % UINT_MAX;
+		printf(">>>>> Will inject an error: h_keys[5]=%d\n", h_keys[5]);
+		h_values[12] = rand() % params->numElements;
+		printf(">>>>> Will inject an error: h_values[12]=%d\n", h_values[12]);
+	}
+}
     if (!(params->generate)) {
         if (fgold = fopen(params->goldName, "rb")) {
             fread(h_keysGold, params->numElements * sizeof(uint), 1, fgold);
@@ -179,13 +188,6 @@ void readData(parameters_t *params, uint *h_keys, uint *h_keysGold, uint *h_valu
             fatal("Could not open gold file. Use -generate");
         }
     }
-
-	if (params->fault_injection) {
-		h_keys[5] = rand() % UINT_MAX;
-		printf(">>>>> Will inject an error: h_keys[5]=%d\n", h_keys[5]);
-		h_values[12] = rand() % params->numElements;
-		printf(">>>>> Will inject an error: h_values[12]=%d\n", h_values[12]);
-	}
 }
 
 void writeOutput(parameters_t *params, uint *h_keys, uint *h_values)
@@ -471,12 +473,19 @@ void testSort(parameters_t *params)
 			writeOutput(params, h_keysOut, h_valuesOut);
 		} else {
 			if (compareGoldOutput(params, h_keysOut, h_valuesOut, h_keysGold, h_valuesGold)) {
+				free(h_keysGold);
+				if (!(params->keysOnly))
+					free(h_valuesGold);
 
 				printf("Warning! Gold file mismatch detected, proceeding to error analysis...\n");
 
 				errors += checkKeys(params, h_keys, h_keysOut);
 				if (!(params->keysOnly))
 					errors += checkVals(params, h_keys, h_keysOut, h_valuesOut);
+
+    				h_keysGold = (uint*) malloc(sizeof(uint) * params->numElements);
+				if(!(params->keysOnly))
+					h_valuesGold = (uint*) malloc(sizeof(uint) * params->numElements);
 
 			} else {
 				errors = 0;
