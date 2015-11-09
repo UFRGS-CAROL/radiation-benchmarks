@@ -667,7 +667,7 @@ int run_qsort(parameters_t *params)
         checkCudaErrors(cudaFree(params->gpudata));
 
         // Display the time between event recordings
-        if (params->verbose) printf("Perf: %.3fk elems/sec\n",(float)size/(ktime*1000.0f));
+        if (params->verbose) printf("Perf: %.3fM elems/sec\n", 1.0e-6f * size / ktime);
         if (params->verbose) {
             printf("Iteration %d ended (Errors: %d). Elapsed time: %.4fs\n", loop1, errors, mysecond()-itertimestamp);
         } else {
