@@ -1,26 +1,22 @@
 #!/bin/bash
 #$1 == big execute CLAMR with big processors
 #$1 == little processor
-#$2 is the numbers of big processors
-
-n_para_lit=1
-n_para_big=2
 
 big="big";
 lit="little";
 
 function right_par(){
 	echo "Please enter with the right parameters <big | little>";
-	exit;
+	return;
 }
 
 if [ `id -u` != 0 ];
 then 
 	echo "Please run as root"
-	exit;
+	return;
 fi
 
-if (( "$#" == $n_para_lit || "$#" == $n_para_big ));
+if (( "$#" == 1 ));
 then
 	#if it's little
 	if [ $1 == $lit ];
@@ -45,5 +41,4 @@ then
 else
 	right_par;
 fi
-export OMP_NUM_THREADS=8
-exit;
+return;
