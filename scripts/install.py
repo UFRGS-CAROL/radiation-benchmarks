@@ -29,10 +29,21 @@ def installPath():
 		path = raw_input()
 	return path
 
-
+def check():
+	datafile = file("/proc/cpuinfo");
+	for line in datafile:
+		if 'jetson-tk1' in line:
+			return True;
+	return False;
 
 varDir = "/var/radiation-benchmarks"
 confFile = "/etc/radiation-benchmarks.conf"
+
+#check if it is K1
+if check():
+	#if it is save everything in sd card
+	varDir = raw_input("Where is mounted the sd card??? ") + "/radiation-benchmarks";
+
 logDir = varDir+"/log"
 micLog = "/micNfs/carol/logs"
 
