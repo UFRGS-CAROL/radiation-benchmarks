@@ -28,7 +28,7 @@
 #endif
 using namespace std;
 using namespace cv;
-int iteractions = 1; //global loop iteration
+int iteractions = 1000000; //global loop iteration
 
 class App {
 public:
