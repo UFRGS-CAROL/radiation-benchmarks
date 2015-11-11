@@ -111,8 +111,8 @@ void App::run() {
 	//================== Init logs
 #ifdef LOGS
 	char test_info[90];
-	snprintf(test_info, 90, "size:unknown, repetition:unknown");
-	start_log_file("Histogram oriented gradients", test_info);
+	snprintf(test_info, 90, "HOG GOLD TEXT FILE");
+	start_log_file("cudaHOG", test_info);
 #endif
 	//====================================
 	if (!input_file.is_open()) {
@@ -226,26 +226,24 @@ void App::run() {
 			time = mysecond();
 
 //-----------------Lucas Aproach
-			bool log_all_rectangles = false;
+//			bool log_all_rectangles = false;
 
-#ifdef LOGS
-			int rectangles_logged = 0;
-
+			//int rectangles_logged = 0;
+			unsigned long int error_counter = 0;
 			if(found.size() != gold.size()) {
-				if(found.size() < gold.size()) // log all rectangles to check which were missed
-				        log_all_rectangles = true;
+				//if(found.size() < gold.size()) // log all rectangles to check which were missed
+				//        log_all_rectangles = true;
 				char message[120];
 				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).\n", found.size(), gold.size());
+#ifdef LOGS
 				log_error_detail(message);
-				if(found.size() > 500) { // inform that only 500 rectangles will be logged
+#endif
+				/*if(found.size() > 500) { // inform that only 500 rectangles will be logged
 					char msg[100];
 					snprintf(msg, 100, "Unreasonable to log all %lu rectangles. Logging the first 500 only.\n", found.size());
 					log_error_detail(msg);
-				}
+				}*/
 			}
-
-#endif
-
 //------------------------------
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
@@ -258,7 +256,9 @@ void App::run() {
 				vf[5] = r.br().y;
 				bool diff = set_countains(vf, gold);
 
-				if (diff || log_all_rectangles) {
+				if (diff)
+					error_counter++;
+				/*{
 
 #ifdef LOGS
 					char str[150];
@@ -267,11 +267,28 @@ void App::run() {
 					log_error_detail(str);
 					log_error_count(rectangles_logged++);
 #endif
-				}
+				}*/
 				// Draw positive classified windows
 				//rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 			}
+
+			if(error_counter){
+				for(size_t g = 0; g < found.size(); g++){
+					Rect r = found[g];
+					char str[150];
+					snprintf(str, 150, "%d,%d,%d,%d,%d,%d\n", r.height, r.width, r.x,	r.y, r.br().x, r.br().y);
+#ifdef LOGS
+					log_error_detail(str);
+#endif
+				}
+			}
+#ifdef LOGS
+			log_error_count(error_counter);
+#endif
+			
 			cout << "Verification time " << mysecond() - time << endl;
+
+		
 			//stringstream ss;
 			//ss << (i + 1);
 			//imwrite(ss.str() + "_out.jpg", img_to_show);
