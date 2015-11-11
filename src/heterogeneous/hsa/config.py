@@ -20,7 +20,7 @@ except IOError as e:
 	print >> sys.stderr, "Configuration setup error: "+str(e)
 	sys.exit(1)
 
-os.system("cd "+installDir+"/src/heterogeneous/hsa/ ; cmake . ; make");
+os.system("cd "+installDir+"/src/heterogeneous/hsa/ ; cmake . -DLOGS=1 ; make");
 os.system("cd "+installDir+"/src/heterogeneous/hsa/src/hsa/fir_hsa/ ; sudo ./config.py");
 os.system("cd "+installDir+"/src/heterogeneous/hsa/src/hsa/page_rank_hsa/ ; sudo ./config.py");
 os.system("cd "+installDir+"/src/heterogeneous/hsa/src/hsa/kmeans_hsa/ ; sudo ./config.py");
