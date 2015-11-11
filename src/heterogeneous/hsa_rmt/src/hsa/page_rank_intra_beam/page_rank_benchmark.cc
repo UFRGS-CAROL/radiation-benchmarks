@@ -43,6 +43,15 @@
 
 #include <memory>
 
+/* radiation things */
+extern "C"
+{
+#include "../../logHelper/logHelper.h"
+}
+
+#define ITERATIONS 1000000
+
+
 PageRankBenchmark::PageRankBenchmark() {
   workGroupSize = 64;
   maxIter = 300;
@@ -110,6 +119,10 @@ void PageRankBenchmark::FillBufferCpu() {
       eigenv_cpu[j] = 0.0;
     }
   }
+//DAGO
+  csrMatrix.close();
+  denseVector.close();
+
 }
 
 void PageRankBenchmark::ReadCsrMatrix() {
@@ -217,21 +230,143 @@ void PageRankBenchmark::Initialize() {
 }
 
 void PageRankBenchmark::Run() {
-  // Execute the kernel
-  ExecKernel();
+  std::cout << "Running Page Rank RMT INTRA. Generating inputs and gold: " << (gen_inputs == true ? "YES" : "NO") << std::endl;
+  std::cout << std::endl;
+
+//initialize logs
+#ifdef LOGS
+  char test_info[100];
+  snprintf(test_info, 100, "size:%d, file:%s", nr, fileName1.c_str());
+  char test_name[100];
+  snprintf(test_name, 100, "hsaPageRank_RMT_INTRA");
+  start_log_file(test_name, test_info);
+  set_max_errors_iter(500);
+  set_iter_interval_print(10);
+#endif
+
+//begin loop of iterations
+  for(int iteration = 0; iteration < (gen_inputs == true ? 1 : ITERATIONS); iteration++)
+  {
+        if(iteration % 10 == 0)
+                std::cout << "Iteration #" << iteration << std::endl;
+
+//start iteration
+#ifdef LOGS
+  start_iteration();
+#endif
+
+  	// Execute the kernel
+  	ExecKernel();
+
+//end iteration
+#ifdef LOGS
+  end_iteration();
+#endif
+
+        if(gen_inputs == true)
+          SaveGold();
+
+        else
+          CheckGold();
+
+//DAGO
+  ReadCsrMatrix();
+  ReadDenseVector();
+  FillBuffer();
+//
+
+  }
+
+//end log file
+#ifdef LOGS
+  end_log_file();
+#endif
+}
+
+void PageRankBenchmark::SaveGold() {
+  char gold_file_str[64];
+  sprintf(gold_file_str, "output/output_%d", nr);
+
+  FILE* gold_file = fopen(gold_file_str, "wb");
+  fwrite(eigenV, nr*sizeof(float), 1, gold_file);
+int zero=0;
+
+  for(int i = 0; i < nr; i++){
+   if(i< 10)
+      printf("%e, %e \n", eigenV[i],vector[i]);
+    if(eigenV[i]==0)
+        zero++;
+  }
+printf("zeros %d of %d\n",zero, nr);
+
+  fclose(gold_file);
+
+}
+
+void PageRankBenchmark::CheckGold() {
+  float *gold = (float*) malloc(nr * sizeof(float));
+
+  char gold_file_str[64];
+  sprintf(gold_file_str, "output/output_%d", nr);
+
+  FILE* gold_file = fopen(gold_file_str, "rb");
+  int read = fread(gold, nr*sizeof(float), 1, gold_file);
+  if(read != 1)
+    read = -1;
+
+  fclose(gold_file);
+
+  int errors = 0;
+  for(int i = 0; i < nr; i++)
+  {
+    if(abs(gold[i] - eigenV[i]) > 1e-5 || eigenV[i] == 0)
+    {
+        errors++;
+
+        char error_detail[128];
+        snprintf(error_detail, 64, "position: [%d], output: %f, gold: %f\n", i, eigenV[i], gold[i]);
+        printf("Error: %s\n", error_detail);
+
+#ifdef LOGS
+  log_error_detail(error_detail);
+#endif
+
+    }
+  }
+  for(int i = 0; i < 10; i++){
+      printf("check: %e, %e \n", eigenV[i],gold[i]);
+  }
+
+  char rmt_error_detail[128];
 
   /* CKALRA, DLOWELL: Process errorBuffer, inthebeam test you can just save to file */
   unsigned int errCount = 0;
   unsigned int totErrCount = 0;
-  printf("errorBuffer size (flat global size): %u\n",ebsize);
+  //printf("errorBuffer size (flat global size): %u\n",ebsize);
   for(unsigned int i=0;i<ebsize;i++){
     if(errorBuffer[i]>0){
       errCount++;
       totErrCount+=errorBuffer[i];
     }
   }
-  printf("Threads with errors: %u\n",errCount);
-  printf("Total errors: %u\n\n",totErrCount);
+
+  if(errCount > 0)
+  {
+    snprintf(rmt_error_detail, 128, "err_buf size: %u, thread_err: %u, total_err: %u\n", ebsize, errCount, totErrCount);
+    printf("%s", rmt_error_detail);
+
+#ifdef LOGS
+  log_error_detail(rmt_error_detail);
+#endif
+
+  }
+
+#ifdef LOGS
+  log_error_count(errors);
+#endif
+
+
+  free(gold);
 }
 
 void PageRankBenchmark::Verify() {

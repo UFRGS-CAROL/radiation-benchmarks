@@ -58,6 +58,9 @@ int main(int argc, const char **argv) {
   command_line_option.AddArgument("Verify", "bool", "false",
       "-v", "--verify",
       "Verify the calculation result");
+  command_line_option.AddArgument("GenInputs", "bool", "false",
+      "-g", "--generate",
+      "Generate inputs and gold.");
 
   command_line_option.Parse(argc, argv);
   if (command_line_option.GetArgumentValue("Help")->AsBool()) {
@@ -65,18 +68,21 @@ int main(int argc, const char **argv) {
     return 0;
   }
 
-  bool verify = command_line_option.GetArgumentValue("Verify")->AsBool();
+  //bool verify = command_line_option.GetArgumentValue("Verify")->AsBool();
   std::string input = command_line_option.GetArgumentValue("Input File")
     ->AsString();
+  bool gen_inputs = command_line_option.GetArgumentValue("GenInputs")->AsBool();
 
   // Create and setup benchmarks
   std::unique_ptr<PageRankBenchmark> benchmark(new PageRankBenchmark());
   benchmark->SetMatrixInputFile(input.c_str());
+  benchmark->SetGenInputs(gen_inputs);
 
   // Run benchmark
   std::unique_ptr<TimeMeasurement> timer(new TimeMeasurementImpl());
   BenchmarkRunner runner(benchmark.get(), timer.get());
-  runner.set_verification_mode(verify);
+  //runner.set_verification_mode(verify);
   runner.Run();
   runner.Summarize();
+
 }

@@ -55,6 +55,8 @@ class FirBenchmark : public Benchmark {
   float *coeff = nullptr;
   float *temp_output = nullptr;
 
+  bool gen_inputs;
+
   // CKALRA, DLOWELL
   unsigned int ebsize;
   unsigned int *errorBuffer;
@@ -68,6 +70,10 @@ class FirBenchmark : public Benchmark {
 
   void setNumBlocks(unsigned int numBlocks) { this->numBlocks = numBlocks; }
   void setNumData(unsigned int numData) { this->numData = numData; }
+  void setGenInputs(bool gen_inputs) {this->gen_inputs = gen_inputs; }
+
+  void SaveGold();
+  void CheckGold();
 };
 
 #endif  // SRC_HSA_FIR_HSA_FIR_BENCHMARK_H_

@@ -47,7 +47,7 @@
 int main(int argc, const char **argv) {
   // Setup command line option
   CommandLineOption command_line_option(
-      "====== Hetero-Mark FIR Benchmarks (HSA mode) ======",
+      "====== Hetero-Mark FIR Benchmarks (HSA RMT INTRA mode) ======",
       "This benchmarks runs Finite Impulse Response (FIR) filter.");
   command_line_option.AddArgument("Help", "bool", "false", "-h", "--help",
                                   "Dump help information");
@@ -58,6 +58,9 @@ int main(int argc, const char **argv) {
       "NumBlock", "integer", "1024", "-b", "--num-block",
       "Number of data blocks, each data block is process in one kernel "
       "launching");
+  command_line_option.AddArgument("GenInputs", "bool", "false",
+      "-g", "--generate",
+      "Generate inputs and gold.");
 
   command_line_option.Parse(argc, argv);
   if (command_line_option.GetArgumentValue("Help")->AsBool()) {
@@ -68,11 +71,14 @@ int main(int argc, const char **argv) {
       command_line_option.GetArgumentValue("NumData")->AsUInt32();
   uint32_t numBlock =
       command_line_option.GetArgumentValue("NumBlock")->AsUInt32();
+  bool gen_inputs = command_line_option.GetArgumentValue("GenInputs")
+    ->AsBool();
 
   // Create and run benchmarks
   std::unique_ptr<FirBenchmark> benchmark(new FirBenchmark());
   benchmark->setNumData(numData);
   benchmark->setNumBlocks(numBlock);
+  benchmark->setGenInputs(gen_inputs);
   std::unique_ptr<TimeMeasurement> timer(new TimeMeasurementImpl());
   BenchmarkRunner runner(benchmark.get(), timer.get());
   runner.Run();

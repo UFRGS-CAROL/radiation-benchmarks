@@ -20,30 +20,30 @@ except IOError as e:
 	print >> sys.stderr, "Configuration setup error: "+str(e)
 	sys.exit(1)
 
-data_path=installDir+"bin/fir"
-bin_path=installDir+"bin/fir"
-src_fir = installDir+"src/heterogeneous/hsa/src/hsa/fir_hsa"
+data_path=installDir+"bin/fir_intra_beam"
+bin_path=installDir+"bin/fir_intra_beam"
+src_fir_intra_beam = installDir+"src/heterogeneous/hsa_rmt/src/hsa/fir_intra_beam"
 
-os.system("sudo mkdir "+src_fir+"/input");
-os.system("sudo mkdir "+src_fir+"/output");
+os.system("sudo mkdir "+src_fir_intra_beam+"/input");
+os.system("sudo mkdir "+src_fir_intra_beam+"/output");
 
 if not os.path.isdir(data_path):
 	os.mkdir(data_path, 0777);
 	os.chmod(data_path, 0777);
 
-os.system("cd "+src_fir);
-os.system("sudo ./fir_hsa -b 2048 -n 1024 -g");
-os.system("sudo ./fir_hsa -b 4096 -n 1024 -g");
-os.system("sudo ./fir_hsa -b 8192 -n 1024 -g");
+#os.system("cd "+src_fir);
+os.system("cd "+src_fir_intra_beam+"; sudo ./fir_intra_beam -b 2048 -n 2048 -g");
+os.system("cd "+src_fir_intra_beam+"; sudo ./fir_intra_beam -b 4096 -n 4096 -g");
+os.system("cd "+src_fir_intra_beam+"; sudo ./fir_intra_beam -b 8192 -n 8192 -g");
 os.system("sudo chmod 777 input output input/* output/* ");
 os.system("mv input output "+data_path);
-os.system("mv ./fir_hsa "+bin_path);
+os.system("mv ./fir_intra_beam "+bin_path);
 
-fp = open(installDir+"scripts/how_to_run_fir_hsa", 'w')
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/fir_hsa -b 2048 -n 1024"
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/fir_hsa -b 4096 -n 1024"
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/fir_hsa -b 8192 -n 1024"
+fp = open(installDir+"scripts/how_to_run_fir_intra_beam", 'w')
+print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/fir_intra_beam -b 2048 -n 2048"
+print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/fir_intra_beam -b 4096 -n 4096"
+print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/fir_intra_beam -b 8192 -n 8192"
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_fft_ocl\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_fir_intra_beam\n"
 
 sys.exit(0)

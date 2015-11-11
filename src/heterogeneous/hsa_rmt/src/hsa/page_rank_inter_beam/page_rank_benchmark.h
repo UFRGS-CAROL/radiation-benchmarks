@@ -83,6 +83,8 @@ class PageRankBenchmark : public Benchmark {
   int nnz;
   int nr;
 
+  bool gen_inputs;
+
   int* rowOffset;
   int* rowOffset_cpu;
   int* col;
@@ -106,6 +108,7 @@ class PageRankBenchmark : public Benchmark {
   PageRankBenchmark();
 
   void SetMatrixInputFile(const char* matrix_file) { fileName1 = matrix_file; }
+  void SetGenInputs(bool g_inputs) { gen_inputs = g_inputs; }
 
   void Initialize() override;
   void Run() override;
@@ -125,6 +128,9 @@ class PageRankBenchmark : public Benchmark {
   InterParams P;
   unsigned int errCount;
   unsigned int totErrCount;
+
+  void SaveGold();
+  void CheckGold();
 };
 
 #endif  // SRC_HSA_PAGE_RANK_HSA_PAGE_RANK_BENCHMARK_H_

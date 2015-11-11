@@ -74,6 +74,9 @@ int main(int argc, const char **argv) {
   command_line_option.AddArgument("Verify", "bool", "false",
       "-v", "--verify",
       "Verify the calculation result");
+  command_line_option.AddArgument("GenInputs", "bool", "false",
+      "-g", "--generate",
+      "Generate inputs and gold.");
 
   command_line_option.Parse(argc, argv);
   if (command_line_option.GetArgumentValue("Help")->AsBool()) {
@@ -92,7 +95,11 @@ int main(int argc, const char **argv) {
     "Maximum Clusters")->AsUInt32();
   uint32_t min_clusters = command_line_option.GetArgumentValue(
     "Minimum Clusters")->AsUInt32();
-
+  bool gen_inputs = command_line_option.GetArgumentValue("GenInputs")
+    ->AsBool();
+  
+  for(int c = 0; c < 10; c++)
+  {
   // Create and setup benchmarks
   std::unique_ptr<KmeansBenchmark> benchmark(new KmeansBenchmark());
   benchmark->SetInputFileName(input.c_str());
@@ -100,11 +107,14 @@ int main(int argc, const char **argv) {
   benchmark->SetThreshold(threshold);
   benchmark->SetMaxClusters(max_clusters);
   benchmark->SetMinClusters(min_clusters);
-
+  benchmark->SetGenInputs(gen_inputs);
+  
   // Run benchmark
   std::unique_ptr<TimeMeasurement> timer(new TimeMeasurementImpl());
   BenchmarkRunner runner(benchmark.get(), timer.get());
   runner.set_verification_mode(verify);
   runner.Run();
   runner.Summarize();
+  }
+
 }

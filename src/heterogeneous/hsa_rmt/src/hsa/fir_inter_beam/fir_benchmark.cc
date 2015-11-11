@@ -40,12 +40,20 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
+#include <iostream>
 //#include "src/hsa/fir_hsa/kernels.h"
 //#include "src/hsa/fir_hsa/fir_benchmark.h"
 
 #include "kernels.h"
 #include "fir_benchmark.h"
 
+/* radiation things */
+extern "C"
+{
+#include "../../logHelper/logHelper.h"
+}
+
+#define ITERATIONS 100000000
 
 void FirBenchmark::Initialize() {
   numTap = 1024;
@@ -65,30 +73,94 @@ void FirBenchmark::Initialize() {
   P.addressBuffer = (unsigned int*)calloc(rmt_buff_size, sizeof(int));
   P.valueBuffer = (unsigned long*)calloc(rmt_buff_size, sizeof(unsigned long));
 
+  
+  char input_file_str[64], coeff_file_str[64];
+  sprintf(input_file_str, "input/input_%d_%d", numBlocks, numData);
+  sprintf(coeff_file_str, "input/coeff_%d_%d", numBlocks, numData);
 
-  // Initialize input data
-  for (unsigned int i = 0; i < numTotalData; i++) {
-    input[i] = i;
+  if(gen_inputs == true)
+  {
+  	// Initialize input data
+  	for (unsigned int i = 0; i < numTotalData; i++) {
+    	  input[i] = i;
+  	}
+
+  	// Initialize coefficient
+  	for (unsigned int i = 0; i < numTap; i++) {
+    	  coeff[i] = 1.0 / numTap;
+  	}
+  
+	FILE* input_file = fopen(input_file_str, "wb");
+        fwrite(input, numTotalData*sizeof(float), 1, input_file);
+        fclose(input_file);
+
+        FILE* coeff_file = fopen(coeff_file_str, "wb");
+        fwrite(coeff, numTap*sizeof(float), 1, coeff_file);
+        fclose(coeff_file);
+
   }
 
-  // Initialize coefficient
-  for (unsigned int i = 0; i < numTap; i++) {
-    coeff[i] = 1.0 / numTap;
+  else
+  {
+        int read;
+
+        FILE* input_file = fopen(input_file_str, "rb");
+        read = fread(input, numTotalData*sizeof(float), 1, input_file);
+        if(read != 1)
+                read = -1;
+
+        fclose(input_file);
+
+        FILE* coeff_file = fopen(coeff_file_str, "rb");
+        read = fread(coeff, numTap*sizeof(float), 1, coeff_file);
+        if(read != 1)
+                read = -1;
+
+        fclose(coeff_file);
   }
 
-  // Initialize temp output
-  for (unsigned int i = 0; i < (numData + numTap - 1); i++) {
-    temp_output[i] = 0.0;
-  }
 }
 
 void FirBenchmark::Run() {
+  std::cout << "Running FIR. Generating inputs and gold: " << (gen_inputs == true ? "YES" : "NO") << std::endl;  
+  std::cout << std::endl;
+
+//initialize logs
+#ifdef LOGS
+  char test_info[100];
+  snprintf(test_info, 100, "blocks:%d, data:%d", numBlocks, numData);
+  char test_name[100];
+  snprintf(test_name, 100, "hsaFIR_RMT_INTER");
+  start_log_file(test_name, test_info);
+  set_max_errors_iter(500);
+  set_iter_interval_print(10);
+#endif
+
+
+
+//begin loop of iterations
+  //for(int iteration = 0; iteration < (gen_inputs == true) ? 1 : 1; iteration++)//ITERATIONS); iteration++)
+  {
+  	// Initialize temp output
+  	for (unsigned int i = 0; i < (numData + numTap - 1); i++) {
+    	  temp_output[i] = 0.0;
+  	}
+
+   	//if(iteration % 10 == 0)
+	//	std::cout << "Iteration #" << iteration << std::endl;
+
+//start iteration
+#ifdef LOGS
+  start_iteration();
+#endif
+
   for (unsigned int i = 0; i < numBlocks; i++) {
-    SNK_INIT_LPARM(lparm, 0);
-    lparm->ndim = 1;
+ 	SNK_INIT_LPARM(lparm, 0);
+ 	lparm->ndim = 1;
 // CKALRA, DLOWELL: double global workgroup size
-    lparm->gdims[0] = 2*numData;
-    lparm->ldims[0] = 128;
+	lparm->gdims[0] = 2*numData;
+	lparm->ldims[0] = 128;
+
     memset(P.lockBuffer,0,rmt_buff_size*sizeof(int));
     memset(P.errorBuffer, 0, rmt_buff_size*sizeof(unsigned int));
     *(P.groupID) = 0;
@@ -107,7 +179,88 @@ void FirBenchmark::Run() {
   printf("Threads with errors: %u\n",errCount);
   printf("Total errors: %u\n\n",totErrCount);
 
+  if(gen_inputs == true)
+		SaveGold();
+
+  	else
+		CheckGold();
+  
+//end iteration
+#ifdef LOGS
+  end_iteration();
+#endif
+
+  }
+
+//end log file
+#ifdef LOGS
+  end_log_file();
+#endif
 }
+
+void FirBenchmark::SaveGold() {
+  char gold_file_str[64];
+  sprintf(gold_file_str, "output/output_%d_%d", numBlocks, numData);
+
+  FILE* gold_file = fopen(gold_file_str, "wb");
+  fwrite(output, numBlocks*numData*sizeof(float), 1, gold_file);
+
+  fclose(gold_file);
+
+}
+
+void FirBenchmark::CheckGold() {
+  float *gold = (float*) malloc(numBlocks * numData * sizeof(float));
+
+  char gold_file_str[64];
+  sprintf(gold_file_str, "output/output_%d_%d", numBlocks, numData);
+
+  FILE* gold_file = fopen(gold_file_str, "rb");
+  if(gold_file == NULL)
+  {
+	printf("can't open gold file!\n");
+	exit(1);
+  }
+
+  else
+  {
+
+  int read = fread(gold, numBlocks*numData*sizeof(float), 1, gold_file);
+  if(read != 1)
+    read = -1;
+
+  fclose(gold_file);
+
+  int errors = 0;
+  for(unsigned int i = 0; i < numBlocks*numData; i++)
+  {
+    if(gold[i] != output[i])
+    {
+	errors++;
+
+        char error_detail[128];
+        snprintf(error_detail, 64, "position: [%d], output: %e, gold: %e\n", i, output[i], gold[i]);
+        printf("Error: %s\n", error_detail);
+
+#ifdef LOGS
+  log_error_detail(error_detail);
+#endif
+
+    }
+  }
+
+#ifdef LOGS
+  log_error_count(errors);
+#endif
+  }
+
+  free(gold);
+
+  //std::cout << "There were " << errors << " errors in the output!" << std::endl;
+  //std::cout << std::endl;
+}
+
+
 
 void FirBenchmark::Verify() {
   for (unsigned int i = 0; i < numTotalData; i++) {
@@ -116,6 +269,8 @@ void FirBenchmark::Verify() {
 }
 
 void FirBenchmark::Summarize() {
+	printf("May the force be with you\n");
+
 }
 
 void FirBenchmark::Cleanup() {
