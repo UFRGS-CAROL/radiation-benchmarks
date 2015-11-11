@@ -50,7 +50,7 @@ extern "C"
 #include "../../logHelper/logHelper.h"
 }
 
-#define ITERATIONS 10000
+#define ITERATIONS 10000000
 
 void FirBenchmark::Initialize() {
   numTap = 1024;
@@ -71,7 +71,8 @@ void FirBenchmark::Initialize() {
   {
   	// Initialize input data
   	for (unsigned int i = 0; i < numTotalData; i++) {
-    	  input[i] = i;
+    	  input[i] = (float)rand()/(float)(RAND_MAX/1000);
+	  output[i] = 0;//(float)rand()/(float)(RAND_MAX/1000);
   	}
 
   	// Initialize coefficient
@@ -87,6 +88,10 @@ void FirBenchmark::Initialize() {
         fwrite(coeff, numTap*sizeof(float), 1, coeff_file);
         fclose(coeff_file);
 
+	/*for (unsigned int i = 0; i < 10; i++)
+	{
+	  printf("input %d: %f\ncoeff %d: %f\n", i, input[i], i, coeff[i]);
+	}*/
   }
 
   else
@@ -94,24 +99,39 @@ void FirBenchmark::Initialize() {
         int read;
 
         FILE* input_file = fopen(input_file_str, "rb");
-        read = fread(input, numTotalData*sizeof(float), 1, input_file);
-        if(read != 1)
-                read = -1;
+        if(input == NULL)
+	{
+		printf("can't open input file!\n");
+		exit(1);
+      	}
+	
+	else
+	{
+	        read = fread(input, numTotalData*sizeof(float), 1, input_file);
+	        if(read != 1)
+	                read = -1;
 
-        fclose(input_file);
+	        fclose(input_file);
+	}
 
         FILE* coeff_file = fopen(coeff_file_str, "rb");
-        read = fread(coeff, numTap*sizeof(float), 1, coeff_file);
-        if(read != 1)
-                read = -1;
+        if(coeff_file == NULL)
+	{
+		printf("can't open coeff file!\n");
+		exit(1);
+	}
+	
+	else
+	{
+		read = fread(coeff, numTap*sizeof(float), 1, coeff_file);
+	        if(read != 1)
+	                read = -1;
 
-        fclose(coeff_file);
+	        fclose(coeff_file);
+	}
+
   }
 
-  // Initialize temp output
-  for (unsigned int i = 0; i < (numData + numTap - 1); i++) {
-    temp_output[i] = 0.0;
-  }
 }
 
 void FirBenchmark::Run() {
@@ -132,6 +152,11 @@ void FirBenchmark::Run() {
 //begin loop of iterations
   for(int iteration = 0; iteration < (gen_inputs == true ? 1 : ITERATIONS); iteration++)
   {
+	// Initialize temp output
+  	for (unsigned int i = 0; i < (numData + numTap - 1); i++) {
+    	  temp_output[i] = input[i];
+  	}
+
 	if(iteration % 10 == 0)
 		std::cout << "Iteration #" << iteration << std::endl;
 
@@ -145,7 +170,7 @@ void FirBenchmark::Run() {
     		lparm->ndim = 1;
     		lparm->gdims[0] = numData;
     		lparm->ldims[0] = 128;
-    		FIR(output, coeff, temp_output, numTap, lparm);
+    		FIR(output+i*numData, coeff, temp_output, numTap, lparm);
   	}
 
   	if(gen_inputs == true)
@@ -176,6 +201,8 @@ void FirBenchmark::SaveGold() {
 
   fclose(gold_file);
 
+  /*for(unsigned int i = numData*numBlocks-10; i < numData*numBlocks; i++)
+    printf("output %d: %e\n", i, output[i]);*/
 }
 
 void FirBenchmark::CheckGold() {
@@ -194,13 +221,14 @@ void FirBenchmark::CheckGold() {
   int errors = 0;
   for(unsigned int i = 0; i < numBlocks*numData; i++)
   {
-    if(abs(gold[i] - output[i]) > 1e-5)
+    if(abs(gold[i] - output[i]) > 1e-5 || output[i] == 0)
     {
 	errors++;
 
         char error_detail[128];
         snprintf(error_detail, 64, "position: [%d], output: %f, gold: %f\n", i, output[i], gold[i]);
-        printf("Error: %s\n", error_detail);
+        
+ 	if(errors < 10 ) printf("Error: %s\n", error_detail);
 
 #ifdef LOGS
   log_error_detail(error_detail);
