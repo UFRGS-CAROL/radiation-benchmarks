@@ -1,4 +1,4 @@
-# Install script for directory: /home/carol/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement
+# Install script for directory: /home/carol/vinicius/radiation-benchmarks/src/heterogeneous/hsa/src/common/time_measurement
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)

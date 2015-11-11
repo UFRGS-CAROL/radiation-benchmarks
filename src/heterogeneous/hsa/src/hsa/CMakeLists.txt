@@ -10,7 +10,7 @@ set( FOLDER_NAME hsa )
 set( SUBDIRECTORIES 
   fir_hsa
 #  hmm_hsa
-#  kmeans_hsa
+  kmeans_hsa
   page_rank_hsa
 )
 

@@ -226,9 +226,9 @@ void FirBenchmark::CheckGold() {
 	errors++;
 
         char error_detail[128];
-        snprintf(error_detail, 64, "position: [%d], output: %f, gold: %f\n", i, output[i], gold[i]);
-        
- 	if(errors < 10 ) printf("Error: %s\n", error_detail);
+        snprintf(error_detail, 128, "position: [%d], output: %f, gold: %f\n", i, output[i], gold[i]);
+ 	printf("%s", error_detail);       
+ 	//if(errors < 10 ) printf("Error: %s\n", error_detail);
 
 #ifdef LOGS
   log_error_detail(error_detail);

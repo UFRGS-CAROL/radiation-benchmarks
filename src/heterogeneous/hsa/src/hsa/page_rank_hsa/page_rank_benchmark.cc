@@ -49,7 +49,7 @@ extern "C"
 #include "../../logHelper/logHelper.h"
 }
 
-#define ITERATIONS 10000
+#define ITERATIONS 1000000
 
 
 PageRankBenchmark::PageRankBenchmark() {
@@ -94,7 +94,7 @@ void PageRankBenchmark::FillBufferCpu() {
     }
     for (int j = 0; j < nnz; j++) {
       csrMatrix >> val[j];
-      // val[j] = (float)val[j];
+     // val[j] = (float)val[j]*10;
       val_cpu[j] = val[j];
     }
   }
@@ -109,12 +109,16 @@ void PageRankBenchmark::FillBufferCpu() {
     }
   } else {
     for (int j = 0; j < nr; j++) {
-      vector[j] = 1.0 / nr;
+      vector[j] = j+1;//1.0 / nr;
       vector_cpu[j] = vector[j];
       eigenV[j] = 0.0;
       eigenv_cpu[j] = 0.0;
     }
   }
+//DAGO
+csrMatrix.close();
+denseVector.close();
+//
 }
 
 void PageRankBenchmark::ReadCsrMatrix() {
@@ -172,6 +176,7 @@ void PageRankBenchmark::ExecKernel() {
   lparm->gdims[0] = nr * workGroupSize;
 
   for (int j = 0; j < maxIter; j++) {
+    //if(j < 25) printf("kernel inner iteration %d: %f, %f\n", j, eigenV[0], vector[0]); 
     if (j % 2 == 0) {
       pageRank_kernel(nr, rowOffset, col, val, sizeof(float) * 64, vector,
                       eigenV, lparm);
@@ -246,6 +251,10 @@ void PageRankBenchmark::Run() {
  
   	// Execute the kernel
   	ExecKernel();
+//end iteration
+#ifdef LOGS
+  end_iteration();
+#endif
 
   	if(gen_inputs == true)
     	  SaveGold();
@@ -253,11 +262,12 @@ void PageRankBenchmark::Run() {
   	else
     	  CheckGold();
 
-//end iteration
-#ifdef LOGS
-  end_iteration();
-#endif
-
+//DAGO
+  ReadCsrMatrix();
+  ReadDenseVector();
+  FillBuffer();
+//
+	
   }
 
 //end log file
@@ -269,7 +279,7 @@ void PageRankBenchmark::Run() {
 void PageRankBenchmark::Verify() {
   CpuRun();
   for (int i = 0; i < nr; i++) {
-    if (abs(eigenv_cpu[i] - eigenV[i]) >= 1e-5) {
+    if (eigenv_cpu[i] != eigenV[i]) {
       std::cerr << "Not correct!\n";
       std::cerr << "Index: " << i << ", expected: " << eigenv_cpu[i]
                 << ", but get: " << eigenV[i]
@@ -284,9 +294,15 @@ void PageRankBenchmark::SaveGold() {
 
   FILE* gold_file = fopen(gold_file_str, "wb");
   fwrite(eigenV, nr*sizeof(float), 1, gold_file);
+int zero=0;
   
-  for(int i = 0; i < 10; i++)
-   printf("%f \n", eigenV[i]);   
+  for(int i = 0; i < nr; i++){
+   if(i< 10)
+      printf("%e, %e \n", eigenV[i],vector[i]);   
+    if(eigenV[i]==0)
+	zero++;
+  }
+printf("zeros %d of %d\n",zero, nr);
 
   fclose(gold_file);
 
@@ -308,7 +324,7 @@ void PageRankBenchmark::CheckGold() {
   int errors = 0;
   for(int i = 0; i < nr; i++)
   {
-    if(abs(gold[i] - eigenV[i]) > 1e-5)
+    if(gold[i] != eigenV[i])
     {
 	errors++;
     	
@@ -321,6 +337,9 @@ void PageRankBenchmark::CheckGold() {
 #endif
   
     } 
+  }
+  for(int i = 0; i < 10; i++){
+      printf("check: %e, %e \n", eigenV[i],gold[i]);   
   }
 
 #ifdef LOGS

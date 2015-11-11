@@ -55,9 +55,9 @@ int main(int argc, const char **argv) {
   command_line_option.AddArgument("Input File", "string", "input.txt",
       "-i", "--input-file",
       "The file that containing the input vector");
-  /*command_line_option.AddArgument("Verify", "bool", "false",
+  command_line_option.AddArgument("Verify", "bool", "false",
       "-v", "--verify",
-      "Verify the calculation result");*/
+      "Verify the calculation result");
   command_line_option.AddArgument("GenInputs", "bool", "false",
       "-g", "--generate",
       "Generate inputs and gold.");

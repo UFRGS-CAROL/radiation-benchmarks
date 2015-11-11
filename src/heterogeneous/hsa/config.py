@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#/usr/bin/python
 
 import os
 import sys
@@ -23,5 +23,6 @@ except IOError as e:
 os.system("cd "+installDir+"/src/heterogeneous/hsa/ ; cmake . ; make");
 os.system("cd "+installDir+"/src/heterogeneous/hsa/src/hsa/fir_hsa/ ; sudo ./config.py");
 os.system("cd "+installDir+"/src/heterogeneous/hsa/src/hsa/page_rank_hsa/ ; sudo ./config.py");
+os.system("cd "+installDir+"/src/heterogeneous/hsa/src/hsa/kmeans_hsa/ ; sudo ./config.py");
 
 sys.exit(0)
