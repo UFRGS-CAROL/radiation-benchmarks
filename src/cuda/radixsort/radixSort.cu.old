@@ -1,0 +1,520 @@
+/**
+ * Copyright 1993-2015 NVIDIA Corporation.  All rights reserved.
+ *
+ * Please refer to the NVIDIA end user license agreement (EULA) associated
+ * with this source code for terms and conditions that govern your use of
+ * this software. Any use, reproduction, disclosure, or distribution of
+ * this software and related documentation outside the terms of the EULA
+ * is strictly prohibited.
+ *
+ */
+
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+#include <thrust/sort.h>
+#include <thrust/copy.h>
+#include <thrust/sequence.h>
+#include <thrust/random.h>
+#include <thrust/generate.h>
+#include <thrust/detail/type_traits.h>
+#include <omp.h>
+
+#include <helper_cuda.h>
+
+#include <algorithm>
+#include <time.h>
+#include <limits.h>
+
+#include <sys/time.h>
+
+#define INPUTSIZE 134217728
+
+int generate;
+
+#ifdef LOGS
+	#include "log_helper.h"
+#endif
+
+typedef struct parameters_s {
+	int numElements;
+	int numIterations;
+	int verbose;
+	int debug;
+	int generate;
+	int fault_injection;
+	char *goldName, *inputName;
+    int keysOnly;
+    int floatKeys;
+} parameters_t;
+
+double mysecond()
+{
+	struct timeval tp;
+	struct timezone tzp;
+	int i = gettimeofday(&tp,&tzp);
+	return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
+}
+
+void fatal(const char *str)
+{
+	printf("FATAL: %s\n", str);
+	#ifdef LOGS
+		if (generate) end_log_file();
+	#endif
+	exit(EXIT_FAILURE);
+}
+
+static void usage(int argc, char *argv[])
+{
+	printf("Syntax: %s -size=N [-generate] [-float] [-verbose] [-debug] [-inputkey=<path>] [-inputval=<path>] [-gold=<path>] [-iterations=N] [-keysonly] \n", argv[0]);
+	exit(EXIT_FAILURE);
+}
+
+void getParams(int argc, char *argv[], parameters_t *params)
+{
+	params->numIterations = 100000000;
+	params->verbose = 0;
+	params->generate = 0;
+	params->fault_injection = 0;
+    params->keysOnly = 0;
+    params->floatKeys = 0;
+	generate = 0;
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "help") ||
+		checkCmdLineFlag(argc, (const char **)argv, "h"))
+	{
+		usage(argc, argv);
+		exit(EXIT_WAIVED);
+	}
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "size")) {
+		params->numElements = getCmdLineArgumentInt(argc, (const char **)argv, "size");
+		if (params->numElements > INPUTSIZE) {
+			fatal("Maximum size reached, please increase the input size on the code source and recompile.");
+		}
+	} else {
+		printf("Missing -size parameter.\n");
+		usage(argc, argv);
+	}
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "verbose")) {
+		params->verbose = 1;
+	}
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "float")) {
+		params->floatKeys = 1;
+	}
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "generate")) {
+		params->generate = 1;
+		generate = 1;
+		params->numIterations = 1;
+	}
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "iterations")) {
+		params->numIterations = getCmdLineArgumentInt(argc, (const char **)argv, "iterations");
+	}
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "debug")) {
+		params->fault_injection = 1;
+	}
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "gold")) {
+		getCmdLineArgumentString(argc, (const char **)argv, "gold", &(params->goldName));
+	} else {
+		params->goldName = new char[100];
+		snprintf(params->goldName, 100, "radixsort_%sGold%s%i", (params->floatKeys ? "float" : "uint"), (params->keysOnly ? "Keys" : "KeysVals"), (signed int)params->numElements);
+		printf("Using default gold filename: %s\n", params->goldName);
+	}
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "input")) {
+		getCmdLineArgumentString(argc, (const char **)argv, "input", &(params->inputName));
+	} else {
+		params->inputName = new char[100];
+		snprintf(params->inputName, 100, "radixsort_%sInput%i", (params->floatKeys ? "float" : "uint"), (signed int)INPUTSIZE);
+		printf("Using default keys input filename: %s\n", params->inputName);
+	}
+}
+
+template <typename T>
+void readData(parameters_t *params, thrust::host_vector<T> h_keys, thrust::host_vector<T> h_keysGold, thrust::host_vector<unsigned int> h_values, thrust::host_vector<unsigned int> h_valuesGold)
+{
+    FILE *finput, *fgold;
+    if (finput = fopen(params->inputName, "rb")) {
+		fread(&h_keys[0], params->numElements * sizeof(T), 1, finput);
+	} else if (params->generate) {
+        thrust::host_vector<T> new_keys(INPUTSIZE);
+        // Fill up with some random data
+        thrust::default_random_engine rng(clock());
+
+        if (params->floatKeys)
+        {
+            thrust::uniform_real_distribution<float> u01(0, 1);
+
+            for (int i = 0; i < (int)INPUTSIZE; i++)
+                new_keys[i] = u01(rng);
+        }
+        else
+        {
+            thrust::uniform_int_distribution<unsigned int> u(0, UINT_MAX);
+
+            for (int i = 0; i < (int)INPUTSIZE; i++)
+                new_keys[i] = u(rng);
+        }
+
+		if (finput = fopen(params->inputName, "wb"))  {
+			fwrite(&new_keys[0], INPUTSIZE * sizeof(T), 1, finput);
+		} else {
+			printf("Could not write key input to file, proceeding anyway...\n");
+		}
+        thrust::copy(new_keys.begin(), new_keys.begin() + params->numElements * sizeof(T), h_keys.begin());
+	} else {
+		fatal("Could not open key input. Use -generate");
+	}
+	fclose(finput);
+
+    if (!(params->keysOnly))
+        thrust::sequence(h_values.begin(), h_values.end());
+
+    if (!(params->generate)) {
+        if (fgold = fopen(params->goldName, "rb")) {
+            fread(&h_keysGold[0], params->numElements * sizeof(T), 1, fgold);
+			if (!(params->keysOnly))
+            	fread(&h_valuesGold[0], params->numElements * sizeof(uint), 1, fgold);
+            fclose(fgold);
+        } else {
+            fatal("Could not open gold file. Use -generate");
+        }
+    }
+}
+
+template <typename T>
+void writeOutput(parameters_t *params, thrust::host_vector<T> h_keys, thrust::host_vector<unsigned int> h_values)
+{
+	FILE *fgold;
+	if (fgold = fopen(params->goldName, "wb")) {
+		fwrite(&h_keys[0], params->numElements * sizeof(T), 1, fgold);
+		if (!(params->keysOnly))
+			fwrite(&h_values[0], params->numElements * sizeof(uint), 1, fgold);
+		fclose(fgold);
+	} else {
+		printf("Error: could not open gold file in wb mode.\n");
+	}
+}
+
+template <typename T>
+int checkKeys(parameters_t *params, thrust::host_vector<T> h_keys, thrust::host_vector<T> h_keysOut)
+{ // Magicas que a semana anterior ao teste proporcionam
+    unsigned char *srcHist;
+    unsigned char *resHist;
+
+	uint numValues = UINT_MAX;
+
+    int flag = 1;
+	int errors = 0;
+
+	register uint index, range;
+	long unsigned int control;
+	range = ((2*numValues*sizeof(unsigned char) > 2048000000) ? 1024000000 : numValues); // Avoid more than 2GB of RAM alloc
+
+	srcHist = (unsigned char *)malloc(range * sizeof(unsigned char));
+	resHist = (unsigned char *)malloc(range * sizeof(unsigned char));
+
+	if (!srcHist || !resHist) fatal("Could not alloc src or res histograms");
+
+    for (index = 0, control = 0; control < numValues; index += range, control += range)
+	{
+		printf("index = %u range = %u alloc=%.2fMB\n", index, range, 2 * (double)range * sizeof(unsigned char) / 1000000);
+
+
+        //Build histograms for keys arrays
+        memset(srcHist, 0, range * sizeof(unsigned char));
+        memset(resHist, 0, range * sizeof(unsigned char));
+
+		register uint indexPLUSrange = index + range;
+		#pragma omp parallel for
+		for (uint i = 0; i < params->numElements; i++)
+        {
+			//if (index!=0) printf("h_keys[%d]=%d h_keysOut[%d]=%d index=%d indexPLUSrange=%d\n", i, h_keys[i], i, h_keysOut[i], index, indexPLUSrange); fflush(stdout);
+			if ((h_keys[i] >= index) && (h_keys[i] < indexPLUSrange) && (h_keys[i] < numValues))
+            {
+				#pragma omp atomic
+                srcHist[(uint)floor(h_keys[i]-index)]++;
+            }
+			if ((h_keysOut[i] >= index) && (h_keysOut[i] < indexPLUSrange) && (h_keysOut[i] < numValues))
+            {
+				#pragma omp atomic
+                resHist[(uint)floor(h_keysOut[i]-index)]++;
+            }
+        }
+		#pragma omp parallel for
+		for (uint i = 0; i < range; i++)
+            if (srcHist[i] != resHist[i])
+			#pragma omp critical
+            {
+				char error_detail[150];
+                snprintf(error_detail, 150, "The histogram from element %d differs. srcHist=%d dstHist=%d\n", i+index, srcHist[i], resHist[i]);
+                #ifdef LOGS
+                    if (!(params->generate)) log_error_detail(error_detail);
+                #endif
+                printf("ERROR : %s\n", error_detail);
+				errors++;
+                flag = 0;
+            }
+
+	}
+	free(resHist);
+	free(srcHist);
+
+	//Finally check the ordering
+	#pragma omp parallel for
+	for (uint i = 0; i < params->numElements - 1; i++)
+		if (h_keysOut[i] > h_keysOut[i + 1])
+		#pragma omp critical
+		{
+			char error_detail[150];
+			if (params->floatKeys) {
+				snprintf(error_detail, 150, "Elements not ordered. index=%d %f>%f", i, h_keysOut[i], h_keysOut[i + 1]);
+			} else {
+				snprintf(error_detail, 150, "Elements not ordered. index=%d %d>%d", i, h_keysOut[i], h_keysOut[i + 1]);
+			}
+			#ifdef LOGS
+				if (!(params->generate)) log_error_detail(error_detail);
+			#endif
+			printf("ERROR: %s\n", error_detail);
+			errors++;
+			flag = 0;
+		}
+
+    if (flag) printf("OK\n");
+    if (!flag) printf("Errors found.\n");
+
+	return errors;
+}
+
+template <typename T>
+int checkVals(parameters_t *params, thrust::host_vector<T> h_keys, thrust::host_vector<T> h_keysOut, thrust::host_vector<unsigned int> h_valuesOut)
+{
+    int correctFlag = 1, stableFlag = 1;
+	int errors = 0;
+
+    printf("...inspecting keys and values array: "); fflush(stdout);
+
+	#pragma omp parallel for
+    for (uint j = 0; j < params->numElements; j++)
+    {
+        if (h_keysOut[j] != h_keys[h_valuesOut[j]])
+		#pragma omp critical
+		{
+			char error_detail[150];
+			snprintf(error_detail, 150, "The link between Val and Key arrays in incorrect. index=%d wrong_key=%d val=%d correct_key_pointed_by_val=%d", j, h_keysOut[j], h_valuesOut[j], h_keys[h_valuesOut[j]]);
+			#ifdef LOGS
+				if (!(params->generate)) log_error_detail(error_detail);
+			#endif
+			printf("ERROR: %s\n", error_detail);
+			errors++;
+            correctFlag = 0;
+		}
+
+        if ((j < params->numElements - 1) && (h_keysOut[j] == h_keysOut[j + 1]) && (h_valuesOut[j] > h_valuesOut[j + 1]))
+		#pragma omp critical
+		{
+			char error_detail[150];
+			snprintf(error_detail, 150, "Unstability detected at index=%d key=%d val[i]=%d val[i+1]=%d", j, h_keysOut[j], h_valuesOut[j], h_valuesOut[j + 1]);
+			#ifdef LOGS
+				if (!(params->generate)) log_error_detail(error_detail);
+			#endif
+			printf("ERROR: %s\n", error_detail);
+			errors++;
+            correctFlag = 0;
+		}
+    }
+
+    printf(correctFlag ? "OK\n" : "***corrupted!!!***\n");
+    printf(stableFlag ? "...stability property: stable!\n" : "...stability property: NOT stable\n");
+
+	return errors;
+}
+
+template <typename T>
+int compareGoldOutput(parameters_t *params, thrust::host_vector<T> h_keysOut, thrust::host_vector<unsigned int> h_valuesOut, thrust::host_vector<T> h_keysGold, thrust::host_vector<unsigned int> h_valuesGold)
+{
+	//return (memcmp(params->h_GoldKey, params->h_DstKey, params->numElements * sizeof(uint)) || memcmp(params->h_GoldVal, params->h_DstVal, params->numElements * sizeof(uint)));
+	int flag = 0;
+	#pragma omp parallel num_threads(2) shared(flag)
+	{
+		if (omp_get_thread_num() == 0) { // Thread 0
+			register unsigned int i;
+			register T *ptr1 = &h_keysOut[0];
+			register T *ptr2 = &h_keysGold[0];
+			#pragma omp parallel for
+			for (i=0; i<params->numElements; i++)
+			{
+				if (ptr1[i] != ptr2[i]) flag=1;
+			}
+		} else { // Thread 1
+			register unsigned int i;
+			register uint *ptr1 = &h_valuesOut[0];
+			register uint *ptr2 = &h_valuesGold[0];
+			#pragma omp parallel for
+			for (i=0; i<params->numElements; i++)
+			{
+				if (ptr1[i] != ptr2[i]) flag=1;
+			}
+		}
+	}
+	return flag;
+}
+
+template <typename T, bool floatKeys>
+void testSort(parameters_t *params)
+{
+    int keybits = 32;
+
+	double itertimestamp, kernel_time, timestamp;
+
+    if (params->verbose)
+        printf("\nSorting %d %d-bit %s keys %s\n\n", params->numElements, keybits, params->floatKeys ? "float" : "unsigned int", params->keysOnly ? "(only)" : "and values");
+
+    int deviceID = -1;
+
+    if (cudaSuccess == cudaGetDevice(&deviceID))
+    {
+        cudaDeviceProp devprop;
+        cudaGetDeviceProperties(&devprop, deviceID);
+        unsigned int totalMem = (params->keysOnly ? 2 : 4) * params->numElements * sizeof(T);
+
+        if (devprop.totalGlobalMem < totalMem)
+        {
+            printf("Error: insufficient amount of device memory to sort %d elements.\n", params->numElements);
+            printf("%u bytes needed, %u bytes available\n", (int) totalMem, (int) devprop.totalGlobalMem);
+            exit(EXIT_SUCCESS);
+        }
+    }
+
+    thrust::host_vector<T> h_keys(params->numElements);
+    thrust::host_vector<T> h_keysOut(params->numElements);
+    thrust::host_vector<T> h_keysGold(params->numElements);
+    thrust::host_vector<unsigned int> h_values, h_valuesOut, h_valuesGold;
+
+    if (!(params->keysOnly)) {
+        h_values = thrust::host_vector<unsigned int>(params->numElements);
+		h_valuesOut = thrust::host_vector<unsigned int>(params->numElements);
+		h_valuesGold = thrust::host_vector<unsigned int>(params->numElements);
+	}
+
+	if (params->verbose) printf("Preparing setup data..."); fflush(stdout);
+	timestamp = mysecond();
+
+    readData<T>(params, h_keys, h_keysGold, h_values, h_valuesGold);
+
+	if (params->verbose) printf("Done in %.4fs\n", mysecond() - timestamp);
+
+    // Copy data onto the GPU
+    thrust::device_vector<T> d_keys;
+    thrust::device_vector<unsigned int> d_values;
+
+    // run multiple iterations to compute an average sort time
+
+    for (unsigned int loop1 = 0; loop1 < params->numIterations; loop1++)
+    {
+		itertimestamp = mysecond();
+        if (params->verbose) printf("================== [Iteration #%i began]\n", loop1);
+
+        // reset data before sort
+        d_keys= h_keys;
+
+        if (!(params->keysOnly))
+            d_values = h_values;
+
+        timestamp = mysecond();
+
+		///////////////// Kernel
+		checkCudaErrors(cudaDeviceSynchronize());
+		#ifdef LOGS
+	        if (!(params->generate)) end_iteration();
+	    #endif
+
+        if (params->keysOnly)
+            thrust::sort(d_keys.begin(), d_keys.end());
+        else
+            thrust::sort_by_key(d_keys.begin(), d_keys.end(), d_values.begin());
+
+		checkCudaErrors(cudaDeviceSynchronize());
+	    #ifdef LOGS
+	        if (!(params->generate)) end_iteration();
+	    #endif
+		kernel_time = mysecond() - timestamp;
+		/////////////////////////
+
+        if (params->verbose) printf("GPU Kernel time: %.4fs\n", kernel_time);
+
+
+	    // Get results back to host for correctness checking
+	    thrust::copy(d_keys.begin(), d_keys.end(), h_keysOut.begin());
+
+	    if (!(params->keysOnly))
+	        thrust::copy(d_values.begin(), d_values.end(), h_valuesOut.begin());
+
+		timestamp = mysecond();
+		int errors = 0;
+		if (params->generate) {
+			printf("Validating output...\n");
+
+			errors += checkKeys<T>(params, h_keys, h_keysOut);
+			errors += checkVals<T>(params, h_keys, h_keysOut, h_valuesOut);
+
+			if (errors)
+				printf("Errors ocurred when validating gold, this is bad. I will save it to file anyway.\n");
+
+			writeOutput<T>(params, h_keysOut, h_valuesOut);
+		} else {
+			if (compareGoldOutput<T>(params, h_keysOut, h_valuesOut, h_keysGold, h_valuesGold)) {
+
+				printf("Warning! Gold file mismatch detected, proceeding to error analysis...\n");
+
+				errors += checkKeys<T>(params, h_keys, h_keysOut);
+				errors += checkVals<T>(params, h_keys, h_keysOut, h_valuesOut);
+			} else {
+				errors = 0;
+			}
+			#ifdef LOGS
+				if (!(params->generate)) log_error_count(errors);
+			#endif
+		}
+        if (params->verbose) printf("Host gold check time: %.4fs\n", mysecond() - timestamp);
+
+		// Display the time between event recordings
+        if (params->verbose) printf("Perf: %.3fM elems/sec\n", 1.0e-6f * params->numElements / kernel_time);
+        if (params->verbose) {
+            printf("Iteration %d ended. Elapsed time: %.4fs\n", loop1, mysecond()-itertimestamp);
+        } else {
+            printf(".");
+        }
+        fflush(stdout);
+    }
+
+	return;
+}
+
+int main(int argc, char **argv)
+{
+	parameters_t *params = (parameters_t *) malloc(sizeof(parameters_t));
+	getParams(argc, argv, params);
+    // Start logs
+    printf("%s Starting...\n\n", argv[0]);
+
+    findCudaDevice(argc, (const char **)argv);
+
+    if (params->floatKeys)
+        testSort<float, true>(params);
+    else
+        testSort<unsigned int, false>(params);
+
+    // cudaDeviceReset causes the driver to clean up all state. While
+    // not mandatory in normal operation, it is good practice.  It is also
+    // needed to ensure correct operation when the application is being
+    // profiled. Calling cudaDeviceReset causes all profile data to be
+    // flushed before the application exits
+    checkCudaErrors(cudaDeviceReset());
+}

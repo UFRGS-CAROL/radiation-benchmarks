@@ -197,6 +197,7 @@ int main(int argc, char **argv) {
         strcat(input_line, argv[iterate_args]);
 
 #ifdef _OPENMP
+    omp_set_num_threads(8);
     start_log_file((char *)"clamr_openmponly", input_line);
 #else
     start_log_file((char *)"clamr_cpuonly", input_line);
@@ -217,6 +218,7 @@ int main(int argc, char **argv) {
    }
 #pragma omp parallel
    {
+      omp_set_num_threads(8);
       nt = omp_get_num_threads();
       tid = omp_get_thread_num();
 
