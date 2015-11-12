@@ -13,4 +13,4 @@ hotspot_cdp: hotspot_cdp.cu
 	$(NVCC) $(NVCC_FLAGS) hotspot_cdp.cu -rdc=true -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) $(ITER) -lLogHelperCuda $(NVCCFLAGS) -Xcompiler " -fopenmp" -o hotspot_cdp
 
 clean:
-	rm -f hotspot_cdp
+	rm -f hotspot_cdp gold_*

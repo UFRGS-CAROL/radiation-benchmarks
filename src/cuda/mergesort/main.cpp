@@ -107,7 +107,7 @@ void getParams(int argc, char *argv[], parameters_t *params)
 		getCmdLineArgumentString(argc, (const char **)argv, "gold", &(params->goldName));
 	} else {
 		params->goldName = new char[100];
-		snprintf(params->goldName, 100, "mergesortGold%i", (signed int)params->size);
+		snprintf(params->goldName, 100, "mergesort_gold%i", (signed int)params->size);
 		printf("Using default gold filename: %s\n", params->goldName);
 	}
 
@@ -115,7 +115,7 @@ void getParams(int argc, char *argv[], parameters_t *params)
 		getCmdLineArgumentString(argc, (const char **)argv, "inputval", &(params->valName));
 	} else {
 		params->valName = new char[100];
-		snprintf(params->valName, 100, "mergesortInputVal%i", (signed int)INPUTSIZE);
+		snprintf(params->valName, 100, "mergesort_inputval%i", (signed int)INPUTSIZE);
 		printf("Using default vals input filename: %s\n", params->valName);
 	}
 
@@ -123,7 +123,7 @@ void getParams(int argc, char *argv[], parameters_t *params)
 		getCmdLineArgumentString(argc, (const char **)argv, "inputkey", &(params->keyName));
 	} else {
 		params->keyName = new char[100];
-		snprintf(params->keyName, 100, "mergesortInputKey%i", (signed int)INPUTSIZE);
+		snprintf(params->keyName, 100, "mergesort_inputkey%i", (signed int)INPUTSIZE);
 		printf("Using default keys input filename: %s\n", params->keyName);
 	}
 }

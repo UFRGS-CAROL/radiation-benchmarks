@@ -12,4 +12,4 @@ radixsort: radixSortThrust.cu
 	$(NVCC) $(NVCC_FLAGS) radixSortThrust.cu -arch=sm_35 -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) $(ITER) -lLogHelperCuda $(NVCCFLAGS) -Xcompiler "-O3 -fopenmp" -o radixsort
 
 clean:
-	rm -rf radixsort
+	rm -rf radixsort radixsort_*
