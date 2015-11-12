@@ -156,15 +156,15 @@ void FirBenchmark::Run() {
 #endif
 
 //begin loop of iterations
-  for(int iteration = 0; iteration < (gen_inputs == true ? 1 : ITERATIONS); iteration++)
+  //for(int iteration = 0; iteration < (gen_inputs == true ? 1 : ITERATIONS); iteration++)
   {
   	// Initialize temp output
 	for (unsigned int i = 0; i < (numData + numTap - 1); i++) {
     	  temp_output[i] = input[i];
   	}
  
- 	if(iteration % 10 == 0)
-       		std::cout << "Iteration #" << iteration << std::endl;
+ 	//if(iteration % 10 == 0)
+       	//	std::cout << "Iteration #" << iteration << std::endl;
 
 //start iteration
 #ifdef LOGS

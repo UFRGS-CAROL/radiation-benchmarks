@@ -34,6 +34,8 @@
 
 void run(int argc, char** argv);
 
+int generate;
+
 /* define timer macros */
 #define pin_stats_reset()   startCycle()
 #define pin_stats_pause(cycles)   stopCycle(cycles)
@@ -64,7 +66,7 @@ void fatal(const char *s)
 {
     fprintf(stderr, "error: %s\n", s);
     #ifdef LOGS
-    if (!(setupParams->generate)) { log_error_detail(s); end_log_file(); }
+    if (!generate) { end_log_file(); }
     #endif
     exit(1);
 }
@@ -332,6 +334,7 @@ void getParams(int argc, char** argv, parameters *params)
     params -> verbose = 0;
     params -> fault_injection = 0;
     params -> generate = 0;
+	generate = 0;
 
     if (argc<2) {
         usage(argc, argv);
@@ -358,6 +361,7 @@ void getParams(int argc, char** argv, parameters *params)
     if (checkCmdLineFlag(argc, (const char **)argv, "generate"))
     {
         params -> generate = 1;
+	generate = 1;
         printf(">> Output will be written to file. Only stream #0 output will be considered.\n");
     }
 

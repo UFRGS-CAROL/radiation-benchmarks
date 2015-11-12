@@ -12,4 +12,4 @@ mergesort: bitonic.cu main.cpp mergeSort.cu mergeSort_host.cpp mergeSort_validat
 	$(NVCC) $(NVCC_FLAGS) -g bitonic.cu main.cpp mergeSort.cu mergeSort_host.cpp mergeSort_validate.cpp -arch=sm_35 -I$(LOGHELPER_INC),./inc/ -L$(LOGHELPER_LIB) $(ITER) -lLogHelperCuda $(NVCCFLAGS) -Xcompiler "-O3 -fopenmp" -o mergesort
 
 clean:
-	rm -rf mergesort
+	rm -rf mergesort mergesort_*

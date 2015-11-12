@@ -13,4 +13,4 @@ hotspot: hotspot.cu
 	$(NVCC) $(NVCC_FLAGS) hotspot.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) $(ITER) -lLogHelperCuda $(NVCCFLAGS) -Xcompiler " -fopenmp" -o hotspot
 
 clean:
-	rm -f hotspot
+	rm -f hotspot gold_*
