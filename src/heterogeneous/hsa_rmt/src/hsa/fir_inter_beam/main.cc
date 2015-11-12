@@ -74,8 +74,6 @@ int main(int argc, const char **argv) {
   bool gen_inputs = command_line_option.GetArgumentValue("GenInputs")
     ->AsBool();
 
-  for(int c = 0; c < 10; c++)
-  {
   // Create and run benchmarks
   std::unique_ptr<FirBenchmark> benchmark(new FirBenchmark());
   benchmark->setNumData(numData);
@@ -85,5 +83,4 @@ int main(int argc, const char **argv) {
   BenchmarkRunner runner(benchmark.get(), timer.get());
   runner.Run();
   runner.Summarize();
-  }
 }
