@@ -285,10 +285,10 @@ void PageRankBenchmark::Run() {
 #endif
 
 //begin loop of iterations
-  for(int iteration = 0; iteration < (gen_inputs == true ? 1 : ITERATIONS); iteration++)
+  //for(int iteration = 0; iteration < (gen_inputs == true ? 1 : ITERATIONS); iteration++)
   {
-        if(iteration % 10 == 0)
-                std::cout << "Iteration #" << iteration << std::endl;
+        //if(iteration % 10 == 0)
+          //      std::cout << "Iteration #" << iteration << std::endl;
 
 //start iteration
 #ifdef LOGS
@@ -384,8 +384,32 @@ void PageRankBenchmark::CheckGold() {
 
     }
   }
-  for(int i = 0; i < 10; i++){
-      printf("check: %e, %e \n", eigenV[i],gold[i]);
+  //for(int i = 0; i < 10; i++){
+   //   printf("check: %e, %e \n", eigenV[i],gold[i]);
+ // }
+
+  char rmt_error_detail[128];
+
+  /* CKALRA, DLOWELL: Process errorBuffer, inthebeam test you can just save to file */
+  unsigned int errCount = 0;
+  unsigned int totErrCount = 0;
+  //printf("errorBuffer size (flat global size): %u\n",ebsize);
+  for(int i=0;i<rmt_buff_size;i++){
+    if(P.errorBuffer[i]>0){
+      errCount++;
+      totErrCount+=P.errorBuffer[i];
+    }
+  }
+
+  if(errCount > 0)
+  {
+    snprintf(rmt_error_detail, 128, "err_buf size: %u, thread_err: %u, total_err: %u\n", rmt_buff_size, errCount, totErrCount);
+    printf("%s", rmt_error_detail);
+
+#ifdef LOGS
+  log_error_detail(rmt_error_detail);
+#endif
+
   }
 
 #ifdef LOGS

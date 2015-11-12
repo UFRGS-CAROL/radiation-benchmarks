@@ -55,6 +55,14 @@
 
 #include "kmeans_benchmark.h"
 
+/* radiation things */
+extern "C"
+{
+#include "../../logHelper/logHelper.h"
+}
+
+#define ITERATIONS 10000000
+
 KmeansBenchmark::KmeansBenchmark() {
 }
 
@@ -106,9 +114,9 @@ void KmeansBenchmark::Read() {
 
   fclose(infile);
 
-  printf("\nI/O completed\n");
-  printf("\nNumber of objects: %d\n", npoints);
-  printf("Number of features: %d\n", nfeatures);
+  //printf("\nI/O completed\n");
+  //printf("\nNumber of objects: %d\n", npoints);
+  //printf("Number of features: %d\n", nfeatures);
 
   // error check for clusters
   if (npoints < min_nclusters) {
@@ -169,7 +177,7 @@ void KmeansBenchmark::Free_mem() {
 }
 
 void KmeansBenchmark::Kmeans_ocl() {
-  printf("iterating\n");
+  //printf("iterating\n");
   int i, j;
 
   // Ke Wang adjustable local group size 2013/08/07 10:37:33
@@ -209,7 +217,7 @@ void KmeansBenchmark::Kmeans_ocl() {
 }
 
 void KmeansBenchmark::Kmeans_clustering() {
-  printf("Running\n");
+  //printf("Running\n");
   int i, j, n = 0;  // counters
   int loop = 0, temp;
   int initial_points = npoints;
@@ -288,7 +296,7 @@ void KmeansBenchmark::Kmeans_clustering() {
     c++;
   } while ((delta > threshold) && (loop++ < 500));
 
-  printf("iterated %d times\n", c);
+  //printf("iterated %d times\n", c);
 
   delete[] new_centers[0];
   delete[] new_centers;
@@ -305,6 +313,32 @@ void KmeansBenchmark::Clustering() {
 
   // fixme
   membership = new int[npoints];
+
+  std::cout << "Running Kmeans. Generating inputs and gold: " << (gen_inputs == true ? "YES" : "NO") << std::endl;
+  std::cout << std::endl;
+
+//initialize logs
+#ifdef LOGS
+  char test_info[100];
+  snprintf(test_info, 100, "points:%d, features:%d", npoints, nfeatures);
+  char test_name[100];
+  snprintf(test_name, 100, "hsaKmeans_RMT_INTER");
+  start_log_file(test_name, test_info);
+  set_max_errors_iter(500);
+  set_iter_interval_print(10);
+#endif
+
+//begin loop of iterations
+  //for(int iteration = 0; iteration < (gen_inputs == true ? 1 : ITERATIONS); iteration++)
+  {
+        //if(iteration % 10 == 0)
+          //      std::cout << "Iteration #" << iteration << std::endl;
+
+//start iteration
+#ifdef LOGS
+  start_iteration();
+#endif
+
 
   min_rmse_ref = FLT_MAX;
 
@@ -344,7 +378,97 @@ void KmeansBenchmark::Clustering() {
     }
   }
 
+	if(gen_inputs == true)
+                SaveGold();
+
+        else
+                CheckGold();
+
+//end iteration
+#ifdef LOGS
+  end_iteration();
+#endif
+
+  }
+
+  //end log file
+#ifdef LOGS
+  end_log_file();
+#endif
+
   delete[] membership;
+}
+
+void KmeansBenchmark::SaveGold() {
+  char gold_file_str[64];
+  sprintf(gold_file_str, "output/output_%d_%d", npoints, nfeatures);
+
+  FILE* gold_file = fopen(gold_file_str, "wb");
+  fwrite(membership, npoints*sizeof(int), 1, gold_file);
+
+  fclose(gold_file);
+}
+
+void KmeansBenchmark::CheckGold() {
+  int *gold = (int*) malloc(npoints * sizeof(int));
+
+  char gold_file_str[64];
+  sprintf(gold_file_str, "output/output_%d_%d", npoints, nfeatures);
+
+  FILE* gold_file = fopen(gold_file_str, "rb");
+  int read = fread(gold, npoints*sizeof(int), 1, gold_file);
+  if(read != 1)
+    read = -1;
+
+  fclose(gold_file);
+
+  int errors = 0;
+  for(int i = 0; i < npoints; i++)
+  {
+    if(membership[i] != gold[i])
+    {
+        errors++;
+
+        char error_detail[128];
+        snprintf(error_detail, 128, "position: [%d], output: %d, gold: %d\n", i, membership[i], gold[i]);
+        printf("%s", error_detail);
+
+#ifdef LOGS
+  log_error_detail(error_detail);
+#endif
+
+    }
+  }
+
+  char rmt_error_detail[128];
+
+  /* CKALRA, DLOWELL: Process errorBuffer, inthebeam test you can just save to file */
+  unsigned int errCount = 0;
+  unsigned int totErrCount = 0;
+  //printf("errorBuffer size (flat global size): %u\n",ebsize);
+  for(int i=0;i<rmt_buff_size;i++){
+    if(P.errorBuffer[i]>0){
+      errCount++;
+      totErrCount+=P.errorBuffer[i];
+    }
+  }
+
+  if(errCount > 0)
+  {
+    snprintf(rmt_error_detail, 128, "err_buf size: %u, thread_err: %u, total_err: %u\n", rmt_buff_size, errCount, totErrCount);
+    printf("%s", rmt_error_detail);
+
+#ifdef LOGS
+  log_error_detail(rmt_error_detail);
+#endif
+
+  }
+
+#ifdef LOGS
+  log_error_count(errors+errCount);
+#endif
+
+  free(gold);
 }
 
 // multi-dimensional spatial Euclid distance square
