@@ -39,10 +39,10 @@ os.system("mv ./hotspot "+bin_path)
 fp = open(installDir+"scripts/how_to_run_hotspot_cuda_K40", 'w')
 print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=1000 -streams=1 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_1000 -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=10000 -streams=1 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_10000 -iterations=10000000"
+print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=1000 -streams=4 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_1000 -iterations=10000000"
+print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=10000 -streams=4 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_10000 -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=1000 -streams=8 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_1000 -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=10000 -streams=8 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_10000 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=1000 -streams=16 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_1000 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=10000 -streams=16 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_10000 -iterations=10000000"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_hotspot_cuda\n"
 
