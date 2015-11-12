@@ -343,8 +343,8 @@ void PageRankBenchmark::SaveGold() {
 int zero=0;
 
   for(int i = 0; i < nr; i++){
-   if(i< 10)
-      printf("%e, %e \n", eigenV[i],vector[i]);
+   //if(i< 10)
+      //printf("%e, %e \n", eigenV[i],vector[i]);
     if(eigenV[i]==0)
         zero++;
   }

@@ -292,12 +292,12 @@ void PageRankBenchmark::SaveGold() {
 int zero=0;
 
   for(int i = 0; i < nr; i++){
-   if(i< 10)
-      printf("%e, %e \n", eigenV[i],vector[i]);
+   //if(i< 10)
+     // printf("%e, %e \n", eigenV[i],vector[i]);
     if(eigenV[i]==0)
         zero++;
   }
-printf("zeros %d of %d\n",zero, nr);
+//printf("zeros %d of %d\n",zero, nr);
 
   fclose(gold_file);
 
@@ -333,9 +333,9 @@ void PageRankBenchmark::CheckGold() {
 
     }
   }
-  for(int i = 0; i < 10; i++){
-      printf("check: %e, %e \n", eigenV[i],gold[i]);
-  }
+  //for(int i = 0; i < 10; i++){
+    //  printf("check: %e, %e \n", eigenV[i],gold[i]);
+  //}
 
   char rmt_error_detail[128];
 
