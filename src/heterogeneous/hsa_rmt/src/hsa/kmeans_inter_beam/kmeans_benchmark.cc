@@ -596,7 +596,7 @@ void KmeansBenchmark::Run() {
 }
 
 void KmeansBenchmark::Summarize() {
-  Display_results();
+  //Display_results();
 }
 
 void KmeansBenchmark::Verify() {

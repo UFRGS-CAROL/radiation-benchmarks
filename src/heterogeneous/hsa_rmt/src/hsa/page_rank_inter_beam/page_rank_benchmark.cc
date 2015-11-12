@@ -427,8 +427,8 @@ void PageRankBenchmark::CheckGold() {
 void PageRankBenchmark::Summarize() {
 
   // CKALRA, DLOWELL: Process errorBuffer, inthebeam test you can just save to file 
-  printf("global_size = %u\n", nr * workGroupSize);
-  printf("local_size = %u\n", workGroupSize);
+  //printf("global_size = %u\n", nr * workGroupSize);
+  //printf("local_size = %u\n", workGroupSize);
   /*unsigned int errCount = 0;
   unsigned int totErrCount = 0;
   printf("errorBuffer size (flat global size): %u\n",rmt_buff_size);
@@ -438,8 +438,8 @@ void PageRankBenchmark::Summarize() {
       totErrCount+=P.errorBuffer[i];
     }
   }*/
- printf("Threads with errors: %u\n",errCount);
- printf("Total errors: %u\n\n",totErrCount);
+ //printf("Threads with errors: %u\n",errCount);
+ //printf("Total errors: %u\n\n",totErrCount);
 }
 
 void PageRankBenchmark::Cleanup() { FreeBuffer(); }
