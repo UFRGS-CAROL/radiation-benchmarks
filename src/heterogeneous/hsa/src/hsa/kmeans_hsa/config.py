@@ -38,11 +38,12 @@ os.system("cd "+src_kmeans+"; sudo ./kmeans_hsa -i input/300000_34.txt -g");
 os.system("sudo chmod 777 input output input/* output/* ");
 os.system("mv input output "+data_path);
 os.system("mv ./kmeans_hsa "+bin_path);
+os.system("cp run_* "+bin_path);
 
 fp = open(installDir+"scripts/how_to_run_kmeans_hsa", 'w')
-print >>fp, "cd "+bin_path+"; sudo ./kmeans_hsa -i input/30000_34.txt"
-print >>fp, "cd "+bin_path+"; sudo ./kmeans_hsa -i input/100000_34.txt"
-print >>fp, "cd "+bin_path+"; sudo ./kmeans_hsa -i input/300000_34.txt"
+print >>fp, "cd "+bin_path+"; python ./run_kmeans_30000.sh"
+print >>fp, "cd "+bin_path+"; python ./run_kmeans_100000.sh"
+print >>fp, "cd "+bin_path+"; python ./run_kmeans_300000.sh"
 
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_kmeans_hsa\n"
