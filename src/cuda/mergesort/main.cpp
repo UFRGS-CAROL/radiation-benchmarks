@@ -25,7 +25,7 @@ typedef struct parameters_s {
 	int debug;
 	int generate;
 	int fault_injection;
-	char *goldName, *valName, *keyName;
+	char *goldName, *inputName;
     uint *h_SrcKey, *h_SrcVal, *h_GoldVal, *h_GoldKey, *h_DstKey, *h_DstVal;
     uint *d_SrcKey, *d_SrcVal, *d_BufKey, *d_BufVal, *d_DstKey, *d_DstVal;
 	int noinputensurance;
@@ -50,7 +50,7 @@ void fatal(const char *str)
 
 static void usage(int argc, char *argv[])
 {
-	printf("Syntax: %s -size=N [-generate] [-verbose] [-debug] [-inputkey=<path>] [-inputval=<path>] [-gold=<path>] [-iterations=N] [-noinputensurance]\n", argv[0]);
+	printf("Syntax: %s -size=N [-generate] [-verbose] [-debug] [-input=<path>] [-gold=<path>] [-iterations=N] [-noinputensurance]\n", argv[0]);
 	exit(EXIT_FAILURE);
 }
 
@@ -107,24 +107,16 @@ void getParams(int argc, char *argv[], parameters_t *params)
 		getCmdLineArgumentString(argc, (const char **)argv, "gold", &(params->goldName));
 	} else {
 		params->goldName = new char[100];
-		snprintf(params->goldName, 100, "mergesort_gold%i", (signed int)params->size);
+		snprintf(params->goldName, 100, "mergesort_gold_%i", (signed int)params->size);
 		printf("Using default gold filename: %s\n", params->goldName);
 	}
 
-	if (checkCmdLineFlag(argc, (const char **)argv, "inputval")) {
-		getCmdLineArgumentString(argc, (const char **)argv, "inputval", &(params->valName));
+	if (checkCmdLineFlag(argc, (const char **)argv, "input")) {
+		getCmdLineArgumentString(argc, (const char **)argv, "input", &(params->inputName));
 	} else {
-		params->valName = new char[100];
-		snprintf(params->valName, 100, "mergesort_inputval%i", (signed int)INPUTSIZE);
-		printf("Using default vals input filename: %s\n", params->valName);
-	}
-
-	if (checkCmdLineFlag(argc, (const char **)argv, "inputkey")) {
-		getCmdLineArgumentString(argc, (const char **)argv, "inputkey", &(params->keyName));
-	} else {
-		params->keyName = new char[100];
-		snprintf(params->keyName, 100, "mergesort_inputkey%i", (signed int)INPUTSIZE);
-		printf("Using default keys input filename: %s\n", params->keyName);
+		params->inputName = new char[100];
+		snprintf(params->inputName, 100, "mergesort_input_%i", (signed int)INPUTSIZE);
+		printf("Using default keys input filename: %s\n", params->inputName);
 	}
 }
 
@@ -143,26 +135,8 @@ void writeOutput(parameters_t *params)
 void readData(parameters_t *params, const uint numValues)
 {
 	FILE *fgold, *finput;
-	if (finput = fopen(params->valName, "rb")) {
-		fread(params->h_SrcVal, params->size * sizeof(uint), 1, finput);
-	} else if (params->generate) {
-		uint *newVals = (uint*) malloc(INPUTSIZE*sizeof(uint));
-		fillValues(newVals, INPUTSIZE);
 
-		if (finput = fopen(params->valName, "wb"))  {
-			fwrite(newVals, INPUTSIZE * sizeof(uint), 1, finput);
-		} else {
-			printf("Could not write val input to file, proceeding anyway...\n");
-		}
-
-		memcpy(params->h_SrcVal, newVals, params->size * sizeof(uint));
-		free(newVals);
-	} else {
-		fatal("Could not open val input. Use -generate");
-	}
-	fclose(finput);
-
-	if (finput = fopen(params->keyName, "rb")) {
+	if (finput = fopen(params->inputName, "rb")) {
 		fread(params->h_SrcKey, params->size * sizeof(uint), 1, finput);
 	} else if (params->generate) {
 		uint *newKeys = (uint*) malloc(INPUTSIZE*sizeof(uint));
@@ -195,7 +169,7 @@ void readData(parameters_t *params, const uint numValues)
 			}
 		}
 
-		if (finput = fopen(params->keyName, "wb")) {
+		if (finput = fopen(params->inputName, "wb")) {
 			fwrite(newKeys, INPUTSIZE * sizeof(uint), 1, finput);
 		} else {
 			printf("Could not write key input to file, proceeding anyway...\n");
@@ -207,6 +181,12 @@ void readData(parameters_t *params, const uint numValues)
 		fatal("Could not open key input. Use -generate");
 	}
 	fclose(finput);
+
+	register uint *ptr = params->h_SrcVal;
+	register uint i;
+	#pragma omp parallel for
+	for (i = 0; i<params->size; i++)
+		ptr[i] = i;
 
 	if (!(params->generate)) {
 		if (fgold = fopen(params->goldName, "rb")) {
