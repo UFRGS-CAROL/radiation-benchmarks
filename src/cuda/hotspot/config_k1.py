@@ -43,7 +43,7 @@ if not os.path.isdir(data_path):
 
 os.system("cd "+src_gemm)
 #not finished yet
-os.system("sudo ./hotspot -size=1024 -generate -temp_file=../../../data/hotspot/temp_1024 -power_file=../../../data/hotspot/power_1024 -gold_file=GOLD_1024 -iterations=1")
+os.system("sudo ./hotspot -size=1024 -temp_file=../../../data/hotspot/temp_1024 -power_file=../../../data/hotspot/power_1024 -gold_file=GOLD_1024 -iterations=1")
 
 os.system("sudo chmod 777 GOLD_* ");
 os.system("mv GOLD_* "+data_path);
