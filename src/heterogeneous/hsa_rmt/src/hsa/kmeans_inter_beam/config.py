@@ -22,7 +22,7 @@ except IOError as e:
 
 data_path=installDir+"bin/kmeans_inter_beam"
 bin_path=installDir+"bin/kmeans_inter_beam"
-src_kmeans_inter_beam = installDir+"src/heterogeneous/hsa_rmt/src/hsa/kmeans_intra_beam"
+src_kmeans_inter_beam = installDir+"src/heterogeneous/hsa_rmt/src/hsa/kmeans_inter_beam"
 
 os.system("sudo mkdir "+src_kmeans_inter_beam+"/input");
 os.system("sudo mkdir "+src_kmeans_inter_beam+"/output");
@@ -32,9 +32,9 @@ if not os.path.isdir(data_path):
 	os.chmod(data_path, 0777);
 
 os.system("cd "+src_kmeans_inter_beam+"/datagen/ ; sudo ./gen_dataset.sh; mv 1* 3* ../input");
-os.system("cd "+src_kmeans_inter_beam+"; sudo ./kmeans_intra_beam -i input/30000_34.txt -g");
-os.system("cd "+src_kmeans_inter_beam+"; sudo ./kmeans_intra_beam -i input/100000_34.txt -g");
-os.system("cd "+src_kmeans_inter_beam+"; sudo ./kmeans_intra_beam -i input/300000_34.txt -g");
+os.system("cd "+src_kmeans_inter_beam+"; sudo ./kmeans_inter_beam -i input/30000_34.txt -g");
+os.system("cd "+src_kmeans_inter_beam+"; sudo ./kmeans_inter_beam -i input/100000_34.txt -g");
+os.system("cd "+src_kmeans_inter_beam+"; sudo ./kmeans_inter_beam -i input/300000_34.txt -g");
 os.system("sudo chmod 777 input output input/* output/* ");
 os.system("mv input output "+data_path);
 os.system("mv ./kmeans_inter_beam "+bin_path);

@@ -22,7 +22,7 @@ except IOError as e:
 
 data_path=installDir+"bin/page_rank_inter_beam"
 bin_path=installDir+"bin/page_rank_inter_beam"
-src_page_rank_inter_beam = installDir+"src/heterogeneous/hsa_rmt/src/hsa/page_rank_intra_beam"
+src_page_rank_inter_beam = installDir+"src/heterogeneous/hsa_rmt/src/hsa/page_rank_inter_beam"
 
 os.system("sudo mkdir "+src_page_rank_inter_beam+"/input");
 os.system("sudo mkdir "+src_page_rank_inter_beam+"/output");
@@ -33,9 +33,9 @@ if not os.path.isdir(data_path):
 
 os.system("cd "+src_page_rank_inter_beam+" ; python PageRank_generateCsrMatrix.py ; mv csr_* input/");
 os.system("sudo cd "+src_page_rank_inter_beam);
-os.system("cd "+src_page_rank_inter_beam+"; sudo ./page_rank_intra_beam -i input/csr_2048_10.txt -g");
-os.system("cd "+src_page_rank_inter_beam+"; sudo ./page_rank_intra_beam -i input/csr_3072_10.txt -g");
-os.system("cd "+src_page_rank_inter_beam+"; sudo ./page_rank_intra_beam -i input/csr_4096_10.txt -g");
+os.system("cd "+src_page_rank_inter_beam+"; sudo ./page_rank_inter_beam -i input/csr_2048_10.txt -g");
+os.system("cd "+src_page_rank_inter_beam+"; sudo ./page_rank_inter_beam -i input/csr_3072_10.txt -g");
+os.system("cd "+src_page_rank_inter_beam+"; sudo ./page_rank_inter_beam -i input/csr_4096_10.txt -g");
 os.system("sudo chmod 777 input output input/* output/* ");
 os.system("sudo mv input output "+data_path);
 os.system("sudo mv ./page_rank_inter_beam "+bin_path);
