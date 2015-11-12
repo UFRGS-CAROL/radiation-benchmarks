@@ -30,14 +30,14 @@ if not os.path.isdir(data_path):
 
 os.system("cd "+src_accl)
 
-os.system("sudo ./accl_generate 2 2 "+data_path+"/2Frames.pgm accl_gold_2_2")
-os.system("sudo ./accl_generate 5 1 "+data_path+"/5Frames.pgm accl_gold_5_1")
-os.system("sudo ./accl_generate 5 5 "+data_path+"/5Frames.pgm accl_gold_5_5")
-os.system("sudo ./accl_generate 7 1 "+data_path+"/7Frames.pgm accl_gold_7_1")
-os.system("sudo ./accl_generate 7 4 "+data_path+"/7Frames.pgm accl_gold_7_4")
-os.system("sudo ./accl_generate 7 7 "+data_path+"/7Frames.pgm accl_gold_7_7")
+os.system("sudo ./accl_generate 2 2 "+data_path+"/2Frames.pgm gold_2_2")
+os.system("sudo ./accl_generate 5 1 "+data_path+"/5Frames.pgm gold_5_1")
+os.system("sudo ./accl_generate 5 5 "+data_path+"/5Frames.pgm gold_5_5")
+os.system("sudo ./accl_generate 7 1 "+data_path+"/7Frames.pgm gold_7_1")
+os.system("sudo ./accl_generate 7 4 "+data_path+"/7Frames.pgm gold_7_4")
+os.system("sudo ./accl_generate 7 7 "+data_path+"/7Frames.pgm gold_7_7")
 os.system("sudo chmod 777 accl accl_generate");
-os.system("mv accl_gold* "+data_path);
+os.system("mv gold* "+data_path);
 os.system("mv ./accl ./accl_generate "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_accl_cuda_K40", 'w')
