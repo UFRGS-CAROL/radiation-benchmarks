@@ -167,17 +167,6 @@ void FirBenchmark::Run() {
 
     FIR(output, coeff, temp_output, numTap,  P.lockBuffer, P.errorBuffer, P.addressBuffer, P.valueBuffer, P.groupID, lparm);
   }
-  unsigned int errCount = 0;
-  unsigned int totErrCount = 0;
-  printf("errorBuffer size (flat global size): %u\n",rmt_buff_size);
-  for(int i=0; i<rmt_buff_size;i++){
-    if(P.errorBuffer[i]>0){
-      errCount++;
-      totErrCount+=P.errorBuffer[i];
-    }
-  }
-  printf("Threads with errors: %u\n",errCount);
-  printf("Total errors: %u\n\n",totErrCount);
 
   if(gen_inputs == true)
 		SaveGold();
