@@ -39,11 +39,12 @@ os.system("cd "+src_page_rank_intra_beam+"; sudo ./page_rank_intra_beam -i input
 os.system("sudo chmod 777 input output input/* output/* ");
 os.system("sudo mv input output "+data_path);
 os.system("sudo mv ./page_rank_intra_beam "+bin_path);
+os.system("sudo cp run_* "+bin_path);
 
 fp = open(installDir+"scripts/how_to_run_page_rank_intra_beam", 'w')
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/page_rank_intra_beam -i input/csr_2048_10.txt"
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/page_rank_intra_beam -i input/csr_3072_10.txt"
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/page_rank_intra_beam -i input/csr_4096_10.txt"
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_page_rank_intra_beam_2048.sh"
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_page_rank_intra_beam_3072.sh"
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_page_rank_intra_beam_4096.sh"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_page_rank_intra_beam\n"
 

@@ -41,9 +41,9 @@ os.system("mv ./fir_hsa "+bin_path);
 os.system("cp run_* "+bin_path);
 
 fp = open(installDir+"scripts/how_to_run_fir_hsa", 'w')
-print >>fp, "cd "+bin_path+"; python "+bin_path+"/run_fir_2048.sh"
-print >>fp, "cd "+bin_path+"; python "+bin_path+"/run_fir_4096.sh"
-print >>fp, "cd "+bin_path+"; python "+bin_path+"/run_fir_8192.sh"
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_fir_2048.sh"
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_fir_4096.sh"
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_fir_8192.sh"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_fir_hsa\n"
 
