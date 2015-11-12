@@ -42,9 +42,9 @@ os.system("sudo mv ./page_rank_intra_beam "+bin_path);
 os.system("sudo cp run_* "+bin_path);
 
 fp = open(installDir+"scripts/how_to_run_page_rank_intra_beam", 'w')
-print >>fp, "cd "+bin_path+"; python "+bin_path+"/run_page_rank_intra_beam_2048.sh"
-print >>fp, "cd "+bin_path+"; python "+bin_path+"/run_page_rank_intra_beam_3072.sh"
-print >>fp, "cd "+bin_path+"; python "+bin_path+"/run_page_rank_intra_beam_4096.sh"
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_page_rank_intra_beam_2048.sh"
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_page_rank_intra_beam_3072.sh"
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_page_rank_intra_beam_4096.sh"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_page_rank_intra_beam\n"
 
