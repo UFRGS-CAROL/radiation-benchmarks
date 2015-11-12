@@ -249,8 +249,33 @@ void FirBenchmark::CheckGold() {
     }
   }
 
+
+char rmt_error_detail[128];
+
+/* CKALRA, DLOWELL: Process errorBuffer, inthebeam test you can just save to file */
+  unsigned int errCount = 0;
+  unsigned int totErrCount = 0;
+  //printf("errorBuffer size (flat global size): %u\n",ebsize);
+  for(int i=0;i<rmt_buff_size;i++){
+    if(P.errorBuffer[i]>0){
+      errCount++;
+      totErrCount+=P.errorBuffer[i];
+    }
+  }
+
+  if(errCount > 0)
+  {
+    snprintf(rmt_error_detail, 128, "err_buf size: %u, thread_err: %u, total_err: %u\n", rmt_buff_size, errCount, totErrCount);
+    printf("%s", rmt_error_detail);
+
 #ifdef LOGS
-  log_error_count(errors);
+  log_error_detail(rmt_error_detail);
+#endif
+
+  }
+
+#ifdef LOGS
+  log_error_count(errors+errCount);
 #endif
   }
 

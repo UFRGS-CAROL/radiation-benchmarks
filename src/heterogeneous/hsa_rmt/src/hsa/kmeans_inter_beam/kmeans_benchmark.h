@@ -130,10 +130,19 @@ class KmeansBenchmark : public Benchmark {
     min_nclusters = min_clusters;
   }
 
+  void SetGenInputs(bool gen_inputs) {
+    this->gen_inputs = gen_inputs;
+  }
+
+  void SaveGold();
+  void CheckGold();
+
  private:
   //-----------------------------------------------------------------------//
   // Host Parameters
   //-----------------------------------------------------------------------//
+
+  bool gen_inputs;
 
   // command line options
   std::string filename_;
