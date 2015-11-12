@@ -22,7 +22,10 @@ except IOError as e:
 
 os.system("cd "+installDir+"/src/heterogeneous/hsa_rmt/ ; cmake . -DLOGS=1 ; make");
 os.system("cd "+installDir+"/src/heterogeneous/hsa_rmt/src/hsa/fir_intra_beam/ ; sudo ./config.py");
+os.system("cd "+installDir+"/src/heterogeneous/hsa_rmt/src/hsa/fir_inter_beam/ ; sudo ./config.py");
 os.system("cd "+installDir+"/src/heterogeneous/hsa_rmt/src/hsa/page_rank_intra_beam/ ; sudo ./config.py");
+os.system("cd "+installDir+"/src/heterogeneous/hsa_rmt/src/hsa/page_rank_inter_beam/ ; sudo ./config.py");
 os.system("cd "+installDir+"/src/heterogeneous/hsa_rmt/src/hsa/kmeans_intra_beam/ ; sudo ./config.py");
+os.system("cd "+installDir+"/src/heterogeneous/hsa_rmt/src/hsa/kmeans_inter_beam/ ; sudo ./config.py");
 
 sys.exit(0)
