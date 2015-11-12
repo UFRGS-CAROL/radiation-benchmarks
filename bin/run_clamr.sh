@@ -6,7 +6,7 @@ big="big";
 lit="little";
 
 function right_par(){
-	echo "Please enter with the right parameters <big | little>";
+	echo "Please enter with the right parameters <big | little> <threads> <iterations>";
 	return;
 }
 
@@ -16,7 +16,7 @@ then
 	return;
 fi
 
-if (( "$#" == 2 ));
+if (( "$#" == 3 ));
 then
 	#if it's little
 	if [ $1 == $lit ];
@@ -44,7 +44,10 @@ then
 	fi
         
         #execute CLAMR with -n 256 -t 1500 -g 100 -G data -j md5files
-        ./clamr_openmponly -n 256 -t 1500 -g 100 -G data -j md5files;
+        for(( i = 0; i < $3; i++ ))
+        do
+                ./clamr_openmponly -n 256 -t 1500 -g 100 -G data -j md5files;
+        done
         	
 else    
 	right_par;

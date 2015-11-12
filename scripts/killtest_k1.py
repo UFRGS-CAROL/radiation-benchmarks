@@ -191,22 +191,22 @@ timestampFile = varDir+"timestamp.txt"
 #run everything ###################################3
 commandList = [ 
 #hog
-[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/1x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_1x.data --iterations 10000000 &", 1, "hog"],
-[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/4x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_4x.data --iterations 10000000 &", 1, "hog"],
-[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/9x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_9x.data --iterations 10000000 &", 1, "hog"],
+[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/1x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_1x.data --iterations 10000000 &", 0.01, "hog"],
+[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/4x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_4x.data --iterations 10000000 &", 0.01, "hog"],
+[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/9x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_9x.data --iterations 10000000 &", 0.01, "hog"],
 #cuda gemm
-[ "sudo "+bin_path+"/cudaGEMM -size=2048 -input_a="+data_path+"/Double_A_2048.matrix -input_b="+data_path+"/Double_B_2048.matrix -gold="+data_path+"/GOLD_2048 -iterations=10000000 &", 1, "cudaGEMM" ],
-[ "sudo "+bin_path+"/cudaGEMM -size=512 -input_a="+data_path+"/Double_A_512.matrix -input_b="+data_path+"/Double_B_512.matrix -gold="+data_path+"/GOLD_512 -iterations=10000000 &", 1, "cudaGEMM"],
-[ "sudo "+bin_path+"/cudaGEMM -size=1024 -input_a="+data_path+"/Double_A_1024.matrix -input_b="+data_path+"/Double_B_1024.matrix -gold="+data_path+"/GOLD_1024 -iterations=10000000 &", 1, "cudaGEMM"],
+[ "sudo "+bin_path+"/cudaGEMM -size=2048 -input_a="+data_path+"/gemm/Double_A_2048.matrix -input_b="+data_path+"/gemm/Double_B_2048.matrix -gold="+data_path+"/gemm/GOLD_2048 -iterations=10000000 &", 0.01, "cudaGEMM" ],
+[ "sudo "+bin_path+"/cudaGEMM -size=512 -input_a="+data_path+"/gemm/Double_A_512.matrix -input_b="+data_path+"/gemm/Double_B_512.matrix -gold="+data_path+"/gemm/GOLD_512 -iterations=10000000 &", 0.01, "cudaGEMM"],
+[ "sudo "+bin_path+"/cudaGEMM -size=1024 -input_a="+data_path+"/gemm/Double_A_1024.matrix -input_b="+data_path+"/gemm/Double_B_1024.matrix -gold="+data_path+"/gemm/GOLD_1024 -iterations=10000000 &", 0.01, "cudaGEMM"],
 #hotspot
-[ "sudo "+bin_path+"/hotspot -size=1024 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/GOLD_1024 -iterations=10000000 &", 1, "hotspot"],
+[ "sudo "+bin_path+"/hotspot -size=1024 -temp_file="+data_path+"/hotspot/temp_1024 -power_file="+data_path+"/hotspot/power_1024 -gold_file="+data_path+"/hotspot/GOLD_1024 -iterations=10000000 &", 0.01, "hotspot"],
 #lava
-[ "sudo "+bin_path+"/lava -boxes=6 -input_distances="+data_path+"/input_distances_6 -input_charges="+data_path+"/input_charges_6 -output_gold="+data_path+"/GOLD_6 -iterations=10000000 -streams=1 &", 1, "lava"], 
-[ "sudo "+bin_path+"/lava -boxes=7 -input_distances="+data_path+"/input_distances_7 -input_charges="+data_path+"/input_charges_7 -output_gold="+data_path+"/GOLD_7 -iterations=10000000 -streams=1 &", 1, "lava"],
-[ "sudo "+bin_path+"/lava -boxes=5 -input_distances="+data_path+"/input_distances_5 -input_charges="+data_path+"/input_charges_5 -output_gold="+data_path+"/GOLD_5 -iterations=10000000 -streams=1 &", 1, "lava"],
+[ "sudo "+bin_path+"/lava -boxes=6 -input_distances="+data_path+"/lava/input_distances_6 -input_charges="+data_path+"/lava/input_charges_6 -output_gold="+data_path+"/lava/GOLD_6 -iterations=10000000 -streams=1 &", 0.01, "lava"], 
+[ "sudo "+bin_path+"/lava -boxes=7 -input_distances="+data_path+"/lava/input_distances_7 -input_charges="+data_path+"/lava/input_charges_7 -output_gold="+data_path+"/lava/GOLD_7 -iterations=10000000 -streams=1 &", 0.01, "lava"],
+[ "sudo "+bin_path+"/lava -boxes=5 -input_distances="+data_path+"/lava/input_distances_5 -input_charges="+data_path+"/lava/input_charges_5 -output_gold="+data_path+"/lava/GOLD_5 -iterations=10000000 -streams=1 &", 0.01, "lava"],
 #clamr
-[ "sudo "+bin_path+"/run_clamr.sh big 8", 1, "clamr_openmponly" ],
-[ "sudo "+bin_path+"/run_clamr.sh little 2", 1, "clamr_openmponly" ] 
+[ "sudo "+bin_path+"/run_clamr.sh big 8 1000", 0.01, "clamr_openmponly" ],
+[ "sudo "+bin_path+"/run_clamr.sh little 2 1000", 0.01, "clamr_openmponly" ] 
 ];
 
 ####################################################
