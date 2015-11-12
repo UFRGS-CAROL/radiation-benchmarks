@@ -20,31 +20,32 @@ except IOError as e:
 	print >> sys.stderr, "Configuration setup error: "+str(e)
 	sys.exit(1)
 
-data_path=installDir+"bin/page_rank"
-bin_path=installDir+"bin/page_rank"
-src_page_rank = installDir+"src/heterogeneous/hsa/src/hsa/page_rank_hsa"
+data_path=installDir+"bin/page_rank_inter_beam"
+bin_path=installDir+"bin/page_rank_inter_beam"
+src_page_rank_inter_beam = installDir+"src/heterogeneous/hsa_rmt/src/hsa/page_rank_intra_beam"
 
-os.system("sudo mkdir "+src_page_rank+"/input");
-os.system("sudo mkdir "+src_page_rank+"/output");
+os.system("sudo mkdir "+src_page_rank_inter_beam+"/input");
+os.system("sudo mkdir "+src_page_rank_inter_beam+"/output");
 
 if not os.path.isdir(data_path):
 	os.mkdir(data_path, 0777);
 	os.chmod(data_path, 0777);
 
-os.system("cd "+src_page_rank+" ; python PageRank_generateCsrMatrix.py ; mv csr_* input/");
-os.system("sudo cd "+src_page_rank);
-os.system("sudo ./page_rank_hsa -i input/csr_2048_10.txt -g");
-os.system("sudo ./page_rank_hsa -i input/csr_3072_10.txt -g");
-os.system("sudo ./page_rank_hsa -i input/csr_4096_10.txt -g");
+os.system("cd "+src_page_rank_inter_beam+" ; python PageRank_generateCsrMatrix.py ; mv csr_* input/");
+os.system("sudo cd "+src_page_rank_inter_beam);
+os.system("cd "+src_page_rank_inter_beam+"; sudo ./page_rank_intra_beam -i input/csr_2048_10.txt -g");
+os.system("cd "+src_page_rank_inter_beam+"; sudo ./page_rank_intra_beam -i input/csr_3072_10.txt -g");
+os.system("cd "+src_page_rank_inter_beam+"; sudo ./page_rank_intra_beam -i input/csr_4096_10.txt -g");
 os.system("sudo chmod 777 input output input/* output/* ");
 os.system("sudo mv input output "+data_path);
-os.system("sudo mv ./page_rank_hsa "+bin_path);
+os.system("sudo mv ./page_rank_inter_beam "+bin_path);
+os.system("sudo cp run_* "+bin_path);
 
-fp = open(installDir+"scripts/how_to_run_page_rank_hsa", 'w')
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/page_rank_hsa -i input/csr_2048_10.txt"
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/page_rank_hsa -i input/csr_3072_10.txt"
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/page_rank_hsa -i input/csr_4096_10.txt"
+fp = open(installDir+"scripts/how_to_run_page_rank_inter_beam", 'w')
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_page_rank_inter_beam_2048.sh"
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_page_rank_inter_beam_3072.sh"
+print >>fp, "cd "+bin_path+"; bash "+bin_path+"/run_page_rank_inter_beam_4096.sh"
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_page_rank_hsa\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_page_rank_inter_beam\n"
 
 sys.exit(0)
