@@ -19,8 +19,8 @@ serverIP = "192.168.1.5" # IP of the remote socket server (hardware watchdog)
 IPmachines = [
 	"192.168.1.6",  #CarolXeon1
 	"192.168.1.7",  #CarolXeon2
-	"192.168.1.8",  #CarolK20
-	"192.168.1.9",  #CarolK40
+	"192.168.1.8",  #CarolK401
+	"192.168.1.9",  #CarolK402
 	"192.168.1.10", #CarolAPU1
 	"192.168.1.11", #CarolAPU2
 	"192.168.1.12", #CarolK1A
@@ -38,8 +38,8 @@ IPmachines = [
 IPtoNames = {
 	"192.168.1.6" : "CarolXeon1",
 	"192.168.1.7" : "CarolXeon2",
-	"192.168.1.8" : "CarolK20",
-	"192.168.1.9" : "CarolK40",
+	"192.168.1.8" : "CarolK401",
+	"192.168.1.9" : "CarolK402",
 	"192.168.1.10" : "CarolAPU1",
 	"192.168.1.11" : "CarolAPU2",
 	"192.168.1.12" : "CarolK1A",
