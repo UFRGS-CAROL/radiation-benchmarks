@@ -38,11 +38,12 @@ os.system("cd "+src_fir+"; sudo ./fir_hsa -b 8192 -n 8192 -g");
 os.system("sudo chmod 777 input output input/* output/* ");
 os.system("mv input output "+data_path);
 os.system("mv ./fir_hsa "+bin_path);
+os.system("cp run_* "+bin_path);
 
 fp = open(installDir+"scripts/how_to_run_fir_hsa", 'w')
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/fir_hsa -b 2048 -n 2048"
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/fir_hsa -b 4096 -n 4096"
-print >>fp, "cd "+bin_path+"; sudo "+bin_path+"/fir_hsa -b 8192 -n 8192"
+print >>fp, "cd "+bin_path+"; python "+bin_path+"/run_fir_2048.sh"
+print >>fp, "cd "+bin_path+"; python "+bin_path+"/run_fir_4096.sh"
+print >>fp, "cd "+bin_path+"; python "+bin_path+"/run_fir_8192.sh"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_fir_hsa\n"
 

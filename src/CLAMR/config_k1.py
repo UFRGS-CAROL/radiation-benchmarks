@@ -34,14 +34,10 @@ os.system("cd "+src_clamr+"/build && cmake -DGRAPHICS_TYPE=None -DPRECISION_TYPE
 os.system("cd "+src_clamr+"/build && make clamr_openmponly");
 #os.system("cmake -DGRAPHICS_TYPE=None -DPRECISION_TYPE=full_precision -DLOG=yes -DCMAKE_BUILD_TYPE=release ..");
 
-os.system("sudo "+src_clamr+"/build/clamr_openmponly -n 512 -t 1000 -g 100 -G data -J md5files")
+os.system("sudo export OMP_NUM_THREADS=8 && sudo "+src_clamr+"/build/clamr_openmponly -n 256 -t 1500 -g 100 -G data -J md5files")
 
 fp = open(installDir+"scripts/how_to_run_clamr_k1", 'w')
-print >>fp, "#Before run you need to execute "+installDir+"/scripts/configure_k1_big_little.sh <big | little> as root user"
-print >>fp, "export OMP_NUM_THREADS=8"
-print >>fp, "sudo "+src_clamr+"/build/clamr_openmponly -n 512 -t 1000 -g 100 -G data -j md5files"
-
-
+print >>fp, "sudo "+src_clamr+"/build/run_clamr.sh <big | little> <threads>"
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_clamr_k1\n"
 
 sys.exit(0)

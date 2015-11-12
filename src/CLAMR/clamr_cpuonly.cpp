@@ -197,8 +197,17 @@ int main(int argc, char **argv) {
         strcat(input_line, argv[iterate_args]);
 
 #ifdef _OPENMP
-    omp_set_num_threads(8);
-    start_log_file((char *)"clamr_openmponly", input_line);
+    //omp_set_num_threads(8);
+    char temp[50] = "OMP THREADS = ";
+    char number[10];
+    sprintf(number, "%d ", omp_get_max_threads());
+
+    strcat(temp, number);
+    if(strlen(input_line) == 200){
+        strcat(input_line, temp);
+        start_log_file((char *)"clamr_openmponly", input_line);
+    }else
+        start_log_file((char *)"clamr_openmponly", temp);
 #else
     start_log_file((char *)"clamr_cpuonly", input_line);
 #endif

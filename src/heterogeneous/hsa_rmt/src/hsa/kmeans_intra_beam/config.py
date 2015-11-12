@@ -38,11 +38,12 @@ os.system("cd "+src_kmeans_intra_beam+"; sudo ./kmeans_intra_beam -i input/30000
 os.system("sudo chmod 777 input output input/* output/* ");
 os.system("mv input output "+data_path);
 os.system("mv ./kmeans_intra_beam "+bin_path);
+os.system("cp .run_* "+bin_path);
 
 fp = open(installDir+"scripts/how_to_run_kmeans_intra_beam", 'w')
-print >>fp, "cd "+bin_path+"; sudo ./kmeans_intra_beam -i input/30000_34.txt"
-print >>fp, "cd "+bin_path+"; sudo ./kmeans_intra_beam -i input/100000_34.txt"
-print >>fp, "cd "+bin_path+"; sudo ./kmeans_intra_beam -i input/300000_34.txt"
+print >>fp, "cd "+bin_path+"; python ./run_kmeans_intra_beam_30000.sh"
+print >>fp, "cd "+bin_path+"; python ./run_kmeans_intra_beam_100000.sh"
+print >>fp, "cd "+bin_path+"; python ./run_kmeans_intra_beam 300000.sh"
 
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_kmeans_intra_beam\n"
