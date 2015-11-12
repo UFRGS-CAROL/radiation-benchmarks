@@ -66,7 +66,7 @@ void fatal(const char *s)
 {
     fprintf(stderr, "error: %s\n", s);
     #ifdef LOGS
-    	if (!generate) { log_error_detail(s); end_log_file(); }
+    	if (!generate) { end_log_file(); }
     #endif
     exit(1);
 }
