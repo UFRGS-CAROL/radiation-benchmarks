@@ -6,7 +6,7 @@ big="big";
 lit="little";
 
 function right_par(){
-	echo "Please enter with the right parameters <big | little> <threads> <iterations>";
+	echo "Please enter with the right parameters <big | little> <threads>";
 	return;
 }
 
@@ -16,7 +16,7 @@ then
 	return;
 fi
 
-if (( "$#" == 3 ));
+if (( "$#" == 1 ));
 then
 	#if it's little
 	if [ $1 == $lit ];
@@ -27,7 +27,7 @@ then
                 echo 0 > /sys/devices/system/cpu/cpu3/online
                 echo LP > /sys/kernel/cluster/active
                 #configure how many threads will be executed
-	        export OMP_NUM_THREADS=2;
+	        
                 
 	fi
 	
@@ -40,17 +40,10 @@ then
                 echo 1 > /sys/devices/system/cpu/cpu3/online
                 echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
                 #configure how many threads will be executed
-	        export OMP_NUM_THREADS=8;
+	        #export OMP_NUM_THREADS=8;
 	fi
-        
-        #execute CLAMR with -n 256 -t 1500 -g 100 -G data -j md5files
-        for(( i = 0; i < $3; i++ ))
-        do
-                ./clamr_openmponly -n 256 -t 1500 -g 100 -G data -j md5files;
-        done
-        	
+       # sudo export OMP_NUM_THREADS='$2';
 else    
 	right_par;
 fi
-
-return;
+exit;
