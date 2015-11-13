@@ -199,11 +199,11 @@ commandList = [
 [ "sudo "+bin_path+"/cudaGEMM -size=512 -input_a="+data_path+"/gemm/Double_A_512.matrix -input_b="+data_path+"/gemm/Double_B_512.matrix -gold="+data_path+"/gemm/GOLD_512 -iterations=10000000 &", 1, "cudaGEMM"],
 [ "sudo "+bin_path+"/cudaGEMM -size=1024 -input_a="+data_path+"/gemm/Double_A_1024.matrix -input_b="+data_path+"/gemm/Double_B_1024.matrix -gold="+data_path+"/gemm/GOLD_1024 -iterations=10000000 &", 1, "cudaGEMM"],
 #hotspot
-[ "sudo "+bin_path+"/hotspot -size=1024 -temp_file="+data_path+"/hotspot/temp_1024 -power_file="+data_path+"/hotspot/power_1024 -gold_file="+data_path+"/hotspot/GOLD_1024 -iterations=10000000 &", 1, "hotspot"],
+[ "sudo "+bin_path+"/hotspot -size=1024 -temp_file="+data_path+"/hotspot/temp_1024 -power_file="+data_path+"/hotspot/power_1024 -gold_file="+data_path+"/hotspot/GOLD_1024 -iterations=10000 &", 1, "hotspot"],
 #lava
-[ "sudo "+bin_path+"/lava -boxes=6 -input_distances="+data_path+"/lava/input_distances_6 -input_charges="+data_path+"/lava/input_charges_6 -output_gold="+data_path+"/lava/GOLD_6 -iterations=10000000 -streams=1 &", 1, "lava"], 
-[ "sudo "+bin_path+"/lava -boxes=7 -input_distances="+data_path+"/lava/input_distances_7 -input_charges="+data_path+"/lava/input_charges_7 -output_gold="+data_path+"/lava/GOLD_7 -iterations=10000000 -streams=1 &", 1, "lava"],
-[ "sudo "+bin_path+"/lava -boxes=5 -input_distances="+data_path+"/lava/input_distances_5 -input_charges="+data_path+"/lava/input_charges_5 -output_gold="+data_path+"/lava/GOLD_5 -iterations=10000000 -streams=1 &", 1, "lava"],
+[ "sudo "+bin_path+"/lava -boxes=6 -input_distances="+data_path+"/lava/input_distances_6 -input_charges="+data_path+"/lava/input_charges_6 -output_gold="+data_path+"/lava/GOLD_6 -iterations=10000 -streams=1 &", 1, "lava"], 
+[ "sudo "+bin_path+"/lava -boxes=7 -input_distances="+data_path+"/lava/input_distances_7 -input_charges="+data_path+"/lava/input_charges_7 -output_gold="+data_path+"/lava/GOLD_7 -iterations=10000 -streams=1 &", 1, "lava"],
+[ "sudo "+bin_path+"/lava -boxes=5 -input_distances="+data_path+"/lava/input_distances_5 -input_charges="+data_path+"/lava/input_charges_5 -output_gold="+data_path+"/lava/GOLD_5 -iterations=10000 -streams=1 &", 1, "lava"],
 #clamr
 [ "sudo "+bin_path+"/run_clamr.sh big ; cd "+installDir+"/src/CLAMR/build; sudo OMP_NUM_THREADS=8 ./clamr_openmponly -n 256 -t 2000 -g 100 -G data -j md5files", 1, "clamr_openmponly" ],
 [ "sudo "+bin_path+"/run_clamr.sh little ; cd "+installDir+"/src/CLAMR/build; sudo /clamr_openmponly -n 256 -t 2000 -g 100 -G data -j md5files", 1, "clamr_openmponly" ] 

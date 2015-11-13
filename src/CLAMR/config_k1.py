@@ -34,7 +34,9 @@ os.system("cd "+src_clamr+"/build && cmake -DGRAPHICS_TYPE=None -DPRECISION_TYPE
 os.system("cd "+src_clamr+"/build && make clamr_openmponly");
 #os.system("cmake -DGRAPHICS_TYPE=None -DPRECISION_TYPE=full_precision -DLOG=yes -DCMAKE_BUILD_TYPE=release ..");
 
-os.system("sudo export OMP_NUM_THREADS=8 && sudo "+src_clamr+"/build/clamr_openmponly -n 256 -t 1500 -g 100 -G data -J md5files")
+os.system("sudo "+installDir+"/scripts/run_clamr.sh big 8");
+os.system("cd "+src_clamr+"/build && sudo ./clamr_openmponly -n 256 -t 2000 -g 100 -G data -J md5files")
+
 
 fp = open(installDir+"scripts/how_to_run_clamr_k1", 'w')
 print >>fp, "sudo "+src_clamr+"/build/run_clamr.sh <big | little> <threads>"

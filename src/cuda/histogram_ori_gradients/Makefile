@@ -2,7 +2,7 @@ NVIDIA_INC=/usr/local/cuda/include/
 NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
-
+LOGS=1
 ifeq ($(LOGS), 1)
 OPTS = -DLOGS
 LOG_FLAGS =  $(LOGHELPER_INC)log_helper.c -I$(LOGHELPER_LIB)
