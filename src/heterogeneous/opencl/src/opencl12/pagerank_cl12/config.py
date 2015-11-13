@@ -31,14 +31,14 @@ if not os.path.isdir(data_path):
 	os.mkdir(data_path, 0777);
 	os.chmod(data_path, 0777);
 
-os.system("cd "+src_page_rank+" ; python PageRank_generateCsrMatrix.py ; mv csr_* input/");
+os.system("cd "+src_page_rank+" ; python ../../../PageRank_generateCsrMatrix.py ; mv csr_* input/");
 #os.system("sudo cd "+src_page_rank);
 os.system("cd "+src_page_rank+"; sudo ./pagerank_cl12 -m input/csr_2048_10.txt -g");
 os.system("cd "+src_page_rank+"; sudo ./pagerank_cl12 -m input/csr_3072_10.txt -g");
 os.system("cd "+src_page_rank+"; sudo ./pagerank_cl12 -m input/csr_4096_10.txt -g");
-os.system("sudo chmod 777 input output input/* output/* ");
-os.system("sudo mv input output "+data_path);
-os.system("sudo mv ./pagerank_cl12 "+bin_path);
+os.system("cd "+src_page_rank+"; sudo chmod 777 input output input/* output/* ");
+os.system("cd "+src_page_rank+"; sudo mv input output "+data_path);
+os.system("cd "+src_page_rank+"; sudo mv ./pagerank_cl12 "+bin_path);
 os.system("sudo cp run_* "+bin_path);
 
 fp = open(installDir+"scripts/how_to_run_pagerank_cl12", 'w')
