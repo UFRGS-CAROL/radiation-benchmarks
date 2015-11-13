@@ -191,13 +191,13 @@ timestampFile = varDir+"timestamp.txt"
 #run everything ###################################3
 commandList = [ 
 #hog
-[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/1x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_1x.data --iterations 10000000 &", 1, "hog"],
-[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/4x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_4x.data --iterations 10000000 &", 1, "hog"],
-[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/9x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_9x.data --iterations 10000000 &", 1, "hog"],
+[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/1x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_1x.data --iterations 10000 &", 1, "hog"],
+[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/4x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_4x.data --iterations 10000 &", 1, "hog"],
+[ "sudo "+bin_path+"/hog "+data_path+"/histogram_ori_gradients/9x_pedestrians.jpg --dst_data "+data_path+"/histogram_ori_gradients/GOLD_9x.data --iterations 10000 &", 1, "hog"],
 #cuda gemm
-[ "sudo "+bin_path+"/cudaGEMM -size=2048 -input_a="+data_path+"/gemm/Double_A_2048.matrix -input_b="+data_path+"/gemm/Double_B_2048.matrix -gold="+data_path+"/gemm/GOLD_2048 -iterations=10000000 &", 1, "cudaGEMM" ],
-[ "sudo "+bin_path+"/cudaGEMM -size=512 -input_a="+data_path+"/gemm/Double_A_512.matrix -input_b="+data_path+"/gemm/Double_B_512.matrix -gold="+data_path+"/gemm/GOLD_512 -iterations=10000000 &", 1, "cudaGEMM"],
-[ "sudo "+bin_path+"/cudaGEMM -size=1024 -input_a="+data_path+"/gemm/Double_A_1024.matrix -input_b="+data_path+"/gemm/Double_B_1024.matrix -gold="+data_path+"/gemm/GOLD_1024 -iterations=10000000 &", 1, "cudaGEMM"],
+[ "sudo "+bin_path+"/cudaGEMM -size=2048 -input_a="+data_path+"/gemm/Double_A_2048.matrix -input_b="+data_path+"/gemm/Double_B_2048.matrix -gold="+data_path+"/gemm/GOLD_2048 -iterations=10000 &", 1, "cudaGEMM" ],
+[ "sudo "+bin_path+"/cudaGEMM -size=512 -input_a="+data_path+"/gemm/Double_A_512.matrix -input_b="+data_path+"/gemm/Double_B_512.matrix -gold="+data_path+"/gemm/GOLD_512 -iterations=10000 &", 1, "cudaGEMM"],
+[ "sudo "+bin_path+"/cudaGEMM -size=1024 -input_a="+data_path+"/gemm/Double_A_1024.matrix -input_b="+data_path+"/gemm/Double_B_1024.matrix -gold="+data_path+"/gemm/GOLD_1024 -iterations=10000 &", 1, "cudaGEMM"],
 #hotspot
 [ "sudo "+bin_path+"/hotspot -size=1024 -temp_file="+data_path+"/hotspot/temp_1024 -power_file="+data_path+"/hotspot/power_1024 -gold_file="+data_path+"/hotspot/GOLD_1024 -iterations=10000 &", 1, "hotspot"],
 #lava
