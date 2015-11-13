@@ -52,9 +52,9 @@ os.system("mv GOLD_* Double_* "+data_path);
 os.system("mv ./generateMatrices ./cudaGEMM "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_gemm_cuda", 'w')
-print >>fp, "sudo "+bin_path+"/cudaGEMM -size=2048 -input_a="+data_path+"/Double_A_2048.matrix -input_b="+data_path+"/Double_B_2048.matrix -gold="+data_path+"/GOLD_2048 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/cudaGEMM -size=512 -input_a="+data_path+"/Double_A_512.matrix -input_b="+data_path+"/Double_B_512.matrix -gold="+data_path+"/GOLD_512 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/cudaGEMM -size=1024 -input_a="+data_path+"/Double_A_1024.matrix -input_b="+data_path+"/Double_B_1024.matrix -gold="+data_path+"/GOLD_1024 -iterations=10000000"
+print >>fp, "sudo "+bin_path+"/cudaGEMM -size=2048 -input_a="+data_path+"/Double_A_2048.matrix -input_b="+data_path+"/Double_B_2048.matrix -gold="+data_path+"/GOLD_2048 -iterations=10000"
+print >>fp, "sudo "+bin_path+"/cudaGEMM -size=512 -input_a="+data_path+"/Double_A_512.matrix -input_b="+data_path+"/Double_B_512.matrix -gold="+data_path+"/GOLD_512 -iterations=10000"
+print >>fp, "sudo "+bin_path+"/cudaGEMM -size=1024 -input_a="+data_path+"/Double_A_1024.matrix -input_b="+data_path+"/Double_B_1024.matrix -gold="+data_path+"/GOLD_1024 -iterations=10000"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_gemm_cuda\n"
 
