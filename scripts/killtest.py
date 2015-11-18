@@ -21,39 +21,8 @@ from datetime import datetime
 # will execute lavaMD for about one hour and then execute gemm for two hours
 # When the list finish executing, it start to execute from the beginning
 commandList = [
-	["sudo /home/carol/radiation-benchmarks/bin/accl 2 2 /home/carol/radiation-benchmarks/data/accl/2Frames.pgm /home/carol/radiation-benchmarks/data/accl/gold_2_2 10000000", 0.016, "accl"], 
-	["sudo /home/carol/radiation-benchmarks/bin/accl 5 1 /home/carol/radiation-benchmarks/data/accl/5Frames.pgm /home/carol/radiation-benchmarks/data/accl/gold_5_1 10000000", 0.016, "accl"],
-	["sudo /home/carol/radiation-benchmarks/bin/accl 5 5 /home/carol/radiation-benchmarks/data/accl/5Frames.pgm /home/carol/radiation-benchmarks/data/accl/gold_5_5 10000000", 0.016, "accl"],
-	["sudo /home/carol/radiation-benchmarks/bin/accl 7 1 /home/carol/radiation-benchmarks/data/accl/7Frames.pgm /home/carol/radiation-benchmarks/data/accl/gold_7_1 10000000", 0.016, "accl"],
-	["sudo /home/carol/radiation-benchmarks/bin/accl 7 4 /home/carol/radiation-benchmarks/data/accl/7Frames.pgm /home/carol/radiation-benchmarks/data/accl/gold_7_4 10000000", 0.016, "accl"],
-	["sudo /home/carol/radiation-benchmarks/bin/accl 7 7 /home/carol/radiation-benchmarks/data/accl/7Frames.pgm /home/carol/radiation-benchmarks/data/accl/gold_7_7 10000000", 0.016, "accl"],
-	["sudo /home/carol/radiation-benchmarks/bin/cudaGEMM -size=1024 -input_a=/home/carol/radiation-benchmarks/data/gemm/dgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/gemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/gemm/dgemmGOLD_1024.matrix -iterations=10000000", 0.016, "cudaGEMM"], 
-	["sudo /home/carol/radiation-benchmarks/bin/cudaGEMM -size=2048 -input_a=/home/carol/radiation-benchmarks/data/gemm/dgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/gemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/gemm/dgemmGOLD_2048.matrix -iterations=10000000", 0.016, "cudaGEMM"],
-	["sudo /home/carol/radiation-benchmarks/bin/cudaGEMM -size=4096 -input_a=/home/carol/radiation-benchmarks/data/gemm/dgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/gemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/gemm/dgemmGOLD_4096.matrix -iterations=10000000", 0.016, "cudaGEMM"],
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot_cdp -size=1024 -sim_time=1000 -streams=1 -temp_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/gold_1024_1000 -iterations=10000000", 0.016, "hotspot_cdp"], 
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot_cdp -size=1024 -sim_time=10000 -streams=1 -temp_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/gold_1024_10000 -iterations=10000000", 0.016, "hotspot_cdp"],
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot_cdp -size=1024 -sim_time=1000 -streams=4 -temp_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/gold_1024_1000 -iterations=10000000", 0.016, "hotspot_cdp"],
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot_cdp -size=1024 -sim_time=10000 -streams=4 -temp_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/gold_1024_10000 -iterations=10000000", 0.016, "hotspot_cdp"],
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot_cdp -size=1024 -sim_time=1000 -streams=8 -temp_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/gold_1024_1000 -iterations=10000000", 0.016, "hotspot_cdp"],
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot_cdp -size=1024 -sim_time=10000 -streams=8 -temp_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot_cdp/gold_1024_10000 -iterations=10000000", 0.016, "hotspot_cdp"],
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=1000 -streams=1 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_1024_1000 -iterations=10000000", 0.016, "hotspot"],
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=10000 -streams=1 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_1024_10000 -iterations=10000000", 0.016, "hotspot"],
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=1000 -streams=4 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_1024_1000 -iterations=10000000", 0.016, "hotspot"],
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=10000 -streams=4 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_1024_10000 -iterations=10000000", 0.016, "hotspot"],
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=1000 -streams=8 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_1024_1000 -iterations=10000000", 0.016, "hotspot"],
-	["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=10000 -streams=8 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_1024_10000 -iterations=10000000", 0.016, "hotspot"],
-	["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=1048576 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_1048576 -iterations=10000000", 0.016, "mergesort"],
-	["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=33554432 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_33554432 -iterations=10000000", 0.016, "mergesort"],
-	["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=67108864 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_67108864 -iterations=10000000", 0.016, "mergesort"],
-	["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=134217728 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_134217728 -iterations=10000000", 0.016, "mergesort"],
-	["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=1048576 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_1048576 -iterations=10000000", 0.016, "quicksort"],
-	["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=33554432 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_33554432 -iterations=10000000", 0.016, "quicksort"],
-	["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=67108864 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_67108864 -iterations=10000000", 0.016, "quicksort"],
-	["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=134217728 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_134217728 -iterations=10000000", 0.016, "quicksort"],
-	["sudo /home/carol/radiation-benchmarks/bin/radixsort -size=1048576 -input=/home/carol/radiation-benchmarks/data/radixsort/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort/radixsort_gold_1048576 -iterations=10000000", 0.016, "radixsort"],
-	["sudo /home/carol/radiation-benchmarks/bin/radixsort -size=33554432 -input=/home/carol/radiation-benchmarks/data/radixsort/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort/radixsort_gold_33554432 -iterations=10000000", 0.016, "radixsort"],
-	["sudo /home/carol/radiation-benchmarks/bin/radixsort -size=67108864 -input=/home/carol/radiation-benchmarks/data/radixsort/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort/radixsort_gold_67108864 -iterations=10000000", 0.016, "radixsort"],
-	["sudo /home/carol/radiation-benchmarks/bin/radixsort -size=134217728 -input=/home/carol/radiation-benchmarks/data/radixsort/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort/radixsort_gold_134217728 -iterations=10000000", 0.016, "radixsort"],
+ 	["./lavaMD 15 4 input1 input2 gold 10000", 1, "lavaMD"],
+ 	["./gemm 1024 4 input1 input2 gold 10000", 2, "gemm"],
 ]
 
 # Command used to kill application
@@ -96,11 +65,6 @@ def updateTimestamp():
 # Remove files with start timestamp of commands executing
 def cleanCommandExecLogs():
 	os.system("rm -f "+varDir+"command_execstart_*")
-#	i=len(commandList)
-#	while i >= 0:
-#		if os.path.isfile(varDir+"command_execstart_"+str(i)):
-#			os.remove(varDir+"command_execstart_"+str(i))
-#		i -= 1
 
 # Return True if the variable commandList from this file changed from the 
 # last time it was executed. If the file was never executed returns False
@@ -152,6 +116,7 @@ def selectCommand():
 	except ValueError as eDetail:
 		logMsg("Rebooting, command execstart timestamp read error: "+str(eDetail))
 		sockConnect()
+		os.system("rm -f "+varDir+"command_execstart_"+str(i))
 		os.system("shutdown -r now")
 		time.sleep(20)
 	#fp = open(varDir+"command_execstart_"+str(i),'r')
