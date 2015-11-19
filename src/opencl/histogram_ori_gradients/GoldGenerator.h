@@ -98,11 +98,12 @@ App::App(CommandLineParser& cmd) {
 	win_stride_width = 8;
 	win_stride_height = 8;
 	gr_threshold = 1;
-	nlevels = 80;
-	hit_threshold = 1.4;
+	nlevels = 100;
+	hit_threshold = 0.9;
 	scale = 1.05;
 	gamma_corr = true;
 	write_once = false;
+
 }
 
 void App::run() {
