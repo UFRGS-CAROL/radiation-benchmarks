@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+
+
+touch /var/lock/subsys/local
+
+exec 2> /tmp/rc.local.log
+exec 1>&2
+set -x
+
+/home/carol/atBoot.sh &
+
+exit 0
