@@ -38,7 +38,6 @@
 #endif
 using namespace std;
 using namespace cv;
-int iteractions = 5; //global loop iteration
 
 class App {
 public:

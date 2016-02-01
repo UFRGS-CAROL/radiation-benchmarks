@@ -28,7 +28,7 @@
 #endif
 using namespace std;
 using namespace cv;
-int iteractions = 1000000; //global loop iteration
+int iteractions = 1000000; //default value
 
 class App {
 public:
@@ -43,12 +43,8 @@ public:
 	string workFps() const;
 	string message() const;
 
-// This function test if gpu_rst matches cpu_rst.
-// If the two vectors are not equal, it will return the difference in vector size
-// Else if will return
-// (total diff of each cpu and gpu rects covered pixels)/(total cpu rects covered pixels)
-	double checkRectSimilarity(Size sz, std::vector<Rect>& cpu_rst,
-			std::vector<Rect>& gpu_rst);
+	void write_output_image(vector<Rect> found, Mat img_to_show, string output);
+
 private:
 	App operator=(App&);
 
@@ -77,15 +73,6 @@ private:
 };
 
 App::App(CommandLineParser& cmd) {
-	/*cout << "\nControls:\n" << "\tESC - exit\n"
-	 << "\tm - change mode GPU <-> CPU\n"
-	 << "\tg - convert image to gray or not\n"
-	 << "\to - save output image once, or switch on/off video save\n"
-	 << "\t1/q - increase/decrease HOG scale\n"
-	 << "\t2/w - increase/decrease levels count\n"
-	 << "\t3/e - increase/decrease HOG group threshold\n"
-	 << "\t4/r - increase/decrease hit threshold\n" << endl;*/
-
 	make_gray = cmd.has("gray");
 	resize_scale = cmd.get<double>("s");
 	vdo_source = ""; //cmd.get < string > ("v");
@@ -93,6 +80,7 @@ App::App(CommandLineParser& cmd) {
 	output = cmd.get < string > ("o");
 	camera_id = cmd.get<int>("c");
 
+	//adjusted parameters
 	win_width = 48;
 	win_stride_width = 8;
 	win_stride_height = 8;
@@ -103,17 +91,10 @@ App::App(CommandLineParser& cmd) {
 	gamma_corr = true;
 	write_once = false;
 
-	/*cout << "Group threshold: " << gr_threshold << endl;
-	 cout << "Levels number: " << nlevels << endl;
-	 cout << "Win width: " << win_width << endl;
-	 cout << "Win stride: (" << win_stride_width << ", " << win_stride_height
-	 << ")\n";
-	 cout << "Hit threshold: " << hit_threshold << endl;
-	 cout << "Gamma correction: " << gamma_corr << endl;*/
-	//cout << endl;
 }
 
-void write_output_image(vector<Rect> found, Mat img_to_show, string output) {
+/** this method write the final image, if required **/
+void App::write_output_image(vector<Rect> found, Mat img_to_show, string output) {
 	// Draw positive classified windows
 	for (size_t i = 0; i < found.size(); i++) {
 		Rect r = found[i];
@@ -122,15 +103,23 @@ void write_output_image(vector<Rect> found, Mat img_to_show, string output) {
 	imwrite(output, img_to_show);
 }
 
+/**
+This method performs HOG classification
+if LOGS is set with TRUE every iteration information 
+about execution will be saved as well corrupted outputs.
+Only the rectangle coordinates are recorded in case of errors.
+**/
+
 void App::run() {
-	//running = true;
-//for gold verification---------
+	//for gold verification---------
 	vector < vector<int> > gold;
 	ifstream input_file(output.c_str());
-	//================== Init logs
+	//init logs
+	//====================================
 #ifdef LOGS
 	char test_info[90];
-	snprintf(test_info, 90, "HOG GOLD TEXT FILE");
+	int image_size = atoi(img_source.c_str()[0]);
+	snprintf(test_info, 90, "gold %dx image", image_size);
 	start_log_file((char*)"openclHOG", test_info);
 #endif
 	//====================================
@@ -141,7 +130,9 @@ void App::run() {
 #endif
 		throw runtime_error(string("can't open image file: " + output));
 	}
-	//get file data
+
+	//open gold values
+	//====================================
 	string line;
 
 	if (getline(input_file, line)) {
@@ -174,22 +165,26 @@ void App::run() {
 		gold.push_back(values);
 	}
 
-//------------------------------
-	VideoWriter video_writer;
+	//====================================
 
+
+	//set win size and win stride for HOG
+	//====================================
 	Size win_size(win_width, win_width * 2);
 	Size win_stride(win_stride_width, win_stride_height);
+	//====================================
 
-	// Create HOG descriptors and detectors here
 	try {
+	// Create HOG descriptors and detectors here
+	//====================================
 		HOGDescriptor hog(win_size, Size(16, 16), Size(8, 8), Size(8, 8), 9, 1,
 				-1, HOGDescriptor::L2Hys, 0.2, gamma_corr,
 				cv::HOGDescriptor::DEFAULT_NLEVELS);
 		hog.setSVMDetector(HOGDescriptor::getDaimlerPeopleDetector());
+	//====================================
 
-		VideoCapture vc;
 		UMat frame;
-
+	//open source img
 		imread(img_source).copyTo(frame);
 		if (frame.empty()) {
 #ifdef LOGS
@@ -213,9 +208,12 @@ void App::run() {
 				resize(img_aux, img, sz);
 			} else
 				img = img_aux;
+			//make a copy every iteration
 			img.copyTo(img_to_show);
+			//set hog levels
 			hog.nlevels = nlevels;
 			vector < Rect > found;
+
 			// Perform HOG classification
 #ifdef LOGS
 			start_iteration();
@@ -227,13 +225,14 @@ void App::run() {
 			end_iteration();
 #endif
 			cout << "Total time: " << mysecond() - time << endl;
-			//verify the output----------------------------------------------
+	//output verification
+	//====================================
 			time = mysecond();
 
 			unsigned long int error_counter = 0;
 
 #ifdef LOGS
-
+			//if the numbers of rects found is different from gold, there is some errors
 			if(found.size() != gold.size()) {
 				char message[120];
 				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).", found.size(), gold.size());
@@ -241,6 +240,7 @@ void App::run() {
 				error_counter++;
 			}
 #endif
+			//check if rects are different
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
 				vector<int> vf(GOLD_LINE_SIZE, 0);
@@ -256,7 +256,7 @@ void App::run() {
 				if (diff) error_counter++;
 			}
 #ifdef LOGS
-
+			//algorithm stops if there are more than 500 iterations with errors
 			if (error_counter) { 
 				for(size_t g = 0; g < found.size(); g++) {
 					Rect r = found[g];
@@ -268,6 +268,8 @@ void App::run() {
 			log_error_count(error_counter);
 		}
 #endif
+	//====================================
+
 	} catch (cv::Exception &e) {
 		char *str = const_cast<char*>(e.what());
 		string err_msg(str);
