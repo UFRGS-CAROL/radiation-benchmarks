@@ -232,7 +232,7 @@ void App::run() {
 			unsigned long int error_counter = 0;
 
 #ifdef LOGS
-			//if the numbers of rects found is different from gold, there is some errors
+			//if the numbers of rects found is different from gold, there are some errors
 			if(found.size() != gold.size()) {
 				char message[120];
 				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).", found.size(), gold.size());
