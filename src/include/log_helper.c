@@ -104,7 +104,7 @@ void update_timestamp() {
     strcat(string, time_s);
     strcat(string, " > ");
     strcat(string, timestamp_watchdog);
-    int res = system(string);
+    system(string);
 };
 
 // ~ ===========================================================================

@@ -117,8 +117,9 @@ void App::run() {
 	//init logs
 	//====================================
 #ifdef LOGS
-	char test_info[90];
-	int image_size = atoi(img_source.c_str()[0]);
+	char test_info[90]; 
+	vector<string> split_ = split(img_source, '_');;
+	int image_size = atoi(split_[0].c_str());
 	snprintf(test_info, 90, "gold %dx image", image_size);
 	start_log_file((char*)"openclHOG", test_info);
 #endif

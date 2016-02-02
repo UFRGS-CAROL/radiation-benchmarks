@@ -13,7 +13,7 @@ LOG_FLAGS = $(LOGHELPER_INC)log_helper.c -I$(LOGHELPER_LIB)
 all: clean hog gold_generator
 
 hog: $(CPP).cpp
-	g++ $(OPTS) $(CPP).cpp $(LOG_FLAGS) -Wall -o3 $(OPENCV_LIBS) -o hog_ocl
+	g++ $(OPTS) $(CPP).cpp -fopenmp $(LOG_FLAGS) -Wall -o3 $(OPENCV_LIBS) -o hog_ocl
 
 gold_generator: GoldGenerator.cpp
 	g++ GoldGenerator.cpp -Wall  -o3 $(OPENCV_LIBS) -o gold_gen_hog_ocl
