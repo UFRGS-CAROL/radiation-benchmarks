@@ -93,7 +93,7 @@ App::App(CommandLineParser& cmd) {
 
 }
 
-/** this method write the final image, if required **/
+/** this method writes the final image, if required **/
 void App::write_output_image(vector<Rect> found, Mat img_to_show, string output) {
 	// Draw positive classified windows
 	for (size_t i = 0; i < found.size(); i++) {
@@ -106,7 +106,7 @@ void App::write_output_image(vector<Rect> found, Mat img_to_show, string output)
 /**
 This method performs HOG classification
 if LOGS is set with TRUE every iteration information 
-about execution will be saved as well corrupted outputs.
+about execution will be saved as well as corrupted outputs.
 Only the rectangle coordinates are recorded in case of errors.
 **/
 
@@ -233,7 +233,7 @@ void App::run() {
 			unsigned long int error_counter = 0;
 
 #ifdef LOGS
-			//if the numbers of rects found is different from gold, there is some errors
+			//if the numbers of rects found is different from gold, log this info
 			if(found.size() != gold.size()) {
 				char message[120];
 				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).", found.size(), gold.size());
@@ -241,7 +241,7 @@ void App::run() {
 				error_counter++;
 			}
 #endif
-			//check if rects are different
+			//for every found rectangle, checks if such rectangle is in gold file
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
 				vector<int> vf(GOLD_LINE_SIZE, 0);
@@ -257,7 +257,7 @@ void App::run() {
 				if (diff) error_counter++;
 			}
 #ifdef LOGS
-			//algorithm stops if there are more than 500 iterations with errors
+			//logs all found rectangles in case of any error
 			if (error_counter) { 
 				for(size_t g = 0; g < found.size(); g++) {
 					Rect r = found[g];
@@ -266,6 +266,7 @@ void App::run() {
 				}
 			}
 			cout << "Verification time " << mysecond() - time << endl;
+			// algorithm stops if 500+ errors in current iteration
 			log_error_count(error_counter);
 		}
 #endif
