@@ -2,20 +2,22 @@
 
 int main(int argc, char** argv) {
 	const char* keys =
-			"{ h help      | false          | print help message }"
+			"{ help      | false          | print help message }"
 					"{ i input     |                | specify input image}"
 					"{ c camera    | -1             | enable camera capturing }"
-					"{ v video     | ../data/768x576.avi | use video as input }"
+					"{ n     | 100               | count of iteractions     }"
 					"{ g gray      | false          | convert image to gray one or not}"
 					"{ s scale     | 1.0            | resize the image before detect}"
 					"{ o output    |                | specify output path when input is images}";
+
+
 	CommandLineParser cmd(argc, argv, keys);
-	if (cmd.has("help")) {
+	/*if (cmd.has("help")) {
 		cout << "Usage : hog [options]" << endl;
 		cout << "Available options:" << endl;
 		cmd.printMessage();
 		return EXIT_SUCCESS;
-	}
+	}*/
 	
 	App app(cmd);
 	try {

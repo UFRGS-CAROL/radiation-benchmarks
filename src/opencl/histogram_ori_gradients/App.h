@@ -28,7 +28,6 @@
 #endif
 using namespace std;
 using namespace cv;
-int iteractions = 1000000; //default value
 
 class App {
 public:
@@ -59,6 +58,7 @@ private:
 	int nlevels;
 	double hit_threshold;
 	bool gamma_corr;
+	int iteractions; //default value
 
 	int64 hog_work_begin;
 	double hog_work_fps;
@@ -79,6 +79,7 @@ App::App(CommandLineParser& cmd) {
 	img_source = cmd.get < string > ("i");
 	output = cmd.get < string > ("o");
 	camera_id = cmd.get<int>("c");
+	iteractions = cmd.get<int>("n");
 
 	//adjusted parameters
 	win_width = 48;
@@ -118,8 +119,8 @@ void App::run() {
 	//====================================
 #ifdef LOGS
 	char test_info[90]; 
-	vector<string> split_ = split(img_source, '_');;
-	int image_size = atoi(split_[0].c_str());
+	vector<string> split_ = split(img_source, '/');
+	int image_size = atoi(split_[split_.size() - 1].c_str());
 	snprintf(test_info, 90, "gold %dx image", image_size);
 	start_log_file((char*)"openclHOG", test_info);
 #endif
