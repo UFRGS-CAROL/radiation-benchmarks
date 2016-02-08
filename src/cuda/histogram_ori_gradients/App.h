@@ -19,6 +19,8 @@
 #include "log_helper.h"
 #endif
 
+using namespace std;
+using namespace cv;
 
 class App {
 public:
@@ -59,6 +61,7 @@ private:
 	double work_fps;
 };
 
+//only for debug
 ostream &operator <<(ostream &os, const App &app) {
 	os << "running " << app.running << endl;
 	os << "make gray " << app.use_gpu << endl;
@@ -90,28 +93,16 @@ App::App(const Args& s) {
 		args.win_width = 64;
 }
 
-void fault_injection(Mat *src, int max_change) {
-	cout << max_change;
-	while (max_change--) {
-		int rand_row = rand() % src->rows;
-		int rand_col = rand() % src->cols;
-		Vec4b& rgba = src->at < Vec4b > (rand_row, rand_col);
-		rgba[0] = UCHAR_MAX;
-		rgba[1] = saturate_cast < uchar
-				> ((float(src->rows)) / ((float) src->cols) * UCHAR_MAX);
-		rgba[2] = saturate_cast < uchar
-				> ((float(src->cols)) / ((float) src->rows) * UCHAR_MAX);
-		rgba[3] = saturate_cast < uchar > (0.5 * (rgba[1] + rgba[2]));
-	}
-}
 
 void App::run() {
 	vector < vector<int> > gold;
 	ifstream input_file(args.dst_video.c_str());
 	//================== Init logs
 #ifdef LOGS
-	char test_info[90];
-	snprintf(test_info, 90, "HOG GOLD TEXT FILE");
+	char test_info[90]; 
+	vector<string> split_ = split(args.src, '/');
+	int image_size = atoi(split_[split_.size() - 1].c_str());
+	snprintf(test_info, 90, "gold %dx image", image_size);
 	start_log_file("cudaHOG", test_info);
 #endif
 	//====================================
@@ -122,7 +113,8 @@ void App::run() {
 #endif
 		throw runtime_error(string("can't open image file: " + args.dst_video));
 	}
-	//get file data
+
+	//get gold file data
 	string line;
 
 	if (getline(input_file, line)) {
@@ -135,7 +127,7 @@ void App::run() {
 			throw runtime_error(
 					string("wrong parameters on gold file: " + args.dst_video));
 		}
-
+		//all parameters are saved on gold generation on gold data, so it's just read from gold
 		this->make_gray = (bool) atoi(sep_line[0].c_str());
 		this->scale = atof(sep_line[1].c_str());
 		this->gamma_corr = (bool) atoi(sep_line[2].c_str());
@@ -225,26 +217,18 @@ void App::run() {
 			ostringstream error_detail;
 			time = mysecond();
 
-//-----------------Lucas Aproach
-//			bool log_all_rectangles = false;
 
-			//int rectangles_logged = 0;
+	//output verification
+	//====================================
 			unsigned long int error_counter = 0;
+	//if the numbers of rects found is different from gold, log this info
 			if(found.size() != gold.size()) {
-				//if(found.size() < gold.size()) // log all rectangles to check which were missed
-				//        log_all_rectangles = true;
 				char message[120];
 				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).\n", found.size(), gold.size());
 #ifdef LOGS
 				log_error_detail(message);
 #endif
-				/*if(found.size() > 500) { // inform that only 500 rectangles will be logged
-					char msg[100];
-					snprintf(msg, 100, "Unreasonable to log all %lu rectangles. Logging the first 500 only.\n", found.size());
-					log_error_detail(msg);
-				}*/
 			}
-//------------------------------
 			for (size_t s = 0; s < found.size(); s++) {
 				Rect r = found[s];
 				vector<int> vf(GOLD_LINE_SIZE, 0);
@@ -258,21 +242,9 @@ void App::run() {
 
 				if (diff)
 					error_counter++;
-				/*{
-
-#ifdef LOGS
-					char str[150];
-					snprintf(str, 150, "%d,%d,%d,%d,%d,%d\n", r.height, r.width, r.x,
-							r.y, r.br().x, r.br().y);
-					log_error_detail(str);
-					log_error_count(rectangles_logged++);
-#endif
-				}*/
-				// Draw positive classified windows
-				//rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
 			}
-
-			if(error_counter){
+		//logs all found rectangles in case of any error
+		if(error_counter){
 				for(size_t g = 0; g < found.size(); g++){
 					Rect r = found[g];
 					char str[150];
@@ -283,6 +255,7 @@ void App::run() {
 				}
 			}
 #ifdef LOGS
+	// algorithm stops if 500+ errors in current iteration
 			log_error_count(error_counter);
 #endif
 			
