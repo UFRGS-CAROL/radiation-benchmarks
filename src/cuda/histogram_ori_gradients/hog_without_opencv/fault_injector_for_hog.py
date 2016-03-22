@@ -166,7 +166,9 @@ def count_continues(path, position, argument, breakpoint_location):
             result = fault_injection(random.randint(1, MAX_STEPS), random.randint(1, MAX_FAULTS), cuda_gdb_p)
             cuda_gdb_p.sendline(DELETE_BREAKPOINT)
             cuda_gdb_p.sendline(CONTINUE)
-            return result
+            break
+    cuda_gdb_p.sendline(QUIT)
+    return result
         #print iterator
            
 def main(argv):

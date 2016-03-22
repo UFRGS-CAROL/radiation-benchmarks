@@ -1,7 +1,7 @@
 NVIDIA_INC=/usr/local/cuda/include/,/usr/local/include/opencv,/usr/local/include
 NVIDIA_LIB=/usr/local/cuda/lib64/,/usr/local/lib,/usr/local/share/OpenCV/3rdparty/lib
-LOGHELPER_INC=../../include/
-LOGHELPER_LIB=../../include/
+LOGHELPER_INC=../../../include/
+LOGHELPER_LIB=../../../include/
 
 ifeq ($(LOGS), 1)
 OPTS = -DLOGS
