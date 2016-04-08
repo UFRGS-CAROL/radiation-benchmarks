@@ -59,10 +59,11 @@ SET_REGISTER = "set $"
 
 class ReturnObj(object):
     exception = ''
-    def __init__(self, position, var):
+    def __init__(self, position, var, set_value):
         self.faults = {}
         self.faults["var"] = var
-        if '*' in var:
+        self.faults["set_val"] = set_value
+        if '(' in var:
             self.faults["var_is_array"] = "yes"
             self.faults["position"] = position
         else:
@@ -78,24 +79,69 @@ def fault_injection(cuda_gdb_p, var):
     tem = '= 0'
     global SET_REGISTER, MAX_ARRAY_SIZE, CUDA_GDB_EXPECT
     
-    #select registers to insert fault
-    #llist = random.sample(configure_hog.register_list[0:N_REGISTERS], n_faults)
-   
-
     #this is an array
-    result = ReturnObj(random.randrange(1, MAX_ARRAY_SIZE), var)
+    result = ReturnObj(random.randrange(1, MAX_ARRAY_SIZE), var, 0)
 
-    #for i in range(0, n_faults):
-    #    string_to_send = SET_REGISTER + llist[i] + " = " + str(random.randrange(1, 1000000))      
-    #    cuda_gdb_p.sendline(string_to_send)
+    if '(' in var:
+        var_string = var + " + "+ str(result.faults["position"]) +")"
+        #print var_string
+        if '*' not in var_string:
+            cuda_gdb_p.sendline("print *"+var_string)
+        else:
+            cuda_gdb_p.sendline("print "+var_string)
 
-    if '*' in var:
-         string_to_send = "set variable "+var + " + " + str(result.faults["position"]) +") = "+ str(random.randrange(1, 1000000))
+        #print "print "+var_string
+        cuda_gdb_p.expect(CUDA_GDB_EXPECT)
+        printed = cuda_gdb_p.before
+        #print printed
+        l = []
+        for t in printed.split():
+            try:
+                l.append(float(t))
+            except ValueError:
+                pass
+        #print l
+        if abs(l[0]) <=1:
+            result.faults["set_val"] =  str(int(random.uniform(1.5, 5.5))) if  l[0].is_integer() else str(random.uniform(1.5, 5.5) )
+        elif abs(l[0]) <= 5:
+            result.faults["set_val"] = str(int(random.uniform(1.3, 3.0)  * l[0])) if  l[0].is_integer() else str(random.uniform(1.3, 3.0) * l[0] )
+        else:
+            result.faults["set_val"] =  str(int(random.uniform(0.1, 0.9)  * l[0])) if  l[0].is_integer() else str(random.uniform(0.1, 0.9) * l[0] )
+
+        if '{' in printed:
+            string_to_send = "set variable "+ var_string+ ".y " + " = " + result.faults["set_val"]
+        else:
+            string_to_send = "set variable "+ var_string + " = " + result.faults["set_val"]
     else:
-        string_to_send = "set variable "+var + " = "+ str(random.randrange(1, 1000000))
-    print string_to_send
+        cuda_gdb_p.sendline("print "+var)
+        cuda_gdb_p.expect(CUDA_GDB_EXPECT)
+        printed = cuda_gdb_p.before
+        l = []
+        for t in printed.split():
+            try:
+                l.append(float(t))
+            except ValueError:
+                pass
+        if abs(l[0]) <=1:
+            result.faults["set_val"] = str(random.uniform(1.5, 5.5))
+        elif abs(l[0]) <= 10:
+            result.faults["set_val"] = str(random.uniform(1.3, 3.0) * l[0])
+        else:
+            result.faults["set_val"] = str(random.uniform(0.1, 0.9) * l[0])
+        
+        
+        string_to_send = "set variable "+var + " = " + var + " * " + result.faults["set_val"] 
+        
+    #print "before " + str(l[0])
+    #print result.faults["set_val"]
+    #print "Passou aqui ness"
     cuda_gdb_p.sendline(string_to_send)
     cuda_gdb_p.expect(CUDA_GDB_EXPECT)
+   # print string_to_send
+
+    
+
+
             
     return result    
 
@@ -121,9 +167,12 @@ def count_continues(path, position, argument, breakpoint_location, choice, cuda_
         cuda_gdb_p.sendline()
     target = ''
     iterator = 0
-    
-    cuda_gdb_p.sendline(SWITCH)
+    #"cuda block (2,0,0) thread (64,0,0)"
+    cuda_gdb_p.sendline("cuda block (2, 0, 0 ) thread (" + str(random.randrange(0, 31))+ ",0,0)")
+   # cuda_gdb_p.expect(CUDA_GDB_EXPECT)
+  #  cuda_gdb_p.sendline(CUDA_FUN_INFO)
     cuda_gdb_p.expect(CUDA_GDB_EXPECT)
+
     while 'is not being run' not in target:
         target = cuda_gdb_p.before
         #print target
@@ -171,7 +220,7 @@ def main(argv):
     csvfile = open(output, "wb") 
     spamwriter = csv.writer(csvfile, delimiter=',')
     #csv header
-    spamwriter.writerow(['position', 'kernel', 'kernel_line', 'var', 'vet_position', 'var_is_array', 'SDC', 'finish', 'log_file'])
+    spamwriter.writerow(['position', 'kernel', 'kernel_line', 'var', 'value', 'vet_position', 'var_is_array', 'SDC', 'finish', 'sig_kill', 'log_file'])
 
     final_writer = []
     parameter = configure_hog.parameter
@@ -205,11 +254,8 @@ def main(argv):
                 cuda_gdb_p.expect(CUDA_GDB_EXPECT)
                 #--------------------------------------------------------
                 position = random.randrange(1, N_CONTINUES_1x)
-                n_steps = random.randint(-1, MAX_STEPS)
-                if 'resize_for_hog_kernel' in kernel:
-                    kernel_line = configure_hog.kernel_start_line[kernel][0]
-                else:
-                    kernel_line = configure_hog.kernel_start_line[kernel][0] + n_steps
+                n_steps = random.randint(0, configure_hog.kernel_start_line[kernel][1])
+                kernel_line = configure_hog.kernel_start_line[kernel][0] + n_steps
                                        
                 choice = random.choice(configure_hog.critical_vars[kernel])
                 
@@ -223,17 +269,18 @@ def main(argv):
                 (out, err) = proc.communicate()             
                 there_is_sdc = 0
                 there_is_end = 1
+                sig_kill = 0
                 out = out.strip()
                 
                 
                 if 'No such file or' not in out:                
                     string_file = open(out).read()
                     fout_string = open('last_log.log','r').read()
-                    print string_file
+                    #print string_file
                                        
                     if  CUDA_EXCEPTION in fout_string or SIGTRAP in fout_string or SIGKILL in fout_string:
                         print "passou"
-                        there_is_end = 0
+                        sig_kill = 1
                     
                     if 'SDC' in string_file:
                         there_is_sdc = 1
@@ -241,9 +288,10 @@ def main(argv):
                         there_is_sdc = 1
                     if 'END' not in string_file:
                         there_is_end = 0
-
-                list_final = [position, kernel, kernel_line, choice, ret.faults["position"], ret.faults["var_is_array"], there_is_sdc, there_is_end, out]
+#    spamwriter.writerow(['position', 'kernel', 'kernel_line', 'var', 'value', 'vet_position', 'var_is_array', 'SDC', 'finish', 'sig_kill', 'log_file'])
+                list_final = [position, kernel, kernel_line, choice, ret.faults["set_val"], ret.faults["position"], ret.faults["var_is_array"], there_is_sdc, there_is_end,sig_kill, out]
                 spamwriter.writerow(list_final)
+                #print cuda_gdb_p.before
                 ########################################################
                 cuda_gdb_p.sendline(QUIT)
                 if cuda_gdb_p.isalive():
