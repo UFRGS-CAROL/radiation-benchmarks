@@ -8,3 +8,4 @@ Source of all radiation-benchmarks benchmarks:
     - particles:
 
 - include folder is for log_helper library
+- every folder has a config_*.py script which serves as a pre-config for the benchmark in a specific platform
