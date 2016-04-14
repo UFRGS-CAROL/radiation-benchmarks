@@ -1,2 +1,10 @@
-Source code files only, do not keep binaries nor data in this folder.
-Readmes on how to build are allowed here.
+Source of all radiation-benchmarks benchmarks:
+    - CLAMR:
+    - cuda:
+    - heterogeneous:
+    - hsa:
+    - microbenchmarks:
+    - opencl:
+    - particles:
+
+- include folder is for log_helper library
