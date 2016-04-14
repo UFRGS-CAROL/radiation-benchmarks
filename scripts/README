@@ -1,1 +1,12 @@
-All scripts should be placed here
+Folders
+    old_script: Scripts which were used long ago
+    xeon_phi_scripts: Scripts for Xeon Phi board
+
+Python scripts:
+    killtest*.py: They Are the scripts for radiation tests
+    install.py: This script install radiation-benchmarks on the host PC
+        - a dir is created on /var/radiation-benchmarks
+        - a config file is created on /etc/radiation-benchmarks.conf
+
+Shell scripts:
+    stringify_ocl.sh: Script to transform opencl files .cl to .h files
