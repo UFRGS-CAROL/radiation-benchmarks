@@ -1,2 +1,4 @@
-All documentation files should be placed here.
+This is the documentation for some basic configs for a radiation-test.
 
+- create_time_server_ntp: shows how to create a time server using a simple PC as a server
+- set_date_timezone.txt: set date on users pc
