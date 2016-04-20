@@ -1,2 +1,11 @@
-Source code files only, do not keep binaries nor data in this folder.
-Readmes on how to build are allowed here.
+Source of all radiation-benchmarks benchmarks:
+    - CLAMR: The CLAMR code is a cell-based adaptive mesh refinement (AMR) mini-app developed as a testbed for hybrid algorithm development using MPI and OpenCL GPU code. 
+    - cuda: benchmarks for CUDA architectures
+    - heterogeneous: heterogeneous benchmarks
+    - hsa: Heterogeneous System Architecture
+    - microbenchmarks: simple benchmarks
+    - opencl: benchmarks for architectures which have OpenCL support 
+    - particles:
+
+- include folder is for log_helper library
+- every folder has a config_*.py script which serves as a pre-config for the benchmark in a specific platform
