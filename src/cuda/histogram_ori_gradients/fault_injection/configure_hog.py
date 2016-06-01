@@ -2,11 +2,13 @@
 filename = "hog.cu"
 benchmark = "hog_without"
 
+path="/home/carol/Fernando/radiation-benchmarks/src/cuda/histogram_ori_gradients/fault_injection/"
+
 #binary path will vary 
-binary_path = "/home/carol/Fernando/radiation-benchmarks/src/cuda/histogram_ori_gradients/hog_without_opencv/hog_without" # where the binary executable of the application is located
+binary_path = path + "hog_without" # where the binary executable of the application is located
 
 #configuration for launching the benchmark
-parameter = " ../../../../data/histogram_ori_gradients/1x_pedestrians.jpg --dst_data GOLD_1x.data --iterations 1"
+parameter = "  /home/carol/Fernando/radiation-benchmarks/data/histogram_ori_gradients/1x_pedestrians.jpg --dst_data " + path + "GOLD_1x.data --iterations 1"
 
 #Kernel line by each HOG kernel
 kernel_start_line = {}
@@ -16,10 +18,10 @@ kernel_start_line["normalize_hists_kernel_many_blocks"] = [281, 1]
 kernel_start_line["resize_for_hog_kernel"]              = [770, 1]
 kernel_start_line["classify_hists_kernel_many_blocks"]  = [405, 1]
 
-start_compute_gradients_8UC4_kernel = "hog.cu:"+str(kernel_start_line["compute_gradients_8UC4_kernel"])
+#start_compute_gradients_8UC4_kernel = "hog.cu:"+str(kernel_start_line["compute_gradients_8UC4_kernel"])
 
 #kernel names
-kernel_names = ["compute_gradients_8UC4_kernel", "compute_hists_kernel_many_blocks", "normalize_hists_kernel_many_blocks", "resize_for_hog_kernel", "classify_hists_kernel_many_blocks"]
+kernel_names = ["compute_hists_kernel_many_blocks", "normalize_hists_kernel_many_blocks", "resize_for_hog_kernel", "classify_hists_kernel_many_blocks"] #"compute_gradients_8UC4_kernel",
 
 #critical vars
 critical_vars = {}

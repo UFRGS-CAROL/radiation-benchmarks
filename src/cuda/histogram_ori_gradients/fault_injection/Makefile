@@ -17,15 +17,15 @@ all: hog_without gold_hog_without
 
 gold_hog_without:
 	nvcc -arch=sm_35 $(ALL_COMMANDS) -c GoldGenerator.cu
-	nvcc -arch=sm_35 $(ALL_COMMANDS) -c hog.cu
+	nvcc -arch=sm_35 $(ALL_COMMANDS) -c /home/carol/Fernando/deep_learning/opencv-2.4.13/modules/gpu/src/cuda/hog.cu
 	nvcc -arch=sm_35 $(ALL_COMMANDS) -o gold_hog_without GoldGenerator.o hog.o
 	rm -rf GoldGenerator.o hog.o
 
 hog_without:
 	nvcc -arch=sm_35 $(ALL_COMMANDS) -c HOG.cu
-	nvcc -arch=sm_35 $(ALL_COMMANDS) -c hog.cu
+	nvcc -arch=sm_35 $(ALL_COMMANDS) -c /home/carol/Fernando/deep_learning/opencv-2.4.13/modules/gpu/src/cuda/hog.cu
 	nvcc -arch=sm_35 $(ALL_COMMANDS) -o hog_without HOG.o hog.o
 	
 clean:
-	rm -rf hog_without gold_hog_without *~ *.data *.o output*.jpg
+	rm -rf hog_without gold_hog_without *~ *.o output*.jpg
 	
