@@ -24,7 +24,7 @@ gold_hog_without:
 hog_without:
 	nvcc -arch=sm_35 $(ALL_COMMANDS) -c HOG.cu
 	nvcc -arch=sm_35 $(ALL_COMMANDS) -c /home/carol/Fernando/deep_learning/opencv-2.4.13/modules/gpu/src/cuda/hog.cu
-	nvcc -arch=sm_35 $(ALL_COMMANDS) -o hog_without HOG.o hog.o
+	nvcc -arch=sm_35 $(ALL_COMMANDS) -o hog_without  HOG.o hog.o
 	
 clean:
 	rm -rf hog_without gold_hog_without *~ *.o output*.jpg

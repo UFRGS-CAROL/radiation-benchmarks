@@ -2,99 +2,49 @@
 
 import sys
 import getopt
-import pexpect
+#import pexpect
 import random
 import time
-import configure_hog
+#import configure_hog
 import csv
 import os
 import subprocess
+import support_classes as sp
+import configure_hog
 
 #hog config
-N_CONTINUES_1x = int(2000)
+N_CONTINUES_1x = int(5)
 MAX_ARRAY_SIZE = 10
 MAX_STEPS = 3
 
-#------------------------
-#CUDA-GDB commands
-#------------------------
-CUDA_GDB_PATH = "/usr/local/cuda/bin/cuda-gdb"
-BREAKPOINT = "break "
-STEPI = "stepi"
-NEXT = "next"
-PC = "print $pc"
-RUN = "run"
-CONTINUE = "continue"
-CUDA_FUN_INFO = "cuda kernel block thread"
-CUDA_THREAD_INFO = "info cuda threads block (2,0,0) thread (64,0,0)"
-SWITCH = "cuda block (2,0,0) thread (64,0,0)"
-YES = "y"
-DELETE_BREAKPOINT = "delete breakpoint 1"
-DELETE_ALL_BREAKS = "delete breakpoints"
-DISABLE_ALL_BREAKS = 'disable breakpoints'
-QUIT= "quit"
-KILL = "kill"
-ENTER = ""
-EXIT = "Program exited normally"
-CUDA_EXCEPTION = "CUDA_EXCEPTION_"
-SIGTRAP = "Program received signal SIGTRAP"
-SIGKILL = "SIGKILL"
-FINISH = 'finish'
-DISABLE_BREAK = 'disable breakpoint '
-ENABLE_BREAK  = 'enable breakpoint '
-IGNORE_1 = 'ignore 1 '
-#------------------------
-#Expect collection
-#------------------------
 
-CUDA_GDB_EXPECT = "\(cuda-gdb\)"
-CUDA_SYN_EXPECT = "__syncthreads\(\)"
-CUDA_SYN_EXPECT_2 = " __syncthreads\(\)"
-PC_EXPECT = "="
-CUDA_FUN_INFO_EXPECT = " "
-THREAD_CONTINUE_EXPECT = "---Type \<return\> to continue, or q \<return\> to quit---"
-THREAD_CONTINUE_EXPECT_WERIED = "---Type \<return\> to continue, or q \<return\> to quit---stepi"
-PROGRAM_KILLED = "Program terminated with signal SIGKILL, Killed"
-NO_FOCUS = "Focus not set on any active CUDA kernel"
-ALLBREAKPOINTS_RES = "Delete all breakpoints? \(y or n\)"
-SET_REGISTER = "set $"
+#cuda signals
+#termination, program, alarm, asynchronous, job, operation error, miscellaneous, si
+SIGNALS = ['SIGKILL','SIGTERM','SIGINT', 'SIGQUIT','SIGHUP',                                   #termination codes
+'SIGFPE', 'SIGILL','SIGSEGV', 'SIGBUS', 'SIGABRT', 'SIGIOT', 'SIGTRAP','SIGEMT','SIGSYS',     #program codes
+'SIGALRM', 'SIGVTALRM', 'SIGPROF',                                                            #alarm codes
+'SIGIO', 'SIGURG', 'SIGPOLL',                                                                 #asynchronous codes
+'SIGCHLD', 'SIGCLD', 'SIGCONT', 'SIGSTOP', 'SIGTSTP', 'SIGTTIN', 'SIGTTOU',                    #job control 
+'SIGPIPE', 'SIGLOST', 'SIGXCPU', 'SIGXFSZ',                                                     #operation codes
+'SIGUSR1', 'SIGUSR2', 'SIGWINCH', 'SIGINFO',                                                    #miscellaneous codes
+'strsignal', 'psignal',                                                                         #signal messages
+#cuda signals
+'CUDA_EXCEPTION_0','CUDA_EXCEPTION_1','CUDA_EXCEPTION_2','CUDA_EXCEPTION_3','CUDA_EXCEPTION_4','CUDA_EXCEPTION_5',
+'CUDA_EXCEPTION_6','CUDA_EXCEPTION_7','CUDA_EXCEPTION_8','CUDA_EXCEPTION_9','CUDA_EXCEPTION_10','CUDA_EXCEPTION_11',
+'CUDA_EXCEPTION_12','CUDA_EXCEPTION_13','CUDA_EXCEPTION_14','CUDA_EXCEPTION_15']
 
-
-class ReturnObj(object):
-    exception = ''
-    def __init__(self, position, var, set_value):
-        self.faults = {}
-        self.faults["var"] = var
-        self.faults["set_val"] = set_value
-        if '(' in var:
-            self.faults["var_is_array"] = "yes"
-            self.faults["position"] = position
-        else:
-            self.faults["var_is_array"] = "no"
-            self.faults["position"] = -1
-        self.exeception = ""
-        
-    def set_exception(self, exception):
-        self.exception = exception
-            
-        
-def fault_injection(cuda_gdb_p, var):
-    tem = '= 0'
-    global SET_REGISTER, MAX_ARRAY_SIZE, CUDA_GDB_EXPECT
-    
+def fault_injection(var, printed, array_i): #cuda_gdb_p, var):
     #this is an array
-    result = ReturnObj(random.randrange(1, MAX_ARRAY_SIZE), var, 0)
-
+    result = sp.ReturnObj(array_i, var, 0)
+    max_less_equal_1 = 5.5
+    min_less_equal_1 = 1.5
+    max_less_equal_5 = 2.5
+    mix_less_equal_5 = 0.1
+    max_all = 0.8
+    min_all = 0.1
+    string_to_send =''
     if '(' in var:
         var_string = var + " + "+ str(result.faults["position"]) +")"
-
-        if '*' not in var_string:
-            cuda_gdb_p.sendline("print *"+var_string)
-        else:
-            cuda_gdb_p.sendline("print "+var_string)
-
-        #cuda_gdb_p.expect(CUDA_GDB_EXPECT)
-        printed = cuda_gdb_p.before
         l = []
         for t in printed.split():
             try:
@@ -102,105 +52,108 @@ def fault_injection(cuda_gdb_p, var):
             except ValueError:
                 pass
 
-        if abs(l[0]) <=1:
-            result.faults["set_val"] =  str(int(random.uniform(0.1, 1.5))) if  l[0].is_integer() else str(random.uniform(1.5, 5.5) )
-        elif abs(l[0]) <= 5:
-            result.faults["set_val"] = str(int(random.uniform(0.1, 1.5)  * l[0])) if  l[0].is_integer() else str(random.uniform(1.3, 3.0) * l[0] )
+        if abs(l[0]) <= 1:
+            num = random.uniform(min_less_equal_1, max_less_equal_1)
+            result.faults["set_val"] = str(int(num)) if  l[0].is_integer() else str(num)
+        elif abs(l[0]) <= 10:
+            num = random.uniform(mix_less_equal_5, max_less_equal_5)
+            result.faults["set_val"] = str(int(num  * l[0])) if  l[0].is_integer() else str(num * l[0] )
         else:
-            result.faults["set_val"] =  str(int(random.uniform(0.1, 0.9)  * l[0])) if  l[0].is_integer() else str(random.uniform(0.1, 0.9) * l[0] )
+            num = random.uniform(min_all, max_all)
+            result.faults["set_val"] = str(int(num  * l[0])) if  l[0].is_integer() else str(num * l[0] )
 
         if '{' in printed:
             string_to_send = "set variable "+ var_string+ ".y " + " = " + result.faults["set_val"]
         else:
             string_to_send = "set variable "+ var_string + " = " + result.faults["set_val"]
+        result.faults["old_value"] = l[0]
     else:
-        cuda_gdb_p.sendline("print "+var)
-        #cuda_gdb_p.expect(CUDA_GDB_EXPECT)
-        printed = cuda_gdb_p.before
         l = []
         for t in printed.split():
             try:
                 l.append(float(t))
             except ValueError:
                 pass
-        if abs(l[0]) <=1:
-            result.faults["set_val"] = str(random.uniform(0.1, 1.5))
+        if abs(l[0]) <= 1:
+            num = random.uniform(min_less_equal_1, max_less_equal_1)
+            result.faults["set_val"] = str(int(num)) if  l[0].is_integer() else str(num)
+            string_to_send = "set variable "+var + " = " + result.faults["set_val"] 
         elif abs(l[0]) <= 10:
-            result.faults["set_val"] = str(random.uniform(0.1, 1.5) * l[0])
+            num = random.uniform(mix_less_equal_5, max_less_equal_5)
+            result.faults["set_val"] = str(int(num  * l[0])) if  l[0].is_integer() else str(num * l[0] )
+            string_to_send = "set variable "+var + " = " + var + " * " + result.faults["set_val"] 
         else:
-            result.faults["set_val"] = str(random.uniform(0.1, 0.9) * l[0])
+            num = random.uniform(min_all, max_all)
+            result.faults["set_val"] = str(int(num  * l[0])) if  l[0].is_integer() else str(num * l[0] )
+            string_to_send = "set variable "+var + " = " + var + " * " + result.faults["set_val"] 
+     
         
-        string_to_send = "set variable "+var + " = " + var + " * " + result.faults["set_val"] 
-        
-    cuda_gdb_p.sendline(string_to_send)
-    #cuda_gdb_p.expect(CUDA_GDB_EXPECT)
-            
+        result.faults["old_value"] = l[0]
+    result.set_variable(string_to_send)
     return result    
 
-def count_continues(path, position, argument, breakpoint_location, choice, cuda_gdb_p):
-    global CUDA_GDB_PATH, BREAKPOINT,KILL,QUIT,DELETE_BREAKPOINT
-    global CUDA_FUN_INFO,PC,RUN,CONTINUE,CUDA_THREAD_INFO,ENTER
-    global NEXT, CUDA_SYN_EXPECT_2
-    global CUDA_GDB_EXPECT,PC_EXPECT,CUDA_FUN_INFO_EXPECT,THREAD_CONTINUE_EXPECT
-    global CUDA_SYN_EXPECT,EXIT,NO_FOCUS,THREAD_CONTINUE_EXPECT_WERIED
-    global SWITCH, PROGRAM_KILLED, YES, DELETE_ALL_BREAKS, ALLBREAKPOINTS_RES
-    global MAX_FAULTS, MAX_STEPS, FINISH, DISABLE_ALL_BREAKS
-    global IGNORE_1
-    #---------------
-    # run the program
-    #---------------
-    wc = cuda_gdb_p.sendline(RUN+argument)
-    resend = cuda_gdb_p.expect([CUDA_GDB_EXPECT,THREAD_CONTINUE_EXPECT])
-    if resend == 1:
-        cuda_gdb_p.sendline()
-    cuda_gdb_p.sendline("cuda block (2, 0, 0 ) thread (" + str(random.randrange(0, 31))+ ",0,0)")
-    #daniel break ignores
-    cuda_gdb_p.sendline(IGNORE_1+str(position))
-    expected =  cuda_gdb_p.expect([CUDA_GDB_EXPECT,CUDA_SYN_EXPECT,THREAD_CONTINUE_EXPECT,PROGRAM_KILLED, CUDA_EXCEPTION, SIGTRAP, THREAD_CONTINUE_EXPECT_WERIED,CUDA_SYN_EXPECT_2,pexpect.TIMEOUT],timeout=60)
 
-    if expected != 0:
-        print 'PASS ON THE EXPECT'
-        cuda_gdb_p.sendline()
-
-    cuda_gdb_p.sendline(CONTINUE)
-    #method performs the fault injection o the running process
-    result = fault_injection(cuda_gdb_p, choice)            
-
-    #delete the breakpoint
-    cuda_gdb_p.sendline(DELETE_BREAKPOINT)
-    if THREAD_CONTINUE_EXPECT_WERIED in cuda_gdb_p.before:
-        cuda_gdb_p.sendline(YES)
+def last_step(output_csv, position, ret, kernel, kernel_line, choice, log_name):
+        #register output
+        global SIGNALS
+        csvfile = open(output_csv, "a") 
+        spamwriter = csv.writer(csvfile, delimiter=',')
+        #writes everything in the file
+        proc = subprocess.Popen("ls -dt /var/radiation-benchmarks/log/*.log | head -1", stdout=subprocess.PIPE, shell=True)
+        (out, err) = proc.communicate()             
+        there_is_sdc = 0
+        there_is_end = 1
         
-    #finish the program
-    cuda_gdb_p.sendline(CONTINUE)
-
-    return result
+        out = out.strip()
+        if 'No such file or' not in out:                
+            string_file = open(out).read()
+            fout_string = open(configure_hog.path + log_name,'r').read()
+                               
+            if 'SDC' in string_file:
+                there_is_sdc = 1
+            if 'ERR' in string_file:
+                there_is_sdc = 1
+            
+            sig_kill = []
+            for message in SIGNALS:
+                mess_temp = message + ','
+                if mess_temp in fout_string:
+                    mess_temp.replace(',', '#')
+                    sig_kill.append(mess_temp)
+                    there_is_end = 0
+                if message in fout_string:
+                    sig_kill.append(message)
+                    there_is_end = 0
+                    
+        sig_kill_str = str(sig_kill).replace(',', ' ')
+        print "Is there SDC "+ str(there_is_sdc)
+        print "It finished " + str(there_is_end)
+#    spamwriter.writerow(['position', 'kernel', 'kernel_line',  'var', 'new_value', 'old_value', 'vet_position', 'var_is_array', 'SDC', 'finish', 'sig_kill', 'log_file'])
+        list_final = [position, kernel, kernel_line, choice, ret.faults["set_val"], ret.faults["old_value"], ret.faults["position"], ret.faults["var_is_array"], there_is_sdc, there_is_end,sig_kill, out]
+        spamwriter.writerow(list_final)
+        
+        csvfile.close()
+        os.system("mv "+ out + " /var/radiation-benchmarks/log/" + kernel)
            
 def main(argv):
-    os.system('rm -rf '+ configure_hog.path + 'last_log.log')
-    global N_CONTINUES_1x, BREAKPOINT, ENABLE_BREAK
-    global SIGTRAP, CUDA_EXCEPTION, SIGKILL
-    global CUDA_GDB_PATH, CUDA_GDB_EXPECT, THREAD_CONTINUE_EXPECT, QUIT
- 
     binary = configure_hog.binary_path
-    #try:
-    #    opts, args = getopt.getopt(argv, "t:o:", ["times", "csv_output"])
-    #except getopt.GetoptError:
-    #    print "Enter with -t <times> -o <csv>"
-    #    sys.exit(2)
-    
-    #for opt, arg in opts:
-    #  if opt in ("-t", "--times"):
-    #      times = int(arg)
-    #  elif opt in ("-o", "--csv_output"):
-    #      output = arg
-    times = 10
+    times = 1
     output = configure_hog.path + "test.csv"
-    #register output
-    csvfile = open(output, "a") 
-    spamwriter = csv.writer(csvfile, delimiter=',')
+    
+    try:
+        opts, args = getopt.getopt(argv, "t:o:", ["times", "csv_output"])
+    except getopt.GetoptError:
+        print "Chosing default parameters 1 time and test.csv, for other parameters use -t <times> -o <output>"
+
+        
+    for opt, arg in opts:
+      if opt in ("-t", "--times"):
+          times = int(arg)
+      elif opt in ("-o", "--csv_output"):
+          output = arg
+    
     #csv header
-    #spamwriter.writerow(['position', 'kernel', 'kernel_line', 'var', 'value', 'vet_position', 'var_is_array', 'SDC', 'finish', 'sig_kill', 'log_file'])
+    #spamwriter.writerow(['position', 'kernel', 'kernel_line', 'var', 'new_value', 'old_value', 'vet_position', 'var_is_array', 'SDC', 'finish', 'sig_kill', 'log_file'])
 
     final_writer = []
     parameter = configure_hog.parameter
@@ -209,77 +162,46 @@ def main(argv):
     print "The process has started ok"
     #################################################################### 
 
-    for i in range(0, times):
+    try:
+        for i in range(0, times):
             for kernel in configure_hog.kernel_names:
+                #Profile the kernel
                 #init the cuda gdb process
-                ####################################################################
-                cuda_gdb_p = pexpect.spawn(CUDA_GDB_PATH+" "+binary)
-                os.system("rm -rf /home/carol/Fernando/radiation-benchmarks/src/cuda/histogram_ori_gradients/fault_injection/last_log.log")
-                fout = file('/home/carol/Fernando/radiation-benchmarks/src/cuda/histogram_ori_gradients/fault_injection/last_log.log','w')
-                cuda_gdb_p.logfile = fout
-                cuda_gdb_p.maxread = 1000000
-                cuda_gdb_p.setecho(False)
-                cuda_gdb_p.expect(CUDA_GDB_EXPECT)  
-                #################################################################### 
-                cuda_gdb_p.sendline(BREAKPOINT+ " "+ configure_hog.filename + ":"+str(configure_hog.kernel_start_line[kernel][0]))
-                cuda_gdb_p.expect(CUDA_GDB_EXPECT)
-                #--------------------------------------------------------
                 position = random.randrange(1, N_CONTINUES_1x)
                 n_steps = random.randint(0, configure_hog.kernel_start_line[kernel][1])
                 kernel_line = configure_hog.kernel_start_line[kernel][0] + n_steps
-                                       
+                array_i = random.randrange(1, MAX_ARRAY_SIZE)
                 choice = random.choice(configure_hog.critical_vars[kernel])
-                
-                print "Iteration "+ str(i) + " position " + str(position) + " kernel "+kernel + " var " + choice
-                
-                ret = count_continues(binary, position, parameter, str(configure_hog.kernel_start_line[kernel][1]), choice, cuda_gdb_p)
-                
-                time.sleep(1)
-                #writes everything in the file
-                proc = subprocess.Popen("sudo ls -dt /var/radiation-benchmarks/log/*.log | head -1", stdout=subprocess.PIPE, shell=True)
-                (out, err) = proc.communicate()             
-                there_is_sdc = 0
-                there_is_end = 1
-                sig_kill = 0
-                out = out.strip()
-                
-                
-                if 'No such file or' not in out:                
-                    string_file = open(out).read()
-                    fout_string = open(configure_hog.path + 'last_log.log','r').read()
-                                       
-                    if  CUDA_EXCEPTION in fout_string or SIGTRAP in fout_string or SIGKILL in fout_string:
-                        print "passou"
-                        sig_kill = 1
-                    
-                    if 'SDC' in string_file:
-                        there_is_sdc = 1
-                    if 'ERR' in string_file:
-                        there_is_sdc = 1
-                    if 'END' not in string_file:
-                        there_is_end = 0
-#    spamwriter.writerow(['position', 'kernel', 'kernel_line', 'var', 'value', 'vet_position', 'var_is_array', 'SDC', 'finish', 'sig_kill', 'log_file'])
-                list_final = [position, kernel, kernel_line, choice, ret.faults["set_val"], ret.faults["position"], ret.faults["var_is_array"], there_is_sdc, there_is_end,sig_kill, out]
-                spamwriter.writerow(list_final)
                 ########################################################
-                cuda_gdb_p.sendline(QUIT)
-                if cuda_gdb_p.isalive():
-                    #time.sleep(20)
-                    while cuda_gdb_p.terminate(force=False) != True:
-                        print "trying terminate"
-                        cuda_gdb_p.sendline(YES)
-                        cuda_gdb_p.sendline()
-                        
-                        #time.sleep(1)
+                #print var in a fault free gdb execution
+                if '(' in choice:
+                    temp_var = choice + '+' + str(array_i) +  ')'
+                else:
+                    temp_var = choice
+                faultFreeObj = sp.SupportFile(configure_hog.path, "hog_without_log", configure_hog.filename + ":" + str(kernel_line), configure_hog.parameter, position, "", "print " + temp_var)
+                faultFreeObj.generate_gdb_file(configure_hog.path, "gdb_fault_free.gdb")
+                faultFreeObj.run("fault_free.log")
+                printed = faultFreeObj.get_printed_string()               
+
+                #select the values changed
+                ret = fault_injection(choice, printed, array_i)
+                print "Iteration "+ str(i) + " position " + str(position) + " kernel "+kernel + " var " + choice + " value " + str(ret.faults["set_val"]) + " old value "+ str(ret.faults["old_value"])
+                ################################################################
+                #perform the fault injection without
+                faultObj = sp.SupportFile(configure_hog.path, "hog_without", configure_hog.filename + ":" + str(kernel_line), configure_hog.parameter, position, ret.faults["set_variable_string"], "")
+                faultObj.generate_gdb_file(configure_hog.path, "gdb_fault_injection.gdb")
+                faultObj.run("fault_injection.log")
+                ###############################################################
+                #check the output file
+                last_step(output,position, ret, kernel, kernel_line,choice, "fault_injection.log")
                 
-                ########################################################
-
-
-
-
-    print "Everything finished ok"     
-    csvfile.close()
+        print "Everything finished ok"
+    except Exception, e:
+        print "some error happened"
+        print sys.exc_info()[0]
+        raise
  
 
 if __name__ == "__main__" :
     main(sys.argv[1:])
+

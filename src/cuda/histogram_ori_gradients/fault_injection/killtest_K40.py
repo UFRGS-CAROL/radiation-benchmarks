@@ -21,15 +21,15 @@ from datetime import datetime
 # will execute lavaMD for about one hour and then execute gemm for two hours
 # When the list finish executing, it start to execute from the beginning
 commandList = [
-    ["sudo /home/carol/Fernando/radiation-benchmarks/src/cuda/histogram_ori_gradients/fault_injection/fault_injector_for_hog.py", 3, "cuda-gdb"],
+    ["sudo /home/carol/Fernando/radiation-benchmarks/src/cuda/histogram_ori_gradients/fault_injection/fault_injector_for_hog.py", 10, "cuda-gdb"],
 ]
 
 # Command used to kill application
 killcmd="killall -9 "
 
 
-timestampMaxDiff = 120 # Time in seconds
-maxKill = 20 # Max number of kills allowed
+timestampMaxDiff = 360 # Time in seconds
+maxKill = 100 # Max number of kills allowed
 
 sockServerIP = "192.168.1.100"
 sockServerPORT = 8080
@@ -222,10 +222,10 @@ try:
         if timestampDiff > timestampMaxDiff:
             # Check if last kill was in the last 60 seconds and reboot
             for cmd in commandList:
-        os.system(killcmd+" hog_without")
+                os.system(killcmd+" hog_without")
                 os.system(killcmd+" "+cmd[2])
-        os.system(killcmd+" fault_injector_for_hog.py")
-        os.system("nvidia-smi -r -i 0")
+                os.system(killcmd+" fault_injector_for_hog.py")
+                os.system("nvidia-smi -r -i 0")
         #print cmd[2]
             now = int(time.time())
             if (now - lastKillTimestamp) < 3*timestampMaxDiff:
