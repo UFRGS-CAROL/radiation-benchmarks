@@ -43,7 +43,7 @@ class SupportFile(object):
         os.system("sudo killall -9 "+ self.bin_file + " > /dev/null 2>&1")
         os.system("sudo killall -9 cuda_gdb > /dev/null 2>&1")
         time.sleep(1)
-        os.system("cuda-gdb -x " + self.gdb_file_path + self.gdb_file_name +" > "+ self.gdb_file_path + log_name)
+        os.system("/usr/local/cuda/bin/cuda-gdb -x " + self.gdb_file_path + self.gdb_file_name +" > "+ self.gdb_file_path + log_name)
         self.log_name = log_name
 
     def get_printed_string(self):

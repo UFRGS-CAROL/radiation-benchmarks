@@ -28,8 +28,8 @@ commandList = [
 killcmd="killall -9 "
 
 
-timestampMaxDiff = 360 # Time in seconds
-maxKill = 100 # Max number of kills allowed
+timestampMaxDiff = 150 # Time in seconds
+maxKill = 10 # Max number of kills allowed
 
 sockServerIP = "192.168.1.100"
 sockServerPORT = 8080

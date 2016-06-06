@@ -13,8 +13,8 @@ import support_classes as sp
 import configure_hog
 
 #hog config
-N_CONTINUES_1x = int(5)
-MAX_ARRAY_SIZE = 10
+N_CONTINUES_1x = int(100)
+MAX_ARRAY_SIZE = 5
 MAX_STEPS = 3
 
 
@@ -39,8 +39,8 @@ def fault_injection(var, printed, array_i): #cuda_gdb_p, var):
     max_less_equal_1 = 5.5
     min_less_equal_1 = 1.5
     max_less_equal_5 = 2.5
-    mix_less_equal_5 = 0.1
-    max_all = 0.8
+    mix_less_equal_5 = 1.5
+    max_all = 2
     min_all = 0.1
     string_to_send =''
     if '(' in var:
@@ -63,7 +63,7 @@ def fault_injection(var, printed, array_i): #cuda_gdb_p, var):
             result.faults["set_val"] = str(int(num  * l[0])) if  l[0].is_integer() else str(num * l[0] )
 
         if '{' in printed:
-            string_to_send = "set variable "+ var_string+ ".y " + " = " + result.faults["set_val"]
+            string_to_send = "set variable "+ var_string.strip('*')+ random.choice(["x" ,".y ", "z"]) + " = " + result.faults["set_val"]
         else:
             string_to_send = "set variable "+ var_string + " = " + result.faults["set_val"]
         result.faults["old_value"] = l[0]
@@ -81,11 +81,11 @@ def fault_injection(var, printed, array_i): #cuda_gdb_p, var):
         elif abs(l[0]) <= 10:
             num = random.uniform(mix_less_equal_5, max_less_equal_5)
             result.faults["set_val"] = str(int(num  * l[0])) if  l[0].is_integer() else str(num * l[0] )
-            string_to_send = "set variable "+var + " = " + var + " * " + result.faults["set_val"] 
+            string_to_send = "set variable "+var + " = " + result.faults["set_val"] 
         else:
             num = random.uniform(min_all, max_all)
             result.faults["set_val"] = str(int(num  * l[0])) if  l[0].is_integer() else str(num * l[0] )
-            string_to_send = "set variable "+var + " = " + var + " * " + result.faults["set_val"] 
+            string_to_send = "set variable "+var + " = " + result.faults["set_val"] 
      
         
         result.faults["old_value"] = l[0]
@@ -137,7 +137,7 @@ def last_step(output_csv, position, ret, kernel, kernel_line, choice, log_name):
            
 def main(argv):
     binary = configure_hog.binary_path
-    times = 1
+    times = 100
     output = configure_hog.path + "test.csv"
     
     try:
@@ -182,7 +182,7 @@ def main(argv):
                 faultFreeObj.generate_gdb_file(configure_hog.path, "gdb_fault_free.gdb")
                 faultFreeObj.run("fault_free.log")
                 printed = faultFreeObj.get_printed_string()               
-
+                print "Printeddddddd ========= "+printed
                 #select the values changed
                 ret = fault_injection(choice, printed, array_i)
                 print "Iteration "+ str(i) + " position " + str(position) + " kernel "+kernel + " var " + choice + " value " + str(ret.faults["set_val"]) + " old value "+ str(ret.faults["old_value"])
@@ -194,7 +194,8 @@ def main(argv):
                 ###############################################################
                 #check the output file
                 last_step(output,position, ret, kernel, kernel_line,choice, "fault_injection.log")
-                
+               
+               
         print "Everything finished ok"
     except Exception, e:
         print "some error happened"
