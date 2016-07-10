@@ -372,14 +372,15 @@ void runTest(int argc, char** argv) {
 		if (*kerrors > 0) {
 			//file = fopen(file_name, "a");
 			//std::cout <<  << *kerrors << "\n";
-			std::stringstream sstm;
-			sstm << "Error detected! kerrors = " << *kerrors;
 #ifdef LOGS
-			log_error_detail(sstm.str().c_str());
+			char error_info[100];
+
+			sprintf(error_info, "Error detected! kerrors = %d" ,*kerrors);
+			log_error_detail(error_info);
+			int host_errors =0;
 #endif
 			cudaMemcpy(output_itemsets, matrix_cuda, sizeof(int) * size,
 					cudaMemcpyDeviceToHost);
-			int host_errors =0;
 			for (int i = 0; (i < n) && (ea < N_ERRORS_LOG); i++) {
 				for (int j = 0; (j < n) && (ea < N_ERRORS_LOG); j++) {
 					if (output_itemsets[i + n * j]
