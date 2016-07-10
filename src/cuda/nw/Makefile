@@ -8,3 +8,4 @@ $(TARGET):
 
 
 clean:
+	rm *.o $(TARGET) *~
