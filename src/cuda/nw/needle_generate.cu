@@ -96,22 +96,22 @@ void ReadArrayFromFile(int* input_itemsets,  char** argv, std::string array = ""
 		FILE *f_a;
 		std::string filenameinput(array);
 		filenameinput += std::string("input_") + argv[1];
-		f_a = fopen(filenameinput.c_str(), "w");
-		//fwrite(input_itemsets, sizeof(int) * n * n, 1, f_a);
-		for(int i = 0; i < n * n; i++){
-			fprintf(f_a, "%d ",  input_itemsets[i]);
-		}
+		f_a = fopen(filenameinput.c_str(), "wb");
+		fwrite(input_itemsets, sizeof(int) * n * n, 1, f_a);
+		//for(int i = 0; i < n * n; i++){
+		//	fprintf(f_a, "%d ",  input_itemsets[i]);
+		//}
 		fclose(f_a);
 	}else{
 		FILE *f_a;
-		f_a = fopen(array.c_str(), "r");
+		f_a = fopen(array.c_str(), "rb");
 		if (f_a == NULL) {
 			std::cout << "error.\n";
 			exit(-3);
 		}
 		std::cout << "read...";
-		for(int i = 0; i < n* n; i++) fscanf(f_a, "%d ", &input_itemsets[i]);
-		//fread(input_itemsets, sizeof(int) * n * n, 1, f_a);
+		//for(int i = 0; i < n* n; i++) fscanf(f_a, "%d ", &input_itemsets[i]);
+		fread(input_itemsets, sizeof(int) * n * n, 1, f_a);
 		fclose(f_a);
 	}
 }
@@ -272,11 +272,11 @@ void runTest(int argc, char** argv) {
 		FILE *f_a;
 		std::string gold_name("gold_" + std::to_string(n));
 
-		f_a = fopen(gold_name.c_str(), "w");
-		//fwrite(input_itemsets, sizeof(int) * n * n, 1, f_a);
-		for(int i = 0; i < n * n; i++){
-			fprintf(f_a, "%d ",  input_itemsets[i]);
-		}
+		f_a = fopen(gold_name.c_str(), "wb");
+		fwrite(input_itemsets, sizeof(int) * n * n, 1, f_a);
+		//for(int i = 0; i < n * n; i++){
+		//	fprintf(f_a, "%d ",  input_itemsets[i]);
+		//}
 		fclose(f_a);
 
 		cudaFree(referrence_cuda);
