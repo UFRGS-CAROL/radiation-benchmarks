@@ -90,9 +90,9 @@ void ReadArrayFromFile(int* input_itemsets,  char** argv, std::string array = ""
 	if(array == ""){
 		std::cout << "Input array path is null so I'm generating a random array  with size == " << n * n << std::endl;
 		for(int i = 0; i < n * n; i++){
-			input_itemsets[i] = rand() % 100000 + 1;
+			input_itemsets[i] = rand() % 24 + 1; //24 is from blosum size
 		}
-		printf("Passou\n");
+
 		FILE *f_a;
 		std::string filenameinput(array);
 		filenameinput += std::string("input_") + argv[1];
@@ -145,10 +145,10 @@ void usage(int argc, char **argv) {
 
 void runTest(int argc, char** argv) {
 	int max_rows, max_cols, penalty;
-	int *input_itemsets, *output_itemsets, *gold_itemsets, *referrence;
+	int *input_itemsets, *output_itemsets,  *referrence;
 	int *matrix_cuda, *referrence_cuda;
 	int size;
-	int zero = 0;
+	//int zero = 0;
 	double timeG;
 	std::string array_path;
 
@@ -179,9 +179,9 @@ void runTest(int argc, char** argv) {
 	////////////////////////////////////////////////////
 
 	//====================================
-	int ea = 0; //wrong integers in the current loop
-	int t_ea = 0; //total number of wrong integers
-	int old_ea = 0;
+	//int ea = 0; //wrong integers in the current loop
+	//int t_ea = 0; //total number of wrong integers
+	//int old_ea = 0;
 
 	double total_time = 0.0;
 
@@ -263,72 +263,14 @@ void runTest(int argc, char** argv) {
 		timeG = mysecond() - timeG;
 		total_time += timeG;
 
-		std::cout << "Done in " << timeG << "s.\n Saving gold";
+		std::cout << "Done in " << timeG << "s.\nSaving gold\n";
 		FILE *f_a;
-		std::string gold_name("gold_" + array_path);
+		std::string gold_name("gold_" + std::to_string(n));
+
 		f_a = fopen(gold_name.c_str(), "wb");
 		fwrite(input_itemsets, sizeof(int) * n * n, 1, f_a);
 		fclose(f_a);
 
-		/*kerrors = 0;
-		// Check errors on GPU...
-		//std::cout << "Sending gold matrix to GPU...";
-		timeG = mysecond();
-		cudaMemcpy(referrence_cuda, gold_itemsets, sizeof(int) * size,
-				cudaMemcpyHostToDevice);
-		// Using referrence just to avoid reallocation for gold
-		cudaMemcpyToSymbol(gpukerrors, &zero, sizeof(int));
-		timeG = mysecond() - timeG;
-		//std::cout << "Done in " << timeG << "s.\nRunning GoldChk...";
-		timeG = mysecond();
-
-		GoldChkKernel<<<gchk_dimGrid, gchk_dimBlock>>>(referrence_cuda,
-				matrix_cuda, n);
-
-		timeG = mysecond() - timeG;
-		//std::cout << "Done in " << timeG << "s.";
-		gpuErrchk(cudaPeekAtLastError());
-		cudaMemcpyFromSymbol(kerrors, gpukerrors, sizeof(unsigned int));
-
-
-		ea = 0;
-
-		if (*kerrors > 0) {
-
-			cudaMemcpy(output_itemsets, matrix_cuda, sizeof(int) * size,
-					cudaMemcpyDeviceToHost);
-			for (int i = 0; (i < n) && (ea < N_ERRORS_LOG); i++) {
-				for (int j = 0; (j < n) && (ea < N_ERRORS_LOG); j++) {
-					if (output_itemsets[i + n * j]
-							!= gold_itemsets[i + n * j]) {
-						ea++;
-						char error_detail[200];
-						sprintf(error_detail,
-								"\n p: [%d, %d], r: %i, e: %i, error: %d\n", i,
-								j, output_itemsets[i + n * j],
-								gold_itemsets[i + n * j], ea);
-
-					}
-				}
-			}
-			t_ea += *kerrors;
-
-		}
-
-		if (*kerrors > 0 || (loop2 % 10 == 0)) {
-			printf("\ntest number: %d", loop2);
-			printf("\ntotal time: %f", total_time);
-			printf("\nerrors: %d", *kerrors);
-			printf("\ntotal errors: %d\n", t_ea);
-			if ((*kerrors != 0) && (*kerrors == old_ea)) {
-				old_ea = 0;
-				return;
-			}
-
-			old_ea = *kerrors;
-		} else {
-			printf(".");
-		}*/
 		cudaFree(referrence_cuda);
 		cudaFree(matrix_cuda);
 	}

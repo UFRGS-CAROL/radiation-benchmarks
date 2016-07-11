@@ -9,7 +9,7 @@ $(TARGET):
 	$(NVCC) needle.cu -o $(TARGET) -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda $(LOGS)
 
 generate: clean
-	$(NVCC) needle_generate.cu -o $(TARGET)_generate
+	$(NVCC) needle_generate.cu -o $(TARGET)_generate -std=c++11 
 
 clean:
 	rm -f *.o $(TARGET) *~ $(TARGET)_generate
