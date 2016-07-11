@@ -136,7 +136,7 @@ void UpdateTimestamp() {
 }
 
 void usage(int argc, char **argv) {
-	fprintf(stderr, "Usage: %s <max_rows/max_cols> <penalty> \n", argv[0]);
+	fprintf(stderr, "Usage: %s <max_rows/max_cols> <penalty> <input, if it exist>\n", argv[0]);
 	fprintf(stderr, "\t<dimension>  - x and y dimensions\n");
 	fprintf(stderr, "\t<penalty> - penalty(positive integer)\n");
 	exit(1);
@@ -153,11 +153,12 @@ void runTest(int argc, char** argv) {
 
 	// the lengths of the two sequences should be able to divided by 16.
 	// And at current stage  max_rows needs to equal max_cols
-	if (argc == 4) {
+	if (argc >= 3) {
 		max_rows = atoi(argv[1]);
 		max_cols = atoi(argv[1]);
 		penalty = atoi(argv[2]);
-		array_path = std::string(argv[3]);
+		if(argc > 3)
+			array_path = std::string(argv[3]);
 	} else {
 		usage(argc, argv);
 	}
