@@ -87,19 +87,9 @@ double mysecond() {
 	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
 }
 
-void ReadArrayFromFile(int* input_itemsets, int* gold_itemsets, char** argv, std::string array, std::string gold) {
+void ReadArrayFromFile(int* input_itemsets, int* gold_itemsets, char** argv, std::string filenameinput, std::string filenamegold) {
 	double time = mysecond();
 	int n = atoi(argv[1]) + 1;
-
-	//"/home/carol/TestGPU/GenerateNeedleArray/NeedleInput_"
-	std::string filenameinput(array);
-	//filenameinput += argv[1];
-	//filenameinput += ".array";
-	//"/home/carol/TestGPU/GenerateNeedleArray/NeedleGOLD_"
-	std::string filenamegold(gold);
-	//filenamegold += argv[1];
-	//filenamegold += ".array";
-
 	std::cout << "open array...";
 
 	FILE *f_a, *f_gold;
