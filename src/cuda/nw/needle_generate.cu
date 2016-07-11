@@ -88,7 +88,7 @@ void ReadArrayFromFile(int* input_itemsets,  char** argv, std::string array = ""
 
 	//"/home/carol/TestGPU/GenerateNeedleArray/NeedleInput_"
 	if(array == ""){
-		std::cout << "Input array path is null so I'm generating a random array  with size == " << n * n << endl;
+		std::cout << "Input array path is null so I'm generating a random array  with size == " << n * n << std::endl;
 		for(int i = 0; i < n * n; i++){
 			input_itemsets[i] = rand() % 100000 + 1;
 		}

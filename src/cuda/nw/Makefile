@@ -8,6 +8,8 @@ all: clean $(TARGET)
 $(TARGET):
 	$(NVCC) needle.cu -o $(TARGET) -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda $(LOGS)
 
+generate: clean
+	$(NVCC) needle_generate.cu -o $(TARGET)_generate
 
 clean:
-	rm -f *.o $(TARGET) *~
+	rm -f *.o $(TARGET) *~ $(TARGET)_generate
