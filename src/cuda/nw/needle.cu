@@ -93,12 +93,12 @@ void ReadArrayFromFile(int* input_itemsets, int* gold_itemsets, char** argv, std
 
 	//"/home/carol/TestGPU/GenerateNeedleArray/NeedleInput_"
 	std::string filenameinput(array);
-	filenameinput += argv[1];
-	filenameinput += ".array";
+	//filenameinput += argv[1];
+	//filenameinput += ".array";
 	//"/home/carol/TestGPU/GenerateNeedleArray/NeedleGOLD_"
 	std::string filenamegold(gold);
-	filenamegold += argv[1];
-	filenamegold += ".array";
+	//filenamegold += argv[1];
+	//filenamegold += ".array";
 
 	std::cout << "open array...";
 
@@ -144,7 +144,7 @@ void UpdateTimestamp() {
 }
 
 void usage(int argc, char **argv) {
-	fprintf(stderr, "Usage: %s <max_rows/max_cols> <penalty> \n", argv[0]);
+	fprintf(stderr, "Usage: %s <max_rows/max_cols> <penalty> <input_array> <gold_array>\n", argv[0]);
 	fprintf(stderr, "\t<dimension>  - x and y dimensions\n");
 	fprintf(stderr, "\t<penalty> - penalty(positive integer)\n");
 	exit(1);
