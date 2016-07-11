@@ -5,7 +5,7 @@
 
 #define SDATA( index)      CUT_BANK_CHECKER(sdata, index)
 
-__device__ __host__ int 
+__device__ __host__ int
 maximum( int a,
 		 int b,
 		 int c){
@@ -13,7 +13,7 @@ maximum( int a,
 int k;
 if( a <= b )
 k = b;
-else 
+else
 k = a;
 
 if( k <=c )
@@ -35,11 +35,11 @@ __global__ void GoldChkKernel(int *gk, int *ck, int n)
 
 __global__ void
 needle_cuda_shared_1(  int* referrence,
-			  int* matrix_cuda, 
+			  int* matrix_cuda,
 			  int cols,
 			  int penalty,
 			  int i,
-			  int block_width) 
+			  int block_width)
 {
   int bx = blockIdx.x;
   int tx = threadIdx.x;
@@ -69,40 +69,40 @@ needle_cuda_shared_1(  int* referrence,
   __syncthreads();
 
   temp[0][tx + 1] = matrix_cuda[index_n];
-  
+
   __syncthreads();
-  
+
 
   for( int m = 0 ; m < BLOCK_SIZE ; m++){
-   
+
 	  if ( tx <= m ){
 
 		  int t_index_x =  tx + 1;
 		  int t_index_y =  m - tx + 1;
 
           temp[t_index_y][t_index_x] = maximum( temp[t_index_y-1][t_index_x-1] + ref[t_index_y-1][t_index_x-1],
-		                                        temp[t_index_y][t_index_x-1]  - penalty, 
+		                                        temp[t_index_y][t_index_x-1]  - penalty,
 												temp[t_index_y-1][t_index_x]  - penalty);
 
-		  
-	  
+
+
 	  }
 
 	  __syncthreads();
-  
+
     }
 
  for( int m = BLOCK_SIZE - 2 ; m >=0 ; m--){
-   
+
 	  if ( tx <= m){
 
 		  int t_index_x =  tx + BLOCK_SIZE - m ;
 		  int t_index_y =  BLOCK_SIZE - tx;
 
           temp[t_index_y][t_index_x] = maximum( temp[t_index_y-1][t_index_x-1] + ref[t_index_y-1][t_index_x-1],
-		                                        temp[t_index_y][t_index_x-1]  - penalty, 
+		                                        temp[t_index_y][t_index_x-1]  - penalty,
 												temp[t_index_y-1][t_index_x]  - penalty);
-	   
+
 	  }
 
 	  __syncthreads();
@@ -116,12 +116,12 @@ needle_cuda_shared_1(  int* referrence,
 
 __global__ void
 needle_cuda_shared_2(  int* referrence,
-			  int* matrix_cuda, 
-			 
+			  int* matrix_cuda,
+
 			  int cols,
 			  int penalty,
 			  int i,
-			  int block_width) 
+			  int block_width)
 {
 
   int bx = blockIdx.x;
@@ -145,44 +145,44 @@ needle_cuda_shared_2(  int* referrence,
 
    if (tx == 0)
 		  temp[tx][0] = matrix_cuda[index_nw];
- 
- 
+
+
   temp[tx + 1][0] = matrix_cuda[index_w + cols * tx];
 
   __syncthreads();
 
   temp[0][tx + 1] = matrix_cuda[index_n];
-  
+
   __syncthreads();
-  
+
 
   for( int m = 0 ; m < BLOCK_SIZE ; m++){
-   
+
 	  if ( tx <= m ){
 
 		  int t_index_x =  tx + 1;
 		  int t_index_y =  m - tx + 1;
 
           temp[t_index_y][t_index_x] = maximum( temp[t_index_y-1][t_index_x-1] + ref[t_index_y-1][t_index_x-1],
-		                                        temp[t_index_y][t_index_x-1]  - penalty, 
-												temp[t_index_y-1][t_index_x]  - penalty);	  
-	  
+		                                        temp[t_index_y][t_index_x-1]  - penalty,
+												temp[t_index_y-1][t_index_x]  - penalty);
+
 	  }
 
 	  __syncthreads();
-  
+
     }
 
 
  for( int m = BLOCK_SIZE - 2 ; m >=0 ; m--){
-   
+
 	  if ( tx <= m){
 
 		  int t_index_x =  tx + BLOCK_SIZE - m ;
 		  int t_index_y =  BLOCK_SIZE - tx;
 
           temp[t_index_y][t_index_x] = maximum( temp[t_index_y-1][t_index_x-1] + ref[t_index_y-1][t_index_x-1],
-		                                        temp[t_index_y][t_index_x-1]  - penalty, 
+		                                        temp[t_index_y][t_index_x-1]  - penalty,
 												temp[t_index_y-1][t_index_x]  - penalty);
 
 

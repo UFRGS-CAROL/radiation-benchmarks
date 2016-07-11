@@ -110,7 +110,7 @@ void ReadArrayFromFile(int* input_itemsets,  char** argv, std::string array = ""
 			exit(-3);
 		}
 		std::cout << "read...";
-		for(int i = 0; i < n* n; i++) fscanf(f_a, "%d", &input_itemsets[i]);
+		for(int i = 0; i < n* n; i++) fscanf(f_a, "%d ", &input_itemsets[i]);
 		//fread(input_itemsets, sizeof(int) * n * n, 1, f_a);
 		fclose(f_a);
 	}
@@ -267,13 +267,15 @@ void runTest(int argc, char** argv) {
 		total_time += timeG;
 
 		std::cout << "Done in " << timeG << "s.\nSaving gold\n";
+		//retrieve information to save as gold
+		cudaError_t mcpy = cudaMemcpy(input_itemsets, matrix_cuda,  sizeof(int) * size, cudaMemcpyDeviceToHost );
 		FILE *f_a;
 		std::string gold_name("gold_" + std::to_string(n));
 
 		f_a = fopen(gold_name.c_str(), "w");
 		//fwrite(input_itemsets, sizeof(int) * n * n, 1, f_a);
 		for(int i = 0; i < n * n; i++){
-			fprintf(f_a, "%d ",  matrix_cuda[i]);
+			fprintf(f_a, "%d ",  input_itemsets[i]);
 		}
 		fclose(f_a);
 
