@@ -390,8 +390,7 @@ void runTest(int argc, char** argv) {
 							!= gold_itemsets[i + n * j]) {
 						ea++;
 						char error_detail[200];
-						sprintf(error_detail,
-								"\n p: [%d, %d], r: %i, e: %i, error: %d\n", i,
+						sprintf(error_detail," p: [%d, %d], r: %i, e: %i, error: %d", i,
 								j, output_itemsets[i + n * j],
 								gold_itemsets[i + n * j], ea);
 #ifdef LOGS
