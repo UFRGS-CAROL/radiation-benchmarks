@@ -92,6 +92,7 @@ void ReadArrayFromFile(int* input_itemsets,  char** argv, std::string array = ""
 		for(int i = 0; i < n * n; i++){
 			input_itemsets[i] = rand() % 100000 + 1;
 		}
+		printf("Passou\n");
 		FILE *f_a;
 		std::string filenameinput(array);
 		filenameinput += std::string("input_") + argv[1];
