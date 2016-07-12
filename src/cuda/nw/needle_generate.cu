@@ -72,6 +72,7 @@ int blosum62[24][24] = { { 4, -1, -2, -2, 0, -1, -1, 0, -2, -1, -1, -1, -1, -2,
 
 double gettime() {
 	struct timeval t;
+	
 	gettimeofday(&t, NULL);
 	return t.tv_sec + t.tv_usec * 1e-6;
 }
