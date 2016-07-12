@@ -134,7 +134,7 @@ void UpdateTimestamp() {
 }
 
 void usage(int argc, char **argv) {
-	fprintf(stderr, "Usage: %s <max_rows/max_cols> <penalty> <input_array> <gold_array>\n", argv[0]);
+	fprintf(stderr, "Usage: %s <max_rows/max_cols> <penalty> <input_array> <gold_array> <iterations>\n", argv[0]);
 	fprintf(stderr, "\t<dimension>  - x and y dimensions\n");
 	fprintf(stderr, "\t<penalty> - penalty(positive integer)\n");
 	exit(1);
@@ -146,17 +146,19 @@ void runTest(int argc, char** argv) {
 	int *matrix_cuda, *referrence_cuda;
 	int size;
 	int zero = 0;
+	int iterations = 1;
 	double timeG;
 	std::string array_path, gold_path;
 
 	// the lengths of the two sequences should be able to divided by 16.
 	// And at current stage  max_rows needs to equal max_cols
-	if (argc == 5) {
+	if (argc == 6) {
 		max_rows = atoi(argv[1]);
 		max_cols = atoi(argv[1]);
 		penalty = atoi(argv[2]);
 		array_path = std::string(argv[3]);
 		gold_path =  std::string(argv[4]);
+		iterations = atoi(argv[5]);
 	} else {
 		usage(argc, argv);
 	}
@@ -269,7 +271,7 @@ void runTest(int argc, char** argv) {
 		input_itemsets[j] = -j * penalty;
 
 	size = max_cols * max_rows;
-	for (int loop2 = 0; loop2 < ITERATIONS; loop2++) {
+	for (int loop2 = 0; loop2 < iterations; loop2++) {
 		//file = fopen(file_name, "a");
 		//std::cout << "Allocating matrixes on GPU...";
 		cudaMalloc((void**) &referrence_cuda, sizeof(int) * size);
