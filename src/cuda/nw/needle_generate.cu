@@ -10,6 +10,7 @@
 #include <sys/time.h>
 
 #define GCHK_BLOCK_SIZE 32
+#define MAX_VALUE_NW 23
 
 // includes, kernels
 #include "needle_kernel.cu"
@@ -90,7 +91,7 @@ void ReadArrayFromFile(int* input_itemsets,  char** argv, std::string array = ""
 	if(array == ""){
 		std::cout << "Input array path is null so I'm generating a random array  with size == " << n * n << std::endl;
 		for(int i = 0; i < n * n; i++){
-			input_itemsets[i] = rand() % 24 + 1; //24 is from blosum size
+			input_itemsets[i] = rand() % MAX_VALUE_NW + 1; //24 is from blosum size
 		}
 
 		FILE *f_a;
@@ -102,9 +103,6 @@ void ReadArrayFromFile(int* input_itemsets,  char** argv, std::string array = ""
 			exit(-3);
 		}
 		fwrite(input_itemsets, sizeof(int) * n * n, 1, f_a);
-		//for(int i = 0; i < n * n; i++){
-		//	fprintf(f_a, "%d ",  input_itemsets[i]);
-		//}
 		fclose(f_a);
 	}else{
 		FILE *f_a;
@@ -114,7 +112,6 @@ void ReadArrayFromFile(int* input_itemsets,  char** argv, std::string array = ""
 			exit(-3);
 		}
 		std::cout << "read...";
-		//for(int i = 0; i < n* n; i++) fscanf(f_a, "%d ", &input_itemsets[i]);
 		fread(input_itemsets, sizeof(int) * n * n, 1, f_a);
 		fclose(f_a);
 	}
@@ -278,9 +275,6 @@ void runTest(int argc, char** argv) {
 
 		f_a = fopen(gold_name.c_str(), "wb");
 		fwrite(input_itemsets, sizeof(int) * n * n, 1, f_a);
-		//for(int i = 0; i < n * n; i++){
-		//	fprintf(f_a, "%d ",  input_itemsets[i]);
-		//}
 		fclose(f_a);
 
 		cudaFree(referrence_cuda);

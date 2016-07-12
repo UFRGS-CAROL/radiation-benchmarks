@@ -25,7 +25,7 @@
 void runTest(int argc, char** argv);
 
 #define N_ERRORS_LOG 500
-#define ITERATIONS 1
+#define ITERATIONS 100
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
@@ -90,7 +90,7 @@ double mysecond() {
 void ReadArrayFromFile(int* input_itemsets, int* gold_itemsets, char** argv, std::string filenameinput, std::string filenamegold) {
 	double time = mysecond();
 	int n = atoi(argv[1]) + 1;
-	std::cout << "open array...";
+	std::cout << "open array...\n";
 
 	FILE *f_a, *f_gold;
 	f_a = fopen(filenameinput.c_str(), "rb");
@@ -256,6 +256,7 @@ void runTest(int argc, char** argv) {
 	 for (int j = 0 ; j < max_rows; j++)
 	 std::cout << "[" << i << "][" << j << "] : " << input_itemsets[i*max_cols+j] << "\t";
 	 }*/
+
 	for (int i = 1; i < max_cols; i++) {
 		for (int j = 1; j < max_rows; j++) {
 			referrence[i * max_cols + j] =
@@ -268,7 +269,6 @@ void runTest(int argc, char** argv) {
 		input_itemsets[j] = -j * penalty;
 
 	size = max_cols * max_rows;
-
 	for (int loop2 = 0; loop2 < ITERATIONS; loop2++) {
 		//file = fopen(file_name, "a");
 		//std::cout << "Allocating matrixes on GPU...";
@@ -280,6 +280,8 @@ void runTest(int argc, char** argv) {
 		}
 		//std::cout << "Done\n";
 		//std::cout << "Sending matrixes to GPU...";
+
+
 
 		timeG = mysecond();
 
@@ -372,8 +374,10 @@ void runTest(int argc, char** argv) {
 			log_error_detail(error_info);
 			int host_errors =0;
 #endif
+
 			cudaMemcpy(output_itemsets, matrix_cuda, sizeof(int) * size,
 					cudaMemcpyDeviceToHost);
+
 			for (int i = 0; (i < n) && (ea < N_ERRORS_LOG); i++) {
 				for (int j = 0; (j < n) && (ea < N_ERRORS_LOG); j++) {
 					if (output_itemsets[i + n * j]
