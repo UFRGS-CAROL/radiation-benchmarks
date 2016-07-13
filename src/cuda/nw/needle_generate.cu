@@ -10,7 +10,7 @@
 #include <sys/time.h>
 
 #define GCHK_BLOCK_SIZE 32
-#define MAX_VALUE_NW 23
+#define MAX_VALUE_NW 24
 
 // includes, kernels
 #include "needle_kernel.cu"
@@ -72,6 +72,7 @@ int blosum62[24][24] = { { 4, -1, -2, -2, 0, -1, -1, 0, -2, -1, -1, -1, -1, -2,
 
 double gettime() {
 	struct timeval t;
+	
 	gettimeofday(&t, NULL);
 	return t.tv_sec + t.tv_usec * 1e-6;
 }
@@ -91,7 +92,7 @@ void ReadArrayFromFile(int* input_itemsets,  char** argv, std::string array = ""
 	if(array == ""){
 		std::cout << "Input array path is null so I'm generating a random array  with size == " << n * n << std::endl;
 		for(int i = 0; i < n * n; i++){
-			input_itemsets[i] = rand() % MAX_VALUE_NW + 1; //24 is from blosum size
+			input_itemsets[i] = rand() % MAX_VALUE_NW; //24 is from blosum size
 		}
 
 		FILE *f_a;
