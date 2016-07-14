@@ -796,5 +796,8 @@ int main(int argc, char *argv[])
     // profiled. Calling cudaDeviceReset causes all profile data to be
     // flushed before the application exits
     checkCudaErrors(cudaDeviceReset());
+ #ifdef LOGS
+	end_log_file();
+#endif
     exit(EXIT_SUCCESS);
 }
