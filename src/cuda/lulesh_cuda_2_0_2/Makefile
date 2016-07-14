@@ -6,15 +6,31 @@ FLAGS		= -arch=sm_35
 DFLAGS	= $(MPI_FLAGS) -lineinfo
 RFLAGS 	= $(MPI_FLAGS) -O3 -DNDEBUG 
 
+TARGET=lulesh
+
+ifeq ($(dbg), 1)
+	DEBUG_FLAG= -g -G
+endif
+
+LOG_FLAGS=
+ifeq ($(logs), 1)
+	LOGHELPER_INC=../../include/
+	LOGHELPER_LIB=../../include/
+	LOG_FLAGS += -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS
+endif 
+
+
 #SILO_INCLUDES := /usr/local/silo-4.8/include
 #SILO_LIBS := /usr/local/silo-4.8/lib
 
-LINKFLAGS = -lmpich -L$(MPICH_DIR)/lib 
+#LINKFLAGS = -lmpich -L$(MPICH_DIR)/lib 
 #LINKFLAGS += -L$(SILO_LIBS) -lsilo
 
 #INC_SILO:= -I$(SILO_INCLUDES)
 
-all: release 
+#all: release 
+all: clean $(TARGET) #generate
+
 
 debug: LINKFLAGS += 
 
@@ -24,8 +40,8 @@ debug: 		FLAGS += $(DFLAGS)
 release: lulesh
 debug: lulesh
 
-lulesh: allocator.o lulesh.o lulesh-comms.o lulesh-comms-gpu.o
-	$(NVCC) $(LINKFLAGS) allocator.o lulesh.o lulesh-comms.o lulesh-comms-gpu.o -o lulesh
+$(TARGET): allocator.o lulesh.o lulesh-comms.o lulesh-comms-gpu.o
+	$(NVCC) $(LINKFLAGS) allocator.o lulesh.o lulesh-comms.o lulesh-comms-gpu.o -o $(TARGET)
 
 allocator.o: allocator.cu vector.h
 	$(NVCC) $(FLAGS) allocator.cu -I ./ -c -o allocator.o
