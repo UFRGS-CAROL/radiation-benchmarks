@@ -16,7 +16,7 @@ LOG_FLAGS=
 ifeq ($(logs), 1)
 	LOGHELPER_INC=../../include/
 	LOGHELPER_LIB=../../include/
-	LOG_FLAGS += -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS
+	LOG_FLAGS += -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS -std=c++11 
 endif 
 
 

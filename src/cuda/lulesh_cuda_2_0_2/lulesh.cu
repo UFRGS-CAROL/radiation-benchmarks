@@ -86,6 +86,7 @@
 
 #ifdef LOGS
 #include "log_helper.h"
+#define ERROR_THRESHOLD 0.0000001
 #endif
 
 /****************************************************/
@@ -4609,7 +4610,12 @@ void InitMeshDecomp(Int_t numRanks, Int_t myRank, Int_t *col, Int_t *row,
 }
 
 void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
-		Int_t nx, Int_t numRanks) {
+		Int_t nx, Int_t numRanks
+#if LOGS
+		,int generate, Real_t *gold_input, char *gold_path_generate) {
+#else
+	) {
+#endif
 	size_t free_mem, total_mem, used_mem;
 	cudaMemGetInfo(&free_mem, &total_mem);
 	used_mem = total_mem - free_mem;
@@ -4642,6 +4648,19 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 	Real_t *e_all = new Real_t[nx * nx];
 	cudaMemcpy(e_all, locDom.e.raw(), nx * nx * sizeof(Real_t),
 			cudaMemcpyDeviceToHost);
+#if LOGS
+	if(generate){
+		FILE *gold = fopen(gold_path_generate, "wb");
+		if(gold == NULL){
+			fprintf(stderr, "Error on opening gold file");
+			exit(LFileError);
+		}
+		fwrite(&e_zero, sizeof(Real_t), 1, gold);
+		fwrite(e_all, sizeof(Real_t), sizeof(Real_t) * nx * nx, gold);
+		fclose(gold);
+	}
+#endif
+
 	for (Index_t j = 0; j < nx; ++j) {
 		for (Index_t k = j + 1; k < nx; ++k) {
 			Real_t AbsDiff = FABS(e_all[j * nx + k] - e_all[k * nx + j]);
@@ -4656,6 +4675,25 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 				MaxRelDiff = RelDiff;
 		}
 	}
+
+#if LOGS
+	//i will check on more position for energy verification
+	int kernel_errors = 0;
+	for (Index_t j = 0; j <= nx; ++j) {
+		for (Index_t k = 0; k <= nx; ++k) {
+			Real_t AbsDiff = FABS(e_all[j * nx + k] - gold_input[j * nx + k]);
+			if (AbsDiff > ERROR_THRESHOLD){
+				kernel_errors++;
+				std::string error_detail = "error matrix position [" + std::to_string(j) + "," + std::to_string(k) + "] shoud_be:"+
+						std::to_string(gold_input[j * nx + k]) +" but_it_is:" + std::to_string(e_all[j * nx + k]);
+				char *temp =error_detail.c_str();
+				log_error_detail(temp);
+			}
+		}
+	}
+	log_error_count(kernel_errors);
+#endif
+
 	delete e_all;
 
 	// Quick symmetry check
