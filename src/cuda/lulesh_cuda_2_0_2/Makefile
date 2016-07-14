@@ -29,7 +29,7 @@ endif
 #INC_SILO:= -I$(SILO_INCLUDES)
 
 #all: release 
-all: clean $(TARGET) #generate
+all: $(TARGET) #generate
 
 
 debug: LINKFLAGS += 
@@ -41,13 +41,13 @@ release: lulesh
 debug: lulesh
 
 $(TARGET): allocator.o lulesh.o lulesh-comms.o lulesh-comms-gpu.o
-	$(NVCC) $(LINKFLAGS) allocator.o lulesh.o lulesh-comms.o lulesh-comms-gpu.o -o $(TARGET)
+	$(NVCC) $(LOG_FLAGS) allocator.o lulesh.o lulesh-comms.o lulesh-comms-gpu.o -o $(TARGET)
 
 allocator.o: allocator.cu vector.h
 	$(NVCC) $(FLAGS) allocator.cu -I ./ -c -o allocator.o
 
 lulesh.o: lulesh.cu util.h vector.h allocator.h
-	$(NVCC) $(FLAGS) lulesh.cu -I ./  $(INC_SILO) -c -o lulesh.o
+	$(NVCC) $(LINKFLAGS) $(LOG_FLAGS) $(FLAGS) lulesh.cu -I ./  $(INC_SILO) -c -o lulesh.o
 
 lulesh-comms.o: lulesh-comms.cu
 	$(NVCC) $(FLAGS) lulesh-comms.cu -I ./ -c -o lulesh-comms.o
