@@ -92,31 +92,31 @@
 /****************************************************/
 /* Allow flexibility for arithmetic representations */
 /****************************************************/
-__device__      inline real4 SQRT(real4 arg) {
+__device__       inline real4 SQRT(real4 arg) {
 	return sqrtf(arg);
 }
-__device__      inline real8 SQRT(real8 arg) {
+__device__       inline real8 SQRT(real8 arg) {
 	return sqrt(arg);
 }
 
-__device__      inline real4 CBRT(real4 arg) {
+__device__       inline real4 CBRT(real4 arg) {
 	return cbrtf(arg);
 }
-__device__      inline real8 CBRT(real8 arg) {
+__device__       inline real8 CBRT(real8 arg) {
 	return cbrt(arg);
 }
 
-__device__      __host__      inline real4 FABS(real4 arg) {
+__device__       __host__       inline real4 FABS(real4 arg) {
 	return fabsf(arg);
 }
-__device__      __host__      inline real8 FABS(real8 arg) {
+__device__       __host__       inline real8 FABS(real8 arg) {
 	return fabs(arg);
 }
 
-__device__      inline real4 FMAX(real4 arg1, real4 arg2) {
+__device__       inline real4 FMAX(real4 arg1, real4 arg2) {
 	return fmaxf(arg1, arg2);
 }
-__device__      inline real8 FMAX(real8 arg1, real8 arg2) {
+__device__       inline real8 FMAX(real8 arg1, real8 arg2) {
 	return fmax(arg1, arg2);
 }
 
@@ -192,8 +192,8 @@ void SumOverNodesShfl(Real_t& val) {
 	val += utils::shfl_xor(val, 1, 8);
 }
 
-__host__      __device__
-     static __forceinline__ Real_t CalcElemVolume(
+__host__       __device__
+      static __forceinline__ Real_t CalcElemVolume(
 		const Real_t x0, const Real_t x1, const Real_t x2, const Real_t x3,
 		const Real_t x4, const Real_t x5, const Real_t x6, const Real_t x7,
 		const Real_t y0, const Real_t y1, const Real_t y2, const Real_t y3,
@@ -269,8 +269,8 @@ __host__      __device__
 	return volume;
 }
 
-__host__      __device__
-     static __forceinline__ Real_t CalcElemVolume(
+__host__       __device__
+      static __forceinline__ Real_t CalcElemVolume(
 		const Real_t x[8], const Real_t y[8], const Real_t z[8]) {
 	return CalcElemVolume(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], y[0],
 			y[1], y[2], y[3], y[4], y[5], y[6], y[7], z[0], z[1], z[2], z[3],
@@ -3060,7 +3060,7 @@ void LagrangeNodal(Domain *domain) {
 }
 
 __device__
-     static inline Real_t AreaFace(const Real_t x0, const Real_t x1,
+      static inline Real_t AreaFace(const Real_t x0, const Real_t x1,
 		const Real_t x2, const Real_t x3, const Real_t y0, const Real_t y1,
 		const Real_t y2, const Real_t y3, const Real_t z0, const Real_t z1,
 		const Real_t z2, const Real_t z3) {
@@ -3077,7 +3077,7 @@ __device__
 }
 
 __device__
-     static inline Real_t CalcElemCharacteristicLength(const Real_t x[8],
+      static inline Real_t CalcElemCharacteristicLength(const Real_t x[8],
 		const Real_t y[8], const Real_t z[8], const Real_t volume) {
 	Real_t a, charLength = Real_t(0.0);
 
@@ -3890,7 +3890,7 @@ void CalcEnergyForElems_device(Real_t& p_new, Real_t& e_new, Real_t& q_new,
 	return;
 }
 
-__device__      inline Index_t giveMyRegion(const Index_t* regCSR, const Index_t i,
+__device__       inline Index_t giveMyRegion(const Index_t* regCSR, const Index_t i,
 		const Index_t numReg) {
 
 	for (Index_t reg = 0; reg < numReg - 1; reg++)
@@ -4396,10 +4396,10 @@ void LagrangeLeapFrog(Domain* domain) {
 void printUsage(char* argv[]) {
 	printf("Usage: \n");
 	printf(
-			"Unstructured grid:  %s -u <file.lmesh> -i <log iterations> -g <to generate gold> \n",
+			"Unstructured grid:  %s -u <file.lmesh> -i <log iterations> -g <to generate gold 1, and for read gold file 0> <gold_path>\n",
 			argv[0]);
 	printf(
-			"Structured grid:    %s -s numEdgeElems  -i <log iterations> -g <to generate gold> \n",
+			"Structured grid:    %s -s numEdgeElems  -i <log iterations> -g <to generate gold 1, and for read gold file 0> <gold_path>\n",
 			argv[0]);
 	printf("\nExamples:\n");
 	printf("%s -s 45 -i 100 -g\n", argv[0]);
@@ -4526,22 +4526,22 @@ void DumpDomain(Domain *domain)
 }
 #endif
 
-void write_solution(Domain* locDom) {
+void write_solution(Domain* locDom, std::string file_path) {
 	Vector_h<Real_t> x_h = locDom->x;
 	Vector_h<Real_t> y_h = locDom->y;
 	Vector_h<Real_t> z_h = locDom->z;
 
-//  printf("Writing solution to file xyz.asc\n");
+	printf("Writing solution to file %s\n", file_path.c_str());
 	std::stringstream filename;
-	filename << "xyz.asc";
+	filename << file_path;
 
 	FILE *fout = fopen(filename.str().c_str(), "wb");
-
+	fprintf(fout, "%d\n", locDom->numNode);
 	for (Index_t i = 0; i < locDom->numNode; i++) {
-		fprintf(fout, "%10d\n", i);
-		fprintf(fout, "%.10f\n", x_h[i]);
-		fprintf(fout, "%.10f\n", y_h[i]);
-		fprintf(fout, "%.10f\n", z_h[i]);
+		fprintf(fout, "%d\n", i);
+		fprintf(fout, "%lf\n", x_h[i]);
+		fprintf(fout, "%lf\n", y_h[i]);
+		fprintf(fout, "%lf\n", z_h[i]);
 	}
 	fclose(fout);
 }
@@ -4612,9 +4612,9 @@ void InitMeshDecomp(Int_t numRanks, Int_t myRank, Int_t *col, Int_t *row,
 void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 		Int_t nx, Int_t numRanks
 #if LOGS
-		,int generate, Real_t *gold_input, char *gold_path_generate) {
+		,int generate, Real_t *gold_input, std::string(gold_path_generate)) {
 #else
-	) {
+		) {
 #endif
 	size_t free_mem, total_mem, used_mem;
 	cudaMemGetInfo(&free_mem, &total_mem);
@@ -4648,19 +4648,19 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 	Real_t *e_all = new Real_t[nx * nx];
 	cudaMemcpy(e_all, locDom.e.raw(), nx * nx * sizeof(Real_t),
 			cudaMemcpyDeviceToHost);
-#if LOGS
-	if(generate){
-		FILE *gold = fopen(gold_path_generate, "wb");
-		if(gold == NULL){
-			fprintf(stderr, "Error on opening gold file");
-			exit(LFileError);
-		}
-		fwrite(&e_zero, sizeof(Real_t), 1, gold);
-		fwrite(e_all, sizeof(Real_t), sizeof(Real_t) * nx * nx, gold);
-		fclose(gold);
-	}
-#endif
+//#if LOGS
+//	if(generate){
+//		FILE *gold = fopen(gold_path_generate, "wb");
+//		if(gold == NULL){
+//			fprintf(stderr, "Error on opening gold file");
+//			exit(LFileError);
+//		}
+//		fwrite(e_all, sizeof(Real_t), sizeof(Real_t) * nx * nx, gold);
+//		fclose(gold);
+//	}
+//#endif
 
+	printf("foi aqui muito antes\n");
 	for (Index_t j = 0; j < nx; ++j) {
 		for (Index_t k = j + 1; k < nx; ++k) {
 			Real_t AbsDiff = FABS(e_all[j * nx + k] - e_all[k * nx + j]);
@@ -4677,21 +4677,47 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 	}
 
 #if LOGS
-	//i will check on more position for energy verification
-	int kernel_errors = 0;
-	for (Index_t j = 0; j <= nx; ++j) {
-		for (Index_t k = 0; k <= nx; ++k) {
-			Real_t AbsDiff = FABS(e_all[j * nx + k] - gold_input[j * nx + k]);
-			if (AbsDiff > ERROR_THRESHOLD){
+	if(generate == 0) {
+		int i, kernel_errors = 0;
+		for (Index_t j = 0; j < locDom.numNode; ++j) {
+			Real_t x = locDom.x[j];
+			Real_t y = locDom.y[j];
+			Real_t z = locDom.z[j];
+
+			if(gold_input + j == NULL) {
 				kernel_errors++;
-				std::string error_detail = "error matrix position [" + std::to_string(j) + "," + std::to_string(k) + "] shoud_be:"+
-						std::to_string(gold_input[j * nx + k]) +" but_it_is:" + std::to_string(e_all[j * nx + k]);
-				char *temp =error_detail.c_str();
+				std::string str = "error:out of bounds";
+				char *temp = &str[0];
+				log_error_detail(temp);
+				break;
+			}
+
+			Real_t abs_diff_x = FABS(x - gold_input[i]);
+
+			Real_t abs_diff_y = FABS(y - gold_input[i + 1]);
+
+			Real_t abs_diff_z = FABS(x - gold_input[i + 2]);
+
+			if((abs_diff_x > ERROR_THRESHOLD) || (abs_diff_y > ERROR_THRESHOLD) || (abs_diff_z > ERROR_THRESHOLD)) {
+				kernel_errors++;
+				std::string j_str = std::to_string(j);
+				std::string x_gold = std::to_string(gold_input[j]);
+				std::string y_gold = std::to_string(gold_input[j + 1]);
+				std::string z_gold = std::to_string(gold_input[j + 2]);
+				std::string x_str = std::to_string(x);
+				std::string y_str = std::to_string(y);
+				std::string z_str = std::to_string(z);
+
+				std::string str = "error:sdc x_gold[" + j_str + "]=" + x_gold + "x_output["+ j_str + "]=" + x_str +
+				" y_gold[" + j_str + "]=" + y_gold + " y_output["+ j_str +"]=" + y_str +" z_gold[" +j_str + "]=" +
+				z_gold + " z_output["+j_str + "]=" + z_str;
+				char *temp = &str[0];
 				log_error_detail(temp);
 			}
+
 		}
+		log_error_count(kernel_errors);
 	}
-	log_error_count(kernel_errors);
 #endif
 
 	delete e_all;
@@ -4707,13 +4733,31 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 	printf("Grind time (us/z/c)  = %10.8g (per dom)  (%10.8g overall)\n",
 			grindTime1, grindTime2);
 	printf("FOM                  = %10.8g (z/s)\n\n", 1000.0 / grindTime2); // zones per second
-
-	bool write_solution_flag = true;
-	if (write_solution_flag) {
-		write_solution(&locDom);
-	}
+#if LOGS
+			if (generate) {
+				write_solution(&locDom, gold_path_generate);
+			}
+#endif
 
 	return;
+}
+
+Real_t *read_real_t_file(char *input_path) {
+	FILE *ipf = fopen(input_path, "rb");
+	if (!(ipf))
+		exit(-1);
+
+	int i, size;
+	fscanf(ipf, "%d\n", &size);
+	double *temp = new Real_t[size * 3];
+	for (Index_t j = 0; j < size; ++j) {
+		fscanf(ipf, "%d\n", &i);
+		fscanf(ipf, "%lf\n", &temp[j]);
+		fscanf(ipf, "%lf\n", &temp[j + 1]);
+		fscanf(ipf, "%lf\n", &temp[j + 2]);
+	}
+	fclose(ipf);
+	return temp;
 }
 
 int main(int argc, char *argv[]) {
@@ -4724,16 +4768,12 @@ int main(int argc, char *argv[]) {
 
 	//argv[1] -u argv[2] u value
 	//argv[3] -i argv[4] i value
-	//argv[5] -g
-	if (argc == 5) { //there is -g
+	//argv[5] -g argv[6] g value (1 or 0) argv[7] gold path
+	int generate = 0;
+	char *gold_path;
+	if (argc == 6) { //there is -g
 		if (strcmp(argv[1], "-u") != 0 && strcmp(argv[1], "-s") != 0
 				&& strcmp(argv[3], "-i") != 0 && strcmp(argv[5], "-g") != 0) {
-			printUsage(argv);
-			exit(LFileError);
-		}
-	} else {
-		if (strcmp(argv[1], "-u") != 0 && strcmp(argv[1], "-s") != 0
-				&& strcmp(argv[3], "-i") != 0) {
 			printUsage(argv);
 			exit(LFileError);
 		}
@@ -4743,6 +4783,10 @@ int main(int argc, char *argv[]) {
 	if (strcmp(argv[1], "-s") == 0) {
 		num_iters = atoi(argv[2]);
 	}
+
+	generate = atoi(argv[6]);
+	gold_path = argv[7];
+	Real_t *gold_values;
 
 	bool structured = (strcmp(argv[1], "-s") == 0);
 
@@ -4770,6 +4814,10 @@ int main(int argc, char *argv[]) {
 	snprintf(test_info, 90, "structured:%s size:%d iterations:%d", (structured ? "YES":"NO"),nx, num_iters);
 	start_log_file("cudaLulesh", test_info);
 #endif
+	if (generate == 0) {
+		gold_values = read_real_t_file(gold_path);
+	}else
+		max_log_iterations = 0;
 	for (int log_it = 0; log_it <= max_log_iterations; log_it++) {
 		Domain *locDom;
 
@@ -4878,20 +4926,25 @@ int main(int argc, char *argv[]) {
 		cudaProfilerStop();
 
 		if (myRank == 0)
-			VerifyAndWriteFinalOutput(elapsed_timeG, *locDom, its, nx,
-					numRanks);
+			VerifyAndWriteFinalOutput(elapsed_timeG, *locDom, its, nx, numRanks
+#if LOGS
+					,generate, gold_values,std::string(gold_path));
+#else
+					);
+#endif
 
 #ifdef SAMI
 		DumpDomain(locDom);
 #endif
 	}
+	if (generate == 0) delete gold_values;
 	cudaDeviceReset();
 
 #if USE_MPI
 	MPI_Finalize();
 #endif
 #ifdef LOGS
-		end_log_file();
+	end_log_file();
 #endif
 	return 0;
 }
