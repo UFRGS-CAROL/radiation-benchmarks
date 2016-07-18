@@ -86,37 +86,37 @@
 
 #ifdef LOGS
 #include "log_helper.h"
-#define ERROR_THRESHOLD 0.0000001
+#define ERROR_THRESHOLD 0.0
 #endif
 
 /****************************************************/
 /* Allow flexibility for arithmetic representations */
 /****************************************************/
-__device__       inline real4 SQRT(real4 arg) {
+__device__          inline real4 SQRT(real4 arg) {
 	return sqrtf(arg);
 }
-__device__       inline real8 SQRT(real8 arg) {
+__device__          inline real8 SQRT(real8 arg) {
 	return sqrt(arg);
 }
 
-__device__       inline real4 CBRT(real4 arg) {
+__device__          inline real4 CBRT(real4 arg) {
 	return cbrtf(arg);
 }
-__device__       inline real8 CBRT(real8 arg) {
+__device__          inline real8 CBRT(real8 arg) {
 	return cbrt(arg);
 }
 
-__device__       __host__       inline real4 FABS(real4 arg) {
+__device__          __host__          inline real4 FABS(real4 arg) {
 	return fabsf(arg);
 }
-__device__       __host__       inline real8 FABS(real8 arg) {
+__device__          __host__          inline real8 FABS(real8 arg) {
 	return fabs(arg);
 }
 
-__device__       inline real4 FMAX(real4 arg1, real4 arg2) {
+__device__          inline real4 FMAX(real4 arg1, real4 arg2) {
 	return fmaxf(arg1, arg2);
 }
-__device__       inline real8 FMAX(real8 arg1, real8 arg2) {
+__device__          inline real8 FMAX(real8 arg1, real8 arg2) {
 	return fmax(arg1, arg2);
 }
 
@@ -192,8 +192,8 @@ void SumOverNodesShfl(Real_t& val) {
 	val += utils::shfl_xor(val, 1, 8);
 }
 
-__host__       __device__
-      static __forceinline__ Real_t CalcElemVolume(
+__host__          __device__
+         static __forceinline__ Real_t CalcElemVolume(
 		const Real_t x0, const Real_t x1, const Real_t x2, const Real_t x3,
 		const Real_t x4, const Real_t x5, const Real_t x6, const Real_t x7,
 		const Real_t y0, const Real_t y1, const Real_t y2, const Real_t y3,
@@ -269,8 +269,8 @@ __host__       __device__
 	return volume;
 }
 
-__host__       __device__
-      static __forceinline__ Real_t CalcElemVolume(
+__host__          __device__
+         static __forceinline__ Real_t CalcElemVolume(
 		const Real_t x[8], const Real_t y[8], const Real_t z[8]) {
 	return CalcElemVolume(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], y[0],
 			y[1], y[2], y[3], y[4], y[5], y[6], y[7], z[0], z[1], z[2], z[3],
@@ -315,7 +315,8 @@ void cuda_init(int rank) {
 	}
 
 #if CUDART_VERSION < 5000
-	fprintf(stderr,"cuda_init(): This implementation of Lulesh uses texture objects, which is requires Cuda 5.0+.\n");
+	fprintf(stderr,
+			"cuda_init(): This implementation of Lulesh uses texture objects, which is requires Cuda 5.0+.\n");
 	exit(1);
 #endif
 
@@ -3060,7 +3061,7 @@ void LagrangeNodal(Domain *domain) {
 }
 
 __device__
-      static inline Real_t AreaFace(const Real_t x0, const Real_t x1,
+         static inline Real_t AreaFace(const Real_t x0, const Real_t x1,
 		const Real_t x2, const Real_t x3, const Real_t y0, const Real_t y1,
 		const Real_t y2, const Real_t y3, const Real_t z0, const Real_t z1,
 		const Real_t z2, const Real_t z3) {
@@ -3077,7 +3078,7 @@ __device__
 }
 
 __device__
-      static inline Real_t CalcElemCharacteristicLength(const Real_t x[8],
+         static inline Real_t CalcElemCharacteristicLength(const Real_t x[8],
 		const Real_t y[8], const Real_t z[8], const Real_t volume) {
 	Real_t a, charLength = Real_t(0.0);
 
@@ -3890,7 +3891,7 @@ void CalcEnergyForElems_device(Real_t& p_new, Real_t& e_new, Real_t& q_new,
 	return;
 }
 
-__device__       inline Index_t giveMyRegion(const Index_t* regCSR, const Index_t i,
+__device__          inline Index_t giveMyRegion(const Index_t* regCSR, const Index_t i,
 		const Index_t numReg) {
 
 	for (Index_t reg = 0; reg < numReg - 1; reg++)
@@ -4099,8 +4100,8 @@ void CalcTimeConstraintsForElems_kernel(Index_t length, Real_t qqc2,
 	int tid = threadIdx.x;
 	int i = blockDim.x * blockIdx.x + tid;
 
-	__shared__ volatile Real_t s_mindthydro[block_size];
-	__shared__ volatile Real_t s_mindtcourant[block_size];
+	__shared__  volatile Real_t s_mindthydro[block_size];
+	__shared__  volatile Real_t s_mindtcourant[block_size];
 
 	Real_t mindthydro = Real_t(1.0e+20);
 	Real_t mindtcourant = Real_t(1.0e+20);
@@ -4536,13 +4537,24 @@ void write_solution(Domain* locDom, std::string file_path) {
 	filename << file_path;
 
 	FILE *fout = fopen(filename.str().c_str(), "wb");
-	fprintf(fout, "%d\n", locDom->numNode);
-	for (Index_t i = 0; i < locDom->numNode; i++) {
-		fprintf(fout, "%d\n", i);
-		fprintf(fout, "%lf\n", x_h[i]);
-		fprintf(fout, "%lf\n", y_h[i]);
-		fprintf(fout, "%lf\n", z_h[i]);
-	}
+//	fprintf(fout, "%d\n", locDom->numNode);
+//	for (Index_t i = 0; i < locDom->numNode; i++) {
+//		fprintf(fout, "%d\n", i);
+//		fprintf(fout, "%lf\n", x_h[i]);
+//		fprintf(fout, "%lf\n", y_h[i]);
+//		fprintf(fout, "%lf\n", z_h[i]);
+//	}
+	//int *numnode = &locDom->numNode;
+	//fwrite(&numnode, sizeof(Index_t), 1,fout);
+	int siz = sizeof(size_t);
+	fwrite(&(x_h.bytes()), sizeof(size_t), 1, fout);
+	fwrite(&(y_h.bytes()), sizeof(size_t), 1, fout);
+	fwrite(&(z_h.bytes()), sizeof(size_t), 1, fout);
+
+	fwrite(x_h.raw(), x_h.bytes(), 1, fout);
+	fwrite(y_h.raw(), y_h.bytes(), 1, fout);
+	fwrite(z_h.raw(), z_h.bytes(), 1, fout);
+	printf("File writed\n");
 	fclose(fout);
 }
 
@@ -4612,7 +4624,7 @@ void InitMeshDecomp(Int_t numRanks, Int_t myRank, Int_t *col, Int_t *row,
 void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 		Int_t nx, Int_t numRanks
 #if LOGS
-		,int generate, Real_t *gold_input, std::string(gold_path_generate)) {
+		,int generate, Real_t **gold_input, std::string(gold_path_generate)) {
 #else
 		) {
 #endif
@@ -4660,7 +4672,7 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 //	}
 //#endif
 
-	printf("foi aqui muito antes\n");
+	//printf("foi aqui muito antes\n");
 	for (Index_t j = 0; j < nx; ++j) {
 		for (Index_t k = j + 1; k < nx; ++k) {
 			Real_t AbsDiff = FABS(e_all[j * nx + k] - e_all[k * nx + j]);
@@ -4692,25 +4704,30 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 				break;
 			}
 
-			Real_t abs_diff_x = FABS(x - gold_input[i]);
+			Real_t x_gold_real = gold_input[0][j];
+			Real_t y_gold_real = gold_input[1][j];
+			Real_t z_gold_real = gold_input[2][j];
 
-			Real_t abs_diff_y = FABS(y - gold_input[i + 1]);
+			Real_t abs_diff_x = FABS(x - x_gold_real);
 
-			Real_t abs_diff_z = FABS(x - gold_input[i + 2]);
+			Real_t abs_diff_y = FABS(y - y_gold_real);
 
-			if((abs_diff_x > ERROR_THRESHOLD) || (abs_diff_y > ERROR_THRESHOLD) || (abs_diff_z > ERROR_THRESHOLD)) {
+			Real_t abs_diff_z = FABS(x - z_gold_real);
+
+			if((abs_diff_x != ERROR_THRESHOLD) || (abs_diff_y != ERROR_THRESHOLD) || (abs_diff_z != ERROR_THRESHOLD)) {
 				kernel_errors++;
 				std::string j_str = std::to_string(j);
-				std::string x_gold = std::to_string(gold_input[j]);
-				std::string y_gold = std::to_string(gold_input[j + 1]);
-				std::string z_gold = std::to_string(gold_input[j + 2]);
+				std::string x_gold = std::to_string(x_gold_real);
+				std::string y_gold = std::to_string(y_gold_real);
+				std::string z_gold = std::to_string(z_gold_real);
 				std::string x_str = std::to_string(x);
 				std::string y_str = std::to_string(y);
 				std::string z_str = std::to_string(z);
 
-				std::string str = "error:sdc x_gold[" + j_str + "]=" + x_gold + "x_output["+ j_str + "]=" + x_str +
-				" y_gold[" + j_str + "]=" + y_gold + " y_output["+ j_str +"]=" + y_str +" z_gold[" +j_str + "]=" +
-				z_gold + " z_output["+j_str + "]=" + z_str;
+				std::string str = std::string("error:sdc") +
+				" x_gold[" + j_str + "]=" + x_gold + " x_output[" + j_str + "]=" + x_str +
+				" y_gold[" + j_str + "]=" + y_gold + " y_output[" + j_str + "]=" + y_str +
+				" z_gold[" + j_str + "]=" + z_gold + " z_output[" + j_str + "]=" + z_str;
 				char *temp = &str[0];
 				log_error_detail(temp);
 			}
@@ -4742,20 +4759,36 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 	return;
 }
 
-Real_t *read_real_t_file(char *input_path) {
+Real_t **read_real_t_file(char *input_path) {
 	FILE *ipf = fopen(input_path, "rb");
 	if (!(ipf))
 		exit(-1);
 
-	int i, size;
-	fscanf(ipf, "%d\n", &size);
-	double *temp = new Real_t[size * 3];
-	for (Index_t j = 0; j < size; ++j) {
-		fscanf(ipf, "%d\n", &i);
-		fscanf(ipf, "%lf\n", &temp[j]);
-		fscanf(ipf, "%lf\n", &temp[j + 1]);
-		fscanf(ipf, "%lf\n", &temp[j + 2]);
-	}
+	int size_x, size_y, size_z;
+	//fscanf(ipf, "%d\n", &size);
+	fread(&size_x, sizeof(size_t), 1, ipf);
+	fread(&size_y, sizeof(size_t), 1, ipf);
+	fread(&size_z, sizeof(size_t), 1, ipf);
+
+	Real_t **temp = new Real_t*[3];
+	temp[0] = new Real_t[size_x];
+	temp[1] = new Real_t[size_y];
+	temp[2] = new Real_t[size_z];
+//	for (Index_t j = 0; j < size; ++j) {
+//		Real_t x, y, z;
+//		fscanf(ipf, "%d\n", &i);
+//		fscanf(ipf, "%lf\n", &x);
+//		fscanf(ipf, "%lf\n", &y);
+//		fscanf(ipf, "%lf\n", &z);
+//		temp[0][j] = x;
+//		temp[1][j] = y;
+//		temp[2][j] = z;
+//	}
+
+	fread(temp[0], size_x, 1, ipf);
+	fread(temp[1], size_y, 1, ipf);
+	fread(temp[2], size_z, 1, ipf);
+
 	fclose(ipf);
 	return temp;
 }
@@ -4786,7 +4819,7 @@ int main(int argc, char *argv[]) {
 
 	generate = atoi(argv[6]);
 	gold_path = argv[7];
-	Real_t *gold_values;
+	Real_t **gold_values;
 
 	bool structured = (strcmp(argv[1], "-s") == 0);
 
@@ -4816,8 +4849,9 @@ int main(int argc, char *argv[]) {
 #endif
 	if (generate == 0) {
 		gold_values = read_real_t_file(gold_path);
-	}else
+	} else
 		max_log_iterations = 0;
+
 	for (int log_it = 0; log_it <= max_log_iterations; log_it++) {
 		Domain *locDom;
 
@@ -4937,7 +4971,12 @@ int main(int argc, char *argv[]) {
 		DumpDomain(locDom);
 #endif
 	}
-	if (generate == 0) delete gold_values;
+	if (generate == 0) {
+		delete[] gold_values[0];
+		delete[] gold_values[1];
+		delete[] gold_values[2];
+		delete gold_values;
+	}
 	cudaDeviceReset();
 
 #if USE_MPI

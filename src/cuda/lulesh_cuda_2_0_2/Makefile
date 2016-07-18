@@ -55,5 +55,12 @@ lulesh-comms.o: lulesh-comms.cu
 lulesh-comms-gpu.o: lulesh-comms-gpu.cu
 	$(NVCC) $(FLAGS) lulesh-comms-gpu.cu -I ./ -c -o lulesh-comms-gpu.o
 
+
+generate:
+	 ./lulesh -s 50 -i 1 -g 1 gold_50
+
+test:
+	 ./lulesh -s 50 -i 1 -g 0 gold_50
+	
 clean: 
 	rm -rf allocator.o lulesh-comms.o lulesh-comms-gpu.o lulesh.o lulesh xyz.asc regNumList.txt
