@@ -92,31 +92,31 @@
 /****************************************************/
 /* Allow flexibility for arithmetic representations */
 /****************************************************/
-__device__          inline real4 SQRT(real4 arg) {
+__device__               inline real4 SQRT(real4 arg) {
 	return sqrtf(arg);
 }
-__device__          inline real8 SQRT(real8 arg) {
+__device__               inline real8 SQRT(real8 arg) {
 	return sqrt(arg);
 }
 
-__device__          inline real4 CBRT(real4 arg) {
+__device__               inline real4 CBRT(real4 arg) {
 	return cbrtf(arg);
 }
-__device__          inline real8 CBRT(real8 arg) {
+__device__               inline real8 CBRT(real8 arg) {
 	return cbrt(arg);
 }
 
-__device__          __host__          inline real4 FABS(real4 arg) {
+__device__               __host__               inline real4 FABS(real4 arg) {
 	return fabsf(arg);
 }
-__device__          __host__          inline real8 FABS(real8 arg) {
+__device__               __host__               inline real8 FABS(real8 arg) {
 	return fabs(arg);
 }
 
-__device__          inline real4 FMAX(real4 arg1, real4 arg2) {
+__device__               inline real4 FMAX(real4 arg1, real4 arg2) {
 	return fmaxf(arg1, arg2);
 }
-__device__          inline real8 FMAX(real8 arg1, real8 arg2) {
+__device__               inline real8 FMAX(real8 arg1, real8 arg2) {
 	return fmax(arg1, arg2);
 }
 
@@ -192,8 +192,8 @@ void SumOverNodesShfl(Real_t& val) {
 	val += utils::shfl_xor(val, 1, 8);
 }
 
-__host__          __device__
-         static __forceinline__ Real_t CalcElemVolume(
+__host__               __device__
+              static __forceinline__ Real_t CalcElemVolume(
 		const Real_t x0, const Real_t x1, const Real_t x2, const Real_t x3,
 		const Real_t x4, const Real_t x5, const Real_t x6, const Real_t x7,
 		const Real_t y0, const Real_t y1, const Real_t y2, const Real_t y3,
@@ -269,8 +269,8 @@ __host__          __device__
 	return volume;
 }
 
-__host__          __device__
-         static __forceinline__ Real_t CalcElemVolume(
+__host__               __device__
+              static __forceinline__ Real_t CalcElemVolume(
 		const Real_t x[8], const Real_t y[8], const Real_t z[8]) {
 	return CalcElemVolume(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], y[0],
 			y[1], y[2], y[3], y[4], y[5], y[6], y[7], z[0], z[1], z[2], z[3],
@@ -3061,7 +3061,7 @@ void LagrangeNodal(Domain *domain) {
 }
 
 __device__
-         static inline Real_t AreaFace(const Real_t x0, const Real_t x1,
+              static inline Real_t AreaFace(const Real_t x0, const Real_t x1,
 		const Real_t x2, const Real_t x3, const Real_t y0, const Real_t y1,
 		const Real_t y2, const Real_t y3, const Real_t z0, const Real_t z1,
 		const Real_t z2, const Real_t z3) {
@@ -3078,7 +3078,7 @@ __device__
 }
 
 __device__
-         static inline Real_t CalcElemCharacteristicLength(const Real_t x[8],
+              static inline Real_t CalcElemCharacteristicLength(const Real_t x[8],
 		const Real_t y[8], const Real_t z[8], const Real_t volume) {
 	Real_t a, charLength = Real_t(0.0);
 
@@ -3891,7 +3891,7 @@ void CalcEnergyForElems_device(Real_t& p_new, Real_t& e_new, Real_t& q_new,
 	return;
 }
 
-__device__          inline Index_t giveMyRegion(const Index_t* regCSR, const Index_t i,
+__device__               inline Index_t giveMyRegion(const Index_t* regCSR, const Index_t i,
 		const Index_t numReg) {
 
 	for (Index_t reg = 0; reg < numReg - 1; reg++)
@@ -4100,8 +4100,8 @@ void CalcTimeConstraintsForElems_kernel(Index_t length, Real_t qqc2,
 	int tid = threadIdx.x;
 	int i = blockDim.x * blockIdx.x + tid;
 
-	__shared__  volatile Real_t s_mindthydro[block_size];
-	__shared__  volatile Real_t s_mindtcourant[block_size];
+	__shared__     volatile Real_t s_mindthydro[block_size];
+	__shared__     volatile Real_t s_mindtcourant[block_size];
 
 	Real_t mindthydro = Real_t(1.0e+20);
 	Real_t mindtcourant = Real_t(1.0e+20);
@@ -4539,17 +4539,21 @@ void write_solution(Domain* locDom, std::string file_path) {
 	FILE *fout = fopen(filename.str().c_str(), "wb");
 //	fprintf(fout, "%d\n", locDom->numNode);
 //	for (Index_t i = 0; i < locDom->numNode; i++) {
-//		fprintf(fout, "%d\n", i);
-//		fprintf(fout, "%lf\n", x_h[i]);
-//		fprintf(fout, "%lf\n", y_h[i]);
-//		fprintf(fout, "%lf\n", z_h[i]);
+//		//fprintf(fout, "%d\n", i);
+//		fprintf(stdout, "x[%d] = %lf ",i, x_h[i]);
+//		fprintf(stdout, "y[%d] = %lf ",i, y_h[i]);
+//		fprintf(stdout, "z[%d] = %lf\n",i, z_h[i]);
 //	}
 	//int *numnode = &locDom->numNode;
 	//fwrite(&numnode, sizeof(Index_t), 1,fout);
-	int siz = sizeof(size_t);
-	fwrite(&(x_h.bytes()), sizeof(size_t), 1, fout);
-	fwrite(&(y_h.bytes()), sizeof(size_t), 1, fout);
-	fwrite(&(z_h.bytes()), sizeof(size_t), 1, fout);
+	size_t siz_x = x_h.bytes();
+	size_t siz_y = y_h.bytes();
+	size_t siz_z = z_h.bytes();
+//	printf("size_x = %lu size_y = %lu size_z = %lu\n", siz_x, siz_y, siz_z);
+
+	fwrite(&siz_x, sizeof(size_t), 1, fout);
+	fwrite(&siz_y, sizeof(size_t), 1, fout);
+	fwrite(&siz_z, sizeof(size_t), 1, fout);
 
 	fwrite(x_h.raw(), x_h.bytes(), 1, fout);
 	fwrite(y_h.raw(), y_h.bytes(), 1, fout);
@@ -4690,7 +4694,7 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 
 #if LOGS
 	if(generate == 0) {
-		int i, kernel_errors = 0;
+		int kernel_errors = 0;
 		for (Index_t j = 0; j < locDom.numNode; ++j) {
 			Real_t x = locDom.x[j];
 			Real_t y = locDom.y[j];
@@ -4712,9 +4716,9 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 
 			Real_t abs_diff_y = FABS(y - y_gold_real);
 
-			Real_t abs_diff_z = FABS(x - z_gold_real);
+			Real_t abs_diff_z = FABS(z - z_gold_real);
 
-			if((abs_diff_x != ERROR_THRESHOLD) || (abs_diff_y != ERROR_THRESHOLD) || (abs_diff_z != ERROR_THRESHOLD)) {
+			if((abs_diff_x > ERROR_THRESHOLD) || (abs_diff_y > ERROR_THRESHOLD) || (abs_diff_z > ERROR_THRESHOLD)) {
 				kernel_errors++;
 				std::string j_str = std::to_string(j);
 				std::string x_gold = std::to_string(x_gold_real);
@@ -4728,6 +4732,7 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 				" x_gold[" + j_str + "]=" + x_gold + " x_output[" + j_str + "]=" + x_str +
 				" y_gold[" + j_str + "]=" + y_gold + " y_output[" + j_str + "]=" + y_str +
 				" z_gold[" + j_str + "]=" + z_gold + " z_output[" + j_str + "]=" + z_str;
+				std::cout << "error happened" << std::endl;
 				char *temp = &str[0];
 				log_error_detail(temp);
 			}
@@ -4764,12 +4769,12 @@ Real_t **read_real_t_file(char *input_path) {
 	if (!(ipf))
 		exit(-1);
 
-	int size_x, size_y, size_z;
+	size_t size_x, size_y, size_z;
 	//fscanf(ipf, "%d\n", &size);
 	fread(&size_x, sizeof(size_t), 1, ipf);
 	fread(&size_y, sizeof(size_t), 1, ipf);
 	fread(&size_z, sizeof(size_t), 1, ipf);
-
+//	printf("size_x = %lu size_y = %lu size_z = %lu\n", size_x, size_y, size_z);
 	Real_t **temp = new Real_t*[3];
 	temp[0] = new Real_t[size_x];
 	temp[1] = new Real_t[size_y];
@@ -4788,6 +4793,12 @@ Real_t **read_real_t_file(char *input_path) {
 	fread(temp[0], size_x, 1, ipf);
 	fread(temp[1], size_y, 1, ipf);
 	fread(temp[2], size_z, 1, ipf);
+//	for (long unsigned int i = 0;
+//			i < size_x / sizeof(Real_t) && i < size_y / sizeof(Real_t)
+//					&& i < size_z / sizeof(Real_t); i++) {
+//		printf("x[%lu] = %lf y[%lu] = %lf z[%lu] = %lf\n", i, temp[0][i], i,
+//				temp[1][i], i, temp[2][i]);
+//	}
 
 	fclose(ipf);
 	return temp;
@@ -4843,9 +4854,11 @@ int main(int argc, char *argv[]) {
 	Index_t nx = atoi(argv[2]);
 	long max_log_iterations = atoi(argv[4]);
 #ifdef LOGS
-	char test_info[90];
-	snprintf(test_info, 90, "structured:%s size:%d iterations:%d", (structured ? "YES":"NO"),nx, num_iters);
-	start_log_file("cudaLulesh", test_info);
+	if (generate == 0) {
+		char test_info[90];
+		snprintf(test_info, 90, "structured:%s size:%d iterations:%d", (structured ? "YES":"NO"),nx, num_iters);
+		start_log_file("cudaLulesh", test_info);
+	}
 #endif
 	if (generate == 0) {
 		gold_values = read_real_t_file(gold_path);
@@ -4914,7 +4927,7 @@ int main(int argc, char *argv[]) {
 		gettimeofday(&start, NULL);
 #endif
 #ifdef LOGS
-		start_iteration();
+		if (generate == 0) start_iteration();
 #endif
 		while (locDom->time_h < locDom->stoptime) {
 			// this has been moved after computation of volume forces to hide launch latencies
@@ -4933,7 +4946,7 @@ int main(int argc, char *argv[]) {
 				break;
 		}
 #ifdef LOGS
-		end_iteration();
+		if (generate == 0) end_iteration();
 #endif
 		// make sure GPU finished its work
 		cudaDeviceSynchronize();
@@ -4983,7 +4996,7 @@ int main(int argc, char *argv[]) {
 	MPI_Finalize();
 #endif
 #ifdef LOGS
-	end_log_file();
+	if (generate == 0) end_log_file();
 #endif
 	return 0;
 }

@@ -60,7 +60,7 @@ generate:
 	 ./lulesh -s 50 -i 1 -g 1 gold_50
 
 test:
-	 ./lulesh -s 50 -i 1 -g 0 gold_50
+	 ./lulesh -s 50 -i 10 -g 0 gold_50
 	
 clean: 
 	rm -rf allocator.o lulesh-comms.o lulesh-comms-gpu.o lulesh.o lulesh xyz.asc regNumList.txt
