@@ -92,31 +92,31 @@
 /****************************************************/
 /* Allow flexibility for arithmetic representations */
 /****************************************************/
-__device__               inline real4 SQRT(real4 arg) {
+__device__                 inline real4 SQRT(real4 arg) {
 	return sqrtf(arg);
 }
-__device__               inline real8 SQRT(real8 arg) {
+__device__                 inline real8 SQRT(real8 arg) {
 	return sqrt(arg);
 }
 
-__device__               inline real4 CBRT(real4 arg) {
+__device__                 inline real4 CBRT(real4 arg) {
 	return cbrtf(arg);
 }
-__device__               inline real8 CBRT(real8 arg) {
+__device__                 inline real8 CBRT(real8 arg) {
 	return cbrt(arg);
 }
 
-__device__               __host__               inline real4 FABS(real4 arg) {
+__device__                 __host__                 inline real4 FABS(real4 arg) {
 	return fabsf(arg);
 }
-__device__               __host__               inline real8 FABS(real8 arg) {
+__device__                 __host__                 inline real8 FABS(real8 arg) {
 	return fabs(arg);
 }
 
-__device__               inline real4 FMAX(real4 arg1, real4 arg2) {
+__device__                 inline real4 FMAX(real4 arg1, real4 arg2) {
 	return fmaxf(arg1, arg2);
 }
-__device__               inline real8 FMAX(real8 arg1, real8 arg2) {
+__device__                 inline real8 FMAX(real8 arg1, real8 arg2) {
 	return fmax(arg1, arg2);
 }
 
@@ -192,8 +192,8 @@ void SumOverNodesShfl(Real_t& val) {
 	val += utils::shfl_xor(val, 1, 8);
 }
 
-__host__               __device__
-              static __forceinline__ Real_t CalcElemVolume(
+__host__                 __device__
+                static __forceinline__ Real_t CalcElemVolume(
 		const Real_t x0, const Real_t x1, const Real_t x2, const Real_t x3,
 		const Real_t x4, const Real_t x5, const Real_t x6, const Real_t x7,
 		const Real_t y0, const Real_t y1, const Real_t y2, const Real_t y3,
@@ -269,8 +269,8 @@ __host__               __device__
 	return volume;
 }
 
-__host__               __device__
-              static __forceinline__ Real_t CalcElemVolume(
+__host__                 __device__
+                static __forceinline__ Real_t CalcElemVolume(
 		const Real_t x[8], const Real_t y[8], const Real_t z[8]) {
 	return CalcElemVolume(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], y[0],
 			y[1], y[2], y[3], y[4], y[5], y[6], y[7], z[0], z[1], z[2], z[3],
@@ -3061,7 +3061,7 @@ void LagrangeNodal(Domain *domain) {
 }
 
 __device__
-              static inline Real_t AreaFace(const Real_t x0, const Real_t x1,
+                static inline Real_t AreaFace(const Real_t x0, const Real_t x1,
 		const Real_t x2, const Real_t x3, const Real_t y0, const Real_t y1,
 		const Real_t y2, const Real_t y3, const Real_t z0, const Real_t z1,
 		const Real_t z2, const Real_t z3) {
@@ -3078,7 +3078,7 @@ __device__
 }
 
 __device__
-              static inline Real_t CalcElemCharacteristicLength(const Real_t x[8],
+                static inline Real_t CalcElemCharacteristicLength(const Real_t x[8],
 		const Real_t y[8], const Real_t z[8], const Real_t volume) {
 	Real_t a, charLength = Real_t(0.0);
 
@@ -3891,7 +3891,7 @@ void CalcEnergyForElems_device(Real_t& p_new, Real_t& e_new, Real_t& q_new,
 	return;
 }
 
-__device__               inline Index_t giveMyRegion(const Index_t* regCSR, const Index_t i,
+__device__                 inline Index_t giveMyRegion(const Index_t* regCSR, const Index_t i,
 		const Index_t numReg) {
 
 	for (Index_t reg = 0; reg < numReg - 1; reg++)
@@ -4100,8 +4100,8 @@ void CalcTimeConstraintsForElems_kernel(Index_t length, Real_t qqc2,
 	int tid = threadIdx.x;
 	int i = blockDim.x * blockIdx.x + tid;
 
-	__shared__     volatile Real_t s_mindthydro[block_size];
-	__shared__     volatile Real_t s_mindtcourant[block_size];
+	__shared__       volatile Real_t s_mindthydro[block_size];
+	__shared__       volatile Real_t s_mindtcourant[block_size];
 
 	Real_t mindthydro = Real_t(1.0e+20);
 	Real_t mindtcourant = Real_t(1.0e+20);
@@ -4635,9 +4635,9 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 	size_t free_mem, total_mem, used_mem;
 	cudaMemGetInfo(&free_mem, &total_mem);
 	used_mem = total_mem - free_mem;
-#if LULESH_SHOW_PROGRESS == 0
-	printf("   Used Memory         =  %8.4f Mb\n", used_mem / (1024. * 1024.));
-#endif
+//#if LULESH_SHOW_PROGRESS == 0
+//	printf("   Used Memory         =  %8.4f Mb\n", used_mem / (1024. * 1024.));
+//#endif
 
 	// GrindTime1 only takes a single domain into account, and is thus a good way to measure
 	// processor speed indepdendent of MPI parallelism.
@@ -4653,9 +4653,9 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 
 	printf("Run completed:  \n");
 	printf("   Problem size        =  %i \n", nx);
-	printf("   MPI tasks           =  %i \n", numRanks);
+//	printf("   MPI tasks           =  %i \n", numRanks);
 	printf("   Iteration count     =  %i \n", its);
-	printf("   Final Origin Energy = %12.6e \n", e_zero);
+//	printf("   Final Origin Energy = %12.6e \n", e_zero);
 
 	Real_t MaxAbsDiff = Real_t(0.0);
 	Real_t TotalAbsDiff = Real_t(0.0);
@@ -4664,33 +4664,6 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 	Real_t *e_all = new Real_t[nx * nx];
 	cudaMemcpy(e_all, locDom.e.raw(), nx * nx * sizeof(Real_t),
 			cudaMemcpyDeviceToHost);
-//#if LOGS
-//	if(generate){
-//		FILE *gold = fopen(gold_path_generate, "wb");
-//		if(gold == NULL){
-//			fprintf(stderr, "Error on opening gold file");
-//			exit(LFileError);
-//		}
-//		fwrite(e_all, sizeof(Real_t), sizeof(Real_t) * nx * nx, gold);
-//		fclose(gold);
-//	}
-//#endif
-
-	//printf("foi aqui muito antes\n");
-	for (Index_t j = 0; j < nx; ++j) {
-		for (Index_t k = j + 1; k < nx; ++k) {
-			Real_t AbsDiff = FABS(e_all[j * nx + k] - e_all[k * nx + j]);
-			TotalAbsDiff += AbsDiff;
-
-			if (MaxAbsDiff < AbsDiff)
-				MaxAbsDiff = AbsDiff;
-
-			Real_t RelDiff = AbsDiff / e_all[k * nx + j];
-
-			if (MaxRelDiff < RelDiff)
-				MaxRelDiff = RelDiff;
-		}
-	}
 
 #if LOGS
 	if(generate == 0) {
@@ -4732,11 +4705,34 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 				" x_gold[" + j_str + "]=" + x_gold + " x_output[" + j_str + "]=" + x_str +
 				" y_gold[" + j_str + "]=" + y_gold + " y_output[" + j_str + "]=" + y_str +
 				" z_gold[" + j_str + "]=" + z_gold + " z_output[" + j_str + "]=" + z_str;
-				std::cout << "error happened" << std::endl;
 				char *temp = &str[0];
 				log_error_detail(temp);
 			}
 
+		}
+		if (kernel_errors) {
+			//get the sum of all mass difference error
+			for (Index_t j = 0; j < nx; ++j) {
+				for (Index_t k = j + 1; k < nx; ++k) {
+					Real_t AbsDiff = FABS(e_all[j * nx + k] - e_all[k * nx + j]);
+					TotalAbsDiff += AbsDiff;
+
+					if (MaxAbsDiff < AbsDiff)
+					MaxAbsDiff = AbsDiff;
+
+					Real_t RelDiff = AbsDiff / e_all[k * nx + j];
+
+					if (MaxRelDiff < RelDiff)
+					MaxRelDiff = RelDiff;
+				}
+			}
+
+			std::string total_abs_diff = std::to_string(TotalAbsDiff);
+			std::string max_rel_diff = std::to_string(MaxRelDiff);
+			std::string max_abs_diff = std::to_string(MaxAbsDiff);
+			std::string err = std::string("total_abs_diff=") + total_abs_diff +" max_rel_diff="+ max_rel_diff + " max_abs_diff="+ max_abs_diff;
+			char *temp = &err[0];
+			log_error_detail(temp);
 		}
 		log_error_count(kernel_errors);
 	}
@@ -4745,20 +4741,20 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 	delete e_all;
 
 	// Quick symmetry check
-	printf("   Testing Plane 0 of Energy Array on rank 0:\n");
-	printf("        MaxAbsDiff   = %12.6e\n", MaxAbsDiff);
-	printf("        TotalAbsDiff = %12.6e\n", TotalAbsDiff);
-	printf("        MaxRelDiff   = %12.6e\n\n", MaxRelDiff);
+//	printf("   Testing Plane 0 of Energy Array on rank 0:\n");
+//	printf("        MaxAbsDiff   = %12.6e\n", MaxAbsDiff);
+//	printf("        TotalAbsDiff = %12.6e\n", TotalAbsDiff);
+//	printf("        MaxRelDiff   = %12.6e\n\n", MaxRelDiff);
 
 	// Timing information
-	printf("\nElapsed time         = %10.2f (s)\n", elapsed_time);
-	printf("Grind time (us/z/c)  = %10.8g (per dom)  (%10.8g overall)\n",
-			grindTime1, grindTime2);
-	printf("FOM                  = %10.8g (z/s)\n\n", 1000.0 / grindTime2); // zones per second
+//	printf("\nElapsed time         = %10.2f (s)\n", elapsed_time);
+//	printf("Grind time (us/z/c)  = %10.8g (per dom)  (%10.8g overall)\n",
+//			grindTime1, grindTime2);
+//	printf("FOM                  = %10.8g (z/s)\n\n", 1000.0 / grindTime2); // zones per second
 #if LOGS
-			if (generate) {
-				write_solution(&locDom, gold_path_generate);
-			}
+	if (generate) {
+		write_solution(&locDom, gold_path_generate);
+	}
 #endif
 
 	return;
