@@ -92,31 +92,31 @@
 /****************************************************/
 /* Allow flexibility for arithmetic representations */
 /****************************************************/
-__device__                 inline real4 SQRT(real4 arg) {
+__device__                  inline real4 SQRT(real4 arg) {
 	return sqrtf(arg);
 }
-__device__                 inline real8 SQRT(real8 arg) {
+__device__                  inline real8 SQRT(real8 arg) {
 	return sqrt(arg);
 }
 
-__device__                 inline real4 CBRT(real4 arg) {
+__device__                  inline real4 CBRT(real4 arg) {
 	return cbrtf(arg);
 }
-__device__                 inline real8 CBRT(real8 arg) {
+__device__                  inline real8 CBRT(real8 arg) {
 	return cbrt(arg);
 }
 
-__device__                 __host__                 inline real4 FABS(real4 arg) {
+__device__                  __host__                  inline real4 FABS(real4 arg) {
 	return fabsf(arg);
 }
-__device__                 __host__                 inline real8 FABS(real8 arg) {
+__device__                  __host__                  inline real8 FABS(real8 arg) {
 	return fabs(arg);
 }
 
-__device__                 inline real4 FMAX(real4 arg1, real4 arg2) {
+__device__                  inline real4 FMAX(real4 arg1, real4 arg2) {
 	return fmaxf(arg1, arg2);
 }
-__device__                 inline real8 FMAX(real8 arg1, real8 arg2) {
+__device__                  inline real8 FMAX(real8 arg1, real8 arg2) {
 	return fmax(arg1, arg2);
 }
 
@@ -192,8 +192,8 @@ void SumOverNodesShfl(Real_t& val) {
 	val += utils::shfl_xor(val, 1, 8);
 }
 
-__host__                 __device__
-                static __forceinline__ Real_t CalcElemVolume(
+__host__                  __device__
+                 static __forceinline__ Real_t CalcElemVolume(
 		const Real_t x0, const Real_t x1, const Real_t x2, const Real_t x3,
 		const Real_t x4, const Real_t x5, const Real_t x6, const Real_t x7,
 		const Real_t y0, const Real_t y1, const Real_t y2, const Real_t y3,
@@ -269,8 +269,8 @@ __host__                 __device__
 	return volume;
 }
 
-__host__                 __device__
-                static __forceinline__ Real_t CalcElemVolume(
+__host__                  __device__
+                 static __forceinline__ Real_t CalcElemVolume(
 		const Real_t x[8], const Real_t y[8], const Real_t z[8]) {
 	return CalcElemVolume(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], y[0],
 			y[1], y[2], y[3], y[4], y[5], y[6], y[7], z[0], z[1], z[2], z[3],
@@ -3061,7 +3061,7 @@ void LagrangeNodal(Domain *domain) {
 }
 
 __device__
-                static inline Real_t AreaFace(const Real_t x0, const Real_t x1,
+                 static inline Real_t AreaFace(const Real_t x0, const Real_t x1,
 		const Real_t x2, const Real_t x3, const Real_t y0, const Real_t y1,
 		const Real_t y2, const Real_t y3, const Real_t z0, const Real_t z1,
 		const Real_t z2, const Real_t z3) {
@@ -3078,7 +3078,7 @@ __device__
 }
 
 __device__
-                static inline Real_t CalcElemCharacteristicLength(const Real_t x[8],
+                 static inline Real_t CalcElemCharacteristicLength(const Real_t x[8],
 		const Real_t y[8], const Real_t z[8], const Real_t volume) {
 	Real_t a, charLength = Real_t(0.0);
 
@@ -3891,7 +3891,7 @@ void CalcEnergyForElems_device(Real_t& p_new, Real_t& e_new, Real_t& q_new,
 	return;
 }
 
-__device__                 inline Index_t giveMyRegion(const Index_t* regCSR, const Index_t i,
+__device__                  inline Index_t giveMyRegion(const Index_t* regCSR, const Index_t i,
 		const Index_t numReg) {
 
 	for (Index_t reg = 0; reg < numReg - 1; reg++)
@@ -4100,8 +4100,8 @@ void CalcTimeConstraintsForElems_kernel(Index_t length, Real_t qqc2,
 	int tid = threadIdx.x;
 	int i = blockDim.x * blockIdx.x + tid;
 
-	__shared__       volatile Real_t s_mindthydro[block_size];
-	__shared__       volatile Real_t s_mindtcourant[block_size];
+	__shared__ volatile Real_t s_mindthydro[block_size];
+	__shared__ volatile Real_t s_mindtcourant[block_size];
 
 	Real_t mindthydro = Real_t(1.0e+20);
 	Real_t mindtcourant = Real_t(1.0e+20);
@@ -4625,6 +4625,13 @@ void InitMeshDecomp(Int_t numRanks, Int_t myRank, Int_t *col, Int_t *row,
 	return;
 }
 
+std::string to_string(Real_t value){
+	char temp[50];
+	memset(temp, 0, 50);
+	sprintf(temp, "%.15e", value);
+	return std::string(temp);
+}
+
 void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 		Int_t nx, Int_t numRanks
 #if LOGS
@@ -4694,17 +4701,15 @@ void VerifyAndWriteFinalOutput(Real_t elapsed_time, Domain& locDom, Int_t its,
 			if((abs_diff_x > ERROR_THRESHOLD) || (abs_diff_y > ERROR_THRESHOLD) || (abs_diff_z > ERROR_THRESHOLD)) {
 				kernel_errors++;
 				std::string j_str = std::to_string(j);
-				std::string x_gold = std::to_string(x_gold_real);
-				std::string y_gold = std::to_string(y_gold_real);
-				std::string z_gold = std::to_string(z_gold_real);
-				std::string x_str = std::to_string(x);
-				std::string y_str = std::to_string(y);
-				std::string z_str = std::to_string(z);
+				std::string x_gold = to_string(x_gold_real);
+				std::string y_gold = to_string(y_gold_real);
+				std::string z_gold = to_string(z_gold_real);
+				std::string x_str = to_string(x);
+				std::string y_str = to_string(y);
+				std::string z_str = to_string(z);
 
-				std::string str = std::string("error:sdc") +
-				" x_gold[" + j_str + "]=" + x_gold + " x_output[" + j_str + "]=" + x_str +
-				" y_gold[" + j_str + "]=" + y_gold + " y_output[" + j_str + "]=" + y_str +
-				" z_gold[" + j_str + "]=" + z_gold + " z_output[" + j_str + "]=" + z_str;
+				std::string str = std::string("p: [") + j_str + "] x_gold:" + x_gold + " x_output:" + x_str +
+				" y_gold:" + y_gold + " y_output:" + y_str +" z_gold:" + z_gold + " z_output:" + z_str;
 				char *temp = &str[0];
 				log_error_detail(temp);
 			}
