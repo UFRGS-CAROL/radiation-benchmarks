@@ -1,346 +1,205 @@
-//========================================================================================================================================================================================================200
-//======================================================================================================================================================150
-//====================================================================================================100
-//==================================================50
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+#include <sys/time.h>
+#include <string.h>
+#include "./main.h"
+#include "./kernel/kernel_cpu.h"
 
-//========================================================================================================================================================================================================200
-//	UPDATE
-//========================================================================================================================================================================================================200
+void usage()
+{
+    printf("Usage: lavamd_gen <# cores> <# boxes 1d>\n");
+    printf("  # cores is the number of threads that OpenMP will create\n");
+    printf("  # boxes 1d is the input size, 15 is reasonable\n");
+}
 
-//	14 APR 2011 Lukasz G. Szafaryn
 
-//========================================================================================================================================================================================================200
-//	DEFINE/INCLUDE
-//========================================================================================================================================================================================================200
-
-//======================================================================================================================================================150
-//	LIBRARIES
-//======================================================================================================================================================150
-
-#include <stdio.h>					// (in path known to compiler)			needed by printf
-#include <stdlib.h>					// (in path known to compiler)			needed by malloc
-#include <stdbool.h>				// (in path known to compiler)			needed by true/false
-
-//======================================================================================================================================================150
-//	UTILITIES
-//======================================================================================================================================================150
-
-#include "./util/timer/timer.h"			// (in path specified here)
-#include "./util/num/num.h"				// (in path specified here)
-
-//======================================================================================================================================================150
-//	MAIN FUNCTION HEADER
-//======================================================================================================================================================150
-
-#include "./main.h"						// (in the current directory)
-
-//======================================================================================================================================================150
-//	KERNEL
-//======================================================================================================================================================150
-
-#include "./kernel/kernel_cpu.h"				// (in library path specified here)
-
-//========================================================================================================================================================================================================200
-//	MAIN FUNCTION
-//========================================================================================================================================================================================================200
-
-int 
-main(	int argc, 
-		char *argv [])
+int main( int argc, char *argv [])
 {
 
-	//======================================================================================================================================================150
-	//	CPU/MCPU VARIABLES
-	//======================================================================================================================================================150
+    char input_distance[150];
+    char input_charges[150];
+    char output_gold[150];
 
-	// timer
-	long long time0;
+    int i, j, k, l, m, n;
 
-	time0 = get_time();
+    par_str par_cpu;
+    dim_str dim_cpu;
+    box_str* box_cpu;
+    FOUR_VECTOR* rv_cpu;
+    fp* qv_cpu;
+    FOUR_VECTOR* fv_cpu;
+    int nh;
 
-	// timer
-	long long time1;
-	long long time2;
-	long long time3;
-	long long time4;
-	long long time5;
-	long long time6;
-	long long time7;
+    dim_cpu.cores_arg = 1;
+    dim_cpu.boxes1d_arg = 1;
 
-	// counters
-	int i, j, k, l, m, n;
+    if(argc == 3) {
+        dim_cpu.cores_arg  = atoi(argv[1]);
+        dim_cpu.boxes1d_arg = atoi(argv[2]);
+    } else {
+        usage();
+        exit(1);
+    }
 
-	// system memory
-	par_str par_cpu;
-	dim_str dim_cpu;
-	box_str* box_cpu;
-	FOUR_VECTOR* rv_cpu;
-	fp* qv_cpu;
-	FOUR_VECTOR* fv_cpu;
-	int nh;
+    printf("Configuration used: cores = %d, boxes1d = %d\n", dim_cpu.cores_arg, dim_cpu.boxes1d_arg);
+    snprintf(input_distance, 150, "input_distance_%d_%d",dim_cpu.cores_arg, dim_cpu.boxes1d_arg);
+    snprintf(input_charges, 150, "input_charges_%d_%d",dim_cpu.cores_arg, dim_cpu.boxes1d_arg);
+    snprintf(output_gold, 150, "output_gold_%d_%d",dim_cpu.cores_arg, dim_cpu.boxes1d_arg);
 
-	time1 = get_time();
+    par_cpu.alpha = 0.5;
 
-	//======================================================================================================================================================150
-	//	CHECK INPUT ARGUMENTS
-	//======================================================================================================================================================150
+    dim_cpu.number_boxes = dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg;
 
-	// assing default values
-	dim_cpu.cores_arg = 1;
-	dim_cpu.boxes1d_arg = 1;
+    dim_cpu.space_elem = dim_cpu.number_boxes * NUMBER_PAR_PER_BOX;
+    dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR);
+    dim_cpu.space_mem2 = dim_cpu.space_elem * sizeof(fp);
 
-	// go through arguments
-	for(dim_cpu.cur_arg=1; dim_cpu.cur_arg<argc; dim_cpu.cur_arg++){
-		// check if -cores
-		if(strcmp(argv[dim_cpu.cur_arg], "-cores")==0){
-			// check if value provided
-			if(argc>=dim_cpu.cur_arg+1){
-				// check if value is a number
-				if(isInteger(argv[dim_cpu.cur_arg+1])==1){
-					dim_cpu.cores_arg = atoi(argv[dim_cpu.cur_arg+1]);
-					if(dim_cpu.cores_arg<0){
-						printf("ERROR: Wrong value to -cores parameter, cannot be <=0\n");
-						return 0;
-					}
-					dim_cpu.cur_arg = dim_cpu.cur_arg+1;
-				}
-				// value is not a number
-				else{
-					printf("ERROR: Value to -cores parameter in not a number\n");
-					return 0;
-				}
-			}
-			// value not provided
-			else{
-				printf("ERROR: Missing value to -cores parameter\n");
-				return 0;
-			}
-		}
-		// check if -boxes1d
-		else if(strcmp(argv[dim_cpu.cur_arg], "-boxes1d")==0){
-			// check if value provided
-			if(argc>=dim_cpu.cur_arg+1){
-				// check if value is a number
-				if(isInteger(argv[dim_cpu.cur_arg+1])==1){
-					dim_cpu.boxes1d_arg = atoi(argv[dim_cpu.cur_arg+1]);
-					if(dim_cpu.boxes1d_arg<0){
-						printf("ERROR: Wrong value to -boxes1d parameter, cannot be <=0\n");
-						return 0;
-					}
-					dim_cpu.cur_arg = dim_cpu.cur_arg+1;
-				}
-				// value is not a number
-				else{
-					printf("ERROR: Value to -boxes1d parameter in not a number\n");
-					return 0;
-				}
-			}
-			// value not provided
-			else{
-				printf("ERROR: Missing value to -boxes1d parameter\n");
-				return 0;
-			}
-		}
-		// unknown
-		else{
-			printf("ERROR: Unknown parameter\n");
-			return 0;
-		}
-	}
+    dim_cpu.box_mem = dim_cpu.number_boxes * sizeof(box_str);
 
-	// Print configuration
-	printf("Configuration used: cores = %d, boxes1d = %d\n", dim_cpu.cores_arg, dim_cpu.boxes1d_arg);
+    box_cpu = (box_str*)malloc(dim_cpu.box_mem);
 
-	time2 = get_time();
+    nh = 0;
 
-	//======================================================================================================================================================150
-	//	INPUTS
-	//======================================================================================================================================================150
+    for(i=0; i<dim_cpu.boxes1d_arg; i++) {
 
-	par_cpu.alpha = 0.5;
+        for(j=0; j<dim_cpu.boxes1d_arg; j++) {
 
-	time3 = get_time();
+            for(k=0; k<dim_cpu.boxes1d_arg; k++) {
 
-	//======================================================================================================================================================150
-	//	DIMENSIONS
-	//======================================================================================================================================================150
+                box_cpu[nh].x = k;
+                box_cpu[nh].y = j;
+                box_cpu[nh].z = i;
+                box_cpu[nh].number = nh;
+                box_cpu[nh].offset = nh * NUMBER_PAR_PER_BOX;
 
-	// total number of boxes
-	dim_cpu.number_boxes = dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg;
+                box_cpu[nh].nn = 0;
 
-	// how many particles space has in each direction
-	dim_cpu.space_elem = dim_cpu.number_boxes * NUMBER_PAR_PER_BOX;
-	dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR);
-	dim_cpu.space_mem2 = dim_cpu.space_elem * sizeof(fp);
+                for(l=-1; l<2; l++) {
 
-	// box array
-	dim_cpu.box_mem = dim_cpu.number_boxes * sizeof(box_str);
+                    for(m=-1; m<2; m++) {
 
-	time4 = get_time();
+                        for(n=-1; n<2; n++) {
 
-	//======================================================================================================================================================150
-	//	SYSTEM MEMORY
-	//======================================================================================================================================================150
+                            if((((i+l)>=0 && (j+m)>=0 && (k+n)>=0)==true && ((i+l)<dim_cpu.boxes1d_arg && (j+m)<dim_cpu.boxes1d_arg && (k+n)<dim_cpu.boxes1d_arg)==true) && (l==0 && m==0 && n==0)==false) {
 
-	//====================================================================================================100
-	//	BOX
-	//====================================================================================================100
+                                box_cpu[nh].nei[box_cpu[nh].nn].x = (k+n);
+                                box_cpu[nh].nei[box_cpu[nh].nn].y = (j+m);
+                                box_cpu[nh].nei[box_cpu[nh].nn].z = (i+l);
+                                box_cpu[nh].nei[box_cpu[nh].nn].number = (box_cpu[nh].nei[box_cpu[nh].nn].z * dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg) + (box_cpu[nh].nei[box_cpu[nh].nn].y * dim_cpu.boxes1d_arg) + box_cpu[nh].nei[box_cpu[nh].nn].x;
+                                box_cpu[nh].nei[box_cpu[nh].nn].offset = box_cpu[nh].nei[box_cpu[nh].nn].number * NUMBER_PAR_PER_BOX;
 
-	// allocate boxes
-	box_cpu = (box_str*)malloc(dim_cpu.box_mem);
+                                box_cpu[nh].nn = box_cpu[nh].nn + 1;
 
-	// initialize number of home boxes
-	nh = 0;
+                            }
+                        }
+                    }
+                }
 
-	// home boxes in z direction
-	for(i=0; i<dim_cpu.boxes1d_arg; i++){
-		// home boxes in y direction
-		for(j=0; j<dim_cpu.boxes1d_arg; j++){
-			// home boxes in x direction
-			for(k=0; k<dim_cpu.boxes1d_arg; k++){
-
-				// current home box
-				box_cpu[nh].x = k;
-				box_cpu[nh].y = j;
-				box_cpu[nh].z = i;
-				box_cpu[nh].number = nh;
-				box_cpu[nh].offset = nh * NUMBER_PAR_PER_BOX;
-
-				// initialize number of neighbor boxes
-				box_cpu[nh].nn = 0;
-
-				// neighbor boxes in z direction
-				for(l=-1; l<2; l++){
-					// neighbor boxes in y direction
-					for(m=-1; m<2; m++){
-						// neighbor boxes in x direction
-						for(n=-1; n<2; n++){
-
-							// check if (this neighbor exists) and (it is not the same as home box)
-							if(		(((i+l)>=0 && (j+m)>=0 && (k+n)>=0)==true && ((i+l)<dim_cpu.boxes1d_arg && (j+m)<dim_cpu.boxes1d_arg && (k+n)<dim_cpu.boxes1d_arg)==true)	&&
-									(l==0 && m==0 && n==0)==false	){
-
-								// current neighbor box
-								box_cpu[nh].nei[box_cpu[nh].nn].x = (k+n);
-								box_cpu[nh].nei[box_cpu[nh].nn].y = (j+m);
-								box_cpu[nh].nei[box_cpu[nh].nn].z = (i+l);
-								box_cpu[nh].nei[box_cpu[nh].nn].number =	(box_cpu[nh].nei[box_cpu[nh].nn].z * dim_cpu.boxes1d_arg * dim_cpu.boxes1d_arg) + 
-																			(box_cpu[nh].nei[box_cpu[nh].nn].y * dim_cpu.boxes1d_arg) + 
-																			 box_cpu[nh].nei[box_cpu[nh].nn].x;
-								box_cpu[nh].nei[box_cpu[nh].nn].offset = box_cpu[nh].nei[box_cpu[nh].nn].number * NUMBER_PAR_PER_BOX;
-
-								// increment neighbor box
-								box_cpu[nh].nn = box_cpu[nh].nn + 1;
-
-							}
-
-						} // neighbor boxes in x direction
-					} // neighbor boxes in y direction
-				} // neighbor boxes in z direction
-
-				// increment home box
-				nh = nh + 1;
-
-			} // home boxes in x direction
-		} // home boxes in y direction
-	} // home boxes in z direction
-
-	//====================================================================================================100
-	//	PARAMETERS, DISTANCE, CHARGE AND FORCE
-	//====================================================================================================100
-
-	// random generator seed set to random value - time in this case
-	srand(time(NULL));
-
-	// input (distances)
-	rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
-	for(i=0; i<dim_cpu.space_elem; i=i+1){
-		rv_cpu[i].v = (rand()%10 + 1) / 10.0;			// get a number in the range 0.1 - 1.0
-		rv_cpu[i].x = (rand()%10 + 1) / 10.0;			// get a number in the range 0.1 - 1.0
-		rv_cpu[i].y = (rand()%10 + 1) / 10.0;			// get a number in the range 0.1 - 1.0
-		rv_cpu[i].z = (rand()%10 + 1) / 10.0;			// get a number in the range 0.1 - 1.0
-	}
-
-	// input (charge)
-	qv_cpu = (fp*)malloc(dim_cpu.space_mem2);
-	for(i=0; i<dim_cpu.space_elem; i=i+1){
-		qv_cpu[i] = (rand()%10 + 1) / 10.0;			// get a number in the range 0.1 - 1.0
-	}
-
-	// output (forces)
-	fv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
-	for(i=0; i<dim_cpu.space_elem; i=i+1){
-		fv_cpu[i].v = 0;								// set to 0, because kernels keeps adding to initial value
-		fv_cpu[i].x = 0;								// set to 0, because kernels keeps adding to initial value
-		fv_cpu[i].y = 0;								// set to 0, because kernels keeps adding to initial value
-		fv_cpu[i].z = 0;								// set to 0, because kernels keeps adding to initial value
-	}
-
-	time5 = get_time();
-
-	//======================================================================================================================================================150
-	//	KERNEL
-	//======================================================================================================================================================150
-
-	//====================================================================================================100
-	//	CPU/MCPU
-	//====================================================================================================100
-
-	kernel_cpu(	par_cpu,
-				dim_cpu,
-				box_cpu,
-				rv_cpu,
-				qv_cpu,
-				fv_cpu);
-
-	time6 = get_time();
-
-	//======================================================================================================================================================150
-	//	SYSTEM MEMORY DEALLOCATION
-	//======================================================================================================================================================150
-
-	// dump results
-#ifdef OUTPUT
-        FILE *fptr;
-	fptr = fopen("result.txt", "w");	
-	for(i=0; i<dim_cpu.space_elem; i=i+1){
-        	fprintf(fptr, "%f, %f, %f, %f\n", fv_cpu[i].v, fv_cpu[i].x, fv_cpu[i].y, fv_cpu[i].z);
-	}
-	fclose(fptr);
-#endif       	
+                nh = nh + 1;
+            }
+        }
+    }
 
 
+    srand(time(NULL));
 
-	free(rv_cpu);
-	free(qv_cpu);
-	free(fv_cpu);
-	free(box_cpu);
+    FILE *file;
 
-	time7 = get_time();
+    if( (file = fopen(input_distance, "wb" )) == 0 )
+        printf( "The file 'input_distances' was not opened\n" );
 
-	//======================================================================================================================================================150
-	//	DISPLAY TIMING
-	//======================================================================================================================================================150
+    rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
+    for(i=0; i<dim_cpu.space_elem; i=i+1) {
+        rv_cpu[i].v = (rand()%10 + 1) / 10.0;
+        rv_cpu[i].x = (rand()%10 + 1) / 10.0;
+        rv_cpu[i].y = (rand()%10 + 1) / 10.0;
+        rv_cpu[i].z = (rand()%10 + 1) / 10.0;
+        fwrite(&(rv_cpu[i].v), 1, sizeof(double), file);
+        fwrite(&(rv_cpu[i].x), 1, sizeof(double), file);
+        fwrite(&(rv_cpu[i].y), 1, sizeof(double), file);
+        fwrite(&(rv_cpu[i].z), 1, sizeof(double), file);
+    }
 
-	// printf("Time spent in different stages of the application:\n");
+    fclose(file);
 
-	// printf("%15.12f s, %15.12f % : VARIABLES\n",						(float) (time1-time0) / 1000000, (float) (time1-time0) / (float) (time7-time0) * 100);
-	// printf("%15.12f s, %15.12f % : INPUT ARGUMENTS\n", 					(float) (time2-time1) / 1000000, (float) (time2-time1) / (float) (time7-time0) * 100);
-	// printf("%15.12f s, %15.12f % : INPUTS\n",							(float) (time3-time2) / 1000000, (float) (time3-time2) / (float) (time7-time0) * 100);
-	// printf("%15.12f s, %15.12f % : dim_cpu\n", 							(float) (time4-time3) / 1000000, (float) (time4-time3) / (float) (time7-time0) * 100);
-	// printf("%15.12f s, %15.12f % : SYS MEM: ALO\n",						(float) (time5-time4) / 1000000, (float) (time5-time4) / (float) (time7-time0) * 100);
+    if( (file = fopen(input_charges, "wb" )) == 0 )
+        printf( "The file 'input_charges' was not opened\n" );
 
-	// printf("%15.12f s, %15.12f % : KERNEL: COMPUTE\n",					(float) (time6-time5) / 1000000, (float) (time6-time5) / (float) (time7-time0) * 100);
+    qv_cpu = (fp*)malloc(dim_cpu.space_mem2);
+    for(i=0; i<dim_cpu.space_elem; i=i+1) {
+        qv_cpu[i] = (rand()%10 + 1) / 10.0;
+        fwrite(&(qv_cpu[i]), 1, sizeof(double), file);
+    }
+    fclose(file);
 
-	// printf("%15.12f s, %15.12f % : SYS MEM: FRE\n", 					(float) (time7-time6) / 1000000, (float) (time7-time6) / (float) (time7-time0) * 100);
+    fv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
+    for(i=0; i<dim_cpu.space_elem; i=i+1) {
+        fv_cpu[i].v = 0;
+        fv_cpu[i].x = 0;
+        fv_cpu[i].y = 0;
+        fv_cpu[i].z = 0;
+    }
 
-	// printf("Total time:\n");
-	// printf("%.12f s\n", 												(float) (time7-time0) / 1000000);
+    printf("executin kernel\n");
+    kernel_cpu(	par_cpu,
+                dim_cpu,
+                box_cpu,
+                rv_cpu,
+                qv_cpu,
+                fv_cpu);
 
-	//======================================================================================================================================================150
-	//	RETURN
-	//======================================================================================================================================================150
 
-	return 0.0;																					// always returns 0.0
+    printf("saving results\n");
+    // dump results
+    if( (file = fopen(output_gold, "wb" )) == 0 )
+        printf( "The file 'output_forces' was not opened\n" );
+    int number_zeros = 0;
+    int higher_zero = 0;
+    int lower_zero = 0;
+    for(i=0; i<dim_cpu.space_elem; i=i+1) {
+        if(fv_cpu[i].v == 0.0)
+            number_zeros++;
+        if(fv_cpu[i].v > 0.0)
+            higher_zero++;
+        if(fv_cpu[i].v < 0.0)
+            lower_zero++;
 
+        if(fv_cpu[i].x == 0.0)
+            number_zeros++;
+        if(fv_cpu[i].x > 0.0)
+            higher_zero++;
+        if(fv_cpu[i].x < 0.0)
+            lower_zero++;
+
+        if(fv_cpu[i].y == 0.0)
+            number_zeros++;
+        if(fv_cpu[i].y > 0.0)
+            higher_zero++;
+        if(fv_cpu[i].y < 0.0)
+            lower_zero++;
+
+        if(fv_cpu[i].z == 0.0)
+            number_zeros++;
+        if(fv_cpu[i].z > 0.0)
+            higher_zero++;
+        if(fv_cpu[i].z < 0.0)
+            lower_zero++;
+
+        fwrite(&(fv_cpu[i].v), 1, sizeof(double), file);
+        fwrite(&(fv_cpu[i].x), 1, sizeof(double), file);
+        fwrite(&(fv_cpu[i].y), 1, sizeof(double), file);
+        fwrite(&(fv_cpu[i].z), 1, sizeof(double), file);
+    }
+    fclose(file);
+
+    printf("Total Number of zeros in the output is %d, from %ld numbers\n",number_zeros, (dim_cpu.space_elem*4));
+
+    free(rv_cpu);
+    free(qv_cpu);
+    free(fv_cpu);
+    free(box_cpu);
+
+    return 0;
 }
