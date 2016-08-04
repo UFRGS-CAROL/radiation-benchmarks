@@ -64,11 +64,7 @@ double kernel_time = 0;
 long long it_time_start;
 
 // ~ ===========================================================================
-#ifdef MIC_NATIVE
 long long get_time() {
-#else
-inline long long get_time() {
-#endif
     struct timeval tv;
 
     gettimeofday(&tv, NULL);
