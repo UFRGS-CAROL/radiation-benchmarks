@@ -475,10 +475,6 @@ int main(int argc, char **argv)
         if (params->verbose) printf("CPU Verify time: %.4fs\n", mysecond() - timestamp);
 
 		timestamp = mysecond();
-		
-		
-		checkCudaErrors(cudaMemcpy(params->h_DstKey, params->d_SrcKey, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
-		checkCudaErrors(cudaMemcpy(params->h_DstVal, params->d_SrcVal, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
 
 		int errors = 0;
 
