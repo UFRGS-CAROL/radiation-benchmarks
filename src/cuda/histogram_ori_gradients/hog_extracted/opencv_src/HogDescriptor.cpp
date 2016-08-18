@@ -139,11 +139,11 @@ void HogDescriptor::computeGradient(const cv::gpu::GpuMat& img,
 	float angleScale = (float) (nbins / CV_PI);
 	switch (img.type()) {
 	case CV_8UC1:
-		compute_gradients_8UC1(nbins, img.rows, img.cols, img, angleScale,
+		compute_gradients_8UC1_ext(nbins, img.rows, img.cols, img, angleScale,
 				_grad, _qangle, gamma_correction);
 		break;
 	case CV_8UC4:
-		compute_gradients_8UC4(nbins, img.rows, img.cols, img, angleScale,
+		compute_gradients_8UC4_ext(nbins, img.rows, img.cols, img, angleScale,
 				_grad, _qangle, gamma_correction);
 		break;
 	}
@@ -152,7 +152,7 @@ void HogDescriptor::computeGradient(const cv::gpu::GpuMat& img,
 void HogDescriptor::computeBlockHistograms(const cv::gpu::GpuMat& img) {
 	cv::Size blocks_per_win = numPartsWithin(win_size, block_size,
 			block_stride);
-	set_up_constants(nbins, block_stride.width, block_stride.height,
+	set_up_constants_ext(nbins, block_stride.width, block_stride.height,
 			blocks_per_win.width, blocks_per_win.height);
 
 	computeGradient(img, grad, qangle);
@@ -165,11 +165,11 @@ void HogDescriptor::computeBlockHistograms(const cv::gpu::GpuMat& img) {
 			static_cast<int>(block_hist_size * blocks_per_img.area()), CV_32F,
 			block_hists_buf);
 
-	compute_hists(nbins, block_stride.width, block_stride.height, img.rows,
+	compute_hists_ext(nbins, block_stride.width, block_stride.height, img.rows,
 			img.cols, grad, qangle, (float) getWinSigma(),
 			block_hists.ptr<float>());
 
-	normalize_hists(nbins, block_stride.width, block_stride.height, img.rows,
+	normalize_hists_ext(nbins, block_stride.width, block_stride.height, img.rows,
 			img.cols, block_hists.ptr<float>(), (float) threshold_L2hys);
 }
 
@@ -190,13 +190,13 @@ void HogDescriptor::getDescriptors(const cv::gpu::GpuMat& img, Size win_stride,
 
 	switch (descr_format) {
 	case DESCR_FORMAT_ROW_BY_ROW:
-		extract_descrs_by_rows(win_size.height, win_size.width,
+		extract_descrs_by_rows_ext(win_size.height, win_size.width,
 				block_stride.height, block_stride.width, win_stride.height,
 				win_stride.width, img.rows, img.cols, block_hists.ptr<float>(),
 				descriptors);
 		break;
 	case DESCR_FORMAT_COL_BY_COL:
-		extract_descrs_by_cols(win_size.height, win_size.width,
+		extract_descrs_by_cols_ext(win_size.height, win_size.width,
 				block_stride.height, block_stride.width, win_stride.height,
 				win_stride.width, img.rows, img.cols, block_hists.ptr<float>(),
 				descriptors);
@@ -227,7 +227,7 @@ void HogDescriptor::computeConfidence(const cv::gpu::GpuMat& img,
 	Size wins_per_img = numPartsWithin(img.size(), win_size, win_stride);
 	labels.create(1, wins_per_img.area(), CV_32F);
 
-	compute_confidence_hists(win_size.height, win_size.width,
+	compute_confidence_hists_ext(win_size.height, win_size.width,
 			block_stride.height, block_stride.width, win_stride.height,
 			win_stride.width, img.rows, img.cols, block_hists.ptr<float>(),
 			detector.ptr<float>(), (float) free_coef, (float) hit_threshold,
@@ -329,7 +329,7 @@ void HogDescriptor::detect(const cv::gpu::GpuMat& img, vector<Point>& hits,
 	//   labels.create(1, wins_per_img.area(), CV_8U);
 	labels = getBuffer(1, wins_per_img.area(), CV_8U, labels_buf);
 
-	classify_hists(win_size.height, win_size.width, block_stride.height,
+	classify_hists_ext(win_size.height, win_size.width, block_stride.height,
 			block_stride.width, win_stride.height, win_stride.width, img.rows,
 			img.cols, block_hists.ptr<float>(), detector.ptr<float>(),
 			(float) free_coef, (float) hit_threshold, labels.ptr());
