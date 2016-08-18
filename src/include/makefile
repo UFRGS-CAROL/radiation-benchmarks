@@ -5,7 +5,12 @@ all: log_helper.c
 	gcc -c log_helper.c
 	ar cvr libLogHelper.a log_helper.o
 
-cuda: log_helper.cu
+sorts: helper_sorts.cu
+	rm -f helper_sorts.o
+	nvcc -c helper_sorts.cu
+	ar cvr libHelperSorts.a helper_sorts.o
+
+cuda: log_helper.cu sorts
 	rm -f log_helper.o
 	rm -f log_helper.cu
 	ln -s log_helper.c log_helper.cu
