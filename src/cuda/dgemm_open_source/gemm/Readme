@@ -1,0 +1,52 @@
+
+This directory contains a set of examples and excersizes for 
+RCS Tutorial "Introduction to GPU programming"
+In particular, this directory explores implementation of GEMM algorithm from BLASS library using CUDA and openACC
+
+Directory Structure
+-------------------
+
+   cuGEMM.cpp - running GEMM program using CUDA libraries
+   accGEMM.c  - running GEMM program using openACC
+
+Building the program
+--------------------
+
+   To build both programs execute make command: make
+   To build cuGEMM, execute: make cuGEMM
+   To build accGEMM, execute: make accGEMM
+   To clean directory, : make clean
+
+Running the program
+-------------------
+
+   To run this programs you have to request a node with GPU.
+   Such node can be requested on SCC cluster, running the folloing command:
+      qsh -V -l gpus=1
+
+   To submit batch job:
+      qsub -l gpus=1 cuGEMM
+      qsub -l gpus=1 accGEMM
+
+Contact Information
+-------------------
+
+   Katia Oleinik
+   koleinik@bu.edu
+
+Operating System Requirements
+-----------------------------
+ 
+   The examples presented in this directory were written for 
+   SCC cluster with Linux OS. Makefile contains system-specific 
+   paths, which could be edited to use on other machines.
+ 
+   NVIDIA's GPU(s) with compute capability 2.0 or higher/
+   NVIDIA CUDA Toolkit
+   Portland Group compiler version 12.6 or higher
+
+Updates
+-------
+
+   2013-06-01: First version of these examples created for
+               Introduction to GPU programming tutorial

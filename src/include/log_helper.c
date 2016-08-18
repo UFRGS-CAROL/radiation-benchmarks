@@ -64,7 +64,7 @@ double kernel_time = 0;
 long long it_time_start;
 
 // ~ ===========================================================================
-inline long long get_time() {
+long long get_time() {
     struct timeval tv;
 
     gettimeofday(&tv, NULL);

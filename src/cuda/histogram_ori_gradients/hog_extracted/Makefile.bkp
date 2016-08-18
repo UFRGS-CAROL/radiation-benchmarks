@@ -1,0 +1,24 @@
+NVIDIA_INC=/usr/local/cuda-7.0/include/
+NVIDIA_LIB=/usr/local/cuda-7.0/lib64/
+LOGHELPER_INC=../../include/
+LOGHELPER_LIB=../../include/
+
+NVCC=/usr/local/cuda-7.0/bin/nvcc
+
+ifeq ($(LOGS), 1)
+OPTS = -DLOGS
+LOG_FLAGS =  $(LOGHELPER_INC)log_helper.c -I$(LOGHELPER_LIB)
+endif
+
+debug = -g -G
+
+all: clean hog gold_generator
+
+hog: HOG.cpp
+	$(NVCC) $(OPTS) HOG.cpp $(debug) $(LOG_FLAGS) -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_calib3d -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_legacy -lopencv_ml -lopencv_nonfree -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_superres -lopencv_video -lopencv_videostab -o hog
+
+gold_generator: GoldGenerator.cpp
+	$(NVCC) GoldGenerator.cpp $(debug) -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_calib3d -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_legacy -lopencv_ml -lopencv_nonfree -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_superres -lopencv_video -lopencv_videostab -o gold_gen
+	
+clean:
+	rm -rf hog gold_gen *~ *.data *.jpg ./output/*
