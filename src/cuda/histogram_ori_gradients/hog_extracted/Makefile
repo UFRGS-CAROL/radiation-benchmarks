@@ -11,16 +11,15 @@ LOG_FLAGS =  $(LOGHELPER_INC)log_helper.c -I$(LOGHELPER_LIB)
 endif
 
 debug = -g -G
-ALL_CV_FLAGS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_calib3d \
-			 -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu \
-			 -lopencv_legacy -lopencv_ml -lopencv_nonfree -lopencv_objdetect  \
-			 -lopencv_photo -lopencv_stitching -lopencv_superres -lopencv_video \
-			  -lopencv_videostab 
-
+ALL_CV_FLAGS=-lopencv_core -lopencv_imgproc -lopencv_highgui  -lopencv_objdetect 
+			 #-lopencv_gpu -lopencv_calib3d -lopencv_video -lopencv_legacy   \
+			 #-lopencv_stitching -lopencv_superres 
+			 #-lopencv_photo  -lopencv_ml -lopencv_ml 			 -lopencv_contrib -lopencv_features2d -lopencv_flann
+			#-lopencv_nonfree
 all:  hog  #gold_generator
 
 hog: HOG.cpp
-	$(NVCC) opencv_src/hog.cu -c $(ALL_CV_FLAGS)
+	$(NVCC) opencv_src/hog.cu -c -I$(NVIDIA_INC)
 	$(NVCC) opencv_src/HogDescriptor.cpp -c $(ALL_CV_FLAGS)
 	$(NVCC) HOG.cpp -c -g $(ALL_CV_FLAGS)
 	$(NVCC) -g -o hog_test hog.o HogDescriptor.o HOG.o $(ALL_CV_FLAGS)

@@ -10,7 +10,7 @@
 #include <iostream>
 
 using namespace cv;
-using namespace cv::gpu;
+//using namespace cv::gpu;
 
 HogDescriptor::HogDescriptor(Size win_size_, Size block_size_,
 		Size block_stride_, Size cell_size_, int nbins_, double win_sigma_,
@@ -107,7 +107,7 @@ void HogDescriptor::setSVMDetector(const vector<float>& _detector) {
 }
 
 cv::gpu::GpuMat HogDescriptor::getBuffer(const Size& sz, int type,
-		GpuMat& buf) {
+		cv::gpu::GpuMat& buf) {
 	if (buf.empty() || buf.type() != type)
 		buf.create(sz, type);
 	else if (buf.cols < sz.width || buf.rows < sz.height)
@@ -118,7 +118,7 @@ cv::gpu::GpuMat HogDescriptor::getBuffer(const Size& sz, int type,
 }
 
 cv::gpu::GpuMat HogDescriptor::getBuffer(int rows, int cols, int type,
-		GpuMat& buf) {
+		cv::gpu::GpuMat& buf) {
 	return getBuffer(Size(cols, rows), type, buf);
 }
 
@@ -275,7 +275,7 @@ void HogDescriptor::computeConfidenceMultiScale(const cv::gpu::GpuMat& img,
 	for (size_t i = 0; i < level_scale.size(); i++) {
 		scale = level_scale[i];
 		Size sz(cvRound(img.cols / scale), cvRound(img.rows / scale));
-		GpuMat smaller_img;
+		cv::gpu::GpuMat smaller_img;
 
 		if (sz == img.size())
 			smaller_img = img;
@@ -371,7 +371,7 @@ void HogDescriptor::detectMultiScale(const cv::gpu::GpuMat& img,
 	for (size_t i = 0; i < level_scale.size(); i++) {
 		scale = level_scale[i];
 		Size sz(cvRound(img.cols / scale), cvRound(img.rows / scale));
-		GpuMat smaller_img;
+		cv::gpu::GpuMat smaller_img;
 
 		if (sz == img.size())
 			smaller_img = img;

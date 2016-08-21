@@ -40,22 +40,18 @@
  //
  //M*/
 
-#if !defined CUDA_DISABLER
+//#include "opencv2/gpu/device/common.hpp"
+//#include "opencv2/gpu/device/warp_shuffle.hpp"
+//#include "opencv2/imgproc/imgproc.hpp"
+//#include "opencv2/gpu/gpu.hpp"
 
-#include "opencv2/gpu/device/common.hpp"
+
 #include "opencv2/gpu/device/reduce.hpp"
 #include "opencv2/gpu/device/functional.hpp"
-#include "opencv2/gpu/device/warp_shuffle.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
 #include "hog.cuh"
-#include "opencv2/gpu/gpu.hpp"
-
-//using namespace cv;
-using namespace cv::gpu::device;
-
-//using namespace std;
 
 // Other values are not supported
+#define uchar unsigned char
 #define CELL_WIDTH 8
 #define CELL_HEIGHT 8
 #define CELLS_PER_BLOCK_X 2
@@ -256,8 +252,8 @@ template<int size>
 __device__ float reduce_smem_ext(float* smem, float val) {
 	unsigned int tid = threadIdx.x;
 	float sum = val;
-
-	reduce < size > (smem, sum, tid, plus<float>());
+	cv::gpu::device::plus<float> temp;
+	cv::gpu::device::reduce < size > (smem, sum, tid, temp);
 
 	if (size == 32) {
 #if __CUDA_ARCH__ >= 300
@@ -382,7 +378,7 @@ __global__ void compute_confidence_hists_kernel_many_blocks_ext(
 
 	const int tid = threadIdx.z * nthreads + threadIdx.x;
 
-	reduce < nthreads > (products, product, tid, plus<float>());
+	cv::gpu::device::reduce < nthreads > (products, product, tid, cv::gpu::device::plus<float>());
 
 	if (threadIdx.x == 0)
 		confidences[blockIdx.y * img_win_width + blockIdx.x * blockDim.z + win_x] =
@@ -449,7 +445,7 @@ __global__ void classify_hists_kernel_many_blocks_ext(const int img_win_width,
 
 	const int tid = threadIdx.z * nthreads + threadIdx.x;
 
-	reduce < nthreads > (products, product, tid, plus<float>());
+	cv::gpu::device::reduce < nthreads > (products, product, tid, cv::gpu::device::plus<float>());
 
 	if (threadIdx.x == 0)
 		labels[blockIdx.y * img_win_width + blockIdx.x * blockDim.z + win_x] =
@@ -844,4 +840,3 @@ void resize_8UC1(const cv::gpu::PtrStepSzb& src, cv::gpu::PtrStepSzb dst) {
 void resize_8UC4(const cv::gpu::PtrStepSzb& src, cv::gpu::PtrStepSzb dst) {
 	resize_for_hog_ext<uchar4>(src, dst, resize8UC4_tex);
 }
-#endif /* CUDA_DISABLER */
