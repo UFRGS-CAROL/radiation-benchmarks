@@ -10,6 +10,7 @@
 #include <omp.h>
 
 #define INPUTSIZE 134217728
+#define RETRY_COUNT 3
 
 int generate;
 
@@ -384,6 +385,7 @@ int main(int argc, char **argv)
 
     const uint DIR = 1;
     const uint numValues = UINT_MAX; // 65536
+	int retries = 0;
 
     printf("%s Starting...\n\n", argv[0]);
 
@@ -417,62 +419,64 @@ int main(int argc, char **argv)
 	checkCudaErrors(cudaMalloc((void **)&(params->d_BufVal), params->size * sizeof(uint)));
 	checkCudaErrors(cudaMalloc((void **)&(params->d_SrcKey), params->size * sizeof(uint)));
 	checkCudaErrors(cudaMalloc((void **)&(params->d_SrcVal), params->size * sizeof(uint)));
-	checkCudaErrors(cudaMalloc((void **)&(params->d_SrcKeyConst), params->size * sizeof(uint)));
-	checkCudaErrors(cudaMalloc((void **)&(params->d_SrcValConst), params->size * sizeof(uint)));
+	//checkCudaErrors(cudaMalloc((void **)&(params->d_SrcKeyConst), params->size * sizeof(uint)));
+	//checkCudaErrors(cudaMalloc((void **)&(params->d_SrcValConst), params->size * sizeof(uint)));
 	
-	checkCudaErrors(cudaMemcpy(params->d_SrcKeyConst, params->h_SrcKey, params->size * sizeof(uint), cudaMemcpyHostToDevice));
-	checkCudaErrors(cudaMemcpy(params->d_SrcValConst, params->h_SrcVal, params->size * sizeof(uint), cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpy(params->d_SrcKey, params->h_SrcKey, params->size * sizeof(uint), cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpy(params->d_SrcVal, params->h_SrcVal, params->size * sizeof(uint), cudaMemcpyHostToDevice));
 
 	for (int loop1 = 0; loop1 < params->iterations; loop1++)
 	{
 		globaltimestamp = mysecond();
         if (params->verbose) printf("================== [Iteration #%i began]\n", loop1);
+		retries = 0;
+		do 
+		{
+			//checkCudaErrors(cudaMemcpy(params->d_SrcKey, params->d_SrcKeyConst, params->size * sizeof(uint), cudaMemcpyDeviceToDevice));
+			//checkCudaErrors(cudaMemcpy(params->d_SrcVal, params->d_SrcValConst, params->size * sizeof(uint), cudaMemcpyDeviceToDevice));
 
-		checkCudaErrors(cudaMemcpy(params->d_SrcKey, params->d_SrcKeyConst, params->size * sizeof(uint), cudaMemcpyDeviceToDevice));
-		checkCudaErrors(cudaMemcpy(params->d_SrcVal, params->d_SrcValConst, params->size * sizeof(uint), cudaMemcpyDeviceToDevice));
+			initMergeSort();
 
-		initMergeSort();
+			checkCudaErrors(cudaDeviceSynchronize());
+			timestamp = mysecond();
+		    #ifdef LOGS
+	        	if (!(params->generate)) start_iteration();
+		    #endif
+			mergeSort(
+			    params->d_DstKey,
+			    params->d_DstVal,
+			    params->d_BufKey,
+			    params->d_BufVal,
+			    params->d_SrcKey,
+			    params->d_SrcVal,
+			    params->size,
+			    DIR
+			);
+			checkCudaErrors(cudaDeviceSynchronize());
+			kernel_time = mysecond() - timestamp;
+	
+        		errNum = 0;
+			timestamp = mysecond();
+			errNum = sortVerify(
+			    params->d_DstKey,
+			    params->d_DstVal,
+			    params->d_SrcKey, 
+			    params->size);
+			checkCudaErrors(cudaDeviceSynchronize());
+		    #ifdef LOGS
+		        if (!(params->generate)) end_iteration();
+		    #endif
 
-		checkCudaErrors(cudaDeviceSynchronize());
-		timestamp = mysecond();
-	    #ifdef LOGS
-	        if (!(params->generate)) start_iteration();
-	    #endif
-		mergeSort(
-		    params->d_DstKey,
-		    params->d_DstVal,
-		    params->d_BufKey,
-		    params->d_BufVal,
-		    params->d_SrcKey,
-		    params->d_SrcVal,
-		    params->size,
-		    DIR
-		);
-		checkCudaErrors(cudaDeviceSynchronize());
-	    #ifdef LOGS
-	        if (!(params->generate)) end_iteration();
-	    #endif
-		kernel_time = mysecond() - timestamp;
-
-        if (params->verbose) printf("GPU Kernel time: %.4fs\n", kernel_time);
-        
-        
-		timestamp = mysecond();
-		errNum = sortVerify(
-		    params->d_DstKey,
-		    params->d_DstVal,
-		    params->d_SrcKey, 
-		    params->size);
-		checkCudaErrors(cudaDeviceSynchronize());
-
-        if (params->verbose) printf("GPU Verify Kernel time: %.4fs\n", mysecond() - timestamp);
-
+		        if (params->verbose) printf("GPU Kernel time: %.4fs\n", kernel_time);
+		        if (params->verbose) printf("GPU Verify Kernel time: %.4fs\n", mysecond() - timestamp);
+			retries++;
+		} while ((retries<RETRY_COUNT) && (errNum != 0));
 		checkCudaErrors(cudaMemcpy(params->h_DstKey, params->d_DstKey, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
 		checkCudaErrors(cudaMemcpy(params->h_DstVal, params->d_DstVal, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
 		
-		timestamp = mysecond();
-		checkVals(params);
-        if (params->verbose) printf("CPU Verify time: %.4fs\n", mysecond() - timestamp);
+		//timestamp = mysecond();
+		//checkVals(params);
+        //if (params->verbose) printf("CPU Verify time: %.4fs\n", mysecond() - timestamp);
 
 		timestamp = mysecond();
 
