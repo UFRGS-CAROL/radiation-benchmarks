@@ -453,13 +453,8 @@ int main(int argc, char **argv)
 			    DIR
 			);
 			checkCudaErrors(cudaDeviceSynchronize());
-		    #ifdef LOGS
-		        if (!(params->generate)) end_iteration();
-		    #endif
 			kernel_time = mysecond() - timestamp;
 	
-		        if (params->verbose) printf("GPU Kernel time: %.4fs\n", kernel_time);
-        	
         		errNum = 0;
 			timestamp = mysecond();
 			errNum = sortVerify(
@@ -468,10 +463,14 @@ int main(int argc, char **argv)
 			    params->d_SrcKey, 
 			    params->size);
 			checkCudaErrors(cudaDeviceSynchronize());
+		    #ifdef LOGS
+		        if (!(params->generate)) end_iteration();
+		    #endif
 
+		        if (params->verbose) printf("GPU Kernel time: %.4fs\n", kernel_time);
 		        if (params->verbose) printf("GPU Verify Kernel time: %.4fs\n", mysecond() - timestamp);
 			retries++;
-		} while ((retries<RETRY_COUNT) && (errNum != 0))
+		} while ((retries<RETRY_COUNT) && (errNum != 0));
 		checkCudaErrors(cudaMemcpy(params->h_DstKey, params->d_DstKey, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
 		checkCudaErrors(cudaMemcpy(params->h_DstVal, params->d_DstVal, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
 		

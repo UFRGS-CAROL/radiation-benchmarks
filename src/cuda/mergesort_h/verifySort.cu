@@ -29,6 +29,7 @@ extern "C" uint sortVerify(uint *d_DstKey, uint *d_DstVal, uint *d_SrcKey, int s
 	
 	cudaMemcpy(&h_errNum, d_errNum, sizeof(uint), cudaMemcpyDeviceToHost);
 	
-	printf("errNum = %u\n", h_errNum);
+	cudaFree(d_errNum);
+
 	return h_errNum;
 }
