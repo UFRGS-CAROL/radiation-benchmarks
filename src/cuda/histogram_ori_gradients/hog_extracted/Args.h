@@ -14,11 +14,10 @@
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
-//#include "opencv2/gpu/gpu.hpp"
+#include <cstdlib>
 #include "opencv2/highgui/highgui.hpp"
 
 using namespace std;
-using namespace cv;
 
 class Args {
 public:

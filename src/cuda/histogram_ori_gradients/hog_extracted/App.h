@@ -20,7 +20,7 @@
 #endif
 
 using namespace std;
-using namespace cv;
+//using namespace cv;
 
 class App {
 public:
@@ -146,11 +146,11 @@ void App::run() {
 		gold.push_back(values);
 	}
 
-	Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
-	Size win_stride(args.win_stride_width, args.win_stride_height);
+	cv::Size win_size(args.win_width, args.win_width * 2); //(64, 128) or (48, 96)
+	cv::Size win_stride(args.win_stride_width, args.win_stride_height);
 	// Create HOG descriptors and detectors here
 	vector<float> detector;
-	if (win_size == Size(64, 128))
+	if (win_size == cv::Size(64, 128))
 		detector = HogDescriptor::getPeopleDetector64x128();
 	else
 		detector = HogDescriptor::getPeopleDetector48x96();
@@ -158,22 +158,16 @@ void App::run() {
 	try {
 
 		//gpu --------------------------------------------
-		HogDescriptor gpu_hog(win_size, Size(16, 16), Size(8, 8),
-				Size(8, 8), 9,HogDescriptor::DEFAULT_WIN_SIGMA, 0.2,
+		HogDescriptor gpu_hog(win_size, cv::Size(16, 16), cv::Size(8, 8),
+				cv::Size(8, 8), 9,HogDescriptor::DEFAULT_WIN_SIGMA, 0.2,
 				gamma_corr, HogDescriptor::DEFAULT_NLEVELS);
-		//====================================================
-		//CPU ------------------------------------------------
-		//cv::HOGDescriptor cpu_hog(win_size, Size(16, 16), Size(8, 8),
-		//		Size(8, 8), 9, 1, -1, HOGDescriptor::L2Hys, 0.2, gamma_corr,
-		//		cv::HOGDescriptor::DEFAULT_NLEVELS);
-		//====================================================
-
+		
 		gpu_hog.setSVMDetector(detector);
 		//cpu_hog.setSVMDetector(detector);
 		for (int i = 0; i < args.iterations; i++) {
-			Mat frame;
+			cv::Mat frame;
 
-			frame = imread(args.src);
+			frame = cv::imread(args.src);
 			if (frame.empty()) {
 #ifdef LOGS
 				log_error_detail("Cant open matrix Frame");
@@ -183,8 +177,8 @@ void App::run() {
 						string("can't open image file: " + args.src));
 			}
 
-			Mat img_aux, img, img_to_show;
-			gpu::GpuMat gpu_img;
+			cv::Mat img_aux, img, img_to_show;
+			cv::gpu::GpuMat gpu_img;
 
 			if (use_gpu)
 				cvtColor(frame, img_aux, CV_BGR2BGRA);
@@ -197,7 +191,7 @@ void App::run() {
 			gpu_hog.nlevels = nlevels;
 			//cpu_hog.nlevels = nlevels;
 
-			vector < Rect > found;
+			vector < cv::Rect > found;
 
 			// Perform HOG classification
 			double time;
@@ -207,7 +201,7 @@ void App::run() {
 			gpu_img.upload(img);
 			time = mysecond();
 			gpu_hog.detectMultiScale(gpu_img, found, hit_threshold, win_stride,
-					Size(0, 0), scale, gr_threshold);
+					cv::Size(0, 0), scale, gr_threshold);
 			time = mysecond() - time;
 #ifdef LOGS
 			end_iteration();
@@ -230,7 +224,7 @@ void App::run() {
 #endif
 			}
 			for (size_t s = 0; s < found.size(); s++) {
-				Rect r = found[s];
+				cv::Rect r = found[s];
 				vector<int> vf(GOLD_LINE_SIZE, 0);
 				vf[0] = r.height;
 				vf[1] = r.width;
@@ -246,7 +240,7 @@ void App::run() {
 		//logs all found rectangles in case of any error
 		if(error_counter){
 				for(size_t g = 0; g < found.size(); g++){
-					Rect r = found[g];
+					cv::Rect r = found[g];
 					char str[150];
 					snprintf(str, 150, "%d,%d,%d,%d,%d,%d\n", r.height, r.width, r.x,	r.y, r.br().x, r.br().y);
 #ifdef LOGS
