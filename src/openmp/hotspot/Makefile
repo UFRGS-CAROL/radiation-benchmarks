@@ -1,9 +1,12 @@
 # C compiler
 CC = gcc
-CC_FLAGS = -g -fopenmp -O3
+CC_FLAGS = -fopenmp -O3
 
-all: hotspot hotspot_check
+intel:CC=icc -mmic -g -DMIC_NATIVE 
+intel:OMP=-qopenmp
 
+#all: hotspot hotspot_check
+intel: hotspot hotspot_check
 
 hotspot: hotspot.c
 	$(CC) $(CC_FLAGS) hotspot.c -o hotspot 
