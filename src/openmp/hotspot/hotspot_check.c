@@ -314,6 +314,9 @@ int main(int argc, char **argv)
     }
     fflush(stdout);
 
+#ifdef LOGS
+    end_log_file();
+#endif /* LOGS */
     /* cleanup	*/
     free(temp);
     free(power);
