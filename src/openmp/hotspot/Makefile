@@ -9,7 +9,7 @@ hotspot: hotspot.c
 	$(CC) $(CC_FLAGS) hotspot.c -o hotspot 
 
 hotspot_check: hotspot_check.c
-	$(CC) $(CC_FLAGS) hotspot_check.c -o hotspot_check
+	$(CC) $(CC_FLAGS) hotspot_check.c  -DLOGS -o hotspot_check
 
 clean:
-	rm -f hotspot 
+	rm -f hotspot hotspot_check
