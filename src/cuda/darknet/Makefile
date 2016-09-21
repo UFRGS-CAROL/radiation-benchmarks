@@ -1,7 +1,8 @@
-GPU=1
-CUDNN=0
-OPENCV=0
-DEBUG=0
+GPU?=0
+CUDNN?=0
+OPENCV?=0
+DEBUG?=0
+LOGS?=0
 
 ARCH= --gpu-architecture=compute_35 --gpu-code=compute_35
 
@@ -15,7 +16,7 @@ CC=gcc
 NVCC=nvcc
 OPTS=-Ofast
 LDFLAGS= -lm -pthread 
-COMMON=  -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB)  
+COMMON= 
 CFLAGS=-Wall -Wfatal-errors 
 
 ifeq ($(DEBUG), 1) 
@@ -44,8 +45,7 @@ ifeq ($(CUDNN), 1)
 endif
 
 ifeq ($(LOGS), 1)
-	CFLAGS+= -DLOGS
-	LDFLAGS+= -lLogHelperCuda
+	CFLAGS+= -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB)  -lLogHelper -DLOGS
 endif
 	 
 
@@ -72,10 +72,10 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj results $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(NVCC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 $(OBJDIR)%.o: %.c $(DEPS)
-	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@
+	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@

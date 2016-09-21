@@ -7,6 +7,8 @@
 #include "cuda.h"
 #include "blas.h"
 #include "connected_layer.h"
+#include <unistd.h>
+#include <getopt.h>
 
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"
@@ -17,7 +19,6 @@
 #endif
 
 #include "helpful.h"
-
 
 extern void run_imagenet(int argc, char **argv);
 extern void run_yolo(int argc, char **argv);
@@ -234,16 +235,98 @@ void visualize(char *cfgfile, char *weightfile) {
 #endif
 }
 
+/**
+ * -e - execution_type = <yolo/classifier/imagenet...>
+ * -m - execution_model = <test/train/valid>
+ * -c - config_file = configuration file
+ * -w - weights = neural network weights
+ * -i - input_data_path = path to all input data *.jpg files
+ * -n - iterations = how many radiation iterations
+ * -g - generate   = generates a gold
+ */
+typedef struct arguments {
+	char *execution_type;
+	char *execution_model;
+	char *config_file;
+	char *weights;
+	char *input_data_path;
+	long int iterations;
+	unsigned char generate;
+} Args;
+
+/**
+ * @parse_arguments
+ * parameter arguments to_parse
+ * return 0 ok, -1 wrong
+ */
+int parse_arguments(Args *to_parse, int argc, char **argv) {
+	static struct option long_options[] = { { "execution_type",
+	required_argument, NULL, 'e' }, { "execution_model",
+	required_argument, NULL, 'm' }, { "config_file", required_argument,
+	NULL, 'c' }, { "weights", required_argument, NULL, 'w' }, {
+			"input_data_path", required_argument, NULL, 'i' }, { "iterations",
+	required_argument, NULL, 'n' }, { "generate", no_argument, NULL, 'g' }, {
+			NULL, 0, NULL, 0 } };
+
+	// loop over all of the options
+	char ch;
+	int ok = -1;
+	int option_index = 0;
+	while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g:", long_options,
+			&option_index)) != -1) {
+		// check to see if a single character or long option came through
+		switch (ch) {
+			case 'e': {
+				to_parse->execution_type = optarg; // or copy it if you want to
+				break;
+			}
+			case 'm': {
+				to_parse->execution_model = optarg; // or copy it if you want to
+				break;
+			}
+			case 'c': {
+				to_parse->config_file = optarg;
+				break;
+			}
+			case 'w': {
+				to_parse->weights = optarg;
+				break;
+			}
+			case 'i': {
+				to_parse->input_data_path = optarg;
+				break;
+			}
+			case 'n': {
+				to_parse->iterations = atol(optarg);
+				break;
+			}
+			case 'g': {
+				break;
+			}
+
+		}
+		ok = 0;
+	}
+	return ok;
+
+}
+
+void usage(char **argv, char *model, char *message) {
+	printf("Some argument is missing, to use %s option\n", model);
+	printf("usage: %s %s", argv[0], message);
+}
+
 int main(int argc, char **argv) {
 	//test_resize("data/bad.jpg");
 	//test_box();
 	//test_convolutional_layer();
 	//I added the new parameters usage
-	//using
 	if (argc < 2) {
-		fprintf(stderr, "usage: %s <function>\n", argv[0]);
+		//fprintf(stderr, "usage: %s <function>\n", argv[0]);
+		usage(argv, "<yolo/valid/classifer>", "<function>");
 		return 0;
 	}
+
 	gpu_index = find_int_arg(argc, argv, "-i", 0);
 	if (find_arg(argc, argv, "-nogpu")) {
 		gpu_index = -1;
@@ -258,66 +341,77 @@ int main(int argc, char **argv) {
 	}
 #endif
 
-	if (0 == strcmp(argv[1], "imagenet")) {
-		run_imagenet(argc, argv);
-	} else if (0 == strcmp(argv[1], "average")) {
-		average(argc, argv);
-	} else if (0 == strcmp(argv[1], "yolo")) {
-		run_yolo(argc, argv);
-	} else if (0 == strcmp(argv[1], "cifar")) {
-		run_cifar(argc, argv);
-	} else if (0 == strcmp(argv[1], "go")) {
-		run_go(argc, argv);
-	} else if (0 == strcmp(argv[1], "rnn")) {
-		run_char_rnn(argc, argv);
-	} else if (0 == strcmp(argv[1], "vid")) {
-		run_vid_rnn(argc, argv);
-	} else if (0 == strcmp(argv[1], "coco")) {
-		run_coco(argc, argv);
-	} else if (0 == strcmp(argv[1], "classifier")) {
-		run_classifier(argc, argv);
-	} else if (0 == strcmp(argv[1], "art")) {
-		run_art(argc, argv);
-	} else if (0 == strcmp(argv[1], "tag")) {
-		run_tag(argc, argv);
-	} else if (0 == strcmp(argv[1], "compare")) {
-		run_compare(argc, argv);
-	} else if (0 == strcmp(argv[1], "dice")) {
-		run_dice(argc, argv);
-	} else if (0 == strcmp(argv[1], "writing")) {
-		run_writing(argc, argv);
-	} else if (0 == strcmp(argv[1], "3d")) {
-		composite_3d(argv[2], argv[3], argv[4]);
-	} else if (0 == strcmp(argv[1], "test")) {
-		test_resize(argv[2]);
-	} else if (0 == strcmp(argv[1], "captcha")) {
-		run_captcha(argc, argv);
-	} else if (0 == strcmp(argv[1], "nightmare")) {
-		run_nightmare(argc, argv);
-	} else if (0 == strcmp(argv[1], "change")) {
-		change_rate(argv[2], atof(argv[3]), (argc > 4) ? atof(argv[4]) : 0);
-	} else if (0 == strcmp(argv[1], "rgbgr")) {
-		rgbgr_net(argv[2], argv[3], argv[4]);
-	} else if (0 == strcmp(argv[1], "denormalize")) {
-		denormalize_net(argv[2], argv[3], argv[4]);
-	} else if (0 == strcmp(argv[1], "normalize")) {
-		normalize_net(argv[2], argv[3], argv[4]);
-	} else if (0 == strcmp(argv[1], "rescale")) {
-		rescale_net(argv[2], argv[3], argv[4]);
-	} else if (0 == strcmp(argv[1], "ops")) {
-		operations(argv[2]);
-	} else if (0 == strcmp(argv[1], "partial")) {
-		partial(argv[2], argv[3], argv[4], atoi(argv[5]));
-	} else if (0 == strcmp(argv[1], "average")) {
-		average(argc, argv);
-	} else if (0 == strcmp(argv[1], "stacked")) {
-		stacked(argv[2], argv[3], argv[4]);
-	} else if (0 == strcmp(argv[1], "visualize")) {
-		visualize(argv[2], (argc > 3) ? argv[3] : 0);
-	} else if (0 == strcmp(argv[1], "imtest")) {
-		test_resize(argv[2]);
+	//try to parse
+	Args to_parse;
+	if (parse_arguments(&to_parse, argc, argv) == 0) {
+		//I'll do firsrt for yolo, next I dont know
+		printf("foi");
+		return 1;
+
+		if (0 == strcmp(argv[1], "imagenet")) {
+			run_imagenet(argc, argv);
+		} else if (0 == strcmp(argv[1], "average")) {
+			average(argc, argv);
+			//} else if () {
+
+			//run_yolo(argc, argv);
+		} else if (0 == strcmp(argv[1], "cifar")) {
+			run_cifar(argc, argv);
+		} else if (0 == strcmp(argv[1], "go")) {
+			run_go(argc, argv);
+		} else if (0 == strcmp(argv[1], "rnn")) {
+			run_char_rnn(argc, argv);
+		} else if (0 == strcmp(argv[1], "vid")) {
+			run_vid_rnn(argc, argv);
+		} else if (0 == strcmp(argv[1], "coco")) {
+			run_coco(argc, argv);
+		} else if (0 == strcmp(argv[1], "classifier")) {
+			run_classifier(argc, argv);
+		} else if (0 == strcmp(argv[1], "art")) {
+			run_art(argc, argv);
+		} else if (0 == strcmp(argv[1], "tag")) {
+			run_tag(argc, argv);
+		} else if (0 == strcmp(argv[1], "compare")) {
+			run_compare(argc, argv);
+		} else if (0 == strcmp(argv[1], "dice")) {
+			run_dice(argc, argv);
+		} else if (0 == strcmp(argv[1], "writing")) {
+			run_writing(argc, argv);
+		} else if (0 == strcmp(argv[1], "3d")) {
+			composite_3d(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "test")) {
+			test_resize(argv[2]);
+		} else if (0 == strcmp(argv[1], "captcha")) {
+			run_captcha(argc, argv);
+		} else if (0 == strcmp(argv[1], "nightmare")) {
+			run_nightmare(argc, argv);
+		} else if (0 == strcmp(argv[1], "change")) {
+			change_rate(argv[2], atof(argv[3]), (argc > 4) ? atof(argv[4]) : 0);
+		} else if (0 == strcmp(argv[1], "rgbgr")) {
+			rgbgr_net(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "denormalize")) {
+			denormalize_net(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "normalize")) {
+			normalize_net(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "rescale")) {
+			rescale_net(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "ops")) {
+			operations(argv[2]);
+		} else if (0 == strcmp(argv[1], "partial")) {
+			partial(argv[2], argv[3], argv[4], atoi(argv[5]));
+		} else if (0 == strcmp(argv[1], "average")) {
+			average(argc, argv);
+		} else if (0 == strcmp(argv[1], "stacked")) {
+			stacked(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "visualize")) {
+			visualize(argv[2], (argc > 3) ? argv[3] : 0);
+		} else if (0 == strcmp(argv[1], "imtest")) {
+			test_resize(argv[2]);
+		} else {
+			fprintf(stderr, "Not an option: %s\n", argv[1]);
+		}
 	} else {
-		fprintf(stderr, "Not an option: %s\n", argv[1]);
+		usage(argv, "<yolo/valid/classifer>", "<function>");
 	}
 	return 0;
 }
