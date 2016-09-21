@@ -9,16 +9,15 @@
 #include "connected_layer.h"
 #include <unistd.h>
 #include <getopt.h>
-
+#include <limits.h>
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"
 #endif
 
 #ifdef LOGS
 #include "log_helper.h"
-#endif
-
 #include "helpful.h"
+#endif
 
 extern void run_imagenet(int argc, char **argv);
 extern void run_yolo(int argc, char **argv);
@@ -251,8 +250,54 @@ typedef struct arguments {
 	char *weights;
 	char *input_data_path;
 	long int iterations;
-	unsigned char generate;
+	char *generate;
+	int generate_flag;
 } Args;
+
+/**
+ * return 1 if everything is ok, and 0 if not
+ */
+int check_args(const Args arg){
+	//check config_file
+	if( access(arg.config_file, F_OK ) == -1 ) {
+		printf("Config file does not exist\n");
+	    return -1;
+	}
+	//check weights
+	if(access(arg.weights, F_OK ) == -1 ) {
+		printf("Weights does not exist\n");
+	    return -1;
+	}
+
+	if (arg.iterations < 0 || arg.iterations > INT_MAX){
+		printf("Use a valid value for iterations\n");
+		return -1;
+	}
+
+	if (arg.input_data_path == NULL){
+		printf("No input path set\n");
+		return -1;
+	}
+	if (arg.generate_flag == 1 && arg.generate == NULL){
+		printf("Generate gold path not passed\n");
+		return -1;
+	}
+	return 0;
+}
+/**
+ * print the passed arg
+ */
+void print_args(const Args arg) {
+	printf("execution type = %s\n"
+			"execution model = %s\n"
+			"config file = %s\n"
+			"weights = %s\n"
+			"input_data_path = %s\n"
+			"iterations = %ld\n"
+			"generate = %s\n", arg.execution_type, arg.execution_model,
+			arg.config_file, arg.weights, arg.input_data_path, arg.iterations,
+			((arg.generate_flag == 0) ? "not generating gold":arg.generate));
+}
 
 /**
  * @parse_arguments
@@ -261,59 +306,71 @@ typedef struct arguments {
  */
 int parse_arguments(Args *to_parse, int argc, char **argv) {
 	static struct option long_options[] = { { "execution_type",
-	required_argument, NULL, 'e' }, { "execution_model",
-	required_argument, NULL, 'm' }, { "config_file", required_argument,
-	NULL, 'c' }, { "weights", required_argument, NULL, 'w' }, {
-			"input_data_path", required_argument, NULL, 'i' }, { "iterations",
-	required_argument, NULL, 'n' }, { "generate", no_argument, NULL, 'g' }, {
-			NULL, 0, NULL, 0 } };
+			required_argument, NULL, 'e' }, { "execution_model",
+			required_argument, NULL, 'm' }, { "config_file", required_argument,
+			NULL, 'c' }, { "weights", required_argument, NULL, 'w' }, {
+			"input_data_path", required_argument, NULL, 'i' },
+			{ "iterations",
+			required_argument, NULL, 'n' },
+			{ "generate", required_argument, NULL, 'g' }, { NULL, 0, NULL, 0 } };
 
 	// loop over all of the options
 	char ch;
 	int ok = -1;
 	int option_index = 0;
-	while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g:", long_options,
+	to_parse->generate_flag = 0;
+	while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g::", long_options,
 			&option_index)) != -1) {
 		// check to see if a single character or long option came through
 		switch (ch) {
-			case 'e': {
-				to_parse->execution_type = optarg; // or copy it if you want to
-				break;
-			}
-			case 'm': {
-				to_parse->execution_model = optarg; // or copy it if you want to
-				break;
-			}
-			case 'c': {
-				to_parse->config_file = optarg;
-				break;
-			}
-			case 'w': {
-				to_parse->weights = optarg;
-				break;
-			}
-			case 'i': {
-				to_parse->input_data_path = optarg;
-				break;
-			}
-			case 'n': {
-				to_parse->iterations = atol(optarg);
-				break;
-			}
-			case 'g': {
-				break;
-			}
+		case 'e': {
+			to_parse->execution_type = optarg; // or copy it if you want to
+			break;
+		}
+		case 'm': {
+			to_parse->execution_model = optarg; // or copy it if you want to
+			break;
+		}
+		case 'c': {
+			to_parse->config_file = optarg;
+			break;
+		}
+		case 'w': {
+			to_parse->weights = optarg;
+			break;
+		}
+		case 'i': {
+			to_parse->input_data_path = optarg;
+			break;
+		}
+		case 'n': {
+			to_parse->iterations = atol(optarg);
+			break;
+
+		}
+		case 'g': {
+			to_parse->generate = optarg;
+			to_parse->generate_flag = 1;
+			break;
+		}
 
 		}
 		ok = 0;
 	}
-	return ok;
+	return (ok || check_args(*to_parse));
 
 }
 
 void usage(char **argv, char *model, char *message) {
 	printf("Some argument is missing, to use %s option\n", model);
-	printf("usage: %s %s", argv[0], message);
+	printf("usage: %s %s ", argv[0], message);
+	printf("\n-e --execution_type = <yolo/classifier/imagenet...>\n"
+			"-m --execution_model = <test/train/valid>\n"
+			"-c --config_file = configuration file\n"
+			"-w --weights = neural network weights\n"
+			"-i --input_data_path = path to all input data *.jpg files\n"
+			"-n --iterations = how many radiation iterations\n"
+			"-g --generate   = generates a gold\n");
 }
 
 int main(int argc, char **argv) {
@@ -345,9 +402,7 @@ int main(int argc, char **argv) {
 	Args to_parse;
 	if (parse_arguments(&to_parse, argc, argv) == 0) {
 		//I'll do firsrt for yolo, next I dont know
-		printf("foi");
-		return 1;
-
+		print_args(to_parse);
 		if (0 == strcmp(argv[1], "imagenet")) {
 			run_imagenet(argc, argv);
 		} else if (0 == strcmp(argv[1], "average")) {
