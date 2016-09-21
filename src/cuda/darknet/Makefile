@@ -11,7 +11,7 @@ OBJDIR=./obj/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-CC=gcc
+CC=g++
 NVCC=nvcc
 OPTS=-Ofast
 LDFLAGS= -lm -pthread 
