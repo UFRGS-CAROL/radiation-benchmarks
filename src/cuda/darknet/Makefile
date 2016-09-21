@@ -15,7 +15,7 @@ CC=gcc
 NVCC=nvcc
 OPTS=-Ofast
 LDFLAGS= -lm -pthread 
-COMMON= 
+COMMON=  -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB)  
 CFLAGS=-Wall -Wfatal-errors 
 
 ifeq ($(DEBUG), 1) 
@@ -45,7 +45,7 @@ endif
 
 ifeq ($(LOGS), 1)
 	CFLAGS+= -DLOGS
-	LDFLAGS+= -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda
+	LDFLAGS+= -lLogHelperCuda
 endif
 	 
 
