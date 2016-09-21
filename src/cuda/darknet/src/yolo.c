@@ -5,6 +5,7 @@
 #include "parser.h"
 #include "box.h"
 #include "demo.h"
+#include "yolo.h"
 
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"
@@ -145,7 +146,7 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 	}
 }
 
-void validate_yolo(char *cfgfile, char *weightfile) {
+void validate_yolo(char *cfgfile, char *weightfile, char *img_list_path, char *base_result_out) {
 	network net = parse_network_cfg(cfgfile);
 	if (weightfile) {
 		load_weights(&net, weightfile);
@@ -155,10 +156,12 @@ void validate_yolo(char *cfgfile, char *weightfile) {
 			net.learning_rate, net.momentum, net.decay);
 	srand(time(0));
 
-	char *base = "results/comp4_det_test_";
+//	char *base = "results/comp4_det_test_";
+	char *base = base_result_out;
 	//list *plist = get_paths("data/voc.2007.test");
-	list *plist = get_paths("/home/pjreddie/data/voc/2007_test.txt");
+	//list *plist = get_paths("/home/pjreddie/data/voc/2007_test.txt");
 	//list *plist = get_paths("data/voc.2012.test");
+	list *plist = get_paths(img_list_path);
 	char **paths = (char **) list_to_array(plist);
 
 	layer l = net.layers[net.n - 1];
@@ -390,7 +393,41 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh) {
 	}
 }
 
-void run_yolo(int argc, char **argv) {
+//void run_yolo(int argc, char **argv) {
+//	int i;
+//	for (i = 0; i < 20; ++i) {
+//		char buff[256];
+//		sprintf(buff, "data/labels/%s.png", voc_names[i]);
+//		voc_labels[i] = load_image_color(buff, 0, 0);
+//	}
+//
+//	float thresh = find_float_arg(argc, argv, "-thresh", .2);
+//	int cam_index = find_int_arg(argc, argv, "-c", 0);
+//	int frame_skip = find_int_arg(argc, argv, "-s", 0);
+//	if (argc < 4) {
+//		fprintf(stderr,
+//				"usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n",
+//				argv[0], argv[1]);
+//		return;
+//	}
+//
+//	char *cfg = argv[3];
+//	char *weights = (argc > 4) ? argv[4] : 0;
+//	char *filename = (argc > 5) ? argv[5] : 0;
+//	if (0 == strcmp(argv[2], "test"))
+//		test_yolo(cfg, weights, filename, thresh);
+//	else if (0 == strcmp(argv[2], "train"))
+//		train_yolo(cfg, weights);
+//	else if (0 == strcmp(argv[2], "valid"))
+//		validate_yolo(cfg, weights);
+//	else if (0 == strcmp(argv[2], "recall"))
+//		validate_yolo_recall(cfg, weights);
+//	else if (0 == strcmp(argv[2], "demo"))
+//		demo(cfg, weights, thresh, cam_index, filename, voc_names, voc_labels,
+//				20, frame_skip);
+//}
+
+void run_yolo(const Args args) {
 	int i;
 	for (i = 0; i < 20; ++i) {
 		char buff[256];
@@ -398,28 +435,36 @@ void run_yolo(int argc, char **argv) {
 		voc_labels[i] = load_image_color(buff, 0, 0);
 	}
 
-	float thresh = find_float_arg(argc, argv, "-thresh", .2);
-	int cam_index = find_int_arg(argc, argv, "-c", 0);
-	int frame_skip = find_int_arg(argc, argv, "-s", 0);
-	if (argc < 4) {
-		fprintf(stderr,
-				"usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n",
-				argv[0], argv[1]);
-		return;
-	}
+	//need to be programed
+	float thresh = args.thresh; //find_float_arg(argc, argv, "-thresh", .2);
+	int cam_index = args.cam_index; //find_int_arg(argc, argv, "-c", 0);
+	int frame_skip = args.frame_skip; //find_int_arg(argc, argv, "-s", 0);
+//	if (argc < 4) {
+//		fprintf(stderr,
+//				"usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n",
+//				argv[0], argv[1]);
+//		return;
+//	}
 
-	char *cfg = argv[3];
-	char *weights = (argc > 4) ? argv[4] : 0;
-	char *filename = (argc > 5) ? argv[5] : 0;
-	if (0 == strcmp(argv[2], "test"))
+	char *cfg = args.config_file; //argv[3];
+	char *weights = args.weights; //(argc > 4) ? argv[4] : 0;
+	//test need be configured on parameters
+	char *filename = args.test_filename; //(argc > 5) ? argv[5] : 0;
+
+	if (0 == strcmp(args.execution_model, "test")) {
 		test_yolo(cfg, weights, filename, thresh);
-	else if (0 == strcmp(argv[2], "train"))
+	}
+	if (0 == strcmp(args.execution_model, "train")) {
 		train_yolo(cfg, weights);
-	else if (0 == strcmp(argv[2], "valid"))
-		validate_yolo(cfg, weights);
-	else if (0 == strcmp(argv[2], "recall"))
+	}
+	if (0 == strcmp(args.execution_model, "valid")) {
+		validate_yolo(cfg, weights, args.img_list_path, args.base_result_out);
+	}
+	if (0 == strcmp(args.execution_model, "recall")) {
 		validate_yolo_recall(cfg, weights);
-	else if (0 == strcmp(argv[2], "demo"))
+	}
+	if (0 == strcmp(args.execution_model, "demo")) {
 		demo(cfg, weights, thresh, cam_index, filename, voc_names, voc_labels,
 				20, frame_skip);
+	}
 }

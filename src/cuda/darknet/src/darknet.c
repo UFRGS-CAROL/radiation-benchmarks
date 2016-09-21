@@ -10,6 +10,9 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <limits.h>
+
+#include "yolo.h"
+
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"
 #endif
@@ -18,22 +21,6 @@
 #include "log_helper.h"
 #include "helpful.h"
 #endif
-
-extern void run_imagenet(int argc, char **argv);
-extern void run_yolo(int argc, char **argv);
-extern void run_coco(int argc, char **argv);
-extern void run_writing(int argc, char **argv);
-extern void run_captcha(int argc, char **argv);
-extern void run_nightmare(int argc, char **argv);
-extern void run_dice(int argc, char **argv);
-extern void run_compare(int argc, char **argv);
-extern void run_classifier(int argc, char **argv);
-extern void run_char_rnn(int argc, char **argv);
-extern void run_vid_rnn(int argc, char **argv);
-extern void run_tag(int argc, char **argv);
-extern void run_cifar(int argc, char **argv);
-extern void run_go(int argc, char **argv);
-extern void run_art(int argc, char **argv);
 
 void change_rate(char *filename, float scale, float add) {
 	// Ready for some weird shit??
@@ -234,52 +221,65 @@ void visualize(char *cfgfile, char *weightfile) {
 #endif
 }
 
-/**
- * -e - execution_type = <yolo/classifier/imagenet...>
- * -m - execution_model = <test/train/valid>
- * -c - config_file = configuration file
- * -w - weights = neural network weights
- * -i - input_data_path = path to all input data *.jpg files
- * -n - iterations = how many radiation iterations
- * -g - generate   = generates a gold
- */
-typedef struct arguments {
-	char *execution_type;
-	char *execution_model;
-	char *config_file;
-	char *weights;
-	char *input_data_path;
-	long int iterations;
-	char *generate;
-	int generate_flag;
-} Args;
-
+void args_init(Args *arg){
+	arg->config_file = NULL;
+	arg->execution_model = NULL;
+	arg->config_file = NULL;
+	arg->weights = NULL;
+	arg->input_data_path = NULL;
+	arg->generate = NULL;
+	arg->base_result_out = NULL;
+	arg->cam_index = -1;
+	arg->frame_skip = -1;
+	arg->generate = 0;
+	arg->img_list_path = NULL;
+	arg->iterations = 1;
+}
 /**
  * return 1 if everything is ok, and 0 if not
  */
-int check_args(const Args arg){
+int check_args(const Args arg) {
 	//check config_file
-	if( access(arg.config_file, F_OK ) == -1 ) {
+	if (access(arg.config_file, F_OK) == -1) {
 		printf("Config file does not exist\n");
-	    return -1;
+		return -1;
 	}
 	//check weights
-	if(access(arg.weights, F_OK ) == -1 ) {
+	if (access(arg.weights, F_OK) == -1) {
 		printf("Weights does not exist\n");
-	    return -1;
+		return -1;
 	}
 
-	if (arg.iterations < 0 || arg.iterations > INT_MAX){
+	if (arg.iterations < 0 || arg.iterations > INT_MAX) {
 		printf("Use a valid value for iterations\n");
 		return -1;
 	}
 
-	if (arg.input_data_path == NULL){
+	if (arg.input_data_path == NULL) {
 		printf("No input path set\n");
 		return -1;
 	}
-	if (arg.generate_flag == 1 && arg.generate == NULL){
+	if (arg.generate_flag == 1 && arg.generate == NULL) {
 		printf("Generate gold path not passed\n");
+		return -1;
+	}
+
+	if (arg.img_list_path == NULL) {
+		printf("Img list not passed\n");
+		return -1;
+	}
+	if (arg.base_result_out == NULL) {
+		printf("Base output not passed\n");
+		return -1;
+	}
+
+	if (arg.gpu_index > 5 && arg.gpu_index < -2){
+		printf("gpu_index not passed\n");
+		return -1;
+	}
+
+	if (arg.gpu_index > 5 && arg.gpu_index < -2){
+		printf("gpu_index not passed\n");
 		return -1;
 	}
 	return 0;
@@ -294,11 +294,22 @@ void print_args(const Args arg) {
 			"weights = %s\n"
 			"input_data_path = %s\n"
 			"iterations = %ld\n"
-			"generate = %s\n", arg.execution_type, arg.execution_model,
+			"generate = %s\n"
+			"img_list_path = %s\n"
+			"base_result_out = %s\n"
+			"gpu_index = %d\n", arg.execution_type, arg.execution_model,
 			arg.config_file, arg.weights, arg.input_data_path, arg.iterations,
-			((arg.generate_flag == 0) ? "not generating gold":arg.generate));
+			((arg.generate_flag == 0) ? "not generating gold" : arg.generate),
+			arg.img_list_path, arg.base_result_out, arg.gpu_index);
 }
 
+/**
+ * set strings null
+ */
+void set_null(Args *arg) {
+	arg->config_file = arg->execution_model = arg->config_file = arg->weights =
+			arg->input_data_path = arg->generate = NULL;
+}
 /**
  * @parse_arguments
  * parameter arguments to_parse
@@ -309,17 +320,18 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 			required_argument, NULL, 'e' }, { "execution_model",
 			required_argument, NULL, 'm' }, { "config_file", required_argument,
 			NULL, 'c' }, { "weights", required_argument, NULL, 'w' }, {
-			"input_data_path", required_argument, NULL, 'i' },
-			{ "iterations",
-			required_argument, NULL, 'n' },
-			{ "generate", required_argument, NULL, 'g' }, { NULL, 0, NULL, 0 } };
+			"input_data_path", required_argument, NULL, 'i' }, { "iterations",
+			required_argument, NULL, 'n' }, { "generate", required_argument,
+			NULL, 'g' }, { "img_list_path", required_argument, NULL, 'l' }, {
+			"base_result_out", required_argument, NULL, 'b' }, { "gpu_index",
+			required_argument, NULL, 'x' }, { NULL, 0, NULL, 0 } };
 
 	// loop over all of the options
 	char ch;
 	int ok = -1;
 	int option_index = 0;
 	to_parse->generate_flag = 0;
-	while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g::", long_options,
+	while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g:l:b:x::", long_options,
 			&option_index)) != -1) {
 		// check to see if a single character or long option came through
 		switch (ch) {
@@ -353,6 +365,19 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 			to_parse->generate_flag = 1;
 			break;
 		}
+		case 'l': {
+			to_parse->img_list_path = optarg;
+			break;
+		}
+		case 'b': {
+			to_parse->base_result_out = optarg;
+			break;
+		}
+
+		case 'x': {
+			to_parse->gpu_index = atoi(optarg);
+			break;
+		}
 
 		}
 		ok = 0;
@@ -370,7 +395,10 @@ void usage(char **argv, char *model, char *message) {
 			"-w --weights = neural network weights\n"
 			"-i --input_data_path = path to all input data *.jpg files\n"
 			"-n --iterations = how many radiation iterations\n"
-			"-g --generate   = generates a gold\n");
+			"-g --generate   = generates a gold\n"
+			"-l --img_list_path = list for all dataset image\n"
+			"-b --base_result_out = output of base\n"
+			"-x --gpu_index = GPU index\n");
 }
 
 int main(int argc, char **argv) {
@@ -384,90 +412,97 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
-	gpu_index = find_int_arg(argc, argv, "-i", 0);
-	if (find_arg(argc, argv, "-nogpu")) {
-		gpu_index = -1;
-	}
-
-#ifndef GPU
-	gpu_index = -1;
-#else
-	if(gpu_index >= 0) {
-		cudaError_t status = cudaSetDevice(gpu_index);
-		check_error(status);
-	}
-#endif
+//	gpu_index = find_int_arg(argc, argv, "-i", 0);
+//	if (find_arg(argc, argv, "-nogpu")) {
+//		gpu_index = -1;
+//	}
 
 	//try to parse
 	Args to_parse;
+	args_init(&to_parse);
 	if (parse_arguments(&to_parse, argc, argv) == 0) {
 		//I'll do firsrt for yolo, next I dont know
 		print_args(to_parse);
-		if (0 == strcmp(argv[1], "imagenet")) {
-			run_imagenet(argc, argv);
-		} else if (0 == strcmp(argv[1], "average")) {
-			average(argc, argv);
-			//} else if () {
-
-			//run_yolo(argc, argv);
-		} else if (0 == strcmp(argv[1], "cifar")) {
-			run_cifar(argc, argv);
-		} else if (0 == strcmp(argv[1], "go")) {
-			run_go(argc, argv);
-		} else if (0 == strcmp(argv[1], "rnn")) {
-			run_char_rnn(argc, argv);
-		} else if (0 == strcmp(argv[1], "vid")) {
-			run_vid_rnn(argc, argv);
-		} else if (0 == strcmp(argv[1], "coco")) {
-			run_coco(argc, argv);
-		} else if (0 == strcmp(argv[1], "classifier")) {
-			run_classifier(argc, argv);
-		} else if (0 == strcmp(argv[1], "art")) {
-			run_art(argc, argv);
-		} else if (0 == strcmp(argv[1], "tag")) {
-			run_tag(argc, argv);
-		} else if (0 == strcmp(argv[1], "compare")) {
-			run_compare(argc, argv);
-		} else if (0 == strcmp(argv[1], "dice")) {
-			run_dice(argc, argv);
-		} else if (0 == strcmp(argv[1], "writing")) {
-			run_writing(argc, argv);
-		} else if (0 == strcmp(argv[1], "3d")) {
-			composite_3d(argv[2], argv[3], argv[4]);
-		} else if (0 == strcmp(argv[1], "test")) {
-			test_resize(argv[2]);
-		} else if (0 == strcmp(argv[1], "captcha")) {
-			run_captcha(argc, argv);
-		} else if (0 == strcmp(argv[1], "nightmare")) {
-			run_nightmare(argc, argv);
-		} else if (0 == strcmp(argv[1], "change")) {
-			change_rate(argv[2], atof(argv[3]), (argc > 4) ? atof(argv[4]) : 0);
-		} else if (0 == strcmp(argv[1], "rgbgr")) {
-			rgbgr_net(argv[2], argv[3], argv[4]);
-		} else if (0 == strcmp(argv[1], "denormalize")) {
-			denormalize_net(argv[2], argv[3], argv[4]);
-		} else if (0 == strcmp(argv[1], "normalize")) {
-			normalize_net(argv[2], argv[3], argv[4]);
-		} else if (0 == strcmp(argv[1], "rescale")) {
-			rescale_net(argv[2], argv[3], argv[4]);
-		} else if (0 == strcmp(argv[1], "ops")) {
-			operations(argv[2]);
-		} else if (0 == strcmp(argv[1], "partial")) {
-			partial(argv[2], argv[3], argv[4], atoi(argv[5]));
-		} else if (0 == strcmp(argv[1], "average")) {
-			average(argc, argv);
-		} else if (0 == strcmp(argv[1], "stacked")) {
-			stacked(argv[2], argv[3], argv[4]);
-		} else if (0 == strcmp(argv[1], "visualize")) {
-			visualize(argv[2], (argc > 3) ? argv[3] : 0);
-		} else if (0 == strcmp(argv[1], "imtest")) {
-			test_resize(argv[2]);
-		} else {
-			fprintf(stderr, "Not an option: %s\n", argv[1]);
+#ifndef GPU
+		to_parse.gpu_index = -1;
+#else
+		if(to_parse.gpu_index >= 0) {
+			cudaError_t status = cudaSetDevice(to_parse.gpu_index);
+			check_error(status);
 		}
+#endif
+
+		if (strcmp(to_parse.execution_type, "yolo") == 0) {
+			run_yolo(to_parse);
+		}
+
+		/*
+		 if (0 == strcmp(argv[1], "imagenet")) {
+		 run_imagenet(argc, argv);
+		 } else if (0 == strcmp(argv[1], "average")) {
+		 average(argc, argv);
+		 } else if (0 == strcmp(argv[1], "yolo")) {
+		 run_yolo(argc, argv);
+		 } else if (0 == strcmp(argv[1], "cifar")) {
+		 run_cifar(argc, argv);
+		 } else if (0 == strcmp(argv[1], "go")) {
+		 run_go(argc, argv);
+		 } else if (0 == strcmp(argv[1], "rnn")) {
+		 run_char_rnn(argc, argv);
+		 } else if (0 == strcmp(argv[1], "vid")) {
+		 run_vid_rnn(argc, argv);
+		 } else if (0 == strcmp(argv[1], "coco")) {
+		 run_coco(argc, argv);
+		 } else if (0 == strcmp(argv[1], "classifier")) {
+		 run_classifier(argc, argv);
+		 } else if (0 == strcmp(argv[1], "art")) {
+		 run_art(argc, argv);
+		 } else if (0 == strcmp(argv[1], "tag")) {
+		 run_tag(argc, argv);
+		 } else if (0 == strcmp(argv[1], "compare")) {
+		 run_compare(argc, argv);
+		 } else if (0 == strcmp(argv[1], "dice")) {
+		 run_dice(argc, argv);
+		 } else if (0 == strcmp(argv[1], "writing")) {
+		 run_writing(argc, argv);
+		 } else if (0 == strcmp(argv[1], "3d")) {
+		 composite_3d(argv[2], argv[3], argv[4]);
+		 } else if (0 == strcmp(argv[1], "test")) {
+		 test_resize(argv[2]);
+		 } else if (0 == strcmp(argv[1], "captcha")) {
+		 run_captcha(argc, argv);
+		 } else if (0 == strcmp(argv[1], "nightmare")) {
+		 run_nightmare(argc, argv);
+		 } else if (0 == strcmp(argv[1], "change")) {
+		 change_rate(argv[2], atof(argv[3]), (argc > 4) ? atof(argv[4]) : 0);
+		 } else if (0 == strcmp(argv[1], "rgbgr")) {
+		 rgbgr_net(argv[2], argv[3], argv[4]);
+		 } else if (0 == strcmp(argv[1], "denormalize")) {
+		 denormalize_net(argv[2], argv[3], argv[4]);
+		 } else if (0 == strcmp(argv[1], "normalize")) {
+		 normalize_net(argv[2], argv[3], argv[4]);
+		 } else if (0 == strcmp(argv[1], "rescale")) {
+		 rescale_net(argv[2], argv[3], argv[4]);
+		 } else if (0 == strcmp(argv[1], "ops")) {
+		 operations(argv[2]);
+		 } else if (0 == strcmp(argv[1], "partial")) {
+		 partial(argv[2], argv[3], argv[4], atoi(argv[5]));
+		 } else if (0 == strcmp(argv[1], "average")) {
+		 average(argc, argv);
+		 } else if (0 == strcmp(argv[1], "stacked")) {
+		 stacked(argv[2], argv[3], argv[4]);
+		 } else if (0 == strcmp(argv[1], "visualize")) {
+		 visualize(argv[2], (argc > 3) ? argv[3] : 0);
+		 } else if (0 == strcmp(argv[1], "imtest")) {
+		 test_resize(argv[2]);
+		 } else {
+		 fprintf(stderr, "Not an option: %s\n", argv[1]);
+		 }
+		 */
 	} else {
 		usage(argv, "<yolo/valid/classifer>", "<function>");
 	}
+	set_null(&to_parse);
 	return 0;
 }
 
