@@ -11,7 +11,7 @@ OBJDIR=./obj/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-CC=g++
+CC=gcc
 NVCC=nvcc
 OPTS=-Ofast
 LDFLAGS= -lm -pthread 
@@ -72,10 +72,10 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj results $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+	$(NVCC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 $(OBJDIR)%.o: %.c $(DEPS)
-	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
+	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@
