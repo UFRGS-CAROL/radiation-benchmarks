@@ -10,7 +10,10 @@
 #include <sys/time.h>
 
 #define GOLD_LINE_SIZE 6
+#ifdef CXX
 using namespace std;
+
+
 void dump_output(int iteration_num, string directory, bool corrupted,
 		vector<vector<int> > data) {
 	char filename[100];
@@ -48,16 +51,16 @@ void dump_output(int iteration_num, string directory, bool corrupted,
 		sprintf(filename, "%s/graph%05d_corrupted_%s.data", directory.c_str(),
 				iteration_num, str_file_time);
 	else
-		sprintf(filename, "%s/graph%05d_%s.data", directory.c_str(),
-				iteration_num, str_file_time);
+		sprintf(filename, "%s/graph%05d_%s.data", directory.c_str(), iteration_num,
+				str_file_time);
 	ofstream fp;
 	fp.open(filename);
 	if (fp.is_open()) {
 		for (unsigned i = 0; i < data.size(); i++) {
 			vector<int> values = data[i];
-			for (unsigned j = 0; j < values.size(); j++) {
+			for(unsigned j = 0; j < values.size(); j++){
 				fp << values[j];
-				if (j != (values.size() - 1))
+				if(j != (values.size() - 1))
 					fp << ',';
 			}
 			fp << endl;
@@ -70,15 +73,8 @@ void dump_output(int iteration_num, string directory, bool corrupted,
 #endif
 		}
 	} else {
-		printf("Could not open %s in save_corrupted_output()\n", filename);
+			printf("Could not open %s in save_corrupted_output()\n", filename);
 	}
-}
-
-double mysecond() {
-	struct timeval tp;
-	struct timezone tzp;
-	gettimeofday(&tp, &tzp);
-	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
 }
 
 vector<string> &split(const string &s, char delim, vector<string> &elems) {
@@ -91,53 +87,32 @@ vector<string> &split(const string &s, char delim, vector<string> &elems) {
 }
 
 vector<string> split(const string &s, char delim) {
-	std::vector < string > elems;
+	std::vector<string> elems;
 	split(s, delim, elems);
 	return elems;
 }
 
-bool set_countains(vector<int> check, vector<vector<int> > src) {
+bool set_countains(vector<int> check, vector< vector<int> > src){
 	unsigned char cont = 0;
-	for (size_t i = 0; i < src.size(); i++) {
+	for(size_t i = 0; i < src.size(); i++){
 		vector<int> temp = src[i];
-		for (size_t j = 0; j < temp.size(); j++) {
-			if (temp[j] == check[j])
+		for(size_t j = 0; j < temp.size(); j++){
+			if(temp[j] == check[j])
 				cont++;
 		}
-		if (cont == temp.size())
+		if(cont == temp.size())
 			return false;
 		cont = 0;
 	}
 	return true;
 }
+#endif //CXX
 
-class InputParser {
-public:
-	InputParser(int &argc, char **argv) {
-		for (int i = 1; i < argc; ++i)
-			this->tokens.push_back(std::string(argv[i]));
-	}
-	/// @author iain
-	const std::string& getCmdOption(const std::string &option) const {
-		std::vector<std::string>::const_iterator itr;
-		itr = std::find(this->tokens.begin(), this->tokens.end(), option);
-		if (itr != this->tokens.end() && ++itr != this->tokens.end()) {
-			return *itr;
-		}
-		return "";
-	}
-	/// @author iain
-	bool cmdOptionExists(const std::string &option) const {
-		return std::find(this->tokens.begin(), this->tokens.end(), option)
-				!= this->tokens.end();
-	}
-
-	ostream& operator<<(ostream& os, const InputParser& dt) {
-		os << this->tokens;
-		return os;
-	}
-private:
-	std::vector<std::string> tokens;
-};
+double mysecond() {
+	struct timeval tp;
+	struct timezone tzp;
+	gettimeofday(&tp, &tzp);
+	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
+}
 
 #endif /* HELPFUL_H_ */
