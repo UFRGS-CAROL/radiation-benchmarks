@@ -331,7 +331,7 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 	int ok = -1;
 	int option_index = 0;
 	to_parse->generate_flag = 0;
-	while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g:l:b:x::", long_options,
+	while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g:l:b:x:", long_options,
 			&option_index)) != -1) {
 		// check to see if a single character or long option came through
 		switch (ch) {
@@ -433,7 +433,7 @@ int main(int argc, char **argv) {
 #endif
 
 		if (strcmp(to_parse.execution_type, "yolo") == 0) {
-			run_yolo(to_parse);
+			//run_yolo(to_parse);
 		}
 
 		/*
