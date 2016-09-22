@@ -86,9 +86,11 @@ static int check_args(const Args arg) {
 	if (arg.generate_flag == 1 && arg.gold_output == NULL) {
 		printf("Generate gold path not passed\n");
 		return -1;
-	}else{
-		printf("If generate is not set, gold input must be passed\n");
-		return -1;
+	}
+
+	if (arg.generate_flag == 0 && arg.gold_input == NULL){
+			printf("If generate is not set, gold input must be passed\n");
+			return -1;
 	}
 
 	if (arg.img_list_path == NULL) {
@@ -123,11 +125,12 @@ static void print_args(const Args arg) {
 //			"input_data_path = %s\n"
 					"iterations = %ld\n"
 					"gold_input/output = %s\n"
+					"gold_flag = %d\n"
 					"img_list_path = %s\n"
 					"base_result_out = %s\n"
 					"gpu_index = %d\n", arg.execution_type, arg.execution_model,
 			arg.config_file, arg.weights, arg.iterations,
-			((arg.generate_flag == 0) ? arg.gold_input : arg.gold_output),
+			((arg.generate_flag == 0) ? arg.gold_input : arg.gold_output), arg.generate_flag,
 			arg.img_list_path, arg.base_result_out, arg.gpu_index);
 }
 
@@ -209,8 +212,10 @@ static int parse_arguments(Args *to_parse, int argc, char **argv) {
 			break;
 		}
 		}
+
 		ok = 0;
 	}
+	print_args(*to_parse);
 	return (ok || check_args(*to_parse));
 
 }

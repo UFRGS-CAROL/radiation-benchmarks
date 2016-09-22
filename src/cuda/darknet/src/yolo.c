@@ -146,9 +146,14 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 		if (ymax > h)
 			ymax = h;
 
+
+
 		for (j = 0; j < classes; ++j) {
+			printf("antes do probs\n");
 			if (probs[i][j]) {
+				printf("depois\n");
 				printf("%d\n", arg.generate_flag);
+
 				//saving the gold files
 				if (arg.generate_flag){
 					fprintf(fps[j], "%s %f %f %f %f %f\n", id, probs[i][j],
@@ -162,6 +167,7 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 #endif
 			}
 		}
+
 	}
 }
 
@@ -194,9 +200,7 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 
 	//if generating a gold
 	if (arg.generate_flag) {
-		char gold_dir[1024];
-		snprintf(gold_dir, 1024, "%s%s.txt", base, arg.gold_output);
-		if ((gold_names = fopen(gold_dir, "w"))) {
+		if ((gold_names = fopen(arg.gold_output, "w"))) {
 			printf("generating gold file\n");
 		} else {
 			printf("error on opening file\n");
@@ -269,11 +273,16 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 			char *path = paths[i + t - nthreads];
 			char *id = basecfg(path);
 			float *X = val_resized[t].data;
+			printf("\n\n\n\n doingn\n\n\n\n\n");
 			float *predictions = network_predict(net, X);
 			int w = val[t].w;
 			int h = val[t].h;
+
+			printf("\n\n\n\n doingn2\n\n\n\n\n");
 			convert_detections(predictions, classes, l.n, square, side, w, h,
 					thresh, probs, boxes, 0);
+
+			printf("\n\n\n\n doingn3\n\n\n\n\n");
 			if (nms)
 				do_nms_sort(boxes, probs, side * side * l.n, classes,
 						iou_thresh);
