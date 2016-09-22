@@ -11,6 +11,11 @@
 #include "opencv2/highgui/highgui_c.h"
 #endif
 
+#ifdef LOGS
+#include "log_helper.h"
+#include "helpful.h"
+#endif
+
 char *voc_names[] = { "aeroplane", "bicycle", "bird", "boat", "bottle", "bus",
 		"car", "cat", "chair", "cow", "diningtable", "dog", "horse",
 		"motorbike", "person", "pottedplant", "sheep", "sofa", "train",
@@ -121,7 +126,7 @@ void convert_detections(float *predictions, int classes, int num, int square,
 }
 
 void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
-		int total, int classes, int w, int h) {
+		int total, int classes, int w, int h, const Args arg) { //Args parameter added to generate or check gold output
 	int i, j;
 	for (i = 0; i < total; ++i) {
 		float xmin = boxes[i].x - boxes[i].w / 2.;
@@ -139,17 +144,26 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 			ymax = h;
 
 		for (j = 0; j < classes; ++j) {
-			if (probs[i][j])
-				fprintf(fps[j], "%s %f %f %f %f %f\n", id, probs[i][j], xmin,
-						ymin, xmax, ymax);
+			if (probs[i][j]) {
+				printf("%d\n", arg.generate_flag);
+				if (arg.generate_flag)
+					fprintf(fps[j], "%s %f %f %f %f %f\n", id, probs[i][j],
+							xmin, ymin, xmax, ymax);
+#ifdef LOGS
+				if (!arg.generate_flag) {
+					printf("generate a log file");
+				}
+
+#endif
+			}
 		}
 	}
 }
 
-void validate_yolo(char *cfgfile, char *weightfile, char *img_list_path, char *base_result_out) {
-	network net = parse_network_cfg(cfgfile);
-	if (weightfile) {
-		load_weights(&net, weightfile);
+void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *img_list_path, char *base_result_out) {
+	network net = parse_network_cfg(arg.config_file);
+	if (arg.weights) {
+		load_weights(&net, arg.weights);
 	}
 	set_batch_network(&net, 1);
 	fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n",
@@ -157,11 +171,11 @@ void validate_yolo(char *cfgfile, char *weightfile, char *img_list_path, char *b
 	srand(time(0));
 
 //	char *base = "results/comp4_det_test_";
-	char *base = base_result_out;
+	char *base = arg.base_result_out;
 	//list *plist = get_paths("data/voc.2007.test");
 	//list *plist = get_paths("/home/pjreddie/data/voc/2007_test.txt");
 	//list *plist = get_paths("data/voc.2012.test");
-	list *plist = get_paths(img_list_path);
+	list *plist = get_paths(arg.img_list_path);
 	char **paths = (char **) list_to_array(plist);
 
 	layer l = net.layers[net.n - 1];
@@ -233,8 +247,9 @@ void validate_yolo(char *cfgfile, char *weightfile, char *img_list_path, char *b
 			if (nms)
 				do_nms_sort(boxes, probs, side * side * l.n, classes,
 						iou_thresh);
+			//now will save gold or keep running with log files
 			print_yolo_detections(fps, id, boxes, probs, side * side * l.n,
-					classes, w, h);
+					classes, w, h, arg);
 			free(id);
 			free_image(val[t]);
 			free_image(val_resized[t]);
@@ -446,25 +461,29 @@ void run_yolo(const Args args) {
 //		return;
 //	}
 
-	char *cfg = args.config_file; //argv[3];
-	char *weights = args.weights; //(argc > 4) ? argv[4] : 0;
+	//char *cfg = args.config_file; //argv[3];
+	//char *weights = args.weights; //(argc > 4) ? argv[4] : 0;
 	//test need be configured on parameters
-	char *filename = args.test_filename; //(argc > 5) ? argv[5] : 0;
+	//char *filename = args.test_filename; //(argc > 5) ? argv[5] : 0;
 
 	if (0 == strcmp(args.execution_model, "test")) {
-		test_yolo(cfg, weights, filename, thresh);
+		//test_yolo(cfg, weights, filename, thresh);
+		printf("function call not done yet\n");
+
 	}
 	if (0 == strcmp(args.execution_model, "train")) {
-		train_yolo(cfg, weights);
+		//train_yolo(cfg, weights);
 	}
 	if (0 == strcmp(args.execution_model, "valid")) {
-		validate_yolo(cfg, weights, args.img_list_path, args.base_result_out);
+		validate_yolo(args);
 	}
 	if (0 == strcmp(args.execution_model, "recall")) {
-		validate_yolo_recall(cfg, weights);
+//		validate_yolo_recall(cfg, weights);
+		printf("function call not done yet\n");
 	}
 	if (0 == strcmp(args.execution_model, "demo")) {
-		demo(cfg, weights, thresh, cam_index, filename, voc_names, voc_labels,
-				20, frame_skip);
+//		demo(cfg, weights, thresh, cam_index, filename, voc_names, voc_labels,
+//				20, frame_skip);
+		printf("function call not done yet\n");
 	}
 }

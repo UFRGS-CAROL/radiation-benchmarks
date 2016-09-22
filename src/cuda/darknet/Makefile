@@ -87,6 +87,10 @@ results:
 
 .PHONY: clean
 
+
+test:darknet
+	./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 1 -g gold/ -l voc.2012.txt -b results/comp4_det_test_ -x -1
+
 clean:
 	rm -rf $(OBJS) $(EXEC)
 

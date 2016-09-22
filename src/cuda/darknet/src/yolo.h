@@ -23,7 +23,7 @@ typedef struct arguments {
 	char *execution_model;
 	char *config_file;
 	char *weights;
-	char *input_data_path;
+//	char *input_data_path;
 	long int iterations;
 	char *generate;
 	int generate_flag;
