@@ -6,6 +6,9 @@
 #include "box.h"
 #include "demo.h"
 #include "yolo.h"
+#include <stdlib.h>
+#include "list.h"
+#include "log_processing.h"
 
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"
@@ -146,9 +149,11 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 		for (j = 0; j < classes; ++j) {
 			if (probs[i][j]) {
 				printf("%d\n", arg.generate_flag);
-				if (arg.generate_flag)
+				//saving the gold files
+				if (arg.generate_flag){
 					fprintf(fps[j], "%s %f %f %f %f %f\n", id, probs[i][j],
 							xmin, ymin, xmax, ymax);
+				}
 #ifdef LOGS
 				if (!arg.generate_flag) {
 					printf("generate a log file");
@@ -185,10 +190,35 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 
 	int j;
 	FILE **fps = calloc(classes, sizeof(FILE *));
+	FILE *gold_names; //to store all gold filenames
+
+	//if generating a gold
+	if (arg.generate_flag) {
+		char gold_dir[1024];
+		snprintf(gold_dir, 1024, "%s%s.txt", base, arg.gold_output);
+		if ((gold_names = fopen(gold_dir, "w"))) {
+			printf("generating gold file\n");
+		} else {
+			printf("error on opening file\n");
+			exit(EXIT_FAILURE);
+		}
+
+	} else {		//if reading a gold
+		if (gold_names = fopen(arg.gold_input, "r")) {
+			printf("reading gold file\n");
+		} else {
+			printf("error on opening file\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	for (j = 0; j < classes; ++j) {
 		char buff[1024];
 		snprintf(buff, 1024, "%s%s.txt", base, voc_names[j]);
 		fps[j] = fopen(buff, "w");
+		if (arg.gold_output) {
+
+		}
 	}
 	box *boxes = calloc(side * side * l.n, sizeof(box));
 	float **probs = calloc(side * side * l.n, sizeof(float *));
@@ -257,6 +287,9 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 	}
 	fprintf(stderr, "Total Detection Time: %f Seconds\n",
 			(double) (time(0) - start));
+
+	//closing the gold input/output
+	fclose(gold_names);
 }
 
 void validate_yolo_recall(char *cfgfile, char *weightfile) {

@@ -23,4 +23,8 @@ void **list_to_array(list *l);
 void free_list(list *l);
 void free_list_contents(list *l);
 
+void free_all(list *l);
+
+void *get(list *l, int i);
+
 #endif

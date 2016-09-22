@@ -8,37 +8,7 @@
 #ifndef YOLO_H_
 #define YOLO_H_
 
-
-/**
- * -e - execution_type = <yolo/classifier/imagenet...>
- * -m - execution_model = <test/train/valid>
- * -c - config_file = configuration file
- * -w - weights = neural network weights
- * -i - input_data_path = path to all input data *.jpg files
- * -n - iterations = how many radiation iterations
- * -g - generate   = generates a gold
- */
-typedef struct arguments {
-	char *execution_type;
-	char *execution_model;
-	char *config_file;
-	char *weights;
-//	char *input_data_path;
-	long int iterations;
-	char *generate;
-	int generate_flag;
-	//if yolo test
-	char *test_filename;
-	int cam_index;
-	float thresh;
-	int frame_skip;
-
-	//input images ...
-	char *img_list_path;
-	char *base_result_out;
-
-	int gpu_index;
-} Args;
+#include "args.h"
 
 extern void run_imagenet(int argc, char **argv);
 //extern void run_yolo(int argc, char **argv);

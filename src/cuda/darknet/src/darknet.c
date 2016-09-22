@@ -7,9 +7,7 @@
 #include "cuda.h"
 #include "blas.h"
 #include "connected_layer.h"
-#include <unistd.h>
-#include <getopt.h>
-#include <limits.h>
+
 
 #include "yolo.h"
 
@@ -216,182 +214,6 @@ void visualize(char *cfgfile, char *weightfile) {
 #endif
 }
 
-void args_init_and_setnull(Args *arg) {
-	arg->config_file = NULL;
-	arg->execution_model = NULL;
-	arg->config_file = NULL;
-	arg->weights = NULL;
-//	arg->input_data_path = NULL;
-	arg->generate = NULL;
-	arg->base_result_out = NULL;
-	arg->cam_index = -1;
-	arg->frame_skip = -1;
-	arg->generate = 0;
-	arg->img_list_path = NULL;
-	arg->iterations = 1;
-}
-/**
- * return 1 if everything is ok, and 0 if not
- */
-int check_args(const Args arg) {
-	//check config_file
-	if (access(arg.config_file, F_OK) == -1) {
-		printf("Config file does not exist\n");
-		return -1;
-	}
-	//check weights
-	if (access(arg.weights, F_OK) == -1) {
-		printf("Weights does not exist\n");
-		return -1;
-	}
-
-	if (arg.iterations < 0 || arg.iterations > INT_MAX) {
-		printf("Use a valid value for iterations\n");
-		return -1;
-	}
-
-//	if (arg.input_data_path == NULL) {
-//		printf("No input path set\n");
-//		return -1;
-//	}
-	if (arg.generate_flag == 1 && arg.generate == NULL) {
-		printf("Generate gold path not passed\n");
-		return -1;
-	}
-
-	if (arg.img_list_path == NULL) {
-		printf("Img list not passed\n");
-		return -1;
-	}
-	if (arg.base_result_out == NULL) {
-		printf("Base output not passed\n");
-		return -1;
-	}
-
-	if (arg.gpu_index > 5 && arg.gpu_index < -2) {
-		printf("gpu_index not passed\n");
-		return -1;
-	}
-
-	if (arg.gpu_index > 5 && arg.gpu_index < -2) {
-		printf("gpu_index not passed\n");
-		return -1;
-	}
-	return 0;
-}
-/**
- * print the passed arg
- */
-void print_args(const Args arg) {
-	printf(
-			"execution type = %s\n"
-					"execution model = %s\n"
-					"config file = %s\n"
-					"weights = %s\n"
-//			"input_data_path = %s\n"
-					"iterations = %ld\n"
-					"generate = %s\n"
-					"img_list_path = %s\n"
-					"base_result_out = %s\n"
-					"gpu_index = %d\n", arg.execution_type, arg.execution_model,
-			arg.config_file, arg.weights, arg.iterations,
-			((arg.generate_flag == 0) ? "not generating gold" : arg.generate),
-			arg.img_list_path, arg.base_result_out, arg.gpu_index);
-}
-
-/**
- * @parse_arguments
- * parameter arguments to_parse
- * return 0 ok, -1 wrong
- */
-int parse_arguments(Args *to_parse, int argc, char **argv) {
-	static struct option long_options[] = { { "execution_type",
-	required_argument, NULL, 'e' }, //yolo/cifar/imagenet...
-			{ "execution_model", required_argument, NULL, 'm' }, //test/valid...
-			{ "config_file", required_argument, NULL, 'c' }, //<yolo, imagenet..>.cfg
-			{ "weights", required_argument, NULL, 'w' }, //<yolo, imagenet..>weights
-//			{ "input_data_path", 	required_argument, NULL, 'i' },
-			{ "iterations", required_argument, NULL, 'n' }, //log data iterations
-			{ "generate", required_argument, NULL, 'g' }, //generate gold
-			{ "img_list_path", required_argument, NULL, 'l' }, //data path list input
-			{ "base_result_out", required_argument, NULL, 'b' }, //result output
-			{ "gpu_index", required_argument, NULL, 'x' }, //gpu index
-			{ NULL, 0, NULL, 0 } };
-
-	// loop over all of the options
-	char ch;
-	int ok = -1;
-	int option_index = 0;
-	to_parse->generate_flag = 0;
-	while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g:l:b:x:", long_options,
-			&option_index)) != -1) {
-		// check to see if a single character or long option came through
-		switch (ch) {
-		case 'e': {
-			to_parse->execution_type = optarg; // or copy it if you want to
-			break;
-		}
-		case 'm': {
-			to_parse->execution_model = optarg; // or copy it if you want to
-			break;
-		}
-		case 'c': {
-			to_parse->config_file = optarg;
-			break;
-		}
-		case 'w': {
-			to_parse->weights = optarg;
-			break;
-		}
-//		case 'i': {
-//			to_parse->input_data_path = optarg;
-//			break;
-//		}
-		case 'n': {
-			to_parse->iterations = atol(optarg);
-			break;
-
-		}
-		case 'g': {
-			to_parse->generate = optarg;
-			to_parse->generate_flag = 1;
-			break;
-		}
-		case 'l': {
-			to_parse->img_list_path = optarg;
-			break;
-		}
-		case 'b': {
-			to_parse->base_result_out = optarg;
-			break;
-		}
-
-		case 'x': {
-			to_parse->gpu_index = atoi(optarg);
-			break;
-		}
-
-		}
-		ok = 0;
-	}
-	return (ok || check_args(*to_parse));
-
-}
-
-void usage(char **argv, char *model, char *message) {
-	printf("Some argument is missing, to use %s option\n", model);
-	printf("usage: %s %s ", argv[0], message);
-	printf("\n-e --execution_type = <yolo/classifier/imagenet...>\n"
-			"-m --execution_model = <test/train/valid>\n"
-			"-c --config_file = configuration file\n"
-			"-w --weights = neural network weights\n"
-			//"-i --input_data_path = path to all input data *.jpg files\n"
-			"-n --iterations = how many radiation iterations\n"
-			"-g --generate   = generates a gold\n"
-			"-l --img_list_path = list for all dataset image\n"
-			"-b --base_result_out = output of base\n"
-			"-x --gpu_index = GPU index\n");
-}
 
 int main(int argc, char **argv) {
 	//test_resize("data/bad.jpg");
@@ -438,69 +260,6 @@ int main(int argc, char **argv) {
 			run_yolo(to_parse);
 		}
 
-		/*
-		 if (0 == strcmp(argv[1], "imagenet")) {
-		 run_imagenet(argc, argv);
-		 } else if (0 == strcmp(argv[1], "average")) {
-		 average(argc, argv);
-		 } else if (0 == strcmp(argv[1], "yolo")) {
-		 run_yolo(argc, argv);
-		 } else if (0 == strcmp(argv[1], "cifar")) {
-		 run_cifar(argc, argv);
-		 } else if (0 == strcmp(argv[1], "go")) {
-		 run_go(argc, argv);
-		 } else if (0 == strcmp(argv[1], "rnn")) {
-		 run_char_rnn(argc, argv);
-		 } else if (0 == strcmp(argv[1], "vid")) {
-		 run_vid_rnn(argc, argv);
-		 } else if (0 == strcmp(argv[1], "coco")) {
-		 run_coco(argc, argv);
-		 } else if (0 == strcmp(argv[1], "classifier")) {
-		 run_classifier(argc, argv);
-		 } else if (0 == strcmp(argv[1], "art")) {
-		 run_art(argc, argv);
-		 } else if (0 == strcmp(argv[1], "tag")) {
-		 run_tag(argc, argv);
-		 } else if (0 == strcmp(argv[1], "compare")) {
-		 run_compare(argc, argv);
-		 } else if (0 == strcmp(argv[1], "dice")) {
-		 run_dice(argc, argv);
-		 } else if (0 == strcmp(argv[1], "writing")) {
-		 run_writing(argc, argv);
-		 } else if (0 == strcmp(argv[1], "3d")) {
-		 composite_3d(argv[2], argv[3], argv[4]);
-		 } else if (0 == strcmp(argv[1], "test")) {
-		 test_resize(argv[2]);
-		 } else if (0 == strcmp(argv[1], "captcha")) {
-		 run_captcha(argc, argv);
-		 } else if (0 == strcmp(argv[1], "nightmare")) {
-		 run_nightmare(argc, argv);
-		 } else if (0 == strcmp(argv[1], "change")) {
-		 change_rate(argv[2], atof(argv[3]), (argc > 4) ? atof(argv[4]) : 0);
-		 } else if (0 == strcmp(argv[1], "rgbgr")) {
-		 rgbgr_net(argv[2], argv[3], argv[4]);
-		 } else if (0 == strcmp(argv[1], "denormalize")) {
-		 denormalize_net(argv[2], argv[3], argv[4]);
-		 } else if (0 == strcmp(argv[1], "normalize")) {
-		 normalize_net(argv[2], argv[3], argv[4]);
-		 } else if (0 == strcmp(argv[1], "rescale")) {
-		 rescale_net(argv[2], argv[3], argv[4]);
-		 } else if (0 == strcmp(argv[1], "ops")) {
-		 operations(argv[2]);
-		 } else if (0 == strcmp(argv[1], "partial")) {
-		 partial(argv[2], argv[3], argv[4], atoi(argv[5]));
-		 } else if (0 == strcmp(argv[1], "average")) {
-		 average(argc, argv);
-		 } else if (0 == strcmp(argv[1], "stacked")) {
-		 stacked(argv[2], argv[3], argv[4]);
-		 } else if (0 == strcmp(argv[1], "visualize")) {
-		 visualize(argv[2], (argc > 3) ? argv[3] : 0);
-		 } else if (0 == strcmp(argv[1], "imtest")) {
-		 test_resize(argv[2]);
-		 } else {
-		 fprintf(stderr, "Not an option: %s\n", argv[1]);
-		 }
-		 */
 	} else {
 		usage(argv, "<yolo/valid/classifer>", "<function>");
 	}
@@ -510,4 +269,68 @@ int main(int argc, char **argv) {
 	args_init_and_setnull(&to_parse);
 	return 0;
 }
+
+/*
+ if (0 == strcmp(argv[1], "imagenet")) {
+ run_imagenet(argc, argv);
+ } else if (0 == strcmp(argv[1], "average")) {
+ average(argc, argv);
+ } else if (0 == strcmp(argv[1], "yolo")) {
+ run_yolo(argc, argv);
+ } else if (0 == strcmp(argv[1], "cifar")) {
+ run_cifar(argc, argv);
+ } else if (0 == strcmp(argv[1], "go")) {
+ run_go(argc, argv);
+ } else if (0 == strcmp(argv[1], "rnn")) {
+ run_char_rnn(argc, argv);
+ } else if (0 == strcmp(argv[1], "vid")) {
+ run_vid_rnn(argc, argv);
+ } else if (0 == strcmp(argv[1], "coco")) {
+ run_coco(argc, argv);
+ } else if (0 == strcmp(argv[1], "classifier")) {
+ run_classifier(argc, argv);
+ } else if (0 == strcmp(argv[1], "art")) {
+ run_art(argc, argv);
+ } else if (0 == strcmp(argv[1], "tag")) {
+ run_tag(argc, argv);
+ } else if (0 == strcmp(argv[1], "compare")) {
+ run_compare(argc, argv);
+ } else if (0 == strcmp(argv[1], "dice")) {
+ run_dice(argc, argv);
+ } else if (0 == strcmp(argv[1], "writing")) {
+ run_writing(argc, argv);
+ } else if (0 == strcmp(argv[1], "3d")) {
+ composite_3d(argv[2], argv[3], argv[4]);
+ } else if (0 == strcmp(argv[1], "test")) {
+ test_resize(argv[2]);
+ } else if (0 == strcmp(argv[1], "captcha")) {
+ run_captcha(argc, argv);
+ } else if (0 == strcmp(argv[1], "nightmare")) {
+ run_nightmare(argc, argv);
+ } else if (0 == strcmp(argv[1], "change")) {
+ change_rate(argv[2], atof(argv[3]), (argc > 4) ? atof(argv[4]) : 0);
+ } else if (0 == strcmp(argv[1], "rgbgr")) {
+ rgbgr_net(argv[2], argv[3], argv[4]);
+ } else if (0 == strcmp(argv[1], "denormalize")) {
+ denormalize_net(argv[2], argv[3], argv[4]);
+ } else if (0 == strcmp(argv[1], "normalize")) {
+ normalize_net(argv[2], argv[3], argv[4]);
+ } else if (0 == strcmp(argv[1], "rescale")) {
+ rescale_net(argv[2], argv[3], argv[4]);
+ } else if (0 == strcmp(argv[1], "ops")) {
+ operations(argv[2]);
+ } else if (0 == strcmp(argv[1], "partial")) {
+ partial(argv[2], argv[3], argv[4], atoi(argv[5]));
+ } else if (0 == strcmp(argv[1], "average")) {
+ average(argc, argv);
+ } else if (0 == strcmp(argv[1], "stacked")) {
+ stacked(argv[2], argv[3], argv[4]);
+ } else if (0 == strcmp(argv[1], "visualize")) {
+ visualize(argv[2], (argc > 3) ? argv[3] : 0);
+ } else if (0 == strcmp(argv[1], "imtest")) {
+ test_resize(argv[2]);
+ } else {
+ fprintf(stderr, "Not an option: %s\n", argv[1]);
+ }
+ */
 
