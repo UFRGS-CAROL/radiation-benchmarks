@@ -1,0 +1,2 @@
+/home/carol/lucas_klein/darknet/VOCdevkit/VOC2012/JPEGImages/2008_000001.jpg
+/home/carol/lucas_klein/darknet/VOCdevkit/VOC2012/JPEGImages/2008_000004.jpg

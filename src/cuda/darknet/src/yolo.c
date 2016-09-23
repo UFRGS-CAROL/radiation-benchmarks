@@ -157,6 +157,55 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 	}
 }
 
+void allocate_yolo_arrays(const long plist_size, const long total_size,
+		int classes, box* boxes, box* boxes_gold, float*** probs,
+		float*** probs_gold) {
+	int j;
+	if (boxes == NULL || boxes_gold == NULL || probs == NULL
+			|| probs_gold == NULL) {
+		fprintf(stderr, "ERROR ON ALLOCATING MEMORY\n");
+		exit(EXIT_FAILURE);
+	}
+	int z;
+	//man this shit sucks, I love C++ and JAVA
+	for (z = 0; z < plist_size; z++) {
+		probs[z] = calloc(total_size, sizeof(float*));
+		probs_gold[z] = calloc(total_size, sizeof(float*));
+		if (probs[z] == NULL || probs_gold[z] == NULL) {
+			fprintf(stderr, "ERROR ON ALLOCATING MEMORY\n");
+			exit(EXIT_FAILURE);
+		}
+		for (j = 0; j < total_size; j++) {
+			probs[z][j] = calloc(classes, sizeof(float));
+			probs_gold[z][j] = calloc(classes, sizeof(float));
+			if (probs[z][j] == NULL || probs_gold[z][j] == NULL) {
+				fprintf(stderr, "ERROR ON ALLOCATING MEMORY\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
+}
+
+void free_yolo_memory(const long plist_size, const long total_size, FILE* gold,
+		float*** probs, float*** probs_gold, box* boxes, box* boxes_gold) {
+	int j;
+	//closing the gold input/output
+	fclose(gold);
+	int z = 0;
+	for (z = 0; z < plist_size; z++) {
+		for (j = 0; j < total_size; j++) {
+			free(probs[z][j]);
+			free(probs_gold[z][j]);
+		}
+		free(probs[z]);
+		free(probs_gold[z]);
+	}
+	free(probs);
+	free(probs_gold);
+	free(boxes);
+	free(boxes_gold);
+}
+
 void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *img_list_path, char *base_result_out) {
 	network net = parse_network_cfg(arg.config_file);
 	if (arg.weights) {
@@ -195,13 +244,15 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 		fps[j] = fopen(buff, "w");
 	}
 
-	box *boxes = calloc(side * side * l.n, sizeof(box));
-	box *boxes_gold;
-	float **probs = calloc(side * side * l.n, sizeof(float *));
-	float **probs_gold;
-	for (j = 0; j < side * side * l.n; ++j) {
-		probs[j] = calloc(classes, sizeof(float *));
-	}
+	const long total_size = side * side * l.n;
+	const long plist_size = plist->size;
+	const long boxes_size = plist_size * total_size;
+	box *boxes = calloc(boxes_size, sizeof(box)); //= calloc(side * side * l.n, sizeof(box));
+	box *boxes_gold = calloc(boxes_size, sizeof(box));
+	float ***probs = calloc(plist_size, sizeof(float**)); // = calloc(side * side * l.n, sizeof(float *));
+	float ***probs_gold = calloc(plist_size, sizeof(float));
+	allocate_yolo_arrays(plist_size, total_size, classes, boxes, boxes_gold,
+			probs, probs_gold);
 	int m = plist->size;
 	int i = 0;
 	int t;
@@ -210,39 +261,53 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 	int nms = 1;
 	float iou_thresh = .5;
 
-	//gold vars
+//gold vars
 	int total_gold, classes_gold, w_gold, h_gold;
-	//to catch all ids correctly
+//to catch all ids correctly
 	char id_gold[plist->size][100]; //its the name of image
 
-	int gold_sizes =  side * side * l.n;
+	int gold_sizes = side * side * l.n;
 
-	//if generating a gold
+//if generating a gold
 	if (arg.generate_flag) {
-		if ((gold = fopen(arg.gold_output, "w"))) {
+		if ((gold = fopen(arg.gold_output, "wb"))) {
 			printf("generating gold file\n");
 		} else {
 			printf("error in opening output file\n");
 			exit(EXIT_FAILURE);
 		}
 	} else {
-		if (gold = fopen(arg.gold_input, "r")) {
+		if (gold = fopen(arg.gold_input, "rb")) {
 			printf("reading gold file\n");
-			boxes_gold = malloc(gold_sizes * sizeof(box));
-			probs_gold = malloc(gold_sizes * sizeof(float*));
-			for(j = 0; j < gold_sizes)
+			read_yolo_gold(gold, boxes_gold, boxes_size, probs_gold, plist_size,
+					total_size, classes);
 			printf("Gold file read\n");
 		} else {
 			printf("error in opening input file\n");
 			exit(EXIT_FAILURE);
 		}
 	}
-
 	int nthreads = 2;
 	image *val = calloc(nthreads, sizeof(image));
+	if (val == NULL) {
+		printf("erro val\n");
+		exit(EXIT_FAILURE);
+	}
 	image *val_resized = calloc(nthreads, sizeof(image));
+	if (val_resized == NULL) {
+		printf("Erro val resized\n");
+		exit(EXIT_FAILURE);
+	}
 	image *buf = calloc(nthreads, sizeof(image));
+	if (buf == NULL) {
+		printf("Erro no buf\n");
+		exit(EXIT_FAILURE);
+	}
 	image *buf_resized = calloc(nthreads, sizeof(image));
+	if (buf_resized == NULL) {
+		printf("Erro buf resised\n");
+		exit(EXIT_FAILURE);
+	}
 	pthread_t *thr = calloc(nthreads, sizeof(pthread_t));
 
 	load_args args = { 0 };
@@ -258,7 +323,7 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 	}
 
 	int it;
-
+	int gold_iterator = 0;
 	for (it = 0; it < arg.iterations; it++) {
 		time_t start = time(0);
 		for (i = nthreads; i < m + nthreads; i += nthreads) {
@@ -285,24 +350,34 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 				int h = val[t].h;
 
 				convert_detections(predictions, classes, l.n, square, side, w,
-						h, thresh, probs, boxes, 0);
+						h, thresh, probs[gold_iterator],
+						(boxes + (gold_iterator * total_size)), 0);
 
 				if (nms)
-					do_nms_sort(boxes, probs, side * side * l.n, classes,
+					do_nms_sort((boxes + (gold_iterator * total_size)),
+							probs[gold_iterator], side * side * l.n, classes,
 							iou_thresh);
 				//now will save gold or keep running with log files
 
 				if (arg.generate_flag) {
-					print_yolo_detections(fps, id, boxes, probs,
-							side * side * l.n, classes, w, h);
-					write_yolo_gold(gold, id, boxes, probs, side * side * l.n,
-							classes, w, h);
-					printf("id %s writen t = %d i = %d\n", id, t, i);
+					print_yolo_detections(fps, id,
+							(boxes + (gold_iterator * total_size)),
+							probs[gold_iterator], side * side * l.n, classes, w,
+							h);
+
+					write_yolo_gold(gold, boxes, boxes_size, probs, plist_size,
+							total_size, classes);
+					printf("gold it %d id %s writen t = %d i = %d\n",
+							gold_iterator, id, t, i);
 				} else {
-					print_yolo_detections(fps, id_gold[t], boxes_gold,
-							probs_gold, total_gold, classes_gold, w_gold,
-							h_gold);
+					print_yolo_detections(fps, id,
+							boxes_gold + (gold_iterator * total_size),
+							probs_gold[gold_iterator], side * side * l.n, classes, w,
+							h);
+					printf("gold it %d id %s writen t = %d i = %d\n",
+							gold_iterator, id, t, i);
 				}
+				gold_iterator++;
 				free(id);
 				free_image(val[t]);
 				free_image(val_resized[t]);
@@ -313,12 +388,9 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 				(double) (time(0) - start));
 	}
 
-	//closing the gold input/output
-	fclose(gold);
-	free(boxes);
-	free(boxes_gold);
-	free(probs);
-	free(probs_gold);
+//closing the gold input/output
+	free_yolo_memory(plist_size, total_size, gold, probs, probs_gold, boxes,
+			boxes_gold);
 }
 
 void validate_yolo_recall(char *cfgfile, char *weightfile) {
@@ -512,7 +584,7 @@ void run_yolo(const Args args) {
 		voc_labels[i] = load_image_color(buff, 0, 0);
 	}
 
-	//need to be programed
+//need to be programed
 	float thresh = args.thresh; //find_float_arg(argc, argv, "-thresh", .2);
 	int cam_index = args.cam_index; //find_int_arg(argc, argv, "-c", 0);
 	int frame_skip = args.frame_skip; //find_int_arg(argc, argv, "-s", 0);
@@ -523,10 +595,10 @@ void run_yolo(const Args args) {
 //		return;
 //	}
 
-	//char *cfg = args.config_file; //argv[3];
-	//char *weights = args.weights; //(argc > 4) ? argv[4] : 0;
-	//test need be configured on parameters
-	//char *filename = args.test_filename; //(argc > 5) ? argv[5] : 0;
+//char *cfg = args.config_file; //argv[3];
+//char *weights = args.weights; //(argc > 4) ? argv[4] : 0;
+//test need be configured on parameters
+//char *filename = args.test_filename; //(argc > 5) ? argv[5] : 0;
 
 	if (0 == strcmp(args.execution_model, "test")) {
 		//test_yolo(cfg, weights, filename, thresh);

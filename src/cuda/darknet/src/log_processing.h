@@ -12,57 +12,30 @@
 
 /**
  * The output will be stored in this order
- * total classes w h
- * id
- * boxes
+  * boxes
  * probs
  */
-void write_yolo_gold(FILE *fps, char *id, box *boxes, float **probs, int total,
-		int classes, int w, int h) {
+void write_yolo_gold(FILE *fps, box *boxes, int boxes_size, float ***probs, int plist_size, int total_size, int classes) {
+	//write all boxes
+	fwrite(boxes, sizeof(box),  boxes_size, fps);
 
-	fprintf(fps, "%d %d %d %d\n", total, classes, w, h);
 	int i, j;
-	//saving id
-	fprintf(fps, "%s\n", id);
-	//saving all boxes
-	for (i = 0; i < total; i++) {
-		fprintf(fps, "%f %f %f %f\n", boxes[i].x, boxes[i].y, boxes[i].w,
-				boxes[i].h); //    float x, y, w, h;
-	}
-
-	//saving all probs
-	for (i = 0; i < total; i++) {
-		for (j = 0; j < classes; j++) {
-			fprintf(fps, "%f", probs[i][j]);
-			if ((j + 1) != classes)
-				fprintf(fps, " ");
+	//write probs
+	for(i = 0; i < plist_size; i++){
+		for(j = 0; j < total_size; j++){
+			fwrite(probs[i][j], sizeof(float), classes, fps);
 		}
-		fprintf(fps, "\n");
 	}
-
 }
 
-void read_yolo_gold(FILE *fps, char **id, box *boxes, float **probs, int *total,
-		int *classes, int *w, int *h) {
-	//reading parameters
-	fscanf(fps, "%d %d %d %d", total, classes, w, h);
-	int it = 0;
-	while (!feof(fps)) {
-		printf("%d\n", it++);
-		//reading id
-		fscanf(fps, "%s", id);
-		int i, j;
-		//reading boxes
-		for (i = 0; i < *total; i++) {
-			fscanf(fps, "%f %f %f %f\n", &boxes[i].x, &boxes[i].y, &boxes[i].w,
-					&boxes[i].h);
-		}
+void read_yolo_gold(FILE *fps, box *boxes, int boxes_size, float ***probs, int plist_size, int total_size, int classes){
+	//read all boxes
+	fread(boxes, sizeof(box), boxes_size, fps);
 
-		//reading probs
-		for (i = 0; i < *total; i++) {
-			for (j = 0; j < *classes; j++) {
-				fscanf(fps, "%f", &probs[i][j]);
-			}
+	int i, j;
+	for(i = 0; i < plist_size; i++){
+		for(j = 0; j < total_size; j++){
+			fread(probs[i][j], sizeof(float), classes, fps);
 		}
 	}
 }
