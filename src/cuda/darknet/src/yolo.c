@@ -157,37 +157,42 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 	}
 }
 
-void allocate_yolo_arrays(const long plist_size, const long total_size,
-		int classes, box* boxes, box* boxes_gold, float*** probs,
+int allocate_yolo_arrays(const long plist_size, const long total_size,
+		int classes, box** boxes, box** boxes_gold, float*** probs,
 		float*** probs_gold) {
-	int j;
+	int z, j;
+	//plist_size * total_size
+	boxes = calloc(plist_size, sizeof(box*)); //= calloc(side * side * l.n, sizeof(box));
+	boxes_gold = calloc(plist_size, sizeof(box*));
+	probs = calloc(plist_size, sizeof(float**)); // = calloc(side * side * l.n, sizeof(float *));
+	probs_gold = calloc(plist_size, sizeof(float));
+
 	if (boxes == NULL || boxes_gold == NULL || probs == NULL
 			|| probs_gold == NULL) {
-		fprintf(stderr, "ERROR ON ALLOCATING MEMORY\n");
-		exit(EXIT_FAILURE);
+		return -1;
 	}
-	int z;
+
 	//man this shit sucks, I love C++ and JAVA
 	for (z = 0; z < plist_size; z++) {
 		probs[z] = calloc(total_size, sizeof(float*));
 		probs_gold[z] = calloc(total_size, sizeof(float*));
-		if (probs[z] == NULL || probs_gold[z] == NULL) {
-			fprintf(stderr, "ERROR ON ALLOCATING MEMORY\n");
-			exit(EXIT_FAILURE);
+		boxes[z] = calloc(total_size, sizeof(box));
+		boxes_gold[z] = calloc(total_size, sizeof(box));
+		if (probs[z] == NULL || probs_gold[z] == NULL || boxes == NULL || boxes_gold == NULL) {
+			return -1;
 		}
 		for (j = 0; j < total_size; j++) {
 			probs[z][j] = calloc(classes, sizeof(float));
 			probs_gold[z][j] = calloc(classes, sizeof(float));
 			if (probs[z][j] == NULL || probs_gold[z][j] == NULL) {
-				fprintf(stderr, "ERROR ON ALLOCATING MEMORY\n");
-				exit(EXIT_FAILURE);
+				return -1;
 			}
 		}
 	}
 }
 
 void free_yolo_memory(const long plist_size, const long total_size, FILE* gold,
-		float*** probs, float*** probs_gold, box* boxes, box* boxes_gold) {
+		float*** probs, float*** probs_gold, box** boxes, box** boxes_gold) {
 	int j;
 	//closing the gold input/output
 	fclose(gold);
@@ -199,6 +204,8 @@ void free_yolo_memory(const long plist_size, const long total_size, FILE* gold,
 		}
 		free(probs[z]);
 		free(probs_gold[z]);
+		free(boxes[z]);
+		free(boxes_gold[z]);
 	}
 	free(probs);
 	free(probs_gold);
@@ -218,8 +225,6 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 
 //	char *base = "results/comp4_det_test_";
 	char *base = arg.base_result_out;
-	//list *plist = get_paths("data/voc.2007.test");
-	//list *plist = get_paths("/home/pjreddie/data/voc/2007_test.txt");
 	//list *plist = get_paths("data/voc.2012.test");
 	list *plist = get_paths(arg.img_list_path);
 	char **paths = (char **) list_to_array(plist);
@@ -230,9 +235,6 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 	int side = l.side;
 
 	//for gold generation or test
-//	Gold gold;
-//	gold_malloc(&gold, classes);
-
 	int j;
 	FILE **fps = calloc(classes, sizeof(FILE *));
 	FILE *gold;
@@ -247,12 +249,16 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 	const long total_size = side * side * l.n;
 	const long plist_size = plist->size;
 	const long boxes_size = plist_size * total_size;
-	box *boxes = calloc(boxes_size, sizeof(box)); //= calloc(side * side * l.n, sizeof(box));
-	box *boxes_gold = calloc(boxes_size, sizeof(box));
-	float ***probs = calloc(plist_size, sizeof(float**)); // = calloc(side * side * l.n, sizeof(float *));
-	float ***probs_gold = calloc(plist_size, sizeof(float));
-	allocate_yolo_arrays(plist_size, total_size, classes, boxes, boxes_gold,
-			probs, probs_gold);
+	//what really matters on detection, the boxes and
+	box **boxes;
+	box **boxes_gold;
+	float ***probs;
+	float ***probs_gold;
+	if(allocate_yolo_arrays(plist_size, total_size, classes, boxes, boxes_gold,
+			probs, probs_gold) == -1){
+		fprintf(stderr, "ERROR ON MEMORY ALOCATION\n");
+		exit(EXIT_FAILURE);
+	}
 	int m = plist->size;
 	int i = 0;
 	int t;
@@ -351,22 +357,22 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 
 				convert_detections(predictions, classes, l.n, square, side, w,
 						h, thresh, probs[gold_iterator],
-						(boxes + (gold_iterator * total_size)), 0);
+						boxes[gold_iterator], 0);
 
 				if (nms)
-					do_nms_sort((boxes + (gold_iterator * total_size)),
+					do_nms_sort(boxes[gold_iterator],
 							probs[gold_iterator], side * side * l.n, classes,
 							iou_thresh);
 				//now will save gold or keep running with log files
 
 				if (arg.generate_flag) {
 					print_yolo_detections(fps, id,
-							(boxes + (gold_iterator * total_size)),
+							boxes[gold_iterator],
 							probs[gold_iterator], side * side * l.n, classes, w,
 							h);
 
-					write_yolo_gold(gold, boxes, boxes_size, probs, plist_size,
-							total_size, classes);
+//					write_yolo_gold(gold, boxes, boxes_size, probs, plist_size,
+//							total_size, classes);
 					printf("gold it %d id %s writen t = %d i = %d\n",
 							gold_iterator, id, t, i);
 				} else {
@@ -377,11 +383,17 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 					printf("gold it %d id %s writen t = %d i = %d\n",
 							gold_iterator, id, t, i);
 				}
+
 				gold_iterator++;
 				free(id);
 				free_image(val[t]);
 				free_image(val_resized[t]);
 			}
+		}
+		//must generate before all computation
+		if (arg.generate_flag) {
+			write_yolo_gold(gold, boxes, boxes_size, probs, plist_size,
+					total_size, classes);
 		}
 
 		fprintf(stderr, "Total Iteration %d Detection Time: %f Seconds\n", it,
