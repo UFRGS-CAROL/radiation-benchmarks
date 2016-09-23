@@ -129,7 +129,7 @@ void convert_detections(float *predictions, int classes, int num, int square,
 }
 
 void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
-		int total, int classes, int w, int h, const Args arg) { //Args parameter added to generate or check gold output
+		int total, int classes, int w, int h) { //Args parameter added to generate or check gold output
 	int i, j;
 	for (i = 0; i < total; ++i) {
 		float xmin = boxes[i].x - boxes[i].w / 2.;
@@ -146,25 +146,11 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 		if (ymax > h)
 			ymax = h;
 
-
-
 		for (j = 0; j < classes; ++j) {
-			printf("antes do probs\n");
 			if (probs[i][j]) {
-				printf("depois\n");
-				printf("%d\n", arg.generate_flag);
-
 				//saving the gold files
-				if (arg.generate_flag){
-					fprintf(fps[j], "%s %f %f %f %f %f\n", id, probs[i][j],
-							xmin, ymin, xmax, ymax);
-				}
-#ifdef LOGS
-				if (!arg.generate_flag) {
-					printf("generate a log file");
-				}
-
-#endif
+				fprintf(fps[j], "%s %f %f %f %f %f\n", id, probs[i][j], xmin,
+						ymin, xmax, ymax);
 			}
 		}
 
@@ -194,41 +180,28 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 	int square = l.sqrt;
 	int side = l.side;
 
+	//for gold generation or test
+//	Gold gold;
+//	gold_malloc(&gold, classes);
+
 	int j;
 	FILE **fps = calloc(classes, sizeof(FILE *));
-	FILE *gold_names; //to store all gold filenames
-
-	//if generating a gold
-	if (arg.generate_flag) {
-		if ((gold_names = fopen(arg.gold_output, "w"))) {
-			printf("generating gold file\n");
-		} else {
-			printf("error on opening file\n");
-			exit(EXIT_FAILURE);
-		}
-
-	} else {		//if reading a gold
-		if (gold_names = fopen(arg.gold_input, "r")) {
-			printf("reading gold file\n");
-		} else {
-			printf("error on opening file\n");
-			exit(EXIT_FAILURE);
-		}
-	}
+	FILE *gold;
 
 	for (j = 0; j < classes; ++j) {
 		char buff[1024];
+
 		snprintf(buff, 1024, "%s%s.txt", base, voc_names[j]);
 		fps[j] = fopen(buff, "w");
-		if (arg.gold_output) {
-
-		}
 	}
-	box *boxes = calloc(side * side * l.n, sizeof(box));
-	float **probs = calloc(side * side * l.n, sizeof(float *));
-	for (j = 0; j < side * side * l.n; ++j)
-		probs[j] = calloc(classes, sizeof(float *));
 
+	box *boxes = calloc(side * side * l.n, sizeof(box));
+	box *boxes_gold;
+	float **probs = calloc(side * side * l.n, sizeof(float *));
+	float **probs_gold;
+	for (j = 0; j < side * side * l.n; ++j) {
+		probs[j] = calloc(classes, sizeof(float *));
+	}
 	int m = plist->size;
 	int i = 0;
 	int t;
@@ -236,6 +209,34 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 	float thresh = .001;
 	int nms = 1;
 	float iou_thresh = .5;
+
+	//gold vars
+	int total_gold, classes_gold, w_gold, h_gold;
+	//to catch all ids correctly
+	char id_gold[plist->size][100]; //its the name of image
+
+	int gold_sizes =  side * side * l.n;
+
+	//if generating a gold
+	if (arg.generate_flag) {
+		if ((gold = fopen(arg.gold_output, "w"))) {
+			printf("generating gold file\n");
+		} else {
+			printf("error in opening output file\n");
+			exit(EXIT_FAILURE);
+		}
+	} else {
+		if (gold = fopen(arg.gold_input, "r")) {
+			printf("reading gold file\n");
+			boxes_gold = malloc(gold_sizes * sizeof(box));
+			probs_gold = malloc(gold_sizes * sizeof(float*));
+			for(j = 0; j < gold_sizes)
+			printf("Gold file read\n");
+		} else {
+			printf("error in opening input file\n");
+			exit(EXIT_FAILURE);
+		}
+	}
 
 	int nthreads = 2;
 	image *val = calloc(nthreads, sizeof(image));
@@ -255,50 +256,69 @@ void validate_yolo(const Args arg) { //char *cfgfile, char *weightfile, char *im
 		args.resized = &buf_resized[t];
 		thr[t] = load_data_in_thread(args);
 	}
-	time_t start = time(0);
-	for (i = nthreads; i < m + nthreads; i += nthreads) {
-		fprintf(stderr, "%d\n", i);
-		for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
-			pthread_join(thr[t], 0);
-			val[t] = buf[t];
-			val_resized[t] = buf_resized[t];
-		}
-		for (t = 0; t < nthreads && i + t < m; ++t) {
-			args.path = paths[i + t];
-			args.im = &buf[t];
-			args.resized = &buf_resized[t];
-			thr[t] = load_data_in_thread(args);
-		}
-		for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
-			char *path = paths[i + t - nthreads];
-			char *id = basecfg(path);
-			float *X = val_resized[t].data;
-			printf("\n\n\n\n doingn\n\n\n\n\n");
-			float *predictions = network_predict(net, X);
-			int w = val[t].w;
-			int h = val[t].h;
 
-			printf("\n\n\n\n doingn2\n\n\n\n\n");
-			convert_detections(predictions, classes, l.n, square, side, w, h,
-					thresh, probs, boxes, 0);
+	int it;
 
-			printf("\n\n\n\n doingn3\n\n\n\n\n");
-			if (nms)
-				do_nms_sort(boxes, probs, side * side * l.n, classes,
-						iou_thresh);
-			//now will save gold or keep running with log files
-			print_yolo_detections(fps, id, boxes, probs, side * side * l.n,
-					classes, w, h, arg);
-			free(id);
-			free_image(val[t]);
-			free_image(val_resized[t]);
+	for (it = 0; it < arg.iterations; it++) {
+		time_t start = time(0);
+		for (i = nthreads; i < m + nthreads; i += nthreads) {
+			fprintf(stderr, "%d\n", i);
+			for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
+				pthread_join(thr[t], 0);
+				val[t] = buf[t];
+				val_resized[t] = buf_resized[t];
+			}
+
+			for (t = 0; t < nthreads && i + t < m; ++t) {
+				args.path = paths[i + t];
+				args.im = &buf[t];
+				args.resized = &buf_resized[t];
+				thr[t] = load_data_in_thread(args);
+			}
+			for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
+				char *path = paths[i + t - nthreads];
+				char *id = basecfg(path);
+				float *X = val_resized[t].data;
+
+				float *predictions = network_predict(net, X);
+				int w = val[t].w;
+				int h = val[t].h;
+
+				convert_detections(predictions, classes, l.n, square, side, w,
+						h, thresh, probs, boxes, 0);
+
+				if (nms)
+					do_nms_sort(boxes, probs, side * side * l.n, classes,
+							iou_thresh);
+				//now will save gold or keep running with log files
+
+				if (arg.generate_flag) {
+					print_yolo_detections(fps, id, boxes, probs,
+							side * side * l.n, classes, w, h);
+					write_yolo_gold(gold, id, boxes, probs, side * side * l.n,
+							classes, w, h);
+					printf("id %s writen t = %d i = %d\n", id, t, i);
+				} else {
+					print_yolo_detections(fps, id_gold[t], boxes_gold,
+							probs_gold, total_gold, classes_gold, w_gold,
+							h_gold);
+				}
+				free(id);
+				free_image(val[t]);
+				free_image(val_resized[t]);
+			}
 		}
+
+		fprintf(stderr, "Total Iteration %d Detection Time: %f Seconds\n", it,
+				(double) (time(0) - start));
 	}
-	fprintf(stderr, "Total Detection Time: %f Seconds\n",
-			(double) (time(0) - start));
 
 	//closing the gold input/output
-	fclose(gold_names);
+	fclose(gold);
+	free(boxes);
+	free(boxes_gold);
+	free(probs);
+	free(probs_gold);
 }
 
 void validate_yolo_recall(char *cfgfile, char *weightfile) {
