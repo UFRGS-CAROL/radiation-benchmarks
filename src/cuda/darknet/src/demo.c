@@ -153,13 +153,19 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
             if(pthread_create(&fetch_thread, 0, fetch_in_thread, 0)) error("Thread creation failed");
             if(pthread_create(&detect_thread, 0, detect_in_thread, 0)) error("Thread creation failed");
 
-            show_image(disp, "Demo");
-            int c = cvWaitKey(1);
-            if (c == 10){
-                if(frame_skip == 0) frame_skip = 60;
-                else if(frame_skip == 4) frame_skip = 0;
-                else if(frame_skip == 60) frame_skip = 4;   
-                else frame_skip = 0;
+            if(1){
+                show_image(disp, "Demo");
+                int c = cvWaitKey(1);
+                if (c == 10){
+                    if(frame_skip == 0) frame_skip = 60;
+                    else if(frame_skip == 4) frame_skip = 0;
+                    else if(frame_skip == 60) frame_skip = 4;   
+                    else frame_skip = 0;
+                }
+            }else{
+                char buff[256];
+                sprintf(buff, "/home/pjreddie/tmp/bag_%07d", count);
+                save_image(disp, buff);
             }
 
             pthread_join(fetch_thread, 0);

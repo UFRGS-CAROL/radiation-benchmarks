@@ -5,6 +5,7 @@
 #include "list.h"
 
 #define SECRET_NUM -1234
+#define TWO_PI 6.2831853071795864769252866
 
 void shuffle(void *arr, size_t n, size_t size);
 void sorta_shuffle(void *arr, size_t n, size_t size, size_t sections);
@@ -41,6 +42,7 @@ float mse_array(float *a, int n);
 float rand_normal();
 size_t rand_size_t();
 float rand_uniform(float min, float max);
+float rand_scale(float s);
 int rand_int(int min, int max);
 float sum_array(float *a, int n);
 float mean_array(float *a, int n);
@@ -55,6 +57,7 @@ float find_float_arg(int argc, char **argv, char *arg, float def);
 int find_arg(int argc, char* argv[], char *arg);
 char *find_char_arg(int argc, char **argv, char *arg, char *def);
 int sample_array(float *a, int n);
+void print_statistics(float *a, int n);
 
 #endif
 

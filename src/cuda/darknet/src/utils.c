@@ -414,6 +414,13 @@ void mean_arrays(float **a, int n, int els, float *avg)
     }
 }
 
+void print_statistics(float *a, int n)
+{
+    float m = mean_array(a, n);
+    float v = variance_array(a, n);
+    printf("MSE: %.6f, Mean: %.6f, Variance: %.6f\n", mse_array(a, n), m, v);
+}
+
 float variance_array(float *a, int n)
 {
     int i;
@@ -521,12 +528,16 @@ int max_index(float *a, int n)
 
 int rand_int(int min, int max)
 {
+    if (max < min){
+        int s = min;
+        min = max;
+        max = s;
+    }
     int r = (rand()%(max - min + 1)) + min;
     return r;
 }
 
 // From http://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
-#define TWO_PI 6.2831853071795864769252866
 float rand_normal()
 {
     static int haveSpare = 0;
@@ -573,7 +584,19 @@ size_t rand_size_t()
 
 float rand_uniform(float min, float max)
 {
+    if(max < min){
+        float swap = min;
+        min = max;
+        max = swap;
+    }
     return ((float)rand()/RAND_MAX * (max - min)) + min;
+}
+
+float rand_scale(float s)
+{
+    float scale = rand_uniform(1, s);
+    if(rand()%2) return scale;
+    return 1./scale;
 }
 
 float **one_hot_encode(float *a, int n, int k)

@@ -8,7 +8,6 @@
 
 void train_tag(char *cfgfile, char *weightfile, int clear)
 {
-    data_seed = time(0);
     srand(time(0));
     float avg_loss = -1;
     char *base = basecfg(cfgfile);
@@ -44,6 +43,11 @@ void train_tag(char *cfgfile, char *weightfile, int clear)
     args.m = N;
     args.d = &buffer;
     args.type = TAG_DATA;
+
+    args.angle = net.angle;
+    args.exposure = net.exposure;
+    args.saturation = net.saturation;
+    args.hue = net.hue;
 
     fprintf(stderr, "%d classes\n", net.outputs);
 

@@ -29,6 +29,8 @@ typedef enum {
     BATCHNORM,
     NETWORK,
     XNOR,
+    REGION,
+    REORG,
     BLANK
 } LAYER_TYPE;
 
@@ -70,6 +72,7 @@ struct layer{
     float saturation;
     float exposure;
     float shift;
+    float ratio;
     int softmax;
     int classes;
     int coords;
@@ -79,6 +82,8 @@ struct layer{
     int does_cost;
     int joint;
     int noadjust;
+    int reorg;
+    int log;
 
     float alpha;
     float beta;
@@ -100,9 +105,7 @@ struct layer{
     int *indexes;
     float *rand;
     float *cost;
-    float *filters;
-    char  *cfilters;
-    float *filter_updates;
+    char  *cweights;
     float *state;
     float *prev_state;
     float *forgot_state;
@@ -112,7 +115,7 @@ struct layer{
     float *concat;
     float *concat_delta;
 
-    float *binary_filters;
+    float *binary_weights;
 
     float *biases;
     float *bias_updates;
@@ -189,11 +192,9 @@ struct layer{
     float * save_delta_gpu;
     float * concat_gpu;
     float * concat_delta_gpu;
-    float * filters_gpu;
-    float * filter_updates_gpu;
 
     float *binary_input_gpu;
-    float *binary_filters_gpu;
+    float *binary_weights_gpu;
 
     float * mean_gpu;
     float * variance_gpu;
@@ -225,8 +226,8 @@ struct layer{
     #ifdef CUDNN
     cudnnTensorDescriptor_t srcTensorDesc, dstTensorDesc;
     cudnnTensorDescriptor_t dsrcTensorDesc, ddstTensorDesc;
-    cudnnFilterDescriptor_t filterDesc;
-    cudnnFilterDescriptor_t dfilterDesc;
+    cudnnFilterDescriptor_t weightDesc;
+    cudnnFilterDescriptor_t dweightDesc;
     cudnnConvolutionDescriptor_t convDesc;
     cudnnConvolutionFwdAlgo_t fw_algo;
     cudnnConvolutionBwdDataAlgo_t bd_algo;
