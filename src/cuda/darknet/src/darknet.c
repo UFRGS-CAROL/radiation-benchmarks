@@ -8,12 +8,14 @@
 #include "blas.h"
 #include "connected_layer.h"
 
+#include "args.h"
+
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"
 #endif
 
 extern void run_voxel(int argc, char **argv);
-extern void run_yolo(int argc, char **argv);
+extern void run_yolo(Args args);
 extern void run_detector(int argc, char **argv);
 extern void run_coco(int argc, char **argv);
 extern void run_writing(int argc, char **argv);
@@ -52,13 +54,13 @@ void average(int argc, char *argv[])
     network net = parse_network_cfg(cfgfile);
     network sum = parse_network_cfg(cfgfile);
 
-    char *weightfile = argv[4];   
+    char *weightfile = argv[4];
     load_weights(&sum, weightfile);
 
     int i, j;
     int n = argc - 5;
     for(i = 0; i < n; ++i){
-        weightfile = argv[i+5];   
+        weightfile = argv[i+5];
         load_weights(&net, weightfile);
         for(j = 0; j < net.n; ++j){
             layer l = net.layers[j];
@@ -336,6 +338,64 @@ void visualize(char *cfgfile, char *weightfile)
 #endif
 }
 
+
+int main(int argc, char **argv) {
+    //test_resize("data/bad.jpg");
+    //test_box();
+    //test_convolutional_layer();
+    //I added the new parameters usage
+    if (argc < 2) {
+        //fprintf(stderr, "usage: %s <function>\n", argv[0]);
+        usage(argv, "<yolo/valid/classifer>", "<function>");
+        return 0;
+    }
+
+//  gpu_index = find_int_arg(argc, argv, "-i", 0);
+//  if (find_arg(argc, argv, "-nogpu")) {
+//      gpu_index = -1;
+//  }
+
+    //try to parse
+    Args to_parse;
+    args_init_and_setnull(&to_parse);
+    if (parse_arguments(&to_parse, argc, argv) == 0) {
+        //I'll do firsrt for yolo, next I dont know
+        print_args(to_parse);
+#ifndef GPU
+        to_parse.gpu_index = -1;
+#else
+        if(to_parse.gpu_index >= 0) {
+            cudaError_t status = cudaSetDevice(to_parse.gpu_index);
+            check_error(status);
+        }
+
+#ifdef LOGS
+        char test_info[90];
+        snprintf(test_info, 90, "execution_type:%s execution_model:%s img_list_path:%s weights:%s config_file:%s iterations:%d", to_parse.execution_type
+                , to_parse.execution_model, to_parse.img_list_path, to_parse.weights, to_parse.config_file, to_parse.iterations);
+        if (!(to_parse.generate_flag)) start_log_file("cudaDarknet", test_info);
+#endif
+
+#endif
+
+
+
+        if (strcmp(to_parse.execution_type, "yolo") == 0) {
+            run_yolo(to_parse);
+        }
+
+    } else {
+        usage(argv, "<yolo/valid/classifer>", "<function>");
+    }
+#ifdef GPU && LOGS
+    if (!(to_parse.generate_flag)) end_log_file();
+#endif
+    args_init_and_setnull(&to_parse);
+    return 0;
+}
+
+
+/*
 int main(int argc, char **argv)
 {
     //test_resize("data/bad.jpg");
@@ -430,5 +490,5 @@ int main(int argc, char **argv)
         fprintf(stderr, "Not an option: %s\n", argv[1]);
     }
     return 0;
-}
+}*/
 
