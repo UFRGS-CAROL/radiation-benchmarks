@@ -4,6 +4,7 @@ OPENCV?=0
 DEBUG?=0
 LOGS?=0
 
+
 ARCH= --gpu-architecture=compute_35 --gpu-code=compute_35
 
 VPATH=./src/

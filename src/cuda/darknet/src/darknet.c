@@ -368,6 +368,7 @@ int main(int argc, char **argv) {
             cudaError_t status = cudaSetDevice(to_parse.gpu_index);
             check_error(status);
         }
+#endif
 
 #ifdef LOGS
         char test_info[90];
@@ -376,10 +377,6 @@ int main(int argc, char **argv) {
         if (!(to_parse.generate_flag)) start_log_file("cudaDarknet", test_info);
 #endif
 
-#endif
-
-
-
         if (strcmp(to_parse.execution_type, "yolo") == 0) {
             run_yolo(to_parse);
         }
@@ -387,9 +384,11 @@ int main(int argc, char **argv) {
     } else {
         usage(argv, "<yolo/valid/classifer>", "<function>");
     }
-#ifdef GPU && LOGS
+
+#ifdef LOGS
     if (!(to_parse.generate_flag)) end_log_file();
 #endif
+
     args_init_and_setnull(&to_parse);
     return 0;
 }

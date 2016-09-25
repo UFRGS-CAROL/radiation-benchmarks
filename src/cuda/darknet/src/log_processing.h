@@ -8,7 +8,14 @@
 #ifndef LOG_PROCESSING_H_
 #define LOG_PROCESSING_H_
 
+#ifdef LOGS
+#include "log_helper.h"
+#endif
+
+#define THRESHOLD_ERROR 0.00000001
+
 typedef struct prob_arry {
+	box *boxes;
 	float **probs;
 	long classes;
 	long total_size;
@@ -16,12 +23,12 @@ typedef struct prob_arry {
 
 //to store all gold filenames
 typedef struct gold_pointers {
-	box *boxes;
-	box *boxes_gold;
-	ProbArray pb_array;
+//	box *boxes_gold;
+//	ProbArray pb;
 	ProbArray *pb_gold;
 	long plist_size;
 	FILE* gold;
+	int has_file;
 } GoldPointers;
 
 /**
@@ -35,7 +42,8 @@ ProbArray new_prob_array(int classes, int total_size) {
 	pb.classes = classes;
 	pb.total_size = total_size;
 	pb.probs = calloc(pb.total_size, sizeof(float*));
-	if (pb.probs == NULL) {
+	pb.boxes = calloc(pb.total_size, sizeof(box));
+	if (pb.probs == NULL || pb.boxes == NULL) {
 		error("ERROR ON ALLOCATING ProbArray\n");
 	}
 	for (i = 0; i < pb.total_size; i++) {
@@ -55,147 +63,222 @@ void free_prob_array(ProbArray *pb) {
 	}
 	if (pb->probs != NULL)
 		free(pb->probs);
+	if (pb->boxes != NULL)
+		free(pb->boxes);
 	pb->classes = pb->total_size = 0;
 	pb = NULL;
 }
 
-GoldPointers new_gold_pointers(ProbArray pb, const int plist_size, char *file_path, char *open_mode){
+GoldPointers new_gold_pointers(int classes, int total_size,
+		const int plist_size, char *file_path, char *open_mode) {
 	GoldPointers gp;
-	gp.pb_array = pb;
-	long int total_size = pb.total_size;
-	long int classes = pb.classes;
 	gp.plist_size = plist_size;
-	//it is a normal box array
-	gp.boxes = calloc(total_size, sizeof(box));
-	//gold box array
-	gp.boxes_gold = calloc(total_size * plist_size, sizeof(box));
-	if(gp.boxes == NULL || gp.boxes_gold == NULL){
-		error("ERROR ON ALLOCATING boxes array\n");
-	}
-
 	gp.pb_gold = calloc(plist_size, sizeof(ProbArray));
-	if(gp.pb_gold == NULL){
+	if (gp.pb_gold == NULL) {
 		error("ERROR ON ALLOCATING ProbArray list\n");
 	}
 	int i;
-	for(i = 0; i < plist_size; i++){
+	for (i = 0; i < plist_size; i++) {
 		gp.pb_gold[i] = new_prob_array(classes, total_size);
 	}
 
-	if((gp.gold = fopen(file_path, open_mode)) == NULL){
+	if (file_path == "") {
+		gp.has_file = 0;
+		return gp;
+	}
+	gp.has_file = 1;
+	if ((gp.gold = fopen(file_path, open_mode)) == NULL) {
 		char buff[1000];
-		sprintf(buff,"ERROR ON OPENING %s\n", buff);
+		sprintf(buff, "ERROR ON OPENING %s\n", file_path);
 		error(buff);
 	}
+
 	return gp;
 }
 
 //don't mess up with the memory in C, shit gonna happens
-void free_gold_pointers(GoldPointers *gp){
-	fclose(gp->gold);
-	free(gp->boxes);
-	free(gp->boxes_gold);
+void free_gold_pointers(GoldPointers *gp) {
+	if (gp->has_file)
+		fclose(gp->gold);
+//	free(gp->boxes);
+//	free(gp->boxes_gold);
 	int i;
-	for(i = 0; i < gp->plist_size;i++){
+	for (i = 0; i < gp->plist_size; i++) {
 		free_prob_array(&gp->pb_gold[i]);
 	}
 	free(gp->pb_gold);
-	free_prob_array(&gp->pb_array);
+//	free_prob_array(&gp->pb);
 }
 
-void cp_to_gold(ProbArray pb, GoldPointers *gp, int iterator){
-
+void prob_array_serialize(ProbArray pb, FILE *fp) {
+	//writing boxes
+	fwrite(pb.boxes, sizeof(box), pb.total_size, fp);
+	if (ferror(fp))
+		error("cannot write to file boxes array\n");
+	clearerr(fp);
+	//writing probs matrix
+	int i;
+	for (i = 0; i < pb.total_size; i++) {
+		fwrite(pb.probs[i], sizeof(float), pb.classes, fp);
+		if (ferror(fp))
+			error("cannot write to file prob array");
+		clearerr(fp);
+	}
 }
 
-///**
-// * The output will be stored in this order
-// * boxes
-// * probs
-// */
-//void write_yolo_gold(GoldPointers *gp) {
-//	//write all boxes
-//	int i, j;
-////	for (i = 0; i < gp->plist_size; i++) {
-//	fwrite(gp->boxes, sizeof(box), gp->total_size * gp->plist_size, gp->gold);
-////	}
-//	//write probs
-//	for (i = 0; i < gp->plist_size; i++) {
-//		for (j = 0; j < gp->total_size; j++) {
-//			fwrite(gp->probs[i], sizeof(float), gp->classes * gp->total_size,
-//					gp->gold);
-//		}
-//	}
-//}
-//
-//void read_yolo_gold(GoldPointers *gp) {
-//	//read all boxes
-//	int i, j;
-////	for (i = 0; i < gp->plist_size; i++) {
-//	fread(gp->boxes, sizeof(box), gp->total * gp->plist_size, gp->gold);
-////	}
-//	for (i = 0; i < gp->plist_size; i++) {
-//		for (j = 0; j < gp->total_size; j++) {
-//			fread(gp->probs[i], sizeof(float), gp->classes * gp->total_size,
-//					gp->gold);
-//		}
-//	}
-//}
-//
-//int allocate_gold_memory(GoldPointers *gp) {
-//	int z, j;
-//	//plist_size * total_size
-//	gp->boxes = calloc(gp->plist_size, sizeof(box*)); //= calloc(side * side * l.n, sizeof(box));
-//	gp->boxes_gold = calloc(gp->plist_size, sizeof(box*));
-//	gp->probs = calloc(gp->plist_size, sizeof(float**)); // = calloc(side * side * l.n, sizeof(float *));
-//	gp->probs_gold = calloc(gp->plist_size, sizeof(float**));
-//
-//	if (gp->boxes == NULL || gp->boxes_gold == NULL || gp->probs == NULL
-//			|| gp->probs_gold == NULL) {
-//		return -1;
-//	}
-//
-//	//man this shit sucks, I love C++ and JAVA
-//	for (z = 0; z < gp->plist_size; z++) {
-//		//probabilities
-//		gp->probs[z] = calloc(gp->total_size, sizeof(float*));
-//		gp->probs_gold[z] = calloc(gp->total_size, sizeof(float*));
-//		//boxes
-//		gp->boxes[z] = calloc(gp->total_size, sizeof(box));
-//		gp->boxes_gold[z] = calloc(gp->total_size, sizeof(box));
-//		if (gp->probs[z] == NULL || gp->probs_gold[z] == NULL
-//				|| gp->boxes[z] == NULL || gp->boxes_gold[z] == NULL) {
-//			return -1;
-//		}
-//		for (j = 0; j < gp->total_size; j++) {
-//			gp->probs[z][j] = calloc(gp->classes, sizeof(float));
-//			gp->probs_gold[z][j] = calloc(gp->classes, sizeof(float));
-//			if (gp->probs[z][j] == NULL || gp->probs_gold[z][j] == NULL) {
-//				return -1;
-//			}
-//		}
-//	}
-//	return 0;
-//}
-//
-//void free_gold_memory(GoldPointers *gp) {
-//	int j;
-//	//closing the gold input/output
-//	fclose(gp->gold);
-//	int z = 0;
-//	for (z = 0; z < gp->plist_size; z++) {
-//		for (j = 0; j < gp->total_size; j++) {
-//			free(gp->probs[z][j]);
-//			free(gp->probs_gold[z][j]);
-//		}
-//		free(gp->probs[z]);
-//		free(gp->probs_gold[z]);
-//		free(gp->boxes[z]);
-//		free(gp->boxes_gold[z]);
-//	}
-//	free(gp->probs);
-//	free(gp->probs_gold);
-//	free(gp->boxes);
-//	free(gp->boxes_gold);
-//}
+/**
+ * The output will be stored in this order
+ long plist_size;
+ long classes;
+ long total_size;
+ for(<plist_size times>){
+ -----pb_gold.boxes
+ -----pb_gold.probs
+ }
+ */
+void gold_pointers_serialize(GoldPointers gp) {
+	if (!gp.has_file)
+		return;
+	fwrite(&gp.plist_size, sizeof(long), 1, gp.gold);
+	if (ferror(gp.gold))
+		error("cannot write to file plist_size\n");
+	clearerr(gp.gold);
+
+	fwrite(&gp.pb_gold[0].classes, sizeof(long), 1, gp.gold);
+	if (ferror(gp.gold))
+		error("cannot write to file classes\n");
+	clearerr(gp.gold);
+
+	fwrite(&gp.pb_gold[0].total_size, sizeof(long), 1, gp.gold);
+	if (ferror(gp.gold))
+		error("cannot write to file total_size\n");
+	clearerr(gp.gold);
+
+	int i;
+	for (i = 0; i < gp.plist_size; i++) {
+		prob_array_serialize(gp.pb_gold[i], gp.gold);
+	}
+	if (ferror(gp.gold))
+		error("cannot write to file total_size\n");
+	clearerr(gp.gold);
+}
+
+/**
+ * This function assumes that pb is already allocated on memory
+ */
+ProbArray read_prob_array(FILE *fp, ProbArray pb) {
+	//writing boxes
+	if (ferror(fp)
+			|| fread(pb.boxes, sizeof(box), pb.total_size, fp) < pb.total_size)
+		error("cannot write to file boxes array\n");
+	clearerr(fp);
+	//writing probs matrix
+	int i;
+	for (i = 0; i < pb.total_size; i++) {
+		if (ferror(fp)
+				|| fread(pb.probs[i], sizeof(float), pb.classes, fp)
+						< pb.classes)
+			error("cannot write to file prob array");
+		clearerr(fp);
+	}
+	return pb; //return itself?
+}
+/**
+ *  the input must be read in this order
+ long plist_size;
+ long classes;
+ long total_size;
+ for(<plist_size times>){
+ -----pb_gold.boxes
+ -----pb_gold.probs
+ }
+ */
+void read_yolo_gold(GoldPointers *gp) {
+	printf("passou dos gold ptr %d\n", gp->has_file);
+	if (ferror(gp->gold)
+			|| fread(&gp->plist_size, sizeof(long), 1, gp->gold) != 1)
+		error("cannot read to file plist_size\n");
+	clearerr(gp->gold);
+
+	if (ferror(gp->gold)
+			|| fread(&gp->pb_gold[0].classes, sizeof(long), 1, gp->gold) != 1)
+		error("cannot read to file classes\n");
+	clearerr(gp->gold);
+
+	if (ferror(gp->gold)
+			|| fread(&gp->pb_gold[0].total_size, sizeof(long), 1, gp->gold)
+					!= 1)
+		error("cannot read to file total_size\n");
+	clearerr(gp->gold);
+
+	int i;
+	for (i = 0; i < gp->plist_size; i++) {
+		gp->pb_gold[i] = read_prob_array(gp->gold, gp->pb_gold[i]);
+	}
+	if (ferror(gp->gold))
+		error("cannot write to file total_size\n");
+	clearerr(gp->gold);
+}
+
+/**
+ * if some error happens the error_count will be != 0
+ */
+int comparable_and_log(ProbArray gold, ProbArray pb, long plist_iteration) {
+	char error_detail[1000];
+	int i, j, error_count = 0;
+	//compare boxes
+	for (i = 0; i < gold.total_size; i++) {
+		box tmp_gold = gold.boxes[i];
+		box tmp_pb = pb.boxes[i];
+		float x_diff = fabs(tmp_gold.x - tmp_pb.x);
+		float y_diff = fabs(tmp_gold.y - tmp_pb.y);
+		float w_diff = fabs(tmp_gold.w - tmp_pb.w);
+		float h_diff = fabs(tmp_gold.h - tmp_pb.h);
+
+		if (x_diff > THRESHOLD_ERROR || y_diff > THRESHOLD_ERROR
+				|| w_diff > THRESHOLD_ERROR || h_diff > THRESHOLD_ERROR) {
+			sprintf(error_detail, "image_list_position: [%ld] boxes: [%d] "
+					" x_r: %1.16e x_e: %1.16e x_diff: %1.16e"
+					" y_r: %1.16e y_e: %1.16e y_diff: %1.16e"
+					" w_r: %1.16e w_e: %1.16e w_diff: %1.16e"
+					" h_r: %1.16e h_e: %1.16e h_diff: %1.16e", plist_iteration,
+					i, tmp_pb.x, tmp_gold.x, x_diff, tmp_pb.y, tmp_gold.y,
+					y_diff, tmp_pb.w, tmp_gold.w, w_diff, tmp_pb.h, tmp_gold.h,
+					h_diff);
+			error_count++;
+#ifdef LOGS
+			log_error_detail(error_detail);
+#endif
+		}
+
+	}
+#ifdef LOGS
+	log_error_count(error_count);
+#endif
+	//compare probs
+	float **gold_probs = gold.probs;
+	float **pb_probs = pb.probs;
+	for (i = 0; i < gold.total_size; i++) {
+		for (j = 0; j < gold.classes; j++) {
+			float diff = fabs(gold_probs[i][j] - pb_probs[i][j]);
+			if (diff > THRESHOLD_ERROR) {
+				sprintf(error_detail,
+						"image_list_position: [%ld] probs: [%d,%d] "
+								" prob_r: %1.16e prob_e: %1.16e",
+						plist_iteration, i, j, pb_probs[i][j],
+						gold_probs[i][j]);
+				error_count++;
+#ifdef LOGS
+				log_error_detail(error_detail);
+#endif
+			}
+		}
+	}
+#ifdef LOGS
+	log_error_count(error_count);
+#endif
+
+	return error_count;
+}
 
 #endif /* LOG_PROCESSING_H_ */

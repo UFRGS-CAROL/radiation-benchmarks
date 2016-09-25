@@ -185,14 +185,25 @@ void validate_yolo(Args parameters) {
 //	box *boxes = calloc(side * side * l.n, sizeof(box));
 //    float **probs = calloc(side*side*l.n, sizeof(float *));
 //    for(j = 0; j < side*side*l.n; ++j) probs[j] = calloc(classes, sizeof(float *));
-	ProbArray pb = new_prob_array(classes, side * side * l.n);
 //    float **probs = pb.probs;
-	GoldPointers gold_var;
-	if(parameters.generate_flag){
-		gold_var = new_gold_pointers(pb, plist->size, parameters.gold_output, "wb");
-	}else{
-		gold_var = new_gold_pointers(pb, plist->size, parameters.gold_input, "rb");
+	GoldPointers current_ptr, gold_ptr;
+	int gold_iterator = 0;
+
+	if (parameters.generate_flag) {
+		current_ptr.has_file = 1;
+		current_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
+				parameters.gold_output, "wb");
+	} else {
+		//only gold_ptr need open a file
+		current_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,"","");
+
+		gold_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
+				parameters.gold_input, "rb");
+		//now we can already load gold values
+		read_yolo_gold(&gold_ptr);
 	}
+
+//	ProbArray pb = gold_var.pb;
 	int m = plist->size;
 	int i = 0;
 	int t;
@@ -239,27 +250,51 @@ void validate_yolo(Args parameters) {
 			float *predictions = network_predict(net, X);
 			int w = val[t].w;
 			int h = val[t].h;
+
+			printf("passou2\n");
 			convert_detections(predictions, classes, l.n, square, side, w, h,
-					thresh, pb.probs, gold_var.boxes, 0);
+					thresh, current_ptr.pb_gold[gold_iterator].probs,
+					current_ptr.pb_gold[gold_iterator].boxes, 0);
 			if (nms) {
-				do_nms_sort(gold_var.boxes, pb.probs, side * side * l.n, classes,
-						iou_thresh);
+				do_nms_sort(current_ptr.pb_gold[gold_iterator].boxes,
+						current_ptr.pb_gold[gold_iterator].probs,
+						side * side * l.n, classes, iou_thresh);
 			}
-			print_yolo_detections(fps, id, gold_var.boxes, pb.probs, side * side * l.n,
+
+			printf("passou\n");
+			print_yolo_detections(fps, id,
+					current_ptr.pb_gold[gold_iterator].boxes,
+					current_ptr.pb_gold[gold_iterator].probs, side * side * l.n,
 					classes, w, h);
+			printf("passou\n");
+			//---------------------------------
+			//check the results
+			if (!parameters.generate_flag) {
+				int cmp = comparable_and_log(gold_ptr.pb_gold[gold_iterator],
+						current_ptr.pb_gold[gold_iterator], gold_iterator);
+				if(cmp)
+					fprintf(stderr, "%d errors found in the computation, run to the mountains\n", cmp);
+			}
+			gold_iterator = (gold_iterator + 1) % plist->size;
+			//---------------------------------
 			free(id);
 			free_image(val[t]);
 			free_image(val_resized[t]);
 		}
 	}
+	printf("finished\n");
+
+	//save gold values
+	if (parameters.generate_flag) {
+		gold_pointers_serialize(current_ptr);
+	}
 	fprintf(stderr, "Total Detection Time: %f Seconds\n",
 			(double) (time(0) - start));
 
 	//for normal execution
-//	free_prob_array(&pb);
-
-	//free(boxes);
-	free_gold_pointers(&gold_var);
+	free_gold_pointers(&current_ptr);
+	if(!parameters.generate_flag)
+		free_gold_pointers(&gold_ptr);
 	free(val);
 	free(val_resized);
 	free(buf);
