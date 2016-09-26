@@ -75,4 +75,6 @@ void read_yolo_gold(GoldPointers *gp);
  */
 unsigned long comparable_and_log(GoldPointers gold, GoldPointers current);
 
+void clear_vectors(GoldPointers *gp);
+
 #endif /* LOG_PROCESSING_H_ */

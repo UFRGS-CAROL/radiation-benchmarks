@@ -266,3 +266,15 @@ unsigned long comparable_and_log(GoldPointers gold, GoldPointers current){
 	}
 	return error_count;
 }
+
+void clear_vectors(GoldPointers *gp){
+	int i;
+	for(i = 0; i < gp->plist_size; i++){
+		ProbArray tmp = gp->pb_gold[i];
+		memset(tmp.boxes, 0, sizeof(box) * tmp.total_size);
+		int j;
+		for(j = 0; j < tmp.total_size; j++){
+			memset(tmp.probs[j], 0, sizeof(float) * tmp.classes);
+		}
+	}
+}

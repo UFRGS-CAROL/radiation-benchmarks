@@ -1,2 +1,5 @@
-/home/carol/lucas_klein/darknet/VOCdevkit/VOC2012/JPEGImages/2008_000001.jpg
-/home/carol/lucas_klein/darknet/VOCdevkit/VOC2012/JPEGImages/2008_000004.jpg
+/home/fernando/git_pesquisa/radiation-benchmarks/data/darknet/VOC2012/2008_000001.jpg
+/home/fernando/git_pesquisa/radiation-benchmarks/data/darknet/VOC2012/2008_000004.jpg
+/home/fernando/git_pesquisa/radiation-benchmarks/data/darknet/VOC2012/2008_001110.jpg
+/home/fernando/git_pesquisa/radiation-benchmarks/data/darknet/VOC2012/2008_001116.jpg
+/home/fernando/git_pesquisa/radiation-benchmarks/data/darknet/VOC2012/2008_001117.jpg

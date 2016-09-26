@@ -89,7 +89,7 @@ results:
 .PHONY: clean
 
 test:darknet
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 30 -d gold/gold_voc2012.test -l voc.2012.txt -b gold/comp4_det_test_ -x -1
+	./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 3 -d gold/gold_voc2012.test -l voc.2012.txt -b gold/comp4_det_test_ -x -1
 
 generate:darknet
 	./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 1 -g gold/gold_voc2012.test -l voc.2012.txt -b gold/comp4_det_test_ -x -1

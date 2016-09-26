@@ -216,7 +216,7 @@ void validate_yolo(Args parameters) {
 	int nms = 1;
 	float iou_thresh = .5;
 
-	int nthreads = 2;
+	int nthreads = 5;
 
 	image *val = calloc(nthreads, sizeof(image));
 	image *val_resized = calloc(nthreads, sizeof(image));
@@ -235,28 +235,37 @@ void validate_yolo(Args parameters) {
 		thr[t] = load_data_in_thread(args);
 	}
 	long iterator;
+	long it = 0;
+//	for (iterator = 0; iterator < parameters.iterations; iterator++) {
+//#ifdef LOGS
+//		if(!parameters.generate_flag) {
+//			start_iteration();
+//		}
+//#endif
+//		time_t start = time(0);
+
+//	for (i = nthreads; i < m + nthreads; i += nthreads) {
+	for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
+		pthread_join(thr[t], 0);
+		val[t] = buf[t];
+		val_resized[t] = buf_resized[t];
+	}
+
+	for (t = 0; t < nthreads && i + t < m; ++t) {
+		args.path = paths[i + t];
+		args.im = &buf[t];
+		args.resized = &buf_resized[t];
+		thr[t] = load_data_in_thread(args);
+	}
+//	}
 	for (iterator = 0; iterator < parameters.iterations; iterator++) {
 #ifdef LOGS
 		if(!parameters.generate_flag) {
 			start_iteration();
 		}
 #endif
-//		time_t start = time(0);
 		double det_start = mysecond();
-
 		for (i = nthreads; i < m + nthreads; i += nthreads) {
-			for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
-				pthread_join(thr[t], 0);
-				val[t] = buf[t];
-				val_resized[t] = buf_resized[t];
-			}
-
-			for (t = 0; t < nthreads && i + t < m; ++t) {
-				args.path = paths[i + t];
-				args.im = &buf[t];
-				args.resized = &buf_resized[t];
-				thr[t] = load_data_in_thread(args);
-			}
 
 			for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
 				char *path = paths[i + t - nthreads];
@@ -280,6 +289,8 @@ void validate_yolo(Args parameters) {
 							side * side * l.n, classes, w, h);
 				}
 				//---------------------------------
+
+//				printf("passou %d %d\n", gold_iterator, it++);
 				gold_iterator = (gold_iterator + 1) % plist->size;
 				//---------------------------------
 				if (iterator == parameters.iterations - 1) {
@@ -305,7 +316,11 @@ void validate_yolo(Args parameters) {
 				fprintf(stderr,
 						"%d errors found in the computation, run to the hills\n",
 						cmp);
-			fprintf(stdout, "Total Gold comparison Time: %f Seconds\n", mysecond() - begin);
+			fprintf(stdout,
+					"Iteration %ld Total Gold comparison Time: %f Seconds\n",
+					iterator, mysecond() - begin);
+//			clear_vectors(&current_ptr);
+//			printf("passou\n");
 
 		}
 #ifdef LOGS
