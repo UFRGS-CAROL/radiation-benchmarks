@@ -46,7 +46,8 @@ ifeq ($(CUDNN), 1)
 endif
 
 ifeq ($(LOGS), 1)
-	CFLAGS+= -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB)  -lLogHelper -DLOGS
+	CFLAGS+= -DLOGS -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper
+	LOG_LINK= $(LOGHELPER_LIB)log_helper.o 
 endif
 
 
@@ -56,7 +57,8 @@ OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o i
 	 captcha.o route_layer.o writing.o box.o nightmare.o normalization_layer.o avgpool_layer.o coco.o dice.o \
 	 yolo.o detector.o layer.o compare.o classifier.o local_layer.o swag.o shortcut_layer.o activation_layer.o \
 	 rnn_layer.o gru_layer.o rnn.o rnn_vid.o crnn_layer.o demo.o tag.o cifar.o go.o batchnorm_layer.o art.o \
-	 region_layer.o reorg_layer.o super.o voxel.o
+	 region_layer.o reorg_layer.o super.o voxel.o log_processing.o args.o
+	 
 ifeq ($(GPU), 1)
 LDFLAGS+= -lstdc++
 OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2col_kernels.o \
@@ -71,7 +73,7 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj results $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LOG_LINK)
 
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
@@ -87,7 +89,7 @@ results:
 .PHONY: clean
 
 test:darknet
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 1 -d gold/gold_voc2012.test -l voc.2012.txt -b gold/comp4_det_test_ -x -1
+	./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 30 -d gold/gold_voc2012.test -l voc.2012.txt -b gold/comp4_det_test_ -x -1
 
 generate:darknet
 	./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 1 -g gold/gold_voc2012.test -l voc.2012.txt -b gold/comp4_det_test_ -x -1

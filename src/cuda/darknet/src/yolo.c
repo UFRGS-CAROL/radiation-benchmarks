@@ -5,7 +5,7 @@
 #include "parser.h"
 #include "box.h"
 #include "demo.h"
-
+#include <sys/time.h>
 #include "args.h"
 #include "log_processing.h"
 
@@ -152,6 +152,13 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 	}
 }
 
+inline double mysecond() {
+	struct timeval tp;
+	struct timezone tzp;
+	gettimeofday(&tp, &tzp);
+	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
+}
+
 void validate_yolo(Args parameters) {
 	network net = parse_network_cfg(parameters.config_file);
 	if (parameters.weights) {
@@ -176,26 +183,24 @@ void validate_yolo(Args parameters) {
 	int j;
 	//classes outputs files
 	FILE **fps = calloc(classes, sizeof(FILE *));
-	for (j = 0; j < classes; ++j) {
-		char buff[1024];
-		snprintf(buff, 1024, "%s%s.txt", base, voc_names[j]);
-		fps[j] = fopen(buff, "w");
+	if (parameters.generate_flag) {
+		for (j = 0; j < classes; ++j) {
+			char buff[1024];
+			snprintf(buff, 1024, "%s%s.txt", base, voc_names[j]);
+			fps[j] = fopen(buff, "w");
+		}
 	}
 	//boxes and probabilities arrays
-//	box *boxes = calloc(side * side * l.n, sizeof(box));
-//    float **probs = calloc(side*side*l.n, sizeof(float *));
-//    for(j = 0; j < side*side*l.n; ++j) probs[j] = calloc(classes, sizeof(float *));
-//    float **probs = pb.probs;
 	GoldPointers current_ptr, gold_ptr;
 	int gold_iterator = 0;
 
 	if (parameters.generate_flag) {
-		current_ptr.has_file = 1;
 		current_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
 				parameters.gold_output, "wb");
 	} else {
 		//only gold_ptr need open a file
-		current_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,"","");
+		current_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
+				"not_open", "not_open");
 
 		gold_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
 				parameters.gold_input, "rb");
@@ -203,7 +208,6 @@ void validate_yolo(Args parameters) {
 		read_yolo_gold(&gold_ptr);
 	}
 
-//	ProbArray pb = gold_var.pb;
 	int m = plist->size;
 	int i = 0;
 	int t;
@@ -213,6 +217,7 @@ void validate_yolo(Args parameters) {
 	float iou_thresh = .5;
 
 	int nthreads = 2;
+
 	image *val = calloc(nthreads, sizeof(image));
 	image *val_resized = calloc(nthreads, sizeof(image));
 	image *buf = calloc(nthreads, sizeof(image));
@@ -229,71 +234,97 @@ void validate_yolo(Args parameters) {
 		args.resized = &buf_resized[t];
 		thr[t] = load_data_in_thread(args);
 	}
-	time_t start = time(0);
-	for (i = nthreads; i < m + nthreads; i += nthreads) {
-		fprintf(stderr, "%d\n", i);
-		for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
-			pthread_join(thr[t], 0);
-			val[t] = buf[t];
-			val_resized[t] = buf_resized[t];
+	long iterator;
+	for (iterator = 0; iterator < parameters.iterations; iterator++) {
+#ifdef LOGS
+		if(!parameters.generate_flag) {
+			start_iteration();
 		}
-		for (t = 0; t < nthreads && i + t < m; ++t) {
-			args.path = paths[i + t];
-			args.im = &buf[t];
-			args.resized = &buf_resized[t];
-			thr[t] = load_data_in_thread(args);
-		}
-		for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
-			char *path = paths[i + t - nthreads];
-			char *id = basecfg(path);
-			float *X = val_resized[t].data;
-			float *predictions = network_predict(net, X);
-			int w = val[t].w;
-			int h = val[t].h;
+#endif
+//		time_t start = time(0);
+		double det_start = mysecond();
 
-			printf("passou2\n");
-			convert_detections(predictions, classes, l.n, square, side, w, h,
-					thresh, current_ptr.pb_gold[gold_iterator].probs,
-					current_ptr.pb_gold[gold_iterator].boxes, 0);
-			if (nms) {
-				do_nms_sort(current_ptr.pb_gold[gold_iterator].boxes,
-						current_ptr.pb_gold[gold_iterator].probs,
-						side * side * l.n, classes, iou_thresh);
+		for (i = nthreads; i < m + nthreads; i += nthreads) {
+			for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
+				pthread_join(thr[t], 0);
+				val[t] = buf[t];
+				val_resized[t] = buf_resized[t];
 			}
 
-			printf("passou\n");
-			print_yolo_detections(fps, id,
-					current_ptr.pb_gold[gold_iterator].boxes,
-					current_ptr.pb_gold[gold_iterator].probs, side * side * l.n,
-					classes, w, h);
-			printf("passou\n");
-			//---------------------------------
-			//check the results
-			if (!parameters.generate_flag) {
-				int cmp = comparable_and_log(gold_ptr.pb_gold[gold_iterator],
-						current_ptr.pb_gold[gold_iterator], gold_iterator);
-				if(cmp)
-					fprintf(stderr, "%d errors found in the computation, run to the mountains\n", cmp);
+			for (t = 0; t < nthreads && i + t < m; ++t) {
+				args.path = paths[i + t];
+				args.im = &buf[t];
+				args.resized = &buf_resized[t];
+				thr[t] = load_data_in_thread(args);
 			}
-			gold_iterator = (gold_iterator + 1) % plist->size;
-			//---------------------------------
-			free(id);
-			free_image(val[t]);
-			free_image(val_resized[t]);
+
+			for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
+				char *path = paths[i + t - nthreads];
+				char *id = basecfg(path);
+				float *X = val_resized[t].data;
+				float *predictions = network_predict(net, X);
+				int w = val[t].w;
+				int h = val[t].h;
+				convert_detections(predictions, classes, l.n, square, side, w,
+						h, thresh, current_ptr.pb_gold[gold_iterator].probs,
+						current_ptr.pb_gold[gold_iterator].boxes, 0);
+				if (nms) {
+					do_nms_sort(current_ptr.pb_gold[gold_iterator].boxes,
+							current_ptr.pb_gold[gold_iterator].probs,
+							side * side * l.n, classes, iou_thresh);
+				}
+				if (parameters.generate_flag) {
+					print_yolo_detections(fps, id,
+							current_ptr.pb_gold[gold_iterator].boxes,
+							current_ptr.pb_gold[gold_iterator].probs,
+							side * side * l.n, classes, w, h);
+				}
+				//---------------------------------
+				gold_iterator = (gold_iterator + 1) % plist->size;
+				//---------------------------------
+				if (iterator == parameters.iterations - 1) {
+					free(id);
+					free_image(val[t]);
+					free_image(val_resized[t]);
+				}
+			}
 		}
+		fprintf(stdout, "Total Detection Time: %f Seconds\n",
+				(double) (mysecond() - det_start));
+
+#ifdef LOGS
+		if(!parameters.generate_flag) {
+			end_iteration();
+		}
+#endif
+		unsigned long cmp = 0;
+		//I need compare things here not anywhere else
+		if (!parameters.generate_flag) {
+			double begin = mysecond();
+			if ((cmp = comparable_and_log(gold_ptr, current_ptr)))
+				fprintf(stderr,
+						"%d errors found in the computation, run to the hills\n",
+						cmp);
+			fprintf(stdout, "Total Gold comparison Time: %f Seconds\n", mysecond() - begin);
+
+		}
+#ifdef LOGS
+		if (!parameters.generate_flag) {
+			log_error_count(cmp);
+		}
+#endif
+
+		//-----------------------------------------------
+
 	}
-	printf("finished\n");
 
-	//save gold values
+//save gold values
 	if (parameters.generate_flag) {
 		gold_pointers_serialize(current_ptr);
 	}
-	fprintf(stderr, "Total Detection Time: %f Seconds\n",
-			(double) (time(0) - start));
-
-	//for normal execution
+//for normal execution
 	free_gold_pointers(&current_ptr);
-	if(!parameters.generate_flag)
+	if (!parameters.generate_flag)
 		free_gold_pointers(&gold_ptr);
 	free(val);
 	free(val_resized);
@@ -457,21 +488,21 @@ void run_yolo(Args args) {
 		voc_labels[i] = load_image_color(buff, 0, 0);
 	}
 
-	//float thresh = find_float_arg(argc, argv, "-thresh", .2);
-	//int cam_index = find_int_arg(argc, argv, "-c", 0);
-	//int frame_skip = find_int_arg(argc, argv, "-s", 0);
-	//if(argc < 4){
-	//    fprintf(stderr, "usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n", argv[0], argv[1]);
-	//    return;
-	//}
+//float thresh = find_float_arg(argc, argv, "-thresh", .2);
+//int cam_index = find_int_arg(argc, argv, "-c", 0);
+//int frame_skip = find_int_arg(argc, argv, "-s", 0);
+//if(argc < 4){
+//    fprintf(stderr, "usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n", argv[0], argv[1]);
+//    return;
+//}
 
 //    char *cfg = args.config_file;
 //    char *weights = args.weights;//(argc > 4) ? argv[4] : 0;
 //    char *filename = a//(argc > 5) ? argv[5]: 0;
-	//if(0==strcmp(argv[2], "test")) test_yolo(cfg, weights, filename, thresh);
-	//else if(0==strcmp(argv[2], "train")) train_yolo(cfg, weights);
+//if(0==strcmp(argv[2], "test")) test_yolo(cfg, weights, filename, thresh);
+//else if(0==strcmp(argv[2], "train")) train_yolo(cfg, weights);
 	if (0 == strcmp(args.execution_model, "valid"))
 		validate_yolo(args);
-	//else if(0==strcmp(argv[2], "recall")) validate_yolo_recall(cfg, weights);
-	//else if(0==strcmp(argv[2], "demo")) demo(cfg, weights, thresh, cam_index, filename, voc_names, voc_labels, 20, frame_skip);
+//else if(0==strcmp(argv[2], "recall")) validate_yolo_recall(cfg, weights);
+//else if(0==strcmp(argv[2], "demo")) demo(cfg, weights, thresh, cam_index, filename, voc_names, voc_labels, 20, frame_skip);
 }
