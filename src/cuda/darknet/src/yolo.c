@@ -286,19 +286,17 @@ void validate_yolo(Args parameters) {
 				float *predictions = network_predict(net, X);
 				int w = val[t].w;
 				int h = val[t].h;
-				ProbArray current;
-				//not allocated yet
+				ProbArray gold, current = current_ptr.pb_gold[gold_iterator];
 				if(!parameters.generate_flag)
-					current = current_ptr.pb_gold[gold_iterator];
+					gold = gold_ptr.pb_gold[gold_iterator];
 
-				ProbArray gold = gold_ptr.pb_gold[gold_iterator];
-				float **probs_gold = gold.probs;
-				box *boxes_gold = gold_ptr.pb_gold[gold_iterator].boxes;
+				float **probs_curr = current.probs;
+				box *boxes_curr = current_ptr.pb_gold[gold_iterator].boxes;
 
 				convert_detections(predictions, classes, l.n, square, side, w,
-						h, thresh, probs_gold, boxes_gold, 0);
+						h, thresh, probs_curr, boxes_curr, 0);
 				if (nms) {
-					do_nms_sort(boxes_gold, probs_gold, side * side * l.n,
+					do_nms_sort(boxes_curr, probs_curr, side * side * l.n,
 							classes, iou_thresh);
 				}
 
