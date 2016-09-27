@@ -412,7 +412,7 @@ int main(int argc, char **argv)
     #ifdef LOGS
     char test_info[90];
     snprintf(test_info, 90, "size:%d", params->size);
-    if (!params->generate) start_log_file("cudaMergeSort", test_info);
+    if (!params->generate) start_log_file("cudaMergeSort_H", test_info);
     #endif
 
     params->h_SrcKey = (uint *)malloc(params->size * sizeof(uint));
