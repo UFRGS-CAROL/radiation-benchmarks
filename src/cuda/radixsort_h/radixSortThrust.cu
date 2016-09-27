@@ -20,7 +20,6 @@
 #include <omp.h>
 
 #include <helper_cuda.h>
-#include "helper_sorts.h"
 
 #include <algorithm>
 #include <time.h>
@@ -31,6 +30,7 @@
 #define INPUTSIZE 134217728
 #define RETRY_COUNT 3
 
+#define MAX_MEMUSE 2048000000// * 2 ( MAX_MEMUSE = 4GB of memory use, avoid using SWAP!)
 
 extern "C" uint sortVerify(uint *d_DstKey, uint *d_DstVal, uint *d_SrcVal, int size);
 
@@ -136,53 +136,62 @@ void getParams(int argc, char *argv[], parameters_t *params)
 void readData(parameters_t *params, uint *h_keys, uint *h_keysGold, uint *h_values, uint *h_valuesGold, int onlygold = 0)
 {
     FILE *finput, *fgold;
+	size_t readFlag = 1;
+
     if (!onlygold)
-    {
-    if (finput = fopen(params->inputName, "rb")) {
-		fread(h_keys, params->numElements * sizeof(uint), 1, finput);
-	} else if (params->generate) {
-        uint *new_keys = (uint *)malloc(sizeof(uint) * INPUTSIZE);
-        // Fill up with some random data
-        thrust::default_random_engine rng(clock());
+	    {
+	    if (finput = fopen(params->inputName, "rb")) {
+			readFlag = readFlag && fread(h_keys, params->numElements * sizeof(uint), 1, finput);
+		} else if (params->generate) {
+	        uint *new_keys = (uint *)malloc(sizeof(uint) * INPUTSIZE);
+	        // Fill up with some random data
+	        thrust::default_random_engine rng(clock());
 
-        thrust::uniform_int_distribution<unsigned int> u(0, UINT_MAX);
+	        thrust::uniform_int_distribution<unsigned int> u(0, UINT_MAX);
 
-        for (int i = 0; i < (int)INPUTSIZE; i++)
-            new_keys[i] = u(rng);
+	        for (int i = 0; i < (int)INPUTSIZE; i++)
+	            new_keys[i] = u(rng);
 
-		if (finput = fopen(params->inputName, "wb"))  {
-			fwrite(new_keys, INPUTSIZE * sizeof(uint), 1, finput);
+			if (finput = fopen(params->inputName, "wb"))  {
+				fwrite(new_keys, INPUTSIZE * sizeof(uint), 1, finput);
+			} else {
+				printf("Could not write key input to file, proceeding anyway...\n");
+			}
+			memcpy(h_keys, new_keys, params->numElements * sizeof(uint));
+			free(new_keys);
 		} else {
-			printf("Could not write key input to file, proceeding anyway...\n");
+			fatal("Could not open key input. Use -generate");
 		}
-		memcpy(h_keys, new_keys, params->numElements * sizeof(uint));
-		free(new_keys);
-	} else {
-		fatal("Could not open key input. Use -generate");
-	}
-	fclose(finput);
+		fclose(finput);
 
-	register uint *ptr = h_values;
-	register uint i;
-	#pragma omp parallel for
-	for (i = 0; i<params->numElements; i++)
-		ptr[i] = i;
+		register uint *ptr = h_values;
+		register uint i;
+		#pragma omp parallel for
+		for (i = 0; i<params->numElements; i++)
+			ptr[i] = i;
 
-	if (params->fault_injection) {
-		h_keys[5] = rand() % UINT_MAX;
-		printf(">>>>> Will inject an error: h_keys[5]=%d\n", h_keys[5]);
-		h_values[12] = rand() % params->numElements;
-		printf(">>>>> Will inject an error: h_values[12]=%d\n", h_values[12]);
+		if (params->fault_injection) {
+			h_keys[5] = rand() % UINT_MAX;
+			printf(">>>>> Will inject an error: h_keys[5]=%d\n", h_keys[5]);
+			h_values[12] = rand() % params->numElements;
+			printf(">>>>> Will inject an error: h_values[12]=%d\n", h_values[12]);
+		}
 	}
-}
     if (!(params->generate)) {
         if (fgold = fopen(params->goldName, "rb")) {
-            fread(h_keysGold, params->numElements * sizeof(uint), 1, fgold);
-			fread(h_valuesGold, params->numElements * sizeof(uint), 1, fgold);
+            readFlag = readFlag && fread(h_keysGold, params->numElements * sizeof(uint), 1, fgold);
+			readFlag = readFlag && fread(h_valuesGold, params->numElements * sizeof(uint), 1, fgold);
             fclose(fgold);
         } else {
             fatal("Could not open gold file. Use -generate");
         }
+    }
+
+    if (!readFlag) {
+        printf("Warning!! Read failed in readData.\n");
+        #ifdef LOGS
+            if (!(params->generate)) log_info_detail("Warning - read failed in readData");
+        #endif
     }
 }
 
@@ -210,7 +219,7 @@ int checkKeys(parameters_t *params, uint *h_keys, uint *h_keysOut)
 
 	register uint index, range;
 	long unsigned int control;
-	range = ((numValues*sizeof(unsigned char) > (size_t)2*1024*1024*1024) ? (size_t)2*1024*1024*1024 : numValues); // Avoid more than 4GB of RAM alloc
+	range = ((numValues*sizeof(unsigned char) > (size_t)MAX_MEMUSE) ? (size_t)MAX_MEMUSE : numValues); // Avoid more than 4GB of RAM alloc
 
 	srcHist = (unsigned char *)malloc(range * sizeof(unsigned char));
 	resHist = (unsigned char *)malloc(range * sizeof(unsigned char));
@@ -398,7 +407,7 @@ void testSort(parameters_t *params)
 	h_values = (uint*) malloc(sizeof(uint) * params->numElements);
 	h_valuesOut = (uint*) malloc(sizeof(uint) * params->numElements);
 	h_valuesGold = (uint*) malloc(sizeof(uint) * params->numElements);
-	
+
 	if (params->verbose) printf("Preparing setup data..."); fflush(stdout);
 	timestamp = mysecond();
 
@@ -423,9 +432,9 @@ void testSort(parameters_t *params)
     {
 		itertimestamp = mysecond();
         if (params->verbose) printf("================== [Iteration #%i began]\n", loop1);
-        
+
 		retries = 0;
-		do 
+		do
 		{
 
 			// reset data before sort
@@ -446,12 +455,12 @@ void testSort(parameters_t *params)
 
 			thrust::sort_by_key(thrust::device_ptr<uint> (d_keys), thrust::device_ptr<uint> (d_keys+params->numElements), thrust::device_ptr<uint> (d_values));
 			checkCudaErrors(cudaDeviceSynchronize());
-			
+
 			kernel_time = mysecond() - timestamp;
-			
+
 			errNum = sortVerify(d_keys, d_values, d_input_keys, params->numElements);
 			checkCudaErrors(cudaDeviceSynchronize());
-			
+
 			#ifdef LOGS
 				if (!(params->generate)) end_iteration();
 			#endif
@@ -460,6 +469,14 @@ void testSort(parameters_t *params)
 			if (errNum) printf("GPU Verify Found ERROR! numErr=%d\n", errNum);
 			if (params->verbose) printf("GPU Kernel time: %.4fs\n", kernel_time);
 			if (params->verbose) printf("GPU Verify Kernel time: %.4fs\n", mysecond() - timestamp);
+
+			if (errNum != 0) {
+				if (params->verbose) printf("Hardening::error detected errNum=%d retries=%d\n", errNum, retries);
+				#ifdef LOGS
+					if (!(params->generate)) log_info_detail("Hardening detected error errNum=%d retries=%d", errNum, retries);
+				#endif
+			}
+
 			retries++;
 		} while ((retries<RETRY_COUNT) && (errNum != 0));
 
