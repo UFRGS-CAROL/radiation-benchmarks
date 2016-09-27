@@ -1,5 +1,5 @@
-#THIS REPOSITORY WAS COPY FROM rbgirshick/py-faster-rcnn, for research purpose only#
------------------------------------------------------------------------------------
+###This repository was copied from https://github.com/rbgirshick/fast-rcnn
+
 ### Disclaimer
 
 The official Faster R-CNN code (written in MATLAB) is available [here](https://github.com/ShaoqingRen/faster_rcnn).

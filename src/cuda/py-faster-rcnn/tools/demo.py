@@ -24,10 +24,6 @@ import scipy.io as sio
 import caffe, os, sys, cv2
 import argparse
 
-#log helper
-os.path.insert(0, ' ../include/log_helper_python/')
-import log_helper as log
-
 CLASSES = ('__background__',
            'aeroplane', 'bicycle', 'bird', 'boat',
            'bottle', 'bus', 'car', 'cat', 'chair',
@@ -112,10 +108,6 @@ def parse_args():
     parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]',
                         choices=NETS.keys(), default='vgg16')
 
-    #for radiation test
-    parser.add_argument('--ite', dest='iterations', help='How many times will execute', default=1, type=int)
-    parser.add_argument('--img_list', dest='img_list_path', help='File that contains all paths to dataset images', default="", type=str)
-
     args = parser.parse_args()
 
     return args
@@ -149,22 +141,11 @@ if __name__ == '__main__':
     for i in xrange(2):
         _, _= im_detect(net, im)
 
-    #execution_type:%s execution_model:%s img_list_path:%s weights:%s config_file:%s iterations:%d"
-    log.start_log_file("py_fater_rcnn", str("execution_type: ", args.demo_net, " img_list_path: ", args.img_list_path
-                                , " weights: vgg iterations: ", args.iterations))
-#iterations
-    for it in range(0, args.iterations):
-        log.start_iteration()
+    im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
+                '001763.jpg', '004545.jpg']
+    for im_name in im_names:
+        print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+        print 'Demo for data/demo/{}'.format(im_name)
+        demo(net, im_name)
 
-        #im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
-        #            '001763.jpg', '004545.jpg']
-        im_names = [line.strip() for line in open(args.img_list_path, 'r')]
-        for im_name in im_names:
-            print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-            print 'Demo for data/demo/{}'.format(im_name)
-            demo(net, im_name)
-
-        plt.show()
-        log.end_iteration()
-        print "Iteration ", it, " done"
-    log.end_log_file()
+    plt.show()
