@@ -77,4 +77,6 @@ unsigned long comparable_and_log(GoldPointers gold, GoldPointers current);
 
 void clear_vectors(GoldPointers *gp);
 
+int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_iteration);
+
 #endif /* LOG_PROCESSING_H_ */
