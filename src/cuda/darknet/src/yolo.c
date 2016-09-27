@@ -384,8 +384,8 @@ void validate_yolo(Args parameters) {
 	free(buf_resized);
 	int cf;
 	printf("passou antes do fclose\n");
-	for (cf = 0; cf < classes; cf++) {
-		fclose(fps[cf]);
+	for (cf = 0; cf < classes; ++cf) {
+		if(fps[cf] != NULL) fclose(fps[cf]);
 	}
 
 	printf("passou depois do fclose\n");
