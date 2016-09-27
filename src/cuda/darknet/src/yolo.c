@@ -128,6 +128,7 @@ void convert_detections(float *predictions, int classes, int num, int square,
 
 void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 		int total, int classes, int w, int h) {
+//	printf("passou2\n");
 	int i, j;
 	for (i = 0; i < total; ++i) {
 		float xmin = boxes[i].x - boxes[i].w / 2.;
@@ -145,10 +146,14 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 			ymax = h;
 
 		for (j = 0; j < classes; ++j) {
-			if (probs[i][j])
+//			printf("%f", )
+			if (probs[i][j]) {
 				fprintf(fps[j], "%s %f %f %f %f %f\n", id, probs[i][j], xmin,
 						ymin, xmax, ymax);
+//				printf("passou3\n");
+			}
 		}
+
 	}
 }
 
@@ -190,6 +195,7 @@ void validate_yolo(Args parameters) {
 			fps[j] = fopen(buff, "w");
 		}
 	}
+
 	//boxes and probabilities arrays
 	GoldPointers current_ptr, gold_ptr;
 	int gold_iterator = 0;
@@ -223,6 +229,8 @@ void validate_yolo(Args parameters) {
 	image *buf = calloc(nthreads, sizeof(image));
 	image *buf_resized = calloc(nthreads, sizeof(image));
 	pthread_t *thr = calloc(nthreads, sizeof(pthread_t));
+	long iterator;
+	long it = 0;
 
 	load_args args = { 0 };
 	args.w = net.w;
@@ -234,8 +242,7 @@ void validate_yolo(Args parameters) {
 		args.resized = &buf_resized[t];
 		thr[t] = load_data_in_thread(args);
 	}
-	long iterator;
-	long it = 0;
+
 //	for (iterator = 0; iterator < parameters.iterations; iterator++) {
 //#ifdef LOGS
 //		if(!parameters.generate_flag) {
@@ -257,6 +264,7 @@ void validate_yolo(Args parameters) {
 		args.resized = &buf_resized[t];
 		thr[t] = load_data_in_thread(args);
 	}
+
 //	}
 	for (iterator = 0; iterator < parameters.iterations; iterator++) {
 #ifdef LOGS
@@ -264,6 +272,7 @@ void validate_yolo(Args parameters) {
 			start_iteration();
 		}
 #endif
+//		printf("passou\n");
 		double det_start = mysecond();
 		for (i = nthreads; i < m + nthreads; i += nthreads) {
 
@@ -274,26 +283,32 @@ void validate_yolo(Args parameters) {
 				float *predictions = network_predict(net, X);
 				int w = val[t].w;
 				int h = val[t].h;
+				float **probs = current_ptr.pb_gold[gold_iterator].probs;
+				box *boxes = current_ptr.pb_gold[gold_iterator].boxes;
+
 				convert_detections(predictions, classes, l.n, square, side, w,
-						h, thresh, current_ptr.pb_gold[gold_iterator].probs,
-						current_ptr.pb_gold[gold_iterator].boxes, 0);
+						h, thresh, probs, boxes, 0);
 				if (nms) {
-					do_nms_sort(current_ptr.pb_gold[gold_iterator].boxes,
-							current_ptr.pb_gold[gold_iterator].probs,
-							side * side * l.n, classes, iou_thresh);
+					do_nms_sort(boxes, probs, side * side * l.n, classes,
+							iou_thresh);
 				}
+
+//				printf("%f %f\n")
 				if (parameters.generate_flag) {
 					print_yolo_detections(fps, id,
 							current_ptr.pb_gold[gold_iterator].boxes,
 							current_ptr.pb_gold[gold_iterator].probs,
 							side * side * l.n, classes, w, h);
 				}
+
 				//---------------------------------
 
 //				printf("passou %d %d\n", gold_iterator, it++);
 				gold_iterator = (gold_iterator + 1) % plist->size;
 				//---------------------------------
-				if (iterator == parameters.iterations - 1) {
+				printf("it %d iterations - 1 %d i %d (m + nthreads - 1) %d\n", iterator, parameters.iterations -1, i, m);
+				if (iterator == parameters.iterations -1 && (i >= m)) {
+					printf("aqui\n");
 					free(id);
 					free_image(val[t]);
 					free_image(val_resized[t]);
@@ -302,6 +317,7 @@ void validate_yolo(Args parameters) {
 		}
 		fprintf(stdout, "Total Detection Time: %f Seconds\n",
 				(double) (mysecond() - det_start));
+
 
 #ifdef LOGS
 		if(!parameters.generate_flag) {
@@ -330,7 +346,8 @@ void validate_yolo(Args parameters) {
 #endif
 
 		//-----------------------------------------------
-
+		for (t = 0; t < nthreads; ++t)
+			pthread_join(thr[t], 0);
 	}
 
 //save gold values
@@ -345,6 +362,14 @@ void validate_yolo(Args parameters) {
 	free(val_resized);
 	free(buf);
 	free(buf_resized);
+	int cf;
+	printf("passou antes do fclose\n");
+	for (cf = 0; cf < classes; cf++) {
+		fclose(fps[cf]);
+	}
+
+	printf("passou depois do fclose\n");
+	printf("Yolo finished\n");
 }
 
 void validate_yolo_recall(char *cfgfile, char *weightfile) {
