@@ -48,6 +48,7 @@ int iter_interval_print = 1;
 
 // Used to log max_error_per_iter details each iteration
 int log_error_detail_count = 0;
+int log_info_detail_count = 0;
 
 char log_file_name[200] = "";
 char full_log_file_name[300] = "";
@@ -117,11 +118,11 @@ char * getValueConfig(char * key){
 	char value[200];
 	int i,j;
 	int key_not_match;
-	
+
 	fp = fopen(config_file, "r");
 	if (fp == NULL)
 		return NULL;
-	
+
 	while ((read = getline(&line, &len, fp)) != -1) {
 		// ignore comments and sections in config file
 		if(line[0] == '#' || line[0] == '[')
@@ -164,7 +165,7 @@ char * getValueConfig(char * key){
 			free(line);
 		return v;
 	}
-	
+
 	fclose(fp);
 	if (line)
 		free(line);
@@ -192,7 +193,7 @@ int start_log_file(char *benchmark_name, char *test_info){
     if(strlen(timestamp_watchdog) > 0 && timestamp_watchdog[strlen(timestamp_watchdog)-1] != '/' )
         strcat(timestamp_watchdog, "/");
     strcat(timestamp_watchdog, timestamp_file);
-#endif    
+#endif
     update_timestamp();
 
     time_t file_time;
@@ -324,6 +325,7 @@ int start_iteration(){
     iteration_number++;
 */
     log_error_detail_count=0;
+    log_info_detail_count=0;
     it_time_start = get_time();
     return 0;
 
@@ -339,6 +341,7 @@ int end_iteration(){
     kernel_time_acc += kernel_time;
 
     log_error_detail_count=0;
+    log_info_detail_count=0;
 
     if(iteration_number % iter_interval_print == 0) {
 
@@ -424,12 +427,12 @@ int log_error_count(unsigned long int kernel_errors){
 int log_error_detail(char *string){
     FILE *file = NULL;
 
-    #pragma omp parallel shared(log_error_detail_count) 
+    #pragma omp parallel shared(log_error_detail_count)
     {
-        #pragma omp critical 
+        #pragma omp critical
         log_error_detail_count++;
     }
-    // Limits the number of lines written to logfile so that 
+    // Limits the number of lines written to logfile so that
     // HD space will not explode
     if((unsigned long)log_error_detail_count > max_errors_per_iter)
         return 0;
@@ -448,3 +451,31 @@ int log_error_detail(char *string){
     return 0;
 };
 
+// ~ ===========================================================================
+// Print some string with the detail of an error/information to log file
+int log_info_detail(char *string){
+    FILE *file = NULL;
+
+    #pragma omp parallel shared(log_info_detail_count)
+    {
+        #pragma omp critical
+        log_info_detail_count++;
+    }
+    // Limits the number of lines written to logfile so that
+    // HD space will not explode
+    if((unsigned long)log_info_detail_count > max_errors_per_iter)
+        return 0;
+
+    file = fopen(full_log_file_name, "a");
+    if (file == NULL){
+        fprintf(stderr, "[ERROR in log_string(char *)] Unable to open file %s\n",full_log_file_name);
+        return 1;
+    }
+
+    fputs("#INF ", file);
+    fputs(string, file);
+    fprintf(file, "\n");
+    fflush(file);
+    fclose(file);
+    return 0;
+};
