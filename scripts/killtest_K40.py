@@ -46,19 +46,14 @@ commandList = [
 
 ##py-faster
 
-#caio must check it
-#	["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=1048576 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_1048576 -iterations=10000000", 0.016, "mergesort"],
-#	["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=33554432 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_33554432 -iterations=10000000", 0.016, "mergesort"],
-#	["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=67108864 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_67108864 -iterations=10000000", 0.016, "mergesort"],
-#	["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=134217728 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_134217728 -iterations=10000000", 0.016, "mergesort"],
-#	["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=1048576 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_1048576 -iterations=10000000", 0.016, "quicksort"],
-#	["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=33554432 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_33554432 -iterations=10000000", 0.016, "quicksort"],
-#	["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=67108864 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_67108864 -iterations=10000000", 0.016, "quicksort"],
-#	["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=134217728 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_134217728 -iterations=10000000", 0.016, "quicksort"],
-#	["sudo /home/carol/radiation-benchmarks/bin/radixsort -size=1048576 -input=/home/carol/radiation-benchmarks/data/radixsort/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort/radixsort_gold_1048576 -iterations=10000000", 0.016, "radixsort"],
-#	["sudo /home/carol/radiation-benchmarks/bin/radixsort -size=33554432 -input=/home/carol/radiation-benchmarks/data/radixsort/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort/radixsort_gold_33554432 -iterations=10000000", 0.016, "radixsort"],
-#	["sudo /home/carol/radiation-benchmarks/bin/radixsort -size=67108864 -input=/home/carol/radiation-benchmarks/data/radixsort/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort/radixsort_gold_67108864 -iterations=10000000", 0.016, "radixsort"],
-#	["sudo /home/carol/radiation-benchmarks/bin/radixsort -size=134217728 -input=/home/carol/radiation-benchmarks/data/radixsort/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort/radixsort_gold_134217728 -iterations=10000000", 0.016, "radixsort"],
+#caio must check it # done OK
+["sudo /home/carol/radiation-benchmarks/bin/mergesort_h -size=1048576 -input=/home/carol/radiation-benchmarks/data/mergesort_h/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort_h/mergesort_gold_1048576 -iterations=10000000", 0.016, "mergesort_h"],
+        ["sudo /home/carol/radiation-benchmarks/bin/mergesort_h -size=33554432 -input=/home/carol/radiation-benchmarks/data/mergesort_h/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort_h/mergesort_gold_33554432 -iterations=10000000", 0.016, "mergesort_h"],
+        ["sudo /home/carol/radiation-benchmarks/bin/mergesort_h -size=134217728 -input=/home/carol/radiation-benchmarks/data/mergesort_h/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort_h/mergesort_gold_134217728 -iterations=10000000", 0.016, "mergesort_h"],
+        ["sudo /home/carol/radiation-benchmarks/bin/radixsort_h -size=1048576 -input=/home/carol/radiation-benchmarks/data/radixsort_h/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort_h/radixsort_gold_1048576 -iterations=10000000", 0.016, "radixsort_h"],
+        ["sudo /home/carol/radiation-benchmarks/bin/radixsort_h -size=33554432 -input=/home/carol/radiation-benchmarks/data/radixsort_h/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort_h/radixsort_gold_33554432 -iterations=10000000", 0.016, "radixsort_h"],
+        ["sudo /home/carol/radiation-benchmarks/bin/radixsort_h -size=134217728 -input=/home/carol/radiation-benchmarks/data/radixsort_h/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort_h/radixsort_gold_134217728 -iterations=10000000", 0.016, "radixsort_h"],
+        ["sudo /home/carol/radiation-benchmarks/bin/radixsort -size=134217728 -input=/home/carol/radiation-benchmarks/data/radixsort/radixsort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/radixsort/radixsort_gold_134217728 -iterations=10000000", 0.016, "radixsort"],
 ]
 
 # Command used to kill application
