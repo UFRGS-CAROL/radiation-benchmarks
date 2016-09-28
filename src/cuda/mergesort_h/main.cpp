@@ -473,89 +473,89 @@ int main(int argc, char **argv)
                 params->d_DstVal,
                 params->d_SrcKey,
                 params->size);
-                checkCudaErrors(cudaDeviceSynchronize());
+            checkCudaErrors(cudaDeviceSynchronize());
+            #ifdef LOGS
+            if (!(params->generate)) end_iteration();
+            #endif
+
+            if (params->verbose) printf("GPU Kernel time: %.4fs\n", kernel_time);
+            if (params->verbose) printf("GPU Verify Kernel time: %.4fs\n", mysecond() - timestamp);
+
+            if (errNum != 0) {
+                if (params->verbose) printf("Hardening::error detected errNum=%d retries=%d\n", errNum, retries);
                 #ifdef LOGS
-                if (!(params->generate)) end_iteration();
+                if (!(params->generate)) log_info_detail("Hardening detected error errNum=%d retries=%d", errNum, retries);
                 #endif
+            }
 
-                if (params->verbose) printf("GPU Kernel time: %.4fs\n", kernel_time);
-                if (params->verbose) printf("GPU Verify Kernel time: %.4fs\n", mysecond() - timestamp);
+            retries++;
+        } while ((retries<RETRY_COUNT) && (errNum != 0));
+        checkCudaErrors(cudaMemcpy(params->h_DstKey, params->d_DstKey, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
+        checkCudaErrors(cudaMemcpy(params->h_DstVal, params->d_DstVal, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
 
-                if (errNum != 0) {
-                    if (params->verbose) printf("Hardening::error detected errNum=%d retries=%d\n", errNum, retries);
-                    #ifdef LOGS
-                    if (!(params->generate)) log_info_detail("Hardening detected error errNum=%d retries=%d", errNum, retries);
-                    #endif
-                }
+        //timestamp = mysecond();
+        //checkVals(params);
+        //if (params->verbose) printf("CPU Verify time: %.4fs\n", mysecond() - timestamp);
 
-                retries++;
-            } while ((retries<RETRY_COUNT) && (errNum != 0));
-            checkCudaErrors(cudaMemcpy(params->h_DstKey, params->d_DstKey, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
-            checkCudaErrors(cudaMemcpy(params->h_DstVal, params->d_DstVal, params->size * sizeof(uint), cudaMemcpyDeviceToHost));
+        timestamp = mysecond();
 
-            //timestamp = mysecond();
-            //checkVals(params);
-            //if (params->verbose) printf("CPU Verify time: %.4fs\n", mysecond() - timestamp);
+        int errors = 0;
 
-            timestamp = mysecond();
+        if (params->generate)  {
+            printf("Validating output...\n");
 
-            int errors = 0;
+            errors += checkKeys(params, numValues);
+            errors += checkVals(params);
 
-            if (params->generate)  {
-                printf("Validating output...\n");
+            if (errors)
+            printf("Errors ocurred when validating gold, this is bad. I will save it to file anyway.\n");
+
+            writeOutput(params);
+        } else {
+            if (compareGoldOutput(params)) {
+
+                printf("Warning! Gold file mismatch detected, proceeding to error analysis...\n");
 
                 errors += checkKeys(params, numValues);
                 errors += checkVals(params);
-
-                if (errors)
-                printf("Errors ocurred when validating gold, this is bad. I will save it to file anyway.\n");
-
-                writeOutput(params);
             } else {
-                if (compareGoldOutput(params)) {
-
-                    printf("Warning! Gold file mismatch detected, proceeding to error analysis...\n");
-
-                    errors += checkKeys(params, numValues);
-                    errors += checkVals(params);
-                } else {
-                    errors = 0;
-                }
-                #ifdef LOGS
-                if (!(params->generate)) log_error_count(errors);
-                #endif
+                errors = 0;
             }
-
-            if (params->verbose) printf("Gold check/generate time: %.4fs\n", mysecond() - timestamp);
-
-            closeMergeSort(); // Dealloc some gpu data
-
-            // Display the time between event recordings
-            if (params->verbose) printf("Perf: %.3fM elems/sec\n", 1.0e-6f * params->size / kernel_time);
-            if (params->verbose) {
-                printf("Iteration %d ended. Elapsed time: %.4fs\n", loop1, mysecond()-globaltimestamp);
-            } else {
-                printf(".");
-            }
-            fflush(stdout);
+            #ifdef LOGS
+            if (!(params->generate)) log_error_count(errors);
+            #endif
         }
-        checkCudaErrors(cudaFree(params->d_SrcVal));
-        checkCudaErrors(cudaFree(params->d_SrcKey));
-        checkCudaErrors(cudaFree(params->d_BufVal));
-        checkCudaErrors(cudaFree(params->d_BufKey));
-        checkCudaErrors(cudaFree(params->d_DstVal));
-        checkCudaErrors(cudaFree(params->d_DstKey));
-        free(params->h_DstVal);
-        free(params->h_DstKey);
-        free(params->h_SrcVal);
-        free(params->h_SrcKey);
 
-        // cudaDeviceReset causes the driver to clean up all state. While
-        // not mandatory in normal operation, it is good practice.  It is also
-        // needed to ensure correct operation when the application is being
-        // profiled. Calling cudaDeviceReset causes all profile data to be
-        // flushed before the application exits
-        cudaDeviceReset();
+        if (params->verbose) printf("Gold check/generate time: %.4fs\n", mysecond() - timestamp);
 
-        exit(EXIT_SUCCESS);
+        closeMergeSort(); // Dealloc some gpu data
+
+        // Display the time between event recordings
+        if (params->verbose) printf("Perf: %.3fM elems/sec\n", 1.0e-6f * params->size / kernel_time);
+        if (params->verbose) {
+            printf("Iteration %d ended. Elapsed time: %.4fs\n", loop1, mysecond()-globaltimestamp);
+        } else {
+            printf(".");
+        }
+        fflush(stdout);
     }
+    checkCudaErrors(cudaFree(params->d_SrcVal));
+    checkCudaErrors(cudaFree(params->d_SrcKey));
+    checkCudaErrors(cudaFree(params->d_BufVal));
+    checkCudaErrors(cudaFree(params->d_BufKey));
+    checkCudaErrors(cudaFree(params->d_DstVal));
+    checkCudaErrors(cudaFree(params->d_DstKey));
+    free(params->h_DstVal);
+    free(params->h_DstKey);
+    free(params->h_SrcVal);
+    free(params->h_SrcKey);
+
+    // cudaDeviceReset causes the driver to clean up all state. While
+    // not mandatory in normal operation, it is good practice.  It is also
+    // needed to ensure correct operation when the application is being
+    // profiled. Calling cudaDeviceReset causes all profile data to be
+    // flushed before the application exits
+    cudaDeviceReset();
+
+    exit(EXIT_SUCCESS);
+}
