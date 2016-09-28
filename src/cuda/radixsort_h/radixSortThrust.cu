@@ -544,7 +544,7 @@ int main(int argc, char **argv)
 	#ifdef LOGS
 		char test_info[90];
 		snprintf(test_info, 90, "size:%d keysOnly:0", params->numElements);
-		if (!params->generate) start_log_file("cudaRadixSort", test_info);
+		if (!params->generate) start_log_file("cudaRadixSort_H", test_info);
 	#endif
 
     testSort(params);
