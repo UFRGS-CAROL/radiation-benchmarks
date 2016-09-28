@@ -22,7 +22,7 @@ import numpy as np
 import scipy.io as sio
 import caffe, os, sys, cv2
 import argparse
-import pickle
+import cPickle as pickle
 import math
 import traceback
 
@@ -79,8 +79,7 @@ def generate(net, image_name):
     timer.tic()
     scores, boxes = im_detect(net, im)
     timer.toc()
-    for i in boxes:
-        print i
+ 
     print ('Detection took {:.3f}s for '
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
