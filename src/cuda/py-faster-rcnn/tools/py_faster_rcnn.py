@@ -13,28 +13,28 @@ Demo script showing detections in sample images.
 See README.md for installation instructions before running.
 """
 
-import _init_paths
-from fast_rcnn.config import cfg
-from fast_rcnn.test import im_detect
-from fast_rcnn.nms_wrapper import nms
-from utils.timer import Timer
+import argparse
+
+import caffe
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.io as sio
-import caffe, os, sys, cv2
-import argparse
+import os
+import sys
+from fast_rcnn.config import cfg
+from fast_rcnn.nms_wrapper import nms
+from fast_rcnn.test import im_detect
+from utils.timer import Timer
 
 #import log helper
 sys.path.insert(0, '../../../include/log_helper_python/')
 
-import log_helper as lh
-
-CLASSES = ('__background__',
+CLASSES = ['__background__',
            'aeroplane', 'bicycle', 'bird', 'boat',
            'bottle', 'bus', 'car', 'cat', 'chair',
            'cow', 'diningtable', 'dog', 'horse',
            'motorbike', 'person', 'pottedplant',
-           'sheep', 'sofa', 'train', 'tvmonitor')
+           'sheep', 'sofa', 'train', 'tvmonitor']
 
 NETS = {'vgg16': ('VGG16',
                   'VGG16_faster_rcnn_final.caffemodel'),
@@ -87,6 +87,7 @@ def detect(net, image_name):
     timer.tic()
     scores, boxes = im_detect(net, im)
     timer.toc()
+    print scores
     print ('Detection took {:.3f}s for '
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
@@ -153,21 +154,46 @@ def parse_args():
 
     parser.add_argument('--log', dest='is_log', help="is to generate logs", choices=["no_logs", "daniel_logs"], default="no_logs")
 
-    parser.add_argument('--iml', dest='img_list', help="img list data path <text file txt, csv..>", default="py_faster_list.txt")
+    parser.add_argument('--iml', dest='img_list', help='mg list data path <text file txt, csv..>', default='py_faster_list.txt')
+
+    parser.add_argument('--ptr', dest='protoxt', help='network prototxt', default='default')
+
+    parser.add_argument('--mds', dest='models', help='network models', default='default')
+
+
+
     args = parser.parse_args()
 
     return args
 
+#write gold for pot use
+def serialize_gold():
+
+
+# compare gold against current
+def compare():
 
 if __name__ == '__main__':
+###################################################################################
+#only load network
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
-
     args = parse_args()
+    #to make sure that the models and cfg will be with absolute path
+    if("default" in arg.ptr):
+        prototxt = os.path.join(cfg.MODELS_DIR, NETS[args.demo_net][0],
+                                'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
+    else:
+        prototxt = os.path.join(cfg.MODELS_DIR, NETS[args.demo_net][0],
+                                'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
 
-    prototxt = os.path.join(cfg.MODELS_DIR, NETS[args.demo_net][0],
-                            'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
-    caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
+
+    if("default" in args.models):
+        caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
+                              NETS[args.demo_net][1])
+        print prototxt , " -- " , caffemodel
+    else:
+        caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
                               NETS[args.demo_net][1])
 
     if not os.path.isfile(caffemodel):
@@ -183,15 +209,13 @@ if __name__ == '__main__':
     net = caffe.Net(prototxt, caffemodel, caffe.TEST)
 
     print '\n\nLoaded network {:s}'.format(caffemodel)
-
-    # Warmup on a dummy image
+##################################################################################
+#device Warmup on a dummy image
     im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
-
-
     for i in xrange(2):
         _, _= im_detect(net, im)
 
-    #######logs########
+##################################################################################
     in_names=[]
     iterations = 1
     if "daniel_logs" in args.is_log:
