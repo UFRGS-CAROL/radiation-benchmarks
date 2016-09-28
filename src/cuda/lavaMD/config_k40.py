@@ -35,7 +35,9 @@ os.system("sudo ./lava -boxes=20 -generate -output_gold=gold_20 -iterations=1 -s
 os.system("sudo ./lava -boxes=25 -generate -output_gold=gold_25 -iterations=1 -streams=1")
 
 os.system("sudo chmod 777 gold_* ");
+os.system("sudo chmod 777 input* ");
 os.system("mv gold_* "+data_path);
+os.system("mv input* "+data_path);
 os.system("mv ./lava "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_lava_cuda_K40", 'w')
