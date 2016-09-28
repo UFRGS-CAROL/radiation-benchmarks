@@ -40,11 +40,11 @@ os.system("mv radixsort_gold_* "+data_path);
 os.system("mv radixsort_input_* "+data_path);
 os.system("mv ./radixsort_h "+bin_path)
 
-fp = open(installDir+"scripts/how_to_run_radixsort_cuda_K40", 'w')
+fp = open(installDir+"scripts/how_to_run_radixsort_h_cuda_K40", 'w')
 print >>fp, "sudo "+bin_path+"/radixsort_h -size=1048576 -input="+data_path+"/radixsort_input_134217728 -gold="+data_path+"/radixsort_gold_1048576 -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/radixsort_h -size=33554432 -input="+data_path+"/radixsort_input_134217728 -gold="+data_path+"/radixsort_gold_33554432 -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/radixsor_ht -size=134217728 -input="+data_path+"/radixsort_input_134217728 -gold="+data_path+"/radixsort_gold_134217728 -iterations=10000000"
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_radixsort_cuda\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_radixsort_h_cuda\n"
 
 sys.exit(0)

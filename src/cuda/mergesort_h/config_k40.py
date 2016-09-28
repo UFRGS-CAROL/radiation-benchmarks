@@ -40,11 +40,11 @@ os.system("mv mergesort_gold* "+data_path);
 os.system("mv mergesort_input* "+data_path);
 os.system("mv ./mergesort_h "+bin_path)
 
-fp = open(installDir+"scripts/how_to_run_mergesort_cuda_K40", 'w')
+fp = open(installDir+"scripts/how_to_run_mergesort_h_cuda_K40", 'w')
 print >>fp, "sudo "+bin_path+"/mergesort_h -size=1048576 -input="+data_path+"/mergesort_input_134217728 -gold="+data_path+"/mergesort_gold_1048576 -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/mergesort_h -size=33554432 -input="+data_path+"/mergesort_input_134217728 -gold="+data_path+"/mergesort_gold_33554432 -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/mergesort_h -size=134217728 -input="+data_path+"/mergesort_input_134217728 -gold="+data_path+"/mergesort_gold_134217728 -iterations=10000000"
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_mergesort_cuda\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_mergesort_h_cuda\n"
 
 sys.exit(0)

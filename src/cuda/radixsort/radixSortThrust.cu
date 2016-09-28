@@ -20,7 +20,6 @@
 #include <omp.h>
 
 #include <helper_cuda.h>
-#include "helper_sorts.h"
 
 #include <algorithm>
 #include <time.h>
