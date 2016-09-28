@@ -6,8 +6,8 @@ nvidia:LIB=-L/usr/local/cuda/lib64
 intel:INC=-I/opt/intel/opencl-1.2-sdk-4.6.0.92/include/
 intel:LIB=-L/opt/intel/opencl-1.2-4.5.0.8/lib64/
 
-amd:INC=-I/opt/AMDAPPSDK-3.0-0-Beta/include/
-amd:LIB=-L/opt/AMDAPPSDK-3.0-0-Beta/lib/x86_64/
+amd:INC=-I/opt/AMDAPPSDK-3.0/include/
+amd:LIB=-L/opt/AMDAPPSDK-3.0/lib/x86_64/
 
 CC = gcc
 CC_FLAGS = -O3
