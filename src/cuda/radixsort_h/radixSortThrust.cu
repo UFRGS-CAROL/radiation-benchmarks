@@ -472,9 +472,11 @@ void testSort(parameters_t *params)
 
 			if (errNum != 0) {
 				if (params->verbose) printf("Hardening::error detected errNum=%d retries=%d\n", errNum, retries);
-				#ifdef LOGS
-					if (!(params->generate)) log_info_detail("Hardening detected error errNum=%d retries=%d", errNum, retries);
-				#endif
+                #ifdef LOGS
+    				char error_detail[150];
+                    snprintf(error_detail, 150, "Hardening detected error errNum=%d retries=%d", errNum, retries);
+                    if (!(params->generate)) log_info_detail(error_detail);
+                #endif
 			}
 
 			retries++;
