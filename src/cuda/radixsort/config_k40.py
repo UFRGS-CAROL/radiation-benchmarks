@@ -20,9 +20,9 @@ except IOError as e:
 	print >> sys.stderr, "Configuration setup error: "+str(e)
 	sys.exit(1)
 
-data_path=installDir+"data/radixsort"
-bin_path=installDir+"bin"
-src_radixsort = installDir+"src/cuda/radixsort"
+data_path=installDir+"data/radixsort/"
+bin_path=installDir+"bin/"
+src_radixsort = installDir+"src/cuda/radixsort/"
 
 if not os.path.isdir(data_path):
 	os.mkdir(data_path, 0777);

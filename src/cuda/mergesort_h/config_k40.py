@@ -20,9 +20,9 @@ except IOError as e:
 	print >> sys.stderr, "Configuration setup error: "+str(e)
 	sys.exit(1)
 
-data_path=installDir+"data/mergesort_h"
-bin_path=installDir+"bin"
-src_mergesort = installDir+"src/cuda/mergesort_h"
+data_path=installDir+"data/mergesort_h/"
+bin_path=installDir+"bin/"
+src_mergesort = installDir+"src/cuda/mergesort_h/"
 
 if not os.path.isdir(data_path):
 	os.mkdir(data_path, 0777);
