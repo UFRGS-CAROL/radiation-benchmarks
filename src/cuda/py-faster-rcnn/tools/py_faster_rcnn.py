@@ -24,6 +24,11 @@ import scipy.io as sio
 import caffe, os, sys, cv2
 import argparse
 
+#import log helper
+sys.path.insert(0, '../../../include/log_helper_python/')
+
+import log_helper as lh
+
 CLASSES = ('__background__',
            'aeroplane', 'bicycle', 'bird', 'boat',
            'bottle', 'bus', 'car', 'cat', 'chair',
@@ -69,11 +74,12 @@ def vis_detections(im, class_name, dets, thresh=0.5):
     plt.tight_layout()
     plt.draw()
 
-def demo(net, image_name):
+def detect(net, image_name):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load the demo image
     im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
+    print im_file
     im = cv2.imread(im_file)
 
     # Detect all object classes and regress object bounds
@@ -97,6 +103,38 @@ def demo(net, image_name):
         dets = dets[keep, :]
         vis_detections(im, cls, dets, thresh=CONF_THRESH)
 
+
+def generate(net, image_name):
+    """Detect object classes in an image using pre-computed object proposals."""
+
+    # Load the demo image
+    im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
+    print im_file
+    im = cv2.imread(im_file)
+
+    # Detect all object classes and regress object bounds
+    timer = Timer()
+    timer.tic()
+    scores, boxes = im_detect(net, im)
+    timer.toc()
+    print ('Detection took {:.3f}s for '
+           '{:d} object proposals').format(timer.total_time, boxes.shape[0])
+
+    # Visualize detections for each class
+    CONF_THRESH = 0.8
+    NMS_THRESH = 0.3
+    for cls_ind, cls in enumerate(CLASSES[1:]):
+        cls_ind += 1 # because we skipped background
+        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_scores = scores[:, cls_ind]
+        dets = np.hstack((cls_boxes,
+                          cls_scores[:, np.newaxis])).astype(np.float32)
+        keep = nms(dets, NMS_THRESH)
+        dets = dets[keep, :]
+        vis_detections(im, cls, dets, thresh=CONF_THRESH)
+
+
+
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description='Faster R-CNN demo')
@@ -108,12 +146,22 @@ def parse_args():
     parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]',
                         choices=NETS.keys(), default='vgg16')
 
+    #radiation logs
+    parser.add_argument('--ite', dest='iterations', help="number of iterations", default='1')
+
+    parser.add_argument('--gen', dest='generate_file', help="if this var is set the gold file will be generated", default="")
+
+    parser.add_argument('--log', dest='is_log', help="is to generate logs", choices=["no_logs", "daniel_logs"], default="no_logs")
+
+    parser.add_argument('--iml', dest='img_list', help="img list data path <text file txt, csv..>", default="py_faster_list.txt")
     args = parser.parse_args()
 
     return args
 
+
 if __name__ == '__main__':
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
+
 
     args = parse_args()
 
@@ -138,14 +186,28 @@ if __name__ == '__main__':
 
     # Warmup on a dummy image
     im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
+
+
     for i in xrange(2):
         _, _= im_detect(net, im)
 
-    im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
+    #######logs########
+    in_names=[]
+    iterations = 1
+    if "daniel_logs" in args.is_log:
+        in_names = [line.strip() for line in open(args.img_list, 'r')]
+        iterations = int(args.iterations)
+    else:
+        im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
                 '001763.jpg', '004545.jpg']
-    for im_name in im_names:
-        print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-        print 'Demo for data/demo/{}'.format(im_name)
-        demo(net, im_name)
+
+    # do our 
+    i = 0
+    while(i < iterations):            
+        for im_name in im_names:
+            print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+            print 'Demo for data/demo/{}'.format(im_name)
+            demo(net, im_name)
+        i += 1
 
     plt.show()
