@@ -22,7 +22,11 @@ import numpy as np
 import scipy.io as sio
 import caffe, os, sys, cv2
 import argparse
+import pickle
+import math
+import traceback
 
+THRESHOLD = 0.0000001
 
 #import log helper
 sys.path.insert(0, '../../../include/log_helper_python/')
@@ -42,41 +46,10 @@ NETS = {'vgg16': ('VGG16',
                   'ZF_faster_rcnn_final.caffemodel')}
 
 
-def vis_detections(im, class_name, dets, thresh=0.5):
-    """Draw detected bounding boxes."""
-    inds = np.where(dets[:, -1] >= thresh)[0]
-    if len(inds) == 0:
-        return
-
-    im = im[:, :, (2, 1, 0)]
-    fig, ax = plt.subplots(figsize=(12, 12))
-    ax.imshow(im, aspect='equal')
-    for i in inds:
-        bbox = dets[i, :4]
-        score = dets[i, -1]
-
-        ax.add_patch(
-            plt.Rectangle((bbox[0], bbox[1]),
-                          bbox[2] - bbox[0],
-                          bbox[3] - bbox[1], fill=False,
-                          edgecolor='red', linewidth=3.5)
-            )
-        ax.text(bbox[0], bbox[1] - 2,
-                '{:s} {:.3f}'.format(class_name, score),
-                bbox=dict(facecolor='blue', alpha=0.5),
-                fontsize=14, color='white')
-
-    ax.set_title(('{} detections with '
-                  'p({} | box) >= {:.1f}').format(class_name, class_name,
-                                                  thresh),
-                  fontsize=14)
-    plt.axis('off')
-    plt.tight_layout()
-    plt.draw()
-
 def detect(net, image_name):
     """Detect object classes in an image using pre-computed object proposals."""
-
+    #will return a hash with boxes and scores
+   
     # Load the demo image
     im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
     print im_file
@@ -87,29 +60,17 @@ def detect(net, image_name):
     timer.tic()
     scores, boxes = im_detect(net, im)
     timer.toc()
-    print scores
+    
     print ('Detection took {:.3f}s for '
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
-
-    # Visualize detections for each class
-    CONF_THRESH = 0.8
-    NMS_THRESH = 0.3
-    for cls_ind, cls in enumerate(CLASSES[1:]):
-        cls_ind += 1 # because we skipped background
-        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
-        cls_scores = scores[:, cls_ind]
-        dets = np.hstack((cls_boxes,
-                          cls_scores[:, np.newaxis])).astype(np.float32)
-        keep = nms(dets, NMS_THRESH)
-        dets = dets[keep, :]
-        vis_detections(im, cls, dets, thresh=CONF_THRESH)
-
+    return [scores, boxes]
 
 def generate(net, image_name):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load the demo image
-    im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
+    #im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
+    im_file = os.path.join(image_name)
     print im_file
     im = cv2.imread(im_file)
 
@@ -118,22 +79,12 @@ def generate(net, image_name):
     timer.tic()
     scores, boxes = im_detect(net, im)
     timer.toc()
+    for i in boxes:
+        print i
     print ('Detection took {:.3f}s for '
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
-    # Visualize detections for each class
-    CONF_THRESH = 0.8
-    NMS_THRESH = 0.3
-    for cls_ind, cls in enumerate(CLASSES[1:]):
-        cls_ind += 1 # because we skipped background
-        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
-        cls_scores = scores[:, cls_ind]
-        dets = np.hstack((cls_boxes,
-                          cls_scores[:, np.newaxis])).astype(np.float32)
-        keep = nms(dets, NMS_THRESH)
-        dets = dets[keep, :]
-        vis_detections(im, cls, dets, thresh=CONF_THRESH)
-
+    return [scores, boxes]
 
 
 def parse_args():
@@ -156,6 +107,8 @@ def parse_args():
 
     parser.add_argument('--iml', dest='img_list', help='mg list data path <text file txt, csv..>', default='py_faster_list.txt')
 
+    parser.add_argument('--gld',  dest='gold', help='gold file', default='')
+
 
 
     args = parser.parse_args()
@@ -163,61 +116,180 @@ def parse_args():
     return args
 
 #write gold for pot use
-def serialize_gold():
-   return
+def serialize_gold(filename,data):
+    try:
+        with open(filename, "wb") as f:
+                pickle.dump(data, f)
+    except:
+        print "Error on writing file"
+
+#open gold file
+def load_file(filename):
+    try:
+        with open(filename, "rb") as f:
+            ret = pickle.load(f)
+    except:
+        return None
+    return ret
 
 # compare gold against current
-def compare():
-    return
+def compare(gold, current, img_name):
+    scores_gold = gold[0]
+    boxes_gold = gold[1]
+    error_count = 0
+    #iterator for current, i need it because generate could be smaller than gold, so python will throw an exception
+    scores_curr = current[0]
+    boxes_curr = current[1]
+
+    max_m_range = scores_m = len(scores_gold)
+    scores_m_curr = len(scores_curr)
+    #diff size
+    if math.abs(scores_m - scores_m_curr) != 0:
+         
+    #compare scores
+    for i in range(0,scores_m):
+        scores_n = len(scores_gold[i])
+        for j in range(0, scores_n):
+            gold_ij = float(scores_gold[i][j])
+            curr_ij = float(scores_curr[i][j])
+            diff = math.fabs(gold_ij -  gold_ij)
+            if diff > THRESHOLD:
+                error_detail = "scores: [" + str(i) + "," + str(j) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
+                error_count += 1
+                lh.log_error_detail(error_detail)
+         
+    #compare scores
+    boxes_m = len(boxes_gold)
+    for i in range(0,boxes_m):
+            boxes_n = len(boxes_gold[i])
+            for j in range(0, boxes_n):
+                gold_ij = float(boxes_gold[i][j])
+                curr_ij = float(boxes_curr[i][j])
+                diff = math.fabs(gold_ij -  gold_ij)
+                if diff > THRESHOLD:
+                    error_detail = "boxes: [" + str(i) + "," + str(j) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
+                    error_count += 1
+                    lh.log_error_detail(error_detail)
+        
+    if error_count > 0:
+        lh.log_error_detail(img_name)
+
+    return error_count
 
 if __name__ == '__main__':
-###################################################################################
-#only load network
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
     args = parse_args()
-    #to make sure that the models and cfg will be with absolute path
-    caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
-                              NETS[args.demo_net][1])
-    caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
-                              NETS[args.demo_net][1])
 
-    if not os.path.isfile(caffemodel):
-        raise IOError(('{:s} not found.\nDid you run ./data/script/'
-                       'fetch_faster_rcnn_models.sh?').format(caffemodel))
+    if "no_logs" not in args.is_log:
+        
+        string_info = "iterations: " + str(args.iterations) + " img_list: " + str(args.img_list) + " board: "
+        if "X1" in args.img_list:
+            string_info += "X1"
+        else:
+            string_info += "K40"
+        lh.start_log_file("PyFasterRcnn", string_info)
+    
+    #object for gold file
+    gold_file = []
+###################################################################################
+#only load network
+    try:
+        #to make sure that the models and cfg will be with absolute path
+        prototxt = os.path.join(cfg.MODELS_DIR, NETS[args.demo_net][0],
+                                    'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
+        caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
+                                  NETS[args.demo_net][1])
 
-    if args.cpu_mode:
-        caffe.set_mode_cpu()
-    else:
-        caffe.set_mode_gpu()
-        caffe.set_device(args.gpu_id)
-        cfg.GPU_ID = args.gpu_id
-    net = caffe.Net(prototxt, caffemodel, caffe.TEST)
+        if not os.path.isfile(caffemodel):
+            raise IOError(('{:s} not found.\nDid you run ./data/script/'
+                           'fetch_faster_rcnn_models.sh?').format(caffemodel))
 
-    print '\n\nLoaded network {:s}'.format(caffemodel)
-##################################################################################
-#device Warmup on a dummy image
-    im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
-    for i in xrange(2):
-        _, _= im_detect(net, im)
+        if args.cpu_mode:
+            caffe.set_mode_cpu()
+        else:
+            caffe.set_mode_gpu()
+            caffe.set_device(args.gpu_id)
+            cfg.GPU_ID = args.gpu_id
+        net = caffe.Net(prototxt, caffemodel, caffe.TEST)
+        ##open gold
+        if args.gold != "":
+            gold_file = load_file(args.gold)
+        print '\n\nLoaded network {:s}'.format(caffemodel)
+    except Exception as e:
+        if "no_logs" not in args.is_log:
+            lh.log_error_detail("exception: error_loading_network error_info:" +
+                str(traceback.format_exception(*sys.exc_info())) + " XX " + str(e.__doc__) + " XX "+ str(e.message))
+            lh.end_log_file()
+            raise
+        else:
+            print " XX " + str(e.__doc__) + " XX "+ str(e.message)
+            
+    ##after loading net we start
+    try:
+    ##################################################################################
+    #device Warmup on a dummy image
+        im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
+        for i in xrange(2):
+            _, _= im_detect(net, im)
 
-##################################################################################
-    in_names=[]
-    iterations = 1
-    if "daniel_logs" in args.is_log:
+    ##################################################################################
+        in_names=[]
+        iterations = 1
+        
         in_names = [line.strip() for line in open(args.img_list, 'r')]
-        iterations = int(args.iterations)
-    else:
-        im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
-                '001763.jpg', '004545.jpg']
 
-    # do our 
-    i = 0
-    while(i < iterations):            
-        for im_name in im_names:
-            print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-            print 'Demo for data/demo/{}'.format(im_name)
-            demo(net, im_name)
-        i += 1
+        if args.generate_file != "":
+            #execute only once
+            print "Generating gold for Py-faster-rcnn"
+            for im_name in in_names:
+                print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+                print 'Demo for {}'.format(im_name)
+                ret=generate(net, im_name)
+                gold_file.append(ret)
+               
+            print "Gold generated, saving file"
+            serialize_gold(args.generate_file, gold_file)
+            print "Gold save sucess"
 
-    plt.show()
+        else:
+            i = 0
+            while(i < iterations):
+                #iterator
+                iterator = iter(gold_file)
+
+                for im_name in in_names:
+                    item = iterator.next()
+                    ###Log
+                    #print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+                    print 'PyFaster for data/demo/{}'.format(im_name)
+                    if "no_logs" not in args.is_log:
+                        ##start
+                        lh.start_iteration()
+                        ret=detect(net, im_name)
+                        lh.end_iteration()
+
+                        #check gold
+                        timer = Timer()
+                        timer.tic()
+                        error_count = compare(item, ret, im_name)                  
+                        timer.toc()
+                        print "Compare time " , timer.total_time , " errors " , error_count
+                        lh.log_error_count(int(error_count))
+                    ##end log
+                i += 1
+    except Exception as e:
+        if "no_logs" not in args.is_log:
+            lh.log_error_detail("exception: error_network_exection error_info:" +
+                str(traceback.format_exception(*sys.exc_info())) + " XX " + str(e.__doc__) + " XX "+ str(e.message))
+            lh.end_log_file()
+            raise
+        else:
+            print " XX " + str(e.__doc__) + " XX "+ str(e.message)
+    ##################################################################################
+    #finish ok
+    if "no_logs" not in args.is_log:
+        lh.end_log_file()
+
+
+
