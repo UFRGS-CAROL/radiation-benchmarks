@@ -30,6 +30,8 @@ if not os.path.isdir(data_path):
 
 os.system("cd "+src_accl)
 
+os.system("make logs=-DLOGS")
+
 os.system("sudo ./accl_generate 2 2 "+data_path+"/2Frames.pgm gold_2_2")
 os.system("sudo ./accl_generate 5 1 "+data_path+"/5Frames.pgm gold_5_1")
 os.system("sudo ./accl_generate 5 5 "+data_path+"/5Frames.pgm gold_5_5")
