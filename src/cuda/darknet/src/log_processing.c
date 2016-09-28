@@ -204,6 +204,8 @@ int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_itera
 	char error_detail[1000];
 	int i, j;
 	unsigned long error_count = 0;
+	float **gold_probs = gold.probs;
+	float **pb_probs = pb.probs;
 	//compare boxes
 
 	for (i = 0; i < gold.total_size; ++i) {
@@ -223,33 +225,63 @@ int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_itera
 					i, tmp_pb.x, tmp_gold.x, x_diff, tmp_pb.y, tmp_gold.y,
 					y_diff, tmp_pb.w, tmp_gold.w, w_diff, tmp_pb.h, tmp_gold.h,
 					h_diff);
-			error_count++;
 #ifdef LOGS
 			log_error_detail(error_detail);
 #endif
+//printf("passou box %d %d\n", i, j);
+			for (j = 0; j < gold.classes; ++j) {
+//printf("passou boxes %d %d\n", i, j);
+				if (pb_probs[i][j] != 0 || gold_probs[i][j] != 0)
+				{
+					sprintf(error_detail, "probs: [%d,%d] "
+									" prob_r: %1.16e prob_e: %1.16e",
+							i, j, pb_probs[i][j],
+							gold_probs[i][j]);
+#ifdef LOGS
+					log_error_detail(error_detail);
+#endif
+				}
+			}
+			error_count++;
 		}
-
+//printf("passou 1 %d %d\n", i, j);
 	}
 	//compare probs
-	float **gold_probs = gold.probs;
-	float **pb_probs = pb.probs;
+
 	for (i = 0; i < gold.total_size; ++i) {
+		int print_box = 0;
 		for (j = 0; j < gold.classes; ++j) {
 
 			float diff = fabs(gold_probs[i][j] - pb_probs[i][j]);
 			if (diff > THRESHOLD_ERROR) {
+//printf("passou 1 %d %d\n", i, j);
 				sprintf(error_detail,
 						"image_list_position: [%ld] probs: [%d,%d] "
 								" prob_r: %1.16e prob_e: %1.16e",
 						plist_iteration, i, j, pb_probs[i][j],
 						gold_probs[i][j]);
 				error_count++;
+				print_box = 1;
 #ifdef LOGS
 				log_error_detail(error_detail);
 #endif
 			}
-//			printf("passou comp %d %d\n", i, j);
+//printf("passou comp %d %d\n", i, j);
 		}
+		if (print_box == 1)
+		{
+			sprintf(error_detail, "boxes: [%d] "
+					" x_r: %1.16e x_e: %1.16e"
+					" y_r: %1.16e y_e: %1.16e"
+					" w_r: %1.16e w_e: %1.16e"
+					" h_r: %1.16e h_e: %1.16e",
+					i, pb.boxes[i].x, gold.boxes[i].x, pb.boxes[i].y, gold.boxes[i].y,
+					pb.boxes[i].w, gold.boxes[i].w, pb.boxes[i].h, gold.boxes[i].h);
+#ifdef LOGS
+			log_error_detail(error_detail);
+#endif
+		}
+
 	}
 //	printf("finish cout\n");
 
