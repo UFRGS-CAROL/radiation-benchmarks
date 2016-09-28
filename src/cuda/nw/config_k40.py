@@ -30,9 +30,9 @@ if not os.path.isdir(data_path):
 
 os.system("cd "+src_nw)
 
-os.system("sudo ./nw_generate 4096 5")
-os.system("sudo ./nw_generate 8192 5")
-os.system("sudo ./nw_generate 16384 5")
+os.system("sudo ./nw_generate 4096 10")
+os.system("sudo ./nw_generate 8192 10")
+os.system("sudo ./nw_generate 16384 10")
 os.system("sudo chmod 777 nw nw_generate");
 os.system("mv gold* "+data_path);
 os.system("mv input* "+data_path);
@@ -40,9 +40,9 @@ os.system("mv ./nw ./nw_generate "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_nw_cuda_K40", 'w')
 
-print >>fp, "sudo "+bin_path+"/nw 4096 5 "+data_path+"/input_4096 "+data_path+"/gold_4096 1000000"
-print >>fp, "sudo "+bin_path+"/nw 8192 5 "+data_path+"/input_8192 "+data_path+"/gold_8192 1000000"
-print >>fp, "sudo "+bin_path+"/nw 16384 5 "+data_path+"/input_16384 "+data_path+"/gold_16384 1000000"
+print >>fp, "sudo "+bin_path+"/nw 4096 10 "+data_path+"/input_4096 "+data_path+"/gold_4096 1000000"
+print >>fp, "sudo "+bin_path+"/nw 8192 10 "+data_path+"/input_8192 "+data_path+"/gold_8192 1000000"
+print >>fp, "sudo "+bin_path+"/nw 16384 10 "+data_path+"/input_16384 "+data_path+"/gold_16384 1000000"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_nw_cuda\n"
 
