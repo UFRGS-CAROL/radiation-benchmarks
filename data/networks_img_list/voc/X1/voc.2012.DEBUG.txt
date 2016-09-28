@@ -1,0 +1,4 @@
+/home/carol/radiation-benchmarks/data/VOC2012/2010_001231.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2009_000903.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2008_008633.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2009_004584.jpg
