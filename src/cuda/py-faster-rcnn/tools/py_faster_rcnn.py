@@ -175,7 +175,7 @@ def compare(gold, current, img_name):
         lh.log_error_detail("score_missing_lines: " + size_error_m)
         error_count += size_error_m
         
-    #compare scores
+"""" #compare scores
     for i in range(0,min_m_range):
         min_n_range = scores_n_gold = len(scores_gold[i])
         scores_n_curr = len(scores_curr[i])
@@ -193,7 +193,7 @@ def compare(gold, current, img_name):
                 error_detail = "scores: [" + str(i) + "," + str(j) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
                 error_count += 1
                 lh.log_error_detail(error_detail)
-
+"""
     #compare boxes #####################################################         
     min_m_range = boxes_m_gold = len(boxes_gold)
     boxes_m_curr = len(boxes_curr)
