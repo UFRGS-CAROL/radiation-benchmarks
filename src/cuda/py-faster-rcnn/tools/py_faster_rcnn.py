@@ -32,7 +32,7 @@ import csv
 THRESHOLD = 0.0000001
 
 #import log helper
-sys.path.insert(0, '../../../include/log_helper_python/')
+sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include/log_helper_python/')
 
 import log_helper as lh
 
