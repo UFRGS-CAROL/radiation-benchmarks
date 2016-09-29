@@ -290,27 +290,25 @@ if __name__ == '__main__':
         if args.generate_file != "":
             #execute only once
             #even in python you need initializate
-            gold_file = []
+            gold_file = {}
             print "Generating gold for Py-faster-rcnn"
             for im_name in in_names:
                 print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                 print 'Demo for {}'.format(im_name)
-                ret=generate(net, im_name)
-                gold_file.append(ret)
+                gold_file[im_name] = generate(net, im_name)
 
             print "Gold generated, saving file"
-           # serialize_gold(args.generate_file, gold_file)
-            write_to_csv(args.generate_file, gold_file)
+            serialize_gold(args.generate_file, gold_file)
+            #write_to_csv(args.generate_file, gold_file)
             print "Gold save sucess"
 
         else:
             i = 0
             while(i < iterations):
                 #iterator
-                iterator = iter(gold_file)
-
+                # iterator = iter(gold_file)
                 for im_name in in_names:
-                    item = iterator.next()
+                    # item = iterator.next()
                     ###Log
                     #print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                     print 'PyFaster for data/demo/{}'.format(im_name)
@@ -323,7 +321,7 @@ if __name__ == '__main__':
                         #check gold
                         timer = Timer()
                         timer.tic()
-                        error_count = compare(item, ret, im_name)                  
+                        error_count = compare(gold_file[im_name], ret, im_name)
                         timer.toc()
                         print "Compare time " , timer.total_time , " errors " , error_count
                         lh.log_error_count(int(error_count))
