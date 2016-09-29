@@ -34,7 +34,7 @@ execution_model = 'valid'
 config_file = data_path + '/yolo.cfg'
 weights = data_path + '/yolo.weights'
 iterations = '10000' #it is not so much, since each dataset have at least 10k of images
-base_caltech_out = src_darknet + '/gold/comp_caltech'
+base_caltech_out = src_darknet
 base_voc_out = src_darknet
 
 
