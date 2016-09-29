@@ -107,6 +107,6 @@ print >>fp, "[\""+cl_half_ex+"\", 1, \"py_faster_rcnn.py\"],"
 print >>fp, "[\""+cl_full_ex+"\", 1, \"py_faster_rcnn.py\"],"
 
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_py_faster_cuda_k40\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_py_faster_rcnn_cuda_K40\n"
 
 sys.exit(0)
