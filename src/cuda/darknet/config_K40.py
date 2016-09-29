@@ -79,26 +79,25 @@ cl_full_gen = "sudo ./darknet -e " + execution_type + " -m " + execution_model +
 
 #voc
 vc_half_ex =  "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 1 -d " + voc_HALF_str + " -b " + base_voc_out + " -x 0"
+	  config_file + " -w " +  weights + " -n 10000 -d " + voc_HALF_str + " -b " + base_voc_out + " -x 0"
 
 vc_full_ex = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 1 -d " + voc_FULL_str + " -b " + base_voc_out + " -x 0"
+	  config_file + " -w " +  weights + " -n 10000 -d " + voc_FULL_str + " -b " + base_voc_out + " -x 0"
 
 
 #caltech
 cl_half_ex = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 1 -d " + cal_HALF_str + " -b " + base_caltech_out + " -x 0"
+	  config_file + " -w " +  weights + " -n 10000 -d " + cal_HALF_str + " -b " + base_caltech_out + " -x 0"
 
 cl_full_ex = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 1 -d " + cal_FULL_str + " -b " + base_caltech_out + " -x 0"
+	  config_file + " -w " +  weights + " -n 10000 -d " + cal_FULL_str + " -b " + base_caltech_out + " -x 0"
 
 os.system("cd "+src_darknet)
 
 os.system("make clean")
 os.system("make -j 4 GPU=1")
 
-#os.system(vc_half_gen)
-
+os.system(vc_half_gen)
 os.system(vc_full_gen)
 os.system(cl_half_gen)
 os.system(cl_full_gen)

@@ -302,10 +302,10 @@ void validate_yolo(Args parameters) {
 
 //				printf("%f %f\n")
 				if (parameters.generate_flag) {
-					print_yolo_detections(fps, id,
-							current_ptr.pb_gold[gold_iterator].boxes,
-							current_ptr.pb_gold[gold_iterator].probs,
-							side * side * l.n, classes, w, h);
+				//	print_yolo_detections(fps, id,
+				//			current_ptr.pb_gold[gold_iterator].boxes,
+				//			current_ptr.pb_gold[gold_iterator].probs,
+				//			side * side * l.n, classes, w, h);
 				}
 
 				//---------------------------------
@@ -338,8 +338,8 @@ void validate_yolo(Args parameters) {
 //				printf("passou %d %d\n", gold_iterator, it++);
 				gold_iterator = (gold_iterator + 1) % plist->size;
 				//---------------------------------
-				printf("it %d iterations - 1 %d i %d (m + nthreads - 1) %d\n",
-						iterator, parameters.iterations - 1, i, m);
+				//printf("it %d iterations - 1 %d i %d (m + nthreads - 1) %d\n",
+				//		iterator, parameters.iterations - 1, i, m);
 				if (iterator == parameters.iterations - 1 && (i >= m)) {
 					printf("aqui\n");
 					free(id);
