@@ -28,28 +28,6 @@ if not os.path.isdir(data_path):
 	os.mkdir(data_path, 0777);
 	os.chmod(data_path, 0777);
 
-"""
- { { "execution_type",
-            required_argument, NULL, 'e' }, //yolo/cifar/imagenet...
-            { "execution_model", required_argument, NULL, 'm' }, //test/valid...
-            { "config_file", required_argument, NULL, 'c' }, //<yolo, imagenet..>.cfg
-            { "weights", required_argument, NULL, 'w' }, //<yolo, imagenet..>weights
-//          { "input_data_path",    required_argument, NULL, 'i' },
-            { "iterations", required_argument, NULL, 'n' }, //log data iterations
-            { "generate", required_argument, NULL, 'g' }, //generate gold
-            { "img_list_path", required_argument, NULL, 'l' }, //data path list input
-            { "base_result_out", required_argument, NULL, 'b' }, //result output
-            { "gpu_index", required_argument, NULL, 'x' }, //gpu index
-            { "gold_input", required_argument, NULL, 'd'},
-            { NULL, 0, NULL, 0 } };
-
-
-test:darknet
-./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 4 -d gold/gold_voc2012.test -l voc.2012.debug.txt -b gold/comp4_det_test_ -x -1
-
-generate:darknet
-./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 1 -g gold/gold_voc2012.test -l voc.2012.debug.txt -b gold/comp4_det_test_ -x 0
-"""
 
 execution_type = 'yolo'
 execution_model = 'valid'
@@ -114,11 +92,18 @@ cl_full_ex = "sudo ./darknet -e " + execution_type + " -m " + execution_model + 
 	  config_file + " -w " +  weights + " -n 1 -d " + cal_FULL_str + " -b " + base_caltech_out + " -x 0"
 
 os.system("cd "+src_darknet)
+
+os.system("make clean")
+os.system("make -j 4 GPU=1")
+
 os.system(vc_half_gen)
 os.system(vc_full_gen)
 os.system(cl_half_gen)
 os.system(cl_full_gen)
 
+os.system("make clean")
+os.system("make -C ../../include/")
+os.system("make -j 4 GPU=1 LOGS=1")
 
 os.system("sudo chmod 777 gold_* ");
 os.system("mv gold_* "+data_path);
