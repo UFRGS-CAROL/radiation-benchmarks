@@ -174,18 +174,21 @@ def compare(gold, current, img_name):
             min_n_range = min(scores_n_gold, scores_n_curr)
             lh.log_error_detail("score_missing_collumns: " + size_error_n + " line: " + cls_ind)
             error_count += size_error_n
-
+        print "\ngold\n\n cls_scores_gold"
+        print cls_scores_gold
+        print "\nCurrent\n"
+        print cls_scores_current
         #current boxes
-        cls_boxes = boxes_curr[:, 4 * cls_ind:4 * (cls_ind + 1)]
-        for i in range(0, min_n_range):
-            gold_ij = cls_scores_gold[i]
-            curr_ij = cls_scores_current[i]
-            diff = math.fabs(gold_ij - curr_ij)
-            if diff > THRESHOLD:
-                error_detail = "class: [" + str(cls_ind) + "] position: ["+ str(i) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
-                error_detail += "\n" + str(cls_boxes)
-                error_count += 1
-                lh.log_error_detail(error_detail)
+        # cls_boxes = boxes_curr[:, 4 * cls_ind:4 * (cls_ind + 1)]
+        # for i in range(0, min_n_range):
+        #     gold_ij = cls_scores_gold[i]
+        #     curr_ij = cls_scores_current[i]
+        #     diff = math.fabs(gold_ij - curr_ij)
+        #     if diff > THRESHOLD:
+        #         error_detail = "class: [" + str(cls_ind) + "] position: ["+ str(i) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
+        #         error_detail += "\n" + str(cls_boxes)
+        #         error_count += 1
+        #         lh.log_error_detail(error_detail)
 
 
     #compare boxes #####################################################         
