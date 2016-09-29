@@ -37,7 +37,8 @@ iterations = '10000' #it is not so much, since each dataset have at least 10k of
 base_caltech_out = src_darknet + '/comp_caltech'
 base_voc_out = src_darknet + '/comp_voc'
 
-img_datasets = data_path + "/networks_img_list"
+
+img_datasets = str.replace(data_path,'/darknet', '') + "/networks_img_list"
 #all inputs
 caltech_gold_FULL = data_path + '/gold_caltech_full.test'
 caltech_img_list_FULL = img_datasets + 'caltech/K40/caltech.pedestrians.FULL.txt'
@@ -97,6 +98,7 @@ os.system("make clean")
 os.system("make -j 4 GPU=1")
 
 os.system(vc_half_gen)
+sys.exit(0)
 os.system(vc_full_gen)
 os.system(cl_half_gen)
 os.system(cl_full_gen)
