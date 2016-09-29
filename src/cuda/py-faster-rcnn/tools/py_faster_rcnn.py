@@ -22,9 +22,12 @@ import numpy as np
 import scipy.io as sio
 import caffe, os, sys, cv2
 import argparse
-import cPickle as pickle
+import pickle
 import math
 import traceback
+
+
+import csv
 
 THRESHOLD = 0.0000001
 
@@ -131,6 +134,25 @@ def load_file(filename):
         return None
     return ret
 
+
+def write_to_csv(filename, data):
+    with open(filename, 'wb') as csvfile:
+        spwriter = csv.writer(csvfile, delimiter=' ',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for scores,boxes in data:
+            scores_m = len(scores)
+            boxes_m = len(boxes)
+
+            spwriter.writerow([scores_m, boxes_m])
+            for scores_i in scores:
+                scores_n =len(scores_i)
+                spwriter.writerow([scores_n, "--", scores_i])
+
+            for boxes_i in boxes:
+                boxes_n = len(boxes_i)
+                spwriter.writerow([boxes_n, "--", boxes_i])
+
+
 # compare gold against current
 def compare(gold, current, img_name):
     scores_gold = gold[0]
@@ -145,8 +167,6 @@ def compare(gold, current, img_name):
     #diff size
     size_error_m = abs(scores_m_gold - scores_m_curr)
     if size_error_m != 0:
-        print "passou"
-        sys.exit(0)
         min_m_range = min(scores_m_gold, scores_m_curr)
         lh.log_error_detail("score_missing_lines: " + size_error_m)
         error_count += size_error_m
@@ -160,8 +180,6 @@ def compare(gold, current, img_name):
             min_n_range = min(scores_n_gold, scores_n_curr)
             lh.log_error_detail("score_missing_collumns: " + size_error_n + " line: " + i)
             error_count += size_error_n
-            print "passou"
-            sys.exit(0)
 
         for j in range(0, min_n_range):
             gold_ij = float(scores_gold[i][j])
@@ -181,8 +199,6 @@ def compare(gold, current, img_name):
         min_m_range = min(boxes_m_gold, boxes_m_curr)
         lh.log_error_detail("boxes_missing_lines: " + size_error_m)
         error_count += size_error_m
-        print "passou"
-        sys.exit(0)
         
 
     for i in range(0,min_m_range):
@@ -193,8 +209,6 @@ def compare(gold, current, img_name):
             min_n_range = min(boxes_n_gold, boxes_n_curr)
             lh.log_error_detail("boxes_missing_collumns: " + size_error_n + " line: " + i)
             error_count += size_error_m
-            print "passou"
-            sys.exit(0)
 
         for j in range(0, min_n_range):
             gold_ij = float(boxes_gold[i][j])
@@ -285,7 +299,8 @@ if __name__ == '__main__':
                 gold_file.append(ret)
 
             print "Gold generated, saving file"
-            serialize_gold(args.generate_file, gold_file)
+           # serialize_gold(args.generate_file, gold_file)
+            write_to_csv((args.generate_file, gold_file))
             print "Gold save sucess"
 
         else:
