@@ -199,7 +199,9 @@ def compare(gold, current, img_name):
         # cls_boxes = boxes[:, 4 * cls_ind:4 * (cls_ind + 1)]
         cls_scores_current = scores_curr[:, cls_ind]
         cls_scores_gold = scores_gold[:, cls_ind]
+        print "\n\n\n\n\n scores current \n\n\\n",
         print cls_scores_current
+        print "\n\n\n\n\n scores gold \n\n\\n",
         print cls_scores_gold
 
     #compare boxes #####################################################         
