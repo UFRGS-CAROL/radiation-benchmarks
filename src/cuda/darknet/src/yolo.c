@@ -545,8 +545,8 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh) {
 void run_yolo(Args args) {
 	int i;
 	for (i = 0; i < 20; ++i) {
-		char buff[256];
-		sprintf(buff, "data/labels/%s.png", voc_names[i]);
+		char buff[1000];
+		sprintf(buff, "%s/data/labels/%s.png", args.base_result_out, voc_names[i]);
 		voc_labels[i] = load_image_color(buff, 0, 0);
 	}
 

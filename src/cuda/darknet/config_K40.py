@@ -35,7 +35,7 @@ config_file = data_path + '/yolo.cfg'
 weights = data_path + '/yolo.weights'
 iterations = '10000' #it is not so much, since each dataset have at least 10k of images
 base_caltech_out = src_darknet + '/gold/comp_caltech'
-base_voc_out = src_darknet + '/gold/comp_voc'
+base_voc_out = src_darknet
 
 
 img_datasets = str.replace(data_path,'/darknet', '') + "/networks_img_list"
