@@ -29,10 +29,6 @@ if not os.path.isdir(data_path):
 	os.chmod(data_path, 0777);
 
 
-# execution_type = 'yolo'
-# execution_model = 'valid'
-# config_file = data_path + '/yolo.cfg'
-# weights = data_path + '/yolo.weights'
 iterations = '10000' #it is not so much, since each dataset have at least 10k of images
 base_caltech_out = src_py_faster + '/gold/comp_caltech'
 base_voc_out = src_py_faster + '/gold/comp_voc'
@@ -45,7 +41,7 @@ caltech_img_list_FULL = img_datasets + 'caltech/K40/caltech.pedestrians.FULL.txt
 cal_FULL_str = caltech_gold_FULL + " -l " + caltech_img_list_FULL
 
 #half of inputs
-caltech_gold_HALF = data_path + '/gold_caltech_half.test'
+caltech_gold_HALF = data_path + '/gold_caltech_full.test'
 caltech_img_list_HALF = img_datasets + '/caltech/K40/caltech.pedestrians.HALF.txt'
 cal_HALF_str = caltech_gold_HALF + " -l " + caltech_img_list_HALF
 
@@ -56,7 +52,7 @@ voc_img_list_FULL = img_datasets + '/voc/K40/voc.2012.FULL.txt'
 voc_FULL_str = voc_gold_FULL + " -l " + voc_img_list_FULL
 
 #half of inputs
-voc_gold_HALF = data_path + '/gold_voc_half.test'
+voc_gold_HALF = data_path + '/gold_voc_full.test'
 voc_img_list_HALF = img_datasets + '/voc/K40/voc.2012.HALF.txt'
 voc_HALF_str = voc_gold_HALF + " -l " + voc_img_list_HALF
 
@@ -105,12 +101,12 @@ os.system(cl_full_gen)
 
 fp = open(installDir+"scripts/how_to_run_py_faster_rcnn_cuda_K40", 'w')
 
-print >>fp, vc_half_ex
-print >>fp, vc_full_ex
-print >>fp, cl_half_ex
-print >>fp, cl_full_ex
+print >>fp, "[\""+vc_half_ex+"\"],"
+print >>fp, "[\""+vc_full_ex+"\"],"
+print >>fp, "[\""+cl_half_ex+"\"],"
+print >>fp, "[\""+cl_full_ex+"\"],"
 
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_py_faster_cuda\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_py_faster_cuda_k40\n"
 
 sys.exit(0)
