@@ -106,11 +106,11 @@ os.system("make clean")
 os.system("make -C ../../include/")
 os.system("make -j 4 GPU=1 LOGS=1")
 
-os.system("sudo chmod 777 gold_* ");
-os.system("mv gold_* "+data_path);
+# os.system("sudo chmod 777 gold_* ");
+# os.system("mv gold_* "+data_path);
 os.system("mv ./darknet "+bin_path)
 
-sys.exit(0)
+
 fp = open(installDir+"scripts/how_to_run_darknet_cuda_K40", 'w')
 
 print >>fp, vc_half_ex
