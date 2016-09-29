@@ -82,18 +82,18 @@ cl_full_gen = "sudo ./darknet -e " + execution_type + " -m " + execution_model +
 #execute################################################################
 #voc
 vc_half_ex =  "[\"sudo "+ bin_path + "/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 10000 -d " + voc_HALF_str + " -b " + base_voc_out + " -x 0 \" ],"
+	  config_file + " -w " +  weights + " -n 10000 -d " + voc_HALF_str + " -b " + base_voc_out + " -x 0 \" , 1, \"darknet\"],"
 
 vc_full_ex = "[\"sudo "+ bin_path + "/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 10000 -d " + voc_FULL_str + " -b " + base_voc_out + " -x 0 \" ],"
+	  config_file + " -w " +  weights + " -n 10000 -d " + voc_FULL_str + " -b " + base_voc_out + " -x 0 \" , 1, \"darknet\"],"
 
 
 #caltech
 cl_half_ex = "[\"sudo "+ bin_path + "/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 10000 -d " + cal_HALF_str + " -b " + base_caltech_out + " -x 0 \" ],"
+	  config_file + " -w " +  weights + " -n 10000 -d " + cal_HALF_str + " -b " + base_caltech_out + " -x 0 \" , 1, \"darknet\"],"
 
 cl_full_ex = "[\"sudo "+ bin_path + "/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 10000 -d " + cal_FULL_str + " -b " + base_caltech_out + " -x 0 \" ],"
+	  config_file + " -w " +  weights + " -n 10000 -d " + cal_FULL_str + " -b " + base_caltech_out + " -x 0 \" , 1, \"darknet\"],"
 
 os.system("cd "+src_darknet)
 
