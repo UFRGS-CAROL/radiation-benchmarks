@@ -145,6 +145,8 @@ def compare(gold, current, img_name):
     #diff size
     size_error_m = abs(scores_m_gold - scores_m_curr)
     if size_error_m != 0:
+        print "passou"
+        sys.exit(0)
         min_m_range = min(scores_m_gold, scores_m_curr)
         lh.log_error_detail("score_missing_lines: " + size_error_m)
         error_count += size_error_m
@@ -158,6 +160,8 @@ def compare(gold, current, img_name):
             min_n_range = min(scores_n_gold, scores_n_curr)
             lh.log_error_detail("score_missing_collumns: " + size_error_n + " line: " + i)
             error_count += size_error_n
+            print "passou"
+            sys.exit(0)
 
         for j in range(0, min_n_range):
             gold_ij = float(scores_gold[i][j])
@@ -177,6 +181,8 @@ def compare(gold, current, img_name):
         min_m_range = min(boxes_m_gold, boxes_m_curr)
         lh.log_error_detail("boxes_missing_lines: " + size_error_m)
         error_count += size_error_m
+        print "passou"
+        sys.exit(0)
         
 
     for i in range(0,min_m_range):
@@ -187,6 +193,8 @@ def compare(gold, current, img_name):
             min_n_range = min(boxes_n_gold, boxes_n_curr)
             lh.log_error_detail("boxes_missing_collumns: " + size_error_n + " line: " + i)
             error_count += size_error_m
+            print "passou"
+            sys.exit(0)
 
         for j in range(0, min_n_range):
             gold_ij = float(boxes_gold[i][j])
@@ -267,13 +275,15 @@ if __name__ == '__main__':
 
         if args.generate_file != "":
             #execute only once
+            #even in python you need initializate
+            gold_file = []
             print "Generating gold for Py-faster-rcnn"
             for im_name in in_names:
                 print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                 print 'Demo for {}'.format(im_name)
                 ret=generate(net, im_name)
                 gold_file.append(ret)
-               
+
             print "Gold generated, saving file"
             serialize_gold(args.generate_file, gold_file)
             print "Gold save sucess"
