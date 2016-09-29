@@ -157,6 +157,8 @@ def write_to_csv(filename, data):
 def compare(gold, current, img_name):
     print "\n\n\n\n\n scores gold \n\n\\n", gold[0]
     print "\n\n\nn\n\n scores curr \n\n\n\n", current[0]
+    print "\n\n\n\n\n boxes gold \n\n\\n", gold[1]
+    print "\n\n\nn\n\n boxes curr \n\n\n\n", current[1]
     scores_gold = gold[0]
     boxes_gold = gold[1]
     error_count = 0
