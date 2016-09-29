@@ -300,7 +300,7 @@ if __name__ == '__main__':
 
             print "Gold generated, saving file"
            # serialize_gold(args.generate_file, gold_file)
-            write_to_csv((args.generate_file, gold_file))
+            write_to_csv(args.generate_file, gold_file)
             print "Gold save sucess"
 
         else:
