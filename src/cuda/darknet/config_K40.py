@@ -45,7 +45,7 @@ caltech_img_list_FULL = img_datasets + '/caltech/K40/caltech.pedestrians.FULL.tx
 cal_FULL_str = caltech_gold_FULL + " -l " + caltech_img_list_FULL
 
 #half of inputs
-caltech_gold_HALF = data_path + '/gold_caltech_half.test'
+caltech_gold_HALF = data_path + '/gold_caltech_full.test'
 caltech_img_list_HALF = img_datasets + '/caltech/K40/caltech.pedestrians.HALF.txt'
 cal_HALF_str = caltech_gold_HALF + " -l " + caltech_img_list_HALF
 
@@ -56,41 +56,44 @@ voc_img_list_FULL = img_datasets + '/voc/K40/voc.2012.FULL.txt'
 voc_FULL_str = voc_gold_FULL + " -l " + voc_img_list_FULL
 
 #half of inputs
-voc_gold_HALF = data_path + '/gold_voc_half.test'
+voc_gold_HALF = data_path + '/gold_voc_full.test'
 voc_img_list_HALF = img_datasets + '/voc/K40/voc.2012.HALF.txt'
 voc_HALF_str = voc_gold_HALF + " -l " + voc_img_list_HALF
 
 
 #voc
+"""
 vc_half_gen =  "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
 	  config_file + " -w " +  weights + " -n 1 -g " + voc_HALF_str + " -b " + base_voc_out + " -x 0"
+"""
 
 vc_full_gen = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
 	  config_file + " -w " +  weights + " -n 1 -g " + voc_FULL_str + " -b " + base_voc_out + " -x 0"
 
 
 #caltech
-cl_half_gen = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+"""
+cl_half_gen = "sudo /darknet -e " + execution_type + " -m " + execution_model + " -c " + \
 	  config_file + " -w " +  weights + " -n 1 -g " + cal_HALF_str + " -b " + base_caltech_out + " -x 0"
-
+"""
 cl_full_gen = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
 	  config_file + " -w " +  weights + " -n 1 -g " + cal_FULL_str + " -b " + base_caltech_out + " -x 0"
 
-
+#execute################################################################
 #voc
-vc_half_ex =  "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 10000 -d " + voc_HALF_str + " -b " + base_voc_out + " -x 0"
+vc_half_ex =  "[\"sudo "+ bin_path + "/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 10000 -d " + voc_HALF_str + " -b " + base_voc_out + " -x 0 \" ],"
 
-vc_full_ex = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 10000 -d " + voc_FULL_str + " -b " + base_voc_out + " -x 0"
+vc_full_ex = "[\"sudo "+ bin_path + "/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 10000 -d " + voc_FULL_str + " -b " + base_voc_out + " -x 0 \" ],"
 
 
 #caltech
-cl_half_ex = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 10000 -d " + cal_HALF_str + " -b " + base_caltech_out + " -x 0"
+cl_half_ex = "[\"sudo "+ bin_path + "/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 10000 -d " + cal_HALF_str + " -b " + base_caltech_out + " -x 0 \" ],"
 
-cl_full_ex = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
-	  config_file + " -w " +  weights + " -n 10000 -d " + cal_FULL_str + " -b " + base_caltech_out + " -x 0"
+cl_full_ex = "[\"sudo "+ bin_path + "/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 10000 -d " + cal_FULL_str + " -b " + base_caltech_out + " -x 0 \" ],"
 
 os.system("cd "+src_darknet)
 
@@ -98,7 +101,7 @@ os.system("make clean")
 os.system("make -j 4 GPU=1")
 
 #os.system(vc_half_gen)
-#os.system(vc_full_gen)
+os.system(vc_full_gen)
 #os.system(cl_half_gen)
 os.system(cl_full_gen)
 
@@ -119,6 +122,6 @@ print >>fp, cl_half_ex
 print >>fp, cl_full_ex
 
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_darknet_cuda\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_darknet_cuda_K40\n"
 
 sys.exit(0)
