@@ -175,26 +175,25 @@ def compare(gold, current, img_name):
         lh.log_error_detail("score_missing_lines: " + size_error_m)
         error_count += size_error_m
         
-""""
-    #compare scores
-    for i in range(0,min_m_range):
-        min_n_range = scores_n_gold = len(scores_gold[i])
-        scores_n_curr = len(scores_curr[i])
-        size_error_n = abs(scores_n_gold - scores_n_curr)
-        if size_error_n != 0:
-            min_n_range = min(scores_n_gold, scores_n_curr)
-            lh.log_error_detail("score_missing_collumns: " + size_error_n + " line: " + i)
-            error_count += size_error_n
+    # #compare scores
+    # for i in range(0,min_m_range):
+    #     min_n_range = scores_n_gold = len(scores_gold[i])
+    #     scores_n_curr = len(scores_curr[i])
+    #     size_error_n = abs(scores_n_gold - scores_n_curr)
+    #     if size_error_n != 0:
+    #         min_n_range = min(scores_n_gold, scores_n_curr)
+    #         lh.log_error_detail("score_missing_collumns: " + size_error_n + " line: " + i)
+    #         error_count += size_error_n
+    #
+    #     for j in range(0, min_n_range):
+    #         gold_ij = float(scores_gold[i][j])
+    #         curr_ij = float(scores_curr[i][j])
+    #         diff = math.fabs(gold_ij -  curr_ij)
+    #         if diff > THRESHOLD:
+    #             error_detail = "scores: [" + str(i) + "," + str(j) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
+    #             error_count += 1
+    #             lh.log_error_detail(error_detail)
 
-        for j in range(0, min_n_range):
-            gold_ij = float(scores_gold[i][j])
-            curr_ij = float(scores_curr[i][j])
-            diff = math.fabs(gold_ij -  curr_ij)
-            if diff > THRESHOLD:
-                error_detail = "scores: [" + str(i) + "," + str(j) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
-                error_count += 1
-                lh.log_error_detail(error_detail)
-"""
     #compare boxes #####################################################         
     min_m_range = boxes_m_gold = len(boxes_gold)
     boxes_m_curr = len(boxes_curr)
