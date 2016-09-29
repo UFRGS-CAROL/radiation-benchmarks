@@ -22,7 +22,7 @@ except IOError as e:
 
 data_path=installDir+"data/darknet"
 bin_path=installDir+"bin"
-src_daknet = installDir+"src/cuda/"
+src_darknet = installDir+"src/cuda/darknet"
 
 if not os.path.isdir(data_path):
 	os.mkdir(data_path, 0777);
@@ -51,27 +51,88 @@ generate:darknet
 ./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 1 -g gold/gold_voc2012.test -l voc.2012.debug.txt -b gold/comp4_det_test_ -x 0
 """
 
-execution_model = 'yolo'
-config_file = data_path + 'yolo.cfg'
-weights = data_path + 'yolo.weights'
-gold_
+execution_type = 'yolo'
+execution_model = 'valid'
+config_file = data_path + '/yolo.cfg'
+weights = data_path + '/yolo.weights'
+iterations = '10000' #it is not so much, since each dataset have at least 10k of images
+base_caltech_out = src_darknet + '/comp_caltech'
+base_voc_out = src_darknet + '/comp_voc'
 
-os.system("cd "+src_hotspot)
-os.system("sudo ./hotspot -size=1024 -generate -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file=gold_1024_1000 -sim_time=1000 -iterations=1")
-os.system("sudo ./hotspot -size=1024 -generate -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file=gold_1024_10000 -sim_time=10000 -iterations=1")
+img_datasets = data_path + "/networks_img_list"
+#all inputs
+caltech_gold_FULL = data_path + '/gold_caltech_full.test'
+caltech_img_list_FULL = img_datasets + 'caltech/K40/caltech.pedestrians.FULL.txt'
+cal_FULL_str = caltech_gold_FULL + " -l " + caltech_img_list_FULL
+
+#half of inputs
+caltech_gold_HALF = data_path + '/gold_caltech_half.test'
+caltech_img_list_HALF = img_datasets + '/caltech/K40/caltech.pedestrians.HALF.txt'
+cal_HALF_str = caltech_gold_HALF + " -l " + caltech_img_list_HALF
+
+#VOC
+#all inputs
+voc_gold_FULL = data_path + '/gold_voc_full.test'
+voc_img_list_FULL = img_datasets + '/voc/K40/voc.2012.FULL.txt'
+voc_FULL_str = voc_gold_FULL + " -l " + voc_img_list_FULL
+
+#half of inputs
+voc_gold_HALF = data_path + '/gold_voc_half.test'
+voc_img_list_HALF = img_datasets + '/voc/K40/voc.2012.HALF.txt'
+voc_HALF_str = voc_gold_HALF + " -l " + voc_img_list_HALF
+
+
+#voc
+vc_half_gen =  "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 1 -g " + voc_HALF_str + " -b " + base_voc_out + " -x 0"
+
+vc_full_gen = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 1 -g " + voc_FULL_str + " -b " + base_voc_out + " -x 0"
+
+
+#caltech
+cl_half_gen = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 1 -g " + cal_HALF_str + " -b " + base_caltech_out + " -x 0"
+
+cl_full_gen = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 1 -g " + cal_FULL_str + " -b " + base_caltech_out + " -x 0"
+
+
+#voc
+vc_half_ex =  "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 1 -d " + voc_HALF_str + " -b " + base_voc_out + " -x 0"
+
+vc_full_ex = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 1 -d " + voc_FULL_str + " -b " + base_voc_out + " -x 0"
+
+
+#caltech
+cl_half_ex = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 1 -d " + cal_HALF_str + " -b " + base_caltech_out + " -x 0"
+
+cl_full_ex = "sudo ./darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+	  config_file + " -w " +  weights + " -n 1 -d " + cal_FULL_str + " -b " + base_caltech_out + " -x 0"
+
+os.system("cd "+src_darknet)
+os.system(vc_half_gen)
+os.system(vc_full_gen)
+os.system(cl_half_gen)
+os.system(cl_full_gen)
+
 
 os.system("sudo chmod 777 gold_* ");
 os.system("mv gold_* "+data_path);
-os.system("mv ./hotspot "+bin_path)
+os.system("mv ./darknet "+bin_path)
 
-fp = open(installDir+"scripts/how_to_run_hotspot_cuda_K40", 'w')
-print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=1000 -streams=1 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_1000 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=10000 -streams=1 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_10000 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=1000 -streams=4 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_1000 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=10000 -streams=4 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_10000 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=1000 -streams=8 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_1000 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/hotspot -size=1024 -sim_time=10000 -streams=8 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_1024_10000 -iterations=10000000"
+sys.exit(0)
+fp = open(installDir+"scripts/how_to_run_darknet_cuda_K40", 'w')
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_hotspot_cuda\n"
+print >>fp, vc_half_ex
+print >>fp, vc_full_ex
+print >>fp, cl_half_ex
+print >>fp, cl_full_ex
+
+
+print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_darknet_cuda\n"
 
 sys.exit(0)
