@@ -34,8 +34,8 @@ execution_model = 'valid'
 config_file = data_path + '/yolo.cfg'
 weights = data_path + '/yolo.weights'
 iterations = '10000' #it is not so much, since each dataset have at least 10k of images
-base_caltech_out = src_darknet + '/comp_caltech'
-base_voc_out = src_darknet + '/comp_voc'
+base_caltech_out = src_darknet + '/gold/comp_caltech'
+base_voc_out = src_darknet + '/gold/comp_voc'
 
 
 img_datasets = str.replace(data_path,'/darknet', '') + "/networks_img_list"
@@ -97,8 +97,8 @@ os.system("cd "+src_darknet)
 os.system("make clean")
 os.system("make -j 4 GPU=1")
 
-os.system(vc_half_gen)
-sys.exit(0)
+#os.system(vc_half_gen)
+
 os.system(vc_full_gen)
 os.system(cl_half_gen)
 os.system(cl_full_gen)
