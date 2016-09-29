@@ -41,7 +41,7 @@ base_voc_out = src_darknet + '/gold/comp_voc'
 img_datasets = str.replace(data_path,'/darknet', '') + "/networks_img_list"
 #all inputs
 caltech_gold_FULL = data_path + '/gold_caltech_full.test'
-caltech_img_list_FULL = img_datasets + 'caltech/K40/caltech.pedestrians.FULL.txt'
+caltech_img_list_FULL = img_datasets + '/caltech/K40/caltech.pedestrians.FULL.txt'
 cal_FULL_str = caltech_gold_FULL + " -l " + caltech_img_list_FULL
 
 #half of inputs
@@ -97,9 +97,9 @@ os.system("cd "+src_darknet)
 os.system("make clean")
 os.system("make -j 4 GPU=1")
 
-os.system(vc_half_gen)
-os.system(vc_full_gen)
-os.system(cl_half_gen)
+#os.system(vc_half_gen)
+#os.system(vc_full_gen)
+#os.system(cl_half_gen)
 os.system(cl_full_gen)
 
 os.system("make clean")
