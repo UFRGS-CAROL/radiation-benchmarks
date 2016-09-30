@@ -44,23 +44,23 @@ def main(board):
     img_datasets = str.replace(data_path,'/darknet', '') + "/networks_img_list"
     #all inputs
     caltech_gold_FULL = data_path + '/gold_caltech_full.test'
-    caltech_img_list_FULL = img_datasets + '/caltech/'+board+'/caltech.pedestrians.FULL.txt'
+    caltech_img_list_FULL = img_datasets + '/caltech/'+board+'/caltech.pedestrians.1K.txt'
     cal_FULL_str = caltech_gold_FULL + " -l " + caltech_img_list_FULL
 
     #half of inputs
     caltech_gold_HALF = data_path + '/gold_caltech_full.test'
-    caltech_img_list_HALF = img_datasets + '/caltech/'+board+'/caltech.pedestrians.HALF.txt'
+    caltech_img_list_HALF = img_datasets + '/caltech/'+board+'/caltech.pedestrians.5K.txt'
     cal_HALF_str = caltech_gold_HALF + " -l " + caltech_img_list_HALF
 
     #VOC
     #all inputs
     voc_gold_FULL = data_path + '/gold_voc_full.test'
-    voc_img_list_FULL = img_datasets + '/voc/'+board+'/voc.2012.FULL.txt'
+    voc_img_list_FULL = img_datasets + '/voc/'+board+'/voc.2012.1K.txt'
     voc_FULL_str = voc_gold_FULL + " -l " + voc_img_list_FULL
 
     #half of inputs
     voc_gold_HALF = data_path + '/gold_voc_full.test'
-    voc_img_list_HALF = img_datasets + '/voc/'+board+'/voc.2012.HALF.txt'
+    voc_img_list_HALF = img_datasets + '/voc/'+board+'/voc.2012.5K.txt'
     voc_HALF_str = voc_gold_HALF + " -l " + voc_img_list_HALF
 
 
