@@ -107,8 +107,8 @@ void print_args(const Args arg) {
  * return 0 ok, -1 wrong
  */
 int parse_arguments(Args *to_parse, int argc, char **argv) {
-    static struct option long_options[] = { { "execution_type",
-            required_argument, NULL, 'e' }, //yolo/cifar/imagenet...
+    static struct option long_options[] = {
+            { "execution_type",  required_argument, NULL, 'e' }, //yolo/cifar/imagenet...
             { "execution_model", required_argument, NULL, 'm' }, //test/valid...
             { "config_file", required_argument, NULL, 'c' }, //<yolo, imagenet..>.cfg
             { "weights", required_argument, NULL, 'w' }, //<yolo, imagenet..>weights
@@ -126,10 +126,12 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
     int ok = -1;
     int option_index = 0;
     to_parse->generate_flag = 0;
+    int max_args = 10;
     while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g:l:b:x:d:", long_options,
-            &option_index)) != -1) {
+            &option_index)) != -1 && max_args--) {
         // check to see if a single character or long option came through
         switch (ch) {
+            
         case 'e': {
             to_parse->execution_type = optarg; // or copy it if you want to
             break;
@@ -178,6 +180,7 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
             to_parse->gold_input = optarg;
             break;
         }
+
         }
 
         ok = 0;

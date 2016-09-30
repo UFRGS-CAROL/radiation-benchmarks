@@ -65,12 +65,12 @@ def main(board):
 
 
     #voc
-    vc_full_gen = "sudo "+ bin_path+"/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+    vc_full_gen = "sudo "+bin_path+"/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
           config_file + " -w " +  weights + " -n 1 -g " + voc_FULL_str + " -b " + base_voc_out + " -x 0"
 
 
     #caltech
-    cl_full_gen = "sudo "+ bin_path+"/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
+    cl_full_gen = "sudo "+bin_path+"/darknet -e " + execution_type + " -m " + execution_model + " -c " + \
           config_file + " -w " +  weights + " -n 1 -g " + cal_FULL_str + " -b " + base_caltech_out + " -x 0"
 
     #execute################################################################
@@ -95,11 +95,10 @@ def main(board):
     os.system("make -j 4 GPU=1 ARCH_I=53")
     os.system("mv ./darknet "+bin_path)
 
-    #os.system(vc_half_gen)
     os.system(vc_full_gen)
-    #os.system(cl_half_gen)
     os.system(cl_full_gen)
 
+    
     os.system("make clean")
     os.system("make -C ../../include/")
     os.system("make -j 4 GPU=1 LOGS=1 ARCH_I=53")

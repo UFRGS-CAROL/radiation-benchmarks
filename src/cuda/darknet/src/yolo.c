@@ -280,6 +280,7 @@ void validate_yolo(Args parameters) {
 					start_iteration();
 				}
 #endif
+                double begin2 = mysecond();
 				char *path = paths[i + t - nthreads];
 				char *id = basecfg(path);
 				float *X = val_resized[t].data;
@@ -337,9 +338,9 @@ void validate_yolo(Args parameters) {
 #endif
 //				printf("passou %d %d\n", gold_iterator, it++);
 				gold_iterator = (gold_iterator + 1) % plist->size;
+                
 				//---------------------------------
-				//printf("it %d iterations - 1 %d i %d (m + nthreads - 1) %d\n",
-				//		iterator, parameters.iterations - 1, i, m);
+				printf("it %d seconds %f\n", iterator, mysecond() - begin2);
 				if (iterator == parameters.iterations - 1 && (i >= m)) {
 					printf("aqui\n");
 					free(id);
