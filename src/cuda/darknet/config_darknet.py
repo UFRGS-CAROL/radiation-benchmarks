@@ -92,7 +92,7 @@ def main(board):
     os.system("cd "+src_darknet)
 
     os.system("make clean")
-    os.system("make -j 4 GPU=1")
+    os.system("make -j 4 GPU=1 ARCH_I=53")
     os.system("mv ./darknet "+bin_path)
 
     #os.system(vc_half_gen)
@@ -102,7 +102,7 @@ def main(board):
 
     os.system("make clean")
     os.system("make -C ../../include/")
-    os.system("make -j 4 GPU=1 LOGS=1")
+    os.system("make -j 4 GPU=1 LOGS=1 ARCH_I=53")
 
     # os.system("sudo chmod 777 gold_* ");
     # os.system("mv gold_* "+data_path);

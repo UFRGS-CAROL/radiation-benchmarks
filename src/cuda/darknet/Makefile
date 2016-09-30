@@ -3,9 +3,9 @@ CUDNN?=0
 OPENCV?=0
 DEBUG?=0
 LOGS?=0
+ARCH_I?=35
 
-
-ARCH= --gpu-architecture=compute_35 --gpu-code=compute_35
+ARCH= --gpu-architecture=compute_$(ARCH_I) --gpu-code=compute_$(ARCH_I)
 
 VPATH=./src/
 EXEC=darknet
