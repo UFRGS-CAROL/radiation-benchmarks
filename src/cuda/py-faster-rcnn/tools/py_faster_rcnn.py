@@ -301,7 +301,7 @@ if __name__ == '__main__':
         lh.start_log_file("PyFasterRcnn", string_info)
     
     #object for gold file
-    gold_file = []
+    gold_file = {}
 ###################################################################################
 #only load network
     try:
