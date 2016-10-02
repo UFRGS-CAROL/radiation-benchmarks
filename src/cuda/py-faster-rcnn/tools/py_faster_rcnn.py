@@ -163,6 +163,64 @@ def write_to_csv(filename, data):
 #         dets = dets[keep, :]
 # vis_detections(im, cls, dets, thresh=CONF_THRESH)
 
+#compare and return the error count and error string detail
+def compare_boxes(gold, current):
+    #compare boxes #####################################################
+    boxes_m_gold = len(gold)
+    boxes_m_curr = len(current)
+    error_count = 0
+    error_detail = ""
+    #diff size
+    size_error_m = abs(boxes_m_gold - boxes_m_curr)
+    if size_error_m != 0:
+        min_m_range = min(boxes_m_gold, boxes_m_curr)
+        lh.log_error_detail("boxes_missing_lines: " + size_error_m)
+        error_count += size_error_m
+
+    i = 0
+    for (i_gold, i_curr) in zip(gold,current):
+        boxes_n_gold = len(i_gold)
+        boxes_n_curr = len(i_curr)
+        size_error_n = abs(boxes_n_gold - boxes_n_curr)
+        i += 1
+        j = 0
+        if size_error_n != 0:
+            lh.log_error_detail("boxes_missing_collumns: " + size_error_n + " line: " + str(i))
+            error_count += size_error_m
+
+        for (j_gold, j_curr) in zip(i_gold, i_curr):
+            gold_ij = float(j_gold)
+            curr_ij = float(j_curr)
+            j += 1
+            diff = math.fabs(gold_ij - curr_ij)
+            if diff > THRESHOLD:
+                lh.log_error_detail("boxes: [" + str(i) + "," + str(j) + "] e: " + str(gold_ij) + " r: " + str(curr_ij))
+                error_count += 1
+
+    return (error_count)
+
+#compare scores and return error count and string error detail
+def compare_scores(gold, current):
+    scores_m_gold = len(gold)
+    scores_m_curr = len(current)
+    error_count = 0
+    error_detail = ""
+    #diff size
+    size_error_m = abs(scores_m_gold - scores_m_curr)
+    if size_error_m != 0:
+        lh.log_error_detail("scores_missing_values: " + size_error_m)
+        error_count += size_error_m
+
+    i = 0
+    for (i_gold, i_curr) in zip(gold, current):
+        gold_val = float(i_gold)
+        curr_val = float(i_curr)
+        diff = math.fabs(gold_val - curr_val)
+        if diff > THRESHOLD:
+            lh.log_error_detail("scores: [" + str(i)  + "] e: " + str(gold_val) + " r: " + str(curr_val))
+            error_count += 1
+
+    return (error_count)
 
 # compare gold against current
 def compare(gold, current, img_name):
@@ -175,7 +233,7 @@ def compare(gold, current, img_name):
 
     CONF_THRESH = 0.8
     NMS_THRESH = 0.3
-
+    error_detail_final = ""
     ########################
     #real compare
 
@@ -199,45 +257,15 @@ def compare(gold, current, img_name):
         keep_curr = nms(dets_curr, NMS_THRESH)
         dets_curr = dets_curr[keep_curr, :]
 
-        m_boxes_curr = len(cls_boxes_curr)
-        m_boxes_gold = len(cls_boxes_gold)
-        m_scores_gold = len(cls_boxes_gold)
-        m_scores_curr = len(cls_boxes_curr)
+        #compare all results
 
-        print cls_boxes_curr
+        error_count += compare_boxes(cls_boxes_gold,cls_boxes_curr)
+        error_count += compare_scores(cls_scores_gold,cls_scores_curr)
 
 
-    #compare boxes #####################################################
-    min_m_range = boxes_m_gold = len(boxes_gold)
-    boxes_m_curr = len(boxes_curr)
-    #diff size
-    size_error_m = abs(boxes_m_gold - boxes_m_curr)
-    if size_error_m != 0:
-        min_m_range = min(boxes_m_gold, boxes_m_curr)
-        lh.log_error_detail("boxes_missing_lines: " + size_error_m)
-        error_count += size_error_m
-
-
-    for i in range(0,min_m_range):
-        min_n_range = boxes_n_gold = len(boxes_gold[i])
-        boxes_n_curr = len(boxes_curr[i])
-        size_error_n = abs(boxes_n_gold - boxes_n_curr)
-        if size_error_n != 0:
-            min_n_range = min(boxes_n_gold, boxes_n_curr)
-            lh.log_error_detail("boxes_missing_collumns: " + size_error_n + " line: " + i)
-            error_count += size_error_m
-
-        for j in range(0, min_n_range):
-            gold_ij = float(boxes_gold[i][j])
-            curr_ij = float(boxes_curr[i][j])
-            diff = math.fabs(gold_ij -  curr_ij)
-            if diff > THRESHOLD:
-                error_detail = "boxes: [" + str(i) + "," + str(j) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
-                error_count += 1
-                lh.log_error_detail(error_detail)
 
     if error_count > 0:
-        lh.log_error_detail(img_name)
+        lh.log_error_detail("input_img: "+img_name)
 
     return error_count
 
