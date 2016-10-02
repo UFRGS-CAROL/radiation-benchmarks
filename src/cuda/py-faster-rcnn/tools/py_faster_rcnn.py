@@ -177,14 +177,27 @@ def compare(gold, current, img_name):
     NMS_THRESH = 0.3
     for cls_ind, cls in enumerate(CLASSES[1:]):
         cls_ind += 1 # because we skipped background
-        cls_boxes = boxes_gold[:, 4*cls_ind:4*(cls_ind + 1)]
-        cls_scores = scores_curr[:, cls_ind]
-        dets = np.hstack((cls_boxes,
-                          cls_scores[:, np.newaxis])).astype(np.float32)
-        keep = nms(dets, NMS_THRESH)
-        dets = dets[keep, :]
-        print dets
 
+        #for gold
+        cls_boxes_gold = boxes_gold[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_scores_gold = scores_gold[:, cls_ind]
+        dets_gold = np.hstack((cls_boxes_gold,
+                          cls_scores_gold[:, np.newaxis])).astype(np.float32)
+        keep_gold = nms(dets_gold, NMS_THRESH)
+        dets_gold = dets_gold[keep_gold, :]
+
+        #for current
+        cls_boxes_curr = boxes_curr[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_scores_curr = scores_curr[:, cls_ind]
+        dets_curr = np.hstack((cls_boxes_curr,
+                          cls_scores_curr[:, np.newaxis])).astype(np.float32)
+        keep_curr = nms(dets_curr, NMS_THRESH)
+        dets_curr = dets_curr[keep_curr, :]
+
+        print "\n\n\ndets gold\n\n\"
+        print dets_gold
+        print "\ndets curr\n"
+        print dets_curr
 
 
     #compare boxes #####################################################         
