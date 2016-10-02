@@ -195,9 +195,9 @@ def compare(gold, current, img_name):
         dets_curr = dets_curr[keep_curr, :]
 
         print "\n\n\ndets gold\n\n\"
-        print dets_gold
+        print cls_boxes_gold
         print "\ndets curr\n"
-        print dets_curr
+        print cls_boxes_curr
 
 
     #compare boxes #####################################################         
