@@ -22,7 +22,7 @@ except IOError as e:
 
 data_path=installDir+"data/py_faster_rcnn"
 bin_path=installDir+"bin"
-src_py_faster = installDir + "src/cuda/py_faster_rcnn"
+src_py_faster = installDir + "src/cuda/py-faster-rcnn"
 
 if not os.path.isdir(data_path):
 	os.mkdir(data_path, 0777);
@@ -37,7 +37,7 @@ base_voc_out = src_py_faster + '/gold/comp_voc'
 img_datasets = str.replace(data_path,'/py_faster_rcnn', '') + "/networks_img_list"
 #all inputs
 caltech_gold_FULL = data_path + '/gold_caltech_full.test'
-caltech_img_list_FULL = img_datasets + 'caltech/K40/caltech.pedestrians.FULL.txt'
+caltech_img_list_FULL = img_datasets + 'caltech/K40/caltech.pedestrians.1K.txt'
 cal_FULL_str = caltech_gold_FULL + " -l " + caltech_img_list_FULL
 
 #half of inputs
@@ -48,7 +48,7 @@ cal_HALF_str = caltech_gold_HALF + " -l " + caltech_img_list_HALF
 #VOC
 #all inputs
 voc_gold_FULL = data_path + '/gold_voc_full.test'
-voc_img_list_FULL = img_datasets + '/voc/K40/voc.2012.FULL.txt'
+voc_img_list_FULL = img_datasets + '/voc/K40/voc.2012.1K.txt'
 voc_FULL_str = voc_gold_FULL + " -l " + voc_img_list_FULL
 
 #half of inputs
@@ -85,9 +85,9 @@ os.system("cd " + src_py_faster)
 # os.system("make clean")
 # os.system("make -j 4 GPU=1")
 
-os.system(vc_half_gen)
+#os.system(vc_half_gen)
 os.system(vc_full_gen)
-os.system(cl_half_gen)
+#os.system(cl_half_gen)
 os.system(cl_full_gen)
 
 # os.system("make clean")
