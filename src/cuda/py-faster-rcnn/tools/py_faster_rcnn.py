@@ -165,6 +165,7 @@ def compare(gold, current, img_name):
     for cls_ind, cls in enumerate(CLASSES[1:]):
         print cls_ind
         cls_ind += 1  # because we skipped background
+        print cls , scores_curr[cls]
         cls_scores_current = scores_curr[:, cls_ind]
         cls_scores_gold = scores_gold[:, cls_ind]
 
