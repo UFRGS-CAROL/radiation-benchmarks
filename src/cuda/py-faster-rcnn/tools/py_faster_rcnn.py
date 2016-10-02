@@ -260,15 +260,15 @@ def compare(gold, current, img_name):
         #compare all results
 
         error_count += compare_boxes(cls_boxes_gold,cls_boxes_curr)
-        error_count += compare_scores(cls_scores_gold,cls_scores_curr)
-        inds_curr = np.where(dets_curr[:, -1] >=  0)[0]
-        inds_gold = np.where(dets_gold[:, -1] >=  0)[0]
-
-        for (i_g, i_c) in zip(inds_gold, inds_curr):
-            scores_gold = dets_gold[i_g, -1]
-            scores_curr = dets_curr[i_c, -1]
-            print "csl scores" , scores_curr
-            print "csl scores gold" , scores_gold
+        # error_count += compare_scores(cls_scores_gold,cls_scores_curr)
+        # inds_curr = np.where(dets_curr[:, -1] >=  0)[0]
+        # inds_gold = np.where(dets_gold[:, -1] >=  0)[0]
+        #
+        # for (i_g, i_c) in zip(inds_gold, inds_curr):
+        #     scores_gold = dets_gold[i_g, -1]
+        #     scores_curr = dets_curr[i_c, -1]
+        #     print "csl scores" , scores_curr
+        #     print "csl scores gold" , scores_gold
 
     if error_count > 0:
         lh.log_error_detail("input_img: "+img_name)
