@@ -194,10 +194,10 @@ def compare(gold, current, img_name):
         keep_curr = nms(dets_curr, NMS_THRESH)
         dets_curr = dets_curr[keep_curr, :]
 
-        print "\n\n\ndets gold\n\n\"
-        print cls_boxes_gold
+        print "\n\n\ndets gold\n\n"
+        print cls_scores_curr
         print "\ndets curr\n"
-        print cls_boxes_curr
+        print cls_scores_curr
 
 
     #compare boxes #####################################################         
