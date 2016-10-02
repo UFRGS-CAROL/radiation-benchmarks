@@ -260,17 +260,17 @@ def compare(gold, current, img_name):
         #compare all results
 
         error_count += compare_boxes(cls_boxes_gold,cls_boxes_curr)
-        inds_gold = np.where(dets_gold[:, -1] >= 0)[0]
-        inds_curr = np.where(dets_curr[:, -1] >= 0)[0]
-        for i in inds_curr:
-            bbox_curr = dets_curr[i, :4]
-            scores_curr = dets_curr[i, -1]
-            print "Scores curr\n" , bbox_curr , " " , scores_curr
-
-        for i in inds_gold:
-            bbox_gold = dets_gold[i, :4]
-            scores_gold = dets_gold[i, -1]
-            print "Scores gold\n" , bbox_gold , " " , scores_gold
+        # inds_gold = np.where(dets_gold[:, -1] >= 0)[0]
+        # inds_curr = np.where(dets_curr[:, -1] >= 0)[0]
+        # for i in inds_curr:
+        #     bbox_curr = dets_curr[i, :4]
+        #     scores_curr = dets_curr[i, -1]
+        #     print "Scores curr\n" , bbox_curr , " " , scores_curr
+        #
+        # for i in inds_gold:
+        #     bbox_gold = dets_gold[i, :4]
+        #     scores_gold = dets_gold[i, -1]
+        #     print "Scores gold\n" , bbox_gold , " " , scores_gold
         # error_count += compare_scores(cls_scores_gold,cls_scores_curr)
         # inds_curr = np.where(dets_curr[:, -1] >=  0)[0]
         # inds_gold = np.where(dets_gold[:, -1] >=  0)[0]
@@ -394,7 +394,7 @@ if __name__ == '__main__':
                     if j == im_size:
                         break
 
-                        
+
                 i += 1
     except Exception as e:
         if "no_logs" not in args.is_log:
