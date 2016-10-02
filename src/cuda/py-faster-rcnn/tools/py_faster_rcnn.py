@@ -152,6 +152,17 @@ def write_to_csv(filename, data):
                 boxes_n = len(boxes_i)
                 spwriter.writerow([boxes_n, "--", boxes_i])
 
+##in the py-faster-original
+#     for cls_ind, cls in enumerate(CLASSES[1:]):
+#         cls_ind += 1 # because we skipped background
+#         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+#         cls_scores = scores[:, cls_ind]
+#         dets = np.hstack((cls_boxes,
+#                           cls_scores[:, np.newaxis])).astype(np.float32)
+#         keep = nms(dets, NMS_THRESH)
+#         dets = dets[keep, :]
+# vis_detections(im, cls, dets, thresh=CONF_THRESH)
+
 
 # compare gold against current
 def compare(gold, current, img_name):
@@ -162,35 +173,18 @@ def compare(gold, current, img_name):
     scores_curr = current[0]
     boxes_curr = current[1]
 
+    CONF_THRESH = 0.8
+    NMS_THRESH = 0.3
     for cls_ind, cls in enumerate(CLASSES[1:]):
-        print cls_ind
-        cls_ind += 1  # because we skipped background
-        print cls , scores_curr[cls]
-        cls_scores_current = scores_curr[:, cls_ind]
-        cls_scores_gold = scores_gold[:, cls_ind]
+        cls_ind += 1 # because we skipped background
+        cls_boxes = boxes_gold[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_scores = scores_curr[:, cls_ind]
+        dets = np.hstack((cls_boxes,
+                          cls_scores[:, np.newaxis])).astype(np.float32)
+        keep = nms(dets, NMS_THRESH)
+        dets = dets[keep, :]
+        print dets
 
-        min_n_range = scores_n_gold = len(cls_scores_gold)
-        scores_n_curr = len(cls_scores_current)
-        size_error_n = abs(scores_n_gold - scores_n_curr)
-        if size_error_n != 0:
-            min_n_range = min(scores_n_gold, scores_n_curr)
-            lh.log_error_detail("score_missing_collumns: " + size_error_n + " line: " + cls_ind)
-            error_count += size_error_n
-        print "\ngold\n\n cls_scores_gold"
-        print cls_scores_gold
-        print "\nCurrent\n"
-        print cls_scores_current
-        #current boxes
-        # cls_boxes = boxes_curr[:, 4 * cls_ind:4 * (cls_ind + 1)]
-        # for i in range(0, min_n_range):
-        #     gold_ij = cls_scores_gold[i]
-        #     curr_ij = cls_scores_current[i]
-        #     diff = math.fabs(gold_ij - curr_ij)
-        #     if diff > THRESHOLD:
-        #         error_detail = "class: [" + str(cls_ind) + "] position: ["+ str(i) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
-        #         error_detail += "\n" + str(cls_boxes)
-        #         error_count += 1
-        #         lh.log_error_detail(error_detail)
 
 
     #compare boxes #####################################################         
