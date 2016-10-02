@@ -175,6 +175,11 @@ def compare(gold, current, img_name):
 
     CONF_THRESH = 0.8
     NMS_THRESH = 0.3
+
+    ########################
+    #real compare
+
+
     for cls_ind, cls in enumerate(CLASSES[1:]):
         cls_ind += 1 # because we skipped background
 
@@ -194,13 +199,15 @@ def compare(gold, current, img_name):
         keep_curr = nms(dets_curr, NMS_THRESH)
         dets_curr = dets_curr[keep_curr, :]
 
-        print "\n\n\ndets gold\n\n"
-        print cls_scores_curr
-        print "\ndets curr\n"
-        print cls_scores_curr
+        m_boxes_curr = len(cls_boxes_curr)
+        m_boxes_gold = len(cls_boxes_gold)
+        m_scores_gold = len(cls_boxes_gold)
+        m_scores_curr = len(cls_boxes_curr)
+
+        print cls_boxes_curr
 
 
-    #compare boxes #####################################################         
+    #compare boxes #####################################################
     min_m_range = boxes_m_gold = len(boxes_gold)
     boxes_m_curr = len(boxes_curr)
     #diff size
@@ -209,7 +216,7 @@ def compare(gold, current, img_name):
         min_m_range = min(boxes_m_gold, boxes_m_curr)
         lh.log_error_detail("boxes_missing_lines: " + size_error_m)
         error_count += size_error_m
-        
+
 
     for i in range(0,min_m_range):
         min_n_range = boxes_n_gold = len(boxes_gold[i])
@@ -228,7 +235,7 @@ def compare(gold, current, img_name):
                 error_detail = "boxes: [" + str(i) + "," + str(j) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
                 error_count += 1
                 lh.log_error_detail(error_detail)
-        
+
     if error_count > 0:
         lh.log_error_detail(img_name)
 
