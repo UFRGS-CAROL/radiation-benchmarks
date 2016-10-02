@@ -260,14 +260,17 @@ def compare(gold, current, img_name):
         #compare all results
 
         error_count += compare_boxes(cls_boxes_gold,cls_boxes_curr)
-        # inds = np.where(dets_gold[:, -1] >= 0)[0]
-        bbox_curr = dets_curr[1, :4]
-        scores_curr = dets_curr[1, -1]
-        print "Scores curr\n" , bbox_curr , " " , scores_curr
+        inds_gold = np.where(dets_gold[:, -1] >= 0)[0]
+        inds_curr = np.where(dets_curr[:, -1] >= 0)[0]
+        for i in inds_curr:
+            bbox_curr = dets_curr[i, :4]
+            scores_curr = dets_curr[i, -1]
+            print "Scores curr\n" , bbox_curr , " " , scores_curr
 
-        bbox_gold = dets_gold[1, :4]
-        scores_gold = dets_gold[1, -1]
-        print "Scores gold\n" , bbox_gold , " " , scores_gold
+        for i in inds_gold:
+            bbox_gold = dets_gold[i, :4]
+            scores_gold = dets_gold[i, -1]
+            print "Scores gold\n" , bbox_gold , " " , scores_gold
         # error_count += compare_scores(cls_scores_gold,cls_scores_curr)
         # inds_curr = np.where(dets_curr[:, -1] >=  0)[0]
         # inds_gold = np.where(dets_gold[:, -1] >=  0)[0]
