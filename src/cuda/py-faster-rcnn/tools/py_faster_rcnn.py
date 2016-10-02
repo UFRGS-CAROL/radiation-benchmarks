@@ -261,8 +261,8 @@ def compare(gold, current, img_name):
 
         error_count += compare_boxes(cls_boxes_gold,cls_boxes_curr)
         error_count += compare_scores(cls_scores_gold,cls_scores_curr)
-        print "csl scores \n\n\n" + cls_scores_curr
-        print "csl scores gold \n\n\n" + cls_scores_gold
+        print "csl scores \n\n\n" , dets_curr[:, -1][0]
+        print "csl scores gold \n\n\n" , dets_gold[:, -1][0]
 
     if error_count > 0:
         lh.log_error_detail("input_img: "+img_name)
