@@ -366,6 +366,8 @@ if __name__ == '__main__':
 
         else:
             i = 0
+            j = 0
+            im_size = len(in_names)
             while(i < iterations):
                 #iterator
                 # iterator = iter(gold_file)
@@ -388,6 +390,9 @@ if __name__ == '__main__':
                         print "Compare time " , timer.total_time , " errors " , error_count
                         lh.log_error_count(int(error_count))
                     ##end log
+                    j += 1
+                    if j == im_size:
+                        break
                 i += 1
     except Exception as e:
         if "no_logs" not in args.is_log:
