@@ -265,7 +265,7 @@ def compare(gold, current, img_name):
         inds_gold = np.where(dets_gold[:, -1] >=  0)[0]
 
         for (i_g, i_c) in zip(inds_gold, inds_curr):
-            scores_gold = dets_gold[i_g, :-1]
+            scores_gold = dets_gold[i_g, -1]
             scores_curr = dets_curr[i_c, -1]
             print "csl scores" , scores_curr
             print "csl scores gold" , scores_gold
