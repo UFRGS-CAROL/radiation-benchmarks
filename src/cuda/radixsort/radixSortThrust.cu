@@ -413,10 +413,18 @@ void testSort(parameters_t *params)
 	if (params->verbose) printf("Done in %.4fs\n", mysecond() - timestamp);
 
     // Copy data onto the GPU
-    uint *d_keys, *d_values;
+    uint *d_keys, *d_values, *d_input_keys, *d_input_values;
 	checkCudaErrors( cudaMalloc((void**)&d_keys, sizeof(uint) * params->numElements) );
-	if (!(params->keysOnly))
+	checkCudaErrors( cudaMalloc((void**)&d_input_keys, sizeof(uint) * params->numElements) );
+	if (!(params->keysOnly)) {
 		checkCudaErrors( cudaMalloc((void**)&d_values, sizeof(uint) * params->numElements) );
+		checkCudaErrors( cudaMalloc((void**)&d_input_values, sizeof(uint) * params->numElements) );
+	}
+
+
+	checkCudaErrors( cudaMemcpy(d_input_keys, h_keys, sizeof(uint) * params->numElements, cudaMemcpyHostToDevice) );
+		if (!(params->keysOnly))
+			checkCudaErrors( cudaMemcpy(d_input_values, h_values, sizeof(uint) * params->numElements, cudaMemcpyHostToDevice) );
 
     // run multiple iterations to compute an average sort time
 
@@ -425,10 +433,15 @@ void testSort(parameters_t *params)
 		itertimestamp = mysecond();
         if (params->verbose) printf("================== [Iteration #%i began]\n", loop1);
 
-        // reset data before sort
-		checkCudaErrors( cudaMemcpy(d_keys, h_keys, sizeof(uint) * params->numElements, cudaMemcpyHostToDevice) );
+		// reset data before sort
+		/*checkCudaErrors( cudaMemcpy(d_keys, h_keys, sizeof(uint) * params->numElements, cudaMemcpyHostToDevice) );
 		if (!(params->keysOnly))
 			checkCudaErrors( cudaMemcpy(d_values, h_values, sizeof(uint) * params->numElements, cudaMemcpyHostToDevice) );
+		*/
+		// reset data before sort
+		checkCudaErrors( cudaMemcpy(d_keys, d_input_keys, sizeof(uint) * params->numElements, cudaMemcpyDeviceToDevice) );
+		if (!(params->keysOnly))
+			checkCudaErrors( cudaMemcpy(d_values, d_input_values, sizeof(uint) * params->numElements, cudaMemcpyDeviceToDevice) );
 
         timestamp = mysecond();
 
