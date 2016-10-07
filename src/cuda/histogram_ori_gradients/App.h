@@ -14,7 +14,7 @@
 #include <list>
 #include <unistd.h>
 
-#include "Helpful.h"
+#include "helpful.h"
 #ifdef LOGS
 #include "log_helper.h"
 #endif
