@@ -33,10 +33,11 @@ gold_generator: GoldGenerator.cpp
 	$(NVCC) GoldGenerator.cpp $(debug) -o generator $(ALL_GOLD_GEN)
 
 test:
-	./hog_test ../../radiation-benchmarks/data/histogram_ori_gradients/1x_pedestrians.jpg --dst_data GOLD_1x.data --iterations 1
+	./hog_test ../../../../data/histogram_ori_gradients/1x_pedestrians.jpg --dst_data GOLD_1x.data --iterations 1
 
 generate:
-	./generator ../../radiation-benchmarks//data/histogram_ori_gradients/1x_pedestrians.jpg --dst_data GOLD_1x.data --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
+
+	./generator ../../../../data/histogram_ori_gradients/1x_pedestrians.jpg --dst_data GOLD_1x.data --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
 	
 
 clean:
