@@ -54,9 +54,12 @@ endif
 #abft = 2 is fast abft
 ifeq ($(ABFT),1)
 	CFLAGS+= -DABFT=1
-else ifeq($ABFT),2)
+endif 
+
+ifeq ($(ABFT), 2)
 	CFLAGS+= -DABFT=2
 endif
+
 
 OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o image.o activations.o \
 	 im2col.o col2im.o blas.o crop_layer.o dropout_layer.o maxpool_layer.o softmax_layer.o data.o \
@@ -96,10 +99,10 @@ results:
 .PHONY: clean
 
 test:darknet
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 3 -d gold/gold_voc2012.test -l /home/carol/radiation-benchmarks/data/VOC2012/voc.2012.ONLY50.txt -b gold/comp4_det_test_ -x 0
+	./darknet -e yolo -m valid -c cfg/yolo.cfg -w data/yolo.weights -n 3 -d data/gold_voc2012.test -l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0
 
 generate:darknet
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w yolo.weights -n 1 -g gold/gold_voc2012.test -l /home/carol/radiation-benchmarks/data/VOC2012/voc.2012.ONLY50.txt -b gold/comp4_det_test_ -x 0
+	./darknet -e yolo -m valid -c cfg/yolo.cfg -w data/yolo.weights -n 1 -g data/gold_voc2012.test -l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0
 
 clean:
 	rm -rf $(OBJS) $(EXEC) obj/*.o
