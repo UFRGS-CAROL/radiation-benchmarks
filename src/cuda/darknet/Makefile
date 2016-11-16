@@ -78,15 +78,14 @@ endif
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-ifeq($(ABFT),1)
-	$(NVCC) $(ARCH) -rdc=true --device-c abft.cu -o abft_temp.o
-	$(NVCC) $(ARCH) --device-link abft_temp.o --output-file abft.o
-endif
-
-
 all: obj results $(EXEC)
 
-$(EXEC): $(OBJS)
+abft.o:
+	$(NVCC) $(ARCH) -rdc=true --device-c abft.cu -o abft_temp.o
+	$(NVCC) $(ARCH) --device-link abft_temp.o --output-file abft.o
+
+
+$(EXEC): $(OBJS) abft.o
 	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LOG_LINK)
 
 $(OBJDIR)%.o: %.c $(DEPS)
