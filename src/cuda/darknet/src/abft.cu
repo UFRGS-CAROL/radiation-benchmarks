@@ -1,4 +1,3 @@
-
 extern "C" {
 #include "abft.h"
 
@@ -144,8 +143,8 @@ __global__ void calc_checksums(float *a, float *b, long rows_a, long cols_a,
 	__syncthreads();
 }
 
-extern "C" void abraham_sum(float *a, float *b, long rows_a, long cols_a, long rows_b,
-		long cols_b) {
+extern "C" void abraham_sum(float *a, float *b, long rows_a, long cols_a,
+		long rows_b, long cols_b) {
 	//these variables will be live only for abft
 //	cudaMalloc()
 
@@ -154,17 +153,17 @@ extern "C" void abraham_sum(float *a, float *b, long rows_a, long cols_a, long r
 	//gpuErrchk(cudaPeekAtLastError());
 }
 
-
 extern "C" ErrorReturn abraham_check(float *c, long rows, long cols) {
 //	printf("passou why\n");
 	ErrorReturn ret;
 	ret.col_detected_errors = 0;
 	ret.row_detected_errors = 0;
-	cudaMemcpyToSymbol(&err_count, ret, sizeof(ErrorReturn));
+
+	cudaMemcpyToSymbol("err_count", (void*) &ret, sizeof(ErrorReturn));
 	check_checksums<<<1, 2>>>(c, rows, cols);
 	//gpuErrchk(cudaPeekAtLastError());
 
-	cudaMemcpyFromSymbol(&ret, err_count,
+	cudaMemcpyFromSymbol((void*) &ret, "err_count", err_count,
 			sizeof(ErrorReturn));
 	return ret;
 }
