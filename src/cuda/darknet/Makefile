@@ -82,7 +82,7 @@ all: obj results $(EXEC)
 
 abft.o:
 	$(NVCC) $(ARCH) -rdc=true --device-c src/abft.cu -o $(OBJDIR)abft_temp.o
-	$(NVCC) $(ARCH) --device-link $(OBJDIR)/abft_temp.o --output-file $(OBJDIR)/abft.o
+	$(NVCC) $(ARCH) --device-link $(OBJDIR)/abft_temp.o --output-file abft.o
 
 
 $(EXEC): abft.o $(OBJS) 
