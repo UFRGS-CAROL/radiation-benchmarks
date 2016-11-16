@@ -171,7 +171,7 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 
 	ErrorReturn temp = abraham_check(C_gpu, M, N);
 	printf("Detected row errors: %d\nDetected collum errors %d\n",
-			temp.row_detected_errors_host, temp.col_detected_errors_host);
+			temp.row_detected_errors, temp.col_detected_errors);
 #endif
 }
 
