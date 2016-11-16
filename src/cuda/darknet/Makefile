@@ -85,8 +85,8 @@ abft.o:
 	$(NVCC) $(ARCH) --device-link $(OBJDIR)/abft_temp.o --output-file abft.o
 
 
-$(EXEC): abft.o $(OBJS) 
-	$(CC) $(COMMON) $(CFLAGS) abft.o $^ -o $@ $(LDFLAGS) $(LOG_LINK)
+$(EXEC): $(OBJS) $(BUILD_ABFT)
+	$(CC) $(COMMON) $(CFLAGS) $(BUILD_ABFT) $^ -o $@ $(LDFLAGS) $(LOG_LINK)
 
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
