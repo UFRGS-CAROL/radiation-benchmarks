@@ -163,8 +163,7 @@ extern "C" ErrorReturn abraham_check(float *c, long rows, long cols) {
 	check_checksums<<<1, 2>>>(c, rows, cols);
 	//gpuErrchk(cudaPeekAtLastError());
 
-	cudaMemcpyFromSymbol((void*) &ret, "err_count", err_count,
-			sizeof(ErrorReturn));
+	cudaMemcpyFromSymbol((void*) &ret, "err_count", sizeof(ErrorReturn));
 	return ret;
 }
 
