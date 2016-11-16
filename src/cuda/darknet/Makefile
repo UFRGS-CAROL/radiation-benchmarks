@@ -68,9 +68,9 @@ endif
 #abft = 1 is dumb abft
 #abft = 2 is fast abft
 ifeq ($(ABFT),1)
-	OBJ+=abft.o
 	CFLAGS+=-L/usr/local/cuda-7.0/lib64/ -lcudadevrt -lcudart
 	CFLAGS+= -DABFT=1
+	BUILD_ABFT=abft.o
 endif 
 
 
@@ -81,12 +81,12 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj results $(EXEC)
 
 abft.o:
-	$(NVCC) $(ARCH) -rdc=true --device-c abft.cu -o abft_temp.o
-	$(NVCC) $(ARCH) --device-link abft_temp.o --output-file abft.o
+	$(NVCC) $(ARCH) -rdc=true --device-c src/abft.cu -o $(OBJDIR)/abft_temp.o
+	$(NVCC) $(ARCH) --device-link $(OBJDIR)/abft_temp.o --output-file $(OBJDIR)/abft.o
 
 
-$(EXEC): $(OBJS) abft.o
-	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LOG_LINK)
+$(EXEC): $(OBJS) $(BUILD_ABFT)
+	$(CC) $(COMMON) $(CFLAGS) $(BUILD_ABFT) $^ -o $@ $(LDFLAGS) $(LOG_LINK)
 
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
