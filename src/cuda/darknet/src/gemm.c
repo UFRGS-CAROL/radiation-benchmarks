@@ -160,7 +160,7 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 //	m  	input 	number of rows of matrix op(A) and C.
 //	n 	input	number of columns of matrix op(B) and C.
 //	k 	input 	number of columns of op(A) and rows of op(B).
-	abraham_sum(B_gpu, A_gpu, K, N, M, k);
+	abraham_sum(B_gpu, A_gpu, K, N, M, K);
 #endif
 	cublasHandle_t handle = blas_handle();
 	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
