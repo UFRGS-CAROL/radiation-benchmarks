@@ -168,15 +168,10 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 	check_error(status);
 
 #if ABFT == 1
-	abraham_check(C_gpu, M, N);
-	int row_detected_errors_host = 0, col_detected_errors_host = 0;
 
-	cudaMemcpyFromSymbol(&row_detected_errors_host, row_detected_errors,
-			sizeof(int));
-	cudaMemcpyFromSymbol(&col_detected_errors_host, col_detected_errors,
-			sizeof(int));
+	ErrorReturn temp = abraham_check(C_gpu, M, N);
 	printf("Detected row errors: %d\nDetected collum errors %d\n",
-			row_detected_errors_host, col_detected_errors_host);
+			temp.row_detected_errors_host, temp.col_detected_errors_host);
 #endif
 }
 
