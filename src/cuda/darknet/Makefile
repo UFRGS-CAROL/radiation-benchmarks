@@ -86,7 +86,7 @@ abft.o:
 
 
 $(EXEC): abft.o $(OBJS) 
-	$(CC) $(COMMON) $(CFLAGS) obj/abft.o $^ -o $@ $(LDFLAGS) $(LOG_LINK)
+	$(CC) $(COMMON) $(CFLAGS) abft.o $^ -o $@ $(LDFLAGS) $(LOG_LINK)
 
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
