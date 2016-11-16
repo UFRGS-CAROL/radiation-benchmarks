@@ -81,7 +81,7 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj results $(EXEC)
 
 abft.o:
-	$(NVCC) $(ARCH) --rdc=true -c src/abft.cu -o $(OBJDIR)abft_temp.o
+	$(NVCC) $(ARCH) --rdc=true -c src/abft.cu -o $(OBJDIR)abft_temp.o -lcudadevrt  -lcudart
 	$(NVCC) $(ARCH) -dlink $(OBJDIR)/abft_temp.o -o abft.o  -lcudadevrt -lcudart
 
 
