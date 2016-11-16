@@ -2,18 +2,18 @@
 __device__ int row_detected_errors = 0;
 __device__ int col_detected_errors = 0;
 
-__global__ void check_col(double *mat, long rows, long cols) {
+__global__ void check_col(float *mat, long rows, long cols) {
 	long i = blockIdx.x * blockDim.x + threadIdx.x;
 
 	long k;
-	double acc = 0;
+	float acc = 0;
 	//must be less one
 	for (k = 0; k < cols - 1; k++) {
 		acc += mat[i * cols + k];
 	}
 	long b_index = i * cols + cols - 1;
 	//printf("b_index %ld acc %lf \n", b_index, acc);
-	double diff = fabs(fabs(mat[b_index]) - fabs(acc));
+	float diff = fabs(fabs(mat[b_index]) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
 		atomicAdd(&col_detected_errors, 1);
 		//printf("passou no col mat[%ld] = %lf diff %lf read %lf calc %lf \n",
@@ -22,18 +22,18 @@ __global__ void check_col(double *mat, long rows, long cols) {
 	//__syncthreads();
 }
 
-__global__ void check_row(double *mat, long rows, long cols) {
+__global__ void check_row(float *mat, long rows, long cols) {
 	long j = blockIdx.x * blockDim.x + threadIdx.x;
 
 	long k;
-	double acc = 0;
+	float acc = 0;
 	//must be less one
 	for (k = 0; k < rows - 1; k++) {
 		acc += mat[k * cols + j];
 	}
 	//printf("a_index %ld acc %lf \n", rows_a * cols_a + j, acc);
 	long a_index = (rows - 1) * cols + j;
-	double diff = fabs(fabs(mat[a_index]) - fabs(acc));
+	float diff = fabs(fabs(mat[a_index]) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
 		atomicAdd(&row_detected_errors, 1);
 		//printf("passou no col mat[%ld] = %lf diff %lf read %lf calc %lf \n",
@@ -44,21 +44,21 @@ __global__ void check_row(double *mat, long rows, long cols) {
 
 //DYNAMIC PARALLELISM ONLY TO CALL NEW KERNELS, ARE FUCK KIDDING???
 //man, I am so lazy
-__global__ void check_checksums(double *c, long rows_c, long cols_c) {
+__global__ void check_checksums(float *c, long rows_c, long cols_c) {
 	long i = blockIdx.x * blockDim.x + threadIdx.x;
 	//printf("i value %ld\n", i);
 	//rows
 	if (i == 0) {
-		long blocks = ceil(cols_c / double(BLOCK_SIZE));
-		long threads = ceil(cols_c / double(blocks));
+		long blocks = ceil(cols_c / float(BLOCK_SIZE));
+		long threads = ceil(cols_c / float(blocks));
 //		printf("passou no row\n");
 		check_row<<<blocks, threads>>>(c, rows_c, cols_c);
 	}
 	//cols
 	if (i == 1) {
 //		printf("passou no col\n");
-		long blocks = ceil(rows_c / double(BLOCK_SIZE));
-		long threads = ceil(rows_c / double(blocks));
+		long blocks = ceil(rows_c / float(BLOCK_SIZE));
+		long threads = ceil(rows_c / float(blocks));
 		check_col<<<blocks, threads>>>(c, rows_c, cols_c);
 	}
 	//printf("passou aqui foi\n");
@@ -78,11 +78,11 @@ __global__ void check_checksums(double *c, long rows_c, long cols_c) {
 //        a[lin_a * col_a + j] = acc;
 //	}
 //rows_b MUST BE THE SAME OF cols_a
-__global__ void first_abraham_op(double *a, long rows_a, long cols_a) {
+__global__ void first_abraham_op(float *a, long rows_a, long cols_a) {
 	long j = blockIdx.x * blockDim.x + threadIdx.x;
 
 	long k;
-	double acc = 0;
+	float acc = 0;
 	for (k = 0; k < rows_a - 1; k++) {
 		acc += a[k * cols_a + j];
 	}
@@ -101,11 +101,11 @@ __global__ void first_abraham_op(double *a, long rows_a, long cols_a) {
  b[i * (col_b + 1) + col_b] = acc;
  }
  */
-__global__ void second_abraham_op(double *b, long rows_b, long cols_b) {
+__global__ void second_abraham_op(float *b, long rows_b, long cols_b) {
 	long i = blockIdx.x * blockDim.x + threadIdx.x;
 
 	long k;
-	double acc = 0;
+	float acc = 0;
 	for (k = 0; k < cols_b - 1; k++) {
 		acc += b[i * cols_b + k];
 	}
@@ -117,7 +117,7 @@ __global__ void second_abraham_op(double *b, long rows_b, long cols_b) {
 	b[b_index] = acc;
 }
 
-__global__ void calc_checksums(double *a, double *b, long rows_a, long cols_a,
+__global__ void calc_checksums(float *a, float *b, long rows_a, long cols_a,
 		long rows_b, long cols_b) {
 	long i = blockIdx.x * blockDim.x + threadIdx.x;
 	//printf("i value %ld\n", i);
@@ -141,7 +141,7 @@ __global__ void calc_checksums(double *a, double *b, long rows_a, long cols_a,
 	__syncthreads();
 }
 
-extern "C" void abraham_sum(double *a, double *b, long rows_a, long cols_a, long rows_b,
+extern "C" void abraham_sum(float *a, float *b, long rows_a, long cols_a, long rows_b,
 		long cols_b) {
 	//these variables will be live only for abft
 //	cudaMalloc()
@@ -152,7 +152,7 @@ extern "C" void abraham_sum(double *a, double *b, long rows_a, long cols_a, long
 }
 
 
-extern "C" void abraham_check(double *c, long rows, long cols) {
+extern "C" void abraham_check(float *c, long rows, long cols) {
 //	printf("passou why\n");
 	check_checksums<<<1, 2>>>(c, rows, cols);
 	//gpuErrchk(cudaPeekAtLastError());
