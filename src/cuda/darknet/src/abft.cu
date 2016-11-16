@@ -1,6 +1,6 @@
 
 
-
+#include "abft.h"
 __device__ ErrorReturn err_count;
 
 __global__ void check_col(float *mat, long rows, long cols) {
