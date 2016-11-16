@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "abft.h"
+
 void gemm_bin(int M, int N, int K, float ALPHA, char *A, int lda, float *B,
 		int ldb, float *C, int ldc) {
 	int i, j, k;
@@ -143,16 +145,39 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
 
 #include <math.h>
 
+//abft implementation
+
+
+//----------------------------------
 void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		float *A_gpu, int lda,
 		float *B_gpu, int ldb,
 		float BETA,
 		float *C_gpu, int ldc)
 {
+
+#if ABFT == 1
+//	m  	input 	number of rows of matrix op(A) and C.
+//	n 	input	number of columns of matrix op(B) and C.
+//	k 	input 	number of columns of op(A) and rows of op(B).
+	abraham_sum(B_gpu, A_gpu, K, N, M, k);
+#endif
 	cublasHandle_t handle = blas_handle();
 	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
 			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb, A_gpu, lda, &BETA, C_gpu, ldc);
 	check_error(status);
+
+#if ABFT == 1
+	abraham_check(C_gpu, M, N);
+	int row_detected_errors_host = 0, col_detected_errors_host = 0;
+
+	cudaMemcpyFromSymbol(&row_detected_errors_host, row_detected_errors,
+			sizeof(int));
+	cudaMemcpyFromSymbol(&col_detected_errors_host, col_detected_errors,
+			sizeof(int));
+	printf("Detected row errors: %d\nDetected collum errors %d\n",
+			row_detected_errors_host, col_detected_errors_host);
+#endif
 }
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, float ALPHA,

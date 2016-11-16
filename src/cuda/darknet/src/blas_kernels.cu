@@ -691,3 +691,6 @@ extern "C" void mult_add_into_gpu(int num, float *a, float *b, float *c)
     mult_add_into_kernel<<<cuda_gridsize(num), BLOCK>>>(num, a, b, c);
     check_error(cudaPeekAtLastError());
 }
+
+
+

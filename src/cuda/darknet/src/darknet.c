@@ -351,8 +351,8 @@ int main(int argc, char **argv) {
 #endif
 
 #ifdef LOGS
-		char test_info[90];
-		snprintf(test_info, 90, "execution_type:%s execution_model:%s img_list_path:%s weights:%s config_file:%s iterations:%d", to_parse.execution_type
+		char test_info[500];
+		snprintf(test_info, 500, "execution_type:%s execution_model:%s img_list_path:%s weights:%s config_file:%s iterations:%d", to_parse.execution_type
 				, to_parse.execution_model, to_parse.img_list_path, to_parse.weights, to_parse.config_file, to_parse.iterations);
 		if (!(to_parse.generate_flag)) start_log_file("cudaDarknet", test_info);
 #endif
