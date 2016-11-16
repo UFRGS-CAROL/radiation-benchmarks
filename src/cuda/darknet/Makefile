@@ -15,10 +15,12 @@ LOGHELPER_LIB=../../include/
 
 CC=gcc
 NVCC=/usr/local/cuda/bin/nvcc
-OPTS=-Ofast
-LDFLAGS= -lm -pthread
+OPTS= -Xcompiler "-Ofast"
+LDFLAGS= -Xcompiler "-lm -pthread"
 COMMON=
-CFLAGS=-Wall -Wfatal-errors
+CFLAGS= -Xcompiler "-Wall -Wfatal-errors" -Wno-deprecated-gpu-targets
+
+CUDAINCLUDE=/usr/local/cuda-7.0/include/
 
 ifeq ($(DEBUG), 1)
 	OPTS=-O0 -g
@@ -35,7 +37,7 @@ endif
 
 ifeq ($(GPU), 1)
 	COMMON+= -DGPU -I/usr/local/cuda/include/
-	CFLAGS+= -DGPU
+	CFLAGS+= -Xcompiler "-DGPU"
 	LDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand
 endif
 
@@ -68,31 +70,31 @@ endif
 #abft = 1 is dumb abft
 #abft = 2 is fast abft
 ifeq ($(ABFT),1)
-	CFLAGS+=-L/usr/local/cuda-7.0/lib64/ -lcudadevrt -lcudart
-	CFLAGS+= -DABFT=1
-	BUILD_ABFT=abft.o
+	LOG_LINK+= -DABFT=1
+	BUILD_ABFT=abft
+	ABFT_SRC=src/abft.cu
 endif 
 
-
+NVCCFLAGS= -Xcompiler "-L/usr/local/cuda/lib64 -lcuda -lcurand  -lcudart" -Xcompiler '-fPIC' -Xcompiler '-lm'
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
 all: obj results $(EXEC)
 
-abft.o:
-	$(NVCC) $(ARCH) --rdc=true -c src/abft.cu -o $(OBJDIR)abft_temp.o -lcudadevrt  -lcudart
-	$(NVCC) $(ARCH) -dlink $(OBJDIR)/abft_temp.o -o abft.o  -lcudadevrt -lcudart
+abft: src/abft.cu
+	$(NVCC)  -I$(CUDAINCLUDE) $(NVCCFLAGS) -c -O3 -dc src/abft.cu -o $(OBJDIR)abft.o -rdc=true $(ARCH)  -lcudadevrt 
+	#$(NVCC) -I$(CUDAINCLUDE) $(NVCCFLAGS)  -dlink $(OBJDIR)abft_temp.o  -lcudadevrt -o $(OBJDIR)abft.o   $(ARCH)  
+	
 
-
-$(EXEC): $(OBJS) $(BUILD_ABFT)
-	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LOG_LINK)
-
+$(EXEC): $(OBJS) 
+	$(NVCC) $(COMMON) $(CFLAGS) $(OBJDIR)abft.o $^  -o $@ $(LDFLAGS) $(LOG_LINK) -lcudadevrt -lcudart -lcuda -rdc=true
+	
 $(OBJDIR)%.o: %.c $(DEPS)
-	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
+	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@
 
-$(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@
+$(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT)
+	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@
 
 obj:
 	mkdir -p obj
