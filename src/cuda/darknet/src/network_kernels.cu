@@ -203,6 +203,7 @@ void forward_backward_network_gpu(network net, float *x, float *y)
     state.delta = 0;
     state.truth = *net.truth_gpu;
     state.train = 1;
+    //printf("passou aqui no forward_backward_network_gpu\n");
     forward_network_gpu(net, state);
     backward_network_gpu(net, state);
 }
@@ -493,6 +494,7 @@ float *get_network_output_gpu(network net)
 float *network_predict_gpu(network net, float *input)
 {
     int size = get_network_input_size(net) * net.batch;
+    printf("size on predict %d %d\n", size, net.batch);
     network_state state;
     state.index = 0;
     state.net = net;
@@ -500,6 +502,7 @@ float *network_predict_gpu(network net, float *input)
     state.truth = 0;
     state.train = 0;
     state.delta = 0;
+    //printf("passou aqui no network_predict_gpu\n");
     forward_network_gpu(net, state);
     float *out = get_network_output_gpu(net);
     cuda_free(state.input);

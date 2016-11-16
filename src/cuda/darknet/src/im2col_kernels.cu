@@ -1,7 +1,7 @@
 #include "cuda_runtime.h"
 #include "curand.h"
 #include "cublas_v2.h"
-
+#include <stdio.h>
 extern "C" {
 #include "im2col.h"
 #include "cuda.h"
@@ -48,6 +48,7 @@ __global__ void im2col_gpu_kernel(const int n, const float* data_im,
 void im2col_ongpu(float *im,
          int channels, int height, int width,
          int ksize, int stride, int pad, float *data_col){
+	//printf("foi nessa pocilga\n\n\n");
     // We are going to launch channels * height_col * width_col kernels, each
     // kernel responsible for copying a single-channel grid.
     int height_col = (height + 2 * pad - ksize) / stride + 1;

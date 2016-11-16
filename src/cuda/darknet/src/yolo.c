@@ -222,7 +222,7 @@ void validate_yolo(Args parameters) {
 	int nms = 1;
 	float iou_thresh = .5;
 
-	int nthreads = 3;
+	int nthreads = 1;
 
 	image *val = calloc(nthreads, sizeof(image));
 	image *val_resized = calloc(nthreads, sizeof(image));
@@ -284,6 +284,7 @@ void validate_yolo(Args parameters) {
 				char *path = paths[i + t - nthreads];
 				char *id = basecfg(path);
 				float *X = val_resized[t].data;
+				printf("val_resized size %d %d\n", val_resized[t].h, val_resized[t].w);
 				float *predictions = network_predict(net, X);
 				int w = val[t].w;
 				int h = val[t].h;

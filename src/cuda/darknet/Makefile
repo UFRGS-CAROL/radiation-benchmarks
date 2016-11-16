@@ -48,7 +48,7 @@ ifeq ($(CUDNN), 1)
 endif
 
 ifeq ($(LOGS), 1)
-	CFLAGS+= -DLOGS -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper
+	CFLAGS+= -Xcompiler "-DLOGS -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper"
 	LOG_LINK= $(LOGHELPER_LIB)log_helper.o 
 endif
 
@@ -70,7 +70,7 @@ endif
 #abft = 1 is dumb abft
 #abft = 2 is fast abft
 ifeq ($(ABFT),1)
-	LOG_LINK+= -DABFT=1
+	LOG_LINK+= -Xcompiler "-DABFT=1"
 	BUILD_ABFT=abft
 	ABFT_SRC=src/abft.cu
 endif 
@@ -83,7 +83,7 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj results $(EXEC)
 
 abft: src/abft.cu
-	$(NVCC)  -I$(CUDAINCLUDE) $(NVCCFLAGS) -c -O3 -dc src/abft.cu -o $(OBJDIR)abft.o -rdc=true $(ARCH)  -lcudadevrt 
+	$(NVCC)  -I$(CUDAINCLUDE) $(NVCCFLAGS) -c -O3 -dc src/abft.cu -o $(OBJDIR)abft.o -rdc=true $(ARCH)  -lcudadevrt $(LOG_LINK)
 	#$(NVCC) -I$(CUDAINCLUDE) $(NVCCFLAGS)  -dlink $(OBJDIR)abft_temp.o  -lcudadevrt -o $(OBJDIR)abft.o   $(ARCH)  
 	
 

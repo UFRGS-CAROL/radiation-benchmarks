@@ -1,6 +1,6 @@
 extern "C" {
 #include "abft.h"
-
+#include <stdio.h>
 }
 __device__ ErrorReturn err_count;
 
@@ -18,8 +18,8 @@ __global__ void check_col(float *mat, long rows, long cols) {
 	float diff = fabs(fabs(mat[b_index]) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
 		atomicAdd(&err_count.col_detected_errors, 1);
-		//printf("passou no col mat[%ld] = %lf diff %lf read %lf calc %lf \n",
-		//		b_index, mat[b_index], mat[b_index], acc, diff);
+//		printf("passou no col mat[%ld] = %lf diff %lf read %lf calc %lf \n",
+//				b_index, mat[b_index], mat[b_index], acc, diff);
 	}
 	//__syncthreads();
 }
@@ -38,8 +38,8 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	float diff = fabs(fabs(mat[a_index]) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
 		atomicAdd(&err_count.row_detected_errors, 1);
-		//printf("passou no col mat[%ld] = %lf diff %lf read %lf calc %lf \n",
-		//		a_index, mat[a_index], mat[a_index], acc, diff);
+//		printf("passou no col mat[%ld] = %lf diff %lf read %lf calc %lf \n",
+//				a_index, mat[a_index], mat[a_index], acc, diff);
 	}
 	//__syncthreads();
 }
@@ -66,7 +66,7 @@ __global__ void check_checksums(float *c, long rows_c, long cols_c) {
 	//printf("passou aqui foi\n");
 
 	__syncthreads();
-	//printf("values %d %d\n ", row_detected_errors, col_detected_errors);
+	printf("values %d %d\n ", err_count.col_detected_errors, err_count.row_detected_errors);
 }
 
 //since dgemm is optimized for square matrices I'm going to use
@@ -159,11 +159,11 @@ extern "C" ErrorReturn abraham_check(float *c, long rows, long cols) {
 	ret.col_detected_errors = 0;
 	ret.row_detected_errors = 0;
 
-	cudaMemcpyToSymbol("err_count", (void*) &ret, sizeof(ErrorReturn));
+	cudaMemcpyToSymbol(err_count, &ret, sizeof(ErrorReturn));
 	check_checksums<<<1, 2>>>(c, rows, cols);
 	//gpuErrchk(cudaPeekAtLastError());
 
-	cudaMemcpyFromSymbol((void*) &ret, "err_count", sizeof(ErrorReturn));
+	cudaMemcpyFromSymbol(&ret, err_count, sizeof(ErrorReturn));
 	return ret;
 }
 
