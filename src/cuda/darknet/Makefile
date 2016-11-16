@@ -70,7 +70,7 @@ endif
 ifeq ($(ABFT),1)
 	CFLAGS+=-L/usr/local/cuda-7.0/lib64/ -lcudadevrt -lcudart
 	CFLAGS+= -DABFT=1
-	BUILD_ABFT=abft.o
+	BUILD_ABFT=$(OBJDIR)abft.o
 endif 
 
 
@@ -86,7 +86,7 @@ abft.o:
 
 
 $(EXEC): $(OBJS) $(BUILD_ABFT)
-	$(CC) $(COMMON) $(CFLAGS) $(OBJDIR)$(BUILD_ABFT) $^ -o $@ $(LDFLAGS) $(LOG_LINK)
+	$(CC) $(COMMON) $(CFLAGS) $(BUILD_ABFT) $^ -o $@ $(LDFLAGS) $(LOG_LINK)
 
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
