@@ -81,8 +81,8 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj results $(EXEC)
 
 abft.o:
-	$(NVCC) $(ARCH) -rdc=true --device-c src/abft.cu -o $(OBJDIR)abft_temp.o
-	$(NVCC) $(ARCH) --device-link $(OBJDIR)/abft_temp.o --output-file abft.o
+	$(NVCC) $(ARCH) --rdc=true -c src/abft.cu -o $(OBJDIR)abft_temp.o
+	$(NVCC) $(ARCH) -dlink $(OBJDIR)/abft_temp.o -o abft.o  -lcudadevrt -lcudart
 
 
 $(EXEC): $(OBJS) $(BUILD_ABFT)
