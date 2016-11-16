@@ -50,17 +50,6 @@ ifeq ($(LOGS), 1)
 	LOG_LINK= $(LOGHELPER_LIB)log_helper.o 
 endif
 
-#abft = 1 is dumb abft
-#abft = 2 is fast abft
-ifeq ($(ABFT),1)
-	CFLAGS+= -DABFT=1
-endif 
-
-ifeq ($(ABFT), 2)
-	CFLAGS+= -DABFT=2
-endif
-
-
 OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o image.o activations.o \
 	 im2col.o col2im.o blas.o crop_layer.o dropout_layer.o maxpool_layer.o softmax_layer.o data.o \
 	 matrix.o network.o connected_layer.o cost_layer.o parser.o option_list.o darknet.o detection_layer.o \
@@ -75,6 +64,14 @@ OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2c
 	col2im_kernels.o blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o \
 	softmax_layer_kernels.o network_kernels.o avgpool_layer_kernels.o
 endif
+
+#abft = 1 is dumb abft
+#abft = 2 is fast abft
+ifeq ($(ABFT),1)
+	CFLAGS+= -DABFT=1
+	OBJ+=abft.o
+endif 
+
 
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
