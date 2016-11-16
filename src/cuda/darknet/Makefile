@@ -71,14 +71,18 @@ ifeq ($(ABFT),1)
 	OBJ+=abft.o
 	CFLAGS+=-L/usr/local/cuda-7.0/lib64/ -lcudadevrt -lcudart
 	CFLAGS+= -DABFT=1
-	$(NVCC) $(ARCH) -rdc=true --device-c abft.cu -o abft_temp.o
-	$(NVCC) $(ARCH) --device-link abft_temp.o --output-file abft.o
 endif 
 
 
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
+
+ifeq($(ABFT),1)
+	$(NVCC) $(ARCH) -rdc=true --device-c abft.cu -o abft_temp.o
+	$(NVCC) $(ARCH) --device-link abft_temp.o --output-file abft.o
+endif
+
 
 all: obj results $(EXEC)
 
