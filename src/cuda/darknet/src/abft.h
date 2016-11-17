@@ -8,8 +8,10 @@
 #ifndef ABFT_H_
 #define ABFT_H_
 
-#define MAX_THRESHOLD  5
+#define MAX_THRESHOLD  0.5
 #define BLOCK_SIZE 1024
+
+#define DIV_VALUE 100000.0
 
 typedef struct erro_return {
 	unsigned long long int row_detected_errors;

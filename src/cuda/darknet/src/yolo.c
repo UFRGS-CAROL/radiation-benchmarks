@@ -9,6 +9,7 @@
 #include "args.h"
 #include "log_processing.h"
 
+#define min(X,Y) (((X) < (Y)) ? (X) : (Y))
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"
 #endif
@@ -223,6 +224,9 @@ void validate_yolo(Args parameters) {
 	float iou_thresh = .5;
 
 	int nthreads = 1;
+	if(m > 1 && m <= 4){
+		nthreads = min(4, m);
+	}
 
 	image *val = calloc(nthreads, sizeof(image));
 	image *val_resized = calloc(nthreads, sizeof(image));
@@ -284,7 +288,7 @@ void validate_yolo(Args parameters) {
 				char *path = paths[i + t - nthreads];
 				char *id = basecfg(path);
 				float *X = val_resized[t].data;
-				printf("val_resized size %d %d\n", val_resized[t].h, val_resized[t].w);
+				//printf("val_resized size %d %d\n", val_resized[t].h, val_resized[t].w);
 				float *predictions = network_predict(net, X);
 				int w = val[t].w;
 				int h = val[t].h;
