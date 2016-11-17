@@ -34,27 +34,34 @@ long long check_start, check_end;
 void runTest( int argc, char** argv);
 
 
-void ReadArrayFromFile(int* input_itemsets, int* gold_itemsets, int max_rows, char * filenameinput, char * filenamegold) {
-//	double time = mysecond();
-    int n = max_rows;// + 1;
-    //std::cout << "open array...\n";
+void ReadArrayFromFile(int* input_itemsets, int max_rows, char * filenameinput) {
+    int n = max_rows;
 
-    FILE *f_a, *f_gold;
+    FILE *f_a;
     f_a = fopen(filenameinput, "rb");
-    f_gold = fopen(filenamegold, "rb");
 
-    if ((f_a == NULL) || (f_gold == NULL)) {
-        printf("Error opening files\n");
+    if (f_a == NULL) {
+        printf("Error opening INPUT files\n");
         exit(-3);
     }
 
-    //std::cout << "read...";
     fread(input_itemsets, sizeof(int) * n * n, 1, f_a);
-    fread(gold_itemsets, sizeof(int) * n * n, 1, f_gold);
     fclose(f_a);
-    fclose(f_gold);
+}
 
-//	printf("ok in %f\n", mysecond() - time);
+void ReadGoldFromFile(int* gold_itemsets, int max_rows, char * filenamegold) {
+    int n = max_rows;
+
+    FILE *f_gold;
+    f_gold = fopen(filenamegold, "rb");
+
+    if (f_gold == NULL) {
+        printf("Error opening GOLD file\n");
+        exit(-3);
+    }
+
+    fread(gold_itemsets, sizeof(int) * n * n, 1, f_gold);
+    fclose(f_gold);
 }
 
 #ifdef OMP_OFFLOAD
@@ -315,7 +322,9 @@ runTest( int argc, char** argv)
 
     printf("Start Needleman-Wunsch\n");
 
-    ReadArrayFromFile(input_itemsets, gold_itemsets, max_rows, array_path, gold_path);
+    ReadArrayFromFile(input_itemsets, max_rows, array_path);
+    ReadGoldFromFile(gold_itemsets, max_rows, gold_path);
+
 
 
     for (int i = 1 ; i < max_cols; i++) {
@@ -406,14 +415,11 @@ runTest( int argc, char** argv)
 #endif
         // read inputs again
         {
-            ReadArrayFromFile(input_itemsets, gold_itemsets, max_rows, array_path, gold_path);
-            for (int i = 1 ; i < max_cols; i++) {
-                for (int j = 1 ; j < max_rows; j++) {
-                    referrence[i*max_cols+j] = blosum62[input_itemsets[i*max_cols]][input_itemsets[j]];
-                }
-            }
+            ReadArrayFromFile(input_itemsets, max_rows, array_path);
+            #pragma omp parallel for
             for( int i = 1; i< max_rows ; i++)
                 input_itemsets[i*max_cols] = -i * penalty;
+            #pragma omp parallel for
             for( int j = 1; j< max_cols ; j++)
                 input_itemsets[j] = -j * penalty;
         }
