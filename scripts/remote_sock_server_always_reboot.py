@@ -222,15 +222,17 @@ def checkMachines():
 			#IPActiveTest[address]=False
                 # Start rebooting again
 		elif seconds > timeDiffBootProblemWait:
-			rebooting[address] = time.time()
-			if address in IPtoNames:
-				print "Rebooting IP "+address+" ("+IPtoNames[address]+")"
-				logMsg("Rebooting IP "+address+" ("+IPtoNames[address]+")")
-			else:
-				print "Rebooting IP "+address
-				logMsg("Rebooting IP "+address)
-			# Reboot machine in another thread
-			RebootMachine(address).start()
+			reboot = datetime.fromtimestamp(rebooting[address])
+			if (now - reboot).total_seconds() > timeDiffBootProblemWait:
+				rebooting[address] = time.time()
+				if address in IPtoNames:
+					print "Rebooting IP "+address+" ("+IPtoNames[address]+")"
+					logMsg("Rebooting IP "+address+" ("+IPtoNames[address]+")")
+				else:
+					print "Rebooting IP "+address
+					logMsg("Rebooting IP "+address)
+				# Reboot machine in another thread
+				RebootMachine(address).start()
 
 
 
