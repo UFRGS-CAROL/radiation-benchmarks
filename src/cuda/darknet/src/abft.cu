@@ -44,7 +44,7 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	long j = blockIdx.x * blockDim.x + threadIdx.x;
 
 	long k;
-	float acc = 0;
+	double acc = 0;
 	//must be less one
 
 	for (k = 0; k < rows - 1; k++) {
