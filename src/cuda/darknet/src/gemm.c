@@ -161,7 +161,7 @@ void print_mat_row_major(float *mat, long m, long n, const char *mat_name) {
 	printf("\n");
 }
 
-int it_print = 0;
+int it_print = 1;
 //----------------------------------
 void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		float *A_gpu, int lda,
