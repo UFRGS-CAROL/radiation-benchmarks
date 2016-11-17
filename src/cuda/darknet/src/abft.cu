@@ -53,7 +53,7 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	float last_one = mat[(k + 1) * cols + j];
 	//printf("a_index %ld acc %lf \n", rows_a * cols_a + j, acc);
 	long a_index = (rows - 1) * cols + j;
-	float diff = fabs(fabs(last_one) - fabs(acc));
+	float diff = fabs(fabs(mat[a_index]) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
 		atomicAdd(&err_count.row_detected_errors, 1);
 		printf("passou no row mat[%ld] = %lf diff %lf last one %lf calc %lf i value %ld\n",
