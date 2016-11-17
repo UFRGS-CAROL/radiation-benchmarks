@@ -50,7 +50,6 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	for (k = 0; k < rows - 1; k++) {
 		acc += mat[k * cols + j] / rows;
 	}
-	printf("\n");
 	float last_one = mat[(k + 1) * cols + j];
 	//printf("a_index %ld acc %lf \n", rows_a * cols_a + j, acc);
 	long a_index = (rows - 1) * cols + j;
