@@ -48,8 +48,10 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	//must be less one
 
 	for (k = 0; k < rows - 1; k++) {
+		if (rows < 300) printf("%f ", mat[k * cols + j]);
 		acc += mat[k * cols + j];
 	}
+	printf("\n");
 	float last_one = mat[(k + 1) * cols + j];
 	//printf("a_index %ld acc %lf \n", rows_a * cols_a + j, acc);
 	long a_index = (rows - 1) * cols + j;
