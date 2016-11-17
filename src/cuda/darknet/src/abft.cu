@@ -17,12 +17,13 @@ __global__ void check_col(float *mat, long rows, long cols) {
 	//printf("b_index %ld acc %lf \n", b_index, acc);
 	float diff = fabs(fabs(mat[b_index]) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
-		atomicAdd(&err_count.col_detected_errors, 1);
-//		printf("passou no col mat[%ld] = %lf diff %lf read %lf calc %lf \n",
-//				b_index, mat[b_index], mat[b_index], acc, diff);
+		atomicAdd(&col_detected_errors, 1);
+//		printf("passou no col mat[%ld] = %ld diff %ld calc %ld i %ld\n",
+//				b_index, (long) mat[b_index], (long) diff, (long) acc, i);
 	}
 	//__syncthreads();
 }
+
 
 __global__ void check_row(float *mat, long rows, long cols) {
 	long j = blockIdx.x * blockDim.x + threadIdx.x;
@@ -37,12 +38,13 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	long a_index = (rows - 1) * cols + j;
 	float diff = fabs(fabs(mat[a_index]) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
-		atomicAdd(&err_count.row_detected_errors, 1);
-//		printf("passou no col mat[%ld] = %lf diff %lf read %lf calc %lf \n",
-//				a_index, mat[a_index], mat[a_index], acc, diff);
+		atomicAdd(&row_detected_errors, 1);
+//		printf("passou no row mat[%ld] = %ld diff %ld calc %ld i value %ld\n",
+//				a_index, (long) mat[a_index - 1], (long) diff, (long) acc, j);
 	}
 	//__syncthreads();
 }
+
 
 //DYNAMIC PARALLELISM ONLY TO CALL NEW KERNELS, ARE FUCK KIDDING???
 //man, I am so lazy
@@ -51,23 +53,24 @@ __global__ void check_checksums(float *c, long rows_c, long cols_c) {
 	//printf("i value %ld\n", i);
 	//rows
 	if (i == 0) {
-		long blocks = ceil(cols_c / float(BLOCK_SIZE));
-		long threads = ceil(cols_c / float(blocks));
-//		printf("passou no row\n");
+		long blocks = ceil(float(cols_c) / float(BLOCK_SIZE));
+		long threads = ceil(float(cols_c) / float(blocks));
 		check_row<<<blocks, threads>>>(c, rows_c, cols_c);
+//		printf("cols %d blocks %ld threads %ld\n", cols_c, blocks, threads);
 	}
 	//cols
 	if (i == 1) {
-//		printf("passou no col\n");
-		long blocks = ceil(rows_c / float(BLOCK_SIZE));
-		long threads = ceil(rows_c / float(blocks));
+		long blocks = ceil(float(rows_c) / float(BLOCK_SIZE));
+		long threads = ceil(float(rows_c) / float(blocks));
 		check_col<<<blocks, threads>>>(c, rows_c, cols_c);
+		printf("blocks %ld threads %ld\n", blocks, threads);
 	}
 	//printf("passou aqui foi\n");
 
 	__syncthreads();
-	printf("values %d %d\n ", err_count.col_detected_errors, err_count.row_detected_errors);
+	//printf("values %d %d\n ", row_detected_errors, col_detected_errors);
 }
+
 
 //since dgemm is optimized for square matrices I'm going to use
 //first ABRAHAM operation
@@ -126,32 +129,26 @@ __global__ void calc_checksums(float *a, float *b, long rows_a, long cols_a,
 	//rows
 	if (i == 0) {
 		//1d grid for abft operations
-		long blocks_abft_first = ceil((cols_a + 1) / float(BLOCK_SIZE));
-		long threads_abft_first = ceil((cols_a + 1) / float(blocks_abft_first));
-		first_abraham_op<<<blocks_abft_first, threads_abft_first>>>(a,
-				rows_a + 1, cols_a + 1);
+		long blocks = ceil(float(cols_a) / float(BLOCK_SIZE));
+		long threads = ceil(float(cols_a) / float(blocks));
+		first_abraham_op<<<blocks, threads>>>(a, rows_a, cols_a);
 	}
 
 	if (i == 1) {
 		//second
-		long blocks_abft_second = ceil((rows_b + 1) / float(BLOCK_SIZE));
-		long threads_abft_second = ceil(
-				(rows_b + 1) / float(blocks_abft_second));
-		second_abraham_op<<<blocks_abft_second, threads_abft_second>>>(b,
-				rows_b + 1, cols_b + 1);
+		long blocks = ceil(float(rows_b) / float(BLOCK_SIZE));
+		long threads = ceil(float(rows_b) / float(blocks));
+		second_abraham_op<<<blocks, threads>>>(b, rows_b, cols_b);
 	}
 	__syncthreads();
 }
 
-extern "C" void abraham_sum(float *a, float *b, long rows_a, long cols_a,
-		long rows_b, long cols_b) {
-	//these variables will be live only for abft
-//	cudaMalloc()
-
-	//-----------------------------------------
+extern "C" void abraham_sum(float *a, float *b, long rows_a, long cols_a, long rows_b,
+		long cols_b) {
 	calc_checksums<<<1, 2>>>(a, b, rows_a, cols_a, rows_b, cols_b);
-	//gpuErrchk(cudaPeekAtLastError());
+	gpuErrchk(cudaPeekAtLastError());
 }
+
 
 extern "C" ErrorReturn abraham_check(float *c, long rows, long cols) {
 //	printf("passou why\n");
