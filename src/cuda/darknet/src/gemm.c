@@ -151,7 +151,7 @@ void print_mat_row_major(float *mat, long m, long n, const char *mat_name) {
 	long i, j;
 	for (i = 0; i < m; i++) {
 		for (j = 0; j < n; j++)
-			printf("%ld ", (PRINT_TYPE) mat[i * n + j]);
+			printf("%f ", mat[i * n + j]);
 		printf("\n");
 	}
 //	printf("on vector 1d\n");
