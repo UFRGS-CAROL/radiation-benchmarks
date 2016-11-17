@@ -8,7 +8,7 @@
 #ifndef ABFT_H_
 #define ABFT_H_
 
-#define MAX_THRESHOLD  0.0001
+#define MAX_THRESHOLD  0.001
 #define BLOCK_SIZE 1024
 
 typedef struct erro_return {
