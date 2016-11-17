@@ -2,6 +2,22 @@ extern "C" {
 #include "abft.h"
 #include <stdio.h>
 }
+
+extern "C" {
+
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
+		true) {
+	if (code != cudaSuccess) {
+		fprintf(stderr, "GPUassert: %s %s %d\n", cudaGetErrorString(code), file,
+				line);
+		if (abort)
+			exit(code);
+	}
+}
+
+}
 __device__ ErrorReturn err_count;
 
 __global__ void check_col(float *mat, long rows, long cols) {
@@ -24,7 +40,6 @@ __global__ void check_col(float *mat, long rows, long cols) {
 	//__syncthreads();
 }
 
-
 __global__ void check_row(float *mat, long rows, long cols) {
 	long j = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -44,7 +59,6 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	}
 	//__syncthreads();
 }
-
 
 //DYNAMIC PARALLELISM ONLY TO CALL NEW KERNELS, ARE FUCK KIDDING???
 //man, I am so lazy
@@ -70,7 +84,6 @@ __global__ void check_checksums(float *c, long rows_c, long cols_c) {
 	__syncthreads();
 	//printf("values %d %d\n ", row_detected_errors, col_detected_errors);
 }
-
 
 //since dgemm is optimized for square matrices I'm going to use
 //first ABRAHAM operation
@@ -143,12 +156,11 @@ __global__ void calc_checksums(float *a, float *b, long rows_a, long cols_a,
 	__syncthreads();
 }
 
-extern "C" void abraham_sum(float *a, float *b, long rows_a, long cols_a, long rows_b,
-		long cols_b) {
+extern "C" void abraham_sum(float *a, float *b, long rows_a, long cols_a,
+		long rows_b, long cols_b) {
 	calc_checksums<<<1, 2>>>(a, b, rows_a, cols_a, rows_b, cols_b);
 	gpuErrchk(cudaPeekAtLastError());
 }
-
 
 extern "C" ErrorReturn abraham_check(float *c, long rows, long cols) {
 //	printf("passou why\n");
