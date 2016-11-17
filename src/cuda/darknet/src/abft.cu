@@ -57,7 +57,7 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	if (diff >= MAX_THRESHOLD) {
 		atomicAdd(&err_count.row_detected_errors, 1);
 		printf("passou no row mat[%ld] = %lf diff %lf last one %lf calc %lf i value %ld\n",
-				a_index, mat[a_index], diff, last_one, acc, j);
+				a_index, mat[a_index - 1], diff, last_one, acc, j);
 	}
 	//__syncthreads();
 }
