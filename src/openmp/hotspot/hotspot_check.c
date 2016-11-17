@@ -355,6 +355,8 @@ int main(int argc, char **argv)
             }
             log_error_count(errors);
 #endif /* LOGS */
+            read_input(power, grid_rows, grid_cols, pfile);
+            read_input(gold, grid_rows, grid_cols, ofile);
         }
         else
         {
@@ -362,8 +364,6 @@ int main(int argc, char **argv)
         }
         fflush(stdout);
         read_input(temp, grid_rows, grid_cols, tfile);
-        read_input(power, grid_rows, grid_cols, pfile);
-        read_input(gold, grid_rows, grid_cols, ofile);
 #ifdef TIMING
         loop_end = timing_get_time();
         double setup_timing = (double) (setup_end - setup_start) / 1000000;
