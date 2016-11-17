@@ -47,21 +47,14 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	double acc = 0;
 	//must be less one
 
-	if (rows < 300)
-		for (k = 0; k < rows - 1; k++) {
-			printf("%f ", mat[k * cols + j]);
-			acc += mat[k * cols + j];
-		}
-
-	else
-		for (k = 0; k < rows - 1; k++) {
-			acc += mat[k * cols + j];
-		}
+	for (k = 0; k < rows - 1; k++) {
+		acc += mat[k * cols + j] / rows;
+	}
 	printf("\n");
 	float last_one = mat[(k + 1) * cols + j];
 	//printf("a_index %ld acc %lf \n", rows_a * cols_a + j, acc);
 	long a_index = (rows - 1) * cols + j;
-	float diff = fabs(fabs(mat[a_index]) - fabs(acc));
+	float diff = fabs((fabs(mat[a_index]) / rows) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
 		atomicAdd(&err_count.row_detected_errors, 1);
 		printf("passou no row mat[%ld] = %lf diff %lf last one %lf calc %lf i value %ld\n",
