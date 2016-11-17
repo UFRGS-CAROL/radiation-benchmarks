@@ -46,16 +46,18 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	long k;
 	float acc = 0;
 	//must be less one
+	float last_one = 0;
 	for (k = 0; k < rows - 1; k++) {
 		acc += mat[k * cols + j];
+		last_one = mat[(k + 1) * cols + j];
 	}
 	//printf("a_index %ld acc %lf \n", rows_a * cols_a + j, acc);
 	long a_index = (rows - 1) * cols + j;
 	float diff = fabs(fabs(mat[a_index]) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
 		atomicAdd(&err_count.row_detected_errors, 1);
-		printf("passou no row mat[%ld] = %lf diff %lf calc %lf i value %ld\n",
-				a_index, mat[a_index], diff, acc, j);
+		printf("passou no row mat[%ld] = %lf diff %lf last one %lf calc %lf i value %ld\n",
+				a_index, mat[a_index], diff, last_one, acc, j);
 	}
 	//__syncthreads();
 }
