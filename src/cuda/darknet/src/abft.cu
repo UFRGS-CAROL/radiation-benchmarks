@@ -44,22 +44,21 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	long j = blockIdx.x * blockDim.x + threadIdx.x;
 
 	long k;
-	float acc = 0;
+	double acc = 0;
 	//must be less one
 
 	for (k = 0; k < rows - 1; k++) {
-		acc += (mat[k * cols + j] / float(rows));
+		acc += mat[k * cols + j] / rows;
 	}
+
 	float last_one = mat[(k + 1) * cols + j];
-
-
+	//printf("a_index %ld acc %lf \n", rows_a * cols_a + j, acc);
 	long a_index = (rows - 1) * cols + j;
-	float pos = (fabs(mat[a_index]) / float(rows));
-	float diff = fabs(pos - fabs(acc));
+	float diff = fabs((fabs(mat[a_index]) / rows) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
 		atomicAdd(&err_count.row_detected_errors, 1);
 		printf("passou no row mat[%ld] = %lf diff %lf last one %lf calc %lf i value %ld\n",
-				a_index, pos, diff, last_one, acc, j);
+				a_index, mat[a_index], diff, last_one, acc, j);
 	}
 	//__syncthreads();
 }
