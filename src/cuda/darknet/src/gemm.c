@@ -146,8 +146,22 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
 #include <math.h>
 
 //abft implementation
+void print_mat_row_major(float *mat, long m, long n, const char *mat_name) {
+	printf("ROW-MAJOR ORDER: printing %s lin %ld col %ld\n", mat_name, m, n);
+	long i, j;
+	for (i = 0; i < m; i++) {
+		for (j = 0; j < n; j++)
+			printf("%ld ", (PRINT_TYPE) mat[i * n + j]);
+		printf("\n");
+	}
+//	printf("on vector 1d\n");
+//	for (i = 0; i < m * n; i++) {
+//		printf("%ld ", (PRINT_TYPE) mat[i]);
+//	}
+	printf("\n");
+}
 
-
+int it_print = 0;
 //----------------------------------
 void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		float *A_gpu, int lda,
@@ -160,8 +174,16 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 //	m  	input 	number of rows of matrix op(A) and C.
 //	n 	input	number of columns of matrix op(B) and C.
 //	k 	input 	number of columns of op(A) and rows of op(B).
+
 	printf("N %d M %d K %d\n", N, M, K);
 	abraham_sum(A_gpu, B_gpu, M, K, K, N);
+	//N 784 M 256 K 512
+	if (N == 784 && M == 256 && K == 512 && it_print == 0){
+		float *temp = (float*) calloc(M * K, sizeof(float));
+		cudaMemcpy(temp, A_gpu, M * K * sizeof(float), cudaMemcpyDeviceToHost);
+		print_mat_row_major(temp, M, K, "test mat A print");
+		it_print = 1;
+	}
 //#endif
 	cublasHandle_t handle = blas_handle();
 	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
