@@ -9,7 +9,7 @@
 #include "./kernel/kernel_cpu.h"
 #ifdef ERR_INJ
 #include <unistd.h>
-#endif 
+#endif
 
 #ifdef LOGS
 #include "../../include/log_helper.h"
@@ -44,7 +44,7 @@ int main( int argc, char *argv [])
 {
 
 #ifdef TIMING
-	setup_start = timing_get_time();
+    setup_start = timing_get_time();
 #endif
     char * input_distance;
     char * input_charges;
@@ -193,93 +193,95 @@ int main( int argc, char *argv [])
 #endif /* LOGS */
 
 #ifdef TIMING
-	setup_end = timing_get_time();
+    setup_end = timing_get_time();
 #endif
     int loop;
     for(loop=0; loop<iteractions; loop++) {
 #ifdef TIMING
-	loop_start = timing_get_time();
+        loop_start = timing_get_time();
 #endif
 
-	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+        for(i=0; i<dim_cpu.space_elem; i=i+1) {
             fv_cpu[i].v = 0;
             fv_cpu[i].x = 0;
             fv_cpu[i].y = 0;
             fv_cpu[i].z = 0;
-	}
+        }
 
 #ifdef ERR_INJ
-	if(loop == 2){
-		printf("injecting error, changing input!\n");
-		rv_cpu[0].v = rv_cpu[0].v*2;
-		rv_cpu[0].x = rv_cpu[0].x*-1;
-		rv_cpu[0].y = rv_cpu[0].y*6;
-		rv_cpu[0].z = rv_cpu[0].z*-3;
-		qv_cpu[0] = qv_cpu[0]*-2;
-	}else if(loop == 3){
-		printf("injecting error, restoring input!\n");
-		rv_cpu[0].v = rv_cpu[0].v/2;
-		rv_cpu[0].x = rv_cpu[0].x/-1;
-		rv_cpu[0].y = rv_cpu[0].y/6;
-		rv_cpu[0].z = rv_cpu[0].z/-3;
-		qv_cpu[0] = qv_cpu[0]/-2;
-	} else if (loop == 4){
-		printf("get ready, infinite loop...\n");
-		fflush(stdout);
-		while(1){sleep(100);}
-	}
+        if(loop == 2) {
+            printf("injecting error, changing input!\n");
+            rv_cpu[0].v = rv_cpu[0].v*2;
+            rv_cpu[0].x = rv_cpu[0].x*-1;
+            rv_cpu[0].y = rv_cpu[0].y*6;
+            rv_cpu[0].z = rv_cpu[0].z*-3;
+            qv_cpu[0] = qv_cpu[0]*-2;
+        } else if(loop == 3) {
+            printf("injecting error, restoring input!\n");
+            rv_cpu[0].v = rv_cpu[0].v/2;
+            rv_cpu[0].x = rv_cpu[0].x/-1;
+            rv_cpu[0].y = rv_cpu[0].y/6;
+            rv_cpu[0].z = rv_cpu[0].z/-3;
+            qv_cpu[0] = qv_cpu[0]/-2;
+        } else if (loop == 4) {
+            printf("get ready, infinite loop...\n");
+            fflush(stdout);
+            while(1) {
+                sleep(100);
+            }
+        }
 #endif
 #ifdef TIMING
-	kernel_start = timing_get_time();
+        kernel_start = timing_get_time();
 #endif
 #ifdef LOGS
-    start_iteration();
+        start_iteration();
 #endif /* LOGS */
-    kernel_cpu(	par_cpu,
-                dim_cpu,
-                box_cpu,
-                rv_cpu,
-                qv_cpu,
-                fv_cpu);
+        kernel_cpu(	par_cpu,
+                    dim_cpu,
+                    box_cpu,
+                    rv_cpu,
+                    qv_cpu,
+                    fv_cpu);
 
 #ifdef LOGS
         end_iteration();
 #endif /* LOGS */
 #ifdef TIMING
-	kernel_end = timing_get_time();
+        kernel_end = timing_get_time();
 #endif
 
 #ifdef TIMING
-	check_start = timing_get_time();
+        check_start = timing_get_time();
 #endif
         int part_error=0;
         #pragma omp parallel for  reduction(+:part_error)
         for(i=0; i<dim_cpu.space_elem; i++) {
-		int thread_error=0;
-	    if ((fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu_GOLD[i].v) > 0.0000000001)){
-            //if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
+            int thread_error=0;
+            if ((fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu_GOLD[i].v) > 0.0000000001)) {
+                //if(fv_cpu_GOLD[i].v != fv_cpu[i].v) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu_GOLD[i].x) > 0.0000000001)){
-            //if(fv_cpu_GOLD[i].x != fv_cpu[i].x) {
+            if ((fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu_GOLD[i].x) > 0.0000000001)) {
+                //if(fv_cpu_GOLD[i].x != fv_cpu[i].x) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu_GOLD[i].y) > 0.0000000001)){
-            //if(fv_cpu_GOLD[i].y != fv_cpu[i].y) {
+            if ((fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu_GOLD[i].y) > 0.0000000001)) {
+                //if(fv_cpu_GOLD[i].y != fv_cpu[i].y) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu_GOLD[i].z) > 0.0000000001)){
-            //if(fv_cpu_GOLD[i].z != fv_cpu[i].z) {
+            if ((fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu_GOLD[i].z) > 0.0000000001)) {
+                //if(fv_cpu_GOLD[i].z != fv_cpu[i].z) {
                 thread_error++;
             }
             if (thread_error  > 0) {
-               // #pragma omp critical
+                // #pragma omp critical
                 {
                     part_error++;
-		    char error_detail[300];
+                    char error_detail[300];
 
                     snprintf(error_detail, 300, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z);
-			printf("error: %s\n",error_detail);
+                    printf("error: %s\n",error_detail);
                     thread_error = 0;
                 }
             }
@@ -288,27 +290,27 @@ int main( int argc, char *argv [])
         }
         #pragma omp parallel for  reduction(+:part_error)
         for(i=0; i<dim_cpu.space_elem; i++) {
-		int thread_error=0;
-	    if ((fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu_GOLD[i].v) > 0.0000000001)){
+            int thread_error=0;
+            if ((fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu[i].v) > 0.0000000001) || (fabs((fv_cpu[i].v - fv_cpu_GOLD[i].v) / fv_cpu_GOLD[i].v) > 0.0000000001)) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu_GOLD[i].x) > 0.0000000001)){
+            if ((fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu[i].x) > 0.0000000001) || (fabs((fv_cpu[i].x - fv_cpu_GOLD[i].x) / fv_cpu_GOLD[i].x) > 0.0000000001)) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu_GOLD[i].y) > 0.0000000001)){
+            if ((fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu[i].y) > 0.0000000001) || (fabs((fv_cpu[i].y - fv_cpu_GOLD[i].y) / fv_cpu_GOLD[i].y) > 0.0000000001)) {
                 thread_error++;
             }
-	    if ((fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu_GOLD[i].z) > 0.0000000001)){
+            if ((fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu[i].z) > 0.0000000001) || (fabs((fv_cpu[i].z - fv_cpu_GOLD[i].z) / fv_cpu_GOLD[i].z) > 0.0000000001)) {
                 thread_error++;
             }
             if (thread_error  > 0) {
-               // #pragma omp critical
+                // #pragma omp critical
                 {
                     part_error++;
-		    char error_detail[300];
+                    char error_detail[300];
 
                     snprintf(error_detail, 300, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z);
-			printf("error: %s\n",error_detail);
+                    printf("error: %s\n",error_detail);
 #ifdef LOGS
                     log_error_detail(error_detail);
 #endif
@@ -324,17 +326,17 @@ int main( int argc, char *argv [])
 #endif /* LOGS */
 
 #ifdef TIMING
-	check_end = timing_get_time();
-	loop_end = timing_get_time();
-	double setup_timing = (double) (setup_end - setup_start) / 1000000;
-	double loop_timing = (double) (loop_end - loop_start) / 1000000;
-	double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
-	double check_timing = (double) (check_end - check_start) / 1000000;
-	printf("\n\tTIMING:\n");
-	printf("setup: %f\n",setup_timing);
-	printf("loop: %f\n",loop_timing);
-	printf("kernel: %f\n",kernel_timing);
-	printf("check: %f\n",check_timing);
+        check_end = timing_get_time();
+        loop_end = timing_get_time();
+        double setup_timing = (double) (setup_end - setup_start) / 1000000;
+        double loop_timing = (double) (loop_end - loop_start) / 1000000;
+        double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
+        double check_timing = (double) (check_end - check_start) / 1000000;
+        printf("\n\tTIMING:\n");
+        printf("setup: %f\n",setup_timing);
+        printf("loop: %f\n",loop_timing);
+        printf("kernel: %f\n",kernel_timing);
+        printf("check: %f\n",check_timing);
 #endif
 
     }
