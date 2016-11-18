@@ -494,7 +494,7 @@ float *get_network_output_gpu(network net)
 float *network_predict_gpu(network net, float *input)
 {
     int size = get_network_input_size(net) * net.batch;
-    printf("size on predict %d %d\n", size, net.batch);
+    //printf("size on predict %d %d\n", size, net.batch);
     network_state state;
     state.index = 0;
     state.net = net;

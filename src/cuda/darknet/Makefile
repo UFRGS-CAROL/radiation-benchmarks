@@ -48,8 +48,9 @@ ifeq ($(CUDNN), 1)
 endif
 
 ifeq ($(LOGS), 1)
-	CFLAGS+= -Xcompiler "-DLOGS -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper"
+	CFLAGS+= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper" -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper
 	LOG_LINK= $(LOGHELPER_LIB)log_helper.o 
+	LOG_FLAGS= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" 
 endif
 
 OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o image.o activations.o \
@@ -73,6 +74,8 @@ ifeq ($(ABFT),1)
 	LOG_LINK+= -Xcompiler "-DABFT=1"
 	BUILD_ABFT=abft
 	ABFT_SRC=src/abft.cu
+	CFLAGS += -DABFT=1
+	BUILD_ABFT_OBJ=$(OBJDIR)abft.o
 endif 
 
 NVCCFLAGS= -Xcompiler "-L/usr/local/cuda/lib64 -lcuda -lcurand  -lcudart" -Xcompiler '-fPIC' -Xcompiler '-lm'
@@ -83,12 +86,12 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj results $(EXEC)
 
 abft: src/abft.cu
-	$(NVCC)  -I$(CUDAINCLUDE) $(NVCCFLAGS) -c -O3 -dc src/abft.cu -o $(OBJDIR)abft.o -rdc=true $(ARCH)  -lcudadevrt $(LOG_LINK)
+	$(NVCC)  -I$(CUDAINCLUDE) $(NVCCFLAGS) -c -O3 -dc src/abft.cu -o $(OBJDIR)abft.o -rdc=true $(ARCH)  -lcudadevrt
 	#$(NVCC) -I$(CUDAINCLUDE) $(NVCCFLAGS)  -dlink $(OBJDIR)abft_temp.o  -lcudadevrt -o $(OBJDIR)abft.o   $(ARCH)  
 	
 
 $(EXEC): $(OBJS) 
-	$(NVCC) $(COMMON) $(CFLAGS) $(OBJDIR)abft.o $^  -o $@ $(LDFLAGS) $(LOG_LINK) -lcudadevrt -lcudart -lcuda -rdc=true
+	$(NVCC) $(COMMON) $(CFLAGS) $(BUILD_ABFT_OBJ) $^  -o $@ $(LDFLAGS) $(LOG_LINK) -lcudadevrt -lcudart -lcuda -rdc=true
 	
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@

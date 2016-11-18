@@ -18,7 +18,7 @@
 #include <stdlib.h> //calloc
 #include <string.h>
 
-#define THRESHOLD_ERROR 0.00000001
+#define THRESHOLD_ERROR 2
 
 typedef struct prob_arry {
 	box *boxes;

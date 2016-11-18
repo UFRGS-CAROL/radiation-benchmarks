@@ -24,18 +24,22 @@ __global__ void check_col(float *mat, long rows, long cols) {
 	long i = blockIdx.x * blockDim.x + threadIdx.x;
 
 	long k;
-	float acc = 0;
+	double acc = 0;
 	//must be less one
-	for (k = 0; k < cols - 1; k++) {
-		acc += mat[i * cols + k];
+	if (cols == 1) {
+		acc = (mat[i * cols]);
+	} else {
+		for (k = 0; k < cols - 1; k++) {
+			acc += (mat[i * cols + k] / DIV_VALUE);
+		}
 	}
 	long b_index = i * cols + cols - 1;
 	//printf("b_index %ld acc %lf \n", b_index, acc);
 	float diff = fabs(fabs(mat[b_index]) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
 		atomicAdd(&err_count.col_detected_errors, 1);
-//		printf("passou no col mat[%ld] = %ld diff %ld calc %ld i %ld\n",
-//				b_index, (long) mat[b_index], (long) diff, (long) acc, i);
+		printf("passou no col mat[%ld] = %ld diff %ld calc %ld i %ld\n",
+				b_index, (long) mat[b_index], (long) diff, (long) acc, i);
 	}
 	//__syncthreads();
 }
@@ -46,20 +50,20 @@ __global__ void check_row(float *mat, long rows, long cols) {
 	long k;
 	double acc = 0;
 	//must be less one
-
-	for (k = 0; k < rows - 1; k++) {
-		acc += mat[k * cols + j] / rows;
+	if (rows == 1) {
+		acc = (mat[j]);
+	} else {
+		for (k = 0; k < rows - 1; k++) {
+			acc += (mat[k * cols + j] / DIV_VALUE);
+		}
 	}
-
-	float last_one = mat[(k + 1) * cols + j];
 	//printf("a_index %ld acc %lf \n", rows_a * cols_a + j, acc);
 	long a_index = (rows - 1) * cols + j;
-	float diff = fabs((fabs(mat[a_index]) / rows) - fabs(acc));
+	float diff = fabs(fabs(mat[a_index]) - fabs(acc));
 	if (diff >= MAX_THRESHOLD) {
-		printf("rows %ld, cols %ld\n", rows, cols);
 		atomicAdd(&err_count.row_detected_errors, 1);
-		printf("passou no row mat[%ld] = %lf diff %lf last one %lf calc %lf i value %ld\n",
-				a_index, mat[a_index], diff, last_one, acc, j);
+		printf("passou no row mat[%ld] = %lf diff %lf calc %lf i value %ld\n",
+				a_index, mat[a_index - 1], diff, acc, j);
 	}
 	//__syncthreads();
 }
@@ -81,7 +85,7 @@ __global__ void check_checksums(float *c, long rows_c, long cols_c) {
 		long blocks = ceil(float(rows_c) / float(BLOCK_SIZE));
 		long threads = ceil(float(rows_c) / float(blocks));
 		check_col<<<blocks, threads>>>(c, rows_c, cols_c);
-		printf("blocks %ld threads %ld\n", blocks, threads);
+//		printf("blocks %ld threads %ld\n", blocks, threads);
 	}
 	//printf("passou aqui foi\n");
 
@@ -104,11 +108,14 @@ __global__ void first_abraham_op(float *a, long rows_a, long cols_a) {
 	long j = blockIdx.x * blockDim.x + threadIdx.x;
 
 	long k;
-	float acc = 0;
-	for (k = 0; k < rows_a - 1; k++) {
-		acc += a[k * cols_a + j];
+	double acc = 0;
+	if (rows_a == 1) {
+		acc = (a[j]);
+	} else {
+		for (k = 0; k < rows_a - 1; k++) {
+			acc += (a[k * cols_a + j] / DIV_VALUE);
+		}
 	}
-
 	long a_index = (rows_a - 1) * cols_a + j;
 	//printf("a_index %ld acc %lf \n", a_index, acc);
 	a[a_index] = acc;
@@ -127,10 +134,15 @@ __global__ void second_abraham_op(float *b, long rows_b, long cols_b) {
 	long i = blockIdx.x * blockDim.x + threadIdx.x;
 
 	long k;
-	float acc = 0;
-	for (k = 0; k < cols_b - 1; k++) {
-		acc += b[i * cols_b + k];
+	double acc = 0;
+	if (cols_b == 1) {
+		acc = (b[i * cols_b]);
+	} else {
+		for (k = 0; k < cols_b - 1; k++) {
+			acc += (b[i * cols_b + k] / DIV_VALUE);
+		}
 	}
+
 	long b_index = i * cols_b + cols_b - 1;
 	//if (i == 0)	b[1] = 9999; //pseudo fault injection
 
@@ -174,7 +186,7 @@ extern "C" ErrorReturn abraham_check(float *c, long rows, long cols) {
 
 	cudaMemcpyToSymbol(err_count, &ret, sizeof(ErrorReturn));
 	check_checksums<<<1, 2>>>(c, rows, cols);
-	//gpuErrchk(cudaPeekAtLastError());
+	gpuErrchk(cudaPeekAtLastError());
 
 	cudaMemcpyFromSymbol(&ret, err_count, sizeof(ErrorReturn));
 	return ret;

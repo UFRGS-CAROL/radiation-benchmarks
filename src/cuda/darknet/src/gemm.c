@@ -57,7 +57,7 @@ void time_random_matrix(int TA, int TB, int m, int k, int n) {
 	}
 	end = clock();
 	printf("Matrix Multiplication %dx%d * %dx%d, TA=%d, TB=%d: %lf ms\n", m, k,
-			k, n, TA, TB, (float) (end - start) / CLOCKS_PER_SEC);
+			k, n, TA, TB, (float) (end - start) / CLOCKS_PER_SEC );
 	free(a);
 	free(b);
 	free(c);
@@ -151,7 +151,7 @@ void print_mat_row_major(float *mat, long m, long n, const char *mat_name) {
 	long i, j;
 	for (i = 0; i < m; i++) {
 		for (j = 0; j < n; j++)
-			printf("%f ", mat[i * n + j]);
+		printf("%f ", mat[i * n + j]);
 		printf("\n");
 	}
 //	printf("on vector 1d\n");
@@ -170,32 +170,33 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		float *C_gpu, int ldc)
 {
 
-//#if ABFT == 1
+#if ABFT == 1
 //	m  	input 	number of rows of matrix op(A) and C.
 //	n 	input	number of columns of matrix op(B) and C.
 //	k 	input 	number of columns of op(A) and rows of op(B).
 
-	printf("N %d M %d K %d\n", N, M, K);
+//	printf("N %d M %d K %d\n", N, M, K);
 	abraham_sum(A_gpu, B_gpu, M, K, K, N);
-	//N 784 M 256 K 512
-	if (N == 784 && M == 256 && K == 512 && it_print == 0){
+//N 784 M 256 K 512
+	if (N == 784 && M == 256 && K == 512 && it_print == 0) {
 		float *temp = (float*) calloc(M * K, sizeof(float));
 		cudaMemcpy(temp, A_gpu, M * K * sizeof(float), cudaMemcpyDeviceToHost);
 		print_mat_row_major(temp, M, K, "test mat A print");
 		it_print = 1;
 	}
-//#endif
+#endif
 	cublasHandle_t handle = blas_handle();
 	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
 			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb, A_gpu, lda, &BETA, C_gpu, ldc);
 	check_error(status);
 
-//#if ABFT == 1
+#if ABFT == 1
 
 	ErrorReturn temp = abraham_check(C_gpu, M, N);
+	if (temp.row_detected_errors || temp.col_detected_errors)
 	printf("Detected row errors: %d\nDetected collum errors %d\n",
 			temp.row_detected_errors, temp.col_detected_errors);
-//#endif
+#endif
 }
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, float ALPHA,
