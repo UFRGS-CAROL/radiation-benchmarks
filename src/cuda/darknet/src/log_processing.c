@@ -331,7 +331,7 @@ void saveLayer(network net)
 		name[28] = 't';
 		name[29] = 'a';
 		name[30] = '/';
-		printf("%s\n\n\n", name);
+		//printf("%s\n\n\n", name);
 			
 		//printf("1111\n");
 		if ((bin = fopen(name, "wb")) == NULL) {
@@ -339,7 +339,7 @@ void saveLayer(network net)
 		}
 		//printf("1112\n");
 		//printf("1113\n");
-		printf("%s\n", name);
+		//printf("%s\n", name);
 		//printf("%f\n", l.output_gpu[0]);
 		//printf("%f\n", l.output_gpu[1]);
 		//printf("%f\n", l.output_gpu[2]);
