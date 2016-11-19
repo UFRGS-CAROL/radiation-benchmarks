@@ -538,8 +538,12 @@ float *network_predict_gpu(network net, float *input, int gold)
     state.train = 0;
     state.delta = 0;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     //printf("passou aqui no network_predict_gpu\n");
     forward_network_gpu(net, state);
+=======
+    forward_network_gpu(net, state, gold);
+>>>>>>> Stashed changes
 =======
     forward_network_gpu(net, state, gold);
 >>>>>>> Stashed changes
