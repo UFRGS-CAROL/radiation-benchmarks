@@ -381,7 +381,7 @@ void validate_yolo(Args parameters) {
 					if ((i % 10) == 0){
 						fprintf(stdout,
 								"Partial it %ld Gold comp Time: %fs Iteration done %3.2f\n",
-								iterator, mysecond() - begin, ((float)t / (float)m) * 100.0);
+								iterator, mysecond() - begin, ((float)i / (float)m) * 100.0);
 					}
 					clear_vectors(&current_ptr);
 					//			printf("passou\n");
