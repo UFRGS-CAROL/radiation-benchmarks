@@ -377,10 +377,10 @@ void validate_yolo(Args parameters) {
 						}
 
 					}
-					if (!(t % 10))
+					if ((t % 10) == 0)
 						fprintf(stdout,
-								"Partial it %ld Gold comp Time: %fs Iteration done %3.2\n",
-								iterator, mysecond() - begin, (t / m) * 100);
+								"Partial it %ld Gold comp Time: %fs Iteration done %3.2f\n",
+								iterator, mysecond() - begin, ((float)t / (float)m) * 100.0);
 					clear_vectors(&current_ptr);
 					//			printf("passou\n");
 				}
