@@ -224,7 +224,7 @@ void validate_yolo(Args parameters) {
 	float iou_thresh = .5;
 
 	int nthreads = 1;
-	if(m > 1 && m <= 4){
+	if (m > 1 && m <= 4) {
 		nthreads = min(4, m);
 	}
 
@@ -273,7 +273,7 @@ void validate_yolo(Args parameters) {
 
 //	}
 	for (iterator = 0; iterator < parameters.iterations; iterator++) {
-
+		long max_err_per_iteration = 0;
 //		printf("passou\n");
 		double det_start = mysecond();
 		for (i = nthreads; i < m + nthreads; i += nthreads) {
@@ -284,27 +284,25 @@ void validate_yolo(Args parameters) {
 					start_iteration();
 				}
 #endif
-                double begin2 = mysecond();
+				double begin2 = mysecond();
 				char *path = paths[i + t - nthreads];
 				char *id = basecfg(path);
 				float *X = val_resized[t].data;
 
 				float *predictions;
 
-				if(parameters.generate_flag) {
+				if (parameters.generate_flag) {
 					predictions = network_predict(net, X, 1);
-				}else
-				{
+				} else {
 					predictions = network_predict(net, X, 0);
 				}
-				
 
 				//float *predictions = network_predict(net, X,0);
 
 				int w = val[t].w;
 				int h = val[t].h;
 				ProbArray gold, current = current_ptr.pb_gold[gold_iterator];
-				if(!parameters.generate_flag)
+				if (!parameters.generate_flag)
 					gold = gold_ptr.pb_gold[gold_iterator];
 
 				float **probs_curr = current.probs;
@@ -319,10 +317,10 @@ void validate_yolo(Args parameters) {
 
 //				printf("%f %f\n")
 				if (parameters.generate_flag) {
-				//	print_yolo_detections(fps, id,
-				//			current_ptr.pb_gold[gold_iterator].boxes,
-				//			current_ptr.pb_gold[gold_iterator].probs,
-				//			side * side * l.n, classes, w, h);
+					//	print_yolo_detections(fps, id,
+					//			current_ptr.pb_gold[gold_iterator].boxes,
+					//			current_ptr.pb_gold[gold_iterator].probs,
+					//			side * side * l.n, classes, w, h);
 				}
 
 				//---------------------------------
@@ -336,17 +334,27 @@ void validate_yolo(Args parameters) {
 				//I need compare things here not anywhere else
 				if (!parameters.generate_flag) {
 					double begin = mysecond();
-					if ((cmp = prob_array_comparable_and_log(gold, current, gold_iterator)))
+					if ((cmp = prob_array_comparable_and_log(gold, current,
+							gold_iterator))) {
 						fprintf(stderr,
 								"%d errors found in the computation, run to the hills\n",
 								cmp);
+						max_err_per_iteration += cmp;
+						if (max_err_per_iteration > 500) {
+#ifdef LOGS
+							if (!parameters.generate_flag) {
+								log_error_count(cmp);
+							}
+#endif
+						}
+
+					}
 					fprintf(stdout,
 							"Iteration %ld Total Gold comparison Time: %f Seconds\n",
 							iterator, mysecond() - begin);
-								clear_vectors(&current_ptr);
+					clear_vectors(&current_ptr);
 					//			printf("passou\n");
-					if (cmp)
-					{
+					if (cmp) {
 						saveLayer(net);
 					}
 				}
@@ -356,10 +364,10 @@ void validate_yolo(Args parameters) {
 					log_error_count(cmp);
 				}
 #endif
-	printf("passou %d %d\n");
+				printf("passou %d %d\n");
 				printf("passou %d %d\n", gold_iterator, it++);
 				gold_iterator = (gold_iterator + 1) % plist->size;
-                
+
 				//---------------------------------
 				printf("it %d seconds %f\n", iterator, mysecond() - begin2);
 				if (iterator == parameters.iterations - 1 && (i >= m)) {
@@ -409,7 +417,8 @@ void validate_yolo(Args parameters) {
 	int cf;
 	printf("passou antes do fclose\n");
 	for (cf = 0; cf < classes; ++cf) {
-		if(fps[cf] != NULL) fclose(fps[cf]);
+		if (fps[cf] != NULL)
+			fclose(fps[cf]);
 	}
 
 	printf("passou depois do fclose\n");
@@ -464,7 +473,7 @@ void validate_yolo_recall(char *cfgfile, char *weightfile) {
 		image orig = load_image_color(path, 0, 0);
 		image sized = resize_image(orig, net.w, net.h);
 		char *id = basecfg(path);
-		float *predictions = network_predict(net, sized.data,0);
+		float *predictions = network_predict(net, sized.data, 0);
 		convert_detections(predictions, classes, l.n, square, side, 1, 1,
 				thresh, probs, boxes, 1);
 		if (nms)
@@ -541,7 +550,7 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh) {
 		image sized = resize_image(im, net.w, net.h);
 		float *X = sized.data;
 		time = clock();
-		float *predictions = network_predict(net, X,0);
+		float *predictions = network_predict(net, X, 0);
 		printf("%s: Predicted in %f seconds.\n", input, sec(clock() - time));
 		convert_detections(predictions, l.classes, l.n, l.sqrt, l.side, 1, 1,
 				thresh, probs, boxes, 0);
@@ -568,7 +577,8 @@ void run_yolo(Args args) {
 	int i;
 	for (i = 0; i < 20; ++i) {
 		char buff[1000];
-		sprintf(buff, "%s/data/labels/%s.png", args.base_result_out, voc_names[i]);
+		sprintf(buff, "%s/data/labels/%s.png", args.base_result_out,
+				voc_names[i]);
 		voc_labels[i] = load_image_color(buff, 0, 0);
 	}
 
