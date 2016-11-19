@@ -165,6 +165,30 @@ inline double mysecond() {
 	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
 }
 
+void free_yolo_test_memory(const Args* parameters, GoldPointers* current_ptr,
+		GoldPointers* gold_ptr, int classes, image* val, image* val_resized,
+		image* buf, image* buf_resized, FILE** fps) {
+	//save gold values
+	if (parameters->generate_flag) {
+		gold_pointers_serialize(*current_ptr);
+	}
+	//for normal execution
+	free_gold_pointers(&*current_ptr);
+	if (!parameters->generate_flag)
+		free_gold_pointers(&*gold_ptr);
+
+	free(val);
+	free(val_resized);
+	free(buf);
+	free(buf_resized);
+	int cf;
+	//	printf("passou antes do fclose\n");
+	for (cf = 0; cf < classes; ++cf) {
+		if (fps[cf] != NULL)
+			fclose(fps[cf]);
+	}
+}
+
 void validate_yolo(Args parameters) {
 	network net = parse_network_cfg(parameters.config_file);
 	if (parameters.weights) {
@@ -341,6 +365,8 @@ void validate_yolo(Args parameters) {
 								cmp);
 						max_err_per_iteration += cmp;
 						if (max_err_per_iteration > 500) {
+							free_yolo_test_memory(&parameters, &current_ptr, &gold_ptr, classes, val,
+									val_resized, buf, buf_resized, fps);
 #ifdef LOGS
 							if (!parameters.generate_flag) {
 								log_error_count(cmp);
@@ -403,26 +429,11 @@ void validate_yolo(Args parameters) {
 	}
 
 //save gold values
-	if (parameters.generate_flag) {
-		gold_pointers_serialize(current_ptr);
-	}
-//for normal execution
-	free_gold_pointers(&current_ptr);
-	if (!parameters.generate_flag)
-		free_gold_pointers(&gold_ptr);
-	free(val);
-	free(val_resized);
-	free(buf);
-	free(buf_resized);
-	int cf;
-	printf("passou antes do fclose\n");
-	for (cf = 0; cf < classes; ++cf) {
-		if (fps[cf] != NULL)
-			fclose(fps[cf]);
-	}
-
-	printf("passou depois do fclose\n");
-	printf("Yolo finished\n");
+	free_yolo_test_memory(&parameters, &current_ptr, &gold_ptr, classes, val,
+			val_resized, buf, buf_resized, fps);
+//
+//	printf("passou depois do fclose\n");
+//	printf("Yolo finished\n");
 }
 
 void validate_yolo_recall(char *cfgfile, char *weightfile) {

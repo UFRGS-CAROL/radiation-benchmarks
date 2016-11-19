@@ -233,8 +233,8 @@ int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_itera
 //printf("passou boxes %d %d\n", i, j);
 				if (pb_probs[i][j] != 0 || gold_probs[i][j] != 0)
 				{
-					sprintf(error_detail, "probs: [%d,%d] "
-									" prob_r: %1.16e prob_e: %1.16e",
+					sprintf(error_detail, "image_list_position: [%ld] probs: [%d,%d] "
+									" prob_r: %1.16e prob_e: %1.16e", plist_iteration,
 							i, j, pb_probs[i][j],
 							gold_probs[i][j]);
 #ifdef LOGS
@@ -270,11 +270,11 @@ int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_itera
 		}
 		if (print_box == 1)
 		{
-			sprintf(error_detail, "boxes: [%d] "
+			sprintf(error_detail, "image_list_position: [%ld] boxes: [%d] "
 					" x_r: %1.16e x_e: %1.16e"
 					" y_r: %1.16e y_e: %1.16e"
 					" w_r: %1.16e w_e: %1.16e"
-					" h_r: %1.16e h_e: %1.16e",
+					" h_r: %1.16e h_e: %1.16e", plist_iteration,
 					i, pb.boxes[i].x, gold.boxes[i].x, pb.boxes[i].y, gold.boxes[i].y,
 					pb.boxes[i].w, gold.boxes[i].w, pb.boxes[i].h, gold.boxes[i].h);
 #ifdef LOGS
