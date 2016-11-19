@@ -177,7 +177,7 @@ __global__ void  variance_delta_kernel(float *x, float *delta, float *mean, floa
             variance_delta[i] += delta[index]*(x[index] - mean[i]);
         }
     }
-    variance_delta[i] *= -.5 * pow(variance[i] + .000001f, (float)(-3./2.));
+    variance_delta[i] *= -.5 * pow((double)variance[i] + .000001f, (double)(-3./2.));
 }
 
 __global__ void accumulate_kernel(float *x, int n, int groups, float *sum)
@@ -242,7 +242,7 @@ __global__ void  fast_variance_delta_kernel(float *x, float *delta, float *mean,
         for(i = 0; i < threads; ++i){
             variance_delta[filter] += local[i];
         }
-        variance_delta[filter] *= -.5 * pow(variance[filter] + .000001f, (float)(-3./2.));
+        variance_delta[filter] *= -.5 * pow((double)variance[filter] + .000001f, (double)(-3./2.));
     }
 }
 
@@ -306,7 +306,7 @@ __global__ void variance_kernel(float *x, float *mean, int batch, int filters, i
     for(j = 0; j < batch; ++j){
         for(k = 0; k < spatial; ++k){
             int index = j*filters*spatial + i*spatial + k;
-            variance[i] += pow((x[index] - mean[i]), 2);
+            variance[i] += pow((double)(x[index] - mean[i]), (double)2);
         }
     }
     variance[i] *= scale;
@@ -353,7 +353,7 @@ __global__ void axpy_kernel(int N, float ALPHA, float *X, int OFFX, int INCX,  f
 __global__ void pow_kernel(int N, float ALPHA, float *X, int INCX, float *Y, int INCY)
 {
     int i = (blockIdx.x + blockIdx.y*gridDim.x) * blockDim.x + threadIdx.x;
-    if(i < N) Y[i*INCY] = pow(X[i*INCX], ALPHA);
+    if(i < N) Y[i*INCY] = pow((double)X[i*INCX], (double)ALPHA);
 }
 
 __global__ void const_kernel(int N, float ALPHA, float *X, int INCX)
@@ -456,7 +456,7 @@ __global__ void  fast_variance_kernel(float *x, float *mean, int batch, int filt
         for(i = 0; i < spatial; i += threads){
             int index = j*spatial*filters + filter*spatial + i + id;
 
-            local[id] += (i+id < spatial) ? pow((x[index] - mean[filter]), 2) : 0;
+            local[id] += (i+id < spatial) ? pow((double)(x[index] - mean[filter]), (double)2) : 0;
         }
     }
 

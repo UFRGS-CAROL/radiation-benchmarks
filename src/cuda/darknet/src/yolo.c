@@ -288,8 +288,19 @@ void validate_yolo(Args parameters) {
 				char *path = paths[i + t - nthreads];
 				char *id = basecfg(path);
 				float *X = val_resized[t].data;
-				//printf("val_resized size %d %d\n", val_resized[t].h, val_resized[t].w);
-				float *predictions = network_predict(net, X);
+
+				float *predictions;
+
+				if(parameters.generate_flag) {
+					predictions = network_predict(net, X, 1);
+				}else
+				{
+					predictions = network_predict(net, X, 0);
+				}
+				
+
+				//float *predictions = network_predict(net, X,0);
+
 				int w = val[t].w;
 				int h = val[t].h;
 				ProbArray gold, current = current_ptr.pb_gold[gold_iterator];
@@ -332,16 +343,21 @@ void validate_yolo(Args parameters) {
 					fprintf(stdout,
 							"Iteration %ld Total Gold comparison Time: %f Seconds\n",
 							iterator, mysecond() - begin);
-					//			clear_vectors(&current_ptr);
+								clear_vectors(&current_ptr);
 					//			printf("passou\n");
-
+					if (cmp)
+					{
+						saveLayer(net);
+					}
 				}
+				printf("passou %d %d\n");
 #ifdef LOGS
 				if (!parameters.generate_flag) {
 					log_error_count(cmp);
 				}
 #endif
-//				printf("passou %d %d\n", gold_iterator, it++);
+	printf("passou %d %d\n");
+				printf("passou %d %d\n", gold_iterator, it++);
 				gold_iterator = (gold_iterator + 1) % plist->size;
                 
 				//---------------------------------
@@ -448,7 +464,7 @@ void validate_yolo_recall(char *cfgfile, char *weightfile) {
 		image orig = load_image_color(path, 0, 0);
 		image sized = resize_image(orig, net.w, net.h);
 		char *id = basecfg(path);
-		float *predictions = network_predict(net, sized.data);
+		float *predictions = network_predict(net, sized.data,0);
 		convert_detections(predictions, classes, l.n, square, side, 1, 1,
 				thresh, probs, boxes, 1);
 		if (nms)
@@ -525,7 +541,7 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh) {
 		image sized = resize_image(im, net.w, net.h);
 		float *X = sized.data;
 		time = clock();
-		float *predictions = network_predict(net, X);
+		float *predictions = network_predict(net, X,0);
 		printf("%s: Predicted in %f seconds.\n", input, sec(clock() - time));
 		convert_detections(predictions, l.classes, l.n, l.sqrt, l.side, 1, 1,
 				thresh, probs, boxes, 0);

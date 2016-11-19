@@ -12,6 +12,9 @@
 #include "log_helper.h"
 #endif
 
+#include "yolo.h"
+#include "network.h"
+#include "layer.h"
 #include "box.h" //boxes
 #include <stdio.h> //FILE*
 #include <math.h> //fabs
@@ -78,5 +81,8 @@ unsigned long comparable_and_log(GoldPointers gold, GoldPointers current);
 void clear_vectors(GoldPointers *gp);
 
 int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_iteration);
+
+void saveLayer(network net);
+void compareLayer(layer l, int i);
 
 #endif /* LOG_PROCESSING_H_ */

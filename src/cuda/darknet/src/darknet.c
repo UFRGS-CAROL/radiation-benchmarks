@@ -87,7 +87,7 @@ void speed(char *cfgfile, int tics) {
 	time_t start = time(0);
 	image im = make_image(net.w, net.h, net.c);
 	for (i = 0; i < tics; ++i) {
-		network_predict(net, im.data);
+		network_predict(net, im.data, 0);
 	}
 	double t = difftime(time(0), start);
 	printf("\n%d evals, %f Seconds\n", tics, t);

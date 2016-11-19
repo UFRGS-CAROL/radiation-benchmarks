@@ -112,7 +112,6 @@ void forward_convolutional_layer_gpu(convolutional_layer l, network_state state)
         float * b = state.workspace;
         float * c = l.output_gpu;
 
-       // printf("passou no convolutional kernels forward_convolutional_layer_gpu\n");
         gemm_ongpu(0,0,m,n,k,1.,a,k,b,n,1.,c+i*m*n,n);
     }
 #endif
@@ -123,6 +122,8 @@ void forward_convolutional_layer_gpu(convolutional_layer l, network_state state)
     add_bias_gpu(l.output_gpu, l.biases_gpu, l.batch, l.n, l.out_w*l.out_h);
 
     activate_array_ongpu(l.output_gpu, l.outputs*l.batch, l.activation);
+
+        
     //if(l.dot > 0) dot_error_gpu(l);
     if(l.binary || l.xnor) swap_binary(&l);
 }
