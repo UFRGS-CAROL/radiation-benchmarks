@@ -379,7 +379,7 @@ void validate_yolo(Args parameters) {
 					}
 					if (!(t % 10))
 						fprintf(stdout,
-								"Partial it %ld Gold comp Time: %fs Iteration done %2:2f\n",
+								"Partial it %ld Gold comp Time: %fs Iteration done %3.2\n",
 								iterator, mysecond() - begin, (t / m) * 100);
 					clear_vectors(&current_ptr);
 					//			printf("passou\n");
@@ -395,7 +395,7 @@ void validate_yolo(Args parameters) {
 				gold_iterator = (gold_iterator + 1) % plist->size;
 
 				//---------------------------------
-				printf("it %d seconds %f\n", iterator, mysecond() - begin2);
+				//printf("it %d seconds %f\n", iterator, mysecond() - begin2);
 				if (iterator == parameters.iterations - 1 && (i >= m)) {
 					//	printf("aqui\n");
 					free(id);
