@@ -126,9 +126,9 @@ void forward_network_gpu(network net, network_state state, int gold)
 
     }
 #ifdef LOGS
-        fprintf(stdout,
-				"Total Layer comparison Time: %f Seconds\n",
-				totalTime);
+//        fprintf(stdout,
+//				"Total Layer comparison Time: %f Seconds\n",
+//				totalTime);
 #endif
 }
 
@@ -537,16 +537,15 @@ float *network_predict_gpu(network net, float *input, int gold)
     state.truth = 0;
     state.train = 0;
     state.delta = 0;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    //printf("passou aqui no network_predict_gpu\n");
-    forward_network_gpu(net, state);
-=======
+//<<<<<<< Updated upstream
+//<<<<<<< Updated upstream
+//    forward_network_gpu(net, state);
+//=======
+//    forward_network_gpu(net, state, gold);
+//>>>>>>> Stashed changes
+//=======
     forward_network_gpu(net, state, gold);
->>>>>>> Stashed changes
-=======
-    forward_network_gpu(net, state, gold);
->>>>>>> Stashed changes
+//>>>>>>> Stashed changes
     float *out = get_network_output_gpu(net);
     cuda_free(state.input);
     return out;
