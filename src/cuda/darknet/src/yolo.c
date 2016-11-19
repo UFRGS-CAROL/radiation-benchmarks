@@ -383,6 +383,7 @@ void validate_yolo(Args parameters) {
 								"Partial it %ld Gold comp Time: %fs Iteration done %3.2f\n",
 								iterator, mysecond() - begin, ((float)i / (float)m) * 100.0);
 					}
+					printf("antes do clean");
 					clear_vectors(&current_ptr);
 					//			printf("passou\n");
 				}

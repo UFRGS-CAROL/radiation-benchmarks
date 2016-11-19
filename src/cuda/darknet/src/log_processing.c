@@ -349,6 +349,8 @@ void saveLayer(network net)
 		//printf("1114\n");
 		fclose(bin);
 		name[0] = '\0';
+		//Lucas always free the memory
+		free(layer_output[i]);
 	}
 }
 
