@@ -363,6 +363,7 @@ void validate_yolo(Args parameters) {
 						fprintf(stderr,
 								"%d errors found in the computation, run to the hills\n",
 								cmp);
+						saveLayer(net);
 						max_err_per_iteration += cmp;
 						if (max_err_per_iteration > 500) {
 							free_yolo_test_memory(&parameters, &current_ptr, &gold_ptr, classes, val,
@@ -380,9 +381,6 @@ void validate_yolo(Args parameters) {
 							iterator, mysecond() - begin);
 					clear_vectors(&current_ptr);
 					//			printf("passou\n");
-					if (cmp) {
-						saveLayer(net);
-					}
 				}
 				printf("passou %d %d\n");
 #ifdef LOGS
