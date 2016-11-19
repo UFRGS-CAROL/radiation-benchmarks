@@ -366,8 +366,9 @@ void validate_yolo(Args parameters) {
 						saveLayer(net);
 						max_err_per_iteration += cmp;
 						if (max_err_per_iteration > 500) {
-							free_yolo_test_memory(&parameters, &current_ptr, &gold_ptr, classes, val,
-									val_resized, buf, buf_resized, fps);
+							free_yolo_test_memory(&parameters, &current_ptr,
+									&gold_ptr, classes, val, val_resized, buf,
+									buf_resized, fps);
 #ifdef LOGS
 							if (!parameters.generate_flag) {
 								log_error_count(cmp);
@@ -376,26 +377,27 @@ void validate_yolo(Args parameters) {
 						}
 
 					}
-					fprintf(stdout,
-							"Iteration %ld Total Gold comparison Time: %f Seconds\n",
-							iterator, mysecond() - begin);
+					if (!(t % 10))
+						fprintf(stdout,
+								"Partial it %ld Gold comp Time: %fs Iteration done %2:2f\n",
+								iterator, mysecond() - begin, (t / m) * 100);
 					clear_vectors(&current_ptr);
 					//			printf("passou\n");
 				}
-				printf("passou %d %d\n");
+//				printf("passou %d %d\n");
 #ifdef LOGS
 				if (!parameters.generate_flag) {
 					log_error_count(cmp);
 				}
 #endif
-				printf("passou %d %d\n");
-				printf("passou %d %d\n", gold_iterator, it++);
+//				printf("passou %d %d\n");
+//				printf("passou %d %d\n", gold_iterator, it++);
 				gold_iterator = (gold_iterator + 1) % plist->size;
 
 				//---------------------------------
 				printf("it %d seconds %f\n", iterator, mysecond() - begin2);
 				if (iterator == parameters.iterations - 1 && (i >= m)) {
-					printf("aqui\n");
+					//	printf("aqui\n");
 					free(id);
 					free_image(val[t]);
 					free_image(val_resized[t]);
