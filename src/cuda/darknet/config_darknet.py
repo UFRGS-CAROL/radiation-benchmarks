@@ -137,7 +137,7 @@ def main(board):
     make_str += " LOGS=1"
 
     os.system(make_clean)
-    os.system("make -C ../../include/")
+    os.system("make -C ../../include/ cuda")
     print "\n\n\n" + make_str + "\n\n\n"
     os.system(make_str)
     os.system("mv ./darknet "+bin_path)
