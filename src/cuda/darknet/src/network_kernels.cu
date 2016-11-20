@@ -47,7 +47,7 @@ float * get_network_output_gpu(network net);
 void forward_network_gpu(network net, network_state state, int gold)
 {
     state.workspace = net.workspace;
-    double totalTime = 0, time;
+//    double totalTime = 0, time;
     //printf("%f\n", state.workspace[0]);
     //layer l2;
     //l2.output_gpu[0] = 1;
@@ -115,7 +115,7 @@ void forward_network_gpu(network net, network_state state, int gold)
 
 		layer_output[i] = (float*)calloc(l.outputs, sizeof(float));
 
-		sum_time += (mysecond() - begin);
+//		sum_time += (mysecond() - begin);
 		cudaMemcpy ( layer_output[i], l.output_gpu, l.outputs*sizeof(float), cudaMemcpyDeviceToHost);
 		
 		/*else 
