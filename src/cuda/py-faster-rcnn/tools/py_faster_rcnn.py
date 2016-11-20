@@ -228,6 +228,7 @@ def compare(gold, current, img_name):
     #iterator for current, i need it because generate could be smaller than gold, so python will throw an exception
     scores_curr = current[0]
     boxes_curr = current[1]
+    print "\n\nsizeof " , sys.getsizeof(scores_curr) / 1024, "\n\n"
 
     CONF_THRESH = 0.8
     NMS_THRESH = 0.3
