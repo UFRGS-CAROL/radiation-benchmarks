@@ -71,14 +71,14 @@ def main(board):
     execute.append(" ".join([''.join(map(str, value)) for key, value in voc_exe.iteritems()]))
 
     for i in generate:
-        # os.system(str(i))
-		print i
+        os.system(str(i))
+		#print i
 
-   # fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
+    fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
 
     for i in execute:
-        # print >> fp, "[\"""sudo " + str(i) + "\" , 0.016, \"py_faster_rcnn\"],"
-        print "[\"""sudo " + str(i) + "\" , 0.016, \"py_faster_rcnn\"],"
+        print >> fp, "[\"""sudo " + str(i) + "\" , 0.016, \"py_faster_rcnn\"],"
+        #print "[\"""sudo " + str(i) + "\" , 0.016, \"py_faster_rcnn\"],"
 
     print "\nConfiguring done, to run check file: " + installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + str(
         board) + "\n"
