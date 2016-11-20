@@ -290,6 +290,9 @@ void validate_yolo(Args parameters) {
 		thr[t] = load_data_in_thread(args);
 	}
 
+	//set abft
+	if(parameters.abft == 1)
+		set_use_abft(1);
 //	}
 	for (iterator = 0; iterator < parameters.iterations; iterator++) {
 		long max_err_per_iteration = 0;
@@ -308,7 +311,6 @@ void validate_yolo(Args parameters) {
 				if(parameters.abft == 1){
 					shared_errors.row_detected_errors = 0;
 					shared_errors.col_detected_errors = 0;
-					set_use_abft(1);
 				}
 				double begin2 = mysecond();
 				char *path = paths[i + t - nthreads];
