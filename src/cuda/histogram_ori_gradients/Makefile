@@ -53,7 +53,7 @@ OPENCV_FLAGS=  -lopencv_core -lopencv_imgproc -lopencv_highgui \
 
 ##Opencv HOG
 hog_opencv: ./HOG.cpp
-	g++ $(OPTS) HOG.cpp $(LOG_FLAGS) -Wall -o3 -DCXX $(OPENCV_FLAGS) -o hog
+	g++ $(OPTS) HOG.cpp $(LOG_FLAGS) -Wall -o3 -DCXX $(OPENCV_FLAGS) -o hog -I$(LOGHELPER_INC)
 
 
 ##hog extracted
