@@ -24,6 +24,7 @@ ErrorReturn abraham_check(float *c, long rows, long cols);
 
 ErrorReturn shared_errors;
 
-int use_abft = 0;
+void set_use_abft(int n);
+int get_use_abft();
 
 #endif /* ABFT_H_ */

@@ -9,7 +9,7 @@
 #include "args.h"
 #include "log_processing.h"
 
-//#include "abft.h"
+#include "abft.h"
 
 #define min(X,Y) (((X) < (Y)) ? (X) : (Y))
 #ifdef OPENCV
@@ -308,7 +308,7 @@ void validate_yolo(Args parameters) {
 				if(parameters.abft){
 					shared_errors.row_detected_errors = 0;
 					shared_errors.col_detected_errors = 0;
-					use_abft = 1;
+					set_use_abft(1);
 				}
 				double begin2 = mysecond();
 				char *path = paths[i + t - nthreads];
