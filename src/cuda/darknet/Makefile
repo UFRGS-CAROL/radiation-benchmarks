@@ -85,7 +85,7 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj results $(EXEC)
 
 abft: src/abft.cu
-	$(NVCC)  -I$(CUDAINCLUDE) $(NVCCFLAGS) -c -O3 -dc src/abft.cu -o $(OBJDIR)abft.o -rdc=true $(ARCH)  -lcudadevrt
+	$(NVCC)  -I$(CUDAINCLUDE) $(NVCCFLAGS) -c -O3 -dc src/abft.cu -o $(OBJDIR)abft.o -rdc=true $(ARCH)  -lcudadevrt 
 	#$(NVCC) -I$(CUDAINCLUDE) $(NVCCFLAGS)  -dlink $(OBJDIR)abft_temp.o  -lcudadevrt -o $(OBJDIR)abft.o   $(ARCH)  
 	
 
@@ -93,10 +93,10 @@ $(EXEC): $(OBJS)
 	$(NVCC) $(COMMON) $(CFLAGS) $(BUILD_ABFT_OBJ) $^  -o $@ $(LDFLAGS) $(LOG_LINK) -lcudadevrt -lcudart -lcuda -rdc=true
 	
 $(OBJDIR)%.o: %.c $(DEPS)
-	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@
+	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LOG_LINK)
 
 $(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT)
-	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@
+	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@ $(LOG_LINK)
 
 obj:
 	mkdir -p obj
