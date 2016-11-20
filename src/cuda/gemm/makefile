@@ -17,7 +17,7 @@ MATRIX_NAMES=dgemm_*
 all: gemm gen
 
 gemm: cudaGEMM.cu
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -lLogHelperCuda -lcublas $(NVCCFLAGS) cudaGEMM.cu -o $(RUN_EXEC)
+	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -lLogHelperCuda -lcublas $(NVCCFLAGS) -DLOGS cudaGEMM.cu -o $(RUN_EXEC)
 
 gen: generateMatrices.cu
 	$(NVCC) -I$(NVIDIA_INC) -L$(NVIDIA_LIB) -lcublas generateMatrices.cu -o $(GEN_EXEC)
