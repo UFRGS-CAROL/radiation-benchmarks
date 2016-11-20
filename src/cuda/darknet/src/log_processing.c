@@ -340,8 +340,7 @@ void saveLayer(network net)
 		name[29] = 'a';
 		name[30] = '/';
 		//printf("%s\n\n\n", name);
-			
-		//printf("1111\n");
+
 		if ((bin = fopen(name, "wb")) == NULL) {
 			printf("ERROR ON OPENING \n");
 		}
