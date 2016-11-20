@@ -7,7 +7,7 @@ endif
 
 ifeq ($(LOGS), 1)
 	OPTS = -DLOGS
-	LOG_FLAGS =  $(LOGHELPER_INC)log_helper.c -I$(LOGHELPER_LIB) -lLogHelper
+	LOG_FLAGS =  -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper
 endif
 
 
