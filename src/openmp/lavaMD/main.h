@@ -16,62 +16,62 @@
 
 typedef struct
 {
-	fp x, y, z;
+    fp x, y, z;
 
 } THREE_VECTOR;
 
 typedef struct
 {
-	fp v, x, y, z;
+    fp v, x, y, z;
 
 } FOUR_VECTOR;
 
 typedef struct nei_str
 {
 
-	// neighbor box
-	int x, y, z;
-	int number;
-	long offset;
+    // neighbor box
+    int x, y, z;
+    int number;
+    long offset;
 
 } nei_str;
 
 typedef struct box_str
 {
 
-	// home box
-	int x, y, z;
-	int number;
-	long offset;
+    // home box
+    int x, y, z;
+    int number;
+    long offset;
 
-	// neighbor boxes
-	int nn;
-	nei_str nei[26];
+    // neighbor boxes
+    int nn;
+    nei_str nei[26];
 
 } box_str;
 
 typedef struct par_str
 {
 
-	fp alpha;
+    fp alpha;
 
 } par_str;
 
 typedef struct dim_str
 {
 
-	// input arguments
-	int cur_arg;
-	int arch_arg;
-	int cores_arg;
-	int boxes1d_arg;
+    // input arguments
+    int cur_arg;
+    int arch_arg;
+    int cores_arg;
+    int boxes1d_arg;
 
-	// system memory
-	long number_boxes;
-	long box_mem;
-	long space_elem;
-	long space_mem;
-	long space_mem2;
+    // system memory
+    long number_boxes;
+    long box_mem;
+    long space_elem;
+    long space_mem;
+    long space_mem2;
 
 } dim_str;
 
@@ -79,6 +79,6 @@ typedef struct dim_str
 //	FUNCTION PROTOTYPES
 //===============================================================================================================================================================================================================200
 
-int 
-main(	int argc, 
-		char *argv []);
+int
+main(	int argc,
+        char *argv []);

@@ -27,7 +27,7 @@ hog: HOG.cpp
 	$(NVCC) opencv_src/hog.cu -c -I$(NVIDIA_INC)
 	$(NVCC) opencv_src/HogDescriptor.cpp -c $(ALL_CV_FLAGS)
 	$(NVCC) HOG.cpp -c $(ALL_CV_FLAGS) $(LOG_FLAGS)
-	$(NVCC) -o hog_test hog.o HogDescriptor.o HOG.o $(ALL_CV_FLAGS) $(LOG_FLAGS)
+	$(NVCC) -o hog_hardened_eccon hog.o HogDescriptor.o HOG.o $(ALL_CV_FLAGS) $(LOG_FLAGS)
 
 gold_generator: GoldGenerator.cpp
 	$(NVCC) GoldGenerator.cpp $(debug) -o generator $(ALL_GOLD_GEN)
@@ -36,6 +36,7 @@ test:
 	./hog_test ../../../../data/histogram_ori_gradients/1x_pedestrians.jpg --dst_data GOLD_1x.data --iterations 1
 
 generate:
+
 	./generator ../../../../data/histogram_ori_gradients/1x_pedestrians.jpg --dst_data GOLD_1x.data --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
 	
 

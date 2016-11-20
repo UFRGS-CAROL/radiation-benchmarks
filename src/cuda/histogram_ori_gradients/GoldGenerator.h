@@ -9,7 +9,7 @@
 #define GOLDGENERATOR_H_
 //new classes
 #include "Args.h"
-#include "Helpful.h"
+#include "helpful.h"
 
 class App {
 public:

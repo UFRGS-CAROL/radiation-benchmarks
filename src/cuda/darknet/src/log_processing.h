@@ -11,14 +11,19 @@
 #ifdef LOGS
 #include "log_helper.h"
 #endif
-
+#include <sys/time.h>
+#include "yolo.h"
+#include "network.h"
+#include "layer.h"
 #include "box.h" //boxes
 #include <stdio.h> //FILE*
 #include <math.h> //fabs
 #include <stdlib.h> //calloc
 #include <string.h>
 
-#define THRESHOLD_ERROR 0.00000001
+#define THRESHOLD_ERROR 0.005
+
+
 
 typedef struct prob_arry {
 	box *boxes;
@@ -78,5 +83,10 @@ unsigned long comparable_and_log(GoldPointers gold, GoldPointers current);
 void clear_vectors(GoldPointers *gp);
 
 int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_iteration);
+
+void saveLayer(network net);
+void compareLayer(layer l, int i);
+
+inline double mysecond();
 
 #endif /* LOG_PROCESSING_H_ */

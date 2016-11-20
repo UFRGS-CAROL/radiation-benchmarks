@@ -257,7 +257,7 @@ __device__ float reduce_smem_ext(float* smem, float val) {
 
 	if (size == 32) {
 #if __CUDA_ARCH__ >= 300
-		return shfl(sum, 0);
+		return __shfl(sum, 0);
 #else
 		return smem[0];
 #endif

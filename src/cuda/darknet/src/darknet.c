@@ -8,8 +8,12 @@
 #include "blas.h"
 #include "connected_layer.h"
 
+#include <sys/stat.h>
+ #include <sys/types.h>
 #include "args.h"
 #include "yolo.h"
+
+#define SAVE_LAYERS_DIR "/var/radiation-benchmarks/data/"
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -87,7 +91,7 @@ void speed(char *cfgfile, int tics) {
 	time_t start = time(0);
 	image im = make_image(net.w, net.h, net.c);
 	for (i = 0; i < tics; ++i) {
-		network_predict(net, im.data);
+		network_predict(net, im.data, 0);
 	}
 	double t = difftime(time(0), start);
 	printf("\n%d evals, %f Seconds\n", tics, t);
@@ -320,6 +324,7 @@ void visualize(char *cfgfile, char *weightfile) {
 }
 
 int main(int argc, char **argv) {
+
 	//test_resize("data/bad.jpg");
 	//test_box();
 	//test_convolutional_layer();
@@ -351,13 +356,16 @@ int main(int argc, char **argv) {
 #endif
 
 #ifdef LOGS
-		char test_info[90];
-		snprintf(test_info, 90, "execution_type:%s execution_model:%s img_list_path:%s weights:%s config_file:%s iterations:%d", to_parse.execution_type
+		char test_info[500];
+		snprintf(test_info, 500, "execution_type:%s execution_model:%s img_list_path:%s weights:%s config_file:%s iterations:%d", to_parse.execution_type
 				, to_parse.execution_model, to_parse.img_list_path, to_parse.weights, to_parse.config_file, to_parse.iterations);
 		if (!(to_parse.generate_flag)) start_log_file("cudaDarknet", test_info);
 #endif
 
 		if (strcmp(to_parse.execution_type, "yolo") == 0) {
+			struct stat st = {0};
+			if(to_parse.abft && stat(SAVE_LAYERS_DIR, &st) == -1)
+			    mkdir(SAVE_LAYERS_DIR, 0777);
 			run_yolo(to_parse);
 		}
 

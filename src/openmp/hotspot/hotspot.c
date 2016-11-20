@@ -32,9 +32,9 @@ const FLOAT chip_width = 0.016;
 
 // Returns the current system time in microseconds
 long long get_time() {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        return (tv.tv_sec * 1000000) + tv.tv_usec;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000000) + tv.tv_usec;
 }
 
 /* ambient temperature, assuming no package at all	*/
@@ -167,7 +167,7 @@ void compute_tran_temp(FLOAT *result, int num_iterations, FLOAT *temp, FLOAT *po
     {
         FLOAT* r = result;
         FLOAT* t = temp;
-	int i = 0;
+        int i = 0;
         for (i = 0; i < num_iterations ; i++)
         {
             single_iteration(r, t, power, row, col, Cap_1, Rx_1, Ry_1, Rz_1, step);
@@ -218,9 +218,9 @@ void read_input(FLOAT *vect, int grid_rows, int grid_cols, char *file)
         fatal ("file could not be opened for reading");
 
     for (i=0; i < grid_rows * grid_cols; i++) {
-        if (fgets(str, STR_SIZE, fp) == NULL){
+        if (fgets(str, STR_SIZE, fp) == NULL) {
             fatal("fgets error");
-	}
+        }
         if (feof(fp))
             fatal("not enough lines in file");
         if ((sscanf(str, "%f", &val) != 1) )

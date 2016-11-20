@@ -387,6 +387,7 @@ int checkVals(parameters_t *params)
 int main(int argc, char **argv)
 {
     double timestamp, globaltimestamp, kernel_time;
+    double total_kernel_time=0.0, total_hard_time=0.0;
     int errNum=0;
 
     srand( time(NULL) );
@@ -465,6 +466,7 @@ int main(int argc, char **argv)
             );
             checkCudaErrors(cudaDeviceSynchronize());
             kernel_time = mysecond() - timestamp;
+            total_kernel_time += kernel_time;
 
             errNum = 0;
             timestamp = mysecond();
@@ -477,6 +479,7 @@ int main(int argc, char **argv)
             #ifdef LOGS
             if (!(params->generate)) end_iteration();
             #endif
+            total_hard_time += mysecond() - timestamp;
 
             if (params->verbose) printf("GPU Kernel time: %.4fs\n", kernel_time);
             if (params->verbose) printf("GPU Verify Kernel time: %.4fs\n", mysecond() - timestamp);
@@ -558,6 +561,10 @@ int main(int argc, char **argv)
     // profiled. Calling cudaDeviceReset causes all profile data to be
     // flushed before the application exits
     cudaDeviceReset();
+
+    if (params->verbose) {
+        printf("\n-> AVG Kernel time: %.4fs\n-> AVG Hardening time: %.4fs\n", total_kernel_time, total_hard_time);
+    }
 
     exit(EXIT_SUCCESS);
 }

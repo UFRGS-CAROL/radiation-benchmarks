@@ -5,8 +5,13 @@
  *      Author: fernando
  */
 
+#include "args.h"
+
 #ifndef YOLO_H_
 #define YOLO_H_
+
+
+
 void run_voxel(int argc, char **argv);
 void run_yolo(Args args);
 void run_detector(int argc, char **argv);
@@ -24,5 +29,7 @@ void run_cifar(int argc, char **argv);
 void run_go(int argc, char **argv);
 void run_art(int argc, char **argv);
 void run_super(int argc, char **argv);
+
+float* layer_output[32];
 
 #endif /* YOLO_H_ */

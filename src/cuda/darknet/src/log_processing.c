@@ -13,6 +13,14 @@
 
 #include "log_processing.h"
 
+inline double mysecond() {
+	struct timeval tp;
+	struct timezone tzp;
+	gettimeofday(&tp, &tzp);
+	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
+}
+
+
 ProbArray new_prob_array(int classes, int total_size) {
 	int i;
 	ProbArray pb;
@@ -233,8 +241,8 @@ int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_itera
 //printf("passou boxes %d %d\n", i, j);
 				if (pb_probs[i][j] != 0 || gold_probs[i][j] != 0)
 				{
-					sprintf(error_detail, "probs: [%d,%d] "
-									" prob_r: %1.16e prob_e: %1.16e",
+					sprintf(error_detail, "image_list_position: [%ld] probs: [%d,%d] "
+									" prob_r: %1.16e prob_e: %1.16e", plist_iteration,
 							i, j, pb_probs[i][j],
 							gold_probs[i][j]);
 #ifdef LOGS
@@ -270,11 +278,11 @@ int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_itera
 		}
 		if (print_box == 1)
 		{
-			sprintf(error_detail, "boxes: [%d] "
+			sprintf(error_detail, "image_list_position: [%ld] boxes: [%d] "
 					" x_r: %1.16e x_e: %1.16e"
 					" y_r: %1.16e y_e: %1.16e"
 					" w_r: %1.16e w_e: %1.16e"
-					" h_r: %1.16e h_e: %1.16e",
+					" h_r: %1.16e h_e: %1.16e", plist_iteration,
 					i, pb.boxes[i].x, gold.boxes[i].x, pb.boxes[i].y, gold.boxes[i].y,
 					pb.boxes[i].w, gold.boxes[i].w, pb.boxes[i].h, gold.boxes[i].h);
 #ifdef LOGS
@@ -283,6 +291,7 @@ int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_itera
 		}
 
 	}
+
 //	printf("finish cout\n");
 
 //	printf("finish cout after error count\n");
@@ -310,3 +319,85 @@ void clear_vectors(GoldPointers *gp){
 		}
 	}
 }
+
+void saveLayer(network net)
+{
+	FILE* bin;
+	char* log_name;
+	char name[100];
+	char a[5];
+	int i;
+	for (i = 0; i < 32; i++)
+	{
+		snprintf(a, 3,"%d",i);
+#ifdef LOGS
+		log_name = get_log_file_name();
+#else
+		log_name = "standard_name";
+#endif
+		strcpy(name, log_name);
+		strcat(name, "_layer_");
+		strcat(name, &a);
+		name[26] = 'd';
+		name[27] = 'a';
+		name[28] = 't';
+		name[29] = 'a';
+		name[30] = '/';
+		//printf("%s\n\n\n", name);
+
+		if ((bin = fopen(name, "wb")) == NULL) {
+			printf("ERROR ON OPENING \n");
+		}
+		//printf("1112\n");
+		//printf("1113\n");
+		//printf("%s\n", name);
+		//printf("%f\n", l.output_gpu[0]);
+		//printf("%f\n", l.output_gpu[1]);
+		//printf("%f\n", l.output_gpu[2]);
+		//printf("%d\n", l.batch);
+
+		fwrite(layer_output[i], sizeof(float), net.layers[i].outputs, bin);
+		//printf("1114\n");
+		fclose(bin);
+		name[0] = '\0';
+		//Lucas always free the memory
+		//free(layer_output[i]);
+	}
+}
+
+void compareLayer(layer l, int i)
+{
+	FILE* bin;
+	int error_count = 0;
+	char name[50];
+	char a[5];
+	snprintf(a, 3,"%d",i);
+	strcpy(name, "gold/layer");
+	strcat(name, &a);
+	strcat(name, ".bin");	
+	//printf("1111\n");
+	if ((bin = fopen(name, "r")) == NULL) {
+		printf("ERROR ON OPENING \n");
+	}
+	//printf("1112\n");
+	//printf("1113\n");
+	//printf("%d\n", l.outputs);
+	//printf("%f\n", l.output_gpu[0]);
+	//printf("%f\n", l.output_gpu[1]);
+	//printf("%f\n", l.output_gpu[2]);
+	//printf("%d\n", l.batch);
+	float * r = (float*)calloc(l.outputs, sizeof(float));
+    cudaMemcpy ( r, l.output_gpu, l.outputs*sizeof(float), cudaMemcpyDeviceToHost);
+    float * s = (float*)calloc(l.outputs, sizeof(float));
+	fread(s, sizeof(float), l.outputs, bin);
+	int j;
+	for (j = 0; j < l.outputs; j++)
+	{
+		if (s[j] != r[j])
+		{
+			error_count++;
+		}
+	}
+	//printf("error count:%d\n", error_count);
+	fclose(bin);
+}	

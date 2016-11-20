@@ -111,6 +111,7 @@ void forward_convolutional_layer_gpu(convolutional_layer l, network_state state)
         float * a = l.weights_gpu;
         float * b = state.workspace;
         float * c = l.output_gpu;
+
         gemm_ongpu(0,0,m,n,k,1.,a,k,b,n,1.,c+i*m*n,n);
     }
 #endif
@@ -121,6 +122,8 @@ void forward_convolutional_layer_gpu(convolutional_layer l, network_state state)
     add_bias_gpu(l.output_gpu, l.biases_gpu, l.batch, l.n, l.out_w*l.out_h);
 
     activate_array_ongpu(l.output_gpu, l.outputs*l.batch, l.activation);
+
+        
     //if(l.dot > 0) dot_error_gpu(l);
     if(l.binary || l.xnor) swap_binary(&l);
 }
@@ -184,6 +187,7 @@ void backward_convolutional_layer_gpu(convolutional_layer l, network_state state
         float * c = l.weight_updates_gpu;
 
         im2col_ongpu(state.input + i*l.c*l.h*l.w, l.c,  l.h,  l.w,  l.size,  l.stride, l.pad, state.workspace);
+        //printf("passou no backward_convolutional_layer_gpu first call\n");
         gemm_ongpu(0,1,m,n,k,1,a + i*m*k,k,b,k,1,c,n);
 
         if(state.delta){
@@ -192,6 +196,7 @@ void backward_convolutional_layer_gpu(convolutional_layer l, network_state state
             float * b = l.delta_gpu;
             float * c = state.workspace;
 
+            //printf("passou no backward_convolutional_layer_gpu second call\n");
             gemm_ongpu(1,0,n,k,m,1,a,n,b + i*k*m,k,0,c,k);
 
             col2im_ongpu(state.workspace, l.c,  l.h,  l.w,  l.size,  l.stride, l.pad, state.delta + i*l.c*l.h*l.w);

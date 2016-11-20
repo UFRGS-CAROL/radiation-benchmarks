@@ -71,15 +71,15 @@ namespace cv { namespace gpu { namespace device
 
         void compute_hists(int nbins, int block_stride_x, int blovck_stride_y,
                            int height, int width, const cv::gpu::PtrStepSzf& grad,
-                           const cv::gpu::PtrStepSzb& qangle, float sigma, float* block_hists);
+                           const cv::gpu::PtrStepSzb& qangle, float sigma, float* block_hists, float* block_hists_copy, int rows);
 
         void normalize_hists(int nbins, int block_stride_x, int block_stride_y,
-                             int height, int width, float* block_hists, float threshold);
+                             int height, int width, float* block_hists, float* block_hists2, float threshold, int rows);
 
         void classify_hists(int win_height, int win_width, int block_stride_y,
                             int block_stride_x, int win_stride_y, int win_stride_x, int height,
                             int width, float* block_hists, float* coefs, float free_coef,
-                            float threshold, unsigned char* labels);
+                            float threshold, unsigned char* labels, unsigned char* labels_copy, int rows);
 
         void compute_confidence_hists(int win_height, int win_width, int block_stride_y, int block_stride_x,
                            int win_stride_y, int win_stride_x, int height, int width, float* block_hists,
@@ -95,7 +95,7 @@ namespace cv { namespace gpu { namespace device
         void compute_gradients_8UC1(int nbins, int height, int width, const cv::gpu::PtrStepSzb& img,
                                     float angle_scale, cv::gpu::PtrStepSzf grad, cv::gpu::PtrStepSzb qangle, bool correct_gamma);
         void compute_gradients_8UC4(int nbins, int height, int width, const cv::gpu::PtrStepSzb& img,
-                                    float angle_scale, cv::gpu::PtrStepSzf grad, cv::gpu::PtrStepSzb qangle, bool correct_gamma);
+                                    float angle_scale, cv::gpu::PtrStepSzf grad, cv::gpu::PtrStepSzf grad_copy, cv::gpu::PtrStepSzb qangle, cv::gpu::PtrStepSzb qangle_copy, bool correct_gamma, int grad_rows, int qangle_rows);
 
         void resize_8UC1(const cv::gpu::PtrStepSzb& src, cv::gpu::PtrStepSzb dst);
         void resize_8UC4(const cv::gpu::PtrStepSzb& src, cv::gpu::PtrStepSzb dst);
@@ -203,6 +203,11 @@ void cv::gpu::HOGDescriptor::computeGradient(const GpuMat& img, GpuMat& _grad, G
     //   qangle.create(img.size(), CV_8UC2);
     _qangle = getBuffer(img.size(), CV_8UC2, qangle_buf);
 
+    GpuMat grad_copy, qangle_copy;
+
+    _grad.copyTo(grad_copy);
+    _qangle.copyTo(qangle_copy);
+
     float angleScale = (float)(nbins / CV_PI);
     switch (img.type())
     {
@@ -210,7 +215,7 @@ void cv::gpu::HOGDescriptor::computeGradient(const GpuMat& img, GpuMat& _grad, G
             hog::compute_gradients_8UC1(nbins, img.rows, img.cols, img, angleScale, _grad, _qangle, gamma_correction);
             break;
         case CV_8UC4:
-            hog::compute_gradients_8UC4(nbins, img.rows, img.cols, img, angleScale, _grad, _qangle, gamma_correction);
+            hog::compute_gradients_8UC4(nbins, img.rows, img.cols, img, angleScale, _grad, grad_copy, _qangle, qangle_copy, gamma_correction, _grad.rows, _qangle.rows);
             break;
     }
 }
@@ -228,12 +233,19 @@ void cv::gpu::HOGDescriptor::computeBlockHistograms(const GpuMat& img)
 
     //   block_hists.create(1, block_hist_size * blocks_per_img.area(), CV_32F);
     block_hists = getBuffer(1, static_cast<int>(block_hist_size * blocks_per_img.area()), CV_32F, block_hists_buf);
+  
+    GpuMat hists_copy;
+    block_hists.copyTo(hists_copy);
 
     hog::compute_hists(nbins, block_stride.width, block_stride.height, img.rows, img.cols,
-                        grad, qangle, (float)getWinSigma(), block_hists.ptr<float>());
+                        grad, qangle, (float)getWinSigma(), block_hists.ptr<float>(), hists_copy.ptr<float>(), block_hists.rows);
+
+   GpuMat hists_copy2;
+
+   block_hists.copyTo(hists_copy2);
 
     hog::normalize_hists(nbins, block_stride.width, block_stride.height, img.rows, img.cols,
-                         block_hists.ptr<float>(), (float)threshold_L2hys);
+                         block_hists.ptr<float>(), hists_copy2.ptr<float>(),(float)threshold_L2hys, block_hists.rows);
 }
 
 
@@ -379,9 +391,12 @@ void cv::gpu::HOGDescriptor::detect(const GpuMat& img, vector<Point>& hits, doub
     //   labels.create(1, wins_per_img.area(), CV_8U);
     labels = getBuffer(1, wins_per_img.area(), CV_8U, labels_buf);
 
+    GpuMat labels_copy;
+    labels.copyTo(labels_copy);
+
     hog::classify_hists(win_size.height, win_size.width, block_stride.height, block_stride.width,
                         win_stride.height, win_stride.width, img.rows, img.cols, block_hists.ptr<float>(),
-                        detector.ptr<float>(), (float)free_coef, (float)hit_threshold, labels.ptr());
+                        detector.ptr<float>(), (float)free_coef, (float)hit_threshold, labels.ptr(), labels_copy.ptr(), labels.rows);
 
     labels.download(labels_host);
     unsigned char* vec = labels_host.ptr();

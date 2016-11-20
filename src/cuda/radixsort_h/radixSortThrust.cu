@@ -378,6 +378,7 @@ void testSort(parameters_t *params)
     int keybits = 32;
 
 	double itertimestamp, kernel_time, timestamp;
+    double total_kernel_time=0.0, total_hard_time=0.0;
 	int retries = 0, errNum=0;
 
     if (params->verbose)
@@ -457,6 +458,7 @@ void testSort(parameters_t *params)
 			checkCudaErrors(cudaDeviceSynchronize());
 
 			kernel_time = mysecond() - timestamp;
+            total_kernel_time += kernel_time;
 
 			errNum = sortVerify(d_keys, d_values, d_input_keys, params->numElements);
 			checkCudaErrors(cudaDeviceSynchronize());
@@ -465,6 +467,8 @@ void testSort(parameters_t *params)
 				if (!(params->generate)) end_iteration();
 			#endif
 			/////////////////////////
+
+            total_hard_time += mysecond() - timestamp;
 
 			if (errNum) printf("GPU Verify Found ERROR! numErr=%d\n", errNum);
 			if (params->verbose) printf("GPU Kernel time: %.4fs\n", kernel_time);
@@ -529,6 +533,10 @@ void testSort(parameters_t *params)
             printf(".");
         }
         fflush(stdout);
+    }
+
+    if (params->verbose) {
+        printf("\n-> AVG Kernel time: %.4fs\n-> AVG Hardening time: %.4fs\n", total_kernel_time, total_hard_time);
     }
 
 	return;

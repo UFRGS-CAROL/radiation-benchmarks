@@ -649,7 +649,7 @@ void kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
                     snprintf(error_detail, 300, "p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", i, thread_error, fv_cpu[i].v, fv_cpu_GOLD[i].v, fv_cpu[i].x, fv_cpu_GOLD[i].x, fv_cpu[i].y, fv_cpu_GOLD[i].y, fv_cpu[i].z, fv_cpu_GOLD[i].z);
 			printf("error: %s\n",error_detail);
-#ifdef logs
+#ifdef LOGS
                     log_error_detail(error_detail);
 #endif
                     thread_error = 0;

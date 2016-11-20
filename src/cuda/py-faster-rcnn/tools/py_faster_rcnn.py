@@ -152,6 +152,75 @@ def write_to_csv(filename, data):
                 boxes_n = len(boxes_i)
                 spwriter.writerow([boxes_n, "--", boxes_i])
 
+##in the py-faster-original
+#     for cls_ind, cls in enumerate(CLASSES[1:]):
+#         cls_ind += 1 # because we skipped background
+#         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+#         cls_scores = scores[:, cls_ind]
+#         dets = np.hstack((cls_boxes,
+#                           cls_scores[:, np.newaxis])).astype(np.float32)
+#         keep = nms(dets, NMS_THRESH)
+#         dets = dets[keep, :]
+# vis_detections(im, cls, dets, thresh=CONF_THRESH)
+
+#compare and return the error count and error string detail
+def compare_boxes(gold, current):
+    #compare boxes #####################################################
+    boxes_m_gold = len(gold)
+    boxes_m_curr = len(current)
+    error_count = 0
+    error_detail = ""
+    #diff size
+    size_error_m = abs(boxes_m_gold - boxes_m_curr)
+    if size_error_m != 0:
+        min_m_range = min(boxes_m_gold, boxes_m_curr)
+        lh.log_error_detail("boxes_missing_lines: " + size_error_m)
+        error_count += size_error_m
+
+    i = 0
+    for (i_gold, i_curr) in zip(gold,current):
+        boxes_n_gold = len(i_gold)
+        boxes_n_curr = len(i_curr)
+        size_error_n = abs(boxes_n_gold - boxes_n_curr)
+        i += 1
+        j = 0
+        if size_error_n != 0:
+            lh.log_error_detail("boxes_missing_collumns: " + size_error_n + " line: " + str(i))
+            error_count += size_error_m
+
+        for (j_gold, j_curr) in zip(i_gold, i_curr):
+            gold_ij = float(j_gold)
+            curr_ij = float(j_curr)
+            j += 1
+            diff = math.fabs(gold_ij - curr_ij)
+            if diff > THRESHOLD:
+                lh.log_error_detail("boxes: [" + str(i) + "," + str(j) + "] e: " + str(gold_ij) + " r: " + str(curr_ij))
+                error_count += 1
+
+    return (error_count)
+
+#compare scores and return error count and string error detail
+def compare_scores(gold, current):
+    scores_m_gold = len(gold)
+    scores_m_curr = len(current)
+    error_count = 0
+    error_detail = ""
+    #diff size
+    size_error_m = abs(scores_m_gold - scores_m_curr)
+    if size_error_m != 0:
+        lh.log_error_detail("scores_missing_values: " + size_error_m)
+        error_count += size_error_m
+
+    i = 0
+    for (i_gold, i_curr) in zip(gold, current):
+        gold_val = float(i_gold)
+        curr_val = float(i_curr)
+        diff = math.fabs(gold_val - curr_val)
+        if diff > THRESHOLD:
+            lh.log_error_detail("scores: [" + str(i)  + "] e: " + str(gold_val) + " r: " + str(curr_val))
+            error_count += 1
+
+    return (error_count)
 
 # compare gold against current
 def compare(gold, current, img_name):
@@ -162,66 +231,58 @@ def compare(gold, current, img_name):
     scores_curr = current[0]
     boxes_curr = current[1]
 
-    # for cls_ind, cls in enumerate(CLASSES[1:]):
-    #     cls_ind += 1  # because we skipped background
-    #     cls_scores_current = scores_curr[:, cls_ind]
-    #     cls_scores_gold = scores_gold[:, cls_ind]
-    #
-    #     min_n_range = scores_n_gold = len(cls_scores_gold)
-    #     scores_n_curr = len(cls_scores_current)
-    #     size_error_n = abs(scores_n_gold - scores_n_curr)
-    #     if size_error_n != 0:
-    #         min_n_range = min(scores_n_gold, scores_n_curr)
-    #         lh.log_error_detail("score_missing_collumns: " + size_error_n + " line: " + cls_ind)
-    #         error_count += size_error_n
-    #     print "\ngold\n\n cls_scores_gold"
-    #     print cls_scores_gold
-    #     print "\nCurrent\n"
-    #     print cls_scores_current
-    #     #current boxes
-    #     # cls_boxes = boxes_curr[:, 4 * cls_ind:4 * (cls_ind + 1)]
-    #     # for i in range(0, min_n_range):
-    #     #     gold_ij = cls_scores_gold[i]
-    #     #     curr_ij = cls_scores_current[i]
-    #     #     diff = math.fabs(gold_ij - curr_ij)
-    #     #     if diff > THRESHOLD:
-    #     #         error_detail = "class: [" + str(cls_ind) + "] position: ["+ str(i) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
-    #     #         error_detail += "\n" + str(cls_boxes)
-    #     #         error_count += 1
-    #     #         lh.log_error_detail(error_detail)
+    CONF_THRESH = 0.8
+    NMS_THRESH = 0.3
+    error_detail_final = ""
+    ########################
+    #real compare
 
 
-    #compare boxes #####################################################         
-    min_m_range = boxes_m_gold = len(boxes_gold)
-    boxes_m_curr = len(boxes_curr)
-    #diff size
-    size_error_m = abs(boxes_m_gold - boxes_m_curr)
-    if size_error_m != 0:
-        min_m_range = min(boxes_m_gold, boxes_m_curr)
-        lh.log_error_detail("boxes_missing_lines: " + size_error_m)
-        error_count += size_error_m
-        
+    for cls_ind, cls in enumerate(CLASSES[1:]):
+        cls_ind += 1 # because we skipped background
 
-    for i in range(0,min_m_range):
-        min_n_range = boxes_n_gold = len(boxes_gold[i])
-        boxes_n_curr = len(boxes_curr[i])
-        size_error_n = abs(boxes_n_gold - boxes_n_curr)
-        if size_error_n != 0:
-            min_n_range = min(boxes_n_gold, boxes_n_curr)
-            lh.log_error_detail("boxes_missing_collumns: " + size_error_n + " line: " + i)
-            error_count += size_error_m
+        #for gold
+        cls_boxes_gold = boxes_gold[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_scores_gold = scores_gold[:, cls_ind]
+        dets_gold = np.hstack((cls_boxes_gold,
+                          cls_scores_gold[:, np.newaxis])).astype(np.float32)
+        keep_gold = nms(dets_gold, NMS_THRESH)
+        dets_gold = dets_gold[keep_gold, :]
 
-        for j in range(0, min_n_range):
-            gold_ij = float(boxes_gold[i][j])
-            curr_ij = float(boxes_curr[i][j])
-            diff = math.fabs(gold_ij -  curr_ij)
-            if diff > THRESHOLD:
-                error_detail = "boxes: [" + str(i) + "," + str(j) + "] e: " +  str(gold_ij) + " r: " + str(curr_ij)
-                error_count += 1
-                lh.log_error_detail(error_detail)
-        
+        #for current
+        cls_boxes_curr = boxes_curr[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_scores_curr = scores_curr[:, cls_ind]
+        dets_curr = np.hstack((cls_boxes_curr,
+                          cls_scores_curr[:, np.newaxis])).astype(np.float32)
+        keep_curr = nms(dets_curr, NMS_THRESH)
+        dets_curr = dets_curr[keep_curr, :]
+
+        #compare all results
+
+        error_count += compare_boxes(cls_boxes_gold,cls_boxes_curr)
+        # inds_gold = np.where(dets_gold[:, -1] >= 0)[0]
+        # inds_curr = np.where(dets_curr[:, -1] >= 0)[0]
+        # for i in inds_curr:
+        #     bbox_curr = dets_curr[i, :4]
+        #     scores_curr = dets_curr[i, -1]
+        #     print "Scores curr\n" , bbox_curr , " " , scores_curr
+        #
+        # for i in inds_gold:
+        #     bbox_gold = dets_gold[i, :4]
+        #     scores_gold = dets_gold[i, -1]
+        #     print "Scores gold\n" , bbox_gold , " " , scores_gold
+        # error_count += compare_scores(cls_scores_gold,cls_scores_curr)
+        # inds_curr = np.where(dets_curr[:, -1] >=  0)[0]
+        # inds_gold = np.where(dets_gold[:, -1] >=  0)[0]
+        #
+        # for (i_g, i_c) in zip(inds_gold, inds_curr):
+        #     scores_gold = dets_gold[i_g, -1]
+        #     scores_curr = dets_curr[i_c, -1]
+        #     print "csl scores" , scores_curr
+        #     print "csl scores gold" , scores_gold
+
     if error_count > 0:
-        lh.log_error_detail(img_name)
+        lh.log_error_detail("input_img: "+img_name)
 
     return error_count
 
@@ -240,7 +301,7 @@ if __name__ == '__main__':
         lh.start_log_file("PyFasterRcnn", string_info)
     
     #object for gold file
-    gold_file = []
+    gold_file = {}
 ###################################################################################
 #only load network
     try:
@@ -305,6 +366,8 @@ if __name__ == '__main__':
 
         else:
             i = 0
+            j = 0
+            im_size = len(in_names)
             while(i < iterations):
                 #iterator
                 # iterator = iter(gold_file)
@@ -327,6 +390,11 @@ if __name__ == '__main__':
                         print "Compare time " , timer.total_time , " errors " , error_count
                         lh.log_error_count(int(error_count))
                     ##end log
+                    j += 1
+                    if j == im_size:
+                        break
+
+
                 i += 1
     except Exception as e:
         if "no_logs" not in args.is_log:

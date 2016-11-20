@@ -1,19 +1,19 @@
 CC=gcc
 OMP=-fopenmp
 
-intel:CC=icc -mmic -g -DMIC_NATIVE 
+intel:CC=icc -mmic -DMIC_NATIVE 
 intel:OMP=-qopenmp
 
 SOURCES_CHECK=main_check.c kernel/kernel_cpu.c  ../../include/log_helper.c
 SOURCES_GEN=main.c kernel/kernel_cpu.c 
 APP_NAME=lavamd
 
-#all: generate lavamd lavamd_err_inj lavamd_timing
+general: lava_generate lavamd lavamd_err_inj lavamd_timing
 
-intel:  generate lavamd lavamd_err_inj lavamd_timing
+intel:  lava_generate lavamd lavamd_err_inj lavamd_timing
 
 
-generate: $(SOURCES_GEN)
+lava_generate: $(SOURCES_GEN)
 	$(CC) $(SOURCES_GEN) -lm $(OMP) -o $(APP_NAME)_genGold
 
 lavamd: $(SOURCES_CHECK)
