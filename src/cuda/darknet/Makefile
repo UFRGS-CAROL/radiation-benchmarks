@@ -48,10 +48,10 @@ ifeq ($(CUDNN), 1)
 endif
 
 ifeq ($(LOGS), 1)
-	CFLAGS+=  -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 
-	LOG_LINK= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1
+	#CFLAGS+=  -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 
+	#LOG_LINK= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1
 	#$(LOGHELPER_LIB)log_helper.o 
-	LOG_CU = $(LOGHELPER_LIB)log_helper.cu
+	LOG_CU = $(LOGHELPER_LIB)log_helper.c
 #	CFLAGS+= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda
 endif
 
@@ -78,30 +78,30 @@ ABFT_SRC=src/abft.cu
 #CFLAGS += -DABFT=1
 BUILD_ABFT_OBJ=$(OBJDIR)abft.o
  
+#$(NVCC) -I$(CUDAINCLUDE) $(NVCCFLAGS)  -dlink $(OBJDIR)abft_temp.o  -lcudadevrt -o $(OBJDIR)abft.o   $(ARCH)  
 
 NVCCFLAGS= -Xcompiler "-L/usr/local/cuda/lib64 -lcuda -lcurand  -lcudart" -Xcompiler '-fPIC' -Xcompiler '-lm'
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-all: obj results $(EXEC)
+all: build_logs obj results $(EXEC)
 
 abft: src/abft.cu
 	$(NVCC)  -I$(CUDAINCLUDE) $(NVCCFLAGS) -c -O3 -dc src/abft.cu -o $(OBJDIR)abft.o -rdc=true $(ARCH)  -lcudadevrt 
-	#$(NVCC) -I$(CUDAINCLUDE) $(NVCCFLAGS)  -dlink $(OBJDIR)abft_temp.o  -lcudadevrt -o $(OBJDIR)abft.o   $(ARCH)  
 	
 
 $(EXEC): $(OBJS) 
-	$(NVCC) $(COMMON) $(BUILD_ABFT_OBJ) $(OBJDIR)log_helper.o $^  -o $@  -lcudadevrt -lcudart -lcuda -rdc=true  $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
+	$(NVCC) $(COMMON) $(BUILD_ABFT_OBJ) $(OBJDIR)log_helper.o $^  -o $@  -lcudadevrt -lcudart -lcuda -rdc=true  $(LDFLAGS) $(CFLAGS) -DLOGS -I../../include
 	
-$(OBJDIR)%.o: %.c $(DEPS)
-	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
+$(OBJDIR)%.o: %.c $(DEPS) 
+	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS)  -DLOGS  -I../../include
 
 build_logs: $(LOG_CU)
-	$(NVCC)  $(LOG_CU) -c obj/log_helper.o
+	$(NVCC)  $(LOG_CU) -c -o $(OBJDIR)log_helper.o
 
-$(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT) build_logs
-	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
+$(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT)  build_logs
+	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CFLAGS)
 
 obj:
 	mkdir -p obj
@@ -117,7 +117,6 @@ test:darknet
 generate:darknet
 	./darknet -e yolo -m valid -c cfg/yolo.cfg -w data/yolo.weights -n 1 -g data/gold_voc2012.test \
 			-l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 0 -a 0
-
 
 
 clean:
