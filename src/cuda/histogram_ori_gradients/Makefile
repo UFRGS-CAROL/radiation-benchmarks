@@ -7,7 +7,7 @@ endif
 
 ifeq ($(LOGS), 1)
 	OPTS = -DLOGS
-	LOG_FLAGS =  -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper
+	LOG_FLAGS =  -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda
 endif
 
 
@@ -33,7 +33,7 @@ HOG_EOF_DIR = ./hog_hardened_ecc_off
 
 ALL_CV_FLAGS=-L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui  -lopencv_objdetect 
 
-ALL_GOLD_GEN= -L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui  -lopencv_objdetect  -lopencv_gpu -lopencv_calib3d -lopencv_video -lopencv_legacy   \
+ALL_GOLD_GEN= -L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui  -lopencv_objdetect  -lopencv_gpu -lopencv_calib3d -lopencv_video -lopencv_legacy \
 			-lopencv_stitching -lopencv_superres \
 			-lopencv_photo  -lopencv_ml -lopencv_ml \
 			-lopencv_contrib -lopencv_features2d -lopencv_flann \
