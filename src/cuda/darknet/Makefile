@@ -48,7 +48,8 @@ ifeq ($(CUDNN), 1)
 endif
 
 ifeq ($(LOGS), 1)
-	CFLAGS+= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper" -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper
+	CFLAGS+= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper"
+	# -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper
 	LOG_LINK= $(LOGHELPER_LIB)log_helper.o 
 	LOG_FLAGS= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" 
 endif
