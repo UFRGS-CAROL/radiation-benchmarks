@@ -387,9 +387,6 @@ void validate_yolo(Args parameters) {
 							}
 						}
 
-							if (!parameters.generate_flag) {
-								log_error_count(cmp);
-							}
 #endif
 						}
 
