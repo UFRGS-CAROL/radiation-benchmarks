@@ -11,6 +11,12 @@
 
 #include "abft.h"
 
+#ifdef LOGS
+#include "log_helper.h"
+#endif
+
+
+
 #define min(X,Y) (((X) < (Y)) ? (X) : (Y))
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"

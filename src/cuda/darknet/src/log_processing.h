@@ -20,9 +20,6 @@
 
 #define THRESHOLD_ERROR 0.005
 
-#ifdef LOGS
-#include "log_helper.h"
-#endif
 
 
 typedef struct prob_arry {
@@ -61,7 +58,7 @@ void free_gold_pointers(GoldPointers *gp);
  */
 void gold_pointers_serialize(GoldPointers gp);
 //don't mess up with the memory in C, shit gonna happens
-void free_gold_pointers(GoldPointers *gp);
+//void free_gold_pointers(GoldPointers *gp);
 
 /**
  *  the input must be read in this order
