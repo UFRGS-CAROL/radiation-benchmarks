@@ -304,10 +304,12 @@ void validate_yolo(Args parameters) {
 				}
 #endif
 
-#if ABFT == 1
-				shared_errors.row_detected_errors = 0;
-				shared_errors.col_detected_errors = 0;
-#endif
+				//for abft, because it is easier use an input parameter than a gcc macro
+				if(parameters.abft){
+					shared_errors.row_detected_errors = 0;
+					shared_errors.col_detected_errors = 0;
+					use_abft = 1;
+				}
 				double begin2 = mysecond();
 				char *path = paths[i + t - nthreads];
 				char *id = basecfg(path);
@@ -371,14 +373,14 @@ void validate_yolo(Args parameters) {
 									buf_resized, fps);
 
 #ifdef LOGS
-#if ABFT == 1
-						if(shared_errors.row_detected_errors || shared_errors.col_detected_errors) {
-							char abft_string[500];
-							fprintf(abft_string, "row_detected_errors: %ll col_detected_errors: %ll",
-									shared_errors.row_detected_errors, shared_errors.col_detected_errors);
-							log_error_detail(abft_string);
+						if(parameters.abft == 1){
+							if(shared_errors.row_detected_errors || shared_errors.col_detected_errors) {
+								char abft_string[500];
+								fprintf(abft_string, "dumb_abft row_detected_errors: %ll col_detected_errors: %ll",
+										shared_errors.row_detected_errors, shared_errors.col_detected_errors);
+								log_error_detail(abft_string);
+							}
 						}
-#endif
 
 							if (!parameters.generate_flag) {
 								log_error_count(cmp);

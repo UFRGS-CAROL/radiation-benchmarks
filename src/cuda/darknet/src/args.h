@@ -41,6 +41,8 @@ typedef struct arguments {
 
 	int gpu_index;
 	char *gold_input;
+	int save_layers;
+	int abft;
 } Args;
 
 void args_init_and_setnull(Args *arg);
