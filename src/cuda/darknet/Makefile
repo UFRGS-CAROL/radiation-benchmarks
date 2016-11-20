@@ -48,8 +48,8 @@ ifeq ($(CUDNN), 1)
 endif
 
 ifeq ($(LOGS), 1)
-	CFLAGS+= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda"  -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda
-	LOG_LINK= -Xcompiler "-DLOGS=1  -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS
+	CFLAGS+=  -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 
+	LOG_LINK= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1
 	#$(LOGHELPER_LIB)log_helper.o 
 #	CFLAGS+= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda
 endif
@@ -94,10 +94,10 @@ $(EXEC): $(OBJS)
 	$(NVCC) $(COMMON) $(BUILD_ABFT_OBJ) $^  -o $@  -lcudadevrt -lcudart -lcuda -rdc=true  $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
 	
 $(OBJDIR)%.o: %.c $(DEPS)
-	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@
+	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
 
 $(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT)
-	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@ 
+	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
 
 obj:
 	mkdir -p obj
