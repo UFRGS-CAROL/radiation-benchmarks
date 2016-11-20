@@ -133,8 +133,7 @@ def main(board):
 
 
     for i in generate:
-        print i
-    #     os.system(str(i))
+        os.system(str(i))
 
 
     make_str += " LOGS=1"
