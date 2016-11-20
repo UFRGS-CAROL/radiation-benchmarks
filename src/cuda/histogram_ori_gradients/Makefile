@@ -20,8 +20,8 @@ LOGHELPER_LIB=../../include/
 
 NVIDIA_INC=/usr/local/cuda-7.0/include/
 NVIDIA_LIB=/usr/local/cuda-7.0/lib64/
-LOGHELPER_INC=../../../include/
-LOGHELPER_LIB=../../../include/
+LOGHELPER_INC=../../include/
+LOGHELPER_LIB=../../include/
 
 #dirs
 HOG_EXT_DIR = ./hog_extracted
