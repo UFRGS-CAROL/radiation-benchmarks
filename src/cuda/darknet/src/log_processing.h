@@ -85,4 +85,6 @@ int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_itera
 void saveLayer(network net);
 void compareLayer(layer l, int i);
 
+inline double mysecond();
+
 #endif /* LOG_PROCESSING_H_ */

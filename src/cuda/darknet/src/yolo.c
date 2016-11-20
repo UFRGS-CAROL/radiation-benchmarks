@@ -158,12 +158,6 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 	}
 }
 
-inline double mysecond() {
-	struct timeval tp;
-	struct timezone tzp;
-	gettimeofday(&tp, &tzp);
-	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
-}
 
 void free_yolo_test_memory(const Args* parameters, GoldPointers* current_ptr,
 		GoldPointers* gold_ptr, int classes, image* val, image* val_resized,
