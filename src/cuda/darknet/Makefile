@@ -96,7 +96,7 @@ $(OBJDIR)%.o: %.c $(DEPS)
 	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LOG_LINK)
 
 $(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT)
-	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@ $(LOG_LINK)
+	$(NVCC) $(ARCH) $(LOG_LINK) $(COMMON) $(CFLAGS) -c $< -o $@ 
 
 obj:
 	mkdir -p obj
