@@ -374,7 +374,7 @@ void validate_yolo(Args parameters) {
 #if ABFT == 1
 						if(shared_errors.row_detected_errors || shared_errors.col_detected_errors) {
 							char abft_string[500];
-							fprintf(abft_string, "row_detected_errors: %d col_detected_errors: %d",
+							fprintf(abft_string, "row_detected_errors: %ll col_detected_errors: %ll",
 									shared_errors.row_detected_errors, shared_errors.col_detected_errors);
 							log_error_detail(abft_string);
 						}
