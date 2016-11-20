@@ -50,7 +50,7 @@ endif
 ifeq ($(LOGS), 1)
 	CFLAGS+= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda"  -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda
 	LOG_LINK= $(LOGHELPER_LIB)log_helper.o 
-	LOG_FLAGS= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" 
+	LOG_FLAGS= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" 
 endif
 
 OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o image.o activations.o \
