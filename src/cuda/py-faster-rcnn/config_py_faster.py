@@ -52,7 +52,7 @@ def main(board):
     txt_list_caltec = installDir + 'data/networks_img_list/gold.caltech.1K.txt'
     caltech_gen = {
 		'exe': ['sudo ', installDir + "/tools/py_faster_rcnn.py "],
-        'gold': [' --gld ', gold_caltec],
+        'gold': [' --gen ', gold_caltec],
         'iml': [' --iml ', txt_list_caltec],
     }
 
@@ -74,7 +74,7 @@ def main(board):
         # os.system(str(i))
 		print i
 
-    fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
+   # fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
 
     for i in execute:
         # print >> fp, "[\"""sudo " + str(i) + "\" , 0.016, \"py_faster_rcnn\"],"
