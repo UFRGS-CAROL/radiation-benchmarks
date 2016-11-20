@@ -1,7 +1,7 @@
 NVIDIA_INC=/usr/local/cuda-7.0/include/
 NVIDIA_LIB=/usr/local/cuda-7.0/lib64/
-LOGHELPER_INC=../../radiation-benchmarks/src/include/
-LOGHELPER_LIB=../../radiation-benchmarks/src/include/
+LOGHELPER_INC=../../../include/
+LOGHELPER_LIB=../../../include/
 
 NVCC=/usr/local/cuda-7.0/bin/nvcc
 CXX=g++
@@ -32,10 +32,10 @@ gold_generator: GoldGenerator.cpp
 	$(NVCC) GoldGenerator.cpp $(debug) -o generator $(ALL_GOLD_GEN)
 
 test:
-	./hog 1x_pedestrians.jpg --dst_data GOLD_1x.data --iterations 1
+	./hog dataset_example.txt --iterations 1
 
 generate:
-	./generator 1x_pedestrians.jpg --dst_data GOLD_1x.data --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
+	./generator dataset_example.txt --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
 	
 
 clean:
