@@ -381,7 +381,8 @@ void validate_yolo(Args parameters) {
 						if(parameters.abft == 1){
 							if(shared_errors.row_detected_errors || shared_errors.col_detected_errors) {
 								char abft_string[500];
-								fprintf(abft_string, "dumb_abft row_detected_errors: %ll col_detected_errors: %ll",
+								fprintf(abft_string, "abft_type: dumb image_list_position: [%ld] row_detected_errors: %ll col_detected_errors: %ll",
+										gold_iterator,
 										shared_errors.row_detected_errors, shared_errors.col_detected_errors);
 								log_error_detail(abft_string);
 							}
