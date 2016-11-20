@@ -106,7 +106,8 @@ void forward_network_gpu(network net, network_state state, int gold)
         }
         state.input = l.output_gpu;
         //FUCK, FUCK, FUCK, I HATE C, I REALLY HATE C MEMORY MANAGEMENT, BIRRLLL
-        printf("old size %d new size %d\n", net.layers[(i - 1) < 0 ? 0:i-1], l.outputs)
+        if(net.layers[(i - 1) < 0 ? 0:i-1].outputs - l.outputs > 0)
+        	printf("old size %d new size %d\n", net.layers[(i - 1) < 0 ? 0:i-1].outputs, l.outputs);
         if(layer_output[i])
         	free(layer_output[i]);
 
