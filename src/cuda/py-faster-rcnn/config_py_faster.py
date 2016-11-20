@@ -25,7 +25,7 @@ def main(board):
 
     data_path = installDir + "data/py_faster_rcnn"
     bin_path = installDir + "bin"
-    src_py_faster = installDir + "src/cuda/py_faster_rcnn"
+    src_py_faster = installDir + "src/cuda/py-faster-rcnn"
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
