@@ -132,24 +132,18 @@ def main(board):
     execute.append (" ".join([''.join(map(str, value))for key,value in voc_exe_save.iteritems()]))
 
 
-    for i in generate:
-        os.system(str(i))
-
-
+    # for i in generate:
+    #     os.system(str(i))
     make_str += " LOGS=1"
 
     os.system(make_clean)
     os.system("make -C ../../include/")
     os.system(make_str)
-
-
-    # os.system("sudo chmod 777 gold_* ");
-    # os.system("mv gold_* "+data_path);
     os.system("mv ./darknet "+bin_path)
     fp = open(installDir+"scripts/how_to_run_darknet_cuda_"+board, 'w')
 
     for i in execute:
-        print >>fp, str(i)
+        print >>fp, "[\"""sudo " + str(i) + "\" , 0.016, \"darknet\"],"
 
 
     print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_darknet_cuda_"+board+"\n"

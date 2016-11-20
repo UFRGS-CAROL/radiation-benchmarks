@@ -9,7 +9,7 @@
 #include "connected_layer.h"
 
 #include <sys/stat.h>
- #include <sys/types.h>
+#include <sys/types.h>
 #include "args.h"
 #include "yolo.h"
 
@@ -357,15 +357,16 @@ int main(int argc, char **argv) {
 
 #ifdef LOGS
 		char test_info[500];
-		snprintf(test_info, 500, "execution_type:%s execution_model:%s img_list_path:%s weights:%s config_file:%s iterations:%d", to_parse.execution_type
-				, to_parse.execution_model, to_parse.img_list_path, to_parse.weights, to_parse.config_file, to_parse.iterations);
-		if (!(to_parse.generate_flag)) start_log_file("cudaDarknet", test_info);
+		snprintf(test_info, 500, "execution_type:%s execution_model:%s img_list_path:%s weights:%s config_file:%s iterations:%d abft: %s", to_parse.execution_type
+				, to_parse.execution_model, to_parse.img_list_path, to_parse.weights, to_parse.config_file, to_parse.iterations,
+				((to_parse.abft == 1) ? "dumb_abft":"no_abft");
+				if (!(to_parse.generate_flag)) start_log_file("cudaDarknet", test_info);
 #endif
 
 		if (strcmp(to_parse.execution_type, "yolo") == 0) {
-			struct stat st = {0};
-			if(to_parse.abft && stat(SAVE_LAYERS_DIR, &st) == -1)
-			    mkdir(SAVE_LAYERS_DIR, 0777);
+			struct stat st = { 0 };
+			if (to_parse.abft && stat(SAVE_LAYERS_DIR, &st) == -1)
+				mkdir(SAVE_LAYERS_DIR, 0777);
 			run_yolo(to_parse);
 		}
 
