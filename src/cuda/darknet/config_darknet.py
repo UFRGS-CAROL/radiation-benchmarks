@@ -132,8 +132,10 @@ def main(board):
     execute.append (" ".join([''.join(map(str, value))for key,value in voc_exe_save.iteritems()]))
 
 
-    # for i in generate:
-    #     os.system(str(i))
+    for i in generate:
+        #os.system(str(i))
+        print i
+
     make_str += " LOGS=1"
 
     os.system(make_clean)
