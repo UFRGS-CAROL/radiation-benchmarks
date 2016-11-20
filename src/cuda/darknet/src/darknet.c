@@ -8,8 +8,12 @@
 #include "blas.h"
 #include "connected_layer.h"
 
+#include <sys/stat.h>
+ #include <sys/types.h>
 #include "args.h"
 #include "yolo.h"
+
+#define SAVE_LAYERS_DIR "/var/radiation-benchmarks/data/"
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -320,6 +324,7 @@ void visualize(char *cfgfile, char *weightfile) {
 }
 
 int main(int argc, char **argv) {
+
 	//test_resize("data/bad.jpg");
 	//test_box();
 	//test_convolutional_layer();
@@ -358,6 +363,9 @@ int main(int argc, char **argv) {
 #endif
 
 		if (strcmp(to_parse.execution_type, "yolo") == 0) {
+			struct stat st = {0};
+			if(to_parse.abft && stat(SAVE_LAYERS_DIR, &st) == -1)
+			    mkdir(SAVE_LAYERS_DIR, 0777);
 			run_yolo(to_parse);
 		}
 
