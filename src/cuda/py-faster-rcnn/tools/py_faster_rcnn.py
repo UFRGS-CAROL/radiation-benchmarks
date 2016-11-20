@@ -195,6 +195,7 @@ def compare_boxes(gold, current):
                 lh.log_error_detail("boxes: [" + str(i) + "," + str(j) + "] e: " + str(gold_ij) + " r: " + str(curr_ij))
                 error_count += 1
 
+
     return (error_count)
 
 #compare scores and return error count and string error detail
@@ -228,7 +229,7 @@ def compare(gold, current, img_name):
     #iterator for current, i need it because generate could be smaller than gold, so python will throw an exception
     scores_curr = current[0]
     boxes_curr = current[1]
-    print "\n\nsizeof " , sys.getsizeof(scores_curr) / 1024, "\n\n"
+
 
     CONF_THRESH = 0.8
     NMS_THRESH = 0.3
@@ -391,6 +392,12 @@ if __name__ == '__main__':
                         error_count = compare(gold_file[im_name], ret, im_name)
                         timer.toc()
 
+                        # if error_count != 0:
+                        iteration_file_pos = iterations + it
+                        scores_name = lh.get_log_file_name() +str(iteration_file_pos) + ".scores"
+                        print scores_name
+                        if error_count != 0:
+                            serialize_gold(scores_name,ret[0])
                         if it % 10 == 0:
                             print "Compare time " , timer.total_time , " errors " , error_count
 
