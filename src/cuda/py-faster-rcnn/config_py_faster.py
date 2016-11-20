@@ -38,6 +38,7 @@ def main(board):
     gold_voc = gold = data_path + '/gold.voc.2012.1K.test'
     txt_list_voc = installDir + 'data/networks_img_list/voc.2012.1K.txt'
     voc_gen = {
+		'exe': ['sudo ', installDir + "/tools/py_faster_rcnn.py "],
         'gold': [' --gen ', gold_voc],
         'iml': [' --iml ', txt_list_voc],
     }
