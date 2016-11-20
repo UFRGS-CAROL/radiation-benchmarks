@@ -51,6 +51,7 @@ ifeq ($(LOGS), 1)
 	CFLAGS+=  -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 
 	LOG_LINK= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1
 	#$(LOGHELPER_LIB)log_helper.o 
+	LOG_CU = $(LOGHELPER_LIB)log_helper.cu
 #	CFLAGS+= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda
 endif
 
@@ -91,12 +92,15 @@ abft: src/abft.cu
 	
 
 $(EXEC): $(OBJS) 
-	$(NVCC) $(COMMON) $(BUILD_ABFT_OBJ) $^  -o $@  -lcudadevrt -lcudart -lcuda -rdc=true  $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
+	$(NVCC) $(COMMON) $(BUILD_ABFT_OBJ) $(OBJDIR)log_helper.o $^  -o $@  -lcudadevrt -lcudart -lcuda -rdc=true  $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
 	
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
 
-$(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT)
+build_logs: $(LOG_CU)
+	$(NVCC)  $(LOG_CU) -c obj/log_helper.o
+
+$(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT) build_logs
 	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
 
 obj:

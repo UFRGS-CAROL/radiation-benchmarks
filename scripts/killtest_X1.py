@@ -30,8 +30,9 @@ commandList = [
 ["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 1  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
 
 ##py-faster
-#	["sudo /home/carol/radiation-benchmarks/src/cuda/py_faster_rcnn/tools/py_faster_rcnn.py --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold_voc_full.test --iml /home/carol/radiation-benchmarks/data/networks_img_list/voc/K40/voc.2012.FULL.txt --log daniel_logs"],
-#	["sudo /home/carol/radiation-benchmarks/src/cuda/py_faster_rcnn/tools/py_faster_rcnn.py --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold_caltech_full.test --iml /home/carol/radiation-benchmarks/data/networks_img_listcaltech/K40/caltech.pedestrians.FULL.txt --log daniel_logs"],
+##py-faster
+["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold.caltech.1K.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
+["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold.voc.2012.1K.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
 
 ##hog
 

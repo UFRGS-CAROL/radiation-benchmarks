@@ -38,9 +38,9 @@ def main(board):
     gold_voc = gold = data_path + '/gold.voc.2012.1K.test'
     txt_list_voc = installDir + 'data/networks_img_list/voc.2012.1K.txt'
     voc_gen = {
-        'exe': ['sudo ', src_py_faster + "/tools/py_faster_rcnn.py "],
         'gold': [' --gen ', gold_voc],
         'iml': [' --iml ', txt_list_voc],
+	'ite': [' --ite ', '1000'], 'zexe': ['sudo ', src_py_faster + "/tools/py_faster_rcnn.py "],
     }
 
     voc_exe = copy.deepcopy(voc_gen)
@@ -51,9 +51,9 @@ def main(board):
     gold_caltec = gold = data_path + '/gold.caltech.1K.test'
     txt_list_caltec = installDir + 'data/networks_img_list/caltech.pedestrians.1K.txt'
     caltech_gen = {
-        'exe': ['sudo ', src_py_faster + "/tools/py_faster_rcnn.py "],
         'gold': [' --gen ', gold_caltec],
         'iml': [' --iml ', txt_list_caltec],
+	'ite': [' --ite ', '1000'], 'zexe': ['sudo ', src_py_faster + "/tools/py_faster_rcnn.py "],
     }
 
     caltech_exe = copy.deepcopy(caltech_gen)
@@ -72,15 +72,12 @@ def main(board):
 
     for i in generate:
         os.system(str(i))
-        print i
-        break
-        #print i
 
     fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
 
     for i in execute:
-        print >> fp, "[\"""sudo " + str(i) + "\" , 0.016, \"py_faster_rcnn\"],"
-        #print "[\"""sudo " + str(i) + "\" , 0.016, \"py_faster_rcnn\"],"
+        print >> fp, "[\"" + str(i) + "\" , 0.016, \"py_faster_rcnn.py\"],"
+        print "[\"" + str(i) + "\" , 0.016, \"py_faster_rcnn.py\"],"
 
     print "\nConfiguring done, to run check file: " + installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + str(
         board) + "\n"
