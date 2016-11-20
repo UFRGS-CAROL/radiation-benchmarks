@@ -37,7 +37,7 @@ def main(board):
 # -l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 1 -a 1
 
     gold = data_path + '/gold.voc.2012.2K.test'
-    txt_list = installDir + 'data/networks_img_list/voc.2012.2K.txt'
+    txt_list = installDir + 'data/networks_img_list/voc.2012.1K.txt'
     voc_gen_clean = {
         'bin':[bin_path, "/darknet"],
         'e':[' -e ', 'yolo'],                   #execution_type =
@@ -60,7 +60,7 @@ def main(board):
 
     #caltech gen
     gold = data_path + '/gold.caltech.2K.test'
-    txt_list = installDir + 'data/networks_img_list/caltech.pedestrians.2K.txt'
+    txt_list = installDir + 'data/networks_img_list/caltech.pedestrians.1K.txt'
     caltech_gen_clean = copy.deepcopy(voc_gen_clean)
     caltech_gen_clean['l'][1] = txt_list
     caltech_gen_clean['g'][1] = gold
@@ -101,7 +101,7 @@ def main(board):
     voc_exe_save['s'][1] = 1
 
 
-    # os.system("cd "+src_darknet)
+    os.system("cd "+src_darknet)
 
     make_clean = "make clean GPU=1"
 
@@ -132,8 +132,8 @@ def main(board):
     execute.append (" ".join([''.join(map(str, value))for key,value in voc_exe_save.iteritems()]))
 
 
-    for i in generate:
-        os.system(str(i))
+    # for i in generate:
+    #     os.system(str(i))
 
 
     make_str += " LOGS=1"
