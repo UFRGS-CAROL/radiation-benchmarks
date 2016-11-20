@@ -20,6 +20,9 @@
 
 #define THRESHOLD_ERROR 0.005
 
+#ifdef LOGS
+#include "log_helper.h"
+#endif
 
 
 typedef struct prob_arry {
