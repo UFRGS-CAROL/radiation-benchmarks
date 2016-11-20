@@ -25,11 +25,9 @@ import argparse
 import pickle
 import math
 import traceback
-
-
 import csv
-
-THRESHOLD = 0.0000001
+import sys
+THRESHOLD = 0.005
 
 #import log helper
 sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include/log_helper_python/')
@@ -371,11 +369,15 @@ if __name__ == '__main__':
             while(i < iterations):
                 #iterator
                 # iterator = iter(gold_file)
+                total_iteration_errors = 0
+                it = 0
                 for im_name in in_names:
                     # item = iterator.next()
                     ###Log
                     #print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-                    print 'PyFaster for data/demo/{}'.format(im_name)
+                    it += 1
+                    if it % 10 == 0:
+                        print 'PyFaster for data/demo/{}'.format(im_name)
                     if "no_logs" not in args.is_log:
                         ##start
                         lh.start_iteration()
@@ -387,8 +389,12 @@ if __name__ == '__main__':
                         timer.tic()
                         error_count = compare(gold_file[im_name], ret, im_name)
                         timer.toc()
-                        print "Compare time " , timer.total_time , " errors " , error_count
+
+                        if it % 10 == 0:
+                            print "Compare time " , timer.total_time , " errors " , error_count
+
                         lh.log_error_count(int(error_count))
+
                     ##end log
                     j += 1
                     if j == im_size:

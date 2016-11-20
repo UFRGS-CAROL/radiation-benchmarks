@@ -72,6 +72,8 @@ def main(board):
 
     for i in generate:
         os.system(str(i))
+		print i
+		break
 		#print i
 
     fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
