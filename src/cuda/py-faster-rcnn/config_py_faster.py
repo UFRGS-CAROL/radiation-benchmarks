@@ -41,6 +41,7 @@ def main(board):
         'exe': ['sudo ', src_py_faster + "/tools/py_faster_rcnn.py "],
         'gold': [' --gen ', gold_voc],
         'iml': [' --iml ', txt_list_voc],
+		'ite': [' --ite ', '1000']
     }
 
     voc_exe = copy.deepcopy(voc_gen)
@@ -54,6 +55,7 @@ def main(board):
         'exe': ['sudo ', src_py_faster + "/tools/py_faster_rcnn.py "],
         'gold': [' --gen ', gold_caltec],
         'iml': [' --iml ', txt_list_caltec],
+		'ite': [' --ite ', '1000']
     }
 
     caltech_exe = copy.deepcopy(caltech_gen)
@@ -72,14 +74,11 @@ def main(board):
 
     for i in generate:
         os.system(str(i))
-        print i
-        break
-        #print i
 
     fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
 
     for i in execute:
-        print >> fp, "[\"""sudo " + str(i) + "\" , 0.016, \"py_faster_rcnn\"],"
+        print >> fp, "[\"" + str(i) + "\" , 0.016, \"py_faster_rcnn\"],"
         #print "[\"""sudo " + str(i) + "\" , 0.016, \"py_faster_rcnn\"],"
 
     print "\nConfiguring done, to run check file: " + installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + str(

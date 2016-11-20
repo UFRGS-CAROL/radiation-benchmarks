@@ -345,7 +345,7 @@ if __name__ == '__main__':
 
     ##################################################################################
         in_names=[]
-        iterations = 1
+        iterations = args.iterations
         
         in_names = [line.strip() for line in open(args.img_list, 'r')]
 
@@ -394,10 +394,10 @@ if __name__ == '__main__':
 
                         # if error_count != 0:
                         iteration_file_pos = iterations + it
-                        scores_name = lh.get_log_file_name() +str(iteration_file_pos) + ".scores"
+                        scores_name = lh.get_log_file_name() +"_"+ str(iteration_file_pos) + ".scores"
                         print scores_name
-                        if error_count != 0:
-                            serialize_gold(scores_name,ret[0])
+                        # if error_count != 0:
+                        serialize_gold(scores_name,ret[0])
                         if it % 10 == 0:
                             print "Compare time " , timer.total_time , " errors " , error_count
 
