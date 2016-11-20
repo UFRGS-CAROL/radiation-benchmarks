@@ -138,6 +138,7 @@ def main(board):
 
     os.system(make_clean)
     os.system("make -C ../../include/")
+    print "\n\n\n" + make_str + "\n\n\n"
     os.system(make_str)
     os.system("mv ./darknet "+bin_path)
     fp = open(installDir+"scripts/how_to_run_darknet_cuda_"+board, 'w')
