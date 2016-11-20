@@ -48,8 +48,7 @@ ifeq ($(CUDNN), 1)
 endif
 
 ifeq ($(LOGS), 1)
-	CFLAGS+= -DLOGS  -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda
-	#-Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" 
+	CFLAGS+= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda"  -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda
 	LOG_LINK= $(LOGHELPER_LIB)log_helper.o 
 	LOG_FLAGS= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" 
 endif
@@ -71,10 +70,10 @@ endif
 
 #abft = 1 is dumb abft
 #abft = 2 is fast abft
-LOG_LINK+= -Xcompiler "-DABFT=1"
+#LOG_LINK+= -Xcompiler "-DABFT=1"
 BUILD_ABFT=abft
 ABFT_SRC=src/abft.cu
-CFLAGS += -DABFT=1
+#CFLAGS += -DABFT=1
 BUILD_ABFT_OBJ=$(OBJDIR)abft.o
  
 
