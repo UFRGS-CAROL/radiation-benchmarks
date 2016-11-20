@@ -51,6 +51,7 @@ def main(board):
     gold_caltec = gold = data_path + '/gold.caltech.1K.test'
     txt_list_caltec = installDir + 'data/networks_img_list/gold.caltech.1K.txt'
     caltech_gen = {
+		'exe': ['sudo ', installDir + "/tools/py_faster_rcnn.py "],
         'gold': [' --gld ', gold_caltec],
         'iml': [' --iml ', txt_list_caltec],
     }
