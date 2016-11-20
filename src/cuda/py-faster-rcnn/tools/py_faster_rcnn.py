@@ -345,7 +345,7 @@ if __name__ == '__main__':
 
     ##################################################################################
         in_names=[]
-        iterations = args.iterations
+        iterations = int(args.iterations)
         
         in_names = [line.strip() for line in open(args.img_list, 'r')]
 
