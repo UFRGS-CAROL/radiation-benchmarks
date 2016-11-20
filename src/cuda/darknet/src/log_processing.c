@@ -330,7 +330,11 @@ void saveLayer(network net)
 	for (i = 0; i < 32; i++)
 	{
 		snprintf(a, 3,"%d",i);
+#ifdef LOGS
 		log_name = get_log_file_name();
+#else
+		log_name = "standard_name";
+#endif
 		strcpy(name, log_name);
 		strcat(name, "_layer_");
 		strcat(name, &a);
