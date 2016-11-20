@@ -83,7 +83,7 @@ hog_har_ecc_off: $(HOG_EOF_DIR)/HOG.cpp
 
 ##hog evaluate
 hog_eval: $(HOG_EVA_DIR)/GoldGenerator.cpp
-	$(CXX) $(HOG_EVA_DIR)/GoldGenerator.cpp -Wall  -o3 -lopencv_core -I$(LOGHELPER_INC) -DCXX -lopencv_imgproc -lopencv_highgui \
+	$(CXX) $(HOG_EVA_DIR)/GoldGenerator.cpp -Wall  -o3 -lopencv_core -I$(LOGHELPER_INC) -lopencv_imgproc -lopencv_highgui \
 	-lopencv_calib3d -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_legacy -lopencv_ml \
 	-lopencv_nonfree -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_superres -lopencv_video \
 	-lopencv_videostab -o $(HOG_EVA_DIR)/hog_evaluate_dataset
