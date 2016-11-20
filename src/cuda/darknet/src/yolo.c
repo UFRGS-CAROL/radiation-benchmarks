@@ -5,7 +5,7 @@
 #include "parser.h"
 #include "box.h"
 #include "demo.h"
-#include <sys/time.h>
+
 #include "args.h"
 #include "log_processing.h"
 

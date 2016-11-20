@@ -11,7 +11,7 @@
 #ifdef LOGS
 #include "log_helper.h"
 #endif
-
+#include <sys/time.h>
 #include "yolo.h"
 #include "network.h"
 #include "layer.h"
