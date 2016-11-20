@@ -70,13 +70,12 @@ endif
 
 #abft = 1 is dumb abft
 #abft = 2 is fast abft
-ifeq ($(ABFT),1)
-	LOG_LINK+= -Xcompiler "-DABFT=1"
-	BUILD_ABFT=abft
-	ABFT_SRC=src/abft.cu
-	CFLAGS += -DABFT=1
-	BUILD_ABFT_OBJ=$(OBJDIR)abft.o
-endif 
+LOG_LINK+= -Xcompiler "-DABFT=1"
+BUILD_ABFT=abft
+ABFT_SRC=src/abft.cu
+CFLAGS += -DABFT=1
+BUILD_ABFT_OBJ=$(OBJDIR)abft.o
+ 
 
 NVCCFLAGS= -Xcompiler "-L/usr/local/cuda/lib64 -lcuda -lcurand  -lcudart" -Xcompiler '-fPIC' -Xcompiler '-lm'
 
@@ -107,12 +106,12 @@ results:
 .PHONY: clean
 
 test:darknet
-
-
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w data/yolo.weights -n 3 -d data/gold_voc2012.test -l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0
+	./darknet -e yolo -m valid -c cfg/yolo.cfg -w data/yolo.weights -n 3 -d data/gold_voc2012.test \
+							-l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 1 -a 0
 
 generate:darknet
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w data/yolo.weights -n 1 -g data/gold_voc2012.test -l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0
+	./darknet -e yolo -m valid -c cfg/yolo.cfg -w data/yolo.weights -n 1 -g data/gold_voc2012.test \
+			-l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 0 -a 0
 
 
 
