@@ -305,7 +305,7 @@ void validate_yolo(Args parameters) {
 #endif
 
 				//for abft, because it is easier use an input parameter than a gcc macro
-				if(parameters.abft){
+				if(parameters.abft == 1){
 					shared_errors.row_detected_errors = 0;
 					shared_errors.col_detected_errors = 0;
 					set_use_abft(1);
@@ -365,7 +365,10 @@ void validate_yolo(Args parameters) {
 						fprintf(stderr,
 								"%d errors found in the computation, run to the hills\n",
 								cmp);
-						saveLayer(net);
+
+						//Lucas saving layers
+						if(parameters.save_layers == 1)
+							saveLayer(net);
 						max_err_per_iteration += cmp;
 						if (max_err_per_iteration > 500) {
 							free_yolo_test_memory(&parameters, &current_ptr,
