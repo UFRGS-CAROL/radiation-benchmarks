@@ -1,4 +1,0 @@
-/home/carol/radiation-benchmarks/data/CALTECH/set07/V004/1144.jpg
-/home/carol/radiation-benchmarks/data/CALTECH/set07/V004/178.jpg
-/home/carol/radiation-benchmarks/data/CALTECH/set07/V004/10.jpg
-/home/carol/radiation-benchmarks/data/CALTECH/set07/V004/484.jpg
