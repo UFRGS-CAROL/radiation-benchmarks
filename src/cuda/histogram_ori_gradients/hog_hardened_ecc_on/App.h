@@ -122,7 +122,7 @@ void App::run() {
 #ifdef LOGS
 	cout << "logs enabled" << endl;
 	char test_info[90]; 
-	snprintf(test_info, 90, "unhardened hog");
+	snprintf(test_info, 90, "hog hardened ecc on");
 	start_log_file("cudaHOG", test_info);
 #endif
 	//====================================
