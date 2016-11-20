@@ -55,7 +55,7 @@ void forward_network_gpu(network net, network_state state, int gold)
     //float *a = get_network_output_gpu_layer(net, 1);
     //printf("%f\n", a[0]);
     int i;
-    double sum_time = 0;
+//    double sum_time = 0;
     for(i = 0; i < net.n; ++i){
         state.index = i;
         layer l = net.layers[i];
@@ -109,7 +109,7 @@ void forward_network_gpu(network net, network_state state, int gold)
         //FUCK, FUCK, FUCK, I HATE C, I REALLY HATE C MEMORY MANAGEMENT, BIRRLLL
 //        if(net.layers[(i - 1) < 0 ? 0:i-1].outputs - l.outputs > 0)
 //        	printf("old size %d new size %d\n", net.layers[(i - 1) < 0 ? 0:i-1].outputs, l.outputs);
-        double begin = mysecond();
+//        double begin = mysecond();
         if(layer_output[i])
         	free(layer_output[i]);
 
@@ -134,7 +134,7 @@ void forward_network_gpu(network net, network_state state, int gold)
 		}*/
 
     }
-    printf("total layer malloc time %d\n", sum_time);
+//    printf("total layer malloc time %d\n", sum_time);
 #ifdef LOGS
 //        fprintf(stdout,
 //				"Total Layer comparison Time: %f Seconds\n",
