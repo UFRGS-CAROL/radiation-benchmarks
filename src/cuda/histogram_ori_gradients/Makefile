@@ -75,7 +75,7 @@ hog_har_ecc_on: $(HOG_HAR_DIR)/HOG.cpp
 ##hog hardened ecc off
 hog_har_ecc_off: $(HOG_EOF_DIR)/HOG.cpp
 	$(NVCC) $(HOG_EOF_DIR)/opencv_src/hog.cu -c -I$(NVIDIA_INC) -o $(HOG_EOF_DIR)/hog.o
-	$(NVCC) $(HOG_EOF_DIR)/opencv_src/HogDescriptor.cpp -c $(ALL_CV_FLAGS) -o $(HOG_EOF_DIR)/HogDescriptor
+	$(NVCC) $(HOG_EOF_DIR)/opencv_src/HogDescriptor.cpp -c $(ALL_CV_FLAGS) -o $(HOG_EOF_DIR)/HogDescriptor.o
 	$(NVCC) $(HOG_EOF_DIR)/HOG.cpp -c $(ALL_CV_FLAGS) $(LOG_FLAGS) -o $(HOG_EOF_DIR)/HOG.o
 	$(CXX) -o $(HOG_EOF_DIR)/hog_har_eccoff $(HOG_EOF_DIR)/hog.o $(HOG_EOF_DIR)/HogDescriptor.o $(HOG_EOF_DIR)/HOG.o \
 		$(ALL_CV_FLAGS) $(LOG_FLAGS) -L/usr/local/cuda-7.0/lib64 -lcuda -lcudart -lcublas -lcurand
