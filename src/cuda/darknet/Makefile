@@ -61,7 +61,7 @@ OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o i
 	 captcha.o route_layer.o writing.o box.o nightmare.o normalization_layer.o avgpool_layer.o coco.o dice.o \
 	 yolo.o detector.o layer.o compare.o classifier.o local_layer.o swag.o shortcut_layer.o activation_layer.o \
 	 rnn_layer.o gru_layer.o rnn.o rnn_vid.o crnn_layer.o demo.o tag.o cifar.o go.o batchnorm_layer.o art.o \
-	 region_layer.o reorg_layer.o super.o voxel.o log_processing.o args.o $(LOG_CU)
+	 region_layer.o reorg_layer.o super.o voxel.o log_processing.o args.o
 	 
 ifeq ($(GPU), 1)
 LDFLAGS+= -lstdc++
@@ -92,12 +92,15 @@ abft: src/abft.cu
 	
 
 $(EXEC): $(OBJS) 
-	$(NVCC) $(COMMON) $(BUILD_ABFT_OBJ) $^  -o $@  -lcudadevrt -lcudart -lcuda -rdc=true  $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
+	$(NVCC) $(COMMON) $(BUILD_ABFT_OBJ) $(OBJDIR)log_helper.o $^  -o $@  -lcudadevrt -lcudart -lcuda -rdc=true  $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
 	
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
 
-$(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT)
+build_logs: $(LOG_CU)
+	$(NVCC)  $(LOG_CU) -c obj/log_helper.o
+
+$(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT) build_logs
 	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
 
 obj:
