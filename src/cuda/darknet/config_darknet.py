@@ -132,14 +132,15 @@ def main(board):
     execute.append (" ".join([''.join(map(str, value))for key,value in voc_exe_save.iteritems()]))
 
 
-    # for i in generate:
+    for i in generate:
+        print i
     #     os.system(str(i))
 
 
     make_str += " LOGS=1"
 
     os.system(make_clean)
-    os.system("make -C ../../include/ cuda")
+    os.system("make -C ../../include/")
     os.system(make_str)
 
 

@@ -8,9 +8,6 @@
 #ifndef LOG_PROCESSING_H_
 #define LOG_PROCESSING_H_
 
-#ifdef LOGS
-#include "log_helper.h"
-#endif
 #include <sys/time.h>
 #include "yolo.h"
 #include "network.h"

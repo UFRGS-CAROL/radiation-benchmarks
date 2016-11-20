@@ -13,6 +13,10 @@
 
 #include "log_processing.h"
 
+
+#ifdef LOGS
+#include "log_helper.h"
+#endif
 inline double mysecond() {
 	struct timeval tp;
 	struct timezone tzp;
