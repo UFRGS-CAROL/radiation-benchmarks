@@ -36,7 +36,7 @@ def main(board):
 #	./darknet -e yolo -m valid -c cfg/yolo.cfg -w data/yolo.weights -n 3 -d data/gold_voc2012.test
 # -l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 1 -a 1
 
-    gold = data_path + '/gold.voc.2012.2K.test'
+    gold = data_path + '/gold.voc.2012.1K.test'
     txt_list = installDir + 'data/networks_img_list/voc.2012.1K.txt'
     voc_gen_clean = {
         'bin':[bin_path, "/darknet"],
@@ -54,18 +54,18 @@ def main(board):
     }
 
     voc_gen_abft = copy.deepcopy(voc_gen_clean)
-    gold_abft = data_path + '/gold.voc.2012.2K.abft.test'
+    gold_abft = data_path + '/gold.voc.2012.1K.abft.test'
     voc_gen_abft['a'][1] = 1
     voc_gen_abft['g'][1] = gold_abft
 
     #caltech gen
-    gold = data_path + '/gold.caltech.2K.test'
+    gold = data_path + '/gold.caltech.1K.test'
     txt_list = installDir + 'data/networks_img_list/caltech.pedestrians.1K.txt'
     caltech_gen_clean = copy.deepcopy(voc_gen_clean)
     caltech_gen_clean['l'][1] = txt_list
     caltech_gen_clean['g'][1] = gold
 
-    gold_abft = data_path + '/gold.caltech.2K.abft.test'
+    gold_abft = data_path + '/gold.caltech.1K.abft.test'
     caltech_gen_abft =copy.deepcopy(caltech_gen_clean)
     caltech_gen_abft['a'][1] = 1
     caltech_gen_abft['g'][1] = gold_abft
