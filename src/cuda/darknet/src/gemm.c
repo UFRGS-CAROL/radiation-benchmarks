@@ -57,7 +57,7 @@ void time_random_matrix(int TA, int TB, int m, int k, int n) {
 	}
 	end = clock();
 	printf("Matrix Multiplication %dx%d * %dx%d, TA=%d, TB=%d: %lf ms\n", m, k,
-			k, n, TA, TB, (float) (end - start) / CLOCKS_PER_SEC );
+			k, n, TA, TB, (float) (end - start) / CLOCKS_PER_SEC);
 	free(a);
 	free(b);
 	free(c);
@@ -193,9 +193,12 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 #if ABFT == 1
 
 	ErrorReturn temp = abraham_check(C_gpu, M, N);
-	if (temp.row_detected_errors || temp.col_detected_errors)
-	printf("Detected row errors: %d\nDetected collum errors %d\n",
-			temp.row_detected_errors, temp.col_detected_errors);
+	shared_errors.row_detected_errors += temp.row_detected_errors;
+	shared_errors.col_detected_errors += temp.col_detected_errors;
+
+//	if (temp.row_detected_errors || temp.col_detected_errors)
+//	printf("Detected row errors: %d\nDetected collum errors %d\n",
+//			temp.row_detected_errors, temp.col_detected_errors);
 #endif
 }
 

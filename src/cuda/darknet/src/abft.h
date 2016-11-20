@@ -22,4 +22,6 @@ void abraham_sum(float *a, float *b, long rows_a, long cols_a, long rows_b,
 		long cols_b);
 ErrorReturn abraham_check(float *c, long rows, long cols);
 
+ErrorReturn shared_errors;
+
 #endif /* ABFT_H_ */

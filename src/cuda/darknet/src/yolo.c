@@ -9,6 +9,8 @@
 #include "args.h"
 #include "log_processing.h"
 
+#include "abft.h"
+
 #define min(X,Y) (((X) < (Y)) ? (X) : (Y))
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"
@@ -158,7 +160,6 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 	}
 }
 
-
 void free_yolo_test_memory(const Args* parameters, GoldPointers* current_ptr,
 		GoldPointers* gold_ptr, int classes, image* val, image* val_resized,
 		image* buf, image* buf_resized, FILE** fps) {
@@ -302,6 +303,11 @@ void validate_yolo(Args parameters) {
 					start_iteration();
 				}
 #endif
+
+#if ABFT == 1
+				shared_errors.row_detected_errors = 0;
+				shared_errors.col_detected_errors = 0;
+#endif
 				double begin2 = mysecond();
 				char *path = paths[i + t - nthreads];
 				char *id = basecfg(path);
@@ -363,7 +369,17 @@ void validate_yolo(Args parameters) {
 							free_yolo_test_memory(&parameters, &current_ptr,
 									&gold_ptr, classes, val, val_resized, buf,
 									buf_resized, fps);
+
 #ifdef LOGS
+#if ABFT == 1
+						if(shared_errors.row_detected_errors || shared_errors.col_detected_errors) {
+							char abft_string[500];
+							fprintf(abft_string, "row_detected_errors: %d col_detected_errors: %d",
+									shared_errors.row_detected_errors, shared_errors.col_detected_errors);
+							log_error_detail(abft_string);
+						}
+#endif
+
 							if (!parameters.generate_flag) {
 								log_error_count(cmp);
 							}
@@ -372,12 +388,13 @@ void validate_yolo(Args parameters) {
 
 					}
 
-					if ((i % 10) == 0){
+					if ((i % 10) == 0) {
 						fprintf(stdout,
 								"Partial it %ld Gold comp Time: %fs Iteration done %3.2f\n",
-								iterator, mysecond() - begin, ((float)i / (float)m) * 100.0);
+								iterator, mysecond() - begin,
+								((float) i / (float) m) * 100.0);
 					}
-					printf("antes do clean");
+//					printf("antes do clean");
 					clear_vectors(&current_ptr);
 					//			printf("passou\n");
 				}
