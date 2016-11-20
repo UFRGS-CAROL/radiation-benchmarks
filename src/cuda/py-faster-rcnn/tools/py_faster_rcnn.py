@@ -47,7 +47,7 @@ NETS = {'vgg16': ('VGG16',
                   'ZF_faster_rcnn_final.caffemodel')}
 
 
-def detect(net, image_name):
+def detect(net, image_name, pr):
     """Detect object classes in an image using pre-computed object proposals."""
     #will return a hash with boxes and scores
    
@@ -61,8 +61,9 @@ def detect(net, image_name):
     timer.tic()
     scores, boxes = im_detect(net, im)
     timer.toc()
-    
-    print ('Detection took {:.3f}s for '
+
+    if pr:
+        print ('Detection took {:.3f}s for '
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
     return [scores, boxes]
 
@@ -383,7 +384,7 @@ if __name__ == '__main__':
                     if "no_logs" not in args.is_log:
                         ##start
                         lh.start_iteration()
-                        ret=detect(net, im_name)
+                        ret=detect(net, im_name, (it % 10 == 0))
                         lh.end_iteration()
 
                         #check gold
@@ -395,9 +396,9 @@ if __name__ == '__main__':
                         # if error_count != 0:
                         iteration_file_pos = iterations + it
                         scores_name = lh.get_log_file_name() +"_"+ str(iteration_file_pos) + ".scores"
-                        print scores_name
-                        # if error_count != 0:
-                        serialize_gold(scores_name,ret[0])
+                        #print scores_name
+                        if error_count != 0:
+                            serialize_gold(scores_name,ret[0])
                         if it % 10 == 0:
                             print "Compare time " , timer.total_time , " errors " , error_count
 
