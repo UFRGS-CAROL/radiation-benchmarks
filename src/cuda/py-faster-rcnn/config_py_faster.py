@@ -49,7 +49,7 @@ def main(board):
 
     # for caltech
     gold_caltec = gold = data_path + '/gold.caltech.1K.test'
-    txt_list_caltec = installDir + 'data/networks_img_list/gold.caltech.1K.txt'
+    txt_list_caltec = installDir + 'data/networks_img_list/caltech.pedestrians.1K.txt'
     caltech_gen = {
         'exe': ['sudo ', src_py_faster + "/tools/py_faster_rcnn.py "],
         'gold': [' --gen ', gold_caltec],
