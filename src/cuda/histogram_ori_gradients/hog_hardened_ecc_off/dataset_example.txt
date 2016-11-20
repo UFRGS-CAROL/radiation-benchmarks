@@ -1,0 +1,2 @@
+../../radiation-benchmarks/data/histogram_ori_gradients/1x_pedestrians.jpg
+../../radiation-benchmarks/data/histogram_ori_gradients/4x_pedestrians.jpg
