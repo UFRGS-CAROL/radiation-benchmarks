@@ -53,7 +53,7 @@ OPENCV_FLAGS=  -lopencv_core -lopencv_imgproc -lopencv_highgui \
 
 ##Opencv HOG
 hog_opencv: ./HOG.cpp
-	g++ $(OPTS) HOG.cpp $(LOG_FLAGS) -Wall -o3 -DCXX $(OPENCV_FLAGS) -o hog -I$(LOGHELPER_INC)
+	g++ $(OPTS) HOG.cpp $(LOG_FLAGS) -Wall -DCXX -o3 $(OPENCV_FLAGS) -o hog -I$(LOGHELPER_INC) -L/usr/local/cuda/lib64/ -lcuda -lcudart 
 
 
 ##hog extracted
@@ -92,7 +92,7 @@ hog_eval: $(HOG_EVA_DIR)/GoldGenerator.cpp
 
 
 gold_generator: GoldGenerator.cpp
-	g++ GoldGenerator.cpp -Wall  -o3 -lopencv_core -I$(LOGHELPER_INC) -DCXX -lopencv_imgproc -lopencv_highgui \
+	g++ GoldGenerator.cpp -Wall  -o3 -lopencv_core -I$(LOGHELPER_INC)  -lopencv_imgproc -lopencv_highgui \
 	-lopencv_calib3d -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_legacy -lopencv_ml \
 	-lopencv_nonfree -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_superres -lopencv_video \
 	-lopencv_videostab -o gold_gen	
