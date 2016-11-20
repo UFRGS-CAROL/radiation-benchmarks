@@ -53,7 +53,8 @@ def detect(net, image_name, pr):
    
     # Load the demo image
     im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
-    print im_file
+    if pr:
+        print im_file
     im = cv2.imread(im_file)
 
     # Detect all object classes and regress object bounds
