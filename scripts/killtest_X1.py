@@ -20,23 +20,28 @@ from datetime import datetime
 # ]
 # will execute lavaMD for about one hour and then execute gemm for two hours
 # When the list finish executing, it start to execute from the beginning
-time_dark = 0.016
-
 commandList = [
-["sudo /home/carol/radiation-benchmarks/bin/darknet -e yolo -m valid -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 10000 -d /home/carol/radiation-benchmarks/data/darknet/gold_voc_full.test -l /home/carol/radiation-benchmarks/data/networks_img_list/voc/X1/voc.2012.5K.txt -b /home/carol/radiation-benchmarks/src/cuda/darknet -x 0 " ,0.016, "darknet"],
-["sudo /home/carol/radiation-benchmarks/bin/darknet -e yolo -m valid -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 10000 -d /home/carol/radiation-benchmarks/data/darknet/gold_voc_full.test -l /home/carol/radiation-benchmarks/data/networks_img_list/voc/X1/voc.2012.1K.txt -b /home/carol/radiation-benchmarks/src/cuda/darknet -x 0 " , 0.016, "darknet"],
-["sudo /home/carol/radiation-benchmarks/bin/darknet -e yolo -m valid -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 10000 -d /home/carol/radiation-benchmarks/data/darknet/gold_caltech_full.test -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech/X1/caltech.pedestrians.5K.txt -b /home/carol/radiation-benchmarks/src/cuda/darknet -x 0 " , 0.016, "darknet"],
-["sudo /home/carol/radiation-benchmarks/bin/darknet -e yolo -m valid -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 10000 -d /home/carol/radiation-benchmarks/data/darknet/gold_caltech_full.test -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech/X1/caltech.pedestrians.1K.txt -b /home/carol/radiation-benchmarks/src/cuda/darknet -x 0 " , 0.016, "darknet"],
+##darknet
+["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
+["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 1  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.abft.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
+["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 1  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
+["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
+["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 1  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.abft.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
+["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 1  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
 
-["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold_voc_full.test --iml /home/carol/radiation-benchmarks/data/networks_img_list/voc/X1/voc.2012.1K.txt --log daniel_logs --it 10000", 0.016, "py_faster_rcnn.py"],
-["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold_voc_full.test --iml /home/carol/radiation-benchmarks/data/networks_img_list/voc/X1/voc.2012.2K.txt --log daniel_logs --it 10000", 0.016, "py_faster_rcnn.py"],
-["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold_caltech_full.test --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech/X1/caltech.pedestrians.1K.txt --log daniel_logs --it 10000", 0.016, "py_faster_rcnn.py"],
-["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold_caltech_full.test --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech/X1/caltech.pedestrians.2K.txt --log daniel_logs --it 10000", 0.016, "py_faster_rcnn.py"],
+##py-faster
+#	["sudo /home/carol/radiation-benchmarks/src/cuda/py_faster_rcnn/tools/py_faster_rcnn.py --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold_voc_full.test --iml /home/carol/radiation-benchmarks/data/networks_img_list/voc/K40/voc.2012.FULL.txt --log daniel_logs"],
+#	["sudo /home/carol/radiation-benchmarks/src/cuda/py_faster_rcnn/tools/py_faster_rcnn.py --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold_caltech_full.test --iml /home/carol/radiation-benchmarks/data/networks_img_listcaltech/K40/caltech.pedestrians.FULL.txt --log daniel_logs"],
 
+##hog
+
+##hog hardened ecc on
+
+##hog hardened ecc off
 ]
 
 # Command used to kill application
-killcmd="killall -9 "
+killcmd="pkill -f "
 
 
 timestampMaxDiff = 30 # Time in seconds
@@ -234,6 +239,7 @@ try:
 			# Check if last kill was in the last 60 seconds and reboot
 			for cmd in commandList:
 				os.system(killcmd+" "+cmd[2])
+			os.system("sudo  /usr/bin/nvidia-smi -i 0 -r")
 			now = int(time.time())
 			if (now - lastKillTimestamp) < 3*timestampMaxDiff:
 				logMsg("Rebooting, last kill too recent, timestampDiff: "+str(timestampDiff)+", current command:"+curCommand)
@@ -261,4 +267,7 @@ except KeyboardInterrupt: # Ctrl+c
 	print "\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )"
 	for cmd in commandList:
 		os.system(killcmd+" "+cmd[2])
+
+	os.system("sudo  /usr/bin/nvidia-smi -i 0 -r")
+
 	sys.exit(1)
