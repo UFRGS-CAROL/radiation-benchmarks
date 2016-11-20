@@ -91,7 +91,7 @@ abft: src/abft.cu
 	
 
 $(EXEC): $(OBJS) 
-	$(NVCC) $(COMMON) $(CFLAGS) $(BUILD_ABFT_OBJ) $^  -o $@ $(LDFLAGS) $(LOG_LINK) -lcudadevrt -lcudart -lcuda -rdc=true
+	$(NVCC) $(COMMON) $(BUILD_ABFT_OBJ) $^  -o $@  -lcudadevrt -lcudart -lcuda -rdc=true  $(LDFLAGS) $(CFLAGS) $(LOG_LINK)
 	
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@
