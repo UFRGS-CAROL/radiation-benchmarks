@@ -295,11 +295,11 @@ void validate_yolo(Args parameters) {
 		set_use_abft(1);
 //	}
 	for (iterator = 0; iterator < parameters.iterations; iterator++) {
-		long max_err_per_iteration = 0;
+
 //		printf("passou\n");
 		double det_start = mysecond();
 		for (i = nthreads; i < m + nthreads; i += nthreads) {
-
+			long max_err_per_iteration = 0;
 			for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
 #ifdef LOGS
 				if(!parameters.generate_flag) {
