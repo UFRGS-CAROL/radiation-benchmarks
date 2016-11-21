@@ -112,15 +112,15 @@ void App::run() {
 		throw runtime_error(string("error opening dataset text file"));
 
 
-	vector < vector<int> > gold;
-
 	vector<string> split_gold0 = split(dataset[0], '/');
-	string gold0 = split_gold0[split_gold0.size() - 1].c_str();
-	gold0.append(".data"); 
-	ifstream input_file(gold0.c_str());
+	string gold0_set = split_gold0[split_gold0.size() - 3].c_str();
+	string gold0_video = split_gold0[split_gold0.size() - 2].c_str();
+	string gold0_frame = split_gold0[split_gold0.size() - 1].c_str();	
+	gold0_set.append("_" + gold0_video + "_" + gold0_frame + ".data");
+
+	ifstream input_file(gold0_set.c_str());
 	//================== Init logs
 #ifdef LOGS
-	cout << "logs enabled" << endl;
 	char test_info[90]; 
 	snprintf(test_info, 90, "hog hardened ecc on");
 	start_log_file("cudaHOG", test_info);
@@ -131,7 +131,7 @@ void App::run() {
 		log_error_detail("Cant open gold file");
 		end_log_file();
 #endif
-		throw runtime_error(string("can't open image file: " + gold0));
+		throw runtime_error(string("can't open image file: " + gold0_set));
 	}
 
 	//get gold file data
@@ -185,7 +185,10 @@ void App::run() {
 		
 		gpu_hog.setSVMDetector(detector);
 		//cpu_hog.setSVMDetector(detector);
-		for (int i = 0; i < args.iterations; i++) {
+
+		int i = 0;
+
+		while (i < args.iterations) {
 			cv::Mat frame;
 
 			frame = cv::imread(dataset[current_dataset_index]);
@@ -201,11 +204,15 @@ void App::run() {
 
 
 			vector<string> split_current_line = split(dataset[current_dataset_index], '/');
-			string gold_name = split_current_line[split_current_line.size() - 1].c_str();
-			gold_name.append(".data"); 
-			ifstream gold_data(gold_name.c_str());
+			string gold_set = split_current_line[split_current_line.size() - 3].c_str();
+			string gold_video = split_current_line[split_current_line.size() - 2].c_str();
+			string gold_frame = split_current_line[split_current_line.size() - 1].c_str();
+			gold_set.append("_" + gold_video + "_" + gold_frame + ".data");
 
-			
+			ifstream gold_data(gold_set.c_str());
+
+			vector < vector<int> > gold;
+
 			while (getline(gold_data, line)) {
 				vector < string > sep_line = split(line, ',');
 				vector<int> values;
@@ -214,11 +221,6 @@ void App::run() {
 				}
 				gold.push_back(values);
 			}
-
-			if(current_dataset_index == (dataset.size()-1)) 
-				current_dataset_index = 0;
-			else
-				current_dataset_index++;
 
 			cv::Mat img_aux, img, img_to_show;
 			cv::gpu::GpuMat gpu_img;
@@ -251,7 +253,7 @@ void App::run() {
 #ifdef LOGS
 			end_iteration();
 #endif
-			cout << "Iteration: " << i << " Time: " << time << " ";
+			cout << "Iteration: " << (i+1) << " (image " << current_dataset_index << ") Time: " << time << " ";
 			//verify the output----------------------------------------------
 			ostringstream error_detail;
 			time = mysecond();
@@ -261,9 +263,9 @@ void App::run() {
 	//====================================
 			unsigned long int error_counter = 0;
 	//if the numbers of rects found is different from gold, log this info
-			if(found.size() != gold.size()) {
+			if(found.size() != (gold.size()-1)) {
 				char message[120];
-				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).\n", found.size(), gold.size());
+				snprintf(message, 120, "Rectangles found: %lu (gold has %lu).\n", found.size(), (gold.size()-1));
 #ifdef LOGS
 				log_error_detail(message);
 #endif
@@ -285,10 +287,13 @@ void App::run() {
 		//logs all found rectangles in case of any error
 		if(error_counter){
 				vector<string> split_ = split(dataset[current_dataset_index], '/');
+				string image_set = split_[split_.size() - 3].c_str();
+				string image_video = split_[split_.size() - 2].c_str();
 				string image_name = split_[split_.size() - 1].c_str();
+				image_set.append("_" + image_video + "_" + image_name);
 
 				char str_name[200];
-				snprintf(str_name, 30, "Image: %s", image_name.c_str());
+				snprintf(str_name, 30, "Image: %s", image_set.c_str());
 #ifdef LOGS
 				log_error_detail(str_name);
 #endif
@@ -323,6 +328,13 @@ void App::run() {
 			//stringstream ss;
 			//ss << (i + 1);
 			//imwrite(ss.str() + "_out.jpg", img_to_show);
+
+			if(current_dataset_index == (dataset.size()-1)) {
+				current_dataset_index = 0;
+				i++;
+			}
+			else
+				current_dataset_index++;
 		}
 		//===============================================================
 	} catch (std::exception& e) {
