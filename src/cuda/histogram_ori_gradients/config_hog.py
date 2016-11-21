@@ -36,10 +36,10 @@ def main(board):
         make_str += "ARCH_I=53"
 
     os.system(make_str)
-    gold_txt = installDir + 'data/networks_img_list/caltech.pedestrians.1K.txt'
+    gold_txt = installDir + 'data/networks_img_list/caltech.pedestrians.critical.1K.txt'
 
     #../../../../data/CALTECH/set10/V000/ --dst_data dataset.txt --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
-    generate_hog = ["sudo ", bin_path + "/hog_extracted/gold_gen ",  gold_txt, " --hit_threshold 0.9 --gr_threshold 1 --nlevels 100"]
+    generate_hog = ["sudo ", "hog_extracted/gold_gen ",  gold_txt, " --hit_threshold 0.9 --gr_threshold 1 --nlevels 100"]
     os.system(" ".join(generate_hog))
 
     #$(HOG_EXT_DIR)/hog_ext $(HOG_OCV_DIR)/hog_opencv $(HOG_HAR_DIR)/hog_har_eccon  $(HOG_EOF_DIR)/hog_har_eccoff
@@ -54,7 +54,7 @@ def main(board):
     }
 
     #move all binaries to bin path
-    os.system("mv hog_extrated/hog_ext hog_hardened_eccoff/hog_har_eccoff hog_hardened_eccon/hog_har_eccon "+bin_path)
+    os.system("mv hog_extracted/hog_ext hog_hardened_ecc_off/hog_har_eccoff hog_hardened_ecc_on/hog_har_eccon "+bin_path)
 
     fp = open(installDir+"scripts/how_to_run_hog_cuda_" + str(board), 'w')
 
