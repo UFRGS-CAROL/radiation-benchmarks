@@ -3,7 +3,7 @@ CC = gcc
 CC_FLAGS = -fopenmp -O3
 
 intel:CC=icc -mmic -DMIC_NATIVE 
-intel:OMP=-qopenmp
+intel:CC_FLAGS=-qopenmp
 
 SOURCES_CHECK=hotspot_check.c ../../include/log_helper.c
 
