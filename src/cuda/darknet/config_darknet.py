@@ -117,8 +117,8 @@ def main(board):
     os.system("mv ./darknet "+bin_path)
 
     generate = []
-    generate.append(" ".join([''.join(map(str, value)) for key,value in caltech_gen_clean.iteritems()]))
-    generate.append(" ".join([''.join(map(str, value)) for key,value in  caltech_gen_abft.iteritems()]))
+    #generate.append(" ".join([''.join(map(str, value)) for key,value in caltech_gen_clean.iteritems()]))
+    #generate.append(" ".join([''.join(map(str, value)) for key,value in  caltech_gen_abft.iteritems()]))
     generate.append(" ".join([''.join(map(str, value)) for key,value in  voc_gen_clean.iteritems()]))
     generate.append(" ".join([''.join(map(str, value)) for key,value in  voc_gen_abft.iteritems()]))
 
@@ -133,7 +133,7 @@ def main(board):
 
 
     for i in generate:
-        #os.system(str(i))
+        os.system(str(i))
         print i
 
     make_str += " LOGS=1"
