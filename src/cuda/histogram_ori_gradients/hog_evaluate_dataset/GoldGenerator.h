@@ -104,7 +104,7 @@ App::App(const Args& s) {
 
 vector<string> read_dataset(string filename){
 	std::vector<std::string> lines;
-	std::ifstream file(filename);
+	std::ifstream file(filename.c_str());
 
 	std::string line;
 	while ( std::getline(file, line) ) {
