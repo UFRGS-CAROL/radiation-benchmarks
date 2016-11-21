@@ -42,8 +42,8 @@ ALL_GOLD_GEN= -L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui  
 
 ALL_CV_FLAGS += $(OPTS) 
 
-.PHONY: all clean gold_generator hog_extracted hog_har_ecc_off hog_har_ecc_on hog_opencv
-all: clean gold_generator hog_extracted hog_har_ecc_off hog_har_ecc_on hog_opencv
+.PHONY: all clean gold_generator hog_extracted hog_har_ecc_off hog_har_ecc_on hog_opencv hog_eval
+all: clean gold_generator hog_extracted hog_har_ecc_off hog_har_ecc_on hog_opencv hog_eval
 
 OPENCV_FLAGS=  -lopencv_core -lopencv_imgproc -lopencv_highgui \
 		-lopencv_calib3d -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_legacy \
