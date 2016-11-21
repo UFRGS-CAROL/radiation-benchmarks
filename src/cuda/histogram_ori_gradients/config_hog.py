@@ -39,17 +39,18 @@ def main(board):
     gold_txt = installDir + 'data/networks_img_list/voc.2012.1K.txt'
 
     #../../../../data/CALTECH/set10/V000/ --dst_data dataset.txt --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
-    generate_hog = ["sudo ", bin_path + "/gold_gen ",  gold_txt, " --dst_data " + data_path + "/ ", " --hit_threshold 0.9 --gr_threshold 1 --nlevels 100"]
+    generate_hog = ["sudo ", bin_path + "/hog_extracted/gold_gen ",  gold_txt, " --dst_data " + data_path + "/ ", " --hit_threshold 0.9 --gr_threshold 1 --nlevels 100"]
+    os.system(" ".join(generate_hog))
 
     #$(HOG_EXT_DIR)/hog_ext $(HOG_OCV_DIR)/hog_opencv $(HOG_HAR_DIR)/hog_har_eccon  $(HOG_EOF_DIR)/hog_har_eccoff
-    HOG_EXT = "hog_ext "
-    HOG_HAR = "hog_har_eccon "
-    HOG_EOF = "hog_har_eccoff "
+    HOG_EXT = "hog_ext"
+    HOG_HAR = "hog_har_eccon"
+    HOG_EOF = "hog_har_eccoff"
 
     execute_hog = {
-        'hog_ext':["sudo ",  bin_path + HOG_EXT,  gold_txt, " --dst_data " + data_path + "/ ", " --iterations 10000000"],
-        'hog_ecc':["sudo ",  bin_path + HOG_HAR,  gold_txt, " --dst_data " + data_path + "/ ", " --iterations 10000000"],
-        'hog_off':["sudo ",  bin_path + HOG_EOF,  gold_txt, " --dst_data " + data_path + "/ ", " --iterations 10000000"],
+        HOG_EXT:["sudo ",  bin_path + "/" +HOG_EXT,  gold_txt, " --dst_data " + data_path + "/ ", " --iterations 10000000"],
+        HOG_HAR:["sudo ",  bin_path + "/" + HOG_HAR,  gold_txt, " --dst_data " + data_path + "/ ", " --iterations 10000000"],
+        HOG_EOF:["sudo ",  bin_path + "/" +HOG_EOF,  gold_txt, " --dst_data " + data_path + "/ ", " --iterations 10000000"],
     }
 
     #move all binaries to bin path
@@ -57,11 +58,18 @@ def main(board):
 
     fp = open(installDir+"scripts/how_to_run_hog_cuda_" + str(board), 'w')
 
-    execute = []
-    execute.append(" ".join([''.join(map(str, value)) for key, value in execute_hog.iteritems()]))
-    for i in execute:
-        print >> fp, "[\"" + str(i) + "\" , 0.016, \"hog\"]," #it is wrong
+
+    for key, value in execute_hog.iteritems():
+        print >> fp, "[\"" + " ".join(value) + "\" , 0.016, \""+str(key)+"\"],"
 
     print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_hog_cuda_" + board +"\n"
 
     sys.exit(0)
+
+
+if __name__ == "__main__":
+    parameter = sys.argv[1:]
+    if len(parameter) < 1:
+        print "./config_generic <k1/x1/k40>"
+    else:
+        main(str(parameter[0]).upper())
