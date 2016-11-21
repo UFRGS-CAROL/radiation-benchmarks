@@ -17,12 +17,11 @@ typedef struct dataset_img {
 	string path;
 	unsigned int rectangles_found;
 
-	bool operator > (const dataset_img& str) const
-	{
+	bool operator >(const dataset_img& str) const {
 		return (rectangles_found > str.rectangles_found);
 	}
 
-}Dataset_img;
+} Dataset_img;
 
 class App {
 public:
@@ -129,62 +128,66 @@ void App::run() {
 	VideoCapture vc;
 	Mat frame;
 
-	vector <Dataset_img> dataset;
+	vector<Dataset_img> dataset;
 
 	DIR* dir;
 	string dir_path(args.src.c_str());
 	dir = opendir(dir_path.c_str());
 	struct dirent *ent;
 	if (dir == NULL) {
-		throw runtime_error(string("can't open dataset directory: " + args.src));	
+		throw runtime_error(
+				string("can't open dataset directory: " + args.src));
 	}
-	int index = 0;
+	int index = 1;
 
-	while((ent = readdir(dir)) != NULL) {
+	while ((ent = readdir(dir)) != NULL) {
 
-	string img_name(ent->d_name);
-	if((img_name.compare(".") != 0 && img_name.compare("..") != 0)) {
+		string img_name(ent->d_name);
+		if ((img_name.compare(".") != 0 && img_name.compare("..") != 0)) {
 
-	string img_path(dir_path + img_name);
-	
-	frame = imread(img_path);
-	if (frame.empty())
-		throw runtime_error(string("can't open image file: " + img_path));
+			string img_path(dir_path + img_name);
 
-	Mat img_aux, img, img_to_show;
-	gpu::GpuMat gpu_img;
+			frame = imread(img_path);
+			if (frame.empty())
+				throw runtime_error(
+						string("can't open image file: " + img_path));
 
-	if (use_gpu)
-		cvtColor(frame, img_aux, CV_BGR2BGRA);
-	else
-		frame.copyTo(img_aux);
+			Mat img_aux, img, img_to_show;
+			gpu::GpuMat gpu_img;
 
-	img = img_aux;
-	img_to_show = img;
+			if (use_gpu)
+				cvtColor(frame, img_aux, CV_BGR2BGRA);
+			else
+				frame.copyTo(img_aux);
 
-	gpu_hog.nlevels = nlevels;
-	cpu_hog.nlevels = nlevels;
+			img = img_aux;
+			img_to_show = img;
 
-	vector<Rect> found;
+			gpu_hog.nlevels = nlevels;
+			cpu_hog.nlevels = nlevels;
 
-	// Perform HOG classification
-	cout << "Evaluating " << img_path << " (" << index << ")" << endl;
-	if (use_gpu) {
-		gpu_img.upload(img);
-		gpu_hog.detectMultiScale(gpu_img, found, hit_threshold, win_stride,
-				Size(0, 0), scale, gr_threshold);
-	} else {
-		cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
-				Size(0, 0), scale, gr_threshold);
-	}
-	Dataset_img current_img;
-	current_img.path = img_path;
-	current_img.rectangles_found = found.size();
-	dataset.push_back(current_img);
-	cout << "Found " << found.size() << endl;
-	index++;
+			vector<Rect> found;
 
-	}//dir loop
+			// Perform HOG classification
+			if (!(index % 100))
+				cout << "Evaluating " << img_path << " (" << index << ")" << endl;
+			if (use_gpu) {
+				gpu_img.upload(img);
+				gpu_hog.detectMultiScale(gpu_img, found, hit_threshold,
+						win_stride, Size(0, 0), scale, gr_threshold);
+			} else {
+				cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
+						Size(0, 0), scale, gr_threshold);
+			}
+			Dataset_img current_img;
+			current_img.path = img_path;
+			current_img.rectangles_found = found.size();
+			dataset.push_back(current_img);
+			if (!(index % 100))
+				cout << "Found " << found.size() << endl;
+			index++;
+
+		} //dir loop
 	}
 	sort(dataset.begin(), dataset.end(), greater<dataset_img>());
 	//cout << "Gold generated with success\n";
@@ -196,35 +199,32 @@ void App::run() {
 	txtname.append("_count.txt");
 	output_file_with_found.open(txtname.c_str());
 	/*
-	output_file << args.make_gray << ",";
-	output_file << args.scale << ",";
-	output_file << args.gamma_corr << ",";
-	output_file << args.gr_threshold << ",";
-	output_file << args.win_width << ",";
-	output_file << args.hit_threshold << ",";
-	output_file << args.nlevels << endl;
-	*/
+	 output_file << args.make_gray << ",";
+	 output_file << args.scale << ",";
+	 output_file << args.gamma_corr << ",";
+	 output_file << args.gr_threshold << ",";
+	 output_file << args.win_width << ",";
+	 output_file << args.hit_threshold << ",";
+	 output_file << args.nlevels << endl;
+	 */
 
 	if (output_file.is_open()) {
-			for (unsigned int i = 0; i < dataset.size(); i++)
-				output_file << dataset[i].path << endl;
-			
+		for (unsigned int i = 0; i < dataset.size(); i++)
+			output_file << dataset[i].path << endl;
 
 		output_file.close();
 	} else {
-		throw runtime_error(
-				string("can't create output file"));
+		throw runtime_error(string("can't create output file"));
 	}
 
 	if (output_file_with_found.is_open()) {
-			for (unsigned int i = 0; i < dataset.size(); i++)
-				output_file_with_found << dataset[i].path << "      " << dataset[i].rectangles_found << endl;
-			
+		for (unsigned int i = 0; i < dataset.size(); i++)
+			output_file_with_found << dataset[i].path << "      "
+					<< dataset[i].rectangles_found << endl;
 
 		output_file_with_found.close();
 	} else {
-		throw runtime_error(
-				string("can't create output file"));
+		throw runtime_error(string("can't create output file"));
 	}
 }
 

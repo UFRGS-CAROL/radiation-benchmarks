@@ -1,6 +1,10 @@
 NVCC=/usr/local/cuda-7.0/bin/nvcc
 CXX=g++
 
+ARCH_I?=35
+
+ARCH= --gpu-architecture=compute_$(ARCH_I) --gpu-code=compute_$(ARCH_I)
+
 ifeq ($(DBG), 1)
 	DEBUG = -g -G
 endif
@@ -11,7 +15,7 @@ ifeq ($(LOGS), 1)
 endif
 
 
-NVIDIA_INC=/usr/local/cuda/include/
+NVIDIA_INC=/usr/local/cuda/include/ $(ARCH)
 NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
@@ -101,12 +105,12 @@ gold_generator: $(HOG_OCV_DIR)/GoldGenerator.cpp
 	
 	
 test:
-	./hog dataset_example.txt --iterations 1
+	.$(HOG_EVA_DIR)/hog_evaluate_dataset ./dataset_example.txt --dst_data dataset.txt --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
 
 generate:
 	./generator dataset_example.txt --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
 	
 	
 clean:
-	rm -rf  $(HOG_EXT_DIR)/hog_ext $(HOG_OCV_DIR)/hog $(HOG_HAR_DIR)/hog_har_eccon  $(HOG_EOF_DIR)/hog_har_eccoff $(HOG_OCV_DIR)/gold_gen \
+	rm -rf  $(HOG_EXT_DIR)/hog_ext $(HOG_OCV_DIR)/hog_opencv $(HOG_HAR_DIR)/hog_har_eccon  $(HOG_EOF_DIR)/hog_har_eccoff $(HOG_OCV_DIR)/gold_gen \
 			$(HOG_EXT_DIR)/*.o $(HOG_OCV_DIR)/*.o $(HOG_HAR_DIR)/*.o  $(HOG_EOF_DIR)/*.o $(HOG_OCV_DIR)/*.o
