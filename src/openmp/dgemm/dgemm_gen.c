@@ -68,22 +68,6 @@ HISTORY: Written by Rob Van der Wijngaart, September 2006.
 #include <omp.h>
 #include <time.h>
 
-#include "../../include/log_helper.h"
-
-#ifdef TIMING
-#include <sys/time.h>
-long long timing_get_time() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (tv.tv_sec * 1000000) + tv.tv_usec;
-}
-
-long long setup_start, setup_end;
-long long loop_start, loop_end;
-long long kernel_start, kernel_end;
-long long check_start, check_end;
-#endif
-
 
 #ifndef MAXTHREADS
 #define MAX_THREADS 1024
@@ -236,61 +220,19 @@ void dgemm(double *A, double *B, double *C, long order, int block){
 
 }
 
-void read_input(double *A, double *B, char * fileA, char * fileB, long int order){
-    FILE *file,*file2;
-    int i, j;
-
-    if( (file = fopen(fileA, "rb" )) == 0 ){
-        printf( "The inputA file was not opened\n" );
-    	exit(1);
-    }
-    if( (file2 = fopen(fileB, "rb" )) == 0 ){
-        printf( "The inputB file was not opened\n" );
-    	exit(1);
-    }
-
-    for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
-        fwrite(&A[(i)+(order)*(j)], 1, sizeof(double), file);
-        fwrite(&B[(i)+(order)*(j)], 1, sizeof(double), file2);
-    }
-    fclose(file);
-    fclose(file2);
-}
-
-void read_gold(double *gold,char * fileGold, long int order){
-    FILE *file;
-    int i, j;
-
-    if( (file = fopen(fileGold, "rb" )) == 0 ){
-        printf( "The gold file was not opened\n" );
-    	exit(1);
-    }
-
-    for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
-        fwrite(&gold[(i)+(order)*(j)], 1, sizeof(double), file);
-    }
-    fclose(file);
-}
-
 int main(int argc, char **argv) {
-
-#ifdef TIMING
-    setup_start = timing_get_time();
-#endif
 
     int     i, j;
     int     nthread_input;        /* thread parameters                              */
     static
-    double  *A, *B, *C, *gold;  /* input (A,B) and output (C) matrices            */
+    double  *A, *B, *C;  /* input (A,B) and output (C) matrices            */
     long    order;                /* number of rows and columns of matrices         */
     int     block;                /* tile size of matrices                          */
-    char *inputA, *inputB, *fileGold;
-    int iterations = 100000;
 
     printf("OpenMP Dense matrix-matrix multiplication\n");
 
-    if (argc != 8) {
-        printf("Usage: %s <# threads> <matrix order> <tile size> <matrix A> <matrix B> <GOLD> <iterations>\n",*argv);
+    if (argc != 3 && argc != 4) {
+        printf("Usage: %s <# threads> <matrix order> [tile size]\n",*argv);
         exit(1);
     }
 
@@ -312,25 +254,38 @@ int main(int argc, char **argv) {
         printf("ERROR: Matrix order must be positive: %ld\n", order);
         exit(1);
     }
-
-    block = atoi(*++argv);
-    inputA = *++argv;
-    inputB = *++argv;
-    fileGold = *++argv;
-    iterations = atoi(*++argv);
-
     A = (double *) prk_malloc(order*order*sizeof(double));
     B = (double *) prk_malloc(order*order*sizeof(double));
     C = (double *) prk_malloc(order*order*sizeof(double));
-    gold = (double *) prk_malloc(order*order*sizeof(double));
-    if (!A || !B || !C || !gold) {
+    if (!A || !B || !C) {
         printf("ERROR: Could not allocate space for global matrices\n");
         exit(1);
     }
 
+    if (argc == 5) {
+        block = atoi(*++argv);
+    } else block = DEFAULTBLOCK;
 
-    read_input(A, B, inputA, inputB, order);
-    read_gold(gold, fileGold, order);
+
+    FILE *file, *file2;
+    char inputA[150], inputB[150];
+    snprintf(inputA, 150, "matrix_A_%ld_m-order_%d_ths_%d_blocks",order, nthread_input, block);
+    snprintf(inputB, 150, "matrix_B_%ld_m-order_%d_ths_%d_blocks",order, nthread_input, block);
+    if( (file = fopen(inputA, "wb" )) == 0 )
+        printf( "The inputA file was not opened\n" );
+    if( (file2 = fopen(inputB, "wb" )) == 0 )
+        printf( "The inputB file was not opened\n" );
+    srand ( time(NULL) );
+    #pragma omp parallel for private(i,j)
+    for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
+	A_arr(i,j) = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.0004e16))+4.1e16;
+	B_arr(i,j) = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.0004e16))+4.1e16;
+        fwrite(&A_arr(i,j), 1, sizeof(double), file);
+        fwrite(&B_arr(i,j), 1, sizeof(double), file2);
+        C_arr(i,j) = 0.0;
+    }
+    fclose(file);
+    fclose(file2);
 
     printf("Matrix order          = %ld\n", order);
     printf("Number of threads     = %d\n", nthread_input);
@@ -339,99 +294,21 @@ int main(int argc, char **argv) {
     else
         printf("No blocking\n");
     printf("Block offset          = %d\n", BOFFSET);
-    printf("Iterations            = %d\n", iterations);
 
-#ifdef LOGS
-    char test_info[200];
-    snprintf(test_info, 200, "matrix_dim:%ld threads:%d block_size:%d block_offset:%d", order, nthread_input, block, BOFFSET);
-    start_log_file("openmpDGEMM", test_info);
-#endif
-#ifdef TIMING
-    setup_end = timing_get_time();
-#endif
-    int loop;
-    for(loop=0; loop < iterations; loop++){
-#ifdef TIMING
-        loop_start = timing_get_time();
-#endif
-#ifdef ERR_INJ
-        if(loop == 2) {
-            printf("injecting error, changing input!\n");
-            A[0] = 102012;
-            A[10] = 102012;
-            A[55] = 102012;
-        } else if (loop == 3) {
-            printf("get ready, infinite loop...\n");
-            fflush(stdout);
-            while(1) {
-                sleep(100);
-            }
-        }
-#endif
+    dgemm(A, B, C, order, block);
 
-
-#ifdef TIMING
-        kernel_start = timing_get_time();
-#endif
-#ifdef LOGS
-        start_iteration();
-#endif
-        dgemm(A, B, C, order, block);
-#ifdef LOGS
-        end_iteration();
-#endif
-#ifdef TIMING
-        kernel_end = timing_get_time();
-#endif
-
-
-#ifdef TIMING
-        check_start = timing_get_time();
-#endif
-        int errors=0;
-        #pragma omp parallel for reduction(+:errors)
-        for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
-            if ((fabs((C[(i)+(order)*(j)] - gold[(i)+(order)*(j)]) / C[(i)+(order)*(j)]) > 0.0000000001) || (fabs((C[(i)+(order)*(j)] - gold[(i)+(order)*(j)]) / gold[(i)+(order)*(j)]) > 0.0000000001)) {
-                errors++;
-#ifdef LOGS
-                char error_detail[200];
-                sprintf(error_detail," p: [%d, %d], r: %1.16e, e: %1.16e", i, j, C[i + order * j], gold[i + order * j]);
-                log_error_detail(error_detail);
-#endif
-            }
-        }
-#ifdef TIMING
-        check_end = timing_get_time();
-#endif
-        if (errors > 0 ) {
-            printf("Errors: %d\n",errors);
-            read_input(A, B, inputA, inputB, order);
-            read_gold(gold, fileGold, order);
-        } else {
-            printf(".");
-        }
-
-#ifdef LOGS
-        log_error_count(errors);
-#endif
-#ifdef TIMING
-        loop_end = timing_get_time();
-        double setup_timing = (double) (setup_end - setup_start) / 1000000;
-        double loop_timing = (double) (loop_end - loop_start) / 1000000;
-        double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
-        double check_timing = (double) (check_end - check_start) / 1000000;
-        printf("\n\tTIMING:\n");
-        printf("setup: %f\n",setup_timing);
-        printf("loop: %f\n",loop_timing);
-        printf("kernel: %f\n",kernel_timing);
-        printf("check: %f\n",check_timing);
-#endif
+    char output_gold[150];
+    snprintf(output_gold, 150, "gold_%ld_m-order_%d_ths_%d_blocks",order, nthread_input, block);
+    if( (file = fopen(output_gold, "wb" )) == 0 )
+        printf( "The GOLD file was not opened\n" );
+    int zero_sum=0;
+    for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
+        if (C_arr(i,j) == 0.0) zero_sum++;
+        fwrite(&C_arr(i,j), 1, sizeof(double), file);
     }
-
-#ifdef LOGS
-    end_log_file();
-#endif
+    fclose(file);
+    printf("Number of zeros in the output: %d\n",zero_sum);
 
     exit(0);
-}
 
+}

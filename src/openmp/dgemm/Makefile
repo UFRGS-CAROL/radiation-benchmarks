@@ -1,2 +1,26 @@
-all: dgemm.c
-	gcc -DDEFAULTBLOCK=32 -DMKL=0 -DBOFFSET=12 -DVERBOSE=0 -DMAXTHREADS=512 -fopenmp -O3 dgemm.c -o dgemm
+# C compiler
+CC = gcc
+CC_FLAGS = -fopenmp -O3 -DDEFAULTBLOCK=32 -DBOFFSET=12
+
+intel:CC=icc -mmic -DMIC_NATIVE
+intel:CC_FLAGS=-qopenmp -DDEFAULTBLOCK=32 -DBOFFSET=12
+
+
+general: dgemm_gen dgemm_check dgemm_err_inj dgemm_timing
+
+intel: dgemm_gen dgemm_check dgemm_err_inj dgemm_timing
+
+dgemm_gen: dgemm_gen.c
+	$(CC) ../../include/log_helper.c dgemm_gen.c -o dgemm $(CC_FLAGS)
+
+dgemm_check: dgemm.c
+	$(CC) ../../include/log_helper.c dgemm.c -DLOGS -o dgemm_check $(CC_FLAGS)
+
+dgemm_err_inj: dgemm.c 
+	$(CC) ../../include/log_helper.c dgemm.c -DLOGS -DERR_INJ -o dgemm_err_inj $(CC_FLAGS)
+
+dgemm_timing: dgemm.c
+	$(CC) ../../include/log_helper.c dgemm.c -DTIMING -o dgemm_timing $(CC_FLAGS)
+
+clean:
+	rm -f dgemm_gen dgemm_check dgemm_err_inj dgemm_timing
