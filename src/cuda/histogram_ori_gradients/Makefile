@@ -54,7 +54,7 @@ OPENCV_FLAGS=  -lopencv_core -lopencv_imgproc -lopencv_highgui \
 
 ##Opencv HOG
 hog_opencv: $(HOG_OCV_DIR)/HOG.cpp
-	g++ $(OPTS) $(HOG_OCV_DIR)/HOG.cpp $(LOG_FLAGS) -Wall -DCXX -o3 $(OPENCV_FLAGS) -o $(HOG_OCV_DIR)/hog -I$(LOGHELPER_INC)\
+	$(CXX) $(OPTS) $(HOG_OCV_DIR)/HOG.cpp $(LOG_FLAGS) -Wall -DCXX -o3 $(OPENCV_FLAGS) -o $(HOG_OCV_DIR)/hog_opencv -I$(LOGHELPER_INC)\
 		 -L/usr/local/cuda/lib64/ -lcuda -lcudart 
 
 
