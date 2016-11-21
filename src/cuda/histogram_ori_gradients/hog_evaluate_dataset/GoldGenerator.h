@@ -102,6 +102,19 @@ App::App(const Args& s) {
 	cout << endl;
 }
 
+vector<string> read_dataset(string filename){
+	std::vector<std::string> lines;
+	std::ifstream file(filename);
+
+	std::string line;
+	while ( std::getline(file, line) ) {
+	    if ( !line.empty() )
+	        lines.push_back(line);
+	}
+
+	return lines;
+}
+
 void App::run() {
 	if (args.dst_video.empty())
 		throw runtime_error(
@@ -132,20 +145,22 @@ void App::run() {
 
 	DIR* dir;
 	string dir_path(args.src.c_str());
-	dir = opendir(dir_path.c_str());
-	struct dirent *ent;
-	if (dir == NULL) {
-		throw runtime_error(
-				string("can't open dataset directory: " + args.src));
-	}
+//	dir = opendir(dir_path.c_str());
+//	struct dirent *ent;
+//
+//	if (dir == NULL) {
+//		throw runtime_error(
+//				string("can't open dataset directory: " + args.src));
+//	}
+	vector<string> dataset_lines = read_dataset(dir_path);
 	int index = 1;
 
-	while ((ent = readdir(dir)) != NULL) {
+	while (index <= dataset_lines.size()) {
 
-		string img_name(ent->d_name);
+		string img_name(dataset_lines[index]);
 		if ((img_name.compare(".") != 0 && img_name.compare("..") != 0)) {
 
-			string img_path(dir_path + img_name);
+			string img_path(img_name);
 
 			frame = imread(img_path);
 			if (frame.empty())
