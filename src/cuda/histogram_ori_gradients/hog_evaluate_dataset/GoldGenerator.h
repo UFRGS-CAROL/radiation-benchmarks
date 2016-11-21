@@ -153,9 +153,9 @@ void App::run() {
 //				string("can't open dataset directory: " + args.src));
 //	}
 	vector<string> dataset_lines = read_dataset(dir_path);
-	int index = 1;
+	int index = 0;
 
-	while (index <= dataset_lines.size()) {
+	while (index < dataset_lines.size()) {
 
 		string img_name(dataset_lines[index]);
 		if ((img_name.compare(".") != 0 && img_name.compare("..") != 0)) {
@@ -184,8 +184,6 @@ void App::run() {
 			vector<Rect> found;
 
 			// Perform HOG classification
-			if (!(index % 100))
-				cout << "Evaluating " << img_path << " (" << index << ")" << endl;
 			if (use_gpu) {
 				gpu_img.upload(img);
 				gpu_hog.detectMultiScale(gpu_img, found, hit_threshold,
@@ -198,12 +196,13 @@ void App::run() {
 			current_img.path = img_path;
 			current_img.rectangles_found = found.size();
 			dataset.push_back(current_img);
-			if (!(index % 100))
-				cout << "Found " << found.size() << endl;
 			index++;
+			if (!(index  % 100))
+				cout << "Evaluating " << img_path << " (" << index << ")" << endl;
 
 		} //dir loop
 	}
+	cout << "Sorting\n";
 	sort(dataset.begin(), dataset.end(), greater<dataset_img>());
 	//cout << "Gold generated with success\n";
 	// Draw positive classified windows (OLD)
@@ -222,7 +221,7 @@ void App::run() {
 	 output_file << args.hit_threshold << ",";
 	 output_file << args.nlevels << endl;
 	 */
-
+	cout << "Writing results\n";
 	if (output_file.is_open()) {
 		for (unsigned int i = 0; i < dataset.size(); i++)
 			output_file << dataset[i].path << endl;
