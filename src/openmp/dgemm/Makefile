@@ -6,9 +6,9 @@ intel:CC=icc -mmic -DMIC_NATIVE
 intel:CC_FLAGS=-qopenmp -DBOFFSET=12
 
 
-general: dgemm_gen dgemm_check dgemm_err_inj dgemm_timing
+general: dgemm_gen dgemm_check dgemm_err_inj dgemm_timing genMatrices
 
-intel: dgemm_gen dgemm_check dgemm_err_inj dgemm_timing
+intel: dgemm_gen dgemm_check dgemm_err_inj dgemm_timing genMatrices
 
 dgemm_gen: dgemm_gen.c ../../include/log_helper.c
 	$(CC) ../../include/log_helper.c dgemm_gen.c -o dgemm_gen $(CC_FLAGS)
@@ -22,8 +22,8 @@ dgemm_err_inj: dgemm.c  ../../include/log_helper.c
 dgemm_timing: dgemm.c ../../include/log_helper.c
 	$(CC) ../../include/log_helper.c dgemm.c -DTIMING -o dgemm_timing $(CC_FLAGS)
 
-clean:
-	rm -f dgemm_gen dgemm_check dgemm_err_inj dgemm_timing genMatrices
-
 genMatrices: generateMatrices.cpp
 	g++ generateMatrices.cpp -o genMatrices
+
+clean:
+	rm -f dgemm_gen dgemm_check dgemm_err_inj dgemm_timing genMatrices
