@@ -96,15 +96,20 @@ int set_iter_interval_print(int interval){
 // Update with current timestamp the file where the software watchdog watchs
 void update_timestamp() {
     time_t timestamp = time(NULL);
-    char time_s[50];
-    char string[100] = "echo ";
+   // char time_s[50];
+   // char string[100] = "echo ";
 
-    sprintf(time_s, "%d", (int) timestamp);
+    //sprintf(time_s, "%d", (int) timestamp);
 
-    strcat(string, time_s);
-    strcat(string, " > ");
-    strcat(string, timestamp_watchdog);
-    system(string);
+	FILE *fp = fopen(timestamp_watchdog, "w");
+	if (fp){
+		fprintf(fp,  "%d", (int) timestamp);
+		fclose(fp);
+	}
+    //strcat(string, time_s);
+    //strcat(string, " > ");
+    //strcat(string, timestamp_watchdog);
+    //system(string);
 };
 
 // ~ ===========================================================================
