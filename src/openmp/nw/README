@@ -1,0 +1,46 @@
+NW OpenMP
+
+* How to compile
+  - Intel Xeon Phi (icc native compilation):
+    $ make intel
+  - General X86 (gcc):
+    $ make general
+
+Compilation should generate 5 binaries:
+  - needle_gen: used to generate the input and gold output. Gold will be used to check if the execution generates a correct output.
+  - needle_check: this binary will be used during radiation test, it will execute the benchmark kernel several times
+  - needle_timing: this binary is used only for testing purposes, it will measure the time spent in every part of the benchmark. This binary will not record any log information
+  - needle_err_inj: this binary is used only for testing purposes, it will change the input value to check if the gold verification is working. This binary will also enter into an infinite loop to test the setup that needs to kill hanging benchmarks.
+
+
+
+* How to generate input data and gold output
+  - gold output
+    $ ./needle_gen <max_rows/max_cols> <penalty> <num_threads>
+        - max_rows/max_cols: one side of the square matrix (1024, 2048, 4096, ...)
+        - penalty: original parameter of the needleman-wunsch algorithm
+        - num_thread: how many thread the openmp should create
+
+
+* How to run a test
+
+Before running the benchmark, the script radiation-benchmarks/scripts/install.py should be executed. This script will create the folder to store the log files and create the conf file in /etc/radiation-benchmark.conf
+
+    $ ./needle_check <max_rows/max_cols> <penalty> <num_threads> <input_array> <gold_array> <#iterations>
+        - max_rows/max_cols: one side of the square matrix (1024, 2048, 4096, ...)
+        - penalty: original parameter of the needleman-wunsch algorithm
+        - num_thread: how many thread the openmp should create
+        - input_array: location of the input file
+        - gold_array: location of the the gold output file
+        - #iterations: how many times the benchmark kernel should be executed, usually 100000 is enough for the radiation test (it will crash before reaching this number)
+
+
+
+* Configuration used for Xeon Phi 3120A
+  - input and gold generated
+    $ ./needle_gen 8192 10 228
+    $ ./needle_gen 16394 10 228
+  - configurations executed
+    $ ./needle_check 8192 10 228 input_8192_th_228_pen_10 gold_8192_th_228_pen_10 1000000
+    $ ./needle_check 16394 10 228 input_16394_th_228_pen_10 gold_16394_th_228_pen_10 1000000
+
