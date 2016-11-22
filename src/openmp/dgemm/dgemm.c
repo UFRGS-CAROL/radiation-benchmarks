@@ -110,6 +110,15 @@ long long check_start, check_end;
 #define ABS(a) ((a) >= 0 ? (a) : -(a))
 #endif
 
+static inline void prk_free(void* p)
+{
+#if defined(__INTEL_COMPILER) && !defined(PRK_USE_POSIX_MEMALIGN)
+    _mm_free(p);
+#else
+    free(p);
+#endif
+}
+
 /* This function is separate from prk_malloc() because
  * we need it when calling prk_shmem_align(..)           */
 static inline int prk_get_alignment(void)
@@ -169,104 +178,93 @@ static inline void* prk_malloc(size_t bytes)
 #endif
 }
 
-void dgemm(double *A, double *B, double *C, long order, int block){
+void dgemm(double *A, double *B, double *C, long order, int block) {
 
-    int     i,ii,j,jj,k,kk,ig,jg,kg; 
+    int     i,ii,j,jj,k,kk,ig,jg,kg;
 
     #pragma omp parallel private (i,j,k,ii,jj,kk,ig,jg,kg)
     {
         double *AA=NULL, *BB=NULL, *CC=NULL;
 
-        if (block > 0) {
-            /* matrix blocks for local temporary copies*/
-            AA = (double *) prk_malloc(block*(block+BOFFSET)*3*sizeof(double));
-            if (!AA) {
-                printf("Could not allocate space for matrix tiles on thread %d\n",
-                       omp_get_thread_num());
-                exit(1);
-            }
-            BB = AA + block*(block+BOFFSET);
-            CC = BB + block*(block+BOFFSET);
+        /* matrix blocks for local temporary copies*/
+        AA = (double *) prk_malloc(block*(block+BOFFSET)*3*sizeof(double));
+        if (!AA) {
+            printf("Could not allocate space for matrix tiles on thread %d\n",
+                   omp_get_thread_num());
+            exit(1);
         }
+        BB = AA + block*(block+BOFFSET);
+        CC = BB + block*(block+BOFFSET);
 
-        if (block > 0) {
 
-            #pragma omp for
-            for(jj = 0; jj < order; jj+=block) {
-                for(kk = 0; kk < order; kk+=block) {
+        #pragma omp for
+        for(jj = 0; jj < order; jj+=block) {
+            for(kk = 0; kk < order; kk+=block) {
+
+                for (jg=jj,j=0; jg<MIN(jj+block,order); j++,jg++)
+                    for (kg=kk,k=0; kg<MIN(kk+block,order); k++,kg++)
+                        BB_arr(j,k) =  B_arr(kg,jg);
+
+                for(ii = 0; ii < order; ii+=block) {
+
+                    for (kg=kk,k=0; kg<MIN(kk+block,order); k++,kg++)
+                        for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
+                            AA_arr(i,k) = A_arr(ig,kg);
 
                     for (jg=jj,j=0; jg<MIN(jj+block,order); j++,jg++)
-                        for (kg=kk,k=0; kg<MIN(kk+block,order); k++,kg++)
-                            BB_arr(j,k) =  B_arr(kg,jg);
+                        for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
+                            CC_arr(i,j) = 0.0;
 
-                    for(ii = 0; ii < order; ii+=block) {
-
-                        for (kg=kk,k=0; kg<MIN(kk+block,order); k++,kg++)
-                            for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
-                                AA_arr(i,k) = A_arr(ig,kg);
-
+                    for (kg=kk,k=0; kg<MIN(kk+block,order); k++,kg++)
                         for (jg=jj,j=0; jg<MIN(jj+block,order); j++,jg++)
                             for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
-                                CC_arr(i,j) = 0.0;
+                                CC_arr(i,j) += AA_arr(i,k)*BB_arr(j,k);
 
-                        for (kg=kk,k=0; kg<MIN(kk+block,order); k++,kg++)
-                            for (jg=jj,j=0; jg<MIN(jj+block,order); j++,jg++)
-                                for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
-                                    CC_arr(i,j) += AA_arr(i,k)*BB_arr(j,k);
+                    for (jg=jj,j=0; jg<MIN(jj+block,order); j++,jg++)
+                        for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
+                            C_arr(ig,jg) += CC_arr(i,j);
 
-                        for (jg=jj,j=0; jg<MIN(jj+block,order); j++,jg++)
-                            for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
-                                C_arr(ig,jg) += CC_arr(i,j);
-
-                    }
                 }
             }
         }
-        else {
-            #pragma omp for
-            for (jg=0; jg<order; jg++)
-                for (kg=0; kg<order; kg++)
-                    for (ig=0; ig<order; ig++)
-                        C_arr(ig,jg) += A_arr(ig,kg)*B_arr(kg,jg);
-        }
-
-    } 
+        prk_free(AA);
+    }
 
 }
 
-void read_input(double *A, double *B, char * fileA, char * fileB, long int order){
+void read_input(double *A, double *B, char * fileA, char * fileB, long int order) {
     FILE *file,*file2;
     int i, j;
 
-    if( (file = fopen(fileA, "rb" )) == 0 ){
+    if( (file = fopen(fileA, "rb" )) == 0 ) {
         printf( "The inputA file was not opened\n" );
-    	exit(1);
+        exit(1);
     }
-    if( (file2 = fopen(fileB, "rb" )) == 0 ){
+    if( (file2 = fopen(fileB, "rb" )) == 0 ) {
         printf( "The inputB file was not opened\n" );
-    	exit(1);
+        exit(1);
     }
 
     for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
-        fread(&A[(i)+(order)*(j)], 1, sizeof(double), file);
-        fread(&B[(i)+(order)*(j)], 1, sizeof(double), file2);
-    }
+            fread(&A[(i)+(order)*(j)], 1, sizeof(double), file);
+            fread(&B[(i)+(order)*(j)], 1, sizeof(double), file2);
+        }
     fclose(file);
     fclose(file2);
 }
 
-void read_gold(double *gold,char * fileGold, long int order){
+void read_gold(double *gold,char * fileGold, long int order) {
     FILE *file;
     int i, j;
 
-    if( (file = fopen(fileGold, "rb" )) == 0 ){
+    if( (file = fopen(fileGold, "rb" )) == 0 ) {
         printf( "The gold file was not opened\n" );
-    	exit(1);
+        exit(1);
     }
 
     for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
-        fread(&gold[(i)+(order)*(j)], 1, sizeof(double), file);
-    }
+            fread(&gold[(i)+(order)*(j)], 1, sizeof(double), file);
+        }
     fclose(file);
 }
 
@@ -348,7 +346,7 @@ int main(int argc, char **argv) {
     setup_end = timing_get_time();
 #endif
     int loop;
-    for(loop=0; loop < iterations; loop++){
+    for(loop=0; loop < iterations; loop++) {
 #ifdef TIMING
         loop_start = timing_get_time();
 #endif
@@ -366,8 +364,8 @@ int main(int argc, char **argv) {
 #endif
 
         for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
-		C[i*order+j] = 0;
-	}
+                C[i*order+j] = 0;
+            }
 
 #ifdef TIMING
         kernel_start = timing_get_time();
@@ -390,15 +388,15 @@ int main(int argc, char **argv) {
         int errors=0;
         #pragma omp parallel for reduction(+:errors)
         for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
-            if ((fabs((C[(i)+(order)*(j)] - gold[(i)+(order)*(j)]) / C[(i)+(order)*(j)]) > 0.0000000001) || (fabs((C[(i)+(order)*(j)] - gold[(i)+(order)*(j)]) / gold[(i)+(order)*(j)]) > 0.0000000001)) {
-                errors++;
+                if ((fabs((C[(i)+(order)*(j)] - gold[(i)+(order)*(j)]) / C[(i)+(order)*(j)]) > 0.0000000001) || (fabs((C[(i)+(order)*(j)] - gold[(i)+(order)*(j)]) / gold[(i)+(order)*(j)]) > 0.0000000001)) {
+                    errors++;
 #ifdef LOGS
-                char error_detail[200];
-                sprintf(error_detail," p: [%d, %d], r: %1.16e, e: %1.16e", i, j, C[i + order * j], gold[i + order * j]);
-                log_error_detail(error_detail);
+                    char error_detail[200];
+                    sprintf(error_detail," p: [%d, %d], r: %1.16e, e: %1.16e", i, j, C[i + order * j], gold[i + order * j]);
+                    log_error_detail(error_detail);
 #endif
+                }
             }
-        }
 #ifdef TIMING
         check_end = timing_get_time();
 #endif
