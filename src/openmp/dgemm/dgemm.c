@@ -91,8 +91,6 @@ long long check_start, check_end;
 #define MAX_THREADS MAXTHREADS
 #endif
 
-#define DEFAULTBLOCK 32
-
 #define AA_arr(i,j) AA[(i)+(block+BOFFSET)*(j)]
 #define BB_arr(i,j) BB[(i)+(block+BOFFSET)*(j)]
 #define CC_arr(i,j) CC[(i)+(block+BOFFSET)*(j)]

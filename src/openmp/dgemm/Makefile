@@ -1,9 +1,9 @@
 # C compiler
 CC = gcc
-CC_FLAGS = -fopenmp -O3 -DDEFAULTBLOCK=32 -DBOFFSET=12
+CC_FLAGS = -fopenmp -O3 -DBOFFSET=12
 
 intel:CC=icc -mmic -DMIC_NATIVE
-intel:CC_FLAGS=-qopenmp -DDEFAULTBLOCK=32 -DBOFFSET=12
+intel:CC_FLAGS=-qopenmp -DBOFFSET=12
 
 
 general: dgemm_gen dgemm_check dgemm_err_inj dgemm_timing
