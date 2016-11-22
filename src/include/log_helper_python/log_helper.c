@@ -21,6 +21,7 @@ char timestamp_watchdog[200] = "/micNfs/carol/logs/timestamp.txt";
 char *timestamp_watchdog;
 char timestamp_file[] = "timestamp.txt";
 char vardir_key[]="vardir";
+char *timestamp_file_py = "/var/radiation-benchmarks/timestamp.txt";
 
 #endif
 
@@ -101,7 +102,7 @@ void update_timestamp() {
 
     //sprintf(time_s, "%d", (int) timestamp);
 
-	FILE *fp = fopen(timestamp_watchdog, "w");
+	FILE *fp = fopen(timestamp_file_py, "w");
 	if (fp){
 		fprintf(fp,  "%d", (int) timestamp);
 		fclose(fp);

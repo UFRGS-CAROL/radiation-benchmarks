@@ -28,7 +28,7 @@ import traceback
 import csv
 import sys
 THRESHOLD = 0.005
-
+import time,calendar
 #import log helper
 sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include/log_helper_python/')
 
@@ -288,11 +288,19 @@ def compare(gold, current, img_name):
 
     return error_count
 
+
+def force_update_timestamp():
+    fp = open("/var/radiation-benchmarks/timestamp.txt", "w")
+    fp.write(str(calendar.timegm(time.gmtime())))
+    fp.close()
+    return
+
+
 if __name__ == '__main__':
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
     args = parse_args()
-
+    force_update_timestamp()
     if "no_logs" not in args.is_log:
         
         string_info = "iterations: " + str(args.iterations) + " img_list: " + str(args.img_list) + " board: "
@@ -306,6 +314,7 @@ if __name__ == '__main__':
     gold_file = {}
 ###################################################################################
 #only load network
+    force_update_timestamp()
     try:
         #to make sure that the models and cfg will be with absolute path
         prototxt = os.path.join(cfg.MODELS_DIR, NETS[args.demo_net][0],
@@ -337,6 +346,7 @@ if __name__ == '__main__':
         else:
             print " XX " + str(e.__doc__) + " XX "+ str(e.message)
             
+    force_update_timestamp()
     ##after loading net we start
     try:
     ##################################################################################
@@ -404,7 +414,7 @@ if __name__ == '__main__':
                             print "Compare time " , timer.total_time , " errors " , error_count
 
                         lh.log_error_count(int(error_count))
-
+                        force_update_timestamp()
                     ##end log
                     j += 1
                     if j == im_size:
