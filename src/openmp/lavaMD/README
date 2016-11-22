@@ -7,7 +7,7 @@ LavaMD OpenMP
     $ make general
 
 Compilation should generate 5 binaries:
-  - lavamd_gen: used to generate the gold output. Gold will be used to check if the execution generates a correct output.
+  - lavamd_gen: used to generate the input and gold output. Gold will be used to check if the execution generates a correct output.
   - lavamd_check: this binary will be used during radiation test, it will execute the benchmark kernel several times
   - lavamd_timing: this binary is used only for testing purposes, it will measure the time spent in every part of the benchmark. This binary will not record any log information
   - lavamd_err_inj: this binary is used only for testing purposes, it will change the input value to check if the gold verification is working. This binary will also enter into an infinite loop to test the setup that needs to kill hanging benchmarks.
