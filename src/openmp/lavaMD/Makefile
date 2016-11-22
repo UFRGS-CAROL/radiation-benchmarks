@@ -14,18 +14,18 @@ intel:  lava_generate lavamd lavamd_err_inj lavamd_timing
 
 
 lava_generate: $(SOURCES_GEN)
-	$(CC) $(SOURCES_GEN) -lm $(OMP) -o $(APP_NAME)_genGold
+	$(CC) $(SOURCES_GEN) -lm $(OMP) -o $(APP_NAME)_gen
 
 lavamd: $(SOURCES_CHECK)
-	$(CC) $(SOURCES_CHECK) -lm $(OMP) -DLOGS -o $(APP_NAME)
+	$(CC) $(SOURCES_CHECK) -lm $(OMP) -DLOGS -o $(APP_NAME)_check
 
 lavamd_timing: $(SOURCES_CHECK)
-	$(CC) $(SOURCES_CHECK) -lm $(OMP) -DTIMING -o $(APP_NAME)_nologs_timing
+	$(CC) $(SOURCES_CHECK) -lm $(OMP) -DTIMING -o $(APP_NAME)_timing
 
 lavamd_err_inj: $(SOURCES_CHECK)
 	$(CC) $(SOURCES_CHECK) -lm $(OMP) -DLOGS -DERR_INJ -o $(APP_NAME)_err_inj
 
 clean:
-	rm -f input_* output_* $(APP_NAME)_genGold $(APP_NAME) $(APP_NAME)_nologs_timing $(APP_NAME)_err_inj
+	rm -f input_* output_* $(APP_NAME)_gen $(APP_NAME)_check $(APP_NAME)_timing $(APP_NAME)_err_inj
 
 
