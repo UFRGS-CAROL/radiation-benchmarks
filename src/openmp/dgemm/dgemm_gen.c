@@ -220,6 +220,27 @@ void dgemm(double *A, double *B, double *C, long order, int block){
 
 }
 
+void read_input(double *A, double *B, char * fileA, char * fileB, long int order){
+    FILE *file,*file2;
+    int i, j;
+
+    if( (file = fopen(fileA, "rb" )) == 0 ){
+        printf( "The inputA file was not opened\n" );
+    	exit(1);
+    }
+    if( (file2 = fopen(fileB, "rb" )) == 0 ){
+        printf( "The inputB file was not opened\n" );
+    	exit(1);
+    }
+
+    for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
+        fread(&A[(i)+(order)*(j)], 1, sizeof(double), file);
+        fread(&B[(i)+(order)*(j)], 1, sizeof(double), file2);
+    }
+    fclose(file);
+    fclose(file2);
+}
+
 int main(int argc, char **argv) {
 
     int     i, j;
@@ -228,11 +249,12 @@ int main(int argc, char **argv) {
     double  *A, *B, *C;  /* input (A,B) and output (C) matrices            */
     long    order;                /* number of rows and columns of matrices         */
     int     block;                /* tile size of matrices                          */
+    char *inputA, *inputB, *fileGold;
 
     printf("OpenMP Dense matrix-matrix multiplication\n");
 
-    if (argc != 3 && argc != 4) {
-        printf("Usage: %s <# threads> <matrix order> [tile size]\n",*argv);
+    if (argc != 6) {
+        printf("Usage: %s <# threads> <matrix order> <tile size> <matrix A> <matrix B>\n",*argv);
         exit(1);
     }
 
@@ -262,30 +284,16 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    if (argc == 5) {
-        block = atoi(*++argv);
-    } else block = DEFAULTBLOCK;
-
-
-    FILE *file, *file2;
-    char inputA[150], inputB[150];
-    snprintf(inputA, 150, "matrix_A_%ld_m-order_%d_ths_%d_blocks",order, nthread_input, block);
-    snprintf(inputB, 150, "matrix_B_%ld_m-order_%d_ths_%d_blocks",order, nthread_input, block);
-    if( (file = fopen(inputA, "wb" )) == 0 )
-        printf( "The inputA file was not opened\n" );
-    if( (file2 = fopen(inputB, "wb" )) == 0 )
-        printf( "The inputB file was not opened\n" );
-    srand ( time(NULL) );
-    #pragma omp parallel for private(i,j)
-    for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
-	A_arr(i,j) = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.0004e16))+4.1e16;
-	B_arr(i,j) = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.0004e16))+4.1e16;
-        fwrite(&A_arr(i,j), 1, sizeof(double), file);
-        fwrite(&B_arr(i,j), 1, sizeof(double), file2);
-        C_arr(i,j) = 0.0;
+    block = atoi(*++argv);
+    if (block < 1) {
+        printf("ERROR: block size must be positive: %d\n", block);
+        exit(1);
     }
-    fclose(file);
-    fclose(file2);
+    inputA = *++argv;
+    inputB = *++argv;
+
+
+    read_input(A, B, inputA, inputB, order);
 
     printf("Matrix order          = %ld\n", order);
     printf("Number of threads     = %d\n", nthread_input);
@@ -297,13 +305,14 @@ int main(int argc, char **argv) {
 
     dgemm(A, B, C, order, block);
 
+    FILE *file;
     char output_gold[150];
     snprintf(output_gold, 150, "gold_%ld_m-order_%d_ths_%d_blocks",order, nthread_input, block);
     if( (file = fopen(output_gold, "wb" )) == 0 )
         printf( "The GOLD file was not opened\n" );
     int zero_sum=0;
     for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
-        if (C_arr(i,j) == 0.0) zero_sum++;
+        if (C_arr(i,j) < 0.000001 && C_arr(i,j) > -0.000001) zero_sum++;
         fwrite(&C_arr(i,j), 1, sizeof(double), file);
     }
     fclose(file);

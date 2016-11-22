@@ -248,8 +248,8 @@ void read_input(double *A, double *B, char * fileA, char * fileB, long int order
     }
 
     for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
-        fwrite(&A[(i)+(order)*(j)], 1, sizeof(double), file);
-        fwrite(&B[(i)+(order)*(j)], 1, sizeof(double), file2);
+        fread(&A[(i)+(order)*(j)], 1, sizeof(double), file);
+        fread(&B[(i)+(order)*(j)], 1, sizeof(double), file2);
     }
     fclose(file);
     fclose(file2);
@@ -265,7 +265,7 @@ void read_gold(double *gold,char * fileGold, long int order){
     }
 
     for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
-        fwrite(&gold[(i)+(order)*(j)], 1, sizeof(double), file);
+        fread(&gold[(i)+(order)*(j)], 1, sizeof(double), file);
     }
     fclose(file);
 }
@@ -355,9 +355,7 @@ int main(int argc, char **argv) {
 #ifdef ERR_INJ
         if(loop == 2) {
             printf("injecting error, changing input!\n");
-            A[0] = 102012;
-            A[10] = 102012;
-            A[55] = 102012;
+            A[100] = 102012;
         } else if (loop == 3) {
             printf("get ready, infinite loop...\n");
             fflush(stdout);
@@ -367,6 +365,9 @@ int main(int argc, char **argv) {
         }
 #endif
 
+        for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
+		C[i*order+j] = 0;
+	}
 
 #ifdef TIMING
         kernel_start = timing_get_time();
