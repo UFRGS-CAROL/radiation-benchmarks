@@ -21,8 +21,8 @@ def main(board):
         print >> sys.stderr, "Configuration setup error: "+str(e)
         sys.exit(1)
 
-    data_path=installDir+"data/histogram_ori_gradients"
-    bin_path=installDir+"bin"
+    data_path=installDir+"src/cuda/histogram_ori_gradients"
+    bin_path=installDir+"src/cuda/histogram_ori_gradients/"
     src_hog = installDir+"src/cuda/histogram_ori_gradients"
 
     if not os.path.isdir(data_path):
@@ -40,6 +40,7 @@ def main(board):
 
     #../../../../data/CALTECH/set10/V000/ --dst_data dataset.txt --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
     generate_hog = ["sudo ", "hog_extracted/gold_gen ",  gold_txt, " --hit_threshold 0.9 --gr_threshold 1 --nlevels 100"]
+    print " ".join(generate_hog)
     os.system(" ".join(generate_hog))
 
     #$(HOG_EXT_DIR)/hog_ext $(HOG_OCV_DIR)/hog_opencv $(HOG_HAR_DIR)/hog_har_eccon  $(HOG_EOF_DIR)/hog_har_eccoff
@@ -48,13 +49,13 @@ def main(board):
     HOG_EOF = "hog_har_eccoff"
 
     execute_hog = {
-        HOG_EXT:["sudo ",  bin_path + "/" + HOG_EXT,  gold_txt,  " --iterations 10000000"],
-        HOG_HAR:["sudo ",  bin_path + "/" + HOG_HAR,  gold_txt,   " --iterations 10000000"],
-        HOG_EOF:["sudo ",  bin_path + "/" + HOG_EOF,  gold_txt,  " --iterations 10000000"],
+        HOG_EXT:["sudo ",  bin_path + "/hog_extracted/" + HOG_EXT,  gold_txt,  " --iterations 1000"],
+        HOG_HAR:["sudo ",  bin_path + "/hog_hardened_ecc_on/" + HOG_HAR,  gold_txt,   " --iterations 1000"],
+        HOG_EOF:["sudo ",  bin_path + "/hog_hardened_ecc_off/" + HOG_EOF,  gold_txt,  " --iterations 1000"],
     }
 
     #move all binaries to bin path
-    os.system("mv hog_extracted/hog_ext hog_hardened_ecc_off/hog_har_eccoff hog_hardened_ecc_on/hog_har_eccon "+bin_path)
+    #os.system("mv hog_extracted/hog_ext hog_hardened_ecc_off/hog_har_eccoff hog_hardened_ecc_on/hog_har_eccon "+bin_path)
 
     fp = open(installDir+"scripts/how_to_run_hog_cuda_" + str(board), 'w')
 

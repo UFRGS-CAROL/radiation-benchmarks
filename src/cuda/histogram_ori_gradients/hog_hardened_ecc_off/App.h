@@ -121,8 +121,8 @@ void App::run() {
 	ifstream input_file(gold0_set.c_str());
 	//================== Init logs
 #ifdef LOGS
-	char test_info[90]; 
-	snprintf(test_info, 90, "hog hardened ecc off");
+	char test_info[500]; 
+	snprintf(test_info, 500, "type: ecc_off dataset: %s", args.src.c_str());
 	start_log_file("cudaHOG", test_info);
 #endif
 	//====================================
