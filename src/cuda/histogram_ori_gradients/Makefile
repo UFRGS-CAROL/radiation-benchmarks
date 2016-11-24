@@ -1,4 +1,4 @@
-NVCC=/usr/local/cuda-7.0/bin/nvcc
+NVCC=/usr/local/cuda/bin/nvcc
 CXX=g++
 
 ARCH_I?=35
@@ -23,8 +23,8 @@ LOGHELPER_LIB=../../include/
 CFLAGS+= -L$(NVIDIA_LIB) -lcuda -lcudart
 
 
-NVIDIA_INC=/usr/local/cuda-7.0/include/
-NVIDIA_LIB=/usr/local/cuda-7.0/lib64/
+NVIDIA_INC=/usr/local/cuda/include/
+NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
@@ -42,8 +42,8 @@ ALL_CV_FLAGS=-L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui  -
 ALL_GOLD_GEN= -L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui  -lopencv_objdetect  -lopencv_gpu -lopencv_calib3d -lopencv_video -lopencv_legacy \
 			-lopencv_stitching -lopencv_superres \
 			-lopencv_photo  -lopencv_ml -lopencv_ml \
-			-lopencv_contrib -lopencv_features2d -lopencv_flann \
-			-lopencv_nonfree
+			-lopencv_contrib -lopencv_features2d -lopencv_flann 
+
 
 ALL_CV_FLAGS += $(OPTS) 
 
@@ -52,7 +52,7 @@ all: clean gold_generator hog_extracted hog_har_ecc_off hog_har_ecc_on hog_openc
 
 OPENCV_FLAGS=  -lopencv_core -lopencv_imgproc -lopencv_highgui \
 		-lopencv_calib3d -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_legacy \
-		-lopencv_ml -lopencv_nonfree -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_superres \
+		-lopencv_ml  -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_superres \
 		-lopencv_video -lopencv_videostab
 		
 
@@ -92,25 +92,14 @@ hog_har_ecc_off: $(HOG_EOF_DIR)/HOG.cpp
 
 ##hog evaluate
 hog_eval: $(HOG_EVA_DIR)/GoldGenerator.cpp
-	$(CXX) $(HOG_EVA_DIR)/GoldGenerator.cpp -Wall  -Ofast -lopencv_core -I$(LOGHELPER_INC) -lopencv_imgproc -lopencv_highgui \
-	-lopencv_calib3d -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_legacy -lopencv_ml \
-	-lopencv_nonfree -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_superres -lopencv_video \
-	-lopencv_videostab -o $(HOG_EVA_DIR)/hog_evaluate_dataset
-
-
+	$(CXX) $(HOG_EVA_DIR)/GoldGenerator.cpp -Wall  -Ofast -lopencv_core -I$(LOGHELPER_INC) $(OPENCV_FLAGS) -o $(HOG_EVA_DIR)/hog_evaluate_dataset
 
 
 gold_generator: $(HOG_OCV_DIR)/GoldGenerator.cpp
-	g++ $(HOG_OCV_DIR)/GoldGenerator.cpp -Wall  -o3 -lopencv_core -I$(LOGHELPER_INC)  -lopencv_imgproc -lopencv_highgui \
-	-lopencv_calib3d -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_legacy -lopencv_ml \
-	-lopencv_nonfree -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_superres -lopencv_video \
-	-lopencv_videostab -o $(HOG_OCV_DIR)/gold_gen	
+	g++ $(HOG_OCV_DIR)/GoldGenerator.cpp -Wall  -o3 -lopencv_core -I$(LOGHELPER_INC) $(OPENCV_FLAGS) -o $(HOG_OCV_DIR)/gold_gen	
 
 generator_ext:  $(HOG_EXT_DIR)/GoldGenerator.cpp
-	g++ $(HOG_EXT_DIR)/GoldGenerator.cpp -Wall  -o3 -lopencv_core -I$(LOGHELPER_INC)  -lopencv_imgproc -lopencv_highgui \
-	-lopencv_calib3d -lopencv_contrib -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_legacy -lopencv_ml \
-	-lopencv_nonfree -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_superres -lopencv_video \
-	-lopencv_videostab -o $(HOG_EXT_DIR)/gold_gen
+	g++ $(HOG_EXT_DIR)/GoldGenerator.cpp -Wall  -o3 -lopencv_core -I$(LOGHELPER_INC)  $(OPENCV_FLAGS) -o $(HOG_EXT_DIR)/gold_gen
 	
 test:
 	.$(HOG_EVA_DIR)/hog_evaluate_dataset ./dataset_example.txt --dst_data dataset.txt --hit_threshold 0.9 --gr_threshold 1 --nlevels 100

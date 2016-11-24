@@ -100,6 +100,8 @@ void App::run() {
 	//multiple images from txt
 	unsigned int current_dataset_index = 0;
 
+	string gold_path("/home/carol/radiation-benchmarks/data/histogram_ori_gradients/");
+
 	vector <string> dataset;
 	string dataset_line;
 	ifstream images(args.src.c_str());
@@ -118,7 +120,8 @@ void App::run() {
 	string gold0_frame = split_gold0[split_gold0.size() - 1].c_str();	
 	gold0_set.append("_" + gold0_video + "_" + gold0_frame + ".data");
 
-	ifstream input_file(gold0_set.c_str());
+	string gold0_abs_path(gold_path + gold0_set);
+	ifstream input_file(gold0_abs_path.c_str());
 	//================== Init logs
 #ifdef LOGS
 	char test_info[500]; 
@@ -131,7 +134,7 @@ void App::run() {
 		log_error_detail("Cant open gold file");
 		end_log_file();
 #endif
-		throw runtime_error(string("can't open image file: " + gold0_set));
+		throw runtime_error(string("can't open gold0 file: " + gold0_abs_path));
 	}
 
 	//get gold file data
@@ -209,7 +212,9 @@ void App::run() {
 			string gold_frame = split_current_line[split_current_line.size() - 1].c_str();
 			gold_set.append("_" + gold_video + "_" + gold_frame + ".data");
 
-			ifstream gold_data(gold_set.c_str());
+		        string gold_abs_path(gold_path + gold_set);
+	
+			ifstream gold_data(gold_abs_path.c_str());
 
 			vector < vector<int> > gold;
 

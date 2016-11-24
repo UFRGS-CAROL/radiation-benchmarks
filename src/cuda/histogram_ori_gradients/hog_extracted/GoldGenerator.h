@@ -170,7 +170,10 @@ void App::run() {
 	gold_set.append("_" + gold_video + "_" + gold_frame + ".data");
 
 	ofstream output_file;
-	output_file.open(gold_set.c_str());
+
+	string data_path("/home/carol/radiation-benchmarks/data/histogram_ori_gradients/");
+	data_path.append(gold_set);
+	output_file.open(data_path.c_str());
 
 	output_file << args.make_gray << ",";
 	output_file << args.scale << ",";
