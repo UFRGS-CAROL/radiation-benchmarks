@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "common.h"
 #include "../../include/log_helper.h"
