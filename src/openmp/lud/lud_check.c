@@ -184,11 +184,13 @@ main ( int argc, char *argv[] )
 #ifdef TIMING
         check_start = timing_get_time();
 #endif
-        int i, j, host_errors = 0;
+        int i, host_errors = 0;
         #pragma omp parallel for reduction(+:host_errors)
         for ( i = 0; i < matrix_dim; i++) {
+            int j;
             for ( j = 0; j < matrix_dim; j++) {
-                if (m[i + matrix_dim * j] != gold[i + matrix_dim * j]) {
+                if ((fabs((m[i + matrix_dim * j] - gold[i + matrix_dim * j]) / m[i + matrix_dim * j]) > 0.0000000001) || (fabs((m[i + matrix_dim * j] - gold[i + matrix_dim * j]) / gold[i + matrix_dim * j]) > 0.0000000001)) {
+                //if (m[i + matrix_dim * j] != gold[i + matrix_dim * j]) {
                     char error_detail[200];
                     sprintf(error_detail," p: [%d, %d], r: %1.16e, e: %1.16e", i, j, m[i + matrix_dim * j], gold[i + matrix_dim * j]);
                     host_errors++;

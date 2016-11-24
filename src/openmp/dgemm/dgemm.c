@@ -386,7 +386,7 @@ int main(int argc, char **argv) {
         check_start = timing_get_time();
 #endif
         int errors=0;
-        #pragma omp parallel for reduction(+:errors)
+        #pragma omp parallel for reduction(+:errors) private(i,j)
         for(j = 0; j < order; j++) for(i = 0; i < order; i++) {
                 if ((fabs((C[(i)+(order)*(j)] - gold[(i)+(order)*(j)]) / C[(i)+(order)*(j)]) > 0.0000000001) || (fabs((C[(i)+(order)*(j)] - gold[(i)+(order)*(j)]) / gold[(i)+(order)*(j)]) > 0.0000000001)) {
                     errors++;
