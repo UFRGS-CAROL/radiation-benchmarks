@@ -15,8 +15,6 @@
 #include "log_helper.h"
 #endif
 
-
-
 #define min(X,Y) (((X) < (Y)) ? (X) : (Y))
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"
@@ -297,7 +295,7 @@ void validate_yolo(Args parameters) {
 	}
 
 	//set abft
-	if(parameters.abft == 1)
+	if (parameters.abft == 1 && !parameters.generate_flag)
 		set_use_abft(1);
 //	}
 	for (iterator = 0; iterator < parameters.iterations; iterator++) {
@@ -314,7 +312,7 @@ void validate_yolo(Args parameters) {
 #endif
 
 				//for abft, because it is easier use an input parameter than a gcc macro
-				if(parameters.abft == 1){
+				if (parameters.abft == 1) {
 					shared_errors.row_detected_errors = 0;
 					shared_errors.col_detected_errors = 0;
 				}
@@ -375,7 +373,7 @@ void validate_yolo(Args parameters) {
 								cmp);
 
 						//Lucas saving layers
-						if(parameters.save_layers == 1)
+						if (parameters.save_layers == 1)
 							saveLayer(net);
 						max_err_per_iteration += cmp;
 						if (max_err_per_iteration > 500) {
@@ -384,15 +382,19 @@ void validate_yolo(Args parameters) {
 									buf_resized, fps);
 
 #ifdef LOGS
-						if(parameters.abft == 1){
-							if(shared_errors.row_detected_errors || shared_errors.col_detected_errors) {
+							if((!parameters.generate_flag) && (parameters.abft == 1) &&
+									(shared_errors.row_detected_errors || shared_errors.col_detected_errors)) {
 								char abft_string[500];
-								fprintf(abft_string, "abft_type: dumb image_list_position: [%ld] row_detected_errors: %ll col_detected_errors: %ll",
+//								printf("\n\n\passou antes vei\n\n");
+								sprintf(abft_string, "abft_type: dumb image_list_position: [%d] row_detected_errors: %llu col_detected_errors: %llu",
 										gold_iterator,
 										shared_errors.row_detected_errors, shared_errors.col_detected_errors);
-								log_error_detail(abft_string);
+//								printf("\n\n\n\Passou aqui \n\n\n\n");
+								log_info_detail(abft_string);
+//								printf("\n\n\npassou na log_error %s", abft_string);
+								//printf("%\n", abft_string);
+
 							}
-						}
 
 #endif
 						}
