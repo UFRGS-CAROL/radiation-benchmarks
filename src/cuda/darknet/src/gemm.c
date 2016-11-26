@@ -174,16 +174,7 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 //	m  	input 	number of rows of matrix op(A) and C.
 //	n 	input	number of columns of matrix op(B) and C.
 //	k 	input 	number of columns of op(A) and rows of op(B).
-
-//	printf("N %d M %d K %d\n", N, M, K);
 		abraham_sum(A_gpu, B_gpu, M, K, K, N);
-//N 784 M 256 K 512
-		if (N == 784 && M == 256 && K == 512 && it_print == 0) {
-			float *temp = (float*) calloc(M * K, sizeof(float));
-			cudaMemcpy(temp, A_gpu, M * K * sizeof(float), cudaMemcpyDeviceToHost);
-			print_mat_row_major(temp, M, K, "test mat A print");
-			it_print = 1;
-		}
 	}
 	cublasHandle_t handle = blas_handle();
 	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
@@ -195,9 +186,9 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		shared_errors.row_detected_errors += temp.row_detected_errors;
 		shared_errors.col_detected_errors += temp.col_detected_errors;
 
-//	if (temp.row_detected_errors || temp.col_detected_errors)
-//	printf("Detected row errors: %d\nDetected collum errors %d\n",
-//			temp.row_detected_errors, temp.col_detected_errors);
+	if (temp.row_detected_errors || temp.col_detected_errors)
+		printf("Detected row errors: %d\nDetected collum errors %d\n",
+			temp.row_detected_errors, temp.col_detected_errors);
 	}
 }
 
