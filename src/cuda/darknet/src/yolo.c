@@ -385,14 +385,14 @@ void validate_yolo(Args parameters) {
 							if((!parameters.generate_flag) && (parameters.abft == 1) &&
 									(shared_errors.row_detected_errors || shared_errors.col_detected_errors)) {
 								char abft_string[500];
-//								printf("\n\n\passou antes vei\n\n");
+								printf("\n\n\passou antes vei\n\n");
 								sprintf(abft_string, "abft_type: dumb image_list_position: [%d] row_detected_errors: %llu col_detected_errors: %llu",
 										gold_iterator,
 										shared_errors.row_detected_errors, shared_errors.col_detected_errors);
-//								printf("\n\n\n\Passou aqui \n\n\n\n");
+								printf("\n\n\n\Passou aqui \n\n\n\n");
 								log_info_detail(abft_string);
-//								printf("\n\n\npassou na log_error %s", abft_string);
-								//printf("%\n", abft_string);
+								printf("\n\n\npassou na log_error %s", abft_string);
+//								printf("%\n", abft_string);
 
 							}
 
