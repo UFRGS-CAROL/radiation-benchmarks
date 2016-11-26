@@ -187,7 +187,7 @@ __global__ void fault_injection(float *mat, int pos){
 extern "C" void abraham_sum(float *a, float *b, long rows_a, long cols_a,
 		long rows_b, long cols_b) {
 	calc_checksums<<<1, 2>>>(a, b, rows_a, cols_a, rows_b, cols_b);
-	fault_injection<<<1,1>>>(b, cols_b * rows_b / 100);
+	//fault_injection<<<1,1>>>(b, cols_b * rows_b / 100);
 	gpuErrchk(cudaPeekAtLastError());
 }
 
