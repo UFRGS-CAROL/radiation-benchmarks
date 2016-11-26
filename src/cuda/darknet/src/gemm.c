@@ -186,7 +186,7 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 							if(temp.row_detected_errors || temp.col_detected_errors) {
 								char abft_string[500];
 								sprintf(abft_string, "abft_type: dumb image_list_position: [%d] row_detected_errors: %llu col_detected_errors: %llu",
-										gold_iterator_abft,
+										get_gold_iterator_abft(),
 										temp.row_detected_errors, temp.col_detected_errors);
 								log_info_detail(abft_string);
 								printf("\n\n\npassou na log_error %s", abft_string);
