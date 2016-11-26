@@ -207,6 +207,10 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 void set_gold_iterator_abft(int gia){
 	gold_iterator_abft = gia;
 }
+
+int get_gold_iterator_abft(){
+	return gold_iterator_abft;
+}
 #endif
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, float ALPHA,
