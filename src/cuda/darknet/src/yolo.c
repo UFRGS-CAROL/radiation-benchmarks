@@ -13,7 +13,7 @@
 
 #ifdef LOGS
 #include "log_helper.h"
-#include "gemm.h"
+//#include "gemm.h"
 #endif
 
 #define min(X,Y) (((X) < (Y)) ? (X) : (Y))
