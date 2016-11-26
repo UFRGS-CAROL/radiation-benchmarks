@@ -1,0 +1,30 @@
+# C compiler
+CC = gcc
+CC_FLAGS = -fopenmp -O3
+
+intel:CC=icc -mmic -DMIC_NATIVE 
+intel:CC_FLAGS=-qopenmp
+
+SOURCES_CHECK=quicksort_check.c ../../include/log_helper.c
+general:SOURCES_CHECK=quicksort_check.c ../../include/log_helper.c
+
+general: quick_gen quick_check quick_err_inj quick_timing
+
+intel: quick_gen quick_check quick_err_inj quick_timing
+
+quick_gen: quicksort_gen.c generateInput.c
+	$(CC) $(CC_FLAGS) quicksort_gen.c -o quick_gen 
+	$(CC) $(CC_FLAGS) generateInput.c -o genInput 
+
+quick_check: $(SOURCES_CHECK)
+	$(CC) $(CC_FLAGS) $(SOURCES_CHECK) -DLOGS -o quick_check
+
+quick_err_inj: $(SOURCES_CHECK)
+	$(CC) $(CC_FLAGS) $(SOURCES_CHECK) -DLOGS -DERR_INJ -o quick_err_inj
+
+quick_timing: $(SOURCES_CHECK)
+	$(CC) $(CC_FLAGS) $(SOURCES_CHECK) -DTIMING -o quick_timing
+
+clean:
+	rm -f genInput quick_gen quick_check quick_err_inj quick_timing
+
