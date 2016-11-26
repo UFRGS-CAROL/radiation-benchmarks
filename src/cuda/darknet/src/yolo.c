@@ -12,7 +12,6 @@
 #include "abft.h"
 
 #ifdef LOGS
-	int gold_iterator_abft;
 #include "log_helper.h"
 //#include "gemm.h"
 #endif

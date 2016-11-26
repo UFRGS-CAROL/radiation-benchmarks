@@ -7,6 +7,11 @@
 
 #include "abft.h"
 
+#ifdef LOGS
+#include "log_helper.h"
+int gold_iterator_abft = 0;
+#endif
+
 void gemm_bin(int M, int N, int K, float ALPHA, char *A, int lda, float *B,
 		int ldb, float *C, int ldc) {
 	int i, j, k;
