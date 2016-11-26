@@ -13,6 +13,7 @@
 
 #ifdef LOGS
 #include "log_helper.h"
+#include "gemm.h"
 #endif
 
 #define min(X,Y) (((X) < (Y)) ? (X) : (Y))
@@ -309,13 +310,15 @@ void validate_yolo(Args parameters) {
 				if(!parameters.generate_flag) {
 					start_iteration();
 				}
+				if(parameters.abft == 1 && !parameters.generate_flag)
+					set_gold_iterator_abft(gold_iterator);
 #endif
 
 				//for abft, because it is easier use an input parameter than a gcc macro
-				if (parameters.abft == 1) {
-					shared_errors.row_detected_errors = 0;
-					shared_errors.col_detected_errors = 0;
-				}
+//				if (parameters.abft == 1) {
+//					shared_errors.row_detected_errors = 0;
+//					shared_errors.col_detected_errors = 0;
+//				}
 				double begin2 = mysecond();
 				char *path = paths[i + t - nthreads];
 				char *id = basecfg(path);
@@ -381,22 +384,6 @@ void validate_yolo(Args parameters) {
 									&gold_ptr, classes, val, val_resized, buf,
 									buf_resized, fps);
 
-#ifdef LOGS
-							if((!parameters.generate_flag) && (parameters.abft == 1) &&
-									(shared_errors.row_detected_errors || shared_errors.col_detected_errors)) {
-								char abft_string[500];
-								printf("\n\n\passou antes vei\n\n");
-								sprintf(abft_string, "abft_type: dumb image_list_position: [%d] row_detected_errors: %llu col_detected_errors: %llu",
-										gold_iterator,
-										shared_errors.row_detected_errors, shared_errors.col_detected_errors);
-								printf("\n\n\n\Passou aqui \n\n\n\n");
-								log_info_detail(abft_string);
-								printf("\n\n\npassou na log_error %s", abft_string);
-//								printf("%\n", abft_string);
-
-							}
-
-#endif
 						}
 
 					}

@@ -19,6 +19,12 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
         float *C, int ldc);
 
 #ifdef GPU
+#ifdef LOGS
+	int gold_iterator_abft;
+	int get_gold_iterator_abft();
+	void set_gold_iterator_abft(int gia);
+#endif
+
 void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA, 
         float *A_gpu, int lda, 
         float *B_gpu, int ldb,
@@ -30,5 +36,7 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, float ALPHA,
         float *B, int ldb,
         float BETA,
         float *C, int ldc);
+
+
 #endif
 #endif
