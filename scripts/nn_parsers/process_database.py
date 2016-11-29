@@ -11,7 +11,7 @@ from sklearn.metrics import jaccard_similarity_score
 import parse_neural_networks as pn
 import shelve
 import errno
-
+import argparse
 # benchmarks dict => (bechmarkname_machinename : list of SDC item)
 # SDC item => [logfile name, header, sdc iteration, iteration total amount error, iteration accumulated error, list of errors ]
 # list of errors => list of strings with all the error detail print in lines using #ERR
@@ -653,7 +653,7 @@ def parseErrLulesh(errString, box, header):
         return None
 
 
-def parseErrors(benchmarkname_machinename, sdcItemList):
+def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
     benchmark = benchmarkname_machinename
     machine = benchmarkname_machinename
     m = re.match("(.*)_(.*)", benchmarkname_machinename)
@@ -868,31 +868,16 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
              errListFiltered2) = relativeErrorParserLulesh(errorsParsed)
         # object detection algorithms need other look
         elif isPyFaster:
-            dataset = "caltech"
-            gold_dir = pn.GOLD_DIR + "darknet_golds/"
-            if "caltech" in img_list_file:
-                gold_dir += "gold_caltech_full.test"
-            else:
-                dataset = "voc"
-                gold_dir += "gold_voc_full.test"
-
-            # only for CNNs
+             # only for CNNs
             if readGoldPyFaster:
                 goldPyFaster = pn.GoldContent(filepath=gold_dir, nn="pyfaster")
                 readGoldPyFaster = False
+
             (maxRelErr, minRelErr, avgRelErr, precision, recall, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
              errListFiltered2) = pn.relativeErrorParserPyFaster(img_list_file, errorsParsed, goldPyFaster, sdci)
 
 
         elif isDarknet:
-            gold_dir = pn.GOLD_DIR + "darknet_golds/"
-            dataset = "caltech"
-            if "caltech" in img_list_file:
-                gold_dir += "gold_caltech_full.test"
-            else:
-                dataset = "voc"
-                gold_dir += "gold_voc_full.test"
-
             # only for CNNs
             if readGoldDarknet:
                 goldDarknet = pn.GoldContent(filepath=gold_dir, nn="darknet")
@@ -951,6 +936,11 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
         # if fileNameSuffix is not None and fileNameSuffix != "":
         #   csvFileName = dirName+'/'+header+'/logs_parsed_'+machine+'_'+fileNameSuffix+'.csv'
         # else:
+        if 'caltech' in gold_dir:
+            dataset = 'caltech'
+        else:
+            dataset = 'voc2012'
+
         if isPyFaster:
             dir = "py_faster_csv_" + dataset
         elif isDarknet:
@@ -1004,33 +994,45 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
     sys.stdout.flush()
 
 
-################ => parseErrors()
+def parse_args():
+    """Parse input arguments."""
+    parser = argparse.ArgumentParser(description='Parse logs for Neural Networks')
+    parser.add_argument('--gold', dest='gold_dir', help='Directory where gold is located',
+                        default=pn.GOLD_DIR, type=str)
+    parser.add_argument('--database', dest='error_database',
+                        help='Where database is located', default="errors_log_database")
 
+    args = parser.parse_args()
+
+    return args
 
 ###########################################
 # MAIN
 ###########################################'
-# db = shelve.open("errors_log_database") #python3
-db = shelve.open("errors_log_database")  # python2
-# jump = True
-# for k, v in db.items(): #python3
-for k, v in db.iteritems():  # python2
-    isHotspot = re.search("Hotspot", k, flags=re.IGNORECASE)
-    isGEMM = re.search("GEMM", k, flags=re.IGNORECASE)
-    isLavaMD = re.search("lavamd", k, flags=re.IGNORECASE)
-    isCLAMR = re.search("clamr", k, flags=re.IGNORECASE)
-    # algoritmos ACCL, NW, Lulesh, Mergesort e Quicksort
-    isACCL = re.search("accl", k, flags=re.IGNORECASE)
-    isNW = re.search("nw", k, flags=re.IGNORECASE)
-    isLulesh = re.search("lulesh", k, flags=re.IGNORECASE)
-    isLud = re.search("lud", k, flags=re.IGNORECASE)
-    isDarknet = re.search("darknet", k, flags=re.IGNORECASE)
-    isPyFaster = re.search("pyfasterrcnn", k, flags=re.IGNORECASE)
 
-    if isHotspot or isGEMM or isLavaMD or isACCL or isNW or isLulesh or isLud or isDarknet or isPyFaster:
-        print("Processing ", k)
-        parseErrors(k, v)
-    else:
-        print("Ignoring ", k)
+if __name__ == '__main__':
+    args = parse_args()
+    # db = shelve.open("errors_log_database") #python3
+    db = shelve.open(args.error_database)  # python2
+    # jump = True
+    # for k, v in db.items(): #python3
+    for k, v in db.iteritems():  # python2
+        isHotspot = re.search("Hotspot", k, flags=re.IGNORECASE)
+        isGEMM = re.search("GEMM", k, flags=re.IGNORECASE)
+        isLavaMD = re.search("lavamd", k, flags=re.IGNORECASE)
+        isCLAMR = re.search("clamr", k, flags=re.IGNORECASE)
+        # algoritmos ACCL, NW, Lulesh, Mergesort e Quicksort
+        isACCL = re.search("accl", k, flags=re.IGNORECASE)
+        isNW = re.search("nw", k, flags=re.IGNORECASE)
+        isLulesh = re.search("lulesh", k, flags=re.IGNORECASE)
+        isLud = re.search("lud", k, flags=re.IGNORECASE)
+        isDarknet = re.search("darknet", k, flags=re.IGNORECASE)
+        isPyFaster = re.search("pyfasterrcnn", k, flags=re.IGNORECASE)
 
-db.close()
+        if isHotspot or isGEMM or isLavaMD or isACCL or isNW or isLulesh or isLud or isDarknet or isPyFaster:
+            print("Processing ", k)
+            parseErrors(k, v, args.gold)
+        else:
+            print("Ignoring ", k)
+
+    db.close()
