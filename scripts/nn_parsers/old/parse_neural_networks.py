@@ -483,7 +483,7 @@ def parseErrPyFaster(errString,imgIndex):
     ret = {}
     if 'boxes' in errString:
         image_err = re.match(
-            ".*boxes\: \[(\d+),(\d+)\].*e\: (\S+).*r\: (\S+).*",
+            ".*boxes\: \[(\d+),(\d+)\].*e\: ([0-9e\+\-\.]+).*r\: ([0-9e\+\-\.]+).*",
             errString)
         if image_err:
             ret["type"] = "boxes"
@@ -676,40 +676,17 @@ def getImageSize(imgPath):
         width, height = im.size
     return width, height
 
-
-
-"""
-ret["type"] = "boxes"
-ret["imgindex"] = imgIndex
-###########
-ret["boxes_x"] = image_err.group(1)
-
-###########
-ret["boxes_y"] = image_err.group(2)
-###########
-ret["e"] = image_err.group(3)
-############
-ret["r"] = image_err.group(4)
-"""
-def relativeErrorParserPyFaster(img_list_path, errList, gold_obj, current_obj, sdcIte):
+def relativeErrorParserPyFaster(img_list_path, errList, gold_obj, sdcIte):
     if len(errList) <= 0:
         return ("errlist fucked",None,None,None,None,None,None,None,None,None)
     img_list = open(img_list_path, "r").readlines()
     imgLPos = getImgLPos(errList=errList, cnn="pyfaster", sdcit=sdcIte, maxsize=len(img_list))
     imgFile = img_list[imgLPos]
     gold = gold_obj[imgFile]
+    print getClassBoxes(gold)
 
-    goldArray = getClassBoxes(gold)
-    tempArray = copyList(goldArray)
-
-    # for i in errList:
-    #     x = long(i["boxes_x"])
-    #     y = long(i["boxes_y"])
-    #
-    #     tempArray[x][y] =
-    return (None, None, None, None, None, None, None, None,None)
-
-
+    return (None, None, None, None, None, None, None, None,
+            None)
 
 
 """
@@ -739,15 +716,12 @@ Compare two sets of boxes
 
 """
 
-def relativeErrorParserDarknet(img_list_path, errList, gold_obj, sdcIt):
+def relativeErrorParserDarknet(img_list_path, errList, gold_obj):
     if len(errList) <= 0:
         return ("errlist fucked",None,None,None,None,None,None,None,None,None)
 
     imgList = open(img_list_path, "r").readlines()
-
-    imgLPos = getImgLPos(sdcit=sdcIt, maxsize=gold_obj.plist_size)
-
-    print "\nTamanho do plist " , gold_obj.plist_size , " tamanho do imgLPos" , imgLPos
+    imgLPos = getImgLPos(errList=errList, cnn="darknet")
     gold = gold_obj.prob_array["boxes"][imgLPos]
     tempBoxes = copyList(gold)
     # {'x_e': '2.3084202575683594e+02', 'h_r': '4.6537536621093750e+01', 'x_diff': '0.0000000000000000e+00',
@@ -768,16 +742,26 @@ def relativeErrorParserDarknet(img_list_path, errList, gold_obj, sdcIt):
     pR = PrecisionAndRecall(0.5)
     imgFile = imgList[imgLPos]
     pR.precisionAndRecallParallel(gold, tempBoxes)
-    #sizX, sizY = getImageSize((GOLD_DIR + imgFile).rstrip("\n"))
+    sizX, sizY = getImageSize((GOLD_DIR + imgFile).rstrip("\n"))
     # start = time.clock()
-    x,y = 0,0#centerOfMassGoldVsFound(gold,tempBoxes,sizX, sizY)
+    x,y = centerOfMassGoldVsFound(gold,tempBoxes,sizX, sizY)
     # print time.clock() - start
     return (len(gold), len(tempBoxes), x, y, pR.getPrecision(), pR.getRecall(), pR.getFalseNegative(), pR.getFalsePositive(), pR.getTruePositive(), imgFile)
 
 def getImgLPos(**kwargs):
-    sdcIte = kwargs.pop("sdcit")
-    maxSize = kwargs.pop("maxsize")
-    return (int(sdcIte) % int(maxSize))
+    errList = kwargs.pop("errList")
+    cnn = kwargs.pop("cnn")
+    if cnn == "darknet":
+        for i in errList:
+            if "ERR" not in i["image_list_position"]:
+                try:
+                    return int(i["image_list_position"])
+                except:
+                    continue
+    elif cnn == "pyfaster":
+        sdcIte = kwargs.pop("sdcit")
+        maxSize = kwargs.pop("maxsize")
+        return (sdcIte % maxSize)
 
 # def relativeErrorPyFaster(img_list_path, errList, gold_obj, sdcIte):
 #     img_list = open(img_list_path, "r").readlines()
