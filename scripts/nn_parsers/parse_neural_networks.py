@@ -205,11 +205,12 @@ class GoldContent(object):
 
     def pyFasterConstructor(self, filepath):
         try:
-            with open(filepath, "rb") as f:
-                tempGold = pickle.load(f)
+            f = open(filepath, "rb")
+            tempGold = pickle.load(f)
+            f.close()
 
         except:
-            tempGold = None
+            raise
         self.pyFasterGold = tempGold
 
 
@@ -225,15 +226,25 @@ def getClassBoxes(gold):
     classBoxes = []
 
     for cls_ind, cls in enumerate(CLASSES[1:]):
-        cls_ind += 1  # because we skipped background
+        cls_ind += 1 # because we skipped background
+        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_scores = scores[:, cls_ind]
+        dets = np.hstack((cls_boxes,
+                          cls_scores[:, np.newaxis])).astype(np.float32)
+        keep = py_cpu_nms(dets, NMS_THRESH)
+        dets = dets[keep, :]
+        classBoxes.append(dets)
 
-        # for gold
-        cls_boxes_gold = boxes[:, 4 * cls_ind:4 * (cls_ind + 1)]
-        dets_gold = np.hstack((cls_boxes_gold,
-                               scores[:, np.newaxis])).astype(np.float32)
-        keep_gold = py_cpu_nms(dets_gold, NMS_THRESH)
-        dets_gold = dets_gold[keep_gold, :]
-        classBoxes.append(dets_gold)
+    # for cls_ind, cls in enumerate(CLASSES[1:]):
+    #     cls_ind += 1  # because we skipped background
+    #
+    #     # for gold
+    #     cls_boxes_gold = boxes[:, 4 * cls_ind:4 * (cls_ind + 1)]
+    #     dets_gold = np.hstack((cls_boxes_gold,
+    #                            scores[:, np.newaxis])).astype(np.float32)
+    #     keep_gold = py_cpu_nms(dets_gold, NMS_THRESH)
+    #     dets_gold = dets_gold[keep_gold, :]
+    #     classBoxes.append(dets_gold)
 
     return classBoxes
 
@@ -596,7 +607,7 @@ def copyList(objList):
     # return list
     temp = []
     for i in objList:
-        temp.append(i.deepcopy())
+        temp.append(copy.deepcopy(i))
     return temp
 
 
@@ -677,6 +688,54 @@ def getImageSize(imgPath):
     return width, height
 
 
+def generatePyFasterRectangles(dets, thresh=0):
+    """Draw detected bounding boxes."""
+    inds = np.where(dets[:, -1] >= thresh)[0]
+
+    if len(inds) == 0:
+        return
+
+    # im = im[:, :, (2, 1, 0)]
+    # fig, ax = plt.subplots(figsize=(12, 12))
+    # ax.imshow(im, aspect='equal')
+    bboxList = []
+    scoresList = []
+    for i in inds:
+        bbox = dets[i, :4]
+        score = dets[i, -1]
+        scoresList.append(score)
+        # left = int(math.floor(float(i["x_r"])))
+        # bottom = int(math.floor(float(i["y_r"])))
+        # h = int(math.ceil(float(i["h_r"])))
+        # w = int(math.ceil(float(i["w_r"])))
+        # tempBoxes[boxPos] = Rectangle(left, bottom, w, h)
+        left = int(math.floor(float(bbox[0])))
+        bottom = int(math.floor(float(bbox[1])))
+        w = int(math.ceil(bbox[2] - bbox[0]))
+        h = int(math.ceil(bbox[3] - bbox[1]))
+        bboxList.append(Rectangle(left, bottom, w, h))
+
+    #     ax.add_patch(
+    #                           X       Y
+    #         plt.Rectangle((bbox[0], bbox[1]),
+    #                         Xmax   -   Xmin
+    #                       bbox[2] - bbox[0],
+    #                         Ymax   -  Ymin
+    #                       bbox[3] - bbox[1], fill=False,
+    #                       edgecolor='red', linewidth=3.5)
+    #         )
+    #     ax.text(bbox[0], bbox[1] - 2,
+    #             '{:s} {:.3f}'.format(class_name, score),
+    #             bbox=dict(facecolor='blue', alpha=0.5),
+    #             fontsize=14, color='white')
+    #
+    # ax.set_title(('{} detections with '
+    #               'p({} | box) >= {:.1f}').format(class_name, class_name,
+    #                                               thresh),
+    #               fontsize=14)
+
+    return scoresList,bboxList
+
 
 """
 ret["type"] = "boxes"
@@ -691,25 +750,41 @@ ret["e"] = image_err.group(3)
 ############
 ret["r"] = image_err.group(4)
 """
-def relativeErrorParserPyFaster(img_list_path, errList, gold_obj, current_obj, sdcIte):
+def relativeErrorParserPyFaster(img_list_path, errList, gold_obj, sdcIte):
     if len(errList) <= 0:
         return ("errlist fucked",None,None,None,None,None,None,None,None,None)
+
+    goldPyfaster = gold_obj.pyFasterGold
     img_list = open(img_list_path, "r").readlines()
-    imgLPos = getImgLPos(errList=errList, cnn="pyfaster", sdcit=sdcIte, maxsize=len(img_list))
-    imgFile = img_list[imgLPos]
-    gold = gold_obj[imgFile]
+    imgLPos =  getImgLPos(sdcit=sdcIte, maxsize=len(goldPyfaster.keys())) #getImgLPos(errList=errList, cnn="pyfaster", sdcit=sdcIte, maxsize=len(img_list))
+    imgFile = img_list[imgLPos].rstrip()
+    gold = goldPyfaster[imgFile]
 
     goldArray = getClassBoxes(gold)
+
     tempArray = copyList(goldArray)
 
-    # for i in errList:
-    #     x = long(i["boxes_x"])
-    #     y = long(i["boxes_y"])
-    #
-    #     tempArray[x][y] =
-    return (None, None, None, None, None, None, None, None,None)
+    print "Gold array size ", len(tempArray)
+    for i in tempArray:
+        print len(i)
+
+    for i in errList:
+        x = long(i["boxes_x"])
+        y = long(i["boxes_y"])
+        print i["boxes_x"] , i["boxes_y"]
+
+        #tempArray[x][y] = float(i["r"])
+    exit(1)
+    goldRectangles = generatePyFasterRectangles(goldArray)
+    tempRectangles      = generatePyFasterRectangles(tempArray)
 
 
+    pR = PrecisionAndRecall(0.5)
+    pR.precisionAndRecallParallel(goldRectangles, tempRectangles)
+
+    return (
+    len(gold), len(tempRectangles), 0, 0, pR.getPrecision(), pR.getRecall(), pR.getFalseNegative(), pR.getFalsePositive(),
+    pR.getTruePositive(), imgFile)
 
 
 """

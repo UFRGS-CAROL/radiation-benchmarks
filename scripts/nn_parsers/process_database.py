@@ -171,6 +171,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
         if isPyFaster:
              # only for CNNs
             if goldPyFaster[dataset][0]:
+                print goldFile
                 goldPyFaster[dataset][1] = pn.GoldContent(filepath=goldFile, nn="pyfaster")
                 goldPyFaster[dataset][0] = False
             (maxRelErr, minRelErr, avgRelErr, precision, recall, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
@@ -235,9 +236,9 @@ def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description='Parse logs for Neural Networks')
     parser.add_argument('--gold', dest='gold_dir', help='Directory where gold is located',
-                        default=pn.GOLD_DIR, type=str)
+                        default=pn.GOLD_DIR, type=str,required=True)
     parser.add_argument('--database', dest='error_database',
-                        help='Where database is located', default="errors_log_database")
+                        help='Where database is located', default="errors_log_database", required=True)
 
     args = parser.parse_args()
 
