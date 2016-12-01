@@ -129,6 +129,46 @@ class PrecisionAndRecall(object):
         self.recall.value = float(self.truePositive.value) / float(self.truePositive.value + self.falseNegative.value)
 
 
+    def precisionRecall(self, gold, found, threshold):
+        #precision
+        outPositive = 0
+        for i in found:
+            for g in gold:
+                # calc the intersection
+                intRect = g.intersection(i)
+                intersectionArea = intRect.area()
+                unionRect = g.union(i)
+                unionArea = unionRect.area()
+
+                if (float(intersectionArea) / float(unionArea)) >= threshold:
+                    outPositive += 1
+                    break
+
+        falsePositive = len(found) - outPositive
+
+        #recall
+        truePositive = 0
+        for i in gold:
+            for z in found:
+                intRect = z.intersection(i)
+                unionRect = z.union(i)
+                intersectionArea = intRect.area()
+                unionArea = unionRect.area()
+                if (float(intersectionArea) / float(unionArea)) >= threshold:
+                    truePositive += 1
+                    break
+
+        falseNegative = len(gold) - truePositive
+        recall = float(truePositive) / float(truePositive + falseNegative)
+
+        precision = float(truePositive) / float(truePositive + falsePositive)
+        self.falseNegative.value = falseNegative
+        self.falsePositive.value = falsePositive
+        self.truePositive.value  = truePositive
+
+        return recall, precision
+
+
 class Point(object):
     x = 0
     y = 0
@@ -219,21 +259,39 @@ class GoldContent(object):
         return copy.deepcopy(self)
 
 
-def getClassBoxes(gold):
+def getClassBoxes(cls_boxes,cls_scores):
+    NMS_THRESH = 0.3
+    finalClassBoxes = []
+    for cls_ind, cls in enumerate(CLASSES[1:]):
+        # cls_ind += 1 # because we skipped background
+        # for gold
+        # cls_boxes_gold = boxes_gold[:, 4*cls_ind:4*(cls_ind + 1)]
+        # cls_scores_gold = scores_gold[:, cls_ind]
+        dets = np.hstack((cls_boxes[cls_ind],
+                          cls_scores[cls_ind][:, np.newaxis])).astype(np.float32)
+        keep = nms(dets, NMS_THRESH)
+        dets = dets[keep, :]
+        finalClassBoxes.append(dets)
+
+    return finalClassBoxes
+
+
+def getCls(gold):
     scores = gold[0]
     boxes = gold[1]
 
     classBoxes = []
-
+    classScores = []
     for cls_ind, cls in enumerate(CLASSES[1:]):
         cls_ind += 1 # because we skipped background
         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
         cls_scores = scores[:, cls_ind]
-        dets = np.hstack((cls_boxes,
-                          cls_scores[:, np.newaxis])).astype(np.float32)
-        keep = py_cpu_nms(dets, NMS_THRESH)
-        dets = dets[keep, :]
-        classBoxes.append(dets)
+        # dets = np.hstack((cls_boxes,
+        #                   cls_scores[:, np.newaxis])).astype(np.float32)
+        # keep = py_cpu_nms(dets, NMS_THRESH)
+        # dets = dets[keep, :]
+        classBoxes.append(cls_boxes)
+        classScores.append(cls_scores)
 
     # for cls_ind, cls in enumerate(CLASSES[1:]):
     #     cls_ind += 1  # because we skipped background
@@ -246,7 +304,7 @@ def getClassBoxes(gold):
     #     dets_gold = dets_gold[keep_gold, :]
     #     classBoxes.append(dets_gold)
 
-    return classBoxes
+    return classBoxes,classScores
 
 
 class Float(Structure):
@@ -589,7 +647,7 @@ def readProbs(cc_file, total_size, classes):
 """I used this function since deepcopy is so slow"""
 
 
-def copyList(objList):
+def copyList(objList, nn='darknet'):
     # list = []
     # # print "Passou aqui"
     # done = True
@@ -606,8 +664,13 @@ def copyList(objList):
     #     list.append(temp)
     # return list
     temp = []
-    for i in objList:
-        temp.append(copy.deepcopy(i))
+    if nn == 'darknet':
+        for i in objList:
+            temp.append(i.deepcopy())
+    else:
+        for i in objList:
+            temp.append(copy.deepcopy(i))
+
     return temp
 
 
@@ -760,21 +823,23 @@ def relativeErrorParserPyFaster(img_list_path, errList, gold_obj, sdcIte):
     imgFile = img_list[imgLPos].rstrip()
     gold = goldPyfaster[imgFile]
 
-    goldArray = getClassBoxes(gold)
+    goldArray = getCls(gold)
 
-    tempArray = copyList(goldArray)
+    tempArray = copyList(goldArray, 'pyfaster')
+
 
     print "Gold array size ", len(tempArray)
-    for i in tempArray:
-        print len(i)
+    # for i in tempArray:
+    #     print len(i)
 
     for i in errList:
         x = long(i["boxes_x"])
         y = long(i["boxes_y"])
         print i["boxes_x"] , i["boxes_y"]
+        # print "vet size ", len(goldArray)
+        # print "x size ", len (tempArray[x])
+       # tempArray[x][y] = float(i["r"])
 
-        #tempArray[x][y] = float(i["r"])
-    exit(1)
     goldRectangles = generatePyFasterRectangles(goldArray)
     tempRectangles      = generatePyFasterRectangles(tempArray)
 
@@ -822,7 +887,7 @@ def relativeErrorParserDarknet(img_list_path, errList, gold_obj, sdcIt):
 
     imgLPos = getImgLPos(sdcit=sdcIt, maxsize=gold_obj.plist_size)
 
-    print "\nTamanho do plist " , gold_obj.plist_size , " tamanho do imgLPos" , imgLPos
+    #print "\nTamanho do plist " , gold_obj.plist_size , " tamanho do imgLPos" , imgLPos
     gold = gold_obj.prob_array["boxes"][imgLPos]
     tempBoxes = copyList(gold)
     # {'x_e': '2.3084202575683594e+02', 'h_r': '4.6537536621093750e+01', 'x_diff': '0.0000000000000000e+00',
@@ -842,12 +907,13 @@ def relativeErrorParserDarknet(img_list_path, errList, gold_obj, sdcIt):
     # writeTempFileCXX("/tmp/temp_test.log", tempBoxes)
     pR = PrecisionAndRecall(0.5)
     imgFile = imgList[imgLPos]
-    pR.precisionAndRecallParallel(gold, tempBoxes)
+    #pR.precisionAndRecallSerial(gold, tempBoxes)
+    p,r = pR.precisionRecall(gold, tempBoxes, 0.5)
     #sizX, sizY = getImageSize((GOLD_DIR + imgFile).rstrip("\n"))
     # start = time.clock()
     x,y = 0,0#centerOfMassGoldVsFound(gold,tempBoxes,sizX, sizY)
     # print time.clock() - start
-    return (len(gold), len(tempBoxes), x, y, pR.getPrecision(), pR.getRecall(), pR.getFalseNegative(), pR.getFalsePositive(), pR.getTruePositive(), imgFile)
+    return (len(gold), len(tempBoxes), x, y, p, r, pR.getFalseNegative(), pR.getFalsePositive(), pR.getTruePositive(), imgFile)
 
 def getImgLPos(**kwargs):
     sdcIte = kwargs.pop("sdcit")
