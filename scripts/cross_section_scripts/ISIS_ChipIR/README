@@ -1,0 +1,25 @@
+How to parse radiation logs and calculate cross section
+
+1. Generate the CSVs files with summarized data
+	- Run the script "first_parser_sdc-csv-generator.py" in the folder where the logs are located. The logs can be compressed in tar.gz files or just in folders
+	- The script will create a folder called logs_parsed with the CSVs files
+
+2. Get the neutron count logs from ChipIR, you must generate one file with all the data in order and each column separated by ';'
+	- The columns must be:
+		1. Date
+		2. time
+		3. decimal of second
+		4. Dimond counter threshold=40mV (counts)
+		5. Dimond counter th=20mV (counts)
+		6. Dimond counter th=30mV (counts)
+		7. Fission Counter (counts)
+		8. Integral Current uAh
+		9. Current uA
+	- there is an example in the folder neutrons_count. countlog-*.txt are the files as they come from ChipIR, unified_logs is the file ready to be used by the cross section scripts
+
+3. Run the script calcCrossSection.py to generate CSVs with the cross section computed by each run and in 1h timesteps
+	- $ ./calcCrossSection.py <unified neutron count logs> <benchmark csv file>  <distance factor>
+		- <unified neutron count log> generated at step 2
+		- <benchmark csv file> csv file generated at step 1, usually is named like this: logs_parsed_carol-k402.csv
+		- <distance factor> float number computed by the distance of the board from the shutter
+
