@@ -28,7 +28,7 @@ def endProgress():
     sys.stdout.flush()
 
 
-def generateSDCList(fi):
+def generateSDCList(fi, toGetInfo = 'not'):
     sdc_item_list = []
     sdc_iter = 0  # number of iterations with error
     iter_err_count = 0  # number of wrong elements inside one iteration
@@ -61,56 +61,77 @@ def generateSDCList(fi):
         m = re.match("(.*ERR.*)", line)
         if m:
             errors.append(m.group(1))
+        elif toGetInfo == 'yes':
+            m = re.match("(.*INFO.*)", line)
+            if m:
+                errors.append(m.group(1))
+
     return sdc_item_list
 
+
+def parse_args():
+    """Parse input arguments."""
+    parser = argparse.ArgumentParser(description='Parse logs for Neural Networks')
+    parser.add_argument('--get_info', dest='toGetInfo', help='If you want to retrieve all #Info',
+                        default='no_info', type=str,required=True)
+
+    args = parser.parse_args()
+
+    return args
 
 ######### main
 # pega todos os arquivos .log na pasta onde esta sendo
 # executado, e nas subpastas tambem
-print("Retrieving file list...")
-all_logs = [y for x in os.walk(".") for y in glob(os.path.join(x[0], '*.log'))]
+###########################################
+# MAIN
+###########################################'
 
-# vai ordenar por data, "pelo nome do arquivo que eh uma data"
-all_logs.sort()
+if __name__ == '__main__':
+    args = parse_args()
+    print("Retrieving file list...")
+    all_logs = [y for x in os.walk(".") for y in glob(os.path.join(x[0], '*.log'))]
 
-benchmarks_dict = dict()
+    # vai ordenar por data, "pelo nome do arquivo que eh uma data"
+    all_logs.sort()
 
-total_files = len(all_logs)
-i = 1
-# percorre todos os arquivos .log
-for fi in all_logs:
-    progress = "{0:.2f}".format(i / total_files * 100)
-    sys.stdout.write("\rProcessing file " + str(i) + " of " + str(total_files) + " - " + progress + "%")
-    sys.stdout.flush()
-    # verifica se o arquivo eh um arquivo de log dos nossos
-    m = re.match(".*/(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(.*)_(.*).log", fi)
-    if m:
-        benchmark = m.group(7)
-        machine_name = m.group(8)
+    benchmarks_dict = dict()
 
-        sdcs_list = generateSDCList(fi)
+    total_files = len(all_logs)
+    i = 1
+    # percorre todos os arquivos .log
+    for fi in all_logs:
+        progress = "{0:.2f}".format(i / total_files * 100)
+        sys.stdout.write("\rProcessing file " + str(i) + " of " + str(total_files) + " - " + progress + "%")
+        sys.stdout.flush()
+        # verifica se o arquivo eh um arquivo de log dos nossos
+        m = re.match(".*/(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(.*)_(.*).log", fi)
+        if m:
+            benchmark = m.group(7)
+            machine_name = m.group(8)
 
-        if len(sdcs_list) > 0:
-            if benchmark + "_" + machine_name not in benchmarks_dict:
-                benchmarks_dict[benchmark + "_" + machine_name] = []
-            benchmarks_dict[benchmark + "_" + machine_name].extend(sdcs_list)
-    i += 1
-sys.stdout.write("Processing file " + str(i) + " of " + str(total_files) + " - 100%                     " + "\n")
+            sdcs_list = generateSDCList(fi,str(args.toGetInfo))
 
-db = shelve.open("errors_log_database")
-# for k, v in benchmarks_dict.iteritems(): #python2.*
-print("writing to database ...")
-for k, v in benchmarks_dict.items():  # python3
-    db[k] = v
-    print("key: ", k, "; size of v:", len(v))
-# print("key: ",k,"\n\n")
-# i = 0
-# for val in v:
-#	print ("value[",i,"]: ",val)
-#	i += 1
-# print("\n\n\n")
+            if len(sdcs_list) > 0:
+                if benchmark + "_" + machine_name not in benchmarks_dict:
+                    benchmarks_dict[benchmark + "_" + machine_name] = []
+                benchmarks_dict[benchmark + "_" + machine_name].extend(sdcs_list)
+        i += 1
+    sys.stdout.write("Processing file " + str(i) + " of " + str(total_files) + " - 100%                     " + "\n")
 
-db.close()
-print("database written!")
-sys.exit(0)
+    db = shelve.open("errors_log_database")
+    # for k, v in benchmarks_dict.iteritems(): #python2.*
+    print("writing to database ...")
+    for k, v in benchmarks_dict.items():  # python3
+        db[k] = v
+        print("key: ", k, "; size of v:", len(v))
+    # print("key: ",k,"\n\n")
+    # i = 0
+    # for val in v:
+    #	print ("value[",i,"]: ",val)
+    #	i += 1
+    # print("\n\n\n")
+
+    db.close()
+    print("database written!")
+    sys.exit(0)
 
