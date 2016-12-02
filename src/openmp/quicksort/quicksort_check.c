@@ -150,6 +150,9 @@ int main(int argc, char** argv)
 #ifdef LOGS
         log_error_count(errors);
 #endif
+#ifdef TIMING
+        check_end = timing_get_time();
+#endif
         if(errors > 0) {
             printf("Errors: %d\n",errors);
             readFileUnsigned(gold, goldFile, size);
