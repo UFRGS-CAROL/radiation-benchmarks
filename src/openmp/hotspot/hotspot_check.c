@@ -328,7 +328,8 @@ int main(int argc, char **argv)
         for (i=0; i < grid_rows; i++) {
             int j;
             for (j=0; j < grid_cols; j++) {
-                if(final_result[i*grid_cols+j] != gold[i*grid_cols+j] ) {
+                if ((fabs((final_result[i*grid_cols+j] - gold[i*grid_cols+j]) / final_result[i*grid_cols+j]) > 0.0000000001) || (fabs((final_result[i*grid_cols+j] - gold[i*grid_cols+j]) / gold[i*grid_cols+j]) > 0.0000000001)) {
+                //if(final_result[i*grid_cols+j] != gold[i*grid_cols+j] ) {
                     errors++;
                 }
             }
@@ -345,7 +346,8 @@ int main(int argc, char **argv)
             for (i=0; i < grid_rows && err_loged < MAX_ERR_ITER_LOG && err_loged < errors; i++) {
                 int j;
                 for (j=0; j < grid_cols && err_loged < MAX_ERR_ITER_LOG && err_loged < errors; j++) {
-                    if(final_result[i*grid_cols+j] != gold[i*grid_cols+j] ) {
+                    if ((fabs((final_result[i*grid_cols+j] - gold[i*grid_cols+j]) / final_result[i*grid_cols+j]) > 0.0000000001) || (fabs((final_result[i*grid_cols+j] - gold[i*grid_cols+j]) / gold[i*grid_cols+j]) > 0.0000000001)) {
+                    //if(final_result[i*grid_cols+j] != gold[i*grid_cols+j] ) {
                         err_loged++;
                         char error_detail[150];
                         snprintf(error_detail, 150, "r:%f e:%f [%d,%d]\n", final_result[i*grid_cols+j], gold[i*grid_cols+j], i, j);
