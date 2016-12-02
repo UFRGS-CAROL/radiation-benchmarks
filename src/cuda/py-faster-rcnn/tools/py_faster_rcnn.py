@@ -46,27 +46,104 @@ NETS = {'vgg16': ('VGG16',
         'zf': ('ZF',
                   'ZF_faster_rcnn_final.caffemodel')}
 
+"""
+originaly the thresh was 0.5, but I want get all results
+so it becames 0
+this function will return a dict composed by:
+ret['boxes'] = a bbox list
+ret['scores'] = a scores list
+"""
+def visDetections(dets, thresh=0):
+    """Draw detected bounding boxes."""
+    inds = np.where(dets[:, -1] >= thresh)[0]
+    if len(inds) == 0:
+        return {'boxes':[], 'scores':[]}
+    ret = {}
+    ret['boxes'] = []
+    ret['scores'] = []
+    # im = im[:, :, (2, 1, 0)]
+    # fig, ax = plt.subplots(figsize=(12, 12))
+    # ax.imshow(im, aspect='equal')
+    for i in inds:
+        bbox = dets[i, :4]
+        score = dets[i, -1]
+        ret['boxes'].append(bbox)
+        ret['scores'].append(score)
+
+    #     ax.add_patch(
+    #         plt.Rectangle((bbox[0], bbox[1]),
+    #                       bbox[2] - bbox[0],
+    #                       bbox[3] - bbox[1], fill=False,
+    #                       edgecolor='red', linewidth=3.5)
+    #         )
+    #     ax.text(bbox[0], bbox[1] - 2,
+    #             '{:s} {:.3f}'.format(class_name, score),
+    #             bbox=dict(facecolor='blue', alpha=0.5),
+    #             fontsize=14, color='white')
+    #
+    # ax.set_title(('{} detections with '
+    #               'p({} | box) >= {:.1f}').format(class_name, class_name,
+    #                                               thresh),
+    #               fontsize=14)
+    # plt.axis('off')
+    # plt.tight_layout()
+    # plt.draw()
+    return ret
 
 def detect(net, image_name, pr):
     """Detect object classes in an image using pre-computed object proposals."""
-    #will return a hash with boxes and scores
-   
+
     # Load the demo image
     im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
-    if pr:
-        print im_file
     im = cv2.imread(im_file)
+    if pr:
+        print img_file
 
     # Detect all object classes and regress object bounds
     timer = Timer()
     timer.tic()
     scores, boxes = im_detect(net, im)
     timer.toc()
-
     if pr:
         print ('Detection took {:.3f}s for '
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
-    return [scores, boxes]
+
+    # Visualize detections for each class
+    CONF_THRESH = 0.0 #0.8
+    NMS_THRESH = 0.3
+    detectionResult = {}
+    for cls_ind, cls in enumerate(CLASSES[1:]):
+        cls_ind += 1 # because we skipped background
+        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_scores = scores[:, cls_ind]
+        dets = np.hstack((cls_boxes,
+                          cls_scores[:, np.newaxis])).astype(np.float32)
+        keep = nms(dets, NMS_THRESH)
+        dets = dets[keep, :]
+        detectionResult[cls] = visDetections(dets, thresh=CONF_THRESH)
+
+    return detectionResult
+
+# def detect(net, image_name, pr):
+#     """Detect object classes in an image using pre-computed object proposals."""
+#     #will return a hash with boxes and scores
+#
+#     # Load the demo image
+#     im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
+#     if pr:
+#         print im_file
+#     im = cv2.imread(im_file)
+#
+#     # Detect all object classes and regress object bounds
+#     timer = Timer()
+#     timer.tic()
+#     scores, boxes = im_detect(net, im)
+#     timer.toc()
+#
+#     if pr:
+#         print ('Detection took {:.3f}s for '
+#            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
+#     return [scores, boxes]
 
 def generate(net, image_name):
     """Detect object classes in an image using pre-computed object proposals."""
@@ -152,139 +229,84 @@ def write_to_csv(filename, data):
                 boxes_n = len(boxes_i)
                 spwriter.writerow([boxes_n, "--", boxes_i])
 
-##in the py-faster-original
-#     for cls_ind, cls in enumerate(CLASSES[1:]):
-#         cls_ind += 1 # because we skipped background
-#         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
-#         cls_scores = scores[:, cls_ind]
-#         dets = np.hstack((cls_boxes,
-#                           cls_scores[:, np.newaxis])).astype(np.float32)
-#         keep = nms(dets, NMS_THRESH)
-#         dets = dets[keep, :]
-# vis_detections(im, cls, dets, thresh=CONF_THRESH)
 
 #compare and return the error count and error string detail
 def compare_boxes(gold, current):
     #compare boxes #####################################################
-    boxes_m_gold = len(gold)
-    boxes_m_curr = len(current)
     error_count = 0
-    error_detail = ""
-    #diff size
-    size_error_m = abs(boxes_m_gold - boxes_m_curr)
-    if size_error_m != 0:
-        min_m_range = min(boxes_m_gold, boxes_m_curr)
-        lh.log_error_detail("boxes_missing_lines: " + size_error_m)
-        error_count += size_error_m
+    goldSize = len(gold)
+    currSize = len(current)
+    bbDiff = goldSize - currSize
+    if bbDiff != 0:
+        min_m_range = min(goldSize, currSize)
+        lh.log_error_detail("img: " + str(img_name) +" wrong_boxes_size: " + bbDiff)
+        error_count += abs(bbDiff)
 
-    i = 0
-    for (i_gold, i_curr) in zip(gold,current):
-        boxes_n_gold = len(i_gold)
-        boxes_n_curr = len(i_curr)
-        size_error_n = abs(boxes_n_gold - boxes_n_curr)
-        i += 1
-        j = 0
-        if size_error_n != 0:
-            lh.log_error_detail("boxes_missing_collumns: " + size_error_n + " line: " + str(i))
-            error_count += size_error_m
-
-        for (j_gold, j_curr) in zip(i_gold, i_curr):
-            gold_ij = float(j_gold)
-            curr_ij = float(j_curr)
-            j += 1
-            diff = math.fabs(gold_ij - curr_ij)
-            if diff > THRESHOLD:
-                lh.log_error_detail("boxes: [" + str(i) + "," + str(j) + "] e: " + str(gold_ij) + " r: " + str(curr_ij))
-                error_count += 1
-
-
-    return (error_count)
-
-#compare scores and return error count and string error detail
-def compare_scores(gold, current):
-    scores_m_gold = len(gold)
-    scores_m_curr = len(current)
-    error_count = 0
-    error_detail = ""
-    #diff size
-    size_error_m = abs(scores_m_gold - scores_m_curr)
-    if size_error_m != 0:
-        lh.log_error_detail("scores_missing_values: " + size_error_m)
-        error_count += size_error_m
-
-    i = 0
-    for (i_gold, i_curr) in zip(gold, current):
-        gold_val = float(i_gold)
-        curr_val = float(i_curr)
-        diff = math.fabs(gold_val - curr_val)
+    for i in range(0,min_m_range):
+        #TEM QUE ARRUMAR AQUI NÃO É SIMPLES ASSIM, TEM QUE COLOCAR AS COORDENADAS
+        iGold = float(gold[i])
+        iCurr = float(current[i])
+        diff = math.fabs(iGold - iCurr)
         if diff > THRESHOLD:
-            lh.log_error_detail("scores: [" + str(i)  + "] e: " + str(gold_val) + " r: " + str(curr_val))
+            lh.log_error_detail(
+                "img: " + str(img_name) + " box: [" + str(i) + "] e: " + str(iGold) + " r: " + str(iCurr))
             error_count += 1
 
-    return (error_count)
+    return error_count
+
+#compare scores and return error count and string error detail
+def compare_scores(gold, current, img_name):
+    error_count = 0
+    goldSize = len(gold)
+    currSize = len(current)
+    scrDiff = goldSize - currSize
+
+    if srcDiff != 0:
+        min_m_range = min(goldSize, currSize)
+        lh.log_error_detail("img: " + str(img_name) +" wrong_score_size: " + srcDiff)
+        error_count += abs(srcDiff)
+
+    for i in range(0,min_m_range):
+        #TEM QUE ARRUMAR AQUI NÃO É SIMPLES ASSIM, TEM QUE COLOCAR AS COORDENADAS
+        iGold = float(gold[i])
+        iCurr = float(current[i])
+        diff = math.fabs(iGold - iCurr)
+        if diff > THRESHOLD:
+
+            lh.log_error_detail("img: " + str(img_name) + " scores: [" + str(i) + "] e: " + str(iGold) + " r: " + str(iCurr))
+            error_count += 1
+
+    return error_count
 
 # compare gold against current
+"""
+for each image there are n classes of objects
+    for each class there are n boxes and n scores
+        ret['boxes'] = a bbox list
+        ret['scores'] = a scores list
+the compare input is the output of a single image
+so only the second for is compared
+
+"""
 def compare(gold, current, img_name):
-    scores_gold = gold[0]
-    boxes_gold = gold[1]
     error_count = 0
-    #iterator for current, i need it because generate could be smaller than gold, so python will throw an exception
-    scores_curr = current[0]
-    boxes_curr = current[1]
 
+    goldSize = len(gold)
+    currSize = len(current)
+    size_error_m = goldSize - currSize
+    if size_error_m != 0:
+        min_m_range = min(goldSize, currSize)
+        lh.log_error_detail("current_missing_info: " + size_error_m)
+        error_count += abs(size_error_m)
 
-    CONF_THRESH = 0.8
-    NMS_THRESH = 0.3
-    error_detail_final = ""
-    ########################
-    #real compare
+    for (iGold, iCurr) in zip(gold, current):
+        bbListGold = iGold['boxes']
+        bbListCurr = iCurr['boxes']
+        scrListGold = iGold['scores']
+        scrListCurr = iCurr['scores']
 
-
-    for cls_ind, cls in enumerate(CLASSES[1:]):
-        cls_ind += 1 # because we skipped background
-
-        #for gold
-        cls_boxes_gold = boxes_gold[:, 4*cls_ind:4*(cls_ind + 1)]
-        cls_scores_gold = scores_gold[:, cls_ind]
-        dets_gold = np.hstack((cls_boxes_gold,
-                          cls_scores_gold[:, np.newaxis])).astype(np.float32)
-        keep_gold = nms(dets_gold, NMS_THRESH)
-        dets_gold = dets_gold[keep_gold, :]
-
-        #for current
-        cls_boxes_curr = boxes_curr[:, 4*cls_ind:4*(cls_ind + 1)]
-        cls_scores_curr = scores_curr[:, cls_ind]
-        dets_curr = np.hstack((cls_boxes_curr,
-                          cls_scores_curr[:, np.newaxis])).astype(np.float32)
-        keep_curr = nms(dets_curr, NMS_THRESH)
-        dets_curr = dets_curr[keep_curr, :]
-
-        #compare all results
-
-        error_count += compare_boxes(cls_boxes_gold,cls_boxes_curr)
-        # inds_gold = np.where(dets_gold[:, -1] >= 0)[0]
-        # inds_curr = np.where(dets_curr[:, -1] >= 0)[0]
-        # for i in inds_curr:
-        #     bbox_curr = dets_curr[i, :4]
-        #     scores_curr = dets_curr[i, -1]
-        #     print "Scores curr\n" , bbox_curr , " " , scores_curr
-        #
-        # for i in inds_gold:
-        #     bbox_gold = dets_gold[i, :4]
-        #     scores_gold = dets_gold[i, -1]
-        #     print "Scores gold\n" , bbox_gold , " " , scores_gold
-        # error_count += compare_scores(cls_scores_gold,cls_scores_curr)
-        # inds_curr = np.where(dets_curr[:, -1] >=  0)[0]
-        # inds_gold = np.where(dets_gold[:, -1] >=  0)[0]
-        #
-        # for (i_g, i_c) in zip(inds_gold, inds_curr):
-        #     scores_gold = dets_gold[i_g, -1]
-        #     scores_curr = dets_curr[i_c, -1]
-        #     print "csl scores" , scores_curr
-        #     print "csl scores gold" , scores_gold
-
-    if error_count > 0:
-        lh.log_error_detail("input_img: "+img_name)
+        error_count += compare_scores(scrListGold, scrListCurr)
+        error_count += compare_boxes(bbListGold, bbListCurr)
 
     return error_count
 
@@ -369,8 +391,8 @@ if __name__ == '__main__':
             for im_name in in_names:
                 print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                 print 'Demo for {}'.format(im_name)
-                gold_file[im_name] = generate(net, im_name)
-
+                gold_file[im_name] = detect(net, im_name,True)
+                print gold_file[im_name]
             print "Gold generated, saving file"
             serialize_gold(args.generate_file, gold_file)
             #write_to_csv(args.generate_file, gold_file)
@@ -406,10 +428,10 @@ if __name__ == '__main__':
 
                         # if error_count != 0:
                         iteration_file_pos = iterations + it
-                        scores_name = lh.get_log_file_name() +"_"+ str(iteration_file_pos) + ".scores"
-                        #print scores_name
-                        if error_count != 0:
-                            serialize_gold(scores_name,ret[0])
+                        # scores_name = lh.get_log_file_name() +"_"+ str(iteration_file_pos) + ".scores"
+                        # print scores_name
+                        # if error_count != 0:
+                        #     serialize_gold(scores_name,ret[0])
                         if it % 10 == 0:
                             print "Compare time " , timer.total_time , " errors " , error_count
 
@@ -437,3 +459,66 @@ if __name__ == '__main__':
 
 
 
+# def compare(gold, current, img_name):
+#     # scores_gold = gold[0]
+#     # boxes_gold = gold[1]
+#     # error_count = 0
+#     # #iterator for current, i need it because generate could be smaller than gold, so python will throw an exception
+#     # scores_curr = current[0]
+#     # boxes_curr = current[1]
+#     #
+#     #
+#     # CONF_THRESH = 0.8
+#     # NMS_THRESH = 0.3
+#     # error_detail_final = ""
+#     # ########################
+#     # #real compare
+#     #
+#     #
+#     # for cls_ind, cls in enumerate(CLASSES[1:]):
+#     #     cls_ind += 1 # because we skipped background
+#     #
+#     #     #for gold
+#     #     cls_boxes_gold = boxes_gold[:, 4*cls_ind:4*(cls_ind + 1)]
+#     #     cls_scores_gold = scores_gold[:, cls_ind]
+#     #     dets_gold = np.hstack((cls_boxes_gold,
+#     #                       cls_scores_gold[:, np.newaxis])).astype(np.float32)
+#     #     keep_gold = nms(dets_gold, NMS_THRESH)
+#     #     dets_gold = dets_gold[keep_gold, :]
+#     #
+#     #     #for current
+#     #     cls_boxes_curr = boxes_curr[:, 4*cls_ind:4*(cls_ind + 1)]
+#     #     cls_scores_curr = scores_curr[:, cls_ind]
+#     #     dets_curr = np.hstack((cls_boxes_curr,
+#     #                       cls_scores_curr[:, np.newaxis])).astype(np.float32)
+#     #     keep_curr = nms(dets_curr, NMS_THRESH)
+#     #     dets_curr = dets_curr[keep_curr, :]
+#     #
+#     #     #compare all results
+#     #
+#     #     error_count += compare_boxes(cls_boxes_gold,cls_boxes_curr)
+#     #     inds_gold = np.where(dets_gold[:, -1] >= 0)[0]
+#     #     inds_curr = np.where(dets_curr[:, -1] >= 0)[0]
+#     #     for i in inds_curr:
+#     #         bbox_curr = dets_curr[i, :4]
+#     #         scores_curr = dets_curr[i, -1]
+#     #         print "Scores curr\n" , bbox_curr , " " , scores_curr
+#     #
+#     #     for i in inds_gold:
+#     #         bbox_gold = dets_gold[i, :4]
+#     #         scores_gold = dets_gold[i, -1]
+#     #         print "Scores gold\n" , bbox_gold , " " , scores_gold
+#     #     error_count += compare_scores(cls_scores_gold,cls_scores_curr)
+#     #     inds_curr = np.where(dets_curr[:, -1] >=  0)[0]
+#     #     inds_gold = np.where(dets_gold[:, -1] >=  0)[0]
+#     #
+#     #     for (i_g, i_c) in zip(inds_gold, inds_curr):
+#     #         scores_gold = dets_gold[i_g, -1]
+#     #         scores_curr = dets_curr[i_c, -1]
+#     #         print "csl scores" , scores_curr
+#     #         print "csl scores gold" , scores_gold
+#
+#     if error_count > 0:
+#         lh.log_error_detail("input_img: "+img_name)
+#
+#     return error_count
