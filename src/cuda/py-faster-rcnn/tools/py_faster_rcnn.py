@@ -27,9 +27,11 @@ import math
 import traceback
 import csv
 import sys
+
 THRESHOLD = 0.005
-import time,calendar
-#import log helper
+import time, calendar
+
+# import log helper
 sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include/log_helper_python/')
 
 import log_helper as lh
@@ -44,8 +46,7 @@ CLASSES = ['__background__',
 NETS = {'vgg16': ('VGG16',
                   'VGG16_faster_rcnn_final.caffemodel'),
         'zf': ('ZF',
-                  'ZF_faster_rcnn_final.caffemodel')}
-
+               'ZF_faster_rcnn_final.caffemodel')}
 
 """
 originaly the thresh was 0.5, but I want get all results
@@ -54,14 +55,15 @@ this function will return a dict composed by:
 ret['boxes'] = a bbox list
 ret['scores'] = a scores list
 """
-def visDetections(dets, thresh=0):
+
+
+def visDetections(dets, thresh):
     """Draw detected bounding boxes."""
+    ret = {'boxes': [], 'scores': []}
     inds = np.where(dets[:, -1] >= thresh)[0]
     if len(inds) == 0:
-        return {'boxes':[], 'scores':[]}
-    ret = {}
-    ret['boxes'] = []
-    ret['scores'] = []
+        return ret
+
     # im = im[:, :, (2, 1, 0)]
     # fig, ax = plt.subplots(figsize=(12, 12))
     # ax.imshow(im, aspect='equal')
@@ -71,7 +73,7 @@ def visDetections(dets, thresh=0):
         ret['boxes'].append(bbox)
         ret['scores'].append(score)
 
-    #     ax.add_patch(
+    # ax.add_patch(
     # e(xy, width, height,
     #         plt.Rectangle((bbox[0], bbox[1]),
     #                       bbox[2] - bbox[0],
@@ -92,6 +94,7 @@ def visDetections(dets, thresh=0):
     # plt.draw()
     return ret
 
+
 def detect(net, image_name, pr):
     """Detect object classes in an image using pre-computed object proposals."""
 
@@ -108,15 +111,15 @@ def detect(net, image_name, pr):
     timer.toc()
     if pr:
         print ('Detection took {:.3f}s for '
-           '{:d} object proposals').format(timer.total_time, boxes.shape[0])
+               '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
     # Visualize detections for each class
-    CONF_THRESH = 0.0 #0.8
+    CONF_THRESH = 0.8
     NMS_THRESH = 0.3
     detectionResult = {}
     for cls_ind, cls in enumerate(CLASSES[1:]):
-        cls_ind += 1 # because we skipped background
-        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_ind += 1  # because we skipped background
+        cls_boxes = boxes[:, 4 * cls_ind:4 * (cls_ind + 1)]
         cls_scores = scores[:, cls_ind]
         dets = np.hstack((cls_boxes,
                           cls_scores[:, np.newaxis])).astype(np.float32)
@@ -125,6 +128,7 @@ def detect(net, image_name, pr):
         detectionResult[cls] = visDetections(dets, thresh=CONF_THRESH)
 
     return detectionResult
+
 
 # def detect(net, image_name, pr):
 #     """Detect object classes in an image using pre-computed object proposals."""
@@ -179,32 +183,35 @@ def parse_args():
     parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]',
                         choices=NETS.keys(), default='vgg16')
 
-    #radiation logs
+    # radiation logs
     parser.add_argument('--ite', dest='iterations', help="number of iterations", default='1')
 
-    parser.add_argument('--gen', dest='generate_file', help="if this var is set the gold file will be generated", default="")
+    parser.add_argument('--gen', dest='generate_file', help="if this var is set the gold file will be generated",
+                        default="")
 
-    parser.add_argument('--log', dest='is_log', help="is to generate logs", choices=["no_logs", "daniel_logs"], default="no_logs")
+    parser.add_argument('--log', dest='is_log', help="is to generate logs", choices=["no_logs", "daniel_logs"],
+                        default="no_logs")
 
-    parser.add_argument('--iml', dest='img_list', help='mg list data path <text file txt, csv..>', default='py_faster_list.txt')
+    parser.add_argument('--iml', dest='img_list', help='mg list data path <text file txt, csv..>',
+                        default='py_faster_list.txt')
 
-    parser.add_argument('--gld',  dest='gold', help='gold file', default='')
-
-
+    parser.add_argument('--gld', dest='gold', help='gold file', default='')
 
     args = parser.parse_args()
 
     return args
 
-#write gold for pot use
-def serialize_gold(filename,data):
+
+# write gold for pot use
+def serialize_gold(filename, data):
     try:
         with open(filename, "wb") as f:
-                pickle.dump(data, f)
+            pickle.dump(data, f)
     except:
         print "Error on writing file"
 
-#open gold file
+
+# open gold file
 def load_file(filename):
     try:
         with open(filename, "rb") as f:
@@ -217,14 +224,14 @@ def load_file(filename):
 def write_to_csv(filename, data):
     with open(filename, 'wb') as csvfile:
         spwriter = csv.writer(csvfile, delimiter=' ',
-                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        for scores,boxes in data:
+                              quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for scores, boxes in data:
             scores_m = len(scores)
             boxes_m = len(boxes)
 
             spwriter.writerow([scores_m, boxes_m])
             for scores_i in scores:
-                scores_n =len(scores_i)
+                scores_n = len(scores_i)
                 spwriter.writerow([scores_n, "--", scores_i])
 
             for boxes_i in boxes:
@@ -232,9 +239,9 @@ def write_to_csv(filename, data):
                 spwriter.writerow([boxes_n, "--", boxes_i])
 
 
-#compare and return the error count and error string detail
+# compare and return the error count and error string detail
 def compare_boxes(gold, current, cls):
-    #compare boxes #####################################################
+    # compare boxes #####################################################
     error_count = 0
     goldSize = len(gold)
     currSize = len(current)
@@ -242,25 +249,25 @@ def compare_boxes(gold, current, cls):
     min_m_range = goldSize
     if bbDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("img: " + str(img_name) +" wrong_boxes_size: " + bbDiff)
+        lh.log_error_detail("wrong_boxes_size: " + bbDiff)
         error_count += abs(bbDiff)
 
     pos = ['x1', 'y1', 'x2', 'y2']
 
-    for i in range(0,min_m_range):
+    for i in range(0, min_m_range):
         # e(xy, width, height,
         #         plt.Rectangle((bbox[0], bbox[1]),
         #                       bbox[2] - bbox[0],
         #                       bbox[3] - bbox[1], fill=False,
         logString = " class: " + str(cls) + " box: [" + str(i) + "] "
         error = False
-        for iGold, iCurr, k in zip(gold[i],current[i],pos):
+        for iGold, iCurr, k in zip(gold[i], current[i], pos):
             iG = float(iGold)
             iC = float(iCurr)
             diff = math.fabs(iG - iC)
 
             if diff > THRESHOLD:
-                logString += str(k) + "_e: "+ str(iG) + " " + str(k) + "_r: " + str(iC) + " "
+                logString += str(k) + "_e: " + str(iG) + " " + str(k) + "_r: " + str(iC) + " "
                 error = True
 
         if error:
@@ -269,7 +276,8 @@ def compare_boxes(gold, current, cls):
 
     return error_count
 
-#compare scores and return error count and string error detail
+
+# compare scores and return error count and string error detail
 def compare_scores(gold, current, cls):
     error_count = 0
     goldSize = len(gold)
@@ -278,18 +286,20 @@ def compare_scores(gold, current, cls):
     min_m_range = goldSize
     if scrDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail(" wrong_score_size: " + srcDiff)
-        error_count += abs(srcDiff)
+        lh.log_error_detail("wrong_score_size: " + scrDiff)
+        error_count += abs(scrDiff)
 
-    for i in range(0,min_m_range):
+    for i in range(0, min_m_range):
         iGold = float(gold[i])
         iCurr = float(current[i])
         diff = math.fabs(iGold - iCurr)
         if diff > THRESHOLD:
-            lh.log_error_detail(" class: " + str(cls) + " score: [" + str(i) + "] e: " + str(iGold) + " r: " + str(iCurr))
+            lh.log_error_detail(
+                " class: " + str(cls) + " score: [" + str(i) + "] e: " + str(iGold) + " r: " + str(iCurr))
             error_count += 1
 
     return error_count
+
 
 # compare gold against current
 """
@@ -301,6 +311,8 @@ the compare input is the output of a single image
 so only the second for is compared
 
 """
+
+
 def compare(gold, current, img_name):
     error_count = 0
     goldKeys = gold.keys()
@@ -328,7 +340,8 @@ def compare(gold, current, img_name):
         error_count += compare_boxes(bbListGold, bbListCurr, i)
 
         if errorBefore != error_count:
-            lh.log_error_info("img_name: " + str(img_name) + " class: " + str(i) + " total_errors: " + str(error_count - errorBefore))
+            lh.log_error_info(
+                "img_name: " + str(img_name) + " class: " + str(i) + " total_errors: " + str(error_count - errorBefore))
 
     return error_count
 
@@ -346,23 +359,23 @@ if __name__ == '__main__':
     args = parse_args()
     force_update_timestamp()
     if "no_logs" not in args.is_log:
-        
+
         string_info = "iterations: " + str(args.iterations) + " img_list: " + str(args.img_list) + " board: "
         if "X1" in args.img_list:
             string_info += "X1"
         else:
             string_info += "K40"
         lh.start_log_file("PyFasterRcnn", string_info)
-    
-    #object for gold file
+
+    # object for gold file
     gold_file = {}
-###################################################################################
-#only load network
+    ###################################################################################
+    # only load network
     force_update_timestamp()
     try:
-        #to make sure that the models and cfg will be with absolute path
+        # to make sure that the models and cfg will be with absolute path
         prototxt = os.path.join(cfg.MODELS_DIR, NETS[args.demo_net][0],
-                                    'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
+                                'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
         caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
                                   NETS[args.demo_net][1])
 
@@ -384,65 +397,66 @@ if __name__ == '__main__':
     except Exception as e:
         if "no_logs" not in args.is_log:
             lh.log_error_detail("exception: error_loading_network error_info:" +
-                str(traceback.format_exception(*sys.exc_info())) + " XX " + str(e.__doc__) + " XX "+ str(e.message))
+                                str(traceback.format_exception(*sys.exc_info())) + " XX " + str(
+                e.__doc__) + " XX " + str(e.message))
             lh.end_log_file()
             raise
         else:
-            print " XX " + str(e.__doc__) + " XX "+ str(e.message)
-            
+            print " XX " + str(e.__doc__) + " XX " + str(e.message)
+
     force_update_timestamp()
     ##after loading net we start
     try:
-    ##################################################################################
-    #device Warmup on a dummy image
+        ##################################################################################
+        # device Warmup on a dummy image
         im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
         for i in xrange(2):
-            _, _= im_detect(net, im)
+            _, _ = im_detect(net, im)
 
-    ##################################################################################
-        in_names=[]
+            ##################################################################################
+        in_names = []
         iterations = int(args.iterations)
-        
+
         in_names = [line.strip() for line in open(args.img_list, 'r')]
 
         if args.generate_file != "":
-            #execute only once
-            #even in python you need initializate
+            # execute only once
+            # even in python you need initializate
             gold_file = {}
             print "Generating gold for Py-faster-rcnn"
             for im_name in in_names:
                 print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                 print 'Demo for {}'.format(im_name)
-                gold_file[im_name] = detect(net, im_name,True)
+                gold_file[im_name] = detect(net, im_name, True)
                 print gold_file[im_name]
             print "Gold generated, saving file"
             serialize_gold(args.generate_file, gold_file)
-            #write_to_csv(args.generate_file, gold_file)
+            # write_to_csv(args.generate_file, gold_file)
             print "Gold save sucess"
 
         else:
             i = 0
-            j = 0
+            # j = 0
             im_size = len(in_names)
-            while(i < iterations):
-                #iterator
+            while (i < iterations):
+                # iterator
                 # iterator = iter(gold_file)
                 total_iteration_errors = 0
                 it = 0
                 for im_name in in_names:
                     # item = iterator.next()
                     ###Log
-                    #print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+                    # print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                     it += 1
                     if it % 10 == 0:
-                        print 'PyFaster for data/demo/{}'.format(im_name)
+                        print 'PyFaster for {}'.format(im_name)
                     if "no_logs" not in args.is_log:
                         ##start
                         lh.start_iteration()
-                        ret=detect(net, im_name, (it % 10 == 0))
+                        ret = detect(net, im_name, (it % 10 == 0))
                         lh.end_iteration()
 
-                        #check gold
+                        # check gold
                         timer = Timer()
                         timer.tic()
                         error_count = compare(gold_file[im_name], ret, im_name)
@@ -455,92 +469,92 @@ if __name__ == '__main__':
                         # if error_count != 0:
                         #     serialize_gold(scores_name,ret[0])
                         if it % 10 == 0:
-                            print "Compare time " , timer.total_time , " errors " , error_count
+                            print "Compare time ", timer.total_time, " errors ", error_count
 
                         lh.log_error_count(int(error_count))
                         force_update_timestamp()
                     ##end log
-                    j += 1
-                    if j == im_size:
-                        break
-
+                    # j += 1
+                    # if j == im_size:
+                    #     break
 
                 i += 1
     except Exception as e:
         if "no_logs" not in args.is_log:
             lh.log_error_detail("exception: error_network_exection error_info:" +
-                str(traceback.format_exception(*sys.exc_info())) + " XX " + str(e.__doc__) + " XX "+ str(e.message))
+                                str(traceback.format_exception(*sys.exc_info())) + " XX " + str(
+                e.__doc__) + " XX " + str(e.message))
             lh.end_log_file()
             raise
         else:
-            print " XX " + str(e.__doc__) + " XX "+ str(e.message)
+            print " XX " + str(e.__doc__) + " XX " + str(e.message)
     ##################################################################################
-    #finish ok
+    # finish ok
     if "no_logs" not in args.is_log:
         lh.end_log_file()
 
 
 
-# def compare(gold, current, img_name):
-#     # scores_gold = gold[0]
-#     # boxes_gold = gold[1]
-#     # error_count = 0
-#     # #iterator for current, i need it because generate could be smaller than gold, so python will throw an exception
-#     # scores_curr = current[0]
-#     # boxes_curr = current[1]
-#     #
-#     #
-#     # CONF_THRESH = 0.8
-#     # NMS_THRESH = 0.3
-#     # error_detail_final = ""
-#     # ########################
-#     # #real compare
-#     #
-#     #
-#     # for cls_ind, cls in enumerate(CLASSES[1:]):
-#     #     cls_ind += 1 # because we skipped background
-#     #
-#     #     #for gold
-#     #     cls_boxes_gold = boxes_gold[:, 4*cls_ind:4*(cls_ind + 1)]
-#     #     cls_scores_gold = scores_gold[:, cls_ind]
-#     #     dets_gold = np.hstack((cls_boxes_gold,
-#     #                       cls_scores_gold[:, np.newaxis])).astype(np.float32)
-#     #     keep_gold = nms(dets_gold, NMS_THRESH)
-#     #     dets_gold = dets_gold[keep_gold, :]
-#     #
-#     #     #for current
-#     #     cls_boxes_curr = boxes_curr[:, 4*cls_ind:4*(cls_ind + 1)]
-#     #     cls_scores_curr = scores_curr[:, cls_ind]
-#     #     dets_curr = np.hstack((cls_boxes_curr,
-#     #                       cls_scores_curr[:, np.newaxis])).astype(np.float32)
-#     #     keep_curr = nms(dets_curr, NMS_THRESH)
-#     #     dets_curr = dets_curr[keep_curr, :]
-#     #
-#     #     #compare all results
-#     #
-#     #     error_count += compare_boxes(cls_boxes_gold,cls_boxes_curr)
-#     #     inds_gold = np.where(dets_gold[:, -1] >= 0)[0]
-#     #     inds_curr = np.where(dets_curr[:, -1] >= 0)[0]
-#     #     for i in inds_curr:
-#     #         bbox_curr = dets_curr[i, :4]
-#     #         scores_curr = dets_curr[i, -1]
-#     #         print "Scores curr\n" , bbox_curr , " " , scores_curr
-#     #
-#     #     for i in inds_gold:
-#     #         bbox_gold = dets_gold[i, :4]
-#     #         scores_gold = dets_gold[i, -1]
-#     #         print "Scores gold\n" , bbox_gold , " " , scores_gold
-#     #     error_count += compare_scores(cls_scores_gold,cls_scores_curr)
-#     #     inds_curr = np.where(dets_curr[:, -1] >=  0)[0]
-#     #     inds_gold = np.where(dets_gold[:, -1] >=  0)[0]
-#     #
-#     #     for (i_g, i_c) in zip(inds_gold, inds_curr):
-#     #         scores_gold = dets_gold[i_g, -1]
-#     #         scores_curr = dets_curr[i_c, -1]
-#     #         print "csl scores" , scores_curr
-#     #         print "csl scores gold" , scores_gold
-#
-#     if error_count > 0:
-#         lh.log_error_detail("input_img: "+img_name)
-#
-#     return error_count
+        # def compare(gold, current, img_name):
+        #     # scores_gold = gold[0]
+        #     # boxes_gold = gold[1]
+        #     # error_count = 0
+        #     # #iterator for current, i need it because generate could be smaller than gold, so python will throw an exception
+        #     # scores_curr = current[0]
+        #     # boxes_curr = current[1]
+        #     #
+        #     #
+        #     # CONF_THRESH = 0.8
+        #     # NMS_THRESH = 0.3
+        #     # error_detail_final = ""
+        #     # ########################
+        #     # #real compare
+        #     #
+        #     #
+        #     # for cls_ind, cls in enumerate(CLASSES[1:]):
+        #     #     cls_ind += 1 # because we skipped background
+        #     #
+        #     #     #for gold
+        #     #     cls_boxes_gold = boxes_gold[:, 4*cls_ind:4*(cls_ind + 1)]
+        #     #     cls_scores_gold = scores_gold[:, cls_ind]
+        #     #     dets_gold = np.hstack((cls_boxes_gold,
+        #     #                       cls_scores_gold[:, np.newaxis])).astype(np.float32)
+        #     #     keep_gold = nms(dets_gold, NMS_THRESH)
+        #     #     dets_gold = dets_gold[keep_gold, :]
+        #     #
+        #     #     #for current
+        #     #     cls_boxes_curr = boxes_curr[:, 4*cls_ind:4*(cls_ind + 1)]
+        #     #     cls_scores_curr = scores_curr[:, cls_ind]
+        #     #     dets_curr = np.hstack((cls_boxes_curr,
+        #     #                       cls_scores_curr[:, np.newaxis])).astype(np.float32)
+        #     #     keep_curr = nms(dets_curr, NMS_THRESH)
+        #     #     dets_curr = dets_curr[keep_curr, :]
+        #     #
+        #     #     #compare all results
+        #     #
+        #     #     error_count += compare_boxes(cls_boxes_gold,cls_boxes_curr)
+        #     #     inds_gold = np.where(dets_gold[:, -1] >= 0)[0]
+        #     #     inds_curr = np.where(dets_curr[:, -1] >= 0)[0]
+        #     #     for i in inds_curr:
+        #     #         bbox_curr = dets_curr[i, :4]
+        #     #         scores_curr = dets_curr[i, -1]
+        #     #         print "Scores curr\n" , bbox_curr , " " , scores_curr
+        #     #
+        #     #     for i in inds_gold:
+        #     #         bbox_gold = dets_gold[i, :4]
+        #     #         scores_gold = dets_gold[i, -1]
+        #     #         print "Scores gold\n" , bbox_gold , " " , scores_gold
+        #     #     error_count += compare_scores(cls_scores_gold,cls_scores_curr)
+        #     #     inds_curr = np.where(dets_curr[:, -1] >=  0)[0]
+        #     #     inds_gold = np.where(dets_gold[:, -1] >=  0)[0]
+        #     #
+        #     #     for (i_g, i_c) in zip(inds_gold, inds_curr):
+        #     #         scores_gold = dets_gold[i_g, -1]
+        #     #         scores_curr = dets_curr[i_c, -1]
+        #     #         print "csl scores" , scores_curr
+        #     #         print "csl scores gold" , scores_gold
+        #
+        #     if error_count > 0:
+        #         lh.log_error_detail("input_img: "+img_name)
+        #
+        #     return error_count
