@@ -239,6 +239,7 @@ def compare_boxes(gold, current, cls):
     goldSize = len(gold)
     currSize = len(current)
     bbDiff = goldSize - currSize
+    min_m_range = goldSize
     if bbDiff != 0:
         min_m_range = min(goldSize, currSize)
         lh.log_error_detail("img: " + str(img_name) +" wrong_boxes_size: " + bbDiff)
@@ -269,15 +270,15 @@ def compare_boxes(gold, current, cls):
     return error_count
 
 #compare scores and return error count and string error detail
-def compare_scores(gold, current, img_name, cls):
+def compare_scores(gold, current, cls):
     error_count = 0
     goldSize = len(gold)
     currSize = len(current)
     scrDiff = goldSize - currSize
-
-    if srcDiff != 0:
+    min_m_range = goldSize
+    if scrDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("img: " + str(img_name) + " wrong_score_size: " + srcDiff)
+        lh.log_error_detail(" wrong_score_size: " + srcDiff)
         error_count += abs(srcDiff)
 
     for i in range(0,min_m_range):
@@ -302,8 +303,6 @@ so only the second for is compared
 """
 def compare(gold, current, img_name):
     error_count = 0
-
-
     goldKeys = gold.keys()
     currKeys = current.keys()
 
@@ -324,9 +323,12 @@ def compare(gold, current, img_name):
         scrListGold = iGold['scores']
         scrListCurr = iCurr['scores']
 
-        error_count += compare_scores(scrListGold, scrListCurr,img_name, cls)
-        error_count += compare_boxes(bbListGold, bbListCurr, img_name, cls)
+        errorBefore = error_count
+        error_count += compare_scores(scrListGold, scrListCurr, i)
+        error_count += compare_boxes(bbListGold, bbListCurr, i)
 
+        if errorBefore != error_count:
+            lh.log_error_info("img_name: " + str(img_name) + " class: " + str(i) + " total_errors: " + str(error_count - errorBefore))
 
     return error_count
 
