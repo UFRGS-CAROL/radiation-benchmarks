@@ -99,7 +99,7 @@ def detect(net, image_name, pr):
     im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
     im = cv2.imread(im_file)
     if pr:
-        print img_file
+        print image_name
 
     # Detect all object classes and regress object bounds
     timer = Timer()
@@ -311,7 +311,9 @@ def compare(gold, current, img_name):
         lh.log_error_detail("current_missing_info: " + size_error_m)
         error_count += abs(size_error_m)
 
-    for (iGold, iCurr) in zip(gold, current):
+    for i in range(0, min_m_range):
+        iGold = gold[i]
+        iCurr = current[i]
         bbListGold = iGold['boxes']
         bbListCurr = iCurr['boxes']
         scrListGold = iGold['scores']
