@@ -1,0 +1,39 @@
+Lulesh 2.0 OpenMP
+
+* How to compile
+  - Intel Xeon Phi (icc native compilation):
+    $ make intel
+  - General X86 (gcc):
+    $ make general
+
+Compilation should generate 5 binaries:
+  - lulesh_gen: used to generate the input and gold output. Gold will be used to check if the execution generates a correct output.
+  - lulesh_check: this binary will be used during radiation test, it will execute the benchmark kernel several times
+  - lulesh_timing: this binary is used only for testing purposes, it will measure the time spent in every part of the benchmark. This binary will not record any log information
+  - lulesh_err_inj: this binary is used only for testing purposes, it will change the input value to check if the gold verification is working. This binary will also enter into an infinite loop to test the setup that needs to kill hanging benchmarks.
+
+
+
+* How to generate input data and gold output
+  - gold output
+    $ ./lulesh_gen -s <size>
+        - size: input size per domain
+
+
+* How to run a test
+
+Before running the benchmark, the script radiation-benchmarks/scripts/install.py should be executed. This script will create the folder to store the log files and create the conf file in /etc/radiation-benchmark.conf
+
+    $ ./lulesh_check -s <size> -g <gold_output> -l <#iterations>
+        - size: input size per domain
+        - gold_output: location of the the gold output file
+        - #iterations: how many times the benchmark kernel should be executed, usually 100000 is enough for the radiation test (it will crash before reaching this number)
+
+
+
+* Configuration used for Xeon Phi 3120A
+  - input and gold generated
+    $ ./lulesh_gen -s 50
+  - configurations executed
+    $ ./lulesh_check -s 50 -g gold_50 -l 100000
+
