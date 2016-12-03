@@ -46,6 +46,7 @@ NETS = {'vgg16': ('VGG16',
         'zf': ('ZF',
                   'ZF_faster_rcnn_final.caffemodel')}
 
+
 """
 originaly the thresh was 0.5, but I want get all results
 so it becames 0
@@ -71,6 +72,7 @@ def visDetections(dets, thresh=0):
         ret['scores'].append(score)
 
     #     ax.add_patch(
+    # e(xy, width, height,
     #         plt.Rectangle((bbox[0], bbox[1]),
     #                       bbox[2] - bbox[0],
     #                       bbox[3] - bbox[1], fill=False,
@@ -144,26 +146,26 @@ def detect(net, image_name, pr):
 #         print ('Detection took {:.3f}s for '
 #            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 #     return [scores, boxes]
-
-def generate(net, image_name):
-    """Detect object classes in an image using pre-computed object proposals."""
-
-    # Load the demo image
-    #im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
-    im_file = os.path.join(image_name)
-    #print im_file
-    im = cv2.imread(im_file)
-
-    # Detect all object classes and regress object bounds
-    timer = Timer()
-    timer.tic()
-    scores, boxes = im_detect(net, im)
-    timer.toc()
- 
-    print ('Detection took {:.3f}s for '
-           '{:d} object proposals').format(timer.total_time, boxes.shape[0])
-
-    return [scores, boxes]
+#
+# def generate(net, image_name):
+#     """Detect object classes in an image using pre-computed object proposals."""
+#
+#     # Load the demo image
+#     #im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
+#     im_file = os.path.join(image_name)
+#     #print im_file
+#     im = cv2.imread(im_file)
+#
+#     # Detect all object classes and regress object bounds
+#     timer = Timer()
+#     timer.tic()
+#     scores, boxes = im_detect(net, im)
+#     timer.toc()
+#
+#     print ('Detection took {:.3f}s for '
+#            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
+#
+#     return [scores, boxes]
 
 
 def parse_args():
@@ -231,7 +233,7 @@ def write_to_csv(filename, data):
 
 
 #compare and return the error count and error string detail
-def compare_boxes(gold, current):
+def compare_boxes(gold, current, cls):
     #compare boxes #####################################################
     error_count = 0
     goldSize = len(gold)
@@ -242,20 +244,32 @@ def compare_boxes(gold, current):
         lh.log_error_detail("img: " + str(img_name) +" wrong_boxes_size: " + bbDiff)
         error_count += abs(bbDiff)
 
+    pos = ['x1', 'y1', 'x2', 'y2']
+
     for i in range(0,min_m_range):
-        #TEM QUE ARRUMAR AQUI NÃO É SIMPLES ASSIM, TEM QUE COLOCAR AS COORDENADAS
-        iGold = float(gold[i])
-        iCurr = float(current[i])
-        diff = math.fabs(iGold - iCurr)
-        if diff > THRESHOLD:
-            lh.log_error_detail(
-                "img: " + str(img_name) + " box: [" + str(i) + "] e: " + str(iGold) + " r: " + str(iCurr))
+        # e(xy, width, height,
+        #         plt.Rectangle((bbox[0], bbox[1]),
+        #                       bbox[2] - bbox[0],
+        #                       bbox[3] - bbox[1], fill=False,
+        logString = " class: " + str(cls) + " box: [" + str(i) + "] "
+        error = False
+        for iGold, iCurr, k in zip(gold[i],current[i],pos):
+            iG = float(iGold)
+            iC = float(iCurr)
+            diff = math.fabs(iG - iC)
+
+            if diff > THRESHOLD:
+                logString += str(k) + "_e: "+ str(iG) + " " + str(k) + "_r: " + str(iC) + " "
+                error = True
+
+        if error:
+            lh.log_error_detail(logString)
             error_count += 1
 
     return error_count
 
 #compare scores and return error count and string error detail
-def compare_scores(gold, current, img_name):
+def compare_scores(gold, current, img_name, cls):
     error_count = 0
     goldSize = len(gold)
     currSize = len(current)
@@ -263,17 +277,15 @@ def compare_scores(gold, current, img_name):
 
     if srcDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("img: " + str(img_name) +" wrong_score_size: " + srcDiff)
+        lh.log_error_detail("img: " + str(img_name) + " wrong_score_size: " + srcDiff)
         error_count += abs(srcDiff)
 
     for i in range(0,min_m_range):
-        #TEM QUE ARRUMAR AQUI NÃO É SIMPLES ASSIM, TEM QUE COLOCAR AS COORDENADAS
         iGold = float(gold[i])
         iCurr = float(current[i])
         diff = math.fabs(iGold - iCurr)
         if diff > THRESHOLD:
-
-            lh.log_error_detail("img: " + str(img_name) + " scores: [" + str(i) + "] e: " + str(iGold) + " r: " + str(iCurr))
+            lh.log_error_detail(" class: " + str(cls) + " score: [" + str(i) + "] e: " + str(iGold) + " r: " + str(iCurr))
             error_count += 1
 
     return error_count
@@ -305,8 +317,9 @@ def compare(gold, current, img_name):
         scrListGold = iGold['scores']
         scrListCurr = iCurr['scores']
 
-        error_count += compare_scores(scrListGold, scrListCurr)
-        error_count += compare_boxes(bbListGold, bbListCurr)
+        error_count += compare_scores(scrListGold, scrListCurr,img_name, cls)
+        error_count += compare_boxes(bbListGold, bbListCurr, img_name, cls)
+
 
     return error_count
 
