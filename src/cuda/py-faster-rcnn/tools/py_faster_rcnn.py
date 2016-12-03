@@ -303,15 +303,20 @@ so only the second for is compared
 def compare(gold, current, img_name):
     error_count = 0
 
-    goldSize = len(gold)
-    currSize = len(current)
+
+    goldKeys = gold.keys()
+    currKeys = current.keys()
+
+    goldSize = len(goldKeys)
+    currSize = len(currKeys)
     size_error_m = goldSize - currSize
     if size_error_m != 0:
-        min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("current_missing_info: " + size_error_m)
+        lh.log_error_detail("missing_classes_on_detected: " + size_error_m)
         error_count += abs(size_error_m)
 
-    for i in range(0, min_m_range):
+    intersection = set(goldKeys) & set(currKeys)
+
+    for i in intersection:
         iGold = gold[i]
         iCurr = current[i]
         bbListGold = iGold['boxes']
