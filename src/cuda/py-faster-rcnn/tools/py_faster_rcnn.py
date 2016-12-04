@@ -336,8 +336,8 @@ def compare(gold, current, img_name):
         scrListCurr = iCurr['scores']
 
         #errorBefore = error_count
-        error_count += compare_scores(scrListGold, scrListCurr, i)
-        error_count += compare_boxes(bbListGold, bbListCurr, i)
+        error_count += compare_scores(scrListGold, scrListCurr, i, img_name)
+        error_count += compare_boxes(bbListGold, bbListCurr, i, img_name)
 
         # if errorBefore != error_count:
         #     lh.log_error_info(
