@@ -338,7 +338,7 @@ def compare(gold, current, img_name):
         error_count += abs(size_error_m)
 
     intersection = set(goldKeys) & set(currKeys)
-
+    tempImgName = getDatasetImgName(img_name)
     for i in intersection:
         iGold = gold[i]
         iCurr = current[i]
@@ -348,8 +348,8 @@ def compare(gold, current, img_name):
         scrListCurr = iCurr['scores']
 
         #errorBefore = error_count
-        error_count += compare_scores(scrListGold, scrListCurr, i, img_name)
-        error_count += compare_boxes(bbListGold, bbListCurr, i, img_name)
+        error_count += compare_scores(scrListGold, scrListCurr, i, tempImgName)
+        error_count += compare_boxes(bbListGold, bbListCurr, i, tempImgName)
 
         # if errorBefore != error_count:
         #     lh.log_error_info(
