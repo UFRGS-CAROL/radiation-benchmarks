@@ -32,7 +32,7 @@ long long check_start, check_end;
 
 void usage()
 {
-    printf("Usage: lavamd_gen <# cores> <# boxes 1d> <input_distances> <input_charges> <gold_output> <#iteractions>\n");
+    printf("Usage: lavamd <# cores> <# boxes 1d> <input_distances> <input_charges> <gold_output> <#iterations>\n");
     printf("  # cores is the number of threads that OpenMP will create\n");
     printf("  # boxes 1d is the input size, 15 is reasonable\n");
 }

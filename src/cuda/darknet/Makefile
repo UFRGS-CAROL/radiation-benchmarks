@@ -48,12 +48,14 @@ ifeq ($(CUDNN), 1)
 endif
 
 ifeq ($(LOGS), 1)
-	#CFLAGS+=  -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 
+	CFLAGS+=-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -DLOGS=1 
 	#LOG_LINK= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1
 	#$(LOGHELPER_LIB)log_helper.o 
-	LOG_CU = $(LOGHELPER_LIB)log_helper.c
 #	CFLAGS+= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda
 endif
+
+LOG_CU = $(LOGHELPER_LIB)log_helper.c
+
 
 OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o image.o activations.o \
 	 im2col.o col2im.o blas.o crop_layer.o dropout_layer.o maxpool_layer.o softmax_layer.o data.o \
@@ -92,13 +94,13 @@ abft: src/abft.cu
 	
 
 $(EXEC): $(OBJS) 
-	$(NVCC) $(COMMON) $(BUILD_ABFT_OBJ) $(OBJDIR)log_helper.o $^  -o $@  -lcudadevrt -lcudart -lcuda -rdc=true  $(LDFLAGS) $(CFLAGS) -DLOGS -I../../include
+	$(NVCC) $(COMMON) $(BUILD_ABFT_OBJ) $(OBJDIR)log_helper.o $^  -o $@  -lcudadevrt -lcudart -lcuda -rdc=true  $(LDFLAGS) $(CFLAGS) 
 	
 $(OBJDIR)%.o: %.c $(DEPS) 
-	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS)  -DLOGS  -I../../include
+	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS)
 
 build_logs: $(LOG_CU)
-	$(NVCC)  $(LOG_CU) -c -o $(OBJDIR)log_helper.o
+	$(NVCC)  -c $(LOG_CU) -o $(OBJDIR)log_helper.o
 
 $(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT)  build_logs
 	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CFLAGS)

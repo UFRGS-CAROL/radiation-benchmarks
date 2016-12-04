@@ -150,7 +150,7 @@ void App::run() {
 	vector<Rect> found;
 
 	// Perform HOG classification
-	cout << "Generating gold image\n";
+	cout << "Generating gold for " << dataset[index].c_str() << "\n";
 	if (use_gpu) {
 		gpu_img.upload(img);
 		gpu_hog.detectMultiScale(gpu_img, found, hit_threshold, win_stride,
@@ -159,16 +159,21 @@ void App::run() {
 		cpu_hog.detectMultiScale(img, found, hit_threshold, win_stride,
 				Size(0, 0), scale, gr_threshold);
 	}
-	cout << "Gold generated with success\n";
+	//cout << "Gold generated with success\n";
 	// Draw positive classified windows (OLD)
 	//save the data on the *.data file
 
 	vector<string> split_current_line = split(dataset[index], '/');
-	string gold_name = split_current_line[split_current_line.size() - 1].c_str();
-	gold_name.append(".data");
+	string gold_set = split_current_line[split_current_line.size() - 3].c_str();
+	string gold_video = split_current_line[split_current_line.size() - 2].c_str();
+	string gold_frame = split_current_line[split_current_line.size() - 1].c_str();
+	gold_set.append("_" + gold_video + "_" + gold_frame + ".data");
 
 	ofstream output_file;
-	output_file.open(gold_name.c_str());
+
+	string data_path("/home/carol/radiation-benchmarks/data/histogram_ori_gradients/");
+	data_path.append(gold_set);
+	output_file.open(data_path.c_str());
 
 	output_file << args.make_gray << ",";
 	output_file << args.scale << ",";

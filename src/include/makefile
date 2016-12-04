@@ -10,7 +10,7 @@ log_helper.cu: log_helper.c
 
 cuda: log_helper.cu
 	rm -f log_helper.o
-	nvcc -c log_helper.cu
+	/usr/local/cuda/bin/nvcc  -c log_helper.cu
 	ar cvr libLogHelperCuda.a log_helper.o
 
 client: log_helper.cu
