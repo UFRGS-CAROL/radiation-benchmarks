@@ -263,7 +263,7 @@ def compare_boxes(gold, current, cls, img_name):
     min_m_range = goldSize
     if bbDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("wrong_boxes_size: " + bbDiff)
+        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + "wrong_boxes_size: " + bbDiff)
         error_count += abs(bbDiff)
 
     pos = ['x1', 'y1', 'x2', 'y2']
@@ -275,13 +275,16 @@ def compare_boxes(gold, current, cls, img_name):
         #                       bbox[3] - bbox[1], fill=False,
         logString ="img_name: " + str(img_name) + " class: " + str(cls) + " box: [" + str(i) + "] "
         error = False
-        for iGold, iCurr, k in zip(gold[i], current[i], pos):
-            iG = float(iGold)
-            iC = float(iCurr)
-            diff = math.fabs(iG - iC)
-            logString += str(k) + "_e: " + str(iG) + " " + str(k) + "_r: " + str(iC) + " "
-            if diff > THRESHOLD:
-                error = True
+        try:
+            for iGold, iCurr, k in zip(gold[i], current[i], pos):
+                iG = float(iGold)
+                iC = float(iCurr)
+                diff = math.fabs(iG - iC)
+                logString += str(k) + "_e: " + str(iG) + " " + str(k) + "_r: " + str(iC) + " "
+                if diff > THRESHOLD:
+                    error = True
+        except:
+            logString = "img_name: " + str(img_name) + " class: " + str(cls) + " box: [" + str(i) + "] loop_error"
 
         if error:
             lh.log_error_detail(logString)
@@ -299,7 +302,7 @@ def compare_scores(gold, current, cls, img_name):
     min_m_range = goldSize
     if scrDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("wrong_score_size: " + scrDiff)
+        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + "wrong_score_size: " + scrDiff)
         error_count += abs(scrDiff)
 
     for i in range(0, min_m_range):
@@ -334,7 +337,7 @@ def compare(gold, current, img_name):
     currSize = len(currKeys)
     size_error_m = goldSize - currSize
     if size_error_m != 0:
-        lh.log_error_detail("missing_classes_on_detected: " + size_error_m)
+        lh.log_error_detail("img_name: " + str(img_name) + " missing_classes_on_detected: " + size_error_m)
         error_count += abs(size_error_m)
 
     intersection = set(goldKeys) & set(currKeys)
@@ -453,7 +456,7 @@ if __name__ == '__main__':
             while (i < iterations):
                 # iterator
                 # iterator = iter(gold_file)
-                total_iteration_errors = 0
+                # total_iteration_errors = 0
                 it = 0
                 for im_name in in_names:
                     # item = iterator.next()
