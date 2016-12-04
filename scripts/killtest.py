@@ -21,8 +21,9 @@ from datetime import datetime
 # will execute lavaMD for about one hour and then execute gemm for two hours
 # When the list finish executing, it start to execute from the beginning
 commandList = [
- 	["./lavaMD 15 4 input1 input2 gold 10000", 1, "lavaMD"],
- 	["./gemm 1024 4 input1 input2 gold 10000", 2, "gemm"],
+# 	["./lavaMD 15 4 input1 input2 gold 10000", 1, "lavaMD"],
+#	["./gemm 1024 4 input1 input2 gold 10000", 2, "gemm"],
+ 	["sudo /home/carol/radiation-benchmarks/bin/mergesort_h -size=1048576 -input=/home/carol/radiation-benchmarks/data/mergesort_h/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort_h/mergesort_gold_1048576 -iterations=10000000", 2, "mergesort_h"],
 ]
 
 # Command used to kill application

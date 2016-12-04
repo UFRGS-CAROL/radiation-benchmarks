@@ -82,11 +82,11 @@ typedef struct dim_str
 } dim_str;
 
 // Returns the current system time in microseconds
-long long get_time() {
+/*long long get_time() {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return (tv.tv_sec * 1000000) + tv.tv_usec;
-}
+}*/
 
 void usage(int argc, char** argv) {
     printf("Usage: %s -boxes=N [-generate] [-input_distances=<path>] [-input_charges=<path>] [-output_gold=<path>] [-iterations=N] [-streams=N] [-debug] [-verbose]\n", argv[0]);

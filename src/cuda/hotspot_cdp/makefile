@@ -10,7 +10,7 @@ LOGHELPER_LIB=../../include/
 all: hotspot_cdp
 
 hotspot_cdp: hotspot_cdp.cu
-	$(NVCC) $(NVCC_FLAGS) hotspot_cdp.cu -rdc=true -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) $(ITER) -lLogHelperCuda $(NVCCFLAGS) -Xcompiler " -fopenmp" -o hotspot_cdp
+	$(NVCC) $(NVCC_FLAGS) hotspot_cdp.cu -rdc=true -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) $(ITER) -lLogHelperCuda $(NVCCFLAGS) -Xcompiler " -fopenmp" -o hotspot_cdp -DLOGS
 
 clean:
 	rm -f hotspot_cdp gold_*
