@@ -13,9 +13,8 @@
 
 #ifdef LOGS
 #include "log_helper.h"
+//#include "gemm.h"
 #endif
-
-
 
 #define min(X,Y) (((X) < (Y)) ? (X) : (Y))
 #ifdef OPENCV
@@ -297,7 +296,7 @@ void validate_yolo(Args parameters) {
 	}
 
 	//set abft
-	if(parameters.abft == 1)
+	if (parameters.abft == 1 && !parameters.generate_flag)
 		set_use_abft(1);
 //	}
 	for (iterator = 0; iterator < parameters.iterations; iterator++) {
@@ -311,13 +310,15 @@ void validate_yolo(Args parameters) {
 				if(!parameters.generate_flag) {
 					start_iteration();
 				}
+				if(parameters.abft == 1 && !parameters.generate_flag)
+					set_gold_iterator_abft(gold_iterator);
 #endif
 
 				//for abft, because it is easier use an input parameter than a gcc macro
-				if(parameters.abft == 1){
-					shared_errors.row_detected_errors = 0;
-					shared_errors.col_detected_errors = 0;
-				}
+//				if (parameters.abft == 1) {
+//					shared_errors.row_detected_errors = 0;
+//					shared_errors.col_detected_errors = 0;
+//				}
 				double begin2 = mysecond();
 				char *path = paths[i + t - nthreads];
 				char *id = basecfg(path);
@@ -375,7 +376,7 @@ void validate_yolo(Args parameters) {
 								cmp);
 
 						//Lucas saving layers
-						if(parameters.save_layers == 1)
+						if (parameters.save_layers == 1)
 							saveLayer(net);
 						max_err_per_iteration += cmp;
 						if (max_err_per_iteration > 500) {
@@ -383,18 +384,6 @@ void validate_yolo(Args parameters) {
 									&gold_ptr, classes, val, val_resized, buf,
 									buf_resized, fps);
 
-#ifdef LOGS
-						if(parameters.abft == 1){
-							if(shared_errors.row_detected_errors || shared_errors.col_detected_errors) {
-								char abft_string[500];
-								fprintf(abft_string, "abft_type: dumb image_list_position: [%ld] row_detected_errors: %ll col_detected_errors: %ll",
-										gold_iterator,
-										shared_errors.row_detected_errors, shared_errors.col_detected_errors);
-								log_error_detail(abft_string);
-							}
-						}
-
-#endif
 						}
 
 					}

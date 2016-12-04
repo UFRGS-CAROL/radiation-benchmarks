@@ -7,6 +7,11 @@
 
 #include "abft.h"
 
+#ifdef LOGS
+#include "log_helper.h"
+int gold_iterator_abft = 0;
+#endif
+
 void gemm_bin(int M, int N, int K, float ALPHA, char *A, int lda, float *B,
 		int ldb, float *C, int ldc) {
 	int i, j, k;
@@ -161,7 +166,6 @@ void print_mat_row_major(float *mat, long m, long n, const char *mat_name) {
 	printf("\n");
 }
 
-int it_print = 1;
 //----------------------------------
 void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		float *A_gpu, int lda,
@@ -174,16 +178,7 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 //	m  	input 	number of rows of matrix op(A) and C.
 //	n 	input	number of columns of matrix op(B) and C.
 //	k 	input 	number of columns of op(A) and rows of op(B).
-
-//	printf("N %d M %d K %d\n", N, M, K);
 		abraham_sum(A_gpu, B_gpu, M, K, K, N);
-//N 784 M 256 K 512
-		if (N == 784 && M == 256 && K == 512 && it_print == 0) {
-			float *temp = (float*) calloc(M * K, sizeof(float));
-			cudaMemcpy(temp, A_gpu, M * K * sizeof(float), cudaMemcpyDeviceToHost);
-			print_mat_row_major(temp, M, K, "test mat A print");
-			it_print = 1;
-		}
 	}
 	cublasHandle_t handle = blas_handle();
 	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
@@ -192,14 +187,31 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 
 	if(get_use_abft() == 1) {
 		ErrorReturn temp = abraham_check(C_gpu, M, N);
-		shared_errors.row_detected_errors += temp.row_detected_errors;
-		shared_errors.col_detected_errors += temp.col_detected_errors;
+#ifdef LOGS
+							if(temp.row_detected_errors || temp.col_detected_errors) {
+								char abft_string[500];
+								sprintf(abft_string, "abft_type: dumb image_list_position: [%d] row_detected_errors: %llu col_detected_errors: %llu",
+										get_gold_iterator_abft(),
+										temp.row_detected_errors, temp.col_detected_errors);
+								log_info_detail(abft_string);
+								printf("\n\n\npassou na log_error %s", abft_string);
+//								printf("%\n", abft_string);
 
-//	if (temp.row_detected_errors || temp.col_detected_errors)
-//	printf("Detected row errors: %d\nDetected collum errors %d\n",
-//			temp.row_detected_errors, temp.col_detected_errors);
+							}
+
+#endif
 	}
 }
+
+#ifdef LOGS
+void set_gold_iterator_abft(int gia){
+	gold_iterator_abft = gia;
+}
+
+int get_gold_iterator_abft(){
+	return gold_iterator_abft;
+}
+#endif
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		float *A, int lda,

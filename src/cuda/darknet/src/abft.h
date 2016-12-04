@@ -22,7 +22,7 @@ void abraham_sum(float *a, float *b, long rows_a, long cols_a, long rows_b,
 		long cols_b);
 ErrorReturn abraham_check(float *c, long rows, long cols);
 
-ErrorReturn shared_errors;
+//ErrorReturn shared_errors;
 
 void set_use_abft(int n);
 int get_use_abft();
