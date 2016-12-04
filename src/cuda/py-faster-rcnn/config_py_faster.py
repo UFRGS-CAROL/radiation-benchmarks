@@ -5,6 +5,12 @@ import sys
 import ConfigParser
 import copy
 
+DATASETS = [
+            {'txt':'caltech.pedestrians.critical.1K.txt', 'gold':'gold.caltech.critical.1K.test'},
+            {'txt':'caltech.pedestrians.1K.txt', 'gold':'gold.caltech.1K.test'},
+            {'txt':'voc.2012.1K.txt', 'gold':'gold.voc.2012.1K.test'},
+]
+
 
 def main(board):
     print "Generating py-faster for CUDA on " + str(board)
@@ -31,47 +37,32 @@ def main(board):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
-    # ./py_faster_rcnn.py --gld test.test --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech/K40/caltech.pedestrians.DEBUG.txt --log daniel_logs
-    # ./py_faster_rcnn.py --gen test.test --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech/K40/caltech.pedestrians.DEBUG.txt
-
-    # for voc2012
-    gold_voc = gold = data_path + '/gold.voc.2012.1K.test'
-    txt_list_voc = installDir + 'data/networks_img_list/voc.2012.1K.txt'
-    voc_gen = {
-        'gold': [' --gen ', gold_voc],
-        'iml': [' --iml ', txt_list_voc],
-	'ite': [' --ite ', '1000'], 'zexe': ['sudo ', src_py_faster + "/tools/py_faster_rcnn.py "],
-    }
-
-    voc_exe = copy.deepcopy(voc_gen)
-    voc_exe['gold'][0] = ' --gld '
-    voc_exe['log'] = [' --log ', ' daniel_logs ']
-
-    # for caltech
-    gold_caltec = gold = data_path + '/gold.caltech.1K.test'
-    txt_list_caltec = installDir + 'data/networks_img_list/caltech.pedestrians.1K.txt'
-    caltech_gen = {
-        'gold': [' --gen ', gold_caltec],
-        'iml': [' --iml ', txt_list_caltec],
-	'ite': [' --ite ', '1000'], 'zexe': ['sudo ', src_py_faster + "/tools/py_faster_rcnn.py "],
-    }
-
-    caltech_exe = copy.deepcopy(caltech_gen)
-    caltech_exe['gold'][0] = ' --gld '
-    caltech_exe['log'] = [' --log ', ' daniel_logs ']
-
-    os.system("cd " + src_py_faster)
-
-    generate = []
-    generate.append(" ".join([''.join(map(str, value)) for key, value in caltech_gen.iteritems()]))
-    generate.append(" ".join([''.join(map(str, value)) for key, value in voc_gen.iteritems()]))
-
+    generate = [str("cd " + src_py_faster),]
     execute = []
-    execute.append(" ".join([''.join(map(str, value)) for key, value in caltech_exe.iteritems()]))
-    execute.append(" ".join([''.join(map(str, value)) for key, value in voc_exe.iteritems()]))
 
+    for i in DATASETS:
+        gold = data_path + '/' + i['gold']
+        txt_list = installDir + 'data/networks_img_list/' + i['txt']
+        gen = {
+            'gold': [' --gen ', gold],
+            'iml': [' --iml ', txt_list],
+        'ite': [' --ite ', '1000'], 'zexe': ['sudo ', src_py_faster + "/tools/py_faster_rcnn.py "],
+        }
+
+        exe = copy.deepcopy(gen)
+        exe['gold'][0] = ' --gld '
+        exe['log'] = [' --log ', ' daniel_logs ']
+
+        generate.append(" ".join([''.join(map(str, value)) for key, value in gen.iteritems()]))
+        execute.append(" ".join([''.join(map(str, value)) for key, value in exe.iteritems()]))
+
+
+    #os.system("cd " + src_py_faster)
     for i in generate:
-        os.system(str(i))
+        if os.system(str(i)) != 0:
+            print "Something went wrong with generate of " , str(i)
+            exit(1)
+
 
     fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
 
@@ -91,3 +82,20 @@ if __name__ == "__main__":
         print "./config_generic <k1/x1/k40>"
     else:
         main(str(parameter[0]).upper())
+
+
+# for caltech
+# gold_caltec = gold = data_path + '/gold.caltech.1K.test'
+# txt_list_caltec = installDir + 'data/networks_img_list/caltech.pedestrians.1K.txt'
+# caltech_gen = {
+#     'gold': [' --gen ', gold_caltec],
+#     'iml': [' --iml ', txt_list_caltec],
+# 'ite': [' --ite ', '1000'], 'zexe': ['sudo ', src_py_faster + "/tools/py_faster_rcnn.py "],
+# }
+#
+# caltech_exe = copy.deepcopy(caltech_gen)
+# caltech_exe['gold'][0] = ' --gld '
+# caltech_exe['log'] = [' --log ', ' daniel_logs ']
+#
+# ./py_faster_rcnn.py --gld test.test --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech/K40/caltech.pedestrians.DEBUG.txt --log daniel_logs
+# ./py_faster_rcnn.py --gen test.test --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech/K40/caltech.pedestrians.DEBUG.txt

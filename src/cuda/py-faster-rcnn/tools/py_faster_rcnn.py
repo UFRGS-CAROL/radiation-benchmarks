@@ -443,7 +443,7 @@ if __name__ == '__main__':
                 print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                 print 'Demo for {}'.format(im_name)
                 gold_file[im_name] = detect(net, im_name, True)
-                print gold_file[im_name]
+                #print gold_file[im_name]
             print "Gold generated, saving file"
             serialize_gold(args.generate_file, gold_file)
             # write_to_csv(args.generate_file, gold_file)
