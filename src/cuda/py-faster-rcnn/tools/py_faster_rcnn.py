@@ -28,7 +28,11 @@ import traceback
 import csv
 import sys
 
+#threshold for radiation test
 THRESHOLD = 0.005
+#threshold for  configuration and nonmaxsupression
+CONF_THRESH = 0.0 #0.8
+NMS_THRESH = 0.3
 import time, calendar
 
 # import log helper
@@ -114,8 +118,6 @@ def detect(net, image_name, pr):
                '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
     # Visualize detections for each class
-    CONF_THRESH = 0.8
-    NMS_THRESH = 0.3
     detectionResult = {}
     for cls_ind, cls in enumerate(CLASSES[1:]):
         cls_ind += 1  # because we skipped background
@@ -240,7 +242,7 @@ def write_to_csv(filename, data):
 
 
 # compare and return the error count and error string detail
-def compare_boxes(gold, current, cls):
+def compare_boxes(gold, current, cls, img_name):
     # compare boxes #####################################################
     error_count = 0
     goldSize = len(gold)
@@ -259,15 +261,14 @@ def compare_boxes(gold, current, cls):
         #         plt.Rectangle((bbox[0], bbox[1]),
         #                       bbox[2] - bbox[0],
         #                       bbox[3] - bbox[1], fill=False,
-        logString = " class: " + str(cls) + " box: [" + str(i) + "] "
+        logString ="img_name: " + str(img_name) + " class: " + str(cls) + " box: [" + str(i) + "] "
         error = False
         for iGold, iCurr, k in zip(gold[i], current[i], pos):
             iG = float(iGold)
             iC = float(iCurr)
             diff = math.fabs(iG - iC)
-
+            logString += str(k) + "_e: " + str(iG) + " " + str(k) + "_r: " + str(iC) + " "
             if diff > THRESHOLD:
-                logString += str(k) + "_e: " + str(iG) + " " + str(k) + "_r: " + str(iC) + " "
                 error = True
 
         if error:
@@ -278,7 +279,7 @@ def compare_boxes(gold, current, cls):
 
 
 # compare scores and return error count and string error detail
-def compare_scores(gold, current, cls):
+def compare_scores(gold, current, cls, img_name):
     error_count = 0
     goldSize = len(gold)
     currSize = len(current)
@@ -294,8 +295,7 @@ def compare_scores(gold, current, cls):
         iCurr = float(current[i])
         diff = math.fabs(iGold - iCurr)
         if diff > THRESHOLD:
-            lh.log_error_detail(
-                " class: " + str(cls) + " score: [" + str(i) + "] e: " + str(iGold) + " r: " + str(iCurr))
+            lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + " score: [" + str(i) + "] e: " + str(iGold) + " r: " + str(iCurr))
             error_count += 1
 
     return error_count
@@ -335,13 +335,13 @@ def compare(gold, current, img_name):
         scrListGold = iGold['scores']
         scrListCurr = iCurr['scores']
 
-        errorBefore = error_count
+        #errorBefore = error_count
         error_count += compare_scores(scrListGold, scrListCurr, i)
         error_count += compare_boxes(bbListGold, bbListCurr, i)
 
-        if errorBefore != error_count:
-            lh.log_error_info(
-                "img_name: " + str(img_name) + " class: " + str(i) + " total_errors: " + str(error_count - errorBefore))
+        # if errorBefore != error_count:
+        #     lh.log_error_info(
+        #         "img_name: " + str(img_name) + " class: " + str(i) + " total_errors: " + str(error_count - errorBefore))
 
     return error_count
 
