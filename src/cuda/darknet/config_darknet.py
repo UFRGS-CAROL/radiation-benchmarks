@@ -94,15 +94,11 @@ def main(board):
     generate.append("mv ./darknet " + bin_path + "/")
 
     for i in generate:
-        # if os.system(str(i)) != 0:
-        #     print "Something went wrong with generate of ", str(i)
-        #     exit(1)
+        if os.system(str(i)) != 0:
+            print "Something went wrong with generate of ", str(i)
+            exit(1)
         print i
 
-    # os.system(make_clean)
-    # os.system("make -C ../../include/ cuda")
-    # print "\n\n\n" + make_str + "\n\n\n"
-    # os.system(make_str)
     fp = open(installDir + "scripts/how_to_run_darknet_cuda_" + board, 'w')
 
     for i in execute:
@@ -122,44 +118,44 @@ if __name__ == "__main__":
 
 
 
-        # voc_gen_abft = copy.deepcopy(voc_gen_clean)
-        # gold_abft = data_path + '/gold.voc.2012.1K.abft.test'
-        # voc_gen_abft['a'][1] = 1
-        # voc_gen_abft['g'][1] = gold_abft
-        #
-        # #caltech gen
-        # gold = data_path + '/gold.caltech.1K.test'
-        # txt_list = installDir + 'data/networks_img_list/caltech.pedestrians.1K.txt'
-        # caltech_gen_clean = copy.deepcopy(voc_gen_clean)
-        # caltech_gen_clean['l'][1] = txt_list
-        # caltech_gen_clean['g'][1] = gold
-        #
-        # gold_abft = data_path + '/gold.caltech.1K.abft.test'
-        # caltech_gen_abft =copy.deepcopy(caltech_gen_clean)
-        # caltech_gen_abft['a'][1] = 1
-        # caltech_gen_abft['g'][1] = gold_abft
-        # execute################################################################
-        # caltech----------
-        # clean
-        # abft
-        # caltech_exe_abft = copy.deepcopy(caltech_gen_abft)
-        # caltech_exe_abft['n'][1] = 10000
-        # caltech_exe_abft['g'][0] = ' -d '
-        # #save layers
-        # caltech_exe_save = copy.deepcopy(caltech_exe_clean)
-        # caltech_exe_save['s'][1] = 1
-        #
-        # #voc---------------
-        # #clean
-        # voc_exe_clean = copy.deepcopy(voc_gen_clean)
-        # voc_exe_clean['n'][1] = 10000
-        # voc_exe_clean['g'][0] = ' -d '
-        #
-        # #abft
-        # voc_exe_abft = copy.deepcopy(voc_gen_abft)
-        # voc_exe_abft['n'][1] = 10000
-        # voc_exe_abft['g'][0] = ' -d '
-        # save layers
+    # voc_gen_abft = copy.deepcopy(voc_gen_clean)
+    # gold_abft = data_path + '/gold.voc.2012.1K.abft.test'
+    # voc_gen_abft['a'][1] = 1
+    # voc_gen_abft['g'][1] = gold_abft
+    #
+    # #caltech gen
+    # gold = data_path + '/gold.caltech.1K.test'
+    # txt_list = installDir + 'data/networks_img_list/caltech.pedestrians.1K.txt'
+    # caltech_gen_clean = copy.deepcopy(voc_gen_clean)
+    # caltech_gen_clean['l'][1] = txt_list
+    # caltech_gen_clean['g'][1] = gold
+    #
+    # gold_abft = data_path + '/gold.caltech.1K.abft.test'
+    # caltech_gen_abft =copy.deepcopy(caltech_gen_clean)
+    # caltech_gen_abft['a'][1] = 1
+    # caltech_gen_abft['g'][1] = gold_abft
+    # execute################################################################
+    # caltech----------
+    # clean
+    # abft
+    # caltech_exe_abft = copy.deepcopy(caltech_gen_abft)
+    # caltech_exe_abft['n'][1] = 10000
+    # caltech_exe_abft['g'][0] = ' -d '
+    # #save layers
+    # caltech_exe_save = copy.deepcopy(caltech_exe_clean)
+    # caltech_exe_save['s'][1] = 1
+    #
+    # #voc---------------
+    # #clean
+    # voc_exe_clean = copy.deepcopy(voc_gen_clean)
+    # voc_exe_clean['n'][1] = 10000
+    # voc_exe_clean['g'][0] = ' -d '
+    #
+    # #abft
+    # voc_exe_abft = copy.deepcopy(voc_gen_abft)
+    # voc_exe_abft['n'][1] = 10000
+    # voc_exe_abft['g'][0] = ' -d '
+    # save layers
     # generate.append(" ".join([''.join(map(str, value)) for key,value in caltech_gen_clean.iteritems()]))
     # generate.append(" ".join([''.join(map(str, value)) for key,value in  caltech_gen_abft.iteritems()]))
     # generate.append(" ".join([''.join(map(str, value)) for key,value in  voc_gen_clean.iteritems()]))
