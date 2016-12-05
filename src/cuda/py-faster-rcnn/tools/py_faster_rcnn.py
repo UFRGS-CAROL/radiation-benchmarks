@@ -135,14 +135,14 @@ def detect(net, image_name, pr):
     return detectionResult
 
 def getDatasetImgName(imgName):
-    dataset = ''
-    for i in DATASETS:
-        if i in imgName:
-            dataset = i
-            break
-
-    list = imgName.split(dataset)
-    return str(dataset + str(list[1]))
+	return imgName
+    #dataset = ''
+    #for i in DATASETS:
+    #    if i in imgName:
+    #        dataset = i
+    #        break
+#    list = imgName.split(dataset)
+#   return str(dataset + str(list[1]))
 
 # def detect(net, image_name, pr):
 #     """Detect object classes in an image using pre-computed object proposals."""
