@@ -3,9 +3,12 @@ CUDNN?=0
 OPENCV?=0
 DEBUG?=0
 LOGS?=0
-ARCH_I?=35
+#ARCH_I?=35
 
-ARCH= --gpu-architecture=compute_$(ARCH_I) --gpu-code=compute_$(ARCH_I)
+ARCH= -gencode arch=compute_35,code=sm_35 -gencode arch=compute_50,code=sm_50 \
+      -gencode arch=compute_53,code=sm_53 -gencode=arch=compute_60,code=sm_60 \
+      -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_62,code=sm_62
+#--gpu-architecture=compute_$(ARCH_I) --gpu-code=compute_$(ARCH_I)
 
 VPATH=./src/
 EXEC=darknet
