@@ -1,4 +1,4 @@
-GPU?=0
+GPU?=1
 CUDNN?=0
 OPENCV?=0
 DEBUG?=0
@@ -116,12 +116,12 @@ results:
 .PHONY: clean
 
 test:darknet
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w data/yolo.weights -n 3 -d data/gold_voc2012.test \
-							-l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 1 -a 1
+	./darknet -e yolo -m valid -c cfg/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 3 -d data/gold_voc2012.test \
+							-l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 0 -a 1
 
 generate:darknet
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w data/yolo.weights -n 1 -g data/gold_voc2012.test \
-			-l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 0 -a 0
+	./darknet -e yolo -m valid -c cfg/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 1 -g data/gold_voc2012.test \
+			-l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 0 -a 1
 
 
 clean:
