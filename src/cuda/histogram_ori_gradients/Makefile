@@ -3,7 +3,10 @@ CXX=g++
 
 ARCH_I?=35
 
-ARCH= --gpu-architecture=compute_$(ARCH_I) --gpu-code=compute_$(ARCH_I)
+ARCH= -gencode arch=compute_35,code=sm_35 -gencode arch=compute_50,code=sm_50 \
+      -gencode arch=compute_53,code=sm_53 -gencode=arch=compute_60,code=sm_60 \
+      -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_62,code=sm_62
+# --gpu-architecture=compute_$(ARCH_I) --gpu-code=compute_$(ARCH_I)
 
 ifeq ($(DBG), 1)
 	DEBUG = -g -G
@@ -20,7 +23,7 @@ NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-CFLAGS+= -L$(NVIDIA_LIB) -lcuda -lcudart
+CFLAGS+= -L$(NVIDIA_LIB) -lcudart
 
 
 NVIDIA_INC=/usr/local/cuda/include/
@@ -50,7 +53,7 @@ all: clean gold_generator hog_extracted hog_har_ecc_off hog_har_ecc_on hog_openc
 ##Opencv HOG
 hog_opencv: $(HOG_OCV_DIR)/HOG.cpp
 	$(CXX) $(OPTS) $(HOG_OCV_DIR)/HOG.cpp $(LOG_FLAGS) -Wall -DCXX -o3 $(ALL_GOLD_GEN) -o $(HOG_OCV_DIR)/hog_opencv -I$(LOGHELPER_INC)\
-		 -L/usr/local/cuda/lib64/ -lcuda -lcudart 
+		 -L/usr/local/cuda/lib64/  -lcudart 
 
 
 ##hog extracted
@@ -58,7 +61,7 @@ hog_extracted: $(HOG_EXT_DIR)/HOG.cpp
 	$(NVCC) $(HOG_EXT_DIR)/opencv_src/hog.cu -c -I$(NVIDIA_INC) -o $(HOG_EXT_DIR)/hog.o
 	$(CXX) $(HOG_EXT_DIR)/opencv_src/HogDescriptor.cpp -c $(ALL_CV_FLAGS) -o $(HOG_EXT_DIR)/HogDescriptor.o $(LOG_FLAGS) $(CFLAGS)
 	$(CXX) $(HOG_EXT_DIR)/HOG.cpp -c $(ALL_CV_FLAGS) -o $(HOG_EXT_DIR)/HOG.o $(LOG_FLAGS) $(CFLAGS)
-	$(CXX) -o $(HOG_EXT_DIR)/hog_ext $(HOG_EXT_DIR)/hog.o $(LOGHELPER_INC)log_helper.o $(HOG_EXT_DIR)/HOG.o $(HOG_EXT_DIR)/HogDescriptor.o \
+	$(CXX) -o $(HOG_EXT_DIR)/hog_ext $(HOG_EXT_DIR)/hog.o $(HOG_EXT_DIR)/HOG.o $(HOG_EXT_DIR)/HogDescriptor.o \
 							$(ALL_CV_FLAGS) $(CFLAGS) $(LOG_FLAGS)
 
 
