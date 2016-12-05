@@ -61,7 +61,7 @@ hog_extracted: $(HOG_EXT_DIR)/HOG.cpp
 	$(NVCC) $(HOG_EXT_DIR)/opencv_src/hog.cu -c -I$(NVIDIA_INC) -o $(HOG_EXT_DIR)/hog.o
 	$(CXX) $(HOG_EXT_DIR)/opencv_src/HogDescriptor.cpp -c $(ALL_CV_FLAGS) -o $(HOG_EXT_DIR)/HogDescriptor.o $(LOG_FLAGS) $(CFLAGS)
 	$(CXX) $(HOG_EXT_DIR)/HOG.cpp -c $(ALL_CV_FLAGS) -o $(HOG_EXT_DIR)/HOG.o $(LOG_FLAGS) $(CFLAGS)
-	$(CXX) -o $(HOG_EXT_DIR)/hog_ext $(HOG_EXT_DIR)/hog.o $(LOGHELPER_INC)log_helper.o $(HOG_EXT_DIR)/HOG.o $(HOG_EXT_DIR)/HogDescriptor.o \
+	$(CXX) -o $(HOG_EXT_DIR)/hog_ext $(HOG_EXT_DIR)/hog.o $(HOG_EXT_DIR)/HOG.o $(HOG_EXT_DIR)/HogDescriptor.o \
 							$(ALL_CV_FLAGS) $(CFLAGS) $(LOG_FLAGS)
 
 
