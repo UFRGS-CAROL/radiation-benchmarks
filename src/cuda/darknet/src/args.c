@@ -136,7 +136,7 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 	to_parse->generate_flag = 0;
 	int max_args = 12;
 	while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g:l:b:x:d:s:a:", long_options,
-			&option_index)) != -1 && max_args--) {
+			&option_index)) != -1 && --max_args) {
 		// check to see if a single character or long option came through
 		switch (ch) {
 
