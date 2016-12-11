@@ -9,13 +9,13 @@ import copy
 
 DATASETS = [
     # normal
-    {'txt': 'caltech.pedestrians.critical.1K.txt', 'gold': 'gold.caltech.critical.1K.test'},
-    {'txt': 'caltech.pedestrians.1K.txt', 'gold': 'gold.caltech.1K.test'},
+    #{'txt': 'caltech.pedestrians.critical.1K.txt', 'gold': 'gold.caltech.critical.1K.test'},
+    #{'txt': 'caltech.pedestrians.1K.txt', 'gold': 'gold.caltech.1K.test'},
     # abft
     {'txt': 'caltech.pedestrians.1K.txt', 'gold': 'gold.caltech.abft.1K.test'},
     {'txt': 'caltech.pedestrians.critical.1K.txt', 'gold': 'gold.caltech.critical.abft.1K.test'},
 
-    {'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.1K.test'},
+    #{'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.1K.test'},
     {'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.abft.1K.test'},
 ]
 
@@ -48,7 +48,7 @@ def main(board):
 
     #	./darknet -e yolo -m valid -c cfg/yolo.cfg -w data/yolo.weights -n 3 -d data/gold_voc2012.test
     # -l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 1 -a 1
-    generate = ["cd " + src_darknet, "make clean GPU=1", "make -j 4 GPU=1 "]
+    generate = ["cd " + src_darknet, "make clean GPU=1", "make -j 4 GPU=1 ", "mv ./darknet " + bin_path + "/"]
     execute = []
     for i in DATASETS:
         abft = 0
