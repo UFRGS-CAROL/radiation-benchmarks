@@ -377,7 +377,7 @@ void validate_yolo(Args parameters) {
 
 						//Lucas saving layers
 						if (parameters.save_layers == 1)
-							saveLayer(net);
+							saveLayer(net, iterator*m, i+t);
 						max_err_per_iteration += cmp;
 						if (max_err_per_iteration > 500) {
 							free_yolo_test_memory(&parameters, &current_ptr,

@@ -325,13 +325,15 @@ void clear_vectors(GoldPointers *gp){
 	}
 }
 
-void saveLayer(network net)
+void saveLayer(network net, int iterator, int n)
 {
 	FILE* bin;
 	char* log_name;
 	char name[100];
-	char a[5];
-	int i;
+	char a[5], b[8], c[8];
+	int i, j;
+	
+	snprintf(b, 5,"%d",iterator+n-1);
 	for (i = 0; i < 32; i++)
 	{
 		snprintf(a, 3,"%d",i);
@@ -341,8 +343,15 @@ void saveLayer(network net)
 		log_name = "standard_name";
 #endif
 		strcpy(name, log_name);
+		strcat(name, "_it_");
+		strcat(name, &b);
 		strcat(name, "_layer_");
 		strcat(name, &a);
+
+		for (j = strlen(name)+2; j >= 31; j--)
+		{
+			name[j] = name [j-1];
+		}
 		name[26] = 'd';
 		name[27] = 'a';
 		name[28] = 't';
