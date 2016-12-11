@@ -6,6 +6,7 @@ all: log_helper.c
 	ar cvr libLogHelper.a log_helper.o
 
 log_helper.cu: log_helper.c
+	rm log_helper.cu
 	ln -s log_helper.c log_helper.cu
 
 cuda: log_helper.cu
