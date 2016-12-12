@@ -81,7 +81,7 @@ void clear_vectors(GoldPointers *gp);
 
 int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_iteration);
 
-void saveLayer(network net);
+void saveLayer(network net, int iterator, int n);
 void compareLayer(layer l, int i);
 
 inline double mysecond();

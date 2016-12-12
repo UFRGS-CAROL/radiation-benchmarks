@@ -263,7 +263,7 @@ def compare_boxes(gold, current, cls, img_name):
     min_m_range = goldSize
     if bbDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + "wrong_boxes_size: " + bbDiff)
+        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + "wrong_boxes_size: " + str(bbDiff))
         error_count += abs(bbDiff)
 
     pos = ['x1', 'y1', 'x2', 'y2']
@@ -302,7 +302,7 @@ def compare_scores(gold, current, cls, img_name):
     min_m_range = goldSize
     if scrDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + "wrong_score_size: " + scrDiff)
+        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + "wrong_score_size: " + str(scrDiff))
         error_count += abs(scrDiff)
 
     for i in range(0, min_m_range):
@@ -337,7 +337,7 @@ def compare(gold, current, img_name):
     currSize = len(currKeys)
     size_error_m = goldSize - currSize
     if size_error_m != 0:
-        lh.log_error_detail("img_name: " + str(img_name) + " missing_classes_on_detected: " + size_error_m)
+        lh.log_error_detail("img_name: " + str(img_name) + " missing_classes_on_detected: " + str(size_error_m))
         error_count += abs(size_error_m)
 
     intersection = set(goldKeys) & set(currKeys)
