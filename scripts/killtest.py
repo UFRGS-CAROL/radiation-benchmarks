@@ -12,7 +12,7 @@ from datetime import datetime
 
 # Commands to be executed by KillTest
 # each command should be in this format:
-# ["command", <hours to be executed>]
+# [<launch command>, <hours to be executed>, <command name to be used by 'killall -9'>]
 # for example: 
 # commandList = [
 # 	["./lavaMD 15 4 input1 input2 gold 10000", 1, "lavaMD"],

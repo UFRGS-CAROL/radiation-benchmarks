@@ -5,13 +5,12 @@ import time
 import os
 from datetime import datetime
 import sys
-#datetime.fromtimestamp(time.time())
 
 socketPort = 8080 # PORT the socket will listen to
 sleepTime = 5 # Time between checks
 timeDiffReboot = 20 # Time in seconds since last connection to reboot machine
 timeDiffBootProblem = 45 # Time in seconds since last connection to stop trying to reboot machine for now
-timeDiffBootProblemWait = 360 # Time in seconds since last connection to stop trying to reboot machine for now
+timeDiffBootProblemWait = 360 # Time in seconds since last connection to start trying to reboot machine
 
 serverIP = "192.168.1.5" # IP of the remote socket server (hardware watchdog)
 #serverIP = socket.gethostbyname(socket.gethostname())
