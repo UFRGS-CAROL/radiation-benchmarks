@@ -1,5 +1,6 @@
 NVCC=/usr/local/cuda/bin/nvcc
 CXX=g++
+DATASET?= dataset_example.txt
 
 ARCH_I?=35
 
@@ -98,7 +99,7 @@ test:
 	.$(HOG_EVA_DIR)/hog_evaluate_dataset ./dataset_example.txt --dst_data dataset.txt --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
 
 generate:
-	./generator dataset_example.txt --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
+	$(HOG_OCV_DIR)/gold_gen	$(DATASET) --hit_threshold 0.9 --gr_threshold 1 --nlevels 100
 	
 	
 clean:
