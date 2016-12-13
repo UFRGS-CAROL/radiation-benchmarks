@@ -51,8 +51,8 @@
 //*
 #include "mnist_parser.h"
 using namespace mnist;
-std::string data_path = "./data/";
-std::string model_file = "./models/mnist_deepcnet.mojo";
+//std::string data_path = "./data/";
+//std::string model_file = "./models/mnist_deepcnet.mojo";
 /*
 #include "cifar_parser.h"
 using namespace cifar;
@@ -94,19 +94,28 @@ void test(mojo::network &cnn, const std::vector<std::vector<float>> &test_images
 }
 
 
+void usage(char * name){
+	fprintf(stderr, "Usage: %s <input size> <input data folder> <model file>\n", name);
+      	fprintf(stderr, "\t<input size> should be 1, 2 , or 3; 1 the biggest, 3 the smallest\n");
+}
+std::string data_path;
+std::string model_file;
 int main(int argc, char** argv)
 {
     int size;
-    if (argc == 2) {
+    char *dataFolder, *modelFile;
+    if (argc == 4) {
         size = atoi(argv[1]);
+        dataFolder = argv[2];
+        modelFile = argv[3];
+	data_path = std::string(dataFolder);
+	model_file = std::string(modelFile);
 	if(size < 1 || size > 3){
-        	fprintf(stderr, "Usage: %s <input size> \n", argv[0]);
-        	fprintf(stderr, "\t<input size> should be 1, 2 , or 3; 1 the biggest, 3 the smallest\n", argv[0]);
+		usage(argv[0]);
         	exit(1);
 	}
     } else {
-        fprintf(stderr, "Usage: %s <input size>\n", argv[0]);
-        fprintf(stderr, "\t<input size> should be 1, 2 , or 3; 1 the biggest, 3 the smallest\n", argv[0]);
+	usage(argv[0]);
         exit(1);
     }
         size = atoi(argv[1]);

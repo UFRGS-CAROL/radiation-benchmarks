@@ -127,6 +127,10 @@ bool compareFiles(std::string& p1, std::string& p2) {
                     std::istreambuf_iterator<char>(f2.rdbuf()));
 }
 
+void usage(char * name){
+	fprintf(stderr, "Usage: %s <input size>  <input data folder> <model file> <gold file> <gold # correct predictions> <#iterations>\n", name);
+      	fprintf(stderr, "\t<input size> should be 1, 2 , or 3; 1 the biggest, 3 the smallest\n");
+}
 
 std::string data_path;
 std::string model_file;
@@ -139,21 +143,19 @@ int main(int argc, char** argv)
     char *goldFile, *dataFolder, *modelFile;
     if (argc == 7) {
         size = atoi(argv[1]);
-        goldFile = argv[2];
-        gold_correct_predictions = atoi(argv[3]);
-        dataFolder = argv[4];
-        modelFile = argv[5];
-        iterations = atoi(argv[6]);
+        dataFolder = argv[2];
+        modelFile = argv[3];
 	data_path = std::string(dataFolder);
 	model_file = std::string(modelFile);
+        goldFile = argv[4];
+        gold_correct_predictions = atoi(argv[5]);
+        iterations = atoi(argv[6]);
 	if(size < 1 || size > 3){
-        	fprintf(stderr, "Usage: %s <input size> <gold file> <gold # correct predictions> <input data folder> <model file> <#iterations>\n", argv[0]);
-        	fprintf(stderr, "\t<input size> should be 1, 2 , or 3; 1 the biggest, 3 the smallest\n", argv[0]);
+		usage(argv[0]);
         	exit(1);
 	}
     } else {
-        fprintf(stderr, "Usage: %s <input size> <gold file> <gold # correct predictions> <input data folder> <model file> <#iterations>\n", argv[0]);
-        fprintf(stderr, "\t<input size> should be 1, 2 , or 3; 1 the biggest, 3 the smallest\n", argv[0]);
+	usage(argv[0]);
         exit(1);
     }
 	// == parse data

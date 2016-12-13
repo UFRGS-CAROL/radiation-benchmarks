@@ -1,0 +1,44 @@
+Mojo-cnn OpenMP
+
+* How to compile
+  - Intel Xeon Phi (icc native compilation):
+    $ make intel
+  - General X86 (gcc):
+    $ make general
+
+Compilation should generate 5 binaries:
+  - mojo_gen: used to generate the input and gold output. Gold will be used to check if the execution generates a correct output.
+  - mojo_check: this binary will be used during radiation test, it will execute the benchmark kernel several times
+  - mojo_timing: this binary is used only for testing purposes, it will measure the time spent in every part of the benchmark. This binary will not record any log information
+  - mojo_err_inj: this binary is used only for testing purposes, it will change the input value to check if the gold verification is working. This binary will also enter into an infinite loop to test the setup that needs to kill hanging benchmarks.
+
+
+
+* How to generate input data and gold output
+  - gold output
+    $ ./mojo_gen <size> <data folder> <model file>
+        - size: input size, 1, 2, or 3 (1 is the biggest and 3 the smallest)
+	- data folder: folder where mnist data is (t10k-images-idx3-ubyte  t10k-labels-idx1-ubyte  train-images-idx3-ubyte  train-labels-idx1-ubyte)
+	- model file: mojo model for mnist (mnist_deepcnet.mojo)
+
+
+* How to run a test
+
+Before running the benchmark, the script radiation-benchmarks/scripts/install.py should be executed. This script will create the folder to store the log files and create the conf file in /etc/radiation-benchmark.conf
+
+    $ ./mojo_check <size> <data folder> <model file> <gold_output> <gold # correct predictions> <#iterations>
+        - size: input size, 1, 2, or 3 (1 is the biggest and 3 the smallest)
+	- data folder: folder where mnist data is (t10k-images-idx3-ubyte  t10k-labels-idx1-ubyte  train-images-idx3-ubyte  train-labels-idx1-ubyte)
+	- model file: mojo model for mnist (mnist_deepcnet.mojo)
+        - gold_output: location of the the gold output file
+	- gold # correct predictions: number of correct predictions for the input size
+        - #iterations: how many times the benchmark kernel should be executed, usually 100000 is enough for the radiation test (it will crash before reaching this number)
+
+
+
+* Configuration used for Xeon Phi 3120A
+  - input and gold generated
+    $ ./mojo_gen 3 data/ models/mnist_deepcnet.mojo
+  - configurations executed
+    $ ./mojo_check 3 data/ models/mnist_deepcnet.mojo gold_network.bin 3319 10000
+
