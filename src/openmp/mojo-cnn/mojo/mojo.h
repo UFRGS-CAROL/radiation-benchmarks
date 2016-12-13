@@ -28,7 +28,7 @@
 
 #pragma once
 
-#define MOJO_SSE3	// turn on SSE3 convolutions
+//#define MOJO_SSE3	// turn on SSE3 convolutions
 //#define MOJO_OMP	// allow multi-threading through openmp
 //#define MOJO_LUTS	// use look up tables, uses more memory
 //#define MOJO_CV3	// use OpenCV 3.x utilities

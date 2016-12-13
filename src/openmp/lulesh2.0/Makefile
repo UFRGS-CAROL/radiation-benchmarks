@@ -2,7 +2,7 @@ CXX=g++ -g
 CXX_FLAGS= -O3 -fopenmp -lm
 
 intel:CXX=icpc -mmic -DMIC_NATIVE
-intel:CXX_FLAGS=-qopenmp -lm
+intel:CXX_FLAGS=-qopenmp 
 
 SOURCES_CHECK=lulesh_check.cc lulesh-util.cc lulesh-init.cc lulesh.h ../../include/log_helper.c
 SOURCES_GEN=lulesh_gen.cc lulesh-util.cc lulesh-init.cc lulesh.h 

@@ -2,7 +2,7 @@ CC=g++
 CC_FLAGS= -I./mojo/ -std=c++11 -fopenmp -O3 -DMOJO_OPM -DMOJO_SSE3 -msse4 -mavx
 
 intel:CC=icc -mmic -DMIC_NATIVE 
-intel:CC_FLAGS=-I./mojo/ -std=c++11 -qopenmp -O3 -DMOJO_OPM -DMOJO_SSE3 -msse4 -mavx
+intel:CC_FLAGS=-I./mojo/ -std=c++11 -qopenmp -O3 -DMOJO_OPM 
 
 
 general: mojo_gen mojo_check mojo_err_inj mojo_timing
