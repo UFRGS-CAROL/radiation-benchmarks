@@ -32,9 +32,7 @@ CLASSES = ['__background__',
            'motorbike', 'person', 'pottedplant',
            'sheep', 'sofa', 'train', 'tvmonitor']
 
-"""
 
-"""
 
 class PrecisionAndRecall(object):
     precision = 0

@@ -66,6 +66,16 @@ def generateSDCList(fi, toGetInfo = 'not'):
             if m:
                 errors.append(m.group(1))
 
+        else: #for old nw logs
+            ##SDC it:145 k_time:0.005087 acc_time:0.746233 k_err:706 acc_err:706
+            m = re.match(".*SDC.*it:(\d+).*k_err:(\d+).*acc_err:(\d+).*", line)
+            if m: # ocorre o SDC no log apos todos os erros da execucao terem sido printados no log
+                sdc_iter = m.group(1)
+                iter_err_count = m.group(2)
+                acc_err = m.group(3)
+                if len(errors) > 0:
+                    sdc_item_list.append([fileName, header, sdc_iter, iter_err_count, acc_err, copy.deepcopy(errors)])
+                errors = []
     return sdc_item_list
 
 

@@ -35,7 +35,7 @@ def getDataset(header):
         if i in header:
             return i
 
-def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
+def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir, brokenHeader='not_broken'):
     benchmark = benchmarkname_machinename
     machine = benchmarkname_machinename
     m = re.match("(.*)_(.*)", benchmarkname_machinename)
@@ -108,13 +108,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
                 box = None
 
 
-        # for CNNs
-        # once I need to know the paths of inputs I cannot use the changed header
-        # darknet
-        if "txt" not in pure_header:
-            sdci += 1
-            # some executions could not be identificated because they doesn't have correct header
-            continue
+
 
         darknet_m = re.match(
             ".*execution_type\:(\S+).*execution_model\:(\S+).*img_list_path\:(\S+).*weights\:(\S+).*config_file\:(\S+).*iterations\:(\d+).*",
@@ -134,6 +128,14 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
                 #header is not ok
                 pass
             # img_list_file = currentImgFile
+
+        # for CNNs
+        # once I need to know the paths of inputs I cannot use the changed header
+        # darknet
+        if "txt" not in pure_header and brokenHeader != 'not_broken':
+        # sdci += 1
+            img_list_file = brokenHeader
+
 
         # pyfaster
         py_faster_m = re.match(".*iterations\: (\d+).*img_list\: (\S+).*board\: (\S+).*", pure_header)
@@ -240,6 +242,7 @@ def parse_args():
     parser.add_argument('--database', dest='error_database',
                         help='Where database is located', default="errors_log_database", required=True)
 
+    parser.add_argument('--broken', dest='brokenHeader', help='If darknet has a broken header', default='not_broken')
     args = parser.parse_args()
 
     return args
@@ -269,7 +272,7 @@ if __name__ == '__main__':
 
         if isHotspot or isGEMM or isLavaMD or isACCL or isNW or isLulesh or isLud or isDarknet or isPyFaster:
             print("Processing ", k)
-            parseErrors(k, v, str(args.gold_dir))
+            parseErrors(k, v, str(args.gold_dir), str(args.brokenHeader))
         else:
             print("Ignoring ", k)
 
