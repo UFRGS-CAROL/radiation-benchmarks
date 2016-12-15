@@ -27,18 +27,20 @@ def getDt(yearDate, dayTime, secFrac):
 
 def getWenderFactor(startDT):
 
-	if startDT < datetime(2015, 11, 17, 0, 0, 0, 0):
-		return 50060
-	elif startDT < datetime(2015, 11, 17, 15, 0, 0, 0):
-		return 49779
-	elif startDT < datetime(2015, 11, 18, 0, 0, 0, 0):
-		return 49194.8
-	elif startDT < datetime(2015, 11, 19, 0, 0, 0, 0):
-		return 49987.7
-	elif startDT < datetime(2015, 11, 20, 0, 0, 0, 0):
-		return 48898.1
+	if startDT < datetime(2016, 12, 12, 6, 38, 0, 0):
+		return 49459
+	elif startDT < datetime(2016, 12, 12, 16, 30, 0, 0):
+		return 49380
+	elif startDT < datetime(2015, 12, 13, 7, 0, 0, 0):
+		return 49220
+	elif startDT < datetime(2015, 12, 13, 22, 52, 0, 0):
+		return 49253
+	elif startDT < datetime(2015, 12, 14, 17, 52, 0, 0):
+		return 49534
+	elif startDT < datetime(2015, 12, 15, 6, 39, 0, 0):
+		return 49397
 	else:
-		return 49930.8
+		return 49512
 
 fileLines = list()
 def readCountFile():
