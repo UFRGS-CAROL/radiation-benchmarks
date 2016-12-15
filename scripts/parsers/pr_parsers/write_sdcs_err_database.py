@@ -6,7 +6,7 @@ import os
 import copy
 from glob import glob
 import shelve
-
+import ParseParameters
 
 def startProgress(title):
     global progress_x
@@ -78,16 +78,6 @@ def generateSDCList(fi, toGetInfo = 'not'):
                 errors = []
     return sdc_item_list
 
-
-def parse_args():
-    """Parse input arguments."""
-    parser = argparse.ArgumentParser(description='Parse logs for Neural Networks')
-    parser.add_argument('--get_info', dest='toGetInfo', help='If you want to retrieve all #Info',
-                        default='no_info', type=str,required=True)
-
-    args = parser.parse_args()
-
-    return args
 
 ######### main
 # pega todos os arquivos .log na pasta onde esta sendo

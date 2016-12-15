@@ -8,10 +8,10 @@ import collections
 from PIL import Image
 import struct
 from sklearn.metrics import jaccard_similarity_score
-import parse_neural_networks as pn
+import DarknetParser as pn
 import shelve
 import errno
-import argparse
+
 # benchmarks dict => (bechmarkname_machinename : list of SDC item)
 # SDC item => [logfile name, header, sdc iteration, iteration total amount error, iteration accumulated error, list of errors ]
 # list of errors => list of strings with all the error detail print in lines using #ERR
