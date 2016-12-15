@@ -1,5 +1,6 @@
 
 import PrecisionAndRecall as pr
+import re
 
 class HogParser(object):
     def __init__(self, **kwargs):
@@ -9,24 +10,33 @@ class HogParser(object):
 
 
     def parseErrHog(self, errString):
-
-        # ERR boxes: [27,4] e: 132.775177002 r: 132.775024414
+        #ERR Image: set08_V009_1237.jpg
+        #ERR 101,50,176,76,226,177
+        #
         ret = {}
+        try:
+            if 'image' in errString:
+                error = re.match(".*Image: (\S+).*")
+                if error:
+                    ret = re.group(1)
+            else:
+                error = re.match(".* (\S+),(\S+),(\S+),(\S+),(\S+),(\S+).*")
 
-
-
-                    # try:
-                    #     long(float(ret["x_r"]))
-                    # except:
-                    #     ret["x_r"] = 1e30
-        # else:
-        #     image_err = re.match(".*probs\: \[(\d+),(\d+)\].*e\: ([0-9e\+\-\.]+).*r\: ([0-9e\+\-\.]+).*",
-        #                          errString)
-        #     if image_err:
-        #         ret["type"] = "probs"
-        #         ret["probs_x"] = image_err.group(1)
-        #         ret["probs_y"] = image_err.group(2)
-        #         ret["prob_e"] = image_err[3]
-        #         ret["prob_r"] = image_err[4]
+                if error:
+                    #r.height, r.width, r.x,	r.y, r.br().x, r.br().y
+                    ret["r_height"] = error.group(1)
+                    ret["r_width"] = error.group(2)
+                    ret["r_x"] = error.group(3)
+                    ret["r_y"] = error.group(4)
+                    ret["r_br_x"] = error.group(5)
+                    ret["r_br_y"] = error.group(6)
+        except:
+            print "Error on HogParser.parseErrHog"
+            raise
 
         return (ret if len(ret) > 0 else None)
+
+
+
+    def relativeErrorParserHog(self, errList):
+        return [None, None]

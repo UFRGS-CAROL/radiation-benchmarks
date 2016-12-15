@@ -33,10 +33,73 @@ CLASSES = ['__background__',
 
 
 class DarknetParser(object):
+    """
+       Compare two sets of boxes
 
 
 
-    def getClassBoxes(cls_boxes,cls_scores):
+              ret["type"] = "boxes"
+               ret["image_list_position"] = image_err.group(1)
+               ret["boxes"] = image_err.group(2)
+               # x
+               ret["x_r"] = image_err.group(3)
+               ret["x_e"] = image_err.group(4)
+               ret["x_diff"] = image_err.group(5)
+               # y
+               ret["y_r"] = image_err.group(6)
+               ret["y_e"] = image_err.group(7)
+               ret["y_diff"] = image_err.group(8)
+               # w
+               ret["w_r"] = image_err.group(9)
+               ret["w_e"] = image_err.group(10)
+               ret["w_diff"] = image_err.group(11)
+               # h
+               ret["h_r"] = image_err.group(12)
+               ret["h_e"] = image_err.group(13)
+               ret["h_diff"] = image_err.group(14)
+
+       """
+
+    def relativeErrorParserDarknet(self, img_list_path, errList, gold_obj, sdcIt):
+        if len(errList) <= 0:
+            return ("errlist fucked", None, None, None, None, None, None, None, None, None)
+
+        imgList = open(img_list_path, "r").readlines()
+
+        imgLPos = getImgLPos(sdcit=sdcIt, maxsize=gold_obj.plist_size)
+
+        # print "\nTamanho do plist " , gold_obj.plist_size , " tamanho do imgLPos" , imgLPos
+        gold = gold_obj.prob_array["boxes"][imgLPos]
+        tempBoxes = copyList(gold)
+        # {'x_e': '2.3084202575683594e+02', 'h_r': '4.6537536621093750e+01', 'x_diff': '0.0000000000000000e+00',
+        #  'w_diff': '3.8146972656250000e-06', 'y_r': '2.5291372680664062e+02', 'y_diff': '0.0000000000000000e+00',
+        #  'w_e': '3.0895418167114258e+01', 'boxes': '94', 'h_e': '4.6537536621093750e+01', 'x_r': '2.3084202575683594e+02',
+        #  'h_diff': '0.0000000000000000e+00', 'y_e': '2.5291372680664062e+02', 'w_r': '3.0895414352416992e+01',
+        #  'type': 'boxes', 'image_list_position': '314'}
+        for i in errList:
+            if i["type"] == "boxes":
+                boxPos = int(i['boxes'])
+                left = int(math.floor(float(i["x_r"])))
+                bottom = int(math.floor(float(i["y_r"])))
+                h = int(math.ceil(float(i["h_r"])))
+                w = int(math.ceil(float(i["w_r"])))
+                tempBoxes[boxPos] = Rectangle(left, bottom, w, h)
+
+        # writeTempFileCXX("/tmp/temp_test.log", tempBoxes)
+        pR = PrecisionAndRecall(0.5)
+        imgFile = imgList[imgLPos]
+        # pR.precisionAndRecallSerial(gold, tempBoxes)
+        p, r = pR.precisionRecall(gold, tempBoxes, 0.5)
+        # sizX, sizY = getImageSize((GOLD_DIR + imgFile).rstrip("\n"))
+        # start = time.clock()
+        x, y = 0, 0  # centerOfMassGoldVsFound(gold,tempBoxes,sizX, sizY)
+        # print time.clock() - start
+        return (
+            len(gold), len(tempBoxes), x, y, p, r, pR.getFalseNegative(), pR.getFalsePositive(), pR.getTruePositive(),
+            imgFile)
+
+
+    def getClassBoxes(self, cls_boxes,cls_scores):
         NMS_THRESH = 0.3
         finalClassBoxes = []
         for cls_ind, cls in enumerate(CLASSES[1:]):
@@ -46,7 +109,7 @@ class DarknetParser(object):
             # cls_scores_gold = scores_gold[:, cls_ind]
             dets = np.hstack((cls_boxes[cls_ind],
                               cls_scores[cls_ind][:, np.newaxis])).astype(np.float32)
-            keep = nms(dets, NMS_THRESH)
+            keep = self.nms(dets, NMS_THRESH)
             dets = dets[keep, :]
             finalClassBoxes.append(dets)
 
