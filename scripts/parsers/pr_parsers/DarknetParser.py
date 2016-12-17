@@ -66,11 +66,11 @@ class DarknetParser(object):
 
         imgList = open(img_list_path, "r").readlines()
 
-        imgLPos = getImgLPos(sdcit=sdcIt, maxsize=gold_obj.plist_size)
+        imgLPos = self.getImgLPos(sdcit=sdcIt, maxsize=gold_obj.plist_size)
 
         # print "\nTamanho do plist " , gold_obj.plist_size , " tamanho do imgLPos" , imgLPos
         gold = gold_obj.prob_array["boxes"][imgLPos]
-        tempBoxes = copyList(gold)
+        tempBoxes = self.copyList(gold)
         # {'x_e': '2.3084202575683594e+02', 'h_r': '4.6537536621093750e+01', 'x_diff': '0.0000000000000000e+00',
         #  'w_diff': '3.8146972656250000e-06', 'y_r': '2.5291372680664062e+02', 'y_diff': '0.0000000000000000e+00',
         #  'w_e': '3.0895418167114258e+01', 'boxes': '94', 'h_e': '4.6537536621093750e+01', 'x_r': '2.3084202575683594e+02',
@@ -98,6 +98,11 @@ class DarknetParser(object):
             len(gold), len(tempBoxes), x, y, p, r, pR.getFalseNegative(), pR.getFalsePositive(), pR.getTruePositive(),
             imgFile)
 
+    def copyList(self, gold):
+        return None
+
+    def getImgLPos(self, sdcIt, maxsize):
+        return None
 
     def getClassBoxes(self, cls_boxes,cls_scores):
         NMS_THRESH = 0.3
@@ -301,7 +306,42 @@ class DarknetParser(object):
 
         return temp
 
-    #
+
+    def getLogHeader(self, header):
+        self.size = None
+        m = re.match(".*size\:(\d+).*", header)
+        if m:
+            try:
+                self.size = int(m.group(1))
+            except:
+                self.size = None
+
+        # # for CNNs
+        # # once I need to know the paths of inputs I cannot use the changed header
+        # # darknet
+        # if "txt" not in self.pure_header:
+        #     sdci += 1
+        #     # some executions could not be identificated because they doesn't have correct header
+        #     continue
+
+        darknet_m = re.match(
+            ".*execution_type\:(\S+).*execution_model\:(\S+).*img_list_path\:(\S+).*weights\:(\S+).*config_file\:(\S+).*iterations\:(\d+).*",
+            self.pure_header)
+
+        if darknet_m:
+            try:
+                self.execution_type = darknet_m.group(1)
+                self.execution_model = darknet_m.group(2)
+                img_list_path = darknet_m.group(3)
+                self.img_list_file = GOLD_DIR + os.path.basename(os.path.normpath(img_list_path))
+
+                self.weights = darknet_m.group(4)
+                self.config_file = darknet_m.group(5)
+                self.iterations = darknet_m.group(6)
+
+            except:
+                self.img_list_file = None
+#
     # """python precision recall was so slow that I needed use C++"""
     # def writeTempFileCXX(path, goldRect):
     #     f = open(path, "w")

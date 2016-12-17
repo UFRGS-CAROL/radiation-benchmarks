@@ -156,6 +156,16 @@ class FasterRcnnParser(object):
             pR.getTruePositive(), imgFile)
 
 
+    def getLogHeader(self, header):
+        # pyfaster
+        py_faster_m = re.match(".*iterations\: (\d+).*img_list\: (\S+).*board\: (\S+).*", self.pure_header)
+        if py_faster_m:
+            iterations = py_faster_m.group(1)
+            img_list_path = py_faster_m.group(2)
+            img_list_file = pn.GOLD_DIR + os.path.basename(os.path.normpath(img_list_path))
+            board = py_faster_m.group(3)
+
+
 
     def py_cpu_nms(self, dets, thresh):
         """Pure Python NMS baseline."""

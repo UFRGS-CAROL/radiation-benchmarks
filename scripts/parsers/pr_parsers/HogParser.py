@@ -39,3 +39,15 @@ class HogParser(Parser):
 
     def header(self):
         return ""
+
+
+
+
+    def getLogHeader(self, header):
+        self.size = None
+        m = re.match(".*size\:(\d+).*", header)
+        if m:
+            try:
+                self.size = int(m.group(1))
+            except:
+                self.size = None
