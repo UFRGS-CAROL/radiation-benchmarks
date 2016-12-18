@@ -1,5 +1,7 @@
-import Parser
 import re
+
+from ParsersClasses import Parser
+
 
 class GemmParser(Parser):
     # Return [posX, posY, read, expected] -> [int, int, float, float]

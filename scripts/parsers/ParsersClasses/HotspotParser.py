@@ -1,5 +1,7 @@
-import Parser
 import re
+
+from ParsersClasses import Parser
+
 
 class HotspotParser(Parser):
     # Return [posX, posY, read, expected] -> [int, int, float, float]

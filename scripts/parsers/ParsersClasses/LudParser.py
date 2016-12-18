@@ -1,10 +1,12 @@
-import Parser
 import re
+
+import Parser
+
 
 class LudParser(Parser):
 
 
-    def getLogHeader(self, header):
+    def setLogHeader(self, header):
         self.size = None
         m = re.match(".*size\:(\d+).*", header)
         if m:

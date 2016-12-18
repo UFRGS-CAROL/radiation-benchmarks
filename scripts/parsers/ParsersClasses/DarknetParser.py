@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+import copy
+import math
+import os
 import re
 
 import numpy as np
-import copy
-import PrecisionAndRecall
-import math
-import os
+
+from SupportClasses import PrecisionAndRecall
 
 # class for reading Darknet gold file
 # from IPython.utils.py3compat import which
@@ -14,9 +15,6 @@ import os
 # need read onc
 # darknet_gold_content = {}
 # pyfaster_gold_contend = {}
-import time
-
-from PIL import Image
 
 GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
 THRESHOLD = 0.5
@@ -33,6 +31,8 @@ CLASSES = ['__background__',
 
 
 class DarknetParser(object):
+
+    goldObj = None
     """
        Compare two sets of boxes
 
@@ -60,16 +60,19 @@ class DarknetParser(object):
 
        """
 
-    def relativeErrorParserDarknet(self, img_list_path, errList, gold_obj, sdcIt):
+    def relativeErrorParser(self, errList):
+        imgListPath = None
+        sdcIt = None
+
         if len(errList) <= 0:
             return ("errlist fucked", None, None, None, None, None, None, None, None, None)
 
-        imgList = open(img_list_path, "r").readlines()
+        imgList = open(imgListPath, "r").readlines()
 
-        imgLPos = self.getImgLPos(sdcit=sdcIt, maxsize=gold_obj.plist_size)
+        imgLPos = self.getImgLPos(sdcit=sdcIt, maxsize=self.goldObj.plist_size)
 
         # print "\nTamanho do plist " , gold_obj.plist_size , " tamanho do imgLPos" , imgLPos
-        gold = gold_obj.prob_array["boxes"][imgLPos]
+        gold = self.goldObj.prob_array["boxes"][imgLPos]
         tempBoxes = self.copyList(gold)
         # {'x_e': '2.3084202575683594e+02', 'h_r': '4.6537536621093750e+01', 'x_diff': '0.0000000000000000e+00',
         #  'w_diff': '3.8146972656250000e-06', 'y_r': '2.5291372680664062e+02', 'y_diff': '0.0000000000000000e+00',

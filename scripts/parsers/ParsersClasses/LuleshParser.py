@@ -1,7 +1,8 @@
+import re
+import sys
 
 import Parser
-import sys
-import re
+
 
 class LuleshParser(Parser):
 
@@ -115,7 +116,7 @@ class LuleshParser(Parser):
             return None
 
 
-    def getLogHeader(self, header):
+    def setLogHeader(self, header):
         self.size = None
         m = re.match(".*size\:(\d+).*", header)
         if m:

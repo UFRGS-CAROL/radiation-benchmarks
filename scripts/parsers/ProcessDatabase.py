@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 import sys
-
-sys.path.insert(0, "/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa/radiation-benchmarks/scripts/parsers/pr_parsers")
-sys.path.insert(0, "/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa/radiation-benchmarks/scripts/parsers/pr_parsers/old")
-sys.path.insert(0, "/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa/radiation-benchmarks/scripts/parsers/sassifi_parser")
-sys.path.insert(0, "/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa/radiation-benchmarks/scripts/parsers/sorts_parser")
 GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
 import os
 import csv
@@ -13,7 +8,7 @@ import re
 import shelve
 import errno
 import argparse
-import MatchBenchmark
+import SupportClasses as sp
 
 
 #temporary set
@@ -31,12 +26,12 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
     sdci = 1
     total_sdcs = len(sdcItemList)
     imageIndex = 0
-    goldDarknet = None
-    goldPyFaster = None
-    readGoldDarknet = True
-    readGoldPyFaster = True
-    img_list_file = ""
-    matchBench = MatchBenchmark()
+    # goldDarknet = None
+    # goldPyFaster = None
+    # readGoldDarknet = True
+    # readGoldPyFaster = True
+    # img_list_file = ""
+    matchBench = sp.MatchBenchmark()
     for sdcItem in sdcItemList:
 
         progress = "{0:.2f}".format(float(sdci) / float(total_sdcs) * 100)
@@ -76,9 +71,9 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
             if err is not None:
                 errorsParsed.append(err)
 
-        (goldLines, detectedLines, xMass, yMass, precision, recall, falseNegative, falsePositive, truePositive,
-         imgFile) = (
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        # (goldLines, detectedLines, xMass, yMass, precision, recall, falseNegative, falsePositive, truePositive,
+        #  imgFile) = (
+        #     0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
         # # Parse relative error
         # if isGEMM or isHotspot or isACCL or isNW or isLud:
@@ -131,11 +126,11 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
 
         if single == 0 and buildImages:
             if size is not None:
-                currObj.build_image(errorsParsed, size,
-                                    currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
+                currObj.buildImage(errorsParsed, size,
+                                   currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
             else:
-                currObj.build_image(errorsParsed, 8192,
-                                    currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
+                currObj.buildImage(errorsParsed, 8192,
+                                   currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
             imageIndex += 1
 
         elif isLavaMD or isLulesh:
@@ -197,17 +192,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
                              "true_positive"])
 
         elif flag == 1:
-            writer.writerow(["logFileName", "Machine", "Benchmark", "Header", "SDC Iteration", "#Accumulated Errors",
-                             "#Iteration Errors", "Relative Errors <= " + str(currObj.toleratedRelErr) + "%",
-                             "Relative Errors <= " + str(currObj.toleratedRelErr2) + "%", "Jaccard",
-                             "Jaccard > " + str(currObj.toleratedRelErr) + "%", "Jaccard > " + str(currObj.toleratedRelErr2) + "%",
-                             "Cubic", "Square", "Line", "Single", "Random", "Cubic Err > " + str(currObj.toleratedRelErr),
-                             "Square Err > " + str(currObj.toleratedRelErr), "Line Err > " + str(currObj.toleratedRelErr),
-                             "Single Err > " + str(currObj.toleratedRelErr), "Random Err > " + str(currObj.toleratedRelErr),
-                             "Cubic Err > " + str(currObj.toleratedRelErr2), "Square Err > " + str(currObj.toleratedRelErr2),
-                             "Line Err > " + str(currObj.toleratedRelErr2), "Single Err > " + str(currObj.toleratedRelErr2),
-                             "Random Err > " + str(currObj.toleratedRelErr2), "Max Relative Error", "Min Rel Error",
-                             "Average Rel Err", "zeroOut", "zeroGold"])
+            writer.writerow()
 
         writer.writerow(
             [currObj.logFileName, currObj.machine, currObj.benchmark, imgFile, currObj.sdcIteration, currObj.accIteErrors, currObj.iteErrors, goldLines, detectedLines,

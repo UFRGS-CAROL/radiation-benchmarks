@@ -1,6 +1,6 @@
-import Parser
 import re
 
+from ParsersClasses import Parser
 
 
 class NWParser(Parser):
@@ -25,7 +25,7 @@ class NWParser(Parser):
             return None
 
 
-    def getLogHeader(self, header):
+    def setLogHeader(self, header):
 
         self.size = None
         m = re.match(".*size\:(\d+).*", header)

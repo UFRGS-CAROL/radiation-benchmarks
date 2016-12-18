@@ -9,7 +9,7 @@ import sys
 import subprocess
 
 
-INSTALLDIRS = ["pr_parsers", "sassifi_parser", "sorts_parser", "cross_section_scripts"]
+INSTALLDIRS = ["ParsersClasses", "SassifiParser", "SortsParser", "CrossSectionScripts"]
 
 """Execute a parser object, in a generic way"""
 class Execute(object):

@@ -1,9 +1,18 @@
+import math
+import os
+import re
 
+import numpy as np
 
+from SupportClasses import PrecisionAndRecall as pr
+
+GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
 
 class FasterRcnnParser(object):
+    goldObj = None
+
     # parse PyFaster
-    def parseErrPyFaster(self,errString, imgIndex):
+    def parseErr(self,errString):
         # ERR boxes: [27,4] e: 132.775177002 r: 132.775024414
         ret = {}
         if 'boxes' in errString:
@@ -12,7 +21,7 @@ class FasterRcnnParser(object):
                 errString)
             if image_err:
                 ret["type"] = "boxes"
-                ret["imgindex"] = imgIndex
+                # ret["imgindex"] = imgIndex
                 ###########
                 ret["boxes_x"] = image_err.group(1)
                 try:
@@ -38,20 +47,6 @@ class FasterRcnnParser(object):
                 except:
                     ret["r"] = 1e30
 
-
-                    # try:
-                    #     long(float(ret["x_r"]))
-                    # except:
-                    #     ret["x_r"] = 1e30
-        # else:
-        #     image_err = re.match(".*probs\: \[(\d+),(\d+)\].*e\: ([0-9e\+\-\.]+).*r\: ([0-9e\+\-\.]+).*",
-        #                          errString)
-        #     if image_err:
-        #         ret["type"] = "probs"
-        #         ret["probs_x"] = image_err.group(1)
-        #         ret["probs_y"] = image_err.group(2)
-        #         ret["prob_e"] = image_err[3]
-        #         ret["prob_r"] = image_err[4]
 
         return (ret if len(ret) > 0 else None)
 
@@ -117,20 +112,22 @@ class FasterRcnnParser(object):
     ret["r"] = image_err.group(4)
     """
 
-    def relativeErrorParserPyFaster(self, img_list_path, errList, gold_obj, sdcIte):
+    def relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return ("errlist fucked", None, None, None, None, None, None, None, None, None)
 
-        goldPyfaster = gold_obj.pyFasterGold
-        img_list = open(img_list_path, "r").readlines()
-        imgLPos = getImgLPos(sdcit=sdcIte, maxsize=len(
+        goldPyfaster = self.goldObj.pyFasterGold
+        sdcIte = 0
+        imgListPath = 0
+        img_list = open(imgListPath, "r").readlines()
+        imgLPos = self.getImgLPos(sdcit=sdcIte, maxsize=len(
             goldPyfaster.keys()))  # getImgLPos(errList=errList, cnn="pyfaster", sdcit=sdcIte, maxsize=len(img_list))
         imgFile = img_list[imgLPos].rstrip()
         gold = goldPyfaster[imgFile]
 
-        goldArray = getCls(gold)
+        goldArray = self.getCls(gold)
 
-        tempArray = copyList(goldArray, 'pyfaster')
+        tempArray = self.copyList(goldArray, 'pyfaster')
 
         print "Gold array size ", len(tempArray)
         # for i in tempArray:
@@ -144,10 +141,10 @@ class FasterRcnnParser(object):
             # print "x size ", len (tempArray[x])
             # tempArray[x][y] = float(i["r"])
 
-        goldRectangles = generatePyFasterRectangles(goldArray)
-        tempRectangles = generatePyFasterRectangles(tempArray)
+        goldRectangles = self.generatePyFasterRectangles(goldArray)
+        tempRectangles = self.generatePyFasterRectangles(tempArray)
 
-        pR = PrecisionAndRecall(0.5)
+        pR = pr.PrecisionAndRecall(0.5)
         pR.precisionAndRecallParallel(goldRectangles, tempRectangles)
 
         return (
@@ -156,13 +153,21 @@ class FasterRcnnParser(object):
             pR.getTruePositive(), imgFile)
 
 
-    def getLogHeader(self, header):
+    def generatePyFasterRectangles(self, goldArray): return None
+
+    def copyList(self, goldArray): return None
+
+    def getCls(self, gold): return None
+
+    def getImgLPos(self, sdcit): return None
+
+    def setLogHeader(self, header):
         # pyfaster
         py_faster_m = re.match(".*iterations\: (\d+).*img_list\: (\S+).*board\: (\S+).*", self.pure_header)
         if py_faster_m:
             iterations = py_faster_m.group(1)
             img_list_path = py_faster_m.group(2)
-            img_list_file = pn.GOLD_DIR + os.path.basename(os.path.normpath(img_list_path))
+            img_list_file = GOLD_DIR + os.path.basename(os.path.normpath(img_list_path))
             board = py_faster_m.group(3)
 
 

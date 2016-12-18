@@ -1,11 +1,13 @@
 import re
-import sys
-import Parser
 import struct
+import sys
+
+import Parser
+
 
 class ParserLavaMD(Parser):
 
-    def jaccardCoefficientLavaMD(self, errListJaccard):
+    def jaccardCoefficient(self, errListJaccard):
         expected = []
         read = []
         for err in errListJaccard:
@@ -45,7 +47,7 @@ class ParserLavaMD(Parser):
             return None
 
     # return [highest relative error, lowest relative error, average relative error, # zeros in the output, #zero in the GOLD, #errors with relative errors lower than limit(toleratedRelErr), list of errors limited by toleratedRelErr, #errors with relative errors lower than limit(toleratedRelErr2), list of errors limited by toleratedRelErr2]
-    def relativeErrorParserLavaMD(self, errList):
+    def relativeErrorParser(self, errList):
         relErr = []
         zeroGold = 0
         zeroOut = 0
@@ -118,10 +120,10 @@ class ParserLavaMD(Parser):
 
     # Return [posX, posY, posZ, vr, ve, xr, xe, yr, ye, zr, ze] -> [int, int, int, float, float, float, float, float, float, float, float]
     # Returns None if it is not possible to parse
-    def parseErr(self, errString, box, header):
-        if box is None:
+    def parseErr(self, errString):
+        if self.box is None:
             print ("box is None!!!\nerrString: ", errString)
-            print("header: ", header)
+            print("header: ", self.header)
             sys.exit(1)
         try:
             ##ERR p: [357361], ea: 4, v_r: 1.5453305664062500e+03, v_e: 1.5455440673828125e+03, x_r: 9.4729260253906250e+02, x_e: 9.4630560302734375e+02, y_r: -8.0158099365234375e+02, y_e: -8.0218914794921875e+02, z_r: 9.8227819824218750e+02, z_e: 9.8161871337890625e+02
@@ -130,10 +132,10 @@ class ParserLavaMD(Parser):
                 errString)
             if m:
                 pos = int(m.group(1))
-                boxSquare = box * box
+                boxSquare = self.box * self.box
                 posZ = int(pos / boxSquare)
-                posY = int((pos - (posZ * boxSquare)) / box)
-                posX = pos - (posZ * boxSquare) - (posY * box)
+                posY = int((pos - (posZ * boxSquare)) / self.box)
+                posX = pos - (posZ * boxSquare) - (posY * self.box)
 
                 vr = float(m.group(2))
                 ve = float(m.group(3))
@@ -150,7 +152,7 @@ class ParserLavaMD(Parser):
             return None
 
 
-    def getLogHeader(self, header):
+    def setLogHeader(self, header):
         self.size = None
         m = re.match(".*size\:(\d+).*", header)
         if m:

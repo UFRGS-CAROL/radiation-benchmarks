@@ -1,6 +1,8 @@
-import PrecisionAndRecall as pr
 import re
+
 import Parser
+import PrecisionAndRecall as pr
+
 
 class HogParser(Parser):
     def __init__(self, **kwargs):
@@ -37,13 +39,9 @@ class HogParser(Parser):
     def relativeErrorParser(self, errList):
         return [None, None]
 
-    def header(self):
-        return ""
 
 
-
-
-    def getLogHeader(self, header):
+    def setLogHeader(self, header):
         self.size = None
         m = re.match(".*size\:(\d+).*", header)
         if m:

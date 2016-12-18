@@ -8,7 +8,7 @@ import collections
 from PIL import Image
 import struct
 from sklearn.metrics import jaccard_similarity_score
-import DarknetParser as pn
+import ParsersClasses.DarknetParser as pn
 import shelve
 import errno
 

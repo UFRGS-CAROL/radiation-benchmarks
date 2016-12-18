@@ -1,25 +1,23 @@
 import re
 import os
 import errno
-import DarknetParser, HotspotParser, HogParser, LavaMDParser
-import MergesortParser, NWParser, QuicksortParser, ACCLParser, FasterRcnnParser
-import LuleshParser, LudParser
+import ParsersClasses
 
 """All benchmarks must be an atribute of MatchBenchmark, it will turn allmost all parser process invisible"""
 class MatchBenchmark(object):
 
     #all fucking benchmarks here
-    radiationBenchmarks = {"darknet":DarknetParser()
-                              , "hotspot":HotspotParser()
-                              , "hog":HogParser()
-                              , "lavamd":LavaMDParser()
-                              , "mergesort":MergesortParser()
-                              , "nw":NWParser()
-                              , "quicksort":QuicksortParser()
-                              , "accl":ACCLParser()
-                              , "pyfasterrcnn":FasterRcnnParser()
-                              , "lulesh":LuleshParser()
-                              , "lud":LudParser()}
+    radiationBenchmarks = {"darknet": ParsersClasses.DarknetParser()
+                              , "hotspot": ParsersClasses.HotspotParser()
+                              , "hog": ParsersClasses.HogParser()
+                              , "lavamd": ParsersClasses.LavaMDParser()
+                              , "mergesort": ParsersClasses.MergesortParser()
+                              , "nw": ParsersClasses.NWParser()
+                              , "quicksort": ParsersClasses.QuicksortParser()
+                              , "accl": ParsersClasses.ACCLParser()
+                              , "pyfasterrcnn": ParsersClasses.FasterRcnnParser()
+                              , "lulesh": ParsersClasses.LuleshParser()
+                              , "lud": ParsersClasses.LudParser()}
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

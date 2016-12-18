@@ -10,11 +10,24 @@ import collections
 
 
 class Parser(object):
-
-    __metaclass__ = ABCMeta
     toleratedRelErr = 2  # minimum relative error to be considered, in percentage
     toleratedRelErr2 = 5  # minimum relative error to be considered, in percentage
     buildImages = False  # build locality images
+
+
+    csvHeader = ["logFileName", "Machine", "Benchmark", "Header", "SDC Iteration", "#Accumulated Errors",
+                             "#Iteration Errors", "Relative Errors <= " + str(toleratedRelErr) + "%",
+                             "Relative Errors <= " + str(toleratedRelErr2) + "%", "Jaccard",
+                             "Jaccard > " + str(toleratedRelErr) + "%", "Jaccard > " + str(toleratedRelErr2) + "%",
+                             "Cubic", "Square", "Line", "Single", "Random", "Cubic Err > " + str(toleratedRelErr),
+                             "Square Err > " + str(toleratedRelErr), "Line Err > " + str(toleratedRelErr),
+                             "Single Err > " + str(toleratedRelErr), "Random Err > " + str(toleratedRelErr),
+                             "Cubic Err > " + str(toleratedRelErr2), "Square Err > " + str(toleratedRelErr2),
+                             "Line Err > " + str(toleratedRelErr2), "Single Err > " + str(toleratedRelErr2),
+                             "Random Err > " + str(toleratedRelErr2), "Max Relative Error", "Min Rel Error",
+                             "Average Rel Err", "zeroOut", "zeroGold"]
+    __metaclass__ = ABCMeta
+
 
     @abstractmethod
     def parseErr(self, errString):
@@ -25,12 +38,12 @@ class Parser(object):
         raise NotImplementedError()
 
     @abstractmethod
-    def header(self):
+    def setLogHeader(self, header):
         raise NotImplementedError()
 
-    @abstractmethod
-    def getLogHeader(self, header):
-        raise NotImplementedError()
+    """if the csvHeader must be different, the variable must be set to the other value, so getCSVHeader will return other constant"""
+    def getCSVHeader(self):
+        return self.csvHeader
 
     # return [highest relative error, lowest relative error, average relative error, # zeros in the output, #zero in the GOLD, #errors with relative errors lower than limit(toleratedRelErr), list of errors limited by toleratedRelErr, #errors with relative errors lower than limit(toleratedRelErr2), list of errors limited by toleratedRelErr2]
     # assumes errList[2] is read valued and errList[3] is expected value
@@ -73,7 +86,7 @@ class Parser(object):
 
             # fileNameSuffix = "errorFilterTo-"+str(toleratedRelErr) # add a suffix to csv filename
 
-    def build_image(self, errors, size, filename):
+    def buildImage(self, errors, size, filename):
         # identifica em qual posicao da matriz ocorreram os erros
         # definindo as bordas [esquerda, cabeca, direita, pe]
         err_limits = [int(size), int(size), 0, 0]

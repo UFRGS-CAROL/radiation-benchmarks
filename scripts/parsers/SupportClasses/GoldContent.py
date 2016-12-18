@@ -1,9 +1,11 @@
-from ctypes import *
-import Rectangle
+import copy
 import math
 import pickle
+
 import numpy as np
-import copy
+
+from SupportClasses import Rectangle
+
 """Read a darknet Gold content to memory"""
 
 
