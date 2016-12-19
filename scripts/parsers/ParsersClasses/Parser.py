@@ -11,10 +11,14 @@ import csv
 
 
 class Parser(object):
+    __metaclass__ = ABCMeta
     __toleratedRelErr = 2  # minimum relative error to be considered, in percentage
     __toleratedRelErr2 = 5  # minimum relative error to be considered, in percentage
     __buildImages = False  # build locality images
-
+    __headerWriten = False
+    __errList = []
+    __pureHeader = ""
+    __logFileNameNoExt = ""
 
     #specific atributes for CSV write
     #logFileName,machine,benchmark,header,sdcIteration,accIteErrors,iteErrors,
@@ -25,7 +29,19 @@ class Parser(object):
     __sdcIteration = -1
     __accIteErrors = -1
     __iteErrors = -1
-    #----------------
+
+    def setDefaultValues(self, logFileName, machine, benchmark, header, sdcIteration, accIteErrors, iteErrors,  errList, logFileNameNoExt, pureHeader):
+        self.__logFileName = logFileName
+        self.__machine = machine
+        self.__benchmark = benchmark
+        self.__header = header
+        self.__sdcIteration = sdcIteration
+        self.__accIteErrors = accIteErrors
+        self.__iteErrors = iteErrors
+        self.__errList = errList
+        self.__pureHeader = pureHeader
+        self.__logFileNameNoExt = logFileNameNoExt
+        #----------------
 
     __csvHeader = ["logFileName", "Machine", "Benchmark", "Header", "SDC Iteration", "#Accumulated Errors",
                              "#Iteration Errors", "Relative Errors <= " + str(__toleratedRelErr) + "%",
@@ -38,7 +54,7 @@ class Parser(object):
                              "Line Err > " + str(__toleratedRelErr2), "Single Err > " + str(__toleratedRelErr2),
                              "Random Err > " + str(__toleratedRelErr2), "Max Relative Error", "Min Rel Error",
                              "Average Rel Err", "zeroOut", "zeroGold"]
-    __metaclass__ = ABCMeta
+
 
     #for relativeErrorParser
     __maxRelErr = 0
@@ -58,9 +74,9 @@ class Parser(object):
     #for localityParser2D
     __locality = {}
     #cubic, square, colRow, single, random
-    __locality["errorsParsed"] = []
-    __locality["errListFiltered"] = []
-    __locality["errListFiltered2"] = []
+    __locality["errorsParsed"] = [0,0,0,0,0]
+    __locality["errListFiltered"] = [0,0,0,0,0]
+    __locality["errListFiltered2"] = [0,0,0,0,0]
 
     #for jaccardCoefficient
     __jaccardCoefficinetDict = {}
@@ -77,20 +93,36 @@ class Parser(object):
     def setBuildImage(self, val):
         self.__buildImage = True
 
+
+
+    """call to the private methods"""
+    def parseErr(self):
+        for errString in self.__errList:
+            err = self.__parseErr(errString)
+            if err != None:
+                self. __errors["errorsParsed"].append(err)
+
+    """for almost all benchmarks this method must be ovirride, because it is application dependent"""
+    def relativeErrorParser(self):
+        [self.__maxRelErr, self.__minRelErr, self.__avgRelErr, self.__zeroOut, self.__zeroGold, self.__relErrLowerLimit,
+         self.__errors["errListFiltered"], self.__relErrLowerLimit2,
+         self.__errors["errListFiltered2"]] = self.__relativeErrorParser(self.__errors["errorParsed"])
+
     @abstractmethod
-    def parseErr(self, errString):
+    def __parseErr(self, errString):
         raise NotImplementedError()
 
-    @abstractmethod
-    def relativeErrorParser(self, errList):
-        raise NotImplementedError()
+    # @abstractmethod
+    # def __relativeErrorParser(self, errList):
+    #     raise NotImplementedError()
 
-
-    """build image, based on object parameters"""
-    @abstractmethod
-    def buildImage(self, imgIndex):
+    """
+        build image, based on object parameters
         #currObj.buildImage(errorsParsed, size,
         #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
+    """
+    @abstractmethod
+    def __buildImage(self, imgIndex):
         raise NotImplementedError()
 
 
@@ -99,15 +131,12 @@ class Parser(object):
         return self.csvHeader
 
 
-    """for almost all benchmarks this method must be ovirride, because it is application dependent"""
-    def relativeErrorParser(self):
-        [self.__maxRelErr, self.__minRelErr, self.__avgRelErr, self.__zeroOut, self.__zeroGold, self.__relErrLowerLimit,
-         self.__errors["errListFiltered"], self.__relErrLowerLimit2,
-         self.__errors["errListFiltered2"]] = self.__relativeErrorParser(self.__errors["errorParsed"])
 
-
-    # return [highest relative error, lowest relative error, average relative error, # zeros in the output, #zero in the GOLD, #errors with relative errors lower than limit(toleratedRelErr), list of errors limited by toleratedRelErr, #errors with relative errors lower than limit(toleratedRelErr2), list of errors limited by toleratedRelErr2]
-    # assumes errList[2] is read valued and errList[3] is expected value
+    """
+    if you want other relative error parser this method must be override
+    return [highest relative error, lowest relative error, average relative error, # zeros in the output, #zero in the GOLD, #errors with relative errors lower than limit(toleratedRelErr), list of errors limited by toleratedRelErr, #errors with relative errors lower than limit(toleratedRelErr2), list of errors limited by toleratedRelErr2]
+    assumes errList[2] is read valued and errList[3] is expected value
+    """
     def __relativeErrorParser(self, errList):
         relErr = []
         zeroGold = 0
@@ -321,6 +350,10 @@ class Parser(object):
 
     """write a list as a row to CSV"""
     def writeToCSV(self, csvFileName):
+        if self.__headerWriten == False:
+            self.__writeCSVHeader(csvFileName)
+            self.__headerWriten = True
+
         try:
 
             csvWFP = open(csvFileName, "a")
@@ -369,10 +402,11 @@ class Parser(object):
 
         except:
             ValueError.message += ValueError.message + "Error on writing row to " + str(csvFileName)
+            raise
 
 
     """writes a csv header, and create the log_parsed directory"""
-    def writeCSVHeader(self, csvFileName):
+    def __writeCSVHeader(self, csvFileName):
         if not os.path.exists(os.path.dirname(csvFileName)):
             try:
                 os.makedirs(os.path.dirname(csvFileName))
@@ -383,4 +417,6 @@ class Parser(object):
         writer = csv.writer(csvWFP, delimiter=';')
         writer.writerow(self.__csvHeader)
         csvWFP.close()
+
+
 

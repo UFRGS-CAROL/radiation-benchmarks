@@ -6,7 +6,7 @@ from ParsersClasses import Parser
 class GemmParser(Parser):
     # Return [posX, posY, read, expected] -> [int, int, float, float]
     # Returns None if it is not possible to parse
-    def parseErr(self, errString):
+    def __parseErr(self, errString):
         try:
             # ERR stream: 0, p: [0, 0], r: 3.0815771484375000e+02, e: 0.0000000000000000e+00
             if 'nan' in errString:
@@ -33,6 +33,15 @@ class GemmParser(Parser):
 
         except ValueError:
             return None
+
+
+    """
+        build image, based on object parameters
+        #currObj.buildImage(errorsParsed, size,
+        #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
+    """
+    def __buildImage(self, imgIndex):
+        raise NotImplementedError()
 
 
     def getLogHeader(self, header):

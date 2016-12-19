@@ -18,13 +18,13 @@ size = 0
 # benchmarks dict => (bechmarkname_machinename : list of SDC item)
 # SDC item => [logfile name, header, sdc iteration, iteration total amount error, iteration accumulated error, list of errors ]
 # list of errors => list of strings with all the error detail print in lines using #ERR
-def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
+def parseErrors(benchmarkname_machinename, sdcItemList):
     # matchBench = MatchBenchmark(sdcItemList, benchmarkname_machinename)
     # benchmark = benchmarkname_machinename
     # machine = benchmarkname_machinename
 
     sdci = 1
-    total_sdcs = len(sdcItemList)
+    totalSdcs = len(sdcItemList)
     imageIndex = 0
     # goldDarknet = None
     # goldPyFaster = None
@@ -34,21 +34,21 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
     matchBench = sp.MatchBenchmark()
     for sdcItem in sdcItemList:
 
-        progress = "{0:.2f}".format(float(sdci) / float(total_sdcs) * 100)
-        sys.stdout.write("\rProcessing SDC " + str(sdci) + " of " + str(total_sdcs) + " - " + progress + "%")
+        progress = "{0:.2f}".format(float(sdci) / float(totalSdcs) * 100)
+        sys.stdout.write("\rProcessing SDC " + str(sdci) + " of " + str(totalSdcs) + " - " + progress + "%")
 
         sys.stdout.flush()
 
         matchBench.processHeader(sdcItem, benchmarkname_machinename)
-        currObj =  matchBench.currObj
+        currObj =  matchBench.getCurrentObj()
         #
         # if isLavaMD and box is None:
         #     continue
 
         # Get error details from log string
 
-        for errString in matchBench.errList:
-            err = None
+        # for errString in matchBench.errList:
+        #     err = None
             # if isGEMM or isLud:
             #     err = parseErrGEMM(errString)
             # elif isHotspot:
@@ -66,7 +66,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
             #     err = pn.parseErrDarknet(errString)
             # elif isPyFaster:
             #     err = pn.parseErrPyFaster(errString, sdcIteration)
-            currObj.parseErr(errString)
+        currObj.parseErr()
             #
             # if err is not None:
             #     errorsParsed.append(err)
@@ -113,7 +113,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
             # if isHotspot:
             #    print errListFiltered
             #    print errorsParsed
-        currObj.localityParser2D()
+        currObj.localityParser()
         currObj.jaccardCoefficient()
         # (square, colRow, single, random) =  currObj.localityParser2D(errorsParsed)
         # (squareF, colRowF, singleF, randomF) =  currObj.localityParser2D(errListFiltered)
@@ -141,7 +141,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
         currObj.writeToCSV()
         sdci += 1
     sys.stdout.write(
-        "\rProcessing SDC " + str(sdci - 1) + " of " + str(total_sdcs) + " - 100%                     " + "\n")
+        "\rProcessing SDC " + str(sdci - 1) + " of " + str(totalSdcs) + " - 100%                     " + "\n")
     sys.stdout.flush()
 
 #       (cubicF, squareF, colRowF, singleF, randomF) = currObj.localityParser3D(errListFiltered)
@@ -213,8 +213,8 @@ def parse_args():
     """Parse input arguments."""
 
     parser = argparse.ArgumentParser(description='Parse logs for Neural Networks')
-    parser.add_argument('--gold', dest='gold_dir', help='Directory where gold is located',
-                        default=GOLD_DIR, type=str)
+    # parser.add_argument('--gold', dest='gold_dir', help='Directory where gold is located',
+    #                     default=GOLD_DIR, type=str)
     parser.add_argument('--database', dest='error_database',
                         help='Where database is located', default="errors_log_database")
 
@@ -233,22 +233,22 @@ if __name__ == '__main__':
     # jump = True
     # for k, v in db.items(): #python3
     for k, v in db.iteritems():  # python2
-        isHotspot = re.search("Hotspot", k, flags=re.IGNORECASE)
-        isGEMM = re.search("GEMM", k, flags=re.IGNORECASE)
-        isLavaMD = re.search("lavamd", k, flags=re.IGNORECASE)
-        isCLAMR = re.search("clamr", k, flags=re.IGNORECASE)
-        # algoritmos ACCL, NW, Lulesh, Mergesort e Quicksort
-        isACCL = re.search("accl", k, flags=re.IGNORECASE)
-        isNW = re.search("nw", k, flags=re.IGNORECASE)
-        isLulesh = re.search("lulesh", k, flags=re.IGNORECASE)
-        isLud = re.search("lud", k, flags=re.IGNORECASE)
-        isDarknet = re.search("darknet", k, flags=re.IGNORECASE)
-        isPyFaster = re.search("pyfasterrcnn", k, flags=re.IGNORECASE)
-
-        if isHotspot or isGEMM or isLavaMD or isACCL or isNW or isLulesh or isLud or isDarknet or isPyFaster:
-            print("Processing ", k)
-            parseErrors(k, v, args.gold)
-        else:
-            print("Ignoring ", k)
+        # isHotspot = re.search("Hotspot", k, flags=re.IGNORECASE)
+        # isGEMM = re.search("GEMM", k, flags=re.IGNORECASE)
+        # isLavaMD = re.search("lavamd", k, flags=re.IGNORECASE)
+        # isCLAMR = re.search("clamr", k, flags=re.IGNORECASE)
+        # # algoritmos ACCL, NW, Lulesh, Mergesort e Quicksort
+        # isACCL = re.search("accl", k, flags=re.IGNORECASE)
+        # isNW = re.search("nw", k, flags=re.IGNORECASE)
+        # isLulesh = re.search("lulesh", k, flags=re.IGNORECASE)
+        # isLud = re.search("lud", k, flags=re.IGNORECASE)
+        # isDarknet = re.search("darknet", k, flags=re.IGNORECASE)
+        # isPyFaster = re.search("pyfasterrcnn", k, flags=re.IGNORECASE)
+        #
+        # if isHotspot or isGEMM or isLavaMD or isACCL or isNW or isLulesh or isLud or isDarknet or isPyFaster:
+        print("Processing ", k)
+        parseErrors(k, v)
+        # else:
+        #     print("Ignoring ", k)
 
     db.close()
