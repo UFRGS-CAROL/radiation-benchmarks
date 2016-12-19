@@ -44,7 +44,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
         #
         # if isLavaMD and box is None:
         #     continue
-        errorsParsed = []
+
         # Get error details from log string
 
         for errString in matchBench.errList:
@@ -66,10 +66,10 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
             #     err = pn.parseErrDarknet(errString)
             # elif isPyFaster:
             #     err = pn.parseErrPyFaster(errString, sdcIteration)
-            err = currObj.parseErr(errString)
-
-            if err is not None:
-                errorsParsed.append(err)
+            currObj.parseErr(errString)
+            #
+            # if err is not None:
+            #     errorsParsed.append(err)
 
         # (goldLines, detectedLines, xMass, yMass, precision, recall, falseNegative, falsePositive, truePositive,
         #  imgFile) = (
@@ -85,8 +85,9 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
         # elif isLulesh:
         #     (maxRelErr, minRelErr, avgRelErr, zeroOut, zeroGold, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
         #      errListFiltered2) = relativeErrorParserLulesh(errorsParsed)
-        (maxRelErr, minRelErr, avgRelErr, zeroOut, zeroGold, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
-              errListFiltered2) = currObj.relativeErrorParser(errorsParsed)
+        # (maxRelErr, minRelErr, avgRelErr, zeroOut, zeroGold, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
+        #       errListFiltered2) = currObj.relativeErrorParser(errorsParsed)
+        currObj.relativeErrorParser()
         # object detection algorithms need other look
         # elif isPyFaster:
         #      # only for CNNs
@@ -112,98 +113,100 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir):
             # if isHotspot:
             #    print errListFiltered
             #    print errorsParsed
-        (square, colRow, single, random) =  currObj.localityParser2D(errorsParsed)
-        (squareF, colRowF, singleF, randomF) =  currObj.localityParser2D(errListFiltered)
-        (squareF2, colRowF2, singleF2, randomF2) =  currObj.localityParser2D(errListFiltered2)
-        jaccard =  currObj.jaccardCoefficient(errorsParsed)
-        jaccardF =  currObj.jaccardCoefficient(errListFiltered)
-        jaccardF2 =  currObj.jaccardCoefficient(errListFiltered2)
-        errListFiltered = []
-        errListFiltered2 = []
-        cubic = 0
-        cubicF = 0
-        cubicF2 = 0
+        currObj.localityParser2D()
+        currObj.jaccardCoefficient()
+        # (square, colRow, single, random) =  currObj.localityParser2D(errorsParsed)
+        # (squareF, colRowF, singleF, randomF) =  currObj.localityParser2D(errListFiltered)
+        # (squareF2, colRowF2, singleF2, randomF2) =  currObj.localityParser2D(errListFiltered2)
+        # jaccard =  currObj.jaccardCoefficient(errorsParsed)
+        # jaccardF =  currObj.jaccardCoefficient(errListFiltered)
+        # jaccardF2 =  currObj.jaccardCoefficient(errListFiltered2)
+        # errListFiltered = []
+        # errListFiltered2 = []
+        # cubic = 0
+        # cubicF = 0
+        # cubicF2 = 0
 
-        if single == 0 and buildImages:
-            if size is not None:
-                currObj.buildImage(errorsParsed, size,
-                                   currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
-            else:
-                currObj.buildImage(errorsParsed, 8192,
-                                   currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
+        # if single == 0 and buildImages:
+        #     if size is not None:
+        #         currObj.buildImage(errorsParsed, size,
+        #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
+        #     else:
+        #to activate this method the setBuildImage method must be called with True parameter
+        if currObj.buildImage(str(imageIndex)):
             imageIndex += 1
 
-        elif isLavaMD or isLulesh:
-            (cubic, square, colRow, single, random) = currObj.localityParser3D(errorsParsed)
-            (cubicF, squareF, colRowF, singleF, randomF) = currObj.localityParser3D(errListFiltered)
-            (cubicF2, squareF2, colRowF2, singleF2, randomF2) = currObj.localityParser3D(errListFiltered2)
-            if isLavaMD:
-                jaccard = currObj.jaccardCoefficientLavaMD(errorsParsed)
-                jaccardF = currObj.jaccardCoefficientLavaMD(errListFiltered)
-                jaccardF2 = currObj.jaccardCoefficientLavaMD(errListFiltered2)
-            else:
-                jaccard = jaccardF = jaccardF2 = 0
-            errListFiltered = []
-            errListFiltered2 = []
+        currObj.localityParser()
 
-        else:  # Need to add locality parser for other benchmarks, if possible!
-            (cubic, square, colRow, single, random) = [0, 0, 0, 0, 0]
-            (cubicF, squareF, colRowF, singleF, randomF) = [0, 0, 0, 0, 0]
-            (cubicF2, squareF2, colRowF2, singleF2, randomF2) = [0, 0, 0, 0, 0]
-            jaccard = None
-            jaccardF = None
-            jaccardF2 = None
-
-        # Write info to csv file
-        # if fileNameSuffix is not None and fileNameSuffix != "":
-        #   csvFileName = dirName+'/'+header+'/logs_parsed_'+machine+'_'+fileNameSuffix+'.csv'
-        # else:
-        if 'caltech' in gold_dir:
-            dataset = 'caltech'
-        else:
-            dataset = 'voc2012'
-
-        if isPyFaster:
-            dir = "py_faster_csv_" + dataset
-        elif isDarknet:
-            dir = "darknet_csv_" + dataset
-        else:
-            dir = currObj.header
-        csvFileName = currObj.dirName + '/' + dir + '/logs_parsed_' + currObj.machine + '.csv'
-        if not os.path.exists(os.path.dirname(csvFileName)):
-            try:
-                os.makedirs(os.path.dirname(csvFileName))
-            except OSError as exc:  # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
-        flag = 0
-        if not os.path.exists(csvFileName):
-            flag = 1
-
-        csvWFP = open(csvFileName, "a")
-        writer = csv.writer(csvWFP, delimiter=';')
-
-        if flag == 1 and (isPyFaster or isDarknet):  # csv header
-            # (len(gold), len(tempBoxes), x, y, pR.getPrecision(), pR.getRecall(), pR.getFalseNegative(),
-            #  pR.getFalsePositive(), pR.getTruePositive())
-            writer.writerow(["logFileName", "Machine", "Benchmark", "imgFile", "SDC_Iteration", "#Accumulated_Errors",
-                             "#Iteration_Errors", "gold_lines", "detected_lines", "x_center_of_mass",
-                             "y_center_of_mass", "precision", "recall", "false_negative", "false_positive",
-                             "true_positive"])
-
-        elif flag == 1:
-            writer.writerow()
-
-        writer.writerow(
-            [currObj.logFileName, currObj.machine, currObj.benchmark, imgFile, currObj.sdcIteration, currObj.accIteErrors, currObj.iteErrors, goldLines, detectedLines,
-             xMass, yMass, precision, recall, falseNegative, falsePositive, truePositive])
-
-        csvWFP.close()
+        currObj.writeToCSV()
         sdci += 1
-
     sys.stdout.write(
         "\rProcessing SDC " + str(sdci - 1) + " of " + str(total_sdcs) + " - 100%                     " + "\n")
     sys.stdout.flush()
+
+#       (cubicF, squareF, colRowF, singleF, randomF) = currObj.localityParser3D(errListFiltered)
+#       (cubicF2, squareF2, colRowF2, singleF2, randomF2) = currObj.localityParser3D(errListFiltered2)
+#
+#
+#     if isLavaMD:
+#         jaccard = currObj.jaccardCoefficientLavaMD(errorsParsed)
+#         jaccardF = currObj.jaccardCoefficientLavaMD(errListFiltered)
+#         jaccardF2 = currObj.jaccardCoefficientLavaMD(errListFiltered2)
+#     else:
+#         jaccard = jaccardF = jaccardF2 = 0
+#     errListFiltered = []
+#     errListFiltered2 = []
+#
+# else:  # Need to add locality parser for other benchmarks, if possible!
+#     (cubic, square, colRow, single, random) = [0, 0, 0, 0, 0]
+#     (cubicF, squareF, colRowF, singleF, randomF) = [0, 0, 0, 0, 0]
+#     (cubicF2, squareF2, colRowF2, singleF2, randomF2) = [0, 0, 0, 0, 0]
+#     jaccard = None
+#     jaccardF = None
+#     jaccardF2 = None
+#
+# Write info to csv file
+# if fileNameSuffix is not None and fileNameSuffix != "":
+#   csvFileName = dirName+'/'+header+'/logs_parsed_'+machine+'_'+fileNameSuffix+'.csv'
+# else:
+# if 'caltech' in gold_dir:
+#     dataset = 'caltech'
+# else:
+#     dataset = 'voc2012'
+#
+# if isPyFaster:
+#     dir = "py_faster_csv_" + dataset
+# elif isDarknet:
+#     dir = "darknet_csv_" + dataset
+# else:
+#     dir = currObj.header
+# csvFileName = currObj.dirName + '/' + dir + '/logs_parsed_' + currObj.machine + '.csv'
+# if not os.path.exists(os.path.dirname(csvFileName)):
+#     try:
+#         os.makedirs(os.path.dirname(csvFileName))
+#     except OSError as exc:  # Guard against race condition
+#         if exc.errno != errno.EEXIST:
+#             raise
+# flag = 0
+# if not os.path.exists(csvFileName):
+#     flag = 1
+#
+# csvWFP = open(csvFileName, "a")
+# writer = csv.writer(csvWFP, delimiter=';')
+#
+# if flag == 1 and (isPyFaster or isDarknet):  # csv header
+#     # (len(gold), len(tempBoxes), x, y, pR.getPrecision(), pR.getRecall(), pR.getFalseNegative(),
+#     #  pR.getFalsePositive(), pR.getTruePositive())
+#     writer.writerow()
+#
+# elif flag == 1:
+#     writer.writerow()
+#
+# writer.writerow(
+#     [currObj.logFileName, currObj.machine, currObj.benchmark, imgFile, currObj.sdcIteration, currObj.accIteErrors, currObj.iteErrors, goldLines, detectedLines,
+#      xMass, yMass, precision, recall, falseNegative, falsePositive, truePositive])
+#
+# csvWFP.close()
 
 
 def parse_args():

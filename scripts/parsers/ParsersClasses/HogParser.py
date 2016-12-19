@@ -37,7 +37,8 @@ class HogParser(Parser):
         return (ret if len(ret) > 0 else None)
 
     def relativeErrorParser(self, errList):
-        return [None, None]
+       return [None, None]
+
 
 
 
