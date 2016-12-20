@@ -5,10 +5,11 @@ import re
 import numpy as np
 
 from SupportClasses import PrecisionAndRecall as pr
+from Parser import Parser
 
 GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
 
-class FasterRcnnParser(object):
+class FasterRcnnParser(Parser):
     goldObj = None
 
     # parse PyFaster
@@ -161,7 +162,7 @@ class FasterRcnnParser(object):
 
     def getImgLPos(self, sdcit): return None
 
-    def setLogHeader(self, header):
+    def getSize(self, header):
         # pyfaster
         py_faster_m = re.match(".*iterations\: (\d+).*img_list\: (\S+).*board\: (\S+).*", self.pure_header)
         if py_faster_m:

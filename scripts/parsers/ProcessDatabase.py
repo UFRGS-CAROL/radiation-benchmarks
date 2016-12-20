@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 import sys
+
+from SupportClasses import MatchBenchmark
+
 GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
 import os
 import csv
@@ -8,7 +11,7 @@ import re
 import shelve
 import errno
 import argparse
-import SupportClasses as sp
+
 
 
 #temporary set
@@ -31,7 +34,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
     # readGoldDarknet = True
     # readGoldPyFaster = True
     # img_list_file = ""
-    matchBench = sp.MatchBenchmark()
+    matchBench = MatchBenchmark.MatchBenchmark(os.getcwd())
     for sdcItem in sdcItemList:
 
         progress = "{0:.2f}".format(float(sdci) / float(totalSdcs) * 100)
@@ -113,6 +116,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
             # if isHotspot:
             #    print errListFiltered
             #    print errorsParsed
+
         currObj.localityParser()
         currObj.jaccardCoefficient()
         # (square, colRow, single, random) =  currObj.localityParser2D(errorsParsed)
@@ -133,10 +137,8 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
         #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
         #     else:
         #to activate this method the setBuildImage method must be called with True parameter
-        if currObj.buildImage(str(imageIndex)):
+        if currObj.buildImageMethod(str(imageIndex)):
             imageIndex += 1
-
-        currObj.localityParser()
 
         currObj.writeToCSV()
         sdci += 1

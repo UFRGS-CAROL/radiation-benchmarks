@@ -1,12 +1,12 @@
 import re
 
-from ParsersClasses import Parser
+from Parser import Parser
 
 
 class GemmParser(Parser):
     # Return [posX, posY, read, expected] -> [int, int, float, float]
     # Returns None if it is not possible to parse
-    def __parseErr(self, errString):
+    def parseErrMethod(self, errString):
         try:
             # ERR stream: 0, p: [0, 0], r: 3.0815771484375000e+02, e: 0.0000000000000000e+00
             if 'nan' in errString:
@@ -40,15 +40,18 @@ class GemmParser(Parser):
         #currObj.buildImage(errorsParsed, size,
         #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
     """
-    def __buildImage(self, imgIndex):
-        raise NotImplementedError()
+    def buildImageMethod(self, imgIndex):
+        # type: (integer) -> boolean
+        return False
 
 
-    def getLogHeader(self, header):
-        self.size = None
+    def getSize(self, header):
+        size = None
         m = re.match(".*size\:(\d+).*", header)
         if m:
             try:
-                self.size = int(m.group(1))
+               size = int(m.group(1))
             except:
-                self.size = None
+               size = None
+
+        return size

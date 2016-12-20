@@ -1,6 +1,6 @@
 import re
 
-from ParsersClasses import Parser
+from Parser import Parser
 
 
 class HotspotParser(Parser):

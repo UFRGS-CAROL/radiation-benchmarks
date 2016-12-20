@@ -1,6 +1,6 @@
 import re
 
-import Parser
+from Parser import Parser
 
 
 class MergesortParser(Parser):
@@ -24,7 +24,7 @@ class MergesortParser(Parser):
 
 
 
-    def setLogHeader(self, header):
+    def getSize(self, header):
         self.size = None
         m = re.match(".*size\:(\d+).*", header)
         if m:

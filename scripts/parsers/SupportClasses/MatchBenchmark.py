@@ -1,12 +1,12 @@
 import re
 import os
 import errno
-import ParsersClasses
+
+from ParsersClasses import GemmParser
 
 """All benchmarks must be an atribute of MatchBenchmark, it will turn allmost all parser process invisible"""
 
-
-class MatchBenchmark(object):
+class MatchBenchmark():
     """        "darknet": ParsersClasses.DarknetParser
         , "hotspot": ParsersClasses.HotspotParser()
         , "hog": ParsersClasses.HogParser()
@@ -32,7 +32,7 @@ class MatchBenchmark(object):
         # , "pyfasterrcnn": ParsersClasses.FasterRcnnParser()
         # , "lulesh": ParsersClasses.LuleshParser()
         # , "lud": ParsersClasses.LudParser()
-        "gemm" : ParsersClasses.GemmParser()
+        "gemm" : GemmParser.GemmParser()
     }
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -66,14 +66,8 @@ class MatchBenchmark(object):
             benchmark = m.group(1)
             machine = m.group(2)
 
-        self.__dirName = self.__localDir + "/" + machine + "/" + benchmark
-        if not os.path.exists(os.path.dirname(self.__dirName)):
-            try:
-                os.makedirs(os.path.dirname(self.__dirName))
-            except OSError as exc:  # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
 
+        isBench = False
         for key, values in self.__radiationBenchmarks.iteritems():
             isBench = re.search(str(key), benchmark, flags=re.IGNORECASE)
             if isBench:
@@ -116,3 +110,4 @@ class MatchBenchmark(object):
 
     def getCurrentObj(self):
         return self.__currBench
+

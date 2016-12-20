@@ -7,7 +7,10 @@ import re
 
 import numpy as np
 
-from SupportClasses import PrecisionAndRecall
+
+from Parser import Parser
+
+
 
 # class for reading Darknet gold file
 # from IPython.utils.py3compat import which
@@ -30,7 +33,7 @@ CLASSES = ['__background__',
            'sheep', 'sofa', 'train', 'tvmonitor']
 
 
-class DarknetParser(object):
+class DarknetParser(Parser):
 
     goldObj = None
     """

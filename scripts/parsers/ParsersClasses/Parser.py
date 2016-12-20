@@ -6,11 +6,12 @@ import os
 import errno
 import collections
 import csv
+import warnings
 
 """Base class for parser, need be implemented by each benchmark"""
 
 
-class Parser(object):
+class Parser():
     __metaclass__ = ABCMeta
     __toleratedRelErr = 2  # minimum relative error to be considered, in percentage
     __toleratedRelErr2 = 5  # minimum relative error to be considered, in percentage
@@ -19,6 +20,10 @@ class Parser(object):
     __errList = []
     __pureHeader = ""
     __logFileNameNoExt = ""
+    __dirName = ""
+
+    #size must be set on the child classes
+    __size = ""
 
     #specific atributes for CSV write
     #logFileName,machine,benchmark,header,sdcIteration,accIteErrors,iteErrors,
@@ -41,6 +46,10 @@ class Parser(object):
         self.__errList = errList
         self.__pureHeader = pureHeader
         self.__logFileNameNoExt = logFileNameNoExt
+
+        self.__size = self.getSize(self.__pureHeader)
+
+        self.__makeDirName()
         #----------------
 
     __csvHeader = ["logFileName", "Machine", "Benchmark", "Header", "SDC Iteration", "#Accumulated Errors",
@@ -98,7 +107,7 @@ class Parser(object):
     """call to the private methods"""
     def parseErr(self):
         for errString in self.__errList:
-            err = self.__parseErr(errString)
+            err = self.parseErrMethod(errString)
             if err != None:
                 self. __errors["errorsParsed"].append(err)
 
@@ -106,10 +115,10 @@ class Parser(object):
     def relativeErrorParser(self):
         [self.__maxRelErr, self.__minRelErr, self.__avgRelErr, self.__zeroOut, self.__zeroGold, self.__relErrLowerLimit,
          self.__errors["errListFiltered"], self.__relErrLowerLimit2,
-         self.__errors["errListFiltered2"]] = self.__relativeErrorParser(self.__errors["errorParsed"])
+         self.__errors["errListFiltered2"]] = self.__relativeErrorParser(self.__errors["errorsParsed"])
 
     @abstractmethod
-    def __parseErr(self, errString):
+    def parseErrMethod(self, errString):
         raise NotImplementedError()
 
     # @abstractmethod
@@ -122,9 +131,12 @@ class Parser(object):
         #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
     """
     @abstractmethod
-    def __buildImage(self, imgIndex):
+    def buildImageMethod(self, imgIndex):
         raise NotImplementedError()
 
+    @abstractmethod
+    def getSize(self, header):
+        raise NotImplementedError()
 
     """if the csvHeader must be different, the variable must be set to the other value, so getCSVHeader will return other constant"""
     def getCSVHeader(self):
@@ -156,11 +168,11 @@ class Parser(object):
             else:
                 relError = abs(absoluteErr / expected) * 100
                 relErr.append(relError)
-                if relError < self.toleratedRelErr:
+                if relError < self.__toleratedRelErr:
                     relErrLowerLimit += 1
                 else:
                     errListFiltered.append(err)
-                if relError < self.toleratedRelErr2:
+                if relError < self.__toleratedRelErr2:
                     relErrLowerLimit2 += 1
                 else:
                     errListFiltered2.append(err)
@@ -246,11 +258,13 @@ class Parser(object):
 
 
     def jaccardCoefficient(self):
-        for keys, values in self.__errors.iteritems():
-            #         jaccard = currObj.jaccardCoefficientLavaMD(errorsParsed)
-            #         jaccardF = currObj.jaccardCoefficientLavaMD(errListFiltered)
-            #         jaccardF2 = currObj.jaccardCoefficientLavaMD(errListFiltered2)
-            self.__jaccardCoefficinetDict[keys] = self.__jaccardCoefficient(values)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            for keys, values in self.__errors.iteritems():
+                #         jaccard = currObj.jaccardCoefficientLavaMD(errorsParsed)
+                #         jaccardF = currObj.jaccardCoefficientLavaMD(errListFiltered)
+                #         jaccardF2 = currObj.jaccardCoefficientLavaMD(errListFiltered2)
+                self.__jaccardCoefficinetDict[keys] = self.__jaccardCoefficient(values)
 
 
 
@@ -286,19 +300,21 @@ class Parser(object):
     # (cubicF, squareF, colRowF, singleF, randomF) = localityParser3D(errListFiltered)
     # (cubicF2, squareF2, colRowF2, singleF2, randomF2) = localityParser3D(errListFiltered2)
     def localityParser(self):
-        for key, value in self.__errors.iteritems():
-            if self.__hasThirdDimention:
-                self.__locality[key] = self.__localityParser3D(value)
-            else:
-                self.__locality[key] = self.__localityParser2D(value)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            for key, value in self.__errors.iteritems():
+                if self.__hasThirdDimention:
+                    self.__locality[key] = self.__localityParser3D(value)
+                else:
+                    self.__locality[key] = self.__localityParser2D(value)
 
     # return [square, col/row, single, random]
     # assumes errList[0] is posX and errList[1] is posY
     def __localityParser2D(self, errList):
         if len(errList) < 1:
-            return [0, 0, 0, 0]
+            return [0, 0, 0, 0, 0]
         elif len(errList) == 1:
-            return [0, 0, 1, 0]
+            return [0, 0, 0, 1, 0]
         else:
             allXPositions = [x[0] for x in errList]  # Get all positions of X
             allYPositions = [x[1] for x in errList]  # Get all positions of Y
@@ -309,11 +325,11 @@ class Parser(object):
             colError = any(
                 x > 1 for x in counterYPositions.values())  # Check if any value is in the list more than one time
             if rowError and colError:  # square error
-                return [1, 0, 0, 0]
+                return [0, 1, 0, 0, 0]
             elif rowError or colError:  # row/col error
-                return [0, 1, 0, 0]
+                return [0, 0, 1, 0, 0]
             else:  # random error
-                return [0, 0, 0, 1]
+                return [0, 0, 0, 0, 1]
 
     # return [cubic, square, line, single, random]
     # assumes errList[0] is posX, errList[1] is posY, and errList[2] is posZ
@@ -347,10 +363,21 @@ class Parser(object):
 
 
     """CSV file operations"""
+    """public method to write csv"""
+    def writeToCSV(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            output = self.__dirName + "/logs_parsed_" + self.__machine + ".csv"
+            self.__writeToCSV(output)
 
-    """write a list as a row to CSV"""
-    def writeToCSV(self, csvFileName):
-        if self.__headerWriten == False:
+
+    """
+    write a list as a row to CSV
+    if you want other type of write to csv,
+    the method __writeToCSV and atribute __csvHeader must be changed
+    """
+    def __writeToCSV(self, csvFileName):
+        if self.__headerWriten == False and os.path.isfile(csvFileName) == False:
             self.__writeCSVHeader(csvFileName)
             self.__headerWriten = True
 
@@ -394,9 +421,11 @@ class Parser(object):
 
             outputList.extend([self.__maxRelErr,
                              self.__minRelErr,
+
                              self.__avgRelErr,
                              self.__zeroOut,
                              self.__zeroGold])
+
             writer.writerow(outputList)
             csvWFP.close()
 
@@ -419,4 +448,11 @@ class Parser(object):
         csvWFP.close()
 
 
-
+    def __makeDirName(self):
+        self.__dirName = os.getcwd() + "/" + self.__benchmark + "/" + str(self.__size) + "/"
+        if not os.path.exists(os.path.dirname(self.__dirName)):
+            try:
+                os.makedirs(os.path.dirname(self.__dirName))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise

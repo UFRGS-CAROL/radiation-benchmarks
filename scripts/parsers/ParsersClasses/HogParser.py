@@ -1,7 +1,7 @@
 import re
 
-import Parser
-import PrecisionAndRecall as pr
+from Parser import Parser
+from SupportClasses import PrecisionAndRecall as pr
 
 
 class HogParser(Parser):
@@ -42,7 +42,7 @@ class HogParser(Parser):
 
 
 
-    def setLogHeader(self, header):
+    def getSize(self, header):
         self.size = None
         m = re.match(".*size\:(\d+).*", header)
         if m:

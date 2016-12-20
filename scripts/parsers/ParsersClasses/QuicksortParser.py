@@ -1,6 +1,6 @@
 import re
 
-import Parser
+from Parser import Parser
 
 
 class QuicksortParser(Parser):

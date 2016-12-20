@@ -1,7 +1,7 @@
 import re
 
-from ParsersClasses import Parser
 
+from Parser import Parser
 
 class ACCLParser(Parser):
     # Return [posX, posY, read, expected, comp_or_spans] -> [int, int, float, float, string]
@@ -67,7 +67,7 @@ class ACCLParser(Parser):
             return None
 
 
-    def setLogHeader(self, header):
+    def getSize(self, header):
         self.header = header
         # for accl
         m = re.match(".*frames[\:-](\d+).*", self.header)
