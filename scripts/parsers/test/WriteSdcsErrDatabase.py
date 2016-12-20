@@ -1,1 +1,1 @@
-../SupportClasses/WriteSdcsErrDatabase.py
+../WriteSdcsErrDatabase.py

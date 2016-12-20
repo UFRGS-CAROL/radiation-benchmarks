@@ -13,8 +13,8 @@ import warnings
 
 class Parser():
     __metaclass__ = ABCMeta
-    __toleratedRelErr = 2  # minimum relative error to be considered, in percentage
-    __toleratedRelErr2 = 5  # minimum relative error to be considered, in percentage
+    __toleratedRelErr = 2.0  # minimum relative error to be considered, in percentage
+    __toleratedRelErr2 = 5.0  # minimum relative error to be considered, in percentage
     __buildImages = False  # build locality images
     __headerWriten = False
     __errList = []
@@ -42,8 +42,10 @@ class Parser():
         self.__header = header
         self.__sdcIteration = sdcIteration
         self.__accIteErrors = accIteErrors
+
         self.__iteErrors = iteErrors
         self.__errList = errList
+        # print "\n\nerr list inside " , len(errList)
         self.__pureHeader = pureHeader
         self.__logFileNameNoExt = logFileNameNoExt
 
@@ -106,6 +108,9 @@ class Parser():
 
     """call to the private methods"""
     def parseErr(self):
+        self.__errors["errorsParsed"] = []
+        self.__errors["errListFiltered"] = []
+        self.__errors["errListFiltered2"] = []
         for errString in self.__errList:
             err = self.parseErrMethod(errString)
             if err != None:
@@ -180,6 +185,7 @@ class Parser():
             maxRelErr = max(relErr)
             minRelErr = min(relErr)
             avgRelErr = sum(relErr) / float(len(relErr))
+            # print "\n\n" , relErrLowerLimit , " > 5 ", relErrLowerLimit2 , "\n\n"
             return [maxRelErr, minRelErr, avgRelErr, zeroOut, zeroGold, relErrLowerLimit, errListFiltered,
                     relErrLowerLimit2, errListFiltered2]
         else:
@@ -258,6 +264,9 @@ class Parser():
 
 
     def jaccardCoefficient(self):
+        self.__jaccardCoefficinetDict["errorsParsed"] = 0
+        self.__jaccardCoefficinetDict["errListFiltered"] = 0
+        self.__jaccardCoefficinetDict["errListFiltered2"] = 0
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             for keys, values in self.__errors.iteritems():
@@ -265,8 +274,6 @@ class Parser():
                 #         jaccardF = currObj.jaccardCoefficientLavaMD(errListFiltered)
                 #         jaccardF2 = currObj.jaccardCoefficientLavaMD(errListFiltered2)
                 self.__jaccardCoefficinetDict[keys] = self.__jaccardCoefficient(values)
-
-
 
     def __jaccardCoefficient(self, errListJaccard):
         expected = []
@@ -300,6 +307,9 @@ class Parser():
     # (cubicF, squareF, colRowF, singleF, randomF) = localityParser3D(errListFiltered)
     # (cubicF2, squareF2, colRowF2, singleF2, randomF2) = localityParser3D(errListFiltered2)
     def localityParser(self):
+        self.__locality["errorsParsed"] = [0, 0, 0, 0, 0]
+        self.__locality["errListFiltered"] = [0, 0, 0, 0, 0]
+        self.__locality["errListFiltered2"] = [0, 0, 0, 0, 0]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             for key, value in self.__errors.iteritems():

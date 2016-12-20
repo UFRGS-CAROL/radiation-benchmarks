@@ -3,6 +3,16 @@ import os
 import errno
 
 from ParsersClasses import GemmParser
+from ParsersClasses import ACCLParser
+from ParsersClasses import DarknetParser
+from ParsersClasses import FasterRcnnParser
+from ParsersClasses import HogParser
+from ParsersClasses import HotspotParser
+from ParsersClasses import LavaMDParser
+from ParsersClasses import LudParser
+from ParsersClasses import LuleshParser
+from ParsersClasses import MergesortParser
+from ParsersClasses import QuicksortParser
 
 """All benchmarks must be an atribute of MatchBenchmark, it will turn allmost all parser process invisible"""
 
@@ -21,28 +31,27 @@ class MatchBenchmark():
     """
     # all fucking benchmarks here
     __radiationBenchmarks = {
-        # "darknet": ParsersClasses.DarknetParser
-        # , "hotspot": ParsersClasses.HotspotParser()
-        # , "hog": ParsersClasses.HogParser()
-        # , "lavamd": ParsersClasses.LavaMDParser()
+         "darknet": DarknetParser.DarknetParser(),
+         "hotspot": HotspotParser.HotspotParser(),
+         "hog": HogParser.HogParser(),
+         "lavamd": LavaMDParser.LavaMDParser(),
         # , "mergesort": ParsersClasses.MergesortParser()
         # , "nw": ParsersClasses.NWParser()
         # , "quicksort": ParsersClasses.QuicksortParser()
-        # , "accl": ParsersClasses.ACCLParser()
-        # , "pyfasterrcnn": ParsersClasses.FasterRcnnParser()
+         "accl": ACCLParser.ACCLParser(),
+         "pyfasterrcnn": FasterRcnnParser.FasterRcnnParser(),
         # , "lulesh": ParsersClasses.LuleshParser()
         # , "lud": ParsersClasses.LudParser()
-        "gemm" : GemmParser.GemmParser()
+        "gemm" : GemmParser.GemmParser(),
     }
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
     """sdcItem is => [logfile name, header, sdc iteration, iteration total amount error, iteration accumulated error, list of errors ]"""
 
-    def __init__(self, localDir):
+    def __init__(self):
         self.__benchSet = False
         self.__currBench = None
-        self.__localDir = str(localDir)
 
     #
 
@@ -59,6 +68,7 @@ class MatchBenchmark():
         iteErrors = sdcItem[3]
         accIteErrors = sdcItem[4]
         errList = sdcItem[5]
+        # print "\n" , len(errList)
         m = re.match("(.*)_(.*)", benchmarkMachineName)
         benchmark = "default"
         machine = "carol"
@@ -70,7 +80,10 @@ class MatchBenchmark():
         isBench = False
         for key, values in self.__radiationBenchmarks.iteritems():
             isBench = re.search(str(key), benchmark, flags=re.IGNORECASE)
+
             if isBench:
+                print "\n\ncurrent bench ", key
+                print "\n\n len " ,logFileName, machine, benchmark, header, sdcIteration, accIteErrors, iteErrors
                 self.__currBench = self.__radiationBenchmarks[str(key)]
                 # doind it I will have duplicate data, but it is the cost of generalization
                 self.__currBench.setDefaultValues(logFileName, machine, benchmark, header, sdcIteration, accIteErrors,
@@ -78,8 +91,8 @@ class MatchBenchmark():
                 break
 
         if not isBench:
-            ValueError.message += ValueError.message + "MatchBenchmark: There is no benchmark as " + str(benchmark)
-            raise
+            print "\nMatchBenchmark: There is no benchmark as " + str(benchmark)
+            raise BaseException
 
             # isHotspot = re.search("hotspot", self.benchmark, flags=re.IGNORECASE)
 

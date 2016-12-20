@@ -4,9 +4,15 @@ import re
 from Parser import Parser
 
 class ACCLParser(Parser):
+    __frames = None
+    __framesPerStream = None
+    __maxRows = None
+    __maxCols = None
+    __penalty = None
+
     # Return [posX, posY, read, expected, comp_or_spans] -> [int, int, float, float, string]
     # Returns None if it is not possible to parse
-    def parseErr(self, errString):
+    def parseErrMethod(self, errString):
         try:
             # ERR stream: 0, p: [0, 0], r: 3.0815771484375000e+02, e: 0.0000000000000000e+00
             # ERR t: [components], p: [256][83], r: 90370, e: 80131
@@ -68,19 +74,19 @@ class ACCLParser(Parser):
 
 
     def getSize(self, header):
-        self.header = header
         # for accl
-        m = re.match(".*frames[\:-](\d+).*", self.header)
-        self.frames = None
-        self.framesPerStream = None
+        m = re.match(".*frames[\:-](\d+).*", header)
+        self.__frames = None
+        self.__framesPerStream = None
         if m:
             try:
-                self.frames = int(m.group(1))
-                m = re.match(".*framesPerStream[\:-](\d+).*", self.header)
-                self.framesPerStream = int(m.group(1))
+                self.__frames = int(m.group(1))
+                m = re.match(".*framesPerStream[\:-](\d+).*", header)
+                self.__framesPerStream = int(m.group(1))
             except:
-                self.frames = None
-                self.framesPerStrem = None
-        self.max_rows = None
-        self.max_cols = None
-        self.penalty = None
+                self.__frames = None
+                self.__framesPerStrem = None
+        return self.__frames
+
+    def buildImageMethod(self, imgIndex):
+        return False

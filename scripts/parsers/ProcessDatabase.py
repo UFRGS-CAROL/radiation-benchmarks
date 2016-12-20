@@ -34,7 +34,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
     # readGoldDarknet = True
     # readGoldPyFaster = True
     # img_list_file = ""
-    matchBench = MatchBenchmark.MatchBenchmark(os.getcwd())
+    matchBench = MatchBenchmark.MatchBenchmark()
     for sdcItem in sdcItemList:
 
         progress = "{0:.2f}".format(float(sdci) / float(totalSdcs) * 100)

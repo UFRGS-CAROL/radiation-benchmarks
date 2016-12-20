@@ -5,11 +5,11 @@ from SupportClasses import PrecisionAndRecall as pr
 
 
 class HogParser(Parser):
-    def __init__(self, **kwargs):
-        self.prThreshold = float(kwargs.pop("threshold"))
-        self.precisionAndRecall = pr.PrecisionAndRecall(self.prThreshold)
 
-    def parseErr(self, errString):
+    __prThreshold = 0.5
+    __precisionAndRecall = pr.PrecisionAndRecall(__prThreshold)
+
+    def parseErrMethod(self, errString):
         # ERR Image: set08_V009_1237.jpg
         # ERR 101,50,176,76,226,177
         #
@@ -40,7 +40,9 @@ class HogParser(Parser):
        return [None, None]
 
 
-
+    def buildImageMethod(self, imgIndex):
+        # type: (integer) -> boolean
+        return False
 
     def getSize(self, header):
         self.size = None

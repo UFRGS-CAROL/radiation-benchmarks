@@ -7,49 +7,18 @@ import numpy as np
 from SupportClasses import PrecisionAndRecall as pr
 from Parser import Parser
 
-GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
+# GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
 
 class FasterRcnnParser(Parser):
-    goldObj = None
+    __csvHeader = ["logFileName", "Machine", "Benchmark", "imgFile", "SDC_Iteration", "#Accumulated_Errors",
+                   "#Iteration_Errors", "gold_lines", "detected_lines", "x_center_of_mass",
+                   "y_center_of_mass", "precision", "recall", "false_negative", "false_positive",
+                   "true_positive"]
+    __goldObj = None
 
-    # parse PyFaster
-    def parseErr(self,errString):
-        # ERR boxes: [27,4] e: 132.775177002 r: 132.775024414
-        ret = {}
-        if 'boxes' in errString:
-            image_err = re.match(
-                ".*boxes\: \[(\d+),(\d+)\].*e\: (\S+).*r\: (\S+).*",
-                errString)
-            if image_err:
-                ret["type"] = "boxes"
-                # ret["imgindex"] = imgIndex
-                ###########
-                ret["boxes_x"] = image_err.group(1)
-                try:
-                    long((ret["boxes_x"]))
-                except:
-                    ret["boxes_x"] = 1e30
-                ###########
-                ret["boxes_y"] = image_err.group(2)
-                try:
-                    long((ret["boxes_y"]))
-                except:
-                    ret["boxes_y"] = 1e30
-                ###########
-                ret["e"] = image_err.group(3)
-                try:
-                    long(float(ret["e"]))
-                except:
-                    ret["e"] = 1e30
-                ############
-                ret["r"] = image_err.group(4)
-                try:
-                    long(float(ret["r"]))
-                except:
-                    ret["r"] = 1e30
-
-
-        return (ret if len(ret) > 0 else None)
+    __iterations = None
+    __imgListPath = None
+    __board = None
 
     def generatePyFasterRectangles(self, dets, thresh=0):
         """Draw detected bounding boxes."""
@@ -99,6 +68,46 @@ class FasterRcnnParser(Parser):
 
         return scoresList, bboxList
 
+
+    # parse PyFaster
+    def parseErrMethod(self,errString):
+        # ERR boxes: [27,4] e: 132.775177002 r: 132.775024414
+        ret = {}
+        if 'boxes' in errString:
+            image_err = re.match(
+                ".*boxes\: \[(\d+),(\d+)\].*e\: (\S+).*r\: (\S+).*",
+                errString)
+            if image_err:
+                ret["type"] = "boxes"
+                # ret["imgindex"] = imgIndex
+                ###########
+                ret["boxes_x"] = image_err.group(1)
+                try:
+                    long((ret["boxes_x"]))
+                except:
+                    ret["boxes_x"] = 1e30
+                ###########
+                ret["boxes_y"] = image_err.group(2)
+                try:
+                    long((ret["boxes_y"]))
+                except:
+                    ret["boxes_y"] = 1e30
+                ###########
+                ret["e"] = image_err.group(3)
+                try:
+                    long(float(ret["e"]))
+                except:
+                    ret["e"] = 1e30
+                ############
+                ret["r"] = image_err.group(4)
+                try:
+                    long(float(ret["r"]))
+                except:
+                    ret["r"] = 1e30
+
+
+        return (ret if len(ret) > 0 else None)
+
     """
     ret["type"] = "boxes"
     ret["imgindex"] = imgIndex
@@ -113,7 +122,7 @@ class FasterRcnnParser(Parser):
     ret["r"] = image_err.group(4)
     """
 
-    def relativeErrorParser(self, errList):
+    def __relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return ("errlist fucked", None, None, None, None, None, None, None, None, None)
 
@@ -154,7 +163,20 @@ class FasterRcnnParser(Parser):
             pR.getTruePositive(), imgFile)
 
 
-    def generatePyFasterRectangles(self, goldArray): return None
+    def getSize(self, header):
+        # pyfaster
+        py_faster_m = re.match(".*iterations\: (\d+).*img_list\: (\S+).*board\: (\S+).*", self.pure_header)
+        if py_faster_m:
+            self.__iterations = py_faster_m.group(1)
+            self.__imgListPath = py_faster_m.group(2)
+            self.__board = py_faster_m.group(3)
+        return self.__imgListPath
+
+
+
+    def buildImageMethod(self, imgIndex):
+        return False
+    # def generatePyFasterRectangles(self, goldArray): return None
 
     def copyList(self, goldArray): return None
 
@@ -162,14 +184,7 @@ class FasterRcnnParser(Parser):
 
     def getImgLPos(self, sdcit): return None
 
-    def getSize(self, header):
-        # pyfaster
-        py_faster_m = re.match(".*iterations\: (\d+).*img_list\: (\S+).*board\: (\S+).*", self.pure_header)
-        if py_faster_m:
-            iterations = py_faster_m.group(1)
-            img_list_path = py_faster_m.group(2)
-            img_list_file = GOLD_DIR + os.path.basename(os.path.normpath(img_list_path))
-            board = py_faster_m.group(3)
+
 
 
 

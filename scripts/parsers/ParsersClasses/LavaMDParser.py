@@ -3,11 +3,15 @@ import struct
 import sys
 
 from Parser import Parser
+from sklearn.metrics import jaccard_similarity_score
 
 
-class ParserLavaMD(Parser):
+class LavaMDParser(Parser):
 
-    def jaccardCoefficient(self, errListJaccard):
+    __box = None
+    __hasThirdDimention = True
+
+    def __jaccardCoefficient(self, errListJaccard):
         expected = []
         read = []
         for err in errListJaccard:
@@ -40,14 +44,14 @@ class ParserLavaMD(Parser):
             expected.extend([n for n in expectedGStr4])
 
         try:
-            jac = self.jaccard_similarity_score(expected, read)
+            jac = jaccard_similarity_score(expected, read)
             dissimilarity = float(1.0 - jac)
             return dissimilarity
         except:
             return None
 
     # return [highest relative error, lowest relative error, average relative error, # zeros in the output, #zero in the GOLD, #errors with relative errors lower than limit(toleratedRelErr), list of errors limited by toleratedRelErr, #errors with relative errors lower than limit(toleratedRelErr2), list of errors limited by toleratedRelErr2]
-    def relativeErrorParser(self, errList):
+    def __relativeErrorParser(self, errList):
         relErr = []
         zeroGold = 0
         zeroOut = 0
@@ -120,10 +124,10 @@ class ParserLavaMD(Parser):
 
     # Return [posX, posY, posZ, vr, ve, xr, xe, yr, ye, zr, ze] -> [int, int, int, float, float, float, float, float, float, float, float]
     # Returns None if it is not possible to parse
-    def parseErr(self, errString):
-        if self.box is None:
+    def parseErrMethod(self, errString):
+        if self.__box is None:
             print ("box is None!!!\nerrString: ", errString)
-            print("header: ", self.header)
+            print("header: ", self.__header)
             sys.exit(1)
         try:
             ##ERR p: [357361], ea: 4, v_r: 1.5453305664062500e+03, v_e: 1.5455440673828125e+03, x_r: 9.4729260253906250e+02, x_e: 9.4630560302734375e+02, y_r: -8.0158099365234375e+02, y_e: -8.0218914794921875e+02, z_r: 9.8227819824218750e+02, z_e: 9.8161871337890625e+02
@@ -132,10 +136,10 @@ class ParserLavaMD(Parser):
                 errString)
             if m:
                 pos = int(m.group(1))
-                boxSquare = self.box * self.box
+                boxSquare = self.__box * self.__box
                 posZ = int(pos / boxSquare)
-                posY = int((pos - (posZ * boxSquare)) / self.box)
-                posX = pos - (posZ * boxSquare) - (posY * self.box)
+                posY = int((pos - (posZ * boxSquare)) / self.__box)
+                posX = pos - (posZ * boxSquare) - (posY * self.__box)
 
                 vr = float(m.group(2))
                 ve = float(m.group(3))
@@ -153,25 +157,28 @@ class ParserLavaMD(Parser):
 
 
     def getSize(self, header):
-        self.size = None
+        size = None
         m = re.match(".*size\:(\d+).*", header)
         if m:
             try:
-                self.size = int(m.group(1))
+                size = int(m.group(1))
             except:
-                self.size = None
+                size = None
 
-        self.box = None
+        self.__box = None
         m = re.match(".*boxes[\:-](\d+).*", header)
         if m:
             try:
-                self.box = int(m.group(1))
+                self.__box = int(m.group(1))
             except:
-                self.box = None
+                self.__box = None
 
         m = re.match(".*box[\:-](\d+).*", header)
         if m:
             try:
-                self.box = int(m.group(1))
+                self.__box = int(m.group(1))
             except:
-                self.box = None
+                self.__box = None
+        return size
+
+    def buildImageMethod(self, imgIndex): return False

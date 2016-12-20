@@ -4,10 +4,13 @@ from Parser import Parser
 
 
 class HotspotParser(Parser):
+
+    def __init__(self):
+        print "\n\n\nPASSOU NO INIT\n\n\n"
     # Return [posX, posY, read, expected] -> [int, int, float, float]
     # Return [posX, posY, expected*2, read] if read is NaN
     # Returns None if it is not possible to parse
-    def parseErr(self, errString):
+    def parseErrMethod(self, errString):
         # print "Passou"
         try:
             m = re.match(".*ERR.*.*r\:([0-9e\+\-\.nan]+).*e\:([0-9e\+\-\.]+).*\[(\d+),(\d+)\]", errString)
@@ -26,7 +29,7 @@ class HotspotParser(Parser):
             m = re.match(".*ERR.*\[(\d+)..(\d+)\].*r\: ([0-9e\+\-\.nan]+).*e\: ([0-9e\+\-\.]+)", errString)
             # CUDA -> ERR stream: 0, p: [0, 0], r: 3.0815771484375000e+02, e: 0.0000000000000000e+00
             if m:
-                print m.group(1) + " " + m.group(2) + " " + m.group(3) + " " + m.group(4) + " "
+                # print m.group(1) + " " + m.group(2) + " " + m.group(3) + " " + m.group(4) + " "
                 posX = int(m.group(1))
                 posY = int(m.group(2))
                 read = m.group(3)
@@ -41,11 +44,16 @@ class HotspotParser(Parser):
             return None
 
 
-    def getLogHeader(self, header):
-        self.size = None
+    def getSize(self, header):
+        size = None
         m = re.match(".*size\:(\d+).*", header)
         if m:
             try:
-                self.size = int(m.group(1))
+                size = int(m.group(1))
             except:
-                self.size = None
+                size = None
+
+        return size
+
+    def buildImageMethod(self, imgIndex):
+        return False
