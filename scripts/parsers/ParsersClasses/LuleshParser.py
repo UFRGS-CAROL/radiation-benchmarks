@@ -6,7 +6,14 @@ from Parser import Parser
 
 class LuleshParser(Parser):
 
-    def relativeErrorParser(self, errList):
+    _box = 50
+    _hasThirdDimention = True
+    _iterations = None
+
+    def _jaccardCoefficient(self, errListJaccard):
+        return 0
+
+    def _relativeErrorParser(self, errList):
         relErr = []
         zeroGold = 0
         zeroOut = 0
@@ -62,11 +69,11 @@ class LuleshParser(Parser):
             relError = relErrorX + relErrorY + relErrorZ  # relErrorV +
             if relError > 0:
                 relErr.append(relError)
-                if relError < self.toleratedRelErr:
+                if relError < self._toleratedRelErr:
                     relErrLowerLimit += 1
                 else:
                     errListFiltered.append(err)
-                if relError < self.toleratedRelErr2:
+                if relError < self._toleratedRelErr2:
                     relErrLowerLimit2 += 1
                 else:
                     errListFiltered2.append(err)
@@ -83,21 +90,21 @@ class LuleshParser(Parser):
     # parse lulesh is the same as lava
     # Return [posX, posY, posZ, vr, ve, xr, xe, yr, ye, zr, ze] -> [int, int, int, float, float, float, float, float, float, float, float]
     # Returns None if it is not possible to parse
-    def parseErr(self, errString, box, header):
-        if box is None:
+    def parseErrMethod(self, errString):
+        if self._box is None:
             print ("box is None!!!\nerrString: ", errString)
-            print("header: ", header)
+            print("header: ", self._header)
             sys.exit(1)
         try:
             ##ERR p: [58978] x_gold:4.950000000000000e-01 x_output:4.949996815262007e-01 y_gold:7.650000000000000e-01 y_output:7.649996815262007e-01 z_gold:4.950000000000000e-01 z_output:4.949996815262007e-01
             m = re.match(
-                ".*ERR.*\[(\d+)\].*x_gold\:([0-9e\+\-\.]+).*x_output\:([0-9e\+\-\.]+).*y_gold\:([0-9e\+\-\.]+).*y_output\:([0-9e\+\-\.]+).*z_gold\:([0-9e\+\-\.]+).*z_output\:([0-9e\+\-\.]+).*",
+                '.*ERR.*\[(\d+)\].*x_gold\:([0-9e\+\-\.]+).*x_output\:([0-9e\+\-\.]+).*y_gold\:([0-9e\+\-\.]+).*y_output\:([0-9e\+\-\.]+).*z_gold\:([0-9e\+\-\.]+).*z_output\:([0-9e\+\-\.]+).*',
                 errString)
             if m:
                 pos = int(m.group(1))
-                boxSquare = box * box
+                boxSquare = self._box * self._box
                 posZ = int(pos / boxSquare)
-                posY = pos if int((pos - (posZ * boxSquare)) / box) == 0 else int((pos - (posZ * boxSquare)) / box)
+                posY = pos if int((pos - (posZ * boxSquare)) / self._box) == 0 else int((pos - (posZ * boxSquare)) / self._box)
 
                 posX = pos  # if (pos-(posZ*boxSquare)-(posY*box)) == 0 else ((pos-(posZ*boxSquare)) / box)
 
@@ -116,24 +123,38 @@ class LuleshParser(Parser):
             return None
 
 
-    def getSize(self, header):
-        self.size = None
-        m = re.match(".*size\:(\d+).*", header)
+    def setSize(self, header):
+        #for lulesh
+        #structured:YES size:50 iterations:50
+        print "\n", header
+        m = re.match(".*structured:YES.*size\:(\d+).*iterations:(\d+).*box:(\d+).*",header)
         if m:
+            self._size = None
+            self._iterations = None
             try:
-                self.size = int(m.group(1))
+                self._size = int (m.group(1))
+                self._iterations = int(m.group(2))
+                self._box = int(m.group(3))
             except:
-                self.size = None
+                self._size = None
+                self._iterations = None
+        else:
+            m = re.match(".*structured:YES.*size\:(\d+).*iterations:(\d+).*",header)
+            self._size = None
+            self._iterations = None
+            if m:
+                try:
+                    self._size = int (m.group(1))
+                    self._iterations = int(m.group(2))
+                except:
+                    self._size = None
+                    self._iterations = None
+        self._size = str(self._size) + str(self._iterations)
+        # return self._size
 
-        # for lulesh
-        # structured:YES size:50 iterations:50
-        m = re.match("structured:YES.*size\:(\d+).*iterations:(\d+)", self.header)
-        self.size = None
-        self.iterations = None
-        if m:
-            try:
-                self.size = int(m.group(1))
-                self.iterations = int(m.group(2))
-            except:
-                self.size = None
-                self.iterations = None
+    def getBenchmark(self):
+        return self._benchmark
+
+    def buildImageMethod(self):
+        return False
+

@@ -77,7 +77,7 @@ class ACCLParser(Parser):
             return None
 
 
-    def getSize(self, header):
+    def setSize(self, header):
         # for accl
         m = re.match(".*frames[\:-](\d+).*", header)
         self.__frames = None
@@ -90,7 +90,8 @@ class ACCLParser(Parser):
             except:
                 self.__frames = None
                 self.__framesPerStrem = None
-        return self.__frames
+        # return self.__frames
+        self._size = str(self.__frames) + str(self.__framesPerStream)
 
     def buildImageMethod(self):
         return False

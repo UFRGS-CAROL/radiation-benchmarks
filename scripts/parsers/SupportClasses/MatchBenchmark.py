@@ -9,6 +9,7 @@ from ParsersClasses import FasterRcnnParser
 from ParsersClasses import HogParser
 from ParsersClasses import HotspotParser
 from ParsersClasses import LavaMDParser
+from ParsersClasses import NWParser
 from ParsersClasses import LudParser
 from ParsersClasses import LuleshParser
 from ParsersClasses import MergesortParser
@@ -17,32 +18,20 @@ from ParsersClasses import QuicksortParser
 """All benchmarks must be an atribute of MatchBenchmark, it will turn allmost all parser process invisible"""
 
 class MatchBenchmark():
-    """        "darknet": ParsersClasses.DarknetParser
-        , "hotspot": ParsersClasses.HotspotParser()
-        , "hog": ParsersClasses.HogParser()
-        , "lavamd": ParsersClasses.LavaMDParser()
-        , "mergesort": ParsersClasses.MergesortParser()
-        , "nw": ParsersClasses.NWParser()
-        , "quicksort": ParsersClasses.QuicksortParser()
-        , "accl": ParsersClasses.ACCLParser()
-        , "pyfasterrcnn": ParsersClasses.FasterRcnnParser()
-        , "lulesh": ParsersClasses.LuleshParser()
-        , "lud": ParsersClasses.LudParser()}
-    """
     # all fucking benchmarks here
     __radiationBenchmarks = {
          "darknet": DarknetParser.DarknetParser(),
          "hotspot": HotspotParser.HotspotParser(),
          "hog": HogParser.HogParser(),
          "lavamd": LavaMDParser.LavaMDParser(),
-        # , "mergesort": ParsersClasses.MergesortParser()
-        # , "nw": ParsersClasses.NWParser()
-        # , "quicksort": ParsersClasses.QuicksortParser()
+         "mergesort": MergesortParser.MergesortParser(),
+         "nw": NWParser.NWParser(),
+         "quicksort": QuicksortParser.QuicksortParser(),
          "accl": ACCLParser.ACCLParser(),
          "pyfasterrcnn": FasterRcnnParser.FasterRcnnParser(),
-        # , "lulesh": ParsersClasses.LuleshParser()
-        # , "lud": ParsersClasses.LudParser()
-        "gemm" : GemmParser.GemmParser(),
+         "lulesh": LuleshParser.LuleshParser(),
+         "lud": LudParser.LudParser(),
+         "gemm" : GemmParser.GemmParser(),
     }
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -87,7 +76,7 @@ class MatchBenchmark():
                 # doind it I will have duplicate data, but it is the cost of generalization
                 self.__currBench.setDefaultValues(logFileName, machine, benchmark, header, sdcIteration, accIteErrors,
                                                   iteErrors, errList, logFileNameNoExt, pureHeader)
-                # print self.__currBench.debugAttPrint()
+                #print self.__currBench.debugAttPrint()
 
                 break
 

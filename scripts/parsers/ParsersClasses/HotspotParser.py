@@ -49,7 +49,7 @@ class HotspotParser(Parser):
             return None
 
 
-    def getSize(self, header):
+    def setSize(self, header):
         size = None
         m = re.match(".*size\:(\d+).*", header)
         if m:
@@ -58,7 +58,7 @@ class HotspotParser(Parser):
             except:
                 size = None
 
-        return size
-
+        # return size
+        self._size = str(size)
     def buildImageMethod(self):
         return False

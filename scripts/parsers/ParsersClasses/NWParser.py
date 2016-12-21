@@ -6,7 +6,7 @@ from Parser import Parser
 class NWParser(Parser):
     # Return [posX, posY, read, expected] -> [int, int, float, float]
     # Returns None if it is not possible to parse
-    def parseErr(self, errString):
+    def parseErrMethod(self, errString):
         try:
             # ERR  p: [1, 467], r: -4654, e: 21, error: 467
             m = re.match(".*ERR.*\[(\d+)..(\d+)\].*r\: ([0-9\+\-]+).*e\: ([0-9\+\-]+).*", errString)
@@ -25,22 +25,35 @@ class NWParser(Parser):
             return None
 
 
-    def getSize(self, header):
+    def setSize(self, header):
+        self._max_rows = None
+        self._max_cols = None
+        self._penalty = None
+        # for nw
 
-        self.size = None
-        m = re.match(".*size\:(\d+).*", header)
+        m = re.match(".*max_rows\:(\d+).*max_cols\:(\d+).*penalty\:(\d+).*", header)
         if m:
+
             try:
-                self.size = int(m.group(1))
+                self._max_rows = int(m.group(1))
+                self._max_cols = int(m.group(2))
+                self._penalty = int(m.group(3))
             except:
-                self.size = None
+                self._max_rows = None
+                self._max_cols = None
+                self._penalty = None
+        else:  # for old logs
+            m = re.match(".*size\:(\d+).*(\d+).*", header)
+            if m:
+                self._max_rows = int(m.group(1))
+                self._max_cols = int(m.group(2))
+                self._penalty = None
+        self._size = str(self._max_cols) + str(self._max_rows)
 
 
-    def getLogHeader(self, header):
-        self.size = None
-        m = re.match(".*size\:(\d+).*", header)
-        if m:
-            try:
-                self.size = int(m.group(1))
-            except:
-                self.size = None
+
+    def buildImageMethod(self):
+        return False
+
+    def getBenchmark(self):
+        return self._benchmark

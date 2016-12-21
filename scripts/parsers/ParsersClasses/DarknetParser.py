@@ -39,7 +39,7 @@ class DarknetParser(Parser):
     def getBenchmark(self):
         return self._benchmark
     #overiding csvheader
-    __csvHeader = ["logFileName", "Machine", "Benchmark", "imgFile", "SDC_Iteration", "#Accumulated_Errors",
+    _csvHeader = ["logFileName", "Machine", "Benchmark", "imgFile", "SDC_Iteration", "#Accumulated_Errors",
                              "#Iteration_Errors", "gold_lines", "detected_lines", "x_center_of_mass",
                              "y_center_of_mass", "precision", "recall", "false_negative", "false_positive",
                              "true_positive"]
@@ -80,7 +80,7 @@ class DarknetParser(Parser):
 
        """
 
-    def __relativeErrorParser(self, errList):
+    def _relativeErrorParser(self, errList):
         imgListPath = None
         sdcIt = None
 
@@ -125,7 +125,7 @@ class DarknetParser(Parser):
     def buildImageMethod(self):
         return False
 
-    def getSize(self, header):
+    def setSize(self, header):
         darknetM = re.match(
             ".*execution_type\:(\S+).*execution_model\:(\S+).*img_list_path\:(\S+).*weights\:(\S+).*config_file\:(\S+).*iterations\:(\d+).*",
             header)
@@ -142,8 +142,8 @@ class DarknetParser(Parser):
 
             except:
                 self.__imgListFile = None
-        return self.__imgListFile
-
+        # return self.__imgListFile
+        self._size = str(self.__imgListFile)
 
 
     # parse Darknet

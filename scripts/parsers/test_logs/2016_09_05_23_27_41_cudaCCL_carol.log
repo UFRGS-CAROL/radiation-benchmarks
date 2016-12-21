@@ -1,0 +1,8 @@
+#HEADER frames:2, framesPerStream:1
+#BEGIN Y:2016 M:09 D:05 Time:23:27:41
+#IT Ite:0 KerTime:4.977877 AccTime:4.977877
+#ERR t: [spans], p: [512][238], r: 362, e: -1
+#ERR t: [spans], p: [513][238], r: 361, e: -1
+#ERR t: [components], p: [256][119], r: 122112, e: -1
+#SDC Ite:0 KerTime:4.977877 AccTime:4.977877 KerErr:3 AccErr:3
+#END

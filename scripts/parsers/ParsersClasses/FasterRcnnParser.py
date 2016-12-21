@@ -10,7 +10,7 @@ from Parser import Parser
 # GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
 
 class FasterRcnnParser(Parser):
-    __csvHeader = ["logFileName", "Machine", "Benchmark", "imgFile", "SDC_Iteration", "#Accumulated_Errors",
+    _csvHeader = ["logFileName", "Machine", "Benchmark", "imgFile", "SDC_Iteration", "#Accumulated_Errors",
                    "#Iteration_Errors", "gold_lines", "detected_lines", "x_center_of_mass",
                    "y_center_of_mass", "precision", "recall", "false_negative", "false_positive",
                    "true_positive"]
@@ -127,7 +127,7 @@ class FasterRcnnParser(Parser):
     ret["r"] = image_err.group(4)
     """
 
-    def __relativeErrorParser(self, errList):
+    def _relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return ("errlist fucked", None, None, None, None, None, None, None, None, None)
 
@@ -168,14 +168,14 @@ class FasterRcnnParser(Parser):
             pR.getTruePositive(), imgFile)
 
 
-    def getSize(self, header):
+    def setSize(self, header):
         # pyfaster
-        py_faster_m = re.match(".*iterations\: (\d+).*img_list\: (\S+).*board\: (\S+).*", self.pure_header)
+        py_faster_m = re.match(".*iterations\: (\d+).*img_list\: (\S+).*board\: (\S+).*", header)
         if py_faster_m:
             self.__iterations = py_faster_m.group(1)
             self.__imgListPath = py_faster_m.group(2)
             self.__board = py_faster_m.group(3)
-        return self.__imgListPath
+        self._size = self.__imgListPath
 
 
 

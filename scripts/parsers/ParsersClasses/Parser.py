@@ -37,17 +37,17 @@ class Parser():
     _imageIndex = 0
 
 
-    __csvHeader = ["logFileName", "Machine", "Benchmark", "Header", "SDC Iteration", "#Accumulated Errors",
+    _csvHeader = ["logFileName", "Machine", "Benchmark", "Header", "SDC Iteration", "#Accumulated Errors",
                              "#Iteration Errors", "Relative Errors <= " + str(_toleratedRelErr) + "%",
                              "Relative Errors <= " + str(_toleratedRelErr2) + "%", "Jaccard",
                              "Jaccard > " + str(_toleratedRelErr) + "%", "Jaccard > " + str(_toleratedRelErr2) + "%",
                              "Cubic", "Square", "Line", "Single", "Random", "Cubic Err > " + str(_toleratedRelErr),
-                             "Square Err > " + str(_toleratedRelErr), "Line Err > " + str(_toleratedRelErr),
-                             "Single Err > " + str(_toleratedRelErr), "Random Err > " + str(_toleratedRelErr),
-                             "Cubic Err > " + str(_toleratedRelErr2), "Square Err > " + str(_toleratedRelErr2),
-                             "Line Err > " + str(_toleratedRelErr2), "Single Err > " + str(_toleratedRelErr2),
-                             "Random Err > " + str(_toleratedRelErr2), "Max Relative Error", "Min Rel Error",
-                             "Average Rel Err", "zeroOut", "zeroGold"]
+                  "Square Err > " + str(_toleratedRelErr), "Line Err > " + str(_toleratedRelErr),
+                  "Single Err > " + str(_toleratedRelErr), "Random Err > " + str(_toleratedRelErr),
+                  "Cubic Err > " + str(_toleratedRelErr2), "Square Err > " + str(_toleratedRelErr2),
+                  "Line Err > " + str(_toleratedRelErr2), "Single Err > " + str(_toleratedRelErr2),
+                  "Random Err > " + str(_toleratedRelErr2), "Max Relative Error", "Min Rel Error",
+                  "Average Rel Err", "zeroOut", "zeroGold"]
 
 
     #for relativeErrorParser
@@ -111,9 +111,10 @@ class Parser():
         self._pureHeader = pureHeader
         self._logFileNameNoExt = logFileNameNoExt
 
-        self._size = self.getSize(self._pureHeader)
+        #self._size = \
+        self.setSize(self._pureHeader)
 
-        self.__makeDirName()
+        self._makeDirName()
 
         #----------------
 
@@ -140,7 +141,7 @@ class Parser():
     def relativeErrorParser(self):
         [self._maxRelErr, self._minRelErr, self._avgRelErr, self._zeroOut, self._zeroGold, self._relErrLowerLimit,
          self._errors["errListFiltered"], self._relErrLowerLimit2,
-         self._errors["errListFiltered2"]] = self.__relativeErrorParser(self._errors["errorsParsed"])
+         self._errors["errListFiltered2"]] = self._relativeErrorParser(self._errors["errorsParsed"])
 
     @abstractmethod
     def parseErrMethod(self, errString):
@@ -160,7 +161,7 @@ class Parser():
         raise NotImplementedError()
 
     @abstractmethod
-    def getSize(self, header):
+    def setSize(self, header):
         raise NotImplementedError()
 
     """if the csvHeader must be different, the variable must be set to the other value, so getCSVHeader will return other constant"""
@@ -174,7 +175,7 @@ class Parser():
     return [highest relative error, lowest relative error, average relative error, # zeros in the output, #zero in the GOLD, #errors with relative errors lower than limit(toleratedRelErr), list of errors limited by toleratedRelErr, #errors with relative errors lower than limit(toleratedRelErr2), list of errors limited by toleratedRelErr2]
     assumes errList[2] is read valued and errList[3] is expected value
     """
-    def __relativeErrorParser(self, errList):
+    def _relativeErrorParser(self, errList):
         relErr = []
         zeroGold = 0
         zeroOut = 0
@@ -214,7 +215,7 @@ class Parser():
 
             # fileNameSuffix = "errorFilterTo-"+str(toleratedRelErr) # add a suffix to csv filename
 
-    def __buildImage(self, errors, size, filename):
+    def _buildImage(self, errors, size, filename):
         # identifica em qual posicao da matriz ocorreram os erros
         # definindo as bordas [esquerda, cabeca, direita, pe]
         err_limits = [int(size), int(size), 0, 0]
@@ -294,9 +295,10 @@ class Parser():
                 #         jaccardF = currObj.jaccardCoefficientLavaMD(errListFiltered)
                 #         jaccardF2 = currObj.jaccardCoefficientLavaMD(errListFiltered2)
                 # print "\n" , self._benchmark
-                self._jaccardCoefficinetDict[keys] = __jaccardCoefficient(self, values)
+                self._jaccardCoefficinetDict[keys] = self._jaccardCoefficient(values)
 
-    def __jaccardCoefficient(self, errListJaccard):
+
+    def _jaccardCoefficient(self, errListJaccard):
         expected = []
         read = []
         for err in errListJaccard:
@@ -335,13 +337,13 @@ class Parser():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             for key, value in self._errors.iteritems():
                 if self._hasThirdDimention:
-                    self._locality[key] = self.__localityParser3D(value)
+                    self._locality[key] = self._localityParser3D(value)
                 else:
-                    self._locality[key] = self.__localityParser2D(value)
+                    self._locality[key] = self._localityParser2D(value)
 
     # return [square, col/row, single, random]
     # assumes errList[0] is posX and errList[1] is posY
-    def __localityParser2D(self, errList):
+    def _localityParser2D(self, errList):
         if len(errList) < 1:
             return [0, 0, 0, 0, 0]
         elif len(errList) == 1:
@@ -364,7 +366,7 @@ class Parser():
 
     # return [cubic, square, line, single, random]
     # assumes errList[0] is posX, errList[1] is posY, and errList[2] is posZ
-    def __localityParser3D(self, errList):
+    def _localityParser3D(self, errList):
         if len(errList) < 1:
             return [0, 0, 0, 0, 0]
         elif len(errList) == 1:
@@ -399,7 +401,7 @@ class Parser():
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             output = self._dirName + "/logs_parsed_" + self._machine + ".csv"
-            self.__writeToCSV(output)
+            self._writeToCSV(output)
 
 
     """
@@ -407,9 +409,9 @@ class Parser():
     if you want other type of write to csv,
     the method __writeToCSV and atribute __csvHeader must be changed
     """
-    def __writeToCSV(self, csvFileName):
+    def _writeToCSV(self, csvFileName):
         if self._headerWriten == False and os.path.isfile(csvFileName) == False:
-            self.__writeCSVHeader(csvFileName)
+            self._writeCSVHeader(csvFileName)
             self._headerWriten = True
 
         try:
@@ -466,7 +468,7 @@ class Parser():
 
 
     """writes a csv header, and create the log_parsed directory"""
-    def __writeCSVHeader(self, csvFileName):
+    def _writeCSVHeader(self, csvFileName):
         if not os.path.exists(os.path.dirname(csvFileName)):
             try:
                 os.makedirs(os.path.dirname(csvFileName))
@@ -475,12 +477,12 @@ class Parser():
                     raise
         csvWFP = open(csvFileName, "a")
         writer = csv.writer(csvWFP, delimiter=';')
-        writer.writerow(self.__csvHeader)
+        writer.writerow(self._csvHeader)
         csvWFP.close()
 
 
-    def __makeDirName(self):
-        self._dirName = os.getcwd() + "/" + self._benchmark + "/" + str(self._size) + "/"
+    def _makeDirName(self):
+        self._dirName = os.getcwd() + "/" + self._machine + "/" + self._benchmark + "/" + str(self._size) + "/"
         if not os.path.exists(os.path.dirname(self._dirName)):
             try:
                 os.makedirs(os.path.dirname(self._dirName))

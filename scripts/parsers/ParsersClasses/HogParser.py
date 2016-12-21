@@ -47,11 +47,12 @@ class HogParser(Parser):
         # type: (integer) -> boolean
         return False
 
-    def getSize(self, header):
-        self.size = None
+    def setSize(self, header):
+        self._size = None
         m = re.match(".*size\:(\d+).*", header)
         if m:
             try:
-                self.size = int(m.group(1))
+                self._size = int(m.group(1))
             except:
                 self.size = None
+        self._size = str(self._size)
