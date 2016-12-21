@@ -8,10 +8,16 @@ from sklearn.metrics import jaccard_similarity_score
 
 class LavaMDParser(Parser):
 
-    __box = None
-    __hasThirdDimention = True
+    _box = None
+    _hasThirdDimention = True
+
+    # __bench = "lavamd"
+
+    def getBenchmark(self):
+        return self._benchmark
 
     def __jaccardCoefficient(self, errListJaccard):
+        print "\n\nPassou no jaccard lava \n\n"
         expected = []
         read = []
         for err in errListJaccard:
@@ -52,6 +58,7 @@ class LavaMDParser(Parser):
 
     # return [highest relative error, lowest relative error, average relative error, # zeros in the output, #zero in the GOLD, #errors with relative errors lower than limit(toleratedRelErr), list of errors limited by toleratedRelErr, #errors with relative errors lower than limit(toleratedRelErr2), list of errors limited by toleratedRelErr2]
     def __relativeErrorParser(self, errList):
+        print "\n\n\nPassou no relavite lava\n\n\n"
         relErr = []
         zeroGold = 0
         zeroOut = 0
@@ -125,9 +132,9 @@ class LavaMDParser(Parser):
     # Return [posX, posY, posZ, vr, ve, xr, xe, yr, ye, zr, ze] -> [int, int, int, float, float, float, float, float, float, float, float]
     # Returns None if it is not possible to parse
     def parseErrMethod(self, errString):
-        if self.__box is None:
+        if self._box is None:
             print ("box is None!!!\nerrString: ", errString)
-            print("header: ", self.__header)
+            print("header: ", self._header)
             sys.exit(1)
         try:
             ##ERR p: [357361], ea: 4, v_r: 1.5453305664062500e+03, v_e: 1.5455440673828125e+03, x_r: 9.4729260253906250e+02, x_e: 9.4630560302734375e+02, y_r: -8.0158099365234375e+02, y_e: -8.0218914794921875e+02, z_r: 9.8227819824218750e+02, z_e: 9.8161871337890625e+02
@@ -136,10 +143,10 @@ class LavaMDParser(Parser):
                 errString)
             if m:
                 pos = int(m.group(1))
-                boxSquare = self.__box * self.__box
+                boxSquare = self._box * self._box
                 posZ = int(pos / boxSquare)
-                posY = int((pos - (posZ * boxSquare)) / self.__box)
-                posX = pos - (posZ * boxSquare) - (posY * self.__box)
+                posY = int((pos - (posZ * boxSquare)) / self._box)
+                posX = pos - (posZ * boxSquare) - (posY * self._box)
 
                 vr = float(m.group(2))
                 ve = float(m.group(3))
@@ -165,20 +172,20 @@ class LavaMDParser(Parser):
             except:
                 size = None
 
-        self.__box = None
+        self._box = None
         m = re.match(".*boxes[\:-](\d+).*", header)
         if m:
             try:
-                self.__box = int(m.group(1))
+                self._box = int(m.group(1))
             except:
-                self.__box = None
+                self._box = None
 
         m = re.match(".*box[\:-](\d+).*", header)
         if m:
             try:
-                self.__box = int(m.group(1))
+                self._box = int(m.group(1))
             except:
-                self.__box = None
+                self._box = None
         return size
 
-    def buildImageMethod(self, imgIndex): return False
+    def buildImageMethod(self): return False

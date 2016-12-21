@@ -20,6 +20,11 @@ class FasterRcnnParser(Parser):
     __imgListPath = None
     __board = None
 
+
+
+    def getBenchmark(self):
+        return self._benchmark
+
     def generatePyFasterRectangles(self, dets, thresh=0):
         """Draw detected bounding boxes."""
         inds = np.where(dets[:, -1] >= thresh)[0]
@@ -174,7 +179,7 @@ class FasterRcnnParser(Parser):
 
 
 
-    def buildImageMethod(self, imgIndex):
+    def buildImageMethod(self):
         return False
     # def generatePyFasterRectangles(self, goldArray): return None
 

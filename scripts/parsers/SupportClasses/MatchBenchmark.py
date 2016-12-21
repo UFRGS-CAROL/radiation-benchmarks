@@ -50,7 +50,6 @@ class MatchBenchmark():
     """sdcItem is => [logfile name, header, sdc iteration, iteration total amount error, iteration accumulated error, list of errors ]"""
 
     def __init__(self):
-        self.__benchSet = False
         self.__currBench = None
 
     #
@@ -82,12 +81,14 @@ class MatchBenchmark():
             isBench = re.search(str(key), benchmark, flags=re.IGNORECASE)
 
             if isBench:
-                print "\n\ncurrent bench ", key
-                print "\n\n len " ,logFileName, machine, benchmark, header, sdcIteration, accIteErrors, iteErrors
+                # print "\n\ncurrent bench ", key
+                # print "\n\n len " ,logFileName, machine, benchmark, header, sdcIteration, accIteErrors, iteErrors
                 self.__currBench = self.__radiationBenchmarks[str(key)]
                 # doind it I will have duplicate data, but it is the cost of generalization
                 self.__currBench.setDefaultValues(logFileName, machine, benchmark, header, sdcIteration, accIteErrors,
                                                   iteErrors, errList, logFileNameNoExt, pureHeader)
+                # print self.__currBench.debugAttPrint()
+
                 break
 
         if not isBench:
@@ -124,3 +125,21 @@ class MatchBenchmark():
     def getCurrentObj(self):
         return self.__currBench
 
+    def parseErrCall(self):
+        self.__currBench.parseErr()
+
+    def relativeErrorParserCall(self):
+        self.__currBench.relativeErrorParser()
+
+
+    def localityParserCall(self):
+        self.__currBench.localityParser()
+
+    def jaccardCoefficientCall(self):
+        self.__currBench.jaccardCoefficient()
+
+    def buildImageCall(self):
+        self.__currBench.buildImageMethod()
+
+    def writeToCSVCall(self):
+        self.__currBench.writeToCSV()

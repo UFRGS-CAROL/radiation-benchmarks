@@ -35,6 +35,9 @@ CLASSES = ['__background__',
 
 class DarknetParser(Parser):
 
+
+    def getBenchmark(self):
+        return self._benchmark
     #overiding csvheader
     __csvHeader = ["logFileName", "Machine", "Benchmark", "imgFile", "SDC_Iteration", "#Accumulated_Errors",
                              "#Iteration_Errors", "gold_lines", "detected_lines", "x_center_of_mass",
@@ -86,7 +89,7 @@ class DarknetParser(Parser):
 
         imgList = open(self.__imgListPath, "r").readlines()
 
-        imgLPos = self.getImgLPos(sdcit= self.__sdcIteration, maxsize=self.__goldObj.plist_size)
+        imgLPos = self.getImgLPos(sdcit= self._sdcIteration, maxsize=self.__goldObj.plist_size)
 
         # print "\nTamanho do plist " , gold_obj.plist_size , " tamanho do imgLPos" , imgLPos
         gold = self.__goldObj.prob_array["boxes"][imgLPos]
@@ -119,7 +122,7 @@ class DarknetParser(Parser):
             imgFile)
 
 
-    def buildImageMethod(self, imgIndex):
+    def buildImageMethod(self):
         return False
 
     def getSize(self, header):

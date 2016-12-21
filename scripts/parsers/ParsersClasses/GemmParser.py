@@ -4,6 +4,11 @@ from Parser import Parser
 
 
 class GemmParser(Parser):
+
+
+    def getBenchmark(self):
+        return self._benchmark
+
     # Return [posX, posY, read, expected] -> [int, int, float, float]
     # Returns None if it is not possible to parse
     def parseErrMethod(self, errString):
@@ -40,7 +45,7 @@ class GemmParser(Parser):
         #currObj.buildImage(errorsParsed, size,
         #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
     """
-    def buildImageMethod(self, imgIndex):
+    def buildImageMethod(self):
         # type: (integer) -> boolean
         return False
 

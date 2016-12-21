@@ -10,6 +10,10 @@ class ACCLParser(Parser):
     __maxCols = None
     __penalty = None
 
+
+    def getBenchmark(self):
+        return self._benchmark
+
     # Return [posX, posY, read, expected, comp_or_spans] -> [int, int, float, float, string]
     # Returns None if it is not possible to parse
     def parseErrMethod(self, errString):
@@ -88,5 +92,5 @@ class ACCLParser(Parser):
                 self.__framesPerStrem = None
         return self.__frames
 
-    def buildImageMethod(self, imgIndex):
+    def buildImageMethod(self):
         return False

@@ -9,6 +9,9 @@ class HogParser(Parser):
     __prThreshold = 0.5
     __precisionAndRecall = pr.PrecisionAndRecall(__prThreshold)
 
+    def getBenchmark(self):
+        return self._benchmark
+
     def parseErrMethod(self, errString):
         # ERR Image: set08_V009_1237.jpg
         # ERR 101,50,176,76,226,177
@@ -40,7 +43,7 @@ class HogParser(Parser):
        return [None, None]
 
 
-    def buildImageMethod(self, imgIndex):
+    def buildImageMethod(self):
         # type: (integer) -> boolean
         return False
 

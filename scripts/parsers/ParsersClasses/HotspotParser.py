@@ -5,8 +5,13 @@ from Parser import Parser
 
 class HotspotParser(Parser):
 
-    def __init__(self):
-        print "\n\n\nPASSOU NO INIT\n\n\n"
+    # def __init__(self):
+    #     print "\n\n\nPASSOU NO INIT\n\n\n"
+
+
+
+    def getBenchmark(self):
+        return self._benchmark
     # Return [posX, posY, read, expected] -> [int, int, float, float]
     # Return [posX, posY, expected*2, read] if read is NaN
     # Returns None if it is not possible to parse
@@ -55,5 +60,5 @@ class HotspotParser(Parser):
 
         return size
 
-    def buildImageMethod(self, imgIndex):
+    def buildImageMethod(self):
         return False

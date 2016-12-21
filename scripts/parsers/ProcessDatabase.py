@@ -28,7 +28,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
 
     sdci = 1
     totalSdcs = len(sdcItemList)
-    imageIndex = 0
+    # imageIndex = 0
     # goldDarknet = None
     # goldPyFaster = None
     # readGoldDarknet = True
@@ -43,7 +43,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
         sys.stdout.flush()
 
         matchBench.processHeader(sdcItem, benchmarkname_machinename)
-        currObj =  matchBench.getCurrentObj()
+        # currObj =  matchBench.getCurrentObj()
         #
         # if isLavaMD and box is None:
         #     continue
@@ -69,7 +69,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
             #     err = pn.parseErrDarknet(errString)
             # elif isPyFaster:
             #     err = pn.parseErrPyFaster(errString, sdcIteration)
-        currObj.parseErr()
+        matchBench.parseErrCall()
             #
             # if err is not None:
             #     errorsParsed.append(err)
@@ -90,7 +90,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
         #      errListFiltered2) = relativeErrorParserLulesh(errorsParsed)
         # (maxRelErr, minRelErr, avgRelErr, zeroOut, zeroGold, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
         #       errListFiltered2) = currObj.relativeErrorParser(errorsParsed)
-        currObj.relativeErrorParser()
+        matchBench.relativeErrorParserCall()
         # object detection algorithms need other look
         # elif isPyFaster:
         #      # only for CNNs
@@ -117,8 +117,8 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
             #    print errListFiltered
             #    print errorsParsed
 
-        currObj.localityParser()
-        currObj.jaccardCoefficient()
+        matchBench.localityParserCall()
+        matchBench.jaccardCoefficientCall()
         # (square, colRow, single, random) =  currObj.localityParser2D(errorsParsed)
         # (squareF, colRowF, singleF, randomF) =  currObj.localityParser2D(errListFiltered)
         # (squareF2, colRowF2, singleF2, randomF2) =  currObj.localityParser2D(errListFiltered2)
@@ -137,10 +137,8 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
         #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
         #     else:
         #to activate this method the setBuildImage method must be called with True parameter
-        if currObj.buildImageMethod(str(imageIndex)):
-            imageIndex += 1
 
-        currObj.writeToCSV()
+        matchBench.writeToCSVCall()
         sdci += 1
     sys.stdout.write(
         "\rProcessing SDC " + str(sdci - 1) + " of " + str(totalSdcs) + " - 100%                     " + "\n")

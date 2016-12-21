@@ -13,93 +13,113 @@ import warnings
 
 class Parser():
     __metaclass__ = ABCMeta
-    __toleratedRelErr = 2.0  # minimum relative error to be considered, in percentage
-    __toleratedRelErr2 = 5.0  # minimum relative error to be considered, in percentage
-    __buildImages = False  # build locality images
-    __headerWriten = False
-    __errList = []
-    __pureHeader = ""
-    __logFileNameNoExt = ""
-    __dirName = ""
+    _toleratedRelErr = 2.0  # minimum relative error to be considered, in percentage
+    _toleratedRelErr2 = 5.0  # minimum relative error to be considered, in percentage
+    _buildImages = False  # build locality images
+    _headerWriten = False
+    _errList = []
+    _pureHeader = ""
+    _logFileNameNoExt = ""
+    _dirName = ""
 
     #size must be set on the child classes
-    __size = ""
+    _size = ""
 
     #specific atributes for CSV write
     #logFileName,machine,benchmark,header,sdcIteration,accIteErrors,iteErrors,
-    __logFileName = ""
-    __machine = ""
-    __benchmark = ""
-    __header = ""
-    __sdcIteration = -1
-    __accIteErrors = -1
-    __iteErrors = -1
+    _logFileName = ""
+    _machine = ""
+    _benchmark = None
+    _header = ""
+    _sdcIteration = -1
+    _accIteErrors = -1
+    _iteErrors = -1
+    _imageIndex = 0
 
-    def setDefaultValues(self, logFileName, machine, benchmark, header, sdcIteration, accIteErrors, iteErrors,  errList, logFileNameNoExt, pureHeader):
-        self.__logFileName = logFileName
-        self.__machine = machine
-        self.__benchmark = benchmark
-        self.__header = header
-        self.__sdcIteration = sdcIteration
-        self.__accIteErrors = accIteErrors
-
-        self.__iteErrors = iteErrors
-        self.__errList = errList
-        # print "\n\nerr list inside " , len(errList)
-        self.__pureHeader = pureHeader
-        self.__logFileNameNoExt = logFileNameNoExt
-
-        self.__size = self.getSize(self.__pureHeader)
-
-        self.__makeDirName()
-        #----------------
 
     __csvHeader = ["logFileName", "Machine", "Benchmark", "Header", "SDC Iteration", "#Accumulated Errors",
-                             "#Iteration Errors", "Relative Errors <= " + str(__toleratedRelErr) + "%",
-                             "Relative Errors <= " + str(__toleratedRelErr2) + "%", "Jaccard",
-                             "Jaccard > " + str(__toleratedRelErr) + "%", "Jaccard > " + str(__toleratedRelErr2) + "%",
-                             "Cubic", "Square", "Line", "Single", "Random", "Cubic Err > " + str(__toleratedRelErr),
-                             "Square Err > " + str(__toleratedRelErr), "Line Err > " + str(__toleratedRelErr),
-                             "Single Err > " + str(__toleratedRelErr), "Random Err > " + str(__toleratedRelErr),
-                             "Cubic Err > " + str(__toleratedRelErr2), "Square Err > " + str(__toleratedRelErr2),
-                             "Line Err > " + str(__toleratedRelErr2), "Single Err > " + str(__toleratedRelErr2),
-                             "Random Err > " + str(__toleratedRelErr2), "Max Relative Error", "Min Rel Error",
+                             "#Iteration Errors", "Relative Errors <= " + str(_toleratedRelErr) + "%",
+                             "Relative Errors <= " + str(_toleratedRelErr2) + "%", "Jaccard",
+                             "Jaccard > " + str(_toleratedRelErr) + "%", "Jaccard > " + str(_toleratedRelErr2) + "%",
+                             "Cubic", "Square", "Line", "Single", "Random", "Cubic Err > " + str(_toleratedRelErr),
+                             "Square Err > " + str(_toleratedRelErr), "Line Err > " + str(_toleratedRelErr),
+                             "Single Err > " + str(_toleratedRelErr), "Random Err > " + str(_toleratedRelErr),
+                             "Cubic Err > " + str(_toleratedRelErr2), "Square Err > " + str(_toleratedRelErr2),
+                             "Line Err > " + str(_toleratedRelErr2), "Single Err > " + str(_toleratedRelErr2),
+                             "Random Err > " + str(_toleratedRelErr2), "Max Relative Error", "Min Rel Error",
                              "Average Rel Err", "zeroOut", "zeroGold"]
 
 
     #for relativeErrorParser
-    __maxRelErr = 0
-    __minRelErr = 0
-    __avgRelErr = 0
-    __zeroOut  = 0
-    __zeroGold = 0
-    __relErrLowerLimit = 0
-    __relErrLowerLimit2 = 0
+    _maxRelErr = 0
+    _minRelErr = 0
+    _avgRelErr = 0
+    _zeroOut  = 0
+    _zeroGold = 0
+    _relErrLowerLimit = 0
+    _relErrLowerLimit2 = 0
 
-    __errors = {}
-    __errors["errorsParsed"] = []
-    __errors["errListFiltered"] = []
-    __errors["errListFiltered2"] = []
+    _errors = {}
+    _errors["errorsParsed"] = []
+    _errors["errListFiltered"] = []
+    _errors["errListFiltered2"] = []
 
 
     #for localityParser2D
-    __locality = {}
+    _locality = {}
     #cubic, square, colRow, single, random
-    __locality["errorsParsed"] = [0,0,0,0,0]
-    __locality["errListFiltered"] = [0,0,0,0,0]
-    __locality["errListFiltered2"] = [0,0,0,0,0]
+    _locality["errorsParsed"] = [0, 0, 0, 0, 0]
+    _locality["errListFiltered"] = [0, 0, 0, 0, 0]
+    _locality["errListFiltered2"] = [0, 0, 0, 0, 0]
 
     #for jaccardCoefficient
-    __jaccardCoefficinetDict = {}
-    __jaccardCoefficinetDict["errorsParsed"] = 0
-    __jaccardCoefficinetDict["errListFiltered"] = 0
-    __jaccardCoefficinetDict["errListFiltered2"] = 0
+    _jaccardCoefficinetDict = {}
+    _jaccardCoefficinetDict["errorsParsed"] = 0
+    _jaccardCoefficinetDict["errListFiltered"] = 0
+    _jaccardCoefficinetDict["errListFiltered2"] = 0
 
-    __hasThirdDimention = False
+    _hasThirdDimention = False
+
+    def debugAttPrint(self):
+        print "*******Var values*******"
+        print "log file" , self._logFileName
+        print "machine" , self._machine
+        print "acc ite errors" , self._accIteErrors
+        print "bencharmk" , self._benchmark
+        print "header" , self._header
+        print "sdcIterators" , self._sdcIteration
+        print "iteErrors" , self._iteErrors
+        print "size" , self._size
+        print "dir name", self._dirName
+        print "third dimention", self._hasThirdDimention
+
+    @abstractmethod
+    def getBenchmark(self):
+        raise NotImplementedError
+
+    def setDefaultValues(self, logFileName, machine, benchmark, header, sdcIteration, accIteErrors, iteErrors,  errList, logFileNameNoExt, pureHeader):
+        self._logFileName = logFileName
+        self._machine = machine
+        self._benchmark = benchmark
+        self._header = header
+        self._sdcIteration = sdcIteration
+        self._accIteErrors = accIteErrors
+
+        self._iteErrors = iteErrors
+        self._errList = errList
+        # print "\n\nerr list inside " , len(errList)
+        self._pureHeader = pureHeader
+        self._logFileNameNoExt = logFileNameNoExt
+
+        self._size = self.getSize(self._pureHeader)
+
+        self.__makeDirName()
+
+        #----------------
 
 
     def getHasThirdDimention(self):
-        return self.__hasThirdDimention
+        return self._hasThirdDimention
 
     def setBuildImage(self, val):
         self.__buildImage = True
@@ -108,19 +128,19 @@ class Parser():
 
     """call to the private methods"""
     def parseErr(self):
-        self.__errors["errorsParsed"] = []
-        self.__errors["errListFiltered"] = []
-        self.__errors["errListFiltered2"] = []
-        for errString in self.__errList:
+        self._errors["errorsParsed"] = []
+        self._errors["errListFiltered"] = []
+        self._errors["errListFiltered2"] = []
+        for errString in self._errList:
             err = self.parseErrMethod(errString)
             if err != None:
-                self. __errors["errorsParsed"].append(err)
+                self. _errors["errorsParsed"].append(err)
 
     """for almost all benchmarks this method must be ovirride, because it is application dependent"""
     def relativeErrorParser(self):
-        [self.__maxRelErr, self.__minRelErr, self.__avgRelErr, self.__zeroOut, self.__zeroGold, self.__relErrLowerLimit,
-         self.__errors["errListFiltered"], self.__relErrLowerLimit2,
-         self.__errors["errListFiltered2"]] = self.__relativeErrorParser(self.__errors["errorsParsed"])
+        [self._maxRelErr, self._minRelErr, self._avgRelErr, self._zeroOut, self._zeroGold, self._relErrLowerLimit,
+         self._errors["errListFiltered"], self._relErrLowerLimit2,
+         self._errors["errListFiltered2"]] = self.__relativeErrorParser(self._errors["errorsParsed"])
 
     @abstractmethod
     def parseErrMethod(self, errString):
@@ -136,7 +156,7 @@ class Parser():
         #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
     """
     @abstractmethod
-    def buildImageMethod(self, imgIndex):
+    def buildImageMethod(self):
         raise NotImplementedError()
 
     @abstractmethod
@@ -173,11 +193,11 @@ class Parser():
             else:
                 relError = abs(absoluteErr / expected) * 100
                 relErr.append(relError)
-                if relError < self.__toleratedRelErr:
+                if relError < self._toleratedRelErr:
                     relErrLowerLimit += 1
                 else:
                     errListFiltered.append(err)
-                if relError < self.__toleratedRelErr2:
+                if relError < self._toleratedRelErr2:
                     relErrLowerLimit2 += 1
                 else:
                     errListFiltered2.append(err)
@@ -264,16 +284,17 @@ class Parser():
 
 
     def jaccardCoefficient(self):
-        self.__jaccardCoefficinetDict["errorsParsed"] = 0
-        self.__jaccardCoefficinetDict["errListFiltered"] = 0
-        self.__jaccardCoefficinetDict["errListFiltered2"] = 0
+        self._jaccardCoefficinetDict["errorsParsed"] = 0
+        self._jaccardCoefficinetDict["errListFiltered"] = 0
+        self._jaccardCoefficinetDict["errListFiltered2"] = 0
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
-            for keys, values in self.__errors.iteritems():
+            for keys, values in self._errors.iteritems():
                 #         jaccard = currObj.jaccardCoefficientLavaMD(errorsParsed)
                 #         jaccardF = currObj.jaccardCoefficientLavaMD(errListFiltered)
                 #         jaccardF2 = currObj.jaccardCoefficientLavaMD(errListFiltered2)
-                self.__jaccardCoefficinetDict[keys] = self.__jaccardCoefficient(values)
+                # print "\n" , self._benchmark
+                self._jaccardCoefficinetDict[keys] = __jaccardCoefficient(self, values)
 
     def __jaccardCoefficient(self, errListJaccard):
         expected = []
@@ -307,16 +328,16 @@ class Parser():
     # (cubicF, squareF, colRowF, singleF, randomF) = localityParser3D(errListFiltered)
     # (cubicF2, squareF2, colRowF2, singleF2, randomF2) = localityParser3D(errListFiltered2)
     def localityParser(self):
-        self.__locality["errorsParsed"] = [0, 0, 0, 0, 0]
-        self.__locality["errListFiltered"] = [0, 0, 0, 0, 0]
-        self.__locality["errListFiltered2"] = [0, 0, 0, 0, 0]
+        self._locality["errorsParsed"] = [0, 0, 0, 0, 0]
+        self._locality["errListFiltered"] = [0, 0, 0, 0, 0]
+        self._locality["errListFiltered2"] = [0, 0, 0, 0, 0]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
-            for key, value in self.__errors.iteritems():
-                if self.__hasThirdDimention:
-                    self.__locality[key] = self.__localityParser3D(value)
+            for key, value in self._errors.iteritems():
+                if self._hasThirdDimention:
+                    self._locality[key] = self.__localityParser3D(value)
                 else:
-                    self.__locality[key] = self.__localityParser2D(value)
+                    self._locality[key] = self.__localityParser2D(value)
 
     # return [square, col/row, single, random]
     # assumes errList[0] is posX and errList[1] is posY
@@ -377,7 +398,7 @@ class Parser():
     def writeToCSV(self):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
-            output = self.__dirName + "/logs_parsed_" + self.__machine + ".csv"
+            output = self._dirName + "/logs_parsed_" + self._machine + ".csv"
             self.__writeToCSV(output)
 
 
@@ -387,28 +408,28 @@ class Parser():
     the method __writeToCSV and atribute __csvHeader must be changed
     """
     def __writeToCSV(self, csvFileName):
-        if self.__headerWriten == False and os.path.isfile(csvFileName) == False:
+        if self._headerWriten == False and os.path.isfile(csvFileName) == False:
             self.__writeCSVHeader(csvFileName)
-            self.__headerWriten = True
+            self._headerWriten = True
 
         try:
 
             csvWFP = open(csvFileName, "a")
             writer = csv.writer(csvWFP, delimiter=';')
-            outputList = [self.__logFileName,
-                             self.__machine,
-                             self.__benchmark,
-                             self.__header,
-                             self.__sdcIteration,
-                             self.__accIteErrors,
-                             self.__iteErrors,
-                             self.__relErrLowerLimit,
-                             self.__relErrLowerLimit2]
+            outputList = [self._logFileName,
+                          self._machine,
+                          self._benchmark,
+                          self._header,
+                          self._sdcIteration,
+                          self._accIteErrors,
+                          self._iteErrors,
+                          self._relErrLowerLimit,
+                          self._relErrLowerLimit2]
 
             # self.__jaccard,
             # self.__jaccardF,
             # self.__jaccardF2,
-            for key,value in self.__jaccardCoefficinetDict.iteritems():
+            for key,value in self._jaccardCoefficinetDict.iteritems():
                 outputList.append(value)
 
             # self.__cubic,
@@ -426,15 +447,15 @@ class Parser():
             # self.__colRowF2,
             # self.__singleF2,
             # self.__randomF2,
-            for key,value in self.__locality.iteritems():
+            for key,value in self._locality.iteritems():
                 outputList.extend(value)
 
-            outputList.extend([self.__maxRelErr,
-                             self.__minRelErr,
+            outputList.extend([self._maxRelErr,
+                               self._minRelErr,
 
-                             self.__avgRelErr,
-                             self.__zeroOut,
-                             self.__zeroGold])
+                               self._avgRelErr,
+                               self._zeroOut,
+                               self._zeroGold])
 
             writer.writerow(outputList)
             csvWFP.close()
@@ -459,10 +480,16 @@ class Parser():
 
 
     def __makeDirName(self):
-        self.__dirName = os.getcwd() + "/" + self.__benchmark + "/" + str(self.__size) + "/"
-        if not os.path.exists(os.path.dirname(self.__dirName)):
+        self._dirName = os.getcwd() + "/" + self._benchmark + "/" + str(self._size) + "/"
+        if not os.path.exists(os.path.dirname(self._dirName)):
             try:
-                os.makedirs(os.path.dirname(self.__dirName))
+                os.makedirs(os.path.dirname(self._dirName))
             except OSError as exc:  # Guard against race condition
                 if exc.errno != errno.EEXIST:
                     raise
+
+    def getImageIndex(self):
+        return self._imageIndex
+
+    def setImageIndex(self, imageIndex):
+        self._imageIndex = imageIndex
