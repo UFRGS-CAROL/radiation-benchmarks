@@ -13,6 +13,30 @@ import warnings
 
 class Parser():
     __metaclass__ = ABCMeta
+    #only for parser
+    __keys = ["errorsParsed", "errListFiltered", "errListFiltered2"]
+    _errors = {}
+    #for localityParser2D
+    _locality = {}
+    #for jaccardCoefficient
+    _jaccardCoefficientDict = {}
+
+    def __init__(self):
+        for i in self.__keys:
+            # _errors["errorsParsed"] = []
+            # _errors["errListFiltered"] = []
+            # _errors["errListFiltered2"] = []
+            self._errors[i] = []
+            # _locality["errorsParsed"] = [0, 0, 0, 0, 0]
+            # _locality["errListFiltered"] = [0, 0, 0, 0, 0]
+            # _locality["errListFiltered2"] = [0, 0, 0, 0, 0]
+            # cubic, square, colRow, single, random
+            self._locality[i] = [0, 0, 0, 0, 0]
+            # _jaccardCoefficinetDict["errorsParsed"] = 0
+            # _jaccardCoefficinetDict["errListFiltered"] = 0
+            # _jaccardCoefficinetDict["errListFiltered2"] = 0
+            self._jaccardCoefficientDict[i] = 0
+
     _toleratedRelErr = 2.0  # minimum relative error to be considered, in percentage
     _toleratedRelErr2 = 5.0  # minimum relative error to be considered, in percentage
     _buildImages = False  # build locality images
@@ -25,8 +49,8 @@ class Parser():
     #size must be set on the child classes
     _size = ""
 
-    #specific atributes for CSV write
-    #logFileName,machine,benchmark,header,sdcIteration,accIteErrors,iteErrors,
+    # specific atributes for CSV write
+    # logFileName,machine,benchmark,header,sdcIteration,accIteErrors,iteErrors,
     _logFileName = ""
     _machine = ""
     _benchmark = None
@@ -59,25 +83,7 @@ class Parser():
     _relErrLowerLimit = 0
     _relErrLowerLimit2 = 0
 
-    _errors = {}
-    _errors["errorsParsed"] = []
-    _errors["errListFiltered"] = []
-    _errors["errListFiltered2"] = []
-
-
-    #for localityParser2D
-    _locality = {}
-    #cubic, square, colRow, single, random
-    _locality["errorsParsed"] = [0, 0, 0, 0, 0]
-    _locality["errListFiltered"] = [0, 0, 0, 0, 0]
-    _locality["errListFiltered2"] = [0, 0, 0, 0, 0]
-
-    #for jaccardCoefficient
-    _jaccardCoefficinetDict = {}
-    _jaccardCoefficinetDict["errorsParsed"] = 0
-    _jaccardCoefficinetDict["errListFiltered"] = 0
-    _jaccardCoefficinetDict["errListFiltered2"] = 0
-
+    # for benchmarks which have a third dimention this attribute must be set on the child process
     _hasThirdDimention = False
 
     def debugAttPrint(self):
@@ -129,9 +135,9 @@ class Parser():
 
     """call to the private methods"""
     def parseErr(self):
-        self._errors["errorsParsed"] = []
-        self._errors["errListFiltered"] = []
-        self._errors["errListFiltered2"] = []
+        # self._errors["errorsParsed"] = []
+        # self._errors["errListFiltered"] = []
+        # self._errors["errListFiltered2"] = []
         for errString in self._errList:
             err = self.parseErrMethod(errString)
             if err != None:
@@ -285,9 +291,9 @@ class Parser():
 
 
     def jaccardCoefficient(self):
-        self._jaccardCoefficinetDict["errorsParsed"] = 0
-        self._jaccardCoefficinetDict["errListFiltered"] = 0
-        self._jaccardCoefficinetDict["errListFiltered2"] = 0
+        # self._jaccardCoefficientDict["errorsParsed"] = 0
+        # self._jaccardCoefficientDict["errListFiltered"] = 0
+        # self._jaccardCoefficientDict["errListFiltered2"] = 0
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             for keys, values in self._errors.iteritems():
@@ -295,7 +301,7 @@ class Parser():
                 #         jaccardF = currObj.jaccardCoefficientLavaMD(errListFiltered)
                 #         jaccardF2 = currObj.jaccardCoefficientLavaMD(errListFiltered2)
                 # print "\n" , self._benchmark
-                self._jaccardCoefficinetDict[keys] = self._jaccardCoefficient(values)
+                self._jaccardCoefficientDict[keys] = self._jaccardCoefficient(values)
 
 
     def _jaccardCoefficient(self, errListJaccard):
@@ -330,9 +336,9 @@ class Parser():
     # (cubicF, squareF, colRowF, singleF, randomF) = localityParser3D(errListFiltered)
     # (cubicF2, squareF2, colRowF2, singleF2, randomF2) = localityParser3D(errListFiltered2)
     def localityParser(self):
-        self._locality["errorsParsed"] = [0, 0, 0, 0, 0]
-        self._locality["errListFiltered"] = [0, 0, 0, 0, 0]
-        self._locality["errListFiltered2"] = [0, 0, 0, 0, 0]
+        # self._locality["errorsParsed"] = [0, 0, 0, 0, 0]
+        # self._locality["errListFiltered"] = [0, 0, 0, 0, 0]
+        # self._locality["errListFiltered2"] = [0, 0, 0, 0, 0]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             for key, value in self._errors.iteritems():
@@ -431,8 +437,8 @@ class Parser():
             # self.__jaccard,
             # self.__jaccardF,
             # self.__jaccardF2,
-            for key,value in self._jaccardCoefficinetDict.iteritems():
-                outputList.append(value)
+            for i in self.__keys:
+                outputList.append(self._jaccardCoefficientDict[i])
 
             # self.__cubic,
             # self.__square,
@@ -449,8 +455,8 @@ class Parser():
             # self.__colRowF2,
             # self.__singleF2,
             # self.__randomF2,
-            for key,value in self._locality.iteritems():
-                outputList.extend(value)
+            for i in self.__keys:
+                outputList.extend(self._locality[i])
 
             outputList.extend([self._maxRelErr,
                                self._minRelErr,
@@ -463,7 +469,8 @@ class Parser():
             csvWFP.close()
 
         except:
-            ValueError.message += ValueError.message + "Error on writing row to " + str(csvFileName)
+            #ValueError.message += ValueError.message + "Error on writing row to " + str(csvFileName)
+            print "Error on writing row to " + str(csvFileName)
             raise
 
 
