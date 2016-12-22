@@ -1,9 +1,9 @@
 import math
 import os
 import re
-
+from SupportClasses import Rectangle
 import numpy as np
-
+from SupportClasses import GoldContent as gc
 from SupportClasses import PrecisionAndRecall as pr
 from Parser import Parser
 
@@ -14,13 +14,16 @@ class FasterRcnnParser(Parser):
                    "#Iteration_Errors", "gold_lines", "detected_lines", "x_center_of_mass",
                    "y_center_of_mass", "precision", "recall", "false_negative", "false_positive",
                    "true_positive"]
-    __goldObj = None
 
+    __goldObj = gc.GoldContent()
     __iterations = None
     __imgListPath = None
     __board = None
 
+    __prThreshold = 0.5
+    __precisionAndRecall = pr.PrecisionAndRecall(__prThreshold)
 
+    __rectangles = Rectangle.Rectangle(0, 0, 0, 0)
 
     def getBenchmark(self):
         return self._benchmark

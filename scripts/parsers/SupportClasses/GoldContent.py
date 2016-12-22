@@ -1,7 +1,8 @@
 import copy
 import math
 import pickle
-from ctypes import *
+# from ctypes import *
+import ctypes
 import numpy as np
 
 from SupportClasses import Rectangle
@@ -9,22 +10,22 @@ from SupportClasses import Rectangle
 """Read a darknet Gold content to memory"""
 
 
-class Float(Structure):
-    _fields_ = [('f', c_float)]
+class Float(ctypes.Structure):
+    _fields_ = [('f', ctypes.c_float)]
 
     def __repr__(self):
         return str(self.f)
 
 
-class Box(Structure):
-    _fields_ = [('x', c_float), ('y', c_float), ('w', c_float), ('h', c_float)]
+class Box(ctypes.Structure):
+    _fields_ = [('x', ctypes.c_float), ('y', ctypes.c_float), ('w', ctypes.c_float), ('h', ctypes.c_float)]
 
     def __repr__(self):
         return str(self.x) + " " + str(self.y) + " " + str(self.w) + " " + str(self.h)
 
 
-class Long(Structure):
-    _fields_ = [('l', c_long)]
+class Long(ctypes.Structure):
+    _fields_ = [('l', ctypes.c_long)]
 
     def __repr__(self):
         return str(self.l)
@@ -60,12 +61,15 @@ class GoldContent(object):
     #
     def __init__(self, **kwargs):
         #use keyargs
-        nn = kwargs.pop("nn")
-        filePath = kwargs.pop("filepath")
-        if "darknet" in nn:
-            self.darknetConstructor(filePath)
-        elif "pyfaster" in nn:
-            self.pyFasterConstructor(filePath)
+        try:
+            nn = kwargs.pop("nn")
+            filePath = kwargs.pop("filepath")
+            if "darknet" in nn:
+                self.darknetConstructor(filePath)
+            elif "pyfaster" in nn:
+                self.pyFasterConstructor(filePath)
+        except:
+            pass
 
     def darknetConstructor(self, filePath):
         cc_file = open(filePath, 'rb')

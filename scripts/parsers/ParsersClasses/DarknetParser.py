@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from SupportClasses import Rectangle
 import copy
 import math
 import os
@@ -7,7 +7,8 @@ import re
 
 import numpy as np
 
-from SupportClasses import PrecisionAndRecall
+from SupportClasses import PrecisionAndRecall as pr
+from SupportClasses import GoldContent as gc
 from Parser import Parser
 
 
@@ -35,6 +36,11 @@ CLASSES = ['__background__',
 
 class DarknetParser(Parser):
 
+    __prThreshold = 0.5
+    __precisionAndRecall = pr.PrecisionAndRecall(__prThreshold)
+    __goldObj = gc.GoldContent()
+
+    __rectangles = Rectangle.Rectangle(0, 0, 0, 0)
 
     def getBenchmark(self):
         return self._benchmark
@@ -44,7 +50,6 @@ class DarknetParser(Parser):
                              "y_center_of_mass", "precision", "recall", "false_negative", "false_positive",
                              "true_positive"]
 
-    __goldObj = None
 
     __executionType  = None
     __executionModel = None
