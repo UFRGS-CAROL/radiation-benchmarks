@@ -33,9 +33,9 @@ def getWenderFactor(startDT):
 		return 49380
 	elif startDT < datetime(2015, 12, 13, 7, 0, 0, 0):
 		return 49220
-	elif startDT < datetime(2015, 12, 13, 22, 52, 0, 0):
+	elif startDT < datetime(2015, 12, 13, 18, 52, 0, 0):
 		return 49253
-	elif startDT < datetime(2015, 12, 14, 17, 52, 0, 0):
+	elif startDT < datetime(2015, 12, 14, 17, 23, 0, 0):
 		return 49534
 	elif startDT < datetime(2015, 12, 15, 6, 39, 0, 0):
 		return 49397
