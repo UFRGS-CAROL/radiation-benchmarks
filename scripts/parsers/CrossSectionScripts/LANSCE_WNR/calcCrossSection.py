@@ -85,6 +85,9 @@ def getFluenceFlux(startDT, endDT):
 				lastDt = curDt
 			elif curDt > endDT:
 				return [(pulseCount*getWenderFactor(startDT)/((endDT - startDT).total_seconds()))*factor, timeNoPulse]
+        # It should not get out of the loop, but in case there is no pulse data, timeNoPulse is updated
+        timeNoPulse += (endDT - curDt).total_seconds()
+	return [(pulseCount*getWenderFactor(startDT)/((endDT - startDT).total_seconds()))*factor, timeNoPulse]
 
 def getFlux(startDT):
 
@@ -118,6 +121,9 @@ def getFlux(startDT):
 				lastDt = curDt
 			elif curDt > endDT:
 				return [(pulseCount*getWenderFactor(startDT)/(60*60))*factor, timeNoPulse]
+        # It should not get out of the loop, but in case there is no pulse data, timeNoPulse is updated
+        timeNoPulse += (endDT - curDt).total_seconds()
+	return [(pulseCount*getWenderFactor(startDT)/(60*60))*factor, timeNoPulse]
 
 
 #########################################################
