@@ -94,3 +94,15 @@ class Rectangle(object):
 
     def area(self):
         return self.width * self.height
+      
+    def jaccard_similarity(self, other):
+	    intersection = 0
+	    for x in xrange(self.left, self.right):
+	        for y in xrange(self.bottom, self.top):
+	            if (x >= other.left and x <= other.right and y >= other.bottom and y <= other.top):
+	                intersection += 1
+	    total = (self.top - self.bottom) * (self.right - self.left) + (other.top - other.bottom) * (other.right - other.left) - intersection
+	    similarity = (float(intersection) / float(total))
+	    return similarity
+
+     
