@@ -58,29 +58,7 @@ class PrecisionAndRecall(object):
     """
         split precision for parallelism
     """
-
-    def precisionMethod(self, gold, found):
-        # print "passou precision"
-        out_positive = 0
-        for i in found:
-            for g in gold:
-                # calc the intersection
-                intRect = g.intersection(i)
-                intersectionArea = intRect.area()
-                unionRect = g.union(i)
-                unionArea = unionRect.area()
-
-                if (float(intersectionArea) / float(unionArea)) >= self.threshold:
-                    out_positive += 1
-                    break
-
-        self.falsePositive.value = len(found) - out_positive
-
-    """
-        split recall for parallelism
-    """
-
-
+    
     def precisionMethod(self, gold, found):
         # print "passou precision"
         out_positive = 0
