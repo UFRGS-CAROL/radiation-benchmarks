@@ -81,15 +81,27 @@ class PrecisionAndRecall(object):
     """
 
 
+    def precisionMethod(self, gold, found):
+        # print "passou precision"
+        out_positive = 0
+        for i in found:
+            for g in gold:
+                if (g.jaccard_similarity(i)) >= self.threshold:
+                    out_positive += 1
+                    break
+
+        self.falsePositive.value = len(found) - out_positive
+
+    """
+        split recall for parallelism
+    """
+
+
     def recallMethod(self, gold, found):
         # print "passou recall"
         for i in gold:
             for z in found:
-                intRect = z.intersection(i)
-                unionRect = z.union(i)
-                intersectionArea = intRect.area()
-                unionArea = unionRect.area()
-                if (float(intersectionArea) / float(unionArea)) >= self.threshold:
+                if (z.jaccard_similarity(i)) >= self.threshold:
                     self.truePositive.value += 1
                     break
 
@@ -102,13 +114,7 @@ class PrecisionAndRecall(object):
         outPositive = 0
         for i in found:
             for g in gold:
-                # calc the intersection
-                intRect = g.intersection(i)
-                intersectionArea = intRect.area()
-                unionRect = g.union(i)
-                unionArea = unionRect.area()
-
-                if (float(intersectionArea) / float(unionArea)) >= threshold:
+                if (g.jaccard_similarity(i)) >= threshold:
                     outPositive += 1
                     break
 
@@ -118,11 +124,7 @@ class PrecisionAndRecall(object):
         truePositive = 0
         for i in gold:
             for z in found:
-                intRect = z.intersection(i)
-                unionRect = z.union(i)
-                intersectionArea = intRect.area()
-                unionArea = unionRect.area()
-                if (float(intersectionArea) / float(unionArea)) >= threshold:
+                if (i.jaccard_similarity(z)) >= threshold:
                     truePositive += 1
                     break
 
