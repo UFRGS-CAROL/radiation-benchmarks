@@ -145,7 +145,8 @@ class Parser():
 
     """for almost all benchmarks this method must be ovirride, because it is application dependent"""
     def relativeErrorParser(self):
-        [self._maxRelErr, self._minRelErr, self._avgRelErr, self._zeroOut, self._zeroGold, self._relErrLowerLimit,
+        [self._maxRelErr, self._minRelErr, self._avgRelErr, self._zeroOut, self._zeroGold,
+            self._relErrLowerLimit,
          self._errors["errListFiltered"], self._relErrLowerLimit2,
          self._errors["errListFiltered2"]] = self._relativeErrorParser(self._errors["errorsParsed"])
 
@@ -416,7 +417,7 @@ class Parser():
     the method __writeToCSV and atribute __csvHeader must be changed
     """
     def _writeToCSV(self, csvFileName):
-        if self._headerWriten == False and os.path.isfile(csvFileName) == False:
+        if os.path.isfile(csvFileName) == False:
             self._writeCSVHeader(csvFileName)
             self._headerWriten = True
 

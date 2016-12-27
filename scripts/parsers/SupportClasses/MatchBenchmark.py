@@ -20,12 +20,20 @@ from ParsersClasses import QuicksortParser
 
 class MatchBenchmark():
     # all fucking benchmarks here
-    __radiationBenchmarks = dict(darknet=DarknetParser.DarknetParser(), hotspot=HotspotParser.HotspotParser(),
-                                 hog=HogParser.HogParser(), lavamd=LavaMDParser.LavaMDParser(),
-                                 mergesort=MergesortParser.MergesortParser(), nw=NWParser.NWParser(),
-                                 quicksort=QuicksortParser.QuicksortParser(), accl=ACCLParser.ACCLParser(),
-                                 pyfasterrcnn=FasterRcnnParser.FasterRcnnParser(), lulesh=LuleshParser.LuleshParser(),
-                                 lud=LudParser.LudParser(), gemm=GemmParser.GemmParser())
+    __radiationBenchmarks = dict(
+        darknet=DarknetParser.DarknetParser(),
+        # hotspot=HotspotParser.HotspotParser(),
+        # hog=HogParser.HogParser(),
+        # lavamd=LavaMDParser.LavaMDParser(),
+        # mergesort=MergesortParser.MergesortParser(),
+        # nw=NWParser.NWParser(),
+        # quicksort=QuicksortParser.QuicksortParser(),
+        # accl=ACCLParser.ACCLParser(),
+        # pyfasterrcnn=FasterRcnnParser.FasterRcnnParser(),
+        # lulesh=LuleshParser.LuleshParser(),
+        # lud=LudParser.LudParser(),
+        # gemm=GemmParser.GemmParser()
+    )
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -61,7 +69,6 @@ class MatchBenchmark():
         isBench = False
         for key, values in self.__radiationBenchmarks.iteritems():
             isBench = re.search(str(key), benchmark, flags=re.IGNORECASE)
-
             if isBench:
                 # print "\n\ncurrent bench ", key
                 # print "\n\n len " ,logFileName, machine, benchmark, header, sdcIteration, accIteErrors, iteErrors
@@ -75,7 +82,9 @@ class MatchBenchmark():
 
         if not isBench:
             print "\nMatchBenchmark: There is no benchmark as " + str(benchmark)
-            raise BaseException
+        return isBench
+
+            #raise BaseException
 
             # isHotspot = re.search("hotspot", self.benchmark, flags=re.IGNORECASE)
 

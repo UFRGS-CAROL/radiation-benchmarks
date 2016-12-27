@@ -36,14 +36,17 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
     # img_list_file = ""
     matchBench = MatchBenchmark.MatchBenchmark()
     for sdcItem in sdcItemList:
+        match = matchBench.processHeader(sdcItem, benchmarkname_machinename)
+        if not match:
+            continue
 
         progress = "{0:.2f}".format(float(sdci) / float(totalSdcs) * 100)
-        sys.stdout.write("\rProcessing SDC " + str(sdci) + " of " + str(totalSdcs) + " - " + progress + "%")
+        sys.stdout.write("\rProcessing SDC " + str(sdci) + " of " + str(
+            totalSdcs) + " - " + progress + "%")
 
         sys.stdout.flush()
 
-        matchBench.processHeader(sdcItem, benchmarkname_machinename)
-        # currObj =  matchBench.getCurrentObj()
+            # currObj =  matchBench.getCurrentObj()
         #
         # if isLavaMD and box is None:
         #     continue

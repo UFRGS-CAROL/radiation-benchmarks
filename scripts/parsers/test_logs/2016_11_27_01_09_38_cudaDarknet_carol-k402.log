@@ -1,0 +1,370 @@
+#HEADER execution_type:yolo execution_model:valid img_list_path:/home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt weights:/home/carol/radiation-benchmarks/data/darknet/yolo.weights config_file:/home/carol/radiation-benchmarks/data/darknet/yolo.cfg iterations:10000 abft: dumb_abft
+#BEGIN Y:2016 M:11 D:27 Time:01:09:38
+#IT Ite:0 KerTime:0.591812 AccTime:0.591812
+#IT Ite:1 KerTime:0.408648 AccTime:1.000460
+#IT Ite:2 KerTime:0.409636 AccTime:1.410096
+#IT Ite:3 KerTime:0.410456 AccTime:1.820552
+#IT Ite:4 KerTime:0.409849 AccTime:2.230401
+#IT Ite:5 KerTime:0.410778 AccTime:2.641179
+#IT Ite:6 KerTime:0.409818 AccTime:3.050997
+#IT Ite:7 KerTime:0.409915 AccTime:3.460912
+#IT Ite:8 KerTime:0.410352 AccTime:3.871264
+#IT Ite:9 KerTime:0.410233 AccTime:4.281497
+#IT Ite:10 KerTime:0.410026 AccTime:4.691523
+#IT Ite:11 KerTime:0.410022 AccTime:5.101545
+#IT Ite:12 KerTime:0.410475 AccTime:5.512020
+#IT Ite:13 KerTime:0.409885 AccTime:5.921905
+#IT Ite:14 KerTime:0.409844 AccTime:6.331749
+#IT Ite:15 KerTime:0.409537 AccTime:6.741286
+#IT Ite:16 KerTime:0.410551 AccTime:7.151837
+#IT Ite:17 KerTime:0.410324 AccTime:7.562161
+#IT Ite:18 KerTime:0.410486 AccTime:7.972647
+#IT Ite:19 KerTime:0.409890 AccTime:8.382537
+#IT Ite:20 KerTime:0.410677 AccTime:8.793214
+#IT Ite:21 KerTime:0.409979 AccTime:9.203193
+#IT Ite:22 KerTime:0.410096 AccTime:9.613289
+#IT Ite:23 KerTime:0.411361 AccTime:10.024650
+#IT Ite:24 KerTime:0.410265 AccTime:10.434915
+#IT Ite:25 KerTime:0.409933 AccTime:10.844848
+#IT Ite:26 KerTime:0.410043 AccTime:11.254891
+#IT Ite:27 KerTime:0.409651 AccTime:11.664542
+#IT Ite:28 KerTime:0.410177 AccTime:12.074719
+#IT Ite:29 KerTime:0.410167 AccTime:12.484886
+#IT Ite:30 KerTime:0.410041 AccTime:12.894927
+#IT Ite:31 KerTime:0.409710 AccTime:13.304637
+#IT Ite:32 KerTime:0.411037 AccTime:13.715674
+#IT Ite:33 KerTime:0.410149 AccTime:14.125823
+#IT Ite:34 KerTime:0.410518 AccTime:14.536341
+#IT Ite:35 KerTime:0.411181 AccTime:14.947522
+#IT Ite:36 KerTime:0.410436 AccTime:15.357958
+#IT Ite:37 KerTime:0.409953 AccTime:15.767911
+#IT Ite:38 KerTime:0.410087 AccTime:16.177998
+#IT Ite:39 KerTime:0.409899 AccTime:16.587897
+#IT Ite:40 KerTime:0.410317 AccTime:16.998214
+#IT Ite:41 KerTime:0.410496 AccTime:17.408710
+#IT Ite:42 KerTime:0.410514 AccTime:17.819224
+#IT Ite:43 KerTime:0.410147 AccTime:18.229371
+#IT Ite:44 KerTime:0.410150 AccTime:18.639521
+#IT Ite:45 KerTime:0.410936 AccTime:19.050457
+#IT Ite:46 KerTime:0.409916 AccTime:19.460373
+#IT Ite:47 KerTime:0.411803 AccTime:19.872176
+#IT Ite:48 KerTime:0.409832 AccTime:20.282008
+#IT Ite:49 KerTime:0.410777 AccTime:20.692785
+#IT Ite:50 KerTime:0.410846 AccTime:21.103631
+#IT Ite:51 KerTime:0.410753 AccTime:21.514384
+#IT Ite:52 KerTime:0.410334 AccTime:21.924718
+#IT Ite:53 KerTime:0.409744 AccTime:22.334462
+#IT Ite:54 KerTime:0.410484 AccTime:22.744946
+#IT Ite:55 KerTime:0.410452 AccTime:23.155398
+#IT Ite:56 KerTime:0.410423 AccTime:23.565821
+#IT Ite:57 KerTime:0.410448 AccTime:23.976269
+#IT Ite:58 KerTime:0.410194 AccTime:24.386463
+#IT Ite:59 KerTime:0.410406 AccTime:24.796869
+#IT Ite:60 KerTime:0.410081 AccTime:25.206950
+#IT Ite:61 KerTime:0.410111 AccTime:25.617061
+#IT Ite:62 KerTime:0.410157 AccTime:26.027218
+#IT Ite:63 KerTime:0.410337 AccTime:26.437555
+#IT Ite:64 KerTime:0.410367 AccTime:26.847922
+#IT Ite:65 KerTime:0.410749 AccTime:27.258671
+#IT Ite:66 KerTime:0.412374 AccTime:27.671045
+#IT Ite:67 KerTime:0.410721 AccTime:28.081766
+#IT Ite:68 KerTime:0.410585 AccTime:28.492351
+#IT Ite:69 KerTime:0.410277 AccTime:28.902628
+#IT Ite:70 KerTime:0.410334 AccTime:29.312962
+#IT Ite:71 KerTime:0.410901 AccTime:29.723863
+#IT Ite:72 KerTime:0.409723 AccTime:30.133586
+#IT Ite:73 KerTime:0.410109 AccTime:30.543695
+#IT Ite:74 KerTime:0.409519 AccTime:30.953214
+#IT Ite:75 KerTime:0.409798 AccTime:31.363012
+#IT Ite:76 KerTime:0.409802 AccTime:31.772814
+#IT Ite:77 KerTime:0.409829 AccTime:32.182643
+#IT Ite:78 KerTime:0.410595 AccTime:32.593238
+#IT Ite:79 KerTime:0.409686 AccTime:33.002924
+#IT Ite:80 KerTime:0.412542 AccTime:33.415466
+#IT Ite:81 KerTime:0.409928 AccTime:33.825394
+#IT Ite:82 KerTime:0.409600 AccTime:34.234994
+#IT Ite:83 KerTime:0.410145 AccTime:34.645139
+#IT Ite:84 KerTime:0.409949 AccTime:35.055088
+#IT Ite:85 KerTime:0.411826 AccTime:35.466914
+#IT Ite:86 KerTime:0.410336 AccTime:35.877250
+#IT Ite:87 KerTime:0.412093 AccTime:36.289343
+#IT Ite:88 KerTime:0.410517 AccTime:36.699860
+#IT Ite:89 KerTime:0.410497 AccTime:37.110357
+#IT Ite:90 KerTime:0.410241 AccTime:37.520598
+#IT Ite:91 KerTime:0.410758 AccTime:37.931356
+#IT Ite:92 KerTime:0.412047 AccTime:38.343403
+#IT Ite:93 KerTime:0.410239 AccTime:38.753642
+#IT Ite:94 KerTime:0.410253 AccTime:39.163895
+#IT Ite:95 KerTime:0.410635 AccTime:39.574530
+#IT Ite:96 KerTime:0.409985 AccTime:39.984515
+#IT Ite:97 KerTime:0.410267 AccTime:40.394782
+#IT Ite:98 KerTime:0.412988 AccTime:40.807770
+#IT Ite:99 KerTime:0.409402 AccTime:41.217172
+#IT Ite:100 KerTime:0.410711 AccTime:41.627883
+#IT Ite:101 KerTime:0.409694 AccTime:42.037577
+#IT Ite:102 KerTime:0.409951 AccTime:42.447528
+#IT Ite:103 KerTime:0.409580 AccTime:42.857108
+#IT Ite:104 KerTime:0.412194 AccTime:43.269302
+#IT Ite:105 KerTime:0.409955 AccTime:43.679257
+#IT Ite:106 KerTime:0.409082 AccTime:44.088339
+#IT Ite:107 KerTime:0.409489 AccTime:44.497828
+#IT Ite:108 KerTime:0.410161 AccTime:44.907989
+#IT Ite:109 KerTime:0.409854 AccTime:45.317843
+#IT Ite:110 KerTime:0.410183 AccTime:45.728026
+#IT Ite:111 KerTime:0.410051 AccTime:46.138077
+#IT Ite:112 KerTime:0.409622 AccTime:46.547699
+#IT Ite:113 KerTime:0.410073 AccTime:46.957772
+#IT Ite:114 KerTime:0.409904 AccTime:47.367676
+#IT Ite:115 KerTime:0.409831 AccTime:47.777507
+#IT Ite:116 KerTime:0.411059 AccTime:48.188566
+#IT Ite:117 KerTime:0.410505 AccTime:48.599071
+#IT Ite:118 KerTime:0.409833 AccTime:49.008904
+#IT Ite:119 KerTime:0.409732 AccTime:49.418636
+#IT Ite:120 KerTime:0.409933 AccTime:49.828569
+#IT Ite:121 KerTime:0.410414 AccTime:50.238983
+#IT Ite:122 KerTime:0.409872 AccTime:50.648855
+#IT Ite:123 KerTime:0.409589 AccTime:51.058444
+#IT Ite:124 KerTime:0.409913 AccTime:51.468357
+#IT Ite:125 KerTime:0.409221 AccTime:51.877578
+#IT Ite:126 KerTime:0.409856 AccTime:52.287434
+#IT Ite:127 KerTime:0.409111 AccTime:52.696545
+#IT Ite:128 KerTime:0.411310 AccTime:53.107855
+#IT Ite:129 KerTime:0.409283 AccTime:53.517138
+#IT Ite:130 KerTime:0.410200 AccTime:53.927338
+#IT Ite:131 KerTime:0.409863 AccTime:54.337201
+#IT Ite:132 KerTime:0.410806 AccTime:54.748007
+#IT Ite:133 KerTime:0.409960 AccTime:55.157967
+#IT Ite:134 KerTime:0.408903 AccTime:55.566870
+#IT Ite:135 KerTime:0.409704 AccTime:55.976574
+#IT Ite:136 KerTime:0.408989 AccTime:56.385563
+#IT Ite:137 KerTime:0.410143 AccTime:56.795706
+#IT Ite:138 KerTime:0.409723 AccTime:57.205429
+#IT Ite:139 KerTime:0.409103 AccTime:57.614532
+#IT Ite:140 KerTime:0.411407 AccTime:58.025939
+#IT Ite:141 KerTime:0.409673 AccTime:58.435612
+#IT Ite:142 KerTime:0.410142 AccTime:58.845754
+#IT Ite:143 KerTime:0.409856 AccTime:59.255610
+#IT Ite:144 KerTime:0.409690 AccTime:59.665300
+#IT Ite:145 KerTime:0.409375 AccTime:60.074675
+#IT Ite:146 KerTime:0.409699 AccTime:60.484374
+#IT Ite:147 KerTime:0.409673 AccTime:60.894047
+#IT Ite:148 KerTime:0.409573 AccTime:61.303620
+#IT Ite:149 KerTime:0.409584 AccTime:61.713204
+#IT Ite:150 KerTime:0.409729 AccTime:62.122933
+#INF abft_type: dumb image_list_position: [151] row_detected_errors: 1 col_detected_errors: 1
+#IT Ite:151 KerTime:0.414882 AccTime:62.537815
+#ERR image_list_position: [151] probs: [17,14]  prob_r: 0.0000000000000000e+00 prob_e: 5.7181753218173981e-03
+#ERR image_list_position: [151] boxes: [17]  x_r: nan x_e: 3.9083694458007812e+02 y_r: nan y_e: 3.0945438385009766e+01 w_r: nan w_e: 9.4010063171386719e+01 h_r: nan h_e: 3.9687515258789062e+01
+#ERR image_list_position: [151] probs: [26,14]  prob_r: 0.0000000000000000e+00 prob_e: 1.6827905550599098e-02
+#ERR image_list_position: [151] boxes: [26]  x_r: nan x_e: 9.9157737731933594e+01 y_r: nan y_e: 9.0601928710937500e+01 w_r: nan w_e: 1.2498211669921875e+02 h_r: nan h_e: 1.6323876953125000e+02
+#ERR image_list_position: [151] probs: [30,11]  prob_r: 0.0000000000000000e+00 prob_e: 9.0371351689100266e-03
+#ERR image_list_position: [151] probs: [30,14]  prob_r: 0.0000000000000000e+00 prob_e: 4.1770059615373611e-02
+#ERR image_list_position: [151] boxes: [30]  x_r: nan x_e: 2.4442857360839844e+02 y_r: nan y_e: 8.1607971191406250e+01 w_r: nan w_e: 4.0316905975341797e+01 h_r: nan h_e: 6.9731681823730469e+01
+#ERR image_list_position: [151] probs: [31,8]  prob_r: 0.0000000000000000e+00 prob_e: 6.9070574827492237e-03
+#ERR image_list_position: [151] probs: [31,9]  prob_r: 0.0000000000000000e+00 prob_e: 1.2976332567632198e-02
+#ERR image_list_position: [151] probs: [31,10]  prob_r: 0.0000000000000000e+00 prob_e: 1.2429266236722469e-02
+#ERR image_list_position: [151] probs: [31,11]  prob_r: 0.0000000000000000e+00 prob_e: 9.9765427410602570e-02
+#ERR image_list_position: [151] probs: [31,14]  prob_r: 0.0000000000000000e+00 prob_e: 4.6112039685249329e-01
+#ERR image_list_position: [151] boxes: [31]  x_r: nan x_e: 2.6337506103515625e+02 y_r: nan y_e: 9.0768211364746094e+01 w_r: nan w_e: 1.4990557861328125e+02 h_r: nan h_e: 1.7602056884765625e+02
+#ERR image_list_position: [151] probs: [33,14]  prob_r: 0.0000000000000000e+00 prob_e: 5.7517685927450657e-03
+#ERR image_list_position: [151] boxes: [33]  x_r: nan x_e: 3.0029467773437500e+02 y_r: nan y_e: 7.8743682861328125e+01 w_r: nan w_e: 4.2393516540527344e+01 h_r: nan h_e: 6.0339214324951172e+01
+#ERR image_list_position: [151] probs: [41,14]  prob_r: 0.0000000000000000e+00 prob_e: 5.2329818718135357e-03
+#ERR image_list_position: [151] boxes: [41]  x_r: nan x_e: 4.6190402221679688e+02 y_r: nan y_e: 8.3567947387695312e+01 w_r: nan w_e: 5.2009887695312500e+01 h_r: nan h_e: 9.0564529418945312e+01
+#ERR image_list_position: [151] probs: [45,11]  prob_r: 0.0000000000000000e+00 prob_e: 5.1657874137163162e-03
+#ERR image_list_position: [151] probs: [45,14]  prob_r: 0.0000000000000000e+00 prob_e: 3.2296743243932724e-02
+#ERR image_list_position: [151] boxes: [45]  x_r: nan x_e: 9.5756752014160156e+01 y_r: nan y_e: 1.3991180419921875e+02 w_r: nan w_e: 8.7337615966796875e+01 h_r: nan h_e: 1.1157674407958984e+02
+#ERR image_list_position: [151] probs: [46,0]  prob_r: 0.0000000000000000e+00 prob_e: 2.6409309357404709e-02
+#ERR image_list_position: [151] probs: [46,1]  prob_r: 0.0000000000000000e+00 prob_e: 1.4212920330464840e-02
+#ERR image_list_position: [151] probs: [46,9]  prob_r: 0.0000000000000000e+00 prob_e: 5.5554125458002090e-02
+#ERR image_list_position: [151] probs: [46,11]  prob_r: 0.0000000000000000e+00 prob_e: 9.4654083251953125e-02
+#ERR image_list_position: [151] probs: [46,14]  prob_r: 0.0000000000000000e+00 prob_e: 5.9178167581558228e-01
+#ERR image_list_position: [151] probs: [46,17]  prob_r: 0.0000000000000000e+00 prob_e: 1.6531964763998985e-02
+#ERR image_list_position: [151] boxes: [46]  x_r: nan x_e: 9.7381057739257812e+01 y_r: nan y_e: 1.5377561950683594e+02 w_r: nan w_e: 1.7782286071777344e+02 h_r: nan h_e: 2.7928671264648438e+02
+#ERR image_list_position: [151] probs: [49,14]  prob_r: 0.0000000000000000e+00 prob_e: 8.2490406930446625e-03
+#ERR image_list_position: [151] boxes: [49]  x_r: nan x_e: 1.6287197875976562e+02 y_r: nan y_e: 1.4274069213867188e+02 w_r: nan w_e: 5.2473411560058594e+01 h_r: nan h_e: 9.2042449951171875e+01
+#ERR image_list_position: [151] probs: [51,11]  prob_r: 0.0000000000000000e+00 prob_e: 3.4568794071674347e-02
+#ERR image_list_position: [151] probs: [51,14]  prob_r: 0.0000000000000000e+00 prob_e: 4.6148467808961868e-02
+#ERR image_list_position: [151] boxes: [51]  x_r: nan x_e: 2.6072619628906250e+02 y_r: nan y_e: 1.2625945281982422e+02 w_r: nan w_e: 9.0986282348632812e+01 h_r: nan h_e: 1.3525596618652344e+02
+#ERR image_list_position: [151] probs: [54,0]  prob_r: 0.0000000000000000e+00 prob_e: 1.2315710075199604e-02
+#ERR image_list_position: [151] probs: [54,1]  prob_r: 0.0000000000000000e+00 prob_e: 1.9188405945897102e-02
+#ERR image_list_position: [151] probs: [54,2]  prob_r: 0.0000000000000000e+00 prob_e: 1.6742600128054619e-02
+#ERR image_list_position: [151] probs: [54,4]  prob_r: 0.0000000000000000e+00 prob_e: 1.3178216293454170e-02
+#ERR image_list_position: [151] probs: [54,9]  prob_r: 0.0000000000000000e+00 prob_e: 5.7457815855741501e-02
+#ERR image_list_position: [151] probs: [54,11]  prob_r: 0.0000000000000000e+00 prob_e: 5.7903343439102173e-01
+#ERR image_list_position: [151] probs: [54,13]  prob_r: 0.0000000000000000e+00 prob_e: 2.6657866314053535e-02
+#ERR image_list_position: [151] probs: [54,14]  prob_r: 0.0000000000000000e+00 prob_e: 1.2927301228046417e-01
+#ERR image_list_position: [151] probs: [54,15]  prob_r: 0.0000000000000000e+00 prob_e: 2.0119892433285713e-02
+#ERR image_list_position: [151] boxes: [54]  x_r: nan x_e: 3.4549459838867188e+02 y_r: nan y_e: 1.3348387145996094e+02 w_r: nan w_e: 1.3029362487792969e+02 h_r: nan h_e: 1.3612959289550781e+02
+#ERR image_list_position: [151] probs: [59,11]  prob_r: 0.0000000000000000e+00 prob_e: 3.2517004758119583e-02
+#ERR image_list_position: [151] boxes: [59]  x_r: nan x_e: 3.6278192138671875e+02 y_r: nan y_e: 1.3177105712890625e+02 w_r: nan w_e: 5.9099929809570312e+01 h_r: nan h_e: 6.4828720092773438e+01
+#ERR image_list_position: [151] probs: [68,3]  prob_r: 0.0000000000000000e+00 prob_e: 9.2920279130339622e-03
+#ERR image_list_position: [151] probs: [68,10]  prob_r: 0.0000000000000000e+00 prob_e: 6.4416863024234772e-03
+#ERR image_list_position: [151] probs: [68,12]  prob_r: 0.0000000000000000e+00 prob_e: 1.1060830205678940e-02
+#ERR image_list_position: [151] probs: [68,13]  prob_r: 0.0000000000000000e+00 prob_e: 9.4071216881275177e-03
+#ERR image_list_position: [151] probs: [68,15]  prob_r: 0.0000000000000000e+00 prob_e: 1.5386159531772137e-02
+#ERR image_list_position: [151] probs: [68,16]  prob_r: 0.0000000000000000e+00 prob_e: 1.1082034558057785e-02
+#ERR image_list_position: [151] boxes: [68]  x_r: nan x_e: 1.0596796417236328e+02 y_r: nan y_e: 1.6584127807617188e+02 w_r: nan w_e: 2.0222949218750000e+02 h_r: nan h_e: 2.7260507202148438e+02
+#ERR image_list_position: [151] probs: [69,11]  prob_r: 0.0000000000000000e+00 prob_e: 6.1762630939483643e-03
+#ERR image_list_position: [151] boxes: [69]  x_r: nan x_e: 1.6912934875488281e+02 y_r: nan y_e: 1.8460957336425781e+02 w_r: nan w_e: 7.8355926513671875e+01 h_r: nan h_e: 9.6876403808593750e+01
+#ERR image_list_position: [151] probs: [73,12]  prob_r: 0.0000000000000000e+00 prob_e: 7.5124511495232582e-03
+#ERR image_list_position: [151] probs: [73,14]  prob_r: 0.0000000000000000e+00 prob_e: 2.0890405401587486e-02
+#ERR image_list_position: [151] probs: [73,17]  prob_r: 0.0000000000000000e+00 prob_e: 1.5836123377084732e-02
+#ERR image_list_position: [151] boxes: [73]  x_r: nan x_e: 2.7057476806640625e+02 y_r: nan y_e: 2.0733589172363281e+02 w_r: nan w_e: 2.9361846923828125e+02 h_r: nan h_e: 2.1455010986328125e+02
+#ERR image_list_position: [151] probs: [75,11]  prob_r: 0.0000000000000000e+00 prob_e: 3.3431556075811386e-02
+#ERR image_list_position: [151] boxes: [75]  x_r: nan x_e: 3.2081918334960938e+02 y_r: nan y_e: 1.8780567932128906e+02 w_r: nan w_e: 1.2546250915527344e+02 h_r: nan h_e: 1.0500521850585938e+02
+#ERR image_list_position: [151] probs: [82,11]  prob_r: 0.0000000000000000e+00 prob_e: 1.5563481487333775e-02
+#ERR image_list_position: [151] probs: [82,14]  prob_r: 0.0000000000000000e+00 prob_e: 8.5469288751482964e-03
+#ERR image_list_position: [151] boxes: [82]  x_r: nan x_e: 4.5882052612304688e+02 y_r: nan y_e: 1.8594987487792969e+02 w_r: nan w_e: 5.9349243164062500e+01 h_r: nan h_e: 1.2845819091796875e+02
+#ERR image_list_position: [151] probs: [89,11]  prob_r: 0.0000000000000000e+00 prob_e: 9.2093385756015778e-03
+#ERR image_list_position: [151] probs: [89,14]  prob_r: 0.0000000000000000e+00 prob_e: 7.7997283078730106e-03
+#ERR image_list_position: [151] boxes: [89]  x_r: nan x_e: 1.0945204925537109e+02 y_r: nan y_e: 2.3377337646484375e+02 w_r: nan w_e: 1.4343222045898438e+02 h_r: nan h_e: 1.4989678955078125e+02
+#ERR image_list_position: [151] probs: [91,11]  prob_r: 0.0000000000000000e+00 prob_e: 5.6594824418425560e-03
+#ERR image_list_position: [151] boxes: [91]  x_r: nan x_e: 1.7372541809082031e+02 y_r: nan y_e: 2.3318716430664062e+02 w_r: nan w_e: 8.0284202575683594e+01 h_r: nan h_e: 7.0331733703613281e+01
+#ERR image_list_position: [151] probs: [93,17]  prob_r: 0.0000000000000000e+00 prob_e: 5.0438321195542812e-03
+#ERR image_list_position: [151] boxes: [93]  x_r: nan x_e: 2.8372091674804688e+02 y_r: nan y_e: 2.1892234802246094e+02 w_r: nan w_e: 2.1593870544433594e+02 h_r: nan h_e: 1.4568519592285156e+02
+#ERR image_list_position: [151] probs: [95,0]  prob_r: 0.0000000000000000e+00 prob_e: 9.1687114909291267e-03
+#ERR image_list_position: [151] probs: [95,5]  prob_r: 0.0000000000000000e+00 prob_e: 7.6224519871175289e-03
+#ERR image_list_position: [151] probs: [95,9]  prob_r: 0.0000000000000000e+00 prob_e: 2.4150669574737549e-02
+#ERR image_list_position: [151] probs: [95,10]  prob_r: 0.0000000000000000e+00 prob_e: 2.4745531380176544e-02
+#ERR image_list_position: [151] probs: [95,11]  prob_r: 0.0000000000000000e+00 prob_e: 4.1152769327163696e-01
+#ERR image_list_position: [151] probs: [95,13]  prob_r: 0.0000000000000000e+00 prob_e: 1.1850403621792793e-02
+#ERR image_list_position: [151] boxes: [95]  x_r: nan x_e: 2.8184326171875000e+02 y_r: nan y_e: 2.1757559204101562e+02 w_r: nan w_e: 2.8571792602539062e+02 h_r: nan h_e: 1.7024090576171875e+02
+#ERR image_list_position: [151] probs: [96,11]  prob_r: 0.0000000000000000e+00 prob_e: 4.4654138386249542e-02
+#ERR image_list_position: [151] boxes: [96]  x_r: nan x_e: 2.9560437011718750e+02 y_r: nan y_e: 2.1765063476562500e+02 w_r: nan w_e: 1.4870803833007812e+02 h_r: nan h_e: 1.0341793060302734e+02
+#ERR image_list_position: [151] probs: [98,8]  prob_r: 0.0000000000000000e+00 prob_e: 9.7998492419719696e-03
+#ERR image_list_position: [151] probs: [98,16]  prob_r: 0.0000000000000000e+00 prob_e: 6.3048321753740311e-03
+#ERR image_list_position: [151] boxes: [98]  x_r: nan x_e: 2.8969998168945312e+02 y_r: nan y_e: 2.1969895935058594e+02 w_r: nan w_e: 2.7168508911132812e+02 h_r: nan h_e: 1.5733135986328125e+02
+#ERR image_list_position: [151] probs: [101,11]  prob_r: 0.0000000000000000e+00 prob_e: 6.5764891915023327e-03
+#ERR image_list_position: [151] boxes: [101]  x_r: nan x_e: 3.8510946655273438e+02 y_r: nan y_e: 2.3531333923339844e+02 w_r: nan w_e: 1.2691973114013672e+02 h_r: nan h_e: 1.2203082275390625e+02
+#ERR image_list_position: [151] probs: [114,11]  prob_r: 0.0000000000000000e+00 prob_e: 1.3984023593366146e-02
+#ERR image_list_position: [151] boxes: [114]  x_r: nan x_e: 2.5673739624023438e+02 y_r: nan y_e: 2.9003271484375000e+02 w_r: nan w_e: 2.3994763183593750e+02 h_r: nan h_e: 1.0552970123291016e+02
+#SDC Ite:151 KerTime:0.414882 AccTime:62.537815 KerErr:60 AccErr:60
+#IT Ite:152 KerTime:0.411674 AccTime:62.949489
+#IT Ite:153 KerTime:0.409907 AccTime:63.359396
+#IT Ite:154 KerTime:0.409081 AccTime:63.768477
+#IT Ite:155 KerTime:0.409577 AccTime:64.178054
+#IT Ite:156 KerTime:0.409756 AccTime:64.587810
+#IT Ite:157 KerTime:0.409426 AccTime:64.997236
+#IT Ite:158 KerTime:0.410202 AccTime:65.407438
+#IT Ite:159 KerTime:0.409262 AccTime:65.816700
+#IT Ite:160 KerTime:0.409731 AccTime:66.226431
+#IT Ite:161 KerTime:0.409101 AccTime:66.635532
+#IT Ite:162 KerTime:0.409715 AccTime:67.045247
+#IT Ite:163 KerTime:0.409906 AccTime:67.455153
+#IT Ite:164 KerTime:0.410569 AccTime:67.865722
+#IT Ite:165 KerTime:0.410039 AccTime:68.275761
+#IT Ite:166 KerTime:0.409391 AccTime:68.685152
+#IT Ite:167 KerTime:0.410022 AccTime:69.095174
+#IT Ite:168 KerTime:0.410237 AccTime:69.505411
+#IT Ite:169 KerTime:0.409859 AccTime:69.915270
+#IT Ite:170 KerTime:0.409786 AccTime:70.325056
+#IT Ite:171 KerTime:0.409215 AccTime:70.734271
+#IT Ite:172 KerTime:0.409371 AccTime:71.143642
+#IT Ite:173 KerTime:0.409888 AccTime:71.553530
+#IT Ite:174 KerTime:0.409987 AccTime:71.963517
+#IT Ite:175 KerTime:0.409606 AccTime:72.373123
+#IT Ite:176 KerTime:0.411411 AccTime:72.784534
+#IT Ite:177 KerTime:0.410036 AccTime:73.194570
+#IT Ite:178 KerTime:0.408872 AccTime:73.603442
+#IT Ite:179 KerTime:0.409423 AccTime:74.012865
+#IT Ite:180 KerTime:0.409029 AccTime:74.421894
+#IT Ite:181 KerTime:0.410149 AccTime:74.832043
+#IT Ite:182 KerTime:0.410021 AccTime:75.242064
+#IT Ite:183 KerTime:0.409880 AccTime:75.651944
+#IT Ite:184 KerTime:0.410191 AccTime:76.062135
+#IT Ite:185 KerTime:0.409615 AccTime:76.471750
+#IT Ite:186 KerTime:0.409854 AccTime:76.881604
+#IT Ite:187 KerTime:0.410366 AccTime:77.291970
+#IT Ite:188 KerTime:0.411349 AccTime:77.703319
+#IT Ite:189 KerTime:0.409458 AccTime:78.112777
+#IT Ite:190 KerTime:0.409951 AccTime:78.522728
+#IT Ite:191 KerTime:0.410061 AccTime:78.932789
+#IT Ite:192 KerTime:0.409824 AccTime:79.342613
+#IT Ite:193 KerTime:0.409756 AccTime:79.752369
+#IT Ite:194 KerTime:0.409842 AccTime:80.162211
+#IT Ite:195 KerTime:0.409701 AccTime:80.571912
+#IT Ite:196 KerTime:0.409769 AccTime:80.981681
+#IT Ite:197 KerTime:0.410337 AccTime:81.392018
+#IT Ite:198 KerTime:0.409745 AccTime:81.801763
+#IT Ite:199 KerTime:0.410075 AccTime:82.211838
+#IT Ite:200 KerTime:0.411044 AccTime:82.622882
+#IT Ite:201 KerTime:0.409631 AccTime:83.032513
+#IT Ite:202 KerTime:0.409954 AccTime:83.442467
+#IT Ite:203 KerTime:0.410115 AccTime:83.852582
+#IT Ite:204 KerTime:0.410375 AccTime:84.262957
+#IT Ite:205 KerTime:0.409454 AccTime:84.672411
+#IT Ite:206 KerTime:0.409204 AccTime:85.081615
+#IT Ite:207 KerTime:0.410073 AccTime:85.491688
+#IT Ite:208 KerTime:0.409100 AccTime:85.900788
+#IT Ite:209 KerTime:0.409094 AccTime:86.309882
+#IT Ite:210 KerTime:0.409600 AccTime:86.719482
+#IT Ite:211 KerTime:0.409861 AccTime:87.129343
+#IT Ite:212 KerTime:0.411361 AccTime:87.540704
+#IT Ite:213 KerTime:0.410258 AccTime:87.950962
+#IT Ite:214 KerTime:0.409496 AccTime:88.360458
+#IT Ite:215 KerTime:0.409710 AccTime:88.770168
+#IT Ite:216 KerTime:0.408934 AccTime:89.179102
+#IT Ite:217 KerTime:0.409472 AccTime:89.588574
+#IT Ite:218 KerTime:0.409881 AccTime:89.998455
+#IT Ite:219 KerTime:0.409735 AccTime:90.408190
+#IT Ite:220 KerTime:0.409787 AccTime:90.817977
+#IT Ite:221 KerTime:0.409787 AccTime:91.227764
+#IT Ite:222 KerTime:0.409505 AccTime:91.637269
+#IT Ite:223 KerTime:0.409743 AccTime:92.047012
+#IT Ite:224 KerTime:0.410918 AccTime:92.457930
+#IT Ite:225 KerTime:0.409415 AccTime:92.867345
+#IT Ite:226 KerTime:0.409879 AccTime:93.277224
+#IT Ite:227 KerTime:0.409400 AccTime:93.686624
+#IT Ite:228 KerTime:0.409681 AccTime:94.096305
+#IT Ite:229 KerTime:0.409617 AccTime:94.505922
+#IT Ite:230 KerTime:0.409745 AccTime:94.915667
+#IT Ite:231 KerTime:0.409731 AccTime:95.325398
+#IT Ite:232 KerTime:0.409420 AccTime:95.734818
+#IT Ite:233 KerTime:0.409438 AccTime:96.144256
+#IT Ite:234 KerTime:0.409197 AccTime:96.553453
+#IT Ite:235 KerTime:0.409487 AccTime:96.962940
+#IT Ite:236 KerTime:0.411593 AccTime:97.374533
+#IT Ite:237 KerTime:0.409425 AccTime:97.783958
+#IT Ite:238 KerTime:0.409252 AccTime:98.193210
+#ERR image_list_position: [238] boxes: [93]  x_r: 2.8372094726562500e+02 x_e: 2.8372091674804688e+02 x_diff: 3.0517578125000000e-05 y_r: 2.1892228698730469e+02 y_e: 2.1892234802246094e+02 y_diff: 6.1035156250000000e-05 w_r: 2.1594392395019531e+02 w_e: 2.1593870544433594e+02 w_diff: 5.2185058593750000e-03 h_r: 1.4568840026855469e+02 h_e: 1.4568519592285156e+02 h_diff: 3.2043457031250000e-03
+#ERR image_list_position: [238] probs: [93,17]  prob_r: 5.0442647188901901e-03 prob_e: 5.0438321195542812e-03
+#SDC Ite:238 KerTime:0.409252 AccTime:98.193210 KerErr:1 AccErr:61
+#IT Ite:239 KerTime:0.409076 AccTime:98.602286
+#IT Ite:240 KerTime:0.409426 AccTime:99.011712
+#IT Ite:241 KerTime:0.409880 AccTime:99.421592
+#IT Ite:242 KerTime:0.409637 AccTime:99.831229
+#IT Ite:243 KerTime:0.409502 AccTime:100.240731
+#IT Ite:244 KerTime:0.409935 AccTime:100.650666
+#IT Ite:245 KerTime:0.409505 AccTime:101.060171
+#IT Ite:246 KerTime:0.408863 AccTime:101.469034
+#IT Ite:247 KerTime:0.409036 AccTime:101.878070
+#IT Ite:248 KerTime:0.412206 AccTime:102.290276
+#IT Ite:249 KerTime:0.409181 AccTime:102.699457
+#IT Ite:250 KerTime:0.409261 AccTime:103.108718
+#IT Ite:251 KerTime:0.409240 AccTime:103.517958
+#IT Ite:252 KerTime:0.408944 AccTime:103.926902
+#IT Ite:253 KerTime:0.409333 AccTime:104.336235
+#IT Ite:254 KerTime:0.409259 AccTime:104.745494
+#IT Ite:255 KerTime:0.409761 AccTime:105.155255
+#IT Ite:256 KerTime:0.409249 AccTime:105.564504
+#IT Ite:257 KerTime:0.409012 AccTime:105.973516
+#IT Ite:258 KerTime:0.409446 AccTime:106.382962
+#IT Ite:259 KerTime:0.409654 AccTime:106.792616
+#IT Ite:260 KerTime:0.411050 AccTime:107.203666
+#IT Ite:261 KerTime:0.409077 AccTime:107.612743
+#IT Ite:262 KerTime:0.409360 AccTime:108.022103
+#IT Ite:263 KerTime:0.409095 AccTime:108.431198
+#IT Ite:264 KerTime:0.409192 AccTime:108.840390
+#IT Ite:265 KerTime:0.409731 AccTime:109.250121
+#IT Ite:266 KerTime:0.409406 AccTime:109.659527
+#IT Ite:267 KerTime:0.409031 AccTime:110.068558
+#IT Ite:268 KerTime:0.408635 AccTime:110.477193
+#IT Ite:269 KerTime:0.409405 AccTime:110.886598
+#IT Ite:270 KerTime:0.409327 AccTime:111.295925
+#IT Ite:271 KerTime:0.409741 AccTime:111.705666
+#IT Ite:272 KerTime:0.411149 AccTime:112.116815
+#IT Ite:273 KerTime:0.409496 AccTime:112.526311
+#IT Ite:274 KerTime:0.409158 AccTime:112.935469
+#IT Ite:275 KerTime:0.409578 AccTime:113.345047
+#IT Ite:276 KerTime:0.409125 AccTime:113.754172
+#IT Ite:277 KerTime:0.409514 AccTime:114.163686

@@ -29,7 +29,7 @@ def endProgress():
     sys.stdout.flush()
 
 
-def generateSDCList(fi, toGetInfo = 'not'):
+def generateSDCList(fi):
     sdc_item_list = []
     sdc_iter = 0  # number of iterations with error
     iter_err_count = 0  # number of wrong elements inside one iteration
@@ -62,21 +62,23 @@ def generateSDCList(fi, toGetInfo = 'not'):
         m = re.match("(.*ERR.*)", line)
         if m:
             errors.append(m.group(1))
-        elif toGetInfo == 'yes':
-            m = re.match("(.*INFO.*)", line)
+        else:
+            #INF abft_type: dumb image_list_position: [151] row_detected_errors: 1 col_detected_errors: 1
+            m = re.match("(.*INF.*)", line)
             if m:
                 errors.append(m.group(1))
 
-        else: #for old nw logs
-            ##SDC it:145 k_time:0.005087 acc_time:0.746233 k_err:706 acc_err:706
-            m = re.match(".*SDC.*it:(\d+).*k_err:(\d+).*acc_err:(\d+).*", line)
-            if m: # ocorre o SDC no log apos todos os erros da execucao terem sido printados no log
-                sdc_iter = m.group(1)
-                iter_err_count = m.group(2)
-                acc_err = m.group(3)
-                if len(errors) > 0:
-                    sdc_item_list.append([fileName, header, sdc_iter, iter_err_count, acc_err, copy.deepcopy(errors)])
-                errors = []
+        #for old nw logs
+        #SDC it:145 k_time:0.005087 acc_time:0.746233 k_err:706 acc_err:706
+        m = re.match(".*SDC.*it:(\d+).*k_err:(\d+).*acc_err:(\d+).*", line)
+        if m: # ocorre o SDC no log apos todos os erros da execucao terem sido printados no log
+            sdc_iter = m.group(1)
+            iter_err_count = m.group(2)
+            acc_err = m.group(3)
+            if len(errors) > 0:
+                sdc_item_list.append([fileName, header, sdc_iter, iter_err_count, acc_err, copy.deepcopy(errors)])
+            errors = []
+
     return sdc_item_list
 
 
@@ -86,20 +88,8 @@ def generateSDCList(fi, toGetInfo = 'not'):
 ###########################################
 # MAIN
 ###########################################'
-import argparse
-def parse_args():
-    """Parse input arguments."""
-    parser = argparse.ArgumentParser(description='Parse logs for Neural Networks')
-    parser.add_argument('--get_info', dest='toGetInfo', help='If you want to retrieve all #Info',
-                        default='no_info', type=str)
-
-    args = parser.parse_args()
-
-    return args
 
 if __name__ == '__main__':
-    args = parse_args()
-
     print("Retrieving file list...")
     all_logs = [y for x in os.walk(".") for y in glob(os.path.join(x[0], '*.log'))]
 
@@ -121,7 +111,7 @@ if __name__ == '__main__':
             benchmark = m.group(7)
             machine_name = m.group(8)
 
-            sdcs_list = generateSDCList(fi,str(args.toGetInfo))
+            sdcs_list = generateSDCList(fi)
 
             if len(sdcs_list) > 0:
                 if benchmark + "_" + machine_name not in benchmarks_dict:
