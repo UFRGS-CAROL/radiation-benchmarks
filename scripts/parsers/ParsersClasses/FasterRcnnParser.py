@@ -185,9 +185,6 @@ class FasterRcnnParser(Parser):
     def buildImageMethod(self):
         return False
     # def generatePyFasterRectangles(self, goldArray): return None
-
-    def copyList(self, goldArray): return None
-
     def getCls(self, gold): return None
 
     def getImgLPos(self, sdcit): return None

@@ -477,16 +477,18 @@ class Parser():
 
     """writes a csv header, and create the log_parsed directory"""
     def _writeCSVHeader(self, csvFileName):
-        if not os.path.exists(os.path.dirname(csvFileName)):
-            try:
-                os.makedirs(os.path.dirname(csvFileName))
-            except OSError as exc:  # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
-        csvWFP = open(csvFileName, "a")
-        writer = csv.writer(csvWFP, delimiter=';')
-        writer.writerow(self._csvHeader)
-        csvWFP.close()
+        if os.path.isfile(csvFileName) == False:
+            if not os.path.exists(os.path.dirname(csvFileName)):
+                try:
+                    os.makedirs(os.path.dirname(csvFileName))
+                except OSError as exc:  # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
+
+            csvWFP = open(csvFileName, "a")
+            writer = csv.writer(csvWFP, delimiter=';')
+            writer.writerow(self._csvHeader)
+            csvWFP.close()
 
 
     def _makeDirName(self):

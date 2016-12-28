@@ -1,8 +1,7 @@
 import copy
 import math
 import pickle
-# from ctypes import *
-import ctypes
+from ctypes import *
 import numpy as np
 
 from SupportClasses import Rectangle
@@ -10,22 +9,22 @@ from SupportClasses import Rectangle
 """Read a darknet Gold content to memory"""
 
 
-class Float(ctypes.Structure):
-    _fields_ = [('f', ctypes.c_float)]
+class Float(Structure):
+    _fields_ = [('f', c_float)]
 
     def __repr__(self):
         return str(self.f)
 
 
-class Box(ctypes.Structure):
-    _fields_ = [('x', ctypes.c_float), ('y', ctypes.c_float), ('w', ctypes.c_float), ('h', ctypes.c_float)]
+class Box(Structure):
+    _fields_ = [('x', c_float), ('y', c_float), ('w', c_float), ('h', c_float)]
 
     def __repr__(self):
         return str(self.x) + " " + str(self.y) + " " + str(self.w) + " " + str(self.h)
 
 
-class Long(ctypes.Structure):
-    _fields_ = [('l', ctypes.c_long)]
+class Long(Structure):
+    _fields_ = [('l', c_long)]
 
     def __repr__(self):
         return str(self.l)
@@ -40,12 +39,12 @@ class Point(object):
         self.y = y
 
 
-class GoldContent(object):
+class GoldContent():
     plist_size = 0
     classe = 0
     total_size = 0
-    prob_array = {}
-    pyFasterGold = []
+    __prob_array = {}
+    __pyFasterGold = []
     pyFasterImgList = ""
 
     # return a dict that look like this
@@ -64,12 +63,19 @@ class GoldContent(object):
         try:
             nn = kwargs.pop("nn")
             filePath = kwargs.pop("filepath")
+
             if "darknet" in nn:
                 self.darknetConstructor(filePath)
             elif "pyfaster" in nn:
                 self.pyFasterConstructor(filePath)
         except:
             pass
+
+    def getRectArray(self):
+        return self.__prob_array['boxes']
+
+    def getProbArray(self):
+        return self.__prob_array['probs']
 
     def darknetConstructor(self, filePath):
         cc_file = open(filePath, 'rb')
@@ -95,16 +101,19 @@ class GoldContent(object):
         self.plist_size = plist_size
         self.classes = classes
         self.total_size = total_size
-        self.prob_array["boxes"] = []
-        self.prob_array["probs"] = []
+        self.__prob_array["boxes"] = []
+        self.__prob_array["probs"] = []
+
         while i < long(plist_size):
             # boxes has total_size size
             boxes = self.readBoxes(cc_file, total_size)
             probs = self.readProbs(cc_file, total_size, classes)
-            self.prob_array["probs"].append(probs)
-            self.prob_array["boxes"].append(boxes)
+            self.__prob_array["probs"].append(probs)
+            self.__prob_array["boxes"].append(boxes)
             i += 1
+
         cc_file.close()
+
 
     def pyFasterConstructor(self, filepath):
         try:
@@ -114,7 +123,7 @@ class GoldContent(object):
 
         except:
             raise
-        self.pyFasterGold = tempGold
+        self.__pyFasterGold = tempGold
 
 
 
@@ -136,8 +145,7 @@ class GoldContent(object):
             bottom = int(math.floor(box.y))
             h = int(math.ceil(box.h))
             w = int(math.ceil(box.w))
-
-            boxes[i] = Rectangle(left, bottom, w, h)
+            boxes[i] = Rectangle.Rectangle(left, bottom, w, h)
             i += 1
         return boxes
 

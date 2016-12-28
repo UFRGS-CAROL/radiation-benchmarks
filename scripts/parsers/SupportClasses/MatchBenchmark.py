@@ -81,7 +81,8 @@ class MatchBenchmark():
                 break
 
         if not isBench:
-            print "\nMatchBenchmark: There is no benchmark as " + str(benchmark)
+            print "\nMatchBenchmark: There is no benchmark as "\
+                  + str(benchmark) + " in radiationBenchmarks list"
         return isBench
 
             #raise BaseException

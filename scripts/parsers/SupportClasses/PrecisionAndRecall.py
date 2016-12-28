@@ -1,7 +1,6 @@
 import multiprocessing
-import subprocess
-
-
+import Rectangle
+from ctypes import *
 """Calculates precision and recall between two sets of rectangles"""
 
 class PrecisionAndRecall(object):
@@ -10,26 +9,34 @@ class PrecisionAndRecall(object):
     falsePositive = 0
     falseNegative = 0
     truePositive = 0
-    threshold = 1
+    __threshold = 1
+
 
     def __init__(self, threshold):
         manager = multiprocessing.Manager()
-        self.threshold = threshold
+        self.__threshold = threshold
         self.precision = manager.Value('f', 0.0)
         self.recall = manager.Value('f', 0.0)
         self.falseNegative = manager.Value('i', 0)
         self.truePositive = manager.Value('i', 0)
-        self.falsePositive =manager.Value('i',0)
+        self.falsePositive =manager.Value('i', 0)
 
     def __repr__(self):
         return "precision " + str(self.precision) + " recall:" + str(self.recall) + " false positive:" + str(self.falsePositive) \
-                + " false negative:" + str(self.falseNegative) + " true positive:" + str(self.truePositive) + " threshold:" + str(self.threshold)
+                + " false negative:" + str(self.falseNegative) + " true positive:" + str(self.truePositive) + " threshold:" + str(self.__threshold)
 
     def getPrecision(self): return self.precision.value
     def getFalsePositive(self): return self.falsePositive.value
     def getFalseNegative(self): return self.falseNegative.value
     def getTruePositive(self): return self.truePositive.value
     def getRecall(self): return self.precision.value
+
+    def cleanValues(self):
+        self.precision.value = 0
+        self.recall.value = 0
+        self.falseNegative.value = 0
+        self.truePositive.value =  0
+        self.falsePositive.value =  0
 
     """
     Calculates the precision an recall value, based on Lucas C++ function for HOG
@@ -49,8 +56,8 @@ class PrecisionAndRecall(object):
         pp = multiprocessing.Process(target=self.precisionMethod, args=(gold, found))
         rp.start()
         pp.start()
-        rp.join(timeout=1)
-        pp.join(timeout=1)
+        rp.join()
+        pp.join()
         # print "precision " + str(self.precision.value) + " recall:" + str(self.recall.value) + " false positive:" + str(self.falsePositive) \
         #         + " false negative:" + str(self.falseNegative) + " true positive:" + str(self.truePositive) + " threshold:" + str(self.threshold)
         self.precision.value = float(self.truePositive.value) / float(self.truePositive.value + self.falsePositive.value)
@@ -64,7 +71,7 @@ class PrecisionAndRecall(object):
         out_positive = 0
         for i in found:
             for g in gold:
-                if (g.jaccard_similarity(i)) >= self.threshold:
+                if (g.jaccard_similarity(i)) >= self.__threshold:
                     out_positive += 1
                     break
 
@@ -79,7 +86,7 @@ class PrecisionAndRecall(object):
         # print "passou recall"
         for i in gold:
             for z in found:
-                if (z.jaccard_similarity(i)) >= self.threshold:
+                if (i.jaccard_similarity(z)) >= self.__threshold:
                     self.truePositive.value += 1
                     break
 
@@ -166,8 +173,21 @@ class PrecisionAndRecall(object):
         # (test_center_of_mass.x - gold_center_of_mass.x)/x_size << "," << (double)(test_center_of_mass.y - gold_center_of_mass.y)/y_size
         return float(xFound - xGold) / xSize, float(yFound - yGold) / ySize
 
-    def getImageSize(self, imgPath):
-        # print imgPath
-        with Image.open(imgPath) as im:
-            width, height = im.size
-        return width, height
+    # def getImageSize(self, imgPath):
+    #     # print imgPath
+    #     with Image.open(imgPath) as im:
+    #         width, height = im.size
+    #     return width, height
+#
+# import random
+# found = [Rectangle.Rectangle(random.randint(1,10),random.randint(1,10),random.randint(1,10),random.randint(1,10)) for n in range(1,10)]
+# gold = [Rectangle.Rectangle(random.randint(5,15),random.randint(5,15),random.randint(5,15),random.randint(5,15)) for n in range(1,10)]
+#
+# print found
+# print gold
+#
+# print "fazendo PR"
+# pr = PrecisionAndRecall(0.5)
+# pr.precisionAndRecallParallel(gold, found)
+# print pr.getPrecision()  , pr.getRecall()
+

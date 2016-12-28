@@ -1,9 +1,16 @@
 from Parser import Parser
 import csv
-import os
+import copy
+from SupportClasses import PrecisionAndRecall
 
 class ObjectDetectionParser(Parser):
-    __prThreshold = 0.5
+
+    # precisionRecallObj = None
+    _prThreshold = 0.5
+
+    # def __init__(self):
+    #     Parser.__init__(self)
+        # self.precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(self._prThreshold)
 
     _classes = ['__background__',
                'aeroplane', 'bicycle', 'bird', 'boat',
@@ -41,11 +48,10 @@ class ObjectDetectionParser(Parser):
 
 
     def _writeToCSV(self, csvFileName):
-        if os.path.isfile(csvFileName) == False:
-            if self._abftType:
-                self._csvHeader.extend(["abft_type", "row_detected_errors", "col_detected_errors"])
+        if self._abftType:
+            self._csvHeader.extend(["abft_type", "row_detected_errors", "col_detected_errors"])
 
-            self._writeCSVHeader(csvFileName)
+        self._writeCSVHeader(csvFileName)
 
         try:
 
@@ -91,3 +97,14 @@ class ObjectDetectionParser(Parser):
 
     def jaccardCoefficient(self):
         pass
+
+    def copyList(self, objList):
+        temp = []
+        if 'Darknet' in self._benchmark:
+            for i in objList:
+                temp.append(i.deepcopy())
+        elif self._benchmark == 'pyfasterrcnn':
+            for i in objList:
+                temp.append(copy.deepcopy(i))
+
+        return temp

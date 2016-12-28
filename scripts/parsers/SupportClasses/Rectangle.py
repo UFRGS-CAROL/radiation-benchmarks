@@ -1,6 +1,3 @@
-
-
-
 """
   	left
 The X coordinate of the left side of the box
@@ -13,7 +10,7 @@ The Y coordinate of the bottom edge of the box
 """
 
 
-class Rectangle(object):
+class Rectangle():
     left = 0
     bottom = 0
     top = 0
@@ -28,15 +25,10 @@ class Rectangle(object):
         self.bottom = bottom
         self.width = width
         self.height = height
-        self.right()
-        self.top()
-
-    def right(self):
-        """The width of the rectangle"""
         self.right = self.left + self.width
-
-    def top(self):
         self.top = self.bottom + self.height
+
+
 
     def __repr__(self):
         return "left " + str(self.left) + " bottom " + str(self.bottom) + " width " + str(
@@ -96,13 +88,11 @@ class Rectangle(object):
         return self.width * self.height
       
     def jaccard_similarity(self, other):
-	    intersection = 0
-	    for x in xrange(self.left, self.right):
-	        for y in xrange(self.bottom, self.top):
-	            if (x >= other.left and x <= other.right and y >= other.bottom and y <= other.top):
-	                intersection += 1
-	    total = (self.top - self.bottom) * (self.right - self.left) + (other.top - other.bottom) * (other.right - other.left) - intersection
-	    similarity = (float(intersection) / float(total))
-	    return similarity
-
-     
+        intersection = 0
+        for x in xrange(self.left, self.right):
+            for y in xrange(self.bottom, self.top):
+                if (x >= other.left and x <= other.right and y >= other.bottom and y <= other.top):
+                    intersection += 1
+        total = (self.top - self.bottom) * (self.right - self.left) + (other.top - other.bottom) * (other.right - other.left) - intersection
+        similarity = (float(intersection) / float(total))
+        return similarity
