@@ -146,6 +146,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
     sys.stdout.write(
         "\rProcessing SDC " + str(sdci - 1) + " of " + str(totalSdcs) + " - 100%                     " + "\n")
     sys.stdout.flush()
+    #print matchBench.checkNotDoneBenchs()
 
 #       (cubicF, squareF, colRowF, singleF, randomF) = currObj.localityParser3D(errListFiltered)
 #       (cubicF2, squareF2, colRowF2, singleF2, randomF2) = currObj.localityParser3D(errListFiltered2)

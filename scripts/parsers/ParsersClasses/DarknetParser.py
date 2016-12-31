@@ -1,37 +1,66 @@
 #!/usr/bin/env python
 import math
 
+import numpy
+
 from SupportClasses import Rectangle
 import os
 import re
 import sys
+from PIL import Image
+
 
 from ObjectDetectionParser import ObjectDetectionParser
 from SupportClasses import GoldContent
 from SupportClasses import PrecisionAndRecall
 
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
-GOLD_BASE_DIR = [
-        '/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
-        '/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN']
+GOLD_BASE_DIR = ['/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
+    '/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN']
 
 DATASETS = {
     # normal
-    # 'gold.caltech.critical.1K.test': {'caltech.pedestrians.critical.1K.txt': { 'gold': None, 'txt': None, 'obj': None}},
+    'gold.caltech.critical.1K.test': {
+        'caltech.pedestrians.critical.1K.txt': {
+            'gold': None, 'txt': None, 'obj': None}},
 
-    'gold.caltech.1K.test': {'caltech.pedestrians.1K.txt' : { 'gold': None, 'txt': None, 'obj': None}},
+    'gold.caltech.1K.test': {
+        'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
     # abft
-    # 'gold.caltech.abft.1K.test': {'caltech.pedestrians.1K.txt' : { 'gold': None, 'txt': None, 'obj': None}},
-    # 'gold.caltech.critical.abft.1K.test': {'caltech.pedestrians.critical.1K.txt' : { 'gold': None, 'txt': None, 'obj': None}},
+    'gold.caltech.abft.1K.test': {
+        'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    'gold.caltech.critical.abft.1K.test': {
+        'caltech.pedestrians.critical.1K.txt': {
+            'gold': None, 'txt': None, 'obj': None}},
 
-    'gold.voc.2012.1K.test': {'voc.2012.1K.txt' : { 'gold': None, 'txt': None, 'obj': None}},
-    # 'gold.voc.2012.abft.1K.test': {'voc.2012.1K.txt' : { 'gold': None, 'txt': None, 'obj': None}},
-}
-
+    'gold.voc.2012.1K.test': {
+        'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    'gold.voc.2012.abft.1K.test': {
+        'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+     }
 
 """___________________"""
 
 import time
+
+
+class ImageRaw():
+    w = 0
+    h = 0
+    file = ""
+
+    def __init__(self, file):
+        self.w, self.h = self.getImageSize(file)
+        self.file = file
+
+
+    def getImageSize(self, imgPath):
+        # print imgPath
+        with Image.open(imgPath) as im:
+            width, height = im.size
+        return width, height
+
+
 class DarknetParser(ObjectDetectionParser):
     __executionType = None
     __executionModel = None
@@ -41,30 +70,33 @@ class DarknetParser(ObjectDetectionParser):
     __iterations = None
     __goldFileName = None
 
-
     def __init__(self):
         start_time = time.time()
         ObjectDetectionParser.__init__(self)
-        for kD,vD in DATASETS.iteritems():
-            for kI,vI in vD.iteritems():
+        for kD, vD in DATASETS.iteritems():
+            for kI, vI in vD.iteritems():
                 for i in GOLD_BASE_DIR:
                     DATASETS[kD][kI]['gold'] = str(i) + '/darknet/' + str(kD)
-                    DATASETS[kD][kI]['txt']  = str(i) + '/networks_img_list/' + str(kI)
+                    DATASETS[kD][kI]['txt'] = str(
+                        i) + '/networks_img_list/' + str(kI)
 
                     if not os.path.isfile(DATASETS[kD][kI]['gold']):
-                        sys.exit(str(DATASETS[kD][kI]['gold']) + " no such file or directory")
+                        sys.exit(str(DATASETS[kD][kI][
+                                         'gold']) + " no such file or directory")
                     if not os.path.isfile(DATASETS[kD][kI]['txt']):
-                        sys.exit(str(DATASETS[kD][kI]['txt']) + " no such file or directory")
+                        sys.exit(str(DATASETS[kD][kI][
+                                         'txt']) + " no such file or directory")
 
-                    #if it pass, I will open all gold on memory
-                    DATASETS[kD][kI]['obj'] = GoldContent.GoldContent(nn='darknet',filepath=DATASETS[kD][kI]['gold'])
+                    # if it pass, I will open all gold on memory
+                    DATASETS[kD][kI]['obj'] = GoldContent.GoldContent(
+                        nn='darknet', filepath=DATASETS[kD][kI]['gold'])
         elapsed_time = time.time() - start_time
 
-        print "\n darknet open gold time " , elapsed_time
-                        #for gold object
-    #each imglist has a gold, only need to keep then on the memory
-    goldObjects = {}
+        print "\n darknet open gold time ", elapsed_time
+        # for gold object
 
+    # each imglist has a gold, only need to keep then on the memory
+    goldObjects = {}
 
     def setSize(self, header):
         if "abft" in header:
@@ -88,6 +120,7 @@ class DarknetParser(ObjectDetectionParser):
                 self.__iterations = darknetM.group(6)
                 if "abft" in header:
                     self._abftType = darknetM.group(7)
+
                 # print "list path" , self.__imgListPath
                 self.__goldFileName = self.getGoldFileName(self.__imgListPath)
                 # print self.__goldFileName
@@ -98,81 +131,132 @@ class DarknetParser(ObjectDetectionParser):
         # tempPath = os.path.basename(self.__imgListPath).replace(".txt","")
         self._size = str(self.__goldFileName)
 
-    """
-       Compare two sets of boxes
+    def __printYoloDetections(self, boxes, probs, total, classes):
+        validRectangles = []
+        validProbs = []
+        validClasses = []
+        for i in range(0, total):
+            box = boxes[i]
+            xmin = box.left - box.width / 2.
+            xmax = box.left + box.width / 2.
+            ymin = box.bottom - box.height / 2.
+            ymax = box.bottom + box.height / 2.
 
+            # if xmin < 0:
+            xmin = max(xmin, 0)
+            # if ymin < 0:
+            ymin = max(ymin, 0)
+            # if xmax > w:
+            xmax = min(xmax, box.width)
+            # if ymax > h:
+            ymax = min(ymax, box.height)
 
+            for j in range(0, classes):
+                if probs[i][j] >= self._detectionThreshold:
+                    validProbs.append(probs[i][j])
+                    rect = box # Rectangle.Rectangle(int(math.floor(xmin)), int(math.floor(ymin)), int(math.ceil(xmax -
+                     #xmin)), int(math.ceil(ymax - ymin)))
+                    validRectangles.append(rect)
+                    validClasses.append(self._classes[j])
+                    print self._classes[j]
 
-              ret["type"] = "boxes"
-               ret["image_list_position"] = image_err.group(1)
-               ret["boxes"] = image_err.group(2)
-               # x
-               ret["x_r"] = image_err.group(3)
-               ret["x_e"] = image_err.group(4)
-               ret["x_diff"] = image_err.group(5)
-               # y
-               ret["y_r"] = image_err.group(6)
-               ret["y_e"] = image_err.group(7)
-               ret["y_diff"] = image_err.group(8)
-               # w
-               ret["w_r"] = image_err.group(9)
-               ret["w_e"] = image_err.group(10)
-               ret["w_diff"] = image_err.group(11)
-               # h
-               ret["h_r"] = image_err.group(12)
-               ret["h_e"] = image_err.group(13)
-               ret["h_diff"] = image_err.group(14)
+        return validRectangles, validProbs, validClasses
 
-       """
-
+    test = []
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return
 
-        #parsing box array
-        goldCurrObj = DATASETS[self.__goldFileName][os.path.basename(self.__imgListPath)]['obj']
+        # parsing box array
+        goldCurrObj = DATASETS[self.__goldFileName][os.path.basename(self.__imgListPath)][
+            'obj']
         if goldCurrObj == None:
             sys.exit("Gold obj was not created")
 
-        goldRectArray = goldCurrObj.getRectArray()
         imgPos = errList[0]["img_list_position"]
 
-        goldRects = goldRectArray[imgPos]
-        foundRects = self.copyList(goldRects)
+        # probs
+        goldProb = goldCurrObj.getProbArray()
+        goldProb = goldProb[imgPos]
+        foundProb = numpy.copy(goldProb)
+        # rects
+        goldRects = goldCurrObj.getRectArray()
+        goldRects = goldRects[imgPos]
+        foundRects = numpy.copy(goldRects)
 
-
+        self._rowDetErrors = 0
+        self._colDetErrors = 0
+        self._wrongElements = 0
         for y in errList:
-            try:
+            if y["type"] == "boxes":
                 i = y['boxes']
-            except:
-                continue
+                rectPos = (i['boxes'])
+                left = int(math.floor(float(i["x_r"])))
+                bottom = int(math.floor(float(i["y_r"])))
+                h = int(math.ceil(float(i["h_r"])))
+                w = int(math.ceil(float(i["w_r"])))
+                foundRects[rectPos] = Rectangle.Rectangle(left, bottom, w, h)
+                self._wrongElements += 1
+            elif y["type"] == "abft":
+                i = y['abft_det']
+                self._rowDetErrors += i["row_detected_errors"]
+                self._colDetErrors += i["col_detected_errors"]
 
-            rectPos = (i['boxes'])
-            left = int(math.floor(float(i["x_r"])))
-            bottom = int(math.floor(float(i["y_r"])))
-            h = int(math.ceil(float(i["h_r"])))
-            w = int(math.ceil(float(i["w_r"])))
-            foundRects[rectPos] = Rectangle.Rectangle(left, bottom, w, h)
+            elif y["type"] == "probs":
+                i = int(y["probs_x"])
+                j = int(y["probs_y"])
+                foundProb[i, j] = float(y["prob_r"])
+
+        #############
+        # before keep going is necessary to filter the results
+        listFile = open(
+            "/home/familia/Fernando/radiation-benchmarks/data/networks_img_list/" + os.path.basename(
+                self.__imgListPath)).readlines()
+
+        imgObj = ImageRaw(listFile[imgPos].rstrip())
+        gValidRects, gValidProbs, gValidClasses = self.__drawDetections(imgObj,
+                                                                        goldCurrObj.getTotalSize(),
+                                                                        goldRects, goldProb)
+        # fValidRects, fValidProbs, fValidClasses = self.__printYoloDetections(
+        #     foundRects, foundProb, goldCurrObj.getTotalSize(),
+        #     goldCurrObj.getClasses())
+        #############
+        imgFilename = listFile[imgPos].rstrip()
+        if len(gValidRects) > 1:
+            imgFilename = imgFilename.split("data", 1)[1]
+            imgFilename = "/home/carol/radiation-benchmarks/data" + imgFilename
+            if imgFilename not in self.test:
+                self.test.append(imgFilename)
+                os.system("echo \""  + str(self.test) + '\" > last_line.txt')
+            # print gValidRects
+            # self.buildImageMethod(listFile[imgPos].rstrip(), gValidRects,
+            #                   gValidClasses, gValidProbs)
+            # self.buildImageMethod(listFile[imgPos].rstrip(), fValidRects,
+            #                       fValidClasses, fValidProbs)
+        # sys.exit()
         #
-        # print "\n\n gold" , goldRectArray
-        # print "\n\n found" , foundObjBoxes
         precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(0.5)
-        precisionRecallObj.precisionAndRecallParallel(goldRects, foundRects)
-        #set all
-        self._goldLines = None
-        self._detectedLines = None
-        self._xCenterOfMass = None
-        self._yCenterOfMass = None
-        self._precision = precisionRecallObj.getPrecision()
-        self._recall = precisionRecallObj.getRecall()
-        self._falseNegative = precisionRecallObj.getFalseNegative()
-        self._falsePositive = precisionRecallObj.getFalsePositive()
-        self._truePositive = precisionRecallObj.getTruePositive()
+        gValidSize = len(gValidRects)
+        # fValidSize = len(fValidRects)
+        # if gValidSize > 0 and fValidSize > 0:
+        #     precisionRecallObj.precisionAndRecallParallel(gValidRects, fValidRects)
+        #     self._precision = precisionRecallObj.getPrecision()
+        #     self._recall = precisionRecallObj.getRecall()
+        #     self._falseNegative = precisionRecallObj.getFalseNegative()
+        #     self._falsePositive = precisionRecallObj.getFalsePositive()
+        #     self._truePositive = precisionRecallObj.getTruePositive()
+        # else:
+        #     self._precision = 0
+        #     self._recall = 0
+        #     self._falseNegative = gValidSize
+        #     self._falsePositive = fValidSize
+        #     self._truePositive = 0
+        # # set all
+        # self._goldLines = len(gValidRects)
+        # # self._detectedLines = len(fValidRects)
+        # self._xCenterOfMass = None
+        # self._yCenterOfMass = None
 
-        # only for darknet
-        self._abftType = None
-        self._rowDetErrors = None
-        self._colDetErrors = None
 
     # parse Darknet
     # returns a dictionary
@@ -184,14 +268,17 @@ class DarknetParser(ObjectDetectionParser):
             dictBox, imgListPosition = self.__processBoxes(errString)
             if len(dictBox) > 0:
                 ret["boxes"] = dictBox
+                ret["type"] = "boxes"
         elif 'probs' in errString:
-            dictProbs , imgListPosition  = self.__processProbs(errString)
+            dictProbs, imgListPosition = self.__processProbs(errString)
             if len(dictProbs) > 0:
                 ret["probs"] = dictProbs
+                ret["type"] = "prob"
         elif 'INF' in errString:
-            dictAbft, imgListPosition  = self.__processAbft(errString)
+            dictAbft, imgListPosition = self.__processAbft(errString)
             if len(dictAbft) > 0:
                 ret["abft_det"] = dictAbft
+                ret["type"] = "abft"
 
         if imgListPosition != "":
             ret["img_list_position"] = int(imgListPosition)
@@ -211,8 +298,7 @@ class DarknetParser(ObjectDetectionParser):
         image_err = re.match(
             ".*image_list_position\: \[(\d+)\].*boxes\: \[(\d+)\].*x_r\: (\S+).*x_e\: (\S+).*x_diff\:"
             " (\S+).*y_r\: (\S+).*y_e\: (\S+).*y_diff\: (\S+).*w_r\: (\S+).*w_e\: (\S+).*w_diff\:"
-            " (\S+).*h_r\: (\S+).*h_e\: (\S+).*h_diff\: (\S+).*",
-            errString)
+            " (\S+).*h_r\: (\S+).*h_e\: (\S+).*h_diff\: (\S+).*", errString)
 
         if image_err:
             try:
@@ -256,7 +342,6 @@ class DarknetParser(ObjectDetectionParser):
                 except:
                     ret["y_diff"] = 1e30
 
-
                 # w
                 ret["w_r"] = image_err.group(9)
                 ret["w_e"] = image_err.group(10)
@@ -298,14 +383,15 @@ class DarknetParser(ObjectDetectionParser):
                 print "Error on parsing boxes"
                 raise
 
-        return ret , imgListPosition
+        return ret, imgListPosition
 
     def __processProbs(self, errString):
         ret = {}
         imgListPosition = ""
         image_err = re.match(
             ".*image_list_position\: \[(\d+)\].*probs\: \[(\d+),"
-            "(\d+)\].*prob_r\: ([0-9e\+\-\.]+).*prob_e\: ([0-9e\+\-\.]+).*", errString)
+            "(\d+)\].*prob_r\: ([0-9e\+\-\.]+).*prob_e\: ([0-9e\+\-\.]+).*",
+            errString)
         if image_err:
             try:
                 imgListPosition = image_err.group(1)
@@ -321,13 +407,14 @@ class DarknetParser(ObjectDetectionParser):
 
     def __processAbft(self, errString):
         # INF abft_type: dumb image_list_position: [151] row_detected_errors: 1 col_detected_errors: 1
-        m = re.match(".*abft_type\: (\S+).*image_list_position\: \[(\d+)\].*row_detected_errors\:"
+        m = re.match(
+            ".*abft_type\: (\S+).*image_list_position\: \[(\d+)\].*row_detected_errors\:"
             " (\d+).*col_detected_errors\: (\d+).*", errString)
         ret = {}
         imgListPosition = ""
         if m:
             try:
-                ret["abft_type"] = str(m.group(1))
+                # ret["abft_type"] = str(m.group(1))
                 imgListPosition = str(m.group(2))
                 ret["row_detected_errors"] = int(m.group(3))
                 ret["col_detected_errors"] = int(m.group(4))
@@ -335,10 +422,7 @@ class DarknetParser(ObjectDetectionParser):
                 print "Error on parsing abft info"
                 raise
 
-        return ret,imgListPosition
-
-    def buildImageMethod(self):
-        return False
+        return ret, imgListPosition
 
     def getGoldFileName(self, imgListPath):
         imgListPath = os.path.basename(imgListPath)
@@ -349,3 +433,55 @@ class DarknetParser(ObjectDetectionParser):
                         return os.path.basename(k)
                     elif 'abft' not in k:
                         return os.path.basename(k)
+
+    def __maxIndex(self, a):
+        n = len(a)
+        if (n <= 0):
+            return -1
+        maxI = 0
+        max = a[0]
+        for i in range(1, n):
+            if (a[i] > max):
+                max = a[i]
+                maxI = i
+        return maxI
+
+
+    def __drawDetections(self, image, num, boxes,probs):
+        validRectangles = []
+        validProbs = []
+        validClasses = []
+        for i in range(0, num):
+            class_ = self.__maxIndex(probs[i])
+            prob = probs[i][class_]
+            if(prob > self._detectionThreshold):
+                # width = 8
+                #print names[class_], prob*100
+                # offset = class_*1 % classesN
+                # red = self.__getColor(2,offset,classesN)
+                # green = self.__getColor(1,offset,classesN)
+                # blue = self.__getColor(0,offset,classesN)
+                # rgb = [red, green, blue]
+                b = boxes[i]
+                left = (b.left - b.width / 2.) * image.w
+                right = (b.left + b.width / 2.) * image.w
+                top = (b.bottom - b.height / 2.) * image.h
+                bot = (b.bottom + b.height / 2.) * image.h
+
+                if (left < 0): left = 0
+                if (right > image.w - 1): right = image.w-1
+                if (top < 0): top = 0
+                if (bot > image.h - 1): bot = image.h-1;
+
+                # draw_box_width(im, left, top, right, bot, width, red, green, blue)
+                # if (labels) draw_label(im, top + width, left, labels[class], rgb)
+                validProbs.append(prob)
+                rect = Rectangle.Rectangle(int(left),
+                                           int(bot), (int(right - left)),
+                                           (int(top - bot)))
+                validRectangles.append(rect)
+                validClasses.append(self._classes[class_])
+
+
+        return validRectangles, validProbs, validClasses
+

@@ -5,56 +5,46 @@ from SupportClasses import Rectangle
 import numpy as np
 from SupportClasses import GoldContent as gc
 from SupportClasses import PrecisionAndRecall as pr
-from Parser import Parser
+from ObjectDetectionParser import  ObjectDetectionParser
 
 # GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
 
-class FasterRcnnParser(Parser):
-    _csvHeader = ["logFileName", "Machine", "Benchmark", "imgFile", "SDC_Iteration", "#Accumulated_Errors",
-                   "#Iteration_Errors", "gold_lines", "detected_lines", "x_center_of_mass",
-                   "y_center_of_mass", "precision", "recall", "false_negative", "false_positive",
-                   "true_positive"]
-
-    __goldObj = gc.GoldContent()
+class FasterRcnnParser(ObjectDetectionParser):
     __iterations = None
     __imgListPath = None
     __board = None
-
-    __prThreshold = 0.5
-    __precisionAndRecall = pr.PrecisionAndRecall(__prThreshold)
 
     __rectangles = Rectangle.Rectangle(0, 0, 0, 0)
 
     def getBenchmark(self):
         return self._benchmark
 
-    def generatePyFasterRectangles(self, dets, thresh=0):
-        """Draw detected bounding boxes."""
-        inds = np.where(dets[:, -1] >= thresh)[0]
-
-        if len(inds) == 0:
-            return
-
-        # im = im[:, :, (2, 1, 0)]
-        # fig, ax = plt.subplots(figsize=(12, 12))
-        # ax.imshow(im, aspect='equal')
-        bboxList = []
-        scoresList = []
-        for i in inds:
-            bbox = dets[i, :4]
-            score = dets[i, -1]
-            scoresList.append(score)
-            # left = int(math.floor(float(i["x_r"])))
-            # bottom = int(math.floor(float(i["y_r"])))
-            # h = int(math.ceil(float(i["h_r"])))
-            # w = int(math.ceil(float(i["w_r"])))
-            # tempBoxes[boxPos] = Rectangle(left, bottom, w, h)
-            left = int(math.floor(float(bbox[0])))
-            bottom = int(math.floor(float(bbox[1])))
-            w = int(math.ceil(bbox[2] - bbox[0]))
-            h = int(math.ceil(bbox[3] - bbox[1]))
-            bboxList.append(Rectangle(left, bottom, w, h))
-
+    # def generatePyFasterRectangles(self, dets, thresh=0):
+    #     """Draw detected bounding boxes."""
+    #     inds = np.where(dets[:, -1] >= thresh)[0]
+    #
+    #     if len(inds) == 0:
+    #         return
+    #
+    #     # im = im[:, :, (2, 1, 0)]
+    #     # fig, ax = plt.subplots(figsize=(12, 12))
+    #     # ax.imshow(im, aspect='equal')
+    #     bboxList = []
+    #     scoresList = []
+    #     for i in inds:
+    #         bbox = dets[i, :4]
+    #         score = dets[i, -1]
+    #         scoresList.append(score)
+    #         # left = int(math.floor(float(i["x_r"])))
+    #         # bottom = int(math.floor(float(i["y_r"])))
+    #         # h = int(math.ceil(float(i["h_r"])))
+    #         # w = int(math.ceil(float(i["w_r"])))
+    #         # tempBoxes[boxPos] = Rectangle(left, bottom, w, h)
+    #         left = int(math.floor(float(bbox[0])))
+    #         bottom = int(math.floor(float(bbox[1])))
+    #         w = int(math.ceil(bbox[2] - bbox[0]))
+    #         h = int(math.ceil(bbox[3] - bbox[1]))
+    #         bboxList.append(Rectangle(left, bottom, w, h))
         # ax.add_patch(
         #                           X       Y
         #         plt.Rectangle((bbox[0], bbox[1]),
@@ -73,8 +63,7 @@ class FasterRcnnParser(Parser):
         #               'p({} | box) >= {:.1f}').format(class_name, class_name,
         #                                               thresh),
         #               fontsize=14)
-
-        return scoresList, bboxList
+        # return scoresList, bboxList
 
 
     # parse PyFaster
@@ -82,93 +71,69 @@ class FasterRcnnParser(Parser):
         # ERR boxes: [27,4] e: 132.775177002 r: 132.775024414
         ret = {}
         if 'boxes' in errString:
-            image_err = re.match(
-                ".*boxes\: \[(\d+),(\d+)\].*e\: (\S+).*r\: (\S+).*",
-                errString)
-            if image_err:
+            dictBox = self._processBoxes(errString)
+            if len(dictBox) > 0:
+                ret["boxes"] = dictBox
                 ret["type"] = "boxes"
-                # ret["imgindex"] = imgIndex
-                ###########
-                ret["boxes_x"] = image_err.group(1)
-                try:
-                    long((ret["boxes_x"]))
-                except:
-                    ret["boxes_x"] = 1e30
-                ###########
-                ret["boxes_y"] = image_err.group(2)
-                try:
-                    long((ret["boxes_y"]))
-                except:
-                    ret["boxes_y"] = 1e30
-                ###########
-                ret["e"] = image_err.group(3)
-                try:
-                    long(float(ret["e"]))
-                except:
-                    ret["e"] = 1e30
-                ############
-                ret["r"] = image_err.group(4)
-                try:
-                    long(float(ret["r"]))
-                except:
-                    ret["r"] = 1e30
-
+        elif 'scores' in errString:
+            self._processScores(errString)
 
         return (ret if len(ret) > 0 else None)
 
-    """
-    ret["type"] = "boxes"
-    ret["imgindex"] = imgIndex
-    ###########
-    ret["boxes_x"] = image_err.group(1)
-
-    ###########
-    ret["boxes_y"] = image_err.group(2)
-    ###########
-    ret["e"] = image_err.group(3)
-    ############
-    ret["r"] = image_err.group(4)
-    """
+    def _processBoxes(self, errString):
+        ret = {}
+        image_err = re.match(
+            ".*boxes\: \[(\d+),(\d+)\].*e\: (\S+).*r\: (\S+).*", errString)
+        if image_err:
+            ret["type"] = "boxes"
+            # ret["imgindex"] = imgIndex
+            ###########
+            ret["boxes_x"] = image_err.group(1)
+            try:
+                long((ret["boxes_x"]))
+            except:
+                ret["boxes_x"] = 1e30
+            ###########
+            ret["boxes_y"] = image_err.group(2)
+            try:
+                long((ret["boxes_y"]))
+            except:
+                ret["boxes_y"] = 1e30
+            ###########
+            ret["e"] = image_err.group(3)
+            try:
+                long(float(ret["e"]))
+            except:
+                ret["e"] = 1e30
+            ############
+            ret["r"] = image_err.group(4)
+            try:
+                long(float(ret["r"]))
+            except:
+                ret["r"] = 1e30
 
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:
-            return ("errlist fucked", None, None, None, None, None, None, None, None, None)
+            return
+        goldRects = []
+        foundRects = []
 
-        goldPyfaster = self.goldObj.pyFasterGold
-        sdcIte = 0
-        imgListPath = 0
-        img_list = open(imgListPath, "r").readlines()
-        imgLPos = self.getImgLPos(sdcit=sdcIte, maxsize=len(
-            goldPyfaster.keys()))  # getImgLPos(errList=errList, cnn="pyfaster", sdcit=sdcIte, maxsize=len(img_list))
-        imgFile = img_list[imgLPos].rstrip()
-        gold = goldPyfaster[imgFile]
 
-        goldArray = self.getCls(gold)
 
-        tempArray = self.copyList(goldArray, 'pyfaster')
 
-        print "Gold array size ", len(tempArray)
-        # for i in tempArray:
-        #     print len(i)
+        precisionRecallObj = pr.PrecisionAndRecall(self.__prThreshold)
+        precisionRecallObj.precisionAndRecallParallel(goldRects, foundRects)
 
-        for i in errList:
-            x = long(i["boxes_x"])
-            y = long(i["boxes_y"])
-            print i["boxes_x"], i["boxes_y"]
-            # print "vet size ", len(goldArray)
-            # print "x size ", len (tempArray[x])
-            # tempArray[x][y] = float(i["r"])
+        self._goldLines = len(goldRects)
+        self._detectedLines = len(foundRects)
+        self._xCenterOfMass = None
+        self._yCenterOfMass = None
+        self._precision = precisionRecallObj.getPrecision()
+        self._recall = precisionRecallObj.getRecall()
+        self._falseNegative = precisionRecallObj.getFalseNegative()
+        self._falsePositive = precisionRecallObj.getFalsePositive()
+        self._truePositive = precisionRecallObj.getTruePositive()
 
-        goldRectangles = self.generatePyFasterRectangles(goldArray)
-        tempRectangles = self.generatePyFasterRectangles(tempArray)
-
-        pR = pr.PrecisionAndRecall(0.5)
-        pR.precisionAndRecallParallel(goldRectangles, tempRectangles)
-
-        return (
-            len(gold), len(tempRectangles), 0, 0, pR.getPrecision(), pR.getRecall(), pR.getFalseNegative(),
-            pR.getFalsePositive(),
-            pR.getTruePositive(), imgFile)
 
 
     def setSize(self, header):

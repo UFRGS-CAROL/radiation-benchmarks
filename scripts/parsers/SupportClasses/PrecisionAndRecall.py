@@ -1,6 +1,5 @@
 import multiprocessing
-import Rectangle
-from ctypes import *
+
 """Calculates precision and recall between two sets of rectangles"""
 
 class PrecisionAndRecall(object):
@@ -60,8 +59,11 @@ class PrecisionAndRecall(object):
         pp.join()
         # print "precision " + str(self.precision.value) + " recall:" + str(self.recall.value) + " false positive:" + str(self.falsePositive) \
         #         + " false negative:" + str(self.falseNegative) + " true positive:" + str(self.truePositive) + " threshold:" + str(self.threshold)
-        self.precision.value = float(self.truePositive.value) / float(self.truePositive.value + self.falsePositive.value)
-
+        if self.truePositive.value + self.falsePositive.value > 0:
+            self.precision.value = float(self.truePositive.value)\
+                               / float(self.truePositive.value + self.falsePositive.value)
+        else:
+            self.precision.value = 0
     """
         split precision for parallelism
     """
@@ -74,7 +76,6 @@ class PrecisionAndRecall(object):
                 if (g.jaccard_similarity(i)) >= self.__threshold:
                     out_positive += 1
                     break
-
         self.falsePositive.value = len(found) - out_positive
 
     """

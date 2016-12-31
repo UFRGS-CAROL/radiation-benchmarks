@@ -40,9 +40,9 @@ class Point(object):
 
 
 class GoldContent():
-    plist_size = 0
-    classe = 0
-    total_size = 0
+    __plistSize = 0
+    __classes = 0
+    __totalSize = 0
     __prob_array = {}
     __pyFasterGold = []
     pyFasterImgList = ""
@@ -71,6 +71,11 @@ class GoldContent():
         except:
             pass
 
+
+    def getTotalSize(self): return self.__totalSize
+    def getClasses(self): return self.__classes
+    def getPlistSize(self): return self.__plistSize
+
     def getRectArray(self):
         return self.__prob_array['boxes']
 
@@ -98,9 +103,9 @@ class GoldContent():
         classes = long(classes.l)
         total_size = long(total_size.l)
         i = 0
-        self.plist_size = plist_size
-        self.classes = classes
-        self.total_size = total_size
+        self.__plistSize = plist_size
+        self.__classes = classes
+        self.__totalSize = total_size
         self.__prob_array["boxes"] = []
         self.__prob_array["probs"] = []
 
@@ -158,7 +163,7 @@ class GoldContent():
             while j < classes:
                 pb_ij = Float()
                 cc_file.readinto(pb_ij)
-                prob[i][j] = pb_ij
+                prob[i][j] = float(pb_ij.f)
                 j += 1
             i += 1
 

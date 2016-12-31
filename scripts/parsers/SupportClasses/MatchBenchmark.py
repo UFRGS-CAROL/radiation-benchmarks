@@ -36,7 +36,7 @@ class MatchBenchmark():
     )
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
+    __notMatchedBenchs = []
     """sdcItem is => [logfile name, header, sdc iteration, iteration total amount error, iteration accumulated error, list of errors ]"""
 
     def __init__(self):
@@ -67,6 +67,7 @@ class MatchBenchmark():
 
 
         isBench = False
+        key = None
         for key, values in self.__radiationBenchmarks.iteritems():
             isBench = re.search(str(key), benchmark, flags=re.IGNORECASE)
             if isBench:
@@ -81,8 +82,8 @@ class MatchBenchmark():
                 break
 
         if not isBench:
-            print "\nMatchBenchmark: There is no benchmark as "\
-                  + str(benchmark) + " in radiationBenchmarks list"
+            if key not in self.__notMatchedBenchs:
+                self.__notMatchedBenchs.append(benchmark)
         return isBench
 
             #raise BaseException
@@ -113,6 +114,12 @@ class MatchBenchmark():
     #     # for each header of each benchmark
     #     if m:
     #         self.__logFileNameNoExt = m.group(1)
+    def checkNotDoneBenchs(self):
+        if len(self.__notMatchedBenchs) == 0:
+            return ""
+
+        return "These benchmarks were not found on radiation_list " + str(set(self.__notMatchedBenchs))
+
 
     def getCurrentObj(self):
         return self.__currBench
