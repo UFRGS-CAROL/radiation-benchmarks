@@ -96,3 +96,13 @@ class Rectangle():
         total = (self.top - self.bottom) * (self.right - self.left) + (other.top - other.bottom) * (other.right - other.left) - intersection
         similarity = (float(intersection) / float(total))
         return similarity
+
+    def __hash__(self):
+        return hash((self.left, self.right, self.top, self.bottom, self.height, self.width))
+
+    def __eq__(self, other):
+        try:
+            return (self.left, self.right, self.top, self.bottom, self.height, self.width)\
+                   == (other.left, other.right, other.top, other.bottom, other.height, other.width)
+        except AttributeError:
+            return NotImplemented

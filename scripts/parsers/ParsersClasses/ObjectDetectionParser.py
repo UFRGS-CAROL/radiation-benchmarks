@@ -12,7 +12,7 @@ class ObjectDetectionParser(Parser):
 
     # precisionRecallObj = None
     _prThreshold = 0.5
-    _detectionThreshold = 0.24
+    _detectionThreshold = 0.1
 
     # def __init__(self):
     #     Parser.__init__(self)
@@ -29,7 +29,8 @@ class ObjectDetectionParser(Parser):
     _csvHeader = ["logFileName", "Machine", "Benchmark", "SDC_Iteration", "#Accumulated_Errors",
                              "#Iteration_Errors", "gold_lines", "detected_lines", "wrong_elements", "x_center_of_mass",
                              "y_center_of_mass", "precision", "recall", "false_negative", "false_positive",
-                             "true_positive", "header"]
+                             "true_positive", "abft_type", "row_detected_errors", "col_detected_errors",
+                    "header"]
 
     # ["gold_lines",
     #     "detected_lines", "x_center_of_mass", "y_center_of_mass", "precision",
@@ -55,10 +56,9 @@ class ObjectDetectionParser(Parser):
 
 
     def _writeToCSV(self, csvFileName):
-        if not os.path.isfile(csvFileName) and self._abftType != 'no_abft':
-            self._csvHeader.extend(
-                ["abft_type", "row_detected_errors", "col_detected_errors",
-                    "header"])
+        # if not os.path.isfile(csvFileName) and self._abftType != 'no_abft' and self._abftType != None:
+        #     self._csvHeader.extend(
+        #         [])
 
         self._writeCSVHeader(csvFileName)
 
@@ -85,12 +85,13 @@ class ObjectDetectionParser(Parser):
             self._recall,
             self._falseNegative,
             self._falsePositive,
-            self._truePositive,
+            self._truePositive, self._abftType, self._rowDetErrors,
+                self._colDetErrors,
             self._header
             ]
 
-            if self._abftType != 'no_abft':
-                outputList.extend([self._abftType, self._rowDetErrors, self._colDetErrors])
+            # if self._abftType != 'no_abft' and self._abftType != None:
+            #     outputList.extend([])
 
             writer.writerow(outputList)
             csvWFP.close()
@@ -111,35 +112,39 @@ class ObjectDetectionParser(Parser):
 
     def copyList(self, objList):
         temp = []
-        if 'Darknet' in self._benchmark:
-            for i in objList:
-                temp.append(i.deepcopy())
-        elif self._benchmark == 'pyfasterrcnn':
-            for i in objList:
-                temp.append(copy.deepcopy(i))
-
+        for i in objList: temp.append(i.deepcopy())
         return temp
 
-    def buildImageMethod(self, imageFile, rectangles, classes, probs):
+
+
+    def buildImageMethod(self, imageFile, rectangles, rectanglesFound):
         im = np.array(Image.open(imageFile), dtype=np.uint8)
 
         # Create figure and axes
-        fig, ax = plt.subplots(1)
+        fig = plt.figure()
+        axG = fig.add_subplot(221)
+        axF = fig.add_subplot(222)
+        # fig, ax = plt.subplots(1)
 
         # Display the image
-        ax.imshow(im)
-
+        axG.imshow(im)
+        axF.imshow(im)
         # Create a Rectangle patch
-        for r, c, p in zip(rectangles, classes, probs):
-            rect = patches.Rectangle((r.left, r.bottom), r.width,
-                                     r.height, linewidth=1, edgecolor='r',
+        for rG, rF in zip(rectangles, rectanglesFound):
+            rect = patches.Rectangle((rG.left, rG.bottom), rG.width,
+                                     rG.height, linewidth=1, edgecolor='r',
                                      facecolor='none')
-
+            rectF = patches.Rectangle((rF.left, rF.bottom), rF.width,
+                                     rF.height, linewidth=1, edgecolor='r',
+                                     facecolor='none')
             # Add the patch to the Axes
-            ax.add_patch(rect)
-            ax.text(r.left, r.bottom - 2,
-                    'class ' + str(c) + ' prob ' + str(p),
-                    bbox=dict(facecolor='blue', alpha=0.5), fontsize=14,
-                    color='white')
+            axG.add_patch(rect)
+            axF.add_patch(rectF)
+            axG.title.set_text("gold")
+            axF.title.set_text("found")
 
+            # ax.text(r.left, r.bottom - 2,
+            #         'class ' + str(c) + ' prob ' + str(p),
+            #         bbox=dict(facecolor='blue', alpha=0.5), fontsize=14,
+            #         color='white')
         plt.show()

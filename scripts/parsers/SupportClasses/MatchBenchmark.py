@@ -51,16 +51,19 @@ class MatchBenchmark():
         except:
             logFileNameNoExt = ""
 
-        pureHeader = sdcItem[1]
-        header = re.sub(r"[^\w\s]", '-', pureHeader)  # keep only numbers and digits
-        sdcIteration = sdcItem[2]
-        iteErrors = sdcItem[3]
-        accIteErrors = sdcItem[4]
-        errList = sdcItem[5]
-        # print "\n" , len(errList)
-        m = re.match("(.*)_(.*)", benchmarkMachineName)
-        benchmark = "default"
-        machine = "carol"
+        try:
+            pureHeader = sdcItem[1]
+            header = re.sub(r"[^\w\s]", '-', pureHeader)  # keep only numbers and digits
+            sdcIteration = sdcItem[2]
+            iteErrors = sdcItem[3]
+            accIteErrors = sdcItem[4]
+            errList = sdcItem[5]
+            # print "\n" , len(errList)
+            m = re.match("(.*)_(.*)", benchmarkMachineName)
+            benchmark = "default"
+            machine = "carol"
+        except:
+            return None
         if m:
             benchmark = m.group(1)
             machine = m.group(2)
