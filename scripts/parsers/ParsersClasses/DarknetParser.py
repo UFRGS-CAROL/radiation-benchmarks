@@ -11,27 +11,27 @@ from PIL import Image
 
 
 from ObjectDetectionParser import ObjectDetectionParser
-from SupportClasses import GoldContent
+from SupportClasses import _GoldContent
 from SupportClasses import PrecisionAndRecall
 
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
-GOLD_BASE_DIR = ['/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
-    '/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN']
+GOLD_BASE_DIR = [
+    '/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
+    '/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
+    # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
+]
 
 DATASETS = {
     # normal
     'gold.caltech.critical.1K.test': {
         'caltech.pedestrians.critical.1K.txt': {
             'gold': None, 'txt': None, 'obj': None}},
-
     'gold.caltech.1K.test': {
         'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
     # abft
     'gold.caltech.abft.1K.test': {
         'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    'gold.caltech.critical.abft.1K.test': {
-        'caltech.pedestrians.critical.1K.txt': {
-            'gold': None, 'txt': None, 'obj': None}},
+    'gold.caltech.critical.abft.1K.test': {'caltech.pedestrians.critical.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
 
     'gold.voc.2012.1K.test': {
         'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
@@ -40,7 +40,7 @@ DATASETS = {
      }
 
 
-CURRENT_MACHINE_DIR ="/home/familia/Fernando/radiation-benchmarks/data/networks_img_list/"
+# CURRENT_MACHINE_DIR ="/home/familia/Fernando/radiation-benchmarks/data/networks_img_list/"
 
 """___________________"""
 
@@ -90,7 +90,7 @@ class DarknetParser(ObjectDetectionParser):
                                          'txt']) + " no such file or directory")
 
                     # if it pass, I will open all gold on memory
-                    DATASETS[kD][kI]['obj'] = GoldContent.GoldContent(
+                    DATASETS[kD][kI]['obj'] = _GoldContent._GoldContent(
                         nn='darknet', filepath=DATASETS[kD][kI]['gold'])
         elapsed_time = time.time() - start_time
 
@@ -123,9 +123,7 @@ class DarknetParser(ObjectDetectionParser):
                 if "abft" in header:
                     self._abftType = darknetM.group(7)
 
-                # print "list path" , self.__imgListPath
                 self.__goldFileName = self.getGoldFileName(self.__imgListPath)
-                # print self.__goldFileName
             except:
                 self.__imgListPath = None
 
@@ -140,24 +138,25 @@ class DarknetParser(ObjectDetectionParser):
         for i in range(0, total):
             box = boxes[i]
             xmin = box.left - box.width / 2.
-            xmax = box.left + box.width / 2.
             ymin = box.bottom - box.height / 2.
-            ymax = box.bottom + box.height / 2.
+            # ymax = box.bottom + box.height / 2.
+            # xmax = box.left + box.width / 2.
+
 
             if xmin < 0:
                 xmin = 0
             if ymin < 0:
                 ymin = 0
-            if xmax > w:
-                xmax = w
-            if ymax > h:
-                ymax = h
+            # if xmax > w:
+            #     xmax = w
+            # if ymax > h:
+            #     ymax = h
 
             for j in range(0, classes):
                 if probs[i][j] >= self._detectionThreshold:
                     validProbs.append(probs[i][j])
-                    rect = Rectangle.Rectangle(int(math.floor(xmin)), int(math.floor(ymin)), int(math.ceil(xmax -
-                     xmin)), int(math.ceil(ymax - ymin)))
+                    #check image bounds
+                    rect = Rectangle.Rectangle(int(xmin), int(ymin), box.width, box.height)
                     validRectangles.append(rect)
                     validClasses.append(self._classes[j])
                     # print self._classes[j]
@@ -170,13 +169,12 @@ class DarknetParser(ObjectDetectionParser):
             return
 
         # parsing box array
-        goldCurrObj = DATASETS[self.__goldFileName][os.path.basename(self.__imgListPath)][
-            'obj']
+        currDataset = DATASETS[self.__goldFileName][os.path.basename(self.__imgListPath)]
+        goldCurrObj = currDataset['obj']
         if goldCurrObj == None:
             sys.exit("Gold obj was not created")
 
-        listFile = open(CURRENT_MACHINE_DIR  + os.path.basename(
-                self.__imgListPath)).readlines()
+        listFile = open(currDataset['txt']).readlines()
 
         imgPos = int(self._sdcIteration) % len(listFile)
 
@@ -193,14 +191,15 @@ class DarknetParser(ObjectDetectionParser):
         self._rowDetErrors = 0
         self._colDetErrors = 0
         self._wrongElements = 0
+
         for y in errList:
             if y["type"] == "boxes":
                 i = y['boxes']
-                rectPos = (i['boxes'])
-                left = int(math.floor(float(i["x_r"])))
-                bottom = int(math.floor(float(i["y_r"])))
-                h = int(math.ceil(float(i["h_r"])))
-                w = int(math.ceil(float(i["w_r"])))
+                rectPos = (i['box_pos'])
+                left = int(float(i["x_r"]))
+                bottom = int((float(i["y_r"])))
+                h = abs(int(float(i["h_r"])))
+                w = abs(int(float(i["w_r"])))
                 foundRects[rectPos] = Rectangle.Rectangle(left, bottom, w, h)
                 self._wrongElements += 1
             elif y["type"] == "abft" and self._abftType != 'no_abft':
@@ -210,9 +209,12 @@ class DarknetParser(ObjectDetectionParser):
                 self._colDetErrors += i["col_detected_errors"]
 
             elif y["type"] == "probs":
-                i = int(y["probs_x"])
-                j = int(y["probs_y"])
-                foundProb[i, j] = float(y["prob_r"])
+                i = int(y["probs"]["probs_x"])
+                j = int(y["probs"]["probs_y"])
+
+                foundProb[i][j] = float(y["probs"]["prob_r"])
+
+
         if self._rowDetErrors > 1e6:
             self._rowDetErrors /= long(1e15)
         if self._colDetErrors > 1e6:
@@ -241,7 +243,7 @@ class DarknetParser(ObjectDetectionParser):
         #         self.test.append(imgFilename)
         #         os.system("echo \""  + str(self.test) + '\" > last_line.txt')
         #     print gValidRects
-        # self.buildImageMethod(listFile[imgPos].rstrip(), gValidRects, fValidRects)
+
         # self.buildImageMethod(listFile[imgPos].rstrip(), fValidRects,
         #                           fValidClasses, fValidProbs, "found")
         # sys.exit()
@@ -253,6 +255,9 @@ class DarknetParser(ObjectDetectionParser):
         precisionRecallObj.precisionAndRecallParallel(gValidRects, fValidRects)
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
+        #
+        # self.buildImageMethod(listFile[imgPos].rstrip(), gValidRects, fValidRects)
+
         self._falseNegative = precisionRecallObj.getFalseNegative()
         self._falsePositive = precisionRecallObj.getFalsePositive()
         self._truePositive = precisionRecallObj.getTruePositive()
@@ -278,7 +283,7 @@ class DarknetParser(ObjectDetectionParser):
             dictProbs, imgListPosition = self.__processProbs(errString)
             if len(dictProbs) > 0:
                 ret["probs"] = dictProbs
-                ret["type"] = "prob"
+                ret["type"] = "probs"
         elif 'INF' in errString:
             dictAbft, imgListPosition = self.__processAbft(errString)
             if len(dictAbft) > 0:
@@ -308,7 +313,7 @@ class DarknetParser(ObjectDetectionParser):
         if image_err:
             try:
                 imgListPosition = image_err.group(1)
-                ret["boxes"] = int(image_err.group(2))
+                ret["box_pos"] = int(image_err.group(2))
                 # x
                 ret["x_r"] = image_err.group(3)
                 ret["x_e"] = image_err.group(4)
@@ -439,54 +444,54 @@ class DarknetParser(ObjectDetectionParser):
                     elif self._abftType == 'no_abft' and 'abft' not in k:
                         return k
 
-    def __maxIndex(self, a):
-        n = len(a)
-        if (n <= 0):
-            return -1
-        maxI = 0
-        max = a[0]
-        for i in range(1, n):
-            if (a[i] > max):
-                max = a[i]
-                maxI = i
-        return maxI
+    # def __maxIndex(self, a):
+    #     n = len(a)
+    #     if (n <= 0):
+    #         return -1
+    #     maxI = 0
+    #     max = a[0]
+    #     for i in range(1, n):
+    #         if (a[i] > max):
+    #             max = a[i]
+    #             maxI = i
+    #     return maxI
 
 
-    def __drawDetections(self, image, num, boxes,probs):
-        validRectangles = []
-        validProbs = []
-        validClasses = []
-        for i in range(0, num):
-            class_ = self.__maxIndex(probs[i])
-            prob = probs[i][class_]
-            if(prob > self._detectionThreshold):
-                # width = 8
-                #print names[class_], prob*100
-                # offset = class_*1 % classesN
-                # red = self.__getColor(2,offset,classesN)
-                # green = self.__getColor(1,offset,classesN)
-                # blue = self.__getColor(0,offset,classesN)
-                # rgb = [red, green, blue]
-                b = boxes[i]
-                left = (b.left - b.width / 2.)  * image.w
-                right = (b.left + b.width / 2.) * image.w
-                top = (b.bottom - b.height / 2.) * image.h
-                bot = (b.bottom + b.height / 2.) * image.h
-
-                if (left < 0): left = 0
-                if (right > image.w - 1): right = image.w-1
-                if (top < 0): top = 0
-                if (bot > image.h - 1): bot = image.h-1;
-
-                # draw_box_width(im, left, top, right, bot, width, red, green, blue)
-                # if (labels) draw_label(im, top + width, left, labels[class], rgb)
-                validProbs.append(prob)
-                rect = Rectangle.Rectangle(int(left),
-                                           int(bot), (int(right - left)),
-                                           (int(top - bot)))
-                validRectangles.append(rect)
-                validClasses.append(self._classes[class_])
-
-
-        return validRectangles, validProbs, validClasses
+    # def __drawDetections(self, image, num, boxes,probs):
+    #     validRectangles = []
+    #     validProbs = []
+    #     validClasses = []
+    #     for i in range(0, num):
+    #         class_ = self.__maxIndex(probs[i])
+    #         prob = probs[i][class_]
+    #         if(prob > self._detectionThreshold):
+    #             # width = 8
+    #             #print names[class_], prob*100
+    #             # offset = class_*1 % classesN
+    #             # red = self.__getColor(2,offset,classesN)
+    #             # green = self.__getColor(1,offset,classesN)
+    #             # blue = self.__getColor(0,offset,classesN)
+    #             # rgb = [red, green, blue]
+    #             b = boxes[i]
+    #             left = (b.left - b.width / 2.)  * image.w
+    #             right = (b.left + b.width / 2.) * image.w
+    #             top = (b.bottom - b.height / 2.) * image.h
+    #             bot = (b.bottom + b.height / 2.) * image.h
+    #
+    #             if (left < 0): left = 0
+    #             if (right > image.w - 1): right = image.w-1
+    #             if (top < 0): top = 0
+    #             if (bot > image.h - 1): bot = image.h-1;
+    #
+    #             # draw_box_width(im, left, top, right, bot, width, red, green, blue)
+    #             # if (labels) draw_label(im, top + width, left, labels[class], rgb)
+    #             validProbs.append(prob)
+    #             rect = Rectangle.Rectangle(int(left),
+    #                                        int(bot), (int(right - left)),
+    #                                        (int(top - bot)))
+    #             validRectangles.append(rect)
+    #             validClasses.append(self._classes[class_])
+    #
+    #
+    #     return validRectangles, validProbs, validClasses
 

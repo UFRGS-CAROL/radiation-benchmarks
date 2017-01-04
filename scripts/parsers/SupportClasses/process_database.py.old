@@ -174,7 +174,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir, brokenHeader='
              # only for CNNs
             if goldPyFaster[dataset][0]:
                 print goldFile
-                goldPyFaster[dataset][1] = pn.GoldContent(filepath=goldFile, nn="pyfaster")
+                goldPyFaster[dataset][1] = pn._GoldContent(filepath=goldFile, nn="pyfaster")
                 goldPyFaster[dataset][0] = False
             (maxRelErr, minRelErr, avgRelErr, precision, recall, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
              errListFiltered2) = pn.relativeErrorParserPyFaster(img_list_file, errorsParsed,  goldPyFaster[dataset][1], str(sdcIteration))
@@ -183,7 +183,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList, gold_dir, brokenHeader='
         elif isDarknet:
             # only for CNNs
             if goldPyFaster[dataset][0]:
-                goldPyFaster[dataset][1] = pn.GoldContent(filepath=goldFile, nn="darknet")
+                goldPyFaster[dataset][1] = pn._GoldContent(filepath=goldFile, nn="darknet")
                 goldPyFaster[dataset][0] = False
             (goldLines, detectedLines, xMass, yMass, precision, recall, falseNegative, falsePositive, truePositive,
              imgFile) = pn.relativeErrorParserDarknet(img_list_file, errorsParsed, goldPyFaster[dataset][1], str(sdcIteration))

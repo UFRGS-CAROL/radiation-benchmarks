@@ -4,12 +4,7 @@ import sys
 from SupportClasses import MatchBenchmark
 
 GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
-import os
-import csv
-import re
-# import pr_parsers.parse_neural_networks as pn
 import shelve
-import errno
 import argparse
 
 
@@ -98,7 +93,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
         # elif isPyFaster:
         #      # only for CNNs
         #     if readGoldPyFaster:
-        #         goldPyFaster = pn.GoldContent(filepath=gold_dir, nn="pyfaster")
+        #         goldPyFaster = pn._GoldContent(filepath=gold_dir, nn="pyfaster")
         #         readGoldPyFaster = False
         #
         #     (maxRelErr, minRelErr, avgRelErr, precision, recall, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
@@ -108,7 +103,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
         # elif isDarknet:
         #     # only for CNNs
         #     if readGoldDarknet:
-        #         goldDarknet = pn.GoldContent(filepath=gold_dir, nn="darknet")
+        #         goldDarknet = pn._GoldContent(filepath=gold_dir, nn="darknet")
         #         readGoldDarknet = False
         #
         #     (goldLines, detectedLines, xMass, yMass, precision, recall, falseNegative, falsePositive, truePositive,

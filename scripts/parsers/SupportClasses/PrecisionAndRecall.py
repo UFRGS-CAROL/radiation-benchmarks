@@ -5,6 +5,7 @@ import multiprocessing
 class PrecisionAndRecall(object):
     precision = 0
     recall = 0
+    specifity = 0
     falsePositive = 0
     falseNegative = 0
     truePositive = 0
@@ -43,11 +44,12 @@ class PrecisionAndRecall(object):
     found = List o Rectangles
     """
 
-    def precisionAndRecallSerial(self, gold, found):
-        self.recallMethod(gold, found)
-
-        self.precisionMethod(gold, found)
-        self.precision.value = float(self.truePositive.value) / float(self.truePositive.value + self.falsePositive.value)
+    # def precisionAndRecallSerial(self, gold, found):
+        # self.recallMethod(gold, found)
+        #
+        # self.precisionMethod(gold, found)
+        # self.precision.value = float(self.truePositive.value) / float(self.truePositive.value + self.falsePositive.value)
+        # self.precisionAndRecallSerial(gold, found, self.
 
     def precisionAndRecallParallel(self, gold, found):
         # print "running in parallel"
@@ -95,12 +97,12 @@ class PrecisionAndRecall(object):
         self.recall.value = float(self.truePositive.value) / float(self.truePositive.value + self.falseNegative.value)
 
 
-    def precisionRecall(self, gold, found, threshold):
+    def precisionAndRecallSerial(self, gold, found):
         #precision
         outPositive = 0
         for i in found:
             for g in gold:
-                if (g.jaccard_similarity(i)) >= threshold:
+                if (g.jaccard_similarity(i)) >= self.__threshold:
                     outPositive += 1
                     break
 
@@ -110,19 +112,21 @@ class PrecisionAndRecall(object):
         truePositive = 0
         for i in gold:
             for z in found:
-                if (i.jaccard_similarity(z)) >= threshold:
+                if (i.jaccard_similarity(z)) >= self.__threshold:
                     truePositive += 1
                     break
 
         falseNegative = len(gold) - truePositive
+        # print "\n", "falsePositive", falsePositive, "falseNegative", falseNegative, "truePositive", truePositive
         recall = float(truePositive) / float(truePositive + falseNegative)
 
         precision = float(truePositive) / float(truePositive + falsePositive)
         self.falseNegative.value = falseNegative
         self.falsePositive.value = falsePositive
         self.truePositive.value  = truePositive
-
-        return recall, precision
+        # print "precision" , precision, "recall" ,recall
+        self.precision.value = precision
+        self.recall.value = recall
 
     """
 
@@ -179,16 +183,17 @@ class PrecisionAndRecall(object):
     #     with Image.open(imgPath) as im:
     #         width, height = im.size
     #     return width, height
-#
+# #
 # import random
+# import Rectangle
 # found = [Rectangle.Rectangle(random.randint(1,10),random.randint(1,10),random.randint(1,10),random.randint(1,10)) for n in range(1,10)]
-# gold = [Rectangle.Rectangle(random.randint(5,15),random.randint(5,15),random.randint(5,15),random.randint(5,15)) for n in range(1,10)]
+# gold = [Rectangle.Rectangle(random.randint(5,15),random.randint(5,15),random.randint(5,15),random.randint(5,15)) for n in range(1,5)]
 #
-# print found
+# print found , "\n"
 # print gold
 #
 # print "fazendo PR"
-# pr = PrecisionAndRecall(0.5)
-# pr.precisionAndRecallParallel(gold, found)
+# pr = PrecisionAndRecall(0.3)
+# pr.precisionAndRecallSerial(gold, found)
 # print pr.getPrecision()  , pr.getRecall()
 

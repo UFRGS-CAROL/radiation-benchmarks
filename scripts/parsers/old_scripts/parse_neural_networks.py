@@ -639,7 +639,7 @@ def readProbs(cc_file, total_size, classes):
 
 
 # def readGold(gold_path):
-#     gold_obj = GoldContent(gold_path)
+#     gold_obj = _GoldContent(gold_path)
 #     return gold_obj
 
 

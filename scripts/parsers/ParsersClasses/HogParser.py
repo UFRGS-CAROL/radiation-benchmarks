@@ -2,13 +2,13 @@ import re
 from SupportClasses import Rectangle
 from Parser import Parser
 from SupportClasses import PrecisionAndRecall as pr
-from SupportClasses import GoldContent as gc
+from SupportClasses import _GoldContent as gc
 
 class HogParser(Parser):
 
     __prThreshold = 0.5
     __precisionAndRecall = pr.PrecisionAndRecall(__prThreshold)
-    __goldObj = gc.GoldContent()
+    __goldObj = gc._GoldContent()
 
     __rectangles = Rectangle.Rectangle(0, 0, 0, 0)
 

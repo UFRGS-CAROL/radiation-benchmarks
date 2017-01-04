@@ -12,7 +12,7 @@ class ObjectDetectionParser(Parser):
 
     # precisionRecallObj = None
     _prThreshold = 0.5
-    _detectionThreshold = 0.1
+    _detectionThreshold = 0.2
 
     # def __init__(self):
     #     Parser.__init__(self)
@@ -130,21 +130,27 @@ class ObjectDetectionParser(Parser):
         axG.imshow(im)
         axF.imshow(im)
         # Create a Rectangle patch
-        for rG, rF in zip(rectangles, rectanglesFound):
+        for rG in rectangles:
             rect = patches.Rectangle((rG.left, rG.bottom), rG.width,
                                      rG.height, linewidth=1, edgecolor='r',
                                      facecolor='none')
-            rectF = patches.Rectangle((rF.left, rF.bottom), rF.width,
-                                     rF.height, linewidth=1, edgecolor='r',
-                                     facecolor='none')
+
             # Add the patch to the Axes
             axG.add_patch(rect)
-            axF.add_patch(rectF)
-            axG.title.set_text("gold")
-            axF.title.set_text("found")
+
+        axG.title.set_text("gold")
+
 
             # ax.text(r.left, r.bottom - 2,
             #         'class ' + str(c) + ' prob ' + str(p),
             #         bbox=dict(facecolor='blue', alpha=0.5), fontsize=14,
             #         color='white')
+
+        for rF in rectanglesFound:
+            rectF = patches.Rectangle((rF.left, rF.bottom), rF.width,
+                                     rF.height, linewidth=1, edgecolor='r',
+                                     facecolor='none')
+            axF.add_patch(rectF)
+        axF.title.set_text("found")
+
         plt.show()

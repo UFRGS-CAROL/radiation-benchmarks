@@ -3,7 +3,7 @@ import os
 import re
 from SupportClasses import Rectangle
 import numpy as np
-from SupportClasses import GoldContent as gc
+from SupportClasses import _GoldContent as gc
 from SupportClasses import PrecisionAndRecall as pr
 from ObjectDetectionParser import  ObjectDetectionParser
 

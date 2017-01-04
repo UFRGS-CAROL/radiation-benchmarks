@@ -39,7 +39,7 @@ class Point(object):
         self.y = y
 
 
-class GoldContent():
+class _GoldContent():
     __plistSize = 0
     __classes = 0
     __totalSize = 0
@@ -146,10 +146,10 @@ class GoldContent():
             # x_min_gold = x_max_gold - gold[i].width;
             # y_min_gold = y_max_gold - gold[i].height;
             # left, top, right, bottom):
-            left = int(math.floor(box.x))
-            bottom = int(math.floor(box.y))
-            h = int(math.ceil(box.h))
-            w = int(math.ceil(box.w))
+            left = int(box.x)
+            bottom = int(box.y)
+            h = int(box.h)
+            w = int(box.w)
             boxes[i] = Rectangle.Rectangle(left, bottom, w, h)
             i += 1
         return boxes

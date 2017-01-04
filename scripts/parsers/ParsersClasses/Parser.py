@@ -135,7 +135,7 @@ class Parser():
 
     """call to the private methods"""
     def parseErr(self):
-        # self._errors["errorsParsed"] = []
+        self._errors["errorsParsed"] = []
         # self._errors["errListFiltered"] = []
         # self._errors["errListFiltered2"] = []
         for errString in self._errList:
