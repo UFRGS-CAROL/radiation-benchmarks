@@ -26,10 +26,12 @@ class PrecisionAndRecall(object):
                 + " false negative:" + str(self.falseNegative) + " true positive:" + str(self.truePositive) + " threshold:" + str(self.__threshold)
 
     def getPrecision(self): return self.precision.value
+    def getRecall(self): return self.recall.value
+
     def getFalsePositive(self): return self.falsePositive.value
     def getFalseNegative(self): return self.falseNegative.value
     def getTruePositive(self): return self.truePositive.value
-    def getRecall(self): return self.precision.value
+
 
     def cleanValues(self):
         self.precision.value = 0
@@ -94,8 +96,10 @@ class PrecisionAndRecall(object):
                     break
 
         self.falseNegative.value = len(gold) - self.truePositive.value
-        self.recall.value = float(self.truePositive.value) / float(self.truePositive.value + self.falseNegative.value)
-
+        if self.truePositive.value + self.falseNegative.value > 0:
+            self.recall.value = float(self.truePositive.value) / float(self.truePositive.value + self.falseNegative.value)
+        else:
+            self.recall.value = 0
 
     def precisionAndRecallSerial(self, gold, found):
         #precision
@@ -158,7 +162,7 @@ class PrecisionAndRecall(object):
     return x and y pixel cordinates
     """
 
-    def centerOfMass(self, rectangles):
+    def _centerOfMass(self, rectangles):
         xTotal = 0
         yTotal = 0
         pixels = 0
@@ -169,11 +173,13 @@ class PrecisionAndRecall(object):
             yTotal += ((r.bottom - r.top - 1) * (r.bottom + r.top) * (r.left - r.right - 1)) / 2
             pixels += (r.top - r.bottom + 1) * (r.right - r.left + 1)
 
-        return ((xTotal) / pixels, (yTotal) / pixels)
-
+        if pixels > 0:
+            return ((xTotal) / pixels, (yTotal) / pixels)
+        else:
+            return 0,0
     def centerOfMassGoldVsFound(self, gold, found, xSize, ySize):
-        xGold, yGold = self.centerOfMass(gold)
-        xFound, yFound = self.centerOfMass(found)
+        xGold, yGold = self._centerOfMass(gold)
+        xFound, yFound = self._centerOfMass(found)
 
         # (test_center_of_mass.x - gold_center_of_mass.x)/x_size << "," << (double)(test_center_of_mass.y - gold_center_of_mass.y)/y_size
         return float(xFound - xGold) / xSize, float(yFound - yGold) / ySize

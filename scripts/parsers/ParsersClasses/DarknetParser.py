@@ -16,9 +16,9 @@ from SupportClasses import PrecisionAndRecall
 
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
 GOLD_BASE_DIR = [
-    '/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
-    '/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
-    # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
+    #'/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
+    #'/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
+     '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 ]
 
 DATASETS = {
@@ -26,17 +26,17 @@ DATASETS = {
     'gold.caltech.critical.1K.test': {
         'caltech.pedestrians.critical.1K.txt': {
             'gold': None, 'txt': None, 'obj': None}},
-    'gold.caltech.1K.test': {
-        'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    # abft
-    'gold.caltech.abft.1K.test': {
-        'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    'gold.caltech.critical.abft.1K.test': {'caltech.pedestrians.critical.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-
-    'gold.voc.2012.1K.test': {
-        'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    'gold.voc.2012.abft.1K.test': {
-        'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    # 'gold.caltech.1K.test': {
+    #     'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    # # abft
+    # 'gold.caltech.abft.1K.test': {
+    #     'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    # 'gold.caltech.critical.abft.1K.test': {'caltech.pedestrians.critical.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    #
+    # 'gold.voc.2012.1K.test': {
+    #     'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    # 'gold.voc.2012.abft.1K.test': {
+    #     'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
      }
 
 
@@ -255,7 +255,7 @@ class DarknetParser(ObjectDetectionParser):
         precisionRecallObj.precisionAndRecallParallel(gValidRects, fValidRects)
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
-        #
+        print "\n", self._precision , self._recall
         # self.buildImageMethod(listFile[imgPos].rstrip(), gValidRects, fValidRects)
 
         self._falseNegative = precisionRecallObj.getFalseNegative()
@@ -264,8 +264,7 @@ class DarknetParser(ObjectDetectionParser):
         # set all
         self._goldLines = gValidSize
         self._detectedLines = fValidSize
-        self._xCenterOfMass = None
-        self._yCenterOfMass = None
+        self._xCenterOfMass, self._yCenterOfMass = precisionRecallObj.centerOfMassGoldVsFound(gValidRects, fValidRects, imgObj.w, imgObj.h)
 
 
     # parse Darknet

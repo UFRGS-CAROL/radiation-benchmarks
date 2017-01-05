@@ -247,20 +247,20 @@ class SassifiParser:
         #     reader_daniel = csv.DictReader(daniel_input, delimiter=';', quoting=csv.QUOTE_NONE)
         #     # reader_daniel = csv.DictReader(daniel_input)
         # else:
-        reader_daniel = csv.DictReader(daniel_input)
+        reader_daniel = csv.DictReader(daniel_input, delimiter=';')
         fieldnames = []
         for i in reader.fieldnames:
             fieldnames.append(i)
 
         for i in reader_daniel.fieldnames:
             fieldnames.append(i)
-        my_lines = 0
-        daniel_lines = 0
+        # my_lines = 0
+        # daniel_lines = 0
 
         output_csv = open("parsed_dc_" + csv_input, 'w')
         writer = csv.DictWriter(output_csv, fieldnames=fieldnames)
         writer.writeheader()
-        first = True
+        # first = True
         daniel_rows = []
         logs_rows = []
         for row in reader_daniel:
@@ -273,11 +273,11 @@ class SassifiParser:
         d = {}
         index_str_log = 'log_file'
         has_sdc = 'has_sdc'
-        if is_daniel == 'd':
+        if is_daniel == 'daniel':
             log_file_name = 'logFileName'
-        elif is_daniel == 'c':
+        elif is_daniel == 'caio':
             log_file_name = 'Logname'
-        elif is_daniel == 'l':
+        elif is_daniel == 'lucas':
             log_file_name = '_File_name'
 
         if is_daniel != 'none':
@@ -341,8 +341,7 @@ if __name__ == "__main__":
     if args.to_join_csv == 'none':
         sassiParse.parse_csv(args.csv_input, args.logs_dir, args.copy)
     else:
-        isDaniel = (args.log_style == 'daniel')
-        sassiParse.process_daniels_and_caios_log(args.csv_input, args.to_join_csv, isDaniel)
+        sassiParse.process_daniels_and_caios_log(args.csv_input, args.to_join_csv, args.log_style)
         # ():
         # else:
         #     process_daniels_and_caios_log(parameter[0], parameter[1],
