@@ -205,7 +205,7 @@ while i < size:
 			if re.match("Time", lines[i+1][0]):
 				i+=1
 			if i+1 < size:
-				while(startDT - datetime.strptime(lines[i+1][0][0:-1], "%c") < timedelta(minutes=60) ):
+				while((datetime.strptime(lines[i+1][0][0:-1], "%c") - startDT)   < timedelta(minutes=60) ):
                                         progress = "{0:.2f}".format( ((float(i)/float(size)) * 100.0))
                                         sys.stdout.write("\rProcessing Line "+str(i)+" of "+str(size)+" - "+progress+"%")
                                         sys.stdout.flush()
