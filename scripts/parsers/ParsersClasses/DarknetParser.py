@@ -16,9 +16,9 @@ from SupportClasses import PrecisionAndRecall
 
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
 GOLD_BASE_DIR = [
-    #'/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
-    #'/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
-     '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
+    #'/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
+    '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
+     # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 ]
 
 DATASETS = {
@@ -26,17 +26,17 @@ DATASETS = {
     'gold.caltech.critical.1K.test': {
         'caltech.pedestrians.critical.1K.txt': {
             'gold': None, 'txt': None, 'obj': None}},
-    # 'gold.caltech.1K.test': {
-    #     'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    # # abft
-    # 'gold.caltech.abft.1K.test': {
-    #     'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    # 'gold.caltech.critical.abft.1K.test': {'caltech.pedestrians.critical.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    #
-    # 'gold.voc.2012.1K.test': {
-    #     'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    # 'gold.voc.2012.abft.1K.test': {
-    #     'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    'gold.caltech.1K.test': {
+        'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    # abft
+    'gold.caltech.abft.1K.test': {
+        'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    'gold.caltech.critical.abft.1K.test': {'caltech.pedestrians.critical.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+
+    'gold.voc.2012.1K.test': {
+        'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    'gold.voc.2012.abft.1K.test': {
+        'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
      }
 
 
@@ -170,6 +170,7 @@ class DarknetParser(ObjectDetectionParser):
 
         # parsing box array
         currDataset = DATASETS[self.__goldFileName][os.path.basename(self.__imgListPath)]
+        print currDataset['txt'], currDataset['gold']
         goldCurrObj = currDataset['obj']
         if goldCurrObj == None:
             sys.exit("Gold obj was not created")

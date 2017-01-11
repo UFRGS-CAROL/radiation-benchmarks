@@ -1,20 +1,56 @@
-import math
 import os
 import re
-from SupportClasses import Rectangle
-import numpy as np
-from SupportClasses import _GoldContent as gc
-from SupportClasses import PrecisionAndRecall as pr
-from ObjectDetectionParser import  ObjectDetectionParser
 
-# GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
+import time
+
+import sys
+
+from ObjectDetectionParser import  ObjectDetectionParser
+from SupportClasses import PrecisionAndRecall as pr
+from SupportClasses import _GoldContent
+
+GOLD_BASE_DIR = [
+    #'/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
+    #'/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
+     '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
+]
+
+DATASETS = {
+    'gold.caltech.critical.1K.test': {
+        'caltech.pedestrians.critical.1K.txt': {
+            'gold': None, 'txt': None, 'obj': None}},
+    'gold.caltech.1K.test': {
+        'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    'gold.voc.2012.1K.test': {
+       'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+}
 
 class FasterRcnnParser(ObjectDetectionParser):
     __iterations = None
     __imgListPath = None
     __board = None
 
-    __rectangles = Rectangle.Rectangle(0, 0, 0, 0)
+    def __init__(self):
+        start_time = time.time()
+        ObjectDetectionParser.__init__(self)
+        for kD, vD in DATASETS.iteritems():
+            for kI, vI in vD.iteritems():
+                for i in GOLD_BASE_DIR:
+                    DATASETS[kD][kI]['gold'] = str(i) + '/py_faster_rcnn/' + str(kD)
+                    DATASETS[kD][kI]['txt'] = str(
+                        i) + '/networks_img_list/' + str(kI)
+
+                    if not os.path.isfile(DATASETS[kD][kI]['gold']):
+                        sys.exit(str(DATASETS[kD][kI][
+                                         'gold']) + " no such file or directory")
+                    if not os.path.isfile(DATASETS[kD][kI]['txt']):
+                        sys.exit(str(DATASETS[kD][kI][
+                                         'txt']) + " no such file or directory")
+
+                    # if it pass, I will open all gold on memory
+                    DATASETS[kD][kI]['obj'] = _GoldContent._GoldContent(
+                        nn='darknet', filepath=DATASETS[kD][kI]['gold'])
+        elapsed_time = time.time() - start_time
 
     def getBenchmark(self):
         return self._benchmark
@@ -38,7 +74,42 @@ class FasterRcnnParser(ObjectDetectionParser):
 
     def _processScores(self, errString):
         ret = {}
+        #ERR img_name: /home/carol/radiation-benchmarks/data/VOC2012/2011_004360.jpg class: horse wrong_score_size: -17
+        #ERR img_name: /home/carol/radiation-benchmarks/data/VOC2012/2011_004360.jpg class: horse score: [0] e: 0.0158654786646 r: 0.00468954769894
+        scoreErr = re.match(".*img_name\: (\S+).*"
+                                 "class\: (\S+).*wrong_score_size\: (\S+).*", errString)
 
+        ret["wrong_score_size"] = -1
+        if scoreErr:
+            try:
+                ret["wrong_score_size"] = abs(int(scoreErr.group(3)))
+            except:
+                print "\nerror on parsing wrong_score_size"
+                raise
+
+        else:
+            scoreErr =  re.match(".*img_name\: (\S+).*"
+                                 "class\: (\S+).*score\: \[(\d+)\].*e\: (\S+).*r\: (\S+).*", errString)
+
+            try:
+                ret["score_pos"] = int(scoreErr.group(3))
+            except:
+                print "\nerror on parsing score pos"
+                raise
+
+            try:
+                ret["score_r"] = float(scoreErr.group(5))
+            except:
+                print "\nerror on parsing score read"
+                raise
+
+        if scoreErr:
+            try:
+                ret["img_path"] = scoreErr.group(1)
+                ret["class"] = scoreErr.group(2)
+            except:
+                print "\nerror on parsing img_path and class"
+                raise
 
         return ret
 
@@ -53,19 +124,19 @@ class FasterRcnnParser(ObjectDetectionParser):
         ret = {}
         if 'wrong' in errString:
 
-            image_err = re.match(".*img_name\: (\S+).*"
+            imageErr = re.match(".*img_name\: (\S+).*"
                                  "class\: (\S+).*box\: \[(\d+)\].*"
                                  "x1_r\: (\S+).*"
                                  "y1_r\: (\S+).*"
                                  "x2_r\: (\S+).*"
                                  "y2_r\: (\S+).*", errString)
-            if image_err:
-                ret["image_path"] = image_err.group(1)
-                ret["class"] = image_err.group(2)
-                ret["box"] = image_err.group(3)
+            if imageErr:
+                ret["image_path"] = imageErr.group(1)
+                ret["class"] = imageErr.group(2)
+                ret["box"] = imageErr.group(3)
 
                 #x1
-                ret["x1"] = image_err.group(4)
+                ret["x1"] = imageErr.group(4)
                 try:
                     long(float(ret["x1"]))
                 except:
@@ -73,7 +144,7 @@ class FasterRcnnParser(ObjectDetectionParser):
                 ###########
 
                 #y1
-                ret["y1"] = image_err.group(5)
+                ret["y1"] = imageErr.group(5)
                 try:
                     long(float(ret["y1"]))
                 except:
@@ -81,7 +152,7 @@ class FasterRcnnParser(ObjectDetectionParser):
                 ###########
 
                 #x2
-                ret["x2"] = image_err.group(6)
+                ret["x2"] = imageErr.group(6)
                 try:
                     long(float(ret["x2"]))
                 except:
@@ -89,7 +160,7 @@ class FasterRcnnParser(ObjectDetectionParser):
                 ############
 
                 #y2
-                ret["y2"] = image_err.group(7)
+                ret["y2"] = imageErr.group(7)
                 try:
                     long(float(ret["y2"]))
                 except:
