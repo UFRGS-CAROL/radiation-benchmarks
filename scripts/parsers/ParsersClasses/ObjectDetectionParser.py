@@ -112,7 +112,7 @@ class ObjectDetectionParser(Parser):
 
     def copyList(self, objList):
         temp = []
-        for i in objList: temp.append(i.deepcopy())
+        for i in objList: temp.append(copy.deepcopy(i.deepcopy()))
         return temp
 
 

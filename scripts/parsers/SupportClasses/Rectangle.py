@@ -28,8 +28,6 @@ class Rectangle():
         self.right = self.left + self.width
         self.top = self.bottom + self.height
 
-
-
     def __repr__(self):
         return "left " + str(self.left) + " bottom " + str(self.bottom) + " width " + str(
             self.width) + " height " + str(self.height) + " right " + str(
@@ -46,16 +44,16 @@ class Rectangle():
         copy_obj.top = self.top
         return copy_obj
 
-    def __deepcopy__(self):
-        # print "passou no deepcopy"
-        copy_obj = Rectangle(0, 0, 0, 0)
-        copy_obj.left = self.left
-        copy_obj.bottom = self.bottom
-        copy_obj.height = self.height
-        copy_obj.width = self.width
-        copy_obj.right = self.right
-        copy_obj.top = self.top
-        return copy_obj
+    # def __deepcopy__(self):
+    #     # print "passou no deepcopy"
+    #     copy_obj = Rectangle(0, 0, 0, 0)
+    #     copy_obj.left = self.left
+    #     copy_obj.bottom = self.bottom
+    #     copy_obj.height = self.height
+    #     copy_obj.width = self.width
+    #     copy_obj.right = self.right
+    #     copy_obj.top = self.top
+    #     return copy_obj
 
     def intersection(self, other):
         # if self.isdisjoint(other):
@@ -106,7 +104,7 @@ class Rectangle():
 
     def __eq__(self, other):
         try:
-            return (self.left, self.right, self.top, self.bottom, self.height, self.width)\
-                   == (other.left, other.right, other.top, other.bottom, other.height, other.width)
+            return (self.left,  self.right,  self.top,  self.bottom,  self.height,  self.width)\
+                == (other.left, other.right, other.top, other.bottom, other.height, other.width)
         except AttributeError:
             return NotImplemented

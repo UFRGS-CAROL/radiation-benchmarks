@@ -16,10 +16,12 @@ from SupportClasses import PrecisionAndRecall
 
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
 GOLD_BASE_DIR = [
-    #'/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
-    '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
+    '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
+    #'/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
      # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 ]
+
+LOCAL_RADIATION_BENCH = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
 
 DATASETS = {
     # normal
@@ -131,26 +133,19 @@ class DarknetParser(ObjectDetectionParser):
         # tempPath = os.path.basename(self.__imgListPath).replace(".txt","")
         self._size = str(self.__goldFileName)
 
-    def __printYoloDetections(self, boxes, probs, total, classes, w, h):
+    def __printYoloDetections(self, boxes, probs, total, classes):
         validRectangles = []
         validProbs = []
         validClasses = []
         for i in range(0, total):
             box = boxes[i]
-            xmin = box.left - box.width / 2.
-            ymin = box.bottom - box.height / 2.
-            # ymax = box.bottom + box.height / 2.
-            # xmax = box.left + box.width / 2.
+            xmin = max(box.left - box.width / 2.0, 0)
+            ymin = max(box.bottom - box.height / 2.0, 0)
 
-
-            if xmin < 0:
-                xmin = 0
-            if ymin < 0:
-                ymin = 0
-            # if xmax > w:
-            #     xmax = w
-            # if ymax > h:
-            #     ymax = h
+            # if xmin < 0:
+            #     xmin = 0
+            # if ymin < 0:
+            #     ymin = 0
 
             for j in range(0, classes):
                 if probs[i][j] >= self._detectionThreshold:
@@ -163,57 +158,110 @@ class DarknetParser(ObjectDetectionParser):
 
         return validRectangles, validProbs, validClasses
 
+    def __setLocalFile(self, listFile, imgPos):
+        tmp = (listFile[imgPos].rstrip()).split('radiation-benchmarks')[1]
+        tmp = LOCAL_RADIATION_BENCH + '/radiation-benchmarks' + tmp
+        return tmp
+
+    def newRectArray(self, arr):
+        ret = numpy.empty(len(arr), dtype=object)
+        t = 0
+        for i in arr:
+            ret[t] = i.deepcopy()
+            t += 1
+        return ret
+
+
+    def newMatrix(self, prob, n, m):
+        ret = numpy.empty((n, m), dtype=float)
+        for i in xrange(0,n):
+            for j in xrange(0, m):
+                ret[i][j] = prob[i][j]
+        return ret
 
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return
 
         # parsing box array
+        print self.__goldFileName
+        print self.__imgListPath
         currDataset = DATASETS[self.__goldFileName][os.path.basename(self.__imgListPath)]
-        print currDataset['txt'], currDataset['gold']
         goldCurrObj = currDataset['obj']
         if goldCurrObj == None:
             sys.exit("Gold obj was not created")
 
         listFile = open(currDataset['txt']).readlines()
+        print currDataset['gold']
 
         imgPos = int(self._sdcIteration) % len(listFile)
+        print imgPos
+        imgFilename = self.__setLocalFile(listFile, imgPos)
+        imgObj = ImageRaw(imgFilename)
+
+
 
         # probs
         goldProb = goldCurrObj.getProbArray()
         goldProb = goldProb[imgPos]
-        foundProb = numpy.copy(goldProb)
+
+        foundProb = self.newMatrix(goldProb, goldCurrObj.getTotalSize(), goldCurrObj.getClasses())#numpy.copy(goldProb)
         # rects
         goldRects = goldCurrObj.getRectArray()
         goldRects = goldRects[imgPos]
 
-        foundRects = self.copyList(goldRects)
+
+        foundRects = self.newRectArray(goldRects)#self.copyList(goldRects)
+
+
 
         self._rowDetErrors = 0
         self._colDetErrors = 0
         self._wrongElements = 0
 
-        for y in errList:
-            if y["type"] == "boxes":
-                i = y['boxes']
-                rectPos = (i['box_pos'])
-                left = int(float(i["x_r"]))
-                bottom = int((float(i["y_r"])))
-                h = abs(int(float(i["h_r"])))
-                w = abs(int(float(i["w_r"])))
-                foundRects[rectPos] = Rectangle.Rectangle(left, bottom, w, h)
-                self._wrongElements += 1
-            elif y["type"] == "abft" and self._abftType != 'no_abft':
+        # for y in errList:
+        #     # print y['img_list_position'], imgPos
+        #     # print y
+        #     if y["type"] == "boxes":
+        #         i = y['boxes']
+        #         rectPos = i['box_pos']
+        #         left = int(float(i["x_r"]))
+        #         bottom = int((float(i["y_r"])))
+        #         # done = False
+        #         # if 1 < math.fabs(float(i['x_r']) - float(i['x_e'])):
+        #         #     print "x" , float(i['x_r']) - float(i['x_e'])
+        #         #     done = True
+        #         # if math.fabs(float(i['y_r']) - float(i['y_e'])) > 1:
+        #         #     print "y", float(i['y_r']) - float(i['y_e'])
+        #         #     done = True
+        #         # if math.fabs(float(i['h_r']) - float(i['h_e'])) > 1:
+        #         #     print "h" , float(i['h_r']) - float(i['h_e'])
+        #         #     done = True
+        #         # if math.fa bs( float(i['w_r']) - float(i['w_e'])) > 1:
+        #         #     print "w" , float(i['w_r']) - float(i['w_e'])
+        #         #     done = True
+        #         h = abs(int(float(i["h_r"])))
+        #         w = abs(int(float(i["w_r"])))
+        #         print "before", foundRects[rectPos]
+        #         print i
+        #         foundRects[rectPos] = Rectangle.Rectangle(left, bottom, w, h)
+        #         # print "rect found " , foundRects[rectPos]
+        #         # print "rect gold "  , goldRects[rectPos] , "\n"
+        #         print float(i["x_r"]) , float(i["y_r"]), float(i["h_r"]), float(i["w_r"])
+        #         print "after", foundRects[rectPos] , "\n"
+        #         self._wrongElements += 1
+        #     elif y["type"] == "abft" and self._abftType != 'no_abft':
+        #
+        #         i = y['abft_det']
+        #         self._rowDetErrors += i["row_detected_errors"]
+        #         self._colDetErrors += i["col_detected_errors"]
+        #
+        #     elif y["type"] == "probs":
+        #         i = int(y["probs"]["probs_x"])
+        #         j = int(y["probs"]["probs_y"])
+        #
+        #         foundProb[i][j] = float(y["probs"]["prob_r"])
 
-                i = y['abft_det']
-                self._rowDetErrors += i["row_detected_errors"]
-                self._colDetErrors += i["col_detected_errors"]
-
-            elif y["type"] == "probs":
-                i = int(y["probs"]["probs_x"])
-                j = int(y["probs"]["probs_y"])
-
-                foundProb[i][j] = float(y["probs"]["prob_r"])
 
 
         if self._rowDetErrors > 1e6:
@@ -223,18 +271,16 @@ class DarknetParser(ObjectDetectionParser):
 
         #############
         # before keep going is necessary to filter the results
-
-
-        imgObj = ImageRaw(listFile[imgPos].rstrip())
-        # gValidRects, gValidProbs, gValidClasses = self.__drawDetections(imgObj,
-        #                                                                 goldCurrObj.getTotalSize(),
-        #                                                                 goldRects, goldProb)
-        fValidRects, fValidProbs, fValidClasses = self.__printYoloDetections(foundRects, foundProb, goldCurrObj.getTotalSize(),
-                                                                             len(self._classes) - 1, imgObj.w, imgObj.h)
         gValidRects, gValidProbs, gValidClasses = self.__printYoloDetections(goldRects, goldProb, goldCurrObj.getTotalSize(),
-                                                                             len(self._classes) -1, imgObj.w, imgObj.h)
+                                                                             len(self._classes) -1)
+        fValidRects, fValidProbs, fValidClasses = self.__printYoloDetections(foundRects, foundProb, goldCurrObj.getTotalSize(),
+                                                                             len(self._classes) - 1)
 
 
+
+        if self._logFileName == '2016_12_11_14_50_35_cudaDarknet_carol-k402.log':
+            print goldRects[31]
+            sys.exit()
         #############
         # imgFilename = listFile[imgPos].rstrip()
         # if len(gValidRects) > 1:
@@ -368,6 +414,7 @@ class DarknetParser(ObjectDetectionParser):
 
                 try:
                     long(float(ret["w_diff"]))
+
                 except:
                     ret["w_diff"] = 1e30
 
@@ -393,6 +440,16 @@ class DarknetParser(ObjectDetectionParser):
                 print "Error on parsing boxes"
                 raise
 
+            # if float(ret['x_r']) - float(ret['x_e']) > 0.01:
+            #     print float(ret['x_r']) - float(ret['x_e'])
+            # if float(ret['y_r']) - float(ret['y_e']) > 0.01:
+            #     print float(ret['y_r']) - float(ret['y_e'])
+            #
+            # if float(ret["h_r"]) - float(ret['h_e']) > 0.01:
+            #     print float(ret["h_r"]) - float(ret['h_e'])
+            # if float(ret["w_r"]) - float(ret["w_e"]) > 0.01:
+            #     print float(ret["w_r"]) - float(ret["w_e"])
+
         return ret, imgListPosition
 
     def __processProbs(self, errString):
@@ -409,6 +466,8 @@ class DarknetParser(ObjectDetectionParser):
                 ret["probs_y"] = image_err.group(3)
                 ret["prob_r"] = image_err.group(4)
                 ret["prob_e"] = image_err.group(5)
+                # if math.fabs(float(ret["prob_r"]) - float(ret["prob_e"])) > 0.1:
+                #     print float(ret["prob_r"]) - float(ret["prob_e"])
             except:
                 print "Error on parsing probs"
                 raise

@@ -4,7 +4,8 @@ import pickle
 from ctypes import *
 import numpy as np
 
-from SupportClasses import Rectangle
+#from SupportClasses
+import Rectangle
 
 """Read a darknet Gold content to memory"""
 
@@ -168,3 +169,9 @@ class _GoldContent():
             i += 1
 
         return prob
+
+
+
+# gold = _GoldContent(nn='darknet', filepath="/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40/darknet/gold.voc.2012.1K.test")
+#
+# print gold.getRectArray()[77][31]
