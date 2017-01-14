@@ -15,31 +15,48 @@ from SupportClasses import _GoldContent
 from SupportClasses import PrecisionAndRecall
 
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
-GOLD_BASE_DIR = [
-    '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
-    #'/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
-     # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
-]
+# GOLD_BASE_DIR = [
+#     '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
+#     #'/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
+#      # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
+# ]
 
-LOCAL_RADIATION_BENCH = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
+GOLD_BASE_DIR = {
+    'carol-k402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
+    'carol-tx': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
+    #carolx1a
+    #carolx1b
+    #carolx1c
+
+     # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
+}
+LOCAL_RADIATION_BENCH =  '/home/fernando/git_pesquisa' #'/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
+
+# DATASETS = {
+#     # normal
+#     'gold.caltech.critical.1K.test': {
+#         'caltech.pedestrians.critical.1K.txt': {
+#             'gold': None, 'txt': None, 'obj': None}},
+#     'gold.caltech.1K.test': {
+#         'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+#     # abft
+#     'gold.caltech.abft.1K.test': {
+#         'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+#     'gold.caltech.critical.abft.1K.test': {'caltech.pedestrians.critical.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+#
+#     'gold.voc.2012.1K.test': {
+#         'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+#     'gold.voc.2012.abft.1K.test': {
+#         'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+#      }
 
 DATASETS = {
     # normal
-    'gold.caltech.critical.1K.test': {
-        'caltech.pedestrians.critical.1K.txt': {
-            'gold': None, 'txt': None, 'obj': None}},
-    'gold.caltech.1K.test': {
-        'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    # abft
-    'gold.caltech.abft.1K.test': {
-        'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    'gold.caltech.critical.abft.1K.test': {'caltech.pedestrians.critical.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    'caltech.pedestrians.critical.1K.txt':{'dumb_abft':'gold.caltech.critical.abft.1K.test', 'no_abft':'gold.caltech.critical.1K.test'},
+    'caltech.pedestrians.1K.txt':{'dumb_abft':'gold.caltech.abft.1K.test','no_abft':'gold.caltech.1K.test'},
+    'voc.2012.1K.txt':{'dumb_abft':'gold.voc.2012.abft.1K.test', 'no_abft': 'gold.voc.2012.1K.test'}
+}
 
-    'gold.voc.2012.1K.test': {
-        'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    'gold.voc.2012.abft.1K.test': {
-        'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-     }
 
 
 # CURRENT_MACHINE_DIR ="/home/familia/Fernando/radiation-benchmarks/data/networks_img_list/"
@@ -74,33 +91,33 @@ class DarknetParser(ObjectDetectionParser):
     __iterations = None
     __goldFileName = None
 
-    def __init__(self):
-        start_time = time.time()
-        ObjectDetectionParser.__init__(self)
-        for kD, vD in DATASETS.iteritems():
-            for kI, vI in vD.iteritems():
-                for i in GOLD_BASE_DIR:
-                    DATASETS[kD][kI]['gold'] = str(i) + '/darknet/' + str(kD)
-                    DATASETS[kD][kI]['txt'] = str(
-                        i) + '/networks_img_list/' + str(kI)
-
-                    if not os.path.isfile(DATASETS[kD][kI]['gold']):
-                        sys.exit(str(DATASETS[kD][kI][
-                                         'gold']) + " no such file or directory")
-                    if not os.path.isfile(DATASETS[kD][kI]['txt']):
-                        sys.exit(str(DATASETS[kD][kI][
-                                         'txt']) + " no such file or directory")
-
-                    # if it pass, I will open all gold on memory
-                    DATASETS[kD][kI]['obj'] = _GoldContent._GoldContent(
-                        nn='darknet', filepath=DATASETS[kD][kI]['gold'])
-        elapsed_time = time.time() - start_time
-
-        print "\n darknet open gold time ", elapsed_time
-        # for gold object
-
-    # each imglist has a gold, only need to keep then on the memory
-    goldObjects = {}
+    # def __init__(self):
+    #     start_time = time.time()
+    #     ObjectDetectionParser.__init__(self)
+    #     for kD, vD in DATASETS.iteritems():
+    #         for kI, vI in vD.iteritems():
+    #             for i in GOLD_BASE_DIR:
+    #                 DATASETS[kD][kI]['gold'] = str(i) + '/darknet/' + str(kD)
+    #                 DATASETS[kD][kI]['txt'] = str(
+    #                     i) + '/networks_img_list/' + str(kI)
+    #
+    #                 if not os.path.isfile(DATASETS[kD][kI]['gold']):
+    #                     sys.exit(str(DATASETS[kD][kI][
+    #                                      'gold']) + " no such file or directory")
+    #                 if not os.path.isfile(DATASETS[kD][kI]['txt']):
+    #                     sys.exit(str(DATASETS[kD][kI][
+    #                                      'txt']) + " no such file or directory")
+    #
+    #                 # if it pass, I will open all gold on memory
+    #                 DATASETS[kD][kI]['obj'] = _GoldContent._GoldContent(
+    #                     nn='darknet', filepath=DATASETS[kD][kI]['gold'])
+    #     elapsed_time = time.time() - start_time
+    #
+    #     print "\n darknet open gold time ", elapsed_time
+    #     # for gold object
+    #
+    # # each imglist has a gold, only need to keep then on the memory
+    # goldObjects = {}
 
     def setSize(self, header):
         if "abft" in header:
@@ -183,37 +200,56 @@ class DarknetParser(ObjectDetectionParser):
         if len(errList) <= 0:
             return
 
-        # parsing box array
-        print self.__goldFileName
-        print self.__imgListPath
-        currDataset = DATASETS[self.__goldFileName][os.path.basename(self.__imgListPath)]
-        goldCurrObj = currDataset['obj']
-        if goldCurrObj == None:
-            sys.exit("Gold obj was not created")
+        # # parsing box array
+        # print self.__goldFileName
+        # print self.__imgListPath
+        # currDataset = DATASETS[self.__goldFileName][os.path.basename(self.__imgListPath)]
+        # goldCurrObj = currDataset['obj']
+        # if goldCurrObj == None:
+        #     sys.exit("Gold obj was not created")
+        #
+        # listFile = open(currDataset['txt']).readlines()
+        # print currDataset['gold']
+        #
+        # imgPos = int(self._sdcIteration) % len(listFile)
+        # print imgPos
+        # imgFilename = self.__setLocalFile(listFile, imgPos)
+        # imgObj = ImageRaw(imgFilename)
+        #
+        #
+        #
+        # # probs
+        # goldProb = goldCurrObj.getProbArray()
+        # goldProb = goldProb[imgPos]
+        #
+        # foundProb = self.newMatrix(goldProb, goldCurrObj.getTotalSize(), goldCurrObj.getClasses())#numpy.copy(goldProb)
+        # # rects
+        # goldRects = goldCurrObj.getRectArray()
+        # goldRects = goldRects[imgPos]
+        #
+        #
+        # foundRects = self.newRectArray(goldRects)#self.copyList(goldRects)
+        #the gold key is build with machine + benchmark + dataset
+        gold = None
+        goldKey = self._machine + "_" + self._benchmark + "_" + self.__goldFileName
+        goldPath = GOLD_BASE_DIR[self._machine] + "/darknet/" + self.__goldFileName
+        txtPath = GOLD_BASE_DIR[self._machine] + '/networks_img_list/' + os.path.basename(self.__imgListPath)
+        if goldKey not in self._goldDatasetArray:
+            g = _GoldContent._GoldContent(nn='darknet', filepath=goldPath)
+            self._goldDatasetArray[goldKey] = g
 
-        listFile = open(currDataset['txt']).readlines()
-        print currDataset['gold']
+        gold = self._goldDatasetArray[goldKey]
+
+        listFile = open(txtPath).readlines()
 
         imgPos = int(self._sdcIteration) % len(listFile)
-        print imgPos
         imgFilename = self.__setLocalFile(listFile, imgPos)
         imgObj = ImageRaw(imgFilename)
+        goldPb = gold.getProbArray()[imgPos]
+        goldRt = gold.getRectArray()[imgPos]
 
-
-
-        # probs
-        goldProb = goldCurrObj.getProbArray()
-        goldProb = goldProb[imgPos]
-
-        foundProb = self.newMatrix(goldProb, goldCurrObj.getTotalSize(), goldCurrObj.getClasses())#numpy.copy(goldProb)
-        # rects
-        goldRects = goldCurrObj.getRectArray()
-        goldRects = goldRects[imgPos]
-
-
-        foundRects = self.newRectArray(goldRects)#self.copyList(goldRects)
-
-
+        foundPb = self.newMatrix(goldPb, gold.getTotalSize(), gold.getClasses())
+        foundRt = self.newRectArray(goldRt)
 
         self._rowDetErrors = 0
         self._colDetErrors = 0
@@ -271,15 +307,15 @@ class DarknetParser(ObjectDetectionParser):
 
         #############
         # before keep going is necessary to filter the results
-        gValidRects, gValidProbs, gValidClasses = self.__printYoloDetections(goldRects, goldProb, goldCurrObj.getTotalSize(),
+        gValidRects, gValidProbs, gValidClasses = self.__printYoloDetections(goldRt, goldPb, gold.getTotalSize(),
                                                                              len(self._classes) -1)
-        fValidRects, fValidProbs, fValidClasses = self.__printYoloDetections(foundRects, foundProb, goldCurrObj.getTotalSize(),
+        fValidRects, fValidProbs, fValidClasses = self.__printYoloDetections(foundRt, foundPb, gold.getTotalSize(),
                                                                              len(self._classes) - 1)
 
 
 
         if self._logFileName == '2016_12_11_14_50_35_cudaDarknet_carol-k402.log':
-            print goldRects[31]
+            print goldRt[31]
             sys.exit()
         #############
         # imgFilename = listFile[imgPos].rstrip()
@@ -494,14 +530,15 @@ class DarknetParser(ObjectDetectionParser):
 
     def getGoldFileName(self, imgListPath):
         imgListPath = os.path.basename(imgListPath)
-        for k, v in DATASETS.iteritems():
-            for kI, vI in v.iteritems():
-                if imgListPath == kI:
-                    k = os.path.basename(k)
-                    if self._abftType == 'dumb_abft' and 'abft' in k:
-                        return k
-                    elif self._abftType == 'no_abft' and 'abft' not in k:
-                        return k
+        # for k, v in DATASETS.iteritems():
+        #     for kI, vI in v.iteritems():
+        #         if imgListPath == kI:
+        #             k = os.path.basename(k)
+        #             if self._abftType == 'dumb_abft' and 'abft' in k:
+        #                 return k
+        #             elif self._abftType == 'no_abft' and 'abft' not in k:
+        #                 return k
+        return DATASETS[imgListPath][self._abftType]
 
     # def __maxIndex(self, a):
     #     n = len(a)

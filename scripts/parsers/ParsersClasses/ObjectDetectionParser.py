@@ -18,6 +18,8 @@ class ObjectDetectionParser(Parser):
     #     Parser.__init__(self)
         # self.precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(self._prThreshold)
 
+
+    _goldDatasetArray = dict()
     _classes = ['__background__',
                'aeroplane', 'bicycle', 'bird', 'boat',
                'bottle', 'bus', 'car', 'cat', 'chair',
