@@ -1,12 +1,10 @@
 #!/usr/bin/env python
-import math
-
 import numpy
+import sys
 
 from SupportClasses import Rectangle
 import os
 import re
-import sys
 from PIL import Image
 
 
@@ -15,19 +13,16 @@ from SupportClasses import _GoldContent
 from SupportClasses import PrecisionAndRecall
 
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
-# GOLD_BASE_DIR = [
-#     '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
-#     #'/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
-#      # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
-# ]
 
 GOLD_BASE_DIR = {
     'carol-k402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
     'carol-tx': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
     #carolx1a
+    'carolx1a': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
     #carolx1b
+    'carolx1b': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
     #carolx1c
-
+    'carolx1c': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1c',
      # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 }
 LOCAL_RADIATION_BENCH =  '/home/fernando/git_pesquisa' #'/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
@@ -56,14 +51,6 @@ DATASETS = {
     'caltech.pedestrians.1K.txt':{'dumb_abft':'gold.caltech.abft.1K.test','no_abft':'gold.caltech.1K.test'},
     'voc.2012.1K.txt':{'dumb_abft':'gold.voc.2012.abft.1K.test', 'no_abft': 'gold.voc.2012.1K.test'}
 }
-
-
-
-# CURRENT_MACHINE_DIR ="/home/familia/Fernando/radiation-benchmarks/data/networks_img_list/"
-
-"""___________________"""
-
-import time
 
 
 class ImageRaw():
@@ -196,44 +183,25 @@ class DarknetParser(ObjectDetectionParser):
                 ret[i][j] = prob[i][j]
         return ret
 
+
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return
 
-        # # parsing box array
-        # print self.__goldFileName
-        # print self.__imgListPath
-        # currDataset = DATASETS[self.__goldFileName][os.path.basename(self.__imgListPath)]
-        # goldCurrObj = currDataset['obj']
-        # if goldCurrObj == None:
-        #     sys.exit("Gold obj was not created")
-        #
-        # listFile = open(currDataset['txt']).readlines()
-        # print currDataset['gold']
-        #
-        # imgPos = int(self._sdcIteration) % len(listFile)
-        # print imgPos
-        # imgFilename = self.__setLocalFile(listFile, imgPos)
-        # imgObj = ImageRaw(imgFilename)
-        #
-        #
-        #
-        # # probs
-        # goldProb = goldCurrObj.getProbArray()
-        # goldProb = goldProb[imgPos]
-        #
-        # foundProb = self.newMatrix(goldProb, goldCurrObj.getTotalSize(), goldCurrObj.getClasses())#numpy.copy(goldProb)
-        # # rects
-        # goldRects = goldCurrObj.getRectArray()
-        # goldRects = goldRects[imgPos]
-        #
-        #
-        # foundRects = self.newRectArray(goldRects)#self.copyList(goldRects)
-        #the gold key is build with machine + benchmark + dataset
-        gold = None
+        if 'k40' not in self._machine:
+            return
+
+        if self._abftType == 'dumb_abft' and 'abft' not in self.__goldFileName:
+            print "\n\n" , self.__goldFileName
         goldKey = self._machine + "_" + self._benchmark + "_" + self.__goldFileName
-        goldPath = GOLD_BASE_DIR[self._machine] + "/darknet/" + self.__goldFileName
-        txtPath = GOLD_BASE_DIR[self._machine] + '/networks_img_list/' + os.path.basename(self.__imgListPath)
+
+        if self._machine in GOLD_BASE_DIR:
+            goldPath = GOLD_BASE_DIR[self._machine] + "/darknet/" + self.__goldFileName
+            txtPath = GOLD_BASE_DIR[self._machine] + '/networks_img_list/' + os.path.basename(self.__imgListPath)
+        else:
+            print self._machine
+            return
+
         if goldKey not in self._goldDatasetArray:
             g = _GoldContent._GoldContent(nn='darknet', filepath=goldPath)
             self._goldDatasetArray[goldKey] = g
@@ -245,8 +213,12 @@ class DarknetParser(ObjectDetectionParser):
         imgPos = int(self._sdcIteration) % len(listFile)
         imgFilename = self.__setLocalFile(listFile, imgPos)
         imgObj = ImageRaw(imgFilename)
+
         goldPb = gold.getProbArray()[imgPos]
         goldRt = gold.getRectArray()[imgPos]
+
+        goldPb = self.newMatrix(goldPb, gold.getTotalSize(), gold.getClasses())
+        goldRt = self.newRectArray(goldRt)
 
         foundPb = self.newMatrix(goldPb, gold.getTotalSize(), gold.getClasses())
         foundRt = self.newRectArray(goldRt)
@@ -255,48 +227,45 @@ class DarknetParser(ObjectDetectionParser):
         self._colDetErrors = 0
         self._wrongElements = 0
 
-        # for y in errList:
-        #     # print y['img_list_position'], imgPos
-        #     # print y
-        #     if y["type"] == "boxes":
-        #         i = y['boxes']
-        #         rectPos = i['box_pos']
-        #         left = int(float(i["x_r"]))
-        #         bottom = int((float(i["y_r"])))
-        #         # done = False
-        #         # if 1 < math.fabs(float(i['x_r']) - float(i['x_e'])):
-        #         #     print "x" , float(i['x_r']) - float(i['x_e'])
-        #         #     done = True
-        #         # if math.fabs(float(i['y_r']) - float(i['y_e'])) > 1:
-        #         #     print "y", float(i['y_r']) - float(i['y_e'])
-        #         #     done = True
-        #         # if math.fabs(float(i['h_r']) - float(i['h_e'])) > 1:
-        #         #     print "h" , float(i['h_r']) - float(i['h_e'])
-        #         #     done = True
-        #         # if math.fa bs( float(i['w_r']) - float(i['w_e'])) > 1:
-        #         #     print "w" , float(i['w_r']) - float(i['w_e'])
-        #         #     done = True
-        #         h = abs(int(float(i["h_r"])))
-        #         w = abs(int(float(i["w_r"])))
-        #         print "before", foundRects[rectPos]
-        #         print i
-        #         foundRects[rectPos] = Rectangle.Rectangle(left, bottom, w, h)
-        #         # print "rect found " , foundRects[rectPos]
-        #         # print "rect gold "  , goldRects[rectPos] , "\n"
-        #         print float(i["x_r"]) , float(i["y_r"]), float(i["h_r"]), float(i["w_r"])
-        #         print "after", foundRects[rectPos] , "\n"
-        #         self._wrongElements += 1
-        #     elif y["type"] == "abft" and self._abftType != 'no_abft':
-        #
-        #         i = y['abft_det']
-        #         self._rowDetErrors += i["row_detected_errors"]
-        #         self._colDetErrors += i["col_detected_errors"]
-        #
-        #     elif y["type"] == "probs":
-        #         i = int(y["probs"]["probs_x"])
-        #         j = int(y["probs"]["probs_y"])
-        #
-        #         foundProb[i][j] = float(y["probs"]["prob_r"])
+        for y in errList:
+            # print y['img_list_position'], imgPos
+            # print y
+            if y["type"] == "boxes":
+                i = y['boxes']
+                rectPos = i['box_pos']
+                # found
+                lr = int(float(i["x_r"]))
+                br = int((float(i["y_r"])))
+                hr = abs(int(float(i["h_r"])))
+                wr = abs(int(float(i["w_r"])))
+                #gold correct
+                le = int(float(i["x_e"]))
+                be = int(float(i["y_e"]))
+                he = int(float(i["h_e"]))
+                we = int(float(i["w_e"]))
+
+                foundRt[rectPos] = Rectangle.Rectangle(lr, br, wr, hr)
+                # t = goldRt[rectPos].deepcopy()
+                goldRt[rectPos] = Rectangle.Rectangle(le, be, we, he)
+                # if not (t == goldRt[rectPos]):
+                #     print "\n", goldRt[rectPos]
+                #     print t
+                self._wrongElements += 1
+            elif y["type"] == "abft" and self._abftType != 'no_abft':
+
+                i = y['abft_det']
+                self._rowDetErrors += i["row_detected_errors"]
+                self._colDetErrors += i["col_detected_errors"]
+
+            elif y["type"] == "probs":
+                i = int(y["probs"]["probs_x"])
+                j = int(y["probs"]["probs_y"])
+
+                # if math.fabs(float(y["probs"]["prob_e"]) - foundPb[i][j]) > 0: print "\n" , foundPb[i][j] , float(y["probs"]["prob_r"]) , y["probs"]["prob_e"]
+
+                foundPb[i][j] = float(y["probs"]["prob_r"])
+                goldPb[i][j] = float(y["probs"]["prob_e"])
+
 
 
 
@@ -314,9 +283,6 @@ class DarknetParser(ObjectDetectionParser):
 
 
 
-        if self._logFileName == '2016_12_11_14_50_35_cudaDarknet_carol-k402.log':
-            print goldRt[31]
-            sys.exit()
         #############
         # imgFilename = listFile[imgPos].rstrip()
         # if len(gValidRects) > 1:
@@ -338,7 +304,21 @@ class DarknetParser(ObjectDetectionParser):
         precisionRecallObj.precisionAndRecallParallel(gValidRects, fValidRects)
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
-        print "\n", self._precision , self._recall
+
+        # if self._logFileName == '2016_02_11_16_28_06_cudaDarknet_carolx1b.log':
+        #     print "\n", gValidRects
+        #     print "\n", fValidRects
+        #     # print goldPb[46][14] #0.591782
+            # print goldPb[31][14] #0.461120
+            # print goldPb[54][11] #0.579033
+            # print goldPb[95][11] #0.411528
+        # if 0< self._precision < 1.0 or 0< self._recall < 1.0:
+        #     print "\n", self._precision , self._recall
+        #     print self._logFileName
+            # print "\n", gValidRects
+            # print "\n", fValidRects
+            #sys.exit()
+
         # self.buildImageMethod(listFile[imgPos].rstrip(), gValidRects, fValidRects)
 
         self._falseNegative = precisionRecallObj.getFalseNegative()
