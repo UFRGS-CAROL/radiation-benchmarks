@@ -1,19 +1,21 @@
 import os
 import re
 
-import time
-
-import sys
-
 from ObjectDetectionParser import  ObjectDetectionParser
-from SupportClasses import PrecisionAndRecall as pr
+from SupportClasses import PrecisionAndRecall
 from SupportClasses import _GoldContent
 
-GOLD_BASE_DIR = [
-    #'/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
-    #'/home/familia/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
-     '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
-]
+GOLD_BASE_DIR = {
+    'carol-k402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
+    'carol-tx': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
+    #carolx1a
+    'carolx1a': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
+    #carolx1b
+    'carolx1b': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
+    #carolx1c
+    'carolx1c': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1c',
+     # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
+}
 
 DATASETS = {
     'gold.caltech.critical.1K.test': {
@@ -30,27 +32,27 @@ class FasterRcnnParser(ObjectDetectionParser):
     __imgListPath = None
     __board = None
 
-    def __init__(self):
-        start_time = time.time()
-        ObjectDetectionParser.__init__(self)
-        for kD, vD in DATASETS.iteritems():
-            for kI, vI in vD.iteritems():
-                for i in GOLD_BASE_DIR:
-                    DATASETS[kD][kI]['gold'] = str(i) + '/py_faster_rcnn/' + str(kD)
-                    DATASETS[kD][kI]['txt'] = str(
-                        i) + '/networks_img_list/' + str(kI)
-
-                    if not os.path.isfile(DATASETS[kD][kI]['gold']):
-                        sys.exit(str(DATASETS[kD][kI][
-                                         'gold']) + " no such file or directory")
-                    if not os.path.isfile(DATASETS[kD][kI]['txt']):
-                        sys.exit(str(DATASETS[kD][kI][
-                                         'txt']) + " no such file or directory")
-
-                    # if it pass, I will open all gold on memory
-                    DATASETS[kD][kI]['obj'] = _GoldContent._GoldContent(
-                        nn='darknet', filepath=DATASETS[kD][kI]['gold'])
-        elapsed_time = time.time() - start_time
+    # def __init__(self):
+    #     start_time = time.time()
+    #     ObjectDetectionParser.__init__(self)
+    #     for kD, vD in DATASETS.iteritems():
+    #         for kI, vI in vD.iteritems():
+    #             for i in GOLD_BASE_DIR:
+    #                 DATASETS[kD][kI]['gold'] = str(i) + '/py_faster_rcnn/' + str(kD)
+    #                 DATASETS[kD][kI]['txt'] = str(
+    #                     i) + '/networks_img_list/' + str(kI)
+    #
+    #                 if not os.path.isfile(DATASETS[kD][kI]['gold']):
+    #                     sys.exit(str(DATASETS[kD][kI][
+    #                                      'gold']) + " no such file or directory")
+    #                 if not os.path.isfile(DATASETS[kD][kI]['txt']):
+    #                     sys.exit(str(DATASETS[kD][kI][
+    #                                      'txt']) + " no such file or directory")
+    #
+    #                 # if it pass, I will open all gold on memory
+    #                 DATASETS[kD][kI]['obj'] = _GoldContent._GoldContent(
+    #                     nn='darknet', filepath=DATASETS[kD][kI]['gold'])
+    #     elapsed_time = time.time() - start_time
 
     def getBenchmark(self):
         return self._benchmark
@@ -171,32 +173,82 @@ class FasterRcnnParser(ObjectDetectionParser):
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return
-        goldRects = []
-        foundRects = []
 
-        precisionRecallObj = pr.PrecisionAndRecall(self.__prThreshold)
-        precisionRecallObj.precisionAndRecallParallel(goldRects, foundRects)
 
-        self._goldLines = len(goldRects)
-        self._detectedLines = len(foundRects)
-        self._xCenterOfMass = None
-        self._yCenterOfMass = None
+        goldKey = self._machine + "_" + self._benchmark + "_" + self.__goldFileName
+
+        if self._machine in GOLD_BASE_DIR:
+            goldPath = GOLD_BASE_DIR[self._machine] + "/darknet/" + self.__goldFileName
+            txtPath = GOLD_BASE_DIR[self._machine] + '/networks_img_list/' + os.path.basename(self.__imgListPath)
+        else:
+            print self._machine
+            return
+
+        if goldKey not in self._goldDatasetArray:
+            g = _GoldContent._GoldContent(nn='darknet', filepath=goldPath)
+            self._goldDatasetArray[goldKey] = g
+
+        gold = self._goldDatasetArray[goldKey]
+
+        listFile = open(txtPath).readlines()
+
+        imgPos = int(self._sdcIteration) % len(listFile)
+        imgFilename = self.__setLocalFile(listFile, imgPos)
+        imgObj = ObjectDetectionParser.ImageRaw(imgFilename)
+
+
+
+        self._wrongElements = 0
+        for y in errList:
+            print y
+
+
+
+
+        precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(self._prThreshold)
+        gValidSize = len(gValidRects)
+        fValidSize = len(fValidRects)
+
+        precisionRecallObj.precisionAndRecallParallel(gValidRects, fValidRects)
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
+
+        # if self._logFileName == '2016_02_11_16_28_06_cudaDarknet_carolx1b.log':
+        #     print "\n", gValidRects
+        #     print "\n", fValidRects
+        #     # print goldPb[46][14] #0.591782
+            # print goldPb[31][14] #0.461120
+            # print goldPb[54][11] #0.579033
+            # print goldPb[95][11] #0.411528
+        # if 0< self._precision < 1.0 or 0< self._recall < 1.0:
+        #     print "\n", self._precision , self._recall
+        #     print self._logFileName
+            # print "\n", gValidRects
+            # print "\n", fValidRects
+            #sys.exit()
+
+        # self.buildImageMethod(listFile[imgPos].rstrip(), gValidRects, fValidRects)
+
         self._falseNegative = precisionRecallObj.getFalseNegative()
         self._falsePositive = precisionRecallObj.getFalsePositive()
         self._truePositive = precisionRecallObj.getTruePositive()
+        # set all
+        self._goldLines = gValidSize
+        self._detectedLines = fValidSize
+        self._xCenterOfMass, self._yCenterOfMass = precisionRecallObj.centerOfMassGoldVsFound(gValidRects, fValidRects, imgObj.w, imgObj.h)
 
 
 
     def setSize(self, header):
         # pyfaster
-        py_faster_m = re.match(".*iterations\: (\d+).*img_list\: (\S+).*board\: (\S+).*", header)
-        if py_faster_m:
-            self.__iterations = py_faster_m.group(1)
-            self.__imgListPath = py_faster_m.group(2)
-            self.__board = py_faster_m.group(3)
-        self._size = self.__imgListPath
+        #HEADER iterations: 1000 img_list: /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt board: K40
+        m = re.match(".*iterations\: (\d+).*img_list\: (\S+).*board\: (\S+).*", header)
+        if m:
+            self.__iterations = m.group(1)
+            self.__imgListPath = m.group(2)
+            self.__board = m.group(3)
+
+        self._size = 'py_faster_' + os.path.basename(self.__imgListPath) + '_' + str(self.__board)
 
 
 

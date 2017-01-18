@@ -154,9 +154,6 @@ class DarknetParser(ObjectDetectionParser):
         if len(errList) <= 0:
             return
 
-        if 'k40' not in self._machine:
-            return
-
         if self._abftType == 'dumb_abft' and 'abft' not in self.__goldFileName:
             print "\n\n" , self.__goldFileName
         goldKey = self._machine + "_" + self._benchmark + "_" + self.__goldFileName
