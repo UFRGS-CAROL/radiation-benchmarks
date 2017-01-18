@@ -1,12 +1,29 @@
 from Parser import Parser
 import csv
 import copy
-import os
+
 #build image
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from PIL import Image
 import numpy as np
+
+
+
+class ImageRaw():
+    w = 0
+    h = 0
+    file = ""
+    def __init__(self, file):
+        self.w, self.h = self.getImageSize(file)
+        self.file = file
+
+
+    def getImageSize(self, imgPath):
+        # print imgPath
+        with Image.open(imgPath) as im:
+            width, height = im.size
+        return width, height
 
 class ObjectDetectionParser(Parser):
 

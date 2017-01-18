@@ -5,7 +5,7 @@ import sys
 from SupportClasses import Rectangle
 import os
 import re
-from PIL import Image
+# from PIL import Image
 
 
 from ObjectDetectionParser import ObjectDetectionParser
@@ -25,25 +25,8 @@ GOLD_BASE_DIR = {
     'carolx1c': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1c',
      # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 }
-LOCAL_RADIATION_BENCH =  '/home/fernando/git_pesquisa' #'/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
 
-# DATASETS = {
-#     # normal
-#     'gold.caltech.critical.1K.test': {
-#         'caltech.pedestrians.critical.1K.txt': {
-#             'gold': None, 'txt': None, 'obj': None}},
-#     'gold.caltech.1K.test': {
-#         'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-#     # abft
-#     'gold.caltech.abft.1K.test': {
-#         'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-#     'gold.caltech.critical.abft.1K.test': {'caltech.pedestrians.critical.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-#
-#     'gold.voc.2012.1K.test': {
-#         'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-#     'gold.voc.2012.abft.1K.test': {
-#         'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-#      }
+LOCAL_RADIATION_BENCH =  '/home/fernando/git_pesquisa' #'/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
 
 DATASETS = {
     # normal
@@ -51,22 +34,6 @@ DATASETS = {
     'caltech.pedestrians.1K.txt':{'dumb_abft':'gold.caltech.abft.1K.test','no_abft':'gold.caltech.1K.test'},
     'voc.2012.1K.txt':{'dumb_abft':'gold.voc.2012.abft.1K.test', 'no_abft': 'gold.voc.2012.1K.test'}
 }
-
-
-class ImageRaw():
-    w = 0
-    h = 0
-    file = ""
-    def __init__(self, file):
-        self.w, self.h = self.getImageSize(file)
-        self.file = file
-
-
-    def getImageSize(self, imgPath):
-        # print imgPath
-        with Image.open(imgPath) as im:
-            width, height = im.size
-        return width, height
 
 
 class DarknetParser(ObjectDetectionParser):
@@ -183,7 +150,6 @@ class DarknetParser(ObjectDetectionParser):
                 ret[i][j] = prob[i][j]
         return ret
 
-
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return
@@ -212,7 +178,7 @@ class DarknetParser(ObjectDetectionParser):
 
         imgPos = int(self._sdcIteration) % len(listFile)
         imgFilename = self.__setLocalFile(listFile, imgPos)
-        imgObj = ImageRaw(imgFilename)
+        imgObj = ObjectDetectionParser.ImageRaw(imgFilename)
 
         goldPb = gold.getProbArray()[imgPos]
         goldRt = gold.getRectArray()[imgPos]
@@ -297,7 +263,7 @@ class DarknetParser(ObjectDetectionParser):
         #                           fValidClasses, fValidProbs, "found")
         # sys.exit()
 
-        precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(0.5)
+        precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(self._prThreshold)
         gValidSize = len(gValidRects)
         fValidSize = len(fValidRects)
 
