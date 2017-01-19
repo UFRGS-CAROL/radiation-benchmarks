@@ -240,20 +240,6 @@ class DarknetParser(ObjectDetectionParser):
         fValidRects, fValidProbs, fValidClasses = self.__printYoloDetections(foundRt, foundPb, gold.getTotalSize(),
                                                                              len(self._classes) - 1)
 
-        #############
-        # imgFilename = listFile[imgPos].rstrip()
-        # if len(gValidRects) > 1:
-        #     imgFilename = imgFilename.split("data", 1)[1]
-        #     imgFilename = "/home/carol/radiation-benchmarks/data" + imgFilename
-        #     if imgFilename not in self.test:
-        #         self.test.append(imgFilename)
-        #         os.system("echo \""  + str(self.test) + '\" > last_line.txt')
-        #     print gValidRects
-
-        # self.buildImageMethod(listFile[imgPos].rstrip(), fValidRects,
-        #                           fValidClasses, fValidProbs, "found")
-        # sys.exit()
-
         precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(self._prThreshold)
         gValidSize = len(gValidRects)
         fValidSize = len(fValidRects)
@@ -261,20 +247,6 @@ class DarknetParser(ObjectDetectionParser):
         precisionRecallObj.precisionAndRecallParallel(gValidRects, fValidRects)
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
-
-        # if self._logFileName == '2016_02_11_16_28_06_cudaDarknet_carolx1b.log':
-        #     print "\n", gValidRects
-        #     print "\n", fValidRects
-        #     # print goldPb[46][14] #0.591782
-        # print goldPb[31][14] #0.461120
-        # print goldPb[54][11] #0.579033
-        # print goldPb[95][11] #0.411528
-        # if 0< self._precision < 1.0 or 0< self._recall < 1.0:
-        #     print "\n", self._precision , self._recall
-        #     print self._logFileName
-        # print "\n", gValidRects
-        # print "\n", fValidRects
-        # sys.exit()
 
         # self.buildImageMethod(listFile[imgPos].rstrip(), gValidRects, fValidRects)
 

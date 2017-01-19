@@ -21,8 +21,16 @@ class ImageRaw():
 
     def getImageSize(self, imgPath):
         # print imgPath
-        with Image.open(imgPath) as im:
-            width, height = im.size
+        width = None
+        height = None
+        try:
+            with Image.open(imgPath) as im:
+                width, height = im.size
+        except:
+            print "\n", imgPath
+
+        if width == None and height == None:
+            print "\n", imgPath
         return width, height
 
 class ObjectDetectionParser(Parser):
@@ -78,10 +86,6 @@ class ObjectDetectionParser(Parser):
 
 
     def _writeToCSV(self, csvFileName):
-        # if not os.path.isfile(csvFileName) and self._abftType != 'no_abft' and self._abftType != None:
-        #     self._csvHeader.extend(
-        #         [])
-
         self._writeCSVHeader(csvFileName)
 
         try:

@@ -76,6 +76,7 @@ class _GoldContent():
     def getTotalSize(self): return self.__totalSize
     def getClasses(self): return self.__classes
     def getPlistSize(self): return self.__plistSize
+    def getPyFasterGold(self): return self.__pyFasterGold
 
     def getRectArray(self):
         return self.__prob_array['boxes']
