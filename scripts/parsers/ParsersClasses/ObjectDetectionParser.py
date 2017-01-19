@@ -37,6 +37,9 @@ class ObjectDetectionParser(Parser):
 
 
     _goldDatasetArray = dict()
+    _goldFileName = None
+    _imgListPath = None
+
     _classes = ['__background__',
                'aeroplane', 'bicycle', 'bird', 'boat',
                'bottle', 'bus', 'car', 'cat', 'chair',

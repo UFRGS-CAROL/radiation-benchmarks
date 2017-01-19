@@ -1,35 +1,36 @@
 import os
 import re
 
-from ObjectDetectionParser import  ObjectDetectionParser
+from ObjectDetectionParser import ObjectDetectionParser
+from ObjectDetectionParser import ImageRaw
 from SupportClasses import PrecisionAndRecall
 from SupportClasses import _GoldContent
+from SupportClasses import Rectangle
 
 GOLD_BASE_DIR = {
     'carol-k402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
     'carol-tx': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
-    #carolx1a
+    # carolx1a
     'carolx1a': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
-    #carolx1b
+    # carolx1b
     'carolx1b': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
-    #carolx1c
+    # carolx1c
     'carolx1c': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1c',
-     # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
+    # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 }
 
+LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa'  # '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
+
 DATASETS = {
-    'gold.caltech.critical.1K.test': {
-        'caltech.pedestrians.critical.1K.txt': {
-            'gold': None, 'txt': None, 'obj': None}},
-    'gold.caltech.1K.test': {
-        'caltech.pedestrians.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
-    'gold.voc.2012.1K.test': {
-       'voc.2012.1K.txt': {'gold': None, 'txt': None, 'obj': None}},
+    # normal
+    'caltech.pedestrians.critical.1K.txt': 'gold.caltech.critical.1K.test',
+    'caltech.pedestrians.1K.txt': 'gold.caltech.1K.test',
+    'voc.2012.1K.txt': 'gold.voc.2012.1K.test'
 }
+
 
 class FasterRcnnParser(ObjectDetectionParser):
     __iterations = None
-    __imgListPath = None
     __board = None
 
     # def __init__(self):
@@ -58,30 +59,26 @@ class FasterRcnnParser(ObjectDetectionParser):
         return self._benchmark
 
     # parse PyFaster
-    def parseErrMethod(self,errString):
+    def parseErrMethod(self, errString):
         ret = {}
         if 'box' in errString:
             dictBox = self._processBoxes(errString)
-            if len(dictBox) > 0:
+            if dictBox:
                 ret["boxes"] = dictBox
-                ret["type"] = "boxes"
         elif 'score' in errString:
             dictScore = self._processScores(errString)
-            if len(dictScore) > 0:
+            if dictScore:
                 ret["scores"] = dictScore
-                ret["type"] = "scores"
 
         return (ret if len(ret) > 0 else None)
 
-
     def _processScores(self, errString):
         ret = {}
-        #ERR img_name: /home/carol/radiation-benchmarks/data/VOC2012/2011_004360.jpg class: horse wrong_score_size: -17
-        #ERR img_name: /home/carol/radiation-benchmarks/data/VOC2012/2011_004360.jpg class: horse score: [0] e: 0.0158654786646 r: 0.00468954769894
+        # ERR img_name: /home/carol/radiation-benchmarks/data/VOC2012/2011_004360.jpg class: horse wrong_score_size: -17
+        # ERR img_name: /home/carol/radiation-benchmarks/data/VOC2012/2011_004360.jpg class: horse score: [0] e: 0.0158654786646 r: 0.00468954769894
         scoreErr = re.match(".*img_name\: (\S+).*"
-                                 "class\: (\S+).*wrong_score_size\: (\S+).*", errString)
+                            "class\: (\S+).*wrong_score_size\: (\S+).*", errString)
 
-        ret["wrong_score_size"] = -1
         if scoreErr:
             try:
                 ret["wrong_score_size"] = abs(int(scoreErr.group(3)))
@@ -90,11 +87,17 @@ class FasterRcnnParser(ObjectDetectionParser):
                 raise
 
         else:
-            scoreErr =  re.match(".*img_name\: (\S+).*"
-                                 "class\: (\S+).*score\: \[(\d+)\].*e\: (\S+).*r\: (\S+).*", errString)
+            scoreErr = re.match(".*img_name\: (\S+).*"
+                                "class\: (\S+).*score\: \[(\d+)\].*e\: (\S+).*r\: (\S+).*", errString)
 
             try:
                 ret["score_pos"] = int(scoreErr.group(3))
+            except:
+                print "\nerror on parsing score pos"
+                raise
+
+            try:
+                ret["score_e"] = float(scoreErr.group(4))
             except:
                 print "\nerror on parsing score pos"
                 raise
@@ -113,7 +116,7 @@ class FasterRcnnParser(ObjectDetectionParser):
                 print "\nerror on parsing img_path and class"
                 raise
 
-        return ret
+        return (ret if len(ret) > 0 else None)
 
     def _processBoxes(self, errString):
         ##ERR img_name: /home/carol/radiation-benchmarks/data/CALTECH/set10/V000/193.jpg
@@ -124,68 +127,89 @@ class FasterRcnnParser(ObjectDetectionParser):
         # x2_e: 610.136474609 x2_r: 610.124450684
         # y2_e: 326.088867188 y2_r: 326.093597412
         ret = {}
-        if 'wrong' in errString:
+        imageErr = re.match(".*img_name\: (\S+).*"
+                            "class\: (\S+).*box\: \[(\d+)\].*"
+                            "x1_e\: (\S+).*x1_r\: (\S+).*"
+                            "y1_e\: (\S+).*y1_r\: (\S+).*"
+                            "x2_e\: (\S+).*x2_r\: (\S+).*"
+                            "y2_e\: (\S+).*y2_r\: (\S+).*", errString)
+        if imageErr:
+            ret["image_path"] = imageErr.group(1)
+            ret["class"] = imageErr.group(2)
+            ret["box"] = imageErr.group(3)
 
-            imageErr = re.match(".*img_name\: (\S+).*"
-                                 "class\: (\S+).*box\: \[(\d+)\].*"
-                                 "x1_r\: (\S+).*"
-                                 "y1_r\: (\S+).*"
-                                 "x2_r\: (\S+).*"
-                                 "y2_r\: (\S+).*", errString)
-            if imageErr:
-                ret["image_path"] = imageErr.group(1)
-                ret["class"] = imageErr.group(2)
-                ret["box"] = imageErr.group(3)
+            # x1
+            ret["x1_e"] = imageErr.group(4)
+            try:
+                long(float(ret["x1_e"]))
+            except:
+                ret["x1_e"] = 1e30
 
-                #x1
-                ret["x1"] = imageErr.group(4)
-                try:
-                    long(float(ret["x1"]))
-                except:
-                    ret["x1"] = 1e30
-                ###########
+            ret["x1_r"] = imageErr.group(5)
+            try:
+                long(float(ret["x1_r"]))
+            except:
+                ret["x1_r"] = 1e30
+            ###########
 
-                #y1
-                ret["y1"] = imageErr.group(5)
-                try:
-                    long(float(ret["y1"]))
-                except:
-                    ret["y1"] = 1e30
-                ###########
+            # y1
+            ret["y1_e"] = imageErr.group(6)
+            try:
+                long(float(ret["y1_e"]))
+            except:
+                ret["y1_e"] = 1e30
 
-                #x2
-                ret["x2"] = imageErr.group(6)
-                try:
-                    long(float(ret["x2"]))
-                except:
-                    ret["x2"] = 1e30
-                ############
+            ret["y1_r"] = imageErr.group(7)
+            try:
+                long(float(ret["y1_r"]))
+            except:
+                ret["y1_r"] = 1e30
+            ###########
 
-                #y2
-                ret["y2"] = imageErr.group(7)
-                try:
-                    long(float(ret["y2"]))
-                except:
-                    ret["y2"] = 1e30
+            # x2
+            ret["x2_e"] = imageErr.group(8)
+            try:
+                long(float(ret["x2_e"]))
+            except:
+                ret["x2_e"] = 1e30
 
-            return ret
+            ret["x2_r"] = imageErr.group(9)
+            try:
+                long(float(ret["x2_r"]))
+            except:
+                ret["x2_r"] = 1e30
+            ############
+
+            # y2
+            ret["y2_e"] = imageErr.group(10)
+            try:
+                long(float(ret["y2_e"]))
+            except:
+                ret["y2_e"] = 1e30
+
+            ret["y2_r"] = imageErr.group(11)
+            try:
+                long(float(ret["y2_r"]))
+            except:
+                ret["y2_r"] = 1e30
+
+        return (ret if len(ret) > 0 else None)
 
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return
 
-
-        goldKey = self._machine + "_" + self._benchmark + "_" + self.__goldFileName
+        goldKey = self._machine + "_" + self._benchmark + "_" + self._goldFileName
 
         if self._machine in GOLD_BASE_DIR:
-            goldPath = GOLD_BASE_DIR[self._machine] + "/darknet/" + self.__goldFileName
-            txtPath = GOLD_BASE_DIR[self._machine] + '/networks_img_list/' + os.path.basename(self.__imgListPath)
+            goldPath = GOLD_BASE_DIR[self._machine] + "/py_faster_rcnn/" + self._goldFileName
+            txtPath = GOLD_BASE_DIR[self._machine] + '/networks_img_list/' + os.path.basename(self._imgListPath)
         else:
             print self._machine
             return
 
         if goldKey not in self._goldDatasetArray:
-            g = _GoldContent._GoldContent(nn='darknet', filepath=goldPath)
+            g = _GoldContent._GoldContent(nn='pyfaster', filepath=goldPath)
             self._goldDatasetArray[goldKey] = g
 
         gold = self._goldDatasetArray[goldKey]
@@ -194,17 +218,23 @@ class FasterRcnnParser(ObjectDetectionParser):
 
         imgPos = int(self._sdcIteration) % len(listFile)
         imgFilename = self.__setLocalFile(listFile, imgPos)
-        imgObj = ObjectDetectionParser.ImageRaw(imgFilename)
+        imgObj = ImageRaw(imgFilename)
 
+        # to get from gold
+        imgFilenameRaw = listFile[imgPos].rstrip()
+        goldImg = gold[imgFilenameRaw]
 
+        gRects, gProbs = self.__generatePyFasterDetection(goldImg)
 
+        gValidRects = []
+        fValidRects = []
+
+        fProbs = []
         self._wrongElements = 0
         for y in errList:
             print y
 
-
-
-
+        self._abftType = self._rowDetErrors = self._colDetErrors = 'pyfaster'
         precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(self._prThreshold)
         gValidSize = len(gValidRects)
         fValidSize = len(fValidRects)
@@ -212,43 +242,57 @@ class FasterRcnnParser(ObjectDetectionParser):
         precisionRecallObj.precisionAndRecallParallel(gValidRects, fValidRects)
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
-
-        # if self._logFileName == '2016_02_11_16_28_06_cudaDarknet_carolx1b.log':
-        #     print "\n", gValidRects
-        #     print "\n", fValidRects
-        #     # print goldPb[46][14] #0.591782
-            # print goldPb[31][14] #0.461120
-            # print goldPb[54][11] #0.579033
-            # print goldPb[95][11] #0.411528
-        # if 0< self._precision < 1.0 or 0< self._recall < 1.0:
-        #     print "\n", self._precision , self._recall
-        #     print self._logFileName
-            # print "\n", gValidRects
-            # print "\n", fValidRects
-            #sys.exit()
-
-        # self.buildImageMethod(listFile[imgPos].rstrip(), gValidRects, fValidRects)
-
         self._falseNegative = precisionRecallObj.getFalseNegative()
         self._falsePositive = precisionRecallObj.getFalsePositive()
         self._truePositive = precisionRecallObj.getTruePositive()
         # set all
         self._goldLines = gValidSize
         self._detectedLines = fValidSize
-        self._xCenterOfMass, self._yCenterOfMass = precisionRecallObj.centerOfMassGoldVsFound(gValidRects, fValidRects, imgObj.w, imgObj.h)
+
+        self._xCenterOfMass, self._yCenterOfMass = precisionRecallObj.centerOfMassGoldVsFound(gValidRects, fValidRects,
+                                                                                              imgObj.w, imgObj.h)
 
 
+    #like printYoloDetection
+    def __generatePyFasterDetection(self, detection):
+        rects = []
+        probs = []
+        for keyDet, valueDet in detection.iteritems():
+            scores = valueDet['scores']
+            box  = valueDet['boxes']
+            for pb, bbox in zip(scores, box):
+                probs.append(float(pb))
+                rect = Rectangle.Rectangle(bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1])
+                rects.append(rect)
+
+        return rects, probs
 
     def setSize(self, header):
         # pyfaster
-        #HEADER iterations: 1000 img_list: /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt board: K40
+        # HEADER iterations: 1000 img_list: /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt board: K40
         m = re.match(".*iterations\: (\d+).*img_list\: (\S+).*board\: (\S+).*", header)
         if m:
             self.__iterations = m.group(1)
-            self.__imgListPath = m.group(2)
+            self._imgListPath = m.group(2)
             self.__board = m.group(3)
 
-        self._size = 'py_faster_' + os.path.basename(self.__imgListPath) + '_' + str(self.__board)
+            self._goldFileName = self.getGoldFileName(self._imgListPath)
 
+        self._size = 'py_faster_' + os.path.basename(self._imgListPath) + '_' + str(self.__board)
 
+    def getGoldFileName(self, imgListPath):
+        imgListPath = os.path.basename(imgListPath)
+        # for k, v in DATASETS.iteritems():
+        #     for kI, vI in v.iteritems():
+        #         if imgListPath == kI:
+        #             k = os.path.basename(k)
+        #             if self._abftType == 'dumb_abft' and 'abft' in k:
+        #                 return k
+        #             elif self._abftType == 'no_abft' and 'abft' not in k:
+        #                 return k
+        return DATASETS[imgListPath]
 
+    def __setLocalFile(self, listFile, imgPos):
+        tmp = (listFile[imgPos].rstrip()).split('radiation-benchmarks')[1]
+        tmp = LOCAL_RADIATION_BENCH + '/radiation-benchmarks' + tmp
+        return tmp
