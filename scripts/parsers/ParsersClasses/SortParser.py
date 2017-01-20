@@ -8,6 +8,7 @@ class SortParser(Parser):
     _errCorrupted = None
     _errLink = None
     _errSync = None
+	_errDetected = None
     _itOOO = None
     _itCorrupted = None
     _itSync = None
@@ -19,12 +20,13 @@ class SortParser(Parser):
     _itLinkSync = None
     _itLinkCorr = None
     _itMultiple = None
+	_itDetected = None
     _balanceMismatches = None
 
     _csvHeader = ['Timestamp','Machine','Benchmark','Header','SDC','LOGGED_ERRORS','ACC_ERR',
-                  'ACC_TIME','ERR_OUTOFORDER','ERR_CORRUPTED','ERR_LINK','ERR_SYNC',
+                  'ACC_TIME','ERR_OUTOFORDER','ERR_CORRUPTED','ERR_LINK','ERR_SYNC','DETECTED',
                   'IT_OOO','IT_CORRUPTED','IT_LINK','IT_SYNC','IT_OOO_CORR','IT_SYNC_CORR',
-                  'IT_SYNC_OOO','IT_LINK_OOO','IT_LINK_CORR','IT_LINK_SYNC','IT_MULTIPLE',
+                  'IT_SYNC_OOO','IT_LINK_OOO','IT_LINK_CORR','IT_LINK_SYNC','IT_MULTIPLE','IT_DETECTED',
                   'BALANCE_MISMATCHES','logFileName']
 
 
@@ -48,11 +50,11 @@ class SortParser(Parser):
 
             csvWFP = open(csvFileName, "a")
             writer = csv.writer(csvWFP, delimiter=';')
-            # ['Timestamp', 'Machine', 'Benchmark', 'Header', 'SDC', 'LOGGED_ERRORS', 'ACC_ERR',
-            #  'ACC_TIME', 'ERR_OUTOFORDER', 'ERR_CORRUPTED', 'ERR_LINK', 'ERR_SYNC',
-            #  'IT_OOO', 'IT_CORRUPTED', 'IT_LINK', 'IT_SYNC', 'IT_OOO_CORR', 'IT_SYNC_CORR',
-            #  'IT_SYNC_OOO', 'IT_LINK_OOO', 'IT_LINK_CORR', 'IT_LINK_SYNC', 'IT_MULTIPLE',
-            #  'BALANCE_MISMATCHES', 'logFileName']
+            # ['Timestamp','Machine','Benchmark','Header','SDC','LOGGED_ERRORS','ACC_ERR',
+            #  'ACC_TIME','ERR_OUTOFORDER','ERR_CORRUPTED','ERR_LINK','ERR_SYNC','DETECTED',
+            #  'IT_OOO','IT_CORRUPTED','IT_LINK','IT_SYNC','IT_OOO_CORR','IT_SYNC_CORR',
+            #  'IT_SYNC_OOO','IT_LINK_OOO','IT_LINK_CORR','IT_LINK_SYNC','IT_MULTIPLE','IT_DETECTED',
+            #  'BALANCE_MISMATCHES','logFileName']
             #arrumar para ficar as variaveis igual a ordem do do header
             outputList = [self._timestamp,
                           self._machine,
@@ -60,12 +62,12 @@ class SortParser(Parser):
                           self._header,
                           self._sdcIteration,
                           self._iteErrors,
-                          self._iteErrors,
                           self._accIteErrors,
                           self._errOutOfOrder,
                           self._errCorrupted,
                           self._errLink,
                           self._errSync,
+						  self._errDetected,
                           self._itOOO,
                           self._itCorrupted,
                           self._itLink,
@@ -76,6 +78,7 @@ class SortParser(Parser):
                           self._itLinkCorr,
                           self._itLinkSync,
                           self._itMultiple,
+						  self._itDetected,
                           self._balanceMismatches,
                           self._logFileName,
                     ]
