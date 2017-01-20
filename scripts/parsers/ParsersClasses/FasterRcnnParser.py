@@ -22,7 +22,7 @@ GOLD_BASE_DIR = {
     # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 }
 
-LOCAL_RADIATION_BENCH ='/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa' # '/home/fernando/git_pesquisa'
+LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa' #'/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
 
 DATASETS = {
     # normal
@@ -227,7 +227,7 @@ class FasterRcnnParser(ObjectDetectionParser):
         imgObj = ImageRaw(imgFilename)
 
         # to get from gold
-        imgFilenameRaw = imgPos.rstrip()
+        imgFilenameRaw = imgPos.rstrip() if 'radiation-benchmarks' in imgPos else '/home/carol/radiation-benchmarks/data/' + imgPos.rstrip()
         goldImg = gold[imgFilenameRaw]
         # print goldImg
         foundImg = self.__copyGoldImg(goldImg)
@@ -286,10 +286,10 @@ class FasterRcnnParser(ObjectDetectionParser):
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
 
-        if len(gValidRects) != 0 and (self._precision != 1.0 or self._precision != 1.0):
-            self.buildImageMethod(imgFilename.rstrip(), gValidRects, fValidRects)
-            print self._precision, self._recall
-            print imgFilenameRaw,self._logFileName
+        # if len(gValidRects) != 0 and (self._precision != 1.0 or self._precision != 1.0):
+        #     self.buildImageMethod(imgFilename.rstrip(), gValidRects, fValidRects)
+        #     print self._precision, self._recall
+        #     print imgFilenameRaw,self._logFileName
         self._falseNegative = precisionRecallObj.getFalseNegative()
         self._falsePositive = precisionRecallObj.getFalsePositive()
         self._truePositive = precisionRecallObj.getTruePositive()
@@ -366,9 +366,12 @@ class FasterRcnnParser(ObjectDetectionParser):
 
     def __setLocalFile(self, imgPath):
         tmp = ''
-        if '/home/carol/radiation-benchmarks/' in imgPath:
-            splited = (imgPath.rstrip()).split('radiation-benchmarks')
-            tmp = splited[1]
-            tmp = LOCAL_RADIATION_BENCH + '/radiation-benchmarks' + tmp
+        if 'radiation-benchmarks' in imgPath:
+            splited = (imgPath.rstrip()).split('radiation-benchmarks/')[1]
+        else:
+            splited = 'data/' + imgPath
+
+        tmp = LOCAL_RADIATION_BENCH + '/radiation-benchmarks/' + splited
+
         tmp.replace('//', '/')
         return tmp
