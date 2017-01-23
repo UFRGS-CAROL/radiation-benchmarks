@@ -109,7 +109,7 @@ class HogParser(ObjectDetectionParser):
                       
         # o fValidRects voce tira do errList
         fValidRects = []
-        print "\n"
+       # print "\n"
         # primeiro default depois altera
         self._rowDetErrors = self._colDetErrors = 'MISSED'
         self._wrongElements = 0
@@ -118,11 +118,11 @@ class HogParser(ObjectDetectionParser):
             if 'image_set_name' in i:
                 img_set = i['image_set_name']
                 current_img = img_set['set']
-                print i['image_set_name']
+                #print i['image_set_name']
             elif 'hardening_result' in i:
                 self._rowDetErrors = self._colDetErrors = i['hardening_result']
-            elif 'err_info' in i:
-                print i['err_info']
+        #    elif 'err_info' in i:
+              # print i['err_info']
 
             elif 'rect_cord' in i:
                 rect = i['rect_cord']
@@ -148,10 +148,10 @@ class HogParser(ObjectDetectionParser):
                 bottom = attributes[3]
                 rect = Rectangle.Rectangle(int(left), int(bottom), int(width), int(height))
                 gValidRects.append(rect)
-        print gValidRects
+        #print gValidRects
 
         self._abftType = 'hog_' + self._type
-        print fValidRects
+        #print fValidRects
         precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(self._prThreshold)
         gValidSize = len(gValidRects)
         fValidSize = len(fValidRects)
@@ -160,10 +160,10 @@ class HogParser(ObjectDetectionParser):
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
 
-        print self._precision, self._recall
+       # print self._precision, self._recall
 
-        imgFilename = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa/radiation-benchmarks/' + str(imgFilename.split('radiation-benchmarks/')[1]).rstrip()
-        self.buildImageMethod(imgFilename, gValidRects, fValidRects)
+        # imgFilename = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa/radiation-benchmarks/' + str(imgFilename.split('radiation-benchmarks/')[1]).rstrip()
+        # self.buildImageMethod(imgFilename, gValidRects, fValidRects)
         self._falseNegative = precisionRecallObj.getFalseNegative()
         self._falsePositive = precisionRecallObj.getFalsePositive()
         self._truePositive = precisionRecallObj.getTruePositive()
