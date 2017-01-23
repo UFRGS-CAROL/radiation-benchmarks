@@ -5,8 +5,8 @@ from ObjectDetectionParser import ObjectDetectionParser
 from ObjectDetectionParser import ImageRaw
 import re
 
-LOCAL_GOLD_FOLDER = "/home/aluno/parser_hog/gold/"
-LOCAL_TXT_FOLDER = "/home/aluno/radiation-benchmarks/data/networks_img_list/"
+LOCAL_GOLD_FOLDER = "/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40/histogram_ori_gradients/" #"/home/aluno/parser_hog/gold/"
+LOCAL_TXT_FOLDER = "/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40/networks_img_list/"#"/home/aluno/radiation-benchmarks/data/networks_img_list/"
 PARAMETERS = "0,1.05,1,1,48,0.9,100"
 
 class HogParser(ObjectDetectionParser):
@@ -89,7 +89,7 @@ class HogParser(ObjectDetectionParser):
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return
-        images_txt = LOCAL_TXT_FOLDER + "caltech.pedestrians.critical.1K.txt"
+        images_txt = LOCAL_TXT_FOLDER + os.path.basename(self._imgListPath) # "caltech.pedestrians.critical.1K.txt"
 
         # o imgFilename tem que ter onde esta a imagem que esta sendo processada
         # para saber qual imagem abrir na darknet eu pegava pelo sdcIteration, que ja e um atributo da classe ObjectDetection
@@ -98,7 +98,7 @@ class HogParser(ObjectDetectionParser):
 
         imgPos = int(self._sdcIteration) % len(images_txt)
         listFile = open(images_txt).readlines()
-        #imgFilename = listFile[imgPos]
+        imgFilename = listFile[imgPos]
 
 
         # imgObj = ImageRaw(imgFilename)
@@ -162,7 +162,8 @@ class HogParser(ObjectDetectionParser):
 
         print self._precision, self._recall
 
-        # self.buildImageMethod(listFile[imgPos].rstrip(), gValidRects, fValidRects)
+        imgFilename = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa/radiation-benchmarks/' + str(imgFilename.split('radiation-benchmarks/')[1]).rstrip()
+        self.buildImageMethod(imgFilename, gValidRects, fValidRects)
         self._falseNegative = precisionRecallObj.getFalseNegative()
         self._falsePositive = precisionRecallObj.getFalsePositive()
         self._truePositive = precisionRecallObj.getTruePositive()
@@ -170,8 +171,12 @@ class HogParser(ObjectDetectionParser):
         self._goldLines = gValidSize
         self._detectedLines = fValidSize
         [self._xCenterOfMass, self._yCenterOfMass] = 0, 0
+
+
         # self._xCenterOfMass, self._yCenterOfMass = precisionRecallObj.centerOfMassGoldVsFound(gValidRects, fValidRects,
         #                                                                                       imgObj.w, imgObj.h)
+
+
     # HEADER type: ecc_off dataset: /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.critical.1K.txt
     def setSize(self, header):
         self._size = None

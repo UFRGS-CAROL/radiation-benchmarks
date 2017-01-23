@@ -22,7 +22,7 @@ GOLD_BASE_DIR = {
     # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 }
 
-LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa' #'/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
+LOCAL_RADIATION_BENCH = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa' #'/home/fernando/git_pesquisa' #
 
 DATASETS = {
     # normal
@@ -35,7 +35,7 @@ DATASETS = {
 class FasterRcnnParser(ObjectDetectionParser):
     __iterations = None
     __board = None
-    _detectionThreshold = 0.8
+    _detectionThreshold = 0.3
     # def __init__(self):
     #     start_time = time.time()
     #     ObjectDetectionParser.__init__(self)
@@ -283,13 +283,18 @@ class FasterRcnnParser(ObjectDetectionParser):
         fValidSize = len(fValidRects)
 
         precisionRecallObj.precisionAndRecallParallel(gValidRects, fValidRects)
-        self._precision = precisionRecallObj.getPrecision()
-        self._recall = precisionRecallObj.getRecall()
+        if len(gValidRects) == 0 and len(fValidRects) == 0:
+            self._precision = 1
+            self._recall = 1
+            print "\n", self._machine
+        else:
+            self._precision = precisionRecallObj.getPrecision()
+            self._recall = precisionRecallObj.getRecall()
 
-        # if len(gValidRects) != 0 and (self._precision != 1.0 or self._precision != 1.0):
-        #     self.buildImageMethod(imgFilename.rstrip(), gValidRects, fValidRects)
-        #     print self._precision, self._recall
-        #     print imgFilenameRaw,self._logFileName
+        if self._precision != 1.0 or self._precision != 1.0 or self._logFileName == '2016_12_14_14_45_32_PyFasterRcnn_carol-k402.log':
+            self.buildImageMethod(imgFilename.rstrip(), gValidRects, fValidRects)
+            print self._precision, self._recall
+            print imgFilenameRaw,self._logFileName
         self._falseNegative = precisionRecallObj.getFalseNegative()
         self._falsePositive = precisionRecallObj.getFalsePositive()
         self._truePositive = precisionRecallObj.getTruePositive()

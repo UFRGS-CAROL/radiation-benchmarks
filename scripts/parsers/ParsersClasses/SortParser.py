@@ -8,7 +8,7 @@ class SortParser(Parser):
     _errCorrupted = None
     _errLink = None
     _errSync = None
-	_errDetected = None
+    _errDetected = None
     _itOOO = None
     _itCorrupted = None
     _itSync = None
@@ -20,7 +20,7 @@ class SortParser(Parser):
     _itLinkSync = None
     _itLinkCorr = None
     _itMultiple = None
-	_itDetected = None
+    _itDetected = None
     _balanceMismatches = None
 
     _csvHeader = ['Timestamp','Machine','Benchmark','Header','SDC','LOGGED_ERRORS','ACC_ERR',
