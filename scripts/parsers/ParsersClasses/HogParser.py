@@ -5,6 +5,9 @@ from ObjectDetectionParser import ObjectDetectionParser
 from ObjectDetectionParser import ImageRaw
 import re
 
+LOCAL_GOLD_FOLDER = "/home/aluno/parser_hog/gold/"
+LOCAL_TXT_FOLDER = "/home/aluno/radiation-benchmarks/data/networks_img_list/"
+PARAMETERS = "0,1.05,1,1,48,0.9,100"
 
 class HogParser(ObjectDetectionParser):
     _imgListPath = None
@@ -86,15 +89,24 @@ class HogParser(ObjectDetectionParser):
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return
+        images_txt = LOCAL_TXT_FOLDER + "caltech.pedestrians.critical.1K.txt"
+
         # o imgFilename tem que ter onde esta a imagem que esta sendo processada
         # para saber qual imagem abrir na darknet eu pegava pelo sdcIteration, que ja e um atributo da classe ObjectDetection
         # imgPos = int(self._sdcIteration) % len(txt das imagens)
         # imgFilename =  listComTxtDasImagens[imgPos]
 
+        imgPos = int(self._sdcIteration) % len(images_txt)
+        listFile = open(images_txt).readlines()
+        #imgFilename = listFile[imgPos]
+
+
         # imgObj = ImageRaw(imgFilename)
         # tem que abrir o gold da imagem que voce esta fazendo e colocar no gValidRects ou outra variavel
-        gValidRects = []
 
+        #imgObj = ImageRaw(imgFilename)
+
+                      
         # o fValidRects voce tira do errList
         fValidRects = []
         print "\n"
@@ -104,6 +116,8 @@ class HogParser(ObjectDetectionParser):
         for i in errList:
             self._wrongElements += 1
             if 'image_set_name' in i:
+                img_set = i['image_set_name']
+                current_img = img_set['set']
                 print i['image_set_name']
             elif 'hardening_result' in i:
                 self._rowDetErrors = self._colDetErrors = i['hardening_result']
@@ -120,6 +134,22 @@ class HogParser(ObjectDetectionParser):
                 wr = int(rect["r_width"])
                 fValidRects.append(Rectangle.Rectangle(lr, br, wr, hr))
 
+        goldFilename = LOCAL_GOLD_FOLDER + current_img + ".data"
+        gold_rectangles = open(goldFilename).readlines()
+        
+        gValidRects = []
+        for rectangle in gold_rectangles:
+            rectangle_stripped = rectangle.rstrip()
+            if rectangle_stripped != PARAMETERS:
+                attributes = rectangle_stripped.split(',')
+                width = attributes[1]
+                height = attributes[0]
+                left = attributes[2]
+                bottom = attributes[3]
+                rect = Rectangle.Rectangle(int(left), int(bottom), int(width), int(height))
+                gValidRects.append(rect)
+        print gValidRects
+
         self._abftType = 'hog_' + self._type
         print fValidRects
         precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(self._prThreshold)
@@ -129,6 +159,8 @@ class HogParser(ObjectDetectionParser):
         precisionRecallObj.precisionAndRecallParallel(gValidRects, fValidRects)
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
+
+        print self._precision, self._recall
 
         # self.buildImageMethod(listFile[imgPos].rstrip(), gValidRects, fValidRects)
         self._falseNegative = precisionRecallObj.getFalseNegative()
@@ -140,7 +172,6 @@ class HogParser(ObjectDetectionParser):
         [self._xCenterOfMass, self._yCenterOfMass] = 0, 0
         # self._xCenterOfMass, self._yCenterOfMass = precisionRecallObj.centerOfMassGoldVsFound(gValidRects, fValidRects,
         #                                                                                       imgObj.w, imgObj.h)
-
     # HEADER type: ecc_off dataset: /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.critical.1K.txt
     def setSize(self, header):
         self._size = None
