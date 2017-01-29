@@ -71,20 +71,18 @@ def parse_args():
     """Parse input arguments."""
 
     parser = argparse.ArgumentParser(description='Parser to select good runs with good crossections')
-    # parser.add_argument('--gold', dest='gold_dir', help='Directory where gold is located',
-    #                     default=GOLD_DIR, type=str)
-    # parser.add_argument('--csv1', dest='csv1',
-    #                     help='Where first csv file is located')
-    # parser.add_argument('--del1', dest='del1',
-    #                     help='delimiter for csv 1', default=',')
-    #
-    # parser.add_argument('--csv2', dest='csv2',
-    #                     help='Where second csv file is located, it must be the file which have the start and end timestamp')
-    #
-    # parser.add_argument('--del2', dest='del2',
-    #                     help='delimiter for csv 2', default=',')
-    #
-    # parser.add_argument('--out', dest='output_file', help='Output file',default='no_out_def')
+    parser.add_argument('--csv1', dest='csv1',
+                        help='Where first csv file is located')
+    parser.add_argument('--del1', dest='del1',
+                        help='delimiter for csv 1', default=',')
+
+    parser.add_argument('--csv2', dest='csv2',
+                        help='Where second csv file is located, it must be the file which have the start and end timestamp')
+
+    parser.add_argument('--del2', dest='del2',
+                        help='delimiter for csv 2', default=',')
+
+    parser.add_argument('--out', dest='output_file', help='Output file',default='no_out_def')
     parser.add_argument('--dir', dest='dir', help='Output file', default='.')
 
     args = parser.parse_args()
@@ -107,48 +105,48 @@ CROSS_SECTION_FILES_TX = ['CROSSECTION_RESULTS/darknet_titan_abft.csv',
 
 if __name__ == '__main__':
     args = parse_args()
-    # csv1 = str(args.csv1)
-    # csv2 = str(args.csv2)
-    # del1 = str(args.del1)
-    # del2 = str(args.del2)
-    # outF = str(args.output_file)
-    # if outF == 'no_out_def':
-    #     outF = getFilename(csv1)
+    csv1 = str(args.csv1)
+    csv2 = str(args.csv2)
+    del1 = str(args.del1)
+    del2 = str(args.del2)
+    outF = str(args.output_file)
+    if outF == 'no_out_def':
+        outF = getFilename(csv1)
 
-    # joinFiles(csv1, del1, csv2, del2, outF)
-    for i in [args.dir + '/ecc_off', args.dir + '/ecc_on']:
-        for root, dirs, files in os.walk(i):
-            for file in files:
-                smallPath = os.path.join(root, file)
-                fullPath  = os.path.abspath(smallPath)
-
-                if '_ecc' in smallPath:
-                    continue
-                if '.csv' in smallPath and ('ecc_on' in root or 'ecc_off' in root and '_ecc' not in root):
-
-                    outPutFile = smallPath.split('logs_parsed')[0].replace('/', '_').replace('.', '_') + \
-                                 smallPath.split('logs_parsed')[1]
-
-                    outPutFile = os.path.abspath(root) + '/' + outPutFile
-
-                    if 'ecc_on' in smallPath and '_ecc' not in smallPath:
-                        if 'k40' in smallPath:
-                            joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_k40_ecc_on.csv', ',', outPutFile)
-
-                    elif 'ecc_off' in smallPath and '_ecc' not in smallPath:
-                        if 'k40' in smallPath:
-                            if 'abft' in smallPath:
-                                joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_k40_abft.csv', ',', outPutFile)
-                            else:
-                                joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_k40_ecc_off.csv', ',', outPutFile)
-
-                        elif 'x1' in smallPath:
-                            joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_x1.csv', ',', outPutFile)
-
-                        elif 'tx' in smallPath:
-                            if 'abft' in smallPath:
-                                joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_titan_abft.csv', ',', outPutFile)
-                            else:
-                                joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_titan.csv', ',', outPutFile)
-
-            print
+    joinFiles(csv1, del1, csv2, del2, outF)
+    # for i in [args.dir + '/ecc_off', args.dir + '/ecc_on']:
+    #     for root, dirs, files in os.walk(i):
+    #         for file in files:
+    #             smallPath = os.path.join(root, file)
+    #             fullPath  = os.path.abspath(smallPath)
+    #
+    #             if '_ecc' in smallPath:
+    #                 continue
+    #             if '.csv' in smallPath and ('ecc_on' in root or 'ecc_off' in root and '_ecc' not in root):
+    #
+    #                 outPutFile = smallPath.split('logs_parsed')[0].replace('/', '_').replace('.', '_') + \
+    #                              smallPath.split('logs_parsed')[1]
+    #
+    #                 outPutFile = os.path.abspath(root) + '/' + outPutFile
+    #
+    #                 if 'ecc_on' in smallPath and '_ecc' not in smallPath:
+    #                     if 'k40' in smallPath:
+    #                         joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_k40_ecc_on.csv', ',', outPutFile)
+    #
+    #                 elif 'ecc_off' in smallPath and '_ecc' not in smallPath:
+    #                     if 'k40' in smallPath:
+    #                         if 'abft' in smallPath:
+    #                             joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_k40_abft.csv', ',', outPutFile)
+    #                         else:
+    #                             joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_k40_ecc_off.csv', ',', outPutFile)
+    #
+    #                     elif 'x1' in smallPath:
+    #                         joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_x1.csv', ',', outPutFile)
+    #
+    #                     elif 'tx' in smallPath:
+    #                         if 'abft' in smallPath:
+    #                             joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_titan_abft.csv', ',', outPutFile)
+    #                         else:
+    #                             joinFiles(fullPath, ';', 'CROSSECTION_RESULTS/darknet_titan.csv', ',', outPutFile)
+    #
+    #         print

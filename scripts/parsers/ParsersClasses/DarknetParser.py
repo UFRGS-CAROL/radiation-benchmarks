@@ -10,6 +10,7 @@ import re
 
 from ObjectDetectionParser import ObjectDetectionParser
 from SupportClasses import _GoldContent
+from ObjectDetectionParser import ImageRaw
 from SupportClasses import PrecisionAndRecall
 
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
@@ -25,6 +26,8 @@ GOLD_BASE_DIR = {
     'carolx1c': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1c',
     # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 }
+
+IMG_OUTPUT_DIR  = '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/img_corrupted_output'
 
 LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa'  # '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
 
@@ -174,7 +177,7 @@ class DarknetParser(ObjectDetectionParser):
 
         imgPos = int(self._sdcIteration) % len(listFile)
         imgFilename = self.__setLocalFile(listFile, imgPos)
-        imgObj = ObjectDetectionParser.ImageRaw(imgFilename)
+        imgObj = ImageRaw(imgFilename)
 
         goldPb = gold.getProbArray()[imgPos]
         goldRt = gold.getRectArray()[imgPos]
@@ -248,7 +251,9 @@ class DarknetParser(ObjectDetectionParser):
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
 
-        # self.buildImageMethod(listFile[imgPos].rstrip(), gValidRects, fValidRects)
+        if IMG_OUTPUT_DIR and (self._precision != 1 or self._recall != 1):
+            self.buildImageMethod(imgFilename.rstrip(), gValidRects, fValidRects, str(self._sdcIteration)
+                                  + '_' + self._logFileName, IMG_OUTPUT_DIR)
 
         self._falseNegative = precisionRecallObj.getFalseNegative()
         self._falsePositive = precisionRecallObj.getFalsePositive()

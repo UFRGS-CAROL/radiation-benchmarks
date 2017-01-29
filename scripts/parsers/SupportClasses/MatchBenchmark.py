@@ -21,15 +21,15 @@ from ParsersClasses import QuicksortParser
 class MatchBenchmark():
     # all fucking benchmarks here
     __radiationBenchmarks = dict(
-        #darknet=DarknetParser.DarknetParser(),
+        darknet=DarknetParser.DarknetParser(),
         # hotspot=HotspotParser.HotspotParser(),
-        hog=HogParser.HogParser(),
+        #hog=HogParser.HogParser(),
         # lavamd=LavaMDParser.LavaMDParser(),
         # mergesort=MergesortParser.MergesortParser(),
         # nw=NWParser.NWParser(),
         # quicksort=QuicksortParser.QuicksortParser(),
         # accl=ACCLParser.ACCLParser(),
-        # pyfasterrcnn=FasterRcnnParser.FasterRcnnParser(),
+        #pyfasterrcnn=FasterRcnnParser.FasterRcnnParser(),
         # lulesh=LuleshParser.LuleshParser(),
         # lud=LudParser.LudParser(),
         # gemm=GemmParser.GemmParser()

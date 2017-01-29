@@ -143,20 +143,22 @@ class ObjectDetectionParser(Parser):
 
 
 
-    def buildImageMethod(self, imageFile, rectangles, rectanglesFound):
+    def buildImageMethod(self, imageFile, rectanglesGold, rectanglesFound, logFileName, dir):
         im = np.array(Image.open(imageFile), dtype=np.uint8)
 
         # Create figure and axes
         fig = plt.figure()
         axG = fig.add_subplot(221)
         axF = fig.add_subplot(222)
+        axG.set_axis_off()
+        axF.set_axis_off()
         # fig, ax = plt.subplots(1)
 
         # Display the image
         axG.imshow(im)
         axF.imshow(im)
         # Create a Rectangle patch
-        for rG in rectangles:
+        for rG in rectanglesGold:
             rect = patches.Rectangle((rG.left, rG.bottom), rG.width,
                                      rG.height, linewidth=1, edgecolor='r',
                                      facecolor='none')
@@ -167,11 +169,6 @@ class ObjectDetectionParser(Parser):
         axG.title.set_text("gold")
 
 
-            # ax.text(r.left, r.bottom - 2,
-            #         'class ' + str(c) + ' prob ' + str(p),
-            #         bbox=dict(facecolor='blue', alpha=0.5), fontsize=14,
-            #         color='white')
-
         for rF in rectanglesFound:
             rectF = patches.Rectangle((rF.left, rF.bottom), rF.width,
                                      rF.height, linewidth=1, edgecolor='r',
@@ -179,4 +176,7 @@ class ObjectDetectionParser(Parser):
             axF.add_patch(rectF)
         axF.title.set_text("found")
 
-        plt.show()
+        # plt.show()
+        saveName = logFileName.split('.')[0] + '.jpg'
+        plt.savefig(dir + '/' + saveName)
+        plt.cla()

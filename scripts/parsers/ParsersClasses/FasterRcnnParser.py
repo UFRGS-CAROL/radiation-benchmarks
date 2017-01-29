@@ -22,7 +22,9 @@ GOLD_BASE_DIR = {
     # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 }
 
-LOCAL_RADIATION_BENCH = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa' #'/home/fernando/git_pesquisa' #
+LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa' #'/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
+
+IMG_OUTPUT_DIR  = '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/img_corrupted_output'
 
 DATASETS = {
     # normal
@@ -286,15 +288,14 @@ class FasterRcnnParser(ObjectDetectionParser):
         if len(gValidRects) == 0 and len(fValidRects) == 0:
             self._precision = 1
             self._recall = 1
-            print "\n", self._machine
         else:
             self._precision = precisionRecallObj.getPrecision()
             self._recall = precisionRecallObj.getRecall()
 
-        if self._precision != 1.0 or self._precision != 1.0 or self._logFileName == '2016_12_14_14_45_32_PyFasterRcnn_carol-k402.log':
-            self.buildImageMethod(imgFilename.rstrip(), gValidRects, fValidRects)
-            print self._precision, self._recall
-            print imgFilenameRaw,self._logFileName
+        if IMG_OUTPUT_DIR and (self._precision != 1 or self._recall != 1):
+            self.buildImageMethod(imgFilename.rstrip(), gValidRects, fValidRects, str(self._sdcIteration)
+                                  + '_' + self._logFileName, IMG_OUTPUT_DIR)
+
         self._falseNegative = precisionRecallObj.getFalseNegative()
         self._falsePositive = precisionRecallObj.getFalsePositive()
         self._truePositive = precisionRecallObj.getTruePositive()
