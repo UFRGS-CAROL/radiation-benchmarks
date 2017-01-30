@@ -24,7 +24,8 @@ GOLD_BASE_DIR = {
     'carolx1b': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
     # carolx1c
     'carolx1c': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1c',
-    # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
+    #fault injection
+    'carolk402': '/home/fernando/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 }
 
 IMG_OUTPUT_DIR  = '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/img_corrupted_output'

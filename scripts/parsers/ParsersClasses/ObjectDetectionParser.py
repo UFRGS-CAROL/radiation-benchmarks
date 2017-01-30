@@ -160,7 +160,7 @@ class ObjectDetectionParser(Parser):
         # Create a Rectangle patch
         for rG in rectanglesGold:
             rect = patches.Rectangle((rG.left, rG.bottom), rG.width,
-                                     rG.height, linewidth=1, edgecolor='r',
+                                     rG.height, linewidth=1, edgecolor='g',
                                      facecolor='none')
 
             # Add the patch to the Axes
