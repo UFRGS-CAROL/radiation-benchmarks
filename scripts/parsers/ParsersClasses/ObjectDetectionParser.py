@@ -171,7 +171,7 @@ class ObjectDetectionParser(Parser):
 
         for rF in rectanglesFound:
             rectF = patches.Rectangle((rF.left, rF.bottom), rF.width,
-                                     rF.height, linewidth=1, edgecolor='r',
+                                     rF.height, linewidth=1, edgecolor='g',
                                      facecolor='none')
             axF.add_patch(rectF)
         axF.title.set_text("found")

@@ -29,7 +29,7 @@ class MatchBenchmark():
         # nw=NWParser.NWParser(),
         # quicksort=QuicksortParser.QuicksortParser(),
         # accl=ACCLParser.ACCLParser(),
-        #pyfasterrcnn=FasterRcnnParser.FasterRcnnParser(),
+        pyfasterrcnn=FasterRcnnParser.FasterRcnnParser(),
         # lulesh=LuleshParser.LuleshParser(),
         # lud=LudParser.LudParser(),
         # gemm=GemmParser.GemmParser()

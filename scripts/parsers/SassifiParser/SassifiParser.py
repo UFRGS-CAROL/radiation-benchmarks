@@ -321,7 +321,7 @@ def parse_args():
     parser.add_argument('--logs_dir', dest='logs_dir', help='Logs directory, which must have all logs described on csv_input',
                         default='logs_dir')
     parser.add_argument('--copy', dest='copy', help='Is necessary to copy logs to another folder', action='store_true')
-    parser.add_argument('--log_style', dest='log_style', help='Which log style is this csv caio, daniel or lucas')
+    parser.add_argument('--log_style', dest='log_style', help='Which log style is this csv caio = Logname, daniel = logFileName or lucas = _File_name')
 
     parser.add_argument('--to_join_csv', dest='to_join_csv', help='Other csv to join', default='none')
 
