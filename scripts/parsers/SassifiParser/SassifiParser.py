@@ -91,7 +91,8 @@ class SassifiParser:
         print "Parsing " + csv_input
         # separate the good data
         if cp != "":
-            os.system("mkdir -p ./" + cp + "_logs")
+            copyLogsFolder ="./" + str(cp) + "_logs"
+            os.system("mkdir -p " + copyLogsFolder)
         for i in range(0, INSTRUCTION_SIZE):
             sdc_inst_count.append(0)
             total_inst_count.append(0)
@@ -108,8 +109,8 @@ class SassifiParser:
         # inj_inst_id, inj_destination_id, inj_bit_location, finished
         for row in reader:
             # cp all good data to new folder
-            if cp:
-                os.system("cp " + logs_dir + "/" + row['log_file'] + " good_logs/")
+            if cp != "":
+                os.system("cp " + logs_dir + "/" + row['log_file'] + copyLogsFolder)
             it_inst_count = 8
 
             if 'inst' in self.inst_type:
