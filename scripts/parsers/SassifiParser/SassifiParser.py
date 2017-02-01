@@ -110,7 +110,7 @@ class SassifiParser:
         for row in reader:
             # cp all good data to new folder
             if cp != "":
-                os.system("cp " + logs_dir + "/" + row['log_file'] + copyLogsFolder)
+                os.system("cp " + logs_dir + "/" + row['log_file'] + " "+ copyLogsFolder)
             it_inst_count = 8
 
             if 'inst' in self.inst_type:
