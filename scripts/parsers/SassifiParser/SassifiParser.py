@@ -90,8 +90,8 @@ class SassifiParser:
         total_aborts = 0
         print "Parsing " + csv_input
         # separate the good data
-        if cp:
-            os.system("mkdir -p ./good_logs")
+        if cp != "":
+            os.system("mkdir -p ./" + cp + "_logs")
         for i in range(0, INSTRUCTION_SIZE):
             sdc_inst_count.append(0)
             total_inst_count.append(0)
@@ -320,7 +320,7 @@ def parse_args():
 
     parser.add_argument('--logs_dir', dest='logs_dir', help='Logs directory, which must have all logs described on csv_input',
                         default='logs_dir')
-    parser.add_argument('--copy', dest='copy', help='Is necessary to copy logs to another folder', action='store_true')
+    parser.add_argument('--copy', dest='copy', help='Is necessary to copy logs to another folder, if yes, pass the output directory', default="")
     parser.add_argument('--log_style', dest='log_style', help='Which log style is this csv caio = Logname, daniel = logFileName or lucas = _File_name')
 
     parser.add_argument('--to_join_csv', dest='to_join_csv', help='Other csv to join', default='none')
