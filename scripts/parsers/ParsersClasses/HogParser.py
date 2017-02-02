@@ -63,7 +63,7 @@ class HogParser(ObjectDetectionParser):
 
     def _parseRectError(self, errString):
         ret = {}
-        error = re.match(".*(\S+),(\S+),(\S+),(\S+),(\S+),(\S+).*", errString)
+        error = re.match(".*ERR (\d+),(\d+),(\d+),(\d+),(\d+),(\d+).*", errString)
         if error:
             # r.height, r.width, r.x,	r.y, r.br().x, r.br().y
             ret["r_height"] = error.group(1)
@@ -89,16 +89,16 @@ class HogParser(ObjectDetectionParser):
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:
             return
-        images_txt = LOCAL_TXT_FOLDER + os.path.basename(self._imgListPath) # "caltech.pedestrians.critical.1K.txt"
+        # images_txt = LOCAL_TXT_FOLDER + os.path.basename(self._imgListPath) # "caltech.pedestrians.critical.1K.txt"
 
         # o imgFilename tem que ter onde esta a imagem que esta sendo processada
         # para saber qual imagem abrir na darknet eu pegava pelo sdcIteration, que ja e um atributo da classe ObjectDetection
         # imgPos = int(self._sdcIteration) % len(txt das imagens)
         # imgFilename =  listComTxtDasImagens[imgPos]
 
-        imgPos = int(self._sdcIteration) % len(images_txt)
-        listFile = open(images_txt).readlines()
-        imgFilename = listFile[imgPos]
+        # imgPos = int(self._sdcIteration) % len(images_txt)
+        # listFile = open(images_txt).readlines()
+        # imgFilename = listFile[imgPos]
 
 
         # imgObj = ImageRaw(imgFilename)
@@ -128,6 +128,7 @@ class HogParser(ObjectDetectionParser):
                 rect = i['rect_cord']
                 # found
                 #{'r_x': '91', 'r_y': '76', 'r_br_x': '181', 'r_br_y': '256', 'r_height': '0', 'r_width': '90'}
+                # print rect
                 lr = int(rect["r_x"])
                 br = int(rect["r_y"])
                 hr = int(rect["r_height"])
@@ -148,10 +149,14 @@ class HogParser(ObjectDetectionParser):
                 bottom = attributes[3]
                 rect = Rectangle.Rectangle(int(left), int(bottom), int(width), int(height))
                 gValidRects.append(rect)
-        #print gValidRects
+
+        # if "2017_01_26_17_36_13_cudaHOG_carolk402.log" in self._logFileName:
+        #     print "\n" , gValidRects
+        #     print "\n", fValidRects
+        #     os.exit()
 
         self._abftType = 'hog_' + self._type
-        #print fValidRects
+
         precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(self._prThreshold)
         gValidSize = len(gValidRects)
         fValidSize = len(fValidRects)
