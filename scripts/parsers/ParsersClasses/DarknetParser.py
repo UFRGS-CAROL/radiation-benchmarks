@@ -15,6 +15,7 @@ from SupportClasses import PrecisionAndRecall
 
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
 
+#these strings in GOLD_BASE_DIR must be the directory paths of the gold logs for each machine
 GOLD_BASE_DIR = {
     'carol-k402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
     'carol-tx': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
@@ -28,8 +29,10 @@ GOLD_BASE_DIR = {
     'carolk402': '/home/fernando/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 }
 
+#IMG_OUTPUT_DIR is the directory to where the images with error comparisons will be saved
 IMG_OUTPUT_DIR  = '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/img_corrupted_output'
 
+#LOCAL_RADIATION_BENCH must be the parent directory of the radiation-benchmarks folder
 LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa'  # '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
 
 DATASETS = {
