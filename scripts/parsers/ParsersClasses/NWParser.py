@@ -48,7 +48,7 @@ class NWParser(Parser):
                 self._max_rows = int(m.group(1))
                 self._max_cols = int(m.group(2))
                 self._penalty = None
-        self._size = str(self._max_cols) + str(self._max_rows)
+        self._size = "max_cols_" + str(self._max_cols) + "_max_rows_" + str(self._max_rows)
 
 
 
