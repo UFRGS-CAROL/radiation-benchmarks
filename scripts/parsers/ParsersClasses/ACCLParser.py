@@ -91,7 +91,7 @@ class ACCLParser(Parser):
                 self.__frames = None
                 self.__framesPerStrem = None
         # return self.__frames
-        self._size = str(self.__frames) + str(self.__framesPerStream)
+        self._size = "frames_" + str(self.__frames) + "_framesPerStream_" + str(self.__framesPerStream)
 
     def buildImageMethod(self):
         return False

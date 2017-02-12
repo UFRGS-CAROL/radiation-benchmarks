@@ -60,5 +60,6 @@ class HotspotParser(Parser):
 
         # return size
         self._size = str(size)
+
     def buildImageMethod(self):
         return False

@@ -9,13 +9,15 @@ from sklearn.metrics import jaccard_similarity_score
 class LavaMDParser(Parser):
 
     _box = None
+    _blockSize = None
+    _streams = None
     _hasThirdDimention = True
 
     def getBenchmark(self):
         return self._benchmark
 
     def _jaccardCoefficient(self, errListJaccard):
-        print "\n\nPassou no jaccard lava \n\n"
+        #print "\n\nPassou no jaccard lava \n\n"
         expected = []
         read = []
         for err in errListJaccard:
@@ -56,7 +58,7 @@ class LavaMDParser(Parser):
 
     # return [highest relative error, lowest relative error, average relative error, # zeros in the output, #zero in the GOLD, #errors with relative errors lower than limit(toleratedRelErr), list of errors limited by toleratedRelErr, #errors with relative errors lower than limit(toleratedRelErr2), list of errors limited by toleratedRelErr2]
     def _relativeErrorParser(self, errList):
-        print "\n\n\nPassou no relavite lava\n\n\n"
+        #print "\n\n\nPassou no relavite lava\n\n\n"
         relErr = []
         zeroGold = 0
         zeroOut = 0
@@ -162,7 +164,7 @@ class LavaMDParser(Parser):
 
 
     def setSize(self, header):
-        size = None
+        #old versions of lava
         m = re.match(".*size\:(\d+).*", header)
         if m:
             try:
@@ -184,7 +186,18 @@ class LavaMDParser(Parser):
                 self._box = int(m.group(1))
             except:
                 self._box = None
-        # return size
 
-        self._size = str(self._box) + str(self._box)
+        #new versions of lava
+        #HEADER streams: 1 boxes:6 block_size:192
+        m = re.match(".*streams\: (\d+).*boxes\:(\d+).*block_size\:(\d+).*", header)
+        if m:
+            self._streams = int(m.group(1))
+            self._box = int(m.group(2))
+            self._blockSize = int(m.group(3))
+
+        if self._blockSize and self._streams:
+            self._size = "streams_"+ str(self._streams) + "_boxes_" + str(self._box) + "_block_size_" + str(self._blockSize)
+        else:
+            self._size = "old_lava_boxes_" + str(self._box)
+
     def buildImageMethod(self): return False

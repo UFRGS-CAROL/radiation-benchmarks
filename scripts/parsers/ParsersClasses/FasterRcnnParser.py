@@ -9,9 +9,18 @@ from ObjectDetectionParser import ImageRaw
 from SupportClasses import PrecisionAndRecall
 from SupportClasses import _GoldContent
 from SupportClasses import Rectangle
-import  
 
-GOLD_BASE_DIR =
+GOLD_BASE_DIR = {
+    'carol-k402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
+    'carol-tx': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
+    # carolx1a
+    'carolx1a': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
+    # carolx1b
+    'carolx1b': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
+    # carolx1c
+    'carolx1c': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1c',
+    # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
+}
 
 LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa' #'/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
 

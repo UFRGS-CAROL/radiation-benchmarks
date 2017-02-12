@@ -59,4 +59,4 @@ class GemmParser(Parser):
             except:
                size = None
 
-        self._size = size
+        self._size = str(size)
