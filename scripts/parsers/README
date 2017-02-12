@@ -1,0 +1,12 @@
+# to set which benchmarks you need to parse set the parameters on
+
+Parameters.py 
+
+# to run the parser 
+#first - create a database
+run WriteSdcsErrDatabase.py where all .log files are located
+
+#second
+run ProcessDatabase.py --database < error database generated file path> on the root directory
+
+# it must generate some folders with all parsed CSVs
