@@ -4,10 +4,12 @@ from SupportClasses import PrecisionAndRecall
 from ObjectDetectionParser import ObjectDetectionParser
 from ObjectDetectionParser import ImageRaw
 import re
+import Parameters as par
 
-LOCAL_GOLD_FOLDER = "/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40/histogram_ori_gradients/" #"/home/aluno/parser_hog/gold/"
-LOCAL_TXT_FOLDER = "/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40/networks_img_list/"#"/home/aluno/radiation-benchmarks/data/networks_img_list/"
-PARAMETERS = "0,1.05,1,1,48,0.9,100"
+# set on Parameters.py
+LOCAL_GOLD_FOLDER = par.hogLocalGoldFolder
+LOCAL_TXT_FOLDER = par.hogLocalTxtFolder
+PARAMETERS = par.hogParameters
 
 class HogParser(ObjectDetectionParser):
     _imgListPath = None

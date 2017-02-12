@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import numpy
-import sys
-
 from SupportClasses import Rectangle
 import os
 import re
@@ -12,36 +10,18 @@ from ObjectDetectionParser import ObjectDetectionParser
 from SupportClasses import _GoldContent
 from ObjectDetectionParser import ImageRaw
 from SupportClasses import PrecisionAndRecall
+import Parameters as par
 
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
 
-#these strings in GOLD_BASE_DIR must be the directory paths of the gold logs for each machine
-GOLD_BASE_DIR = {
-    'carol-k402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
-    'carol-tx': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
-    # carolx1a
-    'carolx1a': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
-    # carolx1b
-    'carolx1b': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
-    # carolx1c
-    'carolx1c': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1c',
-    #fault injection
-    'carolk402': '/home/fernando/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
-}
+# set on Parameters.py
+GOLD_BASE_DIR = par.cnnGoldBaseDir
 
-#IMG_OUTPUT_DIR is the directory to where the images with error comparisons will be saved
-IMG_OUTPUT_DIR  = '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/img_corrupted_output'
+IMG_OUTPUT_DIR  = par.darknetImgOutputDir
 
-#LOCAL_RADIATION_BENCH must be the parent directory of the radiation-benchmarks folder
-LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa'  # '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
+LOCAL_RADIATION_BENCH = par.localRadiationBenchDir
 
-DATASETS = {
-    # normal
-    'caltech.pedestrians.critical.1K.txt': {'dumb_abft': 'gold.caltech.critical.abft.1K.test',
-                                            'no_abft': 'gold.caltech.critical.1K.test'},
-    'caltech.pedestrians.1K.txt': {'dumb_abft': 'gold.caltech.abft.1K.test', 'no_abft': 'gold.caltech.1K.test'},
-    'voc.2012.1K.txt': {'dumb_abft': 'gold.voc.2012.abft.1K.test', 'no_abft': 'gold.voc.2012.1K.test'}
-}
+DATASETS = par.darknetDatasets
 
 
 class DarknetParser(ObjectDetectionParser):
