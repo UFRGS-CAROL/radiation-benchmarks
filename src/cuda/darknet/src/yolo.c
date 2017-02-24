@@ -295,11 +295,12 @@ void validate_yolo(Args parameters) {
 		thr[t] = load_data_in_thread(args);
 	}
 
-	//printf("abft %d\n", parameters.abft);
+	printf("abft %d\n", parameters.abft);
 	//set abft
-	if (parameters.abft == 1)
+	if (parameters.abft == 1){
 		printf("passou no use\n");
 		set_use_abft(1);
+	}
 //	}
 	for (iterator = 0; iterator < parameters.iterations; iterator++) {
 
