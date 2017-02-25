@@ -1,10 +1,12 @@
-#!/usr/bin/env python
 import numpy
 import sys
+import filecmp
+import csv
 
 from SupportClasses import Rectangle
 import os
 import re
+import glob, struct
 # from PIL import Image
 
 
@@ -15,25 +17,29 @@ from SupportClasses import PrecisionAndRecall
 
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
 
+PARSE_LAYERS = True
+LAYERS_GOLD_PATH = '/home/pfpimenta/darknetLayers/'
+LAYERS_PATH = '/home/pfpimenta/darknetLayers/'
+
 #these strings in GOLD_BASE_DIR must be the directory paths of the gold logs for each machine
 GOLD_BASE_DIR = {
-    'carol-k402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40',
-    'carol-tx': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN',
+    'carol-k402': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_K40',
+    'carol-tx': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_TITAN',
     # carolx1a
-    'carolx1a': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
+    'carolx1a': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1b',
     # carolx1b
-    'carolx1b': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1b',
+    'carolx1b': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1b',
     # carolx1c
-    'carolx1c': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_X1/tx1c',
+    'carolx1c': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1c',
     #fault injection
-    'carolk402': '/home/fernando/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
+    #'carolk402': '/home/fernando/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 }
 
 #IMG_OUTPUT_DIR is the directory to where the images with error comparisons will be saved
-IMG_OUTPUT_DIR  = '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/img_corrupted_output'
+IMG_OUTPUT_DIR  = '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/img_corrupted_output/'
 
 #LOCAL_RADIATION_BENCH must be the parent directory of the radiation-benchmarks folder
-LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa'  # '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
+LOCAL_RADIATION_BENCH = '/home/pfpimenta'  # '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
 
 DATASETS = {
     # normal
@@ -52,6 +58,9 @@ class DarknetParser(ObjectDetectionParser):
     __configFile = None
     __iterations = None
 
+    csvHeader = ["logFileName", "Machine", "Benchmark", "SDC_Iteration", "#Accumulated_Errors", "#Iteration_Errors", "gold_lines", "detected_lines", "wrong_elements", "x_center_of_mass", "y_center_of_mass", "precision", "recall", "false_negative", "false_positive","true_positive", "abft_type", "row_detected_errors", "col_detected_errors", "failed_layer", "header"]
+			                    
+    _failed_layer = None
     # def __init__(self):
     #     start_time = time.time()
     #     ObjectDetectionParser.__init__(self)
@@ -79,6 +88,48 @@ class DarknetParser(ObjectDetectionParser):
     #
     # # each imglist has a gold, only need to keep then on the memory
     # goldObjects = {}
+    
+    def _writeToCSV(self, csvFileName):
+        self._writeCSVHeader(csvFileName)
+			
+        try:
+            csvWFP = open(csvFileName, "a")
+            writer = csv.writer(csvWFP, delimiter=';')
+            # ["logFileName", "Machine", "Benchmark", "imgFile", "SDC_Iteration",
+            #     "#Accumulated_Errors", "#Iteration_Errors", "gold_lines",
+            #     "detected_lines", "x_center_of_mass", "y_center_of_mass",
+            #     "precision", "recall", "false_negative", "false_positive",
+            #     "true_positive"]
+            outputList = [self._logFileName,
+                self._machine,
+                self._benchmark,
+                self._sdcIteration,
+                self._accIteErrors,
+                self._iteErrors,
+                self._goldLines,
+                self._detectedLines,
+                self._wrongElements,
+                self._xCenterOfMass,
+                self._yCenterOfMass,
+                self._precision,
+                self._recall,
+                self._falseNegative,
+                self._falsePositive,
+                self._truePositive,
+                self._abftType,
+                self._rowDetErrors,
+                self._colDetErrors,
+                self._failed_layer,
+                self._header]
+			
+                # if self._abftType != 'no_abft' and self._abftType != None:
+                #     outputList.extend([])
+			
+            writer.writerow(outputList)
+            csvWFP.close()
+			        
+        except:
+            pass
 
     def setSize(self, header):
         if "abft" in header:
@@ -155,9 +206,38 @@ class DarknetParser(ObjectDetectionParser):
             for j in xrange(0, m):
                 ret[i][j] = prob[i][j]
         return ret
+    
+    def getSizeOfLayer(self, filename):
+    #retorna o numero de bytes de um log de camada
+        layerFile = open(filename, "rb")
+        contents = layerFile.read()
+        layerSize = len(contents)
+        layerFile.close()
+        return layerSize
+
+    def parseLayers(self):
+        layerSize = [0]*32
+        for i in range(0,32):
+            contentsLen = 0
+            for filename in glob.glob(LAYERS_PATH + '*_' + str(i)):
+                if(layerSize[i]==0):
+                    layerSize[i] = self.getSizeOfLayer(filename)
+
+                layerFile = open(filename,"rb")
+                numItens = layerSize[i]/4 #float size = 4bytes
+                layerContents = struct.unpack('f'*numItens, layerFile.read(4*numItens))
+
+                #print(filename + " :")
+                #layerSize[i] = len(layerContents)
+                #print("len: " + str(layerSize[i]))
+                #for item in layerContents:
+                    #print(str(type(item)))
+                layerFile.close()
+                contentsLen = len(layerContents)
+            print("layer " + str(i) + " size=" + str(layerSize[i]) + " contentSize=" + str(contentsLen))
 
     def _relativeErrorParser(self, errList):
-        if len(errList) <= 0:
+        if len(errList) <= 0:   
             return
 
         if self._abftType == 'dumb_abft' and 'abft' not in self._goldFileName:
@@ -234,6 +314,15 @@ class DarknetParser(ObjectDetectionParser):
 
                 foundPb[i][j] = float(y["probs"]["prob_r"])
                 goldPb[i][j] = float(y["probs"]["prob_e"])
+
+        if PARSE_LAYERS:
+            self.parseLayers()
+            '''for i in range(31, -1, -1):
+                layer_filename = LAYERS_PATH + self._logFileName + "_layer_" + str(i) + "_it_" + self._sdcIteration
+                layer_gold_filename = LAYERS_GOLD_PATH + "gold" + str(i)
+                if filecmp.cmp(layer_filename, layer_gold_filename, False):
+                    self._failed_layer = str(i)'''
+            
 
         if self._rowDetErrors > 1e6:
             self._rowDetErrors /= long(1e15)
