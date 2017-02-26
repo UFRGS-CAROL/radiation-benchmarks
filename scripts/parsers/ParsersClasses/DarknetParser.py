@@ -57,6 +57,39 @@ class DarknetParser(ObjectDetectionParser):
     __weights = None
     __configFile = None
     __iterations = None
+    layerDimentions = {
+        0 : [224, 224, 64],
+        1 : [112, 112, 64],
+        2 : [112, 112, 192],
+        3 : [56, 56, 192],
+        4 : [56, 56, 128],
+        5 : [56, 56, 256],
+        6 : [56, 56, 256],
+        7 : [56, 56, 512],
+        8 : [28, 28, 512],
+        9 : [28, 28, 256],
+        10 : [28, 28, 512],
+        11 : [28, 28, 256],
+        12 : [28, 28, 512],
+        13 : [28, 28, 256],
+        14 : [28, 28, 512],
+        15 : [28, 28, 256],
+        16 : [28, 28, 512],
+        17 : [28, 28, 512],
+        18 : [28, 28, 1024],
+        19 : [14, 14, 1024],
+        20 : [14, 14, 512],
+        21 : [14, 14, 1024],
+        22 : [14, 14, 512],
+        23 : [14, 14, 1024],
+        24 : [14, 14, 1024],
+        25 : [7, 7, 1024],
+        26 : [7, 7, 1024],
+        27 : [7, 7, 1024],
+        28 : [7, 7, 256],
+        29 : [12544],
+        30 : [1175],
+        31 : [1175]}
 
     csvHeader = ["logFileName", "Machine", "Benchmark", "SDC_Iteration", "#Accumulated_Errors", "#Iteration_Errors", "gold_lines", "detected_lines", "wrong_elements", "x_center_of_mass", "y_center_of_mass", "precision", "recall", "false_negative", "false_positive","true_positive", "abft_type", "row_detected_errors", "col_detected_errors", "failed_layer", "header"]
 			                    
@@ -99,7 +132,8 @@ class DarknetParser(ObjectDetectionParser):
             #     "#Accumulated_Errors", "#Iteration_Errors", "gold_lines",
             #     "detected_lines", "x_center_of_mass", "y_center_of_mass",
             #     "precision", "recall", "false_negative", "false_positive",
-            #     "true_positive"]
+            #     "true_positive", "abft_type", "row_detected_errors",
+            #     "col_detected_errors", "failed_layer", "header"]
             outputList = [self._logFileName,
                 self._machine,
                 self._benchmark,
@@ -214,8 +248,8 @@ class DarknetParser(ObjectDetectionParser):
         layerSize = len(contents)
         layerFile.close()
         return layerSize
-
-    def parseLayers(self):
+    
+    def printLayersSizes(self):
         layerSize = [0]*32
         for i in range(0,32):
             contentsLen = 0
@@ -235,6 +269,96 @@ class DarknetParser(ObjectDetectionParser):
                 layerFile.close()
                 contentsLen = len(layerContents)
             print("layer " + str(i) + " size=" + str(layerSize[i]) + " contentSize=" + str(contentsLen))
+
+    def get1DLayerErrorList(self,size):
+        #layerError :: xPos, yPos, zPos, found(?), expected(?)
+        #layerErrorList :: [layerError]
+        layerErrorList = []
+        for i in range(0,size):
+            '''if(layerArray[i] != goldArray[i]):
+                layerError = [i, -1, -1, layerArray[i], goldArray[i]]
+                layerErrorList.append(layerError)'''
+            pass
+        return layerErrorList
+
+    def get3DLayerErrorList(self,width,height,depth):
+        #layerError :: xPos, yPos, zPos, found(?), expected(?)
+        #layerErrorList :: [layerError]
+        layerErrorList = []
+        for i in range(0,width):
+            for j in range(0,height):
+                for k in range(0,depth):
+                    '''if( layer[i][j][k] != gold[i][j][k]):
+                        layerError = [i][j][k], goldArray[i][j][k]
+                        layerErrorList.append(layerError)'''
+                    pass
+        return layerErrorList
+
+    def getLayerDimentions(self,layerNum):
+        width = 0
+        height = 0
+        depth = 0
+        isArray = False
+        if(len(self.layerDimentions[layerNum]) == 3):
+            width = self.layerDimentions[layerNum][0]
+            height = self.layerDimentions[layerNum][1]
+            depth = self.layerDimentions[layerNum][2]
+        elif(len(self.layerDimentions[layerNum]) == 1):
+            #as camadas 29, 30 e 31 sao apenas arrays
+            width = self.layerDimentions[layerNum][0]
+            isArray = True
+        else:
+            print("erro: dicionario ta bugado")
+
+        return isArray, width, height, depth
+    
+    def getLayerErrorList(self,layerNum):
+        #layerError :: xPos, yPos, zPos, found(?), expected(?)
+        #layerErrorList :: [layerError]
+        isArray, width, height, depth = self.getLayerDimentions(layerNum)
+        
+        if(isArray):
+            return self.get1DLayerErrorList(width)
+        else:
+            return self.get3DLayerErrorList(width,height,depth)
+        '''layer_filename = LAYERS_PATH + self._logFileName + "_layer_" + str(i) + "_it_" + self._sdcIteration
+        layer_gold_filename = LAYERS_GOLD_PATH + "gold" + str(i)
+                if filecmp.cmp(layer_filename, layer_gold_filename, False):
+                    self._failed_layer = str(i)'''
+    
+    def printErrorType(self, errType):
+        if(errType[0] == 1):
+            print("cubic error")
+        elif(errType[1] == 1):
+            print("square error")
+        elif(errType[2] == 1):
+            print("column or row error")
+        elif(errType[3] == 1):
+            print("single error")
+        elif(errType[4] == 1):
+            print("random error")
+        else:
+            print("????? there should be a error but there isnt any (probably a bug)")
+
+    def parseLayers(self):
+        ### faz o parsing de todas as camadas de uma iteracao
+        #errorType :: cubic, square, colOrRow, single, random
+        #layerError :: xPos, yPos, zPos, found(?), expected(?)
+        #layerErrorList :: [layerError]
+        #errType = self._localityParser3D(layerErrorList)
+        #self.printErrorType(errType)
+        for i in range(0,32):
+            layerErrorList = self.getLayerErrorList(i)
+            if( i< 29):
+                #layer 3D
+                errorType = self._localityParser3D(layerErrorList)
+                #self.printErrorType(errorType)
+            else:
+                #layer 1D
+                pass
+                
+            #fazer algo c a layerErrorList
+        pass
 
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:   
