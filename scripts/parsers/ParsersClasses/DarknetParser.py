@@ -2,6 +2,8 @@ import numpy
 import sys
 import filecmp
 import csv
+import numpy as np
+from math import*
 
 from SupportClasses import Rectangle
 import os
@@ -241,16 +243,36 @@ class DarknetParser(ObjectDetectionParser):
                 ret[i][j] = prob[i][j]
         return ret
     
-    def getSizeOfLayer(self, filename):
-    #retorna o numero de bytes de um log de camada
-        layerFile = open(filename, "rb")
-        contents = layerFile.read()
-        layerSize = len(contents)
-        layerFile.close()
+    def getSizeOfLayer(self, layerNum):
+        #retorna o numero de bytes de uma layer
+        dim = self.layerDimentions[layerNum]
+        layerSize = 0
+        if(layerNum < 29):
+            layerSize = dim[0]*dim[1]*dim[2]
+        else:
+            layerSize = dim[0]
         return layerSize
+
+
+    def tupleToArray(self, layerContents,layerNum):
+        size = self.layerDimentions[layerNum][0]
+        layer = [0 for i in xrange(0,size)]
+        for i in range(0,size):
+            layer[i] = layerContents[i]
+        return layer
+    
+    def tupleTo3DMatrix(self, layerContents,layerNum):
+        dim = self.layerDimentions[layerNum] #width,height,depth
+        layer = [[[0 for k in xrange(dim[2])] for j in xrange(dim[1])] for i in xrange(dim[0])]
+        for i in range(0,dim[0]):
+            for j in range(0,dim[1]):
+                for k in range(0,dim[2]):
+                    contentsIndex = (i * dim[1] + j) * dim[2] + k
+                    layer[i][j][k] = layerContents[contentsIndex]
+        return layer
     
     def printLayersSizes(self):
-        layerSize = [0]*32
+        layerSize = [0 for k in xrange(32)]
         for i in range(0,32):
             contentsLen = 0
             for filename in glob.glob(LAYERS_PATH + '*_' + str(i)):
@@ -270,28 +292,28 @@ class DarknetParser(ObjectDetectionParser):
                 contentsLen = len(layerContents)
             print("layer " + str(i) + " size=" + str(layerSize[i]) + " contentSize=" + str(contentsLen))
 
-    def get1DLayerErrorList(self,size):
+    def get1DLayerErrorList(self,layerArray,goldArray,size):
         #layerError :: xPos, yPos, zPos, found(?), expected(?)
         #layerErrorList :: [layerError]
         layerErrorList = []
         for i in range(0,size):
-            '''if(layerArray[i] != goldArray[i]):
+            if(layerArray[i] != goldArray[i]):
                 layerError = [i, -1, -1, layerArray[i], goldArray[i]]
-                layerErrorList.append(layerError)'''
-            pass
+                layerErrorList.append(layerError)
+            
         return layerErrorList
 
-    def get3DLayerErrorList(self,width,height,depth):
+    def get3DLayerErrorList(self,layer,gold,width,height,depth):
         #layerError :: xPos, yPos, zPos, found(?), expected(?)
         #layerErrorList :: [layerError]
         layerErrorList = []
         for i in range(0,width):
             for j in range(0,height):
                 for k in range(0,depth):
-                    '''if( layer[i][j][k] != gold[i][j][k]):
-                        layerError = [i][j][k], goldArray[i][j][k]
-                        layerErrorList.append(layerError)'''
-                    pass
+                    if( layer[i][j][k] != gold[i][j][k]):
+                        layerError = [i,j,k,layer[i][j][k],gold[i][j][k]]
+                        layerErrorList.append(layerError)
+                    
         return layerErrorList
 
     def getLayerDimentions(self,layerNum):
@@ -311,34 +333,97 @@ class DarknetParser(ObjectDetectionParser):
             print("erro: dicionario ta bugado")
 
         return isArray, width, height, depth
+
+    def loadLayer(self,layerNum):
+        #carrega de um log para uma matriz
+        layerFilename = LAYERS_PATH + '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_'
+        for filename in glob.glob(layerFilename + str(layerNum)):
+            layerSize = self.getSizeOfLayer(layerNum)
+
+            layerFile = open(filename,"rb")
+            numItens = layerSize #float size = 4bytes
+
+            layerContents = struct.unpack('f'*numItens, layerFile.read(4*numItens))
+            
+            #botar em matriz 3D
+            if( layerNum<29):
+                layer = self.tupleTo3DMatrix(layerContents,layerNum)
+            else:
+                layer = self.tupleToArray(layerContents,layerNum)
+            layerFile.close()
+            #print("load layer " + str(layerNum) + " size = " + str(layerSize) + " filename: " + filename + " len(layer) = " + str(len(layer)))
+            return layer
+
+    def loadGoldLayer(self,layerNum):
+        #carrega de um log para uma matriz
+        layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_0_layer_'
+        for filename in glob.glob(layerFilename + str(layerNum)):
+            layerSize = self.getSizeOfLayer(layerNum)
+
+            layerFile = open(filename,"rb")
+            numItens = layerSize #float size = 4bytes
+
+            layerContents = struct.unpack('f'*numItens, layerFile.read(4*numItens))
+            
+            #botar em matriz 3D
+            if( layerNum<29):
+                layer = self.tupleTo3DMatrix(layerContents,layerNum)
+            else:
+                layer = self.tupleToArray(layerContents,layerNum)
+            layerFile.close()
+            #print("load layer " + str(layerNum) + " size = " + str(layerSize) + " filename: " + filename + " len(layer) = " + str(len(layer)))
+            return layer
     
-    def getLayerErrorList(self,layerNum):
+    def getLayerErrorList(self,layer,gold,layerNum):
         #layerError :: xPos, yPos, zPos, found(?), expected(?)
         #layerErrorList :: [layerError]
         isArray, width, height, depth = self.getLayerDimentions(layerNum)
-        
-        if(isArray):
-            return self.get1DLayerErrorList(width)
-        else:
-            return self.get3DLayerErrorList(width,height,depth)
-        '''layer_filename = LAYERS_PATH + self._logFileName + "_layer_" + str(i) + "_it_" + self._sdcIteration
-        layer_gold_filename = LAYERS_GOLD_PATH + "gold" + str(i)
-                if filecmp.cmp(layer_filename, layer_gold_filename, False):
-                    self._failed_layer = str(i)'''
+        errorList = []
     
-    def printErrorType(self, errType):
-        if(errType[0] == 1):
+        if (layer is None):
+            print('layer ' + str(layerNum) + ' log not found')
+        elif (gold is None):
+            print('gold ' + str(layerNum) + ' log not found')
+        else:
+            if(isArray):
+                errorList = self.get1DLayerErrorList(layer,gold,width)
+            else:
+                errorList = self.get3DLayerErrorList(layer,gold,width,height,depth)
+        return errorList
+        '''layer_filename = LAYERS_PATH + self._logFileName + "_layer_" + str(i) + "_it_" + self._sdcIteration
+        layer_gold_filename = LAYERS_GOLD_PATH + "gold" + str(i)'''
+    
+    def printErrorType(self, errorType):
+        if(errorType[0] == 1):
             print("cubic error")
-        elif(errType[1] == 1):
+        elif(errorType[1] == 1):
             print("square error")
-        elif(errType[2] == 1):
+        elif(errorType[2] == 1):
             print("column or row error")
-        elif(errType[3] == 1):
+        elif(errorType[3] == 1):
             print("single error")
-        elif(errType[4] == 1):
+        elif(errorType[4] == 1):
             print("random error")
         else:
-            print("????? there should be a error but there isnt any (probably a bug)")
+            print("no errors")
+
+
+    def jaccard_similarity(self,x,y):
+
+        intersection_cardinality = len(set.intersection(*[set(x), set(y)]))
+        union_cardinality = len(set.union(*[set(x), set(y)]))
+        return intersection_cardinality/float(union_cardinality)
+    
+    def layer3DToArray(self, layer, layerNum):
+        width, height, depth = self.layerDimentions[layerNum]
+        layerSize = self.getSizeOfLayer(layerNum)
+        layerArray = [0 for k in xrange(layerSize)]
+        for i in range(0,width):
+            for j in range(0,height):
+                for k in range(0,depth):
+                    arrayIndex = (i * height + j) * depth + k
+                    layerArray[arrayIndex] = layer[i][j][k]
+        return layerArray
 
     def parseLayers(self):
         ### faz o parsing de todas as camadas de uma iteracao
@@ -347,17 +432,35 @@ class DarknetParser(ObjectDetectionParser):
         #layerErrorList :: [layerError]
         #errType = self._localityParser3D(layerErrorList)
         #self.printErrorType(errType)
+        errorFound = False
         for i in range(0,32):
-            layerErrorList = self.getLayerErrorList(i)
+            print '\n----layer ' + str(i) + ' :'
+            layer = self.loadLayer(i)
+            gold = self.loadGoldLayer(i)
+            layerErrorList = self.getLayerErrorList(layer,gold,i)
             if( i< 29):
                 #layer 3D
                 errorType = self._localityParser3D(layerErrorList)
-                #self.printErrorType(errorType)
+                self.printErrorType(errorType)
+                if(errorType != [0,0,0,0,0]):
+                    #aconteceu algum tipo de erro
+                    if( not errorFound):
+                        self._failed_layer = str(i)
+                        errorFound = True
+                    layerArray = self.layer3DToArray(layer, i)
+                    goldArray = self.layer3DToArray(gold, i)
+                    jaccardCoef = self.jaccard_similarity(layerArray,goldArray)
+                else:
+                    #nao teve nenhum erro
+                    jaccardCoef = 1
+                print('jaccard = ' + str(jaccardCoef))
             else:
                 #layer 1D
-                pass
-                
+                jaccardCoef = self.jaccard_similarity(layer,gold)
+                print('jaccard = ' + str(jaccardCoef))
+            
             #fazer algo c a layerErrorList
+        print('failed_layer: ' + self._failed_layer)
         pass
 
     def _relativeErrorParser(self, errList):
@@ -721,3 +824,4 @@ class DarknetParser(ObjectDetectionParser):
         #
         #
         #     return validRectangles, validProbs, validClasses
+
