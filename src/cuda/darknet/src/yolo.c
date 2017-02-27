@@ -352,7 +352,7 @@ void validate_yolo(Args parameters) {
 					do_nms_sort(boxes_curr, probs_curr, side * side * l.n,
 							classes, iou_thresh);
 				}
-
+				printf("it %d seconds %f\n", iterator, mysecond() - begin2);
 //				printf("%f %f\n")
 				if (parameters.generate_flag) {
 					//	print_yolo_detections(fps, id,
@@ -412,7 +412,7 @@ void validate_yolo(Args parameters) {
 				gold_iterator = (gold_iterator + 1) % plist->size;
 
 				//---------------------------------
-				//printf("it %d seconds %f\n", iterator, mysecond() - begin2);
+
 				if (iterator == parameters.iterations - 1 && (i >= m)) {
 					//	printf("aqui\n");
 					free(id);
