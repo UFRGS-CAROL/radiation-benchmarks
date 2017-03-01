@@ -474,6 +474,8 @@ class DarknetParser(ObjectDetectionParser):
                 print('jaccard = ' + str(jaccardCoef))
             else:
                 #layer 1D
+                errorType = self._localityParser1D(layerErrorList)
+                self.printErrorType(errorType)
                 jaccardCoef = self.jaccard_similarity(layer,gold)
                 print('jaccard = ' + str(jaccardCoef))
             
@@ -828,7 +830,7 @@ class DarknetParser(ObjectDetectionParser):
         #
         #             if (left < 0): left = 0
         #             if (right > image.w - 1): right = image.w-1
-        #             if (top < 0): top = 0
+	#             if (top < 0): top = 0
         #             if (bot > image.h - 1): bot = image.h-1;
         #
         #             # draw_box_width(im, left, top, right, bot, width, red, green, blue)
