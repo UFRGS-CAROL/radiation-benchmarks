@@ -373,6 +373,26 @@ class DarknetParser(ObjectDetectionParser):
             layerFile.close()
             #print("load layer " + str(layerNum) + " size = " + str(layerSize) + " filename: " + filename + " len(layer) = " + str(len(layer)))
             return layer
+
+    def _localityParser1D(self,layerErrorList):
+        #errorType :: cubic, square, colOrRow, single, random
+        #layerError :: xPos, yPos, zPos, found(?), expected(?)
+        #layerErrorList :: [layerError]
+        if len(layerErrorList) < 1:
+            return [0, 0, 0, 0, 0]
+        elif len(layerErrorList) == 1:
+            return [0, 0, 0, 1, 0]
+        else:
+            errorInSequence = False
+            lastErrorPos = -2
+            for layerError in layerErrorList:
+                if(layerError[0] == lastErrorPos + 1):
+                    errorInSequence = True
+                lastErrorPos = layerError[0]
+            if errorInSequence:
+                return [0, 0, 1, 0, 0]
+            else:
+                return [0, 0, 0, 0, 1]
     
     def getLayerErrorList(self,layer,gold,layerNum):
         #layerError :: xPos, yPos, zPos, found(?), expected(?)
@@ -430,8 +450,6 @@ class DarknetParser(ObjectDetectionParser):
         #errorType :: cubic, square, colOrRow, single, random
         #layerError :: xPos, yPos, zPos, found(?), expected(?)
         #layerErrorList :: [layerError]
-        #errType = self._localityParser3D(layerErrorList)
-        #self.printErrorType(errType)
         errorFound = False
         for i in range(0,32):
             print '\n----layer ' + str(i) + ' :'
@@ -824,4 +842,3 @@ class DarknetParser(ObjectDetectionParser):
         #
         #
         #     return validRectangles, validProbs, validClasses
-
