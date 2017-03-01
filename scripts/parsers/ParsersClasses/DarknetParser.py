@@ -244,7 +244,7 @@ class DarknetParser(ObjectDetectionParser):
         return ret
     
     def getSizeOfLayer(self, layerNum):
-        #retorna o numero de bytes de uma layer
+        #retorna o numero de valores de uma layer
         dim = self.layerDimentions[layerNum]
         layerSize = 0
         if(layerNum < 29):
