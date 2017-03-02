@@ -400,6 +400,9 @@ void validate_yolo(Args parameters) {
 //					printf("antes do clean");
 					clear_vectors(&current_ptr);
 					//			printf("passou\n");
+				}else{
+					//saveLayer(net,iterator*m,i+t);
+					printf("::%i", i+t-nthreads);
 				}
 //				printf("passou %d %d\n");
 #ifdef LOGS
