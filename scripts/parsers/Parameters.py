@@ -14,15 +14,15 @@ from ParsersClasses import QuicksortParser
 #set all benchmarks to be parsed here
 radiationBenchmarks = dict(
         # darknet=DarknetParser.DarknetParser(),
-         hotspot=HotspotParser.HotspotParser(),
+       #  hotspot=HotspotParser.HotspotParser(),
         # hog=HogParser.HogParser(),
-         lavamd=LavaMDParser.LavaMDParser(),
+        # lavamd=LavaMDParser.LavaMDParser(),
         # mergesort=MergesortParser.MergesortParser(),
-         nw=NWParser.NWParser(),
+        # nw=NWParser.NWParser(),
         # quicksort=QuicksortParser.QuicksortParser(),
-         accl=ACCLParser.ACCLParser(),
-        # pyfasterrcnn=FasterRcnnParser.FasterRcnnParser(),
+        # accl=ACCLParser.ACCLParser(),
+        pyfasterrcnn=FasterRcnnParser.FasterRcnnParser(),
         # lulesh=LuleshParser.LuleshParser(),
         # lud=LudParser.LudParser(),
-        gemm=GemmParser.GemmParser()
+        #gemm=GemmParser.GemmParser()
     )

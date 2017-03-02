@@ -22,9 +22,9 @@ GOLD_BASE_DIR = {
     # '/home/familia/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet'
 }
 
-LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa' #'/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
+LOCAL_RADIATION_BENCH = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa' #'/home/fernando/git_pesquisa'
 
-IMG_OUTPUT_DIR  = '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/img_corrupted_output'
+IMG_OUTPUT_DIR  = "" #'/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/img_corrupted_output'
 
 DATASETS = {
     # normal
@@ -65,6 +65,7 @@ class FasterRcnnParser(ObjectDetectionParser):
 
     # parse PyFaster
     def parseErrMethod(self, errString):
+        print errString
         ret = {}
         if 'box' in errString:
             dictBox,imgPath = self._processBoxes(errString)
@@ -142,6 +143,7 @@ class FasterRcnnParser(ObjectDetectionParser):
                             "y2_e\: (\S+).*y2_r\: (\S+).*", errString)
         imgPath = ''
         if imageErr:
+            imageErr['generation'] = 1
             imgPath = imageErr.group(1)
             ret["class"] = imageErr.group(2)
             ret["box"] = imageErr.group(3)
@@ -200,6 +202,26 @@ class FasterRcnnParser(ObjectDetectionParser):
                 long(float(ret["y2_r"]))
             except:
                 ret["y2_r"] = 1e30
+
+        # ERR boxes: [98,12] e: 13.7840118408 r: 13.7840270996
+        imageErr = re.match(".*boxes\: \[(\d+),(\d+)\].*e\: (\S+).*r\: (\S+).*", errString)
+
+        if imageErr:
+            imageErr['generation'] = 2
+            ret["class"] = int(imageErr.group(1))
+            ret["box"] = int(imageErr.group(2))
+
+            ret["e"] = imageErr.group(3)
+            try:
+                long(float(ret["e"]))
+            except:
+                ret["e"] = 1e30
+
+            ret["r"] = imageErr.group(4)
+            try:
+                long(float(ret["r"]))
+            except:
+                ret["r"] = 1e30
 
         return (ret if len(ret) > 0 else None), imgPath
 
@@ -278,7 +300,7 @@ class FasterRcnnParser(ObjectDetectionParser):
 
         gValidRects, gValidProbs, gValidClasses = self.__generatePyFasterDetection(goldImg)
         fValidRects, fValidProbs, fValidClasses = self.__generatePyFasterDetection(foundImg)
-
+        print gValidRects
         self._abftType = self._rowDetErrors = self._colDetErrors = 'pyfaster'
         precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(self._prThreshold)
         gValidSize = len(gValidRects)
