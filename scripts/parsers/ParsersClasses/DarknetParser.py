@@ -21,7 +21,7 @@ from SupportClasses import PrecisionAndRecall
 
 PARSE_LAYERS = True
 LAYERS_GOLD_PATH = '/home/pfpimenta/darknetLayers/golds/'
-LAYERS_PATH = '/home/pfpimenta/darknetLayers/'
+LAYERS_PATH = '/home/pfpimenta/darknetLayers/layers/'
 
 #these strings in GOLD_BASE_DIR must be the directory paths of the gold logs for each machine
 GOLD_BASE_DIR = {
@@ -349,8 +349,11 @@ class DarknetParser(ObjectDetectionParser):
 
     def loadLayer(self,layerNum):
         #carrega de um log para uma matriz
-        layerFilename = LAYERS_PATH + '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_'
-        for filename in glob.glob(layerFilename + str(layerNum)):
+        layerFilename = LAYERS_PATH + self._logFileName + "_it_" + self._sdcIteration + "_layer_" + str(layerNum)
+        # 016
+        #layerFilename = LAYERS_PATH + '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_'
+        print layerFilename
+        for filename in glob.glob(layerFilename):
             layerSize = self.getSizeOfLayer(layerNum)
 
             layerFile = open(filename,"rb")
@@ -369,6 +372,7 @@ class DarknetParser(ObjectDetectionParser):
 
     def loadGoldLayer(self,layerNum):
         #carrega de um log para uma matriz
+        #layerFilename = LAYERS_GOLD_PATH + "gold" + str(layerNum)
         layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_0_layer_'
         for filename in glob.glob(layerFilename + str(layerNum)):
             layerSize = self.getSizeOfLayer(layerNum)
@@ -416,20 +420,16 @@ class DarknetParser(ObjectDetectionParser):
             'filtered2': [],
             'filtered5': []
         }
-    
-        if (layer is None):
-            print('layer ' + str(layerNum) + ' log not found')
-        elif (gold is None):
-            print('gold ' + str(layerNum) + ' log not found')
+        
+        if(isArray):
+            errorLists['allLayers'] = self.get1DLayerErrorList(layer,gold,width,'allLayers')
+            errorLists['filtered2'] = self.get1DLayerErrorList(layer,gold,width,'filtered2')
+            errorLists['filtered5'] = self.get1DLayerErrorList(layer,gold,width,'filtered5')
         else:
-            if(isArray):
-                errorLists['allLayers'] = self.get1DLayerErrorList(layer,gold,width,'allLayers')
-                errorLists['filtered2'] = self.get1DLayerErrorList(layer,gold,width,'filtered2')
-                errorLists['filtered5'] = self.get1DLayerErrorList(layer,gold,width,'filtered5')
-            else:
-                errorLists['filtered5'] = self.get3DLayerErrorList(layer,gold,width,height,depth,'filtered5')
-                errorLists['allLayers'] = self.get3DLayerErrorList(layer,gold,width,height,depth,'allLayers')
-                errorLists['filtered2'] = self.get3DLayerErrorList(layer,gold,width,height,depth,'filtered2')
+            errorLists['filtered5'] = self.get3DLayerErrorList(layer,gold,width,height,depth,'filtered5')
+            errorLists['allLayers'] = self.get3DLayerErrorList(layer,gold,width,height,depth,'allLayers')
+            errorLists['filtered2'] = self.get3DLayerErrorList(layer,gold,width,height,depth,'filtered2')
+        
         return errorLists
         '''layer_filename = LAYERS_PATH + self._logFileName + "_layer_" + str(i) + "_it_" + self._sdcIteration
         layer_gold_filename = LAYERS_GOLD_PATH + "gold" + str(i)'''
@@ -471,6 +471,9 @@ class DarknetParser(ObjectDetectionParser):
         #errorType :: [cubic, square, colOrRow, single, random]
         #layerError :: xPos, yPos, zPos, found(?), expected(?)
         #layerErrorLists :: {[allLlayerErrors], [filtered2LayerErrors], [filtered5LayerErrors]}
+        self._failed_layer = ""
+        logsNotFound = False
+        goldsNotFound = False
         errorFound = False
         errorType = {
             'allLayers': [],
@@ -481,47 +484,60 @@ class DarknetParser(ObjectDetectionParser):
             print '\n----layer ' + str(i) + ' :'
             layer = self.loadLayer(i)
             gold = self.loadGoldLayer(i)
-            layerErrorLists = self.getLayerErrorLists(layer,gold,i)
-            if( i< 29):
-                #layer 3D
-                errorType['allLayers'] = self._localityParser3D(layerErrorLists['allLayers'])
-                errorType['filtered2'] = self._localityParser3D(layerErrorLists['filtered2'])
-                errorType['filtered5'] = self._localityParser3D(layerErrorLists['filtered5'])
-                self.printErrorType(errorType['allLayers'])
-                self.printErrorType(errorType['filtered2'])
-                self.printErrorType(errorType['filtered5'])
-                if(errorType['allLayers'] != [0,0,0,0,0]):
-                    #aconteceu algum tipo de erro
-                    if( not errorFound):
-                        self._failed_layer = str(i)
-                        errorFound = True
-                    layerArray = self.layer3DToArray(layer, i)
-                    goldArray = self.layer3DToArray(gold, i)
-                    jaccardCoef = self.jaccard_similarity(layerArray,goldArray)
-                else:
-                    #nao teve nenhum erro
-                    jaccardCoef = 1
-                print('jaccard = ' + str(jaccardCoef))
+            if (layer is None):
+                print('layer ' + str(i) + ' log not found')
+                logsNotFound = True
+            elif(gold is None):
+                print('gold ' + str(i) + ' log not found')
+                foldsNotFound = True
             else:
-                #layer 1D
-                errorType['allLayers'] = self._localityParser1D(layerErrorLists['allLayers'])
-                errorType['filtered2'] = self._localityParser1D(layerErrorLists['filtered2'])
-                errorType['filtered5'] = self._localityParser1D(layerErrorLists['filtered5'])
-                self.printErrorType(errorType['allLayers'])
-                self.printErrorType(errorType['filtered2'])
-                self.printErrorType(errorType['filtered5'])
-                if(errorType['allLayers'] != [0,0,0,0,0]):
-                    #aconteceu algum tipo de erro
-                    if( not errorFound):
-                        self._failed_layer = str(i)
-                        errorFound = True
-                    jaccardCoef = self.jaccard_similarity(layer,gold)
+                layerErrorLists = self.getLayerErrorLists(layer,gold,i)
+                if( i< 29):
+                    #layer 3D
+                    errorType['allLayers'] = self._localityParser3D(layerErrorLists['allLayers'])
+                    errorType['filtered2'] = self._localityParser3D(layerErrorLists['filtered2'])
+                    errorType['filtered5'] = self._localityParser3D(layerErrorLists['filtered5'])
+                    self.printErrorType(errorType['allLayers'])
+                    self.printErrorType(errorType['filtered2'])
+                    self.printErrorType(errorType['filtered5'])
+                    if(errorType['allLayers'] != [0,0,0,0,0]):
+                        #aconteceu algum tipo de erro
+                        if( not errorFound):
+                            self._failed_layer = str(i)
+                            errorFound = True
+                        layerArray = self.layer3DToArray(layer, i)
+                        goldArray = self.layer3DToArray(gold, i)
+                        jaccardCoef = self.jaccard_similarity(layerArray,goldArray)
+                    else:
+                        #nao teve nenhum erro
+                        jaccardCoef = 1
+                    print('jaccard = ' + str(jaccardCoef))
                 else:
-                    #nao teve nenhum erro
-                    jaccardCoef = 1
+                    #layer 1D
+                    errorType['allLayers'] = self._localityParser1D(layerErrorLists['allLayers'])
+                    errorType['filtered2'] = self._localityParser1D(layerErrorLists['filtered2'])
+                    errorType['filtered5'] = self._localityParser1D(layerErrorLists['filtered5'])
+                    self.printErrorType(errorType['allLayers'])
+                    self.printErrorType(errorType['filtered2'])
+                    self.printErrorType(errorType['filtered5'])
+                    if(errorType['allLayers'] != [0,0,0,0,0]):
+                        #aconteceu algum tipo de erro
+                        if( not errorFound):
+                            self._failed_layer = str(i)
+                            errorFound = True
+                        jaccardCoef = self.jaccard_similarity(layer,gold)
+                    else:
+                        #nao teve nenhum erro
+                        jaccardCoef = 1
                 print('jaccard = ' + str(jaccardCoef))
             
             #fazer algo c a layerErrorList
+        if logsNotFound and goldsNotFound:
+            self._failed_layer += 'golds and logs not found'
+        elif logsNotFound:
+            self._failed_layer += 'logs not found'
+        elif goldsNotFound:
+            self._failed_layer += 'golds not found'
         print('failed_layer: ' + self._failed_layer)
         pass
 
@@ -848,7 +864,6 @@ class DarknetParser(ObjectDetectionParser):
         #             max = a[i]
         #             maxI = i
         #     return maxI
-
 
         # def __drawDetections(self, image, num, boxes,probs):
         #     validRectangles = []
