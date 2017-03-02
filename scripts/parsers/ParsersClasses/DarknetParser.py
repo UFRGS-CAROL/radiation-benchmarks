@@ -94,7 +94,41 @@ class DarknetParser(ObjectDetectionParser):
         31 : [1175]}
 
     csvHeader = ["logFileName", "Machine", "Benchmark", "SDC_Iteration", "#Accumulated_Errors", "#Iteration_Errors", "gold_lines", "detected_lines", "wrong_elements", "x_center_of_mass", "y_center_of_mass", "precision", "recall", "false_negative", "false_positive","true_positive", "abft_type", "row_detected_errors", "col_detected_errors", "failed_layer", "header"]
-			                    
+    layerCsvHeader =  ["logFileName", "Machine", "Benchmark", "imgFile", "SDC_Iteration","failed_layer",
+             "layer0allErrType", "layer0filtered2ErrType", "layer0filtered5ErrType",
+             "layer1allErrType", "layer1filtered2ErrType", "layer1filtered5ErrType",
+             "layer2allErrType", "layer2filtered2ErrType", "layer2filtered5ErrType",
+             "layer3allErrType", "layer3filtered2ErrType", "layer3filtered5ErrType",
+             "layer4allErrType", "layer4filtered2ErrType", "layer4filtered5ErrType",
+             "layer5allErrType", "layer5filtered2ErrType", "layer5filtered5ErrType",
+             "layer6allErrType", "layer6filtered2ErrType", "layer6filtered5ErrType",
+             "layer7allErrType", "layer7filtered2ErrType", "layer7filtered5ErrType",
+             "layer8allErrType", "layer8filtered2ErrType", "layer8filtered5ErrType",
+             "layer9allErrType", "layer9filtered2ErrType", "layer9filtered5ErrType",
+             "layer10allErrType", "layer10filtered2ErrType", "layer10filtered5ErrType",
+             "layer11allErrType", "layer11filtered2ErrType", "layer11filtered5ErrType",
+             "layer12allErrType", "layer12filtered2ErrType", "layer12filtered5ErrType",
+             "layer13allErrType", "layer13filtered2ErrType", "layer13filtered5ErrType",
+             "layer14allErrType", "layer14filtered2ErrType", "layer14filtered5ErrType",
+             "layer15allErrType", "layer15filtered2ErrType", "layer15filtered5ErrType",
+             "layer16allErrType", "layer16filtered2ErrType", "layer16filtered5ErrType",
+             "layer17allErrType", "layer17filtered2ErrType", "layer17filtered5ErrType",
+             "layer18allErrType", "layer18filtered2ErrType", "layer18filtered5ErrType",
+             "layer19allErrType", "layer19filtered2ErrType", "layer19filtered5ErrType",
+             "layer20allErrType", "layer20filtered2ErrType", "layer20filtered5ErrType",
+             "layer21allErrType", "layer21filtered2ErrType", "layer21filtered5ErrType",
+             "layer22allErrType", "layer22filtered2ErrType", "layer22filtered5ErrType",
+             "layer23allErrType", "layer23filtered2ErrType", "layer23filtered5ErrType",
+             "layer24allErrType", "layer24filtered2ErrType", "layer24filtered5ErrType",
+             "layer25allErrType", "layer25filtered2ErrType", "layer25filtered5ErrType",
+             "layer26allErrType", "layer26filtered2ErrType", "layer26filtered5ErrType",
+             "layer27allErrType", "layer27filtered2ErrType", "layer27filtered5ErrType",
+             "layer28allErrType", "layer28filtered2ErrType", "layer28filtered5ErrType",
+             "layer29allErrType", "layer29filtered2ErrType", "layer29filtered5ErrType",
+             "layer30allErrType", "layer30filtered2ErrType", "layer30filtered5ErrType",
+             "layer31allErrType", "layer31filtered2ErrType", "layer31filtered5ErrType",
+             "header"]
+
     _failed_layer = None
     '''# def __init__(self):
     #     start_time = time.time()
@@ -243,6 +277,95 @@ class DarknetParser(ObjectDetectionParser):
                 ret[i][j] = prob[i][j]
         return ret
     
+    def _writeToLayerCSV(self, csvFileName):
+        self._writeCSVHeader(csvFileName)
+			
+        try:
+            csvWFP = open(csvFileName, "a")
+            writer = csv.writer(csvWFP, delimiter=';')
+            # ["logFileName", "Machine", "Benchmark", "imgFile", "SDC_Iteration","failed_layer",
+            # "layer0allErrType", "layer0filtered2ErrType", "layer0filtered5ErrType",
+            # "layer1allErrType", "layer1filtered2ErrType", "layer1filtered5ErrType",
+            # "layer2allErrType", "layer2filtered2ErrType", "layer2filtered5ErrType",
+            # "layer3allErrType", "layer3filtered2ErrType", "layer3filtered5ErrType",
+            # "layer4allErrType", "layer4filtered2ErrType", "layer4filtered5ErrType",
+            # "layer5allErrType", "layer5filtered2ErrType", "layer5filtered5ErrType",
+            # "layer6allErrType", "layer6filtered2ErrType", "layer6filtered5ErrType",
+            # "layer7allErrType", "layer7filtered2ErrType", "layer7filtered5ErrType",
+            # "layer8allErrType", "layer8filtered2ErrType", "layer8filtered5ErrType",
+            # "layer9allErrType", "layer9filtered2ErrType", "layer9filtered5ErrType",
+            # "layer10allErrType", "layer10filtered2ErrType", "layer10filtered5ErrType",
+            # "layer11allErrType", "layer11filtered2ErrType", "layer11filtered5ErrType",
+            # "layer12allErrType", "layer12filtered2ErrType", "layer12filtered5ErrType",
+            # "layer13allErrType", "layer13filtered2ErrType", "layer13filtered5ErrType",
+            # "layer14allErrType", "layer14filtered2ErrType", "layer14filtered5ErrType",
+            # "layer15allErrType", "layer15filtered2ErrType", "layer15filtered5ErrType",
+            # "layer16allErrType", "layer16filtered2ErrType", "layer16filtered5ErrType",
+            # "layer17allErrType", "layer17filtered2ErrType", "layer17filtered5ErrType",
+            # "layer18allErrType", "layer18filtered2ErrType", "layer18filtered5ErrType",
+            # "layer19allErrType", "layer19filtered2ErrType", "layer19filtered5ErrType",
+            # "layer20allErrType", "layer20filtered2ErrType", "layer20filtered5ErrType",
+            # "layer21allErrType", "layer21filtered2ErrType", "layer21filtered5ErrType",
+            # "layer22allErrType", "layer22filtered2ErrType", "layer22filtered5ErrType",
+            # "layer23allErrType", "layer23filtered2ErrType", "layer23filtered5ErrType",
+            # "layer24allErrType", "layer24filtered2ErrType", "layer24filtered5ErrType",
+            # "layer25allErrType", "layer25filtered2ErrType", "layer25filtered5ErrType",
+            # "layer26allErrType", "layer26filtered2ErrType", "layer26filtered5ErrType",
+            # "layer27allErrType", "layer27filtered2ErrType", "layer27filtered5ErrType",
+            # "layer28allErrType", "layer28filtered2ErrType", "layer28filtered5ErrType",
+            # "layer29allErrType", "layer29filtered2ErrType", "layer29filtered5ErrType",
+            # "layer30allErrType", "layer30filtered2ErrType", "layer30filtered5ErrType",
+            # "layer31allErrType", "layer31filtered2ErrType", "layer31filtered5ErrType",
+            # "header"]
+            outputList = [self._logFileName,
+                self._machine,
+                self._benchmark,
+                self._sdcIteration,
+                self._failed_layer,
+                #layer0allErrType", "layer0filtered2ErrType", "layer0filtered5ErrType",
+            # "layer1allErrType", "layer1filtered2ErrType", "layer1filtered5ErrType",
+            # "layer2allErrType", "layer2filtered2ErrType", "layer2filtered5ErrType",
+            # "layer3allErrType", "layer3filtered2ErrType", "layer3filtered5ErrType",
+            # "layer4allErrType", "layer4filtered2ErrType", "layer4filtered5ErrType",
+            # "layer5allErrType", "layer5filtered2ErrType", "layer5filtered5ErrType",
+            # "layer6allErrType", "layer6filtered2ErrType", "layer6filtered5ErrType",
+            # "layer7allErrType", "layer7filtered2ErrType", "layer7filtered5ErrType",
+            # "layer8allErrType", "layer8filtered2ErrType", "layer8filtered5ErrType",
+            # "layer9allErrType", "layer9filtered2ErrType", "layer9filtered5ErrType",
+            # "layer10allErrType", "layer10filtered2ErrType", "layer10filtered5ErrType",
+            # "layer11allErrType", "layer11filtered2ErrType", "layer11filtered5ErrType",
+            # "layer12allErrType", "layer12filtered2ErrType", "layer12filtered5ErrType",
+            # "layer13allErrType", "layer13filtered2ErrType", "layer13filtered5ErrType",
+            # "layer14allErrType", "layer14filtered2ErrType", "layer14filtered5ErrType",
+            # "layer15allErrType", "layer15filtered2ErrType", "layer15filtered5ErrType",
+            # "layer16allErrType", "layer16filtered2ErrType", "layer16filtered5ErrType",
+            # "layer17allErrType", "layer17filtered2ErrType", "layer17filtered5ErrType",
+            # "layer18allErrType", "layer18filtered2ErrType", "layer18filtered5ErrType",
+            # "layer19allErrType", "layer19filtered2ErrType", "layer19filtered5ErrType",
+            # "layer20allErrType", "layer20filtered2ErrType", "layer20filtered5ErrType",
+            # "layer21allErrType", "layer21filtered2ErrType", "layer21filtered5ErrType",
+            # "layer22allErrType", "layer22filtered2ErrType", "layer22filtered5ErrType",
+            # "layer23allErrType", "layer23filtered2ErrType", "layer23filtered5ErrType",
+            # "layer24allErrType", "layer24filtered2ErrType", "layer24filtered5ErrType",
+            # "layer25allErrType", "layer25filtered2ErrType", "layer25filtered5ErrType",
+            # "layer26allErrType", "layer26filtered2ErrType", "layer26filtered5ErrType",
+            # "layer27allErrType", "layer27filtered2ErrType", "layer27filtered5ErrType",
+            # "layer28allErrType", "layer28filtered2ErrType", "layer28filtered5ErrType",
+            # "layer29allErrType", "layer29filtered2ErrType", "layer29filtered5ErrType",
+            # "layer30allErrType", "layer30filtered2ErrType", "layer30filtered5ErrType",
+            # "layer31allErrType", "layer31filtered2ErrType", "layer31filtered5ErrType",
+            # "header"]
+                self._header]
+			
+                # if self._abftType != 'no_abft' and self._abftType != None:
+                #     outputList.extend([])
+			
+            writer.writerow(outputList)
+            csvWFP.close()
+			        
+        except:
+            pass
+    
     def getSizeOfLayer(self, layerNum):
         #retorna o numero de valores de uma layer
         dim = self.layerDimentions[layerNum]
@@ -349,26 +472,33 @@ class DarknetParser(ObjectDetectionParser):
 
     def loadLayer(self,layerNum):
         #carrega de um log para uma matriz
-        layerFilename = LAYERS_PATH + self._logFileName + "_it_" + self._sdcIteration + "_layer_" + str(layerNum)
+        print('_logFileName: ' + self._logFileName[1:]) #016
+        print('_sdcIteration: ' + self._sdcIteration)
+        #layerFilename = self._logFileName + "_it_" + self._sdcIteration + "_layer_" + str(layerNum)
         # 016
-        #layerFilename = LAYERS_PATH + '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_'
-        print layerFilename
-        for filename in glob.glob(layerFilename):
-            layerSize = self.getSizeOfLayer(layerNum)
-
-            layerFile = open(filename,"rb")
-            numItens = layerSize #float size = 4bytes
-
-            layerContents = struct.unpack('f'*numItens, layerFile.read(4*numItens))
+        layerFilename = '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
+        print glob.glob(LAYERS_PATH + '*' + layerFilename[1:])
+        filenames = glob.glob(LAYERS_PATH + '*' + layerFilename[1:])
+        if(len(filenames) == 0):
+            return None
+        elif(len(filenames)>1):
+            print('+de 1 log encontrado para \'' + layerFilename + '\'')
             
-            #botar em matriz 3D
-            if( layerNum<29):
-                layer = self.tupleTo3DMatrix(layerContents,layerNum)
-            else:
-                layer = self.tupleToArray(layerContents,layerNum)
-            layerFile.close()
-            #print("load layer " + str(layerNum) + " size = " + str(layerSize) + " filename: " + filename + " len(layer) = " + str(len(layer)))
-            return layer
+        filename = filenames[0]
+        layerSize = self.getSizeOfLayer(layerNum)
+
+        layerFile = open(filename,"rb")
+        numItens = layerSize #float size = 4bytes
+
+        layerContents = struct.unpack('f'*numItens, layerFile.read(4*numItens))
+        #botar em matriz 3D
+        if( layerNum<29):
+            layer = self.tupleTo3DMatrix(layerContents,layerNum)
+        else:
+            layer = self.tupleToArray(layerContents,layerNum)
+        layerFile.close()
+        #print("load layer " + str(layerNum) + " size = " + str(layerSize) + " filename: " + filename + " len(layer) = " + str(len(layer)))
+        return layer
 
     def loadGoldLayer(self,layerNum):
         #carrega de um log para uma matriz
@@ -431,8 +561,6 @@ class DarknetParser(ObjectDetectionParser):
             errorLists['filtered2'] = self.get3DLayerErrorList(layer,gold,width,height,depth,'filtered2')
         
         return errorLists
-        '''layer_filename = LAYERS_PATH + self._logFileName + "_layer_" + str(i) + "_it_" + self._sdcIteration
-        layer_gold_filename = LAYERS_GOLD_PATH + "gold" + str(i)'''
     
     def printErrorType(self, errorType):
         if(errorType[0] == 1):
@@ -475,11 +603,11 @@ class DarknetParser(ObjectDetectionParser):
         logsNotFound = False
         goldsNotFound = False
         errorFound = False
-        errorType = {
+        self.errorTypeLists = [{
             'allLayers': [],
             'filtered2': [],
             'filtered5': []
-        }
+        } for i in range(0,32)]
         for i in range(0,32):
             print '\n----layer ' + str(i) + ' :'
             layer = self.loadLayer(i)
@@ -494,13 +622,13 @@ class DarknetParser(ObjectDetectionParser):
                 layerErrorLists = self.getLayerErrorLists(layer,gold,i)
                 if( i< 29):
                     #layer 3D
-                    errorType['allLayers'] = self._localityParser3D(layerErrorLists['allLayers'])
-                    errorType['filtered2'] = self._localityParser3D(layerErrorLists['filtered2'])
-                    errorType['filtered5'] = self._localityParser3D(layerErrorLists['filtered5'])
-                    self.printErrorType(errorType['allLayers'])
-                    self.printErrorType(errorType['filtered2'])
-                    self.printErrorType(errorType['filtered5'])
-                    if(errorType['allLayers'] != [0,0,0,0,0]):
+                    self.errorTypeLists[i]['allLayers'] = self._localityParser3D(layerErrorLists['allLayers'])
+                    self.errorTypeLists[i]['filtered2'] = self._localityParser3D(layerErrorLists['filtered2'])
+                    self.errorTypeLists[i]['filtered5'] = self._localityParser3D(layerErrorLists['filtered5'])
+                    self.printErrorType(self.errorTypeLists[i]['allLayers'])
+                    self.printErrorType(self.errorTypeLists[i]['filtered2'])
+                    self.printErrorType(self.errorTypeLists[i]['filtered5'])
+                    if(self.errorTypeLists[i]['allLayers'] != [0,0,0,0,0]):
                         #aconteceu algum tipo de erro
                         if( not errorFound):
                             self._failed_layer = str(i)
@@ -514,13 +642,13 @@ class DarknetParser(ObjectDetectionParser):
                     print('jaccard = ' + str(jaccardCoef))
                 else:
                     #layer 1D
-                    errorType['allLayers'] = self._localityParser1D(layerErrorLists['allLayers'])
-                    errorType['filtered2'] = self._localityParser1D(layerErrorLists['filtered2'])
-                    errorType['filtered5'] = self._localityParser1D(layerErrorLists['filtered5'])
-                    self.printErrorType(errorType['allLayers'])
-                    self.printErrorType(errorType['filtered2'])
-                    self.printErrorType(errorType['filtered5'])
-                    if(errorType['allLayers'] != [0,0,0,0,0]):
+                    self.errorTypeLists[i]['allLayers'] = self._localityParser1D(layerErrorLists['allLayers'])
+                    self.errorTypeLists[i]['filtered2'] = self._localityParser1D(layerErrorLists['filtered2'])
+                    self.errorTypeLists[i]['filtered5'] = self._localityParser1D(layerErrorLists['filtered5'])
+                    self.printErrorType(self.errorTypeLists[i]['allLayers'])
+                    self.printErrorType(self.errorTypeLists[i]['filtered2'])
+                    self.printErrorType(self.errorTypeLists[i]['filtered5'])
+                    if(self.errorTypeLists[i]['allLayers'] != [0,0,0,0,0]):
                         #aconteceu algum tipo de erro
                         if( not errorFound):
                             self._failed_layer = str(i)
@@ -864,7 +992,6 @@ class DarknetParser(ObjectDetectionParser):
         #             max = a[i]
         #             maxI = i
         #     return maxI
-
         # def __drawDetections(self, image, num, boxes,probs):
         #     validRectangles = []
         #     validProbs = []
