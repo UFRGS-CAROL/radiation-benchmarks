@@ -20,7 +20,7 @@ from SupportClasses import PrecisionAndRecall
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
 
 PARSE_LAYERS = True
-LAYERS_GOLD_PATH = '/home/pfpimenta/darknetLayers/'
+LAYERS_GOLD_PATH = '/home/pfpimenta/darknetLayers/golds/'
 LAYERS_PATH = '/home/pfpimenta/darknetLayers/'
 
 #these strings in GOLD_BASE_DIR must be the directory paths of the gold logs for each machine
@@ -96,7 +96,7 @@ class DarknetParser(ObjectDetectionParser):
     csvHeader = ["logFileName", "Machine", "Benchmark", "SDC_Iteration", "#Accumulated_Errors", "#Iteration_Errors", "gold_lines", "detected_lines", "wrong_elements", "x_center_of_mass", "y_center_of_mass", "precision", "recall", "false_negative", "false_positive","true_positive", "abft_type", "row_detected_errors", "col_detected_errors", "failed_layer", "header"]
 			                    
     _failed_layer = None
-    # def __init__(self):
+    '''# def __init__(self):
     #     start_time = time.time()
     #     ObjectDetectionParser.__init__(self)
     #     for kD, vD in DATASETS.iteritems():
@@ -122,7 +122,7 @@ class DarknetParser(ObjectDetectionParser):
     #     # for gold object
     #
     # # each imglist has a gold, only need to keep then on the memory
-    # goldObjects = {}
+    # goldObjects = {}'''
     
     def _writeToCSV(self, csvFileName):
         self._writeCSVHeader(csvFileName)
@@ -292,27 +292,40 @@ class DarknetParser(ObjectDetectionParser):
                 contentsLen = len(layerContents)
             print("layer " + str(i) + " size=" + str(layerSize[i]) + " contentSize=" + str(contentsLen))
 
-    def get1DLayerErrorList(self,layerArray,goldArray,size):
+    def getRelativeError(self,expected,read):
+        absoluteError = abs(expected - read)
+        relativeError = abs(absoluteError / expected) * 100
+        return relativeError
+
+    def get1DLayerErrorList(self,layerArray,goldArray,size, errFilter):
         #layerError :: xPos, yPos, zPos, found(?), expected(?)
-        #layerErrorList :: [layerError]
+        #layerErrorList :: {[allLlayerErrors], [filtered2LayerErrors], [filtered5LayerErrors]}
         layerErrorList = []
         for i in range(0,size):
             if(layerArray[i] != goldArray[i]):
-                layerError = [i, -1, -1, layerArray[i], goldArray[i]]
-                layerErrorList.append(layerError)
+                relativeError = self.getRelativeError(goldArray[i],layerArray[i])
+                if ((errFilter=='allLayers')
+                or ( relativeError>2 and errFilter =='filtered2')
+                or (relativeError>5 and 'filtered5')):
+                    layerError = [i, -1, -1, layerArray[i], goldArray[i]]
+                    layerErrorList.append(layerError)
             
         return layerErrorList
 
-    def get3DLayerErrorList(self,layer,gold,width,height,depth):
+    def get3DLayerErrorList(self,layer,gold,width,height,depth, errFilter):
         #layerError :: xPos, yPos, zPos, found(?), expected(?)
-        #layerErrorList :: [layerError]
+        #layerErrorList :: {[allLlayerErrors], [filtered2LayerErrors], [filtered5LayerErrors]}
         layerErrorList = []
         for i in range(0,width):
             for j in range(0,height):
                 for k in range(0,depth):
                     if( layer[i][j][k] != gold[i][j][k]):
-                        layerError = [i,j,k,layer[i][j][k],gold[i][j][k]]
-                        layerErrorList.append(layerError)
+                        relativeError = self.getRelativeError(gold[i][j][k],layer[i][j][k])
+                        if ((errFilter=='allLayers')
+                        or ( relativeError>2 and errFilter =='filtered2')
+                        or (relativeError>5 and 'filtered5')):
+                            layerError = [i,j,k,layer[i][j][k],gold[i][j][k]]
+                            layerErrorList.append(layerError)
                     
         return layerErrorList
 
@@ -377,7 +390,7 @@ class DarknetParser(ObjectDetectionParser):
     def _localityParser1D(self,layerErrorList):
         #errorType :: cubic, square, colOrRow, single, random
         #layerError :: xPos, yPos, zPos, found(?), expected(?)
-        #layerErrorList :: [layerError]
+        #layerErrorLists :: {[allLlayerErrors], [filtered2LayerErrors], [filtered5LayerErrors]}
         if len(layerErrorList) < 1:
             return [0, 0, 0, 0, 0]
         elif len(layerErrorList) == 1:
@@ -394,11 +407,15 @@ class DarknetParser(ObjectDetectionParser):
             else:
                 return [0, 0, 0, 0, 1]
     
-    def getLayerErrorList(self,layer,gold,layerNum):
+    def getLayerErrorLists(self,layer,gold,layerNum):
         #layerError :: xPos, yPos, zPos, found(?), expected(?)
-        #layerErrorList :: [layerError]
+        #layerErrorLists :: {[allLlayerErrors], [filtered2LayerErrors], [filtered5LayerErrors]}
         isArray, width, height, depth = self.getLayerDimentions(layerNum)
-        errorList = []
+        errorLists = {
+            'allLayers': [],
+            'filtered2': [],
+            'filtered5': []
+        }
     
         if (layer is None):
             print('layer ' + str(layerNum) + ' log not found')
@@ -406,10 +423,14 @@ class DarknetParser(ObjectDetectionParser):
             print('gold ' + str(layerNum) + ' log not found')
         else:
             if(isArray):
-                errorList = self.get1DLayerErrorList(layer,gold,width)
+                errorLists['allLayers'] = self.get1DLayerErrorList(layer,gold,width,'allLayers')
+                errorLists['filtered2'] = self.get1DLayerErrorList(layer,gold,width,'filtered2')
+                errorLists['filtered5'] = self.get1DLayerErrorList(layer,gold,width,'filtered5')
             else:
-                errorList = self.get3DLayerErrorList(layer,gold,width,height,depth)
-        return errorList
+                errorLists['filtered5'] = self.get3DLayerErrorList(layer,gold,width,height,depth,'filtered5')
+                errorLists['allLayers'] = self.get3DLayerErrorList(layer,gold,width,height,depth,'allLayers')
+                errorLists['filtered2'] = self.get3DLayerErrorList(layer,gold,width,height,depth,'filtered2')
+        return errorLists
         '''layer_filename = LAYERS_PATH + self._logFileName + "_layer_" + str(i) + "_it_" + self._sdcIteration
         layer_gold_filename = LAYERS_GOLD_PATH + "gold" + str(i)'''
     
@@ -447,20 +468,29 @@ class DarknetParser(ObjectDetectionParser):
 
     def parseLayers(self):
         ### faz o parsing de todas as camadas de uma iteracao
-        #errorType :: cubic, square, colOrRow, single, random
+        #errorType :: [cubic, square, colOrRow, single, random]
         #layerError :: xPos, yPos, zPos, found(?), expected(?)
-        #layerErrorList :: [layerError]
+        #layerErrorLists :: {[allLlayerErrors], [filtered2LayerErrors], [filtered5LayerErrors]}
         errorFound = False
+        errorType = {
+            'allLayers': [],
+            'filtered2': [],
+            'filtered5': []
+        }
         for i in range(0,32):
             print '\n----layer ' + str(i) + ' :'
             layer = self.loadLayer(i)
             gold = self.loadGoldLayer(i)
-            layerErrorList = self.getLayerErrorList(layer,gold,i)
+            layerErrorLists = self.getLayerErrorLists(layer,gold,i)
             if( i< 29):
                 #layer 3D
-                errorType = self._localityParser3D(layerErrorList)
-                self.printErrorType(errorType)
-                if(errorType != [0,0,0,0,0]):
+                errorType['allLayers'] = self._localityParser3D(layerErrorLists['allLayers'])
+                errorType['filtered2'] = self._localityParser3D(layerErrorLists['filtered2'])
+                errorType['filtered5'] = self._localityParser3D(layerErrorLists['filtered5'])
+                self.printErrorType(errorType['allLayers'])
+                self.printErrorType(errorType['filtered2'])
+                self.printErrorType(errorType['filtered5'])
+                if(errorType['allLayers'] != [0,0,0,0,0]):
                     #aconteceu algum tipo de erro
                     if( not errorFound):
                         self._failed_layer = str(i)
@@ -474,9 +504,21 @@ class DarknetParser(ObjectDetectionParser):
                 print('jaccard = ' + str(jaccardCoef))
             else:
                 #layer 1D
-                errorType = self._localityParser1D(layerErrorList)
-                self.printErrorType(errorType)
-                jaccardCoef = self.jaccard_similarity(layer,gold)
+                errorType['allLayers'] = self._localityParser1D(layerErrorLists['allLayers'])
+                errorType['filtered2'] = self._localityParser1D(layerErrorLists['filtered2'])
+                errorType['filtered5'] = self._localityParser1D(layerErrorLists['filtered5'])
+                self.printErrorType(errorType['allLayers'])
+                self.printErrorType(errorType['filtered2'])
+                self.printErrorType(errorType['filtered5'])
+                if(errorType['allLayers'] != [0,0,0,0,0]):
+                    #aconteceu algum tipo de erro
+                    if( not errorFound):
+                        self._failed_layer = str(i)
+                        errorFound = True
+                    jaccardCoef = self.jaccard_similarity(layer,gold)
+                else:
+                    #nao teve nenhum erro
+                    jaccardCoef = 1
                 print('jaccard = ' + str(jaccardCoef))
             
             #fazer algo c a layerErrorList
@@ -794,6 +836,7 @@ class DarknetParser(ObjectDetectionParser):
         #                 return k
         return DATASETS[imgListPath][self._abftType]
 
+'''
         # def __maxIndex(self, a):
         #     n = len(a)
         #     if (n <= 0):
@@ -830,7 +873,7 @@ class DarknetParser(ObjectDetectionParser):
         #
         #             if (left < 0): left = 0
         #             if (right > image.w - 1): right = image.w-1
-	#             if (top < 0): top = 0
+        #             if (top < 0): top = 0
         #             if (bot > image.h - 1): bot = image.h-1;
         #
         #             # draw_box_width(im, left, top, right, bot, width, red, green, blue)
@@ -843,4 +886,4 @@ class DarknetParser(ObjectDetectionParser):
         #             validClasses.append(self._classes[class_])
         #
         #
-        #     return validRectangles, validProbs, validClasses
+        #     return validRectangles, validProbs, validClasses'''
