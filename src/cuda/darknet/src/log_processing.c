@@ -330,17 +330,18 @@ void saveLayer(network net, int iterator, int n)
 	FILE* bin;
 	char* log_name;
 	char name[100];
+	char folderPath[100];
 	char a[5], b[8], c[8];
 	int i, j;
 	
-	snprintf(b, 5,"%d",iterator+n-1);
+	snprintf(b, 5,"%d",iterator); //iterator+n-1?
 	for (i = 0; i < 32; i++)
 	{
 		snprintf(a, 3,"%d",i);
 #ifdef LOGS
 		log_name = get_log_file_name();
 #else
-		log_name = "standard_name";
+		log_name = "gold";
 #endif
 		strcpy(name, log_name);
 		strcat(name, "_it_");
@@ -348,22 +349,25 @@ void saveLayer(network net, int iterator, int n)
 		strcat(name, "_layer_");
 		strcat(name, &a);
 
-		for (j = strlen(name)+2; j >= 31; j--)
-		{
-			name[j] = name [j-1];
-		}
+#ifdef LOGS
 		name[26] = 'd';
 		name[27] = 'a';
 		name[28] = 't';
 		name[29] = 'a';
 		name[30] = '/';
+#else
+		//folderPath = "/var/radiation-benchmarks/data/";
+		strcpy(folderPath,"/var/radiation-benchmarks/data/");
+		strcat(folderPath, name);
+		strcpy(name,folderPath);
 		//printf("%s\n\n\n", name);
+		printf("...saving %s \n", name);
+#endif
 
+		//printf("...saving %s \n", name); 
 		if ((bin = fopen(name, "wb")) == NULL) {
-			printf("ERROR ON OPENING \n");
+			printf("LAYER: ERROR ON OPENING \n");
 		}
-		//printf("1112\n");
-		//printf("1113\n");
 		//printf("%s\n", name);
 		//printf("%f\n", l.output_gpu[0]);
 		//printf("%f\n", l.output_gpu[1]);
@@ -371,11 +375,11 @@ void saveLayer(network net, int iterator, int n)
 		//printf("%d\n", l.batch);
 
 		fwrite(layer_output[i], sizeof(float), net.layers[i].outputs, bin);
-		//printf("1114\n");
+		
 		fclose(bin);
 		name[0] = '\0';
-		//Lucas always free the memory
-		//free(layer_output[i]);
+
+
 	}
 }
 

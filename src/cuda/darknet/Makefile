@@ -115,13 +115,13 @@ results:
 
 .PHONY: clean
 
-test:darknet
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 3 -d data/gold_voc2012.test \
-							-l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 0 -a 1
+test:
+	./darknet -e yolo -m valid -c cfg/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 1 -d data/gold_voc2012.test2 \
+							-l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 1 -a 0
 
-generate:darknet
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 1 -g data/gold_voc2012.test \
-			-l data/voc.2012.DEBUG.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 0 -a 1
+generate:
+	./darknet -e yolo -m valid -c cfg/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 1 -g data/caltech_1k.test \
+			-l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 1 -a 0
 
 
 clean:

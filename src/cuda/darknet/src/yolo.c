@@ -401,8 +401,8 @@ void validate_yolo(Args parameters) {
 					clear_vectors(&current_ptr);
 					//			printf("passou\n");
 				}else{
-					//saveLayer(net,iterator*m,i+t);
-					printf("::%i", i+t-nthreads);
+					saveLayer(net,i+t-nthreads,i+t);
+					printf("%i :: ", i+t-nthreads);
 				}
 //				printf("passou %d %d\n");
 #ifdef LOGS
