@@ -125,11 +125,25 @@ class DarknetParser(ObjectDetectionParser):
     # # each imglist has a gold, only need to keep then on the memory
     # goldObjects = {}'''
 
-    def getLayerHeaderName(layerNum, errType):
+    def getLayerHeaderName(self, layerNum, errType):
         #layer3<layerNum><errType>ErrType
         layerHeaderName = 'layer' + str(layerNum) + errType + 'ErrType'
         return layerHeaderName
     
+    def errorTypeToString(self, errorType):
+        if(errorType[0] == 1):
+            return "cubic"
+        elif(errorType[1] == 1):
+            return "square"
+        elif(errorType[2] == 1):
+            return "colORrow"
+        elif(errorType[3] == 1):
+            return "single"
+        elif(errorType[4] == 1):
+            return "random"
+        else:
+            return "no errors"
+        
     def _writeToCSV(self, csvFileName):
         if (PARSE_LAYERS) and not(self._extendedHeader):
             self._extendedHeader = True
@@ -170,7 +184,7 @@ class DarknetParser(ObjectDetectionParser):
                 self._header]
 
             if (PARSE_LAYERS):
-                outputList.extend(self.errorTypeLists[i][errType]
+                outputList.extend(self.errorTypeToString(self.errorTypeLists[i][errType])
                                     for i in xrange(32)
                                     for errType in ['allLayers', 'filtered2', 'filtered5'])
 
@@ -365,13 +379,12 @@ class DarknetParser(ObjectDetectionParser):
 
     def loadLayer(self,layerNum):
         #carrega de um log para uma matriz
-        print('_logFileName: ' + self._logFileName[1:]) #016
-        print('_sdcIteration: ' + self._sdcIteration)
-        #layerFilename = self._logFileName + "_it_" + self._sdcIteration + "_layer_" + str(layerNum)
-        # 016
-        layerFilename = '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
-        print glob.glob(LAYERS_PATH + '*' + layerFilename[1:])
-        filenames = glob.glob(LAYERS_PATH + '*' + layerFilename[1:])
+        #print('_logFileName: ' + self._logFileName[])
+        #print('_sdcIteration: ' + self._sdcIteration)
+        layerFilename = self._logFileName + "_it_" + self._sdcIteration + "_layer_" + str(layerNum)
+        #layerFilename = '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
+        #print glob.glob(LAYERS_PATH  + layerFilename[])
+        filenames = glob.glob(LAYERS_PATH + layerFilename)
         if(len(filenames) == 0):
             return None
         elif(len(filenames)>1):
@@ -396,23 +409,28 @@ class DarknetParser(ObjectDetectionParser):
     def loadGoldLayer(self,layerNum):
         #carrega de um log para uma matriz
         #layerFilename = LAYERS_GOLD_PATH + "gold" + str(layerNum)
-        layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_0_layer_'
-        for filename in glob.glob(layerFilename + str(layerNum)):
-            layerSize = self.getSizeOfLayer(layerNum)
+        layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_'
+        filenames = glob.glob(layerFilename + str(layerNum))
+        if(len(filenames) == 0):
+            return None
+        elif(len(filenames)>1):
+            print('+de 1 gold encontrado para \'' + layerFilename + str(layerNum) + '\'')
 
-            layerFile = open(filename,"rb")
-            numItens = layerSize #float size = 4bytes
+        layerSize = self.getSizeOfLayer(layerNum)
 
-            layerContents = struct.unpack('f'*numItens, layerFile.read(4*numItens))
+        layerFile = open(filenames[0],"rb")
+        numItens = layerSize #float size = 4bytes
+
+        layerContents = struct.unpack('f'*numItens, layerFile.read(4*numItens))
             
-            #botar em matriz 3D
-            if( layerNum<29):
-                layer = self.tupleTo3DMatrix(layerContents,layerNum)
-            else:
-                layer = self.tupleToArray(layerContents,layerNum)
-            layerFile.close()
-            #print("load layer " + str(layerNum) + " size = " + str(layerSize) + " filename: " + filename + " len(layer) = " + str(len(layer)))
-            return layer
+        #botar em matriz 3D
+        if( layerNum<29):
+            layer = self.tupleTo3DMatrix(layerContents,layerNum)
+        else:
+            layer = self.tupleToArray(layerContents,layerNum)
+        layerFile.close()
+        #print("load layer " + str(layerNum) + " size = " + str(layerSize) + " filename: " + filename + " len(layer) = " + str(len(layer)))
+        return layer
 
     def _localityParser1D(self,layerErrorList):
         #errorType :: cubic, square, colOrRow, single, random
@@ -506,11 +524,13 @@ class DarknetParser(ObjectDetectionParser):
             layer = self.loadLayer(i)
             gold = self.loadGoldLayer(i)
             if (layer is None):
-                print('layer ' + str(i) + ' log not found')
+                print(self._machine + ' it: ' + self._sdcIteration +' layer ' + str(i) + ' log not found')
                 logsNotFound = True
+                break
             elif(gold is None):
                 print('gold ' + str(i) + ' log not found')
                 foldsNotFound = True
+                break
             else:
                 layerErrorLists = self.getLayerErrorLists(layer,gold,i)
                 if( i< 29):
@@ -528,11 +548,10 @@ class DarknetParser(ObjectDetectionParser):
                             errorFound = True
                         layerArray = self.layer3DToArray(layer, i)
                         goldArray = self.layer3DToArray(gold, i)
-                        jaccardCoef = self.jaccard_similarity(layerArray,goldArray)
+                        #jaccardCoef = self.jaccard_similarity(layerArray,goldArray)
                     else:
                         #nao teve nenhum erro
                         jaccardCoef = 1
-                    print('jaccard = ' + str(jaccardCoef))
                 else:
                     #layer 1D
                     self.errorTypeLists[i]['allLayers'] = self._localityParser1D(layerErrorLists['allLayers'])
@@ -546,11 +565,11 @@ class DarknetParser(ObjectDetectionParser):
                         if( not errorFound):
                             self._failed_layer = str(i)
                             errorFound = True
-                        jaccardCoef = self.jaccard_similarity(layer,gold)
+                        #jaccardCoef = self.jaccard_similarity(layer,gold)
                     else:
                         #nao teve nenhum erro
                         jaccardCoef = 1
-                print('jaccard = ' + str(jaccardCoef))
+                #print('jaccard = ' + str(jaccardCoef))
             
             #fazer algo c a layerErrorList
         if logsNotFound and goldsNotFound:
@@ -559,8 +578,19 @@ class DarknetParser(ObjectDetectionParser):
             self._failed_layer += 'logs not found'
         elif goldsNotFound:
             self._failed_layer += 'golds not found'
-        print('failed_layer: ' + self._failed_layer)
+        print('failed_layer: ' + self._failed_layer + '\n')
         pass
+
+    def haslayerLogs(self):
+        layerLogsIt ={
+            'carol-tx': {'no_abft': [0,1,1177,1497,3927,6974]},
+            'carol-k402': {'no_abft': [52,113,185,219,329,446,463,473,651,797,974,1711,1913,6059],
+                    'dumb_abft': [55,64,466]}
+        }
+        if self._sdcIteration in layerLogsIt[self._machine][self._abftType]:
+            return True
+        else:
+            return False
 
     def _relativeErrorParser(self, errList):
         if len(errList) <= 0:   
@@ -640,9 +670,13 @@ class DarknetParser(ObjectDetectionParser):
 
                 foundPb[i][j] = float(y["probs"]["prob_r"])
                 goldPb[i][j] = float(y["probs"]["prob_e"])
-
-        if PARSE_LAYERS:
-            self.parseLayers()            
+        
+        #if self._abftType != 'no_abft':
+        #    print str(self._sdcIteration) + ' : ' + self._abftType 
+            
+        if PARSE_LAYERS: #and self.hasLayerLogs(self._sdcIteration):
+            self.parseLayers()
+            #print self._machine + self._abftType
 
         if self._rowDetErrors > 1e6:
             self._rowDetErrors /= long(1e15)
