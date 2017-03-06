@@ -148,8 +148,8 @@ class DarknetParser(ObjectDetectionParser):
         if (PARSE_LAYERS) and not(self._extendedHeader):
             self._extendedHeader = True
             self._csvHeader.extend(self.getLayerHeaderName(layerNum,errType)
-                                    for layerNum in xrange(32)
-                                    for errType in ['allLayers', 'filtered2', 'filtered5'])
+                                    for errType in ['allLayers', 'filtered2', 'filtered5']
+                                    for layerNum in xrange(32))
         self._writeCSVHeader(csvFileName)
 
         try:
@@ -185,8 +185,8 @@ class DarknetParser(ObjectDetectionParser):
 
             if (PARSE_LAYERS):
                 outputList.extend(self.errorTypeToString(self.errorTypeLists[i][errType])
-                                    for i in xrange(32)
-                                    for errType in ['allLayers', 'filtered2', 'filtered5'])
+                                    for errType in ['allLayers', 'filtered2', 'filtered5']
+                                    for i in xrange(32))
 
                 # if self._abftType != 'no_abft' and self._abftType != None:
                 #     outputList.extend([])
@@ -381,10 +381,17 @@ class DarknetParser(ObjectDetectionParser):
         #carrega de um log para uma matriz
         #print('_logFileName: ' + self._logFileName[])
         #print('_sdcIteration: ' + self._sdcIteration)
-        layerFilename = self._logFileName + "_it_" + self._sdcIteration + "_layer_" + str(layerNum)
-        #layerFilename = '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
-        #print glob.glob(LAYERS_PATH  + layerFilename[])
-        filenames = glob.glob(LAYERS_PATH + layerFilename)
+        sdcIteration = self._sdcIteration
+        if self._isInstLayers:
+            sdcIteration = str(int(sdcIteration)+1)
+            #print 'debug' + sdcIteration    
+        #layerFilename = LAYERS_PATH + self._logFileName + "_it_" + sdcIteration + "_layer_" + str(layerNum)
+        #layerFilename = LAYERS_PATH + '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
+        layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
+        #print LAYERS_PATH  + layerFilename
+        filenames = glob.glob(layerFilename)
+        #print '_logFilename: ' + self._logFileName
+        #print str(filenames)
         if(len(filenames) == 0):
             return None
         elif(len(filenames)>1):
@@ -422,8 +429,9 @@ class DarknetParser(ObjectDetectionParser):
         datasetName = self.getDatasetName()
         goldIteration = str(int(self._sdcIteration)%1000)
         #print 'dataset? ' + self._goldFileName + '  it ' + self._sdcIteration + '  abft: ' + self._abftType
-        layerFilename = LAYERS_GOLD_PATH + "gold_" + self._machine + datasetName + '_it_' + goldIteration + '_layer_' +str(layerNum)
-        #layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_'
+        #layerFilename = LAYERS_GOLD_PATH + "gold_" + self._machine + datasetName + '_it_' + goldIteration + '_layer_' +str(layerNum)
+        layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
+        #print layerFilename
         filenames = glob.glob(layerFilename)
         #print str(filenames)
         if(len(filenames) == 0):
@@ -540,7 +548,7 @@ class DarknetParser(ObjectDetectionParser):
             layer = self.loadLayer(i)
             gold = self.loadGoldLayer(i)
             if (layer is None):
-                #print(self._machine + ' it: ' + self._sdcIteration +' layer ' + str(i) + ' log not found')
+                print(self._machine + ' it: ' + self._sdcIteration +' layer ' + str(i) + ' log not found')
                 logsNotFound = True
                 break
             elif(gold is None):
@@ -562,8 +570,8 @@ class DarknetParser(ObjectDetectionParser):
                         if( not errorFound):
                             self._failed_layer = str(i)
                             errorFound = True
-                        layerArray = self.layer3DToArray(layer, i)
-                        goldArray = self.layer3DToArray(gold, i)
+                        #layerArray = self.layer3DToArray(layer, i)
+                        #goldArray = self.layer3DToArray(gold, i)
                         #jaccardCoef = self.jaccard_similarity(layerArray,goldArray)
                     else:
                         #nao teve nenhum erro
@@ -609,6 +617,8 @@ class DarknetParser(ObjectDetectionParser):
             return False
 
     def _relativeErrorParser(self, errList):
+        self._isInstLayers = False
+
         if len(errList) <= 0:   
             return
 
@@ -620,8 +630,14 @@ class DarknetParser(ObjectDetectionParser):
             goldPath = GOLD_BASE_DIR[self._machine] + "/darknet/" + self._goldFileName
             txtPath = GOLD_BASE_DIR[self._machine] + '/networks_img_list/' + os.path.basename(self._imgListPath)
         else:
-            print self._machine
-            return
+            if self._machine == 'carolk402': #errors_log_database_inst foi gerado com essa string
+                self._machine = 'carol-k402'
+                goldPath = GOLD_BASE_DIR[self._machine] + "/darknet/" + self._goldFileName
+                txtPath = GOLD_BASE_DIR[self._machine] + '/networks_img_list/' + os.path.basename(self._imgListPath)
+                self._isInstLayers = True
+            else:
+                print '_machine nao indexada: ' + self._machine
+                return
 
         if goldKey not in self._goldDatasetArray:
             g = _GoldContent._GoldContent(nn='darknet', filepath=goldPath)
@@ -689,8 +705,9 @@ class DarknetParser(ObjectDetectionParser):
         
         #if self._abftType != 'no_abft':
         #    print str(self._sdcIteration) + ' : ' + self._abftType 
-            
-        if PARSE_LAYERS: #and self.hasLayerLogs(self._sdcIteration):
+        
+        if PARSE_LAYERS: #and self._sdcIteration in ['463','446','1913']: #and self.hasLayerLogs(self._sdcIteration):
+            #print self._sdcIteration + 'debug'
             self.parseLayers()
             #print self._machine + self._abftType
 
