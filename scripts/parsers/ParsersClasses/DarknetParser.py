@@ -385,9 +385,9 @@ class DarknetParser(ObjectDetectionParser):
         if self._isInstLayers:
             sdcIteration = str(int(sdcIteration)+1)
             #print 'debug' + sdcIteration    
-        #layerFilename = LAYERS_PATH + self._logFileName + "_it_" + sdcIteration + "_layer_" + str(layerNum)
+        layerFilename = LAYERS_PATH + self._logFileName + "_it_" + sdcIteration + "_layer_" + str(layerNum)
         #layerFilename = LAYERS_PATH + '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
-        layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
+        #layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
         #print LAYERS_PATH  + layerFilename
         filenames = glob.glob(layerFilename)
         #print '_logFilename: ' + self._logFileName
@@ -429,8 +429,8 @@ class DarknetParser(ObjectDetectionParser):
         datasetName = self.getDatasetName()
         goldIteration = str(int(self._sdcIteration)%1000)
         #print 'dataset? ' + self._goldFileName + '  it ' + self._sdcIteration + '  abft: ' + self._abftType
-        #layerFilename = LAYERS_GOLD_PATH + "gold_" + self._machine + datasetName + '_it_' + goldIteration + '_layer_' +str(layerNum)
-        layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
+        layerFilename = LAYERS_GOLD_PATH + "gold_" + self._machine + datasetName + '_it_' + goldIteration + '_layer_' +str(layerNum)
+        #layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
         #print layerFilename
         filenames = glob.glob(layerFilename)
         #print str(filenames)
