@@ -127,6 +127,7 @@ class FasterRcnnParser(ObjectDetectionParser):
         return (ret if len(ret) > 0 else None), imgPath
 
     def _processBoxes(self, errString):
+        print "\n" , errString
         ##ERR img_name: /home/carol/radiation-benchmarks/data/CALTECH/set10/V000/193.jpg
         # class: sheep
         # box: [8]
@@ -143,7 +144,7 @@ class FasterRcnnParser(ObjectDetectionParser):
                             "y2_e\: (\S+).*y2_r\: (\S+).*", errString)
         imgPath = ''
         if imageErr:
-            imageErr['generation'] = 1
+            ret['generation'] = 1
             imgPath = imageErr.group(1)
             ret["class"] = imageErr.group(2)
             ret["box"] = imageErr.group(3)
@@ -207,9 +208,9 @@ class FasterRcnnParser(ObjectDetectionParser):
         imageErr = re.match(".*boxes\: \[(\d+),(\d+)\].*e\: (\S+).*r\: (\S+).*", errString)
 
         if imageErr:
-            imageErr['generation'] = 2
-            ret["class"] = int(imageErr.group(1))
-            ret["box"] = int(imageErr.group(2))
+            ret['generation'] = 2
+            ret["i"] = int(imageErr.group(1))
+            ret["j"] = int(imageErr.group(2))
 
             ret["e"] = imageErr.group(3)
             try:
@@ -226,6 +227,7 @@ class FasterRcnnParser(ObjectDetectionParser):
         return (ret if len(ret) > 0 else None), imgPath
 
     def _relativeErrorParser(self, errList):
+        return
         if len(errList) <= 0:
             return
 
@@ -245,8 +247,13 @@ class FasterRcnnParser(ObjectDetectionParser):
         #     print '\nnao passou para ', goldKey
         gold = self._goldDatasetArray[goldKey].getPyFasterGold()
 
+        if errList[0]['generation'] == 1:
+            imgPos = errList[0]['img_path']
+        else:
+            pass
 
-        imgPos = errList[0]['img_path']
+
+
         imgFilename = self.__setLocalFile(imgPos)
         imgObj = ImageRaw(imgFilename)
 
