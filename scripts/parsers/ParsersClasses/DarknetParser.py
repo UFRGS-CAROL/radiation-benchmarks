@@ -20,8 +20,8 @@ from SupportClasses import PrecisionAndRecall
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
 
 PARSE_LAYERS = True
-LAYERS_GOLD_PATH = '/home/pfpimenta/darknetLayers/golds/'
-LAYERS_PATH = '/home/pfpimenta/darknetLayers/layers/'
+LAYERS_GOLD_PATH = '/home/fernando/temp/camadas/data/' #'/home/pfpimenta/darknetLayers/golds/'
+LAYERS_PATH = '/home/fernando/temp/camadas/data/' #'/home/pfpimenta/darknetLayers/layers/'
 
 # these strings in GOLD_BASE_DIR must be the directory paths of the gold logs for each machine
 GOLD_BASE_DIR = {
@@ -34,14 +34,14 @@ GOLD_BASE_DIR = {
     # # carolx1c
     # 'carolx1c': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1c',
     # fault injection
-    'carolk402': '/home/fernando/Dropbox/UFRGS/Pesquisa/fault_injections/sassifi_darknet_paper_micro'
+    'carolk402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Fault_Injections/sassifi_darknet_paper_micro'
 }
 
 # IMG_OUTPUT_DIR is the directory to where the images with error comparisons will be saved
-IMG_OUTPUT_DIR = '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/img_corrupted_output/'
+IMG_OUTPUT_DIR = '' #''/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/img_corrupted_output/'
 
 # LOCAL_RADIATION_BENCH must be the parent directory of the radiation-benchmarks folder
-LOCAL_RADIATION_BENCH = '/home/pfpimenta'  # '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'
+LOCAL_RADIATION_BENCH = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'  # '/home/pfpimenta'
 
 DATASETS = {
     # normal
@@ -60,6 +60,7 @@ class DarknetParser(ObjectDetectionParser):
     __configFile = None
     __iterations = None
     _extendedHeader = False
+    _imgListSize = 1000
     __layerDimentions = {
         0: [224, 224, 64],
         1: [112, 112, 64],
@@ -429,12 +430,12 @@ class DarknetParser(ObjectDetectionParser):
     def loadGoldLayer(self, layerNum):
         # carrega de um log para uma matriz
         datasetName = self.getDatasetName()
-        goldIteration = str(int(self._sdcIteration) % 1000)
+        goldIteration = str(int(self._sdcIteration) % self._imgListSize)
         # print 'dataset? ' + self._goldFileName + '  it ' + self._sdcIteration + '  abft: ' + self._abftType
         layerFilename = LAYERS_GOLD_PATH + "gold_" + self._machine + datasetName + '_it_' + goldIteration + '_layer_' + str(
             layerNum)
         # layerFilename = LAYERS_GOLD_PATH + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
-        # print layerFilename
+        #print layerFilename
         filenames = glob.glob(layerFilename)
         # print str(filenames)
         if (len(filenames) == 0):
@@ -619,9 +620,9 @@ class DarknetParser(ObjectDetectionParser):
             return False
 
     def _relativeErrorParser(self, errList):
-        self._isInstLayers = False
+        self._isInstLayers = True
 
-        if len(errList) <= 0:
+        if len(errList) <= 0: # or '2017_03_06_12_51_03_cudaDarknet_carolk402.log' not in self._logFileName:
             return
 
         if self._abftType == 'dumb_abft' and 'abft' not in self._goldFileName:
@@ -632,14 +633,14 @@ class DarknetParser(ObjectDetectionParser):
             goldPath = GOLD_BASE_DIR[self._machine] + "/darknet/" + self._goldFileName
             txtPath = GOLD_BASE_DIR[self._machine] + '/networks_img_list/' + os.path.basename(self._imgListPath)
         else:
-            if self._machine == 'carolk402':  # errors_log_database_inst foi gerado com essa string
-                self._machine = 'carol-k402'
-                goldPath = GOLD_BASE_DIR[self._machine] + "/darknet/" + self._goldFileName
-                txtPath = GOLD_BASE_DIR[self._machine] + '/networks_img_list/' + os.path.basename(self._imgListPath)
-                self._isInstLayers = True
-            else:
-                print '_machine nao indexada: ' + self._machine
-                return
+            # if self._machine == 'carolk402':  # errors_log_database_inst foi gerado com essa string
+            #     self._machine = 'carol-k402'
+            #     goldPath = GOLD_BASE_DIR[self._machine] + "/darknet/" + self._goldFileName
+            #     txtPath = GOLD_BASE_DIR[self._machine] + '/networks_img_list/' + os.path.basename(self._imgListPath)
+            #     self._isInstLayers = True
+            # else:
+            print '_machine nao indexada: ' + self._machine
+            return
 
         if goldKey not in self._goldDatasetArray:
             g = _GoldContent._GoldContent(nn='darknet', filepath=goldPath)
@@ -649,7 +650,9 @@ class DarknetParser(ObjectDetectionParser):
 
         listFile = open(txtPath).readlines()
 
-        imgPos = int(self._sdcIteration) % len(listFile)
+        #set imglist size for this SDC, it will be set again for other SDC
+        self._imgListSize = len(listFile)
+        imgPos = int(self._sdcIteration) % self._imgListSize
         imgFilename = self.__setLocalFile(listFile, imgPos)
         imgObj = ImageRaw(imgFilename)
 
