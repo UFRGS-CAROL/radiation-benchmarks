@@ -12,6 +12,26 @@ from SupportClasses import PrecisionAndRecall
 
 
 class DarknetParser(ObjectDetectionParser):
+    # these strings in GOLD_BASE_DIR must be the directory paths of the gold logs for each machine
+    _goldBaseDir = {
+        # 'carol-k402': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_K40',
+        # 'carol-tx': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_TITAN',
+        # # carolx1a
+        # 'carolx1a': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1b',
+        # # carolx1b
+        # 'carolx1b': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1b',
+        # # carolx1c
+        # 'carolx1c': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1c',
+        # fault injection
+        'carolk402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Fault_Injections/sassifi_darknet_paper_micro'
+    }
+
+    _datasets = {'caltech.pedestrians.critical.1K.txt': {'dumb_abft': 'gold.caltech.critical.abft.1K.test',
+                                                         'no_abft': 'gold.caltech.critical.1K.test'},
+                 'caltech.pedestrians.1K.txt': {'dumb_abft': 'gold.caltech.abft.1K.test',
+                                                'no_abft': 'gold.caltech.1K.test'},
+                 'voc.2012.1K.txt': {'dumb_abft': 'gold.voc.2012.abft.1K.test', 'no_abft': 'gold.voc.2012.1K.test'}}
+
     __executionType = None
     __executionModel = None
 
@@ -59,31 +79,30 @@ class DarknetParser(ObjectDetectionParser):
                   "recall", "false_negative", "false_positive", "true_positive", "abft_type", "row_detected_errors",
                   "col_detected_errors", "failed_layer", "header"]
 
-    __parseLayers = False
+    _parseLayers = False
     __layersGoldPath = ""
     __layersPath = ""
-    __goldBaseDir = ""
-    __imgOutputDir = ""
-    __localRadiationBench = ""
-    __datasets = ""
+    _imgOutputDir = ""
+    _localRadiationBench = ""
+
 
     def __init__(self, **kwargs):
-        self.__parseLayers =            bool(kwargs.pop("parseLayers"))
-        self.__goldBaseDir =            str(kwargs.pop("goldBaseDir"))
-        self.__imgOutputDir =           str(kwargs.pop("imgOutputDir"))
-        self.__localRadiationBench =    str(kwargs.pop("localRadiationBench"))
-        self.__datasets            =    str(kwargs.pop("datasets"))
-        self._prThreshold =             float(kwargs.pop("pr_threshold"))
+        self._parseLayers = bool(kwargs.pop("parseLayers"))
+        # self._goldBaseDir = str(kwargs.pop("goldBaseDir"))
+        self._imgOutputDir = str(kwargs.pop("imgOutputDir"))
+        self._localRadiationBench = str(kwargs.pop("localRadiationBench"))
+        # self._datasets            =    str(kwargs.pop("datasets"))
+        self._prThreshold = float(kwargs.pop("pr_threshold"))
 
         try:
             super(ObjectDetectionParser, self).__init__()
-            if self.__parseLayers:
+            if self._parseLayers:
                 self.__layersGoldPath = str(kwargs.pop("layersGoldPath"))
                 self.__layersPath = str(kwargs.pop("layersPath"))
                 self._extendedHeader = True
                 self._csvHeader.extend(self.getLayerHeaderName(layerNum, errType)
-                                         for errType in ['allLayers', 'filtered2', 'filtered5']
-                                           for layerNum in xrange(32))
+                                       for errType in ['allLayers', 'filtered2', 'filtered5']
+                                       for layerNum in xrange(32))
         except:
             print "\n Crash on ObjectDetectionParser"
             sys.exit(-1)
@@ -170,7 +189,7 @@ class DarknetParser(ObjectDetectionParser):
                           self._failed_layer,
                           self._header]
 
-            if (self.__parseLayers):
+            if (self._parseLayers):
                 outputList.extend(self.errorTypeToString(self.errorTypeLists[i][errType])
                                   for errType in ['allLayers', 'filtered2', 'filtered5']
                                   for i in xrange(32))
@@ -207,7 +226,8 @@ class DarknetParser(ObjectDetectionParser):
                 if "abft" in header:
                     self._abftType = darknetM.group(7)
 
-                self._goldFileName = self.getGoldFileName(self._imgListPath)
+                self._goldFileName = self._datasets[os.path.basename(self._imgListPath)][self._abftType]
+
             except:
                 self._imgListPath = None
 
@@ -242,7 +262,7 @@ class DarknetParser(ObjectDetectionParser):
 
     def __setLocalFile(self, listFile, imgPos):
         tmp = (listFile[imgPos].rstrip()).split('radiation-benchmarks')[1]
-        tmp = self.__localRadiationBench + '/radiation-benchmarks' + tmp
+        tmp = self._localRadiationBench + '/radiation-benchmarks' + tmp
         return tmp
 
     def newRectArray(self, arr):
@@ -291,7 +311,7 @@ class DarknetParser(ObjectDetectionParser):
         layerSize = [0 for k in xrange(32)]
         for i in range(0, 32):
             contentsLen = 0
-            for filename in glob.glob(self.__layersPath  + '*_' + str(i)):
+            for filename in glob.glob(self.__layersPath + '*_' + str(i)):
                 if (layerSize[i] == 0):
                     layerSize[i] = self.getSizeOfLayer(filename)
 
@@ -371,7 +391,7 @@ class DarknetParser(ObjectDetectionParser):
         if self._isInstLayers:
             sdcIteration = str(int(sdcIteration) + 1)
             # print 'debug' + sdcIteration
-        layerFilename = self.__layersPath  + self._logFileName + "_it_" + sdcIteration + "_layer_" + str(layerNum)
+        layerFilename = self.__layersPath + self._logFileName + "_it_" + sdcIteration + "_layer_" + str(layerNum)
         # layerFilename = self.__layersPath  + '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
         # layerFilename = self.__layersGoldPath + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
         # print self.__layersPath   + layerFilename
@@ -418,7 +438,7 @@ class DarknetParser(ObjectDetectionParser):
         layerFilename = self.__layersGoldPath + "gold_" + self._machine + datasetName + '_it_' + goldIteration + '_layer_' + str(
             layerNum)
         # layerFilename = self.__layersGoldPath + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
-        #print layerFilename
+        # print layerFilename
         filenames = glob.glob(layerFilename)
         # print str(filenames)
         if (len(filenames) == 0):
@@ -605,16 +625,16 @@ class DarknetParser(ObjectDetectionParser):
     def _relativeErrorParser(self, errList):
         self._isInstLayers = True
 
-        if len(errList) <= 0: # or '2017_03_06_12_51_03_cudaDarknet_carolk402.log' not in self._logFileName:
+        if len(errList) <= 0:  # or '2017_03_06_12_51_03_cudaDarknet_carolk402.log' not in self._logFileName:
             return
 
         if self._abftType == 'dumb_abft' and 'abft' not in self._goldFileName:
             print "\n\n", self._goldFileName
         goldKey = self._machine + "_" + self._benchmark + "_" + self._goldFileName
 
-        if self._machine in self.__goldBaseDir :
-            goldPath = self.__goldBaseDir [self._machine] + "/darknet/" + self._goldFileName
-            txtPath = self.__goldBaseDir [self._machine] + '/networks_img_list/' + os.path.basename(self._imgListPath)
+        if self._machine in self._goldBaseDir:
+            goldPath = self._goldBaseDir[self._machine] + "/darknet/" + self._goldFileName
+            txtPath = self._goldBaseDir[self._machine] + '/networks_img_list/' + os.path.basename(self._imgListPath)
         else:
             # if self._machine == 'carolk402':  # errors_log_database_inst foi gerado com essa string
             #     self._machine = 'carol-k402'
@@ -633,7 +653,7 @@ class DarknetParser(ObjectDetectionParser):
 
         listFile = open(txtPath).readlines()
 
-        #set imglist size for this SDC, it will be set again for other SDC
+        # set imglist size for this SDC, it will be set again for other SDC
         self._imgListSize = len(listFile)
         imgPos = int(self._sdcIteration) % self._imgListSize
         imgFilename = self.__setLocalFile(listFile, imgPos)
@@ -694,7 +714,7 @@ class DarknetParser(ObjectDetectionParser):
         # if self._abftType != 'no_abft':
         #    print str(self._sdcIteration) + ' : ' + self._abftType 
 
-        if self.__parseLayers:  # and self._sdcIteration in ['463','446','1913']: #and self.hasLayerLogs(self._sdcIteration):
+        if self._parseLayers:  # and self._sdcIteration in ['463','446','1913']: #and self.hasLayerLogs(self._sdcIteration):
             # print self._sdcIteration + 'debug'
             self.parseLayers()
             # print self._machine + self._abftType
@@ -719,9 +739,9 @@ class DarknetParser(ObjectDetectionParser):
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
 
-        if self.__imgOutputDir and (self._precision != 1 or self._recall != 1):
+        if self._imgOutputDir and (self._precision != 1 or self._recall != 1):
             self.buildImageMethod(imgFilename.rstrip(), gValidRects, fValidRects, str(self._sdcIteration)
-                                  + '_' + self._logFileName, self.__imgOutputDir)
+                                  + '_' + self._logFileName, self._imgOutputDir)
 
         self._falseNegative = precisionRecallObj.getFalseNegative()
         self._falsePositive = precisionRecallObj.getFalsePositive()
@@ -909,18 +929,6 @@ class DarknetParser(ObjectDetectionParser):
                 raise
 
         return ret, imgListPosition
-
-    def getGoldFileName(self, imgListPath):
-        imgListPath = os.path.basename(imgListPath)
-        # for k, v in self.__datasets.iteritems():
-        #     for kI, vI in v.iteritems():
-        #         if imgListPath == kI:
-        #             k = os.path.basename(k)
-        #             if self._abftType == 'dumb_abft' and 'abft' in k:
-        #                 return k
-        #             elif self._abftType == 'no_abft' and 'abft' not in k:
-        #                 return k
-        return self.__datasets[imgListPath][self._abftType]
 
 
 '''
