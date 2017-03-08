@@ -7,6 +7,13 @@ Parameters.py
 run WriteSdcsErrDatabase.py where all .log files are located
 
 #second
-run ProcessDatabase.py --database < error database generated file path> on the root directory
+run ./ProcessDatabase.py --database < error database generated file path> --benchmarks <benchmarks list>
+#for example if you want run this parser for darknet, gemm and accl
+run ./ProcessDatabase.py --database /home/ic_fodao/errors_log_database --benchmarks darknet,gemm,accl
+
+#for HOG, Darknet and PyFasterRCNN some parameters could be set
+--pr_threshold Precision and Recall jaccard similarity threshold value, default is 0.5
+--parser_layers Parse Darknet corrupted layers
+
 
 # it must generate some folders with all parsed CSVs
