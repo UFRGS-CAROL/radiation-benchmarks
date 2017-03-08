@@ -1,17 +1,14 @@
 #!/usr/bin/env python
 import sys
-
 from SupportClasses import MatchBenchmark
-
-GOLD_DIR = "/home/fernando/Dropbox/UFRGS/Pesquisa/LANSCE_2016_PARSED/Gold_CNNs/"
 import shelve
 import argparse
+import Parameters as par
 
-
-
-#temporary set
+# temporary set
 buildImages = False
 size = 0
+
 
 # benchmarks dict => (bechmarkname_machinename : list of SDC item)
 # SDC item => [logfile name, header, sdc iteration, iteration total amount error, iteration accumulated error, list of errors ]
@@ -41,7 +38,7 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
 
         sys.stdout.flush()
 
-            # currObj =  matchBench.getCurrentObj()
+        # currObj =  matchBench.getCurrentObj()
         #
         # if isLavaMD and box is None:
         #     continue
@@ -50,27 +47,27 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
 
         # for errString in matchBench.errList:
         #     err = None
-            # if isGEMM or isLud:
-            #     err = parseErrGEMM(errString)
-            # elif isHotspot:
-            #
-            #     err = parseErrHotspot(errString)
-            # elif isLavaMD:
-            #     err = parseErrLavaMD(errString, box, header)
-            # elif isACCL:
-            #     err = parseErrACCL(errString)
-            # elif isNW:
-            #     err = parseErrNW(errString)
-            # elif isLulesh:
-            #     err = parseErrLulesh(errString, 50, header)
-            # elif isDarknet:
-            #     err = pn.parseErrDarknet(errString)
-            # elif isPyFaster:
-            #     err = pn.parseErrPyFaster(errString, sdcIteration)
+        # if isGEMM or isLud:
+        #     err = parseErrGEMM(errString)
+        # elif isHotspot:
+        #
+        #     err = parseErrHotspot(errString)
+        # elif isLavaMD:
+        #     err = parseErrLavaMD(errString, box, header)
+        # elif isACCL:
+        #     err = parseErrACCL(errString)
+        # elif isNW:
+        #     err = parseErrNW(errString)
+        # elif isLulesh:
+        #     err = parseErrLulesh(errString, 50, header)
+        # elif isDarknet:
+        #     err = pn.parseErrDarknet(errString)
+        # elif isPyFaster:
+        #     err = pn.parseErrPyFaster(errString, sdcIteration)
         matchBench.parseErrCall()
-            #
-            # if err is not None:
-            #     errorsParsed.append(err)
+        #
+        # if err is not None:
+        #     errorsParsed.append(err)
 
         # (goldLines, detectedLines, xMass, yMass, precision, recall, falseNegative, falsePositive, truePositive,
         #  imgFile) = (
@@ -111,9 +108,9 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
 
         # Parse locality metric
         # if isGEMM or isHotspot or isACCL or isNW or isLud:
-            # if isHotspot:
-            #    print errListFiltered
-            #    print errorsParsed
+        # if isHotspot:
+        #    print errListFiltered
+        #    print errorsParsed
 
         matchBench.localityParserCall()
         matchBench.jaccardCoefficientCall()
@@ -134,14 +131,15 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
         #         currObj.buildImage(errorsParsed, size,
         #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
         #     else:
-        #to activate this method the setBuildImage method must be called with True parameter
+        # to activate this method the setBuildImage method must be called with True parameter
 
         matchBench.writeToCSVCall()
         sdci += 1
     sys.stdout.write(
         "\rProcessing SDC " + str(sdci - 1) + " of " + str(totalSdcs) + " - 100%                     " + "\n")
     sys.stdout.flush()
-    #print matchBench.checkNotDoneBenchs()
+    # print matchBench.checkNotDoneBenchs()
+
 
 #       (cubicF, squareF, colRowF, singleF, randomF) = currObj.localityParser3D(errListFiltered)
 #       (cubicF2, squareF2, colRowF2, singleF2, randomF2) = currObj.localityParser3D(errListFiltered2)
@@ -217,9 +215,23 @@ def parse_args():
     parser.add_argument('--database', dest='error_database',
                         help='Where database is located', default="errors_log_database")
 
+    parser.add_argument('--benchmarks', dest='benchmarks',
+                        help='A list separated by \',\' (commas with no sapace) where each item will be the benchmarks that parser will process.'
+                             '\nAvailiable parsers: Darknet, Hotspot, GEMM, HOG, lavamd'
+                             '\nnw, quicksort, accl, PyFasterRCNN, Lulesh, LUD, mergesort.'
+                             ' Darknet benchmark needs --parse_layers parameter, which is False if no layer will be parsed, and True otherwise.'
+                             ' Darknet, HOG, and PyFasterRCNN need a Precision and Recall threshold value', required=True)
+
+    parser.add_argument('--parse_layers', dest='parse_layers', help='If you want parse Darknet layers, set it True, default values is False',
+                        default=False)
+
+    parser.add_argument('--pr_threshold', dest='pr_threshold', help='Precision and Recall threshold value,0 - 1, defautl value is 0.5',
+                        default=0.5)
+
     args = parser.parse_args()
 
     return args
+
 
 ###########################################
 # MAIN
@@ -227,6 +239,17 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+    try:
+        benchlist = (str(args.benchmarks).lower()).split(',')
+        par.setBenchmarks(
+            benchmarks=benchlist,
+            pr_threshold=args.pr_threshold,
+            parse_layers=args.parse_layers,
+        )
+    except:
+        print "SET ALL PARAMTERS CORRECTLY, error on set parameters"
+        sys.exit(-1)
+
     # db = shelve.open("errors_log_database") #python3
     db = shelve.open(args.error_database)  # python2
     # jump = True
