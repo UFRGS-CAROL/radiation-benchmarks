@@ -220,13 +220,18 @@ def parse_args():
                              '\nAvailiable parsers: Darknet, Hotspot, GEMM, HOG, lavamd'
                              '\nnw, quicksort, accl, PyFasterRCNN, Lulesh, LUD, mergesort.'
                              ' Darknet benchmark needs --parse_layers parameter, which is False if no layer will be parsed, and True otherwise.'
-                             ' Darknet, HOG, and PyFasterRCNN need a Precision and Recall threshold value', required=True)
+                             ' Darknet, HOG, and PyFasterRCNN need a Precision and Recall threshold value.'
+                             'If you want a more correct radiation test result pass --check_csv flag', required=True)
 
     parser.add_argument('--parse_layers', dest='parse_layers', help='If you want parse Darknet layers, set it True, default values is False',
                         default=False)
 
     parser.add_argument('--pr_threshold', dest='pr_threshold', help='Precision and Recall threshold value,0 - 1, defautl value is 0.5',
                         default=0.5)
+
+    parser.add_argument('--check_csv', dest='check_csv', help='This parameter will open a csv file which contains all radiation test runs, then it will check '
+                                                              'if every SDC is on a valid run, default is false',
+                        default=False, action='store_true')
 
     args = parser.parse_args()
 

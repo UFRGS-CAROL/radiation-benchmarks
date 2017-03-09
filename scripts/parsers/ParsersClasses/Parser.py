@@ -1,3 +1,4 @@
+import re
 from abc import ABCMeta, abstractmethod
 from PIL import Image
 import struct
@@ -7,18 +8,19 @@ import errno
 import collections
 import csv
 import warnings
+from datetime import datetime
 
 """Base class for parser, need be implemented by each benchmark"""
 
 
 class Parser():
     __metaclass__ = ABCMeta
-    #only for parser
+    # only for parser
     __keys = ["errorsParsed", "errListFiltered", "errListFiltered2"]
     _errors = {}
-    #for localityParser2D
+    # for localityParser2D
     _locality = {}
-    #for jaccardCoefficient
+    # for jaccardCoefficient
     _jaccardCoefficientDict = {}
 
     def __init__(self):
@@ -37,6 +39,8 @@ class Parser():
             # _jaccardCoefficinetDict["errListFiltered2"] = 0
             self._jaccardCoefficientDict[i] = 0
 
+
+
     _toleratedRelErr = 2.0  # minimum relative error to be considered, in percentage
     _toleratedRelErr2 = 5.0  # minimum relative error to be considered, in percentage
     _buildImages = False  # build locality images
@@ -46,7 +50,7 @@ class Parser():
     _logFileNameNoExt = ""
     _dirName = ""
 
-    #size must be set on the child classes
+    # size must be set on the child classes
     _size = ""
 
     # specific atributes for CSV write
@@ -60,12 +64,11 @@ class Parser():
     _iteErrors = -1
     _imageIndex = 0
 
-
     _csvHeader = ["logFileName", "Machine", "Benchmark", "Header", "SDC Iteration", "#Accumulated Errors",
-                             "#Iteration Errors", "Relative Errors <= " + str(_toleratedRelErr) + "%",
-                             "Relative Errors <= " + str(_toleratedRelErr2) + "%", "Jaccard",
-                             "Jaccard > " + str(_toleratedRelErr) + "%", "Jaccard > " + str(_toleratedRelErr2) + "%",
-                             "Cubic", "Square", "Line", "Single", "Random", "Cubic Err > " + str(_toleratedRelErr),
+                  "#Iteration Errors", "Relative Errors <= " + str(_toleratedRelErr) + "%",
+                  "Relative Errors <= " + str(_toleratedRelErr2) + "%", "Jaccard",
+                  "Jaccard > " + str(_toleratedRelErr) + "%", "Jaccard > " + str(_toleratedRelErr2) + "%",
+                  "Cubic", "Square", "Line", "Single", "Random", "Cubic Err > " + str(_toleratedRelErr),
                   "Square Err > " + str(_toleratedRelErr), "Line Err > " + str(_toleratedRelErr),
                   "Single Err > " + str(_toleratedRelErr), "Random Err > " + str(_toleratedRelErr),
                   "Cubic Err > " + str(_toleratedRelErr2), "Square Err > " + str(_toleratedRelErr2),
@@ -73,12 +76,11 @@ class Parser():
                   "Random Err > " + str(_toleratedRelErr2), "Max Relative Error", "Min Rel Error",
                   "Average Rel Err", "zeroOut", "zeroGold"]
 
-
-    #for relativeErrorParser
+    # for relativeErrorParser
     _maxRelErr = 0
     _minRelErr = 0
     _avgRelErr = 0
-    _zeroOut  = 0
+    _zeroOut = 0
     _zeroGold = 0
     _relErrLowerLimit = 0
     _relErrLowerLimit2 = 0
@@ -86,16 +88,23 @@ class Parser():
     # for benchmarks which have a third dimention this attribute must be set on the child process
     _hasThirdDimention = False
 
+    # if the processing database is generated from a fault injection
+    _isFaultInjection = False
+
+    # this will contains the csv that dictates the if the processing log is valid or not
+    _checkRunsCsvData = None
+    _wantToCheckCSV = False
+
     def debugAttPrint(self):
         print "*******Var values*******"
-        print "log file" , self._logFileName
-        print "machine" , self._machine
-        print "acc ite errors" , self._accIteErrors
-        print "bencharmk" , self._benchmark
-        print "header" , self._header
-        print "sdcIterators" , self._sdcIteration
-        print "iteErrors" , self._iteErrors
-        print "size" , self._size
+        print "log file", self._logFileName
+        print "machine", self._machine
+        print "acc ite errors", self._accIteErrors
+        print "bencharmk", self._benchmark
+        print "header", self._header
+        print "sdcIterators", self._sdcIteration
+        print "iteErrors", self._iteErrors
+        print "size", self._size
         print "dir name", self._dirName
         print "third dimention", self._hasThirdDimention
 
@@ -103,7 +112,8 @@ class Parser():
     def getBenchmark(self):
         raise NotImplementedError
 
-    def setDefaultValues(self, logFileName, machine, benchmark, header, sdcIteration, accIteErrors, iteErrors,  errList, logFileNameNoExt, pureHeader):
+    def setDefaultValues(self, logFileName, machine, benchmark, header, sdcIteration, accIteErrors, iteErrors, errList,
+                         logFileNameNoExt, pureHeader):
         self._logFileName = logFileName
         self._machine = machine
         self._benchmark = benchmark
@@ -117,13 +127,12 @@ class Parser():
         self._pureHeader = pureHeader
         self._logFileNameNoExt = logFileNameNoExt
 
-        #self._size = \
+        # self._size = \
         self.setSize(self._pureHeader)
 
         self._makeDirName()
 
-        #----------------
-
+        # ----------------
 
     def getHasThirdDimention(self):
         return self._hasThirdDimention
@@ -131,22 +140,23 @@ class Parser():
     def setBuildImage(self, val):
         self.__buildImage = True
 
-
-
     """call to the private methods"""
+
     def parseErr(self):
         self._errors["errorsParsed"] = []
         # self._errors["errListFiltered"] = []
         # self._errors["errListFiltered2"] = []
         for errString in self._errList:
-            err = self.parseErrMethod(errString)
-            if err != None:
-                self. _errors["errorsParsed"].append(err)
+            if self._isLogValid():
+                err = self.parseErrMethod(errString)
+                if err != None:
+                    self._errors["errorsParsed"].append(err)
 
     """for almost all benchmarks this method must be ovirride, because it is application dependent"""
+
     def relativeErrorParser(self):
         [self._maxRelErr, self._minRelErr, self._avgRelErr, self._zeroOut, self._zeroGold,
-            self._relErrLowerLimit,
+         self._relErrLowerLimit,
          self._errors["errListFiltered"], self._relErrLowerLimit2,
          self._errors["errListFiltered2"]] = self._relativeErrorParser(self._errors["errorsParsed"])
 
@@ -163,6 +173,7 @@ class Parser():
         #currObj.buildImage(errorsParsed, size,
         #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
     """
+
     @abstractmethod
     def buildImageMethod(self):
         raise NotImplementedError()
@@ -172,16 +183,16 @@ class Parser():
         raise NotImplementedError()
 
     """if the csvHeader must be different, the variable must be set to the other value, so getCSVHeader will return other constant"""
+
     def getCSVHeader(self):
         return self.csvHeader
-
-
 
     """
     if you want other relative error parser this method must be override
     return [highest relative error, lowest relative error, average relative error, # zeros in the output, #zero in the GOLD, #errors with relative errors lower than limit(toleratedRelErr), list of errors limited by toleratedRelErr, #errors with relative errors lower than limit(toleratedRelErr2), list of errors limited by toleratedRelErr2]
     assumes errList[2] is read valued and errList[3] is expected value
     """
+
     def _relativeErrorParser(self, errList):
         relErr = []
         zeroGold = 0
@@ -290,7 +301,6 @@ class Parser():
 
         ################# => build_image()
 
-
     def jaccardCoefficient(self):
         # self._jaccardCoefficientDict["errorsParsed"] = 0
         # self._jaccardCoefficientDict["errListFiltered"] = 0
@@ -303,7 +313,6 @@ class Parser():
                 #         jaccardF2 = currObj.jaccardCoefficientLavaMD(errListFiltered2)
                 # print "\n" , self._benchmark
                 self._jaccardCoefficientDict[keys] = self._jaccardCoefficient(values)
-
 
     def _jaccardCoefficient(self, errListJaccard):
         expected = []
@@ -328,8 +337,8 @@ class Parser():
         except:
             return None
 
-
     """locality parser 2d, and 3d if it's avaliable"""
+
     # (square, colRow, single, random) = localityParser2D(errorsParsed)
     # (squareF, colRowF, singleF, randomF) = localityParser2D(errListFiltered)
     # (squareF2, colRowF2, singleF2, randomF2) = localityParser2D(errListFiltered2)
@@ -400,22 +409,21 @@ class Parser():
             else:  # random error
                 return [0, 0, 0, 0, 1]
 
-
-
     """CSV file operations"""
     """public method to write csv"""
+
     def writeToCSV(self):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             output = self._dirName + "/logs_parsed_" + self._machine + ".csv"
             self._writeToCSV(output)
 
-
     """
     write a list as a row to CSV
     if you want other type of write to csv,
     the method __writeToCSV and atribute __csvHeader must be changed
     """
+
     def _writeToCSV(self, csvFileName):
         if os.path.isfile(csvFileName) == False:
             self._writeCSVHeader(csvFileName)
@@ -470,12 +478,12 @@ class Parser():
             csvWFP.close()
 
         except:
-            #ValueError.message += ValueError.message + "Error on writing row to " + str(csvFileName)
+            # ValueError.message += ValueError.message + "Error on writing row to " + str(csvFileName)
             print "Error on writing row to " + str(csvFileName)
             raise
 
-
     """writes a csv header, and create the log_parsed directory"""
+
     def _writeCSVHeader(self, csvFileName):
         if not os.path.isfile(csvFileName):
             if not os.path.exists(os.path.dirname(csvFileName)):
@@ -489,7 +497,6 @@ class Parser():
             writer = csv.writer(csvWFP, delimiter=';')
             writer.writerow(self._csvHeader)
             csvWFP.close()
-
 
     def _makeDirName(self):
         self._dirName = os.getcwd() + "/" + self._machine + "/" + self._benchmark + "/" + str(self._size) + "/"
@@ -505,3 +512,46 @@ class Parser():
 
     def setImageIndex(self, imageIndex):
         self._imageIndex = imageIndex
+
+    """
+    this method check if the processing log is on a valid
+    radiation test run
+    if self._isFaultInjection is True this method will always return true
+
+    """
+
+    def _isLogValid(self):
+        if self._isFaultInjection or not self._wantToCheckCSV:
+            return True
+        # process data
+        # 2016_12_13_19_00_34_cudaDarknet_carol-k402.log
+        m = re.match("(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(.*)_(.*).log", self._logFileName)
+        if m:
+            year = m.group(1)
+            month = m.group(2)
+            day = m.group(3)
+            hour = m.group(4)
+            minutes = m.group(5)
+            second = m.group(6)
+
+            # assuming microsecond = 0
+            currDate = datetime(int(year), int(month), int(day), int(hour), int(minutes), int(second))
+            for j in self._checkRunsCsvData:
+                startDate = j["start timestamp"]
+                endDate = j["end timestamp"]
+                startDate = datetime.strptime(startDate, "%c")
+                endDate = datetime.strptime(endDate, "%c")
+                if startDate <= currDate <= endDate:
+                    return True
+
+        return False
+
+    def setCheckRunsCsvsAndOpen(self,csvFile, checkCsv):
+        if self._isFaultInjection or not checkCsv:
+            return
+        csvObjFile = open(csvFile)
+        readerTwo = csv.DictReader(csvObjFile, delimiter=';')
+
+        self._checkRunsCsvData = [i for i in readerTwo]
+        self._wantToCheckCSV = checkCsv
+        csvFile.close()
