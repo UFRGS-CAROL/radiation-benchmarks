@@ -19,6 +19,7 @@ class DarknetParser(ObjectDetectionParser):
     __configFile = None
     _extendedHeader = False
 
+    __errorTypes = ['allLayers', 'filtered2', 'filtered5', 'filtered50']
     __layerDimentions = {
         0: [224, 224, 64],
         1: [112, 112, 64],
@@ -57,7 +58,7 @@ class DarknetParser(ObjectDetectionParser):
                   "gold_lines", "detected_lines", "wrong_elements", "x_center_of_mass", "y_center_of_mass", "precision",
                   "recall", "false_negative", "false_positive", "true_positive", "abft_type", "row_detected_errors",
                   "col_detected_errors", "failed_layer", "header"]
-
+    
     # it is only for darknet for a while
     _parseLayers = False
     __layersGoldPath = ""
@@ -73,7 +74,7 @@ class DarknetParser(ObjectDetectionParser):
                 self.__layersPath = str(kwargs.pop("layersPath"))
                 self._extendedHeader = True
                 self._csvHeader.extend(self.getLayerHeaderName(layerNum, errType)
-                                       for errType in ['allLayers', 'filtered2', 'filtered5']
+                                       for errType in self.__errorTypes
                                        for layerNum in xrange(32))
         except:
             print "\n Crash on create parse layers parameters"
@@ -163,7 +164,7 @@ class DarknetParser(ObjectDetectionParser):
 
             if (self._parseLayers):
                 outputList.extend(self.errorTypeToString(self.errorTypeLists[i][errType])
-                                  for errType in ['allLayers', 'filtered2', 'filtered5']
+                                  for errType in self.__errorTypes
                                   for i in xrange(32))
 
                 # if self._abftType != 'no_abft' and self._abftType != None:
@@ -314,7 +315,8 @@ class DarknetParser(ObjectDetectionParser):
                 relativeError = self.getRelativeError(goldArray[i], layerArray[i])
                 if ((errFilter == 'allLayers')
                     or (relativeError > 2 and errFilter == 'filtered2')
-                    or (relativeError > 5 and 'filtered5')):
+                    or (relativeError > 5 and errFilter == 'filtered5')
+                    or (relativeError > 50 and errFilter == 'filtered50')):
                     layerError = [i, -1, -1, layerArray[i], goldArray[i]]
                     layerErrorList.append(layerError)
 
@@ -331,7 +333,8 @@ class DarknetParser(ObjectDetectionParser):
                         relativeError = self.getRelativeError(gold[i][j][k], layer[i][j][k])
                         if ((errFilter == 'allLayers')
                             or (relativeError > 2 and errFilter == 'filtered2')
-                            or (relativeError > 5 and 'filtered5')):
+                            or (relativeError > 5 and errFilter == 'filtered5')
+                            or (relativeError > 50 and errFilter == 'filtered50')):
                             layerError = [i, j, k, layer[i][j][k], gold[i][j][k]]
                             layerErrorList.append(layerError)
 
@@ -410,9 +413,9 @@ class DarknetParser(ObjectDetectionParser):
         layerFilename = self.__layersGoldPath + "gold_" + self._machine + datasetName + '_it_' + goldIteration + '_layer_' + str(
             layerNum)
         # layerFilename = self.__layersGoldPath + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
-        # print layerFilename
+        #print layerFilename
         filenames = glob.glob(layerFilename)
-        # print str(filenames)
+        #print str(filenames)
         if (len(filenames) == 0):
             return None
         elif (len(filenames) > 1):
@@ -458,20 +461,14 @@ class DarknetParser(ObjectDetectionParser):
         # layerError :: xPos, yPos, zPos, found(?), expected(?)
         # layerErrorLists :: {[allLlayerErrors], [filtered2LayerErrors], [filtered5LayerErrors]}
         isArray, width, height, depth = self.getLayerDimentions(layerNum)
-        errorLists = {
-            'allLayers': [],
-            'filtered2': [],
-            'filtered5': []
-        }
+        errorLists  = {errorTypeString:[] for errorTypeString in self.__errorTypes}
 
         if (isArray):
-            errorLists['allLayers'] = self.get1DLayerErrorList(layer, gold, width, 'allLayers')
-            errorLists['filtered2'] = self.get1DLayerErrorList(layer, gold, width, 'filtered2')
-            errorLists['filtered5'] = self.get1DLayerErrorList(layer, gold, width, 'filtered5')
+            for errorTypeString in self.__errorTypes:
+                errorLists[errorTypeString] = self.get1DLayerErrorList(layer, gold, width, errorTypeString)
         else:
-            errorLists['filtered5'] = self.get3DLayerErrorList(layer, gold, width, height, depth, 'filtered5')
-            errorLists['allLayers'] = self.get3DLayerErrorList(layer, gold, width, height, depth, 'allLayers')
-            errorLists['filtered2'] = self.get3DLayerErrorList(layer, gold, width, height, depth, 'filtered2')
+            for errorTypeString in self.__errorTypes:
+                errorLists[errorTypeString] = self.get3DLayerErrorList(layer, gold, width, height, depth, errorTypeString)
 
         return errorLists
 
@@ -512,15 +509,14 @@ class DarknetParser(ObjectDetectionParser):
         # layerError :: xPos, yPos, zPos, found(?), expected(?)
         # layerErrorLists :: {[allLlayerErrors], [filtered2LayerErrors], [filtered5LayerErrors]}
         # print ('\n' + self._logFileName + ' :: ' + self._goldFileName + ' :: ' + self._imgListPath)
+        kernelTime = int(self._accIteErrors) // int(self._sdcIteration)
+        #print '\nkerneltime: ' + str(kernelTime)
         self._failed_layer = ""
         logsNotFound = False
         goldsNotFound = False
         errorFound = False
-        self.errorTypeLists = [{
-                                   'allLayers': [],
-                                   'filtered2': [],
-                                   'filtered5': []
-                               } for i in range(0, 32)]
+        self.errorTypeLists = [{errorTypeString:[] for errorTypeString in self.__errorTypes} for i in range(0,32)]
+        #print str(self.errorTypeLists[13]['filtered50'])
         for i in range(0, 32):
             # print '\n----layer ' + str(i) + ' :'
             layer = self.loadLayer(i)
@@ -531,18 +527,14 @@ class DarknetParser(ObjectDetectionParser):
                 break
             elif (gold is None):
                 print('gold ' + str(i) + ' log not found')
-                foldsNotFound = True
+                goldsNotFound = True
                 break
             else:
                 layerErrorLists = self.getLayerErrorLists(layer, gold, i)
                 if (i < 29):
                     # layer 3D
-                    self.errorTypeLists[i]['allLayers'] = self._localityParser3D(layerErrorLists['allLayers'])
-                    self.errorTypeLists[i]['filtered2'] = self._localityParser3D(layerErrorLists['filtered2'])
-                    self.errorTypeLists[i]['filtered5'] = self._localityParser3D(layerErrorLists['filtered5'])
-                    # self.printErrorType(self.errorTypeLists[i]['allLayers'])
-                    # self.printErrorType(self.errorTypeLists[i]['filtered2'])
-                    # self.printErrorType(self.errorTypeLists[i]['filtered5'])
+                    for errorTypeString in self.__errorTypes:
+                        self.errorTypeLists[i][errorTypeString] = self._localityParser3D(layerErrorLists[errorTypeString])
                     if (self.errorTypeLists[i]['allLayers'] != [0, 0, 0, 0, 0]):
                         # aconteceu algum tipo de erro
                         if (not errorFound):
@@ -556,12 +548,8 @@ class DarknetParser(ObjectDetectionParser):
                         jaccardCoef = 1
                 else:
                     # layer 1D
-                    self.errorTypeLists[i]['allLayers'] = self._localityParser1D(layerErrorLists['allLayers'])
-                    self.errorTypeLists[i]['filtered2'] = self._localityParser1D(layerErrorLists['filtered2'])
-                    self.errorTypeLists[i]['filtered5'] = self._localityParser1D(layerErrorLists['filtered5'])
-                    # self.printErrorType(self.errorTypeLists[i]['allLayers'])
-                    # self.printErrorType(self.errorTypeLists[i]['filtered2'])
-                    # self.printErrorType(self.errorTypeLists[i]['filtered5'])
+                    for errorTypeString in self.__errorTypes:
+                        self.errorTypeLists[i][errorTypeString] = self._localityParser1D(layerErrorLists[errorTypeString])
                     if (self.errorTypeLists[i]['allLayers'] != [0, 0, 0, 0, 0]):
                         # aconteceu algum tipo de erro
                         if (not errorFound):
@@ -684,7 +672,7 @@ class DarknetParser(ObjectDetectionParser):
         # if self._abftType != 'no_abft':
         #    print str(self._sdcIteration) + ' : ' + self._abftType 
 
-        if self._parseLayers:  # and self._sdcIteration in ['463','446','1913']: #and self.hasLayerLogs(self._sdcIteration):
+        if self._parseLayers: #and self.hasLayerLogs(self._sdcIteration):
             # print self._sdcIteration + 'debug'
             self.parseLayers()
             # print self._machine + self._abftType
