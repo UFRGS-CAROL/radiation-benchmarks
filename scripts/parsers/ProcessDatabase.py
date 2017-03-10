@@ -223,15 +223,22 @@ def parse_args():
                              ' Darknet, HOG, and PyFasterRCNN need a Precision and Recall threshold value.'
                              'If you want a more correct radiation test result pass --check_csv flag', required=True)
 
-    parser.add_argument('--parse_layers', dest='parse_layers', help='If you want parse Darknet layers, set it True, default values is False',
+    parser.add_argument('--parse_layers', dest='parse_layers',
+                        help='If you want parse Darknet layers, set it True, default values is False',
                         default=False)
 
-    parser.add_argument('--pr_threshold', dest='pr_threshold', help='Precision and Recall threshold value,0 - 1, defautl value is 0.5',
+    parser.add_argument('--pr_threshold', dest='pr_threshold',
+                        help='Precision and Recall threshold value,0 - 1, defautl value is 0.5',
                         default=0.5)
 
-    parser.add_argument('--check_csv', dest='check_csv', help='This parameter will open a csv file which contains all radiation test runs, then it will check '
-                                                              'if every SDC is on a valid run, default is false',
+    parser.add_argument('--check_csv', dest='check_csv',
+                        help='This parameter will open a csv file which contains all radiation test runs, then it will check '
+                             'if every SDC is on a valid run, default is false',
                         default=False, action='store_true')
+
+    parser.add_argument('--ecc', dest='ecc',
+                        help='If the boards have ecc this is passed, otherwise nothing must be passed', default=False,
+                        action='store_true')
 
     args = parser.parse_args()
 
@@ -250,6 +257,8 @@ if __name__ == '__main__':
             benchmarks=benchlist,
             pr_threshold=args.pr_threshold,
             parse_layers=args.parse_layers,
+            check_csv=args.check_csv,
+            ecc=args.ecc
         )
     except:
         print "SET ALL PARAMTERS CORRECTLY, error on set parameters"

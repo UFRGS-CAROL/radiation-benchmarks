@@ -14,7 +14,7 @@ from SupportClasses import PrecisionAndRecall
 class DarknetParser(ObjectDetectionParser):
     # these strings in GOLD_BASE_DIR must be the directory paths of the gold logs for each machine
     _goldBaseDir = {
-        # 'carol-k402': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_K40',
+         'carol-k402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40/',#'/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_K40',
         # 'carol-tx': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_TITAN',
         # # carolx1a
         # 'carolx1a': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1b',
@@ -85,7 +85,6 @@ class DarknetParser(ObjectDetectionParser):
     _imgOutputDir = ""
     _localRadiationBench = ""
 
-
     def __init__(self, **kwargs):
         self._parseLayers = bool(kwargs.pop("parseLayers"))
         # self._goldBaseDir = str(kwargs.pop("goldBaseDir"))
@@ -93,6 +92,8 @@ class DarknetParser(ObjectDetectionParser):
         self._localRadiationBench = str(kwargs.pop("localRadiationBench"))
         # self._datasets            =    str(kwargs.pop("datasets"))
         self._prThreshold = float(kwargs.pop("pr_threshold"))
+        self._ecc = bool(kwargs.pop("ecc"))
+        self._setCheckRunsCsvsAndOpen(csvSummaries=kwargs.pop("check_csv"))
 
         try:
             super(ObjectDetectionParser, self).__init__()

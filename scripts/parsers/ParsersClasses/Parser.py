@@ -92,8 +92,10 @@ class Parser():
     _isFaultInjection = False
 
     # this will contains the csv that dictates the if the processing log is valid or not
-    _checkRunsCsvData = None
-    _wantToCheckCSV = False
+    _checkRunsCsv = None
+
+    # ecc on or off
+    _ecc = False
 
     def debugAttPrint(self):
         print "*******Var values*******"
@@ -146,8 +148,9 @@ class Parser():
         self._errors["errorsParsed"] = []
         # self._errors["errListFiltered"] = []
         # self._errors["errListFiltered2"] = []
+        print "\n", self._logFileName
         for errString in self._errList:
-            if self._isLogValid():
+            if self._isLogValid:
                 err = self.parseErrMethod(errString)
                 if err != None:
                     self._errors["errorsParsed"].append(err)
@@ -520,9 +523,12 @@ class Parser():
 
     """
 
+    @property
     def _isLogValid(self):
-        if self._isFaultInjection or not self._wantToCheckCSV:
+        if self._isFaultInjection or self._checkRunsCsv == None:
             return True
+        board_key = str(self._machine) + ("_ecc_on" if self._ecc else '')
+        currentData = self._checkRunsCsv[board_key]["csv"]
         # process data
         # 2016_12_13_19_00_34_cudaDarknet_carol-k402.log
         m = re.match("(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(.*)_(.*).log", self._logFileName)
@@ -536,22 +542,27 @@ class Parser():
 
             # assuming microsecond = 0
             currDate = datetime(int(year), int(month), int(day), int(hour), int(minutes), int(second))
-            for j in self._checkRunsCsvData:
+            for j in currentData:
                 startDate = j["start timestamp"]
                 endDate = j["end timestamp"]
+                validBench = j["benchmark"] in self._benchmark or self._benchmark in j["benchmark"]
                 startDate = datetime.strptime(startDate, "%c")
                 endDate = datetime.strptime(endDate, "%c")
-                if startDate <= currDate <= endDate:
+                if startDate <= currDate <= endDate and validBench:
                     return True
 
         return False
 
-    def setCheckRunsCsvsAndOpen(self,csvFile, checkCsv):
-        if self._isFaultInjection or not checkCsv:
+    def _setCheckRunsCsvsAndOpen(self, csvSummaries):
+        if self._isFaultInjection or self._checkRunsCsv == None:
             return
-        csvObjFile = open(csvFile)
-        readerTwo = csv.DictReader(csvObjFile, delimiter=';')
 
-        self._checkRunsCsvData = [i for i in readerTwo]
-        self._wantToCheckCSV = checkCsv
-        csvFile.close()
+        self._checkRunsCsv = csvSummaries
+        print "Passou aqui \n\n\n\n"
+
+        for i in self._checkRunsCsv:
+            board_key = str(self._machine) + ("_ecc_on" if self._ecc else '')
+            csvObjFile = open(self._checkRunsCsv[board_key]["csv"])
+            readerTwo = csv.DictReader(csvObjFile, delimiter=';')
+            self._checkRunsCsv[board_key]["data"] = [i for i in readerTwo]
+            csvObjFile.close()
