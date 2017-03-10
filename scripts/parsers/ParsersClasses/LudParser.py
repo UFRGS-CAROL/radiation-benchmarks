@@ -4,6 +4,11 @@ from Parser import Parser
 
 
 class LudParser(Parser):
+
+    def __init__(self, **kwargs):
+        super(Parser, self).__init__(kwargs)
+
+
     _mSize = 0
 
 

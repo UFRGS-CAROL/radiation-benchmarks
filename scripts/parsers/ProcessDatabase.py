@@ -20,12 +20,6 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
 
     sdci = 1
     totalSdcs = len(sdcItemList)
-    # imageIndex = 0
-    # goldDarknet = None
-    # goldPyFaster = None
-    # readGoldDarknet = True
-    # readGoldPyFaster = True
-    # img_list_file = ""
     matchBench = MatchBenchmark.MatchBenchmark()
     for sdcItem in sdcItemList:
         match = matchBench.processHeader(sdcItem, benchmarkname_machinename)
@@ -38,173 +32,16 @@ def parseErrors(benchmarkname_machinename, sdcItemList):
 
         sys.stdout.flush()
 
-        # currObj =  matchBench.getCurrentObj()
-        #
-        # if isLavaMD and box is None:
-        #     continue
-
-        # Get error details from log string
-
-        # for errString in matchBench.errList:
-        #     err = None
-        # if isGEMM or isLud:
-        #     err = parseErrGEMM(errString)
-        # elif isHotspot:
-        #
-        #     err = parseErrHotspot(errString)
-        # elif isLavaMD:
-        #     err = parseErrLavaMD(errString, box, header)
-        # elif isACCL:
-        #     err = parseErrACCL(errString)
-        # elif isNW:
-        #     err = parseErrNW(errString)
-        # elif isLulesh:
-        #     err = parseErrLulesh(errString, 50, header)
-        # elif isDarknet:
-        #     err = pn.parseErrDarknet(errString)
-        # elif isPyFaster:
-        #     err = pn.parseErrPyFaster(errString, sdcIteration)
         matchBench.parseErrCall()
-        #
-        # if err is not None:
-        #     errorsParsed.append(err)
-
-        # (goldLines, detectedLines, xMass, yMass, precision, recall, falseNegative, falsePositive, truePositive,
-        #  imgFile) = (
-        #     0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
-        # # Parse relative error
-        # if isGEMM or isHotspot or isACCL or isNW or isLud:
-        #     (maxRelErr, minRelErr, avgRelErr, zeroOut, zeroGold, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
-        #      errListFiltered2) = relativeErrorParser(errorsParsed)
-        # elif isLavaMD:
-        #     (maxRelErr, minRelErr, avgRelErr, zeroOut, zeroGold, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
-        #      errListFiltered2) = relativeErrorParserLavaMD(errorsParsed)
-        # elif isLulesh:
-        #     (maxRelErr, minRelErr, avgRelErr, zeroOut, zeroGold, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
-        #      errListFiltered2) = relativeErrorParserLulesh(errorsParsed)
-        # (maxRelErr, minRelErr, avgRelErr, zeroOut, zeroGold, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
-        #       errListFiltered2) = currObj.relativeErrorParser(errorsParsed)
         matchBench.relativeErrorParserCall()
-        # object detection algorithms need other look
-        # elif isPyFaster:
-        #      # only for CNNs
-        #     if readGoldPyFaster:
-        #         goldPyFaster = pn._GoldContent(filepath=gold_dir, nn="pyfaster")
-        #         readGoldPyFaster = False
-        #
-        #     (maxRelErr, minRelErr, avgRelErr, precision, recall, relErrLowerLimit, errListFiltered, relErrLowerLimit2,
-        #      errListFiltered2) = pn.relativeErrorParserPyFaster(img_list_file, errorsParsed, goldPyFaster, sdci)
-        #
-        #
-        # elif isDarknet:
-        #     # only for CNNs
-        #     if readGoldDarknet:
-        #         goldDarknet = pn._GoldContent(filepath=gold_dir, nn="darknet")
-        #         readGoldDarknet = False
-        #
-        #     (goldLines, detectedLines, xMass, yMass, precision, recall, falseNegative, falsePositive, truePositive,
-        #      imgFile) = pn.relativeErrorParserDarknet(img_list_file, errorsParsed, goldDarknet)
-
-        # Parse locality metric
-        # if isGEMM or isHotspot or isACCL or isNW or isLud:
-        # if isHotspot:
-        #    print errListFiltered
-        #    print errorsParsed
-
         matchBench.localityParserCall()
         matchBench.jaccardCoefficientCall()
-        # (square, colRow, single, random) =  currObj.localityParser2D(errorsParsed)
-        # (squareF, colRowF, singleF, randomF) =  currObj.localityParser2D(errListFiltered)
-        # (squareF2, colRowF2, singleF2, randomF2) =  currObj.localityParser2D(errListFiltered2)
-        # jaccard =  currObj.jaccardCoefficient(errorsParsed)
-        # jaccardF =  currObj.jaccardCoefficient(errListFiltered)
-        # jaccardF2 =  currObj.jaccardCoefficient(errListFiltered2)
-        # errListFiltered = []
-        # errListFiltered2 = []
-        # cubic = 0
-        # cubicF = 0
-        # cubicF2 = 0
-
-        # if single == 0 and buildImages:
-        #     if size is not None:
-        #         currObj.buildImage(errorsParsed, size,
-        #                            currObj.dirName + '/' + currObj.header + '/' + currObj.logFileNameNoExt + '_' + str(imageIndex))
-        #     else:
-        # to activate this method the setBuildImage method must be called with True parameter
 
         matchBench.writeToCSVCall()
         sdci += 1
     sys.stdout.write(
         "\rProcessing SDC " + str(sdci - 1) + " of " + str(totalSdcs) + " - 100%                     " + "\n")
     sys.stdout.flush()
-    # print matchBench.checkNotDoneBenchs()
-
-
-#       (cubicF, squareF, colRowF, singleF, randomF) = currObj.localityParser3D(errListFiltered)
-#       (cubicF2, squareF2, colRowF2, singleF2, randomF2) = currObj.localityParser3D(errListFiltered2)
-#
-#
-#     if isLavaMD:
-#         jaccard = currObj.jaccardCoefficientLavaMD(errorsParsed)
-#         jaccardF = currObj.jaccardCoefficientLavaMD(errListFiltered)
-#         jaccardF2 = currObj.jaccardCoefficientLavaMD(errListFiltered2)
-#     else:
-#         jaccard = jaccardF = jaccardF2 = 0
-#     errListFiltered = []
-#     errListFiltered2 = []
-#
-# else:  # Need to add locality parser for other benchmarks, if possible!
-#     (cubic, square, colRow, single, random) = [0, 0, 0, 0, 0]
-#     (cubicF, squareF, colRowF, singleF, randomF) = [0, 0, 0, 0, 0]
-#     (cubicF2, squareF2, colRowF2, singleF2, randomF2) = [0, 0, 0, 0, 0]
-#     jaccard = None
-#     jaccardF = None
-#     jaccardF2 = None
-#
-# Write info to csv file
-# if fileNameSuffix is not None and fileNameSuffix != "":
-#   csvFileName = dirName+'/'+header+'/logs_parsed_'+machine+'_'+fileNameSuffix+'.csv'
-# else:
-# if 'caltech' in gold_dir:
-#     dataset = 'caltech'
-# else:
-#     dataset = 'voc2012'
-#
-# if isPyFaster:
-#     dir = "py_faster_csv_" + dataset
-# elif isDarknet:
-#     dir = "darknet_csv_" + dataset
-# else:
-#     dir = currObj.header
-# csvFileName = currObj.dirName + '/' + dir + '/logs_parsed_' + currObj.machine + '.csv'
-# if not os.path.exists(os.path.dirname(csvFileName)):
-#     try:
-#         os.makedirs(os.path.dirname(csvFileName))
-#     except OSError as exc:  # Guard against race condition
-#         if exc.errno != errno.EEXIST:
-#             raise
-# flag = 0
-# if not os.path.exists(csvFileName):
-#     flag = 1
-#
-# csvWFP = open(csvFileName, "a")
-# writer = csv.writer(csvWFP, delimiter=';')
-#
-# if flag == 1 and (isPyFaster or isDarknet):  # csv header
-#     # (len(gold), len(tempBoxes), x, y, pR.getPrecision(), pR.getRecall(), pR.getFalseNegative(),
-#     #  pR.getFalsePositive(), pR.getTruePositive())
-#     writer.writerow()
-#
-# elif flag == 1:
-#     writer.writerow()
-#
-# writer.writerow(
-#     [currObj.logFileName, currObj.machine, currObj.benchmark, imgFile, currObj.sdcIteration, currObj.accIteErrors, currObj.iteErrors, goldLines, detectedLines,
-#      xMass, yMass, precision, recall, falseNegative, falsePositive, truePositive])
-#
-# csvWFP.close()
-
 
 def parse_args():
     """Parse input arguments."""
@@ -240,6 +77,9 @@ def parse_args():
                         help='If the boards have ecc this is passed, otherwise nothing must be passed', default=False,
                         action='store_true')
 
+    parser.add_argument('--is_fi', dest='is_fi', help='if it is a fault injection log processing', action='store_true', default=False)
+
+
     args = parser.parse_args()
 
     return args
@@ -251,18 +91,19 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    try:
-        benchlist = (str(args.benchmarks).lower()).split(',')
-        par.setBenchmarks(
-            benchmarks=benchlist,
-            pr_threshold=args.pr_threshold,
-            parse_layers=args.parse_layers,
-            check_csv=args.check_csv,
-            ecc=args.ecc
-        )
-    except:
-        print "SET ALL PARAMTERS CORRECTLY, error on set parameters"
-        sys.exit(-1)
+    #try:
+    benchlist = (str(args.benchmarks).lower()).split(',')
+    par.setBenchmarks(
+        benchmarks=benchlist,
+        pr_threshold=args.pr_threshold,
+        parse_layers=args.parse_layers,
+        check_csv=args.check_csv,
+        ecc=args.ecc,
+        is_fi=args.is_fi
+    )
+# except:
+    #     print "SET ALL PARAMTERS CORRECTLY, error on set parameters"
+    #     sys.exit(-1)
 
     # db = shelve.open("errors_log_database") #python3
     db = shelve.open(args.error_database)  # python2

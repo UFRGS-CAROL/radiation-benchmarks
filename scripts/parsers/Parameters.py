@@ -23,7 +23,8 @@ LAYERS_PATH = '/home/fernando/temp/camadas/data/'  # '/home/pfpimenta/darknetLay
 IMG_OUTPUT_DIR = ''  # ''/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/img_corrupted_output/'
 
 # LOCAL_RADIATION_BENCH must be the parent directory of the radiation-benchmarks folder
-LOCAL_RADIATION_BENCH = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'  # '/home/pfpimenta'
+#LOCAL_RADIATION_BENCH = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'  # '/home/pfpimenta'
+LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa'
 
 # if var check_csvs is true this values must have the csvs datapath
 # _ecc_on is mandatory only for boards that have ecc memory
@@ -44,6 +45,40 @@ SUMMARIES_FILES = {
                 'logs_parsed_parsed_x1/summaries_x1.csv', 'data':None},
 }
 
+GOLD_BASE_DIR = {
+        # '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_K40'
+        'carol-k402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40/',
+        #'/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_TITAN'
+        'carol-tx': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_TITAN/',
+        # # carolx1a
+        # 'carolx1a': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1b',
+        # # carolx1b
+        # 'carolx1b': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1b',
+        # # carolx1c
+        # 'carolx1c': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1c',
+        # fault injection
+        'carolk402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Fault_Injections/sassifi_darknet_paper_micro'
+    }
+
+DARKNET_DATASETS = {'caltech.pedestrians.critical.1K.txt': {'dumb_abft': 'gold.caltech.critical.abft.1K.test',
+                                                         'no_abft': 'gold.caltech.critical.1K.test'},
+                 'caltech.pedestrians.1K.txt': {'dumb_abft': 'gold.caltech.abft.1K.test',
+                                                'no_abft': 'gold.caltech.1K.test'},
+                 'voc.2012.1K.txt': {'dumb_abft': 'gold.voc.2012.abft.1K.test', 'no_abft': 'gold.voc.2012.1K.test'}}
+
+
+############################################################################################
+###############################FASTER RCNN PARSER PARAMETERS################################
+############################################################################################
+
+FASTER_RCNN_DATASETS = {
+    # normal
+    'caltech.pedestrians.critical.1K.txt': 'gold.caltech.critical.1K.test',
+    'caltech.pedestrians.1K.txt': 'gold.caltech.1K.test',
+    'voc.2012.1K.txt': 'gold.voc.2012.1K.test'
+}
+
+
 ############################################################################################
 #################################OVERALL PARAMETERS ########################################
 ############################################################################################
@@ -56,6 +91,9 @@ def setBenchmarks(**kwargs):
     benchmarks = kwargs.pop("benchmarks")
     pr_threshold = float(kwargs.pop("pr_threshold"))
     parse_layers = bool(kwargs.pop("parse_layers"))
+    checkCsv = SUMMARIES_FILES if bool(kwargs.pop("check_csv")) else None
+    ecc = bool(kwargs.pop("ecc"))
+    isFi = bool(kwargs.pop("is_fi"))
 
     print "Parsing for: ",
     for i in benchmarks:
@@ -63,13 +101,16 @@ def setBenchmarks(**kwargs):
         print i, " ",
         if i == 'darknet':
             benchObj = DarknetParser.DarknetParser(parseLayers=parse_layers,
-                                                   pr_threshold=pr_threshold,
+                                                   prThreshold=pr_threshold,
                                                    layersGoldPath=LAYERS_GOLD_PATH,
                                                    layersPath=LAYERS_PATH,
                                                    imgOutputDir=IMG_OUTPUT_DIR,
                                                    localRadiationBench=LOCAL_RADIATION_BENCH,
-                                                   check_csv= SUMMARIES_FILES if bool(kwargs.pop("check_csv")) else None,
-                                                   ecc=bool(kwargs.pop("ecc"))
+                                                   check_csv= checkCsv,
+                                                   ecc= ecc,
+                                                   is_fi= isFi,
+                                                   goldBaseDir = GOLD_BASE_DIR,
+                                                   datasets=DARKNET_DATASETS
                                                    )
         elif i == 'hotspot':
             benchObj = HotspotParser.HotspotParser()
@@ -86,7 +127,16 @@ def setBenchmarks(**kwargs):
         elif i == 'accl':
             benchObj = ACCLParser.ACCLParser()
         elif i == 'pyfasterrcnn':
-            benchObj = FasterRcnnParser.FasterRcnnParser()
+            benchObj = FasterRcnnParser.FasterRcnnParser(
+                                                   prThreshold=pr_threshold,
+                                                   imgOutputDir=IMG_OUTPUT_DIR,
+                                                   localRadiationBench=LOCAL_RADIATION_BENCH,
+                                                   check_csv= checkCsv,
+                                                   ecc= ecc,
+                                                   is_fi= isFi,
+                                                   goldBaseDir = GOLD_BASE_DIR,
+                                                   datasets=FASTER_RCNN_DATASETS
+                                                         )
         elif i == 'lulesh':
             benchObj = LuleshParser.LuleshParser()
         elif i == 'lud':

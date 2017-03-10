@@ -1,3 +1,5 @@
+from abc import ABCMeta
+
 from Parser import Parser
 import csv
 import copy
@@ -9,11 +11,11 @@ from PIL import Image
 import numpy as np
 
 
-
 class ImageRaw():
     w = 0
     h = 0
     file = ""
+
     def __init__(self, file):
         self.w, self.h = self.getImageSize(file)
         self.file = file
@@ -34,14 +36,36 @@ class ImageRaw():
         return width, height
 
 class ObjectDetectionParser(Parser):
-
+    __metaclass__ =  ABCMeta
     # precisionRecallObj = None
-    _prThreshold = 0.5
+    _prThreshold = None
     _detectionThreshold = 0.2
 
-    # def __init__(self):
-    #     Parser.__init__(self)
-        # self.precisionRecallObj = PrecisionAndRecall.PrecisionAndRecall(self._prThreshold)
+
+    #local radiation-benchmarks git
+    _localRadiationBench = ""
+    # these strings in GOLD_BASE_DIR must be the directory paths of the gold logs for each machine
+    _goldBaseDir = None
+
+    #used datasets
+    _datasets = None
+
+    #output img dir
+    _imgOutputDir = ''
+
+    #img list size
+    _imgListSize = 1000
+
+    _iterations = None
+
+    def __init__(self, **kwargs):
+        Parser.__init__(self, **kwargs)
+        self._prThreshold = float(kwargs.pop("prThreshold"))
+        self._imgOutputDir = str(kwargs.pop("imgOutputDir"))
+
+        self._localRadiationBench = str(kwargs.pop("localRadiationBench"))
+        self._goldBaseDir = kwargs.pop("goldBaseDir")
+        self._datasets = kwargs.pop("datasets")
 
 
     _goldDatasetArray = dict()

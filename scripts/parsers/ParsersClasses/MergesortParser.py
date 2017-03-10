@@ -4,6 +4,11 @@ from SortParser import SortParser
 
 
 class MergesortParser(SortParser):
+    def __init__(self, **kwargs):
+        super(SortParser, self).__init__(kwargs)
+
+
+
     # esse metodo vai ser chamado por um outro na classe parser
     # e depois a lista que tem os resultados produzidos por todas as chamadas desse
     # metodo vai ser processada pelo _relativeErrorParser

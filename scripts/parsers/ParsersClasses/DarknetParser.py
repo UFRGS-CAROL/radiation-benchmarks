@@ -12,34 +12,13 @@ from SupportClasses import PrecisionAndRecall
 
 
 class DarknetParser(ObjectDetectionParser):
-    # these strings in GOLD_BASE_DIR must be the directory paths of the gold logs for each machine
-    _goldBaseDir = {
-         'carol-k402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40/',#'/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_K40',
-        # 'carol-tx': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_TITAN',
-        # # carolx1a
-        # 'carolx1a': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1b',
-        # # carolx1b
-        # 'carolx1b': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1b',
-        # # carolx1c
-        # 'carolx1c': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1c',
-        # fault injection
-        'carolk402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Fault_Injections/sassifi_darknet_paper_micro'
-    }
-
-    _datasets = {'caltech.pedestrians.critical.1K.txt': {'dumb_abft': 'gold.caltech.critical.abft.1K.test',
-                                                         'no_abft': 'gold.caltech.critical.1K.test'},
-                 'caltech.pedestrians.1K.txt': {'dumb_abft': 'gold.caltech.abft.1K.test',
-                                                'no_abft': 'gold.caltech.1K.test'},
-                 'voc.2012.1K.txt': {'dumb_abft': 'gold.voc.2012.abft.1K.test', 'no_abft': 'gold.voc.2012.1K.test'}}
-
     __executionType = None
     __executionModel = None
 
     __weights = None
     __configFile = None
-    __iterations = None
     _extendedHeader = False
-    _imgListSize = 1000
+
     __layerDimentions = {
         0: [224, 224, 64],
         1: [112, 112, 64],
@@ -79,24 +58,16 @@ class DarknetParser(ObjectDetectionParser):
                   "recall", "false_negative", "false_positive", "true_positive", "abft_type", "row_detected_errors",
                   "col_detected_errors", "failed_layer", "header"]
 
+    # it is only for darknet for a while
     _parseLayers = False
     __layersGoldPath = ""
     __layersPath = ""
-    _imgOutputDir = ""
-    _localRadiationBench = ""
 
     def __init__(self, **kwargs):
+        ObjectDetectionParser.__init__(self, **kwargs)
         self._parseLayers = bool(kwargs.pop("parseLayers"))
-        # self._goldBaseDir = str(kwargs.pop("goldBaseDir"))
-        self._imgOutputDir = str(kwargs.pop("imgOutputDir"))
-        self._localRadiationBench = str(kwargs.pop("localRadiationBench"))
-        # self._datasets            =    str(kwargs.pop("datasets"))
-        self._prThreshold = float(kwargs.pop("pr_threshold"))
-        self._ecc = bool(kwargs.pop("ecc"))
-        self._setCheckRunsCsvsAndOpen(csvSummaries=kwargs.pop("check_csv"))
 
         try:
-            super(ObjectDetectionParser, self).__init__()
             if self._parseLayers:
                 self.__layersGoldPath = str(kwargs.pop("layersGoldPath"))
                 self.__layersPath = str(kwargs.pop("layersPath"))
@@ -105,7 +76,7 @@ class DarknetParser(ObjectDetectionParser):
                                        for errType in ['allLayers', 'filtered2', 'filtered5']
                                        for layerNum in xrange(32))
         except:
-            print "\n Crash on ObjectDetectionParser"
+            print "\n Crash on create parse layers parameters"
             sys.exit(-1)
 
     _failed_layer = None
@@ -223,7 +194,7 @@ class DarknetParser(ObjectDetectionParser):
                 self._imgListPath = darknetM.group(3)
                 self.__weights = darknetM.group(4)
                 self.__configFile = darknetM.group(5)
-                self.__iterations = darknetM.group(6)
+                self._iterations = darknetM.group(6)
                 if "abft" in header:
                     self._abftType = darknetM.group(7)
 
@@ -389,7 +360,7 @@ class DarknetParser(ObjectDetectionParser):
         # print('_logFileName: ' + self._logFileName[])
         # print('_sdcIteration: ' + self._sdcIteration)
         sdcIteration = self._sdcIteration
-        if self._isInstLayers:
+        if self._isFaultInjection:
             sdcIteration = str(int(sdcIteration) + 1)
             # print 'debug' + sdcIteration
         layerFilename = self.__layersPath + self._logFileName + "_it_" + sdcIteration + "_layer_" + str(layerNum)
@@ -624,8 +595,6 @@ class DarknetParser(ObjectDetectionParser):
             return False
 
     def _relativeErrorParser(self, errList):
-        self._isInstLayers = True
-
         if len(errList) <= 0:  # or '2017_03_06_12_51_03_cudaDarknet_carolk402.log' not in self._logFileName:
             return
 
@@ -643,7 +612,7 @@ class DarknetParser(ObjectDetectionParser):
             #     txtPath = self.__goldBaseDir [self._machine] + '/networks_img_list/' + os.path.basename(self._imgListPath)
             #     self._isInstLayers = True
             # else:
-            print '_machine nao indexada: ' + self._machine
+            print 'not indexed machine: ' , self._machine , " set it on Parameters.py"
             return
 
         if goldKey not in self._goldDatasetArray:

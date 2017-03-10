@@ -4,6 +4,11 @@ import re
 from Parser import Parser
 
 class ACCLParser(Parser):
+
+    def __init__(self, **kwargs):
+        super(Parser, self).__init__(kwargs)
+
+
     __frames = None
     __framesPerStream = None
     __maxRows = None

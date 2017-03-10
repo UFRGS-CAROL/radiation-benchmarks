@@ -23,7 +23,17 @@ class Parser():
     # for jaccardCoefficient
     _jaccardCoefficientDict = {}
 
-    def __init__(self):
+    # if the processing database is generated from a fault injection
+    _isFaultInjection = False
+
+    # this will contains the csv that dictates the if the processing log is valid or not
+    _checkRunsCsv = None
+
+    # ecc on or off
+    _ecc = False
+
+    def __init__(self, **kwargs):
+        # super(Parser, self).__init__()
         for i in self.__keys:
             # _errors["errorsParsed"] = []
             # _errors["errListFiltered"] = []
@@ -39,6 +49,14 @@ class Parser():
             # _jaccardCoefficinetDict["errListFiltered2"] = 0
             self._jaccardCoefficientDict[i] = 0
 
+        try:
+            self._isFaultInjection = bool(kwargs.pop("is_fi"))
+            self._checkRunsCsv = kwargs.pop("check_csv")
+            self._ecc = bool(kwargs.pop("ecc"))
+        except:
+            self._ecc = False
+            self._checkRunsCsv = None
+            self._isFaultInjection = False
 
 
     _toleratedRelErr = 2.0  # minimum relative error to be considered, in percentage
@@ -88,14 +106,7 @@ class Parser():
     # for benchmarks which have a third dimention this attribute must be set on the child process
     _hasThirdDimention = False
 
-    # if the processing database is generated from a fault injection
-    _isFaultInjection = False
 
-    # this will contains the csv that dictates the if the processing log is valid or not
-    _checkRunsCsv = None
-
-    # ecc on or off
-    _ecc = False
 
     def debugAttPrint(self):
         print "*******Var values*******"
@@ -134,7 +145,21 @@ class Parser():
 
         self._makeDirName()
 
-        # ----------------
+        #for csv run check
+        if self._checkRunsCsv:
+            for i in self._checkRunsCsv:
+                board_key = str(self._machine) + ("_ecc_on" if self._ecc else '')
+                # print self._checkRunsCsv[board_key]["csv"]
+                csvObjFile = open(self._checkRunsCsv[board_key]["csv"])
+
+                #to check the delimiter
+                dialect = csv.Sniffer().sniff(csvObjFile.read(), delimiters=';,')
+                csvObjFile.seek(0)
+                readerTwo = csv.DictReader(csvObjFile, dialect=dialect)
+                self._checkRunsCsv[board_key]["data"] = [i for i in readerTwo]
+                csvObjFile.close()
+
+                # ----------------
 
     def getHasThirdDimention(self):
         return self._hasThirdDimention
@@ -146,13 +171,10 @@ class Parser():
 
     def parseErr(self):
         self._errors["errorsParsed"] = []
-        # self._errors["errListFiltered"] = []
-        # self._errors["errListFiltered2"] = []
-        print "\n", self._logFileName
         for errString in self._errList:
             if self._isLogValid:
                 err = self.parseErrMethod(errString)
-                if err != None:
+                if err is not None:
                     self._errors["errorsParsed"].append(err)
 
     """for almost all benchmarks this method must be ovirride, because it is application dependent"""
@@ -528,7 +550,7 @@ class Parser():
         if self._isFaultInjection or self._checkRunsCsv == None:
             return True
         board_key = str(self._machine) + ("_ecc_on" if self._ecc else '')
-        currentData = self._checkRunsCsv[board_key]["csv"]
+        currentData = self._checkRunsCsv[board_key]["data"]
         # process data
         # 2016_12_13_19_00_34_cudaDarknet_carol-k402.log
         m = re.match("(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(\d+)_(.*)_(.*).log", self._logFileName)
@@ -546,23 +568,17 @@ class Parser():
                 startDate = j["start timestamp"]
                 endDate = j["end timestamp"]
                 validBench = j["benchmark"] in self._benchmark or self._benchmark in j["benchmark"]
+
                 startDate = datetime.strptime(startDate, "%c")
                 endDate = datetime.strptime(endDate, "%c")
                 if startDate <= currDate <= endDate and validBench:
+                    # print "\nstart date ", startDate , " enddate ", endDate, " currDate ", currDate
                     return True
 
         return False
 
     def _setCheckRunsCsvsAndOpen(self, csvSummaries):
-        if self._isFaultInjection or self._checkRunsCsv == None:
+        if self._isFaultInjection or csvSummaries == None:
             return
-
-        self._checkRunsCsv = csvSummaries
-        print "Passou aqui \n\n\n\n"
-
-        for i in self._checkRunsCsv:
-            board_key = str(self._machine) + ("_ecc_on" if self._ecc else '')
-            csvObjFile = open(self._checkRunsCsv[board_key]["csv"])
-            readerTwo = csv.DictReader(csvObjFile, delimiter=';')
-            self._checkRunsCsv[board_key]["data"] = [i for i in readerTwo]
-            csvObjFile.close()
+        else:
+            self._checkRunsCsv = csvSummaries

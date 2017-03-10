@@ -10,6 +10,11 @@ LOCAL_TXT_FOLDER = "/home/fernando/Dropbox/UFRGS/Pesquisa/Teste_12_2016/GOLD_K40
 PARAMETERS = "0,1.05,1,1,48,0.9,100"
 
 class HogParser(ObjectDetectionParser):
+
+    def __init__(self, **kwargs):
+        super(ObjectDetectionParser, self).__init__(kwargs)
+
+
     _imgListPath = None
 
     def getBenchmark(self):

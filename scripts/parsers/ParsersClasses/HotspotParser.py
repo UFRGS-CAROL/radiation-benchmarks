@@ -5,8 +5,8 @@ from Parser import Parser
 
 class HotspotParser(Parser):
 
-    # def __init__(self):
-    #     print "\n\n\nPASSOU NO INIT\n\n\n"
+    def __init__(self, **kwargs):
+        super(Parser, self).__init__(kwargs)
 
 
 

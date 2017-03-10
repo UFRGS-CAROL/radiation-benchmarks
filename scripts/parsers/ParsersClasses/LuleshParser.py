@@ -6,6 +6,10 @@ from Parser import Parser
 
 class LuleshParser(Parser):
 
+
+    def __init__(self, **kwargs):
+        super(Parser, self).__init__(kwargs)
+
     _box = 50
     _hasThirdDimention = True
     _iterations = None
