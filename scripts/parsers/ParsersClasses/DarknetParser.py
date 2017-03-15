@@ -509,7 +509,7 @@ class DarknetParser(ObjectDetectionParser):
         # layerError :: xPos, yPos, zPos, found(?), expected(?)
         # layerErrorLists :: {[allLlayerErrors], [filtered2LayerErrors], [filtered5LayerErrors]}
         # print ('\n' + self._logFileName + ' :: ' + self._goldFileName + ' :: ' + self._imgListPath)
-        kernelTime = int(self._accIteErrors) // int(self._sdcIteration)
+        #kernelTime = int(self._accIteErrors) // int(self._sdcIteration)
         #print '\nkerneltime: ' + str(kernelTime)
         self._failed_layer = ""
         logsNotFound = False
@@ -522,7 +522,7 @@ class DarknetParser(ObjectDetectionParser):
             layer = self.loadLayer(i)
             gold = self.loadGoldLayer(i)
             if (layer is None):
-                print(self._machine + ' it: ' + self._sdcIteration + ' layer ' + str(i) + ' log not found')
+                print(self._machine + ' it: ' + str(self._sdcIteration) + ' layer ' + str(i) + ' log not found')
                 logsNotFound = True
                 break
             elif (gold is None):
