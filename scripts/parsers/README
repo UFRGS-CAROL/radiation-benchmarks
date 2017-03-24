@@ -13,7 +13,7 @@ run ./ProcessDatabase.py --database /home/ic_fodao/errors_log_database --benchma
 
 #for HOG, Darknet and PyFasterRCNN some parameters could be set
 --pr_threshold Precision and Recall jaccard similarity threshold value, default is 0.5
---parser_layers Parse Darknet corrupted layers
+--parse_layers Parse Darknet corrupted layers
 
 
 # it must generate some folders with all parsed CSVs

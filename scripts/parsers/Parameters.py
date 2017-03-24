@@ -16,15 +16,15 @@ from ParsersClasses import QuicksortParser
 ############################################################################################
 """This section MUST, I WRITE MUST, BE SET ACCORDING THE GOLD PATHS"""
 
-LAYERS_GOLD_PATH = '/home/fernando/temp/camadas/data/'  # '/home/pfpimenta/darknetLayers/golds/'
-LAYERS_PATH = '/home/fernando/temp/camadas/data/'  # '/home/pfpimenta/darknetLayers/layers/'
+LAYERS_GOLD_PATH = '/var/radiation-benchmarks/golds/'  # '/home/pfpimenta/darknetLayers/golds/'
+LAYERS_PATH = '/var/radiation-benchmarks/data_rf_16_03_2017/'  # '/home/pfpimenta/darknetLayers/layers/'
 
 # IMG_OUTPUT_DIR is the directory to where the images with error comparisons will be saved
 IMG_OUTPUT_DIR = ''  # ''/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/img_corrupted_output/'
 
 # LOCAL_RADIATION_BENCH must be the parent directory of the radiation-benchmarks folder
 #LOCAL_RADIATION_BENCH = '/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa'  # '/home/pfpimenta'
-LOCAL_RADIATION_BENCH = '/home/fernando/git_pesquisa'
+LOCAL_RADIATION_BENCH = '/home/carol'
 
 # if var check_csvs is true this values must have the csvs datapath
 # _ecc_on is mandatory only for boards that have ecc memory
@@ -57,7 +57,7 @@ GOLD_BASE_DIR = {
         # # carolx1c
         # 'carolx1c': '/home/pfpimenta/Dropbox/ufrgs/bolsaPaolo/GOLD_X1/tx1c',
         # fault injection
-        'carolk402': '/home/fernando/Dropbox/UFRGS/Pesquisa/Fault_Injections/sassifi_darknet_paper_micro'
+        'carolk402': '/home/carol/radiation-benchmarks/data' #'/home/fernando/Dropbox/UFRGS/Pesquisa/Fault_Injections/sassifi_darknet_paper_micro'
     }
 
 DARKNET_DATASETS = {'caltech.pedestrians.critical.1K.txt': {'dumb_abft': 'gold.caltech.critical.abft.1K.test',

@@ -62,7 +62,7 @@ def parse_args():
 
     parser.add_argument('--parse_layers', dest='parse_layers',
                         help='If you want parse Darknet layers, set it True, default values is False',
-                        default=False)
+                        default=False, action='store_true')
 
     parser.add_argument('--pr_threshold', dest='pr_threshold',
                         help='Precision and Recall threshold value,0 - 1, defautl value is 0.5',
@@ -93,6 +93,7 @@ if __name__ == '__main__':
     args = parse_args()
     #try:
     benchlist = (str(args.benchmarks).lower()).split(',')
+    print args.parse_layers
     par.setBenchmarks(
         benchmarks=benchlist,
         pr_threshold=args.pr_threshold,
