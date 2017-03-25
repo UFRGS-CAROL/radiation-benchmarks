@@ -402,7 +402,7 @@ class DarknetParser(ObjectDetectionParser):
             sdcIteration = str(int(sdcIteration) + 1)
             # print 'debug' + sdcIteration
         layerFilename = self.__layersPath + self._logFileName + "_it_" + sdcIteration + "_layer_" + str(layerNum)
-        # layerFilename = self.__layersPath  + '2016_12_11_20_57_38_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
+        #layerFilename = self.__layersPath  + '2017_03_15_04_15_52_cudaDarknet_carolk402.log_it_0_layer_' + str(layerNum)
         # layerFilename = self.__layersGoldPath + '2017_02_22_09_08_51_cudaDarknet_carol-k402.log_it_64_layer_' + str(layerNum)
         # print self.__layersPath   + layerFilename
         filenames = glob.glob(layerFilename)
@@ -536,18 +536,19 @@ class DarknetParser(ObjectDetectionParser):
 
     def getErrorListInfos(self, layerErrorList):
         # layerError :: xPos, yPos, zPos, found(?), expected(?)
-        smallest = None
-        biggest = None
-        average = None
-        stdDeviation = None
-        totalSum = 0
+        smallest = 0.0
+        biggest = 0.0
+        average = 0.0
+        stdDeviation = 0.0
+        #totalSum = long(0)
         relativeErrorsList = []
         for layerError in layerErrorList:
             relativeError = self.getRelativeError(layerError[4], layerError[3])
             relativeErrorsList.append(relativeError)
-            totalSum = totalSum + relativeError
-            
-            if(smallest == None and biggest == None):
+            #totalSum = totalSum + relativeError
+            average += relativeError/len(layerErrorList)
+
+            if(smallest == 0.0 and biggest == 0.0):
                 smallest = relativeError
                 biggest = relativeError
             else:
@@ -555,9 +556,10 @@ class DarknetParser(ObjectDetectionParser):
                     smallest = relativeError
                 if(relativeError > biggest):
                     biggest = relativeError
-
-        if(totalSum != 0):
-            average = totalSum/len(layerErrorList)
+	#print('\ndebug totalSum: ' + str(totalSum))
+        #average = totalSum/len(layerErrorList)
+	#average = numpy.average(relativeErrorsList)
+        if(average != 0.0):
             stdDeviation = numpy.std(relativeErrorsList)
 
         return smallest, biggest, average, stdDeviation
@@ -572,11 +574,11 @@ class DarknetParser(ObjectDetectionParser):
         #kernelTime = int(self._accIteErrors) // int(self._sdcIteration)
         #print '\nkerneltime: ' + str(kernelTime)
 
-        self._smallestError = {filterName:[None for i in xrange(32)] for filterName in self.__filterNames}
-        self._biggestError = {filterName:[None for i in xrange(32)] for filterName in self.__filterNames}
-        self._numErrors = {filterName:[None for i in xrange(32)] for filterName in self.__filterNames}
-        self._errorsAverage = {filterName:[None for i in xrange(32)] for filterName in self.__filterNames}
-        self._errorsStdDeviation = {filterName:[None for i in xrange(32)] for filterName in self.__filterNames}
+        self._smallestError = {filterName:[0.0 for i in xrange(32)] for filterName in self.__filterNames}
+        self._biggestError = {filterName:[0.0 for i in xrange(32)] for filterName in self.__filterNames}
+        self._numErrors = {filterName:[0 for i in xrange(32)] for filterName in self.__filterNames}
+        self._errorsAverage = {filterName:[0.0 for i in xrange(32)] for filterName in self.__filterNames}
+        self._errorsStdDeviation = {filterName:[0.0 for i in xrange(32)] for filterName in self.__filterNames}
         self._failed_layer = ""
         logsNotFound = False
         goldsNotFound = False
@@ -597,7 +599,8 @@ class DarknetParser(ObjectDetectionParser):
                 break
             else:
                 layerErrorList = self.getLayerErrorList(layer, gold, i)
-                self._numErrors['allErrors'][i] = len(layerErrorList)
+		if(len(layerErrorList)>0):
+                    self._numErrors['allErrors'][i] = len(layerErrorList)
                 smallest, biggest, average, stdDeviation = self.getErrorListInfos(layerErrorList)
                 self._smallestError['allErrors'][i] = smallest
                 self._biggestError['allErrors'][i] = biggest
@@ -616,7 +619,7 @@ class DarknetParser(ObjectDetectionParser):
                     self._biggestError['newErrors'][i] = self._biggestError['allErrors'][i]
                     self._errorsAverage['newErrors'][i] = self._errorsAverage['allErrors'][i]
                     self._errorsStdDeviation['newErrors'][i] = self._errorsStdDeviation['allErrors'][i]
-                if(i == 31 and False):
+                if(False): #i == 31):
                     print('\nlogName : ' + self._logFileName)
                     print('numErrors camada ' + str(i) + ' :: ' + str(len(layerErrorList)))
                     print('smallestError camada ' + str(i) + ' :: ' + str(smallest))
@@ -753,11 +756,6 @@ class DarknetParser(ObjectDetectionParser):
         # if self._abftType != 'no_abft':
         #    print str(self._sdcIteration) + ' : ' + self._abftType 
 
-        if self._parseLayers: #and self.hasLayerLogs(self._sdcIteration):
-            # print self._sdcIteration + 'debug'
-            self.parseLayers()
-            # print self._machine + self._abftType
-
         if self._rowDetErrors > 1e6:
             self._rowDetErrors /= long(1e15)
         if self._colDetErrors > 1e6:
@@ -777,6 +775,11 @@ class DarknetParser(ObjectDetectionParser):
         precisionRecallObj.precisionAndRecallParallel(gValidRects, fValidRects)
         self._precision = precisionRecallObj.getPrecision()
         self._recall = precisionRecallObj.getRecall()
+
+        if self._parseLayers: #and self.hasLayerLogs(self._sdcIteration):
+            # print self._sdcIteration + 'debug'
+            self.parseLayers()
+            # print self._machine + self._abftType
 
         if self._imgOutputDir and (self._precision != 1 or self._recall != 1):
             self.buildImageMethod(imgFilename.rstrip(), gValidRects, fValidRects, str(self._sdcIteration)
