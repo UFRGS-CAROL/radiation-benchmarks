@@ -168,8 +168,8 @@ class DarknetParser(ObjectDetectionParser):
             csvWFP.close()
 
         except:
-            print "\n PAU NO CSV\n"
-            raise
+            print "\n Crash on log ", self._logFileName
+            #raise
 
     def setSize(self, header):
         if "abft" in header:
