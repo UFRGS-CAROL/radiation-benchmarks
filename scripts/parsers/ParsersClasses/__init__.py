@@ -1,4 +1,0 @@
-
-from SupportClasses import PrecisionAndRecall
-from SupportClasses import _GoldContent
-from SupportClasses import Rectangle
