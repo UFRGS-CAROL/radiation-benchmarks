@@ -1,3 +1,5 @@
+#THIS REPOSITORY WAS COPIED FROM http://pjreddie.com/darknet, for research purposes only#
+
 ![Darknet Logo](http://pjreddie.com/media/files/darknet-black-small.png)
 
 #Darknet#
