@@ -1,0 +1,3 @@
+[submodule "radiation-benchmarks-parsers"]
+	path = radiation-benchmarks-parsers
+	url = https://github.com/fernandoFernandeSantos/radiation-benchmarks-parsers.git
