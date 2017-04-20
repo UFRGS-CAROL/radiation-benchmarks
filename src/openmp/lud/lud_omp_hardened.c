@@ -104,10 +104,11 @@ void lud_omp(float *a, int size)
             private(chunk_idx, chunk_idx_hardened_1, chunk_idx_hardened_2) shared(size, chunks_per_inter, chunks_in_inter_row, offset, a)
             for ( chunk_idx = 0; chunk_idx < chunks_in_inter_row; chunk_idx++)
             {	
-				chunk_idx_hardened_1 = chunk_idx;
-				chunk_idx_hardened_2 = chunk_idx;
+		chunk_idx_hardened_1 = chunk_idx;
+		chunk_idx_hardened_2 = chunk_idx;
 
-	        	int i, j, k, i_global, j_global, i_here, j_here;
+        	int i, j, k, i_global, i_here, j_here;
+		int j_global_hardened_1, j_global_hardened_2;
                 float sum_hardened_1, sum_hardened_2;
 		
                 float temp[BS*BS] __attribute__ ((aligned (64)));
@@ -119,7 +120,8 @@ void lud_omp(float *a, int size)
                     }
                 }
                 i_global = offset;
-                j_global = offset;
+                j_global_hardened_1 = offset;
+		j_global_hardened_2 = offset;
 
                 // processing top perimeter
                 //
@@ -128,35 +130,38 @@ void lud_omp(float *a, int size)
 		printf("hardening: original_val = %d, hardened_val_1 = %d, hardened_val_2 = %d, read_val = %d\n", chunk_idx, chunk_idx_hardened_1, chunk_idx_hardened_2, READ_HARDENED_VAR(chunk_idx_hardened_1, chunk_idx_hardened_2, int, sizeof(int)));
 #endif
 
-	    	j_global += BS * (READ_HARDENED_VAR(chunk_idx_hardened_1, chunk_idx_hardened_2, int, sizeof(int)) + 1);
+	    	j_global_hardened_1 += BS * (READ_HARDENED_VAR(chunk_idx_hardened_1, chunk_idx_hardened_2, int, sizeof(int)) + 1);
+	    	j_global_hardened_2 += BS * (READ_HARDENED_VAR(chunk_idx_hardened_1, chunk_idx_hardened_2, int, sizeof(int)) + 1);
+
                 for (j = 0; j < BS; j++) {
                     for (i = 0; i < BS; i++) {
                         sum_hardened_1 = 0.f;
 						sum_hardened_2 = 0.f;
                         for (k=0; k < i; k++) {
-                            sum_hardened_1 += temp[BS*i +k] * BB((i_global+k),(j_global+j));
-				 			sum_hardened_2 += temp[BS*i +k] * BB((i_global+k),(j_global+j));
+        	                sum_hardened_1 += temp[BS*i +k] * BB((i_global+k),(READ_HARDENED_VAR(j_global_hardened_1, j_global_hardened_2, int, sizeof(int))+j));
+	 			sum_hardened_2 += temp[BS*i +k] * BB((i_global+k),(READ_HARDENED_VAR(j_global_hardened_1, j_global_hardened_2, int, sizeof(int))+j));
                         }
                         i_here = i_global + i;
-                        j_here = j_global + j;
+                        j_here = READ_HARDENED_VAR(j_global_hardened_1, j_global_hardened_2, int, sizeof(int)) + j;
                         BB(i_here, j_here) = BB(i_here,j_here) - READ_HARDENED_VAR(sum_hardened_1, sum_hardened_2, float, sizeof(float));
                     }
                 }
 
                 // processing left perimeter
                 //
-                j_global = offset;
+                j_global_hardened_1 = offset;
+		j_global_hardened_2 = offset;
                 i_global += BS * (READ_HARDENED_VAR(chunk_idx_hardened_1, chunk_idx_hardened_2, int, sizeof(int)) + 1);
                 for (i = 0; i < BS; i++) {
                     for (j = 0; j < BS; j++) {
                         sum_hardened_1 = 0.f;
 			sum_hardened_2 = 0.f;
                         for (k=0; k < j; k++) {
-                            sum_hardened_1 += BB((i_global+i),(j_global+k)) * temp[BS*k + j];
-                            sum_hardened_2 += BB((i_global+i),(j_global+k)) * temp[BS*k + j];
+                            sum_hardened_1 += BB((i_global+i),(READ_HARDENED_VAR(j_global_hardened_1, j_global_hardened_2, int, sizeof(int))+k)) * temp[BS*k + j];
+                            sum_hardened_2 += BB((i_global+i),(READ_HARDENED_VAR(j_global_hardened_1, j_global_hardened_2, int, sizeof(int))+k)) * temp[BS*k + j];
                         }
                         i_here = i_global + i;
-                        j_here = j_global + j;
+                        j_here = READ_HARDENED_VAR(j_global_hardened_1, j_global_hardened_2, int, sizeof(int)) + j;
                         a[size*i_here + j_here] = ( a[size*i_here+j_here] - READ_HARDENED_VAR(sum_hardened_1, sum_hardened_2, float, sizeof(float))) / a[size*(offset+j) + offset+j];
                     }
                 }
@@ -176,7 +181,8 @@ void lud_omp(float *a, int size)
         		chunk_idx_hardened_1 = chunk_idx;
 				chunk_idx_hardened_2 = chunk_idx;
 
-                int i, j, k, i_global, j_global;
+                int i, j, k, i_global;
+		int j_global_hardened_1, j_global_hardened_2;
                 float temp_top_hardened_1[BS*BS] __attribute__ ((aligned (64)));
 		float temp_top_hardened_2[BS*BS] __attribute__ ((aligned (64)));
                 float temp_left[BS*BS] __attribute__ ((aligned (64)));
@@ -188,13 +194,14 @@ void lud_omp(float *a, int size)
 #endif
 
                 i_global = offset + BS * (1 + READ_HARDENED_VAR(chunk_idx_hardened_1, chunk_idx_hardened_2, int, sizeof(int))/chunks_in_inter_row);
-                j_global = offset + BS * (1 + READ_HARDENED_VAR(chunk_idx_hardened_1, chunk_idx_hardened_2, int, sizeof(int))%chunks_in_inter_row);
+                j_global_hardened_1 = offset + BS * (1 + READ_HARDENED_VAR(chunk_idx_hardened_1, chunk_idx_hardened_2, int, sizeof(int))%chunks_in_inter_row);
+                j_global_hardened_2 = offset + BS * (1 + READ_HARDENED_VAR(chunk_idx_hardened_1, chunk_idx_hardened_2, int, sizeof(int))%chunks_in_inter_row);
 
                 for (i = 0; i < BS; i++) {
                     #pragma omp simd
                     for (j =0; j < BS; j++) {
-                        temp_top_hardened_1[i*BS + j]  = a[size*(i + offset) + j + j_global ];
-			temp_top_hardened_2[i*BS + j]  = a[size*(i + offset) + j + j_global ];
+                        temp_top_hardened_1[i*BS + j]  = a[size*(i + offset) + j + READ_HARDENED_VAR(j_global_hardened_1, j_global_hardened_2, int, sizeof(int)) ];
+			temp_top_hardened_2[i*BS + j]  = a[size*(i + offset) + j + READ_HARDENED_VAR(j_global_hardened_1, j_global_hardened_2, int, sizeof(int)) ];
                         temp_left[i*BS + j] = a[size*(i + i_global) + offset + j];
                     }
                 }
@@ -213,7 +220,7 @@ void lud_omp(float *a, int size)
 #ifdef HARDENING_DEBUG
                     	printf("hardening: array_ptr_1 = %p, array_ptr_2 = %p, size_array = %d, read_array_ptr = %p\n", sum_hardened_1, sum_hardened_2, BS*sizeof(float), READ_HARDENED_ARRAY(sum_hardened_1, sum_hardened_2, float*, BS*sizeof(float)));
 #endif
-			BB((i+i_global),(j+j_global)) -= READ_HARDENED_ARRAY(sum_hardened_1, sum_hardened_2, float*, BS*sizeof(float))[j];
+			BB((i+i_global),(j+READ_HARDENED_VAR(j_global_hardened_1, j_global_hardened_2, int, sizeof(int)))) -= READ_HARDENED_ARRAY(sum_hardened_1, sum_hardened_2, float*, BS*sizeof(float))[j];
                         sum_hardened_1[j] = 0.f;
 			sum_hardened_2[j] = 0.f;
                     }
