@@ -3,14 +3,12 @@ CUDNN=0
 OPENCV=0
 DEBUG=0
 
-ARCH= -gencode arch=compute_20,code=[sm_20,sm_21] \
-      -gencode arch=compute_30,code=sm_30 \
+ARCH= -gencode arch=compute_30,code=sm_30 \
       -gencode arch=compute_35,code=sm_35 \
       -gencode arch=compute_50,code=[sm_50,compute_50] \
       -gencode arch=compute_52,code=[sm_52,compute_52] \
       -gencode arch=compute_60,code=[sm_60,compute_60] \
       -gencode arch=compute_62,code=[sm_62,compute_62]
-
 
 # This is what I use, uncomment if you know your arch and want to specify
 # ARCH=  -gencode arch=compute_52,code=compute_52
@@ -51,10 +49,20 @@ CFLAGS+= -DCUDNN
 LDFLAGS+= -lcudnn
 endif
 
-OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o image.o activations.o im2col.o col2im.o blas.o crop_layer.o dropout_layer.o maxpool_layer.o softmax_layer.o data.o matrix.o network.o connected_layer.o cost_layer.o parser.o option_list.o darknet.o detection_layer.o captcha.o route_layer.o writing.o box.o nightmare.o normalization_layer.o avgpool_layer.o coco.o dice.o yolo.o detector.o layer.o compare.o regressor.o classifier.o local_layer.o swag.o shortcut_layer.o activation_layer.o rnn_layer.o gru_layer.o rnn.o rnn_vid.o crnn_layer.o demo.o tag.o cifar.o go.o batchnorm_layer.o art.o region_layer.o reorg_layer.o lsd.o super.o voxel.o tree.o
+OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o \
+list.o image.o activations.o im2col.o col2im.o blas.o crop_layer.o \
+dropout_layer.o maxpool_layer.o softmax_layer.o data.o matrix.o network.o \
+connected_layer.o cost_layer.o parser.o option_list.o darknet.o detection_layer.o \
+captcha.o route_layer.o writing.o box.o nightmare.o normalization_layer.o avgpool_layer.o \
+coco.o dice.o yolo.o detector.o layer.o compare.o regressor.o classifier.o local_layer.o \
+swag.o shortcut_layer.o activation_layer.o rnn_layer.o gru_layer.o rnn.o rnn_vid.o \
+crnn_layer.o demo.o tag.o cifar.o go.o batchnorm_layer.o art.o region_layer.o reorg_layer.o \
+lsd.o super.o voxel.o tree.o args.o
 ifeq ($(GPU), 1) 
 LDFLAGS+= -lstdc++ 
-OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2col_kernels.o col2im_kernels.o blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o network_kernels.o avgpool_layer_kernels.o
+OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o \
+im2col_kernels.o col2im_kernels.o blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o \
+maxpool_layer_kernels.o network_kernels.o avgpool_layer_kernels.o
 endif
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
