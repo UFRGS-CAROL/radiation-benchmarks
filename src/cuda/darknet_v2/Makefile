@@ -3,6 +3,9 @@ CUDNN=0
 OPENCV=0
 DEBUG=0
 
+#for radiation setup
+LOGS?=0
+
 ARCH= -gencode arch=compute_30,code=sm_30 \
       -gencode arch=compute_35,code=sm_35 \
       -gencode arch=compute_50,code=[sm_50,compute_50] \
@@ -18,6 +21,7 @@ EXEC=darknet
 OBJDIR=./obj/
 
 CC=gcc
+CXX=g++
 NVCC=nvcc 
 OPTS=-Ofast
 LDFLAGS= -lm -pthread 
@@ -65,7 +69,7 @@ im2col_kernels.o col2im_kernels.o blas_kernels.o crop_layer_kernels.o dropout_la
 maxpool_layer_kernels.o network_kernels.o avgpool_layer_kernels.o
 endif
 
-OBJS = $(addprefix $(OBJDIR), $(OBJ))
+OBJS = $(addprefix $(OBJDIR), $(OBJ)) $(OBJDIR)/log_processing.o
 DEPS = $(wildcard src/*.h) Makefile
 
 all: obj backup results $(EXEC)
@@ -79,6 +83,9 @@ $(OBJDIR)%.o: %.c $(DEPS)
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@
 
+log_processing.o:
+	$(CXX) src/log_processing.cpp -c -o obj/log_processing.o
+
 obj:
 	mkdir -p obj
 backup:
@@ -91,3 +98,9 @@ results:
 clean:
 	rm -rf $(OBJS) $(EXEC)
 
+
+test_pure_yolo:
+	./darknet detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
+	
+test:
+	./darknet test_radiation  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp -s 1 -l ../../ddd

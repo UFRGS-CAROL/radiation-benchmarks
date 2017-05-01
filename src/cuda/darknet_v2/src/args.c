@@ -18,6 +18,12 @@ void args_init_and_setnull(Args *arg) {
 	arg->iterations = 1;
 	arg->save_layers = 0;
 	arg->generate_flag = 0;
+
+	//test detector
+	arg->cfg_data = 	"cfg/coco.data";
+	arg->model = "detect";
+	arg->thresh = 0.24;
+	arg->hier_thresh = 0.5;
 }
 /**
  * return 1 if everything is ok, and 0 if not
@@ -56,7 +62,7 @@ int check_args(Args *arg) {
 
 	//make sure if it is generate is only one iteration
 	arg->iterations = ((arg->generate_flag) ? 1 : arg->iterations);
-	return 0;
+	return 1;
 }
 /**
  * print the passed arg
@@ -68,9 +74,13 @@ void print_args(const Args arg) {
 			"gold_input/output = %s\n"
 			"gold_flag = %d\n"
 			"img_list_path = %s\n"
-			"save_layer = %d\n", arg.config_file,
+			"save_layer = %d\n"
+			"model = %s\n"
+			"cfg_data = %s\n"
+			"threshold = %f\n"
+			"hier_thresh = %f\n", arg.config_file,
 			arg.weights, arg.iterations, arg.gold_inout, arg.generate_flag,
-			arg.img_list_path, arg.save_layers);
+			arg.img_list_path, arg.save_layers, arg.model, arg.cfg_data, arg.thresh, arg.hier_thresh);
 }
 
 /**

@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef LOGS
+#include "log_helper.h"
+#endif
 
 #include "args.h"
 #include "parser.h"
@@ -14,6 +17,10 @@ extern void predict_classifier(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, int top);
 extern void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, float thresh, float hier_thresh);
+
+//added for radiation test
+extern void test_detector_radiation(Args args);
+
 extern void run_voxel(int argc, char **argv);
 extern void run_yolo(int argc, char **argv);
 extern void run_detector(int argc, char **argv);
@@ -419,16 +426,39 @@ int main(int argc, char **argv) {
 	} else if (0 == strcmp(argv[1], "detect")) {
 		// changed for radiation setup
 		float thresh = find_float_arg(argc, argv, "-thresh", .24);
-		int radiation_args = 0;
-		if (radiation_args == 0){
 		char *filename = (argc > 4) ? argv[4] : 0;
-			printf("filename %s\n", filename);
-			test_detector("cfg/coco.data", argv[2], argv[3], filename, thresh, .5);
-		}else{
+		test_detector("cfg/coco.data", argv[2], argv[3], filename, thresh, .5);
+
+	} else if (0 == strcmp(argv[1], "test_radiation")) {
+//*************test radiation **************************************************
+		// test if it is an radiation setup
+		Args parsed_args;
+		args_init_and_setnull(&parsed_args);
+		if (parse_arguments(&parsed_args, argc, argv) != -1) {
+
 			//for radiation test/fault injection
-			Args parsed_args;
+			//./darknet detect cfg/yolo.cfg yolo.weights
+			if (parsed_args.generate_flag) {
+				test_detector_radiation(parsed_args);
+			} else {
+#ifdef LOGS
+				char test_info[500];
+				snprintf(test_info, 500, "gold_file: %s", parsed_args.gold_inout);
+
+				start_log_file("cudaDarknet", test_info);
+#endif
+
+				test_detector_radiation(parsed_args);
+
+#ifdef LOGS
+				end_log_file();
+#endif
+			}
 			args_init_and_setnull(&parsed_args);
+		}else{
+			usage(argv, "test_radiation", "test_radiation followed by those parameters");
 		}
+//******************************************************************************
 	} else if (0 == strcmp(argv[1], "cifar")) {
 		run_cifar(argc, argv);
 	} else if (0 == strcmp(argv[1], "go")) {
