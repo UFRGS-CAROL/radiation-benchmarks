@@ -8,111 +8,113 @@
 #ifndef HELPFUL_H_
 #define HELPFUL_H_
 #include <sys/time.h>
+#include <sstream>
 
 #define GOLD_LINE_SIZE 6
-#ifdef CXX
+
+#ifdef __cplusplus
 using namespace std;
 
 
 void dump_output(int iteration_num, string directory, bool corrupted,
-		vector<vector<int> > data) {
-	char filename[100];
+        vector<vector<int> > data) {
+    char filename[100];
 
-	time_t file_time;
-	struct tm *ptm;
-	char day[10], month[10], year[15], hour[10], second[10], minute[10];
-	char str_file_time[80] = "";
+    time_t file_time;
+    struct tm *ptm;
+    char day[10], month[10], year[15], hour[10], second[10], minute[10];
+    char str_file_time[80] = "";
 
-	file_time = time(NULL);
-	ptm = gmtime(&file_time);
+    file_time = time(NULL);
+    ptm = gmtime(&file_time);
 
-	snprintf(day, sizeof(day), "%02d", ptm->tm_mday);
-	snprintf(month, sizeof(month), "%02d", ptm->tm_mon + 1);
-	snprintf(year, sizeof(year), "%04d", ptm->tm_year + 1900);
-	snprintf(hour, sizeof(hour), "%02d", ptm->tm_hour);
-	snprintf(minute, sizeof(minute), "%02d", ptm->tm_min);
-	snprintf(second, sizeof(second), "%02d", ptm->tm_sec);
+    snprintf(day, sizeof(day), "%02d", ptm->tm_mday);
+    snprintf(month, sizeof(month), "%02d", ptm->tm_mon + 1);
+    snprintf(year, sizeof(year), "%04d", ptm->tm_year + 1900);
+    snprintf(hour, sizeof(hour), "%02d", ptm->tm_hour);
+    snprintf(minute, sizeof(minute), "%02d", ptm->tm_min);
+    snprintf(second, sizeof(second), "%02d", ptm->tm_sec);
 
-	strcpy(str_file_time, year);
-	strcat(str_file_time, "_");
-	strcat(str_file_time, month);
-	strcat(str_file_time, "_");
-	strcat(str_file_time, day);
-	strcat(str_file_time, "_");
+    strcpy(str_file_time, year);
+    strcat(str_file_time, "_");
+    strcat(str_file_time, month);
+    strcat(str_file_time, "_");
+    strcat(str_file_time, day);
+    strcat(str_file_time, "_");
 
-	strcat(str_file_time, hour);
-	strcat(str_file_time, "_");
-	strcat(str_file_time, minute);
-	strcat(str_file_time, "_");
-	strcat(str_file_time, second);
-	strcat(str_file_time, "_");
+    strcat(str_file_time, hour);
+    strcat(str_file_time, "_");
+    strcat(str_file_time, minute);
+    strcat(str_file_time, "_");
+    strcat(str_file_time, second);
+    strcat(str_file_time, "_");
 
-	if (corrupted)
-		sprintf(filename, "%s/graph%05d_corrupted_%s.data", directory.c_str(),
-				iteration_num, str_file_time);
-	else
-		sprintf(filename, "%s/graph%05d_%s.data", directory.c_str(), iteration_num,
-				str_file_time);
-	ofstream fp;
-	fp.open(filename);
-	if (fp.is_open()) {
-		for (unsigned i = 0; i < data.size(); i++) {
-			vector<int> values = data[i];
-			for(unsigned j = 0; j < values.size(); j++){
-				fp << values[j];
-				if(j != (values.size() - 1))
-					fp << ',';
-			}
-			fp << endl;
-		}
-		if (corrupted) {
+    if (corrupted)
+        sprintf(filename, "%s/graph%05d_corrupted_%s.data", directory.c_str(),
+                iteration_num, str_file_time);
+    else
+        sprintf(filename, "%s/graph%05d_%s.data", directory.c_str(), iteration_num,
+                str_file_time);
+    ofstream fp;
+    fp.open(filename);
+    if (fp.is_open()) {
+        for (unsigned i = 0; i < data.size(); i++) {
+            vector<int> values = data[i];
+            for(unsigned j = 0; j < values.size(); j++){
+                fp << values[j];
+                if(j != (values.size() - 1))
+                    fp << ',';
+            }
+            fp << endl;
+        }
+        if (corrupted) {
 #ifdef LOG
-			char error_detail[200] = "";
-			sprintf(error_detail,"#DUMP corrupted files dumped to %s", filename);
-			log_error_detail(error_detail);
+            char error_detail[200] = "";
+            sprintf(error_detail,"#DUMP corrupted files dumped to %s", filename);
+            log_error_detail(error_detail);
 #endif
-		}
-	} else {
-			printf("Could not open %s in save_corrupted_output()\n", filename);
-	}
+        }
+    } else {
+            printf("Could not open %s in save_corrupted_output()\n", filename);
+    }
 }
 
 vector<string> &split(const string &s, char delim, vector<string> &elems) {
-	std::stringstream ss(s);
-	std::string item;
-	while (getline(ss, item, delim)) {
-		elems.push_back(item);
-	}
-	return elems;
+    std::stringstream ss(s);
+    std::string item;
+    while (getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
 }
 
 vector<string> split(const string &s, char delim) {
-	std::vector<string> elems;
-	split(s, delim, elems);
-	return elems;
+    std::vector<string> elems;
+    split(s, delim, elems);
+    return elems;
 }
 
 bool set_countains(vector<int> check, vector< vector<int> > src){
-	unsigned char cont = 0;
-	for(size_t i = 0; i < src.size(); i++){
-		vector<int> temp = src[i];
-		for(size_t j = 0; j < temp.size(); j++){
-			if(temp[j] == check[j])
-				cont++;
-		}
-		if(cont == temp.size())
-			return false;
-		cont = 0;
-	}
-	return true;
+    unsigned char cont = 0;
+    for(size_t i = 0; i < src.size(); i++){
+        vector<int> temp = src[i];
+        for(size_t j = 0; j < temp.size(); j++){
+            if(temp[j] == check[j])
+                cont++;
+        }
+        if(cont == temp.size())
+            return false;
+        cont = 0;
+    }
+    return true;
 }
 #endif //CXX
 
 double mysecond() {
-	struct timeval tp;
-	struct timezone tzp;
-	gettimeofday(&tp, &tzp);
-	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
+    struct timeval tp;
+    struct timezone tzp;
+    gettimeofday(&tp, &tzp);
+    return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
 }
 
 #endif /* HELPFUL_H_ */

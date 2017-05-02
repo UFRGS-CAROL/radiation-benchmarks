@@ -143,19 +143,22 @@ detection load_gold(char *gold_path, Args *arg) {
 	}
 
 //	reading only header
-	std::string header = (std::string) data.front();
-	std::vector<std::string> split_ret = split(header, ";");
+	std::string header = data.front();
+	data.pop_front();
+	std::vector < std::string > split_ret = split(header, ';');
 //	thresh hier_tresh img_list_size img_list_path config_file config_data model weights
-	arg->thresh = std::stof(split_ret[0], NULL);
-	arg->hier_thresh = std::stof(split_ret[1], NULL);
-	gold.img_list_size = std::stoi(split_ret[2], NULL);
-	arg->config_file = split_ret[3].c_str();
-	arg->cfg_data = split_ret[4].c_str();
-	arg->model = split_ret[5].c_str();
-	arg->weights = split_ret[6].c_str();
+	arg->thresh = atof(split_ret[0].c_str());
+	arg->hier_thresh = atof(split_ret[1].c_str());
+	gold.img_list_size = atoi(split_ret[2].c_str());
+	arg->config_file = const_cast<char*>(split_ret[3].c_str());
+	arg->cfg_data = const_cast<char*>(split_ret[4].c_str());
+	arg->model = const_cast<char*>(split_ret[5].c_str());
+	arg->weights = const_cast<char*>(split_ret[6].c_str());
 
+	for (std::list<std::string>::const_iterator it = data.begin();
+			it != data.end(); ++it) {
 
-
+	}
 	return gold;
 }
 

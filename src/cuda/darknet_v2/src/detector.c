@@ -760,6 +760,7 @@ void test_detector_radiation(char *gold_file) {
 	//load all information from the goldfile
 	Args args;
 	detection gold = load_gold(gold_file, &args);
+	print_args(args);
 
 	//load cfg file
 	list *options = read_data_cfg(args.cfg_data);
