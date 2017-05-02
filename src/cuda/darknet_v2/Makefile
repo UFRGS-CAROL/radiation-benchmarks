@@ -69,13 +69,18 @@ im2col_kernels.o col2im_kernels.o blas_kernels.o crop_layer_kernels.o dropout_la
 maxpool_layer_kernels.o network_kernels.o avgpool_layer_kernels.o
 endif
 
-OBJS = $(addprefix $(OBJDIR), $(OBJ)) $(OBJDIR)/log_processing.o
+ifeq ($(LOGS), 1)
+LOGHELPER_INC=-I../../include/
+LOGHELPER_LIB=-L../../include/
+endif
+
+OBJS = $(addprefix $(OBJDIR), $(OBJ)) $(OBJDIR)log_processing.o
 DEPS = $(wildcard src/*.h) Makefile
 
 all: obj backup results $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS)  -lstdc++
 
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
@@ -83,8 +88,8 @@ $(OBJDIR)%.o: %.c $(DEPS)
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@
 
-log_processing.o:
-	$(CXX) src/log_processing.cpp -c -o obj/log_processing.o
+$(OBJDIR)log_processing.o: src/log_processing.cpp src/log_processing.h
+	$(CXX) src/log_processing.cpp -c -o obj/log_processing.o $(LOGHELPER_INC)
 
 obj:
 	mkdir -p obj
@@ -103,4 +108,4 @@ test_pure_yolo:
 	./darknet detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
 	
 test:
-	./darknet test_radiation  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp -s 1 -l ../../ddd
+	./darknet test_radiation  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp -s 1 -l test.txt

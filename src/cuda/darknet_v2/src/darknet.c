@@ -2,10 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef LOGS
-#include "log_helper.h"
-#endif
 
+#include "log_processing.h"
 #include "args.h"
 #include "parser.h"
 #include "utils.h"
@@ -439,20 +437,13 @@ int main(int argc, char **argv) {
 			//for radiation test/fault injection
 			//./darknet detect cfg/yolo.cfg yolo.weights
 			if (parsed_args.generate_flag) {
-				test_detector_radiation(parsed_args);
+				test_detector_generate(parsed_args);
 			} else {
-#ifdef LOGS
-				char test_info[500];
-				snprintf(test_info, 500, "gold_file: %s", parsed_args.gold_inout);
-
-				start_log_file("cudaDarknet", test_info);
-#endif
+				start_count_app(parsed_args.gold_inout, "cudaDarknet");
 
 				test_detector_radiation(parsed_args);
 
-#ifdef LOGS
-				end_log_file();
-#endif
+				finish_count_app();
 			}
 			args_init_and_setnull(&parsed_args);
 		}else{
