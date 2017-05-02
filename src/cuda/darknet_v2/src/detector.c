@@ -9,6 +9,7 @@
 #include "blas.h"
 
 #include "args.h"
+
 #include "log_processing.h"
 
 static int coco_ids[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17,
@@ -718,65 +719,105 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 }
 
 /**
+ * support functions
+ * -------------------------------------------------------------------------------------
+ */
+image *load_all_images_sized(image *img_array, int net_w, int net_h,
+		int list_size) {
+//		image sized = letterbox_image(im, net.w, net.h);
+	int i;
+	image *ret = (image*) malloc(sizeof(image) * list_size);
+	for (i = 0; i < list_size; i++) {
+		//ret[i] = letterbox_image(img_array[i], net_w, net_h);
+	}
+	return ret;
+}
+
+image *load_all_images(detection det) {
+//	image im = load_image_color(input, 0, 0);
+	int i;
+	image *ret = (image*) malloc(sizeof(image) * det.img_list_size);
+	for (i = 0; i < det.img_list_size; i++) {
+		ret[i] = load_image_color(det.image_names[i], 0, 0);
+	}
+	return ret;
+}
+
+void free_all_images(image *array, int list_size) {
+	//			free_image(im);
+	int i;
+	for (i = 0; i < list_size; i++) {
+		//free_image(array[i]);
+	}
+}
+//-------------------------------------------------------------------------------------
+
+/**
  * Function created only for radiation test only
  * args is an Args
  */
-void test_detector_radiation(Args args) {
-	char *filename = "data/dog.jpg";
+void test_detector_radiation(char *gold_file) {
+	//load all information from the goldfile
+	Args args;
+	detection gold = load_gold(gold_file, &args);
 
 	//load cfg file
 	list *options = read_data_cfg(args.cfg_data);
+
 	// here it takes data/coco.names
 	char *name_list = option_find_str(options, "names", "data/names.list");
-
 	char **names = get_labels(name_list);
 
-	image **alphabet = load_alphabet();
+//	image **alphabet = load_alphabet();
 	network net = parse_network_cfg(args.config_file);
 	if (args.weights) {
 		load_weights(&net, args.weights);
 	}
 	set_batch_network(&net, 1);
 	srand(2222222);
-	clock_t time;
-	char buff[256];
-	char *input = buff;
-	int j;
+
+	int j, i, it;
 	float nms = .4;
-	// this loop will iterate
-	while (1) {
-		if (filename) {
-			strncpy(input, filename, 256);
+	//load all images
+	image *im_array = load_all_images(gold);
+	image *im_array_sized = load_all_images_sized(im_array, net.w, net.h,
+			gold.img_list_size);
+
+//	alloc once and clear at each iteration
+	layer l = net.layers[net.n - 1];
+	box *boxes = calloc(l.w * l.h * l.n, sizeof(box));
+	float **probs = calloc(l.w * l.h * l.n, sizeof(float *));
+	for (j = 0; j < l.w * l.h * l.n; ++j)
+		probs[j] = calloc(l.classes + 1, sizeof(float *));
+
+	// this loop will iterate all iteration on args * image_size
+	for (i = 0; i < args.iterations; i++) {
+		for (it = 0; it < gold.img_list_size; it++) {
+			image im = im_array[it];
+			image sized = im_array_sized[it];
+
+			float *X = sized.data;
+			float time = clock();
+			network_predict(net, X);
+			printf("Predicted in %f seconds.\n", sec(clock() - time));
+			get_region_boxes(l, im.w, im.h, net.w, net.h, args.thresh, probs,
+					boxes, 0, 0, args.hier_thresh, 1);
+			if (nms)
+				do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nms);
+
+//		draw_detections(im, l.w * l.h * l.n, args.thresh, boxes, probs, names,
+//				alphabet, l.classes);
+			clear_boxes_and_probs(boxes, probs, l.w * l.h * l.n);
 		}
-
-		image im = load_image_color(input, 0, 0);
-		image sized = letterbox_image(im, net.w, net.h);
-		layer l = net.layers[net.n - 1];
-
-		box *boxes = calloc(l.w * l.h * l.n, sizeof(box));
-		float **probs = calloc(l.w * l.h * l.n, sizeof(float *));
-		for (j = 0; j < l.w * l.h * l.n; ++j)
-			probs[j] = calloc(l.classes + 1, sizeof(float *));
-
-		float *X = sized.data;
-		time = clock();
-		network_predict(net, X);
-		printf("%s: Predicted in %f seconds.\n", input, sec(clock() - time));
-		get_region_boxes(l, im.w, im.h, net.w, net.h, args.thresh, probs, boxes,
-				0, 0, args.hier_thresh, 1);
-		if (nms)
-			do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nms);
-
-		draw_detections(im, l.w * l.h * l.n, args.thresh, boxes, probs, names,
-				alphabet, l.classes);
-
-		free_image(im);
-		free_image(sized);
-		free(boxes);
-		free_ptrs((void **) probs, l.w * l.h * l.n);
-		if (filename)
-			break;
 	}
+
+	//free the memory
+	free_ptrs((void **) probs, l.w * l.h * l.n);
+	free(boxes);
+	delete_detection_var(&gold);
+
+	free_all_images(im_array, gold.img_list_size);
+	free_all_images(im_array_sized, gold.img_list_size);
 }
 
 void test_detector_generate(Args args) {
@@ -784,15 +825,16 @@ void test_detector_generate(Args args) {
 	int img_list_size = 0;
 	char **img_list = get_image_filenames(args.img_list_path, &img_list_size);
 
+	//output gold
 	FILE *output_file = fopen(args.gold_inout, "w+");
 	if (output_file) {
 //		writing all parameters for test execution
 //		thresh hier_tresh img_list_size img_list_path config_file config_data model weights
 
-		fprintf(output_file, "%f %f %d %s %s %s %s %s\n", args.thresh,
+		fprintf(output_file, "%f;%f;%d;%s;%s;%s;%s;%s\n", args.thresh,
 				args.hier_thresh, img_list_size, args.img_list_path,
 				args.config_file, args.cfg_data, args.model, args.weights);
-	}else{
+	} else {
 		fprintf(stderr, "GOLD OPENING ERROR");
 		exit(-1);
 	}
@@ -801,28 +843,30 @@ void test_detector_generate(Args args) {
 
 	//load cfg file
 	list *options = read_data_cfg(args.cfg_data);
+
+#ifdef GEN_IMG
 	// here it takes data/coco.names
 	char *name_list = option_find_str(options, "names", "data/names.list");
-
 	char **names = get_labels(name_list);
-
 	image **alphabet = load_alphabet();
+#endif
+
 	network net = parse_network_cfg(args.config_file);
 	if (args.weights) {
 		load_weights(&net, args.weights);
 	}
 	set_batch_network(&net, 1);
 	srand(2222222);
-	clock_t time;
-	char buff[256];
-	char *input = buff;
+//	clock_t time;
+//	char buff[256];
+//	char *input = buff;
 	int j;
 	float nms = .4;
 
 	// this loop will iterate for all images
 	int it;
 	for (it = 0; it < img_list_size; it++) {
-		printf("%s\n", img_list[it]);
+		printf("generating gold for: %s\n", img_list[it]);
 		image im = load_image_color(img_list[it], 0, 0);
 		image sized = letterbox_image(im, net.w, net.h);
 		layer l = net.layers[net.n - 1];
@@ -833,25 +877,28 @@ void test_detector_generate(Args args) {
 			probs[j] = calloc(l.classes + 1, sizeof(float *));
 
 		float *X = sized.data;
-		time = clock();
 		network_predict(net, X);
-		printf("%s: Predicted in %f seconds.\n", input, sec(clock() - time));
 		get_region_boxes(l, im.w, im.h, net.w, net.h, args.thresh, probs, boxes,
 				0, 0, args.hier_thresh, 1);
 		if (nms)
 			do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nms);
 
 //		must do the same thing that draw_detections
-//		but the output will be a gold file
-//		draw_detections(im, l.w * l.h * l.n, args.thresh, boxes, probs, names,
-//				alphabet, l.classes);
+//		but the output will be a gold file (old draw_detections)
 //		first write a filename
 		fprintf(output_file, "%s\n", img_list[it]);
 //		after writes all detection information
-//		each box is described as
-//		class number, left, top, right, bottom, prob (confidence)
-		save_gold(output_file, im, l.w * l.h * l.n, args.thresh, boxes, probs,
-				l.classes);
+//		each box is described as class number, left, top, right, bottom, prob (confidence)
+		save_gold(output_file, im.w, im.h, l.w * l.h * l.n, args.thresh, boxes,
+				probs, l.classes);
+
+#ifdef GEN_IMG
+		draw_detections(im, l.w * l.h * l.n, args.thresh, boxes, probs, names,
+				alphabet, l.classes);
+		char temp[10];
+		sprintf(temp, "pred%d", it);
+		save_image(im, temp);
+#endif
 
 		free_image(im);
 		free_image(sized);
@@ -859,6 +906,13 @@ void test_detector_generate(Args args) {
 		free_ptrs((void **) probs, l.w * l.h * l.n);
 
 	}
+
+	//free char** memory
+	for (it = 0; it < img_list_size; it++) {
+		free(img_list[it]);
+	}
+	free(img_list);
+	//close gold file
 	fclose(output_file);
 }
 

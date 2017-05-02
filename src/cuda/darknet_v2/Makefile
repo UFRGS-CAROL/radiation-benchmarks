@@ -5,6 +5,7 @@ DEBUG=0
 
 #for radiation setup
 LOGS?=0
+GEN_IMG?=0 #if you want to generate images on gold generator execution
 
 ARCH= -gencode arch=compute_30,code=sm_30 \
       -gencode arch=compute_35,code=sm_35 \
@@ -26,7 +27,11 @@ NVCC=nvcc
 OPTS=-Ofast
 LDFLAGS= -lm -pthread 
 COMMON= 
-CFLAGS=-Wall -Wfatal-errors 
+CFLAGS=-Wall -Wfatal-errors
+
+ifeq ($(GEN_IMG), 1)
+CFLAGS+= -DGEN_IMG=1
+endif
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g
@@ -72,6 +77,8 @@ endif
 ifeq ($(LOGS), 1)
 LOGHELPER_INC=-I../../include/
 LOGHELPER_LIB=-L../../include/
+else
+HELPFUL=-I../../include/
 endif
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ)) $(OBJDIR)log_processing.o
@@ -89,7 +96,7 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@
 
 $(OBJDIR)log_processing.o: src/log_processing.cpp src/log_processing.h
-	$(CXX) src/log_processing.cpp -c -o obj/log_processing.o $(LOGHELPER_INC)
+	$(CXX) src/log_processing.cpp -c -o obj/log_processing.o $(LOGHELPER_INC) $(HELPFUL)
 
 obj:
 	mkdir -p obj
@@ -108,4 +115,8 @@ test_pure_yolo:
 	./darknet detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
 	
 test:
-	./darknet test_radiation  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp -s 1 -l test.txt
+	./darknet test_radiation temp
+
+generate:
+	./darknet test_rad_gen  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp -s 1 -l test.txt 
+

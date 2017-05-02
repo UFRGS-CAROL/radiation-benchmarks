@@ -8,17 +8,13 @@
 #include "log_processing.h"
 #include <fstream>
 #include <list>
+#include <vector>
+#include <string>
+#include "helpful.h"
 
 #ifdef LOGS
 #include "log_helper.h"
 #endif
-
-double mysecond() {
-	struct timeval tp;
-	struct timezone tzp;
-	gettimeofday(&tp, &tzp);
-	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
-}
 
 void start_count_app(char *test, char *app) {
 #ifdef LOGS
@@ -43,7 +39,7 @@ void compareLayer(layer l, int i) {
 
 }
 
-const char** get_image_filenames(char *img_list_path, int *image_list_size) {
+char** get_image_filenames(char *img_list_path, int *image_list_size) {
 	std::list < std::string > data;
 	std::string line;
 	std::ifstream img_list_file(img_list_path);
@@ -53,11 +49,13 @@ const char** get_image_filenames(char *img_list_path, int *image_list_size) {
 		}
 		img_list_file.close();
 	}
-	const char** array = new const char*[data.size()];
+	char** array = (char**) malloc(sizeof(char*) * data.size());
 
-	for (std::list<std::string>::const_iterator it = data.begin(); it != data.end();
-			++it) {
-		array[*image_list_size] = it->c_str();
+	for (std::list<std::string>::const_iterator it = data.begin();
+			it != data.end(); ++it) {
+		char *temp = (char*) malloc(it->size() * sizeof(char));
+		strcpy(temp, it->c_str());
+		array[*image_list_size] = temp;
 		(*image_list_size)++;
 	}
 
@@ -67,7 +65,7 @@ const char** get_image_filenames(char *img_list_path, int *image_list_size) {
 }
 
 /**
- * it was adapted from max_index in utils.c line 536
+ * it was adapted from max_index in utils.c line 536image load_image(char *filename, int w, int h, int c);
  * auxiliary funtion for save_gold
  */
 
@@ -89,7 +87,7 @@ inline int get_index(float *a, int n) {
  * it was addapted from draw_detections in image.c line 174
  * it saves a gold file for radiation tests
  */
-void save_gold(FILE *fp, image im, int num, float thresh, box *boxes,
+void save_gold(FILE *fp, int w, int h, int num, float thresh, box *boxes,
 		float **probs, int classes) {
 	int i;
 
@@ -97,7 +95,7 @@ void save_gold(FILE *fp, image im, int num, float thresh, box *boxes,
 		int class_ = get_index(probs[i], classes);
 		float prob = probs[i][class_];
 		if (prob > thresh) {
-			int width = im.h * .012;
+			int width = h * .012;
 //			printf("%d: %.0f%%\n", class_, prob * 100);
 //			int offset = class_ * 123457 % classes;
 //			float red = get_color(2, offset, classes);
@@ -110,25 +108,74 @@ void save_gold(FILE *fp, image im, int num, float thresh, box *boxes,
 //			rgb[2] = blue;
 			box b = boxes[i];
 
-			float left = (b.x - b.w / 2.) * float(im.w);
-			float right = (b.x + b.w / 2.) * float(im.w);
-			float top = (b.y - b.h / 2.) * float(im.h);
-			float bot = (b.y + b.h / 2.) * float(im.h);
+			float left = (b.x - b.w / 2.) * float(w);
+			float right = (b.x + b.w / 2.) * float(w);
+			float top = (b.y - b.h / 2.) * float(h);
+			float bot = (b.y + b.h / 2.) * float(h);
 
 			if (left < 0)
 				left = 0;
-			if (right > im.w - 1)
-				right = im.w - 1;
+			if (right > w - 1)
+				right = w - 1;
 			if (top < 0)
 				top = 0;
-			if (bot > im.h - 1)
-				bot = im.h - 1;
+			if (bot > h - 1)
+				bot = h - 1;
 
 			//will save to fp file in this order
 			//class number, left, top, right, bottom, prob (confidence)
-			fprintf(fp, "%d %f %f %f %f %f\n", class_, left, top, right, bot,
+			fprintf(fp, "%d;%f;%f;%f;%f;%f\n", class_, left, top, right, bot,
 					prob);
 
 		}
+	}
+}
+
+detection load_gold(char *gold_path, Args *arg) {
+	detection gold;
+	std::list < std::string > data;
+	std::string line;
+	std::ifstream img_list_file(gold_path);
+	if (img_list_file.is_open()) {
+		while (getline(img_list_file, line)) {
+			data.push_back(line);
+		}
+	}
+
+//	reading only header
+	std::string header = (std::string) data.front();
+	std::vector<std::string> split_ret = split(header, ";");
+//	thresh hier_tresh img_list_size img_list_path config_file config_data model weights
+	arg->thresh = std::stof(split_ret[0], NULL);
+	arg->hier_thresh = std::stof(split_ret[1], NULL);
+	gold.img_list_size = std::stoi(split_ret[2], NULL);
+	arg->config_file = split_ret[3].c_str();
+	arg->cfg_data = split_ret[4].c_str();
+	arg->model = split_ret[5].c_str();
+	arg->weights = split_ret[6].c_str();
+
+
+
+	return gold;
+}
+
+void delete_detection_var(detection *det) {
+	if (det->image_names) {
+		int i;
+		for (i = 0; i < det->img_list_size; i++) {
+			free(det->image_names[i]);
+		}
+		free(det->image_names);
+	}
+
+	if (det->detection_result)
+		free(det->detection_result);
+
+}
+
+void clear_boxes_and_probs(box *boxes, float **probs, int n) {
+	memset(boxes, 0, sizeof(box) * n);
+	for (int i = 0; i < n; i++) {
+		memset(probs[i], 0, sizeof(float) * n);
 	}
 }
