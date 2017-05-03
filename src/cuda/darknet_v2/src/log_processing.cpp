@@ -153,11 +153,16 @@ detection load_gold(Args *arg) {
 		while (getline(img_list_file, line)) {
 			data.push_back(line);
 		}
+	}else{
+		std::cout << "ERROR ON OPENING GOLD FILE\n";
+		exit(-1);
 	}
 
 //	reading only header
 	std::string header = data.front();
+
 	data.pop_front();
+
 	std::vector < std::string > split_ret = split(header, ';');
 //	0       1           2              3              4            5            6
 //	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights
@@ -169,6 +174,7 @@ detection load_gold(Args *arg) {
 	arg->cfg_data = const_cast<char*>(split_ret[5].c_str());
 	arg->model = const_cast<char*>(split_ret[6].c_str());
 	arg->weights = (char*) calloc(split_ret[7].size(), sizeof(char));
+
 	strcpy(arg->weights, split_ret[7].c_str());
 
 	//fill gold content
@@ -179,9 +185,8 @@ detection load_gold(Args *arg) {
 
 	int img_iterator = 0;
 	std::list<rectangle> rectangle_aux;
-	for (std::list<std::string>::const_iterator it = data.begin();
-			it != data.end(); ++it) {
-		std::string temp = *it;
+	while(data.size()) {
+		std::string temp = data.front();
 		std::vector < string > rect_line = split(temp, ';');
 
 		//if it is less than 2 if is a image path line
@@ -190,16 +195,19 @@ detection load_gold(Args *arg) {
 				gold.detection_result[img_iterator] = (rectangle*) calloc(
 						rectangle_aux.size(), sizeof(rectangle));
 
-				for (int i = 0; i < rectangle_aux.size(); i++){
+				int i = 0;
+				while(rectangle_aux.size()){
 					rectangle final_it = rectangle_aux.front();
-					rectangle_aux.pop_front();
 					gold.detection_result[img_iterator][i] = final_it;
+					i++;
+					rectangle_aux.pop_front();
 				}
 
 			}
 			gold.image_names[img_iterator] =
 					const_cast<char*>(rect_line[0].c_str());
 			img_iterator++;
+
 		} else {
 			//class number, left, top, right, bottom, prob (confidence)
 
@@ -214,7 +222,9 @@ detection load_gold(Args *arg) {
 			rectangle_aux.push_back(rect);
 
 		}
+		data.pop_front();
 	}
+
 	return gold;
 }
 
