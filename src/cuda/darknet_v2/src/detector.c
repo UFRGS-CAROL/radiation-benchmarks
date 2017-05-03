@@ -756,20 +756,23 @@ void free_all_images(image *array, int list_size) {
  * Function created only for radiation test only
  * args is an Args
  */
-void test_detector_radiation(char *gold_file) {
+void test_detector_radiation(Args args) {
 	//load all information from the goldfile
-	Args args;
-	detection gold = load_gold(gold_file, &args);
+	detection gold = load_gold(&args);
+
+	printf("\nArgs inside detector_radiation\n");
 	print_args(args);
 
 	//load cfg file
 	list *options = read_data_cfg(args.cfg_data);
 
+#ifdef GEN_IMG
 	// here it takes data/coco.names
 	char *name_list = option_find_str(options, "names", "data/names.list");
 	char **names = get_labels(name_list);
+	image **alphabet = load_alphabet();
+#endif
 
-//	image **alphabet = load_alphabet();
 	network net = parse_network_cfg(args.config_file);
 	if (args.weights) {
 		load_weights(&net, args.weights);
@@ -806,8 +809,14 @@ void test_detector_radiation(char *gold_file) {
 			if (nms)
 				do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nms);
 
-//		draw_detections(im, l.w * l.h * l.n, args.thresh, boxes, probs, names,
-//				alphabet, l.classes);
+#ifdef GEN_IMG
+		draw_detections(im, l.w * l.h * l.n, args.thresh, boxes, probs, names,
+				alphabet, l.classes);
+		char temp[10];
+		sprintf(temp, "pred%d", it);
+		save_image(im, temp);
+#endif
+
 			clear_boxes_and_probs(boxes, probs, l.w * l.h * l.n);
 		}
 	}

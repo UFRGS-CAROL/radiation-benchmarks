@@ -131,11 +131,11 @@ void save_gold(FILE *fp, int w, int h, int num, float thresh, box *boxes,
 	}
 }
 
-detection load_gold(char *gold_path, Args *arg) {
+detection load_gold(Args *arg) {
 	detection gold;
 	std::list < std::string > data;
 	std::string line;
-	std::ifstream img_list_file(gold_path);
+	std::ifstream img_list_file(arg->gold_inout);
 	if (img_list_file.is_open()) {
 		while (getline(img_list_file, line)) {
 			data.push_back(line);
@@ -146,14 +146,19 @@ detection load_gold(char *gold_path, Args *arg) {
 	std::string header = data.front();
 	data.pop_front();
 	std::vector < std::string > split_ret = split(header, ';');
-//	thresh hier_tresh img_list_size img_list_path config_file config_data model weights
+//	0       1           2              3              4            5            6
+//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights
 	arg->thresh = atof(split_ret[0].c_str());
 	arg->hier_thresh = atof(split_ret[1].c_str());
 	gold.img_list_size = atoi(split_ret[2].c_str());
-	arg->config_file = const_cast<char*>(split_ret[3].c_str());
-	arg->cfg_data = const_cast<char*>(split_ret[4].c_str());
-	arg->model = const_cast<char*>(split_ret[5].c_str());
-	arg->weights = const_cast<char*>(split_ret[6].c_str());
+	arg->img_list_path = const_cast<char*>(split_ret[3].c_str());
+	arg->config_file = const_cast<char*>(split_ret[4].c_str());
+	arg->cfg_data = const_cast<char*>(split_ret[5].c_str());
+	arg->model = const_cast<char*>(split_ret[6].c_str());
+//	char *temp = (char*)malloc(sizeof(char) * split_ret[7].size());
+//	strcpy(temp, split_ret[7].c_str());
+	arg->weights = const_cast<char*>(split_ret[7].c_str());
+
 
 	for (std::list<std::string>::const_iterator it = data.begin();
 			it != data.end(); ++it) {

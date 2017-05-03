@@ -115,8 +115,8 @@ test_pure_yolo:
 	./darknet detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
 	
 test:
-	./darknet test_radiation temp
+	./darknet test_radiation -d temp -n 3
 
 generate:
-	./darknet test_rad_gen  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp -s 1 -l test.txt 
+	./darknet test_radiation  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp -s 1 -l test.txt 
 

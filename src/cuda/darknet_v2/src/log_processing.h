@@ -56,7 +56,7 @@ void save_gold(FILE *fp, int w, int h, int num, float thresh, box *boxes,
 
 void delete_detection_var(detection *det);
 
-detection load_gold(char *gold_path, Args *arg);
+detection load_gold(Args *arg);
 
 int compare_detections(int w, int h, int num, float thresh, box *boxes,
 		float **probs, int classes);

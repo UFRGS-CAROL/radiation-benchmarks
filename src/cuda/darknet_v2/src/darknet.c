@@ -16,7 +16,7 @@ extern void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, float thresh, float hier_thresh);
 
 //added for radiation test
-extern void test_detector_radiation(char*);
+extern void test_detector_radiation(Args args);
 extern void test_detector_generate(Args args);
 
 extern void run_voxel(int argc, char **argv);
@@ -427,30 +427,25 @@ int main(int argc, char **argv) {
 		char *filename = (argc > 4) ? argv[4] : 0;
 		test_detector("cfg/coco.data", argv[2], argv[3], filename, thresh, .5);
 
-	} else if (0 == strcmp(argv[1], "test_rad_gen")) {
+	} else if (0 == strcmp(argv[1], "test_radiation")) {
 //*************test radiation **************************************************
 		// test if it is an radiation setup
 		Args parsed_args;
 		args_init_and_setnull(&parsed_args);
-		if (parse_arguments(&parsed_args, argc, argv) != -1) {
-			//for radiation test/fault injection
-			test_detector_generate(parsed_args);
-		} else {
-			usage(argv, "test_rad_gen",
-					"test_rad_gen followed by those parameters");
-		}
-		args_init_and_setnull(&parsed_args);
-	} else if (0 == strcmp(argv[1], "test_radiation")) {
-		if (argc < 2) {
-			printf(
-					"for radiation test execute: %s test_radiation <path to gold>\n",
-					argv[0]);
-		} else {
-			start_count_app(argv[2], "cudaDarknet");
 
-			test_detector_radiation(argv[2]);
+		switch (parse_arguments(&parsed_args, argc, argv)) {
 
-			finish_count_app();
+			case 1: { //generate
+				//for radiation test/fault injection
+				test_detector_generate(parsed_args);
+				break;
+			}
+			case 2: { //test
+				start_count_app(parsed_args.gold_inout, "cudaDarknet");
+				test_detector_radiation(parsed_args);
+				finish_count_app();
+				break;
+			}
 		}
 //******************************************************************************
 	} else if (0 == strcmp(argv[1], "cifar")) {
