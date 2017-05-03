@@ -12,6 +12,7 @@
 #include <string>
 #include "helpful.h"
 
+#include <iostream>
 #ifdef LOGS
 #include "log_helper.h"
 #endif
@@ -37,6 +38,18 @@ void saveLayer(network net, int iterator, int n) {
 
 void compareLayer(layer l, int i) {
 
+}
+
+inline rectangle init_rectangle(int class_, float left, float top, float right,
+		float bottom, float prob) {
+	rectangle temp;
+	temp.left = left;
+	temp.top = top;
+	temp.right = right;
+	temp.bottom = bottom;
+	temp.prob = prob;
+	temp.class_ = class_;
+	return temp;
 }
 
 char** get_image_filenames(char *img_list_path, int *image_list_size) {
@@ -124,7 +137,7 @@ void save_gold(FILE *fp, int w, int h, int num, float thresh, box *boxes,
 
 			//will save to fp file in this order
 			//class number, left, top, right, bottom, prob (confidence)
-			fprintf(fp, "%d;%f;%f;%f;%f;%f\n", class_, left, top, right, bot,
+			fprintf(fp, "%d;%f;%f;%f;%f;%f;\n", class_, left, top, right, bot,
 					prob);
 
 		}
@@ -155,14 +168,52 @@ detection load_gold(Args *arg) {
 	arg->config_file = const_cast<char*>(split_ret[4].c_str());
 	arg->cfg_data = const_cast<char*>(split_ret[5].c_str());
 	arg->model = const_cast<char*>(split_ret[6].c_str());
-//	char *temp = (char*)malloc(sizeof(char) * split_ret[7].size());
-//	strcpy(temp, split_ret[7].c_str());
-	arg->weights = const_cast<char*>(split_ret[7].c_str());
+	arg->weights = (char*) calloc(split_ret[7].size(), sizeof(char));
+	strcpy(arg->weights, split_ret[7].c_str());
 
+	//fill gold content
+	gold.image_names = (char**) calloc(gold.img_list_size, sizeof(char*));
+	//the first size of gold rectangles is the img_list_size
+	gold.detection_result = (rectangle**) calloc(gold.img_list_size,
+			sizeof(rectangle*));
 
+	int img_iterator = 0;
+	std::list<rectangle> rectangle_aux;
 	for (std::list<std::string>::const_iterator it = data.begin();
 			it != data.end(); ++it) {
+		std::string temp = *it;
+		std::vector < string > rect_line = split(temp, ';');
 
+		//if it is less than 2 if is a image path line
+		if (rect_line.size() < 2) {
+			if (rectangle_aux.size() != 0) {
+				gold.detection_result[img_iterator] = (rectangle*) calloc(
+						rectangle_aux.size(), sizeof(rectangle));
+
+				for (int i = 0; i < rectangle_aux.size(); i++){
+					rectangle final_it = rectangle_aux.front();
+					rectangle_aux.pop_front();
+					gold.detection_result[img_iterator][i] = final_it;
+				}
+
+			}
+			gold.image_names[img_iterator] =
+					const_cast<char*>(rect_line[0].c_str());
+			img_iterator++;
+		} else {
+			//class number, left, top, right, bottom, prob (confidence)
+
+			//(int class_, float left, float top, float right, float bottom, float prob);
+			rectangle rect = init_rectangle(atoi(rect_line[0].c_str()), // class
+			atof(rect_line[1].c_str()), //left
+			atof(rect_line[2].c_str()), //top
+			atof(rect_line[3].c_str()), //right
+			atof(rect_line[4].c_str()), //bottom
+			atof(rect_line[5].c_str()) //prob
+					);
+			rectangle_aux.push_back(rect);
+
+		}
 	}
 	return gold;
 }

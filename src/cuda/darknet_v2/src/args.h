@@ -54,4 +54,6 @@ void print_args(const Args arg);
 int parse_arguments(Args *to_parse, int argc, char **argv);
 
 void usage(char **argv, char *model, char *message);
+
+void delete_args(Args *arg);
 #endif /* ARGS_H_ */

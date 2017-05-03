@@ -756,15 +756,15 @@ void free_all_images(image *array, int list_size) {
  * Function created only for radiation test only
  * args is an Args
  */
-void test_detector_radiation(Args args) {
+void test_detector_radiation(Args *args) {
 	//load all information from the goldfile
 	detection gold = load_gold(&args);
 
 	printf("\nArgs inside detector_radiation\n");
-	print_args(args);
+	print_args(*args);
 
 	//load cfg file
-	list *options = read_data_cfg(args.cfg_data);
+	list *options = read_data_cfg(args->cfg_data);
 
 #ifdef GEN_IMG
 	// here it takes data/coco.names
@@ -773,9 +773,9 @@ void test_detector_radiation(Args args) {
 	image **alphabet = load_alphabet();
 #endif
 
-	network net = parse_network_cfg(args.config_file);
-	if (args.weights) {
-		load_weights(&net, args.weights);
+	network net = parse_network_cfg(args->config_file);
+	if (args->weights) {
+		load_weights(&net, args->weights);
 	}
 	set_batch_network(&net, 1);
 	srand(2222222);
@@ -795,7 +795,7 @@ void test_detector_radiation(Args args) {
 		probs[j] = calloc(l.classes + 1, sizeof(float *));
 
 	// this loop will iterate all iteration on args * image_size
-	for (i = 0; i < args.iterations; i++) {
+	for (i = 0; i < args->iterations; i++) {
 		for (it = 0; it < gold.img_list_size; it++) {
 			image im = im_array[it];
 			image sized = im_array_sized[it];
@@ -804,8 +804,8 @@ void test_detector_radiation(Args args) {
 			float time = clock();
 			network_predict(net, X);
 			printf("Predicted in %f seconds.\n", sec(clock() - time));
-			get_region_boxes(l, im.w, im.h, net.w, net.h, args.thresh, probs,
-					boxes, 0, 0, args.hier_thresh, 1);
+			get_region_boxes(l, im.w, im.h, net.w, net.h, args->thresh, probs,
+					boxes, 0, 0, args->hier_thresh, 1);
 			if (nms)
 				do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nms);
 
@@ -828,22 +828,23 @@ void test_detector_radiation(Args args) {
 
 	free_all_images(im_array, gold.img_list_size);
 	free_all_images(im_array_sized, gold.img_list_size);
+
 }
 
-void test_detector_generate(Args args) {
+void test_detector_generate(Args *args) {
 	// first I nee to treat all image files
 	int img_list_size = 0;
-	char **img_list = get_image_filenames(args.img_list_path, &img_list_size);
+	char **img_list = get_image_filenames(args->img_list_path, &img_list_size);
 
 	//output gold
-	FILE *output_file = fopen(args.gold_inout, "w+");
+	FILE *output_file = fopen(args->gold_inout, "w+");
 	if (output_file) {
 //		writing all parameters for test execution
 //		thresh hier_tresh img_list_size img_list_path config_file config_data model weights
 
-		fprintf(output_file, "%f;%f;%d;%s;%s;%s;%s;%s\n", args.thresh,
-				args.hier_thresh, img_list_size, args.img_list_path,
-				args.config_file, args.cfg_data, args.model, args.weights);
+		fprintf(output_file, "%f;%f;%d;%s;%s;%s;%s;%s\n", args->thresh,
+				args->hier_thresh, img_list_size, args->img_list_path,
+				args->config_file, args->cfg_data, args->model, args->weights);
 	} else {
 		fprintf(stderr, "GOLD OPENING ERROR");
 		exit(-1);
@@ -852,7 +853,7 @@ void test_detector_generate(Args args) {
 	//---------------------------------------
 
 	//load cfg file
-	list *options = read_data_cfg(args.cfg_data);
+	list *options = read_data_cfg(args->cfg_data);
 
 #ifdef GEN_IMG
 	// here it takes data/coco.names
@@ -861,9 +862,9 @@ void test_detector_generate(Args args) {
 	image **alphabet = load_alphabet();
 #endif
 
-	network net = parse_network_cfg(args.config_file);
-	if (args.weights) {
-		load_weights(&net, args.weights);
+	network net = parse_network_cfg(args->config_file);
+	if (args->weights) {
+		load_weights(&net, args->weights);
 	}
 	set_batch_network(&net, 1);
 	srand(2222222);
@@ -888,18 +889,18 @@ void test_detector_generate(Args args) {
 
 		float *X = sized.data;
 		network_predict(net, X);
-		get_region_boxes(l, im.w, im.h, net.w, net.h, args.thresh, probs, boxes,
-				0, 0, args.hier_thresh, 1);
+		get_region_boxes(l, im.w, im.h, net.w, net.h, args->thresh, probs, boxes,
+				0, 0, args->hier_thresh, 1);
 		if (nms)
 			do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nms);
 
 //		must do the same thing that draw_detections
 //		but the output will be a gold file (old draw_detections)
 //		first write a filename
-		fprintf(output_file, "%s\n", img_list[it]);
+		fprintf(output_file, "%s;\n", img_list[it]);
 //		after writes all detection information
 //		each box is described as class number, left, top, right, bottom, prob (confidence)
-		save_gold(output_file, im.w, im.h, l.w * l.h * l.n, args.thresh, boxes,
+		save_gold(output_file, im.w, im.h, l.w * l.h * l.n, args->thresh, boxes,
 				probs, l.classes);
 
 #ifdef GEN_IMG

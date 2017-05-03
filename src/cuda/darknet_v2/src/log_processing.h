@@ -27,12 +27,13 @@ typedef struct rect{
 	float right;
 	float bottom;
 	float prob;
+	int class_;
 }rectangle;
 
 
 typedef struct detection_{
 	char **image_names;
-	rectangle *detection_result;
+	rectangle **detection_result;
 	int img_list_size;
 	int rect_list_size;
 }detection;
@@ -41,6 +42,9 @@ typedef struct detection_{
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+inline rectangle init_rectangle(int class_, float left, float top, float right, float bottom, float prob);
+
 
 void start_count_app(char *test, char *app);
 

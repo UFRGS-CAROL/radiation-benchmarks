@@ -16,8 +16,8 @@ extern void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, float thresh, float hier_thresh);
 
 //added for radiation test
-extern void test_detector_radiation(Args args);
-extern void test_detector_generate(Args args);
+extern void test_detector_radiation(Args *args);
+extern void test_detector_generate(Args *args);
 
 extern void run_voxel(int argc, char **argv);
 extern void run_yolo(int argc, char **argv);
@@ -437,16 +437,17 @@ int main(int argc, char **argv) {
 
 			case 1: { //generate
 				//for radiation test/fault injection
-				test_detector_generate(parsed_args);
+				test_detector_generate(&parsed_args);
 				break;
 			}
 			case 2: { //test
 				start_count_app(parsed_args.gold_inout, "cudaDarknet");
-				test_detector_radiation(parsed_args);
+				test_detector_radiation(&parsed_args);
 				finish_count_app();
 				break;
 			}
 		}
+		delete_args(&parsed_args);
 //******************************************************************************
 	} else if (0 == strcmp(argv[1], "cifar")) {
 		run_cifar(argc, argv);
@@ -463,7 +464,7 @@ int main(int argc, char **argv) {
 	} else if (0 == strcmp(argv[1], "classifier")) {
 		run_classifier(argc, argv);
 	} else if (0 == strcmp(argv[1], "regressor")) {
-		run_regressor(argc, argv);
+		run_regressor(argc, argv);	int i;
 	} else if (0 == strcmp(argv[1], "art")) {
 		run_art(argc, argv);
 	} else if (0 == strcmp(argv[1], "tag")) {
