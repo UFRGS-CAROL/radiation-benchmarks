@@ -32,14 +32,10 @@ void finish_count_app() {
 #endif
 }
 
-void saveLayer(network net, int iterator, int n) {
+void save_layer(network net, int img_iterator, int test_iteration,
+		char *log_filename) {
 
 }
-
-void compareLayer(layer l, int i) {
-
-}
-
 
 rectangle init_rectangle(int class_, float left, float top, float right,
 		float bottom, float prob) {
@@ -103,13 +99,11 @@ inline int get_index(float *a, int n) {
  */
 void save_gold(FILE *fp, int w, int h, int num, float thresh, box *boxes,
 		float **probs, int classes) {
-	int i;
-
-	for (i = 0; i < num; ++i) {
+	for (int i = 0; i < num; ++i) {
 		int class_ = get_index(probs[i], classes);
 		float prob = probs[i][class_];
 		if (prob > thresh) {
-			int width = h * .012;
+//			int width = h * .012;
 //			printf("%d: %.0f%%\n", class_, prob * 100);
 //			int offset = class_ * 123457 % classes;
 //			float red = get_color(2, offset, classes);
@@ -216,8 +210,9 @@ detection load_gold(Args *arg) {
 			if (it != data.begin())
 				img_iterator++;
 
-			gold.image_names[img_iterator] = (char*) calloc(rect_line[0].size(), sizeof(char));
-			strcpy(gold.image_names[img_iterator],rect_line[0].c_str());
+			gold.image_names[img_iterator] = (char*) calloc(rect_line[0].size(),
+					sizeof(char));
+			strcpy(gold.image_names[img_iterator], rect_line[0].c_str());
 		} else {
 			//class number, left, top, right, bottom, prob (confidence)
 			//(int class_, float left, float top, float right, float bottom, float prob);
@@ -252,28 +247,32 @@ detection load_gold(Args *arg) {
 		}
 	}
 
-	print_detection(gold);
+//	print_detection(gold);
 	return gold;
 }
 
-void delete_detection_var(detection *det) {
+void delete_detection_var(detection *det, Args *arg) {
 	if (det->image_names) {
-		int i;
-		for (i = 0; i < det->img_list_size; i++) {
+		for (int i = 0; i < det->img_list_size; i++)
 			free(det->image_names[i]);
-		}
+
 		free(det->image_names);
 	}
 
-	if (det->detection_result)
+	if (det->detection_result) {
+		for (int i = 0; i < det->img_list_size; i++)
+			free(det->detection_result[i]);
 		free(det->detection_result);
+	}
 
+	if (arg->weights)
+		free(arg->weights);
 }
 
-void clear_boxes_and_probs(box *boxes, float **probs, int n) {
+void clear_boxes_and_probs(box *boxes, float **probs, int n, int m) {
 	memset(boxes, 0, sizeof(box) * n);
 	for (int i = 0; i < n; i++) {
-		memset(probs[i], 0, sizeof(float) * n);
+		memset(probs[i], 0, sizeof(float) * m);
 	}
 }
 
@@ -291,4 +290,86 @@ void print_detection(detection det) {
 
 		}
 	}
+}
+
+inline void compare_rectangle(int img_pos, rectangle g, rectangle f, char *error_detail) {
+	error_detail[0] = '#';
+
+	float g_array[5] = { g.left, g.bottom, g.right, g.top, g.prob };
+	float f_array[5] = { f.left, f.bottom, f.right, f.top, f.prob };
+	int diff_class = abs(f.class_ - g.class_);
+
+	bool diff = false;
+	for (int i = 0; i < 5; i++) {
+
+		if (abs(g_array[i] - f_array[i]) > THRESHOLD_ERROR)
+			diff = true;
+	}
+
+	if (diff || diff_class > THRESHOLD_ERROR)
+		sprintf(error_detail, "image_list_position: [%d]"
+				" r_lef: %1.16e e_lef: %1.16e"
+				" r_bot: %1.16e e_bot: %1.16e"
+				" r_rig: %1.16e e_rig: %1.16e"
+				" r_top: %1.16e e_top: %1.16e"
+				" r_prb: %1.16e e_prb: %1.16e"
+				" r_cls: %d e_cls: %d", img_pos, f.left, g.left, f.bottom,
+				g.bottom, f.right, g.right, f.top, g.top, f.prob, g.prob,
+				f.class_, g.class_);
+
+}
+
+void compare(rectangle *gold_rect, int classes, int num, float **found_probs,
+		box *found_boxes, int img_iteration, network net, int test_iteration,
+		int save_layer, float thresh, int w, int h) {
+	int errors = 0;
+
+	for (int i = 0; i < num; ++i) {
+		int class_ = get_index(found_probs[i], classes);
+		float prob = found_probs[i][class_];
+		if (prob > thresh) {
+
+			box b = found_boxes[i];
+			rectangle r_found;
+			rectangle r_gold = gold_rect[i];
+
+			r_found.left = (b.x - b.w / 2.) * float(w);
+			r_found.right = (b.x + b.w / 2.) * float(w);
+			r_found.top = (b.y - b.h / 2.) * float(h);
+			r_found.bottom = (b.y + b.h / 2.) * float(h);
+
+			if (r_found.left < 0)
+				r_found.left = 0;
+			if (r_found.right > w - 1)
+				r_found.right = w - 1;
+			if (r_found.top < 0)
+				r_found.top = 0;
+			if (r_found.bottom > h - 1)
+				r_found.bottom = h - 1;
+
+			r_found.prob = prob;
+			r_found.class_ = class_;
+			char error_detail[500];
+			compare_rectangle(img_iteration, r_gold, r_found, error_detail);
+
+			printf("%s\n", error_detail);
+
+			if (error_detail[0] != '#')
+				errors++;
+
+#ifdef LOGS
+			log_error_detail(error_detail);
+#endif
+		}
+
+	}
+#ifdef LOGS
+	log_error_count(errors);
+
+	//save layers here
+	if(errors && save_layer) {
+		save_layer(net, img_iteration, test_iteration, get_log_file_name());
+	}
+#endif
+
 }

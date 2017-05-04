@@ -26,16 +26,6 @@ void args_init_and_setnull(Args *arg) {
 	arg->hier_thresh = 0.5;
 }
 
-void delete_args(Args *arg){
-	free(arg->config_file);
-
-	free(arg->weights);
-
-	free(arg->gold_inout);
-
-	free(arg->img_list_path);
-}
-
 /**
  * return 1 if it is a generation execution
  * 2 if it is a test

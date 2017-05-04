@@ -12,6 +12,9 @@
 
 #include "log_processing.h"
 
+//my_second
+#include "helpful.h"
+
 static int coco_ids[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17,
 		18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38,
 		39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
@@ -728,7 +731,7 @@ image *load_all_images_sized(image *img_array, int net_w, int net_h,
 	int i;
 	image *ret = (image*) malloc(sizeof(image) * list_size);
 	for (i = 0; i < list_size; i++) {
-		//ret[i] = letterbox_image(img_array[i], net_w, net_h);
+		ret[i] = letterbox_image(img_array[i], net_w, net_h);
 	}
 	return ret;
 }
@@ -747,7 +750,7 @@ void free_all_images(image *array, int list_size) {
 	//			free_image(im);
 	int i;
 	for (i = 0; i < list_size; i++) {
-		//free_image(array[i]);
+		free_image(array[i]);
 	}
 }
 //-------------------------------------------------------------------------------------
@@ -801,30 +804,47 @@ void test_detector_radiation(Args *args) {
 			image sized = im_array_sized[it];
 
 			float *X = sized.data;
-			float time = clock();
+
+			double time = mysecond();
 			network_predict(net, X);
-			printf("Predicted in %f seconds.\n", sec(clock() - time));
+			time = mysecond() - time;
+
 			get_region_boxes(l, im.w, im.h, net.w, net.h, args->thresh, probs,
 					boxes, 0, 0, args->hier_thresh, 1);
+
 			if (nms)
 				do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nms);
 
+//		here we test if any error happened
+//			if shit happened we log
+			double time_cmp = mysecond();
+			compare(gold.detection_result[it], l.classes, l.w * l.h * l.n,
+					probs, boxes, it, net, i, args->save_layers, args->thresh,
+					im.w, im.h);
+			time_cmp = mysecond() - time_cmp;
+
+			printf(
+					"Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds.\n",
+					i, it, time, time_cmp);
+
+//########################################
+
 #ifdef GEN_IMG
-		draw_detections(im, l.w * l.h * l.n, args->thresh, boxes, probs, names,
-				alphabet, l.classes);
-		char temp[10];
-		sprintf(temp, "pred%d", it);
-		save_image(im, temp);
+			draw_detections(im, l.w * l.h * l.n, args->thresh, boxes, probs, names,
+					alphabet, l.classes);
+			char temp[10];
+			sprintf(temp, "pred%d", it);
+			save_image(im, temp);
 #endif
 
-			clear_boxes_and_probs(boxes, probs, l.w * l.h * l.n);
+			clear_boxes_and_probs(boxes, probs, l.w * l.h * l.n, l.classes);
 		}
 	}
 
 	//free the memory
 	free_ptrs((void **) probs, l.w * l.h * l.n);
 	free(boxes);
-	delete_detection_var(&gold);
+	delete_detection_var(&gold, args);
 
 	free_all_images(im_array, gold.img_list_size);
 	free_all_images(im_array_sized, gold.img_list_size);
@@ -889,8 +909,8 @@ void test_detector_generate(Args *args) {
 
 		float *X = sized.data;
 		network_predict(net, X);
-		get_region_boxes(l, im.w, im.h, net.w, net.h, args->thresh, probs, boxes,
-				0, 0, args->hier_thresh, 1);
+		get_region_boxes(l, im.w, im.h, net.w, net.h, args->thresh, probs,
+				boxes, 0, 0, args->hier_thresh, 1);
 		if (nms)
 			do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nms);
 
