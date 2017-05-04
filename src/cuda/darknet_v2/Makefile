@@ -96,7 +96,7 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@
 
 $(OBJDIR)log_processing.o: src/log_processing.cpp src/log_processing.h
-	$(CXX) src/log_processing.cpp -c -o obj/log_processing.o $(LOGHELPER_INC) $(HELPFUL)
+	$(CXX) src/log_processing.cpp -c -o obj/log_processing.o $(LOGHELPER_INC) $(HELPFUL) $(OPTS)
 
 obj:
 	mkdir -p obj
@@ -115,7 +115,7 @@ test_pure_yolo:
 	./darknet detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
 	
 test:
-	./darknet test_radiation -d temp -n 3
+	./darknet test_radiation -d temp.csv -n 3
 
 generate:
 	./darknet test_radiation  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp -s 1 -l test.txt 

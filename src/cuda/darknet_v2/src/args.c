@@ -28,8 +28,11 @@ void args_init_and_setnull(Args *arg) {
 
 void delete_args(Args *arg){
 	free(arg->config_file);
+
 	free(arg->weights);
+
 	free(arg->gold_inout);
+
 	free(arg->img_list_path);
 }
 

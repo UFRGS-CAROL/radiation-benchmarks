@@ -40,7 +40,8 @@ void compareLayer(layer l, int i) {
 
 }
 
-inline rectangle init_rectangle(int class_, float left, float top, float right,
+
+rectangle init_rectangle(int class_, float left, float top, float right,
 		float bottom, float prob) {
 	rectangle temp;
 	temp.left = left;
@@ -153,7 +154,7 @@ detection load_gold(Args *arg) {
 		while (getline(img_list_file, line)) {
 			data.push_back(line);
 		}
-	}else{
+	} else {
 		std::cout << "ERROR ON OPENING GOLD FILE\n";
 		exit(-1);
 	}
@@ -183,10 +184,15 @@ detection load_gold(Args *arg) {
 	gold.detection_result = (rectangle**) calloc(gold.img_list_size,
 			sizeof(rectangle*));
 
+	//for rect list size
+	gold.rect_list_size = (int*) calloc(gold.img_list_size, sizeof(int));
+
 	int img_iterator = 0;
 	std::list<rectangle> rectangle_aux;
-	while(data.size()) {
-		std::string temp = data.front();
+
+	for (std::list<std::string>::const_iterator it = data.begin();
+			it != data.end(); ++it) {
+		std::string temp((*it).c_str());
 		std::vector < string > rect_line = split(temp, ';');
 
 		//if it is less than 2 if is a image path line
@@ -195,22 +201,25 @@ detection load_gold(Args *arg) {
 				gold.detection_result[img_iterator] = (rectangle*) calloc(
 						rectangle_aux.size(), sizeof(rectangle));
 
+				//here I record the number of rectangles for each image
+				gold.rect_list_size[img_iterator] = rectangle_aux.size();
+
 				int i = 0;
-				while(rectangle_aux.size()){
+				while (rectangle_aux.size()) {
 					rectangle final_it = rectangle_aux.front();
+
 					gold.detection_result[img_iterator][i] = final_it;
 					i++;
 					rectangle_aux.pop_front();
 				}
-
 			}
-			gold.image_names[img_iterator] =
-					const_cast<char*>(rect_line[0].c_str());
-			img_iterator++;
+			if (it != data.begin())
+				img_iterator++;
 
+			gold.image_names[img_iterator] = (char*) calloc(rect_line[0].size(), sizeof(char));
+			strcpy(gold.image_names[img_iterator],rect_line[0].c_str());
 		} else {
 			//class number, left, top, right, bottom, prob (confidence)
-
 			//(int class_, float left, float top, float right, float bottom, float prob);
 			rectangle rect = init_rectangle(atoi(rect_line[0].c_str()), // class
 			atof(rect_line[1].c_str()), //left
@@ -222,9 +231,28 @@ detection load_gold(Args *arg) {
 			rectangle_aux.push_back(rect);
 
 		}
-		data.pop_front();
+
 	}
 
+	//the last image rectangles
+	if (rectangle_aux.size() != 0) {
+		gold.detection_result[img_iterator] = (rectangle*) calloc(
+				rectangle_aux.size(), sizeof(rectangle));
+
+		//here I record the number of rectangles for each image
+		gold.rect_list_size[img_iterator] = rectangle_aux.size();
+
+		int i = 0;
+		while (rectangle_aux.size()) {
+			rectangle final_it = rectangle_aux.front();
+
+			gold.detection_result[img_iterator][i] = final_it;
+			i++;
+			rectangle_aux.pop_front();
+		}
+	}
+
+	print_detection(gold);
 	return gold;
 }
 
@@ -246,5 +274,21 @@ void clear_boxes_and_probs(box *boxes, float **probs, int n) {
 	memset(boxes, 0, sizeof(box) * n);
 	for (int i = 0; i < n; i++) {
 		memset(probs[i], 0, sizeof(float) * n);
+	}
+}
+
+void print_rectangle(rectangle ret) {
+	std::cout << ret.class_ << ";" << ret.left << ";" << ret.top << ";"
+			<< ret.right << ";" << ret.bottom << ";" << ret.prob << ";"
+			<< std::endl;
+}
+
+void print_detection(detection det) {
+	for (int i = 0; i < det.img_list_size; i++) {
+		std::cout << det.image_names[i] << std::endl;
+		for (int j = 0; j < det.rect_list_size[i]; j++) {
+			print_rectangle(det.detection_result[i][j]);
+
+		}
 	}
 }

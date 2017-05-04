@@ -35,7 +35,7 @@ typedef struct detection_{
 	char **image_names;
 	rectangle **detection_result;
 	int img_list_size;
-	int rect_list_size;
+	int *rect_list_size;
 }detection;
 
 
@@ -43,8 +43,8 @@ typedef struct detection_{
 extern "C" {
 #endif
 
-inline rectangle init_rectangle(int class_, float left, float top, float right, float bottom, float prob);
-
+//rectangle init_rectangle(int class_, float left, float top, float right, float bottom, float prob);
+void print_rectangle(rectangle ret);
 
 void start_count_app(char *test, char *app);
 
@@ -68,6 +68,7 @@ int compare_detections(int w, int h, int num, float thresh, box *boxes,
 
 void clear_boxes_and_probs(box *boxes, float **probs, int n);
 
+void print_detection(detection det);
 
 
 #ifdef __cplusplus

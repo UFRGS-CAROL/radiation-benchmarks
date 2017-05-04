@@ -763,10 +763,10 @@ void test_detector_radiation(Args *args) {
 	printf("\nArgs inside detector_radiation\n");
 	print_args(*args);
 
+#ifdef GEN_IMG
 	//load cfg file
 	list *options = read_data_cfg(args->cfg_data);
 
-#ifdef GEN_IMG
 	// here it takes data/coco.names
 	char *name_list = option_find_str(options, "names", "data/names.list");
 	char **names = get_labels(name_list);
@@ -810,7 +810,7 @@ void test_detector_radiation(Args *args) {
 				do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nms);
 
 #ifdef GEN_IMG
-		draw_detections(im, l.w * l.h * l.n, args.thresh, boxes, probs, names,
+		draw_detections(im, l.w * l.h * l.n, args->thresh, boxes, probs, names,
 				alphabet, l.classes);
 		char temp[10];
 		sprintf(temp, "pred%d", it);
@@ -842,7 +842,7 @@ void test_detector_generate(Args *args) {
 //		writing all parameters for test execution
 //		thresh hier_tresh img_list_size img_list_path config_file config_data model weights
 
-		fprintf(output_file, "%f;%f;%d;%s;%s;%s;%s;%s\n", args->thresh,
+		fprintf(output_file, "%f;%f;%d;%s;%s;%s;%s;%s;\n", args->thresh,
 				args->hier_thresh, img_list_size, args->img_list_path,
 				args->config_file, args->cfg_data, args->model, args->weights);
 	} else {
@@ -852,10 +852,10 @@ void test_detector_generate(Args *args) {
 
 	//---------------------------------------
 
+#ifdef GEN_IMG
 	//load cfg file
 	list *options = read_data_cfg(args->cfg_data);
 
-#ifdef GEN_IMG
 	// here it takes data/coco.names
 	char *name_list = option_find_str(options, "names", "data/names.list");
 	char **names = get_labels(name_list);
@@ -904,7 +904,7 @@ void test_detector_generate(Args *args) {
 				probs, l.classes);
 
 #ifdef GEN_IMG
-		draw_detections(im, l.w * l.h * l.n, args.thresh, boxes, probs, names,
+		draw_detections(im, l.w * l.h * l.n, args->thresh, boxes, probs, names,
 				alphabet, l.classes);
 		char temp[10];
 		sprintf(temp, "pred%d", it);
@@ -923,6 +923,7 @@ void test_detector_generate(Args *args) {
 		free(img_list[it]);
 	}
 	free(img_list);
+
 	//close gold file
 	fclose(output_file);
 }
@@ -995,3 +996,4 @@ void run_detector(int argc, char **argv) {
 				fullscreen);
 	}
 }
+

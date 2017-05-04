@@ -444,10 +444,10 @@ int main(int argc, char **argv) {
 				start_count_app(parsed_args.gold_inout, "cudaDarknet");
 				test_detector_radiation(&parsed_args);
 				finish_count_app();
+				delete_args(&parsed_args);
 				break;
 			}
 		}
-		delete_args(&parsed_args);
 //******************************************************************************
 	} else if (0 == strcmp(argv[1], "cifar")) {
 		run_cifar(argc, argv);
