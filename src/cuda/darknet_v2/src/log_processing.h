@@ -72,7 +72,8 @@ void clear_boxes_and_probs(box*, float**, int, int);
 
 void print_detection(detection);
 
-void compare(detection gold, float **foud_prob, box *found_prob);
+void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
+		int classes, int img, int save_layer, network net, int test_iteration);
 
 #ifdef __cplusplus
 } //end extern "C"

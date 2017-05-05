@@ -183,7 +183,7 @@ void print_detection(detection det) {
 
 inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 		box g_b, int img, int class_, int pb_i) {
-	float diff_float[3] = { fabs(f_b.x - g_b.x), fabs(f_box.y - g_b.y), fabs(
+	float diff_float[3] = { fabs(f_b.x - g_b.x), fabs(f_b.y - g_b.y), fabs(
 			f_pb - g_pb) };
 	int diff_int[2] = { abs(f_b.h - g_b.h), abs(f_b.w - g_b.w) };
 	bool diff = false;
@@ -201,22 +201,22 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 				" x_r: %1.16e x_e: %1.16e"
 				" y_r: %1.16e y_e: %1.16e"
 				" w_r: %1.16e w_e: %1.16e"
-				" h_r: %1.16e h_e: %1.16e", img_pos, pb_i, class_, f_pb, g_pb,
+				" h_r: %1.16e h_e: %1.16e", img, pb_i, class_, f_pb, g_pb,
 				f_b.x, g_b.x, f_b.y, g_b.y, f_b.w, g_b.w, f_b.h, g_b.h);
 
 	return diff;
 }
 
 void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
-		int classes, int img, int save_layer) {
-	float **gold_probs = gold.probs;
+		int classes, int img, int save_layer, network net, int test_iteration) {
+	float **g_probs = gold.probs;
 	box *g_boxes = gold.boxes;
 
 	int error_count = 0;
 	for (int i = 0; i < num; ++i) {
-		int class_ = get_index(probs[i], classes);
-		float g_prob = gold_probs[i][class_];
-		float f_prob = found_probs[i][class_];
+		int class_ = get_index(g_probs[i], classes);
+		float g_prob = g_probs[i][class_];
+		float f_prob = f_probs[i][class_];
 		box g_b = g_boxes[i];
 		box f_b = f_boxes[i];
 
@@ -240,7 +240,7 @@ void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
 
 	//save layers here
 	if(error_count && save_layer) {
-		save_layer(net, img_iteration, test_iteration, get_log_file_name());
+		save_layer(net, img, test_iteration, get_log_file_name());
 	}
 #endif
 
