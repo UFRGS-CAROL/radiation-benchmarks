@@ -85,51 +85,44 @@ inline int get_index(float *a, int n) {
  * it was adapted from draw_detections in image.c line 174
  * it saves a gold file for radiation tests
  */
-void save_gold(FILE *fp, char *img, int total, int classes, float **probs, box *boxes) {
+void save_gold(FILE *fp, char *img, int num, int classes, float **probs,
+		box *boxes) {
 	fprintf(fp, "%s\n", img);
+	for (int i = 0; i < num; ++i) {
+		int class_ = get_index(probs[i], classes);
+		float prob = probs[i][class_];
+		box b = boxes[i];
+		fprintf(fp, "%f;%f;%f;%f;%f;%d;\n", prob, b.x, b.y, b.w, b.h, class_);
 
-	for (int i = 0; i < total; ++i) {
-		float xmin = boxes[i].x - boxes[i].w / 2.;
-		float xmax = boxes[i].x + boxes[i].w / 2.;
-		float ymin = boxes[i].y - boxes[i].h / 2.;
-		float ymax = boxes[i].y + boxes[i].h / 2.;
-
-		if (xmin < 0)
-			xmin = 0;
-		if (ymin < 0)
-			ymin = 0;
-		if (xmax > w)
-			xmax = w;
-		if (ymax > h)
-			ymax = h;
-
-		for (int j = 0; j < classes; ++j) {
-			fprintf(fps[j], "%f;%f;%f;%f;%f;\n", probs[i][j], xmin, ymin, xmax,
-					ymax);
-		}
 	}
 
 }
 
-prob_array load_prob_array(std::vector<std::string> data, int total, int classes){
+prob_array load_prob_array(int num, int classes, std::ifstream &ifp) {
 	prob_array ret;
-	ret.boxes = (box*) calloc(total, sizeof(box));
-	ret.probs = (float**) calloc(total, sizeof(float*));
-
-	for (int i = 0; i < total; ++i) {
+	ret.boxes = (box*) calloc(num, sizeof(box));
+	ret.probs = (float**) calloc(num, sizeof(float*));
+	for (int i = 0; i < num; i++) {
 		ret.probs[i] = (float*) calloc(classes, sizeof(float));
+	}
 
-		for (int j = 0; j < classes; ++j) {
-			ret.probs[i][j] = atof(data[0].c_str());
-			float xmin = atof(data[1].c_str());
-			float xmax = atof(data[2].c_str());
-			float ymin = atof(data[3].c_str());
-			float ymax = atof(data[4].c_str());
+	std::string line;
+	std::vector < std::string > splited;
+	for (int i = 0; i < num; ++i) {
+		getline(ifp, line);
+		splited = split(line, ';');
+
+		box b;
+		b.x = atof(splited[1].c_str());
+		b.y = atof(splited[2].c_str());
+		b.w = atof(splited[3].c_str());
+		b.h = atof(splited[4].c_str());
+		int class_ = atof(splited[5].c_str());
 
 
-			fprintf(fps[j], "%f;%f;%f;%f;%f;\n", probs[i][j], xmin, ymin, xmax,
-					ymax);
-		}
+		ret.probs[i][class_] = atof(splited[0].c_str());
+
+		ret.boxes[i] = b;
 	}
 	return ret;
 }
@@ -159,21 +152,16 @@ detection load_gold(Args *arg) {
 
 	strcpy(arg->weights, split_ret[7].c_str());
 	gold.total = atoi(split_ret[8].c_str());
-	gold.classes  = atoi(split_ret[9].c_str());
-
+	gold.classes = atoi(split_ret[9].c_str());
 
 	//allocate detector
 	gold.img_names = (char**) calloc(gold.plist_size, sizeof(char*));
 	gold.pb_gold = (prob_array*) calloc(gold.plist_size, sizeof(prob_array));
 
-	for (int i = 0; i < gold.plist_size && getline(img_list_file, line); i++){
-		gold.pb_gold[i] = load_prob_array()
-
+	for (int i = 0; i < gold.plist_size && getline(img_list_file, line); i++) {
+		gold.img_names[i] = const_cast<char*>(line.c_str());
+		gold.pb_gold[i] = load_prob_array(gold.total, gold.classes, img_list_file);
 	}
-
-
-
-
 
 	return gold;
 }

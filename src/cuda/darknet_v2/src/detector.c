@@ -739,9 +739,9 @@ image *load_all_images_sized(image *img_array, int net_w, int net_h,
 image *load_all_images(detection det) {
 //	image im = load_image_color(input, 0, 0);
 	int i;
-	image *ret = (image*) malloc(sizeof(image) * det.img_list_size);
-	for (i = 0; i < det.img_list_size; i++) {
-		ret[i] = load_image_color(det.image_names[i], 0, 0);
+	image *ret = (image*) malloc(sizeof(image) * det.plist_size);
+	for (i = 0; i < det.plist_size; i++) {
+		ret[i] = load_image_color(det.img_names[i], 0, 0);
 	}
 	return ret;
 }
@@ -788,7 +788,7 @@ void test_detector_radiation(Args *args) {
 	//load all images
 	image *im_array = load_all_images(gold);
 	image *im_array_sized = load_all_images_sized(im_array, net.w, net.h,
-			gold.img_list_size);
+			gold.plist_size);
 
 //	alloc once and clear at each iteration
 	layer l = net.layers[net.n - 1];
@@ -799,7 +799,7 @@ void test_detector_radiation(Args *args) {
 
 	// this loop will iterate all iteration on args * image_size
 	for (i = 0; i < args->iterations; i++) {
-		for (it = 0; it < gold.img_list_size; it++) {
+		for (it = 0; it < gold.plist_size; it++) {
 			image im = im_array[it];
 			image sized = im_array_sized[it];
 
@@ -818,9 +818,9 @@ void test_detector_radiation(Args *args) {
 //		here we test if any error happened
 //			if shit happened we log
 			double time_cmp = mysecond();
-			compare(gold.detection_result[it], l.classes, l.w * l.h * l.n,
-					probs, boxes, it, net, i, args->save_layers, args->thresh,
-					im.w, im.h);
+//			compare(gold.pb_gold[it], l.classes, l.w * l.h * l.n,
+//					probs, boxes, it, net, i, args->save_layers, args->thresh,
+//					im.w, im.h);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(
@@ -846,8 +846,8 @@ void test_detector_radiation(Args *args) {
 	free(boxes);
 	delete_detection_var(&gold, args);
 
-	free_all_images(im_array, gold.img_list_size);
-	free_all_images(im_array_sized, gold.img_list_size);
+	free_all_images(im_array, gold.plist_size);
+	free_all_images(im_array_sized, gold.plist_size);
 
 }
 
@@ -922,8 +922,10 @@ void test_detector_generate(Args *args) {
 		fprintf(output_file, "%s;\n", img_list[it]);
 //		after writes all detection information
 //		each box is described as class number, left, top, right, bottom, prob (confidence)
-		save_gold(output_file, im.w, im.h, l.w * l.h * l.n, args->thresh, boxes,
-				probs, l.classes);
+//		save_gold(FILE *fp, char *img, int num, int classes, float **probs,
+//				box *boxes)
+		save_gold(output_file, img_list[it], l.w * l.h * l.n, l.classes,
+				probs, boxes);
 
 #ifdef GEN_IMG
 		draw_detections(im, l.w * l.h * l.n, args->thresh, boxes, probs, names,

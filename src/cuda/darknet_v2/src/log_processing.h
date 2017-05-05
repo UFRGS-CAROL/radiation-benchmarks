@@ -55,7 +55,7 @@ void compareLayer(layer, int);
  */
 char** get_image_filenames(char*, int*);
 
-void save_gold(FILE *fp, char *img, int total, int classes, float **probs,
+void save_gold(FILE *fp, char *img, int num, int classes, float **probs,
 		box *boxes);
 
 /**
