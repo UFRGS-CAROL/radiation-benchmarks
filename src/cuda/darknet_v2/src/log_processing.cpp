@@ -126,6 +126,7 @@ prob_array load_prob_array(std::vector<std::string> data, int total, int classes
 			float ymin = atof(data[3].c_str());
 			float ymax = atof(data[4].c_str());
 
+
 			fprintf(fps[j], "%f;%f;%f;%f;%f;\n", probs[i][j], xmin, ymin, xmax,
 					ymax);
 		}
