@@ -856,6 +856,22 @@ void test_detector_generate(Args *args) {
 	int img_list_size = 0;
 	char **img_list = get_image_filenames(args->img_list_path, &img_list_size);
 
+	//output gold
+	FILE *output_file = fopen(args->gold_inout, "w+");
+	if (output_file) {
+//		writing all parameters for test execution
+//		thresh hier_tresh img_list_size img_list_path config_file config_data model weights
+
+		fprintf(output_file, "%f;%f;%d;%s;%s;%s;%s;%s;\n", args->thresh,
+				args->hier_thresh, img_list_size, args->img_list_path,
+				args->config_file, args->cfg_data, args->model, args->weights);
+	} else {
+		fprintf(stderr, "GOLD OPENING ERROR");
+		exit(-1);
+	}
+
+	//---------------------------------------
+
 #ifdef GEN_IMG
 	//load cfg file
 	list *options = read_data_cfg(args->cfg_data);
@@ -872,27 +888,9 @@ void test_detector_generate(Args *args) {
 	}
 	set_batch_network(&net, 1);
 	srand(2222222);
-
-	//output gold
-	layer l = net.layers[net.n - 1];
-	int total = l.w * l.h * l.n;
-	int classes = l.classes;
-	FILE *output_file = fopen(args->gold_inout, "w+");
-	if (output_file) {
-//		writing all parameters for test execution
-//		thresh hier_tresh img_list_size img_list_path config_file config_data model weights total classes
-
-		fprintf(output_file, "%f;%f;%d;%s;%s;%s;%s;%s;%d;%d;\n", args->thresh,
-				args->hier_thresh, img_list_size, args->img_list_path,
-				args->config_file, args->cfg_data, args->model, args->weights,
-				total, classes);
-	} else {
-		fprintf(stderr, "GOLD OPENING ERROR");
-		exit(-1);
-	}
-
-	//---------------------------------------
-
+//	clock_t time;
+//	char buff[256];
+//	char *input = buff;
 	int j;
 	float nms = .4;
 
@@ -902,7 +900,7 @@ void test_detector_generate(Args *args) {
 		printf("generating gold for: %s\n", img_list[it]);
 		image im = load_image_color(img_list[it], 0, 0);
 		image sized = letterbox_image(im, net.w, net.h);
-		l = net.layers[net.n - 1];
+		layer l = net.layers[net.n - 1];
 
 		box *boxes = calloc(l.w * l.h * l.n, sizeof(box));
 		float **probs = calloc(l.w * l.h * l.n, sizeof(float *));

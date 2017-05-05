@@ -19,60 +19,56 @@
 
 #define THRESHOLD_ERROR 0.005
 
-typedef struct prob_array_ {
-	box *boxes;
-	float **probs;
-} prob_array;
+typedef struct rect {
+	float left;
+	float top;
+	float right;
+	float bottom;
+	float prob;
+	int class_;
+} rectangle;
 
-//to store all gold content
 typedef struct detection_ {
-	prob_array *pb_gold;
-	int plist_size;
-	int classes;
-	int total;
-	char **img_names;
+	char **image_names;
+	rectangle **detection_result;
+	int img_list_size;
+	int *rect_list_size;
 } detection;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * functions to start log file
- */
+rectangle init_rectangle(int, float, float, float, float, float);
+void print_rectangle(rectangle);
+
 void start_count_app(char*, char*);
 
 void finish_count_app();
 
-/**
- * compare and save layers
- */
 void saveLayer(network, int, int);
 void compareLayer(layer, int);
 
-/**
- * get_image_filenames are used by generate
- */
 char** get_image_filenames(char*, int*);
 
-void save_gold(FILE *fp, char *img, int total, int classes, float **probs,
-		box *boxes);
-
-/**
- * radiation test functions
- */
+void save_gold(FILE*, int, int, int, float, box*, float**, int);
 
 void delete_detection_var(detection*, Args*);
 
 detection load_gold(Args*);
 
-int compare_detections();
+int compare_detections(int, int, int, float, box*, float**, int);
 
 void clear_boxes_and_probs(box*, float**, int, int);
 
 void print_detection(detection);
 
-void compare();
+/**
+ * magic function
+ * (rectangle *gold_rect, float **found_probs, box *found_boxes,
+ int img_iteration, network net, int test_iteration, bool save_layer)
+ */
+void compare(rectangle*, int, int, float**, box*, int, network, int, int, float, int, int);
 
 #ifdef __cplusplus
 } //end extern "C"
