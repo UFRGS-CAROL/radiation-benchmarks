@@ -8,11 +8,12 @@
 #ifndef HELPFUL_H_
 #define HELPFUL_H_
 #include <sys/time.h>
-#include <sstream>
+
 
 #define GOLD_LINE_SIZE 6
 
 #ifdef __cplusplus
+#include <sstream>
 using namespace std;
 
 
