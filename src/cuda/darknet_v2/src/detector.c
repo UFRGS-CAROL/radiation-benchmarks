@@ -818,9 +818,9 @@ void test_detector_radiation(Args *args) {
 //		here we test if any error happened
 //			if shit happened we log
 			double time_cmp = mysecond();
-//			compare(gold.pb_gold[it], l.classes, l.w * l.h * l.n,
-//					probs, boxes, it, net, i, args->save_layers, args->thresh,
-//					im.w, im.h);
+			compare(gold.pb_gold[it], l.classes, l.w * l.h * l.n,
+					probs, boxes, it, net, i, args->save_layers, args->thresh,
+					im.w, im.h);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(

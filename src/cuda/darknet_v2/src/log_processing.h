@@ -72,7 +72,7 @@ void clear_boxes_and_probs(box*, float**, int, int);
 
 void print_detection(detection);
 
-void compare();
+void compare(detection gold, float **foud_prob, box *found_prob);
 
 #ifdef __cplusplus
 } //end extern "C"
