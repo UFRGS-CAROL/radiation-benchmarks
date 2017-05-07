@@ -775,8 +775,8 @@ void test_detector_radiation(Args *args) {
 	char **names = get_labels(name_list);
 	image **alphabet = load_alphabet();
 #endif
-
 	network net = parse_network_cfg(args->config_file);
+
 	if (args->weights) {
 		load_weights(&net, args->weights);
 	}
@@ -787,6 +787,7 @@ void test_detector_radiation(Args *args) {
 	float nms = .4;
 	//load all images
 	image *im_array = load_all_images(gold);
+
 	image *im_array_sized = load_all_images_sized(im_array, net.w, net.h,
 			gold.plist_size);
 
@@ -806,8 +807,10 @@ void test_detector_radiation(Args *args) {
 			float *X = sized.data;
 
 			double time = mysecond();
+			//This is the detection
+			start_iteration_app();
+
 			network_predict(net, X);
-			time = mysecond() - time;
 
 			get_region_boxes(l, im.w, im.h, net.w, net.h, args->thresh, probs,
 					boxes, 0, 0, args->hier_thresh, 1);
@@ -815,6 +818,8 @@ void test_detector_radiation(Args *args) {
 			if (nms)
 				do_nms_obj(boxes, probs, l.w * l.h * l.n, l.classes, nms);
 
+			end_iteration_app();
+			time = mysecond() - time;
 //		here we test if any error happened
 //			if shit happened we log
 			double time_cmp = mysecond();
@@ -925,8 +930,8 @@ void test_detector_generate(Args *args) {
 //		each box is described as class number, left, top, right, bottom, prob (confidence)
 //		save_gold(FILE *fp, char *img, int num, int classes, float **probs,
 //				box *boxes)
-		save_gold(output_file, img_list[it], l.w * l.h * l.n, l.classes,
-				probs, boxes);
+		save_gold(output_file, img_list[it], l.w * l.h * l.n, l.classes, probs,
+				boxes);
 
 #ifdef GEN_IMG
 		draw_detections(im, l.w * l.h * l.n, args->thresh, boxes, probs, names,

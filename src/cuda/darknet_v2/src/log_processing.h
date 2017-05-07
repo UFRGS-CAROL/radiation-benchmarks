@@ -17,7 +17,7 @@
 
 #include <stdio.h> //FILE
 
-#define THRESHOLD_ERROR 0.005
+#define THRESHOLD_ERROR 0.05
 
 typedef struct prob_array_ {
 	box *boxes;
@@ -31,10 +31,25 @@ typedef struct detection_ {
 	int classes;
 	int total;
 	char **img_names;
+
+	//for layer save
+	float **layers_output;
+	int *layers_size;
 } detection;
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef LOGS
+char * get_log_file_name();
+int start_log_file(char *benchmark_name, char *test_info);
+int end_log_file();
+int start_iteration();
+int end_iteration();
+int log_error_count(unsigned long int kernel_errors);
+int log_error_detail(char *string);
+int log_info_detail(char *string);
 #endif
 
 /**
@@ -43,6 +58,9 @@ extern "C" {
 void start_count_app(char*, char*);
 
 void finish_count_app();
+
+void start_iteration_app();
+void end_iteration_app();
 
 /**
  * compare and save layers
@@ -74,6 +92,7 @@ void print_detection(detection);
 
 void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
 		int classes, int img, int save_layer, network net, int test_iteration);
+
 
 #ifdef __cplusplus
 } //end extern "C"

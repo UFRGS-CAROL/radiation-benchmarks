@@ -15,6 +15,7 @@
 #include <iostream>
 #ifdef LOGS
 #include "log_helper.h"
+
 #endif
 
 void start_count_app(char *test, char *app) {
@@ -29,6 +30,18 @@ void start_count_app(char *test, char *app) {
 void finish_count_app() {
 #ifdef LOGS
 	end_log_file();
+#endif
+}
+
+void start_iteration_app(){
+#ifdef LOGS
+	start_iteration();
+#endif
+}
+
+void end_iteration_app(){
+#ifdef LOGS
+	end_iteration();
 #endif
 }
 
@@ -158,7 +171,9 @@ detection load_gold(Args *arg) {
 	gold.pb_gold = (prob_array*) calloc(gold.plist_size, sizeof(prob_array));
 
 	for (int i = 0; i < gold.plist_size && getline(img_list_file, line); i++) {
-		gold.img_names[i] = const_cast<char*>(line.c_str());
+		line.erase(line.size() - 1);
+		gold.img_names[i] = (char*) calloc(line.size(), sizeof(char));
+		strcpy(gold.img_names[i], line.c_str());
 		gold.pb_gold[i] = load_prob_array(gold.total, gold.classes,
 				img_list_file);
 	}
@@ -167,7 +182,24 @@ detection load_gold(Args *arg) {
 }
 
 void delete_detection_var(detection *det, Args *arg) {
+	free(arg->weights);
+	for (int i = 0; det->plist_size > i; i++) {
+		if (det->img_names[i])
+			free(det->img_names[i]);
+		if (det->pb_gold[i].boxes)
+			free(det->pb_gold[i].boxes);
 
+		for (int j = 0; j < det->total; j++) {
+			if (det->pb_gold[i].probs[j])
+				free(det->pb_gold[i].probs[j]);
+		}
+		if (det->pb_gold[i].probs)
+			free(det->pb_gold[i].probs);
+
+	}
+
+	if (det->img_names)
+		free(det->img_names);
 }
 
 void clear_boxes_and_probs(box *boxes, float **probs, int n, int m) {
@@ -177,14 +209,29 @@ void clear_boxes_and_probs(box *boxes, float **probs, int n, int m) {
 	}
 }
 
+inline void print_box(box b) {
+	std::cout << b.x << " " << b.y << " " << b.w << " " << b.h << "\n";
+}
+
 void print_detection(detection det) {
+	for (int i = 0; i < det.plist_size; i++) {
+		std::cout << det.img_names[i] << "\n";
+		prob_array p = det.pb_gold[i];
+		for (int j = 0; j < det.total; j++) {
+			print_box(p.boxes[j]);
+//			for (int k = 0; k < det.classes; k++) {
+//				std::cout << p.probs[j][k] << " ";
+//			}
+			std::cout << "\n";
+		}
+	}
 
 }
 
 inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 		box g_b, int img, int class_, int pb_i) {
-	float diff_float[3] = { fabs(f_b.x - g_b.x), fabs(f_b.y - g_b.y), fabs(
-			f_pb - g_pb) };
+	float diff_float[3] = { (float) fabs(f_b.x - g_b.x), (float) fabs(
+			f_b.y - g_b.y), (float) fabs(f_pb - g_pb) };
 	int diff_int[2] = { abs(f_b.h - g_b.h), abs(f_b.w - g_b.w) };
 	bool diff = false;
 	for (int i = 0; i < 3; i++)
@@ -195,14 +242,14 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 		if (diff_int[i] > 0)
 			diff = true;
 
-	if (diff)
-		sprintf(error_detail, "img: [%d]"
-				" prob[%d][%d] r:%1.16e e:%1.16e"
-				" x_r: %1.16e x_e: %1.16e"
-				" y_r: %1.16e y_e: %1.16e"
-				" w_r: %1.16e w_e: %1.16e"
-				" h_r: %1.16e h_e: %1.16e", img, pb_i, class_, f_pb, g_pb,
-				f_b.x, g_b.x, f_b.y, g_b.y, f_b.w, g_b.w, f_b.h, g_b.h);
+//	if (diff)
+	sprintf(error_detail, "img: [%d]"
+			" prob[%d][%d] r:%1.16e e:%1.16e"
+			" x_r: %1.16e x_e: %1.16e"
+			" y_r: %1.16e y_e: %1.16e"
+			" w_r: %1.16e w_e: %1.16e"
+			" h_r: %1.16e h_e: %1.16e", img, pb_i, class_, f_pb, g_pb, f_b.x,
+			g_b.x, f_b.y, g_b.y, f_b.w, g_b.w, f_b.h, g_b.h);
 
 	return diff;
 }
@@ -238,9 +285,9 @@ void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
 #ifdef LOGS
 	log_error_count(error_count);
 
-	//save layers here
+//save layers here
 	if(error_count && save_layer) {
-		save_layer(net, img, test_iteration, get_log_file_name());
+//		save_layer(net, img, test_iteration, get_log_file_name());
 	}
 #endif
 

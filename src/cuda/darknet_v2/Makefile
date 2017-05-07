@@ -76,7 +76,8 @@ endif
 
 ifeq ($(LOGS), 1)
 LOGHELPER_INC=-I../../include/
-LOGHELPER_LIB=-L../../include/
+LOGHELPER_LIB= -L../../include/ -lLogHelper -DLOGS=1
+HELPFUL=-I../../include/
 else
 HELPFUL=-I../../include/
 endif
@@ -87,7 +88,7 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj backup results $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS)  -lstdc++
+	$(CC) $(COMMON) $(CFLAGS) $^ $(LOGHELPER_INC) $(LOGHELPER_LIB) -o $@  $(LDFLAGS) -lstdc++  
 
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@  $(HELPFUL)
@@ -96,7 +97,7 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@ 
 
 $(OBJDIR)log_processing.o: src/log_processing.cpp src/log_processing.h
-	$(CXX) src/log_processing.cpp -c -o obj/log_processing.o $(LOGHELPER_INC) $(HELPFUL) $(OPTS) $(CFLAGS)
+	$(CXX)  src/log_processing.cpp -c -o obj/log_processing.o $(LOGHELPER_LIB) $(LOGHELPER_INC) $(HELPFUL) $(OPTS) $(CFLAGS) 
 
 obj:
 	mkdir -p obj
@@ -115,7 +116,7 @@ test_pure_yolo:
 	./darknet detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
 	
 test:
-	./darknet test_radiation -d temp.csv -n 3
+	./darknet test_radiation -d temp.csv -n 2
 
 generate:
 	./darknet test_radiation  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp.csv -s 1 -l test.txt 
