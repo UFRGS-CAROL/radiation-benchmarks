@@ -3,6 +3,10 @@ CUDNN=0
 OPENCV=0
 DEBUG=0
 
+#for radiation setup
+LOGS?=0
+GEN_IMG?=0 #if you want to generate images on gold generator execution
+
 ARCH= -gencode arch=compute_30,code=sm_30 \
       -gencode arch=compute_35,code=sm_35 \
       -gencode arch=compute_50,code=[sm_50,compute_50] \
@@ -18,11 +22,16 @@ EXEC=darknet
 OBJDIR=./obj/
 
 CC=gcc
+CXX=g++
 NVCC=nvcc 
 OPTS=-Ofast
 LDFLAGS= -lm -pthread 
 COMMON= 
-CFLAGS=-Wall -Wfatal-errors 
+CFLAGS=-Wall -Wfatal-errors
+
+ifeq ($(GEN_IMG), 1)
+CFLAGS+= -DGEN_IMG=1
+endif
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g
@@ -65,19 +74,30 @@ im2col_kernels.o col2im_kernels.o blas_kernels.o crop_layer_kernels.o dropout_la
 maxpool_layer_kernels.o network_kernels.o avgpool_layer_kernels.o
 endif
 
-OBJS = $(addprefix $(OBJDIR), $(OBJ))
+ifeq ($(LOGS), 1)
+LOGHELPER_INC=-I../../include/
+LOGHELPER_LIB= -L../../include/ -lLogHelper -DLOGS=1
+HELPFUL=-I../../include/
+else
+HELPFUL=-I../../include/
+endif
+
+OBJS = $(addprefix $(OBJDIR), $(OBJ)) $(OBJDIR)log_processing.o
 DEPS = $(wildcard src/*.h) Makefile
 
 all: obj backup results $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CC) $(COMMON) $(CFLAGS) $^ $(LOGHELPER_INC) $(LOGHELPER_LIB) -o $@  $(LDFLAGS) -lstdc++  
 
 $(OBJDIR)%.o: %.c $(DEPS)
-	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
+	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@  $(HELPFUL)
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@
+	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@ 
+
+$(OBJDIR)log_processing.o: src/log_processing.cpp src/log_processing.h
+	$(CXX)  src/log_processing.cpp -c -o obj/log_processing.o $(LOGHELPER_LIB) $(LOGHELPER_INC) $(HELPFUL) $(OPTS) $(CFLAGS) 
 
 obj:
 	mkdir -p obj
@@ -90,4 +110,14 @@ results:
 
 clean:
 	rm -rf $(OBJS) $(EXEC)
+
+
+test_pure_yolo:
+	./darknet detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
+	
+test:
+	./darknet test_radiation -d temp.csv -n 2 -s 1
+
+generate:
+	./darknet test_radiation  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp.csv -s 1 -l test.txt 
 

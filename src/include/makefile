@@ -25,4 +25,4 @@ server: log_helper_sockserver.c
 	gcc log_helper_sockserver.c -o server -lpthread
 
 clean:
-	rm -rf libLogHelper.a libLogHelperCuda.a *.o
+	rm -rf libLogHelper.a libLogHelperCuda.a *.o *.a

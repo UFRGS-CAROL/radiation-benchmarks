@@ -27,6 +27,13 @@ typedef struct arguments {
 	//input images ...
 	char *img_list_path;
 	int save_layers;
+
+	//test detector
+	char *cfg_data;
+	char *model;
+
+	float thresh;
+	float hier_thresh;
 } Args;
 
 void args_init_and_setnull(Args *arg);
@@ -47,4 +54,5 @@ void print_args(const Args arg);
 int parse_arguments(Args *to_parse, int argc, char **argv);
 
 void usage(char **argv, char *model, char *message);
+
 #endif /* ARGS_H_ */
