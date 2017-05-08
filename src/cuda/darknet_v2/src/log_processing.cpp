@@ -52,8 +52,10 @@ void end_iteration_app() {
 inline bool compare_layer(float *l1, float *l2, int n) {
 	for (int i = 0; i < n; i++) {
 		float diff = fabs(l1[i] - l2[i]);
-		if (diff > LAYER_THRESHOLD_ERROR)
+		if (diff > LAYER_THRESHOLD_ERROR) {
+			printf("passou  onde nao devia %f\n\n", diff);
 			return true;
+		}
 	}
 	return false;
 }
@@ -62,21 +64,21 @@ void alloc_gold_layers_arrays(detection *det, network *net) {
 	det->net = net;
 	int layers_size = det->net->n;
 	layer *layers = det->net->layers;
-	det->gold_layers = (float**) calloc(layers_size, sizeof(float*));
+	det->gold_layers = NULL; //(float**) calloc(layers_size, sizeof(float*));
 #ifdef GPU
-	det->found_layers = (float**) calloc(laylayers_size, sizeof(float*));
+			det->found_layers = NULL; //(float**) calloc(laylayers_size, sizeof(float*));
 #endif
 
-	for (int i = 0; i < layers_size; i++) {
-		layer l = layers[i];
-		if (det->gold_layers[i])
-			det->gold_layers[i] = (float*) calloc(l.outputs, sizeof(float));
-
-#ifdef GPU
-		if(det->found_layers)
-		det->found_layers[i] = (float*) calloc(l.outputs, sizeof(float));
-#endif
-	}
+//	for (int i = 0; i < layers_size; i++) {
+//		layer l = layers[i];
+//		if (det->gold_layers[i])
+//			det->gold_layers[i] = (float*) calloc(l.outputs, sizeof(float));
+//
+//#ifdef GPU
+//		if(det->found_layers)
+//		det->found_layers[i] = (float*) calloc(l.outputs, sizeof(float));
+//#endif
+//	}
 
 }
 
@@ -108,11 +110,34 @@ inline char* get_small_log_file(char *log_file) {
 	strcpy(ret, str_ret.c_str());
 	return ret;
 }
+
+FILE* open_layer_file(char *output_filename) {
+	FILE* fp = NULL;
+	if ((fp = fopen(output_filename, "w")) == NULL) {
+		printf("ERROR ON OPENING %s file\n", output_filename);
+		exit(-1);
+	}
+	return fp;
+}
+
 void save_layer(detection *det, int img_iterator, int test_iteration,
 		char *log_filename, int generate) {
-	float **gold_layers = det->gold_layers;
-	float **found_layers = det->found_layers;
 	int layers_size = det->net->n;
+
+	if (det->gold_layers == NULL) {
+		det->gold_layers = (float**) calloc(layers_size, sizeof(float*));
+		for (int i = 0; i < layers_size; i++)
+			det->gold_layers[i] = NULL;
+//		printf("passou uma vez\n");
+	}
+#ifdef GPU
+	if(det->found_layers == NULL) {
+		det->found_layers = (float**) calloc(laylayers_size, sizeof(float*));
+		for(int i = 0; i < layers_size; i++) {
+			det->found_layers[i] = NULL;
+		}
+	}
+#endif
 
 	FILE *output_file, *gold_file;
 	char *small_log_file = get_small_log_file(log_filename);
@@ -121,21 +146,22 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 		sprintf(output_filename, "%s%s_layer_%d_img_%d_test_it_%d.layer",
 		LAYER_GOLD, small_log_file, i, img_iterator, test_iteration);
 
-		if ((output_file = fopen(output_filename, "w")) == NULL) {
-			printf("ERROR ON OPENING %s file\n", output_filename);
-			exit(-1);
-		}
-
 		layer l = det->net->layers[i];
 		float *output_layer;
+		if (det->gold_layers[i] == NULL) {
+			det->gold_layers[i] = (float*) calloc(l.outputs, sizeof(float));
+		}
+
 #ifdef GPU
-		cudaMemcpy (found_layers[i], l.output_gpu, l.outputs*sizeof(float), cudaMemcpyDeviceToHost);
+		if(det->found_layers[i] == NULL) {
+			det->found_layers[i] = (float*) calloc(l.outputs, sizeof(float));
+		}
+
+		cudaMemcpy (det->found_layers[i], l.output_gpu, l.outputs*sizeof(float), cudaMemcpyDeviceToHost);
 		output_layer = found_layers[i];
 #else
 		output_layer = l.output;
 #endif
-		printf("%f\n", gold_layers[i]);
-		printf("nao foi\n");
 
 		//if generate is set no need to compare
 		if (!generate) {
@@ -144,29 +170,26 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 			sprintf(gold_filename, "%sgold_layer_%d_img_%d_test_it_0.layer",
 			LAYER_GOLD, i, img_iterator);
 
-			printf("gold %s now %s\nlayers size %d\n", gold_filename,
-					output_filename, l.outputs);
-
-			if ((gold_file = fopen(gold_filename, "r")) == NULL) {
-				printf("ERROR ON OPENING %s file\n", gold_filename);
-				exit(-1);
-			}
-
-			fread(gold_layers[i], sizeof(float), l.outputs, gold_file);
-
+			gold_file = open_layer_file(gold_filename);
+			fread(det->gold_layers[i], sizeof(float), l.outputs, gold_file);
 			fclose(gold_file);
 
-			if (compare_layer(gold_layers[i], output_layer, l.outputs)) {
+			if (compare_layer(det->gold_layers[i], output_layer, l.outputs)) {
+				output_file = open_layer_file(output_filename);
 				fwrite(output_layer, sizeof(float), l.outputs, output_file);
+				fclose(output_file);
 			}
 
 		} else {
+			output_file = open_layer_file(output_filename);
 			fwrite(output_layer, sizeof(float), l.outputs, output_file);
+			fclose(output_file);
 		}
-		fclose(output_file);
+
 #ifdef GPU
-		if(output_layer)
-		free(output_layer);
+		if(output_layer) {
+			free(output_layer);
+		}
 #endif
 	}
 
@@ -362,24 +385,24 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 		box g_b, int img, int class_, int pb_i) {
 	float diff_float[3] = { (float) fabs(f_b.x - g_b.x), (float) fabs(
 			f_b.y - g_b.y), (float) fabs(f_pb - g_pb) };
-	int diff_int[2] = { abs(f_b.h - g_b.h), abs(f_b.w - g_b.w) };
+	int diff_int[3] = { abs(f_b.h - g_b.h), abs(f_b.w - g_b.w), 0 };
 	bool diff = false;
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++) {
 		if (diff_float[i] > THRESHOLD_ERROR)
 			diff = true;
 
-	for (int i = 0; i < 2; i++)
 		if (diff_int[i] > 0)
 			diff = true;
+	}
 
-//	if (diff)
-	sprintf(error_detail, "img: [%d]"
-			" prob[%d][%d] r:%1.16e e:%1.16e"
-			" x_r: %1.16e x_e: %1.16e"
-			" y_r: %1.16e y_e: %1.16e"
-			" w_r: %1.16e w_e: %1.16e"
-			" h_r: %1.16e h_e: %1.16e", img, pb_i, class_, f_pb, g_pb, f_b.x,
-			g_b.x, f_b.y, g_b.y, f_b.w, g_b.w, f_b.h, g_b.h);
+	if (diff)
+		sprintf(error_detail, "img: [%d]"
+				" prob[%d][%d] r:%1.16e e:%1.16e"
+				" x_r: %1.16e x_e: %1.16e"
+				" y_r: %1.16e y_e: %1.16e"
+				" w_r: %1.16e w_e: %1.16e"
+				" h_r: %1.16e h_e: %1.16e", img, pb_i, class_, f_pb, g_pb,
+				f_b.x, g_b.x, f_b.y, g_b.y, f_b.w, g_b.w, f_b.h, g_b.h);
 
 	return diff;
 }
