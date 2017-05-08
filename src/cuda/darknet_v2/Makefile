@@ -97,7 +97,7 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@ 
 
 $(OBJDIR)log_processing.o: src/log_processing.cpp src/log_processing.h
-	$(CXX)  src/log_processing.cpp -c -o obj/log_processing.o $(LOGHELPER_LIB) $(LOGHELPER_INC) $(HELPFUL) $(OPTS) $(CFLAGS) 
+	$(CXX)  src/log_processing.cpp -c -o obj/log_processing.o $(LOGHELPER_LIB) $(LOGHELPER_INC) $(HELPFUL) $(OPTS) $(CFLAGS) $(COMMON) $(LDFLAGS)
 
 obj:
 	mkdir -p obj
