@@ -786,9 +786,9 @@ void test_detector_radiation(Args *args) {
 	int j, i, it;
 	float nms = .4;
 	//load all images
-	image *im_array = load_all_images(gold);
+	const image *im_array = load_all_images(gold);
 
-	image *im_array_sized = load_all_images_sized(im_array, net.w, net.h,
+	const image *im_array_sized = load_all_images_sized(im_array, net.w, net.h,
 			gold.plist_size);
 
 //	alloc once and clear at each iteration
@@ -798,6 +798,8 @@ void test_detector_radiation(Args *args) {
 	for (j = 0; j < l.w * l.h * l.n; ++j)
 		probs[j] = calloc(l.classes + 1, sizeof(float *));
 
+	//need to allocate layers arrays
+	alloc_gold_layers_arrays(&gold, &net);
 	// this loop will iterate all iteration on args * image_size
 	for (i = 0; i < args->iterations; i++) {
 		for (it = 0; it < gold.plist_size; it++) {
@@ -825,8 +827,8 @@ void test_detector_radiation(Args *args) {
 			double time_cmp = mysecond();
 //			void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
 //					int classes, int img, int save_layer, network net, int test_iteration)
-			compare(gold.pb_gold[it], probs, boxes, l.w * l.h * l.n, l.classes,
-					it, args->save_layers, net, i);
+			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes,
+					it, args->save_layers, i);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(
@@ -902,6 +904,10 @@ void test_detector_generate(Args *args) {
 	int j;
 	float nms = .4;
 
+	detection gold_to_save;
+	if(args->save_layers)
+		alloc_gold_layers_arrays(&gold_to_save, &net);
+
 	// this loop will iterate for all images
 	int it;
 	for (it = 0; it < img_list_size; it++) {
@@ -932,6 +938,9 @@ void test_detector_generate(Args *args) {
 //				box *boxes)
 		save_gold(output_file, img_list[it], l.w * l.h * l.n, l.classes, probs,
 				boxes);
+
+		if(args->save_layers)
+			save_layer(&gold_to_save, it, 0, "gold", 1);
 
 #ifdef GEN_IMG
 		draw_detections(im, l.w * l.h * l.n, args->thresh, boxes, probs, names,

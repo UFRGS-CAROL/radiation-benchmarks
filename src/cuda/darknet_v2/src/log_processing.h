@@ -18,10 +18,14 @@
 #include <stdio.h> //FILE
 
 #define THRESHOLD_ERROR 0.05
+#define LAYER_THRESHOLD_ERROR 0.0000001
+
+#define LAYER_GOLD "/var/radiation-benchmarks/data/"
 
 typedef struct prob_array_ {
 	box *boxes;
 	float **probs;
+
 } prob_array;
 
 //to store all gold content
@@ -32,9 +36,11 @@ typedef struct detection_ {
 	int total;
 	char **img_names;
 
-	//for layer save
-	float **layers_output;
-	int *layers_size;
+	//layers vars
+	float **found_layers;
+	float **gold_layers;
+	network *net;
+	int layers_size;
 } detection;
 
 #ifdef __cplusplus
@@ -65,8 +71,10 @@ void end_iteration_app();
 /**
  * compare and save layers
  */
-void saveLayer(network, int, int);
-void compareLayer(layer, int);
+void save_layer(detection *det, int img_iterator, int test_iteration,
+		char *log_filename, int generate);
+
+void alloc_gold_layers_arrays(detection *det, network *net);
 
 /**
  * get_image_filenames are used by generate
@@ -84,14 +92,12 @@ void delete_detection_var(detection*, Args*);
 
 detection load_gold(Args*);
 
-int compare_detections();
+void compare(detection *det, float **f_probs, box *f_boxes, int num,
+		int classes, int img, int save_layer, int test_iteration);
 
 void clear_boxes_and_probs(box*, float**, int, int);
 
 void print_detection(detection);
-
-void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
-		int classes, int img, int save_layer, network net, int test_iteration);
 
 
 #ifdef __cplusplus

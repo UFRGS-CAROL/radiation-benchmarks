@@ -33,20 +33,144 @@ void finish_count_app() {
 #endif
 }
 
-void start_iteration_app(){
+void start_iteration_app() {
 #ifdef LOGS
 	start_iteration();
 #endif
 }
 
-void end_iteration_app(){
+void end_iteration_app() {
 #ifdef LOGS
 	end_iteration();
 #endif
 }
 
-void save_layer(network net, int img_iterator, int test_iteration,
-		char *log_filename) {
+/**
+ * support function only to check if two layers have
+ * the same value
+ */
+inline bool compare_layer(float *l1, float *l2, int n) {
+	for (int i = 0; i < n; i++) {
+		float diff = fabs(l1[i] - l2[i]);
+		if (diff > LAYER_THRESHOLD_ERROR)
+			return true;
+	}
+	return false;
+}
+
+void alloc_gold_layers_arrays(detection *det, network *net) {
+	det->net = net;
+	int layers_size = det->net->n;
+	layer *layers = det->net->layers;
+	det->gold_layers = (float**) calloc(layers_size, sizeof(float*));
+#ifdef GPU
+	det->found_layers = (float**) calloc(laylayers_size, sizeof(float*));
+#endif
+
+	for (int i = 0; i < layers_size; i++) {
+		layer l = layers[i];
+		if (det->gold_layers[i])
+			det->gold_layers[i] = (float*) calloc(l.outputs, sizeof(float));
+
+#ifdef GPU
+		if(det->found_layers)
+		det->found_layers[i] = (float*) calloc(l.outputs, sizeof(float));
+#endif
+	}
+
+}
+
+void delete_gold_layers_arrays(detection det) {
+	float **gold_layers = det.gold_layers;
+	float **found_layers = det.found_layers;
+	int layers_size = det.net->n;
+
+	for (int i = 0; i < layers_size; i++) {
+		if (gold_layers[i])
+			free(gold_layers[i]);
+#ifdef GPU
+		if (found_layers[i])
+		free(found_layers[i]);
+#endif
+	}
+	free(gold_layers);
+#ifdef GPU
+	free(found_layers);
+#endif
+
+}
+
+inline char* get_small_log_file(char *log_file) {
+	std::string temp(log_file);
+	std::vector < std::string > ret_array = split(temp, '/');
+	std::string str_ret = ret_array[ret_array.size() - 1];
+	char *ret = (char*) calloc(str_ret.size(), sizeof(char));
+	strcpy(ret, str_ret.c_str());
+	return ret;
+}
+void save_layer(detection *det, int img_iterator, int test_iteration,
+		char *log_filename, int generate) {
+	float **gold_layers = det->gold_layers;
+	float **found_layers = det->found_layers;
+	int layers_size = det->net->n;
+
+	FILE *output_file, *gold_file;
+	char *small_log_file = get_small_log_file(log_filename);
+	for (int i = 0; i < layers_size; i++) {
+		char output_filename[300];
+		sprintf(output_filename, "%s%s_layer_%d_img_%d_test_it_%d.layer",
+		LAYER_GOLD, small_log_file, i, img_iterator, test_iteration);
+
+		if ((output_file = fopen(output_filename, "w")) == NULL) {
+			printf("ERROR ON OPENING %s file\n", output_filename);
+			exit(-1);
+		}
+
+		layer l = det->net->layers[i];
+		float *output_layer;
+#ifdef GPU
+		cudaMemcpy (found_layers[i], l.output_gpu, l.outputs*sizeof(float), cudaMemcpyDeviceToHost);
+		output_layer = found_layers[i];
+#else
+		output_layer = l.output;
+#endif
+		printf("%f\n", gold_layers[i]);
+		printf("nao foi\n");
+
+		//if generate is set no need to compare
+		if (!generate) {
+			//open gold
+			char gold_filename[300];
+			sprintf(gold_filename, "%sgold_layer_%d_img_%d_test_it_0.layer",
+			LAYER_GOLD, i, img_iterator);
+
+			printf("gold %s now %s\nlayers size %d\n", gold_filename,
+					output_filename, l.outputs);
+
+			if ((gold_file = fopen(gold_filename, "r")) == NULL) {
+				printf("ERROR ON OPENING %s file\n", gold_filename);
+				exit(-1);
+			}
+
+			fread(gold_layers[i], sizeof(float), l.outputs, gold_file);
+
+			fclose(gold_file);
+
+			if (compare_layer(gold_layers[i], output_layer, l.outputs)) {
+				fwrite(output_layer, sizeof(float), l.outputs, output_file);
+			}
+
+		} else {
+			fwrite(output_layer, sizeof(float), l.outputs, output_file);
+		}
+		fclose(output_file);
+#ifdef GPU
+		if(output_layer)
+		free(output_layer);
+#endif
+	}
+
+	free(small_log_file);
 
 }
 
@@ -70,7 +194,7 @@ char** get_image_filenames(char *img_list_path, int *image_list_size) {
 		(*image_list_size)++;
 	}
 
-	// use the array
+// use the array
 
 	return array;
 }
@@ -100,7 +224,7 @@ inline int get_index(float *a, int n) {
  */
 void save_gold(FILE *fp, char *img, int num, int classes, float **probs,
 		box *boxes) {
-	fprintf(fp, "%s\n", img);
+//	fprintf(fp, "%s\n", img);
 	for (int i = 0; i < num; ++i) {
 		int class_ = get_index(probs[i], classes);
 		float prob = probs[i][class_];
@@ -122,6 +246,7 @@ prob_array load_prob_array(int num, int classes, std::ifstream &ifp) {
 	std::string line;
 	std::vector < std::string > splited;
 	for (int i = 0; i < num; ++i) {
+
 		getline(ifp, line);
 		splited = split(line, ';');
 
@@ -166,7 +291,7 @@ detection load_gold(Args *arg) {
 	gold.total = atoi(split_ret[8].c_str());
 	gold.classes = atoi(split_ret[9].c_str());
 
-	//allocate detector
+//allocate detector
 	gold.img_names = (char**) calloc(gold.plist_size, sizeof(char*));
 	gold.pb_gold = (prob_array*) calloc(gold.plist_size, sizeof(prob_array));
 
@@ -174,6 +299,7 @@ detection load_gold(Args *arg) {
 		line.erase(line.size() - 1);
 		gold.img_names[i] = (char*) calloc(line.size(), sizeof(char));
 		strcpy(gold.img_names[i], line.c_str());
+
 		gold.pb_gold[i] = load_prob_array(gold.total, gold.classes,
 				img_list_file);
 	}
@@ -200,6 +326,10 @@ void delete_detection_var(detection *det, Args *arg) {
 
 	if (det->img_names)
 		free(det->img_names);
+
+	if (arg->save_layers) {
+		delete_gold_layers_arrays(*det);
+	}
 }
 
 void clear_boxes_and_probs(box *boxes, float **probs, int n, int m) {
@@ -254,8 +384,11 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 	return diff;
 }
 
-void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
-		int classes, int img, int save_layer, network net, int test_iteration) {
+void compare(detection *det, float **f_probs, box *f_boxes, int num,
+		int classes, int img, int save_layers, int test_iteration) {
+
+	network *net = det->net;
+	prob_array gold = det->pb_gold[img];
 	float **g_probs = gold.probs;
 	box *g_boxes = gold.boxes;
 
@@ -286,8 +419,8 @@ void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
 	log_error_count(error_count);
 
 //save layers here
-	if(error_count && save_layer) {
-//		save_layer(net, img, test_iteration, get_log_file_name());
+	if(error_count && save_layers) {
+		save_layer(det, img, test_iteration, get_log_file_name(), 0);
 	}
 #endif
 
