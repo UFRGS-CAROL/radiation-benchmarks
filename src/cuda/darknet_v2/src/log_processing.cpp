@@ -132,7 +132,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 	}
 #ifdef GPU
 	if(det->found_layers == NULL) {
-		det->found_layers = (float**) calloc(laylayers_size, sizeof(float*));
+		det->found_layers = (float**) calloc(layers_size, sizeof(float*));
 		for(int i = 0; i < layers_size; i++) {
 			det->found_layers[i] = NULL;
 		}
@@ -158,7 +158,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 		}
 
 		cudaMemcpy (det->found_layers[i], l.output_gpu, l.outputs*sizeof(float), cudaMemcpyDeviceToHost);
-		output_layer = found_layers[i];
+		output_layer = det->found_layers[i];
 #else
 		output_layer = l.output;
 #endif
