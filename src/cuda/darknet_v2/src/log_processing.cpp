@@ -155,14 +155,16 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 #ifdef GPU
 		if(det->found_layers[i] == NULL) {
 			det->found_layers[i] = (float*) calloc(l.outputs, sizeof(float));
+			printf("esse aqui e so na primeira\n");
 		}
-
+		printf("Passou aqui\n");
 		cudaMemcpy (det->found_layers[i], l.output_gpu, l.outputs*sizeof(float), cudaMemcpyDeviceToHost);
+		printf("depois aqui tambem");
 		output_layer = det->found_layers[i];
 #else
 		output_layer = l.output;
 #endif
-
+		printf("aqui nao foi\n");
 		//if generate is set no need to compare
 		if (!generate) {
 			//open gold
@@ -181,6 +183,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 			}
 
 		} else {
+			printf("aqui\n\n");
 			output_file = open_layer_file(output_filename);
 			fwrite(output_layer, sizeof(float), l.outputs, output_file);
 			fclose(output_file);
