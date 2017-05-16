@@ -9,6 +9,7 @@
 cd radiation-benchmarks-parsers/
 git checkout master && git pull
 cd ..
+git submodule update --init --recursive
 git add radiation-benchmarks-parsers
 git commit -m "updating submodule to latest"
 git push
