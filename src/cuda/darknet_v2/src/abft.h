@@ -7,7 +7,7 @@
 
 #ifndef ABFT_H_
 #define ABFT_H_
-
+#define MAX_ABFT_TYPES 3
 
 int abft_type;
 
@@ -16,11 +16,11 @@ int abft_type;
  * 1 for Abraham abft
  * 2 for maxpool hardened
  */
-void set_abft(int type) {
+inline void set_abft(int type) {
 	abft_type = type;
 }
 
-int get_abft() {
+inline int get_abft() {
 	return abft_type;
 }
 

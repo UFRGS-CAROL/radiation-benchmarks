@@ -24,6 +24,7 @@ void args_init_and_setnull(Args *arg) {
 	arg->model = "detect";
 	arg->thresh = 0.24;
 	arg->hier_thresh = 0.5;
+	arg->abft = 0;
 }
 
 /**
@@ -63,8 +64,8 @@ int check_args(Args *arg) {
 
 	//check img_list_path
 	if (access(arg->img_list_path, F_OK) == -1) {
-			printf("img_list_path does not exist\n");
-			return -1;
+		printf("img_list_path does not exist\n");
+		return -1;
 	}
 
 	//make sure if it is generate is only one iteration
@@ -85,10 +86,11 @@ void print_args(const Args arg) {
 			"model = %s\n"
 			"cfg_data = %s\n"
 			"threshold = %f\n"
-			"hier_thresh = %f\n", arg.config_file, arg.weights, arg.iterations,
+			"hier_thresh = %f\n"
+			"abft = %f\n", arg.config_file, arg.weights, arg.iterations,
 			arg.gold_inout, arg.generate_flag, arg.img_list_path,
 			arg.save_layers, arg.model, arg.cfg_data, arg.thresh,
-			arg.hier_thresh);
+			arg.hier_thresh, arg.abft);
 }
 
 /**
@@ -97,21 +99,23 @@ void print_args(const Args arg) {
  * return 0 ok, -1 wrong
  */
 int parse_arguments(Args *to_parse, int argc, char **argv) {
-	static struct option long_options[] = { { "config_file", required_argument,
-			NULL, 'c' }, //<yolo, imagenet..>.cfg
-			{ "weights", required_argument, NULL, 'w' }, //<yolo, imagenet..>weights
-			{ "iterations", required_argument, NULL, 'n' }, //log data iterations
-			{ "generate", required_argument, NULL, 'g' }, //generate gold
-			{ "img_list_path", required_argument, NULL, 'l' }, //data path list input
-			{ "gold_inout", required_argument, NULL, 'd' }, { "save_layers",
-					required_argument, NULL, 's' }, { NULL, 0, NULL, 0 } };
+	static struct option long_options[] = { 	//options
+			{ "config_file", required_argument, NULL, 'c' }, //<yolo, imagenet..>.cfg
+					{ "weights", required_argument, NULL, 'w' }, //<yolo, imagenet..>weights
+					{ "iterations", required_argument, NULL, 'n' }, //log data iterations
+					{ "generate", required_argument, NULL, 'g' }, //generate gold
+					{ "img_list_path", required_argument, NULL, 'l' }, //data path list input
+					{ "gold_inout", required_argument, NULL, 'd' },  //gold path
+					{ "save_layers", required_argument, NULL, 's' }, //save layers
+					{ "abft", required_argument, NULL, 'a'},
+					{ NULL, 0, NULL, 0 } };
 
 	// loop over all of the options
 	char ch;
 	int option_index = 0;
 	to_parse->generate_flag = 0;
 	int max_args = 12;
-	while ((ch = getopt_long(argc, argv, "c:w:n:g:l:d:s:", long_options,
+	while ((ch = getopt_long(argc, argv, "c:w:n:g:l:d:s:a:", long_options,
 			&option_index)) != -1 && --max_args) {
 
 		// check to see if a single character or long option came through
@@ -148,6 +152,11 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 
 		case 's': {
 			to_parse->save_layers = atoi(optarg);
+			break;
+		}
+
+		case 'a': {
+			to_parse->abft = atoi(optarg);
 			break;
 		}
 

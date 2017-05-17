@@ -34,6 +34,8 @@ typedef struct arguments {
 
 	float thresh;
 	float hier_thresh;
+
+	int abft;
 } Args;
 
 void args_init_and_setnull(Args *arg);

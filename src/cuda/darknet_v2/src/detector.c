@@ -9,6 +9,7 @@
 #include "blas.h"
 
 #include "args.h"
+#include "abft.h"
 
 #include "log_processing.h"
 
@@ -791,6 +792,10 @@ void test_detector_radiation(Args *args) {
 	const image *im_array_sized = load_all_images_sized(im_array, net.w, net.h,
 			gold.plist_size);
 
+//	set abft
+	if(args->abft && args->abft < MAX_ABFT_TYPES){
+		set_abft(args->abft);
+	}
 //	alloc once and clear at each iteration
 	layer l = net.layers[net.n - 1];
 	box *boxes = calloc(l.w * l.h * l.n, sizeof(box));
