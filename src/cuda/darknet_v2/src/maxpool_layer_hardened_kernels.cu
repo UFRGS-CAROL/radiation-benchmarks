@@ -1,3 +1,13 @@
+/*
+ * maxpool_layer_hardened_kernels.cu
+ *
+ *  Created on: 17/05/2017
+ *      Author: fernando
+ */
+
+
+
+
 #include "cuda_runtime.h"
 #include "curand.h"
 #include "cublas_v2.h"
@@ -7,7 +17,7 @@ extern "C" {
 #include "cuda.h"
 }
 
-__global__ void forward_maxpool_layer_kernel(int n, int in_h, int in_w,
+__global__ void forward_maxpool_layer_kernel_hardened(int n, int in_h, int in_w,
 		int in_c, int stride, int size, int pad, float *input, float *output,
 		int *indexes) {
 	int h = (in_h + 2 * pad) / stride;
@@ -33,6 +43,7 @@ __global__ void forward_maxpool_layer_kernel(int n, int in_h, int in_w,
 	float max = -INFINITY;
 	int max_i = -1;
 	int l, m;
+	printf("\nsize %d\n", size);
 	for (l = 0; l < size; ++l) {
 		for (m = 0; m < size; ++m) {
 			int cur_h = h_offset + i * stride + l;
@@ -49,7 +60,7 @@ __global__ void forward_maxpool_layer_kernel(int n, int in_h, int in_w,
 	indexes[out_index] = max_i;
 }
 
-__global__ void backward_maxpool_layer_kernel(int n, int in_h, int in_w,
+__global__ void backward_maxpool_layer_kernel_hardened(int n, int in_h, int in_w,
 		int in_c, int stride, int size, int pad, float *delta,
 		float *prev_delta, int *indexes) {
 	int h = (in_h + 2 * pad) / stride;
@@ -87,25 +98,24 @@ __global__ void backward_maxpool_layer_kernel(int n, int in_h, int in_w,
 	prev_delta[index] += d;
 }
 
-extern "C" void forward_maxpool_layer_gpu(maxpool_layer layer, network net) {
+extern "C" void forward_maxpool_layer_gpu_hardened(maxpool_layer layer, network net) {
 	int h = layer.out_h;
 	int w = layer.out_w;
 	int c = layer.c;
 
 	size_t n = h * w * c * layer.batch;
 
-	forward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK>>>(n, layer.h,
+	forward_maxpool_layer_kernel_hardened<<<cuda_gridsize(n), BLOCK>>>(n, layer.h,
 			layer.w, layer.c, layer.stride, layer.size, layer.pad,
 			net.input_gpu, layer.output_gpu, layer.indexes_gpu);
 	check_error(cudaPeekAtLastError());
 }
 
-extern "C" void backward_maxpool_layer_gpu(maxpool_layer layer, network net) {
+extern "C" void backward_maxpool_layer_gpu_hardened(maxpool_layer layer, network net) {
 	size_t n = layer.h * layer.w * layer.c * layer.batch;
 
-	backward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK>>>(n, layer.h,
+	backward_maxpool_layer_kernel_hardened<<<cuda_gridsize(n), BLOCK>>>(n, layer.h,
 			layer.w, layer.c, layer.stride, layer.size, layer.pad,
 			layer.delta_gpu, net.delta_gpu, layer.indexes_gpu);
 	check_error(cudaPeekAtLastError());
 }
-
