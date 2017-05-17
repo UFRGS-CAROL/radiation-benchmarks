@@ -2,6 +2,8 @@
 #include "curand.h"
 #include "cublas_v2.h"
 
+#include "abft.h"
+
 extern "C" {
 #include "maxpool_layer.h"
 #include "cuda.h"
@@ -88,6 +90,10 @@ __global__ void backward_maxpool_layer_kernel(int n, int in_h, int in_w,
 }
 
 extern "C" void forward_maxpool_layer_gpu(maxpool_layer layer, network net) {
+	if (get_abft() == 2){
+		forward_maxpool_layer_gpu_hardened(layer, net);
+		return;
+	}
 	int h = layer.out_h;
 	int w = layer.out_w;
 	int c = layer.c;

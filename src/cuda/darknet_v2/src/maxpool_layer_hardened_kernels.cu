@@ -14,44 +14,45 @@ extern "C" {
 #include "cuda.h"
 }
 
-int maxpool_iterator = 0;
 #define FACTOR 5.0
 #define MAXPOOL_N 5
 
 float LOOK_UP_TABLE[] = { //for hardened maxpool
 		INFINITY, //layer 0
-				INFINITY/10, //layer 1
-				INFINITY/10, //layer 2
-				INFINITY/10, //layer 3
-				INFINITY/10, //layer 4
-				INFINITY/10, //layer 5
-				INFINITY/10, //layer 6
-				INFINITY/10, //layer 7
-				INFINITY/10, //layer 8
-				INFINITY/10, //layer 9
-				INFINITY/10, //layer 10
-				INFINITY/10, //layer 11
-				INFINITY/10, //layer 12
-				INFINITY/10, //layer 13
-				INFINITY/10, //layer 14
-				INFINITY/10, //layer 15
-				INFINITY/10, //layer 16
-				INFINITY/10, //layer 17
-				INFINITY/10, //layer 18
-				INFINITY/10, //layer 19
-				INFINITY/10, //layer 20
-				INFINITY/10, //layer 21
-				INFINITY/10, //layer 22
-				INFINITY/10, //layer 23
-				INFINITY/10, //layer 24
-				INFINITY/10, //layer 25
-				INFINITY/10, //layer 26
-				INFINITY/10, //layer 27
-				INFINITY/10, //layer 28
-				INFINITY/10, //layer 29
-				INFINITY/10, //layer 30
-				INFINITY/10 //layer 31
+				INFINITY / 10, //layer 1
+				INFINITY / 10, //layer 2
+				INFINITY / 10, //layer 3
+				INFINITY / 10, //layer 4
+				INFINITY / 10, //layer 5
+				INFINITY / 10, //layer 6
+				INFINITY / 10, //layer 7
+				INFINITY / 10, //layer 8
+				INFINITY / 10, //layer 9
+				INFINITY / 10, //layer 10
+				INFINITY / 10, //layer 11
+				INFINITY / 10, //layer 12
+				INFINITY / 10, //layer 13
+				INFINITY / 10, //layer 14
+				INFINITY / 10, //layer 15
+				INFINITY / 10, //layer 16
+				INFINITY / 10, //layer 17
+				INFINITY / 10, //layer 18
+				INFINITY / 10, //layer 19
+				INFINITY / 10, //layer 20
+				INFINITY / 10, //layer 21
+				INFINITY / 10, //layer 22
+				INFINITY / 10, //layer 23
+				INFINITY / 10, //layer 24
+				INFINITY / 10, //layer 25
+				INFINITY / 10, //layer 26
+				INFINITY / 10, //layer 27
+				INFINITY / 10, //layer 28
+				INFINITY / 10, //layer 29
+				INFINITY / 10, //layer 30
+				INFINITY / 10 //layer 31
 		};
+
+int maxpool_iterator = 0;
 
 __global__ void forward_maxpool_layer_kernel_hardened(int n, int in_h, int in_w,
 		int in_c, int stride, int size, int pad, float *input, float *output,
@@ -148,7 +149,7 @@ __global__ void backward_maxpool_layer_kernel_hardened(int n, int in_h,
 	prev_delta[index] += d;
 }
 
-extern "C" void forward_maxpool_layer_gpu_hardened(maxpool_layer layer,
+void forward_maxpool_layer_gpu_hardened(maxpool_layer layer,
 		network net) {
 	int h = layer.out_h;
 	int w = layer.out_w;
@@ -175,7 +176,7 @@ extern "C" void forward_maxpool_layer_gpu_hardened(maxpool_layer layer,
 	check_error(cudaPeekAtLastError());
 }
 
-extern "C" void backward_maxpool_layer_gpu_hardened(maxpool_layer layer,
+void backward_maxpool_layer_gpu_hardened(maxpool_layer layer,
 		network net) {
 	size_t n = layer.h * layer.w * layer.c * layer.batch;
 
