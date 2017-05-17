@@ -19,7 +19,7 @@ void backward_maxpool_layer(const maxpool_layer l, network net);
 void forward_maxpool_layer_gpu(maxpool_layer l, network net);
 void backward_maxpool_layer_gpu(maxpool_layer l, network net);
 
-void forward_maxpool_layer_gpu_hardened(maxpool_layer l, network net, float max_value_allowed);
+void forward_maxpool_layer_gpu_hardened(maxpool_layer l, network net);
 void backward_maxpool_layer_gpu_hardened(maxpool_layer l, network net);
 #endif
 
