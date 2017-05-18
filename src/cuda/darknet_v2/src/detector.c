@@ -9,8 +9,8 @@
 #include "blas.h"
 
 #include "args.h"
-#include "abft.h"
 
+#define MAX_ABFT_TYPES 3
 #include "log_processing.h"
 
 //my_second
@@ -794,6 +794,7 @@ void test_detector_radiation(Args *args) {
 
 //	set abft
 	if(args->abft && args->abft < MAX_ABFT_TYPES){
+		printf("passou no if\n\n");
 		set_abft(args->abft);
 	}
 //	alloc once and clear at each iteration

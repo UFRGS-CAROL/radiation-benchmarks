@@ -2,12 +2,24 @@
 #include "curand.h"
 #include "cublas_v2.h"
 
-#include "abft.h"
+static int abft_type;
 
 extern "C" {
 #include "maxpool_layer.h"
 #include "cuda.h"
+
 }
+
+
+/**
+ * 0 for no abft
+ * 1 for Abraham abft
+ * 2 for maxpool hardened
+ */
+void set_abft(int type) {
+	abft_type = type;
+}
+
 
 __global__ void forward_maxpool_layer_kernel(int n, int in_h, int in_w,
 		int in_c, int stride, int size, int pad, float *input, float *output,
@@ -90,10 +102,13 @@ __global__ void backward_maxpool_layer_kernel(int n, int in_h, int in_w,
 }
 
 extern "C" void forward_maxpool_layer_gpu(maxpool_layer layer, network net) {
-	if (get_abft() == 2){
+
+	if (abft_type == 2){
+//		printf("passou no hardened\n\n");
 		forward_maxpool_layer_gpu_hardened(layer, net);
 		return;
 	}
+//	printf("nao passou no hardened %d\n\n\n", abft_type);
 	int h = layer.out_h;
 	int w = layer.out_w;
 	int c = layer.c;

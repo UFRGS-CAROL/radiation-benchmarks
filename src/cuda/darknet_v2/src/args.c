@@ -87,7 +87,7 @@ void print_args(const Args arg) {
 			"cfg_data = %s\n"
 			"threshold = %f\n"
 			"hier_thresh = %f\n"
-			"abft = %f\n", arg.config_file, arg.weights, arg.iterations,
+			"abft = %d\n", arg.config_file, arg.weights, arg.iterations,
 			arg.gold_inout, arg.generate_flag, arg.img_list_path,
 			arg.save_layers, arg.model, arg.cfg_data, arg.thresh,
 			arg.hier_thresh, arg.abft);
@@ -156,6 +156,7 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 		}
 
 		case 'a': {
+			printf("abft %s\n", optarg);
 			to_parse->abft = atoi(optarg);
 			break;
 		}
