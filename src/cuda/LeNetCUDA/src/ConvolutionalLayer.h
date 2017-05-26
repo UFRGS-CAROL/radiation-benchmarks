@@ -22,6 +22,8 @@ public:
 			Layer(in_width, in_height, in_depth, in_width - kernel_size + 1,
 					in_height - kernel_size + 1, out_depth, 0.3, 0.01), kernel_size_(
 					kernel_size) {
+
+
 		W_.resize(kernel_size * kernel_size * in_depth_ * out_depth_);
 		deltaW_.resize(kernel_size * kernel_size * in_depth_ * out_depth_);
 		b_.resize(out_depth * out_width_ * out_height_);
