@@ -6,7 +6,7 @@
  */
 
 #include <cstdlib>
-#include "util.h"
+#include "Util.h"
 #include "ConvNet.h"
 
 #define DATA_PATH "./"

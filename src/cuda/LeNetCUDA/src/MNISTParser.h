@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <cassert>
 #include <ctime>
-#include "util.h"
+#include "Util.h"
 
 namespace convnet {
 
@@ -23,11 +23,11 @@ public:
 	MNISTParser();
 	virtual ~MNISTParser();
 
-	Mnist_Parser(std::string data_path) :
-	test_img_fname(data_path + "/t10k-images-idx3-ubyte"), test_lbl_fname(
-			data_path + "/t10k-labels-idx1-ubyte"), train_img_fname(
-			data_path + "/train-images-idx3-ubyte"), train_lbl_fname(
-			data_path + "/train-labels-idx1-ubyte") {
+	MNISTParser(std::string data_path) :
+			test_img_fname(data_path + "/t10k-images-idx3-ubyte"), test_lbl_fname(
+					data_path + "/t10k-labels-idx1-ubyte"), train_img_fname(
+					data_path + "/train-images-idx3-ubyte"), train_lbl_fname(
+					data_path + "/train-labels-idx1-ubyte") {
 
 	}
 
@@ -85,8 +85,8 @@ private:
 		assert(swapEndien_32(rows) == 28);
 		assert(swapEndien_32(cols) == 28);
 
-		std::vector<std::float_t> row;
-		std::vector<std::vector<float_t> > img;
+		std::vector < std::float_t > row;
+		std::vector < std::vector<float_t> > img;
 		std::vector<Img> images;
 
 		uint8_t pixel = 0;
@@ -130,7 +130,7 @@ private:
 		assert(2049 == swapEndien_32(magic));
 		assert(swapEndien_32(number) == images.size());
 
-		std::vector<uint8_t> labels;
+		std::vector < uint8_t > labels;
 
 		uint8_t label;
 		while (!in.eof()) {

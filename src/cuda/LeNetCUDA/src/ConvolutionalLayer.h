@@ -9,27 +9,42 @@
 #define CONVOLUTIONALLAYER_H_
 
 #include "Layer.h"
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+
+#include <vector>
+#include "ConvolutionalLayer.cuh"
+#include "Util.h" //class util
 
 namespace convnet {
 
 class ConvolutionalLayer: public Layer {
 public:
 	ConvolutionalLayer();
-	virtual ~ConvolutionalLayer();
+	virtual ~ConvolutionalLayer() {
+//      limpa a memória da layer
+//      thrust::device_free(this->input_buf);
+//      thrust::device_free(this->weight_buf);
+//      thrust::device_free(this->b_buf);
+//      thrust::device_free(this->output_buf);
+	}
 
 	ConvolutionalLayer(size_t in_width, size_t in_height, size_t in_depth,
 			size_t kernel_size, size_t out_depth) :
 			Layer(in_width, in_height, in_depth, in_width - kernel_size + 1,
-					in_height - kernel_size + 1, out_depth, 0.3, 0.01), kernel_size_(
-					kernel_size) {
+					in_height - kernel_size + 1, out_depth, 0.3, 0.01) {
 
+		//initialization
+		this->kernel_size_ = kernel_size;
 
-		W_.resize(kernel_size * kernel_size * in_depth_ * out_depth_);
-		deltaW_.resize(kernel_size * kernel_size * in_depth_ * out_depth_);
-		b_.resize(out_depth * out_width_ * out_height_);
-		output_.resize(out_depth * out_width_ * out_height_);
+		this->W_.resize(
+				kernel_size * kernel_size * this->in_depth_ * this->out_depth_);
+		this->deltaW_.resize(
+				kernel_size * kernel_size * this->in_depth_ * this->out_depth_);
+		this->b_.resize(out_depth * this->out_width_ * this->out_height_);
+		this->output_.resize(out_depth * this->out_width_ * this->out_height_);
 		this->init_weight();
-//			this->init_cuda();
+		this->init_cuda();
 	}
 
 	void init_weight() {
@@ -37,22 +52,26 @@ public:
 		uniform_rand(b_.begin(), b_.end(), -1, 1);
 	}
 
-//		cl::Context context;
-//		cl::CommandQueue queue;
-//		cl::Program program;
+	void init_cuda() {
+//      Vamos fazer meio que igual a darknet
+//      alloca tudo antes de começar tanto na GPU quanto na CPU e depois dá free
+//      em tudo
+		// Allocate memory on the device
+//      cl::Buffer input_buf(context, CL_MEM_READ_ONLY,
+//              in_width_ * in_height_ * in_depth_ * sizeof(cl_float));
+//      cl::Buffer weight_buf(context, CL_MEM_READ_ONLY,
+//              kernel_size_ * kernel_size_ * in_depth_ * out_depth_
+//                      * sizeof(cl_float));
+//      cl::Buffer b_buf(context, CL_MEM_READ_ONLY,
+//              out_depth_ * out_width_ * out_height_ * sizeof(cl_float));
+//      cl::Buffer output_buf(context, CL_MEM_WRITE_ONLY,
+//              out_width_ * out_height_ * out_depth_ * sizeof(cl_float));
+//      this->input_buf =  thrust::device_malloc<float>(in_width_ * in_height_ * in_depth_ * sizeof(float));
+//      this->weight_buf = thrust::device_malloc<float>(kernel_size_ * kernel_size_ * in_depth_ * out_depth_* sizeof(float));
+//      this->b_buf = thrust::device_malloc<float>(out_depth_ * out_width_ * out_height_ * sizeof(float));
+//      this->output_buf = thrust::device_malloc<float>(out_width_ * out_height_ * out_depth_ * sizeof(cl_float));
 
-//		void init_cuda() {
-//			// OpenCL initialization
-//			std::vector<cl::Platform> platforms;
-//			std::vector<cl::Device> devices;
-//			cl::Platform::get(&platforms);
-//			platforms[0].getDevices(CL_DEVICE_TYPE_GPU, &devices);
-//			context = cl::Context(devices);
-//			queue = cl::CommandQueue(context, devices[0],
-//					CL_QUEUE_PROFILING_ENABLE);
-//
-//			program = jc::buildProgram(KERNEL_PATH, context, devices);
-//		}
+	}
 
 	void forward() {
 		forward_cpu();
@@ -83,57 +102,79 @@ public:
 	void forward_gpu() {
 
 		try {
-			// Allocate memory on the device
-			cl::Buffer input_buf(context, CL_MEM_READ_ONLY,
-					in_width_ * in_height_ * in_depth_ * sizeof(cl_float));
-			cl::Buffer weight_buf(context, CL_MEM_READ_ONLY,
-					kernel_size_ * kernel_size_ * in_depth_ * out_depth_
-							* sizeof(cl_float));
-			cl::Buffer b_buf(context, CL_MEM_READ_ONLY,
-					out_depth_ * out_width_ * out_height_ * sizeof(cl_float));
-			cl::Buffer output_buf(context, CL_MEM_WRITE_ONLY,
-					out_width_ * out_height_ * out_depth_ * sizeof(cl_float));
+//          // Allocate memory on the device
+//          cl::Buffer input_buf(context, CL_MEM_READ_ONLY,
+//                  in_width_ * in_height_ * in_depth_ * sizeof(cl_float));
+//          cl::Buffer weight_buf(context, CL_MEM_READ_ONLY,
+//                  kernel_size_ * kernel_size_ * in_depth_ * out_depth_
+//                          * sizeof(cl_float));
+//          cl::Buffer b_buf(context, CL_MEM_READ_ONLY,
+//                  out_depth_ * out_width_ * out_height_ * sizeof(cl_float));
+//          cl::Buffer output_buf(context, CL_MEM_WRITE_ONLY,
+//                  out_width_ * out_height_ * out_depth_ * sizeof(cl_float));
 
-			std::string kernel_name = "forward_parallel";
-			cl::Kernel kernel(program, kernel_name.c_str());
-			kernel.setArg < cl::Memory > (0, input_buf);
-			kernel.setArg < cl::Memory > (1, weight_buf);
-			kernel.setArg < cl::Memory > (2, b_buf);
-			kernel.setArg < cl::Memory > (3, output_buf);
-			kernel.setArg<int>(4, in_width_);
-			kernel.setArg<int>(5, in_height_);
-			kernel.setArg<int>(6, in_depth_);
-			kernel.setArg<int>(7, out_width_);
-			kernel.setArg<int>(8, out_height_);
-			kernel.setArg<int>(9, out_depth_);
-			kernel.setArg<int>(10, kernel_size_);
+//          std::string kernel_name = "forward_parallel";
+//          cl::Kernel kernel(program, kernel_name.c_str());
+//          kernel.setArg < cl::Memory > (0, input_buf);
+//          kernel.setArg < cl::Memory > (1, weight_buf);
+//          kernel.setArg < cl::Memory > (2, b_buf);
+//          kernel.setArg < cl::Memory > (3, output_buf);
+//          kernel.setArg<int>(4, in_width_);
+//          kernel.setArg<int>(5, in_height_);
+//          kernel.setArg<int>(6, in_depth_);
+//          kernel.setArg<int>(7, out_width_);
+//          kernel.setArg<int>(8, out_height_);
+//          kernel.setArg<int>(9, out_depth_);
+//          kernel.setArg<int>(10, kernel_size_);
 
 			// transfer source data from the host to the device
-			queue.enqueueWriteBuffer(input_buf, CL_TRUE, 0,
-					in_width_ * in_height_ * in_depth_ * sizeof(cl_float),
-					&input_[0]);
-			queue.enqueueWriteBuffer(weight_buf, CL_TRUE, 0,
-					kernel_size_ * kernel_size_ * in_depth_ * out_depth_
-							* sizeof(cl_float), &W_[0]);
-			queue.enqueueWriteBuffer(b_buf, CL_TRUE, 0,
-					out_depth_ * out_width_ * out_height_ * sizeof(cl_float),
-					&b_[0]);
+//          queue.enqueueWriteBuffer(input_buf, CL_TRUE, 0,
+//                  in_width_ * in_height_ * in_depth_ * sizeof(cl_float),
+//                  &input_[0]);
+			//using Thust we can only assign
+			this->input_buf = this->input_;
+
+//          queue.enqueueWriteBuffer(weight_buf, CL_TRUE, 0,
+//                  kernel_size_ * kernel_size_ * in_depth_ * out_depth_
+//                          * sizeof(cl_float), &W_[0]);
+
+			//PEDRO check if it is necessary to transfer weight again
+			this->weight_buf = this->W_;
+
+//          queue.enqueueWriteBuffer(b_buf, CL_TRUE, 0,
+//                  out_depth_ * out_width_ * out_height_ * sizeof(cl_float),
+//                  &b_[0]);
+
+			this->b_buf = this->b_;
 
 			// execute the code on the device
-			int grpWidth = 20;
-			cl::NDRange global(
-					jc::closestMultiple(out_depth_ * out_width_, grpWidth),
-					jc::closestMultiple(out_height_, grpWidth));
-			cl::NDRange local(grpWidth, grpWidth);
-			cl_ulong t = jc::runAndTimeKernel(kernel, queue, global, local);
+			//PEDRO CHECK IT
+			float *i_buf = thrust::raw_pointer_cast(this->input_buf.data());
+			float *w_buf = thrust::raw_pointer_cast(this->weight_buf.data());
+			float *b_buf = thrust::raw_pointer_cast(this->b_buf.data());
+			float *o_buf = thrust::raw_pointer_cast(this->output_buf.data());
+
+			call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_,
+					this->in_height_, this->in_depth_, this->out_width_,
+					this->out_height_, this->out_depth_, this->kernel_size_);
+
+//          int grpWidth = 20;
+//          cl::NDRange global(
+//                  jc::closestMultiple(out_depth_ * out_width_, grpWidth),
+//                  jc::closestMultiple(out_height_, grpWidth));
+//          cl::NDRange local(grpWidth, grpWidth);
+//          cl_ulong t = jc::runAndTimeKernel(kernel, queue, global, local);
+//          queue.enqueueReadBuffer(output_buf, CL_TRUE, 0,
+//                  out_width_ * out_height_ * out_depth_ * sizeof(cl_float),
+//                  &output_[0]);
 
 			// transfer destination data from the device to the host
-			queue.enqueueReadBuffer(output_buf, CL_TRUE, 0,
-					out_width_ * out_height_ * out_depth_ * sizeof(cl_float),
-					&output_[0]);
-		} catch (cl::Error& e) {
-			std::cerr << e.what() << ": " << jc::readable_status(e.err());
-			//return 3;
+			//CHECK IT
+			this->output_ = this->output_buf;
+
+//      } catch (cl::Error& e) {
+//          std::cerr << e.what() << ": " << jc::readable_status(e.err());
+//          //return 3;
 		} catch (std::exception& e) {
 			std::cerr << e.what() << std::endl;
 			//return 2;
@@ -147,65 +188,84 @@ public:
 	void forward_batch(int batch_size) {
 
 		try {
-			// Allocate memory on the device
-			cl::Buffer input_batch_buf(context, CL_MEM_READ_ONLY,
-					batch_size * in_width_ * in_height_ * in_depth_
-							* sizeof(cl_float));
-			cl::Buffer weight_buf(context, CL_MEM_READ_ONLY,
-					kernel_size_ * kernel_size_ * in_depth_ * out_depth_
-							* sizeof(cl_float));
-			cl::Buffer b_buf(context, CL_MEM_READ_ONLY,
-					out_depth_ * out_width_ * out_height_ * sizeof(cl_float));
-			cl::Buffer output_batch_buf(context, CL_MEM_WRITE_ONLY,
-					batch_size * out_width_ * out_height_ * out_depth_
-							* sizeof(cl_float));
+			/*
+						 Allocate memory on the device
+			          cl::Buffer input_buf(context, CL_MEM_READ_ONLY,
+			                  in_width_ * in_height_ * in_depth_ * sizeof(cl_float));
+			          cl::Buffer weight_buf(context, CL_MEM_READ_ONLY,
+			                  kernel_size_ * kernel_size_ * in_depth_ * out_depth_
+			                          * sizeof(cl_float));
+			          cl::Buffer b_buf(context, CL_MEM_READ_ONLY,
+			                  out_depth_ * out_width_ * out_height_ * sizeof(cl_float));
+			          cl::Buffer output_buf(context, CL_MEM_WRITE_ONLY,
+			                  out_width_ * out_height_ * out_depth_ * sizeof(cl_float));
+
+          cl::Buffer input_batch_buf(context, CL_MEM_READ_ONLY,
+                  batch_size * in_width_ * in_height_ * in_depth_
+                          * sizeof(cl_float));
+          cl::Buffer weight_buf(context, CL_MEM_READ_ONLY,
+                  kernel_size_ * kernel_size_ * in_depth_ * out_depth_
+                          * sizeof(cl_float));
+          cl::Buffer b_buf(context, CL_MEM_READ_ONLY,
+                  out_depth_ * out_width_ * out_height_ * sizeof(cl_float));
+          cl::Buffer output_batch_buf(context, CL_MEM_WRITE_ONLY,
+                  batch_size * out_width_ * out_height_ * out_depth_
+                          * sizeof(cl_float));
 
 #ifdef BATCH_MORE
 			std::string kernel_name = "forward_batch_more";
 #else
 			std::string kernel_name = "forward_batch";
 #endif
-			cl::Kernel kernel(program, kernel_name.c_str());
-			kernel.setArg < cl::Memory > (0, input_batch_buf);
-			kernel.setArg < cl::Memory > (1, weight_buf);
-			kernel.setArg < cl::Memory > (2, b_buf);
-			kernel.setArg < cl::Memory > (3, output_batch_buf);
-			kernel.setArg<int>(4, in_width_);
-			kernel.setArg<int>(5, in_height_);
-			kernel.setArg<int>(6, in_depth_);
-			kernel.setArg<int>(7, out_width_);
-			kernel.setArg<int>(8, out_height_);
-			kernel.setArg<int>(9, out_depth_);
-			kernel.setArg<int>(10, kernel_size_);
-			kernel.setArg<int>(11, batch_size);
+          cl::Kernel kernel(program, kernel_name.c_str());
+          kernel.setArg < cl::Memory > (0, input_batch_buf);
+          kernel.setArg < cl::Memory > (1, weight_buf);
+          kernel.setArg < cl::Memory > (2, b_buf);
+          kernel.setArg < cl::Memory > (3, output_batch_buf);
+          kernel.setArg<int>(4, in_width_);
+          kernel.setArg<int>(5, in_height_);
+          kernel.setArg<int>(6, in_depth_);
+          kernel.setArg<int>(7, out_width_);
+          kernel.setArg<int>(8, out_height_);
+          kernel.setArg<int>(9, out_depth_);
+          kernel.setArg<int>(10, kernel_size_);
+          kernel.setArg<int>(11, batch_size);
+
+          queue.enqueueWriteBuffer(input_batch_buf, CL_TRUE, 0,
+                  batch_size * in_width_ * in_height_ * in_depth_
+                          * sizeof(cl_float), &input_batch_[0]);
+          queue.enqueueWriteBuffer(weight_buf, CL_TRUE, 0,
+                  kernel_size_ * kernel_size_ * in_depth_ * out_depth_
+                          * sizeof(cl_float), &W_[0]);
+          queue.enqueueWriteBuffer(b_buf, CL_TRUE, 0,
+                  out_depth_ * out_width_ * out_height_ * sizeof(cl_float),
+                  &b_[0]);
+*/
 
 			// transfer source data from the host to the device
-			queue.enqueueWriteBuffer(input_batch_buf, CL_TRUE, 0,
-					batch_size * in_width_ * in_height_ * in_depth_
-							* sizeof(cl_float), &input_batch_[0]);
-			queue.enqueueWriteBuffer(weight_buf, CL_TRUE, 0,
-					kernel_size_ * kernel_size_ * in_depth_ * out_depth_
-							* sizeof(cl_float), &W_[0]);
-			queue.enqueueWriteBuffer(b_buf, CL_TRUE, 0,
-					out_depth_ * out_width_ * out_height_ * sizeof(cl_float),
-					&b_[0]);
+			//PEDRO CHECK it
+			this->input_buf = this->input_batch_;
+			this->weight_buf = this->W_;
+			this->b_buf = this->b_;
 
 			// execute the code on the device
 			int grpWidth = 20;
 
+			//PEDRO TEM QUE VER COMO CHAMAR O KERNEL AQUI
+
 			int global_width = jc::closestMultiple(out_depth_ * out_width_,
 					grpWidth);
 #ifdef BATCH_MORE
-			int global_height = jc::closestMultiple((batch_size+THREAD_TASKS-1)/THREAD_TASKS*out_height_, grpWidth);
+			int global_height = jc::closestMultiple(batch_size/out_height_, grpWidth);
 #else
 			int global_height = jc::closestMultiple(batch_size * out_height_,
 					grpWidth);
 #endif
-			cl::NDRange global(global_width, global_height);
-			cl::NDRange local(grpWidth, grpWidth);
+//          cl::NDRange global(global_width, global_height);
+//          cl::NDRange local(grpWidth, grpWidth);
 
 #ifndef PROFILING
-			jc::runAndTimeKernel(kernel, queue, global, local);
+//          jc::runAndTimeKernel(kernel, queue, global, local);
 #else
 			int iteration = 100;
 			int input_data_size = (batch_size*in_width_*in_height_*in_depth_
@@ -214,11 +274,12 @@ public:
 			int output_data_size = batch_size*out_width_*out_height_*out_depth_*sizeof(cl_float);
 #ifdef BATCH_MORE
 			printf(" **** In ConvolutionalLayer::forward_batch_more ****\n");
-			int memory_access_per_thread = (in_depth_*kernel_size_*kernel_size_*(1+THREAD_TASKS) + THREAD_TASKS)*sizeof(float);
+//          int memory_access_per_thread = (in_depth_*kernel_size_*kernel_size_*(1+THREAD_TASKS) + THREAD_TASKS)*sizeof(float);
+			int memory_access_per_thread = (in_depth_*kernel_size_*kernel_size_*2 + 1)*sizeof(float);
 			int operations = in_depth_*kernel_size_*kernel_size_*9
-			+ in_depth_*THREAD_TASKS*kernel_size_*kernel_size_*15 + THREAD_TASKS*20;
+			+ in_depth_*kernel_size_*kernel_size_*15 + 20;
 			printf("    Batch size: %d, Tasks of each thread: %d\n    INPUT depth: %d, height: %d, width: %d\n    OUTPUT depth: %d, height: %d, width: %d\n",
-					batch_size, THREAD_TASKS, in_depth_, in_height_, in_width_, out_depth_, out_height_, out_width_);
+					batch_size, 1, in_depth_, in_height_, in_width_, out_depth_, out_height_, out_width_);
 #else
 			printf(" **** In ConvolutionalLayer::forward_batch ****\n");
 			int memory_access_per_thread = (in_depth_ * 2 * kernel_size_*kernel_size_ + 1 + 1)*sizeof(float);
@@ -239,8 +300,8 @@ public:
 			float cpI = float(operations) / memory_access_per_thread;
 			float peak_bandwidth = 25.6;// Memory Bandwidth: 25.6 GB/s
 #ifdef BATCH_MORE
-			float throughPut = memory_access_per_thread * batch_size*out_depth_*out_width_*out_height_ / THREAD_TASKS / each_lasts; // GB/s
-			long long int all_ops = operations*out_depth_*out_width_*out_height_*(batch_size + THREAD_TASKS -1) / THREAD_TASKS;
+			float throughPut = memory_access_per_thread * batch_size*out_depth_*out_width_*out_height_ / each_lasts; // GB/s
+			long long int all_ops = operations*out_depth_*out_width_*out_height_*batch_size;
 #else
 			float throughPut = memory_access_per_thread * batch_size*out_depth_*out_width_*out_height_ / each_lasts; // GB/s
 			long long int all_ops = operations*out_depth_*out_width_*out_height_*batch_size;
@@ -252,13 +313,15 @@ public:
 			output_batch_.resize(
 					batch_size * out_depth_ * out_width_ * out_height_);
 			// transfer destination data from the device to the host
-			queue.enqueueReadBuffer(output_batch_buf, CL_TRUE, 0,
-					batch_size * out_width_ * out_height_ * out_depth_
-							* sizeof(cl_float), &output_batch_[0]);
+//          queue.enqueueReadBuffer(output_batch_buf, CL_TRUE, 0,
+//                  batch_size * out_width_ * out_height_ * out_depth_
+//                          * sizeof(cl_float), &output_batch_[0]);
 
-		} catch (cl::Error& e) {
-			std::cerr << e.what() << ": " << jc::readable_status(e.err());
-			//return 3;
+			this->output_batch_ = this->output_bach_buf;
+
+//      } catch (cl::Error& e) {
+//          std::cerr << e.what() << ": " << jc::readable_status(e.err());
+//          //return 3;
 		} catch (std::exception& e) {
 			std::cerr << e.what() << std::endl;
 			//return 2;
@@ -400,6 +463,14 @@ private:
 	}
 
 	size_t kernel_size_;
+
+	thrust::device_vector<float> input_buf;
+	thrust::device_vector<float> weight_buf;
+	thrust::device_vector<float> b_buf;
+	thrust::device_vector<float> output_buf;
+	thrust::device_vector<float> input_bach_buf;
+	thrust::device_vector<float> output_bach_buf;
+
 };
 
 } /* namespace convnet */

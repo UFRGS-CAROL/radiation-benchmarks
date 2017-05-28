@@ -9,7 +9,7 @@
 #define FULLYCONNECTEDLAYER_H_
 
 #include "Layer.h"
-#include "util.h"
+#include "Util.h"
 
 namespace convnet {
 

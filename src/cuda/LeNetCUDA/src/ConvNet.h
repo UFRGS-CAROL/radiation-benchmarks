@@ -10,7 +10,7 @@
 
 
 #pragma once
-#include "util.h"
+#include "Util.h"
 #include "ConvolutionalLayer.h"
 #include "MNISTParser.h"
 #include "Layer.h"
