@@ -22,7 +22,8 @@ OBJS=$(OBJDIR)/*.o
 LOGS?=0
 COMMON=
 
-CFLAGS= -Ofast -std=c++11
+
+CFLAGS= -std=c++11 
 
 
 ifeq ($(DEBUG),1)
@@ -40,7 +41,7 @@ GPU_KERNELS=ConvKernels.o
 all: obj $(EXEC)
 
 $(EXEC): $(OBJDIR)$(GPU_KERNELS)
-	$(CXX) $(COMMON) $(CFLAGS) $(OBJDIR)$(GPU_KERNELS) $(SRC)main.cpp $(LOGHELPER_INC) $(LOGHELPER_LIB) $(CUDA_THRUST) -o $(EXEC)
+	$(NVCC) $(COMMON) $(CFLAGS) $(OBJDIR)$(GPU_KERNELS) $(SRC)main.cpp $(LOGHELPER_INC) $(LOGHELPER_LIB) $(CUDA_THRUST) -o $(EXEC)
 
 
 $(OBJDIR)$(GPU_KERNELS): 
