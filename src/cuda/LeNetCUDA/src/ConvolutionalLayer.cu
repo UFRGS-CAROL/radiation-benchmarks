@@ -80,8 +80,7 @@ void call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
 			weight_buf, b_buf, output_buf, in_width, in_height, in_depth,
 			out_width, out_height, out_depth, kernel_size);
 
-	cudaError_t ret = cudaDeviceSynchronize()
-	
+	cudaError_t ret = cudaDeviceSynchronize();	
 	CUDA_CHECK_RETURN(ret);
 }
 
@@ -145,10 +144,11 @@ void call_forward_batch(float* input_batch_buf, float* weight_buf, float* b_buf,
 	dim3 blocks(blocks_rows, blocks_cols);
 	dim3 threads(threads_rows, threads_cols);
 
-	cudaError_t ret = forward_batch<<<blocks, threads>>>(input_batch_buf,
+	forward_batch<<<blocks, threads>>>(input_batch_buf,
 			weight_buf, b_buf, output_batch_buf, in_width, in_height, in_depth,
 			out_width, out_height, out_depth, kernel_size, batch_size);
 
+	cudaError_t ret = cudaDeviceSynchronize();	
 	CUDA_CHECK_RETURN(ret);
 }
 
@@ -224,10 +224,11 @@ void call_forward_batch_more(float* input_batch_buf, float* weight_buf,
 	dim3 blocks(blocks_rows, blocks_cols);
 	dim3 threads(threads_rows, threads_cols);
 
-	cudaError_t ret = forward_batch_more<<<blocks, threads>>>(input_batch_buf,
+	forward_batch_more<<<blocks, threads>>>(input_batch_buf,
 			weight_buf, b_buf, output_batch_buf, in_width, in_height, in_depth,
 			out_width, out_height, out_depth, kernel_size, batch_size);
-
+	
+	cudaError_t ret = cudaDeviceSynchronize();		
 	CUDA_CHECK_RETURN(ret);
 }
 
