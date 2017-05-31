@@ -32,7 +32,7 @@
 #include <thrust/device_vector.h>
 
 //#include "settings.h"
-#pragma once
+//#pragma once
 namespace convnet {
 
 

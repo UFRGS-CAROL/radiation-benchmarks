@@ -12,7 +12,7 @@
 #include "Util.h"
 #include <thrust/host_vector.h>
 
-#pragma once
+//#pragma once
 
 namespace convnet {
 
@@ -21,21 +21,23 @@ public:
     Layer();
     virtual ~Layer();
 
-    Layer(size_t in_width, size_t in_height, size_t in_depth, size_t out_width,
-            size_t out_height, size_t out_depth, float_t alpha,
-            float_t lambda) {
+	Layer(size_t in_width, size_t in_height, size_t in_depth,
+			size_t out_width, size_t out_height, size_t out_depth, float_t alpha, float_t lambda) :
+			in_width_(in_width), in_height_(in_height), in_depth_(in_depth),
+			out_width_(out_width), out_height_(out_height), out_depth_(out_depth),
+			alpha_(alpha), lambda_(lambda){
 
-        this->in_width_ = in_width;
-        this->in_height_ = in_height;
-        this->in_depth_ = in_depth;
-        this->out_width_ = out_width;
-        this->out_height_ = out_height;
-        this->out_depth_ = out_depth;
-        this->alpha_ = alpha;
-        this->lambda_ = lambda;
-        this->exp_y = 0;
-        this->next = NULL;
-        this->err = 0;
+        //~ this->in_width_ = in_width;
+        //~ this->in_height_ = in_height;
+        //~ this->in_depth_ = in_depth;
+        //~ this->out_width_ = out_width;
+        //~ this->out_height_ = out_height;
+        //~ this->out_depth_ = out_depth;
+        //~ this->alpha_ = alpha;
+        //~ this->lambda_ = lambda;
+        //~ this->exp_y = 0;
+        //~ this->next = NULL;
+        //~ this->err = 0;
 
     }
 

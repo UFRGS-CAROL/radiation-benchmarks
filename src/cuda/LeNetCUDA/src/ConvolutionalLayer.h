@@ -20,22 +20,11 @@ namespace convnet {
 
 class ConvolutionalLayer: public Layer {
 public:
-	ConvolutionalLayer();
-	virtual ~ConvolutionalLayer() {
-//      limpa a memória da layer
-//      thrust::device_free(this->input_buf);
-//      thrust::device_free(this->weight_buf);
-//      thrust::device_free(this->b_buf);
-//      thrust::device_free(this->output_buf);
-	}
 
-	ConvolutionalLayer(size_t in_width, size_t in_height, size_t in_depth,
+	ConvolutionalLayer(size_t in_width, size_t in_height, size_t in_depth, 
 			size_t kernel_size, size_t out_depth) :
-			Layer(in_width, in_height, in_depth, in_width - kernel_size + 1,
-					in_height - kernel_size + 1, out_depth, 0.3, 0.01) {
-
-		//initialization
-		this->kernel_size_ = kernel_size;
+			Layer(in_width, in_height, in_depth, in_width - kernel_size + 1, in_height - kernel_size + 1, out_depth, 0.3, 0.01),
+			kernel_size_(kernel_size){
 
 		this->W_.resize(
 				kernel_size * kernel_size * this->in_depth_ * this->out_depth_);

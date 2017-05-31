@@ -12,7 +12,7 @@
 
 #include "Util.h"
 
-#pragma once
+//#pragma once
 
 #include "Layer.h"
 

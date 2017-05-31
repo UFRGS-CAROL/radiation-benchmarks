@@ -7,7 +7,9 @@ CXX=g++
 OBJDIR=./obj/
 
 
-CUDA_THRUST=-I/usr/local/cuda/include/thrust/
+
+CUDA_THRUST=
+#-I/usr/local/cuda/include/thrust/
 
 ARCH= -gencode arch=compute_30,code=sm_30 \
       -gencode arch=compute_35,code=sm_35 \
@@ -23,8 +25,9 @@ LOGS?=0
 COMMON=
 
 
-CFLAGS= -std=c++11 
+CFLAGS= -std=c++11  -L/usr/local/cuda/lib64 -lcuda -lcudart
 
+NVCC_FLAGS=-std=c++11 
 
 ifeq ($(DEBUG),1)
 OPTS= -G -g
@@ -41,11 +44,12 @@ GPU_KERNELS=ConvKernels.o
 all: obj $(EXEC)
 
 $(EXEC): $(OBJDIR)$(GPU_KERNELS)
-	$(NVCC) $(COMMON) $(CFLAGS) $(OBJDIR)$(GPU_KERNELS) $(SRC)main.cpp $(LOGHELPER_INC) $(LOGHELPER_LIB) $(CUDA_THRUST) -o $(EXEC)
+	$(NVCC) $(COMMON) $(NVCC_FLAGS) $(SRC)main.cpp $(LOGHELPER_INC) $(LOGHELPER_LIB) -o $(OBJDIR)main.o -c
+	$(NVCC) $(COMMON) $(NVCC_FLAGS) $(OBJDIR)$(GPU_KERNELS) $(OBJDIR)main.o $(LOGHELPER_INC) $(LOGHELPER_LIB) $(CUDA_THRUST) -o $(EXEC)
 
 
 $(OBJDIR)$(GPU_KERNELS): 
-	$(NVCC) $(ARCH) $(COMMON) -c $(SRC)ConvolutionalLayer.cu -o $(OBJDIR)$(GPU_KERNELS)
+	$(NVCC) $(ARCH) $(NVCC_FLAGS) $(COMMON) -c $(SRC)ConvolutionalLayer.cu -o $(OBJDIR)$(GPU_KERNELS)
 	
 
 

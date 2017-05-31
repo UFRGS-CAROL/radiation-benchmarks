@@ -6,25 +6,26 @@
  */
 
 #include <cstdlib>
-#include "Util.h"
+//#include "Util.h"
 #include "ConvNet.h"
+
 
 #define DATA_PATH "./"
 
 
 using namespace std;
-using namespace convnet;
+//~ using namespace convnet;
 
 int main(int argc, char **argv){
 	cout << DATA_PATH << std::endl;
-		MNISTParser m(DATA_PATH);
+		convnet::MNISTParser m(DATA_PATH);
 		cout << m.get_test_img_fname() << std::endl;
 		m.load_testing();
 		//m.load_training();
-		vec2d_t x;
-		vec_t y;
-		vec2d_t test_x;
-		vec_t test_y;
+		convnet::vec2d_t x;
+		convnet::vec_t y;
+		convnet::vec2d_t test_x;
+		convnet::vec_t test_y;
 		/*
 		 for (size_t i = 0; i < 60000; i++){
 		 x.push_back(m.train_sample[i]->image);
@@ -38,14 +39,14 @@ int main(int argc, char **argv){
 			test_y.push_back(m.test_sample[i]->label);
 		}
 
-		ConvNet n;
+		convnet::ConvNet n;
 
-		n.add_layer(new ConvolutionalLayer(32, 32, 1, 5, 6));
-		n.add_layer(new MaxpoolingLayer(28, 28, 6));
-		n.add_layer(new ConvolutionalLayer(14, 14, 6, 5, 16));
-		n.add_layer(new MaxpoolingLayer(10, 10, 16));
-		n.add_layer(new ConvolutionalLayer(5, 5, 16, 5, 100));
-		n.add_layer(new FullyConnectedLayer(100, 10));
+		n.add_layer(new convnet::ConvolutionalLayer(32, 32, 1, 5, 6));
+		n.add_layer(new convnet::MaxpoolingLayer(28, 28, 6));
+		n.add_layer(new convnet::ConvolutionalLayer(14, 14, 6, 5, 16));
+		n.add_layer(new convnet::MaxpoolingLayer(10, 10, 16));
+		n.add_layer(new convnet::ConvolutionalLayer(5, 5, 16, 5, 100));
+		n.add_layer(new convnet::FullyConnectedLayer(100, 10));
 
 		n.train(test_x, test_y, 10000);
 		int test_sample_count = 5;

@@ -9,7 +9,7 @@
 #define CONVNET_H_
 
 
-#pragma once
+//#pragma once
 #include "Util.h"
 #include "ConvolutionalLayer.h"
 #include "MNISTParser.h"
