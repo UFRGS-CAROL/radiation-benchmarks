@@ -18,6 +18,8 @@
 #define DEFAULT_INPUT_SIZE 8192
 #define MAX_HALF 65504
 
+#define ELEMENTS_PER_THREAD 128
+
 int k=0;
 int lda, ldb, ldc;
 int sizea, sizeb, sizec;	
@@ -28,9 +30,6 @@ char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
 void usage() {
     printf("Usage: generateMatrices -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
 }
-
-
-#define BLOCK_SIZE 16
 
 __global__ void floatToHalfKernel(__half *out, float in) {
 	*out = __float2half(in);
@@ -68,19 +67,14 @@ float half2float(__half in) {
 	return h_float;
 }
 
-__global__ void generateKernel(__half *out, unsigned int matrixSize, curandState_t *states) {
-	unsigned int idX = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-	unsigned int idY = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-	unsigned int id = idY * matrixSize + idX;
-	float temp = curand_normal (&(states[threadIdx.y * BLOCK_SIZE + threadIdx.y])) * MAX_HALF;
-	out[id] = __float2half(temp);
-}
+__global__ void generateKernel(__half *out, unsigned int matrixSize, unsigned int seed) {
+	curandState_t state;
+	curand_init(seed, threadIdx.x, 0, &state);
 
-__global__ void curandInitKernel(curandState_t *states, unsigned int matrixSize, unsigned int seed) {
-	unsigned int idX = threadIdx.x;
-	unsigned int idY = threadIdx.y;
-	unsigned int id = idY * BLOCK_SIZE + idX;
-	curand_init(seed, id, 0, &(states[id]));
+	for (register int i=0; i<ELEMENTS_PER_THREAD; i++) {
+		float temp = curand_normal(&state) * MAX_HALF;
+		out[ELEMENTS_PER_THREAD*threadIdx.x + i] = __float2half(temp);
+	}
 }
 
 void generateInputMatrices()
@@ -98,61 +92,56 @@ void generateInputMatrices()
 	}
 
 //================== Set block and grid size for GoldChk kernel
-	int gridsize = DEFAULT_INPUT_SIZE/BLOCK_SIZE < 1 ? 1 : DEFAULT_INPUT_SIZE/BLOCK_SIZE;
-	int blocksize = DEFAULT_INPUT_SIZE/BLOCK_SIZE < 1 ? DEFAULT_INPUT_SIZE : BLOCK_SIZE;
-	printf("grid size=%d block size = %d\n", gridsize, blocksize);
-	dim3 dimBlock(blocksize,blocksize);
-	dim3 dimGrid(gridsize,gridsize);
 //====================================
 
 	/* CUDA's random number library uses curandState_t to keep track of the seed value
 		we will store a random state for every thread  */
 
 	// printf("Alloc\n");
-	curandState_t* states;
+	// curandState_t* state;
 
 	/* allocate space on the GPU for the random states */
 
 	// printf("Size: %ldMB", blocksize * blocksize * sizeof(curandState_t) / (1024*1024));
 
-	checkCudaErrors( cudaMalloc((void**) &states, blocksize * blocksize * sizeof(curandState_t)) );
+	// checkCudaErrors( cudaMalloc((void**) &state, sizeof(curandState_t)) );
 	checkCudaErrors( cudaMalloc((void**) &dev_A, DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half)) );
 	checkCudaErrors( cudaMemset(dev_A, 0, DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half)) );
 
 // printf("InitRand\n");
 
-	curandInitKernel<<<1, dimBlock>>>(states, DEFAULT_INPUT_SIZE, time(NULL));
-	checkCudaErrors( cudaDeviceSynchronize() );
+	// curandInitKernel<<<1, 1>>>(state, time(NULL));
+	// checkCudaErrors( cudaDeviceSynchronize() );
 
 // printf("Generate\n");
-	generateKernel<<<dimGrid, dimBlock>>>(dev_A, DEFAULT_INPUT_SIZE, states);
+	generateKernel<<<1, DEFAULT_INPUT_SIZE/ELEMENTS_PER_THREAD>>>(dev_A, DEFAULT_INPUT_SIZE, time(NULL));
 	checkCudaErrors( cudaDeviceSynchronize() );
 
 // printf("Copy\n");
 	checkCudaErrors( cudaMemcpy(h_A, dev_A, DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half), cudaMemcpyDeviceToHost) );
 
 	cudaFree(dev_A);
-	cudaFree(states);
+	// cudaFree(state);
 
 // printf("Alloc\n");
-	checkCudaErrors( cudaMalloc((void**) &states, blocksize * blocksize * sizeof(curandState_t)) );
+	// checkCudaErrors( cudaMalloc((void**) &state, sizeof(curandState_t)) );
 	checkCudaErrors( cudaMalloc((void**) &dev_B, DEFAULT_INPUT_SIZE  * DEFAULT_INPUT_SIZE* sizeof(__half)) );
 	checkCudaErrors( cudaMemset(dev_B, 0, DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half)) );
 
 	// printf("Init Rand\n");
 
-	curandInitKernel<<<1, dimBlock>>>(states, DEFAULT_INPUT_SIZE, time(NULL));
-	cudaDeviceSynchronize();
+	// curandInitKernel<<<1, 1>>>(state, time(NULL));
+	// cudaDeviceSynchronize();
 
 // printf("Generate\n");
-	generateKernel<<<dimGrid, dimBlock>>>(dev_B, DEFAULT_INPUT_SIZE, states);
+	generateKernel<<<1, DEFAULT_INPUT_SIZE/ELEMENTS_PER_THREAD>>>(dev_B, DEFAULT_INPUT_SIZE, time(NULL));
 	cudaDeviceSynchronize();
 
 // printf("Copy\n");
 	checkCudaErrors( cudaMemcpy(h_B, dev_B, DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half), cudaMemcpyDeviceToHost) );
 
 	cudaFree(dev_B);
-	cudaFree(states);
+	// cudaFree(state);
 
 
 // printf("Write\n");
@@ -164,9 +153,9 @@ void generateInputMatrices()
 		fwrite(&(h_A[i * DEFAULT_INPUT_SIZE]), sizeof(__half) * DEFAULT_INPUT_SIZE, 1, f_A);
 	}
 
-	printf("Element 32 of matrix A: %f (raw __half: %hu)\n", half2float(h_A[32]), h_A[32].x);
+	printf("Element 32 of matrix A: %f (raw __half: %hx)\n", half2float(h_A[32]), h_A[32].x);
 
-	printf("Element 50 of matrix B: %f (raw __half: %hu)\n", half2float(h_B[50]), h_B[50].x);
+	printf("Element 50 of matrix B: %f (raw __half: %hx)\n", half2float(h_B[50]), h_B[50].x);
 
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
