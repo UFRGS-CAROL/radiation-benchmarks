@@ -18,7 +18,7 @@
 #define DEFAULT_INPUT_SIZE 8192
 #define MAX_HALF 65504
 
-#define ELEMENTS_PER_THREAD 128
+#define BLOCK_SIZE 32
 
 int k=0;
 int lda, ldb, ldc;
@@ -67,13 +67,16 @@ float half2float(__half in) {
 	return h_float;
 }
 
-__global__ void generateKernel(__half *out, unsigned int matrixSize, unsigned int seed) {
+__global__ void generateKernel(__half *out, unsigned int matrixSize, unsigned int seed, unsigned elements_per_thread) {
 	curandState_t state;
-	curand_init(seed, threadIdx.x, 0, &state);
+	curand_init(seed, threadIdx.y * BLOCK_SIZE + threadIdx.x, 0, &state);
 
-	for (register int i=0; i<ELEMENTS_PER_THREAD; i++) {
-		float temp = curand_normal(&state) * MAX_HALF;
-		out[ELEMENTS_PER_THREAD*threadIdx.x + i] = __float2half(temp);
+	for (register unsigned int i=0; i<elements_per_thread; i++) {
+		register unsigned int position = elements_per_thread * (threadIdx.y * BLOCK_SIZE + threadIdx.x) + i;
+		do {
+			float temp = curand_normal(&state) * MAX_HALF;
+			out[position] = __float2half(temp);
+		} while(out[position].x == 0);
 	}
 }
 
@@ -91,8 +94,11 @@ void generateInputMatrices()
 		printf("exit on line: %d", __LINE__); exit(-1);
 	}
 
-//================== Set block and grid size for GoldChk kernel
-//====================================
+	//================== Set block and grid size for generateKernel kernel
+	dim3 bSize = dim3(BLOCK_SIZE, BLOCK_SIZE, 1);
+	int elements_per_thread = (pow(DEFAULT_INPUT_SIZE, 2) / pow(BLOCK_SIZE, 2));
+	printf("elements_per_thread=%d\n", elements_per_thread);
+	//====================================
 
 	/* CUDA's random number library uses curandState_t to keep track of the seed value
 		we will store a random state for every thread  */
@@ -114,7 +120,7 @@ void generateInputMatrices()
 	// checkCudaErrors( cudaDeviceSynchronize() );
 
 // printf("Generate\n");
-	generateKernel<<<1, DEFAULT_INPUT_SIZE/ELEMENTS_PER_THREAD>>>(dev_A, DEFAULT_INPUT_SIZE, time(NULL));
+	generateKernel<<<1, bSize>>>(dev_A, DEFAULT_INPUT_SIZE, time(NULL), elements_per_thread);
 	checkCudaErrors( cudaDeviceSynchronize() );
 
 // printf("Copy\n");
@@ -134,7 +140,7 @@ void generateInputMatrices()
 	// cudaDeviceSynchronize();
 
 // printf("Generate\n");
-	generateKernel<<<1, DEFAULT_INPUT_SIZE/ELEMENTS_PER_THREAD>>>(dev_B, DEFAULT_INPUT_SIZE, time(NULL));
+	generateKernel<<<1, bSize>>>(dev_B, DEFAULT_INPUT_SIZE, time(NULL), elements_per_thread);
 	cudaDeviceSynchronize();
 
 // printf("Copy\n");
@@ -144,9 +150,26 @@ void generateInputMatrices()
 	// cudaFree(state);
 
 
+	int numZeros;
 // printf("Write\n");
 	f_A = fopen(a_matrix_path, "wb");
 	f_B = fopen(b_matrix_path, "wb");
+
+	numZeros = 0;
+	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
+		if (h_A[i].x == 0) {
+			numZeros++;
+		}
+	}
+	printf("Number of zeros on A: %d\n", numZeros);
+
+	numZeros = 0;
+	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
+		if (h_B[i].x == 0) {
+			numZeros++;
+		}
+	}
+	printf("Number of zeros on B: %d\n", numZeros);
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
@@ -306,7 +329,7 @@ void generateGoldMatrix()
 			numZeros++;
 		}
 	}
-	printf("Number of zeros: %d\n", numZeros);
+	printf("Number of zeros on gold: %d\n", numZeros);
 
 	//printf("-------------------------\n%.10f\n%.10f\n%.10f\n", GOLD[0], GOLD[1], GOLD[2]);
 
