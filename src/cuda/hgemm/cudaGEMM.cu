@@ -47,6 +47,7 @@ FILE* f_GOLD;
 //================== Host and device matrix ptr's
 __half *A;
 __half *B;
+__half *C;
 __half *GOLD;
 
 __half *d_A;
@@ -242,18 +243,18 @@ void ReadMatrixFromFile(){
 	}
 }
 
-__device__ int kerrors;
+// __device__ int kerrors;
 
-__global__ void GoldChkKernel (__half *gk, __half *ck, int n)//, int *kerrors)
-{
-//================== HW Accelerated output validation
-	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-	//if ((fabs((gk[ty*n+tx]-ck[ty*n+tx])/gk[ty*n+tx]) > 0.0000000001)||(fabs((gk[ty*n+tx]-ck[ty*n+tx])/ck[ty*n+tx]) > 0.0000000001))
-	if (gk[ty*n + tx].x != ck[ty*n + tx].x)
-		atomicAdd(&kerrors, 1);
+// __global__ void GoldChkKernel (__half *gk, __half *ck, int n)//, int *kerrors)
+// {
+// //================== HW Accelerated output validation
+// 	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+// 	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+// 	//if ((fabs((gk[ty*n+tx]-ck[ty*n+tx])/gk[ty*n+tx]) > 0.0000000001)||(fabs((gk[ty*n+tx]-ck[ty*n+tx])/ck[ty*n+tx]) > 0.0000000001))
+// 	if (gk[ty*n + tx].x != ck[ty*n + tx].x)
+// 		atomicAdd(&kerrors, 1);
 
-}
+// }
 
 void usage() {
     printf("Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
@@ -262,15 +263,16 @@ void usage() {
 int main( int argc, char* argv[] )
 {
 //================== CUDA error handlers
-	cudaError_t mcpy;
-	const char *erro;
+	// cudaError_t mcpy;
+	// const char *erro;
 //====================================
 
 //================== Test vars
 	int i, j, loop2;
-	int kernel_errors=0;
-	int zero = 0;
-	double time, kernel_time, global_time;
+	// int kernel_errors=0;
+	// int zero = 0;
+	// double time;
+	double kernel_time, global_time;
 	int device_warmup = 1;
 //====================================
 
@@ -379,17 +381,18 @@ int main( int argc, char* argv[] )
 //================== Alloc HOST memory
 	A = ( __half* ) malloc( sizea * sizeof( __half ) );
 	B = ( __half* ) malloc( sizeb * sizeof( __half ) );
+	C = ( __half* ) malloc( sizeb * sizeof( __half ) );
 
 	GOLD = ( __half* ) malloc( sizec * sizeof( __half ) );
 
-	if (!(A && B && GOLD)) {
+	if (!(A && B && C && GOLD)) {
 		printf("Failed on host malloc.\n");
 		exit(-3);
 	}
 //====================================
 
 //================== Init test environment
-	kernel_errors=0;
+	// kernel_errors=0;
 	GetDevice();
 	ReadMatrixFromFile();
 	cublasHandle_t cublasHandle;
@@ -438,6 +441,7 @@ int main( int argc, char* argv[] )
 		if (loop2 || !device_warmup)
 			if (verbose) printf("Device kernel time for iteration %d: %.3fs\n", loop2, kernel_time);
 
+		/*
 		// Timer...
 		time = mysecond();
 
@@ -482,46 +486,49 @@ int main( int argc, char* argv[] )
 					#endif
 					return 1;
 				} //mem allocate failure
-				char error_detail[150];
-				int host_errors = 0;
+		*/
+		if (memcmp(A, GOLD, sizeof(__half) * k*k)) {
+			char error_detail[150];
+			int host_errors = 0;
 
-				#pragma omp parallel for
-				for(i=0; (i<k); i++)
+			#pragma omp parallel for
+			for(i=0; (i<k); i++)
+			{
+				for(j=0; (j<k); j++)
 				{
-					for(j=0; (j<k); j++)
+					if (A[i + ldc * j].x != GOLD[i + ldc * j].x)
+					//if ((fabs((A[i+ldc*j]-GOLD[i+ldc*j])/A[i+ldc*j]) > 0.0000000001)||(fabs((A[i+ldc*j]-GOLD[i+ldc*j])/GOLD[i+ldc*j]) > 0.0000000001))
+					#pragma omp critical
 					{
-						if (A[i + ldc * j].x != GOLD[i + ldc * j].x)
-						//if ((fabs((A[i+ldc*j]-GOLD[i+ldc*j])/A[i+ldc*j]) > 0.0000000001)||(fabs((A[i+ldc*j]-GOLD[i+ldc*j])/GOLD[i+ldc*j]) > 0.0000000001))
-						#pragma omp critical
-						{
 
-							snprintf(error_detail, 150, "p: [%d, %d], r: %hd, e: %hd", i, j, A[i + ldc * j].x, GOLD[i + ldc * j].x);
-							//printf("%s\n", error_detail);
-							#ifdef LOGS
-							log_error_detail(error_detail);
-							#endif
-							host_errors++;
-							//ea++;
-							//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + ldc * j], GOLD[i + ldc * j], t_ea);
+						snprintf(error_detail, 150, "p: [%d, %d], r: %hd, e: %hd", i, j, A[i + ldc * j].x, GOLD[i + ldc * j].x);
+						//printf("%s\n", error_detail);
+						#ifdef LOGS
+						log_error_detail(error_detail);
+						#endif
+						host_errors++;
+						//ea++;
+						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + ldc * j], GOLD[i + ldc * j], t_ea);
 
-						}
 					}
 				}
-
-				#ifdef LOGS
-						log_error_count(host_errors);
-				#endif
-				//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
-				cudaFree( d_A );
-				cudaFree( d_B );
-				cudaFree( d_C );
-				//====================================
-				ReadMatrixFromFile();
-				//================== Init DEVICE memory
-				allocCudaMemory();
-				copyCudaMemory();
-				//====================================
 			}
+
+			#ifdef LOGS
+				log_error_count(host_errors);
+			#endif
+			//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
+			cudaFree( d_A );
+			cudaFree( d_B );
+			cudaFree( d_C );
+			//====================================
+			ReadMatrixFromFile();
+			//================== Init DEVICE memory
+			allocCudaMemory();
+			copyCudaMemory();
+			//====================================
+		}
+
 		//====================================
 
 		//================== Console hearthbeat
@@ -537,17 +544,17 @@ int main( int argc, char* argv[] )
 		//}
 		//====================================
 
-		//================== Send A back to the device
-		mcpy = cudaMemcpy(d_A, A, sizea * sizeof( __half ), cudaMemcpyHostToDevice );
-		erro = cudaGetErrorString(mcpy);
-		if(strcmp(erro, "no error") != 0) {
-			printf("error mem load A\n");
-			#ifdef LOGS
-			log_error_detail("error mem load A"); end_log_file();
-			#endif
-			return 1;
-		} //mem allocate failure
-		//===================================
+		// //================== Send A back to the device
+		// mcpy = cudaMemcpy(d_A, A, sizea * sizeof( __half ), cudaMemcpyHostToDevice );
+		// erro = cudaGetErrorString(mcpy);
+		// if(strcmp(erro, "no error") != 0) {
+		// 	printf("error mem load A\n");
+		// 	#ifdef LOGS
+		// 	log_error_detail("error mem load A"); end_log_file();
+		// 	#endif
+		// 	return 1;
+		// } //mem allocate failure
+		// //===================================
 
 		if (loop2 || !device_warmup)
 			if (verbose)
