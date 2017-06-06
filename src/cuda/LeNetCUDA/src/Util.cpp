@@ -100,7 +100,6 @@ Sample::Sample(float_t label_, std::vector<float_t> image_) :
 //end namespace convnet
 //////////////////////////////////////////////////////////////
 
-//namespace jc {
 
 std::string fileToString(const std::string& file_name) {
 	std::string file_text;
@@ -148,5 +147,3 @@ unsigned long Timer::getTime() const {
 	elapsed_time += (stop_.tv_usec - start_.tv_usec);
 	return elapsed_time;
 }
-
-//}

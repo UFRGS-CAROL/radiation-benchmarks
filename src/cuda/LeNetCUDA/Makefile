@@ -13,8 +13,7 @@ OBJDIR=./obj/
 CUDA_THRUST=
 #-I/usr/local/cuda/include/thrust/
 
-ARCH= -gencode arch=compute_30,code=sm_30 \
-      -gencode arch=compute_35,code=sm_35 \
+ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] \
       -gencode arch=compute_50,code=[sm_50,compute_50] \
       -gencode arch=compute_52,code=[sm_52,compute_52] \
       -gencode arch=compute_60,code=[sm_60,compute_60] \
@@ -41,8 +40,9 @@ endif
 
 GPU_KERNELS=ConvKernels.o
 
-OBJ=Layer.o ConvolutionalLayer.o ConvolutionalLayerKernel.o ConvNet.o \
-FullyConnectedLayer.o MaxpoolingLayer.o MNISTParser.o OutputLayer.o Util.o main.o
+OBJ=Layer.o ConvolutionalLayer.o ConvolutionalLayerKernel.o ConvNet.o MaxpoolingLayerKernel.o \
+FullyConnectedLayer.o MaxpoolingLayer.o MNISTParser.o OutputLayer.o Util.o  FullyConnectedLayerKernel.o \
+cudaUtil.o main.o
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile

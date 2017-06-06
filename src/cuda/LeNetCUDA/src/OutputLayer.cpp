@@ -7,7 +7,6 @@
 
 #include "OutputLayer.h"
 #include "Util.h"
-//namespace convnet {
 
 OutputLayer::OutputLayer(size_t in_depth) :
 		Layer(1, 1, in_depth, 0, 0, 0, 0, 0) {
@@ -56,5 +55,3 @@ void OutputLayer::back_prop() {
 
 void OutputLayer::init_weight() {
 }
-//} //namespace convnet
-

@@ -11,7 +11,6 @@
 #include "Layer.h"
 
 
-//namespace convnet {
 
 class OutputLayer: public Layer {
 public:
@@ -23,7 +22,5 @@ public:
 	void init_weight();
 
 };
-
-//} /* namespace convnet */
 
 #endif /* OUTPUTLAYER_H_ */

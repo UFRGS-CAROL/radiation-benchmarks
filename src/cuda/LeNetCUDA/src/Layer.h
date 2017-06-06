@@ -12,10 +12,6 @@
 #include "Util.h"
 #include <thrust/host_vector.h>
 
-//#pragma once
-
-//namespace convnet {
-
 class Layer {
 public:
 	Layer(size_t in_width, size_t in_height, size_t in_depth, size_t out_width,

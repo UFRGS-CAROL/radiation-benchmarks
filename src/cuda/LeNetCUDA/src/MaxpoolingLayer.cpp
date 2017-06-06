@@ -7,8 +7,6 @@
 
 #include "MaxpoolingLayer.h"
 
-//namespace convnet {
-
 MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 		size_t in_depth) :
 		Layer(in_width, in_height, in_depth, in_width / 2, in_height / 2,
@@ -41,11 +39,11 @@ void MaxpoolingLayer::forward_batch(int batch_size) {
 	}
 }
 /*
- In forward propagation, k��k blocks are reduced to a single value.
+ In forward propagation, blocks are reduced to a single value.
  Then, this single value acquires an error computed from backwards
  propagation from the previous layer.
  This error is then just forwarded to the place where it came from.
- Since it only came from one place in the k��k block,
+ Since it only came from one place in the  block,
  the backpropagated errors from max-pooling layers are rather sparse.
  */
 void MaxpoolingLayer::back_prop() {
@@ -102,6 +100,4 @@ inline size_t MaxpoolingLayer::getOutIndex_batch(size_t batch, size_t out,
 	return batch * out_depth_ * out_width_ * out_height_
 			+ out * out_width_ * out_height_ + h_ / 2 * out_width_ + (w_ / 2);
 }
-
-//} //namespace convnet
 

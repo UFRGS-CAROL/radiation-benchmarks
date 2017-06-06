@@ -10,9 +10,6 @@
 
 #include "Layer.h"
 
-
-//namespace convnet {
-
 class FullyConnectedLayer: public Layer {
 public:
 	FullyConnectedLayer(size_t in_depth, size_t out_depth);
@@ -34,6 +31,5 @@ private:
 	vec_t get_W_step(size_t in);
 };
 
-//} /* namespace convnet */
 
 #endif /* FULLYCONNECTEDLAYER_H_ */

@@ -3,7 +3,9 @@
  */
 
 #include "ConvolutionalLayerKernel.h"
+#include "cudaUtil.h"
 #include <cstdio>
+
 
 __device__ float sigmod(float in) {
 	return 1.0 / (1.0 + exp(-in));

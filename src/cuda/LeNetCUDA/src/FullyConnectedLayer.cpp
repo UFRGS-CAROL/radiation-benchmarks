@@ -7,7 +7,6 @@
 
 #include "FullyConnectedLayer.h"
 #include "Util.h"
-//namespace convnet{
 
 
 FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
@@ -97,8 +96,4 @@ vec_t FullyConnectedLayer::get_W_step(size_t in) {
 	}
 	return r;
 }
-
-//} //namespace convnet
-
-
 

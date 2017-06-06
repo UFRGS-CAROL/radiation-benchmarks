@@ -7,7 +7,6 @@
 
 #include "ConvolutionalLayer.h"
 
-//namespace convnet {
 
 ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 		size_t in_depth, size_t kernel_size, size_t out_depth) :
@@ -434,6 +433,4 @@ float_t ConvolutionalLayer::conv(vec_t a, vec_t b) {
 	return sum;
 }
 
-
-//} /* namespace convnet */
 

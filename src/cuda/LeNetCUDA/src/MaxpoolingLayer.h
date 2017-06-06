@@ -11,12 +11,7 @@
 #include <unordered_map>
 
 #include "Util.h"
-
-//#pragma once
-
 #include "Layer.h"
-
-//namespace convnet {
 
 class MaxpoolingLayer: public Layer {
 public:
@@ -54,6 +49,5 @@ public:
 	std::unordered_map<size_t, size_t> max_loc;
 };
 
-//} /* namespace convnet */
 
 #endif /* MAXPOOLINGLAYER_H_ */

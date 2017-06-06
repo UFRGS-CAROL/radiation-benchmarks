@@ -13,7 +13,6 @@
 #include <cstdint>
 #include "Util.h"
 
-//namespace convnet {
 
 class MNISTParser {
 public:
@@ -42,7 +41,5 @@ private:
 	std::string train_img_fname;
 	std::string train_lbl_fname;
 };
-
-//} /* namespace convnet */
 
 #endif /* MNISTPARSER_H_ */

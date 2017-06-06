@@ -16,7 +16,6 @@
 #include "ConvolutionalLayerKernel.h"
 #include "Util.h" //class util
 
-//namespace convnet {
 
 class ConvolutionalLayer: public Layer {
 public:
@@ -67,6 +66,5 @@ private:
 
 };
 
-//} /* namespace convnet */
 
 #endif /* CONVOLUTIONALLAYER_H_ */

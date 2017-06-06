@@ -7,8 +7,6 @@
 
 #include "Layer.h"
 
-//namespace convnet {
-
 Layer::Layer(size_t in_width, size_t in_height, size_t in_depth,
 		size_t out_width, size_t out_height, size_t out_depth, float_t alpha,
 		float_t lambda) :
@@ -49,7 +47,4 @@ size_t Layer::fan_in() {
 size_t Layer::fan_out() {
 	return out_width_ * out_height_ * out_height_;
 }
-
-
-//}        //namespace convnet
 
