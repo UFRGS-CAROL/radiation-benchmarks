@@ -2,7 +2,7 @@
  * Here all kernels which were in kernels.ocl were translated
  */
 
-#include "ConvolutionalLayer.cuh"
+#include "ConvolutionalLayerKernel.h"
 #include <cstdio>
 
 __device__ float sigmod(float in) {

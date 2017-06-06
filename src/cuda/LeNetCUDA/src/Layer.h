@@ -14,92 +14,62 @@
 
 //#pragma once
 
-namespace convnet {
+//namespace convnet {
 
 class Layer {
 public:
-    Layer();
-    virtual ~Layer();
+	Layer(size_t in_width, size_t in_height, size_t in_depth, size_t out_width,
+			size_t out_height, size_t out_depth, float_t alpha, float_t lambda) ;
 
-	Layer(size_t in_width, size_t in_height, size_t in_depth,
-			size_t out_width, size_t out_height, size_t out_depth, float_t alpha, float_t lambda) :
-			in_width_(in_width), in_height_(in_height), in_depth_(in_depth),
-			out_width_(out_width), out_height_(out_height), out_depth_(out_depth),
-			alpha_(alpha), lambda_(lambda){
+	virtual void init_weight() = 0;
+	virtual void forward_cpu() = 0;
+	virtual void forward_batch(int batch_size) = 0;
+	virtual void back_prop() = 0;
 
-        //~ this->in_width_ = in_width;
-        //~ this->in_height_ = in_height;
-        //~ this->in_depth_ = in_depth;
-        //~ this->out_width_ = out_width;
-        //~ this->out_height_ = out_height;
-        //~ this->out_depth_ = out_depth;
-        //~ this->alpha_ = alpha;
-        //~ this->lambda_ = lambda;
-        //~ this->exp_y = 0;
-        //~ this->next = NULL;
-        //~ this->err = 0;
+	void forward_gpu();
 
-    }
+	float_t sigmod(float_t in);
 
-    virtual void init_weight() = 0;
-    virtual void forward_cpu() = 0;
-    virtual void forward_batch(int batch_size) = 0;
-    virtual void back_prop() = 0;
+	float_t df_sigmod(float_t f_x);
 
-    void forward_gpu() {
-        forward_cpu();
-    }
+	size_t fan_in();
 
-    float_t sigmod(float_t in) {
-        return 1.0 / (1.0 + std::exp(-in));
-    }
+	size_t fan_out();
 
-    float_t df_sigmod(float_t f_x) {
-        return f_x * (1.0 - f_x);
-    }
+	size_t in_width_;
+	size_t in_height_;
+	size_t in_depth_;
 
-    size_t fan_in() {
-        return in_width_ * in_height_ * in_depth_;
-    }
+	size_t out_width_;
+	size_t out_height_;
+	size_t out_depth_;
 
-    size_t fan_out() {
-        return out_width_ * out_height_ * out_height_;
-    }
+	vec_t W_;
+	vec_t b_;
 
-    size_t in_width_;
-    size_t in_height_;
-    size_t in_depth_;
+	vec_t deltaW_;
 
-    size_t out_width_;
-    size_t out_height_;
-    size_t out_depth_;
+	vec_t input_;
+	vec_t output_;
 
-    vec_t W_;
-    vec_t b_;
+	vec_t input_batch_;
+	vec_t output_batch_;
 
-    vec_t deltaW_;
+	Layer* next;
 
-    vec_t input_;
-    vec_t output_;
+	float_t alpha_; // learning rate
+	float_t lambda_; // momentum
+	vec_t g_; // err terms
 
-    vec_t input_batch_;
-    vec_t output_batch_;
+	/*output*/
+	float_t err;
+	int exp_y;
+	vec_t exp_y_vec;
 
-    Layer* next;
-
-    float_t alpha_; // learning rate
-    float_t lambda_; // momentum
-    vec_t g_; // err terms
-
-    /*output*/
-    float_t err;
-    int exp_y;
-    vec_t exp_y_vec;
-
-    vec_t exp_y_batch;
-    vec_t exp_y_vec_batch;
+	vec_t exp_y_batch;
+	vec_t exp_y_vec_batch;
 };
 
-} /* namespace convnet */
+//} /* namespace convnet */
 
 #endif /* LAYER_H_ */
