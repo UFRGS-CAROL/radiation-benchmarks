@@ -53,22 +53,10 @@ $(EXEC): $(OBJS)
 	$(CXX)  $^ $(LOGHELPER_INC) $(LOGHELPER_LIB) -o $@  $(LDFLAGS)  $(CFLAGS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(CXX) $(CFLAGS) -c $< -o $@  $(HELPFUL)
+	$(NVCC) $(ARCH) $(CFLAGS) -c $< -o $@  $(HELPFUL) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(NVCC_FLAGS)" -c $< -o $@ 
-	
-	
-
-#$(EXEC): $(OBJDIR)$(GPU_KERNELS)
-#	$(NVCC) $(COMMON) $(NVCC_FLAGS) $(SRC)main.cpp $(LOGHELPER_INC) $(LOGHELPER_LIB) -o $(OBJDIR)main.o -c
-#	$(NVCC) $(COMMON) $(NVCC_FLAGS) $(OBJDIR)$(GPU_KERNELS) $(OBJDIR)main.o $(LOGHELPER_INC) $(LOGHELPER_LIB) $(CUDA_THRUST) -o $(EXEC)
-#
-#
-#$(OBJDIR)$(GPU_KERNELS): 
-#	$(NVCC) $(ARCH) $(NVCC_FLAGS) $(COMMON) -c $(SRC)ConvolutionalLayer.cu -o $(OBJDIR)$(GPU_KERNELS)
-	
-
 
 obj:
 	mkdir -p obj
