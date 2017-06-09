@@ -13,10 +13,9 @@
 #include <cstdint>
 #include "Util.h"
 
-
 class MNISTParser {
 public:
-	MNISTParser(std::string data_path);
+	MNISTParser(std::string img_fname, std::string lbl_fname, bool train);
 
 	std::string get_test_img_fname();
 

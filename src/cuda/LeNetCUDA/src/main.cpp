@@ -68,25 +68,28 @@ void train(MNISTParser& m) {
 }
 
 inline void usage(char **argv) {
-	cout << "usage: " << argv[0] << " <train\\classify> <dataset>\n";
+	cout << "usage: " << argv[0] << " <train\\classify> <dataset> <labels>\n";
 }
 
 int main(int argc, char **argv) {
-	if (argc < 3) {
+	if (argc < 4) {
 		usage(argv);
 		return EXIT_FAILURE;
 	}
 
 	string mode = string(argv[1]);
 	string input_data = string(argv[2]);
+	string input_labels = string(argv[3]);
 
 	if (mode == "train") {
 
-		MNISTParser m(input_data.c_str());
+		//if train training and labels must be passed
+		MNISTParser m(input_data.c_str(), input_labels.c_str(), true);
 		cout << "Training for " << m.get_test_img_fname() << std::endl;
 		train(m);
 	} else if (mode == "classify") {
-		MNISTParser m(input_data.c_str());
+		//if train classifing and labels must be passed
+		MNISTParser m(input_data.c_str(), input_labels.c_str(), false);
 		cout << "Classifing for " << m.get_test_img_fname() << std::endl;
 		classify(m);
 	} else {

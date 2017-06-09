@@ -11,14 +11,17 @@
 
 #include <cassert>
 #include <ctime>
-
-
-MNISTParser::MNISTParser(std::string data_path) :
-		test_img_fname(data_path + "/t10k-images-idx3-ubyte"), test_lbl_fname(
-				data_path + "/t10k-labels-idx1-ubyte"), train_img_fname(
-				data_path + "/train-images-idx3-ubyte"), train_lbl_fname(
-				data_path + "/train-labels-idx1-ubyte") {
-
+//:
+//		test_img_fname(data_path + "/t10k-images-idx3-ubyte"), test_lbl_fname(
+//				data_path + "/t10k-labels-idx1-ubyte"), train_img_fname(
+//				data_path + "/train-images-idx3-ubyte"), train_lbl_fname(
+//				data_path + "/train-labels-idx1-ubyte")
+MNISTParser::MNISTParser(std::string img_fname, std::string lbl_fname,
+		bool train) {
+		this->test_img_fname = img_fname;
+		this->test_lbl_fname = lbl_fname;
+		this->train_img_fname = img_fname;
+		this->train_lbl_fname = lbl_fname;
 }
 
 std::string MNISTParser::get_test_img_fname() {

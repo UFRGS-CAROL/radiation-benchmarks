@@ -58,6 +58,10 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(NVCC_FLAGS)" -c $< -o $@ 
 
+train:
+	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte
+
+
 obj:
 	mkdir -p obj
 	
