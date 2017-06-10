@@ -13,8 +13,9 @@ using namespace std;
 void classify(MNISTParser& m) {
 	m.load_testing();
 
-	vec2d_t x;
-	vec_t y;
+//	vec2d_t x;
+//	vec_t y;
+
 	vec2d_t test_x;
 	vec_t test_y;
 	for (size_t i = 0; i < 10000; i++) {

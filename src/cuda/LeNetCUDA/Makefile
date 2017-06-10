@@ -53,10 +53,10 @@ $(EXEC): $(OBJS)
 	$(CXX)  $^ $(LOGHELPER_INC) $(LOGHELPER_LIB) -o $@  $(LDFLAGS)  $(CFLAGS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(NVCC) $(ARCH) $(CFLAGS) -c $< -o $@  $(HELPFUL) 
+	$(NVCC) $(ARCH) $(CFLAGS) $(OPTS) -c $< -o $@  $(HELPFUL) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(NVCC_FLAGS)" -c $< -o $@ 
+	$(NVCC) $(ARCH) $(COMMON) $(OPTS) --compiler-options "$(NVCC_FLAGS)" -c $< -o $@ 
 
 train:
 	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte

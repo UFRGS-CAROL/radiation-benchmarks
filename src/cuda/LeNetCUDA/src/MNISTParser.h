@@ -41,8 +41,8 @@ private:
 	std::string train_lbl_fname;
 
 	friend std::ostream& operator<<(std::ostream& oss, const MNISTParser& t) {
-		oss << "Img fname " << t.test_img_fname << t.train_img_fname << std::endl <<
-				"Label fname " << t.test_lbl_fname << t.train_lbl_fname;
+		oss << "Img fname " << t.test_img_fname << std::endl << "Label fname "
+				<< t.test_lbl_fname;
 		return oss;
 	}
 };

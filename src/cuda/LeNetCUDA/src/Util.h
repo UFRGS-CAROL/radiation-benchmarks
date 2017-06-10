@@ -31,7 +31,7 @@
 
 //namespace convnet {
 
-typedef float float_t;
+//typedef float float_t;
 typedef thrust::host_vector<float_t> vec_t;
 typedef std::vector<std::vector<float_t> > vec2d_t;
 
