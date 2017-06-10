@@ -19,8 +19,9 @@ void classify(MNISTParser& m) {
 	vec2d_t test_x;
 	vec_t test_y;
 	for (size_t i = 0; i < 10000; i++) {
-		test_x.push_back(m.test_sample[i]->image);
-		test_y.push_back(m.test_sample[i]->label);
+		Sample *s = m.get_sample(i);
+		test_x.push_back(s->image);
+		test_y.push_back(s->label);
 	}
 	ConvNet n;
 	n.add_layer(new ConvolutionalLayer(32, 32, 1, 5, 6));
@@ -46,13 +47,12 @@ void train(MNISTParser& m) {
 //	vec2d_t x;
 //	vec_t y;
 	int imgs = 10000;
-	vec2d_t test_x(imgs);
-	vec_t test_y(imgs);
+	vec2d_t test_x;
+	vec_t test_y;
 	for (size_t i = 0; i < imgs; i++) {
-//		test_x.push_back(m.test_sample[i]->image);
-//		test_y.push_back(m.test_sample[i]->label);
-		test_x[i] = m.test_sample[i]->image;
-		test_y[i] = m.test_sample[i]->label;
+		Sample *temp = m.get_sample(i);
+		test_x.push_back(temp->image);
+		test_y.push_back(temp->label);
 	}
 	ConvNet n;
 	n.add_layer(new ConvolutionalLayer(32, 32, 1, 5, 6));

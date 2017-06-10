@@ -19,15 +19,16 @@ public:
 
 	std::string get_test_img_fname();
 
-	std::vector<Sample*> load_testing();
+	void load_testing();
 
-	std::vector<Sample*> load_training();
+	void load_training();
 
 	void test();
 
-	// vector for store test and train samples
-	std::vector<Sample*> test_sample;
-	std::vector<Sample*> train_sample;
+	void add_new_sample(Sample *s);
+	Sample* get_sample(int i);
+
+
 
 private:
 	std::vector<Sample*> load(std::string fimage, std::string flabel);
@@ -40,11 +41,13 @@ private:
 	std::string train_img_fname;
 	std::string train_lbl_fname;
 
-	friend std::ostream& operator<<(std::ostream& oss, const MNISTParser& t) {
-		oss << "Img fname " << t.test_img_fname << std::endl << "Label fname "
-				<< t.test_lbl_fname;
-		return oss;
-	}
+	friend std::ostream& operator<<(std::ostream& oss, const MNISTParser& t);
+
+	// vector for store test and train samples
+	std::vector<Sample*> test_sample;
+	std::vector<Sample*> train_sample;
+
+	bool is_train;
 };
 
 #endif /* MNISTPARSER_H_ */

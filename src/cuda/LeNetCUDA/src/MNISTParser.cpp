@@ -18,24 +18,27 @@
 //				data_path + "/train-labels-idx1-ubyte")
 MNISTParser::MNISTParser(std::string img_fname, std::string lbl_fname,
 		bool train) {
-		this->test_img_fname = img_fname;
-		this->test_lbl_fname = lbl_fname;
-		this->train_img_fname = img_fname;
-		this->train_lbl_fname = lbl_fname;
+	this->test_img_fname = img_fname;
+	this->test_lbl_fname = lbl_fname;
+	this->train_img_fname = img_fname;
+	this->train_lbl_fname = lbl_fname;
+
 }
 
 std::string MNISTParser::get_test_img_fname() {
 	return this->test_img_fname;
 }
 
-std::vector<Sample*> MNISTParser::load_testing() {
-	test_sample = load(test_img_fname, test_lbl_fname);
-	return test_sample;
+//std::vector<Sample*> MNISTParser::load_testing() {
+void MNISTParser::load_testing() {
+	this->test_sample = load(test_img_fname, test_lbl_fname);
+	this->is_train = false;
 }
 
-std::vector<Sample*> MNISTParser::load_training() {
-	train_sample = load(train_img_fname, train_lbl_fname);
-	return train_sample;
+//std::vector<Sample*> MNISTParser::load_training() {
+void MNISTParser::load_training() {
+	this->train_sample = load(train_img_fname, train_lbl_fname);
+	this->is_train = true;
 }
 
 void MNISTParser::test() {
@@ -143,3 +146,14 @@ std::uint32_t MNISTParser::swapEndien_32(std::uint32_t value) {
 			| ((value & 0x00FF0000) >> 8) | ((value & 0xFF000000) >> 24);
 }
 
+std::ostream& operator<<(std::ostream& oss, const MNISTParser& t) {
+	oss << "Img fname " << t.test_img_fname << std::endl << "Label fname "
+			<< t.test_lbl_fname;
+	return oss;
+}
+
+Sample* MNISTParser::get_sample(int i) {
+	if (this->is_train)
+		return this->train_sample[i];
+	return this->test_sample[i];
+}
