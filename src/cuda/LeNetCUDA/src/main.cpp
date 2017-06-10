@@ -43,14 +43,16 @@ void classify(MNISTParser& m) {
 void train(MNISTParser& m) {
 	cout << m << endl;
 	m.load_training();
-	vec2d_t x;
-	vec_t y;
+//	vec2d_t x;
+//	vec_t y;
 	int imgs = 10000;
 	vec2d_t test_x(imgs);
-	vec_t test_y(imgs, 0);
+	vec_t test_y(imgs);
 	for (size_t i = 0; i < imgs; i++) {
-		test_x.push_back(m.test_sample[i]->image);
-		test_y.push_back(m.test_sample[i]->label);
+//		test_x.push_back(m.test_sample[i]->image);
+//		test_y.push_back(m.test_sample[i]->label);
+		test_x[i] = m.test_sample[i]->image;
+		test_y[i] = m.test_sample[i]->label;
 	}
 	ConvNet n;
 	n.add_layer(new ConvolutionalLayer(32, 32, 1, 5, 6));
