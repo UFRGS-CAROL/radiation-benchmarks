@@ -40,6 +40,7 @@ void classify(MNISTParser& m) {
 }
 
 void train(MNISTParser& m) {
+	cout << m << endl;
 	m.load_training();
 	vec2d_t x;
 	vec_t y;
