@@ -45,9 +45,10 @@ void train(MNISTParser& m) {
 	m.load_training();
 	vec2d_t x;
 	vec_t y;
-	vec2d_t test_x;
-	vec_t test_y;
-	for (size_t i = 0; i < 10000; i++) {
+	int imgs = 10000;
+	vec2d_t test_x(imgs);
+	vec_t test_y(imgs, 0);
+	for (size_t i = 0; i < imgs; i++) {
 		test_x.push_back(m.test_sample[i]->image);
 		test_y.push_back(m.test_sample[i]->label);
 	}
