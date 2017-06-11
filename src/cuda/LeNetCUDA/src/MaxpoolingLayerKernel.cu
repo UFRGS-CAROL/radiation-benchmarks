@@ -109,6 +109,9 @@ void forward_maxpool_layer_gpu() {
 	//fill first
 	fill<<<1, in_height * in_width>>>(input);
 
+	float host_input[in_height * in_width];
+	cudaMemcpy(host_input, input, bytes * in_height * in_width, cudaMemcpyDeviceToHost);
+	print_matrix(host_input, in_height, in_width);
 
 	forward_maxpool_layer_kernel<<<blocks, threads>>>(input, max_loc, output,
 			out_width, out_height, out_depth, in_height, in_width);
