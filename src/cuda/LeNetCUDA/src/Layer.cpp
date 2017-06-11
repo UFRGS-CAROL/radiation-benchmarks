@@ -48,3 +48,6 @@ size_t Layer::fan_out() {
 	return out_width_ * out_height_ * out_height_;
 }
 
+float* Layer::get_raw_vector(thrust::device_vector<float> th){
+	return thrust::raw_pointer_cast(th.data());
+}

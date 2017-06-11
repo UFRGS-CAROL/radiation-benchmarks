@@ -57,13 +57,6 @@ private:
 	float_t conv(vec_t a, vec_t b);
 	size_t kernel_size_;
 
-	thrust::device_vector<float> input_buf;
-	thrust::device_vector<float> weight_buf;
-	thrust::device_vector<float> b_buf;
-	thrust::device_vector<float> output_buf;
-	thrust::device_vector<float> input_bach_buf;
-	thrust::device_vector<float> output_bach_buf;
-
 };
 
 

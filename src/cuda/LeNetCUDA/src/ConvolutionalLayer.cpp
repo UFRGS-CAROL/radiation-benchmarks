@@ -7,7 +7,6 @@
 
 #include "ConvolutionalLayer.h"
 
-
 ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 		size_t in_depth, size_t kernel_size, size_t out_depth) :
 		Layer(in_width, in_height, in_depth, in_width - kernel_size + 1,
@@ -29,26 +28,6 @@ void ConvolutionalLayer::init_weight() {
 	uniform_rand(b_.begin(), b_.end(), -1, 1);
 }
 
-void ConvolutionalLayer::init_cuda() {
-//      Vamos fazer meio que igual a darknet
-//      alloca tudo antes de come��ar tanto na GPU quanto na CPU e depois d�� free
-//      em tudo
-	// Allocate memory on the device
-//      cl::Buffer input_buf(context, CL_MEM_READ_ONLY,
-//              in_width_ * in_height_ * in_depth_ * sizeof(cl_float));
-//      cl::Buffer weight_buf(context, CL_MEM_READ_ONLY,
-//              kernel_size_ * kernel_size_ * in_depth_ * out_depth_
-//                      * sizeof(cl_float));
-//      cl::Buffer b_buf(context, CL_MEM_READ_ONLY,
-//              out_depth_ * out_width_ * out_height_ * sizeof(cl_float));
-//      cl::Buffer output_buf(context, CL_MEM_WRITE_ONLY,
-//              out_width_ * out_height_ * out_depth_ * sizeof(cl_float));
-//      this->input_buf =  thrust::device_malloc<float>(in_width_ * in_height_ * in_depth_ * sizeof(float));
-//      this->weight_buf = thrust::device_malloc<float>(kernel_size_ * kernel_size_ * in_depth_ * out_depth_* sizeof(float));
-//      this->b_buf = thrust::device_malloc<float>(out_depth_ * out_width_ * out_height_ * sizeof(float));
-//      this->output_buf = thrust::device_malloc<float>(out_width_ * out_height_ * out_depth_ * sizeof(cl_float));
-
-}
 
 void ConvolutionalLayer::forward() {
 	forward_cpu();
@@ -79,49 +58,10 @@ void ConvolutionalLayer::forward_cpu() {
 void ConvolutionalLayer::forward_gpu() {
 
 	try {
-//          // Allocate memory on the device
-//          cl::Buffer input_buf(context, CL_MEM_READ_ONLY,
-//                  in_width_ * in_height_ * in_depth_ * sizeof(cl_float));
-//          cl::Buffer weight_buf(context, CL_MEM_READ_ONLY,
-//                  kernel_size_ * kernel_size_ * in_depth_ * out_depth_
-//                          * sizeof(cl_float));
-//          cl::Buffer b_buf(context, CL_MEM_READ_ONLY,
-//                  out_depth_ * out_width_ * out_height_ * sizeof(cl_float));
-//          cl::Buffer output_buf(context, CL_MEM_WRITE_ONLY,
-//                  out_width_ * out_height_ * out_depth_ * sizeof(cl_float));
 
-//          std::string kernel_name = "forward_parallel";
-//          cl::Kernel kernel(program, kernel_name.c_str());
-//          kernel.setArg < cl::Memory > (0, input_buf);
-//          kernel.setArg < cl::Memory > (1, weight_buf);
-//          kernel.setArg < cl::Memory > (2, b_buf);
-//          kernel.setArg < cl::Memory > (3, output_buf);
-//          kernel.setArg<int>(4, in_width_);
-//          kernel.setArg<int>(5, in_height_);
-//          kernel.setArg<int>(6, in_depth_);
-//          kernel.setArg<int>(7, out_width_);
-//          kernel.setArg<int>(8, out_height_);
-//          kernel.setArg<int>(9, out_depth_);
-//          kernel.setArg<int>(10, kernel_size_);
-
-		// transfer source data from the host to the device
-//          queue.enqueueWriteBuffer(input_buf, CL_TRUE, 0,
-//                  in_width_ * in_height_ * in_depth_ * sizeof(cl_float),
-//                  &input_[0]);
-		//using Thust we can only assign
 		this->input_buf = this->input_;
-
-//          queue.enqueueWriteBuffer(weight_buf, CL_TRUE, 0,
-//                  kernel_size_ * kernel_size_ * in_depth_ * out_depth_
-//                          * sizeof(cl_float), &W_[0]);
-
 		//PEDRO check if it is necessary to transfer weight again
 		this->weight_buf = this->W_;
-
-//          queue.enqueueWriteBuffer(b_buf, CL_TRUE, 0,
-//                  out_depth_ * out_width_ * out_height_ * sizeof(cl_float),
-//                  &b_[0]);
-
 		this->b_buf = this->b_;
 
 		// execute the code on the device
@@ -135,177 +75,20 @@ void ConvolutionalLayer::forward_gpu() {
 				this->in_height_, this->in_depth_, this->out_width_,
 				this->out_height_, this->out_depth_, this->kernel_size_);
 
-//          int grpWidth = 20;
-//          cl::NDRange global(
-//                  jc::closestMultiple(out_depth_ * out_width_, grpWidth),
-//                  jc::closestMultiple(out_height_, grpWidth));
-//          cl::NDRange local(grpWidth, grpWidth);
-//          cl_ulong t = jc::runAndTimeKernel(kernel, queue, global, local);
-//          queue.enqueueReadBuffer(output_buf, CL_TRUE, 0,
-//                  out_width_ * out_height_ * out_depth_ * sizeof(cl_float),
-//                  &output_[0]);
-
 		// transfer destination data from the device to the host
 		//CHECK IT
 		this->output_ = this->output_buf;
 
-//      } catch (cl::Error& e) {
-//          std::cerr << e.what() << ": " << jc::readable_status(e.err());
-//          //return 3;
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
-		//return 2;
+		exit(2);
 	} catch (...) {
 		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
-		//return 1;
+		exit(1);
 	}
 
 }
 
-void ConvolutionalLayer::forward_batch(int batch_size) {
-
-	try {
-		/*
-		 Allocate memory on the device
-		 cl::Buffer input_buf(context, CL_MEM_READ_ONLY,
-		 in_width_ * in_height_ * in_depth_ * sizeof(cl_float));
-		 cl::Buffer weight_buf(context, CL_MEM_READ_ONLY,
-		 kernel_size_ * kernel_size_ * in_depth_ * out_depth_
-		 * sizeof(cl_float));
-		 cl::Buffer b_buf(context, CL_MEM_READ_ONLY,
-		 out_depth_ * out_width_ * out_height_ * sizeof(cl_float));
-		 cl::Buffer output_buf(context, CL_MEM_WRITE_ONLY,
-		 out_width_ * out_height_ * out_depth_ * sizeof(cl_float));
-
-		 cl::Buffer input_batch_buf(context, CL_MEM_READ_ONLY,
-		 batch_size * in_width_ * in_height_ * in_depth_
-		 * sizeof(cl_float));
-		 cl::Buffer weight_buf(context, CL_MEM_READ_ONLY,
-		 kernel_size_ * kernel_size_ * in_depth_ * out_depth_
-		 * sizeof(cl_float));
-		 cl::Buffer b_buf(context, CL_MEM_READ_ONLY,
-		 out_depth_ * out_width_ * out_height_ * sizeof(cl_float));
-		 cl::Buffer output_batch_buf(context, CL_MEM_WRITE_ONLY,
-		 batch_size * out_width_ * out_height_ * out_depth_
-		 * sizeof(cl_float));
-
-		 #ifdef BATCH_MORE
-		 std::string kernel_name = "forward_batch_more";
-		 #else
-		 std::string kernel_name = "forward_batch";
-		 #endif
-		 cl::Kernel kernel(program, kernel_name.c_str());
-		 kernel.setArg < cl::Memory > (0, input_batch_buf);
-		 kernel.setArg < cl::Memory > (1, weight_buf);
-		 kernel.setArg < cl::Memory > (2, b_buf);
-		 kernel.setArg < cl::Memory > (3, output_batch_buf);
-		 kernel.setArg<int>(4, in_width_);
-		 kernel.setArg<int>(5, in_height_);
-		 kernel.setArg<int>(6, in_depth_);
-		 kernel.setArg<int>(7, out_width_);
-		 kernel.setArg<int>(8, out_height_);
-		 kernel.setArg<int>(9, out_depth_);
-		 kernel.setArg<int>(10, kernel_size_);
-		 kernel.setArg<int>(11, batch_size);
-
-		 queue.enqueueWriteBuffer(input_batch_buf, CL_TRUE, 0,
-		 batch_size * in_width_ * in_height_ * in_depth_
-		 * sizeof(cl_float), &input_batch_[0]);
-		 queue.enqueueWriteBuffer(weight_buf, CL_TRUE, 0,
-		 kernel_size_ * kernel_size_ * in_depth_ * out_depth_
-		 * sizeof(cl_float), &W_[0]);
-		 queue.enqueueWriteBuffer(b_buf, CL_TRUE, 0,
-		 out_depth_ * out_width_ * out_height_ * sizeof(cl_float),
-		 &b_[0]);
-		 */
-
-		// transfer source data from the host to the device
-		//PEDRO CHECK it
-		this->input_buf = this->input_batch_;
-		this->weight_buf = this->W_;
-		this->b_buf = this->b_;
-
-		// execute the code on the device
-		int grpWidth = 20;
-
-		//PEDRO TEM QUE VER COMO CHAMAR O KERNEL AQUI
-
-		int global_width = closestMultiple(out_depth_ * out_width_, grpWidth);
-#ifdef BATCH_MORE
-		int global_height = closestMultiple(batch_size/out_height_, grpWidth);
-#else
-		int global_height = closestMultiple(batch_size * out_height_, grpWidth);
-#endif
-//          cl::NDRange global(global_width, global_height);
-//          cl::NDRange local(grpWidth, grpWidth);
-
-#ifndef PROFILING
-//          jc::runAndTimeKernel(kernel, queue, global, local);
-#else
-		int iteration = 100;
-		int input_data_size = (batch_size*in_width_*in_height_*in_depth_
-				+ kernel_size_*kernel_size_*in_depth_*out_depth_
-				+ batch_size*out_depth_ * out_width_* out_height_)*sizeof(cl_float);
-		int output_data_size = batch_size*out_width_*out_height_*out_depth_*sizeof(cl_float);
-#ifdef BATCH_MORE
-		printf(" **** In ConvolutionalLayer::forward_batch_more ****\n");
-//          int memory_access_per_thread = (in_depth_*kernel_size_*kernel_size_*(1+THREAD_TASKS) + THREAD_TASKS)*sizeof(float);
-		int memory_access_per_thread = (in_depth_*kernel_size_*kernel_size_*2 + 1)*sizeof(float);
-		int operations = in_depth_*kernel_size_*kernel_size_*9
-		+ in_depth_*kernel_size_*kernel_size_*15 + 20;
-		printf("    Batch size: %d, Tasks of each thread: %d\n    INPUT depth: %d, height: %d, width: %d\n    OUTPUT depth: %d, height: %d, width: %d\n",
-				batch_size, 1, in_depth_, in_height_, in_width_, out_depth_, out_height_, out_width_);
-#else
-		printf(" **** In ConvolutionalLayer::forward_batch ****\n");
-		int memory_access_per_thread = (in_depth_ * 2 * kernel_size_*kernel_size_ + 1 + 1)*sizeof(float);
-		int operations = 22 + 26 * in_depth_*kernel_size_*kernel_size_;
-		printf("    Batch size: %d\n    INPUT depth: %d, height: %d, width: %d\n    OUTPUT depth: %d, height: %d, width: %d\n",
-				batch_size, in_depth_, in_height_, in_width_, out_depth_, out_height_, out_width_);
-#endif
-
-		printf("    ==Running with>>> %d <<<Iterations==\n", iteration);
-
-		cl_ulong t = 0; // time in nanosecond, 1e-9 second
-		for (int i = 0; i < iteration; i++) {
-			t += runAndTimeKernel(kernel, queue, global, local);
-		}
-		const float each_lasts = float(t) / iteration; // nano seconds
-		std::cout << "    Time consumed for each iteration: " << each_lasts / 1e6 << " ms" << std::endl;
-		std::cout << "    Time consumed for each batch: " << each_lasts / batch_size / 1e6 << " ms" << std::endl;
-		float cpI = float(operations) / memory_access_per_thread;
-		float peak_bandwidth = 25.6;// Memory Bandwidth: 25.6 GB/s
-#ifdef BATCH_MORE
-		float throughPut = memory_access_per_thread * batch_size*out_depth_*out_width_*out_height_ / each_lasts; // GB/s
-		long long int all_ops = operations*out_depth_*out_width_*out_height_*batch_size;
-#else
-		float throughPut = memory_access_per_thread * batch_size*out_depth_*out_width_*out_height_ / each_lasts; // GB/s
-		long long int all_ops = operations*out_depth_*out_width_*out_height_*batch_size;
-#endif
-		printf("    Input Buffer size: %.2g MB, Output Buffer size: %.2g MB\n", input_data_size / 1e6, output_data_size / 1e6);
-		printf("    CI: %.2g, ThoughPut: %.3g GB/s, Ops/Time= %.3g GFLOPS, CI*Bandwidth= %.3g GFLOPS\n",
-				cpI, throughPut, all_ops/each_lasts, cpI*peak_bandwidth);
-#endif
-		output_batch_.resize(
-				batch_size * out_depth_ * out_width_ * out_height_);
-		// transfer destination data from the device to the host
-//          queue.enqueueReadBuffer(output_batch_buf, CL_TRUE, 0,
-//                  batch_size * out_width_ * out_height_ * out_depth_
-//                          * sizeof(cl_float), &output_batch_[0]);
-
-		this->output_batch_ = this->output_bach_buf;
-
-//      } catch (cl::Error& e) {
-//          std::cerr << e.what() << ": " << jc::readable_status(e.err());
-//          //return 3;
-	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		//return 2;
-	} catch (...) {
-		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
-		//return 1;
-	}
-
-}
 
 void ConvolutionalLayer::back_prop() {
 	g_.clear();
@@ -432,5 +215,3 @@ float_t ConvolutionalLayer::conv(vec_t a, vec_t b) {
 	}
 	return sum;
 }
-
-

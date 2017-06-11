@@ -8,6 +8,8 @@
 #ifndef CUDAUTIL_H_
 #define CUDAUTIL_H_
 
+#include "cuda.h"
+#define BLOCK_SIZE 1024
 /**
  * This macro checks return value of the CUDA runtime call and exits
  * the application if the call failed.
@@ -21,6 +23,7 @@
 	} }
 
 
+dim3 cuda_gridsize(size_t x, size_t y, size_t z);
 
 
 #endif /* CUDAUTIL_H_ */

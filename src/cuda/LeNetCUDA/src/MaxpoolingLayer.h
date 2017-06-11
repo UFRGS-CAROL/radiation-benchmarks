@@ -47,6 +47,10 @@ public:
 	 for err translating.
 	 */
 	std::unordered_map<size_t, size_t> max_loc;
+
+	vec_t max_loc_host;
+	vec_t_gpu max_loc_gpu;
+
 };
 
 

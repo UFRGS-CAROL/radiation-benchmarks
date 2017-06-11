@@ -10,7 +10,7 @@
 
 #include <vector>
 #include "Util.h"
-#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
 
 class Layer {
 public:
@@ -64,6 +64,16 @@ public:
 
 	vec_t exp_y_batch;
 	vec_t exp_y_vec_batch;
+
+
+
+	thrust::device_vector<float> input_buf;
+	thrust::device_vector<float> weight_buf;
+	thrust::device_vector<float> output_buf;
+	thrust::device_vector<float> b_buf;
+
+	float *get_raw_vector(thrust::device_vector<float> th);
+
 };
 
 //} /* namespace convnet */

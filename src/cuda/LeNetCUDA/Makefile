@@ -8,7 +8,7 @@ CXX=g++
 
 OBJDIR=./obj/
 
-
+GPU?=0
 
 CUDA_THRUST=
 #-I/usr/local/cuda/include/thrust/
@@ -38,6 +38,10 @@ LOGHELPER_INC=-I../../include/
 LOGHELPER_LIB=-I../../include/
 endif
 
+ifeq ($(GPU), 1)
+ON_GPU= -DGPU
+endif
+
 GPU_KERNELS=ConvKernels.o
 
 OBJ=Layer.o ConvolutionalLayer.o ConvolutionalLayerKernel.o ConvNet.o MaxpoolingLayerKernel.o \
@@ -50,10 +54,10 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CXX)  $^ $(LOGHELPER_INC) $(LOGHELPER_LIB) -o $@  $(LDFLAGS)  $(CFLAGS)
+	$(CXX)  $^ $(LOGHELPER_INC) $(LOGHELPER_LIB) $(ON_GPU) -o $@  $(LDFLAGS)  $(CFLAGS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(NVCC) $(ARCH) $(CFLAGS) $(OPTS) -c $< -o $@  $(HELPFUL) 
+	$(NVCC) $(ARCH) $(CFLAGS) $(OPTS) $(ON_GPU) -c $< -o $@  $(HELPFUL) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) $(OPTS) --compiler-options "$(NVCC_FLAGS)" -c $< -o $@ 
