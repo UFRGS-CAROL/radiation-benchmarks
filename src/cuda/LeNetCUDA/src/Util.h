@@ -33,8 +33,11 @@
 
 //typedef float float_t;
 typedef thrust::host_vector<float_t> vec_t;
-typedef std::vector<std::vector<float_t> > vec2d_t;
 typedef thust::device_vector<float_t> vec_t_gpu;
+
+typedef std::vector<std::vector<float_t> > vec2d_t;
+
+
 
 struct Image {
 	std::vector<std::vector<std::float_t> > img; // a image is represented by a 2-dimension vector

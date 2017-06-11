@@ -10,7 +10,6 @@
 
 #include <vector>
 #include "Util.h"
-#include <thrust/device_vector.h>
 
 class Layer {
 public:
@@ -67,12 +66,12 @@ public:
 
 
 
-	thrust::device_vector<float> input_buf;
-	thrust::device_vector<float> weight_buf;
-	thrust::device_vector<float> output_buf;
-	thrust::device_vector<float> b_buf;
+	vec_t_gpu input_buf;
+	vec_t_gpu weight_buf;
+	vec_t_gpu output_buf;
+	vec_t_gpu b_buf;
 
-	float *get_raw_vector(thrust::device_vector<float> th);
+	float *get_raw_vector(vec_t_gpu th);
 
 };
 

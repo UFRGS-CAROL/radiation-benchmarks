@@ -66,10 +66,10 @@ void ConvolutionalLayer::forward_gpu() {
 
 		// execute the code on the device
 		//PEDRO CHECK IT
-		float *i_buf = thrust::raw_pointer_cast(this->input_buf.data());
-		float *w_buf = thrust::raw_pointer_cast(this->weight_buf.data());
-		float *b_buf = thrust::raw_pointer_cast(this->b_buf.data());
-		float *o_buf = thrust::raw_pointer_cast(this->output_buf.data());
+		float *i_buf = this->get_raw_vector(this->input_buf.data());
+		float *w_buf = this->get_raw_vector(this->weight_buf.data());
+		float *b_buf = this->get_raw_vector(this->b_buf.data());
+		float *o_buf = this->get_raw_vector(this->output_buf.data());
 
 		call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_,
 				this->in_height_, this->in_depth_, this->out_width_,

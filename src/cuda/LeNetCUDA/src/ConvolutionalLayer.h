@@ -9,8 +9,8 @@
 #define CONVOLUTIONALLAYER_H_
 
 #include "Layer.h"
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
+//#include <thrust/host_vector.h>
+//#include <thrust/device_vector.h>
 
 #include <vector>
 #include "ConvolutionalLayerKernel.h"

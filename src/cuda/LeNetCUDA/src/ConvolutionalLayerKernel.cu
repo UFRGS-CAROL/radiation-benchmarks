@@ -71,14 +71,12 @@ void call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
 		int out_width, int out_height, int out_depth, int kernel_size) {
 
 	//PEDRO if these are the right dimentions
-	long blocks_rows = ceil(float(out_height) / float(BLOCK_SIZE));
-	long threads_rows = ceil(float(out_height) / float(blocks_rows));
-	long blocks_cols = ceil(float(out_width) / float(BLOCK_SIZE));
-	long threads_cols = ceil(float(out_width) / float(blocks_cols));
+	dim3 blocks;
+	dim3 threads;
 
-	dim3 blocks(blocks_rows, blocks_cols);
-	dim3 threads(threads_rows, threads_cols);
+	cuda_gridsize(out_width, out_height, out_depth, &threads, &blocks);
 
+	//I need check it yet
 	forward_parallel<<<blocks, threads>>>(input_buf,
 			weight_buf, b_buf, output_buf, in_width, in_height, in_depth,
 			out_width, out_height, out_depth, kernel_size);
