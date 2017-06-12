@@ -26,7 +26,7 @@
 class ConvNet {
 public:
 	void train(vec2d_t train_x, vec_t train_y, size_t train_size);
-	void test(vec2d_t test_x, vec_t test_y, size_t test_size, int batch_size);
+//	void test(vec2d_t test_x, vec_t test_y, size_t test_size, int batch_size);
 	void test(vec2d_t test_x, vec_t test_y, size_t test_size);
 
 	void add_layer(Layer* layer);

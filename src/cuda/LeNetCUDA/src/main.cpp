@@ -10,7 +10,7 @@
 
 using namespace std;
 
-void classify(MNISTParser& m) {
+void classify(MNISTParser& m, string weigths) {
 	m.load_testing();
 
 //	vec2d_t x;
@@ -30,18 +30,18 @@ void classify(MNISTParser& m) {
 	n.add_layer(new MaxpoolingLayer(10, 10, 16));
 	n.add_layer(new ConvolutionalLayer(5, 5, 16, 5, 100));
 	n.add_layer(new FullyConnectedLayer(100, 10));
-	n.train(test_x, test_y, 10000);
+//	n.train(test_x, test_y, 10000);
 	int test_sample_count = 5;
 	//Sleep(1000);
 	printf("Testing with %d samples:\n", test_sample_count);
 	const clock_t begin_time = clock();
-	n.test(test_x, test_y, test_sample_count, 5);
+	n.test(test_x, test_y, test_sample_count);
 	cout << "Time consumed in test: "
 			<< float(clock() - begin_time) / (CLOCKS_PER_SEC / 1000) << " ms"
 			<< endl;
 }
 
-void train(MNISTParser& m) {
+void train(MNISTParser& m, string weigths) {
 	cout << m << endl;
 	m.load_training();
 //	vec2d_t x;
@@ -70,33 +70,36 @@ void train(MNISTParser& m) {
 	cout << "Time consumed in test: "
 			<< float(clock() - begin_time) / (CLOCKS_PER_SEC / 1000) << " ms"
 			<< endl;
+
+	n.save_weights(weigths);
 }
 
 inline void usage(char **argv) {
-	cout << "usage: " << argv[0] << " <train\\classify> <dataset> <labels>\n";
+	cout << "usage: " << argv[0] << " <train\\classify> <dataset> <labels> <weights>\n";
 }
 
 int main(int argc, char **argv) {
-	if (argc < 4) {
+	if (argc < 5) {
 		usage(argv);
 		return EXIT_FAILURE;
 	}
 
-	string mode = string(argv[1]);
-	string input_data = string(argv[2]);
-	string input_labels = string(argv[3]);
+	string mode(argv[1]);
+	string input_data(argv[2]);
+	string input_labels(argv[3]);
+	string weigths(argv[4]);
 
 	if (mode == "train") {
 
 		//if train training and labels must be passed
 		MNISTParser m(input_data.c_str(), input_labels.c_str(), true);
 		cout << "Training for " << m.get_test_img_fname() << std::endl;
-		train(m);
+		train(m, weigths);
 	} else if (mode == "classify") {
 		//if train classifing and labels must be passed
 		MNISTParser m(input_data.c_str(), input_labels.c_str(), false);
 		cout << "Classifing for " << m.get_test_img_fname() << std::endl;
-		classify(m);
+		classify(m, weigths);
 	} else {
 		usage(argv);
 		return EXIT_FAILURE;

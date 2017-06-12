@@ -25,6 +25,7 @@ public:
 
 	void init_weight();
 	void back_prop();
+	void save_layer(std::ofstream& of);
 
 private:
 	void forward_cpu();
@@ -55,6 +56,8 @@ private:
 	 */
 	float_t conv(vec_t a, vec_t b);
 	size_t kernel_size_;
+
+
 
 };
 

@@ -22,6 +22,9 @@ public:
 
 	virtual void init_weight() = 0;
 	virtual void back_prop() = 0;
+	virtual void save_layer(std::ofstream& of) = 0;
+
+	void save_base_layer(std::ofstream& of);
 
 	void forward();
 
@@ -49,9 +52,6 @@ public:
 	vec_t input_;
 	vec_t output_;
 
-//	vec_t input_batch_;
-//	vec_t output_batch_;
-
 	Layer* next;
 
 	float_t alpha_; // learning rate
@@ -62,9 +62,6 @@ public:
 	float_t err;
 	int exp_y;
 	vec_t exp_y_vec;
-
-//	vec_t exp_y_batch;
-//	vec_t exp_y_vec_batch;
 
 
 #ifdef GPU

@@ -69,6 +69,20 @@ inline size_t MaxpoolingLayer::getOutIndex(size_t out, size_t h_, size_t w_) {
 	return out * out_width_ * out_height_ + h_ / 2 * out_width_ + (w_ / 2);
 }
 
+/**
+ * 	std::unordered_map<size_t, size_t> max_loc;
+ vec_t max_loc_host;
+ */
+void MaxpoolingLayer::save_layer(std::ofstream& of) {
+	this->save_base_layer(of);
+
+	of << this->max_loc.size();
+	for (auto const& p : this->max_loc) {
+		of << p.first << p.second;
+	}
+
+}
+
 #ifdef GPU
 
 void MaxpoolingLayer::forward_gpu() {
@@ -106,7 +120,7 @@ void MaxpoolingLayer::forward_gpu() {
 
 }
 #else
-void MaxpoolingLayer::forward_gpu() {}
+void MaxpoolingLayer::forward_gpu() {
+}
 #endif
-
 

@@ -44,9 +44,12 @@ endif
 
 GPU_KERNELS=ConvKernels.o
 
-OBJ=Layer.o ConvolutionalLayer.o ConvolutionalLayerKernel.o ConvNet.o MaxpoolingLayerKernel.o \
-FullyConnectedLayer.o MaxpoolingLayer.o MNISTParser.o OutputLayer.o Util.o  FullyConnectedLayerKernel.o \
-cudaUtil.o main.o
+OBJ=Layer.o ConvolutionalLayer.o  ConvNet.o FullyConnectedLayer.o \
+MaxpoolingLayer.o MNISTParser.o OutputLayer.o Util.o main.o
+
+ifeq ($(GPU), 1)
+OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o FullyConnectedLayerKernel.o cudaUtil.o
+endif
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
@@ -57,13 +60,13 @@ $(EXEC): $(OBJS)
 	$(CXX)  $^ $(LOGHELPER_INC) $(LOGHELPER_LIB) $(ON_GPU) -o $@  $(LDFLAGS)  $(CFLAGS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(NVCC) $(ARCH) $(CFLAGS) $(OPTS) $(ON_GPU) -c $< -o $@  $(HELPFUL) 
+	$(CXX) $(CFLAGS) $(OPTS) $(ON_GPU) -c $< -o $@  $(HELPFUL) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) $(OPTS) --compiler-options "$(NVCC_FLAGS)" -c $< -o $@ 
 
 train:
-	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte
+	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte  .
 
 
 obj:

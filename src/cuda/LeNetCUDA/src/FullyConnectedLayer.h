@@ -23,6 +23,9 @@ public:
 	 */
 	void init_weight() ;
 
+	virtual void save_layer(std::ofstream& of);
+
+
 private:
 	vec_t get_W(size_t index);
 	vec_t get_W_step(size_t in);

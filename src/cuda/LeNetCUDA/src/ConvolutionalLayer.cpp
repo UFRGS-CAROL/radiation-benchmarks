@@ -177,6 +177,16 @@ float_t ConvolutionalLayer::conv(vec_t a, vec_t b) {
 	return sum;
 }
 
+/**
+ * for convlayer
+ * I need save only
+ * 	size_t kernel_size_;
+ */
+void ConvolutionalLayer::save_layer(std::ofstream& of){
+	this->save_base_layer(of);
+	of.write((char*)this->kernel_size_, sizeof(size_t));
+}
+
 #ifdef GPU
 void ConvolutionalLayer::forward_gpu() {
 

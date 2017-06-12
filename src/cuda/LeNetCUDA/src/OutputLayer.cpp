@@ -39,3 +39,10 @@ void OutputLayer::back_prop() {
 
 void OutputLayer::init_weight() {
 }
+
+/**
+ * there is not outputlayer parameters
+ */
+void OutputLayer::save_layer(std::ofstream& of){
+	this->save_base_layer(of);
+}

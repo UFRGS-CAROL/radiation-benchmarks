@@ -17,18 +17,6 @@ Layer::Layer(size_t in_width, size_t in_height, size_t in_depth,
 				out_width), out_height_(out_height), out_depth_(out_depth), alpha_(
 				alpha), lambda_(lambda) {
 
-	//~ this->in_width_ = in_width;
-	//~ this->in_height_ = in_height;
-	//~ this->in_depth_ = in_depth;
-	//~ this->out_width_ = out_width;
-	//~ this->out_height_ = out_height;
-	//~ this->out_depth_ = out_depth;
-	//~ this->alpha_ = alpha;
-	//~ this->lambda_ = lambda;
-	//~ this->exp_y = 0;
-	//~ this->next = NULL;
-	//~ this->err = 0;
-
 }
 
 void Layer::forward() {
@@ -39,14 +27,6 @@ void Layer::forward() {
 #endif
 
 }
-
-//void Layer::forward_gpu() {
-//	error("CALLING IT FROM LAYER CLASS");
-//}
-//
-//void Layer::forward_cpu() {
-//	error("CALLING IT FROM LAYER CLASS");
-//}
 
 float_t Layer::sigmod(float_t in) {
 	return 1.0 / (1.0 + std::exp(-in));
@@ -62,6 +42,49 @@ size_t Layer::fan_in() {
 
 size_t Layer::fan_out() {
 	return out_width_ * out_height_ * out_height_;
+}
+
+
+/**
+ * 	size_t in_width_;
+	size_t in_height_;
+	size_t in_depth_;
+	size_t out_width_;
+	size_t out_height_;
+	size_t out_depth_;
+	float_t alpha_; // learning rate
+	float_t lambda_; // momentum
+	float_t err;
+	int exp_y;
+	vec_t W_;
+	vec_t b_;
+	vec_t deltaW_;
+	vec_t input_;
+	vec_t output_;
+	vec_t g_; // err terms
+	vec_t exp_y_vec;
+
+	//Layer* parameter I did not save
+	 * it will be set on weights loading
+ */
+void Layer::save_base_layer(std::ofstream& of){
+	of.write((char*)this->in_width_, sizeof(size_t));
+	of.write((char*)this->in_height_, sizeof(size_t));
+	of.write((char*)this->in_depth_, sizeof(size_t));
+	of.write((char*)this->out_width_, sizeof(size_t));
+	of.write((char*)this->out_height_, sizeof(size_t));
+	of.write((char*)this->out_depth_, sizeof(size_t));
+	of.write(reinterpret_cast<const char*>(&this->alpha_), sizeof(float_t));
+	of.write(reinterpret_cast<const char*>(&this->lambda_), sizeof(float_t));
+	of.write(reinterpret_cast<const char*>(&this->err), sizeof(float_t));
+	of.write(reinterpret_cast<const char*>(&this->exp_y), sizeof(int));
+	of.write((char*)&this->W_[0], this->W_.size() * sizeof(float_t));
+	of.write((char*)&this->b_[0], this->b_.size() * sizeof(float_t));
+	of.write((char*)&this->deltaW_[0], this->deltaW_.size() * sizeof(float_t));
+	of.write((char*)&this->input_[0], this->input_.size() * sizeof(float_t));
+	of.write((char*)&this->output_[0], this->output_.size() * sizeof(float_t));
+	of.write((char*)&this->g_[0], this->g_.size() * sizeof(float_t));
+	of.write((char*)&this->exp_y_vec[0], this->exp_y_vec.size() * sizeof(float_t));
 }
 
 #ifdef GPU

@@ -20,6 +20,7 @@ private:
 public:
 	MaxpoolingLayer(size_t in_width, size_t in_height, size_t in_depth);
 
+	void save_layer(std::ofstream& of);
 	/*
 	 In forward propagation, k��k blocks are reduced to a single value.
 	 Then, this single value acquires an error computed from backwards
@@ -45,9 +46,10 @@ public:
 	 */
 	std::unordered_map<size_t, size_t> max_loc;
 
-	vec_t max_loc_host;
+
 #ifdef GPU
 	vec_t_gpu max_loc_gpu;
+	vec_t max_loc_host;
 #endif
 };
 

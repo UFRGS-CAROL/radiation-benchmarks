@@ -83,6 +83,10 @@ vec_t FullyConnectedLayer::get_W_step(size_t in) {
 	return r;
 }
 
+void FullyConnectedLayer::save_layer(std::ofstream& of){
+	this->save_base_layer(of);
+}
+
 #ifdef GPU
 void FullyConnectedLayer::forward_gpu() {
 

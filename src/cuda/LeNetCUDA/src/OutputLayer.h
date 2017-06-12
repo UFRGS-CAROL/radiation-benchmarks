@@ -18,6 +18,8 @@ public:
 
 	void back_prop();
 	void init_weight();
+
+	void save_layer(std::ofstream& of);
 private:
 	void forward_cpu();
 	void forward_gpu();
