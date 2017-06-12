@@ -26,18 +26,25 @@
 #include <math.h>
 #include "boost/random.hpp"
 
+#ifdef GPU
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
-//namespace convnet {
-
-//typedef float float_t;
 typedef thrust::host_vector<float_t> vec_t;
 typedef thust::device_vector<float_t> vec_t_gpu;
 
+#else
+
+typedef std::vector<float_t> vec_t;
+
+#endif
+
 typedef std::vector<std::vector<float_t> > vec2d_t;
 
-
+void inline error(std::string s){
+	std::cout << "ERROR: " << s << std::endl;
+	exit(-1);
+}
 
 struct Image {
 	std::vector<std::vector<std::float_t> > img; // a image is represented by a 2-dimension vector

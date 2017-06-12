@@ -23,24 +23,8 @@ void OutputLayer::forward_cpu() {
 	output_ = input_;
 }
 
-void OutputLayer::forward_batch(int batch_size) {
-	this->err = 0;
-	for (size_t sample = 0; sample < batch_size; sample++) {
-		exp_y_vec_batch.clear();
-		exp_y_vec_batch.resize(in_depth_);
+void OutputLayer::forward_gpu() {
 
-		exp_y_vec_batch[this->exp_y_batch[sample]] = 1;
-		for (size_t i = 0; i < in_depth_; i++) {
-			err +=
-					0.5
-							* (exp_y_vec_batch[i]
-									- input_batch_[sample * in_depth_ + i])
-							* (exp_y_vec_batch[i]
-									- input_batch_[sample * in_depth_ + i]);
-		}
-	}
-	err = err / batch_size;
-	output_batch_ = input_batch_;
 }
 
 void OutputLayer::back_prop() {

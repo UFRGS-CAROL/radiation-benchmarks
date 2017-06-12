@@ -8,7 +8,6 @@
 #include "FullyConnectedLayer.h"
 #include "Util.h"
 
-
 FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
 		Layer(1, 1, in_depth, 1, 1, out_depth, 0.3, 0.01) {
 	output_.resize(out_depth_);
@@ -26,25 +25,12 @@ void FullyConnectedLayer::forward_cpu() {
 	}
 }
 
-void FullyConnectedLayer::forward_batch(int batch_size) {
-	output_batch_.resize(
-			batch_size * out_depth_ * out_width_ * out_height_);
-	for (size_t batch = 0; batch < batch_size; batch++) {
-		for (size_t out = 0; out < out_depth_; out++) {
-			output_batch_[batch * out_depth_ + out] = sigmod(
-					dot_per_batch(batch, input_batch_, get_W(out))
-							+ b_[out]);
-		}
-	}
-}
-
 void FullyConnectedLayer::back_prop() {
 	/*
 	 Compute the err terms;
 	 */
 	for (size_t in = 0; in < in_depth_; in++) {
-		g_[in] = df_sigmod(input_[in])
-				* dot(this->next->g_, get_W_step(in));
+		g_[in] = df_sigmod(input_[in]) * dot(this->next->g_, get_W_step(in));
 	}
 	/*
 	 Update weights.
@@ -97,3 +83,10 @@ vec_t FullyConnectedLayer::get_W_step(size_t in) {
 	return r;
 }
 
+#ifdef GPU
+void FullyConnectedLayer::forward_gpu() {
+
+}
+#else
+void FullyConnectedLayer::forward_gpu() {}
+#endif

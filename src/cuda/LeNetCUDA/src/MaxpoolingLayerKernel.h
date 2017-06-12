@@ -7,10 +7,13 @@
 
 #ifndef MAXPOOLINGLAYERKERNEL_H_
 #define MAXPOOLINGLAYERKERNEL_H_
-#include "MaxpoolingLayer.h"
 
-void forward_maxpool_layer_gpu(MaxpoolingLayer l);
-void backward_maxpool_layer_gpu(MaxpoolingLayer l);
+
+void forward_maxpool_layer_gpu(float_t *input, float_t *output,
+		float_t *max_loc, size_t out_width, size_t out_height, size_t out_depth,
+		size_t in_height, size_t in_width);
+
+void backward_maxpool_layer_gpu();
 
 
 #endif /* MAXPOOLINGLAYERKERNEL_H_ */

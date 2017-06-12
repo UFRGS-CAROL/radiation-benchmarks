@@ -14,10 +14,6 @@ class FullyConnectedLayer: public Layer {
 public:
 	FullyConnectedLayer(size_t in_depth, size_t out_depth);
 
-	void forward_cpu();
-
-	void forward_batch(int batch_size);
-
 	void back_prop() ;
 
 	/*
@@ -26,9 +22,13 @@ public:
 	 see also:http://deeplearning.net/tutorial/references.html#xavier10
 	 */
 	void init_weight() ;
+
 private:
 	vec_t get_W(size_t index);
 	vec_t get_W_step(size_t in);
+
+	void forward_cpu();
+	void forward_gpu();
 };
 
 

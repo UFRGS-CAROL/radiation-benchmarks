@@ -15,11 +15,12 @@
 class OutputLayer: public Layer {
 public:
 	OutputLayer(size_t in_depth);
-	void forward_cpu();
 
-	void forward_batch(int batch_size);
 	void back_prop();
 	void init_weight();
+private:
+	void forward_cpu();
+	void forward_gpu();
 
 };
 

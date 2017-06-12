@@ -66,7 +66,7 @@ void train(MNISTParser& m) {
 	//Sleep(1000);
 	printf("Testing with %d samples:\n", test_sample_count);
 	const clock_t begin_time = clock();
-	n.test(test_x, test_y, test_sample_count, 5);
+	n.test(test_x, test_y, test_sample_count);
 	cout << "Time consumed in test: "
 			<< float(clock() - begin_time) / (CLOCKS_PER_SEC / 1000) << " ms"
 			<< endl;

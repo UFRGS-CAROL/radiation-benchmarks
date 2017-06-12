@@ -6,8 +6,9 @@
  */
 
 #include "Layer.h"
+#ifdef GPU
 #include <thrust/device_vector.h>
-
+#endif
 
 Layer::Layer(size_t in_width, size_t in_height, size_t in_depth,
 		size_t out_width, size_t out_height, size_t out_depth, float_t alpha,
@@ -30,9 +31,22 @@ Layer::Layer(size_t in_width, size_t in_height, size_t in_depth,
 
 }
 
-void Layer::forward_gpu() {
-	forward_cpu();
+void Layer::forward() {
+#ifdef GPU
+	this->forward_gpu();
+#else
+	this->forward_cpu();
+#endif
+
 }
+
+//void Layer::forward_gpu() {
+//	error("CALLING IT FROM LAYER CLASS");
+//}
+//
+//void Layer::forward_cpu() {
+//	error("CALLING IT FROM LAYER CLASS");
+//}
 
 float_t Layer::sigmod(float_t in) {
 	return 1.0 / (1.0 + std::exp(-in));
@@ -50,6 +64,8 @@ size_t Layer::fan_out() {
 	return out_width_ * out_height_ * out_height_;
 }
 
-float* Layer::get_raw_vector(thrust::device_vector<float> th){
+#ifdef GPU
+float* Layer::get_raw_vector(vec_t_gpu th) {
 	return thrust::raw_pointer_cast(th.data());
 }
+#endif

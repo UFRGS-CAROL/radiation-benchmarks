@@ -7,6 +7,10 @@
 
 #include "MaxpoolingLayer.h"
 
+#ifdef GPU
+#include "MaxpoolingLayerKernel.h"
+#endif
+
 MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 		size_t in_depth) :
 		Layer(in_width, in_height, in_depth, in_width / 2, in_height / 2,
@@ -61,7 +65,48 @@ inline float_t MaxpoolingLayer::max_In_(size_t in_index, size_t h_, size_t w_,
 	return max_pixel;
 }
 
-
 inline size_t MaxpoolingLayer::getOutIndex(size_t out, size_t h_, size_t w_) {
 	return out * out_width_ * out_height_ + h_ / 2 * out_width_ + (w_ / 2);
 }
+
+#ifdef GPU
+
+void MaxpoolingLayer::forward_gpu() {
+	try {
+
+		this->input_buf = this->input_;
+		//PEDRO check if it is necessary to transfer weight again
+//		this->weight_buf = this->W_;
+//		this->b_buf = this->b_;
+
+// execute the code on the device
+		float_t *input;
+		float_t *output;
+		float_t *max_loc_buf;
+		size_t out_width;
+		size_t out_height;
+		size_t out_depth;
+		size_t in_height;
+		size_t in_width;
+
+		forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
+				out_height, out_depth, in_height, in_width);
+
+// transfer destination data from the device to the host
+//CHECK IT
+		this->output_ = this->output_buf;
+
+	} catch (std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		exit(2);
+	} catch (...) {
+		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
+		exit(1);
+	}
+
+}
+#else
+void MaxpoolingLayer::forward_gpu() {}
+#endif
+
+

@@ -20,7 +20,7 @@ ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 	this->b_.resize(out_depth * this->out_width_ * this->out_height_);
 	this->output_.resize(out_depth * this->out_width_ * this->out_height_);
 	init_weight();
-	this->init_cuda();
+
 }
 
 void ConvolutionalLayer::init_weight() {
@@ -28,10 +28,6 @@ void ConvolutionalLayer::init_weight() {
 	uniform_rand(b_.begin(), b_.end(), -1, 1);
 }
 
-
-void ConvolutionalLayer::forward() {
-	forward_cpu();
-}
 
 void ConvolutionalLayer::forward_cpu() {
 	std::fill(output_.begin(), output_.end(), 0);
@@ -54,41 +50,6 @@ void ConvolutionalLayer::forward_cpu() {
 		}
 	}
 }
-
-void ConvolutionalLayer::forward_gpu() {
-
-	try {
-
-		this->input_buf = this->input_;
-		//PEDRO check if it is necessary to transfer weight again
-		this->weight_buf = this->W_;
-		this->b_buf = this->b_;
-
-		// execute the code on the device
-		//PEDRO CHECK IT
-		float *i_buf = this->get_raw_vector(this->input_buf.data());
-		float *w_buf = this->get_raw_vector(this->weight_buf.data());
-		float *b_buf = this->get_raw_vector(this->b_buf.data());
-		float *o_buf = this->get_raw_vector(this->output_buf.data());
-
-		call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_,
-				this->in_height_, this->in_depth_, this->out_width_,
-				this->out_height_, this->out_depth_, this->kernel_size_);
-
-		// transfer destination data from the device to the host
-		//CHECK IT
-		this->output_ = this->output_buf;
-
-	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		exit(2);
-	} catch (...) {
-		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
-		exit(1);
-	}
-
-}
-
 
 void ConvolutionalLayer::back_prop() {
 	g_.clear();
@@ -215,3 +176,42 @@ float_t ConvolutionalLayer::conv(vec_t a, vec_t b) {
 	}
 	return sum;
 }
+
+#ifdef GPU
+void ConvolutionalLayer::forward_gpu() {
+
+	try {
+
+		this->input_buf = this->input_;
+		//PEDRO check if it is necessary to transfer weight again
+		this->weight_buf = this->W_;
+		this->b_buf = this->b_;
+
+		// execute the code on the device
+		//PEDRO CHECK IT
+		float *i_buf = this->get_raw_vector(this->input_buf.data());
+		float *w_buf = this->get_raw_vector(this->weight_buf.data());
+		float *b_buf = this->get_raw_vector(this->b_buf.data());
+		float *o_buf = this->get_raw_vector(this->output_buf.data());
+
+		call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_,
+				this->in_height_, this->in_depth_, this->out_width_,
+				this->out_height_, this->out_depth_, this->kernel_size_);
+
+		// transfer destination data from the device to the host
+		//CHECK IT
+		this->output_ = this->output_buf;
+
+	} catch (std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		exit(2);
+	} catch (...) {
+		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
+		exit(1);
+	}
+
+}
+
+#else
+void ConvolutionalLayer::forward_gpu() {}
+#endif

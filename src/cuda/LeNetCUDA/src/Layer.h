@@ -12,16 +12,18 @@
 #include "Util.h"
 
 class Layer {
+private:
+	virtual void forward_gpu() = 0;
+	virtual void forward_cpu() = 0;
+
 public:
 	Layer(size_t in_width, size_t in_height, size_t in_depth, size_t out_width,
 			size_t out_height, size_t out_depth, float_t alpha, float_t lambda) ;
 
 	virtual void init_weight() = 0;
-	virtual void forward_cpu() = 0;
-	virtual void forward_batch(int batch_size) = 0;
 	virtual void back_prop() = 0;
 
-	void forward_gpu();
+	void forward();
 
 	float_t sigmod(float_t in);
 
@@ -47,8 +49,8 @@ public:
 	vec_t input_;
 	vec_t output_;
 
-	vec_t input_batch_;
-	vec_t output_batch_;
+//	vec_t input_batch_;
+//	vec_t output_batch_;
 
 	Layer* next;
 
@@ -61,18 +63,18 @@ public:
 	int exp_y;
 	vec_t exp_y_vec;
 
-	vec_t exp_y_batch;
-	vec_t exp_y_vec_batch;
+//	vec_t exp_y_batch;
+//	vec_t exp_y_vec_batch;
 
 
-
+#ifdef GPU
 	vec_t_gpu input_buf;
 	vec_t_gpu weight_buf;
 	vec_t_gpu output_buf;
 	vec_t_gpu b_buf;
 
 	float *get_raw_vector(vec_t_gpu th);
-
+#endif
 };
 
 //} /* namespace convnet */

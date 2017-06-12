@@ -30,6 +30,8 @@ public:
 	void test(vec2d_t test_x, vec_t test_y, size_t test_size);
 
 	void add_layer(Layer* layer);
+	void load_weights(std::string path);
+	void save_weights(std::string path);
 
 private:
 	size_t max_iter(vec_t v);
@@ -38,10 +40,10 @@ private:
 
 	bool test_once(int test_x_index);
 
-	int test_once_random_batch(int batch_size);
-	int test_once_batch(int test_x_index, int batch_size);
-
-	bool check_batch_result(int batch_size);
+//	int test_once_random_batch(int batch_size);
+//	int test_once_batch(int test_x_index, int batch_size);
+//
+//	bool check_batch_result(int batch_size);
 
 	float_t train_once();
 

@@ -119,7 +119,7 @@ bool ConvNet::test_once_random() {
 bool ConvNet::test_once(int test_x_index) {
 	layers[0]->input_ = test_x_[test_x_index];
 	for (auto layer : layers) {
-		layer->forward_cpu();
+		layer->forward();
 		if (layer->next != nullptr) {
 			layer->next->input_ = layer->output_;
 		}
@@ -127,82 +127,82 @@ bool ConvNet::test_once(int test_x_index) {
 	return (int) test_y_[test_x_index] == (int) max_iter(layers.back()->output_);
 }
 
-int ConvNet::test_once_random_batch(int batch_size) {
-	int test_x_index = uniform_rand(0, test_size_ - batch_size);
-	return test_once_batch(test_x_index, batch_size);
-}
-
-int ConvNet::test_once_batch(int test_x_index, int batch_size) {
-	//std::cout<<"test_x_index: "<<test_x_index<<std::endl;
-	layers.back()->exp_y_batch.resize(batch_size);
-	// concatenate input vectors into one vector
-	for (int s = 0; s < batch_size; s++) {
-		layers[0]->input_batch_.insert(layers[0]->input_batch_.end(),
-				test_x_[test_x_index + s].begin(),
-				test_x_[test_x_index + s].end());
-		layers.back()->exp_y_batch[s] = test_y_[test_x_index + s];
-	}
-
-	for (auto layer : layers) {
-		layer->forward_batch(batch_size);
-		if (layer->next != nullptr) {
-			layer->next->input_batch_ = layer->output_batch_;
-		}
-	}
-
-	// collect batch results
-	int count = 0;
-	int outlables = layers.back()->in_depth_;
-	for (int sample = 0; sample < batch_size; sample++)
-		if ((int) test_y_[test_x_index + sample]
-				== (int) max_iter(
-						&layers.back()->output_batch_[0] + sample * outlables,
-						outlables))
-			count++;
-	return count;
-}
-
-bool ConvNet::check_batch_result(int batch_size) {
-	bool all_correct = true;
-	for (int sample = 0; sample < batch_size; sample++) {
-		int each_input_size = layers[0]->in_height_ * layers[0]->in_width_;
-		vec_t this_input = vec_t(
-				layers[0]->input_batch_.begin() + sample * each_input_size,
-				layers[0]->input_batch_.begin()
-						+ (sample + 1) * each_input_size);
-		layers[0]->input_ = this_input;
-		for (auto layer : layers) {
-			layer->forward_cpu();
-			if (layer->next != nullptr) {
-				layer->next->input_ = layer->output_;
-			}
-		}
-		vec_t output_batch = layers.back()->output_batch_;
-		vec_t this_output = layers.back()->output_;
-		int out_depth = layers.back()->in_depth_;
-		for (int out = 0; out < out_depth; out++) {
-			//printf("     Checking result of batch #%d out #%d...\n", batch, out);
-			float err = fabs(
-					this_output[out] - output_batch[out + sample * out_depth]);
-			if (err > 5e-3) {
-				printf(
-						"   !!==Wrong output. Sample: #%d, Out: #%d, should be: %f, batch result: %f\n",
-						sample, out, this_output[out],
-						output_batch[out + sample * out_depth]);
-				all_correct = false;
-			}
-		}
-		int outlables = layers.back()->in_depth_;
-		int cpu_result = (int) max_iter(layers.back()->output_);
-		int gpu_result = (int) max_iter(
-				&layers.back()->output_batch_[0] + sample * outlables,
-				outlables);
-		if (cpu_result != gpu_result)
-			printf("result #%d mismatch: CPU output: %d, GPU output: %d\n",
-					sample, cpu_result, gpu_result);
-	}
-	return all_correct;
-}
+//int ConvNet::test_once_random_batch(int batch_size) {
+//	int test_x_index = uniform_rand(0, test_size_ - batch_size);
+//	return test_once_batch(test_x_index, batch_size);
+//}
+//
+//int ConvNet::test_once_batch(int test_x_index, int batch_size) {
+//	//std::cout<<"test_x_index: "<<test_x_index<<std::endl;
+//	layers.back()->exp_y_batch.resize(batch_size);
+//	// concatenate input vectors into one vector
+//	for (int s = 0; s < batch_size; s++) {
+//		layers[0]->input_batch_.insert(layers[0]->input_batch_.end(),
+//				test_x_[test_x_index + s].begin(),
+//				test_x_[test_x_index + s].end());
+//		layers.back()->exp_y_batch[s] = test_y_[test_x_index + s];
+//	}
+//
+//	for (auto layer : layers) {
+//		layer->forward_batch(batch_size);
+//		if (layer->next != nullptr) {
+//			layer->next->input_batch_ = layer->output_batch_;
+//		}
+//	}
+//
+//	// collect batch results
+//	int count = 0;
+//	int outlables = layers.back()->in_depth_;
+//	for (int sample = 0; sample < batch_size; sample++)
+//		if ((int) test_y_[test_x_index + sample]
+//				== (int) max_iter(
+//						&layers.back()->output_batch_[0] + sample * outlables,
+//						outlables))
+//			count++;
+//	return count;
+//}
+//
+//bool ConvNet::check_batch_result(int batch_size) {
+//	bool all_correct = true;
+//	for (int sample = 0; sample < batch_size; sample++) {
+//		int each_input_size = layers[0]->in_height_ * layers[0]->in_width_;
+//		vec_t this_input = vec_t(
+//				layers[0]->input_batch_.begin() + sample * each_input_size,
+//				layers[0]->input_batch_.begin()
+//						+ (sample + 1) * each_input_size);
+//		layers[0]->input_ = this_input;
+//		for (auto layer : layers) {
+//			layer->forward();
+//			if (layer->next != nullptr) {
+//				layer->next->input_ = layer->output_;
+//			}
+//		}
+//		vec_t output_batch = layers.back()->output_batch_;
+//		vec_t this_output = layers.back()->output_;
+//		int out_depth = layers.back()->in_depth_;
+//		for (int out = 0; out < out_depth; out++) {
+//			//printf("     Checking result of batch #%d out #%d...\n", batch, out);
+//			float err = fabs(
+//					this_output[out] - output_batch[out + sample * out_depth]);
+//			if (err > 5e-3) {
+//				printf(
+//						"   !!==Wrong output. Sample: #%d, Out: #%d, should be: %f, batch result: %f\n",
+//						sample, out, this_output[out],
+//						output_batch[out + sample * out_depth]);
+//				all_correct = false;
+//			}
+//		}
+//		int outlables = layers.back()->in_depth_;
+//		int cpu_result = (int) max_iter(layers.back()->output_);
+//		int gpu_result = (int) max_iter(
+//				&layers.back()->output_batch_[0] + sample * outlables,
+//				outlables);
+//		if (cpu_result != gpu_result)
+//			printf("result #%d mismatch: CPU output: %d, GPU output: %d\n",
+//					sample, cpu_result, gpu_result);
+//	}
+//	return all_correct;
+//}
 
 float_t ConvNet::train_once() {
 	float_t err = 0;
@@ -217,11 +217,8 @@ float_t ConvNet::train_once() {
 		 Start forward feeding.
 		 */
 		for (auto layer : layers) {
-#ifdef GPU
-			layer->forward_gpu();
-#else
-			layer->forward_cpu();
-#endif
+			layer->forward();
+
 			if (layer->next != nullptr) {
 				layer->next->input_ = layer->output_;
 			}
@@ -236,4 +233,12 @@ float_t ConvNet::train_once() {
 		}
 	}
 	return err / M;
+}
+
+void ConvNet::load_weights(std::string path){
+
+}
+
+void ConvNet::save_weights(std::string path){
+
 }

@@ -6,7 +6,7 @@
  */
 
 #include "cudaUtil.h"
-//#include "MaxpoolingLayerKernel.h"
+#include "MaxpoolingLayerKernel.h"
 
 #define MAXPOOL_SIZE 2
 
@@ -83,15 +83,15 @@ void print_matrix(float *m, size_t h, size_t w) {
 
 }
 
-//void backward_maxpool_layer_gpu(MaxpoolingLayer l) {
-////	size_t n = layer.h * layer.w * layer.c * layer.batch;
-//
-////	backward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK>>>(n, layer.h,
-////			layer.w, layer.c, layer.stride, layer.size, layer.pad,
-////			layer.delta_gpu, net.delta_gpu, layer.indexes_gpu);
-//	cudaError_t ret = cudaDeviceSynchronize();
-//	CUDA_CHECK_RETURN(ret);
-//}
+void backward_maxpool_layer_gpu() {
+//	size_t n = layer.h * layer.w * layer.c * layer.batch;
+
+//	backward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK>>>(n, layer.h,
+//			layer.w, layer.c, layer.stride, layer.size, layer.pad,
+//			layer.delta_gpu, net.delta_gpu, layer.indexes_gpu);
+	cudaError_t ret = cudaDeviceSynchronize();
+	CUDA_CHECK_RETURN(ret);
+}
 
 void forward_maxpool_layer_gpu(float_t *input, float_t *output,
 		float_t *max_loc, size_t out_width, size_t out_height, size_t out_depth,
