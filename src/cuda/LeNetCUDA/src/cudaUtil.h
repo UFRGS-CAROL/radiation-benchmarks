@@ -14,6 +14,16 @@
 #include <math.h>
 
 #define BLOCK_SIZE 1024
+
+
+
+/**
+ * to use instead of unordered map
+ */
+typedef float_t* vec_device;
+typedef Pair* unordered_vec_device;
+
+
 /**
  * This macro checks return value of the CUDA runtime call and exits
  * the application if the call failed.
@@ -26,6 +36,8 @@
 		exit(1);															\
 	} }
 
+
 void cuda_gridsize(dim3*, dim3*, size_t, size_t, size_t z);
+
 
 #endif /* CUDAUTIL_H_ */

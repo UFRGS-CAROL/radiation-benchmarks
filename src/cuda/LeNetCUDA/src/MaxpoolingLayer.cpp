@@ -123,14 +123,14 @@ void MaxpoolingLayer::forward_gpu() {
 //		this->b_buf = this->b_;
 
 // execute the code on the device
-		float_t *input;
-		float_t *output;
-		float_t *max_loc_buf;
-		size_t out_width;
-		size_t out_height;
-		size_t out_depth;
-		size_t in_height;
-		size_t in_width;
+		float_t *input = this->get_raw_vector(this->input_);
+		float_t *output = this->get_raw_vector(this->output_);
+		float_t *max_loc_buf = this->get_raw_vector(this->max_loc_buf);
+		size_t out_width = this->out_width_;
+		size_t out_height = this->out_height_;
+		size_t out_depth = this->out_depth_;
+		size_t in_height = this->in_height_;
+		size_t in_width = this->in_width_;
 
 		forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
 				out_height, out_depth, in_height, in_width);

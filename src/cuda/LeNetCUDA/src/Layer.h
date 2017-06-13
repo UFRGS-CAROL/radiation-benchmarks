@@ -94,7 +94,7 @@ public:
 	vec_t_gpu output_buf;
 	vec_t_gpu b_buf;
 
-	float *get_raw_vector(vec_t_gpu th);
+	float_t *get_raw_vector(vec_t_gpu th);
 #endif
 };
 

@@ -34,27 +34,15 @@ typedef struct pair{
 	size_t second;
 }Pair;
 
-#ifdef GPU
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-
-typedef thrust::host_vector<float_t> vec_host;
-typedef thrust::device_vector<float_t> vec_device;
-
 /**
- * to use instead of unordered map
+ * theses types which will be used
+ * only on host side
  */
-typedef thrust::host_vector<Pair> unordered_vec_host;
-typedef thrust::device_vector<Pair> unordered_vec_device;
-
-#else
-
 typedef std::vector<float_t> vec_host;
 typedef std::vector<Pair>    unordered_vec;
-
-#endif
-
 typedef std::vector<std::vector<float_t> > vec2d_t;
+
+
 
 void inline error(std::string s){
 	std::cout << "ERROR: " << s << std::endl;
