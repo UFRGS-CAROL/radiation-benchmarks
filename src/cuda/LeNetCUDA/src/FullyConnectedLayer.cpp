@@ -17,6 +17,7 @@ FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
 	g_.resize(in_depth_);
 
 	this->init_weight();
+
 }
 
 void FullyConnectedLayer::forward_cpu() {
@@ -88,6 +89,7 @@ void FullyConnectedLayer::save_layer(std::ofstream& of){
 }
 
 void FullyConnectedLayer::load_layer(std::ifstream& in){
+	std::cout << "Inside Fully conected\n";
 	this->load_base_layer(in);
 }
 

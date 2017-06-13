@@ -10,6 +10,8 @@
 
 OutputLayer::OutputLayer(size_t in_depth) :
 		Layer(1, 1, in_depth, 0, 0, 0, 0, 0) {
+
+
 }
 
 void OutputLayer::forward_cpu() {
@@ -49,4 +51,5 @@ void OutputLayer::save_layer(std::ofstream& of){
 
 void OutputLayer::load_layer(std::ifstream& in){
 	this->load_base_layer(in);
+	std::cout << "Inside Output Layer\n";
 }

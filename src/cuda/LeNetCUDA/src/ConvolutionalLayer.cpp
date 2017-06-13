@@ -21,6 +21,8 @@ ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 	this->output_.resize(out_depth * this->out_width_ * this->out_height_);
 	init_weight();
 
+
+
 }
 
 void ConvolutionalLayer::init_weight() {
@@ -190,6 +192,7 @@ void ConvolutionalLayer::save_layer(std::ofstream& of){
 void ConvolutionalLayer::load_layer(std::ifstream& in){
 	this->load_base_layer(in);
 	this->kernel_size_ = this->load_layer_var<size_t>(in);
+	std::cout << "Inside Conv\n";
 }
 
 #ifdef GPU

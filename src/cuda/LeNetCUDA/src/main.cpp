@@ -13,6 +13,7 @@ using namespace std;
 void classify(MNISTParser& m, string weigths) {
 	m.load_testing();
 
+
 //	vec2d_t x;
 //	vec_t y;
 
@@ -31,6 +32,9 @@ void classify(MNISTParser& m, string weigths) {
 	n.add_layer(new ConvolutionalLayer(5, 5, 16, 5, 100));
 	n.add_layer(new FullyConnectedLayer(100, 10));
 //	n.train(test_x, test_y, 10000);
+	//need to load network configurations here
+	n.load_weights(weigths);
+
 	int test_sample_count = 5;
 	//Sleep(1000);
 	printf("Testing with %d samples:\n", test_sample_count);

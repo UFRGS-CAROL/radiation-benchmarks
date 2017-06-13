@@ -162,7 +162,9 @@ void ConvNet::load_weights(std::string path) {
 	std::ifstream in(path, std::ios::in | std::ios::binary | std::ios::ate);
 	if (in.is_open()) {
 		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
+			std::cout << "Passou\n";
 			(*i)->load_layer(in);
+			std::cout << "Passou2\n";
 		}
 		in.close();
 	} else {

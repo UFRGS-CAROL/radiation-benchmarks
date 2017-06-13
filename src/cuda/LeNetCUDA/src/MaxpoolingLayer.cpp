@@ -16,6 +16,8 @@ MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 		Layer(in_width, in_height, in_depth, in_width / 2, in_height / 2,
 				in_depth, 0, 0) {
 	output_.resize(out_depth_ * out_width_ * out_height_);
+
+
 }
 
 void MaxpoolingLayer::forward_cpu() {
@@ -94,6 +96,7 @@ void MaxpoolingLayer::load_layer(std::ifstream& in){
 		size_t second = this->load_layer_var<size_t>(in);
 		this->max_loc[first] = second;
 	}
+	std::cout << "Inside Maxpool\n";
 }
 
 #ifdef GPU

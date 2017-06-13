@@ -6,7 +6,7 @@
  */
 
 #include "Layer.h"
-#include <type_traits>
+
 #ifdef GPU
 #include <thrust/device_vector.h>
 #endif
@@ -69,21 +69,32 @@ size_t Layer::fan_out() {
  */
 template<typename T>
 void Layer::write_layer_vec(vec_t v, std::ofstream& of) {
-	this->write_layer_var<size_t>(v.size(), of);
-	of.write(reinterpret_cast<const char*>(&v[0]), sizeof(T) * v.size());
+	size_t siz = v.size();
+	this->write_layer_var<size_t>(siz, of);
+	for(auto i = v.rbegin(); i != v.rend(); i++){
+		of << (*i);
+	}
+//	of.write(reinterpret_cast<const char*>(&v[0]), sizeof(T) * v.size());
 }
 
 template<typename T>
 void Layer::write_layer_var(T var, std::ofstream& of) {
-	of.write(reinterpret_cast<const char*>(&var), sizeof(T));
+//	of.write(reinterpret_cast<const char*>(&var), sizeof(T));
+	of << var;
 }
 
 template<typename T>
 vec_t Layer::load_layer_vec(std::ifstream& in) {
 	//reading first the size of the vector<T>
 	size_t siz = this->load_layer_var<size_t>(in);
+
 	vec_t v(siz, 0);
-	in.read(reinterpret_cast<char*>(&v[0]), sizeof(T) * siz);
+
+	for(auto i = v.rbegin(); i != v.rend(); i++){
+		float_t tmp;
+		in >> tmp;
+	}
+//	in.read(reinterpret_cast<char*>(&v[0]), sizeof(T) * siz);
 
 	return v;
 }
@@ -91,7 +102,8 @@ vec_t Layer::load_layer_vec(std::ifstream& in) {
 template<typename T>
 T Layer::load_layer_var(std::ifstream& in) {
 	T buf;
-	in.read(reinterpret_cast<char*>(&buf), sizeof(T));
+//	in.read(reinterpret_cast<char*>(&buf), sizeof(T));
+	in >> buf;
 	return buf;
 }
 
@@ -117,7 +129,10 @@ void Layer::save_base_layer(std::ofstream& of) {
 }
 
 void Layer::load_base_layer(std::ifstream& in) {
+	std::cout << "Dentro do load base\n";
 	this->in_width_ = this->load_layer_var<size_t>(in);
+
+
 	this->in_height_ = this->load_layer_var<size_t>(in);
 	this->in_depth_ = this->load_layer_var<size_t>(in);
 	this->out_width_ = this->load_layer_var<size_t>(in);
@@ -128,6 +143,7 @@ void Layer::load_base_layer(std::ifstream& in) {
 	this->lambda_ = this->load_layer_var<float_t>(in);
 	this->err = this->load_layer_var<float_t>(in);
 	this->exp_y = this->load_layer_var<int>(in);
+	std::cout << "Dentro do load base2\n";
 	this->W_ = this->load_layer_vec<vec_t>(in);
 	this->b_ = this->load_layer_vec<vec_t>(in);
 	this->deltaW_ = this->load_layer_vec<vec_t>(in);
@@ -135,6 +151,7 @@ void Layer::load_base_layer(std::ifstream& in) {
 	this->output_ = this->load_layer_vec<vec_t>(in);
 	this->g_ = this->load_layer_vec<vec_t>(in);
 	this->exp_y_vec = this->load_layer_vec<vec_t>(in);
+	std::cout << "Dentro do load base3\n";
 }
 
 #ifdef GPU
