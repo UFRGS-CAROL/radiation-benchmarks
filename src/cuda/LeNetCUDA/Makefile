@@ -66,7 +66,7 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) $(OPTS) --compiler-options "$(NVCC_FLAGS)" -c $< -o $@ 
 
 train:
-	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte  .
+	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte  ./lenet.weights
 
 
 obj:

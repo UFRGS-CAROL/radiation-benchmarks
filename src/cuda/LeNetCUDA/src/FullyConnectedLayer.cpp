@@ -87,6 +87,10 @@ void FullyConnectedLayer::save_layer(std::ofstream& of){
 	this->save_base_layer(of);
 }
 
+void FullyConnectedLayer::load_layer(std::ifstream& in){
+	this->load_base_layer(in);
+}
+
 #ifdef GPU
 void FullyConnectedLayer::forward_gpu() {
 

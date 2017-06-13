@@ -23,7 +23,8 @@ public:
 	 */
 	void init_weight() ;
 
-	virtual void save_layer(std::ofstream& of);
+	void save_layer(std::ofstream& of);
+	void load_layer(std::ifstream& in);
 
 
 private:

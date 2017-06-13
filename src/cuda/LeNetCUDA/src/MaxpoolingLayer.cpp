@@ -76,11 +76,24 @@ inline size_t MaxpoolingLayer::getOutIndex(size_t out, size_t h_, size_t w_) {
 void MaxpoolingLayer::save_layer(std::ofstream& of) {
 	this->save_base_layer(of);
 
-	of << this->max_loc.size();
+	size_t siz =this->max_loc.size();
+	this->write_layer_var<size_t>(siz, of);
+
 	for (auto const& p : this->max_loc) {
-		of << p.first << p.second;
+		this->write_layer_var<size_t>(p.first, of);
+		this->write_layer_var<size_t>(p.second, of);
 	}
 
+}
+
+void MaxpoolingLayer::load_layer(std::ifstream& in){
+	this->load_base_layer(in);
+	size_t siz = this->load_layer_var<size_t>(in);
+	for(int i = 0; i < siz; i++){
+		size_t first = this->load_layer_var<size_t>(in);
+		size_t second = this->load_layer_var<size_t>(in);
+		this->max_loc[first] = second;
+	}
 }
 
 #ifdef GPU

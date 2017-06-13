@@ -7,7 +7,6 @@
 
 #include "ConvNet.h"
 
-
 void ConvNet::train(vec2d_t train_x, vec_t train_y, size_t train_size) {
 
 #ifdef GPU
@@ -160,19 +159,26 @@ float_t ConvNet::train_once() {
 }
 
 void ConvNet::load_weights(std::string path) {
-
+	std::ifstream in(path, std::ios::in | std::ios::binary | std::ios::ate);
+	if (in.is_open()) {
+		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
+			(*i)->load_layer(in);
+		}
+		in.close();
+	} else {
+		error("FAILED TO OPEN FILE " + path);
+	}
 }
 
 void ConvNet::save_weights(std::string path) {
-	std::string full_path(path + "/lenet.weights");
-	std::ofstream fout(full_path, std::ios::out | std::ios::binary);
+	std::ofstream fout(path, std::ios::out | std::ios::binary);
 	if (fout.is_open()) {
-		for (const auto i : this->layers) {
-			(*i).save_layer(fout);
+		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
+			(*i)->save_layer(fout);
 		}
 		fout.close();
 	} else {
-		error("FAILED TO OPEN FILE " + full_path);
+		error("FAILED TO OPEN FILE " + path);
 	}
 
 }

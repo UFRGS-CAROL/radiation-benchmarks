@@ -21,6 +21,7 @@ public:
 	MaxpoolingLayer(size_t in_width, size_t in_height, size_t in_depth);
 
 	void save_layer(std::ofstream& of);
+	void load_layer(std::ifstream& in);
 	/*
 	 In forward propagation, k��k blocks are reduced to a single value.
 	 Then, this single value acquires an error computed from backwards
@@ -36,7 +37,6 @@ public:
 	inline float_t max_In_(size_t in_index, size_t h_, size_t w_,
 			size_t out_index);
 
-
 	inline size_t getOutIndex(size_t out, size_t h_, size_t w_);
 
 	/*
@@ -46,12 +46,10 @@ public:
 	 */
 	std::unordered_map<size_t, size_t> max_loc;
 
-
 #ifdef GPU
 	vec_t_gpu max_loc_gpu;
 	vec_t max_loc_host;
 #endif
 };
-
 
 #endif /* MAXPOOLINGLAYER_H_ */

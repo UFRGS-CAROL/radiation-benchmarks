@@ -26,6 +26,7 @@ public:
 	void init_weight();
 	void back_prop();
 	void save_layer(std::ofstream& of);
+	void load_layer(std::ifstream& in);
 
 private:
 	void forward_cpu();

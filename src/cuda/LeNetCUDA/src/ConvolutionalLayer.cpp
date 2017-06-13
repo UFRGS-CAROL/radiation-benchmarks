@@ -184,7 +184,12 @@ float_t ConvolutionalLayer::conv(vec_t a, vec_t b) {
  */
 void ConvolutionalLayer::save_layer(std::ofstream& of){
 	this->save_base_layer(of);
-	of.write((char*)this->kernel_size_, sizeof(size_t));
+	this->write_layer_var<size_t>(this->kernel_size_, of);
+}
+
+void ConvolutionalLayer::load_layer(std::ifstream& in){
+	this->load_base_layer(in);
+	this->kernel_size_ = this->load_layer_var<size_t>(in);
 }
 
 #ifdef GPU
