@@ -7,7 +7,7 @@
 
 #include "ConvNet.h"
 
-void ConvNet::train(vec2d_t train_x, vec_t train_y, size_t train_size) {
+void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 
 #ifdef GPU
 	std::cout << "Training with GPU:" << std::endl;
@@ -36,7 +36,7 @@ void ConvNet::train(vec2d_t train_x, vec_t train_y, size_t train_size) {
 	}
 }
 
-void ConvNet::test(vec2d_t test_x, vec_t test_y, size_t test_size) {
+void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size) {
 //	assert(batch_size > 0);
 //	assert(test_size % batch_size == 0);
 	test_x_ = test_x, test_y_ = test_y, test_size_ = test_size;
@@ -85,7 +85,7 @@ void ConvNet::add_layer(Layer* layer) {
 	layer->next = NULL;
 }
 
-size_t ConvNet::max_iter(vec_t v) {
+size_t ConvNet::max_iter(vec_host v) {
 	size_t i = 0;
 	float_t max = v[0];
 	for (size_t j = 1; j < v.size(); j++) {
@@ -141,7 +141,6 @@ float_t ConvNet::train_once() {
 		 */
 		for (auto layer : layers) {
 			layer->forward();
-
 			if (layer->next != nullptr) {
 				layer->next->input_ = layer->output_;
 			}
@@ -159,26 +158,27 @@ float_t ConvNet::train_once() {
 }
 
 void ConvNet::load_weights(std::string path) {
-	std::ifstream in(path, std::ios::in | std::ios::binary | std::ios::ate);
-	if (in.is_open()) {
-		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
-			std::cout << "Passou\n";
+	FILE *in = fopen(path.c_str(), "rb");
+//	std::ifstream in(path, std::ios::in | std::ios::binary | std::ios::ate);
+	if (in != NULL) {
+		for (auto i = layers.begin(); i != layers.end(); i++) {
+
 			(*i)->load_layer(in);
-			std::cout << "Passou2\n";
 		}
-		in.close();
+		fclose(in);
 	} else {
 		error("FAILED TO OPEN FILE " + path);
 	}
 }
 
 void ConvNet::save_weights(std::string path) {
-	std::ofstream fout(path, std::ios::out | std::ios::binary);
-	if (fout.is_open()) {
-		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
+	FILE *fout = fopen(path.c_str(), "wb");
+//	std::ofstream fout(path, std::ios::out | std::ios::binary);
+	if (fout != NULL) {
+		for (auto i = layers.begin(); i != layers.end(); i++) {
 			(*i)->save_layer(fout);
 		}
-		fout.close();
+		fclose(fout);
 	} else {
 		error("FAILED TO OPEN FILE " + path);
 	}

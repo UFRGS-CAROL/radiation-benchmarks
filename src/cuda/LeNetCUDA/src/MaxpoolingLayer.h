@@ -13,15 +13,17 @@
 #include "Util.h"
 #include "Layer.h"
 
+
 class MaxpoolingLayer: public Layer {
 private:
 	void forward_gpu();
 	void forward_cpu();
+	Pair get_max_loc_pair(size_t first, size_t second);
 public:
 	MaxpoolingLayer(size_t in_width, size_t in_height, size_t in_depth);
 
-	void save_layer(std::ofstream& of);
-	void load_layer(std::ifstream& in);
+	void save_layer(FILE *of);
+	void load_layer(FILE *in);
 	/*
 	 In forward propagation, k��k blocks are reduced to a single value.
 	 Then, this single value acquires an error computed from backwards
@@ -44,8 +46,8 @@ public:
 	 which will be used in the back propagation,
 	 for err translating.
 	 */
-	std::unordered_map<size_t, size_t> max_loc;
-
+//	std::unordered_map<size_t, size_t> max_loc;
+	unordered_vec max_loc;
 #ifdef GPU
 	vec_t_gpu max_loc_gpu;
 	vec_t max_loc_host;

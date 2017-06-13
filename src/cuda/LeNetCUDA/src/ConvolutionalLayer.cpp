@@ -131,9 +131,9 @@ inline size_t ConvolutionalLayer::getOutIndex(size_t out, size_t h_,
 	return out * out_height_ * out_width_ + h_ * out_width_ + w_;
 }
 
-inline vec_t ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
+inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 		size_t w_) {
-	vec_t r;
+	vec_host r;
 	for (size_t y = 0; y < kernel_size_; y++) {
 		for (size_t x = 0; x < kernel_size_; x++) {
 			r.push_back(
@@ -144,8 +144,8 @@ inline vec_t ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 	return r;
 }
 
-inline vec_t ConvolutionalLayer::getW_(size_t in, size_t out) {
-	vec_t r;
+inline vec_host ConvolutionalLayer::getW_(size_t in, size_t out) {
+	vec_host r;
 	for (size_t i = 0; i < kernel_size_ * kernel_size_; i++)
 		r.push_back(
 				W_[in * out_depth_ * kernel_size_ * kernel_size_
@@ -170,7 +170,7 @@ inline int ConvolutionalLayer::getb_(size_t out, size_t h_, size_t w_) {
 
  see also:
  */
-float_t ConvolutionalLayer::conv(vec_t a, vec_t b) {
+float_t ConvolutionalLayer::conv(vec_host a, vec_host b) {
 	assert(a.size() == b.size());
 	float_t sum = 0, size = a.size();
 	for (size_t i = 0; i < size; i++) {
@@ -184,15 +184,14 @@ float_t ConvolutionalLayer::conv(vec_t a, vec_t b) {
  * I need save only
  * 	size_t kernel_size_;
  */
-void ConvolutionalLayer::save_layer(std::ofstream& of){
+void ConvolutionalLayer::save_layer(FILE *of){
 	this->save_base_layer(of);
 	this->write_layer_var<size_t>(this->kernel_size_, of);
 }
 
-void ConvolutionalLayer::load_layer(std::ifstream& in){
+void ConvolutionalLayer::load_layer(FILE *in){
 	this->load_base_layer(in);
 	this->kernel_size_ = this->load_layer_var<size_t>(in);
-	std::cout << "Inside Conv\n";
 }
 
 #ifdef GPU

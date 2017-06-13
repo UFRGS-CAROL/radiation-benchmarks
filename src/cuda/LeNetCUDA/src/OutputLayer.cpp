@@ -45,11 +45,11 @@ void OutputLayer::init_weight() {
 /**
  * there is not outputlayer parameters
  */
-void OutputLayer::save_layer(std::ofstream& of){
+void OutputLayer::save_layer(FILE *of){
 	this->save_base_layer(of);
 }
 
-void OutputLayer::load_layer(std::ifstream& in){
+void OutputLayer::load_layer(FILE *in){
 	this->load_base_layer(in);
 	std::cout << "Inside Output Layer\n";
 }

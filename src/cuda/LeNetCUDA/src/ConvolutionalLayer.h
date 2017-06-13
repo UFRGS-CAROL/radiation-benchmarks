@@ -25,8 +25,8 @@ public:
 
 	void init_weight();
 	void back_prop();
-	void save_layer(std::ofstream& of);
-	void load_layer(std::ifstream& in);
+	void save_layer(FILE *of);
+	void load_layer(FILE *in);
 
 private:
 	void forward_cpu();
@@ -34,9 +34,9 @@ private:
 
 	inline size_t getOutIndex(size_t out, size_t h_, size_t w_);
 
-	inline vec_t getInforKernel(size_t in, size_t h_, size_t w_);
+	inline vec_host getInforKernel(size_t in, size_t h_, size_t w_);
 
-	inline vec_t getW_(size_t in, size_t out);
+	inline vec_host getW_(size_t in, size_t out);
 
 	inline int getb_(size_t out, size_t h_, size_t w_);
 
@@ -55,7 +55,7 @@ private:
 
 	 see also:
 	 */
-	float_t conv(vec_t a, vec_t b);
+	float_t conv(vec_host a, vec_host b);
 	size_t kernel_size_;
 
 

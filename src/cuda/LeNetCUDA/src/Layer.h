@@ -22,17 +22,34 @@ public:
 
 	virtual void init_weight() = 0;
 	virtual void back_prop() = 0;
-	virtual void save_layer(std::ofstream& of) = 0;
-	virtual void load_layer(std::ifstream& in) = 0;
+	virtual void save_layer(FILE *of) = 0;
+	virtual void load_layer(FILE *in) = 0;
 
-	template<typename T> void write_layer_vec(vec_t v, std::ofstream& of);
-	template<typename T> void write_layer_var(T var, std::ofstream& of);
+	template<typename T> void write_layer_vec(std::vector<T> v, FILE *of) {
+		this->write_layer_var<size_t>(v.size(), of);
+		fwrite(v.data(), sizeof(T), v.size(), of);
+	}
 
-	template<typename T> vec_t load_layer_vec(std::ifstream& in);
-	template<typename T> T load_layer_var(std::ifstream& in);
+	template<typename T> void write_layer_var(T var, FILE *of) {
+		fwrite(&var, sizeof(T), 1, of);
+	}
 
-	void save_base_layer(std::ofstream& of);
-	void load_base_layer(std::ifstream& in);
+	template<typename T> std::vector<T> load_layer_vec(FILE *in) {
+		size_t siz = this->load_layer_var<size_t>(in);
+
+		std::vector<T> v(siz);
+		fread(v.data(), sizeof(T), siz, in);
+		return v;
+	}
+
+	template<typename T> T load_layer_var(FILE *in) {
+		T buf;
+		fread(&buf, sizeof(T), 1, in);
+		return buf;
+	}
+
+	void save_base_layer(FILE *of);
+	void load_base_layer(FILE *in);
 
 	void forward();
 
@@ -52,24 +69,24 @@ public:
 	size_t out_height_;
 	size_t out_depth_;
 
-	vec_t W_;
-	vec_t b_;
+	vec_host W_;
+	vec_host b_;
 
-	vec_t deltaW_;
+	vec_host deltaW_;
 
-	vec_t input_;
-	vec_t output_;
+	vec_host input_;
+	vec_host output_;
 
 	Layer* next;
 
 	float_t alpha_; // learning rate
 	float_t lambda_; // momentum
-	vec_t g_; // err terms
+	vec_host g_; // err terms
 
 	/*output*/
 	float_t err;
 	int exp_y;
-	vec_t exp_y_vec;
+	vec_host exp_y_vec;
 
 #ifdef GPU
 	vec_t_gpu input_buf;

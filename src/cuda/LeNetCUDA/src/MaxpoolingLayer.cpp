@@ -11,12 +11,20 @@
 #include "MaxpoolingLayerKernel.h"
 #endif
 
+#define MAX ULONG_MAX
+
 MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 		size_t in_depth) :
 		Layer(in_width, in_height, in_depth, in_width / 2, in_height / 2,
 				in_depth, 0, 0) {
-	output_.resize(out_depth_ * out_width_ * out_height_);
+	this->output_.resize(
+			this->out_depth_ * this->out_width_ * this->out_height_);
+	Pair t;
+	t.first = MAX;
+	t.second = MAX;
 
+	this->max_loc = std::vector < Pair
+			> (this->out_depth_ * this->in_height_ * this->in_width_, t);
 
 }
 
@@ -40,10 +48,22 @@ void MaxpoolingLayer::forward_cpu() {
  the backpropagated errors from max-pooling layers are rather sparse.
  */
 void MaxpoolingLayer::back_prop() {
+
 	g_.clear();
 	g_.resize(in_width_ * in_height_ * in_depth_);
+
 	for (auto pair : max_loc)
-		g_[pair.second] = this->next->g_[pair.first];
+		if (pair.first != MAX) {
+			g_[pair.second] = this->next->g_[pair.first];
+		}
+
+//	for(auto i = this->max_loc.begin(); i != this->max_loc.end(); i++){
+//		Pair pair = (*i);
+//		if(pair.first != UINT_MAX)
+//			g_[pair.second] = this->next->g_[pair.first];
+//
+//	}
+
 }
 
 void MaxpoolingLayer::init_weight() {
@@ -60,11 +80,18 @@ inline float_t MaxpoolingLayer::max_In_(size_t in_index, size_t h_, size_t w_,
 					+ (w_ + x);
 			if (max_pixel < input_[tmp]) {
 				max_pixel = input_[tmp];
-				max_loc[out_index] = tmp;
+				max_loc[out_index] = this->get_max_loc_pair(out_index, tmp);
 			}
 		}
 	}
 	return max_pixel;
+}
+
+inline Pair MaxpoolingLayer::get_max_loc_pair(size_t first, size_t second) {
+	Pair ret;
+	ret.first = first;
+	ret.second = second;
+	return ret;
 }
 
 inline size_t MaxpoolingLayer::getOutIndex(size_t out, size_t h_, size_t w_) {
@@ -75,28 +102,14 @@ inline size_t MaxpoolingLayer::getOutIndex(size_t out, size_t h_, size_t w_) {
  * 	std::unordered_map<size_t, size_t> max_loc;
  vec_t max_loc_host;
  */
-void MaxpoolingLayer::save_layer(std::ofstream& of) {
+void MaxpoolingLayer::save_layer(FILE *of) {
 	this->save_base_layer(of);
-
-	size_t siz =this->max_loc.size();
-	this->write_layer_var<size_t>(siz, of);
-
-	for (auto const& p : this->max_loc) {
-		this->write_layer_var<size_t>(p.first, of);
-		this->write_layer_var<size_t>(p.second, of);
-	}
-
+	this->write_layer_vec<Pair>(this->max_loc, of);
 }
 
-void MaxpoolingLayer::load_layer(std::ifstream& in){
+void MaxpoolingLayer::load_layer(FILE *in) {
 	this->load_base_layer(in);
-	size_t siz = this->load_layer_var<size_t>(in);
-	for(int i = 0; i < siz; i++){
-		size_t first = this->load_layer_var<size_t>(in);
-		size_t second = this->load_layer_var<size_t>(in);
-		this->max_loc[first] = second;
-	}
-	std::cout << "Inside Maxpool\n";
+	this->max_loc = this->load_layer_vec<Pair>(in);
 }
 
 #ifdef GPU

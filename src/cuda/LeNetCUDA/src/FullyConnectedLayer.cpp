@@ -21,6 +21,7 @@ FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
 }
 
 void FullyConnectedLayer::forward_cpu() {
+
 	for (size_t out = 0; out < out_depth_; out++) {
 		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
 	}
@@ -68,28 +69,27 @@ void FullyConnectedLayer::init_weight() {
 
 }
 
-vec_t FullyConnectedLayer::get_W(size_t index) {
-	vec_t v;
+vec_host FullyConnectedLayer::get_W(size_t index) {
+	vec_host v;
 	for (int i = 0; i < in_depth_; i++) {
 		v.push_back(W_[index * in_depth_ + i]);
 	}
 	return v;
 }
 
-vec_t FullyConnectedLayer::get_W_step(size_t in) {
-	vec_t r;
+vec_host FullyConnectedLayer::get_W_step(size_t in) {
+	vec_host r;
 	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
 		r.push_back(W_[i]);
 	}
 	return r;
 }
 
-void FullyConnectedLayer::save_layer(std::ofstream& of){
+void FullyConnectedLayer::save_layer(FILE *of){
 	this->save_base_layer(of);
 }
 
-void FullyConnectedLayer::load_layer(std::ifstream& in){
-	std::cout << "Inside Fully conected\n";
+void FullyConnectedLayer::load_layer(FILE *in){
 	this->load_base_layer(in);
 }
 

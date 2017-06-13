@@ -23,13 +23,13 @@ public:
 	 */
 	void init_weight() ;
 
-	void save_layer(std::ofstream& of);
-	void load_layer(std::ifstream& in);
+	void save_layer(FILE *of);
+	void load_layer(FILE *in);
 
 
 private:
-	vec_t get_W(size_t index);
-	vec_t get_W_step(size_t in);
+	vec_host get_W(size_t index);
+	vec_host get_W_step(size_t in);
 
 	void forward_cpu();
 	void forward_gpu();

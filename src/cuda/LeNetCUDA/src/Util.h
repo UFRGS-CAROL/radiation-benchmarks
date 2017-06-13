@@ -26,16 +26,31 @@
 #include <math.h>
 #include "boost/random.hpp"
 
+/**
+ * to use instead of unordered map
+ */
+typedef struct pair{
+	size_t first;
+	size_t second;
+}Pair;
+
 #ifdef GPU
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
-typedef thrust::host_vector<float_t> vec_t;
-typedef thust::device_vector<float_t> vec_t_gpu;
+typedef thrust::host_vector<float_t> vec_host;
+typedef thrust::device_vector<float_t> vec_device;
+
+/**
+ * to use instead of unordered map
+ */
+typedef thrust::host_vector<Pair> unordered_vec_host;
+typedef thrust::device_vector<Pair> unordered_vec_device;
 
 #else
 
-typedef std::vector<float_t> vec_t;
+typedef std::vector<float_t> vec_host;
+typedef std::vector<Pair>    unordered_vec;
 
 #endif
 
@@ -86,13 +101,13 @@ void uniform_rand(Iter begin, Iter end, float_t min, float_t max) {
 		*it = uniform_rand(min, max);
 }
 
-void disp_vec_t(vec_t v);
+void disp_vec_t(vec_host v);
 
 void disp_vec2d_t(vec2d_t v);
 
-float_t dot(vec_t x, vec_t w);
+float_t dot(vec_host x, vec_host w);
 
-float_t dot_per_batch(int batch, vec_t x, vec_t w);
+float_t dot_per_batch(int batch, vec_host x, vec_host w);
 
 //} // namespace convnet
 

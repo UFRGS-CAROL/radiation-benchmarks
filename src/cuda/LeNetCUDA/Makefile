@@ -24,13 +24,13 @@ LOGS?=0
 COMMON=-std=c++11 
 
 
-CFLAGS= $(COMMON)  -L/usr/local/cuda/lib64 -lcuda -lcudart
+CFLAGS= $(COMMON) 
 
-NVCC_FLAGS=
+NVCC_FLAGS= 
 #-std=c++11 
 
 ifeq ($(DEBUG),1)
-OPTS= -G -g
+OPTS= -g
 endif
 
 ifeq ($(LOGS), 1)
@@ -40,6 +40,11 @@ endif
 
 ifeq ($(GPU), 1)
 ON_GPU= -DGPU
+CFLAGS+=  -L/usr/local/cuda/lib64 -lcuda -lcudart
+ifeq ($(DEBUG),1)
+OPTS+= -G
+endif
+
 endif
 
 GPU_KERNELS=ConvKernels.o

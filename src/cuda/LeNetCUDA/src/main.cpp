@@ -18,7 +18,7 @@ void classify(MNISTParser& m, string weigths) {
 //	vec_t y;
 
 	vec2d_t test_x;
-	vec_t test_y;
+	vec_host test_y;
 	for (size_t i = 0; i < 10000; i++) {
 		Sample *s = m.get_sample(i);
 		test_x.push_back(s->image);
@@ -52,7 +52,7 @@ void train(MNISTParser& m, string weigths) {
 //	vec_t y;
 	int imgs = 10000;
 	vec2d_t test_x;
-	vec_t test_y;
+	vec_host test_y;
 	for (size_t i = 0; i < imgs; i++) {
 		Sample *temp = m.get_sample(i);
 		test_x.push_back(temp->image);

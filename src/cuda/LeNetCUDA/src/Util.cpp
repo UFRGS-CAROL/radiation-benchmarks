@@ -13,7 +13,7 @@ int uniform_rand(int min, int max) {
 	return dst(gen);
 }
 
-void disp_vec_t(vec_t v) {
+void disp_vec_t(vec_host v) {
 	for (auto i : v)
 		std::cout << i << "\t";
 	std::cout << "\n";
@@ -27,7 +27,7 @@ void disp_vec2d_t(vec2d_t v) {
 	}
 }
 
-float_t dot(vec_t x, vec_t w) {
+float_t dot(vec_host x, vec_host w) {
 	assert(x.size() == w.size());
 	float_t sum = 0;
 	for (size_t i = 0; i < x.size(); i++) {
@@ -36,7 +36,7 @@ float_t dot(vec_t x, vec_t w) {
 	return sum;
 }
 
-float_t dot_per_batch(int batch, vec_t x, vec_t w) {
+float_t dot_per_batch(int batch, vec_host x, vec_host w) {
 	size_t x_width = w.size();
 	float_t sum = 0;
 	for (size_t i = 0; i < x_width; i++) {

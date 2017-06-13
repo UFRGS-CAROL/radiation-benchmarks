@@ -25,16 +25,16 @@
 
 class ConvNet {
 public:
-	void train(vec2d_t train_x, vec_t train_y, size_t train_size);
+	void train(vec2d_t train_x, vec_host train_y, size_t train_size);
 //	void test(vec2d_t test_x, vec_t test_y, size_t test_size, int batch_size);
-	void test(vec2d_t test_x, vec_t test_y, size_t test_size);
+	void test(vec2d_t test_x, vec_host test_y, size_t test_size);
 
 	void add_layer(Layer* layer);
 	void load_weights(std::string path);
 	void save_weights(std::string path);
 
 private:
-	size_t max_iter(vec_t v);
+	size_t max_iter(vec_host v);
 	size_t max_iter(float v[], size_t size);
 	bool test_once_random();
 
@@ -51,11 +51,11 @@ private:
 
 	size_t train_size_;
 	vec2d_t train_x_;
-	vec_t train_y_;
+	vec_host train_y_;
 
 	size_t test_size_;
 	vec2d_t test_x_;
-	vec_t test_y_;
+	vec_host test_y_;
 
 };
 
