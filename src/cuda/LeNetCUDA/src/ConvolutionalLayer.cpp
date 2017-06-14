@@ -7,6 +7,8 @@
 
 #include "ConvolutionalLayer.h"
 
+#include "DeviceVector.h"
+
 ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 		size_t in_depth, size_t kernel_size, size_t out_depth) :
 		Layer(in_width, in_height, in_depth, in_width - kernel_size + 1,

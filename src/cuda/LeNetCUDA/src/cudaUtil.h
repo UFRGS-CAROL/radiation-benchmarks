@@ -16,14 +16,6 @@
 #define BLOCK_SIZE 1024
 
 
-
-/**
- * to use instead of unordered map
- */
-typedef float_t* vec_device;
-typedef Pair* unordered_vec_device;
-
-
 /**
  * This macro checks return value of the CUDA runtime call and exits
  * the application if the call failed.
