@@ -11,27 +11,39 @@
 #include <vector>
 #include "Util.h"
 
-class Layer {
-private:
-	virtual void forward_gpu() = 0;
-	virtual void forward_cpu() = 0;
+#ifdef GPU
+#include "DeviceVector.h"
+#endif
 
+class Layer {
 public:
 	Layer(size_t in_width, size_t in_height, size_t in_depth, size_t out_width,
 			size_t out_height, size_t out_depth, float_t alpha, float_t lambda);
 
 	virtual void init_weight() = 0;
 	virtual void back_prop() = 0;
+	virtual void forward() = 0;
+
 	virtual void save_layer(FILE *of) = 0;
 	virtual void load_layer(FILE *in) = 0;
 
+#ifdef GPU
+	template<typename T> void write_layer_vec(DeviceVector<T> v, FILE *of) {
+		this->write_layer_var<size_t>(v.size(), of);
+//		fwrite(v.data(), sizeof(T), v.size(), of);
+	}
+
+	template<typename T>  DeviceVector<T> load_layer_vec(FILE *in) {
+		size_t siz = this->load_layer_var<size_t>(in);
+
+		DeviceVector<T> v(siz);
+//		fread(v.data(), sizeof(T), siz, in);
+		return v;
+	}
+#else
 	template<typename T> void write_layer_vec(std::vector<T> v, FILE *of) {
 		this->write_layer_var<size_t>(v.size(), of);
 		fwrite(v.data(), sizeof(T), v.size(), of);
-	}
-
-	template<typename T> void write_layer_var(T var, FILE *of) {
-		fwrite(&var, sizeof(T), 1, of);
 	}
 
 	template<typename T> std::vector<T> load_layer_vec(FILE *in) {
@@ -40,6 +52,11 @@ public:
 		std::vector<T> v(siz);
 		fread(v.data(), sizeof(T), siz, in);
 		return v;
+	}
+#endif
+
+	template<typename T> void write_layer_var(T var, FILE *of) {
+		fwrite(&var, sizeof(T), 1, of);
 	}
 
 	template<typename T> T load_layer_var(FILE *in) {
@@ -50,8 +67,6 @@ public:
 
 	void save_base_layer(FILE *of);
 	void load_base_layer(FILE *in);
-
-	void forward();
 
 	float_t sigmod(float_t in);
 
@@ -69,33 +84,35 @@ public:
 	size_t out_height_;
 	size_t out_depth_;
 
-	vec_host W_;
-	vec_host b_;
-
-	vec_host deltaW_;
-
-	vec_host input_;
-	vec_host output_;
-
 	Layer* next;
 
 	float_t alpha_; // learning rate
 	float_t lambda_; // momentum
-	vec_host g_; // err terms
-
 	/*output*/
 	float_t err;
 	int exp_y;
-	vec_host exp_y_vec;
 
+
+	//it is necessary for GPU implementation
 #ifdef GPU
-	vec_t_gpu input_buf;
-	vec_t_gpu weight_buf;
-	vec_t_gpu output_buf;
-	vec_t_gpu b_buf;
+	DeviceVector<float_t> W_;
+	DeviceVector<float_t> b_;
+	DeviceVector<float_t> deltaW_;
+	DeviceVector<float_t> input_;
+	DeviceVector<float_t> output_;
+	DeviceVector<float_t> g_; // err terms
+	DeviceVector<float_t> exp_y_vec;
 
-	float_t *get_raw_vector(vec_t_gpu th);
+#else
+	vec_host W_;
+	vec_host b_;
+	vec_host deltaW_;
+	vec_host input_;
+	vec_host output_;
+	vec_host g_; // err terms
+	vec_host exp_y_vec;
 #endif
+
 };
 
 //} /* namespace convnet */

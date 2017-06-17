@@ -40,7 +40,7 @@ endif
 
 ifeq ($(GPU), 1)
 ON_GPU= -DGPU
-CFLAGS+=  -L/usr/local/cuda/lib64 -lcuda -lcudart
+CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcuda -lcudart
 ifeq ($(DEBUG),1)
 OPTS+= -G
 endif
@@ -49,11 +49,11 @@ endif
 
 GPU_KERNELS=ConvKernels.o
 
-OBJ=Layer.o ConvolutionalLayer.o  ConvNet.o FullyConnectedLayer.o \
+OBJ=Layer.o ConvolutionalLayer.o  #ConvNet.o FullyConnectedLayer.o \
 MaxpoolingLayer.o MNISTParser.o OutputLayer.o Util.o main.o
 
 ifeq ($(GPU), 1)
-OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o FullyConnectedLayerKernel.o cudaUtil.o
+OBJ+= ConvolutionalLayerKernel.o #MaxpoolingLayerKernel.o FullyConnectedLayerKernel.o cudaUtil.o
 endif
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))

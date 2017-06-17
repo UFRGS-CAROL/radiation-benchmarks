@@ -15,6 +15,7 @@
 
 #define BLOCK_SIZE 1024
 
+void cuda_gridsize(dim3*, dim3*, size_t, size_t, size_t z);
 
 /**
  * This macro checks return value of the CUDA runtime call and exits
@@ -27,9 +28,5 @@
 				cudaGetErrorString(_m_cudaStat), __LINE__, __FILE__);		\
 		exit(1);															\
 	} }
-
-
-void cuda_gridsize(dim3*, dim3*, size_t, size_t, size_t z);
-
 
 #endif /* CUDAUTIL_H_ */

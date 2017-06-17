@@ -40,7 +40,7 @@ typedef struct pair{
  */
 typedef std::vector<float_t> vec_host;
 typedef std::vector<Pair>    unordered_vec;
-typedef std::vector<std::vector<float_t> > vec2d_t;
+typedef std::vector<vec_host> vec2d_t;
 
 
 

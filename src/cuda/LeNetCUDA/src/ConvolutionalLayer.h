@@ -9,14 +9,9 @@
 #define CONVOLUTIONALLAYER_H_
 
 #include "Layer.h"
-
-
 #include <vector>
 #include "Util.h" //class util
 
-#ifdef GPU
-#include "ConvolutionalLayerKernel.h"
-#endif
 
 class ConvolutionalLayer: public Layer {
 public:
@@ -24,13 +19,13 @@ public:
 			size_t kernel_size, size_t out_depth);
 
 	void init_weight();
-	void back_prop();
 	void save_layer(FILE *of);
 	void load_layer(FILE *in);
 
+	void forward();
+	void back_prop();
+
 private:
-	void forward_cpu();
-	void forward_gpu();
 
 	inline size_t getOutIndex(size_t out, size_t h_, size_t w_);
 

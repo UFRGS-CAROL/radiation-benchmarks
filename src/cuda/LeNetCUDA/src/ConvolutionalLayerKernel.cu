@@ -6,9 +6,17 @@
 #include "cudaUtil.h"
 #include <cstdio>
 
-
 __device__ float sigmod(float in) {
 	return 1.0 / (1.0 + exp(-in));
+}
+
+__device__ float df_sigmod(float f_x) {
+	return f_x * (1.0 - f_x);
+}
+
+__device__ size_t getb_(size_t out, size_t h_, size_t w_, size_t out_width_,
+		size_t out_height_) {
+	return out * out_width_ * out_height_ + h_ * out_height_ + w_;
 }
 
 __device__ inline int get_global_id(int index) {
@@ -74,13 +82,181 @@ void call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
 	dim3 blocks;
 	dim3 threads;
 
-	cuda_gridsize(out_width, out_height, out_depth, &threads, &blocks);
+	cuda_gridsize(&threads, &blocks, out_width, out_height, out_depth);
 
 	//I need check it yet
-	forward_parallel<<<blocks, threads>>>(input_buf,
-			weight_buf, b_buf, output_buf, in_width, in_height, in_depth,
-			out_width, out_height, out_depth, kernel_size);
+	forward_parallel<<<blocks, threads>>>(input_buf, weight_buf, b_buf,
+			output_buf, in_width, in_height, in_depth, out_width, out_height,
+			out_depth, kernel_size);
 
-	cudaError_t ret = cudaDeviceSynchronize();	
+	cudaError_t ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
+}
+
+__global__ void backpropagation_update_err(float *W_, //weights
+		float *g_, //err array
+		float *g_next, //b_next from this->next->g_
+		float *input_, //input array
+		int out_depth_, //size of the first for loop
+		int in_depth_, //size of the second for loop
+		int out_width_, //size of the third for loop
+		int out_height_, //out height
+		int kernel_size_, //kernel size
+		int in_width_,  //in width
+		int in_height_ //in height
+		) {
+
+	int out = get_global_id(0); //out iterator, comes from the first for loop, < out_depth
+	int in = get_global_id(1); //in iterator, comes from the second for loop, < in_depth
+	int w_ = get_global_id(2); //w_ iterator, comes from the third for loop, < out_width
+
+	/*update err terms of this layer.*/
+//	for (size_t out = 0; out < out_depth_; out++) {
+//		for (size_t in = 0; in < in_depth_; in++) {
+//			for (size_t w_ = 0; w_ < out_width_; w_++) {
+	for (size_t h_ = 0; h_ < out_height_; h_++) {
+		for (size_t y_ = 0; y_ < kernel_size_; y_++) {
+			for (size_t x_ = 0; x_ < kernel_size_; x_++) {
+				auto ff = in * in_width_ * in_height_ + (h_ + y_) * in_width_
+						+ (x_ + w_);
+				g_[ff] +=
+				/*next layer err terms*/
+				g_next[out * out_width_ * out_height_ + h_ * out_width_ + w_]
+						*
+						/*weight*/
+						W_[in * out_depth_ * kernel_size_ * kernel_size_
+								+ out * kernel_size_ * kernel_size_
+								+ kernel_size_ * (kernel_size_ - y_ - 1)
+								+ (kernel_size_ - 1 - x_)] *
+						/*df of input*/
+						df_sigmod(input_[ff]);
+			}
+		}
+	}
+//			}
+//		}
+//	}
+
+}
+
+__global__ void backpropagation_update_weights(
+		float *W_, //weights
+		float *b_, //b_ array
+		float *g_next, //b_next from this->next->g_
+		float *input_, //input_ array
+		float *deltaW_, //deltaW array
+		float alpha_, //alpha value
+		float lambda_, //lambda
+		int out_height_, //out_height
+		int kernel_size_, //kernel size
+		int in_width_, //in width
+		int in_height_, //in height
+		int out_width_, // out width
+		int out_depth_ // out depth
+		) {
+
+	int out = get_global_id(0); //out iterator, comes from the first for loop, < out_depth
+	int in = get_global_id(1); //in iterator, comes from the second for loop, < in_depth
+	int h_ = get_global_id(2); //h_ iterator, comes from the third for loop, < out_width
+
+	/*update weight*/
+//	for (size_t out = 0; out < out_depth_; out++) {
+//		for (size_t in = 0; in < in_depth_; in++) {
+//			for (size_t h_ = 0; h_ < out_height_; h_++) {
+	for (size_t w_ = 0; w_ < out_height_; w_++) {
+		auto tt = getb_(out, h_, w_, out_width_, out_height_);
+		for (size_t y_ = 0; y_ < kernel_size_; y_++) {
+			for (size_t x_ = 0; x_ < kernel_size_; x_++) {
+				/*find update pixel*/
+				auto target = in * out_depth_ * kernel_size_ * kernel_size_
+						+ out * kernel_size_ * kernel_size_
+						+ kernel_size_ * (kernel_size_ - y_ - 1)
+						+ (kernel_size_ - 1 - x_);
+				/*cal delta*/
+				auto delta =
+				/*learning rate*/
+				alpha_
+						*
+						/*input*/
+						input_[in * in_width_ * in_height_
+								+ (h_ + y_) * in_width_ + (x_ + w_)] *
+						/*next layer err terms*/
+						g_next[tt]
+				/*weight momentum*/
+				+ lambda_ * deltaW_[target];
+
+				W_[target] += delta;
+				/*update momentum*/
+				deltaW_[target] = delta;
+			}
+		}
+		b_[tt] += alpha_ * g_next[tt];
+	}
+//			}
+//		}
+//	}
+}
+
+void call_backpropagation_parallel(float *W_, //weights
+		float *g_, //err array
+		float *input_, //input array
+		float *g_next, //b_next from this->next->g_
+		float *deltaW, //deltaW array
+		float *b_,  //b_ vector
+		float alpha, //alpha value
+		float lambda, //lambda value
+		int out_depth, //size of the first for loop
+		int in_depth_, //size of the second for loop
+		int out_width, //size of the third for loop
+		int out_height_, // size of loop
+		int kernel_size_, //size of loop
+		int in_width_, //width size
+		int in_height_ //in height
+		) {
+//	FERNANDO CHECK IT
+//	g_.clear();
+//	g_.resize(in_width_ * in_height_ * in_depth_);
+	dim3 blocks;
+	dim3 threads;
+
+	cuda_gridsize(&threads, &blocks, out_depth, in_depth_, out_width);
+
+//
+//	float *W_, //weights
+//	float *g_, //err array
+//	float *g_next, //b_next from this->next->g_
+//	float *input_, //input array
+//	int out_depth_, //size of the first for loop
+//	int in_depth_, //size of the second for loop
+//	int out_width_, //size of the third for loop
+//	int out_height_, //out height
+//	int kernel_size_, //kernel size
+//	int in_width_,  //in width
+//	int in_height_ //in height
+	backpropagation_update_err<<<blocks, threads>>>(W_, g_, g_next, input_,
+			out_depth, in_depth_, out_width, out_height_, kernel_size_,
+			in_width_, in_height_);
+	cudaError_t ret = cudaDeviceSynchronize();
+	CUDA_CHECK_RETURN(ret);
+
+
+//	float *W_, //weights
+//	float *b_, //b_ array
+//	float *g_next, //b_next from this->next->g_
+//	float *input_, //input_ array
+//	float *deltaW_, //deltaW array
+//	float alpha_, //alpha value
+//	float lambda_, //lambda
+//	int out_height_, //out_height
+//	int kernel_size_, //kernel size
+//	int in_width_, //in width
+//	int in_height_, //in height
+//	int out_width_, // out width
+//	int out_depth_ // out depth
+	backpropagation_update_weights<<<blocks, threads>>>(W_, b_, g_next, input_,
+			deltaW, alpha, lambda, out_height_, kernel_size_, in_width_, in_height_, out_width,
+			out_depth);
+	ret = cudaDeviceSynchronize();
+	CUDA_CHECK_RETURN(ret);
+
 }

@@ -16,15 +16,6 @@ Layer::Layer(size_t in_width, size_t in_height, size_t in_depth,
 
 }
 
-void Layer::forward() {
-#ifdef GPU
-	this->forward_gpu();
-#else
-	this->forward_cpu();
-#endif
-
-}
-
 float_t Layer::sigmod(float_t in) {
 	return 1.0 / (1.0 + std::exp(-in));
 }
@@ -110,7 +101,5 @@ void Layer::load_base_layer(FILE *in) {
 }
 
 #ifdef GPU
-float* Layer::get_raw_vector(vec_t_gpu th) {
-	return thrust::raw_pointer_cast(th.data());
-}
+
 #endif
