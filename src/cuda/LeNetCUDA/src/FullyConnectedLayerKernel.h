@@ -8,10 +8,9 @@
 #ifndef FULLYCONNECTEDLAYERKERNEL_H_
 #define FULLYCONNECTEDLAYERKERNEL_H_
 
-#include "FullyConnectedLayer.h"
 
 
-void forward_gpu(FullyConnectedLayer l);
+void forward_gpu();
 
 
 
