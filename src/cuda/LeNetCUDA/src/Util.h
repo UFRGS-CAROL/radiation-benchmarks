@@ -26,10 +26,12 @@
 #include <math.h>
 #include "boost/random.hpp"
 
+#define MAX ULONG_MAX
+
 /**
  * to use instead of unordered map
  */
-typedef struct pair{
+typedef struct pair_{
 	size_t first;
 	size_t second;
 }Pair;

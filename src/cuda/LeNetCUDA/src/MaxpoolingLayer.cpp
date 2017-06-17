@@ -11,7 +11,7 @@
 #include "MaxpoolingLayerKernel.h"
 #endif
 
-#define MAX ULONG_MAX
+
 
 MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 		size_t in_depth) :
@@ -32,23 +32,7 @@ MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 void MaxpoolingLayer::init_weight() {
 }
 
-//private:
-inline float_t MaxpoolingLayer::max_In_(size_t in_index, size_t h_, size_t w_,
-		size_t out_index) {
-	float_t max_pixel = 0;
-	size_t tmp;
-	for (size_t x = 0; x < 2; x++) {
-		for (size_t y = 0; y < 2; y++) {
-			tmp = (in_index * in_width_ * in_height_) + ((h_ + y) * in_width_)
-					+ (w_ + x);
-			if (max_pixel < input_[tmp]) {
-				max_pixel = input_[tmp];
-				max_loc[out_index] = this->get_max_loc_pair(out_index, tmp);
-			}
-		}
-	}
-	return max_pixel;
-}
+
 
 inline Pair MaxpoolingLayer::get_max_loc_pair(size_t first, size_t second) {
 	Pair ret;
@@ -80,15 +64,15 @@ void MaxpoolingLayer::load_layer(FILE *in) {
 void MaxpoolingLayer::forward() {
 	try {
 
-		this->input_buf = this->input_;
+//		this->input_buf = this->input_;
 		//PEDRO check if it is necessary to transfer weight again
 //		this->weight_buf = this->W_;
 //		this->b_buf = this->b_;
 
 // execute the code on the device
-		float_t *input = this->get_raw_vector(this->input_);
-		float_t *output = this->get_raw_vector(this->output_);
-		float_t *max_loc_buf = this->get_raw_vector(this->max_loc_buf);
+		float_t *input = this->input_.data();
+		float_t *output = this->output_.data();
+		Pair *max_loc_buf = this->max_loc.data();
 		size_t out_width = this->out_width_;
 		size_t out_height = this->out_height_;
 		size_t out_depth = this->out_depth_;
@@ -100,7 +84,7 @@ void MaxpoolingLayer::forward() {
 
 // transfer destination data from the device to the host
 //CHECK IT
-		this->output_ = this->output_buf;
+//		this->output_ = this->output_buf;
 
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
@@ -113,6 +97,13 @@ void MaxpoolingLayer::forward() {
 }
 
 void MaxpoolingLayer::back_prop() {
+
+	Pair *max_loc = this->max_loc.data();
+	float *g_ = this->g_.data();
+	float *g_next = this->next->g_.data();
+	size_t max_size = this->max_loc.size();
+
+	call_backpropagation_maxpool(max_loc, g_, g_next, max_size);
 
 }
 #else
@@ -156,6 +147,22 @@ void MaxpoolingLayer::back_prop() {
 
 }
 
-
+//private:
+inline float_t MaxpoolingLayer::max_In_(size_t in_index, size_t h_, size_t w_,
+		size_t out_index) {
+	float_t max_pixel = 0;
+	size_t tmp;
+	for (size_t x = 0; x < 2; x++) {
+		for (size_t y = 0; y < 2; y++) {
+			tmp = (in_index * in_width_ * in_height_) + ((h_ + y) * in_width_)
+					+ (w_ + x);
+			if (max_pixel < input_[tmp]) {
+				max_pixel = input_[tmp];
+				max_loc[out_index] = this->get_max_loc_pair(out_index, tmp);
+			}
+		}
+	}
+	return max_pixel;
+}
 #endif
 

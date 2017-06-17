@@ -15,7 +15,8 @@
 
 #define BLOCK_SIZE 1024
 
-void cuda_gridsize(dim3*, dim3*, size_t, size_t, size_t z);
+void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y = 1,
+		size_t z = 1);
 
 /**
  * This macro checks return value of the CUDA runtime call and exits

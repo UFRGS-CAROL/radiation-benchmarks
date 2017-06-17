@@ -8,8 +8,8 @@
 #include "cudaUtil.h"
 
 //1D=(65536), 2D=(65536, 65536), 3D=(4096, 4096, 4096)
-void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y = 1,
-		size_t z = 1) {
+void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y,
+		size_t z) {
 
 	long blocks_x = ceil(float(x) / float(BLOCK_SIZE));
 	long threads_x = ceil(float(x) / float(blocks_x));
