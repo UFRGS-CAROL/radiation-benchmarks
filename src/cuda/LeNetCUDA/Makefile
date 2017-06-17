@@ -49,7 +49,7 @@ endif
 
 GPU_KERNELS=ConvKernels.o
 
-OBJ=Layer.o ConvolutionalLayer.o  #ConvNet.o FullyConnectedLayer.o \
+OBJ=Layer.o ConvolutionalLayer.o  ConvNet.o FullyConnectedLayer.o \
 MaxpoolingLayer.o MNISTParser.o OutputLayer.o Util.o main.o
 
 ifeq ($(GPU), 1)

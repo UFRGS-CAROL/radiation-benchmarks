@@ -93,7 +93,7 @@ void backward_maxpool_layer_gpu() {
 	CUDA_CHECK_RETURN(ret);
 }
 
-void forward_maxpool_layer_gpu(float_t *input, float_t *output,
+void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
 		float_t *max_loc, size_t out_width, size_t out_height, size_t out_depth,
 		size_t in_height, size_t in_width) {
 
@@ -107,6 +107,13 @@ void forward_maxpool_layer_gpu(float_t *input, float_t *output,
 }
 
 
+__global__ void backpropagation_maxpool(){
+
+}
+
+void call_backpropagation_maxpool(){
+
+}
 //void forward_maxpool_layer_gpu() {
 //
 ////

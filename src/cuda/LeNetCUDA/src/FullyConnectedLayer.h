@@ -15,6 +15,7 @@ public:
 	FullyConnectedLayer(size_t in_depth, size_t out_depth);
 
 	void back_prop() ;
+	void forward();
 
 	/*
 	 for the activation sigmod,
@@ -31,8 +32,7 @@ private:
 	vec_host get_W(size_t index);
 	vec_host get_W_step(size_t in);
 
-	void forward_cpu();
-	void forward_gpu();
+
 };
 
 

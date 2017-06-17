@@ -17,13 +17,13 @@ public:
 	OutputLayer(size_t in_depth);
 
 	void back_prop();
+	void forward();
+
 	void init_weight();
 
 	void save_layer(FILE *of);
 	void load_layer(FILE *in);
 private:
-	void forward_cpu();
-	void forward_gpu();
 
 };
 

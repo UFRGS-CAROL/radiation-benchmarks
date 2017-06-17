@@ -16,9 +16,8 @@
 
 class MaxpoolingLayer: public Layer {
 private:
-	void forward_gpu();
-	void forward_cpu();
 	Pair get_max_loc_pair(size_t first, size_t second);
+
 public:
 	MaxpoolingLayer(size_t in_width, size_t in_height, size_t in_depth);
 
@@ -34,6 +33,7 @@ public:
 	 */
 	void back_prop();
 	void init_weight();
+	void forward();
 
 	//private:
 	inline float_t max_In_(size_t in_index, size_t h_, size_t w_,
@@ -47,10 +47,11 @@ public:
 	 for err translating.
 	 */
 //	std::unordered_map<size_t, size_t> max_loc;
-	unordered_vec max_loc;
+
 #ifdef GPU
-	vec_t_gpu max_loc_gpu;
-	vec_t max_loc_host;
+	DeviceVector<Pair> max_loc;
+#else
+	unordered_vec max_loc;
 #endif
 };
 

@@ -28,43 +28,6 @@ MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 
 }
 
-void MaxpoolingLayer::forward_cpu() {
-	for (size_t out = 0; out < out_depth_; out++) {
-		for (size_t h_ = 0; h_ < in_height_; h_ += 2) {
-			for (size_t w_ = 0; w_ < in_width_; w_ += 2) {
-				output_[getOutIndex(out, h_, w_)] = max_In_(out, h_, w_,
-						getOutIndex(out, h_, w_));
-			}
-		}
-	}
-}
-
-/*
- In forward propagation, blocks are reduced to a single value.
- Then, this single value acquires an error computed from backwards
- propagation from the previous layer.
- This error is then just forwarded to the place where it came from.
- Since it only came from one place in the  block,
- the backpropagated errors from max-pooling layers are rather sparse.
- */
-void MaxpoolingLayer::back_prop() {
-
-	g_.clear();
-	g_.resize(in_width_ * in_height_ * in_depth_);
-
-	for (auto pair : max_loc)
-		if (pair.first != MAX) {
-			g_[pair.second] = this->next->g_[pair.first];
-		}
-
-//	for(auto i = this->max_loc.begin(); i != this->max_loc.end(); i++){
-//		Pair pair = (*i);
-//		if(pair.first != UINT_MAX)
-//			g_[pair.second] = this->next->g_[pair.first];
-//
-//	}
-
-}
 
 void MaxpoolingLayer::init_weight() {
 }
@@ -114,7 +77,7 @@ void MaxpoolingLayer::load_layer(FILE *in) {
 
 #ifdef GPU
 
-void MaxpoolingLayer::forward_gpu() {
+void MaxpoolingLayer::forward() {
 	try {
 
 		this->input_buf = this->input_;
@@ -132,7 +95,7 @@ void MaxpoolingLayer::forward_gpu() {
 		size_t in_height = this->in_height_;
 		size_t in_width = this->in_width_;
 
-		forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
+		call_forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
 				out_height, out_depth, in_height, in_width);
 
 // transfer destination data from the device to the host
@@ -148,8 +111,51 @@ void MaxpoolingLayer::forward_gpu() {
 	}
 
 }
-#else
-void MaxpoolingLayer::forward_gpu() {
+
+void MaxpoolingLayer::back_prop() {
+
 }
+#else
+
+
+void MaxpoolingLayer::forward() {
+	for (size_t out = 0; out < out_depth_; out++) {
+		for (size_t h_ = 0; h_ < in_height_; h_ += 2) {
+			for (size_t w_ = 0; w_ < in_width_; w_ += 2) {
+				output_[getOutIndex(out, h_, w_)] = max_In_(out, h_, w_,
+						getOutIndex(out, h_, w_));
+			}
+		}
+	}
+}
+
+/*
+ In forward propagation, blocks are reduced to a single value.
+ Then, this single value acquires an error computed from backwards
+ propagation from the previous layer.
+ This error is then just forwarded to the place where it came from.
+ Since it only came from one place in the  block,
+ the backpropagated errors from max-pooling layers are rather sparse.
+ */
+void MaxpoolingLayer::back_prop() {
+
+	g_.clear();
+	g_.resize(in_width_ * in_height_ * in_depth_);
+
+	for (auto pair : max_loc)
+		if (pair.first != MAX) {
+			g_[pair.second] = this->next->g_[pair.first];
+		}
+
+//	for(auto i = this->max_loc.begin(); i != this->max_loc.end(); i++){
+//		Pair pair = (*i);
+//		if(pair.first != UINT_MAX)
+//			g_[pair.second] = this->next->g_[pair.first];
+//
+//	}
+
+}
+
+
 #endif
 

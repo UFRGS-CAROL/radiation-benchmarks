@@ -9,7 +9,7 @@
 #define MAXPOOLINGLAYERKERNEL_H_
 
 
-void forward_maxpool_layer_gpu(float_t *input, float_t *output,
+void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
 		float_t *max_loc, size_t out_width, size_t out_height, size_t out_depth,
 		size_t in_height, size_t in_width);
 
