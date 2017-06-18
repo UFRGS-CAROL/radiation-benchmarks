@@ -25,6 +25,8 @@ public:
 	void forward();
 	void back_prop();
 
+	virtual ~ConvolutionalLayer();
+
 private:
 
 	inline size_t getOutIndex(size_t out, size_t h_, size_t w_);

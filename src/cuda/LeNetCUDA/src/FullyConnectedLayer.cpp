@@ -84,6 +84,9 @@ FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
 
 }
 
+FullyConnectedLayer::~FullyConnectedLayer(){
+
+}
 void FullyConnectedLayer::back_prop() {
 	/*
 	 Compute the err terms;
