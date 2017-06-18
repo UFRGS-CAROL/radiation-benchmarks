@@ -8,8 +8,12 @@
 #include "FullyConnectedLayer.h"
 #include "Util.h"
 
+#ifdef GPU
+
+#include "cuda.h"
+
 FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
-		Layer(1, 1, in_depth, 1, 1, out_depth, 0.3, 0.01) {
+Layer(1, 1, in_depth, 1, 1, out_depth, 0.3, 0.01) {
 	output_.resize(out_depth_);
 	W_.resize(in_depth_ * out_depth_);
 	deltaW_.resize(in_depth_ * out_depth_);
@@ -18,8 +22,23 @@ FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
 
 	this->init_weight();
 
+	cudaError_t ret = cudaMalloc(&this->v_output,
+			sizeof(float) * this->in_depth_ * this->out_depth_);
+	CUDA_CHECK_RETURN(ret);
+
 }
 
+FullyConnectedLayer::~FullyConnectedLayer(){
+	cudaFree(this->v_output);
+}
+
+void FullyConnectedLayer::forward() {
+
+}
+
+void FullyConnectedLayer::back_prop() {
+
+}
 
 /*
  for the activation sigmod,
@@ -35,42 +54,14 @@ void FullyConnectedLayer::init_weight() {
 	 -4 * 6 / std::sqrtf((float)(fan_in() + fan_out())),
 	 4 * 6 / std::sqrtf((float)(fan_in() + fan_out())));
 	 */
-	uniform_rand(W_.begin(), W_.end(), -2, 2);
-	uniform_rand(b_.begin(), b_.end(), -2, 2);
+	vec_host temp_W_, temp_b_;
+	temp_W_.resize(in_depth_ * out_depth_);
+	temp_b_.resize(out_depth_);
+	uniform_rand(temp_W_.begin(), temp_W_.end(), -2, 2);
+	uniform_rand(temp_b_.begin(), temp_b_.end(), -2, 2);
 
-}
-
-vec_host FullyConnectedLayer::get_W(size_t index) {
-	vec_host v;
-	for (int i = 0; i < in_depth_; i++) {
-		v.push_back(W_[index * in_depth_ + i]);
-	}
-	return v;
-}
-
-vec_host FullyConnectedLayer::get_W_step(size_t in) {
-	vec_host r;
-	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
-		r.push_back(W_[i]);
-	}
-	return r;
-}
-
-void FullyConnectedLayer::save_layer(FILE *of){
-	this->save_base_layer(of);
-}
-
-void FullyConnectedLayer::load_layer(FILE *in){
-	this->load_base_layer(in);
-}
-
-#ifdef GPU
-void FullyConnectedLayer::forward() {
-
-}
-
-void FullyConnectedLayer::back_prop() {
-
+	this->W_ = temp_W_;
+	this->b_ = temp_b_;
 }
 
 #else
@@ -81,7 +72,17 @@ void FullyConnectedLayer::forward() {
 	}
 }
 
+FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
+		Layer(1, 1, in_depth, 1, 1, out_depth, 0.3, 0.01) {
+	output_.resize(out_depth_);
+	W_.resize(in_depth_ * out_depth_);
+	deltaW_.resize(in_depth_ * out_depth_);
+	b_.resize(out_depth_);
+	g_.resize(in_depth_);
 
+	this->init_weight();
+
+}
 
 void FullyConnectedLayer::back_prop() {
 	/*
@@ -106,5 +107,48 @@ void FullyConnectedLayer::back_prop() {
 	}
 }
 
+/*
+ for the activation sigmod,
+ weight init as [-4 * (6 / sqrt(fan_in + fan_out)), +4 *(6 / sqrt(fan_in + fan_out))]:
+ see also:http://deeplearning.net/tutorial/references.html#xavier10
+ */
+void FullyConnectedLayer::init_weight() {
+	/*
+	 uniform_rand(W_.begin(), W_.end(),
+	 -4 * 6 / std::sqrtf((float)(fan_in() + fan_out())),
+	 4 * 6 / std::sqrtf((float)(fan_in() + fan_out())));
+	 uniform_rand(b_.begin(), b_.end(),
+	 -4 * 6 / std::sqrtf((float)(fan_in() + fan_out())),
+	 4 * 6 / std::sqrtf((float)(fan_in() + fan_out())));
+	 */
+	uniform_rand(W_.begin(), W_.end(), -2, 2);
+	uniform_rand(b_.begin(), b_.end(), -2, 2);
+
+}
 
 #endif
+
+vec_host FullyConnectedLayer::get_W(size_t index) {
+	vec_host v;
+	for (int i = 0; i < in_depth_; i++) {
+		v.push_back(W_[index * in_depth_ + i]);
+	}
+	return v;
+}
+
+vec_host FullyConnectedLayer::get_W_step(size_t in) {
+	vec_host r;
+	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
+		r.push_back(W_[i]);
+	}
+	return r;
+}
+
+void FullyConnectedLayer::save_layer(FILE *of) {
+	this->save_base_layer(of);
+}
+
+void FullyConnectedLayer::load_layer(FILE *in) {
+	this->load_base_layer(in);
+}
+

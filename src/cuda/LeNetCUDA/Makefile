@@ -49,11 +49,11 @@ endif
 
 GPU_KERNELS=ConvKernels.o
 
-OBJ=Layer.o ConvolutionalLayer.o  ConvNet.o FullyConnectedLayer.o \
-MaxpoolingLayer.o MNISTParser.o OutputLayer.o Util.o main.o
+OBJ=Layer.o ConvolutionalLayer.o MaxpoolingLayer.o #FullyConnectedLayer.o \
+OutputLayer.o ConvNet.o MNISTParser.o Util.o main.o
 
 ifeq ($(GPU), 1)
-OBJ+= ConvolutionalLayerKernel.o #MaxpoolingLayerKernel.o FullyConnectedLayerKernel.o cudaUtil.o
+OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o #FullyConnectedLayerKernel.o cudaUtil.o
 endif
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))

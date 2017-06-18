@@ -27,10 +27,20 @@ public:
 	void save_layer(FILE *of);
 	void load_layer(FILE *in);
 
+	~FullyConnectedLayer();
+
+#ifdef GPU
+	//this vector will be used only at
+	//forward gpu
+	//must be destroyed at class destructor
+	float *v_output;
+#endif
 
 private:
+
 	vec_host get_W(size_t index);
 	vec_host get_W_step(size_t in);
+
 
 
 };
