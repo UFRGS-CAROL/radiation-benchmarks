@@ -27,13 +27,12 @@ public:
 	void save_layer(FILE *of);
 	void load_layer(FILE *in);
 
-	~FullyConnectedLayer();
-
 #ifdef GPU
 	//this vector will be used only at
 	//forward gpu
 	//must be destroyed at class destructor
-	float *v_output;
+	DeviceVector<float> v_output;
+//	DeviceVector<float> r_output;
 #endif
 
 private:

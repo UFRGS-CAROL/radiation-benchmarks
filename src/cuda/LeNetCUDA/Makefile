@@ -49,11 +49,11 @@ endif
 
 GPU_KERNELS=ConvKernels.o
 
-OBJ=Layer.o ConvolutionalLayer.o MaxpoolingLayer.o FullyConnectedLayer.o \
+OBJ=Layer.o ConvolutionalLayer.o MaxpoolingLayer.o FullyConnectedLayer.o #\
 OutputLayer.o ConvNet.o MNISTParser.o Util.o main.o
 
 ifeq ($(GPU), 1)
-OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o #FullyConnectedLayerKernel.o cudaUtil.o
+OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o FullyConnectedLayerKernel.o # OutputLayerKernel.o cudaUtil.o
 endif
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
@@ -68,7 +68,12 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(CFLAGS) $(OPTS) $(ON_GPU) -c $< -o $@  $(HELPFUL) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(COMMON) $(OPTS) --compiler-options "$(NVCC_FLAGS)" -c $< -o $@ 
+	$(NVCC) $(ARCH) $(COMMON) $(OPTS) $(NVCC_FLAGS) -c $< -o $@ -dc
+
+
+
+debug: $(OBJS)
+	$(NVCC) $(ARCH) $(COMMON) $(OPTS) $(OBJ) debug.cu -o debug 
 
 train:
 	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte ./lenet.weights
@@ -81,4 +86,4 @@ obj:
 	
 .PHONY: clean
 clean:
-	rm -rf $(OBJS) $(EXEC)
+	rm -rf $(OBJS) $(EXEC) debug

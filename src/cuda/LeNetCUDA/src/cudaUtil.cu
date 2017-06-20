@@ -27,3 +27,22 @@ void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y,
 }
 
 
+
+__device__ float sigmod_gpu(float in) {
+	return 1.0 / (1.0 + exp(-in));
+}
+
+__device__ float df_sigmod_gpu(float f_x) {
+	return f_x * (1.0 - f_x);
+}
+
+
+__device__ float dot_gpu(float *x, int x_size, float *w) {
+//	assert(x.size() == w.size());
+	float sum = 0;
+#pragma unroll
+	for (int i = 0; i < x_size; i++) {
+		sum += x[i] * w[i];
+	}
+	return sum;
+}

@@ -30,4 +30,11 @@ void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y = 1,
 		exit(1);															\
 	} }
 
+__device__ float sigmod_gpu(float in);
+
+__device__ float df_sigmod_gpu(float f_x);
+__device__ float dot_gpu(float *x, int x_size, float *w);
+
+
+
 #endif /* CUDAUTIL_H_ */

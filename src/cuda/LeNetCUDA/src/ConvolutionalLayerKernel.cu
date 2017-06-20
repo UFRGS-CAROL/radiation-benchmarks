@@ -6,13 +6,6 @@
 #include "cudaUtil.h"
 #include <cstdio>
 
-__device__ float sigmod(float in) {
-	return 1.0 / (1.0 + exp(-in));
-}
-
-__device__ float df_sigmod(float f_x) {
-	return f_x * (1.0 - f_x);
-}
 
 __device__ size_t getb_(size_t out, size_t h_, size_t w_, size_t out_width_,
 		size_t out_height_) {
@@ -71,7 +64,7 @@ __global__ void forward_parallel(float* input_buf, float* weight_buf,
 	unsigned int out_index = out * out_width * out_height + h_index * out_width
 			+ w_index;
 	unsigned int b_index = out_index;
-	output_buf[out_index] = sigmod(sum + b_buf[b_index]);
+	output_buf[out_index] = sigmod_gpu(sum + b_buf[b_index]);
 }
 
 void call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
@@ -129,7 +122,7 @@ __global__ void backpropagation_update_err(float *W_, //weights
 								+ kernel_size_ * (kernel_size_ - y_ - 1)
 								+ (kernel_size_ - 1 - x_)] *
 						/*df of input*/
-						df_sigmod(input_[ff]);
+						df_sigmod_gpu(input_[ff]);
 			}
 		}
 	}

@@ -9,35 +9,39 @@
 #include "Util.h"
 
 #ifdef GPU
-
-#include "cuda.h"
-
-FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
-Layer(1, 1, in_depth, 1, 1, out_depth, 0.3, 0.01) {
-	output_.resize(out_depth_);
-	W_.resize(in_depth_ * out_depth_);
-	deltaW_.resize(in_depth_ * out_depth_);
-	b_.resize(out_depth_);
-	g_.resize(in_depth_);
-
-	this->init_weight();
-
-	cudaError_t ret = cudaMalloc(&this->v_output,
-			sizeof(float) * this->in_depth_ * this->out_depth_);
-	CUDA_CHECK_RETURN(ret);
-
-}
-
-FullyConnectedLayer::~FullyConnectedLayer(){
-	cudaFree(this->v_output);
-}
+#include "FullyConnectedLayerKernel.h"
 
 void FullyConnectedLayer::forward() {
+	float *output_ = this->output_.data();
+	float *input_ = this->input_.data();
+	float *b_ = this->b_.data();
+	float *W_ = this->W_.data();
+	float *v_output = this->v_output.data();
+	int out_depth_ = this->out_depth_;
+	int in_depth_ = this->in_depth_;
+	int input_size = this->input_.size();
+
+	call_forward_fully_connected(output_, input_, b_, W_, v_output, out_depth_, in_depth_,input_size);
 
 }
 
 void FullyConnectedLayer::back_prop() {
+	float *input_ = this->input_.data();
+	float *g_ = this->g_.data();
+	float *g_next = this->next->g_.data();
+	int g_next_size = this->next->g_.size();
+	float *deltaW_ = this->deltaW_.data();
+	float *W_ = this->W_.data();
+	float *b_ = this->b_.data();
+	float *r_output = this->v_output.data();
+	float alpha_ = this->alpha_;
+	float lambda_ = this->lambda_;
+	int in_depth_ = this->in_depth_;
+	int out_depth_ = this->out_depth_;
 
+	call_backpropagation_fully_connected(input_, g_, g_next,
+			deltaW_, W_, b_, r_output,
+			alpha_, lambda_, in_depth_, out_depth_, g_next_size);
 }
 
 /*
@@ -62,6 +66,9 @@ void FullyConnectedLayer::init_weight() {
 
 	this->W_ = temp_W_;
 	this->b_ = temp_b_;
+
+	this->v_output.resize(this->in_depth_ * this->out_depth_);
+//	this->r_output.resize(this->in_depth_ * this->out_depth_);
 }
 
 #else
@@ -72,21 +79,6 @@ void FullyConnectedLayer::forward() {
 	}
 }
 
-FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
-		Layer(1, 1, in_depth, 1, 1, out_depth, 0.3, 0.01) {
-	output_.resize(out_depth_);
-	W_.resize(in_depth_ * out_depth_);
-	deltaW_.resize(in_depth_ * out_depth_);
-	b_.resize(out_depth_);
-	g_.resize(in_depth_);
-
-	this->init_weight();
-
-}
-
-FullyConnectedLayer::~FullyConnectedLayer(){
-
-}
 void FullyConnectedLayer::back_prop() {
 	/*
 	 Compute the err terms;
@@ -153,5 +145,17 @@ void FullyConnectedLayer::save_layer(FILE *of) {
 
 void FullyConnectedLayer::load_layer(FILE *in) {
 	this->load_base_layer(in);
+}
+
+FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
+		Layer(1, 1, in_depth, 1, 1, out_depth, 0.3, 0.01) {
+	output_.resize(out_depth_);
+	W_.resize(in_depth_ * out_depth_);
+	deltaW_.resize(in_depth_ * out_depth_);
+	b_.resize(out_depth_);
+	g_.resize(in_depth_);
+
+	this->init_weight();
+
 }
 
