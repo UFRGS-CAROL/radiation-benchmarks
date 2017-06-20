@@ -16,10 +16,6 @@ Layer::Layer(size_t in_width, size_t in_height, size_t in_depth,
 
 }
 
-Layer::~Layer(){
-
-}
-
 float_t Layer::sigmod(float_t in) {
 	return 1.0 / (1.0 + std::exp(-in));
 }

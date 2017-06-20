@@ -24,7 +24,7 @@ public:
 	void save_layer(FILE *of);
 	void load_layer(FILE *in);
 
-	virtual ~OutputLayer();
+
 private:
 
 };
