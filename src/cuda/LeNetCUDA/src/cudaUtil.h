@@ -14,7 +14,6 @@
 #include <math.h>
 
 #define BLOCK_SIZE 1024
-#define BLOCK_M 32
 
 void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y = 1,
 		size_t z = 1);
@@ -30,13 +29,5 @@ void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y = 1,
 				cudaGetErrorString(_m_cudaStat), __LINE__, __FILE__);		\
 		exit(1);															\
 	} }
-
-__device__ float sigmod_gpu(float in);
-
-__device__ float df_sigmod_gpu(float f_x);
-__device__ float dot_gpu(float *x, int x_size, float *w);
-
-__global__ void full_dot(const float* v1, const float* v2, int N, float* out);
-__global__ void fill(float *input, float t);
 
 #endif /* CUDAUTIL_H_ */

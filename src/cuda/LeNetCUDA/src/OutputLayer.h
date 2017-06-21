@@ -9,7 +9,9 @@
 #define OUTPUTLAYER_H_
 
 #include "Layer.h"
-
+#ifdef GPU
+#include "DeviceVector.h"
+#endif
 
 
 class OutputLayer: public Layer {
@@ -24,6 +26,9 @@ public:
 	void save_layer(FILE *of);
 	void load_layer(FILE *in);
 
+#ifdef GPU
+	DeviceVector<float> reduce_output;
+#endif
 
 private:
 

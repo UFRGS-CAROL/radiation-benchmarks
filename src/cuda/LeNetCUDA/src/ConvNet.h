@@ -16,7 +16,9 @@
 #include "MaxpoolingLayer.h"
 #include "OutputLayer.h"
 #include "FullyConnectedLayer.h"
-
+#ifdef GPU
+#include "DeviceVector.h"
+#endif
 //namespace convnet {
 //
 #define MAX_ITER 2  // maximum training iterations
@@ -34,7 +36,14 @@ public:
 	void save_weights(std::string path);
 
 private:
+
+#ifdef GPU
+	size_t max_iter(DeviceVector<float> v);
+
+#else
 	size_t max_iter(vec_host v);
+#endif
+
 	size_t max_iter(float v[], size_t size);
 	bool test_once_random();
 

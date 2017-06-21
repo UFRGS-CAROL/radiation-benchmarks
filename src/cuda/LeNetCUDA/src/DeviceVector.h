@@ -18,9 +18,9 @@ template<class T> class DeviceVector {
 private:
 	T *device_data;
 	bool allocated_device;
-	/*Will only copy to host if it is requested*/
-	T *host_data;
-	bool allocated_host;
+//	/*Will only copy to host if it is requested*/
+//	T *host_data;
+//	bool allocated_host;
 
 	size_t v_size;
 
@@ -54,7 +54,7 @@ public:
 
 template<class T>
 DeviceVector<T>::DeviceVector(size_t siz) {
-	cudaError_t ret = cudaMalloc(&this->device_data, sizeof(T) * siz);
+	cudaError_t ret = cudaMallocManaged(&this->device_data, sizeof(T) * siz);
 	CUDA_CHECK_RETURN(ret);
 	this->v_size = siz;
 	this->allocated_device = true;
@@ -62,10 +62,11 @@ DeviceVector<T>::DeviceVector(size_t siz) {
 
 template<class T>
 DeviceVector<T>::DeviceVector() {
-	this->device_data = this->host_data = nullptr;
+//	this->device_data = this->host_data = nullptr;
+	this->device_data = nullptr;
 	this->v_size = 0;
 	this->allocated_device = false;
-	this->allocated_host = false;
+//	this->allocated_host = false;
 }
 
 template<class T>
@@ -84,7 +85,7 @@ DeviceVector<T>::DeviceVector(T *data, size_t siz) {
 		cudaFree(this->device_data);
 
 	}
-	cudaError_t ret = cudaMalloc(&this->device_data, sizeof(T) * siz);
+	cudaError_t ret = cudaMallocManaged(&this->device_data, sizeof(T) * siz);
 	CUDA_CHECK_RETURN(ret);
 	this->v_size = siz;
 	this->allocated_device = true;
@@ -102,7 +103,7 @@ DeviceVector<T>& DeviceVector<T>::operator=(const std::vector<T>& other) {
 		if (this->allocated_device) {
 			cudaFree(this->device_data);
 		}
-		cudaError_t ret = cudaMalloc(&this->device_data, sizeof(T) * siz);
+		cudaError_t ret = cudaMallocManaged(&this->device_data, sizeof(T) * siz);
 		CUDA_CHECK_RETURN(ret);
 		this->v_size = siz;
 		this->allocated_device = true;
@@ -119,7 +120,7 @@ void DeviceVector<T>::resize(size_t siz) {
 		cudaFree(this->device_data);
 	} else if (this->v_size != siz) {
 
-		cudaError_t ret = cudaMalloc(&this->device_data, sizeof(T) * siz);
+		cudaError_t ret = cudaMallocManaged(&this->device_data, sizeof(T) * siz);
 		CUDA_CHECK_RETURN(ret);
 		this->v_size = siz;
 		this->allocated_device = true;
@@ -138,22 +139,22 @@ size_t DeviceVector<T>::size() {
 
 template<class T>
 void DeviceVector<T>::pop_vector_from_gpu() {
-	if (this->allocated_host)
-		free(this->host_data);
-
-	this->host_data = (T*) calloc(this->v_size, sizeof(T));
-	cudaError_t ret = cudaMemcpy(this->host_data, this->device_data, sizeof(T) * this->v_size,
-			cudaMemcpyDeviceToHost);
-	CUDA_CHECK_RETURN(ret);
-
-	this->allocated_host = true;
+//	if (this->allocated_host)
+//		free(this->host_data);
+//
+//	this->host_data = (T*) calloc(this->v_size, sizeof(T));
+//	cudaError_t ret = cudaMemcpy(this->host_data, this->device_data, sizeof(T) * this->v_size,
+//			cudaMemcpyDeviceToHost);
+//	CUDA_CHECK_RETURN(ret);
+//
+//	this->allocated_host = true;
 }
 
 template<class T>
 T& DeviceVector<T>::operator [](int i){
-	if (!this->allocated_host)
-		this->pop_vector_from_gpu();
-
-	return this->host_data[i];
+//	if (!this->allocated_host)
+//		this->pop_vector_from_gpu();
+//	return this->host_data[i];
+	return this->device_data[i];
 }
 #endif /* DEVICEVECTOR_H_ */

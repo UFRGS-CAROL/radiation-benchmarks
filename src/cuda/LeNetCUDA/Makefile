@@ -26,7 +26,7 @@ COMMON=-std=c++11
 
 CFLAGS= $(COMMON) 
 
-NVCC_FLAGS= 
+NVCC_FLAGS= -Xcompiler -Ofast
 #-std=c++11 
 
 ifeq ($(DEBUG),1)
@@ -49,11 +49,12 @@ endif
 
 GPU_KERNELS=ConvKernels.o
 
-OBJ=Layer.o ConvolutionalLayer.o MaxpoolingLayer.o FullyConnectedLayer.o #\
+OBJ=Layer.o ConvolutionalLayer.o MaxpoolingLayer.o FullyConnectedLayer.o \
 OutputLayer.o ConvNet.o MNISTParser.o Util.o main.o
 
 ifeq ($(GPU), 1)
-OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o FullyConnectedLayerKernel.o # OutputLayerKernel.o cudaUtil.o
+OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o \
+FullyConnectedLayerKernel.o  OutputLayerKernel.o cudaUtil.o
 endif
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
@@ -68,7 +69,7 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(CFLAGS) $(OPTS) $(ON_GPU) -c $< -o $@  $(HELPFUL) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(COMMON) $(OPTS) $(NVCC_FLAGS) -c $< -o $@ -dc
+	$(NVCC) $(ARCH) $(COMMON) $(OPTS) $(NVCC_FLAGS) -c $< -o $@
 
 
 
@@ -86,4 +87,4 @@ obj:
 	
 .PHONY: clean
 clean:
-	rm -rf $(OBJS) $(EXEC) debug
+	rm -rf obj/*o $(EXEC) debug

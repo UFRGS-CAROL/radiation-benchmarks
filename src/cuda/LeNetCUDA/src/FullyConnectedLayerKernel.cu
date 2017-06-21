@@ -8,6 +8,26 @@
 #include "FullyConnectedLayerKernel.h"
 #include "cudaUtil.h"
 
+__device__ float sigmod_gpu_fully(float in) {
+	return 1.0 / (1.0 + exp(-in));
+}
+
+__device__ float df_sigmod_gpu_fully(float f_x) {
+	return f_x * (1.0 - f_x);
+}
+
+
+__device__ float dot_gpu_fully(float *x, int x_size, float *w) {
+//	assert(x.size() == w.size());
+	float sum = 0;
+#pragma unroll
+	for (int i = 0; i < x_size; i++) {
+		sum += x[i] * w[i];
+	}
+	return sum;
+}
+
+
 /*
  * original function
  vec_host get_W(size_t index) {
@@ -39,9 +59,9 @@ __global__ void forward_gpu_kernel(float *output_, float *input_, float *b_,
 	int v_out_index = out * in_depth_;
 
 	get_W_gpu(out, in_depth_, W_, &v_output[v_out_index]);
-	float dot_result = dot_gpu(input_, input_size, &v_output[v_out_index]);
+	float dot_result = dot_gpu_fully(input_, input_size, &v_output[v_out_index]);
 
-	output_[out] = sigmod_gpu(dot_result + b_[out]);
+	output_[out] = sigmod_gpu_fully(dot_result + b_[out]);
 //	}
 }
 
@@ -82,8 +102,8 @@ __global__ void backpropagation_gpu_err_terms(float *g_, float *g_next,
 //	for (size_t in = 0; in < in_depth_; in++) {
 	int r_index = out_depth_ * in;
 	get_W_step(&r_output[r_index], W_, in, out_depth_, in_depth_);
-	float dot_result = dot_gpu(g_next, g_next_size, &r_output[r_index]);
-	g_[in] = df_sigmod_gpu(input_[in]) * dot_result;
+	float dot_result = dot_gpu_fully(g_next, g_next_size, &r_output[r_index]);
+	g_[in] = df_sigmod_gpu_fully(input_[in]) * dot_result;
 //	}
 
 }

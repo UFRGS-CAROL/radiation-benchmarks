@@ -6,6 +6,9 @@
  */
 
 #include "ConvNet.h"
+#ifdef GPU
+#include "cudaUtil.h"
+#endif
 
 void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 
@@ -85,6 +88,21 @@ void ConvNet::add_layer(Layer* layer) {
 	layer->next = NULL;
 }
 
+#ifdef GPU
+size_t ConvNet::max_iter(DeviceVector<float> v) {
+	size_t i = 0;
+	float_t max = v[0];
+	for (size_t j = 1; j < v.size(); j++) {
+		if (v[j] > max) {
+			max = v[j];
+			i = j;
+		}
+	}
+	cudaError_t ret = cudaDeviceSynchronize();
+	CUDA_CHECK_RETURN(ret);
+	return i;
+}
+#else
 size_t ConvNet::max_iter(vec_host v) {
 	size_t i = 0;
 	float_t max = v[0];
@@ -96,6 +114,7 @@ size_t ConvNet::max_iter(vec_host v) {
 	}
 	return i;
 }
+#endif
 
 size_t ConvNet::max_iter(float v[], size_t size) {
 	size_t i = 0;
