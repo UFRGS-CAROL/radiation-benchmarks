@@ -11,114 +11,10 @@
 #include <vector>
 #include <cstdio>
 
-//Copied from Ugo Varetto github
-//SEE https://github.com/ugovaretto/cuda-training/blob/master/src/004_3_parallel-dot-product-atomics-portable-optimized.cu
-//for more information
-const size_t BLOCK_SIZE = 16;
 
-//------------------------------------------------------------------------------
-
-//Full on-gpu reduction
-
-// each block atomically increments this variable when done
-// performing the first reduction step
-__device__ unsigned int count = 0;
-// shared memory used by partial_dot and sum functions
-// for temporary partial reductions; declare as global variable
-// because used in more than one function
-__shared__ float cache[BLOCK_SIZE];
-
-// partial dot product: each thread block produces a single value
-__device__ float partial_dot(const float* v1, const float* v2, int N,
-		float* out) {
-	int i = blockIdx.x * blockDim.x + threadIdx.x;
-	if (i >= N)
-		return float(0);
-	cache[threadIdx.x] = 0.f;
-	// the threads in the thread block iterate over the entire domain; iteration happens
-	// whenever the total number of threads is lower than the domain size
-	while (i < N) {
-		cache[threadIdx.x] += v1[i] * v2[i];
-		i += gridDim.x * blockDim.x;
-	}
-	__syncthreads(); // required because later on the current thread is accessing
-					 // data written by another thread
-	i = BLOCK_SIZE / 2;
-	while (i > 0) {
-		if (threadIdx.x < i)
-			cache[threadIdx.x] += cache[threadIdx.x + i];
-		__syncthreads();
-		i /= 2;
-	}
-	return cache[0];
-}
-
-// sum all elements in array; array size assumed to be equal to number of blocks
-__device__ float sum(const float* v) {
-	cache[threadIdx.x] = 0.f;
-	int i = threadIdx.x;
-	// the threads in the thread block iterate oevr the entire domain
-	// of size == gridDim.x == total number of blocks; iteration happens
-	// whenever the number of threads in a thread block is lower than
-	// the total number of thread blocks
-	while (i < gridDim.x) {
-		cache[threadIdx.x] += v[i];
-		i += blockDim.x;
-	}
-	__syncthreads(); // required because later on the current thread is accessing
-					 // data written by another thread
-	i = BLOCK_SIZE / 2;
-	while (i > 0) {
-		if (threadIdx.x < i)
-			cache[threadIdx.x] += cache[threadIdx.x + i];
-		__syncthreads();
-		i /= 2;
-	}
-	return cache[0];
-}
-
-// perform parallel dot product in two steps:
-// 1) each block computes a single value and stores it into an array of size == number of blocks
-// 2) the last block to finish step (1) performs a reduction on the array produced in the above step
-// parameters:
-// v1 first input vector
-// v2 second input vector
-// N  size of input vector
-// out output vector: size MUST be equal to the number of GPU blocks since it us used
-//     for partial reduction; result is at position 0
-__global__ void full_dot(const float* v1, const float* v2, int N, float* out) {
-	// true if last block to compute value
-	__shared__ bool lastBlock;
-	// each block computes a value
-	float r = partial_dot(v1, v2, N, out);
-	if (threadIdx.x == 0) {
-		// value is stored into output array by first thread of each block
-		out[blockIdx.x] = r;
-		// wait for value to be available to all the threads on the device
-		__threadfence();
-		// increment atomic counter and retrieve value
-		const unsigned int v = atomicInc(&count, gridDim.x);
-		// check if last block to perform computation
-		lastBlock = (v == gridDim.x - 1);
-	}
-	// the code below is executed by *all* threads in the block:
-	// make sure all the threads in the block access the correct value
-	// of the variable 'lastBlock'
-	__syncthreads();
-
-	// last block performs a the final reduction steps which produces one single value
-	if (lastBlock) {
-		r = sum(out);
-		if (threadIdx.x == 0) {
-			out[0] = r;
-			count = 0;
-		}
-	}
-}
-
-__global__ void fill(float *input) {
+__global__ void fill(float *input, float t) {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
-	input[x] = x;
+	input[x] = t;
 }
 
 // initialization function run on the GPU
@@ -176,9 +72,11 @@ void test_dot_product() {
 	full_dot<<<BLOCKS, THREADS_PER_BLOCK>>>(dev_v1, dev_v2, ARRAY_SIZE,
 			dev_out);
 	std::cout << cudaGetErrorString(cudaGetLastError()) << std::endl;
+	cudaDeviceSynchronize();
 
 	std::cout << "GPU: " << dev_out[0] << std::endl;
-	std::cout << "CPU: " << dot(&host_v1[0], &host_v2[0], ARRAY_SIZE) << std::endl;
+	std::cout << "CPU: " << dot(&host_v1[0], &host_v2[0], ARRAY_SIZE)
+			<< std::endl;
 	free(dev_v1);
 	free(dev_v2);
 	free(dev_out);
