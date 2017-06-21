@@ -7,14 +7,23 @@
 
 #include "cudaUtil.h"
 
-__global__ void forward_output_layer_kernel() {
-	this->err = 0;
-	exp_y_vec.clear();
-	exp_y_vec.resize(in_depth_);
-	exp_y_vec[this->exp_y] = 1;
-	for (size_t i = 0; i < in_depth_; i++) {
-		err += 0.5 * (exp_y_vec[i] - input_[i]) * (exp_y_vec[i] - input_[i]);
-	}
+__global__ void forward_output_layer_kernel(float *err, float *exp_y_vec, float *input_, int in_depth_, int exp_y) {
+	*err = 0;
+//	FERNANDO CHECK IT
+//	exp_y_vec.clear();
+//	exp_y_vec.resize(in_depth_);
+
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if(i > in_depth_)
+		return;
+
+	if (i == 0)
+		exp_y_vec[exp_y] = 1;
+	__syncthreads();
+
+//	for (size_t i = 0; i < in_depth_; i++) {
+	*err += 0.5 * (exp_y_vec[i] - input_[i]) * (exp_y_vec[i] - input_[i]);
+//	}
 	output_ = input_;
 }
 
@@ -29,3 +38,7 @@ __global__ void backprop_output_layer_kernel() {
 }
 
 
+
+void call_forward_output_layer(){
+
+}
