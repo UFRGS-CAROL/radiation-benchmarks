@@ -73,8 +73,8 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 
 
 
-debug: $(OBJS)
-	$(NVCC) $(ARCH) $(COMMON) $(OPTS) $(OBJ) debug.cu -o debug 
+debug: 
+	$(NVCC) $(ARCH) $(COMMON) $(OPTS) src/debug.cu -o debug 
 
 train:
 	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte ./lenet.weights

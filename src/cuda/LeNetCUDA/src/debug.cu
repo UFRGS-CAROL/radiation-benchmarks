@@ -11,7 +11,7 @@
 #include <vector>
 #include <cstdio>
 
-
+#include "DeviceVector.h"
 
 // cpu implementation of dot product
 float dot(const float* v1, const float* v2, int N) {
@@ -67,23 +67,10 @@ void test_dot_product() {
 
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, ARRAY_SIZE, 1, 1);
-//	const int BLOCKS = blocks.x;
+
 	cudaMallocManaged(&dev_out, sizeof(float));
 
-	fill<<<blocks, threads>>>(dev_v1, 2, ARRAY_SIZE);
-	cudaMemcpy(host_v1.data(), dev_v1, SIZE, cudaMemcpyDeviceToHost);
 
-	// initialize vector 2 with kernel; much faster than using for loops on the cpu
-	fill<<<blocks, threads>>>(dev_v2, 1, ARRAY_SIZE);
-	cudaMemcpy(host_v2.data(), dev_v2, SIZE, cudaMemcpyDeviceToHost);
-
-	full_dot<BLOCK_SIZE><<<blocks, threads>>>(dev_v1, dev_v2, dev_out, ARRAY_SIZE);
-	std::cout << cudaGetErrorString(cudaGetLastError()) << std::endl;
-	cudaDeviceSynchronize();
-
-	std::cout << "GPU: " << *dev_out << std::endl;
-	std::cout << "CPU: " << dot(host_v1.data(), host_v2.data(), ARRAY_SIZE)
-			<< std::endl;
 	cudaFree(dev_v1);
 	cudaFree(dev_v2);
 	cudaFree(dev_out);
@@ -133,15 +120,32 @@ void forward_maxpool_layer_gpu() {
 //	cudaFree(max_loc);
 }
 
+
+void test_device_vector(){
+	const int siz = 1024;
+	float t[siz];
+
+	std::vector<float> t2(siz);
+
+	for(int i = 0; i < siz; i++){
+		t[i] = i * 12;
+		t2[i] = 0;
+	}
+
+	DeviceVector<float> v;
+	DeviceVector<float> v2(siz);
+	DeviceVector<float> v3(t, siz);
+	DeviceVector<float> v4;
+	v4 = t2;
+	for(int i = 0; i < siz; i++){
+		std::cout << v2[i] << " " << v3[i] << " " << v4[i] << " " << std::endl;
+	}
+
+}
+
 int main(int argc, char **argv) {
 
-//	std::string opt(argv[1]);
-	test_dot_product();
-//	if (opt == "maxpool") {
-//		forward_maxpool_layer_gpu();
-//	} else if (opt == "device_vector") {
-//
-//	}
+	test_device_vector();
 
 	return 0;
 }
