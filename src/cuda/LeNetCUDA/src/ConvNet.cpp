@@ -25,6 +25,7 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 	 */
 	this->add_layer(new OutputLayer(layers.back()->out_depth_));
 
+
 	/*
 	 start training...
 	 */
@@ -160,9 +161,11 @@ float_t ConvNet::train_once() {
 		 */
 		for (auto layer : layers) {
 			layer->forward();
+#ifndef GPU
 			if (layer->next != nullptr) {
 				layer->next->input_ = layer->output_;
 			}
+#endif
 		}
 		err += layers.back()->err;
 		/*
@@ -275,7 +278,8 @@ void ConvNet::save_weights(std::string path) {
 //			count++;
 //	return count;
 //}
-//
+//return true;
+
 //bool ConvNet::check_batch_result(int batch_size) {
 //	bool all_correct = true;
 //	for (int sample = 0; sample < batch_size; sample++) {

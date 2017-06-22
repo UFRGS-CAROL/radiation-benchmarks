@@ -66,6 +66,8 @@ void ConvolutionalLayer::back_prop() {
 						for (size_t x_ = 0; x_ < kernel_size_; x_++) {
 							auto ff = in * in_width_ * in_height_
 									+ (h_ + y_) * in_width_ + (x_ + w_);
+
+
 							g_[ff] += /*next layer err terms*/
 							this->next->g_[out * out_width_ * out_height_
 									+ h_ * out_width_ + w_]
@@ -83,6 +85,10 @@ void ConvolutionalLayer::back_prop() {
 			}
 		}
 	}
+	std::cout << " g_size " << g_.size() << " " <<
+			" ff here " <<in_depth_ * in_width_ * in_height_
+			+ (out_height_ + kernel_size_) * in_width_ + (kernel_size_ + out_width_) << "\n";
+
 	/*update weight*/
 	for (size_t out = 0; out < out_depth_; out++) {
 		for (size_t in = 0; in < in_depth_; in++) {
@@ -160,7 +166,10 @@ void ConvolutionalLayer::forward() {
 		float *i_buf = this->input_.data();
 		float *w_buf = this->W_.data();
 		float *b_buf = this->b_.data();
-		float *o_buf = this->output_.data();
+
+		//test if put next->input_ is ok
+//		float *o_buf = this->output_.data();
+		float *o_buf = this->get_next_input_data_ptr();
 
 		call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_,
 				this->in_height_, this->in_depth_, this->out_width_,
@@ -182,7 +191,8 @@ void ConvolutionalLayer::forward() {
 
 void ConvolutionalLayer::back_prop() {
 	try {
-
+		g_.clear();
+		g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
 		// execute the code on the device
 		//Fernando CHECK IT
 
@@ -202,14 +212,13 @@ void ConvolutionalLayer::back_prop() {
 		int in_width_ = this->in_width_; //width size
     	int in_height_ = this->in_height_;//in height
 
+    	printf("input size %d\n", this->input_.size());
+
 
 		call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
 				alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
 				in_width_, in_height_);
 
-//		 transfer destination data from the device to the host
-//		CHECK IT
-//		this->output_ = this->output_buf;
 
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;

@@ -103,7 +103,7 @@ __global__ void backpropagation_gpu_err_terms(float *g_, float *g_next,
 	int r_index = out_depth_ * in;
 	get_W_step(&r_output[r_index], W_, in, out_depth_, in_depth_);
 	float dot_result = dot_gpu_fully(g_next, g_next_size, &r_output[r_index]);
-	g_[in] = df_sigmod_gpu_fully(input_[in]) * dot_result;
+	//g_[in] = df_sigmod_gpu_fully(input_[in]) * dot_result;
 //	}
 
 }
@@ -124,10 +124,10 @@ __global__ void backpropagation_gpu_update_weights(float *input_, float *g_next,
 		* input_[in] * g_next[out]/*err terms*/
 		/*+ lambda_ weight decay*/
 		+ lambda_ * deltaW_[out * in_depth_ + in];
-		W_[out * in_depth_ + in] += delta;
-		deltaW_[out * in_depth_ + in] = delta;
+//		W_[out * in_depth_ + in] += delta;
+//		deltaW_[out * in_depth_ + in] = delta;
 	}
-	b_[out] += alpha_ * g_next[out];
+//	b_[out] += alpha_ * g_next[out];
 //	}
 }
 

@@ -53,12 +53,14 @@ void call_forward_output_layer(float *err, float *exp_y_vec, float *input_, floa
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, in_depth_);
 
+
 	forward_output_layer_kernel<<<blocks, threads>>>(exp_y_vec, input_,
 			reduce_output, in_depth_, exp_y);
 	cudaError_t ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
 
 	int reduc_out_size = in_depth_;
+	*err = 0;
 	for(int i = 0; i < reduc_out_size; i++){
 		*err += reduce_output[i];
 	}

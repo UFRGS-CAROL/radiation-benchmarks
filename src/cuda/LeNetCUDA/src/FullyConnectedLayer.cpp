@@ -12,7 +12,8 @@
 #include "FullyConnectedLayerKernel.h"
 
 void FullyConnectedLayer::forward() {
-	float *output_ = this->output_.data();
+//	float *output_ = this->output_.data();
+	float *output_ =  this->get_next_input_data_ptr();
 	float *input_ = this->input_.data();
 	float *b_ = this->b_.data();
 	float *W_ = this->W_.data();

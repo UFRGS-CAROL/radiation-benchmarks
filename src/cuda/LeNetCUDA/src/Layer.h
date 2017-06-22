@@ -26,6 +26,7 @@ public:
 
 	virtual void save_layer(FILE *of) = 0;
 	virtual void load_layer(FILE *in) = 0;
+	float* get_next_input_data_ptr();
 
 #ifdef GPU
 	template<typename T> void write_layer_vec(DeviceVector<T> v, FILE *of) {

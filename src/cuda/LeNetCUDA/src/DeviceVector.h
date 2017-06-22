@@ -38,7 +38,10 @@ public:
 	void resize(size_t siz);
 	T* data();
 
+	void clear();
+
 	DeviceVector<T>& operator=(const std::vector<T>& other);
+	DeviceVector<T>& operator=(const DeviceVector<T>& other);
 
 	//overload only for host side
 	T& operator[](int i);
@@ -69,8 +72,10 @@ DeviceVector<T>::~DeviceVector() {
 		cudaError_t ret = cudaDeviceSynchronize();
 		CUDA_CHECK_RETURN(ret);
 
-		ret = cudaFree(this->device_data);
+		cudaFree(this->device_data);
+		ret = cudaDeviceSynchronize();
 		CUDA_CHECK_RETURN(ret);
+
 		this->v_size = 0;
 		this->allocated_device = false;
 	}
@@ -89,6 +94,29 @@ DeviceVector<T>::DeviceVector(T *data, size_t siz) {
 	this->v_size = siz;
 	this->allocated_device = true;
 	this->memcopy(this->device_data, data, sizeof(T) * siz);
+}
+
+template<class T>
+DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
+	if (this->device_data != other.device_data) { // self-assignment check expected
+		T *data = (T*) other.device_data;
+		size_t siz = other.v_size;
+
+		if (this->allocated_device) {
+			cudaError_t ret = cudaDeviceSynchronize();
+			CUDA_CHECK_RETURN(ret);
+			cudaFree(this->device_data);
+		}
+		cudaMallocManaged(&this->device_data, sizeof(T) * siz);
+		cudaError_t ret = cudaDeviceSynchronize();
+		CUDA_CHECK_RETURN(ret);
+
+		this->v_size = siz;
+		this->allocated_device = true;
+		this->memcopy(this->device_data, data, sizeof(T) * siz);
+
+	}
+	return *this;
 }
 
 template<class T>
@@ -116,11 +144,12 @@ DeviceVector<T>& DeviceVector<T>::operator=(const std::vector<T>& other) {
 
 template<class T>
 void DeviceVector<T>::resize(size_t siz) {
-	if (this->v_size != 0) {
-		cudaError_t ret = cudaDeviceSynchronize();
-		CUDA_CHECK_RETURN(ret);
-		cudaFree(this->device_data);
-	} else if (this->v_size != siz) {
+	if (this->v_size != siz) {
+		if (this->v_size != 0) {
+			cudaError_t ret = cudaDeviceSynchronize();
+			CUDA_CHECK_RETURN(ret);
+			cudaFree(this->device_data);
+		}
 
 		cudaMallocManaged(&this->device_data, sizeof(T) * siz);
 		cudaError_t ret = cudaDeviceSynchronize();
@@ -140,18 +169,24 @@ size_t DeviceVector<T>::size() {
 	return this->v_size;
 }
 
-
 template<class T>
-T& DeviceVector<T>::operator [](int i){
+T& DeviceVector<T>::operator [](int i) {
 //	if (!this->allocated_host)
 //		this->pop_vector_from_gpu();
 //	return this->host_data[i];
 	return this->device_data[i];
 }
 
-template <class T>
-void DeviceVector<T>::memcopy(T* dst, T* src, size_t bytes_size){
+template<class T>
+void DeviceVector<T>::memcopy(T* dst, T* src, size_t bytes_size) {
 	memcpy(dst, src, bytes_size);
+	cudaError_t ret = cudaDeviceSynchronize();
+	CUDA_CHECK_RETURN(ret);
+}
+
+template<class T>
+void DeviceVector<T>::clear() {
+	memset(this->device_data, 0, sizeof(T) * this->v_size);
 	cudaError_t ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
 }

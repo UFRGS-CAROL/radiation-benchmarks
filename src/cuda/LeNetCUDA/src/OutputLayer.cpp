@@ -12,6 +12,9 @@
 #include "OutputLayerKernel.h"
 
 void OutputLayer::forward() {
+	exp_y_vec.clear();
+	exp_y_vec.resize(this->in_depth_);
+
 	float *err = &this->err;
 	float *exp_y_vec = this->exp_y_vec.data();
 	float *input_ = this->input_.data();
@@ -20,9 +23,11 @@ void OutputLayer::forward() {
 	int exp_y = this->exp_y;
 
 	call_forward_output_layer(err, exp_y_vec, input_, reduce_output, in_depth_, exp_y);
+	this->output_ = this->input_;
 }
 
 void OutputLayer::back_prop() {
+	this->g_.clear();
 	float *exp_y_vec = this->exp_y_vec.data();
 	float *input_ = this->input_.data();
 	float *g_ = this->g_.data();
@@ -30,6 +35,13 @@ void OutputLayer::back_prop() {
 
 	call_backpropagation_output_layer(exp_y_vec, input_,
 			g_, in_depth_);
+}
+
+void OutputLayer::init_weight() {
+	this->reduce_output.resize(this->in_depth_);
+	this->exp_y_vec.resize(this->in_depth_);
+	this->g_.resize(this->in_depth_);
+	this->input_.resize(this->in_depth_);
 }
 
 #else
@@ -55,14 +67,15 @@ void OutputLayer::back_prop() {
 	}
 }
 
+void OutputLayer::init_weight() {
+}
+
 #endif
+
 
 OutputLayer::OutputLayer(size_t in_depth) :
 		Layer(1, 1, in_depth, 0, 0, 0, 0, 0) {
-
-}
-
-void OutputLayer::init_weight() {
+	this->init_weight();
 }
 
 /**

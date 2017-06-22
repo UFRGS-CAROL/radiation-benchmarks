@@ -21,8 +21,8 @@ void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y,
 	*blocks = dim3(blocks_x, blocks_y, blocks_z);
 	*threads = dim3(threads_x, threads_y, threads_z);
 
-	printf("b_x %d b_y %d b_z %d\nt_x %d t_y %d t_z %d\n", blocks->x, blocks->y,
-			blocks->z, threads->x, threads->y, threads->z);
+//	printf("b_x %d b_y %d b_z %d\nt_x %d t_y %d t_z %d\n", blocks->x, blocks->y,
+//			blocks->z, threads->x, threads->y, threads->z);
 
 }
 

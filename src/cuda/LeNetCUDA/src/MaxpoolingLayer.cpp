@@ -71,7 +71,8 @@ void MaxpoolingLayer::forward() {
 
 // execute the code on the device
 		float_t *input = this->input_.data();
-		float_t *output = this->output_.data();
+//		float_t *output = this->output_.data();
+		float_t *output =  this->get_next_input_data_ptr();
 		Pair *max_loc_buf = this->max_loc.data();
 		size_t out_width = this->out_width_;
 		size_t out_height = this->out_height_;
@@ -97,6 +98,8 @@ void MaxpoolingLayer::forward() {
 }
 
 void MaxpoolingLayer::back_prop() {
+	g_.clear();
+	g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
 
 	Pair *max_loc = this->max_loc.data();
 	float *g_ = this->g_.data();
