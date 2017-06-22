@@ -122,14 +122,14 @@ void forward_maxpool_layer_gpu() {
 
 
 void test_device_vector(){
-	const int siz = 1024;
+	const int siz = 128;
 	float t[siz];
 
 	std::vector<float> t2(siz);
 
 	for(int i = 0; i < siz; i++){
-		t[i] = i * 12;
-		t2[i] = 0;
+		t[i] = i;
+		t2[i] = i;
 	}
 
 	DeviceVector<float> v;
