@@ -24,6 +24,7 @@ private:
 
 	size_t v_size;
 
+	inline void memcopy(T* dst, T* src, size_t bytes_size);
 public:
 	DeviceVector(size_t siz);
 	DeviceVector();
@@ -89,8 +90,8 @@ DeviceVector<T>::DeviceVector(T *data, size_t siz) {
 	CUDA_CHECK_RETURN(ret);
 	this->v_size = siz;
 	this->allocated_device = true;
-	ret = cudaMemcpy(&this->device_data, data, sizeof(T) * siz,
-			cudaMemcpyHostToDevice);
+	this->memcopy(this->device_data, data, sizeof(T) * siz);
+	ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
 }
 
@@ -107,8 +108,8 @@ DeviceVector<T>& DeviceVector<T>::operator=(const std::vector<T>& other) {
 		CUDA_CHECK_RETURN(ret);
 		this->v_size = siz;
 		this->allocated_device = true;
-		ret = cudaMemcpy(&this->device_data, data, sizeof(T) * siz,
-				cudaMemcpyHostToDevice);
+		this->memcopy(this->device_data, data, sizeof(T) * siz);
+		ret = cudaDeviceSynchronize();
 		CUDA_CHECK_RETURN(ret);
 	}
 	return *this;
@@ -138,7 +139,7 @@ size_t DeviceVector<T>::size() {
 }
 
 template<class T>
-void DeviceVector<T>::pop_vector_from_gpu() {
+inline void DeviceVector<T>::pop_vector_from_gpu() {
 //	if (this->allocated_host)
 //		free(this->host_data);
 //
@@ -156,5 +157,10 @@ T& DeviceVector<T>::operator [](int i){
 //		this->pop_vector_from_gpu();
 //	return this->host_data[i];
 	return this->device_data[i];
+}
+
+template <class T>
+void DeviceVector<T>::memcopy(T* dst, T* src, size_t bytes_size){
+	memcpy(dst, src, bytes_size);
 }
 #endif /* DEVICEVECTOR_H_ */
