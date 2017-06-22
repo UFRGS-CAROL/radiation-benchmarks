@@ -42,7 +42,7 @@ ifeq ($(GPU), 1)
 ON_GPU= -DGPU
 CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcuda -lcudart
 ifeq ($(DEBUG),1)
-OPTS+= -G
+NVCC_FLAGS+= -G
 endif
 
 endif
