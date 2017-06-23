@@ -161,11 +161,11 @@ float_t ConvNet::train_once() {
 		 */
 		for (auto layer : layers) {
 			layer->forward();
-#ifndef GPU
+//#ifndef GPU
 			if (layer->next != nullptr) {
 				layer->next->input_ = layer->output_;
 			}
-#endif
+//#endif
 		}
 		err += layers.back()->err;
 		/*

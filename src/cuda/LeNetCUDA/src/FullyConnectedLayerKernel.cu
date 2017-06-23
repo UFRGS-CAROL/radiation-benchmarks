@@ -103,7 +103,7 @@ __global__ void backpropagation_gpu_err_terms(float *g_, float *g_next,
 	int r_index = out_depth_ * in;
 	get_W_step(&r_output[r_index], W_, in, out_depth_, in_depth_);
 	float dot_result = dot_gpu_fully(g_next, g_next_size, &r_output[r_index]);
-	//g_[in] = df_sigmod_gpu_fully(input_[in]) * dot_result;
+	g_[in] = df_sigmod_gpu_fully(input_[in]) * dot_result;
 //	}
 
 }
@@ -124,10 +124,11 @@ __global__ void backpropagation_gpu_update_weights(float *input_, float *g_next,
 		* input_[in] * g_next[out]/*err terms*/
 		/*+ lambda_ weight decay*/
 		+ lambda_ * deltaW_[out * in_depth_ + in];
-//		W_[out * in_depth_ + in] += delta;
-//		deltaW_[out * in_depth_ + in] = delta;
+		W_[out * in_depth_ + in] += delta;
+		deltaW_[out * in_depth_ + in] = delta;
 	}
-//	b_[out] += alpha_ * g_next[out];
+	__syncthreads();
+	b_[out] += alpha_ * g_next[out];
 //	}
 }
 
@@ -137,10 +138,6 @@ void call_backpropagation_fully_connected(float *input_, float *g_, float *g_nex
 
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, in_depth_);
-
-//	void backpropagation_gpu_err_terms(float *g_, float *g_next,
-//			float *input_, float *r_output, float *W_, int out_depth_,
-//			int in_depth_, int g_next_size)
 	backpropagation_gpu_err_terms<<<blocks, threads>>>(g_, g_next, input_,
 			r_output, W_, out_depth_, in_depth_, g_next_size);
 	cudaError_t ret = cudaDeviceSynchronize();

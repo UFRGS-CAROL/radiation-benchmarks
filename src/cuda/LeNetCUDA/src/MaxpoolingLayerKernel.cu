@@ -103,9 +103,6 @@ __global__ void backpropagation_maxpool(Pair *max_loc, float *g_, float *g_next,
 }
 
 void call_backpropagation_maxpool(Pair *max_loc, float *g_, float *g_next, size_t max_size) {
-//		FERNANDO CHECK IT
-//	g_.clear();
-//		g_.resize(in_width_ * in_height_ * in_depth_);
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, max_size);
 

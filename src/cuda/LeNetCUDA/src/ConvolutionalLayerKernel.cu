@@ -169,7 +169,7 @@ __global__ void backpropagation_update_weights(
 	int in = get_global_id(1); //in iterator, comes from the second for loop, < in_depth
 	int h_ = get_global_id(2); //h_ iterator, comes from the third for loop, < out_width
 
-	if(out > out_depth_ || in > in_depth_ || h_ > out_height_)
+	if(out >= out_depth_ || in >= in_depth_ || h_ >= out_height_)
 		return;
 	/*update weight*/
 //	for (size_t out = 0; out < out_depth_; out++) {
@@ -233,8 +233,6 @@ void call_backpropagation_parallel(float *W_, //weights
 	dim3 threads;
 
 	cuda_gridsize(&threads, &blocks, out_depth, in_depth_, out_width);
-
-
 //	for (size_t out = 0; out < out_depth_; out++) {
 //		for (size_t in = 0; in < in_depth_; in++) {
 //			for (size_t w_ = 0; w_ < out_width_; w_++) {

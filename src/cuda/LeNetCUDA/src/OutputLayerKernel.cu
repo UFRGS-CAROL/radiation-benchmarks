@@ -15,11 +15,6 @@ __device__ float df_sigmod_gpu_output(float f_x) {
 
 __global__ void forward_output_layer_kernel(float *exp_y_vec, float *input_,
 		float *output, int in_depth_, int exp_y) {
-//	*err = 0;
-//	FERNANDO CHECK IT
-//	exp_y_vec.clear();
-//	exp_y_vec.resize(in_depth_);
-
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if (i > in_depth_)
 		return;
@@ -61,6 +56,7 @@ void call_forward_output_layer(float *err, float *exp_y_vec, float *input_, floa
 
 	int reduc_out_size = in_depth_;
 	*err = 0;
+	//Man it is NVIDIA FUCKING MANAGED MEMORY, I Love IT
 	for(int i = 0; i < reduc_out_size; i++){
 		*err += reduce_output[i];
 	}

@@ -193,8 +193,6 @@ void ConvolutionalLayer::back_prop() {
 	try {
 		g_.clear();
 		g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
-		// execute the code on the device
-		//Fernando CHECK IT
 
 		float *W_ = this->W_.data();//weights
 		float *g_ = this->g_.data();//err array
@@ -211,8 +209,6 @@ void ConvolutionalLayer::back_prop() {
 		int kernel_size_ = this->kernel_size_; //size of loop
 		int in_width_ = this->in_width_; //width size
     	int in_height_ = this->in_height_;//in height
-
-    	printf("input size %d\n", this->input_.size());
 
 
 		call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
