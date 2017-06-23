@@ -10,12 +10,17 @@
 
 using namespace std;
 
+void create_lenet(ConvNet *net){
+	net->add_layer(new ConvolutionalLayer(32, 32, 1, 5, 6));
+	net->add_layer(new MaxpoolingLayer(28, 28, 6));
+	net->add_layer(new ConvolutionalLayer(14, 14, 6, 5, 16));
+	net->add_layer(new MaxpoolingLayer(10, 10, 16));
+	net->add_layer(new ConvolutionalLayer(5, 5, 16, 5, 100));
+	net->add_layer(new FullyConnectedLayer(100, 10));
+}
+
 void classify(MNISTParser& m, string weigths) {
 	m.load_testing();
-
-
-//	vec2d_t x;
-//	vec_t y;
 
 	vec2d_t test_x;
 	vec_host test_y;
@@ -25,31 +30,18 @@ void classify(MNISTParser& m, string weigths) {
 		test_y.push_back(s->label);
 	}
 	ConvNet n;
-	n.add_layer(new ConvolutionalLayer(32, 32, 1, 5, 6));
-	n.add_layer(new MaxpoolingLayer(28, 28, 6));
-	n.add_layer(new ConvolutionalLayer(14, 14, 6, 5, 16));
-	n.add_layer(new MaxpoolingLayer(10, 10, 16));
-	n.add_layer(new ConvolutionalLayer(5, 5, 16, 5, 100));
-	n.add_layer(new FullyConnectedLayer(100, 10));
-//	n.train(test_x, test_y, 10000);
+	create_lenet(&n);
 	//need to load network configurations here
 	n.load_weights(weigths);
 
 	int test_sample_count = 5;
-	//Sleep(1000);
 	printf("Testing with %d samples:\n", test_sample_count);
-	const clock_t begin_time = clock();
 	n.test(test_x, test_y, test_sample_count);
-	cout << "Time consumed in test: "
-			<< float(clock() - begin_time) / (CLOCKS_PER_SEC / 1000) << " ms"
-			<< endl;
 }
 
 void train(MNISTParser& m, string weigths) {
-	cout << m << endl;
 	m.load_training();
-//	vec2d_t x;
-//	vec_t y;
+
 	int imgs = 10000;
 	vec2d_t test_x;
 	vec_host test_y;
@@ -59,22 +51,8 @@ void train(MNISTParser& m, string weigths) {
 		test_y.push_back(temp->label);
 	}
 	ConvNet n;
-	n.add_layer(new ConvolutionalLayer(32, 32, 1, 5, 6));
-	n.add_layer(new MaxpoolingLayer(28, 28, 6));
-	n.add_layer(new ConvolutionalLayer(14, 14, 6, 5, 16));
-	n.add_layer(new MaxpoolingLayer(10, 10, 16));
-	n.add_layer(new ConvolutionalLayer(5, 5, 16, 5, 100));
-	n.add_layer(new FullyConnectedLayer(100, 10));
+	create_lenet(&n);
 	n.train(test_x, test_y, 10000);
-	int test_sample_count = 5;
-	//Sleep(1000);
-	printf("Testing with %d samples:\n", test_sample_count);
-	const clock_t begin_time = clock();
-	n.test(test_x, test_y, test_sample_count);
-	cout << "Time consumed in test: "
-			<< float(clock() - begin_time) / (CLOCKS_PER_SEC / 1000) << " ms"
-			<< endl;
-
 	n.save_weights(weigths);
 }
 
@@ -94,7 +72,6 @@ int main(int argc, char **argv) {
 	string weigths(argv[4]);
 
 	if (mode == "train") {
-
 		//if train training and labels must be passed
 		MNISTParser m(input_data.c_str(), input_labels.c_str(), true);
 		cout << "Training for " << m.get_test_img_fname() << std::endl;

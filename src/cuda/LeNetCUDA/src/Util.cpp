@@ -96,11 +96,6 @@ Sample::Sample(float_t label_, std::vector<float_t> image_) :
 		label(label_), image(image_) {
 }
 
-///////////////////////////////////////////////////////////////
-//end namespace convnet
-//////////////////////////////////////////////////////////////
-
-
 std::string fileToString(const std::string& file_name) {
 	std::string file_text;
 

@@ -30,9 +30,7 @@ public:
 #ifdef GPU
 	//this vector will be used only at
 	//forward gpu
-	//must be destroyed at class destructor
 	DeviceVector<float> v_output;
-//	DeviceVector<float> r_output;
 #endif
 
 private:

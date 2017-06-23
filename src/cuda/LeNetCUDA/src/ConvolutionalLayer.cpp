@@ -85,9 +85,7 @@ void ConvolutionalLayer::back_prop() {
 			}
 		}
 	}
-	std::cout << " g_size " << g_.size() << " " <<
-			" ff here " <<in_depth_ * in_width_ * in_height_
-			+ (out_height_ + kernel_size_) * in_width_ + (kernel_size_ + out_width_) << "\n";
+
 
 	/*update weight*/
 	for (size_t out = 0; out < out_depth_; out++) {
@@ -159,25 +157,18 @@ inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 inline vec_host ConvolutionalLayer::getW_(size_t in, size_t out) {}
 
 void ConvolutionalLayer::forward() {
-
+	this->output_.clear();
 	try {
 		// execute the code on the device
-		//Fernando CHECK IT
 		float *i_buf = this->input_.data();
 		float *w_buf = this->W_.data();
 		float *b_buf = this->b_.data();
-
-		//test if put next->input_ is ok
-//		float *o_buf = this->output_.data();
-		float *o_buf = this->get_next_input_data_ptr();
+		float *o_buf = this->output_.data();
 
 		call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_,
 				this->in_height_, this->in_depth_, this->out_width_,
 				this->out_height_, this->out_depth_, this->kernel_size_);
 
-//		 transfer destination data from the device to the host
-//		CHECK IT
-//		this->output_ = this->output_buf;
 
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;

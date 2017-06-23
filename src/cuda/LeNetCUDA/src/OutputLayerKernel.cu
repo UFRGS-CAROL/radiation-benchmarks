@@ -19,10 +19,6 @@ __global__ void forward_output_layer_kernel(float *exp_y_vec, float *input_,
 	if (i > in_depth_)
 		return;
 
-	if (i == 0)
-		exp_y_vec[exp_y] = 1;
-	__syncthreads();
-
 //	for (size_t i = 0; i < in_depth_; i++) {
 	output[i] = 0.5 * (exp_y_vec[i] - input_[i]) * (exp_y_vec[i] - input_[i]);
 //	}
@@ -45,13 +41,17 @@ __global__ void backprop_output_layer_kernel(float *exp_y_vec, float *input_,
 
 
 void call_forward_output_layer(float *err, float *exp_y_vec, float *input_, float *reduce_output, int in_depth_, int exp_y) {
+	//hahahah nvidia managed
+	exp_y_vec[exp_y] = 1;
+	cudaError_t ret = cudaDeviceSynchronize();
+	CUDA_CHECK_RETURN(ret);
+
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, in_depth_);
 
-
 	forward_output_layer_kernel<<<blocks, threads>>>(exp_y_vec, input_,
 			reduce_output, in_depth_, exp_y);
-	cudaError_t ret = cudaDeviceSynchronize();
+	ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
 
 	int reduc_out_size = in_depth_;

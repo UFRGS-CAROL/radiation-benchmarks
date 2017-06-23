@@ -28,6 +28,7 @@ void OutputLayer::forward() {
 
 void OutputLayer::back_prop() {
 	this->g_.clear();
+
 	float *exp_y_vec = this->exp_y_vec.data();
 	float *input_ = this->input_.data();
 	float *g_ = this->g_.data();
@@ -87,6 +88,5 @@ void OutputLayer::save_layer(FILE *of) {
 
 void OutputLayer::load_layer(FILE *in) {
 	this->load_base_layer(in);
-	std::cout << "Inside Output Layer\n";
 }
 

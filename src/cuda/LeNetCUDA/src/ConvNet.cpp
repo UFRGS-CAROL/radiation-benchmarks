@@ -6,6 +6,7 @@
  */
 
 #include "ConvNet.h"
+
 #ifdef GPU
 #include "cudaUtil.h"
 #endif
@@ -25,12 +26,12 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 	 */
 	this->add_layer(new OutputLayer(layers.back()->out_depth_));
 
-
 	/*
 	 start training...
 	 */
 	auto stop = false;
 	int iter = 0;
+	this->mark.start();
 	while (iter < MAX_ITER && !stop) {
 		iter++;
 		auto err = train_once();
@@ -38,12 +39,16 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 		if (err < END_CONDITION)
 			stop = true;
 	}
+	this->mark.stop();
+	std::cout << "Time spent on training " << this->mark << std::endl;
 }
 
 void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size) {
 //	assert(batch_size > 0);
 //	assert(test_size % batch_size == 0);
-	test_x_ = test_x, test_y_ = test_y, test_size_ = test_size;
+	test_x_ = test_x;
+	test_y_ = test_y;
+	test_size_ = test_size;
 	int iter = 0;
 	int bang = 0;
 
@@ -52,7 +57,7 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size) {
 #else
 	std::cout << "Testing with CPU " << std::endl;
 #endif // GPU
-
+	this->mark.start();
 	while (iter < test_size_) {
 		int result = 0;
 //#ifdef GPU // Use GPU
@@ -75,7 +80,10 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size) {
 		bang += result;
 		iter++;
 	}
+	this->mark.stop();
 	std::cout << "bang/test_size_: " << (float) bang / test_size_ << std::endl;
+	std::cout << "Time spent testing " << this->test_size_ << " samples: "
+			<< this->mark << std::endl;
 }
 
 //void ConvNet::test(vec2d_t test_x, vec_t test_y, size_t test_size) {
@@ -99,6 +107,9 @@ size_t ConvNet::max_iter(DeviceVector<float> v) {
 			i = j;
 		}
 	}
+	//PEDRO eu usei cudaManaged malloc, entao
+	//toda vez que acessa do host a memoria
+	//ou em um kernel tem que fazer um cudaDeviceSynchronize
 	cudaError_t ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
 	return i;
@@ -161,11 +172,9 @@ float_t ConvNet::train_once() {
 		 */
 		for (auto layer : layers) {
 			layer->forward();
-//#ifndef GPU
 			if (layer->next != nullptr) {
 				layer->next->input_ = layer->output_;
 			}
-//#endif
 		}
 		err += layers.back()->err;
 		/*

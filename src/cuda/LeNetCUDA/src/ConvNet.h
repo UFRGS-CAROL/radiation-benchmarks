@@ -8,19 +8,17 @@
 #ifndef CONVNET_H_
 #define CONVNET_H_
 
-//#pragma once
 #include "Util.h"
+#include "Layer.h"
 #include "ConvolutionalLayer.h"
 #include "MNISTParser.h"
-#include "Layer.h"
 #include "MaxpoolingLayer.h"
 #include "OutputLayer.h"
 #include "FullyConnectedLayer.h"
 #ifdef GPU
 #include "DeviceVector.h"
 #endif
-//namespace convnet {
-//
+
 #define MAX_ITER 2  // maximum training iterations
 #define M 10 // training sample counts in each iteration
 #define END_CONDITION 1e-3
@@ -65,12 +63,8 @@ private:
 	size_t test_size_;
 	vec2d_t test_x_;
 	vec_host test_y_;
+	Timer mark;
 
 };
-
-//#undef MAX_ITER
-//#undef M
-
-//} /* namespace convnet */
 
 #endif /* CONVNET_H_ */

@@ -100,11 +100,11 @@ void Layer::load_base_layer(FILE *in) {
 
 }
 
-float* Layer::get_next_input_data_ptr(){
-	if (this->next != nullptr)
-		return this->next->input_.data();
-	return nullptr;
-}
+//float* Layer::get_next_input_data_ptr(){
+//	if (this->next != nullptr)
+//		return this->next->input_.data();
+//	return nullptr;
+//}
 
 
 #ifdef GPU

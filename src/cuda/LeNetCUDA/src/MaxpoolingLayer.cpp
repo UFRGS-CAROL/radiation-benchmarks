@@ -19,10 +19,12 @@ MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 				in_depth, 0, 0) {
 	this->output_.resize(
 			this->out_depth_ * this->out_width_ * this->out_height_);
+
+	//it is used instead unordered map on GPU
 	Pair t;
 	t.first = MAX;
 	t.second = MAX;
-
+	//this trick guarantee that I use DeviceVector or std::vector
 	this->max_loc = std::vector < Pair
 			> (this->out_depth_ * this->in_height_ * this->in_width_, t);
 
@@ -64,15 +66,9 @@ void MaxpoolingLayer::load_layer(FILE *in) {
 void MaxpoolingLayer::forward() {
 	try {
 
-//		this->input_buf = this->input_;
-		//PEDRO check if it is necessary to transfer weight again
-//		this->weight_buf = this->W_;
-//		this->b_buf = this->b_;
-
 // execute the code on the device
 		float_t *input = this->input_.data();
-//		float_t *output = this->output_.data();
-		float_t *output =  this->get_next_input_data_ptr();
+		float_t *output = this->output_.data();
 		Pair *max_loc_buf = this->max_loc.data();
 		size_t out_width = this->out_width_;
 		size_t out_height = this->out_height_;
@@ -82,10 +78,6 @@ void MaxpoolingLayer::forward() {
 
 		call_forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
 				out_height, out_depth, in_height, in_width);
-
-// transfer destination data from the device to the host
-//CHECK IT
-//		this->output_ = this->output_buf;
 
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
