@@ -20,7 +20,7 @@
 #endif
 
 #define MAX_ITER 20  // maximum training iterations
-#define M 10 // training sample counts in each iteration
+#define M 30 // training sample counts in each iteration
 #define END_CONDITION 1e-3
 
 class ConvNet {
