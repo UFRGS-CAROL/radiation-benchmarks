@@ -11,6 +11,24 @@
 #include "cudaUtil.h"
 #endif
 
+
+
+void debug_layers(Layer *layer, char *type, int t){
+	char temp[200];
+	std::cout << "Passou\n";
+
+#ifdef GPU
+	sprintf(temp, "layer_%d_gpu_%s.lay", t++, type);
+#else
+	sprintf(temp, "layer_%d_cpu_%s.lay", t++, type);
+#endif
+	FILE *in = fopen(temp, "wb");
+	layer->save_layer(in);
+	fclose(in);
+
+	std::cout << type << "Passou2\n";
+}
+
 void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 
 #ifdef GPU
@@ -40,6 +58,16 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 			stop = true;
 	}
 	this->mark.stop();
+//#ifdef GPU
+//	cudaError_t ret = cudaDeviceSynchronize();
+//	CUDA_CHECK_RETURN(ret);
+//#endif
+//	int i  = 0;
+//	for(auto layer : layers){
+//		debug_layers(layer, "layer", i++);
+//	}
+
+
 	std::cout << "Time spent on training " << this->mark << std::endl;
 }
 
@@ -101,6 +129,7 @@ void ConvNet::add_layer(Layer* layer) {
 size_t ConvNet::max_iter(DeviceVector<float> v) {
 	size_t i = 0;
 	float_t max = v[0];
+	std::cout << "v size " << v.size() << "\n";
 	for (size_t j = 1; j < v.size(); j++) {
 		if (v[j] > max) {
 			max = v[j];
@@ -158,6 +187,7 @@ bool ConvNet::test_once(int test_x_index) {
 	return (int) test_y_[test_x_index] == (int) max_iter(layers.back()->output_);
 }
 
+
 float_t ConvNet::train_once() {
 	float_t err = 0;
 	int iter = 0;
@@ -170,6 +200,7 @@ float_t ConvNet::train_once() {
 		/*
 		 Start forward feeding.
 		 */
+
 		for (auto layer : layers) {
 			layer->forward();
 			if (layer->next != nullptr) {

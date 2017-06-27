@@ -31,14 +31,20 @@ public:
 #ifdef GPU
 	template<typename T> void write_layer_vec(DeviceVector<T> v, FILE *of) {
 		this->write_layer_var<size_t>(v.size(), of);
-//		fwrite(v.data(), sizeof(T), v.size(), of);
+		fwrite(v.data(), sizeof(T), v.size(), of);
+
+		cudaError_t ret = cudaDeviceSynchronize();
+		CUDA_CHECK_RETURN(ret);
 	}
 
 	template<typename T>  DeviceVector<T> load_layer_vec(FILE *in) {
 		size_t siz = this->load_layer_var<size_t>(in);
 
 		DeviceVector<T> v(siz);
-//		fread(v.data(), sizeof(T), siz, in);
+		fread(v.data(), sizeof(T), siz, in);
+
+		cudaError_t ret = cudaDeviceSynchronize();
+		CUDA_CHECK_RETURN(ret);
 		return v;
 	}
 #else

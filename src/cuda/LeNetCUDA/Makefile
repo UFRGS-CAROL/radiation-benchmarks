@@ -74,7 +74,8 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 
 
 debug: 
-	$(NVCC) $(ARCH) $(COMMON) $(OPTS) src/debug.cu -o debug 
+	#$(NVCC) $(ARCH) $(COMMON) $(OPTS) src/debug.cu -o debug 
+	$(CXX) $(COMMON) $(OPTS) src/compare_layers.cpp -o compare
 
 train:
 	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte ./lenet.weights
@@ -87,4 +88,4 @@ obj:
 	
 .PHONY: clean
 clean:
-	rm -rf obj/*o $(EXEC) debug
+	rm -rf obj/*o $(EXEC) debug compare

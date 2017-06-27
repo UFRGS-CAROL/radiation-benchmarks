@@ -107,6 +107,7 @@ DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
 			CUDA_CHECK_RETURN(ret);
 			cudaFree(this->device_data);
 		}
+//		std::cout << "Passou aqui size other" << other.v_size << " this size " << this->v_size << "\n";
 		cudaMallocManaged(&this->device_data, sizeof(T) * siz);
 		cudaError_t ret = cudaDeviceSynchronize();
 		CUDA_CHECK_RETURN(ret);
@@ -116,6 +117,7 @@ DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
 		this->memcopy(this->device_data, data, sizeof(T) * siz);
 
 	}
+
 	return *this;
 }
 
