@@ -192,11 +192,23 @@ float_t ConvNet::train_once() {
 	float_t err = 0;
 	int iter = 0;
 	while (iter < M) {
-		//auto train_x_index = iter % train_size_;
+		auto train_x_index = iter % train_size_;
 		iter++;
-		auto train_x_index = uniform_rand(0, train_size_ - 1);
+		//std::cout << " train_x_index: " << train_x_index << std::endl; //debug
+		//auto train_x_index = uniform_rand(0, train_size_ - 1);
 		layers[0]->input_ = train_x_[train_x_index];
 		layers.back()->exp_y = (int) train_y_[train_x_index];
+		//DEBUG:
+		std::ofstream debugFile;
+#ifdef GPU
+		debugFile.open ("GPUdebugFile.txt");
+#else //CPU
+		debugFile.open ("CPUdebugFile.txt");
+#endif
+		debugFile << "DEBUG layers.back()->exp_y:" << layers.back()->exp_y;
+		debugFile << "\n";
+		debugFile.close();
+		//end DEBUG
 		/*
 		 Start forward feeding.
 		 */
