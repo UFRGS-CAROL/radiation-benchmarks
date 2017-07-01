@@ -191,6 +191,14 @@ bool ConvNet::test_once(int test_x_index) {
 float_t ConvNet::train_once() {
 	float_t err = 0;
 	int iter = 0;
+		//DEBUG:
+		std::ofstream debugFile;
+#ifdef GPU
+		debugFile.open ("GPUdebugFile.txt");
+#else //CPU
+		debugFile.open ("CPUdebugFile.txt");
+#endif
+	//
 	while (iter < M) {
 		auto train_x_index = iter % train_size_;
 		iter++;
@@ -208,19 +216,13 @@ float_t ConvNet::train_once() {
 				layer->next->input_ = layer->output_;
 			}
 			else{
-				//DEBUG:
-				std::ofstream debugFile;
-#ifdef GPU
-				debugFile.open ("GPUdebugFile.txt");
-#else //CPU
-				debugFile.open ("CPUdebugFile.txt");
-#endif
+				//debug
+				debugFile << "iter: "<<iter << " DEBUG final layer->output_: ";
 				for(int i = 0; i < layer->output_.size(); i++){
-					debugFile << "DEBUG final layer->output_: " << layer->output_;
+					debugFile << layer->output_[i] << ", ";
 				}
 				debugFile << "\n";
-				debugFile.close();
-				//end DEBUG
+				//
 			}
 		}
 		err += layers.back()->err;
@@ -232,6 +234,10 @@ float_t ConvNet::train_once() {
 			(*i)->back_prop();
 		}
 	}
+
+	debugFile.close();
+	//end DEBUG
+
 	return err / M;
 }
 
