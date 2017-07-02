@@ -209,21 +209,21 @@ float_t ConvNet::train_once() {
 		/*
 		 Start forward feeding.
 		 */
-
+		int debugIter = 0;
 		for (auto layer : layers) {
+			//std::cout << "layer w h d: " << layer->out_width_ << std::endl; //debug
 			layer->forward();
 			if (layer->next != nullptr) {
 				layer->next->input_ = layer->output_;
 			}
-			else{
-				//debug
-				debugFile << "iter: "<<iter << " DEBUG final layer->output_: ";
-				for(int i = 0; i < layer->output_.size(); i++){
-					debugFile << layer->output_[i] << ", ";
-				}
-				debugFile << "\n";
-				//
+			//debug
+			debugFile << "iter: "<<iter << " DEBUG layer" << debugIter << "->output_: ";
+			for(int i = 0; i < layer->output_.size(); i++){
+				debugFile << layer->output_[i] << ", ";
 			}
+			debugFile << "\n";
+			debugIter++;
+			//
 		}
 		err += layers.back()->err;
 		/*
