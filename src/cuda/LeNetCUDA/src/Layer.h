@@ -33,8 +33,8 @@ public:
 		this->write_layer_var<size_t>(v.size(), of);
 		fwrite(v.data(), sizeof(T), v.size(), of);
 
-		cudaError_t ret = cudaDeviceSynchronize();
-		CUDA_CHECK_RETURN(ret);
+//		cudaError_t ret = cudaDeviceSynchronize();
+//		CUDA_CHECK_RETURN(ret);
 	}
 
 	template<typename T>  DeviceVector<T> load_layer_vec(FILE *in) {
@@ -43,8 +43,8 @@ public:
 		DeviceVector<T> v(siz);
 		fread(v.data(), sizeof(T), siz, in);
 
-		cudaError_t ret = cudaDeviceSynchronize();
-		CUDA_CHECK_RETURN(ret);
+//		cudaError_t ret = cudaDeviceSynchronize();
+//		CUDA_CHECK_RETURN(ret);
 		return v;
 	}
 #else

@@ -139,8 +139,8 @@ size_t ConvNet::max_iter(DeviceVector<float> v) {
 	//PEDRO eu usei cudaManaged malloc, entao
 	//toda vez que acessa do host a memoria
 	//ou em um kernel tem que fazer um cudaDeviceSynchronize
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+//	cudaError_t ret = cudaDeviceSynchronize();
+//	CUDA_CHECK_RETURN(ret);
 	return i;
 }
 #else
@@ -211,17 +211,18 @@ float_t ConvNet::train_once() {
 		 */
 		int debugIter = 0;
 		for (auto layer : layers) {
+			//debug
+			debugFile << "iter: "<<iter << " DEBUG layer" << debugIter << "->input_: ";
+			for(int i = 0; i < layer->input_.size(); i++){
+				debugFile << layer->input_[i] << ", ";
+			}
+			debugFile << "\n";
+
 			//std::cout << "layer w h d: " << layer->out_width_ << std::endl; //debug
 			layer->forward();
 			if (layer->next != nullptr) {
 				layer->next->input_ = layer->output_;
 			}
-			//debug
-			debugFile << "iter: "<<iter << " DEBUG layer" << debugIter << "->output_: ";
-			for(int i = 0; i < layer->output_.size(); i++){
-				debugFile << layer->output_[i] << ", ";
-			}
-			debugFile << "\n";
 			debugIter++;
 			//
 		}

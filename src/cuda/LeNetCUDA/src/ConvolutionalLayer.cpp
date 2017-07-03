@@ -52,6 +52,9 @@ void ConvolutionalLayer::forward() {
 		}
 	}
 
+	for(int i = 0; i < out_depth_; i++)
+		printf("%f ", output_[i]);
+	printf("\n");
 }
 
 void ConvolutionalLayer::back_prop() {

@@ -83,7 +83,9 @@ void call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
 	dim3 blocks;
 	dim3 threads;
 
-	cuda_gridsize(&threads, &blocks, out_width, out_height, out_depth);
+//	cuda_gridsize(&threads, &blocks, out_width, out_height, out_depth);
+	cuda_gridsize(&threads, &blocks, out_width * out_depth, out_height);
+
 
 	//I need check it yet
 	forward_parallel<<<blocks, threads>>>(input_buf, weight_buf, b_buf,
@@ -92,6 +94,11 @@ void call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
 
 	cudaError_t ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
+
+	for(int i = 0; i < out_depth; i++)
+		printf("%f ", output_buf[i]);
+	printf("\n");
+
 }
 
 __global__ void backpropagation_update_err(float *W_, //weights
