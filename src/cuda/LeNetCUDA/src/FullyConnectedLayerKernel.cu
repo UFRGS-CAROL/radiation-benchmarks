@@ -75,6 +75,7 @@ void call_forward_fully_connected(float *output_, float *input_, float *b_,
 			out_depth_, in_depth_, input_size);
 	cudaError_t ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
+
 }
 
 __device__ void get_W_step(float *r_output, float *W_, int in, int out_depth_,

@@ -62,11 +62,13 @@ __global__ void forward_maxpool_layer_kernel(float_t *input_, Pair *max_loc,
 		size_t out_depth_, size_t in_height, size_t in_width) {
 
 	int h_ = blockIdx.y * blockDim.y + threadIdx.y;
-	int w_ = blockIdx.x * blockDim.x + threadIdx.x;
-	int out = blockIdx.z * blockDim.z + threadIdx.z;
-	//	for (size_t out = 0; out < out_depth_; out++) {
-	//		for (size_t h_ = 0; h_ < in_height_; h_ += 2) {
-	//			for (size_t w_ = 0; w_ < in_width_; w_ += 2) {
+	int w_ = (blockIdx.x * blockDim.x + threadIdx.x) / out_depth_;
+	int out = (blockIdx.x * blockDim.x + threadIdx.x) % out_depth_;
+
+//	for (size_t out = 0; out < out_depth_; out++) {
+//		for (size_t h_ = 0; h_ < in_height_; h_ += 2) {
+//			for (size_t w_ = 0; w_ < in_width_; w_ += 2) {
+
 	if ((out < out_depth_) && (h_ < in_height) && (w_ < in_width) && !(h_ % 2)
 			&& !(w_ % 2)) {
 		size_t index = get_out_index(out_width, out_height, out, h_, w_);
@@ -82,12 +84,14 @@ void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
 		size_t in_height, size_t in_width) {
 
 	dim3 blocks, threads;
-	cuda_gridsize(&threads, &blocks, in_width, in_height, out_depth);
+
+	cuda_gridsize(&threads, &blocks, in_width * out_depth, in_height);
 
 	forward_maxpool_layer_kernel<<<blocks, threads>>>(input, max_loc, output,
 			out_width, out_height, out_depth, in_height, in_width);
 	cudaError_t ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
+
 }
 
 __global__ void backpropagation_maxpool(Pair *max_loc, float *g_, float *g_next,

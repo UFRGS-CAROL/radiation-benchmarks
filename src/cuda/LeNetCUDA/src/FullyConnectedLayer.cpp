@@ -72,9 +72,9 @@ void FullyConnectedLayer::init_weight() {
 
 #else
 void FullyConnectedLayer::forward() {
-
 	for (size_t out = 0; out < out_depth_; out++) {
 		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
+
 	}
 }
 

@@ -28,10 +28,8 @@ ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 
 }
 
-
 #ifndef GPU
 void ConvolutionalLayer::forward() {
-
 	std::fill(output_.begin(), output_.end(), 0);
 	for (size_t out = 0; out < out_depth_; out++) { /* for each output feature map */
 		for (size_t in = 0; in < in_depth_; in++) { /* for each input feature map */
@@ -52,9 +50,6 @@ void ConvolutionalLayer::forward() {
 		}
 	}
 
-	for(int i = 0; i < out_depth_; i++)
-		printf("%f ", output_[i]);
-	printf("\n");
 }
 
 void ConvolutionalLayer::back_prop() {
@@ -69,7 +64,6 @@ void ConvolutionalLayer::back_prop() {
 						for (size_t x_ = 0; x_ < kernel_size_; x_++) {
 							auto ff = in * in_width_ * in_height_
 									+ (h_ + y_) * in_width_ + (x_ + w_);
-
 
 							g_[ff] += /*next layer err terms*/
 							this->next->g_[out * out_width_ * out_height_
@@ -88,7 +82,6 @@ void ConvolutionalLayer::back_prop() {
 			}
 		}
 	}
-
 
 	/*update weight*/
 	for (size_t out = 0; out < out_depth_; out++) {
@@ -172,7 +165,6 @@ void ConvolutionalLayer::forward() {
 				this->in_height_, this->in_depth_, this->out_width_,
 				this->out_height_, this->out_depth_, this->kernel_size_);
 
-
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		exit(2);
@@ -188,27 +180,25 @@ void ConvolutionalLayer::back_prop() {
 		g_.clear();
 		g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
 
-		float *W_ = this->W_.data();//weights
+		float *W_ = this->W_.data(); //weights
 		float *g_ = this->g_.data();//err array
 		float *input_ = this->input_.data();//input array
 		float *g_next = this->next->g_.data();//b_next from this->next->g_
 		float *deltaW = this->deltaW_.data();//deltaW array
-		float *b_ = this->b_.data();  //b_ vector
+		float *b_ = this->b_.data();//b_ vector
 		float alpha = this->alpha_;//alpha value
 		float lambda = this->lambda_;
 		int out_depth = this->out_depth_;//size of the first for loop
 		int in_depth_ = this->in_depth_;//size of the second for loop
 		int out_width = this->out_width_;//size of the third for loop
-		int out_height_ = this->out_height_; // size of loop
-		int kernel_size_ = this->kernel_size_; //size of loop
-		int in_width_ = this->in_width_; //width size
-    	int in_height_ = this->in_height_;//in height
-
+		int out_height_ = this->out_height_;// size of loop
+		int kernel_size_ = this->kernel_size_;//size of loop
+		int in_width_ = this->in_width_;//width size
+		int in_height_ = this->in_height_;//in height
 
 		call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
 				alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
 				in_width_, in_height_);
-
 
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
@@ -232,10 +222,7 @@ void ConvolutionalLayer::init_weight() {
 
 }
 
-
 #endif //DEFINE GPU FLAG
-
-
 
 inline int ConvolutionalLayer::getb_(size_t out, size_t h_, size_t w_) {
 	return out * out_width_ * out_height_ + h_ * out_height_ + w_;

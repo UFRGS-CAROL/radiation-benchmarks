@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define BLOCK_SIZE 1024
+#define BLOCK_SIZE 32
 
 void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y = 1,
 		size_t z = 1);

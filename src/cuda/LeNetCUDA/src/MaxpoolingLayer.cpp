@@ -110,6 +110,7 @@ void MaxpoolingLayer::forward() {
 			for (size_t w_ = 0; w_ < in_width_; w_ += 2) {
 				output_[getOutIndex(out, h_, w_)] = max_In_(out, h_, w_,
 						getOutIndex(out, h_, w_));
+
 			}
 		}
 	}
