@@ -28,30 +28,6 @@ ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 
 }
 
-#ifndef GPU
-void ConvolutionalLayer::forward() {
-	std::fill(output_.begin(), output_.end(), 0);
-	for (size_t out = 0; out < out_depth_; out++) { /* for each output feature map */
-		for (size_t in = 0; in < in_depth_; in++) { /* for each input feature map */
-			for (size_t h_ = 0; h_ < out_height_; h_++) {
-				for (size_t w_ = 0; w_ < out_width_; w_++) {
-					output_[getOutIndex(out, h_, w_)] += conv(
-							getInforKernel(in, h_, w_), getW_(in, out));
-				}
-			}
-		}
-		/* use activate function to get output */
-		for (size_t h_ = 0; h_ < out_height_; h_++) {
-			for (size_t w_ = 0; w_ < out_width_; w_++) {
-				output_[getOutIndex(out, h_, w_)] = sigmod(
-						output_[getOutIndex(out, h_, w_)]
-								+ /*eh?*/b_[getb_(out, h_, w_)]);
-			}
-		}
-	}
-
-}
-
 
 void ConvolutionalLayer::back_prop() {
 	g_.clear();
@@ -119,28 +95,80 @@ void ConvolutionalLayer::back_prop() {
 			}
 		}
 	}
-
-	printf("---------\n");
-
-	printf("deltaW_cpu = [");
-	for (int i = 0; i < deltaW_.size(); i++) {
-		printf("%f, ", deltaW_[i]);
-	}
-	printf("]\n");
-
-	printf("W_cpu = [");
-	for (int i = 0; i < W_.size(); i++) {
-		printf("%f, ", W_[i]);
-	}
-	printf("]\n");
-
-	printf("b_cpu = [ ");
-	for (int i = 0; i < b_.size(); i++) {
-		printf("%f, ", b_[i]);
-	}
-	printf("]\n");
-	//exit(-1);
 }
+
+
+inline int ConvolutionalLayer::getb_(size_t out, size_t h_, size_t w_) {
+	return out * out_width_ * out_height_ + h_ * out_height_ + w_;
+}
+
+inline size_t ConvolutionalLayer::getOutIndex(size_t out, size_t h_,
+		size_t w_) {
+	return out * out_height_ * out_width_ + h_ * out_width_ + w_;
+}
+
+/*
+ 2-dimension convoluton:
+
+ 1 2 3                    1 -1 0
+ 3 4 2  conv with kernel  -1 0 1
+ 2 1 3                    1  1 0
+
+ ---->
+ 1*0 + 2*1 + 3*1 + 3*1 + 4*0 + 2*-1 + 2*0 + 1*-1 + 3*1
+ return the sum.
+
+ see also:
+ */
+float_t ConvolutionalLayer::conv(vec_host a, vec_host b) {
+	assert(a.size() == b.size());
+	float_t sum = 0, size = a.size();
+	for (size_t i = 0; i < size; i++) {
+		sum += a[i] * b[size - i - 1];
+	}
+	return sum;
+}
+
+/**
+ * for convlayer
+ * I need save only
+ * 	size_t kernel_size_;
+ */
+void ConvolutionalLayer::save_layer(FILE *of) {
+	this->save_base_layer(of);
+	this->write_layer_var<size_t>(this->kernel_size_, of);
+}
+
+void ConvolutionalLayer::load_layer(FILE *in) {
+	this->load_base_layer(in);
+	this->kernel_size_ = this->load_layer_var<size_t>(in);
+}
+
+
+#ifndef GPU
+void ConvolutionalLayer::forward() {
+	std::fill(output_.begin(), output_.end(), 0);
+	for (size_t out = 0; out < out_depth_; out++) { /* for each output feature map */
+		for (size_t in = 0; in < in_depth_; in++) { /* for each input feature map */
+			for (size_t h_ = 0; h_ < out_height_; h_++) {
+				for (size_t w_ = 0; w_ < out_width_; w_++) {
+					output_[getOutIndex(out, h_, w_)] += conv(
+							getInforKernel(in, h_, w_), getW_(in, out));
+				}
+			}
+		}
+		/* use activate function to get output */
+		for (size_t h_ = 0; h_ < out_height_; h_++) {
+			for (size_t w_ = 0; w_ < out_width_; w_++) {
+				output_[getOutIndex(out, h_, w_)] = sigmod(
+						output_[getOutIndex(out, h_, w_)]
+								+ /*eh?*/b_[getb_(out, h_, w_)]);
+			}
+		}
+	}
+
+}
+
 
 inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 		size_t w_) {
@@ -199,60 +227,60 @@ void ConvolutionalLayer::forward() {
 
 }
 
-void ConvolutionalLayer::back_prop() {
-	try {
-		g_.clear();
-		g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
-
-		float *W_ = this->W_.data(); //weights
-		float *g_ = this->g_.data();//err array
-		float *input_ = this->input_.data();//input array
-		float *g_next = this->next->g_.data();//b_next from this->next->g_
-		float *deltaW = this->deltaW_.data();//deltaW array
-		float *b_ = this->b_.data();//b_ vector
-		float alpha = this->alpha_;//alpha value
-		float lambda = this->lambda_;
-		int out_depth = this->out_depth_;//size of the first for loop
-		int in_depth_ = this->in_depth_;//size of the second for loop
-		int out_width = this->out_width_;//size of the third for loop
-		int out_height_ = this->out_height_;// size of loop
-		int kernel_size_ = this->kernel_size_;//size of loop
-		int in_width_ = this->in_width_;//width size
-		int in_height_ = this->in_height_;//in height
-
-		call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
-				alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
-				in_width_, in_height_);
-
-		printf("---------\n");
-
-		printf("deltaW_cpu = [");
-		for (int i = 0; i < deltaW_.size(); i++) {
-			printf("%f, ", deltaW_[i]);
-		}
-		printf("]\n");
-
-		printf("W_cpu = [");
-		for (int i = 0; i < W_.size(); i++) {
-			printf("%f, ", W_[i]);
-		}
-		printf("]\n");
-
-		printf("b_cpu = [ ");
-		for (int i = 0; i < b_.size(); i++) {
-			printf("%f, ", b_[i]);
-		}
-		printf("]\n");
-		//exit(-1);
-
-	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		exit(2);
-	} catch (...) {
-		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
-		exit(1);
-	}
-}
+//void ConvolutionalLayer::back_prop_() {
+//	try {
+//		g_.clear();
+//		g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
+//
+//		float *W_ = this->W_.data(); //weights
+//		float *g_ = this->g_.data();//err array
+//		float *input_ = this->input_.data();//input array
+//		float *g_next = this->next->g_.data();//b_next from this->next->g_
+//		float *deltaW = this->deltaW_.data();//deltaW array
+//		float *b_ = this->b_.data();//b_ vector
+//		float alpha = this->alpha_;//alpha value
+//		float lambda = this->lambda_;
+//		int out_depth = this->out_depth_;//size of the first for loop
+//		int in_depth_ = this->in_depth_;//size of the second for loop
+//		int out_width = this->out_width_;//size of the third for loop
+//		int out_height_ = this->out_height_;// size of loop
+//		int kernel_size_ = this->kernel_size_;//size of loop
+//		int in_width_ = this->in_width_;//width size
+//		int in_height_ = this->in_height_;//in height
+//
+//		call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
+//				alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
+//				in_width_, in_height_);
+//
+////		printf("---------\n");
+////
+////		printf("deltaW_cpu = [");
+////		for (int i = 0; i < deltaW_.size(); i++) {
+////			printf("%f, ", deltaW_[i]);
+////		}
+////		printf("]\n");
+////
+////		printf("W_cpu = [");
+////		for (int i = 0; i < W_.size(); i++) {
+////			printf("%f, ", W_[i]);
+////		}
+////		printf("]\n");
+////
+////		printf("b_cpu = [ ");
+////		for (int i = 0; i < b_.size(); i++) {
+////			printf("%f, ", b_[i]);
+////		}
+////		printf("]\n");
+////		//exit(-1);
+//
+//	} catch (std::exception& e) {
+//		std::cerr << e.what() << std::endl;
+//		exit(2);
+//	} catch (...) {
+//		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
+//		exit(1);
+//	}
+//}
 
 void ConvolutionalLayer::init_weight() {
 	vec_host temp_W_, temp_b_;
@@ -268,50 +296,3 @@ void ConvolutionalLayer::init_weight() {
 }
 
 #endif //DEFINE GPU FLAG
-
-inline int ConvolutionalLayer::getb_(size_t out, size_t h_, size_t w_) {
-	return out * out_width_ * out_height_ + h_ * out_height_ + w_;
-}
-
-inline size_t ConvolutionalLayer::getOutIndex(size_t out, size_t h_,
-		size_t w_) {
-	return out * out_height_ * out_width_ + h_ * out_width_ + w_;
-}
-
-/*
- 2-dimension convoluton:
-
- 1 2 3                    1 -1 0
- 3 4 2  conv with kernel  -1 0 1
- 2 1 3                    1  1 0
-
- ---->
- 1*0 + 2*1 + 3*1 + 3*1 + 4*0 + 2*-1 + 2*0 + 1*-1 + 3*1
- return the sum.
-
- see also:
- */
-float_t ConvolutionalLayer::conv(vec_host a, vec_host b) {
-	assert(a.size() == b.size());
-	float_t sum = 0, size = a.size();
-	for (size_t i = 0; i < size; i++) {
-		sum += a[i] * b[size - i - 1];
-	}
-	return sum;
-}
-
-/**
- * for convlayer
- * I need save only
- * 	size_t kernel_size_;
- */
-void ConvolutionalLayer::save_layer(FILE *of) {
-	this->save_base_layer(of);
-	this->write_layer_var<size_t>(this->kernel_size_, of);
-}
-
-void ConvolutionalLayer::load_layer(FILE *in) {
-	this->load_base_layer(in);
-	this->kernel_size_ = this->load_layer_var<size_t>(in);
-}
-
