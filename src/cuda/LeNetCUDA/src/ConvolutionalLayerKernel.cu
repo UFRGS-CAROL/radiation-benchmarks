@@ -114,7 +114,6 @@ __global__ void backpropagation_update_err(float *W_, //weights
 		int in_height_ //in height
 		) {
 
-
 //	int out = get_global_id(0) / out_width;
 //		int w_index = get_global_id(0) % out_width;
 //		int h_index = get_global_id(1);
@@ -123,7 +122,6 @@ __global__ void backpropagation_update_err(float *W_, //weights
 	int in = get_global_id(1); //in iterator, comes from the second for loop, < in_depth
 //	int w_ = get_global_id(2); //w_ iterator, comes from the third for loop, < out_width
 	int w_ = get_global_id(0) % out_width_; //w_ iterator, comes from the third for loop, < out_width
-
 
 	if ((out >= out_depth_ || in >= in_depth_ || w_ >= out_width_)
 			|| (in_width_ * in_height_ * in_depth_) < (out * in * w_))
@@ -183,6 +181,7 @@ __global__ void backpropagation_update_weights(float *W_, //weights
 
 	if (out >= out_depth_ || in >= in_depth_ || h_ >= out_height_)
 		return;
+
 	/*update weight*/
 //	for (size_t out = 0; out < out_depth_; out++) {
 //		for (size_t in = 0; in < in_depth_; in++) {
@@ -255,8 +254,6 @@ void call_backpropagation_parallel(float *W_, //weights
 	cudaError_t ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
 
-
-
 //	for (size_t out = 0; out < out_depth_; out++) {
 //		for (size_t in = 0; in < in_depth_; in++) {
 //			for (size_t h_ = 0; h_ < out_height_; h_++) {
@@ -268,10 +265,29 @@ void call_backpropagation_parallel(float *W_, //weights
 	ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
 
-	if(out_width > 1 || out_height_ > 1){
-		printf("inside backprop conv: %d %d %d\n", out_depth, in_depth_, out_width);
-		printf("inside backprop conv: %d %d %d\n", out_depth, in_depth_, out_height_);
-		exit(-1);
+	if (out_width > 1 || out_height_ > 1) {
+		printf("inside backprop conv: %d %d %d\n", out_depth, in_depth_,
+				out_width);
+		printf("inside backprop conv: %d %d %d\n", out_depth, in_depth_,
+				out_height_);
 	}
 
+	printf("deltaW: ");
+	for (int i = 0; i < 10; i++) {
+		printf("%f ", deltaW[i]);
+	}
+	printf("\n");
+
+	printf("W_: ");
+	for (int i = 0; i < 10; i++) {
+		printf("%f ", W_[i]);
+	}
+	printf("\n");
+
+	printf("g_next: ");
+	for (int i = 0; i < 10; i++) {
+		printf("%f ", g_next[i]);
+	}
+	printf("\n");
+	exit(-1);
 }

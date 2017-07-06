@@ -52,6 +52,7 @@ void ConvolutionalLayer::forward() {
 
 }
 
+
 void ConvolutionalLayer::back_prop() {
 	g_.clear();
 	g_.resize(in_width_ * in_height_ * in_depth_);
@@ -84,6 +85,7 @@ void ConvolutionalLayer::back_prop() {
 	}
 
 	/*update weight*/
+	std::vector<size_t> myvector;
 	for (size_t out = 0; out < out_depth_; out++) {
 		for (size_t in = 0; in < in_depth_; in++) {
 			for (size_t h_ = 0; h_ < out_height_; h_++) {
@@ -109,6 +111,7 @@ void ConvolutionalLayer::back_prop() {
 							W_[target] += delta;
 							/*update momentum*/
 							deltaW_[target] = delta;
+							myvector.push_back(target);
 						}
 					}
 					b_[tt] += alpha_ * this->next->g_[tt];
@@ -116,6 +119,25 @@ void ConvolutionalLayer::back_prop() {
 			}
 		}
 	}
+
+	printf("deltaW: ");
+	for (int i = 0; i < 10; i++) {
+		printf("%f ", deltaW_[i]);
+	}
+	printf("\n");
+
+	printf("W_: ");
+	for (int i = 0; i < 10; i++) {
+		printf("%f ", W_[i]);
+	}
+	printf("\n");
+
+	printf("g_next: ");
+	for (int i = 0; i < 10; i++) {
+		printf("%f ", this->next->g_[i]);
+	}
+	printf("\n");
+	exit(-1);
 }
 
 inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
