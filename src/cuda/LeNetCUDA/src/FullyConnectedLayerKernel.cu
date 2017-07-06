@@ -151,4 +151,5 @@ void call_backpropagation_fully_connected(float *input_, float *g_, float *g_nex
 			in_depth_, out_depth_);
 	ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
+	exit(-1);
 }
