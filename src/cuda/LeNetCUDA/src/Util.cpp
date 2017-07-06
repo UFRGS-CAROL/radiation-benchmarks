@@ -36,6 +36,17 @@ float_t dot(vec_host x, vec_host w) {
 	return sum;
 }
 
+#ifdef GPU
+float_t dot(DeviceVector<float> x, DeviceVector<float> w) {
+	assert(x.size() == w.size());
+	float_t sum = 0;
+	for (size_t i = 0; i < x.size(); i++) {
+		sum += x[i] * w[i];
+	}
+	return sum;
+}
+#endif
+
 float_t dot_per_batch(int batch, vec_host x, vec_host w) {
 	size_t x_width = w.size();
 	float_t sum = 0;

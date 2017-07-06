@@ -25,45 +25,45 @@ void FullyConnectedLayer::forward() {
 
 }
 
-void FullyConnectedLayer::back_prop() {
-	float *input_ = this->input_.data();
-	float *g_ = this->g_.data();
-	float *g_next = this->next->g_.data();
-	int g_next_size = this->next->g_.size();
-	float *deltaW_ = this->deltaW_.data();
-	float *W_ = this->W_.data();
-	float *b_ = this->b_.data();
-	float *r_output = this->v_output.data();
-	float alpha_ = this->alpha_;
-	float lambda_ = this->lambda_;
-	int in_depth_ = this->in_depth_;
-	int out_depth_ = this->out_depth_;
-
-	call_backpropagation_fully_connected(input_, g_, g_next,
-			deltaW_, W_, b_, r_output,
-			alpha_, lambda_, in_depth_, out_depth_, g_next_size);
-
-			printf("---------\n");
-
-			printf("deltaW_gpu = [");
-			for (int i = 0; i < this->deltaW_.size(); i++) {
-				printf("%f, ", this->deltaW_[i]);
-			}
-			printf("]\n");
-
-			printf("W_gpu = [");
-			for (int i = 0; i < this->W_.size(); i++) {
-				printf("%f, ", this->W_[i]);
-			}
-			printf("]\n");
-
-			printf("b_gpu = [ ");
-			for (int i = 0; i < this->b_.size(); i++) {
-				printf("%f, ", this->b_[i]);
-			}
-			printf("]\n");
-//			exit(-1);
-}
+//void FullyConnectedLayer::back_prop() {
+//	float *input_ = this->input_.data();
+//	float *g_ = this->g_.data();
+//	float *g_next = this->next->g_.data();
+//	int g_next_size = this->next->g_.size();
+//	float *deltaW_ = this->deltaW_.data();
+//	float *W_ = this->W_.data();
+//	float *b_ = this->b_.data();
+//	float *r_output = this->v_output.data();
+//	float alpha_ = this->alpha_;
+//	float lambda_ = this->lambda_;
+//	int in_depth_ = this->in_depth_;
+//	int out_depth_ = this->out_depth_;
+//
+//	call_backpropagation_fully_connected(input_, g_, g_next,
+//			deltaW_, W_, b_, r_output,
+//			alpha_, lambda_, in_depth_, out_depth_, g_next_size);
+//
+//			printf("---------\n");
+//
+//			printf("deltaW_gpu = [");
+//			for (int i = 0; i < this->deltaW_.size(); i++) {
+//				printf("%f, ", this->deltaW_[i]);
+//			}
+//			printf("]\n");
+//
+//			printf("W_gpu = [");
+//			for (int i = 0; i < this->W_.size(); i++) {
+//				printf("%f, ", this->W_[i]);
+//			}
+//			printf("]\n");
+//
+//			printf("b_gpu = [ ");
+//			for (int i = 0; i < this->b_.size(); i++) {
+//				printf("%f, ", this->b_[i]);
+//			}
+//			printf("]\n");
+////			exit(-1);
+//}
 
 /*
  for the activation sigmod,
@@ -91,6 +91,16 @@ void FullyConnectedLayer::init_weight() {
 	this->v_output.resize(this->in_depth_ * this->out_depth_);
 }
 
+DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
+	DeviceVector<float> r(out_depth_);
+	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
+		int it = i / in_depth_;
+		r[it] = (W_[i]);
+	}
+	return r;
+}
+
+
 #else
 void FullyConnectedLayer::forward() {
 	for (size_t out = 0; out < out_depth_; out++) {
@@ -98,6 +108,38 @@ void FullyConnectedLayer::forward() {
 
 	}
 }
+
+
+/*
+ for the activation sigmod,
+ weight init as [-4 * (6 / sqrt(fan_in + fan_out)), +4 *(6 / sqrt(fan_in + fan_out))]:
+ see also:http://deeplearning.net/tutorial/references.html#xavier10
+ */
+void FullyConnectedLayer::init_weight() {
+	/*
+	 uniform_rand(W_.begin(), W_.end(),
+	 -4 * 6 / std::sqrtf((float)(fan_in() + fan_out())),
+	 4 * 6 / std::sqrtf((float)(fan_in() + fan_out())));
+	 uniform_rand(b_.begin(), b_.end(),
+	 -4 * 6 / std::sqrtf((float)(fan_in() + fan_out())),
+	 4 * 6 / std::sqrtf((float)(fan_in() + fan_out())));
+	 */
+	uniform_rand(W_.begin(), W_.end(), -2, 2);
+	uniform_rand(b_.begin(), b_.end(), -2, 2);
+
+}
+
+vec_host FullyConnectedLayer::get_W_step(size_t in) {
+	vec_host r;
+	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
+		r.push_back(W_[i]);
+	}
+	return r;
+}
+
+
+#endif
+
 
 void FullyConnectedLayer::back_prop() {
 	/*
@@ -120,49 +162,8 @@ void FullyConnectedLayer::back_prop() {
 		}
 		b_[out] += alpha_ * this->next->g_[out];
 	}
-
-	printf("---------\n");
-
-	printf("deltaW_cpu = [");
-	for (int i = 0; i < deltaW_.size(); i++) {
-		printf("%f, ", deltaW_[i]);
-	}
-	printf("]\n");
-
-	printf("W_cpu = [");
-	for (int i = 0; i < W_.size(); i++) {
-		printf("%f, ", W_[i]);
-	}
-	printf("]\n");
-
-	printf("b_cpu = [ ");
-	for (int i = 0; i < b_.size(); i++) {
-		printf("%f, ", b_[i]);
-	}
-	printf("]\n");
-//	exit(-1);
 }
 
-/*
- for the activation sigmod,
- weight init as [-4 * (6 / sqrt(fan_in + fan_out)), +4 *(6 / sqrt(fan_in + fan_out))]:
- see also:http://deeplearning.net/tutorial/references.html#xavier10
- */
-void FullyConnectedLayer::init_weight() {
-	/*
-	 uniform_rand(W_.begin(), W_.end(),
-	 -4 * 6 / std::sqrtf((float)(fan_in() + fan_out())),
-	 4 * 6 / std::sqrtf((float)(fan_in() + fan_out())));
-	 uniform_rand(b_.begin(), b_.end(),
-	 -4 * 6 / std::sqrtf((float)(fan_in() + fan_out())),
-	 4 * 6 / std::sqrtf((float)(fan_in() + fan_out())));
-	 */
-	uniform_rand(W_.begin(), W_.end(), -2, 2);
-	uniform_rand(b_.begin(), b_.end(), -2, 2);
-
-}
-
-#endif
 
 vec_host FullyConnectedLayer::get_W(size_t index) {
 	vec_host v;
@@ -172,13 +173,6 @@ vec_host FullyConnectedLayer::get_W(size_t index) {
 	return v;
 }
 
-vec_host FullyConnectedLayer::get_W_step(size_t in) {
-	vec_host r;
-	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
-		r.push_back(W_[i]);
-	}
-	return r;
-}
 
 void FullyConnectedLayer::save_layer(FILE *of) {
 	this->save_base_layer(of);

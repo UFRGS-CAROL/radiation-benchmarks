@@ -236,8 +236,8 @@ float_t ConvNet::train_once() {
 		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
 			(*i)->back_prop();
 		}
-		if(test++ > 6)
-			exit(-1);
+//		if(test++ > 6)
+//			exit(-1);
 
 	}
 

@@ -10,6 +10,10 @@
 
 #include "Layer.h"
 
+#ifdef GPU
+#include "DeviceVector.h"
+#endif
+
 class FullyConnectedLayer: public Layer {
 public:
 	FullyConnectedLayer(size_t in_depth, size_t out_depth);
@@ -36,8 +40,11 @@ public:
 private:
 
 	vec_host get_W(size_t index);
+#ifdef GPU
+	DeviceVector<float> get_W_step(size_t in);
+#else
 	vec_host get_W_step(size_t in);
-
+#endif
 
 
 };

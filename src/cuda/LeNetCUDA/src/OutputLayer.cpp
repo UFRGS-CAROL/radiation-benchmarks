@@ -26,17 +26,17 @@ void OutputLayer::forward() {
 	this->output_ = this->input_;
 }
 
-void OutputLayer::back_prop() {
-	this->g_.clear();
-
-	float *exp_y_vec = this->exp_y_vec.data();
-	float *input_ = this->input_.data();
-	float *g_ = this->g_.data();
-	int in_depth_ = this->in_depth_;
-
-	call_backpropagation_output_layer(exp_y_vec, input_,
-			g_, in_depth_);
-}
+//void OutputLayer::back_prop() {
+//	this->g_.clear();
+//
+//	float *exp_y_vec = this->exp_y_vec.data();
+//	float *input_ = this->input_.data();
+//	float *g_ = this->g_.data();
+//	int in_depth_ = this->in_depth_;
+//
+//	call_backpropagation_output_layer(exp_y_vec, input_,
+//			g_, in_depth_);
+//}
 
 void OutputLayer::init_weight() {
 	this->reduce_output.resize(this->in_depth_);
@@ -58,21 +58,23 @@ void OutputLayer::forward() {
 	output_ = input_;
 }
 
+
+void OutputLayer::init_weight() {
+	this->g_.resize(this->in_depth_);
+}
+
+#endif
+
+
 void OutputLayer::back_prop() {
 	/* compute err terms of output layers */
 	g_.clear();
 
 	for (size_t i = 0; i < in_depth_; i++) {
-		g_.push_back((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
-
+//		g_.push_back((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
+		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
 	}
 }
-
-void OutputLayer::init_weight() {
-}
-
-#endif
-
 
 OutputLayer::OutputLayer(size_t in_depth) :
 		Layer(1, 1, in_depth, 0, 0, 0, 0, 0) {

@@ -61,6 +61,34 @@ void MaxpoolingLayer::load_layer(FILE *in) {
 	this->max_loc = this->load_layer_vec<Pair>(in);
 }
 
+/*
+ In forward propagation, blocks are reduced to a single value.
+ Then, this single value acquires an error computed from backwards
+ propagation from the previous layer.
+ This error is then just forwarded to the place where it came from.
+ Since it only came from one place in the  block,
+ the backpropagated errors from max-pooling layers are rather sparse.
+ */
+void MaxpoolingLayer::back_prop() {
+
+	g_.clear();
+	g_.resize(in_width_ * in_height_ * in_depth_);
+
+	for (auto i = 0; i < this->max_loc.size(); i++){
+		auto pair = this->max_loc[i];
+		if (pair.first != MAX) {
+			g_[pair.second] = this->next->g_[pair.first];
+		}
+	}
+//	for(auto i = this->max_loc.begin(); i != this->max_loc.end(); i++){
+//		Pair pair = (*i);
+//		if(pair.first != UINT_MAX)
+//			g_[pair.second] = this->next->g_[pair.first];
+//
+//	}
+
+}
+
 #ifdef GPU
 
 void MaxpoolingLayer::forward() {
@@ -89,18 +117,18 @@ void MaxpoolingLayer::forward() {
 
 }
 
-void MaxpoolingLayer::back_prop() {
-	g_.clear();
-	g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
-
-	Pair *max_loc = this->max_loc.data();
-	float *g_ = this->g_.data();
-	float *g_next = this->next->g_.data();
-	size_t max_size = this->max_loc.size();
-
-	call_backpropagation_maxpool(max_loc, g_, g_next, max_size);
-
-}
+//void MaxpoolingLayer::back_prop() {
+//	g_.clear();
+//	g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
+//
+//	Pair *max_loc = this->max_loc.data();
+//	float *g_ = this->g_.data();
+//	float *g_next = this->next->g_.data();
+//	size_t max_size = this->max_loc.size();
+//
+//	call_backpropagation_maxpool(max_loc, g_, g_next, max_size);
+//
+//}
 #else
 
 
@@ -116,36 +144,6 @@ void MaxpoolingLayer::forward() {
 	}
 }
 
-/*
- In forward propagation, blocks are reduced to a single value.
- Then, this single value acquires an error computed from backwards
- propagation from the previous layer.
- This error is then just forwarded to the place where it came from.
- Since it only came from one place in the  block,
- the backpropagated errors from max-pooling layers are rather sparse.
- */
-void MaxpoolingLayer::back_prop() {
-
-	g_.clear();
-	g_.resize(in_width_ * in_height_ * in_depth_);
-
-	std::vector<size_t> temp;
-	for (auto pair : max_loc)
-		if (pair.first != MAX) {
-			temp.push_back(pair.second);
-			g_[pair.second] = this->next->g_[pair.first];
-		}
-
-//	for(auto i = this->max_loc.begin(); i != this->max_loc.end(); i++){
-//		Pair pair = (*i);
-//		if(pair.first != UINT_MAX)
-//			g_[pair.second] = this->next->g_[pair.first];
-//
-//	}
-
-}
-
-//private:
 inline float_t MaxpoolingLayer::max_In_(size_t in_index, size_t h_, size_t w_,
 		size_t out_index) {
 	float_t max_pixel = 0;

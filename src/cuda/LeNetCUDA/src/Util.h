@@ -28,6 +28,12 @@
 
 #define MAX ULONG_MAX
 
+#ifdef GPU
+#include "DeviceVector.h"
+float_t dot(DeviceVector<float> x, DeviceVector<float> w);
+#endif
+
+
 /**
  * to use instead of unordered map
  */
