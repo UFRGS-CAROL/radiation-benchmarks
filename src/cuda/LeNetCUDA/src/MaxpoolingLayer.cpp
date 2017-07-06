@@ -129,8 +129,10 @@ void MaxpoolingLayer::back_prop() {
 	g_.clear();
 	g_.resize(in_width_ * in_height_ * in_depth_);
 
+	std::vector<size_t> temp;
 	for (auto pair : max_loc)
 		if (pair.first != MAX) {
+			temp.push_back(pair.second);
 			g_[pair.second] = this->next->g_[pair.first];
 		}
 
