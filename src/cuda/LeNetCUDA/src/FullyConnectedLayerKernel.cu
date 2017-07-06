@@ -129,7 +129,8 @@ __global__ void backpropagation_gpu_update_weights(float *input_, float *g_next,
 		deltaW_[out * in_depth_ + in] = delta;
 	}
 	__syncthreads();
-	b_[out] += alpha_ * g_next[out];
+	atomicAdd(&b_[out], alpha * g_next[out]);
+//	b_[out] += alpha_ * g_next[out];
 //	}
 }
 
@@ -151,5 +152,4 @@ void call_backpropagation_fully_connected(float *input_, float *g_, float *g_nex
 			in_depth_, out_depth_);
 	ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
-	exit(-1);
 }
