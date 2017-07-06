@@ -272,22 +272,4 @@ void call_backpropagation_parallel(float *W_, //weights
 				out_height_);
 	}
 
-	printf("deltaW: ");
-	for (int i = 0; i < 10; i++) {
-		printf("%f ", deltaW[i]);
-	}
-	printf("\n");
-
-	printf("W_: ");
-	for (int i = 0; i < 10; i++) {
-		printf("%f ", W_[i]);
-	}
-	printf("\n");
-
-	printf("g_next: ");
-	for (int i = 0; i < 10; i++) {
-		printf("%f ", g_next[i]);
-	}
-	printf("\n");
-	exit(-1);
 }

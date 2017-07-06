@@ -85,7 +85,7 @@ void ConvolutionalLayer::back_prop() {
 	}
 
 	/*update weight*/
-	std::vector<size_t> myvector;
+	std::vector < size_t > myvector;
 	for (size_t out = 0; out < out_depth_; out++) {
 		for (size_t in = 0; in < in_depth_; in++) {
 			for (size_t h_ = 0; h_ < out_height_; h_++) {
@@ -120,24 +120,26 @@ void ConvolutionalLayer::back_prop() {
 		}
 	}
 
-	printf("deltaW: ");
-	for (int i = 0; i < 10; i++) {
-		printf("%f ", deltaW_[i]);
-	}
-	printf("\n");
+	printf("---------\n");
 
-	printf("W_: ");
-	for (int i = 0; i < 10; i++) {
-		printf("%f ", W_[i]);
+	printf("deltaW_cpu = [");
+	for (int i = 0; i < deltaW_.size(); i++) {
+		printf("%f, ", deltaW_[i]);
 	}
-	printf("\n");
+	printf("]\n");
 
-	printf("g_next: ");
-	for (int i = 0; i < 10; i++) {
-		printf("%f ", this->next->g_[i]);
+	printf("W_cpu = [");
+	for (int i = 0; i < W_.size(); i++) {
+		printf("%f, ", W_[i]);
 	}
-	printf("\n");
-	exit(-1);
+	printf("]\n");
+
+	printf("b_cpu = [ ");
+	for (int i = 0; i < b_.size(); i++) {
+		printf("%f, ", b_[i]);
+	}
+	printf("]\n");
+	//exit(-1);
 }
 
 inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
@@ -221,6 +223,27 @@ void ConvolutionalLayer::back_prop() {
 		call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
 				alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
 				in_width_, in_height_);
+
+		printf("---------\n");
+
+		printf("deltaW_cpu = [");
+		for (int i = 0; i < deltaW_.size(); i++) {
+			printf("%f, ", deltaW_[i]);
+		}
+		printf("]\n");
+
+		printf("W_cpu = [");
+		for (int i = 0; i < W_.size(); i++) {
+			printf("%f, ", W_[i]);
+		}
+		printf("]\n");
+
+		printf("b_cpu = [ ");
+		for (int i = 0; i < b_.size(); i++) {
+			printf("%f, ", b_[i]);
+		}
+		printf("]\n");
+		//exit(-1);
 
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
