@@ -199,6 +199,7 @@ float_t ConvNet::train_once() {
 		debugFile.open ("CPUdebugFile.txt");
 #endif
 	//
+	int test = 0;
 	while (iter < M) {
 		auto train_x_index = iter % train_size_;
 		iter++;
@@ -224,6 +225,7 @@ float_t ConvNet::train_once() {
 				layer->next->input_ = layer->output_;
 			}
 			debugIter++;
+
 			//
 		}
 		err += layers.back()->err;
@@ -234,6 +236,9 @@ float_t ConvNet::train_once() {
 		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
 			(*i)->back_prop();
 		}
+		if(test++ > 6)
+			exit(-1);
+
 	}
 
 	debugFile.close();

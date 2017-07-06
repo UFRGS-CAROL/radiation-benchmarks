@@ -129,7 +129,7 @@ __global__ void backpropagation_gpu_update_weights(float *input_, float *g_next,
 		deltaW_[out * in_depth_ + in] = delta;
 	}
 	__syncthreads();
-	atomicAdd(&b_[out], alpha * g_next[out]);
+	atomicAdd(&b_[out], alpha_ * g_next[out]);
 //	b_[out] += alpha_ * g_next[out];
 //	}
 }

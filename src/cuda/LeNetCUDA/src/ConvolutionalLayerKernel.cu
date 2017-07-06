@@ -265,11 +265,11 @@ void call_backpropagation_parallel(float *W_, //weights
 	ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
 
-	if (out_width > 1 || out_height_ > 1) {
-		printf("inside backprop conv: %d %d %d\n", out_depth, in_depth_,
-				out_width);
-		printf("inside backprop conv: %d %d %d\n", out_depth, in_depth_,
-				out_height_);
-	}
+//	if (out_width > 1 || out_height_ > 1) {
+//		printf("inside backprop conv: %d %d %d\n", out_depth, in_depth_,
+//				out_width);
+//		printf("inside backprop conv: %d %d %d\n", out_depth, in_depth_,
+//				out_height_);
+//	}
 
 }
