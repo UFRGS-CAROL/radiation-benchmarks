@@ -212,6 +212,7 @@ float_t ConvNet::train_once() {
 		 */
 		int debugIter = 0;
 		for (auto layer : layers) {
+
 			//debug
 			debugFile << "iter: "<<iter << " DEBUG layer" << debugIter << "->input_: ";
 			for(int i = 0; i < layer->input_.size(); i++){
@@ -236,8 +237,6 @@ float_t ConvNet::train_once() {
 		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
 			(*i)->back_prop();
 		}
-//		if(test++ > 6)
-//			exit(-1);
 
 	}
 

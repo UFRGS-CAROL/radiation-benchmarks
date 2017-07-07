@@ -61,7 +61,6 @@ void ConvolutionalLayer::back_prop() {
 	}
 
 	/*update weight*/
-	std::vector < size_t > myvector;
 	for (size_t out = 0; out < out_depth_; out++) {
 		for (size_t in = 0; in < in_depth_; in++) {
 			for (size_t h_ = 0; h_ < out_height_; h_++) {
@@ -87,14 +86,18 @@ void ConvolutionalLayer::back_prop() {
 							W_[target] += delta;
 							/*update momentum*/
 							deltaW_[target] = delta;
-							myvector.push_back(target);
-						}
+							}
 					}
 					b_[tt] += alpha_ * this->next->g_[tt];
 				}
 			}
 		}
 	}
+
+#ifdef GPU
+	cudaError_t ret = cudaDeviceSynchronize();
+	CUDA_CHECK_RETURN(ret);
+#endif
 }
 
 

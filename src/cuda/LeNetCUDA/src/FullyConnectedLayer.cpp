@@ -162,6 +162,10 @@ void FullyConnectedLayer::back_prop() {
 		}
 		b_[out] += alpha_ * this->next->g_[out];
 	}
+#ifdef GPU
+	cudaError_t ret = cudaDeviceSynchronize();
+	CUDA_CHECK_RETURN(ret);
+#endif
 }
 
 

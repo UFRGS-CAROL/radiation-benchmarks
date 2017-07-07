@@ -74,6 +74,10 @@ void OutputLayer::back_prop() {
 //		g_.push_back((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
 	}
+#ifdef GPU
+	cudaError_t ret = cudaDeviceSynchronize();
+	CUDA_CHECK_RETURN(ret);
+#endif
 }
 
 OutputLayer::OutputLayer(size_t in_depth) :

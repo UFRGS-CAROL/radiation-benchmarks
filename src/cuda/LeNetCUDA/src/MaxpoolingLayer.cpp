@@ -80,6 +80,10 @@ void MaxpoolingLayer::back_prop() {
 			g_[pair.second] = this->next->g_[pair.first];
 		}
 	}
+#ifdef GPU
+	cudaError_t ret = cudaDeviceSynchronize();
+	CUDA_CHECK_RETURN(ret);
+#endif
 //	for(auto i = this->max_loc.begin(); i != this->max_loc.end(); i++){
 //		Pair pair = (*i);
 //		if(pair.first != UINT_MAX)
