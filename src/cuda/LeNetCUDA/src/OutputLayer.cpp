@@ -61,6 +61,7 @@ void OutputLayer::forward() {
 
 void OutputLayer::init_weight() {
 	this->g_.resize(this->in_depth_);
+
 }
 
 #endif
@@ -68,7 +69,10 @@ void OutputLayer::init_weight() {
 
 void OutputLayer::back_prop() {
 	/* compute err terms of output layers */
-	g_.clear();
+	if(g_.size() != in_depth_){
+		g_.clear();
+		g_.resize(in_depth_);
+	}
 
 	for (size_t i = 0; i < in_depth_; i++) {
 //		g_.push_back((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));

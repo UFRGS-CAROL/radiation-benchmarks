@@ -103,7 +103,10 @@ DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
 
 #else
 void FullyConnectedLayer::forward() {
+
 	for (size_t out = 0; out < out_depth_; out++) {
+//		vec_host t = get_W(out);
+//		std::cout << t.size() << " " << input_.size() << "\n";
 		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
 
 	}
@@ -193,6 +196,7 @@ FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
 	deltaW_.resize(in_depth_ * out_depth_);
 	b_.resize(out_depth_);
 	g_.resize(in_depth_);
+
 
 	this->init_weight();
 
