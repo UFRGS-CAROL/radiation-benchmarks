@@ -17,6 +17,7 @@
 class MaxpoolingLayer: public Layer {
 private:
 	Pair get_max_loc_pair(size_t first, size_t second);
+	int deb = 0;
 
 public:
 	MaxpoolingLayer(size_t in_width, size_t in_height, size_t in_depth);

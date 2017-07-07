@@ -130,6 +130,8 @@ void MaxpoolingLayer::forward() {
 			printf("%f, ", this->output_[i]);
 		}
 		printf("]\n");
+		if(this->deb > 3)
+				exit(-1);
 
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
@@ -186,6 +188,8 @@ void MaxpoolingLayer::forward() {
 		printf("%f, ", this->output_[i]);
 	}
 	printf("]\n");
+	if(this->deb > 3)
+		exit(-1);
 }
 
 inline float_t MaxpoolingLayer::max_In_(size_t in_index, size_t h_, size_t w_,
