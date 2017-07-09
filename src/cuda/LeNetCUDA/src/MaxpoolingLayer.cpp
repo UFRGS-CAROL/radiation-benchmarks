@@ -111,27 +111,27 @@ void MaxpoolingLayer::forward() {
 		call_forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
 				out_height, out_depth, in_height, in_width);
 
+
 		printf("---------\n");
 
-		printf("max_loc_gpu = [");
+		printf("max_loc_cpu = [");
 		for (int i = 0; i < this->max_loc.size(); i++) {
 			printf("%d, %d, ", this->max_loc[i].first,this->max_loc[i].second);
 		}
 		printf("]\n");
 
-		printf("input_gpu = [");
-		for (int i = 0; i < this->input_.size(); i++) {
-			printf("%f, ", this->input_[i]);
-		}
-		printf("]\n");
-
-		printf("output_gpu = [ ");
-		for (int i = 0; i < this->output_.size(); i++) {
-			printf("%f, ", this->output_[i]);
-		}
-		printf("]\n");
-		if(this->deb++ > 3)
-				exit(-1);
+	//	printf("input_cpu = [");
+	//	for (int i = 0; i < this->input_.size(); i++) {
+	//		printf("%f, ", this->input_[i]);
+	//	}
+	//	printf("]\n");
+	//
+	//	printf("output_cpu = [ ");
+	//	for (int i = 0; i < this->output_.size(); i++) {
+	//		printf("%f, ", this->output_[i]);
+	//	}
+	//	printf("]\n");
+		exit(-1);
 
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
@@ -177,19 +177,18 @@ void MaxpoolingLayer::forward() {
 	}
 	printf("]\n");
 
-	printf("input_cpu = [");
-	for (int i = 0; i < this->input_.size(); i++) {
-		printf("%f, ", this->input_[i]);
-	}
-	printf("]\n");
-
-	printf("output_cpu = [ ");
-	for (int i = 0; i < this->output_.size(); i++) {
-		printf("%f, ", this->output_[i]);
-	}
-	printf("]\n");
-	if(this->deb++ > 3)
-			exit(-1);
+//	printf("input_cpu = [");
+//	for (int i = 0; i < this->input_.size(); i++) {
+//		printf("%f, ", this->input_[i]);
+//	}
+//	printf("]\n");
+//
+//	printf("output_cpu = [ ");
+//	for (int i = 0; i < this->output_.size(); i++) {
+//		printf("%f, ", this->output_[i]);
+//	}
+//	printf("]\n");
+	exit(-1);
 }
 
 inline float_t MaxpoolingLayer::max_In_(size_t in_index, size_t h_, size_t w_,
