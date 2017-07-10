@@ -51,12 +51,12 @@ public:
 // Unified memory copy constructor allows pass-by-value
 template<class T>
 DeviceVector<T>::DeviceVector(const DeviceVector<T>& copy){
-	int siz = copy.v_size;
+	this->v_size = copy.v_size;
 	if(this->allocated){
 		CudaCheckError();
 		cudaFree(this->device_data);
 	}
-	CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
+	CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * this->v_size));
 	CudaCheckError();
 	this->memcopy(copy.device_data, siz);
 	this->allocated = true;
