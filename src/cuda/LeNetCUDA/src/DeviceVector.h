@@ -17,8 +17,8 @@
  */
 template<class T> class DeviceVector {
 private:
-	T *device_data;
-	bool allocated;
+	T *device_data = nullptr;
+	bool allocated = false;
 
 	size_t v_size;
 
