@@ -22,6 +22,9 @@ private:
 	size_t v_size;
 
 	inline void memcopy(T* src, size_t size_count);
+	inline void free_memory();
+	inline void alloc_memory();
+
 public:
 	DeviceVector(size_t siz);
 	DeviceVector();
@@ -48,27 +51,38 @@ public:
 
 };
 
+template<class T>
+inline void DeviceVector<T>::free_memory() {
+	CudaCheckError();
+	CudaSafeCall(cudaFree(this->device_data));
+	this->allocated = false;
+}
+
+template<class T>
+inline void DeviceVector<T>::alloc_memory() {
+	CudaSafeCall(
+			cudaMallocManaged(&this->device_data, sizeof(T) * this->v_size));
+	CudaCheckError();
+	this->allocated = true;
+}
 // Unified memory copy constructor allows pass-by-value
 template<class T>
-DeviceVector<T>::DeviceVector(const DeviceVector<T>& copy){
+DeviceVector<T>::DeviceVector(const DeviceVector<T>& copy) {
 	this->v_size = copy.v_size;
-	if(this->allocated){
-		CudaCheckError();
-		cudaFree(this->device_data);
+	if (this->allocated) {
+		this->free_memory();
 	}
-	CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * this->v_size));
-	CudaCheckError();
+	this->alloc_memory();
 	this->memcopy(copy.device_data, this->v_size);
-	this->allocated = true;
 }
 
 template<class T>
 DeviceVector<T>::DeviceVector(size_t siz) {
-	CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+	if (this->allocated) {
+		this->free_memory();
+	}
 	this->v_size = siz;
-	this->allocated = true;
+	this->alloc_memory();
 }
 
 template<class T>
@@ -80,11 +94,9 @@ DeviceVector<T>::DeviceVector() {
 
 template<class T>
 DeviceVector<T>::~DeviceVector() {
-	if (this->device_data != nullptr) {
-		cudaError_t ret = cudaDeviceSynchronize();
-		CUDA_CHECK_RETURN(ret);
-		cudaFree(this->device_data);
-		CudaCheckError() ;
+	if (this->allocated) {
+		this->free_memory();
+		CudaCheckError();
 		this->device_data = nullptr;
 		this->v_size = 0;
 		this->allocated = false;
@@ -94,19 +106,12 @@ DeviceVector<T>::~DeviceVector() {
 template<class T>
 DeviceVector<T>::DeviceVector(T *data, size_t siz) {
 	if (this->allocated) {
-		cudaError_t ret = cudaDeviceSynchronize();
-		CUDA_CHECK_RETURN(ret);
-		cudaFree(this->device_data);
-		CudaCheckError();
+		this->free_memory();
 	}
-	CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
 
 	this->v_size = siz;
-
+	this->alloc_memory();
 	this->memcopy(data, siz);
-	this->allocated = true;
 }
 
 template<class T>
@@ -116,21 +121,12 @@ DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
 		size_t siz = other.v_size;
 
 		if (this->allocated) {
-			cudaError_t ret = cudaDeviceSynchronize();
-			CUDA_CHECK_RETURN(ret);
-			cudaFree(this->device_data);
-			CudaCheckError();
+			this->free_memory();
 		}
 
-		CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
-		cudaError_t ret = cudaDeviceSynchronize();
-		CUDA_CHECK_RETURN(ret);
-
 		this->v_size = siz;
-
+		this->alloc_memory();
 		this->memcopy(data, siz);
-		this->allocated = true;
-
 	}
 
 	return *this;
@@ -142,19 +138,13 @@ DeviceVector<T>& DeviceVector<T>::operator=(const std::vector<T>& other) {
 		T *data = (T*) other.data();
 		size_t siz = other.size();
 
-		if (allocated) {
-			cudaError_t ret = cudaDeviceSynchronize();
-			CUDA_CHECK_RETURN(ret);
-			cudaFree(this->device_data);
-			CudaCheckError();
+		if (this->allocated) {
+			this->free_memory();
 		}
-		CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
-		cudaError_t ret = cudaDeviceSynchronize();
-		CUDA_CHECK_RETURN(ret);
 
 		this->v_size = siz;
+		this->alloc_memory();
 		this->memcopy(data, siz);
-		this->allocated = true;
 	}
 	return *this;
 }
@@ -163,16 +153,10 @@ template<class T>
 void DeviceVector<T>::resize(size_t siz) {
 	if (this->v_size != siz) {
 		if (this->v_size != 0) {
-			cudaError_t ret = cudaDeviceSynchronize();
-			CUDA_CHECK_RETURN(ret);
-			cudaFree(this->device_data);
-			CudaCheckError();
+			this->free_memory();
 		}
-
-		CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
-		cudaError_t ret = cudaDeviceSynchronize();
-		CUDA_CHECK_RETURN(ret);
 		this->v_size = siz;
+		this->alloc_memory();
 		this->allocated = true;
 	}
 }
@@ -195,14 +179,12 @@ T& DeviceVector<T>::operator [](int i) {
 template<class T>
 void DeviceVector<T>::memcopy(T* src, size_t size_cont) {
 	memcpy(this->device_data, src, sizeof(T) * size_cont);
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+	CudaCheckError();
 }
 
 template<class T>
 void DeviceVector<T>::clear() {
 	memset(this->device_data, 0, sizeof(T) * this->v_size);
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+	CudaCheckError();
 }
 #endif /* DEVICEVECTOR_H_ */
