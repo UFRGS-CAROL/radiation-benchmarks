@@ -10,7 +10,7 @@
 
 #include <vector>
 #include "cudaUtil.h"
-#define DEBUG_LIGHT 1
+//#define DEBUG_LIGHT 
 
 /**
  * Template for vector on the GPU

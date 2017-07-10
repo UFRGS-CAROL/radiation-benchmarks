@@ -71,10 +71,12 @@ void call_forward_fully_connected(float *output_, float *input_, float *b_,
 
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, out_depth_);
+
 	forward_gpu_kernel<<<blocks, threads>>>(output_, input_, b_, W_, v_output,
 			out_depth_, in_depth_, input_size);
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+//	cudaError_t ret = cudaDeviceSynchronize();
+//	CUDA_CHECK_RETURN(ret);
+	CudaCheckError();
 
 }
 

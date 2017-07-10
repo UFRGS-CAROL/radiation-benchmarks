@@ -24,6 +24,9 @@ void OutputLayer::forward() {
 
 	call_forward_output_layer(err, exp_y_vec, input_, reduce_output, in_depth_, exp_y);
 	this->output_ = this->input_;
+
+	std::cout << "err " << *err << "\n";
+
 }
 
 //void OutputLayer::back_prop() {
@@ -55,6 +58,7 @@ void OutputLayer::forward() {
 	for (size_t i = 0; i < in_depth_; i++) {
 		err += 0.5 * (exp_y_vec[i] - input_[i]) * (exp_y_vec[i] - input_[i]);
 	}
+	std::cout << "err " << err << "\n";
 	output_ = input_;
 }
 
@@ -72,15 +76,16 @@ void OutputLayer::back_prop() {
 	if(g_.size() != in_depth_){
 		g_.clear();
 		g_.resize(in_depth_);
+		printf("passou no if do bakc\n");
 	}
 
 	for (size_t i = 0; i < in_depth_; i++) {
-//		g_.push_back((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
 	}
 #ifdef GPU
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+//	cudaError_t ret = cudaDeviceSynchronize();
+//	CUDA_CHECK_RETURN(ret);
+	CudaCheckError();
 #endif
 }
 

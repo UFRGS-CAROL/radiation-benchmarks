@@ -151,6 +151,8 @@ void FullyConnectedLayer::back_prop() {
 	for (size_t in = 0; in < in_depth_; in++) {
 		g_[in] = df_sigmod(input_[in]) * dot(this->next->g_, get_W_step(in));
 	}
+
+
 	/*
 	 Update weights.
 	 */
@@ -165,10 +167,11 @@ void FullyConnectedLayer::back_prop() {
 		}
 		b_[out] += alpha_ * this->next->g_[out];
 	}
-#ifdef GPU
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
-#endif
+
+//#ifdef GPU
+//	cudaError_t ret = cudaDeviceSynchronize();
+//	CUDA_CHECK_RETURN(ret);
+//#endif
 }
 
 

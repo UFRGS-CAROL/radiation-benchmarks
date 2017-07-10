@@ -80,10 +80,7 @@ void MaxpoolingLayer::back_prop() {
 			g_[pair.second] = this->next->g_[pair.first];
 		}
 	}
-#ifdef GPU
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
-#endif
+
 //	for(auto i = this->max_loc.begin(); i != this->max_loc.end(); i++){
 //		Pair pair = (*i);
 //		if(pair.first != UINT_MAX)
@@ -169,13 +166,13 @@ void MaxpoolingLayer::forward() {
 		}
 	}
 
-	printf("---------\n");
-
-	printf("max_loc_cpu = [");
-	for (int i = 0; i < this->max_loc.size(); i++) {
-		printf("%d, %d, ", this->max_loc[i].first,this->max_loc[i].second);
-	}
-	printf("]\n");
+//	printf("---------\n");
+//
+//	printf("max_loc_cpu = [");
+//	for (int i = 0; i < this->max_loc.size(); i++) {
+//		printf("%d, %d, ", this->max_loc[i].first,this->max_loc[i].second);
+//	}
+//	printf("]\n");
 
 //	printf("input_cpu = [");
 //	for (int i = 0; i < this->input_.size(); i++) {
@@ -188,7 +185,7 @@ void MaxpoolingLayer::forward() {
 //		printf("%f, ", this->output_[i]);
 //	}
 //	printf("]\n");
-	exit(-1);
+//	exit(-1);
 }
 
 inline float_t MaxpoolingLayer::max_In_(size_t in_index, size_t h_, size_t w_,

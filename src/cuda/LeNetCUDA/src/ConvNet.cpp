@@ -15,7 +15,6 @@
 
 void debug_layers(Layer *layer, char *type, int t){
 	char temp[200];
-	std::cout << "Passou\n";
 
 #ifdef GPU
 	sprintf(temp, "layer_%d_gpu_%s.lay", t++, type);
@@ -26,7 +25,6 @@ void debug_layers(Layer *layer, char *type, int t){
 	layer->save_layer(in);
 	fclose(in);
 
-	std::cout << type << "Passou2\n";
 }
 
 void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
@@ -58,16 +56,6 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 			stop = true;
 	}
 	this->mark.stop();
-//#ifdef GPU
-//	cudaError_t ret = cudaDeviceSynchronize();
-//	CUDA_CHECK_RETURN(ret);
-//#endif
-//	int i  = 0;
-//	for(auto layer : layers){
-//		debug_layers(layer, "layer", i++);
-//	}
-
-
 	std::cout << "Time spent on training " << this->mark << std::endl;
 }
 
@@ -214,9 +202,9 @@ float_t ConvNet::train_once() {
 		for (auto layer : layers) {
 
 			//debug
-			debugFile << "iter: "<<iter << " DEBUG layer" << debugIter << "->input_: ";
-			for(int i = 0; i < layer->input_.size(); i++){
-				debugFile << layer->input_[i] << ", ";
+			debugFile << "iter: "<<iter << " DEBUG layer" << debugIter << "->output: ";
+			for(int i = 0; i < layer->output_.size(); i++){
+				debugFile << layer->output_[i] << ", ";
 			}
 			debugFile << "\n";
 
@@ -227,14 +215,12 @@ float_t ConvNet::train_once() {
 			}
 
 			debugIter++;
-			std::cout << "passou it " << debugIter << "\n";
-			//
 		}
 		err += layers.back()->err;
 		/*
 		 back propgation
 		 */
-
+//		if(test++ > 2) break;
 		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
 			(*i)->back_prop();
 		}

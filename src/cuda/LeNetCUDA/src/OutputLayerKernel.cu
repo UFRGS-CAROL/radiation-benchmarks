@@ -43,25 +43,25 @@ __global__ void backprop_output_layer_kernel(float *exp_y_vec, float *input_,
 void call_forward_output_layer(float *err, float *exp_y_vec, float *input_, float *reduce_output, int in_depth_, int exp_y) {
 	//hahahah nvidia managed
 	exp_y_vec[exp_y] = 1;
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+//	cudaError_t ret = cudaDeviceSynchronize();
+//	CUDA_CHECK_RETURN(ret);
 
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, in_depth_);
 
 	forward_output_layer_kernel<<<blocks, threads>>>(exp_y_vec, input_,
 			reduce_output, in_depth_, exp_y);
-	ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+//	ret = cudaDeviceSynchronize();
+//	CUDA_CHECK_RETURN(ret);
+	CudaCheckError();
 
-	int reduc_out_size = in_depth_;
 	*err = 0;
 	//Man it is NVIDIA FUCKING MANAGED MEMORY, I Love IT
-	for(int i = 0; i < reduc_out_size; i++){
+	for(int i = 0; i < in_depth_; i++){
 		*err += reduce_output[i];
 	}
-	ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+//	ret = cudaDeviceSynchronize();
+//	CUDA_CHECK_RETURN(ret);
 }
 
 
