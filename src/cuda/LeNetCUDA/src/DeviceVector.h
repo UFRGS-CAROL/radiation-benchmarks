@@ -10,6 +10,7 @@
 
 #include <vector>
 #include "cudaUtil.h"
+#define DEBUG_LIGHT 1
 
 /**
  * Template for vector on the GPU
@@ -68,6 +69,9 @@ inline void DeviceVector<T>::alloc_memory() {
 // Unified memory copy constructor allows pass-by-value
 template<class T>
 DeviceVector<T>::DeviceVector(const DeviceVector<T>& copy) {
+#ifdef DEBUG_LIGHT
+	std::cout << "DeviceVector(const DeviceVector<T>& copy)\n";
+#endif
 	if (this->allocated) {
 		this->free_memory();
 	}
@@ -79,6 +83,9 @@ DeviceVector<T>::DeviceVector(const DeviceVector<T>& copy) {
 
 template<class T>
 DeviceVector<T>::DeviceVector(size_t siz) {
+#ifdef DEBUG_LIGHT
+	std::cout << "DeviceVector(size_t siz)\n";
+#endif
 	if (this->allocated) {
 		this->free_memory();
 	}
@@ -88,6 +95,9 @@ DeviceVector<T>::DeviceVector(size_t siz) {
 
 template<class T>
 DeviceVector<T>::DeviceVector() {
+#ifdef DEBUG_LIGHT
+	std::cout << "DeviceVector()\n";
+#endif
 	this->device_data = nullptr;
 	this->v_size = 0;
 	this->allocated = false;
@@ -95,6 +105,9 @@ DeviceVector<T>::DeviceVector() {
 
 template<class T>
 DeviceVector<T>::~DeviceVector() {
+#ifdef DEBUG_LIGHT
+	std::cout << "~DeviceVector()\n";
+#endif
 	if (this->allocated) {
 		this->free_memory();
 		CudaCheckError();
@@ -106,6 +119,9 @@ DeviceVector<T>::~DeviceVector() {
 
 template<class T>
 DeviceVector<T>::DeviceVector(T *data, size_t siz) {
+#ifdef DEBUG_LIGHT
+	std::cout << "DeviceVector(T *data, size_t siz)\n";
+#endif
 	if (this->allocated) {
 		this->free_memory();
 	}
@@ -117,6 +133,9 @@ DeviceVector<T>::DeviceVector(T *data, size_t siz) {
 
 template<class T>
 DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
+#ifdef DEBUG_LIGHT
+	std::cout << "operator=(const DeviceVector<T>& other)\n";
+#endif
 	if (this->device_data != other.device_data) { // self-assignment check expected
 		T *data = (T*) other.device_data;
 
@@ -134,6 +153,9 @@ DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
 
 template<class T>
 DeviceVector<T>& DeviceVector<T>::operator=(const std::vector<T>& other) {
+#ifdef DEBUG_LIGHT
+	std::cout << "operator=(const std::vector<T>& other) \n";
+#endif
 	if (this->data() != other.data()) { // self-assignment check expected
 		T *data = (T*) other.data();
 		size_t siz = other.size();
@@ -151,6 +173,9 @@ DeviceVector<T>& DeviceVector<T>::operator=(const std::vector<T>& other) {
 
 template<class T>
 void DeviceVector<T>::resize(size_t siz) {
+#ifdef DEBUG_LIGHT
+	std::cout << "resize(size_t siz)\n";
+#endif
 	if (this->v_size != siz) {
 		if (this->v_size != 0) {
 			this->free_memory();
@@ -163,27 +188,42 @@ void DeviceVector<T>::resize(size_t siz) {
 
 template<class T>
 T* DeviceVector<T>::data() {
+#ifdef DEBUG_LIGHT
+	std::cout << "data() \n";
+#endif
 	return this->device_data;
 }
 
 template<class T>
 size_t DeviceVector<T>::size() {
+#ifdef DEBUG_LIGHT
+	std::cout << "size() \n";
+#endif
 	return this->v_size;
 }
 
 template<class T>
 T& DeviceVector<T>::operator [](int i) {
+#ifdef DEBUG_LIGHT
+	std::cout << "operator [] \n";
+#endif
 	return this->device_data[i];
 }
 
 template<class T>
 void DeviceVector<T>::memcopy(T* src, size_t size_cont) {
+#ifdef DEBUG_LIGHT
+	std::cout << "memcopy(T* src, size_t size_cont)\n";
+#endif
 	memcpy(this->device_data, src, sizeof(T) * size_cont);
 	CudaCheckError();
 }
 
 template<class T>
 void DeviceVector<T>::clear() {
+#ifdef DEBUG_LIGHT
+	std::cout << "clear()\n";
+#endif
 	memset(this->device_data, 0, sizeof(T) * this->v_size);
 	CudaCheckError();
 }

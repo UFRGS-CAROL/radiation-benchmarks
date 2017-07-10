@@ -22,6 +22,7 @@
 void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y = 1,
 		size_t z = 1);
 
+
 /**
  * This macro checks return value of the CUDA runtime call and exits
  * the application if the call failed.
@@ -67,6 +68,8 @@ inline void __cudaCheckError(const char *file, const int line) {
 
 	return;
 }
+
+
 
 #endif /* CUDAUTIL_H_ */
 
