@@ -37,7 +37,7 @@ float_t dot(DeviceVector<float> x, DeviceVector<float> w);
 /**
  * to use instead of unordered map
  */
-typedef struct pair_{
+typedef struct {
 	size_t first;
 	size_t second;
 }Pair;
