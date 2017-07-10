@@ -68,10 +68,11 @@ inline void DeviceVector<T>::alloc_memory() {
 // Unified memory copy constructor allows pass-by-value
 template<class T>
 DeviceVector<T>::DeviceVector(const DeviceVector<T>& copy) {
-	this->v_size = copy.v_size;
 	if (this->allocated) {
 		this->free_memory();
 	}
+
+	this->v_size = copy.v_size;
 	this->alloc_memory();
 	this->memcopy(copy.device_data, this->v_size);
 }
@@ -118,15 +119,14 @@ template<class T>
 DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
 	if (this->device_data != other.device_data) { // self-assignment check expected
 		T *data = (T*) other.device_data;
-		size_t siz = other.v_size;
 
 		if (this->allocated) {
 			this->free_memory();
 		}
 
-		this->v_size = siz;
+		this->v_size = other.v_size;
 		this->alloc_memory();
-		this->memcopy(data, siz);
+		this->memcopy(data, other.v_size);
 	}
 
 	return *this;
