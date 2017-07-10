@@ -126,7 +126,7 @@ DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
 
 		this->v_size = other.v_size;
 		this->alloc_memory();
-		this->memcopy(data, siz);
+		this->memcopy(data, this->v_size);
 	}
 
 	return *this;
