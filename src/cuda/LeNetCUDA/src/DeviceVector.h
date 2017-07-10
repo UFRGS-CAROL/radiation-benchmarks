@@ -52,7 +52,7 @@ public:
 
 template<class T>
 DeviceVector<T>::DeviceVector(size_t siz) {
-	cudaMallocManaged(&this->device_data, sizeof(T) * siz);
+	CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
 	cudaError_t ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
 	this->v_size = siz;
@@ -71,7 +71,7 @@ DeviceVector<T>::~DeviceVector() {
 		cudaError_t ret = cudaDeviceSynchronize();
 		CUDA_CHECK_RETURN(ret);
 		cudaFree(this->device_data);
-
+		CudaCheckError() ;
 		this->device_data = nullptr;
 		this->v_size = 0;
 	}
@@ -83,8 +83,9 @@ DeviceVector<T>::DeviceVector(T *data, size_t siz) {
 		cudaError_t ret = cudaDeviceSynchronize();
 		CUDA_CHECK_RETURN(ret);
 		cudaFree(this->device_data);
+		CudaCheckError();
 	}
-	cudaMallocManaged(&this->device_data, sizeof(T) * siz);
+	CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
 	cudaError_t ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
 
@@ -103,9 +104,10 @@ DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
 			cudaError_t ret = cudaDeviceSynchronize();
 			CUDA_CHECK_RETURN(ret);
 			cudaFree(this->device_data);
+			CudaCheckError();
 		}
 
-		cudaMallocManaged(&this->device_data, sizeof(T) * siz);
+		CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
 		cudaError_t ret = cudaDeviceSynchronize();
 		CUDA_CHECK_RETURN(ret);
 
@@ -128,8 +130,9 @@ DeviceVector<T>& DeviceVector<T>::operator=(const std::vector<T>& other) {
 			cudaError_t ret = cudaDeviceSynchronize();
 			CUDA_CHECK_RETURN(ret);
 			cudaFree(this->device_data);
+			CudaCheckError();
 		}
-		cudaMallocManaged(&this->device_data, sizeof(T) * siz);
+		CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
 		cudaError_t ret = cudaDeviceSynchronize();
 		CUDA_CHECK_RETURN(ret);
 
@@ -147,9 +150,10 @@ void DeviceVector<T>::resize(size_t siz) {
 			cudaError_t ret = cudaDeviceSynchronize();
 			CUDA_CHECK_RETURN(ret);
 			cudaFree(this->device_data);
+			CudaCheckError();
 		}
 
-		cudaMallocManaged(&this->device_data, sizeof(T) * siz);
+		CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
 		cudaError_t ret = cudaDeviceSynchronize();
 		CUDA_CHECK_RETURN(ret);
 		this->v_size = siz;

@@ -112,13 +112,13 @@ void MaxpoolingLayer::forward() {
 				out_height, out_depth, in_height, in_width);
 
 
-		printf("---------\n");
-
-		printf("max_loc_cpu = [");
-		for (int i = 0; i < this->max_loc.size(); i++) {
-			printf("%d, %d, ", this->max_loc[i].first,this->max_loc[i].second);
-		}
-		printf("]\n");
+//		printf("---------\n");
+//
+//		printf("max_loc_cpu = [");
+//		for (int i = 0; i < this->max_loc.size(); i++) {
+//			printf("%d, %d, ", this->max_loc[i].first,this->max_loc[i].second);
+//		}
+//		printf("]\n");
 
 	//	printf("input_cpu = [");
 	//	for (int i = 0; i < this->input_.size(); i++) {
@@ -131,7 +131,7 @@ void MaxpoolingLayer::forward() {
 	//		printf("%f, ", this->output_[i]);
 	//	}
 	//	printf("]\n");
-		exit(-1);
+//		exit(-1);
 
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
