@@ -225,8 +225,9 @@ float_t ConvNet::train_once() {
 			if (layer->next != nullptr) {
 				layer->next->input_ = layer->output_;
 			}
-			debugIter++;
 
+			debugIter++;
+			std::cout << "passou it " << debugIter << "\n";
 			//
 		}
 		err += layers.back()->err;
