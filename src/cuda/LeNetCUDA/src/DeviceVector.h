@@ -24,10 +24,11 @@ private:
 
 	size_t v_size;
 
-	inline void memcopy(T* dst, T* src, size_t bytes_size);
+	inline void memcopy(T* src, size_t size_count);
 public:
 	DeviceVector(size_t siz);
 	DeviceVector();
+	DeviceVector(const DeviceVector<T>& copy);
 
 	//this constructor will copy the data to gpu
 	DeviceVector(T *data, size_t siz);
@@ -49,6 +50,19 @@ public:
 	size_t size();
 
 };
+
+// Unified memory copy constructor allows pass-by-value
+template<class T>
+DeviceVector<T>::DeviceVector(const DeviceVector<T>& copy){
+	int siz = copy.v_size;
+	if(this->device_data != nullptr){
+		CudaCheckError();
+		cudaFree(this->device_data);
+	}
+	CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * siz));
+	CudaCheckError();
+	this->memcopy(copy.device_data, siz);
+}
 
 template<class T>
 DeviceVector<T>::DeviceVector(size_t siz) {
@@ -91,7 +105,7 @@ DeviceVector<T>::DeviceVector(T *data, size_t siz) {
 
 	this->v_size = siz;
 
-	this->memcopy(this->device_data, data, sizeof(T) * siz);
+	this->memcopy(data, siz);
 }
 
 template<class T>
@@ -113,7 +127,7 @@ DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
 
 		this->v_size = siz;
 
-		this->memcopy(this->device_data, data, sizeof(T) * siz);
+		this->memcopy(data, siz);
 
 	}
 
@@ -137,7 +151,7 @@ DeviceVector<T>& DeviceVector<T>::operator=(const std::vector<T>& other) {
 		CUDA_CHECK_RETURN(ret);
 
 		this->v_size = siz;
-		this->memcopy(this->device_data, data, sizeof(T) * siz);
+		this->memcopy(data, siz);
 
 	}
 	return *this;
@@ -176,8 +190,8 @@ T& DeviceVector<T>::operator [](int i) {
 }
 
 template<class T>
-void DeviceVector<T>::memcopy(T* dst, T* src, size_t bytes_size) {
-	memcpy(dst, src, bytes_size);
+void DeviceVector<T>::memcopy(T* src, size_t size_cont) {
+	memcpy(this->device_data, src, sizeof(T) * size_cont);
 	cudaError_t ret = cudaDeviceSynchronize();
 	CUDA_CHECK_RETURN(ret);
 }
