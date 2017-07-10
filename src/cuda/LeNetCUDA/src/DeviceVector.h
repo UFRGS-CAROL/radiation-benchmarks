@@ -58,7 +58,7 @@ DeviceVector<T>::DeviceVector(const DeviceVector<T>& copy){
 	}
 	CudaSafeCall(cudaMallocManaged(&this->device_data, sizeof(T) * this->v_size));
 	CudaCheckError();
-	this->memcopy(copy.device_data, siz);
+	this->memcopy(copy.device_data, this->v_size);
 	this->allocated = true;
 }
 
