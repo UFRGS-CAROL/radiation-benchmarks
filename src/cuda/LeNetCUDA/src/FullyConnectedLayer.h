@@ -39,11 +39,13 @@ public:
 
 private:
 
-	vec_host get_W(size_t index);
+
 #ifdef GPU
 	DeviceVector<float> get_W_step(size_t in);
+	DeviceVector<float>  get_W(size_t index);
 #else
 	vec_host get_W_step(size_t in);
+	vec_host get_W(size_t index);
 #endif
 
 

@@ -11,18 +11,36 @@
 #ifdef GPU
 #include "FullyConnectedLayerKernel.h"
 
+//void FullyConnectedLayer::forward() {
+//	float *output_ = this->output_.data();
+//	float *input_ = this->input_.data();
+//	float *b_ = this->b_.data();
+//	float *W_ = this->W_.data();
+//	float *v_output = this->v_output.data();
+//	int out_depth_ = this->out_depth_;
+//	int in_depth_ = this->in_depth_;
+//	int input_size = this->input_.size();
+//
+//	call_forward_fully_connected(output_, input_, b_, W_, v_output, out_depth_, in_depth_,input_size);
+//
+//}
+
+DeviceVector<float>  FullyConnectedLayer::get_W(size_t index) {
+	DeviceVector<float> v(in_depth_);
+	for (int i = 0; i < in_depth_; i++) {
+		v[i] = (W_[index * in_depth_ + i]);
+	}
+	return v;
+}
+
 void FullyConnectedLayer::forward() {
-	float *output_ = this->output_.data();
-	float *input_ = this->input_.data();
-	float *b_ = this->b_.data();
-	float *W_ = this->W_.data();
-	float *v_output = this->v_output.data();
-	int out_depth_ = this->out_depth_;
-	int in_depth_ = this->in_depth_;
-	int input_size = this->input_.size();
 
-	call_forward_fully_connected(output_, input_, b_, W_, v_output, out_depth_, in_depth_,input_size);
+	for (size_t out = 0; out < out_depth_; out++) {
+//		vec_host t = get_W(out);
+//		std::cout << t.size() << " " << input_.size() << "\n";
+		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
 
+	}
 }
 
 //void FullyConnectedLayer::back_prop() {
@@ -102,6 +120,17 @@ DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
 
 
 #else
+
+vec_host FullyConnectedLayer::get_W(size_t index) {
+	vec_host v;
+	for (int i = 0; i < in_depth_; i++) {
+		v.push_back(W_[index * in_depth_ + i]);
+	}
+	return v;
+}
+
+
+
 void FullyConnectedLayer::forward() {
 
 	for (size_t out = 0; out < out_depth_; out++) {
@@ -195,13 +224,6 @@ void FullyConnectedLayer::back_prop() {
 }
 
 
-vec_host FullyConnectedLayer::get_W(size_t index) {
-	vec_host v;
-	for (int i = 0; i < in_depth_; i++) {
-		v.push_back(W_[index * in_depth_ + i]);
-	}
-	return v;
-}
 
 
 void FullyConnectedLayer::save_layer(FILE *of) {
