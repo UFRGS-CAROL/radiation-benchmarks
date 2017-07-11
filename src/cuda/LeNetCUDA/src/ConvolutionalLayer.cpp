@@ -241,26 +241,6 @@ void ConvolutionalLayer::back_prop() {
 			}
 		}
 	}
-//	printf("---------\n");
-//
-//	printf("deltaW_gpu = [");
-//	for (int i = 0; i < this->deltaW_.size(); i++) {
-//		printf("%f, ", this->deltaW_[i]);
-//	}
-//	printf("]\n");
-//
-//	printf("W_gpu = [");
-//	for (int i = 0; i < this->W_.size(); i++) {
-//		printf("%f, ", this->W_[i]);
-//	}
-//	printf("]\n");
-//
-//	printf("b_gpu = [ ");
-//	for (int i = 0; i < this->b_.size(); i++) {
-//		printf("%f, ", this->b_[i]);
-//	}
-//	printf("]\n");
-
 }
 
 inline int ConvolutionalLayer::getb_(size_t out, size_t h_, size_t w_) {
