@@ -12,9 +12,26 @@
 #include "ConvolutionalLayerKernel.h"
 
 inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
-		size_t w_) {}
+		size_t w_) {
+	vec_host r;
+	for (size_t y = 0; y < kernel_size_; y++) {
+		for (size_t x = 0; x < kernel_size_; x++) {
+			r.push_back(
+					input_[in * (in_width_ * in_height_) + (h_ + y) * in_width_
+							+ x + w_]);
+		}
+	}
+	return r;
+}
 
-inline vec_host ConvolutionalLayer::getW_(size_t in, size_t out) {}
+inline vec_host ConvolutionalLayer::getW_(size_t in, size_t out) {
+	vec_host r;
+	for (size_t i = 0; i < kernel_size_ * kernel_size_; i++)
+		r.push_back(
+				W_[in * out_depth_ * kernel_size_ * kernel_size_
+						+ out * kernel_size_ * kernel_size_ + i]);
+	return r;
+}
 
 //void ConvolutionalLayer::forward() {
 //	this->output_.clear();
