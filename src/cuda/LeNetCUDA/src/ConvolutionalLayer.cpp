@@ -191,12 +191,6 @@ void ConvolutionalLayer::load_layer(FILE *in) {
 void ConvolutionalLayer::forward() {
 //	std::fill(output_.begin(), output_.end(), 0);
 	output_.fill(0);
-	std::cout << "in_width_ " << in_width_ << "\n";
-	std::cout << "in_height_ " <<in_height_ << "\n";
-	std::cout << "in_depth_ " << in_depth_<< "\n" ;
-	std::cout << "out_width_ " << out_width_ << "\n";
-	std::cout << "out_height_ " << out_height_ << "\n";
-	std::cout << "out_depth_ " << out_depth_ << "\n";
 
 	for (size_t out = 0; out < out_depth_; out++) { /* for each output feature map */
 		for (size_t in = 0; in < in_depth_; in++) { /* for each input feature map */

@@ -15,6 +15,10 @@
 
 #define BLOCK_SIZE 32
 
+
+inline void __cudaSafeCall(cudaError err, const char *file, const int line);
+inline void __cudaCheckError(const char *file, const int line);
+
 #define CudaSafeCall( err ) __cudaSafeCall( err, __FILE__, __LINE__ )
 #define CudaCheckError()    __cudaCheckError( __FILE__, __LINE__ )
 
@@ -68,7 +72,6 @@ inline void __cudaCheckError(const char *file, const int line) {
 
 	return;
 }
-
 
 
 #endif /* CUDAUTIL_H_ */

@@ -36,10 +36,7 @@ DeviceVector<float>  FullyConnectedLayer::get_W(size_t index) {
 void FullyConnectedLayer::forward() {
 
 	for (size_t out = 0; out < out_depth_; out++) {
-//		vec_host t = get_W(out);
-//		std::cout << t.size() << " " << input_.size() << "\n";
 		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
-
 	}
 }
 
@@ -134,8 +131,6 @@ vec_host FullyConnectedLayer::get_W(size_t index) {
 void FullyConnectedLayer::forward() {
 
 	for (size_t out = 0; out < out_depth_; out++) {
-//		vec_host t = get_W(out);
-//		std::cout << t.size() << " " << input_.size() << "\n";
 		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
 
 	}

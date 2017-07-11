@@ -7,16 +7,21 @@
 #include <cstdio>
 
 __device__ float sigmod_gpu_conv(float in) {
-	return 1.0 / (1.0 + exp(-in));
+	return 1.0 / (1.0 + expf(-in));
 }
 
 __device__ float df_sigmod_gpu_conv(float f_x) {
 	return f_x * (1.0 - f_x);
 }
 
-__device__ size_t getb_(size_t out, size_t h_, size_t w_, size_t out_width_,
-		size_t out_height_) {
+__device__    inline size_t get_b_(size_t out, size_t h_, size_t w_,
+		size_t out_width_, size_t out_height_) {
 	return out * out_width_ * out_height_ + h_ * out_height_ + w_;
+}
+
+__device__    inline size_t get_out_index(size_t out, size_t h_, size_t w_,
+		size_t out_width_, size_t out_height_) {
+	return out * out_height_ * out_width_ + h_ * out_width_ + w_;
 }
 
 __device__ inline int get_global_id(int index) {
@@ -29,6 +34,30 @@ __device__ inline int get_global_id(int index) {
 		return blockIdx.z * blockDim.z + threadIdx.z;
 	};
 	return -1;
+}
+
+__device__ inline float conv(int kernel_size, unsigned int in, int in_width,
+		int in_height, int h_index, int w_index, int out_depth, int size,
+		int out, float* input_buf, float* weight_buf) {
+	float weight_buf_sub[25]; // Set by brute force, NEED to be changed
+	float input_buf_sub[25]; // Set by brute force, NEED to be changed
+	float sum = 0;
+	// load input and weight for this sub area
+	// Aqui ele faz o que a funcao conv faz
+	for (unsigned int y = 0; y < kernel_size; y++) {
+		for (unsigned int x = 0; x < kernel_size; x++) {
+			input_buf_sub[y * kernel_size + x] = input_buf[in
+					* (in_width * in_height) + (h_index + y) * in_width + x
+					+ w_index];
+			weight_buf_sub[y * kernel_size + x] = weight_buf[in * out_depth
+					* size + out * size + y * kernel_size + x];
+		}
+	}
+	// compute the convolution
+	for (unsigned int i = 0; i < size; i++) {
+		sum += input_buf_sub[i] * weight_buf_sub[size - i - 1];
+	}
+	return sum;
 }
 
 __global__ void forward_parallel(float* input_buf, float* weight_buf,
@@ -49,34 +78,21 @@ __global__ void forward_parallel(float* input_buf, float* weight_buf,
 
 	float sum = 0;
 	int size = kernel_size * kernel_size;
-	if (size > 25) {
+	if (size != 25) {
 		printf("\n\n\nPau no kernel\n\n\n");
 		return;
 	}
 
 	for (unsigned int in = 0; in < in_depth; in++) {
-		float weight_buf_sub[25]; // Set by brute force, NEED to be changed
-		float input_buf_sub[25]; // Set by brute force, NEED to be changed
 		// load input and weight for this sub area
-		for (unsigned int y = 0; y < kernel_size; y++) {
-			for (unsigned int x = 0; x < kernel_size; x++) {
-				input_buf_sub[y * kernel_size + x] = input_buf[in
-						* (in_width * in_height) + (h_index + y) * in_width + x
-						+ w_index];
-				weight_buf_sub[y * kernel_size + x] = weight_buf[in * out_depth
-						* size + out * size + y * kernel_size + x];
-			}
-		}
-
-		// compute the convolution
-		for (unsigned int i = 0; i < size; i++) {
-			sum += input_buf_sub[i] * weight_buf_sub[size - i - 1];
-		}
+		// Aqui ele faz o que a funcao conv faz
+		sum += conv(kernel_size, in, in_width, in_height, h_index, w_index,
+				out_depth, size, out, input_buf, weight_buf);
 	}
 
-	unsigned int out_index = out * out_width * out_height + h_index * out_width
-			+ w_index;
-	unsigned int b_index = out_index;
+	unsigned int out_index = get_out_index(out, h_index, w_index, out_width,
+			out_height);
+	unsigned int b_index = get_b_(out, h_index, w_index, out_width, out_height);
 	output_buf[out_index] = sigmod_gpu_conv(sum + b_buf[b_index]);
 }
 
@@ -187,7 +203,7 @@ __global__ void backpropagation_update_weights(float *W_, //weights
 //		for (size_t in = 0; in < in_depth_; in++) {
 //			for (size_t h_ = 0; h_ < out_height_; h_++) {
 	for (size_t w_ = 0; w_ < out_height_; w_++) {
-		auto tt = getb_(out, h_, w_, out_width_, out_height_);
+		auto tt = get_b_(out, h_, w_, out_width_, out_height_);
 		for (size_t y_ = 0; y_ < kernel_size_; y_++) {
 			for (size_t x_ = 0; x_ < kernel_size_; x_++) {
 				/*find update pixel*/
@@ -273,3 +289,4 @@ void call_backpropagation_parallel(float *W_, //weights
 //	}
 
 }
+

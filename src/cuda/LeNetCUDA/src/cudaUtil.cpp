@@ -29,4 +29,3 @@ void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y,
 //			blocks->z, threads->x, threads->y, threads->z);
 
 }
-

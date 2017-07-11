@@ -19,7 +19,7 @@
 #include "DeviceVector.h"
 #endif
 
-#define MAX_ITER 4  // maximum training iterations
+#define MAX_ITER 10  // maximum training iterations
 #define M 10 // training sample counts in each iteration
 #define END_CONDITION 1e-3
 
