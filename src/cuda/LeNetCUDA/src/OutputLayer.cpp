@@ -82,25 +82,25 @@ void OutputLayer::back_prop() {
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
 	}
-	printf("---------\n");
-
-	printf("deltaW_gpu = [");
-	for (int i = 0; i < this->deltaW_.size(); i++) {
-		printf("%f, ", this->deltaW_[i]);
-	}
-	printf("]\n");
-
-	printf("W_gpu = [");
-	for (int i = 0; i < this->W_.size(); i++) {
-		printf("%f, ", this->W_[i]);
-	}
-	printf("]\n");
-
-	printf("b_gpu = [ ");
-	for (int i = 0; i < this->b_.size(); i++) {
-		printf("%f, ", this->b_[i]);
-	}
-	printf("]\n");
+//	printf("---------\n");
+//
+//	printf("deltaW_gpu = [");
+//	for (int i = 0; i < this->deltaW_.size(); i++) {
+//		printf("%f, ", this->deltaW_[i]);
+//	}
+//	printf("]\n");
+//
+//	printf("W_gpu = [");
+//	for (int i = 0; i < this->W_.size(); i++) {
+//		printf("%f, ", this->W_[i]);
+//	}
+//	printf("]\n");
+//
+//	printf("b_gpu = [ ");
+//	for (int i = 0; i < this->b_.size(); i++) {
+//		printf("%f, ", this->b_[i]);
+//	}
+//	printf("]\n");
 
 
 //#ifdef GPU
