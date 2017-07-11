@@ -10,6 +10,7 @@
 #ifdef GPU
 #include "DeviceVector.h"
 #include "ConvolutionalLayerKernel.h"
+#endif
 
 inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 		size_t w_) {
@@ -33,173 +34,6 @@ inline vec_host ConvolutionalLayer::getW_(size_t in, size_t out) {
 	return r;
 }
 
-//void ConvolutionalLayer::forward() {
-//	this->output_.clear();
-//	try {
-//		// execute the code on the device
-//		float *i_buf = this->input_.data();
-//		float *w_buf = this->W_.data();
-//		float *b_buf = this->b_.data();
-//		float *o_buf = this->output_.data();
-//
-//		call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_,
-//				this->in_height_, this->in_depth_, this->out_width_,
-//				this->out_height_, this->out_depth_, this->kernel_size_);
-//
-//	} catch (std::exception& e) {
-//		std::cerr << e.what() << std::endl;
-//		exit(2);
-//	} catch (...) {
-//		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
-//		exit(1);
-//	}
-//
-//}
-
-void ConvolutionalLayer::forward() {
-//	std::fill(output_.begin(), output_.end(), 0);
-	output_.fill(0);
-	for (size_t out = 0; out < out_depth_; out++) { /* for each output feature map */
-		for (size_t in = 0; in < in_depth_; in++) { /* for each input feature map */
-			for (size_t h_ = 0; h_ < out_height_; h_++) {
-				for (size_t w_ = 0; w_ < out_width_; w_++) {
-					output_[getOutIndex(out, h_, w_)] += conv(
-							getInforKernel(in, h_, w_), getW_(in, out));
-				}
-			}
-		}
-		/* use activate function to get output */
-		for (size_t h_ = 0; h_ < out_height_; h_++) {
-			for (size_t w_ = 0; w_ < out_width_; w_++) {
-				output_[getOutIndex(out, h_, w_)] = sigmod(
-						output_[getOutIndex(out, h_, w_)]
-								+ /*eh?*/b_[getb_(out, h_, w_)]);
-			}
-		}
-	}
-
-}
-
-//void ConvolutionalLayer::back_prop_() {
-//	try {
-//		g_.clear();
-//		g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
-//
-//		float *W_ = this->W_.data(); //weights
-//		float *g_ = this->g_.data();//err array
-//		float *input_ = this->input_.data();//input array
-//		float *g_next = this->next->g_.data();//b_next from this->next->g_
-//		float *deltaW = this->deltaW_.data();//deltaW array
-//		float *b_ = this->b_.data();//b_ vector
-//		float alpha = this->alpha_;//alpha value
-//		float lambda = this->lambda_;
-//		int out_depth = this->out_depth_;//size of the first for loop
-//		int in_depth_ = this->in_depth_;//size of the second for loop
-//		int out_width = this->out_width_;//size of the third for loop
-//		int out_height_ = this->out_height_;// size of loop
-//		int kernel_size_ = this->kernel_size_;//size of loop
-//		int in_width_ = this->in_width_;//width size
-//		int in_height_ = this->in_height_;//in height
-//
-//		call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
-//				alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
-//				in_width_, in_height_);
-//
-////		printf("---------\n");
-////
-////		printf("deltaW_cpu = [");
-////		for (int i = 0; i < deltaW_.size(); i++) {
-////			printf("%f, ", deltaW_[i]);
-////		}
-////		printf("]\n");
-////
-////		printf("W_cpu = [");
-////		for (int i = 0; i < W_.size(); i++) {
-////			printf("%f, ", W_[i]);
-////		}
-////		printf("]\n");
-////
-////		printf("b_cpu = [ ");
-////		for (int i = 0; i < b_.size(); i++) {
-////			printf("%f, ", b_[i]);
-////		}
-////		printf("]\n");
-////		//exit(-1);
-//
-//	} catch (std::exception& e) {
-//		std::cerr << e.what() << std::endl;
-//		exit(2);
-//	} catch (...) {
-//		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
-//		exit(1);
-//	}
-//}
-
-void ConvolutionalLayer::init_weight() {
-	vec_host temp_W_, temp_b_;
-	temp_W_.resize(this->W_.size());
-	temp_b_.resize(this->b_.size());
-	uniform_rand(temp_W_.begin(), temp_W_.end(), -1, 1);
-	uniform_rand(temp_b_.begin(), temp_b_.end(), -1, 1);
-
-	this->W_ = temp_W_;
-	this->b_ = temp_b_;
-
-}
-
-#else
-
-void ConvolutionalLayer::forward() {
-	std::fill(output_.begin(), output_.end(), 0);
-	for (size_t out = 0; out < out_depth_; out++) { /* for each output feature map */
-		for (size_t in = 0; in < in_depth_; in++) { /* for each input feature map */
-			for (size_t h_ = 0; h_ < out_height_; h_++) {
-				for (size_t w_ = 0; w_ < out_width_; w_++) {
-					output_[getOutIndex(out, h_, w_)] += conv(
-							getInforKernel(in, h_, w_), getW_(in, out));
-				}
-			}
-		}
-		/* use activate function to get output */
-		for (size_t h_ = 0; h_ < out_height_; h_++) {
-			for (size_t w_ = 0; w_ < out_width_; w_++) {
-				output_[getOutIndex(out, h_, w_)] = sigmod(
-						output_[getOutIndex(out, h_, w_)]
-								+ /*eh?*/b_[getb_(out, h_, w_)]);
-			}
-		}
-	}
-
-}
-
-inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
-		size_t w_) {
-	vec_host r;
-	for (size_t y = 0; y < kernel_size_; y++) {
-		for (size_t x = 0; x < kernel_size_; x++) {
-			r.push_back(
-					input_[in * (in_width_ * in_height_) + (h_ + y) * in_width_
-							+ x + w_]);
-		}
-	}
-	return r;
-}
-
-void ConvolutionalLayer::init_weight() {
-	uniform_rand(W_.begin(), W_.end(), -1, 1);
-	uniform_rand(b_.begin(), b_.end(), -1, 1);
-}
-
-inline vec_host ConvolutionalLayer::getW_(size_t in, size_t out) {
-	vec_host r;
-	for (size_t i = 0; i < kernel_size_ * kernel_size_; i++)
-		r.push_back(
-				W_[in * out_depth_ * kernel_size_ * kernel_size_
-						+ out * kernel_size_ * kernel_size_ + i]);
-	return r;
-}
-
-#endif //DEFINE GPU FLAG
 
 ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 		size_t in_depth, size_t kernel_size, size_t out_depth) :
@@ -328,3 +162,162 @@ void ConvolutionalLayer::load_layer(FILE *in) {
 	this->load_base_layer(in);
 	this->kernel_size_ = this->load_layer_var<size_t>(in);
 }
+
+#ifdef GPU
+
+//void ConvolutionalLayer::forward() {
+//	this->output_.clear();
+//	try {
+//		// execute the code on the device
+//		float *i_buf = this->input_.data();
+//		float *w_buf = this->W_.data();
+//		float *b_buf = this->b_.data();
+//		float *o_buf = this->output_.data();
+//
+//		call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_,
+//				this->in_height_, this->in_depth_, this->out_width_,
+//				this->out_height_, this->out_depth_, this->kernel_size_);
+//
+//	} catch (std::exception& e) {
+//		std::cerr << e.what() << std::endl;
+//		exit(2);
+//	} catch (...) {
+//		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
+//		exit(1);
+//	}
+//
+//}
+
+void ConvolutionalLayer::forward() {
+//	std::fill(output_.begin(), output_.end(), 0);
+	output_.fill(0);
+	std::cout << "in_width_ " << in_width_ << "\n";
+	std::cout << "in_height_ " <<in_height_ << "\n";
+	std::cout << "in_depth_ " << in_depth_<< "\n" ;
+	std::cout << "out_width_ " << out_width_ << "\n";
+	std::cout << "out_height_ " << out_height_ << "\n";
+	std::cout << "out_depth_ " << out_depth_ << "\n";
+
+	for (size_t out = 0; out < out_depth_; out++) { /* for each output feature map */
+		for (size_t in = 0; in < in_depth_; in++) { /* for each input feature map */
+			for (size_t h_ = 0; h_ < out_height_; h_++) {
+				for (size_t w_ = 0; w_ < out_width_; w_++) {
+					output_[getOutIndex(out, h_, w_)] += conv(
+							getInforKernel(in, h_, w_), getW_(in, out));
+				}
+			}
+		}
+		/* use activate function to get output */
+		for (size_t h_ = 0; h_ < out_height_; h_++) {
+			for (size_t w_ = 0; w_ < out_width_; w_++) {
+				output_[getOutIndex(out, h_, w_)] = sigmod(
+						output_[getOutIndex(out, h_, w_)]
+								+ /*eh?*/b_[getb_(out, h_, w_)]);
+			}
+		}
+	}
+
+}
+
+//void ConvolutionalLayer::back_prop_() {
+//	try {
+//		g_.clear();
+//		g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
+//
+//		float *W_ = this->W_.data(); //weights
+//		float *g_ = this->g_.data();//err array
+//		float *input_ = this->input_.data();//input array
+//		float *g_next = this->next->g_.data();//b_next from this->next->g_
+//		float *deltaW = this->deltaW_.data();//deltaW array
+//		float *b_ = this->b_.data();//b_ vector
+//		float alpha = this->alpha_;//alpha value
+//		float lambda = this->lambda_;
+//		int out_depth = this->out_depth_;//size of the first for loop
+//		int in_depth_ = this->in_depth_;//size of the second for loop
+//		int out_width = this->out_width_;//size of the third for loop
+//		int out_height_ = this->out_height_;// size of loop
+//		int kernel_size_ = this->kernel_size_;//size of loop
+//		int in_width_ = this->in_width_;//width size
+//		int in_height_ = this->in_height_;//in height
+//
+//		call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
+//				alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
+//				in_width_, in_height_);
+//
+////		printf("---------\n");
+////
+////		printf("deltaW_cpu = [");
+////		for (int i = 0; i < deltaW_.size(); i++) {
+////			printf("%f, ", deltaW_[i]);
+////		}
+////		printf("]\n");
+////
+////		printf("W_cpu = [");
+////		for (int i = 0; i < W_.size(); i++) {
+////			printf("%f, ", W_[i]);
+////		}
+////		printf("]\n");
+////
+////		printf("b_cpu = [ ");
+////		for (int i = 0; i < b_.size(); i++) {
+////			printf("%f, ", b_[i]);
+////		}
+////		printf("]\n");
+////		//exit(-1);
+//
+//	} catch (std::exception& e) {
+//		std::cerr << e.what() << std::endl;
+//		exit(2);
+//	} catch (...) {
+//		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
+//		exit(1);
+//	}
+//}
+
+void ConvolutionalLayer::init_weight() {
+	vec_host temp_W_, temp_b_;
+	temp_W_.resize(this->W_.size());
+	temp_b_.resize(this->b_.size());
+	uniform_rand(temp_W_.begin(), temp_W_.end(), -1, 1);
+	uniform_rand(temp_b_.begin(), temp_b_.end(), -1, 1);
+
+	this->W_ = temp_W_;
+	this->b_ = temp_b_;
+
+
+}
+
+#else
+
+void ConvolutionalLayer::forward() {
+	std::fill(output_.begin(), output_.end(), 0);
+	for (size_t out = 0; out < out_depth_; out++) { /* for each output feature map */
+		for (size_t in = 0; in < in_depth_; in++) { /* for each input feature map */
+			for (size_t h_ = 0; h_ < out_height_; h_++) {
+				for (size_t w_ = 0; w_ < out_width_; w_++) {
+					output_[getOutIndex(out, h_, w_)] += conv(
+							getInforKernel(in, h_, w_), getW_(in, out));
+				}
+			}
+		}
+		/* use activate function to get output */
+		for (size_t h_ = 0; h_ < out_height_; h_++) {
+			for (size_t w_ = 0; w_ < out_width_; w_++) {
+				output_[getOutIndex(out, h_, w_)] = sigmod(
+						output_[getOutIndex(out, h_, w_)]
+								+ /*eh?*/b_[getb_(out, h_, w_)]);
+			}
+		}
+	}
+
+}
+
+void ConvolutionalLayer::init_weight() {
+	uniform_rand(W_.begin(), W_.end(), -1, 1);
+	uniform_rand(b_.begin(), b_.end(), -1, 1);
+}
+
+
+
+#endif //DEFINE GPU FLAG
+
