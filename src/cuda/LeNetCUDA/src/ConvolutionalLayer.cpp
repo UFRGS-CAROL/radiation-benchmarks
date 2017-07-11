@@ -16,25 +16,49 @@ inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 
 inline vec_host ConvolutionalLayer::getW_(size_t in, size_t out) {}
 
+//void ConvolutionalLayer::forward() {
+//	this->output_.clear();
+//	try {
+//		// execute the code on the device
+//		float *i_buf = this->input_.data();
+//		float *w_buf = this->W_.data();
+//		float *b_buf = this->b_.data();
+//		float *o_buf = this->output_.data();
+//
+//		call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_,
+//				this->in_height_, this->in_depth_, this->out_width_,
+//				this->out_height_, this->out_depth_, this->kernel_size_);
+//
+//	} catch (std::exception& e) {
+//		std::cerr << e.what() << std::endl;
+//		exit(2);
+//	} catch (...) {
+//		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
+//		exit(1);
+//	}
+//
+//}
+
 void ConvolutionalLayer::forward() {
-	this->output_.clear();
-	try {
-		// execute the code on the device
-		float *i_buf = this->input_.data();
-		float *w_buf = this->W_.data();
-		float *b_buf = this->b_.data();
-		float *o_buf = this->output_.data();
-
-		call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_,
-				this->in_height_, this->in_depth_, this->out_width_,
-				this->out_height_, this->out_depth_, this->kernel_size_);
-
-	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		exit(2);
-	} catch (...) {
-		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
-		exit(1);
+//	std::fill(output_.begin(), output_.end(), 0);
+	output_.fill(0);
+	for (size_t out = 0; out < out_depth_; out++) { /* for each output feature map */
+		for (size_t in = 0; in < in_depth_; in++) { /* for each input feature map */
+			for (size_t h_ = 0; h_ < out_height_; h_++) {
+				for (size_t w_ = 0; w_ < out_width_; w_++) {
+					output_[getOutIndex(out, h_, w_)] += conv(
+							getInforKernel(in, h_, w_), getW_(in, out));
+				}
+			}
+		}
+		/* use activate function to get output */
+		for (size_t h_ = 0; h_ < out_height_; h_++) {
+			for (size_t w_ = 0; w_ < out_width_; w_++) {
+				output_[getOutIndex(out, h_, w_)] = sigmod(
+						output_[getOutIndex(out, h_, w_)]
+								+ /*eh?*/b_[getb_(out, h_, w_)]);
+			}
+		}
 	}
 
 }

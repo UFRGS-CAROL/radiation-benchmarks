@@ -111,53 +111,53 @@ void MaxpoolingLayer::back_prop() {
 
 #ifdef GPU
 
-//void MaxpoolingLayer::forward() {
-//	try {
+void MaxpoolingLayer::forward() {
+	try {
+
+// execute the code on the device
+		float_t *input = this->input_.data();
+		float_t *output = this->output_.data();
+		Pair *max_loc_buf = this->max_loc.data();
+		size_t out_width = this->out_width_;
+		size_t out_height = this->out_height_;
+		size_t out_depth = this->out_depth_;
+		size_t in_height = this->in_height_;
+		size_t in_width = this->in_width_;
+
+		call_forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
+				out_height, out_depth, in_height, in_width);
+
+
+//		printf("---------\n");
 //
-//// execute the code on the device
-//		float_t *input = this->input_.data();
-//		float_t *output = this->output_.data();
-//		Pair *max_loc_buf = this->max_loc.data();
-//		size_t out_width = this->out_width_;
-//		size_t out_height = this->out_height_;
-//		size_t out_depth = this->out_depth_;
-//		size_t in_height = this->in_height_;
-//		size_t in_width = this->in_width_;
-//
-//		call_forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
-//				out_height, out_depth, in_height, in_width);
-//
-//
-////		printf("---------\n");
-////
-////		printf("max_loc_cpu = [");
-////		for (int i = 0; i < this->max_loc.size(); i++) {
-////			printf("%d, %d, ", this->max_loc[i].first,this->max_loc[i].second);
-////		}
-////		printf("]\n");
-//
-//	//	printf("input_cpu = [");
-//	//	for (int i = 0; i < this->input_.size(); i++) {
-//	//		printf("%f, ", this->input_[i]);
-//	//	}
-//	//	printf("]\n");
-//	//
-//	//	printf("output_cpu = [ ");
-//	//	for (int i = 0; i < this->output_.size(); i++) {
-//	//		printf("%f, ", this->output_[i]);
-//	//	}
-//	//	printf("]\n");
-////		exit(-1);
-//
-//	} catch (std::exception& e) {
-//		std::cerr << e.what() << std::endl;
-//		exit(2);
-//	} catch (...) {
-//		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
-//		exit(1);
-//	}
-//
-//}
+//		printf("max_loc_cpu = [");
+//		for (int i = 0; i < this->max_loc.size(); i++) {
+//			printf("%d, %d, ", this->max_loc[i].first,this->max_loc[i].second);
+//		}
+//		printf("]\n");
+
+	//	printf("input_cpu = [");
+	//	for (int i = 0; i < this->input_.size(); i++) {
+	//		printf("%f, ", this->input_[i]);
+	//	}
+	//	printf("]\n");
+	//
+	//	printf("output_cpu = [ ");
+	//	for (int i = 0; i < this->output_.size(); i++) {
+	//		printf("%f, ", this->output_[i]);
+	//	}
+	//	printf("]\n");
+//		exit(-1);
+
+	} catch (std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		exit(2);
+	} catch (...) {
+		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
+		exit(1);
+	}
+
+}
 
 //void MaxpoolingLayer::back_prop() {
 //	g_.clear();
@@ -171,37 +171,6 @@ void MaxpoolingLayer::back_prop() {
 //	call_backpropagation_maxpool(max_loc, g_, g_next, max_size);
 //
 //}
-
-void MaxpoolingLayer::forward() {
-	for (size_t out = 0; out < out_depth_; out++) {
-		for (size_t h_ = 0; h_ < in_height_; h_ += 2) {
-			for (size_t w_ = 0; w_ < in_width_; w_ += 2) {
-				output_[getOutIndex(out, h_, w_)] = max_In_(out, h_, w_,
-						getOutIndex(out, h_, w_));
-
-			}
-		}
-	}
-
-}
-
-inline float_t MaxpoolingLayer::max_In_(size_t in_index, size_t h_, size_t w_,
-		size_t out_index) {
-	float_t max_pixel = 0;
-	size_t tmp;
-	for (size_t x = 0; x < 2; x++) {
-		for (size_t y = 0; y < 2; y++) {
-			tmp = (in_index * in_width_ * in_height_) + ((h_ + y) * in_width_)
-					+ (w_ + x);
-			if (max_pixel < input_[tmp]) {
-				max_pixel = input_[tmp];
-				max_loc[out_index] = this->get_max_loc_pair(out_index, tmp);
-			}
-		}
-	}
-	return max_pixel;
-}
-
 #else
 
 

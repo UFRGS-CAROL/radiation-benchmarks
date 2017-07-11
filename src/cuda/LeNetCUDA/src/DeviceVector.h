@@ -50,6 +50,8 @@ public:
 
 	size_t size();
 
+	void fill(T data);
+
 };
 
 template<class T>
@@ -225,6 +227,12 @@ void DeviceVector<T>::clear() {
 	std::cout << "clear()\n";
 #endif
 	memset(this->device_data, 0, sizeof(T) * this->v_size);
+	CudaCheckError();
+}
+
+template<class T>
+void DeviceVector<T>::fill(T data) {
+	memset(this->device_data, data, sizeof(T) * this->v_size);
 	CudaCheckError();
 }
 #endif /* DEVICEVECTOR_H_ */
