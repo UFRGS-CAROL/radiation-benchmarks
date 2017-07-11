@@ -260,7 +260,7 @@ void ConvolutionalLayer::back_prop() {
 		printf("%f, ", this->b_[i]);
 	}
 	printf("]\n");
-	exit(-1);
+
 }
 
 inline int ConvolutionalLayer::getb_(size_t out, size_t h_, size_t w_) {

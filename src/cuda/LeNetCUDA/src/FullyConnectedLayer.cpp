@@ -167,6 +167,26 @@ void FullyConnectedLayer::back_prop() {
 		}
 		b_[out] += alpha_ * this->next->g_[out];
 	}
+	printf("---------\n");
+
+	printf("deltaW_gpu = [");
+	for (int i = 0; i < this->deltaW_.size(); i++) {
+		printf("%f, ", this->deltaW_[i]);
+	}
+	printf("]\n");
+
+	printf("W_gpu = [");
+	for (int i = 0; i < this->W_.size(); i++) {
+		printf("%f, ", this->W_[i]);
+	}
+	printf("]\n");
+
+	printf("b_gpu = [ ");
+	for (int i = 0; i < this->b_.size(); i++) {
+		printf("%f, ", this->b_[i]);
+	}
+	printf("]\n");
+
 
 //#ifdef GPU
 //	cudaError_t ret = cudaDeviceSynchronize();

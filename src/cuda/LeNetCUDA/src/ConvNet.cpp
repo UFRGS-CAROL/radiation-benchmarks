@@ -224,7 +224,7 @@ float_t ConvNet::train_once() {
 		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
 			(*i)->back_prop();
 		}
-
+		exit(-1);
 	}
 
 	debugFile.close();
