@@ -137,9 +137,8 @@ void ConvolutionalLayer::forward() {
 
 void ConvolutionalLayer::init_weight() {
 	vec_host temp_W_, temp_b_;
-	temp_W_.resize(
-			this->kernel_size_ * this->kernel_size_ * this->in_depth_ * this->out_depth_);
-	temp_b_.resize(this->out_depth_ * this->out_width_ * this->out_height_);
+	temp_W_.resize(this->W_.size());
+	temp_b_.resize(this->b_.size());
 	uniform_rand(temp_W_.begin(), temp_W_.end(), -1, 1);
 	uniform_rand(temp_b_.begin(), temp_b_.end(), -1, 1);
 
