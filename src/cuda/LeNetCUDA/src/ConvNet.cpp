@@ -200,20 +200,17 @@ float_t ConvNet::train_once() {
 		 */
 		int debugIter = 0;
 		for (auto layer : layers) {
-
-			//debug
-			debugFile << "iter: "<<iter << " DEBUG layer" << debugIter << "->output: ";
-			for(int i = 0; i < layer->output_.size(); i++){
-				debugFile << layer->output_[i] << ", ";
-			}
-			debugFile << "\n";
-
-			//std::cout << "layer w h d: " << layer->out_width_ << std::endl; //debug
 			layer->forward();
 			if (layer->next != nullptr) {
 				layer->next->input_ = layer->output_;
 			}
 
+			//debug
+			debugFile << debugIter << "_output = [ ";
+			for(int i = 0; i < layer->output_.size(); i++){
+				debugFile << layer->output_[i] << ", ";
+			}
+			debugFile << "]\n";
 			debugIter++;
 		}
 		err += layers.back()->err;
@@ -223,6 +220,7 @@ float_t ConvNet::train_once() {
 //		if(test++ > 2) break;
 		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
 			(*i)->back_prop();
+
 		}
 
 	}
