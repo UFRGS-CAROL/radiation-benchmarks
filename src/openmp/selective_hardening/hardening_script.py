@@ -162,7 +162,7 @@ def make_hardening_header():
         header_str += '{\n'
         header_str += '\tif(memcmp(var_a, var_b, size) != 0)\n'
         header_str += '\t{\n'
-        header_str += '\t\tprintf("\\nHardening error: at file \"%s\"\\n\\n", __FILE__);\n'
+        header_str += '\t\tprintf("\\nHardening error: at file \\\"%s\\\"\\n\\n\", __FILE__);\n'
         header_str += '\t\texit(1);\n'
         header_str += '\t}\n'
         
@@ -176,7 +176,7 @@ def make_hardening_header():
 
         header_str += '\tif(memcmp(bytes_array_a, bytes_array_b, size) != 0)\n'
         header_str += '\t{\n'
-        header_str += '\t\tprintf("\\nHardening error: at file \"%s\"\\n\\n", __FILE__);\n'
+        header_str += '\t\tprintf("\\nHardening error: at file \\\"%s\\\"\\n\\n\", __FILE__);\n'
         header_str += '\t\texit(1);\n'
         header_str += '\t}\n'
 
