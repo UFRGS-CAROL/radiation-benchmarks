@@ -11,19 +11,19 @@
 #ifdef GPU
 #include "FullyConnectedLayerKernel.h"
 
-//void FullyConnectedLayer::forward() {
-//	float *output_ = this->output_.data();
-//	float *input_ = this->input_.data();
-//	float *b_ = this->b_.data();
-//	float *W_ = this->W_.data();
-//	float *v_output = this->v_output.data();
-//	int out_depth_ = this->out_depth_;
-//	int in_depth_ = this->in_depth_;
-//	int input_size = this->input_.size();
-//
-//	call_forward_fully_connected(output_, input_, b_, W_, v_output, out_depth_, in_depth_,input_size);
-//
-//}
+void FullyConnectedLayer::forward() {
+	float *output_ = this->output_.data();
+	float *input_ = this->input_.data();
+	float *b_ = this->b_.data();
+	float *W_ = this->W_.data();
+	float *v_output = this->v_output.data();
+	int out_depth_ = this->out_depth_;
+	int in_depth_ = this->in_depth_;
+	int input_size = this->input_.size();
+
+	call_forward_fully_connected(output_, input_, b_, W_, v_output, out_depth_, in_depth_,input_size);
+
+}
 
 DeviceVector<float>  FullyConnectedLayer::get_W(size_t index) {
 	DeviceVector<float> v(in_depth_);
@@ -33,52 +33,13 @@ DeviceVector<float>  FullyConnectedLayer::get_W(size_t index) {
 	return v;
 }
 
-void FullyConnectedLayer::forward() {
-
-	for (size_t out = 0; out < out_depth_; out++) {
-		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
-	}
-}
-
-//void FullyConnectedLayer::back_prop() {
-//	float *input_ = this->input_.data();
-//	float *g_ = this->g_.data();
-//	float *g_next = this->next->g_.data();
-//	int g_next_size = this->next->g_.size();
-//	float *deltaW_ = this->deltaW_.data();
-//	float *W_ = this->W_.data();
-//	float *b_ = this->b_.data();
-//	float *r_output = this->v_output.data();
-//	float alpha_ = this->alpha_;
-//	float lambda_ = this->lambda_;
-//	int in_depth_ = this->in_depth_;
-//	int out_depth_ = this->out_depth_;
+//void FullyConnectedLayer::forward() {
 //
-//	call_backpropagation_fully_connected(input_, g_, g_next,
-//			deltaW_, W_, b_, r_output,
-//			alpha_, lambda_, in_depth_, out_depth_, g_next_size);
-//
-//			printf("---------\n");
-//
-//			printf("deltaW_gpu = [");
-//			for (int i = 0; i < this->deltaW_.size(); i++) {
-//				printf("%f, ", this->deltaW_[i]);
-//			}
-//			printf("]\n");
-//
-//			printf("W_gpu = [");
-//			for (int i = 0; i < this->W_.size(); i++) {
-//				printf("%f, ", this->W_[i]);
-//			}
-//			printf("]\n");
-//
-//			printf("b_gpu = [ ");
-//			for (int i = 0; i < this->b_.size(); i++) {
-//				printf("%f, ", this->b_[i]);
-//			}
-//			printf("]\n");
-////			exit(-1);
+//	for (size_t out = 0; out < out_depth_; out++) {
+//		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
+//	}
 //}
+
 
 /*
  for the activation sigmod,
@@ -217,3 +178,43 @@ FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
 
 }
 
+
+//void FullyConnectedLayer::back_prop() {
+//	float *input_ = this->input_.data();
+//	float *g_ = this->g_.data();
+//	float *g_next = this->next->g_.data();
+//	int g_next_size = this->next->g_.size();
+//	float *deltaW_ = this->deltaW_.data();
+//	float *W_ = this->W_.data();
+//	float *b_ = this->b_.data();
+//	float *r_output = this->v_output.data();
+//	float alpha_ = this->alpha_;
+//	float lambda_ = this->lambda_;
+//	int in_depth_ = this->in_depth_;
+//	int out_depth_ = this->out_depth_;
+//
+//	call_backpropagation_fully_connected(input_, g_, g_next,
+//			deltaW_, W_, b_, r_output,
+//			alpha_, lambda_, in_depth_, out_depth_, g_next_size);
+//
+//			printf("---------\n");
+//
+//			printf("deltaW_gpu = [");
+//			for (int i = 0; i < this->deltaW_.size(); i++) {
+//				printf("%f, ", this->deltaW_[i]);
+//			}
+//			printf("]\n");
+//
+//			printf("W_gpu = [");
+//			for (int i = 0; i < this->W_.size(); i++) {
+//				printf("%f, ", this->W_[i]);
+//			}
+//			printf("]\n");
+//
+//			printf("b_gpu = [ ");
+//			for (int i = 0; i < this->b_.size(); i++) {
+//				printf("%f, ", this->b_[i]);
+//			}
+//			printf("]\n");
+////			exit(-1);
+//}

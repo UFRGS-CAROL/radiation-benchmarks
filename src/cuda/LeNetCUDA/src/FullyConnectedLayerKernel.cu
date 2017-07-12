@@ -56,13 +56,16 @@ __global__ void forward_gpu_kernel(float *output_, float *input_, float *b_,
 		return;
 
 //	for (size_t out = 0; out < out_depth_; out++) {
-	int v_out_index = out * in_depth_;
-
-	get_W_gpu(out, in_depth_, W_, &v_output[v_out_index]);
-	float dot_result = dot_gpu_fully(input_, input_size, &v_output[v_out_index]);
+//	int v_out_index = out * in_depth_;
+//	get_W_gpu(out, in_depth_, W_, &v_output[v_out_index]);
+	float *v = (float*)malloc(sizeof(float)*in_depth_);
+	get_W_gpu(out, in_depth_, W_, v);
+//	float dot_result = dot_gpu_fully(input_, input_size, &v_output[v_out_index]);
+	float dot_result = dot_gpu_fully(input_, input_size, v);
 
 	output_[out] = sigmod_gpu_fully(dot_result + b_[out]);
 //	}
+	free(v);
 }
 
 void call_forward_fully_connected(float *output_, float *input_, float *b_,
