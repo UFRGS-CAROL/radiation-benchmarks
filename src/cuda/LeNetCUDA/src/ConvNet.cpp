@@ -101,7 +101,6 @@ void ConvNet::add_layer(Layer* layer) {
 size_t ConvNet::max_iter(DeviceVector<float> v) {
 	size_t i = 0;
 	float_t max = v[0];
-	std::cout << "v size " << v.size() << "\n";
 	for (size_t j = 1; j < v.size(); j++) {
 		if (v[j] > max) {
 			max = v[j];
