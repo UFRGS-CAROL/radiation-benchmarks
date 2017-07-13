@@ -32,6 +32,28 @@ size_t Layer::fan_out() {
 	return out_width_ * out_height_ * out_height_;
 }
 
+int Layer::getWeightsSum(){
+	//funcao para a regularizacao L1
+	int sum = 0;
+	int weightsSize = this->W_.size();
+	for(int i = 0; i < weightsSize; i++)
+	{
+		sum += abs(this->W_[i]);
+	}
+	return sum;
+}
+
+int Layer::getSquaredWeightsSum(){
+	//funcao para a regularizacao L2
+	int sum = 0;
+	int weightsSize = this->W_.size();
+	for(int i = 0; i < weightsSize; i++)
+	{
+		sum += this->W_[i] * this->W_[i];
+	}
+	return sum;
+}
+
 /**
  * 	size_t in_width_;
  size_t in_height_;

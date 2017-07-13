@@ -83,6 +83,9 @@ public:
 
 	size_t fan_out();
 
+	int getWeightsSum();
+	int getSquaredWeightsSum();
+
 	size_t in_width_;
 	size_t in_height_;
 	size_t in_depth_;
