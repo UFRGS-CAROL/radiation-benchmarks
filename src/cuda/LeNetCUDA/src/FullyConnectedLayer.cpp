@@ -91,8 +91,12 @@ vec_host FullyConnectedLayer::get_W(size_t index) {
 
 void FullyConnectedLayer::forward() {
 	for (size_t out = 0; out < out_depth_; out++) {
-		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
+		vec_host temp;
+		output_[out] = sigmod(dot(input_, temp = get_W(out)) + b_[out]);
+		for(int i = 0; i < temp.size(); i++) printf("%f, ", temp[i]);
+
 	}
+	printf("\n");
 }
 
 

@@ -214,10 +214,10 @@ float_t ConvNet::train_once() {
 			debugIter++;
 		}
 		err += layers.back()->err;
+
 		/*
 		 back propgation
 		 */
-//		if(test++ > 2) break;
 		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
 			(*i)->back_prop();
 
