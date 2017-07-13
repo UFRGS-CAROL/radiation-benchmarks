@@ -12,6 +12,8 @@
 #include "FullyConnectedLayerKernel.h"
 
 void FullyConnectedLayer::forward() {
+	this->v_output = this->W_;
+
 	float *output_ = this->output_.data();
 	float *input_ = this->input_.data();
 	float *b_ = this->b_.data();
@@ -21,7 +23,7 @@ void FullyConnectedLayer::forward() {
 	int in_depth_ = this->in_depth_;
 	int input_size = this->input_.size();
 
-	call_forward_fully_connected(output_, input_, b_, W_, v_output, out_depth_, in_depth_,input_size);
+	call_forward_fully_connected(output_, input_, b_, W_, out_depth_, in_depth_,input_size);
 
 }
 
@@ -32,14 +34,6 @@ DeviceVector<float>  FullyConnectedLayer::get_W(size_t index) {
 	}
 	return v;
 }
-
-//void FullyConnectedLayer::forward() {
-//
-//	for (size_t out = 0; out < out_depth_; out++) {
-//		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
-//	}
-//}
-
 
 /*
  for the activation sigmod,
@@ -64,7 +58,7 @@ void FullyConnectedLayer::init_weight() {
 	this->W_ = temp_W_;
 	this->b_ = temp_b_;
 
-	this->v_output.resize(this->in_depth_ * this->out_depth_);
+//	this->v_output.resize(this->in_depth_ * this->out_depth_);
 }
 
 DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
@@ -91,12 +85,8 @@ vec_host FullyConnectedLayer::get_W(size_t index) {
 
 void FullyConnectedLayer::forward() {
 	for (size_t out = 0; out < out_depth_; out++) {
-		vec_host temp;
-		output_[out] = sigmod(dot(input_, temp = get_W(out)) + b_[out]);
-		for(int i = 0; i < temp.size(); i++) printf("%f, ", temp[i]);
-
+		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
 	}
-	printf("\n");
 }
 
 
@@ -149,6 +139,7 @@ void FullyConnectedLayer::back_prop() {
 			* input_[in] * this->next->g_[out]/*err terms*/
 			/*+ lambda_ weight decay*/
 			+ lambda_ * deltaW_[out * in_depth_ + in];
+
 			W_[out * in_depth_ + in] += delta;
 			deltaW_[out * in_depth_ + in] = delta;
 		}

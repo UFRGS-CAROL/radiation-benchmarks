@@ -35,6 +35,8 @@ public:
 	//this vector will be used only at
 	//forward gpu
 	DeviceVector<float> v_output;
+#else
+	vec_host  v_output;
 #endif
 
 private:

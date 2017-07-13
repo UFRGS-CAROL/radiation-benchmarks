@@ -18,12 +18,13 @@ void OutputLayer::forward() {
 	float *err = &this->err;
 	float *exp_y_vec = this->exp_y_vec.data();
 	float *input_ = this->input_.data();
+	float *output_ = this->output_.data();
 	float *reduce_output = this->reduce_output.data();
 	int in_depth_ = this->in_depth_;
 	int exp_y = this->exp_y;
 
-	call_forward_output_layer(err, exp_y_vec, input_, reduce_output, in_depth_, exp_y);
-	this->output_ = this->input_;
+	call_forward_output_layer(err, exp_y_vec, input_, reduce_output, output_, in_depth_, exp_y);
+//	this->output_ = this->input_;
 }
 
 //void OutputLayer::back_prop() {
@@ -43,6 +44,7 @@ void OutputLayer::init_weight() {
 	this->exp_y_vec.resize(this->in_depth_);
 	this->g_.resize(this->in_depth_);
 	this->input_.resize(this->in_depth_);
+	this->output_.resize(this->in_depth_);
 }
 
 #else

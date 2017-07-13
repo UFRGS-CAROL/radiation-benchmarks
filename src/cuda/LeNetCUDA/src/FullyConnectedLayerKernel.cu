@@ -8,6 +8,14 @@
 #include "FullyConnectedLayerKernel.h"
 #include "cudaUtil.h"
 
+//__device__ inline float *get_W_gpu(int index, int in_depth_, float *W_) {
+//#pragma unroll
+//	for (int i = 0; i < in_depth_; i++) {
+//		v_output[i] = W_[index * in_depth_ + i];
+//	}
+//	return v_output;
+//}
+
 __device__ float sigmod_gpu_fully(float in) {
 	return 1.0 / (1.0 + exp(-in));
 }
@@ -16,75 +24,39 @@ __device__ float df_sigmod_gpu_fully(float f_x) {
 	return f_x * (1.0 - f_x);
 }
 
-
 __device__ float dot_gpu_fully(float *x, int x_size, float *w) {
 //	assert(x.size() == w.size());
-	float sum = 0;
-//#pragma unroll
+	double sum = 0;
+#pragma unroll
 	for (int i = 0; i < x_size; i++) {
 		sum += x[i] * w[i];
 	}
 	return sum;
 }
 
-
-/*
- * original function
- vec_host get_W(size_t index) {
- vec_host v;
- for (int i = 0; i < in_depth_; i++) {
- v.push_back(W_[index * in_depth_ + i]);
- }
- return v;
- }
- */
-__device__ inline float *get_W_gpu(int index, int in_depth_, float *W_,
-		float *v_output) {
-#pragma unroll
-	for (int i = 0; i < in_depth_; i++) {
-		v_output[i] = W_[index * in_depth_ + i];
-	}
-	return v_output;
-}
-
 __global__ void forward_gpu_kernel(float *output_, float *input_, float *b_,
-		float *W_, float **v_output, int out_depth_, int in_depth_,
-		int input_size) {
+		float *W_, int out_depth_, int in_depth_, int input_size) {
 
 	int out = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (out > out_depth_)
 		return;
 
-//	original for was like this for (size_t out = 0; out < out_depth_; out++)
-	float *v = get_W_gpu(out, in_depth_, W_, v_output[out * in_depth_]);
-	float dot_result = dot_gpu_fully(input_, input_size, v);
+//	 original for was like this for (size_t out = 0; out < out_depth_; out++)
+//	 get_W_gpu(out, in_depth_, W_, &v_output[out * in_depth_]);
+	float *v = &W_[out * in_depth_];
+	float dot = dot_gpu_fully(input_, input_size, v);
 
-	output_[out] = sigmod_gpu_fully(dot_result + b_[out]);
-
+	output_[out] = sigmod_gpu_fully(dot + b_[out]);
 }
 
 void call_forward_fully_connected(float *output_, float *input_, float *b_,
-		float *W_, float *v_output, int out_depth_, int in_depth_,
-		int input_size) {
+		float *W_, int out_depth_, int in_depth_, int input_size) {
 
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, out_depth_);
-	float **temp;
-	CudaSafeCall(cudaMallocManaged(temp, out_depth_ * in_depth_ * sizeof(float)));
-
-	forward_gpu_kernel<<<blocks, threads>>>(output_, input_, b_, W_, temp,
-			out_depth_, in_depth_, input_size);
-
-
+	forward_gpu_kernel<<<blocks, threads>>>(output_, input_, b_, W_, out_depth_, in_depth_, input_size);
 	CudaCheckError();
-
-	for(int i = 0; i < out_depth_ * in_depth_; i++) printf("%f, ", *temp[i]);
-	printf("\n");
-
-	CudaSafeCall(cudaFree(temp));
-	CudaCheckError();
-
 }
 
 __device__ void get_W_step(float *r_output, float *W_, int in, int out_depth_,
@@ -143,22 +115,20 @@ __global__ void backpropagation_gpu_update_weights(float *input_, float *g_next,
 //	}
 }
 
-void call_backpropagation_fully_connected(float *input_, float *g_, float *g_next,
-		float *deltaW_, float *W_, float *b_, float *r_output,
-		float alpha_, float lambda_, int in_depth_, int out_depth_, int g_next_size) {
+void call_backpropagation_fully_connected(float *input_, float *g_,
+		float *g_next, float *deltaW_, float *W_, float *b_, float *r_output,
+		float alpha_, float lambda_, int in_depth_, int out_depth_,
+		int g_next_size) {
 
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, in_depth_);
 	backpropagation_gpu_err_terms<<<blocks, threads>>>(g_, g_next, input_,
 			r_output, W_, out_depth_, in_depth_, g_next_size);
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+	CudaCheckError();
 
 	cuda_gridsize(&threads, &blocks, out_depth_);
 
 	backpropagation_gpu_update_weights<<<blocks, threads>>>(input_, g_next,
-			deltaW_, W_, b_, alpha_, lambda_,
-			in_depth_, out_depth_);
-	ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+			deltaW_, W_, b_, alpha_, lambda_, in_depth_, out_depth_);
+	CudaCheckError();
 }

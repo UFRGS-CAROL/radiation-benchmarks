@@ -8,7 +8,7 @@
 #ifndef CONVOLUTIONALLAYER_CUH_
 #define CONVOLUTIONALLAYER_CUH_
 
-
+#define CONV_KERNEL_SIZE 25
 
 void call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
 		float* output_buf, int in_width, int in_height, int in_depth,

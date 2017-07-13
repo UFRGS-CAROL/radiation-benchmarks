@@ -10,8 +10,7 @@
 
 
 void call_forward_fully_connected(float *output_, float *input_, float *b_,
-		float *W_, float *v_output, int out_depth_, int in_depth_,
-		int input_size);
+		float *W_, int out_depth_, int in_depth_, int input_size);
 
 
 void call_backpropagation_fully_connected(float *input_, float *g_, float *g_next,

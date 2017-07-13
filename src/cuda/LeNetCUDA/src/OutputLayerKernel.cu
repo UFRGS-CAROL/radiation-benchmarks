@@ -12,17 +12,36 @@ __device__ float df_sigmod_gpu_output(float f_x) {
 	return f_x * (1.0 - f_x);
 }
 
-
 __global__ void forward_output_layer_kernel(float *exp_y_vec, float *input_,
-		float *output, int in_depth_, int exp_y) {
+		float *reduce_output, float *output_, int in_depth_, int exp_y) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if (i > in_depth_)
 		return;
 
 //	for (size_t i = 0; i < in_depth_; i++) {
-	output[i] = 0.5 * (exp_y_vec[i] - input_[i]) * (exp_y_vec[i] - input_[i]);
+	reduce_output[i] = 0.5 * (exp_y_vec[i] - input_[i])
+			* (exp_y_vec[i] - input_[i]);
 //	}
+	//copy that was done in the host before
+	output_[i] = input_[i];
+}
 
+void call_forward_output_layer(float *err, float *exp_y_vec, float *input_,
+		float *reduce_output, float *output_, int in_depth_, int exp_y) {
+	//hahahah nvidia managed
+	exp_y_vec[exp_y] = 1;
+
+	dim3 blocks, threads;
+	cuda_gridsize(&threads, &blocks, in_depth_);
+
+	forward_output_layer_kernel<<<blocks, threads>>>(exp_y_vec, input_,
+			reduce_output, output_, in_depth_, exp_y);
+
+	CudaCheckError();
+	*err = 0;
+	for (int i = 0; i < in_depth_; i++) {
+		*err += reduce_output[i];
+	}
 }
 
 __global__ void backprop_output_layer_kernel(float *exp_y_vec, float *input_,
@@ -38,38 +57,11 @@ __global__ void backprop_output_layer_kernel(float *exp_y_vec, float *input_,
 //	}
 }
 
-
-
-void call_forward_output_layer(float *err, float *exp_y_vec, float *input_, float *reduce_output, int in_depth_, int exp_y) {
-	//hahahah nvidia managed
-	exp_y_vec[exp_y] = 1;
-//	cudaError_t ret = cudaDeviceSynchronize();
-//	CUDA_CHECK_RETURN(ret);
-
-	dim3 blocks, threads;
-	cuda_gridsize(&threads, &blocks, in_depth_);
-
-	forward_output_layer_kernel<<<blocks, threads>>>(exp_y_vec, input_,
-			reduce_output, in_depth_, exp_y);
-//	ret = cudaDeviceSynchronize();
-//	CUDA_CHECK_RETURN(ret);
-	CudaCheckError();
-
-	*err = 0;
-	//Man it is NVIDIA FUCKING MANAGED MEMORY, I Love IT
-	for(int i = 0; i < in_depth_; i++){
-		*err += reduce_output[i];
-	}
-//	ret = cudaDeviceSynchronize();
-//	CUDA_CHECK_RETURN(ret);
-}
-
-
 void call_backpropagation_output_layer(float *exp_y_vec, float *input_,
 		float *g_, int in_depth_) {
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, in_depth_);
-	backprop_output_layer_kernel<<<blocks, threads>>>(exp_y_vec, input_, g_, in_depth_);
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+	backprop_output_layer_kernel<<<blocks, threads>>>(exp_y_vec, input_, g_,
+			in_depth_);
+	CudaCheckError();
 }

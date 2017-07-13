@@ -89,8 +89,7 @@ void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
 
 	forward_maxpool_layer_kernel<<<blocks, threads>>>(input, max_loc, output,
 			out_width, out_height, out_depth, in_height, in_width);
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+	CudaCheckError();
 
 }
 
@@ -111,7 +110,6 @@ void call_backpropagation_maxpool(Pair *max_loc, float *g_, float *g_next, size_
 	cuda_gridsize(&threads, &blocks, max_size);
 
 	backpropagation_maxpool<<<blocks, threads>>>(max_loc, g_, g_next, max_size);
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+	CudaCheckError();
 }
 

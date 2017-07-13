@@ -39,8 +39,8 @@ __device__ inline int get_global_id(int index) {
 __device__ inline float conv(int kernel_size, unsigned int in, int in_width,
 		int in_height, int h_index, int w_index, int out_depth, int size,
 		int out, float* input_buf, float* weight_buf) {
-	float weight_buf_sub[25]; // Set by brute force, NEED to be changed
-	float input_buf_sub[25]; // Set by brute force, NEED to be changed
+	float weight_buf_sub[CONV_KERNEL_SIZE]; // Set by brute force, NEED to be changed
+	float input_buf_sub[CONV_KERNEL_SIZE]; // Set by brute force, NEED to be changed
 	float sum = 0;
 	// load input and weight for this sub area
 	// Aqui ele faz o que a funcao conv faz
@@ -100,9 +100,7 @@ void call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
 		float* output_buf, int in_width, int in_height, int in_depth,
 		int out_width, int out_height, int out_depth, int kernel_size) {
 
-	//PEDRO if these are the right dimentions
-	dim3 blocks;
-	dim3 threads;
+	dim3 blocks, threads;
 
 //	cuda_gridsize(&threads, &blocks, out_width, out_height, out_depth);
 	cuda_gridsize(&threads, &blocks, out_width * out_depth, out_height);
@@ -111,9 +109,7 @@ void call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
 	forward_parallel<<<blocks, threads>>>(input_buf, weight_buf, b_buf,
 			output_buf, in_width, in_height, in_depth, out_width, out_height,
 			out_depth, kernel_size);
-
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+	CudaCheckError();
 
 }
 
@@ -267,8 +263,7 @@ void call_backpropagation_parallel(float *W_, //weights
 	backpropagation_update_err<<<blocks, threads>>>(W_, g_, g_next, input_,
 			out_depth, in_depth_, out_width, out_height_, kernel_size_,
 			in_width_, in_height_);
-	cudaError_t ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
+	CudaCheckError();
 
 //	for (size_t out = 0; out < out_depth_; out++) {
 //		for (size_t in = 0; in < in_depth_; in++) {
@@ -278,15 +273,6 @@ void call_backpropagation_parallel(float *W_, //weights
 	backpropagation_update_weights<<<blocks, threads>>>(W_, b_, g_next, input_,
 			deltaW, alpha, lambda, out_height_, kernel_size_, in_width_,
 			in_height_, out_width, out_depth, in_depth_);
-	ret = cudaDeviceSynchronize();
-	CUDA_CHECK_RETURN(ret);
-
-//	if (out_width > 1 || out_height_ > 1) {
-//		printf("inside backprop conv: %d %d %d\n", out_depth, in_depth_,
-//				out_width);
-//		printf("inside backprop conv: %d %d %d\n", out_depth, in_depth_,
-//				out_height_);
-//	}
-
+	CudaCheckError();
 }
 
