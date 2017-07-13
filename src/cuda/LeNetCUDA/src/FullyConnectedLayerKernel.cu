@@ -20,7 +20,7 @@ __device__ float df_sigmod_gpu_fully(float f_x) {
 __device__ float dot_gpu_fully(float *x, int x_size, float *w) {
 //	assert(x.size() == w.size());
 	float sum = 0;
-#pragma unroll
+//#pragma unroll
 	for (int i = 0; i < x_size; i++) {
 		sum += x[i] * w[i];
 	}
@@ -38,12 +38,13 @@ __device__ float dot_gpu_fully(float *x, int x_size, float *w) {
  return v;
  }
  */
-__device__ void get_W_gpu(int index, int in_depth_, float *W_,
+__device__ inline float *get_W_gpu(int index, int in_depth_, float *W_,
 		float *v_output) {
 #pragma unroll
 	for (int i = 0; i < in_depth_; i++) {
 		v_output[i] = W_[index * in_depth_ + i];
 	}
+	return v_output;
 }
 
 __global__ void forward_gpu_kernel(float *output_, float *input_, float *b_,
@@ -55,17 +56,12 @@ __global__ void forward_gpu_kernel(float *output_, float *input_, float *b_,
 	if (out > out_depth_)
 		return;
 
-//	for (size_t out = 0; out < out_depth_; out++) {
-//	int v_out_index = out * in_depth_;
-//	get_W_gpu(out, in_depth_, W_, &v_output[v_out_index]);
-	float *v = (float*)malloc(sizeof(float)*in_depth_);
-	get_W_gpu(out, in_depth_, W_, v);
-//	float dot_result = dot_gpu_fully(input_, input_size, &v_output[v_out_index]);
+//	original for was like this for (size_t out = 0; out < out_depth_; out++)
+	float *v = get_W_gpu(out, in_depth_, W_, &v_output[out * in_depth_]);
 	float dot_result = dot_gpu_fully(input_, input_size, v);
 
 	output_[out] = sigmod_gpu_fully(dot_result + b_[out]);
-//	}
-	free(v);
+
 }
 
 void call_forward_fully_connected(float *output_, float *input_, float *b_,
@@ -77,10 +73,8 @@ void call_forward_fully_connected(float *output_, float *input_, float *b_,
 
 	forward_gpu_kernel<<<blocks, threads>>>(output_, input_, b_, W_, v_output,
 			out_depth_, in_depth_, input_size);
-//	cudaError_t ret = cudaDeviceSynchronize();
-//	CUDA_CHECK_RETURN(ret);
-	CudaCheckError();
 
+	CudaCheckError();
 }
 
 __device__ void get_W_step(float *r_output, float *W_, int in, int out_depth_,

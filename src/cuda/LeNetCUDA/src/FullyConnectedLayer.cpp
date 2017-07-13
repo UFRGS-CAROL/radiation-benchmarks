@@ -80,9 +80,9 @@ DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
 #else
 
 vec_host FullyConnectedLayer::get_W(size_t index) {
-	vec_host v;
+	vec_host v(in_depth_);
 	for (int i = 0; i < in_depth_; i++) {
-		v.push_back(W_[index * in_depth_ + i]);
+		v[i] = (W_[index * in_depth_ + i]);
 	}
 	return v;
 }
@@ -90,10 +90,8 @@ vec_host FullyConnectedLayer::get_W(size_t index) {
 
 
 void FullyConnectedLayer::forward() {
-
 	for (size_t out = 0; out < out_depth_; out++) {
-		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
-
+		output_[out] = dot(input_, get_W(out)); //sigmod(dot(input_, get_W(out)) + b_[out]);
 	}
 }
 
