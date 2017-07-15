@@ -99,3 +99,43 @@ void OutputLayer::load_layer(FILE *in) {
 	this->load_base_layer(in);
 }
 
+void OutputLayer::back_prop_L1() {
+	/* compute err terms of output layers
+		using L1 regularization */
+	if(g_.size() != in_depth_){
+		g_.clear();
+		g_.resize(in_depth_);
+		printf("passou no if do bakc\n");
+	}
+
+	for (size_t i = 0; i < in_depth_; i++) {
+		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
+					+ this->lenetWeighsSum; // L1 regularization
+	}
+}
+
+void OutputLayer::back_prop_L2() {
+	/* compute err terms of output layers
+		using L2 regularization */
+	if(g_.size() != in_depth_){
+		g_.clear();
+		g_.resize(in_depth_);
+		printf("passou no if do bakc\n");
+	}
+
+	for (size_t i = 0; i < in_depth_; i++) {
+		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
+					+ this->lenetSquaredWeighsSum; // L2 regularization
+	}
+}
+
+void OutputLayer::set_sum_LeNet_weights(int sum_Lenet_weights)
+{
+	this->lenetWeighsSum = sum_Lenet_weights;
+}
+
+void OutputLayer::set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights)
+{
+	this->lenetSquaredWeighsSum = sum_Lenet_squared_weights;
+}
+

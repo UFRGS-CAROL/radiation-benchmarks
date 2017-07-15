@@ -237,3 +237,21 @@ void ConvNet::save_weights(std::string path) {
 	}
 
 }
+
+int ConvNet::getSquaredSumLeNetWeights()
+{
+	int sum = 0;
+	for (auto layer : layers) {
+		sum += layer->getSquaredWeightsSum();
+	}
+	return sum;
+}
+
+int ConvNet::getSumLeNetWeights()
+{
+	int sum = 0;
+	for (auto layer : layers) {
+		sum += layer->getWeightsSum();
+	}
+	return sum;
+}

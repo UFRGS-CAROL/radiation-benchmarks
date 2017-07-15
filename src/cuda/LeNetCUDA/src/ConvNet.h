@@ -54,6 +54,9 @@ private:
 
 	float_t train_once();
 
+	int getSumLeNetWeights();
+	int getSquaredSumLeNetWeights();
+
 	std::vector<Layer*> layers;
 
 	size_t train_size_;

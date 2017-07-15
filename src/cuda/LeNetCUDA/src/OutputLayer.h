@@ -26,11 +26,19 @@ public:
 	void save_layer(FILE *of);
 	void load_layer(FILE *in);
 
+	void back_prop_L1();
+	void back_prop_L2();
+
+	void set_sum_LeNet_weights(int sum_Lenet_weights);
+	void set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights);
+
 #ifdef GPU
 	DeviceVector<float> reduce_output;
 #endif
 
 private:
+	int lenetWeighsSum;
+	int lenetSquaredWeighsSum;
 
 };
 
