@@ -13,20 +13,6 @@
 
 
 
-//void debug_layers(Layer *layer, char *type, int t){
-//	char temp[200];
-//
-//#ifdef GPU
-//	sprintf(temp, "layer_%d_gpu_%s.lay", t++, type);
-//#else
-//	sprintf(temp, "layer_%d_cpu_%s.lay", t++, type);
-//#endif
-//	FILE *in = fopen(temp, "wb");
-//	layer->save_layer(in);
-//	fclose(in);
-//
-//}
-
 void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 
 #ifdef GPU
@@ -86,9 +72,10 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size) {
 			<< this->mark << std::endl;
 }
 
-//void ConvNet::test(vec2d_t test_x, vec_t test_y, size_t test_size) {
-//	test(test_x, test_y, test_size, 1);
-//}
+
+std::list<std::pair<size_t, bool>> ConvNet::get_predicted_output(){
+	return this->saved_output;
+}
 
 void ConvNet::add_layer(Layer* layer) {
 	if (!layers.empty())
@@ -150,7 +137,13 @@ bool ConvNet::test_once(int test_x_index) {
 			layer->next->input_ = layer->output_;
 		}
 	}
-	return (int) test_y_[test_x_index] == (int) max_iter(layers.back()->output_);
+
+	int predicted =(int) max_iter(layers.back()->output_);
+	bool is_right = test_y_[test_x_index] == predicted;
+
+	std::pair<size_t, bool> p1(predicted, is_right);
+	this->saved_output.push_back(p1);
+	return (int) is_right;
 }
 
 

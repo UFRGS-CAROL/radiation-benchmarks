@@ -36,6 +36,7 @@ endif
 ifeq ($(LOGS), 1)
 LOGHELPER_INC=-I../../include/
 LOGHELPER_LIB=-I../../include/
+CFLAGS+= -lLogHelperCuda
 endif
 
 ifeq ($(GPU), 1)
@@ -82,6 +83,10 @@ train:
 
 test:
 	./$(EXEC) classify t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights
+
+
+generate:
+	./$(EXEC) gold_gen t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10
 
 obj:
 	mkdir -p obj

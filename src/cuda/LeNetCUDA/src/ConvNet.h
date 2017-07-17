@@ -8,6 +8,9 @@
 #ifndef CONVNET_H_
 #define CONVNET_H_
 
+//for test radiation
+#include <list>
+
 #include "Util.h"
 #include "Layer.h"
 #include "ConvolutionalLayer.h"
@@ -28,6 +31,8 @@ public:
 	void train(vec2d_t train_x, vec_host train_y, size_t train_size);
 //	void test(vec2d_t test_x, vec_t test_y, size_t test_size, int batch_size);
 	void test(vec2d_t test_x, vec_host test_y, size_t test_size);
+
+	std::list<std::pair<size_t, bool>> get_predicted_output();
 
 	void add_layer(Layer* layer);
 	void load_weights(std::string path);
@@ -67,6 +72,9 @@ private:
 	vec2d_t test_x_;
 	vec_host test_y_;
 	Timer mark;
+
+	//this will save all predicted results
+	std::list<std::pair<size_t, bool>> saved_output;
 
 };
 

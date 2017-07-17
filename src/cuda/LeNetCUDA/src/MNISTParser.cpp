@@ -29,6 +29,10 @@ std::string MNISTParser::get_test_img_fname() {
 	return this->test_img_fname;
 }
 
+std::string MNISTParser::get_test_lbl_fname() {
+	return this->test_lbl_fname;
+}
+
 //std::vector<Sample*> MNISTParser::load_testing() {
 void MNISTParser::load_testing() {
 	this->test_sample = load(test_img_fname, test_lbl_fname);
