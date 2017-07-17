@@ -26,12 +26,23 @@
 #define M 10 // training sample counts in each iteration
 #define END_CONDITION 1e-3
 
+#define SAVE_LAYER_DATA "/var/radiation-benchmarks/data"
+
+
+
 class ConvNet {
 public:
 	void train(vec2d_t train_x, vec_host train_y, size_t train_size);
 	void train(vec2d_t train_x, vec_host train_y);
-//	void test(vec2d_t test_x, vec_t test_y, size_t test_size, int batch_size);
+
+	void test(vec2d_t test_x, vec_host test_y,
+			std::vector<std::pair<size_t, bool>> gold_list, //gold for radiation test
+			std::vector<std::vector<Layer*>> gold_layers, //gold layers
+			size_t iterations, bool save_layer);
+
 	void test(vec2d_t test_x, vec_host test_y, size_t test_size);
+
+
 
 	std::list<std::pair<size_t, bool>> get_predicted_output();
 
@@ -52,6 +63,8 @@ private:
 	bool test_once_random();
 
 	bool test_once(int test_x_index);
+
+	std::pair<size_t, bool> test_once_pair(int test_x_index);
 
 //	int test_once_random_batch(int batch_size);
 //	int test_once_batch(int test_x_index, int batch_size);

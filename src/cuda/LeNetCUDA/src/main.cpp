@@ -23,7 +23,8 @@ void create_lenet(ConvNet *net) {
 
 void classify_radiation_test(MNISTParser& m, string weigths,
 		string gold_input) {
-//	start_count_app(gold_input.c_str(), "cudaDarknet")
+	//start log file
+	start_count_app((char*)(gold_input.c_str()), "cudaDarknet");
 	m.load_testing();
 
 	vec2d_t test_x;
@@ -41,6 +42,9 @@ void classify_radiation_test(MNISTParser& m, string weigths,
 	int test_sample_count = 5;
 	printf("Testing with %d samples:\n", test_sample_count);
 	n.test(test_x, test_y, test_sample_count);
+
+	//start log file
+	end_iteration_app();
 }
 
 void classify_gold_generate(MNISTParser& m, string weigths, string gold_output,

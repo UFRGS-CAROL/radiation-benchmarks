@@ -11,6 +11,8 @@
 #include "cudaUtil.h"
 #endif
 
+#include "LogsProcessing.h"
+
 void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 
 #ifdef GPU
@@ -73,7 +75,6 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y) {
 
 		}
 
-
 		/*
 		 back propgation
 		 */
@@ -117,6 +118,56 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size) {
 	std::cout << "bang/test_size_: " << (float) bang / test_size_ << std::endl;
 	std::cout << "Time spent testing " << this->test_size_ << " samples: "
 			<< this->mark << std::endl;
+}
+
+void ConvNet::test(vec2d_t test_x, vec_host test_y,
+		std::vector<std::pair<size_t, bool>> gold_list, //gold for radiation test
+		std::vector<std::vector<Layer*>> gold_layers, //gold layers
+		size_t iterations, bool save_layer) {
+	test_x_ = test_x;
+	test_y_ = test_y;
+	test_size_ = test_x_.size();
+
+	Timer compare_timer;
+
+#ifdef GPU
+	std::cout << "Testing with GPU " << std::endl;
+#else
+	std::cout << "Testing with CPU " << std::endl;
+#endif // GPU
+
+	for (auto i = 0; i < iterations; i++) {
+		this->mark.start();
+		for (auto iter = 0; iter < test_size_; iter++) {
+			auto gold_out = gold_list[i];
+
+			//test under radiation
+			start_iteration_app();
+			auto result = test_once_pair(iter);
+			end_iteration_app();
+
+			//compare output
+			compare_timer.start();
+			auto cmp = compare_output(result, gold_out);
+
+			//log the result
+			if (cmp) {
+				//err_count++
+				inc_count_app();
+
+				//layer comparison
+				if (save_layer) {
+					compare_and_save_layers(gold_layers[i], this->layers);
+				}
+			}
+			compare_timer.stop();
+			//-------------
+		}
+		this->mark.stop();
+		std::cout << "Iteration: " << i << ". Time spent testing "
+				<< this->test_size_ << " samples: " << this->mark << std::endl;
+	}
+
 }
 
 std::list<std::pair<size_t, bool>> ConvNet::get_predicted_output() {
@@ -190,6 +241,23 @@ bool ConvNet::test_once(int test_x_index) {
 	std::pair<size_t, bool> p1(predicted, is_right);
 	this->saved_output.push_back(p1);
 	return (int) is_right;
+}
+
+std::pair<size_t, bool> ConvNet::test_once_pair(int test_x_index) {
+	layers[0]->input_ = test_x_[test_x_index];
+	for (auto layer : layers) {
+		layer->forward();
+		if (layer->next != nullptr) {
+			layer->next->input_ = layer->output_;
+		}
+	}
+
+	int predicted = (int) max_iter(layers.back()->output_);
+	bool is_right = test_y_[test_x_index] == predicted;
+
+	std::pair<size_t, bool> p1(predicted, is_right);
+
+	return p1;
 }
 
 float_t ConvNet::train_once() {
