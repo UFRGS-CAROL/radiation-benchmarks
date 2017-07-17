@@ -120,7 +120,7 @@ void train(MNISTParser& m, string weigths) {
 	}
 	ConvNet n;
 	create_lenet(&n);
-	n.train(test_x, test_y, 10000);
+	n.train(test_x, test_y);
 	n.save_weights(weigths);
 }
 
