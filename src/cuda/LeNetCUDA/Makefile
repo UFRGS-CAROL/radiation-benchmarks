@@ -86,7 +86,10 @@ test:
 
 
 generate:
-	./$(EXEC) gold_gen t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10
+	./$(EXEC) gold_gen t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10 1
+	
+test_rad:
+	./$(EXEC) rad_test t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10 0
 
 
 download_input:

@@ -83,7 +83,7 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y) {
 		}
 
 		err = layers.back()->err;
-		std::cout << " training cost: " << err << std::endl;
+//		std::cout << " training cost: " << err << std::endl;
 //		if(err < END_CONDITION){ // if the error is small enough
 //			std::cout << "Error small enough " << err << "\n";
 //			break;
@@ -93,7 +93,15 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y) {
 	std::cout << "Time spent on training " << this->mark << std::endl;
 }
 
-void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size) {
+/**
+ * General test case
+ * test_x is where the images are located
+ * test_y is the output
+ * test_size is how much images
+ *
+ */
+void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size,
+		std::string gold_layers_path, bool save_layer) {
 //	assert(batch_size > 0);
 //	assert(test_size % batch_size == 0);
 	test_x_ = test_x;
@@ -112,6 +120,10 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size) {
 		int result = 0;
 		result = test_once(iter) ? 1 : 0;
 		bang += result;
+		if(save_layer){
+			//if it is the first time I rewrite the file
+			this->save_weights(gold_layers_path, (iter) ? "ab" : "wb");
+		}
 		iter++;
 	}
 	this->mark.stop();
@@ -120,6 +132,12 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size) {
 			<< this->mark << std::endl;
 }
 
+/**
+ * Test case for radiation setup/fault injection
+ * test_x is where the images are located
+ * test_y is the output
+ * test_size is how much images
+ */
 void ConvNet::test(vec2d_t test_x, vec_host test_y,
 		std::vector<std::pair<size_t, bool>> gold_list, //gold for radiation test
 		std::vector<std::vector<Layer*>> gold_layers, //gold layers
@@ -330,8 +348,8 @@ void ConvNet::load_weights(std::string path) {
 	}
 }
 
-void ConvNet::save_weights(std::string path) {
-	FILE *fout = fopen(path.c_str(), "wb");
+void ConvNet::save_weights(std::string path, std::string file_mode) {
+	FILE *fout = fopen(path.c_str(), file_mode.c_str());
 //	std::ofstream fout(path, std::ios::out | std::ios::binary);
 	if (fout != NULL) {
 		for (auto i = layers.begin(); i != layers.end(); i++) {
@@ -343,6 +361,7 @@ void ConvNet::save_weights(std::string path) {
 	}
 
 }
+
 
 int ConvNet::getSquaredSumLeNetWeights() {
 	int sum = 0;

@@ -40,15 +40,15 @@ public:
 			std::vector<std::vector<Layer*>> gold_layers, //gold layers
 			size_t iterations, bool save_layer);
 
-	void test(vec2d_t test_x, vec_host test_y, size_t test_size);
-
+	void test(vec2d_t test_x, vec_host test_y, size_t test_size,
+			std::string gold_layers_path = "", bool save_layer = false);
 
 
 	std::list<std::pair<size_t, bool>> get_predicted_output();
 
 	void add_layer(Layer* layer);
 	void load_weights(std::string path);
-	void save_weights(std::string path);
+	void save_weights(std::string path, std::string file_mode = "wb");
 
 private:
 
