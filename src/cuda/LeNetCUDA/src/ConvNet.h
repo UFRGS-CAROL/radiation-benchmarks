@@ -38,7 +38,7 @@ public:
 	void test(vec2d_t test_x, vec_host test_y,
 			std::vector<std::pair<size_t, bool>> gold_list, //gold for radiation test
 			std::vector<std::vector<Layer*>> gold_layers, //gold layers
-			size_t iterations, bool save_layer);
+			size_t iterations, bool save_layer, int sample_count);
 
 	void test(vec2d_t test_x, vec_host test_y, size_t test_size,
 			std::string gold_layers_path = "", bool save_layer = false);
@@ -48,7 +48,10 @@ public:
 
 	void add_layer(Layer* layer);
 	void load_weights(std::string path);
+	void load_weights(FILE *in);
 	void save_weights(std::string path, std::string file_mode = "wb");
+
+	std::vector<Layer*> get_layers();
 
 private:
 

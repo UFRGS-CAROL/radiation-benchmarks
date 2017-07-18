@@ -21,32 +21,6 @@ void create_lenet(ConvNet *net) {
 	net->add_layer(new FullyConnectedLayer(100, 10));
 }
 
-void classify_radiation_test(MNISTParser& m, string weigths,
-		string gold_input) {
-	//start log file
-	start_count_app(const_cast<char*>(gold_input.c_str()), const_cast<char*>("cudaDarknet"));
-	m.load_testing();
-
-	vec2d_t test_x;
-	vec_host test_y;
-	for (size_t i = 0; i < 10000; i++) {
-		Sample *s = m.get_sample(i);
-		test_x.push_back(s->image);
-		test_y.push_back(s->label);
-	}
-	ConvNet n;
-	create_lenet(&n);
-	//need to load network configurations here
-	n.load_weights(weigths);
-
-	int test_sample_count = 5;
-	printf("Testing with %d samples:\n", test_sample_count);
-	n.test(test_x, test_y, test_sample_count);
-
-	//start log file
-	end_iteration_app();
-}
-
 void classify_gold_generate(MNISTParser& m, string weigths, string gold_output,
 		int test_sample_count, bool save_layers) {
 	m.load_testing();
@@ -73,14 +47,14 @@ void classify_gold_generate(MNISTParser& m, string weigths, string gold_output,
 		//write gold info
 
 		//test input
-		gold_output_file << m.get_test_img_fname() << ";"
-				<< m.get_test_lbl_fname() << ";";
+		gold_output_file << m.get_test_img_fname() << " "
+				<< m.get_test_lbl_fname() << " ";
 		//test size
-		gold_output_file << weigths << ";" << test_sample_count << "\n";
+		gold_output_file << weigths << " " << test_sample_count << "\n";
 
 		//write the output
 		for (std::pair<size_t, bool> p : output) {
-			gold_output_file << p.first << ";" << p.second << "\n";
+			gold_output_file << p.first << " " << p.second << "\n";
 		}
 
 		gold_output_file.close();
@@ -90,7 +64,9 @@ void classify_gold_generate(MNISTParser& m, string weigths, string gold_output,
 	}
 }
 
-void classify_test_rad(MNISTParser& m, string weigths, string gold_input, bool save_layers){
+void classify_test_rad(MNISTParser& m, string weigths, string gold_input, bool save_layers, int iterations){
+	//start log file
+	start_count_app(const_cast<char*>(gold_input.c_str()), const_cast<char*>("cudaLeNET"));
 	//-------------------------------------------
 	//Main network
 	//-------------------------------------------
@@ -112,29 +88,49 @@ void classify_test_rad(MNISTParser& m, string weigths, string gold_input, bool s
 	//-------------------------------------------
 	ifstream gold_input_file(gold_input);
 	vector<pair<size_t, bool>> gold_data;
-	vector<vector<Layer*>> gold_layers;
+	vector<vector<Layer*> > gold_layers;
 
 	string test_img_fname, test_lbl_fname, weigths_read;
 	int sample_count;
-//
-//	if (gold_input_file.is_open()){
-//		gold_input_file >> test_img_fname >> ";" >> test_lbl_fname >> ";" >> weigths_read >> ";" >> sample_count;
-//
-//		for(int i = 0; i < sample_count; i++){
-//			pair<size_t, bool> p;
-//			gold_input_file >> p.first >> ";" >> p.second;
-//			gold_data.push_back(p);
-//		}
-//
-//		gold_input_file.close()
-//	}else{
-//		error("ERROR: On opening " + gold_input + " file\n");
-//	}
-//
-//	if(save_layers){
-//		FILE *gold_layers_input_file = fopen(string(SAVE_LAYER_DATA) + "/gold_layers_lenet.layer", );
-//	}
 
+	if (gold_input_file.is_open()){
+		gold_input_file >> test_img_fname >> test_lbl_fname >> weigths_read >> sample_count;
+
+		for(int i = 0; i < sample_count; i++){
+			pair<size_t, bool> p;
+			gold_input_file >> p.first >> p.second;
+			gold_data.push_back(p);
+		}
+
+		gold_input_file.close();
+	}else{
+		error("ERROR: On opening " + gold_input + " file\n");
+	}
+
+	//load golds for layer comparison
+	if(save_layers){
+		FILE *gold_layers_input_file = fopen((string(SAVE_LAYER_DATA) + "/gold_layers_lenet.layer").c_str(), "rb");
+
+		for(int i = 0; i < sample_count; i++){
+			if(gold_layers_input_file == NULL){
+				error("ERROR: On reading layer gold\n");
+			}
+			ConvNet temp_gold;
+			create_lenet(&temp_gold);
+			temp_gold.load_weights(gold_layers_input_file);
+			gold_layers.push_back(temp_gold.get_layers());
+
+		}
+		fclose(gold_layers_input_file);
+	}
+	cout << "COmeçou a classificação \n";
+	//-------------------------------------------
+	//Make radiation test
+	//-------------------------------------------
+	n.test(test_x, test_y, gold_data, gold_layers, iterations, save_layers, sample_count);
+
+	//end log file
+	finish_count_app();
 }
 
 void classify(MNISTParser& m, string weigths) {
@@ -177,9 +173,10 @@ void train(MNISTParser& m, string weigths) {
 inline void usage(char **argv) {
 	cout << "usage: " << argv[0]
 			<< " <train\\classify\\gold_gen\\rad_test> <dataset> <labels> <weights>	"
-					"[gold input/output only for gold_gen and rad_test] "
-					"[sample_count only for gold_gen and rad_test] "
-					"[save layers only for gold_gen and rad_test]\n";
+					"[gold input/output] "
+					"[sample_count] "
+					"[save layers] "
+					"[iterations]\n";
 }
 
 int main(int argc, char **argv) {
@@ -197,10 +194,15 @@ int main(int argc, char **argv) {
 	string gold_in_out;
 	int sample_count;
 	bool save_layer = false;
-	if (argc == 8) {
+	int iterations = 1;
+	if (argc == 9) {
 		gold_in_out = argv[5];
 		sample_count = atoi(argv[6]);
 		save_layer = (bool) atoi(argv[7]);
+		iterations = atoi(argv[8]);
+	} else if (argc > 5){
+		usage(argv);
+		return EXIT_FAILURE;
 	}
 
 	if (mode == "train") {
@@ -219,7 +221,9 @@ int main(int argc, char **argv) {
 		classify_gold_generate(m, weigths, gold_in_out, sample_count, save_layer);
 
 	} else if (mode == "rad_test") {
-
+		MNISTParser m(input_data.c_str(), input_labels.c_str(), false);
+		cout << "Testing for " << m.get_test_img_fname() << std::endl;
+		classify_test_rad(m, weigths, gold_in_out, save_layer, iterations);
 	} else {
 		usage(argv);
 		return EXIT_FAILURE;

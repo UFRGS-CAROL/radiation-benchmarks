@@ -34,9 +34,9 @@ void inc_count_app();
  */
 bool compare_layer(float *l1, float *l2, int n);
 
-bool compare_output(std::pair<size_t, bool> p1, std::pair<size_t, bool> p2);
+bool compare_output(std::pair<size_t, bool> p1, std::pair<size_t, bool> p2, int img);
 
 void compare_and_save_layers(std::vector<Layer*> gold, std::vector<Layer*> found);
-
+void log_error_app(char *error_detail);
 
 #endif /* LOGSPROCESSING_H_ */

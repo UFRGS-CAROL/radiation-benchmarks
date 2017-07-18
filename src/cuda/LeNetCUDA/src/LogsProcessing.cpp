@@ -31,6 +31,7 @@ void finish_count_app() {
 void start_iteration_app() {
 #ifdef LOGS
 	start_iteration();
+	error_count = 0;
 #endif
 }
 
@@ -40,7 +41,7 @@ void end_iteration_app() {
 #endif
 }
 
-void inc_count_app(){
+void inc_count_app() {
 #ifdef LOGS
 	log_error_count(error_count++);
 #endif
@@ -61,15 +62,29 @@ bool compare_layer(float *l1, float *l2, int n) {
 	return false;
 }
 
-bool compare_output(std::pair<size_t, bool> p1, std::pair<size_t, bool> p2){
-	bool t1 = p1.first == p2.first;
-	bool t2 = p1.second == p2.second;
-	return t1 && t2;
+bool compare_output(std::pair<size_t, bool> p1, std::pair<size_t, bool> p2,
+		int img) {
+	bool cmp = (p1.first == p2.first) && (p1.second == p2.second);
+	char err[200];
+	if (!cmp) {
+		sprintf(err, "img: [%d] expected_first: [%ld] "
+				"read_first: [%ld] "
+				"expected_second: [%d] "
+				"read_second: [%d]", img, p1.first, p2.first, p1.second,
+				p2.second);
+
+#ifdef LOGS
+		log_error_detail(err);
+		log_error_count(1);
+#else
+		printf("%s\n", err);
+#endif
+	}
+	return cmp;
 }
 
-
-void compare_and_save_layers(std::vector<Layer*> gold, std::vector<Layer*> found){
+void compare_and_save_layers(std::vector<Layer*> gold,
+		std::vector<Layer*> found) {
 
 }
-
 

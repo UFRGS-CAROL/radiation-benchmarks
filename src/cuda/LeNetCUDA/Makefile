@@ -9,6 +9,7 @@ CXX=g++
 OBJDIR=./obj/
 
 GPU?=0
+LOGS?=0
 
 CUDA_THRUST=
 #-I/usr/local/cuda/include/thrust/
@@ -35,8 +36,8 @@ endif
 
 ifeq ($(LOGS), 1)
 LOGHELPER_INC=-I../../include/
-LOGHELPER_LIB=-I../../include/
-CFLAGS+= -lLogHelperCuda
+LOGHELPER_LIB=-L../../include/
+CFLAGS+= -lLogHelperCuda -DLOGS
 endif
 
 ifeq ($(GPU), 1)
@@ -64,10 +65,10 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CXX)  $^ $(LOGHELPER_INC) $(LOGHELPER_LIB) $(ON_GPU) -o $@  $(LDFLAGS)  $(CFLAGS)
+	$(CXX)  $^ $(ON_GPU) -o $@ $(LOGHELPER_LIB) $(CFLAGS) $(LDFLAGS) $(LOGHELPER_INC) 
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(CXX) $(CFLAGS) $(OPTS) $(ON_GPU) -c $< -o $@  $(HELPFUL) 
+	$(CXX) $(OPTS) $(ON_GPU) -c $< -o $@  $(HELPFUL) $(LOGHELPER_INC) $(LOGHELPER_LIB) $(CFLAGS)  
 
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) $(OPTS) $(NVCC_FLAGS) -c $< -o $@
@@ -78,6 +79,10 @@ debug:
 	#$(NVCC) $(ARCH) $(COMMON) $(OPTS) src/debug.cu -o debug 
 	$(CXX) $(COMMON) $(OPTS) src/compare_layers.cpp -o compare
 
+
+#usage: ./leNetCUDA <train\classify\gold_gen\rad_test> <dataset> <labels> <weights>	
+#[gold input/output] [sample_count] [save layers] [iterations]
+
 train:
 	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte ./lenet.weights
 
@@ -86,10 +91,10 @@ test:
 
 
 generate:
-	./$(EXEC) gold_gen t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10 1
+	./$(EXEC) gold_gen t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10 1 1
 	
 test_rad:
-	./$(EXEC) rad_test t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10 0
+	./$(EXEC) rad_test t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10 1 1
 
 
 download_input:

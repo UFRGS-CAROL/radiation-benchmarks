@@ -97,8 +97,7 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y) {
  * General test case
  * test_x is where the images are located
  * test_y is the output
- * test_size is how much images
- *
+ * test_size is how many images will be tested
  */
 void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size,
 		std::string gold_layers_path, bool save_layer) {
@@ -120,7 +119,7 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size,
 		int result = 0;
 		result = test_once(iter) ? 1 : 0;
 		bang += result;
-		if(save_layer){
+		if (save_layer) {
 			//if it is the first time I rewrite the file
 			this->save_weights(gold_layers_path, (iter) ? "ab" : "wb");
 		}
@@ -141,10 +140,10 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size,
 void ConvNet::test(vec2d_t test_x, vec_host test_y,
 		std::vector<std::pair<size_t, bool>> gold_list, //gold for radiation test
 		std::vector<std::vector<Layer*>> gold_layers, //gold layers
-		size_t iterations, bool save_layer) {
+		size_t iterations, bool save_layer, int sample_count) {
 	test_x_ = test_x;
 	test_y_ = test_y;
-	test_size_ = test_x_.size();
+	test_size_ = sample_count;
 
 	Timer compare_timer;
 
@@ -157,26 +156,21 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y,
 	for (auto i = 0; i < iterations; i++) {
 		this->mark.start();
 		for (auto iter = 0; iter < test_size_; iter++) {
-			auto gold_out = gold_list[i];
+			auto gold_out = gold_list[iter];
 
 			//test under radiation
 			start_iteration_app();
 			auto result = test_once_pair(iter);
 			end_iteration_app();
 
+			std::cout << iter << "\n";
+
 			//compare output
 			compare_timer.start();
-			auto cmp = compare_output(result, gold_out);
-
+			auto cmp = compare_output(gold_out, result, iter);
 			//log the result
-			if (cmp) {
-				//err_count++
-				inc_count_app();
-
-				//layer comparison
-				if (save_layer) {
-					compare_and_save_layers(gold_layers[i], this->layers);
-				}
+			if (cmp && save_layer) {
+				compare_and_save_layers(gold_layers[i], this->layers);
 			}
 			compare_timer.stop();
 			//-------------
@@ -334,6 +328,13 @@ float_t ConvNet::train_once() {
 	return err / M;
 }
 
+/**
+ * Used when it is needed to get the layers
+ */
+std::vector<Layer*> ConvNet::get_layers() {
+	return this->layers;
+}
+
 void ConvNet::load_weights(std::string path) {
 	FILE *in = fopen(path.c_str(), "rb");
 //	std::ifstream in(path, std::ios::in | std::ios::binary | std::ios::ate);
@@ -345,6 +346,18 @@ void ConvNet::load_weights(std::string path) {
 		fclose(in);
 	} else {
 		error("FAILED TO OPEN FILE " + path);
+	}
+}
+
+void ConvNet::load_weights(FILE *in) {
+	if (in != NULL) {
+		for (auto i = layers.begin(); i != layers.end(); i++) {
+
+			(*i)->load_layer(in);
+		}
+//		fclose(in);
+	} else {
+		error("FAILED TO OPEN FILE ON LOAD WEIGHTS FOR GOLD LOAD\n");
 	}
 }
 
@@ -361,7 +374,6 @@ void ConvNet::save_weights(std::string path, std::string file_mode) {
 	}
 
 }
-
 
 int ConvNet::getSquaredSumLeNetWeights() {
 	int sum = 0;
