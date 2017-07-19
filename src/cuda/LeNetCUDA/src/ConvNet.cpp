@@ -45,7 +45,13 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 	std::cout << "Time spent on training " << this->mark << std::endl;
 }
 
-void ConvNet::train(vec2d_t train_x, vec_host train_y) {
+/**
+ * General train case
+ * test_x is where the images are located
+ * test_y is the expected output
+ * normalization is the type of norm aplied L1 == A, L2 == B, default == D
+ */
+void ConvNet::train(vec2d_t train_x, vec_host train_y, char normalization) {
 #ifdef GPU
 	std::cout << "Training with GPU:" << std::endl;
 #else
@@ -57,11 +63,11 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y) {
 	/*
 	 auto add OutputLayer as the last layer.
 	 */
-	auto err = 0.0;
+//	auto err = 0.0;
 	this->add_layer(new OutputLayer(layers.back()->out_depth_));
 	this->mark.start();
 
-	for (int i = 0; i < this->train_size_; i++) {
+	for (size_t i = 0; i < this->train_size_; i++) {
 		layers[0]->input_ = train_x_[i];
 		layers.back()->exp_y = (int) train_y_[i];
 		/*
@@ -79,50 +85,48 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y) {
 		 back propgation
 		 */
 
-		 //versao nova
-		 /*
-		if( L1)
-		{
+		if (normalization == 'A') {
 			// nova versao do backpropagation ( L1 )
 			//calcula sum_LeNet_weights:
 			int sum_LeNet_weights = 0;
-			for (auto i = layers.rbegin()+1; i != layers.rend(); i++) {
+			for (auto i = layers.rbegin() + 1; i != layers.rend(); i++) {
 				sum_LeNet_weights += (*i)->getWeightsSum();
 			}
 			//backpropagation
 			auto i = layers.rbegin();
 			(*i)->set_sum_LeNet_weights(sum_LeNet_weights);
 			(*i)->back_prop_L1();
-			for (i = layers.rbegin()+1; i != layers.rend(); i++) {
+			for (i = layers.rbegin() + 1; i != layers.rend(); i++) {
 				(*i)->back_prop();
 			}
-		}else if(L2)
-		{
+		} else if (normalization == 'B') {
 			// nova versao do backpropagation ( L2 )
 			//calcula sum_LeNet_squared_weights:
 			int sum_LeNet_squared_weights = 0;
-			for (auto i = layers.rbegin()+1; i != layers.rend(); i++) {
+			for (auto i = layers.rbegin() + 1; i != layers.rend();
+
+			i++) {
 				sum_LeNet_squared_weights += (*i)->getSquaredWeightsSum();
 			}
 			//backpropagation
 			auto i = layers.rbegin();
 			(*i)->set_sum_LeNet_squared_weights(sum_LeNet_squared_weights);
 			(*i)->back_prop_L2();
-			for (i = layers.rbegin()+1; i != layers.rend(); i++) {
+			for (i = layers.rbegin() + 1; i != layers.rend(); i++) {
 				(*i)->back_prop();
 			}
-		}else{ // versao sem regularizacao L1 nem L2
+		} else if (normalization == 'D') { // versao sem regularizacao L1 nem L2
 			for (auto i = layers.rbegin(); i != layers.rend(); i++) {
 				(*i)->back_prop();
 			}
-		} */
-
-		//versao antiga: (ta no ultimo else do if, que eh o default)
-		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
-			(*i)->back_prop();
 		}
 
-		err = layers.back()->err;
+//		//versao antiga: (ta no ultimo else do if, que eh o default)
+//		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
+//			(*i)->back_prop();
+//		}
+
+//		err = layers.back()->err;
 //		std::cout << " training cost: " << err << std::endl;
 //		if(err < END_CONDITION){ // if the error is small enough
 //			std::cout << "Error small enough " << err << "\n";
@@ -146,7 +150,7 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size,
 	test_x_ = test_x;
 	test_y_ = test_y;
 	test_size_ = test_size;
-	int iter = 0;
+	size_t iter = 0;
 	int bang = 0;
 
 #ifdef GPU
@@ -193,9 +197,9 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y,
 	std::cout << "Testing with CPU " << std::endl;
 #endif // GPU
 
-	for (auto i = 0; i < iterations; i++) {
+	for (size_t i = 0; i < iterations; i++) {
 		this->mark.start();
-		for (auto iter = 0; iter < test_size_; iter++) {
+		for (size_t iter = 0; iter < test_size_; iter++) {
 			auto gold_out = gold_list[iter];
 
 			//test under radiation
@@ -203,11 +207,11 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y,
 			auto result = test_once_pair(iter);
 			end_iteration_app();
 
-			std::cout << iter << "\n";
+			std::cout << "Small iteration " << iter << "\n";
 
 			//compare output
 			compare_timer.start();
-			auto cmp = true; //compare_output(gold_out, result, iter);
+			auto cmp = compare_output(gold_out, result, iter);
 			//log the result
 			if (cmp && save_layer) {
 				compare_and_save_layers(gold_layers[i], this->layers, i, iter);
@@ -315,17 +319,7 @@ std::pair<size_t, bool> ConvNet::test_once_pair(int test_x_index) {
 float_t ConvNet::train_once() {
 	float_t err = 0;
 	int iter = 0;
-#ifdef DEBUG
-	//DEBUG:
-	std::ofstream debugFile;
-#ifdef GPU
-	debugFile.open ("GPUdebugFile.txt");
-#else //CPU
-	debugFile.open ("CPUdebugFile.txt");
-#endif
-#endif
-	//
-	int test = 0;
+
 	while (iter < M) {
 		//auto train_x_index = iter % train_size_;
 		iter++;
@@ -335,34 +329,23 @@ float_t ConvNet::train_once() {
 		/*
 		 Start forward feeding.
 		 */
-		int debugIter = 0;
+
 		for (auto layer : layers) {
 			layer->forward();
 			if (layer->next != nullptr) {
 				layer->next->input_ = layer->output_;
 			}
-#ifdef DEBUG
-			//debug
-			debugFile << debugIter << "_output = [ ";
-			for(int i = 0; i < layer->output_.size(); i++) {
-				debugFile << layer->output_[i] << ", ";
-			}
-			debugFile << "]\n";
-			debugIter++;
-#endif
+
 		}
 		err += layers.back()->err;
 
 		/*
 		 back propgation
 		 */
-			for (auto i = layers.rbegin(); i != layers.rend(); i++) {
-				(*i)->back_prop();
-			}
+		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
+			(*i)->back_prop();
+		}
 	}
-#ifdef DEBUG
-	debugFile.close();
-#endif	//end DEBUG
 
 	return err / M;
 }
@@ -429,3 +412,27 @@ int ConvNet::getSumLeNetWeights() {
 	}
 	return sum;
 }
+
+//
+//#ifdef DEBUG
+//	//DEBUG:
+//	std::ofstream debugFile;
+//#ifdef GPU
+//	debugFile.open ("GPUdebugFile.txt");
+//#else //CPU
+//	debugFile.open ("CPUdebugFile.txt");
+//#endif
+//	int debugIter = 0;
+//#endif
+//#ifdef DEBUG
+//			//debug
+//			debugFile << debugIter << "_output = [ ";
+//			for(int i = 0; i < layer->output_.size(); i++) {
+//				debugFile << layer->output_[i] << ", ";
+//			}
+//			debugFile << "]\n";
+//			debugIter++;
+//#endif
+//#ifdef DEBUG
+//	debugFile.close();
+//#endif	//end DEBUG

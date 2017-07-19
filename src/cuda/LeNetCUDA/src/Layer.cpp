@@ -32,23 +32,21 @@ size_t Layer::fan_out() {
 	return out_width_ * out_height_ * out_height_;
 }
 
-int Layer::getWeightsSum(){
+int Layer::getWeightsSum() {
 	//funcao para a regularizacao L1
 	int sum = 0;
 	int weightsSize = this->W_.size();
-	for(int i = 0; i < weightsSize; i++)
-	{
+	for (int i = 0; i < weightsSize; i++) {
 		sum += abs(this->W_[i]);
 	}
 	return sum;
 }
 
-int Layer::getSquaredWeightsSum(){
+int Layer::getSquaredWeightsSum() {
 	//funcao para a regularizacao L2
 	int sum = 0;
 	int weightsSize = this->W_.size();
-	for(int i = 0; i < weightsSize; i++)
-	{
+	for (int i = 0; i < weightsSize; i++) {
 		sum += this->W_[i] * this->W_[i];
 	}
 	return sum;
@@ -122,35 +120,15 @@ void Layer::load_base_layer(FILE *in) {
 
 }
 
-
-
-//float* Layer::get_next_input_data_ptr(){
-//	if (this->next != nullptr)
-//		return this->next->input_.data();
-//	return nullptr;
-//}
-void Layer::set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights)
-{
-	std::cout << "ERRO: set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights) nao deveria ser chamada nessa layer" << std::endl;
+void Layer::set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights) {
+	std::cout << "COMCEPTUAL ERROR: " << sum_Lenet_squared_weights << "\n";
 }
 
-void Layer::set_sum_LeNet_weights(int sum_Lenet_weights)
-{
-	std::cout << "ERRO: set_sum_LeNet_weights(int sum_Lenet_weights) nao deveria ser chamada nessa layer" << std::endl;
+void Layer::set_sum_LeNet_weights(int sum_Lenet_weights) {
+	std::cout << "COMCEPTUAL ERROR: " << sum_Lenet_weights << "\n";
 }
 
-void Layer::back_prop_L1()
-{
-	std::cout << "ERRO: back_prop_L1() nao deveria ser chamada nessa layer" << std::endl;
+void Layer::back_prop_L1() {}
 
-}
+void Layer::back_prop_L2() {}
 
-void Layer::back_prop_L2()
-{
-	std::cout << "ERRO: back_prop_L2() nao deveria ser chamada nessa layer" << std::endl;
-
-}
-
-#ifdef GPU
-
-#endif

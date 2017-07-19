@@ -25,7 +25,7 @@ LOGS?=0
 COMMON=-std=c++11 
 
 
-CFLAGS= $(COMMON) 
+CFLAGS= $(COMMON) -Wall -Wextra 
 
 NVCC_FLAGS= -Xcompiler -Ofast
 #-std=c++11 
@@ -36,16 +36,20 @@ endif
 
 ifeq ($(LOGS), 1)
 LOGHELPER_INC=-I../../include/
-LOGHELPER_LIB=-L../../include/ -lLogHelper
+	ifeq ($(GPU), 1)
+	LOGHELPER_LIB=-L../../include/ -lLogHelperCuda
+	else
+	LOGHELPER_LIB=-L../../include/ -lLogHelper
+	endif
 CFLAGS+= -DLOGS
 endif
 
 ifeq ($(GPU), 1)
 ON_GPU= -DGPU
 CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcuda -lcudart
-ifeq ($(DEBUG),1)
-NVCC_FLAGS+= -G
-endif
+	ifeq ($(DEBUG),1)
+	NVCC_FLAGS+= -G
+	endif
 
 endif
 

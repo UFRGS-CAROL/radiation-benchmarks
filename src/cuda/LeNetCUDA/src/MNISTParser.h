@@ -15,7 +15,7 @@
 
 class MNISTParser {
 public:
-	MNISTParser(std::string img_fname, std::string lbl_fname, bool train);
+	MNISTParser(std::string img_fname, std::string lbl_fname);
 
 	std::string get_test_img_fname();
 	std::string get_test_lbl_fname();

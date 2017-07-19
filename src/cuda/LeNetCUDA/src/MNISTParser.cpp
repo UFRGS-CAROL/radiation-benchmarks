@@ -16,8 +16,7 @@
 //				data_path + "/t10k-labels-idx1-ubyte"), train_img_fname(
 //				data_path + "/train-images-idx3-ubyte"), train_lbl_fname(
 //				data_path + "/train-labels-idx1-ubyte")
-MNISTParser::MNISTParser(std::string img_fname, std::string lbl_fname,
-		bool train) {
+MNISTParser::MNISTParser(std::string img_fname, std::string lbl_fname) {
 	this->test_img_fname = img_fname;
 	this->test_lbl_fname = lbl_fname;
 	this->train_img_fname = img_fname;
@@ -52,7 +51,7 @@ void MNISTParser::test() {
 	std::cout << (int) test_sample[i]->label << std::endl;
 	//test_sample[i]->image->display();
 
-	size_t j = (int) (rand() * 60000);
+//	size_t j = (int) (rand() * 60000);
 	std::cout << (int) (train_sample[i]->label) << std::endl;
 	//train_sample[i]->image->display();
 
@@ -135,7 +134,7 @@ std::vector<Sample*> MNISTParser::load(std::string fimage, std::string flabel) {
 	}
 
 	std::vector<Sample*> samples;
-	for (int i = 0; i < swapEndien_32(number); i++) {
+	for (size_t i = 0; i < swapEndien_32(number); i++) {
 		samples.push_back(new Sample(labels[i], images[i]->extend()));
 	}
 

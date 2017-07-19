@@ -30,7 +30,8 @@
 class ConvNet {
 public:
 	void train(vec2d_t train_x, vec_host train_y, size_t train_size);
-	void train(vec2d_t train_x, vec_host train_y);
+
+	void train(vec2d_t train_x, vec_host train_y, char normalization);
 
 	void test(vec2d_t test_x, vec_host test_y,
 			std::vector<std::pair<size_t, bool>> gold_list, //gold for radiation test
