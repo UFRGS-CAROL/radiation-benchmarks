@@ -26,9 +26,6 @@
 #define M 10 // training sample counts in each iteration
 #define END_CONDITION 1e-3
 
-#define SAVE_LAYER_DATA "/var/radiation-benchmarks/data"
-
-
 
 class ConvNet {
 public:

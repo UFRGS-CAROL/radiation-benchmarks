@@ -36,8 +36,8 @@ endif
 
 ifeq ($(LOGS), 1)
 LOGHELPER_INC=-I../../include/
-LOGHELPER_LIB=-L../../include/
-CFLAGS+= -lLogHelperCuda -DLOGS
+LOGHELPER_LIB=-L../../include/ -lLogHelper
+CFLAGS+= -DLOGS
 endif
 
 ifeq ($(GPU), 1)
@@ -65,7 +65,7 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CXX)  $^ $(ON_GPU) -o $@ $(LOGHELPER_LIB) $(CFLAGS) $(LDFLAGS) $(LOGHELPER_INC) 
+	$(CXX) $^ $(ON_GPU) -o $@  $(CFLAGS) $(LDFLAGS) $(LOGHELPER_INC) $(LOGHELPER_LIB) 
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(OPTS) $(ON_GPU) -c $< -o $@  $(HELPFUL) $(LOGHELPER_INC) $(LOGHELPER_LIB) $(CFLAGS)  

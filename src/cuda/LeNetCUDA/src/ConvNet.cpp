@@ -167,10 +167,10 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y,
 
 			//compare output
 			compare_timer.start();
-			auto cmp = compare_output(gold_out, result, iter);
+			auto cmp = true; //compare_output(gold_out, result, iter);
 			//log the result
 			if (cmp && save_layer) {
-				compare_and_save_layers(gold_layers[i], this->layers);
+				compare_and_save_layers(gold_layers[i], this->layers, i, iter);
 			}
 			compare_timer.stop();
 			//-------------

@@ -10,8 +10,46 @@
 size_t error_count = 0;
 
 #ifdef LOGS
-#include "log_helper.h"
+#ifdef __cplusplus
+extern "C"{
 #endif
+
+#include "log_helper.h"
+
+// Return the name of the log file generated
+char * get_log_file_name();
+
+// Generate the log file name, log info from user about the test
+// to be executed and reset log variables
+int start_log_file(char *benchmark_name, char *test_info);
+
+// Log the string "#END" and reset global variables
+int end_log_file();
+
+// Start time to measure kernel time, also update
+// iteration number and log to file
+int start_iteration();
+
+// Finish the measured kernel time log both
+// time (total time and kernel time)
+int end_iteration();
+
+// Update total errors variable and log both
+// errors(total errors and kernel errors)
+int log_error_count(unsigned long int kernel_errors);
+
+// Print some string with the detail of an error to log file
+int log_error_detail(char *string);
+
+// Print some string with the detail of an error/information to log file
+int log_info_detail(char *string);
+
+#ifdef __cplusplus
+}
+#endif //extern C
+
+#endif //LOGS def
+
 
 void start_count_app(char *test, char *app) {
 #ifdef LOGS
@@ -84,7 +122,46 @@ bool compare_output(std::pair<size_t, bool> p1, std::pair<size_t, bool> p2,
 }
 
 void compare_and_save_layers(std::vector<Layer*> gold,
-		std::vector<Layer*> found) {
+		std::vector<Layer*> found, int iteration, int img) {
+
+#ifdef LOGS
+	char *log_filename = get_log_file_name();
+#else
+	const char *log_filename = "test";
+#endif
+
+	assert(gold.size() == found.size());
+
+	std::string layer_file_name = std::string(SAVE_LAYER_DATA) + "/"
+			+ std::string(log_filename) + "_it_" + std::to_string(iteration)
+			+ "_img_" + std::to_string(img);
+
+
+	bool error_found = false;
+
+	for (int i = 0; i < gold.size(); i++) {
+		Layer *g = gold[i];
+		Layer *f = found[i];
+		for (int j = 0; j < g->output_.size(); j++) {
+			float g_val = g->output_[i];
+			float f_val = f->output_[i];
+			float diff = fabs(g_val - f_val);
+			if (diff > LAYER_THRESHOLD_ERROR) {
+				error_found = true;
+				break;
+			}
+		}
+		std::string temp_layer_filename = layer_file_name + "_layer_"
+				+ std::to_string(i) + ".layer";
+		FILE *output_layer = fopen(temp_layer_filename.c_str(), "wb");
+		if(output_layer != NULL){
+			f->save_layer(output_layer);
+			fclose(output_layer);
+		}else{
+			error(("ERROR: On opening layer file " + temp_layer_filename).c_str());
+		}
+
+	}
 
 }
 
