@@ -122,12 +122,34 @@ void Layer::load_base_layer(FILE *in) {
 
 }
 
+
+
 //float* Layer::get_next_input_data_ptr(){
 //	if (this->next != nullptr)
 //		return this->next->input_.data();
 //	return nullptr;
 //}
+void Layer::set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights)
+{
+	std::cout << "ERRO: set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights) nao deveria ser chamada nessa layer" << std::endl;
+}
 
+void Layer::set_sum_LeNet_weights(int sum_Lenet_weights)
+{
+	std::cout << "ERRO: set_sum_LeNet_weights(int sum_Lenet_weights) nao deveria ser chamada nessa layer" << std::endl;
+}
+
+void Layer::back_prop_L1()
+{
+	std::cout << "ERRO: back_prop_L1() nao deveria ser chamada nessa layer" << std::endl;
+
+}
+
+void Layer::back_prop_L2()
+{
+	std::cout << "ERRO: back_prop_L2() nao deveria ser chamada nessa layer" << std::endl;
+
+}
 
 #ifdef GPU
 

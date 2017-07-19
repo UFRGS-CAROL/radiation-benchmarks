@@ -78,6 +78,46 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y) {
 		/*
 		 back propgation
 		 */
+
+		 //versao nova
+		 /*
+		if( L1)
+		{
+			// nova versao do backpropagation ( L1 )
+			//calcula sum_LeNet_weights:
+			int sum_LeNet_weights = 0;
+			for (auto i = layers.rbegin()+1; i != layers.rend(); i++) {
+				sum_LeNet_weights += (*i)->getWeightsSum();
+			}
+			//backpropagation
+			auto i = layers.rbegin();
+			(*i)->set_sum_LeNet_weights(sum_LeNet_weights);
+			(*i)->back_prop_L1();
+			for (i = layers.rbegin()+1; i != layers.rend(); i++) {
+				(*i)->back_prop();
+			}
+		}else if(L2)
+		{
+			// nova versao do backpropagation ( L2 )
+			//calcula sum_LeNet_squared_weights:
+			int sum_LeNet_squared_weights = 0;
+			for (auto i = layers.rbegin()+1; i != layers.rend(); i++) {
+				sum_LeNet_squared_weights += (*i)->getSquaredWeightsSum();
+			}
+			//backpropagation
+			auto i = layers.rbegin();
+			(*i)->set_sum_LeNet_squared_weights(sum_LeNet_squared_weights);
+			(*i)->back_prop_L2();
+			for (i = layers.rbegin()+1; i != layers.rend(); i++) {
+				(*i)->back_prop();
+			}
+		}else{ // versao sem regularizacao L1 nem L2
+			for (auto i = layers.rbegin(); i != layers.rend(); i++) {
+				(*i)->back_prop();
+			}
+		} */
+
+		//versao antiga: (ta no ultimo else do if, que eh o default)
 		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
 			(*i)->back_prop();
 		}
@@ -316,10 +356,9 @@ float_t ConvNet::train_once() {
 		/*
 		 back propgation
 		 */
-		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
-			(*i)->back_prop();
-		}
-
+			for (auto i = layers.rbegin(); i != layers.rend(); i++) {
+				(*i)->back_prop();
+			}
 	}
 #ifdef DEBUG
 	debugFile.close();

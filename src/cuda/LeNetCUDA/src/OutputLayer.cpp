@@ -105,7 +105,7 @@ void OutputLayer::back_prop_L1() {
 	if(g_.size() != in_depth_){
 		g_.clear();
 		g_.resize(in_depth_);
-		printf("passou no if do bakc\n");
+		printf("passou no if do back\n");
 	}
 
 	for (size_t i = 0; i < in_depth_; i++) {
@@ -138,4 +138,3 @@ void OutputLayer::set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights)
 {
 	this->lenetSquaredWeighsSum = sum_Lenet_squared_weights;
 }
-
