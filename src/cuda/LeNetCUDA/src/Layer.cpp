@@ -121,11 +121,11 @@ void Layer::load_base_layer(FILE *in) {
 }
 
 void Layer::set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights) {
-	std::cout << "COMCEPTUAL ERROR: " << sum_Lenet_squared_weights << "\n";
+	std::cout << "CONCEPTUAL ERROR: " << sum_Lenet_squared_weights << "\n";
 }
 
 void Layer::set_sum_LeNet_weights(int sum_Lenet_weights) {
-	std::cout << "COMCEPTUAL ERROR: " << sum_Lenet_weights << "\n";
+	std::cout << "COCEPTUAL ERROR: " << sum_Lenet_weights << "\n";
 }
 
 void Layer::back_prop_L1() {}

@@ -86,8 +86,8 @@ public:
 	int getWeightsSum();
 	int getSquaredWeightsSum();
 
-	void set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights);
-	void set_sum_LeNet_weights(int sum_Lenet_weights);
+	virtual void set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights);
+	virtual void set_sum_LeNet_weights(int sum_Lenet_weights);
 
 	virtual void back_prop_L1();
 	virtual void back_prop_L2();
