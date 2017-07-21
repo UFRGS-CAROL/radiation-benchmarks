@@ -18,17 +18,17 @@ ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] \
       -gencode arch=compute_50,code=[sm_50,compute_50] \
       -gencode arch=compute_52,code=[sm_52,compute_52] \
       -gencode arch=compute_60,code=[sm_60,compute_60] \
-      -gencode arch=compute_62,code=[sm_62,compute_62] 
-      
+      -gencode arch=compute_62,code=[sm_62,compute_62]
+
 #for radiation setup
 LOGS?=0
-COMMON=-std=c++11 
+COMMON=-std=c++11
 
 
-CFLAGS= $(COMMON) -Wall -Wextra 
+CFLAGS= $(COMMON) -Wall -Wextra
 
 NVCC_FLAGS= -Xcompiler -Ofast
-#-std=c++11 
+#-std=c++11
 
 ifeq ($(DEBUG),1)
 OPTS= -g
@@ -69,26 +69,32 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CXX) $^ $(ON_GPU) -o $@  $(CFLAGS) $(LDFLAGS) $(LOGHELPER_INC) $(LOGHELPER_LIB) 
+	$(CXX) $^ $(ON_GPU) -o $@  $(CFLAGS) $(LDFLAGS) $(LOGHELPER_INC) $(LOGHELPER_LIB)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(CXX) $(OPTS) $(ON_GPU) -c $< -o $@  $(HELPFUL) $(LOGHELPER_INC) $(LOGHELPER_LIB) $(CFLAGS)  
+	$(CXX) $(OPTS) $(ON_GPU) -c $< -o $@  $(HELPFUL) $(LOGHELPER_INC) $(LOGHELPER_LIB) $(CFLAGS)
 
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) $(OPTS) $(NVCC_FLAGS) -c $< -o $@
 
 
 
-debug: 
-	#$(NVCC) $(ARCH) $(COMMON) $(OPTS) src/debug.cu -o debug 
+debug:
+	#$(NVCC) $(ARCH) $(COMMON) $(OPTS) src/debug.cu -o debug
 	$(CXX) $(COMMON) $(OPTS) src/compare_layers.cpp -o compare
 
 
-#usage: ./leNetCUDA <train\classify\gold_gen\rad_test> <dataset> <labels> <weights>	
+#usage: ./leNetCUDA <train\classify\gold_gen\rad_test> <dataset> <labels> <weights>
 #[gold input/output] [sample_count] [save layers] [iterations]
 
 train:
 	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte ./lenet.weights
+
+train_l1:
+	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte ./lenet.weights L1
+
+train_l2:
+	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte ./lenet.weights L2
 
 test:
 	./$(EXEC) classify t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights
@@ -96,7 +102,7 @@ test:
 
 generate:
 	./$(EXEC) gold_gen t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10 1 1
-	
+
 test_rad:
 	./$(EXEC) rad_test t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10 1 1
 
@@ -115,7 +121,7 @@ download_input:
 
 obj:
 	mkdir -p obj
-	
+
 .PHONY: clean
 clean:
 	rm -rf obj/*o $(EXEC) debug compare

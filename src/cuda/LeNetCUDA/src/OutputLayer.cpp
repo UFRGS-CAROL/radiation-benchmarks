@@ -7,8 +7,8 @@
 
 #include "OutputLayer.h"
 #include "Util.h"
-#define L1_LAMBDA =  0.005;
-#define L2_LAMBDA =  0.001;
+#define L1_LAMBDA  0.005
+#define L2_LAMBDA  0.001
 
 
 #ifdef GPU

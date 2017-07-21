@@ -183,6 +183,8 @@ void train(MNISTParser& m, string weigths, string norm) {
 	n.save_weights(weigths);
 }
 
+
+
 inline void usage(char **argv) {
 	cout << "For classify, gold_gen and rad_test usage: " << argv[0]
 			<< " <classify\\gold_gen\\rad_test> <dataset> <labels> <weights> "
@@ -221,7 +223,7 @@ int main(int argc, char **argv) {
 	}
 
 	if (mode == "train") {
-		//if train training and labels must be passed
+		//if train training and  labels must be passed
 		MNISTParser m(input_data.c_str(), input_labels.c_str());
 		string norm = "";
 		if(argc == 6)
