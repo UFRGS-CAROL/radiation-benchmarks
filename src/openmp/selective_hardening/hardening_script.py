@@ -5,7 +5,7 @@ dollar = re.escape('$')
 space = re.escape(' ')
 decl_symbol = re.escape('%')
 
-keywords = ['for', 'while', 'if', 'else', '//']
+keywords = ['while', 'if', 'else', '//', '/*', '*/']
 type_dict = dict()
 
 def patch_code(code_file):
@@ -21,11 +21,23 @@ def patch_code(code_file):
                         parts = list(filter(None, parts))
                         #for s in parts:
                                 #print(s)
-                        print(parts)
+                        #print(parts)
                         if '%' in line:
                                 #print(parts)
                                 buf_str += make_decl(parts[0], parts[1])
                                 
+			elif 'for' in parts:
+				ignore_step = False
+				for keyword in keywords:
+                                        if keyword in line or 'omp' in line:
+                                                ignore_step = True
+
+                                if ignore_step is True:
+                                        buf_str += line
+                                        continue
+
+				buf_str += line
+				print(parts)
                         elif '=' in parts:
                                 ignore_step = False
                                 for keyword in keywords:
@@ -36,26 +48,26 @@ def patch_code(code_file):
                                         buf_str += line
                                         continue
                                 equals_index = parts.index('=')
-                                print(parts)
-                                print(equals_index)
+                                #print(parts)
+                                #print(equals_index)
                                 if '$' in ''.join(parts[:equals_index]):
-                                        print(parts)
+                                        #print(parts)
                                         var_name = re.split(dollar, parts[0])[1]
                                         
                                         del parts[0]
                                         del parts[0]
                                         parts = parts[:-1] + [';\n']
-                                        print(parts)
+                                        #print(parts)
                                         buf_str += make_attrib(var_name,''.join(parts), True)
 
                                 else:
                                         var_name = parts[0]
-                                        print(parts)
+                                        #print(parts)
                                         del parts[0]
                                         del parts[0]
-                                        print(parts)
+                                        #print(parts)
                                         parts = parts + [';\n']
-                                        print(parts)
+                                        #print(parts)
                                         buf_str += make_attrib(var_name,''.join(parts), False)
 
                         elif '$' in line:

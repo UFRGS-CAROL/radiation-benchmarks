@@ -18,7 +18,7 @@ void FullyConnectedLayer::forward() {
 	float *input_ = this->input_.data();
 	float *b_ = this->b_.data();
 	float *W_ = this->W_.data();
-	float *v_output = this->v_output.data();
+//	float *v_output = this->v_output.data();
 	int out_depth_ = this->out_depth_;
 	int in_depth_ = this->in_depth_;
 	int input_size = this->input_.size();
@@ -29,7 +29,7 @@ void FullyConnectedLayer::forward() {
 
 DeviceVector<float>  FullyConnectedLayer::get_W(size_t index) {
 	DeviceVector<float> v(in_depth_);
-	for (int i = 0; i < in_depth_; i++) {
+	for (size_t i = 0; i < in_depth_; i++) {
 		v[i] = (W_[index * in_depth_ + i]);
 	}
 	return v;
@@ -75,7 +75,7 @@ DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
 
 vec_host FullyConnectedLayer::get_W(size_t index) {
 	vec_host v(in_depth_);
-	for (int i = 0; i < in_depth_; i++) {
+	for (size_t i = 0; i < in_depth_; i++) {
 		v[i] = (W_[index * in_depth_ + i]);
 	}
 	return v;

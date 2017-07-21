@@ -74,7 +74,7 @@ void MaxpoolingLayer::back_prop() {
 	g_.clear();
 	g_.resize(in_width_ * in_height_ * in_depth_);
 
-	for (auto i = 0; i < this->max_loc.size(); i++){
+	for (size_t i = 0; i < this->max_loc.size(); i++){
 		auto pair = this->max_loc[i];
 		if (pair.first != MAX) {
 			g_[pair.second] = this->next->g_[pair.first];

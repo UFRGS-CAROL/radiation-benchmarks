@@ -22,15 +22,16 @@
 #include "DeviceVector.h"
 #endif
 
-#define MAX_ITER 10  // maximum training iterations
-#define M 10 // training sample counts in each iteration
+#define MAX_ITER 30  // maximum training iterations
+#define M 5 // training sample counts in each iteration
 #define END_CONDITION 1e-3
 
 
 class ConvNet {
 public:
 	void train(vec2d_t train_x, vec_host train_y, size_t train_size);
-	void train(vec2d_t train_x, vec_host train_y);
+
+	void train(vec2d_t train_x, vec_host train_y, char normalization);
 
 	void test(vec2d_t test_x, vec_host test_y,
 			std::vector<std::pair<size_t, bool>> gold_list, //gold for radiation test
