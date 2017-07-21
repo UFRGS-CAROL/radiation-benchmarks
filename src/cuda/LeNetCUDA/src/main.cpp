@@ -223,7 +223,9 @@ int main(int argc, char **argv) {
 	if (mode == "train") {
 		//if train training and labels must be passed
 		MNISTParser m(input_data.c_str(), input_labels.c_str());
-		string norm(argv[5]);
+		string norm = "";
+		if(argc == 6)
+			string norm(argv[5]);
 
 		cout << "Training for " << m.get_test_img_fname() << std::endl;
 		train(m, weigths, norm);
