@@ -7,6 +7,9 @@
 
 #include "OutputLayer.h"
 #include "Util.h"
+#define L1_LAMBDA =  0.005;
+#define L2_LAMBDA =  0.001;
+
 
 #ifdef GPU
 #include "OutputLayerKernel.h"
@@ -110,7 +113,7 @@ void OutputLayer::back_prop_L1() {
 
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
-					+ this->lenetWeighsSum; // L1 regularization
+					+ L1_LAMBDA * this->lenetWeighsSum; // L1 regularization
 	}
 }
 
@@ -125,7 +128,7 @@ void OutputLayer::back_prop_L2() {
 
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
-					+ this->lenetSquaredWeighsSum; // L2 regularization
+					+ L2_LAMBDA * this->lenetSquaredWeighsSum; // L2 regularization
 	}
 }
 
