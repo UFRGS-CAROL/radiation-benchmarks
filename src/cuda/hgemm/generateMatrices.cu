@@ -271,6 +271,18 @@ void generateGoldMatrix()
 	GOLD = ( __half* ) malloc( sizec * sizeof( __half ) );
 	
 	ReadMatrixFromFile();
+  if (k <= 16) {
+    printf("\nMatrix A: \n");
+    for (int i = 0; i<k*k; i++) {
+      printf(" %.2e", half2float(A[i]));
+      if ((i+1)%k == 0) printf("\n");
+    }
+    printf("\nMatrix B: \n");
+    for (int i = 0; i<k*k; i++) {
+      printf(" %.2e", half2float(B[i]));
+      if ((i+1)%k == 0) printf("\n");
+    }
+  }
 
 	checkCudaErrors( cudaMalloc( ( void** ) &d_A, sizea * sizeof( __half ) ));
 
@@ -330,6 +342,13 @@ void generateGoldMatrix()
 		}
 	}
 	printf("Number of zeros on gold: %d\n", numZeros);
+
+  if (numZeros > 0 && k <= 16) {
+    for (int i = 0; i<k*k; i++) {
+      printf(" %.2e", half2float(GOLD[i]));
+      if ((i+1)%k == 0) printf("\n");
+    }
+  }
 
 	//printf("-------------------------\n%.10f\n%.10f\n%.10f\n", GOLD[0], GOLD[1], GOLD[2]);
 
