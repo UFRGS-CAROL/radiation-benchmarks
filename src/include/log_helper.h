@@ -1,4 +1,10 @@
 
+//for C++ compilers this macro must exists
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Set the max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
 unsigned long int set_max_errors_iter(unsigned long int max_errors);
@@ -37,3 +43,8 @@ int log_error_detail(char *string);
 
 // Print some string with the detail of an error/information to log file
 int log_info_detail(char *string);
+
+//end C++ macro section
+#ifdef __cplusplus
+}
+#endif
