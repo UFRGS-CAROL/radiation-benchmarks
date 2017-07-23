@@ -36,11 +36,7 @@ endif
 
 ifeq ($(LOGS), 1)
 LOGHELPER_INC=-I../../include/
-	ifeq ($(GPU), 1)
-	LOGHELPER_LIB=-L../../include/ -lLogHelperCuda
-	else
-	LOGHELPER_LIB=-L../../include/ -lLogHelper
-	endif
+LOGHELPER_LIB=-L../../include/ -lLogHelper
 CFLAGS+= -DLOGS
 endif
 
@@ -104,7 +100,7 @@ generate:
 	./$(EXEC) gold_gen t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10 1 1
 
 test_rad:
-	./$(EXEC) rad_test t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10 1 1
+	./$(EXEC) rad_test t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 10 1 10
 
 
 download_input:
