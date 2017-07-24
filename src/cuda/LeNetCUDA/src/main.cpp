@@ -67,8 +67,9 @@ void classify_gold_generate(MNISTParser& m, string weigths, string gold_output,
 
 void classify_test_rad(MNISTParser& m, string weigths, string gold_input,
 		bool save_layers, int iterations) {
+	string header_line = "gold_file: " + gold_input + " weights: " + weigths + " iterations: " + std::to_string(iterations);
 	//start log file
-	start_count_app(const_cast<char*>(gold_input.c_str()),
+	start_count_app(const_cast<char*>(header_line.c_str()),
 			const_cast<char*>("cudaLeNET"));
 	//-------------------------------------------
 	//Main network

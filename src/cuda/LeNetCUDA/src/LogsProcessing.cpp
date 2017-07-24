@@ -68,10 +68,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 
 void start_count_app(char *test, char *app) {
 #ifdef LOGS
-	char test_info[500];
-	snprintf(test_info, 500, "gold_file: %s", test);
-
-	start_log_file(app, test_info);
+	start_log_file(app, test);
 #endif
 }
 
