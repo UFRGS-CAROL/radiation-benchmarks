@@ -32,20 +32,20 @@ size_t Layer::fan_out() {
 	return out_width_ * out_height_ * out_height_;
 }
 
-int Layer::getWeightsSum() {
+float_t Layer::getWeightsSum() {
 	//funcao para a regularizacao L1
-	int sum = 0;
-	int weightsSize = this->W_.size();
+	float_t sum = 0;
+	float_t weightsSize = this->W_.size();
 	for (int i = 0; i < weightsSize; i++) {
 		sum += abs(this->W_[i]);
 	}
 	return sum;
 }
 
-int Layer::getSquaredWeightsSum() {
+float_t Layer::getSquaredWeightsSum() {
 	//funcao para a regularizacao L2
-	int sum = 0;
-	int weightsSize = this->W_.size();
+	float_t sum = 0;
+	float_t weightsSize = this->W_.size();
 	for (int i = 0; i < weightsSize; i++) {
 		sum += this->W_[i] * this->W_[i];
 	}
@@ -120,12 +120,12 @@ void Layer::load_base_layer(FILE *in) {
 
 }
 
-void Layer::set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights) {
+void Layer::set_sum_LeNet_squared_weights(float_t sum_Lenet_squared_weights) {
 	std::cout << "CONCEPTUAL ERROR: " << sum_Lenet_squared_weights << "\n";
 }
 
-void Layer::set_sum_LeNet_weights(int sum_Lenet_weights) {
-	std::cout << "COCEPTUAL ERROR: " << sum_Lenet_weights << "\n";
+void Layer::set_sum_LeNet_weights(float_t sum_Lenet_weights) {
+	std::cout << "CONCEPTUAL ERROR: " << sum_Lenet_weights << "\n";
 }
 
 void Layer::back_prop_L1() {}

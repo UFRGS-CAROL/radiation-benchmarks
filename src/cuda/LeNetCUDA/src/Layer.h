@@ -83,11 +83,11 @@ public:
 
 	size_t fan_out();
 
-	int getWeightsSum();
-	int getSquaredWeightsSum();
+	float_t getWeightsSum();
+	float_t getSquaredWeightsSum();
 
-	virtual void set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights);
-	virtual void set_sum_LeNet_weights(int sum_Lenet_weights);
+	virtual void set_sum_LeNet_squared_weights(float_t sum_Lenet_squared_weights);
+	virtual void set_sum_LeNet_weights(float_t sum_Lenet_weights);
 
 	virtual void back_prop_L1();
 	virtual void back_prop_L2();
