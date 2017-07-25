@@ -67,6 +67,7 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, char normalization) {
 	this->add_layer(new OutputLayer(layers.back()->out_depth_));
 	this->mark.start();
 
+	for(int i = 0; i < 10; i++){ //iterando 10x pelo dataset
 	for (size_t i = 0; i < this->train_size_; i++) {
 		layers[0]->input_ = train_x_[i];
 		layers.back()->exp_y = (int) train_y_[i];
@@ -84,14 +85,15 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, char normalization) {
 		/*
 		 back propgation
 		 */
-
+		//printf("\nnormalizacao debug %c", normalization);
 		if (normalization == 'A') {
 			// nova versao do backpropagation ( L1 )
 			//calcula sum_LeNet_weights:
-			int sum_LeNet_weights = 0;
+			float_t sum_LeNet_weights = 0.0;
 			for (auto i = layers.rbegin() + 1; i != layers.rend(); i++) {
 				sum_LeNet_weights += (*i)->getWeightsSum();
 			}
+			//printf("debug l1 convnet train sumWeights: %f", sum_LeNet_weights);
 			//backpropagation
 			auto i = layers.rbegin();
 			(*i)->set_sum_LeNet_weights(sum_LeNet_weights);
@@ -102,7 +104,7 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, char normalization) {
 		} else if (normalization == 'B') {
 			// nova versao do backpropagation ( L2 )
 			//calcula sum_LeNet_squared_weights:
-			int sum_LeNet_squared_weights = 0;
+			float_t sum_LeNet_squared_weights = 0;
 			for (auto i = layers.rbegin() + 1; i != layers.rend();
 
 			i++) {
@@ -132,6 +134,7 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, char normalization) {
 //			std::cout << "Error small enough " << err << "\n";
 //			break;
 //		}
+	}
 	}
 	this->mark.stop();
 	std::cout << "Time spent on training " << this->mark << std::endl;

@@ -156,7 +156,7 @@ void classify(MNISTParser& m, string weigths) {
 	//need to load network configurations here
 	n.load_weights(weigths);
 
-	int test_sample_count = 5;
+	int test_sample_count = 1000;
 	printf("Testing with %d samples:\n", test_sample_count);
 	n.test(test_x, test_y, test_sample_count);
 }
@@ -164,7 +164,7 @@ void classify(MNISTParser& m, string weigths) {
 void train(MNISTParser& m, string weigths, string norm) {
 	m.load_training();
 
-	size_t imgs = 10000;
+	size_t imgs = 60000;
 	vec2d_t test_x;
 	vec_host test_y;
 	for (size_t i = 0; i < imgs; i++) {
@@ -179,6 +179,7 @@ void train(MNISTParser& m, string weigths, string norm) {
 		norm_ = 'A';
 	if (norm == "L2" || norm == "l2")
 		norm_ = 'B';
+
 
 	n.train(test_x, test_y, norm_);
 	n.save_weights(weigths);
@@ -228,8 +229,9 @@ int main(int argc, char **argv) {
 		MNISTParser m(input_data.c_str(), input_labels.c_str());
 		string norm = "";
 		if(argc == 6)
-			string norm(argv[5]);
-
+			norm = argv[5];
+		//printf("debug main norm: ");
+		//cout << argv[5];
 		cout << "Training for " << m.get_test_img_fname() << std::endl;
 		train(m, weigths, norm);
 	} else if (mode == "classify") {

@@ -80,7 +80,7 @@ void OutputLayer::back_prop() {
 		g_.resize(in_depth_);
 		printf("passou no if do bakc\n");
 	}
-
+	//printf("\ndebug back_prop output layer");
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
 	}
@@ -111,9 +111,11 @@ void OutputLayer::back_prop_L1() {
 		printf("passou no if do back\n");
 	}
 
+
+	//printf("\ndebug lenetWeightsSum: %f", this->lenetWeightsSum);
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
-					+ L1_LAMBDA * this->lenetWeighsSum; // L1 regularization
+					+ L1_LAMBDA * this->lenetWeightsSum; // L1 regularization
 	}
 }
 
@@ -123,21 +125,22 @@ void OutputLayer::back_prop_L2() {
 	if(g_.size() != in_depth_){
 		g_.clear();
 		g_.resize(in_depth_);
-		printf("passou no if do bakc\n");
+		printf("passou no if do back\n");
 	}
 
+       	printf("\ndebug lenetSquaredWeightsSum: %f", this->lenetSquaredWeightsSum);
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
-					+ L2_LAMBDA * this->lenetSquaredWeighsSum; // L2 regularization
+					+ L2_LAMBDA * this->lenetSquaredWeightsSum; // L2 regularization
 	}
 }
 
-void OutputLayer::set_sum_LeNet_weights(int sum_Lenet_weights)
+void OutputLayer::set_sum_LeNet_weights(float_t sum_Lenet_weights)
 {
-	this->lenetWeighsSum = sum_Lenet_weights;
+	this->lenetWeightsSum = sum_Lenet_weights;
 }
 
-void OutputLayer::set_sum_LeNet_squared_weights(int sum_Lenet_squared_weights)
+void OutputLayer::set_sum_LeNet_squared_weights(float_t sum_Lenet_squared_weights)
 {
-	this->lenetSquaredWeighsSum = sum_Lenet_squared_weights;
+	this->lenetSquaredWeightsSum = sum_Lenet_squared_weights;
 }
