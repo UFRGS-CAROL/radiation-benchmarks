@@ -441,7 +441,7 @@ int main(int argc, char **argv) {
 				break;
 			}
 			case 2: { //test
-				start_count_app(parsed_args.gold_inout, "cudaDarknet");
+				start_count_app(parsed_args.gold_inout, "cudaDarknetv2");
 				test_detector_radiation(&parsed_args);
 				finish_count_app();
 				break;
