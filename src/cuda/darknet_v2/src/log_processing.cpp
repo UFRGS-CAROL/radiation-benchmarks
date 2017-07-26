@@ -365,7 +365,7 @@ void print_detection(detection det) {
 }
 
 inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
-		box g_b, int img, int class_, int pb_i) {
+		box g_b, char* img, int class_, int pb_i) {
 	float diff_float[3] = { (float) fabs(f_b.x - g_b.x), (float) fabs(
 			f_b.y - g_b.y), (float) fabs(f_pb - g_pb) };
 	int diff_int[3] = { abs(f_b.h - g_b.h), abs(f_b.w - g_b.w), 0 };
@@ -379,7 +379,7 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 	}
 
 	if (diff)
-		sprintf(error_detail, "img: [%d]"
+		sprintf(error_detail, "img: [%s]"
 				" prob[%d][%d] r:%1.16e e:%1.16e"
 				" x_r: %1.16e x_e: %1.16e"
 				" y_r: %1.16e y_e: %1.16e"
@@ -397,6 +397,7 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 	prob_array gold = det->pb_gold[img];
 	float **g_probs = gold.probs;
 	box *g_boxes = gold.boxes;
+	char* img_string = det->img_names[img];
 
 	int error_count = 0;
 	for (int i = 0; i < num; ++i) {
@@ -406,8 +407,8 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 		box g_b = g_boxes[i];
 		box f_b = f_boxes[i];
 
-		char error_detail[500];
-		if (error_check(error_detail, f_prob, g_prob, f_b, g_b, img, class_,
+		char error_detail[1000];
+		if (error_check(error_detail, f_prob, g_prob, f_b, g_b, img_string, class_,
 				i)) {
 			error_count++;
 
