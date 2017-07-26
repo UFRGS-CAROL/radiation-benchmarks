@@ -793,7 +793,7 @@ void test_detector_radiation(Args *args) {
 			gold.plist_size);
 
 //	set abft
-	if(args->abft && args->abft < MAX_ABFT_TYPES){
+	if (args->abft && args->abft < MAX_ABFT_TYPES) {
 		printf("passou no if\n\n");
 		set_abft(args->abft);
 	}
@@ -833,8 +833,8 @@ void test_detector_radiation(Args *args) {
 			double time_cmp = mysecond();
 //			void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
 //					int classes, int img, int save_layer, network net, int test_iteration)
-			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes,
-					it, args->save_layers, i);
+			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, it,
+					args->save_layers, i);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(
@@ -911,7 +911,7 @@ void test_detector_generate(Args *args) {
 	float nms = .4;
 
 	detection gold_to_save;
-	if(args->save_layers)
+	if (args->save_layers)
 		alloc_gold_layers_arrays(&gold_to_save, &net);
 
 	// this loop will iterate for all images
@@ -945,7 +945,7 @@ void test_detector_generate(Args *args) {
 		save_gold(output_file, img_list[it], l.w * l.h * l.n, l.classes, probs,
 				boxes);
 
-		if(args->save_layers)
+		if (args->save_layers)
 			save_layer(&gold_to_save, it, 0, "gold", 1);
 
 #ifdef GEN_IMG
