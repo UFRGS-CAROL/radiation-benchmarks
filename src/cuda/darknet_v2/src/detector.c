@@ -937,7 +937,7 @@ void test_detector_generate(Args *args) {
 //		must do the same thing that draw_detections
 //		but the output will be a gold file (old draw_detections)
 //		first write a filename
-		fprintf(output_file, "%s;\n", img_list[it]);
+		fprintf(output_file, "%s;%d;%d;%d;\n", img_list[it], im.h, im.w, im.c);
 //		after writes all detection information
 //		each box is described as class number, left, top, right, bottom, prob (confidence)
 //		save_gold(FILE *fp, char *img, int num, int classes, float **probs,
