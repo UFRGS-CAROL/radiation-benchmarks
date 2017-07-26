@@ -109,6 +109,8 @@ int popen_call(char *cmd, char *check_line, char *output_line) {
 		}
 	}
 
+
+	fflush(fp);
 	if (pclose(fp)) {
 		//printf("Command not found or exited with error status\n");
 		return 0;
