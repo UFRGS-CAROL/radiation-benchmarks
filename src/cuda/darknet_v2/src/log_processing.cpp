@@ -142,7 +142,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 	FILE *output_file, *gold_file;
 	char *small_log_file = get_small_log_file(log_filename);
 	for (int i = 0; i < layers_size; i++) {
-		char output_filename[300];
+		char output_filename[500];
 		sprintf(output_filename, "%s%s_layer_%d_img_%d_test_it_%d.layer",
 		LAYER_GOLD, small_log_file, i, img_iterator, test_iteration);
 
@@ -158,8 +158,8 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 		//if generate is set no need to compare
 		if (!generate) {
 			//open gold
-			char gold_filename[300];
-			sprintf(gold_filename, "%sgold_layer_%d_img_%d_test_it_0.layer",
+			char gold_filename[500];
+			sprintf(gold_filename, "%sgold_layer_darknet_v2_%d_img_%d_test_it_0.layer",
 			LAYER_GOLD, i, img_iterator);
 
 			gold_file = open_layer_file(gold_filename, "r");
