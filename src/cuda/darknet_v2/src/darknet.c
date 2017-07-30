@@ -441,7 +441,10 @@ int main(int argc, char **argv) {
 				break;
 			}
 			case 2: { //test
-				start_count_app(parsed_args.gold_inout, "cudaDarknetv2");
+				//void start_count_app(char *test, int save_layer, int abft, int iterations,
+	//				char *app)
+				start_count_app(parsed_args.gold_inout, parsed_args.save_layers,
+						parsed_args.abft, parsed_args.iterations, "cudaDarknetv2");
 				test_detector_radiation(&parsed_args);
 				finish_count_app();
 				break;
@@ -463,7 +466,8 @@ int main(int argc, char **argv) {
 	} else if (0 == strcmp(argv[1], "classifier")) {
 		run_classifier(argc, argv);
 	} else if (0 == strcmp(argv[1], "regressor")) {
-		run_regressor(argc, argv);	int i;
+		run_regressor(argc, argv);
+		int i;
 	} else if (0 == strcmp(argv[1], "art")) {
 		run_art(argc, argv);
 	} else if (0 == strcmp(argv[1], "tag")) {

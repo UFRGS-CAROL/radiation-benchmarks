@@ -795,7 +795,9 @@ void test_detector_radiation(Args *args) {
 //	set abft
 	if (args->abft && args->abft < MAX_ABFT_TYPES) {
 		printf("passou no if\n\n");
+#ifdef GPU
 		set_abft(args->abft);
+#endif
 	}
 //	alloc once and clear at each iteration
 	layer l = net.layers[net.n - 1];

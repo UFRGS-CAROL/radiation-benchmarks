@@ -18,12 +18,21 @@
 
 #endif
 
-void start_count_app(char *test, char *app) {
+void start_count_app(char *test, int save_layer, int abft, int iterations,
+		char *app) {
 #ifdef LOGS
-	char test_info[500];
-	snprintf(test_info, 500, "gold_file: %s", test);
+	char save_layer_char[10];
+	char abft_char[10];
+	char iterations_char[50];
+	sprintf(save_layer_char, "%d", save_layer);
+	sprintf(abft_char, "%d", abft);
+	sprintf(iterations_char, "%d", iterations);
 
-	start_log_file(app, test_info);
+	std::string test_info = std::string("gold_file: ") + std::string(test) +
+	" save_layer: " + save_layer_char + " abft_type: " +
+	abft_char + " iterations: " + iterations_char;
+
+	start_log_file(app, const_cast<char*>(test_info.c_str()));
 #endif
 }
 
@@ -154,7 +163,9 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 			LAYER_GOLD, i, img_iterator);
 
 			gold_file = open_layer_file(gold_filename, "r");
-			if(l.outputs != fread(det->gold_layers[i], sizeof(float), l.outputs, gold_file)){
+			if (l.outputs
+					!= fread(det->gold_layers[i], sizeof(float), l.outputs,
+							gold_file)) {
 				printf("ERROR ON READ size %s\n", gold_filename);
 				fclose(gold_file);
 				exit(-1);
@@ -304,7 +315,7 @@ detection load_gold(Args *arg) {
 	for (int i = 0; i < gold.plist_size && getline(img_list_file, line); i++) {
 		line.erase(line.size() - 1);
 		gold.img_names[i] = (char*) calloc(line.size(), sizeof(char));
-		std::vector<string> line_splited = split(line, ';');
+		std::vector < string > line_splited = split(line, ';');
 		strcpy(gold.img_names[i], line_splited[0].c_str());
 
 		gold.pb_gold[i] = load_prob_array(gold.total, gold.classes,
@@ -409,8 +420,8 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 		box f_b = f_boxes[i];
 
 		char error_detail[1000];
-		if (error_check(error_detail, f_prob, g_prob, f_b, g_b, img_string, class_,
-				i)) {
+		if (error_check(error_detail, f_prob, g_prob, f_b, g_b, img_string,
+				class_, i)) {
 			error_count++;
 
 #ifdef LOGS

@@ -61,7 +61,8 @@ int log_info_detail(char *string);
 /**
  * functions to start log file
  */
-void start_count_app(char*, char*);
+void start_count_app(char *test, int save_layer, int abft, int iterations,
+		char *app) ;
 
 void finish_count_app();
 
