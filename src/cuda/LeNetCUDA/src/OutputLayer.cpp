@@ -7,8 +7,8 @@
 
 #include "OutputLayer.h"
 #include "Util.h"
-#define L1_LAMBDA  0.005
-#define L2_LAMBDA  0.001
+#define L1_LAMBDA  0.000005
+#define L2_LAMBDA  0.00000001
 
 
 #ifdef GPU
@@ -112,7 +112,7 @@ void OutputLayer::back_prop_L1() {
 	}
 
 
-	//printf("\ndebug lenetWeightsSum: %f", this->lenetWeightsSum);
+	printf("\ndebug lenetWeightsSum: %f, valor reguarizacao: %f", this->lenetWeightsSum, L1_LAMBDA* this->lenetWeightsSum);
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
 					+ L1_LAMBDA * this->lenetWeightsSum; // L1 regularization
@@ -128,7 +128,7 @@ void OutputLayer::back_prop_L2() {
 		printf("passou no if do back\n");
 	}
 
-       	printf("\ndebug lenetSquaredWeightsSum: %f", this->lenetSquaredWeightsSum);
+       	printf("\ndebug lenetSquaredWeightsSum: %f, valor regularizacao: %f", this->lenetSquaredWeightsSum, L2_LAMBDA*this->lenetSquaredWeightsSum);
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
 					+ L2_LAMBDA * this->lenetSquaredWeightsSum; // L2 regularization
@@ -137,10 +137,12 @@ void OutputLayer::back_prop_L2() {
 
 void OutputLayer::set_sum_LeNet_weights(float_t sum_Lenet_weights)
 {
+	this->lenetWeightsSum = 0.0;
 	this->lenetWeightsSum = sum_Lenet_weights;
 }
 
 void OutputLayer::set_sum_LeNet_squared_weights(float_t sum_Lenet_squared_weights)
 {
+        this->lenetSquaredWeightsSum = 0.0;
 	this->lenetSquaredWeightsSum = sum_Lenet_squared_weights;
 }

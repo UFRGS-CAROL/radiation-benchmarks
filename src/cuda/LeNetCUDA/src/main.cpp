@@ -156,6 +156,9 @@ void classify(MNISTParser& m, string weigths) {
 	//need to load network configurations here
 	n.load_weights(weigths);
 
+	//debug weights
+	n.print_all_layer_weights();
+
 	int test_sample_count = 1000;
 	printf("Testing with %d samples:\n", test_sample_count);
 	n.test(test_x, test_y, test_sample_count);

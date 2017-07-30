@@ -49,7 +49,10 @@ public:
 	void load_weights(FILE *in);
 	void save_weights(std::string path, std::string file_mode = "wb");
 
+
 	std::vector<Layer*> get_layers();
+
+	void print_all_layer_weights();
 
 private:
 
@@ -74,8 +77,9 @@ private:
 
 	float_t train_once();
 
-	int getSumLeNetWeights();
-	int getSquaredSumLeNetWeights();
+	float_t getSumLeNetWeights();
+	float_t getSquaredSumLeNetWeights();
+
 
 	std::vector<Layer*> layers;
 
