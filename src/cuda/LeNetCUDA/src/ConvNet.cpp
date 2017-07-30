@@ -67,7 +67,7 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, char normalization) {
 	this->add_layer(new OutputLayer(layers.back()->out_depth_));
 	this->mark.start();
 
-	for(int i = 0; i < 10; i++){ //iterando 10x pelo dataset
+	for(int j = 0; j < 1; j++){ //iterando 1x pelo dataset
 	for (size_t i = 0; i < this->train_size_; i++) {
 		layers[0]->input_ = train_x_[i];
 		layers.back()->exp_y = (int) train_y_[i];
@@ -104,12 +104,14 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, char normalization) {
 		} else if (normalization == 'B') {
 			// nova versao do backpropagation ( L2 )
 			//calcula sum_LeNet_squared_weights:
-			float_t sum_LeNet_squared_weights = 0;
+			float_t sum_LeNet_squared_weights = 0.0;
 			for (auto i = layers.rbegin() + 1; i != layers.rend();
 
 			i++) {
 				sum_LeNet_squared_weights += (*i)->getSquaredWeightsSum();
 			}
+			//debug weight sum
+			std::cout << "\n		debug sum lenet squared weights  " << sum_LeNet_squared_weights;
 			//backpropagation
 			auto i = layers.rbegin();
 			(*i)->set_sum_LeNet_squared_weights(sum_LeNet_squared_weights);
@@ -400,20 +402,29 @@ void ConvNet::save_weights(std::string path, std::string file_mode) {
 
 }
 
-int ConvNet::getSquaredSumLeNetWeights() {
-	int sum = 0;
+float_t ConvNet::getSquaredSumLeNetWeights() {
+	float_t sum = 0;
 	for (auto layer : layers) {
 		sum += layer->getSquaredWeightsSum();
 	}
 	return sum;
 }
 
-int ConvNet::getSumLeNetWeights() {
-	int sum = 0;
+float_t ConvNet::getSumLeNetWeights() {
+	float_t sum = 0;
 	for (auto layer : layers) {
 		sum += layer->getWeightsSum();
 	}
 	return sum;
+}
+
+void ConvNet::print_all_layer_weights(){
+	int i=0;
+	for (auto layer : layers) {
+                layer->print_layer_weights(i);
+		i++;
+        }
+
 }
 
 //
