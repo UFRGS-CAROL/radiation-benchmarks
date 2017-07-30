@@ -427,6 +427,26 @@ void ConvNet::print_all_layer_weights(){
 
 }
 
+void ConvNet::print_sum_weights(){
+	float_t sum_weights;
+	sum_weights = this->getSumLeNetWeights();
+	printf("---\n soma de todos os pesos: %f\n", sum_weights);
+}
+
+void ConvNet::print_all_layer_weight_sums(){
+	int i=0;
+	float_t weights_sum;
+	std::cout << "printing all layers weights sums" << std::endl;
+
+	for (auto layer : layers) {
+		weights_sum = layer->getWeightsSum();
+		std::cout << "layer " << i << "\tweights_sum: " << weights_sum << std::endl;
+		i++;
+        }
+	printf("---\n");
+}
+
+
 //
 //#ifdef DEBUG
 //	//DEBUG:

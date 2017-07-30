@@ -52,7 +52,9 @@ public:
 
 	std::vector<Layer*> get_layers();
 
+	void print_all_layer_weight_sums();
 	void print_all_layer_weights();
+	void print_sum_weights();
 
 private:
 
