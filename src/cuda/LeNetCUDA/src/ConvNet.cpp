@@ -67,76 +67,66 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, char normalization) {
 	this->add_layer(new OutputLayer(layers.back()->out_depth_));
 	this->mark.start();
 
-	for(int j = 0; j < 1; j++){ //iterando 1x pelo dataset
-	for (size_t i = 0; i < this->train_size_; i++) {
-		layers[0]->input_ = train_x_[i];
-		layers.back()->exp_y = (int) train_y_[i];
-		/*
-		 Start forward feeding.
-		 */
-		for (auto layer : layers) {
-			layer->forward();
-			if (layer->next != nullptr) {
-				layer->next->input_ = layer->output_;
+	for (int j = 0; j < 1; j++) { //iterando 1x pelo dataset
+		for (size_t i = 0; i < this->train_size_; i++) {
+			layers[0]->input_ = train_x_[i];
+			layers.back()->exp_y = (int) train_y_[i];
+			/*
+			 Start forward feeding.
+			 */
+			for (auto layer : layers) {
+				layer->forward();
+				if (layer->next != nullptr) {
+					layer->next->input_ = layer->output_;
+				}
+
+			}
+
+			/*
+			 back propgation
+			 */
+			//printf("\nnormalizacao debug %c", normalization);
+			if (normalization == 'A') {
+				// nova versao do backpropagation ( L1 )
+				//calcula sum_LeNet_weights:
+				float_t sum_LeNet_weights = 0.0;
+				for (auto i = layers.rbegin() + 1; i != layers.rend(); i++) {
+					sum_LeNet_weights += (*i)->getWeightsSum();
+				}
+				//printf("debug l1 convnet train sumWeights: %f", sum_LeNet_weights);
+				//backpropagation
+				auto i = layers.rbegin();
+				(*i)->set_sum_LeNet_weights(sum_LeNet_weights);
+				(*i)->back_prop_L1();
+				for (i = layers.rbegin() + 1; i != layers.rend(); i++) {
+					(*i)->back_prop();
+				}
+			} else if (normalization == 'B') {
+				// nova versao do backpropagation ( L2 )
+				//calcula sum_LeNet_squared_weights:
+				float_t sum_LeNet_squared_weights = 0.0;
+				for (auto i = layers.rbegin() + 1; i != layers.rend();
+
+				i++) {
+					sum_LeNet_squared_weights += (*i)->getSquaredWeightsSum();
+				}
+				//debug weight sum
+				std::cout << "\n		debug sum lenet squared weights  "
+						<< sum_LeNet_squared_weights;
+				//backpropagation
+				auto i = layers.rbegin();
+				(*i)->set_sum_LeNet_squared_weights(sum_LeNet_squared_weights);
+				(*i)->back_prop_L2();
+				for (i = layers.rbegin() + 1; i != layers.rend(); i++) {
+					(*i)->back_prop();
+				}
+			} else if (normalization == 'D') { // versao sem regularizacao L1 nem L2
+				for (auto i = layers.rbegin(); i != layers.rend(); i++) {
+					(*i)->back_prop();
+				}
 			}
 
 		}
-
-		/*
-		 back propgation
-		 */
-		//printf("\nnormalizacao debug %c", normalization);
-		if (normalization == 'A') {
-			// nova versao do backpropagation ( L1 )
-			//calcula sum_LeNet_weights:
-			float_t sum_LeNet_weights = 0.0;
-			for (auto i = layers.rbegin() + 1; i != layers.rend(); i++) {
-				sum_LeNet_weights += (*i)->getWeightsSum();
-			}
-			//printf("debug l1 convnet train sumWeights: %f", sum_LeNet_weights);
-			//backpropagation
-			auto i = layers.rbegin();
-			(*i)->set_sum_LeNet_weights(sum_LeNet_weights);
-			(*i)->back_prop_L1();
-			for (i = layers.rbegin() + 1; i != layers.rend(); i++) {
-				(*i)->back_prop();
-			}
-		} else if (normalization == 'B') {
-			// nova versao do backpropagation ( L2 )
-			//calcula sum_LeNet_squared_weights:
-			float_t sum_LeNet_squared_weights = 0.0;
-			for (auto i = layers.rbegin() + 1; i != layers.rend();
-
-			i++) {
-				sum_LeNet_squared_weights += (*i)->getSquaredWeightsSum();
-			}
-			//debug weight sum
-			std::cout << "\n		debug sum lenet squared weights  " << sum_LeNet_squared_weights;
-			//backpropagation
-			auto i = layers.rbegin();
-			(*i)->set_sum_LeNet_squared_weights(sum_LeNet_squared_weights);
-			(*i)->back_prop_L2();
-			for (i = layers.rbegin() + 1; i != layers.rend(); i++) {
-				(*i)->back_prop();
-			}
-		} else if (normalization == 'D') { // versao sem regularizacao L1 nem L2
-			for (auto i = layers.rbegin(); i != layers.rend(); i++) {
-				(*i)->back_prop();
-			}
-		}
-
-//		//versao antiga: (ta no ultimo else do if, que eh o default)
-//		for (auto i = layers.rbegin(); i != layers.rend(); i++) {
-//			(*i)->back_prop();
-//		}
-
-//		err = layers.back()->err;
-//		std::cout << " training cost: " << err << std::endl;
-//		if(err < END_CONDITION){ // if the error is small enough
-//			std::cout << "Error small enough " << err << "\n";
-//			break;
-//		}
-	}
 	}
 	this->mark.stop();
 	std::cout << "Time spent on training " << this->mark << std::endl;
@@ -169,8 +159,11 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size,
 		result = test_once(iter) ? 1 : 0;
 		bang += result;
 		if (save_layer) {
-			//if it is the first time I rewrite the file
-			this->save_weights(gold_layers_path, (iter) ? "ab" : "wb");
+#ifdef GPU
+			save_gold_layers< std::vector<DeviceVector<float>*> >(this->gold_layers, iter);
+#else
+			save_gold_layers< std::vector<vec_host*> >(this->gold_layers, iter);
+#endif
 		}
 		iter++;
 	}
@@ -201,6 +194,13 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y,
 #else
 	std::cout << "Testing with CPU " << std::endl;
 #endif // GPU
+	TypeVector gold_l;
+	for (int i = 0; i < test_size_; i++){
+		std::cout << "Passou \n";
+		gold_l = load_gold_layers<TypeVector>(i, this->layers.size());
+		std::cout << "Passou 2\n";
+
+	}
 
 	for (size_t i = 0; i < iterations; i++) {
 		this->mark.start();
@@ -219,7 +219,7 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y,
 			auto cmp = compare_output(gold_out, result, iter);
 			//log the result
 			if (cmp && save_layer) {
-				compare_and_save_layers(gold_layers[i], this->layers, i, iter);
+//				compare_and_save_layers(gold_layers[i], this->layers, i, iter);
 			}
 			compare_timer.stop();
 			//-------------
@@ -289,11 +289,15 @@ bool ConvNet::test_once_random() {
 
 bool ConvNet::test_once(int test_x_index) {
 	layers[0]->input_ = test_x_[test_x_index];
+	int i = 0;
+	this->gold_layers.resize(layers.size());
 	for (auto layer : layers) {
 		layer->forward();
 		if (layer->next != nullptr) {
 			layer->next->input_ = layer->output_;
 		}
+		this->gold_layers[i] = &layer->output_;
+		i++;
 	}
 
 	int predicted = (int) max_iter(layers.back()->output_);
@@ -418,34 +422,34 @@ float_t ConvNet::getSumLeNetWeights() {
 	return sum;
 }
 
-void ConvNet::print_all_layer_weights(){
-	int i=0;
+void ConvNet::print_all_layer_weights() {
+	int i = 0;
 	for (auto layer : layers) {
-                layer->print_layer_weights(i);
+		layer->print_layer_weights(i);
 		i++;
-        }
+	}
 
 }
 
-void ConvNet::print_sum_weights(){
+void ConvNet::print_sum_weights() {
 	float_t sum_weights;
 	sum_weights = this->getSumLeNetWeights();
 	printf("---\n soma de todos os pesos: %f\n", sum_weights);
 }
 
-void ConvNet::print_all_layer_weight_sums(){
-	int i=0;
+void ConvNet::print_all_layer_weight_sums() {
+	int i = 0;
 	float_t weights_sum;
 	std::cout << "printing all layers weights sums" << std::endl;
 
 	for (auto layer : layers) {
 		weights_sum = layer->getWeightsSum();
-		std::cout << "layer " << i << "\tweights_sum: " << weights_sum << std::endl;
+		std::cout << "layer " << i << "\tweights_sum: " << weights_sum
+				<< std::endl;
 		i++;
-        }
+	}
 	printf("---\n");
 }
-
 
 //
 //#ifdef DEBUG

@@ -60,9 +60,10 @@ private:
 
 #ifdef GPU
 	size_t max_iter(DeviceVector<float> v);
-
+	std::vector<DeviceVector<float>*> gold_layers;
 #else
 	size_t max_iter(vec_host v);
+	std::vector<vec_host*> gold_layers;
 #endif
 
 	size_t max_iter(float v[], size_t size);

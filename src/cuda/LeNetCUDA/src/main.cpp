@@ -39,7 +39,7 @@ void classify_gold_generate(MNISTParser& m, string weigths, string gold_output,
 
 	printf("Generating gold with %d samples:\n", test_sample_count);
 	n.test(test_x, test_y, test_sample_count,
-			string(SAVE_LAYER_DATA) + "/gold_layers_lenet.layer", save_layers);
+			string(SAVE_LAYER_DATA), save_layers);
 
 	std::ofstream gold_output_file(gold_output);
 
@@ -114,21 +114,21 @@ void classify_test_rad(MNISTParser& m, string weigths, string gold_input,
 
 	//load golds for layer comparison
 	if (save_layers) {
-		FILE *gold_layers_input_file = fopen(
-				(string(SAVE_LAYER_DATA) + "/gold_layers_lenet.layer").c_str(),
-				"rb");
-
-		for (int i = 0; i < sample_count; i++) {
-			if (gold_layers_input_file == NULL) {
-				error("ERROR: On reading layer gold\n");
-			}
-			ConvNet temp_gold;
-			create_lenet(&temp_gold);
-			temp_gold.load_weights(gold_layers_input_file);
-			gold_layers.push_back(temp_gold.get_layers());
-
-		}
-		fclose(gold_layers_input_file);
+//		FILE *gold_layers_input_file = fopen(
+//				(string(SAVE_LAYER_DATA) + "/gold_layers_lenet.layer").c_str(),
+//				"rb");
+//
+//		for (int i = 0; i < sample_count; i++) {
+//			if (gold_layers_input_file == NULL) {
+//				error("ERROR: On reading layer gold\n");
+//			}
+//			ConvNet temp_gold;
+//			create_lenet(&temp_gold);
+//			temp_gold.load_weights(gold_layers_input_file);
+//			gold_layers.push_back(temp_gold.get_layers());
+//
+//		}
+//		fclose(gold_layers_input_file);
 	}
 	cout << "COmeçou a classificação \n";
 	//-------------------------------------------

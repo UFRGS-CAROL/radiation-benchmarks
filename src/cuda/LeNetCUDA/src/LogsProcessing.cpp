@@ -13,7 +13,8 @@ size_t error_count = 0;
 #include "log_helper.h"
 #endif //LOGS def
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+std::vector<std::string> &split(const std::string &s, char delim,
+		std::vector<std::string> &elems) {
 	std::stringstream ss(s);
 	std::string item;
 	while (getline(ss, item, delim)) {
@@ -27,8 +28,6 @@ std::vector<std::string> split(const std::string &s, char delim) {
 	split(s, delim, elems);
 	return elems;
 }
-
-
 
 void start_count_app(char *test, char *app) {
 #ifdef LOGS
@@ -90,6 +89,7 @@ bool compare_output(std::pair<size_t, bool> p1, std::pair<size_t, bool> p2,
 #ifdef LOGS
 		log_error_detail(err);
 		log_error_count(1);
+		printf("%s\n", err);
 #else
 		printf("%s\n", err);
 #endif
@@ -97,8 +97,8 @@ bool compare_output(std::pair<size_t, bool> p1, std::pair<size_t, bool> p2,
 	return cmp;
 }
 
-void compare_and_save_layers(std::vector<Layer*> gold,
-		std::vector<Layer*> found, int iteration, int img) {
+
+void compare_and_save_layers(TypeVector gold, TypeVector found, int iteration, int img){
 
 	std::vector < std::string > last_part;
 
@@ -118,13 +118,13 @@ void compare_and_save_layers(std::vector<Layer*> gold,
 			+ "_img_" + std::to_string(img);
 
 	for (size_t i = 0; i < gold.size(); i++) {
-		Layer *g = gold[i];
-		Layer *f = found[i];
-		bool error_found = false;
+		auto g = gold[i];
+		auto f = found[i];
+		bool error_found = true;
 
-		for (size_t j = 0; j < g->output_.size(); j++) {
-			float g_val = g->output_[i];
-			float f_val = f->output_[i];
+		for (size_t j = 0; j < g->size(); j++) {
+			float g_val = g[i][j];
+			float f_val = f[i][j];
 			float diff = fabs(g_val - f_val);
 			if (diff > LAYER_THRESHOLD_ERROR) {
 				error_found = true;
@@ -136,7 +136,10 @@ void compare_and_save_layers(std::vector<Layer*> gold,
 					+ std::to_string(i) + ".layer";
 			FILE *output_layer = fopen(temp_layer_filename.c_str(), "wb");
 			if (output_layer != NULL) {
-				f->save_layer(output_layer);
+				size_t v_size = f->size();
+				fwrite(&v_size, sizeof(size_t), 1, output_layer);
+				fwrite(f->data(), sizeof(size_t), f->size(), output_layer);
+
 				fclose(output_layer);
 			} else {
 				error(
@@ -145,6 +148,5 @@ void compare_and_save_layers(std::vector<Layer*> gold,
 		}
 
 	}
-
 }
 
