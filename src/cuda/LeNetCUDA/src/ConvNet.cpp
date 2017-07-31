@@ -139,7 +139,7 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, char normalization) {
  * test_size is how many images will be tested
  */
 void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size,
-		std::string gold_layers_path, bool save_layer) {
+		bool save_layer) {
 //	assert(batch_size > 0);
 //	assert(test_size % batch_size == 0);
 	test_x_ = test_x;
@@ -154,15 +154,17 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size,
 	std::cout << "Testing with CPU " << std::endl;
 #endif // GPU
 	this->mark.start();
+	this->layers_output.resize(layers.size());
 	while (iter < test_size_) {
 		int result = 0;
 		result = test_once(iter) ? 1 : 0;
 		bang += result;
 		if (save_layer) {
 #ifdef GPU
-			save_gold_layers< std::vector<DeviceVector<float>*> >(this->gold_layers, iter);
+			save_gold_layers< std::vector<DeviceVector<float>*> >(this->layers_output, iter);
 #else
-			save_gold_layers< std::vector<vec_host*> >(this->gold_layers, iter);
+			save_gold_layers < std::vector<vec_host*>
+					> (this->layers_output, iter);
 #endif
 		}
 		iter++;
@@ -181,7 +183,6 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size,
  */
 void ConvNet::test(vec2d_t test_x, vec_host test_y,
 		std::vector<std::pair<size_t, bool>> gold_list, //gold for radiation test
-		std::vector<std::vector<Layer*>> gold_layers, //gold layers
 		size_t iterations, bool save_layer, int sample_count) {
 	test_x_ = test_x;
 	test_y_ = test_y;
@@ -194,13 +195,14 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y,
 #else
 	std::cout << "Testing with CPU " << std::endl;
 #endif // GPU
-	TypeVector gold_l;
-	for (int i = 0; i < test_size_; i++){
-		std::cout << "Passou \n";
-		gold_l = load_gold_layers<TypeVector>(i, this->layers.size());
-		std::cout << "Passou 2\n";
 
+	//load all layers of the test
+	TypeVector *gold_layer_array = (TypeVector*)malloc(sizeof(TypeVector) * test_size_);
+	for (size_t i = 0; i < test_size_; i++) {
+		gold_layer_array[i] = load_gold_layers < TypeVector
+				> (i, this->layers.size());
 	}
+	this->layers_output.resize(layers.size());
 
 	for (size_t i = 0; i < iterations; i++) {
 		this->mark.start();
@@ -219,7 +221,10 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y,
 			auto cmp = compare_output(gold_out, result, iter);
 			//log the result
 			if (cmp && save_layer) {
-//				compare_and_save_layers(gold_layers[i], this->layers, i, iter);
+
+//				compare_and_save_layers(gold_layer_array[iter],
+//						this->layers_output, i, iter);
+
 			}
 			compare_timer.stop();
 			//-------------
@@ -228,6 +233,9 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y,
 		std::cout << "Iteration: " << i << ". Time spent testing "
 				<< this->test_size_ << " samples: " << this->mark << std::endl;
 	}
+
+	//free gold_layer_array
+	free(gold_layer_array);
 
 }
 
@@ -290,13 +298,12 @@ bool ConvNet::test_once_random() {
 bool ConvNet::test_once(int test_x_index) {
 	layers[0]->input_ = test_x_[test_x_index];
 	int i = 0;
-	this->gold_layers.resize(layers.size());
 	for (auto layer : layers) {
 		layer->forward();
 		if (layer->next != nullptr) {
 			layer->next->input_ = layer->output_;
 		}
-		this->gold_layers[i] = &layer->output_;
+		this->layers_output[i] = &layer->output_;
 		i++;
 	}
 
@@ -310,11 +317,15 @@ bool ConvNet::test_once(int test_x_index) {
 
 std::pair<size_t, bool> ConvNet::test_once_pair(int test_x_index) {
 	layers[0]->input_ = test_x_[test_x_index];
+
+	int i = 0;
 	for (auto layer : layers) {
 		layer->forward();
 		if (layer->next != nullptr) {
 			layer->next->input_ = layer->output_;
 		}
+		this->layers_output[i] = &layer->output_;
+		i++;
 	}
 
 	int predicted = (int) max_iter(layers.back()->output_);

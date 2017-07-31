@@ -38,8 +38,7 @@ void classify_gold_generate(MNISTParser& m, string weigths, string gold_output,
 	n.load_weights(weigths);
 
 	printf("Generating gold with %d samples:\n", test_sample_count);
-	n.test(test_x, test_y, test_sample_count,
-			string(SAVE_LAYER_DATA), save_layers);
+	n.test(test_x, test_y, test_sample_count, save_layers);
 
 	std::ofstream gold_output_file(gold_output);
 
@@ -92,7 +91,7 @@ void classify_test_rad(MNISTParser& m, string weigths, string gold_input,
 	//-------------------------------------------
 	ifstream gold_input_file(gold_input);
 	vector<pair<size_t, bool>> gold_data;
-	vector < vector<Layer*> > gold_layers;
+//	vector < vector<Layer*> > gold_layers;
 
 	string test_img_fname, test_lbl_fname, weigths_read;
 	int sample_count;
@@ -134,7 +133,7 @@ void classify_test_rad(MNISTParser& m, string weigths, string gold_input,
 	//-------------------------------------------
 	//Make radiation test
 	//-------------------------------------------
-	n.test(test_x, test_y, gold_data, gold_layers, iterations, save_layers,
+	n.test(test_x, test_y, gold_data, iterations, save_layers,
 			sample_count);
 
 	//end log file

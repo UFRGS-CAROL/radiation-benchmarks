@@ -110,7 +110,7 @@ void compare_and_save_layers(TypeVector gold, TypeVector found, int iteration, i
 #else
 	const char *log_filename = "test";
 #endif
-
+	std::cout << "gold size " << gold.size() <<" found size " << found.size() << "\n";
 	assert(gold.size() == found.size());
 
 	std::string layer_file_name = std::string(SAVE_LAYER_DATA) + "/"
@@ -123,8 +123,8 @@ void compare_and_save_layers(TypeVector gold, TypeVector found, int iteration, i
 		bool error_found = true;
 
 		for (size_t j = 0; j < g->size(); j++) {
-			float g_val = g[i][j];
-			float f_val = f[i][j];
+			auto g_val = g[i][j];
+			auto f_val = f[i][j];
 			float diff = fabs(g_val - f_val);
 			if (diff > LAYER_THRESHOLD_ERROR) {
 				error_found = true;

@@ -35,11 +35,9 @@ public:
 
 	void test(vec2d_t test_x, vec_host test_y,
 			std::vector<std::pair<size_t, bool>> gold_list, //gold for radiation test
-			std::vector<std::vector<Layer*>> gold_layers, //gold layers
 			size_t iterations, bool save_layer, int sample_count);
 
-	void test(vec2d_t test_x, vec_host test_y, size_t test_size,
-			std::string gold_layers_path = "", bool save_layer = false);
+	void test(vec2d_t test_x, vec_host test_y, size_t test_size, bool save_layer = false);
 
 
 	std::list<std::pair<size_t, bool>> get_predicted_output();
@@ -60,10 +58,10 @@ private:
 
 #ifdef GPU
 	size_t max_iter(DeviceVector<float> v);
-	std::vector<DeviceVector<float>*> gold_layers;
+	std::vector<DeviceVector<float>*> layers_output;
 #else
 	size_t max_iter(vec_host v);
-	std::vector<vec_host*> gold_layers;
+	std::vector<vec_host*> layers_output;
 #endif
 
 	size_t max_iter(float v[], size_t size);
