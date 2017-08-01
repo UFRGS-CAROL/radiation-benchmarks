@@ -167,16 +167,17 @@ void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
 	std::string layer_file_name = std::string(SAVE_LAYER_DATA) + "/"
 			+ std::string(log_filename) + "_it_" + std::to_string(iteration)
 			+ "_img_" + std::to_string(img);
-
+	std::cout << "gold size " << gold.size() << "\n";
 	for (size_t i = 0; i < gold.size(); i++) {
+		auto g = gold[i];
+		auto f = (*found[i]);
+		bool error_found = true;
 
-		bool error_found = false;
+		assert(g.size() == f.size());
+		for (size_t j = 0; j < g.size(); j++) {
 
-		assert(gold[i].size() == found[i]->size());
-		for (size_t j = 0; j < gold[i].size(); j++) {
-
-			float g_val = gold[i][j];
-			float f_val = (*found[i])[j];
+			float g_val = g[j];
+			float f_val = f[j];
 			float diff = fabs(g_val - f_val);
 			if (diff > LAYER_THRESHOLD_ERROR) {
 				error_found = true;
@@ -188,9 +189,10 @@ void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
 					+ std::to_string(i) + ".layer";
 			FILE *output_layer = fopen(temp_layer_filename.c_str(), "wb");
 			if (output_layer != NULL) {
-				size_t v_size = found[i]->size();
+				size_t v_size = f.size();
+
 				fwrite(&v_size, sizeof(size_t), 1, output_layer);
-				fwrite(found[i]->data(), sizeof(size_t), found[i]->size(),
+				fwrite(f.data(), sizeof(float),f.size(),
 						output_layer);
 
 				fclose(output_layer);

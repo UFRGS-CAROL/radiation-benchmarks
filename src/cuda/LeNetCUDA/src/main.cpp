@@ -168,7 +168,7 @@ void classify(MNISTParser& m, string weigths) {
 void train(MNISTParser& m, string weigths, string norm) {
 	m.load_training();
 
-	size_t imgs = 60000;
+	size_t imgs = 1000;
 	vec2d_t test_x;
 	vec_host test_y;
 	for (size_t i = 0; i < imgs; i++) {
