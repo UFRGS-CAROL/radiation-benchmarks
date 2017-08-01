@@ -81,16 +81,16 @@ bool compare_layer(float *l1, float *l2, int n) {
 	return false;
 }
 
-bool compare_output(std::pair<size_t, bool> p1, std::pair<size_t, bool> p2,
+bool compare_output(std::pair<size_t, bool> gold, std::pair<size_t, bool> found,
 		int img) {
-	bool cmp = (p1.first == p2.first) && (p1.second == p2.second);
+	bool cmp = (gold.first == found.first) && (gold.second == found.second);
 	char err[200];
 	if (!cmp) {
 		sprintf(err, "img: [%d] expected_first: [%ld] "
 				"read_first: [%ld] "
 				"expected_second: [%d] "
-				"read_second: [%d]", img, p1.first, p2.first, p1.second,
-				p2.second);
+				"read_second: [%d]", img, gold.first, found.first, gold.second,
+				found.second);
 
 #ifdef LOGS
 		log_error_detail(err);
