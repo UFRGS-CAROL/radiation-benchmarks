@@ -22,6 +22,8 @@
 #include "DeviceVector.h"
 #endif
 
+#include "LogsProcessing.h"
+
 #define MAX_ITER 30  // maximum training iterations
 #define M 5 // training sample counts in each iteration
 #define END_CONDITION 1e-3
@@ -58,10 +60,10 @@ private:
 
 #ifdef GPU
 	size_t max_iter(DeviceVector<float> v);
-	std::vector<DeviceVector<float>*> layers_output;
+	LayersFound layers_output;
 #else
 	size_t max_iter(vec_host v);
-	std::vector<vec_host*> layers_output;
+	LayersFound layers_output;
 #endif
 
 	size_t max_iter(float v[], size_t size);

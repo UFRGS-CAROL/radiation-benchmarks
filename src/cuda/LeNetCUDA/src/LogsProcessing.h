@@ -13,6 +13,15 @@
 #include "Layer.h"
 #include <vector>
 
+#ifdef GPU
+
+typedef std::vector<DeviceVector<float>*> LayersFound;
+#else
+typedef std::vector<vec_host*> LayersFound;
+#endif
+
+typedef std::vector<vec_host> LayersGold;
+
 #define SAVE_LAYER_DATA "/var/radiation-benchmarks/data"
 
 void start_count_app(char *test, char *app);
@@ -36,68 +45,11 @@ bool compare_output(std::pair<size_t, bool> p1, std::pair<size_t, bool> p2,
 
 void log_error_app(char *error_detail);
 
+LayersGold load_gold_layers(int img, int layer_size);
 
+void save_gold_layers(LayersFound layers, int img);
 
-template<typename T>
-void save_gold_layers(T layers, int img) {
-
-	for (auto i = 0; i < layers.size(); i++) {
-		auto v = layers[i];
-		std::string path = std::string(SAVE_LAYER_DATA)
-				+ "/gold_layer_lenet_img_" + std::to_string(img) + "_layer_"
-				+ std::to_string(i) + ".layer";
-
-		FILE *fout = fopen(path.c_str(), "wb");
-		if (fout != NULL) {
-			size_t v_size = v->size();
-			fwrite(&v_size, sizeof(size_t), 1, fout);
-			fwrite(v->data(), sizeof(float), v->size(), fout);
-			fclose(fout);
-		} else {
-			error("FAILED TO OPEN FILE " + path);
-		}
-
-	}
-
-}
-
-template<typename T>
-T load_gold_layers(int img, int layer_size) {
-	T loaded;
-
-	loaded.resize(layer_size);
-	for (auto i = 0; i < layer_size; i++) {
-		std::string path = std::string(SAVE_LAYER_DATA)
-				+ "/gold_layer_lenet_img_" + std::to_string(img) + "_layer_"
-				+ std::to_string(i) + ".layer";
-
-		FILE *fout = fopen(path.c_str(), "rb");
-		if (fout != NULL) {
-			size_t v_size;
-			fread(&v_size, sizeof(size_t), 1, fout);
-#ifdef GPU
-			auto v = (DeviceVector<float>(v_size));
-#else
-			auto v = (vec_host(v_size));
-#endif
-			fread(v.data(), sizeof(float), v_size, fout);
-			fclose(fout);
-			loaded[i] = &v;
-
-		} else {
-			error("FAILED TO OPEN FILE " + path);
-		}
-	}
-	return loaded;
-}
-
-#ifdef GPU
-typedef std::vector<DeviceVector<float>*> TypeVector;
-#else
-typedef std::vector<vec_host*> TypeVector;
-#endif
-
-void compare_and_save_layers(TypeVector gold, TypeVector found, int iteration, int img);
-
+void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
+		int img);
 
 #endif /* LOGSPROCESSING_H_ */

@@ -60,6 +60,12 @@ void inc_count_app() {
 #endif
 }
 
+char *get_log_filename() {
+#ifdef LOGS
+	return get_log_file_name();
+#endif
+}
+
 /**
  * support function only to check if two layers have
  * the same value
@@ -97,20 +103,65 @@ bool compare_output(std::pair<size_t, bool> p1, std::pair<size_t, bool> p2,
 	return cmp;
 }
 
+LayersGold load_gold_layers(int img, int layer_size) {
+	LayersGold loaded(layer_size);
+	for (auto i = 0; i < layer_size; i++) {
+		std::string path = std::string(SAVE_LAYER_DATA)
+				+ "/gold_layer_lenet_img_" + std::to_string(img) + "_layer_"
+				+ std::to_string(i) + ".layer";
 
-void compare_and_save_layers(TypeVector gold, TypeVector found, int iteration, int img){
+		FILE *fout = fopen(path.c_str(), "rb");
+		if (fout != NULL) {
+			size_t v_size;
+			fread(&v_size, sizeof(size_t), 1, fout);
+
+			loaded[i].resize(v_size);
+
+			fread(loaded[i].data(), sizeof(float), v_size, fout);
+
+		} else {
+			error("FAILED TO OPEN FILE " + path);
+		}
+	}
+	return loaded;
+}
+
+void save_gold_layers(LayersFound layers, int img) {
+
+	for (size_t i = 0; i < layers.size(); i++) {
+		auto v = layers[i];
+		std::string path = std::string(SAVE_LAYER_DATA)
+				+ "/gold_layer_lenet_img_" + std::to_string(img) + "_layer_"
+				+ std::to_string(i) + ".layer";
+
+		FILE *fout = fopen(path.c_str(), "wb");
+		if (fout != NULL) {
+			size_t v_size = v->size();
+			fwrite(&v_size, sizeof(size_t), 1, fout);
+			fwrite(v->data(), sizeof(float), v->size(), fout);
+			fclose(fout);
+		} else {
+			error("FAILED TO OPEN FILE " + path);
+		}
+
+	}
+
+}
+
+void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
+		int img) {
 
 	std::vector < std::string > last_part;
 
 #ifdef LOGS
-	char *temp_log_filename = get_log_file_name();
+	char *temp_log_filename = get_log_filename();
 
 	last_part = split(std::string(temp_log_filename), '/');
 	const char *log_filename = last_part[last_part.size() - 1].c_str();
 #else
 	const char *log_filename = "test";
 #endif
-	std::cout << "gold size " << gold.size() <<" found size " << found.size() << "\n";
+//	std::cout << "gold size " << gold.size() <<" found size " << found.size() << "\n";
 	assert(gold.size() == found.size());
 
 	std::string layer_file_name = std::string(SAVE_LAYER_DATA) + "/"
@@ -118,13 +169,14 @@ void compare_and_save_layers(TypeVector gold, TypeVector found, int iteration, i
 			+ "_img_" + std::to_string(img);
 
 	for (size_t i = 0; i < gold.size(); i++) {
-		auto g = gold[i];
-		auto f = found[i];
-		bool error_found = true;
 
-		for (size_t j = 0; j < g->size(); j++) {
-			auto g_val = g[i][j];
-			auto f_val = f[i][j];
+		bool error_found = false;
+
+		assert(gold[i].size() == found[i]->size());
+		for (size_t j = 0; j < gold[i].size(); j++) {
+
+			float g_val = gold[i][j];
+			float f_val = (*found[i])[j];
 			float diff = fabs(g_val - f_val);
 			if (diff > LAYER_THRESHOLD_ERROR) {
 				error_found = true;
@@ -136,9 +188,10 @@ void compare_and_save_layers(TypeVector gold, TypeVector found, int iteration, i
 					+ std::to_string(i) + ".layer";
 			FILE *output_layer = fopen(temp_layer_filename.c_str(), "wb");
 			if (output_layer != NULL) {
-				size_t v_size = f->size();
+				size_t v_size = found[i]->size();
 				fwrite(&v_size, sizeof(size_t), 1, output_layer);
-				fwrite(f->data(), sizeof(size_t), f->size(), output_layer);
+				fwrite(found[i]->data(), sizeof(size_t), found[i]->size(),
+						output_layer);
 
 				fclose(output_layer);
 			} else {
@@ -149,4 +202,3 @@ void compare_and_save_layers(TypeVector gold, TypeVector found, int iteration, i
 
 	}
 }
-

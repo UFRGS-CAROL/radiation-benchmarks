@@ -11,8 +11,6 @@
 #include "cudaUtil.h"
 #endif
 
-#include "LogsProcessing.h"
-
 void ConvNet::train(vec2d_t train_x, vec_host train_y, size_t train_size) {
 
 #ifdef GPU
@@ -160,12 +158,7 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size,
 		result = test_once(iter) ? 1 : 0;
 		bang += result;
 		if (save_layer) {
-#ifdef GPU
-			save_gold_layers< std::vector<DeviceVector<float>*> >(this->layers_output, iter);
-#else
-			save_gold_layers < std::vector<vec_host*>
-					> (this->layers_output, iter);
-#endif
+			save_gold_layers(this->layers_output, iter);
 		}
 		iter++;
 	}
@@ -197,10 +190,10 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y,
 #endif // GPU
 
 	//load all layers of the test
-	TypeVector *gold_layer_array = (TypeVector*)malloc(sizeof(TypeVector) * test_size_);
+	std::vector<LayersGold> gold_layer_array(test_size_);
+
 	for (size_t i = 0; i < test_size_; i++) {
-		gold_layer_array[i] = load_gold_layers < TypeVector
-				> (i, this->layers.size());
+		gold_layer_array[i] = load_gold_layers(i, this->layers.size());
 	}
 	this->layers_output.resize(layers.size());
 
@@ -221,21 +214,18 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y,
 			auto cmp = compare_output(gold_out, result, iter);
 			//log the result
 			if (cmp && save_layer) {
-
-//				compare_and_save_layers(gold_layer_array[iter],
-//						this->layers_output, i, iter);
+				compare_and_save_layers(gold_layer_array[iter],
+						this->layers_output, i, iter);
 
 			}
 			compare_timer.stop();
 			//-------------
 		}
+
 		this->mark.stop();
 		std::cout << "Iteration: " << i << ". Time spent testing "
 				<< this->test_size_ << " samples: " << this->mark << std::endl;
 	}
-
-	//free gold_layer_array
-	free(gold_layer_array);
 
 }
 
@@ -303,7 +293,7 @@ bool ConvNet::test_once(int test_x_index) {
 		if (layer->next != nullptr) {
 			layer->next->input_ = layer->output_;
 		}
-		this->layers_output[i] = &layer->output_;
+		this->layers_output[i] = &(layer->output_);
 		i++;
 	}
 
@@ -324,7 +314,7 @@ std::pair<size_t, bool> ConvNet::test_once_pair(int test_x_index) {
 		if (layer->next != nullptr) {
 			layer->next->input_ = layer->output_;
 		}
-		this->layers_output[i] = &layer->output_;
+		this->layers_output[i] = &(layer->output_);
 		i++;
 	}
 
