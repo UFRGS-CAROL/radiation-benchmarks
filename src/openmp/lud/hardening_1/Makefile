@@ -17,7 +17,7 @@ lud_gen: lud_gen.c common.c
 	$(CC) common.c lud_omp.c lud_gen.c -o lud_gen  $(CC_FLAGS)
 
 lud_check: $(SOURCES_CHECK)
-	$(CC) common.c $(SOURCES_CHECK) -DLOGS -DTIMING -o lud_check $(CC_FLAGS)
+	$(CC) common.c $(SOURCES_CHECK) -DLOGS -o lud_check $(CC_FLAGS)
 
 lud_check_hardened: $(SOURCES_CHECK_HARDENED)
 	$(CC) common.c $(SOURCES_CHECK_HARDENED) -DLOGS -DTIMING -o lud_check_hardened $(CC_FLAGS)
