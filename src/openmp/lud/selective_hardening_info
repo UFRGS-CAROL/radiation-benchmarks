@@ -1,0 +1,66 @@
+hardening_1:
+        hardened variables:
+                temp_top
+
+        inputs:
+                1024:
+			original time: 0.066970 seconds.
+			hardened time: 0.773114 seconds.
+
+		2048:
+			original time: 0.645630 seconds.
+			hardened time: 5.319299 seconds.
+
+hardening_2:
+        hardened variables:
+                sum
+
+        inputs:
+                1024:
+			original time: 0.102668 seconds.
+			hardened time: 0.154844 seconds.
+
+		2048:
+			original time: 0.633474 seconds.
+			hardened time: 0.988586 seconds.
+
+		4096:
+			original time: 4.709836 seconds.
+			hardened time: 6.577793 seconds.
+
+hardening_3:
+        hardened variables:
+                j_global
+
+        inputs:
+                1024:
+			original time: 0.096609 seconds.
+			hardened time: 0.185144 seconds.
+
+		2048:
+			original time: 0.627378 seconds.
+			hardened time: 1.029505 seconds.
+
+		4096:
+			original time: 4.210426 seconds.
+			hardened time: 7.329238 seconds.
+
+hardening_4:
+        hardened variables:
+                sum, j_global
+
+        inputs:
+                1024:
+			original time: 0.108906 seconds.
+			hardened time: 0.242282 seconds.
+
+		2048:
+			original time: 0.773339 seconds.
+			hardened time: 1.723232 seconds.
+
+		4096:
+			original time: 5.916740 seconds.
+			hardened time: ~13 seconds.
+
+
+		
