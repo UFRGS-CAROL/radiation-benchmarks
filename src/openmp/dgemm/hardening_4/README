@@ -1,0 +1,56 @@
+DGEMM
+
+* How to compile
+  - Intel Xeon Phi (icc native compilation):
+    $ make intel
+  - General X86 (gcc):
+    $ make general
+
+Compilation should generate 5 binaries:
+  - genMatrices: used to generate the input matrices, it will generate 2 matrices of size 8192x8192 using double type and stored in a binary file.
+  - dgemm_gen: used to generate the gold output. Gold will be used to check if the execution generates a correct output.
+  - dgemm_check: this binary will be used during radiation test, it will execute the benchmark kernel several times
+  - dgemm_timing: this binary is used only for testing purposes, it will measure the time spent in every part of the benchmark. This binary will not record any log information
+  - dgemm_err_inj: this binary is used only for testing purposes, it will change the input value to check if the gold verification is working. This binary will also enter into an infinite loop to test the setup that needs to kill hanging benchmarks.
+
+
+
+* How to generate input data and gold output
+  - Input data
+    $ ./genMatrices
+  - gold output
+    $ ./dgemm_gen <# threads> <matrix order> <tile size> <matrix A> <matrix B>
+        - # threads: how many thread should the OpenMP create
+        - matrix order: one side of the square matrix (1024, 2048, 4096, ...)
+        - tile size: one size of the square tile, dgemm is the tiling algorithm 
+        - matrix A:: binary file for the first matrix
+        - matrix B: binary file for the second matrix
+
+
+
+* How to run a test
+
+Before running the benchmark, the script radiation-benchmarks/scripts/install.py should be executed. This script will create the folder to store the log files and create the conf file in /etc/radiation-benchmark.conf
+
+  $ ./dgemm_check <# threads> <matrix order> <tile size> <matrix A> <matrix B> <GOLD> <iterations>
+        - # threads: how many thread should the OpenMP create
+        - matrix order: one side of the square matrix (1024, 2048, 4096, ...)
+        - tile size: one size of the square tile, dgemm is the tiling algorithm 
+        - matrix A:: binary file for the first matrix
+        - matrix B: binary file for the second matrix
+        - gold: binary file with the gold output
+        - iterations: how many times the benchmark kernel should be executed, usually 100000 is enough for the radiation test (it will crash before reaching this number)
+
+
+
+* Configuration used for Xeon Phi 3120A
+  - input and gold generated
+    $ ./genMatrices
+    $ ./dgemm_gen 228 1024 8 dgemm_a_8192 dgemm_b_8192
+    $ ./dgemm_gen 228 2048 16 dgemm_a_8192 dgemm_b_8192
+    $ ./dgemm_gen 228 4096 32 dgemm_a_8192 dgemm_b_8192
+  - configurations executed
+    $ ./dgemm_check 228 1024 8 dgemm_a_8192 dgemm_b_8192 gold_1024_m-order_228_ths_8_blocks 1000000
+    $ ./dgemm_check 228 2048 16 dgemm_a_8192 dgemm_b_8192 gold_2048_m-order_228_ths_16_blocks 1000000
+    $ ./dgemm_check 228 4096 32 dgemm_a_8192 dgemm_b_8192 gold_4096_m-order_228_ths_32_blocks 1000000
+

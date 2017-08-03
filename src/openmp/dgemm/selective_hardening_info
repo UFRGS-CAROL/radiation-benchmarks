@@ -1,0 +1,68 @@
+hardening_1:
+        hardened variables:
+                kg
+
+        inputs:
+                1024:
+			original time: 0.440568 seconds.
+			hardened time: 0.491003 seconds.
+
+		2048:
+			original time: 3.816382 seconds.
+			hardened time: 3.956733 seconds.
+
+hardening_2:
+        hardened variables:
+                kg, jg
+
+        inputs:
+                1024:
+			original time: 0.442969 seconds.
+			hardened time: 0.715112 seconds.
+
+		2048:
+			original time: 3.810149 seconds.
+			hardened time: 5.588850 seconds.
+
+hardening_3:
+        hardened variables:
+                kg, jg, ig
+
+        inputs:
+                1024:
+			original time: 0.442951 seconds.
+			hardened time: 2.639966 seconds.
+
+		2048:
+			original time: 3.810149 seconds.
+			hardened time: ~21 seconds.
+
+hardening_4:
+        hardened variables:
+                jg
+
+        inputs:
+                1024:
+			original time: 0.440568 seconds.
+			hardened time: 0.712575 seconds.
+
+		2048:
+			original time: 3.816382 seconds.
+			hardened time: 5.664792 seconds.
+
+hardening_5:
+        hardened variables:
+                ig
+
+        inputs:
+                1024:
+			original time: 0.440568 seconds.
+			hardened time: 2.302266 seconds.
+
+		2048:
+			original time: 3.816382 seconds.
+			hardened time: ~20 seconds.
+
+
+
+
