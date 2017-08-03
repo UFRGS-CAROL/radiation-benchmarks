@@ -62,6 +62,8 @@ endif
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
+DATA_DIR=/home/carol/radiation-benchmarks/data/lenet
+
 all: obj $(EXEC)
 
 $(EXEC): $(OBJS)
@@ -80,27 +82,28 @@ debug:
 	$(CXX) $(COMMON) $(OPTS) src/compare_layers.cpp -o compare
 
 
+
 #usage: ./leNetCUDA <train\classify\gold_gen\rad_test> <dataset> <labels> <weights>
 #[gold input/output] [sample_count] [save layers] [iterations]
 
 train:
-	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte ./lenet.weights
+	./$(EXEC) train $(DATA_DIR)/train-images-idx3-ubyte $(DATA_DIR)/train-labels-idx1-ubyte $(DATA_DIR)/lenet_base.weights
 
 train_l1:
-	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte ./lenet.weights L1
+	./$(EXEC) train $(DATA_DIR)/train-images-idx3-ubyte $(DATA_DIR)/train-labels-idx1-ubyte $(DATA_DIR)/lenet_L1.weights L1
 
 train_l2:
-	./$(EXEC) train train-images-idx3-ubyte train-labels-idx1-ubyte ./lenet.weights L2
+	./$(EXEC) train $(DATA_DIR)/train-images-idx3-ubyte $(DATA_DIR)/train-labels-idx1-ubyte ./lenet_L2.weights L2
 
 test:
-	./$(EXEC) classify t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights
+	./$(EXEC) classify $(DATA_DIR)/t10k-images-idx3-ubyte $(DATA_DIR)/t10k-labels-idx1-ubyte $(DATA_DIR)/lenet_base.weights
 
 
 generate:
-	./$(EXEC) gold_gen t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 2 1 1
+	./$(EXEC) gold_gen $(DATA_DIR)/t10k-images-idx3-ubyte $(DATA_DIR)/t10k-labels-idx1-ubyte  $(DATA_DIR)/lenet_base.weights $(DATA_DIR)/gold_test 2 1 1
 
 test_rad:
-	./$(EXEC) rad_test t10k-images-idx3-ubyte t10k-labels-idx1-ubyte ./lenet.weights gold_test 2 1 10
+	./$(EXEC) rad_test $(DATA_DIR)/t10k-images-idx3-ubyte $(DATA_DIR)/t10k-labels-idx1-ubyte $(DATA_DIR)/lenet_base.weights $(DATA_DIR)/gold_test 2 1 1
 
 
 download_input:
