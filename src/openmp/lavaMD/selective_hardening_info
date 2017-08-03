@@ -1,0 +1,54 @@
+hardening_1:
+        hardened variables:
+                rv_cpu (rA and rB)
+
+        inputs:
+		7:
+			original time: 1.695855 seconds.
+			hardened time: 3.660910 seconds.
+
+                8:
+			original time: 2.555950 seconds.
+			hardened time: 5.465339 seconds.
+
+		9:
+			original time: 3.758658 seconds.
+			hardened time: 8.116880 seconds.
+
+hardening_2:
+        hardened variables:
+                rv_cpu (only rA)
+
+        inputs:
+		7:
+			original time: 1.695855 seconds.
+			hardened time: 2.611302 seconds.
+
+                8:
+			original time: 2.555950 seconds.
+			hardened time: 4.075082 seconds.
+
+		9:
+			original time: 3.758658 seconds.
+			hardened time: 5.789883 seconds.
+
+hardening_2:
+        hardened variables:
+                rv_cpu (only rB)
+
+        inputs:
+		7:
+			original time: 1.695855 seconds.
+			hardened time: 2.507425 seconds.
+
+                8:
+			original time: 2.555950 seconds.
+			hardened time: 3.886698 seconds.
+
+
+		9:
+			original time: 3.758658 seconds.
+			hardened time: 5.784447 seconds.
+
+
+
