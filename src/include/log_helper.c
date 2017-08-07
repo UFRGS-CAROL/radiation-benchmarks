@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <assert.h>
 
-#define QUERY_GPU "/usr/bin/nvidia-smi --query-gpu=gpu_name,ecc.mode.current --format=csv,noheader 2>/tmp/trash"
+//Buff for ECC check
 #define BUFSIZE 128
 
 #include "log_helper.h"
@@ -16,6 +16,8 @@
 #ifdef MIC_NATIVE
 
 char timestamp_watchdog[200] = "/micNfs/carol/logs/timestamp.txt";
+#define QUERY_GPU "echo Enabled"
+#define ENABLED_CONFIRMATION "Enabled"
 
 #else
 
@@ -24,6 +26,10 @@ char timestamp_watchdog[200] = "/micNfs/carol/logs/timestamp.txt";
 char *timestamp_watchdog;
 char timestamp_file[] = "timestamp.txt";
 char vardir_key[] = "vardir";
+
+//Terminal query which will tells if ECC is enable or not, it could vary depend the platform
+#define QUERY_GPU "/usr/bin/nvidia-smi --query-gpu=gpu_name,ecc.mode.current --format=csv,noheader 2>/tmp/trash"
+#define ENABLED_CONFIRMATION "Enabled"
 
 #endif
 
@@ -129,7 +135,7 @@ int check_ecc_status() {
 	memset(output_line, 0, BUFSIZE);
 
 	//check for enabled ECC
-	return (popen_call(QUERY_GPU, "Enabled", output_line));
+	return (popen_call(QUERY_GPU, ENABLED_CONFIRMATION, output_line));
 }
 
 // ~ ===========================================================================
