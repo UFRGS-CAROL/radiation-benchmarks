@@ -116,9 +116,14 @@ clean:
 test_pure_yolo:
 	./darknet detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
 	
-test:
-	./darknet test_radiation -d temp.csv -n 1 -s 1 -a 0
+
 
 generate:
-	./darknet test_radiation  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp.csv -s 1 -l test.txt -a 0
+	./darknet test_radiation  -c $(RAD_DIR)/src/cuda/darknet_v2/cfg/yolo.cfg \
+								  -w $(RAD_DIR)/data/darknet/yolo_v2.weights \
+								  -g 1 -d $(RAD_DIR)/data/darknet/fault_injection.csv -s 1 -l   \
+								  $(RAD_DIR)/data/networks_img_list/fault_injection.txt -a 0
+
+test:
+	./darknet test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 1 -s 1 -a 0 
 
