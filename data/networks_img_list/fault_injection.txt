@@ -1,0 +1,2 @@
+/home/carol/radiation-benchmarks/data/VOC2012/2010_000158.jpg
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence17/images_right/cam2-20080530-164253-198.jpg
