@@ -143,12 +143,11 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 	char *small_log_file = get_small_log_file(log_filename);
 	for (int i = 0; i < layers_size; i++) {
 		char output_filename[500];
-		sprintf(output_filename, "%s%s_layer_%d_img_%d_test_it_%d.layer",
+		sprintf(output_filename, "%s%s_layer_darknet_v2_%d_img_%d_test_it_%d.layer",
 		LAYER_GOLD, small_log_file, i, img_iterator, test_iteration);
 
 		layer l = det->net->layers[i];
 		float *output_layer;
-
 #ifdef GPU
 		cudaMemcpy (det->found_layers[i], l.output_gpu, l.outputs*sizeof(float), cudaMemcpyDeviceToHost);
 		output_layer = det->found_layers[i];
