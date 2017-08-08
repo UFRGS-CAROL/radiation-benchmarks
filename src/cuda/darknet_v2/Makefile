@@ -85,6 +85,9 @@ endif
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
+RAD_DIR=/home/carol/radiation-benchmarks
+
+
 all: obj backup results $(EXEC)
 
 $(EXEC): $(OBJS)
@@ -111,6 +114,7 @@ results:
 
 clean:
 	rm -rf $(OBJS) $(EXEC)
+
 
 
 test_pure_yolo:
