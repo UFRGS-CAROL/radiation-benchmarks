@@ -298,12 +298,16 @@ detection load_gold(Args *arg) {
 	arg->thresh = atof(split_ret[0].c_str());
 	arg->hier_thresh = atof(split_ret[1].c_str());
 	gold.plist_size = atoi(split_ret[2].c_str());
-	arg->img_list_path = const_cast<char*>(split_ret[3].c_str());
-	arg->config_file = const_cast<char*>(split_ret[4].c_str());
-	arg->cfg_data = const_cast<char*>(split_ret[5].c_str());
-	arg->model = const_cast<char*>(split_ret[6].c_str());
+	arg->img_list_path = (char*) calloc(split_ret[3].size(), sizeof(char)); //const_cast<char*>(split_ret[3].c_str());
+	arg->config_file = (char*) calloc(split_ret[4].size(), sizeof(char)); //const_cast<char*>(split_ret[4].c_str());
+	arg->cfg_data = (char*) calloc(split_ret[5].size(), sizeof(char)); //const_cast<char*>(split_ret[5].c_str());
+	arg->model = (char*) calloc(split_ret[6].size(), sizeof(char)); //const_cast<char*>(split_ret[6].c_str());
 	arg->weights = (char*) calloc(split_ret[7].size(), sizeof(char));
 
+	strcpy(arg->img_list_path, split_ret[3].c_str());
+	strcpy(arg->config_file, split_ret[4].c_str());
+	strcpy(arg->cfg_data, split_ret[5].c_str());
+	strcpy(arg->model, split_ret[6].c_str());
 	strcpy(arg->weights, split_ret[7].c_str());
 	gold.total = atoi(split_ret[8].c_str());
 	gold.classes = atoi(split_ret[9].c_str());
