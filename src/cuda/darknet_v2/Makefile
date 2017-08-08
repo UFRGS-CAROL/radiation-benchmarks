@@ -49,7 +49,7 @@ endif
 ifeq ($(GPU), 1) 
 COMMON+= -DGPU -I/usr/local/cuda/include/
 CFLAGS+= -DGPU
-LDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand
+LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
 endif
 
 ifeq ($(CUDNN), 1) 
@@ -85,6 +85,9 @@ endif
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
+RAD_DIR=/home/carol/radiation-benchmarks
+
+
 all: obj backup results $(EXEC)
 
 $(EXEC): $(OBJS)
@@ -113,12 +116,18 @@ clean:
 	rm -rf $(OBJS) $(EXEC)
 
 
+
 test_pure_yolo:
 	./darknet detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
 	
-test:
-	./darknet test_radiation -d temp.csv -n 1 -s 1 -a 0
+
 
 generate:
-	./darknet test_radiation  -c cfg/yolo.cfg -w ../../../data/darknet/yolo_v2.weights -g 1 -d temp.csv -s 1 -l test.txt -a 0
+	./darknet test_radiation  -c $(RAD_DIR)/src/cuda/darknet_v2/cfg/yolo.cfg \
+								  -w $(RAD_DIR)/data/darknet/yolo_v2.weights \
+								  -g 1 -d $(RAD_DIR)/data/darknet/fault_injection.csv -s 1 -l   \
+								  $(RAD_DIR)/data/networks_img_list/fault_injection.txt -a 0
+
+test:
+	./darknet test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 1 -s 1 -a 0 
 
