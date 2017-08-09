@@ -12,9 +12,10 @@ DATASETS = [
     {'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.abft.1K.csv'},
 ]
 
+
 def download_weights(src_dir, data_dir):
     os.chdir(data_dir)
-    if os.system(".get_darknet_weights.sh") != 0:
+    if os.system("./get_darknet_weights.sh") != 0:
         print "ERROR on downloading darknet v1/v2 weights"
         exit(-1)
 
