@@ -18,7 +18,7 @@ ARCH= -gencode arch=compute_30,code=sm_30 \
 # ARCH=  -gencode arch=compute_52,code=compute_52
 
 VPATH=./src/
-EXEC=darknet
+EXEC=darknet_v2
 OBJDIR=./obj/
 
 CC=gcc
@@ -118,16 +118,16 @@ clean:
 
 
 test_pure_yolo:
-	./darknet detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
+	./$(EXEC) detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
 	
 
 
 generate:
-	./darknet test_radiation  -c $(RAD_DIR)/src/cuda/darknet_v2/cfg/yolo.cfg \
+	./$(EXEC) test_radiation  -c $(RAD_DIR)/src/cuda/darknet_v2/cfg/yolo_v2.cfg \
 								  -w $(RAD_DIR)/data/darknet/yolo_v2.weights \
 								  -g 1 -d $(RAD_DIR)/data/darknet/fault_injection.csv -s 1 -l   \
 								  $(RAD_DIR)/data/networks_img_list/fault_injection.txt -a 0
 
 test:
-	./darknet test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 1 -s 1 -a 0 
+	./$(EXEC) test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 1 -s 1 -a 0 
 
