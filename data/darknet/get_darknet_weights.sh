@@ -10,13 +10,13 @@ YOLOV1=yolo_v1.weights
 YOLOV2=yolo_v2.weights
 
 
-if [ ! -f $DIR/$YOLOV1 ];
+if [ ! -f $DIR/$YOLOV1 ] || [ ! "$(echo "f90aa062b70d10e46649e1f1bd69edce $DIR/$YOLOV1" | md5sum -c)" == "$DIR/$YOLOV1: OK" ];
 then
     wget http://pjreddie.com/media/files/yolov1.weights -O $DIR/$YOLOV1
 fi
 
 
-if [ ! -f $DIR/$YOLOV2 ];
+if [ ! -f $DIR/$YOLOV2 ] || [ ! "$(echo "70d89ba2e180739a1c700a9ff238e354 $DIR/$YOLOV2" | md5sum -c)" == "$DIR/$YOLOV2: OK" ];
 then
     wget https://pjreddie.com/media/files/yolo.weights -O $DIR/$YOLOV2
 fi
