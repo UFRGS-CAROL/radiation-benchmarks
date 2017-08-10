@@ -99,10 +99,10 @@ def main(board):
     generate.append("mv ./darknet_v2 " + bin_path + "/")
 
     for i in generate:
-        # if os.system(str(i)) != 0:
-        #     print "Something went wrong with generate of ", str(i)
-        #     exit(1)
-        print i, "\n"
+        if os.system(str(i)) != 0:
+            print "Something went wrong with generate of ", str(i)
+            exit(1)
+        # print i, "\n"
 
     fp = open(installDir + "scripts/how_to_run_darknet_v2_cuda_" + board, 'w')
 
