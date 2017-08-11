@@ -11,14 +11,15 @@
 #include <vector>
 #include <string>
 #include "helpful.h"
-
+#include <cmath>
 #include <iostream>
 #ifdef LOGS
 #include "log_helper.h"
 
 #endif
 
-const char *ABFT_TYPES[] = {"none", "gemm", "smart_pooling", "l1", "l2", "trained_weights"};
+const char *ABFT_TYPES[] = { "none", "gemm", "smart_pooling", "l1", "l2",
+		"trained_weights" };
 
 void start_count_app(char *test, int save_layer, int abft, int iterations,
 		char *app) {
@@ -136,15 +137,17 @@ FILE* open_layer_file(char *output_filename, const char *mode) {
 }
 
 void save_layer(detection *det, int img_iterator, int test_iteration,
-		char *log_filename, int generate) {
+		char *log_filename, int generate, char *img_list_filename) {
 	int layers_size = det->net->n;
 
 	FILE *output_file, *gold_file;
 	char *small_log_file = get_small_log_file(log_filename);
+	std::string img_list_filename_string(img_list_filename);
+	std::vector < std::string > temp_splited = split(img_list_filename_string,
+			'/');
+	img_list_filename_string = temp_splited[temp_splited.size() - 1];
+
 	for (int i = 0; i < layers_size; i++) {
-		char output_filename[500];
-		sprintf(output_filename, "%s%s_layer_darknet_v2_%d_img_%d_test_it_%d.layer",
-		LAYER_GOLD, small_log_file, i, img_iterator, test_iteration);
 
 		layer l = det->net->layers[i];
 		float *output_layer;
@@ -157,11 +160,13 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 		//if generate is set no need to compare
 		if (!generate) {
 			//open gold
-			char gold_filename[500];
-			sprintf(gold_filename, "%sgold_layer_darknet_v2_%d_img_%d_test_it_0.layer",
-			LAYER_GOLD, i, img_iterator);
+			std::string gold_filename = std::string(LAYER_GOLD)
+					+ img_list_filename_string + "_gold_layer_darknet_v2_"
+					+ std::to_string(i) + "_img_" + std::to_string(img_iterator)
+					+ "_test_it_0.layer";
 
-			gold_file = open_layer_file(gold_filename, "r");
+			gold_file = open_layer_file(
+					const_cast<char*>(gold_filename.c_str()), "r");
 			if (l.outputs
 					!= fread(det->gold_layers[i], sizeof(float), l.outputs,
 							gold_file)) {
@@ -172,14 +177,24 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 			fclose(gold_file);
 
 			if (compare_layer(det->gold_layers[i], output_layer, l.outputs)) {
-
-				output_file = open_layer_file(output_filename, "w");
+				std::string output_filename = std::string(LAYER_GOLD)
+						+ std::string(small_log_file) + "_layer_darknet_v2_"
+						+ std::to_string(i) + "_img_"
+						+ std::to_string(img_iterator) + "_test_it_"
+						+ std::to_string(test_iteration) + ".layer";
+				output_file = open_layer_file(
+						const_cast<char*>(output_filename.c_str()), "w");
 				fwrite(output_layer, sizeof(float), l.outputs, output_file);
 				fclose(output_file);
 			}
 
 		} else {
-			output_file = open_layer_file(output_filename, "w");
+			std::string output_filename = std::string(LAYER_GOLD)
+					+ img_list_filename_string + "_gold_layer_darknet_v2_"
+					+ std::to_string(i) + "_img_" + std::to_string(img_iterator)
+					+ "_test_it_" + std::to_string(test_iteration) + ".layer";
+			output_file = open_layer_file(
+					const_cast<char*>(output_filename.c_str()), "w");
 			fwrite(output_layer, sizeof(float), l.outputs, output_file);
 			fclose(output_file);
 		}
@@ -406,7 +421,8 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 }
 
 void compare(detection *det, float **f_probs, box *f_boxes, int num,
-		int classes, int img, int save_layers, int test_iteration) {
+		int classes, int img, int save_layers, int test_iteration,
+		char *img_list_path) {
 
 //	network *net = det->net;
 	prob_array gold = det->pb_gold[img];
@@ -443,7 +459,7 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 	printf("%d errors found at %s detection\n", error_count, img_string);
 //save layers here
 	if(error_count && save_layers) {
-		save_layer(det, img, test_iteration, get_log_file_name(), 0);
+		save_layer(det, img, test_iteration, get_log_file_name(), 0, img_list_path);
 	}
 #endif
 

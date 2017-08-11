@@ -836,7 +836,7 @@ void test_detector_radiation(Args *args) {
 //			void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
 //					int classes, int img, int save_layer, network net, int test_iteration)
 			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, it,
-					args->save_layers, i);
+					args->save_layers, i, args->img_list_path);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(
@@ -948,7 +948,7 @@ void test_detector_generate(Args *args) {
 				boxes);
 
 		if (args->save_layers)
-			save_layer(&gold_to_save, it, 0, "gold", 1);
+			save_layer(&gold_to_save, it, 0, "gold", 1, args->img_list_path);
 
 #ifdef GEN_IMG
 		draw_detections(im, l.w * l.h * l.n, args->thresh, boxes, probs, names,

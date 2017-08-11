@@ -73,7 +73,7 @@ void end_iteration_app();
  * compare and save layers
  */
 void save_layer(detection *det, int img_iterator, int test_iteration,
-		char *log_filename, int generate);
+		char *log_filename, int generate, char *img_list_filename);
 
 void alloc_gold_layers_arrays(detection *det, network *net);
 
@@ -94,7 +94,7 @@ void delete_detection_var(detection*, Args*);
 detection load_gold(Args*);
 
 void compare(detection *det, float **f_probs, box *f_boxes, int num,
-		int classes, int img, int save_layer, int test_iteration);
+		int classes, int img, int save_layer, int test_iteration, char *img_list_path);
 
 void clear_boxes_and_probs(box*, float**, int, int);
 

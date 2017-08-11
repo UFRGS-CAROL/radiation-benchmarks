@@ -27,7 +27,7 @@ NVCC=nvcc
 OPTS=-Ofast
 LDFLAGS= -lm -pthread 
 COMMON= 
-CFLAGS=-Wall -Wfatal-errors
+CFLAGS=-Wall -Wfatal-errors 
 
 ifeq ($(GEN_IMG), 1)
 CFLAGS+= -DGEN_IMG=1
@@ -97,7 +97,7 @@ $(OBJDIR)%.o: %.c $(DEPS)
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@  $(HELPFUL) $(LOGHELPER_LIB) $(LOGHELPER_INC)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@  $(HELPFUL) $(LOGHELPER_LIB) $(LOGHELPER_INC)
+	$(CXX) -std=c++11 $(COMMON) $(CFLAGS) -c $< -o $@  $(HELPFUL) $(LOGHELPER_LIB) $(LOGHELPER_INC)
 
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@ 
@@ -123,7 +123,7 @@ test_pure_yolo:
 
 
 generate:
-	./$(EXEC) test_radiation  -c $(RAD_DIR)/src/cuda/darknet_v2/cfg/yolo_v2.cfg \
+	./$(EXEC) test_radiation  -c $(RAD_DIR)/data/darknet/yolo_v2.cfg \
 								  -w $(RAD_DIR)/data/darknet/yolo_v2.weights \
 								  -g 1 -d $(RAD_DIR)/data/darknet/fault_injection.csv -s 1 -l   \
 								  $(RAD_DIR)/data/networks_img_list/fault_injection.txt -a 0
