@@ -1,0 +1,10 @@
+/home/carol/radiation-benchmarks/data/CALTECH/set06_V001_1060.jpg
+/home/carol/radiation-benchmarks/data/CALTECH/set06_V001_1351.jpg
+/home/carol/radiation-benchmarks/data/CALTECH/set06_V001_1463.jpg
+/home/carol/radiation-benchmarks/data/CALTECH/set06_V001_341.jpg
+/home/carol/radiation-benchmarks/data/CALTECH/set06_V001_983.jpg
+/home/carol/radiation-benchmarks/data/CALTECH/set06_V002_1349.jpg
+/home/carol/radiation-benchmarks/data/CALTECH/set06_V002_1383.jpg
+/home/carol/radiation-benchmarks/data/CALTECH/set06_V006_113.jpg
+/home/carol/radiation-benchmarks/data/CALTECH/set06_V008_469.jpg
+/home/carol/radiation-benchmarks/data/CALTECH/set06_V011_240.jpg

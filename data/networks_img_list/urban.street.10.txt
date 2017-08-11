@@ -1,0 +1,10 @@
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence01/images_left/cam1-20080702-162454-079.jpg
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence01/images_left/cam1-20080702-162454-249.jpg
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence01/images_left/cam1-20080702-162454-420.jpg
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence01/images_left/cam1-20080702-162454-591.jpg
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence01/images_left/cam1-20080702-162454-761.jpg
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence01/images_left/cam1-20080702-162454-932.jpg
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence01/images_left/cam1-20080702-162455-103.jpg
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence01/images_left/cam1-20080702-162455-274.jpg
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence01/images_left/cam1-20080702-162455-444.jpg
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence01/images_left/cam1-20080702-162455-615.jpg

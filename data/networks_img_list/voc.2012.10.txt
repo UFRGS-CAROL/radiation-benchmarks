@@ -1,0 +1,10 @@
+/home/carol/radiation-benchmarks/data/VOC2012/2010_001883.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2012_003863.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2010_002466.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2010_006144.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2011_005549.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2010_002376.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2010_002829.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2011_005342.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2011_005237.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2012_004164.jpg
