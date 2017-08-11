@@ -19,9 +19,9 @@ DATASETS_BIG = [
 
 DATASETS_SMALL = [
     # very_small for X1 and X2
-    {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'very_small'},
-    {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'very_small'},
-    {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'very_small'},
+    {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
+    {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'small'},
+    {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'small'},
 ]
 
 def download_weights(src_dir, data_dir):
@@ -109,9 +109,9 @@ def main(board):
     generate.append("mv ./darknet_v2 " + bin_path + "/")
 
     for i in generate:
-        # if os.system(str(i)) != 0:
-        #     print "Something went wrong with generate of ", str(i)
-        #     exit(1)
+        if os.system(str(i)) != 0:
+            print "Something went wrong with generate of ", str(i)
+            exit(1)
         print i, "\n"
 
     fp = open(installDir + "scripts/how_to_run_darknet_v2_cuda_" + board, 'w')
