@@ -5,18 +5,24 @@ import ConfigParser
 import sys
 import copy
 
-DATASETS = [
+DATASETS_BIG = [
     # normal
     {'txt': 'caltech.pedestrians.1K.txt', 'gold': 'gold.caltech.1K.csv', 'mode': 'full'},
     {'txt': 'urban.street.1.1K.txt', 'gold': 'gold.urban.street.1.1K.csv', 'mode': 'full'},
     {'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.1K.csv', 'mode': 'full'},
 
-    # small, for layers and x2
+    # small, for layers
     {'txt': 'caltech.pedestrians.100.txt', 'gold': 'gold.caltech.100.csv', 'mode': 'small'},
     {'txt': 'urban.street.100.txt', 'gold': 'gold.urban.street.100.csv', 'mode': 'small'},
     {'txt': 'voc.2012.100.txt', 'gold': 'gold.voc.2012.100.csv', 'mode': 'small'},
 ]
 
+DATASETS_SMALL = [
+    # very_small for X1 and X2
+    {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'very_small'},
+    {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'very_small'},
+    {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'very_small'},
+]
 
 def download_weights(src_dir, data_dir):
     os.chdir(data_dir)
@@ -55,11 +61,15 @@ def main(board):
     generate = ["cd " + src_darknet, "make clean GPU=1", "make -j4 GPU=1 ", "mv ./darknet_v2 " + bin_path + "/"]
     execute = []
 
+    datasets = DATASETS_BIG
+    if board in ['X1', 'K1', 'X2']:
+        datasets = DATASETS_SMALL
+
     # 0 - "none",  1 - "gemm", 2 - "smart_pooling", 3 - "l1", 4 - "l2", 5 - "trained_weights"}
 
     for save_layer in [0, 1]:
         for abft in [0, 2]:
-                for i in DATASETS:
+                for i in datasets:
                     if save_layer == 1 and i['mode'] == 'full':
                         continue
                     gold = data_path + '/' + i['gold']
@@ -99,10 +109,10 @@ def main(board):
     generate.append("mv ./darknet_v2 " + bin_path + "/")
 
     for i in generate:
-        if os.system(str(i)) != 0:
-            print "Something went wrong with generate of ", str(i)
-            exit(1)
-        # print i, "\n"
+        # if os.system(str(i)) != 0:
+        #     print "Something went wrong with generate of ", str(i)
+        #     exit(1)
+        print i, "\n"
 
     fp = open(installDir + "scripts/how_to_run_darknet_v2_cuda_" + board, 'w')
 
