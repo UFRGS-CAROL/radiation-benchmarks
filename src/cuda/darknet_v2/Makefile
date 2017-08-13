@@ -66,7 +66,7 @@ captcha.o route_layer.o writing.o box.o nightmare.o normalization_layer.o avgpoo
 coco.o dice.o yolo.o detector.o layer.o compare.o regressor.o classifier.o local_layer.o \
 swag.o shortcut_layer.o activation_layer.o rnn_layer.o gru_layer.o rnn.o rnn_vid.o \
 crnn_layer.o demo.o tag.o cifar.o go.o batchnorm_layer.o art.o region_layer.o reorg_layer.o \
-lsd.o super.o voxel.o tree.o args.o log_processing.o 
+lsd.o super.o voxel.o tree.o args.o log_processing.o abft.o
 ifeq ($(GPU), 1) 
 LDFLAGS+= -lstdc++ 
 OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o \
