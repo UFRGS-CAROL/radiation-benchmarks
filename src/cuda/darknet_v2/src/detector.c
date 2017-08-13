@@ -10,7 +10,6 @@
 
 #include "args.h"
 
-#define MAX_ABFT_TYPES 3
 #include "log_processing.h"
 
 //my_second
@@ -792,11 +791,14 @@ void test_detector_radiation(Args *args) {
 	const image *im_array_sized = load_all_images_sized(im_array, net.w, net.h,
 			gold.plist_size);
 
+	//if abft is set these parameters will also be set
+	error_return max_pool_errors;
 //	set abft
 	if (args->abft && args->abft < MAX_ABFT_TYPES) {
 		printf("passou no if\n\n");
 #ifdef GPU
 		set_abft(args->abft);
+		init_error_return(&max_pool_errors);
 #endif
 	}
 //	alloc once and clear at each iteration
@@ -835,8 +837,12 @@ void test_detector_radiation(Args *args) {
 			double time_cmp = mysecond();
 //			void compare(prob_array gold, float **f_probs, box *f_boxes, int num,
 //					int classes, int img, int save_layer, network net, int test_iteration)
+
+			//before compare copy maxpool err detection values
+			get_and_reset_error_detected_values(max_pool_errors);
+
 			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, it,
-					args->save_layers, i, args->img_list_path);
+					args->save_layers, i, args->img_list_path, max_pool_errors);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(
@@ -865,6 +871,8 @@ void test_detector_radiation(Args *args) {
 	free_all_images(im_array, gold.plist_size);
 	free_all_images(im_array_sized, gold.plist_size);
 
+	//free smartpool errors
+	free_error_return(&max_pool_errors);
 }
 
 void test_detector_generate(Args *args) {

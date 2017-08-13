@@ -18,9 +18,6 @@
 
 #endif
 
-const char *ABFT_TYPES[] = { "none", "gemm", "smart_pooling", "l1", "l2",
-		"trained_weights" };
-
 void start_count_app(char *test, int save_layer, int abft, int iterations,
 		char *app) {
 #ifdef LOGS
@@ -422,7 +419,7 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 
 void compare(detection *det, float **f_probs, box *f_boxes, int num,
 		int classes, int img, int save_layers, int test_iteration,
-		char *img_list_path) {
+		char *img_list_path, error_return max_pool_errors) {
 
 //	network *net = det->net;
 	prob_array gold = det->pb_gold[img];
@@ -453,8 +450,22 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 
 	}
 
+	//log smart pooling operation
+	bool found = false;
+	std::string abft_error_info = "";
+	for (size_t i = 0; i < max_pool_errors.err_detected_size; i++) {
+		abft_error_info += "error_detected[ " + std::to_string(i) + "]: "
+				+ std::to_string(max_pool_errors.error_detected[i]) + " ";
+		if (max_pool_errors.error_detected[i] != 0) {
+			found = true;
+		}
+	}
+
 #ifdef LOGS
 	log_error_count(error_count);
+	if(found) {
+		log_error_detail(const_cast<char*>(abft_error_info.c_str()));
+	}
 
 	printf("%d errors found at %s detection\n", error_count, img_string);
 //save layers here
