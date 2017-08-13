@@ -142,6 +142,11 @@ void forward_maxpool_layer_gpu_hardened(maxpool_layer layer, network net) {
 	check_error(cudaPeekAtLastError());
 }
 
+__global__ void memset_error(){
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	error_detected[i] = 0;
+}
+
 /**
  * host_error_detected must be allocated
  */
@@ -150,9 +155,7 @@ void get_and_reset_error_detected_values(error_return host_error) {
 	cudaMemcpyFromSymbol(&host_error.error_detected, "error_detected",
 			sizeof(unsigned long) * host_error.err_detected_size, 0, cudaMemcpyDeviceToHost);
 
-	//reset copied from here:https://stackoverflow.com/questions/9996563/cudamemset-fails-on-device-variable?rq=1
-	unsigned long *h_err_reset;
-	cudaGetSymbolAddress((void **) &h_err_reset, "error_detected");
-	cudaMemset(h_err_reset, 0, sizeof(unsigned long));
+	memset_error<<<1, MAXPOOL_N>>>();
+
 	check_error(cudaPeekAtLastError());
 }

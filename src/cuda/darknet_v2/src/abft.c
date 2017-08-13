@@ -23,3 +23,5 @@ void free_error_return(error_return *e){
 void reset_error_return(error_return *e){
 	memset(e->error_detected, 0, sizeof(unsigned long long) * e->err_detected_size);
 }
+
+
