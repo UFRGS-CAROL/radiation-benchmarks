@@ -183,10 +183,11 @@ void free_yolo_test_memory(const Args* parameters, GoldPointers* current_ptr,
 	free(buf_resized);
 	int cf;
 	//	printf("passou antes do fclose\n");
-	for (cf = 0; cf < classes; ++cf) {
-		if (fps[cf] != NULL)
-			fclose(fps[cf]);
-	}
+	if (fps)
+		for (cf = 0; cf < classes; ++cf) {
+			if (fps[cf] != NULL)
+				fclose(fps[cf]);
+		}
 }
 
 void validate_yolo(Args parameters) {
@@ -200,8 +201,8 @@ void validate_yolo(Args parameters) {
 	srand(time(0));
 
 	//result output and image list file
-	char *base = parameters.base_result_out; //"gold/comp4_det_test_";
-	list *plist = get_paths(parameters.img_list_path); //"voc.2012.test");
+	char *base = parameters.base_result_out;
+	list *plist = get_paths(parameters.img_list_path);
 	char **paths = (char **) list_to_array(plist);
 
 	//neural network stuff
@@ -212,14 +213,14 @@ void validate_yolo(Args parameters) {
 
 	int j;
 	//classes outputs files
-	FILE **fps = calloc(classes, sizeof(FILE *));
-	if (parameters.generate_flag) {
-		for (j = 0; j < classes; ++j) {
-			char buff[1024];
-			snprintf(buff, 1024, "%s%s.txt", base, voc_names[j]);
-			fps[j] = fopen(buff, "w");
-		}
-	}
+	FILE **fps = NULL; //calloc(classes, sizeof(FILE *));
+//	if (parameters.generate_flag) {
+//		for (j = 0; j < classes; ++j) {
+//			char buff[1024];
+//			snprintf(buff, 1024, "%s%s.txt", base, voc_names[j]);
+//			fps[j] = fopen(buff, "w");
+//		}
+//	}
 
 	//boxes and probabilities arrays
 	GoldPointers current_ptr, gold_ptr;
@@ -272,15 +273,7 @@ void validate_yolo(Args parameters) {
 	}
 
 	printf("Images opening\n");
-//	for (iterator = 0; iterator < parameters.iterations; iterator++) {
-//#ifdef LOGS
-//		if(!parameters.generate_flag) {
-//			start_iteration();
-//		}
-//#endif
-//		time_t start = time(0);
 
-//	for (i = nthreads; i < m + nthreads; i += nthreads) {
 	for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
 		pthread_join(thr[t], 0);
 		val[t] = buf[t];
@@ -297,14 +290,13 @@ void validate_yolo(Args parameters) {
 
 	printf("abft %d\n", parameters.abft);
 	//set abft
-	if (parameters.abft == 1){
+	if (parameters.abft != 0) {
 		printf("passou no use\n");
-		set_use_abft(1);
+		set_use_abft(parameters.abft);
 	}
-//	}
+
 	for (iterator = 0; iterator < parameters.iterations; iterator++) {
 
-//		printf("passou\n");
 		double det_start = mysecond();
 		for (i = nthreads; i < m + nthreads; i += nthreads) {
 			long max_err_per_iteration = 0;
@@ -314,7 +306,7 @@ void validate_yolo(Args parameters) {
 					start_iteration();
 				}
 				if(parameters.abft == 1 && !parameters.generate_flag)
-					set_gold_iterator_abft(gold_iterator);
+				set_gold_iterator_abft(gold_iterator);
 #endif
 
 				//for abft, because it is easier use an input parameter than a gcc macro
@@ -335,8 +327,6 @@ void validate_yolo(Args parameters) {
 					predictions = network_predict(net, X, 0);
 				}
 
-				//float *predictions = network_predict(net, X,0);
-
 				int w = val[t].w;
 				int h = val[t].h;
 				ProbArray gold, current = current_ptr.pb_gold[gold_iterator];
@@ -353,13 +343,6 @@ void validate_yolo(Args parameters) {
 							classes, iou_thresh);
 				}
 				printf("it %d seconds %f\n", iterator, mysecond() - begin2);
-//				printf("%f %f\n")
-				if (parameters.generate_flag) {
-					//	print_yolo_detections(fps, id,
-					//			current_ptr.pb_gold[gold_iterator].boxes,
-					//			current_ptr.pb_gold[gold_iterator].probs,
-					//			side * side * l.n, classes, w, h);
-				}
 
 				//---------------------------------
 
@@ -380,7 +363,7 @@ void validate_yolo(Args parameters) {
 
 						//Lucas saving layers
 						if (parameters.save_layers == 1)
-							saveLayer(net, iterator*m, i+t);
+							saveLayer(net, iterator * m, i + t);
 						max_err_per_iteration += cmp;
 						if (max_err_per_iteration > 500) {
 							free_yolo_test_memory(&parameters, &current_ptr,
@@ -400,9 +383,9 @@ void validate_yolo(Args parameters) {
 //					printf("antes do clean");
 					clear_vectors(&current_ptr);
 					//			printf("passou\n");
-				}else{
-					saveLayer(net,i+t-nthreads,i+t);
-					printf("%i :: ", i+t-nthreads);
+				} else {
+					saveLayer(net, i + t - nthreads, i + t);
+					printf("%i :: ", i + t - nthreads);
 				}
 //				printf("passou %d %d\n");
 #ifdef LOGS

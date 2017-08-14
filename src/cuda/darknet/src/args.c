@@ -78,6 +78,11 @@ int check_args(Args *arg) {
 		return -1;
 	}
 
+	if(arg->abft < 0 && arg->abft >= ABFT_TYPES){
+		printf("abft must be between 0 and 5\n");
+		return -1;
+	}
+
 	//make sure if it is generate is only one iteration
 	arg->iterations = ((arg->generate_flag) ? 1 : arg->iterations);
 	return 0;

@@ -11,6 +11,9 @@
 #include <unistd.h> //acess F_OK
 #include <stdio.h> //printf
 #include <stdlib.h> //atol
+
+#define ABFT_TYPES 5
+
 /**
  * -e - execution_type = <yolo/classifier/imagenet...>
  * -m - execution_model = <test/train/valid>
