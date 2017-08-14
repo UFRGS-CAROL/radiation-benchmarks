@@ -793,12 +793,12 @@ void test_detector_radiation(Args *args) {
 
 	//if abft is set these parameters will also be set
 	error_return max_pool_errors;
-//	set abft
+	init_error_return(&max_pool_errors);
+	//	set abft
 	if (args->abft && args->abft < MAX_ABFT_TYPES) {
 		printf("passou no if\n\n");
 #ifdef GPU
 		set_abft(args->abft);
-		init_error_return(&max_pool_errors);
 #endif
 	}
 //	alloc once and clear at each iteration
