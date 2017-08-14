@@ -88,7 +88,7 @@ $(TARGET): $(OBJS)
 #	mv $(OBJDIR)abft.o $(OBJDIR)temp_abft.o $(OBJDIR)temp_abft.o
 #	$(NVCC) $(ARCH) -c -dlink -o $(OBJDIR)abft.o  $(OBJDIR)abft.o $(NVCCFLAGS) 
 	$(NVCC) -Xcompiler "$(COMMON)"   -lcudadevrt -lcudart $^  -o $@  -Xcompiler "$(LDFLAGS) $(CFLAGS)" $(NVCCFLAGS) \
-						-L/usr/local/cuda/lib64  -lcurand -lcudart -lcublas 
+						-L/usr/local/cuda/lib64  -lcurand -lcudart -lcublas -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -DLOGS=1 
 	
 $(OBJDIR)%.o: %.c $(DEPS) 
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS)
