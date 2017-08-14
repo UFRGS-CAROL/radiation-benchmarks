@@ -839,7 +839,9 @@ void test_detector_radiation(Args *args) {
 //					int classes, int img, int save_layer, network net, int test_iteration)
 
 			//before compare copy maxpool err detection values
-			get_and_reset_error_detected_values(max_pool_errors);
+			//smart pooling
+			if (args->abft == 2)
+				get_and_reset_error_detected_values(max_pool_errors);
 
 			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, it,
 					args->save_layers, i, args->img_list_path, max_pool_errors);
