@@ -450,6 +450,8 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 
 	}
 
+	//set to false for log_info detail
+	//even if no SDC is detected it will write if smart pooling worked
 	//log smart pooling operation
 	bool found = false;
 	std::string abft_error_info = "";

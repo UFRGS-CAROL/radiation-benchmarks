@@ -63,7 +63,7 @@ def main(board):
     download_weights(src_dir=src_darknet, data_dir=data_path)
 
     # change it for darknetv2
-    generate = ["cd " + src_darknet, "make clean GPU=1", "make -j4 GPU=1 ", "mv ./darknet_v2 " + bin_path + "/"]
+    generate = ["mkdir -p /var/radiation-benchmarks/data", "cd " + src_darknet, "make clean GPU=1", "make -j4 GPU=1 ", "mv ./darknet_v2 " + bin_path + "/"]
     execute = []
 
     # datasets = DATASETS_BIG
