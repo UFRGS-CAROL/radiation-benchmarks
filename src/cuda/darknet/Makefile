@@ -42,7 +42,7 @@ endif
 ifeq ($(GPU), 1)
 	COMMON+= -DGPU -I/usr/local/cuda/include/
 	NVCCFLAGS+= -Xcompiler "-DGPU"
-	LDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand
+	LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
 endif
 
 ifeq ($(CUDNN), 1)
@@ -64,7 +64,7 @@ OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o i
 	 captcha.o route_layer.o writing.o box.o nightmare.o normalization_layer.o avgpool_layer.o coco.o dice.o \
 	 yolo.o detector.o layer.o compare.o classifier.o local_layer.o swag.o shortcut_layer.o activation_layer.o \
 	 rnn_layer.o gru_layer.o rnn.o rnn_vid.o crnn_layer.o demo.o tag.o cifar.o go.o batchnorm_layer.o art.o \
-	 region_layer.o reorg_layer.o super.o voxel.o args.o 
+	 region_layer.o reorg_layer.o super.o voxel.o args.o log_processing.o
 	 
 ifeq ($(GPU), 1)
 LDFLAGS+= -lstdc++
@@ -74,7 +74,7 @@ OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2c
 endif
 
 
-NVCCFLAGS+= -Xcompiler "-L/usr/local/cuda/lib64 -lcuda -lcurand  -lcudart" -Xcompiler '-fPIC' -Xcompiler '-lm'
+NVCCFLAGS+= -dlink -Xcompiler "-L/usr/local/cuda/lib64  -lcurand  -lcudart" -Xcompiler '-fPIC' -Xcompiler '-lm'
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
@@ -84,7 +84,7 @@ RAD_DIR=/home/carol/radiation-benchmarks
 all: obj results $(TARGET)
 
 $(TARGET): $(OBJS) 
-	$(CC) $(COMMON) $^  -o $@  -lcudadevrt -lcudart -lcuda $(LDFLAGS) $(CFLAGS) 
+	$(CC) $(COMMON) $^  -o $@  -lcudadevrt -lcudart  $(LDFLAGS) $(CFLAGS) 
 	
 $(OBJDIR)%.o: %.c $(DEPS) 
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS)
