@@ -165,5 +165,6 @@ void get_and_reset_error_detected_values(error_return host_error) {
 }
 
 void free_err_detected(){
-	cudaFree(error_detected);
+	if(error_detected)
+		cudaFree(error_detected);
 }
