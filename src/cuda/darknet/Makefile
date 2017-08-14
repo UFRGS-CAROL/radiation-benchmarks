@@ -6,7 +6,7 @@ LOGS?=0
 #ARCH_I?=35
 
 ARCH= -gencode arch=compute_35,code=sm_35 -gencode arch=compute_50,code=sm_50 \
-      -gencode arch=compute_53,code=sm_53 -gencode=arch=compute_60,code=sm_60 \
+	  -gencode=arch=compute_60,code=sm_60 \
       -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_62,code=sm_62
 #--gpu-architecture=compute_$(ARCH_I) --gpu-code=compute_$(ARCH_I)
 
@@ -74,7 +74,8 @@ OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2c
 endif
 
 
-NVCCFLAGS+= -dlink -Xcompiler "-L/usr/local/cuda/lib64  -lcurand  -lcudart" -Xcompiler '-fPIC' -Xcompiler '-lm'
+NVCCFLAGS+= -Xcompiler "-L/usr/local/cuda/lib64  -lcurand  -lcudart" -Xcompiler \
+			'-fPIC' -Xcompiler '-lm' -Wno-deprecated-gpu-targets -Xnvlink --disable-warnings
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
@@ -84,7 +85,10 @@ RAD_DIR=/home/carol/radiation-benchmarks
 all: obj results $(TARGET)
 
 $(TARGET): $(OBJS) 
-	$(CC) $(COMMON) $^  -o $@  -lcudadevrt -lcudart  $(LDFLAGS) $(CFLAGS) 
+#	mv $(OBJDIR)abft.o $(OBJDIR)temp_abft.o $(OBJDIR)temp_abft.o
+#	$(NVCC) $(ARCH) -c -dlink -o $(OBJDIR)abft.o  $(OBJDIR)abft.o $(NVCCFLAGS) 
+	$(NVCC) -Xcompiler "$(COMMON)"   -lcudadevrt -lcudart $^  -o $@  -Xcompiler "$(LDFLAGS) $(CFLAGS)" $(NVCCFLAGS) \
+						-L/usr/local/cuda/lib64  -lcurand -lcudart -lcublas 
 	
 $(OBJDIR)%.o: %.c $(DEPS) 
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS)
