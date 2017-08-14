@@ -11,17 +11,18 @@ ARCH= -gencode arch=compute_35,code=sm_35 -gencode arch=compute_50,code=sm_50 \
 #--gpu-architecture=compute_$(ARCH_I) --gpu-code=compute_$(ARCH_I)
 
 VPATH=./src/
-EXEC=darknet
+TARGET=darknet
 OBJDIR=./obj/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
 CC=gcc
 NVCC=/usr/local/cuda/bin/nvcc
-OPTS= -Xcompiler "-Ofast"
-LDFLAGS= -Xcompiler "-lm -pthread"
+OPTS= -Ofast
+LDFLAGS= -lm -pthread
 COMMON=
-CFLAGS= -Xcompiler "-Wall -Wfatal-errors" -Wno-deprecated-gpu-targets
+CFLAGS= -Wall -Wfatal-errors
+NVCCFLAGS= -rdc=true -lcudadevrt
 
 CUDAINCLUDE=/usr/local/cuda-7.0/include/
 
@@ -40,7 +41,7 @@ endif
 
 ifeq ($(GPU), 1)
 	COMMON+= -DGPU -I/usr/local/cuda/include/
-	CFLAGS+= -Xcompiler "-DGPU"
+	NVCCFLAGS+= -Xcompiler "-DGPU"
 	LDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand
 endif
 
@@ -51,14 +52,11 @@ ifeq ($(CUDNN), 1)
 endif
 
 ifeq ($(LOGS), 1)
-	CFLAGS+=-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -DLOGS=1 
+	CFLAGS+=-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -DLOGS=1 
 	#LOG_LINK= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1
 	#$(LOGHELPER_LIB)log_helper.o 
 #	CFLAGS+= -DLOGS -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda" -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda
 endif
-
-LOG_CU = $(LOGHELPER_LIB)log_helper.c
-
 
 OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o image.o activations.o \
 	 im2col.o col2im.o blas.o crop_layer.o dropout_layer.o maxpool_layer.o softmax_layer.o data.o \
@@ -66,47 +64,34 @@ OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o i
 	 captcha.o route_layer.o writing.o box.o nightmare.o normalization_layer.o avgpool_layer.o coco.o dice.o \
 	 yolo.o detector.o layer.o compare.o classifier.o local_layer.o swag.o shortcut_layer.o activation_layer.o \
 	 rnn_layer.o gru_layer.o rnn.o rnn_vid.o crnn_layer.o demo.o tag.o cifar.o go.o batchnorm_layer.o art.o \
-	 region_layer.o reorg_layer.o super.o voxel.o log_processing.o args.o
+	 region_layer.o reorg_layer.o super.o voxel.o args.o 
 	 
 ifeq ($(GPU), 1)
 LDFLAGS+= -lstdc++
 OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2col_kernels.o \
 	col2im_kernels.o blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o \
-	softmax_layer_kernels.o network_kernels.o avgpool_layer_kernels.o
+	softmax_layer_kernels.o network_kernels.o avgpool_layer_kernels.o abft.o
 endif
 
-#abft = 1 is dumb abft
-#abft = 2 is fast abft
-#LOG_LINK+= -Xcompiler "-DABFT=1"
-BUILD_ABFT=abft
-ABFT_SRC=src/abft.cu
-#CFLAGS += -DABFT=1
-BUILD_ABFT_OBJ=$(OBJDIR)abft.o
- 
-#$(NVCC) -I$(CUDAINCLUDE) $(NVCCFLAGS)  -dlink $(OBJDIR)abft_temp.o  -lcudadevrt -o $(OBJDIR)abft.o   $(ARCH)  
 
-NVCCFLAGS= -Xcompiler "-L/usr/local/cuda/lib64 -lcuda -lcurand  -lcudart" -Xcompiler '-fPIC' -Xcompiler '-lm'
+NVCCFLAGS+= -Xcompiler "-L/usr/local/cuda/lib64 -lcuda -lcurand  -lcudart" -Xcompiler '-fPIC' -Xcompiler '-lm'
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-all: build_logs obj results $(EXEC)
+RAD_DIR=/home/carol/radiation-benchmarks
 
-abft: src/abft.cu
-	$(NVCC)  -I$(CUDAINCLUDE) $(NVCCFLAGS) -c -O3 -dc src/abft.cu -o $(OBJDIR)abft.o -rdc=true $(ARCH)  -lcudadevrt 
-	
+all: obj results $(TARGET)
 
-$(EXEC): $(OBJS) 
-	$(NVCC) $(COMMON) $(BUILD_ABFT_OBJ) $(OBJDIR)log_helper.o $^  -o $@  -lcudadevrt -lcudart -lcuda -rdc=true  $(LDFLAGS) $(CFLAGS) 
+$(TARGET): $(OBJS) 
+	$(CC) $(COMMON) $^  -o $@  -lcudadevrt -lcudart -lcuda $(LDFLAGS) $(CFLAGS) 
 	
 $(OBJDIR)%.o: %.c $(DEPS) 
-	$(NVCC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS)
+	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS)
 
-build_logs: $(LOG_CU)
-	$(NVCC)  -c $(LOG_CU) -o $(OBJDIR)log_helper.o
 
-$(OBJDIR)%.o: %.cu $(DEPS) $(BUILD_ABFT)  build_logs
-	$(NVCC) $(ARCH) $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CFLAGS)
+$(OBJDIR)%.o: %.cu $(DEPS)
+	$(NVCC) $(ARCH) $(COMMON) -c $< -o $@ $(NVCCFLAGS)
 
 obj:
 	mkdir -p obj
@@ -116,14 +101,21 @@ results:
 .PHONY: clean
 
 test:
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 1 -d data/gold_voc2012.test2 \
-							-l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 1 -a 0
+	./$(TARGET) -e yolo -m valid -c $(RAD_DIR)/data/darknet/cfg/yolo_v1.cfg \
+							-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
+							-n 1 -d $(RAD_DIR)/data/gold_caltech.test  \
+							-l $(RAD_DIR)/data/networks_img_list/caltech.pedestrians.1K.txt \
+							-b $(RAD_DIR)/src/cuda/darknet \
+							-x 0 -s 1 -a 0
 
 generate:
-	./darknet -e yolo -m valid -c cfg/yolo.cfg -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights -n 1 -g data/caltech_1k.test \
-			-l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt -b ~/radiation-benchmarks/src/cuda/darknet -x 0 -s 1 -a 0
+	./$(TARGET) -e yolo -m valid -c $(RAD_DIR)/data/darknet/cfg/yolo_v1.cfg \
+			-w $(RAD_DIR)/data/darknet/yolo.weights \
+			-n 1 -g $(RAD_DIR)/data/gold_caltech.test \
+			-l $(RAD_DIR)/data/networks_img_list/caltech.pedestrians.1K.txt \
+			-b $(RAD_DIR)/src/cuda/darknet -x 0 -s 1 -a 0
 
 
 clean:
-	rm -rf $(OBJS) $(EXEC) obj/*.o
+	rm -rf $(OBJS) $(TARGET) obj/*.o
 
