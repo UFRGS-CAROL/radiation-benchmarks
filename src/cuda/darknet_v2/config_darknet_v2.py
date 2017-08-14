@@ -18,6 +18,11 @@ DATASETS_BIG = [
 ]
 
 DATASETS_SMALL = [
+    # normal
+    {'txt': 'caltech.pedestrians.1K.txt', 'gold': 'gold.caltech.1K.csv', 'mode': 'full'},
+    {'txt': 'urban.street.1.1K.txt', 'gold': 'gold.urban.street.1.1K.csv', 'mode': 'full'},
+    {'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.1K.csv', 'mode': 'full'},
+
     # very_small for X1 and X2
     {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
     {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'small'},
@@ -61,9 +66,9 @@ def main(board):
     generate = ["cd " + src_darknet, "make clean GPU=1", "make -j4 GPU=1 ", "mv ./darknet_v2 " + bin_path + "/"]
     execute = []
 
-    datasets = DATASETS_BIG
-    if board in ['X1', 'K1', 'X2']:
-        datasets = DATASETS_SMALL
+    # datasets = DATASETS_BIG
+    # if board in ['X1', 'K1', 'X2']:
+    datasets = DATASETS_SMALL
 
     # 0 - "none",  1 - "gemm", 2 - "smart_pooling", 3 - "l1", 4 - "l2", 5 - "trained_weights"}
 
