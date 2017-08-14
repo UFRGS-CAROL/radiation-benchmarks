@@ -18,7 +18,7 @@ ARCH= -gencode arch=compute_30,code=sm_30 \
 # ARCH=  -gencode arch=compute_52,code=compute_52
 
 VPATH=./src/
-EXEC=darknet_v2
+TARGET=darknet_v2
 OBJDIR=./obj/
 
 CC=gcc
@@ -88,9 +88,9 @@ DEPS = $(wildcard src/*.h) Makefile
 RAD_DIR=/home/carol/radiation-benchmarks
 
 
-all: obj backup results $(EXEC)
+all: obj backup results $(TARGET)
 
-$(EXEC): $(OBJS)
+$(TARGET): $(OBJS)
 	$(CC) $(COMMON) $(CFLAGS) $^ $(LOGHELPER_INC) $(LOGHELPER_LIB) -o $@  $(LDFLAGS) -lstdc++  
 
 $(OBJDIR)%.o: %.c $(DEPS)
@@ -113,21 +113,21 @@ results:
 .PHONY: clean
 
 clean:
-	rm -rf $(OBJS) $(EXEC)
+	rm -rf $(OBJS) $(TARGET)
 
 
 
 test_pure_yolo:
-	./$(EXEC) detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
+	./$(TARGET) detect cfg/yolo.cfg ../../../data/darknet/yolo_v2.weights data/dog.jpg
 	
 
 
 generate:
-	./$(EXEC) test_radiation  -c $(RAD_DIR)/data/darknet/yolo_v2.cfg \
+	./$(TARGET) test_radiation  -c $(RAD_DIR)/data/darknet/yolo_v2.cfg \
 								  -w $(RAD_DIR)/data/darknet/yolo_v2.weights \
 								  -g 1 -d $(RAD_DIR)/data/darknet/fault_injection.csv -s 1 -l   \
 								  $(RAD_DIR)/data/networks_img_list/fault_injection.txt -a 0
 
 test:
-	./$(EXEC) test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 1 -s 1 -a 0 
+	./$(TARGET) test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 1 -s 1 -a 0 
 
