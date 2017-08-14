@@ -464,7 +464,7 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 #ifdef LOGS
 	log_error_count(error_count);
 	if(found) {
-		log_error_detail(const_cast<char*>(abft_error_info.c_str()));
+		log_info_detail(const_cast<char*>(abft_error_info.c_str()));
 	}
 
 	printf("%d errors found at %s detection\n", error_count, img_string);
