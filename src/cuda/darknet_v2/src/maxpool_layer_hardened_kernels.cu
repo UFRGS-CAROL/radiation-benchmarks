@@ -152,8 +152,8 @@ __global__ void memset_error(){
  */
 void get_and_reset_error_detected_values(error_return host_error) {
 	//copy from error_detected var
-	cudaMemcpyFromSymbol(&host_error.error_detected, "error_detected",
-			sizeof(unsigned long) * host_error.err_detected_size, 0, cudaMemcpyDeviceToHost);
+	cudaMemcpyFromSymbol(&host_error.error_detected, error_detected,
+			sizeof(unsigned long long) * host_error.err_detected_size);
 
 	memset_error<<<1, MAXPOOL_N>>>();
 
