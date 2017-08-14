@@ -454,7 +454,7 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 	bool found = false;
 	std::string abft_error_info = "";
 	for (size_t i = 0; i < max_pool_errors.err_detected_size; i++) {
-		abft_error_info += "error_detected[ " + std::to_string(i) + "]: "
+		abft_error_info += "error_detected[" + std::to_string(i) + "]: "
 				+ std::to_string(max_pool_errors.error_detected[i]) + " ";
 		if (max_pool_errors.error_detected[i] != 0) {
 			found = true;

@@ -16,7 +16,7 @@ extern "C" {
 
 #define FACTOR 5.0
 
-__device__ unsigned long long error_detected[] = { 0, 0, 0, 0, 0 };
+unsigned long long *error_detected = NULL;
 
 float LOOK_UP_TABLE[] = { //for hardened maxpool
 		34.8208, // layer  0
@@ -57,7 +57,7 @@ int maxpool_iterator = 0;
 
 __global__ void forward_maxpool_layer_kernel_hardened(int n, int in_h, int in_w,
 		int in_c, int stride, int size, int pad, float *input, float *output,
-		int *indexes, float max_value_allowed, int maxp) {
+		int *indexes, float max_value_allowed, unsigned long long *error_detected, int maxp) {
 	int h = (in_h + 2 * pad) / stride;
 	int w = (in_w + 2 * pad) / stride;
 	int c = in_c;
@@ -135,14 +135,18 @@ void forward_maxpool_layer_gpu_hardened(maxpool_layer layer, network net) {
 		maxp = 17;
 	}
 
+	if(error_detected == NULL){
+		cudaMalloc(&error_detected, sizeof(unsigned long long) * MAXPOOL_N);
+	}
+
 	forward_maxpool_layer_kernel_hardened<<<cuda_gridsize(n), BLOCK>>>(n,
 			layer.h, layer.w, layer.c, layer.stride, layer.size, layer.pad,
 			net.input_gpu, layer.output_gpu, layer.indexes_gpu,
-			LOOK_UP_TABLE[maxp] * FACTOR, maxpool_iterator);
+			LOOK_UP_TABLE[maxp] * FACTOR, error_detected, maxpool_iterator);
 	check_error(cudaPeekAtLastError());
 }
 
-__global__ void memset_error(){
+__global__ void memset_error(unsigned long long *error_detected){
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	error_detected[i] = 0;
 }
@@ -152,10 +156,14 @@ __global__ void memset_error(){
  */
 void get_and_reset_error_detected_values(error_return host_error) {
 	//copy from error_detected var
-	cudaMemcpyFromSymbol(&host_error.error_detected, error_detected,
-			sizeof(unsigned long long) * host_error.err_detected_size);
+	cudaMemcpy(host_error.error_detected, error_detected,
+			sizeof(unsigned long long) * host_error.err_detected_size, cudaMemcpyDeviceToHost);
 
-	memset_error<<<1, MAXPOOL_N>>>();
+	memset_error<<<1, MAXPOOL_N>>>(error_detected);
 
 	check_error(cudaPeekAtLastError());
+}
+
+void free_err_detected(){
+	cudaFree(error_detected);
 }

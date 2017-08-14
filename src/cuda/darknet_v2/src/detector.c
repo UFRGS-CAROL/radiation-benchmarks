@@ -875,6 +875,7 @@ void test_detector_radiation(Args *args) {
 
 	//free smartpool errors
 	free_error_return(&max_pool_errors);
+	free_err_detected();
 }
 
 void test_detector_generate(Args *args) {
