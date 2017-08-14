@@ -114,7 +114,7 @@ test:
 
 generate:
 	./$(TARGET) -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
-			-w $(RAD_DIR)/data/darknet/yolo.weights \
+			-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
 			-n 1 -g $(RAD_DIR)/data/gold_caltech.test \
 			-l $(RAD_DIR)/data/networks_img_list/caltech.pedestrians.1K.txt \
 			-b $(RAD_DIR)/src/cuda/darknet -x 0 -s 1 -a 0
