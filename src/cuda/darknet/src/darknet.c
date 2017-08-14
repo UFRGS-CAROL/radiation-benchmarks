@@ -13,6 +13,37 @@
 #include "args.h"
 #include "yolo.h"
 
+
+//extern void predict_classifier(char *datacfg, char *cfgfile, char *weightfile,
+//		char *filename, int top);
+//extern void test_detector(char *datacfg, char *cfgfile, char *weightfile,
+//		char *filename, float thresh, float hier_thresh);
+
+//added for radiation test
+//extern void test_detector_radiation(Args *args);
+//extern void test_detector_generate(Args *args);
+
+extern void run_voxel(int argc, char **argv);
+//extern void run_yolo(int argc, char **argv);
+extern void run_detector(int argc, char **argv);
+extern void run_coco(int argc, char **argv);
+extern void run_writing(int argc, char **argv);
+extern void run_captcha(int argc, char **argv);
+extern void run_nightmare(int argc, char **argv);
+extern void run_dice(int argc, char **argv);
+extern void run_compare(int argc, char **argv);
+extern void run_classifier(int argc, char **argv);
+//extern void run_regressor(int argc, char **argv);
+extern void run_char_rnn(int argc, char **argv);
+extern void run_vid_rnn(int argc, char **argv);
+extern void run_tag(int argc, char **argv);
+extern void run_cifar(int argc, char **argv);
+extern void run_go(int argc, char **argv);
+extern void run_art(int argc, char **argv);
+extern void run_super(int argc, char **argv);
+//extern void run_lsd(int argc, char **argv);
+
+
 #define SAVE_LAYERS_DIR "/var/radiation-benchmarks/data/"
 
 #ifdef LOGS
@@ -360,7 +391,7 @@ int main(int argc, char **argv) {
 		snprintf(test_info, 500, "execution_type:%s execution_model:%s img_list_path:%s weights:%s config_file:%s iterations:%d abft: %s", to_parse.execution_type
 				, to_parse.execution_model, to_parse.img_list_path, to_parse.weights, to_parse.config_file, to_parse.iterations,
 				((to_parse.abft == 1) ? "dumb_abft":"no_abft"));
-				if (!(to_parse.generate_flag)) start_log_file("cudaDarknet", test_info);
+		if (!(to_parse.generate_flag)) start_log_file("cudaDarknet", test_info);
 #endif
 
 		if (strcmp(to_parse.execution_type, "yolo") == 0) {
@@ -370,112 +401,104 @@ int main(int argc, char **argv) {
 			run_yolo(to_parse);
 		}
 
-	} else {
-		usage(argv, "<yolo/valid/classifer>", "<function>");
-	}
-
 #ifdef LOGS
-	if (!(to_parse.generate_flag)) end_log_file();
+		if (!(to_parse.generate_flag)) end_log_file();
 #endif
+
+	} else {
+		usage(argv, "<yolo/valid/classifer>",
+				"<function> to use with radiation test\nusing original mode");
+		if (argc < 2) {
+			fprintf(stderr, "usage: %s <function>\n", argv[0]);
+			return 0;
+		}
+		gpu_index = find_int_arg(argc, argv, "-i", 0);
+		if (find_arg(argc, argv, "-nogpu")) {
+			gpu_index = -1;
+		}
+
+#ifndef GPU
+		gpu_index = -1;
+#else
+		if(gpu_index >= 0) {
+			cuda_set_device(gpu_index);
+		}
+#endif
+
+		if (0 == strcmp(argv[1], "average")) {
+			average(argc, argv);
+//		} else if (0 == strcmp(argv[1], "yolo")) {
+//			run_yolo(argc, argv);
+		} else if (0 == strcmp(argv[1], "voxel")) {
+			run_voxel(argc, argv);
+		} else if (0 == strcmp(argv[1], "super")) {
+			run_super(argc, argv);
+		} else if (0 == strcmp(argv[1], "detector")) {
+			run_detector(argc, argv);
+		} else if (0 == strcmp(argv[1], "cifar")) {
+			run_cifar(argc, argv);
+		} else if (0 == strcmp(argv[1], "go")) {
+			run_go(argc, argv);
+		} else if (0 == strcmp(argv[1], "rnn")) {
+			run_char_rnn(argc, argv);
+		} else if (0 == strcmp(argv[1], "vid")) {
+			run_vid_rnn(argc, argv);
+		} else if (0 == strcmp(argv[1], "coco")) {
+			run_coco(argc, argv);
+		} else if (0 == strcmp(argv[1], "classifier")) {
+			run_classifier(argc, argv);
+		} else if (0 == strcmp(argv[1], "art")) {
+			run_art(argc, argv);
+		} else if (0 == strcmp(argv[1], "tag")) {
+			run_tag(argc, argv);
+		} else if (0 == strcmp(argv[1], "compare")) {
+			run_compare(argc, argv);
+		} else if (0 == strcmp(argv[1], "dice")) {
+			run_dice(argc, argv);
+		} else if (0 == strcmp(argv[1], "writing")) {
+			run_writing(argc, argv);
+		} else if (0 == strcmp(argv[1], "3d")) {
+			composite_3d(argv[2], argv[3], argv[4],
+					(argc > 5) ? atof(argv[5]) : 0);
+		} else if (0 == strcmp(argv[1], "test")) {
+			test_resize(argv[2]);
+		} else if (0 == strcmp(argv[1], "captcha")) {
+			run_captcha(argc, argv);
+		} else if (0 == strcmp(argv[1], "nightmare")) {
+			run_nightmare(argc, argv);
+		} else if (0 == strcmp(argv[1], "change")) {
+			change_rate(argv[2], atof(argv[3]), (argc > 4) ? atof(argv[4]) : 0);
+		} else if (0 == strcmp(argv[1], "rgbgr")) {
+			rgbgr_net(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "reset")) {
+			reset_normalize_net(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "denormalize")) {
+			denormalize_net(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "statistics")) {
+			statistics_net(argv[2], argv[3]);
+		} else if (0 == strcmp(argv[1], "normalize")) {
+			normalize_net(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "rescale")) {
+			rescale_net(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "ops")) {
+			operations(argv[2]);
+		} else if (0 == strcmp(argv[1], "speed")) {
+			speed(argv[2], (argc > 3) ? atoi(argv[3]) : 0);
+		} else if (0 == strcmp(argv[1], "partial")) {
+			partial(argv[2], argv[3], argv[4], atoi(argv[5]));
+		} else if (0 == strcmp(argv[1], "average")) {
+			average(argc, argv);
+		} else if (0 == strcmp(argv[1], "stacked")) {
+			stacked(argv[2], argv[3], argv[4]);
+		} else if (0 == strcmp(argv[1], "visualize")) {
+			visualize(argv[2], (argc > 3) ? argv[3] : 0);
+		} else if (0 == strcmp(argv[1], "imtest")) {
+			test_resize(argv[2]);
+		} else {
+			fprintf(stderr, "Not an option: %s\n", argv[1]);
+		}
+	}
 
 	args_init_and_setnull(&to_parse);
 	return 0;
 }
-
-/*
- int main(int argc, char **argv)
- {
- //test_resize("data/bad.jpg");
- //test_box();
- //test_convolutional_layer();
- if(argc < 2){
- fprintf(stderr, "usage: %s <function>\n", argv[0]);
- return 0;
- }
- gpu_index = find_int_arg(argc, argv, "-i", 0);
- if(find_arg(argc, argv, "-nogpu")) {
- gpu_index = -1;
- }
-
- #ifndef GPU
- gpu_index = -1;
- #else
- if(gpu_index >= 0){
- cuda_set_device(gpu_index);
- }
- #endif
-
- if (0 == strcmp(argv[1], "average")){
- average(argc, argv);
- } else if (0 == strcmp(argv[1], "yolo")){
- run_yolo(argc, argv);
- } else if (0 == strcmp(argv[1], "voxel")){
- run_voxel(argc, argv);
- } else if (0 == strcmp(argv[1], "super")){
- run_super(argc, argv);
- } else if (0 == strcmp(argv[1], "detector")){
- run_detector(argc, argv);
- } else if (0 == strcmp(argv[1], "cifar")){
- run_cifar(argc, argv);
- } else if (0 == strcmp(argv[1], "go")){
- run_go(argc, argv);
- } else if (0 == strcmp(argv[1], "rnn")){
- run_char_rnn(argc, argv);
- } else if (0 == strcmp(argv[1], "vid")){
- run_vid_rnn(argc, argv);
- } else if (0 == strcmp(argv[1], "coco")){
- run_coco(argc, argv);
- } else if (0 == strcmp(argv[1], "classifier")){
- run_classifier(argc, argv);
- } else if (0 == strcmp(argv[1], "art")){
- run_art(argc, argv);
- } else if (0 == strcmp(argv[1], "tag")){
- run_tag(argc, argv);
- } else if (0 == strcmp(argv[1], "compare")){
- run_compare(argc, argv);
- } else if (0 == strcmp(argv[1], "dice")){
- run_dice(argc, argv);
- } else if (0 == strcmp(argv[1], "writing")){
- run_writing(argc, argv);
- } else if (0 == strcmp(argv[1], "3d")){
- composite_3d(argv[2], argv[3], argv[4], (argc > 5) ? atof(argv[5]) : 0);
- } else if (0 == strcmp(argv[1], "test")){
- test_resize(argv[2]);
- } else if (0 == strcmp(argv[1], "captcha")){
- run_captcha(argc, argv);
- } else if (0 == strcmp(argv[1], "nightmare")){
- run_nightmare(argc, argv);
- } else if (0 == strcmp(argv[1], "change")){
- change_rate(argv[2], atof(argv[3]), (argc > 4) ? atof(argv[4]) : 0);
- } else if (0 == strcmp(argv[1], "rgbgr")){
- rgbgr_net(argv[2], argv[3], argv[4]);
- } else if (0 == strcmp(argv[1], "reset")){
- reset_normalize_net(argv[2], argv[3], argv[4]);
- } else if (0 == strcmp(argv[1], "denormalize")){
- denormalize_net(argv[2], argv[3], argv[4]);
- } else if (0 == strcmp(argv[1], "statistics")){
- statistics_net(argv[2], argv[3]);
- } else if (0 == strcmp(argv[1], "normalize")){
- normalize_net(argv[2], argv[3], argv[4]);
- } else if (0 == strcmp(argv[1], "rescale")){
- rescale_net(argv[2], argv[3], argv[4]);
- } else if (0 == strcmp(argv[1], "ops")){
- operations(argv[2]);
- } else if (0 == strcmp(argv[1], "speed")){
- speed(argv[2], (argc > 3) ? atoi(argv[3]) : 0);
- } else if (0 == strcmp(argv[1], "partial")){
- partial(argv[2], argv[3], argv[4], atoi(argv[5]));
- } else if (0 == strcmp(argv[1], "average")){
- average(argc, argv);
- } else if (0 == strcmp(argv[1], "stacked")){
- stacked(argv[2], argv[3], argv[4]);
- } else if (0 == strcmp(argv[1], "visualize")){
- visualize(argv[2], (argc > 3) ? argv[3] : 0);
- } else if (0 == strcmp(argv[1], "imtest")){
- test_resize(argv[2]);
- } else {
- fprintf(stderr, "Not an option: %s\n", argv[1]);
- }
- return 0;
- }*/
-
