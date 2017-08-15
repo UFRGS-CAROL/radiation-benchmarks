@@ -217,7 +217,7 @@ void validate_coco(char *cfgfile, char *weightfile)
             char *path = paths[i+t-nthreads];
             int image_id = get_coco_image_id(path);
             float *X = val_resized[t].data;
-            float *predictions = network_predict(net, X,0);
+            float *predictions = network_predict(net, X);
             int w = val[t].w;
             int h = val[t].h;
             convert_detections(predictions, classes, l.n, square, side, w, h, thresh, probs, boxes, 0);
@@ -282,7 +282,7 @@ void validate_coco_recall(char *cfgfile, char *weightfile)
         image orig = load_image_color(path, 0, 0);
         image sized = resize_image(orig, net.w, net.h);
         char *id = basecfg(path);
-        float *predictions = network_predict(net, sized.data,0);
+        float *predictions = network_predict(net, sized.data);
         convert_detections(predictions, classes, l.n, square, side, 1, 1, thresh, probs, boxes, 1);
         if (nms) do_nms(boxes, probs, side*side*l.n, 1, nms_thresh);
 
@@ -353,7 +353,7 @@ void test_coco(char *cfgfile, char *weightfile, char *filename, float thresh)
         image sized = resize_image(im, net.w, net.h);
         float *X = sized.data;
         time=clock();
-        float *predictions = network_predict(net, X,0);
+        float *predictions = network_predict(net, X);
         printf("%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         convert_detections(predictions, l.classes, l.n, l.sqrt, l.side, 1, 1, thresh, probs, boxes, 0);
         if (nms) do_nms_sort(boxes, probs, l.side*l.side*l.n, l.classes, nms);

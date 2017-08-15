@@ -17,11 +17,13 @@ LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
 CC=gcc
+CXX=g++
 NVCC=/usr/local/cuda/bin/nvcc
 OPTS= -Ofast
 LDFLAGS= -lm -pthread
 COMMON=
-CFLAGS= -Wall -Wfatal-errors
+CFLAGS= -Wall -Wfatal-errors 
+CXXFLAGS=-std=c++11
 NVCCFLAGS= -rdc=true -lcudadevrt
 
 CUDAINCLUDE=/usr/local/cuda-7.0/include/
@@ -64,7 +66,7 @@ OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o i
 	 captcha.o route_layer.o writing.o box.o nightmare.o normalization_layer.o avgpool_layer.o coco.o dice.o \
 	 yolo.o detector.o layer.o compare.o classifier.o local_layer.o swag.o shortcut_layer.o activation_layer.o \
 	 rnn_layer.o gru_layer.o rnn.o rnn_vid.o crnn_layer.o demo.o tag.o cifar.o go.o batchnorm_layer.o art.o \
-	 region_layer.o reorg_layer.o super.o voxel.o args.o log_processing.o
+	 region_layer.o reorg_layer.o super.o voxel.o args.o log_processing.o abft_host.o
 	 
 ifeq ($(GPU), 1)
 LDFLAGS+= -lstdc++
@@ -85,14 +87,14 @@ RAD_DIR=/home/carol/radiation-benchmarks
 all: obj results $(TARGET)
 
 $(TARGET): $(OBJS) 
-#	mv $(OBJDIR)abft.o $(OBJDIR)temp_abft.o $(OBJDIR)temp_abft.o
-#	$(NVCC) $(ARCH) -c -dlink -o $(OBJDIR)abft.o  $(OBJDIR)abft.o $(NVCCFLAGS) 
 	$(NVCC) -Xcompiler "$(COMMON)"   -lcudadevrt -lcudart $^  -o $@  -Xcompiler "$(LDFLAGS) $(CFLAGS)" $(NVCCFLAGS) \
 						-L/usr/local/cuda/lib64  -lcurand -lcudart -lcublas -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -DLOGS=1 
 	
 $(OBJDIR)%.o: %.c $(DEPS) 
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS)
 
+$(OBJDIR)%.o: %.cpp $(DEPS) 
+	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS) $(CFLAGS) -I../../include/ $(CXXFLAGS)
 
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) $(COMMON) -c $< -o $@ $(NVCCFLAGS)

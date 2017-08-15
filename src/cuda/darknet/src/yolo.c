@@ -164,81 +164,314 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 
 	}
 }
+/*
+ void free_yolo_test_memory(const Args* parameters, GoldPointers* current_ptr,
+ GoldPointers* gold_ptr, int classes, image* val, image* val_resized,
+ image* buf, image* buf_resized, FILE** fps) {
+ //save gold values
+ if (parameters->generate_flag) {
+ gold_pointers_serialize(*current_ptr);
+ }
+ //for normal execution
+ free_gold_pointers(&*current_ptr);
+ if (!parameters->generate_flag)
+ free_gold_pointers(&*gold_ptr);
 
-void free_yolo_test_memory(const Args* parameters, GoldPointers* current_ptr,
-		GoldPointers* gold_ptr, int classes, image* val, image* val_resized,
-		image* buf, image* buf_resized, FILE** fps) {
-	//save gold values
-	if (parameters->generate_flag) {
-		gold_pointers_serialize(*current_ptr);
-	}
-	//for normal execution
-	free_gold_pointers(&*current_ptr);
-	if (!parameters->generate_flag)
-		free_gold_pointers(&*gold_ptr);
+ free(val);
+ free(val_resized);
+ free(buf);
+ free(buf_resized);
+ int cf;
+ //	printf("passou antes do fclose\n");
+ if (fps)
+ for (cf = 0; cf < classes; ++cf) {
+ if (fps[cf] != NULL)
+ fclose(fps[cf]);
+ }
+ }
 
-	free(val);
-	free(val_resized);
-	free(buf);
-	free(buf_resized);
-	int cf;
-	//	printf("passou antes do fclose\n");
-	if (fps)
-		for (cf = 0; cf < classes; ++cf) {
-			if (fps[cf] != NULL)
-				fclose(fps[cf]);
-		}
-}
 
-void validate_yolo(Args parameters) {
-	network net = parse_network_cfg(parameters.config_file);
-	if (parameters.weights) {
-		load_weights(&net, parameters.weights);
+ void validate_yolo(Args parameters) {
+ network net = parse_network_cfg(parameters.config_file);
+ if (parameters.weights) {
+ load_weights(&net, parameters.weights);
+ }
+ set_batch_network(&net, 1);
+ fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n",
+ net.learning_rate, net.momentum, net.decay);
+ srand(time(0));
+
+ //result output and image list file
+ char *base = parameters.base_result_out;
+ list *plist = get_paths(parameters.img_list_path);
+ char **paths = (char **) list_to_array(plist);
+
+ //neural network stuff
+ layer l = net.layers[net.n - 1];
+ int classes = l.classes;
+ int square = l.sqrt;
+ int side = l.side;
+
+ int j;
+ //classes outputs files
+ FILE **fps = NULL; //calloc(classes, sizeof(FILE *));
+ //	if (parameters.generate_flag) {
+ //		for (j = 0; j < classes; ++j) {
+ //			char buff[1024];
+ //			snprintf(buff, 1024, "%s%s.txt", base, voc_names[j]);
+ //			fps[j] = fopen(buff, "w");
+ //		}
+ //	}
+
+ //boxes and probabilities arrays
+ GoldPointers current_ptr, gold_ptr;
+ int gold_iterator = 0;
+
+ if (parameters.generate_flag) {
+ current_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
+ parameters.gold_output, "wb");
+ } else {
+ //only gold_ptr need open a file
+ current_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
+ "not_open", "not_open");
+
+ gold_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
+ parameters.gold_input, "rb");
+ //now we can already load gold values
+ read_yolo_gold(&gold_ptr);
+ }
+
+ int m = plist->size;
+ int i = 0;
+ int t;
+
+ float thresh = .001;
+ int nms = 1;
+ float iou_thresh = .5;
+
+ int nthreads = 1;
+ if (m > 1 && m <= 4) {
+ nthreads = min(4, m);
+ }
+
+ image *val = calloc(nthreads, sizeof(image));
+ image *val_resized = calloc(nthreads, sizeof(image));
+ image *buf = calloc(nthreads, sizeof(image));
+ image *buf_resized = calloc(nthreads, sizeof(image));
+ pthread_t *thr = calloc(nthreads, sizeof(pthread_t));
+ long iterator;
+ long it = 0;
+
+ load_args args = { 0 };
+ args.w = net.w;
+ args.h = net.h;
+ args.type = IMAGE_DATA;
+ for (t = 0; t < nthreads; ++t) {
+ args.path = paths[i + t];
+ args.im = &buf[t];
+ args.resized = &buf_resized[t];
+ thr[t] = load_data_in_thread(args);
+ }
+
+ printf("Images opening\n");
+
+ for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
+ pthread_join(thr[t], 0);
+ val[t] = buf[t];
+ val_resized[t] = buf_resized[t];
+ }
+
+ printf("Images opening\n");
+ for (t = 0; t < nthreads && i + t < m; ++t) {
+ args.path = paths[i + t];
+ args.im = &buf[t];
+ args.resized = &buf_resized[t];
+ thr[t] = load_data_in_thread(args);
+ }
+
+ printf("abft %d\n", parameters.abft);
+ //set abft
+ if (parameters.abft != 0) {
+ printf("passou no use\n");
+ set_use_abft(parameters.abft);
+ }
+
+ for (iterator = 0; iterator < parameters.iterations; iterator++) {
+
+ double det_start = mysecond();
+ for (i = nthreads; i < m + nthreads; i += nthreads) {
+ long max_err_per_iteration = 0;
+ for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
+ #ifdef LOGS
+ if(!parameters.generate_flag) {
+ start_iteration();
+ }
+ if(parameters.abft == 1 && !parameters.generate_flag)
+ set_gold_iterator_abft(gold_iterator);
+ #endif
+
+ //for abft, because it is easier use an input parameter than a gcc macro
+ //				if (parameters.abft == 1) {
+ //					shared_errors.row_detected_errors = 0;
+ //					shared_errors.col_detected_errors = 0;
+ //				}
+ double begin2 = mysecond();
+ char *path = paths[i + t - nthreads];
+ char *id = basecfg(path);
+ float *X = val_resized[t].data;
+
+ float *predictions;
+
+ if (parameters.generate_flag) {
+ predictions = network_predict(net, X, 1);
+ } else {
+ predictions = network_predict(net, X, 0);
+ }
+
+ int w = val[t].w;
+ int h = val[t].h;
+ ProbArray gold, current = current_ptr.pb_gold[gold_iterator];
+ if (!parameters.generate_flag)
+ gold = gold_ptr.pb_gold[gold_iterator];
+
+ float **probs_curr = current.probs;
+ box *boxes_curr = current_ptr.pb_gold[gold_iterator].boxes;
+
+ convert_detections(predictions, classes, l.n, square, side, w,
+ h, thresh, probs_curr, boxes_curr, 0);
+ if (nms) {
+ do_nms_sort(boxes_curr, probs_curr, side * side * l.n,
+ classes, iou_thresh);
+ }
+ printf("it %d seconds %f\n", iterator, mysecond() - begin2);
+
+ //---------------------------------
+
+ #ifdef LOGS
+ if(!parameters.generate_flag) {
+ end_iteration();
+ }
+ #endif
+ unsigned long cmp = 0;
+ //I need compare things here not anywhere else
+ if (!parameters.generate_flag) {
+ double begin = mysecond();
+ if ((cmp = prob_array_comparable_and_log(gold, current,
+ gold_iterator))) {
+ fprintf(stderr,
+ "%d errors found in the computation, run to the hills\n",
+ cmp);
+
+ //Lucas saving layers
+ if (parameters.save_layers == 1)
+ saveLayer(net, iterator * m, i + t);
+ max_err_per_iteration += cmp;
+ if (max_err_per_iteration > 500) {
+ free_yolo_test_memory(&parameters, &current_ptr,
+ &gold_ptr, classes, val, val_resized, buf,
+ buf_resized, fps);
+
+ }
+
+ }
+
+ if ((i % 10) == 0) {
+ fprintf(stdout,
+ "Partial it %ld Gold comp Time: %fs Iteration done %3.2f\n",
+ iterator, mysecond() - begin,
+ ((float) i / (float) m) * 100.0);
+ }
+ //					printf("antes do clean");
+ clear_vectors(&current_ptr);
+ //			printf("passou\n");
+ } else {
+ saveLayer(net, i + t - nthreads, i + t);
+ printf("%i :: ", i + t - nthreads);
+ }
+ //				printf("passou %d %d\n");
+ #ifdef LOGS
+ if (!parameters.generate_flag) {
+ log_error_count(cmp);
+ }
+ #endif
+ //				printf("passou %d %d\n");
+ //				printf("passou %d %d\n", gold_iterator, it++);
+ gold_iterator = (gold_iterator + 1) % plist->size;
+
+ //---------------------------------
+
+ if (iterator == parameters.iterations - 1 && (i >= m)) {
+ //	printf("aqui\n");
+ free(id);
+ free_image(val[t]);
+ free_image(val_resized[t]);
+ }
+ }
+ }
+ fprintf(stdout, "Total Detection Time: %f Seconds\n",
+ (double) (mysecond() - det_start));
+
+ //		unsigned long cmp = 0;
+ //		//I need compare things here not anywhere else
+ //		if (!parameters.generate_flag) {
+ //			double begin = mysecond();
+ //			if ((cmp = comparable_and_log(gold_ptr, current_ptr)))
+ //				fprintf(stderr,
+ //						"%d errors found in the computation, run to the hills\n",
+ //						cmp);
+ //			fprintf(stdout,
+ //					"Iteration %ld Total Gold comparison Time: %f Seconds\n",
+ //					iterator, mysecond() - begin);
+ ////			clear_vectors(&current_ptr);
+ ////			printf("passou\n");
+ //
+ //		}
+
+ //-----------------------------------------------
+ for (t = 0; t < nthreads; ++t)
+ pthread_join(thr[t], 0);
+ }
+
+ //save gold values
+ free_yolo_test_memory(&parameters, &current_ptr, &gold_ptr, classes, val,
+ val_resized, buf, buf_resized, fps);
+ //
+ //	printf("passou depois do fclose\n");
+ //	printf("Yolo finished\n");
+ }*/
+
+void validate_yolo(char *cfgfile, char *weightfile) {
+	network net = parse_network_cfg(cfgfile);
+	if (weightfile) {
+		load_weights(&net, weightfile);
 	}
 	set_batch_network(&net, 1);
 	fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n",
 			net.learning_rate, net.momentum, net.decay);
 	srand(time(0));
 
-	//result output and image list file
-	char *base = parameters.base_result_out;
-	list *plist = get_paths(parameters.img_list_path);
+	char *base = "results/comp4_det_test_";
+	//list *plist = get_paths("data/voc.2007.test");
+	list *plist = get_paths("/home/pjreddie/data/voc/2007_test.txt");
+	//list *plist = get_paths("data/voc.2012.test");
 	char **paths = (char **) list_to_array(plist);
 
-	//neural network stuff
 	layer l = net.layers[net.n - 1];
 	int classes = l.classes;
 	int square = l.sqrt;
 	int side = l.side;
 
 	int j;
-	//classes outputs files
-	FILE **fps = NULL; //calloc(classes, sizeof(FILE *));
-//	if (parameters.generate_flag) {
-//		for (j = 0; j < classes; ++j) {
-//			char buff[1024];
-//			snprintf(buff, 1024, "%s%s.txt", base, voc_names[j]);
-//			fps[j] = fopen(buff, "w");
-//		}
-//	}
-
-	//boxes and probabilities arrays
-	GoldPointers current_ptr, gold_ptr;
-	int gold_iterator = 0;
-
-	if (parameters.generate_flag) {
-		current_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
-				parameters.gold_output, "wb");
-	} else {
-		//only gold_ptr need open a file
-		current_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
-				"not_open", "not_open");
-
-		gold_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
-				parameters.gold_input, "rb");
-		//now we can already load gold values
-		read_yolo_gold(&gold_ptr);
+	FILE **fps = calloc(classes, sizeof(FILE *));
+	for (j = 0; j < classes; ++j) {
+		char buff[1024];
+		snprintf(buff, 1024, "%s%s.txt", base, voc_names[j]);
+		fps[j] = fopen(buff, "w");
 	}
+	box *boxes = calloc(side * side * l.n, sizeof(box));
+	float **probs = calloc(side * side * l.n, sizeof(float *));
+	for (j = 0; j < side * side * l.n; ++j)
+		probs[j] = calloc(classes, sizeof(float *));
 
 	int m = plist->size;
 	int i = 0;
@@ -248,197 +481,60 @@ void validate_yolo(Args parameters) {
 	int nms = 1;
 	float iou_thresh = .5;
 
-	int nthreads = 1;
-	if (m > 1 && m <= 4) {
-		nthreads = min(4, m);
-	}
-
+	int nthreads = 2;
 	image *val = calloc(nthreads, sizeof(image));
 	image *val_resized = calloc(nthreads, sizeof(image));
 	image *buf = calloc(nthreads, sizeof(image));
 	image *buf_resized = calloc(nthreads, sizeof(image));
 	pthread_t *thr = calloc(nthreads, sizeof(pthread_t));
-	long iterator;
-	long it = 0;
 
 	load_args args = { 0 };
 	args.w = net.w;
 	args.h = net.h;
 	args.type = IMAGE_DATA;
+
 	for (t = 0; t < nthreads; ++t) {
 		args.path = paths[i + t];
 		args.im = &buf[t];
 		args.resized = &buf_resized[t];
 		thr[t] = load_data_in_thread(args);
 	}
-
-	printf("Images opening\n");
-
-	for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
-		pthread_join(thr[t], 0);
-		val[t] = buf[t];
-		val_resized[t] = buf_resized[t];
-	}
-
-	printf("Images opening\n");
-	for (t = 0; t < nthreads && i + t < m; ++t) {
-		args.path = paths[i + t];
-		args.im = &buf[t];
-		args.resized = &buf_resized[t];
-		thr[t] = load_data_in_thread(args);
-	}
-
-	printf("abft %d\n", parameters.abft);
-	//set abft
-	if (parameters.abft != 0) {
-		printf("passou no use\n");
-		set_use_abft(parameters.abft);
-	}
-
-	for (iterator = 0; iterator < parameters.iterations; iterator++) {
-
-		double det_start = mysecond();
-		for (i = nthreads; i < m + nthreads; i += nthreads) {
-			long max_err_per_iteration = 0;
-			for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
-#ifdef LOGS
-				if(!parameters.generate_flag) {
-					start_iteration();
-				}
-				if(parameters.abft == 1 && !parameters.generate_flag)
-				set_gold_iterator_abft(gold_iterator);
-#endif
-
-				//for abft, because it is easier use an input parameter than a gcc macro
-//				if (parameters.abft == 1) {
-//					shared_errors.row_detected_errors = 0;
-//					shared_errors.col_detected_errors = 0;
-//				}
-				double begin2 = mysecond();
-				char *path = paths[i + t - nthreads];
-				char *id = basecfg(path);
-				float *X = val_resized[t].data;
-
-				float *predictions;
-
-				if (parameters.generate_flag) {
-					predictions = network_predict(net, X, 1);
-				} else {
-					predictions = network_predict(net, X, 0);
-				}
-
-				int w = val[t].w;
-				int h = val[t].h;
-				ProbArray gold, current = current_ptr.pb_gold[gold_iterator];
-				if (!parameters.generate_flag)
-					gold = gold_ptr.pb_gold[gold_iterator];
-
-				float **probs_curr = current.probs;
-				box *boxes_curr = current_ptr.pb_gold[gold_iterator].boxes;
-
-				convert_detections(predictions, classes, l.n, square, side, w,
-						h, thresh, probs_curr, boxes_curr, 0);
-				if (nms) {
-					do_nms_sort(boxes_curr, probs_curr, side * side * l.n,
-							classes, iou_thresh);
-				}
-				printf("it %d seconds %f\n", iterator, mysecond() - begin2);
-
-				//---------------------------------
-
-#ifdef LOGS
-				if(!parameters.generate_flag) {
-					end_iteration();
-				}
-#endif
-				unsigned long cmp = 0;
-				//I need compare things here not anywhere else
-				if (!parameters.generate_flag) {
-					double begin = mysecond();
-					if ((cmp = prob_array_comparable_and_log(gold, current,
-							gold_iterator))) {
-						fprintf(stderr,
-								"%d errors found in the computation, run to the hills\n",
-								cmp);
-
-						//Lucas saving layers
-						if (parameters.save_layers == 1)
-							saveLayer(net, iterator * m, i + t);
-						max_err_per_iteration += cmp;
-						if (max_err_per_iteration > 500) {
-							free_yolo_test_memory(&parameters, &current_ptr,
-									&gold_ptr, classes, val, val_resized, buf,
-									buf_resized, fps);
-
-						}
-
-					}
-
-					if ((i % 10) == 0) {
-						fprintf(stdout,
-								"Partial it %ld Gold comp Time: %fs Iteration done %3.2f\n",
-								iterator, mysecond() - begin,
-								((float) i / (float) m) * 100.0);
-					}
-//					printf("antes do clean");
-					clear_vectors(&current_ptr);
-					//			printf("passou\n");
-				} else {
-					saveLayer(net, i + t - nthreads, i + t);
-					printf("%i :: ", i + t - nthreads);
-				}
-//				printf("passou %d %d\n");
-#ifdef LOGS
-				if (!parameters.generate_flag) {
-					log_error_count(cmp);
-				}
-#endif
-//				printf("passou %d %d\n");
-//				printf("passou %d %d\n", gold_iterator, it++);
-				gold_iterator = (gold_iterator + 1) % plist->size;
-
-				//---------------------------------
-
-				if (iterator == parameters.iterations - 1 && (i >= m)) {
-					//	printf("aqui\n");
-					free(id);
-					free_image(val[t]);
-					free_image(val_resized[t]);
-				}
-			}
-		}
-		fprintf(stdout, "Total Detection Time: %f Seconds\n",
-				(double) (mysecond() - det_start));
-
-//		unsigned long cmp = 0;
-//		//I need compare things here not anywhere else
-//		if (!parameters.generate_flag) {
-//			double begin = mysecond();
-//			if ((cmp = comparable_and_log(gold_ptr, current_ptr)))
-//				fprintf(stderr,
-//						"%d errors found in the computation, run to the hills\n",
-//						cmp);
-//			fprintf(stdout,
-//					"Iteration %ld Total Gold comparison Time: %f Seconds\n",
-//					iterator, mysecond() - begin);
-////			clear_vectors(&current_ptr);
-////			printf("passou\n");
-//
-//		}
-
-		//-----------------------------------------------
-		for (t = 0; t < nthreads; ++t)
+	time_t start = time(0);
+	for (i = nthreads; i < m + nthreads; i += nthreads) {
+		fprintf(stderr, "%d\n", i);
+		for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
 			pthread_join(thr[t], 0);
+			val[t] = buf[t];
+			val_resized[t] = buf_resized[t];
+		}
+		for (t = 0; t < nthreads && i + t < m; ++t) {
+			args.path = paths[i + t];
+			args.im = &buf[t];
+			args.resized = &buf_resized[t];
+			thr[t] = load_data_in_thread(args);
+		}
+		for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
+			char *path = paths[i + t - nthreads];
+			char *id = basecfg(path);
+			float *X = val_resized[t].data;
+			float *predictions = network_predict(net, X);
+			int w = val[t].w;
+			int h = val[t].h;
+			convert_detections(predictions, classes, l.n, square, side, w, h,
+					thresh, probs, boxes, 0);
+			if (nms)
+				do_nms_sort(boxes, probs, side * side * l.n, classes,
+						iou_thresh);
+			print_yolo_detections(fps, id, boxes, probs, side * side * l.n,
+					classes, w, h);
+			free(id);
+			free_image(val[t]);
+			free_image(val_resized[t]);
+		}
 	}
-
-//save gold values
-	free_yolo_test_memory(&parameters, &current_ptr, &gold_ptr, classes, val,
-			val_resized, buf, buf_resized, fps);
-//
-//	printf("passou depois do fclose\n");
-//	printf("Yolo finished\n");
+	fprintf(stderr, "Total Detection Time: %f Seconds\n",
+			(double) (time(0) - start));
 }
-
 void validate_yolo_recall(char *cfgfile, char *weightfile) {
 	network net = parse_network_cfg(cfgfile);
 	if (weightfile) {
@@ -487,7 +583,7 @@ void validate_yolo_recall(char *cfgfile, char *weightfile) {
 		image orig = load_image_color(path, 0, 0);
 		image sized = resize_image(orig, net.w, net.h);
 		char *id = basecfg(path);
-		float *predictions = network_predict(net, sized.data, 0);
+		float *predictions = network_predict(net, sized.data);
 		convert_detections(predictions, classes, l.n, square, side, 1, 1,
 				thresh, probs, boxes, 1);
 		if (nms)
@@ -564,7 +660,7 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh) {
 		image sized = resize_image(im, net.w, net.h);
 		float *X = sized.data;
 		time = clock();
-		float *predictions = network_predict(net, X, 0);
+		float *predictions = network_predict(net, X);
 		printf("%s: Predicted in %f seconds.\n", input, sec(clock() - time));
 		convert_detections(predictions, l.classes, l.n, l.sqrt, l.side, 1, 1,
 				thresh, probs, boxes, 0);
@@ -587,30 +683,50 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh) {
 	}
 }
 
-void run_yolo(Args args) {
+void run_yolo_rad(Args args) {
+//	int i;
+//	for (i = 0; i < 20; ++i) {
+//		char buff[1000];
+//		sprintf(buff, "%s/data/labels/%s.png", args.base_result_out,
+//				voc_names[i]);
+//		voc_labels[i] = load_image_color(buff, 0, 0);
+//	}
+//
+//	if (0 == strcmp(args.execution_model, "valid"))
+//		validate_yolo(args);
+}
+
+void run_yolo(int argc, char **argv) {
 	int i;
 	for (i = 0; i < 20; ++i) {
-		char buff[1000];
-		sprintf(buff, "%s/data/labels/%s.png", args.base_result_out,
-				voc_names[i]);
+		char buff[256];
+		sprintf(buff, "data/labels/%s.png", voc_names[i]);
 		voc_labels[i] = load_image_color(buff, 0, 0);
 	}
 
-//float thresh = find_float_arg(argc, argv, "-thresh", .2);
-//int cam_index = find_int_arg(argc, argv, "-c", 0);
-//int frame_skip = find_int_arg(argc, argv, "-s", 0);
-//if(argc < 4){
-//    fprintf(stderr, "usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n", argv[0], argv[1]);
-//    return;
-//}
+	float thresh = find_float_arg(argc, argv, "-thresh", .2);
+	int cam_index = find_int_arg(argc, argv, "-c", 0);
+	int frame_skip = find_int_arg(argc, argv, "-s", 0);
+	if (argc < 4) {
+		fprintf(stderr,
+				"usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n",
+				argv[0], argv[1]);
+		return;
+	}
 
-//    char *cfg = args.config_file;
-//    char *weights = args.weights;//(argc > 4) ? argv[4] : 0;
-//    char *filename = a//(argc > 5) ? argv[5]: 0;
-//if(0==strcmp(argv[2], "test")) test_yolo(cfg, weights, filename, thresh);
-//else if(0==strcmp(argv[2], "train")) train_yolo(cfg, weights);
-	if (0 == strcmp(args.execution_model, "valid"))
-		validate_yolo(args);
-//else if(0==strcmp(argv[2], "recall")) validate_yolo_recall(cfg, weights);
-//else if(0==strcmp(argv[2], "demo")) demo(cfg, weights, thresh, cam_index, filename, voc_names, voc_labels, 20, frame_skip);
+	char *cfg = argv[3];
+	char *weights = (argc > 4) ? argv[4] : 0;
+	char *filename = (argc > 5) ? argv[5] : 0;
+	if (0 == strcmp(argv[2], "test")){
+		printf("passou aqui\n\n");
+		test_yolo(cfg, weights, filename, thresh);
+	}else if (0 == strcmp(argv[2], "train"))
+		train_yolo(cfg, weights);
+	else if (0 == strcmp(argv[2], "valid"))
+		validate_yolo(cfg, weights);
+	else if (0 == strcmp(argv[2], "recall"))
+		validate_yolo_recall(cfg, weights);
+	else if (0 == strcmp(argv[2], "demo"))
+		demo(cfg, weights, thresh, cam_index, filename, voc_names, voc_labels,
+				20, frame_skip);
 }

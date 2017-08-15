@@ -391,7 +391,7 @@ void validate_classifier_10(char *datacfg, char *filename, char *weightfile)
         images[9] = crop_image(im, shift, shift, w, h);
         float *pred = calloc(classes, sizeof(float));
         for(j = 0; j < 10; ++j){
-            float *p = network_predict(net, images[j].data,0);
+            float *p = network_predict(net, images[j].data);
             axpy_cpu(classes, 1, p, 1, pred, 1);
             free_image(images[j]);
         }
@@ -451,7 +451,7 @@ void validate_classifier_full(char *datacfg, char *filename, char *weightfile)
         //show_image(im, "orig");
         //show_image(crop, "cropped");
         //cvWaitKey(0);
-        float *pred = network_predict(net, resized.data,0);
+        float *pred = network_predict(net, resized.data);
 
         free_image(im);
         free_image(resized);
@@ -510,7 +510,7 @@ void validate_classifier_single(char *datacfg, char *filename, char *weightfile)
         //show_image(im, "orig");
         //show_image(crop, "cropped");
         //cvWaitKey(0);
-        float *pred = network_predict(net, crop.data,0);
+        float *pred = network_predict(net, crop.data);
 
         if(resized.data != im.data) free_image(resized);
         free_image(im);
@@ -570,10 +570,10 @@ void validate_classifier_multi(char *datacfg, char *filename, char *weightfile)
         for(j = 0; j < nscales; ++j){
             image r = resize_min(im, scales[j]);
             resize_network(&net, r.w, r.h);
-            float *p = network_predict(net, r.data,0);
+            float *p = network_predict(net, r.data);
             axpy_cpu(classes, 1, p, 1, pred, 1);
             flip_image(r);
-            p = network_predict(net, r.data,0);
+            p = network_predict(net, r.data);
             axpy_cpu(classes, 1, p, 1, pred, 1);
             if(r.data != im.data) free_image(r);
         }
@@ -634,7 +634,7 @@ void try_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filena
 
         float *X = im.data;
         time=clock();
-        float *predictions = network_predict(net, X,0);
+        float *predictions = network_predict(net, X);
 
         layer l = net.layers[layer_num];
         for(i = 0; i < l.c; ++i){
@@ -710,7 +710,7 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
 
         float *X = r.data;
         time=clock();
-        float *predictions = network_predict(net, X,0);
+        float *predictions = network_predict(net, X);
         top_predictions(net, top, indexes);
         printf("%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         for(i = 0; i < top; ++i){
@@ -751,7 +751,7 @@ void label_classifier(char *datacfg, char *filename, char *weightfile)
         image im = load_image_color(paths[i], 0, 0);
         image resized = resize_min(im, net.w);
         image crop = crop_image(resized, (resized.w - net.w)/2, (resized.h - net.h)/2, net.w, net.h);
-        float *pred = network_predict(net, crop.data,0);
+        float *pred = network_predict(net, crop.data);
 
         if(resized.data != im.data) free_image(resized);
         free_image(im);
@@ -893,7 +893,7 @@ void threat_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_i
         int h = y2 - y1 - 2*border;
         int w = x2 - x1 - 2*border;
 
-        float *predictions = network_predict(net, in_s.data,0);
+        float *predictions = network_predict(net, in_s.data);
         float curr_threat = 0;
         if(1){
             curr_threat = predictions[0] * 0 + 
@@ -1012,7 +1012,7 @@ void gun_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_inde
         image in_s = resize_image(in, net.w, net.h);
         show_image(in, "Threat Detection");
 
-        float *predictions = network_predict(net, in_s.data,0);
+        float *predictions = network_predict(net, in_s.data);
         top_predictions(net, top, indexes);
 
         printf("\033[2J");
@@ -1089,7 +1089,7 @@ void demo_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_ind
         image in_s = resize_image(in, net.w, net.h);
         show_image(in, "Classifier");
 
-        float *predictions = network_predict(net, in_s.data,0);
+        float *predictions = network_predict(net, in_s.data);
         top_predictions(net, top, indexes);
 
         printf("\033[2J");

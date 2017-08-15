@@ -37,14 +37,14 @@ extern "C" {
 #include "shortcut_layer.h"
 #include "blas.h"
 
-#include "log_processing.h"
+//#include "log_processing.h"
 }
 
 float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);
 float * get_network_output_gpu(network net);
 
-void forward_network_gpu(network net, network_state state, int gold)
+void forward_network_gpu(network net, network_state state)
 {
     state.workspace = net.workspace;
 //    double totalTime = 0, time;
@@ -106,40 +106,40 @@ void forward_network_gpu(network net, network_state state, int gold)
             forward_shortcut_layer_gpu(l, state);
         }
         state.input = l.output_gpu;
-        //FUCK, FUCK, FUCK, I HATE C, I REALLY HATE C MEMORY MANAGEMENT, BIRRLLL
-//        if(net.layers[(i - 1) < 0 ? 0:i-1].outputs - l.outputs > 0)
-//        	printf("old size %d new size %d\n", net.layers[(i - 1) < 0 ? 0:i-1].outputs, l.outputs);
-//        double begin = mysecond();
-        if(layer_output[i])
-        	free(layer_output[i]);
-
-		layer_output[i] = (float*)calloc(l.outputs, sizeof(float));
-
-//		sum_time += (mysecond() - begin);
-		cudaMemcpy ( layer_output[i], l.output_gpu, l.outputs*sizeof(float), cudaMemcpyDeviceToHost);
-		
-		/*else 
-		{
-#ifdef LOGS
-			double begin = mysecond();
-			compareLayer(l,i);
-			time = mysecond() - begin;
-			fprintf(stdout,
-				"Layer comparison Time: %f Seconds\n",
-				time);
-			totalTime += time;
-			
-
-#endif
-		}*/
+//        //FUCK, FUCK, FUCK, I HATE C, I REALLY HATE C MEMORY MANAGEMENT, BIRRLLL
+////        if(net.layers[(i - 1) < 0 ? 0:i-1].outputs - l.outputs > 0)
+////        	printf("old size %d new size %d\n", net.layers[(i - 1) < 0 ? 0:i-1].outputs, l.outputs);
+////        double begin = mysecond();
+//        if(layer_output[i])
+//        	free(layer_output[i]);
+//
+//		layer_output[i] = (float*)calloc(l.outputs, sizeof(float));
+//
+////		sum_time += (mysecond() - begin);
+//		cudaMemcpy ( layer_output[i], l.output_gpu, l.outputs*sizeof(float), cudaMemcpyDeviceToHost);
+//
+//		/*else
+//		{
+//#ifdef LOGS
+//			double begin = mysecond();
+//			compareLayer(l,i);
+//			time = mysecond() - begin;
+//			fprintf(stdout,
+//				"Layer comparison Time: %f Seconds\n",
+//				time);
+//			totalTime += time;
+//
+//
+//#endif
+//		}*/
 
     }
-//    printf("total layer malloc time %d\n", sum_time);
-#ifdef LOGS
-//        fprintf(stdout,
-//				"Total Layer comparison Time: %f Seconds\n",
-//				totalTime);
-#endif
+////    printf("total layer malloc time %d\n", sum_time);
+//#ifdef LOGS
+////        fprintf(stdout,
+////				"Total Layer comparison Time: %f Seconds\n",
+////				totalTime);
+//#endif
 }
 
 void backward_network_gpu(network net, network_state state)
@@ -248,7 +248,7 @@ void forward_backward_network_gpu(network net, float *x, float *y)
     state.truth = *net.truth_gpu;
     state.train = 1;
 
-    forward_network_gpu(net, state,0);
+    forward_network_gpu(net, state);
 
     backward_network_gpu(net, state);
 }
@@ -536,7 +536,7 @@ float *get_network_output_gpu(network net)
     return get_network_output_layer_gpu(net, i);
 }
 
-float *network_predict_gpu(network net, float *input, int gold)
+float *network_predict_gpu(network net, float *input)
 {
     int size = get_network_input_size(net) * net.batch;
     //printf("size on predict %d %d\n", size, net.batch);
@@ -554,7 +554,7 @@ float *network_predict_gpu(network net, float *input, int gold)
 //    forward_network_gpu(net, state, gold);
 //>>>>>>> Stashed changes
 //=======
-    forward_network_gpu(net, state, gold);
+    forward_network_gpu(net, state);
 //>>>>>>> Stashed changes
     float *out = get_network_output_gpu(net);
     cuda_free(state.input);

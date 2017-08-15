@@ -13,7 +13,8 @@
 
 
 void run_voxel(int argc, char **argv);
-void run_yolo(Args args);
+void run_yolo_rad(Args args);
+void run_yolo(int argc, char **argv);
 void run_detector(int argc, char **argv);
 void run_coco(int argc, char **argv);
 void run_writing(int argc, char **argv);

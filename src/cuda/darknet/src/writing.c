@@ -112,7 +112,7 @@ void test_writing(char *cfgfile, char *weightfile, char *filename)
         printf("%d %d %d\n", im.h, im.w, im.c);
         float *X = im.data;
         time=clock();
-        network_predict(net, X, 0);
+        network_predict(net, X);
         printf("%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         image pred = get_network_image(net);
 

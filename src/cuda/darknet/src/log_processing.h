@@ -1,89 +1,116 @@
 /*
  * log_processing.h
  *
- *  Created on: 22/09/2016
+ *  Created on: 30/04/2017
  *      Author: fernando
  */
 
 #ifndef LOG_PROCESSING_H_
 #define LOG_PROCESSING_H_
 
-#include <sys/time.h>
-#include "yolo.h"
-#include "network.h"
-#include "layer.h"
+#include <sys/time.h> //cont time
+#include "network.h" //save layer
+#include "layer.h" //save layer
 #include "box.h" //boxes
-#include <stdio.h> //FILE*
-#include <math.h> //fabs
-#include <stdlib.h> //calloc
-#include <string.h>
-
-#define THRESHOLD_ERROR 0.005
 
 
+#include "abft.h"
+#include "args.h" //load gold
 
-typedef struct prob_arry {
+#include <stdio.h> //FILE
+
+#define THRESHOLD_ERROR 0.05
+#define LAYER_THRESHOLD_ERROR 0.0000001
+
+#define LAYER_GOLD "/var/radiation-benchmarks/data/"
+
+
+
+static const char *ABFT_TYPES[] = { "none", "gemm", "smart_pooling", "l1", "l2",
+		"trained_weights" };
+
+
+typedef struct prob_array_ {
 	box *boxes;
 	float **probs;
-	long classes;
-	long total_size;
-} ProbArray;
 
-//to store all gold filenames
-typedef struct gold_pointers {
-//	box *boxes_gold;
-//	ProbArray pb;
-	ProbArray *pb_gold;
-	long plist_size;
-	FILE* gold;
-	int has_file;
-} GoldPointers;
+} prob_array;
 
-//allocate all memory
-GoldPointers new_gold_pointers(int classes, int total_size,
-		const int plist_size, char *file_path, char *open_mode);
+//to store all gold content
+typedef struct detection_ {
+	prob_array *pb_gold;
+	int plist_size;
+	int classes;
+	int total;
+	char **img_names;
 
-//clean memory
-void free_gold_pointers(GoldPointers *gp);
+	//layers vars
+	float **found_layers;
+	float **gold_layers;
+	network *net;
+	int layers_size;
+} detection;
 
-/**
- * The output will be stored in this order
- long plist_size;
- long classes;
- long total_size;
- for(<plist_size times>){
- -----pb_gold.boxes
- -----pb_gold.probs
- }
- */
-void gold_pointers_serialize(GoldPointers gp);
-//don't mess up with the memory in C, shit gonna happens
-//void free_gold_pointers(GoldPointers *gp);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+//#ifdef LOGS
+//char * get_log_file_name();
+//int start_log_file(char *benchmark_name, char *test_info);
+//int end_log_file();
+//int start_iteration();
+//int end_iteration();
+//int log_error_count(unsigned long int kernel_errors);
+//int log_error_detail(char *string);
+//int log_info_detail(char *string);
+//#endif
 
 /**
- *  the input must be read in this order
- long plist_size;
- long classes;
- long total_size;
- for(<plist_size times>){
- -----pb_gold.boxes
- -----pb_gold.probs
- }
+ * functions to start log file
  */
-void read_yolo_gold(GoldPointers *gp);
+void start_count_app(char *test, int save_layer, int abft, int iterations,
+		char *app);
+
+void finish_count_app();
+
+void start_iteration_app();
+void end_iteration_app();
 
 /**
- * if some error happens the error_count will be != 0
+ * compare and save layers
  */
-unsigned long comparable_and_log(GoldPointers gold, GoldPointers current);
+void save_layer(detection *det, int img_iterator, int test_iteration,
+		char *log_filename, int generate, char *img_list_filename);
 
-void clear_vectors(GoldPointers *gp);
+void alloc_gold_layers_arrays(detection *det, network *net);
 
-int prob_array_comparable_and_log(ProbArray gold, ProbArray pb, long plist_iteration);
+/**
+ * get_image_filenames are used by generate
+ */
+char** get_image_filenames(char*, int*);
 
-void saveLayer(network net, int iterator, int n);
-void compareLayer(layer l, int i);
+void save_gold(FILE *fp, char *img, int num, int classes, float **probs,
+		box *boxes);
 
-inline double mysecond();
+/**
+ * radiation test functions
+ */
+
+void delete_detection_var(detection*, Args*);
+
+detection load_gold(Args*);
+
+void compare(detection *det, float **f_probs, box *f_boxes, int num,
+		int classes, int img, int save_layer, int test_iteration,
+		char *img_list_path, ErrorReturn max_pool_errors);
+
+void clear_boxes_and_probs(box*, float**, int, int);
+
+void print_detection(detection);
+
+#ifdef __cplusplus
+} //end extern "C"
+#endif //end IF __cplusplus
 
 #endif /* LOG_PROCESSING_H_ */

@@ -12,7 +12,7 @@
 #include <stdio.h> //printf
 #include <stdlib.h> //atol
 
-#define ABFT_TYPES 5
+#define MAX_ABFT_TYPES 5
 
 /**
  * -e - execution_type = <yolo/classifier/imagenet...>
@@ -46,6 +46,11 @@ typedef struct arguments {
 	char *gold_input;
 	int save_layers;
 	int abft;
+
+	char *cfg_data;
+	char *model;
+	float hier_thresh;
+
 } Args;
 
 void args_init_and_setnull(Args *arg);

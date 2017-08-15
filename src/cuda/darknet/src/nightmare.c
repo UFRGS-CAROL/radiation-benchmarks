@@ -57,7 +57,7 @@ void optimize_picture(network *net, image orig, int max_layer, float scale, floa
     state.input = cuda_make_array(im.data, im.w*im.h*im.c);
     state.delta = cuda_make_array(im.data, im.w*im.h*im.c);
 
-    forward_network_gpu(*net, state,0);
+    forward_network_gpu(*net, state);
     copy_ongpu(last.outputs, last.output_gpu, 1, last.delta_gpu, 1);
 
     cuda_pull_array(last.delta_gpu, last.delta, last.outputs);
@@ -147,7 +147,7 @@ void reconstruct_picture(network net, float *features, image recon, image update
         state.delta = cuda_make_array(delta.data, delta.w*delta.h*delta.c);
         state.truth = cuda_make_array(features, get_network_output_size(net));
 
-        forward_network_gpu(net, state,0);
+        forward_network_gpu(net, state);
         backward_network_gpu(net, state);
 
         cuda_pull_array(state.delta, delta.data, delta.w*delta.h*delta.c);
@@ -231,7 +231,7 @@ void run_nightmare(int argc, char **argv)
         resize_network(&net, im.w, im.h);
 
         int zz = 0;
-        network_predict(net, im.data, 0);
+        network_predict(net, im.data);
         image out_im = get_network_image(net);
         image crop = crop_image(out_im, zz, zz, out_im.w-2*zz, out_im.h-2*zz);
         //flip_image(crop);

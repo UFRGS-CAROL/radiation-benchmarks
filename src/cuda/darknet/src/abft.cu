@@ -203,7 +203,6 @@ __global__ void calc_checksums(float *a, float *b, long rows_a, long cols_a,
 	__syncthreads();
 }
 
-//DYNAMIC PARALLELISM ONLY TO CALL NEW KERNELS, ARE FUCK KIDDING???
 //man, I am so lazy
 __global__ void check_checksums(float *c, long rows_c, long cols_c) {
 	long i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -228,14 +227,3 @@ __global__ void check_checksums(float *c, long rows_c, long cols_c) {
 	//printf("values %d %d\n ", row_detected_errors, col_detected_errors);
 }
 
-//since dgemm is optimized for square matrices I'm going to use
-//first ABRAHAM operation
-//	for (j = 0; j < col_a; j++) {
-//		acc = 0;
-//		for (i = 0; i < lin_a; i++)
-//
-//			acc += a[i * col_a + j];
-//
-//        a[lin_a * col_a + j] = acc;
-//	}
-//rows_b MUST BE THE SAME OF cols_a

@@ -90,7 +90,7 @@ void test_dice(char *cfgfile, char *weightfile, char *filename)
         }
         image im = load_image_color(input, net.w, net.h);
         float *X = im.data;
-        float *predictions = network_predict(net, X,0);
+        float *predictions = network_predict(net, X);
         top_predictions(net, 6, indexes);
         for(i = 0; i < 6; ++i){
             int index = indexes[i];

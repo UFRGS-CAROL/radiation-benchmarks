@@ -78,7 +78,7 @@ int check_args(Args *arg) {
 		return -1;
 	}
 
-	if(arg->abft < 0 && arg->abft >= ABFT_TYPES){
+	if(arg->abft < 0 && arg->abft >= MAX_ABFT_TYPES){
 		printf("abft must be between 0 and 5\n");
 		return -1;
 	}

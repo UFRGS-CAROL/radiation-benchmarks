@@ -257,7 +257,7 @@ void test_char_rnn(char *cfgfile, char *weightfile, int num, char *seed, float t
     for(i = 0; i < len-1; ++i){
         c = seed[i];
         input[c] = 1;
-        network_predict(net, input,0);
+        network_predict(net, input);
         input[c] = 0;
         print_symbol(c, tokens);
     }
@@ -265,7 +265,7 @@ void test_char_rnn(char *cfgfile, char *weightfile, int num, char *seed, float t
     print_symbol(c, tokens);
     for(i = 0; i < num; ++i){
         input[c] = 1;
-        float *out = network_predict(net, input,0);
+        float *out = network_predict(net, input);
         input[c] = 0;
         for(j = 32; j < 127; ++j){
             //printf("%d %c %f\n",j, j, out[j]);
@@ -305,7 +305,7 @@ void test_tactic_rnn(char *cfgfile, char *weightfile, int num, float temp, int r
 
     while((c = getc(stdin)) != EOF){
         input[c] = 1;
-        out = network_predict(net, input,0);
+        out = network_predict(net, input);
         input[c] = 0;
     }
     for(i = 0; i < num; ++i){
@@ -318,7 +318,7 @@ void test_tactic_rnn(char *cfgfile, char *weightfile, int num, float temp, int r
         print_symbol(c, tokens);
 
         input[c] = 1;
-        out = network_predict(net, input,0);
+        out = network_predict(net, input);
         input[c] = 0;
     }
     printf("\n");
@@ -344,7 +344,7 @@ void valid_tactic_rnn(char *cfgfile, char *weightfile, char *seed)
     for(i = 0; i < len; ++i){
         c = seed[i];
         input[(int)c] = 1;
-        network_predict(net, input,0);
+        network_predict(net, input);
         input[(int)c] = 0;
     }
     float sum = 0;
@@ -357,7 +357,7 @@ void valid_tactic_rnn(char *cfgfile, char *weightfile, char *seed)
         if(next < 0 || next >= 255) error("Out of range character");
 
         input[c] = 1;
-        float *out = network_predict(net, input,0);
+        float *out = network_predict(net, input);
         input[c] = 0;
 
         if(c == '.' && next == '\n') in = 0;
@@ -396,7 +396,7 @@ void valid_char_rnn(char *cfgfile, char *weightfile, char *seed)
     for(i = 0; i < len; ++i){
         c = seed[i];
         input[(int)c] = 1;
-        network_predict(net, input,0);
+        network_predict(net, input);
         input[(int)c] = 0;
     }
     float sum = 0;
@@ -409,7 +409,7 @@ void valid_char_rnn(char *cfgfile, char *weightfile, char *seed)
         ++count;
         if(next == ' ' || next == '\n' || next == '\t') ++words;
         input[c] = 1;
-        float *out = network_predict(net, input,0);
+        float *out = network_predict(net, input);
         input[c] = 0;
         sum += log(out[next])/log2;
         c = next;
@@ -438,7 +438,7 @@ void vec_char_rnn(char *cfgfile, char *weightfile, char *seed)
         for(i = 0; i < seed_len; ++i){
             c = seed[i];
             input[(int)c] = 1;
-            network_predict(net, input,0);
+            network_predict(net, input);
             input[(int)c] = 0;
         }
         strip(line);
@@ -446,12 +446,12 @@ void vec_char_rnn(char *cfgfile, char *weightfile, char *seed)
         for(i = 0; i < str_len; ++i){
             c = line[i];
             input[(int)c] = 1;
-            network_predict(net, input,0);
+            network_predict(net, input);
             input[(int)c] = 0;
         }
         c = ' ';
         input[(int)c] = 1;
-        network_predict(net, input,0);
+        network_predict(net, input);
         input[(int)c] = 0;
 
         layer l = net.layers[0];

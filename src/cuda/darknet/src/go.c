@@ -260,7 +260,7 @@ void flip_board(float *board)
 
 void predict_move(network net, float *board, float *move, int multi)
 {
-    float *output = network_predict(net, board,0);
+    float *output = network_predict(net, board);
     copy_cpu(19*19, output, 1, move, 1);
     int i;
     if(multi){
@@ -269,7 +269,7 @@ void predict_move(network net, float *board, float *move, int multi)
             rotate_image_cw(bim, i);
             if(i >= 4) flip_image(bim);
 
-            float *output = network_predict(net, board,0);
+            float *output = network_predict(net, board);
             image oim = float_to_image(19, 19, 1, output);
 
             if(i >= 4) flip_image(oim);
@@ -611,7 +611,7 @@ void test_go(char *cfg, char *weights, int multi)
     float *move = calloc(19*19, sizeof(float));
     int color = 1;
     while(1){
-        float *output = network_predict(net, board,0);
+        float *output = network_predict(net, board);
         copy_cpu(19*19, output, 1, move, 1);
         int i;
         if(multi){
@@ -620,7 +620,7 @@ void test_go(char *cfg, char *weights, int multi)
                 rotate_image_cw(bim, i);
                 if(i >= 4) flip_image(bim);
 
-                float *output = network_predict(net, board,0);
+                float *output = network_predict(net, board);
                 image oim = float_to_image(19, 19, 1, output);
 
                 if(i >= 4) flip_image(oim);
