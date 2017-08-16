@@ -683,17 +683,127 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh) {
 	}
 }
 
+void test_yolo_generate(Args *arg) {
+//-------------------------------------------------------------------------------
+	// first I nee to treat all image files
+	int img_list_size = 0;
+	char **img_list = get_image_filenames(arg->img_list_path, &img_list_size);
+//-------------------------------------------------------------------------------
+	network net = parse_network_cfg(arg->config_file);
+	if (arg->weights) {
+		load_weights(&net, arg->weights);
+	}
+	detection_layer l = net.layers[net.n - 1];
+	set_batch_network(&net, 1);
+	srand(2222222);
+	clock_t time;
+//	char buff[256];
+//	char *input = buff;
+	int j;
+	float nms = .4;
+	box *boxes = calloc(l.side * l.side * l.n, sizeof(box));
+	float **probs = calloc(l.side * l.side * l.n, sizeof(float *));
+	for (j = 0; j < l.side * l.side * l.n; ++j)
+		probs[j] = calloc(l.classes, sizeof(float *));
+
+
+//-------------------------------------------------------------------------------
+	FILE *output_file = fopen(arg->gold_output, "w+");
+	int classes = l.classes;
+	int total =l.side * l.side * l.n;
+
+	if (output_file) {
+//      writing all parameters for test execution
+//      thresh hier_tresh img_list_size img_list_path config_file config_data model weights total classes
+		fprintf(output_file, "%f;%f;%d;%s;%s;%s;%s;%s;%d;%d;\n", arg->thresh,
+				arg->hier_thresh, img_list_size, arg->img_list_path,
+				arg->config_file, arg->cfg_data, arg->model, arg->weights,
+				total, classes);
+	} else {
+		fprintf(stderr, "GOLD OPENING ERROR");
+		exit(-1);
+	}
+	detection gold_to_save;
+	if (arg->save_layers)
+		alloc_gold_layers_arrays(&gold_to_save, &net);
+
+//-------------------------------------------------------------------------------
+
+	int i;
+	for (i = 0; i < img_list_size; i++) {
+		printf("generating gold for: %s\n", img_list[i]);
+//		char *input = img_list[i];
+//		if (filename) {
+//			strncpy(input, filename, 256);
+//		} else {
+//			printf("Enter Image Path: ");
+//			fflush(stdout);
+//			input = fgets(input, 256, stdin);
+//			if (!input)
+//				return;
+//			strtok(input, "\n");
+//		}
+		image im = load_image_color(img_list[i], 0, 0);
+		image sized = resize_image(im, net.w, net.h);
+		float *X = sized.data;
+		time = clock();
+		float *predictions = network_predict(net, X);
+		printf("%s: Predicted in %f seconds.\n", img_list[i],
+				sec(clock() - time));
+		convert_detections(predictions, l.classes, l.n, l.sqrt, l.side, 1, 1,
+				arg->thresh, probs, boxes, 0);
+		if (nms)
+			do_nms_sort(boxes, probs, l.side * l.side * l.n, l.classes, nms);
+
+		//      must do the same thing that draw_detections
+		//      but the output will be a gold file (old draw_detections)
+		//      first write a filename
+		fprintf(output_file, "%s;%d;%d;%d;\n", img_list[i], im.h, im.w, im.c);
+		//      after writes all detection information
+		//      each box is described as class number, left, top, right, bottom, prob (confidence)
+		//      save_gold(FILE *fp, char *img, int num, int classes, float **probs,
+		//              box *boxes)
+		save_gold(output_file, img_list[i], l.side * l.side * l.n, l.classes, probs,
+				boxes);
+
+		if (arg->save_layers)
+			save_layer(&gold_to_save, i, 0, "gold", 1, arg->img_list_path);
+
+#ifdef GEN_IMG
+		//draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, voc_labels, 20);
+		draw_detections(im, l.side * l.side * l.n, arg->thresh, boxes, probs,
+				voc_names, voc_labels, 20);
+		char temp[100];
+		sprintf(temp, "predictions_it_%d", i);
+		save_image(im, temp);
+		show_image(im, temp);
+#endif
+		free_image(im);
+		free_image(sized);
+//#ifdef OPENCV
+//		cvWaitKey(0);
+//		cvDestroyAllWindows();
+//#endif
+//		if (filename)
+//			break;
+	}
+
+	//free char** memory
+	for (i = 0; i < img_list_size; i++) {
+		free(img_list[i]);
+	}
+	free(img_list);
+
+	//close gold file
+	fclose(output_file);
+}
+
 void run_yolo_rad(Args args) {
-//	int i;
-//	for (i = 0; i < 20; ++i) {
-//		char buff[1000];
-//		sprintf(buff, "%s/data/labels/%s.png", args.base_result_out,
-//				voc_names[i]);
-//		voc_labels[i] = load_image_color(buff, 0, 0);
-//	}
-//
-//	if (0 == strcmp(args.execution_model, "valid"))
-//		validate_yolo(args);
+	if (args.generate_flag) {
+		test_yolo_generate(&args);
+	} else {
+
+	}
 }
 
 void run_yolo(int argc, char **argv) {
@@ -717,10 +827,10 @@ void run_yolo(int argc, char **argv) {
 	char *cfg = argv[3];
 	char *weights = (argc > 4) ? argv[4] : 0;
 	char *filename = (argc > 5) ? argv[5] : 0;
-	if (0 == strcmp(argv[2], "test")){
+	if (0 == strcmp(argv[2], "test")) {
 		printf("passou aqui\n\n");
 		test_yolo(cfg, weights, filename, thresh);
-	}else if (0 == strcmp(argv[2], "train"))
+	} else if (0 == strcmp(argv[2], "train"))
 		train_yolo(cfg, weights);
 	else if (0 == strcmp(argv[2], "valid"))
 		validate_yolo(cfg, weights);

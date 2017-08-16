@@ -380,7 +380,7 @@ int main(int argc, char **argv) {
 		args_init_and_setnull(&to_parse);
 		if (parse_arguments(&to_parse, argc, argv) == 0) {
 			//I'll do firsrt for yolo, next I dont know
-			print_args(to_parse);
+//			print_args(to_parse);
 //#ifndef GPU
 //				to_parse.gpu_index = -1;
 //#else

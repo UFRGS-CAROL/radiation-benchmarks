@@ -24,6 +24,12 @@ void args_init_and_setnull(Args *arg) {
 	arg->save_layers = 0;
 	arg->abft = 0;
 
+	//test detector
+	arg->cfg_data = "cfg/coco.data";
+	arg->model = "detect";
+	arg->thresh = 0.24;
+	arg->hier_thresh = 0.5;
+
 }
 /**
  * return 1 if everything is ok, and 0 if not

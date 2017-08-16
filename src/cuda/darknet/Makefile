@@ -53,6 +53,10 @@ ifeq ($(CUDNN), 1)
 	LDFLAGS+= -lcudnn
 endif
 
+ifeq ($(GEN_IMG), 1)
+	CFLAGS+= -DGEN_IMG
+endif
+
 ifeq ($(LOGS), 1)
 	CFLAGS+=-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -DLOGS=1 
 	#LOG_LINK= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1
@@ -82,7 +86,7 @@ NVCCFLAGS+= -Xcompiler "-L/usr/local/cuda/lib64  -lcurand  -lcudart" -Xcompiler 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-RAD_DIR=/home/carol/radiation-benchmarks
+RAD_DIR=/home/fernando/git_pesquisa/radiation-benchmarks
 
 all: obj results $(TARGET)
 
@@ -107,18 +111,18 @@ results:
 .PHONY: clean
 
 test:
-	./$(TARGET) -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
+	./$(TARGET) test_radiation -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
 							-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
-							-n 1 -d $(RAD_DIR)/data/darknet/gold_caltech.test  \
-							-l $(RAD_DIR)/data/networks_img_list/caltech.pedestrians.1K.txt \
+							-n 1 -d $(RAD_DIR)/data/darknet/fault_injection_darknetv1.csv  \
+							-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
 							-b $(RAD_DIR)/src/cuda/darknet \
 							-x 0 -s 1 -a 0
 
 generate:
-	./$(TARGET) -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
+	./$(TARGET) test_radiation -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
 			-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
-			-n 1 -g $(RAD_DIR)/data/darknet/gold_caltech.test \
-			-l $(RAD_DIR)/data/networks_img_list/caltech.pedestrians.1K.txt \
+			-n 1 -g $(RAD_DIR)/data/darknet/fault_injection_darknetv1.csv \
+			-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
 			-b $(RAD_DIR)/src/cuda/darknet -x 0 -s 1 -a 0
 
 
