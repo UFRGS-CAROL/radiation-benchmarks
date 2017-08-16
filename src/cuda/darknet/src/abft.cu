@@ -31,7 +31,7 @@ __device__ long get_index(float *mat, long i, long j, long n) {
 	return i * n + j;
 }
 
-__device__ ErrorReturn err_count;
+__device__ error_return err_count;
 
 __global__ void check_col(float *mat, long rows, long cols) {
 	long i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -169,16 +169,16 @@ extern "C" void abraham_sum(float *a, float *b, long rows_a, long cols_a,
 	//fault_injection<<<1,1>>>(b, cols_b * rows_b / 100);
 }
 
-extern "C" ErrorReturn abraham_check(float *c, long rows, long cols) {
+extern "C" error_return abraham_check(float *c, long rows, long cols) {
 //	printf("passou why\n");
-	ErrorReturn ret;
+	error_return ret;
 	ret.col_detected_errors = 0;
 	ret.row_detected_errors = 0;
 
-	cudaMemcpyToSymbol(err_count, &ret, sizeof(ErrorReturn));
+	cudaMemcpyToSymbol(err_count, &ret, sizeof(error_return));
 	check_checksums_from_host(c, rows, cols);
 
-	cudaMemcpyFromSymbol(&ret, err_count, sizeof(ErrorReturn));
+	cudaMemcpyFromSymbol(&ret, err_count, sizeof(error_return));
 	return ret;
 }
 

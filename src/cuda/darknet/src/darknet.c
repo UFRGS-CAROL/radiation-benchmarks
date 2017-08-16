@@ -398,7 +398,7 @@ int main(int argc, char **argv) {
 //		if (!(to_parse.generate_flag)) start_log_file("cudaDarknetV1", test_info);
 //#endif
 			if (!to_parse.generate_flag) {
-				start_count_app(to_parse.gold_input, to_parse.save_layers,
+				start_count_app(to_parse.gold_inout, to_parse.save_layers,
 						to_parse.abft, to_parse.iterations, "cudaDarknetV1");
 			}
 			if (strcmp(to_parse.execution_type, "yolo") == 0) {

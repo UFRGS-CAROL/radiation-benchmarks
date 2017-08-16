@@ -30,7 +30,6 @@ typedef struct arguments {
 	char *weights;
 //  char *input_data_path;
 	long int iterations;
-	char *gold_output;
 	int generate_flag;
 	//if yolo test
 	char *test_filename;
@@ -43,7 +42,7 @@ typedef struct arguments {
 	char *base_result_out;
 
 	int gpu_index;
-	char *gold_input;
+	char *gold_inout;
 	int save_layers;
 	int abft;
 

@@ -231,7 +231,6 @@ char** get_image_filenames(char *img_list_path, int *image_list_size) {
  * it was adapted from max_index in utils.c line 536image load_image(char *filename, int w, int h, int c);
  * auxiliary funtion for save_gold
  */
-
 inline int get_index(float *a, int n) {
 	if (n <= 0)
 		return -1;
@@ -260,6 +259,15 @@ void save_gold(FILE *fp, char *img, int num, int classes, float **probs,
 		fprintf(fp, "%f;%f;%f;%f;%f;%d;\n", prob, b.x, b.y, b.w, b.h, class_);
 
 	}
+//	for (int i = 0; i < num; i++) {
+//		box b = boxes[i];
+//		for (int class_ = 0; class_ < classes; class_++) {
+//			float prob = probs[i][class_];
+//			fprintf(fp, "%f;%f;%f;%f;%f;%d;\n", prob, b.x, b.y, b.w, b.h,
+//					class_);
+//
+//		}
+//	}
 
 }
 
@@ -429,23 +437,25 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 
 	int error_count = 0;
 	for (int i = 0; i < num; ++i) {
-		int class_ = get_index(g_probs[i], classes);
-		float g_prob = g_probs[i][class_];
-		float f_prob = f_probs[i][class_];
+//		int class_ = get_index(g_probs[i], classes);
 		box g_b = g_boxes[i];
 		box f_b = f_boxes[i];
+		for (int class_ = 0; class_ < classes; class_++) {
+			float g_prob = g_probs[i][class_];
+			float f_prob = f_probs[i][class_];
 
-		char error_detail[1000];
-		if (error_check(error_detail, f_prob, g_prob, f_b, g_b, img_string,
-				class_, i)) {
-			error_count++;
+			char error_detail[1000];
+			if (error_check(error_detail, f_prob, g_prob, f_b, g_b, img_string,
+					class_, i)) {
+				error_count++;
 
 #ifdef LOGS
-			log_error_detail(error_detail);
+				log_error_detail(error_detail);
 #else
-			printf("%s\n", error_detail);
+				printf("%s\n", error_detail);
 #endif
 
+			}
 		}
 
 	}

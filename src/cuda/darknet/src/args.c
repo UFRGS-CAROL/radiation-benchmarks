@@ -13,14 +13,11 @@ void args_init_and_setnull(Args *arg) {
 	arg->config_file = NULL;
 	arg->weights = NULL;
 //  arg->input_data_path = NULL;
-	arg->gold_output = NULL;
 	arg->base_result_out = NULL;
 	arg->cam_index = -1;
 	arg->frame_skip = -1;
-	arg->gold_output = 0;
 	arg->img_list_path = NULL;
 	arg->iterations = 1;
-	arg->gold_input = NULL;
 	arg->save_layers = 0;
 	arg->abft = 0;
 
@@ -29,7 +26,7 @@ void args_init_and_setnull(Args *arg) {
 	arg->model = "detect";
 	arg->thresh = 0.24;
 	arg->hier_thresh = 0.5;
-
+	arg->gold_inout = NULL;
 }
 /**
  * return 1 if everything is ok, and 0 if not
@@ -55,12 +52,12 @@ int check_args(Args *arg) {
 //      printf("No input path set\n");
 //      return -1;
 //  }
-	if (arg->generate_flag == 1 && arg->gold_output == NULL) {
+	if (arg->generate_flag == 1 && arg->gold_inout == NULL) {
 		printf("Generate gold path not passed\n");
 		return -1;
 	}
 
-	if (arg->generate_flag == 0 && arg->gold_input == NULL) {
+	if (arg->generate_flag == 0 && arg->gold_inout == NULL) {
 		printf("If generate is not set, gold input must be passed\n");
 		return -1;
 	}
@@ -104,7 +101,7 @@ void print_args(const Args arg) {
 					"weights = %s\n"
 //          "input_data_path = %s\n"
 					"iterations = %ld\n"
-					"gold_input/output = %s\n"
+					"gold_inout/output = %s\n"
 					"gold_flag = %d\n"
 					"img_list_path = %s\n"
 					"base_result_out = %s\n"
@@ -113,7 +110,7 @@ void print_args(const Args arg) {
 					"abft = %d\n", arg.execution_type,
 			arg.execution_model,
 			arg.config_file, arg.weights, arg.iterations,
-			((arg.generate_flag == 0) ? arg.gold_input : arg.gold_output),
+			((arg.generate_flag == 0) ? arg.gold_inout : arg.gold_inout),
 			arg.generate_flag, arg.img_list_path, arg.base_result_out,
 			arg.gpu_index, arg.save_layers, arg.abft);
 }
@@ -135,7 +132,7 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 			{ "img_list_path", required_argument, NULL, 'l' }, //data path list input
 			{ "base_result_out", required_argument, NULL, 'b' }, //result output
 			{ "gpu_index", required_argument, NULL, 'x' }, //gpu index
-			{ "gold_input", required_argument, NULL, 'd' },
+			{ "gold_inout", required_argument, NULL, 'd' },
 			{ "save_layers",required_argument, NULL, 's' },
 			{ "abft",       required_argument, NULL, 'a' },
 					{ NULL, 0, NULL, 0 } };
@@ -177,7 +174,7 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 
 		}
 		case 'g': {
-			to_parse->gold_output = optarg;
+			to_parse->gold_inout = optarg;
 			to_parse->generate_flag = 1;
 			break;
 		}
@@ -196,7 +193,7 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 		}
 
 		case 'd': {
-			to_parse->gold_input = optarg;
+			to_parse->gold_inout = optarg;
 			break;
 		}
 
@@ -231,7 +228,7 @@ void usage(char **argv, char *model, char *message) {
 			"-l --img_list_path = list for all dataset image\n"
 			"-b --base_result_out = output of base\n"
 			"-x --gpu_index = GPU index\n"
-			"-d --gold_input = if not writing a gold a gold is being reading\n"
+			"-d --gold_inout = if not writing a gold a gold is being reading\n"
 			"-s --save_layers = this must set to 1 if you want to save all wrong computed layers\n"
 			"-a --abft = this must be set to 1 or 2 to use abft, 1 for dumb abft and 2 for smart one\n");
 }

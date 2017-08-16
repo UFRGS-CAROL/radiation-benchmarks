@@ -24,6 +24,10 @@ void forward_maxpool_layer_gpu(maxpool_layer l, network net);
 void backward_maxpool_layer_gpu(maxpool_layer l, network net);
 
 void forward_maxpool_layer_gpu_hardened(maxpool_layer l, network net);
+
+void get_and_reset_error_detected_values(error_return host_error);
+void free_err_detected();
+
 #endif
 
 
@@ -38,8 +42,7 @@ void forward_maxpool_layer_gpu_hardened(maxpool_layer l, network net);
 void set_abft(int type);
 
 
-void get_and_reset_error_detected_values(error_return host_error);
-void free_err_detected();
+
 
 #endif
 

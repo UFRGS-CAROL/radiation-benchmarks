@@ -706,9 +706,9 @@ void test_yolo_generate(Args *arg) {
 	for (j = 0; j < l.side * l.side * l.n; ++j)
 		probs[j] = calloc(l.classes, sizeof(float *));
 
-
+	printf("total %d and other %d\n", l.side * l.side * l.n, l.h * l.n * l.w);
 //-------------------------------------------------------------------------------
-	FILE *output_file = fopen(arg->gold_output, "w+");
+	FILE *output_file = fopen(arg->gold_inout, "w+");
 	int classes = l.classes;
 	int total =l.side * l.side * l.n;
 
