@@ -686,6 +686,8 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
         for (j = 0; j < l.w * l.h * l.n; ++j)
             probs[j] = calloc(l.classes + 1, sizeof(float *));
 
+        printf("valor w * h * n %d valor side * side * n %d\n", l.w * l.h * l.n, l.side * l.side * l.n);
+
         float *X = sized.data;
         time = clock();
         network_predict(net, X);
@@ -760,6 +762,7 @@ void free_all_images(image *array, int list_size) {
  * args is an Args
  */
 void test_detector_radiation(Args *args) {
+	printf("passou antes do load gold\n");
     //load all information from the goldfile
     detection gold = load_gold(args);
 

@@ -97,7 +97,9 @@ void alloc_gold_layers_arrays(detection *det, network *net) {
 
 void delete_gold_layers_arrays(detection det) {
 	float **gold_layers = det.gold_layers;
+#ifdef GPU
 	float **found_layers = det.found_layers;
+#endif
 	int layers_size = det.net->n;
 
 	for (int i = 0; i < layers_size; i++) {
@@ -167,7 +169,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 			if (l.outputs
 					!= fread(det->gold_layers[i], sizeof(float), l.outputs,
 							gold_file)) {
-				printf("ERROR ON READ size %s\n", gold_filename);
+				printf("ERROR ON READ size %s\n", gold_filename.c_str());
 				fclose(gold_file);
 				exit(-1);
 			}
@@ -252,22 +254,29 @@ inline int get_index(float *a, int n) {
 void save_gold(FILE *fp, char *img, int num, int classes, float **probs,
 		box *boxes) {
 //	fprintf(fp, "%s\n", img);
-	for (int i = 0; i < num; ++i) {
-		int class_ = get_index(probs[i], classes);
-		float prob = probs[i][class_];
-		box b = boxes[i];
-		fprintf(fp, "%f;%f;%f;%f;%f;%d;\n", prob, b.x, b.y, b.w, b.h, class_);
-
-	}
-//	for (int i = 0; i < num; i++) {
+//	for (int i = 0; i < num; ++i) {
+//		int class_ = get_index(probs[i], classes);
+//		float prob = probs[i][class_];
 //		box b = boxes[i];
-//		for (int class_ = 0; class_ < classes; class_++) {
-//			float prob = probs[i][class_];
-//			fprintf(fp, "%f;%f;%f;%f;%f;%d;\n", prob, b.x, b.y, b.w, b.h,
-//					class_);
+//		fprintf(fp, "%f;%f;%f;%f;%f;%d;\n", prob, b.x, b.y, b.w, b.h, class_);
 //
-//		}
 //	}
+	std::vector < std::string > to_print;
+	for (int i = 0; i < num; i++) {
+		box b = boxes[i];
+		int class_ = get_index(probs[i], classes);
+//		for (int class_ = 0; class_ < classes; class_++) {
+		float prob = probs[i][class_];
+//			if (prob){
+		fprintf(fp, "%f;%f;%f;%f;%f;%d;\n", prob, b.x, b.y, b.w, b.h, class_);
+//				std::string str_to_print = std::to_string(prob) + ";" +
+//						std::to_string(b.x) + ";" + std::to_string(b.y) + ";" +
+//						std::to_string(b.w) + ";" + std::to_string(b.h) + ";" +
+//						std::to_string(class_) + ";";
+//				to_print.push_back(str_to_print);
+//			}
+//		}
+	}
 
 }
 
@@ -291,7 +300,7 @@ prob_array load_prob_array(int num, int classes, std::ifstream &ifp) {
 		b.y = atof(splited[2].c_str());
 		b.w = atof(splited[3].c_str());
 		b.h = atof(splited[4].c_str());
-		int class_ = atof(splited[5].c_str());
+		int class_ = atoi(splited[5].c_str());
 
 		ret.probs[i][class_] = atof(splited[0].c_str());
 
@@ -400,27 +409,33 @@ void print_detection(detection det) {
 }
 
 inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
-		box g_b, char* img, int class_, int pb_i) {
-	float diff_float[3] = { (float) fabs(f_b.x - g_b.x), (float) fabs(
-			f_b.y - g_b.y), (float) fabs(f_pb - g_pb) };
-	int diff_int[3] = { abs(f_b.h - g_b.h), abs(f_b.w - g_b.w), 0 };
+		box g_b, char* img, int class_g, int class_f, int pb_i) {
+	float diff_float[] = { std::fabs(f_b.x - g_b.x),
+						   std::fabs(f_b.y - g_b.y),
+						   std::fabs(f_pb - g_pb),
+						   std::fabs(f_b.h - g_b.h),
+						   std::fabs(f_b.w - g_b.w),
+						   (float)std::abs(class_g - class_f) };
+
 	bool diff = false;
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 6; i++) {
 		if (diff_float[i] > THRESHOLD_ERROR)
 			diff = true;
 
-		if (diff_int[i] > 0)
-			diff = true;
+//		if (diff_int[i] > 0)
+//			diff = true;
 	}
 
 	if (diff)
 		sprintf(error_detail, "img: [%s]"
-				" prob[%d][%d] r:%1.16e e:%1.16e"
+				" prob_r[%d][%d]: %1.16e"
+				" prob_e[%d][%d]: %1.16e"
 				" x_r: %1.16e x_e: %1.16e"
 				" y_r: %1.16e y_e: %1.16e"
 				" w_r: %1.16e w_e: %1.16e"
-				" h_r: %1.16e h_e: %1.16e", img, pb_i, class_, f_pb, g_pb,
-				f_b.x, g_b.x, f_b.y, g_b.y, f_b.w, g_b.w, f_b.h, g_b.h);
+				" h_r: %1.16e h_e: %1.16e", img, pb_i, class_f, f_pb, pb_i,
+				class_g, g_pb, f_b.x, g_b.x, f_b.y, g_b.y, f_b.w, g_b.w, f_b.h,
+				g_b.h);
 
 	return diff;
 }
@@ -440,22 +455,24 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 //		int class_ = get_index(g_probs[i], classes);
 		box g_b = g_boxes[i];
 		box f_b = f_boxes[i];
-		for (int class_ = 0; class_ < classes; class_++) {
-			float g_prob = g_probs[i][class_];
-			float f_prob = f_probs[i][class_];
+		int class_g = get_index(g_probs[i], classes);
+		int class_f = get_index(f_probs[i], classes);
+//		for (int class_ = 0; class_ < classes; class_++) {
+		float g_prob = g_probs[i][class_g];
+		float f_prob = f_probs[i][class_f];
 
-			char error_detail[1000];
-			if (error_check(error_detail, f_prob, g_prob, f_b, g_b, img_string,
-					class_, i)) {
-				error_count++;
+		char error_detail[1000];
+		if (error_check(error_detail, f_prob, g_prob, f_b, g_b, img_string,
+				class_g, class_f, i)) {
+			error_count++;
 
 #ifdef LOGS
-				log_error_detail(error_detail);
+			log_error_detail(error_detail);
 #else
-				printf("%s\n", error_detail);
+			printf("%s\n", error_detail);
 #endif
 
-			}
+//			}
 		}
 
 	}
@@ -487,3 +504,4 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 #endif
 
 }
+
