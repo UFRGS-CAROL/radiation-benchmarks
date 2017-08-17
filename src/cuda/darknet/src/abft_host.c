@@ -14,6 +14,8 @@ void init_error_return(error_return *e) {
 	e->err_detected_size = MAXPOOL_N;
 	e->error_detected = (unsigned long long*) malloc(
 			e->err_detected_size * sizeof(unsigned long long));
+	memset(e->error_detected, 0,
+			sizeof(unsigned long long) * e->err_detected_size);
 }
 
 void free_error_return(error_return *e) {

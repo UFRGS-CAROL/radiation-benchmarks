@@ -187,7 +187,7 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 	check_error(status);
 
 	if(get_use_abft() == 1) {
-		ErrorReturn temp = abraham_check(C_gpu, M, N);
+		error_return temp = abraham_check(C_gpu, M, N);
 #ifdef LOGS
 							if(temp.row_detected_errors || temp.col_detected_errors) {
 								char abft_string[500];

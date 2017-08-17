@@ -11,6 +11,7 @@
 
 #include "abft.h"
 
+#include "helpful.h"
 #ifdef LOGS
 #include "log_helper.h"
 //#include "gemm.h"
@@ -710,7 +711,7 @@ void test_yolo_generate(Args *arg) {
 //-------------------------------------------------------------------------------
 	FILE *output_file = fopen(arg->gold_inout, "w+");
 	int classes = l.classes;
-	int total =l.side * l.side * l.n;
+	int total = l.side * l.side * l.n;
 
 	if (output_file) {
 //      writing all parameters for test execution
@@ -763,8 +764,8 @@ void test_yolo_generate(Args *arg) {
 		//      each box is described as class number, left, top, right, bottom, prob (confidence)
 		//      save_gold(FILE *fp, char *img, int num, int classes, float **probs,
 		//              box *boxes)
-		save_gold(output_file, img_list[i], l.side * l.side * l.n, l.classes, probs,
-				boxes);
+		save_gold(output_file, img_list[i], l.side * l.side * l.n, l.classes,
+				probs, boxes);
 
 		if (arg->save_layers)
 			save_layer(&gold_to_save, i, 0, "gold", 1, arg->img_list_path);
@@ -798,11 +799,172 @@ void test_yolo_generate(Args *arg) {
 	fclose(output_file);
 }
 
+/**
+ * support functions
+ *resize_image(im, net.w, net.h);
+ * -------------------------------------------------------------------------------------
+ */
+image *load_all_images_sized(image *img_array, int net_w, int net_h,
+		int list_size) {
+//      image sized = letterbox_image(im, net.w, net.h);
+	int i;
+	image *ret = (image*) malloc(sizeof(image) * list_size);
+	for (i = 0; i < list_size; i++) {
+		ret[i] = resize_image(img_array[i], net_w, net_h);//letterbox_image(img_array[i], net_w, net_h);
+	}
+	return ret;
+}
+
+//load_image_color(img_list[i], 0, 0);
+image *load_all_images(detection det) {
+//  image im = load_image_color(input, 0, 0);
+	int i;
+	image *ret = (image*) malloc(sizeof(image) * det.plist_size);
+	for (i = 0; i < det.plist_size; i++) {
+		ret[i] = load_image_color(det.img_names[i], 0, 0);
+	}
+	return ret;
+}
+
+void free_all_images(image *array, int list_size) {
+	//          free_image(im);
+	int i;
+	for (i = 0; i < list_size; i++) {
+		free_image(array[i]);
+	}
+}
+//-------------------------------------------------------------------------------------
+
+/**
+ * Test yolo: radiation test case
+ */
+void test_yolo_radiation_test(Args *arg) {
+//-------------------------------------------------------------------------------
+	//radiation test case needs load gold first
+	detection gold = load_gold(arg);
+	printf("\nArgs inside detector_radiation\n");
+	print_args(*arg);
+
+	//if abft is set these parameters will also be set
+	error_return max_pool_errors;
+	init_error_return(&max_pool_errors);
+	//  set abft
+	if (arg->abft && arg->abft < MAX_ABFT_TYPES) {
+		printf("passou no if\n\n");
+#ifdef GPU
+		set_abft(arg->abft);
+#endif
+	}
+
+//-------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------
+	network net = parse_network_cfg(arg->config_file);
+	if (arg->weights) {
+		load_weights(&net, arg->weights);
+	}
+	detection_layer l = net.layers[net.n - 1];
+	set_batch_network(&net, 1);
+	srand(2222222);
+	clock_t time;
+
+	int j;
+	float nms = .4;
+	box *boxes = calloc(l.side * l.side * l.n, sizeof(box));
+	float **probs = calloc(l.side * l.side * l.n, sizeof(float *));
+	for (j = 0; j < l.side * l.side * l.n; ++j)
+		probs[j] = calloc(l.classes, sizeof(float *));
+
+//-------------------------------------------------------------------------------
+	//load all images
+	const image *im_array = load_all_images(gold);
+
+	const image *im_array_sized = load_all_images_sized(im_array, net.w, net.h,
+			gold.plist_size);
+
+	//need to allocate layers arrays
+	alloc_gold_layers_arrays(&gold, &net);
+//	int classes = l.classes;
+//	int total = l.side * l.side * l.n;
+//-------------------------------------------------------------------------------
+
+	int i, it;
+	for (it = 0; it < arg->iterations; it++) {
+		for (i = 0; i < gold.plist_size; i++) {
+
+			image im = im_array[i]; //load_image_color(img_list[i], 0, 0);
+			image sized = im_array_sized[i]; //resize_image(im, net.w, net.h);
+			float *X = sized.data;
+			time = clock();
+
+			double time = mysecond();
+			//This is the detection
+			start_iteration_app();
+
+			float *predictions = network_predict(net, X);
+
+			convert_detections(predictions, l.classes, l.n, l.sqrt, l.side, 1,
+					1, arg->thresh, probs, boxes, 0);
+			if (nms)
+				do_nms_sort(boxes, probs, l.side * l.side * l.n, l.classes,
+						nms);
+
+			end_iteration_app();
+			time = mysecond() - time;
+//      here we test if any error happened
+//          if shit happened we log
+			double time_cmp = mysecond();
+
+#ifdef GPU
+			//before compare copy maxpool err detection values
+			//smart pooling
+			if (arg->abft == 2) {
+				get_and_reset_error_detected_values(max_pool_errors);
+			}
+#endif
+			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, i,
+					arg->save_layers, it, arg->img_list_path, max_pool_errors);
+			time_cmp = mysecond() - time_cmp;
+
+			printf(
+					"Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds.\n",
+					it, i, time, time_cmp);
+
+//########################################
+
+#ifdef GEN_IMG
+			//draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, voc_labels, 20);
+			draw_detections(im, l.side * l.side * l.n, arg->thresh, boxes, probs,
+					voc_names, voc_labels, 20);
+			char temp[100];
+			sprintf(temp, "predictions_it_%d", i);
+			save_image(im, temp);
+			show_image(im, temp);
+#endif
+			clear_boxes_and_probs(boxes, probs, l.w * l.h * l.n, l.classes);
+
+		}
+	}
+
+	//free the memory
+	free_ptrs((void **) probs, l.w * l.h * l.n);
+	free(boxes);
+	delete_detection_var(&gold, arg);
+
+	free_all_images(im_array, gold.plist_size);
+	free_all_images(im_array_sized, gold.plist_size);
+
+	//free smartpool errors
+	free_error_return(&max_pool_errors);
+#ifdef GPU
+	free_err_detected();
+#endif
+}
+
 void run_yolo_rad(Args args) {
 	if (args.generate_flag) {
 		test_yolo_generate(&args);
 	} else {
-
+		test_yolo_radiation_test(&args);
 	}
 }
 

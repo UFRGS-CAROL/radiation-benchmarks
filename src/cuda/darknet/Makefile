@@ -76,7 +76,7 @@ ifeq ($(GPU), 1)
 LDFLAGS+= -lstdc++
 OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2col_kernels.o \
 	col2im_kernels.o blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o \
-	softmax_layer_kernels.o network_kernels.o avgpool_layer_kernels.o abft.o
+	softmax_layer_kernels.o network_kernels.o avgpool_layer_kernels.o abft.o maxpool_layer_hardened_kernels.o
 endif
 
 
@@ -86,7 +86,7 @@ NVCCFLAGS+= -Xcompiler "-L/usr/local/cuda/lib64  -lcurand  -lcudart" -Xcompiler 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-RAD_DIR=/home/fernando/git_pesquisa/radiation-benchmarks
+RAD_DIR=/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa/radiation-benchmarks
 
 all: obj results $(TARGET)
 

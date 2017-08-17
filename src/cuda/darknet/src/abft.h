@@ -31,7 +31,7 @@ error_return abraham_check(float *c, long rows, long cols);
 void set_use_abft(int n);
 int get_use_abft();
 
-#define MAXPOOL_N 5
+#define MAXPOOL_N 4
 
 //#define MAX_ABFT_TYPES 6
 
