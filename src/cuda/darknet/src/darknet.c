@@ -410,7 +410,7 @@ int main(int argc, char **argv) {
 
 			//#ifdef LOGS
 			if (!(to_parse.generate_flag))
-				end_iteration_app();
+				finish_count_app();
 			//#endif
 
 		}else{
