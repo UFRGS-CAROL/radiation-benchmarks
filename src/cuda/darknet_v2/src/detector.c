@@ -762,7 +762,6 @@ void free_all_images(image *array, int list_size) {
  * args is an Args
  */
 void test_detector_radiation(Args *args) {
-	printf("passou antes do load gold\n");
     //load all information from the goldfile
     detection gold = load_gold(args);
 

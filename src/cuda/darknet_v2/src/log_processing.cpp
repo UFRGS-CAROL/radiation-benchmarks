@@ -417,13 +417,12 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 						   std::fabs(f_b.w - g_b.w),
 						   (float)std::abs(class_g - class_f) };
 
+	if(class_g != class_f)
+		std::cout << " val " <<   class_g << " " << class_f << "\n";
 	bool diff = false;
 	for (int i = 0; i < 6; i++) {
 		if (diff_float[i] > THRESHOLD_ERROR)
 			diff = true;
-
-//		if (diff_int[i] > 0)
-//			diff = true;
 	}
 
 	if (diff)
