@@ -21,7 +21,7 @@ CXX=g++
 NVCC=/usr/local/cuda/bin/nvcc
 OPTS= -Ofast
 LDFLAGS= -lm -pthread
-COMMON=
+COMMON= -I../../include/
 CFLAGS= -Wall -Wfatal-errors 
 CXXFLAGS=-std=c++11
 NVCCFLAGS= -rdc=true -lcudadevrt
