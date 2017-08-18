@@ -11,7 +11,7 @@ ARCH= -gencode arch=compute_35,code=sm_35 -gencode arch=compute_50,code=sm_50 \
 #--gpu-architecture=compute_$(ARCH_I) --gpu-code=compute_$(ARCH_I)
 
 VPATH=./src/
-TARGET=darknet
+TARGET=darknet_v1
 OBJDIR=./obj/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
