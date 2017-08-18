@@ -75,7 +75,7 @@ def main(board):
                     if save_layer == 1 and i['mode'] == 'full':
                         continue
 
-                    gold = data_path + '/' + i['gold']
+                    gold = data_path + '/' + 'darknet_v1_' + i['gold']
                     txt_list = installDir + 'data/networks_img_list/' + i['txt']
                     gen = {
                         'bin': [bin_path, "/darknet_v1"],
