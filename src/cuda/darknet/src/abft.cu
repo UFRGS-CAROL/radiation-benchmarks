@@ -139,13 +139,13 @@ void calc_checksums_from_host(float *a, float *b, long rows_a, long cols_a,
 	//1d grid for abft operations
 	long blocks = ceil(float(cols_a) / float(BLOCK_SIZE));
 	long threads = ceil(float(cols_a) / float(blocks));
-	if (rows_a > 2)
+	if (rows_a > 1)
 		first_abraham_op<<<blocks, threads>>>(a, rows_a, cols_a);
 	gpuErrchk(cudaPeekAtLastError());
 	//second
 	blocks = ceil(float(rows_b) / float(BLOCK_SIZE));
 	threads = ceil(float(rows_b) / float(blocks));
-	if (cols_b > 2)
+	if (cols_b > 1)
 		second_abraham_op<<<blocks, threads>>>(b, rows_b, cols_b);
 	gpuErrchk(cudaPeekAtLastError());
 }
@@ -153,13 +153,13 @@ void calc_checksums_from_host(float *a, float *b, long rows_a, long cols_a,
 void check_checksums_from_host(float *c, long rows_c, long cols_c) {
 	long blocks = ceil(float(cols_c) / float(BLOCK_SIZE));
 	long threads = ceil(float(cols_c) / float(blocks));
-	if (rows_c > 2)
+	if (rows_c > 1)
 		check_row<<<blocks, threads>>>(c, rows_c, cols_c);
 	gpuErrchk(cudaPeekAtLastError());
 	blocks = ceil(float(rows_c) / float(BLOCK_SIZE));
 	threads = ceil(float(rows_c) / float(blocks));
 
-	if (cols_c > 2)
+	if (cols_c > 1)
 		check_col<<<blocks, threads>>>(c, rows_c, cols_c);
 	gpuErrchk(cudaPeekAtLastError());
 }
