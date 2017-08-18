@@ -5,7 +5,8 @@ extern "C" {
 
 extern "C" {
 
-int use_abft = 0;
+static int use_abft = 0;
+
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
@@ -18,11 +19,11 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 	}
 }
 
-void set_use_abft(int n) {
+void set_abft_gemm(int n) {
 	use_abft = n;
 }
 
-int get_use_abft() {
+int get_use_abft_gemm() {
 	return use_abft;
 }
 }

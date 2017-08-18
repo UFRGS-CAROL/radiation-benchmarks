@@ -28,8 +28,8 @@ error_return abraham_check(float *c, long rows, long cols);
 
 //ErrorReturn shared_errors;
 
-void set_use_abft(int n);
-int get_use_abft();
+void set_abft_gemm(int n);
+int get_use_abft_gemm();
 
 #define MAXPOOL_N 4
 

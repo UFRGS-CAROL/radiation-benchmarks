@@ -853,7 +853,14 @@ void test_yolo_radiation_test(Args *arg) {
 	if (arg->abft && arg->abft < MAX_ABFT_TYPES) {
 		printf("passou no if\n\n");
 #ifdef GPU
-		set_abft(arg->abft);
+		switch (arg->abft) {
+			case 1:
+			set_abft_gemm(arg->abft);
+			break;
+			case 2:
+			set_abft_smartpool(arg->abft);
+			break;
+		}
 #endif
 	}
 

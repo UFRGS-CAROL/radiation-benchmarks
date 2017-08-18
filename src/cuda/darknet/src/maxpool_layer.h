@@ -35,7 +35,7 @@ void free_err_detected();
  * 4 l2
  * 5 trained_weights
  */
-void set_abft(int type);
+void set_abft_smartpool(int type);
 
 #endif
 

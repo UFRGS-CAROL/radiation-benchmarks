@@ -174,7 +174,7 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		float *C_gpu, int ldc)
 {
 
-	if(get_use_abft() == 1) {
+	if(get_use_abft_gemm() == 1) {
 //	m  	input 	number of rows of matrix op(A) and C.
 //	n 	input	number of columns of matrix op(B) and C.
 //	k 	input 	number of columns of op(A) and rows of op(B).
@@ -186,7 +186,7 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb, A_gpu, lda, &BETA, C_gpu, ldc);
 	check_error(status);
 
-	if(get_use_abft() == 1) {
+	if(get_use_abft_gemm() == 1) {
 		error_return temp = abraham_check(C_gpu, M, N);
 #ifdef LOGS
 							if(temp.row_detected_errors || temp.col_detected_errors) {
