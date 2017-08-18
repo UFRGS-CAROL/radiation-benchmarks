@@ -725,6 +725,7 @@ void test_yolo_generate(Args *arg) {
 		exit(-1);
 	}
 	detection gold_to_save;
+	gold_to_save.network_name = "darknet_v1";
 	if (arg->save_layers)
 		alloc_gold_layers_arrays(&gold_to_save, &net);
 
@@ -844,7 +845,7 @@ void test_yolo_radiation_test(Args *arg) {
 	detection gold = load_gold(arg);
 	printf("\nArgs inside detector_radiation\n");
 	print_args(*arg);
-
+	gold.network_name = "darknet_v1";
 	//if abft is set these parameters will also be set
 	error_return max_pool_errors;
 	init_error_return(&max_pool_errors);
