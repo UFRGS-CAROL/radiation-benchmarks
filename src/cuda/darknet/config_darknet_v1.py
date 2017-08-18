@@ -89,7 +89,7 @@ def main(board):
                         'l': [' -l ', txt_list],
                         'b': [' -b ', src_darknet],
                         'x': [' -x ', 0],
-                        's': [' -s ', 0],
+                        's': [' -s ', save_layer],
                         'a': [' -a ', abft],
                     }
 
@@ -98,7 +98,7 @@ def main(board):
                     exe['g'][0] = ' -d '
 
                     exe_save = copy.deepcopy(exe)
-                    exe_save['s'][1] = 1
+                    exe_save['s'][1] = save_layer
 
                     if abft == 0:
                         generate.append(" ".join([''.join(map(str, value)) for key, value in gen.iteritems()]))

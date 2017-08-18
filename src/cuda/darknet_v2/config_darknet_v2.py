@@ -92,7 +92,7 @@ def main(board):
                     exe['g'][0] = ' -d '
 
                     exe_save = copy.deepcopy(exe)
-                    exe_save['s'][1] = 1
+                    exe_save['s'][1] = save_layer
 
                     if abft == 0:
                         generate.append(" ".join([''.join(map(str, gen[key])) for key in gen]))
