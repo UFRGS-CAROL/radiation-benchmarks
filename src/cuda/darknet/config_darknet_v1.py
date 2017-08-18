@@ -82,8 +82,8 @@ def main(board):
                         'e': [' -e ', 'yolo'],  # execution_type =
                         'aa': ['test_radiation', ''],
                         'm': [' -m ', 'valid'],  # execution_model =
-                        'c': [' -c ', data_path + '/yolo.cfg'],  # config_file =
-                        'w': [' -w ', data_path + '/yolo.weights'],  # weights =
+                        'c': [' -c ', data_path + '/yolo_v1.cfg'],  # config_file =
+                        'w': [' -w ', data_path + '/yolo_v1.weights'],  # weights =
                         'n': [' -n ', '1'],  # iterations =  #it is not so much, since each dataset have at least 10k of images
                         'g': [' -g ', gold],  # base_caltech_out = base_voc_out = src_darknet
                         'l': [' -l ', txt_list],
