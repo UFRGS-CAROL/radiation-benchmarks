@@ -165,281 +165,7 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 
 	}
 }
-/*
- void free_yolo_test_memory(const Args* parameters, GoldPointers* current_ptr,
- GoldPointers* gold_ptr, int classes, image* val, image* val_resized,
- image* buf, image* buf_resized, FILE** fps) {
- //save gold values
- if (parameters->generate_flag) {
- gold_pointers_serialize(*current_ptr);
- }
- //for normal execution
- free_gold_pointers(&*current_ptr);
- if (!parameters->generate_flag)
- free_gold_pointers(&*gold_ptr);
 
- free(val);
- free(val_resized);
- free(buf);
- free(buf_resized);
- int cf;
- //	printf("passou antes do fclose\n");
- if (fps)
- for (cf = 0; cf < classes; ++cf) {
- if (fps[cf] != NULL)
- fclose(fps[cf]);
- }
- }
-
-
- void validate_yolo(Args parameters) {
- network net = parse_network_cfg(parameters.config_file);
- if (parameters.weights) {
- load_weights(&net, parameters.weights);
- }
- set_batch_network(&net, 1);
- fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n",
- net.learning_rate, net.momentum, net.decay);
- srand(time(0));
-
- //result output and image list file
- char *base = parameters.base_result_out;
- list *plist = get_paths(parameters.img_list_path);
- char **paths = (char **) list_to_array(plist);
-
- //neural network stuff
- layer l = net.layers[net.n - 1];
- int classes = l.classes;
- int square = l.sqrt;
- int side = l.side;
-
- int j;
- //classes outputs files
- FILE **fps = NULL; //calloc(classes, sizeof(FILE *));
- //	if (parameters.generate_flag) {
- //		for (j = 0; j < classes; ++j) {
- //			char buff[1024];
- //			snprintf(buff, 1024, "%s%s.txt", base, voc_names[j]);
- //			fps[j] = fopen(buff, "w");
- //		}
- //	}
-
- //boxes and probabilities arrays
- GoldPointers current_ptr, gold_ptr;
- int gold_iterator = 0;
-
- if (parameters.generate_flag) {
- current_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
- parameters.gold_output, "wb");
- } else {
- //only gold_ptr need open a file
- current_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
- "not_open", "not_open");
-
- gold_ptr = new_gold_pointers(classes, side * side * l.n, plist->size,
- parameters.gold_input, "rb");
- //now we can already load gold values
- read_yolo_gold(&gold_ptr);
- }
-
- int m = plist->size;
- int i = 0;
- int t;
-
- float thresh = .001;
- int nms = 1;
- float iou_thresh = .5;
-
- int nthreads = 1;
- if (m > 1 && m <= 4) {
- nthreads = min(4, m);
- }
-
- image *val = calloc(nthreads, sizeof(image));
- image *val_resized = calloc(nthreads, sizeof(image));
- image *buf = calloc(nthreads, sizeof(image));
- image *buf_resized = calloc(nthreads, sizeof(image));
- pthread_t *thr = calloc(nthreads, sizeof(pthread_t));
- long iterator;
- long it = 0;
-
- load_args args = { 0 };
- args.w = net.w;
- args.h = net.h;
- args.type = IMAGE_DATA;
- for (t = 0; t < nthreads; ++t) {
- args.path = paths[i + t];
- args.im = &buf[t];
- args.resized = &buf_resized[t];
- thr[t] = load_data_in_thread(args);
- }
-
- printf("Images opening\n");
-
- for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
- pthread_join(thr[t], 0);
- val[t] = buf[t];
- val_resized[t] = buf_resized[t];
- }
-
- printf("Images opening\n");
- for (t = 0; t < nthreads && i + t < m; ++t) {
- args.path = paths[i + t];
- args.im = &buf[t];
- args.resized = &buf_resized[t];
- thr[t] = load_data_in_thread(args);
- }
-
- printf("abft %d\n", parameters.abft);
- //set abft
- if (parameters.abft != 0) {
- printf("passou no use\n");
- set_use_abft(parameters.abft);
- }
-
- for (iterator = 0; iterator < parameters.iterations; iterator++) {
-
- double det_start = mysecond();
- for (i = nthreads; i < m + nthreads; i += nthreads) {
- long max_err_per_iteration = 0;
- for (t = 0; t < nthreads && i + t - nthreads < m; ++t) {
- #ifdef LOGS
- if(!parameters.generate_flag) {
- start_iteration();
- }
- if(parameters.abft == 1 && !parameters.generate_flag)
- set_gold_iterator_abft(gold_iterator);
- #endif
-
- //for abft, because it is easier use an input parameter than a gcc macro
- //				if (parameters.abft == 1) {
- //					shared_errors.row_detected_errors = 0;
- //					shared_errors.col_detected_errors = 0;
- //				}
- double begin2 = mysecond();
- char *path = paths[i + t - nthreads];
- char *id = basecfg(path);
- float *X = val_resized[t].data;
-
- float *predictions;
-
- if (parameters.generate_flag) {
- predictions = network_predict(net, X, 1);
- } else {
- predictions = network_predict(net, X, 0);
- }
-
- int w = val[t].w;
- int h = val[t].h;
- ProbArray gold, current = current_ptr.pb_gold[gold_iterator];
- if (!parameters.generate_flag)
- gold = gold_ptr.pb_gold[gold_iterator];
-
- float **probs_curr = current.probs;
- box *boxes_curr = current_ptr.pb_gold[gold_iterator].boxes;
-
- convert_detections(predictions, classes, l.n, square, side, w,
- h, thresh, probs_curr, boxes_curr, 0);
- if (nms) {
- do_nms_sort(boxes_curr, probs_curr, side * side * l.n,
- classes, iou_thresh);
- }
- printf("it %d seconds %f\n", iterator, mysecond() - begin2);
-
- //---------------------------------
-
- #ifdef LOGS
- if(!parameters.generate_flag) {
- end_iteration();
- }
- #endif
- unsigned long cmp = 0;
- //I need compare things here not anywhere else
- if (!parameters.generate_flag) {
- double begin = mysecond();
- if ((cmp = prob_array_comparable_and_log(gold, current,
- gold_iterator))) {
- fprintf(stderr,
- "%d errors found in the computation, run to the hills\n",
- cmp);
-
- //Lucas saving layers
- if (parameters.save_layers == 1)
- saveLayer(net, iterator * m, i + t);
- max_err_per_iteration += cmp;
- if (max_err_per_iteration > 500) {
- free_yolo_test_memory(&parameters, &current_ptr,
- &gold_ptr, classes, val, val_resized, buf,
- buf_resized, fps);
-
- }
-
- }
-
- if ((i % 10) == 0) {
- fprintf(stdout,
- "Partial it %ld Gold comp Time: %fs Iteration done %3.2f\n",
- iterator, mysecond() - begin,
- ((float) i / (float) m) * 100.0);
- }
- //					printf("antes do clean");
- clear_vectors(&current_ptr);
- //			printf("passou\n");
- } else {
- saveLayer(net, i + t - nthreads, i + t);
- printf("%i :: ", i + t - nthreads);
- }
- //				printf("passou %d %d\n");
- #ifdef LOGS
- if (!parameters.generate_flag) {
- log_error_count(cmp);
- }
- #endif
- //				printf("passou %d %d\n");
- //				printf("passou %d %d\n", gold_iterator, it++);
- gold_iterator = (gold_iterator + 1) % plist->size;
-
- //---------------------------------
-
- if (iterator == parameters.iterations - 1 && (i >= m)) {
- //	printf("aqui\n");
- free(id);
- free_image(val[t]);
- free_image(val_resized[t]);
- }
- }
- }
- fprintf(stdout, "Total Detection Time: %f Seconds\n",
- (double) (mysecond() - det_start));
-
- //		unsigned long cmp = 0;
- //		//I need compare things here not anywhere else
- //		if (!parameters.generate_flag) {
- //			double begin = mysecond();
- //			if ((cmp = comparable_and_log(gold_ptr, current_ptr)))
- //				fprintf(stderr,
- //						"%d errors found in the computation, run to the hills\n",
- //						cmp);
- //			fprintf(stdout,
- //					"Iteration %ld Total Gold comparison Time: %f Seconds\n",
- //					iterator, mysecond() - begin);
- ////			clear_vectors(&current_ptr);
- ////			printf("passou\n");
- //
- //		}
-
- //-----------------------------------------------
- for (t = 0; t < nthreads; ++t)
- pthread_join(thr[t], 0);
- }
-
- //save gold values
- free_yolo_test_memory(&parameters, &current_ptr, &gold_ptr, classes, val,
- val_resized, buf, buf_resized, fps);
- //
- //	printf("passou depois do fclose\n");
- //	printf("Yolo finished\n");
- }*/
 
 void validate_yolo(char *cfgfile, char *weightfile) {
 	network net = parse_network_cfg(cfgfile);
@@ -707,7 +433,7 @@ void test_yolo_generate(Args *arg) {
 	for (j = 0; j < l.side * l.side * l.n; ++j)
 		probs[j] = calloc(l.classes, sizeof(float *));
 
-	printf("total %d and other %d\n", l.side * l.side * l.n, l.h * l.n * l.w);
+//	printf("total %d and other %d\n", l.side * l.side * l.n, l.h * l.n * l.w);
 //-------------------------------------------------------------------------------
 	FILE *output_file = fopen(arg->gold_inout, "w+");
 	int classes = l.classes;
@@ -734,17 +460,6 @@ void test_yolo_generate(Args *arg) {
 	int i;
 	for (i = 0; i < img_list_size; i++) {
 		printf("generating gold for: %s\n", img_list[i]);
-//		char *input = img_list[i];
-//		if (filename) {
-//			strncpy(input, filename, 256);
-//		} else {
-//			printf("Enter Image Path: ");
-//			fflush(stdout);
-//			input = fgets(input, 256, stdin);
-//			if (!input)
-//				return;
-//			strtok(input, "\n");
-//		}
 		image im = load_image_color(img_list[i], 0, 0);
 		image sized = resize_image(im, net.w, net.h);
 		float *X = sized.data;
@@ -782,12 +497,6 @@ void test_yolo_generate(Args *arg) {
 #endif
 		free_image(im);
 		free_image(sized);
-//#ifdef OPENCV
-//		cvWaitKey(0);
-//		cvDestroyAllWindows();
-//#endif
-//		if (filename)
-//			break;
 	}
 
 	//free char** memory
@@ -850,8 +559,8 @@ void test_yolo_radiation_test(Args *arg) {
 	error_return max_pool_errors;
 	init_error_return(&max_pool_errors);
 	//  set abft
-	if (arg->abft && arg->abft < MAX_ABFT_TYPES) {
-		printf("passou no if\n\n");
+	if (arg->abft >= 0 && arg->abft < MAX_ABFT_TYPES) {
+		printf("passou no if %d\n\n", arg->abft);
 #ifdef GPU
 		switch (arg->abft) {
 			case 1:
