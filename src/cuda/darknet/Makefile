@@ -125,6 +125,9 @@ generate:
 			-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
 			-b $(RAD_DIR)/src/cuda/darknet -x 0 -s 1 -a 0
 
+test_pure_yolo:
+	./$(TARGET) yolo test $(RAD_DIR)/data/darknet/yolo_v1.cfg  $(RAD_DIR)/data/darknet/yolo_v1.weights data/dog.jpg
+
 
 clean:
 	rm -rf $(OBJS) $(TARGET) obj/*.o
