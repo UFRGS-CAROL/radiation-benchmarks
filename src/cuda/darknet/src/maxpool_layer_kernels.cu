@@ -100,7 +100,7 @@ __global__ void backward_maxpool_layer_kernel(int n, int in_h, int in_w,
 extern "C" void forward_maxpool_layer_gpu(maxpool_layer layer,
 		network_state state) {
 	if (abft_type == 2){
-		printf("passou no hardened\n\n");
+//		printf("passou no hardened\n\n");
 		forward_maxpool_layer_gpu_hardened(layer, state);
 		return;
 	}

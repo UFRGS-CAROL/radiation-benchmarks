@@ -166,7 +166,6 @@ void print_yolo_detections(FILE **fps, char *id, box *boxes, float **probs,
 	}
 }
 
-
 void validate_yolo(char *cfgfile, char *weightfile) {
 	network net = parse_network_cfg(cfgfile);
 	if (weightfile) {
@@ -454,6 +453,21 @@ void test_yolo_generate(Args *arg) {
 	gold_to_save.network_name = "darknet_v1";
 	if (arg->save_layers)
 		alloc_gold_layers_arrays(&gold_to_save, &net);
+
+	//  set abft
+	if (arg->abft >= 0 && arg->abft < MAX_ABFT_TYPES) {
+		printf("passou no if %d\n\n", arg->abft);
+#ifdef GPU
+		switch (arg->abft) {
+			case 1:
+			set_abft_gemm(arg->abft);
+			break;
+			case 2:
+			set_abft_smartpool(arg->abft);
+			break;
+		}
+#endif
+	}
 
 //-------------------------------------------------------------------------------
 
