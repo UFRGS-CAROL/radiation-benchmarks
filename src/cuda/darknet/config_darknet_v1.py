@@ -72,7 +72,7 @@ def main(board):
     for save_layer in [0, 1]:
         for abft in [0, 2]:
                 for i in datasets:
-                    if save_layer == 1 and i['mode'] != 'small':
+                    if save_layer == 1 and i['mode'] == 'full':
                         continue
 
                     gold = data_path + '/' + i['gold']
