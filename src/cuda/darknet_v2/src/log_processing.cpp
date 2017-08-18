@@ -160,7 +160,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 		if (!generate) {
 			//open gold
 			std::string gold_filename = std::string(LAYER_GOLD)
-					+ img_list_filename_string + "_gold_layer_darknet_v2_"
+					+ img_list_filename_string + "_gold_layer_" + std::string(det->network_name) + "_"
 					+ std::to_string(i) + "_img_" + std::to_string(img_iterator)
 					+ "_test_it_0.layer";
 
@@ -177,7 +177,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 
 			if (compare_layer(det->gold_layers[i], output_layer, l.outputs)) {
 				std::string output_filename = std::string(LAYER_GOLD)
-						+ std::string(small_log_file) + "_layer_darknet_v2_"
+						+ std::string(small_log_file) + "_layer_" + std::string(det->network_name) + "_"
 						+ std::to_string(i) + "_img_"
 						+ std::to_string(img_iterator) + "_test_it_"
 						+ std::to_string(test_iteration) + ".layer";
@@ -189,7 +189,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 
 		} else {
 			std::string output_filename = std::string(LAYER_GOLD)
-					+ img_list_filename_string + "_gold_layer_darknet_v2_"
+					+ img_list_filename_string + "_gold_layer_" + std::string(det->network_name) + "_"
 					+ std::to_string(i) + "_img_" + std::to_string(img_iterator)
 					+ "_test_it_" + std::to_string(test_iteration) + ".layer";
 			output_file = open_layer_file(

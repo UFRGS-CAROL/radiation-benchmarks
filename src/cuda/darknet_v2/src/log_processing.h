@@ -48,6 +48,8 @@ typedef struct detection_ {
 	float **gold_layers;
 	network *net;
 	int layers_size;
+
+	char *network_name;
 } detection;
 
 #ifdef __cplusplus

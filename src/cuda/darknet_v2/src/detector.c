@@ -764,7 +764,7 @@ void free_all_images(image *array, int list_size) {
 void test_detector_radiation(Args *args) {
     //load all information from the goldfile
     detection gold = load_gold(args);
-
+	gold.network_name = "darknet_v2";
     printf("\nArgs inside detector_radiation\n");
     print_args(*args);
 
@@ -930,6 +930,7 @@ void test_detector_generate(Args *args) {
     float nms = .4;
 
     detection gold_to_save;
+	gold_to_save.network_name = "darknet_v2";
     if (args->save_layers)
         alloc_gold_layers_arrays(&gold_to_save, &net);
 
