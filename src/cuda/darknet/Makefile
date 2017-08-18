@@ -86,7 +86,7 @@ NVCCFLAGS+= -Xcompiler "-L/usr/local/cuda/lib64  -lcurand  -lcudart" -Xcompiler 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-RAD_DIR=/mnt/4E0AEF320AEF15AD/PESQUISA/git_pesquisa/radiation-benchmarks
+RAD_DIR=/home/fernando/git_pesquisa/radiation-benchmarks
 
 all: obj results $(TARGET)
 

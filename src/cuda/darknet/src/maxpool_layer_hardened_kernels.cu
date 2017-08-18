@@ -7,43 +7,43 @@ extern "C" {
 #include "cuda.h"
 }
 
-#define FACTOR 5.0
+#define FACTOR 10.0
 
 unsigned long long *error_detected = NULL;
 
 float LOOK_UP_TABLE[] = { //for hardened maxpool
-		34.8208, // layer  0
-				34.8208, // layer  1
-				25.9040, // layer  2
-				25.9040, // layer  3
-				20.1720, // layer  4
-				26.2095, // layer  5
-				24.7247, // layer  6
-				24.7247, // layer  7
-				22.0913, // layer  8
-				31.6815, // layer  9
-				31.0876, // layer  10
-				31.0876, // layer  11
-				28.7064, // layer  12
-				53.9315, // layer  13
-				28.5885, // layer  14
-				30.7862, // layer  15
-				20.9733, // layer  16
-				20.9733, // layer  17
-				19.6744, // layer  18
-				44.5123, // layer  19
-				19.7984, // layer  20
-				40.2696, // layer  21
-				102.170, // layer  22
-				20.5588, // layer  23
-				22.0682, // layer  24
-				22.0682, // layer  25
-				19.1314, // layer  26
-				19.1314, // layer  27
-				19.1314, // layer  28
-				17.6953, // layer  29
-				43.3081, // layer  30
-				43.3081	//layer 31
+		23.2265, //layer 0
+		23.2265, //layer 1
+		17.821, //layer 2
+		17.821, //layer 3
+		24.3061, //layer 4
+		13.2396, //layer 5
+		17.4524, //layer 6
+		10.5258, //layer 7
+		10.5258, //layer 8
+		21.5326, //layer 9
+		14.2375, //layer 10
+		28.7749, //layer 11
+		17.065, //layer 12
+		29.3857, //layer 13
+		13.5177, //layer 14
+		23.2387, //layer 15
+		11.1505, //layer 16
+		12.7082, //layer 17
+		10.9391, //layer 18
+		10.9391, //layer 19
+		25.4447, //layer 20
+		22.5485, //layer 21
+		51.8862, //layer 22
+		238.784, //layer 23
+		56.2831, //layer 24
+		49.6482, //layer 25
+		49.1465, //layer 26
+		40.7246, //layer 27
+		1.07145, //layer 28
+		1.07145, //layer 29
+		1.18859, //layer 30
+		1.18859, //layer 31
 		};
 
 int maxpool_iterator = 0;
