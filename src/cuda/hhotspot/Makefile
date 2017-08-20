@@ -1,6 +1,6 @@
 CC=g++
 NVCC=nvcc
-NVCC_FLAGS=-arch=compute_53,sm_53
+NVCC_FLAGS=-arch=sm_53
 
 NVIDIA_INC=/usr/local/cuda/include/;/usr/include/
 NVIDIA_LIB=/usr/local/cuda/lib64/
