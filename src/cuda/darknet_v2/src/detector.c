@@ -798,25 +798,25 @@ void test_detector_radiation(Args *args) {
 	error_return max_pool_errors;
 	init_error_return(&max_pool_errors);
 	//  set abft
-	if (arg->abft >= 0 && arg->abft < MAX_ABFT_TYPES) {
+	if (args->abft >= 0 && args->abft < MAX_ABFT_TYPES) {
 #ifdef GPU
-		switch (arg->abft) {
+		switch (args->abft) {
 			case 1:
-			set_abft_gemm(arg->abft);
+			set_abft_gemm(args->abft);
 			break;
 			case 2:
-			set_abft_smartpool(arg->abft);
+			set_abft_smartpool(args->abft);
 			break;
 			case 3:
-			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
+			printf("%s ABFT not implemented yet\n", ABFT_TYPES[args->abft]);
 			exit(-1);
 			break;
 			case 4:
-			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
+			printf("%s ABFT not implemented yet\n", ABFT_TYPES[args->abft]);
 			exit(-1);
 			break;
 			case 5:
-			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
+			printf("%s ABFT not implemented yet\n", ABFT_TYPES[args->abft]);
 			exit(-1);
 			break;
 			default:
