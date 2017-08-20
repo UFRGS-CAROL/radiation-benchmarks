@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import os
-import sys
 import ConfigParser
 import sys
 import copy
@@ -12,9 +11,9 @@ DATASETS = [
     {'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.1K.csv', 'mode': 'full'},
 
     # average
-    {'txt': 'caltech.pedestrians.100.txt', 'gold': 'gold.caltech.100.csv', 'mode': 'average'},
-    {'txt': 'urban.street.100.txt', 'gold': 'gold.urban.street.100.csv', 'mode': 'average'},
-    {'txt': 'voc.2012.100.txt', 'gold': 'gold.voc.2012.100.csv', 'mode': 'average'},
+    # {'txt': 'caltech.pedestrians.100.txt', 'gold': 'gold.caltech.100.csv', 'mode': 'average'},
+    # {'txt': 'urban.street.100.txt', 'gold': 'gold.urban.street.100.csv', 'mode': 'average'},
+    # {'txt': 'voc.2012.100.txt', 'gold': 'gold.voc.2012.100.csv', 'mode': 'average'},
 
     # very_small for X1 and X2
     {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
@@ -68,9 +67,10 @@ def main(board):
     for save_layer in [0, 1]:
         for abft in [0, 2]:
                 for i in datasets:
-                    if save_layer == 1 and i['mode'] == 'full':
+                    if (save_layer == 1 and i['mode'] == 'full') or (save_layer == 0 and i['mode'] == 'small'):
                         continue
-                    gold = data_path + '/' + i['gold']
+
+                    gold = data_path + '/' + 'darknet_v2_' + i['gold']
                     txt_list = installDir + 'data/networks_img_list/' + i['txt']
                     gen = {
                         'bin': [bin_path, "/darknet_v2"],
@@ -96,6 +96,7 @@ def main(board):
 
                     if abft == 0:
                         generate.append(" ".join([''.join(map(str, gen[key])) for key in gen]))
+
 
                     execute.append(" ".join([''.join(map(str, value)) for key, value in exe.iteritems()]))
                     execute.append(" ".join([''.join(map(str, value)) for key, value in exe_save.iteritems()]))
