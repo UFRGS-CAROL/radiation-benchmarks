@@ -10,6 +10,7 @@
 #include <curand.h>
 #include <curand_kernel.h>
 #include <cuda_fp16.h>
+#include "half.hpp"
 
 // helper functions
 #include "helper_string.h"
@@ -22,7 +23,7 @@
 
 int k=0;
 int lda, ldb, ldc;
-int sizea, sizeb, sizec;	
+int sizea, sizeb, sizec;
 __half *A, *B, *GOLD;
 
 char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
@@ -196,8 +197,8 @@ void generateInputMatrices()
 	return;
 }
 
-void ReadMatrixFromFile(){	
-	
+void ReadMatrixFromFile(){
+
 	int i;
 	FILE *f_A, *f_B;
 
@@ -233,7 +234,7 @@ void GetDevice(){
     int *ndevice; int dev = 0;
     ndevice = &dev;
     cudaGetDevice(ndevice);
-    
+
     cudaSetDevice(0);
         cudaGetDeviceProperties( &prop, 0 );
 	printf("\ndevice: %d %s\n", *ndevice, prop.name);
@@ -257,9 +258,9 @@ void generateGoldMatrix()
 	cublasOperation_t transa = CUBLAS_OP_T;
 	cublasOperation_t transb = CUBLAS_OP_T;
 	////////////////////////////////////////////////////
-	
+
 	////////////////////////////////////////////////////
-	//////////DEVICE VARS///////////////////////////////	
+	//////////DEVICE VARS///////////////////////////////
 
 	__half *d_A;
 	__half *d_B;
@@ -269,7 +270,7 @@ void generateGoldMatrix()
 	A = ( __half* ) malloc( sizea * sizeof( __half ) );
 	B = ( __half* ) malloc( sizeb * sizeof( __half ) );
 	GOLD = ( __half* ) malloc( sizec * sizeof( __half ) );
-	
+
 	ReadMatrixFromFile();
   if (k <= 16) {
     printf("\nMatrix A: \n");
@@ -429,11 +430,16 @@ int main (int argc, char** argv)
 	sizeb = ldb * k;
 	ldc = max( 1, k + 16 );
 	sizec = ldc * k;
-	
+
+    printf("1024 using half.hpp: %f (raw half: %hx)\n", float(half_float::half(1024.0)), half_float::half(1024.0));
+
+    printf("1024 using cudafp16: %f (raw half: %hx)\n", half2float(float2half(1024.0)), float2half(1024.0).x);
+
+
 	FILE *test_file;
 	test_file=fopen(a_matrix_path, "rb");
 	if (!test_file)
-	{ 
+	{
 		printf("Generating input matrices...\n");
 		generateInputMatrices();
 	}
