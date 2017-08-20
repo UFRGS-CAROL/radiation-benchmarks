@@ -20,20 +20,20 @@ int generate;
 
 #define STR_SIZE 256
 
-/* maximum power density possible (say 300W for a 10mm x 10mm chip)	*/
-#define MAX_PD	(3.0e6)
-/* required precision in degrees	*/
-#define PRECISION	0.001
+/* maximum power density possible (say 300W for a 10mm x 10mm chip)  */
+#define MAX_PD  (3.0e6)
+/* required precision in degrees  */
+#define PRECISION  0.001
 #define SPEC_HEAT_SI 1.75e6
 #define K_SI 100
-/* capacitance fitting factor	*/
-#define FACTOR_CHIP	0.5
+/* capacitance fitting factor  */
+#define FACTOR_CHIP  0.5
 
-/* chip parameters	*/
+/* chip parameters  */
 half_float::half t_chip(0.0005);
 half_float::half chip_height(0.016);
 half_float::half chip_width(0.016);
-/* ambient temperature, assuming no package at all	*/
+/* ambient temperature, assuming no package at all  */
 half_float::half amb_temp(80.0);
 
 void run(int argc, char** argv);
@@ -68,7 +68,7 @@ void fatal(const char *s)
 {
     fprintf(stderr, "error: %s\n", s);
     #ifdef LOGS
-    	if (!generate) { end_log_file(); }
+      if (!generate) { end_log_file(); }
     #endif
     exit(1);
 }
@@ -80,8 +80,8 @@ void readInput(parameters *params)
     FILE *ftemp, *fpower, *fgold;
     char str[STR_SIZE];
     half_float::half val;
-	int num_zeros = 0;
-	int num_nans = 0;
+    int num_zeros = 0;
+    int num_nans = 0;
 
     if( (ftemp  = fopen(params->tfile, "r" )) ==0 )
         fatal( "The temp file was not opened" );
@@ -97,21 +97,31 @@ void readInput(parameters *params)
             fgets(str, STR_SIZE, ftemp);
             if (feof(ftemp)) {
                 printf("[%d,%d] size: %d ", i, j, params->grid_rows);
-                fatal("not enough lines in temp file"); }
+                fatal("not enough lines in temp file");
+            }
+
             if ((sscanf(str, "%f", &val) != 1))
                 fatal("invalid temp file format");
-            params->FilesavingTemp[i*(params->grid_cols)+j] = val;
-      			if (val==0) num_zeros++;
-      			if (isnan(val)) num_nans++;
+
+            params->FilesavingTemp[i*(params->grid_cols)+j] = half_float::half(val);
+
+            if (val==0)
+                num_zeros++;
+            if (isnan(val))
+                num_nans++;
 
             fgets(str, STR_SIZE, fpower);
+
             if (feof(fpower))
                 fatal("not enough lines in power file");
             if ((sscanf(str, "%f", &val) != 1))
                 fatal("invalid power file format");
-            params->FilesavingPower[i*(params->grid_cols)+j] = val;
-			if (val==0) num_zeros++;
-			if (isnan(val)) num_nans++;
+
+            params->FilesavingPower[i*(params->grid_cols)+j] = half_float::half(val);
+            if (val==0)
+                num_zeros++;
+            if (isnan(val))
+                num_nans++;
 
             if (!(params->generate)) {
                 fgets(str, STR_SIZE, fgold);
@@ -119,13 +129,13 @@ void readInput(parameters *params)
                     fatal("not enough lines in gold file");
                 if ((sscanf(str, "%f", &val) != 1))
                     fatal("invalid gold file format");
-                params->GoldMatrix[i*(params->grid_cols)+j] = val;
+                params->GoldMatrix[i*(params->grid_cols)+j] = half_float::half(val);
             }
         }
     }
 
-	printf("Zeros in the input: %d\n", num_zeros);
-	printf("NaNs in the input: %d\n", num_nans);
+  printf("Zeros in the input: %d\n", num_zeros);
+  printf("NaNs in the input: %d\n", num_nans);
 
     // =================== FAULT INJECTION
     if (params->fault_injection) {
@@ -147,23 +157,26 @@ void writeOutput(parameters *params)
     int i,j;
     FILE *fgold;
     char str[STR_SIZE];
-	int num_zeros = 0;
-	int num_nans = 0;
+    int num_zeros = 0;
+    int num_nans = 0;
 
     if( (fgold  = fopen(params->ofile, "w" )) ==0 )
         fatal( "The gold was not opened" );
 
     for (i=0; i <= (params->grid_rows)-1; i++) {
         for (j=0; j <= (params->grid_cols)-1; j++) {
-			if (params->MatrixOut[i*(params->grid_cols)+j] == 0) num_zeros++;
-			if (isnan(params->MatrixOut[i*(params->grid_cols)+j])) num_nans++;
-            sprintf(str, "%f\n", (float)params->MatrixOut[i*(params->grid_cols)+j]);
+            float val(params->MatrixOut[i*(params->grid_cols)+j]);
+            if (val == 0)
+                num_zeros++;
+            if (isnan(val))
+                num_nans++;
+            sprintf(str, "%f\n", (float)val);
             fputs(str,fgold);
         }
     }
     fclose(fgold);
-	printf("Zeros in the output: %d\n", num_zeros);
-	printf("NaNs in the output: %d\n", num_nans);
+    printf("Zeros in the output: %d\n", num_zeros);
+    printf("NaNs in the output: %d\n", num_nans);
 }
 
 #define IN_RANGE(x, min, max)   ((x)>=(min) && (x)<=(max))
@@ -280,7 +293,7 @@ half time_elapsed)
         __syncthreads();
         if(i==iteration-1)
             break;
-        if(computed)	 //Assign the computation range
+        if(computed)   //Assign the computation range
             temp_on_cuda[ty][tx]= temp_t[ty][tx];
         __syncthreads();
     }
@@ -508,13 +521,13 @@ void run(int argc, char** argv)
         for (streamIdx = 0; streamIdx < (setupParams-> nstreams); streamIdx++) {
             checkCudaErrors( cudaStreamCreateWithFlags(&(streams[streamIdx]), cudaStreamNonBlocking) );
 
-            checkCudaErrors( cudaMalloc((void**)&(MatrixTemp[streamIdx][0]), sizeof(float)*size) );
-            checkCudaErrors( cudaMalloc((void**)&(MatrixTemp[streamIdx][1]), sizeof(float)*size) );
-            cudaMemcpy(MatrixTemp[streamIdx][0], setupParams->FilesavingTemp, sizeof(float)*size, cudaMemcpyHostToDevice);
-			cudaMemset(MatrixTemp[streamIdx][1], 0.0, sizeof(float)*size);
+            checkCudaErrors( cudaMalloc((void**)&(MatrixTemp[streamIdx][0]), sizeof(half_float::half)*size) );
+            checkCudaErrors( cudaMalloc((void**)&(MatrixTemp[streamIdx][1]), sizeof(half_float::half)*size) );
+            cudaMemcpy(MatrixTemp[streamIdx][0], setupParams->FilesavingTemp, sizeof(half_float::half)*size, cudaMemcpyHostToDevice);
+            cudaMemset(MatrixTemp[streamIdx][1], 0.0, sizeof(half_float::half)*size);
 
-            checkCudaErrors( cudaMalloc((void**)&(MatrixPower[streamIdx]), sizeof(float)*size) );
-            cudaMemcpy(MatrixPower[streamIdx], setupParams->FilesavingPower, sizeof(float)*size, cudaMemcpyHostToDevice);
+            checkCudaErrors( cudaMalloc((void**)&(MatrixPower[streamIdx]), sizeof(half_float::half)*size) );
+            cudaMemcpy(MatrixPower[streamIdx], setupParams->FilesavingPower, sizeof(half_float::half)*size, cudaMemcpyHostToDevice);
         }
         if (setupParams->verbose) printf("[Iteration #%i] GPU prepare time: %.4fs\n", loop1, mysecond()-timestamp);
 
@@ -523,11 +536,13 @@ void run(int argc, char** argv)
         #ifdef LOGS
             if (!(setupParams->generate)) start_iteration();
         #endif
+
         #pragma omp parallel for
         for (streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
             ret[streamIdx] = compute_tran_temp(MatrixPower[streamIdx],MatrixTemp[streamIdx],setupParams->grid_cols,setupParams->grid_rows, \
             setupParams->sim_time,setupParams->pyramid_height, blockCols, blockRows, borderCols, borderRows, streams[streamIdx]);
         }
+
         for (streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
             cudaStreamSynchronize(streams[streamIdx]);
         }
@@ -539,7 +554,6 @@ void run(int argc, char** argv)
         /////////// PERF
         if (setupParams->verbose)
         {
-
             double outputpersec = (double)((setupParams->grid_rows*setupParams->grid_rows*setupParams->nstreams)/kernel_time);
             printf("[Iteration #%i] kernel time: %.4lfs\n", loop1,kernel_time);
             printf("[Iteration #%i] SIZE:%d OUTPUT/S:%f FLOPS: %f (GFLOPS: %.2f)\n", loop1,setupParams->grid_rows, outputpersec, (double)flops / kernel_time,(double)flops / (kernel_time *1000000000));
@@ -550,34 +564,34 @@ void run(int argc, char** argv)
         timestamp = mysecond();
         int kernel_errors=0;
         if (setupParams->generate) {
-            cudaMemcpy(setupParams->MatrixOut, MatrixTemp[0][ret[0]], sizeof(float)*size, cudaMemcpyDeviceToHost);
+            cudaMemcpy(setupParams->MatrixOut, MatrixTemp[0][ret[0]], sizeof(half_float::half)*size, cudaMemcpyDeviceToHost);
             writeOutput(setupParams);
         } else {
             for (streamIdx = 0; streamIdx < setupParams->nstreams; streamIdx++) {
-                memset(setupParams->MatrixOut, 0, sizeof(float)*size);
-                cudaMemcpy(setupParams->MatrixOut, MatrixTemp[streamIdx][ret[streamIdx]], sizeof(float)*size, cudaMemcpyDeviceToHost);
+                memset(setupParams->MatrixOut, 0, sizeof(half_float::half)*size);
+                cudaMemcpy(setupParams->MatrixOut, MatrixTemp[streamIdx][ret[streamIdx]], sizeof(half_float::half)*size, cudaMemcpyDeviceToHost);
                 char error_detail[150];
-				if (memcmp(setupParams->GoldMatrix, setupParams->MatrixOut, sizeof(float)*size))
-				{
-		            #pragma omp parallel for
-		            for (int i=0; i<(setupParams->grid_rows); i++)
-		            {
-						register half_float::half *ptrGold = &(setupParams->GoldMatrix[i*(setupParams->grid_rows)+0]);
-						register half_float::half *ptrOut = &(setupParams->MatrixOut[i*(setupParams->grid_rows)+0]);
-		                for (int j=0 ; j<(setupParams->grid_cols); j++)
-		                {
-		                    if (ptrGold[j]!=ptrOut[j])
-		                    #pragma omp critical
-		                    {
-		                        kernel_errors++;
-		                        snprintf(error_detail, 150, "stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e", streamIdx, i, j, (float)setupParams->GoldMatrix[i*(setupParams->grid_rows)+j], (float)setupParams->MatrixOut[i*(setupParams->grid_rows)+j]);
-		                        printf("stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e\n", streamIdx, i, j, (float)setupParams->GoldMatrix[i*(setupParams->grid_rows)+j], (float)setupParams->MatrixOut[i*(setupParams->grid_rows)+j]);
-		                        #ifdef LOGS
-		                            if (!(setupParams->generate)) log_error_detail(error_detail);
-		                        #endif
-		                    }
-		                }
-					}
+                if (memcmp(setupParams->GoldMatrix, setupParams->MatrixOut, sizeof(half_float::half)*size))
+                {
+                    #pragma omp parallel for
+                    for (int i=0; i<(setupParams->grid_rows); i++)
+                    {
+                        register half_float::half *ptrGold = &(setupParams->GoldMatrix[i*(setupParams->grid_rows)+0]);
+                        register half_float::half *ptrOut = &(setupParams->MatrixOut[i*(setupParams->grid_rows)+0]);
+                        for (int j=0 ; j<(setupParams->grid_cols); j++)
+                        {
+                            if (ptrGold[j]!=ptrOut[j])
+                            #pragma omp critical
+                            {
+                                kernel_errors++;
+                                snprintf(error_detail, 150, "stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e", streamIdx, i, j, (float)setupParams->GoldMatrix[i*(setupParams->grid_rows)+j], (float)setupParams->MatrixOut[i*(setupParams->grid_rows)+j]);
+                                printf("stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e\n", streamIdx, i, j, (float)setupParams->GoldMatrix[i*(setupParams->grid_rows)+j], (float)setupParams->MatrixOut[i*(setupParams->grid_rows)+j]);
+                                #ifdef LOGS
+                                    if (!(setupParams->generate)) log_error_detail(error_detail);
+                                #endif
+                            }
+                        }
+                      }
                 }
             }
             #ifdef LOGS
@@ -602,6 +616,6 @@ void run(int argc, char** argv)
         if (setupParams->verbose) printf("[Iteration #%i] elapsed time: %.4fs\n", loop1, mysecond() - globaltime);
     }
     #ifdef LOGS
-    	if (!(setupParams->generate)) end_log_file();
+      if (!(setupParams->generate)) end_log_file();
     #endif
 }
