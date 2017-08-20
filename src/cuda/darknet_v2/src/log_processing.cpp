@@ -147,7 +147,6 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 	img_list_filename_string = temp_splited[temp_splited.size() - 1];
 
 	for (int i = 0; i < layers_size; i++) {
-
 		layer l = det->net->layers[i];
 		float *output_layer;
 #ifdef GPU
@@ -160,9 +159,9 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 		if (!generate) {
 			//open gold
 			std::string gold_filename = std::string(LAYER_GOLD)
-					+ img_list_filename_string + "_gold_layer_"
-					+ std::string(det->network_name) + "_" + std::to_string(i)
-					+ "_img_" + std::to_string(img_iterator)
+					+ img_list_filename_string + "_"
+					+ std::string(det->network_name) + "_gold_layer_"
+					+ std::to_string(i) + "_img_" + std::to_string(img_iterator)
 					+ "_test_it_0.layer";
 
 			gold_file = open_layer_file(
@@ -179,10 +178,11 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 			if (compare_layer(det->gold_layers[i], output_layer, l.outputs)) {
 				std::string output_filename = std::string(LAYER_GOLD)
 						+ std::string(small_log_file) + "_"
-						+ std::string(det->network_name) + "_" + "_layer_"
+						+ std::string(det->network_name) + "_layer_"
 						+ std::to_string(i) + "_img_"
 						+ std::to_string(img_iterator) + "_test_it_"
 						+ std::to_string(test_iteration) + ".layer";
+
 				output_file = open_layer_file(
 						const_cast<char*>(output_filename.c_str()), "w");
 				fwrite(output_layer, sizeof(float), l.outputs, output_file);
@@ -190,13 +190,14 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 			}
 
 		} else {
-			std::string output_filename = std::string(LAYER_GOLD)
-					+ img_list_filename_string + "_gold_layer_"
-					+ std::string(det->network_name) + "_" + std::to_string(i)
-					+ "_img_" + std::to_string(img_iterator) + "_test_it_"
-					+ std::to_string(test_iteration) + ".layer";
+			//open gold
+			std::string gold_filename = std::string(LAYER_GOLD)
+					+ img_list_filename_string + "_"
+					+ std::string(det->network_name) + "_gold_layer_"
+					+ std::to_string(i) + "_img_" + std::to_string(img_iterator)
+					+ "_test_it_0.layer";
 			output_file = open_layer_file(
-					const_cast<char*>(output_filename.c_str()), "w");
+					const_cast<char*>(gold_filename.c_str()), "w");
 			fwrite(output_layer, sizeof(float), l.outputs, output_file);
 			fclose(output_file);
 		}
@@ -417,8 +418,8 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 			std::fabs(f_pb - g_pb), std::fabs(f_b.h - g_b.h), std::fabs(
 					f_b.w - g_b.w), (float) std::abs(class_g - class_f) };
 
-	if (class_g != class_f)
-		std::cout << " val " << class_g << " " << class_f << "\n";
+//	if (class_g != class_f)
+//		std::cout << " val " << class_g << " " << class_f << "\n";
 	bool diff = false;
 	for (int i = 0; i < 6; i++) {
 		if (diff_float[i] > THRESHOLD_ERROR)
