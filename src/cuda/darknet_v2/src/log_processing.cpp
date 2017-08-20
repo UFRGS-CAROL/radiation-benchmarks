@@ -117,13 +117,11 @@ void delete_gold_layers_arrays(detection det) {
 
 }
 
-inline char* get_small_log_file(char *log_file) {
+inline std::string get_small_log_file(char *log_file) {
 	std::string temp(log_file);
 	std::vector < std::string > ret_array = split(temp, '/');
 	std::string str_ret = ret_array[ret_array.size() - 1];
-	char *ret = (char*) calloc(str_ret.size(), sizeof(char));
-	strcpy(ret, str_ret.c_str());
-	return ret;
+	return str_ret;
 }
 
 FILE* open_layer_file(char *output_filename, const char *mode) {
@@ -140,7 +138,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 	int layers_size = det->net->n;
 
 	FILE *output_file, *gold_file;
-	char *small_log_file = get_small_log_file(log_filename);
+	std::string small_log_file = get_small_log_file(log_filename);
 	std::string img_list_filename_string(img_list_filename);
 	std::vector < std::string > temp_splited = split(img_list_filename_string,
 			'/');
@@ -204,7 +202,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 
 	}
 
-	free(small_log_file);
+//	free(small_log_file);
 
 }
 
