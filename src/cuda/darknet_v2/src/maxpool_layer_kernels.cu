@@ -16,7 +16,7 @@ extern "C" {
  * 1 for Abraham abft
  * 2 for maxpool hardened
  */
-void set_abft(int type) {
+void set_abft_smartpool(int type) {
 	abft_type = type;
 }
 

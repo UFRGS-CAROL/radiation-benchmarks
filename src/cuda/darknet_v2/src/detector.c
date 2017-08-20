@@ -802,7 +802,8 @@ void test_detector_radiation(Args *args) {
 #ifdef GPU
 		switch (args->abft) {
 			case 1:
-			set_abft_gemm(args->abft);
+			printf("%s ABFT not implemented yet\n", ABFT_TYPES[args->abft]);
+			exit(-1);
 			break;
 			case 2:
 			set_abft_smartpool(args->abft);
@@ -820,8 +821,8 @@ void test_detector_radiation(Args *args) {
 			exit(-1);
 			break;
 			default:
-				printf("No ABFT was set\n");
-				break;
+			printf("No ABFT was set\n");
+			break;
 		}
 #endif
 	}
