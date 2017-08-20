@@ -202,9 +202,9 @@ half time_elapsed)
 
     step_div_Cap=hdiv(step, Cap);
 
-    Rx_1=hdiv(1, Rx);
-    Ry_1=hdiv(1, Ry);
-    Rz_1=hdiv(1, Rz);
+    Rx_1=hdiv(__float2half(1.0), Rx);
+    Ry_1=hdiv(__float2half(1.0), Ry);
+    Rz_1=hdiv(__float2half(1.0), Rz);
 
     // each block finally computes result for a small block
     // after N iterations.
@@ -271,9 +271,9 @@ half time_elapsed)
             temp_t[ty][tx] = __hfma(step_div_Cap, __hfma(
                 __hsub(amb_temp, temp_on_cuda[ty][tx]), Rz_1,
                 __hfma(__hsub(__hadd(temp_on_cuda[ty][E], temp_on_cuda[ty][W]),
-                __hmul(2.0, temp_on_cuda[ty][tx])), Rx_1,
+                __hmul(__float2half(2.0), temp_on_cuda[ty][tx])), Rx_1,
                 __hfma(__hsub(__hadd(temp_on_cuda[S][tx], temp_on_cuda[N][tx]),
-                __hmul(2.0, temp_on_cuda[ty][tx])), Ry_1, power_on_cuda[ty][tx])))
+                __hmul(__float2half(2.0), temp_on_cuda[ty][tx])), Ry_1, power_on_cuda[ty][tx])))
                 , temp_on_cuda[ty][tx]);
 
         }
@@ -488,7 +488,8 @@ void run(int argc, char** argv)
     #ifdef LOGS
         char test_info[90];
         snprintf(test_info, 90, "streams:%d size:%d pyramidHeight:%d simTime:%d", setupParams -> nstreams, setupParams -> grid_rows, setupParams -> pyramid_height, setupParams -> sim_time);
-        if (!(setupParams->generate)) start_log_file("cudaHotspot", test_info);
+        char name[] = "cudaHotspot";
+        if (!(setupParams->generate)) start_log_file(name, test_info);
     #endif
 
     timestamp = mysecond();
