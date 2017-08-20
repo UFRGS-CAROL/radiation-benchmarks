@@ -1,2 +1,2 @@
-/home/fernando/git_pesquisa/radiation-benchmarks/data/VOC2012/2010_000158.jpg
-/home/fernando/git_pesquisa/radiation-benchmarks/data/URBAN_STREET/sequence06/images_left/cam1-20080702-162200-464.jpg
+/home/carol/radiation-benchmarks/data/VOC2012/2010_000158.jpg
+/home/carol/radiation-benchmarks/data/URBAN_STREET/sequence06/images_left/cam1-20080702-162200-464.jpg

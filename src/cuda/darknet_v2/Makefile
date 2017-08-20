@@ -85,7 +85,7 @@ endif
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-RAD_DIR=/home/fernando/git_pesquisa/radiation-benchmarks
+RAD_DIR=/home/carol/radiation-benchmarks
 
 
 all: obj backup results $(TARGET)
@@ -129,5 +129,5 @@ generate:
 								  $(RAD_DIR)/data/networks_img_list/fault_injection.txt -a 0
 
 test:
-	./$(TARGET) test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 1 -s 1 -a 0 
+	./$(TARGET) test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 10 -s 0 -a 0 
 
