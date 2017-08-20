@@ -104,7 +104,7 @@ def main(board):
                         generate.append(" ".join([''.join(map(str, value)) for key, value in gen.iteritems()]))
 
                     execute.append(" ".join([''.join(map(str, value)) for key, value in exe.iteritems()]))
-                    execute.append(" ".join([''.join(map(str, value)) for key, value in exe_save.iteritems()]))
+                    # execute.append(" ".join([''.join(map(str, value)) for key, value in exe_save.iteritems()]))
 
 
 
