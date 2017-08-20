@@ -1,8 +1,8 @@
 CC=g++
 NVCC=nvcc
-NVCC_FLAGS=-arch=sm_35
+NVCC_FLAGS=-arch=compute_53,sm_53
 
-NVIDIA_INC=/usr/local/cuda/include/
+NVIDIA_INC=/usr/local/cuda/include/;/usr/include/
 NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
