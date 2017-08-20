@@ -11,14 +11,14 @@ endif
 
 LOG_FLAGS=
 ifeq ($(logs), 1)
-	LOG_FLAGS += -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS
-endif 
+	LOG_FLAGS += -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -DLOGS
+endif
 
 $(TARGET):
-	$(NVCC) $(DEBUG_FLAGS) $(LOG_FLAGS) needle.cu -o $(TARGET)  -std=c++11 
+	$(NVCC) $(DEBUG_FLAGS) $(LOG_FLAGS) needle.cu -o $(TARGET)  -std=c++11
 
 generate:
-	$(NVCC)  $(DEBUG_FLAGS) needle_generate.cu -o $(TARGET)_generate -std=c++11 
+	$(NVCC)  $(DEBUG_FLAGS) needle_generate.cu -o $(TARGET)_generate -std=c++11
 
 gen_gold:nw_generate
 	./nw_generate 2048 10
