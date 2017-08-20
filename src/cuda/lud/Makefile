@@ -11,10 +11,10 @@ endif
 
 LOG_FLAGS=
 ifeq ($(logs), 1)
-	LOG_FLAGS += -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS
-endif 
+	LOG_FLAGS += -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -DLOGS
+endif
 
-GENCODE= -gencode arch=compute_35,code=sm_35  
+GENCODE= -gencode arch=compute_35,code=sm_35
 NVCCFLAGS=-lcublas -lcublas_device -lcudadevrt $(GENCODE) -Xcompiler -fopenmp -I$(NVIDIA_LIB) -L$(NVIDIA_INC)
 
 
