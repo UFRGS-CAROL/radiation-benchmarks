@@ -137,57 +137,6 @@ def detect(net, image_name, pr):
 
 def getDatasetImgName(imgName):
     return imgName
-    # dataset = ''
-    # for i in DATASETS:
-    #    if i in imgName:
-    #        dataset = i
-    #        break
-
-
-#    list = imgName.split(dataset)
-#   return str(dataset + str(list[1]))
-
-# def detect(net, image_name, pr):
-#     """Detect object classes in an image using pre-computed object proposals."""
-#     #will return a hash with boxes and scores
-#
-#     # Load the demo image
-#     im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
-#     if pr:
-#         print im_file
-#     im = cv2.imread(im_file)
-#
-#     # Detect all object classes and regress object bounds
-#     timer = Timer()
-#     timer.tic()
-#     scores, boxes = im_detect(net, im)
-#     timer.toc()
-#
-#     if pr:
-#         print ('Detection took {:.3f}s for '
-#            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
-#     return [scores, boxes]
-#
-# def generate(net, image_name):
-#     """Detect object classes in an image using pre-computed object proposals."""
-#
-#     # Load the demo image
-#     #im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
-#     im_file = os.path.join(image_name)
-#     #print im_file
-#     im = cv2.imread(im_file)
-#
-#     # Detect all object classes and regress object bounds
-#     timer = Timer()
-#     timer.tic()
-#     scores, boxes = im_detect(net, im)
-#     timer.toc()
-#
-#     print ('Detection took {:.3f}s for '
-#            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
-#
-#     return [scores, boxes]
-
 
 def parse_args():
     """Parse input arguments."""
@@ -266,7 +215,7 @@ def compare_boxes(gold, current, cls, img_name):
     min_m_range = goldSize
     if bbDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + "wrong_boxes_size: " + str(bbDiff))
+        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + " wrong_boxes_size: " + str(bbDiff))
         error_count += abs(bbDiff)
 
     pos = ['x1', 'y1', 'x2', 'y2']
