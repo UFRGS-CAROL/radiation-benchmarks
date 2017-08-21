@@ -7,14 +7,14 @@ import copy
 
 DATASETS = [
     # normal
-    {'txt': 'caltech.pedestrians.1K.txt', 'gold': 'gold.caltech.1K.csv', 'mode': 'full'},
-    {'txt': 'urban.street.1.1K.txt', 'gold': 'gold.urban.street.1.1K.csv', 'mode': 'full'},
-    {'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.1K.csv', 'mode': 'full'},
+    {'txt': 'caltech.pedestrians.1K.txt', 'gold': 'gold.caltech.1K.test', 'mode': 'full'},
+    {'txt': 'urban.street.1.1K.txt', 'gold': 'gold.urban.street.1.1K.test', 'mode': 'full'},
+    {'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.1K.test', 'mode': 'full'},
 
     # very_small for X1 and X2
-    {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
-    {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'small'},
-    {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'small'},
+    {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.test', 'mode': 'small'},
+    {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.test', 'mode': 'small'},
+    {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.test', 'mode': 'small'},
 ]
 
 
@@ -50,7 +50,7 @@ def main(board):
         if board in ['K1', 'X1', 'X2'] and i['mode'] == 'full':
             continue
 
-        gold = data_path + '/' + i['gold']
+        gold = data_path + '/py_faster_' + i['gold']
         txt_list = installDir + 'data/networks_img_list/' + i['txt']
         gen = {
             'gold': [' --gen ', gold],
