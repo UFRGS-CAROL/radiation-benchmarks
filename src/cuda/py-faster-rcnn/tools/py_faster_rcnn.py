@@ -28,13 +28,13 @@ import traceback
 import csv
 import sys
 
-#threshold for radiation test
+# threshold for radiation test
 THRESHOLD = 0.005
-#threshold for  configuration and nonmaxsupression
-CONF_THRESH = 0.0 #0.8
+# threshold for  configuration and nonmaxsupression
+CONF_THRESH = 0.0  # 0.8
 NMS_THRESH = 0.3
 
-DATASETS = ['CALTECH_CRITICAL', 'CALTECH', 'VOC2012']
+# DATASETS = ['CALTECH_CRITICAL', 'CALTECH', 'VOC2012']
 
 import time, calendar
 
@@ -134,13 +134,16 @@ def detect(net, image_name, pr):
 
     return detectionResult
 
+
 def getDatasetImgName(imgName):
-	return imgName
-    #dataset = ''
-    #for i in DATASETS:
+    return imgName
+    # dataset = ''
+    # for i in DATASETS:
     #    if i in imgName:
     #        dataset = i
     #        break
+
+
 #    list = imgName.split(dataset)
 #   return str(dataset + str(list[1]))
 
@@ -273,7 +276,7 @@ def compare_boxes(gold, current, cls, img_name):
         #         plt.Rectangle((bbox[0], bbox[1]),
         #                       bbox[2] - bbox[0],
         #                       bbox[3] - bbox[1], fill=False,
-        logString ="img_name: " + str(img_name) + " class: " + str(cls) + " box: [" + str(i) + "] "
+        logString = "img_name: " + str(img_name) + " class: " + str(cls) + " box: [" + str(i) + "] "
         error = False
         try:
             for iGold, iCurr, k in zip(gold[i], current[i], pos):
@@ -302,7 +305,7 @@ def compare_scores(gold, current, cls, img_name):
     min_m_range = goldSize
     if scrDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + "wrong_score_size: " + str(scrDiff))
+        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + " wrong_score_size: " + str(scrDiff))
         error_count += abs(scrDiff)
 
     for i in range(0, min_m_range):
@@ -310,7 +313,9 @@ def compare_scores(gold, current, cls, img_name):
         iCurr = float(current[i])
         diff = math.fabs(iGold - iCurr)
         if diff > THRESHOLD:
-            lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + " score: [" + str(i) + "] e: " + str(iGold) + " r: " + str(iCurr))
+            lh.log_error_detail(
+                "img_name: " + str(img_name) + " class: " + str(cls) + " score: [" + str(i) + "] e: " + str(
+                    iGold) + " r: " + str(iCurr))
             error_count += 1
 
     return error_count
@@ -350,7 +355,7 @@ def compare(gold, current, img_name):
         scrListGold = iGold['scores']
         scrListCurr = iCurr['scores']
 
-        #errorBefore = error_count
+        # errorBefore = error_count
         error_count += compare_scores(scrListGold, scrListCurr, i, tempImgName)
         error_count += compare_boxes(bbListGold, bbListCurr, i, tempImgName)
 
@@ -443,7 +448,7 @@ if __name__ == '__main__':
                 print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                 print 'Demo for {}'.format(im_name)
                 gold_file[im_name] = detect(net, im_name, True)
-                #print gold_file[im_name]
+                # print gold_file[im_name]
             print "Gold generated, saving file"
             serialize_gold(args.generate_file, gold_file)
             # write_to_csv(args.generate_file, gold_file)
@@ -488,10 +493,10 @@ if __name__ == '__main__':
 
                         lh.log_error_count(int(error_count))
                         force_update_timestamp()
-                    ##end log
-                    # j += 1
-                    # if j == im_size:
-                    #     break
+                        ##end log
+                        # j += 1
+                        # if j == im_size:
+                        #     break
 
                 i += 1
     except Exception as e:
@@ -507,69 +512,3 @@ if __name__ == '__main__':
     # finish ok
     if "no_logs" not in args.is_log:
         lh.end_log_file()
-
-
-
-        # def compare(gold, current, img_name):
-        #     # scores_gold = gold[0]
-        #     # boxes_gold = gold[1]
-        #     # error_count = 0
-        #     # #iterator for current, i need it because generate could be smaller than gold, so python will throw an exception
-        #     # scores_curr = current[0]
-        #     # boxes_curr = current[1]
-        #     #
-        #     #
-        #     # CONF_THRESH = 0.8
-        #     # NMS_THRESH = 0.3
-        #     # error_detail_final = ""
-        #     # ########################
-        #     # #real compare
-        #     #
-        #     #
-        #     # for cls_ind, cls in enumerate(CLASSES[1:]):
-        #     #     cls_ind += 1 # because we skipped background
-        #     #
-        #     #     #for gold
-        #     #     cls_boxes_gold = boxes_gold[:, 4*cls_ind:4*(cls_ind + 1)]
-        #     #     cls_scores_gold = scores_gold[:, cls_ind]
-        #     #     dets_gold = np.hstack((cls_boxes_gold,
-        #     #                       cls_scores_gold[:, np.newaxis])).astype(np.float32)
-        #     #     keep_gold = nms(dets_gold, NMS_THRESH)
-        #     #     dets_gold = dets_gold[keep_gold, :]
-        #     #
-        #     #     #for current
-        #     #     cls_boxes_curr = boxes_curr[:, 4*cls_ind:4*(cls_ind + 1)]
-        #     #     cls_scores_curr = scores_curr[:, cls_ind]
-        #     #     dets_curr = np.hstack((cls_boxes_curr,
-        #     #                       cls_scores_curr[:, np.newaxis])).astype(np.float32)
-        #     #     keep_curr = nms(dets_curr, NMS_THRESH)
-        #     #     dets_curr = dets_curr[keep_curr, :]
-        #     #
-        #     #     #compare all results
-        #     #
-        #     #     error_count += compare_boxes(cls_boxes_gold,cls_boxes_curr)
-        #     #     inds_gold = np.where(dets_gold[:, -1] >= 0)[0]
-        #     #     inds_curr = np.where(dets_curr[:, -1] >= 0)[0]
-        #     #     for i in inds_curr:
-        #     #         bbox_curr = dets_curr[i, :4]
-        #     #         scores_curr = dets_curr[i, -1]
-        #     #         print "Scores curr\n" , bbox_curr , " " , scores_curr
-        #     #
-        #     #     for i in inds_gold:
-        #     #         bbox_gold = dets_gold[i, :4]
-        #     #         scores_gold = dets_gold[i, -1]
-        #     #         print "Scores gold\n" , bbox_gold , " " , scores_gold
-        #     #     error_count += compare_scores(cls_scores_gold,cls_scores_curr)
-        #     #     inds_curr = np.where(dets_curr[:, -1] >=  0)[0]
-        #     #     inds_gold = np.where(dets_gold[:, -1] >=  0)[0]
-        #     #
-        #     #     for (i_g, i_c) in zip(inds_gold, inds_curr):
-        #     #         scores_gold = dets_gold[i_g, -1]
-        #     #         scores_curr = dets_curr[i_c, -1]
-        #     #         print "csl scores" , scores_curr
-        #     #         print "csl scores gold" , scores_gold
-        #
-        #     if error_count > 0:
-        #         lh.log_error_detail("input_img: "+img_name)
-        #
-        #     return error_count
