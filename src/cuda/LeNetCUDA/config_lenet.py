@@ -11,11 +11,11 @@ DATASETS = [
 
 ]
 
-WEIGHTS = ['lenet_base.weights', 'lenet_L1.weights', 'lenet_L2.weights']
+WEIGHTS = ['lenet_base.weights'] #, 'lenet_L1.weights', 'lenet_L2.weights']
 
 
 def main(board):
-    print "Generating py-faster for CUDA on " + str(board)
+    print "Generating Lenet for CUDA on " + str(board)
 
     confFile = '/etc/radiation-benchmarks.conf'
     try:
@@ -36,7 +36,7 @@ def main(board):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
-    generate = [str("cd " + src_lenet), ]
+    generate = ["cd " + src_lenet, "make clean GPU=1", "make -j4 GPU=1 ", "mv ./leNetCUDA " + bin_path + "/"]
     execute = []
 
     for w in WEIGHTS:
@@ -46,25 +46,32 @@ def main(board):
             labels = data_path + '/' + i['label']
             weights = data_path + '/' + w
             gen = [None] * 6
-            gen[0] = [' gold_gen ']
-            gen[1] = [set, labels]
-            gen[2] = [weights]
-            gen[3] = [gold]
-            gen[4] = [1000, 0, 1]
-            gen[5] = ['sudo ', src_lenet + "/leNetCUDA "]
+            gen[0] = ['sudo ', src_lenet + "/leNetCUDA "]
+            gen[1] = [' gold_gen ']
+            gen[2] = [set, labels]
+            gen[3] = [weights]
+            gen[4] = [gold]
+            gen[5] = [1000, 0, 1]
 
             exe = copy.deepcopy(gen)
-            exe[0][0] = ' rad_test '
-            exe[4][2] = 1000
+            exe[1] = [' rad_test ']
+            exe[5][2] = 1000
 
-            generate.append()
-            execute.append(" ".join([''.join(str(value)) for value in exe]))
+            generate.append(' '.join(str(r) for v in gen for r in v))
+            execute.append(' '.join(str(r) for v in exe for r in v))
 
-    # os.system("cd " + src_py_faster)
+
+
+    # end for generate
+    generate.append("make clean GPU=1 ")
+    generate.append("make -C ../../include/")
+    generate.append("make -j 4 GPU=1 LOGS=1")
+    generate.append("mv ./leNetCUDA " + bin_path + "/")
+
     for i in generate:
-        # if os.system(str(i)) != 0:
-        #     print "Something went wrong with generate of ", str(i)
-        #     exit(1)
+        if os.system(str(i)) != 0:
+            print "Something went wrong with generate of ", str(i)
+            exit(1)
         print i
 
     fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
