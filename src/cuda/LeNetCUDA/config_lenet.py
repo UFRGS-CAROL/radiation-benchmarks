@@ -74,13 +74,13 @@ def main(board):
             exit(1)
         print i
 
-    fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
+    fp = open(installDir + "scripts/how_to_run_lenet_cuda_" + board, 'w')
 
     for i in execute:
-        print >> fp, "[\"" + str(i) + "\" , 0.016, \"py_faster_rcnn.py\"],"
-        print "[\"" + str(i) + "\" , 0.016, \"py_faster_rcnn.py\"],"
+        print >> fp, "[\"" + str(i) + "\" , 0.016, \"leNetCUDA\"],"
+        print "[\"" + str(i) + "\" , 0.016, \"leNetCUDA\"],"
 
-    print "\nConfiguring done, to run check file: " + installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + str(
+    print "\nConfiguring done, to run check file: " + installDir + "scripts/how_to_run_lenet_cuda_" + str(
         board) + "\n"
 
     sys.exit(0)
