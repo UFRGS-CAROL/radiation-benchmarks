@@ -46,7 +46,7 @@ def main(board):
             labels = data_path + '/' + i['label']
             weights = data_path + '/' + w
             gen = [None] * 6
-            gen[0] = ['sudo ', src_lenet + "/leNetCUDA "]
+            gen[0] = ['sudo ', bin_path + "/leNetCUDA "]
             gen[1] = [' gold_gen ']
             gen[2] = [set, labels]
             gen[3] = [weights]
