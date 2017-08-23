@@ -199,7 +199,7 @@ int main( int argc, char *argv [])
 
 #ifdef LOGS
     char test_info[100];
-    snprintf(test_info, 100, "box:%d spaceElem:%ld cores:%d", dim_cpu.boxes1d_arg,dim_cpu.space_elem,dim_cpu.cores_arg);
+    snprintf(test_info, 100, "hardening_2 box:%d spaceElem:%ld cores:%d", dim_cpu.boxes1d_arg,dim_cpu.space_elem,dim_cpu.cores_arg);
     start_log_file((char *)"openmpLavaMD", test_info);
     set_max_errors_iter(MAX_ERR_ITER_LOG);
     set_iter_interval_print(5);

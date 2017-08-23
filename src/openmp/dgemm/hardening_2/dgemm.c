@@ -340,7 +340,7 @@ int main(int argc, char **argv) {
 
 #ifdef LOGS
     char test_info[200];
-    snprintf(test_info, 200, "matrix_dim:%ld threads:%d block_size:%d block_offset:%d", order, nthread_input, block, BOFFSET);
+    snprintf(test_info, 200, "hardening_2 matrix_dim:%ld threads:%d block_size:%d block_offset:%d", order, nthread_input, block, BOFFSET);
     start_log_file("openmpDGEMM", test_info);
 #endif
 #ifdef TIMING

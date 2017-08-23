@@ -142,7 +142,7 @@ main ( int argc, char *argv[] )
 
 #ifdef LOGS
     char test_info[200];
-    snprintf(test_info, 200, "matrix_dim:%d threads:%d", matrix_dim, omp_num_threads);
+    snprintf(test_info, 200, "hardening_4 matrix_dim:%d threads:%d", matrix_dim, omp_num_threads);
     start_log_file("openmpLUD", test_info);
 #endif
 #ifdef TIMING
