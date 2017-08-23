@@ -66,7 +66,7 @@ def main(board):
     generate.append("make clean GPU=1 ")
     generate.append("make -C ../../include/")
     generate.append("make -j 4 GPU=1 LOGS=1")
-    generate.append("mv ./leNetCUDA " + bin_path + "/")
+    generate.append("sudo mv ./leNetCUDA " + bin_path + "/")
 
     for i in generate:
         if os.system(str(i)) != 0:
