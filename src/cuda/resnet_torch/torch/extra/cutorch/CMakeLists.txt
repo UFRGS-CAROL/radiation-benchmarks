@@ -1,0 +1,50 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8 FATAL_ERROR)
+CMAKE_POLICY(VERSION 2.8)
+
+SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib/THC/cmake ${CMAKE_MODULE_PATH})
+
+FIND_PACKAGE(Torch REQUIRED)
+FIND_PACKAGE(CUDA 6.5 REQUIRED)
+FIND_PACKAGE(MAGMA)
+
+IF (NOT WIN32)
+SET(CMAKE_C_FLAGS "-std=c99 -Werror=implicit-function-declaration ${CMAKE_C_FLAGS}")
+ENDIF (NOT WIN32)
+IF(CUDA_HAS_FP16 OR NOT ${CUDA_VERSION} LESS 7.5)
+  ADD_DEFINITIONS(-DTH_GENERIC_USE_HALF=1)
+  ADD_DEFINITIONS(-DCUDA_HAS_FP16=1)
+ENDIF()
+
+INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
+
+ADD_SUBDIRECTORY(lib)
+
+INCLUDE_DIRECTORIES(BEFORE "${CMAKE_CURRENT_BINARY_DIR}/lib/THC")
+INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/lib/THC")
+INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/torch")
+
+SET(src Storage.c init.c Tensor.c TensorMath.c TensorOperator.c torch/utils.c)
+SET(luasrc init.lua Tensor.lua FFI.lua test/test.lua)
+
+set(CMAKE_REQUIRED_INCLUDES ${LUA_INCDIR})
+include(CheckCSourceCompiles)
+check_c_source_compiles("
+#include <lauxlib.h>
+int main()
+{
+  long i = sizeof(&luaL_setfuncs);
+  return 0;
+}
+" HAS_LUAL_SETFUNCS)
+if(HAS_LUAL_SETFUNCS)
+  add_definitions(-DHAS_LUAL_SETFUNCS)
+endif()
+
+ADD_TORCH_WRAP(cudatensormathwrap TensorMath.lua)
+
+ADD_TORCH_PACKAGE(cutorch "${src}" "${luasrc}")
+TARGET_LINK_LIBRARIES(cutorch luaT THC)
+
+IF(LUALIB)
+  TARGET_LINK_LIBRARIES(cutorch ${LUALIB})
+ENDIF()
