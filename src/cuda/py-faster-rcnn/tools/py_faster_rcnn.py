@@ -39,7 +39,7 @@ NMS_THRESH = 0.3
 import time, calendar
 
 # import log helper
-sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include/log_helper_python/')
+sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include/log_helper_swig_wraper/')
 
 import log_helper as lh
 
