@@ -41,7 +41,7 @@ import time, calendar
 # import log helper
 sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include/log_helper_swig_wraper/')
 
-import log_helper as lh
+import log_helper_python as lh
 
 CLASSES = ['__background__',
            'aeroplane', 'bicycle', 'bird', 'boat',
