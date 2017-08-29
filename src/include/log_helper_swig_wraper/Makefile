@@ -25,7 +25,7 @@ all:$(LIBRARY_NAME)_python $(LIBRARY_NAME)_lua
 $(LIBRARY_NAME)_python: $(LIBRARY_NAME).c $(LIBRARY_NAME).i
 	$(SWIG) -python $(LIBRARY_NAME).i
 	$(CC)  $(CFLAGS) -c $(LIBRARY_NAME).c $(LIBRARY_NAME_WRAP).c -I$(PYTHON_INCLUDE) -I../
-	$(CC) -shared $(LIBRARY_NAME).o $(LIBRARY_NAME_WRAP).o -o $(LIBRARY_NAME)_python.so
+	$(CC) -shared $(LIBRARY_NAME).o $(LIBRARY_NAME_WRAP).o -o _$(LIBRARY_NAME).so
 
 
 $(LIBRARY_NAME)_lua:
