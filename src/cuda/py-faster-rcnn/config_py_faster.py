@@ -70,6 +70,7 @@ def main(board):
         if os.system(str(i)) != 0:
             print "Something went wrong with generate of ", str(i)
             exit(1)
+	#print i
 
     fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
 

@@ -404,16 +404,16 @@ if __name__ == '__main__':
             print "Gold save sucess"
 
         else:
+            print "Test starting"
             i = 0
             # j = 0
             im_size = len(in_names)
             while (i < iterations):
-                # iterator
+                print "Big iteration", i
                 # iterator = iter(gold_file)
                 # total_iteration_errors = 0
                 it = 0
                 for im_name in in_names:
-                    # item = iterator.next()
                     ###Log
                     # print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                     it += 1
