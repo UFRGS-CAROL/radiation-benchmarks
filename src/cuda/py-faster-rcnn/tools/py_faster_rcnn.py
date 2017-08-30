@@ -34,8 +34,6 @@ THRESHOLD = 0.05
 CONF_THRESH = 0.0  # 0.8
 NMS_THRESH = 0.3
 
-# DATASETS = ['CALTECH_CRITICAL', 'CALTECH', 'VOC2012']
-
 import time, calendar
 
 # import log helper
@@ -71,54 +69,29 @@ def visDetections(dets, thresh):
     if len(inds) == 0:
         return ret
 
-    # im = im[:, :, (2, 1, 0)]
-    # fig, ax = plt.subplots(figsize=(12, 12))
-    # ax.imshow(im, aspect='equal')
     for i in inds:
         bbox = dets[i, :4]
         score = dets[i, -1]
         ret['boxes'].append(bbox)
         ret['scores'].append(score)
 
-    # ax.add_patch(
-    # e(xy, width, height,
-    #         plt.Rectangle((bbox[0], bbox[1]),
-    #                       bbox[2] - bbox[0],
-    #                       bbox[3] - bbox[1], fill=False,
-    #                       edgecolor='red', linewidth=3.5)
-    #         )
-    #     ax.text(bbox[0], bbox[1] - 2,
-    #             '{:s} {:.3f}'.format(class_name, score),
-    #             bbox=dict(facecolor='blue', alpha=0.5),
-    #             fontsize=14, color='white')
-    #
-    # ax.set_title(('{} detections with '
-    #               'p({} | box) >= {:.1f}').format(class_name, class_name,
-    #                                               thresh),
-    #               fontsize=14)
-    # plt.axis('off')
-    # plt.tight_layout()
-    # plt.draw()
     return ret
 
 
-def detect(net, image_name, pr):
+def detect(net, image_name):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load the demo image
     im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
     im = cv2.imread(im_file)
-    if pr:
-        print image_name
 
     # Detect all object classes and regress object bounds
     timer = Timer()
     timer.tic()
     scores, boxes = im_detect(net, im)
     timer.toc()
-    if pr:
-        print ('Detection took {:.3f}s for '
-               '{:d} object proposals').format(timer.total_time, boxes.shape[0])
+    print ('Detection took {:.3f}s for '
+           '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
     # Visualize detections for each class
     detectionResult = {}
@@ -134,9 +107,6 @@ def detect(net, image_name, pr):
 
     return detectionResult
 
-
-def getDatasetImgName(imgName):
-    return imgName
 
 def parse_args():
     """Parse input arguments."""
@@ -215,7 +185,8 @@ def compare_boxes(gold, current, cls, img_name):
     min_m_range = goldSize
     if bbDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + " wrong_boxes_size: " + str(bbDiff))
+        lh.log_error_detail(
+            "img_name: " + str(img_name) + " class: " + str(cls) + " wrong_boxes_size: " + str(bbDiff)) + " "
         error_count += abs(bbDiff)
 
     pos = ['x1', 'y1', 'x2', 'y2']
@@ -236,7 +207,7 @@ def compare_boxes(gold, current, cls, img_name):
                 if diff > THRESHOLD:
                     error = True
         except:
-            logString = "img_name: " + str(img_name) + " class: " + str(cls) + " box: [" + str(i) + "] loop_error"
+            logString = "img_name: " + str(img_name) + " class: " + str(cls) + " box: [" + str(i) + "] loop_error "
 
         if error:
             lh.log_error_detail(logString)
@@ -254,7 +225,8 @@ def compare_scores(gold, current, cls, img_name):
     min_m_range = goldSize
     if scrDiff != 0:
         min_m_range = min(goldSize, currSize)
-        lh.log_error_detail("img_name: " + str(img_name) + " class: " + str(cls) + " wrong_score_size: " + str(scrDiff))
+        lh.log_error_detail(
+            "img_name: " + str(img_name) + " class: " + str(cls) + " wrong_score_size: " + str(scrDiff) + " ")
         error_count += abs(scrDiff)
 
     for i in range(0, min_m_range):
@@ -295,7 +267,7 @@ def compare(gold, current, img_name):
         error_count += abs(size_error_m)
 
     intersection = set(goldKeys) & set(currKeys)
-    tempImgName = getDatasetImgName(img_name)
+    # tempImgName = img_name
     for i in intersection:
         iGold = gold[i]
         iCurr = current[i]
@@ -305,12 +277,8 @@ def compare(gold, current, img_name):
         scrListCurr = iCurr['scores']
 
         # errorBefore = error_count
-        error_count += compare_scores(scrListGold, scrListCurr, i, tempImgName)
-        error_count += compare_boxes(bbListGold, bbListCurr, i, tempImgName)
-
-        # if errorBefore != error_count:
-        #     lh.log_error_info(
-        #         "img_name: " + str(img_name) + " class: " + str(i) + " total_errors: " + str(error_count - errorBefore))
+        error_count += compare_scores(scrListGold, scrListCurr, i, img_name)
+        error_count += compare_boxes(bbListGold, bbListCurr, i, img_name)
 
     return error_count
 
@@ -328,12 +296,8 @@ if __name__ == '__main__':
     args = parse_args()
     force_update_timestamp()
     if "no_logs" not in args.is_log:
-
-        string_info = "iterations: " + str(args.iterations) + " img_list: " + str(args.img_list) + " board: "
-        if "X1" in args.img_list:
-            string_info += "X1"
-        else:
-            string_info += "K40"
+        string_info = "iterations: " + str(args.iterations) + " img_list: " + str(
+            args.img_list) + " board: DEFAULT gold: " + str(args.gold)
         lh.start_log_file("PyFasterRcnn", string_info)
 
     # object for gold file
@@ -359,9 +323,7 @@ if __name__ == '__main__':
             caffe.set_device(args.gpu_id)
             cfg.GPU_ID = args.gpu_id
         net = caffe.Net(prototxt, caffemodel, caffe.TEST)
-        ##open gold
-        if args.gold != "":
-            gold_file = load_file(args.gold)
+
         print '\n\nLoaded network {:s}'.format(caffemodel)
     except Exception as e:
         if "no_logs" not in args.is_log:
@@ -385,44 +347,45 @@ if __name__ == '__main__':
             ##################################################################################
         in_names = []
         iterations = int(args.iterations)
-
-        in_names = [line.strip() for line in open(args.img_list, 'r')]
+        with open(args.img_list, 'r') as txt_img_file:
+            in_names = [line.strip() for line in txt_img_file]
 
         if args.generate_file != "":
             # execute only once
-            # even in python you need initializate
+            # even in python you need initialization
             gold_file = {}
             print "Generating gold for Py-faster-rcnn"
             for im_name in in_names:
-                print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
                 print 'Demo for {}'.format(im_name)
-                gold_file[im_name] = detect(net, im_name, True)
-                # print gold_file[im_name]
+                gold_file[im_name] = detect(net, im_name)
+
             print "Gold generated, saving file"
             serialize_gold(args.generate_file, gold_file)
-            # write_to_csv(args.generate_file, gold_file)
             print "Gold save sucess"
 
         else:
+            print "Loading gold"
+            ##open gold
+            if args.gold != "":
+                gold_file = load_file(args.gold)
+            if gold_file == None:
+                lh.log_error_detail("ERROR on opening gold file " + str(args.gold))
+                lh.end_log_file()
+                raise
+
             print "Test starting"
             i = 0
-            # j = 0
             im_size = len(in_names)
-            while (i < iterations):
+            while i < iterations:
                 print "Big iteration", i
-                # iterator = iter(gold_file)
-                # total_iteration_errors = 0
-                it = 0
+
                 for im_name in in_names:
                     ###Log
-                    # print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-                    it += 1
-                    if it % 10 == 0:
-                        print 'PyFaster for {}'.format(im_name)
+                    print 'PyFaster for {}'.format(im_name)
                     if "no_logs" not in args.is_log:
                         ##start
                         lh.start_iteration()
-                        ret = detect(net, im_name, (it % 10 == 0))
+                        ret = detect(net, im_name)
                         lh.end_iteration()
 
                         # check gold
@@ -432,22 +395,14 @@ if __name__ == '__main__':
                         timer.toc()
 
                         # if error_count != 0:
-                        iteration_file_pos = iterations + it
-                        # scores_name = lh.get_log_file_name() +"_"+ str(iteration_file_pos) + ".scores"
-                        # print scores_name
-                        # if error_count != 0:
-                        #     serialize_gold(scores_name,ret[0])
-                        if it % 10 == 0:
-                            print "Compare time ", timer.total_time, " errors ", error_count
+                        print "Compare time ", timer.total_time, " errors ", error_count
 
                         lh.log_error_count(int(error_count))
                         force_update_timestamp()
                         ##end log
-                        # j += 1
-                        # if j == im_size:
-                        #     break
 
                 i += 1
+            print "Test finished"
     except Exception as e:
         if "no_logs" not in args.is_log:
             lh.log_error_detail("exception: error_network_exection error_info:" +
