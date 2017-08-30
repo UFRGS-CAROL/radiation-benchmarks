@@ -12,9 +12,9 @@ DATASETS = [
     {'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.1K.test', 'mode': 'full'},
 
     # very_small for X1 and X2
-    {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.test', 'mode': 'small'},
-    {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.test', 'mode': 'small'},
-    {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.test', 'mode': 'small'},
+    #{'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.test', 'mode': 'small'},
+    #{'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.test', 'mode': 'small'},
+    #{'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.test', 'mode': 'small'},
 ]
 
 
