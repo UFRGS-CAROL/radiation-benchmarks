@@ -44,6 +44,9 @@ int log_error_detail(char *string);
 // Print some string with the detail of an error/information to log file
 int log_info_detail(char *string);
 
+// Get current iteration number
+unsigned long int get_iteration_number();
+
 //end C++ macro section
 #ifdef __cplusplus
 }

@@ -599,3 +599,8 @@ int log_info_detail(char *string) {
 	return 0;
 }
 ;
+
+unsigned long int get_iteration_number()
+{
+	return iteration_number;
+}
