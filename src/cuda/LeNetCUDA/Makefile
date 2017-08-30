@@ -100,10 +100,10 @@ test:
 
 
 generate:
-	./$(EXEC) gold_gen $(DATA_DIR)/t10k-images-idx3-ubyte $(DATA_DIR)/t10k-labels-idx1-ubyte  $(DATA_DIR)/lenet_base.weights $(DATA_DIR)/gold_test 2 1 1
+	./$(EXEC) gold_gen $(DATA_DIR)/t10k-images-idx3-ubyte $(DATA_DIR)/t10k-labels-idx1-ubyte  $(DATA_DIR)/lenet_base.weights $(DATA_DIR)/gold_test 2 0 1
 
 test_rad:
-	./$(EXEC) rad_test $(DATA_DIR)/t10k-images-idx3-ubyte $(DATA_DIR)/t10k-labels-idx1-ubyte $(DATA_DIR)/lenet_base.weights $(DATA_DIR)/gold_test 2 1 1
+	./$(EXEC) rad_test $(DATA_DIR)/t10k-images-idx3-ubyte $(DATA_DIR)/t10k-labels-idx1-ubyte $(DATA_DIR)/lenet_base.weights $(DATA_DIR)/gold_test 2 0 1
 
 
 download_input:
