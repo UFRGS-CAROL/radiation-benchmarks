@@ -1,0 +1,13 @@
+# CMake
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
+
+# Build output
+libthreads.a
+libthreads.so
+libthreadsmain.dylib
+libthreadsmain.so
