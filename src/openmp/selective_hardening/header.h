@@ -5,6 +5,7 @@
 #define READ_HARDENED_ARRAY(POSITION, ARRAY_NAME_1, ARRAY_NAME_2, ARRAY_TYPE, ARRAY_SIZE) ((ARRAY_TYPE)((void*)hardened_compare_and_return_array(POSITION, (void*)(&ARRAY_NAME_1), (void*)(&ARRAY_NAME_2), ARRAY_SIZE)))
 
 static int error_occured = 0;
+static int current_iteration = -1;
 
 void get_bits_str(char* dest_buffer, void* value, long long size);
 
@@ -14,6 +15,12 @@ inline void* hardened_compare_and_return(void* var_a, void* var_b, long long siz
         {
 #pragma omp critical(c1)
 		{
+			if(current_iteration != get_iteration_number())
+			{
+				current_iteration = get_iteration_number();
+				error_occured = 0;	
+			}
+
 			if(error_occured == 0)                	
 			{
 				error_occured = 1;
@@ -52,8 +59,8 @@ inline void* hardened_compare_and_return(void* var_a, void* var_b, long long siz
 			}
 		}
         }
-
-        return var_a;
+        
+	return var_a;
 }
 
 inline void* hardened_compare_and_return_array(void* array_ptr_a, void* array_ptr_b, long long size)
