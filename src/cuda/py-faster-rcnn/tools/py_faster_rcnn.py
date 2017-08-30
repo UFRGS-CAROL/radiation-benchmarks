@@ -29,7 +29,7 @@ import csv
 import sys
 
 # threshold for radiation test
-THRESHOLD = 0.005
+THRESHOLD = 0.05
 # threshold for  configuration and nonmaxsupression
 CONF_THRESH = 0.0  # 0.8
 NMS_THRESH = 0.3
