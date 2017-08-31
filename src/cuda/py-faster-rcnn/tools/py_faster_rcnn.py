@@ -17,9 +17,9 @@ from fast_rcnn.config import cfg
 from fast_rcnn.test import im_detect
 from fast_rcnn.nms_wrapper import nms
 from utils.timer import Timer
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
-import scipy.io as sio
+# import scipy.io as sio
 import caffe, os, sys, cv2
 import argparse
 import pickle
