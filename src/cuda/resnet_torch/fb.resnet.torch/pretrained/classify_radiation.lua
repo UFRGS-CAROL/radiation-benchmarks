@@ -10,6 +10,7 @@
 --  classifies an image using a trained model
 --
 
+require '../../../../include/log_helper_swig_wraper/log_helper'
 require 'torch'
 require 'paths'
 require 'cudnn'
@@ -55,27 +56,29 @@ local transform = t.Compose{
 
 local N = 5
 
-for i=2,#arg do
+for iteration=0,10000 do
+	for i=2,#arg do	
 
-   -- load the image as a RGB float tensor with values 0..1
-   local img = image.load(arg[i], 3, 'float')
-   local name = arg[i]:match( "([^/]+)$" )
+   		-- load the image as a RGB float tensor with values 0..1
+   		local img = image.load(arg[i], 3, 'float')
+		local name = arg[i]:match( "([^/]+)$" )
 
-   -- Scale, normalize, and crop the image
-   img = transform(img)
+   		-- Scale, normalize, and crop the image
+   		img = transform(img)
 
-   -- View as mini-batch of size 1
-   local batch = img:view(1, table.unpack(img:size():totable()))
+   		-- View as mini-batch of size 1
+		local batch = img:view(1, table.unpack(img:size():totable()))
 
-   -- Get the output of the softmax
-   local output = model:forward(batch:cuda()):squeeze()
+   		-- Get the output of the softmax
+   		local output = model:forward(batch:cuda()):squeeze()
 
-   -- Get the top 5 class indexes and probabilities
-   local probs, indexes = output:topk(N, true, true)
-   print('Classes for', arg[i])
-   for n=1,N do
-     print(probs[n], imagenetLabel[indexes[n]])
-   end
-   print('')
+   		-- Get the top 5 class indexes and probabilities
+   		local probs, indexes = output:topk(N, true, true)
+   		print('Classes for', arg[i])
+   		for n=1,N do
+     			print(probs[n], imagenetLabel[indexes[n]])
+   		end
+   		print('')
 
+		end
 end
