@@ -15,13 +15,13 @@ V2MD5SUM=70d89ba2e180739a1c700a9ff238e354
 
 if [ ! -f $DIR/$YOLOV1 ] || [ ! "$(echo "$V1MD5SUM $DIR/$YOLOV1" | md5sum -c)" == "$DIR/$YOLOV1: OK" ];
 then
-    wget https://www.dropbox.com/s/389dxz0l2c7l3i0/yolo.weights -O $DIR/$YOLOV1
+    wget https://www.dropbox.com/s/389dxz0l2c7l3i0/yolo.weights -O $DIR/$YOLOV1 --no-check-certificate
 fi
 
 
 if [ ! -f $DIR/$YOLOV2 ] || [ ! "$(echo "$V2MD5SUM $DIR/$YOLOV2" | md5sum -c)" == "$DIR/$YOLOV2: OK" ];
 then
-    wget https://pjreddie.com/media/files/yolo.weights -O $DIR/$YOLOV2
+    wget https://pjreddie.com/media/files/yolo.weights -O $DIR/$YOLOV2 --no-check-certificate
 fi
 
 #check m5sum
