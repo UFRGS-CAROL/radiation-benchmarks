@@ -32,42 +32,6 @@ void usage() {
     printf("Usage: generateMatrices -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
 }
 
-__global__ void floatToHalfKernel(__half *out, float in) {
-	*out = __float2half(in);
-}
-
-__global__ void halfToFloatKernel(__half in, float *out) {
-	*out = __half2float(in);
-}
-
-__half float2half(float in) {
-	__half half;
-	__half *d_half;
-
-	cudaMalloc(&d_half, sizeof(__half));
-	floatToHalfKernel<<<1, 1>>>(d_half, in);
-
-	cudaDeviceSynchronize();
-
-	cudaMemcpy(&half, d_half, sizeof(__half), cudaMemcpyDeviceToHost);
-
-	return half;
-}
-
-float half2float(__half in) {
-	float h_float;
-	float *d_float;
-
-	cudaMalloc(&d_float, sizeof(float));
-	halfToFloatKernel<<<1, 1>>>(in, d_float);
-
-	cudaDeviceSynchronize();
-
-	cudaMemcpy(&h_float, d_float, sizeof(float), cudaMemcpyDeviceToHost);
-
-	return h_float;
-}
-
 __global__ void generateKernel(__half *out, unsigned int matrixSize, unsigned int seed, unsigned elements_per_thread) {
 	curandState_t state;
 	curand_init(seed, threadIdx.y * BLOCK_SIZE + threadIdx.x, 0, &state);
@@ -77,7 +41,7 @@ __global__ void generateKernel(__half *out, unsigned int matrixSize, unsigned in
 		do {
 			float temp = curand_normal(&state) * MAX_HALF;
 			out[position] = __float2half(temp);
-		} while(out[position].x == 0);
+		} while(__half2float(out[position].x) == 0 || isnan(__half2float(out[position].x)));
 	}
 }
 
@@ -177,9 +141,9 @@ void generateInputMatrices()
 		fwrite(&(h_A[i * DEFAULT_INPUT_SIZE]), sizeof(__half) * DEFAULT_INPUT_SIZE, 1, f_A);
 	}
 
-	printf("Element 32 of matrix A: %f (raw __half: %hx)\n", half2float(h_A[32]), h_A[32].x);
+	printf("Element 32 of matrix A: %f (raw __half: %hx)\n", (float)*((half_float::half*)&(h_A[32])), h_A[32].x);
 
-	printf("Element 50 of matrix B: %f (raw __half: %hx)\n", half2float(h_B[50]), h_B[50].x);
+	printf("Element 50 of matrix B: %f (raw __half: %hx)\n", (float)*((half_float::half*)&(h_B[50])), h_B[50].x);
 
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
@@ -253,8 +217,9 @@ void generateGoldMatrix()
 {
 	////////////////////////////////////////////////////
 	/////////////CUBLAS GEMM VARS///////////////////////
-	const __half alpha = float2half(1.0f);
-	const __half beta = float2half(1.0f);
+    half_float::half oneValue(1.0);
+	const __half alpha = *((half*)&oneValue);
+	const __half beta = *((half*)&oneValue);
 	cublasOperation_t transa = CUBLAS_OP_T;
 	cublasOperation_t transb = CUBLAS_OP_T;
 	////////////////////////////////////////////////////
@@ -275,12 +240,12 @@ void generateGoldMatrix()
   if (k <= 16) {
     printf("\nMatrix A: \n");
     for (int i = 0; i<k*k; i++) {
-      printf(" %.2e", half2float(A[i]));
+      printf(" %.2e", (float)*((half_float::half*)&(A[i])));
       if ((i+1)%k == 0) printf("\n");
     }
     printf("\nMatrix B: \n");
     for (int i = 0; i<k*k; i++) {
-      printf(" %.2e", half2float(B[i]));
+      printf(" %.2e", (float)*((half_float::half*)&(B[i])));
       if ((i+1)%k == 0) printf("\n");
     }
   }
@@ -346,7 +311,7 @@ void generateGoldMatrix()
 
   if (numZeros > 0 && k <= 16) {
     for (int i = 0; i<k*k; i++) {
-      printf(" %.2e", half2float(GOLD[i]));
+      printf(" %.2e",  (float)*((half_float::half*)&(GOLD[i])));
       if ((i+1)%k == 0) printf("\n");
     }
   }
@@ -430,10 +395,6 @@ int main (int argc, char** argv)
 	sizeb = ldb * k;
 	ldc = max( 1, k + 16 );
 	sizec = ldc * k;
-
-    printf("1024 using half.hpp: %f (raw half: %hx)\n", float(half_float::half(1024.0)), half_float::half(1024.0));
-
-    printf("1024 using cudafp16: %f (raw half: %hx)\n", half2float(float2half(1024.0)), float2half(1024.0).x);
 
 
 	FILE *test_file;
