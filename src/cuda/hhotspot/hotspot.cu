@@ -79,7 +79,7 @@ void readInput(parameters *params)
     int i,j;
     FILE *ftemp, *fpower, *fgold;
     char str[STR_SIZE];
-    half_float::half val;
+    float val;
     int num_zeros = 0;
     int num_nans = 0;
 
@@ -105,10 +105,12 @@ void readInput(parameters *params)
 
             params->FilesavingTemp[i*(params->grid_cols)+j] = half_float::half(val);
 
-            if (val==0)
+            if (val==0) {
                 num_zeros++;
-            if (isnan(val))
+            }
+            if (isnan(val)) {
                 num_nans++;
+            }
 
             fgets(str, STR_SIZE, fpower);
 
@@ -134,8 +136,8 @@ void readInput(parameters *params)
         }
     }
 
-  printf("Zeros in the input: %d\n", num_zeros);
-  printf("NaNs in the input: %d\n", num_nans);
+    printf("Zeros in the input: %d\n", num_zeros);
+    printf("NaNs in the input: %d\n", num_nans);
 
     // =================== FAULT INJECTION
     if (params->fault_injection) {
