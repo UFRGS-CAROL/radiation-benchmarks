@@ -568,6 +568,7 @@ void writeGold(dim_str dim_cpu, char *output_gold, FOUR_VECTOR **fv_cpu)
 		fwrite(&((*fv_cpu)[i].y), 1, sizeof(half), fp);
 		fwrite(&((*fv_cpu)[i].z), 1, sizeof(half), fp);
 	}
+	printf("Number of zeros/NaNs written on output: %d\n", number_zeros);
 	fclose(fp);
 }
 
