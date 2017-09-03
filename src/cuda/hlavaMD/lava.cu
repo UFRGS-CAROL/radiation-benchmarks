@@ -619,7 +619,7 @@ int main(int argc, char *argv []) {
 	#ifdef LOGS
 		char test_info[100];
 		snprintf(test_info, 100, "streams: %d boxes:%d block_size:%d", nstreams, dim_cpu.boxes1d_arg, NUMBER_THREADS);
-		if (!generate) start_log_file("cudaLavaMD", test_info);
+		if (!generate) start_log_file("cudaHalfLavaMD", test_info);
 	#endif
 
 	//=====================================================================
@@ -990,7 +990,7 @@ int main(int argc, char *argv []) {
 							snprintf(error_detail, 300, "stream: %d, p: [%d], ea: %d, v_r: %1.16e, v_e: %1.16e, x_r: %1.16e, x_e: %1.16e, y_r: %1.16e, y_e: %1.16e, z_r: %1.16e, z_e: %1.16e\n", streamIdx, \
 								i, thread_error, (float)*((half_float::half*)&(fv_cpu[i].v)), (float)*((half_float::half*)&(fv_cpu_GOLD[i].v)), (float)*((half_float::half*)&(fv_cpu[i].x)), (float)*((half_float::half*)&(fv_cpu_GOLD[i].x)), (float)*((half_float::half*)&(fv_cpu[i].y)), (float)*((half_float::half*)&(fv_cpu_GOLD[i].y)), (float)*((half_float::half*)&(fv_cpu[i].z)), (float)*((half_float::half*)&(fv_cpu_GOLD[i].z)));
 							if (kernel_errors<25) printf("ERROR: %s\n", error_detail);
-							if (kernel_errors>=25) printf("!");
+							if (kernel_errors>=25 && kernel_errors % 25 == 0) printf("!");
 							#ifdef LOGS
 								if (!generate) log_error_detail(error_detail);
 							#endif
