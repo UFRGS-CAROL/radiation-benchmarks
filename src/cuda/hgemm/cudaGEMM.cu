@@ -14,6 +14,7 @@
 #include <cublas_v2.h>
 
 #include <cuda_fp16.h>
+#include "half.hpp"
 
 // helper functions
 #include "helper_string.h"
@@ -27,8 +28,6 @@
 #define BLOCK_SIZE 32
 
 #define DEFAULT_INPUT_SIZE 8192
-
-__half int2hfloat(int x);
 
 int verbose = 0;
 int fault_injection = 0;
@@ -45,76 +44,24 @@ FILE* f_GOLD;
 //====================================
 
 //================== Host and device matrix ptr's
-__half *A;
-__half *B;
-__half *C;
-__half *GOLD;
+half *A;
+half *B;
+half *C;
+half *GOLD;
 
-__half *d_A;
-__half *d_B;
-__half *d_C;
+half *d_A;
+half *d_B;
+half *d_C;
 //====================================
 
 //================== cublas GEMM parameters
-const __half alpha = int2hfloat(1);
-const __half beta = int2hfloat(1);
+const half_float::half oneValue(1.0);
+const half alpha = *((half*)&oneValue);
+const half beta = *((half*)&oneValue);
 cublasOperation_t transa = CUBLAS_OP_T;
 cublasOperation_t transb = CUBLAS_OP_T;
 int sizea, sizeb, sizec;
 int lda, ldb, ldc;
-
-//========= FP16 Host conversion
-__half int2hfloat(int x)
-{
-  unsigned sign = x < 0;
-  unsigned absx = ((unsigned)x ^ -sign) + sign; // safe abs(x)
-  unsigned tmp = absx, manbits = 0;
-  int exp = 0, truncated = 0;
-
-  // calculate the number of bits needed for the mantissa
-  while (tmp)
-  {
-    tmp >>= 1;
-    manbits++;
-  }
-
-  // half-precision floats have 11 bits in the mantissa.
-  // truncate the excess or insert the lacking 0s until there are 11.
-  if (manbits)
-  {
-    exp = 10; // exp bias because 1.0 is at bit position 10
-    while (manbits > 11)
-    {
-      truncated |= absx & 1;
-      absx >>= 1;
-      manbits--;
-      exp++;
-    }
-    while (manbits < 11)
-    {
-      absx <<= 1;
-      manbits++;
-      exp--;
-    }
-  }
-
-  if (exp + truncated > 15)
-  {
-    // absx was too big, force it to +/- infinity
-    exp = 31; // special infinity value
-    absx = 0;
-  }
-  else if (manbits)
-  {
-    // normal case, absx > 0
-    exp += 15; // bias the exponent
-  }
-
-  __half ret;
-  ret.x = (sign << 15) | ((unsigned)exp << 10) | (absx & ((1u<<10)-1));
-
-  return ret;
-}
 
 void GetDevice(){
 //================== Retrieve and set the default CUDA device
@@ -151,7 +98,7 @@ void allocCudaMemory()
 	cudaError_t malloc;
 	const char *erro;
 //====================================
-	malloc = cudaMalloc( ( void** ) &d_A, sizea * sizeof( __half ) );
+	malloc = cudaMalloc( ( void** ) &d_A, sizea * sizeof( half ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -160,7 +107,7 @@ void allocCudaMemory()
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
-	malloc = cudaMalloc( ( void** ) &d_B, sizea * sizeof( __half ) );
+	malloc = cudaMalloc( ( void** ) &d_B, sizea * sizeof( half ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -169,7 +116,7 @@ void allocCudaMemory()
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
-	malloc = cudaMalloc( ( void** ) &d_C, sizea * sizeof( __half ) );
+	malloc = cudaMalloc( ( void** ) &d_C, sizea * sizeof( half ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -184,7 +131,7 @@ void copyCudaMemory()
 	cudaError_t mcpy;
 	const char *erro;
 //====================================
-	mcpy = cudaMemset(d_C, 0, sizea * sizeof (__half));
+	mcpy = cudaMemset(d_C, 0, sizea * sizeof (half));
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -192,7 +139,7 @@ void copyCudaMemory()
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
-	mcpy = cudaMemcpy( d_A, A, sizeb * sizeof( __half ), cudaMemcpyHostToDevice ); // PUSH A
+	mcpy = cudaMemcpy( d_A, A, sizeb * sizeof( half ), cudaMemcpyHostToDevice ); // PUSH A
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -200,7 +147,7 @@ void copyCudaMemory()
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
-	mcpy = cudaMemcpy( d_B, B, sizeb * sizeof( __half ), cudaMemcpyHostToDevice ); // PUSH B
+	mcpy = cudaMemcpy( d_B, B, sizeb * sizeof( half ), cudaMemcpyHostToDevice ); // PUSH B
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -226,9 +173,9 @@ void ReadMatrixFromFile(){
 	}
 	for(i=0; i<k; i++)
 	{
-		fread (&A[ lda * i ], sizeof(__half)*k, 1, f_A);
-		fread (&B[ lda * i ], sizeof(__half)*k, 1, f_B);
-		fread (&GOLD[ lda * i ], sizeof(__half)*k, 1, f_GOLD);
+		fread (&A[ lda * i ], sizeof(half)*lda, 1, f_A);
+		fread (&B[ lda * i ], sizeof(half)*lda, 1, f_B);
+		fread (&GOLD[ lda * i ], sizeof(half)*lda, 1, f_GOLD);
 	}
 	if (verbose) printf("Done reading matrices in %.2fs\n", mysecond() - time);
 
@@ -238,14 +185,15 @@ void ReadMatrixFromFile(){
 
 	if (fault_injection)
 	{
-		A[3] = int2hfloat(6.0);
-		printf("!! Injected 6.0 on position A[3]\n");
+        half_float::half tempValue(6.5);
+		A[3] = *((half*)&tempValue);
+		printf("!! Injected 6.5 on position A[3]\n");
 	}
 }
 
 // __device__ int kerrors;
 
-// __global__ void GoldChkKernel (__half *gk, __half *ck, int n)//, int *kerrors)
+// __global__ void GoldChkKernel (half *gk, half *ck, int n)//, int *kerrors)
 // {
 // //================== HW Accelerated output validation
 // 	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
@@ -379,11 +327,11 @@ int main( int argc, char* argv[] )
 //====================================
 
 //================== Alloc HOST memory
-	A = ( __half* ) malloc( sizea * sizeof( __half ) );
-	B = ( __half* ) malloc( sizeb * sizeof( __half ) );
-	C = ( __half* ) malloc( sizeb * sizeof( __half ) );
+	A = ( half* ) malloc( sizea * sizeof( half ) );
+	B = ( half* ) malloc( sizeb * sizeof( half ) );
+	C = ( half* ) malloc( sizeb * sizeof( half ) );
 
-	GOLD = ( __half* ) malloc( sizec * sizeof( __half ) );
+	GOLD = ( half* ) malloc( sizec * sizeof( half ) );
 
 	if (!(A && B && C && GOLD)) {
 		printf("Failed on host malloc.\n");
@@ -415,7 +363,7 @@ int main( int argc, char* argv[] )
 		// Timer...
 		global_time = mysecond();
 
-		cudaMemset(d_C, 0, sizea * sizeof (__half));
+		cudaMemset(d_C, 0, sizea * sizeof (half));
 
 		kernel_time = mysecond();
 		#ifdef LOGS
@@ -446,7 +394,7 @@ int main( int argc, char* argv[] )
 		time = mysecond();
 
 		//================== Send GOLD to device, to perform HW output validation
-		mcpy = cudaMemcpy(d_A, GOLD, sizea * sizeof( __half ), cudaMemcpyHostToDevice );
+		mcpy = cudaMemcpy(d_A, GOLD, sizea * sizeof( half ), cudaMemcpyHostToDevice );
 		erro = cudaGetErrorString(mcpy);
 		if(strcmp(erro, "no error") != 0) {
 			printf("error mem load gold\n");
@@ -478,7 +426,7 @@ int main( int argc, char* argv[] )
 
 				printf(" kernel error: %d\n", kernel_errors);
 
-				mcpy = cudaMemcpy(A, d_C, sizec * sizeof( __half ), cudaMemcpyDeviceToHost);
+				mcpy = cudaMemcpy(A, d_C, sizec * sizeof( half ), cudaMemcpyDeviceToHost);
 				erro = cudaGetErrorString(mcpy);
 				if(strcmp(erro, "no error") != 0) {
 					#ifdef LOGS
@@ -487,7 +435,7 @@ int main( int argc, char* argv[] )
 					return 1;
 				} //mem allocate failure
 		*/
-		if (memcmp(A, GOLD, sizeof(__half) * k*k)) {
+		if (memcmp(A, GOLD, sizeof(half) * k*k)) {
 			char error_detail[150];
 			int host_errors = 0;
 
@@ -545,7 +493,7 @@ int main( int argc, char* argv[] )
 		//====================================
 
 		// //================== Send A back to the device
-		// mcpy = cudaMemcpy(d_A, A, sizea * sizeof( __half ), cudaMemcpyHostToDevice );
+		// mcpy = cudaMemcpy(d_A, A, sizea * sizeof( half ), cudaMemcpyHostToDevice );
 		// erro = cudaGetErrorString(mcpy);
 		// if(strcmp(erro, "no error") != 0) {
 		// 	printf("error mem load A\n");
@@ -567,7 +515,7 @@ int main( int argc, char* argv[] )
 				///////////
 			}
 
-		if (loop2 || !device_warmup) 
+		if (loop2 || !device_warmup)
 			if (verbose) printf("Iteration #%d time: %.3fs\n\n\n", loop2, mysecond() - global_time);
 		fflush(stdout);
 	}

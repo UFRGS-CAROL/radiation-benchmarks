@@ -24,7 +24,7 @@
 int k=0;
 int lda, ldb, ldc;
 int sizea, sizeb, sizec;
-__half *A, *B, *GOLD;
+half *A, *B, *GOLD;
 
 char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
 
@@ -32,123 +32,66 @@ void usage() {
     printf("Usage: generateMatrices -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
 }
 
-__global__ void generateKernel(__half *out, unsigned int matrixSize, unsigned int seed, unsigned elements_per_thread) {
-	curandState_t state;
-	curand_init(seed, threadIdx.y * BLOCK_SIZE + threadIdx.x, 0, &state);
-
-	for (register unsigned int i=0; i<elements_per_thread; i++) {
-		register unsigned int position = elements_per_thread * (threadIdx.y * BLOCK_SIZE + threadIdx.x) + i;
-		do {
-			float temp = curand_normal(&state) * MAX_HALF;
-			out[position] = __float2half(temp);
-		} while(__half2float(out[position].x) == 0 || isnan(__half2float(out[position].x)));
-	}
-}
-
 void generateInputMatrices()
 {
-	__half *h_A, *h_B;
-	__half *dev_A, *dev_B;
+	half *h_A, *h_B;
 	FILE *f_A, *f_B;
 
-	h_A = (__half*)malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half));
-	h_B = (__half*)malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half));
+    h_A = (half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*(DEFAULT_INPUT_SIZE+16));
+    h_B = (half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*(DEFAULT_INPUT_SIZE+16));
 
-	if (!h_B || !h_A) {
-		printf("Cant alloc host memory for input generation.\n");
-		printf("exit on line: %d", __LINE__); exit(-1);
-	}
+	srand(time(NULL));
 
-	//================== Set block and grid size for generateKernel kernel
-	dim3 bSize = dim3(BLOCK_SIZE, BLOCK_SIZE, 1);
-	int elements_per_thread = (pow(DEFAULT_INPUT_SIZE, 2) / pow(BLOCK_SIZE, 2));
-	printf("elements_per_thread=%d\n", elements_per_thread);
-	//====================================
+    half_float::half tempValue;
 
-	/* CUDA's random number library uses curandState_t to keep track of the seed value
-		we will store a random state for every thread  */
+    for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
+        for (int j=0; j<DEFAULT_INPUT_SIZE+16; j++) {
+            tempValue = half_float::half(rand() % (2*MAX_HALF) - MAX_HALF);
+            h_A[i * (DEFAULT_INPUT_SIZE+16) + j] = *((half*)&tempValue);
 
-	// printf("Alloc\n");
-	// curandState_t* state;
-
-	/* allocate space on the GPU for the random states */
-
-	// printf("Size: %ldMB", blocksize * blocksize * sizeof(curandState_t) / (1024*1024));
-
-	// checkCudaErrors( cudaMalloc((void**) &state, sizeof(curandState_t)) );
-	checkCudaErrors( cudaMalloc((void**) &dev_A, DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half)) );
-	checkCudaErrors( cudaMemset(dev_A, 0, DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half)) );
-
-// printf("InitRand\n");
-
-	// curandInitKernel<<<1, 1>>>(state, time(NULL));
-	// checkCudaErrors( cudaDeviceSynchronize() );
-
-// printf("Generate\n");
-	generateKernel<<<1, bSize>>>(dev_A, DEFAULT_INPUT_SIZE, time(NULL), elements_per_thread);
-	checkCudaErrors( cudaDeviceSynchronize() );
-
-// printf("Copy\n");
-	checkCudaErrors( cudaMemcpy(h_A, dev_A, DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half), cudaMemcpyDeviceToHost) );
-
-	cudaFree(dev_A);
-	// cudaFree(state);
-
-// printf("Alloc\n");
-	// checkCudaErrors( cudaMalloc((void**) &state, sizeof(curandState_t)) );
-	checkCudaErrors( cudaMalloc((void**) &dev_B, DEFAULT_INPUT_SIZE  * DEFAULT_INPUT_SIZE* sizeof(__half)) );
-	checkCudaErrors( cudaMemset(dev_B, 0, DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half)) );
-
-	// printf("Init Rand\n");
-
-	// curandInitKernel<<<1, 1>>>(state, time(NULL));
-	// cudaDeviceSynchronize();
-
-// printf("Generate\n");
-	generateKernel<<<1, bSize>>>(dev_B, DEFAULT_INPUT_SIZE, time(NULL), elements_per_thread);
-	cudaDeviceSynchronize();
-
-// printf("Copy\n");
-	checkCudaErrors( cudaMemcpy(h_B, dev_B, DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(__half), cudaMemcpyDeviceToHost) );
-
-	cudaFree(dev_B);
-	// cudaFree(state);
-
+            tempValue = half_float::half(rand() % (2*MAX_HALF) - MAX_HALF);
+            h_B[i * (DEFAULT_INPUT_SIZE+16) + j] = *((half*)&tempValue);
+        }
+    }
 
 	int numZeros;
 // printf("Write\n");
 	f_A = fopen(a_matrix_path, "wb");
 	f_B = fopen(b_matrix_path, "wb");
 
+    half_float::half val;
+
 	numZeros = 0;
-	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
-		if (h_A[i].x == 0) {
+	for (int i = 0; i<DEFAULT_INPUT_SIZE*(DEFAULT_INPUT_SIZE+16); i++) {
+        val=(float)*((half_float::half*)&(h_A[i]));
+		if (val == 0 || isnan(val) || isinf(val)) {
 			numZeros++;
 		}
 	}
-	printf("Number of zeros on A: %d\n", numZeros);
+	printf("Number of zeros/NaNs/INFs on A: %d\n", numZeros);
 
 	numZeros = 0;
-	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
-		if (h_B[i].x == 0) {
+	for (int i = 0; i<DEFAULT_INPUT_SIZE*(DEFAULT_INPUT_SIZE+16); i++) {
+        val=(float)*((half_float::half*)&(h_B[i]));
+		if (val == 0 || isnan(val) || isinf(val)) {
 			numZeros++;
 		}
 	}
-	printf("Number of zeros on B: %d\n", numZeros);
+	printf("Number of zeros/NaNs/INFs on B: %d\n", numZeros);
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		fwrite(&(h_A[i * DEFAULT_INPUT_SIZE]), sizeof(__half) * DEFAULT_INPUT_SIZE, 1, f_A);
+		fwrite(&(h_A[i * (DEFAULT_INPUT_SIZE+16)]), sizeof(half) * (DEFAULT_INPUT_SIZE+16), 1, f_A);
 	}
 
-	printf("Element 32 of matrix A: %f (raw __half: %hx)\n", (float)*((half_float::half*)&(h_A[32])), h_A[32].x);
+	printf("Element 32 of matrix A: %f (raw half: %hx)\n", (float)*((half_float::half*)&(h_A[32])), h_A[32].x);
 
-	printf("Element 50 of matrix B: %f (raw __half: %hx)\n", (float)*((half_float::half*)&(h_B[50])), h_B[50].x);
+	printf("Element 50 of matrix B: %f (raw half: %hx)\n", (float)*((half_float::half*)&(h_B[50])), h_B[50].x);
 
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		fwrite(&(h_B[i * DEFAULT_INPUT_SIZE]), sizeof(__half) * DEFAULT_INPUT_SIZE, 1, f_B);
+		fwrite(&(h_B[i * (DEFAULT_INPUT_SIZE+16)]), sizeof(half) * (DEFAULT_INPUT_SIZE+16), 1, f_B);
 	}
 	printf("Done\n");
 
@@ -175,8 +118,8 @@ void ReadMatrixFromFile(){
 	}
 	for(i=0; i<k; i++)
 	{
-		fread (&A[ lda * i ], sizeof(__half)*k, 1, f_A);
-		fread (&B[ lda * i ], sizeof(__half)*k, 1, f_B);
+		fread (&A[ lda * i ], sizeof(half)*lda, 1, f_A);
+		fread (&B[ lda * i ], sizeof(half)*lda, 1, f_B);
 	}
 printf("Done reading matrices\n");
 
@@ -218,8 +161,8 @@ void generateGoldMatrix()
 	////////////////////////////////////////////////////
 	/////////////CUBLAS GEMM VARS///////////////////////
     half_float::half oneValue(1.0);
-	const __half alpha = *((half*)&oneValue);
-	const __half beta = *((half*)&oneValue);
+	const half alpha = *((half*)&oneValue);
+	const half beta = *((half*)&oneValue);
 	cublasOperation_t transa = CUBLAS_OP_T;
 	cublasOperation_t transb = CUBLAS_OP_T;
 	////////////////////////////////////////////////////
@@ -227,43 +170,43 @@ void generateGoldMatrix()
 	////////////////////////////////////////////////////
 	//////////DEVICE VARS///////////////////////////////
 
-	__half *d_A;
-	__half *d_B;
-	__half *d_C;
+	half *d_A;
+	half *d_B;
+	half *d_C;
 	////////////////////////////////////////////////////
 
-	A = ( __half* ) malloc( sizea * sizeof( __half ) );
-	B = ( __half* ) malloc( sizeb * sizeof( __half ) );
-	GOLD = ( __half* ) malloc( sizec * sizeof( __half ) );
+	A = ( half* ) malloc( sizea * sizeof( half ) );
+	B = ( half* ) malloc( sizeb * sizeof( half ) );
+	GOLD = ( half* ) malloc( sizec * sizeof( half ) );
 
 	ReadMatrixFromFile();
   if (k <= 16) {
     printf("\nMatrix A: \n");
-    for (int i = 0; i<k*k; i++) {
+    for (int i = 0; i<k*lda; i++) {
       printf(" %.2e", (float)*((half_float::half*)&(A[i])));
       if ((i+1)%k == 0) printf("\n");
     }
     printf("\nMatrix B: \n");
-    for (int i = 0; i<k*k; i++) {
+    for (int i = 0; i<k*lda; i++) {
       printf(" %.2e", (float)*((half_float::half*)&(B[i])));
       if ((i+1)%k == 0) printf("\n");
     }
   }
 
-	checkCudaErrors( cudaMalloc( ( void** ) &d_A, sizea * sizeof( __half ) ));
+	checkCudaErrors( cudaMalloc( ( void** ) &d_A, sizea * sizeof( half ) ));
 
-	checkCudaErrors( cudaMalloc( ( void** ) &d_B, sizea * sizeof( __half ) ));
+	checkCudaErrors( cudaMalloc( ( void** ) &d_B, sizeb * sizeof( half ) ));
 
-	checkCudaErrors( cudaMalloc( ( void** ) &d_C, sizea * sizeof( __half ) ));
+	checkCudaErrors( cudaMalloc( ( void** ) &d_C, sizec * sizeof( half ) ));
 
 
-	checkCudaErrors( cudaMemset( d_C, 0, sizeb * sizeof( __half )) ); // ZERA C
+	checkCudaErrors( cudaMemset( d_C, 0, sizec * sizeof( half )) ); // ZERA C
 
-	checkCudaErrors( cudaMemcpy( d_A, A, sizeb * sizeof( __half ), cudaMemcpyHostToDevice ) ); // PUSH A
+	checkCudaErrors( cudaMemcpy( d_A, A, sizea * sizeof( half ), cudaMemcpyHostToDevice ) ); // PUSH A
 
-	checkCudaErrors( cudaMemcpy( d_B, B, sizeb * sizeof( __half ), cudaMemcpyHostToDevice ) ); // PUSH B
+	checkCudaErrors( cudaMemcpy( d_B, B, sizeb * sizeof( half ), cudaMemcpyHostToDevice ) ); // PUSH B
 
-	printf("cublasHgemm... k=%d transa=%c transb=%c lda=%d ldb=%d ldc=%d\n", k, transa, transb, lda, ldb, ldc);
+	printf("cublasHgemm... k=%d transa=%hx transb=%hx lda=%d ldb=%d ldc=%d\n", k, transa, transb, lda, ldb, ldc);
 	double time = mysecond();
 
 	cublasHandle_t cublasHandle;
@@ -290,7 +233,7 @@ void generateGoldMatrix()
     printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",k, outputpersec, gflops, gflops/1000000000);
 	///////////
 
-	checkCudaErrors( cudaMemcpy(GOLD, d_C, sizec * sizeof( __half ), cudaMemcpyDeviceToHost) );
+	checkCudaErrors( cudaMemcpy(GOLD, d_C, sizec * sizeof( half ), cudaMemcpyDeviceToHost) );
 
 	cudaFree( d_A );
 	cudaFree( d_B );
@@ -301,16 +244,19 @@ void generateGoldMatrix()
 
 	f_GOLD = fopen(gold_matrix_path, "wb");
 
+    half_float::half val;
+
 	int numZeros = 0;
-	for (int i = 0; i<k*k; i++) {
-		if (GOLD[i].x == 0) {
+	for (int i = 0; i<k*lda; i++) {
+        val=(float)*((half_float::half*)&(GOLD[i]));
+		if (val == 0 || isnan(val) || isinf(val)) {
 			numZeros++;
 		}
 	}
-	printf("Number of zeros on gold: %d\n", numZeros);
+	printf("Number of zeros/NaNs/INFs on gold: %d\n", numZeros);
 
   if (numZeros > 0 && k <= 16) {
-    for (int i = 0; i<k*k; i++) {
+    for (int i = 0; i<k*lda; i++) {
       printf(" %.2e",  (float)*((half_float::half*)&(GOLD[i])));
       if ((i+1)%k == 0) printf("\n");
     }
@@ -320,7 +266,7 @@ void generateGoldMatrix()
 
 	for(i=0; i<k; i++)
 	{
-		fwrite( &GOLD[i * lda], sizeof(__half)*k, 1, f_GOLD );
+		fwrite( &GOLD[i * lda], sizeof(half)*lda, 1, f_GOLD );
 	}
 
 	fclose(f_GOLD);
