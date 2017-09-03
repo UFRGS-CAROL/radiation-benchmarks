@@ -393,7 +393,11 @@ void generateInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu,
 
 	// input (distances)
 	if( (fp = fopen(input_distances, "wb" )) == 0 ) {
-		printf( "The file 'input_distances' was not opened\n" ); exit(EXIT_FAILURE);
+		printf( "The file 'input_distances' was not opened\n" );
+		#ifdef LOGS
+			log_error_detail("The file 'input_distances' was not opened"); end_log_file();
+		#endif
+	 	exit(EXIT_FAILURE);
 	}
 	*rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
@@ -423,7 +427,11 @@ void generateInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu,
 
 	// input (charge)
 	if( (fp = fopen(input_charges, "wb" )) == 0 ) {
-		printf( "The file 'input_charges' was not opened\n" ); exit(EXIT_FAILURE);
+		printf( "The file 'input_charges' was not opened\n" );
+		#ifdef LOGS
+			log_error_detail("The file 'input_charges' was not opened"); end_log_file();
+		#endif
+	 	exit(EXIT_FAILURE);
 	}
 
 	*qv_cpu = (half*)malloc(dim_cpu.space_mem2);
@@ -444,7 +452,11 @@ void readInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, cha
 
 	// input (distances)
 	if( (fp = fopen(input_distances, "rb" )) == 0 ) {
-		printf( "The file 'input_distances' was not opened\n" ); exit(EXIT_FAILURE);
+		printf( "The file 'input_distances' was not opened\n" );
+		#ifdef LOGS
+			log_error_detail("The file 'input_distances' was not opened"); end_log_file();
+		#endif
+	 	exit(EXIT_FAILURE);
 	}
 
 	*rv_cpu = (FOUR_VECTOR*)malloc(dim_cpu.space_mem);
@@ -456,11 +468,28 @@ void readInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, cha
 		exit(1);
 	}
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+		#ifdef DOUBLE_PRECISION
+		double tempValue;
+		half_float::half tempHalf;
+		return_value[0] = fread(&tempValue, 1, sizeof(double), fp);
+		tempHalf = half_float::half(tempValue);
+		(*rv_cpu)[i].v = *((half*)&tempHalf);
+		return_value[1] = fread(&tempValue, 1, sizeof(double), fp);
+		tempHalf = half_float::half(tempValue);
+		(*rv_cpu)[i].x = *((half*)&tempHalf);
+		return_value[2] = fread(&tempValue, 1, sizeof(double), fp);
+		tempHalf = half_float::half(tempValue);
+		(*rv_cpu)[i].y = *((half*)&tempHalf);
+		return_value[3] = fread(&tempValue, 1, sizeof(double), fp);
+		tempHalf = half_float::half(tempValue);
+		(*rv_cpu)[i].z = *((half*)&tempHalf);
+		#else
 		return_value[0] = fread(&((*rv_cpu)[i].v), 1, sizeof(half), fp);
 		return_value[1] = fread(&((*rv_cpu)[i].x), 1, sizeof(half), fp);
 		return_value[2] = fread(&((*rv_cpu)[i].y), 1, sizeof(half), fp);
 		return_value[3] = fread(&((*rv_cpu)[i].z), 1, sizeof(half), fp);
-		if ((double)return_value[0] == 0 || (double)return_value[1] == 0 || (double)return_value[2] == 0 || (double)return_value[3] == 0) {
+		#endif
+		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
 			printf("error reading rv_cpu from file\n");
 			#ifdef LOGS
 				log_error_detail("error reading rv_cpu from file"); end_log_file();
@@ -472,7 +501,11 @@ void readInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, cha
 
 	// input (charge)
 	if( (fp = fopen(input_charges, "rb" )) == 0 ) {
-		printf( "The file 'input_charges' was not opened\n" ); exit(EXIT_FAILURE);
+		printf( "The file 'input_charges' was not opened\n" );
+		#ifdef LOGS
+			log_error_detail("The file 'input_charges' was not opened"); end_log_file();
+		#endif
+	 	exit(EXIT_FAILURE);
 	}
 
 	*qv_cpu = (half*)malloc(dim_cpu.space_mem2);
@@ -484,7 +517,15 @@ void readInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, cha
 		exit(1);
 	}
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+		#ifdef DOUBLE_PRECISION
+		double tempValue;
+		half_float::half tempHalf;
+		return_value[0] = fread(&tempValue, 1, sizeof(double), fp);
+		tempHalf = half_float::half(tempValue);
+		(*qv_cpu)[i] = *((half*)&tempHalf);
+		#else
 		return_value[0] = fread(&((*qv_cpu)[i]), 1, sizeof(half), fp);
+		#endif
 		if (return_value[0] == 0) {
 			printf("error reading qv_cpu from file\n");
 			#ifdef LOGS
@@ -524,10 +565,27 @@ void readGold(dim_str dim_cpu, char *output_gold, FOUR_VECTOR **fv_cpu_GOLD)
 		exit(1);
 	}
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
+		#ifdef DOUBLE_PRECISION
+		double tempValue;
+		half_float::half tempHalf;
+		return_value[0] = fread(&tempValue, 1, sizeof(double), fp);
+		tempHalf = half_float::half(tempValue);
+		(*fv_cpu_GOLD)[i].v = *((half*)&tempHalf);
+		return_value[1] = fread(&tempValue, 1, sizeof(double), fp);
+		tempHalf = half_float::half(tempValue);
+		(*fv_cpu_GOLD)[i].x = *((half*)&tempHalf);
+		return_value[2] = fread(&tempValue, 1, sizeof(double), fp);
+		tempHalf = half_float::half(tempValue);
+		(*fv_cpu_GOLD)[i].y = *((half*)&tempHalf);
+		return_value[3] = fread(&tempValue, 1, sizeof(double), fp);
+		tempHalf = half_float::half(tempValue);
+		(*fv_cpu_GOLD)[i].z = *((half*)&tempHalf);
+		#else
 		return_value[0] = fread(&((*fv_cpu_GOLD)[i].v), 1, sizeof(half), fp);
 		return_value[1] = fread(&((*fv_cpu_GOLD)[i].x), 1, sizeof(half), fp);
 		return_value[2] = fread(&((*fv_cpu_GOLD)[i].y), 1, sizeof(half), fp);
 		return_value[3] = fread(&((*fv_cpu_GOLD)[i].z), 1, sizeof(half), fp);
+		#endif
 		if ((float)return_value[0] == 0 || (float)return_value[1] == 0 || (float)return_value[2] == 0 || (float)return_value[3] == 0) {
 			printf("error reading rv_cpu from file\n");
 			#ifdef LOGS

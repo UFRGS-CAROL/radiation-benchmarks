@@ -15,7 +15,7 @@ MATRIX_NAMES=output_gold_* input_distances_* input_charges_*
 ALL: lava
 
 lava: lava.cu
-	$(NVCC) $(NVCC_FLAGS) -DLOGS lava.cu -I$(LOGHELPER_INC) -I$(NVIDIA_INC) -L$(LOGHELPER_LIB) -L$(NVIDIA_LIB) -lLogHelper -Xcompiler " -fopenmp" -o lava
+	$(NVCC) $(NVCC_FLAGS) -DLOGS $(DOUBLE_PRECISION) lava.cu -I$(LOGHELPER_INC) -I$(NVIDIA_INC) -L$(LOGHELPER_LIB) -L$(NVIDIA_LIB) -lLogHelper -Xcompiler " -fopenmp" -o lava
 
 clean:
 	rm -f lava_generate lava $(MATRIX_NAMES)
