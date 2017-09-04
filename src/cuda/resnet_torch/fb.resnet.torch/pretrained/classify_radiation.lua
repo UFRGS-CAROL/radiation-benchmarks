@@ -251,7 +251,7 @@ function test_radiation(arg_size)
       local gold_indexes = gold_content[raw_name][2]
 
 
-      compare_and_log(true, gold_probs, gold_indexes, probs, indexes, raw_name, i)
+      compare_and_log(log, N, gold_probs, gold_indexes, probs, indexes, raw_name, i)
       print(string.format("Comparing took %.5f seconds", os.clock() - compare_time))
 
     end

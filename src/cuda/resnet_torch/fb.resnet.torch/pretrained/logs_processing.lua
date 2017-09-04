@@ -94,24 +94,23 @@ function load_gold(gold_path)
 end
 
 -- compare and log if log is activated
-function compare_and_log(log, gold_probs, gold_indexes, found_probs, found_indexes, img, iteration)
+function compare_and_log(log, tensor_size, gold_probs, gold_indexes, found_probs, found_indexes, img, iteration)
   local error_count = 0
-  --  local i = 0
-  for i, gp in pairs(gold_probs) do
-    print(i, gp)
+
+  for i=1,tensor_size do
+    local gp = gold_probs[i]
     local gi = gold_indexes[i]
     local fp = found_probs[i]
     local fi = found_indexes[i]
-    i = i + 1
     local diff_probs = math.abs(gp - fp)
     local diff_indexes = math.abs(gi - fi)
-
+    print(i)
     -- compare and log if it is greater than threashold
     if diff_probs > THRESHOLD or diff_indexes > THRESHOLD then
       local error_string = string.format("img: [%s] iteration: [%d] found_prob: [%f] gold_prob: [%f] found_index: [%d] gold_index: [%d]",
         img, iteration, fp, gp, fi, gi)
       if log then
-        lh.error_log_detail(error_string)
+        lh.log_error_detail(error_string)
       else
         print(error_string)
       end
@@ -121,7 +120,7 @@ function compare_and_log(log, gold_probs, gold_indexes, found_probs, found_index
   end
 
   if log then
-    lh.error_count(error_count)
+    lh.log_error_count(error_count)
   end
 
 end
