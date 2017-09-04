@@ -1,0 +1,16 @@
+
+#./classifi_radiation.lua [model] [radiation mode generate/rad_test] [txt dataset] [gold_file] [iterations -- ignored for gen]
+all: 
+	mkdir -p ~/radiation-benchmarks/data/resnet_torch
+
+generate:
+	./classify_radiation.lua resnet-200.t7 generate \
+			/home/carol/radiation-benchmarks/data/networks_img_list/fault_injection.txt \
+			/home/carol/radiation-benchmarks/data/resnet_torch/fault_injection_gold.csv \
+			1
+			
+test:
+	./classify_radiation.lua resnet-200.t7 rad_test \
+		/home/carol/radiation-benchmarks/data/networks_img_list/fault_injection.txt \
+		/home/carol/radiation-benchmarks/data/resnet_torch/fault_injection_gold.csv \
+		1
