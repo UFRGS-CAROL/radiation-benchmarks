@@ -1,3 +1,5 @@
+#!/home/carol/radiation-benchmarks/src/cuda/resnet_torch/torch/install/bin/th
+
 --
 --  Copyright (c) 2016, Manuel Araoz
 --  Copyright (c) 2016, Facebook, Inc.
