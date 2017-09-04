@@ -26,7 +26,9 @@ local imagenetLabel = require './imagenet'
 
 function parse_args()
   if #arg < 2 then
-    io.stderr:write('Usage: th classify.lua [MODEL] [FILE]...\n')
+    io.stderr:write('Usage for normal execution: th classify.lua [MODEL] [FILE]...\n')
+    io.stderr:write('Usage for radiation execution: th classifi_radiation.lua [model] \
+    [radiation mode gen/rad] [txt dataset] [gold_file] [iterations -- ignored for gen]\n')
     os.exit(1)
   end
   for _, f in ipairs(arg) do
@@ -86,7 +88,7 @@ function normal_execution()
 
     -- Get the output of the softmax
     local output = model:forward(batch:cuda()):squeeze()
-    print(output:size())
+
     -- Get the top 5 class indexes and probabilities
     local probs, indexes = output:topk(N, true, true)
     print('Classes for', arg[i])
@@ -98,6 +100,39 @@ function normal_execution()
   end
 
 end
+
+
+function generate_radiation_test()
+  local model, softMaxLayer, transform, meanstd = load_model()
+  local N = 10
+
+  for i=2,#arg do
+
+    -- load the image as a RGB float tensor with values 0..1
+    local img = image.load(arg[i], 3, 'float')
+    local name = arg[i]:match( "([^/]+)$" )
+
+    -- Scale, normalize, and crop the image
+    img = transform(img)
+
+    -- View as mini-batch of size 1
+    local batch = img:view(1, table.unpack(img:size():totable()))
+
+    -- Get the output of the softmax
+    local output = model:forward(batch:cuda()):squeeze()
+
+    -- Get the top 5 class indexes and probabilities
+    local probs, indexes = output:topk(N, true, true)
+    print('Classes for', arg[i])
+    for n=1,N do
+      print(probs[n], imagenetLabel[indexes[n]])
+    end
+    print('')
+
+  end
+
+end
+
 
 parse_args()
 normal_execution()
