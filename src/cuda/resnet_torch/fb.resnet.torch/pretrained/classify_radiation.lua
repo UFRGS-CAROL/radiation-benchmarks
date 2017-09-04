@@ -86,7 +86,7 @@ function normal_execution()
 
     -- Get the output of the softmax
     local output = model:forward(batch:cuda()):squeeze()
-    print(output:dim())
+    print(output:size())
     -- Get the top 5 class indexes and probabilities
     local probs, indexes = output:topk(N, true, true)
     print('Classes for', arg[i])
