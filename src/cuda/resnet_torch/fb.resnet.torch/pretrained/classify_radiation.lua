@@ -70,7 +70,7 @@ end
 
 function normal_execution()
   local model, softMaxLayer, transform, meanstd = load_model()
-  local N = 10000
+  local N = 10
 
   for i=2,#arg do
 
@@ -86,7 +86,7 @@ function normal_execution()
 
     -- Get the output of the softmax
     local output = model:forward(batch:cuda()):squeeze()
-
+    print(output)
     -- Get the top 5 class indexes and probabilities
     local probs, indexes = output:topk(N, true, true)
     print('Classes for', arg[i])
