@@ -108,12 +108,12 @@ function generate_radiation_test(arg_size)
   local model, softMaxLayer, transform, meanstd = load_model()
   local N = 10
 
-  for i=arg_size,#arg do
+--  for i=arg_size,#arg do
 
     -- load the image as a RGB float tensor with values 0..1
     -- [model] [radiation mode gen/rad] [txt dataset] [gold_file] [iterations -- ignored for gen]
-    local img = image.load(arg[i], 3, 'float')
-    local name = arg[i]:match( "([^/]+)$" )
+    local img = image.load(arg[2], 3, 'float')
+    local name = arg[2]:match( "([^/]+)$" )
       
 
     -- Scale, normalize, and crop the image
@@ -133,7 +133,7 @@ function generate_radiation_test(arg_size)
     end
     print('')
 
-  end
+--  end
 
 end
 
