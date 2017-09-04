@@ -16,7 +16,7 @@
 
 int k=0;
 int lda, ldb, ldc;
-int sizea, sizeb, sizec;	
+int sizea, sizeb, sizec;
 double *A, *B, *GOLD;
 
 char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
@@ -39,15 +39,15 @@ void generateInputMatrices()
 
 	for(i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		for(j=0; j<DEFAULT_INPUT_SIZE; j++){
+		for(j=0; j<DEFAULT_INPUT_SIZE+16; j++){
 			temp = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.0004e16))+4.1e16;
 			fwrite( &temp, sizeof(double), 1, f_A );
-		
+
 
 			temp = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.4e16))+4.1e16;
 			fwrite( &temp, sizeof(double), 1, f_B );
-			
-			
+
+
 		}
 	}
 
@@ -57,8 +57,8 @@ void generateInputMatrices()
 	return;
 }
 
-void ReadMatrixFromFile(){	
-	
+void ReadMatrixFromFile(){
+
 	int i;
 	FILE *f_A, *f_B;
 
@@ -71,8 +71,8 @@ void ReadMatrixFromFile(){
 	}
 	for(i=0; i<k; i++)
 	{
-		fread (&A[ lda * i ], sizeof(double)*k, 1, f_A);
-		fread (&B[ lda * i ], sizeof(double)*k, 1, f_B);
+		fread (&A[ lda * i ], sizeof(double)*lda, 1, f_A);
+		fread (&B[ lda * i ], sizeof(double)*lda, 1, f_B);
 	}
 printf("Done reading matrices\n");
 
@@ -94,7 +94,7 @@ void GetDevice(){
     int *ndevice; int dev = 0;
     ndevice = &dev;
     cudaGetDevice(ndevice);
-    
+
     cudaSetDevice(0);
         cudaGetDeviceProperties( &prop, 0 );
 	printf("\ndevice: %d %s\n", *ndevice, prop.name);
@@ -117,9 +117,9 @@ void generateGoldMatrix()
 	const double beta = 1.0;
 	char transa = 't', transb = 't';
 	////////////////////////////////////////////////////
-	
+
 	////////////////////////////////////////////////////
-	//////////DEVICE VARS///////////////////////////////	
+	//////////DEVICE VARS///////////////////////////////
 	cudaError_t cumalloc_err;
 	const char *cumalloc_err_str;
 
@@ -133,7 +133,7 @@ void generateGoldMatrix()
 	GOLD = ( double* ) malloc( sizec * sizeof( double ) );
 
 	GetDevice();
-	
+
 	ReadMatrixFromFile();
 
 	cumalloc_err = cudaMalloc( ( void** ) &d_A, sizea * sizeof( double ) );
@@ -274,11 +274,11 @@ int main (int argc, char** argv)
 	sizeb = ldb * k;
 	ldc = max( 1, k + 16 );
 	sizec = ldc * k;
-	
+
 	FILE *test_file;
 	test_file=fopen(a_matrix_path, "rb");
 	if (!test_file)
-	{ 
+	{
 		printf("Generating input matrices...\n");
 		generateInputMatrices();
 	}
