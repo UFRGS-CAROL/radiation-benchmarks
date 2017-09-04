@@ -69,7 +69,7 @@ function load_model()
 end
 
 function normal_execution()
-  load_model()
+  local model, softMaxLayer, transform, meanstd = load_model()
   local N = 10
 
   for i=2,#arg do
