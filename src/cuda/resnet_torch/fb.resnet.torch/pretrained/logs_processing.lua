@@ -114,9 +114,9 @@ function compare_and_log(log, tensor_size, gold_probs, gold_indexes, found_probs
       else
         print(error_string)
       end
+      error_count = error_count + 1
     end
 
-    error_count = error_count + 1
   end
 
   if log then
