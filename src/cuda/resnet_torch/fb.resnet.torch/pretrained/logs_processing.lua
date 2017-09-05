@@ -73,7 +73,7 @@ function load_gold(gold_path)
       local classes_size = tonumber(splited[3])
 
       -- read each probability
-      for i = 0, probs_size - 1 do
+      for i = 1, probs_size do
         line = gold_file:read()
         splited = split(line, ";")
         --probs[n];indexes
