@@ -29,7 +29,7 @@ if not os.path.isdir(data_path):
 	os.chmod(data_path, 0777);
 
 os.system("cd "+src_quicksort)
-
+os.system("make")
 os.system("sudo ./quicksort -size=1048576 -input=quicksort_input_134217728 -gold=quicksort_gold_1048576 -generate -iterations=1")
 os.system("sudo ./quicksort -size=33554432 -input=quicksort_input_134217728 -gold=quicksort_gold_33554432 -generate -iterations=1")
 os.system("sudo ./quicksort -size=67108864 -input=quicksort_input_134217728 -gold=quicksort_gold_67104464 -generate -iterations=1")
