@@ -19,7 +19,7 @@ MATRIX_NAMES=hgemm_*
 all: gemm gen
 
 gemm: cudaGEMM.cu
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -lLogHelper -lcublas $(NVCC_FLAGS) $(LOGS) cudaGEMM.cu -o $(RUN_EXEC)
+	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -lLogHelper -lcublas $(NVCC_FLAGS) -Xcompiler " -fopenmp" $(LOGS) cudaGEMM.cu -o $(RUN_EXEC)
 
 gen: generateMatrices.cu
 	$(NVCC) -I$(NVIDIA_INC) -L$(NVIDIA_LIB) $(NVCC_FLAGS) -lcublas generateMatrices.cu -o $(GEN_EXEC)

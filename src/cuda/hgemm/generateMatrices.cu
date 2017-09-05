@@ -22,7 +22,6 @@
 #define BLOCK_SIZE 32
 
 int k=0;
-int lda, ldb, ldc;
 int sizea, sizeb, sizec;
 half *A, *B, *GOLD;
 
@@ -46,10 +45,14 @@ void generateInputMatrices()
 
     for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
         for (int j=0; j<DEFAULT_INPUT_SIZE+16; j++) {
-            tempValue = half_float::half(rand() % (2*MAX_HALF) - MAX_HALF);
+            do {
+                tempValue = half_float::half(rand() % (2*MAX_HALF) - MAX_HALF);
+            } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
             h_A[i * (DEFAULT_INPUT_SIZE+16) + j] = *((half*)&tempValue);
 
-            tempValue = half_float::half(rand() % (2*MAX_HALF) - MAX_HALF);
+            do {
+                tempValue = half_float::half(rand() % (2*MAX_HALF) - MAX_HALF);
+            } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
             h_B[i * (DEFAULT_INPUT_SIZE+16) + j] = *((half*)&tempValue);
         }
     }
@@ -116,10 +119,14 @@ void ReadMatrixFromFile(){
 		printf("Error opening matrices A, B.\n");
 		printf("exit on line: %d", __LINE__); exit(-1);
 	}
+    size_t ret_value[2];
 	for(i=0; i<k; i++)
 	{
-		fread (&A[ lda * i ], sizeof(half)*lda, 1, f_A);
-		fread (&B[ lda * i ], sizeof(half)*lda, 1, f_B);
+		ret_value[0] = fread (&A[ k * i ], sizeof(half)*k, 1, f_A);
+		ret_value[1] = fread (&B[ k * i ], sizeof(half)*k, 1, f_B);
+        if (ret_value[0] != 1 || ret_value[1] != 1) {
+            printf("Bad input/gold formatting: %lu ; %lu .\n", ret_value[0], ret_value[1]);
+        }
 	}
 printf("Done reading matrices\n");
 
@@ -182,12 +189,12 @@ void generateGoldMatrix()
 	ReadMatrixFromFile();
   if (k <= 16) {
     printf("\nMatrix A: \n");
-    for (int i = 0; i<k*lda; i++) {
+    for (int i = 0; i<k*k; i++) {
       printf(" %.2e", (float)*((half_float::half*)&(A[i])));
       if ((i+1)%k == 0) printf("\n");
     }
     printf("\nMatrix B: \n");
-    for (int i = 0; i<k*lda; i++) {
+    for (int i = 0; i<k*k; i++) {
       printf(" %.2e", (float)*((half_float::half*)&(B[i])));
       if ((i+1)%k == 0) printf("\n");
     }
@@ -206,7 +213,7 @@ void generateGoldMatrix()
 
 	checkCudaErrors( cudaMemcpy( d_B, B, sizeb * sizeof( half ), cudaMemcpyHostToDevice ) ); // PUSH B
 
-	printf("cublasHgemm... k=%d transa=%hx transb=%hx lda=%d ldb=%d ldc=%d\n", k, transa, transb, lda, ldb, ldc);
+	printf("cublasHgemm... k=%d transa=%hx transb=%hx\n", k, transa, transb);
 	double time = mysecond();
 
 	cublasHandle_t cublasHandle;
@@ -215,10 +222,10 @@ void generateGoldMatrix()
 	checkCudaErrors( cublasHgemm(cublasHandle, transa, transb,
 			   k, k, k,
 			   &alpha,
-			   d_A, lda,
-			   d_B, ldb,
+			   d_A, k,
+			   d_B, k,
 			   &beta,
-			   d_C, ldc ) );
+			   d_C, k ) );
 	checkCudaErrors( cudaDeviceSynchronize() );
 
 	cublasDestroy(cublasHandle);
@@ -247,7 +254,7 @@ void generateGoldMatrix()
     half_float::half val;
 
 	int numZeros = 0;
-	for (int i = 0; i<k*lda; i++) {
+	for (int i = 0; i<k*k; i++) {
         val=(float)*((half_float::half*)&(GOLD[i]));
 		if (val == 0 || isnan(val) || isinf(val)) {
 			numZeros++;
@@ -256,7 +263,7 @@ void generateGoldMatrix()
 	printf("Number of zeros/NaNs/INFs on gold: %d\n", numZeros);
 
   if (numZeros > 0 && k <= 16) {
-    for (int i = 0; i<k*lda; i++) {
+    for (int i = 0; i<k*k; i++) {
       printf(" %.2e",  (float)*((half_float::half*)&(GOLD[i])));
       if ((i+1)%k == 0) printf("\n");
     }
@@ -266,7 +273,7 @@ void generateGoldMatrix()
 
 	for(i=0; i<k; i++)
 	{
-		fwrite( &GOLD[i * lda], sizeof(half)*lda, 1, f_GOLD );
+		fwrite( &GOLD[i * k], sizeof(half)*k, 1, f_GOLD );
 	}
 
 	fclose(f_GOLD);
@@ -335,12 +342,9 @@ int main (int argc, char** argv)
 
 	GetDevice();
 
-	lda = max( 1, k + 16 );
-	sizea = lda * k;
-	ldb = max( 1, k + 16 );
-	sizeb = ldb * k;
-	ldc = max( 1, k + 16 );
-	sizec = ldc * k;
+	sizea = k * k;
+	sizeb = k * k;
+	sizec = k * k;
 
 
 	FILE *test_file;
