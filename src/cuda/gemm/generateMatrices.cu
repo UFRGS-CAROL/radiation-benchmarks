@@ -15,7 +15,6 @@
 #define DEFAULT_INPUT_SIZE 8192
 
 int k=0;
-int lda, ldb, ldc;
 int sizea, sizeb, sizec;
 double *A, *B, *GOLD;
 
@@ -37,19 +36,28 @@ void generateInputMatrices()
 
 	srand ( time(NULL) );
 
+    int numZerosA = 0;
+    int numZerosB = 0;
 	for(i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
 		for(j=0; j<DEFAULT_INPUT_SIZE+16; j++){
 			temp = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.0004e16))+4.1e16;
 			fwrite( &temp, sizeof(double), 1, f_A );
-
+            if (temp == 0 || isnan(temp) || isinf(temp)) {
+                numZerosA++;
+            }
 
 			temp = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.4e16))+4.1e16;
 			fwrite( &temp, sizeof(double), 1, f_B );
+            if (temp == 0 || isnan(temp) || isinf(temp)) {
+                numZerosB++;
+            }
 
 
 		}
 	}
+	printf("Number of zeros/NaNs/INFs on A: %d\n", numZerosA);
+	printf("Number of zeros/NaNs/INFs on B: %d\n", numZerosB);
 
 	fclose(f_A);
 	fclose(f_B);
@@ -71,8 +79,8 @@ void ReadMatrixFromFile(){
 	}
 	for(i=0; i<k; i++)
 	{
-		fread (&A[ lda * i ], sizeof(double)*lda, 1, f_A);
-		fread (&B[ lda * i ], sizeof(double)*lda, 1, f_B);
+		fread (&A[ k * i ], sizeof(double)*k, 1, f_A);
+		fread (&B[ k * i ], sizeof(double)*k, 1, f_B);
 	}
 printf("Done reading matrices\n");
 
@@ -161,17 +169,17 @@ void generateGoldMatrix()
 	cumalloc_err_str = cudaGetErrorString(cumalloc_err);
 	if(strcmp(cumalloc_err_str, "no error") != 0) {exit(-3);}
 
-	printf("cublasDgemm... k=%d transa=%c transb=%c lda=%d ldb=%d ldc=%d\n", k, transa, transb, lda, ldb, ldc);
+	printf("cublasDgemm... k=%d transa=%c transb=%c\n", k, transa, transb);
 	double time = mysecond();
 
 
 	cublasDgemm( (cublasOperation_t)transa, (cublasOperation_t)transb,
 			   k, k, k,
 			   alpha,
-			   d_A, lda,
-			   d_B, ldb,
+			   d_A, k,
+			   d_B, k,
 			   beta,
-			   d_C, ldc );
+			   d_C, k );
 	cudaDeviceSynchronize();
 
 	time=mysecond()-time;
@@ -192,17 +200,24 @@ void generateGoldMatrix()
 	cudaFree( d_B );
 	cudaFree( d_C );
 
-	int i;
+	int i, j;
 	FILE *f_GOLD;
 
 	f_GOLD = fopen(gold_matrix_path, "wb");
 
 	//printf("-------------------------\n%.10f\n%.10f\n%.10f\n", GOLD[0], GOLD[1], GOLD[2]);
 
+    int numZeros = 0;
 	for(i=0; i<k; i++)
 	{
-		fwrite( &GOLD[i * lda], sizeof(double)*lda, 1, f_GOLD );
+		fwrite( &GOLD[i * k], sizeof(double)*k, 1, f_GOLD );
+        for(j=0; j<k; j++) {
+            if (isnan(GOLD[i*k + j]) || isinf(GOLD[i*k + j]) || GOLD[i*k + j]==0) {
+                numZeros++;
+            }
+        }
 	}
+	printf("Number of zeros/NaNs/INFs on GOLD: %d\n", numZeros);
 
 	fclose(f_GOLD);
 
@@ -268,12 +283,9 @@ int main (int argc, char** argv)
     }
 //====================================
 
-	lda = max( 1, k + 16 );
-	sizea = lda * k;
-	ldb = max( 1, k + 16 );
-	sizeb = ldb * k;
-	ldc = max( 1, k + 16 );
-	sizec = ldc * k;
+	sizea = k * k;
+	sizeb = k * k;
+	sizec = k * k;
 
 	FILE *test_file;
 	test_file=fopen(a_matrix_path, "rb");

@@ -55,7 +55,6 @@ const double alpha = 1.0;
 const double beta = 1.0;
 char transa = 't', transb = 't';
 int sizea, sizeb, sizec;
-int lda, ldb, ldc;
 
 void GetDevice(){
 //================== Retrieve and set the default CUDA device
@@ -163,11 +162,20 @@ void ReadMatrixFromFile(){
 #endif
 		exit(-3);
 	}
+    size_t ret_value[3];
 	for(i=0; i<k; i++)
 	{
-		fread (&A[ lda * i ], sizeof(double)*lda, 1, f_A);
-		fread (&B[ lda * i ], sizeof(double)*lda, 1, f_B);
-		fread (&GOLD[ lda * i ], sizeof(double)*lda, 1, f_GOLD);
+		ret_value[0] = fread (&A[ k * i ], sizeof(double)*k, 1, f_A);
+		ret_value[1] = fread (&B[ k * i ], sizeof(double)*k, 1, f_B);
+		ret_value[2] = fread (&GOLD[ k * i ], sizeof(double)*k, 1, f_GOLD);
+        if (ret_value[0] != 1 || ret_value[1] != 1 || ret_value[2] != 1) {
+            printf("Bad input/gold formatting: %lu ; %lu ; %lu .\n", ret_value[0], ret_value[1], ret_value[2]);
+    #ifdef LOGS
+    		log_error_detail("Bad input/gold formatting."); end_log_file();
+    #endif
+    		exit(-3);
+
+        }
 	}
 	if (verbose) printf("Done reading matrices in %.2fs\n", mysecond() - time);
 
@@ -307,12 +315,9 @@ int main( int argc, char* argv[] )
 //====================================
 
 //================== cublas GEMM parameters
-	lda = max( 1, k + 16 );
-	sizea = lda * k;
-	ldb = max( 1, k + 16 );
-	sizeb = ldb * k;
-	ldc = max( 1, k + 16 );
-	sizec = ldc * k;
+	sizea = k * k;
+	sizeb = k * k;
+	sizec = k * k;
 //====================================
 
 //================== Alloc HOST memory
@@ -354,10 +359,10 @@ if (loop2 || !device_warmup)
 		cublasDgemm( (cublasOperation_t)transa, (cublasOperation_t)transb,
 			   k, k, k,
 			   alpha,
-			   d_A, lda,
-			   d_B, ldb,
+			   d_A, k,
+			   d_B, k,
 			   beta,
-			   d_C, ldc );
+			   d_C, k );
 		cudaDeviceSynchronize();
 //====================================
 #ifdef LOGS
@@ -385,7 +390,7 @@ time = mysecond();
 //====================================
 
 //================== Device computation, output validation
-		GoldChkKernel<<<dimGrid,dimBlock>>>(d_A, d_C, ldc);
+		GoldChkKernel<<<dimGrid,dimBlock>>>(d_A, d_C, k);
 		cudaDeviceSynchronize();
 //====================================
 
@@ -420,18 +425,18 @@ if (loop2 || !device_warmup)
 			{
 				for(j=0; (j<k); j++)
 				{
-					if ((fabs((A[i+ldc*j]-GOLD[i+ldc*j])/A[i+ldc*j]) > 0.0000000001)||(fabs((A[i+ldc*j]-GOLD[i+ldc*j])/GOLD[i+ldc*j]) > 0.0000000001))
+					if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001))
 					#pragma omp critical
 					{
 
-						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + ldc * j], GOLD[i + ldc * j]);
+						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + k * j], GOLD[i + k * j]);
 						//printf("%s\n", error_detail);
 #ifdef LOGS
 						log_error_detail(error_detail);
 #endif
 						host_errors++;
 						//ea++;
-						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + ldc * j], GOLD[i + ldc * j], t_ea);
+						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
 
 					}
 				}
