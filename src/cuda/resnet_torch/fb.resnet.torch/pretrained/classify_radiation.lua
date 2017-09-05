@@ -245,7 +245,6 @@ function test_radiation(arg_size)
       -----------------------------------------------------------------
       print(string.format("Classifing took %.5f seconds", os.clock() - classifing_time))
       local compare_time = os.clock()
-      print(raw_name)
       local gold_probs = gold_content[raw_name][1]
       local gold_indexes = gold_content[raw_name][2]
 
