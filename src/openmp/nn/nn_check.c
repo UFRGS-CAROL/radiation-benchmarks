@@ -167,8 +167,8 @@ int main(int argc, char* argv[]) {
             if( !(neighbors[j].dist == OPEN) ) {
                 if(compare_neighbor(neighbors[j], neighbors_gold[j])) {
                     errors++;
-                    fprintf(stdout, "OUTP: %s --> %f\n", neighbors[j].entry, neighbors[j].dist);
-                    fprintf(stdout, "GOLD: %s --> %f\n", neighbors_gold[j].entry, neighbors_gold[j].dist);
+                    char error_detail[300];
+                    sprintf(error_detail," p: [%d], r_d: %1.16e, e_d: %1.16e, r_e: %s, e_e: %s", i, neighbors[j].dist, neighbors_gold[j].dist, neighbors[j].entry, neighbors_gold[j].entry);
 #ifdef LOGS
                     log_error_detail(error_detail);
 #endif
