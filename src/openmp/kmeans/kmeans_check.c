@@ -281,6 +281,10 @@ int main(int argc, char **argv) {
             printf("Errors: %d\n",errors);
             read_gold(nclusters, numAttributes, out_filename, cluster_centres_gold);
             /**************** Read input ***************/
+            if ((infile = fopen(filename, "r")) == NULL) {
+                fprintf(stderr, "Error: no such file (%s)\n", filename);
+                exit(1);
+            }
             for (i=1; i<numObjects; i++)
                 attributes[i] = attributes[i-1] + numAttributes;
             rewind(infile);
