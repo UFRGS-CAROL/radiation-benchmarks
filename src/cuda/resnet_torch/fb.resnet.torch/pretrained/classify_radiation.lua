@@ -56,7 +56,7 @@ function parse_args()
     i = i + 1
     iterations = arg[i]
     i = i + 1
-    if arg[i] ~= nil and (arg[i] == 1 or arg[i] == "true" or arg[i] == "True") then
+    if arg[i] ~= nil and (arg[i] == "1" or arg[i] == "true" or arg[i] == "True") then
       log = true
     end
   else
@@ -168,8 +168,6 @@ function generate_radiation_test(arg_size)
 
       print('Classes for', v, 'output lenght', N)
       save_gold(gold_file, v, probs, indexes, N)
-
-      print('')
 
     end
     gold_file:close()
