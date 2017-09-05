@@ -201,7 +201,7 @@ void generateGoldMatrix()
 
 	for(i=0; i<k; i++)
 	{
-		fwrite( &GOLD[i * lda], sizeof(double)*k, 1, f_GOLD );
+		fwrite( &GOLD[i * lda], sizeof(double)*lda, 1, f_GOLD );
 	}
 
 	fclose(f_GOLD);

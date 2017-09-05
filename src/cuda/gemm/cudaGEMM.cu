@@ -165,9 +165,9 @@ void ReadMatrixFromFile(){
 	}
 	for(i=0; i<k; i++)
 	{
-		fread (&A[ lda * i ], sizeof(double)*k, 1, f_A);
-		fread (&B[ lda * i ], sizeof(double)*k, 1, f_B);
-		fread (&GOLD[ lda * i ], sizeof(double)*k, 1, f_GOLD);
+		fread (&A[ lda * i ], sizeof(double)*lda, 1, f_A);
+		fread (&B[ lda * i ], sizeof(double)*lda, 1, f_B);
+		fread (&GOLD[ lda * i ], sizeof(double)*lda, 1, f_GOLD);
 	}
 	if (verbose) printf("Done reading matrices in %.2fs\n", mysecond() - time);
 
