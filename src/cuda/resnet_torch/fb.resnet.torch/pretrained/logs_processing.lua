@@ -104,7 +104,7 @@ function compare_and_log(log, tensor_size, gold_probs, gold_indexes, found_probs
     local fi = found_indexes[i]
     local diff_probs = math.abs(gp - fp)
     local diff_indexes = math.abs(gi - fi)
-    print(i)
+
     -- compare and log if it is greater than threashold
     if diff_probs > THRESHOLD or diff_indexes > THRESHOLD then
       local error_string = string.format("img: [%s] iteration: [%d] found_prob: [%f] gold_prob: [%f] found_index: [%d] gold_index: [%d]",
