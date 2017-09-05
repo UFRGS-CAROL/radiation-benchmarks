@@ -94,26 +94,32 @@ void allocCudaMemory()
 	malloc = cudaMalloc( ( void** ) &d_A, sizea * sizeof( double ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
-#ifdef LOGS
+      printf("error a\n");
+      #ifdef LOGS
 		log_error_detail("error a"); end_log_file();
-#endif
-		exit(EXIT_FAILURE);} //mem allocate failure
+      #endif
+		exit(EXIT_FAILURE);
+   } //mem allocate failure
 
 	malloc = cudaMalloc( ( void** ) &d_B, sizea * sizeof( double ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
-#ifdef LOGS
+      printf("error b\n");
+      #ifdef LOGS
 		log_error_detail("error b"); end_log_file();
-#endif
-		exit(EXIT_FAILURE);} //mem allocate failure
+      #endif
+		exit(EXIT_FAILURE);
+   } //mem allocate failure
 
 	malloc = cudaMalloc( ( void** ) &d_C, sizea * sizeof( double ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
-#ifdef LOGS
+      printf("error c\n");
+      #ifdef LOGS
 		log_error_detail("error c"); end_log_file();
-#endif
-		exit(EXIT_FAILURE);} //mem allocate failure
+      #endif
+		exit(EXIT_FAILURE);
+   } //mem allocate failure
 }
 
 void copyCudaMemory()
@@ -125,26 +131,32 @@ void copyCudaMemory()
 	mcpy = cudaMemset(d_C, 0, sizea * sizeof (double));
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
-#ifdef LOGS
+      printf("error load c\n");
+      #ifdef LOGS
 		log_error_detail("error gpu load c"); end_log_file();
-#endif
-		exit(EXIT_FAILURE);} //mem allocate failure
+      #endif
+		exit(EXIT_FAILURE);
+   } //mem allocate failure
 
 	mcpy = cudaMemcpy( d_A, A, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH A
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
-#ifdef LOGS
+      printf("error load b\n");
+      #ifdef LOGS
 		log_error_detail("error gpu load b"); end_log_file();
-#endif
-		exit(EXIT_FAILURE);} //mem allocate failure
+      #endif
+		exit(EXIT_FAILURE);
+   } //mem allocate failure
 
 	mcpy = cudaMemcpy( d_B, B, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH B
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
-#ifdef LOGS
+      printf("error load a\n");
+      #ifdef LOGS
 		log_error_detail("error gpu load b"); end_log_file();
-#endif
-		exit(EXIT_FAILURE);} //mem allocate failure
+      #endif
+		exit(EXIT_FAILURE);
+   } //mem allocate failure
 }
 
 void ReadMatrixFromFile(){
@@ -157,25 +169,24 @@ void ReadMatrixFromFile(){
 	if (!(f_A&&f_B&&f_GOLD))
 	{
 		printf ("Cant open matrices.\n");
-#ifdef LOGS
+      #ifdef LOGS
 		log_error_detail("Cant open matrices"); end_log_file();
-#endif
+      #endif
 		exit(-3);
 	}
-    size_t ret_value[3];
-	for(i=0; i<k; i++)
-	{
-		ret_value[0] = fread (&A[ k * i ], sizeof(double)*k, 1, f_A);
-		ret_value[1] = fread (&B[ k * i ], sizeof(double)*k, 1, f_B);
-		ret_value[2] = fread (&GOLD[ k * i ], sizeof(double)*k, 1, f_GOLD);
-        if (ret_value[0] != 1 || ret_value[1] != 1 || ret_value[2] != 1) {
-            printf("Bad input/gold formatting: %lu ; %lu ; %lu .\n", ret_value[0], ret_value[1], ret_value[2]);
-    #ifdef LOGS
-    		log_error_detail("Bad input/gold formatting."); end_log_file();
-    #endif
-    		exit(-3);
-
-        }
+   size_t ret_value[3];
+   for(i=0; i<k; i++)
+   {
+      ret_value[0] = fread (&A[ k * i ], sizeof(double)*k, 1, f_A);
+      ret_value[1] = fread (&B[ k * i ], sizeof(double)*k, 1, f_B);
+      ret_value[2] = fread (&GOLD[ k * i ], sizeof(double)*k, 1, f_GOLD);
+      if (ret_value[0] != 1 || ret_value[1] != 1 || ret_value[2] != 1) {
+         printf("Bad input/gold formatting: %lu ; %lu ; %lu .\n", ret_value[0], ret_value[1], ret_value[2]);
+         #ifdef LOGS
+   		log_error_detail("Bad input/gold formatting."); end_log_file();
+         #endif
+   		exit(-3);
+      }
 	}
 	if (verbose) printf("Done reading matrices in %.2fs\n", mysecond() - time);
 
@@ -190,17 +201,17 @@ void ReadMatrixFromFile(){
 	}
 }
 
-__device__ int kerrors;
-
-__global__ void GoldChkKernel (double *gk, double *ck, int n)//, int *kerrors)
-{
-//================== HW Accelerated output validation
-	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-	if ((fabs((gk[ty*n+tx]-ck[ty*n+tx])/gk[ty*n+tx]) > 0.0000000001)||(fabs((gk[ty*n+tx]-ck[ty*n+tx])/ck[ty*n+tx]) > 0.0000000001))
-		atomicAdd(&kerrors, 1);
-
-}
+// __device__ int kerrors;
+//
+// __global__ void GoldChkKernel (double *gk, double *ck, int n)//, int *kerrors)
+// {
+// //================== HW Accelerated output validation
+// 	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+// 	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+// 	if ((fabs((gk[ty*n+tx]-ck[ty*n+tx])/gk[ty*n+tx]) > 0.0000000001)||(fabs((gk[ty*n+tx]-ck[ty*n+tx])/ck[ty*n+tx]) > 0.0000000001))
+// 		atomicAdd(&kerrors, 1);
+//
+// }
 
 void usage() {
     printf("Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
@@ -343,18 +354,18 @@ int main( int argc, char* argv[] )
 	for(loop2=0; loop2<iterations; loop2++)
 	{//================== Global test loop
 
-if (!loop2 && device_warmup) printf("First iteration: device warmup. Please wait...\n");
+      if (!loop2 && device_warmup) printf("First iteration: device warmup. Please wait...\n");
 
-// Timer...
-global_time = mysecond();
+      // Timer...
+      global_time = mysecond();
 
-cudaMemset(d_C, 0, sizea * sizeof (double));
+      cudaMemset(d_C, 0, sizea * sizeof (double));
 
-kernel_time = mysecond();
-#ifdef LOGS
-if (loop2 || !device_warmup)
-	start_iteration();
-#endif
+      kernel_time = mysecond();
+      #ifdef LOGS
+      if (loop2 || !device_warmup)
+      	start_iteration();
+      #endif
 //================== Device computation, GEMM
 		cublasDgemm( (cublasOperation_t)transa, (cublasOperation_t)transb,
 			   k, k, k,
@@ -365,137 +376,141 @@ if (loop2 || !device_warmup)
 			   d_C, k );
 		cudaDeviceSynchronize();
 //====================================
-#ifdef LOGS
-if (loop2 || !device_warmup)
-		end_iteration();
-#endif
-kernel_time = mysecond() - kernel_time;
+      #ifdef LOGS
+      if (loop2 || !device_warmup)
+          end_iteration();
+      #endif
+      kernel_time = mysecond() - kernel_time;
 
-if (loop2 || !device_warmup)
-		if (verbose) printf("Device kernel time for iteration %d: %.3fs\n", loop2, kernel_time);
+      if ((loop2 || !device_warmup) && verbose)
+         printf("Device kernel time for iteration %d: %.3fs\n", loop2, kernel_time);
 
-// Timer...
-time = mysecond();
-
-//================== Send GOLD to device, to perform HW output validation
-		mcpy = cudaMemcpy(d_A, GOLD, sizea * sizeof( double ), cudaMemcpyHostToDevice );
-		erro = cudaGetErrorString(mcpy);
-		if(strcmp(erro, "no error") != 0) {
-			printf("error mem load gold\n");
-#ifdef LOGS
-			log_error_detail("error mem load gold"); end_log_file();
-#endif
-			return 1;} //mem allocate failure
-		cudaMemcpyToSymbol(kerrors, &zero, sizeof(int));
-//====================================
-
-//================== Device computation, output validation
-		GoldChkKernel<<<dimGrid,dimBlock>>>(d_A, d_C, k);
-		cudaDeviceSynchronize();
-//====================================
-
-//================== Retrieve output mismatchs
-		kernel_errors=0;
-		cudaMemcpyFromSymbol(&kernel_errors, kerrors, sizeof(unsigned int));
-//====================================
-
-if (loop2 || !device_warmup)
-		if (verbose) printf("Device gold check kernel time for iteration %d: %.3fs\n", loop2, mysecond() - time);
+//         // Timer...
+//         time = mysecond();
+//
+// //================== Send GOLD to device, to perform HW output validation
+// 		mcpy = cudaMemcpy(d_A, GOLD, sizea * sizeof( double ), cudaMemcpyHostToDevice );
+// 		erro = cudaGetErrorString(mcpy);
+// 		if(strcmp(erro, "no error") != 0) {
+// 			printf("error mem load gold\n");
+//             #ifdef LOGS
+//                 log_error_detail("error mem load gold"); end_log_file();
+//             #endif
+// 			return 1;
+//         } //mem allocate failure
+// 		cudaMemcpyToSymbol(kerrors, &zero, sizeof(int));
+// //====================================
+//
+// //================== Device computation, output validation
+// 		GoldChkKernel<<<dimGrid,dimBlock>>>(d_A, d_C, k);
+// 		cudaDeviceSynchronize();
+// //====================================
+//
+// //================== Retrieve output mismatchs
+// 		kernel_errors=0;
+// 		cudaMemcpyFromSymbol(&kernel_errors, kerrors, sizeof(unsigned int));
+// //====================================
+//
+//       if (loop2 || !device_warmup)
+//          if (verbose) printf("Device gold check kernel time for iteration %d: %.3fs\n", loop2, mysecond() - time);
 
 //================== If there are errors, check on host (increased reliability)
 
-if (loop2 || !device_warmup)
-		if (kernel_errors!=0)
-		{
+      if (loop2 || !device_warmup) {
+   		mcpy = cudaMemcpy(A, d_C, sizec * sizeof( double ), cudaMemcpyDeviceToHost );
+   		erro = cudaGetErrorString(mcpy);
+         if(strcmp(erro, "no error") != 0) {
+            printf("error mem load gold to host\n");
+            #ifdef LOGS
+               log_error_detail("error mem load gold to host"); end_log_file();
+            #endif
+            return 1;
+         } //mem allocate failure
+   		if (memcmp(A, GOLD, sizeof(double) * k*k)) {
+            char error_detail[150];
+            int host_errors = 0;
 
-			printf(" kernel error: %d\n", kernel_errors);
+            // Console feedback
+            printf("!");
 
-			mcpy = cudaMemcpy(A, d_C, sizec * sizeof( double ), cudaMemcpyDeviceToHost);
-			erro = cudaGetErrorString(mcpy);
-			if(strcmp(erro, "no error") != 0) {
-#ifdef LOGS
-				log_error_detail("error mem down c"); end_log_file();
-#endif
-			return 1;} //mem allocate failure
-			char error_detail[150];
-			int host_errors = 0;
+            #pragma omp parallel for
+            for(i=0; (i<k); i++)
+            {
+               for(j=0; (j<k); j++)
+               {
+                  if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001))
+                  #pragma omp critical
+                  {
 
-			#pragma omp parallel for
-			for(i=0; (i<k); i++)
-			{
-				for(j=0; (j<k); j++)
-				{
-					if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001))
-					#pragma omp critical
-					{
+                     snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + k * j], GOLD[i + k * j]);
+                     //printf("%s\n", error_detail);
+                     #ifdef LOGS
+                     log_error_detail(error_detail);
+                     #endif
+                     host_errors++;
+                     //ea++;
+                     //fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
 
-						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + k * j], GOLD[i + k * j]);
-						//printf("%s\n", error_detail);
-#ifdef LOGS
-						log_error_detail(error_detail);
-#endif
-						host_errors++;
-						//ea++;
-						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
+                  }
+               }
+            }
+            printf("!");
 
-					}
-				}
-			}
-
-			#ifdef LOGS
-					log_error_count(host_errors);
-			#endif
+            #ifdef LOGS
+            log_error_count(host_errors);
+            #endif
 //================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
-			cudaFree( d_A );
-			cudaFree( d_B );
-			cudaFree( d_C );
+            cudaFree( d_A );
+            cudaFree( d_B );
+            cudaFree( d_C );
 //====================================
-			ReadMatrixFromFile();
+            ReadMatrixFromFile();
 //================== Init DEVICE memory
-			allocCudaMemory();
-			copyCudaMemory();
+            allocCudaMemory();
+            copyCudaMemory();
 //====================================
-		}
+         }
+      }
 //====================================
 
 //================== Console hearthbeat
-		/*if(kernel_errors > 0 || (loop2 % 10 == 0))
-		{
-			printf("test number: %d\n", loop2);
-			printf(" kernel time: %f\n", kernel_time);
-		}
-		else
-		{*/
-			printf(".");
-			fflush(stdout);
-		//}
+         /*if(kernel_errors > 0 || (loop2 % 10 == 0))
+         {
+         printf("test number: %d\n", loop2);
+         printf(" kernel time: %f\n", kernel_time);
+      }
+      else
+      {*/
+      printf(".");
+      fflush(stdout);
+      //}
 //====================================
 
-//================== Send A back to the device
-		mcpy = cudaMemcpy(d_A, A, sizea * sizeof( double ), cudaMemcpyHostToDevice );
-		erro = cudaGetErrorString(mcpy);
-		if(strcmp(erro, "no error") != 0) {
-			printf("error mem load A\n");
-#ifdef LOGS
-			log_error_detail("error mem load A"); end_log_file();
-#endif
-			return 1;} //mem allocate failure
-//===================================
+// //================== Send A back to the device
+//       mcpy = cudaMemcpy(d_A, A, sizea * sizeof( double ), cudaMemcpyHostToDevice );
+//       erro = cudaGetErrorString(mcpy);
+//       if(strcmp(erro, "no error") != 0) {
+//          printf("error mem load A\n");
+//          #ifdef LOGS
+//          log_error_detail("error mem load A"); end_log_file();
+//          #endif
+//          return 1;
+//       } //mem allocate failure
+// //===================================
 
-if (loop2 || !device_warmup)
-		if (verbose)
-		{
-			/////////// PERF
-			double flops = 2.0*(double)k*k*k;
-			double gflops = flops / kernel_time;
-			double outputpersec = (double)k*k/kernel_time;
-			printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",k, outputpersec, gflops, gflops/1000000000);
-			///////////
-		}
+      if ((loop2 || !device_warmup) && (verbose)) {
+         /////////// PERF
+         double flops = 2.0*(double)k*k*k;
+         double gflops = flops / kernel_time;
+         double outputpersec = (double)k*k/kernel_time;
+         printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",k, outputpersec, gflops, gflops/1000000000);
+         ///////////
+      }
 
-if (loop2 || !device_warmup)
-		if (verbose) printf("Iteration #%d time: %.3fs\n\n\n", loop2, mysecond() - global_time);
-	}
+      if ((loop2 || !device_warmup) && (verbose)) {
+         printf("Iteration #%d time: %.3fs\n\n\n", loop2, mysecond() - global_time);
+      }
+   }
 
 //================== Release device memory
 	cudaFree( d_A );
