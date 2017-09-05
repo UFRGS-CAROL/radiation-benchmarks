@@ -303,6 +303,9 @@ int main(int argc, char **argv) {
 
     }
 
+#ifdef LOGS
+    end_log_file();
+#endif
 
 
     free(attributes);
