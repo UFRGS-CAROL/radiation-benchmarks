@@ -56,7 +56,7 @@ function parse_args()
     i = i + 1
     iterations = arg[i]
     i = i + 1
-    if arg[i] ~= nil and (arg[i] == "1" or arg[i] == "true" or arg[i] == "True") then
+    if arg[i] ~= nil and (arg[i] == "1" or string.lower(arg[i]) == "true" or string.lower(arg[i]) == "log") then
       log = true
     end
   else
