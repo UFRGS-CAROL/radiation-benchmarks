@@ -32,7 +32,6 @@ def main(board):
         sys.exit(1)
 
     data_path = installDir + "data/resnet_torch"
-    bin_path = installDir + "bin"
     src_resnet = installDir + "src/cuda/resnet_torch/fb.resnet.torch/pretrained"
 
     if not os.path.isdir(data_path):
@@ -51,7 +50,7 @@ def main(board):
         weights = data_path + '/' + WEIGHTS[0]
 
         gen = [None] * 6
-        gen[0] = ['sudo ', bin_path + "/classify_radiation.lua "]
+        gen[0] = ['sudo ', src_resnet + "/classify_radiation.lua "]
         gen[1] = [weights]
         gen[2] = [' generate ']
         gen[3] = [set]
