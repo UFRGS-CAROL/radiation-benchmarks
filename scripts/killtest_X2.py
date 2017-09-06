@@ -22,34 +22,42 @@ from datetime import datetime
 # When the list finish executing, it start to execute from the beginning
 commandList = [
 ##darknet
-#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
-#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 1  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.abft.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
-#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 1  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
-#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
-#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 1  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.abft.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
-#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 1  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
 
 ##py-faster
-##py-faster
-#["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold.caltech.1K.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
-#["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold.voc.2012.1K.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
+["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.10.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/py_faster_gold.caltech.10.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
+["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/urban.street.10.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/py_faster_gold.urban.street.10.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
+["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.10.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/py_faster_gold.voc.2012.10.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
 
-##hog
 
 ##gemm double
-["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=1024 -input_a=/home/carol/radiation-benchmarks/data/dgemmdgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_1024.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
-["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=2048 -input_a=/home/carol/radiation-benchmarks/data/dgemmdgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_2048.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
-["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=8192 -input_a=/home/carol/radiation-benchmarks/data/dgemmdgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_8192.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=1024 -input_a=/home/carol/radiation-benchmarks/data/dgemm/dgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_1024.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=2048 -input_a=/home/carol/radiation-benchmarks/data/dgemm/dgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_2048.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=4096 -input_a=/home/carol/radiation-benchmarks/data/dgemm/dgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_4096.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
 
 ## gemm half
-["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=1024 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_1024.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
-["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=2048 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_2048.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
-["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=8192 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_8192.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=1024 -input_a=/home/carol/radiation-benchmarks/data/hgemm/hgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_1024.matrix -iterations=10000000" , 0.016, "cudaHGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=2048 -input_a=/home/carol/radiation-benchmarks/data/hgemm/hgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_2048.matrix -iterations=10000000" , 0.016, "cudaHGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=8192 -input_a=/home/carol/radiation-benchmarks/data/hgemm/hgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_8192.matrix -iterations=10000000" , 0.016, "cudaHGEMM"],
+
+#hotspot float
+["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=1000 -streams=1 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_float_1024_1000 -iterations=10000000" , 0.016, "hotspot"],
+["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=1000 -streams=2 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_float_1024_1000 -iterations=10000000" , 0.016, "hotspot"],
+["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=1000 -streams=4 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_float_1024_1000 -iterations=10000000" , 0.016, "hotspot"],
+
+#hotspot half
+["sudo /home/carol/radiation-benchmarks/bin/hhotspot -size=1024 -sim_time=1000 -streams=1 -temp_file=/home/carol/radiation-benchmarks/data/hhotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hhotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hhotspot/gold_half_1024_1000 -iterations=10000000" , 0.016, "hhotspot"],
+["sudo /home/carol/radiation-benchmarks/bin/hhotspot -size=1024 -sim_time=1000 -streams=2 -temp_file=/home/carol/radiation-benchmarks/data/hhotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hhotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hhotspot/gold_half_1024_1000 -iterations=10000000" , 0.016, "hhotspot"],
+["sudo /home/carol/radiation-benchmarks/bin/hhotspot -size=1024 -sim_time=1000 -streams=4 -temp_file=/home/carol/radiation-benchmarks/data/hhotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hhotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hhotspot/gold_half_1024_1000 -iterations=10000000" , 0.016, "hhotspot"],
+
+#lava double
+["sudo /home/carol/radiation-benchmarks/bin/lava -boxes=10 -input_distances=/home/carol/radiation-benchmarks/data/lava/input_distances_double_10 -input_charges=/home/carol/radiation-benchmarks/data/lava/input_charges_double_10 -output_gold=/home/carol/radiation-benchmarks/data/lava/gold_double_10 -iterations=10000000 -streams=1" , 0.016, "lava"],
+["sudo /home/carol/radiation-benchmarks/bin/lava -boxes=15 -input_distances=/home/carol/radiation-benchmarks/data/lava/input_distances_double_15 -input_charges=/home/carol/radiation-benchmarks/data/lava/input_charges_double_15 -output_gold=/home/carol/radiation-benchmarks/data/lava/gold_double_15 -iterations=10000000 -streams=1" , 0.016, "lava"],
+
+#lava half
+["sudo /home/carol/radiation-benchmarks/bin/hlava -boxes=10 -input_distances=/home/carol/radiation-benchmarks/data/hlava/input_distances_half_10 -input_charges=/home/carol/radiation-benchmarks/data/hlava/input_charges_half_10 -output_gold=/home/carol/radiation-benchmarks/data/hlava/gold_half_10 -iterations=10000000 -streams=1" , 0.016, "hlava"],
+["sudo /home/carol/radiation-benchmarks/bin/hlava -boxes=15 -input_distances=/home/carol/radiation-benchmarks/data/hlava/input_distances_half_15 -input_charges=/home/carol/radiation-benchmarks/data/hlava/input_charges_half_15 -output_gold=/home/carol/radiation-benchmarks/data/hlava/gold_half_15 -iterations=10000000 -streams=1" , 0.016, "hlava"],
 
 
-##hog hardened ecc on
-
-##hog hardened ecc off
 ]
 
 # Command used to kill application
@@ -171,6 +179,7 @@ def selectCommand():
 
 
 def execCommand(command):
+	print command
 	try:
 		updateTimestamp()
 		if re.match(".*&\s*$", command):
