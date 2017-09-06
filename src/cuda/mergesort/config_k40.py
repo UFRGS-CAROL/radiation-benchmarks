@@ -39,10 +39,10 @@ os.system("mv mergesort_* "+data_path);
 os.system("mv ./mergesort "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_mergesort_cuda_K40", 'w')
-print >>fp, "sudo "+bin_path+"/mergesort -size=1048576 -input="+data_path+"/mergesort_input_134217728 -gold="+data_path+"/mergesort_gold_1048576 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/mergesort -size=33554432 -input="+data_path+"/mergesort_input_134217728 -gold="+data_path+"/mergesort_gold_33554432 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/mergesort -size=67108864 -input="+data_path+"/mergesort_input_134217728 -gold="+data_path+"/mergesort_gold_67108864 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/mergesort -size=134217728 -input="+data_path+"/mergesort_input_134217728 -gold="+data_path+"/mergesort_gold_134217728 -iterations=10000000"
+print >>fp, "[\"" + "sudo "+bin_path+"/mergesort -size=1048576 -input="+data_path+"/mergesort_input_134217728 -gold="+data_path+"/mergesort_gold_1048576 -iterations=10000000"     + "\" , 0.016, \"mergesort\"],"
+print >>fp, "[\"" + "sudo "+bin_path+"/mergesort -size=33554432 -input="+data_path+"/mergesort_input_134217728 -gold="+data_path+"/mergesort_gold_33554432 -iterations=10000000"   + "\" , 0.016, \"mergesort\"],"
+print >>fp, "[\"" + "sudo "+bin_path+"/mergesort -size=67108864 -input="+data_path+"/mergesort_input_134217728 -gold="+data_path+"/mergesort_gold_67108864 -iterations=10000000"   + "\" , 0.016, \"mergesort\"],"
+print >>fp, "[\"" + "sudo "+bin_path+"/mergesort -size=134217728 -input="+data_path+"/mergesort_input_134217728 -gold="+data_path+"/mergesort_gold_134217728 -iterations=10000000" + "\" , 0.016, \"mergesort\"],"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_mergesort_cuda\n"
 

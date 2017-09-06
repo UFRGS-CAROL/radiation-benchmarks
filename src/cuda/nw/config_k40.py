@@ -40,9 +40,9 @@ os.system("mv ./nw ./nw_generate "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_nw_cuda_K40", 'w')
 
-print >>fp, "sudo "+bin_path+"/nw 4096 10 "+data_path+"/input_4096 "+data_path+"/gold_4096 1000000"
-print >>fp, "sudo "+bin_path+"/nw 8192 10 "+data_path+"/input_8192 "+data_path+"/gold_8192 1000000"
-print >>fp, "sudo "+bin_path+"/nw 16384 10 "+data_path+"/input_16384 "+data_path+"/gold_16384 1000000"
+print >>fp, "[\"" + "sudo "+bin_path+"/nw 4096 10 "+data_path+"/input_4096 "+data_path+"/gold_4096 1000000" + "\" , 0.016, \"nw\"],"
+print >>fp, "[\"" + "sudo "+bin_path+"/nw 8192 10 "+data_path+"/input_8192 "+data_path+"/gold_8192 1000000" + "\" , 0.016, \"nw\"],"
+print >>fp, "[\"" + "sudo "+bin_path+"/nw 16384 10 "+data_path+"/input_16384 "+data_path+"/gold_16384 1000000" + "\" , 0.016, \"nw\"],"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_nw_cuda\n"
 

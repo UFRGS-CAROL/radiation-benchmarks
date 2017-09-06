@@ -39,10 +39,10 @@ os.system("mv quicksort_* "+data_path);
 os.system("mv ./quicksort "+bin_path)
 
 fp = open(installDir+"scripts/how_to_run_quicksort_cuda_K40", 'w')
-print >>fp, "sudo "+bin_path+"/quicksort -size=1048576 -input="+data_path+"/quicksort_input_134217728 -gold="+data_path+"/quicksort_gold_1048576 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/quicksort -size=33554432 -input="+data_path+"/quicksort_input_134217728 -gold="+data_path+"/quicksort_gold_33554432 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/quicksort -size=67108864 -input="+data_path+"/quicksort_input_134217728 -gold="+data_path+"/quicksort_gold_67108864 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/quicksort -size=134217728 -input="+data_path+"/quicksort_input_134217728 -gold="+data_path+"/quicksort_gold_134217728 -iterations=10000000"
+print >>fp, "[\"" + "sudo "+bin_path+"/quicksort -size=1048576 -input="+data_path+"/quicksort_input_134217728 -gold="+data_path+"/quicksort_gold_1048576 -iterations=10000000"     + "\" , 0.016, \"quicksort\"],"
+print >>fp, "[\"" + "sudo "+bin_path+"/quicksort -size=33554432 -input="+data_path+"/quicksort_input_134217728 -gold="+data_path+"/quicksort_gold_33554432 -iterations=10000000"   + "\" , 0.016, \"quicksort\"],"
+print >>fp, "[\"" + "sudo "+bin_path+"/quicksort -size=67108864 -input="+data_path+"/quicksort_input_134217728 -gold="+data_path+"/quicksort_gold_67108864 -iterations=10000000"   + "\" , 0.016, \"quicksort\"],"
+print >>fp, "[\"" + "sudo "+bin_path+"/quicksort -size=134217728 -input="+data_path+"/quicksort_input_134217728 -gold="+data_path+"/quicksort_gold_134217728 -iterations=10000000" + "\" , 0.016, \"quicksort\"],"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_quicksort_cuda\n"
 
