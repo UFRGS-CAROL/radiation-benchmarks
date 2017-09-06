@@ -30,6 +30,9 @@ if not os.path.isdir(data_path):
 
 os.system("cd "+src_nw)
 
+os.system("make clean")
+os.system("make logs=1")
+
 os.system("sudo ./nw_generate 4096 10")
 os.system("sudo ./nw_generate 8192 10")
 os.system("sudo ./nw_generate 16384 10")

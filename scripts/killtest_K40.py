@@ -61,8 +61,14 @@ commandList = [
 
 
 #["sudo  /home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/classify_radiation.lua  /home/carol/radiation-benchmarks/data/resnet_torch/resnet-200.t7  rad_test  /home/carol/radiation-benchmarks/data/networks_img_list//caltech.pedestrians.1K.txt /home/carol/radiation-benchmarks/data/resnet_torch/gold.caltech.1K.csv 1000 log" , 0.016, "luajit"],
-["sudo  /home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/classify_radiation.lua  /home/carol/radiation-benchmarks/data/resnet_torch/resnet-200.t7  rad_test  /home/carol/radiation-benchmarks/data/networks_img_list//urban.street.1.1K.txt /home/carol/radiation-benchmarks/data/resnet_torch/gold.urban.street.1.1K.csv 1000 log" , 0.016, "luajit"],
+#["sudo  /home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/classify_radiation.lua  /home/carol/radiation-benchmarks/data/resnet_torch/resnet-200.t7  rad_test  /home/carol/radiation-benchmarks/data/networks_img_list//urban.street.1.1K.txt /home/carol/radiation-benchmarks/data/resnet_torch/gold.urban.street.1.1K.csv 1000 log" , 0.016, "luajit"],
 #["sudo  /home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/classify_radiation.lua  /home/carol/radiation-benchmarks/data/resnet_torch/resnet-200.t7  rad_test  /home/carol/radiation-benchmarks/data/networks_img_list//voc.2012.1K.txt /home/carol/radiation-benchmarks/data/resnet_torch/gold.voc.2012.1K.csv 1000 log" , 0.016, "luajit"],
+
+##nw
+["sudo /home/carol/radiation-benchmarks/bin/nw 4096 10 /home/carol/radiation-benchmarks/data/nw/input_4096 /home/carol/radiation-benchmarks/data/nw/gold_4096 1000000" , 0.016, "nw"],
+["sudo /home/carol/radiation-benchmarks/bin/nw 8192 10 /home/carol/radiation-benchmarks/data/nw/input_8192 /home/carol/radiation-benchmarks/data/nw/gold_8192 1000000" , 0.016, "nw"],
+["sudo /home/carol/radiation-benchmarks/bin/nw 16384 10 /home/carol/radiation-benchmarks/data/nw/input_16384 /home/carol/radiation-benchmarks/data/nw/gold_16384 1000000" , 0.016, "nw"],
+
 
 ]
 
