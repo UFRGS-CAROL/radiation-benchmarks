@@ -30,8 +30,6 @@ if not os.path.isdir(data_path):
 
 os.system("cd "+src_hgemm)
 
-os.system("make clean && make")
-
 os.system("sudo ./generateMatricesHalf -size=1024 -input_a=hgemmA_8192.matrix -input_b=hgemmB_8192.matrix -gold=hgemmGOLD_1024.matrix")
 os.system("sudo ./generateMatricesHalf -size=2048 -input_a=hgemmA_8192.matrix -input_b=hgemmB_8192.matrix -gold=hgemmGOLD_2048.matrix")
 os.system("sudo ./generateMatricesHalf -size=8192 -input_a=hgemmA_8192.matrix -input_b=hgemmB_8192.matrix -gold=hgemmGOLD_8192.matrix")

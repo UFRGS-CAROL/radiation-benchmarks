@@ -30,8 +30,6 @@ if not os.path.isdir(data_path):
 
 os.system("cd "+src_dgemm)
 
-os.system("make clean && make")
-
 os.system("sudo ./generateMatricesDouble -size=1024 -input_a=dgemmA_8192.matrix -input_b=dgemmB_8192.matrix -gold=dgemmGOLD_1024.matrix")
 os.system("sudo ./generateMatricesDouble -size=2048 -input_a=dgemmA_8192.matrix -input_b=dgemmB_8192.matrix -gold=dgemmGOLD_2048.matrix")
 os.system("sudo ./generateMatriceDoubles -size=8192 -input_a=dgemmA_8192.matrix -input_b=dgemmB_8192.matrix -gold=dgemmGOLD_8192.matrix")
