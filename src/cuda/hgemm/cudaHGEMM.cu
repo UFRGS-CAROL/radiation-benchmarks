@@ -206,7 +206,7 @@ bool badass_memcmp(half *gold, half *found, unsigned long n){
 	double time = mysecond();
 #pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
    for (i=0; i < n; i++)
-     result = result + (float)*((half_float::half*)&(gold[i])) - (float)*((half_float::half*)&(found[i]));
+     result = result + (gold[i].x - found[i].x);
 
     //  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
 	if (fabs(result) > 0.0000000001)
