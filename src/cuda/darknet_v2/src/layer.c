@@ -95,7 +95,7 @@ void free_layer(layer l)
 #endif
 }
 
-double weight_sumL1(network net){
+/*double weight_sumL1(network net){
   int i;
   double weight_sum = 0;
 
@@ -106,9 +106,9 @@ double weight_sumL1(network net){
       weight_sum += l.weights[j];
     }
   }
-}
+}*/
 
-double squared_weight_sumL1(network net){
+/*double squared_weight_sumL1(network net){
   int i;
   double squared_weight_sum = 0;
 
@@ -120,4 +120,4 @@ double squared_weight_sumL1(network net){
       squared_weight_sum += weight * weight;
     }
   }
-}
+}*/
