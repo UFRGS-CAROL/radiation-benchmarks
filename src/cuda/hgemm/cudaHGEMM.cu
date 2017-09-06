@@ -199,18 +199,17 @@ void ReadMatrixFromFile(){
 }
 
 bool badass_memcmp(half *gold, half *found, unsigned long n){
-    // float result = 0.0;
-    int i;
-    // unsigned long  chunk = ceil(float(n) / float(omp_get_max_threads()));
-    // printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
-    bool flag = 0;
-    double time = mysecond();
-    #pragma omp parallel for
-    for (i=0; i < n; i++)
-         if (gold[i].x != found[i].x) flag = 1;
+	double result = 0.0;
+	int i;
+	unsigned long  chunk = ceil(float(n) / float(omp_get_max_threads()));
+	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
+	double time = mysecond();
+#pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
+   for (i=0; i < n; i++)
+     result = result + (gold[i].x - found[i].x);
 
     //  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
-	if (flag == 1)
+	if (fabs(result) > 0.0000000001)
 		return true;
 	return false;
 }
@@ -475,17 +474,17 @@ int main( int argc, char* argv[] )
 
         //if (kernel_errors != 0) {
         if (loop2 || !device_warmup) {
+            mcpy = cudaMemcpy(A, d_C, sizec * sizeof( half ), cudaMemcpyDeviceToHost );
+            erro = cudaGetErrorString(mcpy);
+            if(strcmp(erro, "no error") != 0) {
+                printf("error mem load gold to host\n");
+                #ifdef LOGS
+                    log_error_detail("error mem load gold to host"); end_log_file();
+                #endif
+                return 1;
+            } //mem allocate failure
+            //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
             if (badass_memcmp(GOLD, A, k * k)){
-                mcpy = cudaMemcpy(A, d_C, sizec * sizeof( half ), cudaMemcpyDeviceToHost );
-                erro = cudaGetErrorString(mcpy);
-                if(strcmp(erro, "no error") != 0) {
-                    printf("error mem load gold to host\n");
-                    #ifdef LOGS
-                        log_error_detail("error mem load gold to host"); end_log_file();
-                    #endif
-                    return 1;
-                } //mem allocate failure
-                //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
     			char error_detail[150];
     			int host_errors = 0;
 
