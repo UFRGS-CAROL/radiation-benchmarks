@@ -285,8 +285,8 @@ struct layer{
 
 void free_layer(layer);
 
-double weight_sumL1(network net);
+//double weight_sumL1(network net);
 
-double squared_weight_sumL1(network net);
+//double squared_weight_sumL1(network net);
 
 #endif
