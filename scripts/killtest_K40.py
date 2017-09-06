@@ -65,9 +65,21 @@ commandList = [
 #["sudo  /home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/classify_radiation.lua  /home/carol/radiation-benchmarks/data/resnet_torch/resnet-200.t7  rad_test  /home/carol/radiation-benchmarks/data/networks_img_list//voc.2012.1K.txt /home/carol/radiation-benchmarks/data/resnet_torch/gold.voc.2012.1K.csv 1000 log" , 0.016, "luajit"],
 
 ##nw
-["sudo /home/carol/radiation-benchmarks/bin/nw 4096 10 /home/carol/radiation-benchmarks/data/nw/input_4096 /home/carol/radiation-benchmarks/data/nw/gold_4096 1000000" , 0.016, "nw"],
-["sudo /home/carol/radiation-benchmarks/bin/nw 8192 10 /home/carol/radiation-benchmarks/data/nw/input_8192 /home/carol/radiation-benchmarks/data/nw/gold_8192 1000000" , 0.016, "nw"],
-["sudo /home/carol/radiation-benchmarks/bin/nw 16384 10 /home/carol/radiation-benchmarks/data/nw/input_16384 /home/carol/radiation-benchmarks/data/nw/gold_16384 1000000" , 0.016, "nw"],
+#["sudo /home/carol/radiation-benchmarks/bin/nw 4096 10 /home/carol/radiation-benchmarks/data/nw/input_4096 /home/carol/radiation-benchmarks/data/nw/gold_4096 1000000" , 0.016, "nw"],
+#["sudo /home/carol/radiation-benchmarks/bin/nw 8192 10 /home/carol/radiation-benchmarks/data/nw/input_8192 /home/carol/radiation-benchmarks/data/nw/gold_8192 1000000" , 0.016, "nw"],
+#["sudo /home/carol/radiation-benchmarks/bin/nw 16384 10 /home/carol/radiation-benchmarks/data/nw/input_16384 /home/carol/radiation-benchmarks/data/nw/gold_16384 1000000" , 0.016, "nw"],
+
+##quicksort
+#["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=1048576 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_1048576 -iterations=10000000" , 0.016, "quicksort"],
+#["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=33554432 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_33554432 -iterations=10000000" , 0.016, "quicksort"],
+#["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=67108864 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_67108864 -iterations=10000000" , 0.016, "quicksort"],
+#["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=134217728 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_134217728 -iterations=10000000" , 0.016, "quicksort"],
+
+##mergesort
+["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=1048576 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_1048576 -iterations=10000000" , 0.016, "mergesort"],
+["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=33554432 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_33554432 -iterations=10000000" , 0.016, "mergesort"],
+["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=67108864 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_67108864 -iterations=10000000" , 0.016, "mergesort"],
+["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=134217728 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_134217728 -iterations=10000000" , 0.016, "mergesort"],
 
 
 ]
