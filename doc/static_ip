@@ -1,0 +1,20 @@
+* CentOS 7
+  - Edit interface file, usually /etc/sysconfig/network-scripts/ifcfg-enp9s0, to the following configs:
+	TYPE=Ethernet
+	BOOTPROTO=dhcp
+	DEFROUTE=yes
+	IPV4_FAILURE_FATAL=no
+	IPV6INIT=yes
+	IPV6_AUTOCONF=yes
+	IPV6_DEFROUTE=yes
+	IPV6_FAILURE_FATAL=no
+	NAME=enp9s0
+	UUID=e5f90757-fb5f-42bc-b718-76e3c99363b2
+	DEVICE=enp9s0
+	ONBOOT=yes
+	PEERDNS=yes
+	PEERROUTES=yes
+	IPV6_PEERDNS=yes
+	IPV6_PEERROUTES=yes
+	IPV6_PRIVACY=no
+
