@@ -210,8 +210,8 @@ bool badass_memcmp(half *gold, half *found, unsigned long n){
 
     //  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
 	if (fabs(result) > 0.0000000001)
-		return false;
-	return true;
+		return true;
+	return false;
 }
 
 // __device__ int kerrors;
