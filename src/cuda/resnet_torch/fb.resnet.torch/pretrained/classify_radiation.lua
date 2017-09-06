@@ -256,14 +256,14 @@ function test_radiation(arg_size)
       local probs, indexes = output:topk(N, true, true)
 
       -----------------------------------------------------------------
-      print(string.format("Classifing took %.5f seconds", os.clock() - classifing_time))
+      print(string.format("Classifing took %.5f seconds, big it: %d small it: %d", os.clock() - classifing_time, i, k))
       local compare_time = os.clock()
       local gold_probs = gold_content[raw_name][1]
       local gold_indexes = gold_content[raw_name][2]
 
 
-      compare_and_log(log, N, gold_probs, gold_indexes, probs, indexes, raw_name, i)
-      print(string.format("Comparing took %.5f seconds", os.clock() - compare_time))
+      local errors = compare_and_log(log, N, gold_probs, gold_indexes, probs, indexes, raw_name, i)
+      print(string.format("Comparing took %.5f seconds, with %d errors", os.clock() - compare_time, errors))
 
     end
   end
@@ -282,6 +282,6 @@ elseif rad_mode =="generate" then
 elseif rad_mode == "rad_test" then
   test_radiation(#arg)
 end
-  
-  
-  
+
+
+

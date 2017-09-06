@@ -122,7 +122,7 @@ function compare_and_log(log, tensor_size, gold_probs, gold_indexes, found_probs
   if log then
     lh.log_error_count(error_count)
   end
-
+  return error_count
 end
 
 -- see if the file exists
