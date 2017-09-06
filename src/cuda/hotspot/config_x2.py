@@ -32,6 +32,9 @@ if not os.path.isdir(bin_path):
 	os.chmod(bin_path, 0777);
 
 os.system("cd "+src_hotspot)
+os.system("cp temp_* "+data_path);
+os.system("cp power_* "+data_path);
+
 os.system("sudo ./hotspot -size=1024 -generate -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file=gold_float_1024_1000 -sim_time=1000 -iterations=1")
 
 os.system("sudo chmod 777 gold_* ");
