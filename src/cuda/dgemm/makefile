@@ -26,3 +26,11 @@ gen: generateMatricesDouble.cu
 
 clean:
 	rm -rf $(RUN_EXEC) $(GEN_EXEC) $(MATRIX_NAMES)
+
+
+generate:
+	./generateMatricesDouble -size=1024 -input_a=dgemmA_8192.matrix -input_b=dgemmB_8192.matrix -gold=dgemmGOLD_1024.matrix
+
+test:
+	./cudaDGEMM -size=1024 -input_a=dgemmA_8192.matrix -input_b=dgemmB_8192.matrix -gold=dgemmGOLD_1024.matrix -iterations=10 -verbose
+

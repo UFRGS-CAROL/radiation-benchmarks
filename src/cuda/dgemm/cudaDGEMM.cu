@@ -201,6 +201,22 @@ void ReadMatrixFromFile(){
 	}
 }
 
+bool badass_memcmp(double *gold, double *found, unsigned long n){
+	double result = 0.0;
+	int i;
+	unsigned long  chunk = n / omp_get_max_threads();
+	printf("max threads %d chunk %d\n", omp_get_max_threads(), chunk);
+	double time = mysecond();
+#pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)  
+   for (i=0; i < n; i++)
+     result = result + (gold[i] - found[i]);
+		
+	printf("comparing took %lf seconds\n", mysecond() - time);
+	if (result > 0.01)
+		return false;
+	return true;
+}
+
 // __device__ int kerrors;
 //
 // __global__ void GoldChkKernel (double *gk, double *ck, int n)//, int *kerrors)
@@ -426,7 +442,8 @@ int main( int argc, char* argv[] )
             #endif
             return 1;
          } //mem allocate failure
-   		if (memcmp(A, GOLD, sizeof(double) * k*k)) {
+   		//~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
+        if (badass_memcmp(GOLD, A, k * k)){
             char error_detail[150];
             int host_errors = 0;
 
