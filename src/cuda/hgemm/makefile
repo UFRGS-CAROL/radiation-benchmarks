@@ -13,7 +13,7 @@ SOURCES_GEN=generateMatricesHalf.cu
 RUN_EXEC=cudaHGEMM
 GEN_EXEC=generateMatricesHalf
 
-MATRIX_NAMES=hgemm_*
+MATRIX_NAMES=hgemm*
 
 
 all: gemm gen

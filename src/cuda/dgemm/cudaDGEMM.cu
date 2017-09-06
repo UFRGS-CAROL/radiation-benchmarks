@@ -205,14 +205,14 @@ bool badass_memcmp(double *gold, double *found, unsigned long n){
 	double result = 0.0;
 	int i;
 	unsigned long  chunk = n / omp_get_max_threads();
-	printf("max threads %d chunk %d\n", omp_get_max_threads(), chunk);
+	//printf("max threads %d chunk %d\n", omp_get_max_threads(), chunk);
 	double time = mysecond();
-#pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)  
+#pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
    for (i=0; i < n; i++)
      result = result + (gold[i] - found[i]);
-		
-	printf("comparing took %lf seconds\n", mysecond() - time);
-	if (result > 0.01)
+
+	//printf("comparing took %lf seconds\n", mysecond() - time);
+	if (fabs(result) > 0.0000000001)
 		return false;
 	return true;
 }

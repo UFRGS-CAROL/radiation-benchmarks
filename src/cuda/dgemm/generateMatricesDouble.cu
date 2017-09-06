@@ -38,6 +38,7 @@ void generateInputMatrices()
 
     int numZerosA = 0;
     int numZerosB = 0;
+    #pragma omp parallel for
 	for(i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
 		for(j=0; j<DEFAULT_INPUT_SIZE+16; j++){

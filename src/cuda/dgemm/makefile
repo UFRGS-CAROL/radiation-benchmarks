@@ -13,7 +13,7 @@ SOURCES_GEN=generateMatricesDouble.cu
 RUN_EXEC=cudaDGEMM
 GEN_EXEC=generateMatricesDouble
 
-MATRIX_NAMES=dgemm_*
+MATRIX_NAMES=dgemm*
 
 
 all: gemm gen
@@ -33,4 +33,3 @@ generate:
 
 test:
 	./cudaDGEMM -size=1024 -input_a=dgemmA_8192.matrix -input_b=dgemmB_8192.matrix -gold=dgemmGOLD_1024.matrix -iterations=10 -verbose
-
