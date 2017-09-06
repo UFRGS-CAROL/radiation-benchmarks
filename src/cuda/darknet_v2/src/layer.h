@@ -179,7 +179,7 @@ struct layer{
 
     float * m;
     float * v;
-    
+
     float * bias_m;
     float * bias_v;
     float * scale_m;
@@ -284,5 +284,9 @@ struct layer{
 };
 
 void free_layer(layer);
+
+double weight_sumL1(network net);
+
+double squared_weight_sumL1(network net);
 
 #endif

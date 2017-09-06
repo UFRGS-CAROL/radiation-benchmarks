@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+//insert sum of weights somewhere here
+
 static void increment_layer(layer *l, int steps)
 {
     int num = l->outputs*l->batch*steps;

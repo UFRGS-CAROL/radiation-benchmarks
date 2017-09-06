@@ -17,7 +17,8 @@
 #include "helper_cuda.h"
 
 #define DEFAULT_INPUT_SIZE 8192
-#define MAX_HALF 65504
+#define MAX_HALF 65503
+#define MAX_HVALUE (float)(sqrt(MAX_HALF / DEFAULT_INPUT_SIZE))
 
 #define BLOCK_SIZE 32
 
@@ -36,28 +37,32 @@ void generateInputMatrices()
 	half *h_A, *h_B;
 	FILE *f_A, *f_B;
 
-    h_A = (half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*(DEFAULT_INPUT_SIZE+16));
-    h_B = (half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*(DEFAULT_INPUT_SIZE+16));
+    h_A = (half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE);
+    h_B = (half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE);
+    printf("Each input matrix size: %.4fGB\n", (float)sizeof(half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE / (1024*1024*1024));
+    printf("Max value: %f Min: %f\n", MAX_HVALUE, -MAX_HVALUE);
 
 	srand(time(NULL));
 
     half_float::half tempValue;
 
     for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
-        for (int j=0; j<DEFAULT_INPUT_SIZE+16; j++) {
+        for (int j=0; j<DEFAULT_INPUT_SIZE; j++) {
             do {
-                tempValue = half_float::half(rand() % (2*MAX_HALF) - MAX_HALF);
+                tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
             } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
-            h_A[i * (DEFAULT_INPUT_SIZE+16) + j] = *((half*)&tempValue);
+            h_A[i * DEFAULT_INPUT_SIZE + j] = *((half*)&tempValue);
 
             do {
-                tempValue = half_float::half(rand() % (2*MAX_HALF) - MAX_HALF);
+                tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
             } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
-            h_B[i * (DEFAULT_INPUT_SIZE+16) + j] = *((half*)&tempValue);
+            h_B[i * DEFAULT_INPUT_SIZE + j] = *((half*)&tempValue);
         }
     }
 
 	int numZeros;
+    int numNans;
+    int numInfs;
 // printf("Write\n");
 	f_A = fopen(a_matrix_path, "wb");
 	f_B = fopen(b_matrix_path, "wb");
@@ -65,26 +70,30 @@ void generateInputMatrices()
     half_float::half val;
 
 	numZeros = 0;
-	for (int i = 0; i<DEFAULT_INPUT_SIZE*(DEFAULT_INPUT_SIZE+16); i++) {
+    numNans = 0;
+    numInfs = 0;
+	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
         val=(float)*((half_float::half*)&(h_A[i]));
-		if (val == 0 || isnan(val) || isinf(val)) {
-			numZeros++;
-		}
+		if (val == 0) numZeros++;
+        if (isnan(val)) numNans++;
+        if (isinf(val)) numInfs++;
 	}
-	printf("Number of zeros/NaNs/INFs on A: %d\n", numZeros);
+	printf("Number of zeros/NaNs/INFs on matrix A: %d/%d/%d\n", numZeros, numNans, numInfs);
 
 	numZeros = 0;
-	for (int i = 0; i<DEFAULT_INPUT_SIZE*(DEFAULT_INPUT_SIZE+16); i++) {
+    numNans = 0;
+    numInfs = 0;
+	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
         val=(float)*((half_float::half*)&(h_B[i]));
-		if (val == 0 || isnan(val) || isinf(val)) {
-			numZeros++;
-		}
+		if (val == 0) numZeros++;
+        if (isnan(val)) numNans++;
+        if (isinf(val)) numInfs++;
 	}
-	printf("Number of zeros/NaNs/INFs on B: %d\n", numZeros);
+	printf("Number of zeros/NaNs/INFs on matrix B: %d/%d/%d\n", numZeros, numNans, numInfs);
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		fwrite(&(h_A[i * (DEFAULT_INPUT_SIZE+16)]), sizeof(half) * (DEFAULT_INPUT_SIZE+16), 1, f_A);
+		fwrite(&(h_A[i * DEFAULT_INPUT_SIZE]), sizeof(half) * DEFAULT_INPUT_SIZE, 1, f_A);
 	}
 
 	printf("Element 32 of matrix A: %f (raw half: %hx)\n", (float)*((half_float::half*)&(h_A[32])), h_A[32].x);
@@ -94,7 +103,7 @@ void generateInputMatrices()
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		fwrite(&(h_B[i * (DEFAULT_INPUT_SIZE+16)]), sizeof(half) * (DEFAULT_INPUT_SIZE+16), 1, f_B);
+		fwrite(&(h_B[i * DEFAULT_INPUT_SIZE]), sizeof(half) * DEFAULT_INPUT_SIZE, 1, f_B);
 	}
 	printf("Done\n");
 
@@ -254,13 +263,15 @@ void generateGoldMatrix()
     half_float::half val;
 
 	int numZeros = 0;
+    int numNans = 0;
+    int numInfs = 0;
 	for (int i = 0; i<k*k; i++) {
         val=(float)*((half_float::half*)&(GOLD[i]));
-		if (val == 0 || isnan(val) || isinf(val)) {
-			numZeros++;
-		}
+		if (val == 0) numZeros++;
+        if (isnan(val)) numNans++;
+        if (isinf(val)) numInfs++;
 	}
-	printf("Number of zeros/NaNs/INFs on gold: %d\n", numZeros);
+	printf("Number of zeros/NaNs/INFs on gold: %d/%d/%d\n", numZeros, numNans, numInfs);
 
   if (numZeros > 0 && k <= 16) {
     for (int i = 0; i<k*k; i++) {
