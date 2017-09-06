@@ -59,7 +59,7 @@ commandList = [
 ##lenet
 #["sudo  /home/carol/radiation-benchmarks/bin/leNetCUDA   rad_test  /home/carol/radiation-benchmarks/data/lenet/t10k-images-idx3-ubyte /home/carol/radiation-benchmarks/data/lenet/t10k-labels-idx1-ubyte /home/carol/radiation-benchmarks/data/lenet/lenet_base.weights /home/carol/radiation-benchmarks/data/lenet/gold_t10k_images.test 1000 0 1000" , 0.016, "leNetCUDA"],
 
-
+##resnet
 #["sudo  /home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/classify_radiation.lua  /home/carol/radiation-benchmarks/data/resnet_torch/resnet-200.t7  rad_test  /home/carol/radiation-benchmarks/data/networks_img_list//caltech.pedestrians.1K.txt /home/carol/radiation-benchmarks/data/resnet_torch/gold.caltech.1K.csv 1000 log" , 0.016, "luajit"],
 #["sudo  /home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/classify_radiation.lua  /home/carol/radiation-benchmarks/data/resnet_torch/resnet-200.t7  rad_test  /home/carol/radiation-benchmarks/data/networks_img_list//urban.street.1.1K.txt /home/carol/radiation-benchmarks/data/resnet_torch/gold.urban.street.1.1K.csv 1000 log" , 0.016, "luajit"],
 #["sudo  /home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/classify_radiation.lua  /home/carol/radiation-benchmarks/data/resnet_torch/resnet-200.t7  rad_test  /home/carol/radiation-benchmarks/data/networks_img_list//voc.2012.1K.txt /home/carol/radiation-benchmarks/data/resnet_torch/gold.voc.2012.1K.csv 1000 log" , 0.016, "luajit"],
