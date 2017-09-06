@@ -40,11 +40,11 @@ os.system("sudo chmod 777 dgemm*.matrix");
 os.system("mv dgemm*.matrix "+data_path);
 os.system("mv ./generateMatricesDouble ./cudaDGEMM "+bin_path)
 
-fp = open(installDir+"scripts/how_to_run_dgemm_cuda_X2", 'w')
+fp = open(installDir+"scripts/how_to_run_dgemm_cuda_x2", 'w')
 print >>fp, "sudo "+bin_path+"/cudaDGEMM -size=1024 -input_a="+data_path+"dgemmA_8192.matrix -input_b="+data_path+"/dgemmB_8192.matrix -gold="+data_path+"/dgemmGOLD_1024.matrix -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/cudaDGEMM -size=2048 -input_a="+data_path+"dgemmA_8192.matrix -input_b="+data_path+"/dgemmB_8192.matrix -gold="+data_path+"/dgemmGOLD_2048.matrix -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/cudaDGEMM -size=4096 -input_a="+data_path+"dgemmA_8192.matrix -input_b="+data_path+"/dgemmB_8192.matrix -gold="+data_path+"/dgemmGOLD_4096.matrix -iterations=10000000"
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_dgemm_cuda\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_dgemm_cuda_x2\n"
 
 sys.exit(0)

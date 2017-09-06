@@ -38,11 +38,11 @@ os.system("sudo chmod 777 gold_* ");
 os.system("mv gold_* "+data_path);
 os.system("mv ./hhotspot "+bin_path)
 
-fp = open(installDir+"scripts/how_to_run_hhotspot_cuda_X2", 'w')
+fp = open(installDir+"scripts/how_to_run_hhotspot_cuda_x2", 'w')
 print >>fp, "sudo "+bin_path+"/hhotspot -size=1024 -sim_time=1000 -streams=1 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_half_1024_1000 -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/hhotspot -size=1024 -sim_time=1000 -streams=2 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_half_1024_1000 -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/hhotspot -size=1024 -sim_time=1000 -streams=4 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_half_1024_1000 -iterations=10000000"
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_hhotspot_cuda\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_hhotspot_cuda_x2\n"
 
 sys.exit(0)

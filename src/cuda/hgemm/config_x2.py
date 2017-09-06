@@ -40,11 +40,11 @@ os.system("sudo chmod 777 hgemm*.matrix");
 os.system("mv hgemm*.matrix "+data_path);
 os.system("mv ./generateMatricesHalf ./cudaHGEMM "+bin_path)
 
-fp = open(installDir+"scripts/how_to_run_hgemm_cuda_X2", 'w')
+fp = open(installDir+"scripts/how_to_run_hgemm_cuda_x2", 'w')
 print >>fp, "sudo "+bin_path+"/cudaHGEMM -size=1024 -input_a="+data_path+"hgemmA_8192.matrix -input_b="+data_path+"/hgemmB_8192.matrix -gold="+data_path+"/hgemmGOLD_1024.matrix -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/cudaHGEMM -size=2048 -input_a="+data_path+"hgemmA_8192.matrix -input_b="+data_path+"/hgemmB_8192.matrix -gold="+data_path+"/hgemmGOLD_2048.matrix -iterations=10000000"
 print >>fp, "sudo "+bin_path+"/cudaHGEMM -size=8192 -input_a="+data_path+"hgemmA_8192.matrix -input_b="+data_path+"/hgemmB_8192.matrix -gold="+data_path+"/hgemmGOLD_8192.matrix -iterations=10000000"
 
-print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_hgemm_cuda\n"
+print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_hgemm_cuda_x2\n"
 
 sys.exit(0)

@@ -405,7 +405,7 @@ void getParams(int argc, char** argv, parameters *params)
     else
     {
         params -> ofile = new char[100];
-        snprintf(params -> ofile, 100, "gold_%i_%i", params -> grid_rows, params -> sim_time);
+        snprintf(params -> ofile, 100, "gold_float_%i_%i", params -> grid_rows, params -> sim_time);
         printf("Using default gold path: %s\n", params -> ofile);
     }
 
