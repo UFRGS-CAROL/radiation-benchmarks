@@ -179,6 +179,7 @@ def selectCommand():
 
 
 def execCommand(command):
+	print command
 	try:
 		updateTimestamp()
 		if re.match(".*&\s*$", command):
