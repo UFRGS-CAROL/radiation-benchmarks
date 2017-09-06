@@ -27,6 +27,9 @@ src_dgemm = installDir+"src/cuda/dgemm"
 if not os.path.isdir(data_path):
 	os.mkdir(data_path, 0777);
 	os.chmod(data_path, 0777);
+if not os.path.isdir(bin_path):
+	os.mkdir(bin_path, 0777);
+	os.chmod(bin_path, 0777);
 
 os.system("cd "+src_dgemm)
 
