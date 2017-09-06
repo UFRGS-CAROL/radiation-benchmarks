@@ -195,6 +195,30 @@ inline int new_compare_output(unsigned char **all_out_frames, int image_size, co
 }
 
 // Input Data -----------------------------------------------------------------
+void new_read_input(unsigned char** all_gray_frames, int &rowsc, int &colsc, int &in_size, const Params &p) {
+
+    for(int task_id = 0; task_id < p.n_warmup + p.n_reps; task_id++) {
+
+        char FileName[300];
+        sprintf(FileName, "%s%d.txt", p.file_name, task_id);
+
+        FILE *fp = fopen(FileName, "r");
+        if(fp == NULL)
+            exit(EXIT_FAILURE);
+
+        fscanf(fp, "%d\n", &rowsc);
+        fscanf(fp, "%d\n", &colsc);
+
+        in_size = rowsc * colsc * sizeof(unsigned char);
+       // all_gray_frames[task_id]    = (unsigned char *)malloc(in_size);
+        for(int i = 0; i < rowsc; i++) {
+            for(int j = 0; j < colsc; j++) {
+                fscanf(fp, "%u ", (unsigned int *)&all_gray_frames[task_id][i * colsc + j]);
+            }
+        }
+        fclose(fp);
+    }
+}
 void read_input(unsigned char** all_gray_frames, int &rowsc, int &colsc, int &in_size, const Params &p) {
 
     for(int task_id = 0; task_id < p.n_warmup + p.n_reps; task_id++) {
@@ -487,7 +511,7 @@ err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup 
         } else {
             printf(".");
         }
-    read_input(all_gray_frames, rowsc, colsc, in_size, p);
+    new_read_input(all_gray_frames, rowsc, colsc, in_size, p);
 #ifdef LOGS
         log_error_count(err);
 #endif
