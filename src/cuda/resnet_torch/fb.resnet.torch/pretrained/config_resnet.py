@@ -33,7 +33,7 @@ def main(board):
 
     data_path = installDir + "data/resnet_torch"
     src_resnet = installDir + "src/cuda/resnet_torch/fb.resnet.torch/pretrained"
-
+    txt_list_path = installDir + "data/networks_img_list/"
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
@@ -45,7 +45,8 @@ def main(board):
 
     for i in DATASETS:
         gold = data_path + '/' + i['gold']
-        set = data_path + '/' + i['txt']
+
+        set = txt_list_path + '/' + i['txt']
 
         weights = data_path + '/' + WEIGHTS[0]
 
