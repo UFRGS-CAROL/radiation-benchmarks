@@ -30,6 +30,7 @@ if not os.path.isdir(data_path):
 
 os.system("cd "+src_mergesort)
 
+os.system("make")
 os.system("sudo ./mergesort -size=1048576 -input=mergesort_input_134217728 -gold=mergesort_gold_1048576 -generate -iterations=1")
 os.system("sudo ./mergesort -size=33554432 -input=mergesort_input_134217728 -gold=mergesort_gold_33554432 -generate -iterations=1")
 os.system("sudo ./mergesort -size=67108864 -input=mergesort_input_134217728 -gold=mergesort_gold_67104464 -generate -iterations=1")
