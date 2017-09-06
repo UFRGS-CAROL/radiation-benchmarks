@@ -33,7 +33,7 @@ commandList = [
 #["sudo /home/carol/radiation-benchmarks/bin/darknet_v1 test_radiation  -c /home/carol/radiation-benchmarks/data/darknet/yolo_v1.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/darknet_v1_gold.voc.2012.10.csv  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.10.txt  -n 10000  -s 1  -a 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo_v1.weights  -x 0" , 0.016, "darknet_v1"],
 #["sudo /home/carol/radiation-benchmarks/bin/darknet_v1 test_radiation  -c /home/carol/radiation-benchmarks/data/darknet/yolo_v1.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/darknet_v1_gold.caltech.10.csv  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.10.txt  -n 10000  -s 1  -a 2  -w /home/carol/radiation-benchmarks/data/darknet/yolo_v1.weights  -x 0" , 0.016, "darknet_v1"],
 #["sudo /home/carol/radiation-benchmarks/bin/darknet_v1 test_radiation  -c /home/carol/radiation-benchmarks/data/darknet/yolo_v1.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/darknet_v1_gold.urban.street.10.csv  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/urban.street.10.txt  -n 10000  -s 1  -a 2  -w /home/carol/radiation-benchmarks/data/darknet/yolo_v1.weights  -x 0" , 0.016, "darknet_v1"],
-["sudo /home/carol/radiation-benchmarks/bin/darknet_v1 test_radiation  -c /home/carol/radiation-benchmarks/data/darknet/yolo_v1.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/darknet_v1_gold.voc.2012.10.csv  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.10.txt  -n 10000  -s 1  -a 2  -w /home/carol/radiation-benchmarks/data/darknet/yolo_v1.weights  -x 0" , 0.016, "darknet_v1"],
+#["sudo /home/carol/radiation-benchmarks/bin/darknet_v1 test_radiation  -c /home/carol/radiation-benchmarks/data/darknet/yolo_v1.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/darknet_v1_gold.voc.2012.10.csv  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.10.txt  -n 10000  -s 1  -a 2  -w /home/carol/radiation-benchmarks/data/darknet/yolo_v1.weights  -x 0" , 0.016, "darknet_v1"],
 
 
 ##darknet V2
@@ -52,6 +52,17 @@ commandList = [
 
 
 ##py-faster
+#["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/py_faster_gold.caltech.1K.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
+#["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/urban.street.1.1K.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/py_faster_gold.urban.street.1.1K.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
+#["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/py_faster_gold.voc.2012.1K.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
+
+##lenet
+#["sudo  /home/carol/radiation-benchmarks/bin/leNetCUDA   rad_test  /home/carol/radiation-benchmarks/data/lenet/t10k-images-idx3-ubyte /home/carol/radiation-benchmarks/data/lenet/t10k-labels-idx1-ubyte /home/carol/radiation-benchmarks/data/lenet/lenet_base.weights /home/carol/radiation-benchmarks/data/lenet/gold_t10k_images.test 1000 0 1000" , 0.016, "leNetCUDA"],
+
+
+#["sudo  /home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/classify_radiation.lua  /home/carol/radiation-benchmarks/data/resnet_torch/resnet-200.t7  rad_test  /home/carol/radiation-benchmarks/data/networks_img_list//caltech.pedestrians.1K.txt /home/carol/radiation-benchmarks/data/resnet_torch/gold.caltech.1K.csv 1000 log" , 0.016, "luajit"],
+["sudo  /home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/classify_radiation.lua  /home/carol/radiation-benchmarks/data/resnet_torch/resnet-200.t7  rad_test  /home/carol/radiation-benchmarks/data/networks_img_list//urban.street.1.1K.txt /home/carol/radiation-benchmarks/data/resnet_torch/gold.urban.street.1.1K.csv 1000 log" , 0.016, "luajit"],
+#["sudo  /home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/classify_radiation.lua  /home/carol/radiation-benchmarks/data/resnet_torch/resnet-200.t7  rad_test  /home/carol/radiation-benchmarks/data/networks_img_list//voc.2012.1K.txt /home/carol/radiation-benchmarks/data/resnet_torch/gold.voc.2012.1K.csv 1000 log" , 0.016, "luajit"],
 
 ]
 

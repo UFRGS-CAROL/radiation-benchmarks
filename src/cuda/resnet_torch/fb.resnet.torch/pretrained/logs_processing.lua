@@ -2,7 +2,7 @@
 -- LogHelper lua wraper must be compiled before using this script
 
 
-local lh = require '../../../../include/log_helper_swig_wraper/log_helper'
+local lh = require 'log_helper'
 local THRESHOLD = 0.005
 -- start a log file
 function start_app(network, dataset, gold_file, log)

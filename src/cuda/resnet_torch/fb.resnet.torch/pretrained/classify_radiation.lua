@@ -18,9 +18,20 @@ require 'cudnn'
 require 'cunn'
 require 'image'
 
+
+---os.execute(". /home/carol/radiation-benchmarks/src/cuda/resnet_torch/torch/install/bin/torch-activate")
+
+---os.execute("echo $PATH")
+
+package.path = '/home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/pretrained/?.lua;' .. ';' .. package.path
+package.cpath = '/home/carol/radiation-benchmarks/src/include/log_helper_swig_wraper/?.so;' .. ';' .. package.cpath
+package.path = '/home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/datasets/?.lua;' .. ';' .. package.path
+package.path = '/home/carol/radiation-benchmarks/src/cuda/resnet_torch/fb.resnet.torch/?.lua;' .. ';' .. package.path
+
+
 local lp = require 'logs_processing'
-local t = require '../datasets/transforms'
-local imagenetLabel = require './imagenet'
+local t = require 'transforms'
+local imagenetLabel = require 'imagenet'
 
 
 --/////////////////////////////////////////////////////
@@ -181,6 +192,7 @@ end
 function load_images(txt_dataset)
   local lines = lines_from(txt_dataset)
   local images = {}
+  print("Loading all images")
   for k,v in pairs(lines) do
     -- load the image as a RGB float tensor with values 0..1
     local img = image.load(v, 3, 'float')
@@ -188,6 +200,7 @@ function load_images(txt_dataset)
     images[k] = {img, name, v}
 
   end
+  print("Images loaded")
   return images
 end
 
