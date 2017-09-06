@@ -76,10 +76,10 @@ commandList = [
 #["sudo /home/carol/radiation-benchmarks/bin/quicksort -size=134217728 -input=/home/carol/radiation-benchmarks/data/quicksort/quicksort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/quicksort/quicksort_gold_134217728 -iterations=10000000" , 0.016, "quicksort"],
 
 ##mergesort
-["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=1048576 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_1048576 -iterations=10000000" , 0.016, "mergesort"],
-["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=33554432 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_33554432 -iterations=10000000" , 0.016, "mergesort"],
-["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=67108864 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_67108864 -iterations=10000000" , 0.016, "mergesort"],
-["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=134217728 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_134217728 -iterations=10000000" , 0.016, "mergesort"],
+#["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=1048576 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_1048576 -iterations=10000000" , 0.016, "mergesort"],
+#["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=33554432 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_33554432 -iterations=10000000" , 0.016, "mergesort"],
+#["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=67108864 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_67108864 -iterations=10000000" , 0.016, "mergesort"],
+#["sudo /home/carol/radiation-benchmarks/bin/mergesort -size=134217728 -input=/home/carol/radiation-benchmarks/data/mergesort/mergesort_input_134217728 -gold=/home/carol/radiation-benchmarks/data/mergesort/mergesort_gold_134217728 -iterations=10000000" , 0.016, "mergesort"],
 
 
 ]
