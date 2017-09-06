@@ -37,14 +37,32 @@ commandList = [
 ##hog
 
 ##gemm double
-["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=1024 -input_a=/home/carol/radiation-benchmarks/data/dgemmdgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_1024.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
-["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=2048 -input_a=/home/carol/radiation-benchmarks/data/dgemmdgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_2048.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
-["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=8192 -input_a=/home/carol/radiation-benchmarks/data/dgemmdgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_8192.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=1024 -input_a=/home/carol/radiation-benchmarks/data/dgemm/dgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_1024.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=2048 -input_a=/home/carol/radiation-benchmarks/data/dgemm/dgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_2048.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=4096 -input_a=/home/carol/radiation-benchmarks/data/dgemm/dgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_4096.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
 
 ## gemm half
-["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=1024 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_1024.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
-["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=2048 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_2048.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
-["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=8192 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_8192.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=1024 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_1024.matrix -iterations=10000000" , 0.016, "cudaHGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=2048 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_2048.matrix -iterations=10000000" , 0.016, "cudaHGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=8192 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_8192.matrix -iterations=10000000" , 0.016, "cudaHGEMM"],
+
+#hotspot float
+["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=1000 -streams=1 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_float_1024_1000 -iterations=10000000" , 0.016, "hotspot"],
+["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=1000 -streams=2 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_float_1024_1000 -iterations=10000000" , 0.016, "hotspot"],
+["sudo /home/carol/radiation-benchmarks/bin/hotspot -size=1024 -sim_time=1000 -streams=4 -temp_file=/home/carol/radiation-benchmarks/data/hotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hotspot/gold_float_1024_1000 -iterations=10000000" , 0.016, "hotspot"],
+
+#hotspot half
+["sudo /home/carol/radiation-benchmarks/bin/hhotspot -size=1024 -sim_time=1000 -streams=1 -temp_file=/home/carol/radiation-benchmarks/data/hhotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hhotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hhotspot/gold_half_1024_1000 -iterations=10000000" , 0.016, "hhotspot"],
+["sudo /home/carol/radiation-benchmarks/bin/hhotspot -size=1024 -sim_time=1000 -streams=2 -temp_file=/home/carol/radiation-benchmarks/data/hhotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hhotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hhotspot/gold_half_1024_1000 -iterations=10000000" , 0.016, "hhotspot"],
+["sudo /home/carol/radiation-benchmarks/bin/hhotspot -size=1024 -sim_time=1000 -streams=4 -temp_file=/home/carol/radiation-benchmarks/data/hhotspot/temp_1024 -power_file=/home/carol/radiation-benchmarks/data/hhotspot/power_1024 -gold_file=/home/carol/radiation-benchmarks/data/hhotspot/gold_half_1024_1000 -iterations=10000000" , 0.016, "hhotspot"],
+
+#lava double
+["sudo /home/carol/radiation-benchmarks/bin/lava -boxes=10 -input_distances=/home/carol/radiation-benchmarks/data/lava/input_distances_double_10 -input_charges=/home/carol/radiation-benchmarks/data/lava/input_charges_double_10 -output_gold=/home/carol/radiation-benchmarks/data/lava/gold_double_10 -iterations=10000000 -streams=1" , 0.016, "lava"],
+["sudo /home/carol/radiation-benchmarks/bin/lava -boxes=15 -input_distances=/home/carol/radiation-benchmarks/data/lava/input_distances_double_15 -input_charges=/home/carol/radiation-benchmarks/data/lava/input_charges_double_15 -output_gold=/home/carol/radiation-benchmarks/data/lava/gold_double_15 -iterations=10000000 -streams=1" , 0.016, "lava"],
+
+#lava half
+["sudo /home/carol/radiation-benchmarks/bin/hlava -boxes=10 -input_distances=/home/carol/radiation-benchmarks/data/hlava/input_distances_half_10 -input_charges=/home/carol/radiation-benchmarks/data/hlava/input_charges_half_10 -output_gold=/home/carol/radiation-benchmarks/data/hlava/gold_half_10 -iterations=10000000 -streams=1" , 0.016, "hlava"],
+["sudo /home/carol/radiation-benchmarks/bin/hlava -boxes=15 -input_distances=/home/carol/radiation-benchmarks/data/hlava/input_distances_half_15 -input_charges=/home/carol/radiation-benchmarks/data/hlava/input_charges_half_15 -output_gold=/home/carol/radiation-benchmarks/data/hlava/gold_half_15 -iterations=10000000 -streams=1" , 0.016, "hlava"],
 
 
 ##hog hardened ecc on

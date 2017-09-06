@@ -45,11 +45,6 @@ fp = open(installDir+"scripts/how_to_run_hlava_cuda_x2", 'w')
 print >>fp, "sudo "+bin_path+"/hlava -boxes=10 -input_distances="+data_path+"/input_distances_half_10 -input_charges="+data_path+"/input_charges_half_10 -output_gold="+data_path+"/gold_half_10 -iterations=10000000 -streams=1"
 print >>fp, "sudo "+bin_path+"/hlava -boxes=15 -input_distances="+data_path+"/input_distances_half_15 -input_charges="+data_path+"/input_charges_half_15 -output_gold="+data_path+"/gold_half_15 -iterations=10000000 -streams=1"
 
-
-#8 streams
-print >>fp, "sudo "+bin_path+"/hlava -boxes=10 -input_distances="+data_path+"/input_distances_half_10 -input_charges="+data_path+"/input_charges_half_10 -output_gold="+data_path+"/gold_half_10 -iterations=10000000 -streams=8"
-print >>fp, "sudo "+bin_path+"/hlava -boxes=15 -input_distances="+data_path+"/input_distances_half_15 -input_charges="+data_path+"/input_charges_half_15 -output_gold="+data_path+"/gold_half_15 -iterations=10000000 -streams=8"
-
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_hlava_cuda_x2\n"
 
 sys.exit(0)
