@@ -4,7 +4,7 @@ import os
 import sys
 import ConfigParser
 
-print "Generating hhotspot for CUDA Tegra K40"
+print "Generating hhotspot for CUDA Tegra X2"
 
 confFile = '/etc/radiation-benchmarks.conf'
 try:
@@ -32,16 +32,16 @@ if not os.path.isdir(bin_path):
 	os.chmod(bin_path, 0777);
 
 os.system("cd "+src_hhotspot)
-os.system("sudo ./hhotspot -size=1024 -generate -temp_file="+data_path+"/temp_half_1024 -power_file="+data_path+"/power_half_1024 -gold_file=gold_half_1024_1000 -sim_time=1000 -iterations=1")
+os.system("sudo ./hhotspot -size=1024 -generate -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file=gold_half_1024_1000 -sim_time=1000 -iterations=1")
 
 os.system("sudo chmod 777 gold_* ");
 os.system("mv gold_* "+data_path);
 os.system("mv ./hhotspot "+bin_path)
 
-fp = open(installDir+"scripts/how_to_run_hhotspot_cuda_K40", 'w')
-print >>fp, "sudo "+bin_path+"/hhotspot -size=1024 -sim_time=1000 -streams=1 -temp_file="+data_path+"/temp_half_1024 -power_file="+data_path+"/power_half_1024 -gold_file="+data_path+"/gold_half_1024_1000 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/hhotspot -size=1024 -sim_time=1000 -streams=2 -temp_file="+data_path+"/temp_half_1024 -power_file="+data_path+"/power_half_1024 -gold_file="+data_path+"/gold_half_1024_1000 -iterations=10000000"
-print >>fp, "sudo "+bin_path+"/hhotspot -size=1024 -sim_time=1000 -streams=4 -temp_file="+data_path+"/temp_half_1024 -power_file="+data_path+"/power_half_1024 -gold_file="+data_path+"/gold_half_1024_1000 -iterations=10000000"
+fp = open(installDir+"scripts/how_to_run_hhotspot_cuda_X2", 'w')
+print >>fp, "sudo "+bin_path+"/hhotspot -size=1024 -sim_time=1000 -streams=1 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_half_1024_1000 -iterations=10000000"
+print >>fp, "sudo "+bin_path+"/hhotspot -size=1024 -sim_time=1000 -streams=2 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_half_1024_1000 -iterations=10000000"
+print >>fp, "sudo "+bin_path+"/hhotspot -size=1024 -sim_time=1000 -streams=4 -temp_file="+data_path+"/temp_1024 -power_file="+data_path+"/power_1024 -gold_file="+data_path+"/gold_half_1024_1000 -iterations=10000000"
 
 print "\nConfiguring done, to run check file: "+installDir+"scripts/how_to_run_hhotspot_cuda\n"
 

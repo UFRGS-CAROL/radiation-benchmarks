@@ -7,10 +7,10 @@ NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-all: hotspot
+all: hhotspot
 
-hotspot: hotspot.cu
-	$(NVCC) $(NVCC_FLAGS) -DLOGS hotspot.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) $(ITER) -lLogHelper -Xcompiler " -fopenmp" -o hotspot
+hhotspot: hhotspot.cu
+	$(NVCC) $(NVCC_FLAGS) -DLOGS hhotspot.cu -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) $(ITER) -lLogHelper -Xcompiler " -fopenmp" -o hhotspot
 
 clean:
-	rm -f hotspot gold_*
+	rm -f hhotspot gold_*

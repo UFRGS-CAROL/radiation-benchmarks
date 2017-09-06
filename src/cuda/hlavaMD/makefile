@@ -7,15 +7,15 @@ LOGHELPER_LIB=../../include/
 NVIDIA_INC=/usr/local/cuda/include/
 NVIDIA_LIB=/usr/local/cuda/lib64/
 
-RUN_EXEC=lava
-GEN_EXEC=lava_generate
+RUN_EXEC=hlava
+GEN_EXEC=hlava_generate
 
 MATRIX_NAMES=output_gold_* input_distances_* input_charges_*
 
-ALL: lava
+ALL: hlava
 
-lava: lava.cu
-	$(NVCC) $(NVCC_FLAGS) -DLOGS $(DOUBLE_PRECISION) lava.cu -I$(LOGHELPER_INC) -I$(NVIDIA_INC) -L$(LOGHELPER_LIB) -L$(NVIDIA_LIB) -lLogHelper -Xcompiler " -fopenmp" -o lava
+hlava: hlava.cu
+	$(NVCC) $(NVCC_FLAGS) -DLOGS $(DOUBLE_PRECISION) hlava.cu -I$(LOGHELPER_INC) -I$(NVIDIA_INC) -L$(LOGHELPER_LIB) -L$(NVIDIA_LIB) -lLogHelper -Xcompiler " -fopenmp" -o hlava
 
 clean:
-	rm -f lava_generate lava $(MATRIX_NAMES)
+	rm -f hlava_generate hlava $(MATRIX_NAMES)
