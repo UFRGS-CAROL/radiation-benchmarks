@@ -207,7 +207,7 @@ bool badass_memcmp(half *gold, half *found, unsigned long n){
     double time = mysecond();
     #pragma omp parallel for
     for (i=0; i < n; i++)
-         if (gold[i].x == found[i].x) flag = 1;
+         if (gold[i].x != found[i].x) flag = 1;
 
     //  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
 	if (flag == 1)
