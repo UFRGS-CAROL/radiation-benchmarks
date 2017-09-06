@@ -4,7 +4,7 @@ import os
 import sys
 import ConfigParser
 
-print "Generating hotspot for CUDA Tegra K40"
+print "Generating hotspot for CUDA Tegra X2"
 
 confFile = '/etc/radiation-benchmarks.conf'
 try:
