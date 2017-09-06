@@ -202,7 +202,7 @@ bool badass_memcmp(half *gold, half *found, unsigned long n){
 	double result = 0.0;
 	int i;
 	unsigned long  chunk = ceil(float(n) / float(omp_get_max_threads()));
-	printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
+	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
 	double time = mysecond();
 #pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
    for (i=0; i < n; i++)
