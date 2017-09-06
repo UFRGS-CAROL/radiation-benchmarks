@@ -59,7 +59,7 @@ commandList = [
 #---------------------------------------- Canny Edge Detection 1 --------------------------------
 # 2500 Frames de Input "Dame 5"
 # CPU
-# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 0.00 -t 1 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1", 1, "cedd"],
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 1.00 -t 4 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
 #GPU
  	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 0.00 -t 1 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
 #CPU+GPU
@@ -74,7 +74,7 @@ commandList = [
 #---------------------------------------- Canny Edge Detection 2 --------------------------------
 # 1110 Frames de Input "Urban"
 # CPU
-# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 256 -a 1.00 -t 4 -r 1100 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/urban_input/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/urban_output/ -l 1", 1, "cedd"],
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 1.00 -t 4 -r 1100 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/urban_input/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/urban_output/ -l 1000000", 1, "cedd"],
 #GPU
  	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 0.00 -t 1 -r 1100 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/urban_input/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/urban_output/ -l 1000000", 1, "cedd"],
 #CPU+GPU
@@ -89,7 +89,7 @@ commandList = [
 #---------------------------------------- Canny Edge Detection 3 --------------------------------
 # 1000 Frames de Input "Caltech"
 # CPU
-# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 256 -a 1.00 -t 4 -r 990 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/caltech_input/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/caltech_output/ -l 1", 1, "cedd"],
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 1.00 -t 4 -r 990 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/caltech_input/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/caltech_output/ -l 1000000", 1, "cedd"],
 #GPU
  	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 0.00 -t 1 -r 990 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/caltech_input/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/caltech_output/ -l 1000000", 1, "cedd"],
 #CPU+GPU
