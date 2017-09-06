@@ -94,3 +94,30 @@ void free_layer(layer l)
     if(l.norms_gpu)               cuda_free(l.norms_gpu);
 #endif
 }
+
+double weight_sumL1(network net){
+  int i;
+  double weight_sum = 0;
+
+  for(i=0; i< net.n; i++){
+    layer l = net.layers[i];
+    int j;
+    for (j=0; j<l.nweights; j++){
+      weight_sum += l.weights[j];
+    }
+  }
+}
+
+double squared_weight_sumL1(network net){
+  int i;
+  double squared_weight_sum = 0;
+
+  for(i=0; i< net.n; i++){
+    layer l = net.layers[i];
+    int j;
+    for (j=0; j<l.nweights; j++){
+      double weight = l.weights[j];
+      squared_weight_sum += weight * weight;
+    }
+  }
+}
