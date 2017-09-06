@@ -13,7 +13,7 @@ from datetime import datetime
 # Commands to be executed by KillTest
 # each command should be in this format:
 # ["command", <hours to be executed>]
-# for example: 
+# for example:
 # commandList = [
 # 	["./lavaMD 15 4 input1 input2 gold 10000", 1, "lavaMD"],
 # 	["./gemm 1024 4 input1 input2 gold 10000", 2, "gemm"]
@@ -22,19 +22,30 @@ from datetime import datetime
 # When the list finish executing, it start to execute from the beginning
 commandList = [
 ##darknet
-["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
-["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 1  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.abft.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
-["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 1  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
-["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
-["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 1  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.abft.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
-["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 1  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
+#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
+#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 1  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.abft.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
+#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.caltech.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  -n 10000  -s 1  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
+#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
+#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 1  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.abft.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 0  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
+#["sudo /home/carol/radiation-benchmarks/bin/darknet  -a 0  -c /home/carol/radiation-benchmarks/data/darknet/yolo.cfg  -b /home/carol/radiation-benchmarks/src/cuda/darknet  -e yolo  -d /home/carol/radiation-benchmarks/data/darknet/gold.voc.2012.1K.test  -m valid  -l /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  -n 10000  -s 1  -w /home/carol/radiation-benchmarks/data/darknet/yolo.weights  -x 0" , 0.016, "darknet"],
 
 ##py-faster
 ##py-faster
-["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold.caltech.1K.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
-["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold.voc.2012.1K.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
+#["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.1K.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold.caltech.1K.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
+#["sudo /home/carol/radiation-benchmarks/src/cuda/py-faster-rcnn/tools/py_faster_rcnn.py   --ite 1000  --iml /home/carol/radiation-benchmarks/data/networks_img_list/voc.2012.1K.txt  --gld /home/carol/radiation-benchmarks/data/py_faster_rcnn/gold.voc.2012.1K.test  --log  daniel_logs " , 0.016, "py_faster_rcnn.py"],
 
 ##hog
+
+##gemm double
+["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=1024 -input_a=/home/carol/radiation-benchmarks/data/dgemmdgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_1024.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=2048 -input_a=/home/carol/radiation-benchmarks/data/dgemmdgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_2048.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaDGEMM -size=8192 -input_a=/home/carol/radiation-benchmarks/data/dgemmdgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/dgemm/dgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/dgemm/dgemmGOLD_8192.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+
+## gemm half
+["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=1024 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_1024.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=2048 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_2048.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+["sudo /home/carol/radiation-benchmarks/bin/cudaHGEMM -size=8192 -input_a=/home/carol/radiation-benchmarks/data/hgemmhgemmA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/hgemmB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/hgemmGOLD_8192.matrix -iterations=10000000" , 0.016, "cudaDGEMM"],
+
 
 ##hog hardened ecc on
 
@@ -87,7 +98,7 @@ def cleanCommandExecLogs():
 #			os.remove(varDir+"command_execstart_"+str(i))
 #		i -= 1
 
-# Return True if the variable commandList from this file changed from the 
+# Return True if the variable commandList from this file changed from the
 # last time it was executed. If the file was never executed returns False
 def checkCommandListChanges():
 	curList = varDir+"currentCommandList"
@@ -114,7 +125,7 @@ def selectCommand():
 	if checkCommandListChanges():
 		cleanCommandExecLogs()
 
-	# Get the index of last existent file	
+	# Get the index of last existent file
 	i=0
 	while os.path.isfile(varDir+"command_execstart_"+str(i)):
 		i += 1
@@ -185,22 +196,22 @@ if not os.path.isfile(confFile):
 try:
 	config = ConfigParser.RawConfigParser()
 	config.read(confFile)
-	
+
 	installDir = config.get('DEFAULT', 'installdir')+"/"
 	varDir =  config.get('DEFAULT', 'vardir')+"/"
 	logDir =  config.get('DEFAULT', 'logdir')+"/"
 	tmpDir =  config.get('DEFAULT', 'tmpdir')+"/"
-	
+
 	#logDir = varDir+"log/"
-	
+
 	if not os.path.isdir(logDir):
 		os.mkdir(logDir, 0777)
 		os.chmod(logDir, 0777)
-	
+
 except IOError as e:
 	print >> sys.stderr, "Configuration setup error: "+str(e)
 	sys.exit(1)
-	
+
 logFile = logDir+"killtest.log"
 timestampFile = varDir+"timestamp.txt"
 
@@ -231,7 +242,7 @@ try:
 				os.system("shutdown -r now")
 				time.sleep(20)
 			timestamp = int(float(time.time()))
-			
+
 		# Get the current timestamp
 		now = int(time.time())
 		timestampDiff = now - timestamp
@@ -252,7 +263,7 @@ try:
 
 			killCount += 1
 			logMsg("timestampMaxDiff kill(#"+str(killCount)+"), timestampDiff:"+str(timestampDiff)+" command '"+curCommand+"'")
-			# Reboot if we reach the max number of kills allowed 
+			# Reboot if we reach the max number of kills allowed
 			if killCount >= maxKill:
 				logMsg("Rebooting, maxKill reached, current command:"+curCommand)
 				sockConnect()
@@ -261,9 +272,9 @@ try:
 			else:
 				curCommand = selectCommand() # select properly the current command to be executed
 				execCommand(curCommand) # start the command
-	
-	
-		time.sleep(1)	
+
+
+		time.sleep(1)
 except KeyboardInterrupt: # Ctrl+c
 	print "\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )"
 	for cmd in commandList:
