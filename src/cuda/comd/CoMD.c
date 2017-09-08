@@ -86,7 +86,6 @@ static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 		char latticeType[8]);
 
 int main(int argc, char** argv) {
-	start_count_app("ddd","ddd");
 	// Prolog
 	initParallel(&argc, &argv);
 	profileStart(totalTimer);
@@ -137,7 +136,7 @@ int main(int argc, char** argv) {
 		startTimer(timestepTimer);
 		timestep(sim, printRate, sim->dt);
 		stopTimer(timestepTimer);
-#if 0
+#if 1
 		// analyze input distribution, note this is done on CPU (slow)
 		AnalyzeInput(sim, iStep);
 #endif     
