@@ -145,6 +145,8 @@ int main(int argc, char** argv) {
 	profileStop(loopTimer);
 
 	sumAtoms(sim);
+	AnalyzeInput(sim, iStep);
+
 	printThings(sim, iStep, getElapsedTime(timestepTimer));
 	timestampBarrier("Ending simulation\n");
 
