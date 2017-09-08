@@ -29,7 +29,7 @@
 #ifndef __GPU_SCAN_H_
 #define __GPU_SCAN_H_
 
-#include "../cub/cub/cub.cuh"
+#include "cub/cub.cuh"
 
 void scan(int *data, int n, int *partial_sums, cudaStream_t stream)
 {

@@ -26,6 +26,7 @@ DEBUG = OFF
 ### own.  If you need any -L or -l switches to get C standard libraries
 ### (such as -lm for the math library) put them in C_LIB.
 CC = gcc #mpicc
+CXX = g++
 CFLAGS = -std=c99 -Wno-unused-result -DMAXATOMS=$(MAXATOMS) 
 OPTFLAGS = -g -O5
 INCLUDES = 
@@ -113,6 +114,22 @@ OBJECTS=$(SOURCES:.c=.o)
 CU_SOURCES=$(wildcard *.cu)
 CU_OBJECTS=$(CU_SOURCES:.cu=.cu.o)
 
+
+##########################################################
+#cpp files to be compiled with c++
+CPPFLAGS=-std=c++11
+CPP_SOURCES=$(wildcard *.cpp)
+CPP_OBJECTS=$(CPP_SOURCES:.cpp=.o)
+RADIATION_BENCH=/home/carol/radiation-benchmarks
+ifeq ($(LOGS), 1)
+	LOG_INCLUDE=${RADIATION_BENCH}/src/include -DLOGS
+	LOG_LIB=${RADIATION_BENCH}/src/include
+	CPPFLAGS+= -lLogHelper
+	LDFLAGS += ${LOG_LIB} ${CPPFLAGS}
+endif
+##########################################################
+
+
 DEFAULT: ${CoMD_EXE}
 
 %.cu.o: %.cu
@@ -120,9 +137,13 @@ DEFAULT: ${CoMD_EXE}
 
 %.o: %.c
 	${CC} ${CFLAGS} -c $< -o $@
+	
 
-${CoMD_EXE}: ${BIN_DIR} CoMD_info.h ${OBJECTS} ${CU_OBJECTS}
-	${CC} ${CFLAGS} -o ${CoMD_EXE} ${OBJECTS} ${CU_OBJECTS} ${LDFLAGS}
+%.o: %.cpp
+	${CXX} ${CPPFLAGS} -c $< -o $@
+
+${CoMD_EXE}: ${CU_OBJECTS} ${BIN_DIR}  CoMD_info.h ${OBJECTS} ${CPP_OBJECTS}
+	${CC} ${CFLAGS} -o ${CoMD_EXE} ${OBJECTS} ${CU_OBJECTS} ${CPP_OBJECTS} ${LDFLAGS}
 
 CoMD_info.h: Makefile
 	./generate_info_header ${CoMD_VARIANT} "$(CC)" "$(CFLAGS)" "$(LDFLAGS)"

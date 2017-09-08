@@ -62,6 +62,8 @@
 
 #include "gpu_utility.h"
 
+#include "logs_processing.h"
+
 #define REDIRECT_OUTPUT 0
 #define   MIN(A,B) ((A) < (B) ? (A) : (B))
 
@@ -71,8 +73,8 @@ static void destroySimulation(SimFlat** ps);
 static void initSubsystems(void);
 static void finalizeSubsystems(void);
 
-static BasePotential* initPotential(
-   int doeam, const char* potDir, const char* potName, const char* potType);
+static BasePotential* initPotential(int doeam, const char* potDir,
+		const char* potName, const char* potType);
 static SpeciesData* initSpecies(BasePotential* pot);
 static Validate* initValidate(SimFlat* s);
 static void validateResult(const Validate* val, SimFlat *sim);
@@ -80,91 +82,91 @@ static void validateResult(const Validate* val, SimFlat *sim);
 static void sumAtoms(SimFlat* s);
 static void printThings(SimFlat* s, int iStep, double elapsedTime);
 static void printSimulationDataYaml(FILE* file, SimFlat* s);
-static void sanityChecks(Command cmd, double cutoff, double latticeConst, char latticeType[8]);
+static void sanityChecks(Command cmd, double cutoff, double latticeConst,
+		char latticeType[8]);
 
-int main(int argc, char** argv)
-{
-   // Prolog
-   initParallel(&argc, &argv);
-   profileStart(totalTimer);
-   initSubsystems();
-   timestampBarrier("Starting Initialization\n");
+int main(int argc, char** argv) {
+	start_count_app("ddd","ddd");
+	// Prolog
+	initParallel(&argc, &argv);
+	profileStart(totalTimer);
+	initSubsystems();
+	timestampBarrier("Starting Initialization\n");
 
-   yamlAppInfo(yamlFile);
-   yamlAppInfo(screenOut);
+	yamlAppInfo(yamlFile);
+	yamlAppInfo(screenOut);
 
-   Command cmd = parseCommandLine(argc, argv);
-   printCmdYaml(yamlFile, &cmd);
-   printCmdYaml(screenOut, &cmd);
+	Command cmd = parseCommandLine(argc, argv);
+	printCmdYaml(yamlFile, &cmd);
+	printCmdYaml(screenOut, &cmd);
 
-   // select device, print info, etc.
+	// select device, print info, etc.
 #ifdef DO_MPI
-   // get number of gpus on current node
-   int numGpus;
-   cudaGetDeviceCount(&numGpus);
+	// get number of gpus on current node
+	int numGpus;
+	cudaGetDeviceCount(&numGpus);
 
-   // set active device (assuming homogenous config)
-   int deviceId = getMyRank() % numGpus;
-   SetupGpu(deviceId);
+	// set active device (assuming homogenous config)
+	int deviceId = getMyRank() % numGpus;
+	SetupGpu(deviceId);
 #else
-   SetupGpu(0);
+	SetupGpu(0);
 #endif
 
-   SimFlat* sim = initSimulation(cmd);
-   printSimulationDataYaml(yamlFile, sim);
-   printSimulationDataYaml(screenOut, sim);
+	SimFlat* sim = initSimulation(cmd);
+	printSimulationDataYaml(yamlFile, sim);
+	printSimulationDataYaml(screenOut, sim);
 
-   Validate* validate = initValidate(sim); // atom counts, energy	   
-   timestampBarrier("Initialization Finished\n");
+	Validate* validate = initValidate(sim); // atom counts, energy
+	timestampBarrier("Initialization Finished\n");
 
-   timestampBarrier("Starting simulation\n");
+	timestampBarrier("Starting simulation\n");
 
-   // This is the CoMD main loop
-   const int nSteps = sim->nSteps;
-   const int printRate = sim->printRate;
-   int iStep = 0;
-   profileStart(loopTimer);
-   for (; iStep<nSteps;)
-   {
-      startTimer(commReduceTimer);
-      sumAtoms(sim);
-      stopTimer(commReduceTimer);
+	// This is the CoMD main loop
+	const int nSteps = sim->nSteps;
+	const int printRate = sim->printRate;
+	int iStep = 0;
+	profileStart(loopTimer);
+	for (; iStep < nSteps;) {
+		startTimer(commReduceTimer);
+		sumAtoms(sim);
+		stopTimer(commReduceTimer);
 
-      printThings(sim, iStep, getElapsedTime(timestepTimer));
+		printThings(sim, iStep, getElapsedTime(timestepTimer));
 
-      startTimer(timestepTimer);
-      timestep(sim, printRate, sim->dt);
-      stopTimer(timestepTimer);
+		startTimer(timestepTimer);
+		timestep(sim, printRate, sim->dt);
+		stopTimer(timestepTimer);
 #if 0
-      // analyze input distribution, note this is done on CPU (slow)
-      AnalyzeInput(sim, iStep);
+		// analyze input distribution, note this is done on CPU (slow)
+		AnalyzeInput(sim, iStep);
 #endif     
-      iStep += printRate;
-   }
-   profileStop(loopTimer);
+		iStep += printRate;
+	}
+	profileStop(loopTimer);
 
-   sumAtoms(sim);
-   printThings(sim, iStep, getElapsedTime(timestepTimer));
-   timestampBarrier("Ending simulation\n");
+	sumAtoms(sim);
+	printThings(sim, iStep, getElapsedTime(timestepTimer));
+	timestampBarrier("Ending simulation\n");
 
-   // Epilog
-   validateResult(validate, sim);
-   profileStop(totalTimer);
+	// Epilog
+	validateResult(validate, sim);
+	profileStop(totalTimer);
 
-   printPerformanceResults(sim->atoms->nGlobal, sim->printRate);
-   printPerformanceResultsYaml(yamlFile);
+	printPerformanceResults(sim->atoms->nGlobal, sim->printRate);
+	printPerformanceResultsYaml(yamlFile);
 
-   destroySimulation(&sim);
-   comdFree(validate);
-   finalizeSubsystems();
+	destroySimulation(&sim);
+	comdFree(validate);
+	finalizeSubsystems();
 
-   timestampBarrier("CoMD Ending\n");
-   destroyParallel();
+	timestampBarrier("CoMD Ending\n");
+	destroyParallel();
 
-   // for profiler
-   cudaDeviceReset();
+	// for profiler
+	cudaDeviceReset();
 
-   return 0;
+	return 0;
 }
 
 /// Initialized the main CoMD data stucture, SimFlat, based on command
@@ -178,411 +180,422 @@ int main(int argc, char** argv)
 /// Initialization order is set by the natural dependencies of the
 /// substructure such as the atoms need the link cells so the link cells
 /// must be initialized before the atoms.
-SimFlat* initSimulation(Command cmd)
-{
-   SimFlat* sim = (SimFlat*)comdMalloc(sizeof(SimFlat));
-   sim->nSteps = cmd.nSteps;
-   sim->printRate = cmd.printRate;
-   sim->dt = cmd.dt;
-   sim->domain = NULL;
-   sim->boxes = NULL;
-   sim->atoms = NULL;
-   sim->ePotential = 0.0;
-   sim->eKinetic = 0.0;
-   sim->atomExchange = NULL;
-   sim->gpuAsync = cmd.gpuAsync;
-   sim->gpuProfile = cmd.gpuProfile;
-  
-   // if profile mode enabled: force 0 steps and turn async off
-   if (sim->gpuProfile) { 
-     sim->nSteps = 0;
-   }
+SimFlat* initSimulation(Command cmd) {
+	SimFlat* sim = (SimFlat*) comdMalloc(sizeof(SimFlat));
+	sim->nSteps = cmd.nSteps;
+	sim->printRate = cmd.printRate;
+	sim->dt = cmd.dt;
+	sim->domain = NULL;
+	sim->boxes = NULL;
+	sim->atoms = NULL;
+	sim->ePotential = 0.0;
+	sim->eKinetic = 0.0;
+	sim->atomExchange = NULL;
+	sim->gpuAsync = cmd.gpuAsync;
+	sim->gpuProfile = cmd.gpuProfile;
 
-   if (!strcmp(cmd.method, "thread_atom")) sim->method = THREAD_ATOM;
-   else if (!strcmp(cmd.method, "warp_atom")) sim->method = WARP_ATOM;
-   else if (!strcmp(cmd.method, "warp_atom_nl")) sim->method = WARP_ATOM_NL;
-   else if (!strcmp(cmd.method, "cta_cell")) sim->method = CTA_CELL;
-   else if (!strcmp(cmd.method, "thread_atom_nl")) sim->method = THREAD_ATOM_NL;
-   else if (!strcmp(cmd.method, "cpu_nl")) sim->method = CPU_NL;
-   else {printf("Error: You have to specify a valid method: -m [thread_atom,thread_atom_nl,warp_atom,warp_atom_nl,cta_cell,cpu_nl]\n"); exit(-1);}
+	// if profile mode enabled: force 0 steps and turn async off
+	if (sim->gpuProfile) {
+		sim->nSteps = 0;
+	}
 
-   int useNL = (sim->method == THREAD_ATOM_NL || sim->method == WARP_ATOM_NL || sim->method == CPU_NL)? 1 : 0;
-   sim->pot = initPotential(cmd.doeam, cmd.potDir, cmd.potName, cmd.potType);
+	if (!strcmp(cmd.method, "thread_atom"))
+		sim->method = THREAD_ATOM;
+	else if (!strcmp(cmd.method, "warp_atom"))
+		sim->method = WARP_ATOM;
+	else if (!strcmp(cmd.method, "warp_atom_nl"))
+		sim->method = WARP_ATOM_NL;
+	else if (!strcmp(cmd.method, "cta_cell"))
+		sim->method = CTA_CELL;
+	else if (!strcmp(cmd.method, "thread_atom_nl"))
+		sim->method = THREAD_ATOM_NL;
+	else if (!strcmp(cmd.method, "cpu_nl"))
+		sim->method = CPU_NL;
+	else {
+		printf(
+				"Error: You have to specify a valid method: -m [thread_atom,thread_atom_nl,warp_atom,warp_atom_nl,cta_cell,cpu_nl]\n");
+		exit(-1);
+	}
 
-   real_t latticeConstant = cmd.lat;
-   if (cmd.lat < 0.0)
-      latticeConstant = sim->pot->lat;
+	int useNL =
+			(sim->method == THREAD_ATOM_NL || sim->method == WARP_ATOM_NL
+					|| sim->method == CPU_NL) ? 1 : 0;
+	sim->pot = initPotential(cmd.doeam, cmd.potDir, cmd.potName, cmd.potType);
 
-   // ensure input parameters make sense.
-   sanityChecks(cmd, sim->pot->cutoff, latticeConstant, sim->pot->latticeType);
+	real_t latticeConstant = cmd.lat;
+	if (cmd.lat < 0.0)
+		latticeConstant = sim->pot->lat;
 
-   sim->species = initSpecies(sim->pot);
+	// ensure input parameters make sense.
+	sanityChecks(cmd, sim->pot->cutoff, latticeConstant, sim->pot->latticeType);
 
-   real3_old globalExtent;
-   globalExtent[0] = cmd.nx * latticeConstant;
-   globalExtent[1] = cmd.ny * latticeConstant;
-   globalExtent[2] = cmd.nz * latticeConstant;
+	sim->species = initSpecies(sim->pot);
 
-   sim->domain = initDecomposition(
-      cmd.xproc, cmd.yproc, cmd.zproc, globalExtent);
+	real3_old globalExtent;
+	globalExtent[0] = cmd.nx * latticeConstant;
+	globalExtent[1] = cmd.ny * latticeConstant;
+	globalExtent[2] = cmd.nz * latticeConstant;
 
-   sim->usePairlist = cmd.usePairlist;
-   if(sim->usePairlist)
-   {
-       sim->gpu.atoms.neighborList.forceRebuildFlag = 1;
-   }
-   sim->gpu.usePairlist = sim->usePairlist;
+	sim->domain = initDecomposition(cmd.xproc, cmd.yproc, cmd.zproc,
+			globalExtent);
 
-   real_t skinDistance;
-   if(useNL || sim->usePairlist){
-          skinDistance = sim->pot->cutoff * cmd.relativeSkinDistance; 
-          if (printRank())
-                  printf("Skin-Distance: %f\n",skinDistance);
-   } else
-          skinDistance = 0.0;
-   sim->skinDistance = skinDistance;
-   if(sim->usePairlist)
-       sim->gpu.atoms.neighborList.skinDistanceHalf2 = skinDistance*skinDistance/4;
-   sim->boxes = initLinkCells(sim->domain, sim->pot->cutoff + skinDistance, cmd.doHilbert);
-   sim->atoms = initAtoms(sim->boxes, skinDistance);
+	sim->usePairlist = cmd.usePairlist;
+	if (sim->usePairlist) {
+		sim->gpu.atoms.neighborList.forceRebuildFlag = 1;
+	}
+	sim->gpu.usePairlist = sim->usePairlist;
 
-   sim->ljInterpolation = cmd.ljInterpolation;
-   sim->spline = cmd.spline;
+	real_t skinDistance;
+	if (useNL || sim->usePairlist) {
+		skinDistance = sim->pot->cutoff * cmd.relativeSkinDistance;
+		if (printRank())
+			printf("Skin-Distance: %f\n", skinDistance);
+	} else
+		skinDistance = 0.0;
+	sim->skinDistance = skinDistance;
+	if (sim->usePairlist)
+		sim->gpu.atoms.neighborList.skinDistanceHalf2 = skinDistance
+				* skinDistance / 4;
+	sim->boxes = initLinkCells(sim->domain, sim->pot->cutoff + skinDistance,
+			cmd.doHilbert);
+	sim->atoms = initAtoms(sim->boxes, skinDistance);
 
-   // create lattice with desired temperature and displacement.
-   createFccLattice(cmd.nx, cmd.ny, cmd.nz, latticeConstant, sim);
-   setTemperature(sim, cmd.temperature);
-   randomDisplacements(sim, cmd.initialDelta);
+	sim->ljInterpolation = cmd.ljInterpolation;
+	sim->spline = cmd.spline;
 
-   // set atoms exchange function
-   sim->atomExchange = initAtomHaloExchange(sim->domain, sim->boxes);
-    if(!cmd.doeam)
-    {
-        SetBoundaryCells(sim, sim->atomExchange);
-    }
-   // set forces exchange function
-   if (cmd.doeam && sim->method < CPU_NL) {
-     EamPotential* pot = (EamPotential*) sim->pot;
-     pot->forceExchange = initForceHaloExchange(sim->domain, sim->boxes,sim->method < CPU_NL);
-     // init boundary cell lists
-     SetBoundaryCells(sim, pot->forceExchange);
-   }
-   if((sim->method == THREAD_ATOM_NL || sim->method == WARP_ATOM_NL) && !cmd.doeam){
-           if (printRank())
-                   printf("Gpu neighborlist implementation is currently only supported for the eam potential.\n");
-           exit(-1);
-   }
- 
-   // setup GPU //TODO: refactor: this should become a init function which allocates everything related to sim->gpu (i.e. break allocateGPU() up into several functions)
-   AllocateGpu(sim, cmd.doeam, skinDistance); 
-   CopyDataToGpu(sim, cmd.doeam);
+	// create lattice with desired temperature and displacement.
+	createFccLattice(cmd.nx, cmd.ny, cmd.nz, latticeConstant, sim);
+	setTemperature(sim, cmd.temperature);
+	randomDisplacements(sim, cmd.initialDelta);
 
-   // Forces must be computed before we call the time stepper.
-   if (!sim->gpuProfile) {
-     startTimer(redistributeTimer);
-     redistributeAtoms(sim);
-     stopTimer(redistributeTimer); 
-   }
+	// set atoms exchange function
+	sim->atomExchange = initAtomHaloExchange(sim->domain, sim->boxes);
+	if (!cmd.doeam) {
+		SetBoundaryCells(sim, sim->atomExchange);
+	}
+	// set forces exchange function
+	if (cmd.doeam && sim->method < CPU_NL) {
+		EamPotential* pot = (EamPotential*) sim->pot;
+		pot->forceExchange = initForceHaloExchange(sim->domain, sim->boxes,
+				sim->method < CPU_NL);
+		// init boundary cell lists
+		SetBoundaryCells(sim, pot->forceExchange);
+	}
+	if ((sim->method == THREAD_ATOM_NL || sim->method == WARP_ATOM_NL)
+			&& !cmd.doeam) {
+		if (printRank())
+			printf(
+					"Gpu neighborlist implementation is currently only supported for the eam potential.\n");
+		exit(-1);
+	}
 
-   if(useNL){
-      buildNeighborList(sim,0);
-   }
+	// setup GPU //TODO: refactor: this should become a init function which allocates everything related to sim->gpu (i.e. break allocateGPU() up into several functions)
+	AllocateGpu(sim, cmd.doeam, skinDistance);
+	CopyDataToGpu(sim, cmd.doeam);
 
-   startTimer(computeForceTimer);
-   computeForce(sim);
-   stopTimer(computeForceTimer);
+	// Forces must be computed before we call the time stepper.
+	if (!sim->gpuProfile) {
+		startTimer(redistributeTimer);
+		redistributeAtoms(sim);
+		stopTimer(redistributeTimer);
+	}
 
-   if(sim->method < CPU_NL)
-      kineticEnergyGpu(sim);
-   else
-      kineticEnergy(sim);
+	if (useNL) {
+		buildNeighborList(sim, 0);
+	}
 
-   if(sim->gpuAsync != 0 && useNL){
-           printf("Async Neighborlist not supported yet!\n");
-           exit(-1);
-   }
-   return sim;
+	startTimer(computeForceTimer);
+	computeForce(sim);
+	stopTimer(computeForceTimer);
+
+	if (sim->method < CPU_NL)
+		kineticEnergyGpu(sim);
+	else
+		kineticEnergy(sim);
+
+	if (sim->gpuAsync != 0 && useNL) {
+		printf("Async Neighborlist not supported yet!\n");
+		exit(-1);
+	}
+	return sim;
 }
 
 /// frees all data associated with *ps and frees *ps
-void destroySimulation(SimFlat** ps)
-{
-   if ( ! ps ) return;
+void destroySimulation(SimFlat** ps) {
+	if (!ps)
+		return;
 
-   SimFlat* s = *ps;
-   if ( ! s ) return;
+	SimFlat* s = *ps;
+	if (!s)
+		return;
 
-   // free GPU data
-   DestroyGpu(s);
+	// free GPU data
+	DestroyGpu(s);
 
-   BasePotential* pot = s->pot;
-   if ( pot) pot->destroy(&pot);
-   destroyLinkCells(&(s->boxes));
-   destroyAtoms(s->atoms);
-   destroyHaloExchange(&(s->atomExchange));
-   comdFree(s->species);
-   comdFree(s->domain);
-   comdFree(s);
-   *ps = NULL;
+	BasePotential* pot = s->pot;
+	if (pot)
+		pot->destroy(&pot);
+	destroyLinkCells(&(s->boxes));
+	destroyAtoms(s->atoms);
+	destroyHaloExchange(&(s->atomExchange));
+	comdFree(s->species);
+	comdFree(s->domain);
+	comdFree(s);
+	*ps = NULL;
 
-   return;
+	return;
 }
 
-void initSubsystems(void)
-{
+void initSubsystems(void) {
 #if REDIRECT_OUTPUT
-   freopen("testOut.txt","w",screenOut);
+	freopen("testOut.txt","w",screenOut);
 #endif
 
-   yamlBegin();
+	yamlBegin();
 }
 
-void finalizeSubsystems(void)
-{
+void finalizeSubsystems(void) {
 #if REDIRECT_OUTPUT
-   fclose(screenOut);
+	fclose(screenOut);
 #endif
-   yamlEnd();
+	yamlEnd();
 }
 
 /// decide whether to get LJ or EAM potentials
-BasePotential* initPotential(
-   int doeam, const char* potDir, const char* potName, const char* potType)
-{
-   BasePotential* pot = NULL;
+BasePotential* initPotential(int doeam, const char* potDir, const char* potName,
+		const char* potType) {
+	BasePotential* pot = NULL;
 
-   if (doeam) 
-      pot = initEamPot(potDir, potName, potType);
-   else 
-      pot = initLjPot();
-   assert(pot);
-   return pot;
+	if (doeam)
+		pot = initEamPot(potDir, potName, potType);
+	else
+		pot = initLjPot();
+	assert(pot);
+	return pot;
 }
 
-SpeciesData* initSpecies(BasePotential* pot)
-{
-   SpeciesData* species = (SpeciesData*)comdMalloc(sizeof(SpeciesData));
+SpeciesData* initSpecies(BasePotential* pot) {
+	SpeciesData* species = (SpeciesData*) comdMalloc(sizeof(SpeciesData));
 
-   strcpy(species->name, pot->name);
-   species->atomicNo = pot->atomicNo;
-   species->mass = pot->mass;
+	strcpy(species->name, pot->name);
+	species->atomicNo = pot->atomicNo;
+	species->mass = pot->mass;
 
-   return species;
+	return species;
 }
 
-Validate* initValidate(SimFlat* sim)
-{
-   sumAtoms(sim);
-   Validate* val = (Validate*)comdMalloc(sizeof(Validate));
-   val->eTot0 = (sim->ePotential + sim->eKinetic) / sim->atoms->nGlobal;
-   val->nAtoms0 = sim->atoms->nGlobal;
+Validate* initValidate(SimFlat* sim) {
+	sumAtoms(sim);
+	Validate* val = (Validate*) comdMalloc(sizeof(Validate));
+	val->eTot0 = (sim->ePotential + sim->eKinetic) / sim->atoms->nGlobal;
+	val->nAtoms0 = sim->atoms->nGlobal;
 
-   if (printRank())
-   {
-      fprintf(screenOut, "\n");
-      printSeparator(screenOut);
-      fprintf(screenOut, "Initial energy : %14.12f, atom count : %d \n", 
-            val->eTot0, val->nAtoms0);
-      fprintf(screenOut, "\n");
-   }
-   return val;
+	if (printRank()) {
+		fprintf(screenOut, "\n");
+		printSeparator(screenOut);
+		fprintf(screenOut, "Initial energy : %14.12f, atom count : %d \n",
+				val->eTot0, val->nAtoms0);
+		fprintf(screenOut, "\n");
+	}
+	return val;
 }
 
-void validateResult(const Validate* val, SimFlat* sim)
-{
-   if (printRank())
-   {
-      real_t eFinal = (sim->ePotential + sim->eKinetic) / sim->atoms->nGlobal;
+void validateResult(const Validate* val, SimFlat* sim) {
+	if (printRank()) {
+		real_t eFinal = (sim->ePotential + sim->eKinetic) / sim->atoms->nGlobal;
 
-      int nAtomsDelta = (sim->atoms->nGlobal - val->nAtoms0);
+		int nAtomsDelta = (sim->atoms->nGlobal - val->nAtoms0);
 
-      fprintf(screenOut, "\n");
-      fprintf(screenOut, "\n");
-      fprintf(screenOut, "Simulation Validation:\n");
+		fprintf(screenOut, "\n");
+		fprintf(screenOut, "\n");
+		fprintf(screenOut, "Simulation Validation:\n");
 
-      fprintf(screenOut, "  Initial energy  : %14.12f\n", val->eTot0);
-      fprintf(screenOut, "  Final energy    : %14.12f\n", eFinal);
-      fprintf(screenOut, "  eFinal/eInitial : %f\n", eFinal/val->eTot0);
-      if ( nAtomsDelta == 0)
-      {
-         fprintf(screenOut, "  Final atom count : %d, no atoms lost\n",
-               sim->atoms->nGlobal);
-      }
-      else
-      {
-         fprintf(screenOut, "#############################\n");
-         fprintf(screenOut, "# WARNING: %6d atoms lost #\n", nAtomsDelta);
-         fprintf(screenOut, "#############################\n");
-      }
-   }
+		fprintf(screenOut, "  Initial energy  : %14.12f\n", val->eTot0);
+		fprintf(screenOut, "  Final energy    : %14.12f\n", eFinal);
+		fprintf(screenOut, "  eFinal/eInitial : %f\n", eFinal / val->eTot0);
+		if (nAtomsDelta == 0) {
+			fprintf(screenOut, "  Final atom count : %d, no atoms lost\n",
+					sim->atoms->nGlobal);
+		} else {
+			fprintf(screenOut, "#############################\n");
+			fprintf(screenOut, "# WARNING: %6d atoms lost #\n", nAtomsDelta);
+			fprintf(screenOut, "#############################\n");
+		}
+	}
 }
 
-void sumAtoms(SimFlat* s)
-{
-   // update num atoms from GPU
+void sumAtoms(SimFlat* s) {
+	// update num atoms from GPU
 //   cudaMemcpy(s->boxes->nAtoms, s->gpu.num_atoms, s->boxes->nLocalBoxes * sizeof(int), cudaMemcpyDeviceToHost);
 
-   // sum atoms across all processers
-   s->atoms->nLocal = 0;
-   for (int i = 0; i < s->boxes->nLocalBoxes; i++)
-   {
-      s->atoms->nLocal += s->boxes->nAtoms[i];
-   }
+	// sum atoms across all processers
+	s->atoms->nLocal = 0;
+	for (int i = 0; i < s->boxes->nLocalBoxes; i++) {
+		s->atoms->nLocal += s->boxes->nAtoms[i];
+	}
 
-   startTimer(commReduceTimer);
-   addIntParallel(&s->atoms->nLocal, &s->atoms->nGlobal, 1);
-   stopTimer(commReduceTimer);
+	startTimer(commReduceTimer);
+	addIntParallel(&s->atoms->nLocal, &s->atoms->nGlobal, 1);
+	stopTimer(commReduceTimer);
 }
 
 /// Prints current time, energy, performance etc to monitor the state of
 /// the running simulation.  Performance per atom is scaled by the
 /// number of local atoms per process this should give consistent timing
 /// assuming reasonable load balance
-void printThings(SimFlat* s, int iStep, double elapsedTime)
-{
-   // keep track previous value of iStep so we can calculate number of steps.
-   static int iStepPrev = -1; 
-   static int firstCall = 1;
+void printThings(SimFlat* s, int iStep, double elapsedTime) {
+	// keep track previous value of iStep so we can calculate number of steps.
+	static int iStepPrev = -1;
+	static int firstCall = 1;
 
-   int nEval = iStep - iStepPrev; // gives nEval = 1 for zeroth step.
-   iStepPrev = iStep;
-   
-   if (! printRank() )
-      return;
+	int nEval = iStep - iStepPrev; // gives nEval = 1 for zeroth step.
+	iStepPrev = iStep;
 
-   if (firstCall)
-   {
-      firstCall = 0;
-      fprintf(screenOut, 
-       "#                                                                                         Performance\n" 
-       "#  Loop   Time(fs)       Total Energy   Potential Energy     Kinetic Energy  Temperature   (us/atom)     # Atoms\n");
-      fflush(screenOut);
-   }
+	if (!printRank())
+		return;
 
-   real_t time = iStep*s->dt;
-   real_t eTotal = (s->ePotential+s->eKinetic) / s->atoms->nGlobal;
-   real_t eK = s->eKinetic / s->atoms->nGlobal;
-   real_t eU = s->ePotential / s->atoms->nGlobal;
-   real_t Temp = (s->eKinetic / s->atoms->nGlobal) / (kB_eV * 1.5);
+	if (firstCall) {
+		firstCall = 0;
+		fprintf(screenOut,
+				"#                                                                                         Performance\n"
+						"#  Loop   Time(fs)       Total Energy   Potential Energy     Kinetic Energy  Temperature   (us/atom)     # Atoms\n");
+		fflush(screenOut);
+	}
 
-   double timePerAtom = 1.0e6*elapsedTime/(double)(nEval*s->atoms->nLocal);
+	real_t time = iStep * s->dt;
+	real_t eTotal = (s->ePotential + s->eKinetic) / s->atoms->nGlobal;
+	real_t eK = s->eKinetic / s->atoms->nGlobal;
+	real_t eU = s->ePotential / s->atoms->nGlobal;
+	real_t Temp = (s->eKinetic / s->atoms->nGlobal) / (kB_eV * 1.5);
 
-   fprintf(screenOut, " %6d %10.2f %18.12f %18.12f %18.12f %12.4f %10.4f %12d\n",
-           iStep, time, eTotal, eU, eK, Temp, timePerAtom, s->atoms->nGlobal);
+	double timePerAtom = 1.0e6 * elapsedTime
+			/ (double) (nEval * s->atoms->nLocal);
+
+	fprintf(screenOut,
+			" %6d %10.2f %18.12f %18.12f %18.12f %12.4f %10.4f %12d\n", iStep,
+			time, eTotal, eU, eK, Temp, timePerAtom, s->atoms->nGlobal);
 }
 
 /// Print information about the simulation in a format that is (mostly)
 /// YAML compliant.
-void printSimulationDataYaml(FILE* file, SimFlat* s)
-{
-   // All ranks get maxOccupancy
-   int maxOcc = maxOccupancy(s->boxes);
+void printSimulationDataYaml(FILE* file, SimFlat* s) {
+	// All ranks get maxOccupancy
+	int maxOcc = maxOccupancy(s->boxes);
 
-   // Only rank 0 prints
-   if (! printRank())
-      return;
-   
-   fprintf(file,"Simulation data: \n");
-   fprintf(file,"  Total atoms        : %d\n", 
-           s->atoms->nGlobal);
-   fprintf(file,"  Min global bounds  : [ %14.10f, %14.10f, %14.10f ]\n",
-           s->domain->globalMin[0], s->domain->globalMin[1], s->domain->globalMin[2]);
-   fprintf(file,"  Max global bounds  : [ %14.10f, %14.10f, %14.10f ]\n",
-           s->domain->globalMax[0], s->domain->globalMax[1], s->domain->globalMax[2]);
-   printSeparator(file);
-   fprintf(file,"Decomposition data: \n");
-   fprintf(file,"  Processors         : %6d,%6d,%6d\n", 
-           s->domain->procGrid[0], s->domain->procGrid[1], s->domain->procGrid[2]);
-   fprintf(file,"  Local boxes        : %6d,%6d,%6d = %8d\n", 
-           s->boxes->gridSize[0], s->boxes->gridSize[1], s->boxes->gridSize[2], 
-           s->boxes->gridSize[0]*s->boxes->gridSize[1]*s->boxes->gridSize[2]);
-   fprintf(file,"  Box size           : [ %14.10f, %14.10f, %14.10f ]\n", 
-           s->boxes->boxSize[0], s->boxes->boxSize[1], s->boxes->boxSize[2]);
-   fprintf(file,"  Box factor         : [ %14.10f, %14.10f, %14.10f ] \n", 
-           s->boxes->boxSize[0]/s->pot->cutoff,
-           s->boxes->boxSize[1]/s->pot->cutoff,
-           s->boxes->boxSize[2]/s->pot->cutoff);
-   fprintf(file, "  Max Link Cell Occupancy: %d of %d\n",
-           maxOcc, MAXATOMS);
-   printSeparator(file);
-   fprintf(file,"Potential data: \n");
-   s->pot->print(file, s->pot);
-   
-   // Memory footprint diagnostics
-   int perAtomSize = 10*sizeof(real_t)+2*sizeof(int);
-   float mbPerAtom = perAtomSize/1024/1024;
-   float totalMemLocal = (float)(perAtomSize*s->atoms->nLocal)/1024/1024;
-   float totalMemGlobal = (float)(perAtomSize*s->atoms->nGlobal)/1024/1024;
+	// Only rank 0 prints
+	if (!printRank())
+		return;
 
-   int nLocalBoxes = s->boxes->gridSize[0]*s->boxes->gridSize[1]*s->boxes->gridSize[2];
-   int nTotalBoxes = (s->boxes->gridSize[0]+2)*(s->boxes->gridSize[1]+2)*(s->boxes->gridSize[2]+2);
-   float paddedMemLocal = (float) nLocalBoxes*(perAtomSize*MAXATOMS)/1024/1024;
-   float paddedMemTotal = (float) nTotalBoxes*(perAtomSize*MAXATOMS)/1024/1024;
+	fprintf(file, "Simulation data: \n");
+	fprintf(file, "  Total atoms        : %d\n", s->atoms->nGlobal);
+	fprintf(file, "  Min global bounds  : [ %14.10f, %14.10f, %14.10f ]\n",
+			s->domain->globalMin[0], s->domain->globalMin[1],
+			s->domain->globalMin[2]);
+	fprintf(file, "  Max global bounds  : [ %14.10f, %14.10f, %14.10f ]\n",
+			s->domain->globalMax[0], s->domain->globalMax[1],
+			s->domain->globalMax[2]);
+	printSeparator(file);
+	fprintf(file, "Decomposition data: \n");
+	fprintf(file, "  Processors         : %6d,%6d,%6d\n",
+			s->domain->procGrid[0], s->domain->procGrid[1],
+			s->domain->procGrid[2]);
+	fprintf(file, "  Local boxes        : %6d,%6d,%6d = %8d\n",
+			s->boxes->gridSize[0], s->boxes->gridSize[1], s->boxes->gridSize[2],
+			s->boxes->gridSize[0] * s->boxes->gridSize[1]
+					* s->boxes->gridSize[2]);
+	fprintf(file, "  Box size           : [ %14.10f, %14.10f, %14.10f ]\n",
+			s->boxes->boxSize[0], s->boxes->boxSize[1], s->boxes->boxSize[2]);
+	fprintf(file, "  Box factor         : [ %14.10f, %14.10f, %14.10f ] \n",
+			s->boxes->boxSize[0] / s->pot->cutoff,
+			s->boxes->boxSize[1] / s->pot->cutoff,
+			s->boxes->boxSize[2] / s->pot->cutoff);
+	fprintf(file, "  Max Link Cell Occupancy: %d of %d\n", maxOcc, MAXATOMS);
+	printSeparator(file);
+	fprintf(file, "Potential data: \n");
+	s->pot->print(file, s->pot);
 
-   printSeparator(file);
-   fprintf(file,"Memory data: \n");
-   fprintf(file, "  Intrinsic atom footprint = %4d B/atom \n", perAtomSize);
-   fprintf(file, "  Total atom footprint     = %7.3f MB (%6.2f MB/node)\n", totalMemGlobal, totalMemLocal);
-   fprintf(file, "  Link cell atom footprint = %7.3f MB/node\n", paddedMemLocal);
-   fprintf(file, "  Link cell atom footprint = %7.3f MB/node (including halo cell data\n", paddedMemTotal);
+	// Memory footprint diagnostics
+	int perAtomSize = 10 * sizeof(real_t) + 2 * sizeof(int);
+	float mbPerAtom = perAtomSize / 1024 / 1024;
+	float totalMemLocal = (float) (perAtomSize * s->atoms->nLocal) / 1024
+			/ 1024;
+	float totalMemGlobal = (float) (perAtomSize * s->atoms->nGlobal) / 1024
+			/ 1024;
 
-   fflush(file);      
+	int nLocalBoxes = s->boxes->gridSize[0] * s->boxes->gridSize[1]
+			* s->boxes->gridSize[2];
+	int nTotalBoxes = (s->boxes->gridSize[0] + 2) * (s->boxes->gridSize[1] + 2)
+			* (s->boxes->gridSize[2] + 2);
+	float paddedMemLocal = (float) nLocalBoxes * (perAtomSize * MAXATOMS) / 1024
+			/ 1024;
+	float paddedMemTotal = (float) nTotalBoxes * (perAtomSize * MAXATOMS) / 1024
+			/ 1024;
+
+	printSeparator(file);
+	fprintf(file, "Memory data: \n");
+	fprintf(file, "  Intrinsic atom footprint = %4d B/atom \n", perAtomSize);
+	fprintf(file, "  Total atom footprint     = %7.3f MB (%6.2f MB/node)\n",
+			totalMemGlobal, totalMemLocal);
+	fprintf(file, "  Link cell atom footprint = %7.3f MB/node\n",
+			paddedMemLocal);
+	fprintf(file,
+			"  Link cell atom footprint = %7.3f MB/node (including halo cell data\n",
+			paddedMemTotal);
+
+	fflush(file);
 }
 
 /// Check that the user input meets certain criteria.
-void sanityChecks(Command cmd, double cutoff, double latticeConst, char latticeType[8])
-{
-   int failCode = 0;
+void sanityChecks(Command cmd, double cutoff, double latticeConst,
+		char latticeType[8]) {
+	int failCode = 0;
 
-   // Check that domain grid matches number of ranks. (fail code 1)
-   int nProcs = cmd.xproc * cmd.yproc * cmd.zproc;
-   if (nProcs != getNRanks())
-   {
-      failCode |= 1;
-      if (printRank() )
-         fprintf(screenOut,
-                 "\nNumber of MPI ranks must match xproc * yproc * zproc\n");
-   }
+	// Check that domain grid matches number of ranks. (fail code 1)
+	int nProcs = cmd.xproc * cmd.yproc * cmd.zproc;
+	if (nProcs != getNRanks()) {
+		failCode |= 1;
+		if (printRank())
+			fprintf(screenOut,
+					"\nNumber of MPI ranks must match xproc * yproc * zproc\n");
+	}
 
-   // Check whether simuation is too small (fail code 2)
-   double minx = 2*cutoff*cmd.xproc;
-   double miny = 2*cutoff*cmd.yproc;
-   double minz = 2*cutoff*cmd.zproc;
-   double sizex = cmd.nx*latticeConst;
-   double sizey = cmd.ny*latticeConst;
-   double sizez = cmd.nz*latticeConst;
+	// Check whether simuation is too small (fail code 2)
+	double minx = 2 * cutoff * cmd.xproc;
+	double miny = 2 * cutoff * cmd.yproc;
+	double minz = 2 * cutoff * cmd.zproc;
+	double sizex = cmd.nx * latticeConst;
+	double sizey = cmd.ny * latticeConst;
+	double sizez = cmd.nz * latticeConst;
 
-   if ( sizex < minx || sizey < miny || sizez < minz)
-   {
-      failCode |= 2;
-      if (printRank())
-         fprintf(screenOut,"\nSimulation too small.\n"
-                 "  Increase the number of unit cells to make the simulation\n"
-                 "  at least (%3.2f, %3.2f. %3.2f) Ansgstroms in size\n",
-                 minx, miny, minz);
-   }
+	if (sizex < minx || sizey < miny || sizez < minz) {
+		failCode |= 2;
+		if (printRank())
+			fprintf(screenOut,
+					"\nSimulation too small.\n"
+							"  Increase the number of unit cells to make the simulation\n"
+							"  at least (%3.2f, %3.2f. %3.2f) Ansgstroms in size\n",
+					minx, miny, minz);
+	}
 
-   // Check for supported lattice structure (fail code 4)
-   if (strcasecmp(latticeType, "FCC") != 0)
-   {
-      failCode |= 4;
-      if ( printRank() )
-         fprintf(screenOut,
-                 "\nOnly FCC Lattice type supported, not %s. Fatal Error.\n",
-                 latticeType);
-   }
-   int checkCode = failCode;
-   bcastParallel(&checkCode, sizeof(int), 0);
-   // This assertion can only fail if different tasks failed different
-   // sanity checks.  That should not be possible.
-   assert(checkCode == failCode);
-      
-   if (failCode != 0)
-      exit(failCode);
+	// Check for supported lattice structure (fail code 4)
+	if (strcasecmp(latticeType, "FCC") != 0) {
+		failCode |= 4;
+		if (printRank())
+			fprintf(screenOut,
+					"\nOnly FCC Lattice type supported, not %s. Fatal Error.\n",
+					latticeType);
+	}
+	int checkCode = failCode;
+	bcastParallel(&checkCode, sizeof(int), 0);
+	// This assertion can only fail if different tasks failed different
+	// sanity checks.  That should not be possible.
+	assert(checkCode == failCode);
+
+	if (failCode != 0)
+		exit(failCode);
 }
 
 // --------------------------------------------------------------
-
 
 /// \page pg_building_comd Building CoMD
 ///
@@ -645,9 +658,7 @@ void sanityChecks(Command cmd, double cutoff, double latticeConst, char latticeT
 
 // --------------------------------------------------------------
 
-
 // --------------------------------------------------------------
-
 
 /// \page pg_measuring_performance Measuring Performance
 ///
@@ -725,7 +736,6 @@ void sanityChecks(Command cmd, double cutoff, double latticeConst, char latticeT
 /// with 3 GB of memory per core.
 
 // --------------------------------------------------------------
-
 
 /// \page pg_problem_selection_and_scaling Problem Selection and Scaling
 ///
@@ -842,9 +852,7 @@ void sanityChecks(Command cmd, double cutoff, double latticeConst, char latticeT
 /// For further details see for example:
 /// https://support.scinet.utoronto.ca/wiki/index.php/Introduction_To_Performance
 
-
 // --------------------------------------------------------------
-
 
 /// \page pg_verifying_correctness Verifying Correctness
 ///
@@ -963,7 +971,6 @@ void sanityChecks(Command cmd, double cutoff, double latticeConst, char latticeT
 
 // --------------------------------------------------------------
 
-
 /// \page pg_comd_architecture CoMD Architecture
 ///
 /// Program Flow {#sec_program_flow}
@@ -1029,7 +1036,6 @@ void sanityChecks(Command cmd, double cutoff, double latticeConst, char latticeT
 
 // --------------------------------------------------------------
 
-
 /// \page pg_optimization_targets Optimization Targets
 ///
 /// Computation {#sec_computation}
@@ -1076,9 +1082,7 @@ void sanityChecks(Command cmd, double cutoff, double latticeConst, char latticeT
 /// halo exchange is performed in the force routine (see
 /// initForceHaloExchange()).
 
-
 // --------------------------------------------------------------
-
 
 /// \page pg_whats_new New Features and Changes in CoMD 1.1
 ///
@@ -1147,9 +1151,7 @@ void sanityChecks(Command cmd, double cutoff, double latticeConst, char latticeT
 /// may be able to help produce a custom version that includes the code
 /// you need.
 
-
 // --------------------------------------------------------------
-
 
 /// \page pg_md_basics MD Basics
 ///
