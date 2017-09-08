@@ -1,0 +1,41 @@
+
+Mini-Application Name    : CoMD-cuda
+Mini-Application Version : 1.1
+Platform:
+  hostname: salmao
+  kernel name: 'Linux'
+  kernel release: '3.13.0-119-generic'
+  processor: 'x86_64'
+Build:
+  CC: '/usr/bin/gcc'
+  compiler version: 'gcc (Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4'
+  CFLAGS: '-std=c99 -Wno-unused-result -DMAXATOMS=64  -DNDEBUG -g -O5 -DCOMD_DOUBLE  -I/usr/local/cuda-8.0//include'
+  LDFLAGS: '-lm -lstdc++ -L/usr/local/cuda-8.0//lib64 -lcudart'
+  using MPI: false
+  Threading: none
+  Double Precision: true
+Run Date/Time: 2017-09-07, 21:44:13
+
+Command Line Parameters:
+  doeam: 1
+  potDir: pots
+  potName: Cu_u6.eam
+  potType: funcfl
+  nx: 98
+  ny: 49
+  nz: 20
+  xproc: 1
+  yproc: 1
+  zproc: 1
+  Lattice constant: -1 Angstroms
+  nSteps: 100
+  printRate: 10
+  Time step: 1 fs
+  Initial Temperature: 600 K
+  Initial Delta: 0 Angstroms
+
+  GPU async opt: 0
+  GPU profiling mode: 0
+  GPU method: thread_atom
+  Space-filling (Hilbert): 0
+
