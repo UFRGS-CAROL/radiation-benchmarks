@@ -118,6 +118,10 @@ int main(int argc, char** argv) {
 
 	Validate* validate = initValidate(sim); // atom counts, energy
 	timestampBarrier("Initialization Finished\n");
+//----------------------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------------------
+
 
 	timestampBarrier("Starting simulation\n");
 

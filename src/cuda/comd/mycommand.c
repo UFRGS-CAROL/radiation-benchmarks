@@ -184,137 +184,143 @@
 ///
 /// \param [in] argc the number of command line arguments
 /// \param [in] argv the command line arguments array
-Command parseCommandLine(int argc, char** argv)
-{
-   Command cmd;
+Command parseCommandLine(int argc, char** argv) {
+	Command cmd;
 
-   memset(cmd.potDir, 0, 1024);
-   memset(cmd.potName, 0, 1024);
-   memset(cmd.potType, 0, 1024);
-   strcpy(cmd.potDir,  "pots");
-   strcpy(cmd.potName, "\0"); // default depends on potType
-   strcpy(cmd.potType, "funcfl");
-   cmd.doeam = 0;
-   cmd.nx = 20;
-   cmd.ny = 20;
-   cmd.nz = 20;
-   cmd.xproc = 1;
-   cmd.yproc = 1;
-   cmd.zproc = 1;
-   cmd.nSteps = 100;
-   cmd.printRate = 10;
-   cmd.dt = 1.0;
-   cmd.lat = -1.0;
-   cmd.temperature = 600.0;
-   cmd.initialDelta = 0.0;
-   cmd.relativeSkinDistance= 0.1;
-   cmd.doHilbert = 0;
+	memset(cmd.potDir, 0, 1024);
+	memset(cmd.potName, 0, 1024);
+	memset(cmd.potType, 0, 1024);
+	strcpy(cmd.potDir, "pots");
+	strcpy(cmd.potName, "\0"); // default depends on potType
+	strcpy(cmd.potType, "funcfl");
+	cmd.doeam = 0;
+	cmd.nx = 20;
+	cmd.ny = 20;
+	cmd.nz = 20;
+	cmd.xproc = 1;
+	cmd.yproc = 1;
+	cmd.zproc = 1;
+	cmd.nSteps = 100;
+	cmd.printRate = 10;
+	cmd.dt = 1.0;
+	cmd.lat = -1.0;
+	cmd.temperature = 600.0;
+	cmd.initialDelta = 0.0;
+	cmd.relativeSkinDistance = 0.1;
+	cmd.doHilbert = 0;
 
-   // gpu-specific
-   memset(cmd.method, 0, 1024);
-   strcpy(cmd.method, "thread_atom");
-   cmd.gpuAsync = 0;
-   cmd.gpuProfile = 0;
+	// gpu-specific
+	memset(cmd.method, 0, 1024);
+	strcpy(cmd.method, "thread_atom");
+	cmd.gpuAsync = 0;
+	cmd.gpuProfile = 0;
 
-   cmd.ljInterpolation = 0;
-   cmd.spline = 0;
+	cmd.ljInterpolation = 0;
+	cmd.spline = 0;
 
-   int help=0;
-   // add arguments for processing.  Please update the html documentation too!
-   addArg("help",       'h', 0, 'i',  &(help),             0,             "print this message");
-   addArg("potDir",     'd', 1, 's',  cmd.potDir,    sizeof(cmd.potDir),  "potential directory");
-   addArg("potName",    'p', 1, 's',  cmd.potName,   sizeof(cmd.potName), "potential name");
-   addArg("potType",    't', 1, 's',  cmd.potType,   sizeof(cmd.potType), "potential type (funcfl or setfl)");
-   addArg("doeam",      'e', 0, 'i',  &(cmd.doeam),        0,             "compute eam potentials");
-   addArg("nx",         'x', 1, 'i',  &(cmd.nx),           0,             "number of unit cells in x");
-   addArg("ny",         'y', 1, 'i',  &(cmd.ny),           0,             "number of unit cells in y");
-   addArg("nz",         'z', 1, 'i',  &(cmd.nz),           0,             "number of unit cells in z");
-   addArg("xproc",      'i', 1, 'i',  &(cmd.xproc),        0,             "processors in x direction");
-   addArg("yproc",      'j', 1, 'i',  &(cmd.yproc),        0,             "processors in y direction");
-   addArg("zproc",      'k', 1, 'i',  &(cmd.zproc),        0,             "processors in z direction");
-   addArg("nSteps",     'N', 1, 'i',  &(cmd.nSteps),       0,             "number of time steps");
-   addArg("printRate",  'n', 1, 'i',  &(cmd.printRate),    0,             "number of steps between output");
-   addArg("dt",         'D', 1, 'd',  &(cmd.dt),           0,             "time step (in fs)");
-   addArg("lat",        'l', 1, 'd',  &(cmd.lat),          0,             "lattice parameter (Angstroms)");
-   addArg("temp",       'T', 1, 'd',  &(cmd.temperature),  0,             "initial temperature (K)");
-   addArg("delta",      'r', 1, 'd',  &(cmd.initialDelta), 0,             "initial delta (Angstroms)");
-   addArg("hilbert",    'H', 0, 'd',  &(cmd.doHilbert), 0,             "space-filling curve for the traversal of cells");
-   addArg("skinDistance",'S', 1, 'd',  &(cmd.relativeSkinDistance), 0,     "skinDistance (relative to cutoff (default: 0.1))");
-   addArg("method",  'm', 1, 's',  cmd.method, sizeof(cmd.method), "thread_atom,warp_atom,warp_atom_nl,cta_cell,thread_atom_nl,cpu_nl");
+	int help = 0;
+	// add arguments for processing.  Please update the html documentation too!
+	addArg("help", 'h', 0, 'i', &(help), 0, "print this message");
+	addArg("potDir", 'd', 1, 's', cmd.potDir, sizeof(cmd.potDir),
+			"potential directory");
+	addArg("potName", 'p', 1, 's', cmd.potName, sizeof(cmd.potName),
+			"potential name");
+	addArg("potType", 't', 1, 's', cmd.potType, sizeof(cmd.potType),
+			"potential type (funcfl or setfl)");
+	addArg("doeam", 'e', 0, 'i', &(cmd.doeam), 0, "compute eam potentials");
+	addArg("nx", 'x', 1, 'i', &(cmd.nx), 0, "number of unit cells in x");
+	addArg("ny", 'y', 1, 'i', &(cmd.ny), 0, "number of unit cells in y");
+	addArg("nz", 'z', 1, 'i', &(cmd.nz), 0, "number of unit cells in z");
+	addArg("xproc", 'i', 1, 'i', &(cmd.xproc), 0, "processors in x direction");
+	addArg("yproc", 'j', 1, 'i', &(cmd.yproc), 0, "processors in y direction");
+	addArg("zproc", 'k', 1, 'i', &(cmd.zproc), 0, "processors in z direction");
+	addArg("nSteps", 'N', 1, 'i', &(cmd.nSteps), 0, "number of time steps");
+	addArg("printRate", 'n', 1, 'i', &(cmd.printRate), 0,
+			"number of steps between output");
+	addArg("dt", 'D', 1, 'd', &(cmd.dt), 0, "time step (in fs)");
+	addArg("lat", 'l', 1, 'd', &(cmd.lat), 0, "lattice parameter (Angstroms)");
+	addArg("temp", 'T', 1, 'd', &(cmd.temperature), 0,
+			"initial temperature (K)");
+	addArg("delta", 'r', 1, 'd', &(cmd.initialDelta), 0,
+			"initial delta (Angstroms)");
+	addArg("hilbert", 'H', 0, 'd', &(cmd.doHilbert), 0,
+			"space-filling curve for the traversal of cells");
+	addArg("skinDistance", 'S', 1, 'd', &(cmd.relativeSkinDistance), 0,
+			"skinDistance (relative to cutoff (default: 0.1))");
+	addArg("method", 'm', 1, 's', cmd.method, sizeof(cmd.method),
+			"thread_atom,warp_atom,warp_atom_nl,cta_cell,thread_atom_nl,cpu_nl");
 
-   // gpu-specific
-   addArg("gpuAsync",   'a', 1, 'i',  &(cmd.gpuAsync),     0,             "communicaton hiding optimization using streams");
-   addArg("gpuProfile", 's', 0, 'i',  &(cmd.gpuProfile),   0,             "profiling mode: reboxing disabled, single kernel run");
-   addArg("ljInterpolation", 'I', 0, 'i', &(cmd.ljInterpolation), 0,   "compute Lennard-Jones potential using interpolation (gpu only)");
-   addArg("spline", 'P', 0, 'i', &(cmd.spline), 0, "use splines for interpolation (gpu only)");
-   addArg("usePairlist", 'L', 0, 'i', &(cmd.usePairlist), 0, "use pairlists for cta_cell method in Lennard-Jones computation");
+	// gpu-specific
+	addArg("gpuAsync", 'a', 1, 'i', &(cmd.gpuAsync), 0,
+			"communicaton hiding optimization using streams");
+	addArg("gpuProfile", 's', 0, 'i', &(cmd.gpuProfile), 0,
+			"profiling mode: reboxing disabled, single kernel run");
+	addArg("ljInterpolation", 'I', 0, 'i', &(cmd.ljInterpolation), 0,
+			"compute Lennard-Jones potential using interpolation (gpu only)");
+	addArg("spline", 'P', 0, 'i', &(cmd.spline), 0,
+			"use splines for interpolation (gpu only)");
+	addArg("usePairlist", 'L', 0, 'i', &(cmd.usePairlist), 0,
+			"use pairlists for cta_cell method in Lennard-Jones computation");
 
-   processArgs(argc,argv);
+	//----------------------------------------------------------------------------------------------------------
+	// save logs
+	addArg("generate", 'g', 1, 's', cmd.gold_in_out, sizeof(cmd.gold_in_out),
+			"generate gold for radiation test, parameter is the gold path");
+	addArg("rad_iter", 'R', 1, 'i', &(cmd.iterations), 0,
+			"iterations used when a radiation test is performed");
+	addArg("save_mid_it", "M", 1, 'i', &(cmd.save_middle_iterations), 0,
+			"save iterations between big iteration, data for gold and errors are saved into /var/radiation-benchmarks/data/");
+	//----------------------------------------------------------------------------------------------------------
 
-   // If user didn't set potName, set type dependent default.
-   if (strlen(cmd.potName) == 0) 
-   {
-      if (strcmp(cmd.potType, "setfl" ) == 0)
-         strcpy(cmd.potName, "Cu01.eam.alloy");
-      if (strcmp(cmd.potType, "funcfl") == 0)
-         strcpy(cmd.potName, "Cu_u6.eam");
-   }
-      
-   if (help)
-   {
-      printArgs();
-      freeArgs();
-      exit(2);
-   }
-   freeArgs();
+	processArgs(argc, argv);
 
-   return cmd;
+	// If user didn't set potName, set type dependent default.
+	if (strlen(cmd.potName) == 0) {
+		if (strcmp(cmd.potType, "setfl") == 0)
+			strcpy(cmd.potName, "Cu01.eam.alloy");
+		if (strcmp(cmd.potType, "funcfl") == 0)
+			strcpy(cmd.potName, "Cu_u6.eam");
+	}
+
+	if (help) {
+		printArgs();
+		freeArgs();
+		exit(2);
+	}
+	freeArgs();
+
+	return cmd;
 }
 
-void printCmdYaml(FILE* file, Command* cmd)
-{
-   if (! printRank())
-      return;
-   fprintf(file,
-           "Command Line Parameters:\n"
-           "  doeam: %d\n"
-           "  potDir: %s\n"
-           "  potName: %s\n"
-           "  potType: %s\n"
-           "  nx: %d\n"
-           "  ny: %d\n"
-           "  nz: %d\n"
-           "  xproc: %d\n"
-           "  yproc: %d\n"
-           "  zproc: %d\n"
-           "  Lattice constant: %g Angstroms\n"
-           "  nSteps: %d\n"
-           "  printRate: %d\n"
-           "  Time step: %g fs\n"
-           "  Initial Temperature: %g K\n"
-           "  Initial Delta: %g Angstroms\n\n"
-           "  GPU async opt: %d\n"
-           "  GPU profiling mode: %d\n"
-           "  GPU method: %s\n"
-           "  Space-filling (Hilbert): %d\n"
-           "\n",
-           cmd->doeam,
-           cmd->potDir,
-           cmd->potName,
-           cmd->potType,
-           cmd->nx, cmd->ny, cmd->nz,
-           cmd->xproc, cmd->yproc, cmd->zproc,
-           cmd->lat,
-           cmd->nSteps,
-           cmd->printRate,
-           cmd->dt,
-           cmd->temperature,
-           cmd->initialDelta,
-	   cmd->gpuAsync,
-	   cmd->gpuProfile,
-	   cmd->method,
-	   cmd->doHilbert
-   );
-   fflush(file);
+void printCmdYaml(FILE* file, Command* cmd) {
+	if (!printRank())
+		return;
+	fprintf(file, "Command Line Parameters:\n"
+			"  doeam: %d\n"
+			"  potDir: %s\n"
+			"  potName: %s\n"
+			"  potType: %s\n"
+			"  nx: %d\n"
+			"  ny: %d\n"
+			"  nz: %d\n"
+			"  xproc: %d\n"
+			"  yproc: %d\n"
+			"  zproc: %d\n"
+			"  Lattice constant: %g Angstroms\n"
+			"  nSteps: %d\n"
+			"  printRate: %d\n"
+			"  Time step: %g fs\n"
+			"  Initial Temperature: %g K\n"
+			"  Initial Delta: %g Angstroms\n\n"
+			"  GPU async opt: %d\n"
+			"  GPU profiling mode: %d\n"
+			"  GPU method: %s\n"
+			"  Space-filling (Hilbert): %d\n"
+			"\n", cmd->doeam, cmd->potDir, cmd->potName, cmd->potType, cmd->nx,
+			cmd->ny, cmd->nz, cmd->xproc, cmd->yproc, cmd->zproc, cmd->lat,
+			cmd->nSteps, cmd->printRate, cmd->dt, cmd->temperature,
+			cmd->initialDelta, cmd->gpuAsync, cmd->gpuProfile, cmd->method,
+			cmd->doHilbert);
+	fflush(file);
 }
 
