@@ -162,5 +162,13 @@ depend:
 	touch .depend
 	makedepend -f .depend -Y. --$(CFLAGS)-- $(SOURCES) 2> /dev/null
 	makedepend -a -f .depend -Y. -o.cu.o --$(CFLAGS)-- $(CU_SOURCES) 2> /dev/null
+	
+
+test:
+	./bin/CoMD-cuda -e -x 98 -y 49 -z 49
+
+generate:
+	./bin/CoMD-cuda -e -x 98 -y 49 -z 49
+
 
 -include .depend
