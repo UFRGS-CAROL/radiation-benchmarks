@@ -266,9 +266,11 @@ Command parseCommandLine(int argc, char** argv) {
 	// save logs
 	addArg("generate", 'g', 1, 's', cmd.gold_in_out, sizeof(cmd.gold_in_out),
 			"generate gold for radiation test, parameter is the gold path");
+
 	addArg("rad_iter", 'R', 1, 'i', &(cmd.iterations), 0,
 			"iterations used when a radiation test is performed");
-	addArg("save_mid_it", "M", 1, 'i', &(cmd.save_middle_iterations), 0,
+
+	addArg("save_mid_it", 'M', 1, 'i', &(cmd.save_middle_iterations), 0,
 			"save iterations between big iteration, data for gold and errors are saved into /var/radiation-benchmarks/data/");
 	//----------------------------------------------------------------------------------------------------------
 
