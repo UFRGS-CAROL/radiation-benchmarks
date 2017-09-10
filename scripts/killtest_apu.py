@@ -116,7 +116,6 @@ sockServerPORT = 8080
 
 # Connect to server and close connection, kind of ping
 def sockConnect():
-	return
 	try:
 		#create an INET, STREAMing socket
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
