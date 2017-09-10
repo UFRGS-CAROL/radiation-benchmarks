@@ -331,7 +331,7 @@ void printCmdYaml(FILE* file, Command* cmd) {
 			"  GPU profiling mode: %d\n"
 			"  GPU method: %s\n"
 			"  Space-filling (Hilbert): %d\n"
-			"  ----- For radiation tests variables -----"
+			"  ----- For radiation tests variables -----\n"
 			"  Generate gold: %d\n"
 			"  Gold path: %s\n"
 			"  Iterations: %d\n"
