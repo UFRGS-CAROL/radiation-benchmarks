@@ -264,6 +264,12 @@ Command parseCommandLine(int argc, char** argv) {
 
 	//----------------------------------------------------------------------------------------------------------
 	// save logs
+	cmd.gold_in_out[0] = '\0';
+	memset(cmd.gold_in_out, 0, sizeof(cmd.gold_in_out));
+	cmd.iterations = 1;
+	cmd.generate = 0;
+	cmd.save_middle_iterations = 0;
+
 	addArg("generate", 'g', 1, 's', cmd.gold_in_out, sizeof(cmd.gold_in_out),
 			"generate gold for radiation test, parameter is the gold path");
 
@@ -272,9 +278,16 @@ Command parseCommandLine(int argc, char** argv) {
 
 	addArg("save_mid_it", 'M', 1, 'i', &(cmd.save_middle_iterations), 0,
 			"save iterations between big iteration, data for gold and errors are saved into /var/radiation-benchmarks/data/");
+
 	//----------------------------------------------------------------------------------------------------------
 
 	processArgs(argc, argv);
+
+	//logs
+	if (cmd.generate) {
+		cmd.iterations = 1;
+	}
+	//end logs
 
 	// If user didn't set potName, set type dependent default.
 	if (strlen(cmd.potName) == 0) {
@@ -318,11 +331,16 @@ void printCmdYaml(FILE* file, Command* cmd) {
 			"  GPU profiling mode: %d\n"
 			"  GPU method: %s\n"
 			"  Space-filling (Hilbert): %d\n"
-			"\n", cmd->doeam, cmd->potDir, cmd->potName, cmd->potType, cmd->nx,
-			cmd->ny, cmd->nz, cmd->xproc, cmd->yproc, cmd->zproc, cmd->lat,
-			cmd->nSteps, cmd->printRate, cmd->dt, cmd->temperature,
-			cmd->initialDelta, cmd->gpuAsync, cmd->gpuProfile, cmd->method,
-			cmd->doHilbert);
+			"  ----- For radiation tests variables -----"
+			"  Generate gold: %d\n"
+			"  Gold path: %s\n"
+			"  Iterations: %d\n"
+			"  Save middle iterations: %d\n", cmd->doeam, cmd->potDir,
+			cmd->potName, cmd->potType, cmd->nx, cmd->ny, cmd->nz, cmd->xproc,
+			cmd->yproc, cmd->zproc, cmd->lat, cmd->nSteps, cmd->printRate,
+			cmd->dt, cmd->temperature, cmd->initialDelta, cmd->gpuAsync,
+			cmd->gpuProfile, cmd->method, cmd->doHilbert, cmd->generate,
+			cmd->gold_in_out, cmd->iterations, cmd->save_middle_iterations);
 	fflush(file);
 }
 
