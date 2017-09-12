@@ -50,7 +50,7 @@ float_t Layer::getSquaredWeightsSum() {
 		sum += this->W_[i] * this->W_[i];
 	}
 	//debug layer weights
-	std::cout << "\n debug getSquaredWeightsSum()  " << sum;
+	//std::cout << "\n debug getSquaredWeightsSum()  " << sum;
 	return sum;
 }
 

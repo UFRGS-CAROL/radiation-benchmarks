@@ -95,6 +95,13 @@ train_l1:
 train_l2:
 	./$(EXEC) train $(DATA_DIR)/train-images-idx3-ubyte $(DATA_DIR)/train-labels-idx1-ubyte $(DATA_DIR)/lenet_L2.weights L2
 
+test_l1:
+	./$(EXEC) classify $(DATA_DIR)/t10k-images-idx3-ubyte $(DATA_DIR)/t10k-labels-idx1-ubyte $(DATA_DIR)/lenet_L1.weights
+
+test_l2:
+	./$(EXEC) classify $(DATA_DIR)/t10k-images-idx3-ubyte $(DATA_DIR)/t10k-labels-idx1-ubyte $(DATA_DIR)/lenet_L2.weights
+
+
 test:
 	./$(EXEC) classify $(DATA_DIR)/t10k-images-idx3-ubyte $(DATA_DIR)/t10k-labels-idx1-ubyte $(DATA_DIR)/lenet_base.weights
 

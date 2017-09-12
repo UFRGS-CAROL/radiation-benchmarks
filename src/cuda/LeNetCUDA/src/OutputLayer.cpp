@@ -113,7 +113,7 @@ void OutputLayer::back_prop_L1() {
 	}
 
 
-	printf("\ndebug lenetWeightsSum: %f, valor reguarizacao: %f", this->lenetWeightsSum, L1_LAMBDA* this->lenetWeightsSum);
+	//printf("\ndebug lenetWeightsSum: %f, valor reguarizacao: %f", this->lenetWeightsSum, L1_LAMBDA* this->lenetWeightsSum);
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
 					+ L1_LAMBDA * this->lenetWeightsSum; // L1 regularization
@@ -129,7 +129,7 @@ void OutputLayer::back_prop_L2() {
 		printf("passou no if do back\n");
 	}
 
-       	printf("\ndebug lenetSquaredWeightsSum: %f, valor regularizacao: %f", this->lenetSquaredWeightsSum, L2_LAMBDA*this->lenetSquaredWeightsSum);
+       	//printf("\ndebug lenetSquaredWeightsSum: %f, valor regularizacao: %f", this->lenetSquaredWeightsSum, L2_LAMBDA*this->lenetSquaredWeightsSum);
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
 					+ L2_LAMBDA * this->lenetSquaredWeightsSum; // L2 regularization
