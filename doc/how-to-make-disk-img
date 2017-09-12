@@ -1,0 +1,58 @@
+run command "sudo fdisk -l" to see all hds in the system
+
+replace '?' by the correct letter
+
+run the commands with sudo
+To make image and compress the file:
+	# dd if=/dev/sd? conv=sync,noerror bs=16M | gzip -c  > /path/to/folder/sd?.img.gz
+
+To uncompress and restore image:
+	# gunzip -c /path/to/folder/sd?.img.gz | dd of=/dev/sd? conv=sync,noerror bs=16M
+
+
+
+Example:
+
+sudo fdisk -l
+
+OUTPUT:
+*************************
+Disk /dev/sda: 128.0 GB, 128035676160 bytes
+255 heads, 63 sectors/track, 15566 cylinders, total 250069680 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x000e7600
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        2048   241682431   120840192   83  Linux
+/dev/sda2       241684478   250068991     4192257    5  Extended
+/dev/sda5       241684480   250068991     4192256   82  Linux swap / Solaris
+
+Disk /dev/sdc: 240.1 GB, 240057409536 bytes
+255 heads, 63 sectors/track, 29185 cylinders, total 468862128 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00089722
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1   *        2048   452122623   226060288   83  Linux
+/dev/sdc2       452124670   468860927     8368129    5  Extended
+/dev/sdc5       452124672   468860927     8368128   82  Linux swap / Solaris
+
+
+*************************
+
+/dev/sda is the SSD running the ubuntu
+/dev/sdc the target SSD
+
+To make the image of /dev/sdc:
+    go to the folder where you want to save the image
+    sudo dd if=/dev/sdc conv=sync,noerror bs=16M | gzip -c > your_image.img.gz
+
+To restore the image saved in your_image.img.gz:
+    go to the folder where you saved the image
+    sudo gunzip -c you_image.img.gz | dd of=/dev/sdc conv=sync,noerror bs=16M
+
+
