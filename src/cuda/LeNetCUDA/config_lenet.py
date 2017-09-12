@@ -11,7 +11,7 @@ DATASETS = [
 
 ]
 
-WEIGHTS = ['lenet_base.weights'] #, 'lenet_L1.weights', 'lenet_L2.weights']
+WEIGHTS = ['lenet_base.weights', 'lenet_l2.weights'] #, 'lenet_l1.weights']
 
 
 def main(board):

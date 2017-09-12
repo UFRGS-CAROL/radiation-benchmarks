@@ -3,7 +3,7 @@ EXEC=leNetCUDA
 OBJDIR=./obj/
 
 SRC=./src/
-NVCC=nvcc
+NVCC=/usr/local/cuda/bin/nvcc
 CXX=g++
 
 OBJDIR=./obj/

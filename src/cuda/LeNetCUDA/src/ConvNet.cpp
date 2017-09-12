@@ -110,7 +110,7 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, char normalization) {
                 }
                 //debug weight sum
                 //std::cout << "\n        debug sum lenet squared weights  "
-                 //       << sum_LeNet_squared_weights;
+                //       << sum_LeNet_squared_weights;
                 //backpropagation
                 auto i = layers.rbegin();
                 (*i)->set_sum_LeNet_squared_weights(sum_LeNet_squared_weights);
