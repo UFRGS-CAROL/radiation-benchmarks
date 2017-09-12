@@ -50,7 +50,7 @@ float_t Layer::getSquaredWeightsSum() {
 		sum += this->W_[i] * this->W_[i];
 	}
 	//debug layer weights
-	std::cout <<"\n debug getSquaredWeightsSum()  " << sum;
+	std::cout << "\n debug getSquaredWeightsSum()  " << sum;
 	return sum;
 }
 
@@ -130,15 +130,17 @@ void Layer::set_sum_LeNet_weights(float_t sum_Lenet_weights) {
 	std::cout << "CONCEPTUAL ERROR: " << sum_Lenet_weights << "\n";
 }
 
-void Layer::back_prop_L1() {}
+void Layer::back_prop_L1() {
+}
 
-void Layer::back_prop_L2() {}
+void Layer::back_prop_L2() {
+}
 
-void Layer::print_layer_weights(int layer_num){
-	std::cout << "\n Printing Layer: " <<  layer_num << std::endl ;
+void Layer::print_layer_weights(int layer_num) {
+	std::cout << "\n Printing Layer: " << layer_num << std::endl;
 	float_t weightsSize = this->W_.size();
-        for (int i = 0; i < weightsSize; i++) {
-                std::cout << this->W_[i] << ", ";
-        }
+	for (int i = 0; i < weightsSize; i++) {
+		std::cout << this->W_[i] << ", ";
+	}
 	std::cout << "---";
 }

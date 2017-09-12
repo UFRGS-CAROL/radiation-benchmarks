@@ -92,6 +92,7 @@ OutputLayer::OutputLayer(size_t in_depth) :
 }
 
 /**
+ * done
  * there is not outputlayer parameters
  */
 void OutputLayer::save_layer(FILE *of) {
