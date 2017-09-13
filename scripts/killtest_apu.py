@@ -50,7 +50,7 @@ commandList = [
 #CPU+GPU
   	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/sc -p 0 -d 0 -i 256 -g 8 -a 0.70 -t 4 -n 367001600 -c 50 -r 1000000", 1, "sc"],
 #30% GPU
-#  	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BS/bs -p 0 -d 0 -i 256 -g 8 -a 0.70 -t 4 -n 367001600 -c 50 -r 1000000", 1, "sc"],
+#  	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/sc -p 0 -d 0 -i 256 -g 8 -a 0.70 -t 4 -n 367001600 -c 50 -r 1000000", 1, "sc"],
 #50% GPU
   	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/sc -p 0 -d 0 -i 256 -g 8 -a 0.50 -t 4 -n 367001600 -c 50 -r 1000000", 1, "sc"],
 #60% GPU
