@@ -23,7 +23,7 @@ OBJDIR=./obj/
 
 CC=gcc
 CXX=g++
-NVCC=nvcc 
+NVCC=/usr/local/cuda-8.0/bin/nvcc 
 OPTS=-Ofast
 LDFLAGS= -lm -pthread 
 COMMON= 

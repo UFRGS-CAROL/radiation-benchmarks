@@ -8,8 +8,8 @@ import sys
 
 socketPort = 8080 # PORT the socket will listen to
 sleepTime = 5 # Time between checks
-timeDiffReboot = 20 # Time in seconds since last connection to reboot machine
-timeDiffBootProblem = 45 # Time in seconds since last connection to stop trying to reboot machine for now
+timeDiffReboot = 25 # Time in seconds since last connection to reboot machine
+timeDiffBootProblem = 60 # Time in seconds since last connection to stop trying to reboot machine for now
 timeDiffBootProblemWait = 360 # Time in seconds since last connection to start trying to reboot machine
 
 serverIP = "192.168.1.5" # IP of the remote socket server (hardware watchdog)
@@ -17,78 +17,86 @@ serverIP = "192.168.1.5" # IP of the remote socket server (hardware watchdog)
 
 # Set the machines IP to check, comment the ones we are not checking
 IPmachines = [
+	"192.168.1.1",  #CarolK201
+	"192.168.1.2",  #CarolK401
 	"192.168.1.6",  #CarolXeon1
 	"192.168.1.7",  #CarolXeon2
-	"192.168.1.8",  #CarolK401
-	"192.168.1.9",  #CarolK402
 	"192.168.1.10", #CarolAPU1
-#	"192.168.1.11", #CarolAPU2
-	"192.168.1.12", #CarolK1A
-	"192.168.1.13", #CarolK1B
+	"192.168.1.11", #CarolAPU2
+	"192.168.1.12", #CarolX2A
+	"192.168.1.13", #CarolX2B
+
+        # Not used:
+#	"192.168.1.8",  #CarolK401
+#	"192.168.1.9",  #CarolK402
 #	"192.168.1.14", #CarolK1C
-	"192.168.1.15", #CarolHSA2
-	"192.168.1.20", #PI_1
-	"192.168.1.21", #PI_2
+#	"192.168.1.15", #CarolHSA2
+#	"192.168.1.20", #PI_1
+#	"192.168.1.21", #PI_2
 #	"192.168.1.22", #PI_3
-	"192.168.1.23", #AT4
-	"192.168.1.24", #AT5
 ]
 
 # Set the machine names for each IP
 IPtoNames = {
+	"192.168.1.1" : "CarolK201",
+	"192.168.1.2" : "CarolK401",
 	"192.168.1.6" : "CarolXeon1",
 	"192.168.1.7" : "CarolXeon2",
-	"192.168.1.8" : "CarolK401",
-	"192.168.1.9" : "CarolK402",
 	"192.168.1.10" : "CarolAPU1",
 	"192.168.1.11" : "CarolAPU2",
-	"192.168.1.12" : "CarolK1A",
-	"192.168.1.13" : "CarolK1B",
-	"192.168.1.14" : "CarolK1C",
-	"192.168.1.15" : "CarolHSA2",
-	"192.168.1.20" : "PI_1",
-	"192.168.1.21" : "PI_2",
-	"192.168.1.22" : "PI_3",
-	"192.168.1.23" : "AT4",
-	"192.168.1.24" : "AT5",
+	"192.168.1.12" : "CarolX2A",
+	"192.168.1.13" : "CarolX2B",
+
+        # Not used:
+#	"192.168.1.8" : "CarolK401",
+#	"192.168.1.9" : "CarolK402",
+#	"192.168.1.14" : "CarolK1C",
+#	"192.168.1.15" : "CarolHSA2",
+#	"192.168.1.20" : "PI_1",
+#	"192.168.1.21" : "PI_2",
+#	"192.168.1.22" : "PI_3",
 }
 
 # Set the switch IP that a machine IP is connected
 IPtoSwitchIP = {
-	"192.168.1.6" : "192.168.1.101",  #CarolXeon1
-	"192.168.1.7" : "192.168.1.102",  #CarolXeon2
-	"192.168.1.8" : "192.168.1.100",  #CarolK401
-	"192.168.1.9" : "192.168.1.102",  #CarolK402
-	"192.168.1.10" : "192.168.1.100", #CarolAPU1
-	"192.168.1.11" : "192.168.1.100", #CarolAPU2
-	"192.168.1.12" : "192.168.1.100", #CarolK1A
-	"192.168.1.13" : "192.168.1.100", #CarolK1B
-	"192.168.1.14" : "192.168.1.100", #CarolK1C
-	"192.168.1.15" : "192.168.1.101", #CarolHSA2
-	"192.168.1.20" : "192.168.1.101", #PI_1
-	"192.168.1.21" : "192.168.1.101", #PI_2
-	"192.168.1.22" : "192.168.1.101", #PI_3
-	"192.168.1.23" : "192.168.1.102", #AT4
-	"192.168.1.24" : "192.168.1.102", #AT5
+	"192.168.1.1" : "192.168.1.100",  #CarolK201
+	"192.168.1.2" : "192.168.1.102",  #CarolK401
+	"192.168.1.6" : "192.168.1.100",  #CarolXeon1
+	"192.168.1.7" : "192.168.1.101",  #CarolXeon2
+	"192.168.1.10" : "192.168.1.101", #CarolAPU1
+	"192.168.1.11" : "192.168.1.102", #CarolAPU2
+	"192.168.1.12" : "192.168.1.101", #CarolX2A
+	"192.168.1.13" : "192.168.1.102", #CarolX2B
+
+        # Not used:
+#	"192.168.1.8" : "192.168.1.100",  #CarolK401
+#	"192.168.1.9" : "192.168.1.102",  #CarolK402
+#	"192.168.1.14" : "192.168.1.100", #CarolK1C
+#	"192.168.1.15" : "192.168.1.101", #CarolHSA2
+#	"192.168.1.20" : "192.168.1.101", #PI_1
+#	"192.168.1.21" : "192.168.1.101", #PI_2
+#	"192.168.1.22" : "192.168.1.101", #PI_3
 }
 
 # Set the switch Port that a machine IP is connected
 IPtoSwitchPort = {
+	"192.168.1.1" : 3,  #CarolK201
+	"192.168.1.2" : 1,  #CarolK401
 	"192.168.1.6" : 1,  #CarolXeon1
-	"192.168.1.7" : 3,  #CarolXeon2
-	"192.168.1.8" : 1,  #CarolK401
-	"192.168.1.9" : 1,  #CarolK402
+	"192.168.1.7" : 1,  #CarolXeon2
 	"192.168.1.10" : 3, #CarolAPU1
 	"192.168.1.11" : 3, #CarolAPU2
-	"192.168.1.12" : 2, #CarolK1A
-	"192.168.1.13" : 4, #CarolK1B
-	"192.168.1.14" : 2, #CarolK1C
-	"192.168.1.15" : 3, #CarolHSA2
-	"192.168.1.20" : 2, #PI_1
-	"192.168.1.21" : 4, #PI_2
-	"192.168.1.22" : 2, #PI_3
-	"192.168.1.23" : 2, #AT4
-	"192.168.1.24" : 4, #AT5
+	"192.168.1.12" : 2, #CarolX2A
+	"192.168.1.13" : 2, #CarolX2B
+
+        # Not used:
+#	"192.168.1.8" : 1,  #CarolK401
+#	"192.168.1.9" : 1,  #CarolK402
+#	"192.168.1.14" : 2, #CarolK1C
+#	"192.168.1.15" : 3, #CarolHSA2
+#	"192.168.1.20" : 2, #PI_1
+#	"192.168.1.21" : 4, #PI_2
+#	"192.168.1.22" : 2, #PI_3
 }
 
 # log in whatever path you are executing this script

@@ -37,7 +37,7 @@ public:
 //		CUDA_CHECK_RETURN(ret);
 	}
 
-	template<typename T>  DeviceVector<T> load_layer_vec(FILE *in) {
+	template<typename T> DeviceVector<T> load_layer_vec(FILE *in) {
 		size_t siz = this->load_layer_var<size_t>(in);
 
 		DeviceVector<T> v(siz);
@@ -86,12 +86,12 @@ public:
 	float_t getWeightsSum();
 	float_t getSquaredWeightsSum();
 
-	virtual void set_sum_LeNet_squared_weights(float_t sum_Lenet_squared_weights);
+	virtual void set_sum_LeNet_squared_weights(
+			float_t sum_Lenet_squared_weights);
 	virtual void set_sum_LeNet_weights(float_t sum_Lenet_weights);
-	
+
 	//weights values debug
 	void print_layer_weights(int layer_num);
-
 
 	virtual void back_prop_L1();
 	virtual void back_prop_L2();
@@ -111,7 +111,6 @@ public:
 	/*output*/
 	float_t err;
 	int exp_y;
-
 
 	//it is necessary for GPU implementation
 #ifdef GPU

@@ -234,12 +234,12 @@ int main(int argc, char **argv) {
     if (mode == "train") {
         //if train training and  labels must be passed
         MNISTParser m(input_data.c_str(), input_labels.c_str());
-        string norm = "";
+        string norm = "none";
         if(argc == 6)
             norm = argv[5];
         //printf("debug main norm: ");
         //cout << argv[5];
-        cout << "Training for " << m.get_test_img_fname() << std::endl;
+        cout << "Training for " << m.get_test_img_fname() << std::endl << "normalization: " << norm << std::endl;
         train(m, weigths, norm);
     } else if (mode == "classify") {
         //if train classifing and labels must be passed
