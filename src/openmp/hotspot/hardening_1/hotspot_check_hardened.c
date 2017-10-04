@@ -2,10 +2,15 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "../../selective_hardening/header.h"
 
-//using namespace std;
+#ifdef LOGS
+#include "../../include/log_helper.h"
+#endif /* LOGS */
+
+#define MAX_ERR_ITER_LOG 500
 
 #define BLOCK_SIZE 16
 #define BLOCK_SIZE_C BLOCK_SIZE
@@ -24,6 +29,20 @@
 #define OPEN
 //#define NUM_THREAD 4
 
+#ifdef TIMING
+inline long long timing_get_time() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000000) + tv.tv_usec;
+}
+
+long long setup_start, setup_end;
+long long loop_start, loop_end;
+long long kernel_start, kernel_end;
+long long check_start, check_end;
+long long int flops=0;
+#endif
+
 typedef float FLOAT;
 
 /* chip parameters	*/
@@ -31,18 +50,12 @@ const FLOAT t_chip = 0.0005;
 const FLOAT chip_height = 0.016;
 const FLOAT chip_width = 0.016;
 
-// Returns the current system time in microseconds
-long long get_time() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (tv.tv_sec * 1000000) + tv.tv_usec;
-}
-
 /* ambient temperature, assuming no package at all	*/
 const FLOAT amb_temp = 80.0;
 
 int num_omp_threads_hardened_1;
 int num_omp_threads_hardened_2;
+
 
 /* Single iteration of the transient solver in the grid model.
  * advances the solution of the discretized difference equations
@@ -166,18 +179,28 @@ void compute_tran_temp(FLOAT *result, int num_iterations, FLOAT *temp, FLOAT *po
     FLOAT Rz_1=1.f/Rz;
     FLOAT Cap_1 = step/Cap;
 
+    FLOAT* r = result;
+    FLOAT* t = temp;
+    int i = 0;
+#ifdef TIMING
+    kernel_start = timing_get_time();
+#endif
+#ifdef LOGS
+    start_iteration();
+#endif /* LOGS */
+    for (i = 0; i < num_iterations ; i++)
     {
-        FLOAT* r = result;
-        FLOAT* t = temp;
-        int i = 0;
-        for (i = 0; i < num_iterations ; i++)
-        {
-            single_iteration(r, t, power, row, col, Cap_1, Rx_1, Ry_1, Rz_1, step);
-            FLOAT* tmp = t;
-            t = r;
-            r = tmp;
-        }
+        single_iteration(r, t, power, row, col, Cap_1, Rx_1, Ry_1, Rz_1, step);
+        FLOAT* tmp = t;
+        t = r;
+        r = tmp;
     }
+#ifdef LOGS
+    end_iteration();
+#endif /* LOGS */
+#ifdef TIMING
+    kernel_end = timing_get_time();
+#endif
 }
 
 void fatal(char *s)
@@ -186,27 +209,6 @@ void fatal(char *s)
     exit(1);
 }
 
-void writeoutput(FLOAT *vect, int grid_rows, int grid_cols, char *file) {
-
-    int i,j, index=0;
-    FILE *fp;
-    char str[STR_SIZE];
-
-    if( (fp = fopen(file, "w" )) == 0 )
-        printf( "The file was not opened\n" );
-
-
-    for (i=0; i < grid_rows; i++)
-        for (j=0; j < grid_cols; j++)
-        {
-
-            sprintf(str, "%f\n", vect[i*grid_cols+j]);
-            fputs(str,fp);
-            index++;
-        }
-
-    fclose(fp);
-}
 
 void read_input(FLOAT *vect, int grid_rows, int grid_cols, char *file)
 {
@@ -235,7 +237,7 @@ void read_input(FLOAT *vect, int grid_rows, int grid_cols, char *file)
 
 void usage(int argc, char **argv)
 {
-    fprintf(stderr, "Usage: %s <grid_rows> <grid_cols> <sim_time> <no. of threads><temp_file> <power_file> <output_file>\n", argv[0]);
+    fprintf(stderr, "Usage: %s <grid_rows> <grid_cols> <sim_time> <no. of threads><temp_file> <power_file> <output_file> <# iterations>\n", argv[0]);
     fprintf(stderr, "\t<grid_rows>  - number of rows in the grid (positive integer)\n");
     fprintf(stderr, "\t<grid_cols>  - number of columns in the grid (positive integer)\n");
     fprintf(stderr, "\t<sim_time>   - number of iterations\n");
@@ -248,19 +250,23 @@ void usage(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
+#ifdef TIMING
+    setup_start = timing_get_time();
+#endif
     int grid_rows, grid_cols, sim_time, i;
-    FLOAT *temp, *power, *result;
+    FLOAT *temp, *power, *result, *final_result, *gold;
     char *tfile, *pfile, *ofile;
+    int tot_iterations = 1;
 
     /* check validity of inputs	*/
-    if (argc != 8)
+    if (argc != 9)
         usage(argc, argv);
     if ((grid_rows = atoi(argv[1])) <= 0 ||
             (grid_cols = atoi(argv[2])) <= 0 ||
             (sim_time = atoi(argv[3])) <= 0 ||
             (num_omp_threads_hardened_1 = atoi(argv[4])) <= 0 ||
-	    (num_omp_threads_hardened_2 = atoi(argv[4])) <= 0
-
+	    (num_omp_threads_hardened_2 = atoi(argv[4])) <= 0 ||
+            (tot_iterations = atoi(argv[8])) <= 0
        )
         usage(argc, argv);
 
@@ -268,8 +274,17 @@ int main(int argc, char **argv)
     temp = (FLOAT *) calloc (grid_rows * grid_cols, sizeof(FLOAT));
     power = (FLOAT *) calloc (grid_rows * grid_cols, sizeof(FLOAT));
     result = (FLOAT *) calloc (grid_rows * grid_cols, sizeof(FLOAT));
+    gold = (FLOAT *) calloc (grid_rows * grid_cols, sizeof(FLOAT));
     if(!temp || !power)
         fatal("unable to allocate memory");
+
+#ifdef LOGS
+    char test_info[100];
+    snprintf(test_info, 100, "simIter:%d gridSize:%dx%d",sim_time, grid_rows, grid_cols);
+    start_log_file((char *)"openMPHotspot_hardening_1", test_info);
+    set_max_errors_iter(MAX_ERR_ITER_LOG);
+    set_iter_interval_print(10);
+#endif /* LOGS */
 
     /* read initial temperatures and input power	*/
     tfile = argv[5];
@@ -278,20 +293,100 @@ int main(int argc, char **argv)
 
     read_input(temp, grid_rows, grid_cols, tfile);
     read_input(power, grid_rows, grid_cols, pfile);
+    read_input(gold, grid_rows, grid_cols, ofile);
 
-    printf("Start computing the transient temperature\n");
+#ifdef TIMING
+    setup_end = timing_get_time();
+#endif
+    printf("Starting hotspot loop\n");
+    int loop1;
+    for (loop1=0; loop1 < tot_iterations; loop1++)
+    {
+#ifdef TIMING
+        loop_start = timing_get_time();
+#endif
+#ifdef ERR_INJ
+        if(loop1 == 2) {
+            printf("injecting error, changing input!\n");
+            temp[0] =  temp[0]*2;
+            power[0] = power[0]*5;
+        } else if (loop1 == 3) {
+            printf("get ready, infinite loop...\n");
+            fflush(stdout);
+            while(1) {
+                sleep(1000);
+            }
+        }
+#endif
 
-    long long start_time = get_time();
 
-    compute_tran_temp(result,sim_time, temp, power, grid_rows, grid_cols);
+        compute_tran_temp(result,sim_time, temp, power, grid_rows, grid_cols);
 
-    long long end_time = get_time();
 
-    printf("Ending simulation\n");
-    printf("Total time: %.3f seconds\n", ((float) (end_time - start_time)) / (1000*1000));
+        final_result = (1&sim_time) ? result : temp;
+        int errors = 0;
+#ifdef TIMING
+        check_start = timing_get_time();
+#endif
+        #pragma omp parallel for reduction(+:errors)
+        for (i=0; i < grid_rows; i++) {
+            int j;
+            for (j=0; j < grid_cols; j++) {
+                if ((fabs((final_result[i*grid_cols+j] - gold[i*grid_cols+j]) / final_result[i*grid_cols+j]) > 0.0000000001) || (fabs((final_result[i*grid_cols+j] - gold[i*grid_cols+j]) / gold[i*grid_cols+j]) > 0.0000000001)) {
+                //if(final_result[i*grid_cols+j] != gold[i*grid_cols+j] ) {
+                    errors++;
+                }
+            }
+        }
+#ifdef TIMING
+        check_end = timing_get_time();
+#endif
 
-    writeoutput((1&sim_time) ? result : temp, grid_rows, grid_cols, ofile);
+        if (errors!=0)
+        {
+            printf("kernel errors: %d\n", errors);
+#ifdef LOGS
+            int err_loged=0;
+            for (i=0; i < grid_rows && err_loged < MAX_ERR_ITER_LOG && err_loged < errors; i++) {
+                int j;
+                for (j=0; j < grid_cols && err_loged < MAX_ERR_ITER_LOG && err_loged < errors; j++) {
+                    if ((fabs((final_result[i*grid_cols+j] - gold[i*grid_cols+j]) / final_result[i*grid_cols+j]) > 0.0000000001) || (fabs((final_result[i*grid_cols+j] - gold[i*grid_cols+j]) / gold[i*grid_cols+j]) > 0.0000000001)) {
+                    //if(final_result[i*grid_cols+j] != gold[i*grid_cols+j] ) {
+                        err_loged++;
+                        char error_detail[150];
+                        snprintf(error_detail, 150, "r:%f e:%f [%d,%d]\n", final_result[i*grid_cols+j], gold[i*grid_cols+j], i, j);
+                        log_error_detail(error_detail);
+                    }
+                }
+            }
+            log_error_count(errors);
+#endif /* LOGS */
+            read_input(power, grid_rows, grid_cols, pfile);
+            read_input(gold, grid_rows, grid_cols, ofile);
+        }
+        else
+        {
+            printf(".");
+        }
+        fflush(stdout);
+        read_input(temp, grid_rows, grid_cols, tfile);
+#ifdef TIMING
+        loop_end = timing_get_time();
+        double setup_timing = (double) (setup_end - setup_start) / 1000000;
+        double loop_timing = (double) (loop_end - loop_start) / 1000000;
+        double kernel_timing = (double) (kernel_end - kernel_start) / 1000000;
+        double check_timing = (double) (check_end - check_start) / 1000000;
+        printf("\n\tTIMING:\n");
+        printf("setup: %f\n",setup_timing);
+        printf("loop: %f\n",loop_timing);
+        printf("kernel: %f\n",kernel_timing);
+        printf("check: %f\n",check_timing);
+#endif
+    }
 
+#ifdef LOGS
+    end_log_file();
+#endif /* LOGS */
     /* cleanup	*/
     free(temp);
     free(power);
