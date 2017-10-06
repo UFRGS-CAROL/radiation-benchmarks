@@ -244,6 +244,10 @@ void ConvNet::add_layer(Layer* layer) {
 #ifdef GPU
 size_t ConvNet::max_iter(DeviceVector<float> v) {
     size_t i = 0;
+#ifdef NOTUNIFIEDMEMORY
+    v.pop_vector();
+#endif
+
     float_t max = v[0];
     for (size_t j = 1; j < v.size(); j++) {
         if (v[j] > max) {
@@ -290,15 +294,18 @@ bool ConvNet::test_once(int test_x_index) {
     layers[0]->input_ = test_x_[test_x_index];
     int i = 0;
     for (auto layer : layers) {
+    	std::cout <<" Passou \n";
         layer->forward();
         if (layer->next != nullptr) {
             layer->next->input_ = layer->output_;
         }
+        std::cout << "After input = output\n";
         this->layers_output[i] = &(layer->output_);
         i++;
     }
-
+    std::cout << "here\n";
     int predicted = (int) max_iter(layers.back()->output_);
+    std::cout << "pau no max iter não deu\n";
     bool is_right = test_y_[test_x_index] == predicted;
 
     std::pair<size_t, bool> p1(predicted, is_right);

@@ -1,0 +1,17 @@
+hardening_1:
+	num_omp_threads
+
+hardening_2:
+	num_omp_threads
+	val
+
+hardening_3:
+	num_omp_threads
+	val
+	chip_height
+
+hardening_4:
+	num_omp_threads
+	val
+	chip_height
+	chip_width

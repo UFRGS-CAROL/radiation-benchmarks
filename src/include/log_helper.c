@@ -50,6 +50,7 @@ char *absolute_path;
 #endif
 
 char logdir_key[] = "logdir";
+char signalcmd_key[] = "signalcmd";
 char config_file[] = "/etc/radiation-benchmarks.conf";
 
 // Used to print the log only for some iterations, equal 1 means print every iteration
@@ -172,6 +173,8 @@ int set_iter_interval_print(int interval) {
 // ~ ===========================================================================
 // Update with current timestamp the file where the software watchdog watchs
 void update_timestamp() {
+	char *signalcmd = getValueConfig(signalcmd_key);
+	system(signalcmd);
 	time_t timestamp = time(NULL);
 	FILE *fp = fopen(timestamp_watchdog, "w");
 	if (fp) {

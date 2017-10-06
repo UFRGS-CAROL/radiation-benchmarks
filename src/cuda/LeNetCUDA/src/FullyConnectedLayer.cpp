@@ -75,6 +75,7 @@ DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
 
 vec_host FullyConnectedLayer::get_W(size_t index) {
 	vec_host v(in_depth_);
+
 	for (size_t i = 0; i < in_depth_; i++) {
 		v[i] = (W_[index * in_depth_ + i]);
 	}
@@ -125,6 +126,15 @@ void FullyConnectedLayer::back_prop() {
 	/*
 	 Compute the err terms;
 	 */
+#ifdef NOTUNIFIEDMEMORY
+	this->W_.pop_vector();
+	this->g_.pop_vector();
+	this->input_.pop_vector();
+	this->next->g_.pop_vector();
+	this->input_.pop_vector();
+	this->deltaW_.pop_vector();
+	this->b_.pop_vector();
+#endif
 	for (size_t in = 0; in < in_depth_; in++) {
 		g_[in] = df_sigmod(input_[in]) * dot(this->next->g_, get_W_step(in));
 	}
@@ -145,6 +155,11 @@ void FullyConnectedLayer::back_prop() {
 		}
 		b_[out] += alpha_ * this->next->g_[out];
 	}
+#ifdef NOTUNIFIEDMEMORY
+	this->g_.push_vector();
+	this->b_.push_vector();
+	this->W_.push_vector();
+#endif
 }
 
 

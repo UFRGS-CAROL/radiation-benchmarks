@@ -15,6 +15,9 @@
 inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 		size_t w_) {
 	vec_host r;
+#ifdef NOTUNIFIEDMEMORY
+	this->input_.pop_vector();
+#endif
 	for (size_t y = 0; y < kernel_size_; y++) {
 		for (size_t x = 0; x < kernel_size_; x++) {
 			r.push_back(
@@ -22,11 +25,15 @@ inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 							+ x + w_]);
 		}
 	}
+
 	return r;
 }
 
 inline vec_host ConvolutionalLayer::getW_(size_t in, size_t out) {
 	vec_host r;
+#ifdef NOTUNIFIEDMEMORY
+	this->W_.pop_vector();
+#endif
 	for (size_t i = 0; i < kernel_size_ * kernel_size_; i++)
 		r.push_back(
 				W_[in * out_depth_ * kernel_size_ * kernel_size_
@@ -53,6 +60,13 @@ ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 void ConvolutionalLayer::back_prop() {
 	g_.clear();
 	g_.resize(in_width_ * in_height_ * in_depth_);
+#ifdef NOTUNIFIEDMEMORY
+	this->W_.pop_vector();
+	this->next->g_.pop_vector();
+	this->input_.pop_vector();
+	this->deltaW_.pop_vector();
+	this->b_.pop_vector();
+#endif
 	/*update err terms of this layer.*/
 	for (size_t out = 0; out < out_depth_; out++) {
 		for (size_t in = 0; in < in_depth_; in++) {
@@ -114,6 +128,14 @@ void ConvolutionalLayer::back_prop() {
 			}
 		}
 	}
+
+#ifdef NOTUNIFIEDMEMORY
+	this->W_.push_vector();
+	this->next->g_.push_vector();
+	this->input_.push_vector();
+	this->deltaW_.push_vector();
+	this->b_.push_vector();
+#endif
 }
 
 inline int ConvolutionalLayer::getb_(size_t out, size_t h_, size_t w_) {

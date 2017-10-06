@@ -47,6 +47,8 @@ if check():
 logDir = varDir+"/log"
 micLog = "/micNfs/carol/logs"
 
+signalCmd = "killall -USR1 killtest.py"
+
 installPath=installPath()
 
 config = ConfigParser.ConfigParser()
@@ -56,6 +58,7 @@ config.set("DEFAULT", "vardir", varDir)
 config.set("DEFAULT", "logdir", logDir)
 config.set("DEFAULT", "tmpdir", "/tmp")
 config.set("DEFAULT", "miclogdir", micLog)
+config.set("DEFAULT", "signalcmd", signalCmd)
 try:
 	if not os.path.isdir(varDir):
 		os.mkdir(varDir, 0777)
