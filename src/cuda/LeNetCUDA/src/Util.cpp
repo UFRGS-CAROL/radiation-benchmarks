@@ -40,6 +40,11 @@ float_t dot(vec_host x, vec_host w) {
 float_t dot(DeviceVector<float> x, DeviceVector<float> w) {
 	assert(x.size() == w.size());
 	float_t sum = 0;
+#ifdef NOTUNIFIEDMEMORY
+	x.pop_vector();
+	w.pop_vector();
+#endif
+
 	for (size_t i = 0; i < x.size(); i++) {
 		sum += x[i] * w[i];
 	}

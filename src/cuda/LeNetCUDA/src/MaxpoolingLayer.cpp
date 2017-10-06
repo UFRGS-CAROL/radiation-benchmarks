@@ -73,6 +73,10 @@ void MaxpoolingLayer::back_prop() {
 
 	g_.clear();
 	g_.resize(in_width_ * in_height_ * in_depth_);
+#ifdef NOTUNIFIEDMEMORY
+	this->next->g_.pop_vector();
+	this->max_loc.pop_vector();
+#endif
 
 	for (size_t i = 0; i < this->max_loc.size(); i++){
 		auto pair = this->max_loc[i];
@@ -80,6 +84,9 @@ void MaxpoolingLayer::back_prop() {
 			g_[pair.second] = this->next->g_[pair.first];
 		}
 	}
+#ifdef NOTUNIFIEDMEMORY
+	this->g_.push_vector();
+#endif
 //	printf("---------\n");
 //
 //	printf("deltaW_gpu = [");

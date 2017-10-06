@@ -244,6 +244,10 @@ void ConvNet::add_layer(Layer* layer) {
 #ifdef GPU
 size_t ConvNet::max_iter(DeviceVector<float> v) {
     size_t i = 0;
+#ifdef NOTUNIFIEDMEMORY
+    v.pop_vector();
+#endif
+
     float_t max = v[0];
     for (size_t j = 1; j < v.size(); j++) {
         if (v[j] > max) {

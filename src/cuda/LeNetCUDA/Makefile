@@ -40,6 +40,7 @@ LOGHELPER_LIB=-L../../include/ -lLogHelper
 CFLAGS+= -DLOGS
 endif
 
+
 ifeq ($(GPU), 1)
 ON_GPU= -DGPU
 CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart
@@ -47,6 +48,10 @@ CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart
 	NVCC_FLAGS+= -G
 	endif
 
+	ifeq ($(NOTUSEUNIFIED), 1) &&
+	NVCC_FLAGS+= -DNOTUNIFIEDMEMORY
+	CFLAGS+= -DNOTUNIFIEDMEMORY
+	endif
 endif
 
 GPU_KERNELS=ConvKernels.o
