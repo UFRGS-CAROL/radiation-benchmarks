@@ -48,7 +48,7 @@ CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart
 	NVCC_FLAGS+= -G
 	endif
 
-	ifeq ($(NOTUSEUNIFIED), 1) &&
+	ifeq ($(NOTUSEUNIFIED), 1)
 	NVCC_FLAGS+= -DNOTUNIFIEDMEMORY
 	CFLAGS+= -DNOTUNIFIEDMEMORY
 	endif
@@ -62,6 +62,11 @@ OutputLayer.o ConvNet.o MNISTParser.o Util.o main.o LogsProcessing.o
 ifeq ($(GPU), 1)
 OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o \
 FullyConnectedLayerKernel.o  OutputLayerKernel.o cudaUtil.o
+endif
+
+ifeq ($(DEBUG_LIGHT), 1)
+CFLAGS+=-DDEBUG_LIGHT=1
+NVCC_FLAGS+= -DDEBUG_LIGHT=1
 endif
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
