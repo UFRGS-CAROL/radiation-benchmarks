@@ -34,6 +34,7 @@ void classify_gold_generate(MNISTParser& m, string weigths, string gold_output,
     }
     ConvNet n;
     create_lenet(&n);
+    std::cout << "pau antes do load weights\n";
     //need to load network configurations here
     n.load_weights(weigths);
 
