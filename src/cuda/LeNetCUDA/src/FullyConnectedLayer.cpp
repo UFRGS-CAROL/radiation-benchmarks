@@ -66,6 +66,9 @@ void FullyConnectedLayer::init_weight() {
 
 DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
 	DeviceVector<float> r(out_depth_);
+#ifdef NOTUNIFIEDMEMORY
+	r.pop_vector();
+#endif
 	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
 		int it = i / in_depth_;
 		r[it] = (W_[i]);
