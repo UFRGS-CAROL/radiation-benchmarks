@@ -28,7 +28,7 @@ DEBUG = OFF
 CC = gcc #mpicc
 CXX = g++
 CFLAGS = -std=c99 -Wno-unused-result -DMAXATOMS=$(MAXATOMS) 
-OPTFLAGS = -g -O5
+OPTFLAGS = -g -O3
 INCLUDES = 
 C_LIB = -lm -lstdc++
 
@@ -129,6 +129,7 @@ ifeq ($(LOGS), 1)
 endif
 ##########################################################
 
+RAD_BENCH=/home/carol/radiation-benchmarks
 
 DEFAULT: ${CoMD_EXE}
 
@@ -168,7 +169,7 @@ test:
 	./bin/CoMD-cuda -e -x 98 -y 49 -z 49
 
 generate:
-	./bin/CoMD-cuda -e -x 98 -y 49 -z 49
+	./bin/CoMD-cuda -e -x 98 -y 49 -z 49 -g $(RAD_BENCH)/data/comd/test.csv -M 1
 
 
 -include .depend
