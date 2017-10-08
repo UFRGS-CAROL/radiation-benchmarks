@@ -29,6 +29,9 @@ void FullyConnectedLayer::forward() {
 
 DeviceVector<float>  FullyConnectedLayer::get_W(size_t index) {
 	DeviceVector<float> v(in_depth_);
+#ifdef NOTUNIFIEDMEMORY
+	v.pop_vector();
+#endif
 	for (size_t i = 0; i < in_depth_; i++) {
 		v[i] = (W_[index * in_depth_ + i]);
 	}
