@@ -93,6 +93,7 @@ void Image::upto_32() {
 	size = 32;
 }
 
+
 std::vector<std::float_t> Image::extend() {
 	std::vector<float_t> v;
 	for (size_t i = 0; i < size; i++) {
