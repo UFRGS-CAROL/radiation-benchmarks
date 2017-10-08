@@ -214,8 +214,10 @@ void DeviceVector<T>::resize(size_t siz) {
 
 #ifdef NOTUNIFIEDMEMORY
 		if(this->host_data){
+			std::cout << "passou aqui\n";
 			free(this->host_data);
 			this->host_data = (T*) calloc(this->v_size, sizeof(T));
+			std::cout << "aqui pau\n";
 		}
 #endif
 	}
