@@ -37,7 +37,7 @@ float_t dot(vec_host x, vec_host w) {
 }
 
 #ifdef GPU
-float_t dot(DeviceVector<float> x, DeviceVector<float> w) {
+float_t dot(DeviceVector<float>& x, DeviceVector<float>& w) {
 	assert(x.size() == w.size());
 	float_t sum = 0;
 	for (size_t i = 0; i < x.size(); i++) {
