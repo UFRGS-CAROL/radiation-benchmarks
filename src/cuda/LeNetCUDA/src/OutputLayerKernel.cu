@@ -28,8 +28,8 @@ __global__ void forward_output_layer_kernel(float *exp_y_vec, float *input_,
 
 void call_forward_output_layer(float *exp_y_vec, float *input_,
 		float *reduce_output, float *output_, int in_depth_, int exp_y) {
-	//hahahah nvidia managed
-	exp_y_vec[exp_y] = 1;
+//	hahahah nvidia managed
+//	exp_y_vec[exp_y] = 1;
 
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, in_depth_);

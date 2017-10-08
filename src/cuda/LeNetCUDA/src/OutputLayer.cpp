@@ -25,6 +25,14 @@ void OutputLayer::forward() {
 	int in_depth_ = this->in_depth_;
 	int exp_y = this->exp_y;
 	std::cout << "passou antes do kernel\n";
+#ifdef NOTUNIFIEDMEMORY
+	this->exp_y_vec.pop_vector();
+#endif
+	this->exp_y_vec[this->exp_y] = 1;
+#ifdef NOTUNIFIEDMEMORY
+	this->exp_y_vec.push_vector();
+#endif
+
 	call_forward_output_layer(exp_y_vec, input_, reduce_output, output_, in_depth_, exp_y);
 	std::cout << "Passou depois do kernel\n";
 #ifdef NOTUNIFIEDMEMORY
@@ -35,9 +43,9 @@ void OutputLayer::forward() {
 		err += this->reduce_output[i];
 	}
 
-#ifdef NOTUNIFIEDMEMORY
-	this->reduce_output.push_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+//	this->reduce_output.push_vector();
+//#endif
 	std::cout << "depois do reduce\n";
 
 }
