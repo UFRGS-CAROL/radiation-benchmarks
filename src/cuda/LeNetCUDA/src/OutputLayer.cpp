@@ -111,6 +111,7 @@ void OutputLayer::back_prop() {
 OutputLayer::OutputLayer(size_t in_depth) :
 		Layer(1, 1, in_depth, 0, 0, 0, 0, 0) {
 	this->init_weight();
+	this->layer_type = "output";
 }
 
 /**

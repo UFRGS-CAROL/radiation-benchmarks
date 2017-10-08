@@ -183,7 +183,7 @@ FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
 
 
 	this->init_weight();
-
+	this->layer_type = "fullyconnected";
 }
 
 

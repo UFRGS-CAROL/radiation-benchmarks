@@ -124,6 +124,7 @@ public:
 	float_t err;
 	int exp_y;
 
+	std::string layer_type;
 	//it is necessary for GPU implementation
 #ifdef GPU
 	DeviceVector<float_t> W_;
