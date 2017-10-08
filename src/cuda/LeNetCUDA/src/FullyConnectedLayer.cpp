@@ -139,6 +139,7 @@ void FullyConnectedLayer::back_prop() {
 	this->b_.pop_vector();
 #endif
 	for (size_t in = 0; in < in_depth_; in++) {
+		std::cout << "inside for\n";
 		g_[in] = df_sigmod(input_[in]) * dot(this->next->g_, get_W_step(in));
 	}
 
