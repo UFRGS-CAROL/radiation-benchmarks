@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 
-void start_count_app(char *test, char *app);
+void start_count_app(char *gold_file, int iterations);
 void finish_count_app();
 void start_iteration_app();
 void end_iteration_app();

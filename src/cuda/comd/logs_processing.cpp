@@ -14,9 +14,10 @@
 
 
 
-void start_count_app(char *test, char *app) {
+void start_count_app(char *gold_file, int iterations) {
 #ifdef LOGS
-
+	std::string header = "gold_file: " + std::string(gold_file) + " iterations: " + std::to_string(iterations);
+	start_log_file("comd", header.c_std());
 #endif
 }
 

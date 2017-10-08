@@ -119,7 +119,9 @@ int main(int argc, char** argv) {
 	Validate* validate = initValidate(sim); // atom counts, energy
 	timestampBarrier("Initialization Finished\n");
 //----------------------------------------------------------------------------------------------------------
-
+//the benchmark starts here
+	if (cmd.mode == 0)
+		start_count_app(cmd.gold_in_out, cmd.iterations);
 //----------------------------------------------------------------------------------------------------------
 
 
@@ -159,6 +161,11 @@ int main(int argc, char** argv) {
 	printPerformanceResults(sim->atoms->nGlobal, sim->printRate);
 	printPerformanceResultsYaml(yamlFile);
 
+//----------------------------------------------------------------------------------------------------------
+// the simulation ends here
+	if (cmd.mode == 0)
+		finish_count_app();
+//----------------------------------------------------------------------------------------------------------
 	destroySimulation(&sim);
 	comdFree(validate);
 	finalizeSubsystems();
