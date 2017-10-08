@@ -75,11 +75,9 @@ void ConvNet::train(vec2d_t train_x, vec_host train_y, char normalization) {
             for (auto layer : layers) {
             	std::cout << "Layer type " << layer->layer_type << "\n";
                 layer->forward();
-                std::cout << "antes do =\n";
                 if (layer->next != nullptr) {
                     layer->next->input_ = layer->output_;
                 }
-                std::cout << "depois do =\n";
             }
 
             /*

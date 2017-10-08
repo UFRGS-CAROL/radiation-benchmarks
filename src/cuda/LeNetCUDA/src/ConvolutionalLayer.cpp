@@ -137,6 +137,7 @@ void ConvolutionalLayer::back_prop() {
 	this->input_.push_vector();
 	this->deltaW_.push_vector();
 	this->b_.push_vector();
+	this->g_.push_vector();
 #endif
 }
 
