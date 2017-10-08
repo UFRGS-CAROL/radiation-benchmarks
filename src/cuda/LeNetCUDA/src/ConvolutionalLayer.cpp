@@ -56,7 +56,6 @@ ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 	init_weight();
 	this->layer_type = "convolutional";
 
-
 }
 
 void ConvolutionalLayer::back_prop() {
@@ -68,6 +67,7 @@ void ConvolutionalLayer::back_prop() {
 	this->input_.pop_vector();
 	this->deltaW_.pop_vector();
 	this->b_.pop_vector();
+	this->g_.pop_vector();
 #endif
 	/*update err terms of this layer.*/
 	for (size_t out = 0; out < out_depth_; out++) {
