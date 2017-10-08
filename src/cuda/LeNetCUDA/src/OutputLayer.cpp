@@ -21,11 +21,11 @@ void OutputLayer::forward() {
 	float *exp_y_vec = this->exp_y_vec.data();
 	float *input_ = this->input_.data();
 	float *output_ = this->output_.data();
-//	float *reduce_output = this->reduce_output.data();
+	float *reduce_output = this->reduce_output.data();
 	int in_depth_ = this->in_depth_;
 	int exp_y = this->exp_y;
 
-	call_forward_output_layer(err, exp_y_vec, input_, reduce_output, output_, in_depth_, exp_y);
+	call_forward_output_layer(exp_y_vec, input_, reduce_output, output_, in_depth_, exp_y);
 
 #ifdef NOTUNIFIEDMEMORY
 	this->reduce_output.pop_vector();
@@ -34,6 +34,7 @@ void OutputLayer::forward() {
 	for (int i = 0; i < in_depth_; i++) {
 		err += this->reduce_output[i];
 	}
+
 #ifdef NOTUNIFIEDMEMORY
 	this->reduce_output.push_vector();
 #endif
