@@ -37,7 +37,7 @@ public:
 	DeviceVector();
 	DeviceVector(const DeviceVector<T>& copy);
 	//overload only for host side
-	T& operator[](int i);
+	T& operator[](int i) const;
 	//this constructor will copy the data to gpu
 	DeviceVector(T *data, size_t siz);
 
@@ -59,7 +59,7 @@ public:
 	void pop_vector();
 	void push_vector();
 #endif
-	size_t size();
+	size_t size() const;
 
 	void fill(T data);
 
@@ -232,7 +232,7 @@ T* DeviceVector<T>::data() {
 }
 
 template<class T>
-size_t DeviceVector<T>::size() {
+size_t DeviceVector<T>::size() const {
 #ifdef DEBUG_LIGHT
 	std::cout << "size() \n";
 #endif
@@ -241,7 +241,7 @@ size_t DeviceVector<T>::size() {
 
 
 template<class T>
-T& DeviceVector<T>::operator [](int i) {
+T& DeviceVector<T>::operator [](int i) const {
 #ifdef DEBUG_LIGHT
 	std::cout << "operator [] \n";
 #endif
