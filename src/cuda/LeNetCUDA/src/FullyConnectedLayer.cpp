@@ -145,8 +145,6 @@ void FullyConnectedLayer::back_prop() {
 		g_[in] = df_sigmod(input_[in]) * dot(this->next->g_, get_W_step(in));
 	}
 
-	std::cout << "passou depois do dot\n";
-
 	/*
 	 Update weights.
 	 */
