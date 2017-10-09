@@ -117,7 +117,7 @@ CU_OBJECTS=$(CU_SOURCES:.cu=.cu.o)
 
 ##########################################################
 #cpp files to be compiled with c++
-CPPFLAGS=-std=c++11
+CPPFLAGS=-std=c++11 $(OTHER_LIB) $(OTHER_INCLUDE) -o3
 CPP_SOURCES=$(wildcard *.cpp)
 CPP_OBJECTS=$(CPP_SOURCES:.cpp=.o)
 RADIATION_BENCH=/home/carol/radiation-benchmarks

@@ -1041,5 +1041,6 @@ void AnalyzeInput(SimFlat *sim, int step) {
 	for (int i = 0; i < size; i++)
 		fprintf(file, "%i,%i,%i,%i,%i,\n", i, atoms_per_cell_hist[i],
 				cell_neigh_hist[i], neigh_lists_hist[i], passed_cutoff_hist[i]);
+
 	fclose(file);
 }
