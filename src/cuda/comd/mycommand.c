@@ -335,8 +335,8 @@ void printCmdYaml(FILE* file, Command* cmd) {
 			"  GPU method: %s\n"
 			"  Space-filling (Hilbert): %d\n"
 			"  ----- For radiation tests variables -----\n"
-			"  Generate gold: %d\n"
-			"  Gold path: %s\n"
+			"  Execution mode: %d\n"
+			"  Gold in/out path: %s\n"
 			"  Iterations: %d\n"
 			"  Save middle iterations: %d\n", cmd->doeam, cmd->potDir,
 			cmd->potName, cmd->potType, cmd->nx, cmd->ny, cmd->nz, cmd->xproc,
