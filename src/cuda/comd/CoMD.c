@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 //	yamlAppInfo(yamlFile);
 //	yamlAppInfo(screenOut);
 //
-//	Command cmd = parseCommandLine(argc, argv);
+	const Command cmd = parseCommandLine(argc, argv);
 //	printCmdYaml(yamlFile, &cmd);
 //	printCmdYaml(screenOut, &cmd);
 
@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
 		yamlAppInfo(yamlFile);
 		yamlAppInfo(screenOut);
 
-		Command cmd = parseCommandLine(argc, argv);
+//		Command cmd = parseCommandLine(argc, argv);
 		printCmdYaml(yamlFile, &cmd);
 		printCmdYaml(screenOut, &cmd);
 
