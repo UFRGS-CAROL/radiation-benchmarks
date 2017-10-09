@@ -87,19 +87,21 @@ static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 
 int main(int argc, char** argv) {
 
-	// Prolog
-	initParallel(&argc, &argv);
-	profileStart(totalTimer);
-	initSubsystems();
-	timestampBarrier("Starting Initialization\n");
 
-	yamlAppInfo(yamlFile);
-	yamlAppInfo(screenOut);
 
 	Command cmd = parseCommandLine(argc, argv);
 
 	int iterations;
 	for (iterations = 0; iterations < cmd.iterations; iterations++) {
+		// Prolog
+		initParallel(&argc, &argv);
+		profileStart(totalTimer);
+		initSubsystems();
+		timestampBarrier("Starting Initialization\n");
+
+		yamlAppInfo(yamlFile);
+		yamlAppInfo(screenOut);
+
 		printCmdYaml(yamlFile, &cmd);
 		printCmdYaml(screenOut, &cmd);
 
