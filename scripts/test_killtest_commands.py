@@ -28,6 +28,12 @@ def logMsg(msg):
 	fp.close()
 	print now.ctime()+": "+str(msg)
 
+def updateTimestamp():
+	command = "echo "+str(int(time.time()))+" > "+timestampFile
+	retcode = os.system(command)
+        global timestampSignal
+        timestampSignal = int(time.time())
+
 def execCommand(command):
 	try:
 		updateTimestamp()
@@ -53,6 +59,7 @@ def killall():
 		print >> sys.stderr, "Could not issue the kill command for each entry, config file error!"
 # When SIGUSR1 or SIGUSR2 is received update timestamp
 def receive_signal(signum, stack):
+        global timestampSignal
 	timestampSignal = int(time.time())
 
 ################################################
@@ -106,27 +113,28 @@ except IOError as e:
 	sys.exit(1)
 
 
-logFile = logDir+"test_killtest_commands.log"
+logFile = "test_killtest_commands.log"
 timestampFile = varDir+"timestamp.txt"
 
 # Start last kill timestamp with an old enough timestamp
-lastKillTimestamp = int(time.time()) - 50*timestampMaxDiff
 timestampSignal = int(time.time())
 
 try:
-    for i in range(0,len(configcmd.sections())-1):
+    for i in range(0,len(configcmd.sections())):
 
         logMsg("Executing command: "+getCommand(i))
 	execStart = int(time.time())
 	execCommand(getCommand(i))
+        maxDiff = 0
+        maxDiffSignal = 0
+        flagDiff = False
+        flagDiffSignal = False
 	while True:
 		# Read the timestamp file
 		try:
 			timestamp = int(os.path.getmtime(timestampFile))
 		except (ValueError, OSError) as eDetail:
-			fp.close()
-			contTimestampReadError += 1
-			logMsg("timestamp read error(#"+str(contTimestampReadError)+"): "+str(eDetail))
+			logMsg("timestamp read error: "+str(eDetail))
 			timestamp = int(float(time.time()))
 			
 		# Get the current timestamp
@@ -136,16 +144,23 @@ try:
                 if timestampDiff > maxDiff:
                     maxDiff = timestampDiff
                 if timestampDiffSignal > maxDiffSignal:
-                    maxDiffSignal = timestampDiff
+                    maxDiffSignal = timestampDiffSignal
 		# If timestamp was not update properly
 		if timestampDiff > timestampMaxDiff:
+                    if not flagDiff:
                         logMsg("ERROR: Timestamp diff from file higher than expected!")
+                        flagDiff = True
 		if timestampDiffSignal > timestampMaxDiff:
+                    if not flagDiffSignal:
                         logMsg("ERROR: Timestamp diff from signal higher than expected!")
+                        flagDiffSignal = True
 	
-                # Execute each command for 3 min only
-                if (now - execStart) > (60 * 3):
+                # Execute each command for 1 min only
+                if (now - execStart) > (60 * 1):
                     killall()
+                    logMsg("maxDiff from file: "+str(maxDiff))
+                    logMsg("maxDiff from signal: "+str(maxDiffSignal))
+                    logMsg("Finished executing command: "+getCommand(i)+"\n\n")
                     break
 	
 		time.sleep(1)

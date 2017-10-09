@@ -171,20 +171,6 @@ int set_iter_interval_print(int interval) {
 ;
 
 // ~ ===========================================================================
-// Update with current timestamp the file where the software watchdog watchs
-void update_timestamp() {
-	char *signalcmd = getValueConfig(signalcmd_key);
-	system(signalcmd);
-	time_t timestamp = time(NULL);
-	FILE *fp = fopen(timestamp_watchdog, "w");
-	if (fp) {
-		fprintf(fp, "%d", (int) timestamp);
-		fclose(fp);
-	}
-}
-;
-
-// ~ ===========================================================================
 // Read config file to get the value of a 'key = value' pair
 char * getValueConfig(char * key) {
 	FILE * fp;
@@ -248,6 +234,20 @@ char * getValueConfig(char * key) {
 	if (line)
 		free(line);
 	return NULL;
+}
+;
+
+// ~ ===========================================================================
+// Update with current timestamp the file where the software watchdog watchs
+void update_timestamp() {
+	char *signalcmd = getValueConfig(signalcmd_key);
+	system(signalcmd);
+	time_t timestamp = time(NULL);
+	FILE *fp = fopen(timestamp_watchdog, "w");
+	if (fp) {
+		fprintf(fp, "%d", (int) timestamp);
+		fclose(fp);
+	}
 }
 ;
 

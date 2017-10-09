@@ -47,6 +47,8 @@ def logMsg(msg):
 def updateTimestamp():
 	command = "echo "+str(int(time.time()))+" > "+timestampFile
 	retcode = os.system(command)
+        global timestampSignal
+        timestampSignal = int(time.time())
 
 
 # Remove files with start timestamp of commands executing
@@ -147,6 +149,7 @@ def killall():
 
 # When SIGUSR1 or SIGUSR2 is received update timestamp
 def receive_signal(signum, stack):
+        global timestampSignal
 	timestampSignal = int(time.time())
 
 ################################################
@@ -190,7 +193,7 @@ if (len(sys.argv) != 2):
 commandFile = sys.argv[1]
 
 if not os.path.isfile(commandFile):
-	print >> sys.stderr, "Command configuration file not found!("+confFile+")"
+	print >> sys.stderr, "Command configuration file not found!("+commandFile+")"
 	sys.exit(1)
 
 configcmd = ConfigParser.RawConfigParser()
