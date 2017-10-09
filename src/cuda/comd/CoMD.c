@@ -86,18 +86,18 @@ static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 		char latticeType[8]);
 
 int main(int argc, char** argv) {
-	// Prolog
-	initParallel(&argc, &argv);
-	profileStart(totalTimer);
-	initSubsystems();
-//	timestampBarrier("Starting Initialization\n");
-
-	yamlAppInfo(yamlFile);
-	yamlAppInfo(screenOut);
-
-	Command cmd = parseCommandLine(argc, argv);
-	printCmdYaml(yamlFile, &cmd);
-	printCmdYaml(screenOut, &cmd);
+//	// Prolog
+//	initParallel(&argc, &argv);
+//	profileStart(totalTimer);
+//	initSubsystems();
+////	timestampBarrier("Starting Initialization\n");
+//
+//	yamlAppInfo(yamlFile);
+//	yamlAppInfo(screenOut);
+//
+//	Command cmd = parseCommandLine(argc, argv);
+//	printCmdYaml(yamlFile, &cmd);
+//	printCmdYaml(screenOut, &cmd);
 
 	// select device, print info, etc.
 #ifdef DO_MPI
@@ -126,22 +126,38 @@ int main(int argc, char** argv) {
 		load_gold(&gold_var);
 	}
 //----------------------------------------------------------------------------------------------------------
-	timestampBarrier("Starting Initialization\n");
-	SimFlat* sim = initSimulation(cmd);
+	int iterations;
+	for (iterations = 0; iterations < cmd.iterations; iterations++) {
+		// Prolog
+		initParallel(&argc, &argv);
+		profileStart(totalTimer);
+		initSubsystems();
+	//	timestampBarrier("Starting Initialization\n");
+
+		yamlAppInfo(yamlFile);
+		yamlAppInfo(screenOut);
+
+		Command cmd = parseCommandLine(argc, argv);
+		printCmdYaml(yamlFile, &cmd);
+		printCmdYaml(screenOut, &cmd);
+
+
+
+
+		timestampBarrier("Starting Initialization\n");
+		SimFlat* sim = initSimulation(cmd);
 //		printSimulationDataYaml(yamlFile, sim);
 //		printSimulationDataYaml(screenOut, sim);
 
-	Validate* validate = initValidate(sim); // atom counts, energy
-	timestampBarrier("Initialization Finished\n");
+		Validate* validate = initValidate(sim); // atom counts, energy
+		timestampBarrier("Initialization Finished\n");
 
-	timestampBarrier("Starting simulation\n");
+		timestampBarrier("Starting simulation\n");
 
-	// This is the CoMD main loop
-	const int nSteps = sim->nSteps;
-	const int printRate = sim->printRate;
-	int iStep = 0;
-	int iterations;
-	for (iterations = 0; iterations < cmd.iterations; iterations++) {
+		// This is the CoMD main loop
+		const int nSteps = sim->nSteps;
+		const int printRate = sim->printRate;
+		int iStep = 0;
 		profileStart(loopTimer);
 		start_iteration_app();
 		for (; iStep < nSteps;) {
@@ -176,31 +192,37 @@ int main(int argc, char** argv) {
 
 		sumAtoms(sim);
 		printThings(sim, iStep, getElapsedTime(timestepTimer));
-	}
-
-	timestampBarrier("Ending simulation\n");
-	gold_var.gold_data[iStep] = sim;
+		timestampBarrier("Ending simulation\n");
+		gold_var.gold_data[iStep] = sim;
 
 //----------------------------------------------------------------------------------------------------------
 // Save gold in generate mode
-	/*
-	 * 1 - for generate
-	 * 2 - radiation test
-	 */
-	if (cmd.mode == 1) {
-		save_gold(&gold_var);
+		/*
+		 * 1 - for generate
+		 * 2 - radiation test
+		 */
+		if (cmd.mode == 1) {
+			save_gold(&gold_var);
+		}
+
+		// Epilog
+		validateResult(validate, sim);
+		profileStop(totalTimer);
+
+		printPerformanceResults(sim->atoms->nGlobal, sim->printRate);
+		printPerformanceResultsYaml(yamlFile);
+
+		destroySimulation(&sim);
+		comdFree(validate);
+
+		finalizeSubsystems();
+
+		timestampBarrier("CoMD Ending\n");
+		destroyParallel();
+
+		// for profiler
+		cudaDeviceReset();
 	}
-
-	// Epilog
-	validateResult(validate, sim);
-	profileStop(totalTimer);
-
-	printPerformanceResults(sim->atoms->nGlobal, sim->printRate);
-	printPerformanceResultsYaml(yamlFile);
-
-	destroySimulation(&sim);
-	comdFree(validate);
-
 //----------------------------------------------------------------------------------------------------------
 // the simulation ends here
 	/*
@@ -212,13 +234,7 @@ int main(int argc, char** argv) {
 	}
 	destroy_gold(&gold_var);
 //----------------------------------------------------------------------------------------------------------
-	finalizeSubsystems();
 
-	timestampBarrier("CoMD Ending\n");
-	destroyParallel();
-
-	// for profiler
-	cudaDeviceReset();
 
 	return 0;
 }
