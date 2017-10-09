@@ -313,6 +313,9 @@ Command parseCommandLine(int argc, char** argv) {
 void printCmdYaml(FILE* file, Command* cmd) {
 	if (!printRank())
 		return;
+
+	char modes[3][20] = {"no_changes", "generate_rad_gold", "radiation_test"};
+
 	fprintf(file, "Command Line Parameters:\n"
 			"  doeam: %d\n"
 			"  potDir: %s\n"
@@ -335,14 +338,14 @@ void printCmdYaml(FILE* file, Command* cmd) {
 			"  GPU method: %s\n"
 			"  Space-filling (Hilbert): %d\n"
 			"  ----- For radiation tests variables -----\n"
-			"  Execution mode: %d\n"
+			"  Execution mode: %s\n"
 			"  Gold in/out path: %s\n"
 			"  Iterations: %d\n"
 			"  Save middle iterations: %d\n", cmd->doeam, cmd->potDir,
 			cmd->potName, cmd->potType, cmd->nx, cmd->ny, cmd->nz, cmd->xproc,
 			cmd->yproc, cmd->zproc, cmd->lat, cmd->nSteps, cmd->printRate,
 			cmd->dt, cmd->temperature, cmd->initialDelta, cmd->gpuAsync,
-			cmd->gpuProfile, cmd->method, cmd->doHilbert, cmd->mode,
+			cmd->gpuProfile, cmd->method, cmd->doHilbert, modes[cmd->mode],
 			cmd->gold_in_out, cmd->iterations, cmd->save_middle_iterations);
 	fflush(file);
 }
