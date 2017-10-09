@@ -198,6 +198,7 @@ int main(int argc, char** argv) {
 
 		destroySimulation(&sim);
 		comdFree(validate);
+		sim = NULL;
 	}
 //----------------------------------------------------------------------------------------------------------
 // the simulation ends here
