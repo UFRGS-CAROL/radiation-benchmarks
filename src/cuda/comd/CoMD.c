@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
 	 * 1 - for generate
 	 * 2 - radiation test
 	 */
-	if (cmd.mode == 1) {
+	if (cmd.mode == 2) {
 		finish_count_app();
 	}
 	destroy_gold(&gold_var);
