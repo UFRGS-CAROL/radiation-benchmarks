@@ -6,7 +6,8 @@
  */
 
 #include "logs_processing.h"
-
+#include <string.h>
+#include <cstdlib>
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -38,7 +39,7 @@ void end_iteration_app() {
 }
 
 //TODO:
-void save_gold(Gold g, SimFlat *sim) {
+void save_gold(Gold *g) {
 
 	//TODO: convert
 	// atoms per cell
@@ -121,6 +122,11 @@ void load_gold(Gold *g){
 
 //TODO
 void init_gold(Gold *g, char *gold_path, int steps){
+	strcpy(g->gold_path, gold_path);
+	g->steps = steps;
+
+	// alloc the memory
+	g->gold_data = (SimFlat**) calloc(steps, sizeof(SimFlat*));
 
 }
 //TODO:
@@ -129,7 +135,9 @@ void compare_and_log(SimFlat *gold, SimFlat *found){
 }
 
 void destroy_gold(Gold *g){
-
+	if(g->gold_data){
+		free(g->gold_data);
+	}
 }
 
 

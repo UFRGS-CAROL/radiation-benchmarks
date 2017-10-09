@@ -17,9 +17,9 @@ extern "C" {
 
 
 typedef struct{
-	char *gold_path[2048];
+	char gold_path[2048];
 	int iterations;
-	SimFlat *gold_data;
+	SimFlat **gold_data;
 	int steps;
 }Gold;
 
@@ -29,7 +29,7 @@ void finish_count_app();
 void start_iteration_app();
 void end_iteration_app();
 
-void save_gold(Gold g, SimFlat *sim);
+void save_gold(Gold *g);
 void compare_and_log(SimFlat *gold, SimFlat *found);
 
 void load_gold(Gold *g);
