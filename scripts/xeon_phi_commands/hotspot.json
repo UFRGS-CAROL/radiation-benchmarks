@@ -1,0 +1,6 @@
+[
+	{
+		"exec": "/home/dagoliveira/git_repositories/codes/radiation-benchmarks/src/openmp/hotspot/hotspot_check 1024 1024 1000 4 /home/dagoliveira/git_repositories/codes/radiation-benchmarks/data/hotspot/temp_1024 /home/dagoliveira/git_repositories/codes/radiation-benchmarks/data/hotspot/power_1024 /home/dagoliveira/git_repositories/codes/radiation-benchmarks/src/openmp/hotspot/gold_1024_1000 1000000",
+		"killcmd": "killall -9 hotspot_check"
+	}
+]
