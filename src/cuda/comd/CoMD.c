@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
 //----------------------------------------------------------------------------------------------------------
 	int iterations;
 	for (iterations = 0; iterations < cmd.iterations; iterations++) {
-		printf("\n\nITERATION %d\n\n", iteration);
+		printf("\n\nITERATION %d\n\n", iterations);
 		timestampBarrier("Starting Initialization\n");
 		SimFlat* sim = initSimulation(cmd);
 //		printSimulationDataYaml(yamlFile, sim);
