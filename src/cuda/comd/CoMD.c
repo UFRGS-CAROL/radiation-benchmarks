@@ -87,16 +87,16 @@ static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 
 int main(int argc, char** argv) {
 	// Prolog
-	initParallel(&argc, &argv);
-	profileStart(totalTimer);
-	initSubsystems();
+//	initParallel(&argc, &argv);
+//	profileStart(totalTimer);
+//	initSubsystems();
 //	timestampBarrier("Starting Initialization\n");
 
-	yamlAppInfo(yamlFile);
+//	yamlAppInfo(yamlFile);
 	yamlAppInfo(screenOut);
 
 	Command cmd = parseCommandLine(argc, argv);
-	printCmdYaml(yamlFile, &cmd);
+//	printCmdYaml(yamlFile, &cmd);
 	printCmdYaml(screenOut, &cmd);
 
 	// select device, print info, etc.
@@ -128,10 +128,14 @@ int main(int argc, char** argv) {
 //----------------------------------------------------------------------------------------------------------
 	int iterations;
 	for (iterations = 0; iterations < cmd.iterations; iterations++) {
+		initParallel(&argc, &argv);
+		profileStart(totalTimer);
+//			initSubsystems();
+
 		timestampBarrier("Starting Initialization\n");
 		SimFlat* sim = initSimulation(cmd);
 //		printSimulationDataYaml(yamlFile, sim);
-//		printSimulationDataYaml(screenOut, sim);
+		printSimulationDataYaml(screenOut, sim);
 
 		Validate* validate = initValidate(sim); // atom counts, energy
 		timestampBarrier("Initialization Finished\n");
@@ -194,7 +198,7 @@ int main(int argc, char** argv) {
 		profileStop(totalTimer);
 
 		printPerformanceResults(sim->atoms->nGlobal, sim->printRate);
-		printPerformanceResultsYaml(yamlFile);
+//		printPerformanceResultsYaml(yamlFile);
 
 		destroySimulation(&sim);
 		comdFree(validate);
