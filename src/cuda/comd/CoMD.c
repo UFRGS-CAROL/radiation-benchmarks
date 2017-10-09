@@ -86,18 +86,18 @@ static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 		char latticeType[8]);
 
 int main(int argc, char** argv) {
-//	// Prolog
-//	initParallel(&argc, &argv);
-//	profileStart(totalTimer);
-//	initSubsystems();
-////	timestampBarrier("Starting Initialization\n");
-//
-//	yamlAppInfo(yamlFile);
-//	yamlAppInfo(screenOut);
-//
-	const Command cmd = parseCommandLine(argc, argv);
-//	printCmdYaml(yamlFile, &cmd);
-//	printCmdYaml(screenOut, &cmd);
+	// Prolog
+	initParallel(&argc, &argv);
+	profileStart(totalTimer);
+	initSubsystems();
+	timestampBarrier("Starting Initialization\n");
+
+	yamlAppInfo(yamlFile);
+	yamlAppInfo(screenOut);
+
+	Command cmd = parseCommandLine(argc, argv);
+	printCmdYaml(yamlFile, &cmd);
+	printCmdYaml(screenOut, &cmd);
 
 	// select device, print info, etc.
 #ifdef DO_MPI
@@ -111,130 +111,59 @@ int main(int argc, char** argv) {
 #else
 	SetupGpu(0);
 #endif
-//----------------------------------------------------------------------------------------------------------
-//the benchmark starts here
-//----------------------------------------------------------------------------------------------------------
-	Gold gold_var;
-	//init golden values
-	init_gold(&gold_var, cmd.gold_in_out, cmd.nSteps);
-	/*
-	 * 1 - for generate
-	 * 2 - radiation test
-	 */
-	if (cmd.mode == 2) {
-		start_count_app(cmd.gold_in_out, cmd.iterations);
-		load_gold(&gold_var);
-	}
-//----------------------------------------------------------------------------------------------------------
-	int iterations;
-	for (iterations = 0; iterations < cmd.iterations; iterations++) {
-		// Prolog
-		initParallel(&argc, &argv);
-		profileStart(totalTimer);
-		initSubsystems();
-	//	timestampBarrier("Starting Initialization\n");
 
-		yamlAppInfo(yamlFile);
-		yamlAppInfo(screenOut);
+	SimFlat* sim = initSimulation(cmd);
+	printSimulationDataYaml(yamlFile, sim);
+	printSimulationDataYaml(screenOut, sim);
 
-//		Command cmd = parseCommandLine(argc, argv);
-		printCmdYaml(yamlFile, &cmd);
-		printCmdYaml(screenOut, &cmd);
+	Validate* validate = initValidate(sim); // atom counts, energy
+	timestampBarrier("Initialization Finished\n");
 
+	timestampBarrier("Starting simulation\n");
 
-
-
-		timestampBarrier("Starting Initialization\n");
-		SimFlat* sim = initSimulation(cmd);
-//		printSimulationDataYaml(yamlFile, sim);
-//		printSimulationDataYaml(screenOut, sim);
-
-		Validate* validate = initValidate(sim); // atom counts, energy
-		timestampBarrier("Initialization Finished\n");
-
-		timestampBarrier("Starting simulation\n");
-
-		// This is the CoMD main loop
-		const int nSteps = sim->nSteps;
-		const int printRate = sim->printRate;
-		int iStep = 0;
-		profileStart(loopTimer);
-		start_iteration_app();
-		for (; iStep < nSteps;) {
-			startTimer(commReduceTimer);
-			sumAtoms(sim);
-			stopTimer(commReduceTimer);
-
-			printThings(sim, iStep, getElapsedTime(timestepTimer));
-
-			startTimer(timestepTimer);
-			timestep(sim, printRate, sim->dt);
-			stopTimer(timestepTimer);
-//#if 1
-//			// analyze input distribution, note this is done on CPU (slow)
-//			AnalyzeInput(sim, iStep);
-//#endif
-			//Compare each iteration with the gold
-			/*
-			 * 1 - for generate
-			 * 2 - radiation test
-			 */
-			if (cmd.mode == 1) {
-				gold_var.gold_data[iStep] = sim;
-			} else if (cmd.mode == 1) {
-				//radiation test
-				compare_and_log(&(gold_var.gold_data[iStep]), sim);
-			}
-			iStep += printRate;
-		}
-		profileStop(loopTimer);
-		end_iteration_app();
-
+	// This is the CoMD main loop
+	const int nSteps = sim->nSteps;
+	const int printRate = sim->printRate;
+	int iStep = 0;
+	profileStart(loopTimer);
+	for (; iStep < nSteps;) {
+		startTimer(commReduceTimer);
 		sumAtoms(sim);
+		stopTimer(commReduceTimer);
+
 		printThings(sim, iStep, getElapsedTime(timestepTimer));
-		timestampBarrier("Ending simulation\n");
-		gold_var.gold_data[iStep] = sim;
 
-//----------------------------------------------------------------------------------------------------------
-// Save gold in generate mode
-		/*
-		 * 1 - for generate
-		 * 2 - radiation test
-		 */
-		if (cmd.mode == 1) {
-			save_gold(&gold_var);
-		}
-
-		// Epilog
-		validateResult(validate, sim);
-		profileStop(totalTimer);
-
-		printPerformanceResults(sim->atoms->nGlobal, sim->printRate);
-		printPerformanceResultsYaml(yamlFile);
-
-		destroySimulation(&sim);
-		comdFree(validate);
-
-		finalizeSubsystems();
-
-		timestampBarrier("CoMD Ending\n");
-		destroyParallel();
-
-		// for profiler
-		cudaDeviceReset();
+		startTimer(timestepTimer);
+		timestep(sim, printRate, sim->dt);
+		stopTimer(timestepTimer);
+#if 0
+		// analyze input distribution, note this is done on CPU (slow)
+		AnalyzeInput(sim, iStep);
+#endif
+		iStep += printRate;
 	}
-//----------------------------------------------------------------------------------------------------------
-// the simulation ends here
-	/*
-	 * 1 - for generate
-	 * 2 - radiation test
-	 */
-	if (cmd.mode == 2) {
-		finish_count_app();
-	}
-	destroy_gold(&gold_var);
-//----------------------------------------------------------------------------------------------------------
+	profileStop(loopTimer);
 
+	sumAtoms(sim);
+	printThings(sim, iStep, getElapsedTime(timestepTimer));
+	timestampBarrier("Ending simulation\n");
+
+	// Epilog
+	validateResult(validate, sim);
+	profileStop(totalTimer);
+
+	printPerformanceResults(sim->atoms->nGlobal, sim->printRate);
+	printPerformanceResultsYaml(yamlFile);
+
+	destroySimulation(&sim);
+	comdFree(validate);
+	finalizeSubsystems();
+
+	timestampBarrier("CoMD Ending\n");
+	destroyParallel();
+
+	// for profiler
+	cudaDeviceReset();
 
 	return 0;
 }
