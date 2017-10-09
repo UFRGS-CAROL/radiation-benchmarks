@@ -1,0 +1,14 @@
+[
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lavamd_check_hardened_2 \"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lavamd/lavamd_check_hardened_2 228 8 /micNfs/codes/lavamd/input_distance_228_8 /micNfs/codes/lavamd/input_charges_228_8 /micNfs/codes/lavamd/output_gold_228_8 10000000\""
+    }, 
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lavamd_check_hardened_2 \"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lavamd/lavamd_check_hardened_2 228 9 /micNfs/codes/lavamd/input_distance_228_9 /micNfs/codes/lavamd/input_charges_228_9 /micNfs/codes/lavamd/output_gold_228_9 10000000\""
+    }, 
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lavamd_check_hardened_2 \"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lavamd/lavamd_check_hardened_2 228 10 /micNfs/codes/lavamd/input_distance_228_10 /micNfs/codes/lavamd/input_charges_228_10 /micNfs/codes/lavamd/output_gold_228_10 10000000\""
+    }
+]

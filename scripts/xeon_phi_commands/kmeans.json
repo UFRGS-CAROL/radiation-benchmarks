@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 kmeans_check\"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/kmeans/kmeans_check -i /micNfs/codes/kmeans/kdd_cup -o /micNfs/codes/kmeans/gold-kdd -n 228 -l 9999999\""
+    }
+]

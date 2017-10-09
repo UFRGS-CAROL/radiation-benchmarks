@@ -11,7 +11,6 @@ import filecmp
 import re
 import shutil
 import signal
-import json
 from datetime import datetime
 
 
@@ -61,9 +60,7 @@ def cleanCommandExecLogs():
 def checkCommandListChanges():
 	curFile = varDir+"currentCommandFile"
 	lastFile = varDir+"lastCommandFile"
-        fp = open(curFile, "w")
-        json.dump(commands,fp)
-        fp.close()
+        shutil.copyfile(commandFile, curFile)
 	if not os.path.isfile(lastFile):
                 shutil.copyfile(commandFile, lastFile)
 		return True
@@ -74,7 +71,7 @@ def checkCommandListChanges():
                 shutil.copyfile(commandFile, lastFile)
 		return True
 
-# Select the correct command to be executed from the commands
+# Select the correct command to be executed from the configcmd configuration file
 def selectCommand():
 	if checkCommandListChanges():
 		cleanCommandExecLogs()
@@ -86,7 +83,7 @@ def selectCommand():
 	i -= 1
 
 	# If there is no file, create the first file with current timestamp
-	# and return the first command of commands list
+	# and return the first command of configcmd configuration file
 	if i == -1:
 		os.system("echo "+str(int(time.time()))+" > "+varDir+"command_execstart_0")
 		return getCommand(0)
@@ -115,7 +112,7 @@ def selectCommand():
 
 	i += 1
 	# If all commands executed their time window, start all over again
-	if i >= len(commands):
+	if i >= len(configcmd.sections()):
 		cleanCommandExecLogs()
 		os.system("echo "+str(int(time.time()))+" > "+varDir+"command_execstart_0")
 		return getCommand(0)
@@ -139,12 +136,13 @@ def execCommand(command):
 		return None
 
 def getCommand(index):
-        return commands[index]["exec"]
+	sec = configcmd.sections()[index]
+        return configcmd.get(sec,"exec")
 
 def killall():
         try:
-		for cmd in commands:
-			os.system(cmd["killcmd"])
+		for sec in configcmd.sections():
+			os.system(configcmd.get(sec,"killcmd"))
         except:
 		print >> sys.stderr, "Could not issue the kill command for each entry, config file error!"
 
@@ -153,20 +151,6 @@ def killall():
 def receive_signal(signum, stack):
         global timestampSignal
 	timestampSignal = int(time.time())
-
-def readCommands(filelist):
-    global commands
-    if os.path.isfile(filelist):
-        fp = open(filelist, "r")
-        for f in fp:
-            f = f.strip()
-            if os.path.isfile(f):
-                fjson = open(f, "r")
-                data = json.load(fjson)
-                fjson.close()
-                commands.extend(data)
-            else:
-                logMsg("ERROR: File with commands not found - "+str(f)+" - continuing with other files")
 
 ################################################
 # KillTest Main Execution
@@ -191,6 +175,8 @@ try:
 	logDir =  config.get('DEFAULT', 'logdir')+"/"
 	tmpDir =  config.get('DEFAULT', 'tmpdir')+"/"
 	
+	#logDir = varDir+"log/"
+	
 	if not os.path.isdir(logDir):
 		os.mkdir(logDir, 0777)
 		os.chmod(logDir, 0777)
@@ -200,32 +186,55 @@ except IOError as e:
 	sys.exit(1)
 	
 
-logFile = logDir+"killtest.log"
-timestampFile = varDir+"timestamp.txt"
-
-
 if (len(sys.argv) != 2):
-    print "Usage: "+sys.argv[0]+" <file with absolute paths of json files>"
+    print "Usage: "+sys.argv[0]+" <command conf file>"
     sys.exit(1)
 
-commands = list()
+commandFile = sys.argv[1]
 
-readCommands(sys.argv[1])
-
-if len(commands) < 1:
-    print >> sys.stderr, "ERROR: No commands read, there is nothing to execute"
+if not os.path.isfile(commandFile):
+	print >> sys.stderr, "Command configuration file not found!("+commandFile+")"
 	sys.exit(1)
+
+configcmd = ConfigParser.RawConfigParser()
+try:
+	configcmd.read(commandFile)
+except IOError as e:
+	print >> sys.stderr, "Command configuration setup error: "+str(e)
+	sys.exit(1)
+
+
+logFile = logDir+"killtest.log"
+timestampFile = varDir+"timestamp.txt"
 
 # Start last kill timestamp with an old enough timestamp
 lastKillTimestamp = int(time.time()) - 50*timestampMaxDiff
 timestampSignal = int(time.time())
 
+contTimestampReadError=0
 try:
 	killCount = 0 # Counts how many kills were executed throughout execution
 	curCommand = selectCommand()
 	execCommand(curCommand)
 	while True:
 		sockConnect()
+		## Read the timestamp file
+		#try:
+		#	#fp = open(timestampFile, 'r')
+		#	#timestamp = int(float(fp.readline().strip()))
+		#	#fp.close()
+		#	timestamp = int(os.path.getmtime(timestampFile))
+		#except (ValueError, OSError) as eDetail:
+		#	fp.close()
+		#	updateTimestamp()
+		#	contTimestampReadError += 1
+		#	logMsg("timestamp read error(#"+str(contTimestampReadError)+"): "+str(eDetail))
+		#	if contTimestampReadError > 1:
+		#		logMsg("Rebooting, timestamp read error: "+str(eDetail))
+		#		sockConnect()
+		#		os.system("shutdown -r now")
+		#		time.sleep(20)
+		#	timestamp = int(float(time.time()))
 			
 		# Get the current timestamp
 		now = int(time.time())
