@@ -51,7 +51,11 @@ char *absolute_path;
 
 char logdir_key[] = "logdir";
 char signalcmd_key[] = "signalcmd";
+#ifdef MIC_NATIVE
+char config_file[] = "/micNfs/radiation-benchmarks.conf";
+#else
 char config_file[] = "/etc/radiation-benchmarks.conf";
+#endif
 
 // Used to print the log only for some iterations, equal 1 means print every iteration
 int iter_interval_print = 1;
