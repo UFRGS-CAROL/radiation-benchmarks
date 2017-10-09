@@ -1,6 +1,6 @@
 [
 	{
-		"exec": "/home/dagoliveira/git_repositories/codes/radiation-benchmarks/src/openmp/hotspot/hotspot_check 1024 1024 1000 4 /home/dagoliveira/git_repositories/codes/radiation-benchmarks/data/hotspot/temp_1024 /home/dagoliveira/git_repositories/codes/radiation-benchmarks/data/hotspot/power_1024 /home/dagoliveira/git_repositories/codes/radiation-benchmarks/src/openmp/hotspot/gold_1024_1000 1000000",
-		"killcmd": "killall -9 hotspot_check"
+		"exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/hotspot/hotspot_check 1024 1024 1000 228 /micNfs/codes/hotspot/temp_1024 /micNfs/codes/hotspot/power_1024 /micNfs/codes/hotspot/gold_1024_1000 1000000\"",
+		"killcmd": "sshpass -p qwerty0 ssh carol@mic0 \" killall -9 hotspot_check\""
 	}
 ]

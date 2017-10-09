@@ -10,41 +10,5 @@
     {
         "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lud_check \"", 
         "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lud/lud_check -n 228 -s 4096 -i /micNfs/codes/lud/input_4096_th_228 -g /micNfs/codes/lud/gold_4096_th_228 -l 10000000\""
-    }, 
-    {
-        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lud_check_hardened_1 \"", 
-        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lud/lud_check_hardened_1 -n 228 -s 1024 -i /micNfs/codes/lud/input_1024_th_228 -g /micNfs/codes/lud/gold_1024_th_228 -l 10000000\""
-    }, 
-    {
-        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lud_check_hardened_1 \"", 
-        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lud/lud_check_hardened_1 -n 228 -s 2048 -i /micNfs/codes/lud/input_2048_th_228 -g /micNfs/codes/lud/gold_2048_th_228 -l 10000000\""
-    }, 
-    {
-        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lud_check_hardened_1 \"", 
-        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lud/lud_check_hardened_1 -n 228 -s 4096 -i /micNfs/codes/lud/input_4096_th_228 -g /micNfs/codes/lud/gold_4096_th_228 -l 10000000\""
-    }, 
-    {
-        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lud_check_hardened_2 \"", 
-        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lud/lud_check_hardened_2 -n 228 -s 1024 -i /micNfs/codes/lud/input_1024_th_228 -g /micNfs/codes/lud/gold_1024_th_228 -l 10000000\""
-    }, 
-    {
-        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lud_check_hardened_2 \"", 
-        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lud/lud_check_hardened_2 -n 228 -s 2048 -i /micNfs/codes/lud/input_2048_th_228 -g /micNfs/codes/lud/gold_2048_th_228 -l 10000000\""
-    }, 
-    {
-        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lud_check_hardened_2 \"", 
-        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lud/lud_check_hardened_2 -n 228 -s 4096 -i /micNfs/codes/lud/input_4096_th_228 -g /micNfs/codes/lud/gold_4096_th_228 -l 10000000\""
-    }, 
-    {
-        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lud_check_hardened_3 \"", 
-        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lud/lud_check_hardened_3 -n 228 -s 1024 -i /micNfs/codes/lud/input_1024_th_228 -g /micNfs/codes/lud/gold_1024_th_228 -l 10000000\""
-    }, 
-    {
-        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lud_check_hardened_3 \"", 
-        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lud/lud_check_hardened_3 -n 228 -s 2048 -i /micNfs/codes/lud/input_2048_th_228 -g /micNfs/codes/lud/gold_2048_th_228 -l 10000000\""
-    }, 
-    {
-        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lud_check_hardened_3 \"", 
-        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lud/lud_check_hardened_3 -n 228 -s 4096 -i /micNfs/codes/lud/input_4096_th_228 -g /micNfs/codes/lud/gold_4096_th_228 -l 10000000\""
     }
 ]
