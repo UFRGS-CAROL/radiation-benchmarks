@@ -166,7 +166,7 @@ depend:
 	
 
 test:
-	./bin/CoMD-cuda -e -x 98 -y 49 -z 49 -g $(RAD_BENCH)/data/comd/test.csv -M 2
+	./bin/CoMD-cuda -e -x 98 -y 49 -z 49 -g $(RAD_BENCH)/data/comd/test.csv -M 2 -R 10
 
 generate:
 	./bin/CoMD-cuda -e -x 98 -y 49 -z 49 -g $(RAD_BENCH)/data/comd/test.csv -M 1
