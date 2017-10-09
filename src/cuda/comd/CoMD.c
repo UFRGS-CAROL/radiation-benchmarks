@@ -198,6 +198,15 @@ int main(int argc, char** argv) {
 
 		destroySimulation(&sim);
 		comdFree(validate);
+
+//		finalizeSubsystems();
+
+		timestampBarrier("CoMD Ending\n");
+		destroyParallel();
+
+		// for profiler
+		cudaDeviceReset();
+
 	}
 
 //----------------------------------------------------------------------------------------------------------
@@ -211,13 +220,6 @@ int main(int argc, char** argv) {
 	}
 	destroy_gold(&gold_var);
 //----------------------------------------------------------------------------------------------------------
-	finalizeSubsystems();
-
-	timestampBarrier("CoMD Ending\n");
-	destroyParallel();
-
-	// for profiler
-	cudaDeviceReset();
 
 	return 0;
 }
