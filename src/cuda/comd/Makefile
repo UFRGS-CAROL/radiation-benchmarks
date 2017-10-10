@@ -27,7 +27,7 @@ DEBUG = OFF
 ### (such as -lm for the math library) put them in C_LIB.
 CC = gcc #mpicc
 CXX = g++
-CFLAGS = -std=c99 -Wno-unused-result -DMAXATOMS=$(MAXATOMS) 
+CFLAGS = -std=c99 -Wno-unused-result -DMAXATOMS=$(MAXATOMS)  -Wall
 OPTFLAGS = -g -O3
 INCLUDES = 
 C_LIB = -lm -lstdc++
