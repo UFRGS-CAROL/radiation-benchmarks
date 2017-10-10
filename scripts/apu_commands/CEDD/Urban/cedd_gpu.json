@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "cedd", 
+        "exec": "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 0.00 -t 1 -r 1100 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/urban_input/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/urban_output/ -l 1000000"
+    }
+]
