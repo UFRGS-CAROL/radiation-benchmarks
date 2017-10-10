@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
 	Command cmd = parseCommandLine(argc, argv);
 	int i;
 	for (i = 0; i < 10; i++){
-		main_(argc, argv, cmd);
+		main_run(argc, argv, cmd);
 	}
 
 	return 0;
