@@ -5,8 +5,8 @@ CC_FLAGS = -fopenmp -O3
 intel:CC=icc -mmic -DMIC_NATIVE 
 intel:CC_FLAGS=-qopenmp
 
-SOURCES_CHECK=hotspot_check.c ../../include/log_helper.c
-SOURCES_CHECK_HARDENED=hotspot_check_hardened.c ../../include/log_helper.c
+SOURCES_CHECK=hotspot_check.c ../../../include/log_helper.c
+SOURCES_CHECK_HARDENED=hotspot_check_hardened.c ../../../include/log_helper.c
 
 general: hotspot hotspot_check hotspot_check_hardened hotspot_err_inj hotspot_timing hotspot_timing_hardened
 
