@@ -38,7 +38,7 @@
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 #pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics : enable
 
-#include "support/common.h"
+#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/support/common.h"
 
 // OpenCL kernel ------------------------------------------------------------------------------------------
 __kernel void SSSP_gpu(__global Node *graph_nodes_av, __global Edge *graph_edges_av, __global int *cost,

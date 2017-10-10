@@ -34,7 +34,7 @@
  */
 
 #include <atomic>
-#include "support/common.h"
+#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/support/common.h"
 
 void run_cpu_threads(Node *graph_nodes_av, Edge *graph_edges_av, std::atomic_int *cost, std::atomic_int *color,
     int *q1, int *q2, int *n_t, std::atomic_int *head, std::atomic_int *tail,

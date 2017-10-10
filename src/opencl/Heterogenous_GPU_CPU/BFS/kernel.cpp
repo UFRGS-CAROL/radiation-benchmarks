@@ -33,7 +33,7 @@
  *
  */
 
-#include "kernel.h"
+#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/kernel.h"
 #include <math.h>
 #include <thread>
 #include <vector>
