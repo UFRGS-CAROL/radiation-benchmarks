@@ -1,6 +1,6 @@
 [
     {
-        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 \"", 
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 nn_check\"", 
         "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/nn/nn_check  /micNfs/codes/nn/list8192k.txt 10 10 80 /micNfs/codes/nn/gold-list8192k.txt 8388608 99999999\""
     }
 ]
