@@ -86,6 +86,14 @@ static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 		char latticeType[8]);
 
 int main(int argc, char** argv) {
+	main_run(argc, argv);
+	main_run(argc, argv);
+	main_run(argc, argv);
+	main_run(argc, argv);
+	return 0;
+}
+
+int main_run(int argc, char** argv) {
 	// Prolog
 	initParallel(&argc, &argv);
 	profileStart(totalTimer);
