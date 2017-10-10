@@ -1,0 +1,46 @@
+#!/bin/bash
+export LC_NUMERIC=en_US.UTF-8   # Using . against ,
+APP=sssp
+PLATFORM=0                              #AMD PLATFORM
+DEVICE=0                                #SPECTRE == GPU
+WORK_ITEMS_HW_LIMIT=256 # APUs HW limit for local_work_size per dimension
+MAX_WORK_GROUP=16                # 8 GPU Cores ->  It's worthwhile testing bigger ??
+STEP=0.01
+result2=0.00
+REP=1
+mkdir results
+
+for THREADS in 1 2 3 4
+do
+        mkdir ./results/$THREADS
+
+        echo "Starting NUMTHREADS: $THREADS"
+        w_items=128
+                w_groups=1
+                alpha=0.00
+        while [ $w_items -le $WORK_ITEMS_HW_LIMIT ]
+        do
+                echo "W_items: $w_items"
+                w_groups=1
+                        while [ $w_groups -le $MAX_WORK_GROUP ]
+                        do
+                                echo "W_group: $w_groups"
+                                for alpha in $(seq 0.0 0.1 1.0)
+                                do
+
+					if [ "$(echo $alpha '==' $result2 | bc -l)" -eq 1 ] && [ $THREADS -ge 2 ]
+					then
+						echo "Pula Só GPU"
+					else
+						 ./$APP -p $PLATFORM -d $DEVICE -t $THREADS -i $w_items -a $alpha -r $REP >> ./results/$THREADS/$THREADS.txt
+					fi
+
+                                echo "$alpha"
+                                done
+
+            		w_groups=$((w_groups+1))
+                        done
+         w_items=$((w_items+8))
+        done
+done
+

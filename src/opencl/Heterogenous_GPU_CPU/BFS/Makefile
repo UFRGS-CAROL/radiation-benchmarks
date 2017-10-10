@@ -39,7 +39,7 @@ else
     CXX=g++
     endif
 endif
-CXX_FLAGS=-std=c++11
+CXX_FLAGS=-std=c++11 -DLOGS
 
 ifndef CHAI_OCL_LIB
     $(error CHAI_OCL_LIB not defined. This environment variable must be defined to point to the location of the OpenCL library)
@@ -56,7 +56,7 @@ ifndef CHAI_OCL_INC
 endif
 INC=-I$(CHAI_OCL_INC)
 
-SRC=main.cpp kernel.cpp
+SRC=main.cpp kernel.cpp /home/carol/radiation-benchmarks/src/include/log_helper.cpp
 OBJECTS=$(SRC:.cpp=.o)
 DEPS=$(OBJECTS:.o=.d)
 EXE=bfs
