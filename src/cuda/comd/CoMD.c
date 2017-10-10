@@ -173,10 +173,10 @@ int main_run(Command cmd) {
 //	finalizeSubsystems();
 
 	timestampBarrier("CoMD Ending\n");
-	destroyParallel();
+//	destroyParallel();
 
 	// for profiler
-	cudaDeviceReset();
+//	cudaDeviceReset();
 
 	return 0;
 }
