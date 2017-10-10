@@ -59,17 +59,17 @@ commandList = [
 #---------------------------------------- Canny Edge Detection 1 --------------------------------
 # 2500 Frames de Input "Dame 5"
 # CPU
- 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 1.00 -t 4 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
+# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 1.00 -t 4 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
 #GPU
- 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 0.00 -t 1 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
+# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 16 -a 0.00 -t 1 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
 #CPU+GPU
- 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 8 -a 0.10 -t 3 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
+# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 8 -a 0.10 -t 3 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
 #30% GPU
- 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 8 -a 0.70 -t 3 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
+# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 8 -a 0.70 -t 3 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
 #50% GPU
- 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 8 -a 0.50 -t 3 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
+# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 8 -a 0.50 -t 3 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
 #60% GPU
- 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 8 -a 0.40 -t 3 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
+# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 8 -a 0.40 -t 3 -r 2490 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/dame_5/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/dame_5/ -l 1000000", 1, "cedd"],
 #-----------------------------------------------------------------------------------------------
 #---------------------------------------- Canny Edge Detection 2 --------------------------------
 # 1110 Frames de Input "Urban"
@@ -101,6 +101,50 @@ commandList = [
 #60% GPU
  	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/cedd -p 0 -d 0 -i 8 -a 0.40 -t 3 -r 990 -w 10 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/caltech_input/ -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/caltech_output/ -l 1000000", 1, "cedd"],
 #-----------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+#---------------------------------------- Breadth-first Search ------------------------------------------
+## Lakes input 
+# CPU
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/bfs -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/lakes_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/lakes_graph_out  -r 1000000 -l 90000000", 1, "bfs"],
+
+# GPU 
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/bfs -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/lakes_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/lakes_graph_out  -r 1000000 -l 0", 1, "bfs"],
+
+#30% GPU
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/bfs -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/lakes_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/lakes_graph_out  -r 1000000 -l 128", 1, "bfs"],
+#50% GPU
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/bfs -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/lakes_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/lakes_graph_out  -r 1000000 -l 256", 1, "bfs"],
+
+#---------------------------------------- Breadth-first Search 2 ------------------------------------------
+## Central input 
+# CPU
+# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/bfs -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/central_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/central_graph_out  -r 1000000 -l 90000000", 1, "bfs"],
+
+# GPU 
+# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/bfs -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/central_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/central_graph_out  -r 1000000 -l 0", 1, "bfs"],
+
+#30% GPU
+# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/bfs -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/central_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/central_graph_out  -r 1000000 -l 128", 1, "bfs"],
+#50% GPU
+# 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/bfs -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/central_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/central_graph_out  -r 1000000 -l 256", 1, "bfs"],
+
+#---------------------------------------- Single Source Shortest path ------------------------------------------
+## Colorado input 
+# CPU
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/sssp -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/input/colorado_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/output/colorado_graph_out  -r 1000000 -l 90000000", 1, "sssp"],
+# GPU
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/sssp -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/input/colorado_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/output/colorado_graph_out  -r 1000000 -l 0", 1, "sssp"],
+# 30# GPU 
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/sssp -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/input/colorado_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/output/colorado_graph_out  -r 1000000 -l 128", 1, "sssp"],
+
+#---------------------------------------- Single Source Shortest path 2 ------------------------------------------
+## Florida input 
+# CPU
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/sssp -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/input/florida_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/output/florida_graph_out  -r 1000000 -l 90000000", 1, "sssp"],
+# GPU
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/sssp -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/input/florida_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/output/florida_graph_out  -r 1000000 -l 0", 1, "sssp"],
+# 30# GPU 
+ 	["/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/sssp -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/input/florida_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/output/florida_graph_out  -r 1000000 -l 128", 1, "sssp"],
 
 ]
 
