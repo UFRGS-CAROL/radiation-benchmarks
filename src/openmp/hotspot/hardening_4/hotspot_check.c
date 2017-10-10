@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #ifdef LOGS
-#include "../../include/log_helper.h"
+#include "../../../include/log_helper.h"
 #endif /* LOGS */
 
 #define MAX_ERR_ITER_LOG 500
