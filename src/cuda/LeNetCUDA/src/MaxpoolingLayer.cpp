@@ -27,6 +27,7 @@ MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 	//this trick guarantee that I use DeviceVector or std::vector
 	this->max_loc = std::vector < Pair
 			> (this->out_depth_ * this->in_height_ * this->in_width_, t);
+	this->layer_type = "maxpool";
 
 }
 

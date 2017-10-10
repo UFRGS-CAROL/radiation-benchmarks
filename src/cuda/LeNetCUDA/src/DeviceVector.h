@@ -37,7 +37,7 @@ public:
 	DeviceVector();
 	DeviceVector(const DeviceVector<T>& copy);
 	//overload only for host side
-	T& operator[](int i);
+	T& operator[](int i) const;
 	//this constructor will copy the data to gpu
 	DeviceVector(T *data, size_t siz);
 
@@ -46,6 +46,9 @@ public:
 	//like std::vector
 	void resize(size_t siz);
 	T* data();
+#ifdef NOTUNIFIEDMEMORY
+	T* h_data();
+#endif
 
 	void clear();
 
@@ -56,7 +59,7 @@ public:
 	void pop_vector();
 	void push_vector();
 #endif
-	size_t size();
+	size_t size() const;
 
 	void fill(T data);
 
@@ -208,6 +211,13 @@ void DeviceVector<T>::resize(size_t siz) {
 		this->v_size = siz;
 		this->alloc_memory();
 		this->allocated = true;
+
+#ifdef NOTUNIFIEDMEMORY
+		if(this->host_data){
+			free(this->host_data);
+		}
+		this->host_data = (T*) calloc(this->v_size, sizeof(T));
+#endif
 	}
 }
 
@@ -220,7 +230,7 @@ T* DeviceVector<T>::data() {
 }
 
 template<class T>
-size_t DeviceVector<T>::size() {
+size_t DeviceVector<T>::size() const {
 #ifdef DEBUG_LIGHT
 	std::cout << "size() \n";
 #endif
@@ -229,7 +239,7 @@ size_t DeviceVector<T>::size() {
 
 
 template<class T>
-T& DeviceVector<T>::operator [](int i) {
+T& DeviceVector<T>::operator [](int i) const {
 #ifdef DEBUG_LIGHT
 	std::cout << "operator [] \n";
 #endif
@@ -301,6 +311,12 @@ void DeviceVector<T>::push_vector(){
 	CudaSafeCall(cudaMemcpy(this->device_data, this->host_data, sizeof(T) * this->v_size, cudaMemcpyHostToDevice));
 	CudaCheckError();
 }
-#endif
+
+template<class T>
+T* DeviceVector<T>::h_data(){
+	return this->host_data;
+}
+
+#endif /* NOTUNIFIEDMEMORY */
 
 #endif /* DEVICEVECTOR_H_ */

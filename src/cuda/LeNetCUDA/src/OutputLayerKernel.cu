@@ -26,10 +26,10 @@ __global__ void forward_output_layer_kernel(float *exp_y_vec, float *input_,
 	output_[i] = input_[i];
 }
 
-void call_forward_output_layer(float *err, float *exp_y_vec, float *input_,
+void call_forward_output_layer(float *exp_y_vec, float *input_,
 		float *reduce_output, float *output_, int in_depth_, int exp_y) {
-	//hahahah nvidia managed
-	exp_y_vec[exp_y] = 1;
+//	hahahah nvidia managed
+//	exp_y_vec[exp_y] = 1;
 
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, in_depth_);
@@ -38,10 +38,10 @@ void call_forward_output_layer(float *err, float *exp_y_vec, float *input_,
 			reduce_output, output_, in_depth_, exp_y);
 
 	CudaCheckError();
-	*err = 0;
-	for (int i = 0; i < in_depth_; i++) {
-		*err += reduce_output[i];
-	}
+//	*err = 0;
+//	for (int i = 0; i < in_depth_; i++) {
+//		*err += reduce_output[i];
+//	}
 }
 
 __global__ void backprop_output_layer_kernel(float *exp_y_vec, float *input_,

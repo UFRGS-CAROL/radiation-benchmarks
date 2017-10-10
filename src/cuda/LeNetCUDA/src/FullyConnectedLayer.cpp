@@ -29,6 +29,9 @@ void FullyConnectedLayer::forward() {
 
 DeviceVector<float>  FullyConnectedLayer::get_W(size_t index) {
 	DeviceVector<float> v(in_depth_);
+#ifdef NOTUNIFIEDMEMORY
+	v.pop_vector();
+#endif
 	for (size_t i = 0; i < in_depth_; i++) {
 		v[i] = (W_[index * in_depth_ + i]);
 	}
@@ -63,6 +66,9 @@ void FullyConnectedLayer::init_weight() {
 
 DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
 	DeviceVector<float> r(out_depth_);
+#ifdef NOTUNIFIEDMEMORY
+	r.pop_vector();
+#endif
 	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
 		int it = i / in_depth_;
 		r[it] = (W_[i]);
@@ -139,7 +145,6 @@ void FullyConnectedLayer::back_prop() {
 		g_[in] = df_sigmod(input_[in]) * dot(this->next->g_, get_W_step(in));
 	}
 
-
 	/*
 	 Update weights.
 	 */
@@ -183,7 +188,7 @@ FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
 
 
 	this->init_weight();
-
+	this->layer_type = "fullyconnected";
 }
 
 

@@ -37,14 +37,9 @@ float_t dot(vec_host x, vec_host w) {
 }
 
 #ifdef GPU
-float_t dot(DeviceVector<float> x, DeviceVector<float> w) {
+float_t dot(const DeviceVector<float>& x, const DeviceVector<float>& w) {
 	assert(x.size() == w.size());
 	float_t sum = 0;
-#ifdef NOTUNIFIEDMEMORY
-	x.pop_vector();
-	w.pop_vector();
-#endif
-
 	for (size_t i = 0; i < x.size(); i++) {
 		sum += x[i] * w[i];
 	}
@@ -97,6 +92,7 @@ void Image::upto_32() {
 
 	size = 32;
 }
+
 
 std::vector<std::float_t> Image::extend() {
 	std::vector<float_t> v;

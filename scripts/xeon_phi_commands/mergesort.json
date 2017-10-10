@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 merge_check\"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/mergesort/merge_check 67108864 228 /micNfs/codes/mergesort/inputsort_134217728 /micNfs/codes/mergesort/gold_67108864 99999999\""
+    }
+]

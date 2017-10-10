@@ -54,6 +54,7 @@ ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 	this->b_.resize(out_depth * this->out_width_ * this->out_height_);
 	this->output_.resize(out_depth * this->out_width_ * this->out_height_);
 	init_weight();
+	this->layer_type = "convolutional";
 
 }
 
@@ -66,6 +67,7 @@ void ConvolutionalLayer::back_prop() {
 	this->input_.pop_vector();
 	this->deltaW_.pop_vector();
 	this->b_.pop_vector();
+	this->g_.pop_vector();
 #endif
 	/*update err terms of this layer.*/
 	for (size_t out = 0; out < out_depth_; out++) {
@@ -135,6 +137,7 @@ void ConvolutionalLayer::back_prop() {
 	this->input_.push_vector();
 	this->deltaW_.push_vector();
 	this->b_.push_vector();
+	this->g_.push_vector();
 #endif
 }
 
@@ -302,6 +305,7 @@ void ConvolutionalLayer::forward() {
 void ConvolutionalLayer::init_weight() {
 	uniform_rand(W_.begin(), W_.end(), -1, 1);
 	uniform_rand(b_.begin(), b_.end(), -1, 1);
+
 }
 
 #endif //DEFINE GPU FLAG

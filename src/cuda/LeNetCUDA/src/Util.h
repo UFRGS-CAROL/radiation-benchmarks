@@ -30,7 +30,7 @@
 
 #ifdef GPU
 #include "DeviceVector.h"
-float_t dot(DeviceVector<float> x, DeviceVector<float> w);
+float_t dot(const DeviceVector<float>& x, const  DeviceVector<float>& w);
 #endif
 
 

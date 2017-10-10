@@ -27,8 +27,8 @@ DEBUG = OFF
 ### (such as -lm for the math library) put them in C_LIB.
 CC = gcc #mpicc
 CXX = g++
-CFLAGS = -std=c99 -Wno-unused-result -DMAXATOMS=$(MAXATOMS) 
-OPTFLAGS = -g -O5
+CFLAGS = -std=c99 -Wno-unused-result -DMAXATOMS=$(MAXATOMS)
+OPTFLAGS = -g -O3
 INCLUDES = 
 C_LIB = -lm -lstdc++
 
@@ -117,7 +117,7 @@ CU_OBJECTS=$(CU_SOURCES:.cu=.cu.o)
 
 ##########################################################
 #cpp files to be compiled with c++
-CPPFLAGS=-std=c++11
+CPPFLAGS=-std=c++11 $(OTHER_LIB) $(OTHER_INCLUDE) -o3
 CPP_SOURCES=$(wildcard *.cpp)
 CPP_OBJECTS=$(CPP_SOURCES:.cpp=.o)
 RADIATION_BENCH=/home/carol/radiation-benchmarks
@@ -129,6 +129,7 @@ ifeq ($(LOGS), 1)
 endif
 ##########################################################
 
+RAD_BENCH=/home/carol/radiation-benchmarks
 
 DEFAULT: ${CoMD_EXE}
 
@@ -165,10 +166,10 @@ depend:
 	
 
 test:
-	./bin/CoMD-cuda -e -x 98 -y 49 -z 49
+	./bin/CoMD-cuda -e -x 98 -y 49 -z 49 -g $(RAD_BENCH)/data/comd/test.csv -M 2 -R 10
 
 generate:
-	./bin/CoMD-cuda -e -x 98 -y 49 -z 49
+	./bin/CoMD-cuda -e -x 98 -y 49 -z 49 -g $(RAD_BENCH)/data/comd/test.csv -M 1
 
 
 -include .depend

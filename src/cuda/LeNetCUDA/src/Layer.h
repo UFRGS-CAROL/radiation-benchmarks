@@ -31,8 +31,14 @@ public:
 #ifdef GPU
 	template<typename T> void write_layer_vec(DeviceVector<T> v, FILE *of) {
 		this->write_layer_var<size_t>(v.size(), of);
-		fwrite(v.data(), sizeof(T), v.size(), of);
 
+#ifdef NOTUNIFIEDMEMORY
+		v.pop_vector();
+		fwrite(v.h_data(), sizeof(T), v.size(), of);
+		v.push_vector();
+#else
+		fwrite(v.data(), sizeof(T), v.size(), of);
+#endif
 //		cudaError_t ret = cudaDeviceSynchronize();
 //		CUDA_CHECK_RETURN(ret);
 	}
@@ -41,8 +47,14 @@ public:
 		size_t siz = this->load_layer_var<size_t>(in);
 
 		DeviceVector<T> v(siz);
-		fread(v.data(), sizeof(T), siz, in);
 
+#ifdef NOTUNIFIEDMEMORY
+		v.pop_vector();
+		fread(v.h_data(), sizeof(T), siz, in);
+		v.push_vector();
+#else
+		fread(v.data(), sizeof(T), siz, in);
+#endif
 //		cudaError_t ret = cudaDeviceSynchronize();
 //		CUDA_CHECK_RETURN(ret);
 		return v;
@@ -112,6 +124,7 @@ public:
 	float_t err;
 	int exp_y;
 
+	std::string layer_type;
 	//it is necessary for GPU implementation
 #ifdef GPU
 	DeviceVector<float_t> W_;
