@@ -89,7 +89,8 @@ static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 int main(int argc, char** argv) {
 	Command cmd = parseCommandLine(argc, argv);
 	int i;
-	for (i = 0; i < 10; i++){
+	for (i = 0; i < 100; i++){
+		printf("\n\n\n\nITERATION %d\n\n\n\n\n", i);
 		main_run(argc, argv, cmd);
 	}
 
