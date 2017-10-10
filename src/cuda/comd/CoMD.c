@@ -85,7 +85,18 @@ static void printSimulationDataYaml(FILE* file, SimFlat* s);
 static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 		char latticeType[8]);
 
-int main(int argc, char** argv) {
+
+int main_(int argc, char** argv) {
+	Command cmd = parseCommandLine(argc, argv);
+	int i;
+	for (i = 0; i < 10; i++){
+		main_(argc, argv, cmd);
+	}
+
+	return 0;
+}
+
+int main_(int argc, char** argv, Command cmd) {
 	// Prolog
 	initParallel(&argc, &argv);
 	profileStart(totalTimer);
@@ -95,7 +106,7 @@ int main(int argc, char** argv) {
 	yamlAppInfo(yamlFile);
 	yamlAppInfo(screenOut);
 
-	Command cmd = parseCommandLine(argc, argv);
+//	Command cmd = parseCommandLine(argc, argv);
 	printCmdYaml(yamlFile, &cmd);
 	printCmdYaml(screenOut, &cmd);
 
@@ -115,51 +126,48 @@ int main(int argc, char** argv) {
 	SimFlat* sim = initSimulation(cmd);
 	printSimulationDataYaml(yamlFile, sim);
 	printSimulationDataYaml(screenOut, sim);
+
 	Validate* validate = initValidate(sim); // atom counts, energy
+	timestampBarrier("Initialization Finished\n");
 
-	int bezinho_momo;
-	for (bezinho_momo = 0; bezinho_momo < 10; bezinho_momo++) {
-		timestampBarrier("Initialization Finished\n");
+	timestampBarrier("Starting simulation\n");
 
-		timestampBarrier("Starting simulation\n");
-
-		// This is the CoMD main loop
-		const int nSteps = sim->nSteps;
-		const int printRate = sim->printRate;
-		int iStep = 0;
-		profileStart(loopTimer);
-		for (; iStep < nSteps;) {
-			startTimer(commReduceTimer);
-			sumAtoms(sim);
-			stopTimer(commReduceTimer);
-
-			printThings(sim, iStep, getElapsedTime(timestepTimer));
-
-			startTimer(timestepTimer);
-			timestep(sim, printRate, sim->dt);
-			stopTimer(timestepTimer);
-#if 0
-			// analyze input distribution, note this is done on CPU (slow)
-			AnalyzeInput(sim, iStep);
-#endif
-			iStep += printRate;
-		}
-		profileStop(loopTimer);
-
+	// This is the CoMD main loop
+	const int nSteps = sim->nSteps;
+	const int printRate = sim->printRate;
+	int iStep = 0;
+	profileStart(loopTimer);
+	for (; iStep < nSteps;) {
+		startTimer(commReduceTimer);
 		sumAtoms(sim);
+		stopTimer(commReduceTimer);
+
 		printThings(sim, iStep, getElapsedTime(timestepTimer));
-		timestampBarrier("Ending simulation\n");
 
-		// Epilog
-		validateResult(validate, sim);
-		profileStop(totalTimer);
-		SetZero(sim);
-
+		startTimer(timestepTimer);
+		timestep(sim, printRate, sim->dt);
+		stopTimer(timestepTimer);
+#if 0
+		// analyze input distribution, note this is done on CPU (slow)
+		AnalyzeInput(sim, iStep);
+#endif
+		iStep += printRate;
 	}
+	profileStop(loopTimer);
+
+	sumAtoms(sim);
+	printThings(sim, iStep, getElapsedTime(timestepTimer));
+	timestampBarrier("Ending simulation\n");
+
+	// Epilog
+	validateResult(validate, sim);
+	profileStop(totalTimer);
+
 	printPerformanceResults(sim->atoms->nGlobal, sim->printRate);
 	printPerformanceResultsYaml(yamlFile);
 
 	destroySimulation(&sim);
+	sim = NULL;
 	comdFree(validate);
 	finalizeSubsystems();
 
