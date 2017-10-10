@@ -86,14 +86,16 @@ static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 		char latticeType[8]);
 
 int main(int argc, char** argv) {
-	main_run(argc, argv);
-	main_run(argc, argv);
-	main_run(argc, argv);
-	main_run(argc, argv);
+	Command cmd = parseCommandLine(argc, argv);
+
+	main_run(argc, argv, cmd);
+	main_run(argc, argv, cmd);
+	main_run(argc, argv, cmd);
+	main_run(argc, argv, cmd);
 	return 0;
 }
 
-int main_run(int argc, char** argv) {
+int main_run(int argc, char** argv, Command cmd) {
 	// Prolog
 	initParallel(&argc, &argv);
 	profileStart(totalTimer);
@@ -103,7 +105,7 @@ int main_run(int argc, char** argv) {
 	yamlAppInfo(yamlFile);
 	yamlAppInfo(screenOut);
 
-	Command cmd = parseCommandLine(argc, argv);
+//	Command cmd = parseCommandLine(argc, argv);
 	printCmdYaml(yamlFile, &cmd);
 	printCmdYaml(screenOut, &cmd);
 
