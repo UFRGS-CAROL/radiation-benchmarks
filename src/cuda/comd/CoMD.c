@@ -85,16 +85,7 @@ static void printSimulationDataYaml(FILE* file, SimFlat* s);
 static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 		char latticeType[8]);
 
-
-int main(int argc, char** argv){
-	int i;
-	for(i = 0; i < 10; i++){
-		main_run(argc, argv);
-	}
-}
-
-
-int main_run(int argc, char** argv) {
+int main(int argc, char** argv) {
 	// Prolog
 	initParallel(&argc, &argv);
 	profileStart(totalTimer);
