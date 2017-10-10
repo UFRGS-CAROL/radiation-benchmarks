@@ -86,7 +86,7 @@ static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 		char latticeType[8]);
 
 
-int main_(int argc, char** argv) {
+int main(int argc, char** argv) {
 	Command cmd = parseCommandLine(argc, argv);
 	int i;
 	for (i = 0; i < 10; i++){
@@ -96,7 +96,7 @@ int main_(int argc, char** argv) {
 	return 0;
 }
 
-int main_(int argc, char** argv, Command cmd) {
+int main_run(int argc, char** argv, Command cmd) {
 	// Prolog
 	initParallel(&argc, &argv);
 	profileStart(totalTimer);
