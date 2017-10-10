@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "sc", 
+        "exec": "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/sc -p 0 -d 0 -i 256 -g 8 -a 0.50 -t 4 -n 367001600 -c 50 -r 1000000"
+    }
+]

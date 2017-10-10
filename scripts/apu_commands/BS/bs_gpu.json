@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "bs", 
+        "exec": "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BS/bs -p 0 -d 0 -i 16 -g 8 -a 0.00 -t 1 -n 2500 -r 1000000 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BS/input/control.txt"
+    }
+]

@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "bfs", 
+        "exec": "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/bfs -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/lakes_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/lakes_graph_out  -r 1000000 -l 256"
+    }
+]
