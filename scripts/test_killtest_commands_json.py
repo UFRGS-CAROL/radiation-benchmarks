@@ -64,7 +64,7 @@ def readCommands(filelist):
         fp = open(filelist, "r")
         for f in fp:
             f = f.strip()
-            if f.startswith("#") or f.startswith("%") or f.startswith("//"):
+            if f.startswith("#") or f.startswith("%"):
                 continue
             if os.path.isfile(f):
                 fjson = open(f, "r")
