@@ -1060,6 +1060,7 @@ void SetZero(SimFlat *sim) {
 			cudaMemset(sim->gpu.atoms.neighborList.nNeighbors, 0,
 					sim->atoms->nLocal * sizeof(int)));
 
+	sim->atoms->nGlobal = 0;
 //	GetDataFromGpu(sim);
 //
 //	int size = MAXATOMS * N_MAX_NEIGHBORS;
