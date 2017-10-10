@@ -68,6 +68,8 @@ void cudaCopyDtH(void* dst, const void* src, int size);
 
 int compactHaloCells(SimFlat* sim, char* h_compactAtoms, int* h_cellOffset);
 
+void SetZero(SimFlat *sim);
+
 #define CUDA_CHECK(command)											\
 {														\
   cudaDeviceSynchronize(); \
