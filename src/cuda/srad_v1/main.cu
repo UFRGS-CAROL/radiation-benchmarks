@@ -41,7 +41,6 @@
 #include <iostream>
 #include "device.c"				// (in library path specified to compiler)	needed by for device functions
 
-
 #ifdef LOGS
 #include "log_helper.h"
 #endif
@@ -167,7 +166,7 @@ void compare_and_log(PGMImage *gold, PGMImage *found) {
 						+ std::to_string(g) + "read: " + std::to_string(f);
 				error_count++;
 #ifdef LOGS
-				log_error_detail(error_detail.c_str());
+				log_error_detail((char*)error_detail.c_str());
 
 #else
 				std::cout << error_detail << "\n";
@@ -177,51 +176,55 @@ void compare_and_log(PGMImage *gold, PGMImage *found) {
 	}
 
 #ifdef LOGS
-    log_error_count(errorerror_count);
+	log_error_count(error_count);
 #endif
 }
 
-void inline start_benchmark(){
+void inline start_benchmark(char *gold_path, int iterations, fp lambda) {
 #ifdef LOGS
+	std::string header = std::string("gold: ") + std::string(gold_path)
+					+ " iterations: " + std::to_string(iterations) +
+					" lambda: " + std::to_string(lambda);
+	start_log_file("cudaSRADV1", (char*)header.c_str());
+
 #endif
 }
 
-
-void inline end_benchmark(){
+void inline end_benchmark() {
 #ifdef LOGS
 	end_log_file();
 #endif
 }
 
-void inline start_iteration(){
+void inline start_iteration_call() {
 #ifdef LOGS
-  	start_iteration();
+	start_iteration();
 #endif
 }
 
-void inline end_iteration(){
+void inline end_iteration_call() {
 #ifdef LOGS
-    end_iteration();
+	end_iteration();
 #endif
 }
 
-void save_gold(PGMImage *img, char *gold_path){
+void save_gold(PGMImage *img, char *gold_path) {
 	int size = img->height * img->width;
 
 	FILE* fout = fopen(gold_path, "wb");
-	if (fout){
+	if (fout) {
 		fwrite(&img->height, sizeof(fp), 1, fout);
 		fwrite(&img->width, sizeof(fp), 1, fout);
 		fwrite(img->data, sizeof(fp), size, fout);
 
-	}else{
+	} else {
 		std::cout << gold_path << " directory not found\n";
 	}
 }
 
-void load_gold(PGMImage *img, char *gold_path){
+void load_gold(PGMImage *img, char *gold_path) {
 	FILE* fin = fopen(gold_path, "rb");
-	if (fin){
+	if (fin) {
 		fread(&img->height, sizeof(fp), 1, fin);
 		fread(&img->width, sizeof(fp), 1, fin);
 
@@ -230,12 +233,11 @@ void load_gold(PGMImage *img, char *gold_path){
 		malloc_img_data(img);
 		fread(img->data, sizeof(fp), size, fin);
 
-	}else{
+	} else {
 		std::cout << gold_path << " directory not found\n";
 	}
 
 }
-
 
 //====================================================================================================100
 //	MAIN FUNCTION
@@ -344,11 +346,10 @@ int main(int argc, char *argv[]) {
 //		Nc = atoi(argv[4]);					// it is 458 in the original image
 	}
 
-
 	//================================================================================80
 	// 	Starting bench
 	//================================================================================80
-	start_benchmark();
+	start_benchmark(gold_path, niter, lambda);
 
 	//================================================================================80
 	// 	READ IMAGE (SIZE OF IMAGE HAS TO BE KNOWN)
@@ -481,14 +482,14 @@ int main(int argc, char *argv[]) {
 
 		double time = get_time();
 		//for logs
-		start_iteration();
+		start_iteration_call();
 		compute_srad(Ne, blocks2, no, mul, blocks_x, mem_size_single, meanROI,
 				meanROI2, varROI, q0sqr, blocks, threads, d_I, d_sums, d_sums2,
 				total, total2, NeROI, lambda, Nr, Nc, d_iN, d_iS, d_jE, d_jW,
 				d_dN, d_dS, d_dW, d_dE, d_c);
 
 		//for logs
-		end_iteration();
+		end_iteration_call();
 
 		std::cout << "Time for iteration " << get_time() - time << "\n";
 		//================================================================================80
@@ -501,8 +502,8 @@ int main(int argc, char *argv[]) {
 		time = get_time();
 		//compare
 		if (mode == 1) {
-			PGMImage found = make_pgm_img(image, Nr, Nc, gold_img.max_gray_value,
-					gold_img.magic_number);
+			PGMImage found = make_pgm_img(image, Nr, Nc,
+					gold_img.max_gray_value, gold_img.magic_number);
 			compare_and_log(&gold_img, &found);
 		}
 
@@ -512,7 +513,7 @@ int main(int argc, char *argv[]) {
 	//================================================================================80
 	// WRITE IMAGE AFTER PROCESSING
 	//================================================================================80
-	if (mode == 0){
+	if (mode == 0) {
 //		write_graphics(gold_path, image, Nr, Nc, 1, 255);
 		PGMImage found = make_pgm_img(image, Nr, Nc, gold_img.max_gray_value,
 				gold_img.magic_number);

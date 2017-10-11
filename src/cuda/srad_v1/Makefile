@@ -26,7 +26,7 @@ NVCC= $(CUDA_DIR)/bin/nvcc
 INCLUDE := $(CUDA_DIR)/include
 
 ifeq ($(LOGS), 1)
-NVCC_FLAGS+= -I../../include/ -L../../include -logHelper -DLOGS
+NVCC_FLAGS+= -I../../include/ -L../../include -lLogHelper -DLOGS
 endif
 
 
