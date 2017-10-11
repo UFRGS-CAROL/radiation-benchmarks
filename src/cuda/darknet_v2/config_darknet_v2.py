@@ -132,7 +132,7 @@ def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
     fp = open(installDir + "scripts/json_files/" + benchmark_bin + ".json", 'w')
 
     list_to_print = ["["]
-    for i, ii in enumerate(execute):
+    for ii, i in enumerate(execute):
         command = "{\"killcmd\": \"killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(i) + "\"}"
         if ii != len(execute) - 1:
             command += ', '
