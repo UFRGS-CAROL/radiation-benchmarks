@@ -163,7 +163,7 @@ void compare_and_log(PGMImage *gold, PGMImage *found) {
 			if (diff > MAX_ERROR_THRESHOLD) {
 				std::string error_detail = "position[" + std::to_string(i)
 						+ "][" + std::to_string(j) + "] expected: "
-						+ std::to_string(g) + "read: " + std::to_string(f);
+						+ std::to_string(g) + " read: " + std::to_string(f);
 				error_count++;
 #ifdef LOGS
 				log_error_detail((char*)error_detail.c_str());
@@ -183,8 +183,8 @@ void compare_and_log(PGMImage *gold, PGMImage *found) {
 void inline start_benchmark(char *gold_path, int iterations, fp lambda) {
 #ifdef LOGS
 	std::string header = std::string("gold: ") + std::string(gold_path)
-					+ " iterations: " + std::to_string(iterations) +
-					" lambda: " + std::to_string(lambda);
+	+ " iterations: " + std::to_string(iterations) +
+	" lambda: " + std::to_string(lambda);
 	start_log_file("cudaSRADV1", (char*)header.c_str());
 
 #endif
@@ -514,14 +514,13 @@ int main(int argc, char *argv[]) {
 		std::cout << "Time for comparing " << get_time() - time << "\n";
 	}
 
-
 	//================================================================================80
 	// WRITE IMAGE AFTER PROCESSING
 	//================================================================================80
 	if (mode == 0) {
 //		write_graphics(gold_path, image, Nr, Nc, 1, 255);
-		PGMImage found = make_pgm_img(image_output, Nr, Nc, gold_img.max_gray_value,
-				gold_img.magic_number);
+		PGMImage found = make_pgm_img(image_output, Nr, Nc,
+				gold_img.max_gray_value, gold_img.magic_number);
 		save_gold(&found, gold_path);
 	}
 	//================================================================================80
