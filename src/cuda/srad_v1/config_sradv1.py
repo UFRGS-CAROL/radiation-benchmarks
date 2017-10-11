@@ -63,10 +63,6 @@ def main(board):
 
     execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin)
 
-    print "\nConfiguring done, to run check file: " + installDir + "scripts/json_files/" + benchmark_bin + ".json"
-
-    sys.exit(0)
-
 
 def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
     for i in generate:
@@ -86,6 +82,7 @@ def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
         print >> fp, i
         print i
     fp.close()
+    print "\nConfiguring done, to run check file: " + installDir + "scripts/json_files/" + benchmark_bin + ".json"
 
 
 if __name__ == "__main__":
