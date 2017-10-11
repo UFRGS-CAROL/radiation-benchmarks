@@ -115,9 +115,9 @@ def main(board):
 
 def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
     for i in generate:
-        # if os.system(str(i)) != 0:
-        #     print "Something went wrong with generate of ", str(i)
-        #     exit(1)
+        if os.system(str(i)) != 0:
+            print "Something went wrong with generate of ", str(i)
+            exit(1)
         print i
     fp = open(installDir + "scripts/json_files/" + benchmark_bin + ".json", 'w')
 
