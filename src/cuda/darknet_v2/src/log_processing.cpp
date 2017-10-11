@@ -52,6 +52,12 @@ void end_iteration_app() {
 #endif
 }
 
+void update_timestamp_app(){
+#ifdef LOGS
+	update_timestamp();
+#endif
+}
+
 /**
  * support function only to check if two layers have
  * the same value

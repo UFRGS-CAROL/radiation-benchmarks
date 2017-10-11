@@ -735,6 +735,10 @@ image *load_all_images_sized(image *img_array, int net_w, int net_h,
 	image *ret = (image*) malloc(sizeof(image) * list_size);
 	for (i = 0; i < list_size; i++) {
 		ret[i] = letterbox_image(img_array[i], net_w, net_h);
+		if (i > 500) {
+			update_timestamp_app();
+		}
+
 	}
 	return ret;
 }
@@ -745,6 +749,9 @@ image *load_all_images(detection det) {
 	image *ret = (image*) malloc(sizeof(image) * det.plist_size);
 	for (i = 0; i < det.plist_size; i++) {
 		ret[i] = load_image_color(det.img_names[i], 0, 0);
+		if (i > 500) {
+			update_timestamp_app();
+		}
 	}
 	return ret;
 }

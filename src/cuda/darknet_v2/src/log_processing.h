@@ -77,6 +77,8 @@ void finish_count_app();
 
 void start_iteration_app();
 void end_iteration_app();
+void update_timestamp_app();
+
 
 /**
  * compare and save layers
