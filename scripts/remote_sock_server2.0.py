@@ -19,14 +19,14 @@ serverIP = "192.168.1.5" # IP of the remote socket server (hardware watchdog)
 
 # Set the machines IP to check, comment the ones we are not checking
 IPmachines = [
-	"192.168.1.1",  #CarolK201
-	"192.168.1.2",  #CarolK401
+#	"192.168.1.1",  #CarolK201
+#	"192.168.1.2",  #CarolK401
 	"192.168.1.6",  #CarolXeon1
-	"192.168.1.7",  #CarolXeon2
-	"192.168.1.10", #CarolAPU1
-	"192.168.1.11", #CarolAPU2
-	"192.168.1.12", #CarolX2A
-	"192.168.1.13", #CarolX2B
+#	"192.168.1.7",  #CarolXeon2
+#	"192.168.1.10", #CarolAPU1
+#	"192.168.1.11", #CarolAPU2
+#	"192.168.1.12", #CarolX2A
+#	"192.168.1.13", #CarolX2B
 
         # Not used:
 #	"192.168.1.8",  #CarolK401
@@ -241,13 +241,14 @@ def checkMachines():
 				print "Boot Problem IP "+address
 				logMsg("Boot Problem IP "+address)
 			#IPActiveTest[address]=False
-                else:
+                elif seconds > 10*IPtoDiffReboot[address]:
 			if address in IPtoNames:
 				print "Rebooting IP "+address+" ("+IPtoNames[address]+")"
 				logMsg("Rebooting IP "+address+" ("+IPtoNames[address]+")")
 			else:
 				print "Rebooting IP "+address
 				logMsg("Rebooting IP "+address)
+			RebootMachine(address).start()
 
 
 class handleMachines(threading.Thread):
