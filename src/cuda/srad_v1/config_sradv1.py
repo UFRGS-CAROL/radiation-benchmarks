@@ -66,15 +66,17 @@ def main(board):
 
 def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
     for i in generate:
-        if os.system(str(i)) != 0:
-            print "Something went wrong with generate of ", str(i)
-            exit(1)
+        # if os.system(str(i)) != 0:
+        #     print "Something went wrong with generate of ", str(i)
+        #     exit(1)
         print i
-    fp = open(installDir + "scripts/json_files/"+ benchmark_bin + ".json", 'w')
+    fp = open(installDir + "scripts/json_files/" + benchmark_bin + ".json", 'w')
 
     list_to_print = ["["]
-    for i in execute:
-        command = "{\"killcmd\": \"killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(i) + "\"}, "
+    for i, ii in enumerate(execute):
+        command = "{\"killcmd\": \"killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(i) + "\"}"
+        if ii != len(execute) - 1:
+            command += ', '
         list_to_print.append(command)
     list_to_print.append("]")
 
