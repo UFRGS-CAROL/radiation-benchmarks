@@ -152,7 +152,7 @@ def killall():
         for cmd in commands:
             os.system(cmd["killcmd"])
     except:
-    print >> sys.stderr, "Could not issue the kill command for each entry, config file error!"
+        print >> sys.stderr, "Could not issue the kill command for each entry, config file error!"
 
 
 # When SIGUSR1 or SIGUSR2 is received update timestamp
