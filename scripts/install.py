@@ -47,7 +47,7 @@ if check():
 logDir = varDir+"/log"
 micLog = "/micNfs/carol/logs"
 
-signalCmd = "killall -q -USR1 killtestSignal.py"
+signalCmd = "killall -q -USR1 killtestSignal.py; killall -q -USR1 test_killtest_commands_json.py"
 
 installPath=installPath()
 
