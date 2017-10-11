@@ -287,6 +287,8 @@ def force_update_timestamp():
     fp = open("/var/radiation-benchmarks/timestamp.txt", "w")
     fp.write(str(calendar.timegm(time.gmtime())))
     fp.close()
+    if "no_logs" not in args.is_log:
+        lh.update_timestamp()
     return
 
 
@@ -299,6 +301,7 @@ if __name__ == '__main__':
         string_info = "iterations: " + str(args.iterations) + " img_list: " + str(
             args.img_list) + " board: DEFAULT gold: " + str(args.gold) + " net: " + str(args.demo_net)
         lh.start_log_file("PyFasterRcnn", string_info)
+
 
     # object for gold file
     gold_file = {}
