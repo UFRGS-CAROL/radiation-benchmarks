@@ -215,6 +215,7 @@ void save_gold(PGMImage *img, char *gold_path) {
 	if (fout) {
 		fwrite(&img->height, sizeof(fp), 1, fout);
 		fwrite(&img->width, sizeof(fp), 1, fout);
+
 		fwrite(img->data, sizeof(fp), size, fout);
 
 	} else {
@@ -377,8 +378,8 @@ int main(int argc, char *argv[]) {
 	//================================================================================80
 	PGMImage gold_img;
 	if (mode == 1) {
-//		read_pgm_image(gold_path, &gold_img, 1);
-		load_gold(&gold_img, gold_path);
+		read_pgm_image(gold_path, &gold_img, 1);
+//		load_gold(&gold_img, gold_path);
 	}
 
 	//================================================================================80
@@ -520,10 +521,10 @@ int main(int argc, char *argv[]) {
 	// WRITE IMAGE AFTER PROCESSING
 	//================================================================================80
 	if (mode == 0) {
-//		write_graphics(gold_path, image, Nr, Nc, 1, 255);
-		PGMImage found = make_pgm_img(image, Nr, Nc, gold_img.max_gray_value,
-				gold_img.magic_number);
-		save_gold(&found, gold_path);
+		write_graphics(gold_path, image, Nr, Nc, 1, 255);
+//		PGMImage found = make_pgm_img(image, Nr, Nc, gold_img.max_gray_value,
+//				gold_img.magic_number);
+//		save_gold(&found, gold_path);
 	}
 	//================================================================================80
 	//	DEALLOCATE

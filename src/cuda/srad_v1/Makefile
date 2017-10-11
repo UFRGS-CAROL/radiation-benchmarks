@@ -55,10 +55,10 @@ main.o: 	main.cu \
 	$(NVCC)	main.cu -c -O3 $(NVCC_FLAGS)
 	
 test:
-	./$(TARGET) 10 0.5 image.pgm 1 image_out.pgm
+	./$(TARGET) 10 0.5 image.pgm 1 image_out.gold
 
 generate:
-	./$(TARGET) 1 0.5 image.pgm 0 image_out.pgm
+	./$(TARGET) 1 0.5 image.pgm 0 image_out.gold
 
 
 # delete all object files
