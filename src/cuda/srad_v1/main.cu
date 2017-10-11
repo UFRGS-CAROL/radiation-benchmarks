@@ -507,6 +507,9 @@ int main(int argc, char *argv[]) {
 		if (mode == 1) {
 			PGMImage found = make_pgm_img(image, Nr, Nc,
 					gold_img.max_gray_value, gold_img.magic_number);
+			std::cout << "test\n";
+			print_image(&gold_img);
+			print_image(&found);
 			compare_and_log(&gold_img, &found);
 		}
 
