@@ -6,9 +6,9 @@ import copy
 
 DATASETS = [
     # normal
-    #{'txt': 'caltech.pedestrians.1K.txt', 'gold': 'gold.caltech.1K.csv', 'mode': 'full'},
-    #{'txt': 'urban.street.1.1K.txt', 'gold': 'gold.urban.street.1.1K.csv', 'mode': 'full'},
-    #{'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.1K.csv', 'mode': 'full'},
+    {'txt': 'caltech.pedestrians.1K.txt', 'gold': 'gold.caltech.1K.csv', 'mode': 'full'},
+    {'txt': 'urban.street.1.1K.txt', 'gold': 'gold.urban.street.1.1K.csv', 'mode': 'full'},
+    {'txt': 'voc.2012.1K.txt', 'gold': 'gold.voc.2012.1K.csv', 'mode': 'full'},
 
     # average
     # {'txt': 'caltech.pedestrians.100.txt', 'gold': 'gold.caltech.100.csv', 'mode': 'average'},
@@ -16,9 +16,9 @@ DATASETS = [
     # {'txt': 'voc.2012.100.txt', 'gold': 'gold.voc.2012.100.csv', 'mode': 'average'},
 
     # very_small for X1 and X2
-    {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
-    {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'small'},
-    {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'small'},
+    #~ {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
+    #~ {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'small'},
+    #~ {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'small'},
 ]
 
 def download_weights(src_dir, data_dir):
@@ -28,6 +28,9 @@ def download_weights(src_dir, data_dir):
         exit(-1)
 
     os.chdir(src_dir)
+    
+WEIGHTS="tiny-yolo-voc_v2.weights"
+CFG="tiny-yolo_v2.cfg"
 
 
 def main(board):
@@ -76,8 +79,8 @@ def main(board):
                         'bin': [bin_path, "/darknet_v2"],
                         # 'e': [' -e ', 'yolo'],  # execution_type =
                         'aa': ['test_radiation', ''],  # execution_model =
-                        'c': [' -c ', data_path + '/yolo_v2.cfg'],  # config_file =
-                        'w': [' -w ', data_path + '/yolo_v2.weights'],  # weights =
+                        'c': [' -c ', data_path + '/' + CFG],  # config_file =
+                        'w': [' -w ', data_path + '/' + WEIGHTS],  # weights =
                         'n': [' -n ', '1'],  # iterations =  #it is not so much, since each dataset have at least 10k of images
                         'g': [' -g ', gold],  # base_caltech_out = base_voc_out = src_darknet
                         'l': [' -l ', txt_list],

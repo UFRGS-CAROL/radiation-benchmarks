@@ -33,18 +33,18 @@ then
     exit -1
 fi
 
-#TINY V1
-if [ ! -f $DIR/$TINY_YOLOV1 ] || [ ! "$(echo "$V1MD5SUM $DIR/$TINY_YOLOV1" | md5sum -c)" == "$DIR/$TINY_YOLOV1: OK" ];
-then
-    wget https://www.dropbox.com/s/acakz3i4ee0tp70/tiny-yolo_v1.weights -O $DIR/$TINY_YOLOV1 --no-check-certificate
-fi
+#~ #TINY V1
+#~ if [ ! -f $DIR/$TINY_YOLOV1 ] || [ ! "$(echo "$V1MD5SUM $DIR/$TINY_YOLOV1" | md5sum -c)" == "$DIR/$TINY_YOLOV1: OK" ];
+#~ then
+    #~ wget https://www.dropbox.com/s/acakz3i4ee0tp70/tiny-yolo_v1.weights -O $DIR/$TINY_YOLOV1 --no-check-certificate
+#~ fi
 
-#check m5sum
-if [ ! "$(echo "$TINYV1MD5SUM $DIR/$TINY_YOLOV1" | md5sum -c)" == "$DIR/$TINY_YOLOV1: OK" ];
-then
-    echo "ERROR: MD5SUM is not the same for Tiny YoloV1 weights, exiting..."
-    exit -1
-fi
+#~ #check m5sum
+#~ if [ ! "$(echo "$TINYV1MD5SUM $DIR/$TINY_YOLOV1" | md5sum -c)" == "$DIR/$TINY_YOLOV1: OK" ];
+#~ then
+    #~ echo "ERROR: MD5SUM is not the same for Tiny YoloV1 weights, exiting..."
+    #~ exit -1
+#~ fi
 
 ########################################################################
 #V2-------------------------
