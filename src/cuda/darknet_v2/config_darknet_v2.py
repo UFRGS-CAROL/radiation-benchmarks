@@ -16,15 +16,9 @@ DATASETS = [
     # {'txt': 'voc.2012.100.txt', 'gold': 'gold.voc.2012.100.csv', 'mode': 'average'},
 
     # very_small for X1 and X2
-<<<<<<< HEAD
     # {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
     # {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'small'},
     # {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'small'},
-=======
-    #~ {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
-    #~ {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'small'},
-    #~ {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'small'},
->>>>>>> cfee1b30d47141de605f349bf054a0457afe845b
 ]
 
 WEIGHTS="tiny-yolo-voc_v2.weights"
@@ -38,10 +32,6 @@ def download_weights(src_dir, data_dir):
 
     os.chdir(src_dir)
     
-WEIGHTS="tiny-yolo-voc_v2.weights"
-CFG="tiny-yolo_v2.cfg"
-
-
 def main(board):
     print "Generating darknet for CUDA, board:" + board
 
