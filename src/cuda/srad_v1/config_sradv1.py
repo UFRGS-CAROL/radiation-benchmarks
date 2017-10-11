@@ -22,15 +22,16 @@ def main(board):
         print >> sys.stderr, "Configuration setup error: " + str(e)
         sys.exit(1)
 
-    data_path = installDir + "data/srad_v1"
+    benchmark_bin = "srad_v1"
+    data_path = installDir + "data/" + benchmark_bin
     bin_path = installDir + "bin"
-    src_srad = installDir + "src/cuda/srad_v1"
+    src_srad = installDir + "src/cuda/" + benchmark_bin
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
-    generate = ["mkdir -p " + data_path, "cd " + src_srad, "make clean", "make",  "mv ./srad_v1 " + bin_path + "/"]
+    generate = ["mkdir -p " + data_path, "cd " + src_srad, "make clean", "make",  "mv ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
     for i in INPUT:
@@ -38,7 +39,7 @@ def main(board):
         #1000 0.5 image.pgm 1 image_out.gold
 
         gen = [None] * 6
-        gen[0] = ['sudo ', bin_path + "/srad_v1 "]
+        gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
         gen[1] = [1]
         gen[2] = [0.5]
         gen[3] = [inputImg]
@@ -58,32 +59,33 @@ def main(board):
     generate.append("make clean ")
     generate.append("make -C ../../include/")
     generate.append("make LOGS=1")
-    generate.append("sudo mv ./srad_v1 " + bin_path + "/")
+    generate.append("sudo mv ./" + benchmark_bin + " " + bin_path + "/")
 
+    execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin)
+
+    print "\nConfiguring done, to run check file: " + installDir + "scripts/json_files/" + benchmark_bin + ".json"
+
+    sys.exit(0)
+
+
+def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
     for i in generate:
-        # if os.system(str(i)) != 0:
-        #     print "Something went wrong with generate of ", str(i)
-        #     exit(1)
+        if os.system(str(i)) != 0:
+            print "Something went wrong with generate of ", str(i)
+            exit(1)
         print i
-
-    fp = open(installDir + "scripts/srad_v1.json" , 'w')
+    fp = open(installDir + "scripts/json_files/"+ benchmark_bin + ".json", 'w')
 
     list_to_print = ["["]
     for i in execute:
-        command = "{\"killcmd\": \"killall -9 srad_v1\", \"exec\": \"" + str(i) + "\"}, "
+        command = "{\"killcmd\": \"killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(i) + "\"}, "
         list_to_print.append(command)
     list_to_print.append("]")
 
     for i in list_to_print:
         print >> fp, i
         print i
-
-
     fp.close()
-
-    print "\nConfiguring done, to run check file: " + installDir + "scripts/srad_v1.json"
-
-    sys.exit(0)
 
 
 if __name__ == "__main__":
