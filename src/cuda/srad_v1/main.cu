@@ -388,6 +388,7 @@ int main(int argc, char *argv[]) {
 	Ne = Nr * Nc;
 
 	image = (fp*) malloc(sizeof(fp) * Ne);
+	fp image_output = (fp*) malloc(sizeof(fp) * Ne);
 
 	resize(image_ori, image_ori_rows, image_ori_cols, image, Nr, Nc, 1);
 
@@ -498,14 +499,14 @@ int main(int argc, char *argv[]) {
 		//================================================================================80
 		// 	COPY RESULTS BACK TO CPU
 		//================================================================================80
-		cudaMemcpy(image, d_I, mem_size, cudaMemcpyDeviceToHost);
+		cudaMemcpy(image_output, d_I, mem_size, cudaMemcpyDeviceToHost);
 
 		checkCUDAError("copy back");
 
 		time = get_time();
 		//compare
 		if (mode == 1) {
-			PGMImage found = make_pgm_img(image, Nr, Nc,
+			PGMImage found = make_pgm_img(image_output, Nr, Nc,
 					gold_img.max_gray_value, gold_img.magic_number);
 			compare_and_log(&gold_img, &found);
 		}
@@ -513,12 +514,6 @@ int main(int argc, char *argv[]) {
 		std::cout << "Time for comparing " << get_time() - time << "\n";
 	}
 
-	for(int i = 0; i < 10; i++){
-		std::cout << image[i] << " ";
-
-	}
-	std::cout << "\n";
-	return 0;
 
 	//================================================================================80
 	// WRITE IMAGE AFTER PROCESSING
@@ -535,6 +530,7 @@ int main(int argc, char *argv[]) {
 	std::cout << "Finishing and deallocate\n";
 	free(image_ori);
 	free(image);
+	free(image_output);
 	free(iN);
 	free(iS);
 	free(jW);
