@@ -19,28 +19,19 @@ serverIP = "192.168.1.5" # IP of the remote socket server (hardware watchdog)
 
 # Set the machines IP to check, comment the ones we are not checking
 IPmachines = [
-#	"192.168.1.1",  #CarolK201
+#	"192.168.1.1",  #CarolTitanX1
 #	"192.168.1.2",  #CarolK401
-	"192.168.1.6",  #CarolXeon1
+#	"192.168.1.6",  #CarolXeon1
 #	"192.168.1.7",  #CarolXeon2
 #	"192.168.1.10", #CarolAPU1
 #	"192.168.1.11", #CarolAPU2
 #	"192.168.1.12", #CarolX2A
 #	"192.168.1.13", #CarolX2B
-
-        # Not used:
-#	"192.168.1.8",  #CarolK401
-#	"192.168.1.9",  #CarolK402
-#	"192.168.1.14", #CarolK1C
-#	"192.168.1.15", #CarolHSA2
-#	"192.168.1.20", #PI_1
-#	"192.168.1.21", #PI_2
-#	"192.168.1.22", #PI_3
 ]
 
 # Set the machine names for each IP
 IPtoDiffReboot = {
-	"192.168.1.1" : 30,  #CarolK201
+	"192.168.1.1" : 30,  #CarolTitanX1
 	"192.168.1.2" : 30,  #CarolK401
 	"192.168.1.6" : 120, #CarolXeon1
 	"192.168.1.7" : 120, #CarolXeon2
@@ -52,7 +43,7 @@ IPtoDiffReboot = {
 
 # Set the machine names for each IP
 IPtoNames = {
-	"192.168.1.1" : "CarolK201",
+	"192.168.1.1" : "CarolTitanX1",
 	"192.168.1.2" : "CarolK401",
 	"192.168.1.6" : "CarolXeon1",
 	"192.168.1.7" : "CarolXeon2",
@@ -60,57 +51,30 @@ IPtoNames = {
 	"192.168.1.11" : "CarolAPU2",
 	"192.168.1.12" : "CarolX2A",
 	"192.168.1.13" : "CarolX2B",
-
-        # Not used:
-#	"192.168.1.8" : "CarolK401",
-#	"192.168.1.9" : "CarolK402",
-#	"192.168.1.14" : "CarolK1C",
-#	"192.168.1.15" : "CarolHSA2",
-#	"192.168.1.20" : "PI_1",
-#	"192.168.1.21" : "PI_2",
-#	"192.168.1.22" : "PI_3",
 }
 
 # Set the switch IP that a machine IP is connected
 IPtoSwitchIP = {
-	"192.168.1.1" : "192.168.1.100",  #CarolK201
-	"192.168.1.2" : "192.168.1.102",  #CarolK401
+	"192.168.1.1" : "192.168.1.102",  #CarolTitanX1
+	"192.168.1.2" : "192.168.1.100",  #CarolK401
 	"192.168.1.6" : "192.168.1.100",  #CarolXeon1
 	"192.168.1.7" : "192.168.1.101",  #CarolXeon2
 	"192.168.1.10" : "192.168.1.101", #CarolAPU1
 	"192.168.1.11" : "192.168.1.102", #CarolAPU2
 	"192.168.1.12" : "192.168.1.101", #CarolX2A
 	"192.168.1.13" : "192.168.1.102", #CarolX2B
-
-        # Not used:
-#	"192.168.1.8" : "192.168.1.100",  #CarolK401
-#	"192.168.1.9" : "192.168.1.102",  #CarolK402
-#	"192.168.1.14" : "192.168.1.100", #CarolK1C
-#	"192.168.1.15" : "192.168.1.101", #CarolHSA2
-#	"192.168.1.20" : "192.168.1.101", #PI_1
-#	"192.168.1.21" : "192.168.1.101", #PI_2
-#	"192.168.1.22" : "192.168.1.101", #PI_3
 }
 
 # Set the switch Port that a machine IP is connected
 IPtoSwitchPort = {
-	"192.168.1.1" : 3,  #CarolK201
-	"192.168.1.2" : 1,  #CarolK401
+	"192.168.1.1" : 1,  #CarolTitanX1
+	"192.168.1.2" : 3,  #CarolK401
 	"192.168.1.6" : 1,  #CarolXeon1
 	"192.168.1.7" : 1,  #CarolXeon2
 	"192.168.1.10" : 3, #CarolAPU1
 	"192.168.1.11" : 3, #CarolAPU2
-	"192.168.1.12" : 2, #CarolX2A
-	"192.168.1.13" : 2, #CarolX2B
-
-        # Not used:
-#	"192.168.1.8" : 1,  #CarolK401
-#	"192.168.1.9" : 1,  #CarolK402
-#	"192.168.1.14" : 2, #CarolK1C
-#	"192.168.1.15" : 3, #CarolHSA2
-#	"192.168.1.20" : 2, #PI_1
-#	"192.168.1.21" : 4, #PI_2
-#	"192.168.1.22" : 2, #PI_3
+	"192.168.1.12" : 4, #CarolX2A
+	"192.168.1.13" : 4, #CarolX2B
 }
 
 # log in whatever path you are executing this script
