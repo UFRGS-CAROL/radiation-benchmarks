@@ -513,6 +513,13 @@ int main(int argc, char *argv[]) {
 		std::cout << "Time for comparing " << get_time() - time << "\n";
 	}
 
+	for(int i = 0; i < 10; i++){
+		std::cout << image[i] << " ";
+
+	}
+	std::cout << "\n";
+	return 0;
+
 	//================================================================================80
 	// WRITE IMAGE AFTER PROCESSING
 	//================================================================================80
