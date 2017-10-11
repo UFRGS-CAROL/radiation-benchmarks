@@ -1,0 +1,14 @@
+[
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 dgemm_check_hardened_1\"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/dgemm/dgemm_check_hardened_1 228 1024 32 /micNfs/codes/dgemm/dgemm_a_1024 /micNfs/codes/dgemm/dgemm_b_1024 /micNfs/codes/dgemm/gold_1024_m-order_228_ths_32_blocks 10000000\""
+    }, 
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 dgemm_check_hardened_1\"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/dgemm/dgemm_check_hardened_1 228 2048 32 /micNfs/codes/dgemm/dgemm_a_2048 /micNfs/codes/dgemm/dgemm_b_2048 /micNfs/codes/dgemm/gold_2048_m-order_228_ths_32_blocks 10000000\""
+    }, 
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 dgemm_check_hardened_1\"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/dgemm/dgemm_check_hardened_1 228 4096 32 /micNfs/codes/dgemm/dgemm_a_4096 /micNfs/codes/dgemm/dgemm_b_4096 /micNfs/codes/dgemm/gold_4096_m-order_228_ths_32_blocks 10000000\""
+    }
+]

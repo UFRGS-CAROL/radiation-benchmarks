@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lavamd_check\"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lavamd/lavamd_check 228 10 /micNfs/codes/lavamd/input_distance_228_10 /micNfs/codes/lavamd/input_charges_228_10 /micNfs/codes/lavamd/output_gold_228_10 10000000\""
+    }
+]
