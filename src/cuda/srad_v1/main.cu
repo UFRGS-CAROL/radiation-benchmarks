@@ -388,7 +388,7 @@ int main(int argc, char *argv[]) {
 	Ne = Nr * Nc;
 
 	image = (fp*) malloc(sizeof(fp) * Ne);
-	fp image_output = (fp*) malloc(sizeof(fp) * Ne);
+	fp *image_output = (fp*) malloc(sizeof(fp) * Ne);
 
 	resize(image_ori, image_ori_rows, image_ori_cols, image, Nr, Nc, 1);
 
