@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -x
 
 # this script will download and check darknet V1 and V2
 # weights consistency
@@ -62,7 +63,7 @@ then
 fi
 
 #TINY V2
-if [ ! -f $DIR/$TINY_YOLOV2 ] || [ ! "$(echo "$V1MD5SUM $DIR/$TINY_YOLOV2" | md5sum -c)" == "$DIR/$TINY_YOLOV2: OK" ];
+if [ ! -f $DIR/$TINY_YOLOV2 ] || [ ! "$(echo "$TINYV2MD5SUM $DIR/$TINY_YOLOV2" | md5sum -c)" == "$DIR/$TINY_YOLOV2: OK" ];
 then
     wget https://www.dropbox.com/s/8ncf5lroyluudvs/tiny-yolo-voc_v2.weights -O $DIR/$TINY_YOLOV2 --no-check-certificate
 fi
