@@ -1,0 +1,46 @@
+#------------------ SC --------------------
+/home/carol/radiation-benchmarks/scripts/apu_commands/SC/sc_cpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/SC/sc_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/SC/sc_cpu+gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/SC/sc_30_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/SC/sc_50_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/SC/sc_60_gpu.json
+#----------------- BS ----------------------
+/home/carol/radiation-benchmarks/scripts/apu_commands/BS/bs_cpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/BS/bs_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/BS/bs_cpu+gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/BS/bs_30_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/BS/bs_50_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/BS/bs_60_gpu.json
+#--------------- CEDD Caltech --------------
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_cpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_cpu+gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_30_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_50_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_60_gpu.json
+#---------------- CEDD Urban ---------------
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Urban/cedd_cpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Urban/cedd_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Urban/cedd_cpu+gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Urban/cedd_30_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Urban/cedd_50_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Urban/cedd_60_gpu.json
+#----------------- BFS Lakes ----------------------
+/home/carol/radiation-benchmarks/scripts/apu_commands/BFS/lakes/bfs_cpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/BFS/lakes/bfs_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/BFS/lakes/bfs_30_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/BFS/lakes/bfs_50_gpu.json
+#---------------- BFS Central ----------------------
+#
+#	Loading ....
+#
+#---------------- SSSP Colorado --------------------
+/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Colorado/sssp_cpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Colorado/sssp_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Colorado/sssp_30_gpu.json
+#---------------- SSSP Florida --------------------
+/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Florida/sssp_cpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Florida/sssp_gpu.json
+/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Florida/sssp_30_gpu.json
+
