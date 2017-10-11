@@ -297,7 +297,7 @@ if __name__ == '__main__':
     force_update_timestamp()
     if "no_logs" not in args.is_log:
         string_info = "iterations: " + str(args.iterations) + " img_list: " + str(
-            args.img_list) + " board: DEFAULT gold: " + str(args.gold)
+            args.img_list) + " board: DEFAULT gold: " + str(args.gold) + " net: " + str(args.demo_net)
         lh.start_log_file("PyFasterRcnn", string_info)
 
     # object for gold file

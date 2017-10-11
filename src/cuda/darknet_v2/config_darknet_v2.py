@@ -106,7 +106,7 @@ def main(board):
 
     # end for generate
     generate.append("make clean GPU=1 ")
-    generate.append("make -C ../../include/")
+    generate.append("make -C ../../include/ clean all")
     generate.append("make -j 4 GPU=1 LOGS=1")
     generate.append("mv ./" + benchmark_bin+ " " + bin_path + "/")
 
