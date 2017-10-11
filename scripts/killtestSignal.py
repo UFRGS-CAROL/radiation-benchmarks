@@ -68,13 +68,13 @@ def checkCommandListChanges():
     json.dump(commands, fp)
     fp.close()
     if not os.path.isfile(lastFile):
-        shutil.copyfile(commandFile, lastFile)
+        shutil.copyfile(curFile, lastFile)
         return True
 
     if filecmp.cmp(curFile, lastFile, shallow=False):
         return False
     else:
-        shutil.copyfile(commandFile, lastFile)
+        shutil.copyfile(curFile, lastFile)
         return True
 
 
