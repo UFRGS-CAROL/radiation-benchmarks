@@ -349,7 +349,8 @@ int main(int argc, char *argv[]) {
 	//================================================================================80
 	// 	Starting bench
 	//================================================================================80
-	start_benchmark(gold_path, niter, lambda);
+	if (mode == 1)
+		start_benchmark(gold_path, niter, lambda);
 
 	//================================================================================80
 	// 	READ IMAGE (SIZE OF IMAGE HAS TO BE KNOWN)
@@ -482,14 +483,16 @@ int main(int argc, char *argv[]) {
 
 		double time = get_time();
 		//for logs
-		start_iteration_call();
+		if (mode == 1)
+			start_iteration_call();
 		compute_srad(Ne, blocks2, no, mul, blocks_x, mem_size_single, meanROI,
 				meanROI2, varROI, q0sqr, blocks, threads, d_I, d_sums, d_sums2,
 				total, total2, NeROI, lambda, Nr, Nc, d_iN, d_iS, d_jE, d_jW,
 				d_dN, d_dS, d_dW, d_dE, d_c);
 
 		//for logs
-		end_iteration_call();
+		if (mode == 1)
+			end_iteration_call();
 
 		std::cout << "Time for iteration " << get_time() - time << "\n";
 		//================================================================================80
@@ -546,7 +549,8 @@ int main(int argc, char *argv[]) {
 	if (mode == 1) {
 		free_img(&gold_img);
 	}
-	end_benchmark();
+	if (mode == 1)
+		end_benchmark();
 }
 
 //====================================================================================================100
