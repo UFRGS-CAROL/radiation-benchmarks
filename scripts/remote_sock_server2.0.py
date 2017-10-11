@@ -233,14 +233,21 @@ def checkMachines():
 				# Reboot machine in another thread
 				RebootMachine(address).start()
 		# If machine did not reboot, log this and set it to not check again
-		elif seconds > 3*IPtoDiffReboot[address]:
+		elif seconds > 3*IPtoDiffReboot[address] and seconds < 10*IPtoDiffReboot[address]:
 			if address in IPtoNames:
 				print "Boot Problem IP "+address+" ("+IPtoNames[address]+")"
 				logMsg("Boot Problem IP "+address+" ("+IPtoNames[address]+")")
 			else:
 				print "Boot Problem IP "+address
 				logMsg("Boot Problem IP "+address)
-			IPActiveTest[address]=False
+			#IPActiveTest[address]=False
+                else:
+			if address in IPtoNames:
+				print "Rebooting IP "+address+" ("+IPtoNames[address]+")"
+				logMsg("Rebooting IP "+address+" ("+IPtoNames[address]+")")
+			else:
+				print "Rebooting IP "+address
+				logMsg("Rebooting IP "+address)
 
 
 class handleMachines(threading.Thread):

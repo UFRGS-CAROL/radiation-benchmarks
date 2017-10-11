@@ -16,15 +16,9 @@ DATASETS = [
     # {'txt': 'voc.2012.100.txt', 'gold': 'gold.voc.2012.100.csv', 'mode': 'average'},
 
     # very_small for X1 and X2
-<<<<<<< HEAD
     # {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
     # {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'small'},
     # {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'small'},
-=======
-    #~ {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
-    #~ {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'small'},
-    #~ {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'small'},
->>>>>>> cfee1b30d47141de605f349bf054a0457afe845b
 ]
 
 WEIGHTS="tiny-yolo-voc_v2.weights"
@@ -38,10 +32,6 @@ def download_weights(src_dir, data_dir):
 
     os.chdir(src_dir)
     
-WEIGHTS="tiny-yolo-voc_v2.weights"
-CFG="tiny-yolo_v2.cfg"
-
-
 def main(board):
     print "Generating darknet for CUDA, board:" + board
 
@@ -125,14 +115,14 @@ def main(board):
 
 def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
     for i in generate:
-        # if os.system(str(i)) != 0:
-        #     print "Something went wrong with generate of ", str(i)
-        #     exit(1)
+        if os.system(str(i)) != 0:
+            print "Something went wrong with generate of ", str(i)
+            exit(1)
         print i
     fp = open(installDir + "scripts/json_files/" + benchmark_bin + ".json", 'w')
 
     list_to_print = ["["]
-    for i, ii in enumerate(execute):
+    for ii, i in enumerate(execute):
         command = "{\"killcmd\": \"killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(i) + "\"}"
         if ii != len(execute) - 1:
             command += ', '
