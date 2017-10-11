@@ -61,19 +61,27 @@ def main(board):
     generate.append("sudo mv ./srad_v1 " + bin_path + "/")
 
     for i in generate:
-        if os.system(str(i)) != 0:
-            print "Something went wrong with generate of ", str(i)
-            exit(1)
+        # if os.system(str(i)) != 0:
+        #     print "Something went wrong with generate of ", str(i)
+        #     exit(1)
         print i
 
-    fp = open(installDir + "scripts/how_to_run_srad_v1_cuda_" + board, 'w')
+    fp = open(installDir + "scripts/srad_v1.json" , 'w')
 
+    list_to_print = ["["]
     for i in execute:
-        print >> fp, "[\"" + str(i) + "\" , 0.016, \"srad_v1\"],"
-        print "[\"" + str(i) + "\" , 0.016, \"srad_v1\"],"
+        command = "{\"killcmd\": \"killall -9 srad_v1\", \"exec\": \"" + str(i) + "\"}, "
+        list_to_print.append(command)
+    list_to_print.append("]")
 
-    print "\nConfiguring done, to run check file: " + installDir + "scripts/how_to_run_srad_v1_cuda_" + str(
-        board) + "\n"
+    for i in list_to_print:
+        print >> fp, i
+        print i
+
+
+    fp.close()
+
+    print "\nConfiguring done, to run check file: " + installDir + "scripts/srad_v1.json"
 
     sys.exit(0)
 
