@@ -61,9 +61,9 @@ def main(board):
     generate.append("sudo mv ./srad_v1 " + bin_path + "/")
 
     for i in generate:
-        # if os.system(str(i)) != 0:
-        #     print "Something went wrong with generate of ", str(i)
-        #     exit(1)
+        if os.system(str(i)) != 0:
+            print "Something went wrong with generate of ", str(i)
+            exit(1)
         print i
 
     fp = open(installDir + "scripts/how_to_run_srad_v1_cuda_" + board, 'w')
