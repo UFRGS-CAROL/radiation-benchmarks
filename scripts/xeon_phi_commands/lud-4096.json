@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 lud_check \"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/lud/lud_check -n 228 -s 4096 -i /micNfs/codes/lud/input_4096_th_228 -g /micNfs/codes/lud/gold_4096_th_228 -l 10000000\""
+    }
+]
