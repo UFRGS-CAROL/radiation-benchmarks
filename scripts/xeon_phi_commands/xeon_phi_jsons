@@ -1,0 +1,10 @@
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/bfs.json
+    # /home/carol/radiation-benchmarks/scripts/xeon_phi_commands/gemm.json
+#/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/hotspot.json
+#/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/kmeans.json
+#/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/lavamd.json
+#/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/lud.json
+#/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/lulesh.json
+#/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/mergesort.json
+#/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/nn.json
+#/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/quicksort.json
