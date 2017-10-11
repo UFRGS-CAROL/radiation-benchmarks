@@ -145,6 +145,7 @@ inline int new_compare_output(unsigned char **all_out_frames, int image_size, co
 
 	//printf("Entrei compara\n");
     int count_error = 0;
+    int new_counter = 0;
     for(int i = 0; i < num_frames; i++) {
 
         // Compare to output file
@@ -164,13 +165,14 @@ inline int new_compare_output(unsigned char **all_out_frames, int image_size, co
                 int pix;
                 fscanf(out_file, "%d ", &pix);
                 if((int)all_out_frames[i][r*colsc+c] != pix) {
+			new_counter++;
                     if(r > 3 && r < rowsc-32 && c > 3 && c < colsc-32){
 
 
                         count_error++;
 #ifdef LOGS
 		        char error_detail[250];
-        		sprintf(error_detail,"p: [%d, %d],r: %d,e: %d,Image Size:%d, #Frame:%d, NTF%d",r,c,(int)all_out_frames[i][r*colsc+c],pix,image_size,i, num_frames);
+        		sprintf(error_detail,"p: [%d, %d],r: %d,e: %d,Image Size:%d, #Frame:%d, #TOTFRA:%d",r,c,(int)all_out_frames[i][r*colsc+c],pix,image_size,i, num_frames);
 
        			 log_error_detail(error_detail);
 #endif
@@ -185,12 +187,17 @@ inline int new_compare_output(unsigned char **all_out_frames, int image_size, co
         for(int rr=rowsc;rr<rowsc_;rr++) fscanf(out_file, "%*[^\n]\n");
 
         fclose(out_file);
-    }
+    //printf("Count Error %d\n",count_error);
+    //printf("New Count Error %d\n\n",new_counter);
 
+    }
+    //printf("\nOut Count Error %d\n",count_error);
+    //printf("Out New Count Error %d\n",new_counter);
     if((float)count_error / (float)(image_size * num_frames) >= 1e-6){
         printf("Test failed\n");
         //exit(EXIT_FAILURE);
     }
+	printf("Sai comapre\n");
     return count_error;
 }
 
@@ -210,7 +217,7 @@ void new_read_input(unsigned char** all_gray_frames, int &rowsc, int &colsc, int
         fscanf(fp, "%d\n", &colsc);
 
         in_size = rowsc * colsc * sizeof(unsigned char);
-       // all_gray_frames[task_id]    = (unsigned char *)malloc(in_size);
+        //all_gray_frames[task_id]    = (unsigned char *)malloc(in_size);
         for(int i = 0; i < rowsc; i++) {
             for(int j = 0; j < colsc; j++) {
                 fscanf(fp, "%u ", (unsigned int *)&all_gray_frames[task_id][i * colsc + j]);
@@ -276,7 +283,9 @@ printf("-p %d -d %d -i %d -a %.2f -t %d \n",p.platform , p.device, p.n_work_item
     int     rowsc, colsc, in_size;
     read_input(all_gray_frames, rowsc, colsc, in_size, p);
     timer.stop("Initialization");
-
+	printf("%d\n",rowsc);
+	printf("%d\n",colsc);
+	printf("%d\n",in_size);
     // Allocate buffers
     timer.start("Allocation");
     const int CPU_PROXY = 0;
