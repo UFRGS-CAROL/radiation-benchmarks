@@ -520,7 +520,7 @@ int main(int argc, char *argv[]) {
 	//================================================================================80
 	if (mode == 0) {
 //		write_graphics(gold_path, image, Nr, Nc, 1, 255);
-		PGMImage found = make_pgm_img(image, Nr, Nc, gold_img.max_gray_value,
+		PGMImage found = make_pgm_img(image_output, Nr, Nc, gold_img.max_gray_value,
 				gold_img.magic_number);
 		save_gold(&found, gold_path);
 	}
