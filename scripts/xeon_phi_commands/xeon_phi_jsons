@@ -1,0 +1,15 @@
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/bfs.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/nw-16394.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/nw-8192.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/lavamd-8.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/lavamd-9.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/lavamd-10.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/hotspot.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/kmeans.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/lud-1024.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/lud-2048.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/lud-4096.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/lulesh.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/mergesort.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/nn.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/quicksort.json

@@ -202,7 +202,7 @@ try:
 			#fp.close()
 			timestamp = int(os.path.getmtime(timestampFile))
 		except (ValueError, OSError) as eDetail:
-			fp.close()
+			#fp.close()
 			updateTimestamp()
 			contTimestampReadError += 1
 			logMsg("timestamp read error(#"+str(contTimestampReadError)+"): "+str(eDetail))

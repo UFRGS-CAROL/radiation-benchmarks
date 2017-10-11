@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 needle_check\"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/nw/needle_check 16394 10 228 /micNfs/codes/nw/input_16394_th_228_pen_10 /micNfs/codes/nw/gold_16394_th_228_pen_10 1000000\""
+    }
+]
