@@ -86,7 +86,7 @@ OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
 
-all: obj $(EXE)
+all: make_obj $(EXE)
 
 
 $(EXE): $(OBJS)
@@ -105,7 +105,8 @@ test:
 generate:
 	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) -w 0 -a 0 -s 0 -z $(RAD_BENCH)/data/bezier_surface/temp.gold -n 2500
 
-obj:
+
+make_obj:
 	mkdir -p $(OBJDIR)
 	mkdir -p $(RAD_BENCH)/data/bezier_surface
 
