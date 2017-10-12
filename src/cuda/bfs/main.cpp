@@ -66,6 +66,10 @@ struct Params {
         file_name       = "input/NYR_input.dat";
         comparison_file = "output/NYR_bfs_BFS.out";
         switching_limit = 128;
+
+
+
+
         int opt;
         while((opt = getopt(argc, argv, "hd:i:g:t:w:r:f:c:l:")) >= 0) {
             switch(opt) {
@@ -90,7 +94,7 @@ struct Params {
         }
         assert(n_gpu_threads > 0 && "Invalid # of device threads!");
         assert(n_gpu_blocks > 0 && "Invalid # of device blocks!");
-        assert(n_threads > 0 && "Invalid # of host threads!");
+//        assert(n_threads > 0 && "Invalid # of host threads!");
     }
 
     void usage() {
