@@ -519,10 +519,11 @@ err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup 
 // Aqui ver se houve erros 
         if(err > 0) {
             printf("Errors: %d\n",err);
+			new_read_input(all_gray_frames, rowsc, colsc, in_size, p);	
         } else {
             printf(".");
         }
-    new_read_input(all_gray_frames, rowsc, colsc, in_size, p);
+    //new_read_input(all_gray_frames, rowsc, colsc, in_size, p);
 #ifdef LOGS
         log_error_count(err);
 #endif
