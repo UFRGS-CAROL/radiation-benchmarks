@@ -8,6 +8,7 @@
 #include <cmath>
 #include <fstream>
 #include <assert.h>
+#include <iostream>
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -128,11 +129,11 @@ void load_gold(XYZ* gold, int size, std::string gold_path) {
 	assert(gold_in.is_open() && "Gold file not opened for reading");
 	int temp_size;
 
-	gold_in.read(reinterpret_cast<char*>(&size), sizeof(int));
+	gold_in.read(reinterpret_cast<char*>(&temp_size), sizeof(int));
 	assert(size == temp_size && "Gold Size is not ok");
 
 	gold = (XYZ*) calloc(size, sizeof(XYZ));
-	assert(gold == NULL && "Could not allocate gold array");
+	assert(gold != NULL && "Could not allocate gold array");
 	gold_in.read(reinterpret_cast<char*>(gold), sizeof(XYZ) * size);
 
 	gold_in.close();
