@@ -77,6 +77,8 @@ EXE=bs
 
 OBJDIR=./obj/
 
+RAD_BENCH=/home/carol/radiation-benchmarks/data/bezier_surface
+
 
 OBJ= kernel_cxx.o logs_processing.o kernel.o main.o
 
@@ -98,13 +100,14 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(NVCC_FLAGS) -c $< -o $@ 
 
 test:
-	./$(EXE)
+	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) -w 0 -r 10 -a 0 -s 1 -z $(RAD_BENCH)/temp.gold -m 2500 -n 2500
 
 generate:
-	./$(EXE)
+	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) -w 0 -a 0 -s 0 -z $(RAD_BENCH)/temp.gold -m 2500 -n 2500
 
 obj:
 	mkdir -p $(OBJDIR)
+	mkdir -p $(RAD_BENCH)
 
 clean:
 	rm -f $(EXE) $(OBJDIR)*.o 
