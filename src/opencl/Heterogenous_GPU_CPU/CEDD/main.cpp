@@ -43,6 +43,8 @@
 #include <unistd.h>
 #include <thread>
 #include <assert.h>
+#include <stdio.h>
+#include <string.h>
 
 //*****************************************  LOG  ***********************************//
 #ifdef LOGS
