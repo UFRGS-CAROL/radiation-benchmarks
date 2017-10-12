@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
 #endif
 
 	//----------------------------------------------------------------------
-	XYZ* gold = nullptr;
+	XYZ* gold = (XYZ*) calloc(out_size, sizeof(XYZ));
 	if (p.mode == 1) {
 		load_gold(gold, out_size, p.gold_in_out);
 	}
@@ -442,10 +442,10 @@ int main(int argc, char **argv) {
 	timer.release("Deallocation");
 
 	printf("Test Passed\n");
+	free(gold);
 
 	if (p.mode == 1) {
 		//radiation
-		free(gold);
 		timer.release("comparing_gold");
 		end_benchmark();
 
