@@ -73,7 +73,7 @@ endif
 
 DEP=kernel.cpp kernel.h main.cpp kernel.cu support/common.h support/cuda-setup.h support/partitioner.h support/timer.h support/verify.h
 SRC=logs_processing.cpp main.cpp kernel.cpp kernel.cu 
-EXE=bs
+EXE=bezier_surface
 
 OBJDIR=./obj/
 
@@ -100,10 +100,14 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(NVCC_FLAGS) -c $< -o $@ 
 
 test:
-	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) -w 0 -r 10 -a 0 -s 1 -z $(RAD_BENCH)/data/bezier_surface/temp.gold -n 2500
+	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) -w 0 -r 10 -a 0 -s 1 \
+			-z $(RAD_BENCH)/data/bezier_surface/temp.gold \
+			-f $(RAD_BENCH)/data/bezier_surface/input/control.txt -n 2500
 
 generate:
-	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) -w 0 -a 0 -s 0 -z $(RAD_BENCH)/data/bezier_surface/temp.gold -n 2500
+	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) -w 0 -a 0 -s 0 \
+			-z $(RAD_BENCH)/data/bezier_surface/temp.gold \
+			-f $(RAD_BENCH)/data/bezier_surface/input/control.txt -n 2500
 
 
 make_obj:

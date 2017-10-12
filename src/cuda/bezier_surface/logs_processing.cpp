@@ -92,11 +92,13 @@ int compare_and_log(XYZ *found, XYZ *gold, int RESOLUTIONI, int RESOLUTIONJ) {
 
 void start_benchmark(std::string gold_path, int n_reps, int n_gpu_threads,
 		int n_gpu_blocks, int n_warmup, float alpha,
-		std::string input_file_name, int in_size_i, int in_size_j) {
+		std::string input_file_name, int in_size_i, int in_size_j,
+		int out_size_i, int out_size_j) {
 #ifdef LOGS
 	std::string header = "gold: " + gold_path + " iterations: " + std::to_string(n_reps) + " n_gpu_threads: " + std::to_string(n_gpu_threads) +
 	" n_gpu_blocks: " + std::to_string(n_gpu_blocks) + " n_warmup: " + std::to_string(n_warmup) + " alpha: " + std::to_string(alpha) + " input_file_name: " +
-	input_file_name + " in_size_i: " + std::to_string(in_size_i) + " in_size_j: " + std::to_string(in_size_j);
+	input_file_name + " in_size_i: " + std::to_string(in_size_i) + " in_size_j: " + std::to_string(in_size_j) +
+	" out_size_i: " + std::to_string(out_size_i) + " out_size_j: " + std::to_string(out_size_j);
 
 	start_log_file("cudaBezierSurface", (char*)header.c_str());
 #endif

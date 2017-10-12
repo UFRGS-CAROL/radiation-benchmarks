@@ -16,7 +16,8 @@ int compare_and_log(XYZ *found, XYZ *gold, int RESOLUTIONI, int RESOLUTIONJ);
 
 void start_benchmark(std::string gold_path, int n_reps, int n_gpu_threads,
 		int n_gpu_blocks, int n_warmup, float alpha,
-		std::string input_file_name, int in_size_i, int in_size_j);
+		std::string input_file_name, int in_size_i, int in_size_j,
+		int out_size_i, int out_size_j);
 void end_benchmark();
 void start_iteration_call();
 void end_iteration_call();

@@ -241,7 +241,7 @@ int main(int argc, char **argv) {
 	if (p.mode == 1) {
 		start_benchmark(p.gold_in_out, p.n_reps, p.n_gpu_threads,
 				p.n_gpu_blocks, p.n_warmup, p.alpha, std::string(p.file_name), p.in_size_i,
-				p.in_size_j);
+				p.in_size_j, p.out_size_i, p.out_size_j);
 	}
 
 	// Allocate
