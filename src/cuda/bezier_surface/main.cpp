@@ -154,11 +154,14 @@ struct Params {
 			assert(
 					(mode == 0 || mode == 1)
 							&& "Invalid mode val, it is 0 (gen) or 1 (rad), default is -1");
-			assert(
-					access(gold_in_out.c_str(), F_OK ) != -1 && mode == 1 && "Gold file must exists to use on radiation test mode");
+
 
 			if (mode == 0) {
 				n_reps = 1;
+			}
+			if (mode == 1){
+				assert(
+						access(gold_in_out.c_str(), F_OK ) != -1 && mode == 1 && "Gold file must exists to use on radiation test mode");
 			}
 		}
 
