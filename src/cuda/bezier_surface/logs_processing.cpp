@@ -9,10 +9,20 @@
 #include <fstream>
 #include <assert.h>
 #include <iostream>
+#include <sys/time.h>
 
 #ifdef LOGS
 #include "log_helper.h"
 #endif
+
+
+ // Returns the current system time in microseconds
+double get_time() {
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (double(tv.tv_sec * 1000000) + double(tv.tv_usec)) /1000000;
+}
+
 
 int compare_and_log(XYZ *found, XYZ *gold, int RESOLUTIONI, int RESOLUTIONJ) {
 	int errors = 0;

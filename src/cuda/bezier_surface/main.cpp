@@ -312,8 +312,9 @@ int main(int argc, char **argv) {
 		}
 #endif
 
-		if (rep >= p.n_warmup)
-			timer.start("Kernel");
+//		if (rep >= p.n_warmup)
+//			timer.start("Kernel");
+		double kernelTime = get_time();
 
 		// Launch GPU threads
 		// Kernel launch
@@ -347,20 +348,21 @@ int main(int argc, char **argv) {
 		cudaDeviceSynchronize();
 		main_thread.join();
 
-		if (rep >= p.n_warmup)
-			timer.stop("Kernel");
+		double diffKernelTime = get_time() - kernelTime;
+//		if (rep >= p.n_warmup)
+//			timer.stop("Kernel");
 		if (p.mode == 1) {
 			end_iteration_call();
 		}
 //	old for final
 //	} //=========================================================================
 //		timer.print("Kernel", p.n_reps);
-		if (rep >= p.n_warmup)
-			timer.print("Kernel", 1);
+//		if (rep >= p.n_warmup)
+//			timer.print("Kernel", 1);
 
 #ifndef CUDA_8_0
 		// Copy back
-		timer.start("Copy Back and Merge");
+//		timer.start("Copy Back and Merge");
 		cudaStatus = cudaMemcpy(h_out_merge, d_out, out_size,
 				cudaMemcpyDeviceToHost);
 		CUDA_ERR();
@@ -381,8 +383,8 @@ int main(int argc, char **argv) {
 				}
 			}
 		}
-		timer.stop("Copy Back and Merge");
-		timer.print("Copy Back and Merge", 1);
+//		timer.stop("Copy Back and Merge");
+//		timer.print("Copy Back and Merge", 1);
 #endif
 
 		if (p.mode == -1) { //standart verification
@@ -395,16 +397,17 @@ int main(int argc, char **argv) {
 #endif
 		}
 		if (p.mode == 1) {
-			timer.start("comparing_gold");
+//			timer.start("comparing_gold");
+			double compareTime = get_time();
 			int err = compare_and_log(h_out_merge, gold, p.out_size_i,
 					p.out_size_j);
-
-			timer.stop("comparing_gold");
-			timer.print("comparing_gold", 1);
+			double diffCompareTime = get_time() - compareTime;
+//			timer.stop("comparing_gold");
+//			timer.print("comparing_gold", 1);
 			if (err) {
 				std::cout << err << " errors were found\n";
 			}
-
+			std::cout << "Kernel Time: " << diffKernelTime << "s compare time: " << diffCompareTime << "\n";
 		}
 
 	} //new for changed for radiation test=============================================

@@ -8,7 +8,7 @@ import ConfigParser
 
 INPUT = ['input/control.txt']
 ITERATIONS = 100000
-ALPHA_VARIATIONS = [0]
+ALPHA_VARIATIONS = [0, 0.1, 0.2, 0.3]
 RESOLUTIONS = [2500, 5000]
 
 
@@ -41,7 +41,11 @@ def main(board):
 
     for i in INPUT:
         for j in ALPHA_VARIATIONS:
+            if j > 0 and ('X1' not in board and 'X2' not in board and 'K1' not in board):
+                continue
             for r in RESOLUTIONS:
+                if r > 2500 and ('X1' in board or 'X2' in board or 'K1' in board):
+                    continue
                 inputFile = data_path + "/" + i
 
                 # $(RAD_BENCH) / src / cuda / bezier_surface /$(EXE) - w

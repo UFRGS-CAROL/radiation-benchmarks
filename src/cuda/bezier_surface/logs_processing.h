@@ -26,4 +26,6 @@ void save_gold(XYZ *gold, int size, std::string gold_path);
 
 void load_gold(XYZ* gold, int size, std::string gold_path);
 
+double get_time();
+
 #endif /* LOGS_PROCESSING_H_ */
