@@ -100,10 +100,10 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(NVCC_FLAGS) -c $< -o $@ 
 
 test:
-	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) -w 0 -r 10 -a 0 -s 1 -z $(RAD_BENCH)/data/bezier_surface/temp.gold -m 2500 -n 2500
+	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) -w 0 -r 10 -a 0 -s 1 -z $(RAD_BENCH)/data/bezier_surface/temp.gold -n 2500
 
 generate:
-	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) -w 0 -a 0 -s 0 -z $(RAD_BENCH)/data/bezier_surface/temp.gold -m 2500 -n 2500
+	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) -w 0 -a 0 -s 0 -z $(RAD_BENCH)/data/bezier_surface/temp.gold -n 2500
 
 obj:
 	mkdir -p $(OBJDIR)
