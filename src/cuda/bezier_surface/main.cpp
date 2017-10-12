@@ -394,7 +394,7 @@ int main(int argc, char **argv) {
 #endif
 		}
 		if (p.mode == 1) {
-			std::cout << "antes do comparing\n";
+			std::cout << "antes do comparing " << p.out_size_i * p.out_size_j << " " << out_size << "\n";
 			timer.start("comparing_gold");
 			int err = compare_and_log(h_out_merge, gold, p.out_size_i,
 					p.out_size_j);
