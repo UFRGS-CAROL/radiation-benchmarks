@@ -283,9 +283,9 @@ printf("-p %d -d %d -i %d -a %.2f -t %d \n",p.platform , p.device, p.n_work_item
     int     rowsc, colsc, in_size;
     read_input(all_gray_frames, rowsc, colsc, in_size, p);
     timer.stop("Initialization");
-	printf("%d\n",rowsc);
-	printf("%d\n",colsc);
-	printf("%d\n",in_size);
+	//printf("%d\n",rowsc);
+	//printf("%d\n",colsc);
+	//printf("%d\n",in_size);
     // Allocate buffers
     timer.start("Allocation");
     const int CPU_PROXY = 0;
@@ -308,7 +308,7 @@ printf("-p %d -d %d -i %d -a %.2f -t %d \n",p.platform , p.device, p.n_work_item
     ALLOC_ERR(h_in_out[CPU_PROXY], h_in_out[GPU_PROXY], h_interm_cpu_proxy, h_theta_cpu_proxy);
     CL_ERR();
     timer.stop("Allocation");
-    timer.print("Allocation", 1);
+    //timer.print("Allocation", 1);
 
     // Initialize (part 2)
     timer.start("Initialization");
@@ -323,7 +323,7 @@ printf("-p %d -d %d -i %d -a %.2f -t %d \n",p.platform , p.device, p.n_work_item
     }
     next_frame.store(0);
     timer.stop("Initialization");
-    timer.print("Initialization", 1);
+    //timer.print("Initialization", 1);
 
     //timer.start("Total Proxies");
 
@@ -524,7 +524,7 @@ err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup 
 #ifdef LOGS
         log_error_count(err);
 #endif
-//printf("Acabei uma it\n");
+printf("Acabei uma it\n");
 }
 #ifdef LOGS
     end_log_file();
