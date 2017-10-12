@@ -32,8 +32,13 @@
 #  THE SOFTWARE.
 # 
 
-CXX=nvcc
-CXX_FLAGS=-std=c++11
+
+# CUDA toolkit installation path
+CUDA_DIR = /usr/local/cuda
+
+CXX=g++
+NVCC=$(CUDA_DIR)/bin/nvcc
+NVCC_FLAGS=-std=c++11
 
 CHAI_CUDA_LIB=/usr/local/cuda-8.0/lib64
 CHAI_CUDA_INC=/usr/local/cuda-8.0/include
@@ -42,7 +47,15 @@ ARCH= -gencode arch=compute_35,code=sm_35 -gencode arch=compute_50,code=sm_50 \
 	  -gencode=arch=compute_60,code=sm_60 \
       -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_62,code=sm_62
 
-CXX_FLAGS+= $(ARCH)
+NVCC_FLAGS+= $(ARCH)
+
+ifeq ($(UNIFIEDMEM), 1)
+NVCC_FLAGS+= -DCUDA_8_0
+endif
+
+ifeq ($(LOGS), 1)
+NVCC_FLAGS+= -I../../include/ -L../../include -lLogHelper -DLOGS
+endif
 
 ifndef CHAI_CUDA_LIB
     $(error CHAI_CUDA_LIB not defined. This environment variable must be defined to point to the location of the CUDA library)
@@ -59,7 +72,15 @@ SRC=main.cpp kernel.cpp kernel.cu
 EXE=bs
 
 all:
-	$(CXX) $(CXX_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE)
+	$(NVCC) $(NVCC_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE)
+
+
+test:
+	./$(EXE)
+
+generate:
+	./$(EXE)
+	
 
 clean:
 	rm -f $(EXE)
