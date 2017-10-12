@@ -42,7 +42,7 @@ def main(board):
     for i in INPUT:
         for j in ALPHA_VARIATIONS:
             for r in RESOLUTIONS:
-                inputFile = data_path + i
+                inputFile = data_path + "/" + i
 
                 # $(RAD_BENCH) / src / cuda / bezier_surface /$(EXE) - w
                 # 0 - r
