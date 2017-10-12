@@ -157,7 +157,7 @@ struct Params {
 			assert(
 					access(gold_in_out.c_str(), F_OK ) != -1 && mode == 1 && "Gold file must exists to use on radiation test mode");
 
-			if(mode == 0){
+			if (mode == 0) {
 				n_reps = 1;
 			}
 		}
@@ -236,25 +236,11 @@ int main(int argc, char **argv) {
 	Timer timer;
 	cudaError_t cudaStatus;
 
-	//----------------------------------------------------------------------
-//	n_gpu_threads = 16;
-//			n_gpu_blocks = 32;
-//			n_threads = 4;
-//			n_warmup = 5;
-//			n_reps = 50;
-//			alpha = 0.1;
-//			file_name = "input/control.txt";
-//			in_size_i = in_size_j = 3;
-//			out_size_i = out_size_j = 300;
 	if (p.mode == 1) {
-//		void inline start_benchmark(const char *gold_path, int n_reps, int n_gpu_threads,
-//				int n_gpu_blocks, int n_warmup, int alpha, const char* input_file_name,
-//				int in_size_i, int in_size_j)
 		start_benchmark(p.gold_in_out.c_str(), p.n_reps, p.n_gpu_threads,
 				p.n_gpu_blocks, p.n_warmup, p.alpha, p.file_name, p.in_size_i,
 				p.in_size_j);
 	}
-	//----------------------------------------------------------------------
 
 	// Allocate
 	timer.start("Allocation");
@@ -305,9 +291,18 @@ int main(int argc, char **argv) {
 	timer.print("Copy To Device", 1);
 #endif
 
+	//----------------------------------------------------------------------
+	XYZ* gold = nullptr;
+	if (p.mode == 1) {
+		int temp_gold_size;
+		load_gold(gold, &temp_gold_size, p.gold_in_out);
+		assert(temp_gold_size == out_size && "Shit happned on loading gold");
+	}
+
+	//----------------------------------------------------------------------
 	// Loop over main kernel
 	for (int rep = 0; rep < p.n_warmup + p.n_reps; ++rep) {
-
+		start_iteration_call();
 // Reset
 #ifdef CUDA_8_0
 		if(p.alpha < 0.0 || p.alpha > 1.0) { // Dynamic partitioning
@@ -352,44 +347,64 @@ int main(int argc, char **argv) {
 
 		if (rep >= p.n_warmup)
 			timer.stop("Kernel");
-	}
-	timer.print("Kernel", p.n_reps);
+		end_iteration_call();
+//	old for final
+//	}=========================================================================
+		timer.print("Kernel", p.n_reps);
 
 #ifndef CUDA_8_0
-	// Copy back
-	timer.start("Copy Back and Merge");
-	cudaStatus = cudaMemcpy(h_out_merge, d_out, out_size,
-			cudaMemcpyDeviceToHost);
-	CUDA_ERR();
-	cudaDeviceSynchronize();
-	// Merge
-	int cut = n_tasks * p.alpha;
-	for (unsigned int t = 0; t < cut; ++t) {
-		const int ty = t / n_tasks_j;
-		const int tx = t % n_tasks_j;
-		int row = ty * p.n_gpu_threads;
-		int col = tx * p.n_gpu_threads;
-		for (int i = row; i < row + p.n_gpu_threads; ++i) {
-			for (int j = col; j < col + p.n_gpu_threads; ++j) {
-				if (i < p.out_size_i && j < p.out_size_j) {
-					h_out_merge[i * p.out_size_j + j] = h_out[i * p.out_size_j
-							+ j];
+		// Copy back
+		timer.start("Copy Back and Merge");
+		cudaStatus = cudaMemcpy(h_out_merge, d_out, out_size,
+				cudaMemcpyDeviceToHost);
+		CUDA_ERR();
+		cudaDeviceSynchronize();
+		// Merge
+		int cut = n_tasks * p.alpha;
+		for (unsigned int t = 0; t < cut; ++t) {
+			const int ty = t / n_tasks_j;
+			const int tx = t % n_tasks_j;
+			int row = ty * p.n_gpu_threads;
+			int col = tx * p.n_gpu_threads;
+			for (int i = row; i < row + p.n_gpu_threads; ++i) {
+				for (int j = col; j < col + p.n_gpu_threads; ++j) {
+					if (i < p.out_size_i && j < p.out_size_j) {
+						h_out_merge[i * p.out_size_j + j] = h_out[i
+								* p.out_size_j + j];
+					}
 				}
 			}
 		}
-	}
-	timer.stop("Copy Back and Merge");
-	timer.print("Copy Back and Merge", 1);
+		timer.stop("Copy Back and Merge");
+		timer.print("Copy Back and Merge", 1);
 #endif
 
+		if (p.mode == -1) { //standart verification
 // Verify answer
 #ifdef CUDA_8_0
-	verify(h_in, h_out, p.in_size_i, p.in_size_j, p.out_size_i, p.out_size_j);
+				verify(h_in, h_out, p.in_size_i, p.in_size_j, p.out_size_i, p.out_size_j);
 #else
-	verify(h_in, h_out_merge, p.in_size_i, p.in_size_j, p.out_size_i,
-			p.out_size_j);
+			verify(h_in, h_out_merge, p.in_size_i, p.in_size_j, p.out_size_i,
+					p.out_size_j);
 #endif
+		}
+		if (p.mode == 1) {
+			timer.start("comparing_gold");
+			int err = compare_and_log(h_out_merge, gold, p.out_size_i, p.out_size_j);
+			timer.stop("comparing_gold");
+			timer.print("comparing_gold", 1);
+			if(err){
+				std::cout << err << " errors were found\n";
+			}
 
+		}
+
+	} //new for changed for radiation test=============================================
+
+	//generate mode
+	if (p.mode == 0) {
+		save_gold(h_out_merge, out_size, p.gold_in_out);
+	}
 	// Free memory
 	timer.start("Deallocation");
 #ifdef CUDA_8_0
@@ -403,6 +418,7 @@ int main(int argc, char **argv) {
 	cudaStatus = cudaFree(d_in);
 	cudaStatus = cudaFree(d_out);
 #endif
+
 	CUDA_ERR();
 	cudaDeviceSynchronize();
 	timer.stop("Deallocation");
@@ -415,10 +431,13 @@ int main(int argc, char **argv) {
 	timer.release("Kernel");
 	timer.release("Copy Back and Merge");
 	timer.release("Deallocation");
+	timer.release("comparing_gold");
 
 	printf("Test Passed\n");
 
-	if(p.mode == 1){
+	if (p.mode == 1) {
+		//radiation
+		free(gold);
 		end_benchmark();
 	}
 	return 0;

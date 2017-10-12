@@ -88,7 +88,7 @@ void run_cpu_threads(XYZ *in, XYZ *outp, int n_tasks, float alpha, int n_threads
             const int wg_in_I = divceil(out_size_i, n_gpu_threads);
 
             for(int t = cpu_first(&p); cpu_more(&p); t = cpu_next(&p)) {
-            	printf("Passou aqui uma vez\n");
+//            	printf("Passou aqui uma vez\n");
                 const int my_s1 = t / wg_in_J;
                 const int my_s0 = t % wg_in_J;
 

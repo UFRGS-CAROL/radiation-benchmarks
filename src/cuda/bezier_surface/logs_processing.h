@@ -7,17 +7,22 @@
 
 #ifndef LOGS_PROCESSING_H_
 #define LOGS_PROCESSING_H_
+#include <string>
+#include "common.h"
 
-void compare_and_log();
-//	start_benchmark(p.gold_in_out.c_str(), p.n_reps, p.n_gpu_threads, p.n_gpu_blocks, p.n_warmup, p.alpha, p.file_name, p.in_size_i, p.in_size_j);
+#define MAX_ERROR_THRESHOLD 1e-8
+
+int compare_and_log(XYZ *found, XYZ *gold, int RESOLUTIONI, int RESOLUTIONJ);
 
 void start_benchmark(const char *gold_path, int n_reps, int n_gpu_threads,
-		int n_gpu_blocks, int n_warmup, float alpha, const char* input_file_name,
-		int in_size_i, int in_size_j);
+		int n_gpu_blocks, int n_warmup, float alpha,
+		const char* input_file_name, int in_size_i, int in_size_j);
 void end_benchmark();
 void start_iteration_call();
 void end_iteration_call();
-void save_gold();
-void load_gold();
+
+void save_gold(XYZ *gold, int size, std::string gold_path);
+
+void load_gold(XYZ* gold, int *size, std::string gold_path);
 
 #endif /* LOGS_PROCESSING_H_ */

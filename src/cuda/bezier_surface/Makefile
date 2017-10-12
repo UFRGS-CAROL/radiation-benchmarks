@@ -64,7 +64,7 @@ LIB=-L/usr/lib/ -L$(CHAI_CUDA_LIB) -lm
 ifndef CHAI_CUDA_INC
     $(error CHAI_CUDA_INC not defined. This environment variable must be defined to point to the location of the CUDA header files)
 endif
-INC=-I$(CHAI_CUDA_INC)
+INC=-I$(CHAI_CUDA_INC) -I./support
 
 ifeq ($(LOGS), 1)
 INC+= -I../../include/
