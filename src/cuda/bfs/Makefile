@@ -31,9 +31,27 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH
 #  THE SOFTWARE.
 # 
+CUDA_DIR = /usr/local/cuda
 
-CXX=nvcc
-CXX_FLAGS=-std=c++11
+CXX=g++
+NVCC=$(CUDA_DIR)/bin/nvcc
+NVCC_FLAGS=-std=c++11
+CXX_FLAGS= -std=c++11 -lcudart -lcublas -lcurand -pthread 
+
+CHAI_CUDA_LIB=/usr/local/cuda-8.0/lib64
+CHAI_CUDA_INC=/usr/local/cuda-8.0/include
+
+ARCH= -gencode arch=compute_35,code=sm_35 -gencode arch=compute_50,code=sm_50 \
+	  -gencode=arch=compute_60,code=sm_60 \
+      -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_62,code=sm_62
+
+NVCC_FLAGS+= $(ARCH)
+
+ifeq ($(UNIFIEDMEM), 1)
+NVCC_FLAGS+= -DCUDA_8_0
+endif
+
+
 
 ifndef CHAI_CUDA_LIB
     $(error CHAI_CUDA_LIB not defined. This environment variable must be defined to point to the location of the CUDA library)
@@ -43,15 +61,52 @@ LIB=-L/usr/lib/ -L$(CHAI_CUDA_LIB) -lm
 ifndef CHAI_CUDA_INC
     $(error CHAI_CUDA_INC not defined. This environment variable must be defined to point to the location of the CUDA header files)
 endif
-INC=-I$(CHAI_CUDA_INC)
+INC=-I$(CHAI_CUDA_INC) -I./support
 
-DEP=kernel.cpp kernel.h main.cpp kernel.cu support/common.h support/cuda-setup.h support/timer.h support/verify.h
-SRC=main.cpp kernel.cpp kernel.cu
+ifeq ($(LOGS), 1)
+INC+= -I../../include/
+LIB+= -L../../include -lLogHelper -DLOGS
+endif
+
+
+DEP=kernel.cpp kernel.h main.cpp kernel.cu support/common.h support/cuda-setup.h support/partitioner.h support/timer.h support/verify.h
+SRC=logs_processing.cpp main.cpp kernel.cpp kernel.cu 
 EXE=bfs
 
-all:
-	$(CXX) $(CXX_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE)
+OBJDIR=./obj/
+
+RAD_BENCH=/home/carol/radiation-benchmarks
+
+
+OBJ= kernel_cxx.o logs_processing.o kernel.o main.o
+
+OBJS = $(addprefix $(OBJDIR), $(OBJ))
+DEPS = $(wildcard src/*.h) Makefile
+
+
+all: make_obj $(EXE)
+
+$(EXE): $(OBJS)
+	$(CXX)  $^ $(LIB) $(INC) -o $@  $(CXX_FLAGS)
+
+
+$(OBJDIR)%.o: %.cpp $(DEPS)
+	$(CXX) $(CXX_FLAGS) -c $< -o $@  $(LIB) $(INC)
+
+$(OBJDIR)%.o: %.cu $(DEPS)
+	$(NVCC) $(NVCC_FLAGS) -c $< -o $@ 
+
+test:
+	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) 
+
+generate:
+	$(RAD_BENCH)/src/cuda/bezier_surface/$(EXE) 
+
+
+make_obj:
+	mkdir -p $(OBJDIR)
+
 
 clean:
-	rm -f $(EXE)
+	rm -f $(EXE) $(OBJDIR)*.o 
 
