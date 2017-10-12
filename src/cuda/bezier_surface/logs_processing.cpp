@@ -133,7 +133,7 @@ void load_gold(XYZ* gold, int size, std::string gold_path) {
 
 	gold = (XYZ*) calloc(size, sizeof(XYZ));
 	assert(gold == NULL && "Could not allocate gold array");
-	gold_in.read(reinterpret_cast<char*>(gold), sizeof(XYZ) * (*size));
+	gold_in.read(reinterpret_cast<char*>(gold), sizeof(XYZ) * size);
 
 	gold_in.close();
 }
