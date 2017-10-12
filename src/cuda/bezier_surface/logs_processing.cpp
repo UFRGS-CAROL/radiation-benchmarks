@@ -76,7 +76,7 @@ int compare_and_log(XYZ *found, XYZ *gold, int RESOLUTIONI, int RESOLUTIONJ) {
 			if (somethin_is_wrong) {
 				errors++;
 #ifdef LOGS
-				log_error_detail(to_write_error.c_str());
+				log_error_detail((char*)to_write_error.c_str());
 #endif
 			}
 
@@ -84,16 +84,21 @@ int compare_and_log(XYZ *found, XYZ *gold, int RESOLUTIONI, int RESOLUTIONJ) {
 	}
 
 #ifdef LOGS
-	log_error_count(err);
+	log_error_count(errors);
 #endif
 
 	return errors;
 }
 
-void start_benchmark(const char *gold_path, int n_reps, int n_gpu_threads,
+void start_benchmark(std::string gold_path, int n_reps, int n_gpu_threads,
 		int n_gpu_blocks, int n_warmup, float alpha,
-		const char* input_file_name, int in_size_i, int in_size_j) {
+		std::string input_file_name, int in_size_i, int in_size_j) {
 #ifdef LOGS
+	std::string header = "gold: " + gold_path + " iterations: " + std::to_string(n_reps) + " n_gpu_threads: " + std::to_string(n_gpu_threads) +
+	" n_gpu_blocks: " + std::to_string(n_gpu_blocks) + " n_warmup: " + std::to_string(n_warmup) + " alpha: " + std::to_string(alpha) + " input_file_name: " +
+	input_file_name + " in_size_i: " + std::to_string(in_size_i) + " in_size_j: " + std::to_string(in_size_j);
+
+	start_log_file("cudaBezierSurface", (char*)header.c_str());
 #endif
 }
 
