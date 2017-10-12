@@ -73,6 +73,7 @@ int compare_and_log(XYZ *found, XYZ *gold, int RESOLUTIONI, int RESOLUTIONJ) {
 				to_write_error += std::string(error_detail);
 				somethin_is_wrong = true;
 			}
+			std::cout << to_write_error << "\n";
 
 			if (somethin_is_wrong) {
 				errors++;
