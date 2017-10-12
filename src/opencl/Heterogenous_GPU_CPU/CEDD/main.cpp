@@ -205,7 +205,7 @@ inline int new_compare_output(unsigned char **all_out_frames, int image_size, co
 
 // Input Data -----------------------------------------------------------------
 void new_read_input(unsigned char** all_gray_frames, int &rowsc, int &colsc, int &in_size, const Params &p) {
-
+	printf("Lendo Input\n");
     for(int task_id = 0; task_id < p.n_warmup + p.n_reps; task_id++) {
 
         char FileName[300];
@@ -524,7 +524,7 @@ err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup 
         } else {
             printf(".");
         }
-    //new_read_input(all_gray_frames, rowsc, colsc, in_size, p);
+   // new_read_input(all_gray_frames, rowsc, colsc, in_size, p);
 #ifdef LOGS
         log_error_count(err);
 #endif
