@@ -394,9 +394,12 @@ int main(int argc, char **argv) {
 #endif
 		}
 		if (p.mode == 1) {
+			std::cout << "antes do comparing\n";
 			timer.start("comparing_gold");
 			int err = compare_and_log(h_out_merge, gold, p.out_size_i,
 					p.out_size_j);
+
+			std::cout << "depois do comparing\n";
 			timer.stop("comparing_gold");
 			timer.print("comparing_gold", 1);
 			if (err) {
@@ -437,14 +440,15 @@ int main(int argc, char **argv) {
 	timer.release("Kernel");
 	timer.release("Copy Back and Merge");
 	timer.release("Deallocation");
-	timer.release("comparing_gold");
 
 	printf("Test Passed\n");
 
 	if (p.mode == 1) {
 		//radiation
 		free(gold);
+		timer.release("comparing_gold");
 		end_benchmark();
+
 	}
 	return 0;
 }
