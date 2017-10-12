@@ -407,7 +407,7 @@ int main(int argc, char **argv) {
 			if (err) {
 				std::cout << err << " errors were found\n";
 			}
-			std::cout << "Kernel Time: " << diffKernelTime << "s compare time: " << diffCompareTime << "\n";
+			std::cout << "Kernel Time: " << diffKernelTime << "s compare time: " << diffCompareTime << "s\n";
 		}
 
 	} //new for changed for radiation test=============================================
