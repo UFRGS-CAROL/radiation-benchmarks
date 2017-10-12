@@ -23,6 +23,6 @@ void end_iteration_call();
 
 void save_gold(XYZ *gold, int size, std::string gold_path);
 
-void load_gold(XYZ* gold, int *size, std::string gold_path);
+void load_gold(XYZ* gold, int size, std::string gold_path);
 
 #endif /* LOGS_PROCESSING_H_ */

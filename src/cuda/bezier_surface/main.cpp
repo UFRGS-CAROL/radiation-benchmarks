@@ -297,9 +297,7 @@ int main(int argc, char **argv) {
 	//----------------------------------------------------------------------
 	XYZ* gold = nullptr;
 	if (p.mode == 1) {
-		int temp_gold_size;
-		load_gold(gold, &temp_gold_size, p.gold_in_out);
-		assert(temp_gold_size == out_size && "Shit happned on loading gold");
+		load_gold(gold, out_size, p.gold_in_out);
 	}
 
 	//----------------------------------------------------------------------

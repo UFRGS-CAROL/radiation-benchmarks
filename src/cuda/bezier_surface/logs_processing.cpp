@@ -123,13 +123,16 @@ void save_gold(XYZ *gold, int size, std::string gold_path) {
 	gold_out.close();
 }
 
-void load_gold(XYZ* gold, int *size, std::string gold_path) {
+void load_gold(XYZ* gold, int size, std::string gold_path) {
 	std::ifstream gold_in(gold_path, std::ios::in | std::ios::binary);
 	assert(gold_in.is_open() && "Gold file not opened for reading");
-	gold_in.read(reinterpret_cast<char*>(size), sizeof(int));
+	int temp_size;
 
-	gold = (XYZ*) calloc(*size, sizeof(XYZ));
-	assert(!gold && "Could not allocate gold array");
+	gold_in.read(reinterpret_cast<char*>(&size), sizeof(int));
+	assert(size == temp_size && "Gold Size is not ok");
+
+	gold = (XYZ*) calloc(size, sizeof(XYZ));
+	assert(gold == NULL && "Could not allocate gold array");
 	gold_in.read(reinterpret_cast<char*>(gold), sizeof(XYZ) * (*size));
 
 	gold_in.close();
