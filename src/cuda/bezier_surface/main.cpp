@@ -154,11 +154,14 @@ struct Params {
 			assert(
 					(mode == 0 || mode == 1)
 							&& "Invalid mode val, it is 0 (gen) or 1 (rad), default is -1");
-			assert(
-					access(gold_in_out.c_str(), F_OK ) != -1 && mode == 1 && "Gold file must exists to use on radiation test mode");
+
 
 			if (mode == 0) {
 				n_reps = 1;
+			}
+			if (mode == 1){
+				assert(
+						access(gold_in_out.c_str(), F_OK ) != -1 && mode == 1 && "Gold file must exists to use on radiation test mode");
 			}
 		}
 
@@ -302,7 +305,9 @@ int main(int argc, char **argv) {
 	//----------------------------------------------------------------------
 	// Loop over main kernel
 	for (int rep = 0; rep < p.n_warmup + p.n_reps; ++rep) {
-		start_iteration_call();
+		if (p.mode == 1) {
+			start_iteration_call();
+		}
 // Reset
 #ifdef CUDA_8_0
 		if(p.alpha < 0.0 || p.alpha > 1.0) { // Dynamic partitioning
@@ -347,11 +352,13 @@ int main(int argc, char **argv) {
 
 		if (rep >= p.n_warmup)
 			timer.stop("Kernel");
-		end_iteration_call();
+		if (p.mode == 1) {
+			end_iteration_call();
+		}
 //	old for final
-//	}=========================================================================
+	} //=========================================================================
 		timer.print("Kernel", p.n_reps);
-
+//		timer.print("Kernel", 1);
 #ifndef CUDA_8_0
 		// Copy back
 		timer.start("Copy Back and Merge");
@@ -390,16 +397,17 @@ int main(int argc, char **argv) {
 		}
 		if (p.mode == 1) {
 			timer.start("comparing_gold");
-			int err = compare_and_log(h_out_merge, gold, p.out_size_i, p.out_size_j);
+			int err = compare_and_log(h_out_merge, gold, p.out_size_i,
+					p.out_size_j);
 			timer.stop("comparing_gold");
 			timer.print("comparing_gold", 1);
-			if(err){
+			if (err) {
 				std::cout << err << " errors were found\n";
 			}
 
 		}
 
-	} //new for changed for radiation test=============================================
+//	} //new for changed for radiation test=============================================
 
 	//generate mode
 	if (p.mode == 0) {
