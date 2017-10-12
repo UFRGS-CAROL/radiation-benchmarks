@@ -79,7 +79,7 @@ inline int new_compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ, int RESOL
 //            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].y);
 
 			sum_delta2_y = fabs(outp[i * RESOLUTIONJ + j].y - outpCPU[i * RESOLUTIONJ + j].y) / fabs(outpCPU[i * RESOLUTIONJ + j].y);
-			if(sum_delta2_y >= 1e-6 ){
+			if(sum_delta2_y >= 1e-8 ){
 		        errors++;
 #ifdef LOGS
 		        char error_detail[200];
@@ -93,7 +93,7 @@ inline int new_compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ, int RESOL
 //            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].z);
 
 			sum_delta2_z = fabs(outp[i * RESOLUTIONJ + j].z - outpCPU[i * RESOLUTIONJ + j].z) / fabs(outpCPU[i * RESOLUTIONJ + j].z);
-			if(sum_delta2_z >= 1e-6 ){
+			if(sum_delta2_z >= 1e-8 ){
 		        errors++;
 #ifdef LOGS
 		        char error_detail[200];
