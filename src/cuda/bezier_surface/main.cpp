@@ -155,11 +155,10 @@ struct Params {
 					(mode == 0 || mode == 1)
 							&& "Invalid mode val, it is 0 (gen) or 1 (rad), default is -1");
 
-
 			if (mode == 0) {
 				n_reps = 1;
 			}
-			if (mode == 1){
+			if (mode == 1) {
 				assert(
 						access(gold_in_out.c_str(), F_OK ) != -1 && mode == 1 && "Gold file must exists to use on radiation test mode");
 			}
@@ -354,9 +353,11 @@ int main(int argc, char **argv) {
 			end_iteration_call();
 		}
 //	old for final
-	} //=========================================================================
-		timer.print("Kernel", p.n_reps);
-//		timer.print("Kernel", 1);
+//	} //=========================================================================
+//		timer.print("Kernel", p.n_reps);
+		if (rep >= p.n_warmup)
+			timer.print("Kernel", 1);
+
 #ifndef CUDA_8_0
 		// Copy back
 		timer.start("Copy Back and Merge");
@@ -394,12 +395,10 @@ int main(int argc, char **argv) {
 #endif
 		}
 		if (p.mode == 1) {
-			std::cout << "antes do comparing " << p.out_size_i * p.out_size_j << " " << out_size << "\n";
 			timer.start("comparing_gold");
 			int err = compare_and_log(h_out_merge, gold, p.out_size_i,
 					p.out_size_j);
 
-			std::cout << "depois do comparing\n";
 			timer.stop("comparing_gold");
 			timer.print("comparing_gold", 1);
 			if (err) {
@@ -408,7 +407,7 @@ int main(int argc, char **argv) {
 
 		}
 
-//	} //new for changed for radiation test=============================================
+	} //new for changed for radiation test=============================================
 
 	//generate mode
 	if (p.mode == 0) {
