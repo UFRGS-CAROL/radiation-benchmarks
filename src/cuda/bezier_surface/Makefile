@@ -39,6 +39,7 @@ CUDA_DIR = /usr/local/cuda
 CXX=g++
 NVCC=$(CUDA_DIR)/bin/nvcc
 NVCC_FLAGS=-std=c++11
+CXX_FLAGS= -std=c++11 -lcudart -lcublas -lcurand -pthread 
 
 CHAI_CUDA_LIB=/usr/local/cuda-8.0/lib64
 CHAI_CUDA_INC=/usr/local/cuda-8.0/include
@@ -71,20 +72,40 @@ LIB+= -L../../include -lLogHelper -DLOGS
 endif
 
 DEP=kernel.cpp kernel.h main.cpp kernel.cu support/common.h support/cuda-setup.h support/partitioner.h support/timer.h support/verify.h
-SRC=main.cpp kernel.cpp kernel.cu
+SRC=logs_processing.cpp main.cpp kernel.cpp kernel.cu 
 EXE=bs
 
-all:
-	$(NVCC) $(NVCC_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE)
+OBJDIR=./obj/
 
+
+OBJ= kernel_cxx.o logs_processing.o kernel.o main.o
+
+OBJS = $(addprefix $(OBJDIR), $(OBJ))
+DEPS = $(wildcard src/*.h) Makefile
+
+
+all: obj $(EXE)
+
+
+$(EXE): $(OBJS)
+	$(CXX)  $^ $(LIB) $(INC) -o $@  $(CXX_FLAGS)
+
+
+$(OBJDIR)%.o: %.cpp $(DEPS)
+	$(CXX) $(CXX_FLAGS) -c $< -o $@  $(LIB) $(INC)
+
+$(OBJDIR)%.o: %.cu $(DEPS)
+	$(NVCC) $(NVCC_FLAGS) -c $< -o $@ 
 
 test:
 	./$(EXE)
 
 generate:
 	./$(EXE)
-	
+
+obj:
+	mkdir -p $(OBJDIR)
 
 clean:
-	rm -f $(EXE)
+	rm -f $(EXE) $(OBJDIR)*.o 
 
