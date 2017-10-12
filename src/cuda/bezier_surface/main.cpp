@@ -353,9 +353,9 @@ int main(int argc, char **argv) {
 			end_iteration_call();
 		}
 //	old for final
-//	} //=========================================================================
-//		timer.print("Kernel", p.n_reps);
-		timer.print("Kernel", 1);
+	} //=========================================================================
+		timer.print("Kernel", p.n_reps);
+//		timer.print("Kernel", 1);
 #ifndef CUDA_8_0
 		// Copy back
 		timer.start("Copy Back and Merge");
