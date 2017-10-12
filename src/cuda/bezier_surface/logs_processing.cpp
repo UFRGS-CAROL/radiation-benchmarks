@@ -15,14 +15,71 @@
 #include "log_helper.h"
 #endif
 
-
- // Returns the current system time in microseconds
+// Returns the current system time in microseconds
 double get_time() {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
-	return (double(tv.tv_sec * 1000000) + double(tv.tv_usec)) /1000000;
+	return (double(tv.tv_sec * 1000000) + double(tv.tv_usec)) / 1000000;
 }
 
+int compare_loop(int RESOLUTIONJ, double sum_delta2_x, int& i,
+		double sum_delta2_y, double sum_delta2_z, XYZ* found, XYZ* gold,
+		int errors) {
+	for (int j = 0; j < RESOLUTIONJ; j++) {
+		//            sum_delta2 += fabs(outp[i * RESOLUTIONJ + j].x - outpCPU[i * RESOLUTIONJ + j].x);
+		//            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].x);
+
+		std::string to_write_error = "";
+		bool somethin_is_wrong = false;
+		sum_delta2_x = fabs(
+				found[i * RESOLUTIONJ + j].x - gold[i * RESOLUTIONJ + j].x)
+				/ fabs(gold[i * RESOLUTIONJ + j].x);
+
+		if (sum_delta2_x >= MAX_ERROR_THRESHOLD) {
+			char error_detail[200];
+			sprintf(error_detail, "X, p: [%d, %d], r: %f, e: %f ", i, j,
+					found[i * RESOLUTIONJ + j].x, gold[i * RESOLUTIONJ + j].x);
+			to_write_error += std::string(error_detail);
+			somethin_is_wrong = true;
+		}
+		//            sum_delta2 += fabs(outp[i * RESOLUTIONJ + j].y - outpCPU[i * RESOLUTIONJ + j].y);
+		//            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].y);
+
+		sum_delta2_y = fabs(
+				found[i * RESOLUTIONJ + j].y - gold[i * RESOLUTIONJ + j].y)
+				/ fabs(gold[i * RESOLUTIONJ + j].y);
+		if (sum_delta2_y >= MAX_ERROR_THRESHOLD) {
+			char error_detail[200];
+			sprintf(error_detail, "Y, p: [%d, %d], r: %f, e: %f ", i, j,
+					found[i * RESOLUTIONJ + j].y, gold[i * RESOLUTIONJ + j].y);
+			to_write_error += std::string(error_detail);
+			somethin_is_wrong = true;
+
+		}
+		//            sum_delta2 += fabs(outp[i * RESOLUTIONJ + j].z - outpCPU[i * RESOLUTIONJ + j].z);
+		//            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].z);
+
+		sum_delta2_z = fabs(
+				found[i * RESOLUTIONJ + j].z - gold[i * RESOLUTIONJ + j].z)
+				/ fabs(gold[i * RESOLUTIONJ + j].z);
+		if (sum_delta2_z >= MAX_ERROR_THRESHOLD) {
+			char error_detail[200];
+			sprintf(error_detail, "Z, p: [%d, %d], r: %f, e: %f", i, j,
+					found[i * RESOLUTIONJ + j].z, gold[i * RESOLUTIONJ + j].z);
+			to_write_error += std::string(error_detail);
+			somethin_is_wrong = true;
+		}
+
+		if (somethin_is_wrong) {
+			errors++;
+#ifdef LOGS
+			log_error_detail((char*)to_write_error.c_str());
+#endif
+		}
+
+	}
+	return errors;
+}
 
 int compare_and_log(XYZ *found, XYZ *gold, int RESOLUTIONI, int RESOLUTIONJ) {
 	int errors = 0;
@@ -34,65 +91,14 @@ int compare_and_log(XYZ *found, XYZ *gold, int RESOLUTIONI, int RESOLUTIONJ) {
 
 	sum_ref2 = 0;
 	L1norm2 = 0;
-	for (int i = 0; i < RESOLUTIONI; i++) {
-		for (int j = 0; j < RESOLUTIONJ; j++) {
-//            sum_delta2 += fabs(outp[i * RESOLUTIONJ + j].x - outpCPU[i * RESOLUTIONJ + j].x);
-//            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].x);
-
-			std::string to_write_error = "";
-			bool somethin_is_wrong = false;
-			sum_delta2_x = fabs(
-					found[i * RESOLUTIONJ + j].x - gold[i * RESOLUTIONJ + j].x)
-					/ fabs(gold[i * RESOLUTIONJ + j].x);
-
-			if (sum_delta2_x >= MAX_ERROR_THRESHOLD) {
-				char error_detail[200];
-				sprintf(error_detail, "X, p: [%d, %d], r: %f, e: %f ", i, j,
-						found[i * RESOLUTIONJ + j].x,
-						gold[i * RESOLUTIONJ + j].x);
-				to_write_error += std::string(error_detail);
-				somethin_is_wrong = true;
-			}
-//            sum_delta2 += fabs(outp[i * RESOLUTIONJ + j].y - outpCPU[i * RESOLUTIONJ + j].y);
-//            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].y);
-
-			sum_delta2_y = fabs(
-					found[i * RESOLUTIONJ + j].y - gold[i * RESOLUTIONJ + j].y)
-					/ fabs(gold[i * RESOLUTIONJ + j].y);
-			if (sum_delta2_y >= MAX_ERROR_THRESHOLD) {
-				char error_detail[200];
-				sprintf(error_detail, "Y, p: [%d, %d], r: %f, e: %f ", i, j,
-						found[i * RESOLUTIONJ + j].y,
-						gold[i * RESOLUTIONJ + j].y);
-				to_write_error += std::string(error_detail);
-				somethin_is_wrong = true;
-
-			}
-//            sum_delta2 += fabs(outp[i * RESOLUTIONJ + j].z - outpCPU[i * RESOLUTIONJ + j].z);
-//            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].z);
-
-			sum_delta2_z = fabs(
-					found[i * RESOLUTIONJ + j].z - gold[i * RESOLUTIONJ + j].z)
-					/ fabs(gold[i * RESOLUTIONJ + j].z);
-			if (sum_delta2_z >= MAX_ERROR_THRESHOLD) {
-				char error_detail[200];
-				sprintf(error_detail, "Z, p: [%d, %d], r: %f, e: %f", i, j,
-						found[i * RESOLUTIONJ + j].z,
-						gold[i * RESOLUTIONJ + j].z);
-				to_write_error += std::string(error_detail);
-				somethin_is_wrong = true;
-			}
-
-			if (somethin_is_wrong) {
-				errors++;
-#ifdef LOGS
-				log_error_detail((char*)to_write_error.c_str());
-#endif
-			}
-
+#pragma omp parallel
+	{
+#pragma omp parallel for shared(errors)
+		for (int i = 0; i < RESOLUTIONI; i++) {
+			errors += compare_loop(RESOLUTIONJ, sum_delta2_x, i, sum_delta2_y,
+					sum_delta2_z, found, gold, errors);
 		}
 	}
-
 #ifdef LOGS
 	log_error_count(errors);
 #endif

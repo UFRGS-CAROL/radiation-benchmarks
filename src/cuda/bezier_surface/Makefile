@@ -39,7 +39,7 @@ CUDA_DIR = /usr/local/cuda
 CXX=g++
 NVCC=$(CUDA_DIR)/bin/nvcc
 NVCC_FLAGS=-std=c++11
-CXX_FLAGS= -std=c++11 -lcudart -lcublas -lcurand -pthread 
+CXX_FLAGS= -std=c++11 -lcudart -lcublas -lcurand -pthread  -fopenmp
 
 CHAI_CUDA_LIB=/usr/local/cuda-8.0/lib64
 CHAI_CUDA_INC=/usr/local/cuda-8.0/include
