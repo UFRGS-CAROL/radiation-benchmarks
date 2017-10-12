@@ -333,6 +333,7 @@ printf("-p %d -d %d -i %d -a %.2f -t %d \n",p.platform , p.device, p.n_work_item
 
 
 for(int rep = 0; rep < p.loop; rep++) {
+	printf("Rep:%d\n",rep);
     timer.start("Total Proxies");
     CoarseGrainPartitioner partitioner = partitioner_create(n_frames, p.alpha, worklist);
     std::vector<std::thread> proxy_threads;
