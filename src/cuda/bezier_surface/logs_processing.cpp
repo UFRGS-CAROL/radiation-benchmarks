@@ -34,7 +34,6 @@ int compare_and_log(XYZ *found, XYZ *gold, int RESOLUTIONI, int RESOLUTIONJ) {
 
 	sum_ref2 = 0;
 	L1norm2 = 0;
-#pragma omp parallel for shared(errors)
 	for (int i = 0; i < RESOLUTIONI; i++) {
 		for (int j = 0; j < RESOLUTIONJ; j++) {
 //            sum_delta2 += fabs(outp[i * RESOLUTIONJ + j].x - outpCPU[i * RESOLUTIONJ + j].x);
