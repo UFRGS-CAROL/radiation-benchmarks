@@ -30,14 +30,6 @@ int compare_and_log(XYZ *found, XYZ *gold, int RESOLUTIONI, int RESOLUTIONJ) {
 //            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].x);
 
 			std::string to_write_error = "";
-			std::cout << "Passou\n";
-			std::cout << found[i * RESOLUTIONJ + j].x << "\n";
-
-			std::cout << "found ok\n";
-			std::cout << gold[i * RESOLUTIONJ + j].x << "\n";
-
-			std::cout << "gold not ok\n";
-			std::cout << "nao sao os vetores\n";
 			bool somethin_is_wrong = false;
 			sum_delta2_x = fabs(
 					found[i * RESOLUTIONJ + j].x - gold[i * RESOLUTIONJ + j].x)
