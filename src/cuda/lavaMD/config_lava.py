@@ -44,11 +44,11 @@ def main(board):
         #	$(RAD_BENCH)/src/cuda/bfs/$(EXE) -t 0 -f $(RAD_BENCH)/data/bfs/graph1MW_6.txt -c temp.gold -m 1 -r 100
         gen = [None] * 7
         gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
-        gen[1] = ['-boxes ', i]
+        gen[1] = ['-boxes=' + str(i)]
         gen[2] = ['-generate ']
         gen[3] = ['-output_gold=' + inputFile + "gold_" +  str(i) + ""]
-        gen[4] = ['-iterations=', 1]  # change for execute
-        gen[5] = ['-streams', 1]
+        gen[4] = ['-iterations=1']  # change for execute
+        gen[5] = ['-streams=1']
         gen[6] = []
 
 
@@ -57,7 +57,7 @@ def main(board):
         exe = copy.deepcopy(gen)
         exe[2] = ['-input_distances=' + inputFile + "input_distances_" + str(i)]
         exe[6] = ['-input_charges=' + inputFile + "input_charges_" + str(i)]
-        gen[4][1] = ITERATIONS
+        exe[4] = ['-iterations=' + str(ITERATIONS)]
 
         generate.append(' '.join(str(r) for v in gen for r in v))
         execute.append(' '.join(str(r) for v in exe for r in v))
@@ -67,9 +67,9 @@ def main(board):
 
 def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
     for i in generate:
-        if os.system(str(i)) != 0:
-            print "Something went wrong with generate of ", str(i)
-            exit(1)
+        # if os.system(str(i)) != 0:
+        #     print "Something went wrong with generate of ", str(i)
+        #     exit(1)
         print i
     fp = open(installDir + "scripts/json_files/" + benchmark_bin + ".json", 'w')
 
