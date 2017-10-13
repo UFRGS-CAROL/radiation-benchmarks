@@ -303,15 +303,16 @@ int main(int argc, char **argv) {
 	timer.stop("Copy To Device");
 
 	//allocate gold
-	std::pair<int*, std::atomic_int*> gold((int*) calloc(n_nodes, sizeof(int)), (std::atomic_int *) calloc( n_nodes,
-			sizeof(std::atomic_int)));
-	assert((gold.first != NULL || gold.second != NULL) && "Could not allocate memory for gold");
-	if(p.mode == 1){
+	std::pair<int*, std::atomic_int*> gold((int*) calloc(n_nodes, sizeof(int)),
+			(std::atomic_int *) calloc(n_nodes, sizeof(std::atomic_int)));
+	assert(
+			(gold.first != NULL || gold.second != NULL) && "Could not allocate memory for gold");
+	if (p.mode == 1) {
 		load_gold(gold, n_nodes, p.comparison_file);
 	}
 
-	long it_cpu=0;
-	long it_gpu=0;
+	long it_cpu = 0;
+	long it_gpu = 0;
 	for (int rep = 0; rep < p.n_reps + p.n_warmup; rep++) {
 
 		// Reset
@@ -330,8 +331,8 @@ int main(int argc, char **argv) {
 		h_iter[0].store(0);
 		h_overflow[0] = 0;
 
-		it_cpu=0;
-		it_gpu=0;
+		it_cpu = 0;
+		it_gpu = 0;
 
 		if (rep >= p.n_warmup)
 			timer.start("Kernel");
@@ -368,7 +369,7 @@ int main(int argc, char **argv) {
 		const int GPU_EXEC =
 				(p.n_gpu_blocks > 0 && p.n_gpu_threads > 0) ? 1 : 0;
 
-		if(p.mode == 1)
+		if (p.mode == 1)
 			start_iteration_call();
 		double kernelTime = get_time();
 		// Run subsequent iterations on CPU or GPU until number of input queue elements is 0
@@ -519,17 +520,19 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		if(p.mode == 1)
+		if (p.mode == 1)
 			end_iteration_call();
 
 		double diffKernelTime = get_time() - kernelTime;
 // old for
 //	} // end of iteration
-		timer.print("Allocation", 1);
-		timer.print("Copy To Device", p.n_reps);
-		timer.print("Kernel", p.n_reps);
-		timer.print("Copy Back and Merge", p.n_reps);
+		if (rep >= p.n_warmup) {
 
+			timer.print("Allocation", 1);
+			timer.print("Copy To Device", p.n_reps);
+			timer.print("Kernel", p.n_reps);
+			timer.print("Copy Back and Merge", p.n_reps);
+		}
 		// Verify answer
 		if (p.mode == -1) {
 			verify(h_cost, n_nodes, p.comparison_file);
@@ -539,10 +542,11 @@ int main(int argc, char **argv) {
 			double compareTime = get_time();
 			int errors = compare_and_log(gold, h_cost, n_nodes, it_cpu, it_gpu);
 			double diffCompareTime = get_time() - compareTime;
-			if(errors){
+			if (errors) {
 				std::cout << errors << " errors found\n";
 			}
-			std::cout << "Kernel Time: " << diffKernelTime << "s compare time: " << diffCompareTime << "s\n";
+			std::cout << "Kernel Time: " << diffKernelTime << "s compare time: "
+					<< diffCompareTime << "s\n";
 		}
 
 //	new for ending

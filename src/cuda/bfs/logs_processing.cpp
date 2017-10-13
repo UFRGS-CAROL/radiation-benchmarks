@@ -39,7 +39,7 @@ int compare_and_log(std::pair<int*, std::atomic_int*> gold,
 			//printf("Computed node %ld cost (%ld != %ld) does not match the expected value\n", i, h_cost[i].load(), cost);
 #ifdef LOGS
 			char error_detail[250];
-			sprintf(error_detail,"Node: %ld index_e: %ld index_r: %ld cost_e: %ld cost_r: %ld CPU: %d GPU: %d\n",
+			sprintf(error_detail,"Node: %d index_e: %d index_r: %d cost_e: %d cost_r: %d CPU: %ld GPU: %ld\n",
 					i, g_index, i, g_cost, f_cost, it_cpu, it_gpu);
 			log_error_detail(error_detail);
 #endif
@@ -58,9 +58,9 @@ void start_benchmark(std::string gold_file, std::string input_file,
 		int n_reps, int switching_limit) {
 #ifdef LOGS
 	std::string header = "gold: " + gold_file + " input_file: " + input_file + " n_gpu_threads: " +
-	std::to_string(n_gpun_gpu_threads) + " n_gpu_blocks: " + std::to_string(n_gpu_blocks) +
-	" n_threads: " + std::to_string(n_threads) + " n_warmup: " + std::to_string(n_wn_warmup) +
-	" n_reps: " + std::to_string(n_reps) + " switching_limit: " + std::to_string(swswitching_limit);
+	std::to_string(n_gpu_threads) + " n_gpu_blocks: " + std::to_string(n_gpu_blocks) +
+	" n_threads: " + std::to_string(n_threads) + " n_warmup: " + std::to_string(n_warmup) +
+	" n_reps: " + std::to_string(n_reps) + " switching_limit: " + std::to_string(switching_limit);
 
 	start_log_file("cudaHeterogeneousBFS", (char*) header.c_str());
 #endif
