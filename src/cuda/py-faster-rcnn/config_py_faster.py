@@ -60,7 +60,7 @@ def main(board):
             'gold': [' --gen ', gold],
             'iml': [' --iml ', txt_list],
             'ite': [' --ite ', '1000'],
-            'zexe': ['sudo ', src_py_faster + "/tools/" + benchmark_bin + " "],
+            'zexe': ['sudo python ', src_py_faster + "/tools/" + benchmark_bin + " "],
             'net': ['--net ', WEIGHTS]
         }
 
