@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 dgemm_check\"", 
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/dgemm/dgemm_check 228 2048 32 /micNfs/codes/dgemm/dgemm_a_2048 /micNfs/codes/dgemm/dgemm_b_2048 /micNfs/codes/dgemm/gold_2048_m-order_228_ths_32_blocks 10000000\""
+    } 
+]
