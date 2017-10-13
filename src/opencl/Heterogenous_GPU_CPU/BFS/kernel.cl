@@ -52,9 +52,9 @@ __kernel void BFS_gpu(__global Node *graph_nodes_av, __global Edge *graph_edges_
     const int MAXWG   = get_num_groups(0);
     const int WG_SIZE = get_local_size(0);
 
-    int iter_local = atom_add(&iter[0], 0);
+    int iter_local = atomic_add(&iter[0], 0);
 
-    int n_t_local = atom_add(n_t, 0);
+    int n_t_local = atomic_add(n_t, 0);
 
     if(tid == 0) {
         // Reset queue
@@ -63,7 +63,7 @@ __kernel void BFS_gpu(__global Node *graph_nodes_av, __global Edge *graph_edges_
 
     // Fetch frontier elements from the queue
     if(tid == 0)
-        *base = atom_add(&head[0], WG_SIZE);
+        *base = atomic_add(&head[0], WG_SIZE);
     barrier(CLK_LOCAL_MEM_FENCE);
 
     int my_base = *base;
@@ -72,17 +72,17 @@ __kernel void BFS_gpu(__global Node *graph_nodes_av, __global Edge *graph_edges_
             // Visit a node from the current frontier
             int pid = q1[my_base + tid];
             //////////////// Visit node ///////////////////////////
-            atom_xchg(&cost[pid], iter_local); // Node visited
+            atomic_xchg(&cost[pid], iter_local); // Node visited
             Node cur_node;
             cur_node.x = graph_nodes_av[pid].x;
             cur_node.y = graph_nodes_av[pid].y;
             // For each outgoing edge
             for(int i = cur_node.x; i < cur_node.y + cur_node.x; i++) {
                 int id        = graph_edges_av[i].x;
-                int old_color = atom_max(&color[id], BLACK);
+                int old_color = atomic_max(&color[id], BLACK);
                 if(old_color < BLACK) {
                     // Push to the queue
-                    int tail_index = atom_add(tail_bin, 1);
+                    int tail_index = atomic_add(tail_bin, 1);
                     if(tail_index >= W_QUEUE_SIZE) {
                         *overflow = 1;
                     } else
@@ -91,14 +91,14 @@ __kernel void BFS_gpu(__global Node *graph_nodes_av, __global Edge *graph_edges_
             }
         }
         if(tid == 0)
-            *base = atom_add(&head[0], WG_SIZE); // Fetch more frontier elements from the queue
+            *base = atomic_add(&head[0], WG_SIZE); // Fetch more frontier elements from the queue
         barrier(CLK_LOCAL_MEM_FENCE);
         my_base = *base;
     }
     /////////////////////////////////////////////////////////
     // Compute size of the output and allocate space in the global queue
     if(tid == 0) {
-        *shift = atom_add(&tail[0], *tail_bin);
+        *shift = atomic_add(&tail[0], *tail_bin);
     }
     barrier(CLK_LOCAL_MEM_FENCE);
     ///////////////////// CONCATENATE INTO GLOBAL MEMORY /////////////////////
@@ -111,6 +111,6 @@ __kernel void BFS_gpu(__global Node *graph_nodes_av, __global Edge *graph_edges_
     //////////////////////////////////////////////////////////////////////////
 
     if(gtid == 0) {
-        atom_add(&iter[0], 1);
+        atomic_add(&iter[0], 1);
     }
 }
