@@ -145,14 +145,14 @@ struct Params {
 
 inline int newest_compare_output(unsigned char **all_out_frames, int image_size,unsigned char **gold, int num_frames, int rowsc, int colsc, int rowsc_, int colsc_) {
 
-	//printf("Entrei compara\n");
+    printf("Entrei compara\n");
     int count_error = 0;
     for(int i = 0; i < num_frames; i++) {
 
         for(int r = 0; r < rowsc; r++) {
             for(int c = 0; c < colsc; c++) {
                 int pix;
-				pix = gold[i][r*colsc+c];
+				pix = (int)gold[i][r*colsc+c];
                 if((int)all_out_frames[i][r*colsc+c] != pix) {
                     if(r > 3 && r < rowsc-32 && c > 3 && c < colsc-32){
                         count_error++;
@@ -179,7 +179,7 @@ inline int newest_compare_output(unsigned char **all_out_frames, int image_size,
 
 inline int new_compare_output(unsigned char **all_out_frames, int image_size, const char *file_name, int num_frames, int rowsc, int colsc, int rowsc_, int colsc_) {
 
-	//printf("Entrei compara\n");
+    printf("Entrei compara sem memoria\n");
     int count_error = 0;
     int new_counter = 0;
     for(int i = 0; i < num_frames; i++) {
@@ -599,13 +599,13 @@ for(int rep = 0; rep < p.loop; rep++) {
 
 
 //verify(all_out_frames, in_size, p.comparison_file, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
-
-//err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
-err = newest_compare_output(all_out_frames, in_size, gold, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
+//asdasdasd
+err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
+//err = newest_compare_output(all_out_frames, in_size, gold, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
 // Aqui ver se houve erros 
         if(err > 0) {
             printf("Errors: %d\n",err);
-			new_read_input(all_gray_frames, rowsc, colsc, in_size, p);
+		    new_read_input(all_gray_frames, rowsc, colsc, in_size, p);
 		    new_read_gold(gold, rowsc, colsc, in_size, p);		
 			 
         } else {
