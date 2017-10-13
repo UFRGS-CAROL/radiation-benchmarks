@@ -56,5 +56,9 @@ typedef struct {
     long x;
     long y;
 } Edge;
+typedef struct {
+    long j;
+    long cost;
+} Gold;
 
 #endif
