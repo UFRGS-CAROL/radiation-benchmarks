@@ -130,15 +130,15 @@ struct Params {
 
 
 
-inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,int num_of_nodes_o,Gold *&h_nodes, int it_cpu, int it_gpu) {
+inline long newest_verify(std::atomic_long *h_cost, long num_of_nodes,long num_of_nodes_o,Gold *&h_nodes, int it_cpu, int it_gpu) {
     int count_error = 0;
     if(num_of_nodes != num_of_nodes_o) { 
         printf("Number of nodes does not match the expected value\n");
         //exit(EXIT_FAILURE);
     }
 
-    for(int i = 0; i < num_of_nodes_o; i++) {
-        int j, cost;
+    for(long i = 0; i < num_of_nodes_o; i++) {
+        long j, cost;
        // fscanf(fpo, "%ld %ld", &j, &cost);
         if(i != h_nodes[i].j || h_cost[i].load() != h_nodes[i].cost) {
 			  count_error++;	
@@ -157,7 +157,7 @@ inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,int num_of_no
     return count_error;
 }
 
-inline int new_verify(std::atomic_int *h_cost, int num_of_nodes, const char *file_name, int it_cpu, int it_gpu) {
+inline long new_verify(std::atomic_long *h_cost, long num_of_nodes, const char *file_name, int it_cpu, int it_gpu) {
     // Compare to output file
     int count_error = 0;
     FILE *fpo = fopen(file_name, "r");
@@ -170,7 +170,7 @@ inline int new_verify(std::atomic_int *h_cost, int num_of_nodes, const char *fil
 #endif
 
     // the number of nodes in the output
-    int num_of_nodes_o = 0;
+    long num_of_nodes_o = 0;
     fscanf(fpo, "%ld", &num_of_nodes_o);
 
 
@@ -182,8 +182,8 @@ inline int new_verify(std::atomic_int *h_cost, int num_of_nodes, const char *fil
     }
 
     // cost of nodes in the output
-    for(int i = 0; i < num_of_nodes_o; i++) {
-        int j, cost;
+    for(long i = 0; i < num_of_nodes_o; i++) {
+        long j, cost;
         fscanf(fpo, "%ld %ld", &j, &cost);
         if(i != j || h_cost[i].load() != cost) {
 			  count_error++;	
@@ -204,7 +204,7 @@ inline int new_verify(std::atomic_int *h_cost, int num_of_nodes, const char *fil
 }
 
 // Input Data -----------------------------------------------------------------
-void read_input_size(int &n_nodes, int &n_edges, const Params &p) {
+void read_input_size(long &n_nodes, long &n_edges, const Params &p) {
     FILE *fp = fopen(p.file_name, "r");
     fscanf(fp, "%ld", &n_nodes);
     fscanf(fp, "%ld", &n_edges);
@@ -214,7 +214,7 @@ void read_input_size(int &n_nodes, int &n_edges, const Params &p) {
 
 }
 
-void read_gold_size(int &n_nodes_o, const Params &p) {
+void read_gold_size(long &n_nodes_o, const Params &p) {
     FILE *fp = fopen(p.comparison_file, "r");
     fscanf(fp, "%ld", &n_nodes_o);
     if(fp)
@@ -231,11 +231,11 @@ void read_gold(Gold *&h_nodes, const Params &p) {
         exit(EXIT_FAILURE);
     }
 
-    int num_of_nodes_o = 0;
+    long num_of_nodes_o = 0;
     fscanf(fpo, "%ld", &num_of_nodes_o);
 
-    for(int i = 0; i < num_of_nodes_o; i++) {
-        int j, cost;
+    for(long i = 0; i < num_of_nodes_o; i++) {
+        long j, cost;
         fscanf(fpo, "%ld %ld", &j, &cost);
         h_nodes[i].j = j;
         h_nodes[i].cost = cost;
@@ -245,11 +245,11 @@ void read_gold(Gold *&h_nodes, const Params &p) {
 	
 
 }
-void read_input(int &source, Node *&h_nodes, Edge *&h_edges, const Params &p) {
+void read_input(long &source, Node *&h_nodes, Edge *&h_edges, const Params &p) {
 	int a;
-    int   start, edgeno;
-    int   n_nodes, n_edges;
-    int   id, cost;
+    long   start, edgeno;
+    long   n_nodes, n_edges;
+    long   id, cost;
     FILE *fp = fopen(p.file_name, "r");
 
     fscanf(fp, "%ld", &n_nodes);
@@ -259,19 +259,19 @@ void read_input(int &source, Node *&h_nodes, Edge *&h_edges, const Params &p) {
     printf("Number of edges = %ld\n", n_edges);
 
     // initalize the memory: Nodes
-    for(int i = 0; i < n_nodes; i++) {
+    for(long i = 0; i < n_nodes; i++) {
         fscanf(fp, "%ld %ld", &start, &edgeno);
         h_nodes[i].x = start;
         h_nodes[i].y = edgeno;
     }
 #if PRINT_ALL
-    for(int i = 0; i < n_nodes; i++) {
+    for(long i = 0; i < n_nodes; i++) {
         printf("%ld, %ld\n", h_nodes[i].x, h_nodes[i].y);
     }
 #endif
 
     // initalize the memory: Edges
-    for(int i = 0; i < n_edges; i++) {
+    for(long i = 0; i < n_edges; i++) {
         fscanf(fp, "%ld", &id);
         fscanf(fp, "%ld", &cost);
         h_edges[i].x = id;
@@ -288,8 +288,8 @@ int main(int argc, char **argv) {
     OpenCLSetup  ocl(p.platform, p.device);
     Timer        timer;
     cl_int       clStatus;
-	int it_cpu=0;
-	int it_gpu=0;
+	long it_cpu=0;
+	long it_gpu=0;
 	int err = 0;
 printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_items, p.n_work_groups,p.n_threads,p.file_name);
 
@@ -304,8 +304,8 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 
 
     // Allocate
-    int n_nodes, n_edges;
-	int n_nodes_o;
+    long n_nodes, n_edges;
+	long n_nodes_o;
     read_input_size(n_nodes, n_edges, p);
     read_gold_size(n_nodes_o, p);
 
@@ -319,28 +319,28 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
     cl_mem d_nodes = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(Node) * n_nodes, NULL, &clStatus);
     Edge * h_edges = (Edge *)malloc(sizeof(Edge) * n_edges);
     cl_mem d_edges = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(Edge) * n_edges, NULL, &clStatus);
-    std::atomic_int *h_color = (std::atomic_int *)malloc(sizeof(std::atomic_int) * n_nodes);
-    cl_mem           d_color = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(int) * n_nodes, NULL, &clStatus);
-    std::atomic_int *h_cost  = (std::atomic_int *)malloc(sizeof(std::atomic_int) * n_nodes);
-    cl_mem           d_cost  = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(int) * n_nodes, NULL, &clStatus);
-    int *            h_q1    = (int *)malloc(n_nodes * sizeof(int));
-    cl_mem           d_q1    = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(int) * n_nodes, NULL, &clStatus);
-    int *            h_q2    = (int *)malloc(n_nodes * sizeof(int));
-    cl_mem           d_q2    = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(int) * n_nodes, NULL, &clStatus);
-    std::atomic_int  h_head[1];
-    cl_mem           d_head = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &clStatus);
-    std::atomic_int  h_tail[1];
-    cl_mem           d_tail = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &clStatus);
-    std::atomic_int  h_threads_end[1];
-    cl_mem           d_threads_end = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &clStatus);
-    std::atomic_int  h_threads_run[1];
-    cl_mem           d_threads_run = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &clStatus);
-    int              h_num_t[1];
-    cl_mem           d_num_t = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &clStatus);
-    int              h_overflow[1];
-    cl_mem           d_overflow = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &clStatus);
-    std::atomic_int  h_iter[1];
-    cl_mem           d_iter = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &clStatus);
+    std::atomic_long *h_color = (std::atomic_long *)malloc(sizeof(std::atomic_long) * n_nodes);
+    cl_mem           d_color = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(long) * n_nodes, NULL, &clStatus);
+    std::atomic_long *h_cost  = (std::atomic_long *)malloc(sizeof(std::atomic_long) * n_nodes);
+    cl_mem           d_cost  = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(long) * n_nodes, NULL, &clStatus);
+    long *            h_q1    = (long *)malloc(n_nodes * sizeof(long));
+    cl_mem           d_q1    = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(long) * n_nodes, NULL, &clStatus);
+    long *            h_q2    = (long *)malloc(n_nodes * sizeof(long));
+    cl_mem           d_q2    = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(long) * n_nodes, NULL, &clStatus);
+    std::atomic_long  h_head[1];
+    cl_mem           d_head = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(long), NULL, &clStatus);
+    std::atomic_long  h_tail[1];
+    cl_mem           d_tail = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(long), NULL, &clStatus);
+    std::atomic_long  h_threads_end[1];
+    cl_mem           d_threads_end = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(long), NULL, &clStatus);
+    std::atomic_long  h_threads_run[1];
+    cl_mem           d_threads_run = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(long), NULL, &clStatus);
+    long              h_num_t[1];
+    cl_mem           d_num_t = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(long), NULL, &clStatus);
+    long              h_overflow[1];
+    cl_mem           d_overflow = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(long), NULL, &clStatus);
+    std::atomic_long  h_iter[1];
+    cl_mem           d_iter = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(long), NULL, &clStatus);
     clFinish(ocl.clCommandQueue);
     ALLOC_ERR(h_nodes, h_edges, h_color, h_cost, h_q1, h_q2);
     CL_ERR();
@@ -349,7 +349,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
     // Initialize
     timer.start("Initialization");
     const int max_wi = ocl.max_work_items(ocl.clKernel);
-    int source;
+    long source;
 	
 	// Podemos colocar me binario, mas perde generalidade 
 
@@ -358,11 +358,11 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 // **********************  Lendo O gold *********************************
 	read_gold(gold,p);
 // **********************************************************************
-    for(int i = 0; i < n_nodes; i++) {
+    for(long i = 0; i < n_nodes; i++) {
         h_cost[i].store(INF);
     }
     h_cost[source].store(0);
-    for(int i = 0; i < n_nodes; i++) {
+    for(long i = 0; i < n_nodes; i++) {
         h_color[i].store(WHITE);
     }
     h_tail[0].store(0);
@@ -390,11 +390,11 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
     for(int rep = 0; rep < p.n_reps; rep++) {
 		//printf("Repetindo\n");
         // Reset
-        for(int i = 0; i < n_nodes; i++) {
+        for(long i = 0; i < n_nodes; i++) {
             h_cost[i].store(INF);
         }
         h_cost[source].store(0);
-        for(int i = 0; i < n_nodes; i++) {
+        for(long i = 0; i < n_nodes; i++) {
             h_color[i].store(WHITE);
         }
 		it_cpu=0;
@@ -415,13 +415,13 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 #endif
         // Run first iteration in master CPU thread
         h_num_t[0] = 1;
-        int pid;
-        int index_i, index_o;
+        long pid;
+        long index_i, index_o;
         for(index_i = 0; index_i < h_num_t[0]; index_i++) {
             pid = h_q1[index_i];
             h_color[pid].store(BLACK);	// Black -> nodo já visitado 
-            for(int i = h_nodes[pid].x; i < (h_nodes[pid].y + h_nodes[pid].x); i++) {	// Itera o numero de arcos
-                int id = h_edges[i].x;
+            for(long i = h_nodes[pid].x; i < (h_nodes[pid].y + h_nodes[pid].x); i++) {	// Itera o numero de arcos
+                long id = h_edges[i].x;
                 h_color[id].store(BLACK);
                 index_o       = h_tail[0].fetch_add(1);
                 h_q2[index_o] = id;
@@ -436,13 +436,13 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
             timer.stop("Kernel");
 
         // Pointers to input and output queues
-        int *  h_qin  = h_q2;
-        int *  h_qout = h_q1;
+        long *  h_qin  = h_q2;
+        long *  h_qout = h_q1;
         cl_mem d_qin  = d_q2;
         cl_mem d_qout = d_q1;
 
-        const int CPU_EXEC = (p.n_threads > 0) ? 1 : 0;
-        const int GPU_EXEC = (p.n_work_groups > 0 && p.n_work_items > 0) ? 1 : 0;
+        const long CPU_EXEC = (p.n_threads > 0) ? 1 : 0;
+        const long GPU_EXEC = (p.n_work_groups > 0 && p.n_work_items > 0) ? 1 : 0;
 
         // Run subsequent iterations on CPU or GPU until number of input queue elements is 0
         while(*h_num_t != 0) {
@@ -487,21 +487,21 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
                 //if(rep >= p.n_warmup)
                     timer.start("Copy To Device");
                 clStatus = clEnqueueWriteBuffer(
-                    ocl.clCommandQueue, d_cost, CL_TRUE, 0, sizeof(int) * n_nodes, h_cost, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_cost, CL_TRUE, 0, sizeof(long) * n_nodes, h_cost, 0, NULL, NULL);
                 clStatus = clEnqueueWriteBuffer(
-                    ocl.clCommandQueue, d_color, CL_TRUE, 0, sizeof(int) * n_nodes, h_color, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_color, CL_TRUE, 0, sizeof(long) * n_nodes, h_color, 0, NULL, NULL);
                 clStatus = clEnqueueWriteBuffer(
-                    ocl.clCommandQueue, d_threads_run, CL_TRUE, 0, sizeof(int), h_threads_run, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_threads_run, CL_TRUE, 0, sizeof(long), h_threads_run, 0, NULL, NULL);
                 clStatus = clEnqueueWriteBuffer(
-                    ocl.clCommandQueue, d_threads_end, CL_TRUE, 0, sizeof(int), h_threads_end, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_threads_end, CL_TRUE, 0, sizeof(long), h_threads_end, 0, NULL, NULL);
                 clStatus = clEnqueueWriteBuffer(
-                    ocl.clCommandQueue, d_overflow, CL_TRUE, 0, sizeof(int), h_overflow, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_overflow, CL_TRUE, 0, sizeof(long), h_overflow, 0, NULL, NULL);
                 clStatus = clEnqueueWriteBuffer(
-                    ocl.clCommandQueue, d_q1, CL_TRUE, 0, sizeof(int) * n_nodes, h_q1, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_q1, CL_TRUE, 0, sizeof(long) * n_nodes, h_q1, 0, NULL, NULL);
                 clStatus = clEnqueueWriteBuffer(
-                    ocl.clCommandQueue, d_q2, CL_TRUE, 0, sizeof(int) * n_nodes, h_q2, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_q2, CL_TRUE, 0, sizeof(long) * n_nodes, h_q2, 0, NULL, NULL);
                 clStatus =
-                    clEnqueueWriteBuffer(ocl.clCommandQueue, d_iter, CL_TRUE, 0, sizeof(int), h_iter, 0, NULL, NULL);
+                    clEnqueueWriteBuffer(ocl.clCommandQueue, d_iter, CL_TRUE, 0, sizeof(long), h_iter, 0, NULL, NULL);
                 clFinish(ocl.clCommandQueue);
                 CL_ERR();
                 //if(rep >= p.n_warmup)
@@ -521,12 +521,12 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
                 clSetKernelArg(ocl.clKernel, 10, sizeof(cl_mem), &d_threads_run);
                 clSetKernelArg(ocl.clKernel, 11, sizeof(cl_mem), &d_overflow);
                 clSetKernelArg(ocl.clKernel, 12, sizeof(cl_mem), &d_iter);
-                clSetKernelArg(ocl.clKernel, 13, sizeof(int), NULL);
-                clSetKernelArg(ocl.clKernel, 14, sizeof(int) * W_QUEUE_SIZE, NULL);
-                clSetKernelArg(ocl.clKernel, 15, sizeof(int), NULL);
-                clSetKernelArg(ocl.clKernel, 16, sizeof(int), NULL);
-                clSetKernelArg(ocl.clKernel, 17, sizeof(int), &p.switching_limit);
-                clSetKernelArg(ocl.clKernel, 18, sizeof(int), &CPU_EXEC);
+                clSetKernelArg(ocl.clKernel, 13, sizeof(long), NULL);
+                clSetKernelArg(ocl.clKernel, 14, sizeof(long) * W_QUEUE_SIZE, NULL);
+                clSetKernelArg(ocl.clKernel, 15, sizeof(long), NULL);
+                clSetKernelArg(ocl.clKernel, 16, sizeof(long), NULL);
+                clSetKernelArg(ocl.clKernel, 17, sizeof(long), &p.switching_limit);
+                clSetKernelArg(ocl.clKernel, 18, sizeof(long), &CPU_EXEC);
                 size_t ls[1] = {(size_t)p.n_work_items};
                 size_t gs[1] = {(size_t)p.n_work_items * p.n_work_groups};
                 clFinish(ocl.clCommandQueue);
@@ -548,11 +548,11 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
                     //if(rep >= p.n_warmup)
                         timer.start("Copy To Device");
                     clStatus = clEnqueueWriteBuffer(
-                        ocl.clCommandQueue, d_num_t, CL_TRUE, 0, sizeof(int), h_num_t, 0, NULL, NULL);
-                    clStatus = clEnqueueWriteBuffer(ocl.clCommandQueue, d_tail, CL_TRUE, 0, sizeof(int), h_tail, 0,
+                        ocl.clCommandQueue, d_num_t, CL_TRUE, 0, sizeof(long), h_num_t, 0, NULL, NULL);
+                    clStatus = clEnqueueWriteBuffer(ocl.clCommandQueue, d_tail, CL_TRUE, 0, sizeof(long), h_tail, 0,
                         NULL, NULL); // Number of elements in output queue
                     clStatus = clEnqueueWriteBuffer(
-                        ocl.clCommandQueue, d_head, CL_TRUE, 0, sizeof(int), h_head, 0, NULL, NULL);
+                        ocl.clCommandQueue, d_head, CL_TRUE, 0, sizeof(long), h_head, 0, NULL, NULL);
                     clFinish(ocl.clCommandQueue);
                     CL_ERR();
                     //if(rep >= p.n_warmup)
@@ -577,9 +577,9 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
                     //if(rep >= p.n_warmup)
                         timer.start("Copy Back and Merge");
                     clStatus =
-                        clEnqueueReadBuffer(ocl.clCommandQueue, d_tail, CL_TRUE, 0, sizeof(int), h_tail, 0, NULL, NULL);
+                        clEnqueueReadBuffer(ocl.clCommandQueue, d_tail, CL_TRUE, 0, sizeof(long), h_tail, 0, NULL, NULL);
                     clStatus =
-                        clEnqueueReadBuffer(ocl.clCommandQueue, d_iter, CL_TRUE, 0, sizeof(int), h_iter, 0, NULL, NULL);
+                        clEnqueueReadBuffer(ocl.clCommandQueue, d_iter, CL_TRUE, 0, sizeof(long), h_iter, 0, NULL, NULL);
                     clFinish(ocl.clCommandQueue);
                     CL_ERR();
                     if(rep >= p.n_warmup)
@@ -593,19 +593,19 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
                 //if(rep >= p.n_warmup)
                     timer.start("Copy Back and Merge");
                 clStatus = clEnqueueReadBuffer(
-                    ocl.clCommandQueue, d_cost, CL_TRUE, 0, sizeof(int) * n_nodes, h_cost, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_cost, CL_TRUE, 0, sizeof(long) * n_nodes, h_cost, 0, NULL, NULL);
                 clStatus = clEnqueueReadBuffer(
-                    ocl.clCommandQueue, d_color, CL_TRUE, 0, sizeof(int) * n_nodes, h_color, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_color, CL_TRUE, 0, sizeof(long) * n_nodes, h_color, 0, NULL, NULL);
                 clStatus = clEnqueueReadBuffer(
-                    ocl.clCommandQueue, d_threads_run, CL_TRUE, 0, sizeof(int), h_threads_run, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_threads_run, CL_TRUE, 0, sizeof(long), h_threads_run, 0, NULL, NULL);
                 clStatus = clEnqueueReadBuffer(
-                    ocl.clCommandQueue, d_threads_end, CL_TRUE, 0, sizeof(int), h_threads_end, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_threads_end, CL_TRUE, 0, sizeof(long), h_threads_end, 0, NULL, NULL);
                 clStatus = clEnqueueReadBuffer(
-                    ocl.clCommandQueue, d_overflow, CL_TRUE, 0, sizeof(int), h_overflow, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_overflow, CL_TRUE, 0, sizeof(long), h_overflow, 0, NULL, NULL);
                 clStatus = clEnqueueReadBuffer(
-                    ocl.clCommandQueue, d_q1, CL_TRUE, 0, sizeof(int) * n_nodes, h_q1, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_q1, CL_TRUE, 0, sizeof(long) * n_nodes, h_q1, 0, NULL, NULL);
                 clStatus = clEnqueueReadBuffer(
-                    ocl.clCommandQueue, d_q2, CL_TRUE, 0, sizeof(int) * n_nodes, h_q2, 0, NULL, NULL);
+                    ocl.clCommandQueue, d_q2, CL_TRUE, 0, sizeof(long) * n_nodes, h_q2, 0, NULL, NULL);
                 clFinish(ocl.clCommandQueue);
                 CL_ERR();
                 //if(rep >= p.n_warmup)
