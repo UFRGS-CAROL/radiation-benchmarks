@@ -232,11 +232,11 @@ if len(commands) < 1:
     print >> sys.stderr, "ERROR: No commands read, there is nothing to execute"
     sys.exit(1)
 
+timestampMaxDiff = timestampMaxDiffDefault
 # Start last kill timestamp with an old enough timestamp
 lastKillTimestamp = int(time.time()) - 50 * timestampMaxDiff
 timestampSignal = int(time.time())
 
-timestampMaxDiff = timestampMaxDiffDefault
 try:
     killCount = 0  # Counts how many kills were executed throughout execution
     curCommand = selectCommand()
