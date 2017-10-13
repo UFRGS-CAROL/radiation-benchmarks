@@ -128,6 +128,33 @@ struct Params {
     }
 };
 
+inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,int num_of_nodes_o,Gold *&h_nodes, int it_cpu, int it_gpu) {
+    int count_error = 0;
+    if(num_of_nodes != num_of_nodes_o) { 
+        printf("Number of nodes does not match the expected value\n");
+        //exit(EXIT_FAILURE);
+    }
+
+    for(int i = 0; i < num_of_nodes_o; i++) {
+        int j, cost;
+       // fscanf(fpo, "%ld %ld", &j, &cost);
+        if(i != h_nodes[i].j || h_cost[i].load() != h_nodes[i].cost) {
+			  count_error++;	
+            //printf("Computed node %ld cost (%ld != %ld) does not match the expected value\n", i, h_cost[i].load(), cost);
+#ifdef LOGS
+		        char error_detail[250];
+        		sprintf(error_detail,"Nodo: %d,e:%d, r:%d, CPU:%d , GPU:%d \n",i,h_cost[i].load(), h_nodes[i].cost,it_cpu,it_gpu);
+
+       			 log_error_detail(error_detail);
+#endif
+
+            //exit(EXIT_FAILURE);
+        }
+    }
+
+    return count_error;
+}
+
 inline int new_verify(std::atomic_int *h_cost, int num_of_nodes, const char *file_name,int it_cpu, int it_gpu) {
     int count_error = 0;
 // Compare to output file
@@ -181,6 +208,36 @@ void read_input_size(int &n_nodes, int &n_edges, const Params &p) {
     if(fp)
         fclose(fp);
 }
+void read_gold_size(int &n_nodes_o, const Params &p) {
+    FILE *fp = fopen(p.comparison_file, "r");
+    fscanf(fp, "%d", &n_nodes_o);
+    if(fp)
+        fclose(fp);
+
+}
+
+
+void read_gold(Gold *&h_nodes, const Params &p) {
+
+    FILE *fpo = fopen(p.comparison_file, "r");
+    if(!fpo) {
+        printf("Error Reading output file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int num_of_nodes_o = 0;
+    fscanf(fpo, "%d", &num_of_nodes_o);
+
+    for(int i = 0; i < num_of_nodes_o; i++) {
+        int j, cost;
+        fscanf(fpo, "%d %d", &j, &cost);
+        h_nodes[i].j = j;
+        h_nodes[i].cost = cost;
+
+    }
+    fclose(fpo);
+	
+}
 
 void read_input(int &source, Node *&h_nodes, Edge *&h_edges, const Params &p) {
 
@@ -225,8 +282,8 @@ int main(int argc, char **argv) {
     OpenCLSetup  ocl(p.platform, p.device);
     Timer        timer;
     cl_int       clStatus;
-	long it_cpu=0;
-	long it_gpu=0;
+	int it_cpu=0;
+	int it_gpu=0;
 	int err = 0;
 printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_items, p.n_work_groups,p.n_threads,p.file_name);
 
@@ -241,9 +298,18 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 
     // Allocate
     int n_nodes, n_edges;
+	int n_nodes_o;
     read_input_size(n_nodes, n_edges, p);
+    read_gold_size(n_nodes_o, p);
+
     timer.start("Allocation");
     Node * h_nodes = (Node *)malloc(sizeof(Node) * n_nodes);
+
+//*************************** Alocando Memoria para o Gold *************************************
+	Gold * gold = (Gold *)malloc(sizeof(Gold) *n_nodes_o );
+//***********************************************************************************************
+
+
     cl_mem d_nodes = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(Node) * n_nodes, NULL, &clStatus);
     Edge * h_edges = (Edge *)malloc(sizeof(Edge) * n_edges);
     cl_mem d_edges = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(Edge) * n_edges, NULL, &clStatus);
@@ -283,7 +349,9 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 
 
     read_input(source, h_nodes, h_edges, p);
-
+// **********************  Lendo O gold *********************************
+	read_gold(gold,p);
+// **********************************************************************
 
     for(int i = 0; i < n_nodes; i++) {
         h_cost[i].store(INF);
@@ -555,12 +623,14 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
         end_iteration();
 #endif
 
-    printf("IT CPU:%ld\t",it_cpu);
-    printf("IT GPU:%ld\n",it_gpu);	
+    printf("IT CPU:%d\t",it_cpu);
+    printf("IT GPU:%d\n",it_gpu);	
     //create_output(h_cost, n_nodes);
-	err=new_verify(h_cost, n_nodes, p.comparison_file,it_cpu,it_gpu);
+	err=newest_verify(h_cost, n_nodes,n_nodes_o,gold,it_cpu,it_gpu);
         if(err > 0) {
             printf("Errors: %d\n",err);
+		    read_input(source, h_nodes, h_edges, p);
+			read_gold(gold,p);
         } else {
             printf(".");
         }
@@ -568,8 +638,8 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
         log_error_count(err);
 #endif
 		// Ler a entrada novamente
-    read_input(source, h_nodes, h_edges, p);
-
+	    read_input(source, h_nodes, h_edges, p);
+		read_gold(gold,p);
     } // end of iteration
 
 
