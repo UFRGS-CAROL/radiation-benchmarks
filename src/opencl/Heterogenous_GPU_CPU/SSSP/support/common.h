@@ -57,8 +57,8 @@ typedef struct {
     int y;
 } Edge;
 typedef struct {
-    int x;
-    int y;
+    int j;
+    int cost;
 } Gold;
 
 #endif
