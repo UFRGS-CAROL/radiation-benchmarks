@@ -45,7 +45,7 @@ def main(board):
         inputFile = data_path + "/"
 
         gen = [None] * 6
-        gen[0] = ['sudo ', bin_path + "/generateMatricesDouble "]
+        gen[0] = ['sudo ', src_dgemm + "/generateMatricesDouble "]
         gen[1] = ['-size=' + str(i)]
         gen[2] = ['-input_a=' + inputFile + 'dgemmA_' + str(i) + '.matrix']
         gen[3] = ['-input_b=' + inputFile + 'dgemmB_' + str(i) + '.matrix']
