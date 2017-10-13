@@ -626,8 +626,8 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 	err=newest_verify(h_cost, n_nodes,n_nodes_o,gold,it_cpu,it_gpu);
         if(err > 0) {
             printf("Errors: %d\n",err);
-		    read_input(source, h_nodes, h_edges, p);
-			read_gold(gold,p);
+//		    read_input(source, h_nodes, h_edges, p);
+//			read_gold(gold,p);
 			
         } else {
             printf(".");
@@ -636,8 +636,8 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
         log_error_count(err);
 #endif
 		// Ler a entrada novamente
-//    read_input(source, h_nodes, h_edges, p);
-
+	    read_input(source, h_nodes, h_edges, p);
+		read_gold(gold,p);
 
 
 	} // end of iteration
