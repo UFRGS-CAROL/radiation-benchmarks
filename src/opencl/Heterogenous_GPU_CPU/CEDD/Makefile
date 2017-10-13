@@ -42,7 +42,7 @@ endif
 ifndef CHAI_OPENCV
 CXX_FLAGS=-std=c++11 -DLOGS
 else
-CXX_FLAGS=-std=c++11 -D CHAI_OPENCV 
+CXX_FLAGS=-std=c++11 -D CHAI_OPENCV  -fopenmp
 endif
 
 ifndef CHAI_OCL_LIB

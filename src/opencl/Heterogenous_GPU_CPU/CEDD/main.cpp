@@ -148,7 +148,7 @@ inline int newest_compare_output(unsigned char **all_out_frames, int image_size,
     printf("Entrei compara\n");
     int count_error = 0;
     for(int i = 0; i < num_frames; i++) {
-
+	update_timestamp();
         for(int r = 0; r < rowsc; r++) {
             for(int c = 0; c < colsc; c++) {
                 int pix;
@@ -182,8 +182,9 @@ inline int new_compare_output(unsigned char **all_out_frames, int image_size, co
     printf("Entrei compara sem memoria\n");
     int count_error = 0;
     int new_counter = 0;
+# pragma omp parallel for
     for(int i = 0; i < num_frames; i++) {
-
+    update_timestamp();
         // Compare to output file
         char FileName[300];
         sprintf(FileName, "%s%d.txt", file_name, i);
@@ -362,12 +363,12 @@ printf("-p %d -d %d -i %d -a %.2f -t %d \n",p.platform , p.device, p.n_work_item
     const int n_frames = p.n_warmup + p.n_reps;
     unsigned char **all_gray_frames = (unsigned char **)malloc(n_frames * sizeof(unsigned char *));
 //******************************* Alocando Memoria para o Gold *****************************
-    unsigned char **gold = (unsigned char **)malloc(n_frames * sizeof(unsigned char *));
+    //unsigned char **gold = (unsigned char **)malloc(n_frames * sizeof(unsigned char *));
 //*****************************************************************************************
     int     rowsc, colsc, in_size;
     read_input(all_gray_frames, rowsc, colsc, in_size, p);
 //******************************* Lendo Gold *********************************************
-    read_gold(gold, rowsc, colsc, in_size, p);
+    //read_gold(gold, rowsc, colsc, in_size, p);
 //****************************************************************************************
     timer.stop("Initialization");
 	//printf("%d\n",rowsc);
@@ -418,7 +419,8 @@ printf("-p %d -d %d -i %d -a %.2f -t %d \n",p.platform , p.device, p.n_work_item
 
 
 for(int rep = 0; rep < p.loop; rep++) {
-	printf("Rep:%d\n",rep);
+    update_timestamp();
+    printf("Rep:%d\n",rep);
     timer.start("Total Proxies");
     CoarseGrainPartitioner partitioner = partitioner_create(n_frames, p.alpha, worklist);
     std::vector<std::thread> proxy_threads;
@@ -432,7 +434,7 @@ for(int rep = 0; rep < p.loop; rep++) {
             if(proxy_tid == GPU_PROXY) {
 //printf("GPU\n");
                 for(int task_id = gpu_first(&partitioner); gpu_more(&partitioner); task_id = gpu_next(&partitioner)) {
-
+    update_timestamp();
                     // Next frame
                     memcpy(h_in_out[proxy_tid], all_gray_frames[task_id], in_size);
 
@@ -544,7 +546,7 @@ for(int rep = 0; rep < p.loop; rep++) {
             } else if(proxy_tid == CPU_PROXY) {
 //printf("CPU\n");
                 for(int task_id = cpu_first(&partitioner); cpu_more(&partitioner); task_id = cpu_next(&partitioner)) {
-
+    update_timestamp();
                     // Next frame
                     memcpy(h_in_out[proxy_tid], all_gray_frames[task_id], in_size);
 
@@ -606,7 +608,7 @@ err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup 
         if(err > 0) {
             printf("Errors: %d\n",err);
 		    new_read_input(all_gray_frames, rowsc, colsc, in_size, p);
-		    new_read_gold(gold, rowsc, colsc, in_size, p);		
+		    //new_read_gold(gold, rowsc, colsc, in_size, p);		
 			 
         } else {
             printf(".");
