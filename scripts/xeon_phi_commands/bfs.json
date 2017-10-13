@@ -1,6 +1,7 @@
 [
     {
         "killcmd": "sshpass -p qwerty0 ssh carol@mic0 \"  killall -9 bfs_check\"", 
-        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/bfs/bfs_check 228 /micNfs/codes/bfs/graph2M.txt /micNfs/codes/bfs/gold-graph2M 9999999\""
+        "exec": "sshpass -p qwerty0 ssh carol@mic0 \" /micNfs/codes/bfs/bfs_check 228 /micNfs/codes/bfs/graph2M.txt /micNfs/codes/bfs/gold-graph2M 9999999\"",
+        "tmDiff": 45
     }
 ]

@@ -14,7 +14,7 @@ import signal
 import json
 from datetime import datetime
 
-timestampMaxDiff = 30  # Time in seconds to wait for the timestamp update
+timestampMaxDiffDefault = 30  # Time in seconds to wait for the timestamp update
 
 maxKill = 5  # Max number of kills allowed
 
@@ -142,6 +142,12 @@ def execCommand(command):
 
 
 def getCommand(index):
+    global timestampMaxDiff
+    try:
+       if commands[index]["tmDiff"]:
+          timestampMaxDiff = commands[index]["tmDiff"]
+    except:
+       timestampMaxDiff = timestampMaxDiffDefault
     return commands[index]["exec"]
 
 
@@ -218,6 +224,8 @@ if len(commands) < 1:
 
 # Start last kill timestamp with an old enough timestamp
 lastKillTimestamp = int(time.time()) - 50 * timestampMaxDiff
+
+timestampMaxDiff = timestampMaxDiffDefault
 
 contTimestampReadError=0
 try:
