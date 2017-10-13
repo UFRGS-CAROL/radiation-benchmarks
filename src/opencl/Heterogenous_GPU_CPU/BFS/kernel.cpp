@@ -39,18 +39,18 @@
 #include <vector>
 #include <algorithm>
 
-long atomic_maximum(std::atomic_long *maximum_value, long value) {
-    long prev_value = (maximum_value)->load();
+int atomic_maximum(std::atomic_int *maximum_value, int value) {
+    int prev_value = (maximum_value)->load();
     while(prev_value < value && !(maximum_value)->compare_exchange_strong(prev_value, value))
         ;
     return prev_value;
 }
 
 // CPU threads-----------------------------------------------------------------
-void run_cpu_threads(Node *h_graph_nodes, Edge *h_graph_edges, std::atomic_long *cost, std::atomic_long *color,
-    long *q1, long *q2, long *n_t, std::atomic_long *head, std::atomic_long *tail,
-    std::atomic_long *threads_end, std::atomic_long *threads_run, std::atomic_long *iter, long n_threads,
-    long LIMIT, const long GPU) {
+void run_cpu_threads(Node *h_graph_nodes, Edge *h_graph_edges, std::atomic_int *cost, std::atomic_int *color,
+    int *q1, int *q2, int *n_t, std::atomic_int *head, std::atomic_int *tail,
+    std::atomic_int *threads_end, std::atomic_int *threads_run, std::atomic_int *iter, int n_threads,
+    int LIMIT, const int GPU) {
 ///////////////// Run CPU worker threads /////////////////////////////////
 #if PRINT
     printf("Starting %d CPU threads\n", n_threads * CPU);
@@ -59,19 +59,19 @@ void run_cpu_threads(Node *h_graph_nodes, Edge *h_graph_edges, std::atomic_long 
     for(int k = 0; k < n_threads; k++) {
         cpu_threads.push_back(std::thread([=]() {
 
-            long iter_local = (iter)->load(); // Current iteration/level
+            int iter_local = (iter)->load(); // Current iteration/level
 
-            long base = (head)->fetch_add(1); // Fetch new node from input queue
+            int base = (head)->fetch_add(1); // Fetch new node from input queue
             while(base < *n_t) {
-                long pid = q1[base];
+                int pid = q1[base];
                 cost[pid].store(iter_local); // Node visited
                 // For each outgoing edge
-                for(long i = h_graph_nodes[pid].x; i < (h_graph_nodes[pid].y + h_graph_nodes[pid].x); i++) {
-                    long id        = h_graph_edges[i].x;
-                    long old_color = atomic_maximum(&color[id], BLACK);
+                for(int i = h_graph_nodes[pid].x; i < (h_graph_nodes[pid].y + h_graph_nodes[pid].x); i++) {
+                    int id        = h_graph_edges[i].x;
+                    int old_color = atomic_maximum(&color[id], BLACK);
                     if(old_color < BLACK) {
                         // Push to the queue
-                        long index_o     = (tail)->fetch_add(1);
+                        int index_o     = (tail)->fetch_add(1);
                         q2[index_o] = id;
                     }
                 }

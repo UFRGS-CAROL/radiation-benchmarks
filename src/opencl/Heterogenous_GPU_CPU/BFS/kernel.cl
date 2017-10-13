@@ -41,20 +41,20 @@
 #include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/support/common.h"
 
 // OpenCL kernel ------------------------------------------------------------------------------------------
-__kernel void BFS_gpu(__global Node *graph_nodes_av, __global Edge *graph_edges_av, __global long *cost,
-    __global long *color, __global long *q1, __global long *q2, __global long *n_t,
-    __global long *head, __global long *tail, __global long *threads_end, __global long *threads_run,
-    __global long *overflow, __global long *iter, __local long *tail_bin, __local long *l_q2, __local long *shift,
-    __local long *base, long LIMIT, const long CPU) {
+__kernel void BFS_gpu(__global Node *graph_nodes_av, __global Edge *graph_edges_av, __global int *cost,
+    __global int *color, __global int *q1, __global int *q2, __global int *n_t,
+    __global int *head, __global int *tail, __global int *threads_end, __global int *threads_run,
+    __global int *overflow, __global int *iter, __local int *tail_bin, __local int *l_q2, __local int *shift,
+    __local int *base, int LIMIT, const int CPU) {
 
-    const long tid     = get_local_id(0);
-    const long gtid    = get_global_id(0);
-    const long MAXWG   = get_num_groups(0);
-    const long WG_SIZE = get_local_size(0);
+    const int tid     = get_local_id(0);
+    const int gtid    = get_global_id(0);
+    const int MAXWG   = get_num_groups(0);
+    const int WG_SIZE = get_local_size(0);
 
-    long iter_local = atom_add(&iter[0], 0);
+    int iter_local = atom_add(&iter[0], 0);
 
-    long n_t_local = atom_add(n_t, 0);
+    int n_t_local = atom_add(n_t, 0);
 
     if(tid == 0) {
         // Reset queue
@@ -66,23 +66,23 @@ __kernel void BFS_gpu(__global Node *graph_nodes_av, __global Edge *graph_edges_
         *base = atom_add(&head[0], WG_SIZE);
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    long my_base = *base;
+    int my_base = *base;
     while(my_base < n_t_local) {
         if(my_base + tid < n_t_local && *overflow == 0) {
             // Visit a node from the current frontier
-            long pid = q1[my_base + tid];
+            int pid = q1[my_base + tid];
             //////////////// Visit node ///////////////////////////
             atom_xchg(&cost[pid], iter_local); // Node visited
             Node cur_node;
             cur_node.x = graph_nodes_av[pid].x;
             cur_node.y = graph_nodes_av[pid].y;
             // For each outgoing edge
-            for(long i = cur_node.x; i < cur_node.y + cur_node.x; i++) {
-                long id        = graph_edges_av[i].x;
-                long old_color = atom_max(&color[id], BLACK);
+            for(int i = cur_node.x; i < cur_node.y + cur_node.x; i++) {
+                int id        = graph_edges_av[i].x;
+                int old_color = atom_max(&color[id], BLACK);
                 if(old_color < BLACK) {
                     // Push to the queue
-                    long tail_index = atom_add(tail_bin, 1);
+                    int tail_index = atom_add(tail_bin, 1);
                     if(tail_index >= W_QUEUE_SIZE) {
                         *overflow = 1;
                     } else
@@ -102,7 +102,7 @@ __kernel void BFS_gpu(__global Node *graph_nodes_av, __global Edge *graph_edges_
     }
     barrier(CLK_LOCAL_MEM_FENCE);
     ///////////////////// CONCATENATE INTO GLOBAL MEMORY /////////////////////
-    long local_shift = tid;
+    int local_shift = tid;
     while(local_shift < *tail_bin) {
         q2[*shift + local_shift] = l_q2[local_shift];
         // Multiple threads are copying elements at the same time, so we shift by multiple elements for next iteration

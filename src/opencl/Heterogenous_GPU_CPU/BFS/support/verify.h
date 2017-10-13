@@ -36,7 +36,7 @@
 #include "common.h"
 #include <math.h>
 
-inline long verify(std::atomic_long *h_cost, long num_of_nodes, const char *file_name) {
+inline int verify(std::atomic_int *h_cost, int num_of_nodes, const char *file_name) {
     // Compare to output file
     FILE *fpo = fopen(file_name, "r");
     if(!fpo) {
@@ -48,7 +48,7 @@ inline long verify(std::atomic_long *h_cost, long num_of_nodes, const char *file
 #endif
 
     // the number of nodes in the output
-    long num_of_nodes_o = 0;
+    int num_of_nodes_o = 0;
     fscanf(fpo, "%ld", &num_of_nodes_o);
     if(num_of_nodes != num_of_nodes_o) {
         printf("Number of nodes does not match the expected value\n");
@@ -56,8 +56,8 @@ inline long verify(std::atomic_long *h_cost, long num_of_nodes, const char *file
     }
 
     // cost of nodes in the output
-    for(long i = 0; i < num_of_nodes_o; i++) {
-        long j, cost;
+    for(int i = 0; i < num_of_nodes_o; i++) {
+        int j, cost;
         fscanf(fpo, "%ld %ld", &j, &cost);
         if(i != j || h_cost[i].load() != cost) {
             printf("Computed node %ld cost (%ld != %ld) does not match the expected value\n", i, h_cost[i].load(), cost);
@@ -69,7 +69,7 @@ inline long verify(std::atomic_long *h_cost, long num_of_nodes, const char *file
     return 0;
 }
 
-inline long create_output(std::atomic_long *h_cost, long num_of_nodes) {
+inline int create_output(std::atomic_int *h_cost, int num_of_nodes) {
     // Compare to output file
     FILE *fpo = fopen("saida_grafo", "w");
     if(!fpo) {
@@ -78,7 +78,7 @@ inline long create_output(std::atomic_long *h_cost, long num_of_nodes) {
     }
 	fprintf(fpo,"%ld\n",num_of_nodes);	
     // cost of nodes in the output
-    for(long i = 0; i < num_of_nodes; i++) {
+    for(int i = 0; i < num_of_nodes; i++) {
 		// escreve i no arquivo e hcost 
 	fprintf(fpo,"%ld %ld\n",i,h_cost[i].load());
    }
