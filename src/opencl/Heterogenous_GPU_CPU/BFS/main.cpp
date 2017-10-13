@@ -304,7 +304,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 
     // Allocate
     long n_nodes, n_edges;
-	long n_nodes_o
+	long n_nodes_o;
     read_input_size(n_nodes, n_edges, p);
     read_gold_size(n_nodes_o, p);
 
