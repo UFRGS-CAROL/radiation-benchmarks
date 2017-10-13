@@ -138,14 +138,14 @@ inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,int num_of_no
     for(int i = 0; i < num_of_nodes_o; i++) {
         int j, cost;
        // fscanf(fpo, "%ld %ld", &j, &cost);
-        if(i != h_nodes[i].j || h_cost[i].load() != h_nodes[i].cost) {
+        if(i != h_nodes[i].j || h_cost[i].load()* -1 != h_nodes[i].cost) {
 			  count_error++;	
             //printf("Computed node %ld cost (%ld != %ld) does not match the expected value\n", i, h_cost[i].load(), cost);
 #ifdef LOGS
-		        char error_detail[250];
-        		sprintf(error_detail,"Nodo: %d,e:%d, r:%d, CPU:%d , GPU:%d \n",i,h_cost[i].load(), h_nodes[i].cost,it_cpu,it_gpu);
+        char error_detail[250];
+	sprintf(error_detail,"Nodo: %d,e:%d, r:%d, CPU:%d , GPU:%d \n",i,h_cost[i].load(), h_nodes[i].cost,it_cpu,it_gpu);
 
-       			 log_error_detail(error_detail);
+	 log_error_detail(error_detail);
 #endif
 
             //exit(EXIT_FAILURE);
@@ -627,10 +627,11 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
     printf("IT GPU:%d\n",it_gpu);	
     //create_output(h_cost, n_nodes);
 	err=newest_verify(h_cost, n_nodes,n_nodes_o,gold,it_cpu,it_gpu);
+	//err=new_verify(h_cost, n_nodes,,it_cpu,it_gpu);
         if(err > 0) {
             printf("Errors: %d\n",err);
 		    read_input(source, h_nodes, h_edges, p);
-			read_gold(gold,p);
+		    read_gold(gold,p);
         } else {
             printf(".");
         }
@@ -638,8 +639,8 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
         log_error_count(err);
 #endif
 		// Ler a entrada novamente
-	    read_input(source, h_nodes, h_edges, p);
-		read_gold(gold,p);
+	read_input(source, h_nodes, h_edges, p);
+	read_gold(gold,p);
     } // end of iteration
 
 
