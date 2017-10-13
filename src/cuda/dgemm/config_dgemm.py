@@ -29,7 +29,7 @@ def main(board):
 
     data_path = installDir + "data/gemm"
     bin_path = installDir + "bin"
-    src_dgemm = installDir + "src/cuda/" + benchmark_bin
+    src_dgemm = installDir + "src/cuda/dgemm"
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
