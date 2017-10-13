@@ -1,4 +1,3 @@
-/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/bfs.json
 /home/carol/radiation-benchmarks/scripts/xeon_phi_commands/nw-16394.json
 /home/carol/radiation-benchmarks/scripts/xeon_phi_commands/nw-8192.json
 /home/carol/radiation-benchmarks/scripts/xeon_phi_commands/lavamd-8.json
@@ -13,3 +12,4 @@
 /home/carol/radiation-benchmarks/scripts/xeon_phi_commands/mergesort.json
 /home/carol/radiation-benchmarks/scripts/xeon_phi_commands/nn.json
 /home/carol/radiation-benchmarks/scripts/xeon_phi_commands/quicksort.json
+/home/carol/radiation-benchmarks/scripts/xeon_phi_commands/bfs.json
