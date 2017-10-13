@@ -626,7 +626,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
     printf("IT CPU:%d\t",it_cpu);
     printf("IT GPU:%d\n",it_gpu);	
     //create_output(h_cost, n_nodes);
-	err=newest_verify(h_cost, n_nodes, p.comparison_file,it_cpu,it_gpu);
+	err=newest_verify(h_cost, n_nodes,n_nodes_o,gold,it_cpu,it_gpu);
         if(err > 0) {
             printf("Errors: %d\n",err);
 		    read_input(source, h_nodes, h_edges, p);
