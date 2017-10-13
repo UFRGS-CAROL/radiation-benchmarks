@@ -145,7 +145,7 @@ inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,int num_of_no
             //printf("Computed node %ld cost (%ld != %ld) does not match the expected value\n", i, h_cost[i].load(), cost);
 #ifdef LOGS
 		        char error_detail[250];
-        		sprintf(error_detail,"Nodo: %ld,e:%ld, r:%ld, CPU:%d , GPU:%d \n",i,h_cost[i].load(), h_nodes[i].cost,it_cpu,it_gpu);
+        		sprintf(error_detail,"Nodo: %d,e:%d, r:%d, CPU:%d , GPU:%d \n",i,h_cost[i].load(), h_nodes[i].cost,it_cpu,it_gpu);
 
        			 log_error_detail(error_detail);
 #endif
@@ -171,7 +171,7 @@ inline int new_verify(std::atomic_int *h_cost, int num_of_nodes, const char *fil
 
     // the number of nodes in the output
     int num_of_nodes_o = 0;
-    fscanf(fpo, "%ld", &num_of_nodes_o);
+    fscanf(fpo, "%d", &num_of_nodes_o);
 
 
 /*Adicionar como tipo de erro ?*/
@@ -184,13 +184,13 @@ inline int new_verify(std::atomic_int *h_cost, int num_of_nodes, const char *fil
     // cost of nodes in the output
     for(int i = 0; i < num_of_nodes_o; i++) {
         int j, cost;
-        fscanf(fpo, "%ld %ld", &j, &cost);
+        fscanf(fpo, "%d %d", &j, &cost);
         if(i != j || h_cost[i].load() != cost) {
 			  count_error++;	
-            //printf("Computed node %ld cost (%ld != %ld) does not match the expected value\n", i, h_cost[i].load(), cost);
+            //printf("Computed node %d cost (%d != %d) does not match the expected value\n", i, h_cost[i].load(), cost);
 #ifdef LOGS
 		        char error_detail[250];
-        		sprintf(error_detail,"Nodo: %ld,e:%ld, r:%ld, CPU:%d , GPU:%d \n",i,h_cost[i].load(), cost,it_cpu,it_gpu);
+        		sprintf(error_detail,"Nodo: %d,e:%d, r:%d, CPU:%d , GPU:%d \n",i,h_cost[i].load(), cost,it_cpu,it_gpu);
 
        			 log_error_detail(error_detail);
 #endif
@@ -206,8 +206,8 @@ inline int new_verify(std::atomic_int *h_cost, int num_of_nodes, const char *fil
 // Input Data -----------------------------------------------------------------
 void read_input_size(int &n_nodes, int &n_edges, const Params &p) {
     FILE *fp = fopen(p.file_name, "r");
-    fscanf(fp, "%ld", &n_nodes);
-    fscanf(fp, "%ld", &n_edges);
+    fscanf(fp, "%d", &n_nodes);
+    fscanf(fp, "%d", &n_edges);
     if(fp)
         fclose(fp);
 
@@ -216,7 +216,7 @@ void read_input_size(int &n_nodes, int &n_edges, const Params &p) {
 
 void read_gold_size(int &n_nodes_o, const Params &p) {
     FILE *fp = fopen(p.comparison_file, "r");
-    fscanf(fp, "%ld", &n_nodes_o);
+    fscanf(fp, "%d", &n_nodes_o);
     if(fp)
         fclose(fp);
 
@@ -232,11 +232,11 @@ void read_gold(Gold *&h_nodes, const Params &p) {
     }
 
     int num_of_nodes_o = 0;
-    fscanf(fpo, "%ld", &num_of_nodes_o);
+    fscanf(fpo, "%d", &num_of_nodes_o);
 
     for(int i = 0; i < num_of_nodes_o; i++) {
         int j, cost;
-        fscanf(fpo, "%ld %ld", &j, &cost);
+        fscanf(fpo, "%d %d", &j, &cost);
         h_nodes[i].j = j;
         h_nodes[i].cost = cost;
 
@@ -252,28 +252,28 @@ void read_input(int &source, Node *&h_nodes, Edge *&h_edges, const Params &p) {
     int   id, cost;
     FILE *fp = fopen(p.file_name, "r");
 
-    fscanf(fp, "%ld", &n_nodes);
-    fscanf(fp, "%ld", &n_edges);
-    fscanf(fp, "%ld", &source);
-    printf("Number of nodes = %ld\t", n_nodes);
-    printf("Number of edges = %ld\n", n_edges);
+    fscanf(fp, "%d", &n_nodes);
+    fscanf(fp, "%d", &n_edges);
+    fscanf(fp, "%d", &source);
+    printf("Number of nodes = %d\t", n_nodes);
+    printf("Number of edges = %d\n", n_edges);
 
     // initalize the memory: Nodes
     for(int i = 0; i < n_nodes; i++) {
-        fscanf(fp, "%ld %ld", &start, &edgeno);
+        fscanf(fp, "%d %d", &start, &edgeno);
         h_nodes[i].x = start;
         h_nodes[i].y = edgeno;
     }
 #if PRINT_ALL
     for(int i = 0; i < n_nodes; i++) {
-        printf("%ld, %ld\n", h_nodes[i].x, h_nodes[i].y);
+        printf("%d, %d\n", h_nodes[i].x, h_nodes[i].y);
     }
 #endif
 
     // initalize the memory: Edges
     for(int i = 0; i < n_edges; i++) {
-        fscanf(fp, "%ld", &id);
-        fscanf(fp, "%ld", &cost);
+        fscanf(fp, "%d", &id);
+        fscanf(fp, "%d", &cost);
         h_edges[i].x = id;
         h_edges[i].y = -cost;
     }
@@ -618,8 +618,8 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 #endif
 
 
-    printf("IT CPU:%ld\t",it_cpu);
-    printf("IT GPU:%ld\n",it_gpu);	
+    printf("IT CPU:%d\t",it_cpu);
+    printf("IT GPU:%d\n",it_gpu);	
 
 
 //	err=new_verify(h_cost, n_nodes, p.comparison_file,it_cpu,it_gpu);
