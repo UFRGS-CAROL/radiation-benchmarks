@@ -222,7 +222,7 @@ void read_gold_size(long &n_nodes_o, const Params &p) {
 }
 
 
-void read_gold(Gold *&h_nodes const Params &p) {
+void read_gold(Gold *&h_nodes, const Params &p) {
 
     FILE *fpo = fopen(p.comparison_file, "r");
     if(!fpo) {
