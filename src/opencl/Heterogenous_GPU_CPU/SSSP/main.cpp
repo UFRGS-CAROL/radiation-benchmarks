@@ -652,7 +652,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
     timer.print("Copy Back and Merge", p.n_reps);
 
     // Verify answer
-    //create_output(h_cost, n_nodes);
+    create_output(h_cost, n_nodes);
     //verify(h_cost, n_nodes, p.comparison_file);
 
     // Free memory
