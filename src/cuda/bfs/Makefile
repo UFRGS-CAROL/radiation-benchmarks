@@ -97,10 +97,10 @@ $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(NVCC_FLAGS) -c $< -o $@ 
 
 test:
-	$(RAD_BENCH)/src/cuda/bfs/$(EXE) -t 0 -f input/NYR_input.dat -c temp.gold -m 1 -r 100 
+	$(RAD_BENCH)/src/cuda/bfs/$(EXE) -t 0 -f $(RAD_BENCH)/data/bfs/graph1MW_6.txt -c temp.gold -m 1 -r 100 
 
 generate:
-	$(RAD_BENCH)/src/cuda/bfs/$(EXE) -t 0 -f input/NYR_input.dat -c temp.gold -m 0 
+	$(RAD_BENCH)/src/cuda/bfs/$(EXE) -t 0 -f $(RAD_BENCH)/data/bfs/graph1MW_6.txt -c temp.gold -m 0 
 
 
 make_obj:

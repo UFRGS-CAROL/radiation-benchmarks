@@ -334,8 +334,8 @@ int main(int argc, char **argv) {
 		it_cpu = 0;
 		it_gpu = 0;
 
-		if (rep >= p.n_warmup)
-			timer.start("Kernel");
+//		if (rep >= p.n_warmup)
+//			timer.start("Kernel");
 
 		// Run first iteration in master CPU thread
 		h_num_t[0] = 1;
@@ -356,8 +356,8 @@ int main(int argc, char **argv) {
 		h_tail[0].store(0);
 		h_threads_run[0].fetch_add(1);
 		h_iter[0].fetch_add(1);
-		if (rep >= p.n_warmup)
-			timer.stop("Kernel");
+//		if (rep >= p.n_warmup)
+//			timer.stop("Kernel");
 
 		// Pointers to input and output queues
 		int * h_qin = h_q2;
@@ -378,8 +378,8 @@ int main(int argc, char **argv) {
 			if ((*h_num_t < p.switching_limit || GPU_EXEC == 0)
 					&& CPU_EXEC == 1) { // If the number of input queue elements is lower than switching_limit
 
-				if (rep >= p.n_warmup)
-					timer.start("Kernel");
+//				if (rep >= p.n_warmup)
+//					timer.start("Kernel");
 
 				// Continue until switching_limit condition is not satisfied
 				while ((*h_num_t != 0)
@@ -407,8 +407,8 @@ int main(int argc, char **argv) {
 					h_head[0].store(0);
 				}
 
-				if (rep >= p.n_warmup)
-					timer.stop("Kernel");
+//				if (rep >= p.n_warmup)
+//					timer.stop("Kernel");
 
 			} else if ((*h_num_t >= p.switching_limit || CPU_EXEC == 0)
 					&& GPU_EXEC == 1) { // If the number of input queue elements is higher than or equal to switching_limit
@@ -435,8 +435,8 @@ int main(int argc, char **argv) {
 						cudaMemcpyHostToDevice);
 				cudaDeviceSynchronize();
 				CUDA_ERR();
-				if (rep >= p.n_warmup)
-					timer.stop("Copy To Device");
+//				if (rep >= p.n_warmup)
+//					timer.stop("Copy To Device");
 
 				// Continue until switching_limit condition is not satisfied
 				while ((*h_num_t != 0)
@@ -452,8 +452,8 @@ int main(int argc, char **argv) {
 						d_qout = d_q1;
 					}
 
-					if (rep >= p.n_warmup)
-						timer.start("Copy To Device");
+//					if (rep >= p.n_warmup)
+//						timer.start("Copy To Device");
 					cudaStatus = cudaMemcpy(d_num_t, h_num_t, sizeof(int),
 							cudaMemcpyHostToDevice);
 					cudaStatus = cudaMemcpy(d_tail, h_tail, sizeof(int),
@@ -462,11 +462,11 @@ int main(int argc, char **argv) {
 							cudaMemcpyHostToDevice);
 					cudaDeviceSynchronize();
 					CUDA_ERR();
-					if (rep >= p.n_warmup)
-						timer.stop("Copy To Device");
-
-					if (rep >= p.n_warmup)
-						timer.start("Kernel");
+//					if (rep >= p.n_warmup)
+//						timer.stop("Copy To Device");
+//
+//					if (rep >= p.n_warmup)
+//						timer.start("Kernel");
 					assert(
 							p.n_gpu_threads <= max_gpu_threads
 									&& "The thread block size is greater than the maximum thread block size that can be used on this device");
@@ -478,27 +478,27 @@ int main(int argc, char **argv) {
 							sizeof(int) * (W_QUEUE_SIZE + 3));
 					cudaDeviceSynchronize();
 					CUDA_ERR();
-					if (rep >= p.n_warmup)
-						timer.stop("Kernel");
-
-					if (rep >= p.n_warmup)
-						timer.start("Copy Back and Merge");
+//					if (rep >= p.n_warmup)
+//						timer.stop("Kernel");
+//
+//					if (rep >= p.n_warmup)
+//						timer.start("Copy Back and Merge");
 					cudaStatus = cudaMemcpy(h_tail, d_tail, sizeof(int),
 							cudaMemcpyDeviceToHost);
 					cudaStatus = cudaMemcpy(h_iter, d_iter, sizeof(int),
 							cudaMemcpyDeviceToHost);
 					cudaDeviceSynchronize();
 					CUDA_ERR();
-					if (rep >= p.n_warmup)
-						timer.stop("Copy Back and Merge");
+//					if (rep >= p.n_warmup)
+//						timer.stop("Copy Back and Merge");
 
 					h_num_t[0] = h_tail[0].load(); // Number of elements in output queue
 					h_tail[0].store(0);
 					h_head[0].store(0);
 				}
 
-				if (rep >= p.n_warmup)
-					timer.start("Copy Back and Merge");
+//				if (rep >= p.n_warmup)
+//					timer.start("Copy Back and Merge");
 				cudaStatus = cudaMemcpy(h_cost, d_cost, sizeof(int) * n_nodes,
 						cudaMemcpyDeviceToHost);
 				cudaStatus = cudaMemcpy(h_color, d_color, sizeof(int) * n_nodes,
@@ -515,8 +515,8 @@ int main(int argc, char **argv) {
 						cudaMemcpyDeviceToHost);
 				cudaDeviceSynchronize();
 				CUDA_ERR();
-				if (rep >= p.n_warmup)
-					timer.stop("Copy Back and Merge");
+//				if (rep >= p.n_warmup)
+//					timer.stop("Copy Back and Merge");
 			}
 		}
 
@@ -526,13 +526,13 @@ int main(int argc, char **argv) {
 		double diffKernelTime = get_time() - kernelTime;
 // old for
 //	} // end of iteration
-		if (rep >= p.n_warmup) {
-
-			timer.print("Allocation", 1);
-			timer.print("Copy To Device", p.n_reps);
-			timer.print("Kernel", p.n_reps);
-			timer.print("Copy Back and Merge", p.n_reps);
-		}
+//		if (rep >= p.n_warmup) {
+//
+//			timer.print("Allocation", 1);
+//			timer.print("Copy To Device", p.n_reps);
+//			timer.print("Kernel", p.n_reps);
+//			timer.print("Copy Back and Merge", p.n_reps);
+//		}
 		// Verify answer
 		if (p.mode == -1) {
 			verify(h_cost, n_nodes, p.comparison_file);
