@@ -13,7 +13,7 @@ ITERATIONS=10000
 
 def main(board):
 
-    benchmark_bin = "dgemm"
+    benchmark_bin = "cudaDGEMM"
     print "Generating "+ benchmark_bin + " for CUDA, board:" + board
 
     confFile = '/etc/radiation-benchmarks.conf'
