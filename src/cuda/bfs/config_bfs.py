@@ -6,11 +6,24 @@ import os
 import sys
 import ConfigParser
 
-INPUT = ['graph1MW_6.txt', "graph4096.txt"]
+INPUT = ["lakes_graph_in"]
 ITERATIONS = 100000
 
 THREADS_HOST = [0, 2, 4]
 
+def untar_graphs(filepath):
+    tries = 3
+
+    while not os.path.isfile(filepath + "/lakes_graph_in"):
+        print "tar xzf " + filepath + "/lakes_graph_in.tar.gz -C " +  filepath + "/"
+        if os.system("tar xzf " + filepath + "/lakes_graph_in.tar.gz -C " +  filepath + "/") != 0:
+            print "Something went wrong with untar of " + filepath + " file. Trying again"
+
+        if tries == 0:
+            return False
+        tries -= 1
+
+    return True
 
 def main(board):
     print "Generating BFS for CUDA on " + str(board)
@@ -30,6 +43,9 @@ def main(board):
     data_path = installDir + "data/" + benchmark_bin
     bin_path = installDir + "bin"
     src_srad = installDir + "src/cuda/" + benchmark_bin
+
+    if not untar_graphs(data_path):
+        raise ValueError("Error on untar the file")
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
@@ -72,9 +88,9 @@ def main(board):
 
 def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
     for i in generate:
-        # if os.system(str(i)) != 0:
-        #     print "Something went wrong with generate of ", str(i )
-        #     exit(1)
+        if os.system(str(i)) != 0:
+            print "Something went wrong with generate of ", str(i )
+            exit(1)
         print i
     fp = open(installDir + "scripts/json_files/" + benchmark_bin + ".json", 'w')
 
