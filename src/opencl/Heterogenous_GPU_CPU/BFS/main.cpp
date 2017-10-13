@@ -131,7 +131,7 @@ struct Params {
 
 
 inline long newest_verify(std::atomic_long *h_cost, long num_of_nodes,long num_of_nodes_o,Gold *&h_nodes, int it_cpu, int it_gpu) {
-
+    int count_error = 0;
     if(num_of_nodes != num_of_nodes_o) { 
         printf("Number of nodes does not match the expected value\n");
         //exit(EXIT_FAILURE);
@@ -139,7 +139,7 @@ inline long newest_verify(std::atomic_long *h_cost, long num_of_nodes,long num_o
 
     for(long i = 0; i < num_of_nodes_o; i++) {
         long j, cost;
-        fscanf(fpo, "%ld %ld", &j, &cost);
+       // fscanf(fpo, "%ld %ld", &j, &cost);
         if(i != h_nodes[i].j || h_cost[i].load() != h_nodes[i].cost) {
 			  count_error++;	
             //printf("Computed node %ld cost (%ld != %ld) does not match the expected value\n", i, h_cost[i].load(), cost);
@@ -154,7 +154,7 @@ inline long newest_verify(std::atomic_long *h_cost, long num_of_nodes,long num_o
         }
     }
 
-
+    return count_error;
 }
 inline long new_verify(std::atomic_long *h_cost, long num_of_nodes, const char *file_name, int it_cpu, int it_gpu) {
     // Compare to output file
