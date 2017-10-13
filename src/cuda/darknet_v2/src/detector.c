@@ -874,8 +874,9 @@ void test_detector_radiation(Args *args) {
 #ifdef GPU
 			//before compare copy maxpool err detection values
 			//smart pooling
-			if (args->abft == 2)
-			get_and_reset_error_detected_values(max_pool_errors);
+			if (args->abft == 2) {
+				get_and_reset_error_detected_values(&max_pool_errors);
+			}
 #endif
 			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, it,
 					args->save_layers, i, args->img_list_path, max_pool_errors);

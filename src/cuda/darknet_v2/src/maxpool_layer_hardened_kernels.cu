@@ -154,12 +154,13 @@ __global__ void memset_error(unsigned long long *error_detected){
 /**
  * host_error_detected must be allocated
  */
-void get_and_reset_error_detected_values(error_return host_error) {
+void get_and_reset_error_detected_values(error_return *host_error) {
     //copy from error_detected var
-    cudaMemcpy(host_error.error_detected, error_detected,
-            sizeof(unsigned long long) * host_error.err_detected_size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(host_error->error_detected, error_detected,
+            sizeof(unsigned long long) * host_error->err_detected_size, cudaMemcpyDeviceToHost);
 
-    memset_error<<<1, MAXPOOL_N>>>(error_detected);
+//    memset_error<<<1, MAXPOOL_N>>>(error_detected);
+    cudaMemset(error_detected, 0, sizeof(unsigned long long) * host_error->err_detected_size);
 
     check_error(cudaPeekAtLastError());
 }
