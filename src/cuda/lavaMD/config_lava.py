@@ -42,21 +42,19 @@ def main(board):
         inputFile = data_path + "/"
 
         #	$(RAD_BENCH)/src/cuda/bfs/$(EXE) -t 0 -f $(RAD_BENCH)/data/bfs/graph1MW_6.txt -c temp.gold -m 1 -r 100
-        gen = [None] * 7
+        gen = [None] * 8
         gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
         gen[1] = ['-boxes=' + str(i)]
         gen[2] = ['-generate ']
         gen[3] = ['-output_gold=' + inputFile + "gold_" +  str(i) + ""]
         gen[4] = ['-iterations=1']  # change for execute
         gen[5] = ['-streams=1']
-        gen[6] = []
-
-
+        gen[6] = ['-input_charges=' + inputFile + "input_charges_" + str(i)]
+        gen[7] = ['-input_distances=' + inputFile + "input_distances_" + str(i)]
 
         # change mode and iterations for exe
         exe = copy.deepcopy(gen)
-        exe[2] = ['-input_distances=' + inputFile + "input_distances_" + str(i)]
-        exe[6] = ['-input_charges=' + inputFile + "input_charges_" + str(i)]
+        exe[2] = []
         exe[4] = ['-iterations=' + str(ITERATIONS)]
 
         generate.append(' '.join(str(r) for v in gen for r in v))
