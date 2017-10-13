@@ -209,6 +209,8 @@ except IOError as e:
 
 logFile = logDir + "killtest.log"
 timestampFile = varDir + "timestamp.txt"
+os.system("touch "+timestampFile)
+os.chmod(timestampFile, 0777)
 
 if (len(sys.argv) != 2):
     print "Usage: " + sys.argv[0] + " <file with absolute paths of json files>"
