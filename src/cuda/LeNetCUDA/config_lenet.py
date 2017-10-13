@@ -13,6 +13,7 @@ DATASETS = [
 
 WEIGHTS = ['lenet_base.weights', 'lenet_l2.weights'] #, 'lenet_l1.weights']
 
+UNIFIED_MEM=" NOTUSEUNIFIED=1 "
 
 def main(board):
     print "Generating Lenet for CUDA on " + str(board)
@@ -37,7 +38,7 @@ def main(board):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
-    generate = ["cd " + src_lenet, "make clean GPU=1", "make -j4 GPU=1 NOTUSEUNIFIED=1 ", "mv ./" + benchmark_bin + " " + bin_path + "/"]
+    generate = ["cd " + src_lenet, "make clean GPU=1", "make -j4 GPU=1" + UNIFIED_MEM, "mv ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
     for s in [0, 1]:
@@ -67,7 +68,7 @@ def main(board):
     # end for generate
     generate.append("make clean GPU=1 ")
     generate.append("make -C ../../include/")
-    generate.append("make -j 4 GPU=1 LOGS=1 NOTUSEUNIFIED=1")
+    generate.append("make -j 4 GPU=1 LOGS=1" + UNIFIED_MEM)
     generate.append("sudo mv ./" + benchmark_bin + " " + bin_path + "/")
 
     execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin)
