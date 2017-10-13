@@ -1,6 +1,6 @@
 [
     {
-        "killcmd": "sssp", 
+        "killcmd": "killall -9 sssp", 
         "exec": "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/sssp -p 0 -d 0 -i 8 -g 256  -t 2 -f /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/input/colorado_graph_in -c /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/output/colorado_graph_out  -r 1000000 -l 128"
     }
 ]
