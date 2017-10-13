@@ -11,6 +11,19 @@ ITERATIONS = 100000
 
 THREADS_HOST = [0, 2, 4]
 
+def untar_graphs(filepath):
+    tries = 3
+
+    while not os.path.isfile(filepath + "/lakes_graph_in"):
+        print "tar xzf " + filepath + "/lakes_graph_in.tar.gz -C " +  filepath + "/"
+        if os.system("tar xzf " + filepath + "/lakes_graph_in.tar.gz -C " +  filepath + "/") != 0:
+            print "Something went wrong with untar of " + filepath + " file. Trying again"
+
+        if tries == 0:
+            return False
+        tries -= 1
+
+    return True
 
 def main(board):
     print "Generating BFS for CUDA on " + str(board)
@@ -30,6 +43,9 @@ def main(board):
     data_path = installDir + "data/" + benchmark_bin
     bin_path = installDir + "bin"
     src_srad = installDir + "src/cuda/" + benchmark_bin
+
+    if not untar_graphs(data_path):
+        raise ValueError("Error on untar the file")
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
