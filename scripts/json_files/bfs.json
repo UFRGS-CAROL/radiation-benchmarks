@@ -1,0 +1,3 @@
+[
+{"killcmd": "killall -9 bfs", "exec": "sudo  /home/carol/radiation-benchmarks/bin/bfs  -t  0 -f  /home/carol/radiation-benchmarks/data/bfs/lakes_graph_in -c  /home/carol/radiation-benchmarks/data/bfs/lakes_graph_in.gold -m  1 -r  100000"}
+]
