@@ -502,7 +502,7 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 
 	printf("%d errors found at %s detection\n", error_count, img_string);
 //save layers here
-	if(error_count && save_layers) {
+	if(error_count && save_layers && test_iteration > 10000) {
 		save_layer(det, img, test_iteration, get_log_file_name(), 0, img_list_path);
 	}
 #endif
