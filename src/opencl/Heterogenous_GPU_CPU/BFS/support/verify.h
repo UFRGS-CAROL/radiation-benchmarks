@@ -49,7 +49,7 @@ inline int verify(std::atomic_int *h_cost, int num_of_nodes, const char *file_na
 
     // the number of nodes in the output
     int num_of_nodes_o = 0;
-    fscanf(fpo, "%ld", &num_of_nodes_o);
+    fscanf(fpo, "%d", &num_of_nodes_o);
     if(num_of_nodes != num_of_nodes_o) {
         printf("Number of nodes does not match the expected value\n");
         exit(EXIT_FAILURE);
@@ -58,9 +58,9 @@ inline int verify(std::atomic_int *h_cost, int num_of_nodes, const char *file_na
     // cost of nodes in the output
     for(int i = 0; i < num_of_nodes_o; i++) {
         int j, cost;
-        fscanf(fpo, "%ld %ld", &j, &cost);
+        fscanf(fpo, "%d %d", &j, &cost);
         if(i != j || h_cost[i].load() != cost) {
-            printf("Computed node %ld cost (%ld != %ld) does not match the expected value\n", i, h_cost[i].load(), cost);
+            printf("Computed node %d cost (%d != %d) does not match the expected value\n", i, h_cost[i].load(), cost);
             exit(EXIT_FAILURE);
         }
     }
@@ -76,11 +76,11 @@ inline int create_output(std::atomic_int *h_cost, int num_of_nodes) {
         printf("Error Creating output file\n");
         exit(EXIT_FAILURE);
     }
-	fprintf(fpo,"%ld\n",num_of_nodes);	
+	fprintf(fpo,"%d\n",num_of_nodes);	
     // cost of nodes in the output
     for(int i = 0; i < num_of_nodes; i++) {
 		// escreve i no arquivo e hcost 
-	fprintf(fpo,"%ld %ld\n",i,h_cost[i].load());
+	fprintf(fpo,"%d %d\n",i,h_cost[i].load());
    }
  
 //printf("sai func \n");
