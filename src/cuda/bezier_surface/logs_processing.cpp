@@ -110,7 +110,7 @@ void start_benchmark(std::string gold_path, int n_reps, int n_gpu_threads,
 	input_file_name + " in_size_i: " + std::to_string(in_size_i) + " in_size_j: " + std::to_string(in_size_j) +
 	" out_size_i: " + std::to_string(out_size_i) + " out_size_j: " + std::to_string(out_size_j);
 
-	start_log_file("cudaBezierSurface", (char*)header.c_str());
+	start_log_file("cudaHeterogeneousBezierSurface", (char*)header.c_str());
 #endif
 }
 
