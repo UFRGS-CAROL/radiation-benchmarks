@@ -6,7 +6,7 @@ import os
 import sys
 import ConfigParser
 
-INPUT = ['graph1MW_6.txt', "graph4096.txt"]
+INPUT = ["lakes_graph_in"]
 ITERATIONS = 100000
 
 THREADS_HOST = [0, 2, 4]
