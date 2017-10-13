@@ -56,47 +56,32 @@ def main(board):
 
         gold = data_path + '/py_faster_' + i['gold']
         txt_list = installDir + 'data/networks_img_list/' + i['txt']
-        gen = {
-            'gold': [' --gen ', gold],
-            'iml': [' --iml ', txt_list],
-            'ite': [' --ite ', '1000'],
-            'zexe': ['sudo python ', src_py_faster + "/tools/" + benchmark_bin + " "],
-            'net': ['--net ', WEIGHTS]
-        }
+        gen = [None] * 6
+        gen[0] = ['sudo python ', src_py_faster + "/tools/" + benchmark_bin + " "]
+        gen[1] = [' --iml ', txt_list]
+        gen[2] = [' --gen ', gold]
+        gen[3] = [' --ite ', '1']
+        gen[4] = ['--net ', WEIGHTS]
+        gen[5] = []
+
 
         exe = copy.deepcopy(gen)
-        exe['gold'][0] = ' --gld '
-        exe['log'] = [' --log ', ' daniel_logs ']
+        exe[2][0] = ' --gld '
+        exe[5] = [' --log ', ' daniel_logs ']
+        exe[3] = [' --ite ', '1000']
 
-        generate.append(" ".join([''.join(map(str, value)) for key, value in gen.iteritems()]))
-        execute.append(" ".join([''.join(map(str, value)) for key, value in exe.iteritems()]))
+        # generate.append(" ".join([''.join(map(str, value)) for key, value in gen.iteritems()]))
+        # execute.append(" ".join([''.join(map(str, value)) for key, value in exe.iteritems()]))
+        generate.append(' '.join(str(r) for v in gen for r in v))
+        execute.append(' '.join(str(r) for v in exe for r in v))
 
-        execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin)
-
-    # os.system("cd " + src_py_faster)
-    # for i in generate:
-    #     if os.system(str(i)) != 0:
-    #         print "Something went wrong with generate of ", str(i)
-    #         exit(1)
-    # #print i
-    #
-    # fp = open(installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + board, 'w')
-    #
-    # for i in execute:
-    #     print >> fp, "[\"" + str(i) + "\" , 0.016, \"py_faster_rcnn.py\"],"
-    #     print "[\"" + str(i) + "\" , 0.016, \"py_faster_rcnn.py\"],"
-    #
-    # print "\nConfiguring done, to run check file: " + installDir + "scripts/how_to_run_py_faster_rcnn_cuda_" + str(
-    #     board) + "\n"
-    #
-    # sys.exit(0)
-
+    execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin)
 
 def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
     for i in generate:
-        if os.system(str(i)) != 0:
-            print "Something went wrong with generate of ", str(i)
-            exit(1)
+        # if os.system(str(i)) != 0:
+        #     print "Something went wrong with generate of ", str(i)
+        #     exit(1)
         print i
     fp = open(installDir + "scripts/json_files/" + benchmark_bin + ".json", 'w')
 
