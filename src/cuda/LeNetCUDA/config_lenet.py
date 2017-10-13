@@ -44,7 +44,7 @@ def main(board):
     for s in [0, 1]:
         for w in WEIGHTS:
             for i in DATASETS:
-                gold = data_path + '/' + i['gold']
+                gold = data_path + '/' + w + "_" + i['gold']
                 set = data_path + '/' + i['set']
                 labels = data_path + '/' + i['label']
                 weights = data_path + '/' + w
