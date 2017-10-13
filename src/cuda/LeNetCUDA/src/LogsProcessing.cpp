@@ -83,9 +83,9 @@ bool compare_layer(float *l1, float *l2, int n) {
 
 bool compare_output(std::pair<size_t, bool> gold, std::pair<size_t, bool> found,
 		int img) {
-	bool cmp = (gold.first == found.first) && (gold.second == found.second);
+//	bool cmp = (gold.first == found.first) && (gold.second == found.second);
 	char err[200];
-	if (!cmp) {
+	if ((gold.first != found.first) || (gold.second != found.second)) {
 		sprintf(err, "img: [%d] expected_first: [%ld] "
 				"read_first: [%ld] "
 				"expected_second: [%d] "
@@ -99,8 +99,9 @@ bool compare_output(std::pair<size_t, bool> gold, std::pair<size_t, bool> found,
 #else
 		printf("%s\n", err);
 #endif
+		return false;
 	}
-	return cmp;
+	return true;
 }
 
 LayersGold load_gold_layers(int img, int layer_size) {
@@ -138,7 +139,12 @@ void save_gold_layers(LayersFound layers, int img) {
 		if (fout != NULL) {
 			size_t v_size = v->size();
 			fwrite(&v_size, sizeof(size_t), 1, fout);
+#ifdef NOTUNIFIEDMEMORY
+			v->pop_vector();
+			fwrite(v->h_data(), sizeof(float), v->size(), fout);
+#else
 			fwrite(v->data(), sizeof(float), v->size(), fout);
+#endif
 			fclose(fout);
 		} else {
 			error("FAILED TO OPEN FILE " + path);
@@ -171,6 +177,9 @@ void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
 	for (size_t i = 0; i < gold.size(); i++) {
 		auto g = gold[i];
 		auto f = (*found[i]);
+#ifdef NOTUNIFIEDMEMORY
+		f.pop_vector();
+#endif
 		bool error_found = true;
 
 		assert(g.size() == f.size());
@@ -192,9 +201,13 @@ void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
 				size_t v_size = f.size();
 
 				fwrite(&v_size, sizeof(size_t), 1, output_layer);
+#ifdef NOTUNIFIEDMEMORY
+				fwrite(f.h_data(), sizeof(float),f.size(),
+						output_layer);
+#else
 				fwrite(f.data(), sizeof(float),f.size(),
 						output_layer);
-
+#endif
 				fclose(output_layer);
 			} else {
 				error(
