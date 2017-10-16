@@ -6,10 +6,10 @@ import copy
 import os
 import sys
 
-BOXES=[10, 15, 20, 25]
+BOXES=[10, 15] #, 20, 25]
 ITERATIONS=10000
 
-def main(board):
+def main(board, debug=None):
     print "Generating Lava for CUDA, board:" + board
 
     confFile = '/etc/radiation-benchmarks.conf'
@@ -22,10 +22,10 @@ def main(board):
         print >> sys.stderr, "Configuration setup error: " + str(e)
         sys.exit(1)
 
-    benchmark_bin = "lava"
-    data_path = installDir + "data/lava"
+    benchmark_bin = "hlavaMD"
+    data_path = installDir + "data/hlava"
     bin_path = installDir + "bin"
-    src_lava = installDir + "src/cuda/lavaMD"
+    src_lava = installDir + "src/cuda/hlavaMD"
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
@@ -60,11 +60,11 @@ def main(board):
         execute.append(' '.join(str(r) for v in exe for r in v))
 
 
-    execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin)
+    execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin, debug)
 
-def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
+def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin, debug):
     for i in generate:
-        if os.system(str(i)) != 0:
+        if debug == None and os.system(str(i)) != 0:
             print "Something went wrong with generate of ", str(i)
             exit(1)
         print i
@@ -84,11 +84,12 @@ def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
     fp.close()
     print "\nConfiguring done, to run check file: " + installDir + "scripts/json_files/" + benchmark_bin + ".json"
 
-
-
 if __name__ == "__main__":
     parameter = sys.argv[1:]
     if len(parameter) < 1:
-        print "./config_generic <k1/x1/x2/k40/titan>"
+        print "./config_generic <k1/x1/x2/k40/titan> <1/true/True if you want to debug the application>"
     else:
-        main(str(parameter[0]).upper())
+        try:
+            main(str(parameter[0].upper()), bool(parameter[1]))
+        except:
+            main(str(parameter[0]).upper())
