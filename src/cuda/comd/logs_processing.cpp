@@ -140,4 +140,8 @@ void destroy_gold(Gold *g){
 	}
 }
 
+void copy_input_iteration(SimFlat* original, SimFlat* to_process){
+
+}
+
 

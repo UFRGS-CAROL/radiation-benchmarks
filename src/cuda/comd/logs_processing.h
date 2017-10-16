@@ -36,6 +36,7 @@ void load_gold(Gold *g);
 void init_gold(Gold *g, char *gold_path, int steps);
 void destroy_gold(Gold *g);
 
+void copy_input_iteration(SimFlat* original, SimFlat* to_process);
 
 #ifdef __cplusplus
 } //end extern "C"

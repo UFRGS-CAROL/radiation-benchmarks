@@ -113,41 +113,50 @@ int main(int argc, char** argv) {
 #endif
 
 	SimFlat* sim = initSimulation(cmd);
+	SimFlat* save_input = initSimulation(cmd);
 	printSimulationDataYaml(yamlFile, sim);
 	printSimulationDataYaml(screenOut, sim);
 
 	Validate* validate = initValidate(sim); // atom counts, energy
 	timestampBarrier("Initialization Finished\n");
+	int iteration_rad;
+	for (iteration_rad = 0; iteration_rad < cmd.iterations; iteration_rad++) {
+		if (iteration_rad > 0){
+			copy_input_iteration(save_input, sim);
+		}
 
-	timestampBarrier("Starting simulation\n");
+		timestampBarrier("Starting simulation\n");
 
-	// This is the CoMD main loop
-	const int nSteps = sim->nSteps;
-	const int printRate = sim->printRate;
-	int iStep = 0;
-	profileStart(loopTimer);
-	for (; iStep < nSteps;) {
-		startTimer(commReduceTimer);
-		sumAtoms(sim);
-		stopTimer(commReduceTimer);
+		// This is the CoMD main loop
+		const int nSteps = sim->nSteps;
+		const int printRate = sim->printRate;
+		int iStep = 0;
+		profileStart(loopTimer);
+		for (; iStep < nSteps;) {
+			startTimer(commReduceTimer);
+			sumAtoms(sim);
+			stopTimer(commReduceTimer);
 
-		printThings(sim, iStep, getElapsedTime(timestepTimer));
+			printThings(sim, iStep, getElapsedTime(timestepTimer));
 
-		startTimer(timestepTimer);
-		timestep(sim, printRate, sim->dt);
-		stopTimer(timestepTimer);
+			startTimer(timestepTimer);
+			timestep(sim, printRate, sim->dt);
+			stopTimer(timestepTimer);
 #if 0
-		// analyze input distribution, note this is done on CPU (slow)
-		AnalyzeInput(sim, iStep);
+			// analyze input distribution, note this is done on CPU (slow)
+			AnalyzeInput(sim, iStep);
 #endif
-		iStep += printRate;
+			iStep += printRate;
+		}
+		profileStop(loopTimer);
+
+		sumAtoms(sim);
+		printThings(sim, iStep, getElapsedTime(timestepTimer));
+		timestampBarrier("Ending simulation\n");
+
+
+
 	}
-	profileStop(loopTimer);
-
-	sumAtoms(sim);
-	printThings(sim, iStep, getElapsedTime(timestepTimer));
-	timestampBarrier("Ending simulation\n");
-
 	// Epilog
 	validateResult(validate, sim);
 	profileStop(totalTimer);
@@ -156,6 +165,7 @@ int main(int argc, char** argv) {
 	printPerformanceResultsYaml(yamlFile);
 
 	destroySimulation(&sim);
+	destroySimulation(&save_input);
 	comdFree(validate);
 	finalizeSubsystems();
 
@@ -265,6 +275,7 @@ SimFlat* initSimulation(Command cmd) {
 	// create lattice with desired temperature and displacement.
 	createFccLattice(cmd.nx, cmd.ny, cmd.nz, latticeConstant, sim);
 	setTemperature(sim, cmd.temperature);
+	initSimulation
 	randomDisplacements(sim, cmd.initialDelta);
 
 	// set atoms exchange function
