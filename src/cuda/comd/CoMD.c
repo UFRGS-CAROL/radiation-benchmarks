@@ -85,47 +85,35 @@ static void printSimulationDataYaml(FILE* file, SimFlat* s);
 static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 		char latticeType[8]);
 
-
 int main(int argc, char** argv) {
-	Command cmd = parseCommandLine(argc, argv);
-	int i;
-	for (i = 0; i < 100; i++){
-		printf("\n\n\n\nITERATION %d\n\n\n\n\n", i);
-		main_run(cmd);
-	}
-
-	return 0;
-}
-
-int main_run(Command cmd) {
 	// Prolog
-//	initParallel(&argc, &argv);
+	initParallel(&argc, &argv);
 	profileStart(totalTimer);
-//	initSubsystems();
+	initSubsystems();
 	timestampBarrier("Starting Initialization\n");
 
-//	yamlAppInfo(yamlFile);
+	yamlAppInfo(yamlFile);
 	yamlAppInfo(screenOut);
 
-//	Command cmd = parseCommandLine(argc, argv);
-//	printCmdYaml(yamlFile, &cmd);
+	Command cmd = parseCommandLine(argc, argv);
+	printCmdYaml(yamlFile, &cmd);
 	printCmdYaml(screenOut, &cmd);
 
 	// select device, print info, etc.
-//#ifdef DO_MPI
-//	// get number of gpus on current node
-//	int numGpus;
-//	cudaGetDeviceCount(&numGpus);
-//
-//	// set active device (assuming homogenous config)
-//	int deviceId = getMyRank() % numGpus;
-//	SetupGpu(deviceId);
-//#else
+#ifdef DO_MPI
+	// get number of gpus on current node
+	int numGpus;
+	cudaGetDeviceCount(&numGpus);
+
+	// set active device (assuming homogenous config)
+	int deviceId = getMyRank() % numGpus;
+	SetupGpu(deviceId);
+#else
 	SetupGpu(0);
-//#endif
+#endif
 
 	SimFlat* sim = initSimulation(cmd);
-//	printSimulationDataYaml(yamlFile, sim);
+	printSimulationDataYaml(yamlFile, sim);
 	printSimulationDataYaml(screenOut, sim);
 
 	Validate* validate = initValidate(sim); // atom counts, energy
@@ -165,18 +153,17 @@ int main_run(Command cmd) {
 	profileStop(totalTimer);
 
 	printPerformanceResults(sim->atoms->nGlobal, sim->printRate);
-//	printPerformanceResultsYaml(yamlFile);
+	printPerformanceResultsYaml(yamlFile);
 
 	destroySimulation(&sim);
-	sim = NULL;
 	comdFree(validate);
-//	finalizeSubsystems();
+	finalizeSubsystems();
 
 	timestampBarrier("CoMD Ending\n");
-//	destroyParallel();
+	destroyParallel();
 
 	// for profiler
-//	cudaDeviceReset();
+	cudaDeviceReset();
 
 	return 0;
 }
