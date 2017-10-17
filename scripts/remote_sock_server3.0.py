@@ -120,7 +120,11 @@ def lindySwitch(portNumber, status, switchIP):
         "Content-Length": "0",
     }
 
-    return requests.post(url, data=json.dumps(payload), headers=headers)
+    try:
+        return requests.post(url, data=json.dumps(payload), headers=headers)
+    except:
+        logMsg("Could not change Lindy IP switch status, portNumber: "+portNumber+", status"+status+", switchIP:"+switchIP)
+        return 1
 
 class Switch():
     def __init__(self, ip, portCount):
