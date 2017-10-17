@@ -164,9 +164,7 @@ def killall():
 # When SIGUSR1 or SIGUSR2 is received update timestamp
 def receive_signal(signum, stack):
     global timestampSignal
-
-
-timestampSignal = int(time.time())
+    timestampSignal = int(time.time())
 
 
 def readCommands(filelist):
