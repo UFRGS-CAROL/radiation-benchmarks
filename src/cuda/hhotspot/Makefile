@@ -1,5 +1,5 @@
 CC=g++
-NVCC=nvcc
+NVCC=/usr/local/cuda/bin/nvcc
 NVCC_FLAGS=-arch=sm_53
 
 NVIDIA_INC=/usr/local/cuda/include/;/usr/include/
