@@ -10,6 +10,7 @@ import sys
 SIZES=[1024]
 ITERATIONS=10000
 SIMTIME=[1000]
+STREAMS=[1, 2, 4]
 
 def main(board, debug=None):
 
@@ -43,25 +44,26 @@ def main(board, debug=None):
 
     for i in SIZES:
         for s in SIMTIME:
-            inputFile = data_path + "/"
+            for t in STREAMS:
+                inputFile = data_path + "/"
 
-            gen = [None] * 8
-            gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
-            gen[1] = ['-size=' + str(i)]
-            gen[2] = ['-generate ']
-            gen[3] = ['-temp_file=' + inputFile + "temp_" +  str(i)]
-            gen[4] = ['-power_file=' + inputFile + "power_" + str(i)]  # change for execute
-            gen[5] = ['-gold_file=' + inputFile + "gold_" + str(i) + "_" + str(s)]
-            gen[6] = ['-sim_time=' + str(i)]
-            gen[7] = ['-iterations=1']
+                gen = [None] * 8
+                gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
+                gen[1] = ['-size=' + str(i)]
+                gen[2] = ['-generate ']
+                gen[3] = ['-temp_file=' + inputFile + "temp_" +  str(i)]
+                gen[4] = ['-power_file=' + inputFile + "power_" + str(i)]  # change for execute
+                gen[5] = ['-gold_file=' + inputFile + "gold_" + str(i) + "_" + str(s)]
+                gen[6] = ['-sim_time=' + str(i)]
+                gen[7] = ['-iterations=1']
 
-            # change mode and iterations for exe
-            exe = copy.deepcopy(gen)
-            exe[2] = []
-            exe[7] = ['-iterations=' + str(ITERATIONS)]
+                # change mode and iterations for exe
+                exe = copy.deepcopy(gen)
+                exe[2] = ['-streams=' + str(t)]
+                exe[7] = ['-iterations=' + str(ITERATIONS)]
 
-            generate.append(' '.join(str(r) for v in gen for r in v))
-            execute.append(' '.join(str(r) for v in exe for r in v))
+                generate.append(' '.join(str(r) for v in gen for r in v))
+                execute.append(' '.join(str(r) for v in exe for r in v))
 
         execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin, debug)
 
