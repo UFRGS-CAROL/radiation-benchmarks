@@ -113,8 +113,7 @@ int main(int argc, char** argv) {
 #endif
 
 	SimFlat* sim = initSimulation(cmd);
-	SimFlat* save_input = (SimFlat*) malloc(sizeof(SimFlat*));// = initSimulation(cmd);
-	memcpy(save_input, sim, sizeof(SimFlat*));
+//	SimFlat* save_input = initSimulation(cmd);
 	printSimulationDataYaml(yamlFile, sim);
 	printSimulationDataYaml(screenOut, sim);
 
@@ -126,9 +125,6 @@ int main(int argc, char** argv) {
 //			copy_input_iteration(save_input, sim);
 			destroySimulation(&sim);
 			sim = initSimulation(cmd);
-
-			memcpy(save_input, sim, sizeof(SimFlat*));
-
 		}
 
 		timestampBarrier("Starting simulation\n");
@@ -140,13 +136,13 @@ int main(int argc, char** argv) {
 		profileStart(loopTimer);
 		for (; iStep < nSteps;) {
 			startTimer(commReduceTimer);
-			sumAtoms(save_input);
+			sumAtoms(sim);
 			stopTimer(commReduceTimer);
 
-			printThings(save_input, iStep, getElapsedTime(timestepTimer));
+			printThings(sim, iStep, getElapsedTime(timestepTimer));
 
 			startTimer(timestepTimer);
-			timestep(save_input, printRate, sim->dt);
+			timestep(sim, printRate, sim->dt);
 			stopTimer(timestepTimer);
 #if 0
 			// analyze input distribution, note this is done on CPU (slow)
@@ -172,7 +168,6 @@ int main(int argc, char** argv) {
 
 	destroySimulation(&sim);
 //	destroySimulation(&save_input);
-	free(save_input);
 	comdFree(validate);
 	finalizeSubsystems();
 
