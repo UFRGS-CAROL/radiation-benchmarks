@@ -29,6 +29,7 @@ def main(board, debug=None):
 
 
     data_path = installDir + "data/" + benchmark_bin
+    original_data_path = installDir + "data/hotspot"
     bin_path = installDir + "bin"
     src_hotspot = installDir + "src/cuda/" + benchmark_bin
 
@@ -51,8 +52,8 @@ def main(board, debug=None):
                 gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
                 gen[1] = ['-size=' + str(i)]
                 gen[2] = ['-generate ']
-                gen[3] = ['-temp_file=' + inputFile + "temp_" +  str(i)]
-                gen[4] = ['-power_file=' + inputFile + "power_" + str(i)]  # change for execute
+                gen[3] = ['-temp_file=' + original_data_path + "/temp_" +  str(i)]
+                gen[4] = ['-power_file=' + original_data_path + "/power_" + str(i)]  # change for execute
                 gen[5] = ['-gold_file=' + inputFile + "gold_" + str(i) + "_" + str(s)]
                 gen[6] = ['-sim_time=' + str(i)]
                 gen[7] = ['-iterations=1']
