@@ -113,7 +113,8 @@ int main(int argc, char** argv) {
 #endif
 
 	SimFlat* sim = initSimulation(cmd);
-	SimFlat* save_input = initSimulation(cmd);
+	SimFlat* save_input = (SimFlat*) malloc(sizeof(SimFlat*));// = initSimulation(cmd);
+	memcpy(save_input, sim, sizeof(SimFlat*));
 	printSimulationDataYaml(yamlFile, sim);
 	printSimulationDataYaml(screenOut, sim);
 
@@ -122,7 +123,12 @@ int main(int argc, char** argv) {
 	int iteration_rad;
 	for (iteration_rad = 0; iteration_rad < cmd.iterations; iteration_rad++) {
 		if (iteration_rad > 0){
-			copy_input_iteration(save_input, sim);
+//			copy_input_iteration(save_input, sim);
+			destroySimulation(&sim);
+			sim = initSimulation(cmd);
+
+			memcpy(save_input, sim, sizeof(SimFlat*));
+
 		}
 
 		timestampBarrier("Starting simulation\n");
@@ -134,13 +140,13 @@ int main(int argc, char** argv) {
 		profileStart(loopTimer);
 		for (; iStep < nSteps;) {
 			startTimer(commReduceTimer);
-			sumAtoms(sim);
+			sumAtoms(save_input);
 			stopTimer(commReduceTimer);
 
-			printThings(sim, iStep, getElapsedTime(timestepTimer));
+			printThings(save_input, iStep, getElapsedTime(timestepTimer));
 
 			startTimer(timestepTimer);
-			timestep(sim, printRate, sim->dt);
+			timestep(save_input, printRate, sim->dt);
 			stopTimer(timestepTimer);
 #if 0
 			// analyze input distribution, note this is done on CPU (slow)
@@ -165,7 +171,8 @@ int main(int argc, char** argv) {
 	printPerformanceResultsYaml(yamlFile);
 
 	destroySimulation(&sim);
-	destroySimulation(&save_input);
+//	destroySimulation(&save_input);
+	free(save_input);
 	comdFree(validate);
 	finalizeSubsystems();
 
@@ -275,7 +282,6 @@ SimFlat* initSimulation(Command cmd) {
 	// create lattice with desired temperature and displacement.
 	createFccLattice(cmd.nx, cmd.ny, cmd.nz, latticeConstant, sim);
 	setTemperature(sim, cmd.temperature);
-	initSimulation
 	randomDisplacements(sim, cmd.initialDelta);
 
 	// set atoms exchange function
