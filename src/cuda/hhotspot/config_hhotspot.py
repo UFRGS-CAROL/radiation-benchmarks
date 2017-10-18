@@ -41,7 +41,7 @@ def main(board, debug=None):
     generate = ["cd " + src_hotspot, "make clean", "make -C ../../include ", "make", "mkdir -p " + data_path,
                 "mv ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
-
+    gen_done = False
     for i in SIZES:
         for s in SIMTIME:
             for t in STREAMS:
@@ -62,7 +62,9 @@ def main(board, debug=None):
                 exe[2] = ['-streams=' + str(t)]
                 exe[7] = ['-iterations=' + str(ITERATIONS)]
 
-                generate.append(' '.join(str(r) for v in gen for r in v))
+                if not gen_done:
+                    generate.append(' '.join(str(r) for v in gen for r in v))
+                    gen_done = True
                 execute.append(' '.join(str(r) for v in exe for r in v))
 
         execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin, debug)
