@@ -14,12 +14,12 @@ __device__ float df_sigmod_gpu_conv(float f_x) {
 	return f_x * (1.0 - f_x);
 }
 
-__device__    inline size_t get_b_(size_t out, size_t h_, size_t w_,
+__device__     inline size_t get_b_(size_t out, size_t h_, size_t w_,
 		size_t out_width_, size_t out_height_) {
 	return out * out_width_ * out_height_ + h_ * out_height_ + w_;
 }
 
-__device__    inline size_t get_out_index(size_t out, size_t h_, size_t w_,
+__device__     inline size_t get_out_index(size_t out, size_t h_, size_t w_,
 		size_t out_width_, size_t out_height_) {
 	return out * out_height_ * out_width_ + h_ * out_width_ + w_;
 }

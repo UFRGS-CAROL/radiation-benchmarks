@@ -49,17 +49,20 @@ void OutputLayer::forward() {
 
 }
 
-//void OutputLayer::back_prop() {
-//	this->g_.clear();
-//
-//	float *exp_y_vec = this->exp_y_vec.data();
-//	float *input_ = this->input_.data();
-//	float *g_ = this->g_.data();
-//	int in_depth_ = this->in_depth_;
-//
-//	call_backpropagation_output_layer(exp_y_vec, input_,
-//			g_, in_depth_);
-//}
+#ifdef TRAINGPU
+
+void OutputLayer::back_prop() {
+	this->g_.clear();
+
+	float *exp_y_vec = this->exp_y_vec.data();
+	float *input_ = this->input_.data();
+	float *g_ = this->g_.data();
+	int in_depth_ = this->in_depth_;
+
+	call_backpropagation_output_layer(exp_y_vec, input_,
+			g_, in_depth_);
+}
+#endif //TRAINGPU
 
 void OutputLayer::init_weight() {
 	this->reduce_output.resize(this->in_depth_);
@@ -91,6 +94,7 @@ void OutputLayer::init_weight() {
 
 #endif
 
+#ifndef TRAINGPU
 void OutputLayer::back_prop() {
 	/* compute err terms of output layers */
 	if (g_.size() != in_depth_) {
@@ -111,6 +115,7 @@ void OutputLayer::back_prop() {
 	this->g_.push_vector();
 #endif
 }
+#endif //TRAINGPU
 
 OutputLayer::OutputLayer(size_t in_depth) :
 		Layer(1, 1, in_depth, 0, 0, 0, 0, 0) {
