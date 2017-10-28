@@ -58,6 +58,8 @@ ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 
 }
 
+#ifndef TRAINGPU
+
 void ConvolutionalLayer::back_prop() {
 	g_.clear();
 	g_.resize(in_width_ * in_height_ * in_depth_);
@@ -140,6 +142,8 @@ void ConvolutionalLayer::back_prop() {
 	this->g_.push_vector();
 #endif
 }
+#endif //TRAINGPU
+
 
 inline int ConvolutionalLayer::getb_(size_t out, size_t h_, size_t w_) {
 	return out * out_width_ * out_height_ + h_ * out_height_ + w_;
@@ -210,60 +214,37 @@ void ConvolutionalLayer::forward() {
 
 }
 
-//void ConvolutionalLayer::back_prop_() {
-//	try {
-//		g_.clear();
-//		g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
-//
-//		float *W_ = this->W_.data(); //weights
-//		float *g_ = this->g_.data();//err array
-//		float *input_ = this->input_.data();//input array
-//		float *g_next = this->next->g_.data();//b_next from this->next->g_
-//		float *deltaW = this->deltaW_.data();//deltaW array
-//		float *b_ = this->b_.data();//b_ vector
-//		float alpha = this->alpha_;//alpha value
-//		float lambda = this->lambda_;
-//		int out_depth = this->out_depth_;//size of the first for loop
-//		int in_depth_ = this->in_depth_;//size of the second for loop
-//		int out_width = this->out_width_;//size of the third for loop
-//		int out_height_ = this->out_height_;// size of loop
-//		int kernel_size_ = this->kernel_size_;//size of loop
-//		int in_width_ = this->in_width_;//width size
-//		int in_height_ = this->in_height_;//in height
-//
-//		call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
-//				alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
-//				in_width_, in_height_);
-//
-////		printf("---------\n");
-////
-////		printf("deltaW_cpu = [");
-////		for (int i = 0; i < deltaW_.size(); i++) {
-////			printf("%f, ", deltaW_[i]);
-////		}
-////		printf("]\n");
-////
-////		printf("W_cpu = [");
-////		for (int i = 0; i < W_.size(); i++) {
-////			printf("%f, ", W_[i]);
-////		}
-////		printf("]\n");
-////
-////		printf("b_cpu = [ ");
-////		for (int i = 0; i < b_.size(); i++) {
-////			printf("%f, ", b_[i]);
-////		}
-////		printf("]\n");
-////		//exit(-1);
-//
-//	} catch (std::exception& e) {
-//		std::cerr << e.what() << std::endl;
-//		exit(2);
-//	} catch (...) {
-//		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
-//		exit(1);
-//	}
-//}
+
+#ifdef TRAINGPU
+void ConvolutionalLayer::back_prop() {
+		g_.clear();
+		g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
+
+		float *W_ = this->W_.data(); //weights
+		float *g_ = this->g_.data();//err array
+		float *input_ = this->input_.data();//input array
+		float *g_next = this->next->g_.data();//b_next from this->next->g_
+		float *deltaW = this->deltaW_.data();//deltaW array
+		float *b_ = this->b_.data();//b_ vector
+		float alpha = this->alpha_;//alpha value
+		float lambda = this->lambda_;
+		int out_depth = this->out_depth_;//size of the first for loop
+		int in_depth_ = this->in_depth_;//size of the second for loop
+		int out_width = this->out_width_;//size of the third for loop
+		int out_height_ = this->out_height_;// size of loop
+		int kernel_size_ = this->kernel_size_;//size of loop
+		int in_width_ = this->in_width_;//width size
+		int in_height_ = this->in_height_;//in height
+
+		call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
+				alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
+				in_width_, in_height_);
+
+}
+
+#endif // TRAINGPU
+
+
 
 void ConvolutionalLayer::init_weight() {
 	vec_host temp_W_, temp_b_;

@@ -62,6 +62,8 @@ void MaxpoolingLayer::load_layer(FILE *in) {
 	this->max_loc = this->load_layer_vec<Pair>(in);
 }
 
+#ifndef TRAINGPU
+
 /*
  In forward propagation, blocks are reduced to a single value.
  Then, this single value acquires an error computed from backwards
@@ -88,40 +90,13 @@ void MaxpoolingLayer::back_prop() {
 #ifdef NOTUNIFIEDMEMORY
 	this->g_.push_vector();
 #endif
-//	printf("---------\n");
-//
-//	printf("deltaW_gpu = [");
-//	for (int i = 0; i < this->deltaW_.size(); i++) {
-//		printf("%f, ", this->deltaW_[i]);
-//	}
-//	printf("]\n");
-//
-//	printf("W_gpu = [");
-//	for (int i = 0; i < this->W_.size(); i++) {
-//		printf("%f, ", this->W_[i]);
-//	}
-//	printf("]\n");
-//
-//	printf("b_gpu = [ ");
-//	for (int i = 0; i < this->b_.size(); i++) {
-//		printf("%f, ", this->b_[i]);
-//	}
-//	printf("]\n");
-
-//	for(auto i = this->max_loc.begin(); i != this->max_loc.end(); i++){
-//		Pair pair = (*i);
-//		if(pair.first != UINT_MAX)
-//			g_[pair.second] = this->next->g_[pair.first];
-//
-//	}
 
 }
+#endif //TRAINGPU
 
 #ifdef GPU
 
 void MaxpoolingLayer::forward() {
-	try {
-
 // execute the code on the device
 		float_t *input = this->input_.data();
 		float_t *output = this->output_.data();
@@ -135,50 +110,24 @@ void MaxpoolingLayer::forward() {
 		call_forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
 				out_height, out_depth, in_height, in_width);
 
-
-//		printf("---------\n");
-//
-//		printf("max_loc_cpu = [");
-//		for (int i = 0; i < this->max_loc.size(); i++) {
-//			printf("%d, %d, ", this->max_loc[i].first,this->max_loc[i].second);
-//		}
-//		printf("]\n");
-
-	//	printf("input_cpu = [");
-	//	for (int i = 0; i < this->input_.size(); i++) {
-	//		printf("%f, ", this->input_[i]);
-	//	}
-	//	printf("]\n");
-	//
-	//	printf("output_cpu = [ ");
-	//	for (int i = 0; i < this->output_.size(); i++) {
-	//		printf("%f, ", this->output_[i]);
-	//	}
-	//	printf("]\n");
-//		exit(-1);
-
-	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		exit(2);
-	} catch (...) {
-		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
-		exit(1);
-	}
-
 }
 
-//void MaxpoolingLayer::back_prop() {
-//	g_.clear();
-//	g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
-//
-//	Pair *max_loc = this->max_loc.data();
-//	float *g_ = this->g_.data();
-//	float *g_next = this->next->g_.data();
-//	size_t max_size = this->max_loc.size();
-//
-//	call_backpropagation_maxpool(max_loc, g_, g_next, max_size);
-//
-//}
+#ifdef TRAINGPU
+
+void MaxpoolingLayer::back_prop() {
+	g_.clear();
+	g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
+
+	Pair *max_loc = this->max_loc.data();
+	float *g_ = this->g_.data();
+	float *g_next = this->next->g_.data();
+	size_t max_size = this->max_loc.size();
+
+	call_backpropagation_maxpool(max_loc, g_, g_next, max_size);
+
+}
+#endif //TRAINGPU
+
 #else
 
 
