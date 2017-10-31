@@ -87,6 +87,8 @@ void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
 
 	cuda_gridsize(&threads, &blocks, in_width * out_depth, in_height);
 
+	printf("in_height %d in_width * out_depth %d threads x threads y %d\n", in_height, in_width * out_depth, threads.x, threads.y);
+
 	forward_maxpool_layer_kernel<<<blocks, threads>>>(input, max_loc, output,
 			out_width, out_height, out_depth, in_height, in_width);
 	CudaCheckError();
