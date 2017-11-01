@@ -122,8 +122,9 @@ void MaxpoolingLayer::back_prop() {
 	float *g_ = this->g_.data();
 	float *g_next = this->next->g_.data();
 	size_t max_size = this->max_loc.size();
+	size_t g_max_size = this->g_.size();
 
-	call_backpropagation_maxpool(max_loc, g_, g_next, max_size);
+	call_backpropagation_maxpool(max_loc, g_, g_next, max_size, g_max_size);
 
 }
 #endif //TRAINGPU
