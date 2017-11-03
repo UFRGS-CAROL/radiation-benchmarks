@@ -29,8 +29,11 @@ void OutputLayer::forward() {
 	this->exp_y_vec.pop_vector();
 #endif
 	this->exp_y_vec[this->exp_y] = 1;
+
 #ifdef NOTUNIFIEDMEMORY
 	this->exp_y_vec.push_vector();
+#else
+	CudaCheckError();
 #endif
 
 	call_forward_output_layer(exp_y_vec, input_, reduce_output, output_, in_depth_, exp_y);
@@ -49,7 +52,7 @@ void OutputLayer::forward() {
 
 }
 
-#ifdef TRAINGPU
+//#ifdef TRAINGPU
 
 void OutputLayer::back_prop() {
 	this->g_.clear();
@@ -62,7 +65,7 @@ void OutputLayer::back_prop() {
 	call_backpropagation_output_layer(exp_y_vec, input_,
 			g_, in_depth_);
 }
-#endif //TRAINGPU
+//#endif //TRAINGPU
 
 void OutputLayer::init_weight() {
 	this->reduce_output.resize(this->in_depth_);
@@ -92,9 +95,7 @@ void OutputLayer::init_weight() {
 
 }
 
-#endif
-
-#ifndef TRAINGPU
+//FULL CPU BACKPROPAGATION
 void OutputLayer::back_prop() {
 	/* compute err terms of output layers */
 	if (g_.size() != in_depth_) {
@@ -103,19 +104,36 @@ void OutputLayer::back_prop() {
 		printf("passou no if do bakc\n");
 	}
 	//printf("\ndebug back_prop output layer");
-#ifdef NOTUNIFIEDMEMORY
-	this->g_.pop_vector();
-	this->input_.pop_vector();
-	this->exp_y_vec.pop_vector();
-#endif
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
 	}
-#ifdef NOTUNIFIEDMEMORY
-	this->g_.push_vector();
-#endif
 }
-#endif //TRAINGPU
+
+
+#endif
+
+//#ifndef TRAINGPU
+//void OutputLayer::back_prop() {
+//	/* compute err terms of output layers */
+//	if (g_.size() != in_depth_) {
+//		g_.clear();
+//		g_.resize(in_depth_);
+//		printf("passou no if do bakc\n");
+//	}
+//	//printf("\ndebug back_prop output layer");
+//#ifdef NOTUNIFIEDMEMORY
+//	this->g_.pop_vector();
+//	this->input_.pop_vector();
+//	this->exp_y_vec.pop_vector();
+//#endif
+//	for (size_t i = 0; i < in_depth_; i++) {
+//		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
+//	}
+//#ifdef NOTUNIFIEDMEMORY
+//	this->g_.push_vector();
+//#endif
+//}
+//#endif //TRAINGPU
 
 OutputLayer::OutputLayer(size_t in_depth) :
 		Layer(1, 1, in_depth, 0, 0, 0, 0, 0) {

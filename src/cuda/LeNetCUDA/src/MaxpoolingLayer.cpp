@@ -62,37 +62,36 @@ void MaxpoolingLayer::load_layer(FILE *in) {
 	this->max_loc = this->load_layer_vec<Pair>(in);
 }
 
-#ifndef TRAINGPU
 
-/*
- In forward propagation, blocks are reduced to a single value.
- Then, this single value acquires an error computed from backwards
- propagation from the previous layer.
- This error is then just forwarded to the place where it came from.
- Since it only came from one place in the  block,
- the backpropagated errors from max-pooling layers are rather sparse.
- */
-void MaxpoolingLayer::back_prop() {
+///*
+// In forward propagation, blocks are reduced to a single value.
+// Then, this single value acquires an error computed from backwards
+// propagation from the previous layer.
+// This error is then just forwarded to the place where it came from.
+// Since it only came from one place in the  block,
+// the backpropagated errors from max-pooling layers are rather sparse.
+// */
+//void MaxpoolingLayer::back_prop() {
+//
+//	g_.clear();
+//	g_.resize(in_width_ * in_height_ * in_depth_);
+//#ifdef NOTUNIFIEDMEMORY
+//	this->next->g_.pop_vector();
+//	this->max_loc.pop_vector();
+//#endif
+//
+//	for (size_t i = 0; i < this->max_loc.size(); i++){
+//		auto pair = this->max_loc[i];
+//		if (pair.first != MAX) {
+//			g_[pair.second] = this->next->g_[pair.first];
+//		}
+//	}
+//#ifdef NOTUNIFIEDMEMORY
+//	this->g_.push_vector();
+//#endif
+//
+//}
 
-	g_.clear();
-	g_.resize(in_width_ * in_height_ * in_depth_);
-#ifdef NOTUNIFIEDMEMORY
-	this->next->g_.pop_vector();
-	this->max_loc.pop_vector();
-#endif
-
-	for (size_t i = 0; i < this->max_loc.size(); i++){
-		auto pair = this->max_loc[i];
-		if (pair.first != MAX) {
-			g_[pair.second] = this->next->g_[pair.first];
-		}
-	}
-#ifdef NOTUNIFIEDMEMORY
-	this->g_.push_vector();
-#endif
-
-}
-#endif //TRAINGPU
 
 #ifdef GPU
 
@@ -112,7 +111,7 @@ void MaxpoolingLayer::forward() {
 
 }
 
-#ifdef TRAINGPU
+//#ifdef TRAINGPU
 
 void MaxpoolingLayer::back_prop() {
 	g_.clear();
@@ -127,9 +126,29 @@ void MaxpoolingLayer::back_prop() {
 	call_backpropagation_maxpool(max_loc, g_, g_next, max_size, g_max_size);
 
 }
-#endif //TRAINGPU
+//#endif //TRAINGPU
 
 #else
+
+/*
+FULL CPU BACKPROPAGATION
+ In forward propagation, blocks are reduced to a single value.
+ Then, this single value acquires an error computed from backwards
+ propagation from the previous layer.
+ This error is then just forwarded to the place where it came from.
+ Since it only came from one place in the  block,
+ the backpropagated errors from max-pooling layers are rather sparse.
+ */
+void MaxpoolingLayer::back_prop() {
+	g_.clear();
+	g_.resize(in_width_ * in_height_ * in_depth_);
+	for (size_t i = 0; i < this->max_loc.size(); i++){
+		auto pair = this->max_loc[i];
+		if (pair.first != MAX) {
+			g_[pair.second] = this->next->g_[pair.first];
+		}
+	}
+}
 
 
 void MaxpoolingLayer::forward() {

@@ -15,9 +15,9 @@
 inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 		size_t w_) {
 	vec_host r;
-#ifdef NOTUNIFIEDMEMORY
-	this->input_.pop_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+//	this->input_.pop_vector();
+//#endif
 	for (size_t y = 0; y < kernel_size_; y++) {
 		for (size_t x = 0; x < kernel_size_; x++) {
 			r.push_back(
@@ -31,9 +31,9 @@ inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 
 inline vec_host ConvolutionalLayer::getW_(size_t in, size_t out) {
 	vec_host r;
-#ifdef NOTUNIFIEDMEMORY
-	this->W_.pop_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+//	this->W_.pop_vector();
+//#endif
 	for (size_t i = 0; i < kernel_size_ * kernel_size_; i++)
 		r.push_back(
 				W_[in * out_depth_ * kernel_size_ * kernel_size_
@@ -58,91 +58,91 @@ ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 
 }
 
-#ifndef TRAINGPU
-
-void ConvolutionalLayer::back_prop() {
-	g_.clear();
-	g_.resize(in_width_ * in_height_ * in_depth_);
-#ifdef NOTUNIFIEDMEMORY
-	this->W_.pop_vector();
-	this->next->g_.pop_vector();
-	this->input_.pop_vector();
-	this->deltaW_.pop_vector();
-	this->b_.pop_vector();
-	this->g_.pop_vector();
-#endif
-	/*update err terms of this layer.*/
-	for (size_t out = 0; out < out_depth_; out++) {
-		for (size_t in = 0; in < in_depth_; in++) {
-			for (size_t w_ = 0; w_ < out_width_; w_++) {
-				for (size_t h_ = 0; h_ < out_height_; h_++) {
-					for (size_t y_ = 0; y_ < kernel_size_; y_++) {
-						for (size_t x_ = 0; x_ < kernel_size_; x_++) {
-							auto ff = in * in_width_ * in_height_
-									+ (h_ + y_) * in_width_ + (x_ + w_);
-
-							g_[ff] += /*next layer err terms*/
-							this->next->g_[out * out_width_ * out_height_
-									+ h_ * out_width_ + w_]
-									* /*weight*/
-									W_[in * out_depth_ * kernel_size_
-											* kernel_size_
-											+ out * kernel_size_ * kernel_size_
-											+ kernel_size_
-													* (kernel_size_ - y_ - 1)
-											+ (kernel_size_ - 1 - x_)] * /*df of input*/
-									df_sigmod(input_[ff]);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/*update weight*/
-	for (size_t out = 0; out < out_depth_; out++) {
-		for (size_t in = 0; in < in_depth_; in++) {
-			for (size_t h_ = 0; h_ < out_height_; h_++) {
-				for (size_t w_ = 0; w_ < out_height_; w_++) {
-					auto tt = getb_(out, h_, w_);
-					for (size_t y_ = 0; y_ < kernel_size_; y_++) {
-						for (size_t x_ = 0; x_ < kernel_size_; x_++) {
-							/*find update pixel*/
-							auto target = in * out_depth_ * kernel_size_
-									* kernel_size_
-									+ out * kernel_size_ * kernel_size_
-									+ kernel_size_ * (kernel_size_ - y_ - 1)
-									+ (kernel_size_ - 1 - x_);
-							/*cal delta*/
-							auto delta = /*learning rate*/
-							alpha_
-									* /*input*/
-									input_[in * in_width_ * in_height_
-											+ (h_ + y_) * in_width_ + (x_ + w_)]
-									* /*next layer err terms*/
-									this->next->g_[tt] + /*weight momentum*/
-							lambda_ * deltaW_[target];
-							W_[target] += delta;
-							/*update momentum*/
-							deltaW_[target] = delta;
-						}
-					}
-					b_[tt] += alpha_ * this->next->g_[tt];
-				}
-			}
-		}
-	}
-
-#ifdef NOTUNIFIEDMEMORY
-	this->W_.push_vector();
-	this->next->g_.push_vector();
-	this->input_.push_vector();
-	this->deltaW_.push_vector();
-	this->b_.push_vector();
-	this->g_.push_vector();
-#endif
-}
-#endif //TRAINGPU
+//#ifndef TRAINGPU
+//
+//void ConvolutionalLayer::back_prop() {
+//	g_.clear();
+//	g_.resize(in_width_ * in_height_ * in_depth_);
+//#ifdef NOTUNIFIEDMEMORY
+//	this->W_.pop_vector();
+//	this->next->g_.pop_vector();
+//	this->input_.pop_vector();
+//	this->deltaW_.pop_vector();
+//	this->b_.pop_vector();
+//	this->g_.pop_vector();
+//#endif
+//	/*update err terms of this layer.*/
+//	for (size_t out = 0; out < out_depth_; out++) {
+//		for (size_t in = 0; in < in_depth_; in++) {
+//			for (size_t w_ = 0; w_ < out_width_; w_++) {
+//				for (size_t h_ = 0; h_ < out_height_; h_++) {
+//					for (size_t y_ = 0; y_ < kernel_size_; y_++) {
+//						for (size_t x_ = 0; x_ < kernel_size_; x_++) {
+//							auto ff = in * in_width_ * in_height_
+//									+ (h_ + y_) * in_width_ + (x_ + w_);
+//
+//							g_[ff] += /*next layer err terms*/
+//							this->next->g_[out * out_width_ * out_height_
+//									+ h_ * out_width_ + w_]
+//									* /*weight*/
+//									W_[in * out_depth_ * kernel_size_
+//											* kernel_size_
+//											+ out * kernel_size_ * kernel_size_
+//											+ kernel_size_
+//													* (kernel_size_ - y_ - 1)
+//											+ (kernel_size_ - 1 - x_)] * /*df of input*/
+//									df_sigmod(input_[ff]);
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
+//
+//	/*update weight*/
+//	for (size_t out = 0; out < out_depth_; out++) {
+//		for (size_t in = 0; in < in_depth_; in++) {
+//			for (size_t h_ = 0; h_ < out_height_; h_++) {
+//				for (size_t w_ = 0; w_ < out_height_; w_++) {
+//					auto tt = getb_(out, h_, w_);
+//					for (size_t y_ = 0; y_ < kernel_size_; y_++) {
+//						for (size_t x_ = 0; x_ < kernel_size_; x_++) {
+//							/*find update pixel*/
+//							auto target = in * out_depth_ * kernel_size_
+//									* kernel_size_
+//									+ out * kernel_size_ * kernel_size_
+//									+ kernel_size_ * (kernel_size_ - y_ - 1)
+//									+ (kernel_size_ - 1 - x_);
+//							/*cal delta*/
+//							auto delta = /*learning rate*/
+//							alpha_
+//									* /*input*/
+//									input_[in * in_width_ * in_height_
+//											+ (h_ + y_) * in_width_ + (x_ + w_)]
+//									* /*next layer err terms*/
+//									this->next->g_[tt] + /*weight momentum*/
+//							lambda_ * deltaW_[target];
+//							W_[target] += delta;
+//							/*update momentum*/
+//							deltaW_[target] = delta;
+//						}
+//					}
+//					b_[tt] += alpha_ * this->next->g_[tt];
+//				}
+//			}
+//		}
+//	}
+//
+//#ifdef NOTUNIFIEDMEMORY
+//	this->W_.push_vector();
+//	this->next->g_.push_vector();
+//	this->input_.push_vector();
+//	this->deltaW_.push_vector();
+//	this->b_.push_vector();
+//	this->g_.push_vector();
+//#endif
+//}
+//#endif //TRAINGPU
 
 
 inline int ConvolutionalLayer::getb_(size_t out, size_t h_, size_t w_) {
@@ -215,7 +215,7 @@ void ConvolutionalLayer::forward() {
 }
 
 
-#ifdef TRAINGPU
+//#ifdef TRAINGPU
 void ConvolutionalLayer::back_prop() {
 		g_.clear();
 		g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
@@ -242,7 +242,7 @@ void ConvolutionalLayer::back_prop() {
 
 }
 
-#endif // TRAINGPU
+//#endif // TRAINGPU
 
 
 
@@ -286,6 +286,74 @@ void ConvolutionalLayer::forward() {
 void ConvolutionalLayer::init_weight() {
 	uniform_rand(W_.begin(), W_.end(), -1, 1);
 	uniform_rand(b_.begin(), b_.end(), -1, 1);
+
+}
+
+//FULL BACKPROPAGATION
+void ConvolutionalLayer::back_prop() {
+	g_.clear();
+	g_.resize(in_width_ * in_height_ * in_depth_);
+	/*update err terms of this layer.*/
+	for (size_t out = 0; out < out_depth_; out++) {
+		for (size_t in = 0; in < in_depth_; in++) {
+			for (size_t w_ = 0; w_ < out_width_; w_++) {
+				for (size_t h_ = 0; h_ < out_height_; h_++) {
+					for (size_t y_ = 0; y_ < kernel_size_; y_++) {
+						for (size_t x_ = 0; x_ < kernel_size_; x_++) {
+							auto ff = in * in_width_ * in_height_
+									+ (h_ + y_) * in_width_ + (x_ + w_);
+
+							g_[ff] += /*next layer err terms*/
+							this->next->g_[out * out_width_ * out_height_
+									+ h_ * out_width_ + w_]
+									* /*weight*/
+									W_[in * out_depth_ * kernel_size_
+											* kernel_size_
+											+ out * kernel_size_ * kernel_size_
+											+ kernel_size_
+													* (kernel_size_ - y_ - 1)
+											+ (kernel_size_ - 1 - x_)] * /*df of input*/
+									df_sigmod(input_[ff]);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/*update weight*/
+	for (size_t out = 0; out < out_depth_; out++) {
+		for (size_t in = 0; in < in_depth_; in++) {
+			for (size_t h_ = 0; h_ < out_height_; h_++) {
+				for (size_t w_ = 0; w_ < out_height_; w_++) {
+					auto tt = getb_(out, h_, w_);
+					for (size_t y_ = 0; y_ < kernel_size_; y_++) {
+						for (size_t x_ = 0; x_ < kernel_size_; x_++) {
+							/*find update pixel*/
+							auto target = in * out_depth_ * kernel_size_
+									* kernel_size_
+									+ out * kernel_size_ * kernel_size_
+									+ kernel_size_ * (kernel_size_ - y_ - 1)
+									+ (kernel_size_ - 1 - x_);
+							/*cal delta*/
+							auto delta = /*learning rate*/
+							alpha_
+									* /*input*/
+									input_[in * in_width_ * in_height_
+											+ (h_ + y_) * in_width_ + (x_ + w_)]
+									* /*next layer err terms*/
+									this->next->g_[tt] + /*weight momentum*/
+							lambda_ * deltaW_[target];
+							W_[target] += delta;
+							/*update momentum*/
+							deltaW_[target] = delta;
+						}
+					}
+					b_[tt] += alpha_ * this->next->g_[tt];
+				}
+			}
+		}
+	}
 
 }
 

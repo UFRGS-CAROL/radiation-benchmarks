@@ -76,7 +76,7 @@ DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
 	return r;
 }
 
-#ifdef TRAINGPU
+//#ifdef TRAINGPU
 void FullyConnectedLayer::back_prop() {
 	float *input_ = this->input_.data();
 	float *g_ = this->g_.data();
@@ -96,7 +96,7 @@ void FullyConnectedLayer::back_prop() {
 			alpha_, lambda_, in_depth_, out_depth_, g_next_size);
 
 }
-#endif //TRAINGPU
+//#endif //TRAINGPU
 
 
 #else
@@ -143,22 +143,11 @@ vec_host FullyConnectedLayer::get_W_step(size_t in) {
 	return r;
 }
 
-#endif
-
-#ifndef TRAINGPU
+//FULL CPU BACKPROPAGATION
 void FullyConnectedLayer::back_prop() {
 	/*
 	 Compute the err terms;
 	 */
-#ifdef NOTUNIFIEDMEMORY
-	this->W_.pop_vector();
-	this->g_.pop_vector();
-	this->input_.pop_vector();
-	this->next->g_.pop_vector();
-	this->input_.pop_vector();
-	this->deltaW_.pop_vector();
-	this->b_.pop_vector();
-#endif
 	for (size_t in = 0; in < in_depth_; in++) {
 		g_[in] = df_sigmod(input_[in]) * dot(this->next->g_, get_W_step(in));
 	}
@@ -178,14 +167,51 @@ void FullyConnectedLayer::back_prop() {
 		}
 		b_[out] += alpha_ * this->next->g_[out];
 	}
-#ifdef NOTUNIFIEDMEMORY
-	this->g_.push_vector();
-	this->b_.push_vector();
-	this->W_.push_vector();
-#endif
 }
 
-#endif //TRAINGPU
+#endif
+
+//#ifndef TRAINGPU
+//void FullyConnectedLayer::back_prop() {
+//	/*
+//	 Compute the err terms;
+//	 */
+//#ifdef NOTUNIFIEDMEMORY
+//	this->W_.pop_vector();
+//	this->g_.pop_vector();
+//	this->input_.pop_vector();
+//	this->next->g_.pop_vector();
+//	this->input_.pop_vector();
+//	this->deltaW_.pop_vector();
+//	this->b_.pop_vector();
+//#endif
+//	for (size_t in = 0; in < in_depth_; in++) {
+//		g_[in] = df_sigmod(input_[in]) * dot(this->next->g_, get_W_step(in));
+//	}
+//
+//	/*
+//	 Update weights.
+//	 */
+//	for (size_t out = 0; out < out_depth_; out++) {
+//		for (size_t in = 0; in < in_depth_; in++) {
+//			auto delta = alpha_/*learning rate*/
+//			* input_[in] * this->next->g_[out]/*err terms*/
+//			/*+ lambda_ weight decay*/
+//			+ lambda_ * deltaW_[out * in_depth_ + in];
+//
+//			W_[out * in_depth_ + in] += delta;
+//			deltaW_[out * in_depth_ + in] = delta;
+//		}
+//		b_[out] += alpha_ * this->next->g_[out];
+//	}
+//#ifdef NOTUNIFIEDMEMORY
+//	this->g_.push_vector();
+//	this->b_.push_vector();
+//	this->W_.push_vector();
+//#endif
+//}
+//
+//#endif //TRAINGPU
 
 void FullyConnectedLayer::save_layer(FILE *of) {
 	this->save_base_layer(of);
