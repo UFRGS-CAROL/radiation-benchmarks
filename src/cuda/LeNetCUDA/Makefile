@@ -8,7 +8,7 @@ CXX=g++
 
 OBJDIR=./obj/
 
-GPU?=0
+GPU?=1
 LOGS?=0
 
 CUDA_THRUST=
@@ -66,7 +66,7 @@ OBJ=Layer.o ConvolutionalLayer.o MaxpoolingLayer.o FullyConnectedLayer.o \
 OutputLayer.o ConvNet.o MNISTParser.o Util.o main.o LogsProcessing.o
 
 ifeq ($(GPU), 1)
-OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o \
+OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o LayerKernel.o \
 FullyConnectedLayerKernel.o  OutputLayerKernel.o cudaUtil.o
 endif
 
