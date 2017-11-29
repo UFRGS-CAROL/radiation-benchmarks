@@ -153,3 +153,8 @@ void Layer::print_layer_weights(int layer_num) {
 	}
 	std::cout << "---";
 }
+
+
+bool Layer::gradient_check(){
+
+}

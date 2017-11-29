@@ -26,6 +26,10 @@ public:
 
 	virtual void save_layer(FILE *of) = 0;
 	virtual void load_layer(FILE *in) = 0;
+
+	//only for gradient check
+	bool gradient_check();
+
 //	float* get_next_input_data_ptr();
 
 #ifdef GPU

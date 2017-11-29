@@ -176,7 +176,11 @@ function generate_radiation_test(arg_size)
 
       -- Get the all class indexes and probabilities
       local probs, indexes = output:topk(N, true, true)
-
+      for pb,10 do
+        print(" ", probs[pb])
+      end
+      print("\n")
+      
       print('Classes for', v, 'output lenght', N)
       save_gold(gold_file, v, probs, indexes, N)
 
@@ -270,6 +274,12 @@ function test_radiation(arg_size)
 
   end_app(log)
 end
+
+
+
+-------------------------------------------------------------------------
+---------------------------- MAIN FUNCTION ------------------------------
+-------------------------------------------------------------------------
 
 weights, rad_mode, txt_dataset, gold_path, iterations, log = parse_args()
 
