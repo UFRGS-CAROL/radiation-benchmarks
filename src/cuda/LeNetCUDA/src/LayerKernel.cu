@@ -26,15 +26,10 @@ __global__ void gradient_check(float *theta_plus, float *theta_minus,
 	gradient_diff[i] = fabs(grad_approx - d_vector[i]);
 }
 
-void call_gradient_check(float *theta_plus, float *theta_minus, float *d_vector,
-		int size_n) {
+bool call_gradient_check(float *theta_plus, float *theta_minus, float *d_vector,
+		float *gradient_diff, float *host_gradient_diff, int size_n) {
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, size_n);
-	//malloc gradient difference array
-	float *gradient_diff = nullptr;
-	float *host_gradient_diff = (float*) malloc(sizeof(float) * size_n);
-	cudaMalloc(&gradient_diff, sizeof(float) * size_n);
-
 	//calc gradient difference
 	gradient_check<<<blocks, threads>>>(theta_plus, theta_minus, d_vector, gradient_diff, size_n);
 	CudaCheckError();
@@ -43,13 +38,10 @@ void call_gradient_check(float *theta_plus, float *theta_minus, float *d_vector,
 	cudaMemcpy(host_gradient_diff, gradient_diff, sizeof(float) * size_n, cudaMemcpyDeviceToHost);
 
 	for(int i = 0; i < size_n; i++){
-		assert(host_gradient_diff[i] > MAX_ERROR_ALLOWED  && "Pau no treino, gradient is bigger than 10e-5");
+		if(host_gradient_diff[i] > MAX_ERROR_ALLOWED)
+			return false;
 	}
 
-	if(gradient_diff)
-		cudaFree(gradient_diff);
-
-	if(host_gradient_diff)
-		free(host_gradient_diff);
+	return true;
 }
 

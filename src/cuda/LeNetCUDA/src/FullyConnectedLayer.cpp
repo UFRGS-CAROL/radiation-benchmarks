@@ -98,7 +98,6 @@ void FullyConnectedLayer::back_prop() {
 }
 //#endif //TRAINGPU
 
-
 #else
 
 vec_host FullyConnectedLayer::get_W(size_t index) {
@@ -232,5 +231,4 @@ FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
 	this->init_weight();
 	this->layer_type = "fullyconnected";
 }
-
 

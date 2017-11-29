@@ -40,7 +40,7 @@ LOGHELPER_LIB=-L../../include/ -lLogHelper
 CFLAGS+= -DLOGS
 endif
 
-
+NOTUSEUNIFIED=1
 ifeq ($(GPU), 1)
 ON_GPU= -DGPU
 CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart
