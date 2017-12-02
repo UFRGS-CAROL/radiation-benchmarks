@@ -43,7 +43,7 @@ void OutputLayer::forward() {
 #endif
 	this->err = 0;
 	for (int i = 0; i < in_depth_; i++) {
-		err += this->reduce_output[i];
+		this->err += this->reduce_output[i];
 	}
 
 //#ifdef NOTUNIFIEDMEMORY

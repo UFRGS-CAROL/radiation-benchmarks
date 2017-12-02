@@ -27,17 +27,6 @@ void FullyConnectedLayer::forward() {
 
 }
 
-DeviceVector<float> FullyConnectedLayer::get_W(size_t index) {
-	DeviceVector<float> v(in_depth_);
-#ifdef NOTUNIFIEDMEMORY
-	v.pop_vector();
-#endif
-	for (size_t i = 0; i < in_depth_; i++) {
-		v[i] = (W_[index * in_depth_ + i]);
-	}
-	return v;
-}
-
 /*
  for the activation sigmod,
  weight init as [-4 * (6 / sqrt(fan_in + fan_out)), +4 *(6 / sqrt(fan_in + fan_out))]:
@@ -64,18 +53,6 @@ void FullyConnectedLayer::init_weight() {
 //	this->v_output.resize(this->in_depth_ * this->out_depth_);
 }
 
-DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
-	DeviceVector<float> r(out_depth_);
-#ifdef NOTUNIFIEDMEMORY
-	r.pop_vector();
-#endif
-	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
-		int it = i / in_depth_;
-		r[it] = (W_[i]);
-	}
-	return r;
-}
-
 //#ifdef TRAINGPU
 void FullyConnectedLayer::back_prop() {
 	float *input_ = this->input_.data();
@@ -100,15 +77,6 @@ void FullyConnectedLayer::back_prop() {
 
 #else
 
-vec_host FullyConnectedLayer::get_W(size_t index) {
-	vec_host v(in_depth_);
-
-	for (size_t i = 0; i < in_depth_; i++) {
-		v[i] = (W_[index * in_depth_ + i]);
-	}
-	return v;
-}
-
 void FullyConnectedLayer::forward() {
 	for (size_t out = 0; out < out_depth_; out++) {
 		output_[out] = sigmod(dot(input_, get_W(out)) + b_[out]);
@@ -132,14 +100,6 @@ void FullyConnectedLayer::init_weight() {
 	uniform_rand(W_.begin(), W_.end(), -2, 2);
 	uniform_rand(b_.begin(), b_.end(), -2, 2);
 
-}
-
-vec_host FullyConnectedLayer::get_W_step(size_t in) {
-	vec_host r;
-	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
-		r.push_back(W_[i]);
-	}
-	return r;
 }
 
 //FULL CPU BACKPROPAGATION
@@ -232,3 +192,42 @@ FullyConnectedLayer::FullyConnectedLayer(size_t in_depth, size_t out_depth) :
 	this->layer_type = "fullyconnected";
 }
 
+vec_host FullyConnectedLayer::get_W(size_t index) {
+	vec_host v(in_depth_);
+
+	for (size_t i = 0; i < in_depth_; i++) {
+		v[i] = (W_[index * in_depth_ + i]);
+	}
+	return v;
+}
+
+vec_host FullyConnectedLayer::get_W_step(size_t in) {
+	vec_host r;
+	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
+		r.push_back(W_[i]);
+	}
+	return r;
+}
+
+//DeviceVector<float> FullyConnectedLayer::get_W(size_t index) {
+//	DeviceVector<float> v(in_depth_);
+//#ifdef NOTUNIFIEDMEMORY
+//	v.pop_vector();
+//#endif
+//	for (size_t i = 0; i < in_depth_; i++) {
+//		v[i] = (W_[index * in_depth_ + i]);
+//	}
+//	return v;
+//}
+
+//DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
+//	DeviceVector<float> r(out_depth_);
+//#ifdef NOTUNIFIEDMEMORY
+//	r.pop_vector();
+//#endif
+//	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
+//		int it = i / in_depth_;
+//		r[it] = (W_[i]);
+//	}
+//	return r;
+//}

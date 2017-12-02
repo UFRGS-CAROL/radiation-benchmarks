@@ -175,7 +175,7 @@ bool Layer::gradient_check(){
 	DeviceVector<float_t> theta_minus_vector(theta);
 	DeviceVector<float_t> theta_plus_vector(theta);
 	DeviceVector<float_t> gradient_diff_vector(theta.size());
-	vector<float_t> host_gradient_diff_vector(theta.size());
+	DeviceVector<float_t> host_gradient_diff_vector(theta.size());
 
 	float *theta_plus =  theta_minus_vector.data();
 	float *theta_minus = theta_plus_vector.data();
@@ -183,7 +183,7 @@ bool Layer::gradient_check(){
 	float *gradient_diff = gradient_diff_vector.data();
 	float *host_gradient_diff = host_gradient_diff_vector.data();
 
-	isis_backprop_ok = call_gradient_check(theta_plus, theta_minus, d_vector,
+	is_backprop_ok = call_gradient_check(theta_plus, theta_minus, d_vector,
 			gradient_diff, host_gradient_diff, theta.size());
 
 

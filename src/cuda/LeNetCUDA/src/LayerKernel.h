@@ -11,7 +11,7 @@
 #define EPSILON 10e-4
 #define MAX_ERROR_ALLOWED 10e-5
 
-void call_gradient_check(float *theta_plus, float *theta_minus, float *d_vector,
-		int size_n);
+bool call_gradient_check(float *theta_plus, float *theta_minus, float *d_vector,
+		float *gradient_diff, float *host_gradient_diff, int size_n);
 
 #endif /* LAYERKERNEL_H_ */
