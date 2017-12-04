@@ -53,6 +53,78 @@ void FullyConnectedLayer::init_weight() {
 //	this->v_output.resize(this->in_depth_ * this->out_depth_);
 }
 
+void FullyConnectedLayer::gradient_checker() {
+	this->input_.pop_vector();
+	this->g_.pop_vector();
+	this->next->g_.pop_vector();
+	this->deltaW_.pop_vector();
+	this->W_.pop_vector();
+	this->b_.pop_vector();
+	this->v_output.pop_vector();
+	int input_size = this->input_.size();
+
+	int in_depth_ = this->in_depth_;
+	int out_depth_ = this->out_depth_;
+
+	DeviceVector<float_t> theta(this->W_);
+
+	DeviceVector<float_t> J_plus(theta.size());
+	DeviceVector<float_t> J_minus(theta.size());
+	std::vector<float_t> grad_approx(theta.size());
+
+	theta.pop_vector();
+	for (int i = 0; i < theta.size(); i++) {
+		DeviceVector<float_t> theta_minus(theta);
+		DeviceVector<float_t> theta_plus(theta);
+
+
+		theta_plus.pop_vector();
+		theta_minus.pop_vector();
+
+
+		theta_plus[i] = theta[i] + EPSILON;
+		theta_minus[i] = theta[i] - EPSILON;
+
+
+		theta_plus.push_vector();
+		theta_minus.push_vector();
+
+
+		call_forward_fully_connected(J_plus.data(), this->input_.data(), this->b_.data(),
+				theta_plus.data(), out_depth_, in_depth_, input_size);
+		call_forward_fully_connected(J_minus.data(), this->input_.data(), this->b_.data(),
+				theta_minus.data(), out_depth_, in_depth_, input_size);
+
+		J_plus.pop_vector();
+		J_minus.pop_vector();
+		grad_approx[i] = (J_plus[i] - J_minus[i]) / (2 * EPSILON);
+	}
+
+	this->deltaW_.pop_vector();
+	std::vector<float_t> grad_diff(this->W_.size());
+
+	//calc norms
+
+	double norm_approx = this->vector_norm<std::vector<float_t> >(grad_approx);
+
+	double norm_grad = this->vector_norm<DeviceVector<float_t> >(this->deltaW_);
+	for (int i = 0; i < grad_diff.size(); i++) {
+		grad_diff[i] = this->deltaW_[i] - grad_approx[i];
+	}
+
+	double numerator = this->vector_norm<std::vector<float_t> >(grad_diff);
+	double difference = numerator / (norm_grad + norm_approx);
+	if (difference > MAX_ERROR_ALLOWED) {
+		std::cout
+		<< "There is a mistake in the backward propagation! difference ="
+		<< difference << "\n";
+	} else {
+		std::cout
+		<< "Your backward propagation works perfectly fine! difference ="
+		<< difference << "\n";
+	}
+}
+
 //#ifdef TRAINGPU
 void FullyConnectedLayer::back_prop() {
 	float *input_ = this->input_.data();
@@ -63,6 +135,7 @@ void FullyConnectedLayer::back_prop() {
 	float *W_ = this->W_.data();
 	float *b_ = this->b_.data();
 	float *r_output = this->v_output.data();
+
 	float alpha_ = this->alpha_;
 	float lambda_ = this->lambda_;
 	int in_depth_ = this->in_depth_;
@@ -72,6 +145,7 @@ void FullyConnectedLayer::back_prop() {
 			deltaW_, W_, b_, r_output,
 			alpha_, lambda_, in_depth_, out_depth_, g_next_size);
 
+	gradient_checker();
 }
 //#endif //TRAINGPU
 

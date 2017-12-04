@@ -70,6 +70,14 @@ inline void DeviceVector<T>::free_memory() {
 	CudaCheckError();
 	CudaSafeCall(cudaFree(this->device_data));
 	this->allocated = false;
+
+#ifdef NOTUNIFIEDMEMORY
+
+	if (this->host_allocated){
+		free(this->host_data);
+		this->host_allocated = false;
+	}
+#endif
 }
 
 template<class T>
@@ -99,6 +107,10 @@ DeviceVector<T>::DeviceVector(const DeviceVector<T>& copy) {
 	this->v_size = copy.v_size;
 	this->alloc_memory();
 	this->memcopy(copy.device_data, this->v_size);
+
+#ifdef NOTUNIFIEDMEMORY
+	this->pop_vector();
+#endif
 }
 
 template<class T>
@@ -111,6 +123,10 @@ DeviceVector<T>::DeviceVector(size_t siz) {
 	}
 	this->v_size = siz;
 	this->alloc_memory();
+
+#ifdef NOTUNIFIEDMEMORY
+	this->pop_vector();
+#endif
 }
 
 template<class T>
@@ -176,6 +192,10 @@ DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
 		this->memcopy(data, this->v_size);
 	}
 
+#ifdef NOTUNIFIEDMEMORY
+	this->pop_vector();
+#endif
+
 	return *this;
 }
 
@@ -196,6 +216,11 @@ DeviceVector<T>& DeviceVector<T>::operator=(const std::vector<T>& other) {
 		this->alloc_memory();
 		this->memcopy(data, siz, 'h');
 	}
+
+#ifdef NOTUNIFIEDMEMORY
+	this->pop_vector();
+#endif
+
 	return *this;
 }
 

@@ -11,6 +11,12 @@
 #include <vector>
 #include "Util.h"
 
+/**
+ * ###########################GRADIENT CHECKING######################################
+ */
+#define EPSILON 10e-4
+#define MAX_ERROR_ALLOWED 10e-5
+
 #ifdef GPU
 #include "DeviceVector.h"
 #endif
@@ -27,8 +33,7 @@ public:
 	virtual void save_layer(FILE *of) = 0;
 	virtual void load_layer(FILE *in) = 0;
 
-	//only for gradient check
-	bool gradient_check();
+
 
 //	float* get_next_input_data_ptr();
 
@@ -140,12 +145,12 @@ public:
 	DeviceVector<float_t> exp_y_vec;
 
 #else
-	vec_host W_;
-	vec_host b_;
-	vec_host deltaW_;
-	vec_host input_;
-	vec_host output_;
-	vec_host g_; // err terms
+	vec_host W_; 		// weights
+	vec_host b_;		//bias
+	vec_host deltaW_; 	//gradients
+	vec_host input_; 	//input parameter
+	vec_host output_;	//output parameter
+	vec_host g_; 		//layer err terms
 	vec_host exp_y_vec;
 #endif
 
