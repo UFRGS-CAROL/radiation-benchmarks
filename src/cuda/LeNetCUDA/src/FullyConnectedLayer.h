@@ -47,7 +47,7 @@ private:
 //#else
 	vec_host get_W_step(size_t in);
 	vec_host get_W(size_t index);
-	void gradient_checker();
+	void gradient_checker(DeviceVector<float_t>& original_b, DeviceVector<float_t>& original_w);
 
 //#endif
 	template<typename T> double vector_norm(T v){

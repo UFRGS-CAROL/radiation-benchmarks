@@ -53,7 +53,7 @@ void FullyConnectedLayer::init_weight() {
 //	this->v_output.resize(this->in_depth_ * this->out_depth_);
 }
 
-void FullyConnectedLayer::gradient_checker() {
+void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, DeviceVector<float_t>& original_w) {
 	this->input_.pop_vector();
 	this->g_.pop_vector();
 	this->next->g_.pop_vector();
@@ -66,33 +66,39 @@ void FullyConnectedLayer::gradient_checker() {
 	int in_depth_ = this->in_depth_;
 	int out_depth_ = this->out_depth_;
 
-	DeviceVector<float_t> theta(this->W_);
+	DeviceVector<float_t> theta(original_w);
+
 
 	DeviceVector<float_t> J_plus(theta.size());
 	DeviceVector<float_t> J_minus(theta.size());
 	std::vector<float_t> grad_approx(theta.size());
 
+	//put theta vector in host
 	theta.pop_vector();
 	for (int i = 0; i < theta.size(); i++) {
-		DeviceVector<float_t> theta_minus(theta);
+		//-----------------------
+		//theta minus calculation
 		DeviceVector<float_t> theta_plus(theta);
 
-
 		theta_plus.pop_vector();
-		theta_minus.pop_vector();
-
 
 		theta_plus[i] = theta[i] + EPSILON;
-		theta_minus[i] = theta[i] - EPSILON;
-
 
 		theta_plus.push_vector();
+
+		call_forward_fully_connected(J_plus.data(), this->input_.data(), original_b.data(),
+				theta_plus.data(), out_depth_, in_depth_, input_size);
+
+		//-----------------------
+		//theta minus calculation
+		DeviceVector<float_t> theta_minus(theta);
+		theta_minus.pop_vector();
+
+		theta_minus[i] = theta[i] - EPSILON;
+
 		theta_minus.push_vector();
 
-
-		call_forward_fully_connected(J_plus.data(), this->input_.data(), this->b_.data(),
-				theta_plus.data(), out_depth_, in_depth_, input_size);
-		call_forward_fully_connected(J_minus.data(), this->input_.data(), this->b_.data(),
+		call_forward_fully_connected(J_minus.data(), this->input_.data(), original_b.data(),
 				theta_minus.data(), out_depth_, in_depth_, input_size);
 
 		J_plus.pop_vector();
@@ -101,15 +107,18 @@ void FullyConnectedLayer::gradient_checker() {
 	}
 
 	this->deltaW_.pop_vector();
-	std::vector<float_t> grad_diff(this->W_.size());
+	std::vector<float_t> grad_diff(theta.size());
 
 	//calc norms
 
 	double norm_approx = this->vector_norm<std::vector<float_t> >(grad_approx);
 
 	double norm_grad = this->vector_norm<DeviceVector<float_t> >(this->deltaW_);
+
+	this->g_.pop_vector();
 	for (int i = 0; i < grad_diff.size(); i++) {
 		grad_diff[i] = this->deltaW_[i] - grad_approx[i];
+//		std::cout << "delta " << this->deltaW_[i] << " approx " << grad_approx[i] << "\n";
 	}
 
 	double numerator = this->vector_norm<std::vector<float_t> >(grad_diff);
@@ -141,11 +150,15 @@ void FullyConnectedLayer::back_prop() {
 	int in_depth_ = this->in_depth_;
 	int out_depth_ = this->out_depth_;
 
+	DeviceVector<float_t> copy_b_(this->b_);
+	DeviceVector<float_t> copy_W_(this->W_);
+
+
 	call_backpropagation_fully_connected(input_, g_, g_next,
 			deltaW_, W_, b_, r_output,
 			alpha_, lambda_, in_depth_, out_depth_, g_next_size);
 
-	gradient_checker();
+	gradient_checker(copy_b_, copy_W_);
 }
 //#endif //TRAINGPU
 

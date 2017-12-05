@@ -10,22 +10,19 @@
 
 #include <vector>
 #include "cudaUtil.h"
-
-//#define DEBUG_LIGHT 
-
 /**
  * Template for vector on the GPU
  */
 template<class T> class DeviceVector {
 private:
+	// device memory
 	T *device_data = nullptr;
-	bool allocated = false;
 
-#ifdef NOTUNIFIEDMEMORY
+	//host memory
 	T *host_data = nullptr;
-	bool host_allocated = false;
-#endif
 
+	//to control allocation memory
+	bool allocated = false;
 	size_t v_size;
 
 	inline void memcopy(T* src, size_t size_count, char src_location = 'd');
@@ -46,19 +43,15 @@ public:
 	//like std::vector
 	void resize(size_t siz);
 	T* data();
-#ifdef NOTUNIFIEDMEMORY
 	T* h_data();
-#endif
 
 	void clear();
 
 	DeviceVector<T>& operator=(const std::vector<T>& other);
 	DeviceVector<T>& operator=(const DeviceVector<T>& other);
 
-#ifdef NOTUNIFIEDMEMORY
 	void pop_vector();
 	void push_vector();
-#endif
 	size_t size() const;
 
 	void fill(T data);
@@ -68,16 +61,15 @@ public:
 template<class T>
 inline void DeviceVector<T>::free_memory() {
 	CudaCheckError();
-	CudaSafeCall(cudaFree(this->device_data));
-	this->allocated = false;
+	//free device side and host side
+	if (this->allocated) {
+		CudaSafeCall(cudaFree(this->device_data));
+		this->allocated = false;
+		this->device_data = nullptr;
 
-#ifdef NOTUNIFIEDMEMORY
-
-	if (this->host_allocated){
 		free(this->host_data);
-		this->host_allocated = false;
+		this->host_data = nullptr;
 	}
-#endif
 }
 
 template<class T>
@@ -91,85 +83,47 @@ inline void DeviceVector<T>::alloc_memory() {
 	CudaSafeCall(
 			cudaMallocManaged(&this->device_data, sizeof(T) * this->v_size));
 #endif
+	this->host_data = (T*) calloc(this->v_size, sizeof(T));
+	assert(this->host_data != nullptr && "Error on allocating host data");
+
 	CudaCheckError();
 	this->allocated = true;
 }
+
 // Unified memory copy constructor allows pass-by-value
 template<class T>
 DeviceVector<T>::DeviceVector(const DeviceVector<T>& copy) {
-#ifdef DEBUG_LIGHT
-	std::cout << "DeviceVector(const DeviceVector<T>& copy)\n";
-#endif
-	if (this->allocated) {
-		this->free_memory();
-	}
-
+	this->free_memory();
 	this->v_size = copy.v_size;
 	this->alloc_memory();
 	this->memcopy(copy.device_data, this->v_size);
-
-#ifdef NOTUNIFIEDMEMORY
-	this->pop_vector();
-#endif
 }
 
 template<class T>
 DeviceVector<T>::DeviceVector(size_t siz) {
-#ifdef DEBUG_LIGHT
-	std::cout << "DeviceVector(size_t siz)\n";
-#endif
-	if (this->allocated) {
-		this->free_memory();
-	}
+	this->free_memory();
 	this->v_size = siz;
 	this->alloc_memory();
-
-#ifdef NOTUNIFIEDMEMORY
-	this->pop_vector();
-#endif
 }
 
 template<class T>
 DeviceVector<T>::DeviceVector() {
-#ifdef DEBUG_LIGHT
-	std::cout << "DeviceVector()\n";
-#endif
 	this->device_data = nullptr;
+	this->host_data = nullptr;
 	this->v_size = 0;
 	this->allocated = false;
 }
 
 template<class T>
 DeviceVector<T>::~DeviceVector() {
-#ifdef DEBUG_LIGHT
-	std::cout << "~DeviceVector()\n";
-#endif
-	if (this->allocated) {
-		this->free_memory();
-		CudaCheckError();
-		this->device_data = nullptr;
-		this->v_size = 0;
-		this->allocated = false;
-	}
-
-#ifdef NOTUNIFIEDMEMORY
-	if (this->host_allocated){
-		free(this->host_data);
-		this->host_allocated = false;
-		this->host_data = nullptr;
-	}
-#endif
+	this->free_memory();
+	CudaCheckError();
+	this->v_size = 0;
 }
 
 template<class T>
 DeviceVector<T>::DeviceVector(T *data, size_t siz) {
-#ifdef DEBUG_LIGHT
-	std::cout << "DeviceVector(T *data, size_t siz)\n";
-#endif
-	if (this->allocated) {
-		this->free_memory();
-	}
-
+	this->free_memory();
 	this->v_size = siz;
 	this->alloc_memory();
 	this->memcopy(data, siz);
@@ -177,98 +131,55 @@ DeviceVector<T>::DeviceVector(T *data, size_t siz) {
 
 template<class T>
 DeviceVector<T>& DeviceVector<T>::operator=(const DeviceVector<T>& other) {
-#ifdef DEBUG_LIGHT
-	std::cout << "operator=(const DeviceVector<T>& other)\n";
-#endif
 	if (this->device_data != other.device_data) { // self-assignment check expected
 		T *data = (T*) other.device_data;
 
-		if (this->allocated) {
-			this->free_memory();
-		}
+		this->free_memory();
 
 		this->v_size = other.v_size;
 		this->alloc_memory();
 		this->memcopy(data, this->v_size);
 	}
 
-#ifdef NOTUNIFIEDMEMORY
-	this->pop_vector();
-#endif
-
 	return *this;
 }
 
 template<class T>
 DeviceVector<T>& DeviceVector<T>::operator=(const std::vector<T>& other) {
-#ifdef DEBUG_LIGHT
-	std::cout << "operator=(const std::vector<T>& other) \n";
-#endif
 	if (this->data() != other.data()) { // self-assignment check expected
 		T *data = (T*) other.data();
 		size_t siz = other.size();
 
-		if (this->allocated) {
-			this->free_memory();
-		}
-
+		this->free_memory();
 		this->v_size = siz;
 		this->alloc_memory();
 		this->memcopy(data, siz, 'h');
 	}
-
-#ifdef NOTUNIFIEDMEMORY
-	this->pop_vector();
-#endif
 
 	return *this;
 }
 
 template<class T>
 void DeviceVector<T>::resize(size_t siz) {
-#ifdef DEBUG_LIGHT
-	std::cout << "resize(size_t siz)\n";
-#endif
 	if (this->v_size != siz) {
-		if (this->v_size != 0) {
-			this->free_memory();
-		}
+		this->free_memory();
 		this->v_size = siz;
 		this->alloc_memory();
-		this->allocated = true;
-
-#ifdef NOTUNIFIEDMEMORY
-		if(this->host_data){
-			free(this->host_data);
-		}
-		this->host_data = (T*) calloc(this->v_size, sizeof(T));
-#endif
 	}
 }
 
 template<class T>
 T* DeviceVector<T>::data() {
-#ifdef DEBUG_LIGHT
-	std::cout << "data() \n";
-#endif
 	return this->device_data;
 }
 
 template<class T>
 size_t DeviceVector<T>::size() const {
-#ifdef DEBUG_LIGHT
-	std::cout << "size() \n";
-#endif
 	return this->v_size;
 }
 
-
 template<class T>
 T& DeviceVector<T>::operator [](int i) const {
-#ifdef DEBUG_LIGHT
-	std::cout << "operator [] \n";
-#endif
-
 #ifdef NOTUNIFIEDMEMORY
 	return this->host_data[i];
 #else
@@ -276,13 +187,8 @@ T& DeviceVector<T>::operator [](int i) const {
 #endif
 }
 
-
 template<class T>
 void DeviceVector<T>::memcopy(T* src, size_t size_cont, char src_location) {
-#ifdef DEBUG_LIGHT
-	std::cout << "memcopy(T* src, size_t size_cont)\n";
-#endif
-
 #ifdef NOTUNIFIEDMEMORY
 	if (src_location == 'd') {
 		CudaSafeCall(cudaMemcpy(this->device_data, src, sizeof(T) * size_cont, cudaMemcpyDeviceToDevice));
@@ -297,15 +203,12 @@ void DeviceVector<T>::memcopy(T* src, size_t size_cont, char src_location) {
 
 template<class T>
 void DeviceVector<T>::clear() {
-#ifdef DEBUG_LIGHT
-	std::cout << "clear()\n";
-#endif
-
 #ifdef NOTUNIFIEDMEMORY
 	CudaSafeCall(cudaMemset(this->device_data, 0, sizeof(T) * this->v_size));
 #else
 	memset(this->device_data, 0, sizeof(T) * this->v_size);
 #endif
+	memset(this->host_data, 0, sizeof(T) * this->v_size);
 	CudaCheckError();
 }
 
@@ -316,32 +219,30 @@ void DeviceVector<T>::fill(T data) {
 #else
 	memset(this->device_data, data, sizeof(T) * this->v_size);
 #endif
-	CudaCheckError();
-}
+	memset(this->host_data, data, sizeof(T) * this->v_size);
 
-#ifdef NOTUNIFIEDMEMORY
-template<class T>
-void DeviceVector<T>::pop_vector(){
-	if (this->host_allocated == false){
-		this->host_data = (T*) calloc(this->v_size, sizeof(T));
-		this->host_allocated = true;
-	}
-
-	CudaSafeCall(cudaMemcpy(this->host_data, this->device_data, sizeof(T) * this->v_size, cudaMemcpyDeviceToHost));
 	CudaCheckError();
 }
 
 template<class T>
-void DeviceVector<T>::push_vector(){
-	CudaSafeCall(cudaMemcpy(this->device_data, this->host_data, sizeof(T) * this->v_size, cudaMemcpyHostToDevice));
+void DeviceVector<T>::pop_vector() {
+	CudaSafeCall(
+			cudaMemcpy(this->host_data, this->device_data,
+					sizeof(T) * this->v_size, cudaMemcpyDeviceToHost));
 	CudaCheckError();
 }
 
 template<class T>
-T* DeviceVector<T>::h_data(){
+void DeviceVector<T>::push_vector() {
+	CudaSafeCall(
+			cudaMemcpy(this->device_data, this->host_data,
+					sizeof(T) * this->v_size, cudaMemcpyHostToDevice));
+	CudaCheckError();
+}
+
+template<class T>
+T* DeviceVector<T>::h_data() {
 	return this->host_data;
 }
-
-#endif /* NOTUNIFIEDMEMORY */
 
 #endif /* DEVICEVECTOR_H_ */
