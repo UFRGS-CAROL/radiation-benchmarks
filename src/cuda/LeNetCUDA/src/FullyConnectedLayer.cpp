@@ -53,7 +53,7 @@ void FullyConnectedLayer::init_weight() {
 //	this->v_output.resize(this->in_depth_ * this->out_depth_);
 }
 
-void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, DeviceVector<float_t>& original_w) {
+void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, DeviceVector<float_t>& original_w, DeviceVector<float_t>& original_input) {
 	this->input_.pop();
 	this->g_.pop();
 	this->next->g_.pop();
@@ -66,11 +66,11 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 	int in_depth_ = this->in_depth_;
 	int out_depth_ = this->out_depth_;
 
-//	DeviceVector<float_t> theta(original_w);
+	//create 2 vectors which are copies of original_w
+	DeviceVector<float_t> J_plus(original_w);
+	DeviceVector<float_t> J_minus(original_w);
 
-
-	DeviceVector<float_t> J_plus(original_w.size());
-	DeviceVector<float_t> J_minus(original_w.size());
+	//only allocate a std::vector with original_w.size
 	std::vector<float_t> grad_approx(original_w.size());
 
 	//put theta vector in host
@@ -86,7 +86,7 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 
 		theta_plus.push();
 
-		call_forward_fully_connected(J_plus.data(), this->input_.data(), original_b.data(),
+		call_forward_fully_connected(J_plus.data(), this->original_input.data(), original_b.data(),
 				theta_plus.data(), out_depth_, in_depth_, input_size);
 
 		//-----------------------
@@ -98,7 +98,7 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 
 		theta_minus.push();
 
-		call_forward_fully_connected(J_minus.data(), this->input_.data(), original_b.data(),
+		call_forward_fully_connected(J_minus.data(), this->original_input.data(), original_b.data(),
 				theta_minus.data(), out_depth_, in_depth_, input_size);
 
 		J_plus.pop();
@@ -152,13 +152,13 @@ void FullyConnectedLayer::back_prop() {
 
 	DeviceVector<float_t> copy_b_(this->b_);
 	DeviceVector<float_t> copy_W_(this->W_);
-
+	DeviceVector<float_t> copy_input(this->input_);
 
 	call_backpropagation_fully_connected(input_, g_, g_next,
 			deltaW_, W_, b_, r_output,
 			alpha_, lambda_, in_depth_, out_depth_, g_next_size);
 
-	gradient_checker(copy_b_, copy_W_);
+	gradient_checker(copy_b_, copy_W_, copy_input);
 }
 //#endif //TRAINGPU
 
