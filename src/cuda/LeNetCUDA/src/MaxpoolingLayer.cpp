@@ -76,8 +76,8 @@ void MaxpoolingLayer::load_layer(FILE *in) {
 //	g_.clear();
 //	g_.resize(in_width_ * in_height_ * in_depth_);
 //#ifdef NOTUNIFIEDMEMORY
-//	this->next->g_.pop_vector();
-//	this->max_loc.pop_vector();
+//	this->next->g_.pop();
+//	this->max_loc.pop();
 //#endif
 //
 //	for (size_t i = 0; i < this->max_loc.size(); i++){
@@ -87,7 +87,7 @@ void MaxpoolingLayer::load_layer(FILE *in) {
 //		}
 //	}
 //#ifdef NOTUNIFIEDMEMORY
-//	this->g_.push_vector();
+//	this->g_.push();
 //#endif
 //
 //}
@@ -108,7 +108,6 @@ void MaxpoolingLayer::forward() {
 
 		call_forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
 				out_height, out_depth, in_height, in_width);
-
 }
 
 //#ifdef TRAINGPU
