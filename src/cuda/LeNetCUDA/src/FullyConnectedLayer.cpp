@@ -66,23 +66,23 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 	int in_depth_ = this->in_depth_;
 	int out_depth_ = this->out_depth_;
 
-	DeviceVector<float_t> theta(original_w);
+//	DeviceVector<float_t> theta(original_w);
 
 
-	DeviceVector<float_t> J_plus(theta.size());
-	DeviceVector<float_t> J_minus(theta.size());
-	std::vector<float_t> grad_approx(theta.size());
+	DeviceVector<float_t> J_plus(original_w.size());
+	DeviceVector<float_t> J_minus(original_w.size());
+	std::vector<float_t> grad_approx(original_w.size());
 
 	//put theta vector in host
-	theta.pop();
-	for (int i = 0; i < theta.size(); i++) {
+	original_w.pop();
+	for (int i = 0; i < original_w.size(); i++) {
 		//-----------------------
 		//theta minus calculation
-		DeviceVector<float_t> theta_plus(theta);
+		DeviceVector<float_t> theta_plus(original_w);
 
 		theta_plus.pop();
 
-		theta_plus[i] = theta[i] + EPSILON;
+		theta_plus[i] = original_w[i] + EPSILON;
 
 		theta_plus.push();
 
@@ -91,10 +91,10 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 
 		//-----------------------
 		//theta minus calculation
-		DeviceVector<float_t> theta_minus(theta);
+		DeviceVector<float_t> theta_minus(original_w);
 		theta_minus.pop();
 
-		theta_minus[i] = theta[i] - EPSILON;
+		theta_minus[i] = original_w[i] - EPSILON;
 
 		theta_minus.push();
 
@@ -107,7 +107,7 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 	}
 
 	this->deltaW_.pop();
-	std::vector<float_t> grad_diff(theta.size());
+	std::vector<float_t> grad_diff(original_w.size());
 
 	//calc norms
 
