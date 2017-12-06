@@ -10,6 +10,7 @@ OBJDIR=./obj/
 
 GPU?=1
 LOGS?=0
+NOTUSEUNIFIED?=0
 
 CUDA_THRUST=
 #-I/usr/local/cuda/include/thrust/
@@ -40,7 +41,7 @@ LOGHELPER_LIB=-L../../include/ -lLogHelper
 CFLAGS+= -DLOGS
 endif
 
-NOTUSEUNIFIED=1
+
 ifeq ($(GPU), 1)
 ON_GPU= -DGPU
 CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart
