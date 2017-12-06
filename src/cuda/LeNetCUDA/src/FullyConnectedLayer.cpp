@@ -86,7 +86,7 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 
 		theta_plus.push();
 
-		call_forward_fully_connected(J_plus.data(), this->original_input.data(), original_b.data(),
+		call_forward_fully_connected(J_plus.data(), original_input.data(), original_b.data(),
 				theta_plus.data(), out_depth_, in_depth_, input_size);
 
 		//-----------------------
@@ -98,7 +98,7 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 
 		theta_minus.push();
 
-		call_forward_fully_connected(J_minus.data(), this->original_input.data(), original_b.data(),
+		call_forward_fully_connected(J_minus.data(), riginal_input.data(), original_b.data(),
 				theta_minus.data(), out_depth_, in_depth_, input_size);
 
 		J_plus.pop();
