@@ -27,7 +27,7 @@ COMMON=-std=c++11
 
 CFLAGS= $(COMMON) -Wall -Wextra
 
-NVCC_FLAGS= -Xcompiler -Ofast
+NVCC_FLAGS= -Xcompiler -Ofast 
 #-std=c++11
 
 ifeq ($(DEBUG),1)
@@ -66,7 +66,7 @@ OBJ=Layer.o ConvolutionalLayer.o MaxpoolingLayer.o FullyConnectedLayer.o \
 OutputLayer.o ConvNet.o MNISTParser.o Util.o main.o LogsProcessing.o
 
 ifeq ($(GPU), 1)
-OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o LayerKernel.o \
+OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o \
 FullyConnectedLayerKernel.o  OutputLayerKernel.o cudaUtil.o
 endif
 
