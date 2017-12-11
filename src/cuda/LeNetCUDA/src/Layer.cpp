@@ -6,7 +6,6 @@
  */
 
 #include "Layer.h"
-#include "LayerKernel.h"
 
 Layer::Layer(size_t in_width, size_t in_height, size_t in_depth,
 		size_t out_width, size_t out_height, size_t out_depth, float_t alpha,
@@ -37,9 +36,9 @@ float_t Layer::getWeightsSum() {
 	//funcao para a regularizacao L1
 	float_t sum = 0.0;
 	float_t weightsSize = this->W_.size();
-#ifdef NOTUNIFIEDMEMORY
-	this->W_.pop_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+	this->W_.pop();
+//#endif
 	for (int i = 0; i < weightsSize; i++) {
 		sum += std::abs(this->W_[i]);
 	}
@@ -50,9 +49,9 @@ float_t Layer::getSquaredWeightsSum() {
 	//funcao para a regularizacao L2
 	float_t sum = 0;
 	float_t weightsSize = this->W_.size();
-#ifdef NOTUNIFIEDMEMORY
-	this->W_.pop_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+	this->W_.pop();
+//#endif
 	for (int i = 0; i < weightsSize; i++) {
 		sum += this->W_[i] * this->W_[i];
 	}
@@ -146,9 +145,9 @@ void Layer::back_prop_L2() {
 void Layer::print_layer_weights(int layer_num) {
 	std::cout << "\n Printing Layer: " << layer_num << std::endl;
 	float_t weightsSize = this->W_.size();
-#ifdef NOTUNIFIEDMEMORY
-	this->W_.pop_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+	this->W_.pop();
+//#endif
 	for (int i = 0; i < weightsSize; i++) {
 		std::cout << this->W_[i] << ", ";
 	}
@@ -156,47 +155,4 @@ void Layer::print_layer_weights(int layer_num) {
 }
 
 
-bool Layer::gradient_check(){
-	bool is_backprop_ok = false;
-#ifdef GPU
-	//must be the len(W) + len(b)
-	DeviceVector<float_t> theta(this->W_.size() + this->b_.size());
 
-	//Initialized host memory
-#ifdef NOTUNIFIEDMEMORY
-	theta.pop_vector();
-#endif
-
-	for(int i = 0; i < this->W_.size(); i++){
-		theta[i] = this->W_[i];
-		theta[i + 1] = this->b_[i];
-	}
-
-	DeviceVector<float_t> theta_minus_vector(theta);
-	DeviceVector<float_t> theta_plus_vector(theta);
-	DeviceVector<float_t> gradient_diff_vector(theta.size());
-	DeviceVector<float_t> host_gradient_diff_vector(theta.size());
-
-	float *theta_plus =  theta_minus_vector.data();
-	float *theta_minus = theta_plus_vector.data();
-	float *d_vector = deltaW_.data();
-	float *gradient_diff = gradient_diff_vector.data();
-	float *host_gradient_diff = host_gradient_diff_vector.data();
-
-	is_backprop_ok = call_gradient_check(theta_plus, theta_minus, d_vector,
-			gradient_diff, host_gradient_diff, theta.size());
-
-
-#ifdef NOTUNIFIEDMEMORY
-	theta.push_vector();
-#endif
-
-
-
-#else
-	std::cout << "NOT IMPLEMENTED FUNCTION\n";
-	is_backprop_ok = true;
-#endif
-	return is_backprop_ok;
-
-}

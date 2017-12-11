@@ -16,7 +16,7 @@ inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 		size_t w_) {
 	vec_host r;
 //#ifdef NOTUNIFIEDMEMORY
-//	this->input_.pop_vector();
+//	this->input_.pop();
 //#endif
 	for (size_t y = 0; y < kernel_size_; y++) {
 		for (size_t x = 0; x < kernel_size_; x++) {
@@ -32,7 +32,7 @@ inline vec_host ConvolutionalLayer::getInforKernel(size_t in, size_t h_,
 inline vec_host ConvolutionalLayer::getW_(size_t in, size_t out) {
 	vec_host r;
 //#ifdef NOTUNIFIEDMEMORY
-//	this->W_.pop_vector();
+//	this->W_.pop();
 //#endif
 	for (size_t i = 0; i < kernel_size_ * kernel_size_; i++)
 		r.push_back(
@@ -64,12 +64,12 @@ ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 //	g_.clear();
 //	g_.resize(in_width_ * in_height_ * in_depth_);
 //#ifdef NOTUNIFIEDMEMORY
-//	this->W_.pop_vector();
-//	this->next->g_.pop_vector();
-//	this->input_.pop_vector();
-//	this->deltaW_.pop_vector();
-//	this->b_.pop_vector();
-//	this->g_.pop_vector();
+//	this->W_.pop();
+//	this->next->g_.pop();
+//	this->input_.pop();
+//	this->deltaW_.pop();
+//	this->b_.pop();
+//	this->g_.pop();
 //#endif
 //	/*update err terms of this layer.*/
 //	for (size_t out = 0; out < out_depth_; out++) {
@@ -134,16 +134,15 @@ ConvolutionalLayer::ConvolutionalLayer(size_t in_width, size_t in_height,
 //	}
 //
 //#ifdef NOTUNIFIEDMEMORY
-//	this->W_.push_vector();
-//	this->next->g_.push_vector();
-//	this->input_.push_vector();
-//	this->deltaW_.push_vector();
-//	this->b_.push_vector();
-//	this->g_.push_vector();
+//	this->W_.push();
+//	this->next->g_.push();
+//	this->input_.push();
+//	this->deltaW_.push();
+//	this->b_.push();
+//	this->g_.push();
 //#endif
 //}
 //#endif //TRAINGPU
-
 
 inline int ConvolutionalLayer::getb_(size_t out, size_t h_, size_t w_) {
 	return out * out_width_ * out_height_ + h_ * out_height_ + w_;
@@ -195,56 +194,44 @@ void ConvolutionalLayer::load_layer(FILE *in) {
 
 void ConvolutionalLayer::forward() {
 	this->output_.clear();
-	try {
-		// execute the code on the device
-		float *i_buf = this->input_.data();
-		float *w_buf = this->W_.data();
-		float *b_buf = this->b_.data();
-		float *o_buf = this->output_.data();
+	// execute the code on the device
+	float *i_buf = this->input_.data();
+	float *w_buf = this->W_.data();
+	float *b_buf = this->b_.data();
+	float *o_buf = this->output_.data();
 
-		call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_, this->in_height_, this->in_depth_, this->out_width_, this->out_height_, this->out_depth_, this->kernel_size_);
-
-	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		exit(2);
-	} catch (...) {
-		std::cerr << "Unexpected error. Aborting!\n" << std::endl;
-		exit(1);
-	}
+	call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_, this->in_height_, this->in_depth_, this->out_width_, this->out_height_, this->out_depth_, this->kernel_size_);
 
 }
 
-
 //#ifdef TRAINGPU
 void ConvolutionalLayer::back_prop() {
-		g_.clear();
-		g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
+	g_.clear();
+	g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
 
-		float *W_ = this->W_.data(); //weights
-		float *g_ = this->g_.data();//err array
-		float *input_ = this->input_.data();//input array
-		float *g_next = this->next->g_.data();//b_next from this->next->g_
-		float *deltaW = this->deltaW_.data();//deltaW array
-		float *b_ = this->b_.data();//b_ vector
-		float alpha = this->alpha_;//alpha value
-		float lambda = this->lambda_;
-		int out_depth = this->out_depth_;//size of the first for loop
-		int in_depth_ = this->in_depth_;//size of the second for loop
-		int out_width = this->out_width_;//size of the third for loop
-		int out_height_ = this->out_height_;// size of loop
-		int kernel_size_ = this->kernel_size_;//size of loop
-		int in_width_ = this->in_width_;//width size
-		int in_height_ = this->in_height_;//in height
+	float *W_ = this->W_.data(); //weights
+	float *g_ = this->g_.data();//err array
+	float *input_ = this->input_.data();//input array
+	float *g_next = this->next->g_.data();//b_next from this->next->g_
+	float *deltaW = this->deltaW_.data();//deltaW array
+	float *b_ = this->b_.data();//b_ vector
+	float alpha = this->alpha_;//alpha value
+	float lambda = this->lambda_;
+	int out_depth = this->out_depth_;//size of the first for loop
+	int in_depth_ = this->in_depth_;//size of the second for loop
+	int out_width = this->out_width_;//size of the third for loop
+	int out_height_ = this->out_height_;// size of loop
+	int kernel_size_ = this->kernel_size_;//size of loop
+	int in_width_ = this->in_width_;//width size
+	int in_height_ = this->in_height_;//in height
 
-		call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
-				alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
-				in_width_, in_height_);
+	call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
+			alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
+			in_width_, in_height_);
 
 }
 
 //#endif // TRAINGPU
-
-
 
 void ConvolutionalLayer::init_weight() {
 	vec_host temp_W_, temp_b_;

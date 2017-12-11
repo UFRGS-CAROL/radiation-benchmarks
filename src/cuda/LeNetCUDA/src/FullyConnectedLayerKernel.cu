@@ -132,3 +132,6 @@ void call_backpropagation_fully_connected(float *input_, float *g_,
 			deltaW_, W_, b_, alpha_, lambda_, in_depth_, out_depth_);
 	CudaCheckError();
 }
+
+
+

@@ -25,29 +25,29 @@ void OutputLayer::forward() {
 	int in_depth_ = this->in_depth_;
 	int exp_y = this->exp_y;
 
-#ifdef NOTUNIFIEDMEMORY
-	this->exp_y_vec.pop_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+	this->exp_y_vec.pop();
+//#endif
 	this->exp_y_vec[this->exp_y] = 1;
 
-#ifdef NOTUNIFIEDMEMORY
-	this->exp_y_vec.push_vector();
-#else
-	CudaCheckError();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+	this->exp_y_vec.push();
+//#else
+//	CudaCheckError();
+//#endif
 
 	call_forward_output_layer(exp_y_vec, input_, reduce_output, output_, in_depth_, exp_y);
 
-#ifdef NOTUNIFIEDMEMORY
-	this->reduce_output.pop_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+	this->reduce_output.pop();
+//#endif
 	this->err = 0;
 	for (int i = 0; i < in_depth_; i++) {
 		this->err += this->reduce_output[i];
 	}
 
 //#ifdef NOTUNIFIEDMEMORY
-//	this->reduce_output.push_vector();
+//	this->reduce_output.push();
 //#endif
 
 }
@@ -122,15 +122,15 @@ void OutputLayer::back_prop() {
 //	}
 //	//printf("\ndebug back_prop output layer");
 //#ifdef NOTUNIFIEDMEMORY
-//	this->g_.pop_vector();
-//	this->input_.pop_vector();
-//	this->exp_y_vec.pop_vector();
+//	this->g_.pop();
+//	this->input_.pop();
+//	this->exp_y_vec.pop();
 //#endif
 //	for (size_t i = 0; i < in_depth_; i++) {
 //		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
 //	}
 //#ifdef NOTUNIFIEDMEMORY
-//	this->g_.push_vector();
+//	this->g_.push();
 //#endif
 //}
 //#endif //TRAINGPU
@@ -162,19 +162,19 @@ void OutputLayer::back_prop_L1() {
 		printf("passou no if do back\n");
 	}
 
-#ifdef NOTUNIFIEDMEMORY
-	this->g_.pop_vector();
-	this->input_.pop_vector();
-	this->exp_y_vec.pop_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+	this->g_.pop();
+	this->input_.pop();
+	this->exp_y_vec.pop();
+//#endif
 	//printf("\ndebug lenetWeightsSum: %f, valor reguarizacao: %f", this->lenetWeightsSum, L1_LAMBDA* this->lenetWeightsSum);
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
 		+ L1_LAMBDA * this->lenetWeightsSum; // L1 regularization
 	}
-#ifdef NOTUNIFIEDMEMORY
-	this->g_.push_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+	this->g_.push();
+//#endif
 }
 
 void OutputLayer::back_prop_L2() {
@@ -185,19 +185,19 @@ void OutputLayer::back_prop_L2() {
 		g_.resize(in_depth_);
 		printf("passou no if do back\n");
 	}
-#ifdef NOTUNIFIEDMEMORY
-	this->g_.pop_vector();
-	this->input_.pop_vector();
-	this->exp_y_vec.pop_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+	this->g_.pop();
+	this->input_.pop();
+	this->exp_y_vec.pop();
+//#endif
 	//printf("\ndebug lenetSquaredWeightsSum: %f, valor regularizacao: %f", this->lenetSquaredWeightsSum, L2_LAMBDA*this->lenetSquaredWeightsSum);
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
 		+ L2_LAMBDA * this->lenetSquaredWeightsSum; // L2 regularization
 	}
-#ifdef NOTUNIFIEDMEMORY
-	this->g_.push_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+	this->g_.push();
+//#endif
 }
 
 void OutputLayer::set_sum_LeNet_weights(float_t sum_Lenet_weights) {

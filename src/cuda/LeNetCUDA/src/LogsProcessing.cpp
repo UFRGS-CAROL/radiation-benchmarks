@@ -24,7 +24,7 @@ std::vector<std::string> &split(const std::string &s, char delim,
 }
 
 std::vector<std::string> split(const std::string &s, char delim) {
-	std::vector < std::string > elems;
+	std::vector<std::string> elems;
 	split(s, delim, elems);
 	return elems;
 }
@@ -139,12 +139,12 @@ void save_gold_layers(LayersFound layers, int img) {
 		if (fout != NULL) {
 			size_t v_size = v->size();
 			fwrite(&v_size, sizeof(size_t), 1, fout);
-#ifdef NOTUNIFIEDMEMORY
-			v->pop_vector();
+//#ifdef NOTUNIFIEDMEMORY
+			v->pop();
 			fwrite(v->h_data(), sizeof(float), v->size(), fout);
-#else
-			fwrite(v->data(), sizeof(float), v->size(), fout);
-#endif
+//#else
+//			fwrite(v->data(), sizeof(float), v->size(), fout);
+//#endif
 			fclose(fout);
 		} else {
 			error("FAILED TO OPEN FILE " + path);
@@ -157,7 +157,7 @@ void save_gold_layers(LayersFound layers, int img) {
 void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
 		int img) {
 
-	std::vector < std::string > last_part;
+	std::vector<std::string> last_part;
 
 #ifdef LOGS
 	char *temp_log_filename = get_log_filename();
@@ -177,9 +177,9 @@ void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
 	for (size_t i = 0; i < gold.size(); i++) {
 		auto g = gold[i];
 		auto f = (*found[i]);
-#ifdef NOTUNIFIEDMEMORY
-		f.pop_vector();
-#endif
+//#ifdef NOTUNIFIEDMEMORY
+		f.pop();
+//#endif
 		bool error_found = true;
 
 		assert(g.size() == f.size());
@@ -201,13 +201,12 @@ void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
 				size_t v_size = f.size();
 
 				fwrite(&v_size, sizeof(size_t), 1, output_layer);
-#ifdef NOTUNIFIEDMEMORY
+//#ifdef NOTUNIFIEDMEMORY
 				fwrite(f.h_data(), sizeof(float),f.size(),
 						output_layer);
-#else
-				fwrite(f.data(), sizeof(float),f.size(),
-						output_layer);
-#endif
+//#else
+//				fwrite(f.data(), sizeof(float), f.size(), output_layer);
+//#endif
 				fclose(output_layer);
 			} else {
 				error(

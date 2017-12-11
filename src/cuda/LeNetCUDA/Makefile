@@ -10,6 +10,7 @@ OBJDIR=./obj/
 
 GPU?=1
 LOGS?=0
+NOTUSEUNIFIED?=0
 
 CUDA_THRUST=
 #-I/usr/local/cuda/include/thrust/
@@ -27,7 +28,7 @@ COMMON=-std=c++11
 
 CFLAGS= $(COMMON) -Wall -Wextra
 
-NVCC_FLAGS= -Xcompiler -Ofast
+NVCC_FLAGS= -Xcompiler -Ofast 
 #-std=c++11
 
 ifeq ($(DEBUG),1)
@@ -40,7 +41,7 @@ LOGHELPER_LIB=-L../../include/ -lLogHelper
 CFLAGS+= -DLOGS
 endif
 
-NOTUSEUNIFIED=1
+
 ifeq ($(GPU), 1)
 ON_GPU= -DGPU
 CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart
@@ -66,7 +67,7 @@ OBJ=Layer.o ConvolutionalLayer.o MaxpoolingLayer.o FullyConnectedLayer.o \
 OutputLayer.o ConvNet.o MNISTParser.o Util.o main.o LogsProcessing.o
 
 ifeq ($(GPU), 1)
-OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o LayerKernel.o \
+OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o \
 FullyConnectedLayerKernel.o  OutputLayerKernel.o cudaUtil.o
 endif
 
