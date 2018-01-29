@@ -8,8 +8,9 @@ CXX=g++
 
 OBJDIR=./obj/
 
-GPU?=0
+GPU?=1
 LOGS?=0
+NOTUSEUNIFIED?=0
 
 CUDA_THRUST=
 #-I/usr/local/cuda/include/thrust/
@@ -27,7 +28,7 @@ COMMON=-std=c++11
 
 CFLAGS= $(COMMON) -Wall -Wextra
 
-NVCC_FLAGS= -Xcompiler -Ofast
+NVCC_FLAGS= -Xcompiler -Ofast 
 #-std=c++11
 
 ifeq ($(DEBUG),1)
@@ -45,13 +46,19 @@ ifeq ($(GPU), 1)
 ON_GPU= -DGPU
 CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart
 	ifeq ($(DEBUG),1)
-	NVCC_FLAGS+= -G
+		NVCC_FLAGS+= -G
 	endif
 
 	ifeq ($(NOTUSEUNIFIED), 1)
-	NVCC_FLAGS+= -DNOTUNIFIEDMEMORY
-	CFLAGS+= -DNOTUNIFIEDMEMORY
+		NVCC_FLAGS+= -DNOTUNIFIEDMEMORY
+		CFLAGS+= -DNOTUNIFIEDMEMORY
 	endif
+	
+	ifeq ($(TRAINGPU), 1)
+		NVCC_FLAGS+= -DTRAINGPU
+		CFLAGS+= -DTRAINGPU
+	endif
+	
 endif
 
 GPU_KERNELS=ConvKernels.o

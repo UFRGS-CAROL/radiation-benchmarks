@@ -11,6 +11,12 @@
 #include <vector>
 #include "Util.h"
 
+/**
+ * ###########################GRADIENT CHECKING######################################
+ */
+#define EPSILON 10e-4
+#define MAX_ERROR_ALLOWED 10e-5
+
 #ifdef GPU
 #include "DeviceVector.h"
 #endif
@@ -26,19 +32,22 @@ public:
 
 	virtual void save_layer(FILE *of) = 0;
 	virtual void load_layer(FILE *in) = 0;
+
+
+
 //	float* get_next_input_data_ptr();
 
 #ifdef GPU
 	template<typename T> void write_layer_vec(DeviceVector<T> v, FILE *of) {
 		this->write_layer_var<size_t>(v.size(), of);
 
-#ifdef NOTUNIFIEDMEMORY
-		v.pop_vector();
+//#ifdef NOTUNIFIEDMEMORY
+		v.pop();
 		fwrite(v.h_data(), sizeof(T), v.size(), of);
-		v.push_vector();
-#else
-		fwrite(v.data(), sizeof(T), v.size(), of);
-#endif
+		v.push();
+//#else
+//		fwrite(v.data(), sizeof(T), v.size(), of);
+//#endif
 //		cudaError_t ret = cudaDeviceSynchronize();
 //		CUDA_CHECK_RETURN(ret);
 	}
@@ -48,13 +57,13 @@ public:
 
 		DeviceVector<T> v(siz);
 
-#ifdef NOTUNIFIEDMEMORY
-		v.pop_vector();
+//#ifdef NOTUNIFIEDMEMORY
+		v.pop();
 		fread(v.h_data(), sizeof(T), siz, in);
-		v.push_vector();
-#else
-		fread(v.data(), sizeof(T), siz, in);
-#endif
+		v.push();
+//#else
+//		fread(v.data(), sizeof(T), siz, in);
+//#endif
 //		cudaError_t ret = cudaDeviceSynchronize();
 //		CUDA_CHECK_RETURN(ret);
 		return v;
@@ -136,12 +145,12 @@ public:
 	DeviceVector<float_t> exp_y_vec;
 
 #else
-	vec_host W_;
-	vec_host b_;
-	vec_host deltaW_;
-	vec_host input_;
-	vec_host output_;
-	vec_host g_; // err terms
+	vec_host W_; 		// weights
+	vec_host b_;		//bias
+	vec_host deltaW_; 	//gradients
+	vec_host input_; 	//input parameter
+	vec_host output_;	//output parameter
+	vec_host g_; 		//layer err terms
 	vec_host exp_y_vec;
 #endif
 

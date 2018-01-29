@@ -141,7 +141,7 @@ DEFAULT: ${CoMD_EXE}
 	
 
 %.o: %.cpp
-	${CXX} ${CPPFLAGS} -c $< -o $@
+	${CXX} ${CPPFLAGS} ${CFLAGS} -c $< -o $@ 
 
 ${CoMD_EXE}: ${CU_OBJECTS} ${BIN_DIR}  CoMD_info.h ${OBJECTS} ${CPP_OBJECTS}
 	${CC} ${CFLAGS} -o ${CoMD_EXE} ${OBJECTS} ${CU_OBJECTS} ${CPP_OBJECTS} ${LDFLAGS}

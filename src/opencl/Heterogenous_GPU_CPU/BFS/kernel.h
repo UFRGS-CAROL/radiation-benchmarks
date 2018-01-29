@@ -36,7 +36,7 @@
 #include <atomic>
 #include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/support/common.h"
 
-void run_cpu_threads(Node *graph_nodes_av, Edge *graph_edges_av, std::atomic_long *cost, std::atomic_long *color,
-    long *q1, long *q2, long *t, std::atomic_long *head, std::atomic_long *tail,
-    std::atomic_long *threads_end, std::atomic_long *threads_run, std::atomic_long *iter, long cpu_threads,
-    long LIMIT, const long GPU);
+void run_cpu_threads(Node *graph_nodes_av, Edge *graph_edges_av, std::atomic_int *cost, std::atomic_int *color,
+    int *q1, int *q2, int *t, std::atomic_int *head, std::atomic_int *tail,
+    std::atomic_int *threads_end, std::atomic_int *threads_run, std::atomic_int *iter, int cpu_threads,
+    int LIMIT, const int GPU);

@@ -12,4 +12,4 @@ cd ..
 #git submodule update --init --recursive
 git add radiation-benchmarks-parsers
 git commit -m "updating submodule to latest"
-git push
+git push -u origin master

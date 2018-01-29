@@ -87,6 +87,8 @@ void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
 
 	cuda_gridsize(&threads, &blocks, in_width * out_depth, in_height);
 
+	//printf("in_height %d in_width * out_depth %d threads x %d threads y %d\n", in_height, in_width * out_depth, threads.x, threads.y);
+
 	forward_maxpool_layer_kernel<<<blocks, threads>>>(input, max_loc, output,
 			out_width, out_height, out_depth, in_height, in_width);
 	CudaCheckError();
@@ -94,22 +96,28 @@ void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
 }
 
 __global__ void backpropagation_maxpool(Pair *max_loc, float *g_, float *g_next,
-		size_t max_size) {
+		size_t max_size, size_t g_max_size) {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	if (x > max_size)
 		return;
 
 	Pair p = max_loc[x];
-	if (p.first != MAX) {
+	if (p.first != MAX && p.second != MAX && p.second < g_max_size && p.first < g_max_size) {
 		g_[p.second] = g_next[p.first];
 	}
 }
 
-void call_backpropagation_maxpool(Pair *max_loc, float *g_, float *g_next, size_t max_size) {
+void call_backpropagation_maxpool(Pair *max_loc, float *g_, float *g_next, size_t max_size, size_t g_max_size) {
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, max_size);
-
-	backpropagation_maxpool<<<blocks, threads>>>(max_loc, g_, g_next, max_size);
+//	for(int i = 0; i < max_size; i++){
+//		auto p = max_loc[i];
+//		if(p.first != MAX && p.second == MAX){
+//			std::cout << p.first << " " << p.second << " " << i << "\n";
+//		}
+//	}
+	assert(g_max_size != 0);
+	backpropagation_maxpool<<<blocks, threads>>>(max_loc, g_, g_next, max_size, g_max_size);
 	CudaCheckError();
 }
 

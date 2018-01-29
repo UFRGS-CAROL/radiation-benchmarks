@@ -18,7 +18,7 @@ class FullyConnectedLayer: public Layer {
 public:
 	FullyConnectedLayer(size_t in_depth, size_t out_depth);
 
-	void back_prop() ;
+	void back_prop();
 	void forward();
 
 	/*
@@ -26,7 +26,7 @@ public:
 	 weight init as [-4 * (6 / sqrt(fan_in + fan_out)), +4 *(6 / sqrt(fan_in + fan_out))]:
 	 see also:http://deeplearning.net/tutorial/references.html#xavier10
 	 */
-	void init_weight() ;
+	void init_weight();
 
 	void save_layer(FILE *of);
 	void load_layer(FILE *in);
@@ -36,22 +36,29 @@ public:
 	//forward gpu
 	DeviceVector<float> v_output;
 #else
-	vec_host  v_output;
+	vec_host v_output;
 #endif
 
 private:
 
-
-#ifdef GPU
-	DeviceVector<float> get_W_step(size_t in);
-	DeviceVector<float>  get_W(size_t index);
-#else
+//#ifdef GPU
+//	DeviceVector<float> get_W_step(size_t in);
+//	DeviceVector<float>  get_W(size_t index);
+//#else
 	vec_host get_W_step(size_t in);
 	vec_host get_W(size_t index);
-#endif
+	void gradient_checker(DeviceVector<float_t>& original_b, DeviceVector<float_t>& original_w, DeviceVector<float_t>& original_input);
+
+//#endif
+	template<typename T> double vector_norm(T v){
+		double n = 0;
+		for(int i = 0; i < v.size(); i++)
+			n += v[i] * v[i];
+
+		return std::sqrt(n);
+	}
 
 
 };
-
 
 #endif /* FULLYCONNECTEDLAYER_H_ */

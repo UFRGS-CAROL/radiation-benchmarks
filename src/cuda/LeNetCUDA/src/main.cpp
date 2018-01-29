@@ -18,7 +18,7 @@ void create_lenet(ConvNet *net) {
 	net->add_layer(new ConvolutionalLayer(14, 14, 6, 5, 16));
 	net->add_layer(new MaxpoolingLayer(10, 10, 16));
 	net->add_layer(new ConvolutionalLayer(5, 5, 16, 5, 100));
-	net->add_layer(new FullyConnectedLayer(100, 10));
+	net->add_layer(new FullyConnectedLayer(120, 10));
 }
 
 void classify_gold_generate(MNISTParser& m, string weigths, string gold_output,

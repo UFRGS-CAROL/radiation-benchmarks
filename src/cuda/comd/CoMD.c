@@ -85,98 +85,97 @@ static void printSimulationDataYaml(FILE* file, SimFlat* s);
 static void sanityChecks(Command cmd, double cutoff, double latticeConst,
 		char latticeType[8]);
 
-
 int main(int argc, char** argv) {
-	Command cmd = parseCommandLine(argc, argv);
-	int i;
-	for (i = 0; i < 100; i++){
-		printf("\n\n\n\nITERATION %d\n\n\n\n\n", i);
-		main_run(cmd);
-	}
-
-	return 0;
-}
-
-int main_run(Command cmd) {
 	// Prolog
-//	initParallel(&argc, &argv);
+	initParallel(&argc, &argv);
 	profileStart(totalTimer);
-//	initSubsystems();
+	initSubsystems();
 	timestampBarrier("Starting Initialization\n");
 
-//	yamlAppInfo(yamlFile);
+	yamlAppInfo(yamlFile);
 	yamlAppInfo(screenOut);
 
-//	Command cmd = parseCommandLine(argc, argv);
-//	printCmdYaml(yamlFile, &cmd);
+	Command cmd = parseCommandLine(argc, argv);
+	printCmdYaml(yamlFile, &cmd);
 	printCmdYaml(screenOut, &cmd);
 
 	// select device, print info, etc.
-//#ifdef DO_MPI
-//	// get number of gpus on current node
-//	int numGpus;
-//	cudaGetDeviceCount(&numGpus);
-//
-//	// set active device (assuming homogenous config)
-//	int deviceId = getMyRank() % numGpus;
-//	SetupGpu(deviceId);
-//#else
+#ifdef DO_MPI
+	// get number of gpus on current node
+	int numGpus;
+	cudaGetDeviceCount(&numGpus);
+
+	// set active device (assuming homogenous config)
+	int deviceId = getMyRank() % numGpus;
+	SetupGpu(deviceId);
+#else
 	SetupGpu(0);
-//#endif
+#endif
 
 	SimFlat* sim = initSimulation(cmd);
-//	printSimulationDataYaml(yamlFile, sim);
+//	SimFlat* save_input = initSimulation(cmd);
+	printSimulationDataYaml(yamlFile, sim);
 	printSimulationDataYaml(screenOut, sim);
 
 	Validate* validate = initValidate(sim); // atom counts, energy
 	timestampBarrier("Initialization Finished\n");
+	int iteration_rad;
+	for (iteration_rad = 0; iteration_rad < cmd.iterations; iteration_rad++) {
+		if (iteration_rad > 0){
+//			copy_input_iteration(save_input, sim);
+			destroySimulation(&sim);
+			sim = initSimulation(cmd);
+		}
 
-	timestampBarrier("Starting simulation\n");
+		timestampBarrier("Starting simulation\n");
 
-	// This is the CoMD main loop
-	const int nSteps = sim->nSteps;
-	const int printRate = sim->printRate;
-	int iStep = 0;
-	profileStart(loopTimer);
-	for (; iStep < nSteps;) {
-		startTimer(commReduceTimer);
-		sumAtoms(sim);
-		stopTimer(commReduceTimer);
+		// This is the CoMD main loop
+		const int nSteps = sim->nSteps;
+		const int printRate = sim->printRate;
+		int iStep = 0;
+		profileStart(loopTimer);
+		for (; iStep < nSteps;) {
+			startTimer(commReduceTimer);
+			sumAtoms(sim);
+			stopTimer(commReduceTimer);
 
-		printThings(sim, iStep, getElapsedTime(timestepTimer));
+			printThings(sim, iStep, getElapsedTime(timestepTimer));
 
-		startTimer(timestepTimer);
-		timestep(sim, printRate, sim->dt);
-		stopTimer(timestepTimer);
+			startTimer(timestepTimer);
+			timestep(sim, printRate, sim->dt);
+			stopTimer(timestepTimer);
 #if 0
-		// analyze input distribution, note this is done on CPU (slow)
-		AnalyzeInput(sim, iStep);
+			// analyze input distribution, note this is done on CPU (slow)
+			AnalyzeInput(sim, iStep);
 #endif
-		iStep += printRate;
+			iStep += printRate;
+		}
+		profileStop(loopTimer);
+
+		sumAtoms(sim);
+		printThings(sim, iStep, getElapsedTime(timestepTimer));
+		timestampBarrier("Ending simulation\n");
+
+
+
 	}
-	profileStop(loopTimer);
-
-	sumAtoms(sim);
-	printThings(sim, iStep, getElapsedTime(timestepTimer));
-	timestampBarrier("Ending simulation\n");
-
 	// Epilog
 	validateResult(validate, sim);
 	profileStop(totalTimer);
 
 	printPerformanceResults(sim->atoms->nGlobal, sim->printRate);
-//	printPerformanceResultsYaml(yamlFile);
+	printPerformanceResultsYaml(yamlFile);
 
 	destroySimulation(&sim);
-	sim = NULL;
+//	destroySimulation(&save_input);
 	comdFree(validate);
-//	finalizeSubsystems();
+	finalizeSubsystems();
 
 	timestampBarrier("CoMD Ending\n");
-//	destroyParallel();
+	destroyParallel();
 
 	// for profiler
-//	cudaDeviceReset();
+	cudaDeviceReset();
 
 	return 0;
 }

@@ -439,10 +439,11 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d \n",p.platform , p.device, p.n_wor
 				exit(1);
 			}
 			fclose(finput);	
+		new_read_input(h_in,p);
         } else {
             printf(".");
         }
-    	new_read_input(h_in, p);
+//    	new_read_input(h_in, p);
 
 #ifdef LOGS
         log_error_count(err);
