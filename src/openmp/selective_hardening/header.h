@@ -3,11 +3,97 @@
 //#define HARDENING_DEBUG
 #define READ_HARDENED_VAR(VAR_NAME_1, VAR_NAME_2, VAR_TYPE, VAR_SIZE, VAR_NAME) (*((VAR_TYPE*)hardened_compare_and_return((void*)(&VAR_NAME_1), (void*)(&VAR_NAME_2), VAR_SIZE, __FILE__, __LINE__, VAR_NAME)))
 #define READ_HARDENED_ARRAY(POSITION, ARRAY_NAME_1, ARRAY_NAME_2, ARRAY_TYPE, ARRAY_SIZE) ((ARRAY_TYPE)((void*)hardened_compare_and_return_array(POSITION, (void*)(&ARRAY_NAME_1), (void*)(&ARRAY_NAME_2), ARRAY_SIZE)))
+#define READ_HARDENED_VAR_FLOAT(VAR_NAME_1, VAR_NAME_2, VAR_NAME) hardened_compare_and_return_float(VAR_NAME_1, VAR_NAME_2, __FILE__, __LINE__, VAR_NAME)
+
+#ifdef FLOAT_XOR
+extern int float_xor(float, float);
+#endif
 
 static int error_occured = 0;
 static int current_iteration = -1;
 
 void get_bits_str(char* dest_buffer, void* value, long long size);
+void dump_error_info(void* var_a, void* var_b, long long size, char* file, long line, char* var_name);
+
+inline float hardened_compare_and_return_float(float var_a, float var_b, char* file, long line, char* var_name)
+{
+	long result;
+	
+	float a = var_a;
+	float b = var_b;
+	result = float_xor(a, b);
+		
+	if(result != 0)
+	{
+//		dump_error_info(&a, &b, sizeof(float), file, line, var_name);
+	}
+
+	return a;
+}
+
+inline double hardened_compare_and_return_double(double var_a, double var_b, char* file, long line, char* var_name)
+{
+	int result;
+	
+	double a = var_a;
+	double b = var_b;
+	result = double_xor(a, b);
+		
+	if(result != 0)
+	{
+//		dump_error_info(&a, &b, sizeof(float), file, line, var_name);
+	}
+
+	return a;
+}
+
+void dump_error_info(void* var_a, void* var_b, long long size, char* file, long line, char* var_name)
+{
+	//#pragma omp critical(c1)
+		{
+			if(current_iteration != get_iteration_number())
+			{
+				current_iteration = get_iteration_number();
+				error_occured = 0;	
+			}
+
+			if(error_occured == 0)                	
+			{
+				error_occured = 1;
+
+				printf("\nHardening error:\n");
+				printf("\tfile: \"%s\"\n", file);
+				printf("\tvariable: \"%s\"\n", var_name);
+				printf("\tline %d\n", line);
+				printf("\tsize %d bytes\n", size);
+
+				char var_1_bits[1024];
+				char var_2_bits[1024];
+		
+				get_bits_str(var_1_bits, var_a, size);
+				get_bits_str(var_2_bits, var_b, size);
+	
+				printf("\tvar_1 bits: %s\n", var_1_bits);
+				printf("\tvar_2 bits: %s\n", var_2_bits);
+
+#ifdef LOGS
+				//end_iteration();
+
+				char error_details[500];
+				sprintf(error_details, " file: [%s], var_name: [%s], line: [%d], size_bytes: [%d], var_1_bits: [%s], var_2_bits: [%s]", file, var_name, line, size, var_1_bits, var_2_bits);
+
+				log_error_detail(error_details);
+
+				//log_error_count(1);
+		
+				//end_log_file();
+#endif
+		
+	                	//exit(1);
+			}
+		}
+
+}
 
 inline void* hardened_compare_and_return(void* var_a, void* var_b, long long size, char* file, long line, char* var_name)
 {
