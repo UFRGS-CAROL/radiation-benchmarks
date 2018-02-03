@@ -44,10 +44,10 @@ FILE* f_GOLD;
 //====================================
 
 //================== Host and device matrix ptr's
-half *A;
-half *B;
-half *C;
-half *GOLD;
+half_float::half *A;
+half_float::half *B;
+half_float::half *C;
+half_float::half *GOLD;
 
 half *d_A;
 half *d_B;
@@ -193,12 +193,12 @@ void ReadMatrixFromFile(){
 	if (fault_injection)
 	{
         half_float::half tempValue(6.5);
-		A[3] = *((half*)&tempValue);
+		A[3] = *((half_float::half*)&tempValue);
 		printf("!! Injected 6.5 on position A[3]\n");
 	}
 }
 
-bool badass_memcmp(half *gold, half *found, unsigned long n){
+bool badass_memcmp(half_float::half *gold, half_float::half *found, unsigned long n){
 	double result = 0.0;
 	int i;
 	unsigned long  chunk = ceil(float(n) / float(omp_get_max_threads()));
@@ -206,7 +206,7 @@ bool badass_memcmp(half *gold, half *found, unsigned long n){
 	double time = mysecond();
 #pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
    for (i=0; i < n; i++)
-     result = result + (gold[i].x - found[i].x);
+     result = result + (gold[i] - found[i]);
 
     //  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
 	if (fabs(result) > 0.0000000001)
@@ -355,11 +355,11 @@ int main( int argc, char* argv[] )
 //====================================
 
 //================== Alloc HOST memory
-	A = ( half* ) malloc( sizea * sizeof( half ) );
-	B = ( half* ) malloc( sizeb * sizeof( half ) );
-	C = ( half* ) malloc( sizeb * sizeof( half ) );
+	A = ( half_float::half* ) malloc( sizea * sizeof( half ) );
+	B = ( half_float::half* ) malloc( sizeb * sizeof( half ) );
+	C = ( half_float::half* ) malloc( sizeb * sizeof( half ) );
 
-	GOLD = ( half* ) malloc( sizec * sizeof( half ) );
+	GOLD = ( half_float::half* ) malloc( sizec * sizeof( half ) );
 
 	if (!(A && B && C && GOLD)) {
 		printf("Failed on host malloc.\n");
@@ -495,12 +495,12 @@ int main( int argc, char* argv[] )
     			{
     				for(j=0; (j<k); j++)
     				{
-    					if (A[i + k * j].x != GOLD[i + k * j].x)
+    					if (A[i + k * j] != GOLD[i + k * j])
     					//if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001))
     					#pragma omp critical
     					{
 
-    						snprintf(error_detail, 150, "p: [%d, %d], r: %hd, e: %hd", i, j, A[i + k * j].x, GOLD[i + k * j].x);
+    						snprintf(error_detail, 150, "p: [%d, %d], r: %hd, e: %hd", i, j, A[i + k * j], GOLD[i + k * j]);
     						//printf("%s\n", error_detail);
     						#ifdef LOGS
     						log_error_detail(error_detail);

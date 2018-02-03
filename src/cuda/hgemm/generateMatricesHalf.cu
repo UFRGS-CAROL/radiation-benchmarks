@@ -34,11 +34,11 @@ void usage() {
 
 void generateInputMatrices()
 {
-	half *h_A, *h_B;
+	half_float::half *h_A, *h_B;
 	FILE *f_A, *f_B;
 
-    h_A = (half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE);
-    h_B = (half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE);
+    h_A = (half_float::half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE);
+    h_B = (half_float::half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE);
     printf("Each input matrix size: %.4fGB\n", (float)sizeof(half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE / (1024*1024*1024));
     printf("Max value: %f Min: %f\n", MAX_HVALUE, -MAX_HVALUE);
 
@@ -51,12 +51,12 @@ void generateInputMatrices()
             do {
                 tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
             } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
-            h_A[i * DEFAULT_INPUT_SIZE + j] = *((half*)&tempValue);
+            h_A[i * DEFAULT_INPUT_SIZE + j] = *((half_float::half*)&tempValue);
 
             do {
                 tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
             } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
-            h_B[i * DEFAULT_INPUT_SIZE + j] = *((half*)&tempValue);
+            h_B[i * DEFAULT_INPUT_SIZE + j] = *((half_float::half*)&tempValue);
         }
     }
 
@@ -96,9 +96,9 @@ void generateInputMatrices()
 		fwrite(&(h_A[i * DEFAULT_INPUT_SIZE]), sizeof(half) * DEFAULT_INPUT_SIZE, 1, f_A);
 	}
 
-	printf("Element 32 of matrix A: %f (raw half: %hx)\n", (float)*((half_float::half*)&(h_A[32])), h_A[32].x);
+	printf("Element 32 of matrix A: %f (raw half: %hx)\n", (float)*((half_float::half*)&(h_A[32])), h_A[32]);
 
-	printf("Element 50 of matrix B: %f (raw half: %hx)\n", (float)*((half_float::half*)&(h_B[50])), h_B[50].x);
+	printf("Element 50 of matrix B: %f (raw half: %hx)\n", (float)*((half_float::half*)&(h_B[50])), h_B[50]);
 
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
