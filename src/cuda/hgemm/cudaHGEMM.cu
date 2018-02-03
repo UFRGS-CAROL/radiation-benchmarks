@@ -500,7 +500,7 @@ int main( int argc, char* argv[] )
     					#pragma omp critical
     					{
 
-    						snprintf(error_detail, 150, "p: [%d, %d], r: %hd, e: %hd", i, j, A[i + k * j], GOLD[i + k * j]);
+    						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + k * j], GOLD[i + k * j]);
     						//printf("%s\n", error_detail);
     						#ifdef LOGS
     						log_error_detail(error_detail);
