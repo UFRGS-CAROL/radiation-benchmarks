@@ -215,11 +215,11 @@ half time_elapsed)
     int tx=threadIdx.x;
     int ty=threadIdx.y;
 
-    step_div_Cap=hdiv(step, Cap);
+    step_div_Cap=__hdiv(step, Cap);
 
-    Rx_1=hdiv(__float2half(1.0), Rx);
-    Ry_1=hdiv(__float2half(1.0), Ry);
-    Rz_1=hdiv(__float2half(1.0), Rz);
+    Rx_1=__hdiv(__float2half(1.0), Rx);
+    Ry_1=__hdiv(__float2half(1.0), Ry);
+    Rz_1=__hdiv(__float2half(1.0), Rz);
 
     // each block finally computes result for a small block
     // after N iterations.
