@@ -34,3 +34,9 @@ gen: generateMatricesHalf.cu
 
 clean:
 	rm -rf $(RUN_EXEC) $(GEN_EXEC) $(MATRIX_NAMES)
+
+generate: gen
+	./generateMatricesHalf -size=1024 -input_a=hgemmA_8192.matrix -input_b=hgemmB_8192.matrix -gold=hgemmGOLD_1024.matrix
+
+test: gemm generate
+	./cudaHGEMM -size=1024 -input_a=hgemmA_8192.matrix -input_b=hgemmB_8192.matrix -gold=hgemmGOLD_1024.matrix -iterations=10 -verbose
