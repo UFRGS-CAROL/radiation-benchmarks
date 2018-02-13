@@ -16,27 +16,32 @@ NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-SOURCES=cudaHGEMM.cu
-SOURCES_GEN=generateMatricesHalf.cu
-RUN_EXEC=cudaHGEMM
+RUN_SOURCES=cudaHGEMM.cu
+GEN_SOURCES=generateMatricesHalf.cu
+RUN_EXEC=hgemm
 GEN_EXEC=generateMatricesHalf
 
 MATRIX_NAMES=hgemm*
 
+DEF_A_INPUT=hgemmA_8192.matrix
+DEF_B_INPUT=hgemmB_8192.matrix
+DEF_SIZE=1024
+DEF_GOLD=hgemmGOLD_$(DEF_TEST_SIZE).matrix
 
-all: gemm gen
 
-gemm: cudaHGEMM.cu
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -O3 -lLogHelper -lcublas $(NVCC_FLAGS) -Xcompiler " -fopenmp -O3" $(LOGS) cudaHGEMM.cu -o $(RUN_EXEC)
+all: $(RUN_EXEC) $(GEN_EXEC)
 
-gen: generateMatricesHalf.cu
-	$(NVCC) -I$(NVIDIA_INC) -L$(NVIDIA_LIB) $(NVCC_FLAGS) -lcublas -O3 generateMatricesHalf.cu -o $(GEN_EXEC)
+$(RUN_EXEC): $(RUN_SOURCES)
+	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -O3 -lLogHelper -lcublas $(NVCC_FLAGS) -Xcompiler " -fopenmp -O3" $(LOGS) $(RUN_SOURCES) -o $(RUN_EXEC)
+
+$(GEN_EXEC): $(GEN_SOURCES)
+	$(NVCC) -I$(NVIDIA_INC) -L$(NVIDIA_LIB) $(NVCC_FLAGS) -lcublas -O3 $(GEN_SOURCES) -o $(GEN_EXEC)
 
 clean:
 	rm -rf $(RUN_EXEC) $(GEN_EXEC) $(MATRIX_NAMES)
 
-generate: gen
-	./generateMatricesHalf -size=1024 -input_a=hgemmA_8192.matrix -input_b=hgemmB_8192.matrix -gold=hgemmGOLD_1024.matrix
+generate: $(GEN_EXEC)
+	$(GEN_EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD)
 
-test: gemm generate
-	./cudaHGEMM -size=1024 -input_a=hgemmA_8192.matrix -input_b=hgemmB_8192.matrix -gold=hgemmGOLD_1024.matrix -iterations=10 -verbose
+test: $(RUN_EXEC) $(GEN_EXEC) generate
+	$(RUN_EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
