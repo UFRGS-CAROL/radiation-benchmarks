@@ -125,7 +125,7 @@ double* openmpMul(double* a, double* b, size_t size) {
 	double time = mysecond();
 
 	double* bT = (double*) malloc(sizeof(double)*size*size);
-	double* c = (double*) malloc(sizeof(double)*size*size);
+	double* c = (double*) calloc(size*size, sizeof(double));
 
 	if (c == NULL || bT == NULL) {
 		printf("could not alloc hostGold matrix.");
@@ -251,7 +251,7 @@ void generateGoldMatrix()
 					#pragma omp critical
 					maxDiff = max(diff, maxDiff);
 				}
-				if (fabs((hostGold[i*k+j]-GOLD[i*k+j])/hostGold[i*k+j]) > 0.1) {
+				if (diff > 0.1) {
 					printf("Fail! hostGold!=gpuGold %f != %f (diff: %e)\n", hostGold[i*k+j], GOLD[i*k+j], fabs((hostGold[i*k+j]-GOLD[i*k+j])/hostGold[i*k+j]));
 					fflush(stdout);
 					exit(-1);
