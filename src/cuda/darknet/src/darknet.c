@@ -379,29 +379,11 @@ int main(int argc, char **argv) {
 		Args to_parse;
 		args_init_and_setnull(&to_parse);
 		if (parse_arguments(&to_parse, argc, argv) == 0) {
-			//I'll do firsrt for yolo, next I dont know
-//			print_args(to_parse);
-//#ifndef GPU
-//				to_parse.gpu_index = -1;
-//#else
-//				if(to_parse.gpu_index >= 0) {
-//					cudaError_t status = cudaSetDevice(to_parse.gpu_index);
-//					check_error(status);
-//				}
-//#endif
-
-//#ifdef LOGS
-//		char test_info[500];
-//		snprintf(test_info, 500, "execution_type:%s execution_model:%s img_list_path:%s weights:%s config_file:%s iterations:%d abft: %s", to_parse.execution_type
-//				, to_parse.execution_model, to_parse.img_list_path, to_parse.weights, to_parse.config_file, to_parse.iterations,
-//				((to_parse.abft == 1) ? "dumb_abft":"no_abft"));
-//		if (!(to_parse.generate_flag)) start_log_file("cudaDarknetV1", test_info);
-//#endif
 			if (!to_parse.generate_flag) {
 				start_count_app(to_parse.gold_inout, to_parse.save_layers,
 						to_parse.abft, to_parse.iterations, "cudaDarknetV1");
 			}
-			if (strcmp(to_parse.execution_type, "yolo") == 0) {
+			if ((strcmp(to_parse.execution_type, "yolo") == 0) || (strcmp(to_parse.execution_type, "yolo_dmr") == 0)){
 				struct stat st = { 0 };
 				if (to_parse.abft && stat(SAVE_LAYERS_DIR, &st) == -1)
 					mkdir(SAVE_LAYERS_DIR, 0777);
@@ -414,7 +396,7 @@ int main(int argc, char **argv) {
 			//#endif
 
 		}else{
-			usage(argv, "<yolo/valid/classifer>",
+			usage(argv, "<yolo/yolo_dmr/valid/classifer>",
 					"<function> to use with radiation test");
 		}
 		args_init_and_setnull(&to_parse);
