@@ -12,7 +12,7 @@
 #include <stdio.h> //printf
 #include <stdlib.h> //atol
 
-#define MAX_ABFT_TYPES 5
+#define MAX_ABFT_TYPES 7
 
 /**
  * -e - execution_type = <yolo/classifier/imagenet...>
