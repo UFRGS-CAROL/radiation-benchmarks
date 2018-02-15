@@ -390,7 +390,7 @@ int main(int argc, char **argv) {
 					mkdir(SAVE_LAYERS_DIR, 0777);
 				run_yolo_rad(to_parse);
 			}
-
+			https://www.youtube.com/watch?v=gjxCJ2FyRMY
 			//#ifdef LOGS
 			if (!(to_parse.generate_flag))
 				finish_count_app();

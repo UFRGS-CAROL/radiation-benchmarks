@@ -761,6 +761,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 	//-------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------
+	printf("\n\nMODULAR REDUNDANCY %d\n\n", modular_redundancy);
 	network redundant_net[modular_redundancy];
 	detection_layer redundant_detection_layer[modular_redundancy];
 
