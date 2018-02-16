@@ -824,7 +824,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 			//This is the detection
 			start_iteration_app();
 
-			float *predictions = network_predict(redundant_net[0], X);
+			float *predictions = network_predict_mr(redundant_net, X, modular_redundancy);
 
 			convert_detections(predictions,
 					redundant_detection_layer[0].classes,
