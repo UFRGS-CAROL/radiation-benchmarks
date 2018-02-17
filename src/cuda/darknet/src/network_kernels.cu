@@ -5,7 +5,6 @@
 // For Modular redundancy
 #include <pthread.h>
 
-
 extern "C" {
 #include <stdio.h>
 #include <time.h>
@@ -49,11 +48,11 @@ float * get_network_output_gpu(network net);
 /**
  * This method will do the magic of executing in parallel
  */
-void run_layer_parallel(layer& l, network_state& state, network& net) {
-//	thread_parameters *t_par = (thread_parameters*)parameters;
-//	layer l = t_par->l;
-//	network_state state = t_par->state;
-//	network net = t_par->net;
+void *run_layer_parallel(void *parameters) {
+	thread_parameters *t_par = (thread_parameters*) parameters;
+	layer l = t_par->l;
+	network_state state = t_par->state;
+	network net = t_par->net;
 
 	if (l.delta_gpu) {
 		fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
@@ -101,91 +100,63 @@ void run_layer_parallel(layer& l, network_state& state, network& net) {
 	} else if (l.type == SHORTCUT) {
 		forward_shortcut_layer_gpu(l, state);
 	}
-//	return NULL;
+	return NULL;
 }
 
-void forward_network_gpu(network net, network_state state,
-		network *redundant_nets, network_state *states,
-		int modular_redundancy) {
-	if (modular_redundancy == 0) {
-		state.workspace = net.workspace;
+void forward_network_gpu(network net, network_state state) {
+	state.workspace = net.workspace;
 
-		for (int i = 0; i < net.n; ++i) {
-			state.index = i;
-			layer l = net.layers[i];
-			if (l.delta_gpu) {
-				fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
-			}
-			if (l.type == CONVOLUTIONAL) {
-				forward_convolutional_layer_gpu(l, state);
-			} else if (l.type == DECONVOLUTIONAL) {
-				forward_deconvolutional_layer_gpu(l, state);
-			} else if (l.type == ACTIVE) {
-				forward_activation_layer_gpu(l, state);
-			} else if (l.type == LOCAL) {
-				forward_local_layer_gpu(l, state);
-			} else if (l.type == DETECTION) {
-				forward_detection_layer_gpu(l, state);
-			} else if (l.type == REGION) {
-				forward_region_layer_gpu(l, state);
-			} else if (l.type == CONNECTED) {
-				forward_connected_layer_gpu(l, state);
-			} else if (l.type == RNN) {
-				forward_rnn_layer_gpu(l, state);
-			} else if (l.type == GRU) {
-				forward_gru_layer_gpu(l, state);
-			} else if (l.type == CRNN) {
-				forward_crnn_layer_gpu(l, state);
-			} else if (l.type == CROP) {
-				forward_crop_layer_gpu(l, state);
-			} else if (l.type == COST) {
-				forward_cost_layer_gpu(l, state);
-			} else if (l.type == SOFTMAX) {
-				forward_softmax_layer_gpu(l, state);
-			} else if (l.type == NORMALIZATION) {
-				forward_normalization_layer_gpu(l, state);
-			} else if (l.type == BATCHNORM) {
-				forward_batchnorm_layer_gpu(l, state);
-			} else if (l.type == MAXPOOL) {
-				forward_maxpool_layer_gpu(l, state);
-			} else if (l.type == REORG) {
-				forward_reorg_layer_gpu(l, state);
-			} else if (l.type == AVGPOOL) {
-				forward_avgpool_layer_gpu(l, state);
-			} else if (l.type == DROPOUT) {
-				forward_dropout_layer_gpu(l, state);
-			} else if (l.type == ROUTE) {
-				forward_route_layer_gpu(l, net);
-			} else if (l.type == SHORTCUT) {
-				forward_shortcut_layer_gpu(l, state);
-			}
-			state.input = l.output_gpu;
-
+	for (int i = 0; i < net.n; ++i) {
+		state.index = i;
+		layer l = net.layers[i];
+		if (l.delta_gpu) {
+			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
 		}
-	} else {
-		for (int i = 0; i < modular_redundancy; i++)
-			states[i].workspace = redundant_nets[i].workspace;
-
-		// Lets create threads
-		pthread_t threads[modular_redundancy];
-
-		for (int i = 0; i < redundant_nets[0].n; ++i) {
-			// For all duplications one thread will be created
-			for (int j = 0; j < modular_redundancy; j++) {
-				// States mus be set to i
-				states[j].index = i;
-
-				// Layer must has the current index
-//				thread_parameters par;
-//				par.l = redundant_nets[j].layers[i];
-//				par.state = states[j];
-
-				run_layer_parallel(redundant_nets[j].layers[i], states[j], redundant_nets[j]);
-				states[j].input =  redundant_nets[j].layers[i].output_gpu;
-				printf("Executou layer %d DMR %d\n", i, j);
-			}
-
+		if (l.type == CONVOLUTIONAL) {
+			forward_convolutional_layer_gpu(l, state);
+		} else if (l.type == DECONVOLUTIONAL) {
+			forward_deconvolutional_layer_gpu(l, state);
+		} else if (l.type == ACTIVE) {
+			forward_activation_layer_gpu(l, state);
+		} else if (l.type == LOCAL) {
+			forward_local_layer_gpu(l, state);
+		} else if (l.type == DETECTION) {
+			forward_detection_layer_gpu(l, state);
+		} else if (l.type == REGION) {
+			forward_region_layer_gpu(l, state);
+		} else if (l.type == CONNECTED) {
+			forward_connected_layer_gpu(l, state);
+		} else if (l.type == RNN) {
+			forward_rnn_layer_gpu(l, state);
+		} else if (l.type == GRU) {
+			forward_gru_layer_gpu(l, state);
+		} else if (l.type == CRNN) {
+			forward_crnn_layer_gpu(l, state);
+		} else if (l.type == CROP) {
+			forward_crop_layer_gpu(l, state);
+		} else if (l.type == COST) {
+			forward_cost_layer_gpu(l, state);
+		} else if (l.type == SOFTMAX) {
+			forward_softmax_layer_gpu(l, state);
+		} else if (l.type == NORMALIZATION) {
+			forward_normalization_layer_gpu(l, state);
+		} else if (l.type == BATCHNORM) {
+			forward_batchnorm_layer_gpu(l, state);
+		} else if (l.type == MAXPOOL) {
+			forward_maxpool_layer_gpu(l, state);
+		} else if (l.type == REORG) {
+			forward_reorg_layer_gpu(l, state);
+		} else if (l.type == AVGPOOL) {
+			forward_avgpool_layer_gpu(l, state);
+		} else if (l.type == DROPOUT) {
+			forward_dropout_layer_gpu(l, state);
+		} else if (l.type == ROUTE) {
+			forward_route_layer_gpu(l, net);
+		} else if (l.type == SHORTCUT) {
+			forward_shortcut_layer_gpu(l, state);
 		}
+		state.input = l.output_gpu;
+
 	}
 
 }
@@ -579,9 +550,7 @@ float train_networks(network *nets, int n, data d, int interval) {
 
 float *get_network_output_layer_gpu(network net, int i) {
 	layer l = net.layers[i];
-	printf("ERRO AQUI\n");
 	cuda_pull_array(l.output_gpu, l.output, l.outputs * l.batch);
-	printf("ERRO DEPOIS\n");
 	return l.output;
 }
 
@@ -609,13 +578,13 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 		states[i].delta = 0;
 	}
 
-	forward_network_gpu(redundant_nets[0], states[0], redundant_nets, states, modular_redundancy);
-	float *out = get_network_output(redundant_nets[0]);
+//	forward_network_gpu(redundant_nets[0], states[0], redundant_nets, states,
+//			modular_redundancy);
 	printf("The error is here\n");
+	float *out = get_network_output(redundant_nets[0]);
 
 	for (int i = 0; i < modular_redundancy; i++)
-		if (states[i].input)
-			cuda_free(states[i].input);
+		cuda_free(states[i].input);
 
 	if (states)
 		free(states);
