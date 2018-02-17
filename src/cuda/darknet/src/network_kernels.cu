@@ -103,9 +103,9 @@ void *run_layer_parallel(void *parameters) {
 	return NULL;
 }
 
-void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
-	network net = nets[0];
-	network_state state = states[0];
+void forward_network_gpu_mr(network net, network_state state, int mr) {
+//	network net = nets[0];
+//	network_state state = states[0];
 	for (int i = 0; i < net.n; ++i) {
 		state.index = i;
 		layer l = net.layers[i];
@@ -623,7 +623,7 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 		int modular_redundancy) {
 	int size = get_network_input_size(redundant_nets[0])
 			* redundant_nets[0].batch;
-	network_state *states = new network_state[modular_redundancy];
+	network_state *states = (network_state*) calloc(modular_redundancy, sizeof(network_state));
 
 	for (int i = 0; i < modular_redundancy; i++) {
 		states[i].index = 0;
@@ -634,7 +634,7 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 		states[i].delta = 0;
 	}
 	printf("passou antes\n");
-	forward_network_gpu_mr(redundant_nets, states, modular_redundancy);
+	forward_network_gpu_mr(redundant_nets[0], states[0], modular_redundancy);
 	printf("The error is here\n");
 	float *out = get_network_output(redundant_nets[0]);
 
@@ -642,7 +642,8 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 		cuda_free(states[i].input);
 
 	if (states)
-		delete[] states;
+		free(states);
+
 	return out;
 }
 
