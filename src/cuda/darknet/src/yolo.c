@@ -770,8 +770,9 @@ void test_yolo_radiation_dmr(Args *arg) {
 		redundant_net[n_i] = parse_network_cfg(arg->config_file);
 		if (arg->weights) {
 			load_weights(&redundant_net[n_i], arg->weights);
+			printf("Load nos pesos\n");
 		}
-		//must allocate for detection layer two
+		//must allocate for detection layer too
 		redundant_detection_layer[n_i] =
 				redundant_net[n_i].layers[redundant_net[n_i].n - 1];
 

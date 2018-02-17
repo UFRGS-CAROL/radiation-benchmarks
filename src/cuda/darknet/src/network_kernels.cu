@@ -49,11 +49,11 @@ float * get_network_output_gpu(network net);
 /**
  * This method will do the magic of executing in parallel
  */
-void *run_layer_parallel(void *parameters) {
-	thread_parameters *t_par = (thread_parameters*)parameters;
-	layer l = t_par->l;
-	network_state state = t_par->state;
-	network net = t_par->net;
+void run_layer_parallel(layer& l, network_state& state, network& net) {
+//	thread_parameters *t_par = (thread_parameters*)parameters;
+//	layer l = t_par->l;
+//	network_state state = t_par->state;
+//	network net = t_par->net;
 
 	if (l.delta_gpu) {
 		fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
@@ -101,7 +101,7 @@ void *run_layer_parallel(void *parameters) {
 	} else if (l.type == SHORTCUT) {
 		forward_shortcut_layer_gpu(l, state);
 	}
-	return NULL;
+//	return NULL;
 }
 
 void forward_network_gpu(network net, network_state state,
@@ -176,12 +176,12 @@ void forward_network_gpu(network net, network_state state,
 				states[j].index = i;
 
 				// Layer must has the current index
-				thread_parameters par;
-				par.l = redundant_nets[j].layers[i];
-				par.state = states[j];
+//				thread_parameters par;
+//				par.l = redundant_nets[j].layers[i];
+//				par.state = states[j];
 
-				run_layer_parallel(&par);
-				state.input = par.l.output_gpu;
+				run_layer_parallel(redundant_nets[j].layers[i], states[j], redundant_nets[j]);
+				states[j].input =  redundant_nets[j].layers[i].output_gpu;
 				printf("Executou layer %d DMR %d\n", i, j);
 			}
 
