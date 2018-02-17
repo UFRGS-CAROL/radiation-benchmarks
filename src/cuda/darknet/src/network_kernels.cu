@@ -623,7 +623,7 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 		int modular_redundancy) {
 	int size = get_network_input_size(redundant_nets[0])
 			* redundant_nets[0].batch;
-	network_state states[modular_redundancy];
+	network_state *states = new network_state[modular_redundancy];
 
 	for (int i = 0; i < modular_redundancy; i++) {
 		states[i].index = 0;
@@ -641,6 +641,8 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 	for (int i = 0; i < modular_redundancy; i++)
 		cuda_free(states[i].input);
 
+	if (states)
+		delete[] states;
 	return out;
 }
 
