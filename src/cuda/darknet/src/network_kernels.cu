@@ -182,6 +182,7 @@ void forward_network_gpu(network net, network_state state,
 
 				run_layer_parallel(&par);
 				state.input = par.l.output_gpu;
+				printf("Executou layer %d DMR %d\n", i, j);
 			}
 
 		}
@@ -606,7 +607,7 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 		states[i].delta = 0;
 	}
 
-	forward_network_gpu(redundant_nets[0], states[0], redundant_nets, states);
+	forward_network_gpu(redundant_nets[0], states[0], redundant_nets, states, modular_redundancy);
 	float *out = get_network_output(redundant_nets[0]);
 
 	for (int i = 0; i < modular_redundancy; i++)
