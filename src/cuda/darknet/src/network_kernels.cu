@@ -579,7 +579,9 @@ float train_networks(network *nets, int n, data d, int interval) {
 
 float *get_network_output_layer_gpu(network net, int i) {
 	layer l = net.layers[i];
+	printf("ERRO AQUI\n");
 	cuda_pull_array(l.output_gpu, l.output, l.outputs * l.batch);
+	printf("ERRO DEPOIS\n");
 	return l.output;
 }
 
