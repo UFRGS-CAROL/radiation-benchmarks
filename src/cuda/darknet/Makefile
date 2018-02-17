@@ -24,7 +24,7 @@ LDFLAGS= -lm -pthread
 COMMON= -I../../include/
 CFLAGS= -Wall -Wfatal-errors 
 CXXFLAGS=-std=c++11
-NVCCFLAGS= -rdc=true -lcudadevrt
+NVCCFLAGS= -rdc=true -lcudadevrt --default-stream per-thread
 
 CUDAINCLUDE=/usr/local/cuda-7.0/include/
 

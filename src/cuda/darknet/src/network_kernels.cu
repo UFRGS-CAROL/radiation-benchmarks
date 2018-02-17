@@ -2,6 +2,10 @@
 #include "curand.h"
 #include "cublas_v2.h"
 
+// For Modular redundancy
+#include <pthread.h>
+
+
 extern "C" {
 #include <stdio.h>
 #include <time.h>
@@ -36,12 +40,69 @@ extern "C" {
 #include "route_layer.h"
 #include "shortcut_layer.h"
 #include "blas.h"
-
 }
 
 float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);
 float * get_network_output_gpu(network net);
+
+/**
+ * This method will do the magic of executing in parallel
+ */
+void *run_layer_parallel(void *parameters) {
+	thread_parameters *t_par = (thread_parameters*)parameters;
+	layer l = t_par->l;
+	network_state state = t_par->state;
+	network net = t_par->net;
+
+	if (l.delta_gpu) {
+		fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
+	}
+	if (l.type == CONVOLUTIONAL) {
+		forward_convolutional_layer_gpu(l, state);
+	} else if (l.type == DECONVOLUTIONAL) {
+		forward_deconvolutional_layer_gpu(l, state);
+	} else if (l.type == ACTIVE) {
+		forward_activation_layer_gpu(l, state);
+	} else if (l.type == LOCAL) {
+		forward_local_layer_gpu(l, state);
+	} else if (l.type == DETECTION) {
+		forward_detection_layer_gpu(l, state);
+	} else if (l.type == REGION) {
+		forward_region_layer_gpu(l, state);
+	} else if (l.type == CONNECTED) {
+		forward_connected_layer_gpu(l, state);
+	} else if (l.type == RNN) {
+		forward_rnn_layer_gpu(l, state);
+	} else if (l.type == GRU) {
+		forward_gru_layer_gpu(l, state);
+	} else if (l.type == CRNN) {
+		forward_crnn_layer_gpu(l, state);
+	} else if (l.type == CROP) {
+		forward_crop_layer_gpu(l, state);
+	} else if (l.type == COST) {
+		forward_cost_layer_gpu(l, state);
+	} else if (l.type == SOFTMAX) {
+		forward_softmax_layer_gpu(l, state);
+	} else if (l.type == NORMALIZATION) {
+		forward_normalization_layer_gpu(l, state);
+	} else if (l.type == BATCHNORM) {
+		forward_batchnorm_layer_gpu(l, state);
+	} else if (l.type == MAXPOOL) {
+		forward_maxpool_layer_gpu(l, state);
+	} else if (l.type == REORG) {
+		forward_reorg_layer_gpu(l, state);
+	} else if (l.type == AVGPOOL) {
+		forward_avgpool_layer_gpu(l, state);
+	} else if (l.type == DROPOUT) {
+		forward_dropout_layer_gpu(l, state);
+	} else if (l.type == ROUTE) {
+		forward_route_layer_gpu(l, net);
+	} else if (l.type == SHORTCUT) {
+		forward_shortcut_layer_gpu(l, state);
+	}
+	return NULL;
+}
 
 void forward_network_gpu(network net, network_state state,
 		network *redundant_nets, network_state *states,
@@ -105,6 +166,9 @@ void forward_network_gpu(network net, network_state state,
 		for (int i = 0; i < modular_redundancy; i++)
 			states[i].workspace = redundant_nets[i].workspace;
 
+		// Lets create threads
+		pthread_t threads[modular_redundancy];
+
 		for (int i = 0; i < redundant_nets[0].n; ++i) {
 			// For all duplications one thread will be created
 			for (int j = 0; j < modular_redundancy; j++) {
@@ -112,55 +176,12 @@ void forward_network_gpu(network net, network_state state,
 				states[j].index = i;
 
 				// Layer must has the current index
-				layer l = redundant_nets[j].layers[i];
-				network_state state = states[j];
-				if (l.delta_gpu) {
-					fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
-				}
-				if (l.type == CONVOLUTIONAL) {
-					forward_convolutional_layer_gpu(l, state);
-				} else if (l.type == DECONVOLUTIONAL) {
-					forward_deconvolutional_layer_gpu(l, state);
-				} else if (l.type == ACTIVE) {
-					forward_activation_layer_gpu(l, state);
-				} else if (l.type == LOCAL) {
-					forward_local_layer_gpu(l, state);
-				} else if (l.type == DETECTION) {
-					forward_detection_layer_gpu(l, state);
-				} else if (l.type == REGION) {
-					forward_region_layer_gpu(l, state);
-				} else if (l.type == CONNECTED) {
-					forward_connected_layer_gpu(l, state);
-				} else if (l.type == RNN) {
-					forward_rnn_layer_gpu(l, state);
-				} else if (l.type == GRU) {
-					forward_gru_layer_gpu(l, state);
-				} else if (l.type == CRNN) {
-					forward_crnn_layer_gpu(l, state);
-				} else if (l.type == CROP) {
-					forward_crop_layer_gpu(l, state);
-				} else if (l.type == COST) {
-					forward_cost_layer_gpu(l, state);
-				} else if (l.type == SOFTMAX) {
-					forward_softmax_layer_gpu(l, state);
-				} else if (l.type == NORMALIZATION) {
-					forward_normalization_layer_gpu(l, state);
-				} else if (l.type == BATCHNORM) {
-					forward_batchnorm_layer_gpu(l, state);
-				} else if (l.type == MAXPOOL) {
-					forward_maxpool_layer_gpu(l, state);
-				} else if (l.type == REORG) {
-					forward_reorg_layer_gpu(l, state);
-				} else if (l.type == AVGPOOL) {
-					forward_avgpool_layer_gpu(l, state);
-				} else if (l.type == DROPOUT) {
-					forward_dropout_layer_gpu(l, state);
-				} else if (l.type == ROUTE) {
-					forward_route_layer_gpu(l, net);
-				} else if (l.type == SHORTCUT) {
-					forward_shortcut_layer_gpu(l, state);
-				}
-				state.input = l.output_gpu;
+				thread_parameters par;
+				par.l = redundant_nets[j].layers[i];
+				par.state = states[j];
+
+				run_layer_parallel(&par);
+				state.input = par.l.output_gpu;
 			}
 
 		}
@@ -576,7 +597,6 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 	network_state *states = (network_state*) calloc(modular_redundancy,
 			sizeof(network_state));
 
-
 	for (int i = 0; i < modular_redundancy; i++) {
 		states[i].index = 0;
 		states[i].net = redundant_nets[i];
@@ -588,8 +608,8 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 
 	forward_network_gpu(redundant_nets[0], states[0], redundant_nets, states);
 	float *out = get_network_output(redundant_nets[0]);
-	printf("PASSOU AQUI ANTES\n");
-	for (i = 0; i < modular_redundancy; i++)
+
+	for (int i = 0; i < modular_redundancy; i++)
 		cuda_free(states[i].input);
 
 	if (states)

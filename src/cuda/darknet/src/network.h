@@ -64,6 +64,12 @@ typedef struct network_state {
 	network net;
 } network_state;
 
+typedef struct {
+	network_state state;
+	layer l;
+	network net;
+} thread_parameters;
+
 #ifdef GPU
 float train_networks(network *nets, int n, data d, int interval);
 void sync_nets(network *nets, int n, int interval);
