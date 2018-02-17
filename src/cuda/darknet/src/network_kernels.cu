@@ -608,6 +608,7 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 	}
 
 	forward_network_gpu(redundant_nets[0], states[0], redundant_nets, states, modular_redundancy);
+	printf("The error is here\n");
 	float *out = get_network_output(redundant_nets[0]);
 
 	for (int i = 0; i < modular_redundancy; i++)
