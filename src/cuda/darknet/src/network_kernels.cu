@@ -633,7 +633,7 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 		states[i].train = 0;
 		states[i].delta = 0;
 	}
-
+	printf("passou antes\n");
 	forward_network_gpu_mr(redundant_nets, states, modular_redundancy);
 	printf("The error is here\n");
 	float *out = get_network_output(redundant_nets[0]);
