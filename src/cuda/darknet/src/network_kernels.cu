@@ -625,8 +625,9 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 		int modular_redundancy) {
 	int size = get_network_input_size(redundant_nets[0])
 			* redundant_nets[0].batch;
-	network_state *states = (network_state*) calloc(modular_redundancy, sizeof(network_state));
-
+	network_state *states = (network_state*) calloc(modular_redundancy,
+			sizeof(network_state));
+	printf("modular redundancy aqui dentro %d\n", modular_redundancy);
 	for (int i = 0; i < modular_redundancy; i++) {
 		states[i].index = 0;
 		states[i].net = redundant_nets[i];
