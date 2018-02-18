@@ -110,7 +110,6 @@ void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 	for (int i = 0; i < nets[0].n; ++i) {
 		network_state state = states[mr - 1];
 		network net = nets[mr - 1];
-		printf("Passou layer %d\n", i);
 		//------------------------------------
 		state.index = i;
 		layer l = net.layers[i];
@@ -161,6 +160,7 @@ void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 			forward_shortcut_layer_gpu(l, state);
 		}
 		state.input = l.output_gpu;
+		printf("Passou layer %d\n", i);
 
 	}
 }
