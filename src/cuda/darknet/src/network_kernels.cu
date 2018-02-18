@@ -621,21 +621,22 @@ float *get_network_output_gpu(network net) {
 
 float *network_predict_gpu_mr(network *nets, float *input,
 		int modular_redundancy) {
-	printf("MR here %d\n", modular_redundancy);
-	network net = nets[modular_redundancy - 1];
+//	printf("MR here %d\n", modular_redundancy);
+//	network net = nets[modular_redundancy - 1];
 	network_state states[modular_redundancy];
-	int size = get_network_input_size(net) * net.batch;
-	network_state state;
-	state.index = 0;
-	state.net = net;
-	state.input = cuda_make_array(input, size);
-	state.truth = 0;
-	state.train = 0;
-	state.delta = 0;
+	int size = get_network_input_size(nets[modular_redundancy - 1])
+			* nets[modular_redundancy - 1].batch;
+//	network_state state;
+//	state.index = 0;
+//	state.net = net;
+//	state.input = cuda_make_array(input, size);
+//	state.truth = 0;
+//	state.train = 0;
+//	state.delta = 0;
 
-	for(int i = 0; i < modular_redundancy; i++){
+	for (int i = 0; i < modular_redundancy; i++) {
 		states[i].index = 0;
-		states[i].net = net;
+		states[i].net = nets[i];
 		states[i].input = cuda_make_array(input, size);
 		states[i].truth = 0;
 		states[i].train = 0;
@@ -643,11 +644,13 @@ float *network_predict_gpu_mr(network *nets, float *input,
 
 	}
 
-	forward_network_gpu_mr(net, states[modular_redundancy - 1], modular_redundancy);
-	float *out = get_network_output_gpu(net);
-	for(int i = 0; i < modular_redundancy; i++)
+	forward_network_gpu_mr(nets[modular_redundancy - 1],
+			states[modular_redundancy - 1], modular_redundancy);
+
+	float *out = get_network_output_gpu(nets[modular_redundancy - 1]);
+	for (int i = 0; i < modular_redundancy; i++)
 		cuda_free(states[i].input);
-	cuda_free(state.input);
+//	cuda_free(state.input);
 	return out;
 
 }
