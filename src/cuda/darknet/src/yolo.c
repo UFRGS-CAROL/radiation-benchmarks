@@ -762,21 +762,39 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//-------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------
 	printf("\n\nMODULAR REDUNDANCY %d\n\n", modular_redundancy);
-	network redundant_net[modular_redundancy];
-	detection_layer redundant_detection_layer[modular_redundancy];
+	network *redundant_net = (network*) calloc(modular_redundancy, sizeof(network));
+	detection_layer *redundant_detection_layer = (detection_layer*) calloc(modular_redundancy, sizeof(detection_layer));
+
+
+//	network net = parse_network_cfg(arg->config_file);
+//	if (arg->weights) {
+//		load_weights(&net, arg->weights);
+//	}
+//	detection_layer l = net.layers[net.n - 1];
+//	set_batch_network(&net, 1);
+//	srand(2222222);
+//	clock_t time;
+//
+//	int j;
+//	float nms = .4;
+//	box *boxes = calloc(l.side * l.side * l.n, sizeof(box));
+//	float **probs = calloc(l.side * l.side * l.n, sizeof(float *));
+//	for (j = 0; j < l.side * l.side * l.n; ++j)
+//		probs[j] = calloc(l.classes, sizeof(float *));
+
 
 	int n_i;
 	for (n_i = 0; n_i < modular_redundancy; n_i++) {
 		redundant_net[n_i] = parse_network_cfg(arg->config_file);
 		if (arg->weights) {
-			load_weights(&redundant_net[n_i], arg->weights);
+			load_weights(&(redundant_net[n_i]), arg->weights);
 			printf("Load nos pesos\n");
 		}
 		//must allocate for detection layer too
 		redundant_detection_layer[n_i] =
 				redundant_net[n_i].layers[redundant_net[n_i].n - 1];
 
-		set_batch_network(&redundant_net[n_i], 1);
+		set_batch_network(&(redundant_net[n_i]), 1);
 
 	}
 
@@ -785,19 +803,13 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 	int j;
 	float nms = .4;
-	box *boxes = calloc(
-			redundant_detection_layer[0].side
-					* redundant_detection_layer[0].side
-					* redundant_detection_layer[0].n, sizeof(box));
-	float **probs = calloc(
-			redundant_detection_layer[0].side
-					* redundant_detection_layer[0].side
-					* redundant_detection_layer[0].n, sizeof(float *));
-	for (j = 0;
-			j
-					< redundant_detection_layer[0].side
-							* redundant_detection_layer[0].side
-							* redundant_detection_layer[0].n; ++j)
+	int total_size = redundant_detection_layer[0].side
+			* redundant_detection_layer[0].side
+			* redundant_detection_layer[0].n;
+	box *boxes = calloc(total_size, sizeof(box));
+	float **probs = calloc(total_size, sizeof(float *));
+
+	for (j = 0; j < total_size; ++j)
 		probs[j] = calloc(redundant_detection_layer[0].classes,
 				sizeof(float *));
 
@@ -825,7 +837,8 @@ void test_yolo_radiation_dmr(Args *arg) {
 			//This is the detection
 			start_iteration_app();
 
-			float *predictions = network_predict_mr(redundant_net, X, modular_redundancy);
+			float *predictions = network_predict_mr(redundant_net, X,
+					modular_redundancy);
 
 			convert_detections(predictions,
 					redundant_detection_layer[0].classes,
@@ -897,6 +910,8 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 	//free smartpool errors
 //	free_error_return(&max_pool_errors);
+	free(redundant_detection_layer);
+	free(redundant_net);
 #ifdef GPU
 	free_err_detected();
 #endif

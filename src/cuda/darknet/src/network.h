@@ -82,8 +82,8 @@ float *network_predict_gpu(network net, float *input);
 float *network_predict_gpu_mr(network *redundant_nets, float *input,
 		int modular_redundancy);
 
-// Hardened version of forward
-void forward_network_gpu_mr(network *nets, network_state *states, int mr);
+//// Hardened version of forward
+//void forward_network_gpu_mr(network nets, network_state *states, int mr);
 
 
 float * get_network_output_gpu_layer(network net, int i);
