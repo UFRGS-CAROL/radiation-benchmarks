@@ -642,7 +642,7 @@ float *network_predict_gpu_mr(network *nets, float *input,
 
 	}
 
-	forward_network_gpu_mr(net, state, modular_redundancy);
+	forward_network_gpu_mr(net, states[modular_redundancy - 1], modular_redundancy);
 	float *out = get_network_output_gpu(net);
 	for(int i = 0; i < modular_redundancy; i++)
 		cuda_free(states[i].input);
