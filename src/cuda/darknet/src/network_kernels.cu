@@ -104,13 +104,11 @@ void *run_layer_parallel(void *parameters) {
 }
 
 void forward_network_gpu_mr(network net, network_state state, int mr) {
-//	network net = nets[0];
-//	network_state state = states[0];
-	printf("Passou dentro da funcao\n");
+	state.workspace = net.workspace;
+
 	for (int i = 0; i < net.n; ++i) {
 		state.index = i;
 		layer l = net.layers[i];
-		printf("Pau na layer %d\n", i);
 		if (l.delta_gpu) {
 			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
 		}
