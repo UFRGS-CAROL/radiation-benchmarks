@@ -619,8 +619,9 @@ float *get_network_output_gpu(network net) {
 	return get_network_output_layer_gpu(net, i);
 }
 
-float *network_predict_gpu_mr(network net, float *input,
+float *network_predict_gpu_mr(network *nets, float *input,
 		int modular_redundancy) {
+	network net = nets[0];
 	int size = get_network_input_size(net) * net.batch;
 	network_state state;
 	state.index = 0;
