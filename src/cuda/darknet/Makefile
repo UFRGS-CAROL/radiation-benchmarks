@@ -29,7 +29,8 @@ NVCCFLAGS= -rdc=true -lcudadevrt --default-stream per-thread
 CUDAINCLUDE=/usr/local/cuda-7.0/include/
 
 ifeq ($(DEBUG), 1)
-	OPTS=-O0 -g
+	OPTS+= -g
+	NVCCFLAGS+= -g -G
 endif
 
 CFLAGS+=$(OPTS)
@@ -116,7 +117,7 @@ test:
 							-n 5000 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
 							-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
 							-b $(RAD_DIR)/src/cuda/darknet \
-							-x 0 -s 0 -a 7
+							-x 0 -s 0 -a 0
 
 generate:
 	./$(TARGET) test_radiation -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
