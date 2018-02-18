@@ -103,7 +103,9 @@ void *run_layer_parallel(void *parameters) {
 	return NULL;
 }
 
-void forward_network_gpu_mr(network net, network_state state, int mr) {
+void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
+	network_state state = states[mr - 1];
+	network net = nets[mr - 1];
 	state.workspace = net.workspace;
 
 	for (int i = 0; i < net.n; ++i) {
@@ -621,18 +623,8 @@ float *get_network_output_gpu(network net) {
 
 float *network_predict_gpu_mr(network *nets, float *input,
 		int modular_redundancy) {
-//	printf("MR here %d\n", modular_redundancy);
-//	network net = nets[modular_redundancy - 1];
 	network_state states[modular_redundancy];
-	int size = get_network_input_size(nets[modular_redundancy - 1])
-			* nets[modular_redundancy - 1].batch;
-//	network_state state;
-//	state.index = 0;
-//	state.net = net;
-//	state.input = cuda_make_array(input, size);
-//	state.truth = 0;
-//	state.train = 0;
-//	state.delta = 0;
+	int size = get_network_input_size(nets[0]) * nets[0].batch;
 
 	for (int i = 0; i < modular_redundancy; i++) {
 		states[i].index = 0;
@@ -644,8 +636,7 @@ float *network_predict_gpu_mr(network *nets, float *input,
 
 	}
 
-	forward_network_gpu_mr(nets[modular_redundancy - 1],
-			states[modular_redundancy - 1], modular_redundancy);
+	forward_network_gpu_mr(nets, states, modular_redundancy);
 
 	float *out = get_network_output_gpu(nets[modular_redundancy - 1]);
 	for (int i = 0; i < modular_redundancy; i++)
