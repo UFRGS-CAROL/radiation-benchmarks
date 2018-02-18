@@ -720,28 +720,37 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//if abft is set these parameters will also be set
 	error_return max_pool_errors;
 	init_error_return(&max_pool_errors);
+
+	//MR size
+	int mr_size = 1;
+
 	//  set abft
 	if (arg->abft >= 0 && arg->abft < MAX_ABFT_TYPES) {
 #ifdef GPU
 		switch (arg->abft) {
-			case 1:
+			case GEMM:
 			set_abft_gemm(arg->abft);
 			break;
-			case 2:
+			case SMART_POOLING:
 			set_abft_smartpool(arg->abft);
 			break;
-			case 3:
+			case L1:
 			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
 			exit(-1);
 			break;
-			case 4:
+			case L2:
 			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
 			exit(-1);
 			break;
-			case 5:
+			case TRAINED_WEIGHTS:
 			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
 			exit(-1);
 			break;
+			case SMART_DMR:
+				mr_size = 2;
+			break;
+			case SMART_TMR:
+				mr_size = 3;
 			default:
 			printf("No ABFT was set\n");
 			break;
@@ -751,12 +760,15 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 	//-------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------
-	network net = parse_network_cfg(arg->config_file);
+	network net[mr_size];
+
+
+	net[0] = parse_network_cfg(arg->config_file);
 	if (arg->weights) {
-		load_weights(&net, arg->weights);
+		load_weights(&net[0], arg->weights);
 	}
-	detection_layer l = net.layers[net.n - 1];
-	set_batch_network(&net, 1);
+	detection_layer l = net[0].layers[net[0].n - 1];
+	set_batch_network(&net[0], 1);
 	srand(2222222);
 	clock_t time;
 
@@ -771,7 +783,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//load all images
 	const image *im_array = load_all_images(gold);
 
-	const image *im_array_sized = load_all_images_sized(im_array, net.w, net.h,
+	const image *im_array_sized = load_all_images_sized(im_array, net[0].w, net[0].h,
 			gold.plist_size);
 
 	//need to allocate layers arrays
@@ -793,7 +805,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 			//This is the detection
 			start_iteration_app();
 
-			float *predictions = network_predict_mr(net, X, 0);
+			float *predictions = network_predict_mr(net[0], X, 0);
 
 			convert_detections(predictions, l.classes, l.n, l.sqrt, l.side, 1,
 					1, arg->thresh, probs, boxes, 0);

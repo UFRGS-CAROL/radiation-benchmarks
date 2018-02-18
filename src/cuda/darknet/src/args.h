@@ -14,6 +14,17 @@
 
 #define MAX_ABFT_TYPES 8
 
+enum abft_type {
+	 NONE,
+	 GEMM,
+	 SMART_POOLING,
+	 L1,
+	 L2,
+	 TRAINED_WEIGHTS,
+	 SMART_DMR,
+	 SMART_TMR
+};
+
 /**
  * -e - execution_type = <yolo/classifier/imagenet...>
  * -m - execution_model = <test/train/valid>
