@@ -810,7 +810,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 			//This is the detection
 			start_iteration_app();
 
-			float *predictions = network_predict_mr(net, X, 0);
+			float *predictions = network_predict_mr(net, X, mr_size);
 
 			convert_detections(predictions, l[0].classes, l[0].n, l[0].sqrt, l[0].side, 1,
 					1, arg->thresh, probs, boxes, 0);
