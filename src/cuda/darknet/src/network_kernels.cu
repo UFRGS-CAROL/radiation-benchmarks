@@ -637,6 +637,22 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 		states[i].delta = 0;
 	}
 	printf("passou antes\n");
+	int inputs;
+	int h, w, c;
+	int max_crop;
+	int min_crop;
+	float angle;
+	float aspect;
+	float exposure;
+	float saturation;
+	float hue;
+
+	int gpu_index;
+
+	printf("NET DATA %d %d %f %f\n", redundant_nets[0].inputs,
+			redundant_nets[0].max_crop, redundant_nets[0].angle,
+			redundant_nets[0].saturation);
+
 	forward_network_gpu_mr(redundant_nets[0], states[0], modular_redundancy);
 	printf("The error is here\n");
 	float *out = get_network_output(redundant_nets[0]);
