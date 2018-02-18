@@ -747,10 +747,10 @@ void test_yolo_radiation_dmr(Args *arg) {
 			exit(-1);
 			break;
 			case SMART_DMR:
-				mr_size = 2;
+			mr_size = 2;
 			break;
 			case SMART_TMR:
-				mr_size = 3;
+			mr_size = 3;
 			default:
 			printf("No ABFT was set\n");
 			break;
@@ -762,10 +762,12 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//-------------------------------------------------------------------------------
 	network net[mr_size];
 
-
-	net[0] = parse_network_cfg(arg->config_file);
-	if (arg->weights) {
-		load_weights(&net[0], arg->weights);
+	int mr_i;
+	for (mr_i = 0; mr_i < mr_size; mr_i++) {
+		net[mr_i] = parse_network_cfg(arg->config_file);
+		if (arg->weights) {
+			load_weights(&net[mr_i], arg->weights);
+		}
 	}
 	detection_layer l = net[0].layers[net[0].n - 1];
 	set_batch_network(&net[0], 1);
@@ -783,8 +785,8 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//load all images
 	const image *im_array = load_all_images(gold);
 
-	const image *im_array_sized = load_all_images_sized(im_array, net[0].w, net[0].h,
-			gold.plist_size);
+	const image *im_array_sized = load_all_images_sized(im_array, net[0].w,
+			net[0].h, gold.plist_size);
 
 	//need to allocate layers arrays
 	alloc_gold_layers_arrays(&gold, &net);
