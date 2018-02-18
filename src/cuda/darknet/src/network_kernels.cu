@@ -104,11 +104,13 @@ void *run_layer_parallel(void *parameters) {
 }
 
 void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
-	network_state state = states[mr - 1];
-	network net = nets[mr - 1];
-	state.workspace = net.workspace;
+	for(int i = 0; i < mr; i++)
+		states[i].workspace = nets[i].workspace;
 
-	for (int i = 0; i < net.n; ++i) {
+	for (int i = 0; i < nets[0].n; ++i) {
+		network_state state = states[mr - 1];
+		network net = nets[mr - 1];
+		//------------------------------------
 		state.index = i;
 		layer l = net.layers[i];
 		if (l.delta_gpu) {
