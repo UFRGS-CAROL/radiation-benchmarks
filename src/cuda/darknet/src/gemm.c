@@ -178,7 +178,7 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 //	m  	input 	number of rows of matrix op(A) and C.
 //	n 	input	number of columns of matrix op(B) and C.
 //	k 	input 	number of columns of op(A) and rows of op(B).
-//		printf ("passou no get\n");
+		printf ("\n\npassou no get\n");
 		abraham_sum(A_gpu, B_gpu, M, K, K, N);
 	}
 	cublasHandle_t handle = blas_handle();
