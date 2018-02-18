@@ -621,47 +621,37 @@ float *get_network_output_gpu(network net) {
 	return get_network_output_layer_gpu(net, i);
 }
 
-float *network_predict_gpu_mr(network *redundant_nets, float *input,
+float *network_predict_gpu_mr(network redundant_nets, float *input,
 		int modular_redundancy) {
-	int size = get_network_input_size(redundant_nets[0])
-			* redundant_nets[0].batch;
-	network_state *states = (network_state*) calloc(modular_redundancy,
-			sizeof(network_state));
+	int size = get_network_input_size(redundant_nets)
+			* redundant_nets.batch;
+	network_state states;
+//			(network_state*) calloc(modular_redundancy,
+//			sizeof(network_state));
 	printf("modular redundancy aqui dentro %d\n", modular_redundancy);
-	for (int i = 0; i < modular_redundancy; i++) {
-		states[i].index = 0;
-		states[i].net = redundant_nets[i];
-		states[i].input = cuda_make_array(input, size);
-		states[i].truth = 0;
-		states[i].train = 0;
-		states[i].delta = 0;
-	}
+//	for (int i = 0; i < modular_redundancy; i++) {
+		states.index = 0;
+		states.net = redundant_nets;
+		states.input = cuda_make_array(input, size);
+		states.truth = 0;
+		states.train = 0;
+		states.delta = 0;
+//	}
 	printf("passou antes\n");
-	int inputs;
-	int h, w, c;
-	int max_crop;
-	int min_crop;
-	float angle;
-	float aspect;
-	float exposure;
-	float saturation;
-	float hue;
 
-	int gpu_index;
+	printf("NET DATA %d %d %f %f\n", redundant_nets.inputs,
+			redundant_nets.max_crop, redundant_nets.angle,
+			redundant_nets.saturation);
 
-	printf("NET DATA %d %d %f %f\n", redundant_nets[0].inputs,
-			redundant_nets[0].max_crop, redundant_nets[0].angle,
-			redundant_nets[0].saturation);
-
-	forward_network_gpu_mr(redundant_nets[0], states[0], modular_redundancy);
+	forward_network_gpu_mr(redundant_nets, states, modular_redundancy);
 	printf("The error is here\n");
-	float *out = get_network_output(redundant_nets[0]);
+	float *out = get_network_output(redundant_nets);
 
 	for (int i = 0; i < modular_redundancy; i++)
-		cuda_free(states[i].input);
+		cuda_free(states.input);
 
-	if (states)
-		free(states);
+//	if (states)
+//		free(states);
 
 	return out;
 }

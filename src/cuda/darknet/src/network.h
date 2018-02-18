@@ -79,7 +79,7 @@ void forward_network_gpu(network net, network_state state);
 float *network_predict_gpu(network net, float *input);
 
 // Hardened version of network_predict_gpu
-float *network_predict_gpu_mr(network *redundant_nets, float *input,
+float *network_predict_gpu_mr(network redundant_nets, float *input,
 		int modular_redundancy);
 
 //// Hardened version of forward
@@ -113,7 +113,7 @@ float train_network_datum(network net, float *x, float *y);
 matrix network_predict_data(network net, data test);
 
 float *network_predict(network net, float *input);
-float *network_predict_mr(network *redundant_nets, float *input,
+float *network_predict_mr(network redundant_nets, float *input,
 		int modular_redundancy);
 
 float network_accuracy(network net, data d);
