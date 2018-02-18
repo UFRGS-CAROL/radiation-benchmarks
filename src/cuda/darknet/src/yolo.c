@@ -761,6 +761,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//-------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------
 	network net[mr_size];
+	detection_layer l[mr_size];
 
 	int mr_i;
 	for (mr_i = 0; mr_i < mr_size; mr_i++) {
@@ -768,18 +769,20 @@ void test_yolo_radiation_dmr(Args *arg) {
 		if (arg->weights) {
 			load_weights(&net[mr_i], arg->weights);
 		}
+		l[mr_i]= net[mr_i].layers[net[mr_i].n - 1];
+		set_batch_network(&net[mr_i], 1);
+
 	}
-	detection_layer l = net[0].layers[net[0].n - 1];
-	set_batch_network(&net[0], 1);
 	srand(2222222);
 	clock_t time;
 
 	int j;
 	float nms = .4;
-	box *boxes = calloc(l.side * l.side * l.n, sizeof(box));
-	float **probs = calloc(l.side * l.side * l.n, sizeof(float *));
-	for (j = 0; j < l.side * l.side * l.n; ++j)
-		probs[j] = calloc(l.classes, sizeof(float *));
+	int total_size = l[0].side * l[0].side * l[0].n;
+	box *boxes = calloc(total_size, sizeof(box));
+	float **probs = calloc(total_size, sizeof(float *));
+	for (j = 0; j < total_size; ++j)
+		probs[j] = calloc(l[0].classes, sizeof(float *));
 
 	//-------------------------------------------------------------------------------
 	//load all images
@@ -789,7 +792,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 			net[0].h, gold.plist_size);
 
 	//need to allocate layers arrays
-	alloc_gold_layers_arrays(&gold, &net);
+	alloc_gold_layers_arrays(&gold, &net[0]);
 	//  int classes = l.classes;
 	//  int total = l.side * l.side * l.n;
 	//-------------------------------------------------------------------------------
@@ -809,10 +812,10 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 			float *predictions = network_predict_mr(net[0], X, 0);
 
-			convert_detections(predictions, l.classes, l.n, l.sqrt, l.side, 1,
+			convert_detections(predictions, l[0].classes, l[0].n, l[0].sqrt, l[0].side, 1,
 					1, arg->thresh, probs, boxes, 0);
 			if (nms)
-				do_nms_sort(boxes, probs, l.side * l.side * l.n, l.classes,
+				do_nms_sort(boxes, probs, l[0].side * l[0].side * l[0].n, l[0].classes,
 						nms);
 
 			end_iteration_app();
@@ -828,7 +831,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 				get_and_reset_error_detected_values(max_pool_errors);
 			}
 #endif
-			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, i,
+			compare(&gold, probs, boxes, l[0].w * l[0].h * l[0].n, l[0].classes, i,
 					arg->save_layers, it, arg->img_list_path, max_pool_errors);
 			time_cmp = mysecond() - time_cmp;
 
@@ -847,13 +850,13 @@ void test_yolo_radiation_dmr(Args *arg) {
 			save_image(im, temp);
 			show_image(im, temp);
 #endif
-			clear_boxes_and_probs(boxes, probs, l.w * l.h * l.n, l.classes);
+			clear_boxes_and_probs(boxes, probs, l[0].w * l[0].h * l[0].n, l[0].classes);
 
 		}
 	}
 
 	//free the memory
-	free_ptrs((void **) probs, l.w * l.h * l.n);
+	free_ptrs((void **) probs, l[0].w * l[0].h * l[0].n);
 	free(boxes);
 	delete_detection_var(&gold, arg);
 
