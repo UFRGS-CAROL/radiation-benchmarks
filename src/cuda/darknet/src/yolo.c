@@ -710,19 +710,16 @@ void test_yolo_radiation_test(Args *arg) {
  * Plus DMR or TMR
  */
 void test_yolo_radiation_dmr(Args *arg) {
-//-------------------------------------------------------------------------------
+
+	//-------------------------------------------------------------------------------
 	//radiation test case needs load gold first
 	detection gold = load_gold(arg);
 	printf("\nArgs inside detector_radiation\n");
 	print_args(*arg);
 	gold.network_name = "darknet_v1";
-
-	//modular redundancy size
-	int modular_redundancy = 1;
-
 	//if abft is set these parameters will also be set
-//	error_return max_pool_errors;
-//	init_error_return(&max_pool_errors);
+	error_return max_pool_errors;
+	init_error_return(&max_pool_errors);
 	//  set abft
 	if (arg->abft >= 0 && arg->abft < MAX_ABFT_TYPES) {
 #ifdef GPU
@@ -744,13 +741,6 @@ void test_yolo_radiation_dmr(Args *arg) {
 			case 5:
 			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
 			exit(-1);
-			case 6:
-			//dmr option
-			modular_redundancy = 2;
-			break;
-			case 7:
-			//tmr option
-			modular_redundancy = 3;
 			break;
 			default:
 			printf("No ABFT was set\n");
@@ -761,10 +751,6 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 	//-------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------
-	printf("\n\nMODULAR REDUNDANCY %d\n\n", modular_redundancy);
-//	network *redundant_net = (network*) calloc(modular_redundancy, sizeof(network));
-//	detection_layer *redundant_detection_layer = (detection_layer*) calloc(modular_redundancy, sizeof(detection_layer));
-
 	network net = parse_network_cfg(arg->config_file);
 	if (arg->weights) {
 		load_weights(&net, arg->weights);
@@ -781,46 +767,17 @@ void test_yolo_radiation_dmr(Args *arg) {
 	for (j = 0; j < l.side * l.side * l.n; ++j)
 		probs[j] = calloc(l.classes, sizeof(float *));
 
-//
-//	int n_i;
-//	for (n_i = 0; n_i < modular_redundancy; n_i++) {
-//		redundant_net[n_i] = parse_network_cfg(arg->config_file);
-//		if (arg->weights) {
-//			load_weights(&(redundant_net[n_i]), arg->weights);
-//			printf("Load nos pesos\n");
-//		}
-//		//must allocate for detection layer too
-//		redundant_detection_layer[n_i] =
-//				redundant_net[n_i].layers[redundant_net[n_i].n - 1];
-//
-//		set_batch_network(&(redundant_net[n_i]), 1);
-//
-//	}
-//
-//	srand(2222222);
-//	clock_t time;
-//
-//	int j;
-//	float nms = .4;
-//	int total_size = redundant_detection_layer[0].side
-//			* redundant_detection_layer[0].side
-//			* redundant_detection_layer[0].n;
-//	box *boxes = calloc(total_size, sizeof(box));
-//	float **probs = calloc(total_size, sizeof(float *));
-//
-//	for (j = 0; j < total_size; ++j)
-//		probs[j] = calloc(redundant_detection_layer[0].classes,
-//				sizeof(float *));
-
 	//-------------------------------------------------------------------------------
 	//load all images
 	const image *im_array = load_all_images(gold);
 
-	const image *im_array_sized = load_all_images_sized(im_array,
-			net.w, net.h, gold.plist_size);
+	const image *im_array_sized = load_all_images_sized(im_array, net.w, net.h,
+			gold.plist_size);
 
 	//need to allocate layers arrays
-	//alloc_gold_layers_arrays(&gold, &net);
+	alloc_gold_layers_arrays(&gold, &net);
+	//  int classes = l.classes;
+	//  int total = l.side * l.side * l.n;
 	//-------------------------------------------------------------------------------
 
 	int i, it;
@@ -836,7 +793,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 			//This is the detection
 			start_iteration_app();
 
-			float *predictions = network_predict_mr(net, X, modular_redundancy);
+			float *predictions = network_predict_mr(net, X, 0);
 
 			convert_detections(predictions, l.classes, l.n, l.sqrt, l.side, 1,
 					1, arg->thresh, probs, boxes, 0);
@@ -846,26 +803,26 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 			end_iteration_app();
 			time = mysecond() - time;
-			// here we test if any error happened
-			// if shit happened we log
+			//      here we test if any error happened
+			//          if shit happened we log
 			double time_cmp = mysecond();
 
-//#ifdef GPU
-//            //before compare copy maxpool err detection values
-//            //smart pooling
-//            if (arg->abft == 2) {
-//                get_and_reset_error_detected_values(max_pool_errors);
-//            }
-//#endif
-//            compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, i,
-//                    arg->save_layers, it, arg->img_list_path, max_pool_errors);
+#ifdef GPU
+			//before compare copy maxpool err detection values
+			//smart pooling
+			if (arg->abft == 2) {
+				get_and_reset_error_detected_values(max_pool_errors);
+			}
+#endif
+			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, i,
+					arg->save_layers, it, arg->img_list_path, max_pool_errors);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(
 					"Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds.\n",
 					it, i, time, time_cmp);
 
-//########################################
+			//########################################
 
 #ifdef GEN_IMG
 			//draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, voc_labels, 20);
@@ -889,14 +846,8 @@ void test_yolo_radiation_dmr(Args *arg) {
 	free_all_images(im_array, gold.plist_size);
 	free_all_images(im_array_sized, gold.plist_size);
 
-	// Freee network
-//	for (n_i = 0; n_i < modular_redundancy; n_i++)
-//		free_network(redundant_net[n_i]);
-
 	//free smartpool errors
-//	free_error_return(&max_pool_errors);
-//	free(redundant_detection_layer);
-//	free(redundant_net);
+	free_error_return(&max_pool_errors);
 #ifdef GPU
 	free_err_detected();
 #endif
