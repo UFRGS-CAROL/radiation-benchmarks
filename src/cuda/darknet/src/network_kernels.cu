@@ -637,7 +637,8 @@ float *network_predict_gpu_mr(network *nets, float *input,
 
 	}
 
-	forward_network_gpu_mr(nets, states, modular_redundancy);
+	//forward_network_gpu_mr(nets, states, modular_redundancy);
+	forward_network_gpu(nets[1], states[1]);
 	printf("passou aqui depois\n");
 	float *out = get_network_output_gpu(nets[1]);
 	printf("passou depois do get\n");
