@@ -637,7 +637,7 @@ float *network_predict_gpu_mr(network *nets, float *input,
 
 	}
 
-	forward_network_gpu_mr(nets, states, 0);
+	forward_network_gpu_mr(nets, states, 1);
 //	forward_network_gpu(nets[1], states[1]);
 	printf("passou aqui depois\n");
 	float *out = get_network_output_gpu(nets[0]);
