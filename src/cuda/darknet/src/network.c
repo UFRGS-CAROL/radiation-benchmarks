@@ -535,8 +535,7 @@ float *network_predict_mr(network *redundant_nets, float *input,
 #ifdef GPU
 	if(gpu_index >= 0) return network_predict_gpu_mr(redundant_nets, input, modular_redundancy);
 #else
-	printf("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
-	exit(-1);
+	error("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
 #endif
 
 }

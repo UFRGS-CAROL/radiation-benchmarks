@@ -14,7 +14,7 @@
 
 #define MAX_ABFT_TYPES 8
 
-enum abft_type {
+typedef enum {
 	 NONE,
 	 GEMM,
 	 SMART_POOLING,
@@ -23,7 +23,7 @@ enum abft_type {
 	 TRAINED_WEIGHTS,
 	 SMART_DMR,
 	 SMART_TMR
-};
+} abft_type ;
 
 /**
  * -e - execution_type = <yolo/classifier/imagenet...>
@@ -55,7 +55,7 @@ typedef struct arguments {
 	int gpu_index;
 	char *gold_inout;
 	int save_layers;
-	int abft;
+	abft_type abft;
 
 	char *cfg_data;
 	char *model;

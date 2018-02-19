@@ -1,9 +1,6 @@
 extern "C" {
 #include "abft.h"
 #include <stdio.h>
-}
-
-extern "C" {
 
 static int use_abft = 0;
 
@@ -45,7 +42,7 @@ __global__ void check_col(float *mat, long rows, long cols) {
 //		return;
 //	} else {
 	for (k = 0; k < cols - 1; k++) {
-		acc += (mat[i * cols + k]);// / DIV_VALUE);
+		acc += (mat[i * cols + k]); // / DIV_VALUE);
 	}
 //	}
 	long b_index = i * cols + cols - 1;
@@ -69,7 +66,7 @@ __global__ void check_row(float *mat, long rows, long cols) {
 //		acc = (mat[j]);
 //	} else {
 	for (k = 0; k < rows - 1; k++) {
-		acc += (mat[k * cols + j]);// / DIV_VALUE);
+		acc += (mat[k * cols + j]);		// / DIV_VALUE);
 	}
 //	}
 	//printf("a_index %ld acc %lf \n", rows_a * cols_a + j, acc);
@@ -92,7 +89,7 @@ __global__ void first_abraham_op(float *a, long rows_a, long cols_a) {
 //		return;
 //	} else {
 	for (k = 0; k < rows_a - 1; k++) {
-		acc += (a[k * cols_a + j]);// / DIV_VALUE);
+		acc += (a[k * cols_a + j]);		// / DIV_VALUE);
 	}
 //	}
 	long a_index = (rows_a - 1) * cols_a + j;
@@ -118,7 +115,7 @@ __global__ void second_abraham_op(float *b, long rows_b, long cols_b) {
 //		return;
 //	} else {
 	for (k = 0; k < cols_b - 1; k++) {
-		acc += (b[i * cols_b + k]);// / DIV_VALUE);
+		acc += (b[i * cols_b + k]);		// / DIV_VALUE);
 	}
 //	}
 

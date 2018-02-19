@@ -6,6 +6,7 @@
 #include "layer.h"
 #include "data.h"
 
+
 typedef enum {
 	CONSTANT, STEP, EXP, POLY, STEPS, SIG, RANDOM
 } learning_rate_policy;
@@ -64,12 +65,6 @@ typedef struct network_state {
 	network net;
 } network_state;
 
-typedef struct {
-	network_state state;
-	layer l;
-	network net;
-} thread_parameters;
-
 #ifdef GPU
 float train_networks(network *nets, int n, data d, int interval);
 void sync_nets(network *nets, int n, int interval);
@@ -84,7 +79,6 @@ float *network_predict_gpu_mr(network *redundant_nets, float *input,
 
 //// Hardened version of forward
 //void forward_network_gpu_mr(network nets, network_state *states, int mr);
-
 
 float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);

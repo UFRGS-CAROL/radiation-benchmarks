@@ -45,15 +45,31 @@ float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);
 float * get_network_output_gpu(network net);
 
-/**
- * This method will do the magic of executing in parallel
- */
-void *run_layer_parallel(void *parameters) {
-	thread_parameters *t_par = (thread_parameters*) parameters;
-	layer l = t_par->l;
-	network_state state = t_par->state;
-	network net = t_par->net;
+typedef struct {
+	int i;
+	network_state state;
+	network net;
+} thread_parameters;
 
+network_state make_state(network net, float* input) {
+	network_state state;
+	int size = get_network_input_size(net) * net.batch;
+	state.index = 0;
+	state.net = net;
+	state.input = cuda_make_array(input, size);
+	state.truth = 0;
+	state.train = 0;
+	state.delta = 0;
+	return state;
+}
+
+void *run_layer_parallel(void *data) {
+	network_state state = ((thread_parameters*)data)->state;
+	network net = ((thread_parameters*)data)->net;
+	int i = ((thread_parameters*)data)->i;
+
+	state.index = i;
+	layer l = net.layers[i];
 	if (l.delta_gpu) {
 		fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
 	}
@@ -100,23 +116,37 @@ void *run_layer_parallel(void *parameters) {
 	} else if (l.type == SHORTCUT) {
 		forward_shortcut_layer_gpu(l, state);
 	}
+	state.input = l.output_gpu;
 	return NULL;
 }
 
-void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
-	network_state state = states[0];
-	network net = nets[0];
-	state.workspace = net.workspace;
+/**
+ * This method will do the magic of executing in parallel
+ */
 
-	int j = 0;
-	for (int i = 0; i < nets[0].n; ++i) {
+void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
+	network net = nets[0];
+	network_state state = states[0];
+	network_state state2 = states[1];
+
+	state.workspace = net.workspace;
+	state2.workspace = net.workspace;
+
+
+	for (int i = 0; i < net.n; ++i) {
 		state.index = i;
 		layer l = net.layers[i];
 		if (l.delta_gpu) {
 			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
 		}
 		if (l.type == CONVOLUTIONAL) {
+
 			forward_convolutional_layer_gpu(l, state);
+
+			layer l2 = nets[1].layers[i];
+			forward_convolutional_layer_gpu(l2, state2);
+			state2.input = l2.output_gpu;
+
 		} else if (l.type == DECONVOLUTIONAL) {
 			forward_deconvolutional_layer_gpu(l, state);
 		} else if (l.type == ACTIVE) {
@@ -159,8 +189,8 @@ void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 			forward_shortcut_layer_gpu(l, state);
 		}
 		state.input = l.output_gpu;
-
 	}
+
 }
 
 void forward_network_gpu(network net, network_state state) {
@@ -610,7 +640,6 @@ float train_networks(network *nets, int n, data d, int interval) {
 
 float *get_network_output_layer_gpu(network net, int i) {
 	layer l = net.layers[i];
-	printf("LAYE ADR %d %d\n", l.output_gpu, l.output);
 	cuda_pull_array(l.output_gpu, l.output, l.outputs * l.batch);
 	return l.output;
 }
@@ -623,32 +652,26 @@ float *get_network_output_gpu(network net) {
 	return get_network_output_layer_gpu(net, i);
 }
 
-float *network_predict_gpu_mr(network *nets, float *input,
-		int modular_redundancy) {
-	network_state states[modular_redundancy];
+float *network_predict_gpu_mr(network *nets, float *input, int mr) {
 	int size = get_network_input_size(nets[0]) * nets[0].batch;
-
-	for (int i = 0; i < modular_redundancy; i++) {
+	network_state states[mr];
+	for(int i = 0; i < mr; i++){
 		states[i].index = 0;
-		states[i].net = nets[i];
+		states[i].net = nets[mr];
 		states[i].input = cuda_make_array(input, size);
 		states[i].truth = 0;
 		states[i].train = 0;
 		states[i].delta = 0;
-
 	}
 
-	forward_network_gpu_mr(nets, states, 1);
-//	forward_network_gpu(nets[1], states[1]);
-	printf("passou aqui depois\n");
-	float *out = get_network_output_gpu(nets[0]);
-	printf("passou depois do get\n");
-	for (int i = 0; i < modular_redundancy; i++) {
-		printf("passou na i = %d\n", i);
-		cuda_free(states[i].input);
+	forward_network_gpu_mr(nets, states, mr);
+
+	float **out = (float**) calloc(mr, sizeof(float*));
+
+	for (int i = 0; i < mr; i++) {
+		out[i] = get_network_output_gpu(nets[i]);
 	}
-//	cuda_free(state.input);
-	return out;
+	return out[0];
 
 }
 

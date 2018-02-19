@@ -6,6 +6,8 @@
 #include <math.h>
 
 #include "abft.h"
+#include "args.h"
+
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -174,42 +176,43 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		float *C_gpu, int ldc)
 {
 
-	if(get_use_abft_gemm() == 1) {
+	if(get_use_abft_gemm() == GEMM) {
 //	m  	input 	number of rows of matrix op(A) and C.
 //	n 	input	number of columns of matrix op(B) and C.
 //	k 	input 	number of columns of op(A) and rows of op(B).
 		printf ("\n\npassou no get\n");
 		abraham_sum(A_gpu, B_gpu, M, K, K, N);
+	} else if(get_use_abft_gemm() == SMART_DMR || get_use_abft_gemm() == SMART_TMR) {
+
 	}
 	cublasHandle_t handle = blas_handle();
 	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
 			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb, A_gpu, lda, &BETA, C_gpu, ldc);
 	check_error(status);
 
-	if(get_use_abft_gemm() == 1) {
+	if(get_use_abft_gemm() == GEMM) {
 		error_return temp = abraham_check(C_gpu, M, N);
 #ifdef LOGS
-							if(temp.row_detected_errors || temp.col_detected_errors) {
-								char abft_string[500];
-								sprintf(abft_string, "abft_type: dumb image_list_position: [%d] row_detected_errors: %llu col_detected_errors: %llu",
-										get_gold_iterator_abft(),
-										temp.row_detected_errors, temp.col_detected_errors);
-								log_info_detail(abft_string);
-								//printf("\n\n\npassou na log_error %s", abft_string);
-//								printf("%\n", abft_string);
-
-							}
+		if(temp.row_detected_errors || temp.col_detected_errors) {
+			char abft_string[500];
+			sprintf(abft_string, "abft_type: dumb image_list_position: [%d] row_detected_errors: %llu col_detected_errors: %llu",
+					get_gold_iterator_abft(),
+					temp.row_detected_errors, temp.col_detected_errors);
+			log_info_detail(abft_string);
+		}
 
 #endif
+	} else if(get_use_abft_gemm() == SMART_DMR || get_use_abft_gemm() == SMART_TMR) {
+
 	}
 }
 
 #ifdef LOGS
-void set_gold_iterator_abft(int gia){
+void set_gold_iterator_abft(int gia) {
 	gold_iterator_abft = gia;
 }
 
-int get_gold_iterator_abft(){
+int get_gold_iterator_abft() {
 	return gold_iterator_abft;
 }
 #endif
