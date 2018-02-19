@@ -158,7 +158,6 @@ void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 				forward_shortcut_layer_gpu(l, states[j]);
 			}
 			states[j].input = l.output_gpu;
-			printf("DEPOIS DO IF GRANDE %d\n", i);
 		}
 	}
 }
@@ -610,6 +609,7 @@ float train_networks(network *nets, int n, data d, int interval) {
 
 float *get_network_output_layer_gpu(network net, int i) {
 	layer l = net.layers[i];
+	printf("LAYE ADR %d %d\n", l.output_gpu, l.output);
 	cuda_pull_array(l.output_gpu, l.output, l.outputs * l.batch);
 	return l.output;
 }
