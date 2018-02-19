@@ -158,6 +158,7 @@ void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 				forward_shortcut_layer_gpu(l, states[j]);
 			}
 			states[j].input = l.output_gpu;
+			printf("DEPOIS DO IF GRANDE\N");
 		}
 	}
 }
