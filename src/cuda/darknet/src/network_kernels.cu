@@ -780,8 +780,7 @@ float *network_predict_gpu_mr(network *nets, float *input, int mr) {
 		states[i].delta = 0;
 	}
 
-//	forward_network_gpu_mr(nets, states, mr);
-	forward_network_gpu(nets[0], states[0]);
+	forward_network_gpu_mr(nets, states, mr);
 	float *out = get_network_output_gpu(nets[0]);
 	for (int i = 0; i < mr; i++)
 		cuda_free(states[i].input);
