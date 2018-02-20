@@ -116,6 +116,7 @@ void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 	network net = nets[0];
 	for (int i = 0; i < mr; i++) {
 		states[i].workspace = net.workspace;
+		states[i].input = states[0].input;
 	}
 
 	for (int i = 0; i < net.n; ++i) {
@@ -776,8 +777,7 @@ float *network_predict_gpu_mr(network *nets, float *input, int mr) {
 		states[i].net = nets[i];
 		if(i == 0)
 			states[i].input = cuda_make_array(input, size);
-		else
-			states[i].input = states[0].input;
+
 		states[i].truth = 0;
 		states[i].train = 0;
 		states[i].delta = 0;
