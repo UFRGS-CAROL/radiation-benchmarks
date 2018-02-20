@@ -24,7 +24,7 @@ LDFLAGS= -lm -pthread
 COMMON= -I../../include/
 CFLAGS= -Wall -Wfatal-errors 
 CXXFLAGS=-std=c++11
-NVCCFLAGS= -rdc=true -lcudadevrt --default-stream per-thread
+NVCCFLAGS= -rdc=true -lcudadevrt --default-stream per-thread -ccbin=/usr/bin
 
 CUDAINCLUDE=/usr/local/cuda-7.0/include/
 
@@ -114,7 +114,7 @@ results:
 test:
 	./$(TARGET) test_radiation -e yolo_dmr -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
 							-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
-							-n 5000 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
+							-n 10 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
 							-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
 							-b $(RAD_DIR)/src/cuda/darknet \
 							-x 0 -s 0 -a 6
