@@ -114,16 +114,21 @@ void *run_layer_parallel(void *data) {
 
 void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 	network net = nets[0];
-	network_state state = states[0];
-	state.workspace = net.workspace;
-
 	for (int i = 0; i < mr; i++) {
 		states[i].workspace = net.workspace;
 	}
 
+	network_state state = states[0];
+
+
 	for (int i = 0; i < net.n; ++i) {
 		state.index = i;
 		layer l = net.layers[i];
+		for(int j = 0; j < mr; j++){
+			states[j].index = i;
+		}
+
+		//--------------------------------------------------------
 		if (l.delta_gpu) {
 			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
 
@@ -771,7 +776,7 @@ float *network_predict_gpu_mr(network *nets, float *input, int mr) {
 	network_state states[mr];
 	for (int i = 0; i < mr; i++) {
 		states[i].index = 0;
-		states[i].net = nets[mr];
+		states[i].net = nets[i];
 		states[i].input = cuda_make_array(input, size);
 		states[i].truth = 0;
 		states[i].train = 0;
@@ -780,13 +785,8 @@ float *network_predict_gpu_mr(network *nets, float *input, int mr) {
 
 	forward_network_gpu_mr(nets, states, mr);
 
-	float **out = (float**) calloc(mr, sizeof(float*));
-
-	for (int i = 0; i < mr; i++) {
-		out[i] = get_network_output_gpu(nets[i]);
-	}
-	return out[0];
-
+	float *out = get_network_output_gpu(nets[0]);
+	return out;
 }
 
 float *network_predict_gpu(network net, float *input) {
