@@ -141,17 +141,17 @@ void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 			for (int j = 1; j < mr; j++) {
 				layer l_mr = nets[j].layers[i];
 				forward_convolutional_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
+//				states[j].input = l_mr.output_gpu;
 			}
 
 		} else if (l.type == DECONVOLUTIONAL) {
 			forward_deconvolutional_layer_gpu(l, states[0]);
 
-//			for (int j = 1; j < mr; j++) {
-//				layer l_mr = nets[j].layers[i];
-//				forward_deconvolutional_layer_gpu(l_mr, states[j]);
+			for (int j = 1; j < mr; j++) {
+				layer l_mr = nets[j].layers[i];
+				forward_deconvolutional_layer_gpu(l_mr, states[j]);
 //				states[j].input = l_mr.output_gpu;
-//			}
+			}
 		} else if (l.type == ACTIVE) {
 			forward_activation_layer_gpu(l, states[0]);
 
