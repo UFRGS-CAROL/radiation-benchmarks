@@ -126,7 +126,7 @@ void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 		for (int j = 0; j < mr; j++) {
 			states[j].index = i;
 		}
-
+		printf("Layer type %d\n", l.type);
 		//--------------------------------------------------------
 		if (l.delta_gpu) {
 			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
@@ -786,8 +786,7 @@ float *network_predict_gpu_mr(network *nets, float *input, int mr) {
 
 	float *out = get_network_output_gpu(nets[0]);
 	for (int i = 0; i < mr; i++)
-		if (states[i].input)
-			cuda_free(states[i].input);
+		cuda_free(states[i].input);
 	return out;
 }
 
