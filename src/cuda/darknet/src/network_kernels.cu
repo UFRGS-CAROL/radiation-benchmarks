@@ -120,11 +120,10 @@ void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 
 	network_state state = states[0];
 
-
 	for (int i = 0; i < net.n; ++i) {
 		state.index = i;
 		layer l = net.layers[i];
-		for(int j = 0; j < mr; j++){
+		for (int j = 0; j < mr; j++) {
 			states[j].index = i;
 		}
 
@@ -786,8 +785,9 @@ float *network_predict_gpu_mr(network *nets, float *input, int mr) {
 	forward_network_gpu_mr(nets, states, mr);
 
 	float *out = get_network_output_gpu(nets[0]);
-	for(int i = 0; i < mr; i++)
-		cuda_free(states[i].input);
+	for (int i = 0; i < mr; i++)
+		if (states[i].input)
+			cuda_free(states[i].input);
 	return out;
 }
 
