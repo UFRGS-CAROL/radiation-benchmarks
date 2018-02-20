@@ -782,8 +782,8 @@ float *network_predict_gpu_mr(network *nets, float *input, int mr) {
 
 	forward_network_gpu_mr(nets, states, mr);
 	float *out = get_network_output_gpu(nets[0]);
-	for (int i = 0; i < mr; i++)
-		cuda_free(states[i].input);
+//	for (int i = 0; i < mr; i++)
+//		cuda_free(states[i].input);
 	return out;
 }
 
