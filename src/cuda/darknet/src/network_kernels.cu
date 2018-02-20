@@ -45,22 +45,25 @@ float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);
 float * get_network_output_gpu(network net);
 
+network_state state;
+
 typedef struct {
 	int i;
-	network_state state;
 	network net;
 } thread_parameters;
 
-void *run_layer_parallel(void *data) {
-	network_state state = ((thread_parameters*) data)->state;
-	network net = ((thread_parameters*) data)->net;
-	int i = ((thread_parameters*) data)->i;
+static void* run_layer_parallel(void *data) {
+	thread_parameters p;
+	memcpy(&p, data, sizeof(thread_parameters));
+	network net = p.net;
+	int i = p.i;
 
 	state.index = i;
 	layer l = net.layers[i];
 	if (l.delta_gpu) {
 		fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
 	}
+
 	if (l.type == CONVOLUTIONAL) {
 		forward_convolutional_layer_gpu(l, state);
 	} else if (l.type == DECONVOLUTIONAL) {
@@ -105,69 +108,41 @@ void *run_layer_parallel(void *data) {
 		forward_shortcut_layer_gpu(l, state);
 	}
 	state.input = l.output_gpu;
-	return NULL;
-}
 
+	return NULL;
+
+}
 /**
  * This method will do the magic of executing in parallel
  */
 
 void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 	network net = nets[0];
-	network_state state = states[0];
+	state = states[0];
+	state.workspace = net.workspace;
+	thread_parameters p;
+	pthread_t threads[mr];
+
+	//set abft
+//	if (mr == 2)
+//		set_abft_gemm(SMART_DMR);
+//	else if (mr == 3)
+//		set_abft_gemm(SMART_TMR);
+
 	for (int i = 0; i < net.n; ++i) {
-		state.index = i;
-		layer l = net.layers[i];
-		if (l.delta_gpu) {
-			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
+		p.i = i;
+		for (int j = 0; j < mr; j++) {
+			p.net = nets[j];
+			if (pthread_create(&threads[j], NULL, run_layer_parallel, &p)) {
+				error("ERROR ON CREATING THREADS\n");
+			}
 		}
-		if (l.type == CONVOLUTIONAL) {
-			forward_convolutional_layer_gpu(l, state);
-		} else if (l.type == DECONVOLUTIONAL) {
-			forward_deconvolutional_layer_gpu(l, state);
-		} else if (l.type == ACTIVE) {
-			forward_activation_layer_gpu(l, state);
-		} else if (l.type == LOCAL) {
-			forward_local_layer_gpu(l, state);
-		} else if (l.type == DETECTION) {
-			forward_detection_layer_gpu(l, state);
-		} else if (l.type == REGION) {
-			forward_region_layer_gpu(l, state);
-		} else if (l.type == CONNECTED) {
-			forward_connected_layer_gpu(l, state);
-		} else if (l.type == RNN) {
-			forward_rnn_layer_gpu(l, state);
-		} else if (l.type == GRU) {
-			forward_gru_layer_gpu(l, state);
-		} else if (l.type == CRNN) {
-			forward_crnn_layer_gpu(l, state);
-		} else if (l.type == CROP) {
-			forward_crop_layer_gpu(l, state);
-		} else if (l.type == COST) {
-			forward_cost_layer_gpu(l, state);
-		} else if (l.type == SOFTMAX) {
-			forward_softmax_layer_gpu(l, state);
-		} else if (l.type == NORMALIZATION) {
-			forward_normalization_layer_gpu(l, state);
-		} else if (l.type == BATCHNORM) {
-			forward_batchnorm_layer_gpu(l, state);
-		} else if (l.type == MAXPOOL) {
-			forward_maxpool_layer_gpu(l, state);
-		} else if (l.type == REORG) {
-			forward_reorg_layer_gpu(l, state);
-		} else if (l.type == AVGPOOL) {
-			forward_avgpool_layer_gpu(l, state);
-		} else if (l.type == DROPOUT) {
-			forward_dropout_layer_gpu(l, state);
-		} else if (l.type == ROUTE) {
-			forward_route_layer_gpu(l, net);
-		} else if (l.type == SHORTCUT) {
-			forward_shortcut_layer_gpu(l, state);
+		for (int j = 0; j < mr; j++) {
+			if (pthread_join(threads[j], NULL)) {
+				error("ERROR ON FINISHING THREADS\n");
+			}
 		}
-		state.input = l.output_gpu;
-
 	}
-
 }
 
 void forward_network_gpu(network net, network_state state) {
@@ -524,7 +499,7 @@ void distribute_updates(layer l, layer base) {
 }
 
 void sync_layer(network *nets, int n, int j) {
-	//printf("Syncing layer %d\n", j);
+//printf("Syncing layer %d\n", j);
 	int i;
 	network net = nets[0];
 	layer base = net.layers[j];
@@ -542,7 +517,7 @@ void sync_layer(network *nets, int n, int j) {
 		layer l = nets[i].layers[j];
 		distribute_weights(l, base);
 	}
-	//printf("Done syncing layer %d\n", j);
+//printf("Done syncing layer %d\n", j);
 }
 
 typedef struct {
@@ -633,16 +608,16 @@ float *network_predict_gpu_mr(network *nets, float *input, int mr) {
 	int size = get_network_input_size(nets[0]) * nets[0].batch;
 	network_state states[mr];
 	for (int i = 0; i < mr; i++) {
-		states[i].index = 0;
-		states[i].net = nets[i];
-		states[i].input = cuda_make_array(input, size);
-		states[i].truth = 0;
-		states[i].train = 0;
-		states[i].delta = 0;
+		network_state state;
+		state.index = 0;
+		state.net = nets[0];
+		state.input = cuda_make_array(input, size);
+		state.truth = 0;
+		state.train = 0;
+		state.delta = 0;
+		states[i] = state;
 	}
-
 	forward_network_gpu_mr(nets, states, mr);
-
 	float *out = get_network_output_gpu(nets[0]);
 	for (int i = 0; i < mr; i++)
 		cuda_free(states[i].input);

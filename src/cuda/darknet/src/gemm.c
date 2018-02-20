@@ -8,7 +8,6 @@
 #include "abft.h"
 #include "args.h"
 
-
 #ifdef LOGS
 #include "log_helper.h"
 int gold_iterator_abft = 0;
@@ -176,6 +175,8 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		float *C_gpu, int ldc)
 {
 
+	cublasHandle_t handle = blas_handle();;
+
 	if(get_use_abft_gemm() == GEMM) {
 //	m  	input 	number of rows of matrix op(A) and C.
 //	n 	input	number of columns of matrix op(B) and C.
@@ -183,9 +184,14 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		printf ("\n\npassou no get\n");
 		abraham_sum(A_gpu, B_gpu, M, K, K, N);
 	} else if(get_use_abft_gemm() == SMART_DMR || get_use_abft_gemm() == SMART_TMR) {
-
+		cudaStream_t stream;
+		cudaStreamCreate(&stream);
+		cublasSetStream(handle, stream);
+	} else {
+		// Normal execution
+		handle = blas_handle();
 	}
-	cublasHandle_t handle = blas_handle();
+
 	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
 			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb, A_gpu, lda, &BETA, C_gpu, ldc);
 	check_error(status);
@@ -203,7 +209,8 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 
 #endif
 	} else if(get_use_abft_gemm() == SMART_DMR || get_use_abft_gemm() == SMART_TMR) {
-
+		cublasDestroy(handle);
+		cudaStreamSynchronize(0);
 	}
 }
 

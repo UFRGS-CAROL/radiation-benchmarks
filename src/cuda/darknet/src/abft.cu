@@ -2,7 +2,7 @@ extern "C" {
 #include "abft.h"
 #include <stdio.h>
 
-static int use_abft = 0;
+static abft_type use_abft = NONE;
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 
@@ -16,13 +16,14 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 	}
 }
 
-void set_abft_gemm(int n) {
-	use_abft = n;
+void set_abft_gemm(abft_type t) {
+	use_abft = t;
 }
 
-int get_use_abft_gemm() {
+abft_type get_use_abft_gemm() {
 	return use_abft;
 }
+
 }
 
 __device__ long get_index(float *mat, long i, long j, long n) {

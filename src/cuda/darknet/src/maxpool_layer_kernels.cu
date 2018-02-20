@@ -7,14 +7,14 @@ extern "C" {
 #include "cuda.h"
 }
 
-static int abft_type;
+static int abft_type_maxpool;
 /**
  * 0 for no abft
  * 1 for Abraham abft
  * 2 for maxpool hardened
  */
 void set_abft_smartpool(int type) {
-	abft_type = type;
+	abft_type_maxpool = type;
 }
 
 __global__ void forward_maxpool_layer_kernel(int n, int in_h, int in_w,
@@ -99,7 +99,7 @@ __global__ void backward_maxpool_layer_kernel(int n, int in_h, int in_w,
 
 extern "C" void forward_maxpool_layer_gpu(maxpool_layer layer,
 		network_state state) {
-	if (abft_type == 2){
+	if (abft_type_maxpool == 2){
 //		printf("passou no hardened\n\n");
 		forward_maxpool_layer_gpu_hardened(layer, state);
 		return;

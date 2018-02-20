@@ -8,6 +8,8 @@
 #ifndef ABFT_H_
 #define ABFT_H_
 
+#include "args.h"
+
 #define MAX_THRESHOLD  0.5
 #define BLOCK_SIZE 1024
 
@@ -28,8 +30,9 @@ error_return abraham_check(float *c, long rows, long cols);
 
 //ErrorReturn shared_errors;
 
-void set_abft_gemm(int n);
-int get_use_abft_gemm();
+void set_abft_gemm(abft_type t);
+abft_type get_use_abft_gemm();
+
 
 #define MAXPOOL_N 4
 

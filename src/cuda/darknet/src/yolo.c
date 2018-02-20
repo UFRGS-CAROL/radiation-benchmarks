@@ -760,7 +760,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 	//-------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------
-	network *net = (network*) calloc(mr_size, sizeof(network));;
+	network net[mr_size];;
 	detection_layer l[mr_size];
 
 	int mr_i;
