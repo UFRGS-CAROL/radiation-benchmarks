@@ -537,7 +537,7 @@ float *network_predict_mr(network *redundant_nets, float *input,
 #else
 	error("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
 #endif
-
+	return NULL;
 }
 
 float *network_predict(network net, float *input) {
