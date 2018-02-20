@@ -774,7 +774,10 @@ float *network_predict_gpu_mr(network *nets, float *input, int mr) {
 	for (int i = 0; i < mr; i++) {
 		states[i].index = 0;
 		states[i].net = nets[i];
-		states[i].input = cuda_make_array(input, size);
+		if(i == 0)
+			states[i].input = cuda_make_array(input, size);
+		else
+			states[i].input = states[0].input;
 		states[i].truth = 0;
 		states[i].train = 0;
 		states[i].delta = 0;
@@ -782,9 +785,7 @@ float *network_predict_gpu_mr(network *nets, float *input, int mr) {
 
 	forward_network_gpu_mr(nets, states, mr);
 	float *out = get_network_output_gpu(nets[0]);
-	for (int i = 0; i < mr; i++)
-		if (states[i].input)
-			cuda_free(states[i].input);
+	cuda_free(states[0].input);
 	return out;
 }
 
