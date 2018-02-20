@@ -114,209 +114,59 @@ void *run_layer_parallel(void *data) {
 
 void forward_network_gpu_mr(network *nets, network_state *states, int mr) {
 	network net = nets[0];
-	for (int i = 0; i < mr; i++) {
-		states[i].workspace = net.workspace;
-		states[i].input = states[0].input;
-	}
-
+	network_state state = states[0];
 	for (int i = 0; i < net.n; ++i) {
-		states[0].index = i;
-		layer l = net.layers[i];
-		for (int j = 0; j < mr; j++) {
-			states[j].index = i;
-		}
-		printf("Layer type %d\n", l.type);
-		//--------------------------------------------------------
-		if (l.delta_gpu) {
-			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
-
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				fill_ongpu(l_mr.outputs * l_mr.batch, 0, l_mr.delta_gpu, 1);
+			state.index = i;
+			layer l = net.layers[i];
+			if (l.delta_gpu) {
+				fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
 			}
-		}
-		if (l.type == CONVOLUTIONAL) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_convolutional_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
+			if (l.type == CONVOLUTIONAL) {
+				forward_convolutional_layer_gpu(l, state);
+			} else if (l.type == DECONVOLUTIONAL) {
+				forward_deconvolutional_layer_gpu(l, state);
+			} else if (l.type == ACTIVE) {
+				forward_activation_layer_gpu(l, state);
+			} else if (l.type == LOCAL) {
+				forward_local_layer_gpu(l, state);
+			} else if (l.type == DETECTION) {
+				forward_detection_layer_gpu(l, state);
+			} else if (l.type == REGION) {
+				forward_region_layer_gpu(l, state);
+			} else if (l.type == CONNECTED) {
+				forward_connected_layer_gpu(l, state);
+			} else if (l.type == RNN) {
+				forward_rnn_layer_gpu(l, state);
+			} else if (l.type == GRU) {
+				forward_gru_layer_gpu(l, state);
+			} else if (l.type == CRNN) {
+				forward_crnn_layer_gpu(l, state);
+			} else if (l.type == CROP) {
+				forward_crop_layer_gpu(l, state);
+			} else if (l.type == COST) {
+				forward_cost_layer_gpu(l, state);
+			} else if (l.type == SOFTMAX) {
+				forward_softmax_layer_gpu(l, state);
+			} else if (l.type == NORMALIZATION) {
+				forward_normalization_layer_gpu(l, state);
+			} else if (l.type == BATCHNORM) {
+				forward_batchnorm_layer_gpu(l, state);
+			} else if (l.type == MAXPOOL) {
+				forward_maxpool_layer_gpu(l, state);
+			} else if (l.type == REORG) {
+				forward_reorg_layer_gpu(l, state);
+			} else if (l.type == AVGPOOL) {
+				forward_avgpool_layer_gpu(l, state);
+			} else if (l.type == DROPOUT) {
+				forward_dropout_layer_gpu(l, state);
+			} else if (l.type == ROUTE) {
+				forward_route_layer_gpu(l, net);
+			} else if (l.type == SHORTCUT) {
+				forward_shortcut_layer_gpu(l, state);
 			}
-
-			forward_convolutional_layer_gpu(l, states[0]);
-
-		} else if (l.type == DECONVOLUTIONAL) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_deconvolutional_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-
-			forward_deconvolutional_layer_gpu(l, states[0]);
-
-		} else if (l.type == ACTIVE) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_activation_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-
-			forward_activation_layer_gpu(l, states[0]);
-
-		} else if (l.type == LOCAL) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_local_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_local_layer_gpu(l, states[0]);
-
-		} else if (l.type == DETECTION) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_detection_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_detection_layer_gpu(l, states[0]);
-
-		} else if (l.type == REGION) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_region_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_region_layer_gpu(l, states[0]);
-
-		} else if (l.type == CONNECTED) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_connected_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_connected_layer_gpu(l, states[0]);
-
-		} else if (l.type == RNN) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_rnn_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_rnn_layer_gpu(l, states[0]);
-
-		} else if (l.type == GRU) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_gru_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-
-			forward_gru_layer_gpu(l, states[0]);
-
-		} else if (l.type == CRNN) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_crnn_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_crnn_layer_gpu(l, states[0]);
-
-		} else if (l.type == CROP) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_crop_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-
-			forward_crop_layer_gpu(l, states[0]);
-
-		} else if (l.type == COST) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_cost_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_cost_layer_gpu(l, states[0]);
-
-		} else if (l.type == SOFTMAX) {
-
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_softmax_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_softmax_layer_gpu(l, states[0]);
-
-		} else if (l.type == NORMALIZATION) {
-
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_normalization_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_normalization_layer_gpu(l, states[0]);
-
-		} else if (l.type == BATCHNORM) {
-
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_batchnorm_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_batchnorm_layer_gpu(l, states[0]);
-
-		} else if (l.type == MAXPOOL) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_maxpool_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_maxpool_layer_gpu(l, states[0]);
-
-		} else if (l.type == REORG) {
-
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_reorg_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_reorg_layer_gpu(l, states[0]);
-
-		} else if (l.type == AVGPOOL) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_avgpool_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_avgpool_layer_gpu(l, states[0]);
-
-		} else if (l.type == DROPOUT) {
-
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_dropout_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_dropout_layer_gpu(l, states[0]);
-
-		} else if (l.type == ROUTE) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_route_layer_gpu(l_mr, nets[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-			forward_route_layer_gpu(l, net);
-
-		} else if (l.type == SHORTCUT) {
-			for (int j = 1; j < mr; j++) {
-				layer l_mr = nets[j].layers[i];
-				forward_shortcut_layer_gpu(l_mr, states[j]);
-				states[j].input = l_mr.output_gpu;
-			}
-
-			forward_shortcut_layer_gpu(l, states[0]);
+			state.input = l.output_gpu;
 
 		}
-		states[0].input = l.output_gpu;
-	}
 
 }
 
