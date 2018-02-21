@@ -79,7 +79,7 @@ void forward_network_gpu(network net, network_state state);
 float *network_predict_gpu(network net, float *input);
 
 // Hardened version of network_predict_gpu
-void* network_predict_gpu_mr(network net, float *input);
+void *network_predict_gpu_mr(void* data);
 
 float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);

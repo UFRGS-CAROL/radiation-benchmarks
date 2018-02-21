@@ -538,9 +538,12 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 	if(gpu_index >= 0) {
 		float* out_mr[mr];
 		pthread_t threads[mr];
+		thread_parameters tp;
 		int i;
 		for(i = 0; i < mr; i++) {
-			out_mr[i] = network_predict_gpu_mr(redundant_nets[i], input[i]);
+			tp.input = input[i];
+			tp.net = redundant_nets[i];
+			out_mr[i] = network_predict_gpu_mr(&tp);
 		}
 		return out_mr[mr - 1];
 	}
