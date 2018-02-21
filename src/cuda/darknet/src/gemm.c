@@ -184,6 +184,7 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		printf ("\n\npassou no get\n");
 		abraham_sum(A_gpu, B_gpu, M, K, K, N);
 	} else if(get_use_abft_gemm() == SMART_DMR || get_use_abft_gemm() == SMART_TMR) {
+		printf("Passou no create blas\n");
 		cudaStream_t stream;
 		cudaStreamCreate(&stream);
 		cublasSetStream(handle, stream);
