@@ -543,7 +543,6 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 		for (i = 0; i < mr; i++) {
 			tp.input = input[i];
 			tp.net = redundant_nets[i];
-			printf("ANtes do pthread create\n");
 			if (pthread_create(&threads[i], NULL, network_predict_gpu_mr,
 					&tp)) {
 				error("ERROR ON CREATING THREADs\n");
