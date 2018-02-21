@@ -796,8 +796,6 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 	//need to allocate layers arrays
 	alloc_gold_layers_arrays(&gold, &net[0]);
-	//  int classes = l.classes;
-	//  int total = l.side * l.side * l.n;
 	//-------------------------------------------------------------------------------
 	float **X = (float**) calloc(mr_size, sizeof(float*));
 
@@ -860,7 +858,6 @@ void test_yolo_radiation_dmr(Args *arg) {
 			clear_boxes_and_probs(boxes, probs, l[0].w * l[0].h * l[0].n,
 					l[0].classes);
 
-
 		}
 	}
 	// free X data
@@ -873,7 +870,8 @@ void test_yolo_radiation_dmr(Args *arg) {
 #ifdef GEN_IMG
 	free_all_images(im_array, gold.plist_size);
 #endif
-	free_all_images(im_array_sized, gold.plist_size);
+	for (mr_i = 0; mr_i < mr_size; mr_i++)
+		free_all_images(im_array_sized[mr_i], gold.plist_size);
 
 	//free smartpool errors
 	free_error_return(&max_pool_errors);
