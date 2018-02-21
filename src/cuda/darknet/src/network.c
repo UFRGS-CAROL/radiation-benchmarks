@@ -540,11 +540,17 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 		pthread_t threads[mr];
 		thread_parameters tp;
 		int i;
+		if (mr == 2) {
+			set_abft_gemm(SMART_DMR);
+		} else if (mr == 3) {
+			set_abft_gemm(SMART_TMR);
+		}
+
 		for (i = 0; i < mr; i++) {
 			tp.input = input[i];
 			tp.net = redundant_nets[i];
 			if (pthread_create(&threads[i], NULL, network_predict_gpu_mr,
-					&tp)) {
+							&tp)) {
 				error("ERROR ON CREATING THREADs\n");
 			}
 		}
