@@ -542,7 +542,7 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 		for(i = 0; i < mr; i++) {
 			out_mr[i] = network_predict_gpu_mr(redundant_nets[i], input[i]);
 		}
-		return out_mr[0];
+		return out_mr[mr - 1];
 	}
 
 #else
