@@ -65,7 +65,6 @@ typedef struct network_state {
 } network_state;
 
 typedef struct {
-	int mr;
 	float *input;
 	network net;
 } thread_parameters;

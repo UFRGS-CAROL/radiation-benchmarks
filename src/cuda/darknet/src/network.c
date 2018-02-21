@@ -543,15 +543,16 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 		for (i = 0; i < mr; i++) {
 			tp.input = input[i];
 			tp.net = redundant_nets[i];
-			//out_mr[i] = network_predict_gpu_mr(&tp);
+			printf("ANtes do pthread create\n");
 			if (pthread_create(&threads[i], NULL, network_predict_gpu_mr,
 					&tp)) {
 				error("ERROR ON CREATING THREADs\n");
 			}
 		}
+		printf("Na espera\n");
 		for (i = 0; i < mr; i++) {
 			void *temp = NULL;
-			if (pthread_join(threads[i], temp)) {
+			if (pthread_join(threads[i], &temp)) {
 				error("ERROR ON FINISHING THREADs\n");
 			}
 			out_mr[i] = (float*) temp;
