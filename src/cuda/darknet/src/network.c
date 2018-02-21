@@ -29,6 +29,9 @@
 #include "route_layer.h"
 #include "shortcut_layer.h"
 
+// For Modular redundancy
+#include <pthread.h>
+
 int get_current_batch(network net) {
 	int batch_num = (*net.seen) / (net.batch * net.subdivisions);
 	return batch_num;
@@ -530,14 +533,22 @@ void top_predictions(network net, int k, int *index) {
 /**
  * It works only for GPU mode
  */
-float *network_predict_mr(network *redundant_nets, float *input,
-		int modular_redundancy) {
+float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 #ifdef GPU
-	if(gpu_index >= 0) return network_predict_gpu_mr(redundant_nets, input, modular_redundancy);
+	if(gpu_index >= 0) {
+		float* out_mr[mr];
+		pthread_t threads[mr];
+		int i;
+		for(i = 0; i < mr; i++) {
+			out_mr[i] = network_predict_gpu_mr(redundant_nets[i], input[i]);
+		}
+		return out_mr[0];
+	}
+
 #else
 	error("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
 #endif
-	return NULL;
+	return NULL ;
 }
 
 float *network_predict(network net, float *input) {

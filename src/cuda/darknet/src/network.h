@@ -6,7 +6,6 @@
 #include "layer.h"
 #include "data.h"
 
-
 typedef enum {
 	CONSTANT, STEP, EXP, POLY, STEPS, SIG, RANDOM
 } learning_rate_policy;
@@ -65,6 +64,12 @@ typedef struct network_state {
 	network net;
 } network_state;
 
+typedef struct {
+	int mr;
+	float *input;
+	network net;
+} thread_parameters;
+
 #ifdef GPU
 float train_networks(network *nets, int n, data d, int interval);
 void sync_nets(network *nets, int n, int interval);
@@ -74,11 +79,7 @@ void forward_network_gpu(network net, network_state state);
 float *network_predict_gpu(network net, float *input);
 
 // Hardened version of network_predict_gpu
-float *network_predict_gpu_mr(network *redundant_nets, float *input,
-		int modular_redundancy);
-
-//// Hardened version of forward
-//void forward_network_gpu_mr(network nets, network_state *states, int mr);
+void* network_predict_gpu_mr(network net, float *input);
 
 float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);
@@ -107,8 +108,7 @@ float train_network_datum(network net, float *x, float *y);
 matrix network_predict_data(network net, data test);
 
 float *network_predict(network net, float *input);
-float *network_predict_mr(network *redundant_nets, float *input,
-		int modular_redundancy);
+float *network_predict_mr(network *redundant_nets, float **input, int mr);
 
 float network_accuracy(network net, data d);
 float *network_accuracies(network net, data d, int n);
