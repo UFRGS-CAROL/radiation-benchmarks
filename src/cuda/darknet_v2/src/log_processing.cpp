@@ -473,7 +473,7 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 #ifdef LOGS
 			log_error_detail(error_detail);
 #else
-//			printf("%s\n", error_detail);
+			printf("%s\n", error_detail);
 #endif
 
 //			}
