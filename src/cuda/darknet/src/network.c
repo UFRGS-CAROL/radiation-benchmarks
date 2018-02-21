@@ -534,7 +534,7 @@ void top_predictions(network net, int k, int *index) {
  * It works only for GPU mode
  */
 float *network_predict_mr(network *redundant_nets, float **input, int mr) {
-#ifndef GPU
+#ifdef GPU
 	if (gpu_index >= 0) {
 		float* out_mr[mr];
 		pthread_t threads[mr];
