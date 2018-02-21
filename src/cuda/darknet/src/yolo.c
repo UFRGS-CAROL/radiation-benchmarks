@@ -761,7 +761,6 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//-------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------
 	network net[mr_size];
-	;
 	detection_layer l[mr_size];
 
 	int mr_i;
@@ -800,15 +799,14 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//  int classes = l.classes;
 	//  int total = l.side * l.side * l.n;
 	//-------------------------------------------------------------------------------
+	float **X = (float**) calloc(mr_size, sizeof(float*));
 
 	int i, it;
 	for (it = 0; it < arg->iterations; it++) {
 		for (i = 0; i < gold.plist_size; i++) {
 
-			float* X[mr_size];
 			for (mr_i = 0; mr_i < mr_size; mr_i++) {
-				image sized = im_array_sized[i][mr_i];
-				X[mr_i] = sized.data;
+				X[mr_i] = im_array_sized[i][mr_i].data;
 			}
 			time = clock();
 
@@ -862,8 +860,11 @@ void test_yolo_radiation_dmr(Args *arg) {
 			clear_boxes_and_probs(boxes, probs, l[0].w * l[0].h * l[0].n,
 					l[0].classes);
 
+
 		}
 	}
+	// free X data
+	free(X);
 
 	//free the memory
 	free_ptrs((void **) probs, l[0].w * l[0].h * l[0].n);
