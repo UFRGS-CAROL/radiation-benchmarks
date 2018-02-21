@@ -869,8 +869,9 @@ void test_yolo_radiation_dmr(Args *arg) {
 	free_ptrs((void **) probs, l[0].w * l[0].h * l[0].n);
 	free(boxes);
 	delete_detection_var(&gold, arg);
-
+#ifdef GEN_IMG
 	free_all_images(im_array, gold.plist_size);
+#endif
 	free_all_images(im_array_sized, gold.plist_size);
 
 	//free smartpool errors
