@@ -25,6 +25,11 @@ typedef enum {
 	 SMART_TMR
 } abft_type ;
 
+typedef struct{
+	cublasHandle_t *handle;
+	cudaStream_t *stream;
+} multi_thread_stream;
+
 /**
  * -e - execution_type = <yolo/classifier/imagenet...>
  * -m - execution_model = <test/train/valid>

@@ -534,7 +534,9 @@ void top_predictions(network net, int k, int *index) {
  * It works only for GPU mode
  */
 float *network_predict_mr(network *redundant_nets, float **input, int mr) {
+
 #ifdef GPU
+	multi_thread_stream handle_streams[mr];
 	if (gpu_index >= 0) {
 		float* out_mr[mr];
 		pthread_t threads[mr];
@@ -554,7 +556,7 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 				error("ERROR ON CREATING THREADs\n");
 			}
 		}
-		printf("Na espera\n");
+		//printf("Na espera\n");
 		for (i = 0; i < mr; i++) {
 			void *temp = NULL;
 			if (pthread_join(threads[i], &temp)) {
@@ -562,6 +564,7 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 			}
 			out_mr[i] = (float*) temp;
 		}
+		//printf("Passou\n");
 		return out_mr[mr - 1];
 	}
 
