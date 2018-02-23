@@ -536,7 +536,7 @@ void top_predictions(network net, int k, int *index) {
 float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 
 #ifdef GPU
-	multi_thread_stream handle_streams[mr];
+//	multi_thread_stream handle_streams[mr];
 	if (gpu_index >= 0) {
 		float* out_mr[mr];
 		pthread_t threads[mr];
