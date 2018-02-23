@@ -185,9 +185,9 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 		printf ("\n\npassou no get\n");
 		abraham_sum(A_gpu, B_gpu, M, K, K, N);
 	} else if(get_use_abft_gemm() == SMART_DMR || get_use_abft_gemm() == SMART_TMR) {
-		cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking);
+//		cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking);
 		cublasCreate(&handle);
-		cublasSetStream(handle, stream);
+//		cublasSetStream(handle, stream);
 	} else {
 		// Normal execution
 		handle = blas_handle();
@@ -210,7 +210,7 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
 
 #endif
 	} else if(get_use_abft_gemm() == SMART_DMR || get_use_abft_gemm() == SMART_TMR) {
-		cudaStreamDestroy(stream);
+//		cudaStreamDestroy(stream);
 		cublasDestroy(handle);
 		//cudaStreamSynchronize(0);
 	}
