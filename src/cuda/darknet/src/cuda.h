@@ -31,5 +31,10 @@ dim3 cuda_gridsize(size_t n);
 cudnnHandle_t cudnn_handle();
 #endif
 
+typedef struct {
+	cublasHandle_t blas_handle;
+	cudaStream_t stream;
+}multi_thread_hd_st;
+
 #endif
 #endif

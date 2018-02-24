@@ -116,7 +116,7 @@ void forward_convolutional_layer_gpu(convolutional_layer l,
 		float * b = state.workspace;
 		float * c = l.output_gpu;
 
-		gemm_ongpu(0, 0, m, n, k, 1., a, k, b, n, 1., c + i * m * n, n);
+		gemm_ongpu(0, 0, m, n, k, 1., a, k, b, n, 1., c + i * m * n, n, &state.st_handle);
 	}
 #endif
 
@@ -196,7 +196,7 @@ void backward_convolutional_layer_gpu(convolutional_layer l,
 		im2col_ongpu(state.input + i * l.c * l.h * l.w, l.c, l.h, l.w, l.size,
 				l.stride, l.pad, state.workspace);
 		//printf("passou no backward_convolutional_layer_gpu first call\n");
-		gemm_ongpu(0, 1, m, n, k, 1, a + i * m * k, k, b, k, 1, c, n);
+		gemm_ongpu(0, 1, m, n, k, 1, a + i * m * k, k, b, k, 1, c, n, NULL);
 
 		if (state.delta) {
 			if (l.binary || l.xnor)
@@ -206,7 +206,7 @@ void backward_convolutional_layer_gpu(convolutional_layer l,
 			float * c = state.workspace;
 
 			//printf("passou no backward_convolutional_layer_gpu second call\n");
-			gemm_ongpu(1, 0, n, k, m, 1, a, n, b + i * k * m, k, 0, c, k);
+			gemm_ongpu(1, 0, n, k, m, 1, a, n, b + i * k * m, k, 0, c, k, NULL);
 
 			col2im_ongpu(state.workspace, l.c, l.h, l.w, l.size, l.stride,
 					l.pad, state.delta + i * l.c * l.h * l.w);

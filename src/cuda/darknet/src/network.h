@@ -62,11 +62,14 @@ typedef struct network_state {
 	int train;
 	int index;
 	network net;
+
+	multi_thread_hd_st st_handle;
 } network_state;
 
 typedef struct {
 	float *input;
 	network net;
+	multi_thread_hd_st st_handle;
 } thread_parameters;
 
 #ifdef GPU

@@ -504,6 +504,7 @@ float *get_network_output_gpu(network net) {
 void *network_predict_gpu_mr(void* data) {
 	network net = ((thread_parameters*) data)->net;
 	float *input = ((thread_parameters*) data)->input;
+	multi_thread_hd_st st_handle = ((thread_parameters*) data)->st_handle;
 
 	int size = get_network_input_size(net) * net.batch;
 	network_state state;
@@ -513,6 +514,7 @@ void *network_predict_gpu_mr(void* data) {
 	state.truth = 0;
 	state.train = 0;
 	state.delta = 0;
+	state.st_handle = st_handle;
 
 	forward_network_gpu(net, state);
 	float *out = get_network_output_gpu(net);
