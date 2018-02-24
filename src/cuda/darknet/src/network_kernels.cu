@@ -51,6 +51,7 @@ void forward_network_gpu(network net, network_state state) {
 		if (l.delta_gpu) {
 			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
 		}
+		printf("Passou ate a layer %d\n", i);
 		if (l.type == CONVOLUTIONAL) {
 			forward_convolutional_layer_gpu(l, state);
 		} else if (l.type == DECONVOLUTIONAL) {
