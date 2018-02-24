@@ -16,16 +16,25 @@
 #define DIV_VALUE 1e5
 
 typedef struct {
-	unsigned long long int row_detected_errors;
-	unsigned long long int col_detected_errors;
+        unsigned long long int row_detected_errors;
+        unsigned long long int col_detected_errors;
 
-	//only for smart pooling
-	unsigned err_detected_size;
-	unsigned long long *error_detected;
+        //only for smart pooling
+        unsigned err_detected_size;
+        unsigned long long *error_detected;
 } error_return;
 
+/*
+typedef struct{
+        cublasHandle_t handle;
+        cudaStream_t stream;
+} multi_thread_stream;
+
+multi_thread_stream *global_stream;
+*/
+
 void abraham_sum(float *a, float *b, long rows_a, long cols_a, long rows_b,
-		long cols_b);
+                long cols_b);
 error_return abraham_check(float *c, long rows, long cols);
 
 //ErrorReturn shared_errors;

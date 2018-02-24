@@ -24,8 +24,6 @@ abft_type get_use_abft_gemm() {
 	return use_abft;
 }
 
-
-
 }
 
 __device__ long get_index(float *mat, long i, long j, long n) {
