@@ -560,10 +560,11 @@ void destroy_handle(multi_thread_hd_st *dt) {
 /**
  * It works only for GPU mode
  */
-float *network_predict_mr(network *redundant_nets, float **input, int mr,
-		multi_thread_hd_st *handle_streams) {
+float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 
 #ifdef GPU
+	multi_thread_hd_st streams[mr];
+
 	if (gpu_index >= 0) {
 		float* out_mr[mr];
 		pthread_t threads[mr];
@@ -578,7 +579,8 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr,
 			thread_parameters tp;
 			tp.input = input[i];
 			tp.net = redundant_nets[i];
-			tp.st_handle = handle_streams[i];
+			tp.st_handle = create_handle();
+
 			if (pthread_create(&threads[i], NULL, network_predict_gpu_mr,
 							&tp)) {
 				error("ERROR ON CREATING THREADs\n");
@@ -591,6 +593,8 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr,
 				error("ERROR ON FINISHING THREADs\n");
 			}
 			out_mr[i] = (float*) temp;
+			destroy_handle(&streams[i]);
+
 		}
 		//printf("Passou\n");
 		return out_mr[mr - 1];

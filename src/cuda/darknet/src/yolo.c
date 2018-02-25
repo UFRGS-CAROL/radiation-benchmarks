@@ -789,13 +789,9 @@ void test_yolo_radiation_dmr(Args *arg) {
 	const image *im_array = load_all_images(gold);
 	const image* im_array_sized[mr_size];
 	//-------------------------------------------------------------------------------
-	// Streams handler
-	multi_thread_hd_st streams[mr_size];
-	//-------------------------------------------------------------------------------
 	for (mr_i = 0; mr_i < mr_size; mr_i++){
 		im_array_sized[mr_i] = load_all_images_sized(im_array, net[0].w,
 				net[0].h, gold.plist_size);
-		streams[mr_i] = create_handle();
 	}
 
 	//need to allocate layers arrays
@@ -817,7 +813,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 			//This is the detection
 			start_iteration_app();
 
-			float *predictions = network_predict_mr(net, X, mr_size, streams);
+			float *predictions = network_predict_mr(net, X, mr_size);
 
 			convert_detections(predictions, l[0].classes, l[0].n, l[0].sqrt,
 					l[0].side, 1, 1, arg->thresh, probs, boxes, 0);
@@ -836,7 +832,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 			//smart pooling
 			if (arg->abft == 2) {
 				for(mr_i = 0; mr_i < mr_size; mr_i++)
-					get_and_reset_error_detected_values(max_pool_errors, streams[mr_i].stream);
+					get_and_reset_error_detected_values(max_pool_errors);
 			}
 #endif
 			compare(&gold, probs, boxes, l[0].w * l[0].h * l[0].n, l[0].classes,
@@ -884,12 +880,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 #ifdef GPU
 	free_err_detected();
 #endif
-	//-------------------------------------------------------------------------------
-	// Streams handler
-	for(mr_i = 0; mr_i < mr_size; mr_i++){
-		destroy_handle(&streams[mr_i]);
-	}
-	//-------------------------------------------------------------------------------
+
 }
 
 void run_yolo_rad(Args args) {
