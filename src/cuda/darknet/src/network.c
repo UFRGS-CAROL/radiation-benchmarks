@@ -44,8 +44,13 @@ void reset_momentum(network net) {
 	net.momentum = 0;
 	net.decay = 0;
 #ifdef GPU
-	if(gpu_index >= 0) update_network_gpu(net);
+	cudaStream_t stream;
+	cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking);
+
+	if(gpu_index >= 0) update_network_gpu(net, stream);
+	cudaStreamDestroy(stream);
 #endif
+
 }
 
 float get_current_rate(network net) {
@@ -324,7 +329,10 @@ void backward_network(network net, network_state state) {
 
 float train_network_datum(network net, float *x, float *y) {
 #ifdef GPU
-	if(gpu_index >= 0) return train_network_datum_gpu(net, x, y);
+	cudaStream_t stream;
+	cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking);
+	if(gpu_index >= 0) return train_network_datum_gpu(net, x, y, stream);
+	cudaStreamDestroy(stream);
 #endif
 	network_state state;
 	*net.seen += net.batch;

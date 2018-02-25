@@ -254,7 +254,7 @@ void backward_detection_layer(const detection_layer l, network_state state) {
 void forward_detection_layer_gpu(const detection_layer l, network_state state)
 {
 	if(!state.train) {
-		copy_ongpu(l.batch*l.inputs, state.input, 1, l.output_gpu, 1);
+		copy_ongpu(l.batch*l.inputs, state.input, 1, l.output_gpu, 1, state.st_handle.stream);
 		return;
 	}
 
@@ -279,7 +279,7 @@ void forward_detection_layer_gpu(const detection_layer l, network_state state)
 
 void backward_detection_layer_gpu(detection_layer l, network_state state)
 {
-	axpy_ongpu(l.batch*l.inputs, 1, l.delta_gpu, 1, state.delta, 1);
+	axpy_ongpu(l.batch*l.inputs, 1, l.delta_gpu, 1, state.delta, 1, state.st_handle.stream);
 	//copy_ongpu(l.batch*l.inputs, l.delta_gpu, 1, state.delta, 1);
 }
 #endif

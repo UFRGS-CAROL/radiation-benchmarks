@@ -180,13 +180,13 @@ void forward_local_layer_gpu(const local_layer l, network_state state)
 	int locations = out_h * out_w;
 
 	for(i = 0; i < l.batch; ++i) {
-		copy_ongpu(l.outputs, l.biases_gpu, 1, l.output_gpu + i*l.outputs, 1);
+		copy_ongpu(l.outputs, l.biases_gpu, 1, l.output_gpu + i*l.outputs, 1, state.st_handle.stream);
 	}
 
 	for(i = 0; i < l.batch; ++i) {
 		float *input = state.input + i*l.w*l.h*l.c;
 		im2col_ongpu(input, l.c, l.h, l.w,
-				l.size, l.stride, l.pad, l.col_image_gpu);
+				l.size, l.stride, l.pad, l.col_image_gpu, state.st_handle.stream);
 		float *output = l.output_gpu + i*l.outputs;
 		for(j = 0; j < locations; ++j) {
 			float *a = l.weights_gpu + j*l.size*l.size*l.c*l.n;
@@ -201,7 +201,7 @@ void forward_local_layer_gpu(const local_layer l, network_state state)
 			gemm_ongpu(0,0,m,n,k,1,a,k,b,locations,1,c,locations, &state.st_handle);
 		}
 	}
-	activate_array_ongpu(l.output_gpu, l.outputs*l.batch, l.activation);
+	activate_array_ongpu(l.output_gpu, l.outputs*l.batch, l.activation, state.st_handle.stream);
 }
 
 void backward_local_layer_gpu(local_layer l, network_state state)
@@ -209,15 +209,15 @@ void backward_local_layer_gpu(local_layer l, network_state state)
 	int i, j;
 	int locations = l.out_w*l.out_h;
 
-	gradient_array_ongpu(l.output_gpu, l.outputs*l.batch, l.activation, l.delta_gpu);
+	gradient_array_ongpu(l.output_gpu, l.outputs*l.batch, l.activation, l.delta_gpu, state.st_handle.stream);
 	for(i = 0; i < l.batch; ++i) {
-		axpy_ongpu(l.outputs, 1, l.delta_gpu + i*l.outputs, 1, l.bias_updates_gpu, 1);
+		axpy_ongpu(l.outputs, 1, l.delta_gpu + i*l.outputs, 1, l.bias_updates_gpu, 1, state.st_handle.stream);
 	}
 
 	for(i = 0; i < l.batch; ++i) {
 		float *input = state.input + i*l.w*l.h*l.c;
 		im2col_ongpu(input, l.c, l.h, l.w,
-				l.size, l.stride, l.pad, l.col_image_gpu);
+				l.size, l.stride, l.pad, l.col_image_gpu, state.st_handle.stream);
 
 		for(j = 0; j < locations; ++j) {
 			float *a = l.delta_gpu + i*l.outputs + j;
@@ -227,7 +227,7 @@ void backward_local_layer_gpu(local_layer l, network_state state)
 			int n = l.size*l.size*l.c;
 			int k = 1;
 			//printf("passou no backward_local_layer_gpu first call\n");
-			gemm_ongpu(0,1,m,n,k,1,a,locations,b,locations,1,c,n, NULL);
+			gemm_ongpu(0,1,m,n,k,1,a,locations,b,locations,1,c,n, state.st_handle.stream);
 		}
 
 		if(state.delta) {
@@ -240,24 +240,24 @@ void backward_local_layer_gpu(local_layer l, network_state state)
 				int n = 1;
 				int k = l.n;
 				//printf("passou no backward_local_layer_gpu second call\n");
-				gemm_ongpu(1,0,m,n,k,1,a,m,b,locations,0,c,locations, NULL);
+				gemm_ongpu(1,0,m,n,k,1,a,m,b,locations,0,c,locations, state.st_handle.stream);
 			}
 
-			col2im_ongpu(l.col_image_gpu, l.c, l.h, l.w, l.size, l.stride, l.pad, state.delta+i*l.c*l.h*l.w);
+			col2im_ongpu(l.col_image_gpu, l.c, l.h, l.w, l.size, l.stride, l.pad, state.delta+i*l.c*l.h*l.w, state.st_handle.stream);
 		}
 	}
 }
 
-void update_local_layer_gpu(local_layer l, int batch, float learning_rate, float momentum, float decay)
+void update_local_layer_gpu(local_layer l, int batch, float learning_rate, float momentum, float decay, cudaStream_t stream)
 {
 	int locations = l.out_w*l.out_h;
 	int size = l.size*l.size*l.c*l.n*locations;
-	axpy_ongpu(l.outputs, learning_rate/batch, l.bias_updates_gpu, 1, l.biases_gpu, 1);
-	scal_ongpu(l.outputs, momentum, l.bias_updates_gpu, 1);
+	axpy_ongpu(l.outputs, learning_rate/batch, l.bias_updates_gpu, 1, l.biases_gpu, 1, stream);
+	scal_ongpu(l.outputs, momentum, l.bias_updates_gpu, 1, stream);
 
-	axpy_ongpu(size, -decay*batch, l.weights_gpu, 1, l.weight_updates_gpu, 1);
-	axpy_ongpu(size, learning_rate/batch, l.weight_updates_gpu, 1, l.weights_gpu, 1);
-	scal_ongpu(size, momentum, l.weight_updates_gpu, 1);
+	axpy_ongpu(size, -decay*batch, l.weights_gpu, 1, l.weight_updates_gpu, 1, stream);
+	axpy_ongpu(size, learning_rate/batch, l.weight_updates_gpu, 1, l.weights_gpu, 1, stream);
+	scal_ongpu(size, momentum, l.weight_updates_gpu, 1, stream);
 }
 
 void pull_local_layer(local_layer l)

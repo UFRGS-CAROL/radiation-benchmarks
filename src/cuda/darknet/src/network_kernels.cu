@@ -49,7 +49,8 @@ void forward_network_gpu(network net, network_state state) {
 		state.index = i;
 		layer l = net.layers[i];
 		if (l.delta_gpu) {
-			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
+			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1,
+					state.st_handle.stream);
 		}
 		//printf("Passou ate a layer %d\n", i);
 		if (l.type == CONVOLUTIONAL) {
@@ -91,7 +92,7 @@ void forward_network_gpu(network net, network_state state) {
 		} else if (l.type == DROPOUT) {
 			forward_dropout_layer_gpu(l, state);
 		} else if (l.type == ROUTE) {
-			forward_route_layer_gpu(l, net);
+			forward_route_layer_gpu(l, net, state);
 		} else if (l.type == SHORTCUT) {
 			forward_shortcut_layer_gpu(l, state);
 		}
@@ -157,14 +158,14 @@ void backward_network_gpu(network net, network_state state) {
 		} else if (l.type == COST) {
 			backward_cost_layer_gpu(l, state);
 		} else if (l.type == ROUTE) {
-			backward_route_layer_gpu(l, net);
+			backward_route_layer_gpu(l, net, state);
 		} else if (l.type == SHORTCUT) {
 			backward_shortcut_layer_gpu(l, state);
 		}
 	}
 }
 
-void update_network_gpu(network net) {
+void update_network_gpu(network net, cudaStream_t stream) {
 	int i;
 	int update_batch = net.batch * net.subdivisions;
 	float rate = get_current_rate(net);
@@ -172,24 +173,25 @@ void update_network_gpu(network net) {
 		layer l = net.layers[i];
 		if (l.type == CONVOLUTIONAL) {
 			update_convolutional_layer_gpu(l, update_batch, rate, net.momentum,
-					net.decay);
+					net.decay, stream);
 		} else if (l.type == DECONVOLUTIONAL) {
-			update_deconvolutional_layer_gpu(l, rate, net.momentum, net.decay);
+			update_deconvolutional_layer_gpu(l, rate, net.momentum, net.decay,
+					stream);
 		} else if (l.type == CONNECTED) {
 			update_connected_layer_gpu(l, update_batch, rate, net.momentum,
-					net.decay);
+					net.decay, stream);
 		} else if (l.type == GRU) {
-			update_gru_layer_gpu(l, update_batch, rate, net.momentum,
-					net.decay);
+			update_gru_layer_gpu(l, update_batch, rate, net.momentum, net.decay,
+					stream);
 		} else if (l.type == RNN) {
-			update_rnn_layer_gpu(l, update_batch, rate, net.momentum,
-					net.decay);
+			update_rnn_layer_gpu(l, update_batch, rate, net.momentum, net.decay,
+					stream);
 		} else if (l.type == CRNN) {
 			update_crnn_layer_gpu(l, update_batch, rate, net.momentum,
-					net.decay);
+					net.decay, stream);
 		} else if (l.type == LOCAL) {
 			update_local_layer_gpu(l, update_batch, rate, net.momentum,
-					net.decay);
+					net.decay, stream);
 		}
 	}
 }
@@ -219,12 +221,13 @@ void forward_backward_network_gpu(network net, float *x, float *y) {
 	backward_network_gpu(net, state);
 }
 
-float train_network_datum_gpu(network net, float *x, float *y) {
+float train_network_datum_gpu(network net, float *x, float *y,
+		cudaStream_t stream) {
 	*net.seen += net.batch;
 	forward_backward_network_gpu(net, x, y);
 	float error = get_network_cost(net);
 	if (((*net.seen) / net.batch) % net.subdivisions == 0)
-		update_network_gpu(net);
+		update_network_gpu(net, stream);
 
 	return error;
 }
@@ -285,23 +288,26 @@ void push_updates(layer l) {
 void update_layer(layer l, network net) {
 	int update_batch = net.batch * net.subdivisions;
 	float rate = get_current_rate(net);
+	cudaStream_t stream;
+	cudaStreamCreate(&stream);
 	if (l.type == CONVOLUTIONAL) {
 		update_convolutional_layer_gpu(l, update_batch, rate, net.momentum,
-				net.decay);
+				net.decay, stream);
 	} else if (l.type == DECONVOLUTIONAL) {
-		update_deconvolutional_layer_gpu(l, rate, net.momentum, net.decay);
+		update_deconvolutional_layer_gpu(l, rate, net.momentum, net.decay, stream);
 	} else if (l.type == CONNECTED) {
 		update_connected_layer_gpu(l, update_batch, rate, net.momentum,
-				net.decay);
+				net.decay, stream);
 	} else if (l.type == RNN) {
-		update_rnn_layer_gpu(l, update_batch, rate, net.momentum, net.decay);
+		update_rnn_layer_gpu(l, update_batch, rate, net.momentum, net.decay, stream);
 	} else if (l.type == GRU) {
-		update_gru_layer_gpu(l, update_batch, rate, net.momentum, net.decay);
+		update_gru_layer_gpu(l, update_batch, rate, net.momentum, net.decay, stream);
 	} else if (l.type == CRNN) {
-		update_crnn_layer_gpu(l, update_batch, rate, net.momentum, net.decay);
+		update_crnn_layer_gpu(l, update_batch, rate, net.momentum, net.decay, stream);
 	} else if (l.type == LOCAL) {
-		update_local_layer_gpu(l, update_batch, rate, net.momentum, net.decay);
+		update_local_layer_gpu(l, update_batch, rate, net.momentum, net.decay, stream);
 	}
+	cudaStreamDestroy(stream);
 }
 
 void merge_weights(layer l, layer base) {

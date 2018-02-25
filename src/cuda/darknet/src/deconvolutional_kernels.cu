@@ -24,7 +24,7 @@ extern "C" void forward_deconvolutional_layer_gpu(deconvolutional_layer layer,
 	int n = layer.h * layer.w;
 	int k = layer.c;
 
-	fill_ongpu(layer.outputs * layer.batch, 0, layer.output_gpu, 1);
+	fill_ongpu(layer.outputs * layer.batch, 0, layer.output_gpu, 1, state.st_handle.stream);
 
 	for (i = 0; i < layer.batch; ++i) {
 		float *a = layer.weights_gpu;
@@ -34,10 +34,10 @@ extern "C" void forward_deconvolutional_layer_gpu(deconvolutional_layer layer,
 		gemm_ongpu(1, 0, m, n, k, 1, a, m, b, n, 0, c, n, &state.st_handle);
 
 		col2im_ongpu(c, layer.n, out_h, out_w, layer.size, layer.stride, 0,
-				layer.output_gpu + i * layer.n * size);
+				layer.output_gpu + i * layer.n * size, state.st_handle.stream);
 	}
 	add_bias_gpu(layer.output_gpu, layer.biases_gpu, layer.batch, layer.n,
-			size);
+			size, state.st_handle.stream);
 	activate_array(layer.output_gpu, layer.batch * layer.n * size,
 			layer.activation);
 }
@@ -69,8 +69,8 @@ extern "C" void backward_deconvolutional_layer_gpu(deconvolutional_layer layer,
 		float *c = layer.weight_updates_gpu;
 
 		im2col_ongpu(layer.delta_gpu + i * layer.n * size, layer.n, out_h,
-				out_w, layer.size, layer.stride, 0, b);
-		gemm_ongpu(0, 1, m, n, k, alpha, a, k, b, k, 1, c, n, NULL);
+				out_w, layer.size, layer.stride, 0, b, state.st_handle.stream);
+		gemm_ongpu(0, 1, m, n, k, alpha, a, k, b, k, 1, c, n, &state.st_handle);
 
 		if (state.delta) {
 			int m = layer.c;
@@ -105,16 +105,16 @@ extern "C" void push_deconvolutional_layer(deconvolutional_layer layer) {
 }
 
 extern "C" void update_deconvolutional_layer_gpu(deconvolutional_layer layer,
-		float learning_rate, float momentum, float decay) {
+		float learning_rate, float momentum, float decay, cudaStream_t stream) {
 	int size = layer.size * layer.size * layer.c * layer.n;
 
 	axpy_ongpu(layer.n, learning_rate, layer.bias_updates_gpu, 1,
-			layer.biases_gpu, 1);
-	scal_ongpu(layer.n, momentum, layer.bias_updates_gpu, 1);
+			layer.biases_gpu, 1, stream);
+	scal_ongpu(layer.n, momentum, layer.bias_updates_gpu, 1, stream);
 
-	axpy_ongpu(size, -decay, layer.weights_gpu, 1, layer.weight_updates_gpu, 1);
+	axpy_ongpu(size, -decay, layer.weights_gpu, 1, layer.weight_updates_gpu, 1, stream);
 	axpy_ongpu(size, learning_rate, layer.weight_updates_gpu, 1,
-			layer.weights_gpu, 1);
-	scal_ongpu(size, momentum, layer.weight_updates_gpu, 1);
+			layer.weights_gpu, 1, stream);
+	scal_ongpu(size, momentum, layer.weight_updates_gpu, 1, stream);
 }
 

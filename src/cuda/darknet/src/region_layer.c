@@ -286,7 +286,7 @@ void forward_region_layer_gpu(const region_layer l, network_state state)
 
 void backward_region_layer_gpu(region_layer l, network_state state)
 {
-	axpy_ongpu(l.batch*l.outputs, 1, l.delta_gpu, 1, state.delta, 1);
+	axpy_ongpu(l.batch*l.outputs, 1, l.delta_gpu, 1, state.delta, 1, state.st_handle.stream);
 	//copy_ongpu(l.batch*l.inputs, l.delta_gpu, 1, state.delta, 1);
 }
 #endif

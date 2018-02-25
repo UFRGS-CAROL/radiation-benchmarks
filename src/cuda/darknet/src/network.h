@@ -75,7 +75,7 @@ typedef struct {
 #ifdef GPU
 float train_networks(network *nets, int n, data d, int interval);
 void sync_nets(network *nets, int n, int interval);
-float train_network_datum_gpu(network net, float *x, float *y);
+float train_network_datum_gpu(network net, float *x, float *y, cudaStream_t stream);
 
 void forward_network_gpu(network net, network_state state);
 float *network_predict_gpu(network net, float *input);
@@ -88,7 +88,7 @@ float * get_network_delta_gpu_layer(network net, int i);
 float *get_network_output_gpu(network net);
 
 void backward_network_gpu(network net, network_state state);
-void update_network_gpu(network net);
+void update_network_gpu(network net, cudaStream_t stream);
 #endif
 
 float get_current_rate(network net);
