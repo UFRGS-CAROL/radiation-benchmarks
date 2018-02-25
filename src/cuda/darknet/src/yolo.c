@@ -787,22 +787,20 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//-------------------------------------------------------------------------------
 	//load all images
 	const image *im_array = load_all_images(gold);
-
 	const image* im_array_sized[mr_size];
-
-	for (mr_i = 0; mr_i < mr_size; mr_i++)
-		im_array_sized[mr_i] = load_all_images_sized(im_array, net[0].w,
-				net[0].h, gold.plist_size);
-
-	//need to allocate layers arrays
-	alloc_gold_layers_arrays(&gold, &net[0]);
 	//-------------------------------------------------------------------------------
 	// Streams handler
 	multi_thread_hd_st streams[mr_size];
-	for(mr_i = 0; mr_i < mr_size; mr_i++){
+	//-------------------------------------------------------------------------------
+	for (mr_i = 0; mr_i < mr_size; mr_i++){
+		im_array_sized[mr_i] = load_all_images_sized(im_array, net[0].w,
+				net[0].h, gold.plist_size);
 		streams[mr_i] = create_handle();
 	}
-	//-------------------------------------------------------------------------------
+
+	//need to allocate layers arrays
+	alloc_gold_layers_arrays(&gold, &net[0]);
+
 	float **X = (float**) calloc(mr_size, sizeof(float*));
 
 	int i, it;

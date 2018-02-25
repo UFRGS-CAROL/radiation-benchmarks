@@ -544,6 +544,7 @@ multi_thread_hd_st create_handle() {
 	cudaStreamCreateWithFlags(&ret.stream, cudaStreamNonBlocking);
 	cublasCreate(&ret.blas_handle);
 	cublasSetStream(ret.blas_handle, ret.stream);
+	printf("Criou aqui\n");
 #endif
 	return ret;
 

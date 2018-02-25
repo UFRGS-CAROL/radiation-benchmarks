@@ -91,6 +91,9 @@ void backward_network_gpu(network net, network_state state);
 void update_network_gpu(network net, cudaStream_t stream);
 #endif
 
+multi_thread_hd_st create_handle();
+void destroy_handle(multi_thread_hd_st *dt);
+
 float get_current_rate(network net);
 int get_current_batch(network net);
 void free_network(network net);
