@@ -541,7 +541,7 @@ void top_predictions(network net, int k, int *index) {
 multi_thread_hd_st create_handle() {
 	multi_thread_hd_st ret;
 #ifdef GPU
-	cudaStreamCreateWithFlags(&ret.stream, cudaStreamNonBlocking);
+	cudaStreamCreate(&ret.stream);
 	cublasCreate(&ret.blas_handle);
 	cublasSetStream(ret.blas_handle, ret.stream);
 #endif
@@ -580,10 +580,10 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 			tp.input = input[i];
 			tp.net = redundant_nets[i];
 			streams[i] = create_handle();
-			tp.st_handle  = streams[i];
+			tp.st_handle = streams[i];
 
 			if (pthread_create(&threads[i], NULL, network_predict_gpu_mr,
-							&tp)) {
+					&tp)) {
 				error("ERROR ON CREATING THREADs\n");
 			}
 		}
