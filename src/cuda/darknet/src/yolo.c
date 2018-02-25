@@ -797,9 +797,16 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//need to allocate layers arrays
 	alloc_gold_layers_arrays(&gold, &net[0]);
 	//-------------------------------------------------------------------------------
+	// Streams handler
+	multi_thread_hd_st streams[mr_size];
+	for(mr_i = 0; mr_i < mr_size; mr_i++){
+		streams[mr_i] = create_handle();
+	}
+	//-------------------------------------------------------------------------------
 	float **X = (float**) calloc(mr_size, sizeof(float*));
 
 	int i, it;
+
 	for (it = 0; it < arg->iterations; it++) {
 		for (i = 0; i < gold.plist_size; i++) {
 
@@ -812,7 +819,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 			//This is the detection
 			start_iteration_app();
 
-			float *predictions = network_predict_mr(net, X, mr_size);
+			float *predictions = network_predict_mr(net, X, mr_size, streams);
 
 			convert_detections(predictions, l[0].classes, l[0].n, l[0].sqrt,
 					l[0].side, 1, 1, arg->thresh, probs, boxes, 0);
@@ -830,7 +837,8 @@ void test_yolo_radiation_dmr(Args *arg) {
 			//before compare copy maxpool err detection values
 			//smart pooling
 			if (arg->abft == 2) {
-				get_and_reset_error_detected_values(max_pool_errors);
+				for(mr_i = 0; mr_i < mr_size; mr_i++)
+					get_and_reset_error_detected_values(max_pool_errors, streams[mr_i].stream);
 			}
 #endif
 			compare(&gold, probs, boxes, l[0].w * l[0].h * l[0].n, l[0].classes,
@@ -878,6 +886,12 @@ void test_yolo_radiation_dmr(Args *arg) {
 #ifdef GPU
 	free_err_detected();
 #endif
+	//-------------------------------------------------------------------------------
+	// Streams handler
+	for(mr_i = 0; mr_i < mr_size; mr_i++){
+		destroy_handle(&streams[mr_i]);
+	}
+	//-------------------------------------------------------------------------------
 }
 
 void run_yolo_rad(Args args) {

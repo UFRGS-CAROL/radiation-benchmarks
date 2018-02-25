@@ -131,7 +131,7 @@ extern "C" void forward_maxpool_layer_gpu_hardened(maxpool_layer layer,
 		cudaMalloc(&error_detected, sizeof(unsigned long long) * MAXPOOL_N);
 	}
 
-	forward_maxpool_layer_kernel_hardened<<<cuda_gridsize(n), BLOCK>>>(n, layer.h,
+	forward_maxpool_layer_kernel_hardened<<<cuda_gridsize(n), BLOCK, 0, state.st_handle.stream>>>(n, layer.h,
 			layer.w, layer.c, layer.stride, layer.size, layer.pad, state.input,
 			layer.output_gpu, layer.indexes_gpu, LOOK_UP_TABLE[maxp] * FACTOR,
 			error_detected, maxpool_iterator);
@@ -146,13 +146,13 @@ __global__ void memset_error(unsigned long long *error_detected) {
 /**
  * host_error_detected must be allocated
  */
-void get_and_reset_error_detected_values(error_return host_error) {
+void get_and_reset_error_detected_values(error_return host_error, cudaStream_t stream) {
 	//copy from error_detected var
 	cudaMemcpy(host_error.error_detected, error_detected,
 			sizeof(unsigned long long) * host_error.err_detected_size,
 			cudaMemcpyDeviceToHost);
 
-	memset_error<<<1, MAXPOOL_N>>>(error_detected);
+	memset_error<<<1, MAXPOOL_N, 0, stream>>>(error_detected);
 
 	check_error(cudaPeekAtLastError());
 }

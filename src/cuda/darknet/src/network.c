@@ -538,29 +538,32 @@ void top_predictions(network net, int k, int *index) {
 	top_k(out, size, k, index);
 }
 
-#ifdef GPU
 multi_thread_hd_st create_handle() {
 	multi_thread_hd_st ret;
+#ifdef GPU
 	cudaStreamCreateWithFlags(&ret.stream, cudaStreamNonBlocking);
 	cublasCreate(&ret.blas_handle);
 	cublasSetStream(ret.blas_handle, ret.stream);
+#endif
 	return ret;
+
 }
 
 void destroy_handle(multi_thread_hd_st *dt) {
+#ifdef GPU
 	cudaStreamSynchronize(dt->stream);
 	cudaStreamDestroy(dt->stream);
 	cublasDestroy(dt->blas_handle);
+#endif
 }
 
-#endif
 /**
  * It works only for GPU mode
  */
-float *network_predict_mr(network *redundant_nets, float **input, int mr) {
+float *network_predict_mr(network *redundant_nets, float **input, int mr,
+		multi_thread_hd_st *handle_streams) {
 
 #ifdef GPU
-	multi_thread_hd_st handle_streams[mr];
 	if (gpu_index >= 0) {
 		float* out_mr[mr];
 		pthread_t threads[mr];
@@ -575,7 +578,6 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 			thread_parameters tp;
 			tp.input = input[i];
 			tp.net = redundant_nets[i];
-			handle_streams[i] = create_handle();
 			tp.st_handle = handle_streams[i];
 			if (pthread_create(&threads[i], NULL, network_predict_gpu_mr,
 							&tp)) {
@@ -589,7 +591,6 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 				error("ERROR ON FINISHING THREADs\n");
 			}
 			out_mr[i] = (float*) temp;
-			destroy_handle(&handle_streams[i]);
 		}
 		//printf("Passou\n");
 		return out_mr[mr - 1];
