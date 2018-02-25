@@ -579,7 +579,8 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 			thread_parameters tp;
 			tp.input = input[i];
 			tp.net = redundant_nets[i];
-			tp.st_handle = create_handle();
+			streams[i] = create_handle();
+			tp.st_handle  = streams[i];
 
 			if (pthread_create(&threads[i], NULL, network_predict_gpu_mr,
 							&tp)) {
