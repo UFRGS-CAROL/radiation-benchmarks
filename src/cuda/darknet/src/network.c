@@ -563,12 +563,15 @@ void destroy_handle(multi_thread_hd_st *dt) {
 float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 
 #ifdef GPU
-	multi_thread_hd_st streams[mr];
+	static multi_thread_hd_st streams[mr];
+	int i;
+	for(i = 0; i < mr; i++) {
+		streams[i] = create_handle();
+	}
 
 	if (gpu_index >= 0) {
 		float* out_mr[mr];
 		pthread_t threads[mr];
-		int i;
 		if (mr == 2) {
 			set_abft_gemm(SMART_DMR);
 		} else if (mr == 3) {
@@ -579,11 +582,10 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 			thread_parameters tp;
 			tp.input = input[i];
 			tp.net = redundant_nets[i];
-			streams[i] = create_handle();
 			tp.st_handle = streams[i];
 
 			if (pthread_create(&threads[i], NULL, network_predict_gpu_mr,
-					&tp)) {
+							&tp)) {
 				error("ERROR ON CREATING THREADs\n");
 			}
 		}
@@ -594,13 +596,14 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 				error("ERROR ON FINISHING THREADs\n");
 			}
 			out_mr[i] = (float*) temp;
-			destroy_handle(&streams[i]);
-
 		}
 		//printf("Passou\n");
 		return out_mr[mr - 1];
 	}
 
+	for(i = 0; i < mr; i++) {
+		destroy_handle(&streams[i]);
+	}
 #else
 	error("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
 #endif
