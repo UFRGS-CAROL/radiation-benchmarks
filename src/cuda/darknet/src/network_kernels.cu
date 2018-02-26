@@ -98,6 +98,8 @@ void forward_network_gpu(network net, network_state state) {
 		}
 		state.input = l.output_gpu;
 
+		cudaStreamSynchronize(state.st_handle.stream);
+
 	}
 
 }
@@ -538,6 +540,7 @@ float *network_predict_gpu(network net, float *input) {
 	state.truth = 0;
 	state.train = 0;
 	state.delta = 0;
+	state.st_handle.stream = 0;
 
 	forward_network_gpu(net, state);
 	float *out = get_network_output_gpu(net);
