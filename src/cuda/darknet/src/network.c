@@ -602,10 +602,7 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 		for(i = 0; i < mr; i++) {
 			destroy_handle(&streams[i]);
 		}
-		printf("passou antes\n");
 		free(streams);
-
-		printf("passou antes porque2\n");
 
 		//printf("Passou\n");
 		return out_mr[mr - 1];
