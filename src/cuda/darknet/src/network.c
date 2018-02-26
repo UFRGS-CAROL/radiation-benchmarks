@@ -563,7 +563,8 @@ void destroy_handle(multi_thread_hd_st *dt) {
 float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 
 #ifdef GPU
-	static multi_thread_hd_st streams[mr];
+	static multi_thread_hd_st *streams;
+	streams = (multi_thread_hd_st*) calloc(mr, sizeof(multi_thread_hd_st));
 	int i;
 	for(i = 0; i < mr; i++) {
 		streams[i] = create_handle();
@@ -604,6 +605,7 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 	for(i = 0; i < mr; i++) {
 		destroy_handle(&streams[i]);
 	}
+	free(streams);
 #else
 	error("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
 #endif
