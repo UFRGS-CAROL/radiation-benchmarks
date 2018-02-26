@@ -563,14 +563,14 @@ void destroy_handle(multi_thread_hd_st *dt) {
 float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 
 #ifdef GPU
-	static multi_thread_hd_st *streams;
-	streams = (multi_thread_hd_st*) calloc(mr, sizeof(multi_thread_hd_st));
-	int i;
-	for(i = 0; i < mr; i++) {
-		streams[i] = create_handle();
-	}
-
 	if (gpu_index >= 0) {
+		static multi_thread_hd_st *streams;
+		streams = (multi_thread_hd_st*) calloc(mr, sizeof(multi_thread_hd_st));
+		int i;
+		for(i = 0; i < mr; i++) {
+			streams[i] = create_handle();
+		}
+
 		float* out_mr[mr];
 		pthread_t threads[mr];
 		if (mr == 2) {
@@ -598,17 +598,19 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 			}
 			out_mr[i] = (float*) temp;
 		}
+
+		for(i = 0; i < mr; i++) {
+			destroy_handle(&streams[i]);
+		}
+		printf("passou antes\n");
+		free(streams);
+
+		printf("passou antes porque2\n");
+
 		//printf("Passou\n");
 		return out_mr[mr - 1];
 	}
 
-	for(i = 0; i < mr; i++) {
-		destroy_handle(&streams[i]);
-	}
-	printf("passou antes\n");
-	free(streams);
-
-	printf("passou antes porque2\n");
 #else
 	error("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
 #endif
