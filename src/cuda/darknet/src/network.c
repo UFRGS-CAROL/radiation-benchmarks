@@ -560,58 +560,47 @@ void destroy_handle(multi_thread_hd_st *dt) {
 /**
  * It works only for GPU mode
  */
-float *network_predict_mr(network *redundant_nets, float **input, int mr) {
-
-#ifdef GPU
+float **network_predict_mr(network *redundant_nets, float **input, int mr) {
+	float** out_mr = NULL;
+//#ifdef GPU
 	if (gpu_index >= 0) {
-		static multi_thread_hd_st *streams;
-		streams = (multi_thread_hd_st*) calloc(mr, sizeof(multi_thread_hd_st));
 		int i;
-		for(i = 0; i < mr; i++) {
-			streams[i] = create_handle();
+		out_mr = (float**) calloc(mr, sizeof(float*));
+
+		//Initialize the lock
+		if (pthread_mutex_init(&lock, NULL) != 0) {
+error("MUTEX INIT ")
 		}
 
-		float* out_mr[mr];
 		pthread_t threads[mr];
-		if (mr == 2) {
-			set_abft_gemm(SMART_DMR);
-		} else if (mr == 3) {
-			set_abft_gemm(SMART_TMR);
+		thread_parameters tp[mr];
+		for (i = 0; i < mr; i++) {
+			tp[i].input = input[i];
+			tp[i].net = redundant_nets[i];
 		}
 
 		for (i = 0; i < mr; i++) {
-			thread_parameters tp;
-			tp.input = input[i];
-			tp.net = redundant_nets[i];
-			tp.st_handle = streams[i];
-
 			if (pthread_create(&threads[i], NULL, network_predict_gpu_mr,
-							&tp)) {
+					&(tp[i]))) {
 				error("ERROR ON CREATING THREADs\n");
 			}
 		}
-		//printf("Na espera\n");
+		sleep(0.001);
 		for (i = 0; i < mr; i++) {
-			void *temp = NULL;
-			if (pthread_join(threads[i], &temp)) {
+			if (pthread_join(threads[i], NULL)) {
 				error("ERROR ON FINISHING THREADs\n");
 			}
-			out_mr[i] = (float*) temp;
 		}
 
-		for(i = 0; i < mr; i++) {
-			destroy_handle(&streams[i]);
-		}
-		free(streams);
+		for (i = 0; i < mr; i++)
+			out_mr[i] = tp[i].out;
 
-		//printf("Passou\n");
-		return out_mr[mr - 1];
 	}
 
-#else
-	error("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
-#endif
-	return NULL ;
+//#else
+//	error("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
+//#endif
+	return out_mr;
 }
 
 float *network_predict(network net, float *input) {

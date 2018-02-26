@@ -70,6 +70,7 @@ typedef struct {
 	float *input;
 	network net;
 	multi_thread_hd_st st_handle;
+	float *out;
 } thread_parameters;
 
 #ifdef GPU
@@ -113,7 +114,7 @@ float train_network_datum(network net, float *x, float *y);
 matrix network_predict_data(network net, data test);
 
 float *network_predict(network net, float *input);
-float *network_predict_mr(network *redundant_nets, float **input, int mr);
+float **network_predict_mr(network *redundant_nets, float **input, int mr);
 
 float network_accuracy(network net, data d);
 float *network_accuracies(network net, data d, int n);
@@ -140,8 +141,6 @@ int get_network_background(network net);
 
 double mysecond();
 
-multi_thread_hd_st create_handle();
-void destroy_handle(multi_thread_hd_st *dt);
 
 #endif
 

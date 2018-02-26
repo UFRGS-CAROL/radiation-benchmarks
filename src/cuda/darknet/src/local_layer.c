@@ -198,7 +198,7 @@ void forward_local_layer_gpu(const local_layer l, network_state state)
 			int k = l.size*l.size*l.c;
 
 			//printf("passou no local layer forward_local_layer_gpu\n");
-			gemm_ongpu(0,0,m,n,k,1,a,k,b,locations,1,c,locations, &state.st_handle);
+			gemm_ongpu(0,0,m,n,k,1,a,k,b,locations,1,c,locations, state.st_handle);
 		}
 	}
 	activate_array_ongpu(l.output_gpu, l.outputs*l.batch, l.activation, state.st_handle.stream);
@@ -227,7 +227,7 @@ void backward_local_layer_gpu(local_layer l, network_state state)
 			int n = l.size*l.size*l.c;
 			int k = 1;
 			//printf("passou no backward_local_layer_gpu first call\n");
-			gemm_ongpu(0,1,m,n,k,1,a,locations,b,locations,1,c,n, state.st_handle.stream);
+			gemm_ongpu(0,1,m,n,k,1,a,locations,b,locations,1,c,n, state.st_handle);
 		}
 
 		if(state.delta) {
@@ -240,7 +240,7 @@ void backward_local_layer_gpu(local_layer l, network_state state)
 				int n = 1;
 				int k = l.n;
 				//printf("passou no backward_local_layer_gpu second call\n");
-				gemm_ongpu(1,0,m,n,k,1,a,m,b,locations,0,c,locations, state.st_handle.stream);
+				gemm_ongpu(1,0,m,n,k,1,a,m,b,locations,0,c,locations, state.st_handle);
 			}
 
 			col2im_ongpu(l.col_image_gpu, l.c, l.h, l.w, l.size, l.stride, l.pad, state.delta+i*l.c*l.h*l.w, state.st_handle.stream);

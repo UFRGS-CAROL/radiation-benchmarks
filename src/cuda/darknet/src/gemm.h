@@ -33,14 +33,14 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA,
         float *B_gpu, int ldb,
         float BETA,
         float *C_gpu, int ldc,
-		multi_thread_hd_st *st_handle);
+		multi_thread_hd_st st_handle);
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, float ALPHA, 
         float *A, int lda, 
         float *B, int ldb,
         float BETA,
         float *C, int ldc,
-		multi_thread_hd_st *st_handle);
+		multi_thread_hd_st st_handle);
 
 
 #endif

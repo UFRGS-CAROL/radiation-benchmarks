@@ -797,7 +797,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//need to allocate layers arrays
 	alloc_gold_layers_arrays(&gold, &net[0]);
 
-	float **X = (float**) calloc(mr_size, sizeof(float*));
+	float* X[mr_size];
 
 	int i, it;
 
@@ -813,7 +813,9 @@ void test_yolo_radiation_dmr(Args *arg) {
 			//This is the detection
 			start_iteration_app();
 
-			float *predictions = network_predict_mr(net, X, mr_size);
+			float **mr_predictions = network_predict_mr(net, X, mr_size);
+			float *predictions = mr_predictions[0];
+//			float *predictions = network_predict(net[0], X[0]);
 
 			convert_detections(predictions, l[0].classes, l[0].n, l[0].sqrt,
 					l[0].side, 1, 1, arg->thresh, probs, boxes, 0);
@@ -822,6 +824,8 @@ void test_yolo_radiation_dmr(Args *arg) {
 						l[0].classes, nms);
 
 			end_iteration_app();
+			free(mr_predictions);
+
 			time = mysecond() - time;
 			//      here we test if any error happened
 			//          if shit happened we log
@@ -850,7 +854,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 			image im = im_array[i];
 
 			//draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, voc_labels, 20);
-			draw_detections(im, l.side * l.side * l.n, arg->thresh, boxes, probs,
+			draw_detections(im, total_size, arg->thresh, boxes, probs,
 					voc_names, voc_labels, 20);
 			char temp[100];
 			sprintf(temp, "predictions_it_%d", i);
@@ -862,12 +866,10 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 		}
 	}
-	// free X data
-	free(X);
-
 	//free the memory
 	free_ptrs((void **) probs, l[0].w * l[0].h * l[0].n);
 	free(boxes);
+
 	delete_detection_var(&gold, arg);
 #ifdef GEN_IMG
 	free_all_images(im_array, gold.plist_size);

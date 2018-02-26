@@ -170,10 +170,7 @@ void print_mat_row_major(float *mat, long m, long n, const char *mat_name) {
 //----------------------------------
 void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A_gpu,
 		int lda, float *B_gpu, int ldb, float BETA, float *C_gpu, int ldc,
-		multi_thread_hd_st *st_handle) {
-
-	cublasHandle_t handle;
-	cudaStream_t stream;
+		multi_thread_hd_st st_handle) {
 
 	if (get_use_abft_gemm() == GEMM) {
 //	m  	input 	number of rows of matrix op(A) and C.
@@ -181,16 +178,9 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A_gpu,
 //	k 	input 	number of columns of op(A) and rows of op(B).
 		printf("\n\npassou no get\n");
 		abraham_sum(A_gpu, B_gpu, M, K, K, N);
-	} else if (get_use_abft_gemm() == SMART_DMR
-			|| get_use_abft_gemm() == SMART_TMR) {
-		handle = st_handle->blas_handle;
-		stream = st_handle->stream;
-	} else {
-		// Normal execution
-		handle = blas_handle();
 	}
 
-	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
+	cudaError_t status = cublasSgemm(st_handle.blas_handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
 			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
 			A_gpu, lda, &BETA, C_gpu, ldc);
 	check_error(status);
@@ -208,11 +198,6 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A_gpu,
 
 #endif
 	}
-//	else if(get_use_abft_gemm() == SMART_DMR || get_use_abft_gemm() == SMART_TMR) {
-////		cudaStreamDestroy(stream);
-////		cublasDestroy(handle);
-//		//cudaStreamSynchronize(0);
-//	}
 }
 
 #ifdef LOGS
@@ -227,7 +212,7 @@ int get_gold_iterator_abft() {
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A,
 		int lda, float *B, int ldb, float BETA, float *C, int ldc,
-		multi_thread_hd_st *st_handle) {
+		multi_thread_hd_st st_handle) {
 	float *A_gpu = cuda_make_array(A, (TA ? lda * K : lda * M));
 	float *B_gpu = cuda_make_array(B, (TB ? ldb * N : ldb * K));
 	float *C_gpu = cuda_make_array(C, ldc * M);
@@ -263,8 +248,9 @@ void time_gpu_random_matrix(int TA, int TB, int m, int k, int n) {
 	float *c = random_matrix(m, n);
 	int i;
 	clock_t start = clock(), end;
+
 	for (i = 0; i < 32; ++i) {
-		gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c, n, NULL);
+		gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c, n, *((multi_thread_hd_st*)(NULL)));
 	}
 	end = clock();
 	printf("Matrix Multiplication %dx%d * %dx%d, TA=%d, TB=%d: %lf s\n", m, k,
@@ -291,7 +277,7 @@ void time_ongpu(int TA, int TB, int m, int k, int n) {
 	int i;
 	clock_t start = clock(), end;
 	for (i = 0; i < iter; ++i) {
-		gemm_ongpu(TA, TB, m, n, k, 1, a_cl, lda, b_cl, ldb, 1, c_cl, n, NULL);
+		gemm_ongpu(TA, TB, m, n, k, 1, a_cl, lda, b_cl, ldb, 1, c_cl, n, *((multi_thread_hd_st*)(NULL)));
 		cudaThreadSynchronize();
 	}
 	double flop = ((double) m) * n * (2. * k + 2.) * iter;
@@ -330,7 +316,7 @@ void test_gpu_accuracy(int TA, int TB, int m, int k, int n) {
 	memset(c_gpu, 0, m * n * sizeof(float));
 	int i;
 	//pm(m,k,b);
-	gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c_gpu, n, NULL);
+	gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c_gpu, n, *((multi_thread_hd_st*)(NULL)));
 	//printf("GPU\n");
 	//pm(m, n, c_gpu);
 

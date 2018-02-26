@@ -38,12 +38,20 @@ extern "C" {
 #include "blas.h"
 }
 
+// Hardening Global variables
+pthread_mutex_t LOCK;
+
+
+
 float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);
 float * get_network_output_gpu(network net);
 
 void forward_network_gpu(network net, network_state state) {
 	state.workspace = net.workspace;
+
+	//That lock
+	pthread_mutex_lock(&LOCK);
 
 	for (int i = 0; i < net.n; ++i) {
 		state.index = i;
@@ -101,6 +109,8 @@ void forward_network_gpu(network net, network_state state) {
 		cudaStreamSynchronize(state.st_handle.stream);
 
 	}
+
+	pthread_mutex_unlock(&LOCK);
 
 }
 
@@ -296,18 +306,23 @@ void update_layer(layer l, network net) {
 		update_convolutional_layer_gpu(l, update_batch, rate, net.momentum,
 				net.decay, stream);
 	} else if (l.type == DECONVOLUTIONAL) {
-		update_deconvolutional_layer_gpu(l, rate, net.momentum, net.decay, stream);
+		update_deconvolutional_layer_gpu(l, rate, net.momentum, net.decay,
+				stream);
 	} else if (l.type == CONNECTED) {
 		update_connected_layer_gpu(l, update_batch, rate, net.momentum,
 				net.decay, stream);
 	} else if (l.type == RNN) {
-		update_rnn_layer_gpu(l, update_batch, rate, net.momentum, net.decay, stream);
+		update_rnn_layer_gpu(l, update_batch, rate, net.momentum, net.decay,
+				stream);
 	} else if (l.type == GRU) {
-		update_gru_layer_gpu(l, update_batch, rate, net.momentum, net.decay, stream);
+		update_gru_layer_gpu(l, update_batch, rate, net.momentum, net.decay,
+				stream);
 	} else if (l.type == CRNN) {
-		update_crnn_layer_gpu(l, update_batch, rate, net.momentum, net.decay, stream);
+		update_crnn_layer_gpu(l, update_batch, rate, net.momentum, net.decay,
+				stream);
 	} else if (l.type == LOCAL) {
-		update_local_layer_gpu(l, update_batch, rate, net.momentum, net.decay, stream);
+		update_local_layer_gpu(l, update_batch, rate, net.momentum, net.decay,
+				stream);
 	}
 	cudaStreamDestroy(stream);
 }
@@ -510,10 +525,13 @@ float *get_network_output_gpu(network net) {
 	return get_network_output_layer_gpu(net, i);
 }
 
+/**
+ * This function will be called by the pthread create
+ */
 void *network_predict_gpu_mr(void* data) {
 	network net = ((thread_parameters*) data)->net;
 	float *input = ((thread_parameters*) data)->input;
-	multi_thread_hd_st st_handle = ((thread_parameters*) data)->st_handle;
+	multi_thread_hd_st st_handle = create_handle();
 
 	int size = get_network_input_size(net) * net.batch;
 	network_state state;
@@ -526,9 +544,11 @@ void *network_predict_gpu_mr(void* data) {
 	state.st_handle = st_handle;
 
 	forward_network_gpu(net, state);
-	float *out = get_network_output_gpu(net);
+	((thread_parameters*) data)->out = get_network_output_gpu(net);
 	cuda_free(state.input);
-	return (void*) out;
+
+	destroy_handle(&st_handle);
+	return (void*) NULL;
 }
 
 float *network_predict_gpu(network net, float *input) {
@@ -540,11 +560,24 @@ float *network_predict_gpu(network net, float *input) {
 	state.truth = 0;
 	state.train = 0;
 	state.delta = 0;
-	state.st_handle.stream = 0;
+	state.st_handle = create_handle();
 
 	forward_network_gpu(net, state);
 	float *out = get_network_output_gpu(net);
 	cuda_free(state.input);
+	destroy_handle(&state.st_handle);
 	return out;
+}
+
+/**
+ * Copy function for Modular redundancy
+ * hardening
+ */
+void mr_copy_network(network main_net, network* mr_nets, int start_layer){
+
+	for(int i = start_layer; i < main_net.n; i++){
+		layer main_layer = main_net.layers[i];
+
+	}
 }
 
