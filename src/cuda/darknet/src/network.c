@@ -605,7 +605,10 @@ float *network_predict_mr(network *redundant_nets, float **input, int mr) {
 	for(i = 0; i < mr; i++) {
 		destroy_handle(&streams[i]);
 	}
+	printf("passou antes\n");
 	free(streams);
+
+	printf("passou antes2\n");
 #else
 	error("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
 #endif
