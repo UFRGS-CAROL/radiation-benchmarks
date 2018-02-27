@@ -132,6 +132,7 @@ void forward_network_gpu_mr(network net, network_state state, int mr_start_layer
 	// if it is the main thread it will continue, if not
 	// must wait
 	if (thread_id != 0){
+		printf("Pelo menos passou aqui\n");
 		sem_wait(&global_semaphore);
 		i = mr_start_layer;
 	}
@@ -141,6 +142,7 @@ void forward_network_gpu_mr(network net, network_state state, int mr_start_layer
 		// check if main thread is on the layer
 		// that the modular redundancy must start
 		if (i == mr_start_layer && thread_id == 0){
+			printf("agora aqui\n");
 			copy_network_content_to_buffer(thread_id, mr_size);
 			sem_post(&global_semaphore);
 		}
