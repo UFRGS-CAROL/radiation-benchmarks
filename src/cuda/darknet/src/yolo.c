@@ -852,22 +852,23 @@ void test_yolo_radiation_dmr(Args *arg) {
 				printf(
 						"Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds.\n",
 						it, i, time, time_cmp);
-			}
-			//########################################
+
+				//########################################
 
 #ifdef GEN_IMG
-			image im = im_array[i];
+				image im = im_array[i];
 
-			//draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, voc_labels, 20);
-			draw_detections(im, total_size, arg->thresh, boxes, probs,
-					voc_names, voc_labels, 20);
-			char temp[100];
-			sprintf(temp, "predictions_it_%d", i);
-			save_image(im, temp);
-			show_image(im, temp);
+				//draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, voc_labels, 20);
+				draw_detections(im, total_size, arg->thresh, boxes, probs,
+						voc_names, voc_labels, 20);
+				char temp[100];
+				sprintf(temp, "predictions_it_%d", i);
+				save_image(im, temp);
+				show_image(im, temp);
 #endif
-			clear_boxes_and_probs(boxes, probs, l[0].w * l[0].h * l[0].n,
-					l[0].classes);
+				clear_boxes_and_probs(boxes, probs, l[0].w * l[0].h * l[0].n,
+						l[0].classes);
+			}
 
 		}
 	}
