@@ -643,6 +643,8 @@ void *network_predict_gpu_mr(void* data) {
 	if (start_layer == 0){
 		forward_network_gpu(net, state);
 	}else{
+		printf("set no buffer not ok %d\n", thread_id);
+
 		buffer_states[thread_id] = state;
 		printf("set no buffer ok %d\n", thread_id);
 		forward_network_gpu_mr(net, state, start_layer, thread_id, mr_size);
