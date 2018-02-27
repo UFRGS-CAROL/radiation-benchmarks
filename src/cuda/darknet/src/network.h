@@ -7,9 +7,7 @@
 #include "data.h"
 #include <semaphore.h>
 
-// Hardening Global variables
-static pthread_mutex_t lock;
-static sem_t global_semaphore;
+
 
 typedef enum {
 	CONSTANT, STEP, EXP, POLY, STEPS, SIG, RANDOM
@@ -74,9 +72,20 @@ typedef struct network_state {
 typedef struct {
 	float *input;
 	network net;
-	multi_thread_hd_st st_handle;
 	float *out;
+	int thread_id;
+	int start_layer;
+	int mr_size;
 } thread_parameters;
+
+// Hardening Global variables
+//static pthread_mutex_t global_lock;
+static sem_t global_semaphore;
+
+static network *buffer_nets;
+static network_state *buffer_states;
+
+
 
 #ifdef GPU
 float train_networks(network *nets, int n, data d, int interval);

@@ -106,21 +106,45 @@ void forward_network_gpu(network net, network_state state) {
 
 }
 
+static void copy_network_content_to_buffer(int thread_id, int mr_size){
+//    pthread_mutex_lock(&global_lock);
+    //Copy everything here
+    for(int i = 1; i < mr_size; i++){
+    	printf("Main thread copying to thread %d\n", i);
+    }
+
+//    pthread_mutex_unlock(&global_lock);
+}
+
 /**
  * int mr_start_layer will be the variable
  * that contains which layer Modular redundancy
  * starts
  */
 
-void forward_network_gpu_mr(network net, network_state state, int mr_start_layer, int thread_id) {
+void forward_network_gpu_mr(network net, network_state state, int mr_start_layer, int thread_id, int mr_size) {
 	state.workspace = net.workspace;
 
+	//if it is main thread it must start at zero,
+	//but if it is mr threads it must start at mr_start_layer
+	int i = 0;
 	//That lock
-	// if it is the main thread it will lock and continue
-	if (thread_id == 0){
-	pthread_mutex_lock(&lock);
+	// if it is the main thread it will continue, if not
+	// must wait
+	if (thread_id != 0){
+		sem_wait(&global_semaphore);
+		i = mr_start_layer;
+	}
 
-	for (int i = 0; i < net.n; ++i) {
+	for (; i < net.n; ++i) {
+		//-----------------------------------------------------------
+		// check if main thread is on the layer
+		// that the modular redundancy must start
+		if (i == mr_start_layer && thread_id == 0){
+			copy_network_content_to_buffer(thread_id, mr_size);
+			sem_post(&global_semaphore);
+		}
+		//-----------------------------------------------------------
 		state.index = i;
 		layer l = net.layers[i];
 		if (l.delta_gpu) {
@@ -176,8 +200,6 @@ void forward_network_gpu_mr(network net, network_state state, int mr_start_layer
 		cudaStreamSynchronize(state.st_handle.stream);
 
 	}
-
-	pthread_mutex_unlock(&lock);
 
 }
 
@@ -601,6 +623,9 @@ void *network_predict_gpu_mr(void* data) {
 	network net = ((thread_parameters*) data)->net;
 	float *input = ((thread_parameters*) data)->input;
 	multi_thread_hd_st st_handle = create_handle();
+	int start_layer = ((thread_parameters*) data)->start_layer;
+	int thread_id = ((thread_parameters*) data)->thread_id;
+	int mr_size = ((thread_parameters*) data)->mr_size;
 
 	int size = get_network_input_size(net) * net.batch;
 	network_state state;
@@ -612,10 +637,16 @@ void *network_predict_gpu_mr(void* data) {
 	state.delta = 0;
 	state.st_handle = st_handle;
 
-	forward_network_gpu(net, state);
+	//If start_layer == 0 it is normal DMR or TMR
+	if (start_layer == 0){
+		forward_network_gpu(net, state);
+	}else{
+		buffer_states[thread_id] = state;
+		forward_network_gpu_mr(net, state, start_layer, thread_id, mr_size);
+	}
+
 	((thread_parameters*) data)->out = get_network_output_gpu(net);
 	cuda_free(state.input);
-
 	destroy_handle(&st_handle);
 	return (void*) NULL;
 }
@@ -636,17 +667,5 @@ float *network_predict_gpu(network net, float *input) {
 	cuda_free(state.input);
 	destroy_handle(&state.st_handle);
 	return out;
-}
-
-/**
- * Copy function for Modular redundancy
- * hardening
- */
-void mr_copy_network(network main_net, network* mr_nets, int start_layer){
-
-	for(int i = start_layer; i < main_net.n; i++){
-		layer main_layer = main_net.layers[i];
-
-	}
 }
 
