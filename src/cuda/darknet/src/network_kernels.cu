@@ -47,8 +47,78 @@ float * get_network_output_gpu(network net);
 void forward_network_gpu(network net, network_state state) {
 	state.workspace = net.workspace;
 
+	for (int i = 0; i < net.n; ++i) {
+		state.index = i;
+		layer l = net.layers[i];
+		if (l.delta_gpu) {
+			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1,
+					state.st_handle.stream);
+		}
+		//printf("Passou ate a layer %d\n", i);
+		if (l.type == CONVOLUTIONAL) {
+			forward_convolutional_layer_gpu(l, state);
+		} else if (l.type == DECONVOLUTIONAL) {
+			forward_deconvolutional_layer_gpu(l, state);
+		} else if (l.type == ACTIVE) {
+			forward_activation_layer_gpu(l, state);
+		} else if (l.type == LOCAL) {
+			forward_local_layer_gpu(l, state);
+		} else if (l.type == DETECTION) {
+			forward_detection_layer_gpu(l, state);
+		} else if (l.type == REGION) {
+			forward_region_layer_gpu(l, state);
+		} else if (l.type == CONNECTED) {
+			forward_connected_layer_gpu(l, state);
+		} else if (l.type == RNN) {
+			forward_rnn_layer_gpu(l, state);
+		} else if (l.type == GRU) {
+			forward_gru_layer_gpu(l, state);
+		} else if (l.type == CRNN) {
+			forward_crnn_layer_gpu(l, state);
+		} else if (l.type == CROP) {
+			forward_crop_layer_gpu(l, state);
+		} else if (l.type == COST) {
+			forward_cost_layer_gpu(l, state);
+		} else if (l.type == SOFTMAX) {
+			forward_softmax_layer_gpu(l, state);
+		} else if (l.type == NORMALIZATION) {
+			forward_normalization_layer_gpu(l, state);
+		} else if (l.type == BATCHNORM) {
+			forward_batchnorm_layer_gpu(l, state);
+		} else if (l.type == MAXPOOL) {
+			forward_maxpool_layer_gpu(l, state);
+		} else if (l.type == REORG) {
+			forward_reorg_layer_gpu(l, state);
+		} else if (l.type == AVGPOOL) {
+			forward_avgpool_layer_gpu(l, state);
+		} else if (l.type == DROPOUT) {
+			forward_dropout_layer_gpu(l, state);
+		} else if (l.type == ROUTE) {
+			forward_route_layer_gpu(l, net, state);
+		} else if (l.type == SHORTCUT) {
+			forward_shortcut_layer_gpu(l, state);
+		}
+		state.input = l.output_gpu;
+
+		cudaStreamSynchronize(state.st_handle.stream);
+
+	}
+
+}
+
+/**
+ * int mr_start_layer will be the variable
+ * that contains which layer Modular redundancy
+ * starts
+ */
+
+void forward_network_gpu_mr(network net, network_state state, int mr_start_layer, int thread_id) {
+	state.workspace = net.workspace;
+
 	//That lock
-	pthread_mutex_lock(&LOCK);
+	// if it is the main thread it will lock and continue
+	if (thread_id == 0){
+	pthread_mutex_lock(&lock);
 
 	for (int i = 0; i < net.n; ++i) {
 		state.index = i;
@@ -107,9 +177,11 @@ void forward_network_gpu(network net, network_state state) {
 
 	}
 
-	pthread_mutex_unlock(&LOCK);
+	pthread_mutex_unlock(&lock);
 
 }
+
+
 
 void backward_network_gpu(network net, network_state state) {
 	state.workspace = net.workspace;

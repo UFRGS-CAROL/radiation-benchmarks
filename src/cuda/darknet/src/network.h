@@ -5,10 +5,11 @@
 #include "image.h"
 #include "layer.h"
 #include "data.h"
+#include <semaphore.h>
 
 // Hardening Global variables
-static pthread_mutex_t LOCK;
-
+static pthread_mutex_t lock;
+static sem_t global_semaphore;
 
 typedef enum {
 	CONSTANT, STEP, EXP, POLY, STEPS, SIG, RANDOM
