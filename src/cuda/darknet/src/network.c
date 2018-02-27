@@ -591,6 +591,7 @@ float **network_predict_mr(network *redundant_nets, float **input, int mr) {
 		}
 
 		for (i = 0; i < mr; i++) {
+			printf("criou thread %d\n", i);
 			if (pthread_create(&threads[i], NULL, network_predict_gpu_mr,
 					&(tp[i]))) {
 				error("ERROR ON CREATING THREADs\n");
