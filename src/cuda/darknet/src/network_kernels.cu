@@ -48,7 +48,7 @@ void forward_network_gpu(network net, network_state state) {
 	state.workspace = net.workspace;
 
 	//That lock
-	pthread_mutex_lock(&LOCK);
+//	pthread_mutex_lock(&LOCK);
 
 	for (int i = 0; i < net.n; ++i) {
 		state.index = i;
@@ -107,7 +107,7 @@ void forward_network_gpu(network net, network_state state) {
 
 	}
 
-	pthread_mutex_unlock(&LOCK);
+//	pthread_mutex_unlock(&LOCK);
 
 }
 
