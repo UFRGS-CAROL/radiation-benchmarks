@@ -789,7 +789,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 	const image *im_array = load_all_images(gold);
 	const image* im_array_sized[mr_size];
 	//-------------------------------------------------------------------------------
-	for (mr_i = 0; mr_i < mr_size; mr_i++){
+	for (mr_i = 0; mr_i < mr_size; mr_i++) {
 		im_array_sized[mr_i] = load_all_images_sized(im_array, net[0].w,
 				net[0].h, gold.plist_size);
 	}
@@ -814,40 +814,45 @@ void test_yolo_radiation_dmr(Args *arg) {
 			start_iteration_app();
 
 			float **mr_predictions = network_predict_mr(net, X, mr_size);
-			float *predictions = mr_predictions[0];
+
+			for (mr_i = 0; mr_i < mr_size; mr_i++) {
+				float *predictions = mr_predictions[mr_i];
 //			float *predictions = network_predict(net[0], X[0]);
 
-			convert_detections(predictions, l[0].classes, l[0].n, l[0].sqrt,
-					l[0].side, 1, 1, arg->thresh, probs, boxes, 0);
-			if (nms)
-				do_nms_sort(boxes, probs, l[0].side * l[0].side * l[0].n,
-						l[0].classes, nms);
+				convert_detections(predictions, l[mr_i].classes, l[mr_i].n,
+						l[mr_i].sqrt, l[mr_i].side, 1, 1, arg->thresh, probs,
+						boxes, 0);
+				if (nms)
+					do_nms_sort(boxes, probs,
+							l[mr_i].side * l[mr_i].side * l[mr_i].n,
+							l[mr_i].classes, nms);
 
-			end_iteration_app();
-			free(mr_predictions);
+				end_iteration_app();
+				free(mr_predictions);
 
-			time = mysecond() - time;
-			//      here we test if any error happened
-			//          if shit happened we log
-			double time_cmp = mysecond();
+				time = mysecond() - time;
+				//      here we test if any error happened
+				//          if shit happened we log
+				double time_cmp = mysecond();
 
 #ifdef GPU
-			//before compare copy maxpool err detection values
-			//smart pooling
-			if (arg->abft == 2) {
-				for(mr_i = 0; mr_i < mr_size; mr_i++)
+				//before compare copy maxpool err detection values
+				//smart pooling
+				if (arg->abft == 2) {
+					for(mr_i = 0; mr_i < mr_size; mr_i++)
 					get_and_reset_error_detected_values(max_pool_errors);
-			}
+				}
 #endif
-			compare(&gold, probs, boxes, l[0].w * l[0].h * l[0].n, l[0].classes,
-					i, arg->save_layers, it, arg->img_list_path,
-					max_pool_errors);
-			time_cmp = mysecond() - time_cmp;
+				compare(&gold, probs, boxes, l[0].w * l[0].h * l[0].n,
+						l[0].classes, i, arg->save_layers, it,
+						arg->img_list_path, max_pool_errors);
 
-			printf(
-					"Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds.\n",
-					it, i, time, time_cmp);
+				time_cmp = mysecond() - time_cmp;
 
+				printf(
+						"Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds.\n",
+						it, i, time, time_cmp);
+			}
 			//########################################
 
 #ifdef GEN_IMG
