@@ -6,6 +6,10 @@
 #include "layer.h"
 #include "data.h"
 
+// Hardening Global variables
+static pthread_mutex_t LOCK;
+
+
 typedef enum {
 	CONSTANT, STEP, EXP, POLY, STEPS, SIG, RANDOM
 } learning_rate_policy;

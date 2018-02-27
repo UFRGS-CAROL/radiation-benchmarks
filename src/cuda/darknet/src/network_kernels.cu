@@ -38,9 +38,6 @@ extern "C" {
 #include "blas.h"
 }
 
-// Hardening Global variables
-pthread_mutex_t LOCK;
-
 
 
 float * get_network_output_gpu_layer(network net, int i);

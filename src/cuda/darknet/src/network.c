@@ -568,8 +568,8 @@ float **network_predict_mr(network *redundant_nets, float **input, int mr) {
 		out_mr = (float**) calloc(mr, sizeof(float*));
 
 		//Initialize the lock
-		if (pthread_mutex_init(&lock, NULL) != 0) {
-error("MUTEX INIT ")
+		if (pthread_mutex_init(&LOCK, NULL) != 0) {
+			error("MUTEX INIT FAILED\n");
 		}
 
 		pthread_t threads[mr];
@@ -595,6 +595,8 @@ error("MUTEX INIT ")
 		for (i = 0; i < mr; i++)
 			out_mr[i] = tp[i].out;
 
+		//Destroy mutex
+	    pthread_mutex_destroy(&LOCK);
 	}
 
 //#else
