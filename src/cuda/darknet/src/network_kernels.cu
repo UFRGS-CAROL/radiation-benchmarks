@@ -38,8 +38,8 @@ extern "C" {
 #include "blas.h"
 }
 
-network *buffer_nets;
-network_state *buffer_states;
+static network *buffer_nets;
+static network_state *buffer_states;
 
 float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);
@@ -654,11 +654,8 @@ void *network_predict_gpu_mr(void* data) {
 	if (start_layer == 0) {
 		forward_network_gpu(net, state);
 	} else {
-		printf("set no buffer not ok %d\n", thread_id);
-
 		buffer_states[thread_id] = state;
 		buffer_nets[thread_id] = net;
-		printf("set no buffer ok %d\n", thread_id);
 		forward_network_gpu_mr(net, state, start_layer, thread_id, mr_size);
 	}
 
