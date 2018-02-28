@@ -131,10 +131,10 @@ void inline copy_layer(layer *dest, layer *src) {
 	dest->inputs = src->inputs;
 	dest->outputs = src->outputs;
 	dest->truths = src->truths;
-	dest->h  = src->h;
+	dest->h = src->h;
 	dest->w = src->w;
 	dest->c = src->c;
-	dest->out_h= src->out_h;
+	dest->out_h = src->out_h;
 	dest->out_w = src->out_w;
 	dest->out_c = src->out_c;
 	dest->n = src->n;
@@ -183,127 +183,130 @@ void inline copy_layer(layer *dest, layer *src) {
 	dest->probability = src->probability;
 	dest->scale = src->scale;
 
+//	int *indexes;
+//	float *rand;
+//	float *cost;
+//	char *cweights;
+//	float *state;
+//	float *prev_state;
+//	float *forgot_state;
+//	float *forgot_delta;
+//	float *state_delta;
+//
+//	float *concat;
+//	float *concat_delta;
+//
+//	float *binary_weights;
+//
+//	float *biases;
+//	float *bias_updates;
+//
+//	float *scales;
+//	float *scale_updates;
+//
+//	float *weights;
+//	float *weight_updates;
+//
+//	float *col_image;
+//	int * input_layers;
+//	int * input_sizes;
+//	float * delta;
+//	float * output;
+//	float * squared;
+//	float * norms;
+//
+//	float * spatial_mean;
+//	float * mean;
+//	float * variance;
+//
+//	float * mean_delta;
+//	float * variance_delta;
+//
+//	float * rolling_mean;
+//	float * rolling_variance;
+//
+//	float * x;
+//	float * x_norm;
+//
+//	struct layer *input_layer;
+//	struct layer *self_layer;
+//	struct layer *output_layer;
+//
+//	struct layer *input_gate_layer;
+//	struct layer *state_gate_layer;
+//	struct layer *input_save_layer;
+//	struct layer *state_save_layer;
+//	struct layer *input_state_layer;
+//	struct layer *state_state_layer;
+//
+//	struct layer *input_z_layer;
+//	struct layer *state_z_layer;
+//
+//	struct layer *input_r_layer;
+//	struct layer *state_r_layer;
+//
+//	struct layer *input_h_layer;
+//	struct layer *state_h_layer;
+//
+//	float *z_cpu;
+//	float *r_cpu;
+//	float *h_cpu;
+//
+//	float *binary_input;
+//
+//	size_t workspace_size;
+//
+//	float *z_gpu;
+//	float *r_gpu;
+//	float *h_gpu;
+//
+//	int *indexes_gpu;
+//	float * prev_state_gpu;
+//	float * forgot_state_gpu;
+//	float * forgot_delta_gpu;
+//	float * state_gpu;
+//	float * state_delta_gpu;
+//	float * gate_gpu;
+//	float * gate_delta_gpu;
+//	float * save_gpu;
+//	float * save_delta_gpu;
+//	float * concat_gpu;
+//	float * concat_delta_gpu;
+//
+//	float *binary_input_gpu;
+//	float *binary_weights_gpu;
+//
+//	float * mean_gpu;
+//	float * variance_gpu;
+//
+//	float * rolling_mean_gpu;
+//	float * rolling_variance_gpu;
+//
+//	float * variance_delta_gpu;
+//	float * mean_delta_gpu;
+//
+//	float * col_image_gpu;
+//
+//	float * x_gpu;
+//	float * x_norm_gpu;
+//	float * weights_gpu;
+//	float * weight_updates_gpu;
+//
+//	float * biases_gpu;
+//	float * bias_updates_gpu;
+//
+//	float * scales_gpu;
+//	float * scale_updates_gpu;
+//
+//	float * output_gpu;
+//	float * delta_gpu;
+//	float * rand_gpu;
+//	float * squared_gpu;
+//	float * norms_gpu;
+}
 
-	int *indexes;
-	float *rand;
-	float *cost;
-	char *cweights;
-	float *state;
-	float *prev_state;
-	float *forgot_state;
-	float *forgot_delta;
-	float *state_delta;
+void copy_network_state(network_state *dest, network_state *src) {
 
-	float *concat;
-	float *concat_delta;
-
-	float *binary_weights;
-
-	float *biases;
-	float *bias_updates;
-
-	float *scales;
-	float *scale_updates;
-
-	float *weights;
-	float *weight_updates;
-
-	float *col_image;
-	int * input_layers;
-	int * input_sizes;
-	float * delta;
-	float * output;
-	float * squared;
-	float * norms;
-
-	float * spatial_mean;
-	float * mean;
-	float * variance;
-
-	float * mean_delta;
-	float * variance_delta;
-
-	float * rolling_mean;
-	float * rolling_variance;
-
-	float * x;
-	float * x_norm;
-
-	struct layer *input_layer;
-	struct layer *self_layer;
-	struct layer *output_layer;
-
-	struct layer *input_gate_layer;
-	struct layer *state_gate_layer;
-	struct layer *input_save_layer;
-	struct layer *state_save_layer;
-	struct layer *input_state_layer;
-	struct layer *state_state_layer;
-
-	struct layer *input_z_layer;
-	struct layer *state_z_layer;
-
-	struct layer *input_r_layer;
-	struct layer *state_r_layer;
-
-	struct layer *input_h_layer;
-	struct layer *state_h_layer;
-
-	float *z_cpu;
-	float *r_cpu;
-	float *h_cpu;
-
-	float *binary_input;
-
-	size_t workspace_size;
-
-	float *z_gpu;
-	float *r_gpu;
-	float *h_gpu;
-
-	int *indexes_gpu;
-	float * prev_state_gpu;
-	float * forgot_state_gpu;
-	float * forgot_delta_gpu;
-	float * state_gpu;
-	float * state_delta_gpu;
-	float * gate_gpu;
-	float * gate_delta_gpu;
-	float * save_gpu;
-	float * save_delta_gpu;
-	float * concat_gpu;
-	float * concat_delta_gpu;
-
-	float *binary_input_gpu;
-	float *binary_weights_gpu;
-
-	float * mean_gpu;
-	float * variance_gpu;
-
-	float * rolling_mean_gpu;
-	float * rolling_variance_gpu;
-
-	float * variance_delta_gpu;
-	float * mean_delta_gpu;
-
-	float * col_image_gpu;
-
-	float * x_gpu;
-	float * x_norm_gpu;
-	float * weights_gpu;
-	float * weight_updates_gpu;
-
-	float * biases_gpu;
-	float * bias_updates_gpu;
-
-	float * scales_gpu;
-	float * scale_updates_gpu;
-
-	float * output_gpu;
-	float * delta_gpu;
-	float * rand_gpu;
-	float * squared_gpu;
-	float * norms_gpu;
 }
 
 static void copy_network_content_to_buffer(int thread_id, int mr_size,
@@ -313,7 +316,7 @@ static void copy_network_content_to_buffer(int thread_id, int mr_size,
 	//main thread network
 	network mt_net = buffer_nets[0];
 	//main thread network state
-	network_state main_thread_state = buffer_states[0];
+	network_state *main_thread_state = &buffer_states[0];
 
 	for (int i = 1; i < mr_size; i++) {
 		network *current_net = &buffer_nets[i];
@@ -353,30 +356,51 @@ static void copy_network_content_to_buffer(int thread_id, int mr_size,
 		current_net->hue = mt_net.hue;
 		current_net->gpu_index = mt_net.gpu_index;
 
+		int workspace_size = 0;
+		printf("sfddsfsfsdf\n");
+
 		for (int i = start_layer; i < mt_net.n; i++) {
-			copy_layer(&current_net->layers[i], &current_net->layers[i]);
+			layer *l_curr = &current_net->layers[i];
+			layer *l_mt = &mt_net.layers[i];
+			copy_layer(l_curr, l_mt);
+			if (workspace_size < l_mt->workspace_size)
+				workspace_size = l_mt->workspace_size;
 		}
+		printf("passouddddddd\n");
+
+		int output_size = get_network_output_size(mt_net);
+		int scales_size = mt_net.num_steps;
+		int steps_size = mt_net.num_steps;
+		int input_gpu_size = get_network_input_size(mt_net) * mt_net.batch;
+		int truth_gpu_size = get_network_output_size(mt_net) * mt_net.batch;
+		if (mt_net.layers[mt_net.n - 1].truths)
+			truth_gpu_size = mt_net.layers[mt_net.n - 1].truths * mt_net.batch;
+
+//#ifdef GPU
+		*current_net->seen = *mt_net.seen;
+		printf("aqui1\n");
+
+		cudaMemcpy(current_net->workspace, mt_net.workspace,
+				((workspace_size - 1) / sizeof(float) + 1),
+				cudaMemcpyDeviceToDevice);
+		printf(
+				"output_size %d scales_size %d steps_size %d input_gpu_size %d truth_gpu_size"
+						" %d ((workspace_size-1)/sizeof(float)+1) %d\n",
+				output_size, scales_size, steps_size, input_gpu_size,
+				truth_gpu_size, (workspace_size - 1));
+
+		memcpy(current_net->output, mt_net.output, sizeof(float) * output_size);
+
+		memcpy(current_net->scales, mt_net.scales, sizeof(float) * scales_size);
+
+		memcpy(current_net->steps, mt_net.steps, sizeof(int) * steps_size);
 
 		//TODO
-		// set it to correct values
-		int workspace_size = 10;
-		int seen_size = 10;
-		int output_size = 10;
-		int scales_size = 10;
-		int steps_size = 10;
-		int input_gpu_size = 10;
-		int truth_gpu_size = 10;
-		memcpy(current_net->workspace, mt_net.workspace,
-				sizeof(float) * workspace_size);
-		memcpy(current_net->seen, mt_net.seen, sizeof(int) * seen_size);
-		memcpy(current_net->output, mt_net.output, sizeof(float) * output_size);
-		memcpy(current_net->scales, mt_net.scales, sizeof(float) * scales_size);
-		memcpy(current_net->steps, mt_net.steps, sizeof(int) * steps_size);
-		memcpy(*current_net->input_gpu, *mt_net.input_gpu,
-				sizeof(float) * input_gpu_size);
-		memcpy(*current_net->truth_gpu, *mt_net.truth_gpu,
-				sizeof(float) * truth_gpu_size);
+		// CHECK IF COPY TRUTH_GPU and INPUT_GPU are necessary
 
+//#endif
+
+		copy_network_state(current_state, main_thread_state);
 	}
 
 //    pthread_mutex_unlock(&global_lock);
@@ -389,7 +413,7 @@ static void copy_network_content_to_buffer(int thread_id, int mr_size,
  */
 
 void forward_network_gpu_mr(network net, network_state state,
-		int mr_start_layer, int thread_id, int mr_size) {
+		int mr_start_layer, int thread_id, int mr_size, cudaStream_t stream) {
 	state.workspace = net.workspace;
 
 //if it is main thread it must start at zero,
@@ -398,11 +422,12 @@ void forward_network_gpu_mr(network net, network_state state,
 //That lock
 // if it is the main thread it will continue, if not
 // must wait
+	printf("Entrou na thread %d\n", thread_id);
 	if (thread_id != 0) {
 		sem_wait(&global_semaphore);
 		i = mr_start_layer;
 	}
-
+	printf("Esta na thread %d\n", thread_id);
 	for (; i < net.n; ++i) {
 		//-----------------------------------------------------------
 		// check if main thread is on the layer
@@ -410,6 +435,7 @@ void forward_network_gpu_mr(network net, network_state state,
 		if (i == mr_start_layer && thread_id == 0) {
 			printf("agora aqui\n");
 			copy_network_content_to_buffer(thread_id, mr_size, mr_start_layer);
+			printf("Passou\n");
 			sem_post(&global_semaphore);
 		}
 		//-----------------------------------------------------------
@@ -903,13 +929,14 @@ void *network_predict_gpu_mr(void* data) {
 	state.delta = 0;
 	state.st_handle = st_handle;
 
-//If start_layer == 0 then it is normal DMR or TMR
+	//If start_layer == 0 then it is normal DMR or TMR
 	if (start_layer == 0) {
 		forward_network_gpu(net, state);
 	} else {
 		buffer_states[thread_id] = state;
 		buffer_nets[thread_id] = net;
-		forward_network_gpu_mr(net, state, start_layer, thread_id, mr_size);
+		forward_network_gpu_mr(net, state, start_layer, thread_id, mr_size,
+				st_handle.stream);
 	}
 
 	((thread_parameters*) data)->out = get_network_output_gpu(net);
