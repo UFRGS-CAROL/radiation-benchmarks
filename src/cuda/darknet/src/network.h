@@ -7,8 +7,6 @@
 #include "data.h"
 #include <semaphore.h>
 
-
-
 typedef enum {
 	CONSTANT, STEP, EXP, POLY, STEPS, SIG, RANDOM
 } learning_rate_policy;
@@ -82,6 +80,10 @@ typedef struct {
 //static pthread_mutex_t global_lock;
 static sem_t global_semaphore;
 
+// To allocate modular redundancy buffers
+void init_mr_buffers(int mr_size);
+void destroy_mr_buffers();
+
 #ifdef GPU
 float train_networks(network *nets, int n, data d, int interval);
 void sync_nets(network *nets, int n, int interval);
@@ -149,7 +151,6 @@ int get_network_nuisance(network net);
 int get_network_background(network net);
 
 double mysecond();
-
 
 #endif
 

@@ -38,10 +38,8 @@ extern "C" {
 #include "blas.h"
 }
 
-#define MAX_MR 3
-
-static network buffer_nets[MAX_MR];
-static network_state buffer_states[MAX_MR];
+network *buffer_nets;
+network_state *buffer_states;
 
 float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);
@@ -109,12 +107,24 @@ void forward_network_gpu(network net, network_state state) {
 
 }
 
-static void copy_network_content_to_buffer(int thread_id, int mr_size){
+void init_mr_buffers(int mr_size) {
+	buffer_nets = (network*) calloc(mr_size, sizeof(network));
+	buffer_states = (network_state*) calloc(mr_size, sizeof(network_state));
+}
+
+void destroy_mr_buffers() {
+	if (buffer_nets)
+		free(buffer_nets);
+	if (buffer_states)
+		free(buffer_states);
+}
+
+static void copy_network_content_to_buffer(int thread_id, int mr_size) {
 //    pthread_mutex_lock(&global_lock);
-    //Copy everything here
-    for(int i = 1; i < mr_size; i++){
-    	printf("Main thread copying to thread %d\n", i);
-    }
+//Copy everything here
+	for (int i = 1; i < mr_size; i++) {
+		printf("Main thread copying to thread %d\n", i);
+	}
 
 //    pthread_mutex_unlock(&global_lock);
 }
@@ -125,17 +135,17 @@ static void copy_network_content_to_buffer(int thread_id, int mr_size){
  * starts
  */
 
-void forward_network_gpu_mr(network net, network_state state, int mr_start_layer, int thread_id, int mr_size) {
+void forward_network_gpu_mr(network net, network_state state,
+		int mr_start_layer, int thread_id, int mr_size) {
 	state.workspace = net.workspace;
 
-	//if it is main thread it must start at zero,
-	//but if it is mr threads it must start at mr_start_layer
+//if it is main thread it must start at zero,
+//but if it is mr threads it must start at mr_start_layer
 	int i = 0;
-	//That lock
-	// if it is the main thread it will continue, if not
-	// must wait
-	if (thread_id != 0){
-		printf("Pelo menos passou aqui\n");
+//That lock
+// if it is the main thread it will continue, if not
+// must wait
+	if (thread_id != 0) {
 		sem_wait(&global_semaphore);
 		i = mr_start_layer;
 	}
@@ -144,7 +154,7 @@ void forward_network_gpu_mr(network net, network_state state, int mr_start_layer
 		//-----------------------------------------------------------
 		// check if main thread is on the layer
 		// that the modular redundancy must start
-		if (i == mr_start_layer && thread_id == 0){
+		if (i == mr_start_layer && thread_id == 0) {
 			printf("agora aqui\n");
 			copy_network_content_to_buffer(thread_id, mr_size);
 			sem_post(&global_semaphore);
@@ -207,8 +217,6 @@ void forward_network_gpu_mr(network net, network_state state, int mr_start_layer
 	}
 
 }
-
-
 
 void backward_network_gpu(network net, network_state state) {
 	state.workspace = net.workspace;
@@ -642,10 +650,10 @@ void *network_predict_gpu_mr(void* data) {
 	state.delta = 0;
 	state.st_handle = st_handle;
 
-	//If start_layer == 0 then it is normal DMR or TMR
-	if (start_layer == 0){
+//If start_layer == 0 then it is normal DMR or TMR
+	if (start_layer == 0) {
 		forward_network_gpu(net, state);
-	}else{
+	} else {
 		printf("set no buffer not ok %d\n", thread_id);
 
 		buffer_states[thread_id] = state;

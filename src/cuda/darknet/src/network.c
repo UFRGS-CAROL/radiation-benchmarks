@@ -562,11 +562,11 @@ void destroy_handle(multi_thread_hd_st *dt) {
  */
 float **network_predict_mr(network *redundant_nets, float **input, int mr) {
 	float** out_mr = NULL;
-//	buffer_nets = redundant_nets;
+
 	int start_layer = 20;
-//	buffer_states = (network_state*) calloc(mr, sizeof(network_state));
+	init_mr_buffers(mr);
 	//make semaphore
-	if (sem_init(&global_semaphore, 0, 10) != 0){
+	if (sem_init(&global_semaphore, 0, 10) != 0) {
 		error("SEMAPHORE NOT INITIALIZED\n");
 	}
 
@@ -574,11 +574,6 @@ float **network_predict_mr(network *redundant_nets, float **input, int mr) {
 	if (gpu_index >= 0) {
 		int i;
 		out_mr = (float**) calloc(mr, sizeof(float*));
-
-//		//Initialize the lock
-//		if (pthread_mutex_init(&global_lock, NULL) != 0) {
-//			error("MUTEX INIT FAILED\n");
-//		}
 
 		pthread_t threads[mr];
 		thread_parameters tp[mr];
@@ -606,13 +601,10 @@ float **network_predict_mr(network *redundant_nets, float **input, int mr) {
 
 		for (i = 0; i < mr; i++)
 			out_mr[i] = tp[i].out;
-
-//		//Destroy mutex
-//		pthread_mutex_destroy(&global_lock);
 	}
 
 	sem_destroy(&global_semaphore);
-
+	destroy_mr_buffers();
 //#else
 //	error("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
 //#endif
