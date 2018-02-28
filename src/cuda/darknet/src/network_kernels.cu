@@ -119,11 +119,264 @@ void destroy_mr_buffers() {
 		free(buffer_states);
 }
 
-static void copy_network_content_to_buffer(int thread_id, int mr_size) {
+void inline copy_layer(layer *dest, layer *src) {
+	dest->type = src->type;
+	dest->activation = src->activation;
+	dest->cost_type = src->cost_type;
+	dest->batch_normalize = src->batch_normalize;
+	dest->shortcut = src->shortcut;
+	dest->batch = src->batch;
+	dest->forced = src->forced;
+	dest->flipped = src->flipped;
+	dest->inputs = src->inputs;
+	dest->outputs = src->outputs;
+	dest->truths = src->truths;
+	dest->h  = src->h;
+	dest->w = src->w;
+	dest->c = src->c;
+	dest->out_h= src->out_h;
+	dest->out_w = src->out_w;
+	dest->out_c = src->out_c;
+	dest->n = src->n;
+	dest->max_boxes = src->max_boxes;
+	dest->groups = src->groups;
+	dest->size = src->size;
+	dest->side = src->side;
+	dest->stride = src->stride;
+	dest->pad = src->pad;
+	dest->sqrt = src->sqrt;
+	dest->flip = src->flip;
+	dest->index = src->index;
+	dest->binary = src->binary;
+	dest->xnor = src->xnor;
+	dest->steps = src->steps;
+	dest->hidden = src->hidden;
+	dest->dot = src->dot;
+	dest->angle = src->angle;
+	dest->jitter = src->jitter;
+	dest->saturation = src->saturation;
+	dest->exposure = src->exposure;
+	dest->shift = src->shift;
+	dest->ratio = src->ratio;
+	dest->softmax = src->softmax;
+	dest->classes = src->classes;
+	dest->coords = src->coords;
+	dest->background = src->background;
+	dest->rescore = src->rescore;
+	dest->objectness = src->objectness;
+	dest->does_cost = src->does_cost;
+	dest->joint = src->joint;
+	dest->noadjust = src->noadjust;
+	dest->reorg = src->reorg;
+	dest->log = src->log;
+	dest->alpha = src->alpha;
+	dest->beta = src->beta;
+	dest->kappa = src->kappa;
+	dest->coord_scale = src->coord_scale;
+	dest->object_scale = src->object_scale;
+	dest->noobject_scale = src->noobject_scale;
+	dest->class_scale = src->class_scale;
+	dest->random = src->random;
+	dest->dontload = src->dontload;
+	dest->dontloadscales = src->dontloadscales;
+	dest->temperature = src->temperature;
+	dest->probability = src->probability;
+	dest->scale = src->scale;
+
+
+	int *indexes;
+	float *rand;
+	float *cost;
+	char *cweights;
+	float *state;
+	float *prev_state;
+	float *forgot_state;
+	float *forgot_delta;
+	float *state_delta;
+
+	float *concat;
+	float *concat_delta;
+
+	float *binary_weights;
+
+	float *biases;
+	float *bias_updates;
+
+	float *scales;
+	float *scale_updates;
+
+	float *weights;
+	float *weight_updates;
+
+	float *col_image;
+	int * input_layers;
+	int * input_sizes;
+	float * delta;
+	float * output;
+	float * squared;
+	float * norms;
+
+	float * spatial_mean;
+	float * mean;
+	float * variance;
+
+	float * mean_delta;
+	float * variance_delta;
+
+	float * rolling_mean;
+	float * rolling_variance;
+
+	float * x;
+	float * x_norm;
+
+	struct layer *input_layer;
+	struct layer *self_layer;
+	struct layer *output_layer;
+
+	struct layer *input_gate_layer;
+	struct layer *state_gate_layer;
+	struct layer *input_save_layer;
+	struct layer *state_save_layer;
+	struct layer *input_state_layer;
+	struct layer *state_state_layer;
+
+	struct layer *input_z_layer;
+	struct layer *state_z_layer;
+
+	struct layer *input_r_layer;
+	struct layer *state_r_layer;
+
+	struct layer *input_h_layer;
+	struct layer *state_h_layer;
+
+	float *z_cpu;
+	float *r_cpu;
+	float *h_cpu;
+
+	float *binary_input;
+
+	size_t workspace_size;
+
+	float *z_gpu;
+	float *r_gpu;
+	float *h_gpu;
+
+	int *indexes_gpu;
+	float * prev_state_gpu;
+	float * forgot_state_gpu;
+	float * forgot_delta_gpu;
+	float * state_gpu;
+	float * state_delta_gpu;
+	float * gate_gpu;
+	float * gate_delta_gpu;
+	float * save_gpu;
+	float * save_delta_gpu;
+	float * concat_gpu;
+	float * concat_delta_gpu;
+
+	float *binary_input_gpu;
+	float *binary_weights_gpu;
+
+	float * mean_gpu;
+	float * variance_gpu;
+
+	float * rolling_mean_gpu;
+	float * rolling_variance_gpu;
+
+	float * variance_delta_gpu;
+	float * mean_delta_gpu;
+
+	float * col_image_gpu;
+
+	float * x_gpu;
+	float * x_norm_gpu;
+	float * weights_gpu;
+	float * weight_updates_gpu;
+
+	float * biases_gpu;
+	float * bias_updates_gpu;
+
+	float * scales_gpu;
+	float * scale_updates_gpu;
+
+	float * output_gpu;
+	float * delta_gpu;
+	float * rand_gpu;
+	float * squared_gpu;
+	float * norms_gpu;
+}
+
+static void copy_network_content_to_buffer(int thread_id, int mr_size,
+		int start_layer) {
 //    pthread_mutex_lock(&global_lock);
 //Copy everything here
+	//main thread network
+	network mt_net = buffer_nets[0];
+	//main thread network state
+	network_state main_thread_state = buffer_states[0];
+
 	for (int i = 1; i < mr_size; i++) {
-		printf("Main thread copying to thread %d\n", i);
+		network *current_net = &buffer_nets[i];
+		network_state *current_state = &buffer_states[i];
+		//-------------------------------------------------------
+		//copy all network content
+		current_net->n = mt_net.n;
+		current_net->batch = mt_net.batch;
+
+		current_net->epoch = mt_net.epoch;
+		current_net->subdivisions = mt_net.subdivisions;
+		current_net->momentum = mt_net.momentum;
+		current_net->decay = mt_net.decay;
+		current_net->outputs = mt_net.outputs;
+		current_net->policy = mt_net.policy;
+
+		current_net->learning_rate = mt_net.learning_rate;
+		current_net->gamma = mt_net.gamma;
+		current_net->scale = mt_net.scale;
+		current_net->power = mt_net.power;
+		current_net->time_steps = mt_net.time_steps;
+		current_net->step = mt_net.step;
+		current_net->max_batches = mt_net.max_batches;
+
+		current_net->num_steps = mt_net.num_steps;
+		current_net->burn_in = mt_net.burn_in;
+		current_net->inputs = mt_net.inputs;
+		current_net->h = mt_net.h;
+		current_net->w = mt_net.w;
+		current_net->c = mt_net.c;
+		current_net->max_crop = mt_net.max_crop;
+		current_net->min_crop = mt_net.min_crop;
+		current_net->angle = mt_net.angle;
+		current_net->aspect = mt_net.aspect;
+		current_net->exposure = mt_net.exposure;
+		current_net->saturation = mt_net.saturation;
+		current_net->hue = mt_net.hue;
+		current_net->gpu_index = mt_net.gpu_index;
+
+		for (int i = start_layer; i < mt_net.n; i++) {
+			copy_layer(&current_net->layers[i], &current_net->layers[i]);
+		}
+
+		//TODO
+		// set it to correct values
+		int workspace_size = 10;
+		int seen_size = 10;
+		int output_size = 10;
+		int scales_size = 10;
+		int steps_size = 10;
+		int input_gpu_size = 10;
+		int truth_gpu_size = 10;
+		memcpy(current_net->workspace, mt_net.workspace,
+				sizeof(float) * workspace_size);
+		memcpy(current_net->seen, mt_net.seen, sizeof(int) * seen_size);
+		memcpy(current_net->output, mt_net.output, sizeof(float) * output_size);
+		memcpy(current_net->scales, mt_net.scales, sizeof(float) * scales_size);
+		memcpy(current_net->steps, mt_net.steps, sizeof(int) * steps_size);
+		memcpy(*current_net->input_gpu, *mt_net.input_gpu,
+				sizeof(float) * input_gpu_size);
+		memcpy(*current_net->truth_gpu, *mt_net.truth_gpu,
+				sizeof(float) * truth_gpu_size);
+
 	}
 
 //    pthread_mutex_unlock(&global_lock);
@@ -156,7 +409,7 @@ void forward_network_gpu_mr(network net, network_state state,
 		// that the modular redundancy must start
 		if (i == mr_start_layer && thread_id == 0) {
 			printf("agora aqui\n");
-			copy_network_content_to_buffer(thread_id, mr_size);
+			copy_network_content_to_buffer(thread_id, mr_size, mr_start_layer);
 			sem_post(&global_semaphore);
 		}
 		//-----------------------------------------------------------
