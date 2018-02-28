@@ -38,7 +38,10 @@ extern "C" {
 #include "blas.h"
 }
 
+#define MAX_MR 3
 
+static network buffer_nets[MAX_MR];
+static network_state buffer_states[MAX_MR];
 
 float * get_network_output_gpu_layer(network net, int i);
 float * get_network_delta_gpu_layer(network net, int i);
@@ -639,13 +642,14 @@ void *network_predict_gpu_mr(void* data) {
 	state.delta = 0;
 	state.st_handle = st_handle;
 
-	//If start_layer == 0 it is normal DMR or TMR
+	//If start_layer == 0 then it is normal DMR or TMR
 	if (start_layer == 0){
 		forward_network_gpu(net, state);
 	}else{
 		printf("set no buffer not ok %d\n", thread_id);
 
 		buffer_states[thread_id] = state;
+		buffer_nets[thread_id] = net;
 		printf("set no buffer ok %d\n", thread_id);
 		forward_network_gpu_mr(net, state, start_layer, thread_id, mr_size);
 	}

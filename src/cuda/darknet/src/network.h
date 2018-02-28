@@ -82,11 +82,6 @@ typedef struct {
 //static pthread_mutex_t global_lock;
 static sem_t global_semaphore;
 
-static network *buffer_nets;
-static network_state *buffer_states;
-
-
-
 #ifdef GPU
 float train_networks(network *nets, int n, data d, int interval);
 void sync_nets(network *nets, int n, int interval);

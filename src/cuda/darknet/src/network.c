@@ -562,9 +562,9 @@ void destroy_handle(multi_thread_hd_st *dt) {
  */
 float **network_predict_mr(network *redundant_nets, float **input, int mr) {
 	float** out_mr = NULL;
-	buffer_nets = redundant_nets;
+//	buffer_nets = redundant_nets;
 	int start_layer = 20;
-	buffer_states = (network_state*) calloc(mr, sizeof(network_state));
+//	buffer_states = (network_state*) calloc(mr, sizeof(network_state));
 	//make semaphore
 	if (sem_init(&global_semaphore, 0, 10) != 0){
 		error("SEMAPHORE NOT INITIALIZED\n");
@@ -617,7 +617,7 @@ float **network_predict_mr(network *redundant_nets, float **input, int mr) {
 //	error("THIS HARDENING DOES NOT WORK WITH CPU MODE!!!\n");
 //#endif
 
-	free(buffer_states);
+//	free(buffer_states);
 	return out_mr;
 }
 
