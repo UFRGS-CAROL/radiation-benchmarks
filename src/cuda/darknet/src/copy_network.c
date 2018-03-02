@@ -598,76 +598,77 @@ void copy_network_state(network_state *dest, network_state *src,
 	dest->train = src->train;
 }
 
-void copy_network_content_to_buffer(int thread_id, int mr_size, int start_layer,
-		network *buffer_nets, network_state *buffer_states) {
+void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
+		network *buffer_nets, network_state *buffer_states, int thread_id,
+		int mr_size, int start_layer) {
 //    pthread_mutex_lock(&global_lock);
 //Copy everything here
 	//main thread network
-	network mt_net = buffer_nets[0];
+//	network mt_net = buffer_nets[0];
 	//main thread network state
-	network_state *main_thread_state = &buffer_states[0];
+//	network_state *mt_state = &buffer_states[0];
 
 	for (int i = 1; i < mr_size; i++) {
 		network *current_net = &buffer_nets[i];
 		network_state *current_state = &buffer_states[i];
 		//-------------------------------------------------------
 		//copy all network content
-		current_net->n = mt_net.n;
-		current_net->batch = mt_net.batch;
+		current_net->n = mt_net->n;
+		current_net->batch = mt_net->batch;
 
-		current_net->epoch = mt_net.epoch;
-		current_net->subdivisions = mt_net.subdivisions;
-		current_net->momentum = mt_net.momentum;
-		current_net->decay = mt_net.decay;
-		current_net->outputs = mt_net.outputs;
-		current_net->policy = mt_net.policy;
+		current_net->epoch = mt_net->epoch;
+		current_net->subdivisions = mt_net->subdivisions;
+		current_net->momentum = mt_net->momentum;
+		current_net->decay = mt_net->decay;
+		current_net->outputs = mt_net->outputs;
+		current_net->policy = mt_net->policy;
 
-		current_net->learning_rate = mt_net.learning_rate;
-		current_net->gamma = mt_net.gamma;
-		current_net->scale = mt_net.scale;
-		current_net->power = mt_net.power;
-		current_net->time_steps = mt_net.time_steps;
-		current_net->step = mt_net.step;
-		current_net->max_batches = mt_net.max_batches;
+		current_net->learning_rate = mt_net->learning_rate;
+		current_net->gamma = mt_net->gamma;
+		current_net->scale = mt_net->scale;
+		current_net->power = mt_net->power;
+		current_net->time_steps = mt_net->time_steps;
+		current_net->step = mt_net->step;
+		current_net->max_batches = mt_net->max_batches;
 
-		current_net->num_steps = mt_net.num_steps;
-		current_net->burn_in = mt_net.burn_in;
-		current_net->inputs = mt_net.inputs;
-		current_net->h = mt_net.h;
-		current_net->w = mt_net.w;
-		current_net->c = mt_net.c;
-		current_net->max_crop = mt_net.max_crop;
-		current_net->min_crop = mt_net.min_crop;
-		current_net->angle = mt_net.angle;
-		current_net->aspect = mt_net.aspect;
-		current_net->exposure = mt_net.exposure;
-		current_net->saturation = mt_net.saturation;
-		current_net->hue = mt_net.hue;
-		current_net->gpu_index = mt_net.gpu_index;
+		current_net->num_steps = mt_net->num_steps;
+		current_net->burn_in = mt_net->burn_in;
+		current_net->inputs = mt_net->inputs;
+		current_net->h = mt_net->h;
+		current_net->w = mt_net->w;
+		current_net->c = mt_net->c;
+		current_net->max_crop = mt_net->max_crop;
+		current_net->min_crop = mt_net->min_crop;
+		current_net->angle = mt_net->angle;
+		current_net->aspect = mt_net->aspect;
+		current_net->exposure = mt_net->exposure;
+		current_net->saturation = mt_net->saturation;
+		current_net->hue = mt_net->hue;
+		current_net->gpu_index = mt_net->gpu_index;
 
 		int workspace_size = 0;
 
-		for (int i = start_layer; i < mt_net.n; i++) {
+		for (int i = start_layer; i < mt_net->n; i++) {
 			layer *l_curr = &current_net->layers[i];
-			layer *l_mt = &mt_net.layers[i];
+			layer *l_mt = &mt_net->layers[i];
 			copy_layer(l_curr, l_mt);
 			if (workspace_size < l_mt->workspace_size)
 				workspace_size = l_mt->workspace_size;
 		}
 
-		int output_size = get_network_output_size(mt_net);
-		int scales_size = mt_net.num_steps;
-		int steps_size = mt_net.num_steps;
-		int input_gpu_size = get_network_input_size(mt_net) * mt_net.batch;
-		int truth_gpu_size = get_network_output_size(mt_net) * mt_net.batch;
-		if (mt_net.layers[mt_net.n - 1].truths)
-			truth_gpu_size = mt_net.layers[mt_net.n - 1].truths * mt_net.batch;
+		int output_size = get_network_output_size(*mt_net);
+		int scales_size = mt_net->num_steps;
+		int steps_size = mt_net->num_steps;
+		int input_gpu_size = get_network_input_size(*mt_net) * mt_net->batch;
+		int truth_gpu_size = get_network_output_size(*mt_net) * mt_net->batch;
+		if (mt_net->layers[mt_net->n - 1].truths)
+			truth_gpu_size = mt_net->layers[mt_net->n - 1].truths * mt_net->batch;
 
 //#ifdef GPU
-		*current_net->seen = *mt_net.seen;
+		*current_net->seen = *mt_net->seen;
 		printf("aqui1\n");
 
-		cuda_mem_copy(current_net->workspace, mt_net.workspace,
+		cuda_mem_copy(current_net->workspace, mt_net->workspace,
 				((workspace_size - 1) / sizeof(float) + 1),
 				cudaMemcpyDeviceToDevice);
 		printf(
@@ -676,13 +677,13 @@ void copy_network_content_to_buffer(int thread_id, int mr_size, int start_layer,
 				output_size, scales_size, steps_size, input_gpu_size,
 				truth_gpu_size, (workspace_size - 1));
 
-		host_mem_copy(current_net->output, mt_net.output,
+		host_mem_copy(current_net->output, mt_net->output,
 				sizeof(float) * output_size);
 
-		host_mem_copy(current_net->scales, mt_net.scales,
+		host_mem_copy(current_net->scales, mt_net->scales,
 				sizeof(float) * scales_size);
 
-		host_mem_copy(current_net->steps, mt_net.steps,
+		host_mem_copy(current_net->steps, mt_net->steps,
 				sizeof(int) * steps_size);
 
 		//TODO
@@ -690,7 +691,7 @@ void copy_network_content_to_buffer(int thread_id, int mr_size, int start_layer,
 
 //#endif
 
-		copy_network_state(current_state, main_thread_state, start_layer);
+		copy_network_state(current_state, mt_state, start_layer);
 	}
 
 //    pthread_mutex_unlock(&global_lock);

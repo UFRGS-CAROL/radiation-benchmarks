@@ -149,7 +149,8 @@ void forward_network_gpu_mr(network net, network_state state,
 		if (i == mr_start_layer && thread_id == 0) {
 //			printf("Starting copying\n");
 //			double time = mysecond();
-			copy_network_content_to_buffer(thread_id, mr_size, mr_start_layer, buffer_nets, buffer_states);
+			copy_network_content_to_buffer(&net, &state, buffer_nets,
+					buffer_states, thread_id, mr_size, mr_start_layer);
 //			printf("Time spent only for copying %lf\n", mysecond() - time);
 			sem_post(&global_semaphore);
 		}
@@ -635,7 +636,6 @@ void *network_predict_gpu_mr(void* data) {
 	int start_layer = ptr->start_layer;
 	int thread_id = ptr->thread_id;
 	int mr_size = ptr->mr_size;
-
 
 	printf("thread %d input %p\n", thread_id, input);
 
