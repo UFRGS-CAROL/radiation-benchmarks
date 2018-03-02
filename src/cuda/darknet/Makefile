@@ -22,14 +22,15 @@ NVCC=/usr/local/cuda/bin/nvcc
 OPTS= -Ofast
 LDFLAGS= -lm -pthread
 COMMON= -I../../include/
-CFLAGS= -Wall -Wfatal-errors 
-CXXFLAGS=-std=c++11
-NVCCFLAGS= -rdc=true -lcudadevrt
+CFLAGS= -Wall -Wfatal-errors -lpthread
+CXXFLAGS=-std=c++11 -lpthread
+NVCCFLAGS= -rdc=true -lcudadevrt --default-stream per-thread -ccbin=/usr/bin
 
 CUDAINCLUDE=/usr/local/cuda-7.0/include/
 
 ifeq ($(DEBUG), 1)
-	OPTS=-O0 -g
+	OPTS+= -g
+	NVCCFLAGS+= -g -G
 endif
 
 CFLAGS+=$(OPTS)
@@ -110,20 +111,29 @@ results:
 
 .PHONY: clean
 
-test:
+test_hardening:
 	./$(TARGET) test_radiation -e yolo_dmr -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
 							-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
-							-n 5 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
+							-n 20 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
 							-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
 							-b $(RAD_DIR)/src/cuda/darknet \
-							-x 0 -s 1 -a 7
+							-x 0 -s 0 -a 6
+test:
+	./$(TARGET) test_radiation -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
+                                                        -w $(RAD_DIR)/data/darknet/yolo_v1.weights \
+                                                        -n 20 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
+                                                        -l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
+                                                        -b $(RAD_DIR)/src/cuda/darknet \
+                                                        -x 0 -s 0 -a 0
+
+
 
 generate:
 	./$(TARGET) test_radiation -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
 			-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
 			-n 1 -g $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv \
 			-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
-			-b $(RAD_DIR)/src/cuda/darknet -x 0 -s 1 -a 0
+			-b $(RAD_DIR)/src/cuda/darknet -x 0 -s 0 -a 0
 
 test_pure_yolo:
 	./$(TARGET) yolo test $(RAD_DIR)/data/darknet/yolo_v1.cfg  $(RAD_DIR)/data/darknet/yolo_v1.weights data/dog.jpg

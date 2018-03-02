@@ -12,7 +12,7 @@ typedef layer deconvolutional_layer;
 #ifdef GPU
 void forward_deconvolutional_layer_gpu(deconvolutional_layer layer, network_state state);
 void backward_deconvolutional_layer_gpu(deconvolutional_layer layer, network_state state);
-void update_deconvolutional_layer_gpu(deconvolutional_layer layer, float learning_rate, float momentum, float decay);
+void update_deconvolutional_layer_gpu(deconvolutional_layer layer, float learning_rate, float momentum, float decay, cudaStream_t stream);
 void push_deconvolutional_layer(deconvolutional_layer layer);
 void pull_deconvolutional_layer(deconvolutional_layer layer);
 #endif

@@ -710,48 +710,47 @@ void test_yolo_radiation_test(Args *arg) {
  * Plus DMR or TMR
  */
 void test_yolo_radiation_dmr(Args *arg) {
-//-------------------------------------------------------------------------------
+
+	//-------------------------------------------------------------------------------
 	//radiation test case needs load gold first
 	detection gold = load_gold(arg);
 	printf("\nArgs inside detector_radiation\n");
 	print_args(*arg);
 	gold.network_name = "darknet_v1";
-
-	//modular redundancy size
-	int modular_redundancy = 1;
-
 	//if abft is set these parameters will also be set
-//	error_return max_pool_errors;
-//	init_error_return(&max_pool_errors);
+	error_return max_pool_errors;
+	init_error_return(&max_pool_errors);
+
+	//MR size
+	int mr_size = 1;
+
 	//  set abft
 	if (arg->abft >= 0 && arg->abft < MAX_ABFT_TYPES) {
 #ifdef GPU
 		switch (arg->abft) {
-			case 1:
+			case GEMM:
 			set_abft_gemm(arg->abft);
 			break;
-			case 2:
+			case SMART_POOLING:
 			set_abft_smartpool(arg->abft);
 			break;
-			case 3:
+			case L1:
 			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
 			exit(-1);
 			break;
-			case 4:
+			case L2:
 			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
 			exit(-1);
 			break;
-			case 5:
+			case TRAINED_WEIGHTS:
 			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
 			exit(-1);
-			case 6:
-			//dmr option
-			modular_redundancy = 2;
 			break;
-			case 7:
-			//tmr option
-			modular_redundancy = 3;
+			case SMART_DMR:
+			mr_size = 2;
 			break;
+			case SMART_TMR:
+			mr_size = 3;
 			default:
 			printf("No ABFT was set\n");
 			break;
@@ -761,144 +760,135 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 	//-------------------------------------------------------------------------------
 	//-------------------------------------------------------------------------------
-	printf("\n\nMODULAR REDUNDANCY %d\n\n", modular_redundancy);
-	network redundant_net[modular_redundancy];
-	detection_layer redundant_detection_layer[modular_redundancy];
+	network net[mr_size];
+	detection_layer l[mr_size];
 
-	int n_i;
-	for (n_i = 0; n_i < modular_redundancy; n_i++) {
-		redundant_net[n_i] = parse_network_cfg(arg->config_file);
+	int mr_i;
+	for (mr_i = 0; mr_i < mr_size; mr_i++) {
+		net[mr_i] = parse_network_cfg(arg->config_file);
 		if (arg->weights) {
-			load_weights(&redundant_net[n_i], arg->weights);
+			load_weights(&net[mr_i], arg->weights);
 		}
-		//must allocate for detection layer two
-		redundant_detection_layer[n_i] =
-				redundant_net[n_i].layers[redundant_net[n_i].n - 1];
-
-		set_batch_network(&redundant_net[n_i], 1);
+		l[mr_i] = net[mr_i].layers[net[mr_i].n - 1];
+		set_batch_network(&net[mr_i], 1);
 
 	}
-
 	srand(2222222);
 	clock_t time;
 
 	int j;
 	float nms = .4;
-	box *boxes = calloc(
-			redundant_detection_layer[0].side
-					* redundant_detection_layer[0].side
-					* redundant_detection_layer[0].n, sizeof(box));
-	float **probs = calloc(
-			redundant_detection_layer[0].side
-					* redundant_detection_layer[0].side
-					* redundant_detection_layer[0].n, sizeof(float *));
-	for (j = 0;
-			j
-					< redundant_detection_layer[0].side
-							* redundant_detection_layer[0].side
-							* redundant_detection_layer[0].n; ++j)
-		probs[j] = calloc(redundant_detection_layer[0].classes,
-				sizeof(float *));
+	int total_size = l[0].side * l[0].side * l[0].n;
+	box *boxes = calloc(total_size, sizeof(box));
+	float **probs = calloc(total_size, sizeof(float *));
+	for (j = 0; j < total_size; ++j)
+		probs[j] = calloc(l[0].classes, sizeof(float *));
 
 	//-------------------------------------------------------------------------------
 	//load all images
 	const image *im_array = load_all_images(gold);
-
-	const image *im_array_sized = load_all_images_sized(im_array,
-			redundant_net[0].w, redundant_net[0].h, gold.plist_size);
+	const image* im_array_sized[mr_size];
+	//-------------------------------------------------------------------------------
+	for (mr_i = 0; mr_i < mr_size; mr_i++) {
+		im_array_sized[mr_i] = load_all_images_sized(im_array, net[0].w,
+				net[0].h, gold.plist_size);
+	}
 
 	//need to allocate layers arrays
-	//alloc_gold_layers_arrays(&gold, &net);
-	//-------------------------------------------------------------------------------
+	alloc_gold_layers_arrays(&gold, &net[0]);
+
+	float* X[mr_size];
 
 	int i, it;
+
 	for (it = 0; it < arg->iterations; it++) {
 		for (i = 0; i < gold.plist_size; i++) {
 
-			image im = im_array[i]; //load_image_color(img_list[i], 0, 0);
-			image sized = im_array_sized[i]; //resize_image(im, net.w, net.h);
-			float *X = sized.data;
+			for (mr_i = 0; mr_i < mr_size; mr_i++) {
+				X[mr_i] = im_array_sized[i][mr_i].data;
+			}
 			time = clock();
 
 			double time = mysecond();
 			//This is the detection
 			start_iteration_app();
 
-			float *predictions = network_predict(redundant_net[0], X);
+			float **mr_predictions = network_predict_mr(net, X, mr_size);
 
-			convert_detections(predictions,
-					redundant_detection_layer[0].classes,
-					redundant_detection_layer[0].n,
-					redundant_detection_layer[0].sqrt,
-					redundant_detection_layer[0].side, 1, 1, arg->thresh, probs,
-					boxes, 0);
-			if (nms)
-				do_nms_sort(boxes, probs,
-						redundant_detection_layer[0].side
-								* redundant_detection_layer[0].side
-								* redundant_detection_layer[0].n,
-						redundant_detection_layer[0].classes, nms);
+			for (mr_i = 0; mr_i < mr_size; mr_i++) {
+				float *predictions = mr_predictions[mr_i];
+//			float *predictions = network_predict(net[0], X[0]);
 
-			end_iteration_app();
-			time = mysecond() - time;
-			// here we test if any error happened
-			// if shit happened we log
-			double time_cmp = mysecond();
+				convert_detections(predictions, l[mr_i].classes, l[mr_i].n,
+						l[mr_i].sqrt, l[mr_i].side, 1, 1, arg->thresh, probs,
+						boxes, 0);
+				if (nms)
+					do_nms_sort(boxes, probs,
+							l[mr_i].side * l[mr_i].side * l[mr_i].n,
+							l[mr_i].classes, nms);
 
-//#ifdef GPU
-//            //before compare copy maxpool err detection values
-//            //smart pooling
-//            if (arg->abft == 2) {
-//                get_and_reset_error_detected_values(max_pool_errors);
-//            }
-//#endif
-//            compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, i,
-//                    arg->save_layers, it, arg->img_list_path, max_pool_errors);
-			time_cmp = mysecond() - time_cmp;
+				end_iteration_app();
+				free(mr_predictions);
 
-			printf(
-					"Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds.\n",
-					it, i, time, time_cmp);
+				time = mysecond() - time;
+				//      here we test if any error happened
+				//          if shit happened we log
+				double time_cmp = mysecond();
 
-//########################################
+#ifdef GPU
+				//before compare copy maxpool err detection values
+				//smart pooling
+				if (arg->abft == 2) {
+					for(mr_i = 0; mr_i < mr_size; mr_i++)
+					get_and_reset_error_detected_values(max_pool_errors);
+				}
+#endif
+				compare(&gold, probs, boxes, l[0].w * l[0].h * l[0].n,
+						l[0].classes, i, arg->save_layers, it,
+						arg->img_list_path, max_pool_errors);
+
+				time_cmp = mysecond() - time_cmp;
+
+				printf(
+						"Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds.\n",
+						it, i, time, time_cmp);
+
+				//########################################
 
 #ifdef GEN_IMG
-			//draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, voc_labels, 20);
-			draw_detections(im, l.side * l.side * l.n, arg->thresh, boxes, probs,
-					voc_names, voc_labels, 20);
-			char temp[100];
-			sprintf(temp, "predictions_it_%d", i);
-			save_image(im, temp);
-			show_image(im, temp);
+				image im = im_array[i];
+
+				//draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, voc_labels, 20);
+				draw_detections(im, total_size, arg->thresh, boxes, probs,
+						voc_names, voc_labels, 20);
+				char temp[100];
+				sprintf(temp, "predictions_it_%d", i);
+				save_image(im, temp);
+				show_image(im, temp);
 #endif
-			clear_boxes_and_probs(boxes, probs,
-					redundant_detection_layer[0].w
-							* redundant_detection_layer[0].h
-							* redundant_detection_layer[0].n,
-					redundant_detection_layer[0].classes);
+				clear_boxes_and_probs(boxes, probs, l[0].w * l[0].h * l[0].n,
+						l[0].classes);
+			}
 
 		}
 	}
-
 	//free the memory
-	free_ptrs((void **) probs,
-			redundant_detection_layer[0].w * redundant_detection_layer[0].h
-					* redundant_detection_layer[0].n);
+	free_ptrs((void **) probs, l[0].w * l[0].h * l[0].n);
 	free(boxes);
+
 	delete_detection_var(&gold, arg);
-
+#ifdef GEN_IMG
 	free_all_images(im_array, gold.plist_size);
-	free_all_images(im_array_sized, gold.plist_size);
-
-	// Freee network
-	for (n_i = 0; n_i < modular_redundancy; n_i++)
-		free_network(redundant_net[n_i]);
+#endif
+	for (mr_i = 0; mr_i < mr_size; mr_i++)
+		free_all_images(im_array_sized[mr_i], gold.plist_size);
 
 	//free smartpool errors
-//	free_error_return(&max_pool_errors);
+	free_error_return(&max_pool_errors);
 #ifdef GPU
 	free_err_detected();
 #endif
+
 }
 
 void run_yolo_rad(Args args) {

@@ -44,7 +44,7 @@ extern "C" void forward_softmax_layer_gpu(const softmax_layer layer, network_sta
 
 extern "C" void backward_softmax_layer_gpu(const softmax_layer layer, network_state state)
 {
-    axpy_ongpu(layer.batch*layer.inputs, 1, layer.delta_gpu, 1, state.delta, 1);
+    axpy_ongpu(layer.batch*layer.inputs, 1, layer.delta_gpu, 1, state.delta, 1, state.st_handle.stream);
 }
 
 /* This is if you want softmax w/o log-loss classification. You probably don't.
