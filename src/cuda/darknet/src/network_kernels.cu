@@ -139,7 +139,7 @@ void forward_network_gpu_mr(network net, network_state state,
 // must wait
 	if (thread_id != 0) {
 		sem_wait(&global_semaphore);
-//		i = mr_start_layer;
+		i = mr_start_layer;
 	}
 
 	for (; i < net.n; ++i) {
@@ -149,9 +149,9 @@ void forward_network_gpu_mr(network net, network_state state,
 		if (i == mr_start_layer && thread_id == 0) {
 //			printf("Starting copying\n");
 //			double time = mysecond();
-//			copy_network_content_to_buffer(thread_id, mr_size, mr_start_layer, buffer_nets, buffer_states);
+			copy_network_content_to_buffer(thread_id, mr_size, mr_start_layer, buffer_nets, buffer_states);
 //			printf("Time spent only for copying %lf\n", mysecond() - time);
-//			sem_post(&global_semaphore);
+			sem_post(&global_semaphore);
 		}
 		//-----------------------------------------------------------
 		state.index = i;
@@ -209,7 +209,6 @@ void forward_network_gpu_mr(network net, network_state state,
 		cudaStreamSynchronize(state.st_handle.stream);
 
 	}
-	sem_post(&global_semaphore);
 
 }
 
