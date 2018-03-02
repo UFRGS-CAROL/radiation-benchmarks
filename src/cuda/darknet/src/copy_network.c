@@ -52,11 +52,6 @@ void copy_convolutional_layer(layer *dest, layer *src) {
 
 	int out_h = convolutional_out_height(*src);
 	int out_w = convolutional_out_width(*src);
-//	l.out_h = out_h;
-//	l.out_w = out_w;
-//	l.out_c = n;
-//	l.outputs = l.out_h * l.out_w * l.out_c;
-//	l.inputs = l.w * l.h * l.c;
 
 //	l.output = calloc(l.batch * out_h * out_w * n, sizeof(float));
 	host_mem_copy(dest->output, src->output,
@@ -420,25 +415,7 @@ void copy_connected_layer(layer *dest, layer *src) {
 }
 
 void copy_detection_layer(layer *dest, layer *src) {
-//	detection_layer l = { 0 };
-//	l.type = DETECTION;
-//
-//	l.n = n;
-//	l.batch = batch;
-//	l.inputs = inputs;
-//	l.classes = classes;
-//	l.coords = coords;
-//	l.rescore = rescore;
-//	l.side = side;
-//	l.w = side;
-//	l.h = side;
-//	assert(side*side*((1 + l.coords)*l.n + l.classes) == inputs);
 	*dest->cost = *src->cost;
-//
-//	l.outputs = l.inputs;
-//	l.truths = l.side * l.side * (1 + l.coords + l.classes);
-//
-
 //	l.output = calloc(batch * l.outputs, sizeof(float));
 	host_mem_copy(dest->output, src->output,
 			src->batch * src->outputs * sizeof(float));
@@ -537,7 +514,6 @@ void copy_layer(layer *dest, layer *src) {
 	dest->probability = src->probability;
 	dest->scale = src->scale;
 
-	printf("Layer type %d\n", src->type);
 	switch (src->type) {
 	case CONVOLUTIONAL:
 		copy_convolutional_layer(dest, src);
@@ -580,8 +556,6 @@ void copy_layer(layer *dest, layer *src) {
 		break;
 	case SHORTCUT:
 		error("ERROR: LAYER TYPE COPY NOT IMPLEMENTED\n");
-
-		error("ERROR: LAYER TYPE COPY NOT IMPLEMENTED\n");
 		break;
 	case ACTIVE:
 		error("ERROR: LAYER TYPE COPY NOT IMPLEMENTED\n");
@@ -617,8 +591,11 @@ void copy_layer(layer *dest, layer *src) {
 
 }
 
-void copy_network_state(network_state *dest, network_state *src) {
-
+void copy_network_state(network_state *dest, network_state *src,
+		int start_layer) {
+	dest->index = src->index;
+	dest->input = dest->net.layers[start_layer].output_gpu;
+	dest->train = src->train;
 }
 
 void copy_network_content_to_buffer(int thread_id, int mr_size, int start_layer,
@@ -669,7 +646,6 @@ void copy_network_content_to_buffer(int thread_id, int mr_size, int start_layer,
 		current_net->gpu_index = mt_net.gpu_index;
 
 		int workspace_size = 0;
-		printf("sfddsfsfsdf\n");
 
 		for (int i = start_layer; i < mt_net.n; i++) {
 			layer *l_curr = &current_net->layers[i];
@@ -678,7 +654,6 @@ void copy_network_content_to_buffer(int thread_id, int mr_size, int start_layer,
 			if (workspace_size < l_mt->workspace_size)
 				workspace_size = l_mt->workspace_size;
 		}
-		printf("passouddddddd\n");
 
 		int output_size = get_network_output_size(mt_net);
 		int scales_size = mt_net.num_steps;
@@ -715,7 +690,7 @@ void copy_network_content_to_buffer(int thread_id, int mr_size, int start_layer,
 
 //#endif
 
-		copy_network_state(current_state, main_thread_state);
+		copy_network_state(current_state, main_thread_state, start_layer);
 	}
 
 //    pthread_mutex_unlock(&global_lock);

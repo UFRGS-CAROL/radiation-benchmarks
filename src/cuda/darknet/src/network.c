@@ -541,7 +541,9 @@ void top_predictions(network net, int k, int *index) {
 multi_thread_hd_st create_handle() {
 	multi_thread_hd_st ret;
 #ifdef GPU
-	cudaStreamCreate(&ret.stream);
+	ret.stream = cudaStreamPerThread;
+
+//	cudaStreamCreateWithFlags(&ret.stream, cudaStreamNonBlocking);
 	cublasCreate(&ret.blas_handle);
 	cublasSetStream(ret.blas_handle, ret.stream);
 #endif
@@ -560,10 +562,10 @@ void destroy_handle(multi_thread_hd_st *dt) {
 /**
  * It works only for GPU mode
  */
-float **network_predict_mr(network *redundant_nets, float **input, int mr) {
+float **network_predict_mr(network *redundant_nets, float *input, int mr) {
 	float** out_mr = NULL;
 
-	int start_layer = 20;
+	int start_layer = 0;
 	init_mr_buffers(mr);
 	//make semaphore
 	if (sem_init(&global_semaphore, 0, 10) != 0) {
@@ -578,15 +580,12 @@ float **network_predict_mr(network *redundant_nets, float **input, int mr) {
 		pthread_t threads[mr];
 		thread_parameters tp[mr];
 		for (i = 0; i < mr; i++) {
-			tp[i].input = input[i];
+			tp[i].input = input;
 			tp[i].net = redundant_nets[i];
 			tp[i].thread_id = i;
 			tp[i].mr_size = mr;
 			tp[i].start_layer = start_layer;
-		}
 
-		for (i = 0; i < mr; i++) {
-			printf("criou thread %d\n", i);
 			if (pthread_create(&threads[i], NULL, network_predict_gpu_mr,
 					&(tp[i]))) {
 				error("ERROR ON CREATING THREADs\n");
@@ -597,10 +596,9 @@ float **network_predict_mr(network *redundant_nets, float **input, int mr) {
 			if (pthread_join(threads[i], NULL)) {
 				error("ERROR ON FINISHING THREADs\n");
 			}
-		}
 
-		for (i = 0; i < mr; i++)
 			out_mr[i] = tp[i].out;
+		}
 	}
 
 	sem_destroy(&global_semaphore);

@@ -137,21 +137,21 @@ void forward_network_gpu_mr(network net, network_state state,
 //That lock
 // if it is the main thread it will continue, if not
 // must wait
-	printf("Entrou na thread %d\n", thread_id);
 	if (thread_id != 0) {
 		sem_wait(&global_semaphore);
-		i = mr_start_layer;
+//		i = mr_start_layer;
 	}
-	printf("Esta na thread %d\n", thread_id);
+
 	for (; i < net.n; ++i) {
 		//-----------------------------------------------------------
 		// check if main thread is on the layer
 		// that the modular redundancy must start
 		if (i == mr_start_layer && thread_id == 0) {
-			printf("agora aqui\n");
-			copy_network_content_to_buffer(thread_id, mr_size, mr_start_layer, buffer_nets, buffer_states);
-			printf("Passou\n");
-			sem_post(&global_semaphore);
+//			printf("Starting copying\n");
+//			double time = mysecond();
+//			copy_network_content_to_buffer(thread_id, mr_size, mr_start_layer, buffer_nets, buffer_states);
+//			printf("Time spent only for copying %lf\n", mysecond() - time);
+//			sem_post(&global_semaphore);
 		}
 		//-----------------------------------------------------------
 		state.index = i;
@@ -209,6 +209,7 @@ void forward_network_gpu_mr(network net, network_state state,
 		cudaStreamSynchronize(state.st_handle.stream);
 
 	}
+	sem_post(&global_semaphore);
 
 }
 
@@ -627,12 +628,17 @@ float *get_network_output_gpu(network net) {
  * This function will be called by the pthread create
  */
 void *network_predict_gpu_mr(void* data) {
-	network net = ((thread_parameters*) data)->net;
-	float *input = ((thread_parameters*) data)->input;
+	thread_parameters *ptr = (thread_parameters*) data;
+
+	network net = ptr->net;
+	float *input = ptr->input;
 	multi_thread_hd_st st_handle = create_handle();
-	int start_layer = ((thread_parameters*) data)->start_layer;
-	int thread_id = ((thread_parameters*) data)->thread_id;
-	int mr_size = ((thread_parameters*) data)->mr_size;
+	int start_layer = ptr->start_layer;
+	int thread_id = ptr->thread_id;
+	int mr_size = ptr->mr_size;
+
+
+	printf("thread %d input %p\n", thread_id, input);
 
 	int size = get_network_input_size(net) * net.batch;
 	network_state state;
@@ -654,7 +660,7 @@ void *network_predict_gpu_mr(void* data) {
 				st_handle.stream);
 	}
 
-	((thread_parameters*) data)->out = get_network_output_gpu(net);
+	ptr->out = get_network_output_gpu(net);
 	cuda_free(state.input);
 	destroy_handle(&st_handle);
 	return (void*) NULL;
