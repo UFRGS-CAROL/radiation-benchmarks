@@ -601,12 +601,6 @@ void copy_network_state(network_state *dest, network_state *src,
 void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 		network *buffer_nets, network_state *buffer_states, int thread_id,
 		int mr_size, int start_layer) {
-//    pthread_mutex_lock(&global_lock);
-//Copy everything here
-	//main thread network
-//	network mt_net = buffer_nets[0];
-	//main thread network state
-//	network_state *mt_state = &buffer_states[0];
 
 	for (int i = 1; i < mr_size; i++) {
 		network *current_net = &buffer_nets[i];
@@ -666,7 +660,6 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 
 //#ifdef GPU
 		*current_net->seen = *mt_net->seen;
-		printf("aqui1\n");
 
 		cuda_mem_copy(current_net->workspace, mt_net->workspace,
 				((workspace_size - 1) / sizeof(float) + 1),

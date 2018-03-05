@@ -458,14 +458,7 @@ void test_yolo_generate(Args *arg) {
 	if (arg->abft >= 0 && arg->abft < MAX_ABFT_TYPES) {
 		printf("passou no if %d\n\n", arg->abft);
 #ifdef GPU
-		switch (arg->abft) {
-			case 1:
-			set_abft_gemm(arg->abft);
-			break;
-			case 2:
-			set_abft_smartpool(arg->abft);
-			break;
-		}
+		set_abft_approach(1, arg);
 #endif
 	}
 
@@ -575,29 +568,7 @@ void test_yolo_radiation_test(Args *arg) {
 	//  set abft
 	if (arg->abft >= 0 && arg->abft < MAX_ABFT_TYPES) {
 #ifdef GPU
-		switch (arg->abft) {
-			case 1:
-			set_abft_gemm(arg->abft);
-			break;
-			case 2:
-			set_abft_smartpool(arg->abft);
-			break;
-			case 3:
-			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
-			exit(-1);
-			break;
-			case 4:
-			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
-			exit(-1);
-			break;
-			case 5:
-			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
-			exit(-1);
-			break;
-			default:
-			printf("No ABFT was set\n");
-			break;
-		}
+		set_abft_approach(1, arg);
 #endif
 	}
 
@@ -705,6 +676,39 @@ void test_yolo_radiation_test(Args *arg) {
 #endif
 }
 
+int set_abft_approach(int mr_size, Args* arg) {
+	//#ifdef GPU
+	switch (arg->abft) {
+	case GEMM:
+		set_abft_gemm(arg->abft);
+		break;
+	case SMART_POOLING:
+		set_abft_smartpool(arg->abft);
+		break;
+	case L1:
+		printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
+		exit(-1);
+		break;
+	case L2:
+		printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
+		exit(-1);
+		break;
+	case TRAINED_WEIGHTS:
+		printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
+		exit(-1);
+		break;
+	case SMART_DMR:
+		mr_size = 2;
+		break;
+	case SMART_TMR:
+		mr_size = 3;
+	default:
+		printf("No ABFT was set\n");
+		break;
+	}
+	return mr_size;
+}
+
 /**
  * Test yolo: radiation test case
  * Plus DMR or TMR
@@ -727,34 +731,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 	//  set abft
 	if (arg->abft >= 0 && arg->abft < MAX_ABFT_TYPES) {
 #ifdef GPU
-		switch (arg->abft) {
-			case GEMM:
-			set_abft_gemm(arg->abft);
-			break;
-			case SMART_POOLING:
-			set_abft_smartpool(arg->abft);
-			break;
-			case L1:
-			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
-			exit(-1);
-			break;
-			case L2:
-			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
-			exit(-1);
-			break;
-			case TRAINED_WEIGHTS:
-			printf("%s ABFT not implemented yet\n", ABFT_TYPES[arg->abft]);
-			exit(-1);
-			break;
-			case SMART_DMR:
-			mr_size = 2;
-			break;
-			case SMART_TMR:
-			mr_size = 3;
-			default:
-			printf("No ABFT was set\n");
-			break;
-		}
+		mr_size = set_abft_approach(mr_size, arg);
 #endif
 	}
 
