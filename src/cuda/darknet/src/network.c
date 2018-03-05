@@ -565,7 +565,7 @@ void destroy_handle(multi_thread_hd_st *dt) {
 float **network_predict_mr(network *redundant_nets, float *input, int mr) {
 	float** out_mr = NULL;
 
-	int start_layer = 20;
+	int start_layer = 0;
 	init_mr_buffers(mr);
 	//make semaphore
 	if (sem_init(&global_semaphore, 0, 10) != 0) {
