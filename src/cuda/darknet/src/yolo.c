@@ -751,7 +751,6 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 	}
 	srand(2222222);
-//	clock_t time;
 
 	int j;
 	float nms = .4;
@@ -788,7 +787,6 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 			for (mr_i = 0; mr_i < mr_size; mr_i++) {
 				float *predictions = mr_predictions[mr_i];
-//			float *predictions = network_predict(net[0], X[0]);
 
 				convert_detections(predictions, l[mr_i].classes, l[mr_i].n,
 						l[mr_i].sqrt, l[mr_i].side, 1, 1, arg->thresh, probs,

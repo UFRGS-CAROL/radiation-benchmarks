@@ -40,64 +40,69 @@ void copy_convolutional_layer(layer *dest, layer *src) {
 	int size = src->size;
 
 //	l.weights = calloc(c * n * size * size, sizeof(float));
-	host_mem_copy(dest->weights, src->weights,
-			c * n * size * size * sizeof(float));
+//	host_mem_copy(dest->weights, src->weights,
+//			c * n * size * size * sizeof(float));
+
 //	l.weight_updates = calloc(c * n * size * size, sizeof(float));
-	host_mem_copy(dest->weight_updates, src->weight_updates,
-			c * n * size * size * sizeof(float));
+//	host_mem_copy(dest->weight_updates, src->weight_updates,
+//			c * n * size * size * sizeof(float));
+
 //	l.biases = calloc(n, sizeof(float));
-	host_mem_copy(dest->biases, src->biases, n * sizeof(float));
+//	host_mem_copy(dest->biases, src->biases, n * sizeof(float));
+
 //	l.bias_updates = calloc(n, sizeof(float));
-	host_mem_copy(dest->bias_updates, src->bias_updates, n * sizeof(float));
+//	host_mem_copy(dest->bias_updates, src->bias_updates, n * sizeof(float));
 
 	int out_h = convolutional_out_height(*src);
 	int out_w = convolutional_out_width(*src);
 
-//	l.output = calloc(l.batch * out_h * out_w * n, sizeof(float));
-	host_mem_copy(dest->output, src->output,
-			src->batch * out_h * out_w * n * sizeof(float));
+	//	l.output = calloc(l.batch * out_h * out_w * n, sizeof(float));
+//	host_mem_copy(dest->output, src->output,
+//			src->batch * out_h * out_w * n * sizeof(float));
+
 //	l.delta = calloc(l.batch * out_h * out_w * n, sizeof(float));
-	host_mem_copy(dest->delta, src->delta,
-			src->batch * out_h * out_w * n * sizeof(float));
+//	host_mem_copy(dest->delta, src->delta,
+//			src->batch * out_h * out_w * n * sizeof(float));
 
 	if (src->binary) {
 //		l.binary_weights = calloc(c * n * size * size, sizeof(float));
-		host_mem_copy(dest->binary_weights, src->binary_weights,
-				c * n * size * size * sizeof(float));
+//		host_mem_copy(dest->binary_weights, src->binary_weights,
+//				c * n * size * size * sizeof(float));
+
 //		l.cweights = calloc(c * n * size * size, sizeof(char));
-		host_mem_copy(dest->cweights, src->cweights,
-				c * n * size * size * sizeof(char));
+//		host_mem_copy(dest->cweights, src->cweights,
+//				c * n * size * size * sizeof(char));
+
 //		l.scales = calloc(n, sizeof(float));
-		host_mem_copy(dest->scales, src->scales, n * sizeof(float));
+//		host_mem_copy(dest->scales, src->scales, n * sizeof(float));
 	}
+
 	if (src->xnor) {
-//		l.binary_weights = calloc(c * n * size * size, sizeof(float));
-		host_mem_copy(dest->binary_weights, src->binary_weights,
-				c * n * size * size * sizeof(float));
-//		l.binary_input = calloc(l.inputs * l.batch, sizeof(float));
-		host_mem_copy(dest->binary_input, src->binary_input,
-				src->inputs * src->batch * sizeof(float));
+		//l.binary_weights = calloc(c * n * size * size, sizeof(float));
+//		host_mem_copy(dest->binary_weights, src->binary_weights,
+//				c * n * size * size * sizeof(float));
+
+//l.binary_input = calloc(l.inputs * l.batch, sizeof(float));
+//		host_mem_copy(dest->binary_input, src->binary_input,
+//				src->inputs * src->batch * sizeof(float));
 	}
 
 	if (src->batch_normalize) {
 //		l.scales = calloc(n, sizeof(float));
-		host_mem_copy(dest->scales, src->scales, n * sizeof(float));
+//		host_mem_copy(dest->scales, src->scales, n * sizeof(float));
 //		l.scale_updates = calloc(n, sizeof(float));
-		host_mem_copy(dest->scales, src->scales, n * sizeof(float));
+//		host_mem_copy(dest->scales, src->scales, n * sizeof(float));
 
-//		for (i = 0; i < n; ++i) {
-//			l.scales[i] = 1;
-//		}
 //		l.mean = calloc(n, sizeof(float));
-		host_mem_copy(dest->mean, src->mean, n * sizeof(float));
+//		host_mem_copy(dest->mean, src->mean, n * sizeof(float));
 //		l.variance = calloc(n, sizeof(float));
-		host_mem_copy(dest->variance, src->variance, n * sizeof(float));
+//		host_mem_copy(dest->variance, src->variance, n * sizeof(float));
 
 //		l.rolling_mean = calloc(n, sizeof(float));
-		host_mem_copy(dest->rolling_mean, src->rolling_mean, n * sizeof(float));
+//		host_mem_copy(dest->rolling_mean, src->rolling_mean, n * sizeof(float));
 //		l.rolling_variance = calloc(n, sizeof(float));
-		host_mem_copy(dest->rolling_variance, src->rolling_variance,
-				n * sizeof(float));
+//		host_mem_copy(dest->rolling_variance, src->rolling_variance,
+//				n * sizeof(float));
 	}
 
 //#ifdef GPU
@@ -108,21 +113,21 @@ void copy_convolutional_layer(layer *dest, layer *src) {
 
 //		l.weight_updates_gpu = cuda_make_array(l.weight_updates,
 //				c * n * size * size);
-		cuda_mem_copy(dest->weight_updates_gpu, src->weight_updates_gpu,
-				c * n * size * size * sizeof(float), cudaMemcpyDeviceToDevice);
+//		cuda_mem_copy(dest->weight_updates_gpu, src->weight_updates_gpu,
+//				c * n * size * size * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //		l.biases_gpu = cuda_make_array(l.biases, n);
 		cuda_mem_copy(dest->biases_gpu, src->biases_gpu, n * sizeof(float),
 				cudaMemcpyDeviceToDevice);
 
 //		l.bias_updates_gpu = cuda_make_array(l.bias_updates, n);
-		cuda_mem_copy(dest->bias_updates_gpu, src->bias_updates_gpu,
-				n * sizeof(float), cudaMemcpyDeviceToDevice);
+//		cuda_mem_copy(dest->bias_updates_gpu, src->bias_updates_gpu,
+//				n * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //		l.delta_gpu = cuda_make_array(l.delta, l.batch * out_h * out_w * n);
-		cuda_mem_copy(dest->delta_gpu, src->delta_gpu,
-				src->batch * out_h * out_w * n * sizeof(float),
-				cudaMemcpyDeviceToDevice);
+//		cuda_mem_copy(dest->delta_gpu, src->delta_gpu,
+//				src->batch * out_h * out_w * n * sizeof(float),
+//				cudaMemcpyDeviceToDevice);
 
 //		l.output_gpu = cuda_make_array(l.output, l.batch * out_h * out_w * n);
 		cuda_mem_copy(dest->output_gpu, src->output_gpu,
@@ -210,36 +215,36 @@ void copy_local_layer(layer *dest, layer *src) {
 	int locations = out_h * out_w;
 
 //		l.weights = calloc(c * n * size * size * locations, sizeof(float));
-	host_mem_copy(dest->weights, src->weights,
-			c * n * size * locations * sizeof(float));
+//	host_mem_copy(dest->weights, src->weights,
+//			c * n * size * locations * sizeof(float));
 
 //		l.weight_updates = calloc(c * n * size * size * locations, sizeof(float));
-	host_mem_copy(dest->weight_updates, src->weight_updates,
-			c * n * size * size * locations * sizeof(float));
+//	host_mem_copy(dest->weight_updates, src->weight_updates,
+//			c * n * size * size * locations * sizeof(float));
 
 //		l.biases = calloc(l.outputs, sizeof(float));
-	host_mem_copy(dest->biases, src->biases, src->outputs * sizeof(float));
+//	host_mem_copy(dest->biases, src->biases, src->outputs * sizeof(float));
 
 //		l.bias_updates = calloc(l.outputs, sizeof(float));
-	host_mem_copy(dest->bias_updates, src->bias_updates,
-			src->outputs * sizeof(float));
+//	host_mem_copy(dest->bias_updates, src->bias_updates,
+//			src->outputs * sizeof(float));
 
-	// float scale = 1./sqrt(size*size*c);
+// float scale = 1./sqrt(size*size*c);
 //		float scale = sqrt(2. / (size * size * c));
 //		for (i = 0; i < c * n * size * size; ++i)
 //			l.weights[i] = scale * rand_uniform(-1, 1);
 
 //		l.col_image = calloc(out_h * out_w * size * size * c, sizeof(float));
-	host_mem_copy(dest->col_image, src->col_image,
-			out_h * out_w * size * size * c * sizeof(float));
+//	host_mem_copy(dest->col_image, src->col_image,
+//			out_h * out_w * size * size * c * sizeof(float));
 
 //		l.output = calloc(l.batch * out_h * out_w * n, sizeof(float));
-	host_mem_copy(dest->output, src->output,
-			src->batch * out_h * out_w * n * sizeof(float));
+//	host_mem_copy(dest->output, src->output,
+//			src->batch * out_h * out_w * n * sizeof(float));
 
 //		l.delta = calloc(l.batch * out_h * out_w * n, sizeof(float));
-	host_mem_copy(dest->delta, src->delta,
-			src->batch * out_h * out_w * n * sizeof(float));
+//	host_mem_copy(dest->delta, src->delta,
+//			src->batch * out_h * out_w * n * sizeof(float));
 
 //	#ifdef GPU
 //		l.weights_gpu = cuda_make_array(l.weights, c*n*size*size*locations);
@@ -248,17 +253,17 @@ void copy_local_layer(layer *dest, layer *src) {
 			cudaMemcpyDeviceToDevice);
 
 //		l.weight_updates_gpu = cuda_make_array(l.weight_updates, c*n*size*size*locations);
-	cuda_mem_copy(dest->weight_updates_gpu, src->weight_updates_gpu,
-			c * n * size * size * locations * sizeof(float),
-			cudaMemcpyDeviceToDevice);
+//	cuda_mem_copy(dest->weight_updates_gpu, src->weight_updates_gpu,
+//			c * n * size * size * locations * sizeof(float),
+//			cudaMemcpyDeviceToDevice);
 
 //		l.biases_gpu = cuda_make_array(l.biases, l.outputs);
 	cuda_mem_copy(dest->biases_gpu, src->biases_gpu,
 			src->outputs * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //		l.bias_updates_gpu = cuda_make_array(l.bias_updates, l.outputs);
-	cuda_mem_copy(dest->bias_updates_gpu, src->bias_updates_gpu,
-			src->outputs * sizeof(float), cudaMemcpyDeviceToDevice);
+//	cuda_mem_copy(dest->bias_updates_gpu, src->bias_updates_gpu,
+//			src->outputs * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //		l.col_image_gpu = cuda_make_array(l.col_image, out_h*out_w*size*size*c);
 	cuda_mem_copy(dest->col_image_gpu, src->col_image_gpu,
@@ -266,9 +271,9 @@ void copy_local_layer(layer *dest, layer *src) {
 			cudaMemcpyDeviceToDevice);
 
 //		l.delta_gpu = cuda_make_array(l.delta, l.batch*out_h*out_w*n);
-	cuda_mem_copy(dest->delta_gpu, src->delta_gpu,
-			src->batch * out_h * out_w * n * sizeof(float),
-			cudaMemcpyDeviceToDevice);
+//	cuda_mem_copy(dest->delta_gpu, src->delta_gpu,
+//			src->batch * out_h * out_w * n * sizeof(float),
+//			cudaMemcpyDeviceToDevice);
 
 //		l.output_gpu = cuda_make_array(l.output, l.batch*out_h*out_w*n);
 	cuda_mem_copy(dest->output_gpu, src->output_gpu,
@@ -284,64 +289,64 @@ void copy_connected_layer(layer *dest, layer *src) {
 	int outputs = src->outputs;
 
 //	l.output = calloc(batch * outputs, sizeof(float));
-	host_mem_copy(dest->output, src->output,
-			src->batch * outputs * sizeof(float));
+//	host_mem_copy(dest->output, src->output,
+//			src->batch * outputs * sizeof(float));
 
 //	l.delta = calloc(batch * outputs, sizeof(float));
-	host_mem_copy(dest->delta, src->delta,
-			src->batch * outputs * sizeof(float));
+//	host_mem_copy(dest->delta, src->delta,
+//			src->batch * outputs * sizeof(float));
 
 //	l.weight_updates = calloc(inputs * outputs, sizeof(float));
-	host_mem_copy(dest->weight_updates, src->weight_updates,
-			inputs * outputs * sizeof(float));
+//	host_mem_copy(dest->weight_updates, src->weight_updates,
+//			inputs * outputs * sizeof(float));
 
 //	l.bias_updates = calloc(outputs, sizeof(float));
-	host_mem_copy(dest->bias_updates, src->bias_updates,
-			outputs * sizeof(float));
+//	host_mem_copy(dest->bias_updates, src->bias_updates,
+//			outputs * sizeof(float));
 
 //	l.weights = calloc(outputs * inputs, sizeof(float));
-	host_mem_copy(dest->weights, src->weights,
-			outputs * inputs * sizeof(float));
+//	host_mem_copy(dest->weights, src->weights,
+//			outputs * inputs * sizeof(float));
 
 //	l.biases = calloc(outputs, sizeof(float));
-	host_mem_copy(dest->biases, src->biases, outputs * sizeof(float));
+//	host_mem_copy(dest->biases, src->biases, outputs * sizeof(float));
 
 	if (src->batch_normalize) {
 //		l.scales = calloc(outputs, sizeof(float));
-		host_mem_copy(dest->scales, src->scales, outputs * sizeof(float));
+//		host_mem_copy(dest->scales, src->scales, outputs * sizeof(float));
 
 //		l.scale_updates = calloc(outputs, sizeof(float));
-		host_mem_copy(dest->scale_updates, src->scale_updates,
-				outputs * sizeof(float));
+//		host_mem_copy(dest->scale_updates, src->scale_updates,
+//				outputs * sizeof(float));
 
 //		l.mean = calloc(outputs, sizeof(float));
-		host_mem_copy(dest->mean, src->mean, outputs * sizeof(float));
+//		host_mem_copy(dest->mean, src->mean, outputs * sizeof(float));
 
 //		l.mean_delta = calloc(outputs, sizeof(float));
-		host_mem_copy(dest->mean_delta, src->mean_delta,
-				outputs * sizeof(float));
+//		host_mem_copy(dest->mean_delta, src->mean_delta,
+//				outputs * sizeof(float));
 
 //		l.variance = calloc(outputs, sizeof(float));
-		host_mem_copy(dest->variance, src->variance, outputs * sizeof(float));
+//		host_mem_copy(dest->variance, src->variance, outputs * sizeof(float));
 
 //		l.variance_delta = calloc(outputs, sizeof(float));
-		host_mem_copy(dest->variance_delta, src->variance_delta,
-				outputs * sizeof(float));
+//		host_mem_copy(dest->variance_delta, src->variance_delta,
+//				outputs * sizeof(float));
 
 //		l.rolling_mean = calloc(outputs, sizeof(float));
-		host_mem_copy(dest->rolling_mean, src->rolling_mean,
-				outputs * sizeof(float));
+//		host_mem_copy(dest->rolling_mean, src->rolling_mean,
+//				outputs * sizeof(float));
 
 //		l.rolling_variance = calloc(outputs, sizeof(float));
-		host_mem_copy(dest->rolling_variance, src->rolling_variance,
-				outputs * sizeof(float));
+//		host_mem_copy(dest->rolling_variance, src->rolling_variance,
+//				outputs * sizeof(float));
 
 //		l.x = calloc(batch * outputs, sizeof(float));
-		host_mem_copy(dest->x, src->x, src->batch * outputs * sizeof(float));
+//		host_mem_copy(dest->x, src->x, src->batch * outputs * sizeof(float));
 
 //		l.x_norm = calloc(batch * outputs, sizeof(float));
-		host_mem_copy(dest->x_norm, src->x_norm,
-				src->batch * outputs * sizeof(float));
+//		host_mem_copy(dest->x_norm, src->x_norm,
+//				src->batch * outputs * sizeof(float));
 	}
 
 //#ifdef GPU
@@ -354,20 +359,20 @@ void copy_connected_layer(layer *dest, layer *src) {
 			cudaMemcpyDeviceToDevice);
 
 //	l.weight_updates_gpu = cuda_make_array(l.weight_updates, outputs*inputs);
-	cuda_mem_copy(dest->weight_updates_gpu, src->weight_updates_gpu,
-			outputs * inputs * sizeof(float), cudaMemcpyDeviceToDevice);
+//	cuda_mem_copy(dest->weight_updates_gpu, src->weight_updates_gpu,
+//			outputs * inputs * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //	l.bias_updates_gpu = cuda_make_array(l.bias_updates, outputs);
-	cuda_mem_copy(dest->bias_updates_gpu, src->bias_updates_gpu,
-			outputs * sizeof(float), cudaMemcpyDeviceToDevice);
+//	cuda_mem_copy(dest->bias_updates_gpu, src->bias_updates_gpu,
+//			outputs * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //	l.output_gpu = cuda_make_array(l.output, outputs*batch);
 	cuda_mem_copy(dest->output_gpu, src->output_gpu,
 			outputs * src->batch * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //	l.delta_gpu = cuda_make_array(l.delta, outputs*batch);
-	cuda_mem_copy(dest->delta_gpu, src->delta_gpu,
-			outputs * src->batch * sizeof(float), cudaMemcpyDeviceToDevice);
+//	cuda_mem_copy(dest->delta_gpu, src->delta_gpu,
+//			outputs * src->batch * sizeof(float), cudaMemcpyDeviceToDevice);
 
 	if (src->batch_normalize) {
 //		l.scales_gpu = cuda_make_array(l.scales, outputs);
@@ -375,8 +380,8 @@ void copy_connected_layer(layer *dest, layer *src) {
 				outputs * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //		l.scale_updates_gpu = cuda_make_array(l.scale_updates, outputs);
-		cuda_mem_copy(dest->scale_updates_gpu, src->scale_updates_gpu,
-				outputs * sizeof(float), cudaMemcpyDeviceToDevice);
+//		cuda_mem_copy(dest->scale_updates_gpu, src->scale_updates_gpu,
+//				outputs * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //		l.mean_gpu = cuda_make_array(l.mean, outputs);
 		cuda_mem_copy(dest->mean_gpu, src->scales_gpu, outputs * sizeof(float),
@@ -395,12 +400,12 @@ void copy_connected_layer(layer *dest, layer *src) {
 				outputs * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //		l.mean_delta_gpu = cuda_make_array(l.mean, outputs);
-		cuda_mem_copy(dest->mean_delta_gpu, src->mean_delta_gpu,
-				outputs * sizeof(float), cudaMemcpyDeviceToDevice);
+//		cuda_mem_copy(dest->mean_delta_gpu, src->mean_delta_gpu,
+//				outputs * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //		l.variance_delta_gpu = cuda_make_array(l.variance, outputs);
-		cuda_mem_copy(dest->variance_delta_gpu, src->variance_delta_gpu,
-				outputs * sizeof(float), cudaMemcpyDeviceToDevice);
+//		cuda_mem_copy(dest->variance_delta_gpu, src->variance_delta_gpu,
+//				outputs * sizeof(float), cudaMemcpyDeviceToDevice);
 
 //		l.x_gpu = cuda_make_array(l.output, l.batch*outputs);
 		cuda_mem_copy(dest->x_gpu, src->x_gpu,
@@ -417,12 +422,12 @@ void copy_connected_layer(layer *dest, layer *src) {
 void copy_detection_layer(layer *dest, layer *src) {
 	*dest->cost = *src->cost;
 //	l.output = calloc(batch * l.outputs, sizeof(float));
-	host_mem_copy(dest->output, src->output,
-			src->batch * src->outputs * sizeof(float));
+//	host_mem_copy(dest->output, src->output,
+//			src->batch * src->outputs * sizeof(float));
 
 //	l.delta = calloc(batch * l.outputs, sizeof(float));
-	host_mem_copy(dest->delta, src->delta,
-			src->batch * src->outputs * sizeof(float));
+//	host_mem_copy(dest->delta, src->delta,
+//			src->batch * src->outputs * sizeof(float));
 
 //#ifdef GPU
 //	l.output_gpu = cuda_make_array(l.output, batch*l.outputs);
@@ -431,9 +436,9 @@ void copy_detection_layer(layer *dest, layer *src) {
 			cudaMemcpyDeviceToDevice);
 
 //	l.delta_gpu = cuda_make_array(l.delta, batch*l.outputs);
-	cuda_mem_copy(dest->delta_gpu, src->delta_gpu,
-			src->batch * src->outputs * sizeof(float),
-			cudaMemcpyDeviceToDevice);
+//	cuda_mem_copy(dest->delta_gpu, src->delta_gpu,
+//			src->batch * src->outputs * sizeof(float),
+//			cudaMemcpyDeviceToDevice);
 //#endif
 
 }
@@ -442,7 +447,7 @@ void copy_dropout_layer(layer *dest, layer *src) {
 	int inputs = src->inputs;
 	int batch = src->batch;
 //    l.rand = calloc(inputs*batch, sizeof(float));
-	host_mem_copy(dest->rand, src->rand, inputs * batch * sizeof(float));
+//	host_mem_copy(dest->rand, src->rand, inputs * batch * sizeof(float));
 //    #ifdef GPU
 //    l.rand_gpu = cuda_make_array(l.rand, inputs*batch);
 	cuda_mem_copy(dest->rand_gpu, src->rand_gpu, inputs * batch * sizeof(float),
@@ -515,14 +520,16 @@ void copy_layer(layer *dest, layer *src) {
 	dest->scale = src->scale;
 
 	switch (src->type) {
-	case CONVOLUTIONAL:
+	case CONVOLUTIONAL: {
 		copy_convolutional_layer(dest, src);
 		break;
+	}
 	case DECONVOLUTIONAL:
 		error("ERROR: LAYER TYPE COPY NOT IMPLEMENTED\n");
 		break;
-	case CONNECTED:
+	case CONNECTED: {
 		copy_connected_layer(dest, src);
+	}
 		break;
 	case MAXPOOL:
 		error("ERROR: LAYER TYPE COPY NOT IMPLEMENTED\n");
@@ -530,9 +537,10 @@ void copy_layer(layer *dest, layer *src) {
 	case SOFTMAX:
 		error("ERROR: LAYER TYPE COPY NOT IMPLEMENTED\n");
 		break;
-	case DETECTION:
+	case DETECTION:{
 		copy_detection_layer(dest, src);
-		break;
+	}
+	break;
 	case DROPOUT:
 		copy_dropout_layer(dest, src);
 		break;
@@ -551,8 +559,10 @@ void copy_layer(layer *dest, layer *src) {
 	case AVGPOOL:
 		error("ERROR: LAYER TYPE COPY NOT IMPLEMENTED\n");
 		break;
-	case LOCAL:
+	case LOCAL: {
 		copy_local_layer(dest, src);
+
+	}
 		break;
 	case SHORTCUT:
 		error("ERROR: LAYER TYPE COPY NOT IMPLEMENTED\n");
@@ -658,7 +668,8 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 		int input_gpu_size = get_network_input_size(*mt_net) * mt_net->batch;
 		int truth_gpu_size = get_network_output_size(*mt_net) * mt_net->batch;
 		if (mt_net->layers[mt_net->n - 1].truths)
-			truth_gpu_size = mt_net->layers[mt_net->n - 1].truths * mt_net->batch;
+			truth_gpu_size = mt_net->layers[mt_net->n - 1].truths
+					* mt_net->batch;
 
 //#ifdef GPU
 		*current_net->seen = *mt_net->seen;
