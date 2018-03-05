@@ -137,23 +137,23 @@ void forward_network_gpu_mr(network net, network_state state,
 //That lock
 // if it is the main thread it will continue, if not
 // must wait
-	if (thread_id != 0) {
-		sem_wait(&global_semaphore);
-		i = mr_start_layer;
-	}
+//	if (thread_id != 0) {
+//		sem_wait(&global_semaphore);
+//		i = mr_start_layer;
+//	}
 
 	for (; i < net.n; ++i) {
 		//-----------------------------------------------------------
 		// check if main thread is on the layer
 		// that the modular redundancy must start
-		if (i == mr_start_layer && thread_id == 0) {
-//			printf("Starting copying\n");
-//			double time = mysecond();
-			copy_network_content_to_buffer(&net, &state, buffer_nets,
-					buffer_states, thread_id, mr_size, mr_start_layer);
-//			printf("Time spent only for copying %lf\n", mysecond() - time);
-			sem_post(&global_semaphore);
-		}
+//		if (i == mr_start_layer && thread_id == 0) {
+////			printf("Starting copying\n");
+////			double time = mysecond();
+//			copy_network_content_to_buffer(&net, &state, buffer_nets,
+//					buffer_states, thread_id, mr_size, mr_start_layer);
+////			printf("Time spent only for copying %lf\n", mysecond() - time);
+//			sem_post(&global_semaphore);
+//		}
 		//-----------------------------------------------------------
 		state.index = i;
 		layer l = net.layers[i];
