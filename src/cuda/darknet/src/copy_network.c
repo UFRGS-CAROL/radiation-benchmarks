@@ -605,6 +605,8 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 	for (int i = 1; i < mr_size; i++) {
 		network *current_net = &buffer_nets[i];
 		network_state *current_state = &buffer_states[i];
+		printf("passou no copy layer \n");
+
 		//-------------------------------------------------------
 		//copy all network content
 		current_net->n = mt_net->n;
