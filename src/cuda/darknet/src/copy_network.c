@@ -630,7 +630,7 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 	for (int i = 0; i < mr_size - 1; i++) {
 		network *current_net = &buffer_nets[i];
 		network_state *current_state = &buffer_states[i];
-		printf("passou no copy layer %p %p \n", current_net, current_state);
+//		printf("passou no copy layer %p %p \n", current_net, current_state);
 
 		//-------------------------------------------------------
 		//copy all network content
@@ -690,9 +690,9 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 //#ifdef GPU
 		*current_net->seen = *mt_net->seen;
 
-		cuda_mem_copy(current_net->workspace, mt_net->workspace,
-				((workspace_size - 1) / sizeof(float) + 1),
-				cudaMemcpyDeviceToDevice);
+//		cuda_mem_copy(current_net->workspace, mt_net->workspace,
+//				((workspace_size - 1) / sizeof(float) + 1),
+//				cudaMemcpyDeviceToDevice);
 //		printf(
 //				"output_size %d scales_size %d steps_size %d input_gpu_size %d truth_gpu_size"
 //						" %d ((workspace_size-1)/sizeof(float)+1) %d\n",
