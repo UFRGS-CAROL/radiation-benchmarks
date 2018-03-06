@@ -444,15 +444,29 @@ void copy_detection_layer(layer *dest, layer *src) {
 }
 
 void copy_dropout_layer(layer *dest, layer *src) {
-	int inputs = src->inputs;
-	int batch = src->batch;
+//	int inputs = src->inputs;
+//	int batch = src->batch;
 //    l.rand = calloc(inputs*batch, sizeof(float));
 //	host_mem_copy(dest->rand, src->rand, inputs * batch * sizeof(float));
 //    #ifdef GPU
 //    l.rand_gpu = cuda_make_array(l.rand, inputs*batch);
-	cuda_mem_copy(dest->rand_gpu, src->rand_gpu, inputs * batch * sizeof(float),
-			cudaMemcpyDeviceToDevice);
+//	cuda_mem_copy(dest->rand_gpu, src->rand_gpu, inputs * batch * sizeof(float),
+//			cudaMemcpyDeviceToDevice);
+
+//	cuda_mem_copy(dest->output_gpu, src->output_gpu, )
 //    #endif
+}
+
+void copy_maxpool_layer(layer *dest, layer *src) {
+	int output_size = src->out_h * src->out_w * src->out_c * src->batch;
+
+	//    l.indexes_gpu = cuda_make_int_array(output_size);
+	cuda_mem_copy(dest->indexes_gpu, src->indexes_gpu,
+			output_size * sizeof(int), cudaMemcpyDeviceToDevice);
+	//    l.output_gpu  = cuda_make_array(l.output, output_size);
+	cuda_mem_copy(dest->output_gpu, src->output_gpu, output_size * sizeof(int),
+			cudaMemcpyDeviceToDevice);
+
 }
 
 void copy_layer(layer *dest, layer *src) {
@@ -531,16 +545,17 @@ void copy_layer(layer *dest, layer *src) {
 		copy_connected_layer(dest, src);
 	}
 		break;
-	case MAXPOOL:
-		error("ERROR: LAYER TYPE COPY NOT IMPLEMENTED\n");
+	case MAXPOOL: {
+		copy_maxpool_layer(dest, src);
+	}
 		break;
 	case SOFTMAX:
 		error("ERROR: LAYER TYPE COPY NOT IMPLEMENTED\n");
 		break;
-	case DETECTION:{
+	case DETECTION: {
 		copy_detection_layer(dest, src);
 	}
-	break;
+		break;
 	case DROPOUT:
 		copy_dropout_layer(dest, src);
 		break;
@@ -612,10 +627,10 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 		network *buffer_nets, network_state *buffer_states, int thread_id,
 		int mr_size, int start_layer) {
 
-	for (int i = 1; i < mr_size; i++) {
+	for (int i = 0; i < mr_size - 1; i++) {
 		network *current_net = &buffer_nets[i];
 		network_state *current_state = &buffer_states[i];
-		printf("passou no copy layer \n");
+		printf("passou no copy layer %p %p \n", current_net, current_state);
 
 		//-------------------------------------------------------
 		//copy all network content
@@ -667,6 +682,7 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 		int steps_size = mt_net->num_steps;
 		int input_gpu_size = get_network_input_size(*mt_net) * mt_net->batch;
 		int truth_gpu_size = get_network_output_size(*mt_net) * mt_net->batch;
+
 		if (mt_net->layers[mt_net->n - 1].truths)
 			truth_gpu_size = mt_net->layers[mt_net->n - 1].truths
 					* mt_net->batch;
@@ -677,20 +693,20 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 		cuda_mem_copy(current_net->workspace, mt_net->workspace,
 				((workspace_size - 1) / sizeof(float) + 1),
 				cudaMemcpyDeviceToDevice);
-		printf(
-				"output_size %d scales_size %d steps_size %d input_gpu_size %d truth_gpu_size"
-						" %d ((workspace_size-1)/sizeof(float)+1) %d\n",
-				output_size, scales_size, steps_size, input_gpu_size,
-				truth_gpu_size, (workspace_size - 1));
+//		printf(
+//				"output_size %d scales_size %d steps_size %d input_gpu_size %d truth_gpu_size"
+//						" %d ((workspace_size-1)/sizeof(float)+1) %d\n",
+//				output_size, scales_size, steps_size, input_gpu_size,
+//				truth_gpu_size, (workspace_size - 1));
 
-		host_mem_copy(current_net->output, mt_net->output,
-				sizeof(float) * output_size);
-
-		host_mem_copy(current_net->scales, mt_net->scales,
-				sizeof(float) * scales_size);
-
-		host_mem_copy(current_net->steps, mt_net->steps,
-				sizeof(int) * steps_size);
+//		host_mem_copy(current_net->output, mt_net->output,
+//				sizeof(float) * output_size);
+//
+//		host_mem_copy(current_net->scales, mt_net->scales,
+//				sizeof(float) * scales_size);
+//
+//		host_mem_copy(current_net->steps, mt_net->steps,
+//				sizeof(int) * steps_size);
 
 		//TODO
 		// CHECK IF COPY TRUTH_GPU and INPUT_GPU are necessary

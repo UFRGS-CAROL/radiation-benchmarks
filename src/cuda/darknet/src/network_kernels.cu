@@ -57,7 +57,7 @@ void forward_network_gpu(network net, network_state state) {
 			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1,
 					state.st_handle.stream);
 		}
-//		printf("Passou ate a layer %d\n", i);
+//		printf("Passou ate a layer %d\n", l.type);
 		if (l.type == CONVOLUTIONAL) {
 			forward_convolutional_layer_gpu(l, state);
 		} else if (l.type == DECONVOLUTIONAL) {
@@ -146,22 +146,23 @@ void forward_network_gpu_mr(network net, network_state state,
 		//-----------------------------------------------------------
 		// check if main thread is on the layer
 		// that the modular redundancy must start
-		if (i == mr_start_layer && thread_id == 0) {
-//			printf("Starting copying\n");
+		printf("i %d Start layer %d thread id %d\n", i, mr_start_layer, thread_id);
+		if (i == mr_start_layer - 1 && thread_id == 0) {
 //			double time = mysecond();
-			copy_network_content_to_buffer(&net, &state, buffer_nets,
-					buffer_states, thread_id, mr_size, mr_start_layer);
+			copy_network_content_to_buffer(&net, &state, buffer_nets + 1,
+					buffer_states + 1, thread_id, mr_size, mr_start_layer - 1);
 //			printf("Time spent only for copying %lf\n", mysecond() - time);
 			sem_post(&global_semaphore);
 		}
 		//-----------------------------------------------------------
+
+
 		state.index = i;
 		layer l = net.layers[i];
 		if (l.delta_gpu) {
 			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1,
 					state.st_handle.stream);
 		}
-		//printf("Passou ate a layer %d\n", i);
 		if (l.type == CONVOLUTIONAL) {
 			forward_convolutional_layer_gpu(l, state);
 		} else if (l.type == DECONVOLUTIONAL) {
