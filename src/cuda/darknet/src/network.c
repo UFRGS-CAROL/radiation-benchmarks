@@ -543,7 +543,7 @@ multi_thread_hd_st create_handle() {
 #ifdef GPU
 	ret.stream = cudaStreamPerThread;
 
-	cudaStreamCreateWithFlags(&ret.stream, cudaStreamNonBlocking);
+//	cudaStreamCreateWithFlags(&ret.stream, cudaStreamNonBlocking);
 	cublasCreate(&ret.blas_handle);
 	cublasSetStream(ret.blas_handle, ret.stream);
 #endif
@@ -554,7 +554,7 @@ multi_thread_hd_st create_handle() {
 void destroy_handle(multi_thread_hd_st *dt) {
 #ifdef GPU
 	cudaStreamSynchronize(dt->stream);
-	cudaStreamDestroy(dt->stream);
+//	cudaStreamDestroy(dt->stream);
 	cublasDestroy(dt->blas_handle);
 #endif
 }
