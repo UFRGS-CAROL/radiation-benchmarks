@@ -672,7 +672,7 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 		for (int i = start_layer; i < mt_net->n; i++) {
 			layer *l_curr = &current_net->layers[i];
 			layer *l_mt = &mt_net->layers[i];
-			copy_layer(l_curr, l_mt);
+//			copy_layer(l_curr, l_mt);
 			if (workspace_size < l_mt->workspace_size)
 				workspace_size = l_mt->workspace_size;
 		}
@@ -699,14 +699,14 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 //				output_size, scales_size, steps_size, input_gpu_size,
 //				truth_gpu_size, (workspace_size - 1));
 
-		host_mem_copy(current_net->output, mt_net->output,
-				sizeof(float) * output_size);
-
-		host_mem_copy(current_net->scales, mt_net->scales,
-				sizeof(float) * scales_size);
-
-		host_mem_copy(current_net->steps, mt_net->steps,
-				sizeof(int) * steps_size);
+//		host_mem_copy(current_net->output, mt_net->output,
+//				sizeof(float) * output_size);
+//
+//		host_mem_copy(current_net->scales, mt_net->scales,
+//				sizeof(float) * scales_size);
+//
+//		host_mem_copy(current_net->steps, mt_net->steps,
+//				sizeof(int) * steps_size);
 
 		//TODO
 		// CHECK IF COPY TRUTH_GPU and INPUT_GPU are necessary
