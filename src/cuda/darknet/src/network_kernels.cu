@@ -146,7 +146,7 @@ void forward_network_gpu_mr(network net, network_state state,
 		//-----------------------------------------------------------
 		// check if main thread is on the layer
 		// that the modular redundancy must start
-		printf("i %d Start layer %d thread id %d\n", i, mr_start_layer, thread_id);
+//		printf("i %d Start layer %d thread id %d\n", i, mr_start_layer, thread_id);
 		if (i == mr_start_layer - 1 && thread_id == 0) {
 //			double time = mysecond();
 			copy_network_content_to_buffer(&net, &state, buffer_nets + 1,
