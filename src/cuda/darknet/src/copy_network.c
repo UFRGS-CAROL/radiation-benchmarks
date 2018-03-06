@@ -627,10 +627,9 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 		network *buffer_nets, network_state *buffer_states, int thread_id,
 		int mr_size, int start_layer) {
 
-	for (int i = 0; i < mr_size - 1; i++) {
+	for (int i = 0; i < mr_size; i++) {
 		network *current_net = &buffer_nets[i];
 		network_state *current_state = &buffer_states[i];
-//		printf("passou no copy layer %p %p \n", current_net, current_state);
 
 		//-------------------------------------------------------
 		//copy all network content
@@ -672,7 +671,7 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 		for (int i = start_layer; i < mt_net->n; i++) {
 			layer *l_curr = &current_net->layers[i];
 			layer *l_mt = &mt_net->layers[i];
-//			copy_layer(l_curr, l_mt);
+			copy_layer(l_curr, l_mt);
 			if (workspace_size < l_mt->workspace_size)
 				workspace_size = l_mt->workspace_size;
 		}
@@ -682,7 +681,6 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 		int steps_size = mt_net->num_steps;
 		int input_gpu_size = get_network_input_size(*mt_net) * mt_net->batch;
 		int truth_gpu_size = get_network_output_size(*mt_net) * mt_net->batch;
-
 		if (mt_net->layers[mt_net->n - 1].truths)
 			truth_gpu_size = mt_net->layers[mt_net->n - 1].truths
 					* mt_net->batch;
@@ -690,23 +688,18 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 //#ifdef GPU
 		*current_net->seen = *mt_net->seen;
 
-//		cuda_mem_copy(current_net->workspace, mt_net->workspace,
-//				((workspace_size - 1) / sizeof(float) + 1),
-//				cudaMemcpyDeviceToDevice);
-//		printf(
-//				"output_size %d scales_size %d steps_size %d input_gpu_size %d truth_gpu_size"
-//						" %d ((workspace_size-1)/sizeof(float)+1) %d\n",
-//				output_size, scales_size, steps_size, input_gpu_size,
-//				truth_gpu_size, (workspace_size - 1));
+		cuda_mem_copy(current_net->workspace, mt_net->workspace,
+				((workspace_size - 1) / sizeof(float) + 1),
+				cudaMemcpyDeviceToDevice);
 
-//		host_mem_copy(current_net->output, mt_net->output,
-//				sizeof(float) * output_size);
-//
-//		host_mem_copy(current_net->scales, mt_net->scales,
-//				sizeof(float) * scales_size);
-//
-//		host_mem_copy(current_net->steps, mt_net->steps,
-//				sizeof(int) * steps_size);
+		host_mem_copy(current_net->output, mt_net->output,
+				sizeof(float) * output_size);
+
+		host_mem_copy(current_net->scales, mt_net->scales,
+				sizeof(float) * scales_size);
+
+		host_mem_copy(current_net->steps, mt_net->steps,
+				sizeof(int) * steps_size);
 
 		//TODO
 		// CHECK IF COPY TRUTH_GPU and INPUT_GPU are necessary
@@ -716,6 +709,5 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 		copy_network_state(current_state, mt_state, start_layer);
 	}
 
-//    pthread_mutex_unlock(&global_lock);
 }
 

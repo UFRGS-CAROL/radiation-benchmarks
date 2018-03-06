@@ -149,8 +149,8 @@ void forward_network_gpu_mr(network net, network_state state,
 //		printf("i %d Start layer %d thread id %d\n", i, mr_start_layer, thread_id);
 		if (i == mr_start_layer - 1 && thread_id == 0) {
 //			double time = mysecond();
-			copy_network_content_to_buffer(&net, &state, buffer_nets + 1,
-					buffer_states + 1, thread_id, mr_size, mr_start_layer - 1);
+//			copy_network_content_to_buffer(&net, &state, buffer_nets + 1,
+//					buffer_states + 1, thread_id, mr_size, mr_start_layer - 1);
 //			printf("Time spent only for copying %lf\n", mysecond() - time);
 			sem_post(&global_semaphore);
 		}
