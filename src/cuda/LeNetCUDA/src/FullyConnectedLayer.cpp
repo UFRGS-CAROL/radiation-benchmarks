@@ -73,7 +73,7 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 
 	//put theta vector in host
 	original_w.pop();
-	for (int i = 0; i < original_w.size(); i++) {
+	for (size_t i = 0; i < original_w.size(); i++) {
 		//-----------------------
 		//theta minus calculation
 		DeviceVector<float_t> theta_plus(original_w);
@@ -114,7 +114,7 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 	double norm_grad = this->vector_norm<DeviceVector<float_t> >(this->deltaW_);
 
 	this->g_.pop();
-	for (int i = 0; i < grad_diff.size(); i++) {
+	for (size_t i = 0; i < grad_diff.size(); i++) {
 		grad_diff[i] = this->deltaW_[i] - grad_approx[i];
 //		std::cout << "delta " << this->deltaW_[i] << " approx " << grad_approx[i] << "\n";
 	}

@@ -60,7 +60,7 @@ private:
 
 	template<typename T> double vector_norm(T v) {
 		double n = 0;
-		for (int i = 0; i < v.size(); i++)
+		for (size_t i = 0; i < v.size(); i++)
 			n += v[i] * v[i];
 
 		return std::sqrt(n);
