@@ -64,6 +64,7 @@ char *get_log_filename() {
 #ifdef LOGS
 	return get_log_file_name();
 #endif
+	return NULL;
 }
 
 /**
@@ -139,12 +140,12 @@ void save_gold_layers(LayersFound layers, int img) {
 		if (fout != NULL) {
 			size_t v_size = v->size();
 			fwrite(&v_size, sizeof(size_t), 1, fout);
-//#ifdef NOTUNIFIEDMEMORY
+#ifdef GPU
 			v->pop();
 			fwrite(v->h_data(), sizeof(float), v->size(), fout);
-//#else
-//			fwrite(v->data(), sizeof(float), v->size(), fout);
-//#endif
+#else
+			fwrite(v->data(), sizeof(float), v->size(), fout);
+#endif
 			fclose(fout);
 		} else {
 			error("FAILED TO OPEN FILE " + path);
@@ -167,7 +168,7 @@ void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
 #else
 	const char *log_filename = "test";
 #endif
-//	std::cout << "gold size " << gold.size() <<" found size " << found.size() << "\n";
+
 	assert(gold.size() == found.size());
 
 	std::string layer_file_name = std::string(SAVE_LAYER_DATA) + "/"
@@ -177,9 +178,9 @@ void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
 	for (size_t i = 0; i < gold.size(); i++) {
 		auto g = gold[i];
 		auto f = (*found[i]);
-//#ifdef NOTUNIFIEDMEMORY
+#ifdef GPU
 		f.pop();
-//#endif
+#endif
 		bool error_found = true;
 
 		assert(g.size() == f.size());
@@ -201,12 +202,13 @@ void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
 				size_t v_size = f.size();
 
 				fwrite(&v_size, sizeof(size_t), 1, output_layer);
-//#ifdef NOTUNIFIEDMEMORY
+#ifdef GPU
 				fwrite(f.h_data(), sizeof(float),f.size(),
 						output_layer);
-//#else
-//				fwrite(f.data(), sizeof(float), f.size(), output_layer);
-//#endif
+#else
+				fwrite(f.data(), sizeof(float),f.size(),
+									output_layer);
+#endif
 				fclose(output_layer);
 			} else {
 				error(

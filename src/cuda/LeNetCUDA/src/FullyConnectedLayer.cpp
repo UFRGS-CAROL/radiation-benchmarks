@@ -9,22 +9,20 @@
 #include "Util.h"
 
 #ifdef GPU
-#include "FullyConnectedLayerKernel.h"
 
 void FullyConnectedLayer::forward() {
 	this->v_output = this->W_;
 
-	float *output_ = this->output_.data();
-	float *input_ = this->input_.data();
-	float *b_ = this->b_.data();
-	float *W_ = this->W_.data();
-//	float *v_output = this->v_output.data();
+	float *output_ = this->output_.d_data();
+	float *input_ = this->input_.d_data();
+	float *b_ = this->b_.d_data();
+	float *W_ = this->W_.d_data();
+//	float *v_output = this->v_output.d_data();
 	int out_depth_ = this->out_depth_;
 	int in_depth_ = this->in_depth_;
 	int input_size = this->input_.size();
 
-	call_forward_fully_connected(output_, input_, b_, W_, out_depth_, in_depth_,input_size);
-
+	this->call_forward_fully_connected(output_, input_, b_, W_, out_depth_, in_depth_,input_size);
 }
 
 /*
@@ -86,8 +84,8 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 
 		theta_plus.push();
 
-		call_forward_fully_connected(J_plus.data(), original_input.data(), original_b.data(),
-				theta_plus.data(), out_depth_, in_depth_, input_size);
+		call_forward_fully_connected(J_plus.d_data(), original_input.d_data(), original_b.d_data(),
+				theta_plus.d_data(), out_depth_, in_depth_, input_size);
 
 		//-----------------------
 		//theta minus calculation
@@ -98,8 +96,8 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 
 		theta_minus.push();
 
-		call_forward_fully_connected(J_minus.data(), original_input.data(), original_b.data(),
-				theta_minus.data(), out_depth_, in_depth_, input_size);
+		call_forward_fully_connected(J_minus.d_data(), original_input.d_data(), original_b.d_data(),
+				theta_minus.d_data(), out_depth_, in_depth_, input_size);
 
 		J_plus.pop();
 		J_minus.pop();
@@ -134,16 +132,15 @@ void FullyConnectedLayer::gradient_checker(DeviceVector<float>& original_b, Devi
 	}
 }
 
-//#ifdef TRAINGPU
 void FullyConnectedLayer::back_prop() {
-	float *input_ = this->input_.data();
-	float *g_ = this->g_.data();
-	float *g_next = this->next->g_.data();
+	float *input_ = this->input_.d_data();
+	float *g_ = this->g_.d_data();
+	float *g_next = this->next->g_.d_data();
 	int g_next_size = this->next->g_.size();
-	float *deltaW_ = this->deltaW_.data();
-	float *W_ = this->W_.data();
-	float *b_ = this->b_.data();
-	float *r_output = this->v_output.data();
+	float *deltaW_ = this->deltaW_.d_data();
+	float *W_ = this->W_.d_data();
+	float *b_ = this->b_.d_data();
+	float *r_output = this->v_output.d_data();
 
 	float alpha_ = this->alpha_;
 	float lambda_ = this->lambda_;
@@ -154,13 +151,12 @@ void FullyConnectedLayer::back_prop() {
 	DeviceVector<float_t> copy_W_(this->W_);
 	DeviceVector<float_t> copy_input(this->input_);
 
-	call_backpropagation_fully_connected(input_, g_, g_next,
+	this->call_backpropagation_fully_connected(input_, g_, g_next,
 			deltaW_, W_, b_, r_output,
 			alpha_, lambda_, in_depth_, out_depth_, g_next_size);
 
-	gradient_checker(copy_b_, copy_W_, copy_input);
+//	gradient_checker(copy_b_, copy_W_, copy_input);
 }
-//#endif //TRAINGPU
 
 #else
 
@@ -217,48 +213,6 @@ void FullyConnectedLayer::back_prop() {
 
 #endif
 
-//#ifndef TRAINGPU
-//void FullyConnectedLayer::back_prop() {
-//	/*
-//	 Compute the err terms;
-//	 */
-//#ifdef NOTUNIFIEDMEMORY
-//	this->W_.pop();
-//	this->g_.pop();
-//	this->input_.pop();
-//	this->next->g_.pop();
-//	this->input_.pop();
-//	this->deltaW_.pop();
-//	this->b_.pop();
-//#endif
-//	for (size_t in = 0; in < in_depth_; in++) {
-//		g_[in] = df_sigmod(input_[in]) * dot(this->next->g_, get_W_step(in));
-//	}
-//
-//	/*
-//	 Update weights.
-//	 */
-//	for (size_t out = 0; out < out_depth_; out++) {
-//		for (size_t in = 0; in < in_depth_; in++) {
-//			auto delta = alpha_/*learning rate*/
-//			* input_[in] * this->next->g_[out]/*err terms*/
-//			/*+ lambda_ weight decay*/
-//			+ lambda_ * deltaW_[out * in_depth_ + in];
-//
-//			W_[out * in_depth_ + in] += delta;
-//			deltaW_[out * in_depth_ + in] = delta;
-//		}
-//		b_[out] += alpha_ * this->next->g_[out];
-//	}
-//#ifdef NOTUNIFIEDMEMORY
-//	this->g_.push();
-//	this->b_.push();
-//	this->W_.push();
-//#endif
-//}
-//
-//#endif //TRAINGPU
-
 void FullyConnectedLayer::save_layer(FILE *of) {
 	this->save_base_layer(of);
 }
@@ -296,25 +250,3 @@ vec_host FullyConnectedLayer::get_W_step(size_t in) {
 	return r;
 }
 
-//DeviceVector<float> FullyConnectedLayer::get_W(size_t index) {
-//	DeviceVector<float> v(in_depth_);
-//#ifdef NOTUNIFIEDMEMORY
-//	v.pop();
-//#endif
-//	for (size_t i = 0; i < in_depth_; i++) {
-//		v[i] = (W_[index * in_depth_ + i]);
-//	}
-//	return v;
-//}
-
-//DeviceVector<float> FullyConnectedLayer::get_W_step(size_t in) {
-//	DeviceVector<float> r(out_depth_);
-//#ifdef NOTUNIFIEDMEMORY
-//	r.pop();
-//#endif
-//	for (size_t i = in; i < out_depth_ * in_depth_; i += in_depth_) {
-//		int it = i / in_depth_;
-//		r[it] = (W_[i]);
-//	}
-//	return r;
-//}

@@ -41,15 +41,9 @@ public:
 	template<typename T> void write_layer_vec(DeviceVector<T> v, FILE *of) {
 		this->write_layer_var<size_t>(v.size(), of);
 
-//#ifdef NOTUNIFIEDMEMORY
 		v.pop();
 		fwrite(v.h_data(), sizeof(T), v.size(), of);
 		v.push();
-//#else
-//		fwrite(v.data(), sizeof(T), v.size(), of);
-//#endif
-//		cudaError_t ret = cudaDeviceSynchronize();
-//		CUDA_CHECK_RETURN(ret);
 	}
 
 	template<typename T> DeviceVector<T> load_layer_vec(FILE *in) {
@@ -57,15 +51,9 @@ public:
 
 		DeviceVector<T> v(siz);
 
-//#ifdef NOTUNIFIEDMEMORY
 		v.pop();
 		fread(v.h_data(), sizeof(T), siz, in);
 		v.push();
-//#else
-//		fread(v.data(), sizeof(T), siz, in);
-//#endif
-//		cudaError_t ret = cudaDeviceSynchronize();
-//		CUDA_CHECK_RETURN(ret);
 		return v;
 	}
 #else

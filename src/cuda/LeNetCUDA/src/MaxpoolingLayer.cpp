@@ -7,12 +7,6 @@
 
 #include "MaxpoolingLayer.h"
 
-#ifdef GPU
-#include "MaxpoolingLayerKernel.h"
-#endif
-
-
-
 MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 		size_t in_depth) :
 		Layer(in_width, in_height, in_depth, in_width / 2, in_height / 2,
@@ -63,69 +57,37 @@ void MaxpoolingLayer::load_layer(FILE *in) {
 }
 
 
-///*
-// In forward propagation, blocks are reduced to a single value.
-// Then, this single value acquires an error computed from backwards
-// propagation from the previous layer.
-// This error is then just forwarded to the place where it came from.
-// Since it only came from one place in the  block,
-// the backpropagated errors from max-pooling layers are rather sparse.
-// */
-//void MaxpoolingLayer::back_prop() {
-//
-//	g_.clear();
-//	g_.resize(in_width_ * in_height_ * in_depth_);
-//#ifdef NOTUNIFIEDMEMORY
-//	this->next->g_.pop();
-//	this->max_loc.pop();
-//#endif
-//
-//	for (size_t i = 0; i < this->max_loc.size(); i++){
-//		auto pair = this->max_loc[i];
-//		if (pair.first != MAX) {
-//			g_[pair.second] = this->next->g_[pair.first];
-//		}
-//	}
-//#ifdef NOTUNIFIEDMEMORY
-//	this->g_.push();
-//#endif
-//
-//}
-
-
 #ifdef GPU
 
 void MaxpoolingLayer::forward() {
 // execute the code on the device
-		float_t *input = this->input_.data();
-		float_t *output = this->output_.data();
-		Pair *max_loc_buf = this->max_loc.data();
+		float_t *input = this->input_.d_data();
+		float_t *output = this->output_.d_data();
+		Pair *max_loc_buf = this->max_loc.d_data();
 		size_t out_width = this->out_width_;
 		size_t out_height = this->out_height_;
 		size_t out_depth = this->out_depth_;
 		size_t in_height = this->in_height_;
 		size_t in_width = this->in_width_;
 
-		call_forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
+		this->call_forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
 				out_height, out_depth, in_height, in_width);
 }
 
-//#ifdef TRAINGPU
 
 void MaxpoolingLayer::back_prop() {
 	g_.clear();
 	g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
 
-	Pair *max_loc = this->max_loc.data();
-	float *g_ = this->g_.data();
-	float *g_next = this->next->g_.data();
+	Pair *max_loc = this->max_loc.d_data();
+	float *g_ = this->g_.d_data();
+	float *g_next = this->next->g_.d_data();
 	size_t max_size = this->max_loc.size();
 	size_t g_max_size = this->g_.size();
 
-	call_backpropagation_maxpool(max_loc, g_, g_next, max_size, g_max_size);
+	this->call_backpropagation_maxpool(max_loc, g_, g_next, max_size, g_max_size);
 
 }
-//#endif //TRAINGPU
 
 #else
 
