@@ -1,6 +1,8 @@
 #include "cuda_runtime.h"
 #include "curand.h"
 #include "cublas_v2.h"
+#include "cuda_profiler_api.h"
+#include <cuda.h>
 
 extern "C" {
 #include <stdio.h>
@@ -40,6 +42,8 @@ extern "C" {
 #include "copy_network.h"
 }
 
+#define LAYER_TO_PROF 31
+
 static network *buffer_nets;
 static network_state *buffer_states;
 
@@ -57,7 +61,10 @@ void forward_network_gpu(network net, network_state state) {
 			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1,
 					state.st_handle.stream);
 		}
-//		printf("Passou ate a layer %d\n", l.type);
+		//printf("Layer %d type %d: ", i, l.type);
+		//if (i == LAYER_TO_PROF)
+		//	cudaProfilerStart();
+		double t = mysecond();
 		if (l.type == CONVOLUTIONAL) {
 			forward_convolutional_layer_gpu(l, state);
 		} else if (l.type == DECONVOLUTIONAL) {
@@ -102,7 +109,10 @@ void forward_network_gpu(network net, network_state state) {
 			forward_shortcut_layer_gpu(l, state);
 		}
 		state.input = l.output_gpu;
-
+		//if (i == LAYER_TO_PROF)
+		//	cudaProfilerStop();
+		t = mysecond() - t;
+		printf("%lf\n", t);
 		cudaStreamSynchronize(state.st_handle.stream);
 
 	}
@@ -149,13 +159,12 @@ void forward_network_gpu_mr(network net, network_state state,
 //		printf("i %d Start layer %d thread id %d\n", i, mr_start_layer, thread_id);
 		if (i == mr_start_layer - 1 && thread_id == 0) {
 //			double time = mysecond();
-//			copy_network_content_to_buffer(&net, &state, buffer_nets + 1,
-//					buffer_states + 1, thread_id, mr_size, mr_start_layer - 1);
+			copy_network_content_to_buffer(&net, &state, buffer_nets + 1,
+					buffer_states + 1, thread_id, mr_size, mr_start_layer - 1);
 //			printf("Time spent only for copying %lf\n", mysecond() - time);
 			sem_post(&global_semaphore);
 		}
 		//-----------------------------------------------------------
-
 
 		state.index = i;
 		layer l = net.layers[i];
