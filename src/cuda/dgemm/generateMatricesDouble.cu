@@ -18,10 +18,12 @@ int k=0;
 int sizea, sizeb, sizec;
 double *A, *B, *GOLD;
 
+bool host_check = false;
+
 char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
 
 void usage() {
-    printf("Usage: generateMatrices -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
+    printf("Usage: generateMatrices -size=N [-host_check] [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
 }
 
 void generateInputMatrices()
@@ -70,6 +72,7 @@ void ReadMatrixFromFile(){
 
 	int i;
 	FILE *f_A, *f_B;
+    printf("Each matrix size: %.4fGB\n", (float)sizeof(double) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE / (1024*1024*1024));
 
 	f_A = fopen(a_matrix_path,"rb");
 	f_B = fopen(b_matrix_path,"rb");
@@ -116,6 +119,33 @@ double mysecond()
    struct timezone tzp;
    int i = gettimeofday(&tp,&tzp);
    return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
+}
+
+double* openmpMul(double* a, double* b, size_t size) {
+	double time = mysecond();
+
+	double* bT = (double*) malloc(sizeof(double)*size*size);
+	double* c = (double*) malloc(sizeof(double)*size*size);
+
+	if (c == NULL || bT == NULL) {
+		printf("could not alloc hostGold matrix.");
+		return NULL;
+	}
+
+	#pragma omp parallel for
+	for (int i=0;i<size;i++)
+		for (int j=0;j<size;j++)
+			bT[j*size+i] = b[i*size+j];
+	
+	#pragma omp parallel for
+	for (int i=0;i<size;i++)
+		for (int j=0;j<size;j++)
+			for (int k=0; k<size;k++) 
+				c[i*size+j] += a[j*size+k] * bT[i*size+k];
+
+	printf("host mmul time: %.2f seconds\n", mysecond()-time);
+
+	return c;
 }
 
 void generateGoldMatrix()
@@ -190,7 +220,7 @@ void generateGoldMatrix()
     double gflops = flops / time;
     double outputpersec = (double)k*k/time;
     printf("kernel time: %lf\n",time);
-    printf("SIZE:%d OUTPUT/S:%f FLOPS:%f\n",k, outputpersec, gflops);
+    printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",k, outputpersec, gflops, gflops/1000000000);
 	///////////
 
 	cumalloc_err = cudaMemcpy(GOLD, d_C, sizec * sizeof( double ), cudaMemcpyDeviceToHost);
@@ -207,6 +237,29 @@ void generateGoldMatrix()
 	f_GOLD = fopen(gold_matrix_path, "wb");
 
 	//printf("-------------------------\n%.10f\n%.10f\n%.10f\n", GOLD[0], GOLD[1], GOLD[2]);
+
+	if (host_check) {
+		printf("Calculating mMul using OpenMP on Host...\n");
+		double *hostGold = openmpMul(A, B, k);
+		printf("Comparing GPU result with Host result...\n");
+		double maxDiff = 0.0;
+		#pragma omp parallel for
+		for (i=0; i<k; i++) {
+			for (j=0; j<k; j++) {
+				register double diff = fabs((hostGold[i*k+j]-GOLD[i*k+j])/hostGold[i*k+j]);
+				if (diff > maxDiff) {
+					#pragma omp critical
+					maxDiff = max(diff, maxDiff);
+				}
+				if (fabs((hostGold[i*k+j]-GOLD[i*k+j])/hostGold[i*k+j]) > 0.1) {
+					printf("Fail! hostGold!=gpuGold %f != %f (diff: %e)\n", hostGold[i*k+j], GOLD[i*k+j], fabs((hostGold[i*k+j]-GOLD[i*k+j])/hostGold[i*k+j]));
+					fflush(stdout);
+					exit(-1);
+				}
+			}
+		}
+		printf("CPU and GPU match by an error of up to %e element difference. Writing to file...\n", maxDiff);
+	}
 
     int numZeros = 0;
 	for(i=0; i<k; i++)
@@ -281,12 +334,20 @@ int main (int argc, char** argv)
         gold_matrix_path = new char[100];
         snprintf(gold_matrix_path, 100, "dgemm_gold_%i", (signed int)k);
         printf("Using default gold path: %s\n", gold_matrix_path);
-    }
+	}
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "host_check"))
+    {
+		host_check = true;
+	}
 //====================================
 
 	sizea = k * k;
 	sizeb = k * k;
 	sizec = k * k;
+
+
+    printf("Each matrix size: %.4fGB\n", (float)sizeof(double) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE / (1024*1024*1024));
 
 	FILE *test_file;
 	test_file=fopen(a_matrix_path, "rb");

@@ -10,8 +10,8 @@ void forward_route_layer(const route_layer l, network net);
 void backward_route_layer(const route_layer l, network net);
 
 #ifdef GPU
-void forward_route_layer_gpu(const route_layer l, network net);
-void backward_route_layer_gpu(const route_layer l, network net);
+void forward_route_layer_gpu(const route_layer l, network net, network_state state);
+void backward_route_layer_gpu(const route_layer l, network net, network_state state);
 #endif
 
 #endif

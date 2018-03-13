@@ -13,11 +13,18 @@
 #include "Util.h"
 #include "Layer.h"
 
-
 class MaxpoolingLayer: public Layer {
 private:
 	Pair get_max_loc_pair(size_t first, size_t second);
 	int deb = 0;
+
+#ifdef GPU
+	void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
+			Pair *max_loc, size_t out_width, size_t out_height, size_t out_depth,
+			size_t in_height, size_t in_width);
+
+	void call_backpropagation_maxpool(Pair *max_loc, float *g_, float *g_next, size_t max_size, size_t g_max_size);
+#endif
 
 public:
 	MaxpoolingLayer(size_t in_width, size_t in_height, size_t in_depth);
@@ -48,7 +55,6 @@ public:
 	 for err translating.
 	 */
 //	std::unordered_map<size_t, size_t> max_loc;
-
 #ifdef GPU
 	DeviceVector<Pair> max_loc;
 #else

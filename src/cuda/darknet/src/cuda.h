@@ -32,4 +32,10 @@ cudnnHandle_t cudnn_handle();
 #endif
 
 #endif
+
+typedef struct {
+	cublasHandle_t blas_handle;
+	cudaStream_t stream;
+} multi_thread_hd_st;
+
 #endif

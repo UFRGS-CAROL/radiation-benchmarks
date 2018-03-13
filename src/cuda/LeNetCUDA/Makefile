@@ -45,20 +45,10 @@ endif
 ifeq ($(GPU), 1)
 ON_GPU= -DGPU
 CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart
+NVCC_FLAGS +=  -Xcompiler '-DGPU'
 	ifeq ($(DEBUG),1)
 		NVCC_FLAGS+= -G
 	endif
-
-	ifeq ($(NOTUSEUNIFIED), 1)
-		NVCC_FLAGS+= -DNOTUNIFIEDMEMORY
-		CFLAGS+= -DNOTUNIFIEDMEMORY
-	endif
-	
-	ifeq ($(TRAINGPU), 1)
-		NVCC_FLAGS+= -DTRAINGPU
-		CFLAGS+= -DTRAINGPU
-	endif
-	
 endif
 
 GPU_KERNELS=ConvKernels.o
