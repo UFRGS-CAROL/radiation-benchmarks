@@ -10,7 +10,7 @@ SOURCES_CHECK=lud_check.c lud_omp.c ../../../include/log_helper.c
 HARDENING_NUMBER=3
 SOURCES_CHECK_HARDENED=lud_check.c lud_omp_hardened.c ../../../include/log_helper.c ../../selective_hardening/hardening.c ../../selective_hardening/xor_asm.c
 
-SOURCES_ASM=lud_omp_hardened.c
+SOURCES_ASM=lud_omp.c
 
 general: lud_gen lud_check lud_check_hardened lud_err_inj lud_timing lud_timing_hardened
 

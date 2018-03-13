@@ -145,7 +145,14 @@ void lud_omp(float *a, int size)
                     for (k=0; k < BS; k++) {
                         #pragma omp simd
                         for (j = 0; j < BS; j++) {
-                            sum[j] += temp_left[BS*i + k] * temp_top[BS*k + j];
+#ifdef TAGS
+				printf("tag begin");
+#endif				
+		          	sum[j] += temp_left[BS*i + k] * temp_top[BS*k + j];
+#ifdef TAGS
+				printf("tag end");
+#endif
+
                         }
                     }
                     #pragma omp simd

@@ -149,13 +149,7 @@ void lud_omp(float *a, int size)
                     for (k=0; k < BS; k++) {
                         #pragma omp simd
                         for (j = 0; j < BS; j++) {
-#ifdef TAGS
-				printf("tag begin");
-#endif				
                             sum[j] += temp_left[BS*i + k] * READ_HARDENED_VAR_FLOAT(temp_top_hardened_1[BS*k + j], temp_top_hardened_2[BS*k + j], "temp_top");
-#ifdef TAGS
-				printf("tag end");
-#endif
                         }
                     }
                     #pragma omp simd

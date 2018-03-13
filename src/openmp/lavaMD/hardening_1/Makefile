@@ -9,7 +9,7 @@ SOURCES_CHECK=main_check.c kernel/kernel_cpu.c  ../../../include/log_helper.c
 HARDENING_NUMBER=1
 SOURCES_CHECK_HARDENED=main_check.c kernel/kernel_cpu_hardened.c  ../../../include/log_helper.c ../../selective_hardening/hardening.c ../../selective_hardening/xor_asm.c
 
-SOURCES_ASM=kernel/kernel_cpu_hardened.c
+SOURCES_ASM=kernel/kernel_cpu.c
 
 SOURCES_GEN=main.c kernel/kernel_cpu.c 
 APP_NAME=lavamd

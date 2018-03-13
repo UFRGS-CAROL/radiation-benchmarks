@@ -150,8 +150,14 @@ void lud_omp(float *a, int size)
                     }
                     #pragma omp simd
                     for (j = 0; j < BS; j++) {
+#ifdef TAGS
+			printf("tag begin");
+#endif
                         BB((i+i_global),(j+j_global)) -= sum[j];
                         sum[j] = 0.f;
+#ifdef TAGS
+			printf("tag end");
+#endif
                     }
                 }
             }
