@@ -12,7 +12,7 @@ extern int omp_num_threads;
 #pragma offload_attribute(push, target(mic))
 #endif
 
-#include "../../selective_hardening/header.h"
+#include "../../selective_hardening/hardening.h"
 
 void lud_diagonal_omp (float* a, int size, int offset)
 {
@@ -149,7 +149,13 @@ void lud_omp(float *a, int size)
                     for (k=0; k < BS; k++) {
                         #pragma omp simd
                         for (j = 0; j < BS; j++) {
-                            sum[j] += temp_left[BS*i + k] * READ_HARDENED_VAR(temp_top_hardened_1[BS*k + j], temp_top_hardened_2[BS*k + j], float, sizeof(float), "temp_top");
+#ifdef TAGS
+				printf("tag begin");
+#endif				
+                            sum[j] += temp_left[BS*i + k] * READ_HARDENED_VAR_FLOAT(temp_top_hardened_1[BS*k + j], temp_top_hardened_2[BS*k + j], "temp_top");
+#ifdef TAGS
+				printf("tag end");
+#endif
                         }
                     }
                     #pragma omp simd
