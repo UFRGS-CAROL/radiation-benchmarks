@@ -62,8 +62,8 @@ void forward_network_gpu(network net, network_state state) {
 					state.st_handle.stream);
 		}
 		//printf("Layer %d type %d: ", i, l.type);
-		//if (i == LAYER_TO_PROF)
-		//	cudaProfilerStart();
+		if (i == LAYER_TO_PROF)
+			cudaProfilerStart();
 		double t = mysecond();
 		if (l.type == CONVOLUTIONAL) {
 			forward_convolutional_layer_gpu(l, state);
@@ -109,8 +109,8 @@ void forward_network_gpu(network net, network_state state) {
 			forward_shortcut_layer_gpu(l, state);
 		}
 		state.input = l.output_gpu;
-		//if (i == LAYER_TO_PROF)
-		//	cudaProfilerStop();
+		if (i == LAYER_TO_PROF)
+			cudaProfilerStop();
 		t = mysecond() - t;
 		printf("%lf\n", t);
 		cudaStreamSynchronize(state.st_handle.stream);

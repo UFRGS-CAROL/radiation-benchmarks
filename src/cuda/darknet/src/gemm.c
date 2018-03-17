@@ -182,12 +182,12 @@ void gemm_ongpu(int TA, int TB, int M, int N, int K, float ALPHA, float *A_gpu,
 		abraham_sum(A_gpu, B_gpu, M, K, K, N);
 	}
 
-	double t = mysecond();
+//	double t = mysecond();
 	cudaError_t status = cublasSgemm(st_handle.blas_handle,
 			(TB ? CUBLAS_OP_T : CUBLAS_OP_N), (TA ? CUBLAS_OP_T : CUBLAS_OP_N),
 			N, M, K, &ALPHA, B_gpu, ldb, A_gpu, lda, &BETA, C_gpu, ldc);
 	check_error(status);
-	printf("Time on gemm gpu %lf\n", mysecond() - t);
+//	printf("Time on gemm gpu %lf\n", mysecond() - t);
 	if (get_use_abft_gemm() == GEMM) {
 		error_return temp = abraham_check(C_gpu, M, N);
 #ifdef LOGS
