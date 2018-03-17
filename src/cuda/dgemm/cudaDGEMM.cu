@@ -401,7 +401,7 @@ int main( int argc, char* argv[] )
           end_iteration();
       #endif
       kernel_time = mysecond() - kernel_time;
-      
+
       if (loop2 || !device_warmup) {
         total_kernel_time += kernel_time;
         min_kernel_time = min(min_kernel_time, kernel_time);
@@ -539,10 +539,17 @@ int main( int argc, char* argv[] )
       }
    }
 
-   printf("\n-- END --\n Total kernel time: %.3fs\n Iterations: %d\n Average kernel time: %.3fs (best: %.3fs worst: %.3fs)", 
-   total_kernel_time, 
-   iterations, 
-   total_kernel_time / iterations, min_kernel_time, max_kernel_time);
+    double gflops = 2.0*(double)k*k*k / 1000000000; // Bilion FLoating-point OPerationS
+    double averageKernelTime = total_kernel_time / (iterations - (device_warmup ? 1 : 0));
+    printf("\n-- END --\n"
+    "Total kernel time: %.3fs\n"
+    "Iterations: %d\n"
+    "Average kernel time: %.3fs (best: %.3fs ; worst: %.3fs)\n"
+    "Average GFLOPs: %.2f (best: %.2f ; worst: %.2f)\n", 
+    total_kernel_time, 
+    iterations, 
+    averageKernelTime, min_kernel_time, max_kernel_time,
+    gflops / averageKernelTime, gflops / min_kernel_time, gflops / max_kernel_time);
 
 //================== Release device memory
 	cudaFree( d_A );
