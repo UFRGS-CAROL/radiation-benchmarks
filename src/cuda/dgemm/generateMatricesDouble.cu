@@ -40,10 +40,10 @@ void generateInputMatrices()
 
     int numZerosA = 0;
     int numZerosB = 0;
-	#pragma omp parallel for
 	for(i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
 		double rowA[DEFAULT_INPUT_SIZE], rowB[DEFAULT_INPUT_SIZE];
+		#pragma omp parallel for
 		for(j=0; j<DEFAULT_INPUT_SIZE; j++){
 			temp = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.0004e16))+4.1e16;
 			rowA[j] = temp;
