@@ -13,7 +13,6 @@
 #include "DeviceVector.h"
 #endif
 
-
 class OutputLayer: public Layer {
 public:
 	OutputLayer(size_t in_depth);
@@ -29,9 +28,9 @@ public:
 	virtual void back_prop_L1();
 	virtual void back_prop_L2();
 
-
 	virtual void set_sum_LeNet_weights(float_t sum_Lenet_weights);
-	virtual void set_sum_LeNet_squared_weights(float_t sum_Lenet_squared_weights);
+	virtual void set_sum_LeNet_squared_weights(
+			float_t sum_Lenet_squared_weights);
 
 #ifdef GPU
 	DeviceVector<float> reduce_output;
@@ -41,6 +40,15 @@ private:
 	float_t lenetWeightsSum;
 	float_t lenetSquaredWeightsSum;
 
+#ifdef GPU
+//void call_forward_output_layer(float *err, float *exp_y_vec, float *input_,
+//		float *reduce_output, float *output_, int in_depth_, int exp_y);
+	void call_forward_output_layer(float *exp_y_vec, float *input_,
+			float *reduce_output, float *output_, int in_depth_, int exp_y);
+
+	void call_backpropagation_output_layer(float *exp_y_vec, float *input_,
+			float *g_, int in_depth_);
+#endif
 };
 
 #endif /* OUTPUTLAYER_H_ */

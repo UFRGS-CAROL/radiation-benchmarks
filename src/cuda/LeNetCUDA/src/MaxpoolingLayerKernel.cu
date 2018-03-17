@@ -6,7 +6,7 @@
  */
 
 #include "cudaUtil.h"
-#include "MaxpoolingLayerKernel.h"
+#include "MaxpoolingLayer.h"
 
 
 #define MAXPOOL_SIZE 2
@@ -79,7 +79,7 @@ __global__ void forward_maxpool_layer_kernel(float_t *input_, Pair *max_loc,
 }
 
 
-void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
+void MaxpoolingLayer::call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
 		Pair *max_loc, size_t out_width, size_t out_height, size_t out_depth,
 		size_t in_height, size_t in_width) {
 
@@ -107,7 +107,7 @@ __global__ void backpropagation_maxpool(Pair *max_loc, float *g_, float *g_next,
 	}
 }
 
-void call_backpropagation_maxpool(Pair *max_loc, float *g_, float *g_next, size_t max_size, size_t g_max_size) {
+void MaxpoolingLayer::call_backpropagation_maxpool(Pair *max_loc, float *g_, float *g_next, size_t max_size, size_t g_max_size) {
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, max_size);
 //	for(int i = 0; i < max_size; i++){

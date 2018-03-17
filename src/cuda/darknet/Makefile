@@ -22,14 +22,15 @@ NVCC=/usr/local/cuda/bin/nvcc
 OPTS= -Ofast
 LDFLAGS= -lm -pthread
 COMMON= -I../../include/
-CFLAGS= -Wall -Wfatal-errors 
-CXXFLAGS=-std=c++11
-NVCCFLAGS= -rdc=true -lcudadevrt
+CFLAGS= -Wall -Wfatal-errors -lpthread
+CXXFLAGS=-std=c++11 -lpthread
+NVCCFLAGS= -rdc=true -lcudadevrt --default-stream per-thread -ccbin=/usr/bin
 
 CUDAINCLUDE=/usr/local/cuda-7.0/include/
 
 ifeq ($(DEBUG), 1)
-	OPTS=-O0 -g
+	OPTS+= -g
+	NVCCFLAGS+= -g -G
 endif
 
 CFLAGS+=$(OPTS)
@@ -44,7 +45,7 @@ endif
 ifeq ($(GPU), 1)
 	COMMON+= -DGPU -I/usr/local/cuda/include/
 	NVCCFLAGS+= -Xcompiler "-DGPU"
-	LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
+	LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand -lcuda
 endif
 
 ifeq ($(CUDNN), 1)
@@ -70,7 +71,7 @@ OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o i
 	 captcha.o route_layer.o writing.o box.o nightmare.o normalization_layer.o avgpool_layer.o coco.o dice.o \
 	 yolo.o detector.o layer.o compare.o classifier.o local_layer.o swag.o shortcut_layer.o activation_layer.o \
 	 rnn_layer.o gru_layer.o rnn.o rnn_vid.o crnn_layer.o demo.o tag.o cifar.o go.o batchnorm_layer.o art.o \
-	 region_layer.o reorg_layer.o super.o voxel.o args.o log_processing.o abft_host.o
+	 region_layer.o reorg_layer.o super.o voxel.o args.o log_processing.o abft_host.o copy_network.o
 	 
 ifeq ($(GPU), 1)
 LDFLAGS+= -lstdc++
@@ -110,20 +111,29 @@ results:
 
 .PHONY: clean
 
-test:
-	./$(TARGET) test_radiation -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
+test_hardening:
+	./$(TARGET) test_radiation -e yolo_dmr -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
 							-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
-							-n 1000 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
+							-n 2 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
 							-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
 							-b $(RAD_DIR)/src/cuda/darknet \
-							-x 0 -s 1 -a 0
+							-x 0 -s 0 -a 6
+test:
+	./$(TARGET) test_radiation -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
+                                                        -w $(RAD_DIR)/data/darknet/yolo_v1.weights \
+                                                        -n 20 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
+                                                        -l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
+                                                        -b $(RAD_DIR)/src/cuda/darknet \
+                                                        -x 0 -s 0 -a 0
+
+
 
 generate:
 	./$(TARGET) test_radiation -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
 			-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
 			-n 1 -g $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv \
 			-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
-			-b $(RAD_DIR)/src/cuda/darknet -x 0 -s 1 -a 0
+			-b $(RAD_DIR)/src/cuda/darknet -x 0 -s 0 -a 0
 
 test_pure_yolo:
 	./$(TARGET) yolo test $(RAD_DIR)/data/darknet/yolo_v1.cfg  $(RAD_DIR)/data/darknet/yolo_v1.weights data/dog.jpg

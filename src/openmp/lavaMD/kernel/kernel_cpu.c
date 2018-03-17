@@ -80,7 +80,7 @@ void  kernel_cpu( par_str par, dim_str dim, box_str* box, FOUR_VECTOR* rv, fp* q
                 for (j=0; j<NUMBER_PAR_PER_BOX; j=j+1) {
 
                     // // coefficients
-                    r2 = rA[i].v + rB[j].v - DOT(rA[i],rB[j]);
+                    r2 = rA[i].v + rB[j].v - (rA[i].x * rB[j].x + rA[i].y * rB[j].y + rA[i].z * rB[j].z);
                     u2 = a2*r2;
                     vij= exp(-u2);
                     fs = 2.*vij;

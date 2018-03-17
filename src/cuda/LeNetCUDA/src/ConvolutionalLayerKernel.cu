@@ -2,9 +2,12 @@
  * Here all kernels which were in kernels.ocl were translated
  */
 
-#include "ConvolutionalLayerKernel.h"
+#include "ConvolutionalLayer.h"
 #include "cudaUtil.h"
 #include <cstdio>
+
+#define CONV_KERNEL_SIZE 25
+
 
 __device__ float sigmod_gpu_conv(float in) {
 	return 1.0 / (1.0 + expf(-in));
@@ -96,7 +99,7 @@ __global__ void forward_parallel(float* input_buf, float* weight_buf,
 	output_buf[out_index] = sigmod_gpu_conv(sum + b_buf[b_index]);
 }
 
-void call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
+void ConvolutionalLayer::call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
 		float* output_buf, int in_width, int in_height, int in_depth,
 		int out_width, int out_height, int out_depth, int kernel_size) {
 
@@ -236,7 +239,7 @@ __global__ void backpropagation_update_weights(float *W_, //weights
 //	}
 }
 
-void call_backpropagation_parallel(float *W_, //weights
+void ConvolutionalLayer::call_backpropagation_parallel(float *W_, //weights
 		float *g_, //err array
 		float *input_, //input array
 		float *g_next, //b_next from this->next->g_

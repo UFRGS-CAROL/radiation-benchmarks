@@ -134,7 +134,7 @@ void classify_test_rad(MNISTParser& m, string weigths, string gold_input,
 //      }
 //      fclose(gold_layers_input_file);
 	}
-	cout << "COmeçou a classificação \n";
+	cout << "Starting classification \n";
 	//-------------------------------------------
 	//Make radiation test
 	//-------------------------------------------

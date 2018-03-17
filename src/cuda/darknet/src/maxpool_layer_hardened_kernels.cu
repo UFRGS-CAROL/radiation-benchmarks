@@ -131,7 +131,7 @@ extern "C" void forward_maxpool_layer_gpu_hardened(maxpool_layer layer,
 		cudaMalloc(&error_detected, sizeof(unsigned long long) * MAXPOOL_N);
 	}
 
-	forward_maxpool_layer_kernel_hardened<<<cuda_gridsize(n), BLOCK>>>(n, layer.h,
+	forward_maxpool_layer_kernel_hardened<<<cuda_gridsize(n), BLOCK, 0, state.st_handle.stream>>>(n, layer.h,
 			layer.w, layer.c, layer.stride, layer.size, layer.pad, state.input,
 			layer.output_gpu, layer.indexes_gpu, LOOK_UP_TABLE[maxp] * FACTOR,
 			error_detected, maxpool_iterator);

@@ -47,7 +47,7 @@ __global__ void im2col_gpu_kernel(const int n, const float* data_im,
 
 void im2col_ongpu(float *im,
          int channels, int height, int width,
-         int ksize, int stride, int pad, float *data_col){
+         int ksize, int stride, int pad, float *data_col, cudaStream_t stream){
 	//printf("foi nessa pocilga\n\n\n");
     // We are going to launch channels * height_col * width_col kernels, each
     // kernel responsible for copying a single-channel grid.
@@ -55,7 +55,7 @@ void im2col_ongpu(float *im,
     int width_col = (width + 2 * pad - ksize) / stride + 1;
     int num_kernels = channels * height_col * width_col;
     im2col_gpu_kernel<<<(num_kernels+BLOCK-1)/BLOCK,
-        BLOCK>>>(
+        BLOCK, 0, stream>>>(
                 num_kernels, im, height, width, ksize, pad,
                 stride, height_col,
                 width_col, data_col);

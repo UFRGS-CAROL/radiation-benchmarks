@@ -26,7 +26,7 @@
 
 
 static const char *ABFT_TYPES[] = { "none", "gemm", "smart_pooling", "l1", "l2",
-		"trained_weights" };
+		"trained_weights", "dmr", "tmr" };
 
 
 typedef struct prob_array_ {

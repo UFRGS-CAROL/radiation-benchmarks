@@ -11,61 +11,44 @@
 #define L2_LAMBDA  0.00000001
 
 #ifdef GPU
-#include "OutputLayerKernel.h"
 
 void OutputLayer::forward() {
 	exp_y_vec.clear();
 	exp_y_vec.resize(this->in_depth_);
 
-//	float *err = &this->err;
-	float *exp_y_vec = this->exp_y_vec.data();
-	float *input_ = this->input_.data();
-	float *output_ = this->output_.data();
-	float *reduce_output = this->reduce_output.data();
+	float *exp_y_vec = this->exp_y_vec.d_data();
+	float *input_ = this->input_.d_data();
+	float *output_ = this->output_.d_data();
+	float *reduce_output = this->reduce_output.d_data();
 	int in_depth_ = this->in_depth_;
 	int exp_y = this->exp_y;
 
-//#ifdef NOTUNIFIEDMEMORY
 	this->exp_y_vec.pop();
-//#endif
 	this->exp_y_vec[this->exp_y] = 1;
 
-//#ifdef NOTUNIFIEDMEMORY
 	this->exp_y_vec.push();
-//#else
-//	CudaCheckError();
-//#endif
 
-	call_forward_output_layer(exp_y_vec, input_, reduce_output, output_, in_depth_, exp_y);
+	this->call_forward_output_layer(exp_y_vec, input_, reduce_output, output_, in_depth_, exp_y);
 
-//#ifdef NOTUNIFIEDMEMORY
 	this->reduce_output.pop();
-//#endif
 	this->err = 0;
 	for (int i = 0; i < in_depth_; i++) {
 		this->err += this->reduce_output[i];
 	}
 
-//#ifdef NOTUNIFIEDMEMORY
-//	this->reduce_output.push();
-//#endif
-
 }
-
-//#ifdef TRAINGPU
 
 void OutputLayer::back_prop() {
 	this->g_.clear();
 
-	float *exp_y_vec = this->exp_y_vec.data();
-	float *input_ = this->input_.data();
-	float *g_ = this->g_.data();
+	float *exp_y_vec = this->exp_y_vec.d_data();
+	float *input_ = this->input_.d_data();
+	float *g_ = this->g_.d_data();
 	int in_depth_ = this->in_depth_;
 
-	call_backpropagation_output_layer(exp_y_vec, input_,
+	this->call_backpropagation_output_layer(exp_y_vec, input_,
 			g_, in_depth_);
 }
-//#endif //TRAINGPU
 
 void OutputLayer::init_weight() {
 	this->reduce_output.resize(this->in_depth_);
@@ -86,7 +69,6 @@ void OutputLayer::forward() {
 	for (size_t i = 0; i < in_depth_; i++) {
 		err += 0.5 * (exp_y_vec[i] - input_[i]) * (exp_y_vec[i] - input_[i]);
 	}
-//	std::cout << "err " << err << "\n";
 	output_ = input_;
 }
 
@@ -109,31 +91,7 @@ void OutputLayer::back_prop() {
 	}
 }
 
-
 #endif
-
-//#ifndef TRAINGPU
-//void OutputLayer::back_prop() {
-//	/* compute err terms of output layers */
-//	if (g_.size() != in_depth_) {
-//		g_.clear();
-//		g_.resize(in_depth_);
-//		printf("passou no if do bakc\n");
-//	}
-//	//printf("\ndebug back_prop output layer");
-//#ifdef NOTUNIFIEDMEMORY
-//	this->g_.pop();
-//	this->input_.pop();
-//	this->exp_y_vec.pop();
-//#endif
-//	for (size_t i = 0; i < in_depth_; i++) {
-//		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i]));
-//	}
-//#ifdef NOTUNIFIEDMEMORY
-//	this->g_.push();
-//#endif
-//}
-//#endif //TRAINGPU
 
 OutputLayer::OutputLayer(size_t in_depth) :
 		Layer(1, 1, in_depth, 0, 0, 0, 0, 0) {
@@ -162,19 +120,19 @@ void OutputLayer::back_prop_L1() {
 		printf("passou no if do back\n");
 	}
 
-//#ifdef NOTUNIFIEDMEMORY
+#ifdef GPU
 	this->g_.pop();
 	this->input_.pop();
 	this->exp_y_vec.pop();
-//#endif
-	//printf("\ndebug lenetWeightsSum: %f, valor reguarizacao: %f", this->lenetWeightsSum, L1_LAMBDA* this->lenetWeightsSum);
+#endif
+
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
 		+ L1_LAMBDA * this->lenetWeightsSum; // L1 regularization
 	}
-//#ifdef NOTUNIFIEDMEMORY
+#ifdef GPU
 	this->g_.push();
-//#endif
+#endif
 }
 
 void OutputLayer::back_prop_L2() {
@@ -185,19 +143,21 @@ void OutputLayer::back_prop_L2() {
 		g_.resize(in_depth_);
 		printf("passou no if do back\n");
 	}
-//#ifdef NOTUNIFIEDMEMORY
+
+#ifdef GPU
 	this->g_.pop();
 	this->input_.pop();
 	this->exp_y_vec.pop();
-//#endif
-	//printf("\ndebug lenetSquaredWeightsSum: %f, valor regularizacao: %f", this->lenetSquaredWeightsSum, L2_LAMBDA*this->lenetSquaredWeightsSum);
+#endif
+
 	for (size_t i = 0; i < in_depth_; i++) {
 		g_[i] = ((exp_y_vec[i] - input_[i]) * df_sigmod(input_[i])) // value error
 		+ L2_LAMBDA * this->lenetSquaredWeightsSum; // L2 regularization
 	}
-//#ifdef NOTUNIFIEDMEMORY
+#ifdef GPU
 	this->g_.push();
-//#endif
+#endif
+
 }
 
 void OutputLayer::set_sum_LeNet_weights(float_t sum_Lenet_weights) {

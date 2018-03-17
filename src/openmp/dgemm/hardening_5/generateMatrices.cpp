@@ -6,7 +6,7 @@
 #include <sys/time.h>
 
 #define MATRIX_PATH "./Double_"
-#define DEFAULT_INPUT_SIZE 8192
+#define DEFAULT_INPUT_SIZE 1024
 
 double *A, *B;
 

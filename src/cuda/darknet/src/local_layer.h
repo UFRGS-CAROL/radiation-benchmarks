@@ -12,7 +12,7 @@ typedef layer local_layer;
 #ifdef GPU
 void forward_local_layer_gpu(local_layer layer, network_state state);
 void backward_local_layer_gpu(local_layer layer, network_state state);
-void update_local_layer_gpu(local_layer layer, int batch, float learning_rate, float momentum, float decay);
+void update_local_layer_gpu(local_layer layer, int batch, float learning_rate, float momentum, float decay, cudaStream_t stream);
 
 void push_local_layer(local_layer layer);
 void pull_local_layer(local_layer layer);
