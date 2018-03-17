@@ -244,6 +244,7 @@ int main( int argc, char* argv[] )
 	// int zero = 0;
 	double time;
 	double kernel_time, global_time;
+    double total_kernel_time, min_kernel_time, max_kernel_time;
 	int device_warmup = 1;
     // int gpu_check = 1;
 //====================================
@@ -344,7 +345,7 @@ int main( int argc, char* argv[] )
 #ifdef LOGS
 	char test_info[90];
 	snprintf(test_info, 90, "size:%d type:half-precision", k);
-	start_log_file("cudaHalfGEMM", test_info);
+	start_log_file("cudaHGEMM", test_info);
 #endif
 //====================================
 
@@ -369,6 +370,9 @@ int main( int argc, char* argv[] )
 
 //================== Init test environment
 	// kernel_errors=0;
+    total_kernel_time = 0;
+    min_kernel_time = UINT_MAX;
+    max_kernel_time = 0;
 	GetDevice();
 	ReadMatrixFromFile();
 	cublasHandle_t cublasHandle;
@@ -415,6 +419,12 @@ int main( int argc, char* argv[] )
 			end_iteration();
 		#endif
 		kernel_time = mysecond() - kernel_time;
+      
+		if (loop2 || !device_warmup) {
+		  total_kernel_time += kernel_time;
+		  min_kernel_time = min(min_kernel_time, kernel_time);
+		  max_kernel_time = max(max_kernel_time, kernel_time);
+		}
 
 		if (loop2 || !device_warmup)
 			if (verbose) printf("Device kernel time for iteration %d: %.3fs\n", loop2, kernel_time);
@@ -578,6 +588,18 @@ int main( int argc, char* argv[] )
 			if (verbose) printf("Iteration #%d time: %.3fs\n\n\n", loop2, mysecond() - global_time);
 		fflush(stdout);
 	}
+
+    double gflops = 2.0*(double)k*k*k / 1000000000; // Bilion FLoating-point OPerationS
+    double averageKernelTime = total_kernel_time / (iterations - (device_warmup ? 1 : 0));
+    printf("\n-- END --\n"
+    "Total kernel time: %.3fs\n"
+    "Iterations: %d\n"
+    "Average kernel time: %.3fs (best: %.3fs ; worst: %.3fs)\n"
+    "Average GFLOPs: %.2f (best: %.2f ; worst: %.2f)\n", 
+    total_kernel_time, 
+    iterations, 
+    averageKernelTime, min_kernel_time, max_kernel_time,
+    gflops / averageKernelTime, gflops / min_kernel_time, gflops / max_kernel_time);
 
 	//================== Release device memory
 	cudaFree( d_A );

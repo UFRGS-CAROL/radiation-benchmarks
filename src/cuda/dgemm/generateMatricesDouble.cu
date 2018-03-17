@@ -40,23 +40,29 @@ void generateInputMatrices()
 
     int numZerosA = 0;
     int numZerosB = 0;
-    #pragma omp parallel for
 	for(i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		for(j=0; j<DEFAULT_INPUT_SIZE+16; j++){
+		double rowA[DEFAULT_INPUT_SIZE], rowB[DEFAULT_INPUT_SIZE];
+		#pragma omp parallel for
+		for(j=0; j<DEFAULT_INPUT_SIZE; j++){
 			temp = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.0004e16))+4.1e16;
-			fwrite( &temp, sizeof(double), 1, f_A );
+			rowA[j] = temp;
             if (temp == 0 || isnan(temp) || isinf(temp)) {
                 numZerosA++;
             }
 
 			temp = (rand()/((double)(RAND_MAX)+1)*(-4.06e16-4.4e16))+4.1e16;
-			fwrite( &temp, sizeof(double), 1, f_B );
+			rowB[j] = temp;
             if (temp == 0 || isnan(temp) || isinf(temp)) {
                 numZerosB++;
             }
-
-
+		}
+		size_t ret_value[2];
+		ret_value[0] = fwrite( rowA, sizeof(double) * DEFAULT_INPUT_SIZE, 1, f_A );
+		ret_value[1] = fwrite( rowB, sizeof(double) * DEFAULT_INPUT_SIZE, 1, f_B );
+		if ((ret_value[0] != 1) || (ret_value[1] != 1)) {
+			printf("Failure writing row %d: %lu ; %lu\n", i, ret_value[0], ret_value[1]);
+			exit(-4);
 		}
 	}
 	printf("Number of zeros/NaNs/INFs on A: %d\n", numZerosA);
@@ -81,12 +87,17 @@ void ReadMatrixFromFile(){
 		printf("Error opening matrices A, B.\n");
 		exit(-1);
 	}
+	size_t ret_value[2];
 	for(i=0; i<k; i++)
 	{
-		fread (&A[ k * i ], sizeof(double)*k, 1, f_A);
-		fread (&B[ k * i ], sizeof(double)*k, 1, f_B);
+		ret_value[0] = fread (&A[ k * i ], sizeof(double)*k, 1, f_A);
+		ret_value[1] = fread (&B[ k * i ], sizeof(double)*k, 1, f_B);
+		if (ret_value[0] != 1 || ret_value[1] != 1) {
+			printf("Bad input formatting while reading line %d: %lu ; %lu .\n", i, ret_value[0], ret_value[1]);
+			exit(-3);
+		}
 	}
-printf("Done reading matrices\n");
+	printf("Done reading matrices\n");
 
 	fclose(f_A);
 	fclose(f_B);
@@ -125,7 +136,7 @@ double* openmpMul(double* a, double* b, size_t size) {
 	double time = mysecond();
 
 	double* bT = (double*) malloc(sizeof(double)*size*size);
-	double* c = (double*) malloc(sizeof(double)*size*size);
+	double* c = (double*) calloc(size*size, sizeof(double));
 
 	if (c == NULL || bT == NULL) {
 		printf("could not alloc hostGold matrix.");
@@ -251,7 +262,7 @@ void generateGoldMatrix()
 					#pragma omp critical
 					maxDiff = max(diff, maxDiff);
 				}
-				if (fabs((hostGold[i*k+j]-GOLD[i*k+j])/hostGold[i*k+j]) > 0.1) {
+				if (diff > 0.1) {
 					printf("Fail! hostGold!=gpuGold %f != %f (diff: %e)\n", hostGold[i*k+j], GOLD[i*k+j], fabs((hostGold[i*k+j]-GOLD[i*k+j])/hostGold[i*k+j]));
 					fflush(stdout);
 					exit(-1);

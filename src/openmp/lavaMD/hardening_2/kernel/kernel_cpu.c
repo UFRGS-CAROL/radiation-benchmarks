@@ -79,14 +79,23 @@ void  kernel_cpu( par_str par, dim_str dim, box_str* box, FOUR_VECTOR* rv, fp* q
                 // do for the # of particles in current (home or neighbor) box
                 for (j=0; j<NUMBER_PAR_PER_BOX; j=j+1) {
 
+#ifdef TAGS
+			printf("tag begin");
+#endif
+
                     // // coefficients
-                    r2 = rA[i].v + rB[j].v - DOT(rA[i],rB[j]);
+                    r2 = rA[i].v + rB[j].v - (rA[i].x * rB[j].x + rA[i].y * rB[j].y + rA[i].z * rB[j].z);
                     u2 = a2*r2;
                     vij= exp(-u2);
                     fs = 2.*vij;
                     d.x = rA[i].x  - rB[j].x;
                     d.y = rA[i].y  - rB[j].y;
                     d.z = rA[i].z  - rB[j].z;
+
+#ifdef TAGS
+			printf("tag end");
+#endif
+
                     fxij=fs*d.x;
                     fyij=fs*d.y;
                     fzij=fs*d.z;

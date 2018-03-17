@@ -65,12 +65,12 @@ HISTORY: Written by Rob Van der Wijngaart, September 2006.
 #include <math.h>
 #include <assert.h>
 #include <unistd.h>
-#include <omp.h>
 #include <time.h>
 
+#include "dgemm.h"
 #include "../../../include/log_helper.h"
 
-#include "../../selective_hardening/header.h"
+extern void dgemm(double *A, double *B, double *C, long order, int block); 
 
 #ifdef TIMING
 #include <sys/time.h>
@@ -94,26 +94,7 @@ double total_kernel_time;
 #define MAX_THREADS MAXTHREADS
 #endif
 
-#define AA_arr(i,j) AA[(i)+(block+BOFFSET)*(j)]
-#define BB_arr(i,j) BB[(i)+(block+BOFFSET)*(j)]
-#define CC_arr(i,j) CC[(i)+(block+BOFFSET)*(j)]
-#define  A_arr(i,j)  A[(i)+(order)*(j)]
-#define  B_arr(i,j)  B[(i)+(order)*(j)]
-#define  C_arr(i,j)  C[(i)+(order)*(j)]
-
-#define forder (1.0*order)
-
-#ifndef MIN
-#define MIN(x,y) ((x)<(y)?(x):(y))
-#endif
-#ifndef MAX
-#define MAX(x,y) ((x)>(y)?(x):(y))
-#endif
-#ifndef ABS
-#define ABS(a) ((a) >= 0 ? (a) : -(a))
-#endif
-
-static inline void prk_free(void* p)
+inline void prk_free(void* p)
 {
 #if defined(__INTEL_COMPILER) && !defined(PRK_USE_POSIX_MEMALIGN)
     _mm_free(p);
@@ -143,7 +124,7 @@ static inline int prk_get_alignment(void)
 int posix_memalign(void **memptr, size_t alignment, size_t size);
 #endif
 
-static inline void* prk_malloc(size_t bytes)
+inline void* prk_malloc(size_t bytes)
 {
 #ifndef PRK_USE_MALLOC
     int alignment = prk_get_alignment();
@@ -179,62 +160,6 @@ static inline void* prk_malloc(size_t bytes)
     if (ret) ptr = NULL;
     return ptr;
 #endif
-}
-
-void dgemm(double *A, double *B, double *C, long order, int block) {
-
-    int     i,ii,j,jj,k,kk,ig;
-    int jg_hardened_1, jg_hardened_2;
-    int kg_hardened_1, kg_hardened_2;
-
-    #pragma omp parallel private (i,j,k,ii,jj,kk,ig,jg_hardened_1,jg_hardened_2,kg_hardened_1, kg_hardened_2)
-    {
-        double *AA=NULL, *BB=NULL, *CC=NULL;
-
-        /* matrix blocks for local temporary copies*/
-        AA = (double *) prk_malloc(block*(block+BOFFSET)*3*sizeof(double));
-        if (!AA) {
-            printf("Could not allocate space for matrix tiles on thread %d\n",
-                   omp_get_thread_num());
-            exit(1);
-        }
-        BB = AA + block*(block+BOFFSET);
-        CC = BB + block*(block+BOFFSET);
-
-
-        #pragma omp for
-        for(jj = 0; jj < order; jj+=block) {
-            for(kk = 0; kk < order; kk+=block) {
-
-                for (jg_hardened_1=jj,jg_hardened_2=jj,j=0; READ_HARDENED_VAR(jg_hardened_1, jg_hardened_2, int, sizeof(int), "jg")<MIN(jj+block,order); j++,jg_hardened_1++,jg_hardened_2++)
-                    for (kg_hardened_1=kk,kg_hardened_2=kk,k=0; READ_HARDENED_VAR(kg_hardened_1, kg_hardened_2, int, sizeof(int), "kg")<MIN(kk+block,order); k++,kg_hardened_1++,kg_hardened_2++)
-                        BB_arr(j,k) =  B_arr(READ_HARDENED_VAR(kg_hardened_1, kg_hardened_2, int, sizeof(int), "kg"),READ_HARDENED_VAR(jg_hardened_1, jg_hardened_2, int, sizeof(int), "jg"));
-
-                for(ii = 0; ii < order; ii+=block) {
-
-                    for (kg_hardened_1=kk,kg_hardened_2=kk,k=0; READ_HARDENED_VAR(kg_hardened_1, kg_hardened_2, int, sizeof(int), "kg")<MIN(kk+block,order); k++,kg_hardened_1++,kg_hardened_2++)
-                        for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
-                            AA_arr(i,k) = A_arr(ig,READ_HARDENED_VAR(kg_hardened_1, kg_hardened_2, int, sizeof(int), "kg"));
-
-                    for (jg_hardened_1=jj,jg_hardened_2=jj,j=0; READ_HARDENED_VAR(jg_hardened_1, jg_hardened_2, int, sizeof(int), "jg")<MIN(jj+block,order); j++,jg_hardened_1++,jg_hardened_2++)
-                        for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
-                            CC_arr(i,j) = 0.0;
-
-                    for (kg_hardened_1=kk,kg_hardened_2=kk,k=0; READ_HARDENED_VAR(kg_hardened_1, kg_hardened_2, int, sizeof(int), "kg")<MIN(kk+block,order); k++,kg_hardened_1++,kg_hardened_2++)
-                        for (jg_hardened_1=jj,jg_hardened_2=jj,j=0; READ_HARDENED_VAR(jg_hardened_1, jg_hardened_2, int, sizeof(int), "jg")<MIN(jj+block,order); j++,jg_hardened_1++,jg_hardened_2++)
-                            for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
-                                CC_arr(i,j) += AA_arr(i,k)*BB_arr(j,k);
-
-                    for (jg_hardened_1=jj,jg_hardened_2=jj,j=0; READ_HARDENED_VAR(jg_hardened_1, jg_hardened_2, int, sizeof(int), "jg")<MIN(jj+block,order); j++,jg_hardened_1++,jg_hardened_2++)
-                        for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
-                            C_arr(ig,READ_HARDENED_VAR(jg_hardened_1, jg_hardened_2, int, sizeof(int), "jg")) += CC_arr(i,j);
-
-                }
-            }
-        }
-        prk_free(AA);
-    }
-
 }
 
 void read_input(double *A, double *B, char * fileA, char * fileB, long int order) {
@@ -344,7 +269,7 @@ int main(int argc, char **argv) {
 
 #ifdef LOGS
     char test_info[200];
-    snprintf(test_info, 200, "matrix_dim:%ld threads:%d block_size:%d block_offset:%d", order, nthread_input, block, BOFFSET);
+    snprintf(test_info, 200, "hardening_1 matrix_dim:%ld threads:%d block_size:%d block_offset:%d", order, nthread_input, block, BOFFSET);
     start_log_file("openmpDGEMM", test_info);
 #endif
 #ifdef TIMING

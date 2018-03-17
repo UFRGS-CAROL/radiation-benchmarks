@@ -1,23 +1,31 @@
-#include "../../include/log_helper.h"
-
-//#define HARDENING_DEBUG
-#define READ_HARDENED_VAR(VAR_NAME_1, VAR_NAME_2, VAR_TYPE, VAR_SIZE, VAR_NAME) (*((VAR_TYPE*)hardened_compare_and_return((void*)(&VAR_NAME_1), (void*)(&VAR_NAME_2), VAR_SIZE, __FILE__, __LINE__, VAR_NAME)))
-#define READ_HARDENED_ARRAY(POSITION, ARRAY_NAME_1, ARRAY_NAME_2, ARRAY_TYPE, ARRAY_SIZE) ((ARRAY_TYPE)((void*)hardened_compare_and_return_array(POSITION, (void*)(&ARRAY_NAME_1), (void*)(&ARRAY_NAME_2), ARRAY_SIZE)))
-#define READ_HARDENED_VAR_FLOAT(VAR_NAME_1, VAR_NAME_2, VAR_NAME) hardened_compare_and_return_float(VAR_NAME_1, VAR_NAME_2, __FILE__, __LINE__, VAR_NAME)
-
-#ifdef FLOAT_XOR
-extern int float_xor(float, float);
-#endif
+#include "hardening.h"
+#include <stdio.h>
+#include <stdlib.h> 
+#include <string.h>
 
 static int error_occured = 0;
 static int current_iteration = -1;
 
-void get_bits_str(char* dest_buffer, void* value, long long size);
-void dump_error_info(void* var_a, void* var_b, long long size, char* file, long line, char* var_name);
+inline int hardened_compare_and_return_int(int var_a, int var_b, char* file, long line, char* var_name)
+{
+	int result;
+	
+	int a = var_a;
+	int b = var_b;
+	result = int_xor(a, b);
+		
+	if(result != 0)
+	{
+		dump_error_info(&a, &b, sizeof(int), file, line, var_name);
+	}
+
+	return a;
+
+}
 
 inline float hardened_compare_and_return_float(float var_a, float var_b, char* file, long line, char* var_name)
 {
-	long result;
+	int result;
 	
 	float a = var_a;
 	float b = var_b;
@@ -25,15 +33,16 @@ inline float hardened_compare_and_return_float(float var_a, float var_b, char* f
 		
 	if(result != 0)
 	{
-//		dump_error_info(&a, &b, sizeof(float), file, line, var_name);
+		dump_error_info(&a, &b, sizeof(float), file, line, var_name);
 	}
 
 	return a;
+
 }
 
 inline double hardened_compare_and_return_double(double var_a, double var_b, char* file, long line, char* var_name)
 {
-	int result;
+	long result;
 	
 	double a = var_a;
 	double b = var_b;
@@ -41,11 +50,58 @@ inline double hardened_compare_and_return_double(double var_a, double var_b, cha
 		
 	if(result != 0)
 	{
-//		dump_error_info(&a, &b, sizeof(float), file, line, var_name);
+		dump_error_info(&a, &b, sizeof(double), file, line, var_name);
 	}
 
 	return a;
 }
+
+/*
+inline void* hardened_compare_and_return_double_array(void* var_a, void* var_b, int size, char* file, long line, char* var_name)
+{
+	long result;
+
+	double* a = (double*)var_a;
+	double* b = (double*)var_b;
+	
+	int num_elem = size / sizeof(double);
+	int i;
+
+	for(i = 0; i < num_elem; i++)
+	{
+		result = double_xor(a[i], b[i]);
+		if(result != 0)
+		{
+			dump_error_info(&a[i], &b[i], sizeof(double), file, line, var_name);
+		}
+	} 
+
+	return var_a;
+}
+
+void* hardened_compare_and_return_double_struct(void* var_a, void* var_b, int size, char* file, long line, char* var_name)
+{
+	long result;
+
+	double* a = (double*)var_a;
+	double* b = (double*)var_b;
+	
+	int num_elem = size / sizeof(double);
+	int i;
+
+	for(i = 0; i < num_elem; i++)
+	{
+		result = double_xor(a[i], b[i]);
+		if(result != 0)
+		{
+			dump_error_info(&a[i], &b[i], sizeof(double), file, line, var_name);
+		}
+	} 
+
+	return var_a;
+
+}
+*/
 
 void dump_error_info(void* var_a, void* var_b, long long size, char* file, long line, char* var_name)
 {
@@ -95,6 +151,7 @@ void dump_error_info(void* var_a, void* var_b, long long size, char* file, long 
 
 }
 
+/*
 inline void* hardened_compare_and_return(void* var_a, void* var_b, long long size, char* file, long line, char* var_name)
 {
         if(memcmp(var_a, var_b, size) != 0)
@@ -166,19 +223,22 @@ inline void* hardened_compare_and_return_array(void* array_ptr_a, void* array_pt
 
         return array_ptr_a;
 }
+*/
 
 void get_bits_str(char* dest_buffer, void* value, long long size)
 {
 	char* char_array = (char*)value;
 		
 	int temp_buffer[1024];
-
+	
 	int i, j;
 	for(i = 0; i < size; i++)
 	{
+		int power = 1;
 		for(j = 0; j < 8; j++)
 		{	
-			temp_buffer[(size*8 - 1) - (i*8 + j)] = ((int)char_array[i] & (int)pow(2, j)) >> j;
+			temp_buffer[(size*8 - 1) - (i*8 + j)] = ((int)char_array[i] & power) >> j;
+			power *= 2;
 		}
 	}
 

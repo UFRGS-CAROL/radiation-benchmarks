@@ -9,7 +9,7 @@ extern "C" {
 #include "./../main.h"
 #include "kernel_cpu_hardened.h"
 
-#include "../../../selective_hardening/header.h"
+#include "../../../selective_hardening/hardening.h"
 
 void  kernel_cpu( par_str par, dim_str dim, box_str* box, FOUR_VECTOR* rv_hardened_1, FOUR_VECTOR* rv_hardened_2, fp* qv, FOUR_VECTOR* fv)
 {
@@ -84,13 +84,13 @@ void  kernel_cpu( par_str par, dim_str dim, box_str* box, FOUR_VECTOR* rv_harden
                 for (j=0; j<NUMBER_PAR_PER_BOX; j=j+1) {
 
                     // // coefficients
-                    r2 = READ_HARDENED_VAR(rA_hardened_1[i].v, rA_hardened_2[i].v, fp, sizeof(fp), "rv") + rB[j].v - DOT(READ_HARDENED_VAR(rA_hardened_1[i], rA_hardened_2[i], FOUR_VECTOR, sizeof(FOUR_VECTOR), "rv"),rB[j]);
+                    r2 = READ_HARDENED_VAR_DOUBLE(rA_hardened_1[i].v, rA_hardened_2[i].v, "rv") + rB[j].v - (READ_HARDENED_VAR_DOUBLE(rA_hardened_1[i].x, rA_hardened_2[i].x, "rv") * rB[j].x + READ_HARDENED_VAR_DOUBLE(rA_hardened_1[i].y, rA_hardened_2[i].y, "rv") * rB[j].y + READ_HARDENED_VAR_DOUBLE(rA_hardened_1[i].z, rA_hardened_2[i].z, "rv") * rB[j].z);
                     u2 = a2*r2;
                     vij= exp(-u2);
                     fs = 2.*vij;
-                    d.x = READ_HARDENED_VAR(rA_hardened_1[i].x, rA_hardened_2[i].x, fp, sizeof(fp), "rv")  - rB[j].x;
-                    d.y = READ_HARDENED_VAR(rA_hardened_1[i].y, rA_hardened_2[i].y, fp, sizeof(fp), "rv")  - rB[j].y;
-                    d.z = READ_HARDENED_VAR(rA_hardened_1[i].z, rA_hardened_2[i].z, fp, sizeof(fp), "rv")  - rB[j].z;
+                    d.x = READ_HARDENED_VAR_DOUBLE(rA_hardened_1[i].x, rA_hardened_2[i].x, "rv")  - rB[j].x;
+                    d.y = READ_HARDENED_VAR_DOUBLE(rA_hardened_1[i].y, rA_hardened_2[i].y, "rv")  - rB[j].y;
+                    d.z = READ_HARDENED_VAR_DOUBLE(rA_hardened_1[i].z, rA_hardened_2[i].z, "rv")  - rB[j].z;
                     fxij=fs*d.x;
                     fyij=fs*d.y;
                     fzij=fs*d.z;

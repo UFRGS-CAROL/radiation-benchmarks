@@ -12,7 +12,7 @@ extern int omp_num_threads;
 #pragma offload_attribute(push, target(mic))
 #endif
 
-#include "../../selective_hardening/header.h"
+#include "../../selective_hardening/hardening.h"
 
 void lud_diagonal_omp (float* a, int size, int offset)
 {
@@ -140,7 +140,7 @@ void lud_omp(float *a, int size)
                 for (i = 0; i < BS; i++) {
                     #pragma omp simd
                     for (j =0; j < BS; j++) {
-                        temp_top[i*BS + j]  = a[size*(i + offset) + j + READ_HARDENED_VAR(j_global_hardened_1, j_global_hardened_2, int, sizeof(int), "j_global") ];
+                        temp_top[i*BS + j]  = a[size*(i + offset) + j + READ_HARDENED_VAR_INT(j_global_hardened_1, j_global_hardened_2, "j_global") ];
                         temp_left[i*BS + j] = a[size*(i + i_global) + offset + j];
                     }
                 }
@@ -156,7 +156,7 @@ void lud_omp(float *a, int size)
                     }
                     #pragma omp simd
                     for (j = 0; j < BS; j++) {
-                        BB((i+i_global),(j+READ_HARDENED_VAR(j_global_hardened_1, j_global_hardened_2, int, sizeof(int), "j_global"))) -= READ_HARDENED_VAR(sum_hardened_1[j], sum_hardened_2[j], float, sizeof(float), "sum");
+                        BB((i+i_global),(j+READ_HARDENED_VAR_INT(j_global_hardened_1, j_global_hardened_2, "j_global"))) -= READ_HARDENED_VAR_FLOAT(sum_hardened_1[j], sum_hardened_2[j], "sum");
                         sum_hardened_1[j] = 0.f;
                         sum_hardened_2[j] = 0.f;
                     }

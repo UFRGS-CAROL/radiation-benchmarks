@@ -10,6 +10,8 @@
 #include <curand.h>
 #include <curand_kernel.h>
 #include <cuda_fp16.h>
+
+#define HALF_ROUND_STYLE std::round_to_nearest
 #include "half.hpp"
 
 // helper functions
@@ -24,22 +26,23 @@
 
 int k=0;
 int sizea, sizeb, sizec;
-half *A, *B, *GOLD;
+half_float::half *A, *B, *GOLD;
+
+bool host_check = false;
 
 char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
 
 void usage() {
-    printf("Usage: generateMatrices -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
+    printf("Usage: generateMatrices -size=N [-host_check] [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
 }
 
-void generateInputMatrices()
+void generateInputMatricesHalf()
 {
 	half_float::half *h_A, *h_B;
 	FILE *f_A, *f_B;
 
-    h_A = (half_float::half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE);
-    h_B = (half_float::half*)malloc(sizeof(half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE);
-    printf("Each input matrix size: %.4fGB\n", (float)sizeof(half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE / (1024*1024*1024));
+    h_A = (half_float::half*)malloc(sizeof(half_float::half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE);
+    h_B = (half_float::half*)malloc(sizeof(half_float::half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE);
     printf("Max value: %f Min: %f\n", MAX_HVALUE, -MAX_HVALUE);
 
 	srand(time(NULL));
@@ -51,12 +54,12 @@ void generateInputMatrices()
             do {
                 tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
             } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
-            h_A[i * DEFAULT_INPUT_SIZE + j] = *((half_float::half*)&tempValue);
+            h_A[i * DEFAULT_INPUT_SIZE + j] = tempValue;
 
             do {
                 tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
             } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
-            h_B[i * DEFAULT_INPUT_SIZE + j] = *((half_float::half*)&tempValue);
+            h_B[i * DEFAULT_INPUT_SIZE + j] = tempValue;
         }
     }
 
@@ -73,7 +76,7 @@ void generateInputMatrices()
     numNans = 0;
     numInfs = 0;
 	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
-        val=(float)*((half_float::half*)&(h_A[i]));
+        val=h_A[i];
 		if (val == 0) numZeros++;
         if (isnan(val)) numNans++;
         if (isinf(val)) numInfs++;
@@ -84,7 +87,7 @@ void generateInputMatrices()
     numNans = 0;
     numInfs = 0;
 	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
-        val=(float)*((half_float::half*)&(h_B[i]));
+        val=h_B[i];
 		if (val == 0) numZeros++;
         if (isnan(val)) numNans++;
         if (isinf(val)) numInfs++;
@@ -93,17 +96,17 @@ void generateInputMatrices()
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		fwrite(&(h_A[i * DEFAULT_INPUT_SIZE]), sizeof(half) * DEFAULT_INPUT_SIZE, 1, f_A);
+		fwrite(&(h_A[i * DEFAULT_INPUT_SIZE]), sizeof(half_float::half) * DEFAULT_INPUT_SIZE, 1, f_A);
 	}
 
-	printf("Element 32 of matrix A: %f (raw half: %hx)\n", (float)*((half_float::half*)&(h_A[32])), h_A[32]);
+	printf("Element 32 of matrix A: %f\n", (float)h_A[32]);
 
-	printf("Element 50 of matrix B: %f (raw half: %hx)\n", (float)*((half_float::half*)&(h_B[50])), h_B[50]);
+	printf("Element 50 of matrix B: %f\n", (float)h_B[50]);
 
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		fwrite(&(h_B[i * DEFAULT_INPUT_SIZE]), sizeof(half) * DEFAULT_INPUT_SIZE, 1, f_B);
+		fwrite(&(h_B[i * DEFAULT_INPUT_SIZE]), sizeof(half_float::half) * DEFAULT_INPUT_SIZE, 1, f_B);
 	}
 	printf("Done\n");
 
@@ -131,8 +134,8 @@ void ReadMatrixFromFile(){
     size_t ret_value[2];
 	for(i=0; i<k; i++)
 	{
-		ret_value[0] = fread (&A[ k * i ], sizeof(half)*k, 1, f_A);
-		ret_value[1] = fread (&B[ k * i ], sizeof(half)*k, 1, f_B);
+		ret_value[0] = fread (&A[ k * i ], sizeof(half_float::half)*k, 1, f_A);
+		ret_value[1] = fread (&B[ k * i ], sizeof(half_float::half)*k, 1, f_B);
         if (ret_value[0] != 1 || ret_value[1] != 1) {
             printf("Bad input/gold formatting: %lu ; %lu .\n", ret_value[0], ret_value[1]);
         }
@@ -172,7 +175,37 @@ double mysecond()
    return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
 }
 
-void generateGoldMatrix()
+half_float::half* openmpMul(half_float::half* a, half_float::half* b, size_t size) {
+	double time = mysecond();
+
+	half_float::half* bT = (half_float::half*) malloc(sizeof(half_float::half)*size*size);
+	half_float::half* c = (half_float::half*) calloc(size*size, sizeof(half_float::half));
+
+	if (c == NULL || bT == NULL) {
+		printf("could not alloc hostGold matrix.");
+		return NULL;
+	}
+
+	#pragma omp parallel for
+	for (int i=0;i<size;i++)
+		for (int j=0;j<size;j++)
+			bT[j*size+i] = b[i*size+j];
+	
+	#pragma omp parallel for
+	for (int i=0;i<size;i++) {
+		for (int j=0;j<size;j++) {
+			for (int k=0;k<size;k++)  {
+				c[i*size+j] += a[j*size+k] * bT[i*size+k];
+			}
+		}
+	}
+
+	printf("host mmul time: %.2f seconds\n", mysecond()-time);
+
+	return c;
+}
+
+void generateGoldMatrixHalf()
 {
 	////////////////////////////////////////////////////
 	/////////////CUBLAS GEMM VARS///////////////////////
@@ -191,23 +224,23 @@ void generateGoldMatrix()
 	half *d_C;
 	////////////////////////////////////////////////////
 
-	A = ( half* ) malloc( sizea * sizeof( half ) );
-	B = ( half* ) malloc( sizeb * sizeof( half ) );
-	GOLD = ( half* ) malloc( sizec * sizeof( half ) );
+	A = ( half_float::half* ) malloc( sizea * sizeof( half_float::half ) );
+	B = ( half_float::half* ) malloc( sizeb * sizeof( half_float::half ) );
+	GOLD = ( half_float::half* ) malloc( sizec * sizeof( half_float::half ) );
 
 	ReadMatrixFromFile();
-  if (k <= 16) {
-    printf("\nMatrix A: \n");
-    for (int i = 0; i<k*k; i++) {
-      printf(" %.2e", (float)*((half_float::half*)&(A[i])));
-      if ((i+1)%k == 0) printf("\n");
-    }
-    printf("\nMatrix B: \n");
-    for (int i = 0; i<k*k; i++) {
-      printf(" %.2e", (float)*((half_float::half*)&(B[i])));
-      if ((i+1)%k == 0) printf("\n");
-    }
-  }
+	if (k <= 16) {
+		printf("\nMatrix A: \n");
+		for (int i = 0; i<k*k; i++) {
+			printf(" %.2e", (float)A[i]);
+			if ((i+1)%k == 0) printf("\n");
+		}
+		printf("\nMatrix B: \n");
+		for (int i = 0; i<k*k; i++) {
+			printf(" %.2e", (float)B[i]);
+			if ((i+1)%k == 0) printf("\n");
+		}
+	}
 
 	checkCudaErrors( cudaMalloc( ( void** ) &d_A, sizea * sizeof( half ) ));
 
@@ -255,7 +288,9 @@ void generateGoldMatrix()
 	cudaFree( d_B );
 	cudaFree( d_C );
 
-	int i;
+	printf("Analysing output on host...\n");
+
+	int i, j;
 	FILE *f_GOLD;
 
 	f_GOLD = fopen(gold_matrix_path, "wb");
@@ -264,27 +299,70 @@ void generateGoldMatrix()
 
 	int numZeros = 0;
     int numNans = 0;
-    int numInfs = 0;
+	int numInfs = 0;
+	float maxAbsVal = 0.0;
+	#pragma omp parallel for
 	for (int i = 0; i<k*k; i++) {
-        val=(float)*((half_float::half*)&(GOLD[i]));
-		if (val == 0) numZeros++;
-        if (isnan(val)) numNans++;
-        if (isinf(val)) numInfs++;
+		val=GOLD[i];
+		if (fabs(val) > maxAbsVal) {
+			#pragma omp critical
+			maxAbsVal = max(fabs(val), maxAbsVal);
+		}
+		if (val == 0) 
+			#pragma omp atomic
+			numZeros++;
+        if (isnan(val)) 
+			#pragma omp atomic
+			numNans++;
+        if (isinf(val)) 
+			#pragma omp atomic
+			numInfs++;
 	}
 	printf("Number of zeros/NaNs/INFs on gold: %d/%d/%d\n", numZeros, numNans, numInfs);
+	printf("Maximum absolute value on gold: %f\n", maxAbsVal);
 
-  if (numZeros > 0 && k <= 16) {
-    for (int i = 0; i<k*k; i++) {
-      printf(" %.2e",  (float)*((half_float::half*)&(GOLD[i])));
-      if ((i+1)%k == 0) printf("\n");
-    }
-  }
+	if (k <= 16) {
+		for (int i = 0; i<k*k; i++) {
+			printf(" %.2e", (float)GOLD[i]);
+			if ((i+1)%k == 0) printf("\n");
+		}
+	}
+
+	if (host_check) {
+		printf("Calculating mMul using OpenMP on Host...\n");
+		half_float::half *hostGold = openmpMul(A, B, k);
+		if (k <= 16) {
+			printf("Host CPU Gold:\n");
+			for (int i = 0; i<k*k; i++) {
+				printf(" %.2e", (float)hostGold[i]);
+				if ((i+1)%k == 0) printf("\n");
+			}
+		}
+		printf("Comparing GPU result with Host result...\n");
+		float maxDiff = 0.0;
+		#pragma omp parallel for
+		for (i=0; i<k; i++) {
+			for (j=0; j<k; j++) {
+				register float diff = fabs(((float)hostGold[i*k+j]-(float)GOLD[i*k+j])/(float)hostGold[i*k+j]);
+				if (diff > maxDiff) {
+					#pragma omp critical
+					maxDiff = max(diff, maxDiff);
+				}
+				// if (diff > 0.1) {
+				// 	printf("Fail! (%d,%d) hostGold!=gpuGold %f != %f (diff: %e)\n", i, j, (float)hostGold[i*k+j], (float)GOLD[i*k+j], diff);
+				// 	fflush(stdout);
+				// 	exit(-1);
+				// }
+			}
+		}
+		printf("CPU and GPU match by an error of up to %e element difference. Writing to file...\n", maxDiff);
+	}
 
 	//printf("-------------------------\n%.10f\n%.10f\n%.10f\n", GOLD[0], GOLD[1], GOLD[2]);
 
 	for(i=0; i<k; i++)
 	{
-		fwrite( &GOLD[i * k], sizeof(half)*k, 1, f_GOLD );
+		fwrite( &GOLD[i * k], sizeof(half_float::half)*k, 1, f_GOLD );
 	}
 
 	fclose(f_GOLD);
@@ -349,6 +427,11 @@ int main (int argc, char** argv)
         snprintf(gold_matrix_path, 100, "hgemm_gold_%i", (signed int)k);
         printf("Using default gold path: %s\n", gold_matrix_path);
     }
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "host_check"))
+    {
+		host_check = true;
+	}
 //====================================
 
 	GetDevice();
@@ -357,18 +440,19 @@ int main (int argc, char** argv)
 	sizeb = k * k;
 	sizec = k * k;
 
+    printf("Each input matrix size: %.4fGB\n", (float)sizeof(half_float::half) * DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE / (1024*1024*1024));
 
 	FILE *test_file;
 	test_file=fopen(a_matrix_path, "rb");
 	if (!test_file)
 	{
 		printf("Generating input matrices...\n");
-		generateInputMatrices();
+		generateInputMatricesHalf();
 	}
 	else
 	{	printf("Input matrices already exist...\n");	}
 
-	generateGoldMatrix();
+	generateGoldMatrixHalf();
 
 	return 0;
 }
