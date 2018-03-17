@@ -193,12 +193,12 @@ int grid_cols,  //Col of grid
 int grid_rows,  //Row of grid
 int border_cols,  // border offset
 int border_rows,  // border offset
-half Cap,      //Capacitance
-half Rx,
-half Ry,
-half Rz,
-half step,
-half time_elapsed)
+float Cap,      //Capacitance
+float Rx,
+float Ry,
+float Rz,
+float step,
+float time_elapsed)
 {
 
     __shared__ half temp_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
@@ -319,18 +319,18 @@ int sim_time, int num_iterations, int blockCols, int blockRows, int borderCols, 
     dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
     dim3 dimGrid(blockCols, blockRows);
 
-    half_float::half grid_height(chip_height / row);
-    half_float::half grid_width(chip_width / col);
+    float grid_height(chip_height / row);
+    float grid_width(chip_width / col);
 
-    half_float::half Cap(FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width * grid_height);
-    half_float::half Rx(grid_width / (2.0 * K_SI * t_chip * grid_height));
-    half_float::half Ry(grid_height / (2.0 * K_SI * t_chip * grid_width));
-    half_float::half Rz(t_chip / (K_SI * grid_height * grid_width));
+    float Cap = (FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width * grid_height);
+    float Rx = (grid_width / (2.0 * K_SI * t_chip * grid_height));
+    float Ry = (grid_height / (2.0 * K_SI * t_chip * grid_width));
+    float Rz = (t_chip / (K_SI * grid_height * grid_width));
 
-    half_float::half max_slope(MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI));
-    half_float::half step(PRECISION / max_slope);
-    half_float::half t;
-    half_float::half time_elapsed;
+    float max_slope(MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI));
+    float step(PRECISION / max_slope);
+    float t;
+    float time_elapsed;
     time_elapsed=0.001;
 
     int src = 1, dst = 0;
@@ -341,7 +341,7 @@ int sim_time, int num_iterations, int blockCols, int blockRows, int borderCols, 
         dst = temp;
         //printf("[%d]", omp_get_thread_num());
         calculate_temp<<<dimGrid, dimBlock, 0, stream>>>(MIN(num_iterations, sim_time-t), (half*)MatrixPower, (half*)MatrixTemp[src], (half*)MatrixTemp[dst],\
-        col, row, borderCols, borderRows, *((half*)&Cap), *((half*)&Rx), *((half*)&Ry), *((half*)&Rz), *((half*)&step), *((half*)&time_elapsed));
+        col, row, borderCols, borderRows, Cap, Rx, Ry, Rz, step, time_elapsed);
         flops += col * row * MIN(num_iterations, sim_time-t) * 15;
     }
     cudaStreamSynchronize(stream);
