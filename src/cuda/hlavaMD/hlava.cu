@@ -138,7 +138,7 @@ void getParams(int argc, char** argv, int *boxes, int *generate, char **input_di
     else
     {
         *input_distances = new char[100];
-        snprintf(*input_distances, 100, "input_distance_half_%i", *boxes);
+        snprintf(*input_distances, 100, "input_distances_half_%i", *boxes);
         printf("Using default input_distances path: %s\n", *input_distances);
     }
 
@@ -383,7 +383,7 @@ double mysecond()
    return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
 }
 
-void generateInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, char *input_charges, half **qv_cpu)
+void generateInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, char *input_charges, half_float::half **qv_cpu)
 {
 	// random generator seed set to random value - time in this case
 	FILE *fp;
@@ -434,17 +434,17 @@ void generateInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu,
 	 	exit(EXIT_FAILURE);
 	}
 
-	*qv_cpu = (half*)malloc(dim_cpu.space_mem2);
+	*qv_cpu = (half_float::half*)malloc(dim_cpu.space_mem2);
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
 								 // get a number in the range 0.1 - 1.0
 		half_float::half tempValue((rand()%10 + 1) / 10.0);
-		(*qv_cpu)[i] = *((half*)&tempValue);
+		(*qv_cpu)[i] = *((half_float::half*)&tempValue);
 		fwrite(&((*qv_cpu)[i]), 1, sizeof(half), fp);
 	}
 	fclose(fp);
 }
 
-void readInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, char *input_charges, half **qv_cpu, int fault_injection)
+void readInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, char *input_charges, half_float::half **qv_cpu, int fault_injection)
 {
 	FILE *fp;
 	int i;
@@ -508,7 +508,7 @@ void readInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, cha
 	 	exit(EXIT_FAILURE);
 	}
 
-	*qv_cpu = (half*)malloc(dim_cpu.space_mem2);
+	*qv_cpu = (half_float::half*)malloc(dim_cpu.space_mem2);
 	if(*qv_cpu == NULL) {
 		printf("error qv_cpu malloc\n");
 		#ifdef LOGS
@@ -539,7 +539,7 @@ void readInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, cha
 	// =============== Fault injection
 	if (fault_injection) {
 		half_float::half tempValue(0.732637263);
-		(*qv_cpu)[2] = *((half*)&tempValue); // must be in range 0.1 - 1.0
+		(*qv_cpu)[2] = *((half_float::half*)&tempValue); // must be in range 0.1 - 1.0
 		printf("!!> Fault injection: qv_cpu[2]=%f\n", *((float*)&((*qv_cpu)[2])));
 	}
 	// ========================
@@ -654,7 +654,7 @@ int main(int argc, char *argv []) {
 	dim_str dim_cpu;
 	box_str* box_cpu;
 	FOUR_VECTOR* rv_cpu;
-	half* qv_cpu;
+	half_float::half* qv_cpu;
 	FOUR_VECTOR* fv_cpu;
 	FOUR_VECTOR* fv_cpu_GOLD;
 	int nh;
@@ -1029,16 +1029,16 @@ int main(int argc, char *argv []) {
 
 				#pragma omp parallel for
 				for(i=0; i<dim_cpu.space_elem; i=i+1) {
-					if(fv_cpu_GOLD[i].v.x != fv_cpu[i].v.x) {
+					if(*((half_float::half*)&(fv_cpu_GOLD[i].v)) != *((half_float::half*)&(fv_cpu[i].v))) {
 						thread_error++;
 					}
-					if(fv_cpu_GOLD[i].x.x != fv_cpu[i].x.x) {
+					if(*((half_float::half*)&(fv_cpu_GOLD[i].x)) != *((half_float::half*)&(fv_cpu[i].x))) {
 						thread_error++;
 					}
-					if(fv_cpu_GOLD[i].y.x != fv_cpu[i].y.x) {
+					if(*((half_float::half*)&(fv_cpu_GOLD[i].y)) != *((half_float::half*)&(fv_cpu[i].y))) {
 						thread_error++;
 					}
-					if(fv_cpu_GOLD[i].z.x != fv_cpu[i].z.x) {
+					if(*((half_float::half*)&(fv_cpu_GOLD[i].z)) != *((half_float::half*)&(fv_cpu[i].z))) {
 						thread_error++;
 					}
 					if (thread_error  > 0) {
