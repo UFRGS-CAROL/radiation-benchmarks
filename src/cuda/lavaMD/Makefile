@@ -1,5 +1,5 @@
 CC=g++
-NVCC=/usr/local/cuda-8.0/bin/nvcc
+NVCC=/usr/local/cuda/bin/nvcc
 
 ARCH= -gencode arch=compute_30,code=sm_30 \
       -gencode arch=compute_35,code=sm_35 \
