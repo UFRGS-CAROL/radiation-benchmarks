@@ -42,7 +42,7 @@ extern "C" {
 #include "copy_network.h"
 }
 
-#define LAYER_TO_PROF 31
+//#define LAYER_TO_PROF 31
 
 static network *buffer_nets;
 static network_state *buffer_states;
@@ -61,10 +61,10 @@ void forward_network_gpu(network net, network_state state) {
 			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1,
 					state.st_handle.stream);
 		}
-		//printf("Layer %d type %d: ", i, l.type);
-		if (i == LAYER_TO_PROF)
-			cudaProfilerStart();
-		double t = mysecond();
+//		printf("Layer %d type %d: ", i, l.type);
+//		if (i == LAYER_TO_PROF)
+//			cudaProfilerStart();
+//		double t = mysecond();
 		if (l.type == CONVOLUTIONAL) {
 			forward_convolutional_layer_gpu(l, state);
 		} else if (l.type == DECONVOLUTIONAL) {
@@ -109,10 +109,10 @@ void forward_network_gpu(network net, network_state state) {
 			forward_shortcut_layer_gpu(l, state);
 		}
 		state.input = l.output_gpu;
-		if (i == LAYER_TO_PROF)
-			cudaProfilerStop();
-		t = mysecond() - t;
-		printf("%lf\n", t);
+//		if (i == LAYER_TO_PROF)
+//			cudaProfilerStop();
+//		t = mysecond() - t;
+//		printf("%lf\n", t);
 		cudaStreamSynchronize(state.st_handle.stream);
 
 	}
@@ -647,7 +647,7 @@ void *network_predict_gpu_mr(void* data) {
 	int thread_id = ptr->thread_id;
 	int mr_size = ptr->mr_size;
 
-	printf("thread %d input %p\n", thread_id, input);
+//	printf("thread %d input %p\n", thread_id, input);
 
 	int size = get_network_input_size(net) * net.batch;
 	network_state state;

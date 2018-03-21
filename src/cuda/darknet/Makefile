@@ -114,7 +114,7 @@ results:
 test_hardening:
 	./$(TARGET) test_radiation -e yolo_dmr -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
 							-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
-							-n 2 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
+							-n 20 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
 							-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
 							-b $(RAD_DIR)/src/cuda/darknet \
 							-x 0 -s 0 -a 6
