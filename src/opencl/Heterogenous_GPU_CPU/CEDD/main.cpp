@@ -145,22 +145,23 @@ struct Params {
 
 inline int newest_compare_output(unsigned char **all_out_frames, int image_size,unsigned char **gold, int num_frames, int rowsc, int colsc, int rowsc_, int colsc_) {
 
-    printf("Entrei compara\n");
+   // printf("Entrei compara\n");
     int count_error = 0;
     for(int i = 0; i < num_frames; i++) {
 	update_timestamp();
         for(int r = 0; r < rowsc; r++) {
             for(int c = 0; c < colsc; c++) {
-                int pix;
-				pix = (int)gold[i][r*colsc+c];
+                int pix;		
+		pix = (int)gold[i][r*colsc+c];
                 if((int)all_out_frames[i][r*colsc+c] != pix) {
                     if(r > 3 && r < rowsc-32 && c > 3 && c < colsc-32){
                         count_error++;
 #ifdef LOGS
+			//printf("Erro frame %d aqui: %d\n",i,colsc);
 		        char error_detail[250];
         		sprintf(error_detail,"p: [%d, %d],r: %d,e: %d,Image Size:%d, #Frame:%d, #TOTFRA:%d",r,c,(int)all_out_frames[i][r*colsc+c],pix,image_size,i, num_frames);
 
-       			 log_error_detail(error_detail);
+       			log_error_detail(error_detail);
 #endif
                     }
                 }
@@ -172,14 +173,14 @@ inline int newest_compare_output(unsigned char **all_out_frames, int image_size,
         printf("Test failed\n");
         //exit(EXIT_FAILURE);
     }
-	printf("Sai compare\n");
+	//printf("Sai compare\n");
     return count_error;
 }
 
 
 inline int new_compare_output(unsigned char **all_out_frames, int image_size, const char *file_name, int num_frames, int rowsc, int colsc, int rowsc_, int colsc_) {
 
-    printf("Entrei compara sem memoria\n");
+    //printf("Entrei compara sem memoria\n");
     int count_error = 0;
     int new_counter = 0;
 # pragma omp parallel for
@@ -230,7 +231,7 @@ inline int new_compare_output(unsigned char **all_out_frames, int image_size, co
         printf("Test failed\n");
         //exit(EXIT_FAILURE);
     }
-	printf("Sai compare\n");
+	//printf("Sai compare\n");
     return count_error;
 }
 
@@ -289,23 +290,38 @@ void read_gold(unsigned char** all_gray_frames, int rowsc, int colsc, int in_siz
     for(int task_id = 0; task_id < p.n_warmup + p.n_reps; task_id++) {
 
         char FileName[300];
-        sprintf(FileName, "%s%d.txt", p.file_name, task_id);
+        sprintf(FileName, "%s%d.txt", p.comparison_file, task_id);
 
         FILE *fp = fopen(FileName, "r");
         if(fp == NULL)
             exit(EXIT_FAILURE);
 
-//        fscanf(fp, "%d\n", &rowsc);
-//        fscanf(fp, "%d\n", &colsc);
+      //  fscanf(fp, "%d\n", &rowsc);
+      // fscanf(fp, "%d\n", &colsc);
 
 //        in_size = rowsc * colsc * sizeof(unsigned char);
         all_gray_frames[task_id]    = (unsigned char *)malloc(in_size);
         for(int i = 0; i < rowsc; i++) {
             for(int j = 0; j < colsc; j++) {
-                fscanf(fp, "%u ", (unsigned int *)&all_gray_frames[task_id][i * colsc + j]);
+                //fscanf(fp, "%u ", (unsigned int *)&all_gray_frames[task_id][i * colsc + j]);
+                fscanf(fp, "%d ",&all_gray_frames[task_id][i * colsc + j]);
+				
             }
         }
+/*
+        for(int i = 0; i < rowsc; i++) {
+            for(int j = 0; j < colsc; j++) {
+
+			
+				printf("%d \t",all_gray_frames[task_id][i * colsc + j]);			
+	//          fscanf(fp, "%u ", (unsigned int *)&all_gray_frames[task_id][i * colsc + j]);
+			
+        }
+		printf("\n");
+        }
+*/
         fclose(fp);
+//printf("\n");
     }
 }
 void read_input(unsigned char** all_gray_frames, int &rowsc, int &colsc, int &in_size, const Params &p) {
@@ -323,13 +339,25 @@ void read_input(unsigned char** all_gray_frames, int &rowsc, int &colsc, int &in
         fscanf(fp, "%d\n", &colsc);
 
         in_size = rowsc * colsc * sizeof(unsigned char);
+//	printf("In size%d: %d \t\n",task_id,in_size);
         all_gray_frames[task_id]    = (unsigned char *)malloc(in_size);
         for(int i = 0; i < rowsc; i++) {
             for(int j = 0; j < colsc; j++) {
                 fscanf(fp, "%u ", (unsigned int *)&all_gray_frames[task_id][i * colsc + j]);
             }
         }
+/*
+        for(int i = 0; i < rowsc; i++) {
+            for(int j = 0; j < colsc; j++) {
+
+		printf("%u \t",all_gray_frames[task_id][i * colsc + j]);			
+//                fscanf(fp, "%u ", (unsigned int *)&all_gray_frames[task_id][i * colsc + j]);
+            }
+		printf("\n");
+        }
+*/	
         fclose(fp);
+	//printf("\n");
     }
 }
 
@@ -363,17 +391,15 @@ printf("-p %d -d %d -i %d -a %.2f -t %d \n",p.platform , p.device, p.n_work_item
     const int n_frames = p.n_warmup + p.n_reps;
     unsigned char **all_gray_frames = (unsigned char **)malloc(n_frames * sizeof(unsigned char *));
 //******************************* Alocando Memoria para o Gold *****************************
-    //unsigned char **gold = (unsigned char **)malloc(n_frames * sizeof(unsigned char *));
+    unsigned char **gold = (unsigned char **)malloc(n_frames * sizeof(unsigned char *));
 //*****************************************************************************************
     int     rowsc, colsc, in_size;
     read_input(all_gray_frames, rowsc, colsc, in_size, p);
 //******************************* Lendo Gold *********************************************
-    //read_gold(gold, rowsc, colsc, in_size, p);
+    read_gold(gold, rowsc, colsc, in_size, p);
 //****************************************************************************************
     timer.stop("Initialization");
-	//printf("%d\n",rowsc);
-	//printf("%d\n",colsc);
-	//printf("%d\n",in_size);
+
     // Allocate buffers
     timer.start("Allocation");
     const int CPU_PROXY = 0;
@@ -601,9 +627,18 @@ for(int rep = 0; rep < p.loop; rep++) {
 
 
 //verify(all_out_frames, in_size, p.comparison_file, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
+/*
+printf("Imprimindo a Saida do Programa\n");
+        for(int i = 0; i < rowsc; i++) {
+            for(int j = 0; j < colsc; j++) {
+		printf("%d \t",all_gray_frames[0][i * colsc + j]);			
+            }
+		printf("\n");
+        }
+*/
 //asdasdasd
-err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
-//err = newest_compare_output(all_out_frames, in_size, gold, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
+//err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
+err = newest_compare_output(all_out_frames, in_size, gold, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
 // Aqui ver se houve erros 
         if(err > 0) {
             printf("Errors: %d\n",err);
@@ -617,7 +652,7 @@ err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup 
 #ifdef LOGS
         log_error_count(err);
 #endif
-printf("Acabei uma it\n");
+//printf("Acabei uma it\n");
 }
 #ifdef LOGS
     end_log_file();
