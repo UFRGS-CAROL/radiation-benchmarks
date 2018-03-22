@@ -23,7 +23,8 @@
 
 class Layer {
 public:
-	Layer(size_t in_width, size_t in_height, size_t in_depth, size_t out_width,
+	Layer(size_t stride, size_t pad, size_t batch, size_t in_width,
+			size_t in_height, size_t in_depth, size_t out_width,
 			size_t out_height, size_t out_depth, float_t alpha, float_t lambda);
 
 	virtual void init_weight() = 0;
@@ -32,8 +33,6 @@ public:
 
 	virtual void save_layer(FILE *of) = 0;
 	virtual void load_layer(FILE *in) = 0;
-
-
 
 //	float* get_next_input_data_ptr();
 
@@ -122,6 +121,12 @@ public:
 	int exp_y;
 
 	std::string layer_type;
+
+	// From darknet implementation
+	size_t batch;
+	size_t pad;
+	size_t stride;
+
 	//it is necessary for GPU implementation
 #ifdef GPU
 	DeviceVector<float_t> W_;

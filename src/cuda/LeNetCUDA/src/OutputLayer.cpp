@@ -10,55 +10,9 @@
 #define L1_LAMBDA  0.0000001
 #define L2_LAMBDA  0.00000001
 
-#ifdef GPU
+#ifndef GPU
 
-void OutputLayer::forward() {
-	exp_y_vec.clear();
-	exp_y_vec.resize(this->in_depth_);
-
-	float *exp_y_vec = this->exp_y_vec.d_data();
-	float *input_ = this->input_.d_data();
-	float *output_ = this->output_.d_data();
-	float *reduce_output = this->reduce_output.d_data();
-	int in_depth_ = this->in_depth_;
-	int exp_y = this->exp_y;
-
-	this->exp_y_vec.pop();
-	this->exp_y_vec[this->exp_y] = 1;
-
-	this->exp_y_vec.push();
-
-	this->call_forward_output_layer(exp_y_vec, input_, reduce_output, output_, in_depth_, exp_y);
-
-	this->reduce_output.pop();
-	this->err = 0;
-	for (int i = 0; i < in_depth_; i++) {
-		this->err += this->reduce_output[i];
-	}
-
-}
-
-void OutputLayer::back_prop() {
-	this->g_.clear();
-
-	float *exp_y_vec = this->exp_y_vec.d_data();
-	float *input_ = this->input_.d_data();
-	float *g_ = this->g_.d_data();
-	int in_depth_ = this->in_depth_;
-
-	this->call_backpropagation_output_layer(exp_y_vec, input_,
-			g_, in_depth_);
-}
-
-void OutputLayer::init_weight() {
-	this->reduce_output.resize(this->in_depth_);
-	this->exp_y_vec.resize(this->in_depth_);
-	this->g_.resize(this->in_depth_);
-	this->input_.resize(this->in_depth_);
-	this->output_.resize(this->in_depth_);
-}
-
-#else
+//#else
 
 void OutputLayer::forward() {
 	this->err = 0;
@@ -94,7 +48,7 @@ void OutputLayer::back_prop() {
 #endif
 
 OutputLayer::OutputLayer(size_t in_depth) :
-		Layer(1, 1, in_depth, 0, 0, 0, 0, 0) {
+		Layer(0, 0, 0, 1, 1, in_depth, 0, 0, 0, 0, 0) {
 	this->init_weight();
 	this->layer_type = "output";
 }

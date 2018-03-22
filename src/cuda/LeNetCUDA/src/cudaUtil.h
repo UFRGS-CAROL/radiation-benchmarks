@@ -14,6 +14,7 @@
 #include <math.h>
 
 #define BLOCK_SIZE 32
+#define BLOCK_SIZE_FULL 512
 
 
 inline void __cudaSafeCall(cudaError err, const char *file, const int line);
@@ -31,6 +32,7 @@ inline void __cudaCheckError(const char *file, const int line);
 void cuda_gridsize(dim3 *threads, dim3 *blocks, size_t x, size_t y = 1,
 		size_t z = 1);
 
+dim3 cuda_gridsize(size_t n);
 
 inline void __cudaSafeCall(cudaError err, const char *file, const int line) {
 

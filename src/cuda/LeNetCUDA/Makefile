@@ -54,11 +54,12 @@ endif
 GPU_KERNELS=ConvKernels.o
 
 OBJ=Layer.o ConvolutionalLayer.o MaxpoolingLayer.o FullyConnectedLayer.o \
-OutputLayer.o ConvNet.o MNISTParser.o Util.o main.o LogsProcessing.o
+OutputLayer.o ConvNet.o SoftmaxLayer.o ActivationLayer.o \
+MNISTParser.o Util.o main.o LogsProcessing.o
 
 ifeq ($(GPU), 1)
-OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o \
-FullyConnectedLayerKernel.o  OutputLayerKernel.o cudaUtil.o
+OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o FullyConnectedLayerKernel.o  \
+OutputLayerKernel.o cudaUtil.o SoftmaxLayerKernel.o ActivationLayerKernel.o 
 endif
 
 ifeq ($(DEBUG_LIGHT), 1)

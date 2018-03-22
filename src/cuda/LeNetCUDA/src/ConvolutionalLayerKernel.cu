@@ -99,7 +99,7 @@ __global__ void forward_parallel(float* input_buf, float* weight_buf,
 	output_buf[out_index] = sigmod_gpu_conv(sum + b_buf[b_index]);
 }
 
-void ConvolutionalLayer::call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
+void call_foward_parallel(float* input_buf, float* weight_buf, float* b_buf,
 		float* output_buf, int in_width, int in_height, int in_depth,
 		int out_width, int out_height, int out_depth, int kernel_size) {
 
@@ -239,7 +239,7 @@ __global__ void backpropagation_update_weights(float *W_, //weights
 //	}
 }
 
-void ConvolutionalLayer::call_backpropagation_parallel(float *W_, //weights
+void call_backpropagation_parallel(float *W_, //weights
 		float *g_, //err array
 		float *input_, //input array
 		float *g_next, //b_next from this->next->g_
@@ -279,3 +279,54 @@ void ConvolutionalLayer::call_backpropagation_parallel(float *W_, //weights
 	CudaCheckError();
 }
 
+
+void ConvolutionalLayer::forward() {
+	this->output_.clear();
+	// execute the code on the device
+	float *i_buf = this->input_.d_data();
+	float *w_buf = this->W_.d_data();
+	float *b_buf = this->b_.d_data();
+	float *o_buf = this->output_.d_data();
+
+	call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_, this->in_height_,
+			this->in_depth_, this->out_width_, this->out_height_, this->out_depth_, this->kernel_size_);
+
+}
+
+void ConvolutionalLayer::back_prop() {
+	g_.clear();
+	g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
+
+	float *W_ = this->W_.d_data(); //weights
+	float *g_ = this->g_.d_data();//err array
+	float *input_ = this->input_.d_data();//input array
+	float *g_next = this->next->g_.d_data();//b_next from this->next->g_
+	float *deltaW = this->deltaW_.d_data();//deltaW array
+	float *b_ = this->b_.d_data();//b_ vector
+	float alpha = this->alpha_;//alpha value
+	float lambda = this->lambda_;
+	int out_depth = this->out_depth_;//size of the first for loop
+	int in_depth_ = this->in_depth_;//size of the second for loop
+	int out_width = this->out_width_;//size of the third for loop
+	int out_height_ = this->out_height_;// size of loop
+	int kernel_size_ = this->kernel_size_;//size of loop
+	int in_width_ = this->in_width_;//width size
+	int in_height_ = this->in_height_;//in height
+
+	call_backpropagation_parallel(W_, g_, input_, g_next, deltaW, b_,
+			alpha, lambda, out_depth, in_depth_, out_width, out_height_, kernel_size_,
+			in_width_, in_height_);
+
+}
+
+void ConvolutionalLayer::init_weight() {
+	vec_host temp_W_, temp_b_;
+	temp_W_.resize(this->W_.size());
+	temp_b_.resize(this->b_.size());
+	uniform_rand(temp_W_.begin(), temp_W_.end(), -1, 1);
+	uniform_rand(temp_b_.begin(), temp_b_.end(), -1, 1);
+
+	this->W_ = temp_W_;
+	this->b_ = temp_b_;
+
+}

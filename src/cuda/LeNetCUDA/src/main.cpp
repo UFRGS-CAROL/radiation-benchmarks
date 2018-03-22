@@ -13,11 +13,11 @@
 using namespace std;
 
 void create_lenet(ConvNet *net) {
-	net->add_layer(new ConvolutionalLayer(32, 32, 1, 5, 6));
+	net->add_layer(new ConvolutionalLayer(0, 0, 0, 32, 32, 1, 5, 6));
 	net->add_layer(new MaxpoolingLayer(28, 28, 6));
-	net->add_layer(new ConvolutionalLayer(14, 14, 6, 5, 16));
+	net->add_layer(new ConvolutionalLayer(0, 0, 0, 14, 14, 6, 5, 16));
 	net->add_layer(new MaxpoolingLayer(10, 10, 16));
-	net->add_layer(new ConvolutionalLayer(5, 5, 16, 5, 100));
+	net->add_layer(new ConvolutionalLayer(0, 0, 0, 5, 5, 16, 5, 100));
 	net->add_layer(new FullyConnectedLayer(120, 10));
 }
 

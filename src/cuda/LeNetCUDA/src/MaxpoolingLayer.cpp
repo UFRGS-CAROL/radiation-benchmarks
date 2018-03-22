@@ -9,7 +9,7 @@
 
 MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 		size_t in_depth) :
-		Layer(in_width, in_height, in_depth, in_width / 2, in_height / 2,
+		Layer(2, 0, 1, in_width, in_height, in_depth, in_width / 2, in_height / 2,
 				in_depth, 0, 0) {
 	this->output_.resize(
 			this->out_depth_ * this->out_width_ * this->out_height_);
@@ -21,6 +21,7 @@ MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 	//this trick guarantee that I use DeviceVector or std::vector
 	this->max_loc = std::vector < Pair
 			> (this->out_depth_ * this->in_height_ * this->in_width_, t);
+	this->indexes = std::vector <size_t>(this->out_depth_ * this->out_height_ * this->out_width_);
 	this->layer_type = "maxpool";
 
 }
@@ -49,48 +50,17 @@ inline size_t MaxpoolingLayer::getOutIndex(size_t out, size_t h_, size_t w_) {
 void MaxpoolingLayer::save_layer(FILE *of) {
 	this->save_base_layer(of);
 	this->write_layer_vec<Pair>(this->max_loc, of);
+	this->write_layer_vec<size_t>(this->indexes, of);
 }
 
 void MaxpoolingLayer::load_layer(FILE *in) {
 	this->load_base_layer(in);
 	this->max_loc = this->load_layer_vec<Pair>(in);
+	this->indexes = this->load_layer_vec<size_t>(in);
 }
 
 
-#ifdef GPU
-
-void MaxpoolingLayer::forward() {
-// execute the code on the device
-		float_t *input = this->input_.d_data();
-		float_t *output = this->output_.d_data();
-		Pair *max_loc_buf = this->max_loc.d_data();
-		size_t out_width = this->out_width_;
-		size_t out_height = this->out_height_;
-		size_t out_depth = this->out_depth_;
-		size_t in_height = this->in_height_;
-		size_t in_width = this->in_width_;
-
-		this->call_forward_maxpool_layer_gpu(input, output, max_loc_buf, out_width,
-				out_height, out_depth, in_height, in_width);
-}
-
-
-void MaxpoolingLayer::back_prop() {
-	g_.clear();
-	g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
-
-	Pair *max_loc = this->max_loc.d_data();
-	float *g_ = this->g_.d_data();
-	float *g_next = this->next->g_.d_data();
-	size_t max_size = this->max_loc.size();
-	size_t g_max_size = this->g_.size();
-
-	this->call_backpropagation_maxpool(max_loc, g_, g_next, max_size, g_max_size);
-
-}
-
-#else
-
+#ifndef GPU
 /*
 FULL CPU BACKPROPAGATION
  In forward propagation, blocks are reduced to a single value.

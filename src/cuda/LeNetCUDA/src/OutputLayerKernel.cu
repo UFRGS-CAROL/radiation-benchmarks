@@ -25,7 +25,7 @@ __global__ void forward_output_layer_kernel(float *exp_y_vec, float *input_,
 	output_[i] = input_[i];
 }
 
-void OutputLayer::call_forward_output_layer(float *exp_y_vec, float *input_,
+void call_forward_output_layer(float *exp_y_vec, float *input_,
 		float *reduce_output, float *output_, int in_depth_, int exp_y) {
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, in_depth_);
@@ -46,11 +46,57 @@ __global__ void backprop_output_layer_kernel(float *exp_y_vec, float *input_,
 
 }
 
-void OutputLayer::call_backpropagation_output_layer(float *exp_y_vec, float *input_,
+void call_backpropagation_output_layer(float *exp_y_vec, float *input_,
 		float *g_, int in_depth_) {
 	dim3 blocks, threads;
 	cuda_gridsize(&threads, &blocks, in_depth_);
 	backprop_output_layer_kernel<<<blocks, threads>>>(exp_y_vec, input_, g_,
 			in_depth_);
 	CudaCheckError();
+}
+
+void OutputLayer::forward() {
+	exp_y_vec.clear();
+	exp_y_vec.resize(this->in_depth_);
+
+	float *exp_y_vec = this->exp_y_vec.d_data();
+	float *input_ = this->input_.d_data();
+	float *output_ = this->output_.d_data();
+	float *reduce_output = this->reduce_output.d_data();
+	int in_depth_ = this->in_depth_;
+	int exp_y = this->exp_y;
+
+	this->exp_y_vec.pop();
+	this->exp_y_vec[this->exp_y] = 1;
+
+	this->exp_y_vec.push();
+
+	call_forward_output_layer(exp_y_vec, input_, reduce_output, output_, in_depth_, exp_y);
+
+	this->reduce_output.pop();
+	this->err = 0;
+	for (int i = 0; i < in_depth_; i++) {
+		this->err += this->reduce_output[i];
+	}
+
+}
+
+void OutputLayer::back_prop() {
+	this->g_.clear();
+
+	float *exp_y_vec = this->exp_y_vec.d_data();
+	float *input_ = this->input_.d_data();
+	float *g_ = this->g_.d_data();
+	int in_depth_ = this->in_depth_;
+
+	call_backpropagation_output_layer(exp_y_vec, input_,
+			g_, in_depth_);
+}
+
+void OutputLayer::init_weight() {
+	this->reduce_output.resize(this->in_depth_);
+	this->exp_y_vec.resize(this->in_depth_);
+	this->g_.resize(this->in_depth_);
+	this->input_.resize(this->in_depth_);
+	this->output_.resize(this->in_depth_);
 }

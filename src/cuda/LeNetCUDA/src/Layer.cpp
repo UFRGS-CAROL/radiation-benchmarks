@@ -7,9 +7,9 @@
 
 #include "Layer.h"
 
-Layer::Layer(size_t in_width, size_t in_height, size_t in_depth,
-		size_t out_width, size_t out_height, size_t out_depth, float_t alpha,
-		float_t lambda) :
+Layer::Layer(size_t stride, size_t pad, size_t batch, size_t in_width,
+		size_t in_height, size_t in_depth, size_t out_width, size_t out_height,
+		size_t out_depth, float_t alpha, float_t lambda) : stride(stride), pad(pad), batch(batch),
 		in_width_(in_width), in_height_(in_height), in_depth_(in_depth), out_width_(
 				out_width), out_height_(out_height), out_depth_(out_depth), alpha_(
 				alpha), lambda_(lambda) {
@@ -153,6 +153,4 @@ void Layer::print_layer_weights(int layer_num) {
 	}
 	std::cout << "---";
 }
-
-
 
