@@ -42,7 +42,7 @@ struct Params {
 void read_input(unsigned char** all_gray_frames, int &rowsc, int &colsc, int &in_size, const Params &p) {
 
 
-		int erro = 0;
+	int erro = 0;
         char FileName[100];
         sprintf(FileName, "%s%d.txt", p.file_name, 5); // Escolhe o  5to Frame
 
@@ -57,9 +57,9 @@ void read_input(unsigned char** all_gray_frames, int &rowsc, int &colsc, int &in
         fscanf(fp, "%d\n", &rowsc);
         fscanf(fp, "%d\n", &colsc);
 
-		// Coloca no novo frame #linhas e # colunas
-		//fprintf(fpo,"%d\n",rowsc);
-		//fprintf(fpo,"%d\n",colsc);
+	// Coloca no novo frame #linhas e # colunas
+	fprintf(fpo,"%d\n",rowsc);
+	fprintf(fpo,"%d\n",colsc);
 
         in_size = rowsc * colsc * sizeof(unsigned char);
         all_gray_frames[0]    = (unsigned char *)malloc(in_size);
@@ -69,6 +69,7 @@ void read_input(unsigned char** all_gray_frames, int &rowsc, int &colsc, int &in
                 fscanf(fp, "%u ", (unsigned int *)&all_gray_frames[0][i * colsc + j]);
 				if(i==10 && j ==50){ // Dentro do quadrado
 					printf("Injetando Erro no quadrado central\n");
+					printf("a %d\n",colsc);
 					fprintf(fpo,"%u ",erro);				
 				}
 				else{

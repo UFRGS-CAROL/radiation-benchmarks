@@ -134,6 +134,7 @@ inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,int num_of_no
     int count_error = 0;
     if(num_of_nodes != num_of_nodes_o) { 
         printf("Number of nodes does not match the expected value\n");
+	
         //exit(EXIT_FAILURE);
     }
 
@@ -388,7 +389,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 //** Loop over kernels
 
     for(int rep = 0; rep < p.n_reps; rep++) {
-		//printf("Repetindo\n");
+	//printf("Repetindo\n");
         // Reset
         for(int i = 0; i < n_nodes; i++) {
             h_cost[i].store(INF);
@@ -627,7 +628,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
         if(err > 0) {
             printf("Errors: %d\n",err);
 		    read_input(source, h_nodes, h_edges, p);
-			read_gold(gold,p);
+		    read_gold(gold,p);
 			
         } else {
             printf(".");
@@ -652,7 +653,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
     timer.print("Copy Back and Merge", p.n_reps);
 
     // Verify answer
-    create_output(h_cost, n_nodes);
+    //create_output(h_cost, n_nodes);
     //verify(h_cost, n_nodes, p.comparison_file);
     // Free memory
     timer.start("Deallocation");
