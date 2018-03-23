@@ -13,6 +13,8 @@
 #include "Util.h"
 #include "Layer.h"
 
+#define MAXPOOL_SIZE 2
+
 class MaxpoolingLayer: public Layer {
 private:
 	Pair get_max_loc_pair(size_t first, size_t second);

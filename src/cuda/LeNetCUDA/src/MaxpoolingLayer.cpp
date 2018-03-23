@@ -24,6 +24,8 @@ MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 	this->indexes = std::vector <size_t>(this->out_depth_ * this->out_height_ * this->out_width_);
 	this->layer_type = "maxpool";
 
+	this->size = MAXPOOL_SIZE;
+
 }
 
 

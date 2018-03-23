@@ -126,6 +126,7 @@ public:
 	size_t batch;
 	size_t pad;
 	size_t stride;
+	size_t size;
 
 	//it is necessary for GPU implementation
 #ifdef GPU
