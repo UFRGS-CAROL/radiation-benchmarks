@@ -228,7 +228,7 @@ void MaxpoolingLayer::back_prop() {
 //				int in_c, int stride, int size, int pad, float *delta,
 //				float *prev_delta, size_t *indexes)
 		backward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK_SIZE_FULL>>>(n, h, w, c, this->stride,
-				this->size, this->pad, g_, g_next, indexes);
+				this->size, this->pad, g_next, g_, indexes);
 		CudaCheckError();
 
 }
