@@ -233,8 +233,8 @@ void MaxpoolingLayer::back_prop() {
 	//call_backpropagation_maxpool(max_loc, g_, g_next, max_size, g_max_size);
 //	void call_backpropagation_maxpool(size_t batch, size_t in_height, size_t in_width, size_t in_depth, size_t stride,
 //			sizet_t size, size_t pad, float* delta_gpu, float* net_delta_gpu, float* indexes_gpu)
-	call_backpropagation_maxpool(this->batch, this->in_height_, this->in_width_, this->in_depth_, this->stride, 2, this->pad, g_,
-			g_next, indexes);
+	call_backpropagation_maxpool(this->batch, this->in_height_, this->in_width_, this->in_depth_, this->stride, 2, this->pad, g_next,
+			g, indexes);
 
 }
 //
