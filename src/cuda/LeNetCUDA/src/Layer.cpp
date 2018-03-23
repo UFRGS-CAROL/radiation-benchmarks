@@ -95,6 +95,10 @@ void Layer::save_base_layer(FILE *of) {
 	this->write_layer_var<float_t>(this->err, of);
 	this->write_layer_var<int>(this->exp_y, of);
 
+	this->write_layer_var<size_t>(this->batch, of);
+	this->write_layer_var<size_t>(this->stride, of);
+	this->write_layer_var<size_t>(this->size, of);
+
 	//vector attributes
 	this->write_layer_vec<float_t>(this->W_, of);
 	this->write_layer_vec<float_t>(this->b_, of);
@@ -116,6 +120,10 @@ void Layer::load_base_layer(FILE *in) {
 	this->lambda_ = this->load_layer_var<float_t>(in);
 	this->err = this->load_layer_var<float_t>(in);
 	this->exp_y = this->load_layer_var<int>(in);
+
+	this->batch = this->load_layer_var<size_t>(in);
+	this->stride = this->load_layer_var<size_t>(in);
+	this->size = this->load_layer_var<size_t>(in);
 
 	//vector attributes
 	this->W_ = this->load_layer_vec<float_t>(in);
