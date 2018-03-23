@@ -203,7 +203,6 @@ void MaxpoolingLayer::back_prop() {
 	size_t g_max_size = this->g_.size();
 	size_t *indexes = this->indexes.d_data();
 
-	std::cout << this->prev->layer_type << "\n";
 	//call_backpropagation_maxpool(max_loc, g_, g_next, max_size, g_max_size);
 	//	dim3 blocks, threads;
 	//	cuda_gridsize(&threads, &blocks, max_size);

@@ -44,7 +44,7 @@ endif
 
 ifeq ($(GPU), 1)
 ON_GPU= -DGPU
-CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart
+CFLAGS+=  -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -lcudart -lcuda -lcublas
 NVCC_FLAGS +=  -Xcompiler '-DGPU'
 	ifeq ($(DEBUG),1)
 		NVCC_FLAGS+= -G
@@ -59,7 +59,7 @@ MNISTParser.o Util.o main.o LogsProcessing.o
 
 ifeq ($(GPU), 1)
 OBJ+= ConvolutionalLayerKernel.o MaxpoolingLayerKernel.o FullyConnectedLayerKernel.o  \
-OutputLayerKernel.o cudaUtil.o SoftmaxLayerKernel.o ActivationLayerKernel.o 
+OutputLayerKernel.o cudaUtil.o SoftmaxLayerKernel.o ActivationLayerKernel.o cudaKernels.o
 endif
 
 ifeq ($(DEBUG_LIGHT), 1)

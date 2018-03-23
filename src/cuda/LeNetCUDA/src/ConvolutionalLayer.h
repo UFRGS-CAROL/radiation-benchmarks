@@ -51,5 +51,11 @@ private:
 	float_t conv(vec_host a, vec_host b);
 	size_t kernel_size_;
 
+#ifdef GPU
+	DeviceVector<float> workspace;
+#else
+	std::vector<float> workspace;
+#endif
+
 };
 #endif /* CONVOLUTIONALLAYER_H_ */

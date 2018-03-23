@@ -282,15 +282,24 @@ void call_backpropagation_parallel(float *W_, //weights
 
 void ConvolutionalLayer::forward() {
 	this->output_.clear();
-	// execute the code on the device
-	float *i_buf = this->input_.d_data();
-	float *w_buf = this->W_.d_data();
-	float *b_buf = this->b_.d_data();
-	float *o_buf = this->output_.d_data();
+//	// execute the code on the device
+//	float *i_buf = this->input_.d_data();
+//	float *w_buf = this->W_.d_data();
+//	float *b_buf = this->b_.d_data();
+//	float *o_buf = this->output_.d_data();
+//
+//	call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_, this->in_height_,
+//			this->in_depth_, this->out_width_, this->out_height_, this->out_depth_, this->kernel_size_);
 
-	call_foward_parallel(i_buf, w_buf, b_buf, o_buf, this->in_width_, this->in_height_,
-			this->in_depth_, this->out_width_, this->out_height_, this->out_depth_, this->kernel_size_);
+	float *a = this->W_;
+	float *b = this->workspace;
+	float *c = this->output_;
 
+	for(int i= 0; i < this->batch; i++){
+//		float *im;
+//		im2col_ongpu(im, )
+		//TODO: implement like darknet
+	}
 }
 
 void ConvolutionalLayer::back_prop() {
