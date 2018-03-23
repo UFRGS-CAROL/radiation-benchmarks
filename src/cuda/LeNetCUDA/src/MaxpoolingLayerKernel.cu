@@ -9,7 +9,7 @@
 #include "MaxpoolingLayer.h"
 
 
-#define MAXPOOL_SIZE 2
+
 
 __device__    inline size_t get_out_index(size_t out_width, size_t out_height,
 		size_t out, size_t h_, size_t w_) {
@@ -181,25 +181,6 @@ void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
 	CudaCheckError();
 }
 
-void call_backpropagation_maxpool(size_t batch, size_t in_height, size_t in_width, size_t in_depth, size_t stride,
-		size_t size, size_t pad, float* delta_gpu, float* net_delta_gpu, size_t* indexes_gpu) {
-//	dim3 blocks, threads;
-//	cuda_gridsize(&threads, &blocks, max_size);
-//
-//	assert(g_max_size != 0);
-//	backpropagation_maxpool<<<blocks, threads>>>(max_loc, g_, g_next, max_size, g_max_size);
-//	CudaCheckError();
-	//	size_t n = layer.h * layer.w * layer.c * layer.batch;
-
-	int h = in_height, w = in_width, c = in_depth;
-	size_t n = h * w * c * batch;
-	dim3 blocks = cuda_gridsize(n);
-
-	backward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK_SIZE_FULL>>>(n, h, w, c, stride,
-			size, pad, delta_gpu, net_delta_gpu, indexes_gpu);
-	CudaCheckError();
-}
-
 
 void MaxpoolingLayer::forward() {
 // execute the code on the device
@@ -231,10 +212,24 @@ void MaxpoolingLayer::back_prop() {
 	size_t *indexes = this->indexes.d_data();
 
 	//call_backpropagation_maxpool(max_loc, g_, g_next, max_size, g_max_size);
-//	void call_backpropagation_maxpool(size_t batch, size_t in_height, size_t in_width, size_t in_depth, size_t stride,
-//			sizet_t size, size_t pad, float* delta_gpu, float* net_delta_gpu, float* indexes_gpu)
-	call_backpropagation_maxpool(this->batch, this->in_height_, this->in_width_, this->in_depth_, this->stride, 2, this->pad, g_next,
-			g_, indexes);
+	//	dim3 blocks, threads;
+	//	cuda_gridsize(&threads, &blocks, max_size);
+	//
+	//	assert(g_max_size != 0);
+	//	backpropagation_maxpool<<<blocks, threads>>>(max_loc, g_, g_next, max_size, g_max_size);
+	//	CudaCheckError();
+    //	size_t n = layer.h * layer.w * layer.c * layer.batch;
+
+		int h = this->in_height_, w = this->in_width_, c = this->in_depth_;
+		size_t n = h * w * c * this->batch;
+		dim3 blocks = cuda_gridsize(n);
+
+//		backward_maxpool_layer_kernel(int n, int in_h, int in_w,
+//				int in_c, int stride, int size, int pad, float *delta,
+//				float *prev_delta, size_t *indexes)
+		backward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK_SIZE_FULL>>>(n, h, w, c, this->stride,
+				this->size, this->pad, g_next, g_, indexes);
+		CudaCheckError();
 
 }
 //
