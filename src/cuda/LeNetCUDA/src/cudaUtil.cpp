@@ -38,7 +38,7 @@ dim3 cuda_gridsize(size_t n){
         x = ceil(sqrt(k));
         y = (n-1)/(x*BLOCK_SIZE_FULL) + 1;
     }
-    dim3 d = {x, y, 1};
+    dim3 d(x, y, 1);
     //printf("%ld %ld %ld %ld\n", n, x, y, x*y*BLOCK);
     return d;
 }

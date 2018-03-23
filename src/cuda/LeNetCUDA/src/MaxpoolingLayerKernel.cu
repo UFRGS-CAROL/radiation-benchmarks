@@ -154,19 +154,29 @@ __global__ void backward_maxpool_layer_kernel(int n, int in_h, int in_w,
 	}
 	prev_delta[index] += d;
 }
-//
-void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
-//		Pair *max_loc,
-		size_t *indexes, size_t out_width, size_t out_height, size_t out_depth,
-		size_t in_height, size_t in_width, size_t in_depth_, size_t stride, size_t pad, size_t size, size_t batch) {
 
-//	dim3 blocks, threads;
-//
-//	cuda_gridsize(&threads, &blocks, in_width * out_depth, in_height);
-//
-//	forward_maxpool_layer_kernel<<<blocks, threads>>>(input, max_loc, output,
-//			out_width, out_height, out_depth, in_height, in_width);
-//	CudaCheckError();
+void MaxpoolingLayer::forward() {
+// execute the code on the device
+		float_t *input = this->input_.d_data();
+		float_t *output = this->output_.d_data();
+//		Pair *max_loc_buf = this->max_loc.d_data();
+		size_t out_width = this->out_width_;
+		size_t out_height = this->out_height_;
+		size_t out_depth = this->out_depth_;
+		size_t in_height = this->in_height_;
+		size_t in_width = this->in_width_;
+		size_t *indexes = this->indexes.d_data();
+		size_t in_depth = this->in_depth_;
+
+//		call_forward_maxpool_layer_gpu(input, output,indexes, out_width,
+//				out_height, out_depth, in_height, in_width, in_depth, 2, 0, 2, this->batch);
+	//	dim3 blocks, threads;
+	//
+	//	cuda_gridsize(&threads, &blocks, in_width * out_depth, in_height);
+	//
+	//	forward_maxpool_layer_kernel<<<blocks, threads>>>(input, max_loc, output,
+	//			out_width, out_height, out_depth, in_height, in_width);
+	//	CudaCheckError();
 
 	// Trying darknet approach
 	int h = out_height;
@@ -176,27 +186,9 @@ void call_forward_maxpool_layer_gpu(float_t *input, float_t *output,
 	size_t n = h * w * c * batch;
 	dim3 blocks = cuda_gridsize(n);
 	forward_maxpool_layer_kernel_darknet<<<blocks, BLOCK_SIZE_FULL>>>(n, in_height,
-			in_width, in_depth_, stride, size, pad,
+			in_width, in_depth, this->stride, this->size, this->pad,
 			input, output, indexes);
 	CudaCheckError();
-}
-
-
-void MaxpoolingLayer::forward() {
-// execute the code on the device
-		float_t *input = this->input_.d_data();
-		float_t *output = this->output_.d_data();
-		Pair *max_loc_buf = this->max_loc.d_data();
-		size_t out_width = this->out_width_;
-		size_t out_height = this->out_height_;
-		size_t out_depth = this->out_depth_;
-		size_t in_height = this->in_height_;
-		size_t in_width = this->in_width_;
-		size_t *indexes = this->indexes.d_data();
-		size_t in_depth = this->in_depth_;
-
-		call_forward_maxpool_layer_gpu(input, output,indexes, out_width,
-				out_height, out_depth, in_height, in_width, in_depth, 2, 0, 2, this->batch);
 }
 
 
@@ -204,13 +196,14 @@ void MaxpoolingLayer::back_prop() {
 	g_.clear();
 	g_.resize(this->in_width_ * this->in_height_ * this->in_depth_);
 
-	Pair *max_loc = this->max_loc.d_data();
-	float *g_ = this->g_.d_data();
-	float *g_next = this->next->g_.d_data();
-	size_t max_size = this->max_loc.size();
+//	Pair *max_loc = this->max_loc.d_data();
+	float *g_ = this->next->g_.d_data();
+	float *g_prev = this->g_.d_data();
+//	size_t max_size = this->max_loc.size();
 	size_t g_max_size = this->g_.size();
 	size_t *indexes = this->indexes.d_data();
 
+	std::cout << this->prev->layer_type << "\n";
 	//call_backpropagation_maxpool(max_loc, g_, g_next, max_size, g_max_size);
 	//	dim3 blocks, threads;
 	//	cuda_gridsize(&threads, &blocks, max_size);
@@ -228,7 +221,7 @@ void MaxpoolingLayer::back_prop() {
 //				int in_c, int stride, int size, int pad, float *delta,
 //				float *prev_delta, size_t *indexes)
 		backward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK_SIZE_FULL>>>(n, h, w, c, this->stride,
-				this->size, this->pad, g_next, g_, indexes);
+				this->size, this->pad, g_, g_prev, indexes);
 		CudaCheckError();
 
 }

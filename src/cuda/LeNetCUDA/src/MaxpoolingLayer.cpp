@@ -15,12 +15,14 @@ MaxpoolingLayer::MaxpoolingLayer(size_t in_width, size_t in_height,
 			this->out_depth_ * this->out_width_ * this->out_height_);
 
 	//it is used instead unordered map on GPU
+#ifndef GPU
 	Pair t;
 	t.first = MAX;
 	t.second = MAX;
 	//this trick guarantee that I use DeviceVector or std::vector
 	this->max_loc = std::vector < Pair
 			> (this->out_depth_ * this->in_height_ * this->in_width_, t);
+#endif
 	this->indexes = std::vector <size_t>(this->out_depth_ * this->out_height_ * this->out_width_);
 	this->layer_type = "maxpool";
 
@@ -51,13 +53,17 @@ inline size_t MaxpoolingLayer::getOutIndex(size_t out, size_t h_, size_t w_) {
  */
 void MaxpoolingLayer::save_layer(FILE *of) {
 	this->save_base_layer(of);
+#ifndef GPU
 	this->write_layer_vec<Pair>(this->max_loc, of);
+#endif
 	this->write_layer_vec<size_t>(this->indexes, of);
 }
 
 void MaxpoolingLayer::load_layer(FILE *in) {
 	this->load_base_layer(in);
+#ifndef GPU
 	this->max_loc = this->load_layer_vec<Pair>(in);
+#endif
 	this->indexes = this->load_layer_vec<size_t>(in);
 }
 

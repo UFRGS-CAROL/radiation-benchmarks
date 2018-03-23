@@ -50,7 +50,7 @@ public:
 	 */
 //	std::unordered_map<size_t, size_t> max_loc;
 #ifdef GPU
-	DeviceVector<Pair> max_loc;
+//	DeviceVector<Pair> max_loc;
 	DeviceVector<size_t> indexes;
 #else
 	unordered_vec max_loc;

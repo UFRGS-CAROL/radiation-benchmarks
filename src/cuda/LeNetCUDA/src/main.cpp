@@ -164,7 +164,7 @@ void classify(MNISTParser& m, string weigths) {
 	n.print_sum_weights();
 	n.print_all_layer_weight_sums();
 
-	int test_sample_count = 1000;
+	int test_sample_count = 10000;
 	printf("Testing with %d samples:\n", test_sample_count);
 	n.test(test_x, test_y, test_sample_count);
 }

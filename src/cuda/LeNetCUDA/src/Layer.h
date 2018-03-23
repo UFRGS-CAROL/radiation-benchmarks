@@ -113,6 +113,7 @@ public:
 	size_t out_depth_;
 
 	Layer* next;
+	Layer* prev;
 
 	float_t alpha_; // learning rate
 	float_t lambda_; // momentum

@@ -142,6 +142,8 @@ void ConvNet::test(vec2d_t test_x, vec_host test_y, size_t test_size,
 	size_t iter = 0;
 	int bang = 0;
 
+	srand(663);
+
 #ifdef GPU
 	std::cout << "Testing with GPU " << std::endl;
 #else
@@ -231,8 +233,11 @@ std::list<std::pair<size_t, bool>> ConvNet::get_predicted_output() {
 }
 
 void ConvNet::add_layer(Layer* layer) {
-	if (!layers.empty())
+	if (!layers.empty()){
 		this->layers.back()->next = layer;
+		layer->prev = this->layers.back();
+	}
+
 	this->layers.push_back(layer);
 	layer->next = NULL;
 }
