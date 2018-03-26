@@ -702,6 +702,7 @@ int set_abft_approach(int mr_size, Args* arg) {
 		break;
 	case SMART_TMR:
 		mr_size = 3;
+		break;
 	default:
 		printf("No ABFT was set\n");
 		break;
@@ -782,6 +783,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 			start_iteration_app();
 			float **mr_predictions = network_predict_mr(net, X, mr_size);
 			end_iteration_app();
+			printf("Passou\n");
 
 			double time_cmp = mysecond() - time;
 
