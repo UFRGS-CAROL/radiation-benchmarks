@@ -54,7 +54,7 @@ endif
 ifndef CHAI_OCL_INC
     $(error CHAI_OCL_INC not defined. This environment variable must be defined to point to the location of the OpenCL header files)
 endif
-INC=-I$(CHAI_OCL_INC)
+INC=-I$(CHAI_OCL_INC) -I/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/ -I/home/carol/radiation-benchmarks/src/include/
 
 SRC=main.cpp kernel.cpp /home/carol/radiation-benchmarks/src/include/log_helper.cpp
 OBJECTS=$(SRC:.cpp=.o)
