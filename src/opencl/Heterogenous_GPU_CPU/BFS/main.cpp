@@ -33,11 +33,11 @@
  *
  */
 
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/kernel.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/support/common.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/support/ocl.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/support/timer.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/support/verify.h"
+#include "kernel.h"
+#include "support/common.h"
+#include "support/ocl.h"
+#include "support/timer.h"
+#include "support/verify.h"
 
 #include <unistd.h>
 #include <thread>
@@ -46,7 +46,7 @@
 
 //*****************************************  LOG  ***********************************//
 #ifdef LOGS
-#include "/home/carol/radiation-benchmarks/src/include/log_helper.h"
+#include "log_helper.h"
 #endif
 //************************************************************************************//
 
@@ -256,8 +256,8 @@ void read_input(int &source, Node *&h_nodes, Edge *&h_edges, const Params &p) {
     fscanf(fp, "%d", &n_nodes);
     fscanf(fp, "%d", &n_edges);
     fscanf(fp, "%d", &source);
-    printf("Number of nodes = %d\t", n_nodes);
-    printf("Number of edges = %d\n", n_edges);
+  //  printf("Number of nodes = %d\t", n_nodes);
+   // printf("Number of edges = %d\n", n_edges);
 
     // initalize the memory: Nodes
     for(int i = 0; i < n_nodes; i++) {
@@ -374,7 +374,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
     h_iter[0].store(0);
     h_overflow[0] = 0;
     timer.stop("Initialization");
-    timer.print("Initialization", 1);
+    //timer.print("Initialization", 1);
 
     // Copy to device
     timer.start("Copy To Device");
@@ -619,8 +619,8 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 #endif
 
 
-    printf("IT CPU:%d\t",it_cpu);
-    printf("IT GPU:%d\n",it_gpu);	
+   // printf("IT CPU:%d\t",it_cpu);
+   // printf("IT GPU:%d\n",it_gpu);	
 
 
 //	err=new_verify(h_cost, n_nodes, p.comparison_file,it_cpu,it_gpu);
@@ -647,10 +647,10 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
     end_log_file();
 #endif
 
-    timer.print("Allocation", 1);
-    timer.print("Copy To Device", p.n_reps);
-    timer.print("Kernel", p.n_reps);
-    timer.print("Copy Back and Merge", p.n_reps);
+   // timer.print("Allocation", 1);
+   // timer.print("Copy To Device", p.n_reps);
+   // timer.print("Kernel", p.n_reps);
+    //timer.print("Copy Back and Merge", p.n_reps);
 
     // Verify answer
     //create_output(h_cost, n_nodes);
@@ -679,8 +679,8 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
     CL_ERR();
     ocl.release();
     timer.stop("Deallocation");
-    timer.print("Deallocation", 1);
+   // timer.print("Deallocation", 1);
 
-    printf("Test Passed\n");
+    //printf("Test Passed\n");
     return 0;
 }
