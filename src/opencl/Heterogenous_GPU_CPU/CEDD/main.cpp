@@ -33,12 +33,12 @@
  *
  */
 
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/kernel.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/support/common.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/support/ocl.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/support/partitioner.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/support/timer.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/support/verify.h"
+#include "kernel.h"
+#include "support/common.h"
+#include "support/ocl.h"
+#include "support/partitioner.h"
+#include "support/timer.h"
+#include "support/verify.h"
 
 #include <unistd.h>
 #include <thread>
@@ -48,7 +48,7 @@
 
 //*****************************************  LOG  ***********************************//
 #ifdef LOGS
-#include "/home/carol/radiation-benchmarks/src/include/log_helper.h"
+#include "log_helper.h"
 #endif
 //************************************************************************************//
 
@@ -446,7 +446,7 @@ printf("-p %d -d %d -i %d -a %.2f -t %d \n",p.platform , p.device, p.n_work_item
 
 for(int rep = 0; rep < p.loop; rep++) {
     update_timestamp();
-    printf("Rep:%d\n",rep);
+    //printf("Rep:%d\n",rep);
     timer.start("Total Proxies");
     CoarseGrainPartitioner partitioner = partitioner_create(n_frames, p.alpha, worklist);
     std::vector<std::thread> proxy_threads;
@@ -638,7 +638,7 @@ printf("Imprimindo a Saida do Programa\n");
 */
 //asdasdasd
 //err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
-err = newest_compare_output(all_out_frames, in_size, gold, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
+	err = newest_compare_output(all_out_frames, in_size, gold, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
 // Aqui ver se houve erros 
         if(err > 0) {
             printf("Errors: %d\n",err);
@@ -658,6 +658,7 @@ err = newest_compare_output(all_out_frames, in_size, gold, p.n_warmup + p.n_reps
     end_log_file();
 #endif
 
+/*
     timer.print("Total Proxies",  p.loop);
     printf("CPU Proxy:\n");
     printf("\t");
@@ -669,7 +670,7 @@ err = newest_compare_output(all_out_frames, in_size, gold, p.n_warmup + p.n_reps
     timer.print("GPU Proxy: Kernel",  p.loop);
     printf("\t");
     timer.print("GPU Proxy: Copy Back",  p.loop);
-
+*/
 
     // Release buffers
     timer.start("Deallocation");
@@ -696,8 +697,8 @@ err = newest_compare_output(all_out_frames, in_size, gold, p.n_warmup + p.n_reps
     free(worklist);
     ocl.release();
     timer.stop("Deallocation");
-    timer.print("Deallocation", 1);
+    //timer.print("Deallocation", 1);
 
-    printf("Test Passed\n");
+    //printf("Test Passed\n");
     return 0;
 }
