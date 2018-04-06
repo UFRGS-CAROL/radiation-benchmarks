@@ -33,11 +33,11 @@
  *
  */
 
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/kernel.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/support/common.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/support/ocl.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/support/timer.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/support/verify.h"
+#include "kernel.h"
+#include "support/common.h"
+#include "support/ocl.h"
+#include "support/timer.h"
+#include "support/verify.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -46,7 +46,7 @@
 
 //*****************************************  LOG  ***********************************//
 #ifdef LOGS
-#include "/home/carol/radiation-benchmarks/src/include/log_helper.h"
+#include "log_helper.h"
 #endif
 //************************************************************************************//
 
