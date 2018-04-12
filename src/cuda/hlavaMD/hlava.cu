@@ -31,6 +31,7 @@
 								 // STABLE
 #define DOT(A,B) ((A.x)*(B.x)+(A.y)*(B.y)+(A.z)*(B.z))
 #define H_DOT(A,B) (__hfma((A.x), (B.x), __hfma((A.y), (B.y), __hmul((A.z), (B.z)))))
+#define H2_DOT(A,B) (__hfma2((A.x), (B.x), __hfma2((A.y), (B.y), __hmul2((A.z), (B.z)))))
 
 //=============================================================================
 //	STRUCTURES
@@ -45,6 +46,16 @@ typedef struct
 {
 	half v, x, y, z;
 } FOUR_VECTOR;
+
+typedef struct
+{
+	half2 x, y, z;
+} THREE_H2_VECTOR;
+
+typedef struct
+{
+	half2 v, x, y, z;
+} FOUR_H2_VECTOR;
 
 typedef struct nei_str
 {
@@ -212,6 +223,7 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 
 		// parameters
 		half a2 = __hmul(__hmul(__float2half(2.0), d_par_gpu.alpha), d_par_gpu.alpha);
+		half2 h2_a2 = __half2half2(a2);
 
 		// home box
 		int first_i;
@@ -230,14 +242,14 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 		__shared__ half qB_shared[200];
 
 		// common
-		half r2;
-		half u2;
-		half vij;
-		half fs;
-		half fxij;
-		half fyij;
-		half fzij;
-		THREE_VECTOR d;
+		half2 r2;
+		half2 u2;
+		half2 vij;
+		half2 fs;
+		half2 fxij;
+		half2 fyij;
+		half2 fzij;
+		THREE_H2_VECTOR d;
 
 		//-------------------------------------------------------------
 		//	Home box
@@ -317,44 +329,92 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 			//	Calculation
 			//-----------------------------------------------------
 
+			// Common work vars for HALF2 optimization
+			FOUR_H2_VECTOR h2_rB_shared_J;
+			FOUR_H2_VECTOR h2_rA_shared_WTX;
+			FOUR_H2_VECTOR h2_fA_WTX;
+			half2 h2_qB_shared_J;
+
 			// loop for the number of particles in the home box
 			// for (int i=0; i<nTotal_i; i++){
 			while(wtx<NUMBER_PAR_PER_BOX) {
-
+				// Convert input vars from HALF to HALF2 for local work
+				h2_rA_shared_WTX.x = __half2half2(rA_shared[wtx].x);
+				h2_rA_shared_WTX.y = __half2half2(rA_shared[wtx].y);
+				h2_rA_shared_WTX.z = __half2half2(rA_shared[wtx].z);
+				h2_rA_shared_WTX.v = __half2half2(rA_shared[wtx].v);
+				h2_fA_WTX.x = __half2half2(fA[wtx].x);
+				h2_fA_WTX.y = __half2half2(fA[wtx].y);
+				h2_fA_WTX.z = __half2half2(fA[wtx].z);
+				h2_fA_WTX.v = __half2half2(fA[wtx].v);
+				
 				// loop for the number of particles in the current nei box
-				for (j=0; j<NUMBER_PAR_PER_BOX; j++) {
+				for (j=0; j<NUMBER_PAR_PER_BOX; j += 2) {
+					// Convert input vars from HALF to HALF2 for local work
+					h2_rB_shared_J.x.x = rB_shared[j + 0].x;
+					h2_rB_shared_J.x.y = rB_shared[j + 1].x;
+					h2_rB_shared_J.y.x = rB_shared[j + 0].y;
+					h2_rB_shared_J.y.y = rB_shared[j + 1].y;
+					h2_rB_shared_J.z.x = rB_shared[j + 0].z;
+					h2_rB_shared_J.z.y = rB_shared[j + 1].z;
+					h2_rB_shared_J.v.x = rB_shared[j + 0].v;
+					h2_rB_shared_J.v.y = rB_shared[j + 1].v;
+					h2_qB_shared_J.x = qB_shared[j + 0];
+					h2_qB_shared_J.y = qB_shared[j + 1];
+
 					// r2 = (half)rA_shared[wtx].v + (half)rB_shared[j].v - H_DOT((half)rA_shared[wtx],(half)rB_shared[j]);
-					r2 = __hsub(__hadd(rA_shared[wtx].v, rB_shared[j].v),  H_DOT(rA_shared[wtx], rB_shared[j]));
+					r2 = __hsub2(__hadd2(h2_rA_shared_WTX.v, h2_rB_shared_J.v),  H2_DOT(h2_rA_shared_WTX, h2_rB_shared_J));
 
 					// u2 = a2*r2;
-					u2 = __hmul(a2, r2);
+					u2 = __hmul2(h2_a2, r2);
 					// vij= exp(-u2);
-					vij= hexp(__hneg(u2));
+					vij= h2exp(__hneg2(u2));
 					// fs = 2*vij;
-					fs = __hmul(__float2half(2.0), vij);
+					fs = __hmul2(__float2half2_rn(2.0), vij);
 
 					// d.x = (half)rA_shared[wtx].x  - (half)rB_shared[j].x;
-					d.x = __hsub(rA_shared[wtx].x, rB_shared[j].x);
+					d.x = __hsub2(h2_rA_shared_WTX.x, h2_rB_shared_J.x);
 					// fxij=fs*d.x;
-					fxij=__hmul(fs, d.x);
+					fxij=__hmul2(fs, d.x);
 					// d.y = (half)rA_shared[wtx].y  - (half)rB_shared[j].y;
-					d.y = __hsub(rA_shared[wtx].y, rB_shared[j].y);
+					d.y = __hsub2(h2_rA_shared_WTX.y, h2_rB_shared_J.y);
 					// fyij=fs*d.y;
-					fyij=__hmul(fs, d.y);
+					fyij=__hmul2(fs, d.y);
 					// d.z = (half)rA_shared[wtx].z  - (half)rB_shared[j].z;
-					d.z = __hsub(rA_shared[wtx].z, rB_shared[j].z);
+					d.z = __hsub2(h2_rA_shared_WTX.z, h2_rB_shared_J.z);
 					// fzij=fs*d.z;
-					fzij=__hmul(fs, d.z);
+					fzij=__hmul2(fs, d.z);
 
 					// fA[wtx].v +=  (half)((half)qB_shared[j]*vij);
-					fA[wtx].v = __hfma(qB_shared[j], vij, fA[wtx].v);
+					h2_fA_WTX.v = __hfma2(h2_qB_shared_J, vij, h2_fA_WTX.v);
 					// fA[wtx].x +=  (half)((half)qB_shared[j]*fxij);
-					fA[wtx].x = __hfma(qB_shared[j], fxij, fA[wtx].x);
+					h2_fA_WTX.x = __hfma2(h2_qB_shared_J, fxij, h2_fA_WTX.x);
 					// fA[wtx].y +=  (half)((half)qB_shared[j]*fyij);
-					fA[wtx].y = __hfma(qB_shared[j], fyij, fA[wtx].y);
+					h2_fA_WTX.y = __hfma2(h2_qB_shared_J, fyij, h2_fA_WTX.y);
 					// fA[wtx].z +=  (half)((half)qB_shared[j]*fzij);
-					fA[wtx].z = __hfma(qB_shared[j], fzij, fA[wtx].z);
+					h2_fA_WTX.z = __hfma2(h2_qB_shared_J, fzij, h2_fA_WTX.z);
+
+					// Convert back vars from HALF2 to HALF on shared memory
+					// rB_shared[j + 0].x = h2_rB_shared_J.x.x;
+					// rB_shared[j + 1].x = h2_rB_shared_J.x.y;
+					// rB_shared[j + 0].y = h2_rB_shared_J.y.x;
+					// rB_shared[j + 1].y = h2_rB_shared_J.y.y;
+					// rB_shared[j + 0].z = h2_rB_shared_J.z.x;
+					// rB_shared[j + 1].z = h2_rB_shared_J.z.y;
+					// rB_shared[j + 0].v = h2_rB_shared_J.v.x;
+					// rB_shared[j + 1].v = h2_rB_shared_J.v.y;
 				}
+
+				// Convert back vars from HALF2 to HALF on shared memory
+				// rA_shared[wtx].x = h2_rA_shared_WTX.x.x;
+				// rA_shared[wtx].y = h2_rA_shared_WTX.y.x;
+				// rA_shared[wtx].z = h2_rA_shared_WTX.z.x;
+				// rA_shared[wtx].v = h2_rA_shared_WTX.z.x;
+				fA[wtx].x = h2_fA_WTX.x.x + h2_fA_WTX.x.y;
+				fA[wtx].y = h2_fA_WTX.y.x + h2_fA_WTX.y.y;
+				fA[wtx].z = h2_fA_WTX.z.x + h2_fA_WTX.z.y;
+				fA[wtx].v = h2_fA_WTX.v.x + h2_fA_WTX.v.y;
+
 				// increment work thread index
 				wtx = wtx + NUMBER_THREADS;
 			}
@@ -468,27 +528,10 @@ void readInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, cha
 		exit(1);
 	}
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
-		#ifdef DOUBLE_PRECISION
-		double tempValue;
-		half_float::half tempHalf;
-		return_value[0] = fread(&tempValue, 1, sizeof(double), fp);
-		tempHalf = half_float::half(tempValue);
-		(*rv_cpu)[i].v = *((half*)&tempHalf);
-		return_value[1] = fread(&tempValue, 1, sizeof(double), fp);
-		tempHalf = half_float::half(tempValue);
-		(*rv_cpu)[i].x = *((half*)&tempHalf);
-		return_value[2] = fread(&tempValue, 1, sizeof(double), fp);
-		tempHalf = half_float::half(tempValue);
-		(*rv_cpu)[i].y = *((half*)&tempHalf);
-		return_value[3] = fread(&tempValue, 1, sizeof(double), fp);
-		tempHalf = half_float::half(tempValue);
-		(*rv_cpu)[i].z = *((half*)&tempHalf);
-		#else
 		return_value[0] = fread(&((*rv_cpu)[i].v), 1, sizeof(half), fp);
 		return_value[1] = fread(&((*rv_cpu)[i].x), 1, sizeof(half), fp);
 		return_value[2] = fread(&((*rv_cpu)[i].y), 1, sizeof(half), fp);
 		return_value[3] = fread(&((*rv_cpu)[i].z), 1, sizeof(half), fp);
-		#endif
 		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0 || return_value[3] == 0) {
 			printf("error reading rv_cpu from file\n");
 			#ifdef LOGS
@@ -517,15 +560,7 @@ void readInput(dim_str dim_cpu, char *input_distances, FOUR_VECTOR **rv_cpu, cha
 		exit(1);
 	}
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
-		#ifdef DOUBLE_PRECISION
-		double tempValue;
-		half_float::half tempHalf;
-		return_value[0] = fread(&tempValue, 1, sizeof(double), fp);
-		tempHalf = half_float::half(tempValue);
-		(*qv_cpu)[i] = *((half*)&tempHalf);
-		#else
 		return_value[0] = fread(&((*qv_cpu)[i]), 1, sizeof(half), fp);
-		#endif
 		if (return_value[0] == 0) {
 			printf("error reading qv_cpu from file\n");
 			#ifdef LOGS
@@ -565,27 +600,10 @@ void readGold(dim_str dim_cpu, char *output_gold, FOUR_VECTOR **fv_cpu_GOLD)
 		exit(1);
 	}
 	for(i=0; i<dim_cpu.space_elem; i=i+1) {
-		#ifdef DOUBLE_PRECISION
-		double tempValue;
-		half_float::half tempHalf;
-		return_value[0] = fread(&tempValue, 1, sizeof(double), fp);
-		tempHalf = half_float::half(tempValue);
-		(*fv_cpu_GOLD)[i].v = *((half*)&tempHalf);
-		return_value[1] = fread(&tempValue, 1, sizeof(double), fp);
-		tempHalf = half_float::half(tempValue);
-		(*fv_cpu_GOLD)[i].x = *((half*)&tempHalf);
-		return_value[2] = fread(&tempValue, 1, sizeof(double), fp);
-		tempHalf = half_float::half(tempValue);
-		(*fv_cpu_GOLD)[i].y = *((half*)&tempHalf);
-		return_value[3] = fread(&tempValue, 1, sizeof(double), fp);
-		tempHalf = half_float::half(tempValue);
-		(*fv_cpu_GOLD)[i].z = *((half*)&tempHalf);
-		#else
 		return_value[0] = fread(&((*fv_cpu_GOLD)[i].v), 1, sizeof(half), fp);
 		return_value[1] = fread(&((*fv_cpu_GOLD)[i].x), 1, sizeof(half), fp);
 		return_value[2] = fread(&((*fv_cpu_GOLD)[i].y), 1, sizeof(half), fp);
 		return_value[3] = fread(&((*fv_cpu_GOLD)[i].z), 1, sizeof(half), fp);
-		#endif
 		if ((float)return_value[0] == 0 || (float)return_value[1] == 0 || (float)return_value[2] == 0 || (float)return_value[3] == 0) {
 			printf("error reading rv_cpu from file\n");
 			#ifdef LOGS
