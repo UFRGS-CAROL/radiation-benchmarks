@@ -68,16 +68,49 @@ struct Params {
     int         switching_limit;
 
     Params(int argc, char **argv) {
+/*
+//CPU
+
         platform        = 0;
         device          = 0;
-        n_work_items    = 256;
-        n_work_groups   = 8;
+        n_work_items    = 8;
+        n_work_groups   = 256;
         n_threads       = 2;
-        n_warmup        = 1;
+        n_warmup        = 0;
         n_reps          = 1;
-        file_name       = "input/NYR_input.dat";
-        comparison_file = "output/NYR_bfs_BFS.out";
+        file_name       = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/lakes_graph_in";
+        comparison_file = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/lakes_graph_out";
+        switching_limit = 90000000;
+*/
+/*
+//GPU
+        platform        = 0;
+        device          = 0;
+        n_work_items    = 8;
+        n_work_groups   = 256;
+        n_threads       = 2;
+        n_warmup        = 0;
+        n_reps          = 1;
+        file_name       = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/lakes_graph_in";
+        comparison_file = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/lakes_graph_out";
+        switching_limit = 0;
+
+*/
+
+//CPU+GPU
+        platform        = 0;
+        device          = 0;
+        n_work_items    = 8;
+        n_work_groups   = 256;
+        n_threads       = 2;
+        n_warmup        = 0;
+        n_reps          = 1;
+        file_name       = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/input/lakes_graph_in";
+        comparison_file = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BFS/output/lakes_graph_out";
         switching_limit = 128;
+
+
+
         int opt;
         while((opt = getopt(argc, argv, "hp:d:i:g:t:w:r:f:c:l:")) >= 0) {
             switch(opt) {
@@ -129,7 +162,7 @@ struct Params {
 };
 
 
-
+/*
 inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,int num_of_nodes_o,Gold *&h_nodes, int it_cpu, int it_gpu) {
     int count_error = 0;
     if(num_of_nodes != num_of_nodes_o) { 
@@ -158,6 +191,7 @@ inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,int num_of_no
     return count_error;
 }
 
+*/
 inline int new_verify(std::atomic_int *h_cost, int num_of_nodes, const char *file_name, int it_cpu, int it_gpu) {
     // Compare to output file
     int count_error = 0;
