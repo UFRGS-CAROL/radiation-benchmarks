@@ -389,10 +389,10 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 				}
 
 				// Copy back data from local memory to global memory
-				fA[wtx].x = h2_fA[wtx].x.x + h2_fA[wtx].x.y;
-				fA[wtx].y = h2_fA[wtx].y.x + h2_fA[wtx].y.y;
-				fA[wtx].z = h2_fA[wtx].z.x + h2_fA[wtx].z.y;
-				fA[wtx].v = h2_fA[wtx].v.x + h2_fA[wtx].v.y;
+				fA[wtx].x = __hadd(h2_fA[wtx].x.x, h2_fA[wtx].x.y);
+				fA[wtx].y = __hadd(h2_fA[wtx].y.x, h2_fA[wtx].y.y);
+				fA[wtx].z = __hadd(h2_fA[wtx].z.x, h2_fA[wtx].z.y);
+				fA[wtx].v = __hadd(h2_fA[wtx].v.x, h2_fA[wtx].v.y);
 
 				// increment work thread index
 				wtx = wtx + NUMBER_THREADS;
