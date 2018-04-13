@@ -48,7 +48,7 @@
 #include "log_helper.h"
 #endif
 //************************************************************************************//
-
+/*
 inline int new_compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ, int RESOLUTIONI, int RESOLUTIONJ) {
 	int errors=0;
 
@@ -83,7 +83,7 @@ inline int new_compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ, int RESOL
 
     return errors;
 }
-
+*/
 // Params ---------------------------------------------------------------------
 struct Params {
 
@@ -102,17 +102,50 @@ struct Params {
     int         out_size_j;
 
     Params(int argc, char **argv) {
+/*
+//CPU
+        platform      = 0;
+        device        = 0;
+        n_work_items  = 5;
+        n_work_groups = 5;
+        n_threads     = 4;
+        n_warmup      = 5;
+        n_reps        = 1;
+        alpha         = 1.0;
+        file_name     = "input/control.txt";
+        in_size_i = in_size_j = 3;
+        out_size_i = out_size_j = 2500;
+*/
+
+/*
+// GPU
         platform      = 0;
         device        = 0;
         n_work_items  = 16;
-        n_work_groups = 32;
-        n_threads     = 4;
+        n_work_groups = 8;
+        n_threads     = 1;
         n_warmup      = 5;
-        n_reps        = 50;
+        n_reps        = 1;
+        alpha         = 0.0;
+        file_name     = "input/control.txt";
+        in_size_i = in_size_j = 3;
+        out_size_i = out_size_j = 2500;
+
+*/
+
+// CPU+GPU 
+        platform      = 0;
+        device        = 0;
+        n_work_items  = 16;
+        n_work_groups = 8;
+        n_threads     = 2;
+        n_warmup      = 5;
+        n_reps        = 1;
         alpha         = 0.1;
         file_name     = "input/control.txt";
         in_size_i = in_size_j = 3;
-        out_size_i = out_size_j = 300;
+        out_size_i = out_size_j = 2500;
+
         int opt;
         while((opt = getopt(argc, argv, "hp:d:i:g:t:w:r:a:f:m:n:")) >= 0) {
             switch(opt) {

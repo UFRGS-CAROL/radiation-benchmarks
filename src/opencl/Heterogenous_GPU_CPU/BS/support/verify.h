@@ -32,9 +32,51 @@
  * THE SOFTWARE.
  *
  */
-
+#ifndef VERIFY_H
+#define VERIFY_H
 #include "common.h"
 #include <math.h>
+
+//*****************************************  LOG  ***********************************//
+#ifdef LOGS
+#include "log_helper.h"
+#endif
+//************************************************************************************//
+
+inline int new_compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ, int RESOLUTIONI, int RESOLUTIONJ) {
+	int errors=0;
+
+    double sum_delta2_x,sum_delta2_y,sum_delta2_z, sum_ref2, L1norm2;
+    sum_delta2_x = 0;
+    sum_delta2_y = 0;
+    sum_delta2_z = 0;
+
+    sum_ref2   = 0;
+    L1norm2    = 0;
+    for(int i = 0; i < RESOLUTIONI; i++) {
+        for(int j = 0; j < RESOLUTIONJ; j++) {
+
+			sum_delta2_x = fabs(outp[i * RESOLUTIONJ + j].x - outpCPU[i * RESOLUTIONJ + j].x) / fabs(outpCPU[i * RESOLUTIONJ + j].x);
+			sum_delta2_y = fabs(outp[i * RESOLUTIONJ + j].y - outpCPU[i * RESOLUTIONJ + j].y) / fabs(outpCPU[i * RESOLUTIONJ + j].y);
+			sum_delta2_z = fabs(outp[i * RESOLUTIONJ + j].z - outpCPU[i * RESOLUTIONJ + j].z) / fabs(outpCPU[i * RESOLUTIONJ + j].z);
+
+			if(sum_delta2_x >= 1e-8 || sum_delta2_y >= 1e-8 || sum_delta2_z >= 1e-8  ){
+
+		        errors++;
+#ifdef LOGS
+		        char error_detail[200];
+        		sprintf(error_detail," p: [%d, %d]; X r: %f, e: %f ; Y: r: %f, e: %f ; Z: r: %f, e: %f  ",i,j,outp[i * RESOLUTIONJ + j].x,outpCPU[i * RESOLUTIONJ + j].x,outp[i * RESOLUTIONJ + j].y,outpCPU[i * RESOLUTIONJ + j].y,outp[i * RESOLUTIONJ + j].z,outpCPU[i * RESOLUTIONJ + j].z);
+
+       			 log_error_detail(error_detail);
+#endif			
+
+			}
+
+        }
+    }
+
+    return errors;
+}
 
 inline int compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ, int RESOLUTIONI, int RESOLUTIONJ) {
     double sum_delta2, sum_ref2, L1norm2;
@@ -114,3 +156,5 @@ inline void verify(XYZ *in, XYZ *out, int in_size_i, int in_size_j, int out_size
     compare_output(out, gold, in_size_i, in_size_j, out_size_i, out_size_j);
     free(gold);
 }
+
+#endif
