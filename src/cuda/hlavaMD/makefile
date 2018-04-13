@@ -21,7 +21,7 @@ MATRIX_NAMES=output_gold_* input_distances_* input_charges_*
 ALL: hlava
 
 hlava: hlava.cu
-	$(NVCC) $(NVCC_FLAGS) -DLOGS $(DOUBLE_PRECISION) hlava.cu -I$(LOGHELPER_INC) -I$(NVIDIA_INC) -L$(LOGHELPER_LIB) -L$(NVIDIA_LIB) -lLogHelper -Xcompiler " -fopenmp" -o hlava
+	$(NVCC) $(NVCC_FLAGS) -DLOGS hlava.cu -I$(LOGHELPER_INC) -I$(NVIDIA_INC) -L$(LOGHELPER_LIB) -L$(NVIDIA_LIB) -lLogHelper -Xcompiler " -fopenmp" -o hlava
 
 clean:
 	rm -f hlava_generate hlava $(MATRIX_NAMES)

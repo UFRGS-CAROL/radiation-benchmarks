@@ -327,15 +327,15 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 			while(wtx<NUMBER_PAR_PER_BOX) {
 				corrWTX = floor(wtx / 2.0);
 				h2_rB_shared[corrWTX].x.x = rB[wtx + 0].x;
-				h2_rB_shared[corrWTX].x.y = rB[wtx + 1].x;
+				h2_rB_shared[corrWTX].x.y = rB[wtx + NUMBER_THREADS].x;
 				h2_rB_shared[corrWTX].y.x = rB[wtx + 0].y;
-				h2_rB_shared[corrWTX].y.y = rB[wtx + 1].y;
+				h2_rB_shared[corrWTX].y.y = rB[wtx + NUMBER_THREADS].y;
 				h2_rB_shared[corrWTX].z.x = rB[wtx + 0].z;
-				h2_rB_shared[corrWTX].z.y = rB[wtx + 1].z;
+				h2_rB_shared[corrWTX].z.y = rB[wtx + NUMBER_THREADS].z;
 				h2_rB_shared[corrWTX].v.x = rB[wtx + 0].v;
-				h2_rB_shared[corrWTX].v.y = rB[wtx + 1].v;
+				h2_rB_shared[corrWTX].v.y = rB[wtx + NUMBER_THREADS].v;
 				h2_qB_shared[corrWTX].x = qB[wtx + 0];
-				h2_qB_shared[corrWTX].y = qB[wtx + 1];
+				h2_qB_shared[corrWTX].y = qB[wtx + NUMBER_THREADS];
 				wtx = wtx + NUMBER_THREADS * 2.0;
 			}
 			wtx = tx;
