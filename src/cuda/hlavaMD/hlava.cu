@@ -347,9 +347,17 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 			//	Calculation
 			//-----------------------------------------------------
 
+			// Common
+			FOUR_H2_VECTOR h2_fA_local;
+
 			// loop for the number of particles in the home box
 			// for (int i=0; i<nTotal_i; i++){
 			while(wtx<NUMBER_PAR_PER_BOX) {
+
+				h2_fA_local.x = __float2half2_rn(0.0);
+				h2_fA_local.y = __float2half2_rn(0.0);
+				h2_fA_local.z = __float2half2_rn(0.0);
+				h2_fA_local.v = __float2half2_rn(0.0);
 				
 				// loop for the number of particles in the current nei box
 				for (j=0; j<floor(NUMBER_PAR_PER_BOX / 2.0); j++) {
@@ -379,20 +387,20 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 					fzij=__hmul2(fs, d.z);
 
 					// fA[wtx].v +=  (half)((half)h2_qB_shared[j]*vij);
-					h2_fA[wtx].v = __hfma2(h2_qB_shared[j], vij, h2_fA[wtx].v);
+					h2_fA_local.v = __hfma2(h2_qB_shared[j], vij, h2_fA_local.v);
 					// fA[wtx].x +=  (half)((half)h2_qB_shared[j]*fxij);
-					h2_fA[wtx].x = __hfma2(h2_qB_shared[j], fxij, h2_fA[wtx].x);
+					h2_fA_local.x = __hfma2(h2_qB_shared[j], fxij, h2_fA_local.x);
 					// fA[wtx].y +=  (half)((half)h2_qB_shared[j]*fyij);
-					h2_fA[wtx].y = __hfma2(h2_qB_shared[j], fyij, h2_fA[wtx].y);
+					h2_fA_local.y = __hfma2(h2_qB_shared[j], fyij, h2_fA_local.y);
 					// fA[wtx].z +=  (half)((half)h2_qB_shared[j]*fzij);
-					h2_fA[wtx].z = __hfma2(h2_qB_shared[j], fzij, h2_fA[wtx].z);
+					h2_fA_local.z = __hfma2(h2_qB_shared[j], fzij, h2_fA_local.z);
 				}
 
 				// Copy back data from local memory to global memory
-				fA[wtx].x = __hadd(h2_fA[wtx].x.x, h2_fA[wtx].x.y);
-				fA[wtx].y = __hadd(h2_fA[wtx].y.x, h2_fA[wtx].y.y);
-				fA[wtx].z = __hadd(h2_fA[wtx].z.x, h2_fA[wtx].z.y);
-				fA[wtx].v = __hadd(h2_fA[wtx].v.x, h2_fA[wtx].v.y);
+				fA[wtx].x = __hadd(fA[wtx].x, __hadd(h2_fA_local.x.x, h2_fA_local.x.y));
+				fA[wtx].y = __hadd(fA[wtx].y, __hadd(h2_fA_local.y.x, h2_fA_local.y.y));
+				fA[wtx].z = __hadd(fA[wtx].z, __hadd(h2_fA_local.z.x, h2_fA_local.z.y));
+				fA[wtx].v = __hadd(fA[wtx].v, __hadd(h2_fA_local.v.x, h2_fA_local.v.y));
 
 				// increment work thread index
 				wtx = wtx + NUMBER_THREADS;
