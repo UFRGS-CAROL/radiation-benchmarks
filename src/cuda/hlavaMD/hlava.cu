@@ -229,7 +229,8 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 		int first_i;
 		FOUR_VECTOR* rA;
 		FOUR_VECTOR* fA;
-		__shared__ FOUR_VECTOR rA_shared[200];
+		FOUR_H2_VECTOR h2_fA[200];
+		__shared__ FOUR_H2_VECTOR h2_rA_shared[200];
 
 		// nei box
 		int pointer;
@@ -238,8 +239,8 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 		FOUR_VECTOR* rB;
 		half* qB;
 		int j = 0;
-		__shared__ FOUR_VECTOR rB_shared[200];
-		__shared__ half qB_shared[200];
+		__shared__ FOUR_H2_VECTOR h2_rB_shared[100];
+		__shared__ half2 h2_qB_shared[100];
 
 		// common
 		half2 r2;
@@ -270,9 +271,16 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 		//	Copy to shared memory
 		//-------------------------------------------------------------
 
-		// home box - shared memory
+		// home box - shared memory - INCLUDES HALF2 transformation -redundant- on shared memory
 		while(wtx<NUMBER_PAR_PER_BOX) {
-			rA_shared[wtx] = rA[wtx];
+			h2_rA_shared[wtx].x = __half2half2(rA[wtx].x);
+			h2_rA_shared[wtx].y = __half2half2(rA[wtx].y);
+			h2_rA_shared[wtx].z = __half2half2(rA[wtx].z);
+			h2_rA_shared[wtx].v = __half2half2(rA[wtx].v);
+			h2_fA[wtx].x = __half2half2(fA[wtx].x);
+			h2_fA[wtx].y = __half2half2(fA[wtx].y);
+			h2_fA[wtx].z = __half2half2(fA[wtx].z);
+			h2_fA[wtx].v = __half2half2(fA[wtx].v);
 			wtx = wtx + NUMBER_THREADS;
 		}
 		wtx = tx;
@@ -314,11 +322,21 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 			//	Setup parameters
 			//-----------------------------------------------------
 
-			// nei box - shared memory
+			// nei box - shared memory - INCLUDES HALF2 optimization on shared memory
+			int corrWTX;
 			while(wtx<NUMBER_PAR_PER_BOX) {
-				rB_shared[wtx] = rB[wtx];
-				qB_shared[wtx] = qB[wtx];
-				wtx = wtx + NUMBER_THREADS;
+				corrWTX = floor(wtx / 2.0);
+				h2_rB_shared[corrWTX].x.x = rB[wtx + 0].x;
+				h2_rB_shared[corrWTX].x.y = rB[wtx + 1].x;
+				h2_rB_shared[corrWTX].y.x = rB[wtx + 0].y;
+				h2_rB_shared[corrWTX].y.y = rB[wtx + 1].y;
+				h2_rB_shared[corrWTX].z.x = rB[wtx + 0].z;
+				h2_rB_shared[corrWTX].z.y = rB[wtx + 1].z;
+				h2_rB_shared[corrWTX].v.x = rB[wtx + 0].v;
+				h2_rB_shared[corrWTX].v.y = rB[wtx + 1].v;
+				h2_qB_shared[corrWTX].x = qB[wtx + 0];
+				h2_qB_shared[corrWTX].y = qB[wtx + 1];
+				wtx = wtx + NUMBER_THREADS * 2.0;
 			}
 			wtx = tx;
 
@@ -329,41 +347,16 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 			//	Calculation
 			//-----------------------------------------------------
 
-			// Common work vars for HALF2 optimization
-			FOUR_H2_VECTOR h2_rB_shared_J;
-			FOUR_H2_VECTOR h2_rA_shared_WTX;
-			FOUR_H2_VECTOR h2_fA_WTX;
-			half2 h2_qB_shared_J;
-
 			// loop for the number of particles in the home box
 			// for (int i=0; i<nTotal_i; i++){
 			while(wtx<NUMBER_PAR_PER_BOX) {
-				// Convert input vars from HALF to HALF2 for local work
-				h2_rA_shared_WTX.x = __half2half2(rA_shared[wtx].x);
-				h2_rA_shared_WTX.y = __half2half2(rA_shared[wtx].y);
-				h2_rA_shared_WTX.z = __half2half2(rA_shared[wtx].z);
-				h2_rA_shared_WTX.v = __half2half2(rA_shared[wtx].v);
-				h2_fA_WTX.x = __half2half2(fA[wtx].x);
-				h2_fA_WTX.y = __half2half2(fA[wtx].y);
-				h2_fA_WTX.z = __half2half2(fA[wtx].z);
-				h2_fA_WTX.v = __half2half2(fA[wtx].v);
 				
 				// loop for the number of particles in the current nei box
-				for (j=0; j<NUMBER_PAR_PER_BOX; j += 2) {
+				for (j=0; j<floor(NUMBER_PAR_PER_BOX / 2.0); j++) {
 					// Convert input vars from HALF to HALF2 for local work
-					h2_rB_shared_J.x.x = rB_shared[j + 0].x;
-					h2_rB_shared_J.x.y = rB_shared[j + 1].x;
-					h2_rB_shared_J.y.x = rB_shared[j + 0].y;
-					h2_rB_shared_J.y.y = rB_shared[j + 1].y;
-					h2_rB_shared_J.z.x = rB_shared[j + 0].z;
-					h2_rB_shared_J.z.y = rB_shared[j + 1].z;
-					h2_rB_shared_J.v.x = rB_shared[j + 0].v;
-					h2_rB_shared_J.v.y = rB_shared[j + 1].v;
-					h2_qB_shared_J.x = qB_shared[j + 0];
-					h2_qB_shared_J.y = qB_shared[j + 1];
 
-					// r2 = (half)rA_shared[wtx].v + (half)rB_shared[j].v - H_DOT((half)rA_shared[wtx],(half)rB_shared[j]);
-					r2 = __hsub2(__hadd2(h2_rA_shared_WTX.v, h2_rB_shared_J.v),  H2_DOT(h2_rA_shared_WTX, h2_rB_shared_J));
+					// r2 = (half)h2_rA_shared[wtx].v + (half)h2_rB_shared[j].v - H_DOT((half)h2_rA_shared[wtx],(half)h2_rB_shared[j]);
+					r2 = __hsub2(__hadd2(h2_rA_shared[wtx].v, h2_rB_shared[j].v),  H2_DOT(h2_rA_shared[wtx], h2_rB_shared[j]));
 
 					// u2 = a2*r2;
 					u2 = __hmul2(h2_a2, r2);
@@ -372,48 +365,28 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu, box_str* d
 					// fs = 2*vij;
 					fs = __hmul2(__float2half2_rn(2.0), vij);
 
-					// d.x = (half)rA_shared[wtx].x  - (half)rB_shared[j].x;
-					d.x = __hsub2(h2_rA_shared_WTX.x, h2_rB_shared_J.x);
+					// d.x = (half)h2_rA_shared[wtx].x  - (half)h2_rB_shared[j].x;
+					d.x = __hsub2(h2_rA_shared[wtx].x, h2_rB_shared[j].x);
 					// fxij=fs*d.x;
 					fxij=__hmul2(fs, d.x);
-					// d.y = (half)rA_shared[wtx].y  - (half)rB_shared[j].y;
-					d.y = __hsub2(h2_rA_shared_WTX.y, h2_rB_shared_J.y);
+					// d.y = (half)h2_rA_shared[wtx].y  - (half)h2_rB_shared[j].y;
+					d.y = __hsub2(h2_rA_shared[wtx].y, h2_rB_shared[j].y);
 					// fyij=fs*d.y;
 					fyij=__hmul2(fs, d.y);
-					// d.z = (half)rA_shared[wtx].z  - (half)rB_shared[j].z;
-					d.z = __hsub2(h2_rA_shared_WTX.z, h2_rB_shared_J.z);
+					// d.z = (half)h2_rA_shared[wtx].z  - (half)h2_rB_shared[j].z;
+					d.z = __hsub2(h2_rA_shared[wtx].z, h2_rB_shared[j].z);
 					// fzij=fs*d.z;
 					fzij=__hmul2(fs, d.z);
 
-					// fA[wtx].v +=  (half)((half)qB_shared[j]*vij);
-					h2_fA_WTX.v = __hfma2(h2_qB_shared_J, vij, h2_fA_WTX.v);
-					// fA[wtx].x +=  (half)((half)qB_shared[j]*fxij);
-					h2_fA_WTX.x = __hfma2(h2_qB_shared_J, fxij, h2_fA_WTX.x);
-					// fA[wtx].y +=  (half)((half)qB_shared[j]*fyij);
-					h2_fA_WTX.y = __hfma2(h2_qB_shared_J, fyij, h2_fA_WTX.y);
-					// fA[wtx].z +=  (half)((half)qB_shared[j]*fzij);
-					h2_fA_WTX.z = __hfma2(h2_qB_shared_J, fzij, h2_fA_WTX.z);
-
-					// Convert back vars from HALF2 to HALF on shared memory
-					// rB_shared[j + 0].x = h2_rB_shared_J.x.x;
-					// rB_shared[j + 1].x = h2_rB_shared_J.x.y;
-					// rB_shared[j + 0].y = h2_rB_shared_J.y.x;
-					// rB_shared[j + 1].y = h2_rB_shared_J.y.y;
-					// rB_shared[j + 0].z = h2_rB_shared_J.z.x;
-					// rB_shared[j + 1].z = h2_rB_shared_J.z.y;
-					// rB_shared[j + 0].v = h2_rB_shared_J.v.x;
-					// rB_shared[j + 1].v = h2_rB_shared_J.v.y;
+					// fA[wtx].v +=  (half)((half)h2_qB_shared[j]*vij);
+					h2_fA[wtx].v = __hfma2(h2_qB_shared[j], vij, h2_fA[wtx].v);
+					// fA[wtx].x +=  (half)((half)h2_qB_shared[j]*fxij);
+					h2_fA[wtx].x = __hfma2(h2_qB_shared[j], fxij, h2_fA[wtx].x);
+					// fA[wtx].y +=  (half)((half)h2_qB_shared[j]*fyij);
+					h2_fA[wtx].y = __hfma2(h2_qB_shared[j], fyij, h2_fA[wtx].y);
+					// fA[wtx].z +=  (half)((half)h2_qB_shared[j]*fzij);
+					h2_fA[wtx].z = __hfma2(h2_qB_shared[j], fzij, h2_fA[wtx].z);
 				}
-
-				// Convert back vars from HALF2 to HALF on shared memory
-				// rA_shared[wtx].x = h2_rA_shared_WTX.x.x;
-				// rA_shared[wtx].y = h2_rA_shared_WTX.y.x;
-				// rA_shared[wtx].z = h2_rA_shared_WTX.z.x;
-				// rA_shared[wtx].v = h2_rA_shared_WTX.z.x;
-				fA[wtx].x = h2_fA_WTX.x.x + h2_fA_WTX.x.y;
-				fA[wtx].y = h2_fA_WTX.y.x + h2_fA_WTX.y.y;
-				fA[wtx].z = h2_fA_WTX.z.x + h2_fA_WTX.z.y;
-				fA[wtx].v = h2_fA_WTX.v.x + h2_fA_WTX.v.y;
 
 				// increment work thread index
 				wtx = wtx + NUMBER_THREADS;
