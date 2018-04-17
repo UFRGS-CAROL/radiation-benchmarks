@@ -254,7 +254,7 @@ void generateGoldMatrixHalf()
 	checkCudaErrors( cudaMalloc( ( void** ) &d_C, sizec * sizeof( half ) ));
 
 
-	checkCudaErrors( cudaMemset( d_C, 0, sizec * sizeof( half )) ); // ZERA C
+	checkCudaErrors( cudaMemset( d_C, half_float::half(0.0), sizec * sizeof( half )) ); // ZERA C
 
 	checkCudaErrors( cudaMemcpy( d_A, A, sizea * sizeof( half ), cudaMemcpyHostToDevice ) ); // PUSH A
 
@@ -313,7 +313,7 @@ void generateGoldMatrixHalf()
 			#pragma omp critical
 			maxAbsVal = max(fabs(val), maxAbsVal);
 		}
-		if (val == 0) 
+		if (val == 0.0) 
 			#pragma omp atomic
 			numZeros++;
         if (isnan(val)) 
