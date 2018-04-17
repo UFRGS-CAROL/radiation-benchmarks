@@ -102,7 +102,7 @@ void generateInputMatricesHalf()
         if (isinf(val)) numInfs++;
 	}
 	printf("Number of zeros/NaNs/INFs on matrix A: %d/%d/%d\n", numZeros, numNans, numInfs);
-	printf("Max/Min values on matrix A: %f/%f\n", (float)maxValue, (float)minVal));
+	printf("Max/Min values on matrix A: %f/%f\n", (float)maxVal, (float)minVal);
 
 	numZeros = 0;
     numNans = 0;
@@ -118,7 +118,7 @@ void generateInputMatricesHalf()
         if (isinf(val)) numInfs++;
 	}
 	printf("Number of zeros/NaNs/INFs on matrix B: %d/%d/%d\n", numZeros, numNans, numInfs);
-	printf("Max/Min values on matrix B: %f/%f\n", (float)maxValue, (float)minVal));
+	printf("Max/Min values on matrix B: %f/%f\n", (float)maxVal, (float)minVal);
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
