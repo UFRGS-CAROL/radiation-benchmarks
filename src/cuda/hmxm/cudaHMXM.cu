@@ -4,6 +4,7 @@
 #include <math.h>
 #include <sys/time.h>
 #include <string>
+#include <omp.h>
 
 #include "half.hpp"
 
@@ -25,7 +26,7 @@ half_float::half *h_B_T;
 half_float::half *h_C;
 half_float::half *h_GOLD;
 half_float::half *d_A;
-half_float::half *d_B;
+half_float::half *d_B_T;
 half_float::half *d_C;
 
 unsigned int *d_errpos;
@@ -121,18 +122,18 @@ bool badass_memcmp(half_float::half *gold, half_float::half *found, unsigned lon
 	return false;
 }
 
-__global__ void MatrixMulKernel (half *d_A, half *d_B_T, half *d_C, int n)
+__global__ void MatrixMulKernel (half *d_A, half *d_B_T_T, half *d_C, int n)
 {
 	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;                                                      
 	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y; 
 	int k;
 	half2 *d_A2 = (half2*)d_A;
-	half2 *d_B_T2 = (half2*)d_B_T;
+	half2 *d_B_T_T2 = (half2*)d_B_T_T;
 	half2 *d_C2 = (half2*)d_C;
 	
 	d_C2[ty*n + tx] = __float2half2_rn(0.0);
 	for (k = 0;  k < n; k++)
-		d_C2[ty*n + tx] = __hfma2(d_A2[ty*n + k], d_B_T2[ty*n + k], d_C2[ty*n + tx]);
+		d_C2[ty*n + tx] = __hfma2(d_A2[ty*n + k], d_B_T_T2[ty*n + k], d_C2[ty*n + tx]);
 
 }
 
@@ -214,7 +215,7 @@ int main( int argc, char* argv[] )
 #endif
 			return 1;} //mem allocate failure
 
-		malloc_a = cudaMalloc( ( void** ) &d_B, size * sizeof( half_float::half ) );
+		malloc_a = cudaMalloc( ( void** ) &d_B_T, size * sizeof( half_float::half ) );
 		erro_malloc = cudaGetErrorString(malloc_a);
 		if(strcmp(erro_malloc, "no error") != 0) if(strcmp(erro_malloc, "no error") != 0) {
 #ifdef LOGS
@@ -248,7 +249,7 @@ int main( int argc, char* argv[] )
 #endif
 			return 1;} //mem allocate failure
 
-		malloc_mem1 = cudaMemcpy( d_B, h_B_T, size * sizeof( half_float::half ), cudaMemcpyHostToDevice ); // PUSH B
+		malloc_mem1 = cudaMemcpy( d_B_T, h_B_T, size * sizeof( half_float::half ), cudaMemcpyHostToDevice ); // PUSH B
 		erro_malloc = cudaGetErrorString(malloc_mem1);
 		if(strcmp(erro_malloc, "no error") != 0) if(strcmp(erro_malloc, "no error") != 0) {
 #ifdef LOGS
@@ -261,7 +262,7 @@ double time = mysecond();
 #ifdef LOGS
 		start_iteration();
 #endif
-		MatrixMulKernel<<<dimGrid,dimBlock>>>(d_A, d_B, d_C, k);
+		MatrixMulKernel<<<dimGrid,dimBlock>>>((half*)d_A, (half*)d_B_T, (half*)d_C, k);
 		cudaDeviceSynchronize();
 #ifdef LOGS
 		end_iteration();
@@ -291,11 +292,12 @@ time = mysecond() - time;
 #ifdef LOGS
 				log_error_detail("error mem load c"); end_log_file(); 
 #endif
-			return 1;} //mem allocate failure
+				return 1;
+			} //mem allocate failure
 
-			for(i=0; (i<k) && ; i++)
+			for(i=0; i<k; i++)
 			{
-				for(j=0; (j<k) && (ea < N_ERRORS_LOG); j++)
+				for(j=0; j<k; j++)
 				{
 					kernel_errors++;
 					if (ea < N_ERRORS_LOG) {
@@ -313,7 +315,7 @@ time = mysecond() - time;
 
 
 #ifdef LOGS
-				log_error_count(host_errors);
+			log_error_count(kernel_errors);
 #endif
 			printf("kernel_errors:%d\n", kernel_errors);
 			ReadMatrixFromFile();
@@ -334,7 +336,7 @@ time = mysecond() - time;
 		}
 
 		cudaFree( d_A );
-		cudaFree( d_B );
+		cudaFree( d_B_T );
 		cudaFree( d_C );
 	}
 
