@@ -306,21 +306,17 @@ void generateGoldMatrixHalf()
     int numNans = 0;
 	int numInfs = 0;
 	float maxAbsVal = 0.0;
-	#pragma omp parallel for
+	
 	for (int i = 0; i<k*k; i++) {
 		val=GOLD[i];
 		if (fabs(val) > maxAbsVal) {
-			#pragma omp critical
 			maxAbsVal = max(fabs(val), maxAbsVal);
 		}
 		if (val == 0.0) 
-			#pragma omp atomic
 			numZeros++;
         if (isnan(val)) 
-			#pragma omp atomic
 			numNans++;
         if (isinf(val)) 
-			#pragma omp atomic
 			numInfs++;
 	}
 	printf("Number of zeros/NaNs/INFs on gold: %d/%d/%d\n", numZeros, numNans, numInfs);
