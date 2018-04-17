@@ -89,17 +89,19 @@ int main(int argc, char **argv) {
             exit(-11);
         }
 
-        float maxDiff = 0;
+        float maxDiff = 0.0;
+        float totDiff = 0.0;
         for (int i = 0; i < dimSpace; i++) {
             //printf(".");
             for (int dim = 0; dim < 4; dim++) {
                 half_float::half halfValue = readHalfFromFile(inputHalfGold);
                 double doubleValue = readDoubleFromFile(inputDoubleGold);
                 float diff = abs((halfValue - doubleValue) / doubleValue);
+                totDiff += diff;
                 maxDiff = max(maxDiff, diff);
             }
         }
-        printf("Done. Checked %d values.\nMax difference: %e", dimSpace * 4, maxDiff);
+        printf("Done. Checked %d values.\nMax difference: %e\nAvg difference: %e\n", dimSpace * 4, maxDiff, totDiff / (dimSpace * 4));
     } else {
         printf("Half input does not exists. Making conversion to half.\n");
 
