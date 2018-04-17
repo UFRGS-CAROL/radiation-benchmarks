@@ -6,6 +6,8 @@
 #include <string>
 #include <sys/time.h>
 
+#include <omp.h>
+
 #include <cublas_v2.h>
 #include <curand.h>
 #include <curand_kernel.h>
@@ -19,8 +21,8 @@
 #include "helper_cuda.h"
 
 #define DEFAULT_INPUT_SIZE 8192
-#define MAX_HALF 65503
-#define MAX_HVALUE (float)(sqrt(MAX_HALF / DEFAULT_INPUT_SIZE))
+#define MAX_HALF 65503.0
+#define MAX_HVALUE (float)floor(sqrt(MAX_HALF / DEFAULT_INPUT_SIZE))
 
 #define BLOCK_SIZE 32
 
@@ -47,17 +49,20 @@ void generateInputMatricesHalf()
 
 	srand(time(NULL));
 
-    half_float::half tempValue;
+	half_float::half tempValue;
+	
+	float maxHalfValue = MAX_HVALUE;
 
+	#pragma omp parallel for
     for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
         for (int j=0; j<DEFAULT_INPUT_SIZE; j++) {
             do {
-                tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
+                tempValue = half_float::half((((float)rand() / RAND_MAX)) * (maxHalfValue * 2.0) - maxHalfValue);
             } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
             h_A[i * DEFAULT_INPUT_SIZE + j] = tempValue;
 
             do {
-                tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
+                tempValue = half_float::half((((float)rand() / RAND_MAX)) * (maxHalfValue * 2.0) - maxHalfValue);
             } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
             h_B[i * DEFAULT_INPUT_SIZE + j] = tempValue;
         }
