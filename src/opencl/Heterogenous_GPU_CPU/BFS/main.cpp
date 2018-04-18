@@ -277,7 +277,6 @@ void read_gold(Gold *&h_nodes, const Params &p) {
 
     }
     fclose(fpo);
-	
 
 }
 void read_input(int &source, Node *&h_nodes, Edge *&h_edges, const Params &p) {
@@ -326,7 +325,7 @@ int main(int argc, char **argv) {
 	int it_cpu=0;
 	int it_gpu=0;
 	int err = 0;
-printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_items, p.n_work_groups,p.n_threads,p.file_name);
+printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n_work_items, p.n_work_groups,p.n_threads,p.file_name,p.switching_limit);
 
 #ifdef LOGS
     set_iter_interval_print(10);
