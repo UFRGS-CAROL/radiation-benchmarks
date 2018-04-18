@@ -503,8 +503,8 @@ int main(int argc, char **argv) {
         end_iteration();
 #endif
 
-    printf("IT CPU:%d\t",it_cpu);
-    printf("IT GPU:%d\n",it_gpu);	
+    //printf("IT CPU:%d\t",it_cpu);
+    //printf("IT GPU:%d\n",it_gpu);	
 
 
 //	err=new_verify(h_cost, n_nodes, p.comparison_file,it_cpu,it_gpu);
