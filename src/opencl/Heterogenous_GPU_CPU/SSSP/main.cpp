@@ -321,7 +321,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 #ifdef LOGS
     set_iter_interval_print(10);
     char test_info[500];
-    snprintf(test_info, 500, "-i %d -g %d -t %d -f %s \n",p.n_work_items, p.n_work_groups,p.n_threads, p.file_name);
+    snprintf(test_info, 500, "-i %d -g %d -t %d -f %s -l %d\n",p.n_work_items, p.n_work_groups,p.n_threads, p.file_name, p.switching_limit);
     start_log_file("openclSingleSourceShortestPath", test_info);
 	//printf("Com LOG\n");
 #endif
