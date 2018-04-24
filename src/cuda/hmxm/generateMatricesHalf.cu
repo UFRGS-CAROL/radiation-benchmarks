@@ -372,7 +372,7 @@ void generateGoldMatrixHalf()
 						maxDiff = max(diff, maxDiff);
 						if (diff > 1.0) {
 							// Difference bigger than an order of magnitude
-							printf("Huge diff! (%d,%d) hostGold!=gpuGold %f != %f (diff: %e)\n", i, j, (float)(hostGold[i*k+j]), (float)(GOLD[i*k+j]), diff);
+							printf("Huge diff! (%d,%d) hostGold!=gpuGold %f != %f (diff: %e) (debug1: %e debug2: %e)\n", i, j, (float)(hostGold[i*k+j]), (float)(GOLD[i*k+j]), diff, (hostGold[i*k+j])-(float)(GOLD[i*k+j]), ((float)(hostGold[i*k+j])-(float)(GOLD[i*k+j])/(float)(hostGold[i*k+j])));
 						}
 					}
 				}
