@@ -29,11 +29,12 @@ int sizea, sizeb, sizec;
 half_float::half *A, *B, *GOLD;
 
 bool host_check = false;
+bool generator_debug = false;
 
 char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
 
 void usage() {
-    printf("Usage: generateMatricesHalf -size=N [-host_check] [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
+    printf("Usage: generateMatricesHalf -size=N [-generator_debug] [-host_check] [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
 }
 
 void generateInputMatricesHalf()
@@ -49,19 +50,28 @@ void generateInputMatricesHalf()
 
     half_float::half tempValue;
 
-    for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
-        for (int j=0; j<DEFAULT_INPUT_SIZE; j++) {
-            do {
-                tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
-            } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
-            h_A[i * DEFAULT_INPUT_SIZE + j] = tempValue;
-
-            do {
-                tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
-            } while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
-            h_B[i * DEFAULT_INPUT_SIZE + j] = tempValue;
-        }
-    }
+	if (!generator_debug) {
+		for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
+			for (int j=0; j<DEFAULT_INPUT_SIZE; j++) {
+				do {
+					tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
+				} while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
+				h_A[i * DEFAULT_INPUT_SIZE + j] = tempValue;
+	
+				do {
+					tempValue = half_float::half((((float)rand() / RAND_MAX)) * (MAX_HVALUE * 2.0) - MAX_HVALUE);
+				} while (isnan((float)tempValue) || isinf((float)tempValue) || (float)tempValue==0.0);
+				h_B[i * DEFAULT_INPUT_SIZE + j] = tempValue;
+			}
+		}
+	} else {
+		for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
+			for (int j=0; j<DEFAULT_INPUT_SIZE; j++) {
+				h_A[i * DEFAULT_INPUT_SIZE + j] = half_float::half(2.0);
+				h_B[i * DEFAULT_INPUT_SIZE + j] = half_float::half(2.0);
+			}
+		}
+	}
 
 	int numZeros;
     int numNans;
@@ -443,6 +453,11 @@ int main (int argc, char** argv)
 	if (checkCmdLineFlag(argc, (const char **)argv, "host_check"))
     {
 		host_check = true;
+	}
+
+	if (checkCmdLineFlag(argc, (const char **)argv, "generator_debug"))
+    {
+		generator_debug = true;
 	}
 //====================================
 
