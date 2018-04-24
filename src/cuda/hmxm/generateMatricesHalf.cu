@@ -330,15 +330,21 @@ void generateGoldMatrixHalf()
 			#pragma omp critical
 			maxAbsVal = max(fabs(val), maxAbsVal);
 		}
-		if (val == 0) 
+		if (val == 0) {
 			#pragma omp atomic
 			numZeros++;
-        if (isnan(val)) 
+			printf("Zero in position (%d,%d)\n", floor(i / k), i - floor(i / k) * k);
+		}
+        if (isnan(val)) {
 			#pragma omp atomic
 			numNans++;
-        if (isinf(val)) 
+			printf("NaN in position (%d,%d)\n", floor(i / k), i - floor(i / k) * k);
+		}
+        if (isinf(val))  {
 			#pragma omp atomic
 			numInfs++;
+			printf("INF in position (%d,%d)\n", floor(i / k), i - floor(i / k) * k);
+		}
 	}
 	printf("Number of zeros/NaNs/INFs on gold: %d/%d/%d\n", numZeros, numNans, numInfs);
 	printf("Maximum absolute value on gold: %f\n", maxAbsVal);
@@ -383,7 +389,7 @@ void generateGoldMatrixHalf()
 
 	for(i=0; i<k; i++)
 	{
-		fwrite( &GOLD[i * k], sizeof(half_float::half)*k, 1, f_GOLD );
+		fwrite( &(GOLD[i * k]), sizeof(half_float::half)*k, 1, f_GOLD );
 	}
 
 	fclose(f_GOLD);
