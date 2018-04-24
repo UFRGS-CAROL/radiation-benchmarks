@@ -365,14 +365,14 @@ void generateGoldMatrixHalf()
 		#pragma omp parallel for
 		for (i=0; i<k; i++) {
 			for (j=0; j<k; j++) {
-				register float diff = fabs(((float)(hostGold[i*k+j])-(float)(GOLD[i*k+j])/(float)(hostGold[i*k+j])));
+				register float diff = fabs((((float)(hostGold[i*k+j])-(float)(GOLD[i*k+j]))/(float)(hostGold[i*k+j])));
 				if (diff > maxDiff) {
 					#pragma omp critical
 					{
 						maxDiff = max(diff, maxDiff);
 						if (diff > 1.0) {
 							// Difference bigger than an order of magnitude
-							printf("Huge diff! (%d,%d) hostGold!=gpuGold %f != %f (diff: %e) (debug1: %e debug2: %e)\n", i, j, (float)(hostGold[i*k+j]), (float)(GOLD[i*k+j]), diff, (hostGold[i*k+j])-(float)(GOLD[i*k+j]), ((float)(hostGold[i*k+j])-(float)(GOLD[i*k+j])/(float)(hostGold[i*k+j])));
+							printf("Huge diff! (%d,%d) hostGold!=gpuGold %f != %f (diff: %e) (debug1: %e debug2: %e)\n", i, j, (float)(hostGold[i*k+j]), (float)(GOLD[i*k+j]), diff, (hostGold[i*k+j])-(float)(GOLD[i*k+j]), (((float)(hostGold[i*k+j])-(float)(GOLD[i*k+j]))/(float)(hostGold[i*k+j])));
 						}
 					}
 				}
