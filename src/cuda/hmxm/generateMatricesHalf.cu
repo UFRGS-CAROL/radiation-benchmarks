@@ -366,9 +366,8 @@ void generateGoldMatrixHalf()
 			for (j=0; j<k; j++) {
 				register float diff = fabs(((float)(hostGold[i*k+j])-(float)(GOLD[i*k+j]))/(float)(hostGold[i*k+j]));
 				if (diff > maxDiff) {
-					{
-						maxDiff = max(diff, maxDiff);
-						printf("New diff! (%d,%d) hostGold!=gpuGold %f != %f (diff: %e)\n", i, j, (float)(hostGold[i*k+j]), (float)(GOLD[i*k+j]), diff);
+					maxDiff = max(diff, maxDiff);
+					printf("New diff! (%d,%d) hostGold!=gpuGold %f != %f (diff: %e)\n", i, j, (float)(hostGold[i*k+j]), (float)(GOLD[i*k+j]), diff);
 				}
 				// if (diff > 0.1) {
 				// 	printf("Fail! (%d,%d) hostGold!=gpuGold %f != %f (diff: %e)\n", i, j, (float)hostGold[i*k+j], (float)GOLD[i*k+j], diff);
