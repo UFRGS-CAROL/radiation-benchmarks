@@ -365,7 +365,7 @@ void generateGoldMatrixHalf()
 		#pragma omp parallel for
 		for (i=0; i<k; i++) {
 			for (j=0; j<k; j++) {
-				register float diff = fabs(((float)(hostGold[i*k+j])-(float)(GOLD[i*k+j])/(float)(hostGold[i*k+j]));
+				register float diff = fabs(((float)(hostGold[i*k+j])-(float)(GOLD[i*k+j])/(float)(hostGold[i*k+j])));
 				if (diff > maxDiff) {
 					#pragma omp critical
 					{
