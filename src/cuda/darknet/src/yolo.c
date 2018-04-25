@@ -638,7 +638,7 @@ void test_yolo_radiation_test(Args *arg) {
 			}
 #endif
 			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, i,
-					arg->save_layers, it, arg->img_list_path, max_pool_errors);
+					arg->save_layers, it, arg->img_list_path, max_pool_errors, im);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(
@@ -812,7 +812,7 @@ void test_yolo_radiation_dmr(Args *arg) {
 				double time_to_compare = mysecond();
 				compare(&gold, probs, boxes, l[0].w * l[0].h * l[0].n,
 						l[0].classes, i, arg->save_layers, it,
-						arg->img_list_path, max_pool_errors);
+						arg->img_list_path, max_pool_errors, im_array[i]);
 
 				time_to_compare = mysecond() - time_to_compare;
 
