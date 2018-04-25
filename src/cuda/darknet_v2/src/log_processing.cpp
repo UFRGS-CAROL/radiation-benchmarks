@@ -52,7 +52,7 @@ void end_iteration_app() {
 #endif
 }
 
-void update_timestamp_app(){
+void update_timestamp_app() {
 #ifdef LOGS
 	update_timestamp();
 #endif
@@ -137,6 +137,88 @@ FILE* open_layer_file(char *output_filename, const char *mode) {
 		exit(-1);
 	}
 	return fp;
+}
+
+bool online_precision_recall(std::vector<box> gold, std::vector<box> found, float threshold) {
+	int x_max_gold, x_min_gold, y_max_gold, y_min_gold, x_max_found,
+			x_min_found, y_max_found, y_min_found;
+
+	long intersection, total;
+	float true_positive = 0;
+	float precision, recall;
+	for (unsigned i = 0; i < gold.size(); i++) {
+		//float x, y, w, h;
+		x_max_gold = gold[i].x;
+		y_max_gold = gold[i].y;
+		x_min_gold = x_max_gold - gold[i].w;
+		y_min_gold = y_max_gold - gold[i].h;
+		//cout << "In rectangle " << i << endl;
+		for (unsigned z = 0; z < found.size(); z++) {
+			x_max_found = found[z].x;
+			y_max_found = found[z].y;
+			x_min_found = x_max_found - found[z].w;
+			y_min_found = y_max_found - found[z].h;
+
+			intersection = 0;
+			total = 0;
+			for (int x = x_min_found; x <= x_max_found; x++) {
+				for (int y = y_min_found; y <= y_max_found; y++) {
+					if ((x >= x_min_gold) && (x <= x_max_gold)
+							&& (y >= y_min_gold) && (y <= y_max_gold)) {
+						intersection++;
+					}
+				}
+			}
+			total = (x_max_gold - x_min_gold) * (y_max_gold - y_min_gold)
+					+ (x_max_found - x_min_found) * (y_max_found - y_min_found)
+					- intersection;
+			if (((float) intersection / total) >= threshold) {
+				true_positive++;
+				break;
+			}
+		}
+
+	}
+	float false_negative = gold.size() - true_positive;
+	recall = true_positive / (true_positive + false_negative);
+
+	float out_positive = 0;
+	for (unsigned z = 0; z < found.size(); z++) {
+		x_max_found = found[z].x;
+		y_max_found = found[z].y;
+		x_min_found = x_max_found - found[z].w;
+		y_min_found = y_max_found - found[z].h;
+
+		for (unsigned i = 0; i < gold.size(); i++) {
+			x_max_gold = gold[i].x;
+			y_max_gold = gold[i].y;
+			x_min_gold = x_max_gold - gold[i].w;
+			y_min_gold = y_max_gold - gold[i].h;
+
+			intersection = 0;
+			total = 0;
+
+			for (int x = x_min_gold; x <= x_max_gold; x++) {
+				for (int y = y_min_gold; y <= y_max_gold; y++) {
+					if ((x >= x_min_found) && (x <= x_max_found)
+							&& (y >= y_min_found) && (y <= y_max_found)) {
+						intersection++;
+					}
+				}
+			}
+			total = (x_max_gold - x_min_gold) * (y_max_gold - y_min_gold)
+					+ (x_max_found - x_min_found) * (y_max_found - y_min_found)
+					- intersection;
+			if (((float) intersection / total) >= threshold) {
+				out_positive++;
+				break;
+			}
+		}
+	}
+	float false_positive = found.size() - out_positive;
+	precision = true_positive / (true_positive + false_positive);
+
+	return CHECK_PR(precision, recall);
 }
 
 void save_layer(detection *det, int img_iterator, int test_iteration,
@@ -454,6 +536,13 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 	box *g_boxes = gold.boxes;
 	char* img_string = det->img_names[img];
 
+	// Check PR if critical
+	std::vector<box> found_boxes(num);
+	std::vector<box> gold_boxes(num);
+	std::vector<float> found_probs(num);
+	std::vector<float> gold_probs(num);
+
+
 	int error_count = 0;
 	for (int i = 0; i < num; ++i) {
 //		int class_ = get_index(g_probs[i], classes);
@@ -464,6 +553,10 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 //		for (int class_ = 0; class_ < classes; class_++) {
 		float g_prob = g_probs[i][class_g];
 		float f_prob = f_probs[i][class_f];
+		found_boxes[i] = f_b;
+		gold_boxes[i] = g_b;
+		found_probs[i] = f_prob;
+		gold_probs[i] = g_prob;
 
 		char error_detail[1000];
 		if (error_check(error_detail, f_prob, g_prob, f_b, g_b, img_string,
@@ -473,7 +566,7 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 #ifdef LOGS
 			log_error_detail(error_detail);
 #else
-//			printf("%s\n", error_detail);
+			printf("%s\n", error_detail);
 #endif
 
 //			}
@@ -494,6 +587,7 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 		}
 	}
 
+	bool online_pr =  online_precision_recall(gold_boxes, found_boxes, PR_THRESHOLD);
 #ifdef LOGS
 	log_error_count(error_count);
 	if(found) {

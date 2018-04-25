@@ -24,6 +24,8 @@
 
 #define LAYER_GOLD "/var/radiation-benchmarks/data/"
 
+#define CHECK_PR(precision, recall) ((precision < 1.0) || (recall < 1.0) ? true : false)
+#define PR_THRESHOLD 0.5
 
 static const char *ABFT_TYPES[] = { "none", "gemm", "smart_pooling", "l1", "l2",
 		"trained_weights", "dmr", "tmr" };
