@@ -26,7 +26,7 @@ CFLAGS= -Wall -Wfatal-errors -lpthread
 CXXFLAGS=-std=c++11 -lpthread
 NVCCFLAGS= -rdc=true -lcudadevrt --default-stream per-thread -ccbin=/usr/bin
 
-CUDAINCLUDE=/usr/local/cuda-7.0/include/
+CUDAINCLUDE=/usr/local/cuda-9.1/include/
 
 ifeq ($(DEBUG), 1)
 	OPTS+= -g
