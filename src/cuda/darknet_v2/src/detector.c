@@ -879,7 +879,7 @@ void test_detector_radiation(Args *args) {
 			}
 #endif
 			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, it,
-					args->save_layers, i, args->img_list_path, max_pool_errors);
+					args->save_layers, i, args->img_list_path, max_pool_errors, im);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(

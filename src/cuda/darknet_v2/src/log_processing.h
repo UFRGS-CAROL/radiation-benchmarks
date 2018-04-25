@@ -24,8 +24,8 @@
 
 #define LAYER_GOLD "/var/radiation-benchmarks/data/"
 
-#define CHECK_PR(precision, recall) ((precision < 1.0) || (recall < 1.0) ? true : false)
 #define PR_THRESHOLD 0.5
+#define CONSIDERING_DETECTION 0.2
 
 static const char *ABFT_TYPES[] = { "none", "gemm", "smart_pooling", "l1", "l2",
 		"trained_weights", "dmr", "tmr" };
@@ -107,12 +107,14 @@ void delete_detection_var(detection*, Args*);
 detection load_gold(Args*);
 
 void compare(detection *det, float **f_probs, box *f_boxes, int num,
-		int classes, int img, int save_layer, int test_iteration,
-		char *img_list_path, error_return max_pool_errors);
+		int classes, int img, int save_layers, int test_iteration,
+		char *img_list_path, error_return max_pool_errors, image im);
 
 void clear_boxes_and_probs(box*, float**, int, int);
 
 void print_detection(detection);
+
+inline void print_box(box b);
 
 #ifdef __cplusplus
 } //end extern "C"

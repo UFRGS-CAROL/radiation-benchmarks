@@ -30,6 +30,8 @@ void start_count_app(char *test, int save_layer, int abft, int iterations,
 	" save_layer: " + save_layer_char + " abft_type: " +
 	ABFT_TYPES[abft] + " iterations: " + iterations_char;
 
+	set_iter_interval_print(10);
+
 	start_log_file(app, const_cast<char*>(test_info.c_str()));
 #endif
 }
@@ -125,7 +127,7 @@ void delete_gold_layers_arrays(detection det) {
 
 inline std::string get_small_log_file(char *log_file) {
 	std::string temp(log_file);
-	std::vector < std::string > ret_array = split(temp, '/');
+	std::vector<std::string> ret_array = split(temp, '/');
 	std::string str_ret = ret_array[ret_array.size() - 1];
 	return str_ret;
 }
@@ -139,28 +141,47 @@ FILE* open_layer_file(char *output_filename, const char *mode) {
 	return fp;
 }
 
-bool online_precision_recall(std::vector<box> gold, std::vector<box> found, float threshold) {
-	int x_max_gold, x_min_gold, y_max_gold, y_min_gold, x_max_found,
-			x_min_found, y_max_found, y_min_found;
+inline void calc_real_coordinates(box b, image im, int *x_max, int *y_max,
+		int *x_min, int *y_min) {
 
-	long intersection, total;
+	int left = ((float) b.x - (float) b.w / 2.) * (float) im.w;
+	int right = ((float) b.x + (float) b.w / 2.) * (float) im.w;
+	int top = ((float) b.y + (float) b.h / 2.) * (float) im.h;
+	int bot = ((float) b.y - (float) b.h / 2.) * (float) im.h;
+
+	if (left < 0)
+		left = 0;
+	if (right > im.w - 1)
+		right = im.w - 1;
+	if (top < 0)
+		top = 0;
+	if (bot > im.h - 1)
+		bot = im.h - 1;
+	*x_max = right;
+	*x_min = left;
+	*y_max = top;
+	*y_min = bot;
+
+}
+
+std::pair<float, float> online_precision_recall(std::vector<box> gold,
+		std::vector<box> found, float threshold, image im) {
 	float true_positive = 0;
-	float precision, recall;
+
 	for (unsigned i = 0; i < gold.size(); i++) {
 		//float x, y, w, h;
-		x_max_gold = gold[i].x;
-		y_max_gold = gold[i].y;
-		x_min_gold = x_max_gold - gold[i].w;
-		y_min_gold = y_max_gold - gold[i].h;
-		//cout << "In rectangle " << i << endl;
-		for (unsigned z = 0; z < found.size(); z++) {
-			x_max_found = found[z].x;
-			y_max_found = found[z].y;
-			x_min_found = x_max_found - found[z].w;
-			y_min_found = y_max_found - found[z].h;
+		int x_max_gold, y_max_gold, x_min_gold, y_min_gold;
+		calc_real_coordinates(gold[i], im, &x_max_gold, &y_max_gold,
+				&x_min_gold, &y_min_gold);
 
-			intersection = 0;
-			total = 0;
+		for (unsigned z = 0; z < found.size(); z++) {
+			int x_max_found, y_max_found, x_min_found, y_min_found;
+
+			calc_real_coordinates(found[z], im, &x_max_found, &y_max_found,
+					&x_min_found, &y_min_found);
+
+			long intersection = 0;
+
 			for (int x = x_min_found; x <= x_max_found; x++) {
 				for (int y = y_min_found; y <= y_max_found; y++) {
 					if ((x >= x_min_gold) && (x <= x_max_gold)
@@ -169,34 +190,40 @@ bool online_precision_recall(std::vector<box> gold, std::vector<box> found, floa
 					}
 				}
 			}
-			total = (x_max_gold - x_min_gold) * (y_max_gold - y_min_gold)
+			long total = (x_max_gold - x_min_gold) * (y_max_gold - y_min_gold)
 					+ (x_max_found - x_min_found) * (y_max_found - y_min_found)
 					- intersection;
-			if (((float) intersection / total) >= threshold) {
-				true_positive++;
-				break;
+			if (total) {
+				if (((float) intersection / (float) total) >= threshold) {
+					true_positive++;
+					break;
+				}
 			}
 		}
 
 	}
 	float false_negative = gold.size() - true_positive;
-	recall = true_positive / (true_positive + false_negative);
+	float recall; // = true_positive / (true_positive + false_negative);
+
+	if (true_positive + false_negative) {
+		recall = true_positive / (true_positive + false_negative);
+	} else {
+		recall = 0;
+	}
 
 	float out_positive = 0;
 	for (unsigned z = 0; z < found.size(); z++) {
-		x_max_found = found[z].x;
-		y_max_found = found[z].y;
-		x_min_found = x_max_found - found[z].w;
-		y_min_found = y_max_found - found[z].h;
+		int x_max_found, y_max_found, x_min_found, y_min_found;
+
+		calc_real_coordinates(found[z], im, &x_max_found, &y_max_found,
+				&x_min_found, &y_min_found);
 
 		for (unsigned i = 0; i < gold.size(); i++) {
-			x_max_gold = gold[i].x;
-			y_max_gold = gold[i].y;
-			x_min_gold = x_max_gold - gold[i].w;
-			y_min_gold = y_max_gold - gold[i].h;
+			int x_max_gold, y_max_gold, x_min_gold, y_min_gold;
+			calc_real_coordinates(gold[i], im, &x_max_gold, &y_max_gold,
+					&x_min_gold, &y_min_gold);
 
-			intersection = 0;
-			total = 0;
+			long intersection = 0;
 
 			for (int x = x_min_gold; x <= x_max_gold; x++) {
 				for (int y = y_min_gold; y <= y_max_gold; y++) {
@@ -206,19 +233,26 @@ bool online_precision_recall(std::vector<box> gold, std::vector<box> found, floa
 					}
 				}
 			}
-			total = (x_max_gold - x_min_gold) * (y_max_gold - y_min_gold)
+			long total = (x_max_gold - x_min_gold) * (y_max_gold - y_min_gold)
 					+ (x_max_found - x_min_found) * (y_max_found - y_min_found)
 					- intersection;
-			if (((float) intersection / total) >= threshold) {
-				out_positive++;
-				break;
+			if (total) {
+				if (((float) intersection / (float) total) >= threshold) {
+					out_positive++;
+					break;
+				}
 			}
 		}
 	}
 	float false_positive = found.size() - out_positive;
-	precision = true_positive / (true_positive + false_positive);
+	float precision; // = true_positive / (true_positive + false_positive);
+	if (true_positive + false_positive) {
+		precision = true_positive / (true_positive + false_positive);
+	} else {
+		precision = 0;
+	}
 
-	return CHECK_PR(precision, recall);
+	return std::pair<float, float>(precision, recall);
 }
 
 void save_layer(detection *det, int img_iterator, int test_iteration,
@@ -228,7 +262,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 	FILE *output_file, *gold_file;
 	std::string small_log_file = get_small_log_file(log_filename);
 	std::string img_list_filename_string(img_list_filename);
-	std::vector < std::string > temp_splited = split(img_list_filename_string,
+	std::vector<std::string> temp_splited = split(img_list_filename_string,
 			'/');
 	img_list_filename_string = temp_splited[temp_splited.size() - 1];
 
@@ -295,7 +329,7 @@ void save_layer(detection *det, int img_iterator, int test_iteration,
 }
 
 char** get_image_filenames(char *img_list_path, int *image_list_size) {
-	std::list < std::string > data;
+	std::list<std::string> data;
 	std::string line;
 	std::ifstream img_list_file(img_list_path);
 	if (img_list_file.is_open()) {
@@ -351,7 +385,7 @@ void save_gold(FILE *fp, char *img, int num, int classes, float **probs,
 //		fprintf(fp, "%f;%f;%f;%f;%f;%d;\n", prob, b.x, b.y, b.w, b.h, class_);
 //
 //	}
-	std::vector < std::string > to_print;
+	std::vector<std::string> to_print;
 	for (int i = 0; i < num; i++) {
 		box b = boxes[i];
 		int class_ = get_index(probs[i], classes);
@@ -379,7 +413,7 @@ prob_array load_prob_array(int num, int classes, std::ifstream &ifp) {
 	}
 
 	std::string line;
-	std::vector < std::string > splited;
+	std::vector<std::string> splited;
 	for (int i = 0; i < num; ++i) {
 
 		getline(ifp, line);
@@ -410,7 +444,7 @@ detection load_gold(Args *arg) {
 		exit(-1);
 	}
 
-	std::vector < std::string > split_ret = split(line, ';');
+	std::vector<std::string> split_ret = split(line, ';');
 //	0       1           2              3              4            5            6
 //	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;total;classes;
 	arg->thresh = atof(split_ret[0].c_str());
@@ -437,7 +471,7 @@ detection load_gold(Args *arg) {
 	for (int i = 0; i < gold.plist_size && getline(img_list_file, line); i++) {
 		line.erase(line.size() - 1);
 		gold.img_names[i] = (char*) calloc(line.size(), sizeof(char));
-		std::vector < string > line_splited = split(line, ';');
+		std::vector<string> line_splited = split(line, ';');
 		strcpy(gold.img_names[i], line_splited[0].c_str());
 
 		gold.pb_gold[i] = load_prob_array(gold.total, gold.classes,
@@ -473,7 +507,12 @@ void delete_detection_var(detection *det, Args *arg) {
 }
 
 void clear_boxes_and_probs(box *boxes, float **probs, int n, int m) {
-	memset(boxes, 0, sizeof(box) * n);
+	for (int i = 0; i < n; i++) {
+		boxes[i].x = 0;
+		boxes[i].y = 0;
+		boxes[i].w = 0;
+		boxes[i].h = 0;
+	}
 	for (int i = 0; i < n; i++) {
 		memset(probs[i], 0, sizeof(float) * m);
 	}
@@ -528,7 +567,7 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 
 void compare(detection *det, float **f_probs, box *f_boxes, int num,
 		int classes, int img, int save_layers, int test_iteration,
-		char *img_list_path, error_return max_pool_errors) {
+		char *img_list_path, error_return max_pool_errors, image im) {
 
 //	network *net = det->net;
 	prob_array gold = det->pb_gold[img];
@@ -537,11 +576,8 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 	char* img_string = det->img_names[img];
 
 	// Check PR if critical
-	std::vector<box> found_boxes(num);
-	std::vector<box> gold_boxes(num);
-	std::vector<float> found_probs(num);
-	std::vector<float> gold_probs(num);
-
+	std::list<box> found_boxes;
+	std::list<box> gold_boxes;
 
 	int error_count = 0;
 	for (int i = 0; i < num; ++i) {
@@ -553,11 +589,13 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 //		for (int class_ = 0; class_ < classes; class_++) {
 		float g_prob = g_probs[i][class_g];
 		float f_prob = f_probs[i][class_f];
-		found_boxes[i] = f_b;
-		gold_boxes[i] = g_b;
-		found_probs[i] = f_prob;
-		gold_probs[i] = g_prob;
 
+		if (f_prob >= CONSIDERING_DETECTION) {
+			found_boxes.push_back(f_b);
+		}
+		if (g_prob >= CONSIDERING_DETECTION) {
+			gold_boxes.push_back(g_b);
+		}
 		char error_detail[1000];
 		if (error_check(error_detail, f_prob, g_prob, f_b, g_b, img_string,
 				class_g, class_f, i)) {
@@ -587,7 +625,6 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 		}
 	}
 
-	bool online_pr =  online_precision_recall(gold_boxes, found_boxes, PR_THRESHOLD);
 #ifdef LOGS
 	log_error_count(error_count);
 	if(found) {
@@ -595,10 +632,19 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 	}
 
 	printf("%d errors found at %s detection\n", error_count, img_string);
-//save layers here
-	if(error_count && save_layers) {
+
+	//save layers here
+	std::vector<box> gold_boxes_vector(std::begin(gold_boxes), std::end(gold_boxes));
+	std::vector<box> found_boxes_vector(std::begin(found_boxes), std::end(found_boxes));
+
+	std::pair<float, float> pr = online_precision_recall(gold_boxes_vector, found_boxes_vector,
+			PR_THRESHOLD, im);
+
+	if(error_count && save_layers && ((pr.first != 1.0) || (pr.second != 1.0))) {
 		save_layer(det, img, test_iteration, get_log_file_name(), 0, img_list_path);
 	}
+	printf("ONLINE PR %f %f\n", pr.first, pr.second);
+
 #endif
 
 }
