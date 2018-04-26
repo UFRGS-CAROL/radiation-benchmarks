@@ -61,7 +61,7 @@ struct Params {
 	const char *file_name;
 	const char *comparison_file;
 	int switching_limit;
-
+	std::string gold_path;
 	//for radiation test
 	int mode;
 
@@ -76,9 +76,11 @@ struct Params {
 		comparison_file = "output/NYR_bfs_BFS.out";
 		switching_limit = 128;
 		mode = -1;
+		gold_path = "";
+
 
 		int opt;
-		while ((opt = getopt(argc, argv, "hd:i:g:t:w:r:f:c:l:m:")) >= 0) {
+		while ((opt = getopt(argc, argv, "hd:i:g:t:w:r:f:c:l:m:p:")) >= 0) {
 			switch (opt) {
 			case 'h':
 				usage();
@@ -113,6 +115,9 @@ struct Params {
 				break;
 			case 'm':
 				mode = atoi(optarg);
+				break;
+			case 'p':
+				gold_path = std::string(optarg);
 				break;
 			default:
 				fprintf(stderr, "\nUnrecognized option!\n");
@@ -149,6 +154,7 @@ struct Params {
 						"\n    -c <C>    comparison file (default=output/NYR_bfs_BFS.out)"
 						"\n    -l <L>    switching limit (default=128)"
 						"\n    -m <M>    mode for radiation test -1 normal execution, 0 generate gold, >=1 (number of iterations) radiation test"
+						"\n	   -p <P>    if generate gold activated it must contains gold ouptut path"
 						"\n");
 	}
 };
@@ -251,8 +257,8 @@ int main(int argc, char **argv) {
 	int n_nodes, n_edges;
 	int n_nodes_o;
 	read_input_size(n_nodes, n_edges, p);
-	read_gold_size(n_nodes_o, p);
 //************************* Allocando Memoria para o Gold **********************
+	read_gold_size(n_nodes_o, p);
 	Gold * gold = (Gold *) malloc(sizeof(Gold) * n_nodes_o);
 //******************************************************************************
 
@@ -577,7 +583,7 @@ int main(int argc, char **argv) {
 	// Generate case
 	if (p.n_reps == 0){
 		//TODO: Put generate function here
-
+		create_output(h_cost, n_nodes, p.gold_path);
 	}
 	//timer.print("Allocation", 1);
 	//timer.print("Copy To Device", p.n_reps);
@@ -586,7 +592,7 @@ int main(int argc, char **argv) {
 
 	// Verify answer
 	// verify(h_cost, n_nodes, p.comparison_file);
-	//create_output(h_cost, n_nodes);
+
 	// Free memory
 	timer.start("Deallocation");
 	free(h_nodes);
@@ -595,6 +601,7 @@ int main(int argc, char **argv) {
 	free(h_cost);
 	free(h_q1);
 	free(h_q2);
+	free(gold);
 	cudaStatus = cudaFree(d_nodes);
 	cudaStatus = cudaFree(d_edges);
 	cudaStatus = cudaFree(d_cost);
@@ -608,6 +615,7 @@ int main(int argc, char **argv) {
 	cudaStatus = cudaFree(d_threads_run);
 	cudaStatus = cudaFree(d_overflow);
 	cudaStatus = cudaFree(d_iter);
+
 	CUDA_ERR();
 	cudaDeviceSynchronize();
 	timer.stop("Deallocation");
