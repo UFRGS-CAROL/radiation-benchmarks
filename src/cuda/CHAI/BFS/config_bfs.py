@@ -16,8 +16,7 @@ ITERATIONS = 100000
 THREADS_HOST = [900000000, 0, 128]
 EMBEDDED_HOSTS = ['K1', 'X1', 'X2', 'APU']
 
-DEBUG_MODE = True
-
+DEBUG_MODE = False
 
 def untar_graphs(file_path):
     tries = 3
