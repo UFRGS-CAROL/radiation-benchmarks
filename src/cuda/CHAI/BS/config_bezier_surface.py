@@ -6,32 +6,18 @@ import os
 import sys
 import ConfigParser
 
-INPUT = ["lakes_graph_in"]
+INPUT = ['input/control.txt']
 ITERATIONS = 100000
+ALPHA_VARIATIONS = [0, 0.1, 0.2, 0.3]
+RESOLUTIONS = [2500, 5000]
 
-THREADS_HOST = [0, 0.2, 0.4]
 EMBEDDED_HOSTS = ['K1', 'X1', 'X2', 'APU']
 
 DEBUG_MODE = True
 
 
-def untar_graphs(file_path):
-    tries = 3
-
-    while not os.path.isfile(file_path + "/lakes_graph_in"):
-        print "tar xzf " + file_path + "/lakes_graph_in.tar.gz -C " + file_path + "/"
-        if os.system("tar xzf " + file_path + "/lakes_graph_in.tar.gz -C " + file_path + "/") != 0:
-            print "Something went wrong with untar of " + file_path + " file. Trying again"
-
-        if tries == 0:
-            return False
-        tries -= 1
-
-    return True
-
-
 def main(board):
-    print "Generating BFS for CUDA on " + str(board)
+    print "Generating Bezier Surface for CUDA on " + str(board)
 
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
@@ -44,48 +30,58 @@ def main(board):
         print >> sys.stderr, "Configuration setup error: " + str(e)
         sys.exit(1)
 
-    benchmark_bin = "bfs"
+    benchmark_bin = "bezier_surface"
     data_path = install_dir + "data/" + benchmark_bin
     bin_path = install_dir + "bin"
-    src_bfs = install_dir + "src/cuda/" + benchmark_bin
-
-    if not untar_graphs(data_path):
-        raise ValueError("Error on untar the file")
+    src_bs = install_dir + "src/cuda/" + benchmark_bin
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
-    generate = ["cd " + src_bfs, "make clean", "make -j4",
+    generate = ["cd " + src_bs, "make clean", "make -j4",
                 "mv ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
     for i in INPUT:
-        for j in THREADS_HOST:
-            if j > 0 and board not in EMBEDDED_HOSTS:
+        for j in ALPHA_VARIATIONS:
+            if j > 0 and ('X1' not in board and 'X2' not in board and 'K1' not in board):
                 continue
+            for r in RESOLUTIONS:
+                if r > 2500 and ('X1' in board or 'X2' in board or 'K1' in board):
+                    continue
+                inputFile = data_path + "/" + i
 
-            input_file = data_path + "/" + i
-            # $(RAD_BENCH)/src/cuda/bfs/$(EXE) -t 0 -f $(RAD_BENCH)/data/bfs/graph1MW_6.txt -c temp.gold -m 1 -r 100
-            gen = [None] * 6
-            gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
-            gen[1] = ['-l ', j]
-            gen[2] = ['-f ', input_file]
-            gen[3] = ['-c ', input_file + ".gold"]
-            gen[4] = ['-m ', 0]  # change for execute
-            gen[5] = ['-r ', 1]
+                # $(RAD_BENCH) / src / cuda / bezier_surface /$(EXE) - w
+                # 0 - r
+                # 10 - a
+                # 0 - s
+                # 1 \
+                # - z $(RAD_BENCH) / data / bezier_surface / temp.gold \
+                #      - f $(RAD_BENCH) / data / bezier_surface / input / control.txt - n
+                # 2500
+                gen = [None] * 8
+                gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
+                gen[1] = ['-w ', 0]
+                gen[2] = ['-r ', 1]
+                gen[3] = ['-a ', j]
+                gen[4] = ['-s ', 0]  # change for execute
+                gen[5] = ['-z ',
+                          data_path + "/alpha_" + str(j) + "_in_size_" + str(r) + "_out_size_" + str(r) + ".gold"]
+                gen[6] = ['-f ', inputFile]
+                gen[7] = ['-n ', r]
 
-            # change mode and iterations for exe
-            exe = copy.deepcopy(gen)
-            exe[4][1] = 1
-            exe[5][1] = ITERATIONS
+                # change mode and iterations for exe
+                exe = copy.deepcopy(gen)
+                exe[4][1] = 1
+                exe[2][1] = ITERATIONS
 
-            generate.append(' '.join(str(r) for v in gen for r in v))
-            execute.append(' '.join(str(r) for v in exe for r in v))
+                generate.append(' '.join(str(r) for v in gen for r in v))
+                execute.append(' '.join(str(r) for v in exe for r in v))
 
     generate.extend(
         ["make clean", "make -C ../../include/",
-         "make LOGS=1",
+         "make -j4 LOGS=1",
          "mv ./" + benchmark_bin + " " + bin_path + "/"])
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin)
 
