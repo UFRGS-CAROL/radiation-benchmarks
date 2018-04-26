@@ -15,7 +15,7 @@ struct Params {
 
     Params(int argc, char **argv) {
 
-        file_name     = "input/control.txt";
+        file_name     = "../../../../data/bezier_surface/input/control.txt";
         in_size_i = in_size_j = 3;
         out_size_i = out_size_j = 300;
         int opt;
