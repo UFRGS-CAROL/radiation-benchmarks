@@ -9,14 +9,18 @@ import ConfigParser
 INPUT = ["lakes_graph_in"]
 ITERATIONS = 100000
 
-THREADS_HOST = [0, 2, 4]
+THREADS_HOST = [0, 0.2, 0.4]
+EMBEDDED_HOSTS = ['K1', 'X1', 'X2', 'APU']
+
+DEBUG_MODE = True
+
 
 def untar_graphs(filepath):
     tries = 3
 
     while not os.path.isfile(filepath + "/lakes_graph_in"):
-        print "tar xzf " + filepath + "/lakes_graph_in.tar.gz -C " +  filepath + "/"
-        if os.system("tar xzf " + filepath + "/lakes_graph_in.tar.gz -C " +  filepath + "/") != 0:
+        print "tar xzf " + filepath + "/lakes_graph_in.tar.gz -C " + filepath + "/"
+        if os.system("tar xzf " + filepath + "/lakes_graph_in.tar.gz -C " + filepath + "/") != 0:
             print "Something went wrong with untar of " + filepath + " file. Trying again"
 
         if tries == 0:
@@ -25,24 +29,25 @@ def untar_graphs(filepath):
 
     return True
 
+
 def main(board):
     print "Generating BFS for CUDA on " + str(board)
 
-    confFile = '/etc/radiation-benchmarks.conf'
+    conf_file = '/etc/radiation-benchmarks.conf'
     try:
         config = ConfigParser.RawConfigParser()
-        config.read(confFile)
+        config.read(conf_file)
 
-        installDir = config.get('DEFAULT', 'installdir') + "/"
+        install_dir = config.get('DEFAULT', 'installdir') + "/"
 
     except IOError as e:
         print >> sys.stderr, "Configuration setup error: " + str(e)
         sys.exit(1)
 
     benchmark_bin = "bfs"
-    data_path = installDir + "data/" + benchmark_bin
-    bin_path = installDir + "bin"
-    src_bfs = installDir + "src/cuda/" + benchmark_bin
+    data_path = install_dir + "data/" + benchmark_bin
+    bin_path = install_dir + "bin"
+    src_bfs = install_dir + "src/cuda/" + benchmark_bin
 
     if not untar_graphs(data_path):
         raise ValueError("Error on untar the file")
@@ -57,17 +62,16 @@ def main(board):
 
     for i in INPUT:
         for j in THREADS_HOST:
-            if j > 0 and ('X1' not in board and 'X2' not in board and 'K1' not in board):
+            if j > 0 and board not in EMBEDDED_HOSTS:
                 continue
 
-            inputFile = data_path + "/" + i
-
-            #	$(RAD_BENCH)/src/cuda/bfs/$(EXE) -t 0 -f $(RAD_BENCH)/data/bfs/graph1MW_6.txt -c temp.gold -m 1 -r 100
+            input_file = data_path + "/" + i
+            # $(RAD_BENCH)/src/cuda/bfs/$(EXE) -t 0 -f $(RAD_BENCH)/data/bfs/graph1MW_6.txt -c temp.gold -m 1 -r 100
             gen = [None] * 6
             gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
-            gen[1] = ['-t ', j]
-            gen[2] = ['-f ', inputFile]
-            gen[3] = ['-c ', inputFile + ".gold"]
+            gen[1] = ['-l ', j]
+            gen[2] = ['-f ', input_file]
+            gen[3] = ['-c ', input_file + ".gold"]
             gen[4] = ['-m ', 0]  # change for execute
             gen[5] = ['-r ', 1]
 
@@ -81,37 +85,37 @@ def main(board):
 
     generate.extend(
         ["make clean", "make -C ../../include/",
-         "make -j4 LOGS=1",
+         "make LOGS=1",
          "mv ./" + benchmark_bin + " " + bin_path + "/"])
-    execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin)
+    execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin)
 
 
-def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
+def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin):
     for i in generate:
-        if os.system(str(i)) != 0:
-            print "Something went wrong with generate of ", str(i )
-            exit(1)
-        print i
-    fp = open(installDir + "scripts/json_files/" + benchmark_bin + ".json", 'w')
+        if DEBUG_MODE:
+            print i
+        else:
+            if os.system(str(i)) != 0:
+                print "Something went wrong with generate of ", str(i)
+                exit(1)
 
-    list_to_print = ["["]
+    list_to_print = ["[\n"]
     for ii, i in enumerate(execute):
         command = "{\"killcmd\": \"killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(i) + "\"}"
         if ii != len(execute) - 1:
-            command += ', '
+            command += ',\n'
         list_to_print.append(command)
-    list_to_print.append("]")
+    list_to_print.append("\n]")
 
-    for i in list_to_print:
-        print >> fp, i
-        print i
-    fp.close()
-    print "\nConfiguring done, to run check file: " + installDir + "scripts/json_files/" + benchmark_bin + ".json"
+    with open(install_dir + "scripts/json_files/" + benchmark_bin + ".json", 'w') as fp:
+        fp.writelines(list_to_print)
+
+    print "\nConfiguring done, to run check file: " + install_dir + "scripts/json_files/" + benchmark_bin + ".json"
 
 
 if __name__ == "__main__":
     parameter = sys.argv[1:]
     if len(parameter) < 1:
-        print "./config_generic <k1/x1/k40>"
+        print "./config_generic <k1/x1/x2/k40/titan>"
     else:
         main(str(parameter[0]).upper())
