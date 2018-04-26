@@ -358,12 +358,17 @@ void generateGoldMatrixHalf()
 		}
 		printf("Comparing GPU result with Host result...\n");
 		float maxDiff = 0.0;
+		float maxAbsDiff = 0.0;
 		for (i=0; i<k; i++) {
 			for (j=0; j<k; j++) {
 				register float diff = fabs(((float)(hostGold[i*k+j])-(float)(GOLD[i*k+j]))/(float)(hostGold[i*k+j]));
+				register float absDiff = (float)(hostGold[i*k+j])-(float)(GOLD[i*k+j]);
 				if (diff > maxDiff) {
 					maxDiff = max(diff, maxDiff);
 					printf("New diff! (%d,%d) hostGold!=gpuGold %f != %f (diff: %e)\n", i, j, (float)(hostGold[i*k+j]), (float)(GOLD[i*k+j]), diff);
+				}
+				if (absDiff > maxAbsDiff) {
+					maxAbsDiff = max(absDiff, maxAbsDiff);
 				}
 				// if (diff > 0.1) {
 				// 	printf("Fail! (%d,%d) hostGold!=gpuGold %f != %f (diff: %e)\n", i, j, (float)hostGold[i*k+j], (float)GOLD[i*k+j], diff);
@@ -372,7 +377,7 @@ void generateGoldMatrixHalf()
 				// }
 			}
 		}
-		printf("CPU and GPU match by an error of up to %e element difference. Writing to file...\n", maxDiff);
+		printf("CPU and GPU match by an error of up to %e element difference. Max abs. diff: %e (relative to half representation: %e) Writing to file...\n", maxDiff, maxAbsDiff, maxAbsDiff / MAX_HALF);
 	}
 
 	//printf("-------------------------\n%.10f\n%.10f\n%.10f\n", GOLD[0], GOLD[1], GOLD[2]);
