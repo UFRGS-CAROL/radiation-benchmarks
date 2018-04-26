@@ -536,8 +536,8 @@ int main(int argc, char **argv) {
     //timer.print("Copy Back and Merge", p.n_reps);
 
     // Verify answer
-    verify(h_cost, n_nodes, p.comparison_file);
-
+    // verify(h_cost, n_nodes, p.comparison_file);
+    //create_output(h_cost, n_nodes);
     // Free memory
     timer.start("Deallocation");
     free(h_nodes);
