@@ -15,13 +15,13 @@ EMBEDDED_HOSTS = ['K1', 'X1', 'X2', 'APU']
 DEBUG_MODE = True
 
 
-def untar_graphs(filepath):
+def untar_graphs(file_path):
     tries = 3
 
-    while not os.path.isfile(filepath + "/lakes_graph_in"):
-        print "tar xzf " + filepath + "/lakes_graph_in.tar.gz -C " + filepath + "/"
-        if os.system("tar xzf " + filepath + "/lakes_graph_in.tar.gz -C " + filepath + "/") != 0:
-            print "Something went wrong with untar of " + filepath + " file. Trying again"
+    while not os.path.isfile(file_path + "/lakes_graph_in"):
+        print "tar xzf " + file_path + "/lakes_graph_in.tar.gz -C " + file_path + "/"
+        if os.system("tar xzf " + file_path + "/lakes_graph_in.tar.gz -C " + file_path + "/") != 0:
+            print "Something went wrong with untar of " + file_path + " file. Trying again"
 
         if tries == 0:
             return False
