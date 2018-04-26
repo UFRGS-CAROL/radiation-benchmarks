@@ -575,7 +575,7 @@ int main(int argc, char **argv) {
 #endif
 
 	// Generate case
-	if (p.reps != 0){
+	if (p.n_reps == 0){
 		//TODO: Put generate function here
 
 	}
