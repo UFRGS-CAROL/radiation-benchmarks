@@ -600,7 +600,7 @@ int main(int argc, char **argv) {
 	// Generate case
 	if (p.mode == 0) {
 		//TODO: Put generate function here
-		create_output(h_cost, n_nodes, p.gold_path);
+		create_output(h_cost, n_nodes, n_edges, p.gold_path);
 	}
 	//timer.print("Allocation", 1);
 	//timer.print("Copy To Device", p.n_reps);
