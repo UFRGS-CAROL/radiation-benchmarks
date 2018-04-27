@@ -68,7 +68,7 @@ LIB+= -L$(LOGHELPERPATH) -lLogHelper -DLOGS
 INC+= -I$(LOGHELPERPATH)
 endif 
 
-ieq ($(DEBUG), 1)
+ifeq ($(DEBUG), 1)
 CXX_FLAGS+= -g -G
 endif
 
