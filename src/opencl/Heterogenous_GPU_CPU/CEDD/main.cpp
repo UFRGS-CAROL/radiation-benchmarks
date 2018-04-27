@@ -180,7 +180,7 @@ inline int newest_compare_output(unsigned char **all_out_frames, int image_size,
     int count_error = 0;
 # pragma omp parallel for
     for(int i = 0; i < num_frames; i++) {
-		update_timestamp();
+		//update_timestamp();
         for(int r = 0; r < rowsc; r++) {
             for(int c = 0; c < colsc; c++) {
                 int pix;		
