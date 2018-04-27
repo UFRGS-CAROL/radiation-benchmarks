@@ -84,6 +84,17 @@ $(EXE):$(SRC)
 	$(NVCC) $(CXX_FLAGS) $(NVCC_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE)
 	
 
+generate:
+	./$(EXE) -f /home/carol/radiation-benchmarks/data/bfs/lakes_graph_in \
+				-c /home/carol/radiation-benchmarks/data/bfs/lakes_graph_out -m 0 \
+				-p /home/carol/radiation-benchmarks/data/bfs/lakes_graph.gold \
+				-r 1 -l 900000000  #CPU
+
+test:
+	./$(EXE) -f /home/carol/radiation-benchmarks/data/bfs/lakes_graph_in \
+				-c /home/carol/radiation-benchmarks/data/bfs/lakes_graph_out -m 1 \
+				-p /home/carol/radiation-benchmarks/data/bfs/lakes_graph.gold \
+				-r 1000 -l 900000000  #CPU
 
 clean:
 	rm -f $(EXE)
