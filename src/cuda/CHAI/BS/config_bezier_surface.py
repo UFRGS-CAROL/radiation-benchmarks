@@ -106,7 +106,13 @@ def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin
 
 
 if __name__ == "__main__":
+    global DEBUG_MODE
+
     parameter = sys.argv[1:]
+    try:
+        DEBUG_MODE = sys.argv[2:]
+    except:
+        DEBUG_MODE = False
     if len(parameter) < 1:
         print "./config_generic <k1/x1/x2/k40/titan>"
     else:
