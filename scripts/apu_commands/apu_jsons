@@ -13,12 +13,12 @@
 /home/carol/radiation-benchmarks/scripts/apu_commands/BS/bs_50_gpu.json
 /home/carol/radiation-benchmarks/scripts/apu_commands/BS/bs_60_gpu.json
 #--------------- CEDD Caltech --------------
-/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_cpu.json
-/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_gpu.json
-/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_cpu+gpu.json
-/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_30_gpu.json
-/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_50_gpu.json
-/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_60_gpu.json
+#/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_cpu.json
+#/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_gpu.json
+#/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_cpu+gpu.json
+#/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_30_gpu.json
+#/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_50_gpu.json
+#/home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Caltech/cedd_60_gpu.json
 #---------------- CEDD Urban ---------------
 /home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Urban/cedd_cpu.json
 /home/carol/radiation-benchmarks/scripts/apu_commands/CEDD/Urban/cedd_gpu.json
@@ -40,7 +40,7 @@
 /home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Colorado/sssp_gpu.json
 /home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Colorado/sssp_30_gpu.json
 #---------------- SSSP Florida --------------------
-/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Florida/sssp_cpu.json
-/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Florida/sssp_gpu.json
-/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Florida/sssp_30_gpu.json
+#/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Florida/sssp_cpu.json
+#/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Florida/sssp_gpu.json
+#/home/carol/radiation-benchmarks/scripts/apu_commands/SSSP/Florida/sssp_30_gpu.json
 

@@ -68,16 +68,47 @@ struct Params {
 	int 		loop; 
 
     Params(int argc, char **argv) {
+/*
+//CPU
         platform        = 0;
         device          = 0;
         n_work_items    = 16;
         n_threads       = 4;
         n_warmup        = 10;
-        n_reps          = 100;
-        alpha           = 0.2;
-		loop 			= 100;
-        file_name       = "input/peppa/";
-        comparison_file = "output/peppa/";
+        n_reps          = 1100;
+        alpha           = 1.0;
+		loop 			= 1;
+        file_name       = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/urban_input/";
+        comparison_file = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/urban_output/";
+*/
+/*
+
+//GPU
+        platform        = 0;
+        device          = 0;
+        n_work_items    = 16;
+        n_threads       = 4;
+        n_warmup        = 10;
+        n_reps          = 1100;
+        alpha           = 0.0;
+	loop 			= 1;
+        file_name       = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/urban_input/";
+        comparison_file = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/urban_output/";
+*/
+
+//CPU +GPU
+        platform        = 0;
+        device          = 0;
+        n_work_items    = 16;
+        n_threads       = 4;
+        n_warmup        = 10;
+        n_reps          = 1100;
+        alpha           = 0.1;
+		loop 			= 1;
+        file_name       = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/input/urban_input/";
+        comparison_file = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/CEDD/output/urban_output/";
+
+
         int opt;
         while((opt = getopt(argc, argv, "hp:d:i:t:w:r:a:f:c:xl:")) >= 0) {
             switch(opt) {
@@ -147,8 +178,9 @@ inline int newest_compare_output(unsigned char **all_out_frames, int image_size,
 
    // printf("Entrei compara\n");
     int count_error = 0;
+# pragma omp parallel for
     for(int i = 0; i < num_frames; i++) {
-	update_timestamp();
+		update_timestamp();
         for(int r = 0; r < rowsc; r++) {
             for(int c = 0; c < colsc; c++) {
                 int pix;		
@@ -237,7 +269,7 @@ inline int new_compare_output(unsigned char **all_out_frames, int image_size, co
 
 // Input Data -----------------------------------------------------------------
 void new_read_input(unsigned char** all_gray_frames, int &rowsc, int &colsc, int &in_size, const Params &p) {
-	printf("Lendo Input\n");
+	//printf("Lendo Input\n");
     for(int task_id = 0; task_id < p.n_warmup + p.n_reps; task_id++) {
 
         char FileName[300];
