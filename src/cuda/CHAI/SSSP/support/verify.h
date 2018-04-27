@@ -43,68 +43,70 @@
 #endif
 //************************************************************************************//
 
-inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,int num_of_nodes_o,Gold *&h_nodes, int it_cpu, int it_gpu) {
-    int count_error = 0;
-    if(num_of_nodes != num_of_nodes_o) { 
-        printf("Number of nodes does not match the expected value\n");
-        //exit(EXIT_FAILURE);
-    }
+inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,
+		int num_of_nodes_o, Gold *&h_nodes, int it_cpu, int it_gpu) {
+	int count_error = 0;
+	if (num_of_nodes != num_of_nodes_o) {
+		printf("Number of nodes does not match the expected value\n");
+		//exit(EXIT_FAILURE);
+	}
 
-    for(int i = 0; i < num_of_nodes_o; i++) {
-        int j, cost;
-       // fscanf(fpo, "%ld %ld", &j, &cost);
-        if(i != h_nodes[i].j || h_cost[i].load()* -1 != h_nodes[i].cost) {
-			  count_error++;	
-            //printf("Computed node %ld cost (%ld != %ld) does not match the expected value\n", i, h_cost[i].load(), cost);
+	for (int i = 0; i < num_of_nodes_o; i++) {
+		int j, cost;
+		// fscanf(fpo, "%ld %ld", &j, &cost);
+		if (i != h_nodes[i].j || h_cost[i].load() * -1 != h_nodes[i].cost) {
+			count_error++;
+			//printf("Computed node %ld cost (%ld != %ld) does not match the expected value\n", i, h_cost[i].load(), cost);
 #ifdef LOGS
-        char error_detail[250];
-	sprintf(error_detail,"Nodo: %d,e:%d, r:%d, CPU:%d , GPU:%d \n",i,h_cost[i].load(), h_nodes[i].cost,it_cpu,it_gpu);
+			char error_detail[250];
+			sprintf(error_detail,"Nodo: %d,e:%d, r:%d, CPU:%d , GPU:%d \n",i,h_cost[i].load(), h_nodes[i].cost,it_cpu,it_gpu);
 
-	 log_error_detail(error_detail);
+			log_error_detail(error_detail);
 #endif
 
-            //exit(EXIT_FAILURE);
-        }
-    }
+			//exit(EXIT_FAILURE);
+		}
+	}
 
-    return count_error;
+	return count_error;
 }
 
-
-inline int verify(std::atomic_int *h_cost, int num_of_nodes, const char *file_name) {
+inline int verify(std::atomic_int *h_cost, int num_of_nodes,
+		const char *file_name) {
 // Compare to output file
 #if PRINT
-    printf("Comparing outputs...\n");
+	printf("Comparing outputs...\n");
 #endif
-    FILE *fpo = fopen(file_name, "r");
-    if(!fpo) {
-        printf("Error Reading output file\n");
-        exit(EXIT_FAILURE);
-    }
+	FILE *fpo = fopen(file_name, "r");
+	if (!fpo) {
+		printf("Error Reading output file\n");
+		exit (EXIT_FAILURE);
+	}
 #if PRINT
-    printf("Reading Output: %s\n", file_name);
+	printf("Reading Output: %s\n", file_name);
 #endif
 
-    // the number of nodes in the output
-    int num_of_nodes_o = 0;
-    fscanf(fpo, "%d", &num_of_nodes_o);
-    if(num_of_nodes != num_of_nodes_o) {
-        printf("FAIL: Number of nodes does not match the expected value\n");
-        exit(EXIT_FAILURE);
-    }
+	// the number of nodes in the output
+	int num_of_nodes_o = 0;
+	fscanf(fpo, "%d", &num_of_nodes_o);
+	if (num_of_nodes != num_of_nodes_o) {
+		printf("FAIL: Number of nodes does not match the expected value\n");
+		exit (EXIT_FAILURE);
+	}
 
-    // cost of nodes in the output
-    for(int i = 0; i < num_of_nodes_o; i++) {
-        int j, cost;
-        fscanf(fpo, "%d %d", &j, &cost);
-        if(i != j || h_cost[i].load() * -1 != cost) {
-            printf("FAIL: Computed node %d cost (%d != %d) does not match the expected value\n", i, h_cost[i].load(), 
-                cost);
-            exit(EXIT_FAILURE);
-        }
-    }
+	// cost of nodes in the output
+	for (int i = 0; i < num_of_nodes_o; i++) {
+		int j, cost;
+		fscanf(fpo, "%d %d", &j, &cost);
+		if (i != j || h_cost[i].load() * -1 != cost) {
+			printf(
+					"FAIL: Computed node %d cost (%d != %d) does not match the expected value\n",
+					i, h_cost[i].load(), cost);
+			exit (EXIT_FAILURE);
+		}
+	}
 
-    fclose(fpo);
-    return 0;
+	fclose(fpo);
+	return 0;
 }
 #endif
