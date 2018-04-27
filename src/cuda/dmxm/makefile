@@ -16,17 +16,18 @@ NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-RUN_SOURCES=./cudaMxM.cu
-GEN_SOURCES=./generateMatrices.cu
-RUN_EXEC=./mxm
-GEN_EXEC=./generateMatrices
-
-MATRIX_NAMES=mxm*
+RUN_SOURCES=./cudaDMxM.cu
+GEN_SOURCES=./generateMatricesDouble.cu
+RUN_EXEC=./dmxm
+GEN_EXEC=./generateMatricesDouble
 
 DEF_SIZE=1024
-DEF_A_INPUT=./mxmA_8192.matrix
-DEF_B_INPUT=./mxmB_8192.matrix
-DEF_GOLD=./mxmGOLD_$(DEF_TEST_SIZE).matrix
+
+DEF_A_INPUT=./dmxm_A_8192.matrix
+DEF_B_INPUT=./dmxm_B_8192.matrix
+DEF_GOLD=./dmxm_GOLD_$(DEF_TEST_SIZE).matrix
+
+MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD)
 
 
 all: $(RUN_EXEC) $(GEN_EXEC)

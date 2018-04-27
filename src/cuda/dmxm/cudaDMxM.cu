@@ -226,7 +226,7 @@ __global__ void MatrixMulKernel (double *d_A, double *d_B, double *d_C, int n)
 }
 
 void usage() {
-    printf("Usage: mxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold_t=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+    printf("Usage: dmxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold_t=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
 int main( int argc, char* argv[] )
@@ -277,7 +277,7 @@ int main( int argc, char* argv[] )
     else
     {
         a_matrix_path = new char[100];
-        snprintf(a_matrix_path, 100, "mxm_a_%i", (signed int)DEFAULT_INPUT_SIZE);
+        snprintf(a_matrix_path, 100, "dmxm_a_%i", (signed int)DEFAULT_INPUT_SIZE);
         printf("Using default input_a path: %s\n", a_matrix_path);
     }
 
@@ -288,7 +288,7 @@ int main( int argc, char* argv[] )
     else
     {
         b_matrix_path = new char[100];
-        snprintf(b_matrix_path, 100, "mxm_b_%i", (signed int)DEFAULT_INPUT_SIZE);
+        snprintf(b_matrix_path, 100, "dmxm_b_%i", (signed int)DEFAULT_INPUT_SIZE);
         printf("Using default input_a path: %s\n", b_matrix_path);
     }
 
@@ -299,7 +299,7 @@ int main( int argc, char* argv[] )
     else
     {
         gold_matrix_path = new char[100];
-        snprintf(gold_matrix_path, 100, "mxm_gold_%i", (signed int)k);
+        snprintf(gold_matrix_path, 100, "dmxm_gold_%i", (signed int)k);
         printf("Using default gold path: %s\n", gold_matrix_path);
     }
 
@@ -344,7 +344,7 @@ int main( int argc, char* argv[] )
 #ifdef LOGS
 	char test_info[90];
 	snprintf(test_info, 90, "size:%d type:double-precision", k);
-	start_log_file("cudaMxM", test_info);
+	start_log_file("cudaDMxM", test_info);
 #endif
 //====================================
 
@@ -367,7 +367,7 @@ int main( int argc, char* argv[] )
     max_kernel_time = 0;
 	GetDevice();
 	ReadMatrixFromFile();
-	printf( "cudaHMxM\n" );
+	printf( "cudaDMxM\n" );
 	fflush(stdout);
 //====================================
 
