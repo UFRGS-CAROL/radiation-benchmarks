@@ -276,7 +276,7 @@ int main(int argc, char **argv) {
 		n_nodes = sizes.first;
 		n_edges = sizes.second;
 	}
-	std::cout << n_nodes << " " << n_edges << "\n";
+	std::cout << gold << "\n";
 //******************************************************************************
 
 	timer.start("Allocation");
