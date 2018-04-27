@@ -9,7 +9,11 @@ import ConfigParser
 INPUT = ["lakes_graph_in"]
 ITERATIONS = 100000
 
-THREADS_HOST = [0, 0.2, 0.4]
+#  ./bfs -f input/lakes_graph_in -c output/lakes_graph_out -r 1 -l 900000000  #CPU
+# ./bfs -f input/lakes_graph_in -c output/lakes_graph_out -r 1 -l 0  #GPU
+# ./bfs -f input/lakes_graph_in -c output/lakes_graph_out -r 1 -l 128 #CPU+GPU
+
+THREADS_HOST = [900000000, 0, 128]
 EMBEDDED_HOSTS = ['K1', 'X1', 'X2', 'APU']
 
 DEBUG_MODE = True
@@ -66,14 +70,16 @@ def main(board):
                 continue
 
             input_file = data_path + "/" + i
+            output_file = data_path + "/lakes_graph_out"
             # $(RAD_BENCH)/src/cuda/bfs/$(EXE) -t 0 -f $(RAD_BENCH)/data/bfs/graph1MW_6.txt -c temp.gold -m 1 -r 100
-            gen = [None] * 6
+            gen = [None] * 7
             gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
             gen[1] = ['-l ', j]
             gen[2] = ['-f ', input_file]
-            gen[3] = ['-c ', input_file + ".gold"]
+            gen[3] = ['-p ', input_file + ".gold"]
             gen[4] = ['-m ', 0]  # change for execute
             gen[5] = ['-r ', 1]
+            gen[6] = ['-c ', output_file]
 
             # change mode and iterations for exe
             exe = copy.deepcopy(gen)
