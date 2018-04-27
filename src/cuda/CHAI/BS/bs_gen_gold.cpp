@@ -23,7 +23,7 @@ struct Params {
 		in_size_i = in_size_j = 3;
 		out_size_i = out_size_j = 300;
 		int opt;
-		while ((opt = getopt(argc, argv, "hp:d:i:g:t:w:r:a:f:m:n:")) >= 0) {
+		while ((opt = getopt(argc, argv, "hp:d:i:z:t:w:r:a:f:m:n:s:")) >= 0) {
 			switch (opt) {
 			case 'h':
 				usage();
@@ -38,11 +38,17 @@ struct Params {
 			case 'n':
 				out_size_i = out_size_j = atoi(optarg);
 				break;
-			case 'g':
+			case 'z':
 				gold_out = std::string(optarg);
 				break;
 			case 'd':
 				input_file = std::string(optarg);
+				break;
+			case 's':
+				break;
+			case 'a':
+				break;
+			case 'r':
 				break;
 			default:
 				fprintf(stderr, "\nUnrecognized option!\n");
@@ -61,7 +67,7 @@ struct Params {
 						"\n    -m <N>    input size in both dimensions (default=3)"
 						"\n    -n <R>    output resolution in both dimensions (default=300)"
 						"\n    -d <D>    generated input file"
-						"\n    -g <G>    gold output file"
+						"\n    -z <Z>    gold output file"
 						"\n");
 	}
 };
@@ -160,7 +166,6 @@ int main(int argc, char **argv) {
 
 	read_input(h_in, p, in_size);
 
-
 	BezierCPU(h_in, gold, p.in_size_i, p.in_size_j, p.out_size_i, p.out_size_j);
 
 	FILE *finput;
@@ -173,7 +178,6 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 	fclose(finput);
-
 
 	FILE *finput_bin;
 //	char filename[100];

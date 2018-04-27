@@ -9,7 +9,7 @@ import ConfigParser
 INPUT = ['input/control.txt']
 ITERATIONS = 100000
 ALPHA_VARIATIONS = [1.0, 0.0, 0.1]
-RESOLUTIONS = [2500, 5000, 10000]
+RESOLUTIONS = [2500, 5000]
 
 EMBEDDED_HOSTS = ['K1', 'X1', 'X2', 'APU']
 
