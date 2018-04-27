@@ -153,8 +153,9 @@ struct Params {
 						"\n    -f <F>    name of input file with control points (default=input/NYR_input.dat)"
 						"\n    -c <C>    comparison file (default=output/NYR_bfs_BFS.out)"
 						"\n    -l <L>    switching limit (default=128)"
-						"\n    -m <M>    mode for radiation test -1 normal execution, 0 generate gold, >=1 (number of iterations) radiation test"
-						"\n	   -p <P>    if generate gold activated it must contains gold ouptut path"
+						"\n    -m <M>    mode -1 default value, 1 for radiation test "
+						"normal execution, 0 generate gold, >=1 (number of iterations) radiation test"
+						"\n	   -p <P>    it must contains gold ouptut path"
 						"\n");
 	}
 };
@@ -175,18 +176,26 @@ void read_gold_size(int &n_nodes_o, const Params &p) {
 		fclose(fp);
 
 }
-void read_gold(Gold *&h_nodes, const Params &p) {
 
-	FILE *fpo = fopen(p.comparison_file, "r");
+
+std::pair<int, int> read_gold(Gold *h_nodes, std::string gold_path) {
+
+	FILE *fpo = fopen(gold_path.c_str(), "r");
 	if (!fpo) {
 		printf("Error Reading output file\n");
 		exit (EXIT_FAILURE);
 	}
 
-	int num_of_nodes_o = 0;
-	fscanf(fpo, "%d", &num_of_nodes_o);
+	int num_of_nodes, num_of_edges;
+	fscanf(fpo, "%d", &num_of_nodes);
+	fscanf(fpo, "%d", &num_of_edges);
 
-	for (int i = 0; i < num_of_nodes_o; i++) {
+	if (h_nodes != nullptr){
+		free(h_nodes);
+		h_nodes = (Gold *) malloc(sizeof(Gold) * num_of_nodes);
+	}
+
+	for (int i = 0; i < num_of_nodes; i++) {
 		int j, cost;
 		fscanf(fpo, "%d %d", &j, &cost);
 		h_nodes[i].j = j;
@@ -194,7 +203,7 @@ void read_gold(Gold *&h_nodes, const Params &p) {
 
 	}
 	fclose(fpo);
-
+	return std::pair<int, int>(num_of_nodes, num_of_edges);
 }
 
 void read_input(int &source, Node *&h_nodes, Edge *&h_edges, const Params &p) {
@@ -255,11 +264,20 @@ int main(int argc, char **argv) {
 
 	// Allocate
 	int n_nodes, n_edges;
-	int n_nodes_o;
-	read_input_size(n_nodes, n_edges, p);
+//	int n_nodes_o;
 //************************* Allocando Memoria para o Gold **********************
-	read_gold_size(n_nodes_o, p);
-	Gold * gold = (Gold *) malloc(sizeof(Gold) * n_nodes_o);
+	Gold *gold = nullptr;
+	if (p.mode == 0){
+//		read_gold_size(n_nodes_o, p);
+		read_input_size(n_nodes, n_edges, p);
+		gold = (Gold *) malloc(sizeof(Gold) * n_nodes);
+
+	}else{
+		std::pair<int, int> sizes = read_gold(gold, p.gold_path);
+		n_nodes = sizes.first;
+		n_edges = sizes.second;
+	}
+
 //******************************************************************************
 
 	timer.start("Allocation");
@@ -314,9 +332,9 @@ int main(int argc, char **argv) {
 	const int max_gpu_threads = setcuda.max_gpu_threads();
 	int source;
 	read_input(source, h_nodes, h_edges, p);
-// **********************  Lendo O gold *********************************
-	read_gold(gold, p);
-// **********************************************************************
+//// **********************  Lendo O gold *********************************
+//	read_gold(gold, p);
+//// **********************************************************************
 	for (int i = 0; i < n_nodes; i++) {
 		h_cost[i].store(INF);
 	}
@@ -558,11 +576,11 @@ int main(int argc, char **argv) {
 		//printf("IT GPU:%d\n",it_gpu);
 
 //	err=new_verify(h_cost, n_nodes, p.comparison_file,it_cpu,it_gpu);
-		err = newest_verify(h_cost, n_nodes, n_nodes_o, gold, it_cpu, it_gpu);
+		err = newest_verify(h_cost, n_nodes, n_nodes, gold, it_cpu, it_gpu);
 		if (err > 0) {
 			printf("Errors: %d\n", err);
 			read_input(source, h_nodes, h_edges, p);
-			read_gold(gold, p);
+			read_gold(gold, p.gold_path);
 
 		} else {
 			printf(".");
@@ -581,7 +599,7 @@ int main(int argc, char **argv) {
 #endif
 
 	// Generate case
-	if (p.n_reps == 0){
+	if (p.mode == 0){
 		//TODO: Put generate function here
 		create_output(h_cost, n_nodes, p.gold_path);
 	}
