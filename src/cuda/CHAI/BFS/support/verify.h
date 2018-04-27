@@ -71,7 +71,7 @@ inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,
 	return count_error;
 }
 inline int create_output(std::atomic_int *h_cost, int num_of_nodes,
-		std::string gold_path) {
+		int num_of_edges, std::string gold_path) {
 	// Compare to output file
 	FILE *fpo = fopen(gold_path.c_str(), "w");
 	if (!fpo) {
@@ -79,6 +79,8 @@ inline int create_output(std::atomic_int *h_cost, int num_of_nodes,
 		exit (EXIT_FAILURE);
 	}
 	fprintf(fpo, "%d\n", num_of_nodes);
+	fprintf(fpo, "%d\n", num_of_edges);
+
 	// cost of nodes in the output
 	for (int i = 0; i < num_of_nodes; i++) {
 		// escreve i no arquivo e hcost 
