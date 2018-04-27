@@ -78,7 +78,6 @@ struct Params {
 		mode = -1;
 		gold_path = "";
 
-
 		int opt;
 		while ((opt = getopt(argc, argv, "hd:i:g:t:w:r:f:c:l:m:p:")) >= 0) {
 			switch (opt) {
@@ -177,7 +176,6 @@ void read_gold_size(int &n_nodes_o, const Params &p) {
 
 }
 
-
 std::pair<int, int> read_gold(Gold *h_nodes, std::string gold_path) {
 
 	FILE *fpo = fopen(gold_path.c_str(), "r");
@@ -190,7 +188,7 @@ std::pair<int, int> read_gold(Gold *h_nodes, std::string gold_path) {
 	fscanf(fpo, "%d", &num_of_nodes);
 	fscanf(fpo, "%d", &num_of_edges);
 
-	if (h_nodes != nullptr){
+	if (h_nodes != nullptr) {
 		free(h_nodes);
 		h_nodes = (Gold *) malloc(sizeof(Gold) * num_of_nodes);
 	}
@@ -267,12 +265,12 @@ int main(int argc, char **argv) {
 //	int n_nodes_o;
 //************************* Allocando Memoria para o Gold **********************
 	Gold *gold = nullptr;
-	if (p.mode == 0){
+	if (p.mode == 0) {
 //		read_gold_size(n_nodes_o, p);
 		read_input_size(n_nodes, n_edges, p);
 		gold = (Gold *) malloc(sizeof(Gold) * n_nodes);
 
-	}else{
+	} else {
 		std::pair<int, int> sizes = read_gold(gold, p.gold_path);
 		n_nodes = sizes.first;
 		n_edges = sizes.second;
@@ -576,7 +574,8 @@ int main(int argc, char **argv) {
 		//printf("IT GPU:%d\n",it_gpu);
 
 //	err=new_verify(h_cost, n_nodes, p.comparison_file,it_cpu,it_gpu);
-		err = newest_verify(h_cost, n_nodes, n_nodes, gold, it_cpu, it_gpu);
+		if (p.mode == 1 || p.mode == -1)
+			err = newest_verify(h_cost, n_nodes, n_nodes, gold, it_cpu, it_gpu);
 		if (err > 0) {
 			printf("Errors: %d\n", err);
 			read_input(source, h_nodes, h_edges, p);
@@ -599,7 +598,7 @@ int main(int argc, char **argv) {
 #endif
 
 	// Generate case
-	if (p.mode == 0){
+	if (p.mode == 0) {
 		//TODO: Put generate function here
 		create_output(h_cost, n_nodes, p.gold_path);
 	}
