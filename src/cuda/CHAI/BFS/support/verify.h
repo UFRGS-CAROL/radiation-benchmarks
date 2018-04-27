@@ -78,8 +78,7 @@ inline int create_output(std::atomic_int *h_cost, int num_of_nodes,
 		printf("Error Creating output file\n");
 		exit (EXIT_FAILURE);
 	}
-	fprintf(fpo, "%d\n", num_of_nodes);
-	fprintf(fpo, "%d\n", num_of_edges);
+	fprintf(fpo, "%d %d\n", num_of_nodes, num_of_edges);
 
 	// cost of nodes in the output
 	for (int i = 0; i < num_of_nodes; i++) {
