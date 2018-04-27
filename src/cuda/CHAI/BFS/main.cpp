@@ -191,7 +191,8 @@ std::pair<int, int> read_gold(Gold *h_nodes, std::string gold_path) {
 		free(h_nodes);
 	}
 	h_nodes = (Gold *) malloc(sizeof(Gold) * num_of_nodes);
-
+	if (h_nodes == NULL)
+		exit(EXIT_FAILURE);
 
 	for (int i = 0; i < num_of_nodes; i++) {
 		int j, cost;
@@ -275,7 +276,7 @@ int main(int argc, char **argv) {
 		n_nodes = sizes.first;
 		n_edges = sizes.second;
 	}
-
+	std::cout << n_nodes << " " << n_edges << "\n";
 //******************************************************************************
 
 	timer.start("Allocation");
