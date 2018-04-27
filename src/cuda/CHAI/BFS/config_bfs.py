@@ -50,7 +50,7 @@ def main(board):
     benchmark_bin = "bfs"
     data_path = install_dir + "data/" + benchmark_bin
     bin_path = install_dir + "bin"
-    src_bfs = install_dir + "src/cuda/" + benchmark_bin
+    src_bfs = install_dir + "src/cuda/CHAI/" + benchmark_bin
 
     if not untar_graphs(data_path):
         raise ValueError("Error on untar the file")
@@ -60,7 +60,7 @@ def main(board):
         os.chmod(data_path, 0777)
 
     generate = ["cd " + src_bfs, "make clean", "make -j4",
-                "mv ./" + benchmark_bin + " " + bin_path + "/"]
+                "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
     for i in INPUT:
@@ -91,15 +91,14 @@ def main(board):
     generate.extend(
         ["make clean", "make -C ../../../include/",
          "make LOGS=1",
-         "mv ./" + benchmark_bin + " " + bin_path + "/"])
+         "mv -f ./" + benchmark_bin + " " + bin_path + "/"])
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin)
 
 
 def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin):
     for i in generate:
-        if DEBUG_MODE:
-            print i
-        else:
+        print i
+        if not DEBUG_MODE:
             if os.system(str(i)) != 0:
                 print "Something went wrong with generate of ", str(i)
                 exit(1)

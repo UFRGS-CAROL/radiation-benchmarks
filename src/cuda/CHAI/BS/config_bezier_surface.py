@@ -40,7 +40,7 @@ def main(board):
         os.chmod(data_path, 0777)
 
     generate = ["cd " + src_bs, "make clean", "make -j4",
-                "mv ./" + benchmark_bin + " " + bin_path + "/"]
+                "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
     for i in INPUT:
@@ -79,15 +79,14 @@ def main(board):
     generate.extend(
         ["make clean", "make -C ../../../include/",
          "make -j4 LOGS=1",
-         "mv ./" + benchmark_bin + " " + bin_path + "/"])
+         "mv -f ./" + benchmark_bin + " " + bin_path + "/"])
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin)
 
 
 def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin):
     for i in generate:
-        if DEBUG_MODE:
-            print i
-        else:
+        print i
+        if not DEBUG_MODE:
             if os.system(str(i)) != 0:
                 print "Something went wrong with generate of ", str(i)
                 exit(1)
