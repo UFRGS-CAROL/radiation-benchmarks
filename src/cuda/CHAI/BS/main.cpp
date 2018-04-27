@@ -234,7 +234,6 @@ void read_gold(const Params p, XYZ* gold, int out_size) {
 		printf("Error reading gold file\n");
 		exit(1);
 	}
-	std::cout << "LEU O GOLD\n";
 	fclose(finput);
 //	return gold;
 }

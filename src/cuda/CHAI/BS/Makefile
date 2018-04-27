@@ -41,7 +41,7 @@ ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
 
 NVCC=nvcc
 CXX=g++
-CXX_FLAGS=-std=c++11 
+CXX_FLAGS=-std=c++11 -O3
 NVCC_FLAGS=$(ARCH)
 LOGS?=1
 
@@ -79,7 +79,7 @@ DEP=kernel.cpp kernel.h main.cpp kernel.cu support/common.h support/cuda-setup.h
 SRC=main.cpp kernel.cpp kernel.cu 
 EXE=bs
 
-all: $(EXE) gen_gold gen_input
+all: $(EXE) gen_gold
 
 $(EXE):$(SRC)
 	$(NVCC) $(CXX_FLAGS) $(NVCC_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE)
@@ -87,16 +87,10 @@ $(EXE):$(SRC)
 gen_gold: bs_gen_gold.cpp
 	$(CXX) $(CXX_FLAGS) bs_gen_gold.cpp -o gen_gold
 	
-	
-gen_input: bs_gen_input.cpp
-	$(CXX) $(CXX_FLAGS) bs_gen_input.cpp -o gen_input
-
 clean:
 	rm -f $(EXE) gen_input gen_gold
 
-generate: gen_gold gen_input
-	./gen_input -f /home/carol/radiation-benchmarks/data/bezier_surface/input/control.txt -n 2500 \
-				-d /home/carol/radiation-benchmarks/data/bezier_surface/input.bin 
+generate: gen_gold
 	./gen_gold -f /home/carol/radiation-benchmarks/data/bezier_surface/input/control.txt -n 2500 \
 				-d /home/carol/radiation-benchmarks/data/bezier_surface/input.bin \
 				-g /home/carol/radiation-benchmarks/data/bezier_surface/bezier_surface_2500.gold

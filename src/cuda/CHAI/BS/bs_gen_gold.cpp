@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <iostream>
 
 // Params ---------------------------------------------------------------------
 struct Params {
@@ -69,7 +70,7 @@ void read_input(XYZ *in, const Params &p, int in_size) {
 
 	// Open input file
 	FILE *f = NULL;
-	f = fopen(p.input_file.c_str(), "r");
+	f = fopen(p.file_name, "r");
 	if (f == NULL) {
 		puts("Error opening file");
 		exit(-1);
@@ -159,10 +160,11 @@ int main(int argc, char **argv) {
 
 	read_input(h_in, p, in_size);
 
+
 	BezierCPU(h_in, gold, p.in_size_i, p.in_size_j, p.out_size_i, p.out_size_j);
 
 	FILE *finput;
-	char filename[100];
+//	char filename[100];
 //	snprintf(filename, 100, "gold_%d", p.out_size_i); // Gold com a resolu
 	if (finput = fopen(p.gold_out.c_str(), "wb")) {
 		fwrite(gold, sizeof(XYZ), out_size, finput);
@@ -172,5 +174,16 @@ int main(int argc, char **argv) {
 	}
 	fclose(finput);
 
+
+	FILE *finput_bin;
+//	char filename[100];
+//	snprintf(filename, 100, "input_%d", p.out_size_i); // Gold com a resolu
+	if (finput_bin = fopen(p.input_file.c_str(), "wb")) {
+		fwrite(h_in, sizeof(XYZ), in_size, finput_bin);
+	} else {
+		printf("Error writing input file");
+		exit(1);
+	}
+	fclose(finput_bin);
 }
 
