@@ -68,6 +68,10 @@ LIB+= -L$(LOGHELPERPATH) -lLogHelper -DLOGS
 INC+= -I$(LOGHELPERPATH)
 endif 
 
+ieq ($(DEBUG), 1)
+CXX_FLAGS+= -g -G
+endif
+
 #support/common.h support/cuda-setup.h support/timer.h support/verify.h
 DEP=kernel.cpp kernel.h main.cpp kernel.cu 
 SRC=main.cpp kernel.cpp kernel.cu
