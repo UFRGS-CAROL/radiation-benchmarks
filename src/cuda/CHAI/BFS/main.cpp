@@ -201,7 +201,9 @@ std::pair<int, int> read_gold(Gold *h_nodes, std::string gold_path) {
 		h_nodes[i].cost = cost;
 
 	}
+
 	fclose(fpo);
+	std::cout << "INSIDE READ GOLD " << h_nodes << "\n";
 	return std::pair<int, int>(num_of_nodes, num_of_edges);
 }
 
@@ -273,10 +275,11 @@ int main(int argc, char **argv) {
 
 	} else {
 		std::pair<int, int> sizes = read_gold(gold, p.gold_path);
+		std::cout << gold << " " << p.mode << "\n";
+
 		n_nodes = sizes.first;
 		n_edges = sizes.second;
 	}
-	std::cout << gold << " " << p.mode << "\n";
 //******************************************************************************
 
 	timer.start("Allocation");
