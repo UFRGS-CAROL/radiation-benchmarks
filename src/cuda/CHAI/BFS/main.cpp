@@ -574,8 +574,9 @@ int main(int argc, char **argv) {
 		//printf("IT GPU:%d\n",it_gpu);
 
 //	err=new_verify(h_cost, n_nodes, p.comparison_file,it_cpu,it_gpu);
-		if (p.mode == 1 || p.mode == -1)
+		if (p.mode == 1)
 			err = newest_verify(h_cost, n_nodes, n_nodes, gold, it_cpu, it_gpu);
+
 		if (err > 0) {
 			printf("Errors: %d\n", err);
 			read_input(source, h_nodes, h_edges, p);

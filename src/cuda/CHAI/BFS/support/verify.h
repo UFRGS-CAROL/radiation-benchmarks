@@ -43,7 +43,7 @@
 #endif
 //************************************************************************************//
 inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,
-		int num_of_nodes_o, Gold *&h_nodes, int it_cpu, int it_gpu) {
+		int num_of_nodes_o, Gold *h_nodes, int it_cpu, int it_gpu) {
 	int count_error = 0;
 	if (num_of_nodes != num_of_nodes_o) {
 		printf("Number of nodes does not match the expected value\n");
