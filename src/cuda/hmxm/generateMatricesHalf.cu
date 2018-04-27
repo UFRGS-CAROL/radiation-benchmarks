@@ -32,7 +32,7 @@ bool generator_debug = false;
 char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
 
 void usage() {
-    printf("Usage: generateMatricesHalf -size=N [-generator_debug] [-host_check] [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
+    printf("Usage: generateMatricesHalf -size=N [-generator_debug] [-host_check] [-input_a=<path>] [-input_b=<path>] [-gold_t=<path>]\n");
 }
 
 void generateInputMatricesHalf()
@@ -223,7 +223,6 @@ __global__ void MatrixMulKernel_T (half *d_A, half *d_B, half *d_C_T, int n)
 	half2 *d_B2 = (half2*)d_B;
 	half2 *d_C_T2 = (half2*)d_C_T;
 	
-	d_C_T2[ty * n2 + tx] = __float2half2_rn(0.0);
 	for (k = 0;  k < n; k++)
 		// c[ty * n + tx] += a[ty * n + k] *  b[k * n + tx];
 		// c[ty * n + tx + 1] += a[ty * n + k + 1] *  b[k * n + tx + 1];
@@ -377,7 +376,8 @@ void generateGoldMatrixHalf()
 				// }
 			}
 		}
-		printf("CPU and GPU match by an error of up to %e element difference. Max abs. diff: %e (relative to half representation: %e) Writing to file...\n", maxDiff, maxAbsDiff, maxAbsDiff / MAX_HALF);
+		printf("CPU and GPU match by a relative error of up to %e element difference.\nMaximum element absolute difference: %e (relatively to half representation: %e)\nWriting to file...\n", 
+		maxDiff, maxAbsDiff, maxAbsDiff / MAX_HALF);
 	}
 
 	//printf("-------------------------\n%.10f\n%.10f\n%.10f\n", GOLD[0], GOLD[1], GOLD[2]);

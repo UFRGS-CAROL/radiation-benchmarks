@@ -11,8 +11,6 @@
 #endif
 // The timestamp is updated on every log_helper function call.
 
-#include <cublas_v2.h>
-
 #include <cuda_fp16.h>
 #include "half.hpp"
 
@@ -32,7 +30,8 @@
 int verbose = 0;
 int fault_injection = 0;
 
-int size=0; // k x k matrix size
+int k=0; // k x k matrix size
+int matrixSize=0; // = k * k matrix size
 int iterations=100000000; // global loop iteracion
 
 //================== Input paths
@@ -45,13 +44,13 @@ FILE* f_GOLD;
 
 //================== Host and device matrix ptr's
 half_float::half *A;
-half_float::half *B_T;
-half_float::half *C;
+half_float::half *B;
+half_float::half *C_T;
 half_float::half *GOLD;
 
 half *d_A;
-half *d_B_T;
-half *d_C;
+half *d_B;
+half *d_C_T;
 //====================================
 
 void GetDevice(){
@@ -89,7 +88,7 @@ void allocCudaMemory()
 	cudaError_t malloc;
 	const char *erro;
 //====================================
-	malloc = cudaMalloc( ( void** ) &d_A, size * size * sizeof( half ) );
+	malloc = cudaMalloc( ( void** ) &d_A, matrixSize * sizeof( half ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -98,7 +97,7 @@ void allocCudaMemory()
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
-	malloc = cudaMalloc( ( void** ) &d_B_T, size * size * sizeof( half ) );
+	malloc = cudaMalloc( ( void** ) &d_B, matrixSize * sizeof( half ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -107,7 +106,7 @@ void allocCudaMemory()
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
-	malloc = cudaMalloc( ( void** ) &d_C, size * size * sizeof( half ) );
+	malloc = cudaMalloc( ( void** ) &d_C_T, matrixSize * sizeof( half ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -122,7 +121,7 @@ void copyCudaMemory()
 	cudaError_t mcpy;
 	const char *erro;
 //====================================
-	mcpy = cudaMemset(d_C, 0, size * size * sizeof (half));
+	mcpy = cudaMemset(d_C_T, 0, matrixSize * sizeof (half));
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -130,15 +129,15 @@ void copyCudaMemory()
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
-	mcpy = cudaMemcpy( d_A, A, size * size * sizeof( half ), cudaMemcpyHostToDevice ); // PUSH A
+	mcpy = cudaMemcpy( d_A, A, matrixSize * sizeof( half ), cudaMemcpyHostToDevice ); // PUSH A
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error gpu load b"); end_log_file();
+		log_error_detail("error gpu load a"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
-	mcpy = cudaMemcpy( d_B_T, B_T, size * size * sizeof( half ), cudaMemcpyHostToDevice ); // PUSH B
+	mcpy = cudaMemcpy( d_B, B, matrixSize * sizeof( half ), cudaMemcpyHostToDevice ); // PUSH B
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -163,21 +162,13 @@ void ReadMatrixFromFile(){
 #endif
 		exit(-3);
 	}
-	half_float::half *B = (half_float::half*)malloc(sizeof(half_float::half) * size * size);
-	if (!B) {
-		printf ("Cant alloc B matrice.\n");
-#ifdef LOGS
-		log_error_detail("Cant alloc B matrice"); end_log_file();
-#endif
-		exit(-3);
-	}
     size_t ret_value[3];
-    for(i=0; i<size; i++)
+    for(i=0; i<k; i++)
     {
-      ret_value[0] = fread (&(A[ size * i ]), sizeof(half)*size, 1, f_A);
-      ret_value[1] = fread (&(B[ size * i ]), sizeof(half)*size, 1, f_B);
-      ret_value[2] = fread (&(GOLD[ size * i ]), sizeof(half)*size, 1, f_GOLD);
-      if (ret_value[0] != 1 || ret_value[1] != 1 || ret_value[2] != 1) {
+      ret_value[0] = fread (&(A[ k * i ]), sizeof(half)*k, 1, f_A);
+      ret_value[1] = fread (&(B[ k * i ]), sizeof(half)*k, 1, f_B);
+      ret_value[2] = fread (&(GOLD[ k * i ]), sizeof(half)*k, 1, f_GOLD);
+      if ((ret_value[0] != 1) || (ret_value[1] != 1) || (ret_value[2] != 1)) {
          printf("Bad input/gold formatting: %lu ; %lu ; %lu .\n", ret_value[0], ret_value[1], ret_value[2]);
          #ifdef LOGS
     		log_error_detail("Bad input/gold formatting."); end_log_file();
@@ -190,14 +181,6 @@ void ReadMatrixFromFile(){
 	fclose(f_A);
 	fclose(f_B);
 	fclose(f_GOLD);
-
-	for (i=0; i<size; i++) {
-		for (j=0; j<size; j++) {
-			B_T[i*size+j] = B[j*size+i];
-		}
-	}
-	
-	free(B);
 
 	if (fault_injection)
 	{
@@ -236,23 +219,24 @@ bool badass_memcmp(half_float::half *gold, half_float::half *found, unsigned lon
 //
 // }
 
-__global__ void MatrixMulKernel_T (half *d_A, half *d_B_T, half *d_C, int n)
+__global__ void MatrixMulKernel_T (half *d_A, half *d_B, half *d_C_T, int n)
 {
-	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;                                                      
+	int tx = (blockIdx.x * BLOCK_SIZE) / 2.0 + threadIdx.x;                                                      
 	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y; 
 	int k;
-	half2 *d_A2 = (half2*)d_A;
-	half2 *d_B_T2 = (half2*)d_B_T;
-	half2 *d_C2 = (half2*)d_C;
+	int n2 = n / 2.0;
+	half2 *d_B2 = (half2*)d_B;
+	half2 *d_C_T2 = (half2*)d_C_T;
 	
-	d_C2[ty*n + tx] = __float2half2_rn(0.0);
 	for (k = 0;  k < n; k++)
-		d_C2[ty*n + tx] = __hfma2(d_A2[ty*n + k], d_B_T2[ty*n + k], d_C2[ty*n + tx]);
+		// c[ty * n + tx] += a[ty * n + k] *  b[k * n + tx];
+		// c[ty * n + tx + 1] += a[ty * n + k + 1] *  b[k * n + tx + 1];
+		d_C_T2[ty * n2 + tx] = __hfma2(__half2half2(d_A[ty * n + k]), d_B2[k * n2 + tx], d_C_T2[ty * n2 + tx]);
 
 }
 
 void usage() {
-    printf("Usage: hmxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+    printf("Usage: hmxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold_t=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
 int main( int argc, char* argv[] )
@@ -281,13 +265,14 @@ int main( int argc, char* argv[] )
 
 	if (checkCmdLineFlag(argc, (const char **)argv, "size"))
     {
-        size = getCmdLineArgumentInt(argc, (const char **)argv, "size");
+        k = getCmdLineArgumentInt(argc, (const char **)argv, "size");
 
-        if ((size <= 0)||(size % 16 != 0))
+        if ((k <= 0)||(k % 16 != 0))
         {
-            printf("Invalid input size given on the command-line: %d\n", size);
+            printf("Invalid input size given on the command-line: %d\n", k);
             exit(EXIT_FAILURE);
-        }
+		}
+		matrixSize = k * k;
     }
 	else
 	{
@@ -302,7 +287,7 @@ int main( int argc, char* argv[] )
     else
     {
         a_matrix_path = new char[100];
-        snprintf(a_matrix_path, 100, "hgemm_a_%i", (signed int)DEFAULT_INPUT_SIZE);
+        snprintf(a_matrix_path, 100, "hmxm_a_%i", (signed int)DEFAULT_INPUT_SIZE);
         printf("Using default input_a path: %s\n", a_matrix_path);
     }
 
@@ -313,7 +298,7 @@ int main( int argc, char* argv[] )
     else
     {
         b_matrix_path = new char[100];
-        snprintf(b_matrix_path, 100, "hgemm_b_%i", (signed int)DEFAULT_INPUT_SIZE);
+        snprintf(b_matrix_path, 100, "hmxm_b_%i", (signed int)DEFAULT_INPUT_SIZE);
         printf("Using default input_a path: %s\n", b_matrix_path);
     }
 
@@ -324,7 +309,7 @@ int main( int argc, char* argv[] )
     else
     {
         gold_matrix_path = new char[100];
-        snprintf(gold_matrix_path, 100, "hgemm_gold_%i", (signed int)size);
+        snprintf(gold_matrix_path, 100, "hmxm_gold_t_%i", (signed int)k);
         printf("Using default gold path: %s\n", gold_matrix_path);
     }
 
@@ -358,29 +343,29 @@ int main( int argc, char* argv[] )
     // }
 //====================================
 
-//================== Set block and grid size for GoldChk kernel
-	int gridsize = size/BLOCK_SIZE < 1 ? 1 : size/BLOCK_SIZE;
-	int blocksize = size/BLOCK_SIZE < 1 ? size : BLOCK_SIZE;
-	dim3 dimBlock(blocksize,blocksize);
+//================== Set block and grid size for MxM kernel
+	int gridsize = k/BLOCK_SIZE < 1 ? 1 : k/BLOCK_SIZE;
+	int blocksize = k/BLOCK_SIZE < 1 ? k : BLOCK_SIZE;
+	dim3 dimBlock(blocksize / 2.0,blocksize);
 	dim3 dimGrid(gridsize,gridsize);
 //====================================
 
 //================== Init logs
 #ifdef LOGS
 	char test_info[90];
-	snprintf(test_info, 90, "size:%d type:half-precision", size);
+	snprintf(test_info, 90, "size:%d type:half-precision", k);
 	start_log_file("cudaHMxM", test_info);
 #endif
 //====================================
 
 //================== Alloc HOST memory
-	A = ( half_float::half* ) malloc( size * size * sizeof( half ) );
-	B_T = ( half_float::half* ) malloc( size * size * sizeof( half ) );
-	C = ( half_float::half* ) malloc( size * size * sizeof( half ) );
+	A = ( half_float::half* ) malloc( matrixSize * sizeof( half ) );
+	B = ( half_float::half* ) malloc( matrixSize * sizeof( half ) );
+	C_T = ( half_float::half* ) malloc( matrixSize * sizeof( half ) );
 
-	GOLD = ( half_float::half* ) malloc( size * size * sizeof( half ) );
+	GOLD = ( half_float::half* ) malloc( matrixSize * sizeof( half ) );
 
-	if (!(A && B_T && C && GOLD)) {
+	if (!(A && B && C_T && GOLD)) {
 		printf("Failed on host malloc.\n");
 		exit(-3);
 	}
@@ -393,8 +378,6 @@ int main( int argc, char* argv[] )
     max_kernel_time = 0;
 	GetDevice();
 	ReadMatrixFromFile();
-	cublasHandle_t cublasHandle;
-	checkCudaErrors( cublasCreate(&cublasHandle) );
 	printf( "cudaHMxM\n" );
 	fflush(stdout);
 //====================================
@@ -413,7 +396,7 @@ int main( int argc, char* argv[] )
 		// Timer...
 		global_time = mysecond();
 
-		cudaMemset(d_C, 0, size * sizeof (half));
+		cudaMemset(d_C_T, 0, matrixSize * sizeof (half));
 
 		if (verbose) printf(",");
 
@@ -423,7 +406,7 @@ int main( int argc, char* argv[] )
 			start_iteration();
 		#endif
 		//================== Device computation, HMxM
-		MatrixMulKernel_T<<<gridsize, blocksize>>>(d_A, d_B_T, d_C, size);
+		MatrixMulKernel_T<<<gridsize, blocksize>>>(d_A, d_B, d_C_T, k);
 		checkCudaErrors( cudaDeviceSynchronize() );
 		//====================================
 		#ifdef LOGS
@@ -448,7 +431,7 @@ int main( int argc, char* argv[] )
 
         //if (kernel_errors != 0) {
         if (loop2 || !device_warmup) {
-            mcpy = cudaMemcpy(A, d_C, size * size * sizeof( half ), cudaMemcpyDeviceToHost );
+            mcpy = cudaMemcpy(A, d_C_T, matrixSize * sizeof( half ), cudaMemcpyDeviceToHost );
             erro = cudaGetErrorString(mcpy);
             if(strcmp(erro, "no error") != 0) {
                 printf("error mem load gold to host\n");
@@ -458,30 +441,30 @@ int main( int argc, char* argv[] )
                 return 1;
             } //mem allocate failure
             //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
-            if (badass_memcmp(GOLD, A, size * size)){
+            if (badass_memcmp(GOLD, A, matrixSize)){
     			char error_detail[150];
     			int host_errors = 0;
 
                 printf("!");
 
     			#pragma omp parallel for
-    			for(i=0; (i<size); i++)
+    			for(i=0; (i<k); i++)
     			{
-    				for(j=0; (j<size); j++)
+    				for(j=0; (j<k); j++)
     				{
-    					if (A[i + size * j] != GOLD[i + size * j])
-    					//if ((fabs((A[i+size*j]-GOLD[i+size*j])/A[i+size*j]) > 0.0000000001)||(fabs((A[i+size*j]-GOLD[i+size*j])/GOLD[i+size*j]) > 0.0000000001))
+    					if (A[i + k * j] != GOLD[i + k * j])
+    					//if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001))
     					#pragma omp critical
     					{
 
-    						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + size * j], GOLD[i + size * j]);
-    						printf("%s\n", error_detail);
+    						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + k * j], GOLD[i + k * j]);
+    						if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
     						#ifdef LOGS
     						log_error_detail(error_detail);
     						#endif
     						host_errors++;
     						//ea++;
-    						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + size * j], GOLD[i + size * j], t_ea);
+    						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
 
     					}
     				}
@@ -494,8 +477,8 @@ int main( int argc, char* argv[] )
     			#endif
     			//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
     			cudaFree( d_A );
-    			cudaFree( d_B_T );
-    			cudaFree( d_C );
+    			cudaFree( d_B );
+    			cudaFree( d_C_T );
     			//====================================
     			ReadMatrixFromFile();
     			//================== Init DEVICE memory
@@ -527,10 +510,10 @@ int main( int argc, char* argv[] )
 			if (verbose)
 			{
 				/////////// PERF
-				double flops = 2.0*(double)size*size*size;
+				double flops = 2.0*(double)k*k*k;
 				double gflops = flops / kernel_time;
-				double outputpersec = (double)size*size/kernel_time;
-				printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",size, outputpersec, gflops, gflops/1000000000);
+				double outputpersec = (double)matrixSize/kernel_time;
+				printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",k, outputpersec, gflops, gflops/1000000000);
 				///////////
 			}
 
@@ -539,7 +522,7 @@ int main( int argc, char* argv[] )
 		fflush(stdout);
 	}
 
-    double gflops = 2.0*(double)size*size*size / 1000000000; // Bilion FLoating-point OPerationS
+    double gflops = 2.0*(double)k*k*k / 1000000000; // Bilion FLoating-point OPerationS
     double averageKernelTime = total_kernel_time / (iterations - (device_warmup ? 1 : 0));
     printf("\n-- END --\n"
     "Total kernel time: %.3fs\n"
@@ -553,12 +536,13 @@ int main( int argc, char* argv[] )
 
 	//================== Release device memory
 	cudaFree( d_A );
-	cudaFree( d_B_T );
-	cudaFree( d_C );
+	cudaFree( d_B );
+	cudaFree( d_C_T );
 	//====================================
 
 	free( A );
-	free( B_T );
+	free( B );
+	free( GOLD );
 	#ifdef LOGS
 	end_log_file();
 	#endif
