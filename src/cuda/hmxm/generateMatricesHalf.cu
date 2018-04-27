@@ -281,6 +281,7 @@ void generateGoldMatrixHalf()
 	double time = mysecond();
 	
 	MatrixMulKernel_T<<<dimGrid, dimBlock>>>(d_A, d_B, d_C_T, k);
+	checkCudaErrors( cudaPeekAtLastError() );
 	checkCudaErrors( cudaDeviceSynchronize() );
 
 	time=mysecond()-time;

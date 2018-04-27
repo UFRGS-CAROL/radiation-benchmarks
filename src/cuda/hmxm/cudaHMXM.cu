@@ -45,7 +45,6 @@ FILE* f_GOLD;
 //================== Host and device matrix ptr's
 half_float::half *A;
 half_float::half *B;
-half_float::half *C_T;
 half_float::half *GOLD;
 
 half *d_A;
@@ -361,11 +360,10 @@ int main( int argc, char* argv[] )
 //================== Alloc HOST memory
 	A = ( half_float::half* ) malloc( matrixSize * sizeof( half ) );
 	B = ( half_float::half* ) malloc( matrixSize * sizeof( half ) );
-	C_T = ( half_float::half* ) malloc( matrixSize * sizeof( half ) );
 
 	GOLD = ( half_float::half* ) malloc( matrixSize * sizeof( half ) );
 
-	if (!(A && B && C_T && GOLD)) {
+	if (!(A && B && GOLD)) {
 		printf("Failed on host malloc.\n");
 		exit(-3);
 	}
@@ -406,7 +404,8 @@ int main( int argc, char* argv[] )
 			start_iteration();
 		#endif
 		//================== Device computation, HMxM
-		MatrixMulKernel_T<<<gridsize, blocksize>>>(d_A, d_B, d_C_T, k);
+		MatrixMulKernel_T<<<dimGrid, dimBlock>>>(d_A, d_B, d_C_T, k);
+		checkCudaErrors( cudaPeekAtLastError() );
 		checkCudaErrors( cudaDeviceSynchronize() );
 		//====================================
 		#ifdef LOGS
@@ -431,17 +430,9 @@ int main( int argc, char* argv[] )
 
         //if (kernel_errors != 0) {
         if (loop2 || !device_warmup) {
-            mcpy = cudaMemcpy(A, d_C_T, matrixSize * sizeof( half ), cudaMemcpyDeviceToHost );
-            erro = cudaGetErrorString(mcpy);
-            if(strcmp(erro, "no error") != 0) {
-                printf("error mem load gold to host\n");
-                #ifdef LOGS
-                    log_error_detail("error mem load gold to host"); end_log_file();
-                #endif
-                return 1;
-            } //mem allocate failure
+            checkCudaErrors( cudaMemcpy(A, d_C_T, matrixSize * sizeof( half ), cudaMemcpyDeviceToHost) );
             //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
-            if (badass_memcmp(GOLD, A, matrixSize)){
+            if (badass_memcmp(GOLD, A, matrixSize)) {
     			char error_detail[150];
     			int host_errors = 0;
 
