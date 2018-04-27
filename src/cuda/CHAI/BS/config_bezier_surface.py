@@ -8,8 +8,8 @@ import ConfigParser
 
 INPUT = ['input/control.txt']
 ITERATIONS = 100000
-ALPHA_VARIATIONS = [0, 0.1, 0.2, 0.3]
-RESOLUTIONS = [2500, 5000]
+ALPHA_VARIATIONS = [1.0, 0.0, 0.1]
+RESOLUTIONS = [2500, 5000, 10000]
 
 EMBEDDED_HOSTS = ['K1', 'X1', 'X2', 'APU']
 
@@ -33,7 +33,7 @@ def main(board):
     benchmark_bin = "bezier_surface"
     data_path = install_dir + "data/" + benchmark_bin
     bin_path = install_dir + "bin"
-    src_bs = install_dir + "src/cuda/" + benchmark_bin
+    src_bs = install_dir + "src/cuda/CHAI/BS"
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
@@ -45,34 +45,31 @@ def main(board):
 
     for i in INPUT:
         for j in ALPHA_VARIATIONS:
-            if j > 0 and ('X1' not in board and 'X2' not in board and 'K1' not in board):
+            if j > 0 and board not in EMBEDDED_HOSTS:
                 continue
             for r in RESOLUTIONS:
-                if r > 2500 and ('X1' in board or 'X2' in board or 'K1' in board):
+                if r > 2500 and board in EMBEDDED_HOSTS:
                     continue
-                inputFile = data_path + "/" + i
+                input_file = data_path + "/" + i
 
-                # $(RAD_BENCH) / src / cuda / bezier_surface /$(EXE) - w
-                # 0 - r
-                # 10 - a
-                # 0 - s
-                # 1 \
-                # - z $(RAD_BENCH) / data / bezier_surface / temp.gold \
-                #      - f $(RAD_BENCH) / data / bezier_surface / input / control.txt - n
-                # 2500
+                # ./ gen_gold - f / home / carol / radiation - benchmarks / data / bezier_surface / input / control.txt - n
+                # 2500 \
+                # - d / home / carol / radiation - benchmarks / data / bezier_surface / input.bin \
+                # - g / home / carol / radiation - benchmarks / data / bezier_surface / bezier_surface_2500.gold
                 gen = [None] * 8
-                gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
-                gen[1] = ['-w ', 0]
+                gen[0] = ['sudo ', src_bs + "/gen_gold "]
+                gen[1] = ['-d ', data_path + "/input.bin"]
                 gen[2] = ['-r ', 1]
                 gen[3] = ['-a ', j]
                 gen[4] = ['-s ', 0]  # change for execute
                 gen[5] = ['-z ',
                           data_path + "/alpha_" + str(j) + "_in_size_" + str(r) + "_out_size_" + str(r) + ".gold"]
-                gen[6] = ['-f ', inputFile]
+                gen[6] = ['-f ', input_file]
                 gen[7] = ['-n ', r]
 
                 # change mode and iterations for exe
                 exe = copy.deepcopy(gen)
+                exe[0][1] = bin_path + "/" + benchmark_bin + " "
                 exe[4][1] = 1
                 exe[2][1] = ITERATIONS
 
@@ -80,7 +77,7 @@ def main(board):
                 execute.append(' '.join(str(r) for v in exe for r in v))
 
     generate.extend(
-        ["make clean", "make -C ../../include/",
+        ["make clean", "make -C ../../../include/",
          "make -j4 LOGS=1",
          "mv ./" + benchmark_bin + " " + bin_path + "/"])
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin)
