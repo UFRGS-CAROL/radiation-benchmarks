@@ -187,6 +187,7 @@ std::pair<int, int> read_gold(Gold *h_nodes, std::string gold_path) {
 	int num_of_nodes, num_of_edges;
 	fscanf(fpo, "%d %d", &num_of_nodes, &num_of_edges);
 	printf("edges %d nodes %d\n", num_of_nodes, num_of_edges);
+	std::cout << gold_path << "\n";
 	if (h_nodes != nullptr) {
 		free(h_nodes);
 		h_nodes = (Gold *) malloc(sizeof(Gold) * num_of_nodes);
