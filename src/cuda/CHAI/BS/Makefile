@@ -41,7 +41,8 @@ ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
 
 NVCC=nvcc
 CXX=g++
-CXX_FLAGS=-std=c++11 $(ARCH)
+CXX_FLAGS=-std=c++11 
+NVCC_FLAGS=$(ARCH)
 LOGS?=1
 
 CHAI_CUDA_LIB?=/usr/local/cuda/lib64
@@ -69,6 +70,10 @@ LIB+= -L$(LOGHELPERPATH) -lLogHelper -DLOGS
 INC+= -I$(LOGHELPERPATH)
 endif 
 
+ifeq ($(DEBUG), 1)
+CXX_FLAGS+= -g
+NVCC_FLAGS=-g -G
+endif
 
 DEP=kernel.cpp kernel.h main.cpp kernel.cu support/common.h support/cuda-setup.h support/partitioner.h support/timer.h support/verify.h
 SRC=main.cpp kernel.cpp kernel.cu 
@@ -76,16 +81,27 @@ EXE=bs
 
 all: $(EXE) gen_gold gen_input
 
-$(EXE):
-	$(NVCC) $(CXX_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE)
+$(EXE):$(SRC)
+	$(NVCC) $(CXX_FLAGS) $(NVCC_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE)
 	
-gen_gold:
-	$(NVCC) $(CXX_FLAGS) bs_gen_gold.cpp -o gen_gold
+gen_gold: bs_gen_gold.cpp
+	$(CXX) $(CXX_FLAGS) bs_gen_gold.cpp -o gen_gold
 	
 	
-gen_input:
-	$(NVCC) $(CXX_FLAGS) bs_gen_input.cpp -o gen_input
+gen_input: bs_gen_input.cpp
+	$(CXX) $(CXX_FLAGS) bs_gen_input.cpp -o gen_input
 
 clean:
 	rm -f $(EXE) gen_input gen_gold
 
+generate: gen_gold gen_input
+	./gen_input -f /home/carol/radiation-benchmarks/data/bezier_surface/input/control.txt -n 2500 \
+				-d /home/carol/radiation-benchmarks/data/bezier_surface/input.bin 
+	./gen_gold -f /home/carol/radiation-benchmarks/data/bezier_surface/input/control.txt -n 2500 \
+				-d /home/carol/radiation-benchmarks/data/bezier_surface/input.bin \
+				-g /home/carol/radiation-benchmarks/data/bezier_surface/bezier_surface_2500.gold
+
+test: $(EXE)
+	./$(EXE) -d /home/carol/radiation-benchmarks/data/bezier_surface/input.bin -n 2500 \
+			-z /home/carol/radiation-benchmarks/data/bezier_surface/bezier_surface_2500.gold \
+			-a 0.1 -r 10 -s 1 

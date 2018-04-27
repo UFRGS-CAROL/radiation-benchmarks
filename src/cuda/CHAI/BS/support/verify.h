@@ -42,119 +42,138 @@
 #endif
 //************************************************************************************//
 
-inline int new_compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ, int RESOLUTIONI, int RESOLUTIONJ) {
-	int errors=0;
+inline int new_compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ,
+		int RESOLUTIONI, int RESOLUTIONJ) {
+	int errors = 0;
 
-    double sum_delta2_x,sum_delta2_y,sum_delta2_z, sum_ref2, L1norm2;
-    sum_delta2_x = 0;
-    sum_delta2_y = 0;
-    sum_delta2_z = 0;
+	double sum_delta2_x, sum_delta2_y, sum_delta2_z, sum_ref2, L1norm2;
+	sum_delta2_x = 0;
+	sum_delta2_y = 0;
+	sum_delta2_z = 0;
 
-    sum_ref2   = 0;
-    L1norm2    = 0;
-    for(int i = 0; i < RESOLUTIONI; i++) {
-        for(int j = 0; j < RESOLUTIONJ; j++) {
+	sum_ref2 = 0;
+	L1norm2 = 0;
+	for (int i = 0; i < RESOLUTIONI; i++) {
+		for (int j = 0; j < RESOLUTIONJ; j++) {
 
-			sum_delta2_x = fabs(outp[i * RESOLUTIONJ + j].x - outpCPU[i * RESOLUTIONJ + j].x) / fabs(outpCPU[i * RESOLUTIONJ + j].x);
-			sum_delta2_y = fabs(outp[i * RESOLUTIONJ + j].y - outpCPU[i * RESOLUTIONJ + j].y) / fabs(outpCPU[i * RESOLUTIONJ + j].y);
-			sum_delta2_z = fabs(outp[i * RESOLUTIONJ + j].z - outpCPU[i * RESOLUTIONJ + j].z) / fabs(outpCPU[i * RESOLUTIONJ + j].z);
+			sum_delta2_x = fabs(
+					outp[i * RESOLUTIONJ + j].x
+							- outpCPU[i * RESOLUTIONJ + j].x)
+					/ fabs(outpCPU[i * RESOLUTIONJ + j].x);
+			sum_delta2_y = fabs(
+					outp[i * RESOLUTIONJ + j].y
+							- outpCPU[i * RESOLUTIONJ + j].y)
+					/ fabs(outpCPU[i * RESOLUTIONJ + j].y);
+			sum_delta2_z = fabs(
+					outp[i * RESOLUTIONJ + j].z
+							- outpCPU[i * RESOLUTIONJ + j].z)
+					/ fabs(outpCPU[i * RESOLUTIONJ + j].z);
 
-			if(sum_delta2_x >= 1e-8 || sum_delta2_y >= 1e-8 || sum_delta2_z >= 1e-8  ){
+			if (sum_delta2_x >= 1e-8 || sum_delta2_y >= 1e-8
+					|| sum_delta2_z >= 1e-8) {
 
-		        errors++;
+				errors++;
 #ifdef LOGS
-		        char error_detail[200];
-        		sprintf(error_detail," p: [%d, %d]; X r: %f, e: %f ; Y r: %f, e: %f ; Z r: %f, e: %f  ",i,j,outp[i * RESOLUTIONJ + j].x,outpCPU[i * RESOLUTIONJ + j].x,outp[i * RESOLUTIONJ + j].y,outpCPU[i * RESOLUTIONJ + j].y,outp[i * RESOLUTIONJ + j].z,outpCPU[i * RESOLUTIONJ + j].z);
+				char error_detail[200];
+				sprintf(error_detail," p: [%d, %d]; X r: %f, e: %f ; Y r: %f, e: %f ; Z r: %f, e: %f  ",i,j,outp[i * RESOLUTIONJ + j].x,outpCPU[i * RESOLUTIONJ + j].x,outp[i * RESOLUTIONJ + j].y,outpCPU[i * RESOLUTIONJ + j].y,outp[i * RESOLUTIONJ + j].z,outpCPU[i * RESOLUTIONJ + j].z);
 
-       			 log_error_detail(error_detail);
+				log_error_detail(error_detail);
 #endif			
 
 			}
 
-        }
-    }
+		}
+	}
 
-    return errors;
+	return errors;
 }
 
-
-inline int compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ, int RESOLUTIONI, int RESOLUTIONJ) {
-    double sum_delta2, sum_ref2, L1norm2;
-    sum_delta2 = 0;
-    sum_ref2   = 0;
-    L1norm2    = 0;
-    for(int i = 0; i < RESOLUTIONI; i++) {
-        for(int j = 0; j < RESOLUTIONJ; j++) {
-            sum_delta2 += fabs(outp[i * RESOLUTIONJ + j].x - outpCPU[i * RESOLUTIONJ + j].x);
-            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].x);
-            sum_delta2 += fabs(outp[i * RESOLUTIONJ + j].y - outpCPU[i * RESOLUTIONJ + j].y);
-            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].y);
-            sum_delta2 += fabs(outp[i * RESOLUTIONJ + j].z - outpCPU[i * RESOLUTIONJ + j].z);
-            sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].z);
-        }
-    }
-    L1norm2 = (double)(sum_delta2 / sum_ref2);
-    if(L1norm2 >= 1e-6){
-        printf("Test failed\n");
-        exit(EXIT_FAILURE);
-    }
-    return 0;
+inline int compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ,
+		int RESOLUTIONI, int RESOLUTIONJ) {
+	double sum_delta2, sum_ref2, L1norm2;
+	sum_delta2 = 0;
+	sum_ref2 = 0;
+	L1norm2 = 0;
+	for (int i = 0; i < RESOLUTIONI; i++) {
+		for (int j = 0; j < RESOLUTIONJ; j++) {
+			sum_delta2 += fabs(
+					outp[i * RESOLUTIONJ + j].x
+							- outpCPU[i * RESOLUTIONJ + j].x);
+			sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].x);
+			sum_delta2 += fabs(
+					outp[i * RESOLUTIONJ + j].y
+							- outpCPU[i * RESOLUTIONJ + j].y);
+			sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].y);
+			sum_delta2 += fabs(
+					outp[i * RESOLUTIONJ + j].z
+							- outpCPU[i * RESOLUTIONJ + j].z);
+			sum_ref2 += fabs(outpCPU[i * RESOLUTIONJ + j].z);
+		}
+	}
+	L1norm2 = (double) (sum_delta2 / sum_ref2);
+	if (L1norm2 >= 1e-6) {
+		printf("Test failed\n");
+		exit (EXIT_FAILURE);
+	}
+	return 0;
 }
 
 // BezierBlend (http://paulbourke.net/geometry/bezier/)
 inline T BezierBlend(int k, T mu, int n) {
-    int nn, kn, nkn;
-    T   blend = 1;
-    nn        = n;
-    kn        = k;
-    nkn       = n - k;
-    while(nn >= 1) {
-        blend *= nn;
-        nn--;
-        if(kn > 1) {
-            blend /= (T)kn;
-            kn--;
-        }
-        if(nkn > 1) {
-            blend /= (T)nkn;
-            nkn--;
-        }
-    }
-    if(k > 0)
-        blend *= pow(mu, (T)k);
-    if(n - k > 0)
-        blend *= pow(1 - mu, (T)(n - k));
-    return (blend);
+	int nn, kn, nkn;
+	T blend = 1;
+	nn = n;
+	kn = k;
+	nkn = n - k;
+	while (nn >= 1) {
+		blend *= nn;
+		nn--;
+		if (kn > 1) {
+			blend /= (T) kn;
+			kn--;
+		}
+		if (nkn > 1) {
+			blend /= (T) nkn;
+			nkn--;
+		}
+	}
+	if (k > 0)
+		blend *= pow(mu, (T) k);
+	if (n - k > 0)
+		blend *= pow(1 - mu, (T) (n - k));
+	return (blend);
 }
 
 // Sequential implementation for comparison purposes
-inline void BezierCPU(XYZ *inp, XYZ *outp, int NI, int NJ, int RESOLUTIONI, int RESOLUTIONJ) {
-    int i, j, ki, kj;
-    T   mui, muj, bi, bj;
-    for(i = 0; i < RESOLUTIONI; i++) {
-        mui = i / (T)(RESOLUTIONI - 1);
-        for(j = 0; j < RESOLUTIONJ; j++) {
-            muj     = j / (T)(RESOLUTIONJ - 1);
-            XYZ out = {0, 0, 0};
-            for(ki = 0; ki <= NI; ki++) {
-                bi = BezierBlend(ki, mui, NI);
-                for(kj = 0; kj <= NJ; kj++) {
-                    bj = BezierBlend(kj, muj, NJ);
-                    out.x += (inp[ki * (NJ + 1) + kj].x * bi * bj);
-                    out.y += (inp[ki * (NJ + 1) + kj].y * bi * bj);
-                    out.z += (inp[ki * (NJ + 1) + kj].z * bi * bj);
-                }
-            }
-            outp[i * RESOLUTIONJ + j] = out;
-        }
-    }
+inline void BezierCPU(XYZ *inp, XYZ *outp, int NI, int NJ, int RESOLUTIONI,
+		int RESOLUTIONJ) {
+	int i, j, ki, kj;
+	T mui, muj, bi, bj;
+	for (i = 0; i < RESOLUTIONI; i++) {
+		mui = i / (T) (RESOLUTIONI - 1);
+		for (j = 0; j < RESOLUTIONJ; j++) {
+			muj = j / (T) (RESOLUTIONJ - 1);
+			XYZ out = { 0, 0, 0 };
+			for (ki = 0; ki <= NI; ki++) {
+				bi = BezierBlend(ki, mui, NI);
+				for (kj = 0; kj <= NJ; kj++) {
+					bj = BezierBlend(kj, muj, NJ);
+					out.x += (inp[ki * (NJ + 1) + kj].x * bi * bj);
+					out.y += (inp[ki * (NJ + 1) + kj].y * bi * bj);
+					out.z += (inp[ki * (NJ + 1) + kj].z * bi * bj);
+				}
+			}
+			outp[i * RESOLUTIONJ + j] = out;
+		}
+	}
 }
 
-inline void verify(XYZ *in, XYZ *out, int in_size_i, int in_size_j, int out_size_i, int out_size_j) {
-    XYZ *gold = (XYZ *)malloc(out_size_i * out_size_j * sizeof(XYZ));
-    BezierCPU(in, gold, in_size_i, in_size_j, out_size_i, out_size_j);
-    compare_output(out, gold, in_size_i, in_size_j, out_size_i, out_size_j);
-    free(gold);
+inline void verify(XYZ *in, XYZ *out, int in_size_i, int in_size_j,
+		int out_size_i, int out_size_j) {
+	XYZ *gold = (XYZ *) malloc(out_size_i * out_size_j * sizeof(XYZ));
+	BezierCPU(in, gold, in_size_i, in_size_j, out_size_i, out_size_j);
+	compare_output(out, gold, in_size_i, in_size_j, out_size_i, out_size_j);
+	free(gold);
 }
 
 #endif
