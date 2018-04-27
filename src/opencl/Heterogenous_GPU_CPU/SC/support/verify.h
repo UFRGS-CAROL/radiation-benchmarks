@@ -32,9 +32,48 @@
  * THE SOFTWARE.
  *
  */
-
+#ifndef VERIFY_H
+#define VERIFY_H
 #include "common.h"
 #include <math.h>
+
+//*****************************************  LOG  ***********************************//
+#ifdef LOGS
+#include "log_helper.h"
+#endif
+//************************************************************************************//
+
+inline int new_compare_output(T *outp, T *outpCPU, int size) {
+	//printf("Estou na compare\n");
+	int errors=0;
+    double sum_delta2,sum_delta2_x, sum_ref2, L1norm2;
+    sum_delta2 = 0;
+    sum_ref2   = 0;
+    L1norm2    = 0;
+	//printf("\tSize:%d\n",size);
+
+#pragma omp parallel for
+    for(int i = 0; i < size; i++) {
+//		update_timestamp();
+          sum_ref2 = std::abs(outpCPU[i]);
+
+    	if(sum_ref2 == 0)
+    	    sum_ref2 = 1; //In case percent=0
+		sum_delta2_x = std::abs(outp[i] - outpCPU[i]) / sum_ref2 ;
+
+			if(sum_delta2_x >= 1e-12 ){
+		        errors++;
+#ifdef LOGS
+		        char error_detail[200];
+        		sprintf(error_detail,"X, p: [%d], r: %d, e: %d",i,outp[i],outpCPU[i] );
+
+       			 log_error_detail(error_detail);
+#endif			
+
+			}
+    }
+    return errors;
+}
 
 inline int compare_output(T *outp, T *outpCPU, int size) {
     double sum_delta2, sum_ref2, L1norm2;
@@ -78,3 +117,5 @@ inline void verify(T *input, T *input_array, int size, int value, int size_compa
     cpu_streamcompaction(input_array, size, value);
     compare_output(input, input_array, size_compact);
 }
+
+#endif

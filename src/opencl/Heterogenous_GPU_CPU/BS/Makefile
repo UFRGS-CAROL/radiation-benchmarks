@@ -44,7 +44,7 @@ CXX_FLAGS=-std=c++11 -DLOGS
 ifndef CHAI_OCL_LIB
     $(error CHAI_OCL_LIB not defined. This environment variable must be defined to point to the location of the OpenCL library)
 endif
-LIB=-L/usr/lib/ -L$(CHAI_OCL_LIB) -lOpenCL -lm 
+LIB=-L/usr/lib/ -L../../../include/ -lLogHelper -L$(CHAI_OCL_LIB) -lOpenCL -lm 
 
 is_pthreads=$(shell ${CXX} -v 2> /dev/stdout | grep "Thread model" | awk {'print $$3'})
 ifeq ($(is_pthreads),posix)
@@ -56,7 +56,7 @@ ifndef CHAI_OCL_INC
 endif
 INC=-I$(CHAI_OCL_INC) -I/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BS/ -I/home/carol/radiation-benchmarks/src/include/
 
-SRC=main.cpp kernel.cpp /home/carol/radiation-benchmarks/src/include/log_helper.cpp
+SRC=main.cpp kernel.cpp #/home/carol/radiation-benchmarks/src/include/log_helper.cpp
 OBJECTS=$(SRC:.cpp=.o)
 DEPS=$(OBJECTS:.o=.d)
 EXE=bs

@@ -39,7 +39,7 @@ else
     CXX=g++
     endif
 endif
-CXX_FLAGS=-std=c++11 -DLOGS
+CXX_FLAGS=-std=c++11 -DLOGS -fopenmp
 
 ifndef CHAI_OCL_LIB
     $(error CHAI_OCL_LIB not defined. This environment variable must be defined to point to the location of the OpenCL library)

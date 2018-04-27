@@ -66,17 +66,49 @@ struct Params {
     int   remove_value;
 
     Params(int argc, char **argv) {
+/*
+//CPU
         platform          = 0;
         device            = 0;
         n_work_items      = 256;
         n_work_groups     = 8;
         n_threads         = 4;
-        n_warmup          = 5;
-        n_reps            = 50;
-        alpha             = 0.1;
-        in_size           = 1048576;
+        n_warmup          = 0;
+        n_reps            = 1;
+        alpha             = 1.0;
+        in_size           = 367001600;
         compaction_factor = 50;
         remove_value      = 0;
+
+*/
+/*
+//GPU
+        platform          = 0;
+        device            = 0;
+        n_work_items      = 256;
+        n_work_groups     = 8;
+        n_threads         = 4;
+        n_warmup          = 0;
+        n_reps            = 1;
+        alpha             = 0.0;
+        in_size           = 367001600;
+        compaction_factor = 50;
+        remove_value      = 0;
+*/
+
+//CPU + GPU
+        platform          = 0;
+        device            = 0;
+        n_work_items      = 256;
+        n_work_groups     = 8;
+        n_threads         = 4;
+        n_warmup          = 0;
+        n_reps            = 1;
+        alpha             = 0.7;
+        in_size           = 367001600;
+        compaction_factor = 50;
+        remove_value      = 0;
+
         int opt;
         while((opt = getopt(argc, argv, "hp:d:i:g:t:w:r:a:n:c:")) >= 0) {
             switch(opt) {
@@ -147,58 +179,23 @@ struct Params {
     }
 };
 
+inline int create_output(T *ouput, const Params &p){
+	const int n_tasks     = divceil(p.in_size, p.n_work_items * REGS);
+	int in_size = n_tasks * p.n_work_items * REGS * sizeof(T);
+	char filename[100];
+	FILE *finput;
+	snprintf(filename, 100, "gold_%d_%d_%d",p.in_size,p.n_work_items,p.compaction_factor); // Gold com a resolução 
+	if (finput = fopen(filename, "wb")) {
+    	fwrite(ouput, in_size, 1 , finput);
+	} else {
+    	printf("Error writing output file");
+    	exit(1);
+	}
+	fclose(finput);
 
-inline int new_compare_output(T *outp, T *outpCPU, int size) {
-	
-	int errors=0;
-    double sum_delta2,sum_delta2_x, sum_ref2, L1norm2;
-    sum_delta2 = 0;
-    sum_ref2   = 0;
-    L1norm2    = 0;
-    for(int i = 0; i < size; i++) {
-//        sum_delta2 += std::abs(outp[i] - outpCPU[i]);
-          sum_ref2 = std::abs(outpCPU[i]);
-
-    	if(sum_ref2 == 0)
-    	    sum_ref2 = 1; //In case percent=0
-//		printf("%f\n",sum_delta2_x)
-		sum_delta2_x = std::abs(outp[i] - outpCPU[i]) / sum_ref2 ;
-//		printf("%f\n",sum_delta2_x);
-//		if(sum_ref2==0)
-//			printf("Dividido por zero\n");
-//sum_delta2_x=1;
-			if(sum_delta2_x >= 1e-12 ){
-		        errors++;
-#ifdef LOGS
-		        char error_detail[200];
-        		sprintf(error_detail,"X, p: [%d], r: %d, e: %d",i,outp[i],outpCPU[i] );
-
-       			 log_error_detail(error_detail);
-#endif			
-
-			}
-    }
-
-    /*if(sum_ref2 == 0)
-        sum_ref2 = 1; //In case percent=0
-    L1norm2      = (double)(sum_delta2 / sum_ref2);
-*/
-/*    if(L1norm2 >= 1e-6){
-        errors++;
-        char error_detail[200];
-        sprintf(error_detail,"Delta:%f Ref:%f L1norm2:%f",sum_delta2 ,sum_ref2 ,L1norm2);
-#ifdef LOGS
-        log_error_detail(error_detail);
-#endif			
-#ifdef LOGS
-        log_error_count(errors);
-#endif
-        //printf("Test failed\n");
-        //exit(EXIT_FAILURE);
-    }
-*/
-    return errors;
 }
+
+
 // Input Data -----------------------------------------------------------------
 void new_read_input(T *input, const Params &p) {
 
@@ -220,7 +217,7 @@ void new_read_input(T *input, const Params &p) {
 void read_input(T *input, const Params &p) {
 
     // Initialize the host input vectors
-    srand(time(NULL));
+    srand(15);			// Colocamos  a mesma semente para gerar a mesma Sequencia de Números 
     for(int i = 0; i < p.in_size; i++) {
         input[i] = (T)p.remove_value;
     }
@@ -246,7 +243,9 @@ int main(int argc, char **argv) {
 	int err = 0;
 
 printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.device, p.n_work_items,p.n_work_groups,p.alpha,p.n_threads,p.in_size,p.compaction_factor);
-
+	
+	//printf("Main size:%d\n",p.in_size);
+	
 #ifdef LOGS
     set_iter_interval_print(10);
     char test_info[300];
@@ -288,7 +287,8 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
     // Initialize
     timer.start("Initialization");
     const int max_wi = ocl.max_work_items(ocl.clKernel);
-    new_read_input(h_in_out, p);
+    //new_read_input(h_in_out, p);
+	read_input(h_in_out, p);	
 #ifdef OCL_2_0
     h_flags[0].store(1);
 #else
@@ -300,9 +300,11 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
 
 // Ler gold
 // *********************** Lendo GOLD   *****************************
+
     char filename[300];
-    snprintf(filename, 300, "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/gold_%d_%d_%d",p.in_size,p.n_work_items,p.compaction_factor); // Gold com a resolução 
     FILE *finput;
+
+   snprintf(filename, 300, "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/gold_%d_%d_%d",p.in_size,p.n_work_items,p.compaction_factor); // Gold com a resolução 
     if (finput = fopen(filename, "rb")) {
         fread(h_in_backup, p.in_size * sizeof(T), 1 , finput);
     } else {
@@ -311,11 +313,13 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
     }
 	fclose(finput);	
 
+//*********************************************************************
     //memcpy(h_in_backup, h_in_out, p.in_size * sizeof(T)); // Backup for reuse across iterations
 
     // Loop over main kernel
     for(int rep = 0; rep < p.n_reps; rep++) {
-
+		//printf("Estou na rep %d\n",rep);
+		update_timestamp();
 #ifndef OCL_2_0
     // Copy to device
     timer.start("Copy To Device");
@@ -369,7 +373,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
         clSetKernelArg(ocl.clKernel, 7, sizeof(cl_mem), &d_in_out);
         clSetKernelArg(ocl.clKernel, 8, sizeof(cl_mem), &d_flags);
 #endif
-
+		update_timestamp();
         // Kernel launch
         size_t ls[1] = {(size_t)p.n_work_items};
         size_t gs[1] = {(size_t)p.n_work_items * p.n_work_groups};
@@ -406,6 +410,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
 
 #ifndef OCL_2_0
     // Copy back
+	update_timestamp();
     timer.start("Copy Back and Merge");
     if(p.alpha < 1.0) {
         int offset = n_tasks_cpu == 0 ? 1 : 2;
@@ -419,10 +424,39 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
     //timer.print("Copy Back and Merge", 1);
 #endif
 
+//create_output(h_in_backup,p);
+
+//******************************************************
+/*
+	int param1 = divceil(p.in_size, p.n_work_items * REGS);
+	int param2 = param1 * p.n_work_items * REGS * sizeof(T);
+
+	
+
+
+	//printf("Criando Input\n");
+   char filename5[100];
+    snprintf(filename5, 100, "agold_%d_%d_%d",p.in_size,p.n_work_items,p.compaction_factor); // Gold com a resolução 
+    if (finput = fopen(filename5, "wb")) {
+        fwrite(h_in_out, param2, 1 , finput);
+    } else {
+        printf("Error writing input file");
+        exit(1);
+    }
+    fclose(finput);
+*/
+	//printf("Criei Input\n");
+//*****************************************************
+
     // Verify answer
    // verify(h_in_out, h_in_backup, p.in_size, p.remove_value, (p.in_size * p.compaction_factor) / 100);
-    err = new_compare_output(h_in_out, h_in_backup, (p.in_size * p.compaction_factor) / 100);
+	//printf("Verificando Input\n");
 
+    timer.start("Compare");
+    err = new_compare_output(h_in_out, h_in_backup, (p.in_size * p.compaction_factor) / 100);
+    timer.stop("Compare");
+
+	//printf("Terminei de Verificar\n");
 // Aqui ver se houve erros 
         if(err > 0) {
             printf("Errors: %d\n",err);
@@ -437,8 +471,9 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
         } else {
             printf(".");
         }
-    	new_read_input(h_in_out, p);
-
+		update_timestamp();
+    	//new_read_input(h_in_out, p);
+		read_input(h_in_out, p);
 #ifdef LOGS
         log_error_count(err);
 #endif
@@ -448,6 +483,8 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
     end_log_file();
 #endif
 
+	//timer.print("Compare",p.n_reps);
+	//timer.print("Kernel",p.n_reps);
     // Free memory
     timer.start("Deallocation");
 #ifdef OCL_2_0
