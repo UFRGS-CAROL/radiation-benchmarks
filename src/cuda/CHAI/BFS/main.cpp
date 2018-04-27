@@ -176,7 +176,7 @@ void read_gold_size(int &n_nodes_o, const Params &p) {
 
 }
 
-std::pair<int, int> read_gold(Gold *h_nodes, std::string gold_path) {
+Gold* read_gold(int *num_of_nodes, int *num_of_edges, std::string gold_path) {
 	std::cout << "Passou aqui\n\n\n";
 	FILE *fpo = fopen(gold_path.c_str(), "r");
 	if (!fpo) {
@@ -184,17 +184,17 @@ std::pair<int, int> read_gold(Gold *h_nodes, std::string gold_path) {
 		exit (EXIT_FAILURE);
 	}
 
-	int num_of_nodes, num_of_edges;
-	fscanf(fpo, "%d %d", &num_of_nodes, &num_of_edges);
+//	int num_of_nodes, num_of_edges;
+	fscanf(fpo, "%d %d", num_of_nodes, num_of_edges);
+//	if (h_nodes != nullptr) {
+//		free(h_nodes);
+//	}
 
-	if (h_nodes != nullptr) {
-		free(h_nodes);
-	}
-	h_nodes = (Gold *) malloc(sizeof(Gold) * num_of_nodes);
+	Gold *h_nodes = (Gold *) malloc(sizeof(Gold) * *num_of_nodes);
 	if (h_nodes == NULL)
-		exit(EXIT_FAILURE);
+		exit (EXIT_FAILURE);
 
-	for (int i = 0; i < num_of_nodes; i++) {
+	for (int i = 0; i < *num_of_nodes; i++) {
 		int j, cost;
 		fscanf(fpo, "%d %d", &j, &cost);
 		h_nodes[i].j = j;
@@ -203,8 +203,9 @@ std::pair<int, int> read_gold(Gold *h_nodes, std::string gold_path) {
 	}
 
 	fclose(fpo);
-	std::cout << "INSIDE READ GOLD " << h_nodes << "\n";
-	return std::pair<int, int>(num_of_nodes, num_of_edges);
+//	std::cout << "INSIDE READ GOLD " << h_nodes << "\n";
+//	return std::pair<int, int>(num_of_nodes, num_of_edges);
+	return h_nodes;
 }
 
 void read_input(int &source, Node *&h_nodes, Edge *&h_edges, const Params &p) {
@@ -274,11 +275,12 @@ int main(int argc, char **argv) {
 		gold = (Gold *) malloc(sizeof(Gold) * n_nodes);
 
 	} else {
-		std::pair<int, int> sizes = read_gold(gold, p.gold_path);
-		std::cout << gold << " " << p.mode << "\n";
-
-		n_nodes = sizes.first;
-		n_edges = sizes.second;
+//		std::pair<int, int> sizes =
+		gold = read_gold(&n_nodes, &n_edges, p.gold_path);
+//		std::cout << gold << " " << p.mode << "\n";
+//
+//		n_nodes = sizes.first;
+//		n_edges = sizes.second;
 	}
 //******************************************************************************
 
@@ -584,7 +586,10 @@ int main(int argc, char **argv) {
 		if (err > 0) {
 			printf("Errors: %d\n", err);
 			read_input(source, h_nodes, h_edges, p);
-			read_gold(gold, p.gold_path);
+			if(gold){
+				free(gold);
+			}
+			gold = read_gold(&n_nodes, &n_edges, p.gold_path);
 
 		} else {
 			printf(".");
