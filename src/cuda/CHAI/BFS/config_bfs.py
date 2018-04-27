@@ -90,7 +90,7 @@ def main(board):
             execute.append(' '.join(str(r) for v in exe for r in v))
 
     generate.extend(
-        ["make clean", "make -C ../../include/",
+        ["make clean", "make -C ../../../include/",
          "make LOGS=1",
          "mv ./" + benchmark_bin + " " + bin_path + "/"])
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin)
