@@ -46,7 +46,7 @@ float *GOLD;
 
 float *d_A;
 float *d_B;
-float *d_C_T;
+float *d_C;
 //====================================
 
 void GetDevice(){
@@ -102,7 +102,7 @@ void allocCudaMemory()
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
-	malloc = cudaMalloc( ( void** ) &d_C_T, matrixSize * sizeof( float ) );
+	malloc = cudaMalloc( ( void** ) &d_C, matrixSize * sizeof( float ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -117,7 +117,7 @@ void copyCudaMemory()
 	cudaError_t mcpy;
 	const char *erro;
 //====================================
-	mcpy = cudaMemset(d_C_T, 0, matrixSize * sizeof (float));
+	mcpy = cudaMemset(d_C, 0, matrixSize * sizeof (float));
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -385,7 +385,7 @@ int main( int argc, char* argv[] )
 		// Timer...
 		global_time = mysecond();
 
-		cudaMemset(d_C_T, 0, matrixSize * sizeof (float));
+		cudaMemset(d_C, 0, matrixSize * sizeof (float));
 
 		if (verbose) printf(",");
 
@@ -395,7 +395,7 @@ int main( int argc, char* argv[] )
 			start_iteration();
 		#endif
 		//================== Device computation, HMxM
-		MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_C_T, k);
+		MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, k);
 		checkCudaErrors( cudaPeekAtLastError() );
 		checkCudaErrors( cudaDeviceSynchronize() );
 		//====================================
@@ -421,7 +421,7 @@ int main( int argc, char* argv[] )
 
         //if (kernel_errors != 0) {
         if (loop2 || !device_warmup) {
-            checkCudaErrors( cudaMemcpy(A, d_C_T, matrixSize * sizeof( float ), cudaMemcpyDeviceToHost) );
+            checkCudaErrors( cudaMemcpy(A, d_C, matrixSize * sizeof( float ), cudaMemcpyDeviceToHost) );
             //~ if (memcmp(A, GOLD, sizeof(float) * k*k)) {
             if (badass_memcmp(GOLD, A, matrixSize)) {
     			char error_detail[150];
@@ -460,7 +460,7 @@ int main( int argc, char* argv[] )
     			//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
     			cudaFree( d_A );
     			cudaFree( d_B );
-    			cudaFree( d_C_T );
+    			cudaFree( d_C );
     			//====================================
     			ReadMatrixFromFile();
     			//================== Init DEVICE memory
@@ -519,7 +519,7 @@ int main( int argc, char* argv[] )
 	//================== Release device memory
 	cudaFree( d_A );
 	cudaFree( d_B );
-	cudaFree( d_C_T );
+	cudaFree( d_C );
 	//====================================
 
 	free( A );

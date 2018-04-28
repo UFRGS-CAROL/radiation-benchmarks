@@ -22,7 +22,7 @@ DEF_SIZE=1024
 
 DEF_A_INPUT=./hmxm_A_8192.matrix
 DEF_B_INPUT=./hmxm_B_8192.matrix
-DEF_GOLD=./hmxm_GOLD_$(DEF_TEST_SIZE).matrix
+DEF_GOLD=./hmxm_GOLD_$(DEF_SIZE).matrix
 
 MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD)
 
