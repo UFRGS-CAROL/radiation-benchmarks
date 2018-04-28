@@ -6,6 +6,8 @@
 #include <string>
 #include <omp.h>
 
+#include <cublas.h>
+
 #ifdef LOGS
 #include "log_helper.h"
 #endif
@@ -19,8 +21,6 @@
 #define min( x, y ) ( (x) < (y) ? (x) : (y) )
 #undef max
 #define max( x, y ) ( (x) > (y) ? (x) : (y) )
-
-#define BLOCK_SIZE 32
 
 #define DEFAULT_INPUT_SIZE 8192
 
@@ -40,13 +40,13 @@ FILE* f_GOLD;
 //====================================
 
 //================== Host and device matrix ptr's
-double *A;
-double *B;
-double *GOLD;
+float *A;
+float *B;
+float *GOLD;
 
-double *d_A;
-double *d_B;
-double *d_C_T;
+float *d_A;
+float *d_B;
+float *d_C;
 //====================================
 
 void GetDevice(){
@@ -84,7 +84,7 @@ void allocCudaMemory()
 	cudaError_t malloc;
 	const char *erro;
 //====================================
-	malloc = cudaMalloc( ( void** ) &d_A, matrixSize * sizeof( double ) );
+	malloc = cudaMalloc( ( void** ) &d_A, matrixSize * sizeof( float ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -93,7 +93,7 @@ void allocCudaMemory()
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
-	malloc = cudaMalloc( ( void** ) &d_B, matrixSize * sizeof( double ) );
+	malloc = cudaMalloc( ( void** ) &d_B, matrixSize * sizeof( float ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -102,7 +102,7 @@ void allocCudaMemory()
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
-	malloc = cudaMalloc( ( void** ) &d_C_T, matrixSize * sizeof( double ) );
+	malloc = cudaMalloc( ( void** ) &d_C, matrixSize * sizeof( float ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -117,7 +117,7 @@ void copyCudaMemory()
 	cudaError_t mcpy;
 	const char *erro;
 //====================================
-	mcpy = cudaMemset(d_C_T, 0, matrixSize * sizeof (double));
+	mcpy = cudaMemset(d_C, 0, matrixSize * sizeof (float));
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -125,7 +125,7 @@ void copyCudaMemory()
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
-	mcpy = cudaMemcpy( d_A, A, matrixSize * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH A
+	mcpy = cudaMemcpy( d_A, A, matrixSize * sizeof( float ), cudaMemcpyHostToDevice ); // PUSH A
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -133,7 +133,7 @@ void copyCudaMemory()
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
-	mcpy = cudaMemcpy( d_B, B, matrixSize * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH B
+	mcpy = cudaMemcpy( d_B, B, matrixSize * sizeof( float ), cudaMemcpyHostToDevice ); // PUSH B
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -161,9 +161,9 @@ void ReadMatrixFromFile(){
     size_t ret_value[3];
     for(i=0; i<k; i++)
     {
-      ret_value[0] = fread (&(A[ k * i ]), sizeof(double)*k, 1, f_A);
-      ret_value[1] = fread (&(B[ k * i ]), sizeof(double)*k, 1, f_B);
-      ret_value[2] = fread (&(GOLD[ k * i ]), sizeof(double)*k, 1, f_GOLD);
+      ret_value[0] = fread (&(A[ k * i ]), sizeof(float)*k, 1, f_A);
+      ret_value[1] = fread (&(B[ k * i ]), sizeof(float)*k, 1, f_B);
+      ret_value[2] = fread (&(GOLD[ k * i ]), sizeof(float)*k, 1, f_GOLD);
       if ((ret_value[0] != 1) || (ret_value[1] != 1) || (ret_value[2] != 1)) {
          printf("Bad input/gold formatting: %lu ; %lu ; %lu .\n", ret_value[0], ret_value[1], ret_value[2]);
          #ifdef LOGS
@@ -180,13 +180,13 @@ void ReadMatrixFromFile(){
 
 	if (fault_injection)
 	{
-		A[3] = (double)6.5;
+		A[3] = (float)6.5;
 		printf("!! Injected 6.5 on position A[3]\n");
 	}
 }
 
-bool badass_memcmp(double *gold, double *found, unsigned long n){
-	double result = 0.0;
+bool badass_memcmp(float *gold, float *found, unsigned long n){
+	float result = 0.0;
 	int i;
 	unsigned long  chunk = ceil(float(n) / float(omp_get_max_threads()));
 	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
@@ -214,19 +214,8 @@ bool badass_memcmp(double *gold, double *found, unsigned long n){
 //
 // }
 
-__global__ void MatrixMulKernel (double *d_A, double *d_B, double *d_C, int n)
-{
-	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;                                                      
-	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y; 
-	int k;
-	
-	for (k = 0;  k < n; k++)
-	  d_C[ty*n + tx] += d_A[ty*n + k]*d_B[k*n + tx];
-
-}
-
 void usage() {
-    printf("Usage: dmxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold_t=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+    printf("Usage: sgemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold_t=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
 int main( int argc, char* argv[] )
@@ -277,7 +266,7 @@ int main( int argc, char* argv[] )
     else
     {
         a_matrix_path = new char[100];
-        snprintf(a_matrix_path, 100, "dmxm_a_%i", (signed int)DEFAULT_INPUT_SIZE);
+        snprintf(a_matrix_path, 100, "sgemm_a_%i", (signed int)DEFAULT_INPUT_SIZE);
         printf("Using default input_a path: %s\n", a_matrix_path);
     }
 
@@ -288,7 +277,7 @@ int main( int argc, char* argv[] )
     else
     {
         b_matrix_path = new char[100];
-        snprintf(b_matrix_path, 100, "dmxm_b_%i", (signed int)DEFAULT_INPUT_SIZE);
+        snprintf(b_matrix_path, 100, "sgemm_b_%i", (signed int)DEFAULT_INPUT_SIZE);
         printf("Using default input_a path: %s\n", b_matrix_path);
     }
 
@@ -299,7 +288,7 @@ int main( int argc, char* argv[] )
     else
     {
         gold_matrix_path = new char[100];
-        snprintf(gold_matrix_path, 100, "dmxm_gold_%i", (signed int)k);
+        snprintf(gold_matrix_path, 100, "sgemm_gold_%i", (signed int)k);
         printf("Using default gold path: %s\n", gold_matrix_path);
     }
 
@@ -333,26 +322,26 @@ int main( int argc, char* argv[] )
     // }
 //====================================
 
-//================== Set block and grid size for MxM kernel
-	int gridsize = k/BLOCK_SIZE < 1 ? 1 : k/BLOCK_SIZE;
-	int blocksize = k/BLOCK_SIZE < 1 ? k : BLOCK_SIZE;
-	dim3 dimBlock(blocksize,blocksize);
-	dim3 dimGrid(gridsize,gridsize);
-//====================================
+	////////////////////////////////////////////////////
+	/////////////CUBLAS GEMM VARS///////////////////////
+	const float alpha = 1.0;
+	const float beta = 1.0;
+	char transa = 't', transb = 't';
+	////////////////////////////////////////////////////
 
 //================== Init logs
 #ifdef LOGS
 	char test_info[90];
-	snprintf(test_info, 90, "size:%d type:double-precision", k);
-	start_log_file("cudaDMxM", test_info);
+	snprintf(test_info, 90, "size:%d type:single-precision", k);
+	start_log_file("cudaSGEMM", test_info);
 #endif
 //====================================
 
 //================== Alloc HOST memory
-	A = ( double* ) malloc( matrixSize * sizeof( double ) );
-	B = ( double* ) malloc( matrixSize * sizeof( double ) );
+	A = ( float* ) malloc( matrixSize * sizeof( float ) );
+	B = ( float* ) malloc( matrixSize * sizeof( float ) );
 
-	GOLD = ( double* ) malloc( matrixSize * sizeof( double ) );
+	GOLD = ( float* ) malloc( matrixSize * sizeof( float ) );
 
 	if (!(A && B && GOLD)) {
 		printf("Failed on host malloc.\n");
@@ -367,7 +356,7 @@ int main( int argc, char* argv[] )
     max_kernel_time = 0;
 	GetDevice();
 	ReadMatrixFromFile();
-	printf( "cudaDMxM\n" );
+	printf( "cudaSGEMM\n" );
 	fflush(stdout);
 //====================================
 
@@ -385,7 +374,7 @@ int main( int argc, char* argv[] )
 		// Timer...
 		global_time = mysecond();
 
-		cudaMemset(d_C_T, 0, matrixSize * sizeof (double));
+		cudaMemset(d_C, 0, matrixSize * sizeof (float));
 
 		if (verbose) printf(",");
 
@@ -395,12 +384,19 @@ int main( int argc, char* argv[] )
 			start_iteration();
 		#endif
 		//================== Device computation, HMxM
-		MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_C_T, k);
+	
+        cublasSgemm( (cublasOperation_t)transa, (cublasOperation_t)transb,
+            k, k, k,
+            alpha,
+            d_A, k,
+            d_B, k,
+            beta,
+            d_C, k );
 
-		checkCudaErrors( cudaPeekAtLastError() );
-		
-		checkCudaErrors( cudaDeviceSynchronize() );
-		checkCudaErrors( cudaPeekAtLastError() );
+        checkCudaErrors( cudaPeekAtLastError() );
+
+        checkCudaErrors( cudaDeviceSynchronize() );
+        checkCudaErrors( cudaPeekAtLastError() );
 		//====================================
 		#ifdef LOGS
 		if (loop2 || !device_warmup)
@@ -424,8 +420,8 @@ int main( int argc, char* argv[] )
 
         //if (kernel_errors != 0) {
         if (loop2 || !device_warmup) {
-            checkCudaErrors( cudaMemcpy(A, d_C_T, matrixSize * sizeof( double ), cudaMemcpyDeviceToHost) );
-            //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
+            checkCudaErrors( cudaMemcpy(A, d_C, matrixSize * sizeof( float ), cudaMemcpyDeviceToHost) );
+            //~ if (memcmp(A, GOLD, sizeof(float) * k*k)) {
             if (badass_memcmp(GOLD, A, matrixSize)) {
     			char error_detail[150];
     			int host_errors = 0;
@@ -463,7 +459,7 @@ int main( int argc, char* argv[] )
     			//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
     			cudaFree( d_A );
     			cudaFree( d_B );
-    			cudaFree( d_C_T );
+    			cudaFree( d_C );
     			//====================================
     			ReadMatrixFromFile();
     			//================== Init DEVICE memory
@@ -522,7 +518,7 @@ int main( int argc, char* argv[] )
 	//================== Release device memory
 	cudaFree( d_A );
 	cudaFree( d_B );
-	cudaFree( d_C_T );
+	cudaFree( d_C );
 	//====================================
 
 	free( A );

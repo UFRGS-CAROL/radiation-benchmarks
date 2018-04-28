@@ -1,30 +1,33 @@
 CC=g++
 NVCC=/usr/local/cuda/bin/nvcc
 
-ARCH= -gencode arch=compute_53,code=[sm_53,compute_53] \
+ARCH= -gencode arch=compute_30,code=sm_30 \
+      -gencode arch=compute_35,code=sm_35 \
+      -gencode arch=compute_50,code=[sm_50,compute_50] \
+      -gencode arch=compute_52,code=[sm_52,compute_52] \
       -gencode arch=compute_60,code=[sm_60,compute_60] \
       -gencode arch=compute_62,code=[sm_62,compute_62]
 
 
-NVCC_FLAGS= $(ARCH) #-arch=sm_35
+NVCC_FLAGS= $(ARCH)
 
 NVIDIA_INC=/usr/local/cuda/include/,./
 NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-RUN_SOURCES=./cudaHGEMM.cu
-GEN_SOURCES=./generateMatricesHalf.cu
-RUN_EXEC=./hgemm
-GEN_EXEC=./generateMatricesHalf
+RUN_SOURCES=./cudaSGEMM.cu
+GEN_SOURCES=./generateMatricesSingle.cu
+RUN_EXEC=./sgemm
+GEN_EXEC=./generateMatricesSingle
 
 DEF_SIZE=1024
 
-DEF_A_INPUT=./hgemm_A_8192.matrix
-DEF_B_INPUT=./hgemm_B_8192.matrix
-DEF_GOLD=./hgemm_GOLD_$(DEF_SIZE).matrix
+DEF_A_INPUT=./sgemm_A_8192.matrix
+DEF_B_INPUT=./sgemm_B_8192.matrix
+DEF_GOLD=./sgemm_GOLD_$(DEF_SIZE).matrix
 
-MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./hgemm*.matrix
+MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./sgemm*.matrix
 
 
 all: $(RUN_EXEC) $(GEN_EXEC)
