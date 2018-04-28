@@ -87,8 +87,8 @@ inline int verify(std::atomic_int *h_cost, int num_of_nodes,
 #endif
 
 	// the number of nodes in the output
-	int num_of_nodes_o = 0;
-	fscanf(fpo, "%d", &num_of_nodes_o);
+	int num_of_nodes_o = 0, num_edges;
+	fscanf(fpo, "%d %d", &num_of_nodes_o, &num_edges);
 	if (num_of_nodes != num_of_nodes_o) {
 		printf("FAIL: Number of nodes does not match the expected value\n");
 		exit (EXIT_FAILURE);
