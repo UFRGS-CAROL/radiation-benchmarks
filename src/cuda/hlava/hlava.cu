@@ -678,12 +678,11 @@ int main(int argc, char *argv []) {
 
 	getParams(argc, argv, &dim_cpu.boxes1d_arg, &generate, &input_distances, &input_charges, &output_gold, &iterations, &verbose, &fault_injection, &nstreams);
 
-	printf("streams: %d boxes:%d block_size:%d\n", nstreams, dim_cpu.boxes1d_arg, NUMBER_THREADS);
-
+	char test_info[200];
+	snprintf(test_info, 200, "type:half-precision streams:%d boxes:%d block_size:%d", nstreams, dim_cpu.boxes1d_arg, NUMBER_THREADS);
+	printf("%s\n", test_info);
 	#ifdef LOGS
-		char test_info[100];
-		snprintf(test_info, 100, "streams: %d boxes:%d block_size:%d", nstreams, dim_cpu.boxes1d_arg, NUMBER_THREADS);
-		if (!generate) start_log_file("cudaHalfLavaMD", test_info);
+		if (!generate) start_log_file("cudaHLavaMD", test_info);
 	#endif
 
 	//=====================================================================
@@ -980,23 +979,25 @@ int main(int argc, char *argv []) {
 		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
 			kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx]>>>( par_cpu, dim_cpu, \
 				d_box_gpu[streamIdx], d_rv_gpu[streamIdx], d_qv_gpu[streamIdx], d_fv_gpu[streamIdx]);
+			checkCudaErrors( cudaPeekAtLastError() );
 		}
 		//printf("All kernels were commited.\n");
 		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
 			cuda_error = cudaStreamSynchronize(streams[streamIdx]);
+			error_string = cudaGetErrorString(cuda_error);
+			if(strcmp(error_string, "no error") != 0) {
+				printf("error logic: %s\n",error_string);
+				#ifdef LOGS
+					if (!generate) log_error_detail("error logic:"); end_log_file();
+				#endif
+				exit(1);
+			}
+			checkCudaErrors( cudaPeekAtLastError() );
 		}
 		#ifdef LOGS
 			if (!generate) end_iteration();
 		#endif
 		kernel_time = mysecond()-kernel_time;
-		error_string = cudaGetErrorString(cuda_error);
-		if(strcmp(error_string, "no error") != 0) {
-			printf("error logic: %s\n",error_string);
-			#ifdef LOGS
-				if (!generate) log_error_detail("error logic:"); end_log_file();
-			#endif
-			exit(1);
-		}
 
 
 		//=====================================================================
