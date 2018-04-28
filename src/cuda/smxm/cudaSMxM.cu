@@ -277,7 +277,7 @@ int main( int argc, char* argv[] )
     else
     {
         a_matrix_path = new char[100];
-        snprintf(a_matrix_path, 100, "smxm_a_%i", (signed int)DEFAULT_INPUT_SIZE);
+        snprintf(a_matrix_path, 100, "smxm_a_%i.matrix", (signed int)DEFAULT_INPUT_SIZE);
         printf("Using default input_a path: %s\n", a_matrix_path);
     }
 
@@ -288,7 +288,7 @@ int main( int argc, char* argv[] )
     else
     {
         b_matrix_path = new char[100];
-        snprintf(b_matrix_path, 100, "smxm_b_%i", (signed int)DEFAULT_INPUT_SIZE);
+        snprintf(b_matrix_path, 100, "smxm_b_%i.matrix", (signed int)DEFAULT_INPUT_SIZE);
         printf("Using default input_a path: %s\n", b_matrix_path);
     }
 
@@ -299,7 +299,7 @@ int main( int argc, char* argv[] )
     else
     {
         gold_matrix_path = new char[100];
-        snprintf(gold_matrix_path, 100, "smxm_gold_%i", (signed int)k);
+        snprintf(gold_matrix_path, 100, "smxm_gold_%i.matrix", (signed int)k);
         printf("Using default gold path: %s\n", gold_matrix_path);
     }
 
