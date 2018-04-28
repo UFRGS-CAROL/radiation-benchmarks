@@ -1,1 +1,0 @@
-/home/greg/ws/digits/examples/classification/images/one.png
