@@ -1,3 +1,30 @@
+new_hardened_1:
+	hardened_variables:
+		matrix_dim, chunks_in_inter_row
+
+new_hardened_2:
+	hardened_variables:
+		temp
+
+new_hardened_3:
+	hardened_variables:
+		matrix_dim
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 hardening_1:
         hardened variables:
                 temp_top

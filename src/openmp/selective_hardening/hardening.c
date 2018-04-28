@@ -56,6 +56,23 @@ inline double hardened_compare_and_return_double(double var_a, double var_b, cha
 	return a;
 }
 
+inline void* hardened_compare_and_return_ptr(void* var_a, void* var_b, char* file, long line, char* var_name)
+{
+	void* result;
+	
+	void* a = var_a;
+	void* b = var_b;
+	result = ptr_xor(a, b);
+		
+	if(result != 0)
+	{
+		dump_error_info(&a, &b, sizeof(void*), file, line, var_name);
+	}
+
+	return a;
+}
+
+
 /*
 inline void* hardened_compare_and_return_double_array(void* var_a, void* var_b, int size, char* file, long line, char* var_name)
 {
