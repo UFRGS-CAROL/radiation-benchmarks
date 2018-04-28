@@ -5,7 +5,7 @@ import copy
 import os
 import sys
 
-SIZES = [1024, 2048, 4096, 8192]
+SIZES = [2048, 4096, 8192]
 ITERATIONS = 10000
 
 DEBUG_MODE = False

@@ -15,7 +15,7 @@ LOGHELPER_LIB=../../include/
 
 RUN_SOURCES=./cudaHGEMM.cu
 GEN_SOURCES=./generateMatricesHalf.cu
-RUN_EXEC=./hgemm
+RUN_EXEC=./cudaHGEMM
 GEN_EXEC=./generateMatricesHalf
 
 DEF_SIZE=1024
