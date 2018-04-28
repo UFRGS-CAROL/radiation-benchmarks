@@ -1,0 +1,5 @@
+[
+{"killcmd": "killall -9 cudaHGEMM", "exec": "sudo  /home/carol/radiation-benchmarks/bin/cudaHGEMM  -size=8192 -input_a=/home/carol/radiation-benchmarks/data/hgemm/cudaHGEMMA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/cudaHGEMMB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/GOLD_8192.matrix -iterations=10000"},
+{"killcmd": "killall -9 cudaHGEMM", "exec": "sudo  /home/carol/radiation-benchmarks/bin/cudaHGEMM  -size=4096 -input_a=/home/carol/radiation-benchmarks/data/hgemm/cudaHGEMMA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/cudaHGEMMB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/GOLD_4096.matrix -iterations=10000"},
+{"killcmd": "killall -9 cudaHGEMM", "exec": "sudo  /home/carol/radiation-benchmarks/bin/cudaHGEMM  -size=2048 -input_a=/home/carol/radiation-benchmarks/data/hgemm/cudaHGEMMA_8192.matrix -input_b=/home/carol/radiation-benchmarks/data/hgemm/cudaHGEMMB_8192.matrix -gold=/home/carol/radiation-benchmarks/data/hgemm/GOLD_2048.matrix -iterations=10000"}
+]
