@@ -5,24 +5,22 @@
 #include <sys/time.h>
 #include <string>
 #include <omp.h>
-// helper functions
-#include "helper_string.h"
-#include "helper_cuda.h"
+
+#include <cublas.h>
 
 #ifdef LOGS
 #include "log_helper.h"
 #endif
 // The timestamp is updated on every log_helper function call.
 
-#include "cuda.h"
-#include "cublas.h"
+// helper functions
+#include "helper_string.h"
+#include "helper_cuda.h"
 
 #undef min
 #define min( x, y ) ( (x) < (y) ? (x) : (y) )
 #undef max
 #define max( x, y ) ( (x) > (y) ? (x) : (y) )
-
-#define BLOCK_SIZE 32
 
 #define DEFAULT_INPUT_SIZE 8192
 
@@ -30,6 +28,7 @@ int verbose = 0;
 int fault_injection = 0;
 
 int k=0; // k x k matrix size
+int matrixSize=0; // = k * k matrix size
 int iterations=100000000; // global loop iteracion
 
 //================== Input paths
@@ -49,12 +48,6 @@ double *d_A;
 double *d_B;
 double *d_C;
 //====================================
-
-//================== cublas GEMM parameters
-const double alpha = 1.0;
-const double beta = 1.0;
-char transa = 't', transb = 't';
-int sizea, sizeb, sizec;
 
 void GetDevice(){
 //================== Retrieve and set the default CUDA device
@@ -91,35 +84,31 @@ void allocCudaMemory()
 	cudaError_t malloc;
 	const char *erro;
 //====================================
-	malloc = cudaMalloc( ( void** ) &d_A, sizea * sizeof( double ) );
+	malloc = cudaMalloc( ( void** ) &d_A, matrixSize * sizeof( double ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
-      printf("error a\n");
-      #ifdef LOGS
+#ifdef LOGS
 		log_error_detail("error a"); end_log_file();
-      #endif
+#endif
 		exit(EXIT_FAILURE);
-   } //mem allocate failure
+	} //mem allocate failure
 
-	malloc = cudaMalloc( ( void** ) &d_B, sizea * sizeof( double ) );
+	malloc = cudaMalloc( ( void** ) &d_B, matrixSize * sizeof( double ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
-      printf("error b\n");
-      #ifdef LOGS
+#ifdef LOGS
 		log_error_detail("error b"); end_log_file();
-      #endif
+#endif
 		exit(EXIT_FAILURE);
-   } //mem allocate failure
+	} //mem allocate failure
 
-	malloc = cudaMalloc( ( void** ) &d_C, sizea * sizeof( double ) );
+	malloc = cudaMalloc( ( void** ) &d_C, matrixSize * sizeof( double ) );
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
-      printf("error c\n");
-      #ifdef LOGS
+#ifdef LOGS
 		log_error_detail("error c"); end_log_file();
-      #endif
-		exit(EXIT_FAILURE);
-   } //mem allocate failure
+#endif
+		exit(EXIT_FAILURE);} //mem allocate failure
 }
 
 void copyCudaMemory()
@@ -128,40 +117,35 @@ void copyCudaMemory()
 	cudaError_t mcpy;
 	const char *erro;
 //====================================
-	mcpy = cudaMemset(d_C, 0, sizea * sizeof (double));
+	mcpy = cudaMemset(d_C, 0, matrixSize * sizeof (double));
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
-      printf("error load c\n");
-      #ifdef LOGS
+#ifdef LOGS
 		log_error_detail("error gpu load c"); end_log_file();
-      #endif
-		exit(EXIT_FAILURE);
-   } //mem allocate failure
+#endif
+		exit(EXIT_FAILURE);} //mem allocate failure
 
-	mcpy = cudaMemcpy( d_A, A, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH A
+	mcpy = cudaMemcpy( d_A, A, matrixSize * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH A
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
-      printf("error load b\n");
-      #ifdef LOGS
-		log_error_detail("error gpu load b"); end_log_file();
-      #endif
-		exit(EXIT_FAILURE);
-   } //mem allocate failure
+#ifdef LOGS
+		log_error_detail("error gpu load a"); end_log_file();
+#endif
+		exit(EXIT_FAILURE);} //mem allocate failure
 
-	mcpy = cudaMemcpy( d_B, B, sizeb * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH B
+	mcpy = cudaMemcpy( d_B, B, matrixSize * sizeof( double ), cudaMemcpyHostToDevice ); // PUSH B
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
-      printf("error load a\n");
-      #ifdef LOGS
+#ifdef LOGS
 		log_error_detail("error gpu load b"); end_log_file();
-      #endif
-		exit(EXIT_FAILURE);
-   } //mem allocate failure
+#endif
+		exit(EXIT_FAILURE);} //mem allocate failure
 }
 
 void ReadMatrixFromFile(){
 //================== Read inputs to HOST memory
-	int i;
+	int i, j;
+	if (verbose) printf("Reading matrices... ");
 	double time = mysecond();
 	f_A = fopen(a_matrix_path,"rb");
 	f_B = fopen(b_matrix_path,"rb");
@@ -169,25 +153,25 @@ void ReadMatrixFromFile(){
 	if (!(f_A&&f_B&&f_GOLD))
 	{
 		printf ("Cant open matrices.\n");
-      #ifdef LOGS
+#ifdef LOGS
 		log_error_detail("Cant open matrices"); end_log_file();
-      #endif
+#endif
 		exit(-3);
 	}
-   size_t ret_value[3];
-   for(i=0; i<k; i++)
-   {
-      ret_value[0] = fread (&A[ k * i ], sizeof(double)*k, 1, f_A);
-      ret_value[1] = fread (&B[ k * i ], sizeof(double)*k, 1, f_B);
-      ret_value[2] = fread (&GOLD[ k * i ], sizeof(double)*k, 1, f_GOLD);
-      if (ret_value[0] != 1 || ret_value[1] != 1 || ret_value[2] != 1) {
+    size_t ret_value[3];
+    for(i=0; i<k; i++)
+    {
+      ret_value[0] = fread (&(A[ k * i ]), sizeof(double)*k, 1, f_A);
+      ret_value[1] = fread (&(B[ k * i ]), sizeof(double)*k, 1, f_B);
+      ret_value[2] = fread (&(GOLD[ k * i ]), sizeof(double)*k, 1, f_GOLD);
+      if ((ret_value[0] != 1) || (ret_value[1] != 1) || (ret_value[2] != 1)) {
          printf("Bad input/gold formatting: %lu ; %lu ; %lu .\n", ret_value[0], ret_value[1], ret_value[2]);
          #ifdef LOGS
-   		log_error_detail("Bad input/gold formatting."); end_log_file();
+    		log_error_detail("Bad input/gold formatting."); end_log_file();
          #endif
-   		exit(-3);
+    		exit(-3);
       }
-	}
+    }
 	if (verbose) printf("Done reading matrices in %.2fs\n", mysecond() - time);
 
 	fclose(f_A);
@@ -196,15 +180,15 @@ void ReadMatrixFromFile(){
 
 	if (fault_injection)
 	{
-		A[3] = 6.0;
-		printf("!! Injected 6.0 on position A[3]\n");
+		A[3] = (double)6.5;
+		printf("!! Injected 6.5 on position A[3]\n");
 	}
 }
 
 bool badass_memcmp(double *gold, double *found, unsigned long n){
 	double result = 0.0;
 	int i;
-	unsigned long  chunk = ceil(float(n) / float(omp_get_max_threads()));
+	unsigned long  chunk = ceil(double(n) / double(omp_get_max_threads()));
 	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
 	double time = mysecond();
 #pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
@@ -224,13 +208,14 @@ bool badass_memcmp(double *gold, double *found, unsigned long n){
 // //================== HW Accelerated output validation
 // 	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 // 	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-// 	if ((fabs((gk[ty*n+tx]-ck[ty*n+tx])/gk[ty*n+tx]) > 0.0000000001)||(fabs((gk[ty*n+tx]-ck[ty*n+tx])/ck[ty*n+tx]) > 0.0000000001))
+// 	//if ((fabs((gk[ty*n+tx]-ck[ty*n+tx])/gk[ty*n+tx]) > 0.0000000001)||(fabs((gk[ty*n+tx]-ck[ty*n+tx])/ck[ty*n+tx]) > 0.0000000001))
+// 	if (gk[ty*n + tx].x != ck[ty*n + tx].x)
 // 		atomicAdd(&kerrors, 1);
 //
 // }
 
 void usage() {
-    printf("Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+    printf("Usage: dgemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold_t=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
 int main( int argc, char* argv[] )
@@ -242,11 +227,13 @@ int main( int argc, char* argv[] )
 
 //================== Test vars
 	int i, j, loop2;
-	int kernel_errors=0;
-	int zero = 0;
-	double time, kernel_time, global_time;
+	// int kernel_errors=0;
+	// int zero = 0;
+	double time;
+	double kernel_time, global_time;
     double total_kernel_time, min_kernel_time, max_kernel_time;
 	int device_warmup = 1;
+    // int gpu_check = 1;
 //====================================
 
 //================== Read test parameters
@@ -263,7 +250,8 @@ int main( int argc, char* argv[] )
         {
             printf("Invalid input size given on the command-line: %d\n", k);
             exit(EXIT_FAILURE);
-        }
+		}
+		matrixSize = k * k;
     }
 	else
 	{
@@ -325,44 +313,51 @@ int main( int argc, char* argv[] )
 		device_warmup = 0;
         printf("!! The first iteration may not reflect real timing information\n");
     }
+
+	// if (checkCmdLineFlag(argc, (const char **)argv, "no-gpu-gold-check"))
+    // {
+	// 	gpu_check = 0;
+    // } else {
+    //     printf("!! The gold check will happen on the GPU and fall back to CPU in case of errors\n");
+    // }
 //====================================
 
-//================== Set block and grid size for GoldChk kernel
-	int gridsize = k/BLOCK_SIZE < 1 ? 1 : k/BLOCK_SIZE;
-	int blocksize = k/BLOCK_SIZE < 1 ? k : BLOCK_SIZE;
-	dim3 dimBlock(blocksize,blocksize);
-	dim3 dimGrid(gridsize,gridsize);
-//====================================
+	////////////////////////////////////////////////////
+	/////////////CUBLAS GEMM VARS///////////////////////
+	const double alpha = 1.0;
+	const double beta = 1.0;
+	char transa = 't', transb = 't';
+	////////////////////////////////////////////////////
 
 //================== Init logs
 #ifdef LOGS
 	char test_info[90];
-	snprintf(test_info, 90, "size:%d", k);
+	snprintf(test_info, 90, "size:%d type:double-precision", k);
 	start_log_file("cudaDGEMM", test_info);
 #endif
 //====================================
 
-//================== cublas GEMM parameters
-	sizea = k * k;
-	sizeb = k * k;
-	sizec = k * k;
-//====================================
-
 //================== Alloc HOST memory
-	A = ( double* ) malloc( sizea * sizeof( double ) );
-	B = ( double* ) malloc( sizeb * sizeof( double ) );
+	A = ( double* ) malloc( matrixSize * sizeof( double ) );
+	B = ( double* ) malloc( matrixSize * sizeof( double ) );
 
-	GOLD = ( double* ) malloc( sizec * sizeof( double ) );
+	GOLD = ( double* ) malloc( matrixSize * sizeof( double ) );
+
+	if (!(A && B && GOLD)) {
+		printf("Failed on host malloc.\n");
+		exit(-3);
+	}
 //====================================
 
 //================== Init test environment
-	kernel_errors=0;
+	// kernel_errors=0;
     total_kernel_time = 0;
     min_kernel_time = UINT_MAX;
     max_kernel_time = 0;
 	GetDevice();
 	ReadMatrixFromFile();
-	printf( "cublasDGEMM\n" );
+	printf( "cudaDGEMM\n" );
+	fflush(stdout);
 //====================================
 
 //================== Init DEVICE memory
@@ -374,170 +369,139 @@ int main( int argc, char* argv[] )
 	for(loop2=0; loop2<iterations; loop2++)
 	{//================== Global test loop
 
-      if (!loop2 && device_warmup) printf("First iteration: device warmup. Please wait...\n");
+		if (!loop2 && device_warmup) printf("First iteration: device warmup. Please wait...\n");
 
-      // Timer...
-      global_time = mysecond();
+		// Timer...
+		global_time = mysecond();
 
-      cudaMemset(d_C, 0, sizea * sizeof (double));
+		cudaMemset(d_C, 0, matrixSize * sizeof (double));
 
-      kernel_time = mysecond();
-      #ifdef LOGS
-      if (loop2 || !device_warmup)
-      	start_iteration();
-      #endif
-//================== Device computation, GEMM
-		cublasDgemm( (cublasOperation_t)transa, (cublasOperation_t)transb,
-			   k, k, k,
-			   alpha,
-			   d_A, k,
-			   d_B, k,
-			   beta,
-			   d_C, k );
-		cudaDeviceSynchronize();
-//====================================
-      #ifdef LOGS
-      if (loop2 || !device_warmup)
-          end_iteration();
-      #endif
-      kernel_time = mysecond() - kernel_time;
+		if (verbose) printf(",");
 
-      if (loop2 || !device_warmup) {
-        total_kernel_time += kernel_time;
-        min_kernel_time = min(min_kernel_time, kernel_time);
-        max_kernel_time = max(max_kernel_time, kernel_time);
-      }
+		kernel_time = mysecond();
+		#ifdef LOGS
+		if (loop2 || !device_warmup)
+			start_iteration();
+		#endif
+		//================== Device computation, HMxM
+	
+        cublasDgemm( (cublasOperation_t)transa, (cublasOperation_t)transb,
+            k, k, k,
+            alpha,
+            d_A, k,
+            d_B, k,
+            beta,
+            d_C, k );
 
-      if ((loop2 || !device_warmup) && verbose)
-         printf("Device kernel time for iteration %d: %.3fs\n", loop2, kernel_time);
+        checkCudaErrors( cudaPeekAtLastError() );
 
-//         // Timer...
-//         time = mysecond();
-//
-// //================== Send GOLD to device, to perform HW output validation
-// 		mcpy = cudaMemcpy(d_A, GOLD, sizea * sizeof( double ), cudaMemcpyHostToDevice );
-// 		erro = cudaGetErrorString(mcpy);
-// 		if(strcmp(erro, "no error") != 0) {
-// 			printf("error mem load gold\n");
-//             #ifdef LOGS
-//                 log_error_detail("error mem load gold"); end_log_file();
-//             #endif
-// 			return 1;
-//         } //mem allocate failure
-// 		cudaMemcpyToSymbol(kerrors, &zero, sizeof(int));
-// //====================================
-//
-// //================== Device computation, output validation
-// 		GoldChkKernel<<<dimGrid,dimBlock>>>(d_A, d_C, k);
-// 		cudaDeviceSynchronize();
-// //====================================
-//
-// //================== Retrieve output mismatchs
-// 		kernel_errors=0;
-// 		cudaMemcpyFromSymbol(&kernel_errors, kerrors, sizeof(unsigned int));
-// //====================================
-//
-//       if (loop2 || !device_warmup)
-//          if (verbose) printf("Device gold check kernel time for iteration %d: %.3fs\n", loop2, mysecond() - time);
+        checkCudaErrors( cudaDeviceSynchronize() );
+        checkCudaErrors( cudaPeekAtLastError() );
+		//====================================
+		#ifdef LOGS
+		if (loop2 || !device_warmup)
+			end_iteration();
+		#endif
+		kernel_time = mysecond() - kernel_time;
+      
+		if (loop2 || !device_warmup) {
+		  total_kernel_time += kernel_time;
+		  min_kernel_time = min(min_kernel_time, kernel_time);
+		  max_kernel_time = max(max_kernel_time, kernel_time);
+		}
 
-//================== If there are errors, check on host (increased reliability)
+		if (loop2 || !device_warmup)
+			if (verbose) printf("Device kernel time for iteration %d: %.3fs\n", loop2, kernel_time);
 
-      if (loop2 || !device_warmup) {
-   		mcpy = cudaMemcpy(A, d_C, sizec * sizeof( double ), cudaMemcpyDeviceToHost );
-   		erro = cudaGetErrorString(mcpy);
-         if(strcmp(erro, "no error") != 0) {
-            printf("error mem load gold to host\n");
-            #ifdef LOGS
-               log_error_detail("error mem load gold to host"); end_log_file();
-            #endif
-            return 1;
-         } //mem allocate failure
-   		//~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
-        if (badass_memcmp(GOLD, A, k * k)){
-            char error_detail[150];
-            int host_errors = 0;
+    	if (verbose) printf(",");
 
-            // Console feedback
-            printf("!");
+        // Timer...
+        time = mysecond();
 
-            #pragma omp parallel for
-            for(i=0; (i<k); i++)
-            {
-               for(j=0; (j<k); j++)
-               {
-                  if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001))
-                  #pragma omp critical
-                  {
+        //if (kernel_errors != 0) {
+        if (loop2 || !device_warmup) {
+            checkCudaErrors( cudaMemcpy(A, d_C, matrixSize * sizeof( double ), cudaMemcpyDeviceToHost) );
+            //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
+            if (badass_memcmp(GOLD, A, matrixSize)) {
+    			char error_detail[150];
+    			int host_errors = 0;
 
-                     snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, A[i + k * j], GOLD[i + k * j]);
-                     //printf("%s\n", error_detail);
-                     #ifdef LOGS
-                     log_error_detail(error_detail);
-                     #endif
-                     host_errors++;
-                     //ea++;
-                     //fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
+                printf("!");
 
-                  }
-               }
-            }
-            printf("!");
+    			#pragma omp parallel for
+    			for(i=0; (i<k); i++)
+    			{
+    				for(j=0; (j<k); j++)
+    				{
+    					if (A[i + k * j] != GOLD[i + k * j])
+    					//if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001))
+    					#pragma omp critical
+    					{
 
-            #ifdef LOGS
-            log_error_count(host_errors);
-            #endif
-//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
-            cudaFree( d_A );
-            cudaFree( d_B );
-            cudaFree( d_C );
-//====================================
-            ReadMatrixFromFile();
-//================== Init DEVICE memory
-            allocCudaMemory();
-            copyCudaMemory();
-//====================================
-         }
-      }
-//====================================
+    						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, (double)(A[i + k * j]), (double)(GOLD[i + k * j]));
+    						if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
+    						#ifdef LOGS
+    						log_error_detail(error_detail);
+    						#endif
+    						host_errors++;
+    						//ea++;
+    						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
 
-//================== Console hearthbeat
-         /*if(kernel_errors > 0 || (loop2 % 10 == 0))
-         {
-         printf("test number: %d\n", loop2);
-         printf(" kernel time: %f\n", kernel_time);
-      }
-      else
-      {*/
-      printf(".");
-      fflush(stdout);
-      //}
-//====================================
+    					}
+    				}
+    			}
 
-// //================== Send A back to the device
-//       mcpy = cudaMemcpy(d_A, A, sizea * sizeof( double ), cudaMemcpyHostToDevice );
-//       erro = cudaGetErrorString(mcpy);
-//       if(strcmp(erro, "no error") != 0) {
-//          printf("error mem load A\n");
-//          #ifdef LOGS
-//          log_error_detail("error mem load A"); end_log_file();
-//          #endif
-//          return 1;
-//       } //mem allocate failure
-// //===================================
+                // printf("numErrors:%d", host_errors);
 
-      if ((loop2 || !device_warmup) && (verbose)) {
-         /////////// PERF
-         double flops = 2.0*(double)k*k*k;
-         double gflops = flops / kernel_time;
-         double outputpersec = (double)k*k/kernel_time;
-         printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",k, outputpersec, gflops, gflops/1000000000);
-         ///////////
-      }
+    			#ifdef LOGS
+    				log_error_count(host_errors);
+    			#endif
+    			//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
+    			cudaFree( d_A );
+    			cudaFree( d_B );
+    			cudaFree( d_C );
+    			//====================================
+    			ReadMatrixFromFile();
+    			//================== Init DEVICE memory
+    			allocCudaMemory();
+    			copyCudaMemory();
+    			//====================================
+    		}
+        }
 
-      if ((loop2 || !device_warmup) && (verbose)) {
-         printf("Iteration #%d time: %.3fs\n\n\n", loop2, mysecond() - global_time);
-      }
-   }
+		//====================================
+
+		//================== Console hearthbeat
+		/*if(kernel_errors > 0 || (loop2 % 10 == 0))
+		{
+			printf("test number: %d\n", loop2);
+			printf(" kernel time: %f\n", kernel_time);
+		}
+		else
+		{*/
+			printf(".");
+			fflush(stdout);
+		//}
+		//====================================
+
+		if (loop2 || !device_warmup)
+			if (verbose) printf("Gold check time for iteration %d: %.3fs\n", loop2, mysecond() - time);
+
+		if (loop2 || !device_warmup)
+			if (verbose)
+			{
+				/////////// PERF
+				double flops = 2.0*(double)k*k*k;
+				double gflops = flops / kernel_time;
+				double outputpersec = (double)matrixSize/kernel_time;
+				printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",k, outputpersec, gflops, gflops/1000000000);
+				///////////
+			}
+
+		if (loop2 || !device_warmup)
+			if (verbose) printf("Iteration #%d time: %.3fs\n\n\n", loop2, mysecond() - global_time);
+		fflush(stdout);
+	}
 
     double gflops = 2.0*(double)k*k*k / 1000000000; // Bilion FLoating-point OPerationS
     double averageKernelTime = total_kernel_time / (iterations - (device_warmup ? 1 : 0));
@@ -551,17 +515,18 @@ int main( int argc, char* argv[] )
     averageKernelTime, min_kernel_time, max_kernel_time,
     gflops / averageKernelTime, gflops / min_kernel_time, gflops / max_kernel_time);
 
-//================== Release device memory
+	//================== Release device memory
 	cudaFree( d_A );
 	cudaFree( d_B );
 	cudaFree( d_C );
-//====================================
+	//====================================
 
 	free( A );
 	free( B );
-#ifdef LOGS
+	free( GOLD );
+	#ifdef LOGS
 	end_log_file();
-#endif
+	#endif
 
 	return 0;
 }
