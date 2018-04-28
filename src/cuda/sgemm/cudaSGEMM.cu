@@ -215,7 +215,7 @@ bool badass_memcmp(float *gold, float *found, unsigned long n){
 // }
 
 void usage() {
-    printf("Usage: sgemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold_t=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+    printf("Usage: sgemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
 int main( int argc, char* argv[] )

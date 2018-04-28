@@ -235,7 +235,7 @@ __global__ void MatrixMulKernel_T (half *d_A, half *d_B, half *d_C_T, int n)
 }
 
 void usage() {
-    printf("Usage: hmxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold_t=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+    printf("Usage: hmxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
 int main( int argc, char* argv[] )

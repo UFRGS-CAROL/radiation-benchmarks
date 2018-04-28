@@ -226,7 +226,7 @@ __global__ void MatrixMulKernel (double *d_A, double *d_B, double *d_C, int n)
 }
 
 void usage() {
-    printf("Usage: dmxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold_t=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+    printf("Usage: dmxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
 int main( int argc, char* argv[] )
