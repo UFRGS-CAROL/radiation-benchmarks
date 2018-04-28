@@ -271,12 +271,10 @@ int main(int argc, char **argv) {
 
 	//*************************** Alocando Memoria para o Gold *************************************
 	Gold * gold = (Gold *) malloc(sizeof(Gold) * n_nodes);
-	if (p.mode == 0) {
+	if (p.mode == 1) {
 		// **********************  Lendo O gold *********************************
 		read_gold(gold, p);
 		// **********************************************************************
-	} else {
-
 	}
 
 	//***********************************************************************************************
@@ -590,11 +588,8 @@ int main(int argc, char **argv) {
 
 		// printf("IT CPU:%d\t",it_cpu);
 		//printf("IT GPU:%d\n",it_gpu);
-		if (p.mode == 0) {
-			create_output(h_cost, n_nodes, n_edges, std::string(p.comparison_file));
-		} else {
-			err = newest_verify(h_cost, n_nodes, n_nodes, gold, it_cpu,
-					it_gpu);
+		if (p.mode == 1) {
+			err = newest_verify(h_cost, n_nodes, n_nodes, gold, it_cpu, it_gpu);
 		}		//err=new_verify(h_cost, n_nodes,,it_cpu,it_gpu);
 
 		if (err > 0) {
@@ -619,7 +614,9 @@ int main(int argc, char **argv) {
 	//timer.print("Copy To Device", p.n_reps);
 	// timer.print("Kernel", p.n_reps);
 	// timer.print("Copy Back and Merge", p.n_reps);
-
+	if (p.mode == 0) {
+		create_output(h_cost, n_nodes, n_edges, std::string(p.comparison_file));
+	}
 	// Verify answer
 	verify(h_cost, n_nodes, p.comparison_file);
 
