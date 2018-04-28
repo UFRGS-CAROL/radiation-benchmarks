@@ -99,6 +99,7 @@ inline int verify(std::atomic_int *h_cost, int num_of_nodes,
 		int j, cost;
 		fscanf(fpo, "%d %d", &j, &cost);
 		if (i != j || h_cost[i].load() * -1 != cost) {
+			printf("i %d j %d h_cost * -1 %d cost %d\n", i, j, h_cost[i].load() * -1, cost);
 			printf(
 					"FAIL: Computed node %d cost (%d != %d) does not match the expected value\n",
 					i, h_cost[i].load(), cost);
