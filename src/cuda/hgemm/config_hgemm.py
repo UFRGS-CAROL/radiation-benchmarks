@@ -5,7 +5,7 @@ import copy
 import os
 import sys
 
-SIZES = [2048, 4096, 8192]
+SIZES = [16384, 8192, 4096]
 ITERATIONS = 10000
 
 DEBUG_MODE = False
@@ -41,14 +41,16 @@ def main(board):
                 "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
+    # gen only for max size
+    max_size = max(SIZES)
     for i in SIZES:
         input_file = data_path + "/"
 
         gen = [None] * 6
         gen[0] = ['sudo ', src_dgemm + "/" + GENERATE_BIN_NAME + " "]
         gen[1] = ['-size=' + str(i)]
-        gen[2] = ['-input_a=' + input_file + benchmark_bin + 'A_' + str(i) + '.matrix']
-        gen[3] = ['-input_b=' + input_file + benchmark_bin + 'B_' + str(i) + '.matrix']
+        gen[2] = ['-input_a=' + input_file + benchmark_bin + 'A_' + str(max_size) + '.matrix']
+        gen[3] = ['-input_b=' + input_file + benchmark_bin + 'B_' + str(max_size) + '.matrix']
         gen[4] = ['-gold=' + input_file + "GOLD_" + str(i) + ".matrix"]  # change for execute
         gen[5] = []
 
