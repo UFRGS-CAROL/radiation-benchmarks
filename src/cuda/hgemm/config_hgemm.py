@@ -37,7 +37,8 @@ def main(board):
         os.chmod(data_path, 0777)
 
     # change it for lava
-    generate = ["cd " + src_dgemm, "make clean", "make -C ../../include ", "make -j 4", "mkdir -p " + data_path,
+    generate = ["sudo mkdir -p " + bin_path, "cd " + src_dgemm, "make clean", "make -C ../../include ", "make -j 4",
+                "mkdir -p " + data_path,
                 "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
