@@ -1,7 +1,10 @@
 CC=g++
 NVCC=/usr/local/cuda/bin/nvcc
 
-ARCH= -gencode arch=compute_53,code=[sm_53,compute_53] \
+ARCH= -gencode arch=compute_30,code=[sm_30,compute_30] \
+      -gencode arch=compute_35,code=[sm_35,compute_35] \
+      -gencode arch=compute_50,code=[sm_50,compute_50] \
+      -gencode arch=compute_52,code=[sm_52,compute_52] \
       -gencode arch=compute_60,code=[sm_60,compute_60] \
       -gencode arch=compute_62,code=[sm_62,compute_62]
 
@@ -13,16 +16,16 @@ NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-RUN_SOURCES=./cudaHMxM.cu
-GEN_SOURCES=./generateMatricesHalf.cu
-RUN_EXEC=./hmxm
-GEN_EXEC=./generateMatricesHalf
+RUN_SOURCES=./cudaSMxM.cu
+GEN_SOURCES=./generateMatricesSingle.cu
+RUN_EXEC=./smxm
+GEN_EXEC=./generateMatricesSingle
 
 DEF_SIZE=1024
 
-DEF_A_INPUT=./hmxm_A_8192.matrix
-DEF_B_INPUT=./hmxm_B_8192.matrix
-DEF_GOLD=./hmxm_GOLD_$(DEF_TEST_SIZE).matrix
+DEF_A_INPUT=./smxm_A_8192.matrix
+DEF_B_INPUT=./smxm_B_8192.matrix
+DEF_GOLD=./smxm_GOLD_$(DEF_TEST_SIZE).matrix
 
 MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD)
 
