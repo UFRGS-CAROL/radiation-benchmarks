@@ -74,4 +74,5 @@ test:
 train:
 	 env LD_LIBRARY_PATH=$(SRCRAD)/caffe/build/lib/ \
 	 ./lenet train --solver=$(DATAPATH)/lenet_solver.prototxt
+	rm -rf _iter_10000.caffemodel  _iter_10000.solverstate
 	
