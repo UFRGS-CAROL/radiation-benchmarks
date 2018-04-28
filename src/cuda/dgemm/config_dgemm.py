@@ -5,7 +5,7 @@ import copy
 import os
 import sys
 
-SIZES = [2048, 4096, 8192]
+SIZES = [8192, 2048, 4096]
 ITERATIONS = 10000
 
 DEBUG_MODE = False
@@ -51,7 +51,7 @@ def main(board):
         gen[1] = ['-size=' + str(i)]
         gen[2] = ['-input_a=' + input_file + benchmark_bin + 'A_' + str(max_size) + '.matrix']
         gen[3] = ['-input_b=' + input_file + benchmark_bin + 'B_' + str(max_size) + '.matrix']
-        gen[4] = ['-gold=' + input_file + "GOLD_" + str(max_size) + ".matrix"]  # change for execute
+        gen[4] = ['-gold=' + input_file + "GOLD_" + str(i) + ".matrix"]  # change for execute
         gen[5] = []
 
         # change mode and iterations for exe
@@ -59,8 +59,7 @@ def main(board):
         exe[0][1] = bin_path + '/' + benchmark_bin + " "
         exe[5] = ['-iterations=' + str(ITERATIONS)]
 
-        if i == max_size:
-            generate.append(' '.join(str(r) for v in gen for r in v))
+        generate.append(' '.join(str(r) for v in gen for r in v))
         execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin)
