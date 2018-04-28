@@ -422,16 +422,19 @@ printf("-p %d -d %d -i %d -a %.2f -t %d \n",p.platform , p.device, p.n_work_item
     const int max_wi_hyst   = ocl.max_work_items(ocl.clKernel_hyst);
     const int n_frames = p.n_warmup + p.n_reps;
     unsigned char **all_gray_frames = (unsigned char **)malloc(n_frames * sizeof(unsigned char *));
+	//update_timestamp();
 //******************************* Alocando Memoria para o Gold *****************************
     unsigned char **gold = (unsigned char **)malloc(n_frames * sizeof(unsigned char *));
 //*****************************************************************************************
     int     rowsc, colsc, in_size;
+	update_timestamp();
     read_input(all_gray_frames, rowsc, colsc, in_size, p);
 //******************************* Lendo Gold *********************************************
-    read_gold(gold, rowsc, colsc, in_size, p);
+	update_timestamp();    
+	read_gold(gold, rowsc, colsc, in_size, p);
 //****************************************************************************************
     timer.stop("Initialization");
-
+	update_timestamp();
     // Allocate buffers
     timer.start("Allocation");
     const int CPU_PROXY = 0;
@@ -470,11 +473,7 @@ printf("-p %d -d %d -i %d -a %.2f -t %d \n",p.platform , p.device, p.n_work_item
     next_frame.store(0);
     timer.stop("Initialization");
     //timer.print("Initialization", 1);
-
     //timer.start("Total Proxies");
-
-
-
 
 for(int rep = 0; rep < p.loop; rep++) {
     update_timestamp();
@@ -486,13 +485,14 @@ for(int rep = 0; rep < p.loop; rep++) {
         start_iteration();
 #endif
 	//printf("Nova it\n");
+	timer.start("TESTE");
     for(int proxy_tid = 0; proxy_tid < 2; proxy_tid++) {
         proxy_threads.push_back(std::thread([&, proxy_tid]() {
 
             if(proxy_tid == GPU_PROXY) {
 //printf("GPU\n");
                 for(int task_id = gpu_first(&partitioner); gpu_more(&partitioner); task_id = gpu_next(&partitioner)) {
-    update_timestamp();
+    				update_timestamp();
                     // Next frame
                     memcpy(h_in_out[proxy_tid], all_gray_frames[task_id], in_size);
 
@@ -604,7 +604,7 @@ for(int rep = 0; rep < p.loop; rep++) {
             } else if(proxy_tid == CPU_PROXY) {
 //printf("CPU\n");
                 for(int task_id = cpu_first(&partitioner); cpu_more(&partitioner); task_id = cpu_next(&partitioner)) {
-    update_timestamp();
+    				update_timestamp();
                     // Next frame
                     memcpy(h_in_out[proxy_tid], all_gray_frames[task_id], in_size);
 
@@ -628,6 +628,7 @@ for(int rep = 0; rep < p.loop; rep++) {
 #ifdef LOGS
         end_iteration();
 #endif
+	timer.stop("TESTE");
     timer.stop("Total Proxies");
     //timer.print("Total Proxies", 1);
     //printf("CPU Proxy:\n");
@@ -656,7 +657,7 @@ for(int rep = 0; rep < p.loop; rep++) {
 #endif
 
     // Verify answer
-
+	update_timestamp();
 
 //verify(all_out_frames, in_size, p.comparison_file, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
 /*
@@ -670,7 +671,9 @@ printf("Imprimindo a Saida do Programa\n");
 */
 //asdasdasd
 //err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
+	timer.start("Tempo Compare");
 	err = newest_compare_output(all_out_frames, in_size, gold, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
+	timer.stop("Tempo Compare");
 // Aqui ver se houve erros 
         if(err > 0) {
             printf("Errors: %d\n",err);
@@ -686,10 +689,13 @@ printf("Imprimindo a Saida do Programa\n");
 #endif
 //printf("Acabei uma it\n");
 }
+
 #ifdef LOGS
     end_log_file();
 #endif
 
+	timer.print("TESTE",p.loop);
+	timer.print("Tempo Compare",p.loop);
 /*
     timer.print("Total Proxies",  p.loop);
     printf("CPU Proxy:\n");

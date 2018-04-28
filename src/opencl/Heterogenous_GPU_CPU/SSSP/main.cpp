@@ -378,12 +378,13 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
     const int max_wi = ocl.max_work_items(ocl.clKernel);
     int source;
 
-
+	update_timestamp();
     read_input(source, h_nodes, h_edges, p);
 // **********************  Lendo O gold *********************************
+	update_timestamp();
 	read_gold(gold,p);
 // **********************************************************************
-
+	update_timestamp();
     for(int i = 0; i < n_nodes; i++) {
         h_cost[i].store(INF);
     }
@@ -660,10 +661,14 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 	err=newest_verify(h_cost, n_nodes,n_nodes_o,gold,it_cpu,it_gpu);
 	//err=new_verify(h_cost, n_nodes,,it_cpu,it_gpu);
         if(err > 0) {
-            printf("Errors: %d\n",err);
+            //printf("Errors: %d\n",err);
+			update_timestamp();
 		    read_input(source, h_nodes, h_edges, p);
+			update_timestamp();
 		    read_gold(gold,p);
+			update_timestamp();
         } else {
+			update_timestamp();
             printf(".");
         }
 #ifdef LOGS
