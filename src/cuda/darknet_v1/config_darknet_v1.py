@@ -27,7 +27,7 @@ BINARY_NAME = "darknet_v1"
 DEBUG_MODE = False
 SAVE_LAYER = [0, 1]
 # 0 - "none",  1 - "gemm", 2 - "smart_pooling", 3 - "l1", 4 - "l2", 5 - "trained_weights"}
-ABFT = [0, 2]
+ABFT = [0]  # , 2]
 
 
 def download_weights(src_dir, data_dir):
@@ -108,7 +108,7 @@ def main(board):
                     generate.append(" ".join([''.join(map(str, value)) for key, value in gen.iteritems()]))
 
                 execute.append(" ".join([''.join(map(str, value)) for key, value in exe.iteritems()]))
-    
+
     generate.append("make clean GPU=1 ")
     generate.append("make -C ../../include/")
     generate.append("make -j 4 GPU=1 LOGS=1")
