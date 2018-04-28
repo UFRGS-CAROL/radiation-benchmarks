@@ -57,7 +57,7 @@ struct Params {
 void read_input(T *input, const Params &p) {
 
     // Initialize the host input vectors
-    srand(time(NULL));
+    srand(15);
     for(int i = 0; i < p.in_size; i++) {
         input[i] = (T)p.remove_value;
     }

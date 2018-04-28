@@ -2,7 +2,7 @@
 
 CC=gcc
 
-CCFLAGS=-fPIC -Wall -Werror -Wextra -pedantic -shared -Wno-unknown-pragmas
+CCFLAGS=-fPIC -Wall -Werror -Wextra -shared -Wno-unknown-pragmas
 
 OBJ=log_helper.o
 LIBOUT=libLogHelper.so

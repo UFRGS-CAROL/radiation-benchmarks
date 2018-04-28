@@ -292,8 +292,9 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d \n",p.platform , p.device, p.n_wor
     timer.start("Initialization");
     const int max_wi = ocl.max_work_items(ocl.clKernel);
 //	printf("Maximum Work Items %d\n",max_wi);
+	update_timestamp();
     new_read_input(h_in, p);
-
+	update_timestamp();
 // *********************** Lendo GOLD   *****************************
     char filename[300];
     snprintf(filename, 300, "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BS/gold_%d",p.out_size_i); // Gold com a resolução 
@@ -305,7 +306,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d \n",p.platform , p.device, p.n_wor
         exit(1);
     }
 	fclose(finput);	
-
+	update_timestamp();
 
     clFinish(ocl.clCommandQueue);
     timer.stop("Initialization");
@@ -419,20 +420,25 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d \n",p.platform , p.device, p.n_wor
 	printf("OpenCL 2.0 not supported by compare_output - Developing");
 	exit(0);
 #else
+   update_timestamp();
    err= new_compare_output(h_out_merge, gold, p.in_size_i, p.in_size_j, p.out_size_i, p.out_size_j);
+   update_timestamp();
 #endif
 
         if(err > 0) {
-            printf("Errors: %d\n",err);
+            //printf("Errors: %d\n",err);
 			snprintf(filename, 300, "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/BS/gold_%d",p.out_size_i); // Gold com a resolução 
 			if (finput = fopen(filename, "rb")) {
 				fread(gold, out_size, 1 , finput);
+				update_timestamp();
 			} else {
 				printf("Error reading gold file\n");
 				exit(1);
 			}
-			fclose(finput);	
+			fclose(finput);
+		update_timestamp();		
 		new_read_input(h_in,p);
+		update_timestamp();
         } else {
             printf(".");
         }
