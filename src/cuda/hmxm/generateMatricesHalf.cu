@@ -183,7 +183,7 @@ double mysecond()
    return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
 }
 
-half_float::half* openmpMul_T(half_float::half* a, half_float::half* b, size_t size) {
+half_float::half* openmpMul(half_float::half* a, half_float::half* b, size_t size) {
 	double time = mysecond();
 
 	half_float::half* bT = (half_float::half*) malloc(sizeof(half_float::half)*size*size);
@@ -203,7 +203,6 @@ half_float::half* openmpMul_T(half_float::half* a, half_float::half* b, size_t s
 	for (int i=0;i<size;i++) {
 		for (int j=0;j<size;j++) {
 			for (int k=0;k<size;k++)  {
-				//c[i*size+j] += a[j*size+k] * bT[i*size+k];
 				c[j*size+i] += a[j*size+k] * bT[i*size+k];
 			}
 		}
@@ -214,19 +213,19 @@ half_float::half* openmpMul_T(half_float::half* a, half_float::half* b, size_t s
 	return c;
 }
 
-__global__ void MatrixMulKernel_T (half *d_A, half *d_B, half *d_C_T, int n)
+__global__ void MatrixMulKernel (half *d_A, half *d_B, half *d_C, int n)
 {
 	int tx = (blockIdx.x * BLOCK_SIZE) / 2.0 + threadIdx.x;                                                      
 	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y; 
 	int k;
 	int n2 = n / 2.0;
 	half2 *d_B2 = (half2*)d_B;
-	half2 *d_C_T2 = (half2*)d_C_T;
+	half2 *d_C2 = (half2*)d_C;
 	
 	for (k = 0;  k < n; k++)
 		// c[ty * n + tx] += a[ty * n + k] *  b[k * n + tx];
 		// c[ty * n + tx + 1] += a[ty * n + k + 1] *  b[k * n + tx + 1];
-		d_C_T2[ty * n2 + tx] = __hfma2(__half2half2(d_A[ty * n + k]), d_B2[k * n2 + tx], d_C_T2[ty * n2 + tx]);
+		d_C2[ty * n2 + tx] = __hfma2(__half2half2(d_A[ty * n + k]), d_B2[k * n2 + tx], d_C2[ty * n2 + tx]);
 
 }
 
@@ -243,7 +242,7 @@ void generateGoldMatrixHalf()
 	//////////DEVICE VARS///////////////////////////////
 	half *d_A;
 	half *d_B;
-	half *d_C_T;
+	half *d_C;
 	////////////////////////////////////////////////////
 
 	A = ( half_float::half* ) malloc( size * sizeof( half_float::half ) );
@@ -268,10 +267,10 @@ void generateGoldMatrixHalf()
 
 	checkCudaErrors( cudaMalloc( ( void** ) &d_B, size * sizeof( half ) ));
 
-	checkCudaErrors( cudaMalloc( ( void** ) &d_C_T, size * sizeof( half ) ));
+	checkCudaErrors( cudaMalloc( ( void** ) &d_C, size * sizeof( half ) ));
 
 
-	checkCudaErrors( cudaMemset( d_C_T, 0, size * sizeof( half )) ); // ZERA C
+	checkCudaErrors( cudaMemset( d_C, 0, size * sizeof( half )) ); // ZERA C
 
 	checkCudaErrors( cudaMemcpy( d_A, A, size * sizeof( half ), cudaMemcpyHostToDevice ) ); // PUSH A
 
@@ -280,7 +279,7 @@ void generateGoldMatrixHalf()
 	printf("cudaHMxM... k=%d\n", k);
 	double time = mysecond();
 	
-	MatrixMulKernel_T<<<dimGrid, dimBlock>>>(d_A, d_B, d_C_T, k);
+	MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, k);
 	checkCudaErrors( cudaPeekAtLastError() );
 	checkCudaErrors( cudaDeviceSynchronize() );
 
@@ -294,11 +293,11 @@ void generateGoldMatrixHalf()
     printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",k, outputpersec, gflops, gflops/1000000000);
 	///////////
 
-	checkCudaErrors( cudaMemcpy(GOLD, d_C_T, size * sizeof( half ), cudaMemcpyDeviceToHost) );
+	checkCudaErrors( cudaMemcpy(GOLD, d_C, size * sizeof( half ), cudaMemcpyDeviceToHost) );
 
 	cudaFree( d_A );
 	cudaFree( d_B );
-	cudaFree( d_C_T );
+	cudaFree( d_C );
 
 	printf("Analysing output on host...\n");
 
@@ -348,7 +347,7 @@ void generateGoldMatrixHalf()
 
 	if (host_check) {
 		printf("Calculating mMul using OpenMP on Host...\n");
-		half_float::half *hostGold = openmpMul_T(A, B, k);
+		half_float::half *hostGold = openmpMul(A, B, k);
 		if (k <= 16) {
 			printf("Host CPU Gold:\n");
 			for (int i = 0; i<k*k; i++) {
@@ -447,7 +446,7 @@ int main (int argc, char** argv)
     else
     {
         gold_matrix_path = new char[100];
-        snprintf(gold_matrix_path, 100, "hmxm_gold_t_%i", (signed int)k);
+        snprintf(gold_matrix_path, 100, "hmxm_gold_%i", (signed int)k);
         printf("Using default gold path: %s\n", gold_matrix_path);
     }
 

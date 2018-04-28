@@ -6,24 +6,25 @@ ARCH= -gencode arch=compute_53,code=[sm_53,compute_53] \
       -gencode arch=compute_62,code=[sm_62,compute_62]
 
 
-NVCC_FLAGS= $(ARCH) #-arch=sm_35
+NVCC_FLAGS= $(ARCH)
 
 NVIDIA_INC=/usr/local/cuda/include/,./
 NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-RUN_SOURCES=./cudaHMXM.cu
+RUN_SOURCES=./cudaHMxM.cu
 GEN_SOURCES=./generateMatricesHalf.cu
 RUN_EXEC=./hmxm
 GEN_EXEC=./generateMatricesHalf
 
-MATRIX_NAMES=hmxm*
-
 DEF_SIZE=1024
-DEF_A_INPUT=./hmxmA_8192.matrix
-DEF_B_INPUT=./hmxmB_8192.matrix
-DEF_GOLD=./hmxmGOLD_$(DEF_TEST_SIZE).matrix
+
+DEF_A_INPUT=./hmxm_A_8192.matrix
+DEF_B_INPUT=./hmxm_B_8192.matrix
+DEF_GOLD=./hmxm_GOLD_$(DEF_TEST_SIZE).matrix
+
+MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD)
 
 
 all: $(RUN_EXEC) $(GEN_EXEC)
