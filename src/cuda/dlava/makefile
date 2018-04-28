@@ -16,20 +16,20 @@ NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-RUN_SOURCES=./lava.cu
-RUN_EXEC=./lava
+RUN_SOURCES=./dlava.cu
+RUN_EXEC=./dlava
 
 DEF_SIZE=12
 
-DEF_CHARGES_INPUT=./input_charges_$(DEF_SIZE)
-DEF_DISTANCES_INPUT=./input_distances_$(DEF_SIZE)
-DEF_GOLD=./output_gold_$(DEF_SIZE)
+DEF_CHARGES_INPUT=./dlava_charges_$(DEF_SIZE)
+DEF_DISTANCES_INPUT=./dlava_distances_$(DEF_SIZE)
+DEF_GOLD=./dlava_gold_$(DEF_SIZE)
 
-INPUTS_NAMES=$(DEF_CHARGES_INPUT) $(DEF_DISTANCES_INPUT) $(DEF_GOLD) ./input_charges_* ./input_distances_* ./output_gold_*
+INPUTS_NAMES=$(DEF_CHARGES_INPUT) $(DEF_DISTANCES_INPUT) $(DEF_GOLD) ./dlava_charges_* ./dlava_distances_* ./dlava_gold_*
 
 ALL: $(RUN_EXEC)
 
-$(RUN_EXEC): lava.cu
+$(RUN_EXEC): $(RUN_SOURCES)
 	$(NVCC) $(NVCC_FLAGS) -DLOGS $(RUN_SOURCES) -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -Xcompiler " -fopenmp" -o $(RUN_EXEC)
 
 clean:

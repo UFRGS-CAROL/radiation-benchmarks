@@ -3,6 +3,7 @@
 //============================================================================
 
 //	14 APR 2011 Lukasz G. Szafaryn
+//  2014-2018 Caio Lunardi
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,13 +82,6 @@ typedef struct dim_str
 	long space_mem2;
 } dim_str;
 
-// Returns the current system time in microseconds
-/*long long get_time() {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	return (tv.tv_sec * 1000000) + tv.tv_usec;
-}*/
-
 void usage(int argc, char** argv) {
     printf("Usage: %s -boxes=N [-generate] [-input_distances=<path>] [-input_charges=<path>] [-output_gold=<path>] [-iterations=N] [-streams=N] [-debug] [-verbose]\n", argv[0]);
 }
@@ -134,7 +128,7 @@ void getParams(int argc, char** argv, int *boxes, int *generate, char **input_di
     else
     {
         *input_distances = new char[100];
-        snprintf(*input_distances, 100, "input_distances_double_%i", *boxes);
+        snprintf(*input_distances, 100, "dlava_distances_%i", *boxes);
         printf("Using default input_distances path: %s\n", *input_distances);
     }
 
@@ -145,7 +139,7 @@ void getParams(int argc, char** argv, int *boxes, int *generate, char **input_di
     else
     {
         *input_charges = new char[100];
-        snprintf(*input_charges, 100, "input_charges_double_%i", *boxes);
+        snprintf(*input_charges, 100, "dlava_charges_%i", *boxes);
         printf("Using default input_charges path: %s\n", *input_charges);
     }
 
@@ -156,7 +150,7 @@ void getParams(int argc, char** argv, int *boxes, int *generate, char **input_di
     else
     {
         *output_gold = new char[100];
-        snprintf(*output_gold, 100, "output_gold_double_%i", *boxes);
+        snprintf(*output_gold, 100, "dlava_gold_%i", *boxes);
         printf("Using default output_gold path: %s\n", *output_gold);
     }
 
