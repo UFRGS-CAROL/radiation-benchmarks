@@ -11,7 +11,7 @@ ITERATIONS = 10000
 DEBUG_MODE = False
 BENCHMARK_BIN = "cudaDGEMM"
 DATA_PATH_BASE = "dgemm"
-GENERATE_BIN_NAME = "generateMatricesSingle"
+GENERATE_BIN_NAME = "generateMatricesDouble"
 
 
 def main(board):
