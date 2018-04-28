@@ -10,7 +10,7 @@ ITERATIONS = 10000
 
 DEBUG_MODE = False
 BENCHMARK_BIN = "cudaDGEMM"
-
+DATA_PATH_BASE = "dgemm"
 
 def main(board):
     benchmark_bin = BENCHMARK_BIN
@@ -26,17 +26,17 @@ def main(board):
         print >> sys.stderr, "Configuration setup error: " + str(e)
         sys.exit(1)
 
-    data_path = install_dir + "data/gemm"
+    data_path = install_dir + "data/" + DATA_PATH_BASE
     bin_path = install_dir + "bin"
-    src_dgemm = install_dir + "src/cuda/dgemm"
+    src_dgemm = install_dir + "src/cuda/" + DATA_PATH_BASE
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
     # change it for lava
-    generate = ["cd " + src_dgemm, "make clean", "make -C ../../include ", "make", "mkdir -p " + data_path,
-                "mv ./" + benchmark_bin + " " + bin_path + "/"]
+    generate = ["cd " + src_dgemm, "make clean", "make -C ../../include ", "make -j 4", "mkdir -p " + data_path,
+                "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
     for i in SIZES:
