@@ -149,7 +149,7 @@ void getParams(int argc, char** argv, int *boxes, int *generate, char **input_di
     else
     {
         *input_distances = new char[100];
-        snprintf(*input_distances, 100, "input_distances_half_%i", *boxes);
+        snprintf(*input_distances, 100, "hlava_distances_%i", *boxes);
         printf("Using default input_distances path: %s\n", *input_distances);
     }
 
@@ -160,7 +160,7 @@ void getParams(int argc, char** argv, int *boxes, int *generate, char **input_di
     else
     {
         *input_charges = new char[100];
-        snprintf(*input_charges, 100, "input_charges_half_%i", *boxes);
+        snprintf(*input_charges, 100, "hlava_charges_%i", *boxes);
         printf("Using default input_charges path: %s\n", *input_charges);
     }
 
@@ -171,7 +171,7 @@ void getParams(int argc, char** argv, int *boxes, int *generate, char **input_di
     else
     {
         *output_gold = new char[100];
-        snprintf(*output_gold, 100, "output_gold_half_%i", *boxes);
+        snprintf(*output_gold, 100, "hlava_gold_%i", *boxes);
         printf("Using default output_gold path: %s\n", *output_gold);
     }
 
