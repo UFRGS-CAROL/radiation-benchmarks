@@ -6,7 +6,7 @@ import copy
 import os
 import sys
 
-BOXES = [10, 15, 20, 25]
+BOXES = [10, 15, 20, 25, 30]
 ITERATIONS = 10000
 DEBUG_MODE = False
 BENCHMARK_BIN = "dlava"
