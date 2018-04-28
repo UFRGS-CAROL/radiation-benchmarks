@@ -1,4 +1,0 @@
-[
-{"killcmd": "killall -9 bezier_surface", "exec": "sudo  /home/carol/radiation-benchmarks/bin/bezier_surface  -w  0 -r  100000 -a  0 -s  1 -z  /home/carol/radiation-benchmarks/data/bezier_surface/alpha_0_in_size_2500_out_size_2500.gold -f  /home/carol/radiation-benchmarks/data/bezier_surface/input/control.txt -n  2500"}, 
-{"killcmd": "killall -9 bezier_surface", "exec": "sudo  /home/carol/radiation-benchmarks/bin/bezier_surface  -w  0 -r  100000 -a  0 -s  1 -z  /home/carol/radiation-benchmarks/data/bezier_surface/alpha_0_in_size_5000_out_size_5000.gold -f  /home/carol/radiation-benchmarks/data/bezier_surface/input/control.txt -n  5000"}
-]
