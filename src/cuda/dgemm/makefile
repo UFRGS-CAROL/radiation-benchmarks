@@ -18,7 +18,7 @@ LOGHELPER_LIB=../../include/
 
 RUN_SOURCES=./cudaDGEMM.cu
 GEN_SOURCES=./generateMatricesDouble.cu
-RUN_EXEC=./dgemm
+RUN_EXEC=./cudaDGEMM
 GEN_EXEC=./generateMatricesDouble
 
 DEF_SIZE=1024
