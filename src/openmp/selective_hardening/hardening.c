@@ -23,6 +23,23 @@ inline int hardened_compare_and_return_int(int var_a, int var_b, char* file, lon
 
 }
 
+inline long hardened_compare_and_return_long(long var_a, long var_b, char* file, long line, char* var_name)
+{
+	long result;
+	
+	long a = var_a;
+	long b = var_b;
+	result = long_xor(a, b);
+		
+	if(result != 0)
+	{
+		dump_error_info(&a, &b, sizeof(long), file, line, var_name);
+	}
+
+	return a;
+
+}
+
 inline float hardened_compare_and_return_float(float var_a, float var_b, char* file, long line, char* var_name)
 {
 	int result;

@@ -1,3 +1,32 @@
+new_hardening_1:
+	hardened_variables:
+		dim_cpu
+
+new_hardening_2:
+	hardened_variables:
+		k
+
+new_hardening_3:
+	hardened_variables:
+		k, n
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 hardening_1:
         hardened variables:
                 rv_cpu (rA and rB)
