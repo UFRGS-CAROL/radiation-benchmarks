@@ -162,7 +162,7 @@ inline int create_output(std::atomic_int *h_cost, int num_of_nodes,
 	// cost of nodes in the output
 	for (int i = 0; i < num_of_nodes; i++) {
 		// escreve i no arquivo e hcost
-		fprintf(fpo, "%d %d\n", i, h_cost[i].load());
+		fprintf(fpo, "%d %d\n", i, h_cost[i].load() * -1);
 	}
 
 //printf("sai func \n");

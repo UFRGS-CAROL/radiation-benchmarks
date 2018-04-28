@@ -80,7 +80,7 @@ DEP=kernel.cpp kernel.h main.cpp kernel.cu support/common.h support/cuda-setup.h
 SRC=main.cpp kernel.cpp kernel.cu
 EXE=sssp
 
-$(EXE):$(SRC)
+$(EXE):$(SRC) $(DEP)
 	$(NVCC) $(CXX_FLAGS) $(NVCC_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE)
 	
 
