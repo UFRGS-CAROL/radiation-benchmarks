@@ -387,10 +387,12 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
 	
 	// Podemos colocar me binario, mas perde generalidade 
 
-	
+	update_timestamp();	
     read_input(source, h_nodes, h_edges, p);
+	update_timestamp();
 // **********************  Lendo O gold *********************************
 	read_gold(gold,p);
+	update_timestamp();
 // **********************************************************************
     for(int i = 0; i < n_nodes; i++) {
         h_cost[i].store(INF);
@@ -659,11 +661,14 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
 //	err=new_verify(h_cost, n_nodes, p.comparison_file,it_cpu,it_gpu);
 	err=newest_verify(h_cost, n_nodes,n_nodes_o,gold,it_cpu,it_gpu);
         if(err > 0) {
-            printf("Errors: %d\n",err);
+            //printf("Errors: %d\n",err);
+			update_timestamp();
 		    read_input(source, h_nodes, h_edges, p);
+			update_timestamp();			
 		    read_gold(gold,p);
-			
+			update_timestamp();			
         } else {
+			update_timestamp();
             printf(".");
         }
 #ifdef LOGS

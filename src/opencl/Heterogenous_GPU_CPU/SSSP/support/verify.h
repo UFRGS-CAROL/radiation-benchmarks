@@ -58,7 +58,7 @@ inline int newest_verify(std::atomic_int *h_cost, int num_of_nodes,int num_of_no
             //printf("Computed node %ld cost (%ld != %ld) does not match the expected value\n", i, h_cost[i].load(), cost);
 #ifdef LOGS
         char error_detail[250];
-	sprintf(error_detail,"Nodo: %d,e:%d, r:%d, CPU:%d , GPU:%d \n",i,h_cost[i].load(), h_nodes[i].cost,it_cpu,it_gpu);
+	sprintf(error_detail,"Nodo: %d,e:%d, r:%d, CPU:%d , GPU:%d \n",i, h_nodes[i].cost,h_cost[i].load(),it_cpu,it_gpu);
 
 	 log_error_detail(error_detail);
 #endif
