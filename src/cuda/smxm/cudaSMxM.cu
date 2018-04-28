@@ -396,8 +396,11 @@ int main( int argc, char* argv[] )
 		#endif
 		//================== Device computation, HMxM
 		MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, k);
+
 		checkCudaErrors( cudaPeekAtLastError() );
+		
 		checkCudaErrors( cudaDeviceSynchronize() );
+		checkCudaErrors( cudaPeekAtLastError() );
 		//====================================
 		#ifdef LOGS
 		if (loop2 || !device_warmup)
