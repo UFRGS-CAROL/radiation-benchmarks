@@ -565,7 +565,7 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 	return diff;
 }
 
-void compare(detection *det, float **f_probs, box *f_boxes, int num,
+int compare(detection *det, float **f_probs, box *f_boxes, int num,
 		int classes, int img, int save_layers, int test_iteration,
 		char *img_list_path, error_return max_pool_errors, image im) {
 
@@ -631,21 +631,23 @@ void compare(detection *det, float **f_probs, box *f_boxes, int num,
 		log_info_detail(const_cast<char*>(abft_error_info.c_str()));
 	}
 
-	printf("%d errors found at %s detection\n", error_count, img_string);
+	//printf("%d errors found at %s detection\n", error_count, img_string);
 
 	//save layers here
 	std::vector<box> gold_boxes_vector(std::begin(gold_boxes), std::end(gold_boxes));
 	std::vector<box> found_boxes_vector(std::begin(found_boxes), std::end(found_boxes));
 
-	std::pair<float, float> pr = online_precision_recall(gold_boxes_vector, found_boxes_vector,
-			PR_THRESHOLD, im);
+	if (error_count != 0){
+		std::pair<float, float> pr = online_precision_recall(gold_boxes_vector, found_boxes_vector,
+				PR_THRESHOLD, im);
 
-	if(error_count && save_layers && ((pr.first != 1.0) || (pr.second != 1.0))) {
-		save_layer(det, img, test_iteration, get_log_file_name(), 0, img_list_path);
+		if(save_layers && ((pr.first != 1.0) || (pr.second != 1.0))) {
+			save_layer(det, img, test_iteration, get_log_file_name(), 0, img_list_path);
+		}
+		printf("ONLINE PR %f %f\n", pr.first, pr.second);
 	}
-	printf("ONLINE PR %f %f\n", pr.first, pr.second);
-
 #endif
+	return error_count;
 
 }
 

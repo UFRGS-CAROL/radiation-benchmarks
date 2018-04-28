@@ -27,6 +27,8 @@
 #define PR_THRESHOLD 0.5
 #define CONSIDERING_DETECTION 0.2
 
+#define MAX_ERROR_COUNT 500
+
 static const char *ABFT_TYPES[] = { "none", "gemm", "smart_pooling", "l1", "l2",
 		"trained_weights", "dmr", "tmr" };
 
@@ -106,7 +108,7 @@ void delete_detection_var(detection*, Args*);
 
 detection load_gold(Args*);
 
-void compare(detection *det, float **f_probs, box *f_boxes, int num,
+int compare(detection *det, float **f_probs, box *f_boxes, int num,
 		int classes, int img, int save_layers, int test_iteration,
 		char *img_list_path, error_return max_pool_errors, image im);
 

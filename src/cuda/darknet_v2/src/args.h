@@ -11,6 +11,22 @@
 #include <unistd.h> //acess F_OK
 #include <stdio.h> //printf
 #include <stdlib.h> //atol
+
+
+#define MAX_ABFT_TYPES 8
+
+typedef enum {
+	 NONE,
+	 GEMM,
+	 SMART_POOLING,
+	 L1_HARDENING,
+	 L2_HARDENING,
+	 TRAINED_WEIGHTS,
+	 SMART_DMR,
+	 SMART_TMR
+} abft_type ;
+
+
 /**
  * -c - config_file = configuration file
  * -w - weights = neural network weights
@@ -35,7 +51,7 @@ typedef struct arguments {
 	float thresh;
 	float hier_thresh;
 
-	int abft;
+	abft_type abft;
 } Args;
 
 void args_init_and_setnull(Args *arg);
