@@ -11,6 +11,7 @@ ITERATIONS = 10000
 DEBUG_MODE = False
 BENCHMARK_BIN = "dlava"
 DATA_PATH_BASE = "dlava"
+EMBEDDED_HOSTS = ['K1', 'X1', 'X2', 'APU']
 
 
 def main(board):
@@ -40,6 +41,9 @@ def main(board):
                 "mkdir -p " + data_path,
                 "mv ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
+
+    if board in EMBEDDED_HOSTS:
+        BOXES.pop()
 
     for i in BOXES:
         input_file = data_path + "/"
