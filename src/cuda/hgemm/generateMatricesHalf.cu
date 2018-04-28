@@ -20,7 +20,7 @@
 #include "helper_string.h"
 #include "helper_cuda.h"
 
-#define DEFAULT_INPUT_SIZE 8192 * 2
+#define DEFAULT_INPUT_SIZE 8192
 #define MAX_HALF 65503.0
 #define MAX_HVALUE (float)floor(sqrt(MAX_HALF / DEFAULT_INPUT_SIZE))
 
