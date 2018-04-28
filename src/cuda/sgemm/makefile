@@ -18,7 +18,7 @@ LOGHELPER_LIB=../../include/
 
 RUN_SOURCES=./cudaSGEMM.cu
 GEN_SOURCES=./generateMatricesSingle.cu
-RUN_EXEC=./sgemm
+RUN_EXEC=./cudaSGEMM
 GEN_EXEC=./generateMatricesSingle
 
 DEF_SIZE=1024
