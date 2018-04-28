@@ -21,12 +21,13 @@ GEN_SOURCES=./generateMatricesDouble.cu
 RUN_EXEC=./dgemm
 GEN_EXEC=./generateMatricesDouble
 
-MATRIX_NAMES=dgemm*
-
 DEF_SIZE=1024
-DEF_A_INPUT=./dgemmA_8192.matrix
-DEF_B_INPUT=./dgemmB_8192.matrix
-DEF_GOLD=./dgemmGOLD_$(DEF_TEST_SIZE).matrix
+
+DEF_A_INPUT=./dgemm_A_8192.matrix
+DEF_B_INPUT=./dgemm_B_8192.matrix
+DEF_GOLD=./dgemm_GOLD_$(DEF_TEST_SIZE).matrix
+
+MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./dgemm*.matrix
 
 
 all: $(RUN_EXEC) $(GEN_EXEC)

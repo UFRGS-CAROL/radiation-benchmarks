@@ -27,7 +27,7 @@ DEF_A_INPUT=./dmxm_A_8192.matrix
 DEF_B_INPUT=./dmxm_B_8192.matrix
 DEF_GOLD=./dmxm_GOLD_$(DEF_TEST_SIZE).matrix
 
-MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD)
+MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./dmxm*.matrix
 
 
 all: $(RUN_EXEC) $(GEN_EXEC)

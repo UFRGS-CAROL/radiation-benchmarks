@@ -24,7 +24,7 @@ DEF_A_INPUT=./hmxm_A_8192.matrix
 DEF_B_INPUT=./hmxm_B_8192.matrix
 DEF_GOLD=./hmxm_GOLD_$(DEF_SIZE).matrix
 
-MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD)
+MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./hmxm*.matrix
 
 
 all: $(RUN_EXEC) $(GEN_EXEC)

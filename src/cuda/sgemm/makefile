@@ -27,7 +27,7 @@ DEF_A_INPUT=./sgemm_A_8192.matrix
 DEF_B_INPUT=./sgemm_B_8192.matrix
 DEF_GOLD=./sgemm_GOLD_$(DEF_SIZE).matrix
 
-MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD)
+MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./sgemm*.matrix
 
 
 all: $(RUN_EXEC) $(GEN_EXEC)

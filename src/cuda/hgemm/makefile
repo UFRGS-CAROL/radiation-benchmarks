@@ -18,12 +18,13 @@ GEN_SOURCES=./generateMatricesHalf.cu
 RUN_EXEC=./hgemm
 GEN_EXEC=./generateMatricesHalf
 
-MATRIX_NAMES=hgemm*
-
 DEF_SIZE=1024
-DEF_A_INPUT=./hgemmA_8192.matrix
-DEF_B_INPUT=./hgemmB_8192.matrix
-DEF_GOLD=./hgemmGOLD_$(DEF_TEST_SIZE).matrix
+
+DEF_A_INPUT=./hgemm_A_8192.matrix
+DEF_B_INPUT=./hgemm_B_8192.matrix
+DEF_GOLD=./hgemm_GOLD_$(DEF_SIZE).matrix
+
+MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./hgemm*.matrix
 
 
 all: $(RUN_EXEC) $(GEN_EXEC)
