@@ -1,3 +1,6 @@
 [submodule "radiation-benchmarks-parsers"]
 	path = radiation-benchmarks-parsers
 	url = https://github.com/fernandoFernandeSantos/radiation-benchmarks-parsers.git
+[submodule "src/cuda/lenet_single/caffe"]
+	path = src/cuda/lenet_single/caffe
+	url = https://github.com/NVIDIA/caffe.git
