@@ -597,7 +597,7 @@ int main(int argc, char **argv) {
 			read_input(source, h_nodes, h_edges, p);
 			read_gold(gold, p);
 		} else {
-			printf(".");
+			printf(".ITERATION %d\n", rep);
 		}
 #ifdef LOGS
 		log_error_count(err);

@@ -87,12 +87,12 @@ $(EXE):$(SRC) $(DEP)
 generate:$(EXE)
 	./$(EXE) -f /home/carol/radiation-benchmarks/data/sssp/colorado_graph_in \
 				-c /home/carol/radiation-benchmarks/data/sssp/colorado_graph.gold -m 0 \
-				-r 1 -l 900000000  #CPU
+				-r 1 -l 0  #CPU
 
 test: $(EXE)
 	./$(EXE) -f /home/carol/radiation-benchmarks/data/sssp/colorado_graph_in \
 				-c /home/carol/radiation-benchmarks/data/sssp/colorado_graph.gold -m 1 \
-				-r 1000 -l 900000000  #CPU
+				-r 1000 -l 0  #CPU
 
 clean:
 	rm -f $(EXE)
