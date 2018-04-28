@@ -453,8 +453,10 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
 	//printf("Verificando Input\n");
 
     timer.start("Compare");
+	update_timestamp();
     err = new_compare_output(h_in_out, h_in_backup, (p.in_size * p.compaction_factor) / 100);
     timer.stop("Compare");
+	update_timestamp();
 
 	//printf("Terminei de Verificar\n");
 // Aqui ver se houve erros 
@@ -469,6 +471,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
 			}
 			fclose(finput);	
         } else {
+			update_timestamp();
             printf(".");
         }
 		update_timestamp();
