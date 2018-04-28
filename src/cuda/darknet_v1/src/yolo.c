@@ -604,6 +604,7 @@ void test_yolo_radiation_test(Args *arg) {
 //-------------------------------------------------------------------------------
 
 	int i, it;
+	int overall_errors = 0;
 	for (it = 0; it < arg->iterations; it++) {
 		for (i = 0; i < gold.plist_size; i++) {
 
@@ -637,14 +638,18 @@ void test_yolo_radiation_test(Args *arg) {
 				get_and_reset_error_detected_values(max_pool_errors);
 			}
 #endif
-			compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, i,
+			int error_count = compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, i,
 					arg->save_layers, it, arg->img_list_path, max_pool_errors, im);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(
 					"Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds.\n",
 					it, i, time, time_cmp);
-
+			if ((overall_errors +=  error_count) > MAX_ERROR_COUNT){
+				const char error_string[1000];
+				sprintf(error_string, "%d ERRORS DETECTED, WHITCH IS MUCH MORE THAN %d. FINISHING APPLICATION\n", overall_errors, MAX_ERROR_COUNT);
+				error(error_string);
+			}
 //########################################
 
 #ifdef GEN_IMG

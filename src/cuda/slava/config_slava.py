@@ -9,8 +9,8 @@ import sys
 BOXES = [10, 15, 20, 25, 30]
 ITERATIONS = 10000
 DEBUG_MODE = False
-BENCHMARK_BIN = "hlava"
-DATA_PATH_BASE = "hlava"
+BENCHMARK_BIN = "slava"
+DATA_PATH_BASE = "slava"
 EMBEDDED_HOSTS = ['K1', 'X1', 'X2', 'APU']
 
 
@@ -41,6 +41,9 @@ def main(board):
                 "mkdir -p " + data_path,
                 "mv ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
+
+    # if board in EMBEDDED_HOSTS:
+    #     BOXES.pop()
 
     for i in BOXES:
         input_file = data_path + "/"

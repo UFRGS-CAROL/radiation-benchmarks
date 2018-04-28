@@ -1,3 +1,10 @@
 #/home/carol/radiation-benchmarks/scripts/json_files/cudaDGEMM.json
 #/home/carol/radiation-benchmarks/scripts/json_files/cudaHGEMM.json
 #/home/carol/radiation-benchmarks/scripts/json_files/cudaSGEMM.json
+#/home/carol/radiation-benchmarks/scripts/json_files/dlava.json
+#/home/carol/radiation-benchmarks/scripts/json_files/slava.json
+#/home/carol/radiation-benchmarks/scripts/json_files/hlava.json
+#/home/carol/radiation-benchmarks/scripts/json_files/cudaDMXM.json
+#/home/carol/radiation-benchmarks/scripts/json_files/cudaSMXM.json
+#/home/carol/radiation-benchmarks/scripts/json_files/cudaHMXM.json
+/home/carol/radiation-benchmarks/scripts/json_files/darknet_v1.json
