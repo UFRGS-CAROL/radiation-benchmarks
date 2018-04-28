@@ -308,7 +308,7 @@ int main( int argc, char* argv[] )
     else
     {
         gold_matrix_path = new char[100];
-        snprintf(gold_matrix_path, 100, "hmxm_gold_t_%i", (signed int)k);
+        snprintf(gold_matrix_path, 100, "hmxm_gold_%i", (signed int)k);
         printf("Using default gold path: %s\n", gold_matrix_path);
     }
 
