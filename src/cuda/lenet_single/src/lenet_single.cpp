@@ -708,15 +708,11 @@ gflags	::SetUsageMessage("command line brew\n"
 		char** argv_copy = (char**)malloc(argc * sizeof(char*));
 		for (int i = 0; i < argc - RADIATION_PARAMETERS; i++) {
 			argv_copy[i] = argv[i];
+			printf("%s\n", argv_copy[i]);
 		}
 
 		int argc_copy = argc - RADIATION_PARAMETERS;
-		printf("passou\n");
-
 		caffe::GlobalInit(&argc_copy, &argv_copy);
-		printf("agora não\n");
-		//		if (argv_copy)
-//			free(argv_copy);
 	} else {
 		caffe::GlobalInit(&argc, &argv);
 	}
