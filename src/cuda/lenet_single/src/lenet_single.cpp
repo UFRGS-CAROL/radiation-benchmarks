@@ -313,7 +313,8 @@ int test() {
 	Net caffe_net(FLAGS_model, caffe::TEST, 0U, nullptr, nullptr, false,
 			FLAGS_level, &stages);
 	caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
-	LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
+	LOG(INFO) << "Running for " << FLAGS_iterations << " iterations. fernando iterations " << global_log->iterations << std::endl ;
+
 
 	for (int rad_iterations = 0; rad_iterations < global_log->iterations;
 			rad_iterations++) {
@@ -325,7 +326,7 @@ int test() {
 			const vector<Blob*>& result = caffe_net.Forward(&iter_loss);
 			loss += iter_loss;
 			int idx = 0;
-			LOG(INFO) << " RESULT " << result[0] << "\n";
+//			LOG(INFO) << " RESULT " << result[0] << "\n";
 			for (int j = 0; j < result.size(); ++j) {
 				const float* result_vec = result[j]->cpu_data<float>();
 				for (int k = 0; k < result[j]->count(); ++k, ++idx) {
@@ -338,8 +339,8 @@ int test() {
 					}
 					const std::string& output_name =
 							caffe_net.blob_names()[caffe_net.output_blob_indices()[j]];
-					LOG(INFO) << "Batch " << i << ", " << output_name << " = "
-							<< score;
+//					LOG(INFO) << "Batch " << i << ", " << output_name << " = "
+//							<< score;
 				}
 			}
 		}
