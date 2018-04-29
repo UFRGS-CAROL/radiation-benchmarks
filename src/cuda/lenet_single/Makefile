@@ -9,10 +9,9 @@ ARCH+= -gencode=arch=compute_60,code=sm_60 -gencode=arch=compute_61,code=sm_61
 ARCH+= -gencode=arch=compute_62,code=sm_62 -gencode=arch=compute_70,code=sm_70
 
 
-CXXFLAGS= -lcuda -lcurand -lcudart -lcublas -MMD -MP -pthread -fPIC -DCAFFE_VERSION=0.17.0 
+CXXFLAGS= -MMD -MP -pthread -fPIC -DCAFFE_VERSION=0.17.0 
 CXXFLAGS+= -std=c++11 -DCUDA_NO_HALF -DNDEBUG -O3 -DUSE_CUDNN -DUSE_OPENCV -DUSE_LEVELDB -DUSE_LMDB
-CXXFLAGS+= -Wall -Wno-sign-compare -lcaffe-nv -lglog -lopencv_core -lopencv_highgui -lopencv_imgproc 
-CXXFLAGS+= -pthread -fPIC 
+CXXFLAGS+= -Wall -Wno-sign-compare -pthread -fPIC -Wl,-rpath,\$ORIGIN/../../lib
 		 
 NVCCFLAGS= -Xptxas -v $(ARCH)
 
@@ -27,11 +26,11 @@ INCLUDE+= -I$(CAFFEDIR)/src -I$(CAFFEDIR)/include -I$(CAFFEDIR)/3rdparty -I/usr/
 INCLUDE+= -I$(CUDADIR)/include -I/usr/include/openblas/
 
 
-LDFLAGS=  -std=c++11 -lcudart -lcublas -lcurand -lglog -lgflags -lprotobuf -lleveldb -lsnappy -llmdb -lboost_system 
+LDFLAGS=  -lcuda -lcudart -lcublas -lcurand -lglog -lgflags -lprotobuf -lleveldb -lsnappy -llmdb -lboost_system 
 LDFLAGS+= -lhdf5_hl -lhdf5 -lm -lopencv_core -lopencv_highgui -lopencv_imgproc -lboost_thread -lstdc++  
-LDFLAGS+= -lcblas -latlas -lcaffe-nv -lnvidia-ml -lboost_system -lglog -lgflags -lprotobuf -lboost_filesystem 
-LDFLAGS+= -lm -lturbojpeg -lhdf5_hl -lhdf5 -lleveldb -lsnappy -llmdb -lopencv_core -lopencv_highgui -lopencv_imgproc 
-LDFLAGS+= -lboost_thread -lboost_regex -lstdc++ -lcudnn -lopenblas -Wl,-rpath,\$ORIGIN/../../lib
+LDFLAGS+= -lcblas -latlas -lnvidia-ml -lboost_system -lgflags -lprotobuf -lboost_filesystem 
+LDFLAGS+= -lm -lturbojpeg -lhdf5_hl -lhdf5 -lleveldb -lsnappy -llmdb -lopencv_core 
+LDFLAGS+= -lboost_thread -lboost_regex -lstdc++ -lcudnn -lopenblas 
 
 DATAPATH=/home/carol/radiation-benchmarks/data/lenet
 SRCRAD=/home/carol/radiation-benchmarks/src/cuda/lenet_single
@@ -42,7 +41,7 @@ ifeq ($(DEBUG), 1)
 endif
 
 ifeq ($(LOGS), 1)
-INCLUDE+=-I../../include/
+INCLUDE+= -I../../include/
 LDFLAGS+= -L../../include/ -lLogHelper
 CXXFLAGS+= -DLOGS=1
 endif
