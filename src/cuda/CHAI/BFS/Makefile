@@ -38,7 +38,7 @@ ARCH+= -gencode arch=compute_52,code=[sm_52,compute_52]
 ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60] 
 ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
 
-CXX=nvcc
+CXX=/usr/local/cuda/bin/nvcc
 CXX_FLAGS=-std=c++11 $(ARCH)
 LOGS?=1
 
