@@ -85,7 +85,7 @@ test:
 generate:
 	 env LD_LIBRARY_PATH=/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/build/lib/ \
 	 ./lenet test -model=$(DATAPATH)/lenet_train_test.prototxt \
-	 	-weights=$(DATAPATH)/single_iter_10000.caffemodel \
+	 	-weights=$(DATAPATH)/single_iter_10000.caffemodel -iterations=1000 \
 	 	1000 1 $(DATAPATH)/gold_test.csv
 			 	
 train:
