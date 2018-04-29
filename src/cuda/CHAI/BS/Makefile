@@ -32,14 +32,13 @@
 #  THE SOFTWARE.
 # 
 
-ARCH=  -gencode arch=compute_30,code=[sm_30,compute_30] 
-ARCH+= -gencode arch=compute_35,code=[sm_35,compute_35]
+ARCH= -gencode arch=compute_35,code=[sm_35,compute_35]
 ARCH+= -gencode arch=compute_50,code=[sm_50,compute_50] 
 ARCH+= -gencode arch=compute_52,code=[sm_52,compute_52] 
 ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60] 
 ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
 
-NVCC=nvcc
+NVCC=/usr/local/cuda/bin/nvcc
 CXX=g++
 CXX_FLAGS=-std=c++11 -O3
 NVCC_FLAGS=$(ARCH)
