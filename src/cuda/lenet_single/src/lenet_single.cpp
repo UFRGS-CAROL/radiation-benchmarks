@@ -670,13 +670,13 @@ int time() {
 }
 RegisterBrewFunction(time);
 
-char** pre_process_argv(int argc, char** argv, int radiation_parameters_size) {
-	char** ret_args_copy = (char**)malloc(argc * sizeof(char));
-	for (int i = 0; i < argc - radiation_parameters_size; i++) {
-		ret_args_copy[i] = argv[i];
-	}
-	return ret_args_copy;
-}
+//char** pre_process_argv(int argc, char** argv, int radiation_parameters_size) {
+//	char** ret_args_copy = (char**)malloc(argc * sizeof(char));
+//	for (int i = 0; i < argc - radiation_parameters_size; i++) {
+//		ret_args_copy[i] = argv[i];
+//	}
+//	return ret_args_copy;
+//}
 
 int main(int argc, char** argv) {
 	// Print output to stderr (while still logging).
@@ -705,7 +705,11 @@ gflags	::SetUsageMessage("command line brew\n"
 	// <rad iterations> <generate or not> <gold path>
 	// Run tool or show usage.
 	if (argc > 3) {
-		char** argv_copy = pre_process_argv(argc, argv, RADIATION_PARAMETERS);
+		char** argv_copy = (char**)malloc(argc * sizeof(char));
+		for (int i = 0; i < argc - RADIATION_PARAMETERS; i++) {
+			argv_copy[i] = argv[i];
+		}
+
 		int argc_copy = argc - RADIATION_PARAMETERS;
 		caffe::GlobalInit(&argc_copy, &argv_copy);
 		free(argv_copy);
