@@ -704,19 +704,13 @@ gflags	::SetUsageMessage("command line brew\n"
 	// after caffe parameters this comes
 	// <rad iterations> <generate or not> <gold path>
 	// Run tool or show usage.
+	int argc_copy = argc - RADIATION_PARAMETERS;
 	if (argc > 4) {
 		char** argv_copy = (char**)malloc((argc - RADIATION_PARAMETERS) * sizeof(char*));
 		for (int i = 0; i < argc - RADIATION_PARAMETERS; i++) {
 			argv_copy[i] = argv[i];
-			printf("%s\n", argv_copy[i]);
 		}
-
-
-		int argc_copy = argc - RADIATION_PARAMETERS;
-		printf("argc copy before %d\n", argc_copy);
 		caffe::GlobalInit(&argc_copy, &argv_copy);
-
-		printf("argc copy after %d\n", argc_copy);
 	} else {
 		caffe::GlobalInit(&argc, &argv);
 	}
@@ -735,7 +729,7 @@ gflags	::SetUsageMessage("command line brew\n"
 	LOG(INFO) << "Arguments: " << os.str();
 
 
-	if ((argc - RADIATION_PARAMETERS) == 2) {
+	if (argc_copy == 2) {
 #ifdef WITH_PYTHON_LAYER
 		try {
 			Py_InitializeEx(0);
