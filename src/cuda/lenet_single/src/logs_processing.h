@@ -9,14 +9,8 @@
 #define LOGSPROCESSING_H_
 
 #define LAYER_THRESHOLD_ERROR 1e-5
-
-#include <vector>
-
-typedef std::vector<float> LayersFound;
-
-typedef std::vector<float> LayersGold;
-
 #define SAVE_LAYER_DATA "/var/radiation-benchmarks/data"
+
 
 void start_count_app(char *test, char *app);
 
@@ -28,22 +22,20 @@ void end_iteration_app();
 
 void inc_count_app();
 
+void log_error_app(char *error_detail);
+
 /**
  * support function only to check if two layers have
  * the same value
  */
 bool compare_layer(float *l1, float *l2, int n);
 
-bool compare_output(std::pair<size_t, bool> gold, std::pair<size_t, bool> found,
-		int img);
+bool compare_output();
 
-void log_error_app(char *error_detail);
+void* load_gold_layers(int img, int layer_size);
 
-LayersGold load_gold_layers(int img, int layer_size);
+void save_gold_layers();
 
-void save_gold_layers(LayersFound layers, int img);
-
-void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
-		int img);
+void compare_and_save_layers();
 
 #endif /* LOGSPROCESSING_H_ */

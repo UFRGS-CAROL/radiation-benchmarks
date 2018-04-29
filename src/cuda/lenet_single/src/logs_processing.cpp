@@ -6,12 +6,16 @@
  */
 
 #include "logs_processing.h"
-
-size_t error_count = 0;
+#include <vector>
+#include <sstream>
+#include <string>
 
 #ifdef LOGS
 #include "log_helper.h"
 #endif //LOGS def
+
+int error_count = 0;
+
 
 std::vector<std::string> &split(const std::string &s, char delim,
 		std::vector<std::string> &elems) {
@@ -72,53 +76,28 @@ char *get_log_filename() {
  * the same value
  */
 bool compare_layer(float *l1, float *l2, int n) {
-	for (int i = 0; i < n; i++) {
-		float diff = fabs(l1[i] - l2[i]);
-		if (diff > LAYER_THRESHOLD_ERROR) {
-//			printf("passou  onde nao devia %f\n\n", diff);
-			return true;
-		}
-	}
+
 	return false;
 }
 
-bool compare_output(std::pair<size_t, bool> gold, std::pair<size_t, bool> found,
-		int img) {
-//	bool cmp = (gold.first == found.first) && (gold.second == found.second);
-	char err[200];
-	if ((gold.first != found.first) || (gold.second != found.second)) {
-		sprintf(err, "img: [%d] expected_first: [%ld] "
-				"read_first: [%ld] "
-				"expected_second: [%d] "
-				"read_second: [%d]", img, gold.first, found.first, gold.second,
-				found.second);
-
-#ifdef LOGS
-		log_error_detail(err);
-		log_error_count(1);
-		printf("%s\n", err);
-#else
-		printf("%s\n", err);
-#endif
-		return false;
-	}
+bool compare_output() {
+	//TODO
+	// compare caffe output
 	return true;
 }
 
-LayersGold load_gold_layers(int img, int layer_size) {
-	LayersGold loaded(layer_size);
+void* load_gold_layers(int img, int layer_size) {
 	//TODO
 	// load caffe layers
-	return loaded;
+	return (NULL);
 }
 
-void save_gold_layers(LayersFound layers, int img) {
+void save_gold_layers() {
 	//TODO
 	// Save caffe layers
 }
 
-void compare_and_save_layers(LayersGold gold, LayersFound found, int iteration,
-		int img) {
+void compare_and_save_layers() {
 	//TODO
 	// compare caffe layers
 }
