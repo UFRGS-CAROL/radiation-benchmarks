@@ -671,7 +671,7 @@ int time() {
 RegisterBrewFunction(time);
 
 char** pre_process_argv(int argc, char** argv, int radiation_parameters_size) {
-	char** ret_args_copy = malloc(argc * sizeof(char));
+	char** ret_args_copy = (char**)malloc(argc * sizeof(char));
 	for (int i = 0; i < argc - radiation_parameters_size; i++) {
 		ret_args_copy[i] = argv[i];
 	}
