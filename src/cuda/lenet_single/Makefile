@@ -44,10 +44,10 @@ SRC=./src
 all: obj $(TARGET)
 
 $(TARGET): classifier
-	$(CXX) $(OBJDIR)/caffe.o  -o $@ $(LIBRARY) $(INCLUDE) $(LDFLAGS)
+	$(CXX) $(OBJDIR)/lenet_single.o  -o $@ $(LIBRARY) $(INCLUDE) $(LDFLAGS)
 
 classifier:
-	$(CXX) $(OBJDIR)/caffe.cpp -c  -o $(OBJDIR)/caffe.o  $(INCLUDE) $(LDFLAGS) $(CXXFLAGS)
+	$(CXX) $(SRC)/lenet_single.cpp -c  -o $(OBJDIR)/lenet_single.o  $(INCLUDE) $(LDFLAGS) $(CXXFLAGS)
 	
 
 #classification:  
