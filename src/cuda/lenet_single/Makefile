@@ -66,10 +66,12 @@ clean:
 	
 test:
 	 env LD_LIBRARY_PATH=/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/build/lib/ \
-	 ./lenet caffe/models/bvlc_reference_caffenet/deploy.prototxt \
-		caffe/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel \
- 		caffe/data/ilsvrc12/imagenet_mean.binaryproto caffe/data/ilsvrc12/synset_words.txt \
- 		caffe/examples/images/cat.jpg
+	 ./lenet test $(DATAPATH)/lenet.prototxt \
+	 	$(DATAPATH)/single_iter_10000.caffemodel 
+			 	
+	 
+	 
+
 	
 train:
 	 env LD_LIBRARY_PATH=$(SRCRAD)/caffe/build/lib/ \
