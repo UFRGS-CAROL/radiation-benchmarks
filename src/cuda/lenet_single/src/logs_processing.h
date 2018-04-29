@@ -11,20 +11,22 @@
 
 #define RADIATION_PARAMETERS 3
 
-class LogsProcessing{
+class LogsProcessing {
 private:
 	const float layer_threshold_error = 1e-5;
 	const char *save_layer_data = "/var/radiation-benchmarks/data";
 	bool generate;
-
-	std::string test;
 	std::string app;
 	unsigned error_count;
+	int iterations;
+	std::string gold_path;
+	std::string weights;
 
 public:
-	LogsProcessing(bool generate, std::string app, std::string test,
+	LogsProcessing(std::string app, bool generate, std::string gold_path,
+			std::string weights, std::string prototxt, int iterations,
 			int log_interval = 10);
-    virtual ~LogsProcessing();
+	virtual ~LogsProcessing();
 
 	void start_iteration_app();
 

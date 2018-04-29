@@ -702,6 +702,14 @@ gflags	::SetUsageMessage("command line brew\n"
 		os << "[" << n << "]: " << argv[n] << std::endl;
 	}
 
+//	[0]: ./lenet
+//	[1]: test
+//	[2]: -model=/home/carol/radiation-benchmarks/data/lenet/lenet_train_test.prototxt
+//	[3]: -weights=/home/carol/radiation-benchmarks/data/lenet/single_iter_10000.caffemodel
+//	[4]: 1000
+//	[5]: 1
+//	[6]: /home/carol/radiation-benchmarks/data/lenet/gold_test.csv
+
 	//I will pass in the following order
 	// to not to  crash the application
 	// after caffe parameters this comes
@@ -709,11 +717,19 @@ gflags	::SetUsageMessage("command line brew\n"
 	// Run tool or show usage.
 	int argc_copy = argc - RADIATION_PARAMETERS;
 	if (argc > 4) {
-		char** argv_copy = (char**)malloc((argc - RADIATION_PARAMETERS) * sizeof(char*));
+		char** argv_copy = (char**) malloc(
+				(argc - RADIATION_PARAMETERS) * sizeof(char*));
 		for (int i = 0; i < argc - RADIATION_PARAMETERS; i++) {
 			argv_copy[i] = argv[i];
 		}
+		std::string prototxt = std::string(argv[2]);
+		std::string weights = std::string(argv[3]);
+		int iterations = atoi(argv[4]);
+		bool genrate = atoi(argv[5]);
+		std::string gold_path = std::string(argv[6]);
 
+		global_log = new LogsProcessing("lenetSingleCUDA", generate, gold_path,
+				weights, prototxt, iterations)
 		caffe::GlobalInit(&argc_copy, &argv_copy);
 	} else {
 		caffe::GlobalInit(&argc, &argv);
@@ -732,25 +748,8 @@ gflags	::SetUsageMessage("command line brew\n"
 	LOG(INFO) << "CUDA driver version: " << Caffe::cuda_driver_version();
 	LOG(INFO) << "Arguments: " << os.str();
 
-
 	if (argc_copy == 2) {
-#ifdef WITH_PYTHON_LAYER
-		try {
-			Py_InitializeEx(0);
-			if (!PyEval_ThreadsInitialized()) {
-				PyEval_InitThreads();
-				static PyThreadState* mainPyThread = PyEval_SaveThread();
-				(void)mainPyThread;
-			}
-#endif
 		return GetBrewFunction(caffe::string(argv[1]))();
-
-#ifdef WITH_PYTHON_LAYER
-	} catch (bp::error_already_set&) {
-		PyErr_Print();
-		return 1;
-	}
-#endif
 	} else {
 		gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
 	}
