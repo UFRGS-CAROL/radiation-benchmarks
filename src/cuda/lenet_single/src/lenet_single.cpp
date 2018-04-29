@@ -726,11 +726,11 @@ gflags	::SetUsageMessage("command line brew\n"
 
 	LOG(INFO) << "This is NVCaffe " << Caffe::caffe_version() << " started at "
 			<< Caffe::start_time();
-//	LOG(INFO) << "CuDNN version: " << Caffe::cudnn_version();
-//	LOG(INFO) << "CuBLAS version: " << Caffe::cublas_version();
-//	LOG(INFO) << "CUDA version: " << Caffe::cuda_version();
-//	LOG(INFO) << "CUDA driver version: " << Caffe::cuda_driver_version();
-//	LOG(INFO) << "Arguments: " << os.str();
+	LOG(INFO) << "CuDNN version: " << Caffe::cudnn_version();
+	LOG(INFO) << "CuBLAS version: " << Caffe::cublas_version();
+	LOG(INFO) << "CUDA version: " << Caffe::cuda_version();
+	LOG(INFO) << "CUDA driver version: " << Caffe::cuda_driver_version();
+	LOG(INFO) << "Arguments: " << os.str();
 //
 //	if (argc == 2) {
 //#ifdef WITH_PYTHON_LAYER
