@@ -710,6 +710,8 @@ gflags	::SetUsageMessage("command line brew\n"
 			argv_copy[i] = argv[i];
 			printf("%s\n", argv_copy[i]);
 		}
+		for(int i = argc - RADIATION_PARAMETERS; i < argc; i++)
+			argv[i] = "";
 
 		int argc_copy = argc - RADIATION_PARAMETERS;
 		caffe::GlobalInit(&argc_copy, &argv_copy);
