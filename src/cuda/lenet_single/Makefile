@@ -41,20 +41,38 @@ ifeq ($(DEBUG), 1)
 	CXXFLAGS+= -g
 endif
 
+ifeq ($(LOGS), 1)
+INCLUDE+=-I../../include/
+LIBRARY+= -L../../include/ -lLogHelper -DLOGS=1
+endif
+
+
 OBJDIR=./obj
 SRC=./src
 
+OBJS = $(addprefix $(OBJDIR), $(OBJ))
+DEPS = $(wildcard src/*.h) Makefile
+
 all: obj $(TARGET)
 
-$(TARGET): classifier
-	$(CXX) $(OBJDIR)/lenet_single.o  -o $@ $(LIBRARY) $(INCLUDE) $(LDFLAGS)
+#$(TARGET): classifier
+#	$(CXX) $(OBJDIR)/lenet_single.o  -o $@ $(LIBRARY) $(INCLUDE) $(LDFLAGS)
 
-classifier:
-	$(CXX) $(SRC)/lenet_single.cpp -c  -o $(OBJDIR)/lenet_single.o  $(INCLUDE) $(LDFLAGS) $(CXXFLAGS)
+$(TARGET): $(OBJS)
+	$(CC)  $(COMMON) $(CFLAGS)  $^ -o $@  $(LDFLAGS)
+
+$(OBJDIR)%.o: %.c $(DEPS)
+	$(CC)  $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
+
+$(OBJDIR)%.o: %.cpp $(DEPS)
+	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
+
+$(OBJDIR)%.o: %.cu $(DEPS)
+	$(NVCC) $(ARCH)  $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@  $(NVCCFLAGS)
+
+#classifier:
+#	$(CXX) $(SRC)/lenet_single.cpp -c  -o $(OBJDIR)/lenet_single.o  $(INCLUDE) $(LDFLAGS) $(CXXFLAGS)
 	
-
-#classification:  
-#	$(CXX) $(SRC)/classification.cpp -c  -o $(OBJDIR)/classification.o  $(INCLUDE) $(LDFLAGS) $(CXXFLAGS)
 
 obj:
 	mkdir -p obj
