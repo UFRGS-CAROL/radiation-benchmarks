@@ -33,7 +33,7 @@ void LogsProcessing::end_iteration_app() {
 void LogsProcessing::log_error_app(std::string error_detail) {
 #ifdef LOGS
 	if (!this->generate) {
-		log_error_detail(error_detail.c_str());
+		log_error_detail(const_cast<char*>(error_detail.c_str()));
 	}
 #endif
 }
@@ -53,7 +53,7 @@ LogsProcessing::LogsProcessing(std::string app, bool generate, std::string gold_
 	+ " iterations: " + std::to_string(iterations) + " prototxt: " + prototxt;
 #ifdef LOGS
 	set_iter_interval_print(log_interval);
-	start_log_file(const_cast<char*>(header_line.c_str()), const_cast<char*>(test.c_str()));
+	start_log_file(const_cast<char*>(header_line.c_str()), const_cast<char*>(app.c_str()));
 #endif
 }
 }
