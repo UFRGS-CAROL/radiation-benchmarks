@@ -416,11 +416,10 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
     clStatus =
         clEnqueueWriteBuffer(ocl.clCommandQueue, d_nodes, CL_TRUE, 0, sizeof(Node) * n_nodes, h_nodes, 0, NULL, NULL);
     clStatus =
-        clEnqueueWriteBuffer(ocl.clCommandQueue, d_edges, CL_TRUE, 0, sizeof(Edge) * n_edges, h_edges, 0, NULL, NULL);
+	clEnqueueWriteBuffer(ocl.clCommandQueue, d_edges, CL_TRUE, 0, sizeof(Edge) * n_edges, h_edges, 0, NULL, NULL);
     clFinish(ocl.clCommandQueue);
     CL_ERR();
     timer.stop("Copy To Device");
-
 //** Loop over kernels
 
     for(int rep = 0; rep < p.n_reps; rep++) {
@@ -429,6 +428,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
         for(int i = 0; i < n_nodes; i++) {
             h_cost[i].store(INF);
         }
+	update_timestamp();
         h_cost[source].store(0);
         for(int i = 0; i < n_nodes; i++) {
             h_color[i].store(WHITE);
@@ -487,6 +487,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
                 CPU_EXEC == 1) { // If the number of input queue elements is lower than switching_limit
 				//printf("CPU\n");
 				it_cpu=it_cpu+1;
+				update_timestamp();
                 //if(rep >= p.n_warmup)
                     timer.start("Kernel");
 
@@ -520,6 +521,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
                       GPU_EXEC ==1) { // If the number of input queue elements is higher than or equal to switching_limit
 				//printf("GPU\n");
 				it_gpu=it_gpu+1;
+				update_timestamp();
                 //if(rep >= p.n_warmup)
                     timer.start("Copy To Device");
                 clStatus = clEnqueueWriteBuffer(
@@ -659,6 +661,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
 
 
 //	err=new_verify(h_cost, n_nodes, p.comparison_file,it_cpu,it_gpu);
+	update_timestamp();
 	err=newest_verify(h_cost, n_nodes,n_nodes_o,gold,it_cpu,it_gpu);
         if(err > 0) {
             //printf("Errors: %d\n",err);
