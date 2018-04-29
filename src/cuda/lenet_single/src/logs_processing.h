@@ -7,20 +7,24 @@
 
 #ifndef LOGSPROCESSING_H_
 #define LOGSPROCESSING_H_
+#include <string>
 
 #define RADIATION_PARAMETERS 3
 
 class LogsProcessing{
 private:
-	float layer_threshold_error = 1e-5;
-	char *save_layer_data = "/var/radiation-benchmarks/data";
+	const float layer_threshold_error = 1e-5;
+	const char *save_layer_data = "/var/radiation-benchmarks/data";
 	bool generate;
 
-public:
-	LogsProcessing();
-	void start_count_app(char *test, char *app);
+	std::string test;
+	std::string app;
+	unsigned error_count;
 
-	void finish_count_app();
+public:
+	LogsProcessing(bool generate, std::string app, std::string test,
+			int log_interval = 10);
+    virtual ~LogsProcessing();
 
 	void start_iteration_app();
 
@@ -28,7 +32,7 @@ public:
 
 	void inc_count_app();
 
-	void log_error_app(char *error_detail);
+	void log_error_app(std::string error_detail);
 
 	/**
 	 * support function only to check if two layers have

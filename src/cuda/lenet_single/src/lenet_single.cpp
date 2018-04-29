@@ -28,6 +28,8 @@ using caffe::Timer;
 using caffe::vector;
 using std::ostringstream;
 
+LogsProcessing global_log;
+
 DEFINE_string(gpu, "",
 		"Optional; run in GPU mode on given device IDs separated by ', '."
 		"Use '-gpu all' to run on all available GPUs. The effective training "
@@ -359,7 +361,8 @@ int test() {
 RegisterBrewFunction(test);
 
 // Test: score a detection model.
-int test_detection(LogsProcessing logs) {
+int test_detection() {
+
 	typedef float Dtype;
 	CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to score.";
 	CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";

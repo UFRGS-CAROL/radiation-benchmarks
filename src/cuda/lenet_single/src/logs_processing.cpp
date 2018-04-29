@@ -8,59 +8,63 @@
 #include "logs_processing.h"
 #include <vector>
 #include <sstream>
-#include <string>
 
 #ifdef LOGS
 #include "log_helper.h"
 #endif //LOGS def
 
-int error_count = 0;
-
-
-std::vector<std::string> &split(const std::string &s, char delim,
-		std::vector<std::string> &elems) {
-	std::stringstream ss(s);
-	std::string item;
-	while (getline(ss, item, delim)) {
-		elems.push_back(item);
-	}
-	return elems;
-}
-
-std::vector<std::string> split(const std::string &s, char delim) {
-	std::vector < std::string > elems;
-	split(s, delim, elems);
-	return elems;
-}
-
-void LogsProcessing::start_count_app(char *test, char *app) {
-#ifdef LOGS
-	start_log_file(app, test);
-#endif
-}
-
-void LogsProcessing::finish_count_app() {
-#ifdef LOGS
-	end_log_file();
-#endif
-}
-
 void LogsProcessing::start_iteration_app() {
 #ifdef LOGS
-	start_iteration();
-	error_count = 0;
+	if (!this->generate) {
+		start_iteration();
+		this->error_count = 0;
+	}
 #endif
 }
 
 void LogsProcessing::end_iteration_app() {
 #ifdef LOGS
-	end_iteration();
+	if (!this->generate) {
+		end_iteration();
+	}
+#endif
+}
+
+void LogsProcessing::log_error_app(std::string error_detail) {
+#ifdef LOGS
+	if (!this->generate) {
+		log_error_detail(error_detail.c_str());
+	}
+#endif
+}
+
+LogsProcessing::LogsProcessing(bool generate, std::string app, std::string test,
+		int log_interval) {
+	this->generate = generate;
+	if (!this->generate) {
+		this->app = app;
+		this->test = test;
+		this->error_count = 0;
+#ifdef LOGS
+		set_iter_interval_print(log_interval);
+		start_log_file(app.c_str(), test.c_str());
+#endif
+	}
+}
+
+LogsProcessing::~LogsProcessing() {
+#ifdef LOGS
+	if (!this->generate) {
+		end_log_file();
+	}
 #endif
 }
 
 void LogsProcessing::inc_count_app() {
 #ifdef LOGS
-	log_error_count(error_count++);
+	if (!this->generate) {
+		log_error_count(this->error_count++);
+	}
 #endif
 }
 
