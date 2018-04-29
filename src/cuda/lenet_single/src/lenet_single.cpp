@@ -325,6 +325,7 @@ int test() {
 			const vector<Blob*>& result = caffe_net.Forward(&iter_loss);
 			loss += iter_loss;
 			int idx = 0;
+			LOG(INFO) << " RESULT SIZE " << result.size() << " result[0].count " << result[0]->count() << "\n";
 			for (int j = 0; j < result.size(); ++j) {
 				const float* result_vec = result[j]->cpu_data<float>();
 				for (int k = 0; k < result[j]->count(); ++k, ++idx) {
