@@ -44,10 +44,10 @@ SRC=./src
 all: obj $(TARGET)
 
 $(TARGET): classifier
-	$(CXX) caffe/tools/caffe.o  -o $@ $(LIBRARY) $(INCLUDE) $(LDFLAGS)
+	$(CXX) $(OBJDIR)/caffe.o  -o $@ $(LIBRARY) $(INCLUDE) $(LDFLAGS)
 
 classifier:
-	$(CXX) caffe/tools/caffe.cpp -c  -o caffe/tools/caffe.o  $(INCLUDE) $(LDFLAGS) $(CXXFLAGS)
+	$(CXX) $(OBJDIR)/caffe.cpp -c  -o $(OBJDIR)/caffe.o  $(INCLUDE) $(LDFLAGS) $(CXXFLAGS)
 	
 
 #classification:  
