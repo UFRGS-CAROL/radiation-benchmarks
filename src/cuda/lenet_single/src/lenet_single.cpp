@@ -714,7 +714,7 @@ gflags	::SetUsageMessage("command line brew\n"
 
 
 		int argc_copy = argc - RADIATION_PARAMETERS;
-		caffe::GlobalInit(&argc_copy, &argv_copy);
+		//caffe::GlobalInit(&argc_copy, &argv_copy);
 	} else {
 		caffe::GlobalInit(&argc, &argv);
 	}
