@@ -467,82 +467,84 @@ int test_detection() {
 			}
 		}
 
-	}
-	loss /= FLAGS_iterations;
-	LOG(INFO) << "Loss: " << loss;
+		loss /= FLAGS_iterations;
+		LOG(INFO) << "Loss: " << loss;
 
-	for (int i = 0; i < test_score.size(); ++i) {
-		int test_score_output_id_value = test_score_output_id[i];
-		const vector<int>& output_blob_indices =
-				caffe_net.output_blob_indices();
-		const vector<string>& blob_names = caffe_net.blob_names();
-		const vector<float>& blob_loss_weights = caffe_net.blob_loss_weights();
-		if (test_score_output_id_value < output_blob_indices.size()) {
-			int blob_index = output_blob_indices[test_score_output_id_value];
-			if (blob_index < blob_names.size()
-					&& blob_index < blob_loss_weights.size()) {
-				const std::string& output_name = blob_names[blob_index];
-				const float loss_weight = blob_loss_weights[blob_index];
-				std::ostringstream loss_msg_stream;
-				const float mean_score = test_score[i] / FLAGS_iterations;
-				if (loss_weight) {
-					loss_msg_stream << " (* " << loss_weight << " = "
-							<< (loss_weight * mean_score) << " loss)";
+		for (int i = 0; i < test_score.size(); ++i) {
+			int test_score_output_id_value = test_score_output_id[i];
+			const vector<int>& output_blob_indices =
+					caffe_net.output_blob_indices();
+			const vector<string>& blob_names = caffe_net.blob_names();
+			const vector<float>& blob_loss_weights =
+					caffe_net.blob_loss_weights();
+			if (test_score_output_id_value < output_blob_indices.size()) {
+				int blob_index = output_blob_indices[test_score_output_id_value];
+				if (blob_index < blob_names.size()
+						&& blob_index < blob_loss_weights.size()) {
+					const std::string& output_name = blob_names[blob_index];
+					const float loss_weight = blob_loss_weights[blob_index];
+					std::ostringstream loss_msg_stream;
+					const float mean_score = test_score[i] / FLAGS_iterations;
+					if (loss_weight) {
+						loss_msg_stream << " (* " << loss_weight << " = "
+								<< (loss_weight * mean_score) << " loss)";
+					}
+					LOG(INFO) << output_name << " = " << mean_score
+							<< loss_msg_stream.str();
 				}
-				LOG(INFO) << output_name << " = " << mean_score
-						<< loss_msg_stream.str();
 			}
 		}
-	}
 
-	//To compute mAP
-	for (int i = 0; i < all_true_pos.size(); ++i) {
-		if (all_true_pos.find(i) == all_true_pos.end()) {
-			LOG(FATAL) << "Missing output_blob true_pos: " << i;
-		}
-		const std::map<int, vector<std::pair<float, int> > >& true_pos =
-				all_true_pos.find(i)->second;
-		if (all_false_pos.find(i) == all_false_pos.end()) {
-			LOG(FATAL) << "Missing output_blob false_pos: " << i;
-		}
-		const std::map<int, vector<std::pair<float, int> > >& false_pos =
-				all_false_pos.find(i)->second;
-		if (all_num_pos.find(i) == all_num_pos.end()) {
-			LOG(FATAL) << "Missing output_blob num_pos: " << i;
-		}
-		const std::map<int, int>& num_pos = all_num_pos.find(i)->second;
-		std::map<int, float> APs;
-		float mAP = 0.;
-		// Sort true_pos and false_pos with descend scores.
-		for (std::map<int, int>::const_iterator it = num_pos.begin();
-				it != num_pos.end(); ++it) {
-			int label = it->first;
-			int label_num_pos = it->second;
-			if (true_pos.find(label) == true_pos.end()) {
-				LOG(WARNING) << "Missing true_pos for label: " << label;
-				continue;
+		//To compute mAP
+		for (int i = 0; i < all_true_pos.size(); ++i) {
+			if (all_true_pos.find(i) == all_true_pos.end()) {
+				LOG(FATAL) << "Missing output_blob true_pos: " << i;
 			}
-			const vector<std::pair<float, int> >& label_true_pos =
-					true_pos.find(label)->second;
-			if (false_pos.find(label) == false_pos.end()) {
-				LOG(WARNING) << "Missing false_pos for label: " << label;
-				continue;
+			const std::map<int, vector<std::pair<float, int> > >& true_pos =
+					all_true_pos.find(i)->second;
+			if (all_false_pos.find(i) == all_false_pos.end()) {
+				LOG(FATAL) << "Missing output_blob false_pos: " << i;
 			}
-			const vector<std::pair<float, int> >& label_false_pos =
-					false_pos.find(label)->second;
-			vector<float> prec, rec;
-			caffe::ComputeAP(label_true_pos, label_num_pos, label_false_pos,
-					FLAGS_ap_version, &prec, &rec, &(APs[label]));
-			mAP += APs[label];
-			if (FLAGS_show_per_class_result) {
-				LOG(INFO) << "class AP " << label << ": " << APs[label];
+			const std::map<int, vector<std::pair<float, int> > >& false_pos =
+					all_false_pos.find(i)->second;
+			if (all_num_pos.find(i) == all_num_pos.end()) {
+				LOG(FATAL) << "Missing output_blob num_pos: " << i;
 			}
+			const std::map<int, int>& num_pos = all_num_pos.find(i)->second;
+			std::map<int, float> APs;
+			float mAP = 0.;
+			// Sort true_pos and false_pos with descend scores.
+			for (std::map<int, int>::const_iterator it = num_pos.begin();
+					it != num_pos.end(); ++it) {
+				int label = it->first;
+				int label_num_pos = it->second;
+				if (true_pos.find(label) == true_pos.end()) {
+					LOG(WARNING) << "Missing true_pos for label: " << label;
+					continue;
+				}
+				const vector<std::pair<float, int> >& label_true_pos =
+						true_pos.find(label)->second;
+				if (false_pos.find(label) == false_pos.end()) {
+					LOG(WARNING) << "Missing false_pos for label: " << label;
+					continue;
+				}
+				const vector<std::pair<float, int> >& label_false_pos =
+						false_pos.find(label)->second;
+				vector<float> prec, rec;
+				caffe::ComputeAP(label_true_pos, label_num_pos, label_false_pos,
+						FLAGS_ap_version, &prec, &rec, &(APs[label]));
+				mAP += APs[label];
+				if (FLAGS_show_per_class_result) {
+					LOG(INFO) << "class AP " << label << ": " << APs[label];
+				}
+			}
+			mAP /= num_pos.size();
+			const int output_blob_index = caffe_net.output_blob_indices()[i];
+			const string& output_name =
+					caffe_net.blob_names()[output_blob_index];
+			LOG(INFO) << "Test net output mAP #" << i << ": " << output_name
+					<< " = " << mAP;
 		}
-		mAP /= num_pos.size();
-		const int output_blob_index = caffe_net.output_blob_indices()[i];
-		const string& output_name = caffe_net.blob_names()[output_blob_index];
-		LOG(INFO) << "Test net output mAP #" << i << ": " << output_name
-				<< " = " << mAP;
 	}
 	return 0;
 }
