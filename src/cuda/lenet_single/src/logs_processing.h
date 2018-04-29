@@ -18,11 +18,12 @@ private:
 	bool generate;
 	std::string app;
 	unsigned error_count;
-	int iterations;
 	std::string gold_path;
 	std::string weights;
 
 public:
+	int iterations;
+
 	LogsProcessing(std::string app, bool generate, std::string gold_path,
 			std::string weights, std::string prototxt, int iterations,
 			int log_interval = 10);

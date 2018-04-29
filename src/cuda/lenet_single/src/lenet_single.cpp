@@ -396,70 +396,77 @@ int test_detection() {
 	// Instantiate the caffe net.
 	Net caffe_net(FLAGS_model, caffe::TEST, 0U);
 	caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
+
 	LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
+	for (int rad_iterations = 0; rad_iterations < global_log->iterations;
+			rad_iterations++) {
 
-	std::map<int, std::map<int, vector<std::pair<float, int> > > > all_true_pos;
-	std::map<int, std::map<int, vector<std::pair<float, int> > > > all_false_pos;
-	std::map<int, std::map<int, int> > all_num_pos;
+		std::map<int, std::map<int, vector<std::pair<float, int> > > > all_true_pos;
+		std::map<int, std::map<int, vector<std::pair<float, int> > > > all_false_pos;
+		std::map<int, std::map<int, int> > all_num_pos;
 
-	vector<int> test_score_output_id;
-	vector<float> test_score;
-	float loss = 0;
-	for (int i = 0; i < FLAGS_iterations; ++i) {
-		float iter_loss;
-		const vector<Blob*>& result = caffe_net.Forward(&iter_loss);
-		loss += iter_loss;
-		int idx = 0;
-		for (int j = 0; j < result.size(); ++j) {
-			const float* result_vec = result[j]->cpu_data<float>();
-			for (int k = 0; k < result[j]->count(); ++k, ++idx) {
-				const float score = result_vec[k];
-				if (i == 0) {
-					test_score.push_back(score);
-					test_score_output_id.push_back(j);
-				} else {
-					test_score[idx] += score;
-				}
-				const std::string& output_name =
-						caffe_net.blob_names()[caffe_net.output_blob_indices()[j]];
-				LOG(INFO) << "Batch " << i << ", " << output_name << " = "
-						<< score;
-			}
-		}
-
-		//To compute mAP
-		for (int j = 0; j < result.size(); ++j) {
-			CHECK_EQ(result[j]->width(), 5);
-			const Dtype* result_vec = result[j]->cpu_data<Dtype>();
-			int num_det = result[j]->height();
-			for (int k = 0; k < num_det; ++k) {
-				int item_id = static_cast<int>(result_vec[k * 5]);
-				int label = static_cast<int>(result_vec[k * 5 + 1]);
-				if (item_id == -1) {
-					// Special row of storing number of positives for a label.
-					if (all_num_pos[j].find(label) == all_num_pos[j].end()) {
-						all_num_pos[j][label] = static_cast<int>(result_vec[k
-								* 5 + 2]);
+		vector<int> test_score_output_id;
+		vector<float> test_score;
+		float loss = 0;
+		for (int i = 0; i < FLAGS_iterations; ++i) {
+			float iter_loss;
+			const vector<Blob*>& result = caffe_net.Forward(&iter_loss);
+			loss += iter_loss;
+			int idx = 0;
+			for (int j = 0; j < result.size(); ++j) {
+				const float* result_vec = result[j]->cpu_data<float>();
+				for (int k = 0; k < result[j]->count(); ++k, ++idx) {
+					const float score = result_vec[k];
+					if (i == 0) {
+						test_score.push_back(score);
+						test_score_output_id.push_back(j);
 					} else {
-						all_num_pos[j][label] += static_cast<int>(result_vec[k
-								* 5 + 2]);
+						test_score[idx] += score;
 					}
-				} else {
-					// Normal row storing detection status.
-					float score = result_vec[k * 5 + 2];
-					int tp = static_cast<int>(result_vec[k * 5 + 3]);
-					int fp = static_cast<int>(result_vec[k * 5 + 4]);
-					if (tp == 0 && fp == 0) {
-						// Ignore such case. It happens when a detection bbox is matched to
-						// a difficult gt bbox and we don't evaluate on difficult gt bbox.
-						continue;
+					const std::string& output_name =
+							caffe_net.blob_names()[caffe_net.output_blob_indices()[j]];
+					LOG(INFO) << "Batch " << i << ", " << output_name << " = "
+							<< score;
+				}
+			}
+
+			//To compute mAP
+			for (int j = 0; j < result.size(); ++j) {
+				CHECK_EQ(result[j]->width(), 5);
+				const Dtype* result_vec = result[j]->cpu_data<Dtype>();
+				int num_det = result[j]->height();
+				for (int k = 0; k < num_det; ++k) {
+					int item_id = static_cast<int>(result_vec[k * 5]);
+					int label = static_cast<int>(result_vec[k * 5 + 1]);
+					if (item_id == -1) {
+						// Special row of storing number of positives for a label.
+						if (all_num_pos[j].find(label)
+								== all_num_pos[j].end()) {
+							all_num_pos[j][label] =
+									static_cast<int>(result_vec[k * 5 + 2]);
+						} else {
+							all_num_pos[j][label] +=
+									static_cast<int>(result_vec[k * 5 + 2]);
+						}
+					} else {
+						// Normal row storing detection status.
+						float score = result_vec[k * 5 + 2];
+						int tp = static_cast<int>(result_vec[k * 5 + 3]);
+						int fp = static_cast<int>(result_vec[k * 5 + 4]);
+						if (tp == 0 && fp == 0) {
+							// Ignore such case. It happens when a detection bbox is matched to
+							// a difficult gt bbox and we don't evaluate on difficult gt bbox.
+							continue;
+						}
+						all_true_pos[j][label].push_back(
+								std::make_pair(score, tp));
+						all_false_pos[j][label].push_back(
+								std::make_pair(score, fp));
 					}
-					all_true_pos[j][label].push_back(std::make_pair(score, tp));
-					all_false_pos[j][label].push_back(
-							std::make_pair(score, fp));
 				}
 			}
 		}
+
 	}
 	loss /= FLAGS_iterations;
 	LOG(INFO) << "Loss: " << loss;
@@ -729,7 +736,8 @@ gflags	::SetUsageMessage("command line brew\n"
 		bool generate = atoi(argv[i++]);
 		std::string gold_path = std::string(argv[i++]);
 
-		LOG(INFO) << prototxt << " " << weights << " " << iterations << " " << generate << " " << generate << std::endl;
+		LOG(INFO) << prototxt << " " << weights << " " << iterations << " "
+				<< generate << " " << generate << std::endl;
 		global_log = new LogsProcessing("lenetSingleCUDA", generate, gold_path,
 				weights, prototxt, iterations);
 		caffe::GlobalInit(&argc_copy, &argv_copy);
@@ -750,7 +758,7 @@ gflags	::SetUsageMessage("command line brew\n"
 	LOG(INFO) << "CUDA driver version: " << Caffe::cuda_driver_version();
 	LOG(INFO) << "Arguments: " << os.str();
 
-	if (argc > 4){
+	if (argc > 4) {
 		delete global_log;
 	}
 
