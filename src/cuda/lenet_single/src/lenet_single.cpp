@@ -731,7 +731,7 @@ gflags	::SetUsageMessage("command line brew\n"
 	LOG(INFO) << "CUDA driver version: " << Caffe::cuda_driver_version();
 	LOG(INFO) << "Arguments: " << os.str();
 
-	if (argc == 2) {
+	if ((argc - RADIATION_PARAMETERS) == 2) {
 #ifdef WITH_PYTHON_LAYER
 		try {
 			Py_InitializeEx(0);
@@ -750,7 +750,6 @@ gflags	::SetUsageMessage("command line brew\n"
 	}
 #endif
 	} else {
-		printf("passou\n");
 		gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
 	}
 }
