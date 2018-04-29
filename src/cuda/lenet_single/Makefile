@@ -43,7 +43,8 @@ endif
 
 ifeq ($(LOGS), 1)
 INCLUDE+=-I../../include/
-LIBRARY+= -L../../include/ -lLogHelper -DLOGS=1
+LDFLAGS+= -L../../include/ -lLogHelper
+CXXFLAGS+= -DLOGS=1
 endif
 
 OBJ=lenet_single.o logs_processing.o
