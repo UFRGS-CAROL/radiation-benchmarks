@@ -46,6 +46,8 @@ INCLUDE+=-I../../include/
 LIBRARY+= -L../../include/ -lLogHelper -DLOGS=1
 endif
 
+OBJ=lenet_single.o logs_processing.o
+
 
 OBJDIR=./obj
 SRC=./src
