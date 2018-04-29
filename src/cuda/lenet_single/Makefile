@@ -11,7 +11,7 @@ ARCH+= -gencode=arch=compute_62,code=sm_62 -gencode=arch=compute_70,code=sm_70
 
 CXXFLAGS= -lcuda -lcurand -lcudart -lcublas -MMD -MP -pthread -fPIC -DCAFFE_VERSION=0.17.0 
 CXXFLAGS+= -std=c++11 -DCUDA_NO_HALF -DNDEBUG -O3 -DUSE_CUDNN -DUSE_OPENCV -DUSE_LEVELDB -DUSE_LMDB
-CXXFLAGS+= -Wall -Wno-sign-compare -c -lcaffe-nv -lglog -lopencv_core -lopencv_highgui -lopencv_imgproc 
+CXXFLAGS+= -Wall -Wno-sign-compare -lcaffe-nv -lglog -lopencv_core -lopencv_highgui -lopencv_imgproc 
 CXXFLAGS+= -pthread -fPIC 
 		 
 NVCCFLAGS= -Xptxas -v $(ARCH)
@@ -59,7 +59,7 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(LDFLAGS) $^ -o $@   $(CXXFLAGS) $(LIBRARY)
+	$(CXX) $^ -o $@ $(LDFLAGS) $(CXXFLAGS) $(LIBRARY)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) -c $< -o $@  $(CXXFLAGS) $(INCLUDE) 
