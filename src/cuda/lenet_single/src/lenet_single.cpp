@@ -748,9 +748,14 @@ gflags	::SetUsageMessage("command line brew\n"
 	LOG(INFO) << "CUDA driver version: " << Caffe::cuda_driver_version();
 	LOG(INFO) << "Arguments: " << os.str();
 
+	if (argc > 4){
+		delete global_log;
+	}
+
 	if (argc_copy == 2) {
 		return GetBrewFunction(caffe::string(argv[1]))();
 	} else {
 		gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
 	}
+
 }
