@@ -28,7 +28,7 @@ using caffe::Timer;
 using caffe::vector;
 using std::ostringstream;
 
-LogsProcessing global_log;
+LogsProcessing* global_log;
 
 DEFINE_string(gpu, "",
 		"Optional; run in GPU mode on given device IDs separated by ', '."
