@@ -49,8 +49,8 @@ endif
 OBJ=lenet_single.o logs_processing.o
 
 
-OBJDIR=./obj
-SRC=./src
+OBJDIR=./obj/
+SRC=./src/
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
