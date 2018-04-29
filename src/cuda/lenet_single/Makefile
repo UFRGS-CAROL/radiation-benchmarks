@@ -59,7 +59,7 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(OBJS) -o $@  $(LDFLAGS) $(CXXFLAGS) $(LIBRARY)
+	$(CXX) $(LDFLAGS) $^ -o $@   $(CXXFLAGS) $(LIBRARY)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) -c $< -o $@  $(CXXFLAGS) $(INCLUDE) 
@@ -71,7 +71,7 @@ obj:
 	mkdir -p obj
 
 clean:
-	rm -rf $(TARGET) $(OBJDIR)/*.o 
+	rm -rf $(TARGET) $(OBJDIR)/*.o $(OBJDIR)/*.d
 
 	
 	
