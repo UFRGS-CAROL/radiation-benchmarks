@@ -719,15 +719,17 @@ gflags	::SetUsageMessage("command line brew\n"
 	if (argc > 4) {
 		char** argv_copy = (char**) malloc(
 				(argc - RADIATION_PARAMETERS) * sizeof(char*));
-		for (int i = 0; i < argc - RADIATION_PARAMETERS; i++) {
+		int i;
+		for (i = 0; i < argc - RADIATION_PARAMETERS; i++) {
 			argv_copy[i] = argv[i];
 		}
 		std::string prototxt = std::string(argv[2]);
 		std::string weights = std::string(argv[3]);
-		int iterations = atoi(argv[4]);
-		bool generate = atoi(argv[5]);
-		std::string gold_path = std::string(argv[6]);
+		int iterations = atoi(argv[i++]);
+		bool generate = atoi(argv[i++]);
+		std::string gold_path = std::string(argv[i++]);
 
+		LOG(INFO) << prototxt << " " << weights << " " << iterations << " " << generate << " " << generate << std::endl;
 		global_log = new LogsProcessing("lenetSingleCUDA", generate, gold_path,
 				weights, prototxt, iterations);
 		caffe::GlobalInit(&argc_copy, &argv_copy);
