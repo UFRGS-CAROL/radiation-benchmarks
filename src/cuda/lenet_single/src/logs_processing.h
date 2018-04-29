@@ -37,6 +37,8 @@ public:
 
 	void log_error_app(std::string error_detail);
 
+    friend std::ostream& operator<<(std::ostream& os, const LogsProcessing& dt);
+
 	/**
 	 * support function only to check if two layers have
 	 * the same value

@@ -38,9 +38,9 @@ void LogsProcessing::log_error_app(std::string error_detail) {
 #endif
 }
 
-LogsProcessing::LogsProcessing(std::string app, bool generate, std::string gold_path,
-		std::string weights, std::string prototxt, int iterations,
-		int log_interval) {
+LogsProcessing::LogsProcessing(std::string app, bool generate,
+		std::string gold_path, std::string weights, std::string prototxt,
+		int iterations, int log_interval) {
 	this->generate = generate;
 	if (!this->generate) {
 		this->app = app;
@@ -48,37 +48,44 @@ LogsProcessing::LogsProcessing(std::string app, bool generate, std::string gold_
 		this->iterations = iterations;
 		this->gold_path = gold_path;
 		this->weights = weights;
-		std::string
-	header_line = "gold_file: " + gold_path  + " weights: " + weights
-	+ " iterations: " + std::to_string(iterations) + " prototxt: " + prototxt;
+		std::string header_line = "gold_file: " + gold_path + " weights: "
+				+ weights + " iterations: " + std::to_string(iterations)
+				+ " prototxt: " + prototxt;
 #ifdef LOGS
-	set_iter_interval_print(log_interval);
-	start_log_file(const_cast<char*>(app.c_str()), const_cast<char*>(header_line.c_str()));
+		set_iter_interval_print(log_interval);
+		start_log_file(const_cast<char*>(app.c_str()), const_cast<char*>(header_line.c_str()));
 #endif
-}
+	}
 }
 
 LogsProcessing::~LogsProcessing() {
 #ifdef LOGS
-if (!this->generate) {
-	end_log_file();
-}
+	if (!this->generate) {
+		end_log_file();
+	}
 #endif
 }
 
 void LogsProcessing::inc_count_app() {
 #ifdef LOGS
-if (!this->generate) {
-	log_error_count(this->error_count++);
-}
+	if (!this->generate) {
+		log_error_count(this->error_count++);
+	}
 #endif
 }
 
 char* LogsProcessing::get_log_filename() {
 #ifdef LOGS
-return get_log_file_name();
+	return get_log_file_name();
 #endif
-return NULL;
+	return NULL;
+}
+
+std::ostream& operator<<(std::ostream& os, const LogsProcessing& dt) {
+	os
+			<< "gold_file: " + dt.gold_path + " weights: " + dt.weights
+					+ " iterations: " + std::to_string(dt.iterations);
+	return os;
 }
 
 /**
@@ -87,19 +94,19 @@ return NULL;
  */
 bool LogsProcessing::compare_layer(float *l1, float *l2, int n) {
 
-return false;
+	return false;
 }
 
 bool LogsProcessing::compare_output() {
 //TODO
 // compare caffe output
-return true;
+	return true;
 }
 
 void* LogsProcessing::load_gold_layers(int img, int layer_size) {
 //TODO
 // load caffe layers
-return (NULL);
+	return (NULL);
 }
 
 void LogsProcessing::save_gold_layers() {
