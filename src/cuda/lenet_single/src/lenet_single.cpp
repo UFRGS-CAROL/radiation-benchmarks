@@ -729,7 +729,7 @@ gflags	::SetUsageMessage("command line brew\n"
 		std::string gold_path = std::string(argv[6]);
 
 		global_log = new LogsProcessing("lenetSingleCUDA", generate, gold_path,
-				weights, prototxt, iterations)
+				weights, prototxt, iterations);
 		caffe::GlobalInit(&argc_copy, &argv_copy);
 	} else {
 		caffe::GlobalInit(&argc, &argv);
