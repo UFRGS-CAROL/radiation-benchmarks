@@ -59,10 +59,7 @@ all: obj $(TARGET)
 #	$(CXX) $(OBJDIR)/lenet_single.o  -o $@ $(LIBRARY) $(INCLUDE) $(LDFLAGS)
 
 $(TARGET): $(OBJS)
-	$(CC)  $(COMMON) $(CFLAGS)    $^ -o $@  $(LDFLAGS) $(CXXFLAGS)
-
-#$(OBJDIR)%.o: %.c $(DEPS)
-#	$(CC)  $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CXXFLAGS)
+	$(CXX)  $(COMMON) $(CFLAGS)    $^ -o $@  $(LDFLAGS) $(CXXFLAGS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CXXFLAGS)
