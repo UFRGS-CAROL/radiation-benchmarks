@@ -9,9 +9,10 @@ ARCH+= -gencode=arch=compute_60,code=sm_60 -gencode=arch=compute_61,code=sm_61
 ARCH+= -gencode=arch=compute_62,code=sm_62 -gencode=arch=compute_70,code=sm_70
 
 
-CXXFLAGS= -MMD -MP -pthread -fPIC -DCAFFE_VERSION=0.17.0 
+CXXFLAGS= -lcuda -lcurand -lcudart -lcublas -MMD -MP -pthread -fPIC -DCAFFE_VERSION=0.17.0 
 CXXFLAGS+= -std=c++11 -DCUDA_NO_HALF -DNDEBUG -O3 -DUSE_CUDNN -DUSE_OPENCV -DUSE_LEVELDB -DUSE_LMDB
-CXXFLAGS+= -Wall -Wno-sign-compare -pthread -fPIC -Wl,-rpath,\$ORIGIN/../../lib
+CXXFLAGS+= -Wall -Wno-sign-compare -lcaffe-nv -lglog -lopencv_core -lopencv_highgui -lopencv_imgproc 
+CXXFLAGS+= -pthread -fPIC 
 		 
 NVCCFLAGS= -Xptxas -v $(ARCH)
 
@@ -26,11 +27,11 @@ INCLUDE+= -I$(CAFFEDIR)/src -I$(CAFFEDIR)/include -I$(CAFFEDIR)/3rdparty -I/usr/
 INCLUDE+= -I$(CUDADIR)/include -I/usr/include/openblas/
 
 
-LDFLAGS=  -lcuda -lcudart -lcublas -lcurand -lglog -lgflags -lprotobuf -lleveldb -lsnappy -llmdb -lboost_system 
+LDFLAGS=  -std=c++11 -lcudart -lcublas -lcurand -lglog -lgflags -lprotobuf -lleveldb -lsnappy -llmdb -lboost_system 
 LDFLAGS+= -lhdf5_hl -lhdf5 -lm -lopencv_core -lopencv_highgui -lopencv_imgproc -lboost_thread -lstdc++  
-LDFLAGS+= -lcblas -latlas -lnvidia-ml -lboost_system -lgflags -lprotobuf -lboost_filesystem 
-LDFLAGS+= -lm -lturbojpeg -lhdf5_hl -lhdf5 -lleveldb -lsnappy -llmdb -lopencv_core 
-LDFLAGS+= -lboost_thread -lboost_regex -lstdc++ -lcudnn -lopenblas 
+LDFLAGS+= -lcblas -latlas -lcaffe-nv -lnvidia-ml -lboost_system -lglog -lgflags -lprotobuf -lboost_filesystem 
+LDFLAGS+= -lm -lturbojpeg -lhdf5_hl -lhdf5 -lleveldb -lsnappy -llmdb -lopencv_core -lopencv_highgui -lopencv_imgproc 
+LDFLAGS+= -lboost_thread -lboost_regex -lstdc++ -lcudnn -lopenblas -Wl,-rpath,\$ORIGIN/../../lib
 
 DATAPATH=/home/carol/radiation-benchmarks/data/lenet
 SRCRAD=/home/carol/radiation-benchmarks/src/cuda/lenet_single
@@ -41,9 +42,9 @@ ifeq ($(DEBUG), 1)
 endif
 
 ifeq ($(LOGS), 1)
-INCLUDE+= -I../../include/
+INCLUDE+=-I../../include/
 LDFLAGS+= -L../../include/ -lLogHelper
-CXXFLAGS+= -DLOGS=1
+CXXFLAGS+=-DLOGS=1
 endif
 
 OBJ=lenet_single.o logs_processing.o
@@ -55,16 +56,14 @@ VPATH=./src/
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-BUILDFLAGS = $(LDFLAGS) $(CXXFLAGS) $(INCLUDE) $(LIBRARY) 
-
 .PHONY : all clean
 all: obj $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $^ -o $@ $(BUILDFLAGS)
+	$(CXX) $^ -o $@ $(LDFLAGS) $(CXXFLAGS) $(LIBRARY) $(INCLUDE)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(CXX) -c $< -o $@ $(BUILDFLAGS)
+	$(CXX) -c $< -o $@  $(CXXFLAGS) $(INCLUDE) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) --compiler-options "$(CXXFLAGS)" -c $< -o $@  $(NVCCFLAGS) $(INCLUDE)
