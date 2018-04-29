@@ -5,7 +5,7 @@
  *      Author: carol
  */
 
-#include "LogsProcessing.h"
+#include "logs_processing.h"
 
 size_t error_count = 0;
 
