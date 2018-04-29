@@ -695,7 +695,7 @@ gflags	::SetUsageMessage("command line brew\n"
 
 	std::ostringstream os;
 	os << std::endl;
-	for (int n = 0; n < argc; ++n) {
+	for (int n = 0; n < argc - RADIATION_PARAMETERS; ++n) {
 		os << "[" << n << "]: " << argv[n] << std::endl;
 	}
 
