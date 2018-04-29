@@ -84,15 +84,12 @@ clean:
 	
 test:
 	 env LD_LIBRARY_PATH=/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/build/lib/ \
-	 ./lenet test -model=$(DATAPATH)/lenet.prototxt \
+	 ./lenet test -model=$(DATAPATH)/lenet_train_test.prototxt \
 	 	-weights=$(DATAPATH)/single_iter_10000.caffemodel 
 			 	
-	 
-	 
-
-	
 train:
 	 env LD_LIBRARY_PATH=$(SRCRAD)/caffe/build/lib/ \
 	 ./lenet train --solver=$(DATAPATH)/lenet_solver_single.prototxt
 	rm -rf _iter_10000.caffemodel  _iter_10000.solverstate
+
 	
