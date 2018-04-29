@@ -730,25 +730,27 @@ gflags	::SetUsageMessage("command line brew\n"
 	LOG(INFO) << "CUDA version: " << Caffe::cuda_version();
 	LOG(INFO) << "CUDA driver version: " << Caffe::cuda_driver_version();
 	LOG(INFO) << "Arguments: " << os.str();
-//
-//	if (argc == 2) {
-//#ifdef WITH_PYTHON_LAYER
-//		try {
-//			Py_InitializeEx(0);
-//			if (!PyEval_ThreadsInitialized()) {
-//				PyEval_InitThreads();
-//				static PyThreadState* mainPyThread = PyEval_SaveThread();
-//				(void)mainPyThread;
-//			}
-//#endif
-//		return GetBrewFunction(caffe::string(argv[1]))();
-//#ifdef WITH_PYTHON_LAYER
-//	} catch (bp::error_already_set&) {
-//		PyErr_Print();
-//		return 1;
-//	}
-//#endif
-//	} else {
-//		gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
-//	}
+
+	if (argc == 2) {
+#ifdef WITH_PYTHON_LAYER
+		try {
+			Py_InitializeEx(0);
+			if (!PyEval_ThreadsInitialized()) {
+				PyEval_InitThreads();
+				static PyThreadState* mainPyThread = PyEval_SaveThread();
+				(void)mainPyThread;
+			}
+#endif
+		return GetBrewFunction(caffe::string(argv[1]))();
+
+#ifdef WITH_PYTHON_LAYER
+	} catch (bp::error_already_set&) {
+		PyErr_Print();
+		return 1;
+	}
+#endif
+	} else {
+		printf("passou\n");
+		gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
+	}
 }
