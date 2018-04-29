@@ -713,6 +713,7 @@ gflags	::SetUsageMessage("command line brew\n"
 //		int argc_copy = argc - RADIATION_PARAMETERS;
 //		caffe::GlobalInit(&argc_copy, &argv_copy);
 //		free(argv_copy);
+		printf("passou\n");
 	} else {
 		caffe::GlobalInit(&argc, &argv);
 	}
