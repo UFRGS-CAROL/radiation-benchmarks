@@ -13,6 +13,9 @@ namespace bp = boost::python;
 #include "caffe/util/signal_handler.h"
 #include "caffe/util/bbox_util.hpp"
 
+// For radiation tests
+#include "logs_processing.h"
+
 using caffe::TBlob;
 using caffe::Blob;
 using caffe::Caffe;
