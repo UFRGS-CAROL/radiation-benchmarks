@@ -77,7 +77,7 @@ endif
 
 DEP=kernel.cpp kernel.h main.cpp kernel.cu support/common.h support/cuda-setup.h support/partitioner.h support/timer.h support/verify.h
 SRC=main.cpp kernel.cpp kernel.cu 
-EXE=bs
+EXE=bezier_surface
 
 all: $(EXE) gen_gold
 
