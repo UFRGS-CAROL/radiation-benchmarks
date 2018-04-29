@@ -61,8 +61,8 @@ all: obj $(TARGET)
 $(TARGET): $(OBJS)
 	$(CC)  $(COMMON) $(CFLAGS)    $^ -o $@  $(LDFLAGS) $(CXXFLAGS)
 
-$(OBJDIR)%.o: %.c $(DEPS)
-	$(CC)  $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CXXFLAGS)
+#$(OBJDIR)%.o: %.c $(DEPS)
+#	$(CC)  $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CXXFLAGS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CXXFLAGS)
