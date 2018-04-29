@@ -33,6 +33,9 @@ LDFLAGS+= -lcblas -latlas -lcaffe-nv -lnvidia-ml -lboost_system -lglog -lgflags 
 LDFLAGS+= -lm -lturbojpeg -lhdf5_hl -lhdf5 -lleveldb -lsnappy -llmdb -lopencv_core -lopencv_highgui -lopencv_imgproc 
 LDFLAGS+= -lboost_thread -lboost_regex -lstdc++ -lcudnn -lopenblas -Wl,-rpath,\$ORIGIN/../../lib
 
+DATAPATH=/home/carol/radiation-benchmarks/cuda/lenet
+SRCRAD=/home/carol/radiation-benchmarks/src/cuda/lenet_single
+
 ifeq ($(DEBUG), 1)
 	NVCCFLAGS+= -G -g
 	CXXFLAGS+= -g
@@ -68,5 +71,7 @@ test:
  		caffe/data/ilsvrc12/imagenet_mean.binaryproto caffe/data/ilsvrc12/synset_words.txt \
  		caffe/examples/images/cat.jpg
 	
-
+train:
+	 env LD_LIBRARY_PATH=$(SRCRAD)/caffe/build/lib/ \
+	 ./lenet train --solver=$(DATAPATH)/lenet_solver.prototx
 	
