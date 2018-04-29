@@ -725,7 +725,7 @@ gflags	::SetUsageMessage("command line brew\n"
 		std::string prototxt = std::string(argv[2]);
 		std::string weights = std::string(argv[3]);
 		int iterations = atoi(argv[4]);
-		bool genrate = atoi(argv[5]);
+		bool generate = atoi(argv[5]);
 		std::string gold_path = std::string(argv[6]);
 
 		global_log = new LogsProcessing("lenetSingleCUDA", generate, gold_path,
