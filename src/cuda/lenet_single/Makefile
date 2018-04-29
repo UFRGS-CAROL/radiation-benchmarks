@@ -58,13 +58,13 @@ DEPS = $(wildcard src/*.h) Makefile
 all: obj $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX)  $(COMMON) $(CFLAGS)    $^ -o $@  $(LDFLAGS) $(CXXFLAGS) $(LIBRARY)
+	$(CXX) $(CFLAGS) $^ -o $@  $(LDFLAGS) $(CXXFLAGS) $(LIBRARY)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@  $(CXXFLAGS) $(INCLUDE) 
+	$(CXX) $(CFLAGS) -c $< -o $@  $(CXXFLAGS) $(INCLUDE) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH)  $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@  $(NVCCFLAGS) $(CXXFLAGS) $(INCLUDE)
+	$(NVCC) $(ARCH)  $(COMMON) --compiler-options "$(CXXFLAGS)" -c $< -o $@  $(NVCCFLAGS) $(INCLUDE)
 
 obj:
 	mkdir -p obj
