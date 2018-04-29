@@ -713,7 +713,10 @@ gflags	::SetUsageMessage("command line brew\n"
 
 
 		int argc_copy = argc - RADIATION_PARAMETERS;
+		printf("argc copy before %d\n", argc_copy);
 		caffe::GlobalInit(&argc_copy, &argv_copy);
+
+		printf("argc copy after %d\n", argc_copy);
 	} else {
 		caffe::GlobalInit(&argc, &argv);
 	}
@@ -730,6 +733,7 @@ gflags	::SetUsageMessage("command line brew\n"
 	LOG(INFO) << "CUDA version: " << Caffe::cuda_version();
 	LOG(INFO) << "CUDA driver version: " << Caffe::cuda_driver_version();
 	LOG(INFO) << "Arguments: " << os.str();
+
 
 	if ((argc - RADIATION_PARAMETERS) == 2) {
 #ifdef WITH_PYTHON_LAYER
