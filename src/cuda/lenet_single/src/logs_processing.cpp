@@ -33,38 +33,38 @@ std::vector<std::string> split(const std::string &s, char delim) {
 	return elems;
 }
 
-void start_count_app(char *test, char *app) {
+void LogsProcessing::start_count_app(char *test, char *app) {
 #ifdef LOGS
 	start_log_file(app, test);
 #endif
 }
 
-void finish_count_app() {
+void LogsProcessing::finish_count_app() {
 #ifdef LOGS
 	end_log_file();
 #endif
 }
 
-void start_iteration_app() {
+void LogsProcessing::start_iteration_app() {
 #ifdef LOGS
 	start_iteration();
 	error_count = 0;
 #endif
 }
 
-void end_iteration_app() {
+void LogsProcessing::end_iteration_app() {
 #ifdef LOGS
 	end_iteration();
 #endif
 }
 
-void inc_count_app() {
+void LogsProcessing::inc_count_app() {
 #ifdef LOGS
 	log_error_count(error_count++);
 #endif
 }
 
-char *get_log_filename() {
+char* LogsProcessing::get_log_filename() {
 #ifdef LOGS
 	return get_log_file_name();
 #endif
@@ -75,29 +75,30 @@ char *get_log_filename() {
  * support function only to check if two layers have
  * the same value
  */
-bool compare_layer(float *l1, float *l2, int n) {
+bool LogsProcessing::compare_layer(float *l1, float *l2, int n) {
 
 	return false;
 }
 
-bool compare_output() {
+bool LogsProcessing::compare_output() {
 	//TODO
 	// compare caffe output
 	return true;
 }
 
-void* load_gold_layers(int img, int layer_size) {
+void* LogsProcessing::load_gold_layers(int img, int layer_size) {
 	//TODO
 	// load caffe layers
 	return (NULL);
 }
 
-void save_gold_layers() {
+void LogsProcessing::save_gold_layers() {
 	//TODO
 	// Save caffe layers
 }
 
-void compare_and_save_layers() {
+void LogsProcessing::compare_and_save_layers() {
 	//TODO
 	// compare caffe layers
 }
+

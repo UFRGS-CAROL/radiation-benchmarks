@@ -670,13 +670,22 @@ int time() {
 }
 RegisterBrewFunction(time);
 
+char** pre_process_argv(int argc, char** argv, int radiation_parameters_size){
+	char** ret_args_copy = malloc(argc * sizeof(char));
+	for(int i = 0; i < argc - radiation_parameters_size; i++){
+		ret_args_copy[i] = argv[i];
+	}
+	return ret_args_copy;
+}
+
 int main(int argc, char** argv) {
 	// Print output to stderr (while still logging).
 	FLAGS_alsologtostderr = 1;
 	// Set version
 	gflags::SetVersionString (AS_STRING(CAFFE_VERSION));
+
 	// Usage message.
-gflags	::SetUsageMessage("command line brew\n"
+	gflags::SetUsageMessage("command line brew\n"
 			"usage: caffe <command> <args>\n\n"
 			"commands:\n"
 			"  train           train or finetune a model\n"
@@ -689,8 +698,16 @@ gflags	::SetUsageMessage("command line brew\n"
 	for (int n = 0; n < argc; ++n) {
 		os << "[" << n << "]: " << argv[n] << std::endl;
 	}
+
+	//I will pass in the following order
+	// to not to  crash the application
+	// after caffe parameters this comes
+	// <rad iterations> <generate or not> <gold path>
 	// Run tool or show usage.
-	caffe::GlobalInit(&argc, &argv);
+	char** argv_copy = pre_process_argv(argc, argv, RADIATION_PARAMETERS);
+
+	caffe::GlobalInit(&(argc - RADIATION_PARAMETERS), &argv_copy);
+	free(argv_copy);
 
 	vector<int> gpus;
 	get_gpus(&gpus);

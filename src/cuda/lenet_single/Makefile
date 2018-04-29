@@ -78,8 +78,7 @@ clean:
 test:
 	 env LD_LIBRARY_PATH=/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/build/lib/ \
 	 ./lenet test -model=$(DATAPATH)/lenet_train_test.prototxt \
-	 	-weights=$(DATAPATH)/single_iter_10000.caffemodel \
-	 	-rad_iterations=1000 -generate=1 -gold_path=$(DATAPATH)/gold_test.csv
+	 	-weights=$(DATAPATH)/single_iter_10000.caffemodel
 			 	
 train:
 	 env LD_LIBRARY_PATH=$(SRCRAD)/caffe/build/lib/ \
