@@ -1,3 +1,27 @@
+new_hardening_1:
+	hardened_variables:
+		order
+
+new_hardened_2:
+	hardened_variables:
+		order, block
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 hardening_1:
         hardened variables:
                 kg
