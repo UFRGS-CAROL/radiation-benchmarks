@@ -359,7 +359,7 @@ int test() {
 RegisterBrewFunction(test);
 
 // Test: score a detection model.
-int test_detection() {
+int test_detection(LogsProcessing logs) {
 	typedef float Dtype;
 	CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to score.";
 	CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";
@@ -710,6 +710,7 @@ gflags	::SetUsageMessage("command line brew\n"
 		for (int i = 0; i < argc - RADIATION_PARAMETERS; i++) {
 			argv_copy[i] = argv[i];
 		}
+
 		caffe::GlobalInit(&argc_copy, &argv_copy);
 	} else {
 		caffe::GlobalInit(&argc, &argv);
