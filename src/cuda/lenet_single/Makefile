@@ -57,21 +57,14 @@ DEPS = $(wildcard src/*.h) Makefile
 
 all: obj $(TARGET)
 
-#$(TARGET): classifier
-#	$(CXX) $(OBJDIR)/lenet_single.o  -o $@ $(LIBRARY) $(INCLUDE) $(LDFLAGS)
-
 $(TARGET): $(OBJS)
-	$(CXX)  $(COMMON) $(CFLAGS)    $^ -o $@  $(LDFLAGS) $(CXXFLAGS)
+	$(CXX)  $(COMMON) $(CFLAGS)    $^ -o $@  $(LDFLAGS) $(CXXFLAGS) $(LIBRARY)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CXXFLAGS)
+	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@  $(CXXFLAGS) $(INCLUDE) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH)  $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@  $(NVCCFLAGS) $(CXXFLAGS)
-
-#classifier:
-#	$(CXX) $(SRC)/lenet_single.cpp -c  -o $(OBJDIR)/lenet_single.o  $(INCLUDE) $(LDFLAGS) $(CXXFLAGS)
-	
+	$(NVCC) $(ARCH)  $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@  $(NVCCFLAGS) $(CXXFLAGS) $(INCLUDE)
 
 obj:
 	mkdir -p obj
