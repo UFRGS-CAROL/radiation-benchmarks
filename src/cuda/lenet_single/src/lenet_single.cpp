@@ -704,16 +704,15 @@ gflags	::SetUsageMessage("command line brew\n"
 	// after caffe parameters this comes
 	// <rad iterations> <generate or not> <gold path>
 	// Run tool or show usage.
-	if (argc > 3) {
-//		char** argv_copy = (char**)malloc(argc * sizeof(char));
-//		for (int i = 0; i < argc - RADIATION_PARAMETERS; i++) {
-//			argv_copy[i] = argv[i];
-//		}
-//
-//		int argc_copy = argc - RADIATION_PARAMETERS;
-//		caffe::GlobalInit(&argc_copy, &argv_copy);
-//		free(argv_copy);
-		printf("passou %d\n", argc);
+	if (argc > 4) {
+		char** argv_copy = (char**)malloc(argc * sizeof(char));
+		for (int i = 0; i < argc - RADIATION_PARAMETERS; i++) {
+			argv_copy[i] = argv[i];
+		}
+
+		int argc_copy = argc - RADIATION_PARAMETERS;
+		caffe::GlobalInit(&argc_copy, &argv_copy);
+		free(argv_copy);
 	} else {
 		caffe::GlobalInit(&argc, &argv);
 	}
