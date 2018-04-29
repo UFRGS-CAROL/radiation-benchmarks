@@ -53,7 +53,7 @@ LogsProcessing::LogsProcessing(std::string app, bool generate, std::string gold_
 	+ " iterations: " + std::to_string(iterations) + " prototxt: " + prototxt;
 #ifdef LOGS
 	set_iter_interval_print(log_interval);
-	start_log_file(header_line.c_str(), test.c_str());
+	start_log_file(const_cast<char*>(header_line.c_str()), const_cast<char*>(test.c_str()));
 #endif
 }
 }
