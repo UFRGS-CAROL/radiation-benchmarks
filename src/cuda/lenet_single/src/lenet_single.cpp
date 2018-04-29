@@ -719,13 +719,13 @@ gflags	::SetUsageMessage("command line brew\n"
 		caffe::GlobalInit(&argc, &argv);
 	}
 
-//	vector<int> gpus;
-//	get_gpus(&gpus);
-//	Caffe::SetDevice(gpus.size() > 0 ? gpus[0] : 0);
-//	Caffe::set_gpus(gpus);
-//
-//	LOG(INFO) << "This is NVCaffe " << Caffe::caffe_version() << " started at "
-//			<< Caffe::start_time();
+	vector<int> gpus;
+	get_gpus(&gpus);
+	Caffe::SetDevice(gpus.size() > 0 ? gpus[0] : 0);
+	Caffe::set_gpus(gpus);
+
+	LOG(INFO) << "This is NVCaffe " << Caffe::caffe_version() << " started at "
+			<< Caffe::start_time();
 //	LOG(INFO) << "CuDNN version: " << Caffe::cudnn_version();
 //	LOG(INFO) << "CuBLAS version: " << Caffe::cublas_version();
 //	LOG(INFO) << "CUDA version: " << Caffe::cuda_version();
