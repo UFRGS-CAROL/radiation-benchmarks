@@ -670,9 +670,9 @@ int time() {
 }
 RegisterBrewFunction(time);
 
-char** pre_process_argv(int argc, char** argv, int radiation_parameters_size){
+char** pre_process_argv(int argc, char** argv, int radiation_parameters_size) {
 	char** ret_args_copy = malloc(argc * sizeof(char));
-	for(int i = 0; i < argc - radiation_parameters_size; i++){
+	for (int i = 0; i < argc - radiation_parameters_size; i++) {
 		ret_args_copy[i] = argv[i];
 	}
 	return ret_args_copy;
@@ -685,7 +685,7 @@ int main(int argc, char** argv) {
 	gflags::SetVersionString (AS_STRING(CAFFE_VERSION));
 
 	// Usage message.
-	gflags::SetUsageMessage("command line brew\n"
+gflags	::SetUsageMessage("command line brew\n"
 			"usage: caffe <command> <args>\n\n"
 			"commands:\n"
 			"  train           train or finetune a model\n"
@@ -704,10 +704,14 @@ int main(int argc, char** argv) {
 	// after caffe parameters this comes
 	// <rad iterations> <generate or not> <gold path>
 	// Run tool or show usage.
-	char** argv_copy = pre_process_argv(argc, argv, RADIATION_PARAMETERS);
-
-	caffe::GlobalInit(&(argc - RADIATION_PARAMETERS), &argv_copy);
-	free(argv_copy);
+	if (argc > 3) {
+		char** argv_copy = pre_process_argv(argc, argv, RADIATION_PARAMETERS);
+		int argc_copy = argc - RADIATION_PARAMETERS;
+		caffe::GlobalInit(&argc_copy, &argv_copy);
+		free(argv_copy);
+	} else {
+		caffe::GlobalInit(&argc, &argv);
+	}
 
 	vector<int> gpus;
 	get_gpus(&gpus);
