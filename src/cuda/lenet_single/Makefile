@@ -55,14 +55,16 @@ VPATH=./src/
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
+BUILDFLAGS = $(LDFLAGS) $(CXXFLAGS) $(INCLUDE) $(LIBRARY) 
+
 .PHONY : all clean
 all: obj $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $^ -o $@ $(LDFLAGS) $(CXXFLAGS) $(LIBRARY)
+	$(CXX) $^ -o $@ $(BUILDFLAGS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(CXX) -c $< -o $@  $(CXXFLAGS) $(INCLUDE) 
+	$(CXX) -c $< -o $@ $(BUILDFLAGS)
 
 $(OBJDIR)%.o: %.cu $(DEPS)
 	$(NVCC) $(ARCH) --compiler-options "$(CXXFLAGS)" -c $< -o $@  $(NVCCFLAGS) $(INCLUDE)
