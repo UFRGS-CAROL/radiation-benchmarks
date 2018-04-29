@@ -70,7 +70,24 @@ void new_read_input(T *input, const Params &p) {
     }
 	fclose(finput);	
 }
+void read_input(T *input, const Params &p) {
 
+    // Initialize the host input vectors
+    srand(15);			// Colocamos  a mesma semente para gerar a mesma Sequencia de Números 
+    for(int i = 0; i < p.in_size; i++) {
+        input[i] = (T)p.remove_value;
+    }
+    int M = (p.in_size * p.compaction_factor) / 100;
+    int m = M;
+    while(m > 0) {
+        int x = (int)(p.in_size * (((float)rand() / (float)RAND_MAX)));
+        if(x < p.in_size)
+            if(input[x] == p.remove_value) {
+                input[x] = (T)(x + 2);
+                m--;
+            }
+    }
+}
 // Sequential implementation for comparison purposes
 inline double cpu_streamcompaction(T *input, int size, int value) {
     struct timeval t1, t2;
@@ -97,7 +114,7 @@ int main(int argc, char **argv) {
 	int in_size = n_tasks * p.n_work_items * REGS * sizeof(T);
 
     T *    h_in_out = (T *)malloc(n_tasks * p.n_work_items * REGS * sizeof(T));
-    new_read_input(h_in_out, p);
+    read_input(h_in_out, p);
 
     cpu_streamcompaction(h_in_out, p.in_size, p.remove_value);
 
