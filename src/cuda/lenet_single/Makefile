@@ -20,9 +20,9 @@ LIBRARY=  -L$(CUDADIR)/lib64   -L/usr/local/lib -L/usr/lib -L/usr/lib/x86_64-lin
 LIBRARY+=  -L/usr/lib/nvidia-396 -L/usr/lib/nvidia-390 -L/usr/lib/nvidia-387 
 LIBRARY+= -L/usr/lib/nvidia-384 -L/usr/lib/nvidia-381 -L/usr/lib/nvidia-375 -L/usr/lib/nvidia-367 
 LIBRARY+= -L/usr/lib/nvidia-361 -L/usr/lib/nvidia-352 -L$(CUDADIR)/lib  
-LIBRARY+= -L/usr/lib/x86_64-linux-gnu/hdf5/serial -L/usr/lib/openblas-base/ -L$(CAFFEDIR)/.build_release/lib 
+LIBRARY+= -L/usr/lib/x86_64-linux-gnu/hdf5/serial -L/usr/lib/openblas-base/ -L$(CAFFEDIR)/.build_release/lib  -L$(CAFFEDIR)/build/lib
 
-INCLUDE=  -I$(CUDADIR)/include -I/usr/local/include -I/usr/include/hdf5/serial -I$(CAFFEDIR)/.build_release/src 
+INCLUDE=  -I$(CUDADIR)/include -I/usr/local/include -I/usr/include/hdf5/serial -I$(CAFFEDIR)/build/src 
 INCLUDE+= -I$(CAFFEDIR)/src -I$(CAFFEDIR)/include -I$(CAFFEDIR)/3rdparty -I/usr/include/hdf5/serial  
 INCLUDE+= -I$(CUDADIR)/include -I/usr/include/openblas/
 
@@ -59,16 +59,16 @@ all: obj $(TARGET)
 #	$(CXX) $(OBJDIR)/lenet_single.o  -o $@ $(LIBRARY) $(INCLUDE) $(LDFLAGS)
 
 $(TARGET): $(OBJS)
-	$(CC)  $(COMMON) $(CFLAGS)  $^ -o $@  $(LDFLAGS)
+	$(CC)  $(COMMON) $(CFLAGS)    $^ -o $@  $(LDFLAGS) $(CXXFLAGS)
 
 $(OBJDIR)%.o: %.c $(DEPS)
-	$(CC)  $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
+	$(CC)  $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CXXFLAGS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
-	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
+	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@  $(LDFLAGS) $(CXXFLAGS)
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH)  $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@  $(NVCCFLAGS)
+	$(NVCC) $(ARCH)  $(COMMON) --compiler-options "$(CFLAGS)" -c $< -o $@  $(NVCCFLAGS) $(CXXFLAGS)
 
 #classifier:
 #	$(CXX) $(SRC)/lenet_single.cpp -c  -o $(OBJDIR)/lenet_single.o  $(INCLUDE) $(LDFLAGS) $(CXXFLAGS)
