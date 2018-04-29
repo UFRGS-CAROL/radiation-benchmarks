@@ -313,7 +313,7 @@ int test() {
 	Net caffe_net(FLAGS_model, caffe::TEST, 0U, nullptr, nullptr, false,
 			FLAGS_level, &stages);
 	caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
-	LOG(INFO) << "Running for " << FLAGS_iterations << " iterations. fernando iterations " << global_log << std::endl ;
+	LOG(INFO) << "Running for " << FLAGS_iterations << " iterations. fernando iterations " << *global_log << std::endl ;
 
 
 	for (int rad_iterations = 0; rad_iterations < global_log->iterations;
