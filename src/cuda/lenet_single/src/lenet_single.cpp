@@ -494,7 +494,7 @@ int test_detection() {
 				}
 			}
 		}
-
+		LOG(INFO) << "\n\nPASSOU AQUI\n\n";
 		//To compute mAP
 		for (int i = 0; i < all_true_pos.size(); ++i) {
 			if (all_true_pos.find(i) == all_true_pos.end()) {
