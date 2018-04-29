@@ -420,6 +420,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
         for(int i = 0; i < n_nodes; i++) {
             h_cost[i].store(INF);
         }
+	update_timestamp();
         h_cost[source].store(0);
         for(int i = 0; i < n_nodes; i++) {
             h_color[i].store(WHITE);
@@ -483,7 +484,8 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 
             if((*h_num_t < p.switching_limit || GPU_EXEC == 0) &&
                 CPU_EXEC == 1) { // If the number of input queue elements is lower than switching_limit
-				it_cpu=it_cpu+1;
+		update_timestamp();			
+		it_cpu=it_cpu+1;
                 //if(rep >= p.n_warmup)
                     timer.start("Kernel");
 
@@ -519,7 +521,8 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
             } else if((*h_num_t >= p.switching_limit || CPU_EXEC == 0) &&
                       GPU_EXEC ==
                           1) { // If the number of input queue elements is higher than or equal to switching_limit
-				it_gpu=it_gpu+1;
+			update_timestamp();		
+			it_gpu=it_gpu+1;
                 //if(rep >= p.n_warmup)
                     timer.start("Copy To Device");
                 clStatus = clEnqueueWriteBuffer(
@@ -658,6 +661,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
    // printf("IT CPU:%d\t",it_cpu);
     //printf("IT GPU:%d\n",it_gpu);	
     //create_output(h_cost, n_nodes);
+	update_timestamp();
 	err=newest_verify(h_cost, n_nodes,n_nodes_o,gold,it_cpu,it_gpu);
 	//err=new_verify(h_cost, n_nodes,,it_cpu,it_gpu);
         if(err > 0) {
@@ -689,7 +693,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
    // timer.print("Copy Back and Merge", p.n_reps);
 
     // Verify answer
-    create_output(h_cost, n_nodes);
+    //create_output(h_cost, n_nodes);
     //verify(h_cost, n_nodes, p.comparison_file);
 
     // Free memory
