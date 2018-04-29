@@ -27,7 +27,7 @@
 #define PR_THRESHOLD 0.5
 #define CONSIDERING_DETECTION 0.2
 
-#define MAX_ERROR_COUNT 500
+#define MAX_ERROR_COUNT 500 * 2
 
 static const char *ABFT_TYPES[] = { "none", "gemm", "smart_pooling", "l1", "l2",
 		"trained_weights", "dmr", "tmr" };
