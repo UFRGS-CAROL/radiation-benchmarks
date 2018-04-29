@@ -13,14 +13,9 @@
 #include "Layer.h"
 #include <vector>
 
-#ifdef GPU
+typedef std::vector<float> LayersFound;
 
-typedef std::vector<DeviceVector<float>*> LayersFound;
-#else
-typedef std::vector<vec_host*> LayersFound;
-#endif
-
-typedef std::vector<vec_host> LayersGold;
+typedef std::vector<float> LayersGold;
 
 #define SAVE_LAYER_DATA "/var/radiation-benchmarks/data"
 
