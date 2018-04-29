@@ -66,8 +66,8 @@ clean:
 	
 test:
 	 env LD_LIBRARY_PATH=/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/build/lib/ \
-	 ./lenet test $(DATAPATH)/lenet.prototxt \
-	 	$(DATAPATH)/single_iter_10000.caffemodel 
+	 ./lenet test -model=$(DATAPATH)/lenet.prototxt \
+	 	-weights=$(DATAPATH)/single_iter_10000.caffemodel 
 			 	
 	 
 	 
