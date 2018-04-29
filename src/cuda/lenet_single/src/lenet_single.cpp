@@ -707,7 +707,8 @@ gflags	::SetUsageMessage("command line brew\n"
 	if (argc > 4) {
 		char** argv_copy = (char**)malloc((argc - RADIATION_PARAMETERS) * sizeof(char*));
 		for (int i = 0; i < argc - RADIATION_PARAMETERS; i++) {
-			argv_copy[i] = argv[i];
+			argv_copy[i] = (char*) malloc(1000);
+			strcpy(argv_copy[i], argv[i]);
 			printf("%s\n", argv_copy[i]);
 		}
 
