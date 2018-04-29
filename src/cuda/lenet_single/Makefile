@@ -50,7 +50,7 @@ OBJ=lenet_single.o logs_processing.o
 
 
 OBJDIR=./obj/
-SRC=./src/
+VPATH=./src/
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
