@@ -10,7 +10,6 @@
 
 #define LAYER_THRESHOLD_ERROR 1e-5
 
-#include "Layer.h"
 #include <vector>
 
 typedef std::vector<float> LayersFound;
