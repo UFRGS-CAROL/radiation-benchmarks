@@ -78,7 +78,7 @@ def main(board):
         create_mnist(src_lenet=src_lenet)
 
     # Insert caffe and log helper to PYTHONPATH
-    env_command = "$PYTHONPATH:" + src_lenet + "/" + CAFFE_PYTHON
+    env_command = src_lenet + "/" + CAFFE_PYTHON + ":$PYTHONPATH"
     env_command += ":" + install_dir + "/src/" + LOG_HELPER_LIB
     generate = ["cd " + src_lenet,
                 "make -C ../../include/log_helper_swig_wraper/ log_helper_python"]
