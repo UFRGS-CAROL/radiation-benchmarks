@@ -7,7 +7,7 @@ from caffe.proto import caffe_pb2
 
 
 def test(prototxt, lenet_model, lmdb_file):
-    layer_output = open("./caffe_to_vhdl/generated/tb/caffe_layer_output.txt", "w")
+    layer_output = open("./caffe_layer_output.txt", "w")
 
     # load the model
     net = caffe.Net(prototxt,
@@ -111,8 +111,11 @@ if __name__ == '__main__':
     solver = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_solver.prototxt"
     model = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_train_test.prototxt"
     weights = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_iter_10000.caffemodel"
-    db_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_test_lmdb/"
+    db_train_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_train_lmdb/"
+    db_test_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_test_lmdb/"
+
     # Training(model)
-    train_model(model, weights, db_path)
-    test()
-test()
+    train_model(model, weights, db_test_path)
+    lenet_model_prototxt = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet.prototxt"
+    test(lenet_model_prototxt, weights, db_test_path)
+
