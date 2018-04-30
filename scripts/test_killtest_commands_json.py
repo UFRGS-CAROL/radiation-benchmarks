@@ -112,7 +112,7 @@ except IOError as e:
 	print >> sys.stderr, "System configuration setup error: "+str(e)
 	sys.exit(1)
 
-logFile = "/home/carol/Desktop/Test_Log/log_test.txt"
+logFile = "log_test.txt"
 timestampFile = varDir+"timestamp.txt"
 
 if (len(sys.argv) != 2):
