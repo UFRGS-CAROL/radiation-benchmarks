@@ -15,6 +15,17 @@ WEIGHTS = ['lenet_base.weights', 'lenet_l2.weights'] #, 'lenet_l1.weights']
 
 UNIFIED_MEM=" NOTUSEUNIFIED=1 "
 
+# Before keep going execute
+# data/mnist/get_mnist.sh
+# examples/mnist/create_mnist.sh
+# solver = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_solver.prototxt"
+# model = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_train_test.prototxt"
+# weights = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_iter_10000.caffemodel"
+# db_train_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_train_lmdb/"
+# db_test_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_test_lmdb/"
+# lenet_model_prototxt = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet.prototxt"
+
+
 def main(board):
     print "Generating Lenet for CUDA on " + str(board)
 

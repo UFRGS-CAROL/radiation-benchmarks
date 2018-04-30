@@ -1,87 +1,36 @@
+import argparse
+
+import pickle
+from itertools import count
+
 caffe_root = '/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/'  # this file should be run from {
 # caffe_root}/examples (otherwise change this line)
 import sys
+
 sys.path.insert(0, caffe_root + 'python')
 
+# import log helper
+sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include/log_helper_swig_wraper/')
+import _log_helper as lh
 import caffe
 import lmdb
 import numpy as np
-from caffe.proto import caffe_pb2
+
+LOG_INTGEVAL = 10
+MAX_ERROR_COUNT = 1000
 
 
-def test(prototxt, lenet_model, lmdb_file):
-    layer_output = open("./caffe_layer_output.txt", "w")
-
-    # load the model
-    net = caffe.Net(prototxt,
-                    lenet_model,
-                    caffe.TEST)
-
-    # load input and configure preprocessing
-    lmdb_env = lmdb.open(lmdb_file)
-    lmdb_txn = lmdb_env.begin()
-    lmdb_cursor = lmdb_txn.cursor()
-    datum = caffe_pb2.Datum()
-
-    instance = 0
-    for key, value in lmdb_cursor:
-        instance += 1
-
-        if instance <= 1:
-
-            datum.ParseFromString(value)
-
-            label = datum.label
-            data = caffe.io.datum_to_array(datum)
-            image = data.astype(np.float32)
-
-            dim1 = len(image)
-            dim2 = len(image[0])
-            dim3 = len(image[0][0])
-            for i in range(0, dim1):
-                for j in range(0, dim2):
-                    for k in range(0, dim3):
-                        image[i][j][k] *= 0.00390625
-
-            # load the image in the data layer
-            net.blobs['data'].data[...] = image
-
-            # compute
-            # out = net.forward()
-            out = net.forward(start='data', end='ip2')
-
-            # predicted predicted class
-            # print out['prob'].argmax()
-            print out['ip2']
-            layer_results = out['ip2']
-
-            dim1 = len(layer_results)
-            dim2 = len(layer_results[0])
-            # dim3 = len(layer_results[0][0])
-            # dim4 = len(layer_results[0][0][0])
-
-            # print(str(dim1) + " | " + str(dim2) + " | " + str(dim3) + " | " + str(dim4) + "\n\n\n")
-
-            for i in range(0, dim1):
-                for j in range(0, dim2):
-                    layer_output.write(str(layer_results[i][j]) + "\n")
-                    # for k in range(0, dim3):
-                    # for l in range(0, dim4):
-                    # layerOutput.write(str(layer_results[i][j][k][l]) + "\n")
-
-
-def set_device():
-    caffe.set_device(0)
+def set_device(device):
+    caffe.set_device(device)
     caffe.set_mode_gpu()
 
 
 def training(solver_file):
     """
-    training
+    Training function
+    :param solver_file: prototxt solver
+    :return: void
     """
-
-    set_device()
-
     solver = caffe.get_solver(solver_file)
     # solver.solve() # solve completely
 
@@ -100,12 +49,11 @@ def training(solver_file):
     test_accuracy = np.zeros(int(np.ceil(number_iteration * 1.0 / test_interval)))
 
     # tmp variables
-    _train_loss = 0;
     _test_loss = 0;
     _test_accuracy = 0;
 
     # main loop
-    for iter in range(number_iteration):
+    for iteration in range(number_iteration):
         solver.step(1)
 
         # save model during training
@@ -113,8 +61,8 @@ def training(solver_file):
         # ~ string = 'lenet_iter_%(iter)d.caffemodel'%{'iter': iter}
         # ~ solver.net.save(string)
 
-        if 0 == iter % display:
-            train_loss[iter // display] = solver.net.blobs['loss'].data
+        if 0 == iteration % display:
+            train_loss[iteration // display] = solver.net.blobs['loss'].data
 
         '''
         # accumulate the train loss
@@ -125,30 +73,34 @@ def training(solver_file):
             _train_loss = 0
         '''
 
-        if 0 == iter % test_interval:
+        if 0 == iteration % test_interval:
             for test_iter in range(test_iteration):
                 solver.test_nets[0].forward()
                 _test_loss += solver.test_nets[0].blobs['loss'].data
                 _test_accuracy += solver.test_nets[0].blobs['accuracy'].data
 
-            test_loss[iter / test_interval] = _test_loss / test_iteration
-            test_accuracy[iter / test_interval] = _test_accuracy / test_iteration
+            test_loss[iteration / test_interval] = _test_loss / test_iteration
+            test_accuracy[iteration / test_interval] = _test_accuracy / test_iteration
             _test_loss = 0
             _test_accuracy = 0
 
 
-def test_model(model, weights, db_path):
+def testing(model, weights, db_path, max_predictions=5):
+    """
+    Normal testing, without logs
+    :param max_predictions: max number of test predictions, default = 5
+    :param model: prototxt file
+    :param weights: .caffemodel
+    :param db_path: path to lmdb files
+    :return: void
+    """
     net = caffe.Net(model, weights, caffe.TEST)
-    set_device()
-    # db_path = './examples/mnist/mnist_test_lmdb'
-
     lmdb_env = lmdb.open(db_path)
     lmdb_txn = lmdb_env.begin()
     lmdb_cursor = lmdb_txn.cursor()
     count = 0
     correct = 0
     for key, value in lmdb_cursor:
-        # print "Count:", count
         count += 1
         datum = caffe.proto.caffe_pb2.Datum()
         datum.ParseFromString(value)
@@ -160,26 +112,179 @@ def test_model(model, weights, db_path):
         out = net.forward()
 
         predicted_label = out['prob'][0].argmax(axis=0)
-        # print(label, predicted_label)
         if label == predicted_label:
             correct += 1
-        # print("Label is class " + str(label) + ", predicted class is " + str(predicted_label[0][0]))
+        if count > max_predictions: break
 
-    print(str(correct) + " out of " + str(count) + " were classified correctly")
+    print(
+        "{} out of {} were classified correctly, precision of {}".format(correct, count, float(correct) / float(count)))
 
 
-# Before keep going execute
-# data/mnist/get_mnist.sh
-# examples/mnist/create_mnist.sh
+def generating_radiation(model, weights, db_path, gold_path):
+    """
+    Generates a gold that can be used on radiation tests
+    :param gold_path: gold file path
+    :param model: prototxt file
+    :param weights: .caffemodel file (weights)
+    :param db_path: lmdb file that contais mnist test
+    :return: void, it picle the dictionary using save_file
+    """
+    output_list = []
+    net = caffe.Net(model, weights, caffe.TEST)
+    lmdb_env = lmdb.open(db_path)
+    lmdb_txn = lmdb_env.begin()
+    lmdb_cursor = lmdb_txn.cursor()
+    for key, value in lmdb_cursor:
+        datum = caffe.proto.caffe_pb2.Datum()
+        datum.ParseFromString(value)
+        label = int(datum.label)
+        image = caffe.io.datum_to_array(datum)
+        image = image.astype(np.uint8)
+        net.blobs['data'].data[...] = np.asarray([image])
+        # out = net.forward_all(data=np.asarray([image]))
+        out = net.forward()
+
+        predicted_label = out['prob'][0].argmax(axis=0)
+        correct = label == predicted_label
+        output_list.append([label, predicted_label, correct])
+
+    save_file(gold_path, output_list)
+
+
+def testing_radiation(model, weights, db_path, gold_path, iterations):
+    """
+    Radiation test functions
+    :param model: prototxt file
+    :param weights: .caffemodel file (weights)
+    :param db_path: lmdb file that contains mnist test
+    :param gold_path: gold filename path
+    :param iterations: radiation iterations
+    :return: void
+    """
+    string_info = "iterations: {} gold: {} dataset: mnist weights: {} model: {} db_path: {}".format(iterations,
+                                                                                                    gold_path, weights,
+                                                                                                    model, db_path)
+    # STARTING log file
+    lh.start_log_file("LenetSingle", string_info)
+    lh.set_iter_interval(10)
+
+    gold_data = load_file(gold_path)
+    net = caffe.Net(model, weights, caffe.TEST)
+    lmdb_env = lmdb.open(db_path)
+    lmdb_txn = lmdb_env.begin()
+    lmdb_cursor = lmdb_txn.cursor()
+    overall_errors = 0
+    for iteration in range(iterations):
+        i = 0
+        for key, value in lmdb_cursor:
+            datum = caffe.proto.caffe_pb2.Datum()
+            datum.ParseFromString(value)
+            label = int(datum.label)
+            image = caffe.io.datum_to_array(datum)
+            image = image.astype(np.uint8)
+            net.blobs['data'].data[...] = np.asarray([image])
+
+            out = net.forward()
+
+            predicted_label = out['prob'][0].argmax(axis=0)
+            correct = label == predicted_label
+            # [label, predicted_label, correct]
+            gold_label = gold_data[i][0]
+            gold_predicted_label = gold_data[i][1]
+            gold_correct = gold_data[i][2]
+
+            if label != gold_label or gold_predicted_label != predicted_label or gold_correct != correct:
+                error_detail = 'sample: {} label_e: {} label_r: {} predicted_label_e: {} predicted_label_r: {} '
+                error_detail += 'gold_correct_e: {} gold_correct_r: {}'
+                lh.log_error_detail(error_detail.format(i, gold_label, label,
+                                                        gold_predicted_label, predicted_label,
+                                                        gold_correct, correct))
+                lh.log_error_count(1)
+                overall_errors += 1
+            if overall_errors > MAX_ERROR_COUNT:
+                raise ValueError("MAX ERROR COUNT REACHED")
+
+            i += 1
+
+    # CLOSING log file
+    lh.end_log_file()
+
+
+# write gold for pot use
+def save_file(filename, data):
+    try:
+        with open(filename, "wb") as f:
+            pickle.dump(data, f)
+    except Exception as err:
+        print("ERROR ON SAVING FILE" + str(err))
+
+
+# open gold file
+def load_file(filename):
+    try:
+        with open(filename, "rb") as f:
+            ret = pickle.load(f)
+    except Exception as err:
+        print("ERROR ON LOAD FILE" + str(err))
+        return None
+    return ret
+
+
+def parse_args():
+    """Parse input arguments."""
+    parser = argparse.ArgumentParser(description='Faster R-CNN demo')
+    parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
+                        default=0, type=int)
+    # radiation logs
+    parser.add_argument('--ite', dest='iterations', help="number of iterations", default=1, type=int)
+
+    parser.add_argument('--testmode', dest='test_mode', help="0 Generates GOLD file"
+                                                             "1 Radiation test"
+                                                             "2 Test on mnist"
+                                                             "3 Train on mnist"
+                                                             "for option 2, solver file must be passed",
+                        default=0, choices=[0, 1, 2, 3], type=int)
+
+    parser.add_argument('--prototxt', dest='prototxt', help="prototxt file path",
+                        default="caffe/examples/mnist/lenet_train_test.prototxt")
+
+    parser.add_argument('--lenet_model', dest='model', help='lenet.caffemodel',
+                        default='caffe/examples/mnist/lenet_iter_10000.caffemodel')
+
+    parser.add_argument('--lmdb', dest='lmbd', help='lmdb file path, it can be test or train',
+                        default='caffe/examples/mnist/mnist_test_lmdb/')
+
+    parser.add_argument('--solver', dest='solver', help='lenet solver prototxt',
+                        default='caffe/examples/mnist/lenet_solver.prototxt')
+
+    parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold.gold')
+
+    args = parser.parse_args()
+
+    return args
+
+
+def main():
+    """
+    MAIN FUNCTION
+    :return: void
+    """
+    args = parse_args()
+    set_device(int(args.gpu_id))
+    # GENERATE CASE
+    if args.test_mode == 0:
+        generating_radiation(model=args.prototxt, weights=args.lenet_model, db_path=args.lmdb, gold_path=args.gold)
+
+    elif args.test_mode == 1:  # RADIATION CASE
+        testing_radiation(model=args.prototxt, weights=args.lenet_model, db_path=args.lmdb, gold_path=args.gold,
+                          iterations=args.iterations)
+
+    elif args.test_mode == 2:  # NORMAL TESTING CASE
+        testing(model=args.prototxt, weights=args.lenet_model, db_path=args.lmdb)
+
+    elif args.test_mode == 3:  # TRAIN ON MNIST
+        training(solver_file=args.solver)
+
 
 if __name__ == '__main__':
-    solver = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_solver.prototxt"
-    model = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_train_test.prototxt"
-    weights = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_iter_10000.caffemodel"
-    db_train_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_train_lmdb/"
-    db_test_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_test_lmdb/"
-
-    # training(solver_file=solver)
-    lenet_model_prototxt = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet.prototxt"
-    test_model(lenet_model_prototxt, weights, db_test_path)
-
+    main()
