@@ -107,12 +107,13 @@ def generating_radiation(model, weights, db_path, gold_path):
     :param db_path: lmdb file that contais mnist test
     :return: void, it picle the dictionary using save_file
     """
-    print("Generating gold for lenet " + LENET_PRECISION)
     output_list = []
     net = caffe.Net(model, weights, caffe.TEST)
     lmdb_env = lmdb.open(db_path)
     lmdb_txn = lmdb_env.begin()
     lmdb_cursor = lmdb_txn.cursor()
+    print("Generating gold for lenet " + LENET_PRECISION)
+
     for key, value in lmdb_cursor:
         datum = caffe.proto.caffe_pb2.Datum()
         datum.ParseFromString(value)
