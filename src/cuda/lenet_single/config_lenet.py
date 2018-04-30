@@ -86,7 +86,7 @@ def main(board):
 
     for set in DATASETS:
         gen = [None] * 8
-        gen[0] = ['env ' + env_command, 'sudo ' + bin_path + " "]
+        gen[0] = ['sudo env ' + env_command, bin_path + " "]
         gen[1] = [' --ite', 1]
         gen[2] = [' --testmode ', 0]
         gen[3] = [' --ite ', '1']
