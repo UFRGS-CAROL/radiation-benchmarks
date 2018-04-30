@@ -124,7 +124,7 @@ def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin
     list_to_print.append("\n]")
 
     if not DEBUG_MODE:
-        with open(install_dir + "scripts/json_files/" + benchmark_bin + ".json", 'w') as fp:
+        with open(install_dir + "/scripts/json_files/" + benchmark_bin.replace(".py", "") + ".json", 'w') as fp:
             fp.writelines(list_to_print)
 
     print "\nConfiguring done, to run check file: " + install_dir + "scripts/json_files/" + benchmark_bin + ".json"
