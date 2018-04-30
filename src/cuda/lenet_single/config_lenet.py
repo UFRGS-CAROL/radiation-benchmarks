@@ -7,17 +7,21 @@ import copy
 from errno import ENOENT
 
 DEBUG_MODE = False
+LENET_PRECISION = 'single'
 DATASETS = [
     # normal
     {'train_model': 'caffe/examples/mnist/lenet_train_test.prototxt',
      'test_model': 'caffe/examples/mnist/lenet.prototxt',
      'weights': 'caffe/examples/mnist/lenet_iter_10000.caffemodel',
-     'gold': 'gold_lenet_single_10k.gold',
+     'gold': 'gold_lenet_' + LENET_PRECISION + '_10k.gold',
      'solver': 'caffe/examples/mnist/lenet_solver.prototxt',
      'db_train_path': 'caffe/examples/mnist/mnist_train_lmdb/',
      'db_test_path': 'caffe/examples/mnist/mnist_test_lmdb/'},
 
 ]
+
+CAFFE_PYTHON = 'caffe/python'
+LOG_HELPER_LIB = 'include/log_helper_swig_wraper'
 
 
 def create_mnist(src_lenet):
@@ -52,33 +56,37 @@ def main(board):
         config = ConfigParser.RawConfigParser()
         config.read(conf_file)
 
-        install_dir = config.get('DEFAULT', 'installdir') + "/"
+        install_dir = config.get('DEFAULT', 'installdir')
 
     except IOError as e:
         print >> sys.stderr, "Configuration setup error: " + str(e)
         sys.exit(1)
 
-    benchmark_bin = "lenet_single.py"
-    data_path = install_dir + "data/lenet"
-    src_lenet = install_dir + "src/cuda/lenet_single"
+    benchmark_bin = 'lenet_' + LENET_PRECISION + '.py'
+    data_path = install_dir + "/data/lenet"
+    src_lenet = install_dir + "/src/cuda/lenet_" + LENET_PRECISION
     bin_path = src_lenet + "/" + benchmark_bin
 
     print "Generating " + benchmark_bin + " precision for CUDA on " + str(board)
 
-    if not os.path.isdir(data_path):
+    if not DEBUG_MODE and not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
     # check if all training files are ok
-    create_mnist(src_lenet=src_lenet)
+    if not DEBUG_MODE:
+        create_mnist(src_lenet=src_lenet)
 
+    # Insert caffe and log helper to PYTHONPATH
+    env_command = "$PYTHONPATH:" + src_lenet + "/" + CAFFE_PYTHON
+    env_command += ":" + install_dir + "/src/" + LOG_HELPER_LIB
     generate = ["cd " + src_lenet,
                 "make -C ../../include/log_helper_swig_wraper/ log_helper_python"]
     execute = []
 
     for set in DATASETS:
         gen = [None] * 8
-        gen[0] = ['sudo ' + bin_path + " "]
+        gen[0] = ['env ' + env_command, 'sudo ' + bin_path + " "]
         gen[1] = [' --ite', 1]
         gen[2] = [' --testmode ', 0]
         gen[3] = [' --ite ', '1']
@@ -108,14 +116,16 @@ def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin
 
     list_to_print = ["[\n"]
     for ii, i in enumerate(execute):
-        command = "{\"killcmd\": \"killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(i) + "\"}"
+        command = "{\"killcmd\": \"pkill -9 " + benchmark_bin + "; kiall -9 " + benchmark_bin + "\", \"exec\": \"" + str(
+            i) + "\"}"
         if ii != len(execute) - 1:
             command += ',\n'
         list_to_print.append(command)
     list_to_print.append("\n]")
 
-    with open(install_dir + "scripts/json_files/" + benchmark_bin + ".json", 'w') as fp:
-        fp.writelines(list_to_print)
+    if not DEBUG_MODE:
+        with open(install_dir + "scripts/json_files/" + benchmark_bin + ".json", 'w') as fp:
+            fp.writelines(list_to_print)
 
     print "\nConfiguring done, to run check file: " + install_dir + "scripts/json_files/" + benchmark_bin + ".json"
 

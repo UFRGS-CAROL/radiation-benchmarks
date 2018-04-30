@@ -1,16 +1,6 @@
 #!/usr/bin/python2.7
-
 import argparse
 import pickle
-
-caffe_root = '/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/'  # this file should be run from {
-# caffe_root}/examples (otherwise change this line)
-import sys
-
-sys.path.insert(0, caffe_root + 'python')
-
-# import log helper
-sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include/log_helper_swig_wraper/')
 import _log_helper as lh
 import caffe
 import lmdb
@@ -19,6 +9,7 @@ from time import time
 
 LOG_INTERVAL = 10
 MAX_ERROR_COUNT = 1000
+LENET_PRECISION = 'single'
 
 
 def set_device(device):
@@ -57,22 +48,8 @@ def training(solver_file):
     for iteration in range(number_iteration):
         solver.step(1)
 
-        # save model during training
-        # ~ if iter == number_iteration - 1: #in [10, 30, 60, 100, 300, 600, 1000, 3000, 6000, number_iteration - 1]:
-        # ~ string = 'lenet_iter_%(iter)d.caffemodel'%{'iter': iter}
-        # ~ solver.net.save(string)
-
         if 0 == iteration % display:
             train_loss[iteration // display] = solver.net.blobs['loss'].data
-
-        '''
-        # accumulate the train loss
-        _train_loss += solver.net.blobs['SoftmaxWithLoss1'].data
-
-        if 0 == iter % display:
-            train_loss[iter // display] = _train_loss / display
-            _train_loss = 0
-        '''
 
         if 0 == iteration % test_interval:
             for test_iter in range(test_iteration):
@@ -130,6 +107,7 @@ def generating_radiation(model, weights, db_path, gold_path):
     :param db_path: lmdb file that contais mnist test
     :return: void, it picle the dictionary using save_file
     """
+    print("Generating gold for lenet " + LENET_PRECISION)
     output_list = []
     net = caffe.Net(model, weights, caffe.TEST)
     lmdb_env = lmdb.open(db_path)
@@ -150,6 +128,7 @@ def generating_radiation(model, weights, db_path, gold_path):
         output_list.append([label, predicted_label, correct])
 
     save_file(gold_path, output_list)
+    print("Gold generate with sucess for lenet " + LENET_PRECISION)
 
 
 def testing_radiation(model, weights, db_path, gold_path, iterations):
@@ -166,7 +145,7 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
                                                                                                     gold_path, weights,
                                                                                                     model, db_path)
     # STARTING log file
-    lh.start_log_file("LenetSingle", string_info)
+    lh.start_log_file("Lenet" + LENET_PRECISION.title(), string_info)
     lh.set_iter_interval_print(LOG_INTERVAL)
 
     gold_data = load_file(gold_path)
@@ -178,6 +157,7 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     for iteration in range(iterations):
         i = 0
         local_errors = 0
+        average_time = 0.0
         for key, value in lmdb_cursor:
 
             datum = caffe.proto.caffe_pb2.Datum()
@@ -190,11 +170,13 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
             tic = time()
             out = net.forward()
             toc = time()
+            average_time += toc - tic
             lh.end_iteration()
 
             if i % LOG_INTERVAL == 0:
-                print("Iteration = {}, time = {}, iteration errors = {}, overall errors {}"
-                      .format(i, toc - tic, local_errors, overall_errors))
+                print("Iteration = {}, averaget time = {}, iteration errors = {}, overall errors {}"
+                      .format(i, average_time / float(LOG_INTERVAL), local_errors, overall_errors))
+                average_time = 0.0
 
             predicted_label = out['prob'][0].argmax(axis=0)
             correct = label == predicted_label
