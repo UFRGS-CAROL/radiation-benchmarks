@@ -6,7 +6,6 @@ import ConfigParser
 import copy
 from errno import ENOENT
 
-
 DEBUG_MODE = False
 DATASETS = [
     # normal
@@ -29,14 +28,18 @@ def create_mnist(src_lenet):
     :param src_lenet: where lenet is located
     :return: void, raise an exception if MNIST weren't created
     """
-    a_files = [DATASETS['db_train_path'] + "data.mdb", DATASETS['db_train_path'] + "lock.mdb",
-               DATASETS['db_test_path'] + "data.mdb", DATASETS['db_test_path'] + "lock.mdb",
+    dataset = DATASETS[0]
+    a_files = [dataset['db_train_path'] + "data.mdb", dataset['db_train_path'] + "lock.mdb",
+               dataset['db_test_path'] + "data.mdb", dataset['db_test_path'] + "lock.mdb",
                src_lenet + '/caffe/data/mnist/get_mnist.sh', src_lenet + '/caffe/examples/mnist/create_mnist.sh']
 
     a_exist = [f for f in a_files if os.path.isfile(f)]
     a_non_exist = list(set(a_exist) ^ set(a_files))
     if len(a_non_exist) != 0:
         raise IOError(ENOENT, 'NOT A FILE', a_non_exist[0])
+
+    if len(a_exist) == len(a_files):
+        return
 
     for e in [src_lenet + '/caffe/data/mnist/get_mnist.sh', src_lenet + '/caffe/examples/mnist/create_mnist.sh']:
         if os.system(e) != 0:
@@ -65,6 +68,9 @@ def main(board):
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
+
+    # check if all training files are ok
+    create_mnist(src_lenet=src_lenet)
 
     generate = ["cd " + src_lenet,
                 "make -C ../../include/log_helper_swig_wraper/ log_helper_python"]
