@@ -137,7 +137,7 @@ def training(solver_file):
             _test_accuracy = 0
 
 
-def train_model(model, weights, db_path):
+def test_model(model, weights, db_path):
     net = caffe.Net(model, weights, caffe.TEST)
     set_device()
     # db_path = './examples/mnist/mnist_test_lmdb'
@@ -183,5 +183,5 @@ if __name__ == '__main__':
     # train_model(model, weights, db_test_path)
     training(solver_file=solver)
     lenet_model_prototxt = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet.prototxt"
-    test(lenet_model_prototxt, weights, db_test_path)
+    test_model(lenet_model_prototxt, weights, db_test_path)
 
