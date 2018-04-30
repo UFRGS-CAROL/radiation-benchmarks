@@ -160,10 +160,10 @@ def test_model(model, weights, db_path):
         out = net.forward()
 
         predicted_label = out['prob'][0].argmax(axis=0)
-        print(predicted_label)
-        if label == predicted_label[0][0]:
-            correct += 1
-        print("Label is class " + str(label) + ", predicted class is " + str(predicted_label[0][0]))
+        print(label, predicted_label)
+        # if label == predicted_label[0][0]:
+        #     correct += 1
+        # print("Label is class " + str(label) + ", predicted class is " + str(predicted_label[0][0]))
         if count == 3:
             break
     print(str(correct) + " out of " + str(count) + " were classified correctly")
