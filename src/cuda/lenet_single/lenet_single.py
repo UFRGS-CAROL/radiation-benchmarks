@@ -179,9 +179,7 @@ if __name__ == '__main__':
     db_train_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_train_lmdb/"
     db_test_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_test_lmdb/"
 
-    # Training(model)
-    # train_model(model, weights, db_test_path)
-    training(solver_file=solver)
+    # training(solver_file=solver)
     lenet_model_prototxt = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet.prototxt"
     test_model(lenet_model_prototxt, weights, db_test_path)
 
