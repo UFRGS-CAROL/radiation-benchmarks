@@ -9,9 +9,9 @@ import ConfigParser
 INPUT = "colorado_graph_in"
 ITERATIONS = 100000
 # ./sssp -f /home/carol/radiation-benchmarks/data/sssp/colorado_graph_in \
-# 			-c /home/carol/radiation-benchmarks/data/sssp/colorado_graph.gold -m 0 \
-# 			-r 1 -l 0  #CPU
-# TITAN X (Pascal)	.ITERATION 0
+#           -c /home/carol/radiation-benchmarks/data/sssp/colorado_graph.gold -m 0 \
+#           -r 1 -l 0  #CPU
+# TITAN X (Pascal)  .ITERATION 0
 
 #  ./bfs -f input/lakes_graph_in -c output/lakes_graph_out -r 1 -l 900000000  #CPU
 # ./bfs -f input/lakes_graph_in -c output/lakes_graph_out -r 1 -l 0  #GPU
@@ -64,7 +64,7 @@ def main(board):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
-    generate = ["cd " + src_bfs, "make clean", "make -j4",
+    generate = ["mkdir -p " + bin_path, "cd " + src_bfs, "make clean", "make -j4",
                 "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
