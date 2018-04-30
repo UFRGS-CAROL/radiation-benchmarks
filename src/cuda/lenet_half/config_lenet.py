@@ -7,7 +7,7 @@ import copy
 from errno import ENOENT
 
 DEBUG_MODE = False
-LENET_PRECISION = 'single'
+LENET_PRECISION = 'half'
 DATASETS = [
     # normal
     {'train_model': 'caffe/examples/mnist/lenet_train_test.prototxt',
