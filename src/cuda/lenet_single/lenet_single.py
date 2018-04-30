@@ -1,8 +1,7 @@
+#!/usr/local/bin/python2.7
+
 import argparse
-
 import pickle
-from itertools import count
-
 caffe_root = '/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/'  # this file should be run from {
 # caffe_root}/examples (otherwise change this line)
 import sys
