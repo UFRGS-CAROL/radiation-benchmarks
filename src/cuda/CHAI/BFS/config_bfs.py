@@ -51,7 +51,7 @@ def main(board):
     benchmark_bin = "bfs"
     data_path = install_dir + "data/" + benchmark_bin
     bin_path = install_dir + "bin"
-    src_bfs = install_dir + "src/cuda/CHAI/" + benchmark_bin
+    src_bfs = install_dir + "src/cuda/CHAI"
 
     if not untar_graphs(data_path):
         raise ValueError("Error on untar the file")
