@@ -75,6 +75,68 @@ def set_device():
     caffe.set_mode_gpu()
 
 
+def training(solver_file):
+    """
+    training
+    """
+
+    set_device()
+
+    solver = caffe.get_solver(solver_file)
+    # solver.solve() # solve completely
+
+    number_iteration = 10000
+
+    # collect the information
+    display = 100
+
+    # test information
+    test_iteration = 100
+    test_interval = 100
+
+    # loss and accuracy information
+    train_loss = np.zeros(int(np.ceil(number_iteration * 1.0 / display)))
+    test_loss = np.zeros(int(np.ceil(number_iteration * 1.0 / test_interval)))
+    test_accuracy = np.zeros(int(np.ceil(number_iteration * 1.0 / test_interval)))
+
+    # tmp variables
+    _train_loss = 0;
+    _test_loss = 0;
+    _test_accuracy = 0;
+
+    # main loop
+    for iter in range(number_iteration):
+        solver.step(1)
+
+        # save model during training
+        # ~ if iter == number_iteration - 1: #in [10, 30, 60, 100, 300, 600, 1000, 3000, 6000, number_iteration - 1]:
+        # ~ string = 'lenet_iter_%(iter)d.caffemodel'%{'iter': iter}
+        # ~ solver.net.save(string)
+
+        if 0 == iter % display:
+            train_loss[iter // display] = solver.net.blobs['loss'].data
+
+        '''
+        # accumulate the train loss
+        _train_loss += solver.net.blobs['SoftmaxWithLoss1'].data
+
+        if 0 == iter % display:
+            train_loss[iter // display] = _train_loss / display
+            _train_loss = 0
+        '''
+
+        if 0 == iter % test_interval:
+            for test_iter in range(test_iteration):
+                solver.test_nets[0].forward()
+                _test_loss += solver.test_nets[0].blobs['loss'].data
+                _test_accuracy += solver.test_nets[0].blobs['accuracy'].data
+
+            test_loss[iter / test_interval] = _test_loss / test_iteration
+            test_accuracy[iter / test_interval] = _test_accuracy / test_iteration
+            _test_loss = 0
+            _test_accuracy = 0
+
+
 def train_model(model, weights, db_path):
     net = caffe.Net(model, weights, caffe.TEST)
     set_device()
@@ -118,7 +180,8 @@ if __name__ == '__main__':
     db_test_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_test_lmdb/"
 
     # Training(model)
-    train_model(model, weights, db_test_path)
+    # train_model(model, weights, db_test_path)
+    training(solver_file=solver)
     lenet_model_prototxt = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet.prototxt"
     test(lenet_model_prototxt, weights, db_test_path)
 
