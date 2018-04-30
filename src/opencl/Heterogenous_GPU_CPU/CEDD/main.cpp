@@ -200,7 +200,7 @@ inline int newest_compare_output(unsigned char **all_out_frames, int image_size,
             }
         }
     }
-
+    update_timestamp();
     if((float)count_error / (float)(image_size * num_frames) >= 1e-6){
         printf("Test failed\n");
         //exit(EXIT_FAILURE);
