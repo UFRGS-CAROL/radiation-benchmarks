@@ -116,7 +116,7 @@ def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin
 
     list_to_print = ["[\n"]
     for ii, i in enumerate(execute):
-        command = "{\"killcmd\": \"pkill -9 " + benchmark_bin + "; kiall -9 " + benchmark_bin + "\", \"exec\": \"" + str(
+        command = "{\"killcmd\": \"pkill -9 " + benchmark_bin + "; killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(
             i) + "\"}"
         if ii != len(execute) - 1:
             command += ',\n'
