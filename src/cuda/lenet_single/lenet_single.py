@@ -249,10 +249,10 @@ def parse_args():
     # radiation logs
     parser.add_argument('--ite', dest='iterations', help="number of iterations", default=1, type=int)
 
-    parser.add_argument('--testmode', dest='test_mode', help="0 Generates GOLD file"
-                                                             "1 Radiation test"
-                                                             "2 Test on mnist"
-                                                             "3 Train on mnist"
+    parser.add_argument('--testmode', dest='test_mode', help="0 Generates GOLD file\n"
+                                                             "1 Radiation test\n"
+                                                             "2 Test on mnist\n"
+                                                             "3 Train on mnist\n"
                                                              "for option 2, solver file must be passed",
                         default=0, choices=[0, 1, 2, 3], type=int)
 

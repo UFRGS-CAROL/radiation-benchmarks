@@ -4,113 +4,125 @@ import os
 import sys
 import ConfigParser
 import copy
+from errno import ENOENT
 
+
+DEBUG_MODE = False
 DATASETS = [
     # normal
-    {'set': 't10k-images-idx3-ubyte', 'label': 't10k-labels-idx1-ubyte', 'gold': 'gold_t10k_images.test'},
+    {'train_model': 'caffe/examples/mnist/lenet_train_test.prototxt',
+     'test_model': 'caffe/examples/mnist/lenet.prototxt',
+     'weights': 'caffe/examples/mnist/lenet_iter_10000.caffemodel',
+     'gold': 'gold_lenet_single_10k.gold',
+     'solver': 'caffe/examples/mnist/lenet_solver.prototxt',
+     'db_train_path': 'caffe/examples/mnist/mnist_train_lmdb/',
+     'db_test_path': 'caffe/examples/mnist/mnist_test_lmdb/'},
 
 ]
 
-WEIGHTS = ['lenet_base.weights', 'lenet_l2.weights'] #, 'lenet_l1.weights']
 
-UNIFIED_MEM=" NOTUSEUNIFIED=1 "
+def create_mnist(src_lenet):
+    """
+    Execute caffe scripts to create mnist
+    caffe/data/mnist/get_mnist.sh
+    caffe/examples/mnist/create_mnist.sh
+    :param src_lenet: where lenet is located
+    :return: void, raise an exception if MNIST weren't created
+    """
+    a_files = [DATASETS['db_train_path'] + "data.mdb", DATASETS['db_train_path'] + "lock.mdb",
+               DATASETS['db_test_path'] + "data.mdb", DATASETS['db_test_path'] + "lock.mdb",
+               src_lenet + '/caffe/data/mnist/get_mnist.sh', src_lenet + '/caffe/examples/mnist/create_mnist.sh']
 
-# Before keep going execute
-# data/mnist/get_mnist.sh
-# examples/mnist/create_mnist.sh
-# solver = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_solver.prototxt"
-# model = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_train_test.prototxt"
-# weights = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_iter_10000.caffemodel"
-# db_train_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_train_lmdb/"
-# db_test_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_test_lmdb/"
-# lenet_model_prototxt = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet.prototxt"
+    a_exist = [f for f in a_files if os.path.isfile(f)]
+    a_non_exist = list(set(a_exist) ^ set(a_files))
+    if len(a_non_exist) != 0:
+        raise IOError(ENOENT, 'NOT A FILE', a_non_exist[0])
+
+    for e in [src_lenet + '/caffe/data/mnist/get_mnist.sh', src_lenet + '/caffe/examples/mnist/create_mnist.sh']:
+        if os.system(e) != 0:
+            raise ValueError("Something went wrong when executing: ", str(e))
 
 
 def main(board):
-    print "Generating Lenet for CUDA on " + str(board)
-
-    confFile = '/etc/radiation-benchmarks.conf'
+    conf_file = '/etc/radiation-benchmarks.conf'
     try:
         config = ConfigParser.RawConfigParser()
-        config.read(confFile)
+        config.read(conf_file)
 
-        installDir = config.get('DEFAULT', 'installdir') + "/"
+        install_dir = config.get('DEFAULT', 'installdir') + "/"
 
     except IOError as e:
         print >> sys.stderr, "Configuration setup error: " + str(e)
         sys.exit(1)
 
-    benchmark_bin = "leNetCUDA"
-    data_path = installDir + "data/lenet"
-    bin_path = installDir + "bin"
-    src_lenet = installDir + "src/cuda/LeNetCUDA"
+    benchmark_bin = "lenet_single.py"
+    data_path = install_dir + "data/lenet"
+    src_lenet = install_dir + "src/cuda/lenet_single"
+    bin_path = src_lenet + "/" + benchmark_bin
+
+    print "Generating " + benchmark_bin + " precision for CUDA on " + str(board)
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
-    generate = ["cd " + src_lenet, "make clean GPU=1", "make -j4 GPU=1" + UNIFIED_MEM, "mv ./" + benchmark_bin + " " + bin_path + "/"]
+    generate = ["cd " + src_lenet,
+                "make -C ../../include/log_helper_swig_wraper/ log_helper_python"]
     execute = []
 
-    for s in [0, 1]:
-        for w in WEIGHTS:
-            for i in DATASETS:
-                gold = data_path + '/' + w + "_" + i['gold']
-                set = data_path + '/' + i['set']
-                labels = data_path + '/' + i['label']
-                weights = data_path + '/' + w
-                gen = [None] * 6
-                gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
-                gen[1] = [' gold_gen ']
-                gen[2] = [set, labels]
-                gen[3] = [weights]
-                gen[4] = [gold]
-                gen[5] = [1000, s, 1]
+    for set in DATASETS:
+        gen = [None] * 8
+        gen[0] = ['sudo ' + bin_path + " "]
+        gen[1] = [' --ite', 1]
+        gen[2] = [' --testmode ', 0]
+        gen[3] = [' --ite ', '1']
+        gen[4] = ['--prototxt ', src_lenet + "/" + set['test_model']]
+        gen[5] = ['--lenet_model ', src_lenet + "/" + set['weights']]
+        gen[6] = ['--lmdb ', src_lenet + "/" + set['db_test_path']]
+        gen[7] = ['--gold ', data_path + '/' + set['gold']]
 
-                exe = copy.deepcopy(gen)
-                exe[1] = [' rad_test ']
-                exe[5][2] = 1000
+        exe = copy.deepcopy(gen)
+        exe[2][1] = 1
+        exe[3][1] = 1000
 
-                generate.append(' '.join(str(r) for v in gen for r in v))
-                execute.append(' '.join(str(r) for v in exe for r in v))
+        generate.append(' '.join(str(r) for v in gen for r in v))
+        execute.append(' '.join(str(r) for v in exe for r in v))
 
+    execute_and_write_json_to_file(execute=execute, generate=generate, install_dir=install_dir,
+                                   benchmark_bin=benchmark_bin)
 
 
-    # end for generate
-    generate.append("make clean GPU=1 ")
-    generate.append("make -C ../../include/")
-    generate.append("make -j 4 GPU=1 LOGS=1" + UNIFIED_MEM)
-    generate.append("sudo mv ./" + benchmark_bin + " " + bin_path + "/")
-
-    execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin)
-
-
-
-def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
+def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin):
     for i in generate:
-        if os.system(str(i)) != 0:
-            print "Something went wrong with generate of ", str(i )
-            exit(1)
         print i
-    fp = open(installDir + "scripts/json_files/" + benchmark_bin + ".json", 'w')
+        if not DEBUG_MODE:
+            if os.system(str(i)) != 0:
+                print "Something went wrong with generate of ", str(i)
+                exit(1)
 
-    list_to_print = ["["]
+    list_to_print = ["[\n"]
     for ii, i in enumerate(execute):
         command = "{\"killcmd\": \"killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(i) + "\"}"
         if ii != len(execute) - 1:
-            command += ', '
+            command += ',\n'
         list_to_print.append(command)
-    list_to_print.append("]")
+    list_to_print.append("\n]")
 
-    for i in list_to_print:
-        print >> fp, i
-        print i
-    fp.close()
-    print "\nConfiguring done, to run check file: " + installDir + "scripts/json_files/" + benchmark_bin + ".json"
+    with open(install_dir + "scripts/json_files/" + benchmark_bin + ".json", 'w') as fp:
+        fp.writelines(list_to_print)
+
+    print "\nConfiguring done, to run check file: " + install_dir + "scripts/json_files/" + benchmark_bin + ".json"
+
 
 if __name__ == "__main__":
+    global DEBUG_MODE
+
     parameter = sys.argv[1:]
+    try:
+        DEBUG_MODE = sys.argv[2:]
+    except:
+        DEBUG_MODE = False
     if len(parameter) < 1:
-        print "./config_generic <k1/x1/k40>"
+        print "./config_generic <k1/x1/x2/k40/titan>"
     else:
         main(str(parameter[0]).upper())
