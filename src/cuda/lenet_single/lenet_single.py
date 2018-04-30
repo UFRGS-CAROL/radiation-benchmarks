@@ -1,6 +1,9 @@
+caffe_root = '/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/'  # this file should be run from {
+# caffe_root}/examples (otherwise change this line)
+import sys
+sys.path.insert(0, caffe_root + 'python')
+
 import caffe
-import argparse
-import os
 import lmdb
 import numpy as np
 from caffe.proto import caffe_pb2
