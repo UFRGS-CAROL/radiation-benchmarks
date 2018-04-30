@@ -15,7 +15,7 @@ import _log_helper as lh
 import caffe
 import lmdb
 import numpy as np
-from utils.timer import Timer
+from time import time
 
 LOG_INTERVAL = 10
 MAX_ERROR_COUNT = 1000
@@ -187,15 +187,14 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
             image = image.astype(np.uint8)
             net.blobs['data'].data[...] = np.asarray([image])
             lh.start_iteration()
-            timer = Timer()
-            timer.tic()
+            tic = time()
             out = net.forward()
-            timer.toc()
+            toc = time()
             lh.end_iteration()
 
             if i % LOG_INTERVAL == 0:
                 print("Iteration = {}, time = {}, iteration errors = {}, overall errors {}"
-                      .format(i, timer.total_time, local_errors, overall_errors))
+                      .format(i, toc - tic, local_errors, overall_errors))
 
             predicted_label = out['prob'][0].argmax(axis=0)
             correct = label == predicted_label
