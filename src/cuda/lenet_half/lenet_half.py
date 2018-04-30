@@ -9,7 +9,7 @@ from time import time
 
 LOG_INTERVAL = 10
 MAX_ERROR_COUNT = 1000
-LENET_PRECISION = 'single'
+LENET_PRECISION = 'half'
 
 
 def set_device(device):
