@@ -39,7 +39,7 @@ def main(board):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
-    generate = ["cd " + src_bs, "make clean", "make -j4",
+    generate = ["mkdir -p " + bin_path, "cd " + src_bs, "make clean", "make -j4",
                 "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
