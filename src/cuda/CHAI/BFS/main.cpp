@@ -177,7 +177,7 @@ void read_gold_size(int &n_nodes_o, const Params &p) {
 }
 
 Gold* read_gold(int *num_of_nodes, int *num_of_edges, std::string gold_path) {
-	std::cout << "Passou aqui\n\n\n";
+	//std::cout << "Passou aqui\n\n\n";
 	FILE *fpo = fopen(gold_path.c_str(), "r");
 	if (!fpo) {
 		printf("Error Reading output file\n");

@@ -313,7 +313,7 @@ int main(int argc, char **argv) {
 
 	// Loop over main kernel
 	for (int rep = 0; rep < p.n_reps; rep++) {
-		std::cout << "ITERATION " << rep << "\n";
+		//std::cout << "ITERATION " << rep << "\n";
 
 // Reset
 #ifdef CUDA_8_0
