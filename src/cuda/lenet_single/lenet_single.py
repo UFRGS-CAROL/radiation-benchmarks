@@ -108,10 +108,10 @@ def train_model(model, weights, db_path):
 # examples/mnist/create_mnist.sh
 
 if __name__ == '__main__':
-    solver = "/home/carol/radiation-benchmarks/src/cuda/LeNetCUDA/caffe/examples/mnist/lenet_solver.prototxt"
-    model = "/home/carol/radiation-benchmarks/src/cuda/LeNetCUDA/caffe/examples/mnist/lenet_train_test.prototxt"
-    weights = "/home/carol/radiation-benchmarks/src/cuda/LeNetCUDA/caffe/examples/mnist/lenet_iter_10000.caffemodel"
-    db_path = "/home/carol/radiation-benchmarks/src/cuda/LeNetCUDA/caffe/examples/mnist/mnist_test_lmdb/"
+    solver = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_solver.prototxt"
+    model = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_train_test.prototxt"
+    weights = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/lenet_iter_10000.caffemodel"
+    db_path = "/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/examples/mnist/mnist_test_lmdb/"
     # Training(model)
     train_model(model, weights, db_path)
     test()
