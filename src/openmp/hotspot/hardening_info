@@ -1,3 +1,26 @@
+new_hardening_1:
+	grid_rows
+
+new_hardening_2:
+	grid_rows, num_omp_threads
+
+new_hardening_3:
+	grid_rows, num_omp_threads, grid_cols
+
+new_hardening_4:
+	grid_rows, num_omp_threads, grid_cols, sim_time
+
+
+
+
+
+
+
+
+
+
+
+
 hardening_1:
 	num_omp_threads
 
