@@ -112,7 +112,7 @@ except IOError as e:
 	print >> sys.stderr, "System configuration setup error: "+str(e)
 	sys.exit(1)
 
-logFile = "test_json.log"
+logFile = "/home/carol/Desktop/Test_Log/log_test.txt"
 timestampFile = varDir+"timestamp.txt"
 
 if (len(sys.argv) != 2):
@@ -167,8 +167,8 @@ try:
                         logMsg("ERROR: Timestamp diff from signal higher than expected!")
                         flagDiffSignal = True
 	
-                # Execute each command for 1 min only
-                if (now - execStart) > (60 * 1):
+                # Execute each command for 5 min only
+                if (now - execStart) > (60 * 3):
                     killall()
                     logMsg("maxDiff from file: "+str(maxDiff))
                     logMsg("maxDiff from signal: "+str(maxDiffSignal))
