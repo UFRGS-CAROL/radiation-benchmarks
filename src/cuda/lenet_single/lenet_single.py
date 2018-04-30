@@ -1,7 +1,8 @@
-#!/usr/local/bin/python2.7
+#!/usr/bin/python2.7
 
 import argparse
 import pickle
+
 caffe_root = '/home/carol/radiation-benchmarks/src/cuda/lenet_single/caffe/'  # this file should be run from {
 # caffe_root}/examples (otherwise change this line)
 import sys
@@ -14,8 +15,9 @@ import _log_helper as lh
 import caffe
 import lmdb
 import numpy as np
+from utils.timer import Timer
 
-LOG_INTGEVAL = 10
+LOG_INTERVAL = 10
 MAX_ERROR_COUNT = 1000
 
 
@@ -48,8 +50,8 @@ def training(solver_file):
     test_accuracy = np.zeros(int(np.ceil(number_iteration * 1.0 / test_interval)))
 
     # tmp variables
-    _test_loss = 0;
-    _test_accuracy = 0;
+    _test_loss = 0
+    _test_accuracy = 0
 
     # main loop
     for iteration in range(number_iteration):
@@ -165,7 +167,7 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
                                                                                                     model, db_path)
     # STARTING log file
     lh.start_log_file("LenetSingle", string_info)
-    lh.set_iter_interval(10)
+    lh.set_iter_interval_print(LOG_INTERVAL)
 
     gold_data = load_file(gold_path)
     net = caffe.Net(model, weights, caffe.TEST)
@@ -175,15 +177,25 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     overall_errors = 0
     for iteration in range(iterations):
         i = 0
+        local_errors = 0
         for key, value in lmdb_cursor:
+
             datum = caffe.proto.caffe_pb2.Datum()
             datum.ParseFromString(value)
             label = int(datum.label)
             image = caffe.io.datum_to_array(datum)
             image = image.astype(np.uint8)
             net.blobs['data'].data[...] = np.asarray([image])
-
+            lh.start_iteration()
+            timer = Timer()
+            timer.tic()
             out = net.forward()
+            timer.toc()
+            lh.end_iteration()
+
+            if i % LOG_INTERVAL == 0:
+                print("Iteration = {}, time = {}, iteration errors = {}, overall errors {}"
+                      .format(i, timer.total_time, local_errors, overall_errors))
 
             predicted_label = out['prob'][0].argmax(axis=0)
             correct = label == predicted_label
@@ -200,6 +212,7 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
                                                         gold_correct, correct))
                 lh.log_error_count(1)
                 overall_errors += 1
+                local_errors += 1
             if overall_errors > MAX_ERROR_COUNT:
                 raise ValueError("MAX ERROR COUNT REACHED")
 
@@ -250,7 +263,7 @@ def parse_args():
     parser.add_argument('--lenet_model', dest='model', help='lenet.caffemodel',
                         default='caffe/examples/mnist/lenet_iter_10000.caffemodel')
 
-    parser.add_argument('--lmdb', dest='lmbd', help='lmdb file path, it can be test or train',
+    parser.add_argument('--lmdb', dest='lmdb', help='lmdb file path, it can be test or train',
                         default='caffe/examples/mnist/mnist_test_lmdb/')
 
     parser.add_argument('--solver', dest='solver', help='lenet solver prototxt',
@@ -272,14 +285,14 @@ def main():
     set_device(int(args.gpu_id))
     # GENERATE CASE
     if args.test_mode == 0:
-        generating_radiation(model=args.prototxt, weights=args.lenet_model, db_path=args.lmdb, gold_path=args.gold)
+        generating_radiation(model=args.prototxt, weights=args.model, db_path=args.lmdb, gold_path=args.gold)
 
     elif args.test_mode == 1:  # RADIATION CASE
-        testing_radiation(model=args.prototxt, weights=args.lenet_model, db_path=args.lmdb, gold_path=args.gold,
+        testing_radiation(model=args.prototxt, weights=args.model, db_path=args.lmdb, gold_path=args.gold,
                           iterations=args.iterations)
 
     elif args.test_mode == 2:  # NORMAL TESTING CASE
-        testing(model=args.prototxt, weights=args.lenet_model, db_path=args.lmdb)
+        testing(model=args.prototxt, weights=args.model, db_path=args.lmdb)
 
     elif args.test_mode == 3:  # TRAIN ON MNIST
         training(solver_file=args.solver)
