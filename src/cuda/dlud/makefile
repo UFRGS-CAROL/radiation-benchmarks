@@ -17,31 +17,26 @@ LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
 RUN_SOURCES=./cudaDLUD.cu
-GEN_SOURCES=./lud_kernel.cu ./generateMatricesDouble.cu
 RUN_EXEC=./cudaDLUD
-GEN_EXEC=./generateMatricesDouble
 
 DEF_SIZE=1024
 
-DEF_A_INPUT=./dlud_input_8192.matrix
+DEF_INPUT=./dlud_input_8192.matrix
 DEF_GOLD=./dlud_GOLD_$(DEF_TEST_SIZE).matrix
 
-MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./dlud*.matrix
+MATRIX_NAMES=$(DEF_INPUT) $(DEF_GOLD) ./dlud*.matrix
 
 
-all: $(RUN_EXEC) $(GEN_EXEC)
+all: $(RUN_EXEC)
 
 $(RUN_EXEC): $(RUN_SOURCES)
 	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -O3 -lLogHelper -lcublas $(NVCC_FLAGS) -Xcompiler " -fopenmp -O3" $(LOGS) $(RUN_SOURCES) -o $(RUN_EXEC)
 
-$(GEN_EXEC): $(GEN_SOURCES)
-	$(NVCC) -I$(NVIDIA_INC) -L$(NVIDIA_LIB) $(NVCC_FLAGS) -Xcompiler " -fopenmp -O3" -lcublas -O3 $(GEN_SOURCES) -o $(GEN_EXEC)
-
 clean:
-	rm -rf $(RUN_EXEC) $(GEN_EXEC) $(MATRIX_NAMES)
+	rm -rf $(RUN_EXEC) $(MATRIX_NAMES)
 
 generate: $(GEN_EXEC)
-	$(GEN_EXEC) -size=$(DEF_SIZE) -host_check -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD)
+	$(RUN_EXEC) -size=$(DEF_SIZE) -generate -input=$(DEF_INPUT) -gold=$(DEF_GOLD)
 
-test: $(RUN_EXEC) $(GEN_EXEC) generate
-	$(RUN_EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
+test: $(RUN_EXEC) generate
+	$(RUN_EXEC) -size=$(DEF_SIZE) -input=$(DEF_A_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose

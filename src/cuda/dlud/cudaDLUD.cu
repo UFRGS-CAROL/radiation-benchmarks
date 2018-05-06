@@ -150,8 +150,8 @@ void copyCudaMemory()
 
 void generateInputMatrix(double *m) {
 	#pragma omp parallel for
-	for (int i = 0; i < k; i++)
-		for (int j = 0; j < k; j++)
+	for (int i = 0; i < DEFAULT_INPUT_SIZE; i++)
+		for (int j = 0; j < DEFAULT_INPUT_SIZE; j++)
 			m[i * k + j] = (double) rand() / 32768.0;
 
 	if (!(f_INPUT = fopen(input_matrix_path, "wb"))) {
@@ -159,8 +159,8 @@ void generateInputMatrix(double *m) {
 		exit(EXIT_FAILURE);
 	} else {
 		size_t ret_value = 0;
-		for (int i = 0; i < k; i++) {
-			ret_value = fwrite(&(m[i * k]), k * sizeof(double), 1, f_INPUT);
+		for (int i = 0; i < DEFAULT_INPUT_SIZE; i++) {
+			ret_value = fwrite(&(m[i * DEFAULT_INPUT_SIZE]), DEFAULT_INPUT_SIZE * sizeof(double), 1, f_INPUT);
 			if (ret_value != 1) {
 				printf("Failure writing to input: %d\n", ret_value);
 				exit(EXIT_FAILURE);
