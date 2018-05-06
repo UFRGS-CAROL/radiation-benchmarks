@@ -49,6 +49,8 @@ double *d_B;
 double *d_C;
 //====================================
 
+typedef char byte;
+
 void GetDevice(){
 //================== Retrieve and set the default CUDA device
     cudaDeviceProp prop;
@@ -185,20 +187,30 @@ void ReadMatrixFromFile(){
 	}
 }
 
-bool badass_memcmp(double *gold, double *found, unsigned long n){
-	double result = 0.0;
-	int i;
-	unsigned long  chunk = ceil(double(n) / double(omp_get_max_threads()));
-	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
-	double time = mysecond();
-#pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
-   for (i=0; i < n; i++)
-     result = result + (gold[i] - found[i]);
+// bool badass_memcmp(double *gold, double *found, unsigned long n){
+// 	double result = 0.0;
+// 	int i;
+// 	unsigned long  chunk = ceil(double(n) / double(omp_get_max_threads()));
+// 	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
+// 	double time = mysecond();
+// #pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
+//    for (i=0; i < n; i++)
+//      result = result + (gold[i] - found[i]);
 
-    //  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
-	if (fabs(result) > 0.0000000001)
-		return true;
-	return false;
+//     //  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
+// 	if (fabs(result) > 0.0000000001)
+// 		return true;
+// 	return false;
+// }
+
+bool badass_memcmp(byte *gold, byte *found, unsigned long n){
+	double time = mysecond();
+	bool flag = false;
+	#pragma omp parallel for shared(flag)
+	for (int i=0; i < n; i++)
+		if (gold[i] != found[i]) flag = true;
+		
+	return flag;
 }
 
 // __device__ int kerrors;
@@ -422,7 +434,7 @@ int main( int argc, char* argv[] )
         if (loop2 || !device_warmup) {
             checkCudaErrors( cudaMemcpy(A, d_C, matrixSize * sizeof( double ), cudaMemcpyDeviceToHost) );
             //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
-            if (badass_memcmp(GOLD, A, matrixSize)) {
+            if (badass_memcmp((byte*)GOLD, (byte*)A, matrixSize)) {
     			char error_detail[150];
     			int host_errors = 0;
 
@@ -433,39 +445,42 @@ int main( int argc, char* argv[] )
     			{
     				for(j=0; (j<k); j++)
     				{
-    					if (A[i + k * j] != GOLD[i + k * j])
-    					//if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001))
-    					#pragma omp critical
-    					{
-
-    						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, (double)(A[i + k * j]), (double)(GOLD[i + k * j]));
-    						if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
-    						#ifdef LOGS
-    						log_error_detail(error_detail);
-    						#endif
-    						host_errors++;
-    						//ea++;
-    						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
-
-    					}
+    					//if (A[i + k * j] != GOLD[i + k * j])
+						if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > pow(1.0, -10))||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > pow(1.0, -10))) {
+							#pragma omp critical
+							{
+								snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, (double)(A[i + k * j]), (double)(GOLD[i + k * j]));
+								if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
+								#ifdef LOGS
+								log_error_detail(error_detail);
+								#endif
+								host_errors++;
+								//ea++;
+								//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
+	
+							}
+						}
     				}
     			}
 
                 // printf("numErrors:%d", host_errors);
 
-    			#ifdef LOGS
-    				log_error_count(host_errors);
-    			#endif
-    			//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
-    			cudaFree( d_A );
-    			cudaFree( d_B );
-    			cudaFree( d_C );
-    			//====================================
-    			ReadMatrixFromFile();
-    			//================== Init DEVICE memory
-    			allocCudaMemory();
-    			copyCudaMemory();
-    			//====================================
+				if (host_errors != 0) {
+					printf("#");
+					#ifdef LOGS
+						log_error_count(host_errors);
+					#endif
+					//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
+					cudaFree( d_A );
+					cudaFree( d_B );
+					cudaFree( d_C );
+					//====================================
+					ReadMatrixFromFile();
+					//================== Init DEVICE memory
+					allocCudaMemory();
+					copyCudaMemory();
+					//====================================
+				}
     		}
         }
 
