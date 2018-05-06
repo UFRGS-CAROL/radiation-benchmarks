@@ -43,7 +43,7 @@
 #include "log_helper.h"
 #endif
 
-#include "lud_kernel.cu"
+#include "dlud_kernel.cu"
 
 #define DEFAULT_INPUT_SIZE 8192
 
@@ -149,18 +149,18 @@ void copyCudaMemory()
 }
 
 void generateInputMatrix(double *m) {
-	#pragma omp parallel for
-	for (int i = 0; i < DEFAULT_INPUT_SIZE; i++)
-		for (int j = 0; j < DEFAULT_INPUT_SIZE; j++)
-			m[i * k + j] = (double) rand() / 32768.0;
-
 	if (!(f_INPUT = fopen(input_matrix_path, "wb"))) {
 		printf("Error: Could not open input file in wb mode. %s\n", input_matrix_path);
 		exit(EXIT_FAILURE);
 	} else {
-		size_t ret_value = 0;
+		printf("Generating input matrix of size %dx%d...\n", DEFAULT_INPUT_SIZE, DEFAULT_INPUT_SIZE);
 		for (int i = 0; i < DEFAULT_INPUT_SIZE; i++) {
-			ret_value = fwrite(&(m[i * DEFAULT_INPUT_SIZE]), DEFAULT_INPUT_SIZE * sizeof(double), 1, f_INPUT);
+			double tempArray[DEFAULT_INPUT_SIZE];
+			#pragma omp parallel for
+			for (int j = 0; j < DEFAULT_INPUT_SIZE; j++)
+				tempArray[j] = (double) rand() / 32768.0;
+			size_t ret_value = 0;
+			ret_value = fwrite(tempArray, DEFAULT_INPUT_SIZE * sizeof(double), 1, f_INPUT);
 			if (ret_value != 1) {
 				printf("Failure writing to input: %d\n", ret_value);
 				exit(EXIT_FAILURE);
@@ -193,6 +193,10 @@ void ReadMatrixFromFile(){
 	if (verbose) printf("Reading matrices... ");
 	double time = mysecond();
 	f_INPUT = fopen(input_matrix_path,"rb");
+	if (generate && !f_INPUT) {
+		generateInputMatrix(INPUT);
+	}
+	f_INPUT = fopen(input_matrix_path,"rb");
 	if (f_INPUT) {
 		// open input successful
     	size_t ret_value;
@@ -208,18 +212,12 @@ void ReadMatrixFromFile(){
 			}
 		}
 		fclose(f_INPUT);
-	} else if (generate) {
-		generateInputMatrix(INPUT);
 	} else {
 		printf ("Cant open matrices and -generate is false.\n");
-		if (generate) {
-			generateInputMatrix(INPUT);
-		} else {
 #ifdef LOGS
-			log_error_detail("Cant open matrices"); end_log_file();
+		log_error_detail("Cant open matrices"); end_log_file();
 #endif
-			exit(EXIT_FAILURE);
-		}
+		exit(EXIT_FAILURE);
 	}
 
 	if (!generate) {
@@ -250,7 +248,7 @@ void ReadMatrixFromFile(){
 bool badass_memcmp(double *gold, double *found, unsigned long n){
 	double result = 0.0;
 	int i;
-	unsigned long  chunk = ceil(float(n) / float(omp_get_max_threads()));
+	unsigned long  chunk = ceil(double(n) / double(omp_get_max_threads()));
 	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
 	double time = mysecond();
 #pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
@@ -310,7 +308,7 @@ int main( int argc, char* argv[] )
 
 	if (checkCmdLineFlag(argc, (const char **)argv, "input"))
     {
-        getCmdLineArgumentString(argc, (const char **)argv, "input_a", &input_matrix_path);
+        getCmdLineArgumentString(argc, (const char **)argv, "input", &input_matrix_path);
     }
     else
     {
@@ -471,7 +469,7 @@ int main( int argc, char* argv[] )
     					if (INPUT[i + k * j] != GOLD[i + k * j])
     					#pragma omp critical
     					{
-    						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, (float)(INPUT[i + k * j]), (float)(GOLD[i + k * j]));
+    						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, (double)(INPUT[i + k * j]), (double)(GOLD[i + k * j]));
     						if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
     						#ifdef LOGS
 								if (!generate) log_error_detail(error_detail);

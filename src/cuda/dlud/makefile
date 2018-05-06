@@ -22,7 +22,7 @@ RUN_EXEC=./cudaDLUD
 DEF_SIZE=1024
 
 DEF_INPUT=./dlud_input_8192.matrix
-DEF_GOLD=./dlud_GOLD_$(DEF_TEST_SIZE).matrix
+DEF_GOLD=./dlud_gold_$(DEF_SIZE).matrix
 
 MATRIX_NAMES=$(DEF_INPUT) $(DEF_GOLD) ./dlud*.matrix
 
@@ -39,4 +39,4 @@ generate: $(GEN_EXEC)
 	$(RUN_EXEC) -size=$(DEF_SIZE) -generate -input=$(DEF_INPUT) -gold=$(DEF_GOLD)
 
 test: $(RUN_EXEC) generate
-	$(RUN_EXEC) -size=$(DEF_SIZE) -input=$(DEF_A_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
+	$(RUN_EXEC) -size=$(DEF_SIZE) -input=$(DEF_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
