@@ -42,6 +42,7 @@ FILE* f_GOLD;
 //================== Host and device matrix ptr's
 double *A;
 double *B;
+double *C;
 double *GOLD;
 
 double *d_A;
@@ -204,11 +205,14 @@ void ReadMatrixFromFile(){
 // }
 
 bool badass_memcmp(byte *gold, byte *found, unsigned long n){
-	double time = mysecond();
 	bool flag = false;
 	#pragma omp parallel for shared(flag)
-	for (int i=0; i < n; i++)
-		if (gold[i] != found[i]) flag = true;
+	for (int i=0; i < n; i++) {
+		if (gold[i] != found[i]) {
+			//printf("memcmp found an error at position [%d]: gold: 0x%hhX | output: 0x%hhX\n", i, gold[i], found[i]);
+			flag = true;
+		}
+	}
 		
 	return flag;
 }
@@ -352,10 +356,11 @@ int main( int argc, char* argv[] )
 //================== Alloc HOST memory
 	A = ( double* ) malloc( matrixSize * sizeof( double ) );
 	B = ( double* ) malloc( matrixSize * sizeof( double ) );
+	C = ( double* ) malloc( matrixSize * sizeof( double ) );
 
 	GOLD = ( double* ) malloc( matrixSize * sizeof( double ) );
 
-	if (!(A && B && GOLD)) {
+	if (!(A && B && C && GOLD)) {
 		printf("Failed on host malloc.\n");
 		exit(-3);
 	}
@@ -432,9 +437,11 @@ int main( int argc, char* argv[] )
 
         //if (kernel_errors != 0) {
         if (loop2 || !device_warmup) {
-            checkCudaErrors( cudaMemcpy(A, d_C, matrixSize * sizeof( double ), cudaMemcpyDeviceToHost) );
+            checkCudaErrors( cudaMemcpy(C, d_C, matrixSize * sizeof( double ), cudaMemcpyDeviceToHost) );
+			checkCudaErrors( cudaDeviceSynchronize() );
+			checkCudaErrors( cudaPeekAtLastError() );
             //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
-            if (badass_memcmp((byte*)GOLD, (byte*)A, matrixSize)) {
+            if (badass_memcmp((byte*)GOLD, (byte*)C, matrixSize * sizeof( double ) )) {
     			char error_detail[150];
     			int host_errors = 0;
 
@@ -445,11 +452,13 @@ int main( int argc, char* argv[] )
     			{
     				for(j=0; (j<k); j++)
     				{
-    					//if (A[i + k * j] != GOLD[i + k * j])
-						if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > pow(1.0, -10))||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > pow(1.0, -10))) {
+						//if ((A[i + k * j]) != (GOLD[i + k * j]))
+						double valGold = GOLD[i+k*j];
+						double valOutput = C[i+k*j];
+						if ((fabs((double)(valOutput-valGold)/valGold) > pow(1.0, -10.0))||(fabs((double)(valOutput-valGold)/valGold) > pow(1.0, -10.0))) {
 							#pragma omp critical
 							{
-								snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, (double)(A[i + k * j]), (double)(GOLD[i + k * j]));
+								snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", i, j, valOutput, valGold);
 								if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
 								#ifdef LOGS
 								log_error_detail(error_detail);
@@ -538,6 +547,7 @@ int main( int argc, char* argv[] )
 
 	free( A );
 	free( B );
+	free( C );
 	free( GOLD );
 	#ifdef LOGS
 	end_log_file();
