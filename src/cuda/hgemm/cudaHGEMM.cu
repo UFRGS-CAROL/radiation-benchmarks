@@ -499,7 +499,7 @@ int main( int argc, char* argv[] )
 
         //if (kernel_errors != 0) {
         if (loop2 || !device_warmup) {
-            checkCudaErrors( cudaMemcpy(C, d_C, matrixSize * sizeof( half ), cudaMemcpyDeviceToHost) );
+            checkCudaErrors( cudaMemcpy(C, d_C, sizec * sizeof( half ), cudaMemcpyDeviceToHost) );
 			checkCudaErrors( cudaDeviceSynchronize() );
 			checkCudaErrors( cudaPeekAtLastError() );
             //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
