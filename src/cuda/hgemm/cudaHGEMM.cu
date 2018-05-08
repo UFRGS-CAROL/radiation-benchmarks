@@ -541,7 +541,7 @@ int main( int argc, char* argv[] )
 							#pragma omp critical
 							{
 								snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", i, j, (double)valOutput, (double)valGold);
-								//printf("%s\n", error_detail);
+								printf("%s\n", error_detail);
 								#ifdef LOGS
 								log_error_detail(error_detail);
 								#endif
