@@ -217,6 +217,25 @@ bool badass_memcmp(byte *gold, byte *found, unsigned long n){
 	return flag;
 }
 
+bool badass_memcmp_float(float *gold, float *found, unsigned long n){
+	bool flag = false;
+    double t = mysecond();
+    double min = 1.0e-10;
+	#pragma omp parallel for shared(flag)    
+	for (unsigned long i=0; i < n; i++) {
+        float valGold = GOLD[i];
+		float valOutput = C[i];
+		if (fabs((valOutput-valGold)/valGold > min) || fabs((valOutput-valGold)/valGold) > min){
+			//printf("memcmp found an error at position [%d]: gold: 0x%hhX | output: 0x%hhX\n", i, gold[i], found[i]);
+			flag = true;
+		}
+	}
+		
+    double final_time = mysecond() - t;
+    if (verbose) printf("Time comparing %lf\n", final_time);
+	return flag;
+}
+
 // __device__ int kerrors;
 //
 // __global__ void GoldChkKernel (double *gk, double *ck, int n)//, int *kerrors)
@@ -441,7 +460,7 @@ int main( int argc, char* argv[] )
 			checkCudaErrors( cudaDeviceSynchronize() );
 			checkCudaErrors( cudaPeekAtLastError() );
             //~ if (memcmp(A, GOLD, sizeof(float) * k*k)) {
-            if (badass_memcmp((byte*)GOLD, (byte*)C, matrixSize * sizeof( float ))) {
+            if (badass_memcmp_float(GOLD, C, matrixSize)) {
     			char error_detail[150];
     			int host_errors = 0;
 
@@ -452,15 +471,14 @@ int main( int argc, char* argv[] )
     			{
     				for(j=0; (j<k); j++)
     				{
-						double valGold = GOLD[i+k*j];
-						double valOutput = C[i+k*j];
+						float valGold = GOLD[i+k*j];
+						float valOutput = C[i+k*j];
     					//if (A[i + k * j] != GOLD[i + k * j])
     					//if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001))
-						if ((fabs((double)(valOutput-valGold)/valGold) > pow(1.0, -5.0))||(fabs((double)(valOutput-valGold)/valGold) > pow(1.0, -5.0))) {
+						if ((fabs((double)(valOutput-valGold)/valGold) > 10e-10)||(fabs((double)(valOutput-valGold)/valGold) > 10e-10)) {
 							#pragma omp critical
 							{
-
-								snprintf(error_detail, 150, "p: [%d, %d], r: %1.8e, e: %1.8e", i, j, valOutput, valGold);
+								snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", i, j, valOutput, valGold);
 								if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
 								#ifdef LOGS
 								log_error_detail(error_detail);

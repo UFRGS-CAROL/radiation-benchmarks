@@ -232,7 +232,7 @@ bool badass_memcmp_double(double *gold, double *found, unsigned long n){
 	}
 		
     double final_time = mysecond() - t;
-    printf("Time comparing %lf\n", final_time);
+    if (verbose) printf("Time comparing %lf\n", final_time);
 	return flag;
 }
 
