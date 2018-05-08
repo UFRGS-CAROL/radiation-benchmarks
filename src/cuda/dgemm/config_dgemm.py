@@ -48,7 +48,7 @@ def main(board):
         input_file = data_path + "/"
 
         gen = [None] * 6
-        gen[0] = ['sudo ', src_dgemm + "/" + GENERATE_BIN_NAME + " "]
+        gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', src_dgemm + "/" + GENERATE_BIN_NAME + " "]
         gen[1] = ['-size=' + str(i)]
         gen[2] = ['-input_a=' + input_file + benchmark_bin + 'A_' + str(max_size) + '.matrix']
         gen[3] = ['-input_b=' + input_file + benchmark_bin + 'B_' + str(max_size) + '.matrix']

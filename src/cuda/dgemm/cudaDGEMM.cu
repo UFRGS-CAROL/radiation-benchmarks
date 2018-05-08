@@ -206,7 +206,7 @@ void ReadMatrixFromFile(){
 
 bool badass_memcmp(byte *gold, byte *found, unsigned long n){
 	bool flag = false;
-	#pragma omp parallel for shared(flag)
+	//#pragma omp parallel for private(gold,found) shared(flag)
 	for (int i=0; i < n; i++) {
 		if (gold[i] != found[i]) {
 			//printf("memcmp found an error at position [%d]: gold: 0x%hhX | output: 0x%hhX\n", i, gold[i], found[i]);
@@ -216,6 +216,26 @@ bool badass_memcmp(byte *gold, byte *found, unsigned long n){
 		
 	return flag;
 }
+
+bool badass_memcmp_double(double *gold, double *found, unsigned long n){
+	bool flag = false;
+    double t = mysecond();
+    double min = 1.0e-10;
+	#pragma omp parallel for shared(flag)    
+	for (unsigned long i=0; i < n; i++) {
+        double valGold = GOLD[i];
+		double valOutput = C[i];
+		if (fabs((valOutput-valGold)/valGold > min) || fabs((valOutput-valGold)/valGold) > min){
+			//printf("memcmp found an error at position [%d]: gold: 0x%hhX | output: 0x%hhX\n", i, gold[i], found[i]);
+			flag = true;
+		}
+	}
+		
+    double final_time = mysecond() - t;
+    printf("Time comparing %lf\n", final_time);
+	return flag;
+}
+
 
 // __device__ int kerrors;
 //
@@ -441,7 +461,7 @@ int main( int argc, char* argv[] )
 			checkCudaErrors( cudaDeviceSynchronize() );
 			checkCudaErrors( cudaPeekAtLastError() );
             //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
-            if (badass_memcmp((byte*)GOLD, (byte*)C, matrixSize * sizeof( double ) )) {
+            if (badass_memcmp_double(GOLD, C, matrixSize)){ //badass_memcmp((byte*)GOLD, (byte*)C, matrixSize * sizeof( double ) )) {
     			char error_detail[150];
     			int host_errors = 0;
 
@@ -455,7 +475,7 @@ int main( int argc, char* argv[] )
 						//if ((A[i + k * j]) != (GOLD[i + k * j]))
 						double valGold = GOLD[i+k*j];
 						double valOutput = C[i+k*j];
-						if ((fabs((double)(valOutput-valGold)/valGold) > pow(1.0, -10.0))||(fabs((double)(valOutput-valGold)/valGold) > pow(1.0, -10.0))) {
+						if ((fabs((double)(valOutput-valGold)/valGold) > 1e-10)||(fabs((double)(valOutput-valGold)/valGold) > 1e-10)) {
 							#pragma omp critical
 							{
 								snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", i, j, valOutput, valGold);
