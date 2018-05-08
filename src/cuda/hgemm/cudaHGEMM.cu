@@ -194,9 +194,9 @@ void ReadMatrixFromFile(){
 
 	if (fault_injection)
 	{
-        half_float::half tempValue(6.5);
+        half_float::half tempValue(0.5);
 		A[3] = *((half_float::half*)&tempValue);
-		printf("!! Injected 6.5 on position A[3]\n");
+		printf("!! Injected forced value 0.5 on position A[3]\n");
 	}
 }
 
