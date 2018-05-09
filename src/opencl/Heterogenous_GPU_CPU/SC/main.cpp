@@ -322,7 +322,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
 		update_timestamp();
 #ifndef OCL_2_0
     // Copy to device
-    timer.start("Copy To Device");
+   // timer.start("Copy To Device");
     clStatus = clEnqueueWriteBuffer(
         ocl.clCommandQueue, d_in_out, CL_TRUE, 0, n_tasks_gpu * p.n_work_items * REGS * sizeof(T),
         h_in_out + n_tasks_cpu * p.n_work_items * REGS, 0, NULL, NULL);
@@ -330,7 +330,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
         ocl.clCommandQueue, d_flags, CL_TRUE, 0, n_flags * sizeof(int), h_flags, 0, NULL, NULL);
     CL_ERR();
     clFinish(ocl.clCommandQueue);
-    timer.stop("Copy To Device");
+    //timer.stop("Copy To Device");
     //timer.print("Copy To Device", 1);
 #endif
         // Reset
@@ -354,7 +354,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
 #endif
 
     //   if(rep >= p.n_warmup)
-            timer.start("Kernel");
+       //     timer.start("Kernel");
 
         clSetKernelArg(ocl.clKernel, 0, sizeof(int), &p.in_size);
         clSetKernelArg(ocl.clKernel, 1, sizeof(int), &p.remove_value);
@@ -401,7 +401,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
         main_thread.join();
 
 //        if(rep >= p.n_warmup)
-            timer.stop("Kernel");
+        //    timer.stop("Kernel");
    // }
     //timer.print("Kernel", p.n_reps);
 #ifdef LOGS
@@ -411,7 +411,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
 #ifndef OCL_2_0
     // Copy back
 	update_timestamp();
-    timer.start("Copy Back and Merge");
+  //  timer.start("Copy Back and Merge");
     if(p.alpha < 1.0) {
         int offset = n_tasks_cpu == 0 ? 1 : 2;
         clStatus   = clEnqueueReadBuffer(ocl.clCommandQueue, d_in_out, CL_TRUE, 0,
@@ -420,7 +420,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
         CL_ERR();
     }
     clFinish(ocl.clCommandQueue);
-    timer.stop("Copy Back and Merge");
+    //timer.stop("Copy Back and Merge");
     //timer.print("Copy Back and Merge", 1);
 #endif
 
@@ -452,16 +452,16 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
    // verify(h_in_out, h_in_backup, p.in_size, p.remove_value, (p.in_size * p.compaction_factor) / 100);
 	//printf("Verificando Input\n");
 
-    timer.start("Compare");
+   // timer.start("Compare");
 	update_timestamp();
     err = new_compare_output(h_in_out, h_in_backup, (p.in_size * p.compaction_factor) / 100);
-    timer.stop("Compare");
+    //timer.stop("Compare");
 	update_timestamp();
 
 	//printf("Terminei de Verificar\n");
 // Aqui ver se houve erros 
         if(err > 0) {
-            printf("Errors: %d\n",err);
+      //      printf("Errors: %d\n",err);
 			snprintf(filename, 300, "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/gold_%d_%d_%d",p.in_size,p.n_work_items,p.compaction_factor); // Gold com a resolução 
 			if (finput = fopen(filename, "rb")) {
 				fread(h_in_backup,p.in_size * sizeof(T), 1 , finput);
