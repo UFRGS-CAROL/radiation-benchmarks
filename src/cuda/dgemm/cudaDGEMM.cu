@@ -237,15 +237,15 @@ bool badass_memcmp_double(double *gold, double *found, unsigned long n){
 	return flag;
 }
 
-#define BLOCK_SIZE 192
+#define GOLDCHK_BLOCK_SIZE 192
 
 __device__ int kerrors;
 
 __global__ void GoldChkKernel (double *gk, double *ck, int n)//, int *kerrors)
 {
 //================== HW Accelerated output validation
-	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+	int tx = blockIdx.x * GOLDCHK_BLOCK_SIZE + threadIdx.x;
+	int ty = blockIdx.y * GOLDCHK_BLOCK_SIZE + threadIdx.y;
 	//if ((fabs((gk[ty*n+tx]-ck[ty*n+tx])/gk[ty*n+tx]) > 0.0000000001)||(fabs((gk[ty*n+tx]-ck[ty*n+tx])/ck[ty*n+tx]) > 0.0000000001))
 	if (gk[ty*n + tx] != ck[ty*n + tx])
 		atomicAdd(&kerrors, 1);
@@ -510,8 +510,8 @@ int main( int argc, char* argv[] )
 				checkHost = false;
 
 				//================== Set block and grid size for GoldChk kernel
-				int gridsize = k/BLOCK_SIZE < 1 ? 1 : k/BLOCK_SIZE;
-				int blocksize = k/BLOCK_SIZE < 1 ? k : BLOCK_SIZE;
+				int gridsize = k/GOLDCHK_BLOCK_SIZE < 1 ? 1 : k/GOLDCHK_BLOCK_SIZE;
+				int blocksize = k/GOLDCHK_BLOCK_SIZE < 1 ? k : GOLDCHK_BLOCK_SIZE;
 				dim3 dimBlock(blocksize,blocksize);
 				dim3 dimGrid(gridsize,gridsize);
 				//====================================
