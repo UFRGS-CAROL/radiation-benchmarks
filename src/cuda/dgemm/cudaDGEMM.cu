@@ -461,6 +461,10 @@ int main( int argc, char* argv[] )
 
 		cudaMemset(d_C, 0, matrixSize * sizeof (double));
 
+        checkCudaErrors( cudaPeekAtLastError() );
+
+        checkCudaErrors( cudaDeviceSynchronize() );
+
 		if (verbose) printf(",");
 
 		kernel_time = mysecond();
