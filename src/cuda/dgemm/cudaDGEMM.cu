@@ -416,7 +416,7 @@ int main( int argc, char* argv[] )
 //================== Init logs
 #ifdef LOGS
 	char test_info[90];
-	snprintf(test_info, 90, "size:%d gpu-gold-check:%s type:double-precision", k, gold_gpu_check);
+	snprintf(test_info, 90, "size:%d gpu-gold-check:%d type:double-precision", k, gold_gpu_check);
 	start_log_file("cudaDGEMM", test_info);
 #endif
 //====================================
