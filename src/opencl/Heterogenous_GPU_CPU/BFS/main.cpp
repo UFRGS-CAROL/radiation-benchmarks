@@ -343,7 +343,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
     read_input_size(n_nodes, n_edges, p);
     read_gold_size(n_nodes_o, p);
 
-    timer.start("Allocation");
+//    timer.start("Allocation");
     Node * h_nodes = (Node *)malloc(sizeof(Node) * n_nodes);
 
 //*************************** Alocando Memoria para o Gold ********************************************
@@ -378,10 +378,10 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
     clFinish(ocl.clCommandQueue);
     ALLOC_ERR(h_nodes, h_edges, h_color, h_cost, h_q1, h_q2);
     CL_ERR();
-    timer.stop("Allocation");
+  //  timer.stop("Allocation");
 
     // Initialize
-    timer.start("Initialization");
+    //timer.start("Initialization");
     const int max_wi = ocl.max_work_items(ocl.clKernel);
     int source;
 	
@@ -408,18 +408,18 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
     h_q1[0] = source;
     h_iter[0].store(0);
     h_overflow[0] = 0;
-    timer.stop("Initialization");
+   // timer.stop("Initialization");
     //timer.print("Initialization", 1);
 
     // Copy to device
-    timer.start("Copy To Device");
+   // timer.start("Copy To Device");
     clStatus =
         clEnqueueWriteBuffer(ocl.clCommandQueue, d_nodes, CL_TRUE, 0, sizeof(Node) * n_nodes, h_nodes, 0, NULL, NULL);
     clStatus =
 	clEnqueueWriteBuffer(ocl.clCommandQueue, d_edges, CL_TRUE, 0, sizeof(Edge) * n_edges, h_edges, 0, NULL, NULL);
     clFinish(ocl.clCommandQueue);
     CL_ERR();
-    timer.stop("Copy To Device");
+   // timer.stop("Copy To Device");
 //** Loop over kernels
 
     for(int rep = 0; rep < p.n_reps; rep++) {
@@ -445,7 +445,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
         h_overflow[0] = 0;
 
         //if(rep >= p.n_warmup)
-            timer.start("Kernel");
+     //       timer.start("Kernel");
 #ifdef LOGS
         start_iteration();
 #endif
@@ -469,7 +469,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
         h_threads_run[0].fetch_add(1);
         h_iter[0].fetch_add(1);
         //if(rep >= p.n_warmup)
-            timer.stop("Kernel");
+       //     timer.stop("Kernel");
 
         // Pointers to input and output queues
         int *  h_qin  = h_q2;
@@ -489,7 +489,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
 				it_cpu=it_cpu+1;
 				update_timestamp();
                 //if(rep >= p.n_warmup)
-                    timer.start("Kernel");
+         //           timer.start("Kernel");
 
                 // Continue until switching_limit condition is not satisfied
                 while((*h_num_t != 0) && (*h_num_t < p.switching_limit || GPU_EXEC == 0) && CPU_EXEC == 1) {
@@ -515,7 +515,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
                 }
 
                 //if(rep >= p.n_warmup)
-                    timer.stop("Kernel");
+           //         timer.stop("Kernel");
 
             } else if((*h_num_t >= p.switching_limit || CPU_EXEC == 0) &&
                       GPU_EXEC ==1) { // If the number of input queue elements is higher than or equal to switching_limit
@@ -523,7 +523,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
 				it_gpu=it_gpu+1;
 				update_timestamp();
                 //if(rep >= p.n_warmup)
-                    timer.start("Copy To Device");
+             //       timer.start("Copy To Device");
                 clStatus = clEnqueueWriteBuffer(
                     ocl.clCommandQueue, d_cost, CL_TRUE, 0, sizeof(int) * n_nodes, h_cost, 0, NULL, NULL);
                 clStatus = clEnqueueWriteBuffer(
@@ -543,10 +543,10 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
                 clFinish(ocl.clCommandQueue);
                 CL_ERR();
                 //if(rep >= p.n_warmup)
-                    timer.stop("Copy To Device");
+               //     timer.stop("Copy To Device");
 
                 //if(rep >= p.n_warmup)
-                    timer.start("Kernel");
+                 //   timer.start("Kernel");
                 // Setting kernel arguments
                 clSetKernelArg(ocl.clKernel, 0, sizeof(cl_mem), &d_nodes);
                 clSetKernelArg(ocl.clKernel, 1, sizeof(cl_mem), &d_edges);
@@ -569,7 +569,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
                 size_t gs[1] = {(size_t)p.n_work_items * p.n_work_groups};
                 clFinish(ocl.clCommandQueue);
                 //if(rep >= p.n_warmup)
-                    timer.stop("Kernel");
+            //        timer.stop("Kernel");
 
                 // Continue until switching_limit condition is not satisfied
                 while((*h_num_t != 0) && (*h_num_t >= p.switching_limit || CPU_EXEC == 0) && GPU_EXEC == 1) {
@@ -584,7 +584,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
                     }
 
                     //if(rep >= p.n_warmup)
-                        timer.start("Copy To Device");
+              //          timer.start("Copy To Device");
                     clStatus = clEnqueueWriteBuffer(
                         ocl.clCommandQueue, d_num_t, CL_TRUE, 0, sizeof(int), h_num_t, 0, NULL, NULL);
                     clStatus = clEnqueueWriteBuffer(ocl.clCommandQueue, d_tail, CL_TRUE, 0, sizeof(int), h_tail, 0,
@@ -594,10 +594,10 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
                     clFinish(ocl.clCommandQueue);
                     CL_ERR();
                     //if(rep >= p.n_warmup)
-                        timer.stop("Copy To Device");
+                //        timer.stop("Copy To Device");
 
                     //if(rep >= p.n_warmup)
-                        timer.start("Kernel");
+                  //      timer.start("Kernel");
                     clSetKernelArg(ocl.clKernel, 4, sizeof(cl_mem), &d_qin); // Input and output queues
                     clSetKernelArg(ocl.clKernel, 5, sizeof(cl_mem), &d_qout);
                     assert(ls[0] <= max_wi && 
@@ -610,18 +610,18 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
 
                     CL_ERR();
                     //if(rep >= p.n_warmup)
-                        timer.stop("Kernel");
+                    //    timer.stop("Kernel");
 
                     //if(rep >= p.n_warmup)
-                        timer.start("Copy Back and Merge");
+                      //  timer.start("Copy Back and Merge");
                     clStatus =
                         clEnqueueReadBuffer(ocl.clCommandQueue, d_tail, CL_TRUE, 0, sizeof(int), h_tail, 0, NULL, NULL);
                     clStatus =
                         clEnqueueReadBuffer(ocl.clCommandQueue, d_iter, CL_TRUE, 0, sizeof(int), h_iter, 0, NULL, NULL);
                     clFinish(ocl.clCommandQueue);
                     CL_ERR();
-                    if(rep >= p.n_warmup)
-                        timer.stop("Copy Back and Merge");
+                    //if(rep >= p.n_warmup)
+                       // timer.stop("Copy Back and Merge");
 
                     h_num_t[0] = h_tail[0].load(); // Number of elements in output queue
                     h_tail[0].store(0);
@@ -629,7 +629,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
                 }
 
                 //if(rep >= p.n_warmup)
-                    timer.start("Copy Back and Merge");
+                    //timer.start("Copy Back and Merge");
                 clStatus = clEnqueueReadBuffer(
                     ocl.clCommandQueue, d_cost, CL_TRUE, 0, sizeof(int) * n_nodes, h_cost, 0, NULL, NULL);
                 clStatus = clEnqueueReadBuffer(
@@ -647,7 +647,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s -l %d\n",p.platform , p.device, p.n
                 clFinish(ocl.clCommandQueue);
                 CL_ERR();
                 //if(rep >= p.n_warmup)
-                    timer.stop("Copy Back and Merge");
+             //       timer.stop("Copy Back and Merge");
             }
         }
 
