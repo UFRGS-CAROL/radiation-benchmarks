@@ -237,7 +237,7 @@ bool badass_memcmp_double(double *gold, double *found, unsigned long n){
 	return flag;
 }
 
-#define GOLDCHK_BLOCK_SIZE 192
+#define GOLDCHK_BLOCK_SIZE 32
 
 __device__ int kerrors;
 
@@ -535,7 +535,10 @@ int main( int argc, char* argv[] )
 
 				//================== Device computation, output validation
 				GoldChkKernel<<<dimGrid,dimBlock>>>(d_A, d_C, k);
-				cudaDeviceSynchronize();
+				checkCudaErrors( cudaPeekAtLastError() );
+		
+				checkCudaErrors( cudaDeviceSynchronize() );
+				checkCudaErrors( cudaPeekAtLastError() );
 				//====================================
 
 				//================== Retrieve output mismatchs
