@@ -38,7 +38,7 @@ def main(board):
 
     # change it for lava
     generate = ["sudo mkdir -p " + bin_path, "cd " + src_dgemm, "make clean", "make -C ../../include ", "make -j 4",
-                "mkdir -p " + data_path,
+                "mkdir -p " + data_path, "sudo rm -f " + data_path + "/*",
                 "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
