@@ -221,6 +221,7 @@ void read_input(T *input, const Params &p) {
     for(int i = 0; i < p.in_size; i++) {
         input[i] = (T)p.remove_value;
     }
+	update_timestamp();
     int M = (p.in_size * p.compaction_factor) / 100;
     int m = M;
     while(m > 0) {
@@ -256,7 +257,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
 
 
     // Allocate buffers
-    timer.start("Allocation");
+    //timer.start("Allocation");
     const int n_tasks     = divceil(p.in_size, p.n_work_items * REGS);
     const int n_tasks_cpu = n_tasks * p.alpha;
     const int n_tasks_gpu = n_tasks - n_tasks_cpu;
@@ -281,11 +282,11 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
     T *h_in_backup = (T *)malloc(p.in_size * sizeof(T)); // Este é o gold
     ALLOC_ERR(h_in_out, h_flags, h_in_backup);
     clFinish(ocl.clCommandQueue);
-    timer.stop("Allocation");
+    //timer.stop("Allocation");
     //timer.print("Allocation", 1);
 
     // Initialize
-    timer.start("Initialization");
+    //timer.start("Initialization");
     const int max_wi = ocl.max_work_items(ocl.clKernel);
     //new_read_input(h_in_out, p);
 	read_input(h_in_out, p);	
@@ -295,12 +296,12 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
     h_flags[0]           = 1;
     h_flags[n_tasks_cpu] = 1;
 #endif
-    timer.stop("Initialization");
+    //timer.stop("Initialization");
     //timer.print("Initialization", 1);
 
 // Ler gold
 // *********************** Lendo GOLD   *****************************
-
+	update_timestamp();
     char filename[300];
     FILE *finput;
 
@@ -347,6 +348,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
         clStatus = clEnqueueWriteBuffer(
             ocl.clCommandQueue, d_in_out, CL_TRUE, 0, n_tasks_gpu * p.n_work_items * REGS * sizeof(T),
             h_in_out + n_tasks_cpu * p.n_work_items * REGS, 0, NULL, NULL);
+	update_timestamp();
         clStatus = clEnqueueWriteBuffer(
             ocl.clCommandQueue, d_flags, CL_TRUE, 0, n_flags * sizeof(int), h_flags, 0, NULL, NULL);
         CL_ERR();
@@ -387,7 +389,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
             clStatus = clEnqueueNDRangeKernel(ocl.clCommandQueue, ocl.clKernel, 1, NULL, gs, ls, 0, NULL, NULL);
             CL_ERR();
         }
-
+	update_timestamp();
         // Launch CPU threads
         std::thread main_thread(run_cpu_threads, h_in_out, h_in_out, h_flags, p.in_size, p.remove_value, p.n_threads,
             p.n_work_items, n_tasks, p.alpha
