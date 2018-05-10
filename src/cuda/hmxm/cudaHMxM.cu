@@ -238,6 +238,53 @@ void usage() {
     printf("Usage: hmxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
+void checkOutputErrors() {
+	char error_detail[150];
+	int host_errors = 0;
+
+	#pragma omp parallel for
+	for(int i=0; (i<k); i++)
+	{
+		for(int j=0; (j<k); j++)
+		{
+			half_float::half outputValue(A[i + k * j]);
+			half_float::half goldValue(GOLD[i + k * j]);
+			//if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001)) {
+			if (outputValue != goldValue) {
+				#pragma omp critical
+				{
+
+					snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", i, j, (double)outputValue, (double)goldValue);
+					if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
+					#ifdef LOGS
+					log_error_detail(error_detail);
+					#endif
+					host_errors++;
+					//ea++;
+					//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
+
+				}
+			}
+		}
+	}
+
+	// printf("numErrors:%d", host_errors);
+
+	#ifdef LOGS
+		log_error_count(host_errors);
+	#endif
+	//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
+	cudaFree( d_A );
+	cudaFree( d_B );
+	cudaFree( d_C_T );
+	//====================================
+	ReadMatrixFromFile();
+	//================== Init DEVICE memory
+	allocCudaMemory();
+	copyCudaMemory();
+	//====================================
+}
+
 int main( int argc, char* argv[] )
 {
 //================== CUDA error handlers
@@ -246,7 +293,7 @@ int main( int argc, char* argv[] )
 //====================================
 
 //================== Test vars
-	int i, j, loop2;
+	int loop2;
 	// int kernel_errors=0;
 	// int zero = 0;
 	double time;
@@ -436,49 +483,8 @@ int main( int argc, char* argv[] )
             checkCudaErrors( cudaMemcpy(A, d_C_T, matrixSize * sizeof( half ), cudaMemcpyDeviceToHost) );
             //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
             if (badass_memcmp(GOLD, A, matrixSize)) {
-    			char error_detail[150];
-    			int host_errors = 0;
-
-                printf("!");
-
-    			#pragma omp parallel for
-    			for(i=0; (i<k); i++)
-    			{
-    				for(j=0; (j<k); j++)
-    				{
-    					if (A[i + k * j] != GOLD[i + k * j])
-    					//if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001))
-    					#pragma omp critical
-    					{
-
-    						snprintf(error_detail, 150, "p: [%d, %d], r: %1.16e, e: %1.16e", i, j, (float)(A[i + k * j]), (float)(GOLD[i + k * j]));
-    						if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
-    						#ifdef LOGS
-    						log_error_detail(error_detail);
-    						#endif
-    						host_errors++;
-    						//ea++;
-    						//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
-
-    					}
-    				}
-    			}
-
-                // printf("numErrors:%d", host_errors);
-
-    			#ifdef LOGS
-    				log_error_count(host_errors);
-    			#endif
-    			//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
-    			cudaFree( d_A );
-    			cudaFree( d_B );
-    			cudaFree( d_C_T );
-    			//====================================
-    			ReadMatrixFromFile();
-    			//================== Init DEVICE memory
-    			allocCudaMemory();
-    			copyCudaMemory();
-    			//====================================
+				printf("!");
+				checkOutputErrors();
     		}
         }
 
