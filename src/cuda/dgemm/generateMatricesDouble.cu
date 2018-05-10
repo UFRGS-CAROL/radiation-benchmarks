@@ -204,7 +204,7 @@ void generateGoldMatrixHalf()
 	/////////////CUBLAS GEMM VARS///////////////////////
 	const double alpha = 1.0;
 	const double beta = 1.0;
-	char transa = CUBLAS_OP_N, transb = CUBLAS_OP_N;
+	char transa = 't', transb = 't';
 	////////////////////////////////////////////////////
 
 	////////////////////////////////////////////////////
