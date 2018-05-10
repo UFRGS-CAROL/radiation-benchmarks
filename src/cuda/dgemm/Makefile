@@ -11,7 +11,7 @@ ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60]
 ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
 
 
-NVCC_FLAGS= $(ARCH) -O3  -lcublas
+NVCC_FLAGS= $(ARCH) -O3  -lcublas -std=c++11
 INCLUDE= -I/usr/local/cuda/include/
 LIBRARY= -L/usr/local/cuda/lib64/
 
@@ -29,7 +29,11 @@ ifeq ($(USE_OMP), 1)
 NVCC_FLAGS+= -DUSE_OMP -Xcompiler " -fopenmp -O3"
 endif
 
-BIN=bin
+ifeq ($(DEBUG), 1)
+NVCC_FLAGS+= -g -G
+endif
+
+BIN=.
 
 
 RUN_SOURCES=$(BIN)/cudaDGEMM.cu
@@ -43,19 +47,13 @@ DEF_GOLD=./dgemm_GOLD_$(DEF_TEST_SIZE).matrix
 MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./dgemm*.matrix
 
 
-
-
 SRC = $(wildcard *.cu)
 TARGET = $(SRC:%.cu=$(BIN)/%)
 
-all: bin $(TARGET)
+all: $(TARGET)
 
 $(BIN)/% : %.cu
 	$(NVCC) $(INCLUDE) $(LIBRARY) $(NVCC_FLAGS) $< -o $@
-
-$(BIN):
-	mkdir -p $(BIN)
-
 
 clean:
 	rm -rf $(RUN_EXEC) $(GEN_EXEC) $(MATRIX_NAMES)
