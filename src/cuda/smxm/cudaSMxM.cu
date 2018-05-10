@@ -238,7 +238,7 @@ void checkOutputErrors() {
 	{
 		for(int j=0; (j<k); j++)
 		{
-			float goldValue(GOLD[i + k * j]));
+			float goldValue(GOLD[i + k * j]);
 			float outputValue(A[i + k * j]);
 			//if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001)) {
 			if (outputValue != goldValue) {
