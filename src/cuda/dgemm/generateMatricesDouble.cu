@@ -188,7 +188,7 @@ double* openmpMul(double* a, double* b, size_t size) {
 	for (int i=0;i<size;i++) {
 		for (int j=0;j<size;j++) {
 			for (int k=0;k<size;k++)  {
-				c[j*size+i] += a[j*size+k] * bT[i*size+k];
+				c[i*size+j] += a[j*size+k] * bT[i*size+k];
 			}
 		}
 	}
@@ -204,7 +204,7 @@ void generateGoldMatrixHalf()
 	/////////////CUBLAS GEMM VARS///////////////////////
 	const double alpha = 1.0;
 	const double beta = 1.0;
-	char transa = 'n', transb = 'n';
+	char transa = CUBLAS_OP_N, transb = CUBLAS_OP_N;
 	////////////////////////////////////////////////////
 
 	////////////////////////////////////////////////////
