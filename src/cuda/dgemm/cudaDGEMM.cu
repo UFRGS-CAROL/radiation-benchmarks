@@ -260,20 +260,18 @@ void checkOutputErrors() {
 	char error_detail[150];
 	int host_errors = 0;
 
-	printf("!");
-
 	#pragma omp parallel for
 	for(int i=0; (i<k); i++)
 	{
 		for(int j=0; (j<k); j++)
 		{
-			// double valGold = GOLD[i+k*j];
-			// double valOutput = C[i+k*j];
+			double valGold = GOLD[i+k*j];
+			double valOutput = C[i+k*j];
 			// if ((fabs((double)(valOutput-valGold)/valGold) > 1e-10)||(fabs((double)(valOutput-valGold)/valGold) > 1e-10)) {
-			if (GOLD[i+k*j] != C[i+k*j]) {	
+			if (valGold != valOutput) {	
 				#pragma omp critical
 				{
-					snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", i, j, C[i+k*j], GOLD[i+k*j]);
+					snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", i, j, valOutput, valGold);
 					if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
 					#ifdef LOGS
 					log_error_detail(error_detail);
@@ -460,10 +458,9 @@ int main( int argc, char* argv[] )
 		global_time = mysecond();
 
 		cudaMemset(d_C, 0, matrixSize * sizeof (double));
-
         checkCudaErrors( cudaPeekAtLastError() );
-
         checkCudaErrors( cudaDeviceSynchronize() );
+        checkCudaErrors( cudaPeekAtLastError() );
 
 		if (verbose) printf(",");
 
@@ -483,7 +480,6 @@ int main( int argc, char* argv[] )
             d_C, k );
 
         checkCudaErrors( cudaPeekAtLastError() );
-
         checkCudaErrors( cudaDeviceSynchronize() );
         checkCudaErrors( cudaPeekAtLastError() );
 		//====================================
@@ -565,6 +561,7 @@ int main( int argc, char* argv[] )
 				checkCudaErrors( cudaPeekAtLastError() );
 				//~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
 				if (badass_memcmp_double(GOLD, C, matrixSize)){ //badass_memcmp((byte*)GOLD, (byte*)C, matrixSize * sizeof( double ) )) {
+					printf("!");
 					checkOutputErrors();
 				}
 			}

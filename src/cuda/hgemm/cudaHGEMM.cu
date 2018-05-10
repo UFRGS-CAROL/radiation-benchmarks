@@ -261,6 +261,54 @@ bool badass_memcmp_half(half_float::half *gold, half_float::half *found, unsigne
 //
 // }
 
+void checkOutputErrors() {
+	char error_detail[150];
+	int host_errors = 0;
+	
+	#pragma omp parallel for
+	for(int i=0; (i<k); i++)
+	{
+		for(int j=0; (j<k); j++)
+		{
+			half_float::half valGold = GOLD[i+k*j];
+			half_float::half valOutput = C[i+k*j];
+			// if (fabs((double)(valOutput-valGold)/valGold) > 10e-10||(fabs((double)(valOutput-valGold)/valGold) > 10e-10)) {
+			if (valGold != valOutput) {
+				#pragma omp critical
+				{
+					snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", i, j, (double)valOutput, (double)valGold);
+					if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
+					#ifdef LOGS
+					log_error_detail(error_detail);
+					#endif
+					host_errors++;
+					//ea++;
+					//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
+				}
+			}
+		}
+	}
+
+	// printf("numErrors:%d", host_errors);
+
+	if (host_errors != 0) {
+		printf("#");
+		#ifdef LOGS
+			log_error_count(host_errors);
+		#endif
+		//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
+		cudaFree( d_A );
+		cudaFree( d_B );
+		cudaFree( d_C );
+		//====================================
+		ReadMatrixFromFile();
+		//================== Init DEVICE memory
+		allocCudaMemory();
+		copyCudaMemory();
+		//====================================
+	}
+}
+
 void usage() {
     printf("Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
@@ -273,7 +321,7 @@ int main( int argc, char* argv[] )
 //====================================
 
 //================== Test vars
-	int i, j, loop2;
+	int loop2;
 	// int kernel_errors=0;
 	// int zero = 0;
 	double time;
@@ -430,6 +478,9 @@ int main( int argc, char* argv[] )
 		global_time = mysecond();
 
 		cudaMemset(d_C, 0, sizea * sizeof (half));
+        checkCudaErrors( cudaPeekAtLastError() );
+        checkCudaErrors( cudaDeviceSynchronize() );
+        checkCudaErrors( cudaPeekAtLastError() );
 
 		if (verbose) printf(",");
 
@@ -439,14 +490,16 @@ int main( int argc, char* argv[] )
 			start_iteration();
 		#endif
 		//================== Device computation, GEMM
-		checkCudaErrors( cublasHgemm(cublasHandle, transa, transb,
+		cublasHgemm(cublasHandle, transa, transb,
 			   k, k, k,
 			   &alpha,
 			   d_A, k,
 			   d_B, k,
 			   &beta,
-			   d_C, k ) );
+			   d_C, k );
+		checkCudaErrors( cudaPeekAtLastError() );
 		checkCudaErrors( cudaDeviceSynchronize() );
+		checkCudaErrors( cudaPeekAtLastError() );
 		//====================================
 		#ifdef LOGS
 		if (loop2 || !device_warmup)
@@ -523,54 +576,8 @@ int main( int argc, char* argv[] )
 			checkCudaErrors( cudaPeekAtLastError() );
             //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
             if (badass_memcmp_half(GOLD, C, sizec)) {
-    			char error_detail[150];
-    			int host_errors = 0;
-
-                printf("!");
-
-    			#pragma omp parallel for
-    			for(i=0; (i<k); i++)
-    			{
-    				for(j=0; (j<k); j++)
-    				{
-						half_float::half valGold = GOLD[i+k*j];
-						half_float::half valOutput = C[i+k*j];
-    					//if (A[i + k * j] != GOLD[i + k * j])
-    					//if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001))
-						if (fabs((double)(valOutput-valGold)/valGold) > 10e-10||(fabs((double)(valOutput-valGold)/valGold) > 10e-10)) {
-							#pragma omp critical
-							{
-								snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", i, j, (double)valOutput, (double)valGold);
-								if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
-								#ifdef LOGS
-								log_error_detail(error_detail);
-								#endif
-								host_errors++;
-								//ea++;
-								//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
-							}
-						}
-    				}
-    			}
-
-                // printf("numErrors:%d", host_errors);
-
-				if (host_errors != 0) {
-					printf("#");
-					#ifdef LOGS
-						log_error_count(host_errors);
-					#endif
-					//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
-					cudaFree( d_A );
-					cudaFree( d_B );
-					cudaFree( d_C );
-					//====================================
-					ReadMatrixFromFile();
-					//================== Init DEVICE memory
-					allocCudaMemory();
-					copyCudaMemory();
-					//====================================
-				}
+				printf("!");
+    			checkOutputErrors();
     		}
         }
 
