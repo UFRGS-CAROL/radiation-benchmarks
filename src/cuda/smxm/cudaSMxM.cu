@@ -42,6 +42,7 @@ FILE* f_GOLD;
 //================== Host and device matrix ptr's
 float *A;
 float *B;
+float *C;
 float *GOLD;
 
 float *d_A;
@@ -88,7 +89,7 @@ void allocCudaMemory()
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error a"); end_log_file();
+		log_error_detail((char *)"error a"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
@@ -97,7 +98,7 @@ void allocCudaMemory()
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error b"); end_log_file();
+		log_error_detail((char *)"error b"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
@@ -106,7 +107,7 @@ void allocCudaMemory()
 	erro = cudaGetErrorString(malloc);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error c"); end_log_file();
+		log_error_detail((char *)"error c"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 }
@@ -121,7 +122,7 @@ void copyCudaMemory()
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error gpu load c"); end_log_file();
+		log_error_detail((char *)"error gpu load c"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
@@ -129,7 +130,7 @@ void copyCudaMemory()
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error gpu load a"); end_log_file();
+		log_error_detail((char *)"error gpu load a"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 
@@ -137,14 +138,14 @@ void copyCudaMemory()
 	erro = cudaGetErrorString(mcpy);
 	if(strcmp(erro, "no error") != 0) {
 #ifdef LOGS
-		log_error_detail("error gpu load b"); end_log_file();
+		log_error_detail((char *)"error gpu load b"); end_log_file();
 #endif
 		exit(EXIT_FAILURE);} //mem allocate failure
 }
 
 void ReadMatrixFromFile(){
 //================== Read inputs to HOST memory
-	int i, j;
+	int i;
 	if (verbose) printf("Reading matrices... ");
 	double time = mysecond();
 	f_A = fopen(a_matrix_path,"rb");
@@ -154,7 +155,7 @@ void ReadMatrixFromFile(){
 	{
 		printf ("Cant open matrices.\n");
 #ifdef LOGS
-		log_error_detail("Cant open matrices"); end_log_file();
+		log_error_detail((char *)"Cant open matrices"); end_log_file();
 #endif
 		exit(-3);
 	}
@@ -167,7 +168,7 @@ void ReadMatrixFromFile(){
       if ((ret_value[0] != 1) || (ret_value[1] != 1) || (ret_value[2] != 1)) {
          printf("Bad input/gold formatting: %lu ; %lu ; %lu .\n", ret_value[0], ret_value[1], ret_value[2]);
          #ifdef LOGS
-    		log_error_detail("Bad input/gold formatting."); end_log_file();
+    		log_error_detail((char *)"Bad input/gold formatting."); end_log_file();
          #endif
     		exit(-3);
       }
@@ -185,21 +186,21 @@ void ReadMatrixFromFile(){
 	}
 }
 
-bool badass_memcmp(float *gold, float *found, unsigned long n){
-	float result = 0.0;
-	int i;
-	unsigned long  chunk = ceil(float(n) / float(omp_get_max_threads()));
-	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
-	double time = mysecond();
-#pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
-   for (i=0; i < n; i++)
-     result = result + (gold[i] - found[i]);
+// bool badass_memcmp(float *gold, float *found, unsigned long n){
+// 	float result = 0.0;
+// 	int i;
+// 	unsigned long  chunk = ceil(float(n) / float(omp_get_max_threads()));
+// 	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
+// 	double time = mysecond();
+// #pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
+//    for (i=0; i < n; i++)
+//      result = result + (gold[i] - found[i]);
 
-    //  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
-	if (fabs(result) > 0.0000000001)
-		return true;
-	return false;
-}
+//     //  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
+// 	if (fabs(result) > 0.0000000001)
+// 		return true;
+// 	return false;
+// }
 
 // __device__ int kerrors;
 //
@@ -229,58 +230,54 @@ void usage() {
     printf("Usage: smxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
+
+
 void checkOutputErrors() {
-	char error_detail[150];
 	int host_errors = 0;
 
-	#pragma omp parallel for
-	for(int i=0; (i<k); i++)
+	#pragma omp parallel for shared(host_errors)
+	for(int i=0; (i<k*k); i++)
 	{
-		for(int j=0; (j<k); j++)
-		{
-			float goldValue(GOLD[i + k * j]);
-			float outputValue(A[i + k * j]);
-			//if ((fabs((A[i+k*j]-GOLD[i+k*j])/A[i+k*j]) > 0.0000000001)||(fabs((A[i+k*j]-GOLD[i+k*j])/GOLD[i+k*j]) > 0.0000000001)) {
-			if (outputValue != goldValue) {
-				#pragma omp critical
-				{
-					snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", i, j, (double)outputValue, (double)goldValue);
-					if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
-					#ifdef LOGS
+		register float valGold = GOLD[i];
+		register float valOutput = C[i];
+		// if ((fabs((double)(valOutput-valGold)/valGold) > 1e-10)||(fabs((double)(valOutput-valGold)/valGold) > 1e-10)) {
+		if (valGold != valOutput) {	
+			#pragma omp critical
+			{
+				char error_detail[150];
+				snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", (int)floor(i/k), i%k, (double)valOutput, (double)valGold);
+				if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
+
+				#ifdef LOGS
 					log_error_detail(error_detail);
-					#endif
-					host_errors++;
-					//ea++;
-					//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
-				}
+				#endif
+				host_errors++;
 			}
 		}
 	}
 
 	// printf("numErrors:%d", host_errors);
 
-	#ifdef LOGS
-		log_error_count(host_errors);
-	#endif
-	//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
-	cudaFree( d_A );
-	cudaFree( d_B );
-	cudaFree( d_C );
-	//====================================
-	ReadMatrixFromFile();
-	//================== Init DEVICE memory
-	allocCudaMemory();
-	copyCudaMemory();
-	//====================================
+	if (host_errors != 0) {
+		printf("#");
+		#ifdef LOGS
+			log_error_count(host_errors);
+		#endif
+		//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
+		cudaFree( d_A );
+		cudaFree( d_B );
+		cudaFree( d_C );
+		//====================================
+		ReadMatrixFromFile();
+		//================== Init DEVICE memory
+		allocCudaMemory();
+		copyCudaMemory();
+		//====================================
+	}
 }
 
 int main( int argc, char* argv[] )
 {
-//================== CUDA error handlers
-	cudaError_t mcpy;
-	const char *erro;
-//====================================
-
 //================== Test vars
 	int loop2;
 	// int kernel_errors=0;
@@ -389,17 +386,18 @@ int main( int argc, char* argv[] )
 #ifdef LOGS
 	char test_info[90];
 	snprintf(test_info, 90, "size:%d type:single-precision", k);
-	start_log_file("cudaSMxM", test_info);
+	start_log_file((char *)"cudaSMxM", test_info);
 #endif
 //====================================
 
 //================== Alloc HOST memory
 	A = ( float* ) malloc( matrixSize * sizeof( float ) );
 	B = ( float* ) malloc( matrixSize * sizeof( float ) );
+	C = ( float* ) malloc( matrixSize * sizeof( float ) );
 
 	GOLD = ( float* ) malloc( matrixSize * sizeof( float ) );
 
-	if (!(A && B && GOLD)) {
+	if (!(A && B && C && GOLD)) {
 		printf("Failed on host malloc.\n");
 		exit(-3);
 	}
@@ -469,12 +467,12 @@ int main( int argc, char* argv[] )
 
         //if (kernel_errors != 0) {
         if (loop2 || !device_warmup) {
-            checkCudaErrors( cudaMemcpy(A, d_C, matrixSize * sizeof( float ), cudaMemcpyDeviceToHost) );
+            checkCudaErrors( cudaMemcpy(C, d_C, matrixSize * sizeof( float ), cudaMemcpyDeviceToHost) );
             //~ if (memcmp(A, GOLD, sizeof(float) * k*k)) {
-            if (badass_memcmp(GOLD, A, matrixSize)) {
-				printf("!");
+// 			if (badass_memcmp(GOLD, A, matrixSize)) {
+//				printf("!");
 				checkOutputErrors();
-    		}
+//    		}
         }
 
 		//====================================
