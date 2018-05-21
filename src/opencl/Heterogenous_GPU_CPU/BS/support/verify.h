@@ -54,8 +54,6 @@ inline int new_compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ, int RESOL
     sum_ref2   = 0;
     L1norm2    = 0;
 
-
-
 /*
 //************************ Compare 2 Caso não se comporte como esperado **********************
 

@@ -173,12 +173,15 @@ struct Params {
                 "\n");
     }
 };
-
+// Eh essa aqui a função utilizada para compare Maio 2018
 inline int newest_compare_output(unsigned char **all_out_frames, int image_size,unsigned char **gold, int num_frames, int rowsc, int colsc, int rowsc_, int colsc_) {
 
    // printf("Entrei compara\n");
     int count_error = 0;
-# pragma omp parallel for
+	int i = 0 ;
+	int r = 0 ;
+	int c = 0 ;
+# pragma omp parallel for reduction(+:count_error) private(i,c,r)
     for(int i = 0; i < num_frames; i++) {
 		//update_timestamp();
         for(int r = 0; r < rowsc; r++) {
@@ -548,7 +551,7 @@ for(int rep = 0; rep < p.loop; rep++) {
                     clStatus = clEnqueueNDRangeKernel(
                         ocl.clCommandQueue, ocl.clKernel_sobel, 2, offset, gs, ls, 0, NULL, NULL);
                     CL_ERR();
-
+			update_timestamp();
                     // NON-MAXIMUM SUPPRESSION KERNEL
                     // Set arguments
 #ifdef OCL_2_0
@@ -612,6 +615,7 @@ for(int rep = 0; rep < p.loop; rep++) {
                     timer.start("CPU Proxy: Kernel");
                     std::thread main_thread(run_cpu_threads, h_in_out[proxy_tid], h_interm_cpu_proxy, h_theta_cpu_proxy,
                         rowsc, colsc, p.n_threads, task_id);
+	
                     main_thread.join();
                     timer.stop("CPU Proxy: Kernel");
 
@@ -623,6 +627,7 @@ for(int rep = 0; rep < p.loop; rep++) {
 
         }));
     }
+	update_timestamp();
     std::for_each(proxy_threads.begin(), proxy_threads.end(), [](std::thread &t) { t.join(); });
     clFinish(ocl.clCommandQueue);
 #ifdef LOGS
@@ -669,7 +674,7 @@ printf("Imprimindo a Saida do Programa\n");
 		printf("\n");
         }
 */
-//asdasdasd
+
 //err = new_compare_output(all_out_frames, in_size, p.comparison_file, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
 	timer.start("Tempo Compare");
 	err = newest_compare_output(all_out_frames, in_size, gold, p.n_warmup + p.n_reps, rowsc, colsc, rowsc, colsc);
@@ -677,7 +682,9 @@ printf("Imprimindo a Saida do Programa\n");
 // Aqui ver se houve erros 
         if(err > 0) {
             printf("Errors: %d\n",err);
+			update_timestamp();
 		    new_read_input(all_gray_frames, rowsc, colsc, in_size, p);
+			update_timestamp();
 		    //new_read_gold(gold, rowsc, colsc, in_size, p);		
 			 
         } else {
