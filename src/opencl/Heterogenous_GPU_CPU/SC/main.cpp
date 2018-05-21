@@ -300,6 +300,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
     //timer.print("Initialization", 1);
 
 // Ler gold
+// Para gerar novamente o gold, modificar o arquivo atual de gold para agold... e colocar ele no path e descomentar laa embaixo a função create gold
 // *********************** Lendo GOLD   *****************************
 	update_timestamp();
     char filename[300];
@@ -385,7 +386,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
 #ifdef LOGS
         start_iteration();
 #endif
-
+	update_timestamp();		
             clStatus = clEnqueueNDRangeKernel(ocl.clCommandQueue, ocl.clKernel, 1, NULL, gs, ls, 0, NULL, NULL);
             CL_ERR();
         }
@@ -398,7 +399,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
             worklist
 #endif
             );
-
+update_timestamp();
         clFinish(ocl.clCommandQueue);
         main_thread.join();
 
@@ -426,16 +427,12 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
     //timer.print("Copy Back and Merge", 1);
 #endif
 
-//create_output(h_in_backup,p);
+create_output(h_in_backup,p);
 
 //******************************************************
 /*
 	int param1 = divceil(p.in_size, p.n_work_items * REGS);
 	int param2 = param1 * p.n_work_items * REGS * sizeof(T);
-
-	
-
-
 	//printf("Criando Input\n");
    char filename5[100];
     snprintf(filename5, 100, "agold_%d_%d_%d",p.in_size,p.n_work_items,p.compaction_factor); // Gold com a resolução 
@@ -482,7 +479,7 @@ printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.dev
 #ifdef LOGS
         log_error_count(err);
 #endif
-
+	sleep(3);
 	}
 #ifdef LOGS
     end_log_file();

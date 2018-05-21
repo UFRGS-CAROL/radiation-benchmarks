@@ -50,10 +50,36 @@ inline int new_compare_output(T *outp, T *outpCPU, int size) {
     sum_delta2 = 0;
     sum_ref2   = 0;
     L1norm2    = 0;
+	int i = 0;
 	//printf("\tSize:%d\n",size);
 
-#pragma omp parallel for
-    for(int i = 0; i < size; i++) {
+
+/*
+//************************ Compare 2 Caso não se comporte como esperado **********************
+#pragma omp parallel for reduction(+:errors) private(i)
+    for(i = 0; i < size; i++) {
+
+          sum_ref2 = std::abs(outpCPU[i]);
+
+    	if(sum_ref2 == 0)
+    	    sum_ref2 = 1; //In case percent=0
+		sum_delta2_x = (double)std::abs(outp[i] - outpCPU[i]) / sum_ref2 ;
+
+			if(sum_delta2_x >= 1e-12 ){
+					errors++;
+					#ifdef LOGS
+					char error_detail[200];
+					sprintf(error_detail,"X, p: [%d], r: %d, e: %d",i,outp[i],outpCPU[i] );
+
+		   			log_error_detail(error_detail);
+					#endif				
+			}
+	}
+*/
+
+// ******************* Compare Testado em Maio 2018 ***************************
+#pragma omp parallel for reduction(+:errors) private(i)
+    for(i=0; i < size; i++) {
 		if(outp[i] != outpCPU[i]){	// Computed result is different
 
 			errors++;
@@ -64,27 +90,9 @@ inline int new_compare_output(T *outp, T *outpCPU, int size) {
    			log_error_detail(error_detail);
 			#endif			
 		}
-/*
-          sum_ref2 = std::abs(outpCPU[i]);
-
-    	if(sum_ref2 == 0)
-    	    sum_ref2 = 1; //In case percent=0
-		sum_delta2_x = (double)std::abs(outp[i] - outpCPU[i]) / sum_ref2 ;
-
-			if(sum_delta2_x >= 1e-12 ){
-				#pragma omp critical
-				{
-					errors++;
-					#ifdef LOGS
-					char error_detail[200];
-					sprintf(error_detail,"X, p: [%d], r: %d, e: %d",i,outp[i],outpCPU[i] );
-
-		   			log_error_detail(error_detail);
-					#endif			
-				}
-			}
-*/
     }
+
+
     return errors;
 }
 
