@@ -65,7 +65,7 @@ inline int new_compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ, int RESOL
 		        errors++;
 #ifdef LOGS
 		        char error_detail[200];
-        		sprintf(error_detail," p: [%d, %d]; X r: %f, e: %f ; Y r: %f, e: %f ; Z r: %f, e: %f  ",i,j,outp[i * RESOLUTIONJ + j].x,outpCPU[i * RESOLUTIONJ + j].x,outp[i * RESOLUTIONJ + j].y,outpCPU[i * RESOLUTIONJ + j].y,outp[i * RESOLUTIONJ + j].z,outpCPU[i * RESOLUTIONJ + j].z);
+        		sprintf(error_detail," p: [%d, %d]; X r: %1.16e, e: %1.16e ; Y r: %1.16e, e: %1.16e ; Z r: %1.16e, e: %1.16e  ",i,j,outp[i * RESOLUTIONJ + j].x,outpCPU[i * RESOLUTIONJ + j].x,outp[i * RESOLUTIONJ + j].y,outpCPU[i * RESOLUTIONJ + j].y,outp[i * RESOLUTIONJ + j].z,outpCPU[i * RESOLUTIONJ + j].z);
 
        			 log_error_detail(error_detail);
 #endif			
