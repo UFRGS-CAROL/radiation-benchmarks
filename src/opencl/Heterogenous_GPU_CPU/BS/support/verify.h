@@ -53,6 +53,41 @@ inline int new_compare_output(XYZ *outp, XYZ *outpCPU, int NI, int NJ, int RESOL
 
     sum_ref2   = 0;
     L1norm2    = 0;
+
+
+
+/*
+//************************ Compare 2 Caso não se comporte como esperado **********************
+
+    for(int i = 0; i < RESOLUTIONI; i++) {
+        for(int j = 0; j < RESOLUTIONJ; j++) {
+
+			register float result_x =  outp[i * RESOLUTIONJ + j].x;
+			register float gold_x = outpCPU[i * RESOLUTIONJ + j].x;
+
+			register float result_y =  outp[i * RESOLUTIONJ + j].y;
+			register float gold_y = outpCPU[i * RESOLUTIONJ + j].y;
+
+			register float result_z =  outp[i * RESOLUTIONJ + j].z;
+			register float gold_z = outpCPU[i * RESOLUTIONJ + j].z;
+
+			if( result_x != gold_x  || result_y != gold_y  || result_z != gold_z ){
+
+		        errors++;
+#ifdef LOGS
+		        char error_detail[200];
+        		sprintf(error_detail," p: [%d, %d]; X r: %1.16e, e: %1.16e ; Y r: %1.16e, e: %1.16e ; Z r: %1.16e, e: %1.16e  ",i,j, result_x ,gold_x ,result_y ,gold_y,result_z ,gold_z);
+
+       			 log_error_detail(error_detail);
+#endif			
+
+			}
+
+        }
+    }
+*/
+
+// ************************ Compare 1 Testado em Maio ****************************************
     for(int i = 0; i < RESOLUTIONI; i++) {
         for(int j = 0; j < RESOLUTIONJ; j++) {
 
