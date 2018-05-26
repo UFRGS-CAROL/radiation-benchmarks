@@ -104,8 +104,8 @@ struct Params {
         n_threads       = 2;
         n_warmup        = 1;
         n_reps          = 1;
-        file_name       = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/input/colorado_graph_in";
-        comparison_file = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/output/colorado_graph_out";
+        file_name       = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/input/florida_graph_in";
+        comparison_file = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/output/florida_graph_out";
         switching_limit = 128;
 
 
@@ -326,7 +326,6 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 	//printf("Com LOG\n");
 #endif
 
-
     // Allocate
     int n_nodes, n_edges;
 	int n_nodes_o;
@@ -340,7 +339,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 	Gold * gold = (Gold *)malloc(sizeof(Gold) *n_nodes_o );
 //***********************************************************************************************
 
-
+	update_timestamp();
     cl_mem d_nodes = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(Node) * n_nodes, NULL, &clStatus);
     Edge * h_edges = (Edge *)malloc(sizeof(Edge) * n_edges);
     cl_mem d_edges = clCreateBuffer(ocl.clContext, CL_MEM_READ_WRITE, sizeof(Edge) * n_edges, NULL, &clStatus);
@@ -415,7 +414,8 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 
 // Loop over kernels
     for(int rep = 0; rep < p.n_reps; rep++) {
-
+	update_timestamp();
+	printf("NOVA IT:%d\n",rep);
         // Reset
         for(int i = 0; i < n_nodes; i++) {
             h_cost[i].store(INF);
@@ -491,7 +491,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 
                 // Continue until switching_limit condition is not satisfied
                 while((*h_num_t != 0) && (*h_num_t < p.switching_limit || GPU_EXEC == 0) && CPU_EXEC == 1) {
-
+			update_timestamp();
                     // Swap queues
                     if(h_iter[0] % 2 == 0) {
                         h_qin  = h_q1;
@@ -575,7 +575,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 
                 // Continue until switching_limit condition is not satisfied
                 while((*h_num_t != 0) && (*h_num_t >= p.switching_limit || CPU_EXEC == 0) && GPU_EXEC == 1) {
-
+			update_timestamp();
                     // Swap queues
                     if(h_iter[0] % 2 == 0) {
                         d_qin  = d_q1;
