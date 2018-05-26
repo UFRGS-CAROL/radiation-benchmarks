@@ -104,8 +104,8 @@ struct Params {
         n_threads       = 2;
         n_warmup        = 1;
         n_reps          = 1;
-        file_name       = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/input/florida_graph_in";
-        comparison_file = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/output/florida_graph_out";
+        file_name       = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/input/NYR_input.dat";
+        comparison_file = "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SSSP/output/NYR_bfs.out";
         switching_limit = 128;
 
 
@@ -415,7 +415,7 @@ printf("-p %d -d %d -i %d -g %d  -t %d -f %s\n",p.platform , p.device, p.n_work_
 // Loop over kernels
     for(int rep = 0; rep < p.n_reps; rep++) {
 	update_timestamp();
-	printf("NOVA IT:%d\n",rep);
+	//printf("NOVA IT:%d\n",rep);
         // Reset
         for(int i = 0; i < n_nodes; i++) {
             h_cost[i].store(INF);
