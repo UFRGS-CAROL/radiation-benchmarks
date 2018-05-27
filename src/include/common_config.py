@@ -1,10 +1,11 @@
 import os
-from socket import  gethostname
+from socket import gethostname
 
 DEBUG_MODE = True
-POSSIBLE_BOARDS_BRANDS = {"NVIDIA" : "nvidia-smi --query-gpu=gpu_name --format=csv,noheader",
-                          "AMD" : "clinfo",
-                          "INTEL" : ""}
+POSSIBLE_BOARDS_BRANDS = {"NVIDIA": "nvidia-smi --query-gpu=gpu_name --format=csv,noheader",
+                          "AMD": "clinfo",
+                          "INTEL": ""}
+
 
 def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin):
     """
@@ -44,3 +45,4 @@ def discover_board():
     for test_board in POSSIBLE_BOARDS_BRANDS:
         if os.system(test_board) != 0:
             return test_board, hostname
+    return None, None
