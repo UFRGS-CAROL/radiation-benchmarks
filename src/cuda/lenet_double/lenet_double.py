@@ -6,7 +6,7 @@ import caffe
 import lmdb
 import numpy as np
 from time import time
-from threading import Thread
+import threading
 
 LOG_INTERVAL = 10
 MAX_ERROR_COUNT = 1000
@@ -206,15 +206,30 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     lh.end_log_file()
 
 
-def parallel_foward(thread):
-    """
-    Process in parallel a bunch of lenet exectuions
-    :param image: input image to classify
-    :param net: neural network
-    :return: the output data
-    """
-    global output_list, net_list
-    output_list[thread] = net_list[thread].forward()
+class ParallelThread(threading.Thread):
+    output = None
+
+    def __init__(self, net, thread_id):
+        super(ParallelThread, self).__init__()
+        self.thread_id = thread_id
+        self.net = net
+
+    def run(self):
+        self.output = self.net.forward()
+
+    def set_image(self, image):
+        self.net.blobs['data'].data[...] = image
+
+
+# def parallel_foward(thread):
+#     """
+#     Process in parallel a bunch of lenet exectuions
+#     :param image: input image to classify
+#     :param net: neural network
+#     :return: the output data
+#     """
+#     global output_list, net_list
+#     output_list[thread] = net_list[thread].forward()
 
 
 def testing_radiation_multithread(model, weights, db_path, gold_path, iterations, multithread):
@@ -246,7 +261,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
     lmdb_cursor = lmdb_txn.cursor()
     input_images = [[] for _ in range(multithread)]
 
-    # net_list = []
+    net_list = []
     for thread_net in range(multithread):
         net_list.append(caffe.Net(model, weights, caffe.TEST))
 
@@ -261,6 +276,10 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
         for i in range(multithread):
             input_images[i].append([label, np.asarray([image])])
 
+    thread_list = []
+    for thread in range(multithread):
+        thread_list.append(ParallelThread(thread, net_list[thread]))
+
     overall_errors = 0
 
     for iteration in range(iterations):
@@ -272,20 +291,19 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             # Multithread execution
             lh.start_iteration()
             tic = time()
-            thread_list = []
-            for thread in range(multithread):
-                net_list[thread].blobs['data'].data[...] = input_images[thread][img][1]
-                # parallel_foward(thread)
-                thread_list.append(Thread(target=parallel_foward, args=(thread,)))
+            # thread_list = []
+            # for thread in thread_list:
+            #     thread.setimage(input_images[thread][img][1])
+            # net_list[thread].blobs['data'].data[...] = input_images[thread][img][1]
+            # parallel_foward(thread)
+            # thread_list.append(Thread(target=parallel_foward, args=(thread,)))
             #
-            for th in thread_list:
+            for thread, th in enumerate(thread_list):
+                th.setimage(input_images[thread][img][1])
                 th.start()
 
             for th in thread_list:
                 th.join()
-                if not th.is_alive():
-                    del th
-            del thread_list
 
             toc = time()
             average_time += toc - tic
