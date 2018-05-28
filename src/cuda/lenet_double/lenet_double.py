@@ -230,7 +230,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
     lmdb_env = lmdb.open(db_path)
     lmdb_txn = lmdb_env.begin()
     lmdb_cursor = lmdb_txn.cursor()
-    input_images = [] * multithread
+    input_images = [[] for _ in range(multithread)]
 
     for thread_net in range(multithread):
         net_list[thread_net] = caffe.Net(model, weights, caffe.TEST)
