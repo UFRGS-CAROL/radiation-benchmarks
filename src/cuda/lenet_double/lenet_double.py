@@ -218,6 +218,7 @@ class ParallelThread(threading.Thread):
         self.output = self.net.forward()
 
     def set_image(self, image):
+        print self.net.blobs['data'].data
         self.net.blobs['data'].data[...] = image
 
     def get_output(self):
