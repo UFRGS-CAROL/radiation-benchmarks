@@ -339,7 +339,7 @@ def parse_args():
                                                              "2 Test on mnist\n"
                                                              "3 Train on mnist\n"
                                                              "for option 2, solver file must be passed",
-                        default=0, choices=[0, 1, 2, 3], type=int)
+                        default=0, choices=[0, 1, 2, 3, 4], type=int)
 
     parser.add_argument('--prototxt', dest='prototxt', help="prototxt file path",
                         default="caffe/examples/mnist/lenet_train_test.prototxt")
