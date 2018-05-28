@@ -301,7 +301,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
                 net_list[thread].blobs['data'].data[...] = input_images[thread][img][1]
 
             with contextlib.closing(Pool(processes=multithread)) as pool:
-                pool.map(parallel_foward, [multithread] * multithread)
+                pool.map(parallel_foward, range(0, multithread))
             # thread_list.append(Thread(target=parallel_foward, args=(thread,)))
             #
 
