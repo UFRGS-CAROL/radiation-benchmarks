@@ -226,7 +226,7 @@ def load_file(filename):
 
 def parse_args():
     """Parse input arguments."""
-    parser = argparse.ArgumentParser(description='Faster R-CNN demo')
+    parser = argparse.ArgumentParser(description='Lenet ' + LENET_PRECISION)
     parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
                         default=0, type=int)
     # radiation logs
@@ -251,7 +251,7 @@ def parse_args():
     parser.add_argument('--solver', dest='solver', help='lenet solver prototxt',
                         default='caffe/examples/mnist/lenet_solver.prototxt')
 
-    parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold.gold')
+    parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold_' + LENET_PRECISION + '.gold')
 
     args = parser.parse_args()
 

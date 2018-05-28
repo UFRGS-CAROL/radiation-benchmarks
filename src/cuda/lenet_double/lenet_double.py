@@ -240,16 +240,16 @@ def parse_args():
                         default=0, choices=[0, 1, 2, 3], type=int)
 
     parser.add_argument('--prototxt', dest='prototxt', help="prototxt file path",
-                        default="./lenet_train_test_" + LENET_PRECISION + ".prototxt")
+                        default="caffe/examples/mnist/lenet_train_test.prototxt")
 
     parser.add_argument('--lenet_model', dest='model', help='lenet.caffemodel',
-                        default='caffe/examples/mnist/lenet_iter_10000_' + LENET_PRECISION + '.caffemodel')
+                        default='caffe/examples/mnist/lenet_iter_10000.caffemodel')
 
     parser.add_argument('--lmdb', dest='lmdb', help='lmdb file path, it can be test or train',
                         default='caffe/examples/mnist/mnist_test_lmdb/')
 
     parser.add_argument('--solver', dest='solver', help='lenet solver prototxt',
-                        default='./lenet_solver_' + LENET_PRECISION + '.prototxt')
+                        default='caffe/examples/mnist/lenet_solver.prototxt')
 
     parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold_' + LENET_PRECISION + '.gold')
 
