@@ -5,6 +5,8 @@ import sys
 import ConfigParser
 import copy
 from errno import ENOENT
+sys.path.insert(0, '../../include')
+import common_config
 
 DEBUG_MODE = False
 LENET_PRECISION = 'single'
@@ -50,7 +52,7 @@ def create_mnist(src_lenet):
             raise ValueError("Something went wrong when executing: ", str(e))
 
 
-def main(board):
+def config_lenet(board):
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
         config = ConfigParser.RawConfigParser()
@@ -134,11 +136,8 @@ if __name__ == "__main__":
     global DEBUG_MODE
 
     parameter = sys.argv[1:]
-    try:
-        DEBUG_MODE = sys.argv[2:]
-    except:
-        DEBUG_MODE = False
-    if len(parameter) < 1:
-        print "./config_generic <k1/x1/x2/k40/titan>"
-    else:
-        main(str(parameter[0]).upper())
+    if str(sys.argv[2:]).upper() == 'DEBUG':
+        DEBUG_MODE = True
+
+    board, _ = common_config.discover_board()
+    config_lenet(board=board)
