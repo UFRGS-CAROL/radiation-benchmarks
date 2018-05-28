@@ -9,7 +9,7 @@ from time import time
 
 LOG_INTERVAL = 10
 MAX_ERROR_COUNT = 1000
-LENET_PRECISION = 'single'
+LENET_PRECISION = 'double'
 
 
 def set_device(device):
@@ -240,18 +240,18 @@ def parse_args():
                         default=0, choices=[0, 1, 2, 3], type=int)
 
     parser.add_argument('--prototxt', dest='prototxt', help="prototxt file path",
-                        default="caffe/examples/mnist/lenet_train_test.prototxt")
+                        default="./lenet_train_test_double.prototxt")
 
     parser.add_argument('--lenet_model', dest='model', help='lenet.caffemodel',
-                        default='caffe/examples/mnist/lenet_iter_10000.caffemodel')
+                        default='./lenet_iter_10000_double.caffemodel')
 
     parser.add_argument('--lmdb', dest='lmdb', help='lmdb file path, it can be test or train',
-                        default='caffe/examples/mnist/mnist_test_lmdb/')
+                        default='../lenet_single/caffe/examples/mnist/mnist_test_lmdb/')
 
     parser.add_argument('--solver', dest='solver', help='lenet solver prototxt',
-                        default='caffe/examples/mnist/lenet_solver.prototxt')
+                        default='./lenet_solver_double.prototxt')
 
-    parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold.gold')
+    parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold_double.gold')
 
     args = parser.parse_args()
 
