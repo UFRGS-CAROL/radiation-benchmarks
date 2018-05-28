@@ -226,7 +226,7 @@ def load_file(filename):
 
 def parse_args():
     """Parse input arguments."""
-    parser = argparse.ArgumentParser(description='Faster R-CNN demo')
+    parser = argparse.ArgumentParser(description='Lenet ' + LENET_PRECISION)
     parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
                         default=0, type=int)
     # radiation logs
@@ -240,18 +240,18 @@ def parse_args():
                         default=0, choices=[0, 1, 2, 3], type=int)
 
     parser.add_argument('--prototxt', dest='prototxt', help="prototxt file path",
-                        default="./lenet_train_test_double.prototxt")
+                        default="./lenet_train_test_" + LENET_PRECISION + ".prototxt")
 
     parser.add_argument('--lenet_model', dest='model', help='lenet.caffemodel',
-                        default='./lenet_iter_10000_double.caffemodel')
+                        default='caffe/examples/mnist/lenet_iter_10000_' + LENET_PRECISION + '.caffemodel')
 
     parser.add_argument('--lmdb', dest='lmdb', help='lmdb file path, it can be test or train',
-                        default='../lenet_single/caffe/examples/mnist/mnist_test_lmdb/')
+                        default='caffe/examples/mnist/mnist_test_lmdb/')
 
     parser.add_argument('--solver', dest='solver', help='lenet solver prototxt',
-                        default='./lenet_solver_double.prototxt')
+                        default='./lenet_solver_' + LENET_PRECISION + '.prototxt')
 
-    parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold_double.gold')
+    parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold_' + LENET_PRECISION + '.gold')
 
     args = parser.parse_args()
 

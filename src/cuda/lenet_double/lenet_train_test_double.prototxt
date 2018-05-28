@@ -15,7 +15,7 @@ layer {
     scale: 0.00390625
   }
   data_param {
-    source: "../lenet_single/caffe/examples/mnist/mnist_train_lmdb"
+    source: "caffe/examples/mnist/mnist_train_lmdb"
     batch_size: 64
     backend: LMDB
   }
@@ -32,7 +32,7 @@ layer {
     scale: 0.00390625
   }
   data_param {
-    source: "../lenet_single/caffe/examples/mnist/mnist_test_lmdb"
+    source: "caffe/examples/mnist/mnist_test_lmdb"
     batch_size: 100
     backend: LMDB
   }
