@@ -205,16 +205,16 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     lh.end_log_file()
 
 
-def parallel_foward(image, net):
+def parallel_foward(image, net, thread):
     """
     Process in parallel a bunch of lenet exectuions
     :param image: input image to classify
     :param net: neural network
     :return: the output data
     """
+    global output_list
     net.blobs['data'].data[...] = np.asarray([image])
-    output = net.forward()
-    return output
+    output_list[thread] = net.forward()
 
 
 def testing_radiation_multithread(model, weights, db_path, gold_path, iterations, multithread):
@@ -227,6 +227,8 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
     :param iterations: radiation iterations
     :return: void
     """
+    global output_list
+
     string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} "
     string_info += "model: {} db_path: {} threads: {}"
     string_info = string_info.format(iterations, gold_path, LENET_PRECISION, weights,
@@ -271,7 +273,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             tic = time()
 
             for thread in range(multithread):
-                output_list[thread] = parallel_foward(input_images[thread][img][1], net_list[thread])
+                parallel_foward(image=input_images[thread][img][1], net=net_list[thread], thread=thread)
 
             toc = time()
             average_time += toc - tic
@@ -307,7 +309,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
                 print (
                     "Multi execution iteration = {}, averaget time = {}, iteration errors = {}, overall errors {},"
                     " number of thread {}".format(img, average_time / float(LOG_INTERVAL),
-                                                   local_errors, overall_errors, thread))
+                                                  local_errors, overall_errors, thread))
                 average_time = 0.0
 
     # CLOSING log file
@@ -399,4 +401,5 @@ def main():
 
 
 if __name__ == '__main__':
+    output_list = None
     main()
