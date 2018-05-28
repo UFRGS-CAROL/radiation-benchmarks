@@ -299,7 +299,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             # thread_list.append(Thread(target=parallel_foward, args=(thread,)))
             #
             for thread, th in enumerate(thread_list):
-                th.setimage(input_images[thread][img][1])
+                th.set_image(input_images[thread][img][1])
                 th.start()
 
             for th in thread_list:
