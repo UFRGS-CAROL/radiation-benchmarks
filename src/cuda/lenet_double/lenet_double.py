@@ -271,7 +271,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
 
             # -------------------------------------------------------------
             # Compare output
-            for thread in multithread:
+            for thread in range(multithread):
                 predicted_label = output_list[thread]['prob'][0].argmax(axis=0)
                 label_to_compare, _ = input_images[thread][img]
                 correct = label_to_compare == predicted_label
