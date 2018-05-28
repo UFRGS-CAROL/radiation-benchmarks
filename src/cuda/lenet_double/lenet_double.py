@@ -142,10 +142,10 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     :param iterations: radiation iterations
     :return: void
     """
-    string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} model: {} db_path: {}".format(
-                                                    iterations,
-                                                    gold_path, weights,
-                                                    model, db_path, LENET_PRECISION)
+    string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} model: {} db_path: {} threads: 1".format(
+        iterations,
+        gold_path, weights,
+        model, db_path, LENET_PRECISION)
     # STARTING log file
     lh.start_log_file("Lenet" + LENET_PRECISION.title(), string_info)
     lh.set_iter_interval_print(LOG_INTERVAL)
@@ -156,6 +156,85 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     lmdb_txn = lmdb_env.begin()
     lmdb_cursor = lmdb_txn.cursor()
     overall_errors = 0
+    for iteration in range(iterations):
+        i = 0
+        local_errors = 0
+        average_time = 0.0
+        for key, value in lmdb_cursor:
+
+            datum = caffe.proto.caffe_pb2.Datum()
+            datum.ParseFromString(value)
+            label = int(datum.label)
+            image = caffe.io.datum_to_array(datum)
+            image = image.astype(np.uint8)
+            net.blobs['data'].data[...] = np.asarray([image])
+            lh.start_iteration()
+            tic = time()
+            out = net.forward()
+            toc = time()
+            average_time += toc - tic
+            lh.end_iteration()
+
+            if i % LOG_INTERVAL == 0:
+                print("Iteration = {}, averaget time = {}, iteration errors = {}, overall errors {}"
+                      .format(i, average_time / float(LOG_INTERVAL), local_errors, overall_errors))
+                average_time = 0.0
+
+            predicted_label = out['prob'][0].argmax(axis=0)
+            correct = label == predicted_label
+            # [label, predicted_label, correct]
+            gold_label = gold_data[i][0]
+            gold_predicted_label = gold_data[i][1]
+            gold_correct = gold_data[i][2]
+
+            if label != gold_label or gold_predicted_label != predicted_label or gold_correct != correct:
+                error_detail = 'sample: {} label_e: {} label_r: {} predicted_label_e: {} predicted_label_r: {} '
+                error_detail += 'gold_correct_e: {} gold_correct_r: {}'
+                lh.log_error_detail(error_detail.format(i, gold_label, label,
+                                                        gold_predicted_label, predicted_label,
+                                                        gold_correct, correct))
+                lh.log_error_count(1)
+                overall_errors += 1
+                local_errors += 1
+            if overall_errors > MAX_ERROR_COUNT:
+                raise ValueError("MAX ERROR COUNT REACHED")
+
+            i += 1
+
+    # CLOSING log file
+    lh.end_log_file()
+
+
+def multithread_testing_radiation(model, weights, db_path, gold_path, iterations, multithread):
+    """
+    Multi thread radiation test
+    :param model: prototxt file
+    :param weights: .caffemodel file (weights)
+    :param db_path: lmdb file that contains mnist test
+    :param gold_path: gold filename path
+    :param iterations: radiation iterations
+    :return: void
+    """
+    string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} model: {} db_path: {} threads: {}".format(
+        iterations,
+        gold_path, LENET_PRECISION, weights,
+        model, db_path, multithread)
+
+    # STARTING log file
+    lh.start_log_file("Lenet" + LENET_PRECISION.title(), string_info)
+    lh.set_iter_interval_print(LOG_INTERVAL)
+
+    net_list = [None] * multithread
+    for i in range(multithread):
+        net_list[i] = caffe.Net(model, weights, caffe.TEST)
+
+    gold_data = load_file(gold_path)
+    lmdb_env = lmdb.open(db_path)
+    lmdb_txn = lmdb_env.begin()
+    lmdb_cursor = lmdb_txn.cursor()
+    overall_errors = 0
+
+
     for iteration in range(iterations):
         i = 0
         local_errors = 0
@@ -254,6 +333,10 @@ def parse_args():
 
     parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold_' + LENET_PRECISION + '.gold')
 
+    parser.add_argument('--multi', dest='multithread',
+                        help='Multi lenet number execution, if it is 1, it is the same as test_mode == 1',
+                        default=1, type=int)
+
     args = parser.parse_args()
 
     return args
@@ -279,6 +362,10 @@ def main():
 
     elif args.test_mode == 3:  # TRAIN ON MNIST
         training(solver_file=args.solver)
+
+    elif args.test_mode == 4:  # Multi lenet radiation test
+        multithread_testing_radiation(model=args.prototxt, weights=args.model, db_path=args.lmdb, gold_path=args.gold,
+                                      iterations=args.iterations, multithread=args.multithread)
 
 
 if __name__ == '__main__':
