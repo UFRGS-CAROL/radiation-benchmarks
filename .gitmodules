@@ -7,3 +7,6 @@
 [submodule "src/cuda/lenet_half/caffe"]
 	path = src/cuda/lenet_half/caffe
 	url = https://github.com/NVIDIA/caffe.git
+[submodule "src/cuda/lenet_double/caffe"]
+	path = src/cuda/lenet_double/caffe
+	url = https://github.com/NVIDIA/caffe.git
