@@ -214,7 +214,7 @@ def parallel_foward(image, net, thread):
     :return: the output data
     """
     global output_list
-    net.blobs['data'].data[...] = np.asarray([image])
+    net.blobs['data'].data[...] = image
     output_list[thread] = net.forward()
 
 
@@ -259,7 +259,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
         image = caffe.io.datum_to_array(datum)
         image = image.astype(np.uint8)
         for i in range(multithread):
-            input_images[i].append([label, image])
+            input_images[i].append([label, np.asarray([image])])
 
     overall_errors = 0
 
@@ -276,8 +276,8 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             for thread in range(multithread):
                 new_thread = Thread(target=parallel_foward, args=(input_images[thread][img][1],
                                                                   net_list[thread], thread))
-                new_thread.start()
                 thread_list.append(new_thread)
+                new_thread.start()
 
             for th in thread_list:
                 th.join()
