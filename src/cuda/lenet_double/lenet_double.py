@@ -276,7 +276,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             for thread in range(multithread):
                 net_list[thread].blobs['data'].data[...] = input_images[thread][img][1]
 
-                new_thread = Thread(target=parallel_foward, args=(thread))
+                new_thread = Thread(target=parallel_foward, args=(thread,))
                 thread_list.append(new_thread)
                 new_thread.start()
 
