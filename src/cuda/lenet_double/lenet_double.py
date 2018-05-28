@@ -218,10 +218,9 @@ class ParallelThread(threading.Thread):
         self.output = self.net.forward()
 
     def set_image(self, image):
-        print np.ndim(self.net.blobs['data'].data[0])
         self.net.blobs['data'].data[...] = image
-        print np.ndim(self.net.blobs['data'].data.shape())
-
+        print np.ndim(self.net.blobs['data'].data[0][0])
+        
     def get_output(self):
         return self.output
 
