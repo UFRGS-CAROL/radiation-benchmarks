@@ -275,16 +275,17 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             thread_list = []
             for thread in range(multithread):
                 net_list[thread].blobs['data'].data[...] = input_images[thread][img][1]
-                parallel_foward(thread)
-            #     thread_list.append(Thread(target=parallel_foward, args=(thread,)))
+                # parallel_foward(thread)
+                thread_list.append(Thread(target=parallel_foward, args=(thread,)))
             #
-            # for th in thread_list:
-            #     th.start()
-            #
-            # for th in thread_list:
-            #     th.join()
-            #
-            # del thread_list
+            for th in thread_list:
+                th.start()
+
+            for th in thread_list:
+                th.join()
+                if not th.is_alive():
+                    del th
+            del thread_list
 
             toc = time()
             average_time += toc - tic
