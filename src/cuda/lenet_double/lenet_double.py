@@ -223,6 +223,10 @@ class ParallelThread(threading.Thread):
     def get_output(self):
         return self.output
 
+    def __del__(self):
+        del self.net.blobs['data'].data[...]
+        super(type(self), self).__del__()
+
 # def parallel_foward(thread):
 #     """
 #     Process in parallel a bunch of lenet exectuions
@@ -278,10 +282,6 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
         for i in range(multithread):
             input_images[i].append([label, np.asarray([image])])
 
-    thread_list = []
-    for thread in range(multithread):
-        thread_list.append(ParallelThread(net=net_list[thread], thread_id=thread))
-
     overall_errors = 0
 
     for iteration in range(iterations):
@@ -300,6 +300,10 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             # parallel_foward(thread)
             # thread_list.append(Thread(target=parallel_foward, args=(thread,)))
             #
+            thread_list = []
+            for thread in range(multithread):
+                thread_list.append(ParallelThread(net=net_list[thread], thread_id=thread))
+
             for thread, th in enumerate(thread_list):
                 th.set_image(input_images[thread][img][1])
                 th.start()
@@ -307,6 +311,10 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             for thread, th in enumerate(thread_list):
                 th.join()
                 output_list[thread] = th.get_output()
+
+            for thread in range(multithread):
+                del thread_list[thread]
+            del thread_list
 
             toc = time()
             average_time += toc - tic
