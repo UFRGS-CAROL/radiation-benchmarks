@@ -6,7 +6,7 @@ import caffe
 import lmdb
 import numpy as np
 from time import time
-import threading
+from multiprocessing import Pool
 
 LOG_INTERVAL = 10
 MAX_ERROR_COUNT = 1000
@@ -206,33 +206,32 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     lh.end_log_file()
 
 
-class ParallelThread(threading.Thread):
-    output = None
+# class ParallelThread(threading.Thread):
+#     output = None
+#
+#     def __init__(self, net, thread_id):
+#         super(ParallelThread, self).__init__()
+#         self.thread_id = thread_id
+#         self.net = net
+#
+#     def run(self):
+#         self.output = self.net.forward()
+#
+#     def set_image(self, image):
+#         self.net.blobs['data'].data[...] = image
+#
+#     def get_output(self):
+#         return self.output
 
-    def __init__(self, net, thread_id):
-        super(ParallelThread, self).__init__()
-        self.thread_id = thread_id
-        self.net = net
-
-    def run(self):
-        self.output = self.net.forward()
-
-    def set_image(self, image):
-        self.net.blobs['data'].data[...] = image
-        print np.ndim(self.net.blobs['data'].data[0][0])
-        
-    def get_output(self):
-        return self.output
-
-# def parallel_foward(thread):
-#     """
-#     Process in parallel a bunch of lenet exectuions
-#     :param image: input image to classify
-#     :param net: neural network
-#     :return: the output data
-#     """
-#     global output_list, net_list
-#     output_list[thread] = net_list[thread].forward()
+def parallel_foward(thread):
+    """
+    Process in parallel a bunch of lenet exectuions
+    :param image: input image to classify
+    :param net: neural network
+    :return: the output data
+    """
+    global output_list, net_list
+    output_list[thread] = net_list[thread].forward()
 
 
 def testing_radiation_multithread(model, weights, db_path, gold_path, iterations, multithread):
@@ -245,8 +244,8 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
     :param iterations: radiation iterations
     :return: void
     """
-    # global output_list
-    # global net_list
+    global output_list
+    global net_list
 
     string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} "
     string_info += "model: {} db_path: {} threads: {}"
@@ -279,6 +278,10 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
         for i in range(multithread):
             input_images[i].append([label, np.asarray([image])])
 
+    # thread_list = []
+    # for thread in range(multithread):
+    #     thread_list.append(ParallelThread(net=net_list[thread], thread_id=thread))
+
     overall_errors = 0
 
     for iteration in range(iterations):
@@ -293,23 +296,17 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             # thread_list = []
             # for thread in thread_list:
             #     thread.setimage(input_images[thread][img][1])
-            # net_list[thread].blobs['data'].data[...] = input_images[thread][img][1]
-            # parallel_foward(thread)
+            for thread in range(multithread):
+                net_list[thread].blobs['data'].data[...] = input_images[thread][img][1]
+
+            with Pool(processes=multithread) as pool:
+                pool.map(parallel_foward, [multithread] * multithread)
             # thread_list.append(Thread(target=parallel_foward, args=(thread,)))
             #
-            thread_list = []
-            for thread in range(multithread):
-                thread_list.append(ParallelThread(net=net_list[thread], thread_id=thread))
 
-            for thread, th in enumerate(thread_list):
-                th.set_image(input_images[thread][img][1])
-                th.start()
+            # for th in thread_list:
+            #     th.join()
 
-            for thread, th in enumerate(thread_list):
-                th.join()
-                output_list[thread] = th.get_output()
-
-            del thread_list
             toc = time()
             average_time += toc - tic
             lh.end_iteration()
@@ -436,6 +433,6 @@ def main():
 
 
 if __name__ == '__main__':
-    # output_list = None
-    # net_list = []
+    output_list = None
+    net_list = []
     main()
