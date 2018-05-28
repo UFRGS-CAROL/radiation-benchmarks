@@ -142,9 +142,10 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     :param iterations: radiation iterations
     :return: void
     """
-    string_info = "iterations: {} gold: {} dataset: mnist weights: {} model: {} db_path: {}".format(iterations,
-                                                                                                    gold_path, weights,
-                                                                                                    model, db_path)
+    string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} model: {} db_path: {}".format(
+                                                    iterations,
+                                                    gold_path, weights,
+                                                    model, db_path, LENET_PRECISION)
     # STARTING log file
     lh.start_log_file("Lenet" + LENET_PRECISION.title(), string_info)
     lh.set_iter_interval_print(LOG_INTERVAL)
@@ -226,7 +227,7 @@ def load_file(filename):
 
 def parse_args():
     """Parse input arguments."""
-    parser = argparse.ArgumentParser(description='Faster R-CNN demo')
+    parser = argparse.ArgumentParser(description='Lenet ' + LENET_PRECISION)
     parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
                         default=0, type=int)
     # radiation logs
@@ -251,7 +252,7 @@ def parse_args():
     parser.add_argument('--solver', dest='solver', help='lenet solver prototxt',
                         default='caffe/examples/mnist/lenet_solver.prototxt')
 
-    parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold.gold')
+    parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold_' + LENET_PRECISION + '.gold')
 
     args = parser.parse_args()
 
