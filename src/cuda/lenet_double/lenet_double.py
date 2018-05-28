@@ -206,16 +206,17 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     lh.end_log_file()
 
 
-def parallel_foward(image, net, thread):
+def parallel_foward(image, thread):
     """
     Process in parallel a bunch of lenet exectuions
     :param image: input image to classify
-    :param net: neural network
+    :param thread: the thread id
     :return: the output data
     """
     global output_list
-    net.blobs['data'].data[...] = image
-    output_list[thread] = net.forward()
+    global net_list
+    net_list[thread].blobs['data'].data[...] = image
+    output_list[thread] = net_list[thread].forward()
 
 
 def testing_radiation_multithread(model, weights, db_path, gold_path, iterations, multithread):
@@ -229,6 +230,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
     :return: void
     """
     global output_list
+    global net_list
 
     string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} "
     string_info += "model: {} db_path: {} threads: {}"
@@ -246,7 +248,6 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
     lmdb_cursor = lmdb_txn.cursor()
     input_images = [[] for _ in range(multithread)]
 
-    net_list = []
     for thread_net in range(multithread):
         net_list.append(caffe.Net(model, weights, caffe.TEST))
 
@@ -274,8 +275,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             tic = time()
             thread_list = []
             for thread in range(multithread):
-                new_thread = Thread(target=parallel_foward, args=(input_images[thread][img][1],
-                                                                  net_list[thread], thread))
+                new_thread = Thread(target=parallel_foward, args=(input_images[thread][img][1], thread))
                 thread_list.append(new_thread)
                 new_thread.start()
 
@@ -411,4 +411,5 @@ def main():
 
 if __name__ == '__main__':
     output_list = None
+    net_list = []
     main()
