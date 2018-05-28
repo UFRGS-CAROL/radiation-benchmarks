@@ -220,6 +220,8 @@ class ParallelThread(threading.Thread):
     def set_image(self, image):
         self.net.blobs['data'].data[...] = image
 
+    def get_output(self):
+        return self.output
 
 # def parallel_foward(thread):
 #     """
@@ -242,8 +244,8 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
     :param iterations: radiation iterations
     :return: void
     """
-    global output_list
-    global net_list
+    # global output_list
+    # global net_list
 
     string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} "
     string_info += "model: {} db_path: {} threads: {}"
@@ -302,8 +304,9 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
                 th.set_image(input_images[thread][img][1])
                 th.start()
 
-            for th in thread_list:
+            for thread, th in enumerate(thread_list):
                 th.join()
+                output_list[thread] = th.get_output()
 
             toc = time()
             average_time += toc - tic
@@ -431,6 +434,6 @@ def main():
 
 
 if __name__ == '__main__':
-    output_list = None
-    net_list = []
+    # output_list = None
+    # net_list = []
     main()
