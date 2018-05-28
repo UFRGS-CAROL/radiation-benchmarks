@@ -278,7 +278,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
 
     thread_list = []
     for thread in range(multithread):
-        thread_list.append(ParallelThread(thread, net_list[thread]))
+        thread_list.append(ParallelThread(net=net_list[thread], thread_id=thread))
 
     overall_errors = 0
 
