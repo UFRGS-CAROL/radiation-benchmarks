@@ -223,10 +223,6 @@ class ParallelThread(threading.Thread):
     def get_output(self):
         return self.output
 
-    def __del__(self):
-        del self.net.blobs['data'].data[...]
-        super(type(self), self).__del__()
-
 # def parallel_foward(thread):
 #     """
 #     Process in parallel a bunch of lenet exectuions
@@ -312,10 +308,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
                 th.join()
                 output_list[thread] = th.get_output()
 
-            for thread in range(multithread):
-                del thread_list[thread]
             del thread_list
-
             toc = time()
             average_time += toc - tic
             lh.end_iteration()
