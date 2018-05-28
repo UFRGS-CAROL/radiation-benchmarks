@@ -220,6 +220,7 @@ class ParallelThread(threading.Thread):
     def set_image(self, image):
         print self.net.blobs['data'].data
         self.net.blobs['data'].data[...] = image
+        print self.net.blobs['data'].data
 
     def get_output(self):
         return self.output
