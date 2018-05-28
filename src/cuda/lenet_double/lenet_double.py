@@ -6,6 +6,7 @@ import caffe
 import lmdb
 import numpy as np
 from time import time
+from threading import Thread
 
 LOG_INTERVAL = 10
 MAX_ERROR_COUNT = 1000
@@ -271,9 +272,17 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             # Multithread execution
             lh.start_iteration()
             tic = time()
-
+            thread_list = []
             for thread in range(multithread):
-                parallel_foward(image=input_images[thread][img][1], net=net_list[thread], thread=thread)
+                new_thread = Thread(target=parallel_foward, args=(input_images[thread][img][1],
+                                                                  net_list[thread], thread))
+                new_thread.start()
+                thread_list.append(new_thread)
+
+            for th in thread_list:
+                th.join()
+
+            del thread_list
 
             toc = time()
             average_time += toc - tic
@@ -307,9 +316,9 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             # Print info
             if img % LOG_INTERVAL == 0:
                 print (
-                    "Multi execution iteration = {}, averaget time = {}, iteration errors = {}, overall errors {},"
-                    " number of thread {}".format(img, average_time / float(LOG_INTERVAL),
-                                                  local_errors, overall_errors, thread))
+                    "Multi execution iteration = {}, averaget time = {}, iteration errors = {}, overall errors {}"
+                        .format(img, average_time / float(LOG_INTERVAL),
+                                local_errors, overall_errors))
                 average_time = 0.0
 
     # CLOSING log file
