@@ -205,6 +205,18 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     lh.end_log_file()
 
 
+def parallel_foward(image, net):
+    """
+    Process in parallel a bunch of lenet exectuions
+    :param image: input image to classify
+    :param net: neural network
+    :return: the output data
+    """
+    net.blobs['data'].data[...] = np.asarray([image])
+    output = net.forward()
+    return output
+
+
 def testing_radiation_multithread(model, weights, db_path, gold_path, iterations, multithread):
     """
     Multi thread radiation test
@@ -224,7 +236,6 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
     lh.start_log_file("Lenet" + LENET_PRECISION.title(), string_info)
     lh.set_iter_interval_print(LOG_INTERVAL)
 
-    net_list = [None] * multithread
     output_list = [None] * multithread
     gold_data = load_file(gold_path)
     lmdb_env = lmdb.open(db_path)
@@ -232,8 +243,9 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
     lmdb_cursor = lmdb_txn.cursor()
     input_images = [[] for _ in range(multithread)]
 
+    net_list = []
     for thread_net in range(multithread):
-        net_list[thread_net] = caffe.Net(model, weights, caffe.TEST)
+        net_list.append(caffe.Net(model, weights, caffe.TEST))
 
     max_images = 0
     for _, value in lmdb_cursor:
@@ -259,11 +271,7 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             tic = time()
 
             for thread in range(multithread):
-                net = net_list[thread]
-                _, image = input_images[thread][img]
-
-                net.blobs['data'].data[...] = np.asarray([image])
-                output_list[thread] = net.forward()
+                output_list[thread] = parallel_foward(input_images[thread][img][1], net_list[thread])
 
             toc = time()
             average_time += toc - tic
@@ -298,8 +306,8 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
             if img % LOG_INTERVAL == 0:
                 print (
                     "Multi execution iteration = {}, averaget time = {}, iteration errors = {}, overall errors {},"
-                    " number of threads {}".format(img, average_time / float(LOG_INTERVAL),
-                                                   local_errors, overall_errors, multithread))
+                    " number of thread {}".format(img, average_time / float(LOG_INTERVAL),
+                                                   local_errors, overall_errors, thread))
                 average_time = 0.0
 
     # CLOSING log file
