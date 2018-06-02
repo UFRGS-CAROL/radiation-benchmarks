@@ -23,7 +23,7 @@ void check_framework_errors(cudaError_t error) {
 	exit(EXIT_FAILURE);
 }
 
-void* safe_cudaMalloc(size_t size) {
+void* safe_cudaMalloc(size_t size, cudaError_t *status) {
 	void* devicePtr;
 	void* goldPtr;
 	void* outputPtr;
@@ -49,7 +49,7 @@ void* safe_cudaMalloc(size_t size) {
 		// Failed
 		free(outputPtr);
 		free(goldPtr);
-		void* newDevicePtr = safe_cudaMalloc(size);
+		void* newDevicePtr = safe_cudaMalloc(size, status);
 		check_framework_errors(cudaFree(devicePtr));
 		return newDevicePtr;
 	}
@@ -59,13 +59,13 @@ void* safe_cudaMalloc(size_t size) {
 	check_framework_errors(cudaMemset(devicePtr, 0x55, size));
 	memset(goldPtr, 0x5, size);
 
-	check_framework_errors(
-			cudaMemcpy(outputPtr, devicePtr, size, cudaMemcpyDeviceToHost));
+	*status = cudaMemcpy(outputPtr, devicePtr, size, cudaMemcpyDeviceToHost);
+	check_framework_errors(*status);
 	if (memcmp(outputPtr, goldPtr, size)) {
 		// Failed
 		free(outputPtr);
 		free(goldPtr);
-		void* newDevicePtr = safe_cudaMalloc(size);
+		void* newDevicePtr = safe_cudaMalloc(size, status);
 		check_framework_errors(cudaFree(devicePtr));
 		return newDevicePtr;
 	}
@@ -151,7 +151,8 @@ float *cuda_make_array(float *x, size_t n) {
 	float *x_gpu;
 	size_t size = sizeof(float) * n;
 #ifdef SAFE_MALLOC
-	x_gpu = safe_cudaMalloc(size);
+	cudaError_t status;
+	x_gpu = safe_cudaMalloc(size, &status);
 #else
 	cudaError_t status = cudaMalloc((void **) &x_gpu, size);
 #endif

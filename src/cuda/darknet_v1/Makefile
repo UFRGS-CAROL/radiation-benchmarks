@@ -58,6 +58,10 @@ ifeq ($(GEN_IMG), 1)
 	CFLAGS+= -DGEN_IMG
 endif
 
+ifeq ($(SAFE_MALLOC), 1)
+	CFLAGS+= -DSAFE_MALLOC
+endif
+
 ifeq ($(LOGS), 1)
 	CFLAGS+=-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelper -DLOGS=1 
 	#LOG_LINK= -Xcompiler "-I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1 " -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -lLogHelperCuda -DLOGS=1
@@ -112,7 +116,7 @@ results:
 .PHONY: clean
 
 test_hardening:
-	./$(TARGET) test_radiation -e yolo_dmr -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
+	./$(TARGET) test_radiation -e yolo_mem_check -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
 							-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
 							-n 20 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
 							-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
