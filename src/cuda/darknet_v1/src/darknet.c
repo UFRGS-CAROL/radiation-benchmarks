@@ -385,7 +385,8 @@ int main(int argc, char **argv) {
 				start_count_app(to_parse.gold_inout, to_parse.save_layers,
 						to_parse.abft, to_parse.iterations, "cudaDarknetV1");
 			}
-			if ((strcmp(to_parse.execution_type, "yolo") == 0) || (strcmp(to_parse.execution_type, "yolo_dmr") == 0)){
+			if ((strcmp(to_parse.execution_type, "yolo") == 0) || (strcmp(to_parse.execution_type, "yolo_dmr"
+					|| strcmp(to_parse.execution_type, "yolo_mem_check")) == 0)){
 				struct stat st = { 0 };
 				if (to_parse.abft && stat(SAVE_LAYERS_DIR, &st) == -1)
 					mkdir(SAVE_LAYERS_DIR, 0777);

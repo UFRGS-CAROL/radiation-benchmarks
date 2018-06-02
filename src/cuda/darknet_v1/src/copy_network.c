@@ -710,4 +710,3 @@ void copy_network_content_to_buffer(network *mt_net, network_state *mt_state,
 	}
 
 }
-
