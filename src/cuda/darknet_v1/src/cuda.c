@@ -27,7 +27,7 @@ void* safe_cudaMalloc(size_t size) {
 	void* devicePtr;
 	void* goldPtr;
 	void* outputPtr;
-	printf("Passou aqui\n");
+	printf("Passou aqui %d\n", size);
 	// First, alloc DEVICE proposed memory and HOST memory for device memory checking
 	check_framework_errors(cudaMalloc(&devicePtr, size));
 	outputPtr = malloc(size);
