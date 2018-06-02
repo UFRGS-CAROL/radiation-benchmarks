@@ -761,26 +761,43 @@ void test_yolo_radiation_dmr(Args *arg) {
 	int j;
 	float nms = .4;
 	int total_size = l[0].side * l[0].side * l[0].n;
-	box *boxes = calloc(total_size, sizeof(box));
-	float **probs = calloc(total_size, sizeof(float *));
-	for (j = 0; j < total_size; ++j)
-		probs[j] = calloc(l[0].classes, sizeof(float *));
+//	box *boxes = calloc(total_size, sizeof(box));
+	// Must alloc for each execution line of the TMR
+	box **array_mr_box = calloc(mr_size, sizeof(box*));
+	for(mr_i = 0; mr_i < mr_size; mr_i++)
+		array_mr_box = calloc(total_size, sizeof(box));
+
+	float ***array_mr_probs = calloc(mr_size, sizeof(float**));
+	for(mr_i = 0; mr_i < mr_size; mr_size++)
+		array_mr_probs[mr_i] = calloc(total_size, sizeof(float*));
+//	float **probs = calloc(total_size, sizeof(float *));
+
+		for (j = 0; j < total_size; j++)
+//			probs[j] = calloc(l[0].classes, sizeof(float *));
+			array_mr_probs[mr_i][j] = calloc(l[0].classes, sizeof(float));
 
 	//-------------------------------------------------------------------------------
 	//load all images
 	const image *im_array = load_all_images(gold);
-	const image *im_array_sized = load_all_images_sized(im_array, net[0].w,
-			net[0].h, gold.plist_size);
+	const image **array_of_im_array_sized = calloc(mr_size, sizeof(image*));
+	for(mr_i = 0; mr_i < mr_size; mr_i++)
+		array_of_im_array_sized[mr_i] = load_all_images_sized(im_array, net[0].w,
+				net[0].h, gold.plist_size);
+//	const image *im_array_sized = load_all_images_sized(im_array, net[0].w,
+//			net[0].h, gold.plist_size);
 
 	//need to allocate layers arrays
 	alloc_gold_layers_arrays(&gold, &net[0]);
 
 	int i, it;
-
+	// Inputs for
+	float **X = calloc(mr_size, sizeof(float*));
 	for (it = 0; it < arg->iterations; it++) {
 		for (i = 0; i < gold.plist_size; i++) {
 
-			float *X = im_array_sized[i].data;
+//			float *X = im_array_sized[i].data;
+			for(mr_i = 0; mr_i < mr_size; mr_i++)
+				X[mr_i] = array_of_im_array_sized[mr_i][i].data;
 
 			double time = mysecond();
 
@@ -794,6 +811,8 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 			for (mr_i = 0; mr_i < mr_size; mr_i++) {
 				float *predictions = mr_predictions[mr_i];
+				float **probs = array_mr_probs[mr_i];
+				box *boxes = array_mr_box[mr_i];
 
 				convert_detections(predictions, l[mr_i].classes, l[mr_i].n,
 						l[mr_i].sqrt, l[mr_i].side, 1, 1, arg->thresh, probs,
@@ -803,6 +822,8 @@ void test_yolo_radiation_dmr(Args *arg) {
 							l[mr_i].side * l[mr_i].side * l[mr_i].n,
 							l[mr_i].classes, nms);
 
+				//Compare if the inputs and outputs are good
+				compare_input_output();
 				//      here we test if any error happened
 				//          if shit happened we log
 
@@ -846,12 +867,21 @@ void test_yolo_radiation_dmr(Args *arg) {
 		}
 	}
 	//free the memory
-	free_ptrs((void **) probs, l[0].w * l[0].h * l[0].n);
-	free(boxes);
+	for(mr_i = 0; mr_i < mr_size; mr_i++){
+		float **probs = array_mr_probs[mr_i];
+		free_ptrs((void **) probs, l[0].w * l[0].h * l[0].n);
+		box *boxes = array_mr_box[mr_i];
+		free(boxes);
+
+		const image **im_array_sized = array_of_im_array_sized[mr_i];
+		free_all_images(im_array_sized, gold.plist_size);
+
+	}
+
 
 	delete_detection_var(&gold, arg);
 	free_all_images(im_array, gold.plist_size);
-	free_all_images(im_array_sized, gold.plist_size);
+
 
 	//free smartpool errors
 	free_error_return(&max_pool_errors);
