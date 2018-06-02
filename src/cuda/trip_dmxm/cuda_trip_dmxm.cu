@@ -50,16 +50,18 @@ double *d_B[3];
 double *d_C[3];
 //====================================
 
-void checkFrameworkErrors(cudaError_t error) {
+#define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
+
+void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 	if(error == cudaSuccess) {
 		return;
 	} 
 	char errorDescription[250];
-	snprintf(errorDescription, "CUDA Framework error: %s. Bailing.", cudaGetErrorString(error));
+	snprintf(errorDescription, 250, "CUDA Framework error: %s. Bailing.", cudaGetErrorString(error));
 #ifdef LOGS
 	log_error_detail((char *)errorDescription); end_log_file();
 #endif
-	printf("%s\n", errorDescription);
+	printf("%s - Line: %d at %s\n", errorDescription, line, file);
 	exit(EXIT_FAILURE);
 }
 
@@ -122,7 +124,7 @@ void* safe_cudaMalloc(size_t size) {
 	
 	// ===> SECOND PHASE: CHECK SETTING BITS TO 01010101
 	checkFrameworkErrors( cudaMemset(devicePtr, 0x55, size) );
-	memset(goldPtr, 0x5, size);
+	memset(goldPtr, 0x55, size);
 	
 	checkFrameworkErrors( cudaMemcpy(outputPtr, devicePtr, size, cudaMemcpyDeviceToHost) );
 	if (memcmp(outputPtr, goldPtr, size)) {
@@ -155,15 +157,25 @@ void allocCudaMemory()
 	d_C[2] = (double*) safe_cudaMalloc( matrixSize * sizeof( double ) );
 }
 
+void freeCudaMemory() {
+	checkFrameworkErrors( cudaFree( d_A[0] ) );
+	checkFrameworkErrors( cudaFree( d_A[1] ) );
+	checkFrameworkErrors( cudaFree( d_A[2] ) );
+
+	checkFrameworkErrors( cudaFree( d_B[0] ) );
+	checkFrameworkErrors( cudaFree( d_B[1] ) );
+	checkFrameworkErrors( cudaFree( d_B[2] ) );
+
+	checkFrameworkErrors( cudaFree( d_C[0] ) );
+	checkFrameworkErrors( cudaFree( d_C[1] ) );
+	checkFrameworkErrors( cudaFree( d_C[2] ) );
+}
+
 void copyCudaMemory()
 {
-//================== CUDA error handlers
-	cudaError_t mcpy;
-	const char *erro;
-//====================================
-	checkFrameworkErrors( cudaMemset( d_C[0], 0, matrixSize * sizeof (double)) );
-	checkFrameworkErrors( cudaMemset( d_C[1], 0, matrixSize * sizeof (double)) );
-	checkFrameworkErrors( cudaMemset( d_C[2], 0, matrixSize * sizeof (double)) );
+	checkFrameworkErrors( cudaMemset( d_C[0], 0x00, matrixSize * sizeof (double)) );
+	checkFrameworkErrors( cudaMemset( d_C[1], 0x00, matrixSize * sizeof (double)) );
+	checkFrameworkErrors( cudaMemset( d_C[2], 0x00, matrixSize * sizeof (double)) );
 
 	checkFrameworkErrors( cudaMemcpy( d_A[0], A, matrixSize * sizeof( double ), cudaMemcpyHostToDevice ) ); // PUSH A
 	checkFrameworkErrors( cudaMemcpy( d_A[1], A, matrixSize * sizeof( double ), cudaMemcpyHostToDevice ) ); // PUSH A
@@ -217,15 +229,49 @@ void ReadMatrixFromFile(){
 	}
 }
 
-__global__ void MatrixMulKernel (double *d_A, double *d_B, double *d_C, int n)
+__global__ void MatrixMulKernel (double *d_A0, double *d_A1, double *d_A2, double *d_B0, double *d_B1, double *d_B2, double *d_C0, double *d_C1, double *d_C2, int n)
 {
 	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;                                                      
 	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y; 
 	int k;
-	
-	for (k = 0;  k < n; k++)
-		d_C[ty*n + tx] += d_A[ty*n + k]*d_B[k*n + tx];
 
+	register size_t offset_A;
+	register double in_A;
+	register double in_A1;
+
+	register size_t offset_B;
+	register double in_B;
+	register double in_B1;
+	
+	register double acc = 0.0;
+	for (k = 0;  k < n; k++) {
+	
+		offset_A = ty*n + k;
+		in_A = d_A0[offset_A];
+		in_A1 = d_A1[offset_A];
+		if (in_A != in_A1) {
+			if (in_A != d_A2[offset_A]) {
+				in_A = in_A1;
+			}
+		}
+	
+		offset_B = k*n + tx;
+		in_B = d_B0[offset_B];
+		in_B1 = d_B1[offset_B];
+		if (in_B != in_B1) {
+			if (in_B != d_B2[offset_B]) {
+				in_B = in_B1;
+			}
+		}
+
+		acc += in_A * in_B;
+	}
+
+	register size_t offset_C = ty*n + tx;
+
+	d_C0[offset_C] = acc;
+	d_C1[offset_C] = acc;
+	d_C2[offset_C] = acc;
 }
 
 void usage() {
@@ -234,38 +280,77 @@ void usage() {
 
 void checkOutputErrors() {
 	int host_errors = 0;
+	int memory_errors = 0;
 
 	#pragma omp parallel for shared(host_errors)
-	for(int i=0; (i<k*k); i++)
+	for(int i=0; i<matrixSize; i++)
 	{
+		register bool checkFlag = true;
 		register double valGold = GOLD[i];
 		register double valOutput0 = C[0][i];
 		register double valOutput1 = C[1][i];
 		register double valOutput2 = C[2][i];
-		if (valOutput != valOutput1) {
-			if (valOutput != valOutput2) {
-				if (valOutput1 != valOutput2) {
-					// All 3 values are different. Cazzo
+		register double valOutput = valOutput0;
+		if ((valOutput0 != valOutput1) || (valOutput1 != valOutput2)) {
+			#pragma omp critical
+			{
+				char info_detail[150];
+				snprintf(info_detail, 150, "m: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e", (int)floor(i/k), i%k, valOutput0, valOutput1, valOutput2);
+				if (verbose && (memory_errors < 10)) printf("%s\n", info_detail);
 
+				#ifdef LOGS
+					log_info_detail(info_detail);
+				#endif
+				memory_errors+=1;
+			}
+			if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2)) {
+				// All 3 values diverge
+				if (valOutput0 == valGold) {
+					valOutput = valOutput0;
+				} else if (valOutput1 == valGold) {
+					valOutput = valOutput1;
+				} else if (valOutput2 == valGold) {
+					valOutput = valOutput2;
 				} else {
-					// Only 0 is wrong. 1 == 2
+					// NO VALUE MATCHES THE GOLD AND ALL 3 DIVERGE!
+					checkFlag = false;
+					#pragma omp critical
+					{
+						char error_detail[150];
+						snprintf(error_detail, 150, "f: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e, e: %1.20e", (int)floor(i/k), i%k, valOutput0, valOutput1, valOutput2, valGold);
+						if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
+		
+						#ifdef LOGS
+							log_error_detail(error_detail);
+						#endif
+						host_errors++;
+					}
 				}
-			} else if (valOutput1 != valOutput2) {
-				// Only 1 is wrong. 
+			} else if (valOutput1 == valOutput2) {
+				// Only value 0 diverge
+				valOutput = valOutput1;
+			} else if (valOutput0 == valOutput2) {
+				// Only value 1 diverge
+				valOutput = valOutput0;
+			} else if (valOutput0 == valOutput1) {
+				// Only value 2 diverge
+				valOutput = valOutput0;
 			}
 		}
 		// if ((fabs((double)(valOutput-valGold)/valGold) > 1e-10)||(fabs((double)(valOutput-valGold)/valGold) > 1e-10)) {
 		if (valGold != valOutput) {	
-			#pragma omp critical
-			{
-				char error_detail[150];
-				snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", (int)floor(i/k), i%k, valOutput, valGold);
-				if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
-
-				#ifdef LOGS
-					log_error_detail(error_detail);
-				#endif
-				host_errors++;
+			if (checkFlag) {
+				#pragma omp critical
+				{
+					char error_detail[150];
+					snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e", (int)floor(i/k), i%k, valOutput, valGold);
+					if (verbose && (host_errors < 10)) printf("%s\n", error_detail);
+	
+					#ifdef LOGS
+						log_error_detail(error_detail);
+					#endif
+					host_errors++;
+				}
 			}
 		}
 	}
@@ -278,9 +363,7 @@ void checkOutputErrors() {
 			log_error_count(host_errors);
 		#endif
 		//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
-		checkFrameworkErrors( cudaFree( d_A ) );
-		checkFrameworkErrors( cudaFree( d_B ) );
-		checkFrameworkErrors( cudaFree( d_C ) );
+		freeCudaMemory();
 		//====================================
 		ReadMatrixFromFile();
 		//================== Init DEVICE memory
@@ -380,13 +463,6 @@ int main( int argc, char* argv[] )
 		device_warmup = 0;
         printf("!! The first iteration may not reflect real timing information\n");
     }
-
-	// if (checkCmdLineFlag(argc, (const char **)argv, "no-gpu-gold-check"))
-    // {
-	// 	gpu_check = 0;
-    // } else {
-    //     printf("!! The gold check will happen on the GPU and fall back to CPU in case of errors\n");
-    // }
 //====================================
 
 //================== Set block and grid size for MxM kernel
@@ -456,7 +532,7 @@ int main( int argc, char* argv[] )
 			start_iteration();
 		#endif
 		//================== Device computation, DMxM
-		MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, k);
+		MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A[0], d_A[1], d_A[2], d_B[0], d_B[1], d_B[2], d_C[0], d_C[1], d_C[2], k);
 
 		checkFrameworkErrors( cudaPeekAtLastError() );
 		
@@ -528,13 +604,14 @@ int main( int argc, char* argv[] )
     gflops / averageKernelTime, gflops / min_kernel_time, gflops / max_kernel_time);
 
 	//================== Release device memory
-	checkFrameworkErrors( cudaFree( d_A ) );
-	checkFrameworkErrors( cudaFree( d_B ) );
-	checkFrameworkErrors( cudaFree( d_C ) );
+	freeCudaMemory();
 	//====================================
 
 	free( A );
 	free( B );
+	free( C[0] );
+	free( C[1] );
+	free( C[2] );
 	free( GOLD );
 	#ifdef LOGS
 	end_log_file();
