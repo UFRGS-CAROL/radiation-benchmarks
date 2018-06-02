@@ -57,7 +57,7 @@ void* safe_cudaMalloc(size_t size) {
 
 	// ===> SECOND PHASE: CHECK SETTING BITS TO 01010101
 	check_framework_errors(cudaMemset(devicePtr, 0x55, size));
-	memset(goldPtr, 0x5, size);
+	memset(goldPtr, 0x55, size);
 
 	check_framework_errors(cudaMemcpy(outputPtr, devicePtr, size, cudaMemcpyDeviceToHost));
 	if (memcmp(outputPtr, goldPtr, size)) {
