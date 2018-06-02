@@ -9,6 +9,8 @@ int gpu_index = 0;
 #include <stdlib.h>
 #include <time.h>
 
+static unsigned char is_crash = 0;
+
 void check_framework_errors(cudaError_t error) {
 	if (error == cudaSuccess) {
 		return;
@@ -27,7 +29,16 @@ void* safe_cudaMalloc(size_t size) {
 	void* devicePtr;
 	void* goldPtr;
 	void* outputPtr;
-	printf("Passou aqui %d\n", size);
+
+	if(is_crash == 0) {
+		char errorDescription[250];
+		sprintf(errorDescription, "Trying_to_alloc_memory_GPU_may_crash");
+#ifdef LOGS
+		log_info_detail((char *)errorDescription);
+#endif
+		is_crash = 1;
+	}
+
 	// First, alloc DEVICE proposed memory and HOST memory for device memory checking
 	check_framework_errors(cudaMalloc(&devicePtr, size));
 	outputPtr = malloc(size);
@@ -153,7 +164,7 @@ float *cuda_make_array(float *x, size_t n) {
 	cudaError_t status;
 	x_gpu = safe_cudaMalloc(size);
 	if(x_gpu == 0)
-		status = 0;
+	status = 0;
 #else
 	cudaError_t status = cudaMalloc((void **) &x_gpu, size);
 #endif
