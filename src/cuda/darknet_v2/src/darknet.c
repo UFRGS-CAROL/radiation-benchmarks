@@ -432,8 +432,10 @@ int main(int argc, char **argv) {
 		// test if it is an radiation setup
 		Args parsed_args;
 		args_init_and_setnull(&parsed_args);
+		int parsed = parse_arguments(&parsed_args, argc, argv);
+		set_tensor_cores(parsed_args.use_tensor_cores);
 
-		switch (parse_arguments(&parsed_args, argc, argv)) {
+		switch (parsed) {
 
 			case 1: { //generate
 				//for radiation test/fault injection
@@ -444,7 +446,7 @@ int main(int argc, char **argv) {
 				//void start_count_app(char *test, int save_layer, int abft, int iterations,
 	//				char *app)
 				start_count_app(parsed_args.gold_inout, parsed_args.save_layers,
-						parsed_args.abft, parsed_args.iterations, "cudaDarknetv2");
+						parsed_args.abft, parsed_args.iterations, "cudaDarknetv2", parsed_args.use_tensor_cores);
 				test_detector_radiation(&parsed_args);
 				finish_count_app();
 				break;

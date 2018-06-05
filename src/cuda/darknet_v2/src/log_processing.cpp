@@ -19,16 +19,17 @@
 #endif
 
 void start_count_app(char *test, int save_layer, int abft, int iterations,
-		char *app) {
+		char *app, unsigned char use_tensor_core_mode) {
 #ifdef LOGS
 	char save_layer_char[10];
 	char iterations_char[50];
 	sprintf(save_layer_char, "%d", save_layer);
 	sprintf(iterations_char, "%d", iterations);
 
+
 	std::string test_info = std::string("gold_file: ") + std::string(test) +
 	" save_layer: " + save_layer_char + " abft_type: " +
-	ABFT_TYPES[abft] + " iterations: " + iterations_char;
+	ABFT_TYPES[abft] + " iterations: " + iterations_char + " tensor_core_mode: " + std::to_string(use_tensor_core_mode);
 
 	set_iter_interval_print(10);
 
@@ -366,6 +367,8 @@ inline int get_index(float *a, int n) {
 		if (a[i] > max) {
 			max = a[i];
 			max_i = i;
+//			printf("in time max %f\n", max);
+
 		}
 	}
 	return max_i;
@@ -414,6 +417,7 @@ prob_array load_prob_array(int num, int classes, std::ifstream &ifp) {
 
 	std::string line;
 	std::vector<std::string> splited;
+	printf("before\n");
 	for (int i = 0; i < num; ++i) {
 
 		getline(ifp, line);
@@ -430,6 +434,7 @@ prob_array load_prob_array(int num, int classes, std::ifstream &ifp) {
 
 		ret.boxes[i] = b;
 	}
+	printf("finish\n");
 	return ret;
 }
 
@@ -469,13 +474,16 @@ detection load_gold(Args *arg) {
 	gold.pb_gold = (prob_array*) calloc(gold.plist_size, sizeof(prob_array));
 
 	for (int i = 0; i < gold.plist_size && getline(img_list_file, line); i++) {
+		printf("passou auqi\n");
 		line.erase(line.size() - 1);
 		gold.img_names[i] = (char*) calloc(line.size(), sizeof(char));
 		std::vector<string> line_splited = split(line, ';');
 		strcpy(gold.img_names[i], line_splited[0].c_str());
+		printf("passou auqi plist size %d i %d\n", gold.plist_size, i);
 
 		gold.pb_gold[i] = load_prob_array(gold.total, gold.classes,
 				img_list_file);
+		printf("last chance\n");
 	}
 
 	return gold;
@@ -537,21 +545,26 @@ void print_detection(detection det) {
 
 }
 
-inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
-		box g_b, char* img, int class_g, int class_f, int pb_i) {
-	float diff_float[] = { std::fabs(f_b.x - g_b.x), std::fabs(f_b.y - g_b.y),
-			std::fabs(f_pb - g_pb), std::fabs(f_b.h - g_b.h), std::fabs(
-					f_b.w - g_b.w), (float) std::abs(class_g - class_f) };
+inline std::string error_check(float f_pb, float g_pb, box f_b, box g_b,
+		char* img, int class_g, int class_f, int pb_i) {
+
+	std::vector<float> diff_array = { std::fabs(f_b.x - g_b.x),  //x axis
+	std::fabs(f_b.y - g_b.y), //y axis
+	std::fabs(f_pb - g_pb), //probabilities
+	std::fabs(f_b.h - g_b.h), // height
+	std::fabs(f_b.w - g_b.w), (float) std::abs(class_g - class_f) }; // width and class
 
 //	if (class_g != class_f)
 //		std::cout << " val " << class_g << " " << class_f << "\n";
 	bool diff = false;
-	for (int i = 0; i < 6; i++) {
-		if (diff_float[i] > THRESHOLD_ERROR)
+	for (auto diff_element : diff_array) {
+		if (diff_element > THRESHOLD_ERROR)
 			diff = true;
 	}
 
-	if (diff)
+	if (diff) {
+		char error_detail[1000];
+
 		sprintf(error_detail, "img: [%s]"
 				" prob_r[%d][%d]: %1.16e"
 				" prob_e[%d][%d]: %1.16e"
@@ -561,13 +574,15 @@ inline bool error_check(char *error_detail, float f_pb, float g_pb, box f_b,
 				" h_r: %1.16e h_e: %1.16e", img, pb_i, class_f, f_pb, pb_i,
 				class_g, g_pb, f_b.x, g_b.x, f_b.y, g_b.y, f_b.w, g_b.w, f_b.h,
 				g_b.h);
+		return std::string(error_detail);
+	}
 
-	return diff;
+	return "";
 }
 
-int compare(detection *det, float **f_probs, box *f_boxes, int num,
-		int classes, int img, int save_layers, int test_iteration,
-		char *img_list_path, error_return max_pool_errors, image im) {
+int compare(detection *det, float **f_probs, box *f_boxes, int num, int classes,
+		int img, int save_layers, int test_iteration, char *img_list_path,
+		error_return max_pool_errors, image im) {
 
 //	network *net = det->net;
 	prob_array gold = det->pb_gold[img];
@@ -580,15 +595,23 @@ int compare(detection *det, float **f_probs, box *f_boxes, int num,
 	std::list<box> gold_boxes;
 
 	int error_count = 0;
-	for (int i = 0; i < num; ++i) {
-//		int class_ = get_index(g_probs[i], classes);
+	for (int i = 0; i < num; i++) {
+
 		box g_b = g_boxes[i];
 		box f_b = f_boxes[i];
 		int class_g = get_index(g_probs[i], classes);
 		int class_f = get_index(f_probs[i], classes);
-//		for (int class_ = 0; class_ < classes; class_++) {
+
 		float g_prob = g_probs[i][class_g];
 		float f_prob = f_probs[i][class_f];
+
+//		printf("Gold box dddd\n");
+//		print_box(g_b);
+//
+//		printf("Found box\n");
+//		print_box(g_b);
+//		printf("Gold prob %f found prob %f\n", g_prob, f_prob);
+
 
 		if (f_prob >= CONSIDERING_DETECTION) {
 			found_boxes.push_back(f_b);
@@ -596,18 +619,18 @@ int compare(detection *det, float **f_probs, box *f_boxes, int num,
 		if (g_prob >= CONSIDERING_DETECTION) {
 			gold_boxes.push_back(g_b);
 		}
-		char error_detail[1000];
-		if (error_check(error_detail, f_prob, g_prob, f_b, g_b, img_string,
-				class_g, class_f, i)) {
-			error_count++;
 
+		std::string error_detail = error_check(f_prob, g_prob, f_b, g_b,
+				img_string, class_g, class_f, i);
+
+		if (error_detail != "") {
+			error_count++;
 #ifdef LOGS
-			log_error_detail(error_detail);
+			log_error_detail(const_cast<char*>(error_detail.c_str()));
 #else
 			printf("%s\n", error_detail);
 #endif
 
-//			}
 		}
 
 	}
@@ -637,7 +660,7 @@ int compare(detection *det, float **f_probs, box *f_boxes, int num,
 	std::vector<box> gold_boxes_vector(std::begin(gold_boxes), std::end(gold_boxes));
 	std::vector<box> found_boxes_vector(std::begin(found_boxes), std::end(found_boxes));
 
-	if (error_count != 0){
+	if (error_count != 0) {
 		std::pair<float, float> pr = online_precision_recall(gold_boxes_vector, found_boxes_vector,
 				PR_THRESHOLD, im);
 

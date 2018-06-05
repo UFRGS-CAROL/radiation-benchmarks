@@ -25,6 +25,7 @@ void args_init_and_setnull(Args *arg) {
 	arg->thresh = 0.24;
 	arg->hier_thresh = 0.5;
 	arg->abft = 0;
+	arg->use_tensor_cores = 0;
 }
 
 /**
@@ -68,6 +69,11 @@ int check_args(Args *arg) {
 		return -1;
 	}
 
+	if (arg->use_tensor_cores > 1){
+		printf("Use tensor cores flag must be 0 or 1\n");
+		return -1;
+	}
+
 	//make sure if it is generate is only one iteration
 	arg->iterations = ((arg->generate_flag) ? 1 : arg->iterations);
 	return 1;
@@ -87,10 +93,11 @@ void print_args(const Args arg) {
 			"cfg_data = %s\n"
 			"threshold = %f\n"
 			"hier_thresh = %f\n"
-			"abft = %d\n", arg.config_file, arg.weights, arg.iterations,
+			"abft = %d\n"
+			"use_tensor_core = %d\n", arg.config_file, arg.weights, arg.iterations,
 			arg.gold_inout, arg.generate_flag, arg.img_list_path,
 			arg.save_layers, arg.model, arg.cfg_data, arg.thresh,
-			arg.hier_thresh, arg.abft);
+			arg.hier_thresh, arg.abft, arg.use_tensor_cores);
 }
 
 /**
@@ -107,15 +114,16 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 					{ "img_list_path", required_argument, NULL, 'l' }, //data path list input
 					{ "gold_inout", required_argument, NULL, 'd' },  //gold path
 					{ "save_layers", required_argument, NULL, 's' }, //save layers
-					{ "abft", required_argument, NULL, 'a'},
+					{ "abft", required_argument, NULL, 'a'}, //abft
+					{ "use_tensor_core", required_argument, NULL, 't'}, //tensor cores
 					{ NULL, 0, NULL, 0 } };
 
 	// loop over all of the options
 	char ch;
 	int option_index = 0;
 	to_parse->generate_flag = 0;
-	int max_args = 12;
-	while ((ch = getopt_long(argc, argv, "c:w:n:g:l:d:s:a:", long_options,
+	int max_args = 13;
+	while ((ch = getopt_long(argc, argv, "c:w:n:g:l:d:s:a:t:", long_options,
 			&option_index)) != -1 && --max_args) {
 
 		// check to see if a single character or long option came through
@@ -161,6 +169,11 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 			break;
 		}
 
+		case 't': {
+			to_parse->use_tensor_cores = atoi(optarg);
+			break;
+		}
+
 		}
 
 	}
@@ -179,5 +192,6 @@ void usage(char **argv, char *model, char *message) {
 					"-g --generate   = generates a gold\n"
 					"-l --img_list_path = list for all dataset image\n"
 					"-d --gold_inout = if not writing a gold a gold is being reading\n"
-					"-s --save_layers = this must set to 1 if you want to save all wrong computed layers\n");
+					"-s --save_layers = this must set to 1 if you want to save all wrong computed layers\n"
+					"-t --use_tensor_cores = using the tensor cores\n");
 }

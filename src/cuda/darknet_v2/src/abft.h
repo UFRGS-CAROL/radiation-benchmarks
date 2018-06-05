@@ -15,7 +15,7 @@ typedef struct {
 
 #define MAXPOOL_N 5
 
-#define MAX_ABFT_TYPES 6
+#define MAX_ABFT_TYPES 8
 
 void init_error_return(error_return *e);
 

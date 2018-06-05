@@ -11,9 +11,9 @@
 #include <unistd.h> //acess F_OK
 #include <stdio.h> //printf
 #include <stdlib.h> //atol
+#include "abft.h"
 
-
-#define MAX_ABFT_TYPES 8
+//#define MAX_ABFT_TYPES 8
 
 typedef enum {
 	 NONE,
@@ -52,6 +52,9 @@ typedef struct arguments {
 	float hier_thresh;
 
 	abft_type abft;
+
+	//use tensor cores
+	unsigned char use_tensor_cores;
 } Args;
 
 void args_init_and_setnull(Args *arg);

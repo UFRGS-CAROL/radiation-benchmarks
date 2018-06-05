@@ -75,6 +75,10 @@ OBJ+= im2col_kernels.o col2im_kernels.o blas_kernels.o crop_layer_kernels.o drop
 OBJ+= maxpool_layer_kernels.o network_kernels.o avgpool_layer_kernels.o maxpool_layer_hardened_kernels.o
 endif
 
+ifeq ($(SAFE_MALLOC), 1)
+CFLAGS+= -DSAFE_MALLOC
+endif
+
 ifeq ($(LOGS), 1)
 LOGHELPER_INC=-I../../include/
 LOGHELPER_LIB= -L../../include/ -lLogHelper -DLOGS=1
@@ -127,8 +131,8 @@ generate:
 	./$(TARGET) test_radiation  -c $(RAD_DIR)/data/darknet/yolo_v2.cfg \
 								  -w $(RAD_DIR)/data/darknet/yolo_v2.weights \
 								  -g 1 -d $(RAD_DIR)/data/darknet/fault_injection.csv -s 1 -l   \
-								  $(RAD_DIR)/data/networks_img_list/fault_injection.txt -a 0
+								  $(RAD_DIR)/data/networks_img_list/fault_injection.txt -a 0 -t 1
 
 test:
-	./$(TARGET) test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 10 -s 0 -a 0 
+	./$(TARGET) test_radiation -d $(RAD_DIR)/data/darknet/fault_injection.csv -n 10 -s 0 -a 0 -t 0
 
