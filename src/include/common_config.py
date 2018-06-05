@@ -1,25 +1,25 @@
 import os
 from socket import gethostname
 
-DEBUG_MODE = True
+#ADD new boards lines here
 POSSIBLE_BOARDS_BRANDS = {"NVIDIA": "nvidia-smi --query-gpu=gpu_name --format=csv,noheader",
                           "AMD": "clinfo",
-                          "INTEL": ""}
+                          "INTEL": "something_here"}
 
 
-def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin):
+def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug):
     """
     This function will execute generate commands and create json file for the chosen benchmark
     :param execute:
     :param generate:
     :param install_dir:
     :param benchmark_bin:
+    :param debug: if you want debug the config
     :return:
     """
     for i in generate:
         print i
-        if not DEBUG_MODE:
-            if os.system(str(i)) != 0:
+        if not debug and os.system(str(i)) != 0:
                 print "Something went wrong with generate of ", str(i)
                 exit(1)
 
@@ -42,7 +42,7 @@ def discover_board():
     :return: the board model and the hostname
     """
     hostname = gethostname()
-    for test_board in POSSIBLE_BOARDS_BRANDS:
-        if os.system(test_board) != 0:
+    for test_board, test_command in POSSIBLE_BOARDS_BRANDS.iteritems():
+        if os.system(test_command + " 2> /tmp/config") == 0:
             return test_board, hostname
     return None, None
