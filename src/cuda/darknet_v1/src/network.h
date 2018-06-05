@@ -101,6 +101,10 @@ float *get_network_output_gpu(network net);
 
 void backward_network_gpu(network net, network_state state);
 void update_network_gpu(network net, cudaStream_t stream);
+
+
+// use tensor cores set
+void set_tensor_cores(unsigned char use_tcs);
 #endif
 
 multi_thread_hd_st create_handle();

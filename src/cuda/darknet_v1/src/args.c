@@ -27,6 +27,7 @@ void args_init_and_setnull(Args *arg) {
 	arg->thresh = 0.24;
 	arg->hier_thresh = 0.5;
 	arg->gold_inout = NULL;
+	arg->use_tensor_cores = 0;
 }
 /**
  * return 1 if everything is ok, and 0 if not
@@ -81,8 +82,13 @@ int check_args(Args *arg) {
 		return -1;
 	}
 
-	if(arg->abft < 0 && arg->abft >= MAX_ABFT_TYPES){
+	if (arg->abft < 0 && arg->abft >= MAX_ABFT_TYPES) {
 		printf("abft must be between 0 and 5\n");
+		return -1;
+	}
+
+	if (arg->use_tensor_cores > 1) {
+		printf("Select a valid tensor cores mode 0 or 1\n");
 		return -1;
 	}
 
@@ -107,12 +113,13 @@ void print_args(const Args arg) {
 					"base_result_out = %s\n"
 					"gpu_index = %d\n"
 					"save_layer = %d\n"
-					"abft = %d\n", arg.execution_type,
+					"abft = %d\n"
+					"tensor cores = %d\n", arg.execution_type,
 			arg.execution_model,
 			arg.config_file, arg.weights, arg.iterations,
 			((arg.generate_flag == 0) ? arg.gold_inout : arg.gold_inout),
 			arg.generate_flag, arg.img_list_path, arg.base_result_out,
-			arg.gpu_index, arg.save_layers, arg.abft);
+			arg.gpu_index, arg.save_layers, arg.abft, arg.use_tensor_cores);
 }
 
 /**
@@ -132,19 +139,21 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 			{ "img_list_path", required_argument, NULL, 'l' }, //data path list input
 			{ "base_result_out", required_argument, NULL, 'b' }, //result output
 			{ "gpu_index", required_argument, NULL, 'x' }, //gpu index
-			{ "gold_inout", required_argument, NULL, 'd' },
-			{ "save_layers",required_argument, NULL, 's' },
-			{ "abft",       required_argument, NULL, 'a' },
-					{ NULL, 0, NULL, 0 } };
+			{ "gold_inout", required_argument, NULL, 'd' }, //gold path
+			{ "save_layers", required_argument, NULL, 's' }, //save layer
+			{ "abft", required_argument, NULL, 'a' }, // abft parameter
+			{ "use_tensor_core", required_argument, NULL, 't' }, //use tensor cores
+			{ NULL, 0, NULL, 0 } };
 
 	// loop over all of the options
 	char ch;
 	int ok = -1;
 	int option_index = 0;
 	to_parse->generate_flag = 0;
-	int max_args = 12;
-	while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g:l:b:x:d:s:a:", long_options,
-			&option_index)) != -1 && --max_args) {
+
+	int max_args = 13;
+	while ((ch = getopt_long(argc, argv, "e:m:c:w:i:n:g:l:b:x:d:s:a:t:",
+			long_options, &option_index)) != -1 && --max_args) {
 		// check to see if a single character or long option came through
 		switch (ch) {
 
@@ -206,6 +215,10 @@ int parse_arguments(Args *to_parse, int argc, char **argv) {
 			to_parse->abft = atoi(optarg);
 			break;
 		}
+		case 't': {
+			to_parse->use_tensor_cores = atoi(optarg);
+			break;
+		}
 		}
 
 		ok = 0;
@@ -230,5 +243,6 @@ void usage(char **argv, char *model, char *message) {
 			"-x --gpu_index = GPU index\n"
 			"-d --gold_inout = if not writing a gold a gold is being reading\n"
 			"-s --save_layers = this must set to 1 if you want to save all wrong computed layers\n"
-			"-a --abft = this must be set to 1 or 2 to use abft, 1 for dumb abft and 2 for smart one\n");
+			"-a --abft = this must be set to 1 or 2 to use abft, 1 for dumb abft and 2 for smart one\n"
+			"-t --use_tensor_cores = this parameter must be equal to 1 if you want CUBLAS_TENSOR_OP_MATH and 0 for CUBLAS_DEFAULT_MATH\n");
 }

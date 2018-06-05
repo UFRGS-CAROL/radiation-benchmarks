@@ -62,6 +62,8 @@ typedef struct arguments {
 	char *model;
 	float hier_thresh;
 
+	//use tensor cores
+	unsigned char use_tensor_cores;
 } Args;
 
 void args_init_and_setnull(Args *arg);

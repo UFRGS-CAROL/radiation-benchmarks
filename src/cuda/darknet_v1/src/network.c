@@ -32,6 +32,15 @@
 // For Modular redundancy
 #include <pthread.h>
 
+#ifdef GPU
+static unsigned char use_tensor_cores = 0;
+
+void set_tensor_cores(unsigned char use_tcs){
+	use_tensor_cores = use_tcs;
+}
+
+#endif
+
 int get_current_batch(network net) {
 	int batch_num = (*net.seen) / (net.batch * net.subdivisions);
 	return batch_num;
@@ -546,6 +555,14 @@ multi_thread_hd_st create_handle() {
 //	cudaStreamCreateWithFlags(&ret.stream, cudaStreamNonBlocking);
 	cublasCreate(&ret.blas_handle);
 	cublasSetStream(ret.blas_handle, ret.stream);
+
+	//use tensor cores
+	if (use_tensor_cores == 0){
+		cublasSetMathMode(ret.blas_handle, CUBLAS_DEFAULT_MATH);
+	}else if(use_tensor_cores == 1){
+		cublasSetMathMode(ret.blas_handle, CUBLAS_TENSOR_OP_MATH);
+	}
+
 #endif
 	return ret;
 

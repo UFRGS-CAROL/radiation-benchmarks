@@ -3,6 +3,7 @@ CUDNN?=0
 OPENCV?=0
 DEBUG?=0
 LOGS?=0
+SAFE_MALLOC?=0
 
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35]
 ARCH+= -gencode arch=compute_50,code=[sm_50,compute_50] 
@@ -125,10 +126,10 @@ test_hardening:
 test:
 	./$(TARGET) test_radiation -e yolo -m valid -c $(RAD_DIR)/data/darknet/yolo_v1.cfg \
                                                         -w $(RAD_DIR)/data/darknet/yolo_v1.weights \
-                                                        -n 2000 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
+                                                        -n 20 -d $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv  \
                                                         -l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
                                                         -b $(RAD_DIR)/src/cuda/darknet_v1 \
-                                                        -x 1 -s 0 -a 0
+                                                        -x 1 -s 0 -a 0 -t 1
 
 
 
@@ -137,7 +138,7 @@ generate:
 			-w $(RAD_DIR)/data/darknet/yolo_v1.weights \
 			-n 1 -g $(RAD_DIR)/data/darknet/darknet_v1_fault_injection_darknetv1.csv \
 			-l $(RAD_DIR)/data/networks_img_list/fault_injection.txt \
-			-b $(RAD_DIR)/src/cuda/darknet_v1 -x 0 -s 1 -a 0
+			-b $(RAD_DIR)/src/cuda/darknet_v1 -x 0 -s 1 -a 0 -t 1
 
 test_pure_yolo:
 	./$(TARGET) yolo test $(RAD_DIR)/data/darknet/yolo_v1.cfg  $(RAD_DIR)/data/darknet/yolo_v1.weights data/dog.jpg

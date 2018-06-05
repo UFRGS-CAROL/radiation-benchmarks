@@ -11,6 +11,9 @@ int gpu_index = 0;
 
 static unsigned char is_crash = 0;
 
+
+
+
 void check_framework_errors(cudaError_t error) {
 	if (error == cudaSuccess) {
 		return;

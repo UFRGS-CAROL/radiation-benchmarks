@@ -61,10 +61,7 @@ void forward_network_gpu(network net, network_state state) {
 			fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1,
 					state.st_handle.stream);
 		}
-//		printf("Layer %d type %d: ", i, l.type);
-//		if (i == LAYER_TO_PROF)
-//			cudaProfilerStart();
-//		double t = mysecond();
+
 		if (l.type == CONVOLUTIONAL) {
 			forward_convolutional_layer_gpu(l, state);
 		} else if (l.type == DECONVOLUTIONAL) {
@@ -109,10 +106,6 @@ void forward_network_gpu(network net, network_state state) {
 			forward_shortcut_layer_gpu(l, state);
 		}
 		state.input = l.output_gpu;
-//		if (i == LAYER_TO_PROF)
-//			cudaProfilerStop();
-//		t = mysecond() - t;
-//		printf("%lf\n", t);
 		cudaStreamSynchronize(state.st_handle.stream);
 
 	}
