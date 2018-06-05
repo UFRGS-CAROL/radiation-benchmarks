@@ -35,7 +35,7 @@
 #ifdef GPU
 static unsigned char use_tensor_cores = 0;
 
-void set_tensor_cores(unsigned char use_tcs){
+void set_tensor_cores(const unsigned char use_tcs){
 	use_tensor_cores = use_tcs;
 }
 

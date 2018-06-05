@@ -27,7 +27,6 @@ DATASETS = [
 ]
 
 BINARY_NAME = "darknet_v1"
-DEBUG_MODE = False
 SAVE_LAYER = [0, 1]
 USE_TENSOR_CORES = [0, 1]
 # 0 - "none",  1 - "gemm", 2 - "smart_pooling", 3 - "l1", 4 - "l2", 5 - "trained_weights"}
@@ -43,7 +42,7 @@ def download_weights(src_dir, data_dir):
     os.chdir(src_dir)
 
 
-def config(board):
+def config(board, debug):
     print "Generating darknet for CUDA, board:" + board
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -80,7 +79,7 @@ def config(board):
                     if (save_layer == 1 and i['mode'] == 'full') or (save_layer == 0 and i['mode'] == 'small'):
                         continue
 
-                    gold = data_path + '/' + BINARY_NAME + '_' + i['gold']
+                    gold = data_path + '/' + BINARY_NAME + '_tensor_cores_mode_' + str(tc) + '_' + i['gold']
                     txt_list = install_dir + 'data/networks_img_list/' + i['txt']
                     gen = {
                         'bin': ["sudo " + bin_path, "/" + BINARY_NAME],
@@ -117,14 +116,16 @@ def config(board):
     generate.append("mv ./" + BINARY_NAME + " " + bin_path + "/")
 
     execute_and_write_json_to_file(execute=execute, generate=generate, install_dir=install_dir,
-                                   benchmark_bin=BINARY_NAME, debug=DEBUG_MODE)
+                                   benchmark_bin=BINARY_NAME, debug=debug)
 
 if __name__ == "__main__":
-    global DEBUG_MODE
+    debug_mode = False
 
-    parameter = str(sys.argv[1:]).upper() 
-    if parameter == 'DEBUG':
-        DEBUG_MODE = True
-
+    try:
+        parameter = str(sys.argv[1:][0]).upper() 
+        if parameter == 'DEBUG':
+            debug_mode = True
+    except:
+        pass
     board, _ = discover_board()
-    config(board=board)
+    config(board=board, debug=debug_mode)

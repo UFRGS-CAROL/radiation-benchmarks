@@ -474,16 +474,13 @@ detection load_gold(Args *arg) {
 	gold.pb_gold = (prob_array*) calloc(gold.plist_size, sizeof(prob_array));
 
 	for (int i = 0; i < gold.plist_size && getline(img_list_file, line); i++) {
-		printf("passou auqi\n");
 		line.erase(line.size() - 1);
 		gold.img_names[i] = (char*) calloc(line.size(), sizeof(char));
 		std::vector<string> line_splited = split(line, ';');
 		strcpy(gold.img_names[i], line_splited[0].c_str());
-		printf("passou auqi plist size %d i %d\n", gold.plist_size, i);
 
 		gold.pb_gold[i] = load_prob_array(gold.total, gold.classes,
 				img_list_file);
-		printf("last chance\n");
 	}
 
 	return gold;
