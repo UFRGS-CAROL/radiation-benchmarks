@@ -417,7 +417,6 @@ prob_array load_prob_array(int num, int classes, std::ifstream &ifp) {
 
 	std::string line;
 	std::vector<std::string> splited;
-	printf("before\n");
 	for (int i = 0; i < num; ++i) {
 
 		getline(ifp, line);
@@ -434,7 +433,6 @@ prob_array load_prob_array(int num, int classes, std::ifstream &ifp) {
 
 		ret.boxes[i] = b;
 	}
-	printf("finish\n");
 	return ret;
 }
 
