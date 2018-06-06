@@ -308,7 +308,7 @@ void checkOutputErrors() {
 
 	// printf("numErrors:%d", host_errors);
 
-	if (host_errors != 0) {
+	/*if (host_errors != 0) {
 		printf("#");
 #ifdef LOGS
 		log_error_count(host_errors);
@@ -323,7 +323,7 @@ void checkOutputErrors() {
 		allocCudaMemory();
 		copyCudaMemory();
 		//====================================
-	}
+	}*/
 }
 
 void usage() {
@@ -593,7 +593,7 @@ int main(int argc, char* argv[]) {
 			//~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
 //            if (badass_memcmp_half(GOLD, C, sizec)) {
 //				printf("!");
-			//checkOutputErrors();
+			checkOutputErrors();
 //    		}
 		}
 
