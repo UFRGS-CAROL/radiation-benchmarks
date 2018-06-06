@@ -6,7 +6,7 @@
 #include <string>
 #include <omp.h>
 
-#include "safe_malloc.h"
+#include "safe_memory.h"
 
 #ifdef LOGS
 #include "log_helper.h"
