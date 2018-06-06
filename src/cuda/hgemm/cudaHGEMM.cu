@@ -6,7 +6,7 @@
 #include <string>
 #include <omp.h>
 
-#include "safe_malloc.c"
+#include "safe_malloc.h"
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -104,7 +104,7 @@ void allocCudaMemory() {
 	d_A = (half*)safe_malloc(matrixSize * sizeof(half));
 #else
 	malloc = cudaMalloc((void**) &d_A, matrixSize * sizeof(half));
-	if (strcmp(erro, "no error") != 0) {
+	if (strcmp(erro, "no error") != 0){
 #ifdef LOGS
 		log_error_detail((char *)"error a"); end_log_file();
 #endif
