@@ -44,7 +44,8 @@ endif
 
 BIN=.
 
-OBJS= safe_memory.o
+SAFEMEMORYDIR=../dgemm
+OBJS=$(SAFEMEMORYDIR)/safe_memory.o
 RUN_SOURCES=$(BIN)/cudaHGEMM.cu
 GEN_SOURCES=$(BIN)/generateMatricesHalf.cu
 TARGET=$(BIN)/cudaHGEMM
