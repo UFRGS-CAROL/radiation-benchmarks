@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [8192, 2048, 4096]
+SIZES = [8192, 4096, 2048]
 ITERATIONS = 10000
 USE_TENSOR_CORES = [0, 1]
 
@@ -57,7 +57,7 @@ def config(board, debug):
             gen[1] = ['-size=' + str(i)]
             gen[2] = ['-input_a=' + input_file + benchmark_bin + 'A_' + str(max_size) + '.matrix']
             gen[3] = ['-input_b=' + input_file + benchmark_bin + 'B_' + str(max_size) + '.matrix']
-            gen[4] = ['-gold=' + input_file + "GOLD_" + str(i) + ".matrix"]  # change for execute
+            gen[4] = ['-gold=' + input_file + "GOLD_size_" +  str(i) + "_use_tensor_" + str(tc) + ".matrix"]  # change for execute
             gen[5] = []
             gen[6] = ['-use_tensors=' + str(tc)]
 

@@ -42,7 +42,7 @@ def download_weights(src_dir, data_dir):
     os.chdir(src_dir)
 
 
-def config(board, debug):
+def config(board, debug, download_data):
     print "Generating darknet for CUDA, board:" + board
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -65,7 +65,8 @@ def config(board, debug):
         os.chmod(data_path, 0777)
 
     # executing weights test first
-    download_weights(src_dir=src_darknet, data_dir=data_path)
+    if download_data:
+        download_weights(src_dir=src_darknet, data_dir=data_path)
 
     generate = ["sudo mkdir -p " + bin_path, "mkdir -p /var/radiation-benchmarks/data", "cd " + src_darknet,
                 "make clean GPU=1", "make -j 4 GPU=1 SAFE_MALLOC=1",
@@ -119,13 +120,14 @@ def config(board, debug):
                                    benchmark_bin=BINARY_NAME, debug=debug)
 
 if __name__ == "__main__":
-    debug_mode = False
-
     try:
         parameter = str(sys.argv[1:][0]).upper() 
         if parameter == 'DEBUG':
             debug_mode = True
+        if parameter == "DOWNLOAD_DATA":
+            download_data = True
     except:
-        pass
+        debug_mode = False
+        download_data = False 
     board, _ = discover_board()
-    config(board=board, debug=debug_mode)
+    config(board=board, debug=debug_mode, download_data=download_data)

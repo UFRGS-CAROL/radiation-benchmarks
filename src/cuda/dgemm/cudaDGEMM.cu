@@ -10,6 +10,10 @@
 #include <cuda_runtime.h>
 #include "cublas_v2.h"
 
+#ifdef SAFE_MALLOC
+#include "safe_memory.h"
+#endif
+
 #ifdef LOGS
 #include "log_helper.h"
 #endif
@@ -87,17 +91,23 @@ double mysecond() {
 void allocCudaMemory() {
 //================== CUDA error handlers
 	cudaError_t malloc;
-	const char *erro;
+	const char *erro = 0;
 //====================================
+#ifdef SAFE_MALLOC
+	d_A = (double*)safe_malloc(matrixSize * sizeof(double));
+#else
 	malloc = cudaMalloc((void**) &d_A, matrixSize * sizeof(double));
-	erro = cudaGetErrorString(malloc);
 	if (strcmp(erro, "no error") != 0) {
 #ifdef LOGS
 		log_error_detail((char *)"error a"); end_log_file();
 #endif
 		exit (EXIT_FAILURE);
 	} //mem allocate failure
+#endif
 
+#ifdef SAFE_MALLOC
+	d_B = (double*)safe_malloc(matrixSize * sizeof(double));
+#else
 	malloc = cudaMalloc((void**) &d_B, matrixSize * sizeof(double));
 	erro = cudaGetErrorString(malloc);
 	if (strcmp(erro, "no error") != 0) {
@@ -106,15 +116,21 @@ void allocCudaMemory() {
 #endif
 		exit (EXIT_FAILURE);
 	} //mem allocate failure
+#endif
 
+#ifdef SAFE_MALLOC
+	d_C = (double*)safe_malloc(matrixSize * sizeof(double));
+#else
 	malloc = cudaMalloc((void**) &d_C, matrixSize * sizeof(double));
 	erro = cudaGetErrorString(malloc);
+
 	if (strcmp(erro, "no error") != 0) {
 #ifdef LOGS
 		log_error_detail((char *)"error c"); end_log_file();
 #endif
 		exit (EXIT_FAILURE);
 	} //mem allocate failure
+#endif
 }
 
 void copyCudaMemory() {
@@ -398,7 +414,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	//flag for tensor cores
-	if (checkCmdLineFlag(argc, (const char **) argv, "use_tensors")){
+	if (checkCmdLineFlag(argc, (const char **) argv, "use_tensors")) {
 		use_tensor_cores = 1;
 	}
 //====================================
@@ -437,9 +453,9 @@ int main(int argc, char* argv[]) {
 	checkCudaErrors(cublasCreate(&blas_handle));
 
 	printf("Tensor cores %d, handle %d\n", use_tensor_cores, blas_handle);
-	if (use_tensor_cores == 0){
+	if (use_tensor_cores == 0) {
 		cublasSetMathMode(blas_handle, CUBLAS_DEFAULT_MATH);
-	}else if(use_tensor_cores == 1){
+	} else if (use_tensor_cores == 1) {
 		cublasSetMathMode(blas_handle, CUBLAS_TENSOR_OP_MATH);
 	}
 

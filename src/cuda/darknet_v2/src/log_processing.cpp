@@ -29,7 +29,7 @@ void start_count_app(char *test, int save_layer, int abft, int iterations,
 
 	std::string test_info = std::string("gold_file: ") + std::string(test) +
 	" save_layer: " + save_layer_char + " abft_type: " +
-	ABFT_TYPES[abft] + " iterations: " + iterations_char + " tensor_core_mode: " + std::to_string(use_tensor_core_mode);
+	ABFT_TYPES[abft] + " iterations: " + iterations_char + " tensor_core_mode: " + std::to_string(int(use_tensor_core_mode));
 
 	set_iter_interval_print(10);
 
