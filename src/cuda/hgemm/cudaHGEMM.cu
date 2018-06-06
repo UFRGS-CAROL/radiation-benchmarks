@@ -6,6 +6,8 @@
 #include <string>
 #include <omp.h>
 
+#include "safe_malloc.c"
+
 #ifdef LOGS
 #include "log_helper.h"
 #endif
@@ -96,18 +98,24 @@ double mysecond() {
 void allocCudaMemory() {
 //================== CUDA error handlers
 	cudaError_t malloc;
-	const char *erro;
+	const char *erro = 0;
 //====================================
-	malloc = cudaMalloc((void**) &d_A, sizea * sizeof(half));
-	erro = cudaGetErrorString(malloc);
+#ifdef SAFE_MALLOC
+	d_A = (half*)safe_malloc(matrixSize * sizeof(half));
+#else
+	malloc = cudaMalloc((void**) &d_A, matrixSize * sizeof(half));
 	if (strcmp(erro, "no error") != 0) {
 #ifdef LOGS
 		log_error_detail((char *)"error a"); end_log_file();
 #endif
 		exit (EXIT_FAILURE);
 	} //mem allocate failure
+#endif
 
-	malloc = cudaMalloc((void**) &d_B, sizea * sizeof(half));
+#ifdef SAFE_MALLOC
+	d_B = (half*)safe_malloc(matrixSize * sizeof(half));
+#else
+	malloc = cudaMalloc((void**) &d_B, matrixSize * sizeof(double));
 	erro = cudaGetErrorString(malloc);
 	if (strcmp(erro, "no error") != 0) {
 #ifdef LOGS
@@ -115,16 +123,23 @@ void allocCudaMemory() {
 #endif
 		exit (EXIT_FAILURE);
 	} //mem allocate failure
+#endif
 
-	malloc = cudaMalloc((void**) &d_C, sizea * sizeof(half));
+#ifdef SAFE_MALLOC
+	d_C = (half*)safe_malloc(matrixSize * sizeof(half));
+#else
+	malloc = cudaMalloc((void**) &d_C, matrixSize * sizeof(double));
 	erro = cudaGetErrorString(malloc);
+
 	if (strcmp(erro, "no error") != 0) {
 #ifdef LOGS
 		log_error_detail((char *)"error c"); end_log_file();
 #endif
 		exit (EXIT_FAILURE);
 	} //mem allocate failure
+#endif
 }
+
 
 void copyCudaMemory() {
 //================== CUDA error handlers
