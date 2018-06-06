@@ -67,8 +67,8 @@ $(GEN_EXEC): $(GEN_SOURCES)
 	$(NVCC) $(INCLUDE) $(LIBRARY) $(NVCC_FLAGS) $(GEN_SOURCES) -o $(GEN_EXEC)
 	
 
-safe_memory.o: safe_memory.cpp safe_memory.h
-	$(CXX) $(COMMON) $(CFLAGS) -c safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
+safe_memory.o: $(SAFEMEMORYDIR)/safe_memory.cpp $(SAFEMEMORYDIR)/safe_memory.h
+	$(CXX) $(COMMON) $(CFLAGS) -c $(SAFEMEMORYDIR)/safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
 
 clean:
 	rm -rf $(TARGET) $(GEN_EXEC) $(MATRIX_NAMES) *.o
