@@ -56,7 +56,7 @@ DEF_B_INPUT=./hgemm_B_8192.matrix
 DEF_GOLD=./hgemm_GOLD_$(DEF_TEST_SIZE).matrix
 MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./hgemm*.matrix
 
-
+CFLAGS+= -I$(SAFEMEMORYDIR)/
 
 all: $(GEN_EXEC) $(TARGET)
 
