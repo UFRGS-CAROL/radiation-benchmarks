@@ -504,8 +504,10 @@ int main(int argc, char* argv[]) {
 		start_iteration();
 #endif
 		//================== Device computation, GEMM
+		printf("Passou antes do gemm\n");
 		cublasHgemm(cublasHandle, transa, transb, k, k, k, &alpha, d_A, k, d_B,
 				k, &beta, d_C, k);
+				printf("Passou antes do gemm2\n");
 		checkCudaErrors(cudaPeekAtLastError());
 		checkCudaErrors(cudaDeviceSynchronize());
 		checkCudaErrors(cudaPeekAtLastError());
