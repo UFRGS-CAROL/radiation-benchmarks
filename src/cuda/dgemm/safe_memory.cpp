@@ -10,8 +10,6 @@
 
 static unsigned char is_crash = 0;
 
-
-
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
 
 void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
@@ -28,14 +26,12 @@ void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 	exit (EXIT_FAILURE);
 }
 
-
 void* safe_malloc(size_t size) {
 	void* devicePtr = NULL;
 	void* goldPtr = NULL;
 	void* outputPtr = NULL;
 
-
-	if(is_crash == 0) {
+	if (is_crash == 0) {
 		char errorDescription[250];
 		sprintf(errorDescription, "Trying_to_alloc_memory_GPU_may_crash");
 #ifdef LOGS
@@ -43,7 +39,6 @@ void* safe_malloc(size_t size) {
 #endif
 		is_crash = 1;
 	}
-
 
 	// First, alloc DEVICE proposed memory and HOST memory for device memory checking
 	checkFrameworkErrors(cudaMalloc(&devicePtr, size));
@@ -95,4 +90,8 @@ void* safe_malloc(size_t size) {
 	free(outputPtr);
 	free(goldPtr);
 	return devicePtr;
+}
+
+int safe_cuda_malloc_cover(void **ptr, size_t size) {
+	*ptr = safe_malloc(size);
 }

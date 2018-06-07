@@ -6,6 +6,9 @@ import os
 import sys
 import ConfigParser
 
+sys.path.insert(0, '../../../include')
+from common_config import discover_board, execute_and_write_json_to_file
+
 INPUT = ['input/control.txt']
 ITERATIONS = 100000
 ALPHA_VARIATIONS = [1.0, 0.0, 0.1]
@@ -13,10 +16,7 @@ RESOLUTIONS = [2500, 5000]
 
 EMBEDDED_HOSTS = ['K1', 'X1', 'X2', 'APU']
 
-DEBUG_MODE = True
-
-
-def main(board):
+def config(board, debug):
     print "Generating Bezier Surface for CUDA on " + str(board)
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -80,40 +80,23 @@ def main(board):
         ["make clean", "make -C ../../../include/",
          "make -j4 LOGS=1",
          "mv -f ./" + benchmark_bin + " " + bin_path + "/"])
-    execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin)
 
 
-def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin):
-    for i in generate:
-        print i
-        if not DEBUG_MODE:
-            if os.system(str(i)) != 0:
-                print "Something went wrong with generate of ", str(i)
-                exit(1)
-
-    list_to_print = ["[\n"]
-    for ii, i in enumerate(execute):
-        command = "{\"killcmd\": \"killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(i) + "\"}"
-        if ii != len(execute) - 1:
-            command += ',\n'
-        list_to_print.append(command)
-    list_to_print.append("\n]")
-
-    with open(install_dir + "scripts/json_files/" + benchmark_bin + ".json", 'w') as fp:
-        fp.writelines(list_to_print)
-
-    print "\nConfiguring done, to run check file: " + install_dir + "scripts/json_files/" + benchmark_bin + ".json"
+    #execute, generate, install_dir, benchmark_bin, debug
+    execute_and_write_json_to_file(execute=execute, generate=generate,
+                                    install_dir=install_dir, 
+                                    benchmark_bin=benchmark_bin, 
+                                    debug=debug)
 
 
 if __name__ == "__main__":
-    global DEBUG_MODE
-
-    parameter = sys.argv[1:]
     try:
-        DEBUG_MODE = sys.argv[2:]
+        parameter = str(sys.argv[1:][0]).upper() 
+        if parameter == 'DEBUG':
+            debug_mode = True
     except:
-        DEBUG_MODE = False
-    if len(parameter) < 1:
-        print "./config_generic <k1/x1/x2/k40/titan>"
-    else:
-        main(str(parameter[0]).upper())
+        debug_mode = False
+    
+    board, _ = discover_board()
+    config(board=board, debug=debug_mode)
+    
