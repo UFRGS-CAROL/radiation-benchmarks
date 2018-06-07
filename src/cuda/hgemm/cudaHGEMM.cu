@@ -295,11 +295,11 @@ int check_chunk_errors(half_float::half *ptr_c, half_float::half *ptr_gold,
 //							+ std::to_string(val_output) + ", e: "
 //							+ std::to_string(val_gold));
 
-				snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e",
-						(int) floor(i / k), i % k, (double) val_output,
-						(double) val_gold);
-				if (verbose && (final_errors < 10))
-					printf("Thread %d %s\n", omp_get_thread_num(), error_detail);
+			snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e",
+					(int) floor(i / k), i % k, (double) val_output,
+					(double) val_gold);
+			if (verbose && (final_errors < 10))
+				printf("Thread %d %s\n", omp_get_thread_num(), error_detail);
 
 #ifdef LOGS
 #pragma omp critical
@@ -318,14 +318,14 @@ int check_chunk_errors(half_float::half *ptr_c, half_float::half *ptr_gold,
 void real_check_output_errors() {
 	int host_errors = 0;
 	int array_size = k * k;
-
+	printf("ARRAY SIZE %d\n", array_size);
 
 	double time_before = mysecond();
 #pragma omp parallel
 	{
-	int max_threads = omp_get_num_threads();
-	int chunk_size = ceil(float(array_size) / float(max_threads));
-	printf("Max threads %d\n", max_threads);
+		int max_threads = omp_get_num_threads();
+		int chunk_size = ceil(float(array_size) / float(max_threads));
+		printf("Max threads %d\n", max_threads);
 
 #pragma omp for reduction(+:host_errors)
 //#pragma omp parallel for shared(host_errors)
@@ -358,57 +358,57 @@ void real_check_output_errors() {
 }
 
 void checkOutputErrors() {
-//	int host_errors = 0;
-//	int array_size = k * k;
-//	char error_detail[150];
-//
-//	double time_before = mysecond();
-//#pragma omp parallel for shared(host_errors)
-//	for (int i = 0; i < array_size; i++) {
-//		half_float::half valGold = GOLD[i];
-//		half_float::half valOutput = C[i];
-//		// if ((fabs((double)(valOutput-valGold)/valGold) > 1e-10)||(fabs((double)(valOutput-valGold)/valGold) > 1e-10)) {
-//		if (valGold != valOutput) {
-//#pragma omp critical
-//			{
-//				snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e",
-//						(int) floor(i / k), i % k, (double) valOutput,
-//						(double) valGold);
-//				if (verbose && (host_errors < 10))
-//					printf("%s\n", error_detail);
-//
-//#ifdef LOGS
-//				log_error_detail(error_detail);
-//#endif
-//				host_errors++;
-//			}
-//		}
-//	}
-//	printf("Time comparing %lf\n", mysecond() - time_before);
-	real_check_output_errors();
-	// printf("numErrors:%d", host_errors);
+	int host_errors = 0;
+	int array_size = k * k;
+	char error_detail[150];
 
-	/*if (host_errors != 0) {
-	 printf("#");
-	 #ifdef LOGS
-	 log_error_count(host_errors);
-	 #endif
-	 //================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
-	 cudaFree(d_A);
-	 cudaFree(d_B);
-	 cudaFree(d_C);
-	 //====================================
-	 ReadMatrixFromFile();
-	 //================== Init DEVICE memory
-	 allocCudaMemory();
-	 copyCudaMemory();
-	 //====================================
-	 }*/
+	double time_before = mysecond();
+#pragma omp parallel for shared(host_errors)
+	for (int i = 0; i < array_size; i++) {
+		half_float::half valGold = GOLD[i];
+		half_float::half valOutput = C[i];
+		// if ((fabs((double)(valOutput-valGold)/valGold) > 1e-10)||(fabs((double)(valOutput-valGold)/valGold) > 1e-10)) {
+		if (valGold != valOutput) {
+#pragma omp critical
+			{
+				snprintf(error_detail, 150, "p: [%d, %d], r: %1.20e, e: %1.20e",
+						(int) floor(i / k), i % k, (double) valOutput,
+						(double) valGold);
+				if (verbose && (host_errors < 10))
+					printf("%s\n", error_detail);
+
+#ifdef LOGS
+				log_error_detail(error_detail);
+#endif
+				host_errors++;
+			}
+		}
+	}
+	printf("Time comparing %lf ", mysecond() - time_before);
+//	real_check_output_errors();
+	printf("numErrors:%d\n", host_errors);
+
+	if (host_errors != 0) {
+		printf("#");
+#ifdef LOGS
+		log_error_count(host_errors);
+#endif
+		//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
+		cudaFree(d_A);
+		cudaFree(d_B);
+		cudaFree(d_C);
+		//====================================
+		ReadMatrixFromFile();
+		//================== Init DEVICE memory
+		allocCudaMemory();
+		copyCudaMemory();
+		//====================================
+	}
 }
 
 void usage() {
 	printf(
-			"Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+			"Usage: cudaGemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup] [-use_tensors=<0 or 1>]\n");
 }
 
 int main(int argc, char* argv[]) {
@@ -493,7 +493,8 @@ int main(int argc, char* argv[]) {
 
 	//flag for tensor cores
 	if (checkCmdLineFlag(argc, (const char **) argv, "use_tensors")) {
-		use_tensor_cores = 1;
+		use_tensor_cores = getCmdLineArgumentInt(argc, (const char **) argv,
+				"use_tensors");
 	}
 	// if (checkCmdLineFlag(argc, (const char **)argv, "no-gpu-gold-check"))
 	// {
@@ -549,7 +550,8 @@ int main(int argc, char* argv[]) {
 	printf("cublasHGEMM\n");
 	fflush (stdout);
 //====================================
-	printf("Tensor cores %d, handle %d\n", use_tensor_cores, cublasHandle);
+	printf("Tensor cores %d, is handle defined? %d\n", use_tensor_cores,
+			(cublasHandle && true));
 	//flag for tensor cores
 	if (use_tensor_cores == 0) {
 		cublasSetMathMode(cublasHandle, CUBLAS_DEFAULT_MATH);
@@ -571,8 +573,8 @@ int main(int argc, char* argv[]) {
 		global_time = mysecond();
 
 		cudaMemset(d_C, 0, sizea * sizeof(half));
-		checkCudaErrors(cudaPeekAtLastError());
-		checkCudaErrors(cudaDeviceSynchronize());
+		checkCudaErrors (cudaPeekAtLastError());checkCudaErrors
+		(cudaDeviceSynchronize());
 		checkCudaErrors(cudaPeekAtLastError());
 
 		if (verbose)
@@ -584,10 +586,10 @@ int main(int argc, char* argv[]) {
 		start_iteration();
 #endif
 		//================== Device computation, GEMM
-		printf("Passou antes do gemm\n");
+
 		cublasHgemm(cublasHandle, transa, transb, k, k, k, &alpha, d_A, k, d_B,
 				k, &beta, d_C, k);
-		printf("Passou antes do gemm2\n");
+
 		checkCudaErrors(cudaPeekAtLastError());
 		checkCudaErrors(cudaDeviceSynchronize());
 		checkCudaErrors(cudaPeekAtLastError());

@@ -40,7 +40,7 @@ void usage() {
 			"Usage: generateMatrices -size=N [-host_check] [-generator_debug] [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
 }
 
-void generateInputMatricesHalf() {
+void generateInputMatricesHalf(unsigned char use_tensor_cores) {
 	half_float::half *h_A, *h_B;
 	FILE * f_A, *f_B;
 
@@ -50,7 +50,12 @@ void generateInputMatricesHalf() {
 			sizeof(half_float::half) * DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE);
 	printf("Max value: %f Min: %f\n", MAX_HVALUE, -MAX_HVALUE);
 
-	srand (time(NULL));
+	std::random_device rd; //Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+	std::uniform_real_distribution<float> dis(-MAX_HVALUE, MAX_HVALUE);
+
+	if (use_tensor_cores == 0)
+		srand (time(NULL));
 
 half_float	::half tempValue;
 
@@ -63,9 +68,14 @@ half_float	::half tempValue;
 				tempValue = half_float::half(2.0);
 			} else {
 				do {
-					tempValue = half_float::half(
-							(((float) rand() / RAND_MAX)) * (maxHalfValue * 2.0)
-									- maxHalfValue);
+					if (use_tensor_cores == 1) {
+						tempValue = half_float::half(
+								(((float) rand() / RAND_MAX))
+										* (maxHalfValue * 2.0) - maxHalfValue);
+					} else {
+						tempValue = half_float::half(dis(gen));
+					}
+
 				} while (isnan((float) tempValue) || isinf((float) tempValue)
 						|| (float) tempValue == 0.0);
 			}
@@ -75,9 +85,13 @@ half_float	::half tempValue;
 				tempValue = half_float::half(2.0);
 			} else {
 				do {
-					tempValue = half_float::half(
-							(((float) rand() / RAND_MAX)) * (maxHalfValue * 2.0)
-									- maxHalfValue);
+					if (use_tensor_cores == 1) {
+						tempValue = half_float::half(
+								(((float) rand() / RAND_MAX))
+										* (maxHalfValue * 2.0) - maxHalfValue);
+					} else {
+						tempValue = half_float::half(dis(gen));
+					}
 				} while (isnan((float) tempValue) || isinf((float) tempValue)
 						|| (float) tempValue == 0.0);
 			}
@@ -251,7 +265,7 @@ half_float::half* openmpMul(half_float::half* a, half_float::half* b,
 	return c;
 }
 
-void generateGoldMatrixHalf() {
+void generateGoldMatrixHalf(unsigned char use_tensor_cores) {
 	////////////////////////////////////////////////////
 	/////////////CUBLAS GEMM VARS///////////////////////
 	half_float::half oneValue(1.0);
@@ -309,6 +323,14 @@ void generateGoldMatrixHalf() {
 
 	cublasHandle_t cublasHandle;
 	checkCudaErrors(cublasCreate(&cublasHandle));
+
+	printf("Tensor cores %d, is handle defined? %d\n", use_tensor_cores,
+			(cublasHandle && true));
+	if (use_tensor_cores == 0) {
+		cublasSetMathMode(cublasHandle, CUBLAS_DEFAULT_MATH);
+	} else if (use_tensor_cores == 1) {
+		cublasSetMathMode(cublasHandle, CUBLAS_TENSOR_OP_MATH);
+	}
 
 	checkCudaErrors(
 			cublasHgemm(cublasHandle, transa, transb, k, k, k, &alpha, d_A, k,
@@ -478,6 +500,13 @@ int main(int argc, char** argv) {
 	if (checkCmdLineFlag(argc, (const char **) argv, "generator_debug")) {
 		generator_debug = true;
 	}
+
+	unsigned char use_tensor_cores = 0;
+	//flag for tensor cores
+	if (checkCmdLineFlag(argc, (const char **) argv, "use_tensors")) {
+		use_tensor_cores = getCmdLineArgumentInt(argc, (const char **) argv,
+				"use_tensors");
+	}
 //====================================
 
 	GetDevice();
@@ -494,12 +523,12 @@ int main(int argc, char** argv) {
 	test_file = fopen(a_matrix_path, "rb");
 	if (!test_file) {
 		printf("Generating input matrices...\n");
-		generateInputMatricesHalf();
+		generateInputMatricesHalf(use_tensor_cores);
 	} else {
 		printf("Input matrices already exist...\n");
 	}
 
-	generateGoldMatrixHalf();
+	generateGoldMatrixHalf(use_tensor_cores);
 
 	return 0;
 }

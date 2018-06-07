@@ -10,13 +10,13 @@ ARCH+= -gencode arch=compute_52,code=[sm_52,compute_52]
 ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60] 
 ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
 ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70]
+ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]
 
 
 NVCC_FLAGS= $(ARCH) -O3  -lcublas -std=c++11
 INCLUDE= -I/usr/local/cuda/include #/ -I/usr/local/cuda/samples/common/inc/
 LIBRARY= -L/usr/local/cuda/lib64/
 CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart
-
 
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/

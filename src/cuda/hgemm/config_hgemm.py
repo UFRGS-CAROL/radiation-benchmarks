@@ -41,7 +41,7 @@ def config(board, debug):
 
     # change it for lava
     generate = ["sudo mkdir -p " + bin_path, "cd " + src_dgemm, "make clean", "make -C ../../include ", "make -j 4",
-                "mkdir -p " + data_path, "sudo rm -f " + data_path + "/*cudaHGEMM*",
+                "mkdir -p " + data_path, "sudo rm -f " + data_path + "/*" + BENCHMARK_BIN + "*",
                 "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
@@ -54,8 +54,8 @@ def config(board, debug):
             gen = [None] * 7
             gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', src_dgemm + "/" + GENERATE_BIN_NAME + " "]
             gen[1] = ['-size=' + str(i)]
-            gen[2] = ['-input_a=' + input_file + benchmark_bin + 'A_' + str(max_size) + '.matrix']
-            gen[3] = ['-input_b=' + input_file + benchmark_bin + 'B_' + str(max_size) + '.matrix']
+            gen[2] = ['-input_a=' + input_file + benchmark_bin + 'A_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
+            gen[3] = ['-input_b=' + input_file + benchmark_bin + 'B_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
             gen[4] = ['-gold=' + input_file + "GOLD_size_" +  str(i) + "_use_tensor_" + str(tc) + ".matrix"]  # change for execute
             gen[5] = []
             gen[6] = ['-use_tensors=' + str(tc)]
