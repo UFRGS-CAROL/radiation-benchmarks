@@ -74,7 +74,7 @@ clean:
 	rm -rf $(TARGET) $(GEN_EXEC) $(MATRIX_NAMES) *.o
 
 generate: all
-	$(GEN_EXEC) -size=$(DEF_SIZE)  -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -use_tensors=0
+	$(GEN_EXEC) -size=$(DEF_SIZE)  -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -use_tensors=1
 
 test: generate
-	$(TARGET) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=10  -use_tensors=0 -verbose
+	$(TARGET) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=10  -use_tensors=1 -verbose

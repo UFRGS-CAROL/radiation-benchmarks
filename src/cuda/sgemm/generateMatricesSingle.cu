@@ -32,7 +32,7 @@ char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
 
 void usage() {
 	printf(
-			"Usage: generateMatricesSingle -size=N [-generator_debug] [-host_check] [-input_a=<path>] [-input_b=<path>] [-gold=<path>]\n");
+			"Usage: generateMatricesSingle -size=N [-generator_debug] [-host_check] [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-use_tensors=<0 or 1>]\n");
 }
 
 void generateInputMatrices(unsigned char use_tersor_cores) {
