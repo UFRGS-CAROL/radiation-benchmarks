@@ -4,14 +4,16 @@
 import ConfigParser
 import copy
 import os
-
 import sys
+sys.path.insert(0, '../../include')
+from common_config import discover_board, execute_and_write_json_to_file
+
 
 SIZES=[1024]
 ITERATIONS=10000
 SIMTIME=[1000]
 
-def main(board):
+def config(board, debug):
 
     benchmark_bin = "hotspot"
     print "Generating "+ benchmark_bin + " for CUDA, board:" + board
@@ -64,35 +66,22 @@ def main(board):
             execute.append(' '.join(str(r) for v in exe for r in v))
 
 
-    execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin)
+    #execute, generate, install_dir, benchmark_bin, debug
+    execute_and_write_json_to_file(execute=execute, generate=generate,
+                                    install_dir=installDir, 
+                                    benchmark_bin=benchmark_bin, 
+                                    debug=debug)
 
-def execute_and_write_how_to_file(execute, generate, installDir, benchmark_bin):
-    for i in generate:
-        if os.system(str(i)) != 0:
-            print "Something went wrong with generate of ", str(i)
-            exit(1)
-        print i
-    fp = open(installDir + "scripts/json_files/" + benchmark_bin + ".json", 'w')
-
-    list_to_print = ["["]
-    for ii, i in enumerate(execute):
-        command = "{\"killcmd\": \"killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(i) + "\"}"
-        if ii != len(execute) - 1:
-            command += ', '
-        list_to_print.append(command)
-    list_to_print.append("]")
-
-    for i in list_to_print:
-        print >> fp, i
-        print i
-    fp.close()
-    print "\nConfiguring done, to run check file: " + installDir + "scripts/json_files/" + benchmark_bin + ".json"
 
 
 
 if __name__ == "__main__":
-    parameter = sys.argv[1:]
-    if len(parameter) < 1:
-        print "./config_generic <k1/x1/x2/k40/titan>"
-    else:
-        main(str(parameter[0]).upper())
+    try:
+        parameter = str(sys.argv[1:][0]).upper() 
+        if parameter == 'DEBUG':
+            debug_mode = True
+    except:
+        debug_mode = False
+    
+    board, _ = discover_board()
+    config(board=board, debug=debug_mode)
