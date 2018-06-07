@@ -5,16 +5,19 @@ import copy
 import os
 import sys
 
-SIZES = [8192, 2048, 4096]
-ITERATIONS = 10000
+sys.path.insert(0, '../../include')
+from common_config import discover_board, execute_and_write_json_to_file
 
-DEBUG_MODE = False
+SIZES = [8192, 4096, 2048]
+ITERATIONS = 10000
+USE_TENSOR_CORES = [0, 1]
+
 BENCHMARK_BIN = "cudaSGEMM"
 DATA_PATH_BASE = "sgemm"
 GENERATE_BIN_NAME = "generateMatricesSingle"
 
 
-def main(board):
+def config(board, debug):
     benchmark_bin = BENCHMARK_BIN
     print "Generating " + benchmark_bin + " for CUDA, board:" + board
 
@@ -38,65 +41,44 @@ def main(board):
 
     # change it for lava
     generate = ["sudo mkdir -p " + bin_path, "cd " + src_dgemm, "make clean", "make -C ../../include ", "make -j 4",
-                "mkdir -p " + data_path,
+                "mkdir -p " + data_path, "sudo rm -f " + data_path + "/*" + BENCHMARK_BIN + "*",
                 "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
     # gen only for max size
     max_size = max(SIZES)
     for i in SIZES:
-        input_file = data_path + "/"
+        for tc in USE_TENSOR_CORES:
+            input_file = data_path + "/"
 
-        gen = [None] * 6
-        gen[0] = ['sudo ', src_dgemm + "/" + GENERATE_BIN_NAME + " "]
-        gen[1] = ['-size=' + str(i)]
-        gen[2] = ['-input_a=' + input_file + benchmark_bin + 'A_' + str(max_size) + '.matrix']
-        gen[3] = ['-input_b=' + input_file + benchmark_bin + 'B_' + str(max_size) + '.matrix']
-        gen[4] = ['-gold=' + input_file + "GOLD_" + str(i) + ".matrix"]  # change for execute
-        gen[5] = []
+            gen = [None] * 7
+            gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', src_dgemm + "/" + GENERATE_BIN_NAME + " "]
+            gen[1] = ['-size=' + str(i)]
+            gen[2] = ['-input_a=' + input_file + benchmark_bin + 'A_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
+            gen[3] = ['-input_b=' + input_file + benchmark_bin + 'B_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
+            gen[4] = ['-gold=' + input_file + "GOLD_size_" +  str(i) + "_use_tensor_" + str(tc) + ".matrix"]  # change for execute
+            gen[5] = []
+            gen[6] = ['-use_tensors=' + str(tc)]
 
-        # change mode and iterations for exe
-        exe = copy.deepcopy(gen)
-        exe[0][1] = bin_path + '/' + benchmark_bin + " "
-        exe[5] = ['-iterations=' + str(ITERATIONS)]
+            # change mode and iterations for exe
+            exe = copy.deepcopy(gen)
+            exe[0][1] = bin_path + '/' + benchmark_bin + " "
+            exe[5] = ['-iterations=' + str(ITERATIONS)]
 
-        generate.append(' '.join(str(r) for v in gen for r in v))
-        execute.append(' '.join(str(r) for v in exe for r in v))
+            generate.append(' '.join(str(r) for v in gen for r in v))
+            execute.append(' '.join(str(r) for v in exe for r in v))
 
-    execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin)
+    execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 
-
-def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin):
-    for i in generate:
-        print i
-        if not DEBUG_MODE:
-            if os.system(str(i)) != 0:
-                print "Something went wrong with generate of ", str(i)
-                exit(1)
-
-    list_to_print = ["[\n"]
-    for ii, i in enumerate(execute):
-        command = "{\"killcmd\": \"killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(i) + "\"}"
-        if ii != len(execute) - 1:
-            command += ',\n'
-        list_to_print.append(command)
-    list_to_print.append("\n]")
-
-    with open(install_dir + "scripts/json_files/" + benchmark_bin + ".json", 'w') as fp:
-        fp.writelines(list_to_print)
-
-    print "\nConfiguring done, to run check file: " + install_dir + "scripts/json_files/" + benchmark_bin + ".json"
 
 
 if __name__ == "__main__":
-    global DEBUG_MODE
-
-    parameter = sys.argv[1:]
     try:
-        DEBUG_MODE = sys.argv[2:]
+        parameter = str(sys.argv[1:][0]).upper() 
+        if parameter == 'DEBUG':
+            debug_mode = True
     except:
-        DEBUG_MODE = False
-    if len(parameter) < 1:
-        print "./config_generic <k1/x1/x2/k40/titan>"
-    else:
-        main(str(parameter[0]).upper())
+        debug_mode = False
+    
+    board, _ = discover_board()
+    config(board=board, debug=debug_mode)
