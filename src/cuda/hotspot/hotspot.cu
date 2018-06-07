@@ -14,6 +14,10 @@ int generate;
 #include "log_helper.h"
 #endif
 
+#ifdef SAFE_MALLOC
+#include "safe_memory.h"
+#endif
+
 #define BLOCK_SIZE 16
 
 #define STR_SIZE 256
@@ -495,12 +499,22 @@ void run(int argc, char** argv)
         for (streamIdx = 0; streamIdx < (setupParams-> nstreams); streamIdx++) {
             checkCudaErrors( cudaStreamCreateWithFlags(&(streams[streamIdx]), cudaStreamNonBlocking) );
 
+#ifdef SAFE_MALLOC
+            safe_cuda_malloc_cover((void**)&(MatrixTemp[streamIdx][0]), sizeof(float)*size);
+            safe_cuda_malloc_cover((void**)&(MatrixTemp[streamIdx][1]), sizeof(float)*size);
+
+#else
             checkCudaErrors( cudaMalloc((void**)&(MatrixTemp[streamIdx][0]), sizeof(float)*size) );
             checkCudaErrors( cudaMalloc((void**)&(MatrixTemp[streamIdx][1]), sizeof(float)*size) );
+#endif
+
             cudaMemcpy(MatrixTemp[streamIdx][0], setupParams->FilesavingTemp, sizeof(float)*size, cudaMemcpyHostToDevice);
 			cudaMemset(MatrixTemp[streamIdx][1], 0.0, sizeof(float)*size);
-
+#ifdef SAFE_MALLOC
+			safe_cuda_malloc_cover((void**)&(MatrixPower[streamIdx]), sizeof(float)*size);
+#else
             checkCudaErrors( cudaMalloc((void**)&(MatrixPower[streamIdx]), sizeof(float)*size) );
+#endif
             cudaMemcpy(MatrixPower[streamIdx], setupParams->FilesavingPower, sizeof(float)*size, cudaMemcpyHostToDevice);
         }
         if (setupParams->verbose) printf("[Iteration #%i] GPU prepare time: %.4fs\n", loop1, mysecond()-timestamp);
