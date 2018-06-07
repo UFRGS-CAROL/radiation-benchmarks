@@ -19,6 +19,10 @@
 #include "log_helper.h"
 #endif
 
+#ifdef SAFE_MALLOC
+#include "safe_memory.h"
+#endif
+
 //=============================================================================
 //	DEFINE / INCLUDE
 //=============================================================================
@@ -751,8 +755,12 @@ int main(int argc, char *argv []) {
 			//==================================================
 			//	boxes
 			//==================================================
-
-			cuda_error = cudaMalloc( (void **)&(d_box_gpu[streamIdx]), dim_cpu.box_mem);
+#ifdef SAFE_MALLOC
+			cuda_error = cudaSuccess;
+			safe_cuda_malloc_cover((void **)&(d_box_gpu[streamIdx]), dim_cpu.box_mem);
+#else
+      		cuda_error = cudaMalloc( (void **)&(d_box_gpu[streamIdx]), dim_cpu.box_mem);
+#endif
 			error_string = cudaGetErrorString(cuda_error);
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error d_box_gpu cudaMalloc\n");
@@ -764,8 +772,12 @@ int main(int argc, char *argv []) {
 			//==================================================
 			//	rv
 			//==================================================
-
+#ifdef SAFE_MALLOC
+			cuda_error = cudaSuccess;
+			safe_cuda_malloc_cover( (void **)&(d_rv_gpu[streamIdx]), dim_cpu.space_mem);
+#else
 			cuda_error = cudaMalloc( (void **)&(d_rv_gpu[streamIdx]), dim_cpu.space_mem);
+#endif
 			error_string = cudaGetErrorString(cuda_error);
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error d_rv_gpu cudaMalloc\n");
@@ -777,8 +789,13 @@ int main(int argc, char *argv []) {
 			//==================================================
 			//	qv
 			//==================================================
+#ifdef SAFE_MALLOC
+			cuda_error = cudaSuccess;
+			cudaMalloc( (void **)&(d_qv_gpu[streamIdx]), dim_cpu.space_mem2);
 
+#else
 			cuda_error = cudaMalloc( (void **)&(d_qv_gpu[streamIdx]), dim_cpu.space_mem2);
+#endif
 			error_string = cudaGetErrorString(cuda_error);
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error d_qv_gpu cudaMalloc\n");
@@ -790,8 +807,13 @@ int main(int argc, char *argv []) {
 			//==================================================
 			//	fv
 			//==================================================
+#ifdef SAFE_MALLOC
+			cuda_error = cudaSuccess;
+			safe_cuda_malloc_cover( (void **)&(d_fv_gpu[streamIdx]), dim_cpu.space_mem);
 
+#else
 			cuda_error = cudaMalloc( (void **)&(d_fv_gpu[streamIdx]), dim_cpu.space_mem);
+#endif
 			error_string = cudaGetErrorString(cuda_error);
 			if(strcmp(error_string, "no error") != 0) {
 				printf("error d_fv_gpu cudaMalloc\n");
