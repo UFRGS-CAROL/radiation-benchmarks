@@ -308,7 +308,7 @@ bool badass_memcmp_float(float *gold, float *found, unsigned long n) {
 
 void usage() {
 	printf(
-			"Usage: sgemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+			"Usage: sgemm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup] [-use_tensors=<0 or 1>]\n");
 }
 
 void checkOutputErrors() {
@@ -462,8 +462,8 @@ int main(int argc, char* argv[]) {
 
 //================== Init logs
 #ifdef LOGS
-	char test_info[90];
-	snprintf(test_info, 90, "size:%d type:single-precision", k);
+	char test_info[150];
+	snprintf(test_info, 150, "size:%d type:single-precision use_tensor_cores:%d", k, use_tensor_cores);
 	start_log_file((char *)"cudaSGEMM", test_info);
 #endif
 //====================================
