@@ -42,7 +42,7 @@ clean:
 	rm -rf $(RUN_EXEC) $(GEN_EXEC) $(MATRIX_NAMES)
 
 generate: $(GEN_EXEC)
-	$(GEN_EXEC) -size=$(DEF_SIZE) -host_check -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD)
+	$(GEN_EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD)
 
 test: $(RUN_EXEC) $(GEN_EXEC) generate
 	$(RUN_EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
