@@ -414,8 +414,10 @@ int main(int argc, char* argv[]) {
 	}
 
 	//flag for tensor cores
-	if (checkCmdLineFlag(argc, (const char **) argv, "use_tensors")) {
-		use_tensor_cores = 1;
+	if (checkCmdLineFlag(argc, (const char **) argv, "use_tensors") && getCmdLineArgumentInt(argc, (const char **) argv,
+			"use_tensors") == 1) {
+		printf(
+				"Use tensor cores is not available for Double precision, using normal cores instead\n");
 	}
 //====================================
 
@@ -452,11 +454,11 @@ int main(int argc, char* argv[]) {
 
 	checkCudaErrors(cublasCreate(&blas_handle));
 
-	printf("Tensor cores %d, handle %d\n", use_tensor_cores, blas_handle);
+	printf("Tensor cores %d, is handle available\n", use_tensor_cores, (blas_handle && true));
 	if (use_tensor_cores == 0) {
 		cublasSetMathMode(blas_handle, CUBLAS_DEFAULT_MATH);
 	} else if (use_tensor_cores == 1) {
-		cublasSetMathMode(blas_handle, CUBLAS_TENSOR_OP_MATH);
+		//TODO: implement when double precision is available
 	}
 
 //================== Init test environment

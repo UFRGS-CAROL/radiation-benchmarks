@@ -10,6 +10,7 @@ ARCH+= -gencode arch=compute_52,code=[sm_52,compute_52]
 ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60] 
 ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
 ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70]
+ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]
 
 
 NVCC_FLAGS= $(ARCH) -O3  -lcublas -std=c++11
@@ -43,7 +44,8 @@ endif
 
 BIN=.
 
-OBJS= safe_memory.o
+SAFEMEMORYDIR=./
+OBJS=$(SAFEMEMORYDIR)/safe_memory.o
 RUN_SOURCES=$(BIN)/cudaDGEMM.cu
 GEN_SOURCES=$(BIN)/generateMatricesDouble.cu
 TARGET=$(BIN)/cudaDGEMM
@@ -54,7 +56,7 @@ DEF_B_INPUT=./dgemm_B_8192.matrix
 DEF_GOLD=./dgemm_GOLD_$(DEF_TEST_SIZE).matrix
 MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./dgemm*.matrix
 
-
+NVCC_FLAGS+= -I$(SAFEMEMORYDIR)/
 
 all: $(GEN_EXEC) $(TARGET)
 
@@ -65,8 +67,8 @@ $(GEN_EXEC): $(GEN_SOURCES)
 	$(NVCC) $(INCLUDE) $(LIBRARY) $(NVCC_FLAGS) $(GEN_SOURCES) -o $(GEN_EXEC)
 	
 
-safe_memory.o: safe_memory.cpp safe_memory.h
-	$(CXX) $(COMMON) $(CFLAGS) -c safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
+safe_memory.o: $(SAFEMEMORYDIR)/safe_memory.cpp $(SAFEMEMORYDIR)/safe_memory.h
+	$(CXX) $(COMMON) $(CFLAGS) -c $(SAFEMEMORYDIR)/safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
 
 clean:
 	rm -rf $(TARGET) $(GEN_EXEC) $(MATRIX_NAMES) *.o
