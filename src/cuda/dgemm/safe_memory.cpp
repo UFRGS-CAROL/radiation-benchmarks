@@ -129,3 +129,59 @@ int safe_cuda_malloc_cover(void **ptr, unsigned long size) {
 	*ptr = safe_malloc(size);
 	return 0;
 }
+
+static void error(char *error_message){
+	fprintf(stdout, "ERROR: %s, at line %d, file %s\n", error_message, __LINE__, __FILE__);
+	exit(EXIT_FAILURE);
+}
+
+/**
+ * memory alloc three pointers
+ */
+void triple_malloc(triple_memory tmr){
+	//malloc host
+	tmr.host_ptr1 = malloc(tmr.size);
+	tmr.host_ptr2 = malloc(tmr.size);
+	tmr.host_ptr3 = malloc(tmr.size);
+	if (tmr.host_ptr1 == NULL || tmr.host_ptr2 == NULL 
+			|| tmr.host_ptr3 == NULL){
+		error("could not allocate host memory");
+	} 
+	
+	//malloc device
+	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr1, tmr.size));
+	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr2, tmr.size));
+	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr3, tmr.size));
+}
+
+/**
+ * free the triple memory
+ */
+void triple_free(triple_memory tmr){
+		//malloc host
+	tmr.host_ptr1 = malloc(tmr.size);
+	tmr.host_ptr2 = malloc(tmr.size);
+	tmr.host_ptr3 = malloc(tmr.size);
+	if (tmr.host_ptr1 == NULL || tmr.host_ptr2 == NULL 
+			|| tmr.host_ptr3 == NULL){
+		error("could not allocate host memory");
+	} 
+	
+	//malloc device
+	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr1, tmr.size));
+	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr2, tmr.size));
+	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr3, tmr.size));
+}
+
+/**
+ * copy three memory to gpu
+ */
+void triple_host_to_device_copy(triple_memory tmr){
+}
+ 
+/**
+ * copy triple memory from gpu
+ */
+void triple_device_to_host_copy(triple_memory tmr){
+}
+
