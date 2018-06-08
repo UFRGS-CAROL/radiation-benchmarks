@@ -1,4 +1,4 @@
-CXX=g++
+CC=g++
 NVCC=/usr/local/cuda/bin/nvcc
 LOGS?=1
 USE_OMP?=1
@@ -16,7 +16,7 @@ ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]
 NVCC_FLAGS= $(ARCH) -O3  -lcublas -std=c++11
 INCLUDE= -I/usr/local/cuda/include #/ -I/usr/local/cuda/samples/common/inc/
 LIBRARY= -L/usr/local/cuda/lib64/
-CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart
+CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart -std=c++11
 
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
@@ -68,7 +68,7 @@ $(GEN_EXEC): $(GEN_SOURCES)
 	
 
 safe_memory.o: $(SAFEMEMORYDIR)/safe_memory.cpp $(SAFEMEMORYDIR)/safe_memory.h
-	$(CXX) $(COMMON) $(CFLAGS) -c $(SAFEMEMORYDIR)/safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
+	$(CXX) $(COMMON) $(CXXFLAGS) -c $(SAFEMEMORYDIR)/safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
 
 clean:
 	rm -rf $(TARGET) $(GEN_EXEC) $(MATRIX_NAMES) *.o

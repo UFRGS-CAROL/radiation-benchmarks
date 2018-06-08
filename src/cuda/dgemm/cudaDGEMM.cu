@@ -454,7 +454,7 @@ int main(int argc, char* argv[]) {
 
 	checkCudaErrors(cublasCreate(&blas_handle));
 
-	printf("Tensor cores %d, is handle available\n", use_tensor_cores, (blas_handle && true));
+	printf("Tensor cores %d, is handle available %d\n", use_tensor_cores, (blas_handle && true));
 	if (use_tensor_cores == 0) {
 		cublasSetMathMode(blas_handle, CUBLAS_DEFAULT_MATH);
 	} else if (use_tensor_cores == 1) {
