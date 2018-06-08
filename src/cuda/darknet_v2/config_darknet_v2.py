@@ -124,6 +124,8 @@ def config(board, debug, download_data):
 
 
 if __name__ == "__main__":
+    debug_mode = False
+    download_data = False
     try:
         parameter = str(sys.argv[1:][0]).upper() 
         if parameter == 'DEBUG':
