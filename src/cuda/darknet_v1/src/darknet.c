@@ -383,7 +383,7 @@ int main(int argc, char **argv) {
 
 			if (!to_parse.generate_flag) {
 				start_count_app(to_parse.gold_inout, to_parse.save_layers,
-						to_parse.abft, to_parse.iterations, "cudaDarknetV1");
+						to_parse.abft, to_parse.iterations, "cudaDarknetV1", to_parse.use_tensor_cores);
 			}
 			if ((strcmp(to_parse.execution_type, "yolo") == 0) || (strcmp(to_parse.execution_type, "yolo_dmr"
 					|| strcmp(to_parse.execution_type, "test_radiation")) == 0)){
