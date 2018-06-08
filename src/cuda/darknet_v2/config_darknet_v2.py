@@ -19,13 +19,12 @@ DATASETS = [
     #{'txt': 'voc.2012.100.txt', 'gold': 'gold.voc.2012.100.csv', 'mode': 'average'},
 
     # very_small for X1 and X2
-    #  {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
-    #  {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'small'},
-    #  {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'small'},
+    # {'txt': 'caltech.pedestrians.10.txt', 'gold': 'gold.caltech.10.csv', 'mode': 'small'},
+    # {'txt': 'urban.street.10.txt', 'gold': 'gold.urban.street.10.csv', 'mode': 'small'},
+    # {'txt': 'voc.2012.10.txt', 'gold': 'gold.voc.2012.10.csv', 'mode': 'small'},
 ]
 
 BINARY_NAME = "darknet_v2"
-
 SAVE_LAYER = [0, 1]
 USE_TENSOR_CORES = [0, 1]
 # 0 - "none",  1 - "gemm", 2 - "smart_pooling", 3 - "l1", 4 - "l2", 5 - "trained_weights"}
@@ -43,7 +42,7 @@ def download_weights(src_dir, data_dir):
     os.chdir(src_dir)
 
 
-def config(board, debug):
+def config(board, debug, download_data):
     print "Generating darknet v2 for CUDA, board:" + board
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -56,7 +55,7 @@ def config(board, debug):
         print >> sys.stderr, "Configuration setup error: " + str(e)
         sys.exit(1)
 
-    benchmark_bin = "darknet_v2"
+    benchmark_bin = BINARY_NAME
     data_path = install_dir + "data/darknet"
     bin_path = install_dir + "bin"
     src_darknet = install_dir + "src/cuda/" + benchmark_bin
@@ -66,7 +65,8 @@ def config(board, debug):
         os.chmod(data_path, 0777)
 
     # executing weights test first
-    download_weights(src_dir=src_darknet, data_dir=data_path)
+    if download_data:
+        download_weights(src_dir=src_darknet, data_dir=data_path)
 
     # change it for darknetv2
     generate = ["mkdir -p " + bin_path, "mkdir -p /var/radiation-benchmarks/data", "cd " + src_darknet,
@@ -86,7 +86,7 @@ def config(board, debug):
                     gold = data_path + '/' + BINARY_NAME + '_tensor_cores_mode_' + str(tc) + '_' + i['gold']
                     txt_list = install_dir + 'data/networks_img_list/' + i['txt']
                     gen = {
-                        'bin': [bin_path, "/darknet_v2"],
+                        'bin': ["sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} " + bin_path, "/" + benchmark_bin],
                         # 'e': [' -e ', 'yolo'],  # execution_type =
                         'aa': ['test_radiation', ''],  # execution_model =
                         'c': [' -c ', data_path + '/' + CFG],  # config_file =
@@ -110,15 +110,13 @@ def config(board, debug):
                     exe_save['s'][1] = save_layer
 
                     if abft == 0:
-                        generate.append(" ".join([''.join(map(str, gen[key])) for key in gen]))
+                        generate.append(" ".join([''.join(map(str, value)) for key, value in gen.iteritems()]))
 
                     execute.append(" ".join([''.join(map(str, value)) for key, value in exe.iteritems()]))
-                    # execute.append(" ".join([''.join(map(str, value)) for key, value in exe_save.iteritems()]))
-
-    # end for generate
-    generate.append("make clean GPU=1")
-    generate.append("make -C ../../include/ clean all")
-    generate.append("make -j 4 GPU=1 LOGS=1  SAFE_MALLOC=1")
+                   
+    generate.append("make clean GPU=1 SAFE_MALLOC=1")
+    generate.append("make -C ../../include/")
+    generate.append("make -j 4 GPU=1 SAFE_MALLOC=1 LOGS=1")
     generate.append("mv ./" + benchmark_bin + " " + bin_path + "/")
 
     execute_and_write_json_to_file(execute=execute, generate=generate, install_dir=install_dir,
@@ -126,14 +124,14 @@ def config(board, debug):
 
 
 if __name__ == "__main__":
-    debug_mode = False
-
     try:
         parameter = str(sys.argv[1:][0]).upper() 
         if parameter == 'DEBUG':
             debug_mode = True
+        if parameter == "DOWNLOAD_DATA":
+            download_data = True
     except:
-        pass
-
+        debug_mode = False
+        download_data = False 
     board, _ = discover_board()
-    config(board=board, debug=debug_mode)
+    config(board=board, debug=debug_mode, download_data=download_data)
