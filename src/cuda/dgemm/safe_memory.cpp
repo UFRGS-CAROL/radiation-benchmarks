@@ -3,6 +3,8 @@
 #include <cuda.h>
 #include <cstdio>
 #include <cstring>
+#include <string>
+#include <iostream>
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -23,16 +25,16 @@ static unsigned char is_crash = 0;
 
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
 
-void inline log_error_detail_and_exit(char *error_description) {
+void inline log_error_detail_and_exit(std::string error_description) {
 #ifdef LOGS
-	log_error_detail(error_description);
+	log_error_detail(const_cast<char*>(error_description.c_str()));
 	end_log_file();
 #endif
 }
 
-void inline log_error_detail_and_continue(char *error_description) {
+void inline log_error_detail_and_continue(std::string error_description) {
 #ifdef LOGS
-	log_error_detail(error_description);
+	log_error_detail(const_cast<char*>(error_description.c_str()));
 #endif
 }
 
@@ -55,7 +57,7 @@ void* safe_malloc(size_t size) {
 	void* outputPtr = NULL;
 
 	if (is_crash == 0) {
-		char *error_description = "Trying_to_alloc_memory_GPU_may_crash";
+		const char *error_description = "Trying_to_alloc_memory_GPU_may_crash";
 		log_error_detail_and_continue(error_description);
 		is_crash = 1;
 	}
@@ -130,24 +132,25 @@ int safe_cuda_malloc_cover(void **ptr, unsigned long size) {
 	return 0;
 }
 
-static void error(char *error_message){
-	fprintf(stdout, "ERROR: %s, at line %d, file %s\n", error_message, __LINE__, __FILE__);
-	exit(EXIT_FAILURE);
+static void error(std::string error_message) {
+	std::cout << "ERROR: " << error_message << "at line " << __LINE__ << " "
+			<< __FILE__ << std::endl;
+	exit (EXIT_FAILURE);
 }
 
 /**
  * memory alloc three pointers
  */
-void triple_malloc(triple_memory tmr){
+void triple_malloc(triple_memory tmr) {
 	//malloc host
 	tmr.host_ptr1 = malloc(tmr.size);
 	tmr.host_ptr2 = malloc(tmr.size);
 	tmr.host_ptr3 = malloc(tmr.size);
-	if (tmr.host_ptr1 == NULL || tmr.host_ptr2 == NULL 
-			|| tmr.host_ptr3 == NULL){
+	if (tmr.host_ptr1 == NULL || tmr.host_ptr2 == NULL
+			|| tmr.host_ptr3 == NULL) {
 		error("could not allocate host memory");
-	} 
-	
+	}
+
 	//malloc device
 	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr1, tmr.size));
 	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr2, tmr.size));
@@ -157,31 +160,57 @@ void triple_malloc(triple_memory tmr){
 /**
  * free the triple memory
  */
-void triple_free(triple_memory tmr){
-		//malloc host
-	tmr.host_ptr1 = malloc(tmr.size);
-	tmr.host_ptr2 = malloc(tmr.size);
-	tmr.host_ptr3 = malloc(tmr.size);
-	if (tmr.host_ptr1 == NULL || tmr.host_ptr2 == NULL 
-			|| tmr.host_ptr3 == NULL){
-		error("could not allocate host memory");
-	} 
-	
+void triple_free(triple_memory tmr) {
+	//malloc host
+	if (tmr.host_ptr1 == NULL) {
+		error("HOST_PTR1 not allocated");
+	}
+
+	if (tmr.host_ptr2 == NULL) {
+		error("HOST_PTR2 not allocated");
+	}
+
+	if (tmr.host_ptr3 == NULL) {
+		error("HOST_PTR3 not allocated");
+	}
+
 	//malloc device
-	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr1, tmr.size));
-	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr2, tmr.size));
-	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr3, tmr.size));
+	checkFrameworkErrors(cudaFree(tmr.device_ptr1));
+	checkFrameworkErrors(cudaFree(tmr.device_ptr2));
+	checkFrameworkErrors(cudaFree(tmr.device_ptr3));
 }
 
 /**
  * copy three memory to gpu
  */
-void triple_host_to_device_copy(triple_memory tmr){
+void triple_host_to_device_copy(triple_memory tmr) {
+	checkFrameworkErrors(
+			cudaMemcpy(tmr.device_ptr1, tmr.host_ptr1, tmr.size,
+					cudaMemcpyHostToDevice));
+
+	checkFrameworkErrors(
+			cudaMemcpy(tmr.device_ptr2, tmr.host_ptr2, tmr.size,
+					cudaMemcpyHostToDevice));
+
+	checkFrameworkErrors(
+			cudaMemcpy(tmr.device_ptr3, tmr.host_ptr3, tmr.size,
+					cudaMemcpyHostToDevice));
+
 }
- 
+
 /**
  * copy triple memory from gpu
  */
-void triple_device_to_host_copy(triple_memory tmr){
+void triple_device_to_host_copy(triple_memory tmr) {
+	checkFrameworkErrors(
+			cudaMemcpy(tmr.host_ptr1, tmr.device_ptr1, tmr.size,
+					cudaMemcpyDeviceToHost));
+
+	checkFrameworkErrors(
+			cudaMemcpy(tmr.host_ptr2, tmr.device_ptr2, tmr.size,
+					cudaMemcpyDeviceToHost));
+	checkFrameworkErrors(
+			cudaMemcpy(tmr.host_ptr3, tmr.device_ptr3, tmr.size,
+					cudaMemcpyDeviceToHost));
 }
 
