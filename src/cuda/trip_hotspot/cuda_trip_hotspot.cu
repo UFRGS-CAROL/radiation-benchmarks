@@ -511,9 +511,11 @@ __global__ void calculate_temp(int iteration,  //number of iteration
  */
 long long int flops = 0;
 
-int compute_tran_temp(float *MatrixPower, float *MatrixTemp[2], int col,
-		int row, int sim_time, int num_iterations, int blockCols, int blockRows,
-		int borderCols, int borderRows, cudaStream_t stream) {
+int compute_tran_temp(float *MatrixPower, float *MatrixTemp[2],
+
+		int col, int row, int sim_time, int num_iterations, int blockCols,
+		int blockRows, int borderCols, int borderRows, cudaStream_t stream) {
+
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dimGrid(blockCols, blockRows);
 
@@ -668,15 +670,7 @@ void run(int argc, char** argv) {
 	// =======================
 
 	// ===============  pyramid parameters
-# define EXPAND_RATE 2// add one iteration will extend the pyramid base by 2 per each borderline	int borderCols = (setupParams->pyramid_height) * EXPAND_RATE / 2;	int borderRows = (setupParams->pyramid_height) * EXPAND_RATE / 2;	int smallBlockCol = BLOCK_SIZE - (setupParams->pyramid_height) * EXPAND_RATE;	int smallBlockRow = BLOCK_SIZE - (setupParams->pyramid_height) * EXPAND_RATE;	int blockCols = setupParams->grid_cols / smallBlockCol	+ ((setupParams->grid_cols % smallBlockCol == 0) ? 0 : 1);	int blockRows = setupParams->grid_rows / smallBlockRow	+ ((setupParams->grid_rows % smallBlockRow == 0) ? 0 : 1);
-
-	int size = (setupParams->grid_cols) * (setupParams->grid_rows);
-	// =======================
-	//malloc triple memory for GPU
-
-	triple_malloc(&setupParams->triple_FilesavingTemp, size * sizeof(float));
-	triple_malloc(&setupParams->triple_FilesavingPower, size * sizeof(float));
-	triple_malloc(&setupParams->triple_MatrixOut, size * sizeof(float));
+# define EXPAND_RATE 2// add one iteration will extend the pyramid base by 2 per each borderline	int borderCols = (setupParams->pyramid_height) * EXPAND_RATE / 2;	int borderRows = (setupParams->pyramid_height) * EXPAND_RATE / 2;	int smallBlockCol = BLOCK_SIZE - (setupParams->pyramid_height) * EXPAND_RATE;	int smallBlockRow = BLOCK_SIZE - (setupParams->pyramid_height) * EXPAND_RATE;	int blockCols = setupParams->grid_cols / smallBlockCol	+ ((setupParams->grid_cols % smallBlockCol == 0) ? 0 : 1);	int blockRows = setupParams->grid_rows / smallBlockRow	+ ((setupParams->grid_rows % smallBlockRow == 0) ? 0 : 1);	int size = (setupParams->grid_cols) * (setupParams->grid_rows);	// =======================	//malloc triple memory for GPU	triple_malloc(&setupParams->triple_FilesavingTemp, size * sizeof(float));	triple_malloc(&setupParams->triple_FilesavingPower, size * sizeof(float));	triple_malloc(&setupParams->triple_MatrixOut, size * sizeof(float));
 
 //	setupParams->FilesavingTemp = (float *) malloc(size * sizeof(float));
 //	setupParams->FilesavingPower = (float *) malloc(size * sizeof(float));
@@ -704,16 +698,21 @@ void run(int argc, char** argv) {
 		printf("readInput time: %.4fs\n", mysecond() - timestamp);
 	fflush (stdout);
 
-	cudaStream_t *streams = (cudaStream_t *) malloc(
-			(setupParams->nstreams) * sizeof(cudaStream_t));
+	cudaStream_t *streams = (cudaStream_t *)
+
+	malloc((setupParams->nstreams) * sizeof(cudaStream_t));
 	for (int loop1 = 0; loop1 < (setupParams->setup_loops); loop1++) {
 		globaltime = mysecond();
 
 		int ret[setupParams->nstreams];
 		float *MatrixTemp[setupParams->nstreams][2],
 				*MatrixPower[setupParams->nstreams];
+		//NEW ALLOCATION
+//		triple_memory *MatrixTemp[setupParams->nstreams][2];
+//		triple_memory *MatrixPower[setupParams->nstreams];
 
 		timestamp = mysecond();
+
 		for (streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
 			checkCudaErrors(
 					cudaStreamCreateWithFlags(&(streams[streamIdx]),
@@ -811,7 +810,7 @@ void run(int argc, char** argv) {
 						for (int j = 0; j < (setupParams->grid_cols); j++) {
 							if (ptrGold[j] != ptrOut[j])
 #pragma omp critical
-									{
+								{
 								kernel_errors++;
 								snprintf(error_detail, 150,
 										"stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e",
