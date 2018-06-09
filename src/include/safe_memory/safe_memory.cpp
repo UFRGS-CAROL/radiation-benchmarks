@@ -105,29 +105,13 @@ void* safe_malloc(size_t size) {
 	}
 	// ===> END FIRST PHASE
 
-//	// ===> SECOND PHASE: CHECK SETTING BITS TO 01010101
-//	checkFrameworkErrors(cudaMemset(device_ptr, 0x55, size));
-//	memset(gold_ptr, 0x55, size);
-//
-//	checkFrameworkErrors(
-//			cudaMemcpy(outputPtr, device_ptr, size, cudaMemcpyDeviceToHost));
-//	if (memcmp(outputPtr, gold_ptr, size)) {
-//		// Failed
-//		free(outputPtr);
-//		free(gold_ptr);
-//		void* newDevicePtr = safe_malloc(size);
-//		checkFrameworkErrors(cudaFree(device_ptr));
-//		return newDevicePtr;
-//	}
-
-// ===> END SECOND PHASE
-
+	// ===> free host memory
 	free(outputPtr);
 	free(gold_ptr);
 	return device_ptr;
 }
 
-int safe_cuda_malloc_cover(void **ptr, unsigned long size) {
+int safe_cuda_malloc_cover(void **ptr, size_t size) {
 	*ptr = safe_malloc(size);
 	return 0;
 }
@@ -141,43 +125,44 @@ static void error(std::string error_message) {
 /**
  * memory alloc three pointers
  */
-void triple_malloc(triple_memory tmr) {
+void triple_malloc(triple_memory *tmr, size_t size) {
+	tmr->size = size;
+	//malloc device
+	tmr->device_ptr1 = safe_malloc(tmr->size);
+	tmr->device_ptr2 = safe_malloc(tmr->size);
+	tmr->device_ptr3 = safe_malloc(tmr->size);
+
 	//malloc host
-	tmr.host_ptr1 = malloc(tmr.size);
-	tmr.host_ptr2 = malloc(tmr.size);
-	tmr.host_ptr3 = malloc(tmr.size);
-	if (tmr.host_ptr1 == NULL || tmr.host_ptr2 == NULL
-			|| tmr.host_ptr3 == NULL) {
+	tmr->host_ptr1 = malloc(tmr->size);
+	tmr->host_ptr2 = malloc(tmr->size);
+	tmr->host_ptr3 = malloc(tmr->size);
+	if (tmr->host_ptr1 == NULL || tmr->host_ptr2 == NULL
+			|| tmr->host_ptr3 == NULL) {
 		error("could not allocate host memory");
 	}
-
-	//malloc device
-	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr1, tmr.size));
-	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr2, tmr.size));
-	checkFrameworkErrors(cudaMalloc(&tmr.device_ptr3, tmr.size));
 }
 
 /**
  * free the triple memory
  */
-void triple_free(triple_memory tmr) {
+void triple_free(triple_memory *tmr) {
 	//malloc host
-	if (tmr.host_ptr1 == NULL) {
+	if (tmr->host_ptr1 == NULL) {
 		error("HOST_PTR1 not allocated");
 	}
 
-	if (tmr.host_ptr2 == NULL) {
+	if (tmr->host_ptr2 == NULL) {
 		error("HOST_PTR2 not allocated");
 	}
 
-	if (tmr.host_ptr3 == NULL) {
+	if (tmr->host_ptr3 == NULL) {
 		error("HOST_PTR3 not allocated");
 	}
 
 	//malloc device
-	checkFrameworkErrors(cudaFree(tmr.device_ptr1));
-	checkFrameworkErrors(cudaFree(tmr.device_ptr2));
-	checkFrameworkErrors(cudaFree(tmr.device_ptr3));
+	checkFrameworkErrors(cudaFree(tmr->device_ptr1));
+	checkFrameworkErrors(cudaFree(tmr->device_ptr2));
+	checkFrameworkErrors(cudaFree(tmr->device_ptr3));
 }
 
 /**
@@ -214,3 +199,37 @@ void triple_device_to_host_copy(triple_memory tmr) {
 					cudaMemcpyDeviceToHost));
 }
 
+/**
+ * fill with an specified byte
+ */
+void triple_memset(triple_memory tmr, unsigned char byte) {
+	//set on gpu
+	checkFrameworkErrors(cudaMemset(tmr.device_ptr1, byte, tmr.size));
+	checkFrameworkErrors(cudaMemset(tmr.device_ptr2, byte, tmr.size));
+	checkFrameworkErrors(cudaMemset(tmr.device_ptr3, byte, tmr.size));
+
+	//set on cpu
+	memset(tmr.host_ptr1, byte, tmr.size);
+	memset(tmr.host_ptr2, byte, tmr.size);
+	memset(tmr.host_ptr3, byte, tmr.size);
+}
+
+/**
+ * set host value at i position
+ */
+void inline set_host_i(triple_memory tmr, int i, size_t size_of_mem,
+		void *value) {
+	memcpy(tmr.host_ptr1 + (i * size_of_mem), value, size_of_mem);
+	memcpy(tmr.host_ptr2 + (i * size_of_mem), value, size_of_mem);
+	memcpy(tmr.host_ptr3 + (i * size_of_mem), value, size_of_mem);
+}
+
+/**
+ * get host value at i position
+ * TODO: implement a safe get
+ */
+void inline get_host_i(triple_memory tmr, int i, size_t size_of_mem,
+		void *value) {
+	memcpy(value, tmr.host_ptr1 + (i * size_of_mem), size_of_mem);
+
+}
