@@ -5,7 +5,7 @@ CXX=gcc
 CUDALIB= -L/usr/local/cuda/lib64 -lcudart
 CUDAINC= -I/usr/local/cuda/include
 
-CXXFLAGS=-fPIC -Wall -Werror -Wextra -shared  $(CUDALIB) $(CUDAINC) 
+CXXFLAGS=-fPIC -Wall -Wextra -shared  $(CUDALIB) $(CUDAINC) 
 CXXFLAGS+= -Wno-unknown-pragmas -std=c++11 -O3 
 
 OBJ=safe_memory.o
