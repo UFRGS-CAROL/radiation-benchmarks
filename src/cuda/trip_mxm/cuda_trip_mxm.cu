@@ -5,6 +5,8 @@
 #include <sys/time.h>
 #include <string>
 #include <omp.h>
+#include <random>
+#include <cuda_fp16.h>
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -15,6 +17,8 @@
 #include "helper_string.h"
 #include "helper_cuda.h"
 
+#include "half.hpp"
+
 #undef min
 #define min( x, y ) ( (x) < (y) ? (x) : (y) )
 #undef max
@@ -24,12 +28,45 @@
 
 #define DEFAULT_INPUT_SIZE 8192
 
+//=========== DEFINE TESTED TYPE
+#if defined(test_type_double)
+	#define GENERATOR_MAXABSVALUE 4.1e+16
+	#define GENERATOR_MINABSVALUE 0
+	const char test_type_description[] = "double";
+	typedef double tested_type;
+	typedef double tested_type_host;
+#elif defined(test_type_single)
+	#define GENERATOR_MAXABSVALUE 4.1e+2
+	#define GENERATOR_MINABSVALUE 0
+	const char test_type_description[] = "single";
+	typedef float tested_type;
+	typedef float tested_type_host;
+#elif defined(test_type_half)
+	#define GENERATOR_MAXABSVALUE 2.0
+	#define GENERATOR_MINABSVALUE 0
+	const char test_type_description[] = "half";
+	typedef half tested_type;
+	typedef half_float::half tested_type_host;
+#else 
+	#error TEST TYPE NOT DEFINED OR INCORRECT. USE TYPE=<double|single|half>.
+#endif
+
+//====================== benchmark+setup configuration
+int generate = 0;
 int verbose = 0;
 int fault_injection = 0;
 
 int k = 0; // k x k matrix size
 int matrixSize = 0; // = k * k matrix size
 int iterations = 100000000; // global loop iteracion
+//=========================
+
+//======== generator configuration
+int generate_safechecks = 0;
+bool generate_inputmatricesready = false;
+bool host_check = false;
+bool generator_debug = false;
+//=========================
 
 //================== Input paths
 char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
@@ -40,14 +77,14 @@ FILE* f_GOLD;
 //====================================
 
 //================== Host and device matrix ptr's
-double *A;
-double *B;
-double *C[3];
-double *GOLD;
+tested_type_host *A;
+tested_type_host *B;
+tested_type_host *C[3];
+tested_type_host *GOLD;
 
-double *d_A[3];
-double *d_B[3];
-double *d_C[3];
+tested_type *d_A[3];
+tested_type *d_B[3];
+tested_type *d_C[3];
 //====================================
 
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
@@ -60,7 +97,8 @@ void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 	snprintf(errorDescription, 250, "CUDA Framework error: %s. Bailing.",
 			cudaGetErrorString(error));
 #ifdef LOGS
-	log_error_detail((char *)errorDescription); end_log_file();
+	if (!generate)
+		log_error_detail((char *)errorDescription); end_log_file();
 #endif
 	printf("%s - Line: %d at %s\n", errorDescription, line, file);
 	exit (EXIT_FAILURE);
@@ -147,17 +185,17 @@ void* safe_cudaMalloc(size_t size) {
 }
 
 void allocCudaMemory() {
-	d_A[0] = (double*) safe_cudaMalloc(matrixSize * sizeof(double));
-	d_A[1] = (double*) safe_cudaMalloc(matrixSize * sizeof(double));
-	d_A[2] = (double*) safe_cudaMalloc(matrixSize * sizeof(double));
+	d_A[0] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_A[1] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_A[2] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 
-	d_B[0] = (double*) safe_cudaMalloc(matrixSize * sizeof(double));
-	d_B[1] = (double*) safe_cudaMalloc(matrixSize * sizeof(double));
-	d_B[2] = (double*) safe_cudaMalloc(matrixSize * sizeof(double));
+	d_B[0] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_B[1] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_B[2] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 
-	d_C[0] = (double*) safe_cudaMalloc(matrixSize * sizeof(double));
-	d_C[1] = (double*) safe_cudaMalloc(matrixSize * sizeof(double));
-	d_C[2] = (double*) safe_cudaMalloc(matrixSize * sizeof(double));
+	d_C[0] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_C[1] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_C[2] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 }
 
 void freeCudaMemory() {
@@ -175,90 +213,201 @@ void freeCudaMemory() {
 }
 
 void copyCudaMemory() {
-	checkFrameworkErrors(cudaMemset(d_C[0], 0x00, matrixSize * sizeof(double)));
-	checkFrameworkErrors(cudaMemset(d_C[1], 0x00, matrixSize * sizeof(double)));
-	checkFrameworkErrors(cudaMemset(d_C[2], 0x00, matrixSize * sizeof(double)));
+	checkFrameworkErrors(cudaMemset(d_C[0], 0x00, matrixSize * sizeof(tested_type)));
+	checkFrameworkErrors(cudaMemset(d_C[1], 0x00, matrixSize * sizeof(tested_type)));
+	checkFrameworkErrors(cudaMemset(d_C[2], 0x00, matrixSize * sizeof(tested_type)));
 
 	checkFrameworkErrors(
-			cudaMemcpy(d_A[0], A, matrixSize * sizeof(double),
+			cudaMemcpy(d_A[0], A, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH A
 	checkFrameworkErrors(
-			cudaMemcpy(d_A[1], A, matrixSize * sizeof(double),
+			cudaMemcpy(d_A[1], A, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH A
 	checkFrameworkErrors(
-			cudaMemcpy(d_A[2], A, matrixSize * sizeof(double),
+			cudaMemcpy(d_A[2], A, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH A
 
 	checkFrameworkErrors(
-			cudaMemcpy(d_B[0], B, matrixSize * sizeof(double),
+			cudaMemcpy(d_B[0], B, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH B
 	checkFrameworkErrors(
-			cudaMemcpy(d_B[1], B, matrixSize * sizeof(double),
+			cudaMemcpy(d_B[1], B, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH B
 	checkFrameworkErrors(
-			cudaMemcpy(d_B[2], B, matrixSize * sizeof(double),
+			cudaMemcpy(d_B[2], B, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH B
 }
 
-void ReadMatrixFromFile() {
-//================== Read inputs to HOST memory
+void readMatricesFromFile() {
 	int i;
-	if (verbose)
-		printf("Reading matrices... ");
-	double time = mysecond();
 	f_A = fopen(a_matrix_path, "rb");
 	f_B = fopen(b_matrix_path, "rb");
 	f_GOLD = fopen(gold_matrix_path, "rb");
 	if (!(f_A && f_B && f_GOLD)) {
 		printf("Cant open matrices.\n");
 #ifdef LOGS
-		log_error_detail((char *)"Cant open matrices"); end_log_file();
+		if (!generate)
+			log_error_detail((char *)"Cant open matrices"); end_log_file();
 #endif
 		exit(-3);
 	}
+
 	size_t ret_value[3];
 	for (i = 0; i < k; i++) {
-		ret_value[0] = fread(&(A[k * i]), sizeof(double) * k, 1, f_A);
-		ret_value[1] = fread(&(B[k * i]), sizeof(double) * k, 1, f_B);
-		ret_value[2] = fread(&(GOLD[k * i]), sizeof(double) * k, 1, f_GOLD);
+		ret_value[0] = fread(&(A[k * i]), sizeof(tested_type) * k, 1, f_A);
+		ret_value[1] = fread(&(B[k * i]), sizeof(tested_type) * k, 1, f_B);
+		ret_value[2] = fread(&(GOLD[k * i]), sizeof(tested_type) * k, 1, f_GOLD);
 		if ((ret_value[0] != 1) || (ret_value[1] != 1) || (ret_value[2] != 1)) {
 			printf("Bad input/gold formatting: %lu ; %lu ; %lu .\n",
 					ret_value[0], ret_value[1], ret_value[2]);
 #ifdef LOGS
-			log_error_detail((char *)"Bad input/gold formatting."); end_log_file();
+			if (!generate)
+				log_error_detail((char *)"Bad input/gold formatting."); end_log_file();
 #endif
 			exit(-3);
 		}
 	}
-	if (verbose)
-		printf("Done reading matrices in %.2fs\n", mysecond() - time);
 
 	fclose(f_A);
 	fclose(f_B);
 	fclose(f_GOLD);
-
-	if (fault_injection) {
-		A[3] = (double) 6.5;
-		printf("!! Injected 6.5 on position A[3]\n");
-	}
 }
 
-__global__ void MatrixMulKernel(double *d_A0, double *d_A1, double *d_A2,
-		double *d_B0, double *d_B1, double *d_B2, double *d_C0, double *d_C1,
-		double *d_C2, int n) {
-	int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-	int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-	int k;
+void generateInputMatrices()
+{
+	FILE *f_A, *f_B;
+
+	std::random_device rd; //Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+	std::uniform_real_distribution<double> dis(-GENERATOR_MAXABSVALUE, GENERATOR_MAXABSVALUE);
+
+	if (!generator_debug) {
+		for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
+			for (int j=0; j<DEFAULT_INPUT_SIZE; j++) {
+				A[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)dis(gen);
+				B[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)dis(gen);
+			}
+		}
+	} else {
+		for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
+			for (int j=0; j<DEFAULT_INPUT_SIZE; j++) {
+				A[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)2.0;
+				B[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)2.0;
+			}
+		}
+	}
+
+	int numZeros;
+    int numNans;
+    int numInfs;
+// printf("Write\n");
+	f_A = fopen(a_matrix_path, "wb");
+	f_B = fopen(b_matrix_path, "wb");
+	if (!(f_A&&f_B)) {
+		printf("Could not open f_A or f_B\n");
+		exit(EXIT_FAILURE);
+	}
+
+    tested_type_host val;
+
+	numZeros = 0;
+    numNans = 0;
+    numInfs = 0;
+	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
+        val=A[i];
+		if (val == 0) numZeros++;
+        if (isnan(val)) numNans++;
+        if (isinf(val)) numInfs++;
+	}
+	printf("Number of zeros/NaNs/INFs on matrix A: %d/%d/%d\n", numZeros, numNans, numInfs);
+
+	numZeros = 0;
+    numNans = 0;
+    numInfs = 0;
+	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
+        val=B[i];
+		if (val == 0) numZeros++;
+        if (isnan(val)) numNans++;
+        if (isinf(val)) numInfs++;
+	}
+	printf("Number of zeros/NaNs/INFs on matrix B: %d/%d/%d\n", numZeros, numNans, numInfs);
+
+	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
+	{
+		fwrite(&(A[i * DEFAULT_INPUT_SIZE]), sizeof(tested_type) * DEFAULT_INPUT_SIZE, 1, f_A);
+	}
+
+	printf("Element 32 of matrix A: %f\n", (double)A[32]);
+
+	printf("Element 50 of matrix B: %f\n", (double)B[50]);
+
+
+	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
+	{
+		fwrite(&(B[i * DEFAULT_INPUT_SIZE]), sizeof(tested_type_host) * DEFAULT_INPUT_SIZE, 1, f_B);
+	}
+	printf("Done\n");
+
+	fclose(f_A);
+	fclose(f_B);
+	return;
+}
+
+void retrieveInputMatrices() {
+//================== Read inputs to HOST memory
+	double time = mysecond();
+
+	if (verbose)
+		printf("Preparing input matrices... ");
+
+	if (generate && !generate_inputmatricesready) {
+		generateInputMatrices();
+	} else {
+		readMatricesFromFile();
+	}
+
+	if (fault_injection) {
+		A[3] = (tested_type_host) 6.5;
+		printf("!! Injected 6.5 on position A[3]\n");
+	}
+	
+	if (verbose)
+		printf("Done reading matrices in %.2fs\n", mysecond() - time);
+}
+
+void writeGoldtoFile() {
+	int i;
+	f_GOLD = fopen(gold_matrix_path, "wb");
+	if (!f_GOLD) {
+		printf("Could not open f_GOLD\n");
+		exit(EXIT_FAILURE);
+	}
+
+	for(i=0; i<k; i++)
+	{
+		fwrite( &(GOLD[i * k]), sizeof(double)*k, 1, f_GOLD );
+	}
+
+	fclose(f_GOLD);
+}
+__global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_type *d_A2,
+		tested_type *d_B0, tested_type *d_B1, tested_type *d_B2, tested_type *d_C0, tested_type *d_C1,
+		tested_type *d_C2, int n) {
+
+#if defined(test_type_double) or defined(test_type_single)
+	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+	register int k;
 
 	register size_t offset_A;
-	register double in_A;
-	register double in_A1;
+	register tested_type in_A;
+	register tested_type in_A1;
 
 	register size_t offset_B;
-	register double in_B;
-	register double in_B1;
+	register tested_type in_B;
+	register tested_type in_B1;
 
-	register double acc = 0.0;
+	register tested_type acc = 0.0;
 	for (k = 0; k < n; k++) {
 
 		offset_A = ty * n + k;
@@ -287,38 +436,101 @@ __global__ void MatrixMulKernel(double *d_A0, double *d_A1, double *d_A2,
 	d_C0[offset_C] = acc;
 	d_C1[offset_C] = acc;
 	d_C2[offset_C] = acc;
+
+#elif defined(test_type_half)
+
+	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+	register int n2 = n / 2.0;
+	register int k;
+
+	register half2 *d_B0_half2 = (half2*)d_B0;
+	register half2 *d_B1_half2 = (half2*)d_B1;
+	register half2 *d_B2_half2 = (half2*)d_B2;
+
+	register size_t offset_A;
+	register half2 in_A;
+	register half2 in_A1;
+
+	register size_t offset_B;
+	register half2 in_B;
+	register half2 in_B1;
+
+	register half2 acc = __float2half2_rn(0.0);
+	for (k = 0; k < n; k++) {
+
+		// First half
+		offset_A = ty * n2 + k;
+		in_A = __half2half2(d_A0[offset_A]);
+		in_A1 = __half2half2(d_A1[offset_A]);
+		if (*((float*)&in_A) != *((float*)&in_A1)) {
+			if ((*((float*)&in_A) != *((float*)&__half2half2(d_A2[offset_A])))) {
+				in_A = in_A1;
+			}
+		}
+		offset_B = k * n2 + tx;
+		in_B = d_B0_half2[offset_B];
+		in_B1 = d_B1_half2[offset_B];
+		if (*((float*)&in_B) != *((float*)&in_B1)) {
+			if (*((float*)&in_B) != *((float*)&(d_B2_half2[offset_B]))) {
+				in_B = in_B1;
+			}
+		}
+
+		acc = __hfma2(in_A, in_B, acc);
+	}
+
+	register size_t offset_C = ty * n2 + tx;
+
+	((half2*)d_C0)[offset_C] = acc;
+	((half2*)d_C1)[offset_C] = acc;
+	((half2*)d_C2)[offset_C] = acc;
+
+	// int n2 = n / 2.0;
+	// half2 *d_B2 = (half2*)d_B;
+	// half2 *d_C_T2 = (half2*)d_C_T;
+	
+	// for (k = 0;  k < n; k++)
+	// 	// c[ty * n + tx] += a[ty * n + k] *  b[k * n + tx];
+	// 	// c[ty * n + tx + 1] += a[ty * n + k + 1] *  b[k * n + tx + 1];
+	// 	d_C_T2[ty * n2 + tx] = __hfma2(__half2half2(d_A[ty * n + k]), d_B2[k * n2 + tx], d_C_T2[ty * n2 + tx]);
+#endif
+
 }
 
-void usage() {
-	printf(
-			"Usage: cuda_trip_dmxm -size=N [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+void usage(int argc, char* argv[]) {
+	printf("Usage: %s -size=N [-generate] [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n", argv[0]);
 }
 
-void checkOutputErrors() {
+// Returns true if no errors are found. False if otherwise.
+// Set votedOutput pointer to retrieve the voted matrix
+bool checkOutputErrors(tested_type_host* votedOutput = NULL) {
 	int host_errors = 0;
 	int memory_errors = 0;
 
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < matrixSize; i++) {
 		register bool checkFlag = true;
-		register double valGold = GOLD[i];
-		register double valOutput0 = C[0][i];
-		register double valOutput1 = C[1][i];
-		register double valOutput2 = C[2][i];
-		register double valOutput = valOutput0;
+		register tested_type_host valGold = GOLD[i];
+		register tested_type_host valOutput0 = C[0][i];
+		register tested_type_host valOutput1 = C[1][i];
+		register tested_type_host valOutput2 = C[2][i];
+		register tested_type_host valOutput = valOutput0;
 		if ((valOutput0 != valOutput1) || (valOutput1 != valOutput2)) {
 #pragma omp critical
 			{
 				char info_detail[150];
 				snprintf(info_detail, 150,
 						"m: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e",
-						(int) floor(i / k), i % k, valOutput0, valOutput1,
-						valOutput2);
+						(int) floor(i / k), i % k, 
+						(double)valOutput0, (double)valOutput1,
+						(double)valOutput2);
 				if (verbose && (memory_errors < 10))
 					printf("%s\n", info_detail);
 
 #ifdef LOGS
-				log_info_detail(info_detail);
+				if (!generate) 
+					log_info_detail(info_detail);
 #endif
 				memory_errors += 1;
 			}
@@ -338,13 +550,14 @@ void checkOutputErrors() {
 						char error_detail[150];
 						snprintf(error_detail, 150,
 								"f: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e, e: %1.20e",
-								(int) floor(i / k), i % k, valOutput0,
-								valOutput1, valOutput2, valGold);
+								(int) floor(i / k), i % k, (double)valOutput0,
+								(double)valOutput1, (double)valOutput2, (double)valGold);
 						if (verbose && (host_errors < 10))
 							printf("%s\n", error_detail);
 
 #ifdef LOGS
-						log_error_detail(error_detail);
+						if (!generate)
+							log_error_detail(error_detail);
 #endif
 						host_errors++;
 					}
@@ -360,22 +573,26 @@ void checkOutputErrors() {
 				valOutput = valOutput0;
 			}
 		}
-		// if ((fabs((double)(valOutput-valGold)/valGold) > 1e-10)||(fabs((double)(valOutput-valGold)/valGold) > 1e-10)) {
-		if (valGold != valOutput) {
-			if (checkFlag) {
+		if (votedOutput != NULL) 
+			votedOutput[i] = valOutput;
+		// if ((fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)||(fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)) {
+		if (!(generate && (votedOutput != NULL))) {
+			if (valGold != valOutput) {
+				if (checkFlag) {
 #pragma omp critical
-				{
-					char error_detail[150];
-					snprintf(error_detail, 150,
-							"p: [%d, %d], r: %1.20e, e: %1.20e",
-							(int) floor(i / k), i % k, valOutput, valGold);
-					if (verbose && (host_errors < 10))
-						printf("%s\n", error_detail);
-
+					{
+						char error_detail[150];
+						snprintf(error_detail, 150,
+								"p: [%d, %d], r: %1.20e, e: %1.20e",
+								(int) floor(i / k), i % k, (double)valOutput, (double)valGold);
+						if (verbose && (host_errors < 10))
+							printf("%s\n", error_detail);
 #ifdef LOGS
-					log_error_detail(error_detail);
+						if (!generate)
+							log_error_detail(error_detail);
 #endif
-					host_errors++;
+						host_errors++;
+					}
 				}
 			}
 		}
@@ -386,17 +603,19 @@ void checkOutputErrors() {
 	if (host_errors != 0) {
 		printf("#");
 #ifdef LOGS
-		log_error_count(host_errors);
+		if (!generate)
+			log_error_count(host_errors);
 #endif
 		//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
 		freeCudaMemory();
 		//====================================
-		ReadMatrixFromFile();
+		retrieveInputMatrices();
 		//================== Init DEVICE memory
 		allocCudaMemory();
 		copyCudaMemory();
 		//====================================
 	}
+	return host_errors == 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -413,7 +632,7 @@ int main(int argc, char* argv[]) {
 
 //================== Read test parameters
 	if (argc < 2) {
-		usage();
+		usage(argc, argv);
 		exit(-1);
 	}
 
@@ -426,7 +645,7 @@ int main(int argc, char* argv[]) {
 		}
 		matrixSize = k * k;
 	} else {
-		usage();
+		usage(argc, argv);
 		exit (EXIT_FAILURE);
 	}
 
@@ -475,8 +694,25 @@ int main(int argc, char* argv[]) {
 
 	if (checkCmdLineFlag(argc, (const char **) argv, "no-warmup")) {
 		device_warmup = 0;
-		printf(
-				"!! The first iteration may not reflect real timing information\n");
+		printf("!! The first iteration may not reflect real timing information\n");
+	}
+
+	if (checkCmdLineFlag(argc, (const char **) argv, "generate")) {
+		generate = 1;
+		device_warmup = 0;
+		fault_injection = 0;
+		iterations = 20;
+		generate_safechecks = 5;
+		printf("!! Generate !! Disabling device_warmup, fault_injection and iterations limiting.\n");
+		printf("!! Generate parameters: generate_safechecks: %d / \n", generate_safechecks);
+	}
+
+	if (checkCmdLineFlag(argc, (const char **) argv, "generator_debug")) {
+		if (generate) {
+			generator_debug = true;
+		} else {
+			printf("!! generator_debug ignored: generate is not activated. active with -generate.\n");
+		}
 	}
 //====================================
 
@@ -489,20 +725,24 @@ int main(int argc, char* argv[]) {
 
 //================== Init logs
 #ifdef LOGS
-	char test_info[90];
-	snprintf(test_info, 90, "size:%d type:double-precision-triplicated", k);
-	start_log_file((char *)"cuda_trip_dmxm", test_info);
+	if (!generate) {
+		char test_info[90];
+		char test_name[90];
+		snprintf(test_info, 90, "size:%d type:%s-precision-triplicated", k, test_type_description);
+		snprintf(test_name, 90, "cuda_trip_%s_mxm", test_type_description);
+		start_log_file(test_name, test_info);
+	}
 #endif
 //====================================
 
 //================== Alloc HOST memory
-	A = (double*) malloc(matrixSize * sizeof(double));
-	B = (double*) malloc(matrixSize * sizeof(double));
-	C[0] = (double*) malloc(matrixSize * sizeof(double));
-	C[1] = (double*) malloc(matrixSize * sizeof(double));
-	C[2] = (double*) malloc(matrixSize * sizeof(double));
+	A = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	B = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	C[0] = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	C[1] = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	C[2] = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 
-	GOLD = (double*) malloc(matrixSize * sizeof(double));
+	GOLD = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 
 	if (!(A && B && C[0] && C[1] && C[2] && GOLD)) {
 		printf("Failed on host malloc.\n");
@@ -516,9 +756,13 @@ int main(int argc, char* argv[]) {
 	min_kernel_time = UINT_MAX;
 	max_kernel_time = 0;
 	GetDevice();
-	ReadMatrixFromFile();
+	retrieveInputMatrices();
 	printf("cuda_trip_dmxm\n");
 	fflush (stdout);
+//====================================
+
+//================== Init generator if enabled
+	int generate_safechecks_count = 0;
 //====================================
 
 //================== Init DEVICE memory
@@ -535,19 +779,20 @@ int main(int argc, char* argv[]) {
 		global_time = mysecond();
 
 		checkFrameworkErrors(
-				cudaMemset(d_C[0], 0, matrixSize * sizeof(double)));
+				cudaMemset(d_C[0], 0, matrixSize * sizeof(tested_type)));
 		checkFrameworkErrors(
-				cudaMemset(d_C[1], 0, matrixSize * sizeof(double)));
+				cudaMemset(d_C[1], 0, matrixSize * sizeof(tested_type)));
 		checkFrameworkErrors(
-				cudaMemset(d_C[2], 0, matrixSize * sizeof(double)));
+				cudaMemset(d_C[2], 0, matrixSize * sizeof(tested_type)));
 
 		if (verbose)
 			printf(",");
 
 		kernel_time = mysecond();
 #ifdef LOGS
-		if (loop2 || !device_warmup)
-		start_iteration();
+		if (!generate)
+			if (loop2 || !device_warmup)
+				start_iteration();
 #endif
 		//================== Device computation, DMxM
 		MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A[0], d_A[1], d_A[2], d_B[0],
@@ -559,8 +804,9 @@ int main(int argc, char* argv[]) {
 		checkFrameworkErrors(cudaPeekAtLastError());
 		//====================================
 #ifdef LOGS
-		if (loop2 || !device_warmup)
-		end_iteration();
+		if (!generate) 
+			if (loop2 || !device_warmup)
+				end_iteration();
 #endif
 		kernel_time = mysecond() - kernel_time;
 
@@ -583,15 +829,34 @@ int main(int argc, char* argv[]) {
 
 		if (loop2 || !device_warmup) {
 			checkFrameworkErrors(
-					cudaMemcpy(C[0], d_C[0], matrixSize * sizeof(double),
+					cudaMemcpy(C[0], d_C[0], matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
 			checkFrameworkErrors(
-					cudaMemcpy(C[1], d_C[1], matrixSize * sizeof(double),
+					cudaMemcpy(C[1], d_C[1], matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
 			checkFrameworkErrors(
-					cudaMemcpy(C[2], d_C[2], matrixSize * sizeof(double),
+					cudaMemcpy(C[2], d_C[2], matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
-			checkOutputErrors();
+			if (generate) {
+				if (generate_safechecks_count == 0) {
+					printf("Generate: First generation. Step %d/%d of max. %d \n", generate_safechecks_count, generate_safechecks, iterations);
+					checkOutputErrors(GOLD); // This will copy the voted matrix to gold
+					generate_safechecks_count++;
+				} else {
+					if (!checkOutputErrors()) {
+						printf("Generate: Failed on compare. Step %d/%d of max. %d \n", generate_safechecks_count, generate_safechecks, iterations);
+						generate_safechecks_count = 0;
+					} else {
+						printf("Generate: Success on compare. Step %d/%d of max. %d\n", generate_safechecks_count, generate_safechecks, iterations);generate_safechecks_count++;
+						if (generate_safechecks_count >= generate_safechecks) {
+							writeGoldtoFile();
+							loop2 = iterations; // This will make the loop end
+						}
+					}
+				}
+			} else {
+				checkOutputErrors();
+			}
 		}
 		//====================================
 
@@ -646,7 +911,8 @@ int main(int argc, char* argv[]) {
 	free(C[2]);
 	free(GOLD);
 #ifdef LOGS
-	end_log_file();
+	if (!generate) 
+		end_log_file();
 #endif
 
 	return 0;
