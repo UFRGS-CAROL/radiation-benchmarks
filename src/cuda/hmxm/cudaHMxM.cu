@@ -478,26 +478,12 @@ int main( int argc, char* argv[] )
         //if (kernel_errors != 0) {
         if (loop2 || !device_warmup) {
             checkCudaErrors( cudaMemcpy(A, d_C_T, matrixSize * sizeof( half ), cudaMemcpyDeviceToHost) );
-            //~ if (memcmp(A, GOLD, sizeof(double) * k*k)) {
-//			if (badass_memcmp(GOLD, A, matrixSize)) {
-//				printf("!");
-				checkOutputErrors();
-//    		}
+			checkOutputErrors();
         }
 
 		//====================================
-
-		//================== Console hearthbeat
-		/*if(kernel_errors > 0 || (loop2 % 10 == 0))
-		{
-			printf("test number: %d\n", loop2);
-			printf(" kernel time: %f\n", kernel_time);
-		}
-		else
-		{*/
-			printf(".");
-			fflush(stdout);
-		//}
+		printf(".");
+		fflush(stdout);
 		//====================================
 
 		if (loop2 || !device_warmup)

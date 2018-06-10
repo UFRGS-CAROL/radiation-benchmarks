@@ -27,7 +27,7 @@ bool generator_debug = false;
 char *gold_matrix_path, *a_matrix_path, *b_matrix_path;
 
 void usage() {
-    printf("Usage: generateMatricesDouble -size=N [-generator_debug] [-host_check] [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-ensure_gold=N]\n");
+    printf("Usage: generateMatrices -size=N [-generator_debug] [-host_check] [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-ensure_gold=N]\n");
 }
 
 void generateInputMatrices()
