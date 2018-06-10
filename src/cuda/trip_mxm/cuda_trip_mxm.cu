@@ -401,30 +401,30 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_typ
 
 	register size_t offset_A;
 	register tested_type in_A;
-	register tested_type in_A1;
+	register tested_type in_A1_half2;
 
 	register size_t offset_B;
 	register tested_type in_B;
-	register tested_type in_B1;
+	register tested_type in_B1_half2;
 
 	register tested_type acc = 0.0;
 	for (k = 0; k < n; k++) {
 
 		offset_A = ty * n + k;
 		in_A = d_A0[offset_A];
-		in_A1 = d_A1[offset_A];
-		if (in_A != in_A1) {
+		in_A1_half2 = d_A1[offset_A];
+		if (in_A != in_A1_half2) {
 			if (in_A != d_A2[offset_A]) {
-				in_A = in_A1;
+				in_A = in_A1_half2;
 			}
 		}
 
 		offset_B = k * n + tx;
 		in_B = d_B0[offset_B];
-		in_B1 = d_B1[offset_B];
-		if (in_B != in_B1) {
+		in_B1_half2 = d_B1[offset_B];
+		if (in_B != in_B1_half2) {
 			if (in_B != d_B2[offset_B]) {
-				in_B = in_B1;
+				in_B = in_B1_half2;
 			}
 		}
 
@@ -449,35 +449,35 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_typ
 	register half2 *d_B2_half2 = (half2*)d_B2;
 
 	register size_t offset_A;
-	register half2 in_A;
-	register half2 in_A1;
+	register half2 in_A_half2;
+	register half2 in_A1_half2;
 
 	register size_t offset_B;
-	register half2 in_B;
-	register half2 in_B1;
+	register half2 in_B_half2;
+	register half2 in_B1_half2;
 
 	register half2 acc = __float2half2_rn(0.0);
 	for (k = 0; k < n; k++) {
 
 		// First half
-		offset_A = ty * n2 + k;
-		in_A = __half2half2(d_A0[offset_A]);
-		in_A1 = __half2half2(d_A1[offset_A]);
-		if (*((float*)&in_A) != *((float*)&in_A1)) {
-			if ((*((float*)&in_A) != *((float*)&__half2half2(d_A2[offset_A])))) {
-				in_A = in_A1;
+		offset_A = ty * n + k;
+		in_A_half2 = __half2half2(d_A0[offset_A]);
+		in_A1_half2 = __half2half2(d_A1[offset_A]);
+		if (*((float*)&in_A_half2) != *((float*)&in_A1_half2)) {
+			if ((*((float*)&in_A_half2) != *((float*)&__half2half2(d_A2[offset_A])))) {
+				in_A_half2 = in_A1_half2;
 			}
 		}
 		offset_B = k * n2 + tx;
-		in_B = d_B0_half2[offset_B];
-		in_B1 = d_B1_half2[offset_B];
-		if (*((float*)&in_B) != *((float*)&in_B1)) {
-			if (*((float*)&in_B) != *((float*)&(d_B2_half2[offset_B]))) {
-				in_B = in_B1;
+		in_B_half2 = d_B0_half2[offset_B];
+		in_B1_half2 = d_B1_half2[offset_B];
+		if (*((float*)&in_B_half2) != *((float*)&in_B1_half2)) {
+			if (*((float*)&in_B_half2) != *((float*)&(d_B2_half2[offset_B]))) {
+				in_B_half2 = in_B1_half2;
 			}
 		}
 
-		acc = __hfma2(in_A, in_B, acc);
+		acc = __hfma2(in_A_half2, in_B_half2, acc);
 	}
 
 	register size_t offset_C = ty * n2 + tx;
@@ -504,7 +504,7 @@ void usage(int argc, char* argv[]) {
 
 // Returns true if no errors are found. False if otherwise.
 // Set votedOutput pointer to retrieve the voted matrix
-bool checkOutputErrors(tested_type_host* votedOutput = NULL) {
+bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) {
 	int host_errors = 0;
 	int memory_errors = 0;
 
@@ -516,7 +516,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL) {
 		register tested_type_host valOutput1 = C[1][i];
 		register tested_type_host valOutput2 = C[2][i];
 		register tested_type_host valOutput = valOutput0;
-		if ((valOutput0 != valOutput1) || (valOutput1 != valOutput2)) {
+		if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
 #pragma omp critical
 			{
 				char info_detail[150];
@@ -534,7 +534,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL) {
 #endif
 				memory_errors += 1;
 			}
-			if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2)) {
+			if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2) && (valOutput0 != valOutput2)) {
 				// All 3 values diverge
 				if (valOutput0 == valGold) {
 					valOutput = valOutput0;
@@ -576,7 +576,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL) {
 		if (votedOutput != NULL) 
 			votedOutput[i] = valOutput;
 		// if ((fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)||(fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)) {
-		if (!(generate && (votedOutput != NULL))) {
+		if (check) {
 			if (valGold != valOutput) {
 				if (checkFlag) {
 #pragma omp critical
@@ -717,10 +717,17 @@ int main(int argc, char* argv[]) {
 //====================================
 
 //================== Set block and grid size for MxM kernel
+#if defined(test_type_double) or defined(test_type_single)
 	int gridsize = k / BLOCK_SIZE < 1 ? 1 : k / BLOCK_SIZE;
 	int blocksize = k / BLOCK_SIZE < 1 ? k : BLOCK_SIZE;
 	dim3 dimBlock(blocksize, blocksize);
 	dim3 dimGrid(gridsize, gridsize);
+#elif defined(test_type_half)
+	int gridsize = k / BLOCK_SIZE < 1 ? 1 : k / BLOCK_SIZE;
+	int blocksize = k / BLOCK_SIZE < 1 ? k : BLOCK_SIZE;
+	dim3 dimBlock(blocksize / 2.0, blocksize);
+	dim3 dimGrid(gridsize, gridsize);
+#endif
 //====================================
 
 //================== Init logs
@@ -757,7 +764,7 @@ int main(int argc, char* argv[]) {
 	max_kernel_time = 0;
 	GetDevice();
 	retrieveInputMatrices();
-	printf("cuda_trip_dmxm\n");
+	printf("cuda_trip_mxm\n");
 	fflush (stdout);
 //====================================
 
@@ -794,7 +801,7 @@ int main(int argc, char* argv[]) {
 			if (loop2 || !device_warmup)
 				start_iteration();
 #endif
-		//================== Device computation, DMxM
+		//================== Device computation, MxM
 		MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A[0], d_A[1], d_A[2], d_B[0],
 				d_B[1], d_B[2], d_C[0], d_C[1], d_C[2], k);
 
@@ -840,7 +847,7 @@ int main(int argc, char* argv[]) {
 			if (generate) {
 				if (generate_safechecks_count == 0) {
 					printf("Generate: First generation. Step %d/%d of max. %d \n", generate_safechecks_count, generate_safechecks, iterations);
-					checkOutputErrors(GOLD); // This will copy the voted matrix to gold
+					checkOutputErrors(GOLD, false); // This will copy the voted matrix to gold
 					generate_safechecks_count++;
 				} else {
 					if (!checkOutputErrors()) {
