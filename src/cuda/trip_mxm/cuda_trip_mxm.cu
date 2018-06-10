@@ -276,6 +276,19 @@ void readMatricesFromFile() {
 void generateInputMatrices()
 {
 	FILE *f_A, *f_B;
+	tested_type_host *h_A, *h_B;
+
+	if (k==DEFAULT_INPUT_SIZE) {
+		h_A = A;
+		h_B = B;
+	} else {
+		h_A = (tested_type_host*) malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
+		h_B = (tested_type_host*) malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
+		if (!(h_A && h_B)) {
+			printf("Could not alloc h_A or h_B");
+			exit(EXIT_FAILURE);
+		}
+	}
 
 	std::random_device rd; //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
@@ -284,18 +297,23 @@ void generateInputMatrices()
 	if (!generator_debug) {
 		for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
 			for (int j=0; j<DEFAULT_INPUT_SIZE; j++) {
-				A[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)dis(gen);
-				B[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)dis(gen);
+				h_A[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)dis(gen);
+				h_B[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)dis(gen);
 			}
 		}
 	} else {
 		for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
 			for (int j=0; j<DEFAULT_INPUT_SIZE; j++) {
-				A[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)2.0;
-				B[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)2.0;
+				h_A[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)2.0;
+				h_B[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)2.0;
 			}
 		}
 	}
+
+	if (h_A != A) {
+		memcpy(A, h_A, matrixSize * sizeof(tested_type));
+		memcpy(B, h_B, matrixSize * sizeof(tested_type));
+	} 
 
 	int numZeros;
     int numNans;
@@ -314,7 +332,7 @@ void generateInputMatrices()
     numNans = 0;
     numInfs = 0;
 	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
-        val=A[i];
+        val=h_A[i];
 		if (val == 0) numZeros++;
         if (isnan(val)) numNans++;
         if (isinf(val)) numInfs++;
@@ -325,7 +343,7 @@ void generateInputMatrices()
     numNans = 0;
     numInfs = 0;
 	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
-        val=B[i];
+        val=h_B[i];
 		if (val == 0) numZeros++;
         if (isnan(val)) numNans++;
         if (isinf(val)) numInfs++;
@@ -334,7 +352,7 @@ void generateInputMatrices()
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		fwrite(&(A[i * DEFAULT_INPUT_SIZE]), sizeof(tested_type) * DEFAULT_INPUT_SIZE, 1, f_A);
+		fwrite(&(h_A[i * DEFAULT_INPUT_SIZE]), sizeof(tested_type) * DEFAULT_INPUT_SIZE, 1, f_A);
 	}
 
 	printf("Element 32 of matrix A: %f\n", (double)A[32]);
@@ -344,12 +362,16 @@ void generateInputMatrices()
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		fwrite(&(B[i * DEFAULT_INPUT_SIZE]), sizeof(tested_type_host) * DEFAULT_INPUT_SIZE, 1, f_B);
+		fwrite(&(h_B[i * DEFAULT_INPUT_SIZE]), sizeof(tested_type_host) * DEFAULT_INPUT_SIZE, 1, f_B);
 	}
 	printf("Done\n");
 
 	fclose(f_A);
 	fclose(f_B);
+	if (h_A != A) {
+		free(h_A);
+		free(h_B);
+	}
 	return;
 }
 
@@ -364,6 +386,19 @@ void retrieveInputMatrices() {
 		generateInputMatrices();
 	} else {
 		readMatricesFromFile();
+	}
+
+	if ((generate) && (generator_debug) && (k <= 16)) {
+		printf("\nMatrix A: \n");
+		for (int i = 0; i<k*k; i++) {
+			printf(" %.2e", (float)A[i]);
+			if ((i+1)%k == 0) printf("\n");
+		}
+		printf("\nMatrix B: \n");
+		for (int i = 0; i<k*k; i++) {
+			printf(" %.2e", (float)B[i]);
+			if ((i+1)%k == 0) printf("\n");
+		}
 	}
 
 	if (fault_injection) {
@@ -439,7 +474,7 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_typ
 
 #elif defined(test_type_half)
 
-	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+	register int tx = (blockIdx.x * BLOCK_SIZE) / 2.0 + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int n2 = n / 2.0;
 	register int k;
@@ -447,6 +482,11 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_typ
 	register half2 *d_B0_half2 = (half2*)d_B0;
 	register half2 *d_B1_half2 = (half2*)d_B1;
 	register half2 *d_B2_half2 = (half2*)d_B2;
+
+	register size_t offset_C;
+	register half2 *d_C0_half2 = (half2*)d_C0;
+	register half2 *d_C1_half2 = (half2*)d_C1;
+	register half2 *d_C2_half2 = (half2*)d_C2;
 
 	register size_t offset_A;
 	register half2 in_A_half2;
@@ -463,16 +503,16 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_typ
 		offset_A = ty * n + k;
 		in_A_half2 = __half2half2(d_A0[offset_A]);
 		in_A1_half2 = __half2half2(d_A1[offset_A]);
-		if (*((float*)&in_A_half2) != *((float*)&in_A1_half2)) {
-			if ((*((float*)&in_A_half2) != *((float*)&__half2half2(d_A2[offset_A])))) {
+		if (__hbne2(in_A_half2, in_A1_half2)) { // __hbne2: true if both halves are equal
+			if (__hbne2(in_A_half2, __half2half2(d_A2[offset_A]))) {
 				in_A_half2 = in_A1_half2;
 			}
 		}
 		offset_B = k * n2 + tx;
 		in_B_half2 = d_B0_half2[offset_B];
 		in_B1_half2 = d_B1_half2[offset_B];
-		if (*((float*)&in_B_half2) != *((float*)&in_B1_half2)) {
-			if (*((float*)&in_B_half2) != *((float*)&(d_B2_half2[offset_B]))) {
+		if (__hbne2(in_B_half2, in_B1_half2)) {
+			if (__hbne2(in_B_half2, d_B2_half2[offset_B])) {
 				in_B_half2 = in_B1_half2;
 			}
 		}
@@ -480,11 +520,11 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_typ
 		acc = __hfma2(in_A_half2, in_B_half2, acc);
 	}
 
-	register size_t offset_C = ty * n2 + tx;
+	offset_C = ty * n2 + tx;
 
-	((half2*)d_C0)[offset_C] = acc;
-	((half2*)d_C1)[offset_C] = acc;
-	((half2*)d_C2)[offset_C] = acc;
+	d_C0_half2[offset_C] = acc;
+	d_C1_half2[offset_C] = acc;
+	d_C2_half2[offset_C] = acc;
 
 	// int n2 = n / 2.0;
 	// half2 *d_B2 = (half2*)d_B;
@@ -654,8 +694,8 @@ int main(int argc, char* argv[]) {
 				&a_matrix_path);
 	} else {
 		a_matrix_path = new char[100];
-		snprintf(a_matrix_path, 100, "dmxm_a_%i.matrix",
-				(signed int) DEFAULT_INPUT_SIZE);
+		snprintf(a_matrix_path, 100, "mxm_a_%s_%i.matrix",
+				test_type_description, (signed int) DEFAULT_INPUT_SIZE);
 		printf("Using default input_a path: %s\n", a_matrix_path);
 	}
 
@@ -664,8 +704,8 @@ int main(int argc, char* argv[]) {
 				&b_matrix_path);
 	} else {
 		b_matrix_path = new char[100];
-		snprintf(b_matrix_path, 100, "dmxm_b_%i.matrix",
-				(signed int) DEFAULT_INPUT_SIZE);
+		snprintf(b_matrix_path, 100, "mxm_b_%s_%i.matrix",
+				test_type_description, (signed int) DEFAULT_INPUT_SIZE);
 		printf("Using default input_a path: %s\n", b_matrix_path);
 	}
 
@@ -674,7 +714,7 @@ int main(int argc, char* argv[]) {
 				&gold_matrix_path);
 	} else {
 		gold_matrix_path = new char[100];
-		snprintf(gold_matrix_path, 100, "dmxm_gold_%i.matrix", (signed int) k);
+		snprintf(gold_matrix_path, 100, "mxm_gold_%s_%i.matrix", test_type_description, (signed int) k);
 		printf("Using default gold path: %s\n", gold_matrix_path);
 	}
 
@@ -838,17 +878,51 @@ int main(int argc, char* argv[]) {
 			checkFrameworkErrors(
 					cudaMemcpy(C[0], d_C[0], matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
+			if ((generate) && (k <= 16)) {
+				printf("\nMatrix C (0): \n");
+				for (int i = 0; i<k*k; i++) {
+					printf(" %.2e", (float)C[0][i]);
+					if ((i+1)%k == 0) printf("\n");
+				}
+				printf("\n");
+			}
+
 			checkFrameworkErrors(
 					cudaMemcpy(C[1], d_C[1], matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
+			if ((generate) && (k <= 16)) {
+				printf("\nMatrix C (1): \n");
+				for (int i = 0; i<k*k; i++) {
+					printf(" %.2e", (float)C[1][i]);
+					if ((i+1)%k == 0) printf("\n");
+				}
+				printf("\n");
+			}
+
 			checkFrameworkErrors(
 					cudaMemcpy(C[2], d_C[2], matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
+			if ((generate) && (k <= 16)) {
+				printf("\nMatrix C (2): \n");
+				for (int i = 0; i<k*k; i++) {
+					printf(" %.2e", (float)C[2][i]);
+					if ((i+1)%k == 0) printf("\n");
+				}
+				printf("\n");
+			}
 			if (generate) {
 				if (generate_safechecks_count == 0) {
 					printf("Generate: First generation. Step %d/%d of max. %d \n", generate_safechecks_count, generate_safechecks, iterations);
 					checkOutputErrors(GOLD, false); // This will copy the voted matrix to gold
 					generate_safechecks_count++;
+					if ((generate) && (k <= 16)) {
+						printf("\nMatrix GOLD (VOTED): \n");
+						for (int i = 0; i<k*k; i++) {
+							printf(" %.2e", (float)GOLD[i]);
+							if ((i+1)%k == 0) printf("\n");
+						}
+						printf("\n");
+					}
 				} else {
 					if (!checkOutputErrors()) {
 						printf("Generate: Failed on compare. Step %d/%d of max. %d \n", generate_safechecks_count, generate_safechecks, iterations);
