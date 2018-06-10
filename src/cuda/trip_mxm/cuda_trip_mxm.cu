@@ -238,26 +238,38 @@ void copyCudaMemory() {
 					cudaMemcpyHostToDevice)); // PUSH B
 }
 
-void readMatricesFromFile() {
+void readMatricesFromFile(bool gold = true) {
 	int i;
 	f_A = fopen(a_matrix_path, "rb");
 	f_B = fopen(b_matrix_path, "rb");
-	f_GOLD = fopen(gold_matrix_path, "rb");
-	if (!(f_A && f_B && f_GOLD)) {
-		printf("Cant open matrices.\n");
+	if (!(f_A && f_B)) {
+		printf("Cant open input  matrices.\n");
 #ifdef LOGS
 		if (!generate)
-			log_error_detail((char *)"Cant open matrices"); end_log_file();
+			log_error_detail((char *)"Cant open input matrices"); end_log_file();
 #endif
 		exit(-3);
 	}
+	if (gold) {
+ 		if (! (f_GOLD = fopen(gold_matrix_path, "rb"))) {
+			printf("Cant open gold matrice.\n");
+#ifdef LOGS
+					if (!generate)
+						log_error_detail((char *)"Cant open gold matrice"); end_log_file();
+#endif
+			exit(-3);
+		}
+	}
+
 
 	size_t ret_value[3];
 	for (i = 0; i < k; i++) {
 		ret_value[0] = fread(&(A[k * i]), sizeof(tested_type) * k, 1, f_A);
 		ret_value[1] = fread(&(B[k * i]), sizeof(tested_type) * k, 1, f_B);
-		ret_value[2] = fread(&(GOLD[k * i]), sizeof(tested_type) * k, 1, f_GOLD);
-		if ((ret_value[0] != 1) || (ret_value[1] != 1) || (ret_value[2] != 1)) {
+		if (gold) {
+			ret_value[2] = fread(&(GOLD[k * i]), sizeof(tested_type) * k, 1, f_GOLD);
+		}
+		if ((ret_value[0] != 1) || (ret_value[1] != 1) || (gold && (ret_value[2] != 1))) {
 			printf("Bad input/gold formatting: %lu ; %lu ; %lu .\n",
 					ret_value[0], ret_value[1], ret_value[2]);
 #ifdef LOGS
@@ -270,7 +282,7 @@ void readMatricesFromFile() {
 
 	fclose(f_A);
 	fclose(f_B);
-	fclose(f_GOLD);
+	if (gold) fclose(f_GOLD);
 }
 
 void generateInputMatrices()
@@ -382,10 +394,16 @@ void retrieveInputMatrices() {
 	if (verbose)
 		printf("Preparing input matrices... ");
 
-	if (generate && !generate_inputmatricesready) {
+	FILE *f_A = fopen(a_matrix_path, "rb");
+	FILE *f_B = fopen(b_matrix_path, "rb");
+	if (generate && (!f_A || !f_B)) {
+		if (f_A) fclose(f_A);
+		if (f_B) fclose(f_B);
 		generateInputMatrices();
 	} else {
-		readMatricesFromFile();
+		if (f_A) fclose(f_A);
+		if (f_B) fclose(f_B);
+		readMatricesFromFile(!generate);
 	}
 
 	if ((generate) && (generator_debug) && (k <= 16)) {
@@ -402,8 +420,8 @@ void retrieveInputMatrices() {
 	}
 
 	if (fault_injection) {
-		A[3] = (tested_type_host) 6.5;
-		printf("!! Injected 6.5 on position A[3]\n");
+		A[3] = (tested_type_host) 1.666;
+		printf("!! Injected 1.666 on position A[3]\n");
 	}
 	
 	if (verbose)
