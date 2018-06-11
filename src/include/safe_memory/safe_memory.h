@@ -11,10 +11,7 @@
 #include <stdlib.h>
 
 typedef enum {
-    CHAR,
-    INT,
-    FLOAT,
-    DOUBLE
+	CHAR, INT, FLOAT, DOUBLE
 } type;
 
 typedef struct {
@@ -71,11 +68,24 @@ int safe_cuda_malloc_cover(void **ptr, size_t size);
 /**
  * set host value at i position
  */
-void inline set_host_i(triple_memory tmr, int i, size_t size_of_mem, void *value);
+void triple_set_host_i(triple_memory tmr, int i, size_t size_of_mem,
+		void *value);
 
 /**
  * get host value at i position
  * TODO: implement a safe get
  */
-void inline get_host_i(triple_memory tmr, int i, size_t size_of_mem, void *value);
+void triple_get_host_i(triple_memory tmr, int i, size_t size_of_mem,
+		void *value);
+
+/**
+ * Copy two triple memory device
+ */
+void triple_copy_device(triple_memory *dst, const triple_memory src);
+
+/**
+ * Copy two triple memory host
+ */
+void triple_copy_host(triple_memory *dst, const triple_memory src);
+
 #endif /* SAFE_MEMORY_H_ */

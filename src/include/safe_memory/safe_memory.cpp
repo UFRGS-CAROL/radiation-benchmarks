@@ -187,16 +187,19 @@ void triple_host_to_device_copy(triple_memory tmr) {
  * copy triple memory from gpu
  */
 void triple_device_to_host_copy(triple_memory tmr) {
-	checkFrameworkErrors(
-			cudaMemcpy(tmr.host_ptr1, tmr.device_ptr1, tmr.size,
-					cudaMemcpyDeviceToHost));
+	printf("%p %p %p\n", tmr.host_ptr1, tmr.host_ptr2, tmr.host_ptr3, tmr.size);
+	printf("%p %p %p\n", tmr.device_ptr1, tmr.device_ptr2, tmr.device_ptr3, tmr.size);
 
-	checkFrameworkErrors(
-			cudaMemcpy(tmr.host_ptr2, tmr.device_ptr2, tmr.size,
-					cudaMemcpyDeviceToHost));
-	checkFrameworkErrors(
-			cudaMemcpy(tmr.host_ptr3, tmr.device_ptr3, tmr.size,
-					cudaMemcpyDeviceToHost));
+//	checkFrameworkErrors(
+//			cudaMemcpy(tmr.host_ptr1, tmr.device_ptr1, tmr.size,
+//					cudaMemcpyDeviceToHost));
+
+//	checkFrameworkErrors(
+//			cudaMemcpy(tmr.host_ptr2, tmr.device_ptr2, tmr.size,
+//					cudaMemcpyDeviceToHost));
+//	checkFrameworkErrors(
+//			cudaMemcpy(tmr.host_ptr3, tmr.device_ptr3, tmr.size,
+//					cudaMemcpyDeviceToHost));
 }
 
 /**
@@ -217,7 +220,7 @@ void triple_memset(triple_memory tmr, unsigned char byte) {
 /**
  * set host value at i position
  */
-void inline set_host_i(triple_memory tmr, int i, size_t size_of_mem,
+void triple_set_host_i(triple_memory tmr, int i, size_t size_of_mem,
 		void *value) {
 	memcpy(tmr.host_ptr1 + (i * size_of_mem), value, size_of_mem);
 	memcpy(tmr.host_ptr2 + (i * size_of_mem), value, size_of_mem);
@@ -228,8 +231,34 @@ void inline set_host_i(triple_memory tmr, int i, size_t size_of_mem,
  * get host value at i position
  * TODO: implement a safe get
  */
-void inline get_host_i(triple_memory tmr, int i, size_t size_of_mem,
+void triple_get_host_i(triple_memory tmr, int i, size_t size_of_mem,
 		void *value) {
 	memcpy(value, tmr.host_ptr1 + (i * size_of_mem), size_of_mem);
+}
 
+/**
+ * Copy two triple memory device
+ */
+void triple_copy_device(triple_memory *dst, const triple_memory src) {
+	if (dst->size != src.size) {
+		error("DST and SRC do not have the same size, exiting");
+	}
+	checkFrameworkErrors(
+			cudaMemcpy(dst->device_ptr1, src.device_ptr1, src.size,
+					cudaMemcpyDeviceToDevice));
+	checkFrameworkErrors(
+			cudaMemcpy(dst->device_ptr2, src.device_ptr2, src.size,
+					cudaMemcpyDeviceToDevice));
+	checkFrameworkErrors(
+			cudaMemcpy(dst->device_ptr3, src.device_ptr3, src.size,
+					cudaMemcpyDeviceToDevice));
+}
+
+void triple_copy_host(triple_memory *dst, const triple_memory src) {
+	if (dst->size != src.size) {
+		error("DST and SRC do not have the same size, exiting");
+	}
+	memcpy(dst->host_ptr1, src.host_ptr1, src.size);
+	memcpy(dst->host_ptr2, src.host_ptr2, src.size);
+	memcpy(dst->host_ptr3, src.host_ptr3, src.size);
 }

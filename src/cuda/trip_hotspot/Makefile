@@ -54,7 +54,7 @@ all: $(GEN_EXEC) $(TARGET)
 $(TARGET): $(RUN_SOURCES)
 	$(NVCC) $(INCLUDE) $(LIBRARY) $(NVCC_FLAGS) $(RUN_SOURCES) -o $(TARGET)
 	
-test:
+test: $(TARGET)
 	./cuda_trip_hotspot -size=1024 -sim_time=1024 -temp_file=../../../data/hotspot/temp_1024 -power_file=../../../data/hotspot/power_1024 -gold_file=gold_test -iterations=10 -streams=1 -verbose
 	
 	

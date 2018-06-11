@@ -60,7 +60,7 @@ typedef struct parameters_t {
 } parameters;
 
 void run(int argc, char** argv);
-bool check_output_errors(parameters *setup_parameters, int streamIdx);
+int check_output_errors(parameters *setup_parameters, int streamIdx);
 
 double mysecond() {
 	struct timeval tp;
@@ -626,7 +626,7 @@ int main(int argc, char** argv) {
 }
 
 void run(int argc, char** argv) {
-	int streamIdx;
+	//int streamIdx;
 	double timestamp, globaltime;
 
 	parameters *setupParams = (parameters *) malloc(sizeof(parameters));
@@ -708,7 +708,7 @@ void run(int argc, char** argv) {
 	float *MatrixTemp3[setupParams->nstreams][2],
 			*MatrixPower3[setupParams->nstreams];
 	//-----------------------------------------------------------------------------------
-	for (streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
+	for (int streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
 		checkCudaErrors(
 				cudaStreamCreateWithFlags(&(streams[streamIdx]),
 						cudaStreamNonBlocking));
@@ -807,7 +807,8 @@ void run(int argc, char** argv) {
 //		//-----------------------------------------------------------------------------------
 
 		timestamp = mysecond();
-		for (streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
+		for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
+				streamIdx++) {
 //			CHANGED
 //			checkCudaErrors(
 //					cudaStreamCreateWithFlags(&(streams[streamIdx]),
@@ -927,7 +928,8 @@ void run(int argc, char** argv) {
 		if (!(setupParams->generate)) start_iteration();
 #endif
 #pragma omp parallel for
-		for (streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
+		for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
+				streamIdx++) {
 			ret[streamIdx] = compute_tran_temp(
 					///compute_tran_temp(
 					//float *MatrixPower1, float *MatrixPower2, float *MatrixPower3,
@@ -942,7 +944,8 @@ void run(int argc, char** argv) {
 					blockCols, blockRows, borderCols, borderRows,
 					streams[streamIdx]);
 		}
-		for (streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
+		for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
+				streamIdx++) {
 			cudaStreamSynchronize(streams[streamIdx]);
 		}
 #ifdef LOGS
@@ -982,8 +985,22 @@ void run(int argc, char** argv) {
 
 			writeOutput(setupParams);
 		} else {
-			kernel_errors = check_output_errors(setupParams, streamIdx);
-//			for (streamIdx = 0; streamIdx < setupParams->nstreams;
+			for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
+					streamIdx++) {
+
+				cudaMemcpy(setupParams->MatrixOut1,
+						MatrixTemp1[streamIdx][ret[streamIdx]],
+						sizeof(float) * size, cudaMemcpyDeviceToHost);
+				cudaMemcpy(setupParams->MatrixOut2,
+						MatrixTemp2[streamIdx][ret[streamIdx]],
+						sizeof(float) * size, cudaMemcpyDeviceToHost);
+				cudaMemcpy(setupParams->MatrixOut3,
+						MatrixTemp3[streamIdx][ret[streamIdx]],
+						sizeof(float) * size, cudaMemcpyDeviceToHost);
+
+				kernel_errors = check_output_errors(setupParams, streamIdx);
+			}
+			//			for (streamIdx = 0; streamIdx < setupParams->nstreams;
 //					streamIdx++) {
 //				memset(setupParams->MatrixOut, 0, sizeof(float) * size);
 //				cudaMemcpy(setupParams->MatrixOut,
@@ -1067,7 +1084,7 @@ void run(int argc, char** argv) {
 					mysecond() - globaltime);
 	}
 
-	for (streamIdx = 0; streamIdx < setupParams->nstreams; streamIdx++) {
+	for (int streamIdx = 0; streamIdx < setupParams->nstreams; streamIdx++) {
 		// =======================
 		//HARDENING AGAINST BAD BOARDS
 		//-----------------------------------------------------------------------------------
@@ -1093,29 +1110,29 @@ void run(int argc, char** argv) {
 
 // Returns true if no errors are found. False if otherwise.
 // Set votedOutput pointer to retrieve the voted matrix
-bool check_output_errors(parameters *setup_parameters, int streamIdx) {
+int check_output_errors(parameters *setup_parameters, int streamIdx) {
 	int host_errors = 0;
 	int memory_errors = 0;
 
-#pragma omp parallel for shared(host_errors)
-	for (int i = 0; i < (setup_parameters->grid_rows); i++) {
-		for (int j = 0; j < (setup_parameters->grid_cols); j++) {
-			int index = i * (setup_parameters->grid_rows) + j;
+//#pragma omp parallel for shared(host_errors)
+	for (int i = 0; i < setup_parameters->grid_rows; i++) {
+		for (int j = 0; j < setup_parameters->grid_cols; j++) {
+			int index = i * setup_parameters->grid_rows + j;
 			register bool checkFlag = true;
 			register float valGold = setup_parameters->GoldMatrix1[index];
-			register float valOutput0 = setup_parameters->MatrixOut1[index];
-			register float valOutput1 = setup_parameters->MatrixOut2[index];
-			register float valOutput2 = setup_parameters->MatrixOut3[index];
-			register float valOutput = valOutput0;
+			register float valOutput1 = setup_parameters->MatrixOut1[index];
+			register float valOutput2 = setup_parameters->MatrixOut2[index];
+			register float valOutput3 = setup_parameters->MatrixOut3[index];
+			register float valOutput = valOutput1;
 
-			if ((valOutput0 != valOutput1) || (valOutput1 != valOutput2)) {
+			if ((valOutput1 != valOutput2) || (valOutput2 != valOutput3)) {
 #pragma omp critical
 				{
 					char info_detail[150];
 					snprintf(info_detail, 150,
 							"stream: %d, m: [%d, %d], r0: %1.16e, r1: %1.16e, r2: %1.16e",
-							streamIdx, i, j, valOutput0, valOutput1,
-							valOutput2);
+							streamIdx, i, j, valOutput1, valOutput2,
+							valOutput3);
 					if (setup_parameters->verbose && (memory_errors < 10))
 						printf("%s\n", info_detail);
 
@@ -1125,14 +1142,14 @@ bool check_output_errors(parameters *setup_parameters, int streamIdx) {
 #endif
 					memory_errors += 1;
 				}
-				if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2)) {
+				if ((valOutput1 != valOutput2) && (valOutput2 != valOutput3)) {
 					// All 3 values diverge
-					if (valOutput0 == valGold) {
-						valOutput = valOutput0;
-					} else if (valOutput1 == valGold) {
+					if (valOutput1 == valGold) {
 						valOutput = valOutput1;
 					} else if (valOutput2 == valGold) {
 						valOutput = valOutput2;
+					} else if (valOutput3 == valGold) {
+						valOutput = valOutput3;
 					} else {
 						// NO VALUE MATCHES THE GOLD AND ALL 3 DIVERGE!
 						checkFlag = false;
@@ -1141,8 +1158,8 @@ bool check_output_errors(parameters *setup_parameters, int streamIdx) {
 							char error_detail[150];
 							snprintf(error_detail, 150,
 									"stream: %d, f: [%d, %d], r0: %1.16e, r1: %1.16e, r2: %1.16e, e: %1.16e",
-									streamIdx, i, j, valOutput0, valOutput1,
-									valOutput2, valGold);
+									streamIdx, i, j, valOutput1, valOutput2,
+									valOutput3, valGold);
 
 							if (setup_parameters->verbose && (host_errors < 10))
 								printf("%s\n", error_detail);
@@ -1154,15 +1171,15 @@ bool check_output_errors(parameters *setup_parameters, int streamIdx) {
 							host_errors++;
 						}
 					}
-				} else if (valOutput1 == valOutput2) {
+				} else if (valOutput2 == valOutput3) {
 					// Only value 0 diverge
-					valOutput = valOutput1;
-				} else if (valOutput0 == valOutput2) {
+					valOutput = valOutput2;
+				} else if (valOutput1 == valOutput3) {
 					// Only value 1 diverge
-					valOutput = valOutput0;
-				} else if (valOutput0 == valOutput1) {
+					valOutput = valOutput1;
+				} else if (valOutput1 == valOutput2) {
 					// Only value 2 diverge
-					valOutput = valOutput0;
+					valOutput = valOutput1;
 				}
 			}
 //			if (votedOutput != NULL)
@@ -1187,11 +1204,10 @@ bool check_output_errors(parameters *setup_parameters, int streamIdx) {
 
 				}
 			}
-//			}
 		}
 	}
 
 	printf("numErrors:%d", host_errors);
 
-	return host_errors == 0;
+	return host_errors;
 }
