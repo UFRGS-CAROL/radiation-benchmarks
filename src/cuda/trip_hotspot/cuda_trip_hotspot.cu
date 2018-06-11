@@ -930,6 +930,11 @@ void run(int argc, char** argv) {
 #pragma omp parallel for
 		for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
 				streamIdx++) {
+			unsigned long long int is_memory_bad_host = 0;
+
+			cudaMemcpyToSymbol("is_memory_bad", &is_memory_bad_host,
+					sizeof(unsigned long long int), 0, cudaMemcpyHostToDevice);
+
 			ret[streamIdx] = compute_tran_temp(
 					///compute_tran_temp(
 					//float *MatrixPower1, float *MatrixPower2, float *MatrixPower3,
@@ -987,6 +992,14 @@ void run(int argc, char** argv) {
 		} else {
 			for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
 					streamIdx++) {
+				unsigned long long int is_memory_bad_host = 0;
+
+				cudaMemcpyFromSymbol(&is_memory_bad_host, "is_memory_bad",
+						sizeof(unsigned long long int), 0,
+						cudaMemcpyDeviceToHost);
+
+				printf("For stream %d is memory bad %ld\n", streamIdx,
+						is_memory_bad_host);
 
 				cudaMemcpy(setupParams->MatrixOut1,
 						MatrixTemp1[streamIdx][ret[streamIdx]],
@@ -1207,7 +1220,7 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 		}
 	}
 
-	printf("numErrors:%d", host_errors);
+	printf("numErrors:%d\n", host_errors);
 
 	return host_errors;
 }
