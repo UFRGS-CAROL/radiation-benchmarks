@@ -32,42 +32,51 @@
 
 #define OPS 1000000000
 
+//===================================== DEFINE TESTED PRECISION
+#if defined(test_precision_double)
 
-//===================================== DEFINE TESTED TYPE
-#if defined(test_type_double)
-
-#define OPS_PER_THREAD_ITERATION 1
+#define OPS_PER_THREAD_OPERATION 1
 #define INPUT_A 1.1945305291614955E+103 // 0x5555555555555555
 #define INPUT_B 3.7206620809969885E-103 // 0x2AAAAAAAAAAAAAAA
 #define OUTPUT_R 4.444444444444444 //0x4011C71C71C71C71
-const char test_type_description[] = "double";
+const char test_precision_description[] = "double";
 typedef double tested_type;
 typedef double tested_type_host;
 
-#elif defined(test_type_single)
+#elif defined(test_precision_single)
 
-#define OPS_PER_THREAD_ITERATION 1
+#define OPS_PER_THREAD_OPERATION 1
 #define INPUT_A 1.4660155E+13 // 0x55555555
 #define INPUT_B 3.0316488E-13 // 0x2AAAAAAA
 #define OUTPUT_R 4.444444 //0x408E38E3
-const char test_type_description[] = "single";
+const char test_precision_description[] = "single";
 typedef float tested_type;
 typedef float tested_type_host;
 
-#elif defined(test_type_half)
+#elif defined(test_precision_half)
 
-#define OPS_PER_THREAD_ITERATION 2
+#define OPS_PER_THREAD_OPERATION 2
 #define INPUT_A 1.066E+2 // 0x56AA
 #define INPUT_B 4.166E-2 // 0x2955
 #define OUTPUT_R 4.44 // 0x4471
-const char test_type_description[] = "half";
+const char test_precision_description[] = "half";
 typedef half tested_type;
 typedef half_float::half tested_type_host;
 
 #else 
-#error TEST TYPE NOT DEFINED OR INCORRECT. USE TYPE=<double|single|half>.
+#error TEST PRECISION NOT DEFINED OR INCORRECT. USE PRECISION=<double|single|half>.
 #endif
 //=====================================================
+
+#if defined(test_type_fma) 
+const char test_type_description[] = "fma";
+#elif defined(test_type_add) 
+const char test_type_description[] = "add";
+#elif defined(test_type_mul)
+const char test_type_description[] = "mul";
+#else
+#error TEST TYPE NOT DEFINED OR INCORRECT. USE TYPE=<fma|add|mul>.
+#endif
 
 //====================== benchmark+setup configuration
 int verbose = 0;
@@ -197,54 +206,148 @@ void setCudaMemory() {
 	checkFrameworkErrors(cudaMemset(d_R[2], 0x00, r_size * sizeof(tested_type)));
 }
 
-__global__ void MicroBenchmarkKernel (tested_type *d_R0, tested_type *d_R1, tested_type *d_R2)
+__global__ void MicroBenchmarkKernel_FMA (tested_type *d_R0, tested_type *d_R1, tested_type *d_R2)
 {
-#if defined(test_type_double) or defined(test_type_single)
-
+// ========================================== Double and Single precision
+#if defined(test_precision_double) or defined(test_precision_single)
 	register tested_type acc = OUTPUT_R;
-
 	register tested_type input_a = INPUT_A;
 	register tested_type input_b = INPUT_B;
 	register tested_type input_a_neg = -INPUT_A;
 	register tested_type input_b_neg = -INPUT_B;
-
-	#pragma unroll 512
-	for (register unsigned int count = 0; count < (OPS / ( 4 * OPS_PER_THREAD_ITERATION )); count++) {
-		acc = fma(input_a, input_b, acc);
-		acc = fma(input_a_neg, input_b, acc);
-		acc = fma(input_a, input_b_neg, acc);
-		acc = fma(input_a_neg, input_b_neg, acc);
-	}
-	
-	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
-	d_R1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
-	d_R2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
-
-#elif defined(test_type_half)
-
+#elif defined(test_precision_half)
 	register half2 acc = __float2half2_rn(OUTPUT_R);
-
-	register half2 *d_R0_half2 = (half2*)d_R0;
-	register half2 *d_R1_half2 = (half2*)d_R1;
-	register half2 *d_R2_half2 = (half2*)d_R2;
-
 	register half2 input_a = __float2half2_rn(INPUT_A);
 	register half2 input_b = __float2half2_rn(INPUT_B);
 	register half2 input_a_neg = __float2half2_rn(-INPUT_A);
 	register half2 input_b_neg = __float2half2_rn(-INPUT_B);
+	register half2 *d_R0_half2 = (half2*)d_R0;
+	register half2 *d_R1_half2 = (half2*)d_R1;
+	register half2 *d_R2_half2 = (half2*)d_R2;
+#endif
 
-	#pragma unroll 512
-	for (register unsigned int count = 0; count < (OPS / ( 4 * OPS_PER_THREAD_ITERATION )); count++) {
+#pragma unroll 512
+	for (register unsigned int count = 0; count < (OPS / ( 4 * OPS_PER_THREAD_OPERATION )); count++) {
+#if defined(test_precision_double)
+		acc = fma(input_a, input_b, acc);
+		acc = fma(input_a_neg, input_b, acc);
+		acc = fma(input_a, input_b_neg, acc);
+		acc = fma(input_a_neg, input_b_neg, acc);
+#elif defined(test_precision_single)
+		acc = __fmaf_rn(input_a, input_b, acc);
+		acc = __fmaf_rn(input_a_neg, input_b, acc);
+		acc = __fmaf_rn(input_a, input_b_neg, acc);
+		acc = __fmaf_rn(input_a_neg, input_b_neg, acc);
+#elif defined(test_precision_half)
 		acc = __hfma2(input_a, input_b, acc);
 		acc = __hfma2(input_a_neg, input_b, acc);
 		acc = __hfma2(input_a, input_b_neg, acc);
 		acc = __hfma2(input_a_neg, input_b_neg, acc);
+#endif
 	}
-
+	
+#if defined(test_precision_double) or defined(test_precision_single)
+	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	d_R1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	d_R2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+#elif defined(test_precision_half)
 	d_R0_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 	d_R1_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 	d_R2_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+#endif
+}
 
+__global__ void MicroBenchmarkKernel_ADD (tested_type *d_R0, tested_type *d_R1, tested_type *d_R2)
+{
+// ========================================== Double and Single precision
+#if defined(test_precision_double) or defined(test_precision_single)
+	register tested_type acc = OUTPUT_R;
+	register tested_type input_a = OUTPUT_R;
+	register tested_type input_a_neg = -OUTPUT_R;
+#elif defined(test_precision_half)
+	register half2 acc = __float2half2_rn(OUTPUT_R);
+	register half2 input_a = __float2half2_rn(OUTPUT_R);
+	register half2 input_a_neg = __float2half2_rn(-OUTPUT_R);
+	register half2 *d_R0_half2 = (half2*)d_R0;
+	register half2 *d_R1_half2 = (half2*)d_R1;
+	register half2 *d_R2_half2 = (half2*)d_R2;
+#endif
+
+#pragma unroll 512
+	for (register unsigned int count = 0; count < (OPS / ( 4 * OPS_PER_THREAD_OPERATION )); count++) {
+#if defined(test_precision_double)
+		acc = __dadd_rn(acc, input_a);
+		acc = __dadd_rn(acc, input_a_neg);
+		acc = __dadd_rn(acc, input_a_neg);
+		acc = __dadd_rn(acc, input_a);
+#elif defined(test_precision_single)
+		acc = __fadd_rn(acc, input_a);
+		acc = __fadd_rn(acc, input_a_neg);
+		acc = __fadd_rn(acc, input_a_neg);
+		acc = __fadd_rn(acc, input_a);
+#elif defined(test_precision_half)
+		acc = __hadd2(acc, input_a);
+		acc = __hadd2(acc, input_a_neg);
+		acc = __hadd2(acc, input_a_neg);
+		acc = __hadd2(acc, input_a);
+#endif
+	}
+	
+#if defined(test_precision_double) or defined(test_precision_single)
+	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	d_R1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	d_R2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+#elif defined(test_precision_half)
+	d_R0_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	d_R1_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	d_R2_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+#endif
+}
+
+__global__ void MicroBenchmarkKernel_MUL (tested_type *d_R0, tested_type *d_R1, tested_type *d_R2)
+{
+// ========================================== Double and Single precision
+#if defined(test_precision_double) or defined(test_precision_single)
+	register tested_type acc = OUTPUT_R;
+	register tested_type input_a = INPUT_A;
+	register tested_type input_a_inv = 1.0/INPUT_A;
+#elif defined(test_precision_half)
+	register half2 acc = __float2half2_rn(OUTPUT_R);
+	register half2 input_a = __float2half2_rn(INPUT_B);
+	register half2 input_a_inv = __float2half2_rn(1.0/INPUT_B);
+	register half2 *d_R0_half2 = (half2*)d_R0;
+	register half2 *d_R1_half2 = (half2*)d_R1;
+	register half2 *d_R2_half2 = (half2*)d_R2;
+#endif
+
+#pragma unroll 512
+	for (register unsigned int count = 0; count < (OPS / ( 4 * OPS_PER_THREAD_OPERATION )); count++) {
+#if defined(test_precision_double)
+		acc = __dmul_rn(acc, input_a);
+		acc = __dmul_rn(acc, input_a_inv);
+		acc = __dmul_rn(acc, input_a_inv);
+		acc = __dmul_rn(acc, input_a);
+#elif defined(test_precision_single)
+		acc = __fmul_rn(acc, input_a);
+		acc = __fmul_rn(acc, input_a_inv);
+		acc = __fmul_rn(acc, input_a_inv);
+		acc = __fmul_rn(acc, input_a);
+#elif defined(test_precision_half)
+		acc = __hmul2(acc, input_a);
+		acc = __hmul2(acc, input_a_inv);
+		acc = __hmul2(acc, input_a_inv);
+		acc = __hmul2(acc, input_a);
+#endif
+	}
+	
+#if defined(test_precision_double) or defined(test_precision_single)
+	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	d_R1[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	d_R2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+#elif defined(test_precision_half)
+	d_R0_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	d_R1_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
+	d_R2_half2[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 #endif
 }
 
@@ -384,15 +487,15 @@ int main(int argc, char* argv[]) {
 
 	printf("grid size = %d ; block size = %d\n", gridsize, blocksize);
 
-	r_size = gridsize * blocksize * OPS_PER_THREAD_ITERATION;
+	r_size = gridsize * blocksize * OPS_PER_THREAD_OPERATION;
 //====================================
 
 //================== Init logs
 #ifdef LOGS
 	char test_info[250];
 	char test_name[250];
-	snprintf(test_info, 250, "ops: %d gridsize:%d blocksize:%d type:%s-precision-triplicated", OPS, gridsize, blocksize, test_type_description);
-	snprintf(test_name, 250, "cuda_trip_%s_micro-fma", test_type_description);
+	snprintf(test_info, 250, "ops:%d gridsize:%d blocksize:%d type:%s-%s-precision-triplicated", OPS, gridsize, blocksize, test_type_description, test_precision_description);
+	snprintf(test_name, 250, "cuda_trip_%s_micro-%s", test_precision_description, test_type_description);
 	start_log_file(test_name, test_info);
 #endif
 //====================================
@@ -413,7 +516,7 @@ int main(int argc, char* argv[]) {
 	total_kernel_time = 0;
 	min_kernel_time = UINT_MAX;
 	max_kernel_time = 0;
-	printf("cuda_trip_micro\n");
+	printf("cuda_trip_micro-%s_%s\n", test_type_description, test_precision_description);
 	fflush(stdout);
 //====================================
 
@@ -436,8 +539,14 @@ int main(int argc, char* argv[]) {
 #ifdef LOGS
 		start_iteration();
 #endif
-		//================== Device computation, MxM
-		MicroBenchmarkKernel<<<gridsize, blocksize>>>(d_R[0], d_R[1], d_R[2]);
+		//================== Device computation
+#if test_type_fma
+		MicroBenchmarkKernel_FMA<<<gridsize, blocksize>>>(d_R[0], d_R[1], d_R[2]);
+#elif test_type_add
+		MicroBenchmarkKernel_ADD<<<gridsize, blocksize>>>(d_R[0], d_R[1], d_R[2]);
+#elif test_type_mul
+		MicroBenchmarkKernel_MUL<<<gridsize, blocksize>>>(d_R[0], d_R[1], d_R[2]);
+#endif
 
 		checkFrameworkErrors(cudaPeekAtLastError());
 
@@ -489,7 +598,7 @@ int main(int argc, char* argv[]) {
 
 		if (verbose) {
 			/////////// PERF
-			double flops = r_size * OPS * OPS_PER_THREAD_ITERATION;
+			double flops = r_size * OPS * OPS_PER_THREAD_OPERATION;
 			double gflops = flops / kernel_time;
 			double outputpersec = (double) r_size / kernel_time;
 			printf("SIZE:%ld OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n", r_size,
@@ -503,7 +612,7 @@ int main(int argc, char* argv[]) {
 		fflush(stdout);
 	}
 
-	double gflops = r_size * OPS * OPS_PER_THREAD_ITERATION / 1000000000; // Bilion FLoating-point OPerationS
+	double gflops = r_size * OPS * OPS_PER_THREAD_OPERATION / 1000000000; // Bilion FLoating-point OPerationS
 	double averageKernelTime = total_kernel_time
 			/ iterations;
 	printf("\n-- END --\n"
