@@ -677,7 +677,7 @@ void run(int argc, char** argv) {
 
 	//-----------------------------------------------------------------------------------
 
-	printf("cudaHOTSPOT\nstreams:%d size:%d pyramidHeight:%d simTime:%d\n",
+	printf("cudaTripHOTSPOT\nstreams:%d size:%d pyramidHeight:%d simTime:%d\n",
 			setupParams->nstreams, setupParams->grid_rows,
 			setupParams->pyramid_height, setupParams->sim_time);
 
@@ -992,15 +992,6 @@ void run(int argc, char** argv) {
 		} else {
 			for (int streamIdx = 0; streamIdx < (setupParams->nstreams);
 					streamIdx++) {
-				unsigned long long int is_memory_bad_host = 0;
-
-				cudaMemcpyFromSymbol(&is_memory_bad_host, "is_memory_bad",
-						sizeof(unsigned long long int), 0,
-						cudaMemcpyDeviceToHost);
-
-				printf("For stream %d is memory bad %ld\n", streamIdx,
-						is_memory_bad_host);
-
 				cudaMemcpy(setupParams->MatrixOut1,
 						MatrixTemp1[streamIdx][ret[streamIdx]],
 						sizeof(float) * size, cudaMemcpyDeviceToHost);
@@ -1219,6 +1210,20 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 			}
 		}
 	}
+
+#ifdef LOGS
+	unsigned long long int is_memory_bad_host = 0;
+	cudaMemcpyFromSymbol(&is_memory_bad_host, "is_memory_bad",
+			sizeof(unsigned long long int), 0,
+			cudaMemcpyDeviceToHost);
+	if(is_memory_bad_host != 0) {
+		char error_info[150];
+
+		sprintf(error_info, "For stream %d times that memory diverged %ld\n", streamIdx,
+				is_memory_bad_host);
+		log_info_detail(error_info);
+	}
+#endif
 
 	printf("numErrors:%d\n", host_errors);
 

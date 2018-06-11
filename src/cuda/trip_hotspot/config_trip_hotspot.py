@@ -12,10 +12,11 @@ from common_config import discover_board, execute_and_write_json_to_file
 SIZES=[1024]
 ITERATIONS=10000
 SIMTIME=[1000]
+STREAMS=10
 
 def config(board, debug):
-
-    benchmark_bin = "hotspot"
+    original_hotspot = "hotspot"
+    benchmark_bin = "cuda_trip_hotspot"
     print "Generating "+ benchmark_bin + " for CUDA, board:" + board
 
     confFile = '/etc/radiation-benchmarks.conf'
@@ -29,7 +30,7 @@ def config(board, debug):
         sys.exit(1)
 
 
-    data_path = installDir + "data/" + benchmark_bin
+    data_path = installDir + "data/" + original_hotspot
     bin_path = installDir + "bin"
     src_hotspot = installDir + "src/cuda/" + benchmark_bin
 
@@ -39,7 +40,7 @@ def config(board, debug):
 
 
     # change it for lava
-    generate = ["cd " + src_hotspot, "make clean", "make -C ../../include ", "make", "mkdir -p " + data_path,
+    generate = ["cd " + src_hotspot, "make clean", "make -C ../../include ", "make -C ../../include/safe_memory/", "make", "mkdir -p " + data_path,
                 "mv ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
@@ -47,7 +48,7 @@ def config(board, debug):
         for s in SIMTIME:
             inputFile = data_path + "/"
 
-            gen = [None] * 8
+            gen = [None] * 9
             gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
             gen[1] = ['-size=' + str(i)]
             gen[2] = ['-generate ']
@@ -56,6 +57,7 @@ def config(board, debug):
             gen[5] = ['-gold_file=' + inputFile + "gold_" + str(i) + "_" + str(s)]
             gen[6] = ['-sim_time=' + str(i)]
             gen[7] = ['-iterations=1']
+            gen[8] = ['-streams=' + str(STREAMS)]
 
             # change mode and iterations for exe
             exe = copy.deepcopy(gen)
