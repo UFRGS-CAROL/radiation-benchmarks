@@ -9,11 +9,13 @@ sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 ITERATIONS = 10000
+PRECISIONS = ["double", "single", "half"]
+TYPES = ["fma", "add", "mul"]
 
 
-def config(board, arith_type, debug):
+def config(board, test_type, arith_type, debug):
 
-    benchmark_bin = "cuda_trip_micro-fma_" + arith_type
+    benchmark_bin = "cuda_trip_micro-" + test_type + "_" + arith_type
     print "Generating " + benchmark_bin + " for CUDA, board:" + board
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -27,13 +29,13 @@ def config(board, arith_type, debug):
         sys.exit(1)
 
     bin_path = install_dir + "bin"
-    src_benchmark = install_dir + "src/cuda/trip_micro-fma"
+    src_benchmark = install_dir + "src/cuda/trip_micro"
 
     generate = ["sudo mkdir -p " + bin_path, 
                 "cd " + src_benchmark, 
                 "make clean", 
                 "make -C ../../include ", 
-                "make TYPE=" + arith_type + " -j 4",
+                "make TYPE=" + test_type + " PRECISION=" + arith_type + " -j 4",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
@@ -49,18 +51,6 @@ def config(board, arith_type, debug):
 
 if __name__ == "__main__":
     try:
-        parameter = str(sys.argv[1:][0])
-        if parameter == 'TYPE=double':
-            arith_type = 'double'
-        if parameter == 'TYPE=single':
-            arith_type = 'single'
-        if parameter == 'TYPE=half':
-            arith_type = 'half'
-    except:
-        print "Usage: config_trip_micro-fma.py TYPE=<double|single|half> [DEBUG]"
-        exit()
-
-    try:
         parameter = str(sys.argv[1:][1]).upper() 
         if parameter == 'DEBUG':
             debug_mode = True
@@ -68,4 +58,8 @@ if __name__ == "__main__":
         debug_mode = False
     
     board, _ = discover_board()
-    config(board=board, arith_type=arith_type, debug=debug_mode)
+    for test_type in TYPES:
+        for arith_type in PRECISIONS:
+            config(board=board, test_type=test_type, arith_type=arith_type, debug=debug_mode)
+    print "Multiple jsons may have been generated."
+    
