@@ -9,6 +9,7 @@ sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 SIZES = [8192, 2048, 512]
+PRECISIONS = ["double", "single", "half"]
 ITERATIONS = 10000
 USE_TENSOR_CORES = [0] #, 1]
 
@@ -79,18 +80,6 @@ def config(board, arith_type, debug):
 
 if __name__ == "__main__":
     try:
-        parameter = str(sys.argv[1:][0])
-        if parameter == 'PRECISION=double':
-            arith_type = 'double'
-        if parameter == 'PRECISION=single':
-            arith_type = 'single'
-        if parameter == 'PRECISION=half':
-            arith_type = 'half'
-    except:
-        print "Usage: config_tripmxm.py PRECISION=<double|single|half> [DEBUG]"
-        exit()
-
-    try:
         parameter = str(sys.argv[1:][1]).upper() 
         if parameter == 'DEBUG':
             debug_mode = True
@@ -98,4 +87,6 @@ if __name__ == "__main__":
         debug_mode = False
     
     board, _ = discover_board()
-    config(board=board, arith_type=arith_type, debug=debug_mode)
+    for p in PRECISIONS:
+        config(board=board, arith_type=p, debug=debug_mode)
+    print "Multiple jsons may have been generated."
