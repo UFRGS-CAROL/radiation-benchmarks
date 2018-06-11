@@ -42,7 +42,7 @@ def config(board, arith_type, debug):
                 "cd " + src_benchmark, 
                 "make clean", 
                 "make -C ../../include ", 
-                "make TYPE=" + arith_type + " -j 4",
+                "make PRECISION=" + arith_type + " -j 4",
                 "mkdir -p " + data_path, 
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
@@ -80,14 +80,14 @@ def config(board, arith_type, debug):
 if __name__ == "__main__":
     try:
         parameter = str(sys.argv[1:][0])
-        if parameter == 'TYPE=double':
+        if parameter == 'PRECISION=double':
             arith_type = 'double'
-        if parameter == 'TYPE=single':
+        if parameter == 'PRECISION=single':
             arith_type = 'single'
-        if parameter == 'TYPE=half':
+        if parameter == 'PRECISION=half':
             arith_type = 'half'
     except:
-        print "Usage: config_tripmxm.py TYPE=<double|single|half> [DEBUG]"
+        print "Usage: config_tripmxm.py PRECISION=<double|single|half> [DEBUG]"
         exit()
 
     try:

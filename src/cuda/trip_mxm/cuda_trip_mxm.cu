@@ -29,22 +29,22 @@
 #define DEFAULT_INPUT_SIZE 8192
 
 //=========== DEFINE TESTED TYPE
-#if defined(test_type_double)
+#if defined(test_precision_double)
 	#define GENERATOR_MAXABSVALUE 4.1e+16
 	#define GENERATOR_MINABSVALUE 0
-	const char test_type_description[] = "double";
+	const char test_precision_description[] = "double";
 	typedef double tested_type;
 	typedef double tested_type_host;
-#elif defined(test_type_single)
+#elif defined(test_precision_single)
 	#define GENERATOR_MAXABSVALUE 4.1e+2
 	#define GENERATOR_MINABSVALUE 0
-	const char test_type_description[] = "single";
+	const char test_precision_description[] = "single";
 	typedef float tested_type;
 	typedef float tested_type_host;
-#elif defined(test_type_half)
+#elif defined(test_precision_half)
 	#define GENERATOR_MAXABSVALUE 2.0
 	#define GENERATOR_MINABSVALUE 0
-	const char test_type_description[] = "half";
+	const char test_precision_description[] = "half";
 	typedef half tested_type;
 	typedef half_float::half tested_type_host;
 #else 
@@ -447,7 +447,7 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_typ
 		tested_type *d_B0, tested_type *d_B1, tested_type *d_B2, tested_type *d_C0, tested_type *d_C1,
 		tested_type *d_C2, int n) {
 
-#if defined(test_type_double) or defined(test_type_single)
+#if defined(test_precision_double) or defined(test_precision_single)
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;
@@ -490,7 +490,7 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_typ
 	d_C1[offset_C] = acc;
 	d_C2[offset_C] = acc;
 
-#elif defined(test_type_half)
+#elif defined(test_precision_half)
 
 	register int tx = (blockIdx.x * BLOCK_SIZE) / 2.0 + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
@@ -713,7 +713,7 @@ int main(int argc, char* argv[]) {
 	} else {
 		a_matrix_path = new char[100];
 		snprintf(a_matrix_path, 100, "mxm_a_%s_%i.matrix",
-				test_type_description, (signed int) DEFAULT_INPUT_SIZE);
+				test_precision_description, (signed int) DEFAULT_INPUT_SIZE);
 		printf("Using default input_a path: %s\n", a_matrix_path);
 	}
 
@@ -723,7 +723,7 @@ int main(int argc, char* argv[]) {
 	} else {
 		b_matrix_path = new char[100];
 		snprintf(b_matrix_path, 100, "mxm_b_%s_%i.matrix",
-				test_type_description, (signed int) DEFAULT_INPUT_SIZE);
+				test_precision_description, (signed int) DEFAULT_INPUT_SIZE);
 		printf("Using default input_a path: %s\n", b_matrix_path);
 	}
 
@@ -732,7 +732,7 @@ int main(int argc, char* argv[]) {
 				&gold_matrix_path);
 	} else {
 		gold_matrix_path = new char[100];
-		snprintf(gold_matrix_path, 100, "mxm_gold_%s_%i.matrix", test_type_description, (signed int) k);
+		snprintf(gold_matrix_path, 100, "mxm_gold_%s_%i.matrix", test_precision_description, (signed int) k);
 		printf("Using default gold path: %s\n", gold_matrix_path);
 	}
 
@@ -775,12 +775,12 @@ int main(int argc, char* argv[]) {
 //====================================
 
 //================== Set block and grid size for MxM kernel
-#if defined(test_type_double) or defined(test_type_single)
+#if defined(test_precision_double) or defined(test_precision_single)
 	int gridsize = k / BLOCK_SIZE < 1 ? 1 : k / BLOCK_SIZE;
 	int blocksize = k / BLOCK_SIZE < 1 ? k : BLOCK_SIZE;
 	dim3 dimBlock(blocksize, blocksize);
 	dim3 dimGrid(gridsize, gridsize);
-#elif defined(test_type_half)
+#elif defined(test_precision_half)
 	int gridsize = k / BLOCK_SIZE < 1 ? 1 : k / BLOCK_SIZE;
 	int blocksize = k / BLOCK_SIZE < 1 ? k : BLOCK_SIZE;
 	dim3 dimBlock(blocksize / 2.0, blocksize);
@@ -793,8 +793,8 @@ int main(int argc, char* argv[]) {
 	if (!generate) {
 		char test_info[90];
 		char test_name[90];
-		snprintf(test_info, 90, "size:%d type:%s-precision-triplicated", k, test_type_description);
-		snprintf(test_name, 90, "cuda_trip_%s_mxm", test_type_description);
+		snprintf(test_info, 90, "size:%d type:%s-precision-triplicated", k, test_precision_description);
+		snprintf(test_name, 90, "cuda_trip_%s_mxm", test_precision_description);
 		start_log_file(test_name, test_info);
 	}
 #endif
