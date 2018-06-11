@@ -213,7 +213,7 @@ class LenetThread(Thread):
     def __init__(self, **kwargs):
         super(LenetThread, self).__init__()
         self.__thread_id = kwargs.get("thread_id")
-        self.__db_path = kwargs.get("db_path")
+        self.__data = kwargs.get("data")
         self.__gold_data = kwargs.get("gold_data")
         self.__iterations = kwargs.get("iterations")
         self.__model = kwargs.get("model")
@@ -226,20 +226,20 @@ class LenetThread(Thread):
         :return: None
         """
         net = caffe.Net(self.__model, self.__weights, caffe.TEST)
-        lmdb_env = lmdb.open(self.__db_path)
-        lmdb_txn = lmdb_env.begin()
-        lmdb_cursor = lmdb_txn.cursor()
+        # lmdb_env = lmdb.open(self.__db_path)
+        # lmdb_txn = lmdb_env.begin()
+        # lmdb_cursor = lmdb_txn.cursor()
         # overall_errors = 0
         for iteration in range(self.__iterations):
             i = 0
-            # local_errors = 0
-            for key, value in lmdb_cursor:
+            classification_result = []
+            for image, label in self.__data:
 
-                datum = caffe.proto.caffe_pb2.Datum()
-                datum.ParseFromString(value)
-                label = int(datum.label)
-                image = caffe.io.datum_to_array(datum)
-                image = image.astype(np.uint8)
+                # datum = caffe.proto.caffe_pb2.Datum()
+                # datum.ParseFromString(value)
+                # label = int(datum.label)
+                # image = caffe.io.datum_to_array(datum)
+                # image = image.astype(np.uint8)
                 net.blobs['data'].data[...] = np.asarray([image])
 
                 # Do the classification
@@ -249,6 +249,13 @@ class LenetThread(Thread):
                 kernel_time = toc - tic
 
                 predicted_label = out['prob'][0].argmax(axis=0)
+                classification_result.append([iteration, i, label, predicted_label])
+                i += 1
+
+
+            for r in classification_result:
+                label = classification_result[2]
+                predicted_label = r[3]
                 correct = label == predicted_label
 
                 # [label, predicted_label, correct]
@@ -265,10 +272,8 @@ class LenetThread(Thread):
                                                        gold_correct, correct)
 
                     self.__queue.put({"error": error_detail, "sample": i, "iteration": iteration, "kernel_time": kernel_time})
-                else:
-                    self.__queue.put({"error": "", "sample": i, "iteration": iteration, "kernel_time": kernel_time})
 
-                i += 1
+
 
     def queue_is_empty(self):
         return self.__queue.empty()
@@ -298,11 +303,24 @@ def testing_radiation_multithread(model, weights, db_path, gold_path, iterations
     lh.start_log_file("Lenet" + LENET_PRECISION.title(), string_info)
     lh.set_iter_interval_print(LOG_INTERVAL)
 
+    # data for classification
+    data = []
+    lmdb_env = lmdb.open(db_path)
+    lmdb_txn = lmdb_env.begin()
+    lmdb_cursor = lmdb_txn.cursor()
+    for key, value in lmdb_cursor:
+        datum = caffe.proto.caffe_pb2.Datum()
+        datum.ParseFromString(value)
+        label = int(datum.label)
+        image = caffe.io.datum_to_array(datum)
+        image = image.astype(np.uint8)
+        data.append([image, label])
+
     gold_data = load_file(gold_path)
 
     # List of all lenet executions for lenet
     lenet_execution_list = [
-        LenetThread(thread_id=i, db_path=db_path, gold_data=gold_data, iterations=iterations, model=model,
+        LenetThread(thread_id=i, data=data, gold_data=gold_data, iterations=iterations, model=model,
                     weights=weights) for i in range(multithread)]
 
     # Start all threads
