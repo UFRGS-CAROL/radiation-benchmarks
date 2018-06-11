@@ -82,6 +82,8 @@ def config_lenet(board):
     # Insert caffe and log helper to PYTHONPATH
     env_command = "PYTHONPATH=" + src_lenet + "/" + CAFFE_PYTHON
     env_command += ":" + install_dir + "/src/" + LOG_HELPER_LIB + ":$PYTHONPATH"
+    env_command += " LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+
     generate = ["cd " + src_lenet,
                 "make -C ../../include/log_helper_swig_wraper/ log_helper_python"]
     execute = []
@@ -98,7 +100,7 @@ def config_lenet(board):
         gen[7] = ['--gold ', data_path + '/' + set['gold']]
 
         exe = copy.deepcopy(gen)
-        exe[2][1] = 1
+        exe[2][1] = 4
         exe[3][1] = 1000
 
         generate.append(' '.join(str(r) for v in gen for r in v))
