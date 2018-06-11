@@ -13,9 +13,9 @@ ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70]
 ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]
 
 
-NVCC_FLAGS= $(ARCH) -O3  -lcublas -std=c++11
+NVCC_FLAGS= $(ARCH) -O3  -lcublas -std=c++11 -lSafeMemory
 INCLUDE= -I/usr/local/cuda/include #/ -I/usr/local/cuda/samples/common/inc/
-LIBRARY= -L/usr/local/cuda/lib64/
+LIBRARY= -L/usr/local/cuda/lib64/ -L../../include/safe_memory
 CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
 
 TARGET=cuda_trip_hotspot
@@ -51,11 +51,17 @@ NVCC_FLAGS+= -I$(SAFEMEMORYDIR)/
 
 all: $(GEN_EXEC) $(TARGET)
 
-$(TARGET): safe_memory.o $(RUN_SOURCES)
-	$(NVCC) $(INCLUDE) $(LIBRARY) $(NVCC_FLAGS) safe_memory.o $(RUN_SOURCES) -o $(TARGET)
+$(TARGET): $(RUN_SOURCES)
+	$(NVCC) $(INCLUDE) $(LIBRARY) $(NVCC_FLAGS) $(RUN_SOURCES) -o $(TARGET)
 	
-safe_memory.o: $(SAFEMEMORYDIR)/safe_memory.cpp $(SAFEMEMORYDIR)/safe_memory.h
-	$(CXX) $(COMMON) $(CFLAGS) -c $(SAFEMEMORYDIR)/safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
+test:
+	./cuda_trip_hotspot -size=1024 -sim_time=1024 -temp_file=../../../data/hotspot/temp_1024 -power_file=../../../data/hotspot/power_1024 -gold_file=gold_test -iterations=10 -streams=1 -verbose
+	
+	
+generate:
+	./cuda_trip_hotspot -generate -size=1024 -sim_time=1024 -temp_file=../../../data/hotspot/temp_1024 -power_file=../../../data/hotspot/power_1024 -gold_file=gold_test -iterations=1	 -streams=1 -verbose
+
+	
 
 clean:
 	rm -f $(TARGET) gold_*
