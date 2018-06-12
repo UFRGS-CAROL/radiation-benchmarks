@@ -1,27 +1,28 @@
 #!/usr/bin/python
+
 import threading
 import socket
 import time
 import os
 from datetime import datetime
 import sys
+import requests
 
-# PORT the socket will listen to
 socketPort = 8080
 
 # Time between checks
-sleepTime = 5
+sleepTime = 3
 
 # IP of the remote socket server (hardware watchdog)
 serverIP = "192.168.1.5"
 
 # Set the machines IP to check, comment the ones we are not checking
 IPmachines = [
-    "192.168.1.14",  # CarolTitanX1
+    # "192.168.1.14",  # CarolTitanX1
     # "192.168.1.2",  #CarolK401
     # "192.168.1.6",  #CarolXeon1
-    "192.168.1.7",  # CarolXeon2
-    "192.168.1.10",  # CarolAPU1
+    # "192.168.1.7",  # CarolXeon2
+    # "192.168.1.10",  # CarolAPU1
     "192.168.1.11",  # CarolAPU2
     # "192.168.1.12", #CarolX2A
     # "192.168.1.13", #CarolX2B
@@ -58,7 +59,7 @@ IPtoSwitchIP = {
     "192.168.1.6": "192.168.1.100",  # CarolXeon1
     "192.168.1.7": "192.168.1.102",  # CarolXeon2
     "192.168.1.10": "192.168.1.101",  # CarolAPU1
-    "192.168.1.11": "192.168.1.102",  # CarolAPU2
+    "192.168.1.11": "192.168.1.104",  # CarolAPU2
     "192.168.1.12": "192.168.1.101",  # CarolX2A
     "192.168.1.13": "192.168.1.102",  # CarolX2B
 }
@@ -70,7 +71,7 @@ IPtoSwitchPort = {
     "192.168.1.6": 1,  # CarolXeon1
     "192.168.1.7": 1,  # CarolXeon2
     "192.168.1.10": 1,  # CarolAPU1
-    "192.168.1.11": 3,  # CarolAPU2
+    "192.168.1.11": 2,  # CarolAPU2
     "192.168.1.12": 4,  # CarolX2A
     "192.168.1.13": 4,  # CarolX2B
 }
@@ -80,6 +81,7 @@ SwitchIPtoModel = {
     "192.168.1.101": "default",
     "192.168.1.102": "default",
     "192.168.1.103": "lindy",
+    "192.168.1.104": "default",
 }
 
 # log in whatever path you are executing this script
@@ -88,6 +90,12 @@ logFile = "server.log"
 # Socket server
 # Create an INET, STREAMing socket
 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Maximum number of reboots
+MAX_REBOOT_NUMBER = 20
+
+# Max time in seconds to support MAX_REBOOT_NUMBER
+SMALLEST_REBOOTING = 1300
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -156,13 +164,13 @@ class Switch:
         port = port - 1
 
         for i in range(0, self.portCount):
-            if i == (port):
+            if i == port:
                 cmd += self.portList[i] % c
             else:
                 cmd += self.portList[i]
 
         cmd += '&Apply=Apply\" '
-        cmd += 'http://%s/tgi/iocontrol.tgi ' % (self.ip)
+        cmd += 'http://%s/tgi/iocontrol.tgi ' % self.ip
         cmd += '-o /dev/null 2>/dev/null'
         return os.system(cmd)
 
@@ -184,7 +192,7 @@ class HandleMachines(threading.Thread):
         """
         print "\tStarting thread to check machine connections"
         while 1:
-            checkMachines()
+            check_machines()
             time.sleep(sleepTime)
 
 
@@ -255,7 +263,7 @@ def lindy_switch(portNumber, status, switchIP):
     try:
         return requests.post(url, data=json.dumps(payload), headers=headers)
     except BaseException as ex:
-        logMsg(
+        log_msg(
             "Could not change Lindy IP switch status, portNumber: " + portNumber + ", status" + status + ", switchIP:" + switchIP)
         print(str(ex))
         return 1
@@ -306,8 +314,38 @@ def start_socket():
         if address[0] in IPmachines:
             IPLastConn[address[0]] = time.time()  # Set new timestamp
             # If machine was set to not check again, now it's alive so start to check again
+            # This branch will verify if the machine was rebooted so many times that it cant keep going
             IPActiveTest[address[0]] = True
+
         clientSocket.close()
+
+
+################################################
+# Check if the reboot interval is feasible
+################################################
+def check_reboot_interval(address):
+    """
+    # Check if the reboot interval is feasible
+    :param address: the ip address
+    :return: True if it is possible to reboot
+    """
+    global IPMaximumReboot, rebooting
+
+    last_reboot = IPMaximumReboot[address]["last_reboot"] = datetime.fromtimestamp(int(rebooting[address]))
+    now = datetime.now()
+    time_diff = (now - last_reboot).total_seconds()
+    print ("reboot_times {} last_reboot {} now {}".format(IPMaximumReboot[address][
+        "reboot_times"], last_reboot, now))
+
+    if time_diff < SMALLEST_REBOOTING and IPMaximumReboot[address][
+        "reboot_times"] > MAX_REBOOT_NUMBER:
+        return False
+    elif time_diff > SMALLEST_REBOOTING:
+        print("PASSOU AQUI TIME DIFF {}".format(time_diff))
+        IPMaximumReboot[address]["reboot_times"] = 0
+
+    IPMaximumReboot[address]["reboot_times"] += 1
+    return True
 
 
 ################################################
@@ -330,14 +368,14 @@ def check_machines():
         # If machine is not working fine reboot it
         if IPtoDiffReboot[address] < seconds < 3 * IPtoDiffReboot[address]:
             reboot = datetime.fromtimestamp(rebooting[address])
-            if (now - reboot).total_seconds() > IPtoDiffReboot[address]:
+            if (now - reboot).total_seconds() > IPtoDiffReboot[address] and check_reboot_interval(address=address):
                 rebooting[address] = time.time()
                 if address in IPtoNames:
                     print "Rebooting IP " + address + " (" + IPtoNames[address] + ")"
-                    logMsg("Rebooting IP " + address + " (" + IPtoNames[address] + ")")
+                    log_msg("Rebooting IP " + address + " (" + IPtoNames[address] + ")")
                 else:
                     print "Rebooting IP " + address
-                    logMsg("Rebooting IP " + address)
+                    log_msg("Rebooting IP " + address)
                 # Reboot machine in another thread
                 RebootMachine(address).start()
 
@@ -345,20 +383,20 @@ def check_machines():
         elif 3 * IPtoDiffReboot[address] < seconds < 10 * IPtoDiffReboot[address]:
             if address in IPtoNames:
                 print "Boot Problem IP " + address + " (" + IPtoNames[address] + ")"
-                logMsg("Boot Problem IP " + address + " (" + IPtoNames[address] + ")")
+                log_msg("Boot Problem IP " + address + " (" + IPtoNames[address] + ")")
             else:
                 print "Boot Problem IP " + address
-                logMsg("Boot Problem IP " + address)
+                log_msg("Boot Problem IP " + address)
 
             IPActiveTest[address] = False
 
         elif seconds > 10 * IPtoDiffReboot[address]:
             if address in IPtoNames:
                 print "Rebooting IP " + address + " (" + IPtoNames[address] + ")"
-                logMsg("Rebooting IP " + address + " (" + IPtoNames[address] + ")")
+                log_msg("Rebooting IP " + address + " (" + IPtoNames[address] + ")")
             else:
                 print "Rebooting IP " + address
-                logMsg("Rebooting IP " + address)
+                log_msg("Rebooting IP " + address)
             RebootMachine(address).start()
 
 
@@ -370,10 +408,14 @@ def main():
     Main function for the server
     :return: None
     """
+    global IPLastConn, IPActiveTest, rebooting, IPMaximumReboot
     try:
         # Set the initial timestamp for all IPs
         IPLastConn = dict()
         IPActiveTest = dict()
+        # Set the maximum number of reboots
+        IPMaximumReboot = dict()
+
         rebooting = dict()
         for ip in IPmachines:
             rebooting[ip] = time.time()
@@ -382,6 +424,9 @@ def main():
             port = IPtoSwitchPort[ip]
             switchIP = IPtoSwitchIP[ip]
             set_ip_switch(port, "On", switchIP)
+
+            # set the counters to zero
+            IPMaximumReboot[ip] = {"reboot_times": 0, "last_reboot": None}
 
         handle = HandleMachines()
         handle.setDaemon(True)
