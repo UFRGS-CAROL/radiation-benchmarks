@@ -2,8 +2,10 @@ CC=g++
 NVCC=/usr/local/cuda/bin/nvcc
 
 ARCH= -gencode arch=compute_53,code=[sm_53,compute_53] \
-      -gencode arch=compute_60,code=[sm_60,compute_60] \
-      -gencode arch=compute_62,code=[sm_62,compute_62]
+      -gencode arch=compute_60,code=[sm_60,compute_60] \	# Tesla P100
+      -gencode arch=compute_61,code=[sm_61,compute_61] \	# Titan X | Titan Xp
+      -gencode arch=compute_62,code=[sm_62,compute_62] \	# Tegra X2
+      -gencode arch=compute_70,code=[sm_70,compute_70]		# Titan V | Tesla V100
 
 
 NVCC_FLAGS= $(ARCH)
