@@ -1,55 +1,86 @@
-CC=g++
+CXX=g++
 NVCC=/usr/local/cuda/bin/nvcc
-
-LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
+LOGS?=1
+USE_OMP?=1
+SAFE_MALLOC?=1
 
 ifeq ($(LOWERCASED_PRECISION),half)
-ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60] \	# Tesla P100
-		-gencode arch=compute_61,code=[sm_61,compute_61] \	# Titan X | Titan Xp
-		-gencode arch=compute_62,code=[sm_62,compute_62] \	# Tegra X2
-		-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
+ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
+ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
+ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 else
-ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35] \  # Tesla K40
-		-gencode arch=compute_53,code=[sm_53,compute_53] \  # Tegra X1
-		-gencode arch=compute_60,code=[sm_60,compute_60] \	# Tesla P100
-		-gencode arch=compute_61,code=[sm_61,compute_61] \	# Titan X | Titan Xp
-		-gencode arch=compute_62,code=[sm_62,compute_62] \	# Tegra X2
-		-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]	# Tesla K40
+ARCH+= 	-gencode arch=compute_53,code=[sm_53,compute_53]	# Tegra X1
+ARCH+= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
+ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
+ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
+ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 endif
 
-NVCC_FLAGS= $(ARCH)
+
+NVCC_FLAGS= $(ARCH) -O3  -lcublas -std=c++11  -lSafeMemory
+INCLUDE= -I/usr/local/cuda/include #/ -I/usr/local/cuda/samples/common/inc/
+LIBRARY= -L/usr/local/cuda/lib64/ -L../../include/safe_memory
+CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
 
 NVIDIA_INC=/usr/local/cuda/include/,./
 NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
-SOURCES=./cuda_trip_mxm.cu
-EXEC_RADIX=./cuda_trip_mxm_
-EXEC=$(EXEC_RADIX)$(LOWERCASED_PRECISION)
+ifeq ($(LOGS), 1)
+INCLUDE+= -I$(LOGHELPER_INC)
+NVCC_FLAGS+= -DLOGS -lLogHelper 
+LIBRARY+= -L$(LOGHELPER_LIB) 
+CXXFLAGS+= -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -DLOGS -lLogHelper 
+endif
 
-DEF_SIZE=1024
+ifeq ($(USE_OMP), 1)
+NVCC_FLAGS+= -DUSE_OMP -Xcompiler " -fopenmp -O3"
+endif
 
-DEF_A_INPUT=./mxm_$(LOWERCASED_PRECISION)_A_8192.matrix
-DEF_B_INPUT=./mxm_$(LOWERCASED_PRECISION)_B_8192.matrix
-DEF_GOLD=./mxm_$(LOWERCASED_PRECISION)_GOLD_$(DEF_TEST_SIZE).matrix
+ifeq ($(SAFE_MALLOC), 1)
+NVCC_FLAGS+= -DSAFE_MALLOC
+endif
 
-MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./mxm*.matrix
+RUN_SOURCES=./cuda_trip_lava.cu
+EXEC_RADIX=./cuda_trip_lava_
+RUN_EXEC=$(EXEC_RADIX)$(LOWERCASED_PRECISION)
 
-all: $(EXEC)
+DEF_SIZE=12
 
-check-benchtype:
-	echo "syntax: make PRECISION=<double|half|single>"
-	test $(PRECISION)
+DEF_CHARGES_INPUT=./lava_$(LOWERCASED_PRECISION)_charges_$(DEF_SIZE)
+DEF_DISTANCES_INPUT=./lava_$(LOWERCASED_PRECISION)_distances_$(DEF_SIZE)
+DEF_GOLD=./lava_$(LOWERCASED_PRECISION)_gold_$(DEF_SIZE)
+DEF_INOUTS_RADIX=./lava_$(LOWERCASED_PRECISION)_*
 
-$(EXEC): check-benchtype $(RUN_SOURCES)
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
+SAFEMEMORYDIR=../dgemm
+NVCC_FLAGS+= -I$(SAFEMEMORYDIR)/
+NVCC_FLAGS+= -I$(SAFEMEMORYDIR)/
+INPUTS_NAMES=$(DEF_CHARGES_INPUT) $(DEF_DISTANCES_INPUT) $(DEF_GOLD) $(DEF_INOUTS_RADIX)
+
+ALL: $(RUN_EXEC)
+
+$(RUN_EXEC):  $(RUN_SOURCES)
+	$(NVCC) $(NVCC_FLAGS) $(INCLUDE) $(LIBRARY) $(RUN_SOURCES)  -o $(RUN_EXEC)
+
+#safe_memory.o: $(SAFEMEMORYDIR)/safe_memory.cpp $(SAFEMEMORYDIR)/safe_memory.h
+#	$(CXX) $(COMMON) $(CFLAGS) -c $(SAFEMEMORYDIR)/safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
+
+
+$(GEN_EXEC): $(GEN_SOURCES)
+	$(NVCC) $(INCLUDE) $(LIBRARY) $(NVCC_FLAGS) $(GEN_SOURCES) -o $(GEN_EXEC)
+	
+
+#safe_memory.o: $(SAFEMEMORYDIR)/safe_memory.cpp $(SAFEMEMORYDIR)/safe_memory.h
+#	$(CXX) $(COMMON) $(CFLAGS) -c $(SAFEMEMORYDIR)/safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
 
 clean:
-	rm -rf $(EXEC_RADIX)* $(MATRIX_NAMES)
+	rm -f $(RUN_EXEC) $(INPUTS_NAMES) *.o
 
-generate: $(EXEC)
-	$(EXEC) -generate -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD)
+generate: $(RUN_EXEC)
+	$(RUN_EXEC) -boxes=$(DEF_SIZE) -generate -streams=1 -iterations=1 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
 
-test: $(EXEC) generate
-	$(EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
+test: $(RUN_EXEC) generate
+	$(RUN_EXEC) -boxes=$(DEF_SIZE) -streams=1 -iterations=10 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
