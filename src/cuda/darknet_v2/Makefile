@@ -13,6 +13,7 @@ ARCH+= -gencode arch=compute_50,code=[sm_50,compute_50]
 ARCH+= -gencode arch=compute_52,code=[sm_52,compute_52] 
 ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60] 
 ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
+ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70]
 
 # This is what I use, uncomment if you know your arch and want to specify
 # ARCH=  -gencode arch=compute_52,code=compute_52

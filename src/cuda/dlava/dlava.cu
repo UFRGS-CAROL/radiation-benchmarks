@@ -20,7 +20,7 @@
 #endif
 
 #ifdef SAFE_MALLOC
-#include "safe_memory.h"
+#include "safe_memory/safe_memory.h"
 #endif
 
 //=============================================================================

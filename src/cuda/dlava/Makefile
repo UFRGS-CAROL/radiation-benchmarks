@@ -13,9 +13,9 @@ ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70]
 ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]
 
 
-NVCC_FLAGS= $(ARCH) -O3  -lcublas -std=c++11 
+NVCC_FLAGS= $(ARCH) -O3  -lcublas -std=c++11  -lSafeMemory
 INCLUDE= -I/usr/local/cuda/include #/ -I/usr/local/cuda/samples/common/inc/
-LIBRARY= -L/usr/local/cuda/lib64/
+LIBRARY= -L/usr/local/cuda/lib64/ -L../../include/safe_memory
 CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
 
 NVIDIA_INC=/usr/local/cuda/include/,./
@@ -54,19 +54,19 @@ INPUTS_NAMES=$(DEF_CHARGES_INPUT) $(DEF_DISTANCES_INPUT) $(DEF_GOLD) ./dlava_cha
 
 ALL: $(RUN_EXEC)
 
-$(RUN_EXEC): safe_memory.o $(RUN_SOURCES)
-	$(NVCC) $(NVCC_FLAGS) $(INCLUDE) $(LIBRARY) $(RUN_SOURCES) ./safe_memory.o -o $(RUN_EXEC)
+$(RUN_EXEC):  $(RUN_SOURCES)
+	$(NVCC) $(NVCC_FLAGS) $(INCLUDE) $(LIBRARY) $(RUN_SOURCES)  -o $(RUN_EXEC)
 
-safe_memory.o: $(SAFEMEMORYDIR)/safe_memory.cpp $(SAFEMEMORYDIR)/safe_memory.h
-	$(CXX) $(COMMON) $(CFLAGS) -c $(SAFEMEMORYDIR)/safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
+#safe_memory.o: $(SAFEMEMORYDIR)/safe_memory.cpp $(SAFEMEMORYDIR)/safe_memory.h
+#	$(CXX) $(COMMON) $(CFLAGS) -c $(SAFEMEMORYDIR)/safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
 
 
 $(GEN_EXEC): $(GEN_SOURCES)
 	$(NVCC) $(INCLUDE) $(LIBRARY) $(NVCC_FLAGS) $(GEN_SOURCES) -o $(GEN_EXEC)
 	
 
-safe_memory.o: $(SAFEMEMORYDIR)/safe_memory.cpp $(SAFEMEMORYDIR)/safe_memory.h
-	$(CXX) $(COMMON) $(CFLAGS) -c $(SAFEMEMORYDIR)/safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
+#safe_memory.o: $(SAFEMEMORYDIR)/safe_memory.cpp $(SAFEMEMORYDIR)/safe_memory.h
+#	$(CXX) $(COMMON) $(CFLAGS) -c $(SAFEMEMORYDIR)/safe_memory.cpp -o $@ $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) 
 
 clean:
 	rm -f $(RUN_EXEC) $(INPUTS_NAMES) *.o
