@@ -162,6 +162,13 @@ unsigned long int set_max_errors_iter(unsigned long int max_errors) {
 }
 
 // ~ ===========================================================================
+unsigned long int set_max_infos_iter(unsigned long int max_infos) {
+    max_infos_per_iter = max_infos;
+
+    return max_infos_per_iter;
+}
+
+// ~ ===========================================================================
 // Set the interval the program must print log details, default is 1 (each iteration)
 int set_iter_interval_print(int interval) {
     if (interval < 1) {

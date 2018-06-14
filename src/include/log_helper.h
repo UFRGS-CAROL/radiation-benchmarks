@@ -9,6 +9,9 @@ extern "C" {
 // If more than max errors is found, exit the program
 unsigned long int set_max_errors_iter(unsigned long int max_errors);
 
+// Set the max number of infos logged in a single iteration
+unsigned long int set_max_infos_iter(unsigned long int max_infos);
+
 // Set the interval the program must print log details,
 // default is 1 (each iteration)
 int set_iter_interval_print(int interval);
