@@ -215,6 +215,7 @@ void new_read_input(XYZ *in, const Params p) {
 //			p.out_size_i); // Gold com a resoluo
 	int in_size = (p.in_size_i + 1) * (p.in_size_j + 1); // * sizeof(XYZ);
 	FILE *finput;
+	printf("Input FIle: %s \n",p.input.c_str());
 	if (finput = fopen(p.input.c_str(), "rb")) {
 		fread(in, sizeof(XYZ), in_size, finput);
 	} else {
@@ -276,6 +277,7 @@ int main(int argc, char **argv) {
 	XYZ * h_in = (XYZ *) malloc(in_size);
 	XYZ * h_out = (XYZ *) malloc(out_size);
 	XYZ * h_out_merge = (XYZ *) malloc(out_size);
+	update_timestamp();
 	XYZ * gold = (XYZ *) malloc(out_size);          // Gold Memory Allocation
 	XYZ * d_in;
 	cudaStatus = cudaMalloc((void**) &d_in, in_size);
@@ -295,6 +297,7 @@ int main(int argc, char **argv) {
 
 // *********************** Lendo GOLD   *****************************
 	if (p.mode == 1) {
+		update_timestamp();
 		read_gold(p, gold, out_size);
 	}
 	cudaDeviceSynchronize();
@@ -313,8 +316,8 @@ int main(int argc, char **argv) {
 
 	// Loop over main kernel
 	for (int rep = 0; rep < p.n_reps; rep++) {
-		//std::cout << "ITERATION " << rep << "\n";
-
+		std::cout << "ITERATION " << rep << "\n";
+		update_timestamp();
 // Reset
 #ifdef CUDA_8_0
 		if(p.alpha < 0.0 || p.alpha > 1.0) { // Dynamic partitioning
@@ -399,8 +402,10 @@ int main(int argc, char **argv) {
 		verify(h_in, h_out, p.in_size_i, p.in_size_j, p.out_size_i, p.out_size_j);
 #else
 		// printf("Else/n");
+		update_timestamp();
 		err = new_compare_output(h_out_merge, gold, p.in_size_i, p.in_size_j,
 				p.out_size_i, p.out_size_j);
+		update_timestamp();		
 #endif
 
 		if (err > 0) {
@@ -416,6 +421,7 @@ int main(int argc, char **argv) {
 //			}
 //			fclose(finput);
 			read_gold(p, gold, out_size);
+			update_timestamp();
 			new_read_input(h_in, p);
 		} else {
 			printf(".");
