@@ -79,12 +79,12 @@ FILE* f_GOLD;
 //================== Host and device matrix ptr's
 tested_type_host *A;
 tested_type_host *B;
-tested_type_host *C[3];
+tested_type_host *C0, *C1, *C2;
 tested_type_host *GOLD;
 
-tested_type *d_A[3];
-tested_type *d_B[3];
-tested_type *d_C[3];
+tested_type *d_A0, *d_A1, *d_A2;
+tested_type *d_B0, *d_B1, *d_B2;
+tested_type *d_C0, *d_C1, *d_C2;
 //====================================
 
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
@@ -185,56 +185,56 @@ void* safe_cudaMalloc(size_t size) {
 }
 
 void allocCudaMemory() {
-	d_A[0] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
-	d_A[1] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
-	d_A[2] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_A0 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_A1 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_A2 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 
-	d_B[0] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
-	d_B[1] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
-	d_B[2] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_B0 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_B1 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_B2 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 
-	d_C[0] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
-	d_C[1] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
-	d_C[2] = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_C0 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_C1 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+	d_C2 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 }
 
 void freeCudaMemory() {
-	checkFrameworkErrors(cudaFree(d_A[0]));
-	checkFrameworkErrors(cudaFree(d_A[1]));
-	checkFrameworkErrors(cudaFree(d_A[2]));
+	checkFrameworkErrors(cudaFree(d_A0));
+	checkFrameworkErrors(cudaFree(d_A1));
+	checkFrameworkErrors(cudaFree(d_A2));
 
-	checkFrameworkErrors(cudaFree(d_B[0]));
-	checkFrameworkErrors(cudaFree(d_B[1]));
-	checkFrameworkErrors(cudaFree(d_B[2]));
+	checkFrameworkErrors(cudaFree(d_B0));
+	checkFrameworkErrors(cudaFree(d_B1));
+	checkFrameworkErrors(cudaFree(d_B2));
 
-	checkFrameworkErrors(cudaFree(d_C[0]));
-	checkFrameworkErrors(cudaFree(d_C[1]));
-	checkFrameworkErrors(cudaFree(d_C[2]));
+	checkFrameworkErrors(cudaFree(d_C0));
+	checkFrameworkErrors(cudaFree(d_C1));
+	checkFrameworkErrors(cudaFree(d_C2));
 }
 
 void copyCudaMemory() {
-	checkFrameworkErrors(cudaMemset(d_C[0], 0x00, matrixSize * sizeof(tested_type)));
-	checkFrameworkErrors(cudaMemset(d_C[1], 0x00, matrixSize * sizeof(tested_type)));
-	checkFrameworkErrors(cudaMemset(d_C[2], 0x00, matrixSize * sizeof(tested_type)));
+	checkFrameworkErrors(cudaMemset(d_C0, 0x00, matrixSize * sizeof(tested_type)));
+	checkFrameworkErrors(cudaMemset(d_C1, 0x00, matrixSize * sizeof(tested_type)));
+	checkFrameworkErrors(cudaMemset(d_C2, 0x00, matrixSize * sizeof(tested_type)));
 
 	checkFrameworkErrors(
-			cudaMemcpy(d_A[0], A, matrixSize * sizeof(tested_type),
+			cudaMemcpy(d_A0, A, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH A
 	checkFrameworkErrors(
-			cudaMemcpy(d_A[1], A, matrixSize * sizeof(tested_type),
+			cudaMemcpy(d_A1, A, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH A
 	checkFrameworkErrors(
-			cudaMemcpy(d_A[2], A, matrixSize * sizeof(tested_type),
+			cudaMemcpy(d_A2, A, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH A
 
 	checkFrameworkErrors(
-			cudaMemcpy(d_B[0], B, matrixSize * sizeof(tested_type),
+			cudaMemcpy(d_B0, B, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH B
 	checkFrameworkErrors(
-			cudaMemcpy(d_B[1], B, matrixSize * sizeof(tested_type),
+			cudaMemcpy(d_B1, B, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH B
 	checkFrameworkErrors(
-			cudaMemcpy(d_B[2], B, matrixSize * sizeof(tested_type),
+			cudaMemcpy(d_B2, B, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH B
 }
 
@@ -443,115 +443,94 @@ void writeGoldtoFile() {
 
 	fclose(f_GOLD);
 }
+
+__device__ unsigned long long int is_memory_bad = 0;
+
+__device__ tested_type inline read_voter(tested_type *v1, tested_type *v2, tested_type *v3,
+		int offset) {
+
+	register tested_type in1 = v1[offset];
+	register tested_type in2 = v2[offset];
+	register tested_type in3 = v3[offset];
+
+	if (in1 == in2 || in1 == in3) {
+		return in1;
+	}
+
+	if (in2 == in3) {
+		return in2;
+	}
+
+	if (in1 != in2 && in2 != in3 && in1 != in3) {
+		atomicAdd(&is_memory_bad, 1);
+	}
+
+	return in1;
+}
+
+__device__ half2 inline read_voter_h2(half2 *v1, half2 *v2, half2 *v3,
+		int offset) {
+
+	register half2 in1 = v1[offset];
+	register half2 in2 = v2[offset];
+	register half2 in3 = v3[offset];
+
+	if (__hbeq2(in1, in2) || __hbeq2(in1, in3)) {
+		return in1;
+	}
+
+	if (__hbeq2(in2, in3)) {
+		return in2;
+	}
+
+	if (__hbne(in1, in2) && __hbne(in2, in3) && __hbneq(in1, in3)) {
+		atomicAdd(&is_memory_bad, 1);
+	}
+
+	return in1;
+}
+
 __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_type *d_A2,
-		tested_type *d_B0, tested_type *d_B1, tested_type *d_B2, tested_type *d_C0, tested_type *d_C1,
-		tested_type *d_C2, int n) {
+								tested_type *d_B0, tested_type *d_B1, tested_type *d_B2, 
+								tested_type *d_C0, tested_type *d_C1, tested_type *d_C2, 
+								int n) {
 
 #if defined(test_precision_double) or defined(test_precision_single)
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;
 
-	register size_t offset_A;
-	register tested_type in_A;
-	register tested_type in_A1_half2;
-
-	register size_t offset_B;
-	register tested_type in_B;
-	register tested_type in_B1_half2;
-
 	register tested_type acc = 0.0;
 	for (k = 0; k < n; k++) {
-
-		offset_A = ty * n + k;
-		in_A = d_A0[offset_A];
-		in_A1_half2 = d_A1[offset_A];
-		if (in_A != in_A1_half2) {
-			if (in_A != d_A2[offset_A]) {
-				in_A = in_A1_half2;
-			}
-		}
-
-		offset_B = k * n + tx;
-		in_B = d_B0[offset_B];
-		in_B1_half2 = d_B1[offset_B];
-		if (in_B != in_B1_half2) {
-			if (in_B != d_B2[offset_B]) {
-				in_B = in_B1_half2;
-			}
-		}
-
-		acc += in_A * in_B;
+		acc = 	read_voter(d_A0, d_A1, d_A2, ty * n + k) 
+				* 
+				read_voter(d_B0, d_B1, d_B2, k * n + tx)
+				+
+				acc;
 	}
 
-	register size_t offset_C = ty * n + tx;
-
-	d_C0[offset_C] = acc;
-	d_C1[offset_C] = acc;
-	d_C2[offset_C] = acc;
+	d_C0[ty * n + tx] = acc;
+	d_C1[ty * n + tx] = acc;
+	d_C2[ty * n + tx] = acc;
 
 #elif defined(test_precision_half)
 
 	register int tx = (blockIdx.x * BLOCK_SIZE) / 2.0 + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-	register int n2 = n / 2.0;
 	register int k;
-
-	register half2 *d_B0_half2 = (half2*)d_B0;
-	register half2 *d_B1_half2 = (half2*)d_B1;
-	register half2 *d_B2_half2 = (half2*)d_B2;
-
-	register size_t offset_C;
-	register half2 *d_C0_half2 = (half2*)d_C0;
-	register half2 *d_C1_half2 = (half2*)d_C1;
-	register half2 *d_C2_half2 = (half2*)d_C2;
-
-	register size_t offset_A;
-	register half2 in_A_half2;
-	register half2 in_A1_half2;
-
-	register size_t offset_B;
-	register half2 in_B_half2;
-	register half2 in_B1_half2;
 
 	register half2 acc = __float2half2_rn(0.0);
 	for (k = 0; k < n; k++) {
 
-		// First half
-		offset_A = ty * n + k;
-		in_A_half2 = __half2half2(d_A0[offset_A]);
-		in_A1_half2 = __half2half2(d_A1[offset_A]);
-		if (__hbne2(in_A_half2, in_A1_half2)) { // __hbne2: true if both halves are equal
-			if (__hbne2(in_A_half2, __half2half2(d_A2[offset_A]))) {
-				in_A_half2 = in_A1_half2;
-			}
-		}
-		offset_B = k * n2 + tx;
-		in_B_half2 = d_B0_half2[offset_B];
-		in_B1_half2 = d_B1_half2[offset_B];
-		if (__hbne2(in_B_half2, in_B1_half2)) {
-			if (__hbne2(in_B_half2, d_B2_half2[offset_B])) {
-				in_B_half2 = in_B1_half2;
-			}
-		}
-
-		acc = __hfma2(in_A_half2, in_B_half2, acc);
+		acc = __hfma2(	__half2half2(read_voter(d_A0, d_A1, d_A2, ty * n + k)), 
+						read_voter_h2((half2*)d_B0, (half2*)d_B1, (half2*)d_B2, k * (n / 2.0) + tx), 
+						acc);
+		// n/2 is needed because we changed how we iterate d_B
 	}
 
-	offset_C = ty * n2 + tx;
-
-	d_C0_half2[offset_C] = acc;
-	d_C1_half2[offset_C] = acc;
-	d_C2_half2[offset_C] = acc;
-
-	// int n2 = n / 2.0;
-	// half2 *d_B2 = (half2*)d_B;
-	// half2 *d_C_T2 = (half2*)d_C_T;
-	
-	// for (k = 0;  k < n; k++)
-	// 	// c[ty * n + tx] += a[ty * n + k] *  b[k * n + tx];
-	// 	// c[ty * n + tx + 1] += a[ty * n + k + 1] *  b[k * n + tx + 1];
-	// 	d_C_T2[ty * n2 + tx] = __hfma2(__half2half2(d_A[ty * n + k]), d_B2[k * n2 + tx], d_C_T2[ty * n2 + tx]);
+	((half2*)d_C0)[ty * n2 + tx] = acc;
+	((half2*)d_C1)[ty * n2 + tx] = acc;
+	((half2*)d_C2)[ty * n2 + tx] = acc;
 #endif
 
 }
@@ -570,12 +549,12 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 	for (int i = 0; i < matrixSize; i++) {
 		register bool checkFlag = true;
 		register tested_type_host valGold = GOLD[i];
-		register tested_type_host valOutput0 = C[0][i];
-		register tested_type_host valOutput1 = C[1][i];
-		register tested_type_host valOutput2 = C[2][i];
+		register tested_type_host valOutput0 = C0[i];
+		register tested_type_host valOutput1 = C1[i];
+		register tested_type_host valOutput2 = C2[i];
 		register tested_type_host valOutput = valOutput0;
 		if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
-#pragma omp critical
+			#pragma omp critical
 			{
 				char info_detail[150];
 				snprintf(info_detail, 150,
@@ -603,7 +582,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 				} else {
 					// NO VALUE MATCHES THE GOLD AND ALL 3 DIVERGE!
 					checkFlag = false;
-#pragma omp critical
+					#pragma omp critical
 					{
 						char info_detail[150];
 						snprintf(info_detail, 150,
@@ -807,13 +786,13 @@ int main(int argc, char* argv[]) {
 //================== Alloc HOST memory
 	A = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 	B = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
-	C[0] = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
-	C[1] = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
-	C[2] = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	C0 = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	C1 = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	C2 = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 
 	GOLD = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 
-	if (!(A && B && C[0] && C[1] && C[2] && GOLD)) {
+	if (!(A && B && C0 && C1 && C2 && GOLD)) {
 		printf("Failed on host malloc.\n");
 		exit(-3);
 	}
@@ -848,11 +827,11 @@ int main(int argc, char* argv[]) {
 		global_time = mysecond();
 
 		checkFrameworkErrors(
-				cudaMemset(d_C[0], 0, matrixSize * sizeof(tested_type)));
+				cudaMemset(d_C0, 0, matrixSize * sizeof(tested_type)));
 		checkFrameworkErrors(
-				cudaMemset(d_C[1], 0, matrixSize * sizeof(tested_type)));
+				cudaMemset(d_C1, 0, matrixSize * sizeof(tested_type)));
 		checkFrameworkErrors(
-				cudaMemset(d_C[2], 0, matrixSize * sizeof(tested_type)));
+				cudaMemset(d_C2, 0, matrixSize * sizeof(tested_type)));
 
 		if (verbose)
 			printf(",");
@@ -864,8 +843,10 @@ int main(int argc, char* argv[]) {
 				start_iteration();
 #endif
 		//================== Device computation, MxM
-		MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A[0], d_A[1], d_A[2], d_B[0],
-				d_B[1], d_B[2], d_C[0], d_C[1], d_C[2], k);
+		MatrixMulKernel<<<dimGrid, dimBlock>>>(	d_A0, d_A1, d_A2,
+												d_B0, d_B1, d_B2, 
+												d_C0, d_C1, d_C2, 
+												k);
 
 		checkFrameworkErrors(cudaPeekAtLastError());
 
@@ -898,7 +879,7 @@ int main(int argc, char* argv[]) {
 
 		if (loop2 || !device_warmup) {
 			checkFrameworkErrors(
-					cudaMemcpy(C[0], d_C[0], matrixSize * sizeof(tested_type),
+					cudaMemcpy(C0, d_C0, matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
 			if ((generate) && (k <= 16)) {
 				printf("\nMatrix C (0): \n");
@@ -910,7 +891,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			checkFrameworkErrors(
-					cudaMemcpy(C[1], d_C[1], matrixSize * sizeof(tested_type),
+					cudaMemcpy(C1, d_C1, matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
 			if ((generate) && (k <= 16)) {
 				printf("\nMatrix C (1): \n");
@@ -922,7 +903,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			checkFrameworkErrors(
-					cudaMemcpy(C[2], d_C[2], matrixSize * sizeof(tested_type),
+					cudaMemcpy(C2, d_C2, matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
 			if ((generate) && (k <= 16)) {
 				printf("\nMatrix C (2): \n");
@@ -1009,9 +990,9 @@ int main(int argc, char* argv[]) {
 
 	free(A);
 	free(B);
-	free(C[0]);
-	free(C[1]);
-	free(C[2]);
+	free(C0);
+	free(C1);
+	free(C2);
 	free(GOLD);
 #ifdef LOGS
 	if (!generate) 
