@@ -44,7 +44,7 @@ int main(){
 		}
 		if (i%16==0){
 			log_info_detail("info of event during iteration");
-			info_count = info_count + 1;
+			info_count = info_count + 520;
 		}
 
 		// log how many errors the iteration had
