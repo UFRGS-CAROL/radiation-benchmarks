@@ -17,7 +17,7 @@ STREAMS=10
 def config(board, debug):
     original_hotspot = "hotspot"
     benchmark_bin = "cuda_trip_single_hotspot"
-    benchmark_src = "cuda_trip_hotspot"
+    benchmark_src = "trip_hotspot"
     print "Generating "+ benchmark_bin + " for CUDA, board:" + board
 
     confFile = '/etc/radiation-benchmarks.conf'
