@@ -12,9 +12,9 @@ from common_config import discover_board, execute_and_write_json_to_file
 INPUT = ['input/control.txt']
 ITERATIONS = 100000
 ALPHA_VARIATIONS = [1.0, 0.0, 0.1]
-RESOLUTIONS = [2500, 5000]
+RESOLUTIONS = [2500]
 
-EMBEDDED_HOSTS = ['K1', 'X1', 'X2', 'APU']
+EMBEDDED_HOSTS = ['K1', 'TX1', 'TX2', 'CarolTegraX1A']
 
 def config(board, debug):
     print "Generating Bezier Surface for CUDA on " + str(board)
@@ -39,13 +39,13 @@ def config(board, debug):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
-    generate = ["mkdir -p " + bin_path, "cd " + src_bs, "make clean", "make -j4",
+    generate = ["mkdir -p " + bin_path, "cd " + src_bs, "make clean", "make ",
                 "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
     for i in INPUT:
         for j in ALPHA_VARIATIONS:
-            if j > 0 and board not in EMBEDDED_HOSTS:
+            if j > 0.0 and board not in EMBEDDED_HOSTS:
                 continue
             for r in RESOLUTIONS:
                 if r > 2500 and board in EMBEDDED_HOSTS:
@@ -78,7 +78,7 @@ def config(board, debug):
 
     generate.extend(
         ["make clean", "make -C ../../../include/",
-         "make -j4 LOGS=1",
+         "make  LOGS=1",
          "mv -f ./" + benchmark_bin + " " + bin_path + "/"])
 
 
@@ -90,6 +90,7 @@ def config(board, debug):
 
 
 if __name__ == "__main__":
+    debug_mode = False
     try:
         parameter = str(sys.argv[1:][0]).upper() 
         if parameter == 'DEBUG':
