@@ -30,6 +30,7 @@ int main(){
 
 
 		int error_count = 0;
+		int info_count = 0;
 		
 		if(i%8==0){
 			// Testing with error_count > 0 for some iterations
@@ -41,12 +42,17 @@ int main(){
 			// Tell log how many errors the iteration had
 			error_count = i+1;
 		}
+		if (i%16==0){
+			log_info_detail("info of event during iteration");
+			info_count = info_count + 1;
+		}
 
 		// log how many errors the iteration had
 		// if error_count is greater than 500, or the
 		// max_errors_iter set with set_max_errors_iter()
 		// it will terminate the execution
 		log_error_count(error_count);
+		log_info_count(info_count);
 	}
 
 	// Finish the log file
