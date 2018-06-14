@@ -468,13 +468,14 @@ __device__ tested_type inline read_voter(tested_type *v1, tested_type *v2, teste
 	return in1;
 }
 
+#if defined(test_precision_half)
 __device__ half2 inline read_voter_h2(half2 *v1, half2 *v2, half2 *v3,
 		int offset) {
 
 	register half2 in1 = v1[offset];
 	register half2 in2 = v2[offset];
 	register half2 in3 = v3[offset];
-
+	__hbeq2
 	if (__hbeq2(in1, in2) || __hbeq2(in1, in3)) {
 		return in1;
 	}
@@ -489,6 +490,7 @@ __device__ half2 inline read_voter_h2(half2 *v1, half2 *v2, half2 *v3,
 
 	return in1;
 }
+#endif
 
 __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_type *d_A2,
 								tested_type *d_B0, tested_type *d_B1, tested_type *d_B2, 
