@@ -277,6 +277,8 @@ int main(int argc, char **argv) {
 	} else {
 //		std::pair<int, int> sizes =
 		gold = read_gold(&n_nodes, &n_edges, p.gold_path);
+		update_timestamp();
+
 //		std::cout << gold << " " << p.mode << "\n";
 //
 //		n_nodes = sizes.first;
@@ -309,6 +311,7 @@ int main(int argc, char **argv) {
 	int * d_head;
 	cudaStatus = cudaMalloc((void**) &d_head, sizeof(int));
 	std::atomic_int h_tail[1];
+	update_timestamp();
 	int * d_tail;
 	cudaStatus = cudaMalloc((void**) &d_tail, sizeof(int));
 	std::atomic_int h_threads_end[1];
@@ -336,6 +339,7 @@ int main(int argc, char **argv) {
 	const int max_gpu_threads = setcuda.max_gpu_threads();
 	int source;
 	read_input(source, h_nodes, h_edges, p);
+	update_timestamp();
 //// **********************  Lendo O gold *********************************
 //	read_gold(gold, p);
 //// **********************************************************************
@@ -368,8 +372,9 @@ int main(int argc, char **argv) {
 	timer.stop("Copy To Device");
 
 	for (int rep = 0; rep < p.n_reps; rep++) {
-
+		//printf("Rep %d \n",rep);
 		// Reset
+		update_timestamp();
 		for (int i = 0; i < n_nodes; i++) {
 			h_cost[i].store(INF);
 		}
@@ -431,6 +436,7 @@ int main(int argc, char **argv) {
 
 			if ((*h_num_t < p.switching_limit || GPU_EXEC == 0)
 					&& CPU_EXEC == 1) { // If the number of input queue elements is lower than switching_limit
+				update_timestamp();
 				it_cpu = it_cpu + 1;
 				//if(rep >= p.n_warmup)
 				timer.start("Kernel");
@@ -465,7 +471,7 @@ int main(int argc, char **argv) {
 
 			} else if ((*h_num_t >= p.switching_limit || CPU_EXEC == 0)
 					&& GPU_EXEC == 1) { // If the number of input queue elements is higher than or equal to switching_limit
-
+				update_timestamp();
 				it_gpu = it_gpu + 1;
 				//if(rep >= p.n_warmup)
 				timer.start("Copy To Device");
@@ -580,20 +586,25 @@ int main(int argc, char **argv) {
 		//printf("IT GPU:%d\n",it_gpu);
 
 //	err=new_verify(h_cost, n_nodes, p.comparison_file,it_cpu,it_gpu);
-		if (p.mode == 1)
+		if (p.mode == 1){
+			update_timestamp();
 			err = newest_verify(h_cost, n_nodes, n_nodes, gold, it_cpu, it_gpu);
 
 		if (err > 0) {
 			printf("Errors: %d\n", err);
+			update_timestamp();
 			read_input(source, h_nodes, h_edges, p);
 			if(gold){
 				free(gold);
 			}
+			update_timestamp();
 			gold = read_gold(&n_nodes, &n_edges, p.gold_path);
 
 		} else {
 			printf(".");
+			fflush(stdout);
 		}
+    }
 #ifdef LOGS
 		log_error_count(err);
 #endif
