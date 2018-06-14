@@ -483,7 +483,7 @@ __device__ half2 inline read_voter_h2(half2 *v1, half2 *v2, half2 *v3,
 		return in2;
 	}
 
-	if (__hbne(in1, in2) && __hbne(in2, in3) && __hbneq(in1, in3)) {
+	if (__hbne2(in1, in2) && __hbne2(in2, in3) && __hbne2(in1, in3)) {
 		atomicAdd(&is_memory_bad, 1);
 	}
 
@@ -884,7 +884,7 @@ int main(int argc, char* argv[]) {
 			if ((generate) && (k <= 16)) {
 				printf("\nMatrix C (0): \n");
 				for (int i = 0; i<k*k; i++) {
-					printf(" %.2e", (float)C[0][i]);
+					printf(" %.2e", (float)C0[i]);
 					if ((i+1)%k == 0) printf("\n");
 				}
 				printf("\n");
@@ -896,7 +896,7 @@ int main(int argc, char* argv[]) {
 			if ((generate) && (k <= 16)) {
 				printf("\nMatrix C (1): \n");
 				for (int i = 0; i<k*k; i++) {
-					printf(" %.2e", (float)C[1][i]);
+					printf(" %.2e", (float)C1[i]);
 					if ((i+1)%k == 0) printf("\n");
 				}
 				printf("\n");
@@ -908,7 +908,7 @@ int main(int argc, char* argv[]) {
 			if ((generate) && (k <= 16)) {
 				printf("\nMatrix C (2): \n");
 				for (int i = 0; i<k*k; i++) {
-					printf(" %.2e", (float)C[2][i]);
+					printf(" %.2e", (float)C2[i]);
 					if ((i+1)%k == 0) printf("\n");
 				}
 				printf("\n");
