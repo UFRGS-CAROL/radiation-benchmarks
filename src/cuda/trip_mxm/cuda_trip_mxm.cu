@@ -590,7 +590,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 				if (!generate) 
 					log_info_detail(info_detail);
 #endif
-				memory_errors += 1;
+				memory_errors++;
 			}
 			if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2) && (valOutput0 != valOutput2)) {
 				// All 3 values diverge
@@ -605,19 +605,19 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 					checkFlag = false;
 #pragma omp critical
 					{
-						char error_detail[150];
-						snprintf(error_detail, 150,
-								"f: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e, e: %1.20e",
+						char info_detail[150];
+						snprintf(info_detail, 150,
+								"t: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e, e: %1.20e",
 								(int) floor(i / k), i % k, (double)valOutput0,
 								(double)valOutput1, (double)valOutput2, (double)valGold);
-						if (verbose && (host_errors < 10))
-							printf("%s\n", error_detail);
+						if (verbose && (memory_errors < 10))
+							printf("%s\n", info_detail);
 
 #ifdef LOGS
 						if (!generate)
-							log_error_detail(error_detail);
+							log_info_detail(info_detail);
 #endif
-						host_errors++;
+						memory_errors++;
 					}
 				}
 			} else if (valOutput1 == valOutput2) {
@@ -658,12 +658,16 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 
 	// printf("numErrors:%d", host_errors);
 
-	if (host_errors != 0) {
-		printf("#");
 #ifdef LOGS
-		if (!generate)
-			log_error_count(host_errors);
+	if (!generate) {
+		log_info_count(memory_errors);
+		log_error_count(host_errors);
+	}
 #endif
+	if (memory_errors != 0) printf("M");
+	if (host_errors != 0) printf("#");
+
+	if ((host_errors != 0) || (memory_errors != 0)) {
 		//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
 		freeCudaMemory();
 		//====================================
