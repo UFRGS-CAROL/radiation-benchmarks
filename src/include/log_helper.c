@@ -36,6 +36,7 @@ char vardir_key[] = "vardir";
 // Max errors that can be found for a single iteration
 // If more than max errors is found, exit the program
 unsigned long int max_errors_per_iter = 500;
+unsigned long int max_infos_per_iter = 500;
 
 // Absolute path for log file, if needed
 #ifdef MIC_NATIVE
@@ -73,6 +74,7 @@ unsigned long int last_iter_errors = 0;
 unsigned long int last_iter_with_errors = 0;
 
 unsigned long int kernels_total_errors = 0;
+unsigned long int kernels_total_infos = 0;
 unsigned long int iteration_number = 0;
 double kernel_time_acc = 0;
 double kernel_time = 0;
@@ -533,6 +535,67 @@ int log_error_count(unsigned long int kernel_errors) {
 }
 
 // ~ ===========================================================================
+// Update total infos variable and log both infos(total infos and iteration infos)
+int log_info_count(unsigned long int info_count) {
+
+    update_timestamp();
+
+    if (info_count < 1) {
+        return 0;
+    }
+
+    kernels_total_infos += info_count;
+
+    FILE *file = NULL;
+    file = fopen(full_log_file_name, "a");
+
+    if (file == NULL) {
+        fprintf(stderr,
+                "[ERROR in log_string(char *)] Unable to open file %s\n",
+                full_log_file_name);
+        return 1;
+    }
+
+    // (iteration_number-1) because this function is called after end_iteration() that increments iteration_number
+    fprintf(file, "#CINF Ite:%lu KerTime:%f AccTime:%f KerInfo:%lu AccInfo:%lu\n",
+            iteration_number - 1, kernel_time, kernel_time_acc, info_count,
+            kernels_total_infos);
+    //fprintf(file, "#SDC kernel_errors:%lu\n", kernel_errors);
+    //fprintf(file, "#TOTAL_SDC total_errors:%lu\n", kernels_total_errors);
+    fflush(file);
+
+//     if (info_count > max_infos_per_iter) {
+// #ifdef ERR_INJ
+//         fprintf(file, "#ERR_INJ not aborting, we would abort otherwise\n");
+// #else
+//         fprintf(file, "#ABORT too many infos per iteration\n");
+//         fflush(file);
+//         fclose(file);
+//         end_log_file();
+//         exit(1);
+// #endif
+//     }
+
+    // if (kernel_errors == last_iter_errors
+    //         && (last_iter_with_errors + 1) == iteration_number
+    //         && kernel_errors != 0) {
+    //     fprintf(file, "#ABORT amount of errors equals of the last iteration\n");
+    //     fflush(file);
+    //     fclose(file);
+    //     end_log_file();
+    //     exit(1);
+    // }
+
+    fclose(file);
+
+    // last_iter_errors = kernel_errors;
+    // last_iter_with_errors = iteration_number;
+
+    return 0;
+
+}
+
+// ~ ===========================================================================
 // Print some string with the detail of an error to log file
 int log_error_detail(char *string) {
     FILE *file = NULL;
@@ -575,7 +638,7 @@ int log_info_detail(char *string) {
     }
     // Limits the number of lines written to logfile so that
     // HD space will not explode
-    if ((unsigned long) log_info_detail_count > max_errors_per_iter)
+    if ((unsigned long) log_info_detail_count > max_infos_per_iter)
         return 0;
 
     file = fopen(full_log_file_name, "a");

@@ -38,6 +38,9 @@ int end_iteration();
 // errors(total errors and kernel errors)
 int log_error_count(unsigned long int kernel_errors);
 
+//Update total infos variable and log both infos(total infos and iteration infos)
+int log_info_count(unsigned long int info_count);
+
 // Print some string with the detail of an error to log file
 int log_error_detail(char *string);
 
