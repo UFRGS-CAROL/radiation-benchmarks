@@ -684,7 +684,7 @@ void run(int argc, char** argv) {
 #ifdef LOGS
 	char test_info[90];
 	snprintf(test_info, 90, "streams:%d size:%d pyramidHeight:%d simTime:%d", setupParams -> nstreams, setupParams -> grid_rows, setupParams -> pyramid_height, setupParams -> sim_time);
-	if (!(setupParams->generate)) start_log_file("cudaHotspot", test_info);
+	if (!(setupParams->generate)) start_log_file("cuda_trip_single_hotspot", test_info);
 #endif
 
 	timestamp = mysecond();

@@ -18,7 +18,7 @@ INCLUDE= -I/usr/local/cuda/include #/ -I/usr/local/cuda/samples/common/inc/
 LIBRARY= -L/usr/local/cuda/lib64/ -L../../include/safe_memory
 CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
 
-TARGET=cuda_trip_hotspot
+TARGET=cuda_trip_single_hotspot
 
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
