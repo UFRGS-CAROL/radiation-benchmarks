@@ -56,6 +56,8 @@ int generate = 0;
 int verbose = 0;
 int fault_injection = 0;
 
+unsigned long long int host_is_memory_bad = 0;
+
 int k = 0; // k x k matrix size
 int matrixSize = 0; // = k * k matrix size
 int iterations = 100000000; // global loop iteracion
@@ -185,6 +187,8 @@ void* safe_cudaMalloc(size_t size) {
 }
 
 void allocCudaMemory() {
+
+#ifdef SAFE_MALLOC
 	d_A0 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 	d_A1 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 	d_A2 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
@@ -196,6 +200,20 @@ void allocCudaMemory() {
 	d_C0 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 	d_C1 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 	d_C2 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
+#else
+	checkFrameworkErrors(cudaMalloc(&d_A0, matrixSize * sizeof(tested_type)));
+	checkFrameworkErrors(cudaMalloc(&d_A1, matrixSize * sizeof(tested_type)));
+	checkFrameworkErrors(cudaMalloc(&d_A2, matrixSize * sizeof(tested_type)));
+
+	checkFrameworkErrors(cudaMalloc(&d_B0, matrixSize * sizeof(tested_type)));
+	checkFrameworkErrors(cudaMalloc(&d_B1, matrixSize * sizeof(tested_type)));
+	checkFrameworkErrors(cudaMalloc(&d_B2, matrixSize * sizeof(tested_type)));
+
+	checkFrameworkErrors(cudaMalloc(&d_C0, matrixSize * sizeof(tested_type)));
+	checkFrameworkErrors(cudaMalloc(&d_C1, matrixSize * sizeof(tested_type)));
+	checkFrameworkErrors(cudaMalloc(&d_C2, matrixSize * sizeof(tested_type)));
+#endif
+
 }
 
 void freeCudaMemory() {
@@ -438,7 +456,7 @@ void writeGoldtoFile() {
 
 	for(i=0; i<k; i++)
 	{
-		fwrite( &(GOLD[i * k]), sizeof(double)*k, 1, f_GOLD );
+		fwrite( &(GOLD[i * k]), sizeof(tested_type)*k, 1, f_GOLD );
 	}
 
 	fclose(f_GOLD);
@@ -446,6 +464,7 @@ void writeGoldtoFile() {
 
 __device__ unsigned long long int is_memory_bad = 0;
 
+#if defined(test_precision_double) or defined(test_precision_single)
 __device__ tested_type inline read_voter(tested_type *v1, tested_type *v2, tested_type *v3,
 		int offset) {
 
@@ -467,6 +486,29 @@ __device__ tested_type inline read_voter(tested_type *v1, tested_type *v2, teste
 
 	return in1;
 }
+#elif defined(test_precision_half)
+__device__ half inline read_voter(half *v1, half *v2, half *v3,
+		int offset) {
+
+	register half in1 = v1[offset];
+	register half in2 = v2[offset];
+	register half in3 = v3[offset];
+
+	if (__heq(in1, in2) || __heq(in1, in3)) {
+		return in1;
+	}
+
+	if (__heq(in2, in3)) {
+		return in2;
+	}
+
+	if (__hne(in1, in2) && __hne(in2, in3) && __hne(in1, in3)) {
+		atomicAdd(&is_memory_bad, 1);
+	}
+
+	return in1;
+}
+#endif
 
 #if defined(test_precision_half)
 __device__ half2 inline read_voter_h2(half2 *v1, half2 *v2, half2 *v3,
@@ -475,7 +517,7 @@ __device__ half2 inline read_voter_h2(half2 *v1, half2 *v2, half2 *v3,
 	register half2 in1 = v1[offset];
 	register half2 in2 = v2[offset];
 	register half2 in3 = v3[offset];
-	__hbeq2
+
 	if (__hbeq2(in1, in2) || __hbeq2(in1, in3)) {
 		return in1;
 	}
@@ -530,9 +572,9 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_typ
 		// n/2 is needed because we changed how we iterate d_B
 	}
 
-	((half2*)d_C0)[ty * n2 + tx] = acc;
-	((half2*)d_C1)[ty * n2 + tx] = acc;
-	((half2*)d_C2)[ty * n2 + tx] = acc;
+	((half2*)d_C0)[ty * (n / 2) + tx] = acc;
+	((half2*)d_C1)[ty * (n / 2) + tx] = acc;
+	((half2*)d_C2)[ty * (n / 2) + tx] = acc;
 #endif
 
 }
@@ -546,6 +588,22 @@ void usage(int argc, char* argv[]) {
 bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) {
 	int host_errors = 0;
 	int memory_errors = 0;
+
+
+	if (host_is_memory_bad != 0) {
+		char info_detail[150];
+		snprintf(info_detail, 150,
+				"b: is_memory_bad: %llu",
+				host_is_memory_bad);
+		if (verbose)
+			printf("%s\n", info_detail);
+
+#ifdef LOGS
+		if (!generate) 
+			log_info_detail(info_detail);
+#endif
+		memory_errors++;
+	} 
 
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < matrixSize; i++) {
@@ -648,7 +706,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 	if (memory_errors != 0) printf("M");
 	if (host_errors != 0) printf("#");
 
-	if ((host_errors != 0) || (memory_errors != 0)) {
+	if ((host_errors != 0) || (host_is_memory_bad != 0)) { // (memory_errors != 0)
 		//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
 		freeCudaMemory();
 		//====================================
@@ -658,7 +716,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 		copyCudaMemory();
 		//====================================
 	}
-	return host_errors == 0;
+	return (host_errors == 0) && (host_is_memory_bad == 0);
 }
 
 int main(int argc, char* argv[]) {
@@ -823,6 +881,8 @@ int main(int argc, char* argv[]) {
 	for (loop2 = 0; loop2 < iterations; loop2++) {
 		//================== Global test loop
 
+		host_is_memory_bad = 0;
+
 		if (!loop2 && device_warmup)
 			printf("First iteration: device warmup. Please wait...\n");
 
@@ -834,6 +894,10 @@ int main(int argc, char* argv[]) {
 				cudaMemset(d_C1, 0, matrixSize * sizeof(tested_type)));
 		checkFrameworkErrors(
 				cudaMemset(d_C2, 0, matrixSize * sizeof(tested_type)));
+
+		checkFrameworkErrors( 
+			cudaMemcpyToSymbol(is_memory_bad, &host_is_memory_bad,
+				sizeof(unsigned long long int), 0, cudaMemcpyHostToDevice) );
 
 		if (verbose)
 			printf(",");
@@ -915,6 +979,15 @@ int main(int argc, char* argv[]) {
 				}
 				printf("\n");
 			}
+
+			checkFrameworkErrors(
+				cudaMemcpyFromSymbol(&host_is_memory_bad, is_memory_bad,
+						sizeof(unsigned long long int), 0,
+						cudaMemcpyDeviceToHost) );
+			if (verbose) {
+				printf("is_memory_bad: %llu\n", host_is_memory_bad);
+			}
+
 			if (generate) {
 				if (generate_safechecks_count == 0) {
 					printf("Generate: First generation. Step %d/%d of max. %d \n", generate_safechecks_count, generate_safechecks, iterations);
