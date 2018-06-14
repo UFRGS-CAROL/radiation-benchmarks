@@ -17,6 +17,7 @@ STREAMS=10
 def config(board, debug):
     original_hotspot = "hotspot"
     benchmark_bin = "cuda_trip_single_hotspot"
+    benchmark_src = "cuda_trip_hotspot"
     print "Generating "+ benchmark_bin + " for CUDA, board:" + board
 
     confFile = '/etc/radiation-benchmarks.conf'
@@ -32,7 +33,7 @@ def config(board, debug):
 
     data_path = installDir + "data/" + original_hotspot
     bin_path = installDir + "bin"
-    src_hotspot = installDir + "src/cuda/" + benchmark_bin
+    src_hotspot = installDir + "src/cuda/" + benchmark_src
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
