@@ -9,6 +9,12 @@
 #define SAFE_MEMORY_H_
 
 #include <stdlib.h>
+#include <cuda_runtime.h>
+#include <cuda.h>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <iostream>
 
 typedef enum {
 	CHAR, INT, FLOAT, DOUBLE
