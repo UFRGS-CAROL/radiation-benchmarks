@@ -29,6 +29,13 @@ typedef struct {
 	size_t size;
 } triple_memory;
 
+#define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
+
+/**
+ * generic log helper checker for errors
+ */
+void __checkFrameworkErrors(cudaError_t error, int line, const char* file);
+
 /**
  * memory alloc three pointers
  */
