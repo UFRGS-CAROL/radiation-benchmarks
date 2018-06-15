@@ -30,7 +30,7 @@
 
 #define DEFAULT_INPUT_SIZE 8192
 
-#define OPS 1000000000
+//#define OPS 1000000000
 
 //===================================== DEFINE TESTED PRECISION
 #if defined(test_precision_double)
