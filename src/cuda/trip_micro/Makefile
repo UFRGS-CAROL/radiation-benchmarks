@@ -1,3 +1,5 @@
+OPS?=1000000000
+
 CC=g++
 NVCC=/usr/local/cuda/bin/nvcc
 
@@ -38,7 +40,7 @@ check-benchtype:
 	test $(PRECISION)
 
 $(EXEC): check-benchtype $(RUN_SOURCES)
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -Dtest_type_$(LOWERCASED_TYPE) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
+	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DOPS=$(OPS) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -Dtest_type_$(LOWERCASED_TYPE) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
 
 clean:
 	rm -rf $(EXEC_RADIX)*
