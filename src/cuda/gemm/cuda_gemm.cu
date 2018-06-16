@@ -335,7 +335,7 @@ void generateInputMatrices()
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		fwrite(&(h_B[i * DEFAULT_INPUT_SIZE]), sizeof(tested_type_host) * DEFAULT_INPUT_SIZE, 1, f_B);
+		fwrite(&(h_B[i * DEFAULT_INPUT_SIZE]), sizeof(tested_type) * DEFAULT_INPUT_SIZE, 1, f_B);
 	}
 	printf("Done\n");
 
@@ -757,6 +757,8 @@ int main(int argc, char* argv[]) {
 
 		checkFrameworkErrors(
 				cudaMemset(d_C, 0, matrixSize * sizeof(tested_type)));
+
+		checkFrameworkErrors( cudaDeviceSynchronize() );
 
 		if (verbose)
 			printf(",");
