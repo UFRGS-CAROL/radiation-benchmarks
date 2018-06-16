@@ -10,15 +10,16 @@ from common_config import discover_board, execute_and_write_json_to_file
 
 SIZES = [8192, 2048, 512]
 PRECISIONS = ["double", "single", "half"]
-ITERATIONS = 10000
-USE_TENSOR_CORES = [0] #, 1]
+ITERATIONS = 100000
+USE_TENSOR_CORES = [0, 1]
+CHECK_INPUTS = [1] #[0, 1]
 
 
 def config(board, arith_type, debug):
 
-    DATA_PATH_BASE = "mxm_" + arith_type
+    DATA_PATH_BASE = "gemm_" + arith_type
 
-    benchmark_bin = "cuda_trip_mxm_" + arith_type
+    benchmark_bin = "cuda_gemm_" + arith_type
     print "Generating " + benchmark_bin + " for CUDA, board:" + board
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -33,7 +34,7 @@ def config(board, arith_type, debug):
 
     data_path = install_dir + "data/" + DATA_PATH_BASE
     bin_path = install_dir + "bin"
-    src_benchmark = install_dir + "src/cuda/trip_mxm"
+    src_benchmark = install_dir + "src/cuda/gemm"
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
@@ -49,30 +50,34 @@ def config(board, arith_type, debug):
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
-    # gen only for max size, defined on cuda_trip_mxm.cu
+    # gen only for max size, defined on cuda_gemm.cu
     max_size = 8192
     for i in SIZES:
         for tc in USE_TENSOR_CORES:
-            input_file = data_path + "/"
+            if  (arith_type == 'double') and ((tc == 1) and (0 in USE_TENSOR_CORES)):
+                continue # TENSOR not implemented on Double
+            for input_check in CHECK_INPUTS:
+                input_file = data_path + "/"
 
-            gen = [None] * 8
-            gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
-            gen[1] = ['-size=' + str(i)]
-            gen[2] = ['-input_a=' + input_file + 'A_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
-            gen[3] = ['-input_b=' + input_file + 'B_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
-            gen[4] = ['-gold=' + input_file + "GOLD_" +  str(i) + "_use_tensor_" + str(tc) + ".matrix"]  # change for execute
-            gen[5] = []
-            gen[6] = ['-use_tensors=' + str(tc)]
-            gen[7] = ['-generate']
+                gen = [None] * 9
+                gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
+                gen[1] = ['-size=' + str(i)]
+                gen[2] = ['-input_a=' + input_file + 'A_' + str(arith_type) + "_" + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
+                gen[3] = ['-input_b=' + input_file + 'B_' + str(arith_type) + "_" + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
+                gen[4] = ['-gold=' + input_file + "GOLD_" + str(arith_type) + "_" +  str(i) + "_use_tensor_" + str(tc) + ".matrix"]  # change for execute
+                gen[5] = []
+                gen[6] = ['-use_tensor=' + str(tc)]
+                gen[7] = ['-input_check=' + str(input_check)]
+                gen[8] = ['-generate']
 
-            # change mode and iterations for exe
-            exe = copy.deepcopy(gen)
-            exe[0][1] = bin_path + '/' + benchmark_bin + " "
-            exe[5] = ['-iterations=' + str(ITERATIONS)]
-            exe[7] = []
+                # change mode and iterations for exe
+                exe = copy.deepcopy(gen)
+                exe[0][1] = bin_path + '/' + benchmark_bin + " "
+                exe[5] = ['-iterations=' + str(ITERATIONS)]
+                exe[8] = []
 
-            generate.append(' '.join(str(r) for v in gen for r in v))
-            execute.append(' '.join(str(r) for v in exe for r in v))
+                generate.append(' '.join(str(r) for v in gen for r in v))
+                execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 
