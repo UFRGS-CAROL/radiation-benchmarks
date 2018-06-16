@@ -71,7 +71,7 @@ int test_use_tensor = 0;
 int test_gpu_check = 0;
 #ifdef SAFE_MALLOC
 int test_use_safemalloc = 1;
-#elif
+#else
 int test_use_safemalloc = 0;
 #endif
 
