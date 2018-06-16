@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [16384] #[8192, 2048, 512]
+SIZES = [8192, 2048, 512]
 PRECISIONS = ["double", "single", "half"]
 ITERATIONS = 100000
 USE_TENSOR_CORES = [0, 1]
@@ -45,7 +45,7 @@ def config(board, arith_type, debug):
                 "cd " + src_benchmark, 
                 "make clean", 
                 "make -C ../../include ", 
-                "make PRECISION=" + arith_type + " -j 4 " + "DEFAULT_INPUT_SIZE=" + max_size,
+                "make PRECISION=" + arith_type + " -j 4 " + "DEFAULT_INPUT_SIZE=" + str(max_size),
                 "mkdir -p " + data_path, 
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
@@ -75,7 +75,7 @@ def config(board, arith_type, debug):
                 exe[0][1] = bin_path + '/' + benchmark_bin + " "
                 exe[5] = ['-iterations=' + str(ITERATIONS)]
                 exe[6] = ['-gpu_check']
-                exe[8] = []
+                exe[9] = []
 
                 generate.append(' '.join(str(r) for v in gen for r in v))
                 execute.append(' '.join(str(r) for v in exe for r in v))
