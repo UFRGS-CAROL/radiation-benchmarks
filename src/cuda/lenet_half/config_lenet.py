@@ -6,9 +6,8 @@ import ConfigParser
 import copy
 from errno import ENOENT
 sys.path.insert(0, '../../include')
-import common_config
+from common_config import execute_and_write_json_to_file, discover_board
 
-DEBUG_MODE = False
 LENET_PRECISION = 'half'
 DATASETS = [
     # normal
@@ -52,7 +51,7 @@ def create_mnist(src_lenet):
             raise ValueError("Something went wrong when executing: ", str(e))
 
 
-def config_lenet(board):
+def config(board, debug):
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
         config = ConfigParser.RawConfigParser()
@@ -71,17 +70,19 @@ def config_lenet(board):
 
     print "Generating " + benchmark_bin + " precision for CUDA on " + str(board)
 
-    if not DEBUG_MODE and not os.path.isdir(data_path):
+    if not debug and not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
     # check if all training files are ok
-    if not DEBUG_MODE:
+    if not debug:
         create_mnist(src_lenet=src_lenet)
 
     # Insert caffe and log helper to PYTHONPATH
     env_command = "PYTHONPATH=" + src_lenet + "/" + CAFFE_PYTHON
     env_command += ":" + install_dir + "/src/" + LOG_HELPER_LIB + ":$PYTHONPATH"
+    env_command += " LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+
     generate = ["cd " + src_lenet,
                 "make -C ../../include/log_helper_swig_wraper/ log_helper_python"]
     execute = []
@@ -105,39 +106,18 @@ def config_lenet(board):
         execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute=execute, generate=generate, install_dir=install_dir,
-                                   benchmark_bin=benchmark_bin)
-
-
-def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin):
-    for i in generate:
-        print i
-        if not DEBUG_MODE:
-            if os.system(str(i)) != 0:
-                print "Something went wrong with generate of ", str(i)
-                exit(1)
-
-    list_to_print = ["[\n"]
-    for ii, i in enumerate(execute):
-        command = "{\"killcmd\": \"pkill -9 " + benchmark_bin + "; killall -9 " + benchmark_bin + "\", \"exec\": \"" + str(
-            i) + "\"}"
-        if ii != len(execute) - 1:
-            command += ',\n'
-        list_to_print.append(command)
-    list_to_print.append("\n]")
-    new_bench_bin = benchmark_bin.replace(".py", "")
-    if not DEBUG_MODE:
-        with open(install_dir + "/scripts/json_files/" + new_bench_bin + ".json", 'w') as fp:
-            fp.writelines(list_to_print)
-
-    print "\nConfiguring done, to run check file: " + install_dir + "/scripts/json_files/" + new_bench_bin + ".json"
+                                   benchmark_bin=benchmark_bin, debug=debug)
 
 
 if __name__ == "__main__":
-    global DEBUG_MODE
+    debug_mode = False
 
-    parameter = sys.argv[1:]
-    if str(sys.argv[2:]).upper() == 'DEBUG':
-        DEBUG_MODE = True
+    try:
+        parameter = sys.argv[1:]
+        if str(sys.argv[2:]).upper() == 'DEBUG':
+            debug_mode = True
+    except:
+        pass
 
-    board, _ = common_config.discover_board()
-    config_lenet(board=board)
+    board, _ = discover_board()
+    config(board=board, debug=debug_mode)
