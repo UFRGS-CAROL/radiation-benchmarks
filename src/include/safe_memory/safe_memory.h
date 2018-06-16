@@ -9,6 +9,12 @@
 #define SAFE_MEMORY_H_
 
 #include <stdlib.h>
+#include <cuda_runtime.h>
+#include <cuda.h>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <iostream>
 
 typedef enum {
 	CHAR, INT, FLOAT, DOUBLE
@@ -28,6 +34,13 @@ typedef struct {
 	// stores the memory byte size that will be allocated
 	size_t size;
 } triple_memory;
+
+#define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
+
+/**
+ * generic log helper checker for errors
+ */
+void __checkFrameworkErrors(cudaError_t error, int line, const char* file);
 
 /**
  * memory alloc three pointers

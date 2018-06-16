@@ -1,10 +1,4 @@
 #include "safe_memory.h"
-#include <cuda_runtime.h>
-#include <cuda.h>
-#include <cstdio>
-#include <cstring>
-#include <string>
-#include <iostream>
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -22,8 +16,6 @@ typedef unsigned char _byte_;
 _byte_ TEST_POSSIBILITIES[] = { XAA, X55, X00, XFF };
 
 static unsigned char is_crash = 0;
-
-#define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
 
 void inline log_error_detail_and_exit(std::string error_description) {
 #ifdef LOGS
