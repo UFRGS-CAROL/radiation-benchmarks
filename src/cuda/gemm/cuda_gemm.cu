@@ -513,7 +513,7 @@ __global__ void GoldChkKernel(tested_type *gk, tested_type *ck, int n) {
 #if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
 	for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
 		row = i * n;
-		for (j=tx; i<tx+GOLDCHK_TILE_SIZE; j++) {
+		for (j=tx; j<tx+GOLDCHK_TILE_SIZE; j++) {
 			if (gk[row + j] != ck[row + j]) {
 				atomicAdd(&gck_device_errors, 1);
 			}
@@ -522,7 +522,7 @@ __global__ void GoldChkKernel(tested_type *gk, tested_type *ck, int n) {
 #elif defined(PRECISION_HALF)
 	for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
 		row = i * n;
-		for (j=tx; i<tx+GOLDCHK_TILE_SIZE; j+=2) {
+		for (j=tx; j<tx+GOLDCHK_TILE_SIZE; j+=2) {
 			if (__hne2(gk[row + j*2], ck[row + j*2])) {
 				atomicAdd(&gck_device_errors, 1);
 			}
