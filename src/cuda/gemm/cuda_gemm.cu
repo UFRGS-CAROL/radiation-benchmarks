@@ -386,10 +386,6 @@ void writeGoldtoFile() {
 	fclose(f_GOLD);
 }
 
-void usage(int argc, char* argv[]) {
-	printf("Usage: %s -size=N [-generate] [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-gpu_check] [-test_input_check] [-no-warmup]\n", argv[0]);
-}
-
 // Returns true if no errors are found. False if otherwise.
 // Set votedOutput pointer to retrieve the voted matrix
 bool check_errors(bool check_output = true, bool check_input = true) {
@@ -484,6 +480,10 @@ bool check_errors(bool check_output = true, bool check_input = true) {
 	return (output_errors == 0) && (input_errors == 0);
 }
 
+void usage(int argc, char* argv[]) {
+	printf("Usage: %s -size=N [-generate] [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-gpu_check] [-test_input_check] [-no-warmup] [-use_tensor=<0|1>] [-input_check=<0|1>]\n", argv[0]);
+}
+
 int main(int argc, char* argv[]) {
 //================== Test vars
 	int loop2;
@@ -516,11 +516,12 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (checkCmdLineFlag(argc, (const char **) argv, "use_tensor")) {
+		test_use_tensor = getCmdLineArgumentInt(argc, (const char **) argv, "use_tensor");
 #ifdef PRECISION_DOUBLE
-		test_use_tensor = false;
-		printf("\n========>> Warning:\nNo tensor cores are available in Double precision\n============\n");
-#else
-		test_use_tensor = true;
+		if (test_use_tensor) {
+			test_use_tensor = false;
+			printf("\n========>> Warning:\nNo tensor cores are available in Double precision\n============\n");
+		}
 #endif
 	}
 
@@ -597,7 +598,7 @@ int main(int argc, char* argv[]) {
 	}
 	
 	if (checkCmdLineFlag(argc, (const char **) argv, "input_check")) {
-		test_input_check = true;
+		test_input_check = getCmdLineArgumentInt(argc, (const char **) argv, "input_check");
 	}
 //====================================
 
