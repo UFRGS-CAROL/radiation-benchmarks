@@ -907,7 +907,7 @@ int main(int argc, char* argv[]) {
 					// Receive from device
 					checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyFromSymbol(&gck_errors, gck_device_errors, sizeof(unsigned long long int)) );
 					if (gck_errors != 0) {
-						printf("$");
+						printf("$(%u)", (unsigned int)gck_errors);
 						checkOnHost = true;
 					}
 				} else {
