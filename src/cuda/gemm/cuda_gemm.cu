@@ -523,7 +523,7 @@ __global__ void GoldChkKernel(tested_type *gk, tested_type *ck, int n) {
 	for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
 		row = i * n;
 		for (j=tx; j<tx+GOLDCHK_TILE_SIZE; j+=2) {
-			if (__hne2(gk[row + j*2], ck[row + j*2])) {
+			if (__hne2(*(((half2*)&(gk[row + j*2])), *(((half2*)&(ck[row + j*2]))) {
 				atomicAdd(&gck_device_errors, 1);
 			}
 		}
@@ -730,7 +730,6 @@ int main(int argc, char* argv[]) {
 ////////////////////////////////////////////////////////////////////
 
 ////////////// GOLD CHECK Kernel /////////////////
-	unsigned long long int goldCheckKernel_errors = 0;
 	dim3 gck_blockSize = dim3(	GOLDCHK_BLOCK_SIZE, 
 								GOLDCHK_BLOCK_SIZE);
 	dim3 gck_gridSize = dim3(	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE), 
