@@ -412,6 +412,26 @@ bool check_errors(bool check_output = true, bool check_input = true) {
 
 #pragma omp parallel for shared(output_errors)
 	for (int i = 0; i < matrixSize; i++) {
+		if (check_output) {
+			register tested_type_host valGold = GOLD[i];
+			register tested_type_host valOutput = C[i];
+			if (valGold != valOutput) {
+#pragma omp critical
+				{
+					char error_detail[150];
+					snprintf(error_detail, 150,
+							"p: [%d, %d], r: %1.20e, e: %1.20e",
+							(int) floor(i / k), i % k, (double)valOutput, (double)valGold);
+					if (verbose && (output_errors < 10))
+						printf("%s\n", error_detail);
+#ifdef LOGS
+					if (!generate)
+						log_error_detail(error_detail);
+#endif
+					output_errors++;
+				}
+			}
+		}
 		if (check_input) {
 			assert (endA != NULL);
 			assert (endB != NULL);
@@ -449,26 +469,6 @@ bool check_errors(bool check_output = true, bool check_input = true) {
 						log_info_detail(info_detail);
 #endif
 					input_errors++;
-				}
-			}
-		}
-		if (check_output) {
-			register tested_type_host valGold = GOLD[i];
-			register tested_type_host valOutput = C[i];
-			if (valGold != valOutput) {
-#pragma omp critical
-				{
-					char error_detail[150];
-					snprintf(error_detail, 150,
-							"p: [%d, %d], r: %1.20e, e: %1.20e",
-							(int) floor(i / k), i % k, (double)valOutput, (double)valGold);
-					if (verbose && (output_errors < 10))
-						printf("%s\n", error_detail);
-#ifdef LOGS
-					if (!generate)
-						log_error_detail(error_detail);
-#endif
-					output_errors++;
 				}
 			}
 		}
@@ -523,7 +523,7 @@ __global__ void GoldChkKernel(tested_type *gk, tested_type *ck, int n) {
 	for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
 		row = i * n;
 		for (j=tx; j<tx+GOLDCHK_TILE_SIZE; j+=2) {
-			if (__hne2(*(((half2*)&(gk[row + j*2])), *(((half2*)&(ck[row + j*2]))) {
+			if (__hbne2(*((half2*)(&(gk[row + j*2]))), *((half2*)(&(ck[row + j*2]))))) {
 				atomicAdd(&gck_device_errors, 1);
 			}
 		}
@@ -739,6 +739,7 @@ int main(int argc, char* argv[]) {
 
 //================== Init generator if enabled
 	int generate_safechecks_count = 0;
+	bool generate_success = false;
 //====================================
 
 //================== Init DEVICE memory
@@ -908,13 +909,14 @@ int main(int argc, char* argv[]) {
 						} else {
 							printf("Generate: Success on compare. Step %d/%d of max. %d\n", generate_safechecks_count, generate_safechecks, iterations);generate_safechecks_count++;
 							if (generate_safechecks_count >= generate_safechecks) {
+								generate_success = true;
 								writeGoldtoFile();
 								loop2 = iterations; // This will make the loop end
 							}
 						}
 					}
 				} else {
-					check_errors(false, test_input_check);
+					check_errors(true, test_input_check);
 				}
 			}
 		}
@@ -974,6 +976,10 @@ int main(int argc, char* argv[]) {
 	if (!generate) 
 		end_log_file();
 #endif
+
+	if (generate && !generate_success) {
+		exit(EXIT_FAILURE);
+	}
 
 	return 0;
 }
