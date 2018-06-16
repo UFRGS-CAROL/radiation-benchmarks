@@ -158,14 +158,14 @@ void allocCudaMemory() {
 	d_A = (tested_type*) safe_malloc(matrixSize * sizeof(tested_type));
 	d_B = (tested_type*) safe_malloc(matrixSize * sizeof(tested_type));
 	d_C = (tested_type*) safe_malloc(matrixSize * sizeof(tested_type));
-	if (gpu_check) {
+	if (test_gpu_check) {
 		d_GOLD = (tested_type*) safe_malloc(matrixSize * sizeof(tested_type));
 	}
 #else
 	checkFrameworkErrors(cudaMalloc(&d_A, matrixSize * sizeof(tested_type)));
 	checkFrameworkErrors(cudaMalloc(&d_B, matrixSize * sizeof(tested_type)));
 	checkFrameworkErrors(cudaMalloc(&d_C, matrixSize * sizeof(tested_type)));
-	if (gpu_check) {
+	if (test_gpu_check) {
 		checkFrameworkErrors(cudaMalloc(&d_GOLD, matrixSize * sizeof(tested_type)));
 	}
 #endif
@@ -176,7 +176,7 @@ void freeCudaMemory() {
 	checkFrameworkErrors(cudaFree(d_A));
 	checkFrameworkErrors(cudaFree(d_B));
 	checkFrameworkErrors(cudaFree(d_C));
-	if (gpu_check) {
+	if (test_gpu_check) {
 		checkFrameworkErrors(cudaFree(d_GOLD));
 	}
 }
@@ -192,7 +192,7 @@ void copyCudaMemory() {
 			cudaMemcpy(d_B, B, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH B
 
-	if (gpu_check) {
+	if (test_gpu_check) {
 		checkFrameworkErrors(
 			cudaMemcpy(d_GOLD, GOLD, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH B
@@ -504,18 +504,33 @@ bool check_errors(bool check_output = true, bool check_input = true) {
 
 __device__ unsigned long long int gck_device_errors;
 
-__global__ void GoldChkKernel(double *gk, double *ck, int n) {
+__global__ void GoldChkKernel(tested_type *gk, tested_type *ck, int n) {
 //================== HW Accelerated output validation
 	int tx = (blockIdx.x * GOLDCHK_BLOCK_SIZE + threadIdx.x) * GOLDCHK_TILE_SIZE;
 	int ty = (blockIdx.y * GOLDCHK_BLOCK_SIZE + threadIdx.y)  * GOLDCHK_TILE_SIZE;
 	register unsigned int i, j, row;
+
+#if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
 	for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
 		row = i * n;
 		for (j=tx; i<tx+GOLDCHK_TILE_SIZE; j++) {
-			if (gk[row + j] != ck[row + j])
+			if (gk[row + j] != ck[row + j]) {
 				atomicAdd(&gck_device_errors, 1);
+			}
 		}
 	}
+}
+#elif defined(PRECISION_HALF)
+	for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
+		row = i * n;
+		for (j=tx; i<tx+GOLDCHK_TILE_SIZE; j+=2) {
+			if (__hne2(gk[row + j*2], ck[row + j*2])) {
+				atomicAdd(&gck_device_errors, 1);
+			}
+		}
+	}
+#endif
+
 }
 ///////////////////////////////////////// GOLD CHECK ON DEVICE ////////////////////////
 
@@ -720,7 +735,7 @@ int main(int argc, char* argv[]) {
 	dim3 gck_blockSize = dim3(	GOLDCHK_BLOCK_SIZE, 
 								GOLDCHK_BLOCK_SIZE);
 	dim3 gck_gridSize = dim3(	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE), 
-								k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE))
+								k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
 //////////////////////////////////////////////////
 //====================================
 
@@ -877,7 +892,7 @@ int main(int argc, char* argv[]) {
 				}
 			} else {
 				bool checkOnHost = false;
-				if (gpu_check) {
+				if (test_gpu_check) {
 					assert (d_GOLD != NULL);
 
 					// Send to device
