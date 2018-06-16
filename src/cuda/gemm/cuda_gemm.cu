@@ -500,7 +500,7 @@ bool check_errors(bool check_output = true, bool check_input = true) {
 
 ///////////////////////////////////////// GOLD CHECK ON DEVICE ////////////////////////
 #define GOLDCHK_BLOCK_SIZE 32
-#define GOLDCHK_TILE_SIZE 1
+#define GOLDCHK_TILE_SIZE 16
 
 __device__ unsigned long long int gck_device_errors;
 
