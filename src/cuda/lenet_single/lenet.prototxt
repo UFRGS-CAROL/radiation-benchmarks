@@ -1,10 +1,10 @@
 name: "LeNet"
 
-default_forward_type: FLOAT
-default_backward_type: FLOAT
-default_forward_math: FLOAT
-default_backward_math: FLOAT
-global_grad_scale: FLOAT
+#default_forward_type: FLOAT
+#default_backward_type: FLOAT
+#default_forward_math: FLOAT
+#default_backward_math: FLOAT
+#global_grad_scale: FLOAT
 
 
 layer {
