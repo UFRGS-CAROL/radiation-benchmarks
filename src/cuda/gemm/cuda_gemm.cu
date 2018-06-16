@@ -519,7 +519,6 @@ __global__ void GoldChkKernel(tested_type *gk, tested_type *ck, int n) {
 			}
 		}
 	}
-}
 #elif defined(PRECISION_HALF)
 	for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
 		row = i * n;
