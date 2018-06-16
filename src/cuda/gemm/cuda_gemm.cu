@@ -834,7 +834,7 @@ int main(int argc, char* argv[]) {
 				assert (d_GOLD != NULL);
 
 				// Send to device
-				unsigned long long int gck_errors = 0;
+				unsigned long long int gck_errors = 8;
 				checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyToSymbol(gck_device_errors, &gck_errors, sizeof(unsigned long long int)) );
 				// GOLD is already on device.
 
