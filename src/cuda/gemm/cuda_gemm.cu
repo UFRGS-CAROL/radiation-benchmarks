@@ -35,7 +35,9 @@
 #undef max
 #define max( x, y ) ( (x) > (y) ? (x) : (y) )
 
+#ifndef DEFAULT_INPUT_SIZE
 #define DEFAULT_INPUT_SIZE 8192
+#endif
 
 //=========== DEFINE TESTED TYPE
 #if defined(PRECISION_DOUBLE)
@@ -508,6 +510,9 @@ int main(int argc, char* argv[]) {
 		if ((k <= 0) || (k % 16 != 0)) {
 			printf("Invalid input size given on the command-line: %d\n", k);
 			exit (EXIT_FAILURE);
+		}
+		if (k>DEFAULT_INPUT_SIZE) {
+			printf("\n========>> Warning:\nSIZE > DEFAULT_INPUT_SIZE. May crash on input retrieval.\n============\n");
 		}
 		matrixSize = k * k;
 	} else {

@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [8192, 2048, 512]
+SIZES = [16384] #[8192, 2048, 512]
 PRECISIONS = ["double", "single", "half"]
 ITERATIONS = 100000
 USE_TENSOR_CORES = [0, 1]
@@ -40,18 +40,18 @@ def config(board, arith_type, debug):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
+    max_size = max(SIZES)
+
     generate = ["sudo mkdir -p " + bin_path, 
                 "cd " + src_benchmark, 
                 "make clean", 
                 "make -C ../../include ", 
-                "make PRECISION=" + arith_type + " -j 4",
+                "make PRECISION=" + arith_type + " -j 4 " + "DEFAULT_INPUT_SIZE=" + max_size,
                 "mkdir -p " + data_path, 
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
-    # gen only for max size, defined on cuda_gemm.cu
-    max_size = 8192
     for i in SIZES:
         for tc in USE_TENSOR_CORES:
             if  (arith_type == 'double') and ((tc == 1) and (0 in USE_TENSOR_CORES)):
