@@ -195,7 +195,7 @@ void copyCudaMemory() {
 	if (test_gpu_check) {
 		checkFrameworkErrors(
 			cudaMemcpy(d_GOLD, GOLD, matrixSize * sizeof(tested_type),
-					cudaMemcpyHostToDevice)); // PUSH B
+					cudaMemcpyHostToDevice)); // PUSH GOLD
 	}
 }
 
@@ -829,91 +829,91 @@ int main(int argc, char* argv[]) {
 		time = mysecond();
 
 		if (loop2 || !device_warmup) {
-			checkFrameworkErrors(
-					cudaMemcpy(C, d_C, matrixSize * sizeof(tested_type),
-							cudaMemcpyDeviceToHost));
-			if ((generate) && (k <= 16)) {
-				printf("\nMatrix C: \n");
-				for (int i = 0; i<k*k; i++) {
-					printf(" %.2e", (float)C[i]);
-					if ((i+1)%k == 0) printf("\n");
-				}
-				printf("\n");
-			}
+			bool checkOnHost = false;
+			if (test_gpu_check) {
+				assert (d_GOLD != NULL);
 
-			if (test_input_check) {
-				checkFrameworkErrors(
-					cudaMemcpy(endA, d_A, matrixSize * sizeof(tested_type),
-							cudaMemcpyDeviceToHost));
-				if ((generate) && (k <= 16)) {
-					printf("\nMatrix A(end): \n");
-					for (int i = 0; i<k*k; i++) {
-						printf(" %.2e", (float)endA[i]);
-						if ((i+1)%k == 0) printf("\n");
-					}
-					printf("\n");
-				}
+				// Send to device
+				unsigned long long int gck_errors = 0;
+				checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyToSymbol(gck_device_errors, &gck_errors, sizeof(unsigned long long int)) );
+				// GOLD is already on device.
 
-				checkFrameworkErrors(
-						cudaMemcpy(endB, d_B, matrixSize * sizeof(tested_type),
-								cudaMemcpyDeviceToHost));
-				if ((generate) && (k <= 16)) {
-					printf("\nMatrix B(end): \n");
-					for (int i = 0; i<k*k; i++) {
-						printf(" %.2e", (float)endB[i]);
-						if ((i+1)%k == 0) printf("\n");
-					}
-					printf("\n");
-				}
-			}
+				/////////////////// Run kernel
+				GoldChkKernel<<<gck_gridSize, gck_blockSize>>>(d_GOLD, d_C, k);
+				checkOnHost |= checkFrameworkErrorsNoFail( cudaPeekAtLastError() );
+				checkOnHost |= checkFrameworkErrorsNoFail( cudaDeviceSynchronize() );
+				///////////////////
 
-
-			if (generate) {
-				if (generate_safechecks_count == 0) {
-					printf("Generate: First generation. Step %d/%d of max. %d \n", generate_safechecks_count, 
-					generate_safechecks, iterations);
-					if (check_errors(false, test_input_check) ) {
-						generate_safechecks_count++;
-						memcpy(GOLD, C, matrixSize * sizeof(tested_type));
-					}
-				} else {
-					if (!check_errors(true, test_input_check)) {
-						printf("Generate: Failed on compare. Step %d/%d of max. %d \n", generate_safechecks_count, generate_safechecks, iterations);
-						generate_safechecks_count = 0;
-					} else {
-						printf("Generate: Success on compare. Step %d/%d of max. %d\n", generate_safechecks_count, generate_safechecks, iterations);generate_safechecks_count++;
-						if (generate_safechecks_count >= generate_safechecks) {
-							writeGoldtoFile();
-							loop2 = iterations; // This will make the loop end
-						}
-					}
-				}
-			} else {
-				bool checkOnHost = false;
-				if (test_gpu_check) {
-					assert (d_GOLD != NULL);
-
-					// Send to device
-					unsigned long long int gck_errors = 0;
-					checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyToSymbol(gck_device_errors, &gck_errors, sizeof(unsigned long long int)) );
-					// GOLD is already on device.
-
-					/////////////////// Run kernel
-					GoldChkKernel<<<gck_gridSize, gck_blockSize>>>(d_GOLD, d_C, k);
-					checkOnHost |= checkFrameworkErrorsNoFail( cudaPeekAtLastError() );
-					checkOnHost |= checkFrameworkErrorsNoFail( cudaDeviceSynchronize() );
-					///////////////////
-
-					// Receive from device
-					checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyFromSymbol(&gck_errors, gck_device_errors, sizeof(unsigned long long int)) );
-					if (gck_errors != 0) {
-						printf("$(%u)", (unsigned int)gck_errors);
-						checkOnHost = true;
-					}
-				} else {
+				// Receive from device
+				checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyFromSymbol(&gck_errors, gck_device_errors, sizeof(unsigned long long int)) );
+				if (gck_errors != 0) {
+					printf("$(%u)", (unsigned int)gck_errors);
 					checkOnHost = true;
 				}
-				if (checkOnHost) {
+			} else {
+				checkOnHost = true;
+			}
+			if (checkOnHost) {
+				checkFrameworkErrors(
+					cudaMemcpy(C, d_C, matrixSize * sizeof(tested_type),
+							cudaMemcpyDeviceToHost));
+				if ((generate) && (k <= 16)) {
+					printf("\nMatrix C: \n");
+					for (int i = 0; i<k*k; i++) {
+						printf(" %.2e", (float)C[i]);
+						if ((i+1)%k == 0) printf("\n");
+					}
+					printf("\n");
+				}
+
+				if (test_input_check) {
+					checkFrameworkErrors(
+						cudaMemcpy(endA, d_A, matrixSize * sizeof(tested_type),
+								cudaMemcpyDeviceToHost));
+					if ((generate) && (k <= 16)) {
+						printf("\nMatrix A(end): \n");
+						for (int i = 0; i<k*k; i++) {
+							printf(" %.2e", (float)endA[i]);
+							if ((i+1)%k == 0) printf("\n");
+						}
+						printf("\n");
+					}
+
+					checkFrameworkErrors(
+							cudaMemcpy(endB, d_B, matrixSize * sizeof(tested_type),
+									cudaMemcpyDeviceToHost));
+					if ((generate) && (k <= 16)) {
+						printf("\nMatrix B(end): \n");
+						for (int i = 0; i<k*k; i++) {
+							printf(" %.2e", (float)endB[i]);
+							if ((i+1)%k == 0) printf("\n");
+						}
+						printf("\n");
+					}
+				}
+
+
+				if (generate) {
+					if (generate_safechecks_count == 0) {
+						printf("Generate: First generation. Step %d/%d of max. %d \n", generate_safechecks_count, 
+						generate_safechecks, iterations);
+						if (check_errors(false, test_input_check) ) {
+							generate_safechecks_count++;
+							memcpy(GOLD, C, matrixSize * sizeof(tested_type));
+						}
+					} else {
+						if (!check_errors(true, test_input_check)) {
+							printf("Generate: Failed on compare. Step %d/%d of max. %d \n", generate_safechecks_count, generate_safechecks, iterations);
+							generate_safechecks_count = 0;
+						} else {
+							printf("Generate: Success on compare. Step %d/%d of max. %d\n", generate_safechecks_count, generate_safechecks, iterations);generate_safechecks_count++;
+							if (generate_safechecks_count >= generate_safechecks) {
+								writeGoldtoFile();
+								loop2 = iterations; // This will make the loop end
+							}
+						}
+					}
+				} else {
 					check_errors(false, test_input_check);
 				}
 			}
