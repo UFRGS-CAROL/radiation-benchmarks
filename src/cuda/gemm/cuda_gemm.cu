@@ -604,8 +604,8 @@ int main(int argc, char* argv[]) {
 
 //================== Set cuBLAS GEMM parameters
 ////////////////////////////////////////////////////////////////////
-	const tested_type alpha = (tested_type) tested_type_host(1.0);
-	const tested_type beta = (tested_type) tested_type_host(1.0);
+	const tested_type_host alpha = tested_type_host(1.0);
+	const tested_type_host beta = tested_type_host(1.0);
 	cublasOperation_t transa = CUBLAS_OP_T, transb = CUBLAS_OP_T;
 ////////////////////////////////////////////////////////////////////
 //==================
@@ -705,30 +705,30 @@ int main(int argc, char* argv[]) {
 			transa, 
 			transb, 
 			k, k, k,
-			&alpha, 
+			(tested_type*)&alpha, 
 			d_A, k, 
 			d_B, k, 
-			&beta, 	
+			(tested_type*)&beta, 	
 			d_C, k) );
 #elif defined(PRECISION_SINGLE)
 		checkBlasFrameworkErrors( cublasSgemm(blas_handle,
 			transa, 
 			transb, 
 			k, k, k,
-			&alpha, 
+			(tested_type*)&alpha, 
 			d_A, k, 
 			d_B, k, 
-			&beta, 	
+			(tested_type*)&beta, 	
 			d_C, k) );
 #elif defined(PRECISION_HALF)
 		checkBlasFrameworkErrors( cublasHgemm(blas_handle,
 			transa, 
 			transb, 
 			k, k, k,
-			&alpha, 
+			(tested_type*)&alpha, 
 			d_A, k, 
 			d_B, k, 
-			&beta, 	
+			(tested_type*)&beta, 	
 			d_C, k) );
 #endif
 
