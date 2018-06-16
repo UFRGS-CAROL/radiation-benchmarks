@@ -2,6 +2,9 @@ name: "LeNet"
 
 default_forward_type:  DOUBLE
 default_backward_type: DOUBLE
+default_forward_math: DOUBLE
+default_backward_math: DOUBLE
+global_grad_scale: DOUBLE
 
 layer {
   name: "data"

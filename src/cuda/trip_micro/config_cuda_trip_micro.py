@@ -30,12 +30,18 @@ def config(board, test_type, arith_type, debug):
 
     bin_path = install_dir + "bin"
     src_benchmark = install_dir + "src/cuda/trip_micro"
+    
+    
+    # This will define how many instructions will be executed
+    ops = 1000000000
+    if "X1" in board or "X2" in board:
+        ops = 100000000
 
     generate = ["sudo mkdir -p " + bin_path, 
                 "cd " + src_benchmark, 
                 "make clean", 
                 "make -C ../../include ", 
-                "make TYPE=" + test_type + " PRECISION=" + arith_type + " -j 4",
+                "make TYPE=" + test_type + " PRECISION=" + arith_type + " -j 4 OPS=" + str(ops),
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
