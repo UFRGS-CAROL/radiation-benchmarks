@@ -509,6 +509,12 @@ __global__ void GoldChkKernel(tested_type *gk, tested_type *ck, int n) {
 	int tx = (blockIdx.x * GOLDCHK_BLOCK_SIZE + threadIdx.x) * GOLDCHK_TILE_SIZE;
 	int ty = (blockIdx.y * GOLDCHK_BLOCK_SIZE + threadIdx.y)  * GOLDCHK_TILE_SIZE;
 	register unsigned int i, j, row;
+	if (tx >= n) {
+		return;
+	}
+	if (ty >= n) {
+		return;
+	}
 
 #if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
 	for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
@@ -732,8 +738,8 @@ int main(int argc, char* argv[]) {
 ////////////// GOLD CHECK Kernel /////////////////
 	dim3 gck_blockSize = dim3(	GOLDCHK_BLOCK_SIZE, 
 								GOLDCHK_BLOCK_SIZE);
-	dim3 gck_gridSize = dim3(	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE), 
-								k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
+	dim3 gck_gridSize = dim3(	ceil(k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE)), 
+								ceil(k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE)));
 //////////////////////////////////////////////////
 //====================================
 
@@ -834,7 +840,7 @@ int main(int argc, char* argv[]) {
 				assert (d_GOLD != NULL);
 
 				// Send to device
-				unsigned long long int gck_errors = 8;
+				unsigned long long int gck_errors = 0;
 				checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyToSymbol(gck_device_errors, &gck_errors, sizeof(unsigned long long int)) );
 				// GOLD is already on device.
 
