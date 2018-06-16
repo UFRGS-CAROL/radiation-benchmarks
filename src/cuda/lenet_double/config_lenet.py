@@ -99,7 +99,7 @@ def config(board, debug):
         gen[7] = ['--gold ', data_path + '/' + set['gold']]
 
         exe = copy.deepcopy(gen)
-        exe[2][1] = 4
+        exe[2][1] = 1
         exe[3][1] = 1000
 
         generate.append(' '.join(str(r) for v in gen for r in v))
