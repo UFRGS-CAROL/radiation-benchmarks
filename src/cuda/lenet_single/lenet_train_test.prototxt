@@ -1,5 +1,10 @@
 name: "LeNet"
 
+default_forward_type: FLOAT
+default_backward_type: FLOAT
+default_forward_math: FLOAT
+default_backward_math: FLOAT
+
 layer {
   name: "mnist"
   type: "Data"
