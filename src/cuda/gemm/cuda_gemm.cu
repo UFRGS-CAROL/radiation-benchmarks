@@ -35,7 +35,9 @@
 #undef max
 #define max( x, y ) ( (x) > (y) ? (x) : (y) )
 
+#ifndef DEFAULT_INPUT_SIZE
 #define DEFAULT_INPUT_SIZE 8192
+#endif
 
 //=========== DEFINE TESTED TYPE
 #if defined(PRECISION_DOUBLE)
@@ -102,6 +104,7 @@ tested_type_host *GOLD;
 tested_type *d_A;
 tested_type *d_B;
 tested_type *d_C;
+tested_type *d_GOLD;
 //====================================
 
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
@@ -155,10 +158,16 @@ void allocCudaMemory() {
 	d_A = (tested_type*) safe_malloc(matrixSize * sizeof(tested_type));
 	d_B = (tested_type*) safe_malloc(matrixSize * sizeof(tested_type));
 	d_C = (tested_type*) safe_malloc(matrixSize * sizeof(tested_type));
+	if (gpu_check) {
+		d_GOLD = (tested_type*) safe_malloc(matrixSize * sizeof(tested_type));
+	}
 #else
 	checkFrameworkErrors(cudaMalloc(&d_A, matrixSize * sizeof(tested_type)));
 	checkFrameworkErrors(cudaMalloc(&d_B, matrixSize * sizeof(tested_type)));
 	checkFrameworkErrors(cudaMalloc(&d_C, matrixSize * sizeof(tested_type)));
+	if (gpu_check) {
+		checkFrameworkErrors(cudaMalloc(&d_GOLD, matrixSize * sizeof(tested_type)));
+	}
 #endif
 
 }
@@ -167,6 +176,9 @@ void freeCudaMemory() {
 	checkFrameworkErrors(cudaFree(d_A));
 	checkFrameworkErrors(cudaFree(d_B));
 	checkFrameworkErrors(cudaFree(d_C));
+	if (gpu_check) {
+		checkFrameworkErrors(cudaFree(d_GOLD));
+	}
 }
 
 void copyCudaMemory() {
@@ -179,6 +191,12 @@ void copyCudaMemory() {
 	checkFrameworkErrors(
 			cudaMemcpy(d_B, B, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice)); // PUSH B
+
+	if (gpu_check) {
+		checkFrameworkErrors(
+			cudaMemcpy(d_GOLD, GOLD, matrixSize * sizeof(tested_type),
+					cudaMemcpyHostToDevice)); // PUSH B
+	}
 }
 
 void readMatricesFromFile(bool gold = true) {
@@ -480,6 +498,27 @@ bool check_errors(bool check_output = true, bool check_input = true) {
 	return (output_errors == 0) && (input_errors == 0);
 }
 
+///////////////////////////////////////// GOLD CHECK ON DEVICE ////////////////////////
+#define GOLDCHK_BLOCK_SIZE 32
+#define GOLDCHK_TILE_SIZE 16
+
+__device__ unsigned long long int gck_device_errors;
+
+__global__ void GoldChkKernel(double *gk, double *ck, int n) {
+//================== HW Accelerated output validation
+	int tx = (blockIdx.x * GOLDCHK_BLOCK_SIZE + threadIdx.x) * GOLDCHK_TILE_SIZE;
+	int ty = (blockIdx.y * GOLDCHK_BLOCK_SIZE + threadIdx.y)  * GOLDCHK_TILE_SIZE;
+	register unsigned int i, j, row;
+	for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
+		row = i * n;
+		for (j=tx; i<tx+GOLDCHK_TILE_SIZE; j++) {
+			if (gk[row + j] != ck[row + j])
+				atomicAdd(&gck_device_errors, 1);
+		}
+	}
+}
+///////////////////////////////////////// GOLD CHECK ON DEVICE ////////////////////////
+
 void usage(int argc, char* argv[]) {
 	printf("Usage: %s -size=N [-generate] [-input_a=<path>] [-input_b=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-gpu_check] [-test_input_check] [-no-warmup] [-use_tensor=<0|1>] [-input_check=<0|1>]\n", argv[0]);
 }
@@ -487,13 +526,10 @@ void usage(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
 //================== Test vars
 	int loop2;
-	// int kernel_errors=0;
-	// int zero = 0;
 	double time;
 	double kernel_time, global_time;
 	double total_kernel_time, min_kernel_time, max_kernel_time;
 	int device_warmup = 1;
-	// int gpu_check = 1;
 //====================================
 
 //================== Read test parameters
@@ -508,6 +544,9 @@ int main(int argc, char* argv[]) {
 		if ((k <= 0) || (k % 16 != 0)) {
 			printf("Invalid input size given on the command-line: %d\n", k);
 			exit (EXIT_FAILURE);
+		}
+		if (k>DEFAULT_INPUT_SIZE) {
+			printf("\n========>> Warning:\nSIZE > DEFAULT_INPUT_SIZE. May crash on input retrieval.\n============\n");
 		}
 		matrixSize = k * k;
 	} else {
@@ -573,6 +612,16 @@ int main(int argc, char* argv[]) {
 		device_warmup = 0;
 		printf("!! The first iteration may not reflect real timing information\n");
 	}
+	
+	if (checkCmdLineFlag(argc, (const char **) argv, "gpu_check")) {
+		if (k % (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE) == 0) {
+			test_gpu_check = true;
+			printf("> Testing on GPU using GoldChk kernel\n");
+		} else {
+			test_gpu_check = false;
+			printf("\n========>> Warning:\nCannot test on GPU with this size. Size must be a multiple of %d.\n============\n", (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
+		}
+	}
 
 	if (checkCmdLineFlag(argc, (const char **) argv, "generate")) {
 		generate = 1;
@@ -581,7 +630,8 @@ int main(int argc, char* argv[]) {
 		iterations = 20;
 		generate_safechecks = 5;
 		test_input_check = true;
-		printf("!! Generate !! Enabling input_check. Disabling device_warmup, fault_injection and iterations limiting.\n");
+		test_gpu_check = false;
+		printf("!! Generate !! Enabling input_check. Disabling device_warmup, gpu check, fault_injection and iterations limiting.\n");
 		printf("!! Generate parameters: generate_safechecks: %d / \n", generate_safechecks);
 	}
 
@@ -591,10 +641,6 @@ int main(int argc, char* argv[]) {
 		} else {
 			printf("!! generator_debug ignored: generate is not activated. active with -generate.\n");
 		}
-	}
-	
-	if (checkCmdLineFlag(argc, (const char **) argv, "gpu_check")) {
-		printf("\n========>> Warning:\nGPU Check of gold not yet available\n============\n");
 	}
 	
 	if (checkCmdLineFlag(argc, (const char **) argv, "input_check")) {
@@ -668,6 +714,14 @@ int main(int argc, char* argv[]) {
 		checkBlasFrameworkErrors( cublasSetMathMode(blas_handle, CUBLAS_DEFAULT_MATH) );
 	}
 ////////////////////////////////////////////////////////////////////
+
+////////////// GOLD CHECK Kernel /////////////////
+	unsigned long long int goldCheckKernel_errors = 0;
+	dim3 gck_blockSize = dim3(	GOLDCHK_BLOCK_SIZE, 
+								GOLDCHK_BLOCK_SIZE);
+	dim3 gck_gridSize = dim3(	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE), 
+								k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE))
+//////////////////////////////////////////////////
 //====================================
 
 //================== Init generator if enabled
@@ -822,7 +876,33 @@ int main(int argc, char* argv[]) {
 					}
 				}
 			} else {
-				check_errors(false, test_input_check);
+				bool checkOnHost = false;
+				if (gpu_check) {
+					assert (d_GOLD != NULL);
+
+					// Send to device
+					unsigned long long int gck_errors = 0;
+					checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyToSymbol(gck_device_errors, &gck_errors, sizeof(unsigned long long int)) );
+					// GOLD is already on device.
+
+					/////////////////// Run kernel
+					GoldChkKernel<<<gck_gridSize, gck_blockSize>>>(d_GOLD, d_C, k);
+					checkOnHost |= checkFrameworkErrorsNoFail( cudaPeekAtLastError() );
+					checkOnHost |= checkFrameworkErrorsNoFail( cudaDeviceSynchronize() );
+					///////////////////
+
+					// Receive from device
+					checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyFromSymbol(&gck_errors, gck_device_errors, sizeof(unsigned long long int)) );
+					if (gck_errors != 0) {
+						printf("$");
+						checkOnHost = true;
+					}
+				} else {
+					checkOnHost = true;
+				}
+				if (checkOnHost) {
+					check_errors(false, test_input_check);
+				}
 			}
 		}
 		//====================================
@@ -857,7 +937,7 @@ int main(int argc, char* argv[]) {
 
 	double gflops = 2.0 * (double) k * k * k / 1000000000; // Bilion FLoating-point OPerationS
 	double averageKernelTime = total_kernel_time
-			/ (iterations - (device_warmup ? 1 : 0));
+			/ (loop2 - (device_warmup && !generate ? 1 : 0));
 	printf("\n-- END --\n"
 			"Total kernel time: %.3fs\n"
 			"Iterations: %d\n"
