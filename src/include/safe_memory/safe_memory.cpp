@@ -43,6 +43,19 @@ void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 	exit (EXIT_FAILURE);
 }
 
+bool __checkFrameworkErrorsNoFail(cudaError_t error, int line, const char* file) {
+	if (error == cudaSuccess) {
+		return false;
+	}
+	char errorDescription[250];
+	snprintf(errorDescription, 250, "CUDA Framework error: %s. Not failing...",
+			cudaGetErrorString(error));
+	log_error_detail_and_continue(errorDescription);
+
+	printf("%s - Line: %d at %s\n", errorDescription, line, file);
+	return true;
+}
+
 void* safe_malloc(size_t size) {
 	void* device_ptr = NULL;
 	void* gold_ptr = NULL;
