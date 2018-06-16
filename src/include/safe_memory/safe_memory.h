@@ -36,11 +36,13 @@ typedef struct {
 } triple_memory;
 
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
+#define checkFrameworkErrorsNoFail(error) __checkFrameworkErrorsNoFail(error, __LINE__, __FILE__)
 
 /**
  * generic log helper checker for errors
  */
 void __checkFrameworkErrors(cudaError_t error, int line, const char* file);
+bool __checkFrameworkErrorsNoFail(cudaError_t error, int line, const char* file);
 
 /**
  * memory alloc three pointers
