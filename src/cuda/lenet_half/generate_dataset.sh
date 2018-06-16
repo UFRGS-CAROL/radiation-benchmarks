@@ -1,10 +1,16 @@
 #!/bin/bash
 
 set -x
+set -e
 
-cd caffe/data/mnist/
+MNIST_DATA_DIR=caffe/data/mnist
+MNIST_DIR=examples/mnist
+
+cd $MNIST_DATA_DIR
 sh get_mnist.sh 
 cd ../../
-examples/mnist/create_mnist.sh 
+$MNIST_DIR/create_mnist.sh 
+cd ../
+cp ./*prototxt caffe/$MNIST_DIR
 
 exit 0

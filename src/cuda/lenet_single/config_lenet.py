@@ -106,7 +106,7 @@ def config(board, debug):
         execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute=execute, generate=generate, install_dir=install_dir + "/",
-                                   benchmark_bin=benchmark_bin.replace(".py", ""), debug=debug)
+                                   benchmark_bin=benchmark_bin, debug=debug)
 
 
 if __name__ == "__main__":
