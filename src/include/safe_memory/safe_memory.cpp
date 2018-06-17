@@ -83,7 +83,7 @@ void* safe_host_malloc(size_t size) {
 			#pragma omp parallel for
 			for (int k=0; k<size; k++) {
 				if (((unsigned char*)host_ptr)[k] != (unsigned char)mem_const_value) {
-					printf(":Fail: %d - host: %hhx - gold: %hhX\n", k, ((unsigned char*)host_ptr)[k], mem_const_value);
+					printf(":Host safe_memory Fail: %llu/%llu - host: %hhx - gold: %hhX\n", k, size, ((unsigned char*)host_ptr)[k], mem_const_value);
 					is_memory_corrupted = true;
 					break;
 				}
