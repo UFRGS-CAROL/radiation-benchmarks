@@ -18,7 +18,7 @@ INCLUDE= -I/usr/local/cuda/include #/ -I/usr/local/cuda/samples/common/inc/
 LIBRARY= -L/usr/local/cuda/lib64/ -L../../include/safe_memory
 CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
 
-TARGET=cuda_trip_single_hotspot
+TARGET=cuda_trip_double_hotspot
 
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
@@ -54,12 +54,12 @@ all: $(GEN_EXEC) $(TARGET)
 $(TARGET): $(RUN_SOURCES)
 	$(NVCC) $(INCLUDE) $(LIBRARY) $(NVCC_FLAGS) $(RUN_SOURCES) -o $(TARGET)
 	
-test: $(TARGET)
-	./cuda_trip_hotspot -size=1024 -sim_time=1024 -temp_file=../../../data/hotspot/temp_1024 -power_file=../../../data/hotspot/power_1024 -gold_file=gold_test -iterations=10 -streams=1 -verbose
+test: generate $(TARGET)
+	./$(TARGET) -size=1024 -sim_time=1024 -temp_file=../../../data/hotspot/temp_1024 -power_file=../../../data/hotspot/power_1024 -gold_file=gold_test -iterations=10 -streams=1 -verbose
 	
 	
-generate:
-	./cuda_trip_hotspot -generate -size=1024 -sim_time=1024 -temp_file=../../../data/hotspot/temp_1024 -power_file=../../../data/hotspot/power_1024 -gold_file=gold_test -iterations=1	 -streams=1 -verbose
+generate: $(TARGET)
+	./$(TARGET) -generate -size=1024 -sim_time=1024 -temp_file=../../../data/hotspot/temp_1024 -power_file=../../../data/hotspot/power_1024 -gold_file=gold_test -iterations=1	 -streams=1 -verbose
 
 	
 

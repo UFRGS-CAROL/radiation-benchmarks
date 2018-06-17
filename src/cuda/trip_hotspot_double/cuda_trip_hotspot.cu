@@ -92,7 +92,7 @@ void readInput(parameters *params) {
 		fatal("The power file was not opened");
 
 	if (!(params->generate))
-		if ((fgold = fopen(params->ofile, "r")) == 0)
+		if ((fgold = fopen(params->ofile, "rb")) == 0)
 			fatal("The gold was not opened");
 
 	for (i = 0; i <= (params->grid_rows) - 1; i++) {
@@ -141,16 +141,17 @@ void readInput(parameters *params) {
 				num_nans++;
 
 			if (!(params->generate)) {
-				fgets(str, STR_SIZE, fgold);
-				if (feof(fgold))
-					fatal("not enough lines in gold file");
-				if ((sscanf(str, "%lf", &val) != 1))
-					fatal("invalid gold file format");
+				// fgets(str, STR_SIZE, fgold);
+				// if (feof(fgold))
+				// 	fatal("not enough lines in gold file");
+				// if ((sscanf(str, "%le", &val) != 1))
+				// 	fatal("invalid gold file format");
+				assert( fread(&(params->GoldMatrix1[i * (params->grid_cols) + j]), sizeof(double), 1, fgold) == 1 );
 
 				// =======================
 				//HARDENING AGAINST BAD BOARDS
 				//-----------------------------------------------------------------------------------
-				params->GoldMatrix1[i * (params->grid_cols) + j] = val;
+				// params->GoldMatrix1[i * (params->grid_cols) + j] = val;
 				//-----------------------------------------------------------------------------------
 
 			}
@@ -182,7 +183,7 @@ void writeOutput(parameters *params) {
 	int num_zeros = 0;
 	int num_nans = 0;
 
-	if ((fgold = fopen(params->ofile, "w")) == 0)
+	if ((fgold = fopen(params->ofile, "wb")) == 0)
 		fatal("The gold was not opened");
 
 	for (i = 0; i <= (params->grid_rows) - 1; i++) {
@@ -198,9 +199,10 @@ void writeOutput(parameters *params) {
 				num_nans++;
 
 			//-----------------------------------------------------------------------------------
-			sprintf(str, "%lf\n",
-					params->MatrixOut1[i * (params->grid_cols) + j]);
-			fputs(str, fgold);
+			fwrite(&(params->MatrixOut1[i * (params->grid_cols) + j]), sizeof(double), 1, fgold);
+			// sprintf(str, "%lf\n",
+			// params->MatrixOut1[i * (params->grid_cols) + j]);
+			// fputs(str, fgold);
 		}
 	}
 	fclose(fgold);

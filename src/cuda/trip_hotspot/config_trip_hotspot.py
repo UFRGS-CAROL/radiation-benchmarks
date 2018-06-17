@@ -13,7 +13,7 @@ SIZES=[1024]
 ITERATIONS=10000
 SIMTIME=[1000]
 STREAMS=10
-
+ARITH_TYPE="single"
 def config(board, debug):
     original_hotspot = "hotspot"
     benchmark_bin = "cuda_trip_single_hotspot"
@@ -55,7 +55,7 @@ def config(board, debug):
             gen[2] = ['-generate ']
             gen[3] = ['-temp_file=' + inputFile + "temp_" +  str(i)]
             gen[4] = ['-power_file=' + inputFile + "power_" + str(i)]  # change for execute
-            gen[5] = ['-gold_file=' + inputFile + "gold_" + str(i) + "_" + str(s)]
+            gen[5] = ['-gold_file=' + inputFile + "gold_" + str(i) + "_" + ARITH_TYPE + "_"  + str(s)]
             gen[6] = ['-sim_time=' + str(i)]
             gen[7] = ['-iterations=1']
             gen[8] = ['-streams=' + str(STREAMS)]
