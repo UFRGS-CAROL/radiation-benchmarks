@@ -2,7 +2,15 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <assert.h>
+
+#ifdef USE_OMP
 #include <omp.h>
+#endif
+
+#ifdef PRECISION_HALF
+#include <cuda_fp16.h>
+#include "half.hpp"
+#endif
 
 int generate;
 
@@ -13,9 +21,31 @@ int generate;
 #ifdef LOGS
 #include "log_helper.h"
 #endif
+// The timestamp is updated on every log_helper function call.
 
 #ifdef SAFE_MALLOC
 #include "safe_memory/safe_memory.h"
+#endif
+
+#ifndef DEFAULT_SIM_TIME
+#define DEFAULT_SIM_TIME 10000
+#endif
+
+//=========== DEFINE TESTED TYPE
+#if defined(PRECISION_DOUBLE)
+	const char test_precision_description[] = "double";
+	typedef double tested_type;
+	typedef double tested_type_host;
+#elif defined(PRECISION_SINGLE)
+	const char test_precision_description[] = "single";
+	typedef float tested_type;
+	typedef float tested_type_host;
+#elif defined(PRECISION_HALF)
+	const char test_precision_description[] = "half";
+	typedef half tested_type;
+	typedef half_float::half tested_type_host;
+#else 
+	#error TEST TYPE NOT DEFINED OR INCORRECT. USE PRECISION=<double|single|half>.
 #endif
 
 #define BLOCK_SIZE 16
@@ -32,11 +62,11 @@ int generate;
 #define FACTOR_CHIP	0.5
 
 /* chip parameters	*/
-float t_chip = 0.0005;
-float chip_height = 0.016;
-float chip_width = 0.016;
+tested_type_host t_chip(0.0005);
+tested_type_host chip_height(0.016);
+tested_type_host chip_width(0.016);
 /* ambient temperature, assuming no package at all	*/
-float amb_temp = 80.0;
+tested_type_host amb_temp(80.0);
 
 /* define timer macros */
 #define pin_stats_reset()   startCycle()
@@ -45,9 +75,9 @@ float amb_temp = 80.0;
 
 typedef struct parameters_t {
 	int grid_cols, grid_rows;
-	float *FilesavingTemp1, *FilesavingPower1, *MatrixOut1, *GoldMatrix1;
-	float *FilesavingTemp2, *FilesavingPower2, *MatrixOut2;
-	float *FilesavingTemp3, *FilesavingPower3, *MatrixOut3;
+	tested_type_host *FilesavingTemp1, *FilesavingPower1, *MatrixOut1, *GoldMatrix1;
+	tested_type_host *FilesavingTemp2, *FilesavingPower2, *MatrixOut2;
+	tested_type_host *FilesavingTemp3, *FilesavingPower3, *MatrixOut3;
 
 	char *tfile, *pfile, *ofile;
 	int nstreams;
@@ -92,12 +122,14 @@ void readInput(parameters *params) {
 		fatal("The power file was not opened");
 
 	if (!(params->generate))
-		if ((fgold = fopen(params->ofile, "r")) == 0)
+		if ((fgold = fopen(params->ofile, "rb")) == 0)
 			fatal("The gold was not opened");
 
 	for (i = 0; i <= (params->grid_rows) - 1; i++) {
 		for (j = 0; j <= (params->grid_cols) - 1; j++) {
-			fgets(str, STR_SIZE, ftemp);
+			if (!fgets(str, STR_SIZE, ftemp)) {
+				fatal("not enough lines in temp file");
+			}
 			if (feof(ftemp)) {
 				printf("[%d,%d] size: %d ", i, j, params->grid_rows);
 				fatal("not enough lines in temp file");
@@ -109,18 +141,20 @@ void readInput(parameters *params) {
 			//HARDENING AGAINST BAD BOARDS
 			//-----------------------------------------------------------------------------------
 
-			params->FilesavingTemp1[i * (params->grid_cols) + j] = val;
-			params->FilesavingTemp2[i * (params->grid_cols) + j] = val;
-			params->FilesavingTemp3[i * (params->grid_cols) + j] = val;
+			params->FilesavingTemp1[i * (params->grid_cols) + j] = tested_type_host(val);
+			params->FilesavingTemp2[i * (params->grid_cols) + j] = tested_type_host(val);
+			params->FilesavingTemp3[i * (params->grid_cols) + j] = tested_type_host(val);
 
 			//-----------------------------------------------------------------------------------
 
-			if (val == 0)
+			if (tested_type_host(val) == 0)
 				num_zeros++;
-			if (isnan(val))
+			if (isnan(tested_type_host(val)))
 				num_nans++;
 
-			fgets(str, STR_SIZE, fpower);
+			if (!fgets(str, STR_SIZE, fpower)) {
+				fatal("not enough lines in power file");
+			}
 			if (feof(fpower))
 				fatal("not enough lines in power file");
 			if ((sscanf(str, "%f", &val) != 1))
@@ -129,28 +163,29 @@ void readInput(parameters *params) {
 			//HARDENING AGAINST BAD BOARDS
 			//-----------------------------------------------------------------------------------
 
-			params->FilesavingPower1[i * (params->grid_cols) + j] = val;
-			params->FilesavingPower2[i * (params->grid_cols) + j] = val;
-			params->FilesavingPower3[i * (params->grid_cols) + j] = val;
+			params->FilesavingPower1[i * (params->grid_cols) + j] = tested_type_host(val);
+			params->FilesavingPower2[i * (params->grid_cols) + j] = tested_type_host(val);
+			params->FilesavingPower3[i * (params->grid_cols) + j] = tested_type_host(val);
 
 			//-----------------------------------------------------------------------------------
 
-			if (val == 0)
+			if (tested_type_host(val) == 0)
 				num_zeros++;
-			if (isnan(val))
+			if (isnan(tested_type_host(val)))
 				num_nans++;
 
 			if (!(params->generate)) {
-				fgets(str, STR_SIZE, fgold);
-				if (feof(fgold))
-					fatal("not enough lines in gold file");
-				if ((sscanf(str, "%f", &val) != 1))
-					fatal("invalid gold file format");
+				// fgets(str, STR_SIZE, fgold);
+				// if (feof(fgold))
+				// 	fatal("not enough lines in gold file");
+				// if ((sscanf(str, "%f", &val) != 1))
+				// 	fatal("invalid gold file format");
+				assert( fread(&(params->GoldMatrix1[i * (params->grid_cols) + j]), sizeof(tested_type), 1, fgold) == 1 );
 
 				// =======================
 				//HARDENING AGAINST BAD BOARDS
 				//-----------------------------------------------------------------------------------
-				params->GoldMatrix1[i * (params->grid_cols) + j] = val;
+				// params->GoldMatrix1[i * (params->grid_cols) + j] = val;
 				//-----------------------------------------------------------------------------------
 
 			}
@@ -164,7 +199,7 @@ void readInput(parameters *params) {
 	if (params->fault_injection) {
 		params->FilesavingTemp1[32] = 6.231235;
 		printf("!!!!!!!!! Injected error: FilesavingTemp[32] = %f\n",
-				params->FilesavingTemp1[32]);
+				(double)params->FilesavingTemp1[32]);
 	}
 	// ==================================
 
@@ -178,11 +213,11 @@ void writeOutput(parameters *params) {
 	// =================== Write output to gold file
 	int i, j;
 	FILE *fgold;
-	char str[STR_SIZE];
+	// char str[STR_SIZE];
 	int num_zeros = 0;
 	int num_nans = 0;
 
-	if ((fgold = fopen(params->ofile, "w")) == 0)
+	if ((fgold = fopen(params->ofile, "wb")) == 0)
 		fatal("The gold was not opened");
 
 	for (i = 0; i <= (params->grid_rows) - 1; i++) {
@@ -198,9 +233,10 @@ void writeOutput(parameters *params) {
 				num_nans++;
 
 			//-----------------------------------------------------------------------------------
-			sprintf(str, "%f\n",
-					params->MatrixOut1[i * (params->grid_cols) + j]);
-			fputs(str, fgold);
+			fwrite(&(params->MatrixOut1[i * (params->grid_cols) + j]), sizeof(tested_type), 1, fgold);
+			// sprintf(str, "%f\n",
+			// 		params->MatrixOut1[i * (params->grid_cols) + j]);
+			// fputs(str, fgold);
 		}
 	}
 	fclose(fgold);
@@ -214,12 +250,12 @@ void writeOutput(parameters *params) {
 
 __device__ unsigned long long int is_memory_bad = 0;
 
-__device__ float inline read_voter(float *v1, float *v2, float *v3,
+__device__ tested_type inline read_voter(tested_type *v1, tested_type *v2, tested_type *v3,
 		int offset) {
 
-	register float in1 = v1[offset];
-	register float in2 = v2[offset];
-	register float in3 = v3[offset];
+	register tested_type in1 = v1[offset];
+	register tested_type in2 = v2[offset];
+	register tested_type in3 = v3[offset];
 
 	if (in1 == in2 || in1 == in3) {
 		return in1;
@@ -236,11 +272,11 @@ __device__ float inline read_voter(float *v1, float *v2, float *v3,
 	return in1;
 }
 
-__device__ float inline read_voter_2d(float v1[][BLOCK_SIZE],
-		float v2[][BLOCK_SIZE], float v3[][BLOCK_SIZE], int x, int y) {
-	register float in1 = v1[x][y];
-	register float in2 = v2[x][y];
-	register float in3 = v3[x][y];
+__device__ tested_type inline read_voter_2d(tested_type v1[][BLOCK_SIZE],
+	tested_type v2[][BLOCK_SIZE], tested_type v3[][BLOCK_SIZE], int x, int y) {
+	register tested_type in1 = v1[x][y];
+	register tested_type in2 = v2[x][y];
+	register tested_type in3 = v3[x][y];
 
 	if (in1 == in2 || in1 == in3) {
 		return in1;
@@ -259,17 +295,17 @@ __device__ float inline read_voter_2d(float v1[][BLOCK_SIZE],
 
 __global__ void calculate_temp(int iteration,  //number of iteration
 		//Hardening against bad boards
-		float* power1,   //power input
-		float* temp_src1,    //temperature input/output
-		float* temp_dst1,    //temperature input/output
+		tested_type* power1,   //power input
+		tested_type* temp_src1,    //temperature input/output
+		tested_type* temp_dst1,    //temperature input/output
 		//---------------------------------------------------
-		float* power2,   //power input
-		float* temp_src2,    //temperature input/output
-		float* temp_dst2,    //temperature input/output
+		tested_type* power2,   //power input
+		tested_type* temp_src2,    //temperature input/output
+		tested_type* temp_dst2,    //temperature input/output
 		//---------------------------------------------------
-		float* power3,   //power input
-		float* temp_src3,    //temperature input/output
-		float* temp_dst3,    //temperature input/output
+		tested_type* power3,   //power input
+		tested_type* temp_src3,    //temperature input/output
+		tested_type* temp_dst3,    //temperature input/output
 		//---------------------------------------------------
 
 		int grid_cols,  //Col of grid
@@ -280,24 +316,24 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 		float Rx, float Ry, float Rz, float step, float time_elapsed) {
 
 	//----------------------------------------------------
-	__shared__ float temp_on_cuda_1[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ float power_on_cuda_1[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ float temp_t_1[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
+	__shared__ tested_type temp_on_cuda_1[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ tested_type power_on_cuda_1[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ tested_type temp_t_1[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
 
 	//----------------------------------------------------
-	__shared__ float temp_on_cuda_2[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ float power_on_cuda_2[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ float temp_t_2[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
+	__shared__ tested_type temp_on_cuda_2[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ tested_type power_on_cuda_2[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ tested_type temp_t_2[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
 
 	//----------------------------------------------------
-	__shared__ float temp_on_cuda_3[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ float power_on_cuda_3[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ float temp_t_3[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
+	__shared__ tested_type temp_on_cuda_3[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ tested_type power_on_cuda_3[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ tested_type temp_t_3[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
 	//---------------------------------------------------
 
-	float amb_temp = 80.0;
-	float step_div_Cap;
-	float Rx_1, Ry_1, Rz_1;
+	tested_type amb_temp = 80.0;
+	tested_type step_div_Cap;
+	tested_type Rx_1, Ry_1, Rz_1;
 
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -386,7 +422,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 		IN_RANGE(tx, validXmin, validXmax) &&
 		IN_RANGE(ty, validYmin, validYmax)) {
 			computed = true;
-			register float calculated = read_voter_2d(temp_on_cuda_1,
+			register tested_type calculated = read_voter_2d(temp_on_cuda_1,
 					temp_on_cuda_2, temp_on_cuda_3, ty, tx)
 					+ step_div_Cap
 							* (read_voter_2d(power_on_cuda_1, power_on_cuda_2,
@@ -398,7 +434,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 													temp_on_cuda_2,
 													temp_on_cuda_3, N, tx)
 
-											- 2.0
+											- tested_type(2.0)
 													* read_voter_2d(
 															temp_on_cuda_1,
 															temp_on_cuda_2,
@@ -410,7 +446,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 											+ read_voter_2d(temp_on_cuda_1,
 													temp_on_cuda_2,
 													temp_on_cuda_3, ty, W)
-											- 2.0
+											- tested_type(2.0)
 													* read_voter_2d(
 															temp_on_cuda_1,
 															temp_on_cuda_2,
@@ -469,8 +505,8 @@ long long int flops = 0;
 
 int compute_tran_temp(
 		//Memory triplication
-		float *MatrixPower1, float *MatrixPower2, float *MatrixPower3,
-		float *MatrixTemp1[2], float *MatrixTemp2[2], float *MatrixTemp3[2],
+		tested_type_host *MatrixPower1, tested_type_host *MatrixPower2, tested_type_host *MatrixPower3,
+		tested_type_host *MatrixTemp1[2], tested_type_host *MatrixTemp2[2], tested_type_host *MatrixTemp3[2],
 		//-------------------------------------------------------------
 		int col, int row, int sim_time, int num_iterations, int blockCols,
 		int blockRows, int borderCols, int borderRows, cudaStream_t stream) {
@@ -500,12 +536,12 @@ int compute_tran_temp(
 		calculate_temp<<<dimGrid, dimBlock, 0, stream>>>(
 				MIN(num_iterations, sim_time - t),
 				//memory hardening --------------------------------
-				MatrixPower1, MatrixTemp1[src],
-				MatrixTemp1[dst], //default copy
-				MatrixPower2, MatrixTemp2[src],
-				MatrixTemp2[dst], //second copy
-				MatrixPower3, MatrixTemp3[src],
-				MatrixTemp3[dst], //third copy
+				(tested_type*)MatrixPower1, (tested_type*)MatrixTemp1[src],
+				(tested_type*)MatrixTemp1[dst], //default copy
+				(tested_type*)MatrixPower2, (tested_type*)MatrixTemp2[src],
+				(tested_type*)MatrixTemp2[dst], //second copy
+				(tested_type*)MatrixPower3, (tested_type*)MatrixTemp3[src],
+				(tested_type*)MatrixTemp3[dst], //third copy
 
 				col, row, borderCols, borderRows, Cap, Rx, Ry, Rz, step,
 				time_elapsed);
@@ -517,13 +553,13 @@ int compute_tran_temp(
 
 void usage(int argc, char** argv) {
 	printf(
-			"Usage: %s -size=N [-generate] [-sim_time=N] [-temp_file=<path>] [-power_file=<path>] [-gold_file=<path>] [-iterations=N] [-streams=N] [-debug] [-verbose]\n",
+			"Usage: %s [-size=N] [-generate] [-sim_time=N] [-input_temp=<path>] [-input_power=<path>] [-gold=<path>] [-iterations=N] [-streams=N] [-debug] [-verbose]\n",
 			argv[0]);
 }
 
 void getParams(int argc, char** argv, parameters *params) {
 	params->nstreams = 1;
-	params->sim_time = 1000;
+	params->sim_time = DEFAULT_SIM_TIME;
 	params->pyramid_height = 1;
 	params->setup_loops = 10000000;
 	params->verbose = 0;
@@ -569,30 +605,30 @@ void getParams(int argc, char** argv, parameters *params) {
 		}
 	}
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "temp_file")) {
-		getCmdLineArgumentString(argc, (const char **) argv, "temp_file",
+	if (checkCmdLineFlag(argc, (const char **) argv, "input_temp")) {
+		getCmdLineArgumentString(argc, (const char **) argv, "input_temp",
 				&(params->tfile));
 	} else {
 		params->tfile = new char[100];
 		snprintf(params->tfile, 100, "temp_%i", params->grid_rows);
-		printf("Using default temp_file path: %s\n", params->tfile);
+		printf("Using default input_temp path: %s\n", params->tfile);
 	}
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "power_file")) {
-		getCmdLineArgumentString(argc, (const char **) argv, "power_file",
+	if (checkCmdLineFlag(argc, (const char **) argv, "input_power")) {
+		getCmdLineArgumentString(argc, (const char **) argv, "input_power",
 				&(params->pfile));
 	} else {
 		params->pfile = new char[100];
 		snprintf(params->pfile, 100, "power_%i", params->grid_rows);
-		printf("Using default power_file path: %s\n", params->pfile);
+		printf("Using default input_power path: %s\n", params->pfile);
 	}
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "gold_file")) {
-		getCmdLineArgumentString(argc, (const char **) argv, "gold_file",
+	if (checkCmdLineFlag(argc, (const char **) argv, "gold")) {
+		getCmdLineArgumentString(argc, (const char **) argv, "gold",
 				&(params->ofile));
 	} else {
 		params->ofile = new char[100];
-		snprintf(params->ofile, 100, "gold_float_%i_%i", params->grid_rows,
+		snprintf(params->ofile, 100, "gold_%s_%i_%i", test_precision_description, params->grid_rows,
 				params->sim_time);
 		printf("Using default gold path: %s\n", params->ofile);
 	}
@@ -650,18 +686,18 @@ void run(int argc, char** argv) {
 	// =======================
 	//HARDENING AGAINST BAD BOARDS
 	//-----------------------------------------------------------------------------------
-	setupParams->FilesavingTemp1 = (float *) malloc(size * sizeof(float));
-	setupParams->FilesavingPower1 = (float *) malloc(size * sizeof(float));
-	setupParams->MatrixOut1 = (float *) calloc(size, sizeof(float));
-	setupParams->GoldMatrix1 = (float *) calloc(size, sizeof(float));
+	setupParams->FilesavingTemp1 = (tested_type_host *) malloc(size * sizeof(tested_type));
+	setupParams->FilesavingPower1 = (tested_type_host *) malloc(size * sizeof(tested_type));
+	setupParams->MatrixOut1 = (tested_type_host *) calloc(size, sizeof(tested_type));
+	setupParams->GoldMatrix1 = (tested_type_host *) calloc(size, sizeof(tested_type));
 
-	setupParams->FilesavingTemp2 = (float *) malloc(size * sizeof(float));
-	setupParams->FilesavingPower2 = (float *) malloc(size * sizeof(float));
-	setupParams->MatrixOut2 = (float *) calloc(size, sizeof(float));
+	setupParams->FilesavingTemp2 = (tested_type_host *) malloc(size * sizeof(tested_type));
+	setupParams->FilesavingPower2 = (tested_type_host *) malloc(size * sizeof(tested_type));
+	setupParams->MatrixOut2 = (tested_type_host *) calloc(size, sizeof(tested_type));
 
-	setupParams->FilesavingTemp3 = (float *) malloc(size * sizeof(float));
-	setupParams->FilesavingPower3 = (float *) malloc(size * sizeof(float));
-	setupParams->MatrixOut3 = (float *) calloc(size, sizeof(float));
+	setupParams->FilesavingTemp3 = (tested_type_host *) malloc(size * sizeof(tested_type));
+	setupParams->FilesavingPower3 = (tested_type_host *) malloc(size * sizeof(tested_type));
+	setupParams->MatrixOut3 = (tested_type_host *) calloc(size, sizeof(tested_type));
 
 	if (!(setupParams->FilesavingPower1) || !(setupParams->FilesavingTemp1)
 			|| !(setupParams->MatrixOut1) || !(setupParams->GoldMatrix1))
@@ -682,9 +718,11 @@ void run(int argc, char** argv) {
 			setupParams->pyramid_height, setupParams->sim_time);
 
 #ifdef LOGS
-	char test_info[90];
-	snprintf(test_info, 90, "streams:%d size:%d pyramidHeight:%d simTime:%d", setupParams -> nstreams, setupParams -> grid_rows, setupParams -> pyramid_height, setupParams -> sim_time);
-	if (!(setupParams->generate)) start_log_file("cuda_trip_single_hotspot", test_info);
+	char test_info[150];
+	char test_name[90];
+	snprintf(test_info, 150, "streams:%d precision:%s size:%d pyramidHeight:%d simTime:%d", setupParams -> nstreams, test_precision_description, setupParams -> grid_rows, setupParams -> pyramid_height, setupParams -> sim_time);
+	snprintf(test_name, 90, "cuda_trip_hotspot_%s", test_precision_description);
+	if (!(setupParams->generate)) start_log_file(test_name, test_info);
 #endif
 
 	timestamp = mysecond();
@@ -699,13 +737,13 @@ void run(int argc, char** argv) {
 	// =======================
 	//HARDENING AGAINST BAD BOARDS
 	//-----------------------------------------------------------------------------------
-	float *MatrixTemp1[setupParams->nstreams][2],
+	tested_type_host *MatrixTemp1[setupParams->nstreams][2],
 			*MatrixPower1[setupParams->nstreams];
 
-	float *MatrixTemp2[setupParams->nstreams][2],
+	tested_type_host *MatrixTemp2[setupParams->nstreams][2],
 			*MatrixPower2[setupParams->nstreams];
 
-	float *MatrixTemp3[setupParams->nstreams][2],
+	tested_type_host *MatrixTemp3[setupParams->nstreams][2],
 			*MatrixPower3[setupParams->nstreams];
 	//-----------------------------------------------------------------------------------
 	for (int streamIdx = 0; streamIdx < (setupParams->nstreams); streamIdx++) {
@@ -718,13 +756,13 @@ void run(int argc, char** argv) {
 		//HARDENING AGAINST BAD BOARDS
 		//-----------------------------------------------------------------------------------
 		for(int z = 0; z < 2; z++) {
-			safe_cuda_malloc_cover((void**)&(MatrixTemp1[streamIdx][z]), sizeof(float)*size);
+			safe_cuda_malloc_cover((void**)&(MatrixTemp1[streamIdx][z]), sizeof(tested_type)*size);
 //		safe_cuda_malloc_cover((void**)&(MatrixTemp1[streamIdx][1]), sizeof(float)*size);
 
-			safe_cuda_malloc_cover((void**)&(MatrixTemp2[streamIdx][z]), sizeof(float)*size);
+			safe_cuda_malloc_cover((void**)&(MatrixTemp2[streamIdx][z]), sizeof(tested_type)*size);
 //		safe_cuda_malloc_cover((void**)&(MatrixTemp2[streamIdx][1]), sizeof(float)*size);
 
-			safe_cuda_malloc_cover((void**)&(MatrixTemp3[streamIdx][z]), sizeof(float)*size);
+			safe_cuda_malloc_cover((void**)&(MatrixTemp3[streamIdx][z]), sizeof(tested_type)*size);
 //		safe_cuda_malloc_cover((void**)&(MatrixTemp3[streamIdx][1]), sizeof(float)*size);
 		}
 		//-----------------------------------------------------------------------------------
@@ -735,24 +773,24 @@ void run(int argc, char** argv) {
 		//-----------------------------------------------------------------------------------
 		checkCudaErrors(
 				cudaMalloc((void**) &(MatrixTemp1[streamIdx][0]),
-						sizeof(float) * size));
+						sizeof(tested_type) * size));
 		checkCudaErrors(
 				cudaMalloc((void**) &(MatrixTemp1[streamIdx][1]),
-						sizeof(float) * size));
+						sizeof(tested_type) * size));
 
 		checkCudaErrors(
 				cudaMalloc((void**) &(MatrixTemp2[streamIdx][0]),
-						sizeof(float) * size));
+						sizeof(tested_type) * size));
 		checkCudaErrors(
 				cudaMalloc((void**) &(MatrixTemp2[streamIdx][1]),
-						sizeof(float) * size));
+						sizeof(tested_type) * size));
 
 		checkCudaErrors(
 				cudaMalloc((void**) &(MatrixTemp3[streamIdx][0]),
-						sizeof(float) * size));
+						sizeof(tested_type) * size));
 		checkCudaErrors(
 				cudaMalloc((void**) &(MatrixTemp3[streamIdx][1]),
-						sizeof(float) * size));
+						sizeof(tested_type) * size));
 
 		//-----------------------------------------------------------------------------------
 
@@ -762,9 +800,9 @@ void run(int argc, char** argv) {
 		// =======================
 		//HARDENING AGAINST BAD BOARDS
 		//-----------------------------------------------------------------------------------
-		safe_cuda_malloc_cover((void**)&(MatrixPower1[streamIdx]), sizeof(float)*size);
-		safe_cuda_malloc_cover((void**)&(MatrixPower2[streamIdx]), sizeof(float)*size);
-		safe_cuda_malloc_cover((void**)&(MatrixPower3[streamIdx]), sizeof(float)*size);
+		safe_cuda_malloc_cover((void**)&(MatrixPower1[streamIdx]), sizeof(tested_type)*size);
+		safe_cuda_malloc_cover((void**)&(MatrixPower2[streamIdx]), sizeof(tested_type)*size);
+		safe_cuda_malloc_cover((void**)&(MatrixPower3[streamIdx]), sizeof(tested_type)*size);
 
 		//-----------------------------------------------------------------------------------
 
@@ -775,15 +813,15 @@ void run(int argc, char** argv) {
 
 		checkCudaErrors(
 				cudaMalloc((void**) &(MatrixPower1[streamIdx]),
-						sizeof(float) * size));
+						sizeof(tested_type) * size));
 
 		checkCudaErrors(
 				cudaMalloc((void**) &(MatrixPower2[streamIdx]),
-						sizeof(float) * size));
+						sizeof(tested_type) * size));
 
 		checkCudaErrors(
 				cudaMalloc((void**) &(MatrixPower3[streamIdx]),
-						sizeof(float) * size));
+						sizeof(tested_type) * size));
 		//-----------------------------------------------------------------------------------
 
 #endif
@@ -862,16 +900,16 @@ void run(int argc, char** argv) {
 			//-----------------------------------------------------------------------------------
 
 			cudaMemcpy(MatrixTemp1[streamIdx][0], setupParams->FilesavingTemp1,
-					sizeof(float) * size, cudaMemcpyHostToDevice);
-			cudaMemset(MatrixTemp2[streamIdx][1], 0.0, sizeof(float) * size);
+					sizeof(tested_type) * size, cudaMemcpyHostToDevice);
+			cudaMemset(MatrixTemp2[streamIdx][1], 0.0, sizeof(tested_type) * size);
 
 			cudaMemcpy(MatrixTemp2[streamIdx][0], setupParams->FilesavingTemp2,
-					sizeof(float) * size, cudaMemcpyHostToDevice);
-			cudaMemset(MatrixTemp2[streamIdx][1], 0.0, sizeof(float) * size);
+					sizeof(tested_type) * size, cudaMemcpyHostToDevice);
+			cudaMemset(MatrixTemp2[streamIdx][1], 0.0, sizeof(tested_type) * size);
 
 			cudaMemcpy(MatrixTemp3[streamIdx][0], setupParams->FilesavingTemp3,
-					sizeof(float) * size, cudaMemcpyHostToDevice);
-			cudaMemset(MatrixTemp3[streamIdx][1], 0.0, sizeof(float) * size);
+					sizeof(tested_type) * size, cudaMemcpyHostToDevice);
+			cudaMemset(MatrixTemp3[streamIdx][1], 0.0, sizeof(tested_type) * size);
 
 			//-----------------------------------------------------------------------------------
 //
@@ -907,13 +945,13 @@ void run(int argc, char** argv) {
 			//-----------------------------------------------------------------------------------
 
 			cudaMemcpy(MatrixPower1[streamIdx], setupParams->FilesavingPower1,
-					sizeof(float) * size, cudaMemcpyHostToDevice);
+					sizeof(tested_type) * size, cudaMemcpyHostToDevice);
 
 			cudaMemcpy(MatrixPower2[streamIdx], setupParams->FilesavingPower2,
-					sizeof(float) * size, cudaMemcpyHostToDevice);
+					sizeof(tested_type) * size, cudaMemcpyHostToDevice);
 
 			cudaMemcpy(MatrixPower3[streamIdx], setupParams->FilesavingPower3,
-					sizeof(float) * size, cudaMemcpyHostToDevice);
+					sizeof(tested_type) * size, cudaMemcpyHostToDevice);
 
 			//-----------------------------------------------------------------------------------
 
@@ -981,11 +1019,11 @@ void run(int argc, char** argv) {
 			//HARDENING AGAINST BAD BOARDS
 			//-----------------------------------------------------------------------------------
 			cudaMemcpy(setupParams->MatrixOut1, MatrixTemp1[0][ret[0]],
-					sizeof(float) * size, cudaMemcpyDeviceToHost);
+					sizeof(tested_type) * size, cudaMemcpyDeviceToHost);
 			cudaMemcpy(setupParams->MatrixOut2, MatrixTemp2[0][ret[0]],
-					sizeof(float) * size, cudaMemcpyDeviceToHost);
+					sizeof(tested_type) * size, cudaMemcpyDeviceToHost);
 			cudaMemcpy(setupParams->MatrixOut3, MatrixTemp3[0][ret[0]],
-					sizeof(float) * size, cudaMemcpyDeviceToHost);
+					sizeof(tested_type) * size, cudaMemcpyDeviceToHost);
 			//-----------------------------------------------------------------------------------
 
 			writeOutput(setupParams);
@@ -994,15 +1032,15 @@ void run(int argc, char** argv) {
 					streamIdx++) {
 				cudaMemcpy(setupParams->MatrixOut1,
 						MatrixTemp1[streamIdx][ret[streamIdx]],
-						sizeof(float) * size, cudaMemcpyDeviceToHost);
+						sizeof(tested_type) * size, cudaMemcpyDeviceToHost);
 				cudaMemcpy(setupParams->MatrixOut2,
 						MatrixTemp2[streamIdx][ret[streamIdx]],
-						sizeof(float) * size, cudaMemcpyDeviceToHost);
+						sizeof(tested_type) * size, cudaMemcpyDeviceToHost);
 				cudaMemcpy(setupParams->MatrixOut3,
 						MatrixTemp3[streamIdx][ret[streamIdx]],
-						sizeof(float) * size, cudaMemcpyDeviceToHost);
+						sizeof(tested_type) * size, cudaMemcpyDeviceToHost);
 
-				kernel_errors = check_output_errors(setupParams, streamIdx);
+				check_output_errors(setupParams, streamIdx);
 			}
 			//			for (streamIdx = 0; streamIdx < setupParams->nstreams;
 //					streamIdx++) {
@@ -1046,9 +1084,6 @@ void run(int argc, char** argv) {
 //					}
 //				}
 //			}
-#ifdef LOGS
-			if (!(setupParams->generate)) log_error_count(kernel_errors);
-#endif
 		}
 
 		if (setupParams->verbose)
@@ -1118,25 +1153,42 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 	int host_errors = 0;
 	int memory_errors = 0;
 
+		unsigned long long int is_memory_bad_host = 0;
+		cudaMemcpyFromSymbol(&is_memory_bad_host, "is_memory_bad", sizeof(unsigned long long int), 0, cudaMemcpyDeviceToHost);
+		if(is_memory_bad_host != 0) {
+			char info_detail[150];
+			snprintf(info_detail, 150,
+					"b: is_memory_bad: %llu",
+					is_memory_bad_host);
+			if (setup_parameters->verbose)
+				printf("%s\n", info_detail);
+	
+	#ifdef LOGS
+			if (!generate) 
+				log_info_detail(info_detail);
+	#endif
+			memory_errors++;
+		}
+
 //#pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < setup_parameters->grid_rows; i++) {
 		for (int j = 0; j < setup_parameters->grid_cols; j++) {
 			int index = i * setup_parameters->grid_rows + j;
 			register bool checkFlag = true;
-			register float valGold = setup_parameters->GoldMatrix1[index];
-			register float valOutput1 = setup_parameters->MatrixOut1[index];
-			register float valOutput2 = setup_parameters->MatrixOut2[index];
-			register float valOutput3 = setup_parameters->MatrixOut3[index];
-			register float valOutput = valOutput1;
+			register tested_type_host valGold = setup_parameters->GoldMatrix1[index];
+			register tested_type_host valOutput1 = setup_parameters->MatrixOut1[index];
+			register tested_type_host valOutput2 = setup_parameters->MatrixOut2[index];
+			register tested_type_host valOutput3 = setup_parameters->MatrixOut3[index];
+			register tested_type_host valOutput = valOutput1;
 
 			if ((valOutput1 != valOutput2) || (valOutput2 != valOutput3)) {
 #pragma omp critical
 				{
 					char info_detail[150];
 					snprintf(info_detail, 150,
-							"stream: %d, m: [%d, %d], r0: %1.16e, r1: %1.16e, r2: %1.16e",
-							streamIdx, i, j, valOutput1, valOutput2,
-							valOutput3);
+							"stream: %d, m: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e",
+							streamIdx, i, j, 
+							(double)valOutput1, (double)valOutput2, (double)valOutput3);
 					if (setup_parameters->verbose && (memory_errors < 10))
 						printf("%s\n", info_detail);
 
@@ -1156,24 +1208,7 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 						valOutput = valOutput3;
 					} else {
 						// NO VALUE MATCHES THE GOLD AND ALL 3 DIVERGE!
-						checkFlag = false;
-#pragma omp critical
-						{
-							char error_detail[150];
-							snprintf(error_detail, 150,
-									"stream: %d, f: [%d, %d], r0: %1.16e, r1: %1.16e, r2: %1.16e, e: %1.16e",
-									streamIdx, i, j, valOutput1, valOutput2,
-									valOutput3, valGold);
-
-							if (setup_parameters->verbose && (host_errors < 10))
-								printf("%s\n", error_detail);
-
-#ifdef LOGS
-							if (!generate)
-							log_error_detail(error_detail);
-#endif
-							host_errors++;
-						}
+						printf("#");
 					}
 				} else if (valOutput2 == valOutput3) {
 					// Only value 0 diverge
@@ -1196,8 +1231,9 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 				{
 					char error_detail[150];
 					snprintf(error_detail, 150,
-							"stream: %d, p: [%d, %d], r: %1.16e, e: %1.16e",
-							streamIdx, i, j, valOutput, valGold);
+							"stream: %d, p: [%d, %d], r: %1.20e, e: %1.20e",
+							streamIdx, i, j, 
+							(double)valOutput, (double)valGold);
 					if (setup_parameters->verbose && (host_errors < 10))
 						printf("%s\n", error_detail);
 #ifdef LOGS
@@ -1212,20 +1248,13 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 	}
 
 #ifdef LOGS
-	unsigned long long int is_memory_bad_host = 0;
-	cudaMemcpyFromSymbol(&is_memory_bad_host, "is_memory_bad",
-			sizeof(unsigned long long int), 0,
-			cudaMemcpyDeviceToHost);
-	if(is_memory_bad_host != 0) {
-		char error_info[150];
-
-		sprintf(error_info, "For stream %d times that memory diverged %ld\n", streamIdx,
-				is_memory_bad_host);
-		log_info_detail(error_info);
+	if (!generate) {
+		log_info_count(memory_errors);
+		log_error_count(host_errors);
 	}
 #endif
+	if (memory_errors != 0) printf("M");
+	if (host_errors != 0) printf("#");
 
-	printf("numErrors:%d\n", host_errors);
-
-	return host_errors;
+	return (host_errors == 0) && (memory_errors == 0);
 }
