@@ -24,6 +24,8 @@
 
 #ifdef SAFE_MALLOC
 #include "safe_memory/safe_memory.h"
+#else
+#define safe_host_malloc malloc
 #endif
 
 // helper functions
@@ -255,8 +257,8 @@ void generateInputMatrices()
 		h_A = A;
 		h_B = B;
 	} else {
-		h_A = (tested_type_host*) malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
-		h_B = (tested_type_host*) malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
+		h_A = (tested_type_host*) safe_host_malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
+		h_B = (tested_type_host*) safe_host_malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
 		if (!(h_A && h_B)) {
 			printf("Could not alloc h_A or h_B");
 			exit(EXIT_FAILURE);
@@ -685,11 +687,11 @@ int main(int argc, char* argv[]) {
 //====================================
 
 //================== Alloc HOST memory
-	A = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
-	B = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
-	C = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	A = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
+	B = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
+	C = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
 
-	GOLD = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	GOLD = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
 
 	if (!(A && B && C && GOLD)) {
 		printf("Failed on host malloc.\n");
@@ -697,8 +699,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (test_input_check) {
-		endA = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
-		endB = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+		endA = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
+		endB = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
 		if (!(endA && endB)) {
 			printf("Failed on host malloc.\n");
 			exit(-3);
