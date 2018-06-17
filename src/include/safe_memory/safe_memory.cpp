@@ -147,6 +147,7 @@ void* safe_malloc(size_t size) {
 			//if corrupted we dont need to keep going
 			if (is_memory_corrupted) {
 				round = MAX_MEM_TEST_ROUNDS;
+				printf(":Device safe_memory Fail - size: %llu\n", size);
 				break;
 			}
 		}
