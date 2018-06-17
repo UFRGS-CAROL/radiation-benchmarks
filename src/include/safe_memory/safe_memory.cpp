@@ -17,6 +17,13 @@ _byte_ TEST_POSSIBILITIES[] = { XAA, X55, X00, XFF };
 
 static unsigned char is_crash = 0;
 
+unsigned long long getAvailablePhysicalSystemMemory()
+{
+    long av_pages = sysconf(_SC_AVPHYS_PAGES);
+    long page_size = sysconf(_SC_PAGE_SIZE);
+    return av_pages * page_size;
+}
+
 void inline log_error_detail_and_exit(std::string error_description) {
 #ifdef LOGS
 	log_error_detail(const_cast<char*>(error_description.c_str()));
@@ -54,6 +61,51 @@ bool __checkFrameworkErrorsNoFail(cudaError_t error, int line, const char* file)
 
 	printf("%s - Line: %d at %s\n", errorDescription, line, file);
 	return true;
+}
+
+void* safe_host_malloc(size_t size) {
+	void* host_ptr = NULL;
+
+	if (getAvailablePhysicalSystemMemory() < size) {
+		return NULL; // Too much memory used.
+	}
+
+	host_ptr = malloc(size);
+	if (host_ptr == NULL) 
+		return NULL;
+	
+	bool is_memory_corrupted = false;
+	for (int round = 0; round < MAX_MEM_TEST_ROUNDS; round++) {
+		for (auto mem_const_value : TEST_POSSIBILITIES) {
+			// ===> FIRST PHASE: CHECK SETTING BITS TO mem_const_value, that is  XAA, X55, X00, XFF
+			memset(host_ptr, mem_const_value, size);
+
+			//check if memory is ok
+			#pragma omp parallel for
+			for (int k=0; k<size; k++) {
+				if (host_ptr[k] != mem_const_value) {
+					is_memory_corrupted = true;
+					break;
+				}
+			}
+
+			//if corrupted we dont need to keep going
+			if (is_memory_corrupted) {
+				round = MAX_MEM_TEST_ROUNDS;
+				break;
+			}
+		}
+	}
+
+	if (is_memory_corrupted) {
+		// Failed
+		void* new_host_ptr = safe_malloc(size);
+		free(host_ptr)
+		return new_host_ptr;
+	}
+	// ===> END FIRST PHASE
+	
+	return host_ptr;
 }
 
 void* safe_malloc(size_t size) {

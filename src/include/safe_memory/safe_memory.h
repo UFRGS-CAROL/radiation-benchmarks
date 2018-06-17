@@ -15,6 +15,16 @@
 #include <cstring>
 #include <string>
 #include <iostream>
+#include <unistd.h>
+
+
+unsigned long long getTotalSystemMemory()
+{
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    GlobalMemoryStatusEx(&status);
+    return status.ullTotalPhys;
+}
 
 typedef enum {
 	CHAR, INT, FLOAT, DOUBLE
