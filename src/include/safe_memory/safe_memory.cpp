@@ -16,7 +16,6 @@ typedef unsigned char _byte_;
 _byte_ TEST_POSSIBILITIES[] = { XAA, X55, X00, XFF };
 
 static unsigned char is_crash = 0;
-
 unsigned long long getAvailablePhysicalSystemMemory()
 {
     long av_pages = sysconf(_SC_AVPHYS_PAGES);
@@ -83,7 +82,8 @@ void* safe_host_malloc(size_t size) {
 			//check if memory is ok
 			#pragma omp parallel for
 			for (int k=0; k<size; k++) {
-				if (host_ptr[k] != mem_const_value) {
+				if (((unsigned char*)host_ptr)[k] != (unsigned char)mem_const_value) {
+					printf(":Fail: %d - host: %hhx - gold: %hhX\n", k, ((unsigned char*)host_ptr)[k], mem_const_value);
 					is_memory_corrupted = true;
 					break;
 				}
@@ -99,8 +99,8 @@ void* safe_host_malloc(size_t size) {
 
 	if (is_memory_corrupted) {
 		// Failed
-		void* new_host_ptr = safe_malloc(size);
-		free(host_ptr)
+		void* new_host_ptr = safe_host_malloc(size);
+		free(host_ptr);
 		return new_host_ptr;
 	}
 	// ===> END FIRST PHASE

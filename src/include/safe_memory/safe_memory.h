@@ -17,15 +17,6 @@
 #include <iostream>
 #include <unistd.h>
 
-
-unsigned long long getTotalSystemMemory()
-{
-    MEMORYSTATUSEX status;
-    status.dwLength = sizeof(status);
-    GlobalMemoryStatusEx(&status);
-    return status.ullTotalPhys;
-}
-
 typedef enum {
 	CHAR, INT, FLOAT, DOUBLE
 } type;
@@ -78,6 +69,8 @@ void triple_device_to_host_copy(triple_memory tmr);
  * fill with an specified byte
  */
 void triple_memset(triple_memory tmr, unsigned char byte);
+
+void* safe_host_malloc(size_t size);
 
 /**
  * Safe memory allocation grant
