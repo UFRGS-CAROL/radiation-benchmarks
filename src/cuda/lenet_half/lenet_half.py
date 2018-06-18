@@ -11,7 +11,7 @@ from copy import copy
 
 LOG_INTERVAL = 10
 MAX_ERROR_COUNT = 1000
-LENET_PRECISION = 'double'
+LENET_PRECISION = 'half'
 
 
 def set_device(device):
@@ -151,10 +151,10 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     :param iterations: radiation iterations
     :return: void
     """
-    string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} model: {} db_path: {}".format(
+    string_info = "iterations: {} gold: {} precision: {} dataset: mnist_weights: {} model: {} db_path: {}".format(
                                                     iterations,
-                                                    gold_path, weights,
-                                                    model, db_path, LENET_PRECISION)
+                                                    gold_path, LENET_PRECISION, weights,
+                                                    model, db_path)
     # STARTING log file
     lh.start_log_file("Lenet" + LENET_PRECISION.title(), string_info)
     lh.set_iter_interval_print(LOG_INTERVAL)
