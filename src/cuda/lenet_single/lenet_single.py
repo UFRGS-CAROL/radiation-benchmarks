@@ -6,6 +6,8 @@ import caffe
 import lmdb
 import numpy as np
 from time import time
+from copy import copy
+
 
 LOG_INTERVAL = 10
 MAX_ERROR_COUNT = 1000
@@ -113,20 +115,27 @@ def generating_radiation(model, weights, db_path, gold_path):
     lmdb_txn = lmdb_env.begin()
     lmdb_cursor = lmdb_txn.cursor()
     print("Generating gold for lenet " + LENET_PRECISION)
+    percentage = 0
+    lmdb_length = lmdb_env.stat()["entries"]
 
     for key, value in lmdb_cursor:
+        percentage += 1
+        if percentage % 100 == 0: 
+            print("{0:.2f}% processed".format(10.0 - lmdb_length / float(percentage)))
         datum = caffe.proto.caffe_pb2.Datum()
         datum.ParseFromString(value)
         label = int(datum.label)
         image = caffe.io.datum_to_array(datum)
         image = image.astype(np.uint8)
-        net.blobs['data'].data[...] = np.asarray([image])
-        # out = net.forward_all(data=np.asarray([image]))
-        out = net.forward()
 
+        net.blobs['data'].data[...] = np.asarray([image])
+
+        out = net.forward()
+        # save last layer data
+        ip2_output = net.blobs["ip2"].data[0]
         predicted_label = out['prob'][0].argmax(axis=0)
-        correct = label == predicted_label
-        output_list.append([label, predicted_label, correct])
+        
+        output_list.append([label, predicted_label, copy(ip2_output)])
 
     save_file(gold_path, output_list)
     print("Gold generate with sucess for lenet " + LENET_PRECISION)
@@ -181,21 +190,38 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
                 average_time = 0.0
 
             predicted_label = out['prob'][0].argmax(axis=0)
-            correct = label == predicted_label
-            # [label, predicted_label, correct]
+	    predicted_ip2_layer = net.blobs["ip2"].data[0]
+
+            # [label, predicted_label, ip2 layer]
             gold_label = gold_data[i][0]
             gold_predicted_label = gold_data[i][1]
-            gold_correct = gold_data[i][2]
-
-            if label != gold_label or gold_predicted_label != predicted_label or gold_correct != correct:
+            gold_ip2_layer = gold_data[i][2]
+            # fault injection
+            #predicted_ip2_layer[3] = 10000000
+            error_count = 0
+            if label != gold_label or gold_predicted_label != predicted_label: # or gold_correct != correct:
                 error_detail = 'sample: {} label_e: {} label_r: {} predicted_label_e: {} predicted_label_r: {} '
-                error_detail += 'gold_correct_e: {} gold_correct_r: {}'
+                #error_detail += 'gold_correct_e: {} gold_correct_r: {}'
                 lh.log_error_detail(error_detail.format(i, gold_label, label,
-                                                        gold_predicted_label, predicted_label,
-                                                        gold_correct, correct))
-                lh.log_error_count(1)
-                overall_errors += 1
-                local_errors += 1
+                                                        gold_predicted_label, predicted_label)) # ,
+                                                        #gold_correct, correct))
+                error_count = 1
+                print('ERROR', error_detail)
+            # I know that both layers will have the same size
+            ip2_i = 0
+	    for predicted_ip2_value, gold_ip2_value in zip(predicted_ip2_layer, gold_ip2_layer):
+                ip2_i += 1
+                if predicted_ip2_value != gold_ip2_value:
+                    error_count += 1
+                    error_detail = "sample:{0} label_e:{1} label_r:{2} predicted_label_e:{3} predicted_label_r:{4} ip2_value[{5}] excpected:{6:.20e} read:{7:.20e}".format(
+                    i, gold_label, label, gold_predicted_label, predicted_label,
+                    ip2_i, gold_ip2_value, predicted_ip2_value)
+                    lh.log_error_detail(error_detail)
+                    print('ERROR ON LAST LAYER', error_detail)
+
+            lh.log_error_count(error_count)
+            overall_errors += error_count
+            local_errors += error_count
             if overall_errors > MAX_ERROR_COUNT:
                 raise ValueError("MAX ERROR COUNT REACHED")
 
