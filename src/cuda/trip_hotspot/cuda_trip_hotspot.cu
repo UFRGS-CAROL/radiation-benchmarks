@@ -198,8 +198,14 @@ void readInput(parameters *params) {
 	// =================== FAULT INJECTION
 	if (params->fault_injection) {
 		params->FilesavingTemp1[32] = 6.231235;
-		printf("!!!!!!!!! Injected error: FilesavingTemp[32] = %f\n",
+		params->FilesavingTemp2[32] = 6.231235;
+		params->FilesavingTemp3[32] = 6.231235;
+		printf("!!!!!!!!! Injected error: FilesavingTemp1[32] = %f\n",
 				(double)params->FilesavingTemp1[32]);
+		printf("!!!!!!!!! Injected error: FilesavingTemp2[32] = %f\n",
+				(double)params->FilesavingTemp2[32]);
+		printf("!!!!!!!!! Injected error: FilesavingTemp3[32] = %f\n",
+				(double)params->FilesavingTemp3[32]);
 	}
 	// ==================================
 
@@ -320,16 +326,16 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	__shared__ tested_type power_on_cuda_1[BLOCK_SIZE][BLOCK_SIZE];
 	__shared__ tested_type temp_t_1[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
 
-	//----------------------------------------------------
-	__shared__ tested_type temp_on_cuda_2[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ tested_type power_on_cuda_2[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ tested_type temp_t_2[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
+	// //----------------------------------------------------
+	// __shared__ tested_type temp_on_cuda_2[BLOCK_SIZE][BLOCK_SIZE];
+	// __shared__ tested_type power_on_cuda_2[BLOCK_SIZE][BLOCK_SIZE];
+	// __shared__ tested_type temp_t_2[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
 
-	//----------------------------------------------------
-	__shared__ tested_type temp_on_cuda_3[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ tested_type power_on_cuda_3[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ tested_type temp_t_3[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
-	//---------------------------------------------------
+	// //----------------------------------------------------
+	// __shared__ tested_type temp_on_cuda_3[BLOCK_SIZE][BLOCK_SIZE];
+	// __shared__ tested_type power_on_cuda_3[BLOCK_SIZE][BLOCK_SIZE];
+	// __shared__ tested_type temp_t_3[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
+	// //---------------------------------------------------
 
 	tested_type amb_temp = 80.0;
 	tested_type step_div_Cap;
@@ -380,14 +386,14 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 		power_on_cuda_1[ty][tx] = read_voter(power1, power2, power3, index); // Load the power data from global memory to shared memory
 
 		//v2
-		temp_on_cuda_2[ty][tx] = read_voter(temp_src1, temp_src2, temp_src3,
-				index); // Load the temperature data from global memory to shared memory
-		power_on_cuda_2[ty][tx] = read_voter(power1, power2, power3, index); // Load the power data from global memory to shared memory
+		// temp_on_cuda_2[ty][tx] = read_voter(temp_src1, temp_src2, temp_src3,
+		// 		index); // Load the temperature data from global memory to shared memory
+		// power_on_cuda_2[ty][tx] = read_voter(power1, power2, power3, index); // Load the power data from global memory to shared memory
 
-		//v3
-		temp_on_cuda_3[ty][tx] = read_voter(temp_src1, temp_src2, temp_src3,
-				index); // Load the temperature data from global memory to shared memory
-		power_on_cuda_3[ty][tx] = read_voter(power1, power2, power3, index); // Load the power data from global memory to shared memory
+		// //v3
+		// temp_on_cuda_3[ty][tx] = read_voter(temp_src1, temp_src2, temp_src3,
+		// 		index); // Load the temperature data from global memory to shared memory
+		// power_on_cuda_3[ty][tx] = read_voter(power1, power2, power3, index); // Load the power data from global memory to shared memory
 
 	}
 	__syncthreads();
@@ -422,48 +428,53 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 		IN_RANGE(tx, validXmin, validXmax) &&
 		IN_RANGE(ty, validYmin, validYmax)) {
 			computed = true;
-			register tested_type calculated = read_voter_2d(temp_on_cuda_1,
-					temp_on_cuda_2, temp_on_cuda_3, ty, tx)
+			register tested_type calculated = temp_on_cuda_1[ty][tx]//read_voter_2d(temp_on_cuda_1,
+					//temp_on_cuda_2, temp_on_cuda_3, ty, tx)
 					+ step_div_Cap
-							* (read_voter_2d(power_on_cuda_1, power_on_cuda_2,
-									power_on_cuda_3, ty, tx)
-									+ (read_voter_2d(temp_on_cuda_1,
-											temp_on_cuda_2, temp_on_cuda_3, S,
-											tx)
-											+ read_voter_2d(temp_on_cuda_1,
-													temp_on_cuda_2,
-													temp_on_cuda_3, N, tx)
+							* (power_on_cuda_1[ty][tx]//read_voter_2d(power_on_cuda_1, power_on_cuda_2,
+									//power_on_cuda_3, ty, tx)
+									+ (temp_on_cuda_1[S][tx]//read_voter_2d(temp_on_cuda_1,
+											//temp_on_cuda_2, temp_on_cuda_3, S,
+											//tx)
+											+ temp_on_cuda_1[N][tx]//read_voter_2d(temp_on_cuda_1,
+													//temp_on_cuda_2,
+													//temp_on_cuda_3, N, tx)
 
 											- tested_type(2.0)
-													* read_voter_2d(
-															temp_on_cuda_1,
-															temp_on_cuda_2,
-															temp_on_cuda_3, ty,
-															tx)) * Ry_1
-									+ (read_voter_2d(temp_on_cuda_1,
-											temp_on_cuda_2, temp_on_cuda_3, ty,
-											E)
-											+ read_voter_2d(temp_on_cuda_1,
-													temp_on_cuda_2,
-													temp_on_cuda_3, ty, W)
+													* temp_on_cuda_1[ty][tx]//read_voter_2d(
+															//temp_on_cuda_1,
+															//temp_on_cuda_2,
+															//temp_on_cuda_3, ty,
+															//tx)
+														) 
+														* Ry_1
+									+ (temp_on_cuda_1[ty][E]//read_voter_2d(temp_on_cuda_1,
+											//temp_on_cuda_2, temp_on_cuda_3, ty,
+											//E)
+											+ temp_on_cuda_1[ty][W]//read_voter_2d(temp_on_cuda_1,
+													//temp_on_cuda_2,
+													//temp_on_cuda_3, ty, W)
 											- tested_type(2.0)
-													* read_voter_2d(
-															temp_on_cuda_1,
-															temp_on_cuda_2,
-															temp_on_cuda_3, ty,
-															tx)) * Rx_1
+													* temp_on_cuda_1[ty][tx]//read_voter_2d(
+															//temp_on_cuda_1,
+															//temp_on_cuda_2,
+															//temp_on_cuda_3, ty,
+															//tx)
+														) 
+														* Rx_1
 									+ (amb_temp
-											- read_voter_2d(temp_on_cuda_1,
-													temp_on_cuda_2,
-													temp_on_cuda_3, ty, tx))
+											- temp_on_cuda_1[ty][tx]//read_voter_2d(temp_on_cuda_1,
+													//temp_on_cuda_2,
+													//temp_on_cuda_3, ty, tx)
+											)
 											* Rz_1);
 			temp_t_1[ty][tx] = calculated;
 
 			//--------------------------------------------------------------------------------------------------------------------------
-			temp_t_2[ty][tx] = calculated;
+			// temp_t_2[ty][tx] = calculated;
 
 			//--------------------------------------------------------------------------------------------------------------------------
-			temp_t_3[ty][tx] = calculated;
+			// temp_t_3[ty][tx] = calculated;
 
 		}
 		__syncthreads();
@@ -471,12 +482,12 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 			break;
 		if (computed) {	 //Assign the computation range
 
-			temp_on_cuda_1[ty][tx] = read_voter_2d(temp_t_1, temp_t_2, temp_t_3,
-					ty, tx);
-			temp_on_cuda_2[ty][tx] = read_voter_2d(temp_t_1, temp_t_2, temp_t_3,
-					ty, tx);
-			temp_on_cuda_3[ty][tx] = read_voter_2d(temp_t_1, temp_t_2, temp_t_3,
-					ty, tx);
+			temp_on_cuda_1[ty][tx] = temp_t_1[ty][tx];//read_voter_2d(temp_t_1, temp_t_2, temp_t_3,
+					//ty, tx);
+			//temp_on_cuda_2[ty][tx] = temp_t_1[ty][tx];//read_voter_2d(temp_t_1, temp_t_2, temp_t_3,
+					//ty, tx);
+			//temp_on_cuda_3[ty][tx] = temp_t_1[ty][tx];//read_voter_2d(temp_t_1, temp_t_2, temp_t_3,
+					//ty, tx);
 
 		}
 		__syncthreads();
@@ -488,13 +499,13 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	if (computed) {
 		//--------------------------------------------------------------------------------------------------------------------------
 
-		temp_dst1[index] = read_voter_2d(temp_t_1, temp_t_2, temp_t_3, ty, tx);
+		temp_dst1[index] = temp_t_1[ty][tx];//read_voter_2d(temp_t_1, temp_t_2, temp_t_3, ty, tx);
 		//--------------------------------------------------------------------------------------------------------------------------
 
-		temp_dst2[index] = read_voter_2d(temp_t_1, temp_t_2, temp_t_3, ty, tx);
+		temp_dst2[index] = temp_t_1[ty][tx];//read_voter_2d(temp_t_1, temp_t_2, temp_t_3, ty, tx);
 		//--------------------------------------------------------------------------------------------------------------------------
 
-		temp_dst3[index] = read_voter_2d(temp_t_1, temp_t_2, temp_t_3, ty, tx);
+		temp_dst3[index] = temp_t_1[ty][tx];//read_voter_2d(temp_t_1, temp_t_2, temp_t_3, ty, tx);
 	}
 }
 
@@ -1153,22 +1164,22 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 	int host_errors = 0;
 	int memory_errors = 0;
 
-		unsigned long long int is_memory_bad_host = 0;
-		cudaMemcpyFromSymbol(&is_memory_bad_host, "is_memory_bad", sizeof(unsigned long long int), 0, cudaMemcpyDeviceToHost);
-		if(is_memory_bad_host != 0) {
-			char info_detail[150];
-			snprintf(info_detail, 150,
-					"b: is_memory_bad: %llu",
-					is_memory_bad_host);
-			if (setup_parameters->verbose)
-				printf("%s\n", info_detail);
-	
-	#ifdef LOGS
-			if (!generate) 
-				log_info_detail(info_detail);
-	#endif
-			memory_errors++;
-		}
+	unsigned long long int is_memory_bad_host = 0;
+	cudaMemcpyFromSymbol(&is_memory_bad_host, "is_memory_bad", sizeof(unsigned long long int), 0, cudaMemcpyDeviceToHost);
+	if(is_memory_bad_host != 0) {
+		char info_detail[150];
+		snprintf(info_detail, 150,
+				"b: is_memory_bad: %llu",
+				is_memory_bad_host);
+		if (setup_parameters->verbose)
+			printf("%s\n", info_detail);
+
+#ifdef LOGS
+		if (!generate) 
+			log_info_detail(info_detail);
+#endif
+		memory_errors++;
+	}
 
 //#pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < setup_parameters->grid_rows; i++) {
@@ -1211,13 +1222,13 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 						printf("#");
 					}
 				} else if (valOutput2 == valOutput3) {
-					// Only value 0 diverge
+					// Only value 1 diverge
 					valOutput = valOutput2;
 				} else if (valOutput1 == valOutput3) {
-					// Only value 1 diverge
+					// Only value 2 diverge
 					valOutput = valOutput1;
 				} else if (valOutput1 == valOutput2) {
-					// Only value 2 diverge
+					// Only value 3 diverge
 					valOutput = valOutput1;
 				}
 			}
@@ -1225,8 +1236,7 @@ int check_output_errors(parameters *setup_parameters, int streamIdx) {
 //				votedOutput[i] = valOutput;
 			// if ((fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)||(fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)) {
 //			if (!(generate && (votedOutput != NULL))) {
-			if (valGold != valOutput && checkFlag) {
-
+			if ((valGold != valOutput) && checkFlag) {
 #pragma omp critical
 				{
 					char error_detail[150];
