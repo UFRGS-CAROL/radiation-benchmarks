@@ -6,8 +6,8 @@ import caffe
 import lmdb
 import numpy as np
 from time import time
-from threading import Thread
-from Queue import Queue
+from copy import copy
+
 
 LOG_INTERVAL = 10
 MAX_ERROR_COUNT = 1000
@@ -115,20 +115,27 @@ def generating_radiation(model, weights, db_path, gold_path):
     lmdb_txn = lmdb_env.begin()
     lmdb_cursor = lmdb_txn.cursor()
     print("Generating gold for lenet " + LENET_PRECISION)
+    percentage = 0
+    lmdb_length = lmdb_env.stat()["entries"]
 
     for key, value in lmdb_cursor:
+        percentage += 1
+        if percentage % 100 == 0: 
+            print("{0:.2f}% processed".format(10.0 - lmdb_length / float(percentage)))
         datum = caffe.proto.caffe_pb2.Datum()
         datum.ParseFromString(value)
         label = int(datum.label)
         image = caffe.io.datum_to_array(datum)
         image = image.astype(np.uint8)
-        net.blobs['data'].data[...] = np.asarray([image])
-        # out = net.forward_all(data=np.asarray([image]))
-        out = net.forward()
 
+        net.blobs['data'].data[...] = np.asarray([image])
+
+        out = net.forward()
+        # save last layer data
+        ip2_output = net.blobs["ip2"].data[0]
         predicted_label = out['prob'][0].argmax(axis=0)
-        correct = label == predicted_label
-        output_list.append([label, predicted_label, correct])
+        
+        output_list.append([label, predicted_label, copy(ip2_output)])
 
     save_file(gold_path, output_list)
     print("Gold generate with sucess for lenet " + LENET_PRECISION)
@@ -144,10 +151,10 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     :param iterations: radiation iterations
     :return: void
     """
-    string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} model: {} db_path: {} threads: 1".format(
-        iterations,
-        gold_path, weights,
-        model, db_path, LENET_PRECISION)
+    string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} model: {} db_path: {}".format(
+                                                    iterations,
+                                                    gold_path, weights,
+                                                    model, db_path, LENET_PRECISION)
     # STARTING log file
     lh.start_log_file("Lenet" + LENET_PRECISION.title(), string_info)
     lh.set_iter_interval_print(LOG_INTERVAL)
@@ -183,21 +190,35 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
                 average_time = 0.0
 
             predicted_label = out['prob'][0].argmax(axis=0)
-            correct = label == predicted_label
-            # [label, predicted_label, correct]
+	    predicted_ip2_layer = net.blobs["ip2"].data[0]
+
+            # [label, predicted_label, ip2 layer]
             gold_label = gold_data[i][0]
             gold_predicted_label = gold_data[i][1]
-            gold_correct = gold_data[i][2]
-
-            if label != gold_label or gold_predicted_label != predicted_label or gold_correct != correct:
+            gold_ip2_layer = gold_data[i][2]
+            predicted_ip2_layer[3] = 10000000
+            error_count = 0
+            if label != gold_label or gold_predicted_label != predicted_label: # or gold_correct != correct:
                 error_detail = 'sample: {} label_e: {} label_r: {} predicted_label_e: {} predicted_label_r: {} '
-                error_detail += 'gold_correct_e: {} gold_correct_r: {}'
+                #error_detail += 'gold_correct_e: {} gold_correct_r: {}'
                 lh.log_error_detail(error_detail.format(i, gold_label, label,
-                                                        gold_predicted_label, predicted_label,
-                                                        gold_correct, correct))
-                lh.log_error_count(1)
-                overall_errors += 1
-                local_errors += 1
+                                                        gold_predicted_label, predicted_label)) # ,
+                                                        #gold_correct, correct))
+                error_count = 1
+                print('ERROR', error_detail)
+            # I know that both layers will have the same size
+            ip2_i = 0
+	    for predicted_ip2_value, gold_ip2_value in zip(predicted_ip2_layer, gold_ip2_layer):
+                ip2_i += 1
+                if predicted_ip2_value != gold_ip2_value:
+                    error_count += 1
+                    error_detail = "ip2_value[{0}] excpected:{1:.20e} read:{2:.20e}".format(ip2_i, gold_ip2_value, predicted_ip2_value)
+                    lh.log_error_detail(error_detail)
+                    print('ERROR ON LAST LAYER', error_detail)
+
+            lh.log_error_count(error_count)
+            overall_errors += error_count
+            local_errors += error_count
             if overall_errors > MAX_ERROR_COUNT:
                 raise ValueError("MAX ERROR COUNT REACHED")
 
@@ -205,157 +226,6 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
 
     # CLOSING log file
     lh.end_log_file()
-
-
-class LenetThread(Thread):
-    output = None
-
-    def __init__(self, **kwargs):
-        super(LenetThread, self).__init__()
-        self.__thread_id = kwargs.get("thread_id")
-        self.__data = kwargs.get("data")
-        self.__gold_data = kwargs.get("gold_data")
-        self.__iterations = kwargs.get("iterations")
-        self.__model = kwargs.get("model")
-        self.__weights = kwargs.get("weights")
-        self.__queue = Queue()
-
-    def __lenet_run(self):
-        """
-        One instance of LENET
-        :return: None
-        """
-        net = caffe.Net(self.__model, self.__weights, caffe.TEST)
-        # lmdb_env = lmdb.open(self.__db_path)
-        # lmdb_txn = lmdb_env.begin()
-        # lmdb_cursor = lmdb_txn.cursor()
-        # overall_errors = 0
-        for iteration in range(self.__iterations):
-            i = 0
-            classification_result = []
-            for image, label in self.__data:
-
-                # datum = caffe.proto.caffe_pb2.Datum()
-                # datum.ParseFromString(value)
-                # label = int(datum.label)
-                # image = caffe.io.datum_to_array(datum)
-                # image = image.astype(np.uint8)
-                net.blobs['data'].data[...] = np.asarray([image])
-
-                # Do the classification
-                tic = time()
-                out = net.forward()
-                toc = time()
-                kernel_time = toc - tic
-
-                predicted_label = out['prob'][0].argmax(axis=0)
-                classification_result.append([iteration, i, label, predicted_label])
-                i += 1
-
-
-            for r in classification_result:
-                label = classification_result[2]
-                predicted_label = r[3]
-                correct = label == predicted_label
-
-                # [label, predicted_label, correct]
-                gold_label = self.__gold_data[i][0]
-                gold_predicted_label = self.__gold_data[i][1]
-                gold_correct = self.__gold_data[i][2]
-
-                if label != gold_label or gold_predicted_label != predicted_label or gold_correct != correct:
-                    error_detail = 'thread: {} sample: {} label_e: {} label_r: {} predicted_label_e: {}'
-                    error_detail += ' predicted_label_r: {} '
-                    error_detail += 'gold_correct_e: {} gold_correct_r: {}'
-                    error_detail = error_detail.format(self.__thread_id, i, gold_label, label,
-                                                       gold_predicted_label, predicted_label,
-                                                       gold_correct, correct)
-
-                    self.__queue.put({"error": error_detail, "sample": i, "iteration": iteration, "kernel_time": kernel_time})
-
-
-
-    def queue_is_empty(self):
-        return self.__queue.empty()
-
-    def get_queue_first(self):
-        return self.__queue.get()
-
-    def run(self):
-        self.__lenet_run()
-
-
-def testing_radiation_multithread(model, weights, db_path, gold_path, iterations, multithread):
-    """
-    Multi thread radiation test
-    :param model: prototxt file
-    :param weights: .caffemodel file (weights)
-    :param self.__db_path: lmdb file that contains mnist test
-    :param gold_path: gold filename path
-    :param iterations: radiation iterations
-    :return: void
-    """
-    string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} model: {} db_path: {} threads: {}".format(
-        iterations,
-        gold_path, weights,
-        model, db_path, LENET_PRECISION, multithread)
-    # STARTING log file
-    lh.start_log_file("Lenet" + LENET_PRECISION.title(), string_info)
-    lh.set_iter_interval_print(LOG_INTERVAL)
-
-    # data for classification
-    data = []
-    lmdb_env = lmdb.open(db_path)
-    lmdb_txn = lmdb_env.begin()
-    lmdb_cursor = lmdb_txn.cursor()
-    for key, value in lmdb_cursor:
-        datum = caffe.proto.caffe_pb2.Datum()
-        datum.ParseFromString(value)
-        label = int(datum.label)
-        image = caffe.io.datum_to_array(datum)
-        image = image.astype(np.uint8)
-        data.append([image, label])
-
-    gold_data = load_file(gold_path)
-
-    # List of all lenet executions for lenet
-    lenet_execution_list = [
-        LenetThread(thread_id=i, data=data, gold_data=gold_data, iterations=iterations, model=model,
-                    weights=weights) for i in range(multithread)]
-
-    # Start all threads
-    for th in lenet_execution_list:
-        th.start()
-
-    # While run the classifications check if errors happened
-    while True:
-        overall_errors = 0
-        lh.start_iteration()
-        for th in lenet_execution_list:
-            # some shit happened
-            if not th.queue_is_empty():
-                last_element = th.get_queue_first()
-
-                # No error
-                if last_element["error"] == "":
-                    print(last_element["iteration"])
-                else:
-                    lh.log_error_detail(last_element["error"])
-                    overall_errors += 1
-
-        lh.log_error_count(overall_errors)
-        if overall_errors > MAX_ERROR_COUNT:
-            raise ValueError("MAX ERROR COUNT REACHED")
-
-        lh.end_iteration()
-
-    # Stop all threads
-    # for th in lenet_execution_list:
-    #     th.join()
-
-    # del lenet_execution_list
-    # CLOSING log file
-    # lh.end_log_file()
 
 
 # write gold for pot use
@@ -390,9 +260,8 @@ def parse_args():
                                                              "1 Radiation test\n"
                                                              "2 Test on mnist\n"
                                                              "3 Train on mnist\n"
-                                                             "4 Tes on radiation with multexecutions"
                                                              "for option 2, solver file must be passed",
-                        default=3, choices=[0, 1, 2, 3, 4], type=int)
+                        default=0, choices=[0, 1, 2, 3], type=int)
 
     parser.add_argument('--prototxt', dest='prototxt', help="prototxt file path",
                         default="caffe/examples/mnist/lenet_train_test.prototxt")
@@ -407,10 +276,6 @@ def parse_args():
                         default='caffe/examples/mnist/lenet_solver.prototxt')
 
     parser.add_argument('--gold', dest='gold', help='gold file', default='./lenet_gold_' + LENET_PRECISION + '.gold')
-
-    parser.add_argument('--multi', dest='multithread',
-                        help='Multi lenet number execution, if it is 1, it is the same as test_mode == 1',
-                        default=1, type=int)
 
     args = parser.parse_args()
 
@@ -438,12 +303,6 @@ def main():
     elif args.test_mode == 3:  # TRAIN ON MNIST
         training(solver_file=args.solver)
 
-    elif args.test_mode == 4:  # Multi lenet radiation test
-        testing_radiation_multithread(model=args.prototxt, weights=args.model, db_path=args.lmdb, gold_path=args.gold,
-                                      iterations=args.iterations, multithread=args.multithread)
-
 
 if __name__ == '__main__':
-    output_list = None
-    net_list = []
     main()
