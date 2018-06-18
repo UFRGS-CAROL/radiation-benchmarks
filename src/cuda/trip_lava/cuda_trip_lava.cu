@@ -116,14 +116,13 @@ __host__ inline bool operator==(const FOUR_VECTOR_HOST& lhs, const FOUR_VECTOR_H
 }
 __host__ inline bool operator!=(const FOUR_VECTOR_HOST& lhs, const FOUR_VECTOR_HOST& rhs){return !operator==(lhs,rhs);}
 
-#if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
 
 __device__ inline bool operator==(const FOUR_VECTOR& lhs, const FOUR_VECTOR& rhs){ 
 	return (lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.z == rhs.z) && (lhs.v == rhs.v);
 }
 __device__ inline bool operator!=(const FOUR_VECTOR& lhs, const FOUR_VECTOR& rhs){return !operator==(lhs,rhs);}
 
-#elif defined(PRECISION_HALF)
+#if defined(PRECISION_HALF)
 
 typedef struct
 {
@@ -134,14 +133,6 @@ typedef struct
 {
 	half2 v, x, y, z;
 } FOUR_H2_VECTOR;
-
-__device__ inline bool operator==(const FOUR_VECTOR& lhs, const FOUR_VECTOR& rhs){ 
-	return 	__hne(lhs.x, rhs.x) && 
-			__hne(lhs.y, rhs.y) && 
-			__hne(lhs.z, rhs.z) && 
-			__hne(lhs.v, rhs.v);
-}
-__device__ inline bool operator!=(const FOUR_VECTOR& lhs, const FOUR_VECTOR& rhs){return !operator==(lhs,rhs);}
 
 __device__ inline bool operator==(const FOUR_H2_VECTOR& lhs, const FOUR_H2_VECTOR& rhs){ 
 	return 	__hbne2(lhs.x, rhs.x) && 
@@ -320,7 +311,7 @@ __device__ T inline read_voter(T *v1, T *v2, T *v3,
 //-----------------------------------------------------------------------------
 //	plasmaKernel_gpu_2
 //-----------------------------------------------------------------------------
-#if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
+// #if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
 __global__ void kernel_gpu_cuda(par_str d_par_gpu, 
 								dim_str d_dim_gpu, 
 								box_str* d_box_gpu_1, box_str* d_box_gpu_2, box_str* d_box_gpu_3, 
@@ -347,7 +338,7 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu,
 		//-------------------------------------------------------------
 
 		// parameters
-		tested_type a2 = 2.0*d_par_gpu.alpha*d_par_gpu.alpha;
+		tested_type a2 = tested_type(2.0)*d_par_gpu.alpha*d_par_gpu.alpha;
 
 		// home box
 		int first_i;
@@ -500,8 +491,12 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu,
 								);
 
 					u2 = a2*r2;
+#if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
 					vij= exp(-u2);
-					fs = 2*vij;
+#elif defined(PRECISION_HALF)
+					vij= hexp(-u2);
+#endif
+					fs = tested_type(2.0)*vij;
 
 					d.x = 	r2_rA_shared_cached_WTX.x  
 							- 
@@ -597,337 +592,344 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu,
 		//------------------------------------------------------------------------------------------------------------------------------------------------------160
 	}
 }
-#elif defined(PRECISION_HALF)
-__device__ inline void covert_FV_to_FVH2(FOUR_VECTOR fv, FOUR_H2_VECTOR *fv_h2) {
-	fv_h2 -> x = __half2half2(fv.x);
-	fv_h2 -> y = __half2half2(fv.y);
-	fv_h2 -> z = __half2half2(fv.z);
-	fv_h2 -> v = __half2half2(fv.v);
-}
-__global__ void kernel_gpu_cuda(par_str d_par_gpu, 
-								dim_str d_dim_gpu, 
-								box_str* d_box_gpu_1, box_str* d_box_gpu_2, box_str* d_box_gpu_3, 
-								FOUR_VECTOR* d_rv_gpu_1, FOUR_VECTOR* d_rv_gpu_2, FOUR_VECTOR* d_rv_gpu_3, 
-								tested_type* d_qv_gpu_1, tested_type* d_qv_gpu_2, tested_type* d_qv_gpu_3, 
-								FOUR_VECTOR* d_fv_gpu_1, FOUR_VECTOR* d_fv_gpu_2, FOUR_VECTOR* d_fv_gpu_3) {
+// #elif defined(PRECISION_HALF)
+// __device__ inline void covert_FV_to_FVH2(FOUR_VECTOR fv, FOUR_H2_VECTOR *fv_h2) {
+// 	(fv_h2 -> x).x = fv.x;
+// 	(fv_h2 -> x).y = fv.x;
 
-	//---------------------------------------------------------------------
-	//	THREAD PARAMETERS
-	//---------------------------------------------------------------------
+// 	(fv_h2 -> y).x = fv.y;
+// 	(fv_h2 -> y).y = fv.y;
 
-	int bx = blockIdx.x;		 // get current horizontal block index (0-n)
-	int tx = threadIdx.x;		 // get current horizontal thread index (0-n)
-	int wtx = tx;
+// 	(fv_h2 -> z).x = fv.z;
+// 	(fv_h2 -> z).y = fv.z;
 
-	//---------------------------------------------------------------------
-	//	DO FOR THE NUMBER OF BOXES
-	//---------------------------------------------------------------------
+// 	(fv_h2 -> v).x = fv.v;
+// 	(fv_h2 -> v).y = fv.v;
+// }
+// __global__ void kernel_gpu_cuda(par_str d_par_gpu, 
+// 								dim_str d_dim_gpu, 
+// 								box_str* d_box_gpu_1, box_str* d_box_gpu_2, box_str* d_box_gpu_3, 
+// 								FOUR_VECTOR* d_rv_gpu_1, FOUR_VECTOR* d_rv_gpu_2, FOUR_VECTOR* d_rv_gpu_3, 
+// 								tested_type* d_qv_gpu_1, tested_type* d_qv_gpu_2, tested_type* d_qv_gpu_3, 
+// 								FOUR_VECTOR* d_fv_gpu_1, FOUR_VECTOR* d_fv_gpu_2, FOUR_VECTOR* d_fv_gpu_3) {
 
-	if(bx<d_dim_gpu.number_boxes) {
+// 	//---------------------------------------------------------------------
+// 	//	THREAD PARAMETERS
+// 	//---------------------------------------------------------------------
 
-		//-------------------------------------------------------------
-		//	Extract input parameters
-		//-------------------------------------------------------------
+// 	int bx = blockIdx.x;		 // get current horizontal block index (0-n)
+// 	int tx = threadIdx.x;		 // get current horizontal thread index (0-n)
+// 	int wtx = tx;
 
-		// parameters
-		half a2 = __hmul(__hmul(__float2half(2.0), d_par_gpu.alpha), d_par_gpu.alpha);
-		half2 h2_a2 = __half2half2(a2);
+// 	//---------------------------------------------------------------------
+// 	//	DO FOR THE NUMBER OF BOXES
+// 	//---------------------------------------------------------------------
 
-		// home box
-		int first_i;
-		FOUR_VECTOR *rA_1, *rA_2, *rA_3;
-		FOUR_VECTOR *fA_1, *fA_2, *fA_3;
-		__shared__ FOUR_H2_VECTOR h2_rA_shared_1[200];
-		__shared__ FOUR_H2_VECTOR h2_rA_shared_2[200];
-		__shared__ FOUR_H2_VECTOR h2_rA_shared_3[200];
+// 	if(bx<d_dim_gpu.number_boxes) {
 
-		// nei box
-		int pointer;
-		int k = 0;
-		int first_j;
-		FOUR_VECTOR *rB_1, *rB_2, *rB_3;
-		tested_type *qB_1, *qB_2, *qB_3;
-		int j = 0;
-		__shared__ FOUR_H2_VECTOR h2_rB_shared_1[100];
-		__shared__ FOUR_H2_VECTOR h2_rB_shared_2[100];
-		__shared__ FOUR_H2_VECTOR h2_rB_shared_3[100];
-		__shared__ half2 h2_qB_shared_1[100];
-		__shared__ half2 h2_qB_shared_2[100];
-		__shared__ half2 h2_qB_shared_3[100];
+// 		//-------------------------------------------------------------
+// 		//	Extract input parameters
+// 		//-------------------------------------------------------------
 
-		// common
-		half2 r2;
-		half2 u2;
-		half2 vij;
-		half2 fs;
-		half2 fxij;
-		half2 fyij;
-		half2 fzij;
-		THREE_H2_VECTOR d;
+// 		// parameters
+// 		half a2 = __float2half(2.0) * d_par_gpu.alpha * d_par_gpu.alpha;
+// 		half2 h2_a2 = __half2half2(a2);
 
-		//-------------------------------------------------------------
-		//	Home box
-		//-------------------------------------------------------------
+// 		// home box
+// 		int first_i;
+// 		FOUR_VECTOR *rA_1, *rA_2, *rA_3;
+// 		FOUR_VECTOR *fA_1, *fA_2, *fA_3;
+// 		__shared__ FOUR_H2_VECTOR h2_rA_shared_1[200];
+// 		__shared__ FOUR_H2_VECTOR h2_rA_shared_2[200];
+// 		__shared__ FOUR_H2_VECTOR h2_rA_shared_3[200];
 
-		//-------------------------------------------------------------
-		//	Setup parameters
-		//-------------------------------------------------------------
+// 		// nei box
+// 		int pointer;
+// 		int k = 0;
+// 		int first_j;
+// 		FOUR_VECTOR *rB_1, *rB_2, *rB_3;
+// 		tested_type *qB_1, *qB_2, *qB_3;
+// 		int j = 0;
+// 		__shared__ FOUR_H2_VECTOR h2_rB_shared_1[100];
+// 		__shared__ FOUR_H2_VECTOR h2_rB_shared_2[100];
+// 		__shared__ FOUR_H2_VECTOR h2_rB_shared_3[100];
+// 		__shared__ half2 h2_qB_shared_1[100];
+// 		__shared__ half2 h2_qB_shared_2[100];
+// 		__shared__ half2 h2_qB_shared_3[100];
 
-		// home box - box parameters
-		first_i = read_voter(d_box_gpu_1, d_box_gpu_2, d_box_gpu_3, bx).offset;
+// 		// common
+// 		half2 r2;
+// 		half2 u2;
+// 		half2 vij;
+// 		half2 fs;
+// 		half2 fxij;
+// 		half2 fyij;
+// 		half2 fzij;
+// 		THREE_H2_VECTOR d;
 
-		// home box - distance, force, charge and type parameters
-		rA_1 = &d_rv_gpu_1[first_i]; 
-		rA_2 = &d_rv_gpu_2[first_i];
-		rA_3 = &d_rv_gpu_3[first_i];
+// 		//-------------------------------------------------------------
+// 		//	Home box
+// 		//-------------------------------------------------------------
 
-		fA_1 = &d_fv_gpu_1[first_i];
-		fA_2 = &d_fv_gpu_2[first_i];
-		fA_3 = &d_fv_gpu_3[first_i];
+// 		//-------------------------------------------------------------
+// 		//	Setup parameters
+// 		//-------------------------------------------------------------
 
-		//-------------------------------------------------------------
-		//	Copy to shared memory
-		//-------------------------------------------------------------
+// 		// home box - box parameters
+// 		first_i =read_voter(d_box_gpu_1, d_box_gpu_2, d_box_gpu_3, bx).offset;
 
-		// home box - shared memory - INCLUDES HALF2 transformation -redundant- on shared memory
-		while(wtx<NUMBER_PAR_PER_BOX) {
-			covert_FV_to_FVH2(read_voter(rA_1, rA_2, rA_3, wtx), &(h2_rA_shared_1[wtx]));
-			covert_FV_to_FVH2(read_voter(rA_1, rA_2, rA_3, wtx), &(h2_rA_shared_2[wtx]));
-			covert_FV_to_FVH2(read_voter(rA_1, rA_2, rA_3, wtx), &(h2_rA_shared_3[wtx]));
-			wtx = wtx + NUMBER_THREADS;
-		}
-		wtx = tx;
+// 		// home box - distance, force, charge and type parameters
+// 		rA_1 = &d_rv_gpu_1[first_i]; 
+// 		rA_2 = &d_rv_gpu_2[first_i];
+// 		rA_3 = &d_rv_gpu_3[first_i];
 
-		// synchronize threads  - not needed, but just to be safe
-		__syncthreads();
+// 		fA_1 = &d_fv_gpu_1[first_i];
+// 		fA_2 = &d_fv_gpu_2[first_i];
+// 		fA_3 = &d_fv_gpu_3[first_i];
 
-		//-------------------------------------------------------------
-		//	nei box loop
-		//-------------------------------------------------------------
+// 		//-------------------------------------------------------------
+// 		//	Copy to shared memory
+// 		//-------------------------------------------------------------
 
-		// loop over neiing boxes of home box
-		for (k=0; k<(1+read_voter(d_box_gpu_1, d_box_gpu_2, d_box_gpu_3, bx).nn); k++) {
+// 		// home box - shared memory - INCLUDES HALF2 transformation -redundant- on shared memory
+// 		while(wtx<NUMBER_PAR_PER_BOX) {
+// 			covert_FV_to_FVH2(read_voter(rA_1, rA_2, rA_3, wtx), &(h2_rA_shared_1[wtx]));
+// 			covert_FV_to_FVH2(read_voter(rA_1, rA_2, rA_3, wtx), &(h2_rA_shared_2[wtx]));
+// 			covert_FV_to_FVH2(read_voter(rA_1, rA_2, rA_3, wtx), &(h2_rA_shared_3[wtx]));
+// 			wtx = wtx + NUMBER_THREADS;
+// 		}
+// 		wtx = tx;
 
-			//---------------------------------------------
-			//	nei box - get pointer to the right box
-			//---------------------------------------------
+// 		// synchronize threads  - not needed, but just to be safe
+// 		__syncthreads();
 
-			if(k==0) {
-				pointer = bx;	 // set first box to be processed to home box
-			}
-			else {
-								 // remaining boxes are nei boxes
-				pointer = read_voter(d_box_gpu_1, d_box_gpu_2, d_box_gpu_3, bx).nei[k-1].number;
-			}
+// 		//-------------------------------------------------------------
+// 		//	nei box loop
+// 		//-------------------------------------------------------------
 
-			//-----------------------------------------------------
-			//	Setup parameters
-			//-----------------------------------------------------
+// 		// loop over neiing boxes of home box
+// 		for (k=0; k<(1+read_voter(d_box_gpu_1, d_box_gpu_2, d_box_gpu_3, bx).nn); k++) {
 
-			// nei box - box parameters
-			first_j = read_voter(d_box_gpu_1, d_box_gpu_2, d_box_gpu_3, pointer).offset;
+// 			//---------------------------------------------
+// 			//	nei box - get pointer to the right box
+// 			//---------------------------------------------
 
-			// nei box - distance, (force), charge and (type) parameters
-			rB_1 = &d_rv_gpu_1[first_j];
-			rB_2 = &d_rv_gpu_2[first_j];
-			rB_3 = &d_rv_gpu_3[first_j];
+// 			if(k==0) {
+// 				pointer = bx;	 // set first box to be processed to home box
+// 			}
+// 			else {
+// 								 // remaining boxes are nei boxes
+// 				pointer = read_voter(d_box_gpu_1, d_box_gpu_2, d_box_gpu_3, bx).nei[k-1].number;
+// 			}
+
+// 			//-----------------------------------------------------
+// 			//	Setup parameters
+// 			//-----------------------------------------------------
+
+// 			// nei box - box parameters
+// 			first_j = read_voter(d_box_gpu_1, d_box_gpu_2, d_box_gpu_3, pointer).offset;
+
+// 			// nei box - distance, (force), charge and (type) parameters
+// 			rB_1 = &d_rv_gpu_1[first_j];
+// 			rB_2 = &d_rv_gpu_2[first_j];
+// 			rB_3 = &d_rv_gpu_3[first_j];
 			
-			qB_1 = &d_qv_gpu_1[first_j];
-			qB_2 = &d_qv_gpu_2[first_j];
-			qB_3 = &d_qv_gpu_3[first_j];
+// 			qB_1 = &d_qv_gpu_1[first_j];
+// 			qB_2 = &d_qv_gpu_2[first_j];
+// 			qB_3 = &d_qv_gpu_3[first_j];
 
-			//-----------------------------------------------------
-			//	Setup parameters
-			//-----------------------------------------------------
+// 			//-----------------------------------------------------
+// 			//	Setup parameters
+// 			//-----------------------------------------------------
 
-			// nei box - shared memory - INCLUDES HALF2 optimization on shared memory
-			int corrWTX;
-			register FOUR_VECTOR cached_FV_FIRST;
-			register FOUR_VECTOR cached_FV_SECOND;
-			register half cached_value_FIRST;
-			register half cached_value_SECOND;
-			while(wtx<NUMBER_PAR_PER_BOX) {
-				corrWTX = floor(wtx / 2.0);
+// 			// nei box - shared memory - INCLUDES HALF2 optimization on shared memory
+// 			int corrWTX;
+// 			register FOUR_VECTOR cached_FV_FIRST;
+// 			register FOUR_VECTOR cached_FV_SECOND;
+// 			register half cached_value_FIRST;
+// 			register half cached_value_SECOND;
+// 			while(wtx<NUMBER_PAR_PER_BOX) {
+// 				corrWTX = floor(wtx / 2.0);
 
-				cached_FV_FIRST = read_voter(rB_1, rB_2, rB_3, wtx + 0);
-				cached_FV_SECOND = read_voter(rB_1, rB_2, rB_3, wtx + NUMBER_THREADS);
+// 				cached_FV_FIRST = read_voter(rB_1, rB_2, rB_3, wtx + 0);
+// 				cached_FV_SECOND = read_voter(rB_1, rB_2, rB_3, wtx + NUMBER_THREADS);
 
-				h2_rB_shared_1[corrWTX].x.x = cached_FV_FIRST.x;
-				h2_rB_shared_2[corrWTX].x.x = cached_FV_FIRST.x;
-				h2_rB_shared_3[corrWTX].x.x = cached_FV_FIRST.x;
-				h2_rB_shared_1[corrWTX].x.y = cached_FV_SECOND.x;
-				h2_rB_shared_2[corrWTX].x.y = cached_FV_SECOND.x;
-				h2_rB_shared_3[corrWTX].x.y = cached_FV_SECOND.x;
+// 				h2_rB_shared_1[corrWTX].x.x = cached_FV_FIRST.x;
+// 				h2_rB_shared_2[corrWTX].x.x = cached_FV_FIRST.x;
+// 				h2_rB_shared_3[corrWTX].x.x = cached_FV_FIRST.x;
+// 				h2_rB_shared_1[corrWTX].x.y = cached_FV_SECOND.x;
+// 				h2_rB_shared_2[corrWTX].x.y = cached_FV_SECOND.x;
+// 				h2_rB_shared_3[corrWTX].x.y = cached_FV_SECOND.x;
 				
-				h2_rB_shared_1[corrWTX].y.x = cached_FV_FIRST.y;
-				h2_rB_shared_2[corrWTX].y.x = cached_FV_FIRST.y;
-				h2_rB_shared_3[corrWTX].y.x = cached_FV_FIRST.y;
-				h2_rB_shared_1[corrWTX].y.y = cached_FV_SECOND.y;
-				h2_rB_shared_2[corrWTX].y.y = cached_FV_SECOND.y;
-				h2_rB_shared_3[corrWTX].y.y = cached_FV_SECOND.y;
+// 				h2_rB_shared_1[corrWTX].y.x = cached_FV_FIRST.y;
+// 				h2_rB_shared_2[corrWTX].y.x = cached_FV_FIRST.y;
+// 				h2_rB_shared_3[corrWTX].y.x = cached_FV_FIRST.y;
+// 				h2_rB_shared_1[corrWTX].y.y = cached_FV_SECOND.y;
+// 				h2_rB_shared_2[corrWTX].y.y = cached_FV_SECOND.y;
+// 				h2_rB_shared_3[corrWTX].y.y = cached_FV_SECOND.y;
 				
-				h2_rB_shared_1[corrWTX].z.x = cached_FV_FIRST.z;
-				h2_rB_shared_2[corrWTX].z.x = cached_FV_FIRST.z;
-				h2_rB_shared_3[corrWTX].z.x = cached_FV_FIRST.z;
-				h2_rB_shared_1[corrWTX].z.y = cached_FV_SECOND.z;
-				h2_rB_shared_2[corrWTX].z.y = cached_FV_SECOND.z;
-				h2_rB_shared_3[corrWTX].z.y = cached_FV_SECOND.z;
+// 				h2_rB_shared_1[corrWTX].z.x = cached_FV_FIRST.z;
+// 				h2_rB_shared_2[corrWTX].z.x = cached_FV_FIRST.z;
+// 				h2_rB_shared_3[corrWTX].z.x = cached_FV_FIRST.z;
+// 				h2_rB_shared_1[corrWTX].z.y = cached_FV_SECOND.z;
+// 				h2_rB_shared_2[corrWTX].z.y = cached_FV_SECOND.z;
+// 				h2_rB_shared_3[corrWTX].z.y = cached_FV_SECOND.z;
 
-				h2_rB_shared_1[corrWTX].v.x = cached_FV_FIRST.v;
-				h2_rB_shared_2[corrWTX].v.x = cached_FV_FIRST.v;
-				h2_rB_shared_3[corrWTX].v.x = cached_FV_FIRST.v;
-				h2_rB_shared_1[corrWTX].v.y = cached_FV_SECOND.v;
-				h2_rB_shared_2[corrWTX].v.y = cached_FV_SECOND.v;
-				h2_rB_shared_3[corrWTX].v.y = cached_FV_SECOND.v;
+// 				h2_rB_shared_1[corrWTX].v.x = cached_FV_FIRST.v;
+// 				h2_rB_shared_2[corrWTX].v.x = cached_FV_FIRST.v;
+// 				h2_rB_shared_3[corrWTX].v.x = cached_FV_FIRST.v;
+// 				h2_rB_shared_1[corrWTX].v.y = cached_FV_SECOND.v;
+// 				h2_rB_shared_2[corrWTX].v.y = cached_FV_SECOND.v;
+// 				h2_rB_shared_3[corrWTX].v.y = cached_FV_SECOND.v;
 				
-				cached_value_FIRST = read_voter(qB_1, qB_2, qB_3, wtx + 0);
-				cached_value_SECOND = read_voter(qB_1, qB_2, qB_3, wtx + NUMBER_THREADS);
+// 				cached_value_FIRST = read_voter(qB_1, qB_2, qB_3, wtx + 0);
+// 				cached_value_SECOND = read_voter(qB_1, qB_2, qB_3, wtx + NUMBER_THREADS);
 
-				h2_qB_shared_1[corrWTX].x = cached_value_FIRST;
-				h2_qB_shared_2[corrWTX].x = cached_value_FIRST;
-				h2_qB_shared_3[corrWTX].x = cached_value_FIRST;
-				h2_qB_shared_1[corrWTX].y = cached_value_SECOND;
-				h2_qB_shared_2[corrWTX].y = cached_value_SECOND;
-				h2_qB_shared_3[corrWTX].y = cached_value_SECOND;
+// 				h2_qB_shared_1[corrWTX].x = cached_value_FIRST;
+// 				h2_qB_shared_2[corrWTX].x = cached_value_FIRST;
+// 				h2_qB_shared_3[corrWTX].x = cached_value_FIRST;
+// 				h2_qB_shared_1[corrWTX].y = cached_value_SECOND;
+// 				h2_qB_shared_2[corrWTX].y = cached_value_SECOND;
+// 				h2_qB_shared_3[corrWTX].y = cached_value_SECOND;
 
-				wtx = wtx + NUMBER_THREADS * 2.0;
-			}
-			wtx = tx;
+// 				wtx = wtx + NUMBER_THREADS * 2.0;
+// 			}
+// 			wtx = tx;
 
-			// synchronize threads because in next section each thread accesses data brought in by different threads here
-			__syncthreads();
+// 			// synchronize threads because in next section each thread accesses data brought in by different threads here
+// 			__syncthreads();
 
-			//-----------------------------------------------------
-			//	Calculation
-			//-----------------------------------------------------
+// 			//-----------------------------------------------------
+// 			//	Calculation
+// 			//-----------------------------------------------------
 
-			// Common
-			register FOUR_H2_VECTOR h2_fA_local;
+// 			// Common
+// 			register FOUR_H2_VECTOR h2_fA_local;
 
-			// Caching
-			register FOUR_H2_VECTOR r2_rA_shared_cached_WTX; // safe
-			register FOUR_H2_VECTOR h2_rB_shared_cached_J; // safe
-			register half2 h2_qB_shared_cached_J; // safe
+// 			// Caching
+// 			register FOUR_H2_VECTOR r2_rA_shared_cached_WTX; // safe
+// 			register FOUR_H2_VECTOR h2_rB_shared_cached_J; // safe
+// 			register half2 h2_qB_shared_cached_J; // safe
 
-			register half add_cache;
+// 			register half add_cache;
 
-			// loop for the number of particles in the home box
-			// for (int i=0; i<nTotal_i; i++){
-			while(wtx<NUMBER_PAR_PER_BOX) {
+// 			// loop for the number of particles in the home box
+// 			// for (int i=0; i<nTotal_i; i++){
+// 			while(wtx<NUMBER_PAR_PER_BOX) {
 
-				h2_fA_local.x = __float2half2_rn(0.0);
-				h2_fA_local.y = __float2half2_rn(0.0);
-				h2_fA_local.z = __float2half2_rn(0.0);
-				h2_fA_local.v = __float2half2_rn(0.0);
+// 				h2_fA_local.x = __float2half2_rn(0.0);
+// 				h2_fA_local.y = __float2half2_rn(0.0);
+// 				h2_fA_local.z = __float2half2_rn(0.0);
+// 				h2_fA_local.v = __float2half2_rn(0.0);
 
-				r2_rA_shared_cached_WTX = read_voter(h2_rA_shared_1, h2_rA_shared_2, h2_rA_shared_3, wtx);
+// 				r2_rA_shared_cached_WTX = read_voter(h2_rA_shared_1, h2_rA_shared_2, h2_rA_shared_3, wtx);
 				
-				// loop for the number of particles in the current nei box
-				for (j=0; j<floor(NUMBER_PAR_PER_BOX / 2.0); j++) {
-					// Convert input vars from HALF to HALF2 for local work
+// 				// loop for the number of particles in the current nei box
+// 				for (j=0; j<floor(NUMBER_PAR_PER_BOX / 2.0); j++) {
+// 					// Convert input vars from HALF to HALF2 for local work
 
-					h2_rB_shared_cached_J = read_voter(h2_rB_shared_1, h2_rB_shared_2, h2_rB_shared_3, j);
+// 					h2_rB_shared_cached_J = read_voter(h2_rB_shared_1, h2_rB_shared_2, h2_rB_shared_3, j);
 
-					// r2 = (half)h2_rA_shared[wtx].v + (half)h2_rB_shared[j].v - H_DOT((half)h2_rA_shared[wtx],(half)h2_rB_shared[j]);
-					r2 = __hsub2(
-							__hadd2(
-								r2_rA_shared_cached_WTX.v, 
-								h2_rB_shared_cached_J.v),  
-							H2_DOT(
-								r2_rA_shared_cached_WTX, 
-								h2_rB_shared_cached_J));
+// 					// r2 = (half)h2_rA_shared[wtx].v + (half)h2_rB_shared[j].v - H_DOT((half)h2_rA_shared[wtx],(half)h2_rB_shared[j]);
+// 					r2 = __hsub2(
+// 							__hadd2(
+// 								r2_rA_shared_cached_WTX.v, 
+// 								h2_rB_shared_cached_J.v),  
+// 							H2_DOT(
+// 								r2_rA_shared_cached_WTX, 
+// 								h2_rB_shared_cached_J));
 
-					// u2 = a2*r2;
-					u2 = __hmul2(h2_a2, r2);
-					// vij= exp(-u2);
-					vij= h2exp(__hneg2(u2));
-					// fs = 2*vij;
-					fs = __hmul2(__float2half2_rn(2.0), vij);
+// 					// u2 = a2*r2;
+// 					u2 = __hmul2(h2_a2, r2);
+// 					// vij= exp(-u2);
+// 					vij= h2exp(__hneg2(u2));
+// 					// fs = 2*vij;
+// 					fs = __hmul2(__float2half2_rn(2.0), vij);
 
-					// d.x = (half)h2_rA_shared[wtx].x  - (half)h2_rB_shared[j].x;
-					d.x = __hsub2(
-							r2_rA_shared_cached_WTX.x, 
-							h2_rB_shared_cached_J.x);
-					// fxij=fs*d.x;
-					fxij=__hmul2(fs, d.x);
-					// d.y = (half)h2_rA_shared[wtx].y  - (half)h2_rB_shared[j].y;
-					d.y = __hsub2(
-							r2_rA_shared_cached_WTX.y, 
-							h2_rB_shared_cached_J.y);
-					// fyij=fs*d.y;
-					fyij=__hmul2(fs, d.y);
-					// d.z = (half)h2_rA_shared[wtx].z  - (half)h2_rB_shared[j].z;
-					d.z = __hsub2(
-							r2_rA_shared_cached_WTX.z, 
-							h2_rB_shared_cached_J.z);
-					// fzij=fs*d.z;
-					fzij=__hmul2(fs, d.z);
+// 					// d.x = (half)h2_rA_shared[wtx].x  - (half)h2_rB_shared[j].x;
+// 					d.x = __hsub2(
+// 							r2_rA_shared_cached_WTX.x, 
+// 							h2_rB_shared_cached_J.x);
+// 					// fxij=fs*d.x;
+// 					fxij=__hmul2(fs, d.x);
+// 					// d.y = (half)h2_rA_shared[wtx].y  - (half)h2_rB_shared[j].y;
+// 					d.y = __hsub2(
+// 							r2_rA_shared_cached_WTX.y, 
+// 							h2_rB_shared_cached_J.y);
+// 					// fyij=fs*d.y;
+// 					fyij=__hmul2(fs, d.y);
+// 					// d.z = (half)h2_rA_shared[wtx].z  - (half)h2_rB_shared[j].z;
+// 					d.z = __hsub2(
+// 							r2_rA_shared_cached_WTX.z, 
+// 							h2_rB_shared_cached_J.z);
+// 					// fzij=fs*d.z;
+// 					fzij=__hmul2(fs, d.z);
 
-					h2_qB_shared_cached_J = read_voter(h2_qB_shared_1, h2_qB_shared_2, h2_qB_shared_3, j);
+// 					h2_qB_shared_cached_J = read_voter(h2_qB_shared_1, h2_qB_shared_2, h2_qB_shared_3, j);
 
-					// fA[wtx].v +=  (half)((half)h2_qB_shared[j]*vij);
-					h2_fA_local.v = __hfma2(
-							h2_qB_shared_cached_J, 
-							vij, 
-							h2_fA_local.v);
-					// fA[wtx].x +=  (half)((half)h2_qB_shared[j]*fxij);
-					h2_fA_local.x = __hfma2(
-							h2_qB_shared_cached_J, 
-							fxij, 
-							h2_fA_local.x);
-					// fA[wtx].y +=  (half)((half)h2_qB_shared[j]*fyij);
-					h2_fA_local.y = __hfma2(
-							h2_qB_shared_cached_J, 
-							fyij, 
-							h2_fA_local.y);
-					// fA[wtx].z +=  (half)((half)h2_qB_shared[j]*fzij);
-					h2_fA_local.z = __hfma2(
-							h2_qB_shared_cached_J, 
-							fzij, 
-							h2_fA_local.z);
-				}
+// 					// fA[wtx].v +=  (half)((half)h2_qB_shared[j]*vij);
+// 					h2_fA_local.v = __hfma2(
+// 							h2_qB_shared_cached_J, 
+// 							vij, 
+// 							h2_fA_local.v);
+// 					// fA[wtx].x +=  (half)((half)h2_qB_shared[j]*fxij);
+// 					h2_fA_local.x = __hfma2(
+// 							h2_qB_shared_cached_J, 
+// 							fxij, 
+// 							h2_fA_local.x);
+// 					// fA[wtx].y +=  (half)((half)h2_qB_shared[j]*fyij);
+// 					h2_fA_local.y = __hfma2(
+// 							h2_qB_shared_cached_J, 
+// 							fyij, 
+// 							h2_fA_local.y);
+// 					// fA[wtx].z +=  (half)((half)h2_qB_shared[j]*fzij);
+// 					h2_fA_local.z = __hfma2(
+// 							h2_qB_shared_cached_J, 
+// 							fzij, 
+// 							h2_fA_local.z);
+// 				}
 
-				// Copy back data from local memory to global memory
-				add_cache = __hadd(h2_fA_local.x.x, h2_fA_local.x.y);
-				fA_1[wtx].x = __hadd(fA_1[wtx].x, add_cache);
-				fA_2[wtx].x = __hadd(fA_2[wtx].x, add_cache);
-				fA_3[wtx].x = __hadd(fA_3[wtx].x, add_cache);
+// 				// Copy back data from local memory to global memory
+// 				add_cache = __hadd(h2_fA_local.x.x, h2_fA_local.x.y);
+// 				fA_1[wtx].x = __hadd(fA_1[wtx].x, add_cache);
+// 				fA_2[wtx].x = __hadd(fA_2[wtx].x, add_cache);
+// 				fA_3[wtx].x = __hadd(fA_3[wtx].x, add_cache);
 
-				add_cache = __hadd(h2_fA_local.y.x, h2_fA_local.y.y);
-				fA_1[wtx].y = __hadd(fA_1[wtx].y, add_cache);
-				fA_2[wtx].y = __hadd(fA_2[wtx].y, add_cache);
-				fA_3[wtx].y = __hadd(fA_3[wtx].y, add_cache);
+// 				add_cache = __hadd(h2_fA_local.y.x, h2_fA_local.y.y);
+// 				fA_1[wtx].y = __hadd(fA_1[wtx].y, add_cache);
+// 				fA_2[wtx].y = __hadd(fA_2[wtx].y, add_cache);
+// 				fA_3[wtx].y = __hadd(fA_3[wtx].y, add_cache);
 
-				add_cache = __hadd(h2_fA_local.z.x, h2_fA_local.z.y);
-				fA_1[wtx].z = __hadd(fA_1[wtx].z, add_cache);
-				fA_2[wtx].z = __hadd(fA_2[wtx].z, add_cache);
-				fA_3[wtx].z = __hadd(fA_3[wtx].z, add_cache);
+// 				add_cache = __hadd(h2_fA_local.z.x, h2_fA_local.z.y);
+// 				fA_1[wtx].z = __hadd(fA_1[wtx].z, add_cache);
+// 				fA_2[wtx].z = __hadd(fA_2[wtx].z, add_cache);
+// 				fA_3[wtx].z = __hadd(fA_3[wtx].z, add_cache);
 
-				add_cache = __hadd(h2_fA_local.v.x, h2_fA_local.v.y);
-				fA_1[wtx].v = __hadd(fA_1[wtx].v, add_cache);
-				fA_2[wtx].v = __hadd(fA_2[wtx].v, add_cache);
-				fA_3[wtx].v = __hadd(fA_3[wtx].v, add_cache);
+// 				add_cache = __hadd(h2_fA_local.v.x, h2_fA_local.v.y);
+// 				fA_1[wtx].v = __hadd(fA_1[wtx].v, add_cache);
+// 				fA_2[wtx].v = __hadd(fA_2[wtx].v, add_cache);
+// 				fA_3[wtx].v = __hadd(fA_3[wtx].v, add_cache);
 
-				// increment work thread index
-				wtx = wtx + NUMBER_THREADS;
-			}
+// 				// increment work thread index
+// 				wtx = wtx + NUMBER_THREADS;
+// 			}
 
-			// reset work index
-			wtx = tx;
+// 			// reset work index
+// 			wtx = tx;
 
-			// synchronize after finishing force contributions from current nei box not to cause conflicts when starting next box
-			__syncthreads();
+// 			// synchronize after finishing force contributions from current nei box not to cause conflicts when starting next box
+// 			__syncthreads();
 
-			//----------------------------------------------------------------------------------------------------------------------------------140
-			//	Calculation END
-			//----------------------------------------------------------------------------------------------------------------------------------140
-		}
-		//------------------------------------------------------------------------------------------------------------------------------------------------------160
-		//	nei box loop END
-		//------------------------------------------------------------------------------------------------------------------------------------------------------160
-	}
-}
-#endif
+// 			//----------------------------------------------------------------------------------------------------------------------------------140
+// 			//	Calculation END
+// 			//----------------------------------------------------------------------------------------------------------------------------------140
+// 		}
+// 		//------------------------------------------------------------------------------------------------------------------------------------------------------160
+// 		//	nei box loop END
+// 		//------------------------------------------------------------------------------------------------------------------------------------------------------160
+// 	}
+// }
+// #endif
 
 double mysecond()
 {
