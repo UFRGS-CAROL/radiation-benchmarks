@@ -24,6 +24,8 @@
 
 #ifdef SAFE_MALLOC
 #include "safe_memory/safe_memory.h"
+#else
+#define safe_host_malloc malloc
 #endif
 
 // helper functions
@@ -71,7 +73,7 @@ int test_use_tensor = 0;
 int test_gpu_check = 0;
 #ifdef SAFE_MALLOC
 int test_use_safemalloc = 1;
-#elif
+#else
 int test_use_safemalloc = 0;
 #endif
 
@@ -255,8 +257,8 @@ void generateInputMatrices()
 		h_A = A;
 		h_B = B;
 	} else {
-		h_A = (tested_type_host*) malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
-		h_B = (tested_type_host*) malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
+		h_A = (tested_type_host*) safe_host_malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
+		h_B = (tested_type_host*) safe_host_malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
 		if (!(h_A && h_B)) {
 			printf("Could not alloc h_A or h_B");
 			exit(EXIT_FAILURE);
@@ -335,7 +337,7 @@ void generateInputMatrices()
 
 	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
 	{
-		fwrite(&(h_B[i * DEFAULT_INPUT_SIZE]), sizeof(tested_type_host) * DEFAULT_INPUT_SIZE, 1, f_B);
+		fwrite(&(h_B[i * DEFAULT_INPUT_SIZE]), sizeof(tested_type) * DEFAULT_INPUT_SIZE, 1, f_B);
 	}
 	printf("Done\n");
 
@@ -412,6 +414,26 @@ bool check_errors(bool check_output = true, bool check_input = true) {
 
 #pragma omp parallel for shared(output_errors)
 	for (int i = 0; i < matrixSize; i++) {
+		if (check_output) {
+			register tested_type_host valGold = GOLD[i];
+			register tested_type_host valOutput = C[i];
+			if (valGold != valOutput) {
+#pragma omp critical
+				{
+					char error_detail[150];
+					snprintf(error_detail, 150,
+							"p: [%d, %d], r: %1.20e, e: %1.20e",
+							(int) floor(i / k), i % k, (double)valOutput, (double)valGold);
+					if (verbose && (output_errors < 10))
+						printf("%s\n", error_detail);
+#ifdef LOGS
+					if (!generate)
+						log_error_detail(error_detail);
+#endif
+					output_errors++;
+				}
+			}
+		}
 		if (check_input) {
 			assert (endA != NULL);
 			assert (endB != NULL);
@@ -449,26 +471,6 @@ bool check_errors(bool check_output = true, bool check_input = true) {
 						log_info_detail(info_detail);
 #endif
 					input_errors++;
-				}
-			}
-		}
-		if (check_output) {
-			register tested_type_host valGold = GOLD[i];
-			register tested_type_host valOutput = C[i];
-			if (valGold != valOutput) {
-#pragma omp critical
-				{
-					char error_detail[150];
-					snprintf(error_detail, 150,
-							"p: [%d, %d], r: %1.20e, e: %1.20e",
-							(int) floor(i / k), i % k, (double)valOutput, (double)valGold);
-					if (verbose && (output_errors < 10))
-						printf("%s\n", error_detail);
-#ifdef LOGS
-					if (!generate)
-						log_error_detail(error_detail);
-#endif
-					output_errors++;
 				}
 			}
 		}
@@ -523,7 +525,7 @@ __global__ void GoldChkKernel(tested_type *gk, tested_type *ck, int n) {
 	for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
 		row = i * n;
 		for (j=tx; j<tx+GOLDCHK_TILE_SIZE; j+=2) {
-			if (__hne2(*(((half2*)&(gk[row + j*2])), *(((half2*)&(ck[row + j*2]))) {
+			if (__hbne2(*((half2*)(&(gk[row + j*2]))), *((half2*)(&(ck[row + j*2]))))) {
 				atomicAdd(&gck_device_errors, 1);
 			}
 		}
@@ -685,11 +687,11 @@ int main(int argc, char* argv[]) {
 //====================================
 
 //================== Alloc HOST memory
-	A = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
-	B = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
-	C = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	A = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
+	B = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
+	C = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
 
-	GOLD = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	GOLD = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
 
 	if (!(A && B && C && GOLD)) {
 		printf("Failed on host malloc.\n");
@@ -697,8 +699,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (test_input_check) {
-		endA = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
-		endB = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+		endA = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
+		endB = (tested_type_host*) safe_host_malloc(matrixSize * sizeof(tested_type));
 		if (!(endA && endB)) {
 			printf("Failed on host malloc.\n");
 			exit(-3);
@@ -739,6 +741,7 @@ int main(int argc, char* argv[]) {
 
 //================== Init generator if enabled
 	int generate_safechecks_count = 0;
+	bool generate_success = false;
 //====================================
 
 //================== Init DEVICE memory
@@ -756,6 +759,8 @@ int main(int argc, char* argv[]) {
 
 		checkFrameworkErrors(
 				cudaMemset(d_C, 0, matrixSize * sizeof(tested_type)));
+
+		checkFrameworkErrors( cudaDeviceSynchronize() );
 
 		if (verbose)
 			printf(",");
@@ -908,13 +913,14 @@ int main(int argc, char* argv[]) {
 						} else {
 							printf("Generate: Success on compare. Step %d/%d of max. %d\n", generate_safechecks_count, generate_safechecks, iterations);generate_safechecks_count++;
 							if (generate_safechecks_count >= generate_safechecks) {
+								generate_success = true;
 								writeGoldtoFile();
 								loop2 = iterations; // This will make the loop end
 							}
 						}
 					}
 				} else {
-					check_errors(false, test_input_check);
+					check_errors(true, test_input_check);
 				}
 			}
 		}
@@ -974,6 +980,10 @@ int main(int argc, char* argv[]) {
 	if (!generate) 
 		end_log_file();
 #endif
+
+	if (generate && !generate_success) {
+		exit(EXIT_FAILURE);
+	}
 
 	return 0;
 }

@@ -13,10 +13,11 @@ SIZES=[1024]
 ITERATIONS=10000
 SIMTIME=[1000]
 STREAMS=10
+PRECISIONS = ["double", "single", "half"]
 
-def config(board, debug):
+def config(board, arith_type, debug):
     original_hotspot = "hotspot"
-    benchmark_bin = "cuda_trip_single_hotspot"
+    benchmark_bin = "cuda_trip_hotspot_"+arith_type
     benchmark_src = "trip_hotspot"
     print "Generating "+ benchmark_bin + " for CUDA, board:" + board
 
@@ -41,7 +42,12 @@ def config(board, debug):
 
 
     # change it for lava
-    generate = ["cd " + src_hotspot, "make clean", "make -C ../../include ", "make -C ../../include/safe_memory/", "make", "mkdir -p " + data_path,
+    generate = ["cd " + src_hotspot, 
+                "make clean", 
+                "make -C ../../include ", 
+                "make -C ../../include/safe_memory/", 
+                "make PRECISION=" + arith_type, 
+                "mkdir -p " + data_path,
                 "mv ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
@@ -53,10 +59,10 @@ def config(board, debug):
             gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
             gen[1] = ['-size=' + str(i)]
             gen[2] = ['-generate ']
-            gen[3] = ['-temp_file=' + inputFile + "temp_" +  str(i)]
-            gen[4] = ['-power_file=' + inputFile + "power_" + str(i)]  # change for execute
-            gen[5] = ['-gold_file=' + inputFile + "gold_" + str(i) + "_" + str(s)]
-            gen[6] = ['-sim_time=' + str(i)]
+            gen[3] = ['-input_temp=' + inputFile + "temp_" +  str(i)]
+            gen[4] = ['-input_power=' + inputFile + "power_" + str(i)]  # change for execute
+            gen[5] = ['-gold=' + inputFile + "gold_" + str(i) + "_" + arith_type + "_"  + str(s)]
+            gen[6] = ['-sim_time=' + str(s)]
             gen[7] = ['-iterations=1']
             gen[8] = ['-streams=' + str(STREAMS)]
 
@@ -87,4 +93,6 @@ if __name__ == "__main__":
         debug_mode = False
     
     board, _ = discover_board()
-    config(board=board, debug=debug_mode)
+    for p in PRECISIONS:
+        config(board=board, arith_type=p, debug=debug_mode)
+    print "Multiple jsons may have been generated."

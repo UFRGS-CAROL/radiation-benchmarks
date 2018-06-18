@@ -15,6 +15,7 @@
 #include <cstring>
 #include <string>
 #include <iostream>
+#include <unistd.h>
 
 typedef enum {
 	CHAR, INT, FLOAT, DOUBLE
@@ -68,6 +69,8 @@ void triple_device_to_host_copy(triple_memory tmr);
  * fill with an specified byte
  */
 void triple_memset(triple_memory tmr, unsigned char byte);
+
+void* safe_host_malloc(size_t size);
 
 /**
  * Safe memory allocation grant
