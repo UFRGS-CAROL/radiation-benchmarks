@@ -12,7 +12,7 @@ SIZES = [8192]
 PRECISIONS = ["double", "single", "half"]
 ITERATIONS = 100000
 USE_TENSOR_CORES = [0, 1]
-CHECK_INPUTS = [1] #[0, 1]
+CHECK_INPUTS = [0] #[0, 1]
 
 def config(board, arith_type, debug):
 
@@ -86,7 +86,7 @@ def config(board, arith_type, debug):
 
 if __name__ == "__main__":
     try:
-        parameter = str(sys.argv[1:][1]).upper() 
+        parameter = str(sys.argv[0:][1]).upper() 
         if parameter == 'DEBUG':
             debug_mode = True
     except:
