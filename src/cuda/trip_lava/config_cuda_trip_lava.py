@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [12]
+SIZES = [15]
 PRECISIONS = ["double", "single", "half"]
 ITERATIONS = 10000
 
