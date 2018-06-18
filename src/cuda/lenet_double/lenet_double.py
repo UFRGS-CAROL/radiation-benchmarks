@@ -151,10 +151,10 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
     :param iterations: radiation iterations
     :return: void
     """
-    string_info = "iterations: {} gold: {} precision: {} dataset: mnist weights: {} model: {} db_path: {}".format(
+    string_info = "iterations: {} gold: {} precision: {} dataset: mnist_weights: {} model: {} db_path: {}".format(
                                                     iterations,
-                                                    gold_path, weights,
-                                                    model, db_path, LENET_PRECISION)
+                                                    gold_path, LENET_PRECISION, weights,
+                                                    model, db_path)
     # STARTING log file
     lh.start_log_file("Lenet" + LENET_PRECISION.title(), string_info)
     lh.set_iter_interval_print(LOG_INTERVAL)
@@ -196,7 +196,8 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
             gold_label = gold_data[i][0]
             gold_predicted_label = gold_data[i][1]
             gold_ip2_layer = gold_data[i][2]
-            predicted_ip2_layer[3] = 10000000
+            # fault injection
+            #predicted_ip2_layer[3] = 10000000
             error_count = 0
             if label != gold_label or gold_predicted_label != predicted_label: # or gold_correct != correct:
                 error_detail = 'sample: {} label_e: {} label_r: {} predicted_label_e: {} predicted_label_r: {} '
@@ -212,7 +213,9 @@ def testing_radiation(model, weights, db_path, gold_path, iterations):
                 ip2_i += 1
                 if predicted_ip2_value != gold_ip2_value:
                     error_count += 1
-                    error_detail = "ip2_value[{0}] excpected:{1:.20e} read:{2:.20e}".format(ip2_i, gold_ip2_value, predicted_ip2_value)
+                    error_detail = "sample:{0} label_e:{1} label_r:{2} predicted_label_e:{3} predicted_label_r:{4} ip2_value[{5}] excpected:{6:.20e} read:{7:.20e}".format(
+                    i, gold_label, label, gold_predicted_label, predicted_label,
+                    ip2_i, gold_ip2_value, predicted_ip2_value)
                     lh.log_error_detail(error_detail)
                     print('ERROR ON LAST LAYER', error_detail)
 
