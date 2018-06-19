@@ -345,8 +345,8 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu,
 		FOUR_VECTOR *rA_1, *rA_2, *rA_3;
 		FOUR_VECTOR *fA_1, *fA_2, *fA_3;
 		__shared__ FOUR_VECTOR rA_shared_1[200];
-		__shared__ FOUR_VECTOR rA_shared_2[200];
-		__shared__ FOUR_VECTOR rA_shared_3[200];
+		// __shared__ FOUR_VECTOR rA_shared_2[200];
+		// __shared__ FOUR_VECTOR rA_shared_3[200];
 
 		// nei box
 		int pointer;
@@ -356,11 +356,11 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu,
 		tested_type *qB_1, *qB_2, *qB_3;
 		int j = 0;
 		__shared__ FOUR_VECTOR rB_shared_1[200];
-		__shared__ FOUR_VECTOR rB_shared_2[200];
-		__shared__ FOUR_VECTOR rB_shared_3[200];
+		// __shared__ FOUR_VECTOR rB_shared_2[200];
+		// __shared__ FOUR_VECTOR rB_shared_3[200];
 		__shared__ tested_type qB_shared_1[200];
-		__shared__ tested_type qB_shared_2[200];
-		__shared__ tested_type qB_shared_3[200];
+		// __shared__ tested_type qB_shared_2[200];
+		// __shared__ tested_type qB_shared_3[200];
 
 		// common
 		tested_type r2;
@@ -399,8 +399,8 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu,
 		// home box - shared memory
 		while(wtx<NUMBER_PAR_PER_BOX) {
 			rA_shared_1[wtx] = read_voter(rA_1, rA_2, rA_3, wtx);
-			rA_shared_2[wtx] = read_voter(rA_1, rA_2, rA_3, wtx);
-			rA_shared_3[wtx] = read_voter(rA_1, rA_2, rA_3, wtx);
+			// rA_shared_2[wtx] = read_voter(rA_1, rA_2, rA_3, wtx);
+			// rA_shared_3[wtx] = read_voter(rA_1, rA_2, rA_3, wtx);
 			wtx = wtx + NUMBER_THREADS;
 		}
 		wtx = tx;
@@ -450,12 +450,12 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu,
 			// nei box - shared memory
 			while(wtx<NUMBER_PAR_PER_BOX) {
 				rB_shared_1[wtx] = read_voter(rB_1, rB_2, rB_3, wtx);
-				rB_shared_2[wtx] = read_voter(rB_1, rB_2, rB_3, wtx);
-				rB_shared_3[wtx] = read_voter(rB_1, rB_2, rB_3, wtx);
+				// rB_shared_2[wtx] = read_voter(rB_1, rB_2, rB_3, wtx);
+				// rB_shared_3[wtx] = read_voter(rB_1, rB_2, rB_3, wtx);
 
 				qB_shared_1[wtx] =  read_voter(qB_1, qB_2, qB_3,wtx);
-				qB_shared_2[wtx] =  read_voter(qB_1, qB_2, qB_3,wtx);
-				qB_shared_3[wtx] =  read_voter(qB_1, qB_2, qB_3,wtx);
+				// qB_shared_2[wtx] =  read_voter(qB_1, qB_2, qB_3,wtx);
+				// qB_shared_3[wtx] =  read_voter(qB_1, qB_2, qB_3,wtx);
 				wtx = wtx + NUMBER_THREADS;
 			}
 			wtx = tx;
@@ -467,28 +467,29 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu,
 			//	Calculation
 			//-----------------------------------------------------
 			// Caching
-			register FOUR_VECTOR r2_rA_shared_cached_WTX; // safe
-			register FOUR_VECTOR h2_rB_shared_cached_J; // safe
-			register tested_type h2_qB_shared_cached_J; // safe
+			// register FOUR_VECTOR r2_rA_shared_cached_WTX; // safe
+			// register FOUR_VECTOR h2_rB_shared_cached_J; // safe
+			// register tested_type h2_qB_shared_cached_J; // safe
 
 			// loop for the number of particles in the home box
 			// for (int i=0; i<nTotal_i; i++){
 			while(wtx<NUMBER_PAR_PER_BOX) {
 
-				r2_rA_shared_cached_WTX = read_voter(rA_shared_1, rA_shared_2, rA_shared_3, wtx);
+				// r2_rA_shared_cached_WTX = read_voter(rA_shared_1, rA_shared_2, rA_shared_3, wtx);
 
 				// loop for the number of particles in the current nei box
 				for (j=0; j<NUMBER_PAR_PER_BOX; j++) {
 
-					h2_rB_shared_cached_J = read_voter(rB_shared_1, rB_shared_2, rB_shared_3, j);
+					// h2_rB_shared_cached_J = read_voter(rB_shared_1, rB_shared_2, rB_shared_3, j);
 
-					r2 = 	r2_rA_shared_cached_WTX.v
+					r2 = 	rA_shared_1[wtx].v
 							+ 
-							h2_rB_shared_cached_J.v
+							rB_shared_1[j].v
 							- 
-							DOT( 	r2_rA_shared_cached_WTX,
-									h2_rB_shared_cached_J
-								);
+							DOT( 	
+								rA_shared_1[wtx],
+								rB_shared_1[j]
+							);
 
 					u2 = a2*r2;
 #if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
@@ -498,78 +499,78 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu,
 #endif
 					fs = tested_type(2.0)*vij;
 
-					d.x = 	r2_rA_shared_cached_WTX.x  
+					d.x = 	rA_shared_1[wtx].x  
 							- 
-							h2_rB_shared_cached_J.x;
+							rB_shared_1[j].x;
 
 					fxij=fs*d.x;
 
-					d.y = 	r2_rA_shared_cached_WTX.y  
+					d.y = 	rA_shared_1[wtx].y  
 							- 
-							h2_rB_shared_cached_J.y;
+							rB_shared_1[j].y;
 
 					fyij=fs*d.y;
 
-					d.z = 	r2_rA_shared_cached_WTX.z  
+					d.z = 	rA_shared_1[wtx].z  
 							- 
-							h2_rB_shared_cached_J.z;
+							rB_shared_1[j].z;
 							
 					fzij=fs*d.z;
 
-					h2_qB_shared_cached_J = (tested_type)read_voter(qB_shared_1, qB_shared_2, qB_shared_3, j);
+					// h2_qB_shared_cached_J = (tested_type)read_voter(qB_shared_1, qB_shared_2, qB_shared_3, j);
 
 					fA_1[wtx].v +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									vij);
 					fA_2[wtx].v +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									vij);
 					fA_3[wtx].v +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									vij);
 									
 
 					fA_1[wtx].x +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									fxij);
 					fA_2[wtx].x +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									fxij);
 					fA_3[wtx].x +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									fxij);
 
 
 					fA_1[wtx].y +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									fyij);
 					fA_2[wtx].y +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									fyij);
 					fA_3[wtx].y +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									fyij);
 
 
 					fA_1[wtx].z +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									fzij);
 					fA_2[wtx].z +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									fzij);
 					fA_3[wtx].z +=  (tested_type)(
-									h2_qB_shared_cached_J
+									qB_shared_1[j]
 									*
 									fzij);
 				}
