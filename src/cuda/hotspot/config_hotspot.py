@@ -17,8 +17,8 @@ PRECISIONS = ["double", "single", "half"]
 
 def config(board, arith_type, debug):
     original_hotspot = "hotspot"
-    benchmark_bin = "cuda_trip_hotspot_"+arith_type
-    benchmark_src = "trip_hotspot"
+    benchmark_bin = "cuda_hotspot_"+arith_type
+    benchmark_src = "hotspot"
     print "Generating "+ benchmark_bin + " for CUDA, board:" + board
 
     confFile = '/etc/radiation-benchmarks.conf'
