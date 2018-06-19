@@ -64,6 +64,40 @@
 	#error TEST TYPE NOT DEFINED OR INCORRECT. USE PRECISION=<double|single|half>.
 #endif
 
+#ifndef checkFrameworkErrors
+#define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
+void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
+	if (error == cudaSuccess) {
+		return;
+	}
+	char errorDescription[250];
+	snprintf(errorDescription, 250, "CUDA Framework error: %s. Bailing.",
+			cudaGetErrorString(error));
+#ifdef LOGS
+	log_error_detail(errorDescription);
+#endif
+
+	printf("%s - Line: %d at %s\n", errorDescription, line, file);
+	exit (EXIT_FAILURE);
+}
+
+#define checkFrameworkErrorsNoFail(error) __checkFrameworkErrorsNoFail(error, __LINE__, __FILE__)
+bool __checkFrameworkErrorsNoFail(cudaError_t error, int line, const char* file) {
+	if (error == cudaSuccess) {
+		return false;
+	}
+	char errorDescription[250];
+	snprintf(errorDescription, 250, "CUDA Framework error: %s. Not failing...",
+			cudaGetErrorString(error));
+#ifdef LOGS
+	log_error_detail(errorDescription);
+#endif
+
+	printf("%s - Line: %d at %s\n", errorDescription, line, file);
+	return true;
+}
+#endif
+
 //====================== benchmark+setup configuration
 int generate = 0;
 int verbose = 0;
@@ -484,8 +518,10 @@ bool check_errors(bool check_output = true, bool check_input = true) {
 		log_error_count(output_errors);
 	}
 #endif
-	if (input_errors != 0) printf("@");
-	if (output_errors != 0) printf("#");
+	if ((input_errors != 0) && (!verbose) ) printf("@");
+	if ((input_errors != 0) && (verbose) ) printf("Input errors: %d\n", input_errors);
+	if ((output_errors != 0) && (!verbose) ) printf("#");
+	if ((output_errors != 0) && (verbose) ) printf("Output errors: %d\n", output_errors);
 
 	if ((output_errors != 0) || (input_errors != 0)) {
 		//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
@@ -525,7 +561,7 @@ __global__ void GoldChkKernel(tested_type *gk, tested_type *ck, int n) {
 	for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
 		row = i * n;
 		for (j=tx; j<tx+GOLDCHK_TILE_SIZE; j+=2) {
-			if (__hbne2(*((half2*)(&(gk[row + j*2]))), *((half2*)(&(ck[row + j*2]))))) {
+			if (__hbne2(*((half2*)(&(gk[row + j]))), *((half2*)(&(ck[row + j]))))) {
 				atomicAdd(&gck_device_errors, 1);
 			}
 		}
@@ -900,7 +936,7 @@ int main(int argc, char* argv[]) {
 
 				if (generate) {
 					if (generate_safechecks_count == 0) {
-						printf("Generate: First generation. Step %d/%d of max. %d \n", generate_safechecks_count, 
+						if (verbose) printf("Generate: First generation. Step %d/%d of max. %d \n", generate_safechecks_count, 
 						generate_safechecks, iterations);
 						if (check_errors(false, test_input_check) ) {
 							generate_safechecks_count++;
@@ -908,14 +944,14 @@ int main(int argc, char* argv[]) {
 						}
 					} else {
 						if (!check_errors(true, test_input_check)) {
-							printf("Generate: Failed on compare. Step %d/%d of max. %d \n", generate_safechecks_count, generate_safechecks, iterations);
+							if (verbose) printf("Generate: Failed on compare. Step %d/%d of max. %d \n", generate_safechecks_count, generate_safechecks, iterations);
 							generate_safechecks_count = 0;
 						} else {
-							printf("Generate: Success on compare. Step %d/%d of max. %d\n", generate_safechecks_count, generate_safechecks, iterations);generate_safechecks_count++;
+							if (verbose) printf("Generate: Success on compare. Step %d/%d of max. %d\n", generate_safechecks_count, generate_safechecks, iterations);generate_safechecks_count++;
 							if (generate_safechecks_count >= generate_safechecks) {
 								generate_success = true;
 								writeGoldtoFile();
-								loop2 = iterations; // This will make the loop end
+								break;
 							}
 						}
 					}
@@ -927,7 +963,7 @@ int main(int argc, char* argv[]) {
 		//====================================
 
 		//================== Console hearthbeat
-		printf(".");
+		if (!verbose) printf(".");
 		fflush(stdout);
 		//====================================
 

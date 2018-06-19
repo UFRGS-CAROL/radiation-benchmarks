@@ -24,7 +24,7 @@ ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 endif
 
 
-NVCC_FLAGS= $(ARCH) -O3  -lcublas -std=c++11 -lSafeMemory 
+NVCC_FLAGS= $(ARCH) -O3  -lcublas -std=c++11
 INCLUDE= -I/usr/local/cuda/include
 LIBRARY= -L/usr/local/cuda/lib64/
 CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
@@ -51,7 +51,7 @@ NVCC_FLAGS+= -g -G
 endif
 
 ifeq ($(SAFE_MALLOC), 1)
-NVCC_FLAGS+= -DSAFE_MALLOC
+NVCC_FLAGS+= -DSAFE_MALLOC -lSafeMemory 
 LIBRARY+= -L../../include/safe_memory
 endif
 

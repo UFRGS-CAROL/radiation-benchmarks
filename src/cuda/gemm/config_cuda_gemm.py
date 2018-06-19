@@ -8,9 +8,10 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [8192]
+SIZES = [14336]
 PRECISIONS = ["double", "single", "half"]
 ITERATIONS = 100000
+SAFE_MEMORY_CUDA = 0
 USE_TENSOR_CORES = [0, 1]
 CHECK_INPUTS = [0] #[0, 1]
 
@@ -45,7 +46,7 @@ def config(board, arith_type, debug):
                 "cd " + src_benchmark, 
                 "make clean", 
                 "make -C ../../include ", 
-                "make PRECISION=" + arith_type + " -j 4 " + "DEFAULT_INPUT_SIZE=" + str(max_size),
+                "make PRECISION=" + arith_type + " -j 4 " + " DEFAULT_INPUT_SIZE=" + str(max_size) + " SAFE_MALLOC=" + str(SAFE_MEMORY_CUDA),
                 "mkdir -p " + data_path, 
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
