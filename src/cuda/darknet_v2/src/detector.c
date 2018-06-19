@@ -893,7 +893,7 @@ void test_detector_radiation(Args *args) {
 			}
 #endif
 			int error_count = compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, it,
-					args->save_layers, i, args->img_list_path, max_pool_errors, im);
+					args->save_layers, i, args->img_list_path, max_pool_errors, im, 1);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(

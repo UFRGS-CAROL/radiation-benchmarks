@@ -579,8 +579,8 @@ void destroy_handle(multi_thread_hd_st *dt) {
 /**
  * It works only for GPU mode
  */
-float **network_predict_mr(network *redundant_nets, float **inputs, int mr) {
-	float** out_mr = NULL;
+void network_predict_mr(network *redundant_nets, float **inputs, int mr, float** out_mr) {
+	//float** out_mr = NULL;
 
 	int start_layer = 0;
 	init_mr_buffers(mr);
@@ -592,7 +592,7 @@ float **network_predict_mr(network *redundant_nets, float **inputs, int mr) {
 //#ifdef GPU
 	if (gpu_index >= 0) {
 		int i;
-		out_mr = (float**) calloc(mr, sizeof(float*));
+//		out_mr = (float**) calloc(mr, sizeof(float*));
 
 		pthread_t threads[mr];
 		thread_parameters tp[mr];
@@ -625,7 +625,7 @@ float **network_predict_mr(network *redundant_nets, float **inputs, int mr) {
 //#endif
 
 //	free(buffer_states);
-	return out_mr;
+//	return out_mr;
 }
 
 float *network_predict(network net, float *input) {

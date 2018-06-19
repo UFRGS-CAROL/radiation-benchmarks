@@ -639,7 +639,7 @@ void test_yolo_radiation_test(Args *arg) {
 			}
 #endif
 			int error_count = compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, i,
-					arg->save_layers, it, arg->img_list_path, max_pool_errors, im);
+					arg->save_layers, it, arg->img_list_path, max_pool_errors, im, 1);
 			time_cmp = mysecond() - time_cmp;
 
 			printf(
@@ -720,7 +720,7 @@ int set_abft_approach(int mr_size, Args* arg) {
  * Plus DMR or TMR
  */
 void test_yolo_radiation_dmr(Args *arg) {
-
+	printf("before reading gold\n");
 	//-------------------------------------------------------------------------------
 	//radiation test case needs load gold first
 	detection gold = load_gold(arg);
@@ -764,17 +764,20 @@ void test_yolo_radiation_dmr(Args *arg) {
 //	box *boxes = calloc(total_size, sizeof(box));
 	// Must alloc for each execution line of the TMR
 	box **array_mr_box = calloc(mr_size, sizeof(box*));
-	for(mr_i = 0; mr_i < mr_size; mr_i++)
-		array_mr_box = calloc(total_size, sizeof(box));
+
+	for(mr_i = 0; mr_i < mr_size; mr_i++){
+		array_mr_box[mr_i] = calloc(total_size, sizeof(box));
+	}
 
 	float ***array_mr_probs = calloc(mr_size, sizeof(float**));
-	for(mr_i = 0; mr_i < mr_size; mr_size++)
+
+	for(mr_i = 0; mr_i < mr_size; mr_i++){
 		array_mr_probs[mr_i] = calloc(total_size, sizeof(float*));
 //	float **probs = calloc(total_size, sizeof(float *));
-
 		for (j = 0; j < total_size; j++)
 //			probs[j] = calloc(l[0].classes, sizeof(float *));
 			array_mr_probs[mr_i][j] = calloc(l[0].classes, sizeof(float));
+	}
 
 	//-------------------------------------------------------------------------------
 	//load all images
@@ -791,7 +794,9 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 	int i, it;
 	// Inputs for
-	float **X = calloc(mr_size, sizeof(float*));
+	float* X[mr_size]; // = calloc(mr_size, sizeof(float*));
+	float* mr_predictions[mr_size];// = calloc(mr_size, sizeof(float*));
+
 	for (it = 0; it < arg->iterations; it++) {
 		for (i = 0; i < gold.plist_size; i++) {
 
@@ -803,12 +808,12 @@ void test_yolo_radiation_dmr(Args *arg) {
 
 			//This is the detection
 			start_iteration_app();
-			float **mr_predictions = network_predict_mr(net, X, mr_size);
+			//float **mr_predictions = network_predict_mr(net, X, mr_size);
+			network_predict_mr(net, X, mr_size, mr_predictions);
 			end_iteration_app();
-			printf("Passou\n");
 
 			double time_cmp = mysecond() - time;
-
+			int total_mr_errors = 0;
 			for (mr_i = 0; mr_i < mr_size; mr_i++) {
 				float *predictions = mr_predictions[mr_i];
 				float **probs = array_mr_probs[mr_i];
@@ -822,8 +827,6 @@ void test_yolo_radiation_dmr(Args *arg) {
 							l[mr_i].side * l[mr_i].side * l[mr_i].n,
 							l[mr_i].classes, nms);
 
-				//Compare if the inputs and outputs are good
-				compare_input_output();
 				//      here we test if any error happened
 				//          if shit happened we log
 
@@ -836,15 +839,14 @@ void test_yolo_radiation_dmr(Args *arg) {
 				}
 #endif
 				double time_to_compare = mysecond();
-				compare(&gold, probs, boxes, l[0].w * l[0].h * l[0].n,
+				int mr_i_errors = compare(&gold, probs, boxes, l[0].w * l[0].h * l[0].n,
 						l[0].classes, i, arg->save_layers, it,
-						arg->img_list_path, max_pool_errors, im_array[i]);
+						arg->img_list_path, max_pool_errors, im_array[i], mr_i);
 
 				time_to_compare = mysecond() - time_to_compare;
-
-				printf(
-						"MR ==>> %d Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds.\n",
-						mr_i, it, i, time_cmp, time_to_compare);
+				total_mr_errors += mr_i_errors;
+				printf("MR ==>> %d Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds. Errors %d Total errors %d\n",
+						mr_i, it, i, time_cmp, time_to_compare, mr_i_errors, total_mr_errors);
 
 				//########################################
 
@@ -862,10 +864,11 @@ void test_yolo_radiation_dmr(Args *arg) {
 				clear_boxes_and_probs(boxes, probs, l[0].w * l[0].h * l[0].n,
 						l[0].classes);
 			}
-			free(mr_predictions);
+			//free(mr_predictions);
 
 		}
 	}
+	
 	//free the memory
 	for(mr_i = 0; mr_i < mr_size; mr_i++){
 		float **probs = array_mr_probs[mr_i];
@@ -892,147 +895,15 @@ void test_yolo_radiation_dmr(Args *arg) {
 }
 
 
-/**
- * Test yolo: radiation test case
- * For DDR memories that contains stuck at errors
- */
-void test_yolo_mem_check(Args *arg) {
-	//-------------------------------------------------------------------------------
-		//radiation test case needs load gold first
-		detection gold = load_gold(arg);
-		printf("\nArgs inside detector_radiation\n");
-		print_args(*arg);
-		gold.network_name = "darknet_v1";
-		//if abft is set these parameters will also be set
-		error_return max_pool_errors;
-		init_error_return(&max_pool_errors);
-		//  set abft
-		if (arg->abft >= 0 && arg->abft < MAX_ABFT_TYPES) {
-	#ifdef GPU
-			set_abft_approach(1, arg);
-	#endif
-		}
-
-	//-------------------------------------------------------------------------------
-	//-------------------------------------------------------------------------------
-		network net = parse_network_cfg(arg->config_file);
-		if (arg->weights) {
-			load_weights(&net, arg->weights);
-		}
-		detection_layer l = net.layers[net.n - 1];
-		set_batch_network(&net, 1);
-		srand(2222222);
-		clock_t time;
-
-		int j;
-		float nms = .4;
-		box *boxes = calloc(l.side * l.side * l.n, sizeof(box));
-		float **probs = calloc(l.side * l.side * l.n, sizeof(float *));
-		for (j = 0; j < l.side * l.side * l.n; ++j)
-			probs[j] = calloc(l.classes, sizeof(float *));
-
-	//-------------------------------------------------------------------------------
-		//load all images
-		const image *im_array = load_all_images(gold);
-
-		const image *im_array_sized = load_all_images_sized(im_array, net.w, net.h,
-				gold.plist_size);
-
-		//need to allocate layers arrays
-		alloc_gold_layers_arrays(&gold, &net);
-	//  int classes = l.classes;
-	//  int total = l.side * l.side * l.n;
-	//-------------------------------------------------------------------------------
-
-		int i, it;
-		int overall_errors = 0;
-		for (it = 0; it < arg->iterations; it++) {
-			for (i = 0; i < gold.plist_size; i++) {
-
-				image im = im_array[i]; //load_image_color(img_list[i], 0, 0);
-				image sized = im_array_sized[i]; //resize_image(im, net.w, net.h);
-				float *X = sized.data;
-				time = clock();
-
-				double time = mysecond();
-				//This is the detection
-				start_iteration_app();
-
-				float *predictions = network_predict(net, X);
-
-				convert_detections(predictions, l.classes, l.n, l.sqrt, l.side, 1,
-						1, arg->thresh, probs, boxes, 0);
-				if (nms)
-					do_nms_sort(boxes, probs, l.side * l.side * l.n, l.classes,
-							nms);
-
-				end_iteration_app();
-				time = mysecond() - time;
-	//      here we test if any error happened
-	//          if shit happened we log
-				double time_cmp = mysecond();
-
-	#ifdef GPU
-				//before compare copy maxpool err detection values
-				//smart pooling
-				if (arg->abft == 2) {
-					get_and_reset_error_detected_values(max_pool_errors);
-				}
-	#endif
-				int error_count = compare(&gold, probs, boxes, l.w * l.h * l.n, l.classes, i,
-						arg->save_layers, it, arg->img_list_path, max_pool_errors, im);
-				time_cmp = mysecond() - time_cmp;
-
-				printf(
-						"Iteration %d - image %d predicted in %f seconds. Comparisson in %f seconds.\n",
-						it, i, time, time_cmp);
-				if ((overall_errors +=  error_count) > MAX_ERROR_COUNT){
-					const char error_string[1000];
-					sprintf(error_string, "%d ERRORS DETECTED, WHITCH IS MUCH MORE THAN %d. FINISHING APPLICATION\n", overall_errors, MAX_ERROR_COUNT);
-					error(error_string);
-				}
-	//########################################
-
-	#ifdef GEN_IMG
-				//draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, voc_labels, 20);
-				draw_detections(im, l.side * l.side * l.n, arg->thresh, boxes, probs,
-						voc_names, voc_labels, 20);
-				char temp[100];
-				sprintf(temp, "predictions_it_%d", i);
-				save_image(im, temp);
-				show_image(im, temp);
-	#endif
-				clear_boxes_and_probs(boxes, probs, l.w * l.h * l.n, l.classes);
-
-			}
-		}
-
-		//free the memory
-		free_ptrs((void **) probs, l.w * l.h * l.n);
-		free(boxes);
-		delete_detection_var(&gold, arg);
-
-		free_all_images(im_array, gold.plist_size);
-		free_all_images(im_array_sized, gold.plist_size);
-
-		//free smartpool errors
-		free_error_return(&max_pool_errors);
-	#ifdef GPU
-		free_err_detected();
-	#endif
-
-}
-
 void run_yolo_rad(Args args) {
 	if (args.generate_flag) {
 		test_yolo_generate(&args);
 	} else if (strcmp(args.execution_type, "yolo") == 0) {
 		test_yolo_radiation_test(&args);
 	} else if (strcmp(args.execution_type, "yolo_dmr") == 0) {
+		printf("passou no run yolo\n");		
 		test_yolo_radiation_dmr(&args);
-	} else if (strcmp(args.execution_type, "yolo_mem_check") == 0){
-		test_yolo_mem_check(&args);
-	}
+	} 
 }
 
 void run_yolo(int argc, char **argv) {

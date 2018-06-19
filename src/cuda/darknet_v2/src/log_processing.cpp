@@ -577,13 +577,15 @@ inline std::string error_check(float f_pb, float g_pb, box f_b, box g_b,
 
 int compare(detection *det, float **f_probs, box *f_boxes, int num, int classes,
 		int img, int save_layers, int test_iteration, char *img_list_path,
-		error_return max_pool_errors, image im) {
+		error_return max_pool_errors, image im, int stream_mr) {
+//	printf("passou no compare\n");
 
 //	network *net = det->net;
 	prob_array gold = det->pb_gold[img];
 	float **g_probs = gold.probs;
 	box *g_boxes = gold.boxes;
 	char* img_string = det->img_names[img];
+//	printf("sssss passou no compare\n");
 
 	// Check PR if critical
 	std::list<box> found_boxes;
@@ -591,9 +593,11 @@ int compare(detection *det, float **f_probs, box *f_boxes, int num, int classes,
 
 	int error_count = 0;
 	for (int i = 0; i < num; i++) {
-
+//		printf("the error is here %p\n", g_boxes);
 		box g_b = g_boxes[i];
+//		printf("the error is here %p\n", f_boxes);		
 		box f_b = f_boxes[i];
+//		printf("before get index\n");
 		int class_g = get_index(g_probs[i], classes);
 		int class_f = get_index(f_probs[i], classes);
 
@@ -602,7 +606,7 @@ int compare(detection *det, float **f_probs, box *f_boxes, int num, int classes,
 
 //		printf("Gold box dddd\n");
 //		print_box(g_b);
-//
+
 //		printf("Found box\n");
 //		print_box(g_b);
 //		printf("Gold prob %f found prob %f\n", g_prob, f_prob);
@@ -618,8 +622,10 @@ int compare(detection *det, float **f_probs, box *f_boxes, int num, int classes,
 		std::string error_detail = error_check(f_prob, g_prob, f_b, g_b,
 				img_string, class_g, class_f, i);
 
+
 		if (error_detail != "") {
 			error_count++;
+			error_detail += " stream_modular_redundancy " + std::to_string(stream_mr);
 #ifdef LOGS
 			log_error_detail(const_cast<char*>(error_detail.c_str()));
 #else

@@ -107,7 +107,7 @@ detection load_gold(Args*);
 
 int compare(detection *det, float **f_probs, box *f_boxes, int num, int classes,
 		int img, int save_layers, int test_iteration, char *img_list_path,
-		error_return max_pool_errors, image im);
+		error_return max_pool_errors, image im, int stream_mr);
 
 void clear_boxes_and_probs(box*, float**, int, int);
 
