@@ -141,8 +141,10 @@ tested_type *d_B;
 tested_type *d_C;
 tested_type *d_GOLD;
 
+
+#define BYTE unsigned char
 size_t availableDeviceMemory = 0;
-void* deviceMemory = NULL;
+BYTE* deviceMemory = NULL;
 //====================================
 
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
@@ -180,9 +182,9 @@ void GetDevice() {
 
 	checkFrameworkErrors(cudaSetDevice(0));
 	checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
-	availableDeviceMemory = prop.totalGlobalMem * 0.8;
+	availableDeviceMemory = prop.totalGlobalMem * 0.9;
 	printf("\nDevice total globam memory: %llu\n", prop.totalGlobalMem);
-	printf("\nAvailable device memory for this benchmark: %fGB\n", (double)availableDeviceMemory / (1024*1024*1024));
+	printf("\nAvailable device memory for this benchmark: %.2fGB\n", (double)availableDeviceMemory / (1024*1024*1024));
 	printf("\ndevice: %d %s\n", *ndevice, prop.name);
 }
 
@@ -206,8 +208,6 @@ void freeCudaMemory() {
 	deviceMemory = NULL;
 }
 
-#define BYTE unsigned char
-
 __device__ unsigned long long int memoryFailures = 0;
 
 __global__ void MemoryTester(BYTE* first, BYTE* second, int n) {
@@ -221,23 +221,35 @@ __global__ void MemoryTester(BYTE* first, BYTE* second, int n) {
 }
 
 bool testOffsetWithVector(size_t offset, size_t size, BYTE* testVector) {
-	printf("OFFSET %lu\n", offset);
+	char info_detail[100];
+	snprintf(info_detail, 100, "Trying to alloc memory with OFFSET %lu", offset);
+#ifdef LOGS
+	if (!generate) {
+		log_info_detail(info_detail);
+	}
+#endif
+	printf("%s\n", info_detail);
+
 	unsigned long long int hostMemoryFailures = 0;
 	int n = (int)sqrt(size);
 	dim3 blockSize(32, 32);
 	dim3 gridSize(ceil(n / 32), ceil(n / 32));
+
 	checkFrameworkErrors( cudaMemcpy(deviceMemory + offset, testVector, size, cudaMemcpyHostToDevice) );
 	checkFrameworkErrors( cudaMemcpy(deviceMemory + offset + size, testVector, size, cudaMemcpyHostToDevice) );
 	checkFrameworkErrors( cudaMemcpyToSymbol(memoryFailures, &hostMemoryFailures, sizeof(unsigned long long int)) );
 	checkFrameworkErrors( cudaDeviceSynchronize() );
+
 	MemoryTester<<<gridSize, blockSize>>>((BYTE*) deviceMemory + offset, (BYTE*) deviceMemory + offset + size, n);
+
 	checkFrameworkErrors( cudaPeekAtLastError() );
 	checkFrameworkErrors( cudaDeviceSynchronize() );
 	checkFrameworkErrors( cudaMemcpyFromSymbol(&hostMemoryFailures, memoryFailures, sizeof(unsigned long long int)) );
+	
 	return hostMemoryFailures == 0;
 }
 bool testOffsetWithValues(size_t offset, size_t size) {
-	printf("OFFSET %lu\n", offset);
+	printf("OFFSET %lu (%.2f / %.2f)\n", offset, (double)offset / (1024*1024*1024), (double)availableDeviceMemory / (1024*1024*1024));
 	unsigned long long int hostMemoryFailures = 0;
 	int n = (int)sqrt(size);
 	dim3 blockSize(32, 32);
@@ -288,41 +300,60 @@ void allocCudaMemory() {
 	// ALLOC d_A, d_B, d_C, d_GOLD
 
 	size_t fullMatrixSize = matrixSize * sizeof(tested_type);
+	size_t offsetStep = (1024*1024*256); // 128MB
+
+	int retry_counts = 0;
+	int max_retries = 5;
 
 	// Alloc all the gpu memory
 	size_t currentOffset = 0;
+	size_t lastUsedOffset = 0;
 	checkFrameworkErrors( cudaMalloc(&deviceMemory, availableDeviceMemory) );
 	// d_A
 	while (currentOffset + fullMatrixSize*2 < availableDeviceMemory) {
 		if (testOffsetWithVector(currentOffset, fullMatrixSize, (BYTE*)A))
 			break;
-		currentOffset += fullMatrixSize*2;
+		currentOffset += offsetStep;
 	}
 	if (currentOffset + fullMatrixSize*2 >= availableDeviceMemory) {
 #ifdef LOGS
 		if (!generate) {
 			log_error_detail((char*)"Could not alloc safe A");
-			exit(EXIT_FAILURE);
 		}
 #endif
+		if (retry_counts >= max_retries) {
+			printf("Failed to found safe memory\n");
+			exit(EXIT_FAILURE);
+		}
+		retry_counts++;
+		currentOffset = lastUsedOffset + fullMatrixSize;
 	}
 	d_A = (tested_type*) (deviceMemory + currentOffset);
+	lastUsedOffset = currentOffset;
+	printf("d_A found at %llu\n", currentOffset);
 	currentOffset += fullMatrixSize;
 	// d_B
 	while (currentOffset + fullMatrixSize*2 < availableDeviceMemory) {
 		if (testOffsetWithVector(currentOffset, fullMatrixSize, (BYTE*)B))
 			break;
-		currentOffset += fullMatrixSize*2;
+		currentOffset += offsetStep;
 	}
 	if (currentOffset + fullMatrixSize*2 >= availableDeviceMemory) {
 #ifdef LOGS
 		if (!generate) {
 			log_error_detail((char*)"Could not alloc safe B");
-			exit(EXIT_FAILURE);
 		}
 #endif
+		if (retry_counts >= max_retries) {
+			printf("Failed to found safe memory\n");
+			exit(EXIT_FAILURE);
+		}
+		retry_counts++;
+		currentOffset = lastUsedOffset + fullMatrixSize;
 	}
 	d_B = (tested_type*) (deviceMemory + currentOffset);
+	lastUsedOffset = currentOffset;
+	printf("d_B found at %llu\n", currentOffset);
 	currentOffset += fullMatrixSize;
 	// d_C
 	while (currentOffset + fullMatrixSize*2 < availableDeviceMemory) {
@@ -333,34 +364,48 @@ void allocCudaMemory() {
 			if (testOffsetWithVector(currentOffset, fullMatrixSize, (BYTE*)GOLD))
 				break;
 		}
-		currentOffset += fullMatrixSize*2;
+		currentOffset += offsetStep;
 	}
 	if (currentOffset + fullMatrixSize*2 >= availableDeviceMemory) {
 #ifdef LOGS
 		if (!generate) {
 			log_error_detail((char*)"Could not alloc safe C");
-			exit(EXIT_FAILURE);
 		}
 #endif
+		if (retry_counts >= max_retries) {
+			printf("Failed to found safe memory\n");
+			exit(EXIT_FAILURE);
+		}
+		retry_counts++;
+		currentOffset = lastUsedOffset + fullMatrixSize;
 	}
 	d_C = (tested_type*) (deviceMemory + currentOffset);
+	lastUsedOffset = currentOffset;
+	printf("d_C found at %llu\n", currentOffset);
 	currentOffset += fullMatrixSize;
 	if (test_gpu_check) {
 		// d_GOLD
 		while (currentOffset + fullMatrixSize*2 < availableDeviceMemory) {
 			if (testOffsetWithVector(currentOffset, fullMatrixSize, (BYTE*)GOLD))
 				break;
-			currentOffset += fullMatrixSize*2;
+			currentOffset += offsetStep;
 		}
 		if (currentOffset + fullMatrixSize*2 >= availableDeviceMemory) {
 #ifdef LOGS
 			if (!generate) {
 				log_error_detail((char*)"Could not alloc safe GOLD");
-				exit(EXIT_FAILURE);
 			}
 #endif
+			if (retry_counts >= max_retries) {
+				printf("Failed to found safe memory\n");
+				exit(EXIT_FAILURE);
+			}
+			retry_counts++;
+			currentOffset = lastUsedOffset + fullMatrixSize;
 		}
 		d_GOLD = (tested_type*) (deviceMemory + currentOffset);
+		lastUsedOffset = currentOffset;
+		printf("d_GOLD found at %llu\n", currentOffset);
 		currentOffset += fullMatrixSize;
 	}
 }
