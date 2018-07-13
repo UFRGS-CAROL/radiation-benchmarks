@@ -875,8 +875,8 @@ int main(int argc, char *argv []) {
 
 	char test_info[200];
 	char test_name[200];
-	snprintf(test_info, 200, "type:%s-precision-triplicated streams:%d boxes:%d block_size:%d", test_precision_description, nstreams, dim_cpu.boxes1d_arg, NUMBER_THREADS);
-	snprintf(test_name, 200, "cuda_trip_%s_lava", test_precision_description);
+	snprintf(test_info, 200, "type:%s-precision streams:%d boxes:%d block_size:%d", test_precision_description, nstreams, dim_cpu.boxes1d_arg, NUMBER_THREADS);
+	snprintf(test_name, 200, "cuda_%s_lava", test_precision_description);
 	printf("\n=================================\n%s\n%s\n=================================\n\n", test_name, test_info);
 	#ifdef LOGS
 		if (!generate) {
