@@ -277,7 +277,7 @@ int main(int argc, char **argv)
 #ifdef LOGS
     char test_info[100];
     snprintf(test_info, 100, "simIter:%d gridSize:%dx%d",sim_time, grid_rows, grid_cols);
-    start_log_file((char *)"openMPHotspot", test_info);
+    start_log_file((char *)"openMPDHotspot", test_info);
     set_max_errors_iter(MAX_ERR_ITER_LOG);
     set_iter_interval_print(10);
 #endif /* LOGS */
