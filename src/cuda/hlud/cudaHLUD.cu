@@ -58,6 +58,11 @@ int matrixSize=0; // = k * k matrix size
 int iterations=100000000; // global loop iteracion
 bool generate=false;
 
+#define GENERATOR_MAXABSVALUE 4.1e+16
+#define GENERATOR_MINABSVALUE 0
+typedef double tested_type;
+typedef double tested_type_host;
+
 //================== Input paths
 char *gold_matrix_path, *input_matrix_path;
 
@@ -151,26 +156,79 @@ void copyCudaMemory()
 		exit(EXIT_FAILURE);} //mem allocate failure
 }
 
-void generateInputMatrix(half_float::half *m) {
-	if (!(f_INPUT = fopen(input_matrix_path, "wb"))) {
-		printf("Error: Could not open input file in wb mode. %s\n", input_matrix_path);
-		exit(EXIT_FAILURE);
+void generateInputMatrices()
+{
+	FILE *f_INPUT;
+	half_float::half *h_INPUT;
+
+	if (k==DEFAULT_INPUT_SIZE) {
+		h_INPUT = INPUT;
 	} else {
-		printf("Generating input matrix of size %dx%d...\n", DEFAULT_INPUT_SIZE, DEFAULT_INPUT_SIZE);
-		for (int i = 0; i < DEFAULT_INPUT_SIZE; i++) {
-			half_float::half tempArray[DEFAULT_INPUT_SIZE];
-			#pragma omp parallel for
-			for (int j = 0; j < DEFAULT_INPUT_SIZE; j++)
-				tempArray[j] = half_float::half( rand() / 32768.0 );
-			size_t ret_value = 0;
-			ret_value = fwrite(tempArray, DEFAULT_INPUT_SIZE * sizeof( half ), 1, f_INPUT);
-			if (ret_value != 1) {
-				printf("Failure writing to input: %d\n", ret_value);
-				exit(EXIT_FAILURE);
+		h_INPUT = (tested_type_host*) malloc(DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
+		if (!h_INPUT) {
+			printf("Could not alloc h_INPUT\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	std::random_device rd; //Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+	std::uniform_real_distribution<double> dis(-GENERATOR_MAXABSVALUE, GENERATOR_MAXABSVALUE);
+
+	if (!generator_debug) {
+		for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
+			for (int j=0; j<DEFAULT_INPUT_SIZE; j++) {
+				h_INPUT[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)dis(gen);
 			}
 		}
-		fclose(f_INPUT);
+	} else {
+		for (int i=0; i<DEFAULT_INPUT_SIZE; i++) {
+			for (int j=0; j<DEFAULT_INPUT_SIZE; j++) {
+				h_INPUT[i * DEFAULT_INPUT_SIZE + j] = (tested_type_host)2.0;
+			}
+		}
 	}
+
+	if (h_INPUT != INPUT) {
+		memcpy(INPUT, h_INPUT, matrixSize * sizeof(tested_type));
+	} 
+
+	int numZeros;
+    int numNans;
+    int numInfs;
+// printf("Write\n");
+	f_INPUT = fopen(a_matrix_path, "wb");
+	if (!f_INPUT) {
+		printf("Could not open f_INPUT\n");
+		exit(EXIT_FAILURE);
+	}
+
+    tested_type_host val;
+
+	numZeros = 0;
+    numNans = 0;
+    numInfs = 0;
+	for (int i = 0; i<DEFAULT_INPUT_SIZE*DEFAULT_INPUT_SIZE; i++) {
+        val=h_INPUT[i];
+		if (val == 0) numZeros++;
+        if (isnan(val)) numNans++;
+        if (isinf(val)) numInfs++;
+	}
+	printf("Number of zeros/NaNs/INFs on matrix INPUT: %d/%d/%d\n", numZeros, numNans, numInfs);
+
+	for(int i=0; i<DEFAULT_INPUT_SIZE; i++)
+	{
+		fwrite(&(h_INPUT[i * DEFAULT_INPUT_SIZE]), sizeof(tested_type) * DEFAULT_INPUT_SIZE, 1, f_INPUT);
+	}
+
+	printf("Element 32 of matrix A: %f\n", (double)INPUT[32]);
+	printf("Done\n");
+
+	fclose(f_INPUT);
+	if (h_INPUT != INPUT) {
+		free(h_INPUT);
+	}
+	return;
 }
 
 void writeGoldToFile(half_float::half *m) {
