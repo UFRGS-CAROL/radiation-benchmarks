@@ -243,8 +243,8 @@ void ReadMatrixFromFile(){
 
 	if (fault_injection)
 	{
-		INPUT[3] = half_float::half(6.5);
-		printf("!! Injected 6.5 on position INPUT[3]\n");
+		INPUT[515] = half_float::half(0.2);
+		printf("!! Injected 0.2 on position INPUT[515]\n");
 	}
 }
 
