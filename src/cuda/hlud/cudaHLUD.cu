@@ -266,7 +266,7 @@ void ReadMatrixFromFile(){
 
 bool badass_memcmp(half_float::half *gold, half_float::half *found, unsigned long n){
 	#pragma omp parallel for
-	for (int i=0; i < n, i++) {
+	for (int i=0; i < n; i++) {
 		if (found[i] != gold[i]) {
 			return true;
 		}
