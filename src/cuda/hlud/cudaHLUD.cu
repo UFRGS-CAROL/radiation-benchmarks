@@ -60,7 +60,7 @@ int iterations=100000000; // global loop iteracion
 bool generate=false;
 bool generator_debug=false;
 
-#define GENERATOR_MAXABSVALUE 4.1e+16
+#define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
 typedef half tested_type;
 typedef half_float::half tested_type_host;
