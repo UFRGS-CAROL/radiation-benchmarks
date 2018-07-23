@@ -248,19 +248,29 @@ void ReadMatrixFromFile(){
 	}
 }
 
-bool badass_memcmp(half_float::half *gold, half_float::half *found, unsigned long n){
-	half_float::half result(0.0);
-	int i;
-	unsigned long  chunk = ceil(double(n) / double(omp_get_max_threads()));
-	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
-	double time = mysecond();
-#pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
-   for (i=0; i < n; i++)
-     result = result + (gold[i] - found[i]);
+// bool badass_memcmp(half_float::half *gold, half_float::half *found, unsigned long n){
+// 	half_float::half result(0.0);
+// 	int i;
+// 	unsigned long  chunk = ceil(double(n) / double(omp_get_max_threads()));
+// 	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
+// 	double time = mysecond();
+// #pragma omp parallel for default(shared) private(i) schedule(static,chunk) reduction(+:result)
+//    for (i=0; i < n; i++)
+//      result = result + (gold[i] - found[i]);
 
-    //  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
-	if (fabs(result) > 0.0000000001)
-		return true;
+//     //  printf("comparing took %lf seconds, diff %lf\n", mysecond() - time, result);
+// 	if (fabs(result) > 0.0000000001)
+// 		return true;
+// 	return false;
+// }
+
+bool badass_memcmp(half_float::half *gold, half_float::half *found, unsigned long n){
+	#pragma omp parallel for
+	for (int i=0; i < n, i++) {
+		if (found[i] != gold[i]) {
+			return true;
+		}
+	}
 	return false;
 }
 
