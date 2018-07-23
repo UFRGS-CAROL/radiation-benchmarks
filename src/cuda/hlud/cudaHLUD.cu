@@ -249,7 +249,7 @@ void ReadMatrixFromFile(){
 }
 
 bool badass_memcmp(half_float::half *gold, half_float::half *found, unsigned long n){
-	half_float::half result = 0.0;
+	half_float::half result(0.0);
 	int i;
 	unsigned long  chunk = ceil(double(n) / double(omp_get_max_threads()));
 	// printf("size %d max threads %d chunk %d\n", n, omp_get_max_threads(), chunk);
