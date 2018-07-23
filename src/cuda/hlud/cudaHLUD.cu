@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <omp.h>
+#include <random>
 
 #include <cuda_fp16.h>
 #include "half.hpp"
@@ -156,7 +157,7 @@ void copyCudaMemory()
 		exit(EXIT_FAILURE);} //mem allocate failure
 }
 
-void generateInputMatrices()
+void generateInputMatrix()
 {
 	FILE *f_INPUT;
 	half_float::half *h_INPUT;
@@ -197,7 +198,7 @@ void generateInputMatrices()
     int numNans;
     int numInfs;
 // printf("Write\n");
-	f_INPUT = fopen(a_matrix_path, "wb");
+	f_INPUT = fopen(input_matrix_path, "wb");
 	if (!f_INPUT) {
 		printf("Could not open f_INPUT\n");
 		exit(EXIT_FAILURE);
