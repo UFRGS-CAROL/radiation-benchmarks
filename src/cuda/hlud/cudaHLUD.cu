@@ -464,7 +464,7 @@ int main( int argc, char* argv[] )
         time = mysecond();
 
         //if (kernel_errors != 0) {
-        checkCudaErrors( cudaMemcpy(INPUT, d_OUTPUT, matrixSize * sizeof( half_float::half ), cudaMemcpyDeviceToHost) );
+        checkCudaErrors( cudaMemcpy(INPUT, d_OUTPUT, matrixSize * sizeof( half ), cudaMemcpyDeviceToHost) );
 		if (generate) {
 			writeGoldToFile(INPUT);
 		} else if (loop2 || !device_warmup) {
