@@ -7,7 +7,7 @@ ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
 
-NVCC_FLAGS= $(ARCH) #-arch=sm_35
+NVCC_FLAGS= $(ARCH) -std=c++11 #-arch=sm_35
 
 NVIDIA_INC=/usr/local/cuda/include/,./
 NVIDIA_LIB=/usr/local/cuda/lib64/
