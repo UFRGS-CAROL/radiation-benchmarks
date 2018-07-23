@@ -158,7 +158,7 @@ void generateInputMatrix(double *m) {
 			double tempArray[DEFAULT_INPUT_SIZE];
 			#pragma omp parallel for
 			for (int j = 0; j < DEFAULT_INPUT_SIZE; j++)
-				tempArray[j] = (double) rand() / 32768.0;
+				tempArray[j] = (double) (rand() / RAND_MAX) *  32768.0;
 			size_t ret_value = 0;
 			ret_value = fwrite(tempArray, DEFAULT_INPUT_SIZE * sizeof(double), 1, f_INPUT);
 			if (ret_value != 1) {
