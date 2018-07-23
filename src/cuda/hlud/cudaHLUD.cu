@@ -58,6 +58,7 @@ int k=0; // k x k matrix size
 int matrixSize=0; // = k * k matrix size
 int iterations=100000000; // global loop iteracion
 bool generate=false;
+bool generator_debug=false;
 
 #define GENERATOR_MAXABSVALUE 4.1e+16
 #define GENERATOR_MINABSVALUE 0
@@ -256,7 +257,7 @@ void ReadMatrixFromFile(){
 	double time = mysecond();
 	f_INPUT = fopen(input_matrix_path,"rb");
 	if (generate && !f_INPUT) {
-		generateInputMatrix(INPUT);
+		generateInputMatrix();
 	}
 	f_INPUT = fopen(input_matrix_path,"rb");
 	if (f_INPUT) {
@@ -431,6 +432,14 @@ int main( int argc, char* argv[] )
 		printf("Will generate input if needed and GOLD.\nIterations setted to 1. no-warmup setted to false.\n");
     } else {
 		generate = 0;
+	}
+
+	if (checkCmdLineFlag(argc, (const char **) argv, "generator_debug")) {
+		if (generate) {
+			generator_debug = true;
+		} else {
+			printf("!! generator_debug ignored: generate is not activated. active with -generate.\n");
+		}
 	}
 
 	// if (checkCmdLineFlag(argc, (const char **)argv, "no-gpu-gold-check"))
