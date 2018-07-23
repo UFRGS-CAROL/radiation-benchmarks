@@ -60,8 +60,8 @@ bool generate=false;
 
 #define GENERATOR_MAXABSVALUE 4.1e+16
 #define GENERATOR_MINABSVALUE 0
-typedef double tested_type;
-typedef double tested_type_host;
+typedef half tested_type;
+typedef half_float::half tested_type_host;
 
 //================== Input paths
 char *gold_matrix_path, *input_matrix_path;
