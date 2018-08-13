@@ -1201,15 +1201,20 @@ int main(int argc, char *argv []) {
 	//	SYSTEM MEMORY DEALLOCATION
 	//=====================================================================
 
-	if (!generate) free(fv_cpu_GOLD);
-	free(fv_cpu);
-	free(rv_cpu);
-	free(qv_cpu);
-	free(box_cpu);
-	printf("\n");
+        if (!generate && fv_cpu_GOLD) free(fv_cpu_GOLD);
 
-	#ifdef LOGS
-    	if (!generate) end_log_file();
+        //if (fv_cpu) free(fv_cpu);
+        for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+                free(fv_cpu[streamIdx]);
+        }
+        
+        if (rv_cpu) free(rv_cpu);
+        if (qv_cpu) free(qv_cpu);
+        if (box_cpu) free(box_cpu);
+        printf("\n");
+
+        #ifdef LOGS
+        if (!generate) end_log_file();
     #endif
 
 	return 0;
