@@ -29,7 +29,7 @@ int set_iter_interval_print(int interval) {
 }
 
 // Update with current timestamp the file where the software watchdog watchs
-void update_timestamp() {
+extern "C" void update_timestamp() {
 	obj->update_timestamp();
 }
 
