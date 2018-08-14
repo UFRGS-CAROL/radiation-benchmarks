@@ -10,7 +10,6 @@
 
 #include <string>
 
-//namespace radiation {
 
 class LogHelper {
 
@@ -182,6 +181,5 @@ public:
 
 };
 
-//} /* namespace radiation */
 
 #endif /* LOGHELPER_H_ */

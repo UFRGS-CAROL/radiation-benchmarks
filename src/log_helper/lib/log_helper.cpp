@@ -19,6 +19,7 @@
 
 //Buff for ECC check
 #define BUFSIZE 128
+
 //#define QUERY_GPU "echo Enabled"
 #define ENABLED_CONFIRMATION "Enabled"
 
