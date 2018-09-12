@@ -3,8 +3,6 @@ NVCC=/usr/local/cuda/bin/nvcc
 PRECISION=single
 LOWERCASED_PRECISION=single
 
-HARDENING?=0
-
 HARDENING_NAME=$(if $(HARDENING),hard,unhard)
 
 ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
@@ -34,11 +32,10 @@ MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./mxm*.matrix
 all: $(EXEC)
 
 check-benchtype:
-	echo "syntax: make [HARDENING=0|1]"
-	test $(HARDENING)
+	echo "syntax: make [HARDENING]"
 
 $(EXEC): check-benchtype $(RUN_SOURCES)
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -DHARDENING=$(HARDENING) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
+	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) $(if $(HARDENING),-DHARDENING,) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
 
 clean:
 	rm -rf $(EXEC_RADIX)* $(MATRIX_NAMES)
