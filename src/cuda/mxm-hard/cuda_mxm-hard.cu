@@ -19,13 +19,15 @@
 
 #include "half.hpp"
 
+using namespace std;
+
 #undef min
 #define min( x, y ) ( (x) < (y) ? (x) : (y) )
 #undef max
 #define max( x, y ) ( (x) > (y) ? (x) : (y) )
 
 #undef reldiff
-#define reldiff( x, y ) ( std:abs(x - y) / x )
+#define reldiff( x, y ) ( abs(x - y) / x )
 
 #define BLOCK_SIZE 32
 
