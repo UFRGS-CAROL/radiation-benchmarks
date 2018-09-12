@@ -526,7 +526,11 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 	register double maxHardeningDifference = 0.0;
 #endif
 
+#ifdef HARDENING_ENABLED
 #pragma omp parallel for shared(host_errors) shared(maxHardeningDifference)
+#else
+#pragma omp parallel for shared(host_errors)
+#endif
 	for (int i = 0; i < matrixSize; i++) {
 		register bool checkFlag = true;
 		register tested_type_host valGold = GOLD[i];
