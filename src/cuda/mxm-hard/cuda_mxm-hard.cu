@@ -933,10 +933,11 @@ int main(int argc, char* argv[]) {
 	C0 = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 //	C1 = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 //	C2 = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
+	H0 = (half_float::half*) malloc(matrixSize * sizeof(half_float::half));
 
 	GOLD = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 
-	if (!(A && B && C0 && GOLD)) { //&& C1 && C2
+	if (!(A && B && C0 && H0 && GOLD)) { //&& C1 && C2
 		printf("Failed on host malloc.\n");
 		exit(-3);
 	}
