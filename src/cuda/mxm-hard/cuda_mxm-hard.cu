@@ -737,7 +737,7 @@ register double maxHardeningDifference = 0.0;
 								(int) floor(i / k), i % k, (double) valOutput,
 								(double) valHardening);
 						if (verbose && (info_count < 10))
-							printf("%s\n", info_count);
+							printf("%s\n", info_detail);
 #ifdef LOGS
 						if (!generate)
 							log_info_detail(info_detail);
