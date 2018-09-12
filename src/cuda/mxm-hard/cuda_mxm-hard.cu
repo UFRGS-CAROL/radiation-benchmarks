@@ -729,6 +729,11 @@ register double maxHardeningDifference = 0.0;
 			#pragma omp critical
 			{
 				maxHardeningDifference = max(maxHardeningDifference, max(std::abs(valOutput / valHardening), std::abs(valHardening / valOutput)));
+				if (verbose)
+					printf("New maxHardeningDifference: %f p: [%d, %d], h: %1.20e, l: %1.20e",
+						maxHardeningDifference,
+						(int) floor(i / k), i % k, (double) valOutput,
+						(double) valHardening);
 			}
 		}
 
