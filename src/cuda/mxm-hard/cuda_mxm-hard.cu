@@ -48,6 +48,7 @@ const char test_precision_description[] = "single";
 typedef float tested_type;
 typedef float tested_type_host;
 
+#else
 #error TEST TYPE NOT DEFINED OR INCORRECT. USE TYPE=<double|single>.
 #endif
 
@@ -713,7 +714,9 @@ register double maxHardeningDifference = 0.0;
 
 		if (!check && std::abs(valHardening - valOutput) > maxHardeningDifference) {
 			#pragma omp critical
-			maxHardeningDifference = max(maxHardeningDifference, std::abs(valHardening - valOutput);
+			{
+				maxHardeningDifference = max(maxHardeningDifference, std::abs(valHardening - valOutput));
+			}
 		}
 
 		if (votedOutput != NULL)
@@ -722,7 +725,7 @@ register double maxHardeningDifference = 0.0;
 		if (check) {
 			if (std::abs(valHardening - valOutput) > MAX_ALLOWED_HARDENING_DIFF) {
 				if (checkFlag) {
-					checkFlag = false; // This to avoid counting as an error
+					checkFlag = false; // This to avoid counting detected error as a true error
 					// Hardening detected error
 					#pragma omp critical
 					{
@@ -735,7 +738,7 @@ register double maxHardeningDifference = 0.0;
 							printf("%s\n", info_count);
 #ifdef LOGS
 						if (!generate)
-						log_info_count(info_detail);
+							log_info_count(info_detail);
 #endif
 						info_count++;
 					}
