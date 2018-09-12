@@ -37,7 +37,7 @@
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
 
-#define MAX_ALLOWED_HARDENING_DIFF 1024.0
+#define MAX_ALLOWED_HARDENING_DIFF 1.0
 
 const char test_precision_description[] = "double";
 typedef double tested_type;
@@ -52,7 +52,7 @@ typedef double tested_type_host;
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
 
-#define MAX_ALLOWED_HARDENING_DIFF 1024.0
+#define MAX_ALLOWED_HARDENING_DIFF 1.0
 
 const char test_precision_description[] = "single";
 typedef float tested_type;
@@ -724,10 +724,11 @@ register double maxHardeningDifference = 0.0;
 //			}
 //		}
 
-		if (!check && std::abs(valHardening - valOutput) > maxHardeningDifference) {
+		if (!check && 
+			(max(std::abs(valOutput / valHardening), std::abs(valHardening / valOutput)) > maxHardeningDifference)) {
 			#pragma omp critical
 			{
-				maxHardeningDifference = max(maxHardeningDifference, std::abs(valHardening - valOutput));
+				maxHardeningDifference = max(maxHardeningDifference, max(std::abs(valOutput / valHardening), std::abs(valHardening / valOutput)));
 			}
 		}
 
@@ -735,7 +736,7 @@ register double maxHardeningDifference = 0.0;
 			votedOutput[i] = valOutput;
 		// if ((fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)||(fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)) {
 		if (check) {
-			if (std::abs(valHardening - valOutput) > MAX_ALLOWED_HARDENING_DIFF) {
+			if (max(std::abs(valOutput / valHardening), std::abs(valHardening / valOutput)) > MAX_ALLOWED_HARDENING_DIFF) {
 				if (checkFlag) {
 					checkFlag = false; // This to avoid counting detected error as a true error
 					// Hardening detected error
