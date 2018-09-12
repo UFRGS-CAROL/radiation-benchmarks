@@ -28,6 +28,8 @@
 
 #define DEFAULT_INPUT_SIZE 8192
 
+#define MAX_ALLOWED_HARDENING_DIFF 0.0
+
 //=========== DEFINE TESTED TYPE
 #if defined(test_precision_double)
 
@@ -578,7 +580,7 @@ __global__ void MatrixMulKernelHard(tested_type *d_A0, tested_type *d_B0,
 	register int k;
 
 	register int tx_hard = (blockIdx.x * BLOCK_SIZE) / 2.0 + threadIdx.x;
-	register acc_hard = __float2half2_rn(0.0);
+	register half2 acc_hard = __float2half2_rn(0.0);
 
 	register tested_type acc = 0.0;
 	for (k = 0; k < n; k++) {
