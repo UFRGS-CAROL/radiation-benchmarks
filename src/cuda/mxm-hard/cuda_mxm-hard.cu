@@ -464,7 +464,7 @@ void writeGoldtoFile() {
 __global__ void MatrixMulKernelHard(tested_type *d_A, 
 		tested_type *d_B,
 		tested_type *d_C, 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 		half *d_H, 
 #endif
 		int n) {
@@ -473,14 +473,14 @@ __global__ void MatrixMulKernelHard(tested_type *d_A,
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;
 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 	register half2 acc_hard = __float2half2_rn(0.0);
 #endif
 	register tested_type acc = 0.0;
 	for (k = 0; k < n; k+=2) {
 		acc = d_A[ty * n + (k+0)] * d_B[(k+0) * n + tx] + acc;
 		acc = d_A[ty * n + (k+1)] * d_B[(k+1) * n + tx] + acc;
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 		acc_hard = __hfma2( 
 			__floats2half2_rn(d_A[ty * n + (k+0)], d_A[ty * n + (k+1)]),
 			__floats2half2_rn(d_B[(k+0) * n + tx], d_B[(k+1) * n + tx]),
@@ -489,7 +489,7 @@ __global__ void MatrixMulKernelHard(tested_type *d_A,
 	}
 
 	d_C[ty * n + tx] = acc;
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 	d_H[ty * n + tx] = acc_hard.x + acc_hard.y;
 #endif
 
