@@ -24,6 +24,9 @@
 #undef max
 #define max( x, y ) ( (x) > (y) ? (x) : (y) )
 
+#undef reldiff
+#define reldiff( x, y ) ( std:abs(x - y) / x )
+
 #define BLOCK_SIZE 32
 
 #define DEFAULT_INPUT_SIZE 8192
@@ -724,11 +727,10 @@ register double maxHardeningDifference = 0.0;
 //			}
 //		}
 
-		if (!check && 
-			(max(std::abs(valOutput / valHardening), std::abs(valHardening / valOutput)) > maxHardeningDifference)) {
+		if (!check && ( reldiff(valOutput, valHardening) > maxHardeningDifference)) {
 			#pragma omp critical
 			{
-				maxHardeningDifference = max(maxHardeningDifference, max(std::abs(valOutput / valHardening), std::abs(valHardening / valOutput)));
+				maxHardeningDifference = max(maxHardeningDifference, reldiff(valOutput, valHardening));
 				if (verbose)
 					printf("New maxHardeningDifference: %f p: [%d, %d], h: %1.20e, l: %1.20e\n",
 						maxHardeningDifference,
@@ -741,7 +743,7 @@ register double maxHardeningDifference = 0.0;
 			votedOutput[i] = valOutput;
 		// if ((fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)||(fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)) {
 		if (check) {
-			if (max(std::abs(valOutput / valHardening), std::abs(valHardening / valOutput)) > MAX_ALLOWED_HARDENING_DIFF) {
+			if (reldiff(valOutput, valHardening) > MAX_ALLOWED_HARDENING_DIFF) {
 				if (checkFlag) {
 					checkFlag = false; // This to avoid counting detected error as a true error
 					// Hardening detected error
