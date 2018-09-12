@@ -81,7 +81,7 @@ tested_type *d_B; //, *d_B1, *d_B2;
 tested_type *d_C; //, *d_C1, *d_C2;
 
 #ifdef HARDENING
-half_float::half *H0;
+half_float::half *H;
 half *d_H;
 #endif
 //====================================
@@ -537,7 +537,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 		register tested_type_host valOutput = C[i];
 
 #ifdef HARDENING
-		register tested_type_host valHardening = H0[i]; 
+		register tested_type_host valHardening = H[i]; 
 
 		if (!check && ( reldiff(valHardening, valOutput) > maxHardeningDifference)) {
 			#pragma omp critical
@@ -769,14 +769,14 @@ int main(int argc, char* argv[]) {
 	B = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 	C = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 #ifdef HARDENING
-	H0 = (half_float::half*) malloc(matrixSize * sizeof(half_float::half));
+	H = (half_float::half*) malloc(matrixSize * sizeof(half_float::half));
 #endif
 
 	GOLD = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 
 	if (!(A && B && C 
 #ifdef HARDENING
-		&& H0 
+		&& H 
 #endif
 		&& GOLD)) { 
 		printf("Failed on host malloc.\n");
@@ -891,12 +891,12 @@ int main(int argc, char* argv[]) {
 #ifdef HARDENING
 			// COPY H
 			checkFrameworkErrors(
-					cudaMemcpy(H0, d_H, matrixSize * sizeof(half),
+					cudaMemcpy(H, d_H, matrixSize * sizeof(half),
 							cudaMemcpyDeviceToHost));
 			if ((generate) && (k <= 16)) {
 				printf("\nMatrix H (0): \n");
 				for (int i = 0; i < k * k; i++) {
-					printf(" %.2e", (float) H0[i]);
+					printf(" %.2e", (float) H[i]);
 					if ((i + 1) % k == 0)
 						printf("\n");
 				}
