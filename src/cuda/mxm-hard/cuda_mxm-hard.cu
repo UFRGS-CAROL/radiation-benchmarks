@@ -25,7 +25,7 @@
 #define max( x, y ) ( (x) > (y) ? (x) : (y) )
 
 #undef reldiff
-#define reldiff( x, y ) ( (y - x) / x )
+#define reldiff( x, y ) ( (y - x) / max( abs(x), abs(y) ) )
 
 #define BLOCK_SIZE 32
 
