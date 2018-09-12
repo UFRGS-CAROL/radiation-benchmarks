@@ -35,7 +35,7 @@ all: $(EXEC)
 
 check-benchtype:
 	echo "syntax: make [HARDENING=0|1]"
-	test $(HARDENED)
+	test $(HARDENING)
 
 $(EXEC): check-benchtype $(RUN_SOURCES)
 	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -DHARDENING=$(HARDENING) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
