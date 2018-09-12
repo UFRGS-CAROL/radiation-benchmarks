@@ -579,17 +579,19 @@ __global__ void MatrixMulKernelHard(tested_type *d_A0, tested_type *d_B0,
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;
 
-	register int tx_hard = (blockIdx.x * BLOCK_SIZE) / 2.0 + threadIdx.x;
 	register half2 acc_hard = __float2half2_rn(0.0);
-
 	register tested_type acc = 0.0;
-	for (k = 0; k < n; k++) {
-		acc = d_A0[ty * n + k] * d_B0[k * n + tx] + acc;
-		acc_hard = __hfma2( __float2half2_rn( d_A0[ty * n + k] ), __float2half2_rn( d_B0[k * (n / 2) + tx_hard] ), acc_hard);
+	for (k = 0; k < n; k+=2) {
+		acc = d_A0[ty * n + (k+0)] * d_B0[(k+0) * n + tx] + acc;
+		acc = d_A0[ty * n + (k+1)] * d_B0[(k+1) * n + tx] + acc;
+		acc_hard = __hfma2( 
+			__floats2half2_rn(d_A0[ty * n + (k+0)], d_A0[ty * n + (k+1)]),
+			__floats2half2_rn(d_B0[(k+0) * n + ty], d_B0[(k+1) * n + ty]),
+			acc_hard);
 	}
 
 	d_C0[ty * n + tx] = acc;
-	((half2*)d_H0)[ty * (n / 2) + tx_hard] = acc_hard;
+	d_H0[ty * n + tx] = acc_hard.x + acc_hard.y;
 
 /*	
 #elif defined(test_precision_half)
