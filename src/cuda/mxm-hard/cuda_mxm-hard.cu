@@ -727,10 +727,10 @@ register double maxHardeningDifference = 0.0;
 //			}
 //		}
 
-		if (!check && ( reldiff(valOutput, valHardening) > maxHardeningDifference)) {
+		if (!check && ( reldiff(valHardening, valOutput) > maxHardeningDifference)) {
 			#pragma omp critical
 			{
-				maxHardeningDifference = max(maxHardeningDifference, reldiff(valOutput, valHardening));
+				maxHardeningDifference = max(maxHardeningDifference, reldiff(valHardening, valOutput));
 				if (verbose)
 					printf("New maxHardeningDifference: %f p: [%d, %d], h: %1.20e, l: %1.20e\n",
 						maxHardeningDifference,
@@ -743,7 +743,7 @@ register double maxHardeningDifference = 0.0;
 			votedOutput[i] = valOutput;
 		// if ((fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)||(fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)) {
 		if (check) {
-			if (reldiff(valOutput, valHardening) > MAX_ALLOWED_HARDENING_DIFF) {
+			if (reldiff(valHardening, valOutput) > MAX_ALLOWED_HARDENING_DIFF) {
 				if (checkFlag) {
 					checkFlag = false; // This to avoid counting detected error as a true error
 					// Hardening detected error
