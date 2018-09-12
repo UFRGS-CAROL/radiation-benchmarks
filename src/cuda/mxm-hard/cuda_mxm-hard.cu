@@ -597,9 +597,11 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 		}
 	}
 
+#ifdef HARDENING_ENABLED
 	if ((generate || !check) && verbose) {
 		printf("\nmaxHardeningDifference: %f\n\n", maxHardeningDifference);
 	}
+#endif
 	// printf("numErrors:%d", host_errors);
 
 #ifdef LOGS
