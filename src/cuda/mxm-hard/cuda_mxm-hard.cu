@@ -80,7 +80,7 @@ tested_type *d_A; //, *d_A1, *d_A2;
 tested_type *d_B; //, *d_B1, *d_B2;
 tested_type *d_C; //, *d_C1, *d_C2;
 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 half_float::half *H0;
 half *d_H;
 #endif
@@ -192,7 +192,7 @@ void allocCudaMemory() {
 
 	d_C = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 	d_H = (half*) safe_cudaMalloc(matrixSize * sizeof(half));
 #endif
 
@@ -203,7 +203,7 @@ void allocCudaMemory() {
 
 	checkFrameworkErrors(cudaMalloc(&d_C, matrixSize * sizeof(tested_type)));
 	
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 	checkFrameworkErrors(cudaMalloc(&d_H, matrixSize * sizeof(half)));
 #endif
 
@@ -218,7 +218,7 @@ void freeCudaMemory() {
 
 	checkFrameworkErrors(cudaFree(d_C));
 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 	checkFrameworkErrors(cudaFree(d_H));
 #endif
 }
@@ -233,7 +233,7 @@ void copyCudaMemory() {
 	checkFrameworkErrors(
 		cudaMemcpy(d_B, B, matrixSize * sizeof(tested_type), cudaMemcpyHostToDevice)); // PUSH B
 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 	checkFrameworkErrors(
 		cudaMemset(d_H, 0x00, matrixSize * sizeof(half)));
 #endif
@@ -464,34 +464,26 @@ void writeGoldtoFile() {
 __global__ void MatrixMulKernelHard(tested_type *d_A, 
 		tested_type *d_B,
 		tested_type *d_C, 
-#ifdef HARDENING_ENABLED
 		half *d_H, 
-#endif
 		int n) {
 
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;
 
-#ifdef HARDENING_ENABLED
 	register half2 acc_hard = __float2half2_rn(0.0);
-#endif
 	register tested_type acc = 0.0;
 	for (k = 0; k < n; k+=2) {
 		acc = d_A[ty * n + (k+0)] * d_B[(k+0) * n + tx] + acc;
 		acc = d_A[ty * n + (k+1)] * d_B[(k+1) * n + tx] + acc;
-#ifdef HARDENING_ENABLED
 		acc_hard = __hfma2( 
 			__floats2half2_rn(d_A[ty * n + (k+0)], d_A[ty * n + (k+1)]),
 			__floats2half2_rn(d_B[(k+0) * n + tx], d_B[(k+1) * n + tx]),
 			acc_hard);
-#endif
 	}
 
 	d_C[ty * n + tx] = acc;
-#ifdef HARDENING_ENABLED
 	d_H[ty * n + tx] = acc_hard.x + acc_hard.y;
-#endif
 
 }
 
@@ -522,11 +514,11 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 //		memory_errors++;
 //	}
 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 	register double maxHardeningDifference = 0.0;
 #endif
 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 #pragma omp parallel for shared(host_errors) shared(maxHardeningDifference)
 #else
 #pragma omp parallel for shared(host_errors)
@@ -536,7 +528,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 		register tested_type_host valGold = GOLD[i];
 		register tested_type_host valOutput = C[i];
 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 		register tested_type_host valHardening = H0[i]; 
 
 		if (!check && ( reldiff(valHardening, valOutput) > maxHardeningDifference)) {
@@ -556,7 +548,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 			votedOutput[i] = valOutput;
 		// if ((fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)||(fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)) {
 		if (check) {
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 			if (reldiff(valHardening, valOutput) > MAX_ALLOWED_HARDENING_DIFF) {
 				if (checkFlag) {
 					checkFlag = false; // This to avoid counting detected error as a true error
@@ -601,7 +593,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL, bool check = true) 
 		}
 	}
 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 	if ((generate || !check) && verbose) {
 		printf("\nmaxHardeningDifference: %f\n\n", maxHardeningDifference);
 	}
@@ -763,14 +755,14 @@ int main(int argc, char* argv[]) {
 	A = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 	B = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 	C = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 	H0 = (half_float::half*) malloc(matrixSize * sizeof(half_float::half));
 #endif
 
 	GOLD = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 
 	if (!(A && B && C 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 		&& H0 
 #endif
 		&& GOLD)) { 
@@ -786,7 +778,7 @@ int main(int argc, char* argv[]) {
 	max_kernel_time = 0;
 	GetDevice();
 	retrieveInputMatrices();
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 	printf("cuda_%s_mxm-hard\n", test_precision_description);
 #else
 	printf("cuda_%s_mxm-unhard\n", test_precision_description);
@@ -815,7 +807,7 @@ int main(int argc, char* argv[]) {
 
 		checkFrameworkErrors(
 			cudaMemset(d_C, 0, matrixSize * sizeof(tested_type)));
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 		checkFrameworkErrors(
 			cudaMemset(d_H, 0, matrixSize * sizeof(half)));
 #endif
@@ -834,7 +826,7 @@ int main(int argc, char* argv[]) {
 			d_A, 
 			d_B, 
 			d_C, 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 			d_H, 
 #endif
 			k);
@@ -883,7 +875,7 @@ int main(int argc, char* argv[]) {
 				printf("\n");
 			}
 
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 			// COPY H
 			checkFrameworkErrors(
 					cudaMemcpy(H0, d_H, matrixSize * sizeof(half),
@@ -988,7 +980,7 @@ int main(int argc, char* argv[]) {
 	free(A);
 	free(B);
 	free(C);
-#ifdef HARDENING_ENABLED
+#ifdef HARDENING
 	free(H);
 #endif
 	free(GOLD);
