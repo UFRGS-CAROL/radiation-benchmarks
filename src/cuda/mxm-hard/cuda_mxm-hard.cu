@@ -585,11 +585,11 @@ __global__ void MatrixMulKernelHard(tested_type *d_A0, tested_type *d_B0,
 	register tested_type acc = 0.0;
 	for (k = 0; k < n; k++) {
 		acc = d_A0[ty * n + k] * d_B0[k * n + tx] + acc;
-		acc_hard = __hfma2( __float2half2_rn( d_A0[ty * n + k] ), __float2half2_rn( d_B0[k * (n / 2) + tx] ), acc_hard);
+		acc_hard = __hfma2( __float2half2_rn( d_A0[ty * n + k] ), __float2half2_rn( d_B0[k * (n / 2) + tx_hard] ), acc_hard);
 	}
 
 	d_C0[ty * n + tx] = acc;
-	((half2*)d_H0)[ty * (n / 2) + tx] = acc_hard;
+	((half2*)d_H0)[ty * (n / 2) + tx_hard] = acc_hard;
 
 /*	
 #elif defined(test_precision_half)
@@ -740,7 +740,7 @@ register double maxHardeningDifference = 0.0;
 							printf("%s\n", info_count);
 #ifdef LOGS
 						if (!generate)
-							log_info_count(info_detail);
+							log_info_detail(info_detail);
 #endif
 						info_count++;
 					}
@@ -776,6 +776,7 @@ register double maxHardeningDifference = 0.0;
 #ifdef LOGS
 	if (!generate) {
 //		log_info_count(memory_errors);
+		log_info_count(info_count);
 		log_error_count(host_errors);
 	}
 #endif
