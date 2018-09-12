@@ -744,8 +744,13 @@ int main(int argc, char* argv[]) {
 	if (!generate) {
 		char test_info[90];
 		char test_name[90];
-		snprintf(test_info, 90, "size:%d type:%s-precision-hardened", k, test_precision_description);
-		snprintf(test_name, 90, "cuda_%s_mxm-hard", test_precision_description);
+#ifdef HARDENING
+		snprintf(test_info, 90, "size:%d type:%s-precision-unhardened", k, test_precision_description);
+		snprintf(test_name, 90, "cuda_%s_mxm-unhard", test_precision_description);
+#else
+snprintf(test_info, 90, "size:%d type:%s-precision-hardened", k, test_precision_description);
+snprintf(test_name, 90, "cuda_%s_mxm-hard", test_precision_description);
+#endif
 		start_log_file(test_name, test_info);
 	}
 #endif
