@@ -594,7 +594,7 @@ __global__ void MatrixMulKernelHard(tested_type *d_A0, tested_type *d_B0,
 		acc = d_A0[ty * n + (k+1)] * d_B0[(k+1) * n + tx] + acc;
 		acc_hard = __hfma2( 
 			__floats2half2_rn(d_A0[ty * n + (k+0)], d_A0[ty * n + (k+1)]),
-			__floats2half2_rn(d_B0[(k+0) * n + ty], d_B0[(k+1) * n + ty]),
+			__floats2half2_rn(d_B0[(k+0) * n + tx], d_B0[(k+1) * n + tx]),
 			acc_hard);
 	}
 
