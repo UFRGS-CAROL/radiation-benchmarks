@@ -34,8 +34,11 @@
 #if defined(test_precision_double)
 
 
-#define GENERATOR_MAXABSVALUE 4.1e+16
+// #define GENERATOR_MAXABSVALUE 4.1e+16
+// #define GENERATOR_MINABSVALUE 0
+#define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
+
 const char test_precision_description[] = "double";
 typedef double tested_type;
 typedef double tested_type_host;
@@ -44,8 +47,11 @@ typedef double tested_type_host;
 #elif defined(test_precision_single)
 
 
-#define GENERATOR_MAXABSVALUE 4.1e+2
+// #define GENERATOR_MAXABSVALUE 4.1e+2
+// #define GENERATOR_MINABSVALUE 0
+#define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
+
 const char test_precision_description[] = "single";
 typedef float tested_type;
 typedef float tested_type_host;
