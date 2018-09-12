@@ -19,8 +19,6 @@
 
 #include "half.hpp"
 
-using namespace std;
-
 #undef min
 #define min( x, y ) ( (x) < (y) ? (x) : (y) )
 #undef max
