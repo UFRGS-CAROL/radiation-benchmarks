@@ -32,6 +32,8 @@
 
 #define DEFAULT_INPUT_SIZE 8192
 
+#define MAX_ALLOWED_HARDENING_DIFF ( k / ( 2^16 ) )
+
 //=========== DEFINE TESTED TYPE
 #if defined(test_precision_double)
 
@@ -40,8 +42,6 @@
 // #define GENERATOR_MINABSVALUE 0
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
-
-#define MAX_ALLOWED_HARDENING_DIFF 0.0
 
 const char test_precision_description[] = "double";
 typedef double tested_type;
@@ -55,8 +55,6 @@ typedef double tested_type_host;
 // #define GENERATOR_MINABSVALUE 0
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
-
-#define MAX_ALLOWED_HARDENING_DIFF 0.0
 
 const char test_precision_description[] = "single";
 typedef float tested_type;
