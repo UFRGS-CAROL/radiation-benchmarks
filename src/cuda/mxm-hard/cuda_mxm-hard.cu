@@ -730,7 +730,7 @@ register double maxHardeningDifference = 0.0;
 			{
 				maxHardeningDifference = max(maxHardeningDifference, max(std::abs(valOutput / valHardening), std::abs(valHardening / valOutput)));
 				if (verbose)
-					printf("New maxHardeningDifference: %f p: [%d, %d], h: %1.20e, l: %1.20e",
+					printf("New maxHardeningDifference: %f p: [%d, %d], h: %1.20e, l: %1.20e\n",
 						maxHardeningDifference,
 						(int) floor(i / k), i % k, (double) valOutput,
 						(double) valHardening);
