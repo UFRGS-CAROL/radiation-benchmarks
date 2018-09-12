@@ -5,7 +5,7 @@ LOWERCASED_PRECISION=single
 
 HARDENING?=0
 
-HARDENING_NAME=$(if $(HARDENING),@echo hard, @echo unhard)
+HARDENING_NAME=$(if $(HARDENING),hard,unhard)
 
 ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
 ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
