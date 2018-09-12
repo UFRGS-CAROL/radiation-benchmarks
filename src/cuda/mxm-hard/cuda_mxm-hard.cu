@@ -28,8 +28,6 @@
 
 #define DEFAULT_INPUT_SIZE 8192
 
-#define MAX_ALLOWED_HARDENING_DIFF 0.0
-
 //=========== DEFINE TESTED TYPE
 #if defined(test_precision_double)
 
@@ -38,6 +36,8 @@
 // #define GENERATOR_MINABSVALUE 0
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
+
+#define MAX_ALLOWED_HARDENING_DIFF 1024.0
 
 const char test_precision_description[] = "double";
 typedef double tested_type;
@@ -51,6 +51,8 @@ typedef double tested_type_host;
 // #define GENERATOR_MINABSVALUE 0
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
+
+#define MAX_ALLOWED_HARDENING_DIFF 1024.0
 
 const char test_precision_description[] = "single";
 typedef float tested_type;
@@ -840,7 +842,7 @@ int main(int argc, char* argv[]) {
 				&a_matrix_path);
 	} else {
 		a_matrix_path = new char[100];
-		snprintf(a_matrix_path, 100, "mxm_a_%s_%i.matrix",
+		snprintf(a_matrix_path, 100, "mxm-hard_a_%s_%i.matrix",
 				test_precision_description, (signed int) DEFAULT_INPUT_SIZE);
 		printf("Using default input_a path: %s\n", a_matrix_path);
 	}
@@ -850,7 +852,7 @@ int main(int argc, char* argv[]) {
 				&b_matrix_path);
 	} else {
 		b_matrix_path = new char[100];
-		snprintf(b_matrix_path, 100, "mxm_b_%s_%i.matrix",
+		snprintf(b_matrix_path, 100, "mxm-hard_b_%s_%i.matrix",
 				test_precision_description, (signed int) DEFAULT_INPUT_SIZE);
 		printf("Using default input_a path: %s\n", b_matrix_path);
 	}
@@ -860,7 +862,7 @@ int main(int argc, char* argv[]) {
 				&gold_matrix_path);
 	} else {
 		gold_matrix_path = new char[100];
-		snprintf(gold_matrix_path, 100, "mxm_gold_%s_%i.matrix",
+		snprintf(gold_matrix_path, 100, "mxm-hard_gold_%s_%i.matrix",
 				test_precision_description, (signed int) k);
 		printf("Using default gold path: %s\n", gold_matrix_path);
 	}
