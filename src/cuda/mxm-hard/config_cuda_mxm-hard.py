@@ -58,7 +58,7 @@ def config(board, arith_type, hardening, debug):
     for i in SIZES:
         input_file = data_path + "/"
 
-        gen = [None] * 8
+        gen = [None] * 7
         gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
         gen[1] = ['-size=' + str(i)]
         gen[2] = ['-input_a=' + input_file + 'A_' + str(max_size) + "_hardening_" + str(hardening) + '.matrix']
