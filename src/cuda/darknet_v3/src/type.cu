@@ -56,6 +56,7 @@ int fread_float_to_real_t(real_t* dst, size_t siz, size_t times, FILE* fp) {
 
 }
 
+#if REAL_TYPE == HALF
 
 FP16Array::FP16Array(size_t size, float* fp32_array) {
 	cudaError_t status = cudaMalloc(&this->fp16_ptr,
@@ -96,3 +97,4 @@ void FP16Array::cuda_convert_f16_to_f32() {
 			this->fp32_ptr);
 }
 
+#endif

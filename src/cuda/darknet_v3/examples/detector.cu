@@ -1,4 +1,5 @@
 #include "darknet.h"
+#include "DetectionGold.h"
 
 static int coco_ids[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17,
 		18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38,
@@ -365,8 +366,8 @@ void validate_detector_flip(char *datacfg, char *cfgfile, char *weightfile,
 			int w = val[t].w;
 			int h = val[t].h;
 			int num = 0;
-			detection *dets = get_network_boxes(net, w, h, thresh, real_t(.5), map, 0,
-					&num);
+			detection *dets = get_network_boxes(net, w, h, thresh, real_t(.5),
+					map, 0, &num);
 			if (nms)
 				do_nms_sort(dets, num, classes, nms);
 			if (coco) {
@@ -499,8 +500,8 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile,
 			int w = val[t].w;
 			int h = val[t].h;
 			int nboxes = 0;
-			detection *dets = get_network_boxes(net, w, h, thresh, real_t(.5), map, 0,
-					&nboxes);
+			detection *dets = get_network_boxes(net, w, h, thresh, real_t(.5),
+					map, 0, &nboxes);
 			if (nms)
 				do_nms_sort(dets, nboxes, classes, nms);
 			if (coco) {
@@ -563,8 +564,8 @@ void validate_detector_recall(char *cfgfile, char *weightfile) {
 		char *id = basecfg(path);
 		network_predict(net, sized.data);
 		int nboxes = 0;
-		detection *dets = get_network_boxes(net, sized.w, sized.h, thresh, real_t(.5),
-				0, 1, &nboxes);
+		detection *dets = get_network_boxes(net, sized.w, sized.h, thresh,
+				real_t(.5), 0, 1, &nboxes);
 		if (nms)
 			do_nms_obj(dets, nboxes, 1, nms);
 
@@ -628,7 +629,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 			strncpy(input, filename, 256);
 		} else {
 			printf("Enter Image Path: ");
-			fflush(stdout);
+			fflush (stdout);
 			input = fgets(input, 256, stdin);
 			if (!input)
 				return;
@@ -685,7 +686,12 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, real_t thresh, real_t hier_thresh, char *outfile,
-		int fullscreen) {
+		int fullscreen, char **argv, int argc) {
+	//--------------------------------------------------------------------
+	DetectionGold detection_gold(argc, argv, thresh, hier_thresh);
+	//--------------------------------------------------------------------
+
+
 	list *options = read_data_cfg(datacfg);
 	char *name_list = option_find_str(options, "names", "data/names.list");
 	char **names = get_labels(name_list);
@@ -698,7 +704,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	char buff[256];
 	char *input = buff;
 	real_t nms = real_t(.45);
-//	printf("passou aqui\n");
+
 	int size = 9;
 	char **image_names = get_labels(filename);
 
@@ -708,7 +714,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			strncpy(input, image_names[icount++], 256);
 		} else {
 			printf("Enter Image Path: ");
-			fflush(stdout);
+			fflush (stdout);
 			input = fgets(input, 256, stdin);
 			if (!input)
 				return;
@@ -968,8 +974,12 @@ void run_detector(int argc, char **argv) {
 	char *weights = (argc > 5) ? argv[5] : 0;
 	char *filename = (argc > 6) ? argv[6] : 0;
 	if (0 == strcmp(argv[2], "test"))
-		test_detector_radiation(datacfg, cfg, weights, filename, thresh, hier_thresh,
-				outfile, fullscreen);
+		test_detector(datacfg, cfg, weights, filename, thresh,
+				hier_thresh, outfile, fullscreen);
+	else if (0 == strcmp(argv[2], "test_radiation")) {
+		test_detector_radiation(datacfg, cfg, weights, filename, thresh,
+				hier_thresh, outfile, fullscreen, argv, argc);
+	}
 	else if (0 == strcmp(argv[2], "train"))
 		train_detector(datacfg, cfg, weights, gpus, ngpus, clear);
 	else if (0 == strcmp(argv[2], "valid"))

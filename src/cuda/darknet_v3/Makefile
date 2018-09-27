@@ -4,7 +4,7 @@ OPENCV?=0
 OPENMP=0
 DEBUG?=0
 REAL_TYPE?=float
-
+LOGS?=1
 
 ARCH= -gencode arch=compute_60,code=sm_60 \
       -gencode arch=compute_61,code=sm_61 \
@@ -33,6 +33,10 @@ CFLAGS=-Wall -Wno-unused-result -Wno-unknown-pragmas -Wfatal-errors -Wno-write-s
 
 NVCCFLAGS= --disable-warnings --std=c++11 
 
+ifeq ($(LOGS), 1)
+NVCCFLAGS += -DLOGS -I../../include
+NVCCLDFLAGS += -L../../include -lLogHelper
+endif
 
 ifeq ($(OPENMP), 1) 
 CFLAGS+= -fopenmp
@@ -63,7 +67,7 @@ COMMON+= `pkg-config --cflags opencv`
 endif
 
 ifeq ($(GPU), 1) 
-COMMON+= -DGPU -I/usr/local/cuda/include/
+COMMON+= -DGPU -I/usr/local/cuda/include/ -I../../include
 CFLAGS+= -DGPU
 LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
 endif
@@ -83,7 +87,7 @@ l2norm_layer.o yolo_layer.o iseg_layer.o type.o
 
 # I removed those ones to save time
 # captcha.o lsd.o super.o art.o tag.o cifar.o go.o rnn.o segmenter.o regressor.o classifier.o coco.o nightmare.o instance-segmenter.o
-EXECOBJA= yolo.o detector.o  darknet.o
+EXECOBJA= yolo.o detector.o  log_processing.o darknet.o
 
 ifeq ($(GPU), 1) 
 LDFLAGS+= -lstdc++ 
