@@ -35,6 +35,10 @@ public:
 
 	std::string get_small_log_file();
 
+	void log_error_info(char* error_detail);
+
+	void update_error_count(long error_count);
+
 };
 
 #endif /* LOG_PROCESSING_H_ */

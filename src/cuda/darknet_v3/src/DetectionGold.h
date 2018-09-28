@@ -14,6 +14,21 @@
 #include "layer.h" //save layer
 #include "box.h" //boxes
 
+//	box bbox;
+//	int classes;
+//	real_t *prob;
+//	real_t *mask;
+//	real_t objectness;
+//	int sort_class;
+// int l_coord
+#include <tuple>
+#include <unordered_map>
+
+typedef std::vector<std::tuple<box, int, std::vector<real_t>, std::vector<real_t>, real_t,
+		int, int> >gold_tuple_array;
+
+typedef std::unordered_map<std::string, gold_tuple_array> gold_hash;
+
 #define THRESHOLD_ERROR 0.05
 #define LAYER_THRESHOLD_ERROR 0.0000001
 
@@ -38,6 +53,10 @@ public:
 	// For logging functions
 	Log *app_logging;
 
+	//gold atribute
+	gold_hash gold_hash_var;
+
+
 	DetectionGold(int argc, char **argv, real_t thresh, real_t hier_thresh,
 			char *img_list_path, char *config_file, char *config_data,
 			char *model, char *weights);
@@ -48,6 +67,7 @@ public:
 			network& net);
 
 
+
 private:
 	/**
 	 * it was adapted from draw_detections in network.cu
@@ -56,10 +76,14 @@ private:
 	void save_gold_img_i(detection *dets, int nboxes, int classes,
 			std::ofstream& gold_file, int l_coords);
 
+	void load_gold_hash(std::ifstream& gold_file);
+
 	std::string print_box(box b);
 
 	void write_gold_header();
-
+	void generate_method(int img_index, int nboxes, network& net,
+			detection* dets);
+	void compare_method(int nboxes, detection* dets, std::string img, int l_coord);
 };
 
 #endif /* DETECTIONGOLD_H_ */

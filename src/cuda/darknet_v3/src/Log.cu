@@ -64,3 +64,14 @@ std::string Log::get_small_log_file() {
 	return str_ret;
 }
 
+void Log::log_error_info(char* error_detail){
+#ifdef LOGS
+			log_error_detail(const_cast<char*>(error_detail.c_str()));
+#endif
+}
+
+void Log::update_error_count(long error_count){
+#ifdef LOGS
+	log_error_count(error_count);
+#endif
+}
