@@ -36,9 +36,11 @@ void ProbArray::read_prob_array(int num, int classes, std::ifstream &ifp) {
 	}
 }
 
-
+//thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;total;classes;
 DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
-		real_t hier_thresh) {
+		real_t hier_thresh, int img_list_size, char *img_list_path,
+		char *config_file, char *config_data, char *model, char *weights,
+		int total, int classes) {
 	char *def;
 	this->gold_inout = std::string(find_char_arg(argc, argv, "-gold", def));
 	this->generate = find_int_arg(argc, argv, "-generate", 0);
@@ -48,7 +50,8 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	this->stream_mr = find_int_arg(argc, argv, "-smx_redundancy", 0);
 	this->thresh = thresh;
 	this->hier_thresh = hier_thresh;
-	std::cout << this->generate << " " << this->iterations << " " << this->gold_inout << "\n";
+	std::cout << this->generate << " " << this->iterations << " "
+			<< this->gold_inout << "\n";
 
 	if (this->generate != true) {
 
@@ -96,6 +99,16 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 			this->pb_gold[i].read_prob_array(this->total, this->classes,
 					img_list_file);
 		}
+	} else {
+		this->plist_size = img_list_size;
+		this->img_list_path = std::string(img_list_path);
+		this->config_file = std::string(config_file);
+		this->cfg_data = std::string(config_data);
+		this->model = std::string(model);
+		this->weights = std::string(weights);
+		this->total = total;
+		this->classes = classes;
+		this->write_gold_header();
 	}
 
 }
@@ -106,11 +119,11 @@ void DetectionGold::write_gold_header() {
 	std::string gold_header = std::to_string(this->thresh) + ";";
 	gold_header += std::to_string(this->hier_thresh) + ";";
 	gold_header += std::to_string(this->plist_size) + ";";
-	gold_header += (this->img_list_path) + ";";
-	gold_header += (this->config_file) + ";";
-	gold_header += (this->cfg_data) + ";";
-	gold_header += (this->model) + ";";
-	gold_header += (this->weights) + ";";
+	gold_header += this->img_list_path + ";";
+	gold_header += this->config_file + ";";
+	gold_header += this->cfg_data + ";";
+	gold_header += this->model + ";";
+	gold_header += this->weights + ";";
 
 	gold_header += std::to_string(this->total) + ";";
 	gold_header += std::to_string(this->classes) + ";\n";
