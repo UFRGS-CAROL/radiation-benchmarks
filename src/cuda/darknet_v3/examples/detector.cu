@@ -687,12 +687,6 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, real_t thresh, real_t hier_thresh, char *outfile,
 		int fullscreen, char **argv, int argc) {
-	//--------------------------------------------------------------------
-	printf("Executig radiation setup/test\n");
-	DetectionGold detection_gold(argc, argv, thresh, hier_thresh);
-	//--------------------------------------------------------------------
-
-
 	list *options = read_data_cfg(datacfg);
 	char *name_list = option_find_str(options, "names", "data/names.list");
 	char **names = get_labels(name_list);
@@ -710,6 +704,18 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	char **image_names = get_labels(filename);
 
 	int icount = 0;
+
+	//--------------------------------------------------------------------
+	printf("Executig radiation setup/test\n");
+//	(int argc, char **argv, real_t thresh,
+//				real_t hier_thresh, int img_list_size, char *img_list_path,
+//				char *config_file, char *config_data, char *model, char *weights,
+//				int total, int classes)
+	DetectionGold detection_gold(argc, argv, thresh, hier_thresh, size, filename, cfgfile,
+			datacfg, const_cast<char*>("detector"), weightfile, 1,
+			net->layers[net->n - 1].classes);
+	//--------------------------------------------------------------------
+
 	while (icount < size) {
 		if (*image_names) {
 			strncpy(input, image_names[icount++], 256);
@@ -975,13 +981,12 @@ void run_detector(int argc, char **argv) {
 	char *weights = (argc > 5) ? argv[5] : 0;
 	char *filename = (argc > 6) ? argv[6] : 0;
 	if (0 == strcmp(argv[2], "test"))
-		test_detector(datacfg, cfg, weights, filename, thresh,
-				hier_thresh, outfile, fullscreen);
+		test_detector(datacfg, cfg, weights, filename, thresh, hier_thresh,
+				outfile, fullscreen);
 	else if (0 == strcmp(argv[2], "test_radiation")) {
 		test_detector_radiation(datacfg, cfg, weights, filename, thresh,
 				hier_thresh, outfile, fullscreen, argv, argc);
-	}
-	else if (0 == strcmp(argv[2], "train"))
+	} else if (0 == strcmp(argv[2], "train"))
 		train_detector(datacfg, cfg, weights, gpus, ngpus, clear);
 	else if (0 == strcmp(argv[2], "valid"))
 		validate_detector(datacfg, cfg, weights, outfile);
