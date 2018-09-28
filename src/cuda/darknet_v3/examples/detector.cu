@@ -688,6 +688,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, real_t thresh, real_t hier_thresh, char *outfile,
 		int fullscreen, char **argv, int argc) {
 	//--------------------------------------------------------------------
+	printf("Executig radiation setup/test\n");
 	DetectionGold detection_gold(argc, argv, thresh, hier_thresh);
 	//--------------------------------------------------------------------
 

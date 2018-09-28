@@ -47,6 +47,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	this->stream_mr = find_int_arg(argc, argv, "-smx_redundancy", 0);
 	this->thresh = thresh;
 	this->hier_thresh = hier_thresh;
+	std::cout << this->generate << " " << this->iterations << " " << this->gold_inout << "\n";
 
 	if (this->generate != true) {
 
