@@ -691,6 +691,7 @@ inline std::pair<std::vector<image>, std::vector <std::pair<int, int> > > load_a
 
 	int i = 0;
 	for (auto s : img_list) {
+		std::cout << s << "\n";
 		image im = load_image_color(const_cast<char*>(s.c_str()), 0, 0);
 		sized_images[i] = letterbox_image(im, net->w, net->h);
 		original_sizes[i].first = im.w;
@@ -735,11 +736,11 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	// round counter for the images
 	int count_image = 0;
 	//--------------------------------------------------------------------
-
+	std::cout << "passou depois\n";
 	for (int iteration = 0; iteration < detection_gold.iterations;
 			iteration++) {
 		layer l = net->layers[net->n - 1];
-
+		std::cout << "passou tambem\n";
 		real_t *X = sized_images[count_image].data;
 
 		time = what_time_is_it_now();
