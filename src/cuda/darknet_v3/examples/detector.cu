@@ -700,6 +700,10 @@ inline std::pair<std::vector<image>, std::vector <std::pair<int, int> > > load_a
 		i++;
 		free_image(im);
 	}
+	std::pair<std::vector<image>, std::vector <std::pair<int, int> > > ret;
+	ret.first = img_list;
+	ret.second = sized_images;
+	return ret;
 }
 
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
