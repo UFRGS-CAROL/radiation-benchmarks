@@ -11,10 +11,7 @@
 #include <vector>
 #include "helpful.h"
 
-
-
 static const char* ABFT_TYPES[] = { "none", "abft" };
-
 
 Log::Log(std::string gold, int save_layer, int abft, int iterations,
 		std::string app, unsigned char use_tensor_core_mode) {
@@ -23,13 +20,16 @@ Log::Log(std::string gold, int save_layer, int abft, int iterations,
 
 	test_info += " save_layer: " + std::to_string(save_layer) + " abft_type: ";
 
-	test_info += std::string(ABFT_TYPES[abft]) + " iterations: " + std::to_string(iterations);
+	test_info += std::string(ABFT_TYPES[abft]) + " iterations: "
+			+ std::to_string(iterations);
 
-	test_info += " tensor_core_mode: " + std::to_string(int(use_tensor_core_mode));
+	test_info += " tensor_core_mode: "
+			+ std::to_string(int(use_tensor_core_mode));
 
 	set_iter_interval_print(10);
 
-	start_log_file(const_cast<char*>(app.c_str()), const_cast<char*>(test_info.c_str()));
+	start_log_file(const_cast<char*>(app.c_str()),
+			const_cast<char*>(test_info.c_str()));
 #endif
 }
 
@@ -64,13 +64,13 @@ std::string Log::get_small_log_file() {
 	return str_ret;
 }
 
-void Log::log_error_info(char* error_detail){
+void Log::log_error_info(char* error_detail) {
 #ifdef LOGS
-			log_error_detail(const_cast<char*>(error_detail.c_str()));
+	log_error_detail(error_detail);
 #endif
 }
 
-void Log::update_error_count(long error_count){
+void Log::update_error_count(long error_count) {
 #ifdef LOGS
 	log_error_count(error_count);
 #endif

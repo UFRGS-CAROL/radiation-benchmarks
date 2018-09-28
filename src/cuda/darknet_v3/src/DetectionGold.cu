@@ -127,12 +127,14 @@ bool operator!=(const box& a, const box& b) {
 
 void DetectionGold::compare_method(int nboxes, detection* dets, std::string img,
 		int f_l_coord) {
+	std::ostringstream error_info("");
+
 	//----------------------------------------------------------------
 	//Comparing nboxes
 	int g_nboxes = this->gold_hash_var[img].size();
 	int min_nboxes = g_nboxes;
 	if (g_nboxes != nboxes) {
-		error_info = "";
+		error_info = std::ostringstream("");
 		error_info << "img: " << img << " detection_bbox: " << i
 				<< " nboxes_e: " << g_nboxes << " nboxes_r: " << nboxes;
 		this->app_logging->log_error_info(error_info.c_str());
@@ -161,11 +163,10 @@ void DetectionGold::compare_method(int nboxes, detection* dets, std::string img,
 		int g_sort_class = std::get < 5 > (gold_tuple_var[i]);
 		int g_l_coord = std::get < 6 > (gold_tuple_var[i]);
 
-		std::ostringstream error_info = "";
 		//----------------------------------------------------------------
 		//Comparing objectness
 		if (g_objectness != f_objectness) {
-			error_info = "";
+			error_info.clear();
 			error_info << "img: " << img << " detection_bbox: " << i
 					<< " objectness_e: " << g_objectness << " objectness_r: "
 					<< f_objectness;
@@ -175,7 +176,7 @@ void DetectionGold::compare_method(int nboxes, detection* dets, std::string img,
 		//----------------------------------------------------------------
 		//Comparing sort_class
 		if (g_sort_class != f_sort_class) {
-			error_info = "";
+			error_info.clear();
 			error_info << "img: " << img << " detection_bbox: " << i
 					<< " sort_class_e: " << g_sort_class << " sort_class_r: "
 					<< f_sort_class;
@@ -186,7 +187,7 @@ void DetectionGold::compare_method(int nboxes, detection* dets, std::string img,
 		//----------------------------------------------------------------
 		//Comparing bbox
 		if (g_bbox != f_bbox) {
-			error_info = "";
+			error_info.clear();
 			error_info << "img: " << img << " detection_bbox: " << i << " x_e: "
 					<< g_bbox.x << " x_r: " << f_bbox.x << "y_e: " << g_bbox.y
 					<< " y_r: " << f_bbox.y << "h_e: " << g_bbox.h << " h_r: "
@@ -199,7 +200,7 @@ void DetectionGold::compare_method(int nboxes, detection* dets, std::string img,
 		// prob is always classes size
 		int min_classes = g_classes;
 		if (f_classes != g_classes) {
-			error_info = "";
+			error_info.clear();
 			error_info << "img: " << img
 					<< " different number of classes for detection " << i
 					<< " diff " << std::abs(f_classes - g_classes);
@@ -211,7 +212,7 @@ void DetectionGold::compare_method(int nboxes, detection* dets, std::string img,
 			real_t g = g_prob[cl];
 			real_t f = f_prob[cl];
 			if (g != f) {
-				error_info = "";
+				error_info.clear();
 				error_info << "img: " << img << " detection_bbox: " << i
 						<< " detection_class: " << cl << " prob_e: " << g
 						<< " prob_r: " << f;
@@ -223,7 +224,7 @@ void DetectionGold::compare_method(int nboxes, detection* dets, std::string img,
 		//Comparing mask
 		int min_l_coord = g_l_coord;
 		if (g_l_coord != f_l_coord) {
-			error_info = "";
+			error_info.clear();
 			error_info << "img: " << img
 					<< " different number of l_coord for detection " << i
 					<< " diff " << std::abs(g_l_coord - f_l_coord);
@@ -235,7 +236,7 @@ void DetectionGold::compare_method(int nboxes, detection* dets, std::string img,
 			real_t g = g_mask[cl];
 			real_t f = f_mask[cl];
 			if (g != f) {
-				error_info = "";
+				error_info.clear();
 				error_info << "img: " << img << " detection_bbox: " << i
 						<< " detection_mask: " << cl << " mask_e: " << g
 						<< " mask_r: " << f;
