@@ -435,6 +435,7 @@ void readMatricesFromFile(bool gold = true) {
 	f_A = fopen(a_matrix_path, "rb");
 	f_B = fopen(b_matrix_path, "rb");
 	f_C = fopen(c_matrix_path, "rb");
+	
 	if (!(f_A && f_B && f_C)) {
 		printf("Cant open input  matrices.\n");
 #ifdef LOGS
@@ -534,7 +535,7 @@ void generateInputMatrices()
 	f_A = fopen(a_matrix_path, "wb");
 	f_B = fopen(b_matrix_path, "wb");
 	f_C = fopen(c_matrix_path, "wb");
-	if (!(f_A&&f_B)) {
+	if (!(f_A&&f_B && f_C)) {
 		printf("Could not open f_A or f_B or f_B \n");
 		exit(EXIT_FAILURE);
 	}
@@ -648,6 +649,7 @@ void retrieveInputMatrices() {
 			printf(" %.2e", (float)C [i]);
 			if ((i+1)%k == 0) printf("\n");
 		}
+	
 	}
 
 	if (fault_injection) {
@@ -1040,7 +1042,7 @@ __device__ half2 inline read_voter_h2(half2 *v1, half2 *v2, half2 *v3,
 //~ }
 
 
-__global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_type *d_A2,
+  __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_type *d_A2,
 								tested_type *d_B0, tested_type *d_B1, tested_type *d_B2,
 								tested_type *d_C0, tested_type *d_C1, tested_type *d_C2,  
 								tested_type *d_D0, tested_type *d_D1, tested_type *d_D2, 
@@ -1059,7 +1061,8 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1, tested_typ
 				+
 				acc;
 	}
-	acc += read_voter(d_C0, d_C1, d_C2, k * n + tx);
+	//~ acc += read_voter(d_C0, d_C1, d_C2, k * n + tx);
+	acc += read_voter(d_C0, d_C1, d_C2, ty * n + tx);
 
 	d_D0[ty * n + tx] = acc;
 	d_D1[ty * n + tx] = acc;
@@ -1279,6 +1282,16 @@ int main(int argc, char **argv)
 				test_precision_description, (signed int) DEFAULT_INPUT_SIZE);
 		printf("Using default input_a path: %s\n", b_matrix_path);
 	}
+		
+	if (checkCmdLineFlag(argc, (const char **) argv, "input_c")) {
+		getCmdLineArgumentString(argc, (const char **) argv, "input_c",
+				&c_matrix_path);
+	} else {
+		c_matrix_path = new char[100];
+		snprintf(c_matrix_path, 100, "mxm_c_%s_%i.matrix",
+				test_precision_description, (signed int) DEFAULT_INPUT_SIZE);
+		printf("Using default input_a path: %s\n", c_matrix_path);
+	}
 
 	if (checkCmdLineFlag(argc, (const char **) argv, "gold")) {
 		getCmdLineArgumentString(argc, (const char **) argv, "gold",
@@ -1311,7 +1324,7 @@ int main(int argc, char **argv)
 	if (checkCmdLineFlag(argc, (const char **) argv, "generate")) {
 		generate = 1;
 		device_warmup = 0;
-		fault_injection = 0;
+		fault_injection = 0;	//~ fault_injection = 1;
 		iterations = 20;
 		generate_safechecks = 5;
 		printf("!! Generate !! Disabling device_warmup, fault_injection and iterations limiting.\n");
@@ -1462,7 +1475,7 @@ int main(int argc, char **argv)
 					cudaMemcpy(D0, d_D0, matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
 			if ((generate) && (k <= 16)) {
-				printf("\nMatrix C (0): \n");
+				printf("\nMatrix D (0): \n");
 				for (int i = 0; i<k*k; i++) {
 					printf(" %.2e", (float)D0[i]);
 					if ((i+1)%k == 0) printf("\n");
@@ -1474,7 +1487,7 @@ int main(int argc, char **argv)
 					cudaMemcpy(D1, d_D1, matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
 			if ((generate) && (k <= 16)) {
-				printf("\nMatrix C (1): \n");
+				printf("\nMatrix D (1): \n");
 				for (int i = 0; i<k*k; i++) {
 					printf(" %.2e", (float)D1[i]);
 					if ((i+1)%k == 0) printf("\n");
@@ -1486,7 +1499,7 @@ int main(int argc, char **argv)
 					cudaMemcpy(D2, d_D2, matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost));
 			if ((generate) && (k <= 16)) {
-				printf("\nMatrix C (2): \n");
+				printf("\nMatrix D (2): \n");
 				for (int i = 0; i<k*k; i++) {
 					printf(" %.2e", (float)D2[i]);
 					if ((i+1)%k == 0) printf("\n");
@@ -1591,7 +1604,7 @@ int main(int argc, char **argv)
 
 //==================== ORIGINAL GEMM CODE ABOVE ===============
     
-    printf("Initializing...\n");
+    //~ printf("Initializing...\n");
 
     //~ int dev = findCudaDevice(argc, (const char **)argv);
 
@@ -1645,7 +1658,7 @@ int main(int argc, char **argv)
 
     //checkKernelErrors((init_device_matrices<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK>>>(A_h, B_h, C_h, A, B, C, D)));
 
-    checkCudaErrors(cudaDeviceSynchronize());
+    //~ checkCudaErrors(cudaDeviceSynchronize());
 
     //~ enum {
         //~ // Compute the right amount of shared memory to request.
@@ -1670,7 +1683,7 @@ int main(int argc, char **argv)
     // If enough shared memory available on the GPU use high performant kernel
     //~ if (deviceProp.sharedMemPerMultiprocessor >= SHMEM_SZ)
     //~ {
-        printf("Computing... using high performance kernel compute_gemm \n");
+        //~ printf("Computing... using high performance kernel compute_gemm \n");
 
        // checkCudaErrors(cudaFuncSetAttribute(compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
        // checkKernelErrors((compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
