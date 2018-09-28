@@ -46,7 +46,10 @@ public:
 	// For logging functions
 	Log *app_logging;
 
-	DetectionGold(int argc, char **argv, real_t thresh, real_t hier_thresh);
+	DetectionGold(int argc, char **argv, real_t thresh,
+			real_t hier_thresh, int img_list_size, char *img_list_path,
+			char *config_file, char *config_data, char *model, char *weights,
+			int total, int classes);
 	void write_gold_header();
 	/**
 	 * it was adapted from draw_detections in image.c line 174
