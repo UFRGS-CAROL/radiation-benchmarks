@@ -37,19 +37,19 @@ public:
 	std::string gold_inout;
 	bool generate;
 	real_t thresh, hier_thresh;
-	int plist_size, total, classes;
+	int plist_size, classes;
 	std::string img_list_path, config_file, cfg_data, model, weights;
 	std::vector<std::string> gold_img_names;
 	std::vector<ProbArray> pb_gold;
 	int iterations, tensor_core_mode, stream_mr;
+	int nboxes;
 
 	// For logging functions
 	Log *app_logging;
 
 	DetectionGold(int argc, char **argv, real_t thresh,
-			real_t hier_thresh, int img_list_size, char *img_list_path,
-			char *config_file, char *config_data, char *model, char *weights,
-			int total, int classes);
+			real_t hier_thresh, char *img_list_path,
+			char *config_file, char *config_data, char *model, char *weights, int classes);
 	void write_gold_header();
 	/**
 	 * it was adapted from draw_detections in image.c line 174

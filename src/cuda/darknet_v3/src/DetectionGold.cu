@@ -6,8 +6,9 @@
  */
 
 #include "DetectionGold.h"
-
+#include <iterator>
 #include "helpful.h"
+
 
 void ProbArray::read_prob_array(int num, int classes, std::ifstream &ifp) {
 	this->boxes = std::vector < box > (num);
@@ -38,9 +39,8 @@ void ProbArray::read_prob_array(int num, int classes, std::ifstream &ifp) {
 
 //thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;total;classes;
 DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
-		real_t hier_thresh, int img_list_size, char *img_list_path,
-		char *config_file, char *config_data, char *model, char *weights,
-		int total, int classes) {
+		real_t hier_thresh, char *img_list_path, char *config_file,
+		char *config_data, char *model, char *weights, int classes) {
 	char *def;
 	this->gold_inout = std::string(find_char_arg(argc, argv, "-gold", def));
 	this->generate = find_int_arg(argc, argv, "-generate", 0);
@@ -82,8 +82,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->model = split_ret[6].size();//const_cast<char*>(split_ret[6].c_str());
 		this->weights = split_ret[7].size();
 
-		this->total = atoi(split_ret[8].c_str());
-		this->classes = atoi(split_ret[9].c_str());
+		this->classes = atoi(split_ret[8].c_str());
 
 		//allocate detector
 		this->gold_img_names = std::vector < std::string > (this->plist_size);
@@ -96,17 +95,23 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 			std::vector < std::string > line_splited = split(line, ';');
 			this->gold_img_names[i] = line_splited[0];
 
-			this->pb_gold[i].read_prob_array(this->total, this->classes,
+			this->pb_gold[i].read_prob_array(this->nboxes, this->classes,
 					img_list_file);
 		}
 	} else {
-		this->plist_size = img_list_size;
 		this->img_list_path = std::string(img_list_path);
+
+		//reading the img list path content
+		std::ifstream tmp_img_file(this->img_list_path);
+		std::copy(std::istream_iterator < std::string > (tmp_img_file),
+				std::istream_iterator<std::string>(),
+				std::back_inserter(this->gold_img_names));
+
+		this->plist_size = this->gold_img_names.size();
 		this->config_file = std::string(config_file);
 		this->cfg_data = std::string(config_data);
 		this->model = std::string(model);
 		this->weights = std::string(weights);
-		this->total = total;
 		this->classes = classes;
 		this->write_gold_header();
 	}
@@ -115,7 +120,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 void DetectionGold::write_gold_header() {
 	//	0       1           2              3              4            5            6        7      8     9
-	//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;total;classes;
+	//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;classes;
 	std::string gold_header = std::to_string(this->thresh) + ";";
 	gold_header += std::to_string(this->hier_thresh) + ";";
 	gold_header += std::to_string(this->plist_size) + ";";
@@ -125,7 +130,6 @@ void DetectionGold::write_gold_header() {
 	gold_header += this->model + ";";
 	gold_header += this->weights + ";";
 
-	gold_header += std::to_string(this->total) + ";";
 	gold_header += std::to_string(this->classes) + ";\n";
 	std::ofstream gold(this->gold_inout);
 	if (gold.is_open()) {
@@ -281,7 +285,7 @@ std::ostream& operator<<(std::ostream& ret, DetectionGold &det) {
 	for (int i = 0; i < det.plist_size; i++) {
 		ret << det.gold_img_names[i] << "\n";
 		ProbArray p = det.pb_gold[i];
-		for (int j = 0; j < det.total; j++) {
+		for (int j = 0; j < det.nboxes; j++) {
 			ret << det.print_box(p.boxes[j]) << "\n";
 		}
 	}

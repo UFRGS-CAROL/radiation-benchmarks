@@ -684,6 +684,23 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 	}
 }
 
+inline std::pair<std::vector<image>, std::vector <std::pair<int, int> > > load_all_images(
+		std::vector<std::string> img_list, network *net) {
+	std::vector<image> sized_images(img_list.size());
+	std::vector<std::pair<int, int>> original_sizes(img_list.size());
+
+	int i = 0;
+	for (auto s : img_list) {
+		image im = load_image_color(const_cast<char*>(s.c_str()), 0, 0);
+		sized_images[i] = letterbox_image(im, net->w, net->h);
+		original_sizes[i].first = im.w;
+		original_sizes[i].second = im.h;
+
+		i++;
+		free_image(im);
+	}
+}
+
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, real_t thresh, real_t hier_thresh, char *outfile,
 		int fullscreen, char **argv, int argc) {
@@ -700,53 +717,44 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	char *input = buff;
 	real_t nms = real_t(.45);
 
-	int size = 9;
-	char **image_names = get_labels(filename);
-
-	int icount = 0;
 
 	//--------------------------------------------------------------------
 	printf("Executig radiation setup/test\n");
 //	(int argc, char **argv, real_t thresh,
 //				real_t hier_thresh, int img_list_size, char *img_list_path,
-//				char *config_file, char *config_data, char *model, char *weights,
-//				int total, int classes)
-	DetectionGold detection_gold(argc, argv, thresh, hier_thresh, size, filename, cfgfile,
-			datacfg, const_cast<char*>("detector"), weightfile, 1,
-			net->layers[net->n - 1].classes);
+//				char *config_file, char *config_data, char *model, char *weights, int classes)
+	DetectionGold detection_gold(argc, argv, thresh, hier_thresh,
+			filename, cfgfile, datacfg, const_cast<char*>("detector"),
+			weightfile, net->layers[net->n - 1].classes);
+
+	std::pair<std::vector<image>, std::vector<std::pair<int, int> > > pair_sts =
+			load_all_images(detection_gold.gold_img_names, net);
+	std::vector<image> sized_images = pair_sts.first;
+	std::vector<std::pair<int, int> > imgs_sizes = pair_sts.second;
+
+	// round counter for the images
+	int count_image = 0;
 	//--------------------------------------------------------------------
 
-	while (icount < size) {
-		if (*image_names) {
-			strncpy(input, image_names[icount++], 256);
-		} else {
-			printf("Enter Image Path: ");
-			fflush (stdout);
-			input = fgets(input, 256, stdin);
-			if (!input)
-				return;
-			strtok(input, "\n");
-		}
-
-		image im = load_image_color(input, 0, 0);
-
-		image sized = letterbox_image(im, net->w, net->h);
+	for (int iteration = 0; iteration < detection_gold.iterations;
+			iteration++) {
 		layer l = net->layers[net->n - 1];
 
-		real_t *X = sized.data;
+		real_t *X = sized_images[count_image].data;
 
 		time = what_time_is_it_now();
 		network_predict(net, X);
 		printf("%s: Predicted in %f seconds.\n", input,
 				what_time_is_it_now() - time);
 		int nboxes = 0;
-		detection *dets = get_network_boxes(net, im.w, im.h, thresh,
+		detection *dets = get_network_boxes(net, imgs_sizes[count_image].first, imgs_sizes[count_image].second, thresh,
 				hier_thresh, 0, 1, &nboxes);
 
 		if (nms)
 			do_nms_sort(dets, nboxes, l.classes, nms);
+#ifdef DRAW
 		draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
-		free_detections(dets, nboxes);
+
 		if (outfile) {
 			save_image(im, outfile);
 		} else {
@@ -759,10 +767,14 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			show_image(im, "predictions", 0);
 #endif
 		}
+#endif
+		free_detections(dets, nboxes);
+		count_image = (count_image + 1) % sized_images.size();
+	}
 
+	//TODO: it could be bad
+	for(auto im : sized_images){
 		free_image(im);
-		free_image(sized);
-
 	}
 }
 /*
