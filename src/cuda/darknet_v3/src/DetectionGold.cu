@@ -190,42 +190,6 @@ DetectionGold::~DetectionGold() {
 	}
 }
 
-std::string DetectionGold::error_check(real_t f_pb, real_t g_pb, box f_b,
-		box g_b, std::string img, int class_g, int class_f, int pb_i) {
-
-	std::vector<real_t> diff_array = {std::fabs(f_b.x - g_b.x),  //x axis
-		std::fabs(f_b.y - g_b.y),//y axis
-		std::fabs(f_pb - g_pb),//probabilities
-		std::fabs(f_b.h - g_b.h),// height
-		std::fabs(f_b.w - g_b.w), (real_t) std::abs(class_g - class_f)}; // width and class
-
-	//	if (class_g != class_f)
-	//		std::cout << " val " << class_g << " " << class_f << "\n";
-	bool diff = false;
-	for (auto diff_element : diff_array) {
-		if (diff_element > THRESHOLD_ERROR) {
-			diff = true;
-			break;
-		}
-	}
-
-	if (diff) {
-		char error_detail[1000];
-
-		sprintf(error_detail, "img: [%s]"
-				" prob_r[%d][%d]: %1.16e"
-				" prob_e[%d][%d]: %1.16e"
-				" x_r: %1.16e x_e: %1.16e"
-				" y_r: %1.16e y_e: %1.16e"
-				" w_r: %1.16e w_e: %1.16e"
-				" h_r: %1.16e h_e: %1.16e", img, pb_i, class_f, f_pb, pb_i,
-				class_g, g_pb, f_b.x, g_b.x, f_b.y, g_b.y, f_b.w, g_b.w,
-				f_b.h, g_b.h);
-		return std::string(error_detail);
-	}
-
-	return "";
-}
 
 std::string DetectionGold::print_box(box b) {
 	return std::to_string(b.x) + " " + std::to_string(b.y) + " "

@@ -56,9 +56,6 @@ private:
 	void save_gold_img_i(detection *dets, int nboxes, int classes,
 			std::ofstream& gold_file, int l_coords);
 
-	std::string error_check(real_t f_pb, real_t g_pb, box f_b, box g_b,
-			std::string img, int class_g, int class_f, int pb_i);
-
 	std::string print_box(box b);
 
 	void write_gold_header();
