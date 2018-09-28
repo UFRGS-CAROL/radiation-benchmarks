@@ -39,7 +39,8 @@ void ProbArray::read_prob_array(int num, int classes, std::ifstream &ifp) {
 
 DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		real_t hier_thresh) {
-	this->gold_inout = find_arg(argc, argv, "-gold");
+	char *def;
+	this->gold_inout = std::string(find_char_arg(argc, argv, "-gold", def));
 	this->generate = find_int_arg(argc, argv, "-generate", 0);
 	this->network_name = "darknet_v3";
 	this->iterations = find_int_arg(argc, argv, "-iterations", 1);
