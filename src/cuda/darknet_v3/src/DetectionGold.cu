@@ -84,11 +84,6 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 		this->classes = atoi(split_ret[8].c_str());
 
-		//check if iterations is bigger than img_list_size
-		if (this->iterations < this->plist_size){
-			this->iterations = this->plist_size;
-		}
-
 		//allocate detector
 		this->gold_img_names = std::vector < std::string > (this->plist_size);
 		this->pb_gold = std::vector < ProbArray > (this->plist_size);
@@ -119,6 +114,11 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->weights = std::string(weights);
 		this->classes = classes;
 		this->write_gold_header();
+	}
+
+	//check if iterations is bigger than img_list_size
+	if (this->iterations < this->plist_size){
+		this->iterations = this->plist_size;
 	}
 
 }
