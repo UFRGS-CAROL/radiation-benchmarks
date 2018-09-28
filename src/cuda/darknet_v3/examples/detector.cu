@@ -684,7 +684,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 	}
 }
 
-inline std::pair<std::vector<image>, std::vector <std::pair<int, int> > > load_all_images(
+inline std::pair<std::vector<image>, std::vector<std::pair<int, int> > > load_all_images(
 		std::vector<std::string> img_list, network *net) {
 	std::vector<image> sized_images(img_list.size());
 	std::vector<std::pair<int, int>> original_sizes(img_list.size());
@@ -700,7 +700,8 @@ inline std::pair<std::vector<image>, std::vector <std::pair<int, int> > > load_a
 		i++;
 		free_image(im);
 	}
-	std::pair<std::vector<image>, std::vector <std::pair<int, int> > > ret(sized_images, original_sizes);
+	std::pair<std::vector<image>, std::vector<std::pair<int, int> > > ret(
+			sized_images, original_sizes);
 
 	return ret;
 }
@@ -721,20 +722,19 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	char *input = buff;
 	real_t nms = real_t(.45);
 
-
 	//--------------------------------------------------------------------
 	printf("Executig radiation setup/test\n");
 //	(int argc, char **argv, real_t thresh,
 //				real_t hier_thresh, int img_list_size, char *img_list_path,
 //				char *config_file, char *config_data, char *model, char *weights, int classes)
-	DetectionGold detection_gold(argc, argv, thresh, hier_thresh,
-			filename, cfgfile, datacfg, const_cast<char*>("detector"),
-			weightfile, net->layers[net->n - 1].classes);
+	DetectionGold detection_gold(argc, argv, thresh, hier_thresh, filename,
+			cfgfile, datacfg, const_cast<char*>("detector"), weightfile,
+			net->layers[net->n - 1].classes);
 
 	std::pair<std::vector<image>, std::vector<std::pair<int, int> > > pair_sts =
 			load_all_images(detection_gold.gold_img_names, net);
 	std::vector<image> sized_images = pair_sts.first;
-	std::vector<std::pair<int, int> > imgs_sizes = pair_sts.second;
+	std::vector < std::pair<int, int> > imgs_sizes = pair_sts.second;
 
 	// round counter for the images
 	int count_image = 0;
@@ -752,7 +752,10 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		printf("%s: Predicted in %f seconds.\n", input,
 				what_time_is_it_now() - time);
 		int nboxes = 0;
-		detection *dets = get_network_boxes(net, imgs_sizes[count_image].first, imgs_sizes[count_image].second, thresh,
+
+		int im_w = imgs_sizes[count_image].first;
+		int im_h = imgs_sizes[count_image].second;
+		detection *dets = get_network_boxes(net, im_w, im_h, thresh,
 				hier_thresh, 0, 1, &nboxes);
 
 		if (nms)
@@ -773,12 +776,14 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 #endif
 		}
 #endif
+		std::cout << "before free\n";
 		free_detections(dets, nboxes);
-		count_image = (count_image + 1) % sized_images.size();
+		count_image = (count_image + 1) % detection_gold.gold_img_names.size();
+		std::cout << "after free\n";
 	}
 
 	//TODO: it could be bad
-	for(auto im : sized_images){
+	for (auto im : sized_images) {
 		free_image(im);
 	}
 }
