@@ -743,6 +743,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		std::cout << "passou tambem\n";
 		real_t *X = sized_images[count_image].data;
 
+		std::cout << X << " x value\n";
 		time = what_time_is_it_now();
 		network_predict(net, X);
 		printf("%s: Predicted in %f seconds.\n", input,
