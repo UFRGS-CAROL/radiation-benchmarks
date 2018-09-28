@@ -87,7 +87,7 @@ l2norm_layer.o yolo_layer.o iseg_layer.o type.o
 
 # I removed those ones to save time
 # captcha.o lsd.o super.o art.o tag.o cifar.o go.o rnn.o segmenter.o regressor.o classifier.o coco.o nightmare.o instance-segmenter.o
-EXECOBJA= yolo.o detector.o  log_processing.o darknet.o
+EXECOBJA= yolo.o detector.o  Log.o DetectionGold.o darknet.o
 
 ifeq ($(GPU), 1) 
 LDFLAGS+= -lstdc++ 

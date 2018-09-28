@@ -17,7 +17,7 @@
 //~ #include <iostream>
 #include <fstream>
 
-void dump_output(int iteration_num, std::string directory, bool corrupted,
+static void dump_output(int iteration_num, std::string directory, bool corrupted,
         std::vector<std::vector<int> > data) {
     char filename[100];
 
@@ -80,7 +80,7 @@ void dump_output(int iteration_num, std::string directory, bool corrupted,
     }
 }
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+static std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss(s);
     std::string item;
     while (getline(ss, item, delim)) {
@@ -89,13 +89,13 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
     return elems;
 }
 
-std::vector<std::string> split(const std::string &s, char delim) {
+static std::vector<std::string> split(const std::string &s, char delim) {
     std::vector < std::string > elems;
     split(s, delim, elems);
     return elems;
 }
 
-bool set_countains(std::vector<int> check, std::vector<std::vector<int> > src) {
+static bool set_countains(std::vector<int> check, std::vector<std::vector<int> > src) {
     unsigned char cont = 0;
     for (size_t i = 0; i < src.size(); i++) {
         std::vector<int> temp = src[i];
@@ -111,7 +111,7 @@ bool set_countains(std::vector<int> check, std::vector<std::vector<int> > src) {
 }
 #endif //CXX
 
-double mysecond() {
+static double mysecond() {
     struct timeval tp;
     struct timezone tzp;
     gettimeofday(&tp, &tzp);
