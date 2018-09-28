@@ -724,12 +724,8 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 
 	//--------------------------------------------------------------------
 	printf("Executig radiation setup/test\n");
-//	(int argc, char **argv, real_t thresh,
-//				real_t hier_thresh, int img_list_size, char *img_list_path,
-//				char *config_file, char *config_data, char *model, char *weights, int classes)
 	DetectionGold detection_gold(argc, argv, thresh, hier_thresh, filename,
-			cfgfile, datacfg, const_cast<char*>("detector"), weightfile,
-			net->layers[net->n - 1].classes);
+			cfgfile, datacfg, const_cast<char*>("detector"), weightfile);
 
 	std::pair<std::vector<image>, std::vector<std::pair<int, int> > > pair_sts =
 			load_all_images(detection_gold.gold_img_names, net);
@@ -737,7 +733,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	std::vector < std::pair<int, int> > imgs_sizes = pair_sts.second;
 
 	// round counter for the images
-	int count_image = 0;
+	int count_image = -1;
 	//--------------------------------------------------------------------
 	std::cout << "passou depois\n";
 	for (int iteration = 0; iteration < detection_gold.iterations;
@@ -760,6 +756,10 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 
 		if (nms)
 			do_nms_sort(dets, nboxes, l.classes, nms);
+
+		// Test or compare the detections with the gold
+		detection_gold.compare_or_generate(dets, nboxes, count_image, *net);
+
 #ifdef DRAW
 		draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
 
