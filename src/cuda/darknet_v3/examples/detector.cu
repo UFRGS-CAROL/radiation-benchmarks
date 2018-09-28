@@ -782,9 +782,8 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		std::cout << "after free\n";
 	}
 
-	//TODO: it could be bad
-	for (auto im : sized_images) {
-		free_image(im);
+	for (count_image = 0; count_image < sized_images.size(); count_image++) {
+		free_image(sized_images[count_image]);
 	}
 }
 /*
