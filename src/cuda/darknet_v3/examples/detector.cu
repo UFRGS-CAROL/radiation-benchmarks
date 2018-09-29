@@ -684,10 +684,8 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 	}
 }
 
-inline std::pair<std::vector<image>, std::vector<std::pair<int, int> > > load_all_images(
-		std::vector<std::string> img_list, network *net) {
-	std::vector<image> sized_images(img_list.size());
-	std::vector<std::pair<int, int>> original_sizes(img_list.size());
+std::vector<std::pair<int, int> > load_all_images(std::vector<std::string> img_list, std::vector<image>& sized_images, network *net) {
+	std::vector<std::pair<int, int> > original_sizes(img_list.size());
 
 	int i = 0;
 	for (auto s : img_list) {
@@ -700,10 +698,8 @@ inline std::pair<std::vector<image>, std::vector<std::pair<int, int> > > load_al
 		i++;
 		free_image(im);
 	}
-	std::pair<std::vector<image>, std::vector<std::pair<int, int> > > ret(
-			sized_images, original_sizes);
 
-	return ret;
+	return original_sizes;
 }
 
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
@@ -727,10 +723,9 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	DetectionGold detection_gold(argc, argv, thresh, hier_thresh, filename,
 			cfgfile, datacfg, const_cast<char*>("detector"), weightfile);
 
-	std::pair<std::vector<image>, std::vector<std::pair<int, int> > > pair_sts =
-			load_all_images(detection_gold.gold_img_names, net);
-	std::vector<image> sized_images = pair_sts.first;
-	std::vector < std::pair<int, int> > imgs_sizes = pair_sts.second;
+	std::vector<image> sized_images(detection_gold.gold_img_names.size());
+
+	std::vector<std::pair<int, int> > image_sizes = load_all_images(detection_gold.gold_img_names, sized_images, net);
 
 	// round counter for the images
 	int count_image = -1;
@@ -749,8 +744,8 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 				what_time_is_it_now() - time);
 		int nboxes = 0;
 
-		int im_w = imgs_sizes[count_image].first;
-		int im_h = imgs_sizes[count_image].second;
+		int im_w = image_sizes[count_image].first;
+		int im_h = image_sizes[count_image].second;
 		detection *dets = get_network_boxes(net, im_w, im_h, thresh,
 				hier_thresh, 0, 1, &nboxes);
 
