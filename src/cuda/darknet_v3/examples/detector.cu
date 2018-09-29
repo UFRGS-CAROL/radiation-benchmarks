@@ -692,6 +692,7 @@ std::vector<std::pair<int, int> > load_all_images(std::vector<std::string> img_l
 		std::cout << s << "\n";
 		image im = load_image_color(const_cast<char*>(s.c_str()), 0, 0);
 		sized_images[i] = letterbox_image(im, net->w, net->h);
+		std::cout << i << " image pointer here " << im.data << "\n";
 		original_sizes[i].first = im.w;
 		original_sizes[i].second = im.h;
 
