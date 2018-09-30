@@ -792,16 +792,16 @@ void forward_network_gpu(network *netp) {
 			net.truth = l.output;
 		}
 
-#if REAL_TYPE == HALF
-		std::string out = "layer_" + std::to_string(i) + "_type_half.txt";
-#else
-		std::string out = "layer_" + std::to_string(i) + "_type_singl.txt";
-#endif
-		std::ofstream myfile(out);
-
-		for (int t = 0; t < 1000; t++)
-			myfile << l.output[t] << std::endl;
-		myfile.close();
+//#if REAL_TYPE == HALF
+//		std::string out = "layer_" + std::to_string(i) + "_type_half.txt";
+//#else
+//		std::string out = "layer_" + std::to_string(i) + "_type_singl.txt";
+//#endif
+//		std::ofstream myfile(out);
+//
+//		for (int t = 0; t < 1000; t++)
+//			myfile << l.output[t] << std::endl;
+//		myfile.close();
 	}
 
 	pull_network_output(netp);
