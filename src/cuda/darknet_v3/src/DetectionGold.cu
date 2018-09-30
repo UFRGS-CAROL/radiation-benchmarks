@@ -35,7 +35,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 		//	detection gold;
 		std::string line;
-		std::ifstream gold_file(this->gold_inout);
+		std::ifstream gold_file(this->gold_inout, std::ifstream::in);
 		if (gold_file.is_open()) {
 			getline(gold_file, line);
 		} else {
@@ -100,7 +100,7 @@ void DetectionGold::write_gold_header() {
 	gold_header += this->coord + ";";
 	gold_header += this->classes + ";\n";
 
-	std::ofstream gold(this->gold_inout);
+	std::ofstream gold(this->gold_inout, std::ofstream::trunc);
 	if (gold.is_open()) {
 		gold << gold_header;
 		gold.close();
