@@ -64,9 +64,9 @@ std::string Log::get_small_log_file() {
 	return str_ret;
 }
 
-void Log::log_error_info(char* error_detail) {
+void Log::log_error_info(std::string error_detail) {
 #ifdef LOGS
-	log_error_detail(error_detail);
+	log_error_detail(const_cast<char*>(error_detail.c_str()));
 #endif
 }
 

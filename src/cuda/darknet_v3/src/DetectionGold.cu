@@ -41,7 +41,15 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	char *def;
 	this->gold_inout = std::string(find_char_arg(argc, argv, "-gold", def));
 	this->generate = find_int_arg(argc, argv, "-generate", 0);
-	this->network_name = "darknet_v3";
+	this->network_name = "darknet_v3_";
+#if REAL_TYPE == HALF
+	this->network_name += "half";
+#elif REAL_TYPE == FLOAT
+	this->network_name += "single";
+#elif REAL_TYPE == DOUBLE
+	this->network_name += "double";
+#endif
+
 	this->iterations = find_int_arg(argc, argv, "-iterations", 1);
 	this->tensor_core_mode = find_int_arg(argc, argv, "-tensor_cores", 0);
 	this->stream_mr = find_int_arg(argc, argv, "-smx_redundancy", 0);
@@ -70,7 +78,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 		std::vector < std::string > split_ret = split(line, ';');
 		//	0       1           2              3              4            5            6      7
-		//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;coord;
+		//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;
 		this->thresh = std::stof(split_ret[0]);
 		this->hier_thresh = std::stof(split_ret[1]);
 		this->plist_size = std::stoi(split_ret[2]);
@@ -113,9 +121,12 @@ bool operator!=(const box& a, const box& b) {
 	return (a.h != b.h || a.w != b.w || a.x != b.x || a.y != a.y);
 }
 
-void DetectionGold::cmp(detection* dets, int nboxes, int img_index, int classes) {
+void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index, int classes) {
 	std::ostringstream error_info("");
 	std::string img = this->gold_img_names[img_index];
+
+	std::vector<Detection> gold_dets = this->gold_hash_var[img];
+
 
 }
 
