@@ -685,13 +685,19 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 }
 
 void load_all_images(
-		std::vector<std::string> img_list, std::vector<image>& images,
-		std::vector<image>& sized_images, network *net) {
+		std::vector<std::string> img_list, image *images, image *sized_images, network *net) {
 
 	for (int i = 0; i < img_list.size(); i++) {
 		images[i] = load_image_color(const_cast<char*>(img_list[i].c_str()), 0,
 				0);
 		sized_images[i] = letterbox_image(images[i], net->w, net->h);
+	}
+}
+
+void free_all_images(image* images, image* sized_images, int size){
+	for (int i = 0; i < size; i++) {
+		free_image(images[i]);
+		free_image(sized_images[i]);
 	}
 }
 
@@ -716,8 +722,8 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	DetectionGold detection_gold(argc, argv, thresh, hier_thresh, filename,
 			cfgfile, datacfg, const_cast<char*>("detector"), weightfile);
 
-	std::vector<image> images(detection_gold.gold_img_names.size());
-	std::vector<image> sized_images(detection_gold.gold_img_names.size());
+	image* images = new image[detection_gold.gold_img_names.size()];
+	image* sized_images = new image[detection_gold.gold_img_names.size()];
 
 	load_all_images(detection_gold.gold_img_names, images, sized_images, net);
 
@@ -745,33 +751,14 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			do_nms_sort(dets, nboxes, l.classes, nms);
 
 		// Test or compare the detections with the gold
+		//		draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
 		detection_gold.compare_or_generate(dets, nboxes, count_image, *net);
-
-#ifdef DRAW
-		draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
-
-		if (outfile) {
-			save_image(im, outfile);
-		} else {
-			save_image(im, "predictions");
-#ifdef OPENCV
-			cvNamedWindow("predictions", CV_WINDOW_NORMAL);
-			if(fullscreen) {
-				cvSetWindowProperty("predictions", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
-			}
-			show_image(im, "predictions", 0);
-#endif
-		}
-#endif
 
 		free_detections(dets, nboxes);
 		count_image = (count_image + 1) % detection_gold.gold_img_names.size();
 	}
 
-	for (auto im : sized_images) {
-		free_image(im);
-	}
-
+	free_all_images(images, sized_images, detection_gold.gold_img_names.size());
 }
 /*
  void censor_detector(char *datacfg, char *cfgfile, char *weightfile, int cam_index, const char *filename, int class, real_t thresh, int skip)
