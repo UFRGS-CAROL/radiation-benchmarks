@@ -37,22 +37,26 @@
 struct Detection {
 	std::vector<real_t> mask;
 	std::vector<real_t> prob;
-	std::vector<box> boxes;
+	box bbox;
 
-	int mask_size;
 	int nboxes;
 	real_t objectness;
 	int sort_class;
 
 	Detection() :
-			mask_size(0), nboxes(0), objectness(0), sort_class(0), mask(
-					std::vector<real_t>()), prob(std::vector<real_t>()), boxes(
-					std::vector<box>()) {
+			nboxes(0), objectness(0), sort_class(0), mask(
+					std::vector<real_t>()), prob(std::vector<real_t>()), bbox(box()) {
+	}
+
+	Detection(int nboxes, int sort_class, real_t objectness,
+			std::vector<real_t> mask, std::vector<real_t> prob, box bb) :
+			nboxes(nboxes), objectness(objectness), sort_class(sort_class), mask(
+					mask), prob(prob), bbox(bb) {
 	}
 
 	Detection(const Detection& a) :
-			mask_size(a.mask_size), nboxes(a.nboxes), objectness(a.objectness), sort_class(
-					a.sort_class), mask(a.mask), prob(a.prob), boxes(a.boxes) {
+			nboxes(a.nboxes), objectness(a.objectness), sort_class(
+					a.sort_class), mask(a.mask), prob(a.prob), bbox(a.bbox) {
 	}
 
 };
@@ -75,7 +79,6 @@ public:
 	std::string img_list_path, config_file, cfg_data, model, weights;
 	std::vector<std::string> gold_img_names;
 	int iterations, tensor_core_mode, stream_mr;
-	int classes;
 	int coord;
 
 	// For logging functions
@@ -86,20 +89,22 @@ public:
 
 	DetectionGold(int argc, char **argv, real_t thresh, real_t hier_thresh,
 			char *img_list_path, char *config_file, char *config_data,
-			char *model, char *weights, int classes);
+			char *model, char *weights);
 
 	virtual ~DetectionGold();
 
-	void run(detection* dets, int nboxes, int img_index, int l_coord);
+	void run(detection* dets, int nboxes, int img_index, int l_coord,
+			int classes);
 
 private:
 	void load_gold_hash(std::ifstream& gold_file);
 
-
 	void write_gold_header();
 
-	void gen(detection* dets, int nboxes, int img_index, int l_coord, std::ofstream& gold_file);
-	void cmp(detection* dets, int nboxes, int img_index, int l_coord);
+	void gen(detection* dets, int nboxes, int img_index, int l_coord,
+			std::ofstream& gold_file, int classes);
+	void cmp(detection* dets, int nboxes, int img_index, int l_coord,
+			int classes);
 };
 
 #endif /* DETECTIONGOLD_H_ */
