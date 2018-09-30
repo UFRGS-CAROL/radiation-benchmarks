@@ -684,19 +684,22 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 	}
 }
 
-void load_all_images(std::vector<std::string> img_list,
-		std::vector<image>& images, std::vector<image>& sized_images,
+std::vector<std::pair<int, int> > load_all_images(
+		std::vector<std::string> img_list, std::vector<image>& sized_images,
 		network *net) {
+	std::vector < std::pair<int, int> > ret(img_list.size());
 
 	for (int i = 0; i < img_list.size(); i++) {
-		std::cout << img_list[i] << "\n";
-		images[i] = load_image_color(const_cast<char*>(img_list[i].c_str()), 0,
+		image im = load_image_color(const_cast<char*>(img_list[i].c_str()), 0,
 				0);
-		sized_images[i] = letterbox_image(images[i], net->w, net->h);
-		std::cout << i << " image pointer here " << images[i].data << "\n";
+		sized_images[i] = letterbox_image(im, net->w, net->h);
 
-//		free_image(im);
+		ret[i].first = im.w;
+		ret[i].second = im.h;
+
+		free_image(im);
 	}
+	return ret;
 }
 
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
@@ -720,10 +723,10 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	DetectionGold detection_gold(argc, argv, thresh, hier_thresh, filename,
 			cfgfile, datacfg, const_cast<char*>("detector"), weightfile);
 
-	std::vector<image> images(detection_gold.gold_img_names.size());
 	std::vector<image> sized_images(detection_gold.gold_img_names.size());
 
-	load_all_images(detection_gold.gold_img_names, images, sized_images, net);
+	std::vector < std::pair<int, int> > img_sizes = load_all_images(
+			detection_gold.gold_img_names, sized_images, net);
 
 	// round counter for the images
 	int count_image = 0;
@@ -742,8 +745,8 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 				what_time_is_it_now() - time);
 		int nboxes = 0;
 
-		int im_w = images[count_image].w;
-		int im_h = images[count_image].h;
+		int im_w = img_sizes[count_image].first;
+		int im_h = img_sizes[count_image].second;
 		detection *dets = get_network_boxes(net, im_w, im_h, thresh,
 				hier_thresh, 0, 1, &nboxes);
 
@@ -775,12 +778,10 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		std::cout << "after free\n";
 	}
 
-//	for (count_image = 0; count_image < detection_gold.gold_img_names.size();
-//			count_image++) {
-//		free_image(sized_images[count_image]);
-//	}
-//	if (sized_images)
-//		delete sized_images;
+	for (auto im : sized_images) {
+		free_image(im);
+	}
+
 }
 /*
  void censor_detector(char *datacfg, char *cfgfile, char *weightfile, int cam_index, const char *filename, int class, real_t thresh, int skip)
