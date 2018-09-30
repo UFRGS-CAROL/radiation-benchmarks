@@ -155,8 +155,8 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
 	std::cout << img << ";" << nboxes << ";" << l_coord << ";" << classes << ";" << std::endl;
 	for (int i = 0; i < nboxes; ++i) {
 
-		for (int j = 0; j < l_coord; j++) {
-			gold_file << dets[i].mask[j] << ";" << std::endl;
+		for (int lc = 0; lc < l_coord; lc++) {
+			gold_file << dets[i].mask[lc] << ";" << std::endl;
 		}
 
 		box b = dets[i].bbox;
