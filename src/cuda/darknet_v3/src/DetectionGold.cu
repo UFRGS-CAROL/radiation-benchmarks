@@ -11,6 +11,31 @@
 #include <sstream>
 #include <ctime>
 
+
+void DetectionGold::write_gold_header() {
+	//	0       1           2              3              4            5            6        7
+	//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;
+	std::string gold_header = std::to_string(this->thresh) + ";";
+	gold_header += std::to_string(this->hier_thresh) + ";";
+	gold_header += std::to_string(this->plist_size) + ";";
+	gold_header += this->img_list_path + ";";
+	gold_header += this->config_file + ";";
+	gold_header += this->cfg_data + ";";
+	gold_header += this->model + ";";
+	gold_header += this->weights + ";";
+	gold_header += this->coord + ";";
+
+	std::ofstream gold(this->gold_inout, std::ofstream::trunc);
+	if (gold.is_open()) {
+		gold << gold_header << std::endl;
+		gold.close();
+	} else {
+		std::cout << "ERROR ON OPENING GOLD OUTPUT FILE\n";
+		exit(-1);
+	}
+}
+
+
 DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		real_t hier_thresh, char *img_list_path, char *config_file,
 		char *config_data, char *model, char *weights) {
@@ -84,29 +109,6 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->iterations = this->plist_size;
 	}
 
-}
-
-void DetectionGold::write_gold_header() {
-	//	0       1           2              3              4            5            6        7
-	//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;
-	std::string gold_header = std::to_string(this->thresh) + ";";
-	gold_header += std::to_string(this->hier_thresh) + ";";
-	gold_header += std::to_string(this->plist_size) + ";";
-	gold_header += this->img_list_path + ";";
-	gold_header += this->config_file + ";";
-	gold_header += this->cfg_data + ";";
-	gold_header += this->model + ";";
-	gold_header += this->weights + ";";
-	gold_header += this->coord + ";";
-
-	std::ofstream gold(this->gold_inout, std::ofstream::trunc);
-	if (gold.is_open()) {
-		gold << gold_header;
-		gold.close();
-	} else {
-		std::cout << "ERROR ON OPENING GOLD OUTPUT FILE\n";
-		exit(-1);
-	}
 }
 
 bool operator!=(const box& a, const box& b) {
