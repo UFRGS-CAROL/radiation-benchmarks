@@ -751,8 +751,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			do_nms_sort(dets, nboxes, l.classes, nms);
 
 		// Test or compare the detections with the gold
-		//		draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
-		detection_gold.compare_or_generate(dets, nboxes, count_image, *net);
+		detection_gold.run(dets, nboxes, count_image, l.coords);
 
 		free_detections(dets, nboxes);
 		count_image = (count_image + 1) % detection_gold.gold_img_names.size();

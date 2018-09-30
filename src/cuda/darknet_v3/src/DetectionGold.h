@@ -24,11 +24,6 @@
 #include <tuple>
 #include <unordered_map>
 
-typedef std::vector<std::tuple<box, int, std::vector<real_t>, std::vector<real_t>, real_t,
-		int, int> >gold_tuple_array;
-
-typedef std::unordered_map<std::string, gold_tuple_array> gold_hash;
-
 #define THRESHOLD_ERROR 0.05
 #define LAYER_THRESHOLD_ERROR 0.0000001
 
@@ -38,6 +33,37 @@ typedef std::unordered_map<std::string, gold_tuple_array> gold_hash;
 #define CONSIDERING_DETECTION 0.2
 
 #define MAX_ERROR_COUNT 500 * 2
+
+struct Detection {
+	std::vector<real_t> mask;
+	std::vector<real_t> prob;
+	std::vector<box> boxes;
+
+	int mask_size;
+	int nboxes;
+	real_t objectness;
+	int sort_class;
+
+	Detection() :
+			mask_size(0), nboxes(0), objectness(0), sort_class(0), mask(
+					std::vector<real_t>()), prob(std::vector<real_t>()), boxes(
+					std::vector<box>()) {
+	}
+
+	Detection(const Detection& a) :
+			mask_size(a.mask_size), nboxes(a.nboxes), objectness(a.objectness), sort_class(
+					a.sort_class), mask(a.mask), prob(a.prob), boxes(a.boxes) {
+	}
+
+};
+
+struct GoldHash {
+	std::unordered_map<std::string, std::vector<Detection> > data;
+
+	std::vector<Detection> operator[](std::string img) {
+		return this->data[img];
+	}
+};
 
 class DetectionGold {
 public:
@@ -49,13 +75,14 @@ public:
 	std::string img_list_path, config_file, cfg_data, model, weights;
 	std::vector<std::string> gold_img_names;
 	int iterations, tensor_core_mode, stream_mr;
+	int classes;
+	int coord;
 
 	// For logging functions
 	Log *app_logging;
 
 	//gold atribute
-	gold_hash gold_hash_var;
-
+	GoldHash gold_hash_var;
 
 	DetectionGold(int argc, char **argv, real_t thresh, real_t hier_thresh,
 			char *img_list_path, char *config_file, char *config_data,
@@ -63,27 +90,17 @@ public:
 
 	virtual ~DetectionGold();
 
-	void compare_or_generate(detection *dets, int nboxes, int img_index,
-			network& net);
-
-
+	void run(detection* dets, int nboxes, int img_index, int l_coord);
 
 private:
-	/**
-	 * it was adapted from draw_detections in network.cu
-	 * it saves a gold file for radiation tests
-	 */
-	void save_gold_img_i(detection *dets, int nboxes, int classes,
-			std::ofstream& gold_file, int l_coords);
-
 	void load_gold_hash(std::ifstream& gold_file);
 
 	std::string print_box(box b);
 
 	void write_gold_header();
-	void generate_method(int img_index, int nboxes, network& net,
-			detection* dets);
-	void compare_method(int nboxes, detection* dets, std::string img, int l_coord);
+
+	void gen(detection* dets, int nboxes, int img_index, int l_coord, std::ofstream& gold_file);
+	void cmp(detection* dets, int nboxes, int img_index, int l_coord);
 };
 
 #endif /* DETECTIONGOLD_H_ */
