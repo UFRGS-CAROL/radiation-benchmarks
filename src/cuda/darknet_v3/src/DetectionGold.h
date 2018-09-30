@@ -95,7 +95,6 @@ public:
 private:
 	void load_gold_hash(std::ifstream& gold_file);
 
-	std::string print_box(box b);
 
 	void write_gold_header();
 

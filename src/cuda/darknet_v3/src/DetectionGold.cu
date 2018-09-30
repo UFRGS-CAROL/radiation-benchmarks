@@ -87,7 +87,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 }
 
 void DetectionGold::write_gold_header() {
-	//	0       1           2              3              4            5            6        7      8     9
+	//	0       1           2              3              4            5            6        7      8
 	//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;classes;
 	std::string gold_header = std::to_string(this->thresh) + ";";
 	gold_header += std::to_string(this->hier_thresh) + ";";
@@ -98,7 +98,7 @@ void DetectionGold::write_gold_header() {
 	gold_header += this->model + ";";
 	gold_header += this->weights + ";";
 	gold_header += this->coord + ";";
-	gold_header += this->classes + ";\n";
+	gold_header += this->classes + ";";
 
 	std::ofstream gold(this->gold_inout);
 	if (gold.is_open()) {
@@ -146,23 +146,23 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
 	//first write the image string name
 	std::string img = this->gold_img_names[img_index];
 
-	gold_file << img << ";" << nboxes << ";\n";
+	gold_file << img << ";" << nboxes << ";";
 	for (int i = 0; i < nboxes; ++i) {
 
 		for (int j = 0; j < l_coord; j++) {
 			gold_file << dets[i].mask[j] << ";";
 		}
-		gold_file << "\n";
+//		gold_file << "\n";
 
 		box b = dets[i].bbox;
 
 		gold_file << dets[i].objectness << ";" << dets[i].sort_class << ";"
-				<< b.x << ";" << b.y << ";" << b.w << ";" << b.h << ";\n";
+				<< b.x << ";" << b.y << ";" << b.w << ";" << b.h << ";";
 
 		for (int j = 0; j < this->classes; ++j) {
 			gold_file << dets[i].prob[j] << ";";
 		}
-		gold_file << "\n";
+//		gold_file << "\n";
 	}
 
 }
@@ -224,9 +224,3 @@ DetectionGold::~DetectionGold() {
 		delete this->app_logging;
 	}
 }
-
-std::string DetectionGold::print_box(box b) {
-	return std::to_string(b.x) + " " + std::to_string(b.y) + " "
-			+ std::to_string(b.w) + " " + std::to_string(b.h) + "\n";
-}
-
