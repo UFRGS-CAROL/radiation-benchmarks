@@ -527,6 +527,7 @@ detection *make_network_boxes(network *net, real_t thresh, int *num) {
 	detection *dets = (detection*) calloc(nboxes, sizeof(detection));
 	for (i = 0; i < nboxes; ++i) {
 		dets[i].prob = (real_t*) calloc(l.classes, sizeof(real_t));
+		printf("Lcord inside network %d\n", l.coords);
 		if (l.coords > 4) {
 			dets[i].mask = (real_t*) calloc(l.coords - 4, sizeof(real_t));
 		}
