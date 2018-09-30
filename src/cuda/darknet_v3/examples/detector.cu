@@ -720,7 +720,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	//--------------------------------------------------------------------
 	printf("Executig radiation setup/test\n");
 	DetectionGold detection_gold(argc, argv, thresh, hier_thresh, filename,
-			cfgfile, datacfg, const_cast<char*>("detector"), weightfile);
+			cfgfile, datacfg, const_cast<char*>("detector"), weightfile, net->layers[net->n -1].classes);
 
 	image* images = new image[detection_gold.gold_img_names.size()];
 	image* sized_images = new image[detection_gold.gold_img_names.size()];
@@ -738,7 +738,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 
 		time = what_time_is_it_now();
 		network_predict(net, X);
-		printf("%s: Predicted in %f seconds.\n", input,
+		printf("%s: Predicted in %f seconds.\n", detection_gold.gold_img_names[count_image].c_str(),
 				what_time_is_it_now() - time);
 		int nboxes = 0;
 

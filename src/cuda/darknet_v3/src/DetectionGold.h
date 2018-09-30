@@ -86,7 +86,7 @@ public:
 
 	DetectionGold(int argc, char **argv, real_t thresh, real_t hier_thresh,
 			char *img_list_path, char *config_file, char *config_data,
-			char *model, char *weights);
+			char *model, char *weights, int classes);
 
 	virtual ~DetectionGold();
 

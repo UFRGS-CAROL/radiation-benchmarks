@@ -12,7 +12,7 @@
 
 DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		real_t hier_thresh, char *img_list_path, char *config_file,
-		char *config_data, char *model, char *weights) {
+		char *config_data, char *model, char *weights, int classes) {
 	char *def;
 	this->gold_inout = std::string(find_char_arg(argc, argv, "-gold", def));
 	this->generate = find_int_arg(argc, argv, "-generate", 0);
@@ -146,19 +146,19 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
 	//first write the image string name
 	std::string img = this->gold_img_names[img_index];
 
-	gold_file << img << ";" << nboxes << ";";
+	gold_file << img << ";" << nboxes << ";" << std::endl;
 	for (int i = 0; i < nboxes; ++i) {
 
 		for (int j = 0; j < l_coord; j++) {
 			gold_file << dets[i].mask[j] << ";";
 		}
-		gold_file << "\n";
+		gold_file << std::endl;
 
 		box b = dets[i].bbox;
 
 		gold_file << dets[i].objectness << ";" << dets[i].sort_class << ";"
 				<< b.x << ";" << b.y << ";" << b.w << ";" << b.h << ";\n";
-
+		std::cout << "CLasses are " << this->classes << "\n";
 		for (int j = 0; j < this->classes; ++j) {
 			std::cout<< "passou na probs\n";
 			gold_file << dets[i].prob[j] << ";";
