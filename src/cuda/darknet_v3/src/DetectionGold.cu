@@ -9,6 +9,7 @@
 #include <iterator>
 #include "helpful.h"
 #include <sstream>
+#include <ctime>
 
 DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		real_t hier_thresh, char *img_list_path, char *config_file,
@@ -135,7 +136,13 @@ void DetectionGold::run(detection *dets, int nboxes, int img_index,
 	} else {
 		// To compare function
 		//detection is allways nboxes size
-		this->cmp(dets, nboxes, img_index, l_coord, classes);
+	    std::time_t start = std::time(nullptr);
+
+	    this->cmp(dets, nboxes, img_index, l_coord, classes);
+
+	    std::cout << "Seconds to compare: "
+	              << std::difftime(std::time(nullptr), start) << " s.\n";
+
 	}
 }
 
@@ -164,6 +171,8 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
 			if(prob != 0)
 				gold_file << prob << ";" << cl << ";" << std::endl;
 		}
+		//just to end the box info
+		gold_file << "--;" << std::endl;
 	}
 
 }
@@ -174,7 +183,7 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 	std::string line;
 
 	for (int i = 0; i < this->plist_size && getline(gold_file, line); i++) {
-		//	gold_file << img << ";" << nboxes << ";\n";
+		//	gold_file << img << ";" << nboxes << ";" << l_coord << ";" << classes << ";" << std::endl;
 		std::vector < std::string > splited_line = split(line, ';');
 		// Set each img_name path
 		this->gold_img_names[i] = splited_line[0];
@@ -213,6 +222,8 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 			for (int cl = 0; cl < classes && getline(gold_file, line); cl++){
 				splited_line = split(line, ';');
 
+				if(splited_line[0] == "--")
+					break;
 				real_t prob = std::stof(splited_line[0]);
 
 			}
