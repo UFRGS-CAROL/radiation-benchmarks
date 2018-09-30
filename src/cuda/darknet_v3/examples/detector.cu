@@ -726,7 +726,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	load_all_images(detection_gold.gold_img_names, images, sized_images, net);
 
 	// round counter for the images
-	int count_image = -1;
+	int count_image = 0;
 	//--------------------------------------------------------------------
 	std::cout << "passou depois\n";
 	for (int iteration = 0; iteration < detection_gold.iterations;
