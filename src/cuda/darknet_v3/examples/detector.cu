@@ -684,14 +684,14 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 	}
 }
 
-std::vector<std::pair<int, int> > load_all_images(std::vector<std::string> img_list, std::vector<image> *sized_images, network *net) {
+std::vector<std::pair<int, int> > load_all_images(std::vector<std::string> img_list, image* sized_images, network *net) {
 	std::vector<std::pair<int, int> > original_sizes(img_list.size());
 
 	int i = 0;
 	for (auto s : img_list) {
 		std::cout << s << "\n";
 		image im = load_image_color(const_cast<char*>(s.c_str()), 0, 0);
-		(*sized_images)[i] = letterbox_image(im, net->w, net->h);
+		sized_images[i] = letterbox_image(im, net->w, net->h);
 		std::cout << i << " image pointer here " << im.data << "\n";
 		original_sizes[i].first = im.w;
 		original_sizes[i].second = im.h;
@@ -724,9 +724,9 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	DetectionGold detection_gold(argc, argv, thresh, hier_thresh, filename,
 			cfgfile, datacfg, const_cast<char*>("detector"), weightfile);
 
-	std::vector<image> sized_images(detection_gold.gold_img_names.size());
+	image* sized_images= new image[detection_gold.gold_img_names.size()];
 
-	std::vector<std::pair<int, int> > image_sizes = load_all_images(detection_gold.gold_img_names, &sized_images, net);
+	std::vector<std::pair<int, int> > image_sizes = load_all_images(detection_gold.gold_img_names, sized_images, net);
 
 	// round counter for the images
 	int count_image = -1;
@@ -778,9 +778,11 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		std::cout << "after free\n";
 	}
 
-	for (count_image = 0; count_image < sized_images.size(); count_image++) {
+	for (count_image = 0; count_image < detection_gold.gold_img_names.size(); count_image++) {
 		free_image(sized_images[count_image]);
 	}
+	if (sized_images)
+		delete sized_images;
 }
 /*
  void censor_detector(char *datacfg, char *cfgfile, char *weightfile, int cam_index, const char *filename, int class, real_t thresh, int skip)
