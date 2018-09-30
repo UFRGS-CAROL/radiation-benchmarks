@@ -159,8 +159,10 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
 
 		std::cout << "CLasses are " << classes << "\n";
 
-		for (int j = 0; j < classes; ++j){
-			gold_file << dets[i].prob[j] << ";" << std::endl;
+		for (int cl = 0; cl < classes; ++cl){
+			real_t prob =  dets[i].prob[cl];
+			if(prob != 0)
+				gold_file << prob << ";" << cl << ";" << std::endl;
 		}
 	}
 
