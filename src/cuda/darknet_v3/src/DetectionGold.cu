@@ -160,6 +160,7 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
 				<< b.x << ";" << b.y << ";" << b.w << ";" << b.h << ";\n";
 
 		for (int j = 0; j < this->classes; ++j) {
+			std::cout<< "passou na probs\n";
 			gold_file << dets[i].prob[j] << ";";
 		}
 		gold_file << "\n";
