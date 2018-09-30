@@ -134,6 +134,14 @@ detector:
 	./darknet detector demo cfg/coco.data cfg/yolov3-spp.cfg data/yolov3-spp.weights data/output.avi
 
 demo:
+	./darknet detector test cfg/coco.data cfg/yolov3-spp.cfg /home/carol/radiation-benchmarks/data/darknet/yolov3-spp.weights \
+						/home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.10.txt 
+
+generate:
 	./darknet detector test_radiation cfg/coco.data cfg/yolov3-spp.cfg /home/carol/radiation-benchmarks/data/darknet/yolov3-spp.weights \
 						/home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.10.txt \
 						-generate 1 -gold ./test.csv
+test:
+	./darknet detector test_radiation cfg/coco.data cfg/yolov3-spp.cfg /home/carol/radiation-benchmarks/data/darknet/yolov3-spp.weights \
+						/home/carol/radiation-benchmarks/data/networks_img_list/caltech.pedestrians.10.txt \
+						-generate 0 -gold ./test.csv
