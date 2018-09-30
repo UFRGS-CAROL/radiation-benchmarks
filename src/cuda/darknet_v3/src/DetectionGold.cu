@@ -150,20 +150,19 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
 	for (int i = 0; i < nboxes; ++i) {
 
 		for (int j = 0; j < l_coord; j++) {
-			gold_file << dets[i].mask[j] << ";";
+			gold_file << dets[i].mask[j] << ";" << std::endl;
 		}
-		gold_file << std::endl;
 
 		box b = dets[i].bbox;
 
 		gold_file << dets[i].objectness << ";" << dets[i].sort_class << ";"
-				<< b.x << ";" << b.y << ";" << b.w << ";" << b.h << ";\n";
+				<< b.x << ";" << b.y << ";" << b.w << ";" << b.h << ";"
+				<< std::endl;
+
 		std::cout << "CLasses are " << this->classes << "\n";
-		for (int j = 0; j < this->classes; ++j) {
-			std::cout<< "passou na probs\n";
-			gold_file << dets[i].prob[j] << ";";
-		}
-		gold_file << "\n";
+
+		for (int j = 0; j < this->classes; ++j)
+			gold_file << dets[i].prob[j] << ";" << std::endl;
 	}
 
 }
