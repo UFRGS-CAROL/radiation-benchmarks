@@ -731,14 +731,12 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	// round counter for the images
 	int count_image = 0;
 	//--------------------------------------------------------------------
-	std::cout << "passou depois\n";
 	for (int iteration = 0; iteration < detection_gold.iterations;
 			iteration++) {
 		layer l = net->layers[net->n - 1];
-		std::cout << "passou tambem\n";
+
 		real_t *X = sized_images[count_image].data;
 
-		std::cout << X << " x value\n";
 		time = what_time_is_it_now();
 		network_predict(net, X);
 		printf("%s: Predicted in %f seconds.\n", input,
@@ -772,10 +770,9 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 #endif
 		}
 #endif
-		std::cout << "before free\n";
+
 		free_detections(dets, nboxes);
 		count_image = (count_image + 1) % detection_gold.gold_img_names.size();
-		std::cout << "after free\n";
 	}
 
 	for (auto im : sized_images) {
