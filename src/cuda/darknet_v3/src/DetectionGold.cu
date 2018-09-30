@@ -23,7 +23,6 @@ void DetectionGold::write_gold_header() {
 	gold_header += this->cfg_data + ";";
 	gold_header += this->model + ";";
 	gold_header += this->weights + ";";
-	gold_header += this->coord + ";";
 
 	std::ofstream gold(this->gold_inout, std::ofstream::trunc);
 	if (gold.is_open()) {
@@ -80,7 +79,6 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->cfg_data = split_ret[5];
 		this->model = split_ret[6];
 		this->weights = split_ret[7];
-		this->coord = std::stoi(split_ret[8]);
 
 		//allocate detector
 		this->load_gold_hash(gold_file);
@@ -154,6 +152,7 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
 	std::string img = this->gold_img_names[img_index];
 
 	gold_file << img << ";" << nboxes << ";" << l_coord << ";" << classes << ";" << std::endl;
+	std::cout << img << ";" << nboxes << ";" << l_coord << ";" << classes << ";" << std::endl;
 	for (int i = 0; i < nboxes; ++i) {
 
 		for (int j = 0; j < l_coord; j++) {
