@@ -35,7 +35,7 @@
 #define MAX_ERROR_COUNT 500 * 2
 
 struct Detection {
-	std::vector<real_t> mask;
+//	std::vector<real_t> mask;
 	std::vector<real_t> prob;
 	box bbox;
 
@@ -44,19 +44,19 @@ struct Detection {
 	int sort_class;
 
 	Detection() :
-			nboxes(0), objectness(0), sort_class(0), mask(
-					std::vector<real_t>()), prob(std::vector<real_t>()), bbox(box()) {
+			nboxes(0), objectness(0), sort_class(0), prob(
+					std::vector<real_t>()), bbox(box()) {
 	}
 
 	Detection(int nboxes, int sort_class, real_t objectness,
-			std::vector<real_t> mask, std::vector<real_t> prob, box bb) :
-			nboxes(nboxes), objectness(objectness), sort_class(sort_class), mask(
-					mask), prob(prob), bbox(bb) {
+			std::vector<real_t> prob, box bb) :
+			nboxes(nboxes), objectness(objectness), sort_class(sort_class), prob(
+					prob), bbox(bb) {
 	}
 
 	Detection(const Detection& a) :
 			nboxes(a.nboxes), objectness(a.objectness), sort_class(
-					a.sort_class), mask(a.mask), prob(a.prob), bbox(a.bbox) {
+					a.sort_class), prob(a.prob), bbox(a.bbox) {
 	}
 
 };
@@ -92,18 +92,16 @@ public:
 
 	virtual ~DetectionGold();
 
-	void run(detection* dets, int nboxes, int img_index, int l_coord,
-			int classes);
+	void run(detection* dets, int nboxes, int img_index, int classes);
 
 private:
 	void load_gold_hash(std::ifstream& gold_file);
 
 	void write_gold_header();
 
-	void gen(detection* dets, int nboxes, int img_index, int l_coord,
+	void gen(detection* dets, int nboxes, int img_index,
 			std::ofstream& gold_file, int classes);
-	void cmp(detection* dets, int nboxes, int img_index, int l_coord,
-			int classes);
+	void cmp(detection* dets, int nboxes, int img_index, int classes);
 };
 
 #endif /* DETECTIONGOLD_H_ */

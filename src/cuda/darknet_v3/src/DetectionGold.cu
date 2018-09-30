@@ -113,15 +113,13 @@ bool operator!=(const box& a, const box& b) {
 	return (a.h != b.h || a.w != b.w || a.x != b.x || a.y != a.y);
 }
 
-void DetectionGold::cmp(detection* dets, int nboxes, int img_index,
-		int l_coord, int classes) {
+void DetectionGold::cmp(detection* dets, int nboxes, int img_index, int classes) {
 	std::ostringstream error_info("");
 	std::string img = this->gold_img_names[img_index];
 
 }
 
-void DetectionGold::run(detection *dets, int nboxes, int img_index,
-		int l_coord, int classes) {
+void DetectionGold::run(detection *dets, int nboxes, int img_index, int classes) {
 	// To generate function
 	//std::string img, detection* dets, int nboxes, int classes, int l_coord
 	if (this->generate) {
@@ -131,14 +129,14 @@ void DetectionGold::run(detection *dets, int nboxes, int img_index,
 			std::cerr << "ERROR ON OPENING GOLD FILE\n";
 			exit(-1);
 		}
-		this->gen(dets, nboxes, img_index, l_coord, gold_file, classes);
+		this->gen(dets, nboxes, img_index, gold_file, classes);
 		gold_file.close();
 	} else {
 		// To compare function
 		//detection is allways nboxes size
 	    std::time_t start = std::time(nullptr);
 
-	    this->cmp(dets, nboxes, img_index, l_coord, classes);
+	    this->cmp(dets, nboxes, img_index, classes);
 
 	    std::cout << "Seconds to compare: "
 	              << std::difftime(std::time(nullptr), start) << " s.\n";
@@ -146,18 +144,13 @@ void DetectionGold::run(detection *dets, int nboxes, int img_index,
 	}
 }
 
-void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
-		std::ofstream& gold_file, int classes) {
+void DetectionGold::gen(detection *dets, int nboxes, int img_index,	std::ofstream& gold_file, int classes) {
 	//first write the image string name
 	std::string img = this->gold_img_names[img_index];
 
-	gold_file << img << ";" << nboxes << ";" << l_coord << ";" << classes << ";" << std::endl;
-	std::cout << img << ";" << nboxes << ";" << l_coord << ";" << classes << ";" << std::endl;
+	gold_file << img << ";" << nboxes << ";" << classes << ";" << std::endl;
+	std::cout << img << ";" << nboxes << ";" << classes << ";" << std::endl;
 	for (int i = 0; i < nboxes; ++i) {
-
-		for (int lc = 0; lc < l_coord; lc++) {
-			gold_file << dets[i].mask[lc] << ";" << std::endl;
-		}
 
 		box b = dets[i].bbox;
 
@@ -184,27 +177,26 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 	std::string line;
 
 	for (int i = 0; i < this->plist_size && getline(gold_file, line); i++) {
-		//	gold_file << img << ";" << nboxes << ";" << l_coord << ";" << classes << ";" << std::endl;
+		//	gold_file << img << ";" << nboxes << ";" << classes << ";" << std::endl;
 		std::vector < std::string > splited_line = split(line, ';');
 		// Set each img_name path
 		this->gold_img_names[i] = splited_line[0];
 		// Probarray creation
 		int nboxes = std::stoi(splited_line[1]);
-		int l_coords = std::stoi(splited_line[2]);
-		int classes = std::stoi(splited_line[3]);
+		int classes = std::stoi(splited_line[2]);
 		//
 		std::vector<Detection> detections(nboxes);
 
 		for (int bb = 0; bb < nboxes; ++bb) {
 
-			// Getting mask
-			std::vector<real_t> masks(l_coords);
-			for (int lc = 0; lc < l_coords; lc++){
-				getline(gold_file, line);
-				splited_line = split(line, ';');
-				real_t mask = std::stof(splited_line[0]);
-				masks[lc] = real_t(mask);
-			}
+//			 Getting mask
+//			std::vector<real_t> masks(l_coords);
+//			for (int lc = 0; lc < l_coords; lc++){
+//				getline(gold_file, line);
+//				splited_line = split(line, ';');
+//				real_t mask = std::stof(splited_line[0]);
+//				masks[lc] = real_t(mask);
+//			}
 
 			// Getting bb box
 			box b;
@@ -226,10 +218,11 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 				if(splited_line[0] == "--")
 					break;
 				real_t prob = std::stof(splited_line[0]);
+				probs[cl] = prob;
 
 			}
 
-			detections[bb] = Detection(nboxes, sort_class, objectness, masks, probs, b);
+			detections[bb] = Detection(nboxes, sort_class, objectness, probs, b);
 		}
 
 		this->gold_hash_var[this->gold_img_names[i]] = detections;
