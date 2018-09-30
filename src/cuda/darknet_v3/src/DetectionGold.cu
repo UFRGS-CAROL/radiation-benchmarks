@@ -12,7 +12,7 @@
 
 DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		real_t hier_thresh, char *img_list_path, char *config_file,
-		char *config_data, char *model, char *weights, int classes) {
+		char *config_data, char *model, char *weights) {
 	char *def;
 	this->gold_inout = std::string(find_char_arg(argc, argv, "-gold", def));
 	this->generate = find_int_arg(argc, argv, "-generate", 0);
@@ -45,7 +45,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 		std::vector < std::string > split_ret = split(line, ';');
 		//	0       1           2              3              4            5            6      7
-		//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;coord;classes
+		//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;coord;
 		this->thresh = std::stof(split_ret[0]);
 		this->hier_thresh = std::stof(split_ret[1]);
 		this->plist_size = std::stoi(split_ret[2]);
@@ -55,7 +55,6 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->model = split_ret[6];
 		this->weights = split_ret[7];
 		this->coord = std::stoi(split_ret[8]);
-		this->classes = std::stoi(split_ret[9]);
 
 		//allocate detector
 		this->load_gold_hash(gold_file);
@@ -87,8 +86,8 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 }
 
 void DetectionGold::write_gold_header() {
-	//	0       1           2              3              4            5            6        7      8
-	//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;classes;
+	//	0       1           2              3              4            5            6        7
+	//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;
 	std::string gold_header = std::to_string(this->thresh) + ";";
 	gold_header += std::to_string(this->hier_thresh) + ";";
 	gold_header += std::to_string(this->plist_size) + ";";
@@ -98,7 +97,6 @@ void DetectionGold::write_gold_header() {
 	gold_header += this->model + ";";
 	gold_header += this->weights + ";";
 	gold_header += this->coord + ";";
-	gold_header += this->classes + ";\n";
 
 	std::ofstream gold(this->gold_inout, std::ofstream::trunc);
 	if (gold.is_open()) {
@@ -115,14 +113,14 @@ bool operator!=(const box& a, const box& b) {
 }
 
 void DetectionGold::cmp(detection* dets, int nboxes, int img_index,
-		int l_coord) {
+		int l_coord, int classes) {
 	std::ostringstream error_info("");
 	std::string img = this->gold_img_names[img_index];
 
 }
 
 void DetectionGold::run(detection *dets, int nboxes, int img_index,
-		int l_coord) {
+		int l_coord, int classes) {
 	// To generate function
 	//std::string img, detection* dets, int nboxes, int classes, int l_coord
 	if (this->generate) {
@@ -132,21 +130,21 @@ void DetectionGold::run(detection *dets, int nboxes, int img_index,
 			std::cerr << "ERROR ON OPENING GOLD FILE\n";
 			exit(-1);
 		}
-		this->gen(dets, nboxes, img_index, l_coord, gold_file);
+		this->gen(dets, nboxes, img_index, l_coord, gold_file, classes);
 		gold_file.close();
 	} else {
 		// To compare function
 		//detection is allways nboxes size
-		this->cmp(dets, nboxes, img_index, l_coord);
+		this->cmp(dets, nboxes, img_index, l_coord, classes);
 	}
 }
 
 void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
-		std::ofstream& gold_file) {
+		std::ofstream& gold_file, int classes) {
 	//first write the image string name
 	std::string img = this->gold_img_names[img_index];
 
-	gold_file << img << ";" << nboxes << ";" << std::endl;
+	gold_file << img << ";" << nboxes << ";" << l_coord << ";" << classes << ";" << std::endl;
 	for (int i = 0; i < nboxes; ++i) {
 
 		for (int j = 0; j < l_coord; j++) {
@@ -159,10 +157,11 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
 				<< b.x << ";" << b.y << ";" << b.w << ";" << b.h << ";"
 				<< std::endl;
 
-		std::cout << "CLasses are " << this->classes << "\n";
+		std::cout << "CLasses are " << classes << "\n";
 
-		for (int j = 0; j < this->classes; ++j)
+		for (int j = 0; j < classes; ++j){
 			gold_file << dets[i].prob[j] << ";" << std::endl;
+		}
 	}
 
 }
@@ -179,38 +178,44 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 		this->gold_img_names[i] = splited_line[0];
 		// Probarray creation
 		int nboxes = std::stoi(splited_line[1]);
-
+		int l_coords = std::stoi(splited_line[2]);
+		int classes = std::stoi(splited_line[3]);
 		//
 		std::vector<Detection> detections(nboxes);
 
-		for (int bb = 0; bb < nboxes && getline(gold_file, line); ++bb) {
-			Detection i_element;
-			i_element.nboxes = nboxes;
+		for (int bb = 0; bb < nboxes; ++bb) {
 
 			// Getting mask
-			getline(gold_file, line);
-			splited_line = split(line, ';');
-			for (auto mask : splited_line)
-				i_element.mask.push_back(real_t(std::stof(mask)));
+			std::vector<real_t> masks(l_coords);
+			for (int lc = 0; lc < l_coords; lc++){
+				getline(gold_file, line);
+				splited_line = split(line, ';');
+				real_t mask = std::stof(splited_line[0]);
+				masks[lc] = real_t(mask);
+			}
 
 			// Getting bb box
 			box b;
-			i_element.objectness = std::stof(splited_line[0]);
-			i_element.sort_class = std::stoi(splited_line[1]);
+			getline(gold_file, line);
+			splited_line = split(line, ';');
+
+			real_t objectness = std::stof(splited_line[0]);
+			int sort_class = std::stoi(splited_line[1]);
 			b.x = std::stof(splited_line[2]);
 			b.y = std::stof(splited_line[3]);
 			b.w = std::stof(splited_line[4]);
 			b.h = std::stof(splited_line[5]);
 
-			i_element.boxes.push_back(b);
-
 			// Getting the probabilities
-			getline(gold_file, line);
-			splited_line = split(line, ';');
-			for (auto prob : splited_line)
-				i_element.prob.push_back(std::stof(prob));
+			std::vector<real_t> probs(classes);
+			for (int cl = 0; cl < classes && getline(gold_file, line); cl++){
+				splited_line = split(line, ';');
 
-			detections[bb] = i_element;
+				real_t prob = std::stof(splited_line[0]);
+
+			}
+
+			detections[bb] = Detection(nboxes, sort_class, objectness, masks, probs, b);
 		}
 
 		this->gold_hash_var[this->gold_img_names[i]] = detections;

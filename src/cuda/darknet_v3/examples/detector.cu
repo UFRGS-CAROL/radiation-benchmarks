@@ -720,7 +720,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	//--------------------------------------------------------------------
 	printf("Executig radiation setup/test\n");
 	DetectionGold detection_gold(argc, argv, thresh, hier_thresh, filename,
-			cfgfile, datacfg, const_cast<char*>("detector"), weightfile, net->layers[net->n -1].classes);
+			cfgfile, datacfg, const_cast<char*>("detector"), weightfile);
 
 	image* images = new image[detection_gold.gold_img_names.size()];
 	image* sized_images = new image[detection_gold.gold_img_names.size()];
@@ -751,7 +751,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			do_nms_sort(dets, nboxes, l.classes, nms);
 
 		// Test or compare the detections with the gold
-		detection_gold.run(dets, nboxes, count_image, l.coords);
+		detection_gold.run(dets, nboxes, count_image, l.coords, l.classes);
 
 		free_detections(dets, nboxes);
 		count_image = (count_image + 1) % detection_gold.gold_img_names.size();
