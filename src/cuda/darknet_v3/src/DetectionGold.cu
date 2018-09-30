@@ -98,7 +98,7 @@ void DetectionGold::write_gold_header() {
 	gold_header += this->model + ";";
 	gold_header += this->weights + ";";
 	gold_header += this->coord + ";";
-	gold_header += this->classes + ";";
+	gold_header += this->classes + ";\n";
 
 	std::ofstream gold(this->gold_inout);
 	if (gold.is_open()) {
@@ -152,17 +152,17 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index, int l_coord,
 		for (int j = 0; j < l_coord; j++) {
 			gold_file << dets[i].mask[j] << ";";
 		}
-//		gold_file << "\n";
+		gold_file << "\n";
 
 		box b = dets[i].bbox;
 
 		gold_file << dets[i].objectness << ";" << dets[i].sort_class << ";"
-				<< b.x << ";" << b.y << ";" << b.w << ";" << b.h << ";";
+				<< b.x << ";" << b.y << ";" << b.w << ";" << b.h << ";\n";
 
 		for (int j = 0; j < this->classes; ++j) {
 			gold_file << dets[i].prob[j] << ";";
 		}
-//		gold_file << "\n";
+		gold_file << "\n";
 	}
 
 }
