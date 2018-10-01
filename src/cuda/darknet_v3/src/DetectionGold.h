@@ -86,7 +86,8 @@ struct GoldHash {
 	}
 
 	void put(std::string img, std::vector<Detection> a) {
-		this->data.at(img) = a;
+		std::pair<std::string, std::vector<Detection> > tmp(img, a);
+		this->data.insert(tmp);
 	}
 };
 
