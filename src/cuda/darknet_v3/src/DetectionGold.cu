@@ -126,16 +126,20 @@ void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 	std::vector<Detection> gold_dets = this->gold_hash_var[img];
 
 	int min_nboxes = gold_dets.size();
+	int error_count = 0;
+
+	std::cout << "size of gold_dets " << gold_dets.size() << "\n";
+
 	if (min_nboxes != nboxes) {
 		std::string error_detail = "img: " + img
-				+ "Number of boxes smaller than gold nboxes_e: "
+				+ " nboxes_e: "
 				+ std::to_string(min_nboxes) + " nboxes_r: "
 				+ std::to_string(nboxes);
 		this->app_logging->log_error_info(error_detail);
 		min_nboxes = std::min(nboxes, min_nboxes);
+		error_count++;
 	}
 
-	int error_count = 0;
 	for (int nb = 0; nb < min_nboxes; nb++) {
 		Detection g_det = gold_dets[nb];
 		detection f_det = found_dets[nb];
@@ -248,6 +252,7 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 		std::vector < std::string > splited_line = split(line, ';');
 		// Set each img_name path
 		this->gold_img_names[i] = splited_line[0];
+		std::cout << "img name load " << this->gold_img_names[i] << "\n";
 		// Probarray creation
 		int nboxes = std::stoi(splited_line[1]);
 		int classes = std::stoi(splited_line[2]);
@@ -255,15 +260,6 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 		std::vector<Detection> detections(nboxes);
 
 		for (int bb = 0; bb < nboxes; ++bb) {
-
-//			 Getting mask
-//			std::vector<real_t> masks(l_coords);
-//			for (int lc = 0; lc < l_coords; lc++){
-//				getline(gold_file, line);
-//				splited_line = split(line, ';');
-//				real_t mask = std::stof(splited_line[0]);
-//				masks[lc] = real_t(mask);
-//			}
 
 			// Getting bb box
 			box b;
@@ -297,7 +293,6 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 		}
 
 		this->gold_hash_var[this->gold_img_names[i]] = detections;
-
 	}
 
 }
