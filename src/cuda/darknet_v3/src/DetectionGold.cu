@@ -11,6 +11,10 @@
 #include <sstream>
 #include <ctime>
 
+#define THRESHOLD_ERROR 1e5
+#define STORE_PRECISION 12
+
+
 void DetectionGold::write_gold_header() {
 	//	0       1           2              3              4            5            6        7
 	//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;
@@ -118,7 +122,12 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 }
 
 bool operator!=(const box& a, const box& b) {
-	return (a.h != b.h || a.w != b.w || a.x != b.x || a.y != a.y);
+	real_t x_diff = std::abs(a.x - b.x);
+	real_t y_diff = std::abs(a.y - b.y);
+	real_t w_diff = std::abs(a.w - b.w);
+	real_t h_diff = std::abs(a.h - b.h);
+
+	return (x_diff > THRESHOLD_ERROR || y_diff > THRESHOLD_ERROR || w_diff > THRESHOLD_ERROR || h_diff > THRESHOLD_ERROR);
 }
 
 void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
@@ -152,10 +161,13 @@ void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 		int g_sort_class = g_det.sort_class;
 		int f_sort_class = f_det.sort_class;
 
-		if ((g_box != f_box) || (g_objectness != f_objectness)
-				|| (g_sort_class != f_sort_class)) {
+		real_t objs_diff = std::abs(g_objectness - f_objectness);
+		int sortc_diff = std::abs(g_sort_class - f_sort_class);
+
+
+		if ((objs_diff > THRESHOLD_ERROR) || (sortc_diff > THRESHOLD_ERROR) || (g_box != f_box)) {
 			std::ostringstream error_info("");
-			error_info.precision(6);
+			error_info.precision(STORE_PRECISION);
 
 			error_info << "img: " << img << " detection: " << nb << " x_e: "
 					<< g_box.x << " x_r: " << f_box.x << " y_e: " << g_box.y
@@ -175,7 +187,7 @@ void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 
 			if (g_prob != f_prob) {
 				std::ostringstream error_info("");
-				error_info.precision(6);
+				error_info.precision(STORE_PRECISION);
 
 				error_info << "img: " << img << " detection: " << nb
 						<< " class: " << cl << " prob_e: " << g_prob
