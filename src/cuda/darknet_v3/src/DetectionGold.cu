@@ -88,7 +88,8 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 		//allocate detector
 		this->load_gold_hash(gold_file);
-		std::cout << "Size of vector outside " << this->gold_hash_var[this->gold_img_names[0]].size() << "\n";
+		std::cout << "Size of vector outside "
+				<< this->gold_hash_var[this->gold_img_names[0]].size() << "\n";
 		gold_file.close();
 
 	} else {
@@ -132,8 +133,7 @@ void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 	std::cout << "size of gold_dets " << gold_dets.size() << "\n";
 
 	if (min_nboxes != nboxes) {
-		std::string error_detail = "img: " + img
-				+ " nboxes_e: "
+		std::string error_detail = "img: " + img + " nboxes_e: "
 				+ std::to_string(min_nboxes) + " nboxes_r: "
 				+ std::to_string(nboxes);
 		this->app_logging->log_error_info(error_detail);
@@ -258,7 +258,7 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 		int nboxes = std::stoi(splited_line[1]);
 		int classes = std::stoi(splited_line[2]);
 		//
-//		std::vector<Detection> detections(nboxes);
+		std::vector<Detection> detections(nboxes);
 
 		for (int bb = 0; bb < nboxes; ++bb) {
 
@@ -289,15 +289,16 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 
 			}
 
-//			detections[bb] = Detection(nboxes, sort_class, objectness, probs,
-//					b);
-			this->gold_hash_var[this->gold_img_names[i]].push_back(Detection(nboxes, sort_class, objectness, probs,
-					b));
-			std::cout << " size of det vector inside " << this->gold_hash_var[this->gold_img_names[i]].size() << "\n";
+			detections[bb] = Detection(nboxes, sort_class, objectness, probs,
+					b);
+
+			std::cout << " size of det vector inside " << detections.size()
+					<< "\n";
 
 		}
 
-//		this->gold_hash_var[this->gold_img_names[i]] = detections;
+		this->gold_hash_var[this->gold_img_names[i]] = std::vector < Detection
+				> (detections);
 	}
 
 }
