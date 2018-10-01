@@ -11,7 +11,7 @@
 #include <sstream>
 #include <ctime>
 
-#define THRESHOLD_ERROR 1e5
+#define THRESHOLD_ERROR 1e12
 #define STORE_PRECISION 12
 
 
