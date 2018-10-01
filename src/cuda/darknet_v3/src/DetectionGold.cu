@@ -58,8 +58,6 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	this->thresh = thresh;
 	this->hier_thresh = hier_thresh;
 
-	std::cout << this->generate << " " << this->iterations << " "
-			<< this->gold_inout << "\n";
 
 	if (!this->generate) {
 

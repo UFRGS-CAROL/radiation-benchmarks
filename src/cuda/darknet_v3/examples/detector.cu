@@ -729,6 +729,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 
 	// round counter for the images
 	int count_image = 0;
+	printf("ITerations %d\n", detection_gold.iterations);
 	//--------------------------------------------------------------------
 	for (int iteration = 0; iteration < detection_gold.iterations;
 			iteration++) {
