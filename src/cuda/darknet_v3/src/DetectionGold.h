@@ -70,6 +70,12 @@ struct Detection {
 		}
 		return *this;
 	}
+
+	friend std::ostream& operator<<(std::ostream& os, const Detection& b) {
+		os << b.nboxes << " " << b.objectness << " " << b.sort_class << " "
+				<< b.bbox.x << " " << b.bbox.y;
+		return os;
+	}
 };
 
 struct GoldHash {

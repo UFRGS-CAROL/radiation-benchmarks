@@ -290,6 +290,8 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 
 			detections[bb] = Detection(nboxes, sort_class, objectness, probs,
 					b);
+			std::cout << "Gold " << objectness << " " << sort_class << " " << b.x << " " << b.y << "\n";
+			std::cout << "Gold " << detections[bb] << "\n";
 		}
 
 		this->gold_hash_var[this->gold_img_names[i]] = detections;
