@@ -257,7 +257,7 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 		int nboxes = std::stoi(splited_line[1]);
 		int classes = std::stoi(splited_line[2]);
 		//
-		std::vector<Detection> detections(nboxes);
+//		std::vector<Detection> detections(nboxes);
 
 		for (int bb = 0; bb < nboxes; ++bb) {
 
@@ -288,13 +288,15 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 
 			}
 
-			detections[bb] = Detection(nboxes, sort_class, objectness, probs,
-					b);
-			std::cout << "Gold " << objectness << " " << sort_class << " " << b.x << " " << b.y << "\n";
-			std::cout << "Gold " << detections[bb] << "\n";
+//			detections[bb] = Detection(nboxes, sort_class, objectness, probs,
+//					b);
+			this->gold_hash_var[this->gold_img_names[i]].push_back(Detection(nboxes, sort_class, objectness, probs,
+					b));
+			std::cout << "Gold " << nboxes << objectness << " " << sort_class << " " << b.x << " " << b.y << "\n";
+//			std::cout << "Set  " << detections[bb] << "\n";
 		}
 
-		this->gold_hash_var[this->gold_img_names[i]] = detections;
+//		this->gold_hash_var[this->gold_img_names[i]] = detections;
 	}
 
 }
