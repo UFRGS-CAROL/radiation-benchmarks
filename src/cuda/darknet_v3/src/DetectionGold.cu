@@ -216,7 +216,7 @@ void DetectionGold::run(detection *dets, int nboxes, int img_index,
 		double start = mysecond();
 		this->cmp(dets, nboxes, img_index, classes);
 
-		if(this->current_iteration % PRINT_INTERVAL)
+		if(this->current_iteration % PRINT_INTERVAL == 0)
 			std::cout << "Seconds to compare: "
 				<< mysecond() - start << " s.\n";
 

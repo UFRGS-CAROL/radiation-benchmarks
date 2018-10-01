@@ -743,7 +743,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		network_predict(net, X);
 		detection_gold.end_iteration();
 
-		if(iteration % PRINT_INTERVAL)
+		if(iteration % PRINT_INTERVAL == 0)
 			printf("%s: Predicted in %f seconds.\n", detection_gold.gold_img_names[count_image].c_str(), what_time_is_it_now() - time);
 
 		int nboxes = 0;
