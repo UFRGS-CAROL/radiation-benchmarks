@@ -130,8 +130,6 @@ void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 	int min_nboxes = gold_dets.size();
 	int error_count = 0;
 
-	std::cout << "size of gold_dets " << gold_dets.size() << "\n";
-
 	if (min_nboxes != nboxes) {
 		std::string error_detail = "img: " + img + " nboxes_e: "
 				+ std::to_string(min_nboxes) + " nboxes_r: "
