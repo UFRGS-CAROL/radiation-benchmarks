@@ -253,7 +253,7 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 		std::vector < std::string > splited_line = split(line, ';');
 		// Set each img_name path
 		this->gold_img_names[i] = splited_line[0];
-		std::cout << "img name load " << this->gold_img_names[i] << "\n";
+
 		// Probarray creation
 		int nboxes = std::stoi(splited_line[1]);
 		int classes = std::stoi(splited_line[2]);
@@ -291,9 +291,6 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 
 			detections[bb] = Detection(nboxes, sort_class, objectness, probs,
 					b);
-
-			std::cout << " size of det vector inside " << detections.size()
-					<< "\n";
 
 		}
 
