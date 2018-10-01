@@ -94,6 +94,9 @@ public:
 
 	void run(detection* dets, int nboxes, int img_index, int classes);
 
+	void start_iteration();
+	void end_iteration();
+
 private:
 	void load_gold_hash(std::ifstream& gold_file);
 

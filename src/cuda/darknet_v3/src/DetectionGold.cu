@@ -307,3 +307,11 @@ DetectionGold::~DetectionGold() {
 		delete this->app_logging;
 	}
 }
+
+void DetectionGold::start_iteration(){
+	this->app_logging->start_iteration_app();
+}
+
+void DetectionGold::end_iteration(){
+	this->app_logging->end_iteration_app();
+}

@@ -738,9 +738,9 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 
 		time = what_time_is_it_now();
 
-		detection_gold.app_logging->start_iteration_app();
+		detection_gold.start_iteration();
 		network_predict(net, X);
-		detection_gold.app_logging->end_iteration_app();
+		detection_gold.end_iteration();
 
 		printf("%s: Predicted in %f seconds.\n", detection_gold.gold_img_names[count_image].c_str(),
 				what_time_is_it_now() - time);
