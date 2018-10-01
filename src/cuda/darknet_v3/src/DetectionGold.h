@@ -59,6 +59,17 @@ struct Detection {
 					a.sort_class), prob(a.prob), bbox(a.bbox) {
 	}
 
+	Detection& operator=(const Detection& other) // copy assignment
+			{
+		if (this != &other) { // self-assignment check expected
+			this->prob = std::vector < real_t > (other.prob);
+			this->bbox = other.bbox;
+			this->nboxes = other.nboxes;
+			this->objectness = other.objectness;
+			this->sort_class = other.sort_class;
+		}
+		return *this;
+	}
 };
 
 struct GoldHash {
