@@ -107,6 +107,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->weights = std::string(weights);
 
 		this->write_gold_header();
+		this->iterations = 1;
 	}
 
 	//check if iterations is bigger than img_list_size
