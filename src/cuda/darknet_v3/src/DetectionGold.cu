@@ -154,13 +154,13 @@ void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 			std::ostringstream error_info("");
 			error_info.precision(6);
 
-			error_info << "img: " << img << " detection: " << nb
-					<< " x_e: " << g_box.x << " x_r: " << f_box.x
-					<< " y_e: " << g_box.y << " y_r: " << f_box.y
-					<< " h_e: " << g_box.h << " h_r: " << f_box.h
-					<< " w_e: " << g_box.w << " w_r: " << f_box.w
-					<< " objectness_e: " << g_objectness << " objectness_r: " << f_objectness
-					<< " sort_class_e: " << g_sort_class << " sort_class_r: " << f_sort_class;
+			error_info << "img: " << img << " detection: " << nb << " x_e: "
+					<< g_box.x << " x_r: " << f_box.x << " y_e: " << g_box.y
+					<< " y_r: " << f_box.y << " h_e: " << g_box.h << " h_r: "
+					<< f_box.h << " w_e: " << g_box.w << " w_r: " << f_box.w
+					<< " objectness_e: " << g_objectness << " objectness_r: "
+					<< f_objectness << " sort_class_e: " << g_sort_class
+					<< " sort_class_r: " << f_sort_class;
 
 			this->app_logging->log_error_info(error_info.str());
 			error_count++;
@@ -308,10 +308,12 @@ DetectionGold::~DetectionGold() {
 	}
 }
 
-void DetectionGold::start_iteration(){
-	this->app_logging->start_iteration_app();
+void DetectionGold::start_iteration() {
+	if (!this->generate)
+		this->app_logging->start_iteration_app();
 }
 
-void DetectionGold::end_iteration(){
-	this->app_logging->end_iteration_app();
+void DetectionGold::end_iteration() {
+	if (!this->generate)
+		this->app_logging->end_iteration_app();
 }
