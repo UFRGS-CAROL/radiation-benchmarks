@@ -184,8 +184,9 @@ void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 		for (int cl = 0; cl < classes; ++cl) {
 			real_t g_prob = g_det.prob[cl];
 			real_t f_prob = f_det.prob[cl];
+			real_t prob_diff = std::abs(g_prob - f_prob);
 
-			if (g_prob != f_prob) {
+			if (prob_diff > THRESHOLD_ERROR) {
 				std::ostringstream error_info("");
 				error_info.precision(STORE_PRECISION);
 
