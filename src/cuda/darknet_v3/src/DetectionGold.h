@@ -24,8 +24,9 @@
 #include <tuple>
 #include <unordered_map>
 
-#define THRESHOLD_ERROR 0.05
-#define LAYER_THRESHOLD_ERROR 0.0000001
+#define THRESHOLD_ERROR 1e10
+#define STORE_PRECISION 12
+#define PRINT_INTERVAL 10
 
 #define LAYER_GOLD "/var/radiation-benchmarks/data/"
 
@@ -101,7 +102,7 @@ public:
 	std::string img_list_path, config_file, cfg_data, model, weights;
 	std::vector<std::string> gold_img_names;
 	int iterations, tensor_core_mode, stream_mr;
-
+	int current_iteration;
 	// For logging functions
 	Log *app_logging;
 

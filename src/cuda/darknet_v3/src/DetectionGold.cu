@@ -11,10 +11,6 @@
 #include <sstream>
 #include <ctime>
 
-#define THRESHOLD_ERROR 1e10
-#define STORE_PRECISION 12
-
-
 void DetectionGold::write_gold_header() {
 	//	0       1           2              3              4            5            6        7
 	//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;
@@ -57,6 +53,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	this->stream_mr = find_int_arg(argc, argv, "-smx_redundancy", 0);
 	this->thresh = thresh;
 	this->hier_thresh = hier_thresh;
+	this->current_iteration = 0;
 
 
 	if (!this->generate) {
@@ -219,7 +216,8 @@ void DetectionGold::run(detection *dets, int nboxes, int img_index,
 		double start = mysecond();
 		this->cmp(dets, nboxes, img_index, classes);
 
-		std::cout << "Seconds to compare: "
+		if(this->current_iteration % PRINT_INTERVAL)
+			std::cout << "Seconds to compare: "
 				<< mysecond() - start << " s.\n";
 
 	}
@@ -321,4 +319,5 @@ void DetectionGold::start_iteration() {
 void DetectionGold::end_iteration() {
 	if (!this->generate)
 		this->app_logging->end_iteration_app();
+	this->current_iteration++;
 }
