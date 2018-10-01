@@ -297,8 +297,7 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 
 		}
 
-		this->gold_hash_var[this->gold_img_names[i]] = std::vector < Detection
-				> (detections);
+		this->gold_hash_var.put(this->gold_img_names[i], detections);
 	}
 
 }

@@ -84,6 +84,10 @@ struct GoldHash {
 	std::vector<Detection> operator[](std::string img) {
 		return this->data[img];
 	}
+
+	void put(std::string img, std::vector<Detection> a) {
+		this->data.at(img) = a;
+	}
 };
 
 class DetectionGold {
