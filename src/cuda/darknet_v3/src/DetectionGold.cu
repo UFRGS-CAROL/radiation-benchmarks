@@ -88,6 +88,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 		//allocate detector
 		this->load_gold_hash(gold_file);
+		std::cout << "Size of vector outside " << this->gold_hash_var[this->gold_img_names[0]].size() << "\n";
 		gold_file.close();
 
 	} else {
@@ -292,8 +293,8 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 //					b);
 			this->gold_hash_var[this->gold_img_names[i]].push_back(Detection(nboxes, sort_class, objectness, probs,
 					b));
-			std::cout << "Gold " << nboxes << objectness << " " << sort_class << " " << b.x << " " << b.y << "\n";
-//			std::cout << "Set  " << detections[bb] << "\n";
+			std::cout << " size of det vector inside " << this->gold_hash_var[this->gold_img_names[i]].size() << "\n";
+
 		}
 
 //		this->gold_hash_var[this->gold_img_names[i]] = detections;
