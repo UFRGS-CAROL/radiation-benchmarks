@@ -684,8 +684,8 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile,
 	}
 }
 
-void load_all_images(
-		std::vector<std::string> img_list, image *images, image *sized_images, network *net) {
+void load_all_images(std::vector<std::string> img_list, image *images,
+		image *sized_images, network *net) {
 
 	for (int i = 0; i < img_list.size(); i++) {
 		images[i] = load_image_color(const_cast<char*>(img_list[i].c_str()), 0,
@@ -694,7 +694,7 @@ void load_all_images(
 	}
 }
 
-void free_all_images(image* images, image* sized_images, int size){
+void free_all_images(image* images, image* sized_images, int size) {
 	for (int i = 0; i < size; i++) {
 		free_image(images[i]);
 		free_image(sized_images[i]);
@@ -728,39 +728,45 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	load_all_images(detection_gold.gold_img_names, images, sized_images, net);
 
 	// round counter for the images
-	int count_image = 0;
+//	int count_image = 0;
 	printf("ITerations %d\n", detection_gold.iterations);
 	//--------------------------------------------------------------------
 	for (int iteration = 0; iteration < detection_gold.iterations;
 			iteration++) {
-		layer l = net->layers[net->n - 1];
+		for (int count_image = 0;
+				count_image < detection_gold.gold_img_names.size();
+				count_image++) {
+			layer l = net->layers[net->n - 1];
 
-		real_t *X = sized_images[count_image].data;
+			real_t *X = sized_images[count_image].data;
 
-		time = what_time_is_it_now();
+			time = what_time_is_it_now();
 
-		detection_gold.start_iteration();
-		network_predict(net, X);
-		detection_gold.end_iteration();
+			detection_gold.start_iteration();
+			network_predict(net, X);
+			detection_gold.end_iteration();
 
-		if(iteration % PRINT_INTERVAL == 0)
-			printf("%s: Predicted in %f seconds.\n", detection_gold.gold_img_names[count_image].c_str(), what_time_is_it_now() - time);
+			int nboxes = 0;
 
-		int nboxes = 0;
+			int im_w = images[count_image].w;
+			int im_h = images[count_image].h;
+			detection *dets = get_network_boxes(net, im_w, im_h, thresh,
+					hier_thresh, 0, 1, &nboxes);
 
-		int im_w = images[count_image].w;
-		int im_h = images[count_image].h;
-		detection *dets = get_network_boxes(net, im_w, im_h, thresh,
-				hier_thresh, 0, 1, &nboxes);
+			if (nms)
+				do_nms_sort(dets, nboxes, l.classes, nms);
 
-		if (nms)
-			do_nms_sort(dets, nboxes, l.classes, nms);
+			if (detection_gold.generate || iteration % PRINT_INTERVAL == 0)
+				printf("%s: Predicted in %f seconds. Number of boxes %d\n",
+						detection_gold.gold_img_names[count_image].c_str(),
+						what_time_is_it_now() - time, nboxes);
 
-		// Test or compare the detections with the gold
-		detection_gold.run(dets, nboxes, count_image, l.classes);
+			// Test or compare the detections with the gold
+			detection_gold.run(dets, nboxes, count_image, l.classes);
 
-		free_detections(dets, nboxes);
-		count_image = (count_image + 1) % detection_gold.gold_img_names.size();
+			free_detections(dets, nboxes);
+//		count_image = (count_image + 1) % detection_gold.gold_img_names.size();
+		}
 	}
 
 	free_all_images(images, sized_images, detection_gold.gold_img_names.size());

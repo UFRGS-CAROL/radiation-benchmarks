@@ -313,6 +313,7 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, real_t thresh) {
 				&nboxes);
 		if (nms)
 			do_nms_sort(dets, l.side * l.side * l.n, l.classes, nms);
+		printf("YOLO N BOXES %d\n", nboxes);
 
 		draw_detections(im, dets, l.side * l.side * l.n, thresh, voc_names,
 				alphabet, 20);
@@ -337,7 +338,7 @@ void run_yolo(int argc, char **argv) {
 				argv[0], argv[1]);
 		return;
 	}
-
+	printf("mode of yolo %s\n", argv[2]);
 	int avg = find_int_arg(argc, argv, "-avg", 1);
 	char *cfg = argv[3];
 	char *weights = (argc > 4) ? argv[4] : 0;

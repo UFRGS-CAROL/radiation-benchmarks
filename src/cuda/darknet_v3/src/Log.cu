@@ -72,6 +72,7 @@ void Log::log_error_info(std::string error_detail) {
 
 void Log::update_error_count(long error_count) {
 #ifdef LOGS
-	log_error_count(error_count);
+	if(error_count)
+		log_error_count(error_count);
 #endif
 }

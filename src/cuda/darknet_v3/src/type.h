@@ -46,8 +46,6 @@ public:
 
 	FP16Array(size_t size, float* fp32_array);
 
-	void realloc(size_t size, float* fp32_array, bool realloc) ;
-
 	void cuda_convert_f32_to_f16();
 
 	void cuda_convert_f16_to_f32();

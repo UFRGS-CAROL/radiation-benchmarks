@@ -16,22 +16,6 @@
 #ifdef GPU
 #include "cuda.h"
 #endif
-/**
- * Transform a float array into an half precision
- */
-
-__global__ void float_to_half_array(real_t_device* dst, float* src,
-		size_t size) {
-	int i = (blockIdx.x + blockIdx.y * gridDim.x) * blockDim.x + threadIdx.x;
-	if (i < size)
-		dst[i] = __float2half(src[i]);
-}
-
-void transform_float_to_half_array(real_t_device* dst, float* src, size_t n) {
-	float_to_half_array<<<cuda_gridsize(n), BLOCK>>>(dst, src, n);
-	check_error(cudaPeekAtLastError());
-
-}
 
 /**
  * Read a file for all precisions

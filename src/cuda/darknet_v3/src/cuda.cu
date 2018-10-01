@@ -108,15 +108,7 @@ void cuda_random(real_t_device *x_gpu, size_t n) {
 	}
 
 #if REAL_TYPE == HALF
-	float* tmp_d;
-	cudaError_t status = cudaMalloc((void **) &tmp_d, sizeof(real_t) * n);
-	check_error(status);
-
-	curandStatus_t stss = curandGenerateUniform(gen[i], tmp_d, n);
-
-	transform_float_to_half_array(x_gpu, tmp_d, n);
-	cudaFree(tmp_d);
-
+	curandStatus_t status = curandGenerateUniform(gen[i], x_gpu, n);
 #elif REAL_TYPE == FLOAT
 	curandStatus_t status = curandGenerateUniform(gen[i], x_gpu, n);
 #elif REAL_TYPE == DOUBLE

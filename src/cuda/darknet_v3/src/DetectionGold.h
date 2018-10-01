@@ -43,20 +43,18 @@ struct Detection {
 	int nboxes;
 	real_t objectness;
 	int sort_class;
+	int classes;
 
-	Detection() :
-			nboxes(0), objectness(0), sort_class(0), prob(
+	Detection() : classes(0), nboxes(0), objectness(0), sort_class(0), prob(
 					std::vector<real_t>()), bbox(box()) {
 	}
 
-	Detection(int nboxes, int sort_class, real_t objectness,
-			std::vector<real_t> prob, box bb) :
-			nboxes(nboxes), objectness(objectness), sort_class(sort_class), prob(
+	Detection(int classes, int nboxes, int sort_class, real_t objectness,
+			std::vector<real_t> prob, box bb) :  classes(classes), nboxes(nboxes), objectness(objectness), sort_class(sort_class), prob(
 					prob), bbox(bb) {
 	}
 
-	Detection(const Detection& a) :
-			nboxes(a.nboxes), objectness(a.objectness), sort_class(
+	Detection(const Detection& a) :  classes(a.classes), nboxes(a.nboxes), objectness(a.objectness), sort_class(
 					a.sort_class), prob(a.prob), bbox(a.bbox) {
 	}
 

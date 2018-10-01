@@ -55,7 +55,6 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 	this->hier_thresh = hier_thresh;
 	this->current_iteration = 0;
 
-
 	if (!this->generate) {
 
 		//		Log(std::string gold, int save_layer, int abft, int iterations,
@@ -110,10 +109,10 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->iterations = 1;
 	}
 
-	//check if iterations is bigger than img_list_size
-	if (this->iterations < this->plist_size) {
-		this->iterations = this->plist_size;
-	}
+//	//check if iterations is bigger than img_list_size
+//	if (this->iterations < this->plist_size) {
+//		this->iterations = this->plist_size;
+//	}
 
 }
 
@@ -123,7 +122,8 @@ bool operator!=(const box& a, const box& b) {
 	real_t w_diff = std::abs(a.w - b.w);
 	real_t h_diff = std::abs(a.h - b.h);
 
-	return (x_diff > THRESHOLD_ERROR || y_diff > THRESHOLD_ERROR || w_diff > THRESHOLD_ERROR || h_diff > THRESHOLD_ERROR);
+	return (x_diff > THRESHOLD_ERROR || y_diff > THRESHOLD_ERROR
+			|| w_diff > THRESHOLD_ERROR || h_diff > THRESHOLD_ERROR);
 }
 
 void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
@@ -132,19 +132,10 @@ void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 
 	std::vector<Detection> gold_dets = this->gold_hash_var[img];
 
-	int min_nboxes = gold_dets.size();
 	int error_count = 0;
+	std::cout << " nboxes " << nboxes << " detections " << gold_dets.size() << "\n";
 
-	if (min_nboxes != nboxes) {
-		std::string error_detail = "img: " + img + " nboxes_e: "
-				+ std::to_string(min_nboxes) + " nboxes_r: "
-				+ std::to_string(nboxes);
-		this->app_logging->log_error_info(error_detail);
-		min_nboxes = std::min(nboxes, min_nboxes);
-		error_count++;
-	}
-
-	for (int nb = 0; nb < min_nboxes; nb++) {
+	for (int nb = 0; nb < nboxes; nb++) {
 		Detection g_det = gold_dets[nb];
 		detection f_det = found_dets[nb];
 
@@ -160,8 +151,8 @@ void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 		real_t objs_diff = std::abs(g_objectness - f_objectness);
 		int sortc_diff = std::abs(g_sort_class - f_sort_class);
 
-
-		if ((objs_diff > THRESHOLD_ERROR) || (sortc_diff > THRESHOLD_ERROR) || (g_box != f_box)) {
+		if ((objs_diff > THRESHOLD_ERROR) || (sortc_diff > THRESHOLD_ERROR)
+				|| (g_box != f_box)) {
 			std::ostringstream error_info("");
 			error_info.precision(STORE_PRECISION);
 
@@ -182,7 +173,8 @@ void DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 			real_t f_prob = f_det.prob[cl];
 			real_t prob_diff = std::abs(g_prob - f_prob);
 
-			if (prob_diff > THRESHOLD_ERROR) {
+			if ((g_prob >= this->thresh || f_prob >= this->thresh)
+					&& prob_diff > THRESHOLD_ERROR) {
 				std::ostringstream error_info("");
 				error_info.precision(STORE_PRECISION);
 
@@ -217,9 +209,9 @@ void DetectionGold::run(detection *dets, int nboxes, int img_index,
 		double start = mysecond();
 		this->cmp(dets, nboxes, img_index, classes);
 
-		if(this->current_iteration % PRINT_INTERVAL == 0)
-			std::cout << "Seconds to compare: "
-				<< mysecond() - start << " s.\n";
+		if (this->current_iteration % PRINT_INTERVAL == 0)
+			std::cout << "Seconds to compare: " << mysecond() - start
+					<< " s.\n";
 
 	}
 }
@@ -229,23 +221,24 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index,
 	//first write the image string name
 	std::string img = this->gold_img_names[img_index];
 
-	gold_file << img << ";" << nboxes << ";" << classes << ";" << std::endl;
+	gold_file << img << ";" << nboxes << ";" << std::endl;
 
-	for (int i = 0; i < nboxes; ++i) {
+	for (int bb = 0; bb < nboxes; bb++) {
+		detection det = dets[bb];
+		box b = det.bbox;
 
-		box b = dets[i].bbox;
+		std::ostringstream box_str("");
+		box_str.precision(STORE_PRECISION);
 
-		gold_file << dets[i].objectness << ";" << dets[i].sort_class << ";"
-				<< b.x << ";" << b.y << ";" << b.w << ";" << b.h << ";"
-				<< std::endl;
+		box_str << dets[bb].objectness << ";" << dets[bb].sort_class << ";"
+				<< b.x << ";" << b.y << ";" << b.w << ";" << b.h << ";" << det.classes << ";" << std::endl;
 
-		for (int cl = 0; cl < classes; ++cl) {
-			real_t prob = dets[i].prob[cl];
-			if (prob != 0)
-				gold_file << prob << ";" << cl << ";" << std::endl;
+		for (int cl = 0; cl < det.classes; cl++) {
+			real_t prob = dets[bb].prob[cl];
+			box_str << prob << ";";
 		}
-		//just to end the box info
-		gold_file << "--;" << std::endl;
+
+		gold_file << box_str.str() << std::endl;
 	}
 
 }
@@ -255,50 +248,49 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 	this->gold_img_names = std::vector < std::string > (this->plist_size);
 	std::string line;
 
-	for (int i = 0; i < this->plist_size && getline(gold_file, line); i++) {
-		//	gold_file << img << ";" << nboxes << ";" << classes << ";" << std::endl;
+	for (int i = 0; i < this->plist_size; i++) {
+
+		//	gold_file << img << ";" << nboxes << ";" << std::endl;
+		getline(gold_file, line);
 		std::vector < std::string > splited_line = split(line, ';');
+
 		// Set each img_name path
 		this->gold_img_names[i] = splited_line[0];
 
 		// Probarray creation
+
 		int nboxes = std::stoi(splited_line[1]);
-		int classes = std::stoi(splited_line[2]);
-		//
-		std::vector<Detection> detections(nboxes);
+//		int classes = std::stoi(splited_line[2]);
+
+		std::vector<Detection> detections(nboxes, Detection());
 
 		for (int bb = 0; bb < nboxes; ++bb) {
 
 			// Getting bb box
 			box b;
 			getline(gold_file, line);
-			splited_line = split(line, ';');
 
+			splited_line = split(line, ';');
 			real_t objectness = std::stof(splited_line[0]);
 			int sort_class = std::stoi(splited_line[1]);
 			b.x = std::stof(splited_line[2]);
 			b.y = std::stof(splited_line[3]);
 			b.w = std::stof(splited_line[4]);
 			b.h = std::stof(splited_line[5]);
+			int classes = std::stoi(splited_line[6]);
 
 			// Getting the probabilities
 			std::vector < real_t > probs(classes, 0.0);
 
-			while (getline(gold_file, line)) {
+			if (getline(gold_file, line)) {
 				splited_line = split(line, ';');
 
-				if (splited_line[0] == "--")
-					break;
-				real_t prob = std::stof(splited_line[0]);
-				int class_ = std::stoi(splited_line[1]);
-
-				probs[class_] = prob;
-
+				for (auto cl = 0; cl < classes; cl++) {
+					probs[cl] = std::stof(splited_line[cl]);
+				}
 			}
-
-			detections[bb] = Detection(nboxes, sort_class, objectness, probs,
+			detections[bb] = Detection(classes, nboxes, sort_class, objectness, probs,
 					b);
-
 		}
 
 		this->gold_hash_var.put(this->gold_img_names[i], detections);
