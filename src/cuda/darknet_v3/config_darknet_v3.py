@@ -70,16 +70,17 @@ def config(board, debug):
                 exec_bin_path = "sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
                 exec_bin_path += " " + bin_path + "/" + bin_final_name
 
-                gen = [None] * 9
+                gen = [None] * 10
                 gen[0] = [exec_bin_path]
                 gen[1] = [" detector test_radiation "]
-                gen[2] = [data_path + '/' + CFG]
-                gen[3] = [data_path + '/' + WEIGHTS]
-                gen[4] = [txt_list]
-                gen[5] = [' -generate ', '1']
-                gen[6] = [' -iterations ', '1']
-                gen[7] = [' -tensor_cores ', str(tc)]
-                gen[8] = [' -gold ', gold]
+                gen[2] = [src_darknet + "/cfg/coco.data"]
+                gen[3] = [data_path + '/' + CFG]
+                gen[4] = [data_path + '/' + WEIGHTS]
+                gen[5] = [txt_list]
+                gen[6] = [' -generate ', '1']
+                gen[7] = [' -iterations ', '1']
+                gen[8] = [' -tensor_cores ', str(tc)]
+                gen[9] = [' -gold ', gold]
 
                 generate.append("make -j 4 GPU=1 LOGS=1 REAL_TYPE=" + fp_precision)
                 generate.append("mv ./" + bin_final_name + "  " + bin_path + "/")
