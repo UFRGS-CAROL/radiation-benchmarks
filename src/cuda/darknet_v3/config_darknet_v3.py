@@ -59,7 +59,7 @@ def config(board, debug):
         for i in DATASETS:
             for tc in USE_TENSOR_CORES:
                 generate = ["make clean GPU=1 LOGS=1"]
-
+                execute = []
                 bin_final_name = benchmark_bin + "_" + fp_precision
                 generate.append("make -j4 GPU=1 REAL_TYPE=" + fp_precision)
                 generate.append("mv ./" + bin_final_name + "  " + bin_path + "/")
