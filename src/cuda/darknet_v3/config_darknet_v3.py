@@ -86,8 +86,8 @@ def config(board, debug):
                 generate.append("mv ./" + bin_final_name + "  " + bin_path + "/")
 
                 exe = copy.deepcopy(gen)
-                exe[6][1] = '1000000'
-                exe[5][1] = '0'
+                exe[7][1] = '1000000'
+                exe[6][1] = '0'
 
                 generate.append(" ".join([''.join(value) for value in gen]))
 
