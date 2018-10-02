@@ -695,6 +695,11 @@ void free_all_images(image *imgs, image* sized_images, int list_size) {
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, real_t thresh, real_t hier_thresh, char *outfile,
 		int fullscreen, int argc, char** argv) {
+
+	printf(
+			"CFG FILE: %s\nDATA CFG: %s\nWeightfile: %s\nImage data path file: %s\nThresh: %f\n",
+			cfgfile, datacfg, weightfile, filename, thresh);
+
 	network *net = load_network(cfgfile, weightfile, 0);
 	set_batch_network(net, 1);
 	srand(2222222);
