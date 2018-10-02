@@ -139,11 +139,11 @@ demo:
 	./$(EXEC) detector test cfg/coco.data cfg/yolov3-spp.cfg data/yolov3-spp.weights data/dog.jpg
 
 generate:
-	./$(EXEC) detector test_radiation cfg/coco.data cfg/yolov3.cfg data/yolov3.weights \
-			$(RADIATIONDIR)/data/networks_img_list/caltech.pedestrians.10.txt \
+	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3.cfg ../../../data/darknet/yolov3.weights \
+			../../../data/networks_img_list/caltech.pedestrians.100.txt \
 			-generate 1 -gold ./test.csv
 
 test:
-	./$(EXEC) detector test_radiation cfg/coco.data cfg/yolov3.cfg data/yolov3.weights \
-			$(RADIATIONDIR)/data/networks_img_list/caltech.pedestrians.10.txt \
-			-generate 0 -gold ./test.csv -iterations 200
+	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3.cfg ../../../data/darknet/yolov3.weights \
+			../../../data/networks_img_list/caltech.pedestrians.100.txt \
+			-generate 0 -gold ./test.csv -iterations 20

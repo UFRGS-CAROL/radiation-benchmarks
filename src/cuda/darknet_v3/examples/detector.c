@@ -753,12 +753,12 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			int curr_err = run(gold, dets, nboxes, img, l.classes);
 			double end = what_time_is_it_now();
 
-			if ((iteration * img) % PRINT_INTERVAL == 0) {
+//			if ((iteration * img) % PRINT_INTERVAL == 0) {
 				printf(
 						"Iteration %d img %d, %d objects predicted in %f seconds. %d errors, coparisson took %lfs\n",
 						iteration, img, nboxes, what_time_is_it_now() - time,
 						curr_err, end - start);
-			}
+//			}
 
 			if (last_errors && curr_err) {
 				printf(
