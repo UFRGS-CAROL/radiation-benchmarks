@@ -18,10 +18,6 @@
 #include <tuple>
 #include <unordered_map>
 
-// I choose the values based on wikipedia
-// articles, for half and float
-//THRESHOLD_ERROR 1e^-floor(max num of decimal digits - 1)
-// For double the max is 10
 
 #if REAL_TYPE == HALF
 #define THRESHOLD_ERROR 1e-2
@@ -29,11 +25,11 @@
 
 #elif REAL_TYPE == FLOAT
 #define THRESHOLD_ERROR 1e-3
-#define STORE_PRECISION 6
+#define STORE_PRECISION 7
 
 #elif REAL_TYPE == DOUBLE
-#define THRESHOLD_ERROR 1e-9
-#define STORE_PRECISION 12
+#define THRESHOLD_ERROR 1e-5
+#define STORE_PRECISION 9
 
 
 #endif
