@@ -18,8 +18,25 @@
 #include <tuple>
 #include <unordered_map>
 
-#define THRESHOLD_ERROR 1e-10
-#define STORE_PRECISION 12
+// I choose the values based on wikipedia
+// articles, for half and float
+//THRESHOLD_ERROR 1e^-floor(max num of decimal digits - 1)
+// For double the max is 10
+
+#if REAL_TYPE == HALF
+#define THRESHOLD_ERROR 1e-2
+#define STORE_PRECISION 2
+
+#elif REAL_TYPE == FLOAT
+#define THRESHOLD_ERROR 1e-6
+#define STORE_PRECISION 6
+
+#elif REAL_TYPE == DOUBLE
+#define THRESHOLD_ERROR 1e-9
+#define STORE_PRECISION 9
+
+
+#endif
 
 #define LAYER_GOLD "/var/radiation-benchmarks/data/"
 
