@@ -6,7 +6,7 @@ DEBUG?=0
 REAL_TYPE?=float
 LOGS?=0
 
-RADIATIONDIR=/home/ffsantos/fernando_rad_dir/radiation-benchmarks/
+RADIATIONDIR=/home/carol/radiation-benchmarks/
 
 ARCH= -gencode arch=compute_60,code=sm_60 \
       -gencode arch=compute_61,code=sm_61 \
