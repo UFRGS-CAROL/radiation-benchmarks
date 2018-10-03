@@ -24,7 +24,7 @@ detection_gold_t* create_detection_gold(int argc, char **argv, real_t thresh, re
 
 void destroy_detection_gold(detection_gold_t *m);
 
-int run(detection_gold_t *m, detection* dets, int nboxes, int img_index, int classes);
+int run(detection_gold_t *m, detection* dets, int nboxes, int img_index, int classes, int img_w, int img_h);
 
 void start_iteration_wrapper(detection_gold_t *m);
 void end_iteration_wrapper(detection_gold_t *m);
@@ -32,6 +32,8 @@ void end_iteration_wrapper(detection_gold_t *m);
 int get_iterations(detection_gold_t *m);
 
 int get_img_num(detection_gold_t *m);
+
+unsigned char get_use_tensor_cores(detection_gold_t *m);
 
 #ifdef __cplusplus
 }

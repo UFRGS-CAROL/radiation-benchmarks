@@ -18,7 +18,6 @@
 #include <tuple>
 #include <unordered_map>
 
-
 #if REAL_TYPE == HALF
 #define THRESHOLD_ERROR 1e-2
 #define STORE_PRECISION 4
@@ -31,14 +30,9 @@
 #define THRESHOLD_ERROR 1e-5
 #define STORE_PRECISION 9
 
-
 #endif
 
-#define LAYER_GOLD "/var/radiation-benchmarks/data/"
-
-#define PR_THRESHOLD 0.5
-#define CONSIDERING_DETECTION 0.2
-
+#define THRESHOLD_ERROR_INTEGER 1
 #define MAX_ERROR_COUNT 500 * 2
 
 /**
@@ -73,7 +67,7 @@ struct Detection {
 	Detection& operator=(const Detection& other) // copy assignment
 			{
 		if (this != &other) { // self-assignment check expected
-			this->prob = std::vector < real_t > (other.prob);
+			this->prob = std::vector<real_t>(other.prob);
 			this->bbox = other.bbox;
 			this->nboxes = other.nboxes;
 			this->objectness = other.objectness;
@@ -106,8 +100,10 @@ struct DetectionGold {
 	int plist_size;
 	std::string img_list_path, config_file, cfg_data, model, weights;
 	std::vector<std::string> gold_img_names;
-	int iterations, tensor_core_mode, stream_mr;
+	int iterations, stream_mr;
+	unsigned char tensor_core_mode;
 	int total_errors;
+	bool normalized_coordinates;
 
 	//gold atribute
 	GoldHash gold_hash_var;
@@ -120,7 +116,7 @@ struct DetectionGold {
 
 	virtual ~DetectionGold();
 
-	int run(detection* dets, int nboxes, int img_index, int classes);
+	int run(detection* dets, int nboxes, int img_index, int classes, int img_w, int img_h);
 
 	void start_iteration();
 	void end_iteration();
@@ -131,21 +127,15 @@ struct DetectionGold {
 
 	void gen(detection* dets, int nboxes, int img_index,
 			std::ofstream& gold_file, int classes);
-	int cmp(detection* dets, int nboxes, int img_index, int classes);
+	int cmp(detection* dets, int nboxes, int img_index, int classes, int img_w, int img_h);
 
-	//log functions
-//	void start_log(std::string gold, int save_layer, int abft, int iterations,
-//			std::string app, unsigned char use_tensor_core_mode);
-//
-//	void end_iteration_app();
-//
-//	void start_iteration_app();
-//
-//	void update_timestamp_app();
-//
-//	void log_error_info(std::string error_detail);
-//
-//	void update_error_count(long error_count);
+	std::ostringstream generate_gold_line(int bb, detection det, const box& b,
+			detection* dets);
+
+	int compare_line(real_t g_objectness, real_t f_objectness, int g_sort_class,
+			int f_sort_class, const box& g_box, const box& f_box,
+			const std::string& img, int nb, int classes, const Detection& g_det,
+			detection f_det, int img_w, int img_h);
 };
 
 #endif /* DETECTIONGOLD_H_ */

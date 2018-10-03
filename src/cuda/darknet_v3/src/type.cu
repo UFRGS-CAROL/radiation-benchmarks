@@ -5,13 +5,35 @@
  *      Author: fernando
  */
 
-extern "C" {
 #include "type.h"
-}
-
 #include "cuda_fp16.h"
 #include "cuda.h"
 #include <assert.h>
+
+
+
+/**
+ * Read a file for all precisions
+ */
+int fread_float_to_real_t(real_t* dst, size_t siz, size_t times, FILE* fp) {
+	float* temp = (float*) calloc(times, sizeof(float));
+	if (temp == NULL) {
+		return -1;
+	}
+	size_t fread_result = fread(temp, sizeof(float), times, fp);
+	if (fread_result != times) {
+		free(temp);
+		return -1;
+	}
+
+	for (size_t i = 0; i < times; i++) {
+		//TODO: make ready for half
+		dst[i] = real_t(temp[i]);
+	}
+	free(temp);
+	return fread_result;
+
+}
 
 #if REAL_TYPE == HALF
 
@@ -81,72 +103,11 @@ __global__ void cuda_f16_to_f32(real_t_fp16 *X, size_t N, real_t *Y) {
 //	output_f32[idx] = __half2float(input_f16[idx]);
 //}
 
-void inline convert_and_push_3_arrays(real_t *d_a, real_t *d_b, real_t *d_c,
-		real_t_fp16 *a, int siz_a, real_t_fp16 *b, int siz_b, real_t_fp16 *c, int siz_c) {
 
-	check_error(cudaMalloc(&a, sizeof(real_t_fp16) * siz_a));
 
-	check_error(cudaMalloc(&b, sizeof(real_t_fp16) * siz_b));
-
-	check_error(cudaMalloc(&c, sizeof(real_t_fp16) * siz_c));
-
-	//old division
-	//siz_b / BLOCK + 1, BLOCK
-//	cuda_f32_to_f16<<<siz_b / BLOCK + 1, BLOCK>>>(d_a, siz_a, a);
-//	check_error(cudaPeekAtLastError());
-//
-//	cuda_f32_to_f16<<<siz_b / BLOCK + 1, BLOCK>>>(d_b, siz_b, b);
-//	check_error(cudaPeekAtLastError());
-//
-//	cuda_f32_to_f16<<<siz_b / BLOCK + 1, BLOCK>>>(d_c, siz_c, c);
-//	check_error(cudaPeekAtLastError());
-
-	cuda_f32_to_f16<<<cuda_gridsize(siz_a), BLOCK>>>(d_a, siz_a, a);
-	check_error(cudaPeekAtLastError());
-
-	cuda_f32_to_f16<<<cuda_gridsize(siz_b), BLOCK>>>(d_b, siz_b, b);
-	check_error(cudaPeekAtLastError());
-
-	cuda_f32_to_f16<<<cuda_gridsize(siz_c), BLOCK>>>(d_c, siz_c, c);
-	check_error(cudaPeekAtLastError());
-
-}
-
-void inline pop_and_convert_3_arrays(real_t *d_a, real_t *d_b, real_t *d_c,
-		real_t_fp16 *a, int siz_a, real_t_fp16 *b, int siz_b, real_t_fp16 *c, int siz_c) {
-
-//	cuda_f16_to_f32<<<siz_b / BLOCK + 1, BLOCK>>>(a, siz_a, d_a);
-//	check_error(cudaPeekAtLastError());
-//
-//	cuda_f16_to_f32<<<siz_b / BLOCK + 1, BLOCK>>>(b, siz_b, d_b);
-//	check_error(cudaPeekAtLastError());
-//
-//	cuda_f16_to_f32<<<siz_b / BLOCK + 1, BLOCK>>>(c, siz_c, d_c);
-//	check_error(cudaPeekAtLastError());
-
-	cuda_f16_to_f32<<<cuda_gridsize(siz_a), BLOCK>>>(a, siz_a, d_a);
-	check_error(cudaPeekAtLastError());
-
-	cuda_f16_to_f32<<<cuda_gridsize(siz_b), BLOCK>>>(b, siz_b, d_b);
-	check_error(cudaPeekAtLastError());
-
-	cuda_f16_to_f32<<<cuda_gridsize(siz_c), BLOCK>>>(c, siz_c, d_c);
-	check_error(cudaPeekAtLastError());
-
-	//free the three half arrays
-	check_error(cudaFree(a));
-
-	check_error(cudaFree(b));
-
-	check_error(cudaFree(c));
-
-}
 //	run_cuda_gemm_half(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
-void run_cuda_gemm_half(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
+void run_cuda_gemm_half(cublasHandle_t handle, int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc) {
-	cublasHandle_t handle;
-	cublasCreate(&handle);
-
 	real_t_fp16 *a = nullptr;
 	real_t_fp16 *b = nullptr;
 	real_t_fp16 *c = nullptr;
@@ -190,33 +151,11 @@ void run_cuda_gemm_half(int TA, int TB, int M, int N, int K, real_t ALPHA, real_
 	check_error(cudaFree(c));
 
 	check_error(status);
-	cublasDestroy(handle);
 }
 
 #endif
 
-/**
- * Read a file for all precisions
- */
-int fread_float_to_real_t(real_t* dst, size_t siz, size_t times, FILE* fp) {
-	float* temp = (float*) calloc(times, sizeof(float));
-	if (temp == NULL) {
-		return -1;
-	}
-	size_t fread_result = fread(temp, sizeof(float), times, fp);
-	if (fread_result != times) {
-		free(temp);
-		return -1;
-	}
 
-	for (size_t i = 0; i < times; i++) {
-		//TODO: make ready for half
-		dst[i] = real_t(temp[i]);
-	}
-	free(temp);
-	return fread_result;
-
-}
 
 //
 //#ifdef __NVCC__
