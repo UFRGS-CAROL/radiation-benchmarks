@@ -78,26 +78,31 @@
 #define DEFAULT_INPUT_SIZE 8192
 
 //=========== DEFINE TESTED TYPE
-#if defined(test_precision_double)
-#define GENERATOR_MAXABSVALUE 4.1e+16
-#define GENERATOR_MINABSVALUE 0
-const char test_precision_description[] = "double";
-typedef double tested_type;
-typedef double tested_type_host;
-#elif defined(test_precision_single)
-#define GENERATOR_MAXABSVALUE 4.1e+2
-#define GENERATOR_MINABSVALUE 0
-const char test_precision_description[] = "single";
-typedef float tested_type;
-typedef float tested_type_host;
-#elif defined(test_precision_half)
+
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
 const char test_precision_description[] = "half";
 typedef half tested_type;
 typedef half_float::half tested_type_host;
-#else 
-#error TEST TYPE NOT DEFINED OR INCORRECT. USE TYPE=<double|single|half>.
+
+#if defined(test_precision_double)
+	typedef double tested_type_c;
+//
+//	#define GENERATOR_MAXABSVALUE 4.1e+16
+//	#define GENERATOR_MINABSVALUE 0
+//	const char test_precision_description[] = "double";
+//	typedef double tested_type;
+//	typedef double tested_type_host;
+#elif defined(test_precision_single)
+	typedef float tested_type_c;
+//
+//	#define GENERATOR_MAXABSVALUE 4.1e+2
+//	#define GENERATOR_MINABSVALUE 0
+//	const char test_precision_description[] = "single";
+//	typedef float tested_type_host;
+
+#else defined(test_precision_half)
+	typedef half tested_type_c;
 #endif
 
 //====================== benchmark+setup configuration
@@ -787,32 +792,39 @@ __host__ void init_host_matrices(float *a, float *b, float *c) {
 	}
 }
 
-__global__ void init_device_matrices(const float *A_h, const float *B_h, const float *C_h, half *A0, half *A1,, half *A2, half *B0,
-		half *B1, half *B2, tested_type *C0, tested_type *C1, tested_type *C2 float *D0, float *D1, float *D2)
-{
-	for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < M_GLOBAL * K_GLOBAL; i += gridDim.x * blockDim.x)
-	A0[i] = __float2half(A_h[i]);
-	A1[i] = __float2half(A_h[i]);
-	A2[i] = __float2half(A_h[i]);
-
-	for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < N_GLOBAL * K_GLOBAL; i += gridDim.x * blockDim.x)
-	B0[i] = __float2half(B_h[i]);
-	B1[i] = __float2half(B_h[i]);
-	B2[i] = __float2half(B_h[i]);
-	for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < M_GLOBAL * N_GLOBAL; i += gridDim.x * blockDim.x)
-	C0[i] = C_h[i];
-	C1[i] = C_h[i];
-	C2[i] = C_h[i];
-	for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < M_GLOBAL * N_GLOBAL; i += gridDim.x * blockDim.x)
-	D0[i] = 0;
-	D1[i] = 0;
-	D2[i] = 0;
-
-}
+//__global__ void init_device_matrices(const float *A_h,
+//		const float *B_h,
+//		const float *C_h,
+//		half *A0, half *A1,
+//		half *A2, half *B0,
+//		half *B1, half *B2,
+//		tested_type *C0, tested_type *C1,
+//		tested_type *C2 float *D0,
+//		float *D1, float *D2)
+//{
+//	for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < M_GLOBAL * K_GLOBAL; i += gridDim.x * blockDim.x)
+//	A0[i] = __float2half(A_h[i]);
+//	A1[i] = __float2half(A_h[i]);
+//	A2[i] = __float2half(A_h[i]);
+//
+//	for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < N_GLOBAL * K_GLOBAL; i += gridDim.x * blockDim.x)
+//	B0[i] = __float2half(B_h[i]);
+//	B1[i] = __float2half(B_h[i]);
+//	B2[i] = __float2half(B_h[i]);
+//	for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < M_GLOBAL * N_GLOBAL; i += gridDim.x * blockDim.x)
+//	C0[i] = C_h[i];
+//	C1[i] = C_h[i];
+//	C2[i] = C_h[i];
+//	for (int i = blockDim.x * blockIdx.x + threadIdx.x; i < M_GLOBAL * N_GLOBAL; i += gridDim.x * blockDim.x)
+//	D0[i] = 0;
+//	D1[i] = 0;
+//	D2[i] = 0;
+//
+//}
 
 __global__ void compute_gemm(const half *A0, const half *A1, const half *A2,
 		const half *B0, const half *B1, const half *B2, tested_type *C0,
-		tested_type *C1, tested_type *C2, float *D0, float *D1, float *D2,
+		tested_type_c *C1, tested_type_c *C2, float *D0, float *D1, float *D2,
 		float alpha, float beta) {
 	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
