@@ -192,6 +192,7 @@ int DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 		exit(-1);
 	}
 	this->app_log->update_error_count(error_count);
+	this->app_log->update_timestamp_app();
 	return error_count;
 }
 
