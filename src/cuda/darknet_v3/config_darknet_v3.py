@@ -29,7 +29,7 @@ BINARY_NAME = "darknet_v3"
 USE_TENSOR_CORES = [0]#, 1]
 # 0 - "none",  1 - "gemm", 2 - "smart_pooling", 3 - "l1", 4 - "l2", 5 - "trained_weights"}
 ABFT = [0]  # , 2]
-REAL_TYPES = ["double", "single", "half"]
+REAL_TYPES = ["single", "half"]
 WEIGHTS = "yolov3.weights"
 CFG = "yolov3.cfg"
 
