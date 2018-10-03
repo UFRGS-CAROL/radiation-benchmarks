@@ -71,7 +71,7 @@ def config(board, debug):
                 generate = ["make clean GPU=1 LOGS=1"]
                 execute = []
                 bin_final_name = benchmark_bin + "_" + fp_precision
-                generate.append("make -j4 GPU=1 REAL_TYPE=" + fp_precision)
+                generate.append("make -j4 LOGS=1 GPU=1 REAL_TYPE=" + fp_precision)
                 generate.append("mv ./" + bin_final_name + "  " + bin_path + "/")
 
                 gold = data_path + '/' + BINARY_NAME + '_tensor_cores_mode_' + str(tc) + '_fp_precision_' + str(
