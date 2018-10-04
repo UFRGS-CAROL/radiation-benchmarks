@@ -2,8 +2,13 @@ GPU?=1
 DEBUG?=0
 #for radiation setup
 LOGS?=0
+DEBUG_ON_TITAN?=1
 
-ARCH= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+
+ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
+ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
+ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
+ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
 # This is what I use, uncomment if you know your arch and want to specify
 # ARCH=  -gencode arch=compute_52,code=compute_52
@@ -18,14 +23,14 @@ NVCC=/usr/local/cuda/bin/nvcc
 OPTS=-Ofast
 LDFLAGS= -lm -pthread -lstdc++ 
 COMMON= 
-CFLAGS=-Wall -Wfatal-errors 
+CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas
 
 
 INCLUDE=-I/usr/local/cuda/include
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
-NVCCFLAGS=-G -DDEBUG
+NVCCFLAGS+=-G -DDEBUG
 endif
 
 CFLAGS+=$(OPTS)
@@ -39,7 +44,7 @@ CFLAGS+= -DGPU
 LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
 endif
 
-OBJ=main.o GEMMWMMA.o
+OBJ= main.o 
 
 ifeq ($(SAFE_MALLOC), 1)
 CFLAGS+= -DSAFE_MALLOC
@@ -48,6 +53,10 @@ endif
 ifeq ($(LOGS), 1)
 INCLUDE+=-I../../include/
 LDFLAGS+= -L../../include/ -lLogHelper -DLOGS=1
+endif
+
+ifeq ($(DEBUG_ON_TITAN), 1)
+CFLAGS+= -DDEBUG_ON_TITAN
 endif
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
@@ -59,7 +68,7 @@ RAD_DIR=/home/carol/radiation-benchmarks
 all: obj $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(COMMON) $(CFLAGS) $^ $(INCLUDE) -o $@  $(LDFLAGS)  
+	$(CXX) $(COMMON) $(CFLAGS) $^ $(INCLUDE) -o $@  $(LDFLAGS)  
 
 #$(OBJDIR)%.o: %.c $(DEPS)
 #	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@  $(HELPFUL) $(LOGHELPER_LIB) $(LOGHELPER_INC)
