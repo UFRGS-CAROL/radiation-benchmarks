@@ -70,13 +70,20 @@ cudnnHandle_t cudnn_handle()
 }
 #endif
 
-cublasHandle_t blas_handle() {
+cublasHandle_t blas_handle(unsigned char use_tensor_cores) {
 	static int init[16] = { 0 };
 	static cublasHandle_t handle[16];
 	int i = cuda_get_device();
 	if (!init[i]) {
 		cublasCreate(&handle[i]);
 		init[i] = 1;
+
+		if (use_tensor_cores == 0) {
+			cublasSetMathMode(handle[i], CUBLAS_DEFAULT_MATH);
+		} else if (use_tensor_cores == 1) {
+			cublasSetMathMode(handle[i], CUBLAS_TENSOR_OP_MATH);
+		}
+
 	}
 	return handle[i];
 }

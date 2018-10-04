@@ -34,13 +34,13 @@ void destroy_detection_gold(detection_gold_t *m) {
 }
 
 int run(detection_gold_t *m, detection* dets, int nboxes, int img_index,
-		int classes) {
+		int classes, int img_w, int img_h) {
 	DetectionGold *obj;
 	if (m == NULL)
 		return 0;
 
 	obj = static_cast<DetectionGold *>(m->obj);
-	return obj->run(dets, nboxes, img_index, classes);
+	return obj->run(dets, nboxes, img_index, classes, img_w, img_h);
 }
 
 void start_iteration_wrapper(detection_gold_t *m) {
@@ -79,5 +79,15 @@ int get_img_num(detection_gold_t *m) {
 
 	obj = static_cast<DetectionGold *>(m->obj);
 	int it = obj->plist_size;
+	return it;
+}
+
+unsigned char get_use_tensor_cores(detection_gold_t *m){
+	DetectionGold *obj;
+	if (m == NULL)
+		return 0;
+
+	obj = static_cast<DetectionGold *>(m->obj);
+	unsigned char it = obj->tensor_core_mode;
 	return it;
 }

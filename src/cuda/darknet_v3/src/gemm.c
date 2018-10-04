@@ -148,22 +148,20 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 #ifdef GPU
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
-		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc) {
+		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc,
+		unsigned char use_tensor_cores) {
+	cublasHandle_t handle = blas_handle(use_tensor_cores);
 
 #if REAL_TYPE == HALF
 	//run_cuda_gemm_half(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 //	int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc)
-	run_cuda_gemm_half(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
+	run_cuda_gemm_half(handle, TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
 #elif REAL_TYPE == FLOAT
-	cublasHandle_t handle = blas_handle();
-
 	cudaError_t status = (cudaError_t) cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
 			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
 			A_gpu, lda, &BETA, C_gpu, ldc);
 	check_error(status);
 #elif REAL_TYPE == DOUBLE
-	cublasHandle_t handle = blas_handle();
-
 	cudaError_t status = (cudaError_t) cublasDgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
 			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
 			A_gpu, lda, &BETA, C_gpu, ldc);
@@ -195,7 +193,7 @@ void time_gpu_random_matrix(int TA, int TB, int m, int k, int n) {
 	int i;
 	clock_t start = clock(), end;
 	for (i = 0; i < 32; ++i) {
-		gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c, n);
+		gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c, n, 0);
 	}
 	end = clock();
 	printf("Matrix Multiplication %dx%d * %dx%d, TA=%d, TB=%d: %lf s\n", m, k,
@@ -222,7 +220,7 @@ void time_gpu(int TA, int TB, int m, int k, int n) {
 	int i;
 	clock_t start = clock(), end;
 	for (i = 0; i < iter; ++i) {
-		gemm_gpu(TA, TB, m, n, k, 1, a_cl, lda, b_cl, ldb, 1, c_cl, n);
+		gemm_gpu(TA, TB, m, n, k, 1, a_cl, lda, b_cl, ldb, 1, c_cl, n, 0);
 		cudaDeviceSynchronize();
 	}
 	double flop = ((double) m) * n * (2. * k + 2.) * iter;
@@ -261,7 +259,7 @@ void test_gpu_accuracy(int TA, int TB, int m, int k, int n) {
 	memset(c_gpu, 0, m * n * sizeof(real_t));
 	int i;
 	//pm(m,k,b);
-	gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c_gpu, n);
+	gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c_gpu, n, 0);
 	//printf("GPU\n");
 	//pm(m, n, c_gpu);
 

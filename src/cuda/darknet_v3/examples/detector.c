@@ -712,7 +712,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	 */
 	detection_gold_t *gold = create_detection_gold(argc, argv, thresh,
 			hier_thresh, filename, cfgfile, datacfg, "detector", weightfile);
-
+	net->use_tensor_cores = get_use_tensor_cores(gold);
 	//--------------------------
 
 	int iteration, img;
@@ -750,7 +750,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 
 			//Save or compare
 			double start = what_time_is_it_now();
-			int curr_err = run(gold, dets, nboxes, img, l.classes);
+			int curr_err = run(gold, dets, nboxes, img, l.classes, im.w, im.h);
 			double end = what_time_is_it_now();
 
 //			if ((iteration * img) % PRINT_INTERVAL == 0) {

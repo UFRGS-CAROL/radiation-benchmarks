@@ -29,7 +29,7 @@ BINARY_NAME = "darknet_v3"
 USE_TENSOR_CORES = [0]#, 1]
 # 0 - "none",  1 - "gemm", 2 - "smart_pooling", 3 - "l1", 4 - "l2", 5 - "trained_weights"}
 ABFT = [0]  # , 2]
-REAL_TYPES = ["double", "single", "half"]
+REAL_TYPES = ["single", "half"]
 WEIGHTS = "yolov3.weights"
 CFG = "yolov3.cfg"
 
@@ -71,7 +71,7 @@ def config(board, debug):
                 generate = ["make clean GPU=1 LOGS=1"]
                 execute = []
                 bin_final_name = benchmark_bin + "_" + fp_precision
-                generate.append("make -j4 GPU=1 REAL_TYPE=" + fp_precision)
+                generate.append("make -j4 LOGS=1 GPU=1 REAL_TYPE=" + fp_precision)
                 generate.append("mv ./" + bin_final_name + "  " + bin_path + "/")
 
                 gold = data_path + '/' + BINARY_NAME + '_tensor_cores_mode_' + str(tc) + '_fp_precision_' + str(
