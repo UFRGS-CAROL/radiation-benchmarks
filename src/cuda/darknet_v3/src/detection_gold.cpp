@@ -285,10 +285,10 @@ std::ostringstream DetectionGold::generate_gold_line(int bb, detection det,
 
 	//TODO: To be implemented
 	if (this->normalized_coordinates) {
-		real_t left = std::max((g_box.x - g_box.w / 2.) * img_w, 0.0);
-		real_t right = std::min((g_box.x + g_box.w / 2.) * img_w, img_w - 1.0);
-		real_t top = std::max((g_box.y - g_box.h / 2.) * img_h, 0.0);
-		real_t bot = std::min((g_box.y + g_box.h / 2.) * img_h, img_h - 1.0);
+		//real_t left = std::max((g_box.x - g_box.w / 2.) * img_w, 0.0);
+		//real_t right = std::min((g_box.x + g_box.w / 2.) * img_w, img_w - 1.0);
+		//real_t top = std::max((g_box.y - g_box.h / 2.) * img_h, 0.0);
+		//real_t bot = std::min((g_box.y + g_box.h / 2.) * img_h, img_h - 1.0);
 	}
 
 	box_str << dets[bb].objectness << ";" << det.sort_class << ";" << b.x << ";"
