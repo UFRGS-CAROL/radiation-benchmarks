@@ -1,48 +1,95 @@
-CC=g++
-NVCC=/usr/local/cuda/bin/nvcc
-PRECISION?=single # fazer uma precision para C
-					
-LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
+GPU?=1
+DEBUG?=0
+#for radiation setup
+LOGS?=0
 
-ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+#ARCH=  -gencode arch=compute_30,code=[sm_30,compute_30] 
+#ARCH+= -gencode arch=compute_35,code=[sm_35,compute_35]
+#ARCH= -gencode arch=compute_50,code=[sm_50,compute_50] 
+#ARCH+= -gencode arch=compute_52,code=[sm_52,compute_52] 
+#ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60] 
+#ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
+ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70]
 
-NVCC_FLAGS= $(ARCH)
+# This is what I use, uncomment if you know your arch and want to specify
+# ARCH=  -gencode arch=compute_52,code=compute_52
 
-NVIDIA_INC=/usr/local/cuda/include/ -I/usr/local/cuda/samples/common/inc
-NVIDIA_LIB=/usr/local/cuda/lib64/
-LOGHELPER_INC=../../include/
-LOGHELPER_LIB=../../include/
+VPATH=./src/
+TARGET=gemm_wmma
+OBJDIR=./obj/
 
-SOURCES=./cuda_tensorcore_gemm.cu
-EXEC_RADIX=./cuda_tensorcore_gemm_
-EXEC=$(EXEC_RADIX)$(LOWERCASED_PRECISION)
+CC=gcc
+CXX=g++
+NVCC=/usr/local/cuda/bin/nvcc 
+OPTS=-Ofast
+LDFLAGS= -lm -pthread -lstdc++ 
+COMMON= 
+CFLAGS=-Wall -Wfatal-errors 
 
-DEF_SIZE=1024
 
-DEF_A_INPUT=./mxm_$(LOWERCASED_PRECISION)_A_8192.matrix
-DEF_B_INPUT=./mxm_$(LOWERCASED_PRECISION)_B_8192.matrix
-DEF_C_INPUT=./mxm_$(LOWERCASED_PRECISION)_C_8192.matrix
-DEF_GOLD=./mxm_$(LOWERCASED_PRECISION)_GOLD_$(DEF_TEST_SIZE).matrix
+INCLUDE=-I/usr/local/cuda/include
 
-MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_C_INPUT) $(DEF_GOLD) ./mxm*.matrix
+ifeq ($(DEBUG), 1) 
+OPTS=-O0 -g -DDEBUG
+NVCCFLAGS=-G -DDEBUG
+endif
 
-all: $(EXEC)
+CFLAGS+=$(OPTS)
+STDVERSION=--std=c++11
 
-check-benchtype:
-	echo "syntax: make PRECISION=<double|half|single>"
-	test $(PRECISION)
+COMMON+= $(STDVERSION)
 
-$(EXEC): check-benchtype $(RUN_SOURCES)
-	$(NVCC) -I$(NVIDIA_INC) -I$(LOGHELPER_INC) -L$(NVIDIA_LIB) -L$(LOGHELPER_LIB) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
+ifeq ($(GPU), 1) 
+COMMON+= -DGPU -I/usr/local/cuda/include/
+CFLAGS+= -DGPU
+LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
+endif
 
+OBJ=main.o GEMMWMMA.o
+
+ifeq ($(SAFE_MALLOC), 1)
+CFLAGS+= -DSAFE_MALLOC
+endif
+
+ifeq ($(LOGS), 1)
+INCLUDE+=-I../../include/
+LDFLAGS+= -L../../include/ -lLogHelper -DLOGS=1
+endif
+
+OBJS = $(addprefix $(OBJDIR), $(OBJ))
+DEPS = $(wildcard ./*.cuh) Makefile
+
+RAD_DIR=/home/carol/radiation-benchmarks
+
+
+all: obj $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) $(COMMON) $(CFLAGS) $^ $(INCLUDE) -o $@  $(LDFLAGS)  
+
+#$(OBJDIR)%.o: %.c $(DEPS)
+#	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@  $(HELPFUL) $(LOGHELPER_LIB) $(LOGHELPER_INC)
+
+$(OBJDIR)%.o: %.cpp $(DEPS)
+	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@ $(INCLUDE) 
+
+$(OBJDIR)%.o: %.cu $(DEPS)
+	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" $(INCLUDE) -c $< -o $@ 
+
+
+obj:
+	mkdir -p obj
+
+
+.PHONY: clean
 clean:
-	rm -rf $(EXEC_RADIX)* $(MATRIX_NAMES)
+	rm -rf $(OBJS) $(TARGET)
 
-generate: $(EXEC)
-	$(EXEC) -generate -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -input_c=$(DEF_C_INPUT) -gold=$(DEF_GOLD) 
 
-test: $(EXEC) generate
-	$(EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -input_c=$(DEF_C_INPUT) -gold=$(DEF_GOLD) -iterations=1000 -verbose 
+
+
+generate:
+	#TODO:
+	
+test:
+	#TODO:
