@@ -725,7 +725,7 @@ __device__ tested_type inline read_voter(tested_type *v1, tested_type *v2, teste
 	return in1;
 }
 #elif defined(test_precision_half)
-__device__ half inline read_voter(half *v1, half *v2, half *v3,
+__device__ fragment inline read_voter(half *v1, half *v2, half *v3,
 		int offset) {
 
 	register half in1 = v1[offset];
@@ -1047,25 +1047,25 @@ __global__ void simple_wmma_gemm(half *a0, half *a1, half *a2, half *b0,
 	int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
 
 	// Declare the fragments
-	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half,
+	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, tested_type,
 			wmma::row_major> a0_frag;
-	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half,
+	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, tested_type,
 			wmma::row_major> a1_frag;
-	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half,
+	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, tested_type,
 			wmma::row_major> a2_frag;
-	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half,
+	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, tested_type,
 			wmma::col_major> b0_frag;
-	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half,
+	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, tested_type,
 			wmma::col_major> b1_frag;
-	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half,
+	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, tested_type,
 			wmma::col_major> b2_frag;
 
 	//
-	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
+	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, tested_type_c> acc_frag;
 
-	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c0_frag;
-	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c1_frag;
-	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c2_frag;
+	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, tested_type_c> c0_frag;
+	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, tested_type_c> c1_frag;
+	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, tested_type_c> c2_frag;
 
 	wmma::fill_fragment(acc_frag, 0.0f);
 
@@ -1088,10 +1088,12 @@ __global__ void simple_wmma_gemm(half *a0, half *a1, half *a2, half *b0,
 			wmma::load_matrix_sync(b1_frag, b1 + bCol + bRow * ldb, ldb);
 			wmma::load_matrix_sync(b2_frag, b2 + bCol + bRow * ldb, ldb);
 			// Perform the matrix multiplication
-			wmma::mma_sync(acc_frag,
-					(read_voter(a0_frag, a1_frag, a2_frag, (aCol + aRow * lda))),
-					(read_voter(b0_frag, b1_frag, b2_frag, (bCol + bRow * ldb))),
-					acc_frag);
+			//~ wmma::mma_sync(acc_frag,
+					//~ (read_voter(a0_frag, a1_frag, a2_frag, (aCol + aRow * lda))),
+					//~ (read_voter(b0_frag, b1_frag, b2_frag, (bCol + bRow * ldb))),
+					//~ acc_frag);
+					
+			wmma::mma_sync(acc_frag, a0_frag, b0_frag ,acc_frag);		
 
 		}
 	}
@@ -1101,20 +1103,20 @@ __global__ void simple_wmma_gemm(half *a0, half *a1, half *a2, half *b0,
 	int cRow = warpM * WMMA_M;
 
 	if (cRow < m_ld && cCol < n_ld) {
-		wmma::load_matrix_sync(c0_frag, c + cCol + cRow * ldc, ldc,
+		wmma::load_matrix_sync(c0_frag, c0 + cCol + cRow * ldc, ldc,
 				wmma::mem_row_major);
-		wmma::load_matrix_sync(c1_frag, c + cCol + cRow * ldc, ldc,
+		wmma::load_matrix_sync(c1_frag, c1 + cCol + cRow * ldc, ldc,
 				wmma::mem_row_major);
-		wmma::load_matrix_sync(c2_frag, c + cCol + cRow * ldc, ldc,
+		wmma::load_matrix_sync(c2_frag, c2 + cCol + cRow * ldc, ldc,
 				wmma::mem_row_major);
 
-		for (int i = 0; i < c_frag.num_elements; i++) {
-			read_voter(c0_frag, c1_frag, c2_frag, (cCol + cRow * ldc)).x[i] =
-					alpha * acc_frag.x[i]
-							+ beta
-									* read_voter(c0_frag, c1_frag, c2_frag,
-											(cCol + cRow * ldc)).x[i];
-		}
+		//~ for (int i = 0; i < c0_frag.num_elements; i++) {
+			//~ read_voter(c0_frag, c1_frag, c2_frag, (cCol + cRow * ldc)).x[i] =
+					//~ alpha * acc_frag.x[i]
+							//~ + beta
+									//~ * read_voter(c0_frag, c1_frag, c2_frag,
+											//~ (cCol + cRow * ldc)).x[i];
+		//~ }
 
 		// Store the output
 		//wmma::store_matrix_sync(d + cCol + cRow * ldc, c_frag, ldc, wmma::mem_row_major);
@@ -1146,7 +1148,7 @@ __host__ void matMultiplyOnHost(float *A, float *B, float *C, float alpha,
 	}
 }
 
-_global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1,
+__global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_A1,
 		tested_type *d_A2, tested_type *d_B0, tested_type *d_B1,
 		tested_type *d_B2, tested_type *d_C0, tested_type *d_C1,
 		tested_type *d_C2, tested_type *d_D0, tested_type *d_D1,
@@ -1782,35 +1784,35 @@ int main(int argc, char **argv) {
 	tested_type *d_D2 = NULL;
 
 	checkCudaErrors(
-			cudaMalloc((void**) &A0, sizeof(half) * M_GLOBAL * K_GLOBAL));
+			cudaMalloc((void**) &d_A0, sizeof(half) * M_GLOBAL * K_GLOBAL));
 	checkCudaErrors(
-			cudaMalloc((void**) &A1, sizeof(half) * M_GLOBAL * K_GLOBAL));
+			cudaMalloc((void**) &d_A1, sizeof(half) * M_GLOBAL * K_GLOBAL));
 	checkCudaErrors(
-			cudaMalloc((void**) &A2, sizeof(half) * M_GLOBAL * K_GLOBAL));
+			cudaMalloc((void**) &d_A2, sizeof(half) * M_GLOBAL * K_GLOBAL));
 
 	checkCudaErrors(
-			cudaMalloc((void**) &B0, sizeof(half) * N_GLOBAL * K_GLOBAL));
+			cudaMalloc((void**) &d_B0, sizeof(half) * N_GLOBAL * K_GLOBAL));
 	checkCudaErrors(
-			cudaMalloc((void**) &B1, sizeof(half) * N_GLOBAL * K_GLOBAL));
+			cudaMalloc((void**) &d_B1, sizeof(half) * N_GLOBAL * K_GLOBAL));
 	checkCudaErrors(
-			cudaMalloc((void**) &B2, sizeof(half) * N_GLOBAL * K_GLOBAL));
+			cudaMalloc((void**) &d_B2, sizeof(half) * N_GLOBAL * K_GLOBAL));
 
 	checkCudaErrors(
-			cudaMalloc((void**) &C0,
+			cudaMalloc((void**) &d_C0,
 					sizeof(tested_type) * M_GLOBAL * N_GLOBAL));
 	checkCudaErrors(
-			cudaMalloc((void**) &C1,
+			cudaMalloc((void**) &d_C1,
 					sizeof(tested_type) * M_GLOBAL * N_GLOBAL));
 	checkCudaErrors(
-			cudaMalloc((void**) &C2,
+			cudaMalloc((void**) &d_C2,
 					sizeof(tested_type) * M_GLOBAL * N_GLOBAL));
 
 	checkCudaErrors(
-			cudaMalloc((void**) &D0, sizeof(float) * M_GLOBAL * N_GLOBAL));
+			cudaMalloc((void**) &d_D0, sizeof(float) * M_GLOBAL * N_GLOBAL));
 	checkCudaErrors(
-			cudaMalloc((void**) &D1, sizeof(float) * M_GLOBAL * N_GLOBAL));
+			cudaMalloc((void**) &d_D1, sizeof(float) * M_GLOBAL * N_GLOBAL));
 	checkCudaErrors(
-			cudaMalloc((void**) &D2, sizeof(float) * M_GLOBAL * N_GLOBAL));
+			cudaMalloc((void**) &d_D2, sizeof(float) * M_GLOBAL * N_GLOBAL));
 
 	// assert(((unsigned long long)A) % 128 == 0);
 	// assert(((unsigned long long)B) % 128 == 0);
@@ -1823,10 +1825,10 @@ int main(int argc, char **argv) {
 
 	printf("Preparing data for GPU...\n");
 
-	checkKernelErrors(
-			(init_device_matrices<<<deviceProp.multiProcessorCount,
-					THREADS_PER_BLOCK>>>(A_h, B_h, C_h, A0, A1, A2, B0, B1, B2,
-					C0, C1, C2, D0, D1, D2)));
+	//~ checkKernelErrors(
+			//~ (init_device_matrices<<<deviceProp.multiProcessorCount,
+					//~ THREADS_PER_BLOCK>>>(A_h, B_h, C_h, d_A0, d_A1, d_A2, d_B0, d_B1, d_B2,
+					//~ d_C0, d_C1, d_C2, d_D0, d_D1, d_D2)));
 
 	checkCudaErrors(cudaDeviceSynchronize());
 
@@ -1857,14 +1859,14 @@ int main(int argc, char **argv) {
 	if (deviceProp.sharedMemPerMultiprocessor >= SHMEM_SZ) {
 		printf("Computing... using high performance kernel compute_gemm \n");
 
-		checkCudaErrors(
-				cudaFuncSetAttribute(compute_gemm,
-						cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-		checkKernelErrors(
-				(compute_gemm<<<deviceProp.multiProcessorCount,
-						THREADS_PER_BLOCK, SHMEM_SZ>>>(d_A0, d_A1, d_A2, d_B0,
-						d_B1, d_B2, d_C0, d_C1, d_C2, d_D0, d_D1, d_D2, alpha,
-						beta)));
+		//~ checkCudaErrors(
+				//~ cudaFuncSetAttribute(compute_gemm,
+						//~ cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+		//~ checkKernelErrors(
+				//~ (compute_gemm<<<deviceProp.multiProcessorCount,
+						//~ THREADS_PER_BLOCK, SHMEM_SZ>>>(d_A0, d_A1, d_A2, d_B0,
+						//~ d_B1, d_B2, d_C0, d_C1, d_C2, d_D0, d_D1, d_D2, alpha,
+						//~ beta)));
 
 		checkFrameworkErrors(cudaPeekAtLastError());
 
@@ -1892,7 +1894,9 @@ int main(int argc, char **argv) {
 
 		printf("Computing... using simple_wmma_gemm kernel\n");
 		simple_wmma_gemm<<<gridDim, blockDim>>>(d_A0, d_A1, d_A2, d_B0, d_B1,
-				d_B2, d_C0, d_C1, d_C2, d_D0, d_D1, d_D2, alpha, beta);
+				d_B2, d_C0, d_C1, d_C2, d_D0, d_D1, d_D2, M_GLOBAL, N_GLOBAL, K_GLOBAL, alpha, beta);
+				
+		
 
 		checkFrameworkErrors(cudaPeekAtLastError());
 
@@ -1939,3 +1943,4 @@ int main(int argc, char **argv) {
 
 		return 0;
 	}
+}
