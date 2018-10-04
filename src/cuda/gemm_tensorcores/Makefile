@@ -3,20 +3,7 @@ DEBUG?=0
 #for radiation setup
 LOGS?=0
 
-<<<<<<< HEAD
-#ARCH=  -gencode arch=compute_30,code=[sm_30,compute_30] 
-#ARCH+= -gencode arch=compute_35,code=[sm_35,compute_35]
-#ARCH= -gencode arch=compute_50,code=[sm_50,compute_50] 
-#ARCH+= -gencode arch=compute_52,code=[sm_52,compute_52] 
-#ARCH+= -gencode arch=compute_60,code=[sm_60,compute_60] 
-#ARCH+= -gencode arch=compute_62,code=[sm_62,compute_62]
-ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70]
-=======
-#ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-#ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-#ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
->>>>>>> b0ee6e6a551de728805da4fcf38cd0d88a39835a
 
 # This is what I use, uncomment if you know your arch and want to specify
 # ARCH=  -gencode arch=compute_52,code=compute_52

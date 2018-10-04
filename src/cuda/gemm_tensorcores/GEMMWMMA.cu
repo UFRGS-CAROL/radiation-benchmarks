@@ -87,13 +87,11 @@ __global__ void wmma_matrix_mul(half_t *a, half_t *b, real_t *c, size_t M,
 	}
 }
 
-namespace radiation {
-
 
 template<class host_half_t, class half_t, class real_t>
-void GEMMWMMA::mul() {
+void GEMMWMMA<host_half_t, half_t, real_t>::mul() {
 //		//No double multiplication is allowed
-	if (std::is_same<T, double>::value) {
+	if (std::is_same<half_t, double>::value || std::is_same<half_t, float>::value ) {
 		error(
 				"Double multiplication is not allowed with tensor cores, use GEMM base class instead");
 	}
@@ -127,7 +125,7 @@ this	->byte_size_c = this->rows_c * this->cols_c * sizeof(float);
 }
 
 template<class host_half_t, class half_t, class real_t>
-GEMMWMMA::GEMMWMMA(const host_half_t* host_ptr_a, const host_half_t* host_ptr_b,
+GEMMWMMA<host_half_t, half_t, real_t>::GEMMWMMA(const host_half_t* host_ptr_a, const host_half_t* host_ptr_b,
 		const host_half_t* host_ptr_c, size_t rows_a, size_t cols_a,
 		size_t cols_b) {
 
@@ -161,7 +159,7 @@ GEMMWMMA::GEMMWMMA(const host_half_t* host_ptr_a, const host_half_t* host_ptr_b,
 
 		this->debug("push memory to device");
 		//set 0 to C matrix
-		this->push_arrays(host_ptr_a, host_ptr_b);
+		this->push_arrays(host_ptr_a, host_ptr_b, host_ptr_c);
 	} else {
 		error("columns or rows equal to zero, or less than zero");
 	}
@@ -172,7 +170,7 @@ GEMMWMMA::GEMMWMMA(const host_half_t* host_ptr_a, const host_half_t* host_ptr_b,
  * PUSH arrays to gpu and set 0x0 to C matrix
  */
 template<class host_half_t, class half_t, class real_t>
-void GEMMWMMA::push_arrays(const host_half_t* host_ptr_a,
+void GEMMWMMA<host_half_t, half_t, real_t>::push_arrays(const host_half_t* host_ptr_a,
 		const host_half_t* host_ptr_b, const host_half_t* host_ptr_c) {
 
 	this->debug("memset array D");
@@ -208,7 +206,7 @@ void GEMMWMMA::push_arrays(const host_half_t* host_ptr_a,
  */
 template<class host_half_t, class half_t, class real_t>
 
-void GEMMWMMA::pull_array(host_half_t* host_ptr_d) {
+void GEMMWMMA<host_half_t, half_t, real_t>::pull_array(host_half_t* host_ptr_d) {
 
 	this->debug("memcpy array C to host");
 	// PULL C
@@ -222,7 +220,7 @@ void GEMMWMMA::pull_array(host_half_t* host_ptr_d) {
  */
 template<class host_half_t, class half_t, class real_t>
 
-virtual GEMMWMMA::~GEMMWMMA() {
+GEMMWMMA<host_half_t, half_t, real_t>::~GEMMWMMA() {
 
 	this->debug("destructor");
 	if (this->device_ptr_a != nullptr)
@@ -238,4 +236,3 @@ virtual GEMMWMMA::~GEMMWMMA() {
 		check_framework_errors(cudaFree(this->device_ptr_c));
 }
 
-}//END NAMESPACE RADIATION

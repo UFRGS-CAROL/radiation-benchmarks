@@ -10,13 +10,13 @@
 
 #include <type_traits>
 
+#include <cstdio>
+
 
 // The only dimensions currently supported by WMMA
 #define WMMA_M 16
 #define WMMA_N 16
 #define WMMA_K 16
-
-namespace radiation {
 
 
 //ERROR functions definitions
@@ -75,6 +75,5 @@ public:
 
 };
 
-} /* namespace radiation */
 
 #endif /* GEMMWMMA_H_ */
