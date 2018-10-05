@@ -388,7 +388,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 //GOLD Matrix
 	std::vector<real_t> host_matrix_gold(
 			log_obj.size_matrices * log_obj.size_matrices);
-	GEMMWMMA<host_half, half, real_t> mult_enviroment(host_matrix_a,
+	GEMMWMMA<host_half, half, real_t> mult_enviroment(host_matrix_a.data(),
 			host_matrix_b.data(), host_matrix_c.data(), log_obj.size_matrices,
 			log_obj.size_matrices, log_obj.size_matrices);
 
