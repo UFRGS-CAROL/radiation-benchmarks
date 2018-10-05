@@ -370,15 +370,6 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),
 				host_matrix_d2.data());
 
-
-			// print 100's first elements 
-		for (size_t i = 0; i < 100; i++) {
-			for (size_t j = 0; j < 100; j++) {
-				std::cout << host_matrix_d0[i * 100 + j]<<" || " << host_matrix_d1[i * 100 + j] <<" || " << host_matrix_d2[i * 100 + j] << std::endl;
-			}
-		}
-
-
 		//TODO check this
 		if (log_obj.generate) {
 			tries++;
@@ -392,11 +383,6 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				throw std::runtime_error(
 						"More than 5 tries on matrix generate\n");
 			std::cout << "Iteration: " << it << std::endl;
-
-			for (int i = 0; i < 4; i++) {
-				std::cout << "gold: " << host_gold[i] << std::endl;
-			}
-
 		} else {
 			double start = log_obj.mysecond();
 
