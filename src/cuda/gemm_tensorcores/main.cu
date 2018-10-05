@@ -51,12 +51,7 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 			}
 		}
 
-		// print 100's first elements 
-		for (size_t i = 0; i < 100; i++) {
-			for (size_t j = 0; j < 100; j++) {
-				std::cout << a_host_vector[i * 100 + j]<<" || " << b_host_vector[i * 100 + j] <<" || " << c_host_vector[i * 100 + j] << std::endl;
-			}
-		}
+	
 
 		host_half zero(0.0);
 		host_half nan_ = host_half(half_float::nanh("0"));
@@ -402,22 +397,13 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		mult_enviroment.pull_array(host_matrix_d1.data(), host_matrix_d2.data(),
 				host_matrix_d3.data());
 
-		// for (size_t i = 0; i < 4; i++) {
 
-		// 	std::cout << " d1= " << host_matrix_d1[i] << std::endl;
-
-		// }
-
-		// for (size_t i = 0; i < 4; i++) {
-
-		// 	std::cout << " d2= " << host_matrix_d2[i] << std::endl;
-
-		// }
-
-		// for (size_t i = 0; i < 4; i++) {
-
-		// 	std::cout << " d3= " << host_matrix_d3[i] << std::endl;
-		// }
+			// print 100's first elements 
+		for (size_t i = 0; i < 100; i++) {
+			for (size_t j = 0; j < 100; j++) {
+				std::cout << host_matrix_d1[i * 100 + j]<<" || " << host_matrix_d2[i * 100 + j] <<" || " << host_matrix_d3[i * 100 + j] << std::endl;
+			}
+		}
 
 
 		//TODO check this
