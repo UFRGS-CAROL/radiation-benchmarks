@@ -121,7 +121,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 		time = what_time_is_it_now();
 		real_t loss = 0;
 #ifdef GPU
-		if(ngpus == 1) {
+		if (ngpus == 1) {
 			loss = train_network(net, train);
 		} else {
 			loss = train_networks(nets, ngpus, train, 4);
@@ -139,7 +139,8 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 				what_time_is_it_now() - time, i * imgs);
 		if (i % 100 == 0) {
 #ifdef GPU
-			if(ngpus != 1) sync_nets(nets, ngpus, 0);
+			if (ngpus != 1)
+				sync_nets(nets, ngpus, 0);
 #endif
 			char buff[256];
 			sprintf(buff, "%s/%s.backup", backup_directory, base);
@@ -147,7 +148,8 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 		}
 		if (i % 10000 == 0 || (i < 1000 && i % 100 == 0)) {
 #ifdef GPU
-			if(ngpus != 1) sync_nets(nets, ngpus, 0);
+			if (ngpus != 1)
+				sync_nets(nets, ngpus, 0);
 #endif
 			char buff[256];
 			sprintf(buff, "%s/%s_%d.weights", backup_directory, base, i);
@@ -156,7 +158,8 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 		free_data(train);
 	}
 #ifdef GPU
-	if(ngpus != 1) sync_nets(nets, ngpus, 0);
+	if (ngpus != 1)
+		sync_nets(nets, ngpus, 0);
 #endif
 	char buff[256];
 	sprintf(buff, "%s/%s_final.weights", backup_directory, base);
@@ -695,40 +698,51 @@ void free_all_images(image *imgs, image* sized_images, int list_size) {
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, real_t thresh, real_t hier_thresh, char *outfile,
 		int fullscreen, int argc, char** argv) {
-
-	printf(
-			"CFG FILE: %s\nDATA CFG: %s\nWeightfile: %s\nImage data path file: %s\nThresh: %f\n",
-			cfgfile, datacfg, weightfile, filename, thresh);
-
-	network *net = load_network(cfgfile, weightfile, 0);
-	set_batch_network(net, 1);
-	srand(2222222);
-	double time;
-	real_t nms = .45;
-
-	char **img_names = get_labels(filename);
 	/**
 	 * DetectionGold declaration
 	 */
 	detection_gold_t *gold = create_detection_gold(argc, argv, thresh,
 			hier_thresh, filename, cfgfile, datacfg, "detector", weightfile);
-	net->use_tensor_cores = get_use_tensor_cores(gold);
+	int smx_redundancy = get_smx_redundancy(gold);
+	printf("AQUI %d\n\n", smx_redundancy);
 	//--------------------------
+	network** net_array = malloc(sizeof(network*) * smx_redundancy);
+
+	printf(
+			"CFG FILE: %s\nDATA CFG: %s\nWeightfile: %s\nImage data path file: %s\nThresh: %f\n",
+			cfgfile, datacfg, weightfile, filename, thresh);
+
+	int inet;
+	for (inet = 0; inet < smx_redundancy; inet++) {
+		network *net = load_network(cfgfile, weightfile, 0);
+		set_batch_network(net, 1);
+		//Set tensor cores on the net
+		net->use_tensor_cores = get_use_tensor_cores(gold);
+		net->smx_redundancy = smx_redundancy;
+		net_array[inet] = net;
+	}
+	srand(2222222);
+	double time;
+	real_t nms = .45;
+
+	char **img_names = get_labels(filename);
 
 	int iteration, img;
 	int max_it = get_iterations(gold);
 	int plist_size = get_img_num(gold);
+
 	//load images
 	image* images = (image*) malloc(sizeof(image) * plist_size);
 	image* sized_images = (image*) malloc(sizeof(image) * plist_size);
-	load_all_images(images, sized_images, img_names, plist_size, net->w,
-			net->h);
+	load_all_images(images, sized_images, img_names, plist_size, net_array[0]->w,
+			net_array[0]->h);
 
 	//start the process
 	for (iteration = 0; iteration < max_it; iteration++) {
 		int last_errors = 0;
 		for (img = 0; img < plist_size; img++) {
-			layer l = net->layers[net->n - 1];
+
+			layer l = net_array[0]->layers[net_array[0]->n - 1];
 
 			image im = images[img];
 			image sized = sized_images[img];
@@ -738,26 +752,32 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 
 			//Run one iteration
 			start_iteration_wrapper(gold);
-			network_predict(net, X);
+//			network_predict(net, X);
+			network_predict_smx_red(net_array, X);
 			end_iteration_wrapper(gold);
 
 			int nboxes = 0;
-			detection *dets = get_network_boxes(net, im.w, im.h, thresh,
+			printf("aui antes do dets\n");
+			detection *dets = get_network_boxes(net_array[0], im.w, im.h, thresh,
 					hier_thresh, 0, 1, &nboxes);
 
+			printf("aui antes do nms\n");
 			if (nms)
 				do_nms_sort(dets, nboxes, l.classes, nms);
 
+
+			printf("aui antes do run\n");
 			//Save or compare
 			double start = what_time_is_it_now();
-			int curr_err = run(gold, dets, nboxes, img, l.classes, im.w, im.h);
+			int curr_err = 0;
+			//run(gold, dets, nboxes, img, l.classes, im.w, im.h);
 			double end = what_time_is_it_now();
 
 //			if ((iteration * img) % PRINT_INTERVAL == 0) {
-				printf(
-						"Iteration %d img %d, %d objects predicted in %f seconds. %d errors, coparisson took %lfs\n",
-						iteration, img, nboxes, what_time_is_it_now() - time,
-						curr_err, end - start);
+			printf(
+					"Iteration %d img %d, %d objects predicted in %f seconds. %d errors, coparisson took %lfs\n",
+					iteration, img, nboxes, what_time_is_it_now() - time,
+					curr_err, end - start);
 //			}
 
 			if (last_errors && curr_err) {
@@ -768,6 +788,12 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			last_errors = curr_err;
 		}
 	}
+
+	for (inet = 0; inet < smx_redundancy; inet++) {
+		free_network(net_array[inet]);
+	}
+	free(net_array);
+
 
 	destroy_detection_gold(gold);
 	free_all_images(images, sized_images, 10);

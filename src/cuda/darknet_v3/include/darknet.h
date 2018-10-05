@@ -506,6 +506,8 @@ typedef struct network {
 	real_t *output_gpu;
 
 	unsigned char use_tensor_cores;
+
+	int smx_redundancy;
 #endif
 
 } network;
@@ -667,6 +669,7 @@ real_t cuda_mag_array(real_t *x_gpu, size_t n);
 void cuda_push_array(real_t *x_gpu, real_t *x, size_t n);
 
 void forward_network_gpu(network *net);
+void forward_network_gpu_parallel(network **netp_array);
 void backward_network_gpu(network *net);
 void update_network_gpu(network *net);
 
@@ -778,7 +781,11 @@ void draw_detections(image im, detection *dets, int num, real_t thresh,
 matrix network_predict_data(network *net, data test);
 image **load_alphabet();
 image get_network_image(network *net);
+
 real_t *network_predict(network *net, real_t *input);
+
+//TODO: Fernando
+void network_predict_smx_red(network **net, real_t *input);
 
 int network_width(network *net);
 int network_height(network *net);
