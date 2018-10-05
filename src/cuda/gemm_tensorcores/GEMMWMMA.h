@@ -105,12 +105,12 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 	d1[ty * N + tx] = acc;
 	d2[ty * N + tx] = acc;
 
-	for (int i = 0; i < N; i++)
-		printf("d0 %f\n", d0[i]);
-	for (int i = 0; i < N; i++)
-		printf("d1 %f\n", d1[i]);
-	for (int i = 0; i < N; i++)
-		printf("d2 %f\n", d2[i]);
+	// for (int i = 0; i < N; i++)
+	// 	printf("d0 %f\n", d0[i]);
+	// for (int i = 0; i < N; i++)
+	// 	printf("d1 %f\n", d1[i]);
+	// for (int i = 0; i < N; i++)
+	// 	printf("d2 %f\n", d2[i]);
 
 }
 
