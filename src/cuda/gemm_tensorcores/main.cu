@@ -35,8 +35,8 @@ template<class real_t> void generate_matrices_files(std::string a_path,
 		GENERATOR_MAXABSVALUE);
 		std::cout << "entrou if generate1" << std::endl;
 
-		for (size_t i = 0; i < matrix_size; i++) {
-			for (size_t j = 0; j < matrix_size; j++) {
+		for (int i = 0; i < matrix_size; i++) {
+			for (int j = 0; j < matrix_size; j++) {
 				a_host_vector[i * matrix_size + j] = host_half(dis(gen));
 				b_host_vector[i * matrix_size + j] = host_half(dis(gen));
 				c_host_vector[i * matrix_size + j] = real_t(dis(gen));
@@ -180,7 +180,7 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 				char info_detail[200];
 				snprintf(info_detail, 150,
 						"m: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e",
-						(int) floor(i / matrix_size), i % matrix_size,
+						int(floor(i / matrix_size)), int(i % matrix_size),
 						(double) valOutput0, (double) valOutput1,
 						(double) valOutput2);
 				if (verbose && (memory_errors < 10))
@@ -207,7 +207,7 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 						char info_detail[200];
 						snprintf(info_detail, 150,
 								"t: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e, e: %1.20e",
-								(int) floor(i / matrix_size), i % matrix_size,
+								int(floor(i / matrix_size)), int(i % matrix_size),
 								(double) valOutput0, (double) valOutput1,
 								(double) valOutput2, (double) valGold);
 						if (verbose && (memory_errors < 10))
@@ -240,8 +240,8 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 					{
 						char error_detail[200];
 						snprintf(error_detail, 150,
-								"p: [%d, %d], r: %1.20e, e: %1.20e",
-								(int) floor(i / matrix_size), i % matrix_size,
+								"p: [%lu, %lu], r: %1.20e, e: %1.20e",
+								int(floor(i / matrix_size)), int(i % matrix_size),
 								(double) valOutput, (double) valGold);
 
 						if (verbose && (host_errors < 10))
