@@ -58,7 +58,6 @@ endif
 ifeq ($(DEBUG_ON_TITAN), 1)
 CFLAGS+= -DDEBUG_ON_TITAN
 endif
-
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard ./*.cuh) Makefile
 
@@ -86,7 +85,7 @@ obj:
 
 .PHONY: clean
 clean:
-	rm -rf $(OBJS) $(TARGET)
+	rm -rf $(OBJS) $(TARGET) ./*.matrix
 
 
 
