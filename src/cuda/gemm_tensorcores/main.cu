@@ -220,13 +220,6 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 		if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
 #pragma omp critical
 			{
-//				char info_detail[200];
-//				snprintf(info_detail, 150,
-//						"m: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e",
-//						int(floor(i / log.size_matrices)),
-//						int(i % log.size_matrices), (double) valOutput0,
-//						(double) valOutput1, (double) valOutput2);
-//
 				std::stringstream info_detail("");
 				info_detail << "m: [" << int(floor(i / log.size_matrices))
 						<< ", " << i % log.size_matrices << "], r0: "
@@ -253,13 +246,6 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 					checkFlag = false;
 #pragma omp critical
 					{
-//						char info_detail[200];
-//						snprintf(info_detail, 150,
-//								"t: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e, e: %1.20e",
-//								int(floor(i / log.size_matrices)),
-//								int(i % log.size_matrices), (double) valOutput0,
-//								(double) valOutput1, (double) valOutput2,
-//								(double) valGold);
 						std::stringstream info_detail("");
 						info_detail << "t: ["
 								<< int(floor(i / log.size_matrices)) << ", "
@@ -287,17 +273,12 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 			}
 		}
 
-		std::cout << "val out: " << valOutput << std::endl;
 		if (valGold != valOutput) {
 			if (checkFlag) {
 #pragma omp critical
 				{
-//				char error_detail[200];
-//				snprintf(error_detail, 150,
-//						"p: [%lu, %lu], r: %1.20e, e: %1.20e",
-//						int(floor(i / log.size_matrices)),
-//						int(i % log.size_matrices), (double) valOutput,
-//						(double) valGold);
+					std::cout << "val out: " << valOutput << std::endl;
+
 					std::stringstream error_detail("");
 					error_detail << "p: [" << int(floor(i / log.size_matrices))
 							<< ", " << i % log.size_matrices << "], r: "
