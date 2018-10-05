@@ -102,6 +102,16 @@ void write_gold_to_file(std::string gold_path, std::vector<real_t>& gold) {
 	}
 }
 
+template<class real_t> bool is_output_ok(std::vector<real_t>& d0,
+		std::vector<real_t>& d1, std::vector<real_t>& d2,
+		std::vector<real_t>& correct_vector) {
+	//TODO: Pedro tem que fazer a verificacao
+	// se o output que vai ser salvo no gold esta ok
+	// tem que fazer uma votacao melhor de tres
+	// e salvar no correct_vector
+	return true;
+}
+
 template<class real_t> void retrieve_matrices(std::string a_path,
 		std::string b_path, std::string c_path, std::string gold_path,
 		half_vector& a_host_vector, half_vector& b_host_vector,
@@ -147,11 +157,10 @@ template<class real_t> void retrieve_matrices(std::string a_path,
 }
 
 template<class real_t>
-bool compare_output_matrices(long long host_is_memory_bad, bool generate,
+std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 		std::vector<real_t>& gold, std::vector<real_t>& c0,
-		std::vector<real_t>& c1, std::vector<real_t>& c2,
-		std::vector<real_t>& voted_output, Log *log, int matrix_size,
-		bool check, bool verbose) {
+		std::vector<real_t>& c1, std::vector<real_t>& c2, Log *log,
+		int matrix_size, bool verbose) {
 
 	int host_errors = 0;
 	int memory_errors = 0;
@@ -162,8 +171,7 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 		if (verbose)
 			std::cout << info_detail << std::endl;
 
-		if (!generate)
-			log->log_error(info_detail);
+		log->log_error(info_detail);
 		memory_errors++;
 	}
 
@@ -187,8 +195,7 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 				if (verbose && (memory_errors < 10))
 					std::cout << info_detail << std::endl;
 
-				if (!generate)
-					log->log_info(info_detail);
+				log->log_info(info_detail);
 				memory_errors++;
 			}
 			if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2)
@@ -215,8 +222,7 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 						if (verbose && (memory_errors < 10))
 							std::cout << info_detail << std::endl;
 
-						if (!generate)
-							log->log_info(std::string(info_detail));
+						log->log_info(std::string(info_detail));
 
 						memory_errors++;
 					}
@@ -232,27 +238,22 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 				valOutput = valOutput0;
 			}
 		}
-		if (voted_output.size() == gold.size())
-			voted_output[i] = valOutput;
-		// if ((fabs((real_t)(valOutput-valGold)/valGold) > 1e-10)||(fabs((real_t)(valOutput-valGold)/valGold) > 1e-10)) {
-		if (check) {
-			if (valGold != valOutput) {
-				if (checkFlag) {
-#pragma omp critical
-					{
-						char error_detail[200];
-						snprintf(error_detail, 150,
-								"p: [%lu, %lu], r: %1.20e, e: %1.20e",
-								int(floor(i / matrix_size)),
-								int(i % matrix_size), (double) valOutput,
-								(double) valGold);
 
-						if (verbose && (host_errors < 10))
-							std::cout << error_detail << std::endl;
-						if (!generate)
-							log->log_error(error_detail);
-						host_errors++;
-					}
+		if (valGold != valOutput) {
+			if (checkFlag) {
+#pragma omp critical
+				{
+					char error_detail[200];
+					snprintf(error_detail, 150,
+							"p: [%lu, %lu], r: %1.20e, e: %1.20e",
+							int(floor(i / matrix_size)), int(i % matrix_size),
+							(double) valOutput, (double) valGold);
+
+					if (verbose && (host_errors < 10))
+						std::cout << error_detail << std::endl;
+
+					log->log_error(error_detail);
+					host_errors++;
 				}
 			}
 		}
@@ -260,17 +261,16 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 
 	// printf("numErrors:%d", host_errors);
 
-	if (!generate) {
-		log->update_info_count(memory_errors);
-		log->update_error_count(host_errors);
-	}
+	log->update_info_count(memory_errors);
+	log->update_error_count(host_errors);
 
 	if (memory_errors != 0)
 		std::cout << "M";
 	if (host_errors != 0)
 		std::cout << "#";
 
-	return (host_errors == 0) && (host_is_memory_bad == 0);
+	std::pair<int, int> res(memory_errors, host_errors);
+	return res;
 }
 
 void usage(char **argv) {
@@ -359,20 +359,34 @@ int main(int argc, char** argv) {
 			mult_enviroment.pull_array(host_matrix_d1.data(),
 					host_matrix_d2.data(), host_matrix_d3.data());
 
-			//TODO: FIX FOR GENERATE AND TEST
-			bool has_error = compare_output_matrices(mult_enviroment.get_memory_errors(),
-					generate, host_gold, host_matrix_d1, host_matrix_d2,
-					host_matrix_d3, host_matrix_d3, log_obj, size_matrices,
-					false, verbose);
+			std::pair<int, int> errors = compare_output_matrices(
+					mult_enviroment.get_memory_errors(), host_gold,
+					host_matrix_d1, host_matrix_d2, host_matrix_d3, log_obj,
+					size_matrices, verbose);
 
-			if (!has_error) {
+			//TODO check this
+			if (generate) {
 				tries++;
-				it--;
+
+				bool has_errors = is_output_ok(host_matrix_d1, host_matrix_d2,
+						host_matrix_d3, host_gold);
+				if (has_errors)
+					it--;
+				if (tries > 5)
+					throw std::runtime_error(
+							"More than 5 tries on matrix generate\n");
+
 			}
 
-			if (generate && tries > 5)
-				throw std::runtime_error(
-						"More than 5 tries on matrix generate\n");
+			//If errors != 0 reload matrices to gpu
+			if (errors.first != 0 || errors.second != 0) {
+				mult_enviroment.push_arrays(host_matrix_a.data(),
+						host_matrix_b.data(), host_matrix_c.data());
+			}
+
+			std::cout << "Iteration: " << it << " memory errors "
+					<< errors.first << " radiation errors " << errors.second
+					<< std::endl;
 
 		}
 
