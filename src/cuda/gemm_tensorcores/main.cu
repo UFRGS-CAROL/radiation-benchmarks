@@ -282,8 +282,8 @@ void usage(char **argv) {
 template<class real_t>
 void call_mxm(size_t size_matrices, bool generate, std::string a_input_path,
 		std::string b_input_path, std::string c_input_path,
-		std::string gold_inout_path, half_vector host_matrix_a,
-		half_vector host_matrix_b, int iterations, bool verbose, Log* log_obj) {
+		std::string gold_inout_path, half_vector& host_matrix_a,
+		half_vector& host_matrix_b, int iterations, bool verbose, Log* log_obj) {
 	// C matrix
 	std::vector<real_t> host_matrix_c(size_matrices * size_matrices);
 	std::vector<real_t> host_gold(size_matrices * size_matrices);
