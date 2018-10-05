@@ -42,7 +42,6 @@ void __error(const char* error, int line, const char* file) {
 	exit (EXIT_FAILURE);
 }
 
-
 template<class real_t>
 __device__ real_t inline read_voter(real_t *v1, real_t *v2, real_t *v3,
 		int offset, unsigned long long int* is_memory_bad) {
@@ -72,7 +71,6 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 		real_t *d1, real_t *d2, size_t M, size_t N, size_t K, float alpha,
 		float beta, unsigned long long int* is_memory_bad) {
 
-
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;
@@ -100,14 +98,19 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 		acc = real_t(tmp) + acc;
 
 	}
-//    printf("%.2f",__half2float(acc));
-	acc += read_voter<real_t>(c0, c1, c2, ty * N + tx, is_memory_bad);
-	 printf("%f",acc);
-	d0[ty * N + tx] = acc;
 
+	acc += read_voter<real_t>(c0, c1, c2, ty * N + tx, is_memory_bad);
+
+	d0[ty * N + tx] = acc;
 	d1[ty * N + tx] = acc;
 	d2[ty * N + tx] = acc;
 
+	for (int i = 0; i < N; i++)
+		printf("d0 %f\n", d0[i]);
+	for (int i = 0; i < N; i++)
+		printf("d1 %f\n", d1[i]);
+	for (int i = 0; i < N; i++)
+		printf("d2 %f\n", d2[i]);
 
 }
 
@@ -174,26 +177,24 @@ public:
 
 		this->debug("matrix multiplication");
 
-
 		wmma_matrix_mul<half_t, real_t> <<<gridDim, blockDim>>>(
 				this->device_ptr_a0, this->device_ptr_a1, this->device_ptr_a2,
 				this->device_ptr_b0, this->device_ptr_b1, this->device_ptr_b2,
 				this->device_ptr_c0, this->device_ptr_c1, this->device_ptr_c2,
 				this->device_ptr_d0, this->device_ptr_d1, this->device_ptr_d2,
-				this->rows_a, this->cols_b, this->rows_b, 1.0, 1.0, this->device_is_memory_bad);
-
+				this->rows_a, this->cols_b, this->rows_b, 1.0, 1.0,
+				this->device_is_memory_bad);
 
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
-
 
 		this->byte_size_c = this->rows_c * this->cols_c * sizeof(float);
 
 	}
 
-	GEMMWMMA(const std::vector<host_half_t> &host_ptr_a0, const host_half_t* host_ptr_b0,
-			const real_t* host_ptr_c0, size_t rows_a, size_t cols_a,
-			size_t cols_b) {
+	GEMMWMMA(const std::vector<host_half_t> &host_ptr_a0,
+			const host_half_t* host_ptr_b0, const real_t* host_ptr_c0,
+			size_t rows_a, size_t cols_a, size_t cols_b) {
 
 		this->rows_a = rows_a;
 		this->cols_a = cols_a;
@@ -416,7 +417,8 @@ public:
 		size_t host_is_memory_bad;
 		check_framework_errors(
 				cudaMemcpy(&host_is_memory_bad, this->device_is_memory_bad,
-						sizeof(unsigned long long int), cudaMemcpyDeviceToHost));
+						sizeof(unsigned long long int),
+						cudaMemcpyDeviceToHost));
 		return host_is_memory_bad;
 	}
 

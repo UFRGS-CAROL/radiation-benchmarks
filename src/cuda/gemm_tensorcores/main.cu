@@ -34,7 +34,6 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 		std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 		std::uniform_real_distribution<double> dis(-GENERATOR_MAXABSVALUE,
 		GENERATOR_MAXABSVALUE);
-//		std::cout << "entrou if generate1" << std::endl;
 
 //		for (size_t i = 0; i < log.size_matrices; i++) {
 //			for (size_t j = 0; j < log.size_matrices; j++) {
@@ -44,28 +43,17 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 //			}
 //		}
 
-
-		for (size_t i = 0; i < 16; i++) {
-			for (size_t j = 0; j < 16; j++) {
-				a_host_vector[i * 16 + j] = (half) 2.0;
-				b_host_vector[i * 16 + j] = (half) 2.0;
-				c_host_vector[i * 16 + j] = (float) 2.0;
+		for (size_t i = 0; i < log.size_matrices; i++) {
+			for (size_t j = 0; j < log.size_matrices; j++) {
+				a_host_vector[i * log.size_matrices + j] = (half) 2.0;
+				b_host_vector[i * log.size_matrices + j] = (half) 2.0;
+				c_host_vector[i * log.size_matrices + j] = (float) 2.0;
 			}
 		}
 
-		for (size_t i = 0; i < 16; i++) {
-						for (size_t j = 0; j < 16; j++) {
-							std::cout << " Ah= " << a_host_vector[i * 16+ j]  << std::endl;
-							std::cout << " Bh= " << b_host_vector[i * 16 + j] <<  std::endl;
-							std::cout << " Ch= " << c_host_vector[i * 16+ j] <<  std::endl;
-						}
-		}
-
-//		std::cout << "entrou generate1" << std::endl;
 		host_half zero(0.0);
 		host_half nan_ = host_half(half_float::nanh("0"));
 		host_half inf_ = host_half(host_half(0x7C00));
-//		std::cout << "entrou generate2" << std::endl;
 
 		int numZeros = std::count(a_host_vector.begin(), a_host_vector.end(),
 				zero);
@@ -91,8 +79,6 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 
 		std::cout << "Number of zeros/NaNs/INFs on matrix C: " << numZeros
 				<< numNans << numInfs << std::endl;
-
-
 
 		f_a.write(reinterpret_cast<char*>(a_host_vector.data()),
 				a_host_vector.size() * sizeof(host_half));
@@ -130,11 +116,14 @@ template<class real_t> int is_output_ok(std::vector<real_t>& d0,
 
 //	<<<<<<< HEAD
 	int memory_errors = 0;
+
+
 	for (size_t i = 0; i < d0.size(); i++) {
 		real_t val_output0 = d0[i];
 		real_t val_output1 = d1[i];
 		real_t val_output2 = d2[i];
 		real_t val_output = val_output0;
+
 		if ((val_output0 != val_output1) || (val_output0 != val_output2)) {
 			memory_errors++;
 
@@ -232,6 +221,8 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 	int host_errors = 0;
 	int memory_errors = 0;
 
+	std::cout << "host_is_memory_bad: " << host_is_memory_bad << std::endl;
+
 	if (host_is_memory_bad != 0) {
 		std::string info_detail = "b: is_memory_bad: "
 				+ std::to_string(host_is_memory_bad);
@@ -250,6 +241,7 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 		register real_t valOutput1 = c1[i];
 		register real_t valOutput2 = c2[i];
 		register real_t valOutput = valOutput0;
+
 		if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
 #pragma omp critical
 			{
@@ -320,6 +312,7 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 			}
 		}
 
+		std::cout << "val out: " << valOutput << std::endl;
 		if (valGold != valOutput) {
 			if (checkFlag) {
 #pragma omp critical
@@ -375,16 +368,15 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			log_obj.size_matrices * log_obj.size_matrices);
 	std::vector<real_t> host_matrix_d3(
 			log_obj.size_matrices * log_obj.size_matrices);
-//		std::cout << "passou declaracao host" << std::endl;
+
 	if (!log_obj.generate) {
 		retrieve_matrices<real_t>(host_matrix_a, host_matrix_b, host_matrix_c,
 				host_gold, log_obj);
 	} else {
-		//			std::cout << "entrou else" << std::endl;
+
 		generate_matrices_files<real_t>(host_matrix_a, host_matrix_b,
 				host_matrix_c, log_obj);
 	}
-
 
 //GOLD Matrix
 	std::vector<real_t> host_matrix_gold(
@@ -394,6 +386,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			log_obj.size_matrices, log_obj.size_matrices);
 
 	int tries = 0;
+
 	for (int it = 0; it < log_obj.iterations; it++) {
 		log_obj.start_iteration_app();
 		mult_enviroment.mul();
@@ -402,58 +395,63 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		mult_enviroment.pull_array(host_matrix_d1.data(), host_matrix_d2.data(),
 				host_matrix_d3.data());
 
+		for (size_t i = 0; i < 4; i++) {
 
-
-		for (size_t i = 0; i < 16; i++) {
-
-			std::cout << " d1= " << host_matrix_d1[i]  << std::endl;
+			std::cout << " d1= " << host_matrix_d1[i] << std::endl;
 
 		}
 
-		for (size_t i = 0; i < 16; i++) {
+		for (size_t i = 0; i < 4; i++) {
 
-			std::cout << " d2= " << host_matrix_d2[i] <<  std::endl;
-
+			std::cout << " d2= " << host_matrix_d2[i] << std::endl;
 
 		}
 
-		for (size_t i = 0; i < 16; i++) {
+		for (size_t i = 0; i < 4; i++) {
 
-			std::cout << " d3= " << host_matrix_d3[i] <<  std::endl;
+			std::cout << " d3= " << host_matrix_d3[i] << std::endl;
 		}
 
-		for (size_t i = 0; i < 16; i++) {
-
-					std::cout << " gold host = " << host_gold[i] <<  std::endl;
-		}
-		double start = log_obj.mysecond();
-		std::pair<int, int> errors = compare_output_matrices(
-				mult_enviroment.get_memory_errors(), host_gold, host_matrix_d1,
-				host_matrix_d2, host_matrix_d3, log_obj);
-		double end = log_obj.mysecond();
-
-		std::cout << "Iteration: " << it << " memory errors " << errors.first
-				<< " radiation errors " << errors.second
-				<< ". Time spent on comparing " << end - start << "s."
-				<< std::endl;
 
 		//TODO check this
 		if (log_obj.generate) {
 			tries++;
 			int has_errors = is_output_ok(host_matrix_d1, host_matrix_d2,
 					host_matrix_d3, host_gold);
+			std::cout << "has: " << has_errors << std::endl;
 			if (has_errors != 0)
 				it--;
 
 			if (tries > 5)
 				throw std::runtime_error(
 						"More than 5 tries on matrix generate\n");
+			std::cout << "Iteration: " << it << std::endl;
+
+			for (int i = 0; i < 4; i++) {
+				std::cout << "gold: " << host_gold[i] << std::endl;
+			}
+
+		} else {
+			double start = log_obj.mysecond();
+
+			std::pair<int, int> errors = compare_output_matrices(
+					mult_enviroment.get_memory_errors(), host_gold,
+					host_matrix_d1, host_matrix_d2, host_matrix_d3, log_obj);
+			double end = log_obj.mysecond();
+
+			std::cout << "Iteration: " << it << " memory errors "
+					<< errors.first << " radiation errors " << errors.second
+					<< ". Time spent on comparing " << end - start << "s."
+					<< std::endl;
+
+			//If errors != 0 reload matrices to gpu
+			if (errors.first != 0 || errors.second != 0) {
+				mult_enviroment.push_arrays(host_matrix_a, host_matrix_b.data(),
+						host_matrix_c.data());
+			}
+
 		}
-		//If errors != 0 reload matrices to gpu
-		if (errors.first != 0 || errors.second != 0) {
-			mult_enviroment.push_arrays(host_matrix_a,
-					host_matrix_b.data(), host_matrix_c.data());
-		}
+
 	}
 	if (log_obj.generate) {
 		write_gold_to_file<real_t>(log_obj.gold_inout_path, host_gold);
