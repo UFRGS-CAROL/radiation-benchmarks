@@ -337,11 +337,11 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 	std::vector<real_t> host_gold(
 			log_obj.size_matrices * log_obj.size_matrices);
 // D Matrix
+	std::vector<real_t> host_matrix_d0(
+			log_obj.size_matrices * log_obj.size_matrices);
 	std::vector<real_t> host_matrix_d1(
 			log_obj.size_matrices * log_obj.size_matrices);
 	std::vector<real_t> host_matrix_d2(
-			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<real_t> host_matrix_d3(
 			log_obj.size_matrices * log_obj.size_matrices);
 
 	if (!log_obj.generate) {
@@ -367,14 +367,14 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		mult_enviroment.mul();
 		log_obj.end_iteration_app();
 
-		mult_enviroment.pull_array(host_matrix_d1.data(), host_matrix_d2.data(),
-				host_matrix_d3.data());
+		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),
+				host_matrix_d2.data());
 
 
 			// print 100's first elements 
 		for (size_t i = 0; i < 100; i++) {
 			for (size_t j = 0; j < 100; j++) {
-				std::cout << host_matrix_d1[i * 100 + j]<<" || " << host_matrix_d2[i * 100 + j] <<" || " << host_matrix_d3[i * 100 + j] << std::endl;
+				std::cout << host_matrix_d0[i * 100 + j]<<" || " << host_matrix_d1[i * 100 + j] <<" || " << host_matrix_d2[i * 100 + j] << std::endl;
 			}
 		}
 
@@ -382,8 +382,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		//TODO check this
 		if (log_obj.generate) {
 			tries++;
-			int has_errors = is_output_ok(host_matrix_d1, host_matrix_d2,
-					host_matrix_d3, host_gold);
+			int has_errors = is_output_ok(host_matrix_d0, host_matrix_d1,
+					host_matrix_d2, host_gold);
 			// std::cout << "has: " << has_errors << std::endl;
 			if (has_errors != 0)
 				it--;
@@ -402,7 +402,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 
 			std::pair<int, int> errors = compare_output_matrices(
 					mult_enviroment.get_memory_errors(), host_gold,
-					host_matrix_d1, host_matrix_d2, host_matrix_d3, log_obj);
+					host_matrix_d0, host_matrix_d1, host_matrix_d2, log_obj);
 			double end = log_obj.mysecond();
 
 			std::cout << "Iteration: " << it << " memory errors "
