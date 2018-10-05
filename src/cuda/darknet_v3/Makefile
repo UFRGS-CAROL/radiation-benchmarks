@@ -146,4 +146,4 @@ generate:
 test:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3.cfg ../../../data/darknet/yolov3.weights \
 			../../../data/networks_img_list/caltech.pedestrians.100.txt \
-			-generate 0 -gold ./test.csv -iterations 1 -norm_coord 0 -tensor_cores 1
+			-generate 0 -gold ./test.csv -iterations 1 -norm_coord 0 -tensor_cores 1 -smx_redundancy 2

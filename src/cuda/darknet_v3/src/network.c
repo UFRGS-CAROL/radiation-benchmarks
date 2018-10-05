@@ -31,6 +31,7 @@
 #include "shortcut_layer.h"
 #include "parser.h"
 #include "data.h"
+#include <unistd.h>
 
 load_args get_base_args(network *net) {
 	load_args args = { 0 };
@@ -493,6 +494,31 @@ real_t *network_predict(network *net, real_t *input) {
 	return out;
 }
 
+void network_predict_smx_red(network **net, real_t *input) {
+	int i;
+	int smx_red = net[0]->smx_redundancy;
+
+	network *orig_array = malloc(sizeof(network) * smx_red);
+
+	for (i = 0; i < smx_red; i++) {
+		orig_array[i] = *net[i];
+		net[i]->input = input;
+		net[i]->truth = 0;
+		net[i]->train = 0;
+		net[i]->delta = 0;
+	}
+
+	forward_network_gpu_parallel(net);
+
+	for (i = 0; i < smx_red; i++) {
+//		out[i] = net[i]->output;
+		*(net[i]) = orig_array[i];
+	}
+
+	free(orig_array);
+//	return out;
+}
+
 int num_detections(network *net, real_t thresh) {
 	int i;
 	int s = 0;
@@ -779,6 +805,38 @@ void forward_network_gpu(network *netp) {
 	}
 	pull_network_output(netp);
 	calc_network_cost(netp);
+}
+
+void* forward_network_gpu_caller(void *netp) {
+	printf("FORWARD NETWORK GPU %d\n", ((network*) netp)->smx_redundancy);
+	forward_network_gpu((network*) netp);
+	return NULL ;
+}
+
+void forward_network_gpu_parallel(network **netp_array) {
+	int mr = netp_array[0]->smx_redundancy;
+
+	pthread_t *threads = (pthread_t*) malloc(sizeof(pthread_t) * mr);
+	int i;
+	for (i = 0; i < mr; i++) {
+		if (pthread_create(&threads[i], NULL, forward_network_gpu_caller,
+				netp_array[i])) {
+			error("ERROR ON CREATING THREADs\n");
+		}
+	}
+	printf("APSSKKKKK %d\n", mr);
+	sleep(0.001);
+	for (i = 0; i < mr; i++) {
+		if (pthread_join(threads[i], NULL)) {
+			error("ERROR ON FINISHING THREADs\n");
+		}
+	}
+	printf("APSSKKKKKdddd %d\n", mr);
+
+	free(threads);
+	printf("APSSKKKKKdddd dddddddddsfasdadfasddf%d\n", mr);
+
+
 }
 
 void backward_network_gpu(network *netp) {

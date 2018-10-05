@@ -91,3 +91,13 @@ unsigned char get_use_tensor_cores(detection_gold_t *m){
 	unsigned char it = obj->tensor_core_mode;
 	return it;
 }
+
+int get_smx_redundancy(detection_gold_t *m){
+	DetectionGold *obj;
+	if (m == NULL)
+		return 0;
+
+	obj = static_cast<DetectionGold *>(m->obj);
+	int it = obj->stream_mr;
+	return it;
+}

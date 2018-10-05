@@ -60,7 +60,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 	this->iterations = find_int_arg(argc, argv, "-iterations", 1);
 	this->tensor_core_mode = find_int_arg(argc, argv, "-tensor_cores", 0);
-	this->stream_mr = find_int_arg(argc, argv, "-smx_redundancy", 0);
+	this->stream_mr = find_int_arg(argc, argv, "-smx_redundancy", 1);
 	this->thresh = thresh;
 	this->hier_thresh = hier_thresh;
 	this->total_errors = 0;
