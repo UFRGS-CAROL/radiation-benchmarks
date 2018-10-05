@@ -104,6 +104,24 @@ void write_gold_to_file(std::string gold_path, std::vector<real_t>& gold) {
 template<class real_t> bool is_output_ok(std::vector<real_t>& d0,
 		std::vector<real_t>& d1, std::vector<real_t>& d2,
 		std::vector<real_t>& correct_vector) {
+
+
+	if (d0 == d1){ 
+		correct_vector = d0.
+	}
+	else if (d1==d2){
+		correct_vector = d1;
+	}
+	else if (d2==d3){
+		correct_vector = d2;
+	}
+	else if (d1==d3){
+		correct_vector = d1;
+	}
+	else if (d1 != d2 && d2 != d3 && d1 != d3){
+		return false;
+	}
+
 	//TODO: Pedro tem que fazer a verificacao
 	// se o output que vai ser salvo no gold esta ok
 	// tem que fazer uma votacao melhor de tres
