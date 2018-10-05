@@ -34,20 +34,38 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 		std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 		std::uniform_real_distribution<double> dis(-GENERATOR_MAXABSVALUE,
 		GENERATOR_MAXABSVALUE);
-		std::cout << "entrou if generate1" << std::endl;
+//		std::cout << "entrou if generate1" << std::endl;
 
-		for (size_t i = 0; i < log.size_matrices; i++) {
-			for (size_t j = 0; j < log.size_matrices; j++) {
-				a_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
-				b_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
-				c_host_vector[i * log.size_matrices + j] = real_t(dis(gen));
+//		for (size_t i = 0; i < log.size_matrices; i++) {
+//			for (size_t j = 0; j < log.size_matrices; j++) {
+//				a_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
+//				b_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
+//				c_host_vector[i * log.size_matrices + j] = real_t(dis(gen));
+//			}
+//		}
+
+
+		for (size_t i = 0; i < 16; i++) {
+			for (size_t j = 0; j < 16; j++) {
+				a_host_vector[i * 16 + j] = (half) 2.0;
+				b_host_vector[i * 16 + j] = (half) 2.0;
+				c_host_vector[i * 16 + j] = (float) 2.0;
 			}
 		}
-		std::cout << "entrou generate1" << std::endl;
+
+		for (size_t i = 0; i < 16; i++) {
+						for (size_t j = 0; j < 16; j++) {
+							std::cout << " Ah= " << a_host_vector[i * 16+ j]  << std::endl;
+							std::cout << " Bh= " << b_host_vector[i * 16 + j] <<  std::endl;
+							std::cout << " Ch= " << c_host_vector[i * 16+ j] <<  std::endl;
+						}
+		}
+
+//		std::cout << "entrou generate1" << std::endl;
 		host_half zero(0.0);
 		host_half nan_ = host_half(half_float::nanh("0"));
 		host_half inf_ = host_half(host_half(0x7C00));
-		std::cout << "entrou generate2" << std::endl;
+//		std::cout << "entrou generate2" << std::endl;
 
 		int numZeros = std::count(a_host_vector.begin(), a_host_vector.end(),
 				zero);
@@ -59,7 +77,7 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 		std::cout << "Number of zeros/NaNs/INFs on matrix A: " << numZeros
 				<< numNans << numInfs << std::endl;
 
-		std::cout << "entrou generate3" << std::endl;
+//		std::cout << "entrou generate3" << std::endl;
 		numZeros = std::count(b_host_vector.begin(), b_host_vector.end(), zero);
 		numNans = std::count(b_host_vector.begin(), b_host_vector.end(), nan_);
 		numInfs = std::count(b_host_vector.begin(), b_host_vector.end(), inf_);
@@ -73,6 +91,8 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 
 		std::cout << "Number of zeros/NaNs/INFs on matrix C: " << numZeros
 				<< numNans << numInfs << std::endl;
+
+
 
 		f_a.write(reinterpret_cast<char*>(a_host_vector.data()),
 				a_host_vector.size() * sizeof(host_half));
@@ -364,12 +384,15 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		generate_matrices_files<real_t>(host_matrix_a, host_matrix_b,
 				host_matrix_c, log_obj);
 	}
+
+
 //GOLD Matrix
 	std::vector<real_t> host_matrix_gold(
 			log_obj.size_matrices * log_obj.size_matrices);
-	GEMMWMMA<host_half, half, real_t> mult_enviroment(host_matrix_a.data(),
+	GEMMWMMA<host_half, half, real_t> mult_enviroment(host_matrix_a,
 			host_matrix_b.data(), host_matrix_c.data(), log_obj.size_matrices,
 			log_obj.size_matrices, log_obj.size_matrices);
+
 	int tries = 0;
 	for (int it = 0; it < log_obj.iterations; it++) {
 		log_obj.start_iteration_app();
@@ -379,6 +402,30 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		mult_enviroment.pull_array(host_matrix_d1.data(), host_matrix_d2.data(),
 				host_matrix_d3.data());
 
+
+
+		for (size_t i = 0; i < 16; i++) {
+
+			std::cout << " d1= " << host_matrix_d1[i]  << std::endl;
+
+		}
+
+		for (size_t i = 0; i < 16; i++) {
+
+			std::cout << " d2= " << host_matrix_d2[i] <<  std::endl;
+
+
+		}
+
+		for (size_t i = 0; i < 16; i++) {
+
+			std::cout << " d3= " << host_matrix_d3[i] <<  std::endl;
+		}
+
+		for (size_t i = 0; i < 16; i++) {
+
+					std::cout << " gold host = " << host_gold[i] <<  std::endl;
+		}
 		double start = log_obj.mysecond();
 		std::pair<int, int> errors = compare_output_matrices(
 				mult_enviroment.get_memory_errors(), host_gold, host_matrix_d1,
@@ -404,7 +451,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		}
 		//If errors != 0 reload matrices to gpu
 		if (errors.first != 0 || errors.second != 0) {
-			mult_enviroment.push_arrays(host_matrix_a.data(),
+			mult_enviroment.push_arrays(host_matrix_a,
 					host_matrix_b.data(), host_matrix_c.data());
 		}
 	}

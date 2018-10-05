@@ -14,6 +14,7 @@
 #include <iostream>
 #include <mma.h>
 #include <cuda_fp16.h> // For half precision computation
+#include <iostream>
 
 // The only dimensions currently supported by WMMA
 #define WMMA_M 16
@@ -40,6 +41,7 @@ void __error(const char* error, int line, const char* file) {
 	printf("%s - Line: %d at %s\n", error, line, file);
 	exit (EXIT_FAILURE);
 }
+
 
 template<class real_t>
 __device__ real_t inline read_voter(real_t *v1, real_t *v2, real_t *v3,
@@ -70,22 +72,43 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 		real_t *d1, real_t *d2, size_t M, size_t N, size_t K, float alpha,
 		float beta, unsigned long long int* is_memory_bad) {
 
+
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;
-//	printf("entrou wmma mult");
+
+//
+//	printf("\n wmma a0= %f  \n", __half2float(a0[ty * N + k]));
+//	printf("\n wmma a1= %f  \n", __half2float(a1[ty * N + k]));
+//	printf("\n wmma a2= %f  \n", __half2float(a2[ty * N + k]));
+//
+//	printf("\n wmma b0= %f  \n", __half2float(b0[ty * N + k]));
+//	printf("\n wmma b1= %f  \n", __half2float(b1[ty * N + k]));
+//	printf("\n wmma b2= %f  \n", __half2float(b2[ty * N + k]));
+//
+//	printf("\n wmma c0= %f  \n", (c0[ty * N + k]));
+//	printf("\n wmma c1= %f  \n", (c1[ty * N + k]));
+//	printf("\n wmma c2= %f  \n", (c2[ty * N + k]));
+//
+//	printf("read a: %f", __half2float(read_voter<half_t>(a0, a1, a2, ty * N + k, is_memory_bad)));
+
 	register real_t acc = 0.0;
 	for (k = 0; k < N; k++) {
-		half_t tmp = read_voter(a0, a1, a2, ty * N + k, is_memory_bad)
-				* read_voter(b0, b1, b2, k * N + tx, is_memory_bad);
-		acc = real_t(tmp) + acc;
-	}
-//	printf("passou for wmma mult");
-	acc += read_voter(c0, c1, c2, ty * N + tx, is_memory_bad);
 
+		half_t tmp = read_voter<half_t>(a0, a1, a2, ty * N + k, is_memory_bad)
+				* read_voter<half_t>(b0, b1, b2, k * N + tx, is_memory_bad);
+		acc = real_t(tmp) + acc;
+
+	}
+//    printf("%.2f",__half2float(acc));
+	acc += read_voter<real_t>(c0, c1, c2, ty * N + tx, is_memory_bad);
+	 printf("%f",acc);
 	d0[ty * N + tx] = acc;
+
 	d1[ty * N + tx] = acc;
 	d2[ty * N + tx] = acc;
+
+
 }
 
 #define check_framework_errors(error) __check_framework_errors(error, __LINE__, __FILE__)
@@ -151,7 +174,7 @@ public:
 
 		this->debug("matrix multiplication");
 
-		printf("entrou funcao mul");
+
 		wmma_matrix_mul<half_t, real_t> <<<gridDim, blockDim>>>(
 				this->device_ptr_a0, this->device_ptr_a1, this->device_ptr_a2,
 				this->device_ptr_b0, this->device_ptr_b1, this->device_ptr_b2,
@@ -159,16 +182,16 @@ public:
 				this->device_ptr_d0, this->device_ptr_d1, this->device_ptr_d2,
 				this->rows_a, this->cols_b, this->rows_b, 1.0, 1.0, this->device_is_memory_bad);
 
-		printf("passou chamada wmma mult");
+
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
 
-		printf("passou sync mul");
+
 		this->byte_size_c = this->rows_c * this->cols_c * sizeof(float);
 
 	}
 
-	GEMMWMMA(const host_half_t* host_ptr_a0, const host_half_t* host_ptr_b0,
+	GEMMWMMA(const std::vector<host_half_t> &host_ptr_a0, const host_half_t* host_ptr_b0,
 			const real_t* host_ptr_c0, size_t rows_a, size_t cols_a,
 			size_t cols_b) {
 
@@ -236,6 +259,7 @@ public:
 							sizeof(unsigned long long int)));
 
 			this->debug("push memory to device");
+
 			//set 0 to C matrix
 			this->push_arrays(host_ptr_a0, host_ptr_b0, host_ptr_c0);
 		} else {
@@ -248,7 +272,7 @@ public:
 	 * PUSH arrays to gpu and set 0x0 to C matrix
 	 */
 
-	void push_arrays(const host_half_t* host_ptr_a0,
+	void push_arrays(const std::vector<host_half_t> &host_ptr_a0,
 			const host_half_t* host_ptr_b0, const real_t* host_ptr_c0) {
 
 		this->debug("memset array D");
@@ -267,15 +291,17 @@ public:
 
 		//PUSH A
 		check_framework_errors(
-				cudaMemcpy(this->device_ptr_a0, host_ptr_a0,
+				cudaMemcpy(this->device_ptr_a0, host_ptr_a0.data(),
 						this->rows_a * this->cols_a * sizeof(half_t),
 						cudaMemcpyHostToDevice));
+//		printf("a0 = %f \n", host_ptr_a0[1]);
 		check_framework_errors(
-				cudaMemcpy(this->device_ptr_a0, host_ptr_a0,
+				cudaMemcpy(this->device_ptr_a1, host_ptr_a0.data(),
 						this->rows_a * this->cols_a * sizeof(half_t),
 						cudaMemcpyHostToDevice));
+//		printf("a1 = %f \n", host_ptr_a0[1]);
 		check_framework_errors(
-				cudaMemcpy(this->device_ptr_a0, host_ptr_a0,
+				cudaMemcpy(this->device_ptr_a2, host_ptr_a0.data(),
 						this->rows_a * this->cols_a * sizeof(half_t),
 						cudaMemcpyHostToDevice));
 
@@ -287,12 +313,12 @@ public:
 						this->rows_b * this->cols_b * sizeof(half_t),
 						cudaMemcpyHostToDevice));
 		check_framework_errors(
-				cudaMemcpy(this->device_ptr_b0, host_ptr_b0,
+				cudaMemcpy(this->device_ptr_b1, host_ptr_b0,
 						this->rows_b * this->cols_b * sizeof(half_t),
 						cudaMemcpyHostToDevice));
 
 		check_framework_errors(
-				cudaMemcpy(this->device_ptr_b0, host_ptr_b0,
+				cudaMemcpy(this->device_ptr_b2, host_ptr_b0,
 						this->rows_b * this->cols_b * sizeof(half_t),
 						cudaMemcpyHostToDevice));
 
@@ -303,11 +329,11 @@ public:
 						this->rows_c * this->cols_c * sizeof(real_t),
 						cudaMemcpyHostToDevice));
 		check_framework_errors(
-				cudaMemcpy(this->device_ptr_c0, host_ptr_c0,
+				cudaMemcpy(this->device_ptr_c1, host_ptr_c0,
 						this->rows_c * this->cols_c * sizeof(real_t),
 						cudaMemcpyHostToDevice));
 		check_framework_errors(
-				cudaMemcpy(this->device_ptr_c0, host_ptr_c0,
+				cudaMemcpy(this->device_ptr_c2, host_ptr_c0,
 						this->rows_c * this->cols_c * sizeof(real_t),
 						cudaMemcpyHostToDevice));
 	}
@@ -321,6 +347,8 @@ public:
 
 		this->debug("memcpy array D to host");
 		// PULL D's
+
+//		printf("Dd= %f",);
 		check_framework_errors(
 				cudaMemcpy(host_ptr_d0, this->device_ptr_d0, this->byte_size_c,
 						cudaMemcpyDeviceToHost));
