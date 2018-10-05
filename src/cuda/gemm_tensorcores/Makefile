@@ -91,7 +91,8 @@ clean:
 
 
 generate:
-	#TODO:
+	./$(TARGET) --size 1024 --generate 1
 	
 test:
-	#TODO:
+	./$(TARGET) --size 1024 --generate 0
+	

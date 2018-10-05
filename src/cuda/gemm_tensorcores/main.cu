@@ -85,7 +85,7 @@ template<class real_t> void generate_matrices_files(std::string a_path,
 		f_c.close();
 
 	} else {
-		throw "Some of the imput files could not be generated\n";
+		throw std::runtime_error("Some of the imput files could not be generated\n");
 	}
 
 }
@@ -97,7 +97,7 @@ void write_gold_to_file(std::string gold_path, std::vector<real_t>& gold) {
 		f_gold.write(reinterpret_cast<char*>(gold.data()),
 				sizeof(real_t) * gold.size());
 	} else {
-		throw "Could not write gold file\n";
+		throw std::runtime_error("Could not write gold file\n");
 	}
 }
 
@@ -138,7 +138,7 @@ template<class real_t> void retrieve_matrices(std::string a_path,
 	} else {
 		if (log != nullptr)
 			log->log_error("Could not retrieve the matrices");
-		throw "Could not retrieve the matrices\n";
+		throw std::runtime_error("Could not retrieve the matrices\n");
 	}
 
 	std::cout << "Done with reading matrices " << log->mysecond() - start
@@ -362,7 +362,7 @@ int main(int argc, char** argv) {
 			}
 
 			if (generate && tries > 5)
-				throw "More than 5 tries on matrix generate\n";
+				throw std::runtime_error("More than 5 tries on matrix generate\n");
 
 		}
 

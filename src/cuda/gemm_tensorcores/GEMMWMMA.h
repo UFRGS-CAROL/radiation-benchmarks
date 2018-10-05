@@ -181,7 +181,7 @@ public:
 		//		//No double multiplication is allowed
 		if (std::is_same<half_t, double>::value
 				|| std::is_same<half_t, float>::value) {
-			throw "Double/Float multiplication is not allowed with tensor cores, use GEMM base class instead";
+			throw std::runtime_error("Double/Float multiplication is not allowed with tensor cores, use GEMM base class instead\n");
 		}
 
 		this->debug("thread dim allocation");
@@ -426,10 +426,10 @@ public:
 
 	unsigned long long int get_memory_errors() {
 		unsigned long long int host_is_memory_bad;
-		check_framework_errors(
-				cudaMemcpyFromSymbol(&host_is_memory_bad, "is_memory_bad",
-						sizeof(unsigned long long int), 0,
-						cudaMemcpyDeviceToHost));
+//		check_framework_errors(
+//				cudaMemcpyFromSymbol(&host_is_memory_bad, "is_memory_bad",
+//						sizeof(unsigned long long int), 0,
+//						cudaMemcpyDeviceToHost));
 		return host_is_memory_bad;
 	}
 
