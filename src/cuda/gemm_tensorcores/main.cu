@@ -385,5 +385,7 @@ int main(int argc, char** argv) {
 
 	if (log_obj)
 		delete log_obj;
+
+	std::cout << "Finished computation\n";
 	return 0;
 }
