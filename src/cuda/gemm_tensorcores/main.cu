@@ -360,10 +360,12 @@ int main(int argc, char** argv) {
 					host_matrix_d2.data(), host_matrix_d3.data());
 
 			//TODO: FIX FOR GENERATE AND TEST
-			if (compare_output_matrices(mult_enviroment.get_memory_errors(),
+			bool has_error = compare_output_matrices(mult_enviroment.get_memory_errors(),
 					generate, host_gold, host_matrix_d1, host_matrix_d2,
 					host_matrix_d3, host_matrix_d3, log_obj, size_matrices,
-					false, verbose)) {
+					false, verbose);
+
+			if (!has_error) {
 				tries++;
 				it--;
 			}
