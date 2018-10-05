@@ -59,7 +59,7 @@ template<class real_t> void generate_matrices_files(std::string a_path,
 				<< numNans << numInfs << std::endl;
 
 		std::cout << "entrou generate3" << std::endl;
-		numZeros = std::count(b_host_vector.begin(), b_host_vector.end(),zero);
+		numZeros = std::count(b_host_vector.begin(), b_host_vector.end(), zero);
 		numNans = std::count(b_host_vector.begin(), b_host_vector.end(), nan_);
 		numInfs = std::count(b_host_vector.begin(), b_host_vector.end(), inf_);
 
@@ -67,7 +67,7 @@ template<class real_t> void generate_matrices_files(std::string a_path,
 				<< numNans << numInfs << std::endl;
 
 		numZeros = std::count(c_host_vector.begin(), c_host_vector.end(), zero);
-		numNans = std::count(c_host_vector.begin(), c_host_vector.end(),nan_);
+		numNans = std::count(c_host_vector.begin(), c_host_vector.end(), nan_);
 		numInfs = std::count(c_host_vector.begin(), c_host_vector.end(), inf_);
 
 		std::cout << "Number of zeros/NaNs/INFs on matrix C: " << numZeros
@@ -85,7 +85,8 @@ template<class real_t> void generate_matrices_files(std::string a_path,
 		f_c.close();
 
 	} else {
-		throw std::runtime_error("Some of the imput files could not be generated\n");
+		throw std::runtime_error(
+				"Some of the imput files could not be generated\n");
 	}
 
 }
@@ -150,7 +151,7 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 		std::vector<real_t>& gold, std::vector<real_t>& c0,
 		std::vector<real_t>& c1, std::vector<real_t>& c2,
 		std::vector<real_t>& voted_output, Log *log, int matrix_size,
-		bool check = true, bool verbose = true) {
+		bool check, bool verbose) {
 
 	int host_errors = 0;
 	int memory_errors = 0;
@@ -207,9 +208,10 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 						char info_detail[200];
 						snprintf(info_detail, 150,
 								"t: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e, e: %1.20e",
-								int(floor(i / matrix_size)), int(i % matrix_size),
-								(double) valOutput0, (double) valOutput1,
-								(double) valOutput2, (double) valGold);
+								int(floor(i / matrix_size)),
+								int(i % matrix_size), (double) valOutput0,
+								(double) valOutput1, (double) valOutput2,
+								(double) valGold);
 						if (verbose && (memory_errors < 10))
 							std::cout << info_detail << std::endl;
 
@@ -241,8 +243,9 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 						char error_detail[200];
 						snprintf(error_detail, 150,
 								"p: [%lu, %lu], r: %1.20e, e: %1.20e",
-								int(floor(i / matrix_size)), int(i % matrix_size),
-								(double) valOutput, (double) valGold);
+								int(floor(i / matrix_size)),
+								int(i % matrix_size), (double) valOutput,
+								(double) valGold);
 
 						if (verbose && (host_errors < 10))
 							std::cout << error_detail << std::endl;
@@ -270,9 +273,11 @@ bool compare_output_matrices(long long host_is_memory_bad, bool generate,
 	return (host_errors == 0) && (host_is_memory_bad == 0);
 }
 
-void usage(char **argv){
-	std::cout << "./" << argv[0] << " --generate 0/1 --size <matrix size> --iterations <how many iterations> --input_a <input A> "
-			"--input_b <input B> --input_c <input C> --gold <gold file> --precision <float/double>" << std::endl;
+void usage(char **argv) {
+	std::cout << "./" << argv[0]
+			<< " --generate 0/1 --size <matrix size> --iterations <how many iterations> --input_a <input A> "
+					"--input_b <input B> --input_c <input C> --gold <gold file> --precision <float/double>"
+			<< std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -303,21 +308,23 @@ int main(int argc, char** argv) {
 	std::string precision = log_obj->find_char_arg(argc, argv, "--precision",
 			"float");
 
+	bool verbose = log_obj->find_int_arg(argc, argv, "--verbose", 0);
+
 	std::cout << "Generate: " << generate << std::endl;
 	std::cout << "A input path: " << a_input_path << std::endl;
-	std::cout << "B input path: " <<  b_input_path<< std::endl;
-	std::cout << "C input path: " <<  c_input_path << std::endl;
-	std::cout << "Gold in/out path: " <<  gold_inout_path << std::endl;
+	std::cout << "B input path: " << b_input_path << std::endl;
+	std::cout << "C input path: " << c_input_path << std::endl;
+	std::cout << "Gold in/out path: " << gold_inout_path << std::endl;
 	std::cout << "Iterations: " << iterations << std::endl;
 	std::cout << "Matrix size: " << size_matrices << std::endl;
 	std::cout << "Precision: " << precision << std::endl;
+	std::cout << "Verbose: " << verbose << std::endl;
 
 	// Alloc all memories on host
 	half_vector host_matrix_a(size_matrices * size_matrices);
 	half_vector host_matrix_b(size_matrices * size_matrices);
 
 	if (precision == "float") {
-
 
 		// C matrix
 		float_vector host_matrix_c(size_matrices * size_matrices);
@@ -356,13 +363,14 @@ int main(int argc, char** argv) {
 			if (compare_output_matrices(mult_enviroment.get_memory_errors(),
 					generate, host_gold, host_matrix_d1, host_matrix_d2,
 					host_matrix_d3, host_matrix_d3, log_obj, size_matrices,
-					false, false)) {
+					false, verbose)) {
 				tries++;
 				it--;
 			}
 
 			if (generate && tries > 5)
-				throw std::runtime_error("More than 5 tries on matrix generate\n");
+				throw std::runtime_error(
+						"More than 5 tries on matrix generate\n");
 
 		}
 
