@@ -177,6 +177,8 @@ public:
 
 		this->debug("matrix multiplication");
 
+		check_framework_errors(cudaMemset(this->device_is_memory_bad, 0x0, sizeof(unsigned long long int)));
+
 		wmma_matrix_mul<half_t, real_t> <<<gridDim, blockDim>>>(
 				this->device_ptr_a0, this->device_ptr_a1, this->device_ptr_a2,
 				this->device_ptr_b0, this->device_ptr_b1, this->device_ptr_b2,
@@ -192,7 +194,7 @@ public:
 
 	}
 
-	GEMMWMMA(const std::vector<host_half_t> &host_ptr_a0,
+	GEMMWMMA(const host_half_t* host_ptr_a0,
 			const host_half_t* host_ptr_b0, const real_t* host_ptr_c0,
 			size_t rows_a, size_t cols_a, size_t cols_b) {
 
@@ -273,7 +275,7 @@ public:
 	 * PUSH arrays to gpu and set 0x0 to C matrix
 	 */
 
-	void push_arrays(const std::vector<host_half_t> &host_ptr_a0,
+	void push_arrays(const host_half_t* host_ptr_a0,
 			const host_half_t* host_ptr_b0, const real_t* host_ptr_c0) {
 
 		this->debug("memset array D");
@@ -292,17 +294,17 @@ public:
 
 		//PUSH A
 		check_framework_errors(
-				cudaMemcpy(this->device_ptr_a0, host_ptr_a0.data(),
+				cudaMemcpy(this->device_ptr_a0, host_ptr_a0,
 						this->rows_a * this->cols_a * sizeof(half_t),
 						cudaMemcpyHostToDevice));
 //		printf("a0 = %f \n", host_ptr_a0[1]);
 		check_framework_errors(
-				cudaMemcpy(this->device_ptr_a1, host_ptr_a0.data(),
+				cudaMemcpy(this->device_ptr_a1, host_ptr_a0,
 						this->rows_a * this->cols_a * sizeof(half_t),
 						cudaMemcpyHostToDevice));
 //		printf("a1 = %f \n", host_ptr_a0[1]);
 		check_framework_errors(
-				cudaMemcpy(this->device_ptr_a2, host_ptr_a0.data(),
+				cudaMemcpy(this->device_ptr_a2, host_ptr_a0,
 						this->rows_a * this->cols_a * sizeof(half_t),
 						cudaMemcpyHostToDevice));
 

@@ -116,10 +116,7 @@ template<class real_t> int is_output_ok(std::vector<real_t>& d0,
 		std::vector<real_t>& d1, std::vector<real_t>& d2,
 		std::vector<real_t>& correct_vector) {
 
-//	<<<<<<< HEAD
 	int memory_errors = 0;
-
-
 	for (size_t i = 0; i < d0.size(); i++) {
 		real_t val_output0 = d0[i];
 		real_t val_output1 = d1[i];
@@ -147,30 +144,6 @@ template<class real_t> int is_output_ok(std::vector<real_t>& d0,
 		correct_vector[i] = val_output;
 	}
 	return memory_errors;
-//	=======
-//
-//	if (d0 == d1) {
-//		correct_vector = d0.
-//	}
-//	else if (d1==d2) {
-//		correct_vector = d1;
-//	}
-//	else if (d2==d3) {
-//		correct_vector = d2;
-//	}
-//	else if (d1==d3) {
-//		correct_vector = d1;
-//	}
-//	else if (d1 != d2 && d2 != d3 && d1 != d3) {
-//		return false;
-//	}
-//
-//	//TODO: Pedro tem que fazer a verificacao
-//	// se o output que vai ser salvo no gold esta ok
-//	// tem que fazer uma votacao melhor de tres
-//	// e salvar no correct_vector
-//	return true;
-//>>>>>>> 9383aaede052c495a645216e82bcbe29f861b5dc
 }
 
 template<class real_t> void retrieve_matrices(half_vector& a_host_vector,
@@ -439,7 +412,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
-				mult_enviroment.push_arrays(host_matrix_a, host_matrix_b.data(),
+				mult_enviroment.push_arrays(host_matrix_a.data(), host_matrix_b.data(),
 						host_matrix_c.data());
 			}
 
