@@ -3,6 +3,7 @@
 #include <vector>
 #include <random>
 #include <fstream>      // std::ifstream
+#include <sstream>      // std::stringstream
 
 #include "half.hpp"
 #include "Log.h"
@@ -107,7 +108,7 @@ template<class real_t> int is_output_ok(std::vector<real_t>& d0,
 		std::vector<real_t>& d1, std::vector<real_t>& d2,
 		std::vector<real_t>& correct_vector) {
 
-<<<<<<< HEAD
+//	<<<<<<< HEAD
 	int memory_errors = 0;
 	for (size_t i = 0; i < d0.size(); i++) {
 		real_t val_output0 = d0[i];
@@ -135,30 +136,30 @@ template<class real_t> int is_output_ok(std::vector<real_t>& d0,
 		correct_vector[i] = val_output;
 	}
 	return memory_errors;
-=======
-
-	if (d0 == d1){ 
-		correct_vector = d0.
-	}
-	else if (d1==d2){
-		correct_vector = d1;
-	}
-	else if (d2==d3){
-		correct_vector = d2;
-	}
-	else if (d1==d3){
-		correct_vector = d1;
-	}
-	else if (d1 != d2 && d2 != d3 && d1 != d3){
-		return false;
-	}
-
-	//TODO: Pedro tem que fazer a verificacao
-	// se o output que vai ser salvo no gold esta ok
-	// tem que fazer uma votacao melhor de tres
-	// e salvar no correct_vector
-	return true;
->>>>>>> 9383aaede052c495a645216e82bcbe29f861b5dc
+//	=======
+//
+//	if (d0 == d1) {
+//		correct_vector = d0.
+//	}
+//	else if (d1==d2) {
+//		correct_vector = d1;
+//	}
+//	else if (d2==d3) {
+//		correct_vector = d2;
+//	}
+//	else if (d1==d3) {
+//		correct_vector = d1;
+//	}
+//	else if (d1 != d2 && d2 != d3 && d1 != d3) {
+//		return false;
+//	}
+//
+//	//TODO: Pedro tem que fazer a verificacao
+//	// se o output que vai ser salvo no gold esta ok
+//	// tem que fazer uma votacao melhor de tres
+//	// e salvar no correct_vector
+//	return true;
+//>>>>>>> 9383aaede052c495a645216e82bcbe29f861b5dc
 }
 
 template<class real_t> void retrieve_matrices(half_vector& a_host_vector,
@@ -232,16 +233,23 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 		if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
 #pragma omp critical
 			{
-				char info_detail[200];
-				snprintf(info_detail, 150,
-						"m: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e",
-						int(floor(i / log.size_matrices)),
-						int(i % log.size_matrices), (double) valOutput0,
-						(double) valOutput1, (double) valOutput2);
-				if (log.verbose && (memory_errors < 10))
-					std::cout << info_detail << std::endl;
+//				char info_detail[200];
+//				snprintf(info_detail, 150,
+//						"m: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e",
+//						int(floor(i / log.size_matrices)),
+//						int(i % log.size_matrices), (double) valOutput0,
+//						(double) valOutput1, (double) valOutput2);
+//
+				std::stringstream info_detail("");
+				info_detail << "m: [" << int(floor(i / log.size_matrices))
+						<< ", " << i % log.size_matrices << "], r0: "
+						<< valOutput0 << ", r1: " << valOutput1 << ", r2: "
+						<< valOutput2;
 
-				log.log_info(info_detail);
+				if (log.verbose && (memory_errors < 10))
+					std::cout << info_detail.str() << std::endl;
+
+				log.log_info(info_detail.str());
 				memory_errors++;
 			}
 			if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2)
@@ -258,17 +266,24 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 					checkFlag = false;
 #pragma omp critical
 					{
-						char info_detail[200];
-						snprintf(info_detail, 150,
-								"t: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e, e: %1.20e",
-								int(floor(i / log.size_matrices)),
-								int(i % log.size_matrices), (double) valOutput0,
-								(double) valOutput1, (double) valOutput2,
-								(double) valGold);
-						if (log.verbose && (memory_errors < 10))
-							std::cout << info_detail << std::endl;
+//						char info_detail[200];
+//						snprintf(info_detail, 150,
+//								"t: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e, e: %1.20e",
+//								int(floor(i / log.size_matrices)),
+//								int(i % log.size_matrices), (double) valOutput0,
+//								(double) valOutput1, (double) valOutput2,
+//								(double) valGold);
+						std::stringstream info_detail("");
+						info_detail << "t: ["
+								<< int(floor(i / log.size_matrices)) << ", "
+								<< i % log.size_matrices << "], r0: "
+								<< valOutput0 << ", r1: " << valOutput1
+								<< ", r2: " << valOutput2 << ", e: " << valGold;
 
-						log.log_info(std::string(info_detail));
+						if (log.verbose && (memory_errors < 10))
+							std::cout << info_detail.str() << std::endl;
+
+						log.log_info(std::string(info_detail.str()));
 
 						memory_errors++;
 					}
@@ -289,23 +304,28 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 			if (checkFlag) {
 #pragma omp critical
 				{
-					char error_detail[200];
-					snprintf(error_detail, 150,
-							"p: [%lu, %lu], r: %1.20e, e: %1.20e",
-							int(floor(i / log.size_matrices)), int(i % log.size_matrices),
-							(double) valOutput, (double) valGold);
+//				char error_detail[200];
+//				snprintf(error_detail, 150,
+//						"p: [%lu, %lu], r: %1.20e, e: %1.20e",
+//						int(floor(i / log.size_matrices)),
+//						int(i % log.size_matrices), (double) valOutput,
+//						(double) valGold);
+					std::stringstream error_detail("");
+					error_detail << "p: [" << int(floor(i / log.size_matrices))
+							<< ", " << i % log.size_matrices << "], r: "
+							<< valOutput << ", e: " << valGold;
 
 					if (log.verbose && (host_errors < 10))
-						std::cout << error_detail << std::endl;
+						std::cout << error_detail.str() << std::endl;
 
-					log.log_error(error_detail);
+					log.log_error(error_detail.str());
 					host_errors++;
 				}
 			}
 		}
 	}
 
-	// printf("numErrors:%d", host_errors);
+// printf("numErrors:%d", host_errors);
 
 	log.update_info_count(memory_errors);
 	log.update_error_count(host_errors);
@@ -323,19 +343,19 @@ template<class real_t>
 void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		Log& log_obj) {
 
-	// C matrix
+// C matrix
 	std::vector<real_t> host_matrix_c(
 			log_obj.size_matrices * log_obj.size_matrices);
 	std::vector<real_t> host_gold(
 			log_obj.size_matrices * log_obj.size_matrices);
-	// D Matrix
+// D Matrix
 	std::vector<real_t> host_matrix_d1(
 			log_obj.size_matrices * log_obj.size_matrices);
 	std::vector<real_t> host_matrix_d2(
 			log_obj.size_matrices * log_obj.size_matrices);
 	std::vector<real_t> host_matrix_d3(
 			log_obj.size_matrices * log_obj.size_matrices);
-	//		std::cout << "passou declaracao host" << std::endl;
+//		std::cout << "passou declaracao host" << std::endl;
 	if (!log_obj.generate) {
 		retrieve_matrices<real_t>(host_matrix_a, host_matrix_b, host_matrix_c,
 				host_gold, log_obj);
@@ -344,7 +364,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		generate_matrices_files<real_t>(host_matrix_a, host_matrix_b,
 				host_matrix_c, log_obj);
 	}
-	//GOLD Matrix
+//GOLD Matrix
 	std::vector<real_t> host_matrix_gold(
 			log_obj.size_matrices * log_obj.size_matrices);
 	GEMMWMMA<host_half, half, real_t> mult_enviroment(host_matrix_a.data(),
@@ -414,7 +434,7 @@ int main(int argc, char** argv) {
 	std::cout << "Precision: " << log_obj.precision << std::endl;
 	std::cout << "Verbose: " << log_obj.verbose << std::endl;
 
-	// Alloc all memories on host
+// Alloc all memories on host
 	half_vector host_matrix_a(log_obj.size_matrices * log_obj.size_matrices);
 	half_vector host_matrix_b(log_obj.size_matrices * log_obj.size_matrices);
 
