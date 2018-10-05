@@ -52,6 +52,7 @@ endif
 
 ifeq ($(LOGS), 1)
 INCLUDE+=-I../../include/
+NVCCFLAGS+= -DLOGS=1
 LDFLAGS+= -L../../include/ -lLogHelper -DLOGS=1
 endif
 
@@ -59,7 +60,7 @@ ifeq ($(DEBUG_ON_TITAN), 1)
 CFLAGS+= -DDEBUG_ON_TITAN
 endif
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
-DEPS = $(wildcard ./*.cuh) Makefile
+DEPS = $(wildcard ./*.h) Makefile
 
 RAD_DIR=/home/carol/radiation-benchmarks
 

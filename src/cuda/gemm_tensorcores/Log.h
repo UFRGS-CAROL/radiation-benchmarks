@@ -53,10 +53,13 @@ public:
 
 #ifdef LOGS
 		std::string test_info = std::string(" iterations: ")
-		+ std::to_string(iterations);
+		+ std::to_string(this->iterations);
 
-		test_info += " precision: " + precision;
+		test_info += " precision: " + this->precision;
 
+		test_info += " matrix_n_dim: " + std::to_string(this->size_matrices);
+
+		std::string app = "gemm_tensor_cores_" + this->precision;
 		set_iter_interval_print(10);
 
 		start_log_file(const_cast<char*>(app.c_str()),
@@ -110,7 +113,7 @@ public:
 	 void update_info_count(long info_count) {
 #ifdef LOGS
 		if (info_count)
-		log_info_count (error_count);
+		log_info_count (info_count);
 #endif
 	}
 
