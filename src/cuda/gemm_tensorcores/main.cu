@@ -8,7 +8,10 @@
 #include "Log.h"
 #include "GEMMWMMA.h"
 
+#ifndef DEFAULT_INPUT_SIZE
 #define DEFAULT_INPUT_SIZE 8192
+#endif
+
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
 
@@ -16,14 +19,13 @@ typedef half_float::half host_half;
 
 typedef std::vector<host_half> half_vector;
 
-template<class real_t> void generate_matrices_files(std::string a_path,
-		std::string b_path, std::string c_path, half_vector& a_host_vector,
+template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 		half_vector& b_host_vector, std::vector<real_t>& c_host_vector,
-		int matrix_size) {
+		Log& log) {
 
-	std::ofstream f_a(a_path, std::ios::out | std::ios::binary);
-	std::ofstream f_b(b_path, std::ios::out | std::ios::binary);
-	std::ofstream f_c(c_path, std::ios::out | std::ios::binary);
+	std::ofstream f_a(log.a_input_path, std::ios::out | std::ios::binary);
+	std::ofstream f_b(log.b_input_path, std::ios::out | std::ios::binary);
+	std::ofstream f_c(log.c_input_path, std::ios::out | std::ios::binary);
 //	std::cout << "entrou generate" << std::endl;
 
 	if (f_a.is_open() && f_b.is_open() && f_c.is_open()) {
@@ -33,11 +35,11 @@ template<class real_t> void generate_matrices_files(std::string a_path,
 		GENERATOR_MAXABSVALUE);
 		std::cout << "entrou if generate1" << std::endl;
 
-		for (int i = 0; i < matrix_size; i++) {
-			for (int j = 0; j < matrix_size; j++) {
-				a_host_vector[i * matrix_size + j] = host_half(dis(gen));
-				b_host_vector[i * matrix_size + j] = host_half(dis(gen));
-				c_host_vector[i * matrix_size + j] = real_t(dis(gen));
+		for (size_t i = 0; i < log.size_matrices; i++) {
+			for (size_t j = 0; j < log.size_matrices; j++) {
+				a_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
+				b_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
+				c_host_vector[i * log.size_matrices + j] = real_t(dis(gen));
 			}
 		}
 		std::cout << "entrou generate1" << std::endl;
@@ -101,27 +103,49 @@ void write_gold_to_file(std::string gold_path, std::vector<real_t>& gold) {
 	}
 }
 
-template<class real_t> bool is_output_ok(std::vector<real_t>& d0,
+template<class real_t> int is_output_ok(std::vector<real_t>& d0,
 		std::vector<real_t>& d1, std::vector<real_t>& d2,
 		std::vector<real_t>& correct_vector) {
-	//TODO: Pedro tem que fazer a verificacao
-	// se o output que vai ser salvo no gold esta ok
-	// tem que fazer uma votacao melhor de tres
-	// e salvar no correct_vector
-	return true;
+
+	int memory_errors = 0;
+	for (size_t i = 0; i < d0.size(); i++) {
+		real_t val_output0 = d0[i];
+		real_t val_output1 = d1[i];
+		real_t val_output2 = d2[i];
+		real_t val_output = val_output0;
+		if ((val_output0 != val_output1) || (val_output0 != val_output2)) {
+			memory_errors++;
+
+			if ((val_output0 != val_output1) && (val_output1 != val_output2)
+					&& (val_output0 != val_output2)) {
+				// All 3 values diverge
+				memory_errors++;
+			} else if (val_output1 == val_output2) {
+				// Only value 0 diverge
+				val_output = val_output1;
+			} else if (val_output0 == val_output2) {
+				// Only value 1 diverge
+				val_output = val_output0;
+			} else if (val_output0 == val_output1) {
+				// Only value 2 diverge
+				val_output = val_output0;
+			}
+		}
+		correct_vector[i] = val_output;
+	}
+	return memory_errors;
 }
 
-template<class real_t> void retrieve_matrices(std::string a_path,
-		std::string b_path, std::string c_path, std::string gold_path,
-		half_vector& a_host_vector, half_vector& b_host_vector,
-		std::vector<real_t>& c_host_vector,
-		std::vector<real_t>& gold_host_vector, Log *log) {
+template<class real_t> void retrieve_matrices(half_vector& a_host_vector,
+		half_vector& b_host_vector, std::vector<real_t>& c_host_vector,
+		std::vector<real_t>& gold_host_vector, Log& log) {
 
-	double start = log->mysecond();
-	std::ifstream f_a(a_path, std::ios::in | std::ios::binary);
-	std::ifstream f_b(b_path, std::ios::in | std::ios::binary);
-	std::ifstream f_c(c_path, std::ios::in | std::ios::binary);
-	std::ifstream f_gold(gold_path, std::ifstream::in | std::ifstream::binary);
+	double start = log.mysecond();
+	std::ifstream f_a(log.a_input_path, std::ios::in | std::ios::binary);
+	std::ifstream f_b(log.b_input_path, std::ios::in | std::ios::binary);
+	std::ifstream f_c(log.c_input_path, std::ios::in | std::ios::binary);
+	std::ifstream f_gold(log.gold_inout_path,
+			std::ifstream::in | std::ifstream::binary);
 
 	if (f_a.is_open() && f_b.is_open() && f_c.is_open() && f_gold) {
 
@@ -146,20 +170,18 @@ template<class real_t> void retrieve_matrices(std::string a_path,
 		f_c.close();
 		f_gold.close();
 	} else {
-		if (log != nullptr)
-			log->log_error("Could not retrieve the matrices");
+		log.log_error("Could not retrieve the matrices");
 		throw std::runtime_error("Could not retrieve the matrices\n");
 	}
 
-	std::cout << "Done with reading matrices " << log->mysecond() - start
+	std::cout << "Done with reading matrices " << log.mysecond() - start
 			<< "s\n";
 }
 
 template<class real_t>
 std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 		std::vector<real_t>& gold, std::vector<real_t>& c0,
-		std::vector<real_t>& c1, std::vector<real_t>& c2, Log *log,
-		int matrix_size, bool verbose) {
+		std::vector<real_t>& c1, std::vector<real_t>& c2, Log& log) {
 
 	int host_errors = 0;
 	int memory_errors = 0;
@@ -167,10 +189,10 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 	if (host_is_memory_bad != 0) {
 		std::string info_detail = "b: is_memory_bad: "
 				+ std::to_string(host_is_memory_bad);
-		if (verbose)
+		if (log.verbose)
 			std::cout << info_detail << std::endl;
 
-		log->log_error(info_detail);
+		log.log_error(info_detail);
 		memory_errors++;
 	}
 
@@ -188,13 +210,13 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 				char info_detail[200];
 				snprintf(info_detail, 150,
 						"m: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e",
-						int(floor(i / matrix_size)), int(i % matrix_size),
-						(double) valOutput0, (double) valOutput1,
-						(double) valOutput2);
-				if (verbose && (memory_errors < 10))
+						int(floor(i / log.size_matrices)),
+						int(i % log.size_matrices), (double) valOutput0,
+						(double) valOutput1, (double) valOutput2);
+				if (log.verbose && (memory_errors < 10))
 					std::cout << info_detail << std::endl;
 
-				log->log_info(info_detail);
+				log.log_info(info_detail);
 				memory_errors++;
 			}
 			if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2)
@@ -214,14 +236,14 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 						char info_detail[200];
 						snprintf(info_detail, 150,
 								"t: [%d, %d], r0: %1.20e, r1: %1.20e, r2: %1.20e, e: %1.20e",
-								int(floor(i / matrix_size)),
-								int(i % matrix_size), (double) valOutput0,
+								int(floor(i / log.size_matrices)),
+								int(i % log.size_matrices), (double) valOutput0,
 								(double) valOutput1, (double) valOutput2,
 								(double) valGold);
-						if (verbose && (memory_errors < 10))
+						if (log.verbose && (memory_errors < 10))
 							std::cout << info_detail << std::endl;
 
-						log->log_info(std::string(info_detail));
+						log.log_info(std::string(info_detail));
 
 						memory_errors++;
 					}
@@ -245,13 +267,13 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 					char error_detail[200];
 					snprintf(error_detail, 150,
 							"p: [%lu, %lu], r: %1.20e, e: %1.20e",
-							int(floor(i / matrix_size)), int(i % matrix_size),
+							int(floor(i / log.size_matrices)), int(i % log.size_matrices),
 							(double) valOutput, (double) valGold);
 
-					if (verbose && (host_errors < 10))
+					if (log.verbose && (host_errors < 10))
 						std::cout << error_detail << std::endl;
 
-					log->log_error(error_detail);
+					log.log_error(error_detail);
 					host_errors++;
 				}
 			}
@@ -260,8 +282,8 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 
 	// printf("numErrors:%d", host_errors);
 
-	log->update_info_count(memory_errors);
-	log->update_error_count(host_errors);
+	log.update_info_count(memory_errors);
+	log.update_error_count(host_errors);
 
 	if (memory_errors != 0)
 		std::cout << "M";
@@ -272,57 +294,63 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 	return res;
 }
 
-void usage(char **argv) {
-	std::cout << "./" << argv[0]
-			<< " --generate 0/1 --size <matrix size> --iterations <how many iterations> --input_a <input A> "
-					"--input_b <input B> --input_c <input C> --gold <gold file> --precision <float/double>"
-			<< std::endl;
-}
-
 template<class real_t>
-void call_mxm(size_t size_matrices, bool generate, std::string a_input_path,
-		std::string b_input_path, std::string c_input_path,
-		std::string gold_inout_path, half_vector& host_matrix_a,
-		half_vector& host_matrix_b, int iterations, bool verbose, Log* log_obj) {
+void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
+		Log& log_obj) {
+
 	// C matrix
-	std::vector<real_t> host_matrix_c(size_matrices * size_matrices);
-	std::vector<real_t> host_gold(size_matrices * size_matrices);
+	std::vector<real_t> host_matrix_c(
+			log_obj.size_matrices * log_obj.size_matrices);
+	std::vector<real_t> host_gold(
+			log_obj.size_matrices * log_obj.size_matrices);
 	// D Matrix
-	std::vector<real_t> host_matrix_d1(size_matrices * size_matrices);
-	std::vector<real_t> host_matrix_d2(size_matrices * size_matrices);
-	std::vector<real_t> host_matrix_d3(size_matrices * size_matrices);
+	std::vector<real_t> host_matrix_d1(
+			log_obj.size_matrices * log_obj.size_matrices);
+	std::vector<real_t> host_matrix_d2(
+			log_obj.size_matrices * log_obj.size_matrices);
+	std::vector<real_t> host_matrix_d3(
+			log_obj.size_matrices * log_obj.size_matrices);
 	//		std::cout << "passou declaracao host" << std::endl;
-	if (!generate) {
-		retrieve_matrices<real_t>(a_input_path, b_input_path, c_input_path,
-				gold_inout_path, host_matrix_a, host_matrix_b, host_matrix_c,
+	if (!log_obj.generate) {
+		retrieve_matrices<real_t>(host_matrix_a, host_matrix_b, host_matrix_c,
 				host_gold, log_obj);
 	} else {
 		//			std::cout << "entrou else" << std::endl;
-		generate_matrices_files<real_t>(a_input_path, b_input_path, c_input_path,
-				host_matrix_a, host_matrix_b, host_matrix_c, size_matrices);
+		generate_matrices_files<real_t>(host_matrix_a, host_matrix_b,
+				host_matrix_c, log_obj);
 	}
 	//GOLD Matrix
-	std::vector<real_t> host_matrix_gold(size_matrices * size_matrices);
+	std::vector<real_t> host_matrix_gold(
+			log_obj.size_matrices * log_obj.size_matrices);
 	GEMMWMMA<host_half, half, real_t> mult_enviroment(host_matrix_a.data(),
-			host_matrix_b.data(), host_matrix_c.data(), size_matrices,
-			size_matrices, size_matrices);
+			host_matrix_b.data(), host_matrix_c.data(), log_obj.size_matrices,
+			log_obj.size_matrices, log_obj.size_matrices);
 	int tries = 0;
-	for (int it = 0; it < iterations; it++) {
+	for (int it = 0; it < log_obj.iterations; it++) {
+		log_obj.start_iteration_app();
 		mult_enviroment.mul();
+		log_obj.end_iteration_app();
+
 		mult_enviroment.pull_array(host_matrix_d1.data(), host_matrix_d2.data(),
 				host_matrix_d3.data());
+
+		double start = log_obj.mysecond();
 		std::pair<int, int> errors = compare_output_matrices(
 				mult_enviroment.get_memory_errors(), host_gold, host_matrix_d1,
-				host_matrix_d2, host_matrix_d3, log_obj, size_matrices,
-				verbose);
+				host_matrix_d2, host_matrix_d3, log_obj);
+		double end = log_obj.mysecond();
+
 		std::cout << "Iteration: " << it << " memory errors " << errors.first
-				<< " radiation errors " << errors.second << std::endl;
+				<< " radiation errors " << errors.second
+				<< ". Time spent on comparing " << end - start << "s."
+				<< std::endl;
+
 		//TODO check this
-		if (generate) {
+		if (log_obj.generate) {
 			tries++;
-			bool has_errors = is_output_ok(host_matrix_d1, host_matrix_d2,
+			int has_errors = is_output_ok(host_matrix_d1, host_matrix_d2,
 					host_matrix_d3, host_gold);
-			if (!has_errors)
+			if (has_errors != 0)
 				it--;
 
 			if (tries > 5)
@@ -335,69 +363,43 @@ void call_mxm(size_t size_matrices, bool generate, std::string a_input_path,
 					host_matrix_b.data(), host_matrix_c.data());
 		}
 	}
-	if (generate) {
-		write_gold_to_file<real_t>(gold_inout_path, host_gold);
+	if (log_obj.generate) {
+		write_gold_to_file<real_t>(log_obj.gold_inout_path, host_gold);
 	}
 }
 
+void usage(char **argv) {
+	std::cout << "./" << argv[0]
+			<< " --generate 0/1 --gold <gold file, DEFAULT=./gold.matrix > --size <matrix size, DEFAULT=8192> "
+					"--iterations <how many iterations, optional> --input_a <input A, DEFAUL=./input_a.matrix> "
+					"--input_b <input B, DEFAUL=./input_b.matrix> --input_c <input C, DEFAUL=./input_c.matrix>  --precision <float/double, DEFAULT=float>"
+			<< std::endl;
+}
+
 int main(int argc, char** argv) {
+	Log log_obj(argc, argv, DEFAULT_INPUT_SIZE);
 
-//	if (argc < 7){
-//		usage(argv);
-//		throw "Wrong parameters\n";
-//	}
-
-	Log *log_obj = new Log();
-
-	bool generate = log_obj->find_int_arg(argc, argv, "--generate", 0);
-
-	size_t size_matrices = log_obj->find_int_arg(argc, argv, "--size",
-	DEFAULT_INPUT_SIZE);
-
-	int iterations = log_obj->find_int_arg(argc, argv, "--iterations", 1);
-
-	std::string a_input_path = log_obj->find_char_arg(argc, argv, "--input_a",
-			"./input_a.matrix");
-	std::string b_input_path = log_obj->find_char_arg(argc, argv, "--input_b",
-			"./input_b.matrix");
-	std::string c_input_path = log_obj->find_char_arg(argc, argv, "--input_c",
-			"./input_c.matrix");
-	std::string gold_inout_path = log_obj->find_char_arg(argc, argv, "--gold",
-			"./gold.matrix");
-
-	std::string precision = log_obj->find_char_arg(argc, argv, "--precision",
-			"float");
-
-	bool verbose = log_obj->find_int_arg(argc, argv, "--verbose", 0);
-
-	std::cout << "Generate: " << generate << std::endl;
-	std::cout << "A input path: " << a_input_path << std::endl;
-	std::cout << "B input path: " << b_input_path << std::endl;
-	std::cout << "C input path: " << c_input_path << std::endl;
-	std::cout << "Gold in/out path: " << gold_inout_path << std::endl;
-	std::cout << "Iterations: " << iterations << std::endl;
-	std::cout << "Matrix size: " << size_matrices << std::endl;
-	std::cout << "Precision: " << precision << std::endl;
-	std::cout << "Verbose: " << verbose << std::endl;
+	std::cout << "Generate: " << log_obj.generate << std::endl;
+	std::cout << "A input path: " << log_obj.a_input_path << std::endl;
+	std::cout << "B input path: " << log_obj.b_input_path << std::endl;
+	std::cout << "C input path: " << log_obj.c_input_path << std::endl;
+	std::cout << "Gold in/out path: " << log_obj.gold_inout_path << std::endl;
+	std::cout << "Iterations: " << log_obj.iterations << std::endl;
+	std::cout << "Matrix size: " << log_obj.size_matrices << std::endl;
+	std::cout << "Precision: " << log_obj.precision << std::endl;
+	std::cout << "Verbose: " << log_obj.verbose << std::endl;
 
 	// Alloc all memories on host
-	half_vector host_matrix_a(size_matrices * size_matrices);
-	half_vector host_matrix_b(size_matrices * size_matrices);
+	half_vector host_matrix_a(log_obj.size_matrices * log_obj.size_matrices);
+	half_vector host_matrix_b(log_obj.size_matrices * log_obj.size_matrices);
 
-	if (precision == "float") {
-		call_mxm<float>(size_matrices, generate, a_input_path, b_input_path,
-				c_input_path, gold_inout_path, host_matrix_a, host_matrix_b,
-				iterations, verbose, log_obj);
+	if (log_obj.precision == "float") {
+		call_mxm<float>(host_matrix_a, host_matrix_b, log_obj);
 	}
 
-	if (precision == "double") {
-		call_mxm<double>(size_matrices, generate, a_input_path, b_input_path,
-				c_input_path, gold_inout_path, host_matrix_a, host_matrix_b,
-				iterations, verbose, log_obj);
+	if (log_obj.precision == "double") {
+		call_mxm<double>(host_matrix_a, host_matrix_b, log_obj);
 	}
-
-	if (log_obj)
-		delete log_obj;
 
 	std::cout << "Finished computation\n";
 	return 0;

@@ -18,11 +18,42 @@
 
 class Log {
 public:
-	static void start_log(int iterations, std::string app,
-			std::string precision, int size) {
+	bool generate;
+	size_t size_matrices;
+	int iterations;
+	std::string a_input_path;
+	std::string b_input_path;
+	std::string c_input_path;
+	std::string gold_inout_path;
+	std::string precision;
+	bool verbose;
+
+	Log(int argc, char** argv, int input_size) {
+
+		this->generate = this->find_int_arg(argc, argv, "--generate", 0);
+
+		this->size_matrices = this->find_int_arg(argc, argv, "--size",
+				input_size);
+
+		this->iterations = this->find_int_arg(argc, argv, "--iterations", 1);
+
+		this->a_input_path = this->find_char_arg(argc, argv, "--input_a",
+				"./input_a.matrix");
+		this->b_input_path = this->find_char_arg(argc, argv, "--input_b",
+				"./input_b.matrix");
+		this->c_input_path = this->find_char_arg(argc, argv, "--input_c",
+				"./input_c.matrix");
+		this->gold_inout_path = this->find_char_arg(argc, argv, "--gold",
+				"./gold.matrix");
+
+		this->precision = this->find_char_arg(argc, argv, "--precision",
+				"float");
+
+		this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);
+
 #ifdef LOGS
 		std::string test_info = std::string(" iterations: ")
-				+ std::to_string(iterations);
+		+ std::to_string(iterations);
 
 		test_info += " precision: " + precision;
 
@@ -33,53 +64,53 @@ public:
 #endif
 	}
 
-	static void end_log() {
+	virtual ~Log() {
 #ifdef LOGS
 		end_log_file();
 #endif
 	}
 
-	static void end_iteration_app() {
+	void end_iteration_app() {
 #ifdef LOGS
 		end_iteration();
 #endif
 	}
 
-	static void start_iteration_app() {
+	void start_iteration_app() {
 #ifdef LOGS
 		start_iteration();
 #endif
 	}
 
-	static void update_timestamp_app() {
+	void update_timestamp_app() {
 #ifdef LOGS
 		update_timestamp();
 #endif
 	}
 
-	static void log_error(std::string error_detail) {
+	void log_error(std::string error_detail) {
 #ifdef LOGS
 		log_error_detail(const_cast<char*>(error_detail.c_str()));
 #endif
 	}
 
-	static void log_info(std::string info_detail) {
+	void log_info(std::string info_detail) {
 #ifdef LOGS
 		log_info_detail(const_cast<char*>(info_detail.c_str()));
 #endif
 	}
 
-	static void update_error_count(long error_count) {
+	void update_error_count(long error_count) {
 #ifdef LOGS
 		if (error_count)
-			log_error_count(error_count);
+		log_error_count(error_count);
 #endif
 	}
 
-	static void update_info_count(long info_count) {
+	 void update_info_count(long info_count) {
 #ifdef LOGS
 		if (info_count)
-			log_info_count (error_count);
+		log_info_count (error_count);
 #endif
 	}
 

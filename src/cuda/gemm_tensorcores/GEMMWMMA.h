@@ -15,12 +15,10 @@
 #include <mma.h>
 #include <cuda_fp16.h> // For half precision computation
 
-
 // The only dimensions currently supported by WMMA
 #define WMMA_M 16
 #define WMMA_N 16
 #define WMMA_K 16
-
 
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 32
@@ -43,11 +41,9 @@ void __error(const char* error, int line, const char* file) {
 	exit (EXIT_FAILURE);
 }
 
-__device__ unsigned long long int is_memory_bad = 0;
-
 template<class real_t>
 __device__ real_t inline read_voter(real_t *v1, real_t *v2, real_t *v3,
-		int offset) {
+		int offset, unsigned long long int* is_memory_bad) {
 
 	register real_t in1 = v1[offset];
 	register real_t in2 = v2[offset];
@@ -62,41 +58,17 @@ __device__ real_t inline read_voter(real_t *v1, real_t *v2, real_t *v3,
 	}
 
 	if (in1 != in2 && in2 != in3 && in1 != in3) {
-		atomicAdd(&is_memory_bad, 1);
+		atomicAdd(is_memory_bad, 1);
 	}
 
 	return in1;
 }
 
-//__device__ half inline read_voter(half *v1, half *v2, half *v3, int offset) {
-//
-//	register half in1 = v1[offset];
-//	register half in2 = v2[offset];
-//	register half in3 = v3[offset];
-//
-//	if (__heq(in1, in2) || __heq(in1, in3)) {
-//		return in1;
-//	}
-//
-//	if (__heq(in2, in3)) {
-//		return in2;
-//	}
-//
-//	if (__hne(in1, in2) && __hne(in2, in3) && __hne(in1, in3)) {
-//		atomicAdd(&is_memory_bad, 1);
-//	}
-//
-//	return in1;
-//}
-
-
 template<class half_t, class real_t>
-__global__ void wmma_matrix_mul(
-		half_t *a0, half_t *a1, half_t *a2,
-		half_t *b0, half_t *b1, half_t *b2,
-		real_t *c0, real_t *c1, real_t *c2,
-		real_t*d0, real_t *d1, real_t *d2,
-		size_t M, size_t N, size_t K, float alpha, float beta){
+__global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
+		half_t *b1, half_t *b2, real_t *c0, real_t *c1, real_t *c2, real_t*d0,
+		real_t *d1, real_t *d2, size_t M, size_t N, size_t K, float alpha,
+		float beta, unsigned long long int* is_memory_bad) {
 
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
@@ -104,12 +76,12 @@ __global__ void wmma_matrix_mul(
 //	printf("entrou wmma mult");
 	register real_t acc = 0.0;
 	for (k = 0; k < N; k++) {
-		half_t tmp = read_voter(a0, a1, a2, ty * N + k)
-						* read_voter(b0, b1, b2, k * N + tx);
+		half_t tmp = read_voter(a0, a1, a2, ty * N + k, is_memory_bad)
+				* read_voter(b0, b1, b2, k * N + tx, is_memory_bad);
 		acc = real_t(tmp) + acc;
 	}
 //	printf("passou for wmma mult");
-	acc += read_voter(c0, c1, c2, ty * N + tx);
+	acc += read_voter(c0, c1, c2, ty * N + tx, is_memory_bad);
 
 	d0[ty * N + tx] = acc;
 	d1[ty * N + tx] = acc;
@@ -150,38 +122,15 @@ public:
 
 	bool to_debug = false;
 
-//	//const host_half_t* host_ptr_a1, const host_half_t*host_ptr_a2,
-//	//const host_half_t* host_ptr_b1, const host_half_t* host_ptr_b2,
-//	//const host_half_t* host_ptr_c1, const host_half_t* host_ptr_c2,
-//	GEMMWMMA(const host_half_t* host_ptr_a0, const host_half_t* host_ptr_b0,
-//			const real_t* host_ptr_c0, size_t rows_a, size_t cols_a,
-//			size_t cols_b);
-//
-//	virtual ~GEMMWMMA();
-//	/**
-//	 * Template multiplication
-//	 */
-//	void mul();
-//
-//	//const host_half_t* host_ptr_a1, const host_half_t* host_ptr_a2,
-//	//const host_half_t* host_ptr_b1, const host_half_t* host_ptr_b2,
-//	//const host_half_t* host_ptr_c1, const host_half_t* host_ptr_c2
-//
-//	void push_arrays(const host_half_t* host_ptr_a0, const host_half_t* host_ptr_b0,
-//			const real_t* host_ptr_c0);
-//
-//	void pull_array(real_t* host_ptr_d0, real_t* host_ptr_d1,
-//			real_t* host_ptr_d2);
-//
-//	void debug(std::string str);
-//
-//	unsigned long long int get_memory_errors();
+	//to check memory errors
+	unsigned long long int* device_is_memory_bad = nullptr;
 
 	void mul() {
 		//		//No double multiplication is allowed
 		if (std::is_same<half_t, double>::value
 				|| std::is_same<half_t, float>::value) {
-			throw std::runtime_error("Double/Float multiplication is not allowed with tensor cores, use GEMM base class instead\n");
+			throw std::runtime_error(
+					"Double/Float multiplication is not allowed with tensor cores, use GEMM base class instead\n");
 		}
 
 		this->debug("thread dim allocation");
@@ -208,9 +157,9 @@ public:
 				this->device_ptr_b0, this->device_ptr_b1, this->device_ptr_b2,
 				this->device_ptr_c0, this->device_ptr_c1, this->device_ptr_c2,
 				this->device_ptr_d0, this->device_ptr_d1, this->device_ptr_d2,
-				this->rows_a, this->cols_b, this->rows_b, 1.0, 1.0);
+				this->rows_a, this->cols_b, this->rows_b, 1.0, 1.0, this->device_is_memory_bad);
 
-		printf("passou chamada wmma mult");		
+		printf("passou chamada wmma mult");
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
 
@@ -280,6 +229,11 @@ public:
 
 			//to pull C array directly
 			this->byte_size_c = this->rows_c * this->cols_c * sizeof(real_t);
+
+			check_framework_errors(
+					cudaMalloc(
+							reinterpret_cast<void **>(&this->device_is_memory_bad),
+							sizeof(unsigned long long int)));
 
 			this->debug("push memory to device");
 			//set 0 to C matrix
@@ -416,6 +370,12 @@ public:
 			check_framework_errors(cudaFree(this->device_ptr_d1));
 		if (this->device_ptr_d2 != nullptr)
 			check_framework_errors(cudaFree(this->device_ptr_d2));
+
+		//Is memory bad
+		if (this->device_is_memory_bad != nullptr) {
+			check_framework_errors(cudaFree(this->device_is_memory_bad));
+
+		}
 	}
 
 	void debug(std::string str) {
@@ -424,12 +384,11 @@ public:
 		}
 	}
 
-	unsigned long long int get_memory_errors() {
-		unsigned long long int host_is_memory_bad;
-//		check_framework_errors(
-//				cudaMemcpyFromSymbol(&host_is_memory_bad, "is_memory_bad",
-//						sizeof(unsigned long long int), 0,
-//						cudaMemcpyDeviceToHost));
+	size_t get_memory_errors() {
+		size_t host_is_memory_bad;
+		check_framework_errors(
+				cudaMemcpy(&host_is_memory_bad, this->device_is_memory_bad,
+						sizeof(unsigned long long int), cudaMemcpyDeviceToHost));
 		return host_is_memory_bad;
 	}
 
