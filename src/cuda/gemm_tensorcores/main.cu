@@ -15,8 +15,6 @@
 typedef half_float::half host_half;
 
 typedef std::vector<host_half> half_vector;
-typedef std::vector<float> float_vector;
-typedef std::vector<double> double_vector;
 
 template<class real_t> void generate_matrices_files(std::string a_path,
 		std::string b_path, std::string c_path, half_vector& a_host_vector,
@@ -97,6 +95,7 @@ void write_gold_to_file(std::string gold_path, std::vector<real_t>& gold) {
 	if (f_gold.is_open()) {
 		f_gold.write(reinterpret_cast<char*>(gold.data()),
 				sizeof(real_t) * gold.size());
+		f_gold.close();
 	} else {
 		throw std::runtime_error("Could not write gold file\n");
 	}
@@ -280,6 +279,67 @@ void usage(char **argv) {
 			<< std::endl;
 }
 
+template<class real_t>
+void call_mxm(size_t size_matrices, bool generate, std::string a_input_path,
+		std::string b_input_path, std::string c_input_path,
+		std::string gold_inout_path, half_vector host_matrix_a,
+		half_vector host_matrix_b, int iterations, bool verbose, Log* log_obj) {
+	// C matrix
+	std::vector<real_t> host_matrix_c(size_matrices * size_matrices);
+	std::vector<real_t> host_gold(size_matrices * size_matrices);
+	// D Matrix
+	std::vector<real_t> host_matrix_d1(size_matrices * size_matrices);
+	std::vector<real_t> host_matrix_d2(size_matrices * size_matrices);
+	std::vector<real_t> host_matrix_d3(size_matrices * size_matrices);
+	//		std::cout << "passou declaracao host" << std::endl;
+	if (!generate) {
+		retrieve_matrices<real_t>(a_input_path, b_input_path, c_input_path,
+				gold_inout_path, host_matrix_a, host_matrix_b, host_matrix_c,
+				host_gold, log_obj);
+	} else {
+		//			std::cout << "entrou else" << std::endl;
+		generate_matrices_files<real_t>(a_input_path, b_input_path, c_input_path,
+				host_matrix_a, host_matrix_b, host_matrix_c, size_matrices);
+	}
+	//GOLD Matrix
+	std::vector<real_t> host_matrix_gold(size_matrices * size_matrices);
+	GEMMWMMA<host_half, half, real_t> mult_enviroment(host_matrix_a.data(),
+			host_matrix_b.data(), host_matrix_c.data(), size_matrices,
+			size_matrices, size_matrices);
+	int tries = 0;
+	for (int it = 0; it < iterations; it++) {
+		mult_enviroment.mul();
+		mult_enviroment.pull_array(host_matrix_d1.data(), host_matrix_d2.data(),
+				host_matrix_d3.data());
+		std::pair<int, int> errors = compare_output_matrices(
+				mult_enviroment.get_memory_errors(), host_gold, host_matrix_d1,
+				host_matrix_d2, host_matrix_d3, log_obj, size_matrices,
+				verbose);
+		std::cout << "Iteration: " << it << " memory errors " << errors.first
+				<< " radiation errors " << errors.second << std::endl;
+		//TODO check this
+		if (generate) {
+			tries++;
+			bool has_errors = is_output_ok(host_matrix_d1, host_matrix_d2,
+					host_matrix_d3, host_gold);
+			if (!has_errors)
+				it--;
+
+			if (tries > 5)
+				throw std::runtime_error(
+						"More than 5 tries on matrix generate\n");
+		}
+		//If errors != 0 reload matrices to gpu
+		if (errors.first != 0 || errors.second != 0) {
+			mult_enviroment.push_arrays(host_matrix_a.data(),
+					host_matrix_b.data(), host_matrix_c.data());
+		}
+	}
+	if (generate) {
+		write_gold_to_file<real_t>(gold_inout_path, host_gold);
+	}
+}
+
 int main(int argc, char** argv) {
 
 //	if (argc < 7){
@@ -325,76 +385,15 @@ int main(int argc, char** argv) {
 	half_vector host_matrix_b(size_matrices * size_matrices);
 
 	if (precision == "float") {
+		call_mxm<float>(size_matrices, generate, a_input_path, b_input_path,
+				c_input_path, gold_inout_path, host_matrix_a, host_matrix_b,
+				iterations, verbose, log_obj);
+	}
 
-		// C matrix
-		float_vector host_matrix_c(size_matrices * size_matrices);
-		float_vector host_gold(size_matrices * size_matrices);
-		// D Matrix
-		float_vector host_matrix_d1(size_matrices * size_matrices);
-		float_vector host_matrix_d2(size_matrices * size_matrices);
-		float_vector host_matrix_d3(size_matrices * size_matrices);
-//		std::cout << "passou declaracao host" << std::endl;
-
-		if (!generate) {
-			retrieve_matrices(a_input_path, b_input_path, c_input_path,
-					gold_inout_path, host_matrix_a, host_matrix_b,
-					host_matrix_c, host_gold, log_obj);
-
-		} else {
-//			std::cout << "entrou else" << std::endl;
-			generate_matrices_files(a_input_path, b_input_path, c_input_path,
-					host_matrix_a, host_matrix_b, host_matrix_c, size_matrices);
-		}
-		//GOLD Matrix
-		float_vector host_matrix_gold(size_matrices * size_matrices);
-
-		GEMMWMMA<host_half, half, float> mult_enviroment(host_matrix_a.data(),
-				host_matrix_b.data(), host_matrix_c.data(), size_matrices,
-				size_matrices, size_matrices);
-
-		int tries = 0;
-		for (int it = 0; it < iterations; it++) {
-
-			mult_enviroment.mul();
-			mult_enviroment.pull_array(host_matrix_d1.data(),
-					host_matrix_d2.data(), host_matrix_d3.data());
-
-			std::pair<int, int> errors = compare_output_matrices(
-					mult_enviroment.get_memory_errors(), host_gold,
-					host_matrix_d1, host_matrix_d2, host_matrix_d3, log_obj,
-					size_matrices, verbose);
-
-			//TODO check this
-			if (generate) {
-				tries++;
-
-				bool has_errors = is_output_ok(host_matrix_d1, host_matrix_d2,
-						host_matrix_d3, host_gold);
-				if (has_errors)
-					it--;
-				if (tries > 5)
-					throw std::runtime_error(
-							"More than 5 tries on matrix generate\n");
-
-			}
-
-			//If errors != 0 reload matrices to gpu
-			if (errors.first != 0 || errors.second != 0) {
-				mult_enviroment.push_arrays(host_matrix_a.data(),
-						host_matrix_b.data(), host_matrix_c.data());
-			}
-
-			std::cout << "Iteration: " << it << " memory errors "
-					<< errors.first << " radiation errors " << errors.second
-					<< std::endl;
-
-		}
-
-		if (generate) {
-			write_gold_to_file(gold_inout_path, host_gold);
-		}
-	} else if (precision == "double") {
-
+	if (precision == "double") {
+		call_mxm<double>(size_matrices, generate, a_input_path, b_input_path,
+				c_input_path, gold_inout_path, host_matrix_a, host_matrix_b,
+				iterations, verbose, log_obj);
 	}
 
 	if (log_obj)
