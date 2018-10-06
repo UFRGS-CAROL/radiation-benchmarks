@@ -272,7 +272,7 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 				valOutput = valOutput0;
 			}
 		}
-		std::cout << "val out: " << valGold << std::endl
+		std::cout << "val out: " << valGold << std::endl;
 		if (valGold != valOutput) {
 			if (checkFlag) {
 #pragma omp critical
