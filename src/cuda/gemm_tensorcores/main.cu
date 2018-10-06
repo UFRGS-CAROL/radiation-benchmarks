@@ -272,12 +272,12 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 				valOutput = valOutput0;
 			}
 		}
-		std::cout << "val gold: " << valGold << std::endl;
+		// std::cout << "val gold: " << valGold << std::endl;
 		if (valGold != valOutput) {
 			if (checkFlag) {
 #pragma omp critical
 				{
-					 std::cout << "val out: " << valOutput << std::endl;
+					 // std::cout << "val out: " << valOutput << std::endl;
 
 					std::stringstream error_detail("");
 					error_detail << "p: [" << int(floor(i / log.size_matrices))
@@ -352,12 +352,12 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),
 				host_matrix_d2.data());
 
-		for (int i = 0; i < 100; ++i)
-		{
-				std::cout << "d0: " << host_matrix_d0[i] << std::endl;
-				std::cout << "d1: " << host_matrix_d1[i] << std::endl;
-				std::cout << "d2: " << host_matrix_d2[i] << std::endl;
-		}
+		// for (int i = 0; i < 100; ++i)
+		// {
+		// 		std::cout << "d0: " << host_matrix_d0[i] << std::endl;
+		// 		std::cout << "d1: " << host_matrix_d1[i] << std::endl;
+		// 		std::cout << "d2: " << host_matrix_d2[i] << std::endl;
+		// }
 
 	
 
@@ -377,7 +377,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 
 			for (int i = 0; i < 16; ++i)
 			{
-			std::cout << "gold: " << host_gold[i] << std::endl;
+			// std::cout << "gold: " << host_gold[i] << std::endl;
 			}
 		} else {
 			double start = log_obj.mysecond();
