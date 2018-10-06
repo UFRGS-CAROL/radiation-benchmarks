@@ -277,7 +277,7 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 			if (checkFlag) {
 #pragma omp critical
 				{
-					std::cout << "val out: " << valOutput << std::endl;
+					// std::cout << "val out: " << valOutput << std::endl;
 
 					std::stringstream error_detail("");
 					error_detail << "p: [" << int(floor(i / log.size_matrices))
@@ -351,6 +351,13 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),
 				host_matrix_d2.data());
 
+		for (int i = 0; i < 16; ++i)
+		{
+			std::cout << "d0: " << host_matrix_d0[i] << std::endl;
+			std::cout << "d1: " << host_matrix_d1[i] << std::endl;
+			std::cout << "d2: " << host_matrix_d2[i] << std::endl;
+		}
+
 		//TODO check this
 		if (log_obj.generate) {
 			tries++;
@@ -364,6 +371,11 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				throw std::runtime_error(
 						"More than 5 tries on matrix generate\n");
 			std::cout << "Iteration: " << it << std::endl;
+
+			for (int i = 0; i < 16; ++i)
+			{
+			std::cout << "gold: " << host_gold[i] << std::endl;
+			}
 		} else {
 			double start = log_obj.mysecond();
 
