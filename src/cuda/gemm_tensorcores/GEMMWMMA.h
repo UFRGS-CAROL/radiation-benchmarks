@@ -199,7 +199,9 @@ public:
 				this->device_is_memory_bad);
 
 		this->debug("device synchronize");
-		check_framework_errors(cudaDeviceSynchronize());
+		// check_framework_errors(cudaDeviceSynchronize());
+		check_framework_errors(__syncthreads());
+
 
 		this->byte_size_c = this->rows_c * this->cols_c * sizeof(float);
 
