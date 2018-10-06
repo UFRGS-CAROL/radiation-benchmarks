@@ -311,14 +311,14 @@ public:
 						cudaMemcpyDeviceToHost));
 
 		std::cout << "Values computed by one wmma core\n";
-		// for(int i = 0; i < WMMA_M; i++){
-		// 	for(int j = 0; j < WMMA_N; j++){
-		// 		std::cout << "d0[" << i << "," << j << "] " << host_ptr_d0[i * WMMA_K + j] << " ";
-		// 		std::cout << "d1[" << i << "," << j << "] " << host_ptr_d1[i * WMMA_K + j] << " ";
-		// 		std::cout << "d2[" << i << "," << j << "] " << host_ptr_d2[i * WMMA_K + j] << "\n";
-		// 	}
-		// 	std::cout << "\n";
-		// }
+		for(int i = 0; i < WMMA_M; i++){
+			for(int j = 0; j < WMMA_N; j++){
+				std::cout << "d0[" << i << "," << j << "] " << host_ptr_d0[i * WMMA_K + j] << " ";
+				std::cout << "d1[" << i << "," << j << "] " << host_ptr_d1[i * WMMA_K + j] << " ";
+				std::cout << "d2[" << i << "," << j << "] " << host_ptr_d2[i * WMMA_K + j] << "\n";
+			}
+			std::cout << "\n";
+		}
 	}
 
 	/**
