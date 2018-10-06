@@ -126,13 +126,10 @@ public:
 						sizeof(unsigned long long int)));
 
 	
-		// simple_wmma_gemm<<<1, 1>>>(this->device_ptr_d0,
-		// 		this->device_ptr_d1, this->device_ptr_d2, this->rows_a,
-		// 		this->rows_b, this->alpha, this->beta);
-
-		simple_wmma_gemm<<<grid_dim, block_dim>>>(this->device_ptr_d0,
+		simple_wmma_gemm<<<1, 1>>>(this->device_ptr_d0,
 				this->device_ptr_d1, this->device_ptr_d2, this->rows_a,
 				this->rows_b, this->alpha, this->beta);
+
 
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
