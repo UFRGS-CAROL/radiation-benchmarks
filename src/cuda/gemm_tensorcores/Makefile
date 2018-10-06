@@ -92,7 +92,7 @@ clean:
 
 
 generate:
-	./$(TARGET) --size 1024 --generate 1 --verbose 1 --tensor_cores 0
+	./$(TARGET) --size 1024 --generate 1 --verbose 1 --tensor_cores 1
 	
 test:
 	./$(TARGET) --size 1024 --generate 0 --verbose 1 --iterations 10 --tensor_cores 0
