@@ -95,7 +95,7 @@ public:
 				this->device_ptr_d1, this->device_ptr_d2, this->rows_a,
 				this->cols_b, this->rows_b, this->alpha, this->beta,
 				this->device_is_memory_bad);
-
+		printf("saiu kernel");
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
 
