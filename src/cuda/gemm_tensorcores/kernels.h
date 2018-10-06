@@ -36,7 +36,7 @@ __global__ void simple_wmma_gemm(half *d0, half *d1, half *d2, size_t m_ld, size
 	int ldb = WMMA_K;
 	int ldc = WMMA_M;
 	int ldc_c = m_ld;
-
+	printf("D0 = %f\n", d0[1]);
 	// Tile using a 2D grid
 	int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / WARP_SIZE;
 	int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
