@@ -12,18 +12,9 @@
 #include <string>
 #include <cstdio>
 #include <iostream>
-#include <mma.h>
 #include <cuda_fp16.h> // For half precision computation
 #include <iostream>
-
-// The only dimensions currently supported by WMMA
-#define WMMA_M 16
-#define WMMA_N 16
-#define WMMA_K 16
-
-#ifndef BLOCK_SIZE
-#define BLOCK_SIZE 32
-#endif
+#include "kernels.h"
 
 //ERROR functions definitions
 void __check_framework_errors(cudaError_t error, int line, const char* file) {
@@ -42,65 +33,17 @@ void __error(const char* error, int line, const char* file) {
 	exit (EXIT_FAILURE);
 }
 
-template<class real_t>
-__device__ real_t inline read_voter(real_t *v1, real_t *v2, real_t *v3,
-		int offset, unsigned long long int* is_memory_bad) {
-
-	register real_t in1 = v1[offset];
-	register real_t in2 = v2[offset];
-	register real_t in3 = v3[offset];
-
-	if (in1 == in2 || in1 == in3) {
-		return in1;
-	}
-
-	if (in2 == in3) {
-		return in2;
-	}
-
-	if (in1 != in2 && in2 != in3 && in1 != in3) {
-		atomicAdd(is_memory_bad, 1);
-	}
-
-	return in1;
-}
-
-template<class half_t, class real_t>
-__global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
-		half_t *b1, half_t *b2, real_t *c0, real_t *c1, real_t *c2, real_t*d0,
-		real_t *d1, real_t *d2, size_t M, size_t N, size_t K, float alpha,
-		float beta, unsigned long long int* is_memory_bad) {
-
-	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-	register int k;
-
-	register real_t acc = 0.0;
-	for (k = 0; k < N; k++) {
-
-		half_t tmp = read_voter<half_t>(a0, a1, a2, ty * N + k, is_memory_bad)
-				* read_voter<half_t>(b0, b1, b2, k * N + tx, is_memory_bad);
-		acc = real_t(tmp) + acc;
-
-	}
-
-	acc += read_voter<real_t>(c0, c1, c2, ty * N + tx, is_memory_bad);
-
-	d0[ty * N + tx] = (float)acc;
-	d1[ty * N + tx] = (float)acc;
-	d2[ty * N + tx] = (float)acc;
-
-}
-
 #define check_framework_errors(error) __check_framework_errors(error, __LINE__, __FILE__)
 #define error(error) __error(error, __LINE__, __FILE__)
 
 template<class host_half_t, class half_t, class real_t>
 class GEMMWMMA {
 
-	void make_dims(dim3& dim_block, dim3& dim_grid){
-		int grid_size = this->cols_a / BLOCK_SIZE < 1 ? 1 : this->cols_a / BLOCK_SIZE;
-		int block_size = this->cols_b / BLOCK_SIZE < 1 ? this->cols_c : BLOCK_SIZE;
+	void make_dims(dim3& dim_block, dim3& dim_grid) {
+		int grid_size =
+				this->cols_a / BLOCK_SIZE < 1 ? 1 : this->cols_a / BLOCK_SIZE;
+		int block_size =
+				this->cols_b / BLOCK_SIZE < 1 ? this->cols_c : BLOCK_SIZE;
 		dim_block.x = block_size;
 		dim_block.y = block_size;
 
@@ -132,6 +75,7 @@ public:
 	size_t cols_b, rows_b;
 	size_t cols_c, rows_c;
 
+	real_t alpha, beta;
 	size_t byte_size_c;
 
 	bool to_debug = false;
@@ -139,55 +83,78 @@ public:
 	//to check memory errors
 	unsigned long long int* device_is_memory_bad = nullptr;
 
-	void mul() {
-		//		//No double multiplication is allowed
-		if (std::is_same<half_t, double>::value
-				|| std::is_same<half_t, float>::value) {
-			throw std::runtime_error(
-					"Double/Float multiplication is not allowed with tensor cores, use GEMM base class instead\n");
-		}
+	void mul_mxm() {
 
 		this->debug("thread dim allocation");
 		//		// Setup execution parameters
-		dim3 grid_dim;
-		dim3 block_dim;
-		this->make_dims(block_dim, grid_dim);
-
-		// blockDim.x must be a multple of warpSize
-		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-//		blockDim.x = 128;
-//		blockDim.y = 4;
-//
-//		gridDim.x = (this->rows_a + (WMMA_M * blockDim.x / 32 - 1))
-//				/ (WMMA_M * blockDim.x / 32);
-//
-//		gridDim.y = (this->cols_b + WMMA_N * blockDim.y - 1)
-//				/ (WMMA_N * blockDim.y);
+	    // Setup execution parameters
+	    dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+	    dim3 grid(std::ceil(this->cols_a / BLOCK_SIZE), std::ceil(this->rows_a / BLOCK_SIZE));
 
 		this->debug("matrix multiplication");
 
-		check_framework_errors(cudaMemset(this->device_is_memory_bad, 0x0, sizeof(unsigned long long int)));
+		check_framework_errors(
+				cudaMemset(this->device_is_memory_bad, 0x0,
+						sizeof(unsigned long long int)));
 
-		wmma_matrix_mul<half_t, real_t> <<<grid_dim, block_dim>>>(
+		wmma_matrix_mul<half_t, real_t> <<<grid, threads>>>(
 				this->device_ptr_a0, this->device_ptr_a1, this->device_ptr_a2,
 				this->device_ptr_b0, this->device_ptr_b1, this->device_ptr_b2,
 				this->device_ptr_c0, this->device_ptr_c1, this->device_ptr_c2,
 				this->device_ptr_d0, this->device_ptr_d1, this->device_ptr_d2,
-				this->rows_a, this->cols_b, this->rows_b, 1.0, 1.0,
+				this->rows_a, this->cols_b, this->rows_b, this->alpha, this->beta,
 				this->device_is_memory_bad);
 
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
 
+	}
 
+	void mul_wmma() {
+		this->debug("thread dim allocation");
+		//		// Setup execution parameters
+		// First: using WMMA
+		dim3 grid_dim;
+		dim3 block_dim;
 
-		this->byte_size_c = this->rows_c * this->cols_c * sizeof(float);
+		// block_dim.x must be a multple of warpSize
+		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+		block_dim.x = 128;
+		block_dim.y = 4;
+
+		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / 32 - 1))
+				/ (WMMA_M * block_dim.x / 32);
+		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
+				/ (WMMA_N * block_dim.y);
+
+		this->debug("matrix multiplication");
+
+		check_framework_errors(
+				cudaMemset(this->device_is_memory_bad, 0x0,
+						sizeof(unsigned long long int)));
+
+		simple_wmma_gemm<<<grid_dim, block_dim>>>(
+				this->device_ptr_a0, this->device_ptr_a1, this->device_ptr_a2,
+				this->device_ptr_b0, this->device_ptr_b1, this->device_ptr_b2,
+				this->device_ptr_c0, this->device_ptr_c1, this->device_ptr_c2,
+				this->device_ptr_d0, this->device_ptr_d1, this->device_ptr_d2,
+				this->rows_a, this->cols_b, this->rows_b, this->alpha, this->beta,
+				this->device_is_memory_bad);
+
+		this->debug("device synchronize");
+		check_framework_errors(cudaDeviceSynchronize());
 
 	}
 
-	GEMMWMMA(const host_half_t* host_ptr_a0,
-			const host_half_t* host_ptr_b0, const real_t* host_ptr_c0,
-			size_t rows_a, size_t cols_a, size_t cols_b) {
+	GEMMWMMA(const host_half_t* host_ptr_a0, const host_half_t* host_ptr_b0,
+			const real_t* host_ptr_c0, size_t rows_a, size_t cols_a,
+			size_t cols_b, real_t alpha, real_t beta) {
+
+		//		//No double multiplication is allowed
+		if (std::is_same<half_t, float>::value) {
+			throw std::runtime_error(
+					"Double/Float multiplication is not allowed with tensor cores, use GEMM base class instead\n");
+		}
 
 		this->rows_a = rows_a;
 		this->cols_a = cols_a;
@@ -195,6 +162,8 @@ public:
 		this->cols_b = cols_b;
 		this->cols_c = this->rows_a;
 		this->rows_c = this->cols_b;
+		this->alpha = alpha;
+		this->beta = beta;
 
 		if (rows_a > 0 && cols_a > 0 && cols_b > 0) {
 			this->debug("device memory allocation");

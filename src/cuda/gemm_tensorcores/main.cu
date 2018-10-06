@@ -337,16 +337,19 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 //GOLD Matrix
 	std::vector<real_t> host_matrix_gold(
 			log_obj.size_matrices * log_obj.size_matrices);
+
 	GEMMWMMA<host_half, half, real_t> mult_enviroment(host_matrix_a.data(),
 			host_matrix_b.data(), host_matrix_c.data(), log_obj.size_matrices,
-			log_obj.size_matrices, log_obj.size_matrices);
+			log_obj.size_matrices, log_obj.size_matrices, 1.0, 1.0);
 
 	int tries = 0;
 
 	for (int it = 0; it < log_obj.iterations; it++) {
 		log_obj.start_iteration_app();
-		mult_enviroment.mul();
-
+		if(log_obj.use_tensor_cores)
+			mult_enviroment.mul_wmma();
+		else
+			mult_enviroment.mul_mxm();
 		log_obj.end_iteration_app();
 
 		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),
@@ -432,13 +435,18 @@ int main(int argc, char** argv) {
 	half_vector host_matrix_a(log_obj.size_matrices * log_obj.size_matrices);
 	half_vector host_matrix_b(log_obj.size_matrices * log_obj.size_matrices);
 
+	//TODO: To be implemented
+//	if(log_obj.precision == "half"){
+//		call_mxm<host_half>(host_matrix_a, host_matrix_b, log_obj);
+//
+//	}
 	if (log_obj.precision == "float") {
 		call_mxm<float>(host_matrix_a, host_matrix_b, log_obj);
 	}
-
-	if (log_obj.precision == "double") {
-		call_mxm<double>(host_matrix_a, host_matrix_b, log_obj);
-	}
+//
+//	if (log_obj.precision == "double") {
+//		call_mxm<double>(host_matrix_a, host_matrix_b, log_obj);
+//	}
 
 	std::cout << "Finished computation\n";
 	return 0;

@@ -27,6 +27,7 @@ public:
 	std::string gold_inout_path;
 	std::string precision;
 	bool verbose;
+	bool use_tensor_cores;
 
 	Log(int argc, char** argv, int input_size) {
 
@@ -48,6 +49,8 @@ public:
 
 		this->precision = this->find_char_arg(argc, argv, "--precision",
 				"float");
+
+		this->use_tensor_cores = this->find_int_arg(argc, argv, "--tensor_cores", 0);
 
 		this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);
 
