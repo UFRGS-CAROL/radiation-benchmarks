@@ -294,7 +294,8 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 		}
 	}
 
-	std::cout << memory_errors << " " << host_errors << "\n";
+// printf("numErrors:%d", host_errors);
+
 	log.update_info_count(memory_errors);
 	log.update_error_count(host_errors);
 
@@ -345,11 +346,18 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 	for (int it = 0; it < log_obj.iterations; it++) {
 		log_obj.start_iteration_app();
 		mult_enviroment.mul();
-		
+
 		log_obj.end_iteration_app();
 
 		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),
 				host_matrix_d2.data());
+
+		for (int i = 0; i < 16; ++i)
+		{
+				std::cout << "d0: " << host_matrix_d0[i] << std::endl;
+				std::cout << "d1: " << host_matrix_d1[i] << std::endl;
+				std::cout << "d2: " << host_matrix_d2[i] << std::endl;
+		}
 
 	
 
@@ -374,13 +382,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		} else {
 			double start = log_obj.mysecond();
 
-			for (int i = 0; i < 100; ++i)
-			{
-				std::cout << "d0: " << host_matrix_d0[i] << std::endl;
-				std::cout << "d1: " << host_matrix_d1[i] << std::endl;
-				std::cout << "d2: " << host_matrix_d2[i] << std::endl;
-			}
-
+		
 			std::pair<int, int> errors = compare_output_matrices(
 					mult_enviroment.get_memory_errors(), host_gold,
 					host_matrix_d0, host_matrix_d1, host_matrix_d2, log_obj);
