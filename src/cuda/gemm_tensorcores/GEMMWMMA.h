@@ -12,7 +12,6 @@
 #include <string>
 #include <cstdio>
 #include <iostream>
-#include <cuda_fp16.h> // For half precision computation
 #include <iostream>
 #include "kernels.h"
 
@@ -36,21 +35,9 @@ void __error(const char* error, int line, const char* file) {
 #define check_framework_errors(error) __check_framework_errors(error, __LINE__, __FILE__)
 #define error(error) __error(error, __LINE__, __FILE__)
 
-template<class host_half_t, class half_t, class real_t>
+//host_half, half, host_real_t, real_t
+template<class host_half_t, class half_t, class host_real_t, class real_t>
 class GEMMWMMA {
-
-	void make_dims(dim3& dim_block, dim3& dim_grid) {
-		int grid_size =
-				this->cols_a / BLOCK_SIZE < 1 ? 1 : this->cols_a / BLOCK_SIZE;
-		int block_size =
-				this->cols_b / BLOCK_SIZE < 1 ? this->cols_c : BLOCK_SIZE;
-		dim_block.x = block_size;
-		dim_block.y = block_size;
-
-		dim_grid.x = grid_size;
-		dim_grid.y = grid_size;
-	}
-
 public:
 
 	// Memory pointers to device and host data
@@ -87,9 +74,10 @@ public:
 
 		this->debug("thread dim allocation");
 		//		// Setup execution parameters
-	    // Setup execution parameters
-	    dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-	    dim3 grid(std::ceil(this->cols_a / BLOCK_SIZE), std::ceil(this->rows_a / BLOCK_SIZE));
+		// Setup execution parameters
+		dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+		dim3 grid(std::ceil(this->cols_a / BLOCK_SIZE),
+				std::ceil(this->rows_a / BLOCK_SIZE));
 
 		this->debug("matrix multiplication");
 
@@ -97,12 +85,12 @@ public:
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
 
-		wmma_matrix_mul<half_t, real_t> <<<grid, threads>>>(
-				this->device_ptr_a0, this->device_ptr_a1, this->device_ptr_a2,
-				this->device_ptr_b0, this->device_ptr_b1, this->device_ptr_b2,
-				this->device_ptr_c0, this->device_ptr_c1, this->device_ptr_c2,
-				this->device_ptr_d0, this->device_ptr_d1, this->device_ptr_d2,
-				this->rows_a, this->cols_b, this->rows_b, this->alpha, this->beta,
+		matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
+				this->device_ptr_a1, this->device_ptr_a2, this->device_ptr_b0,
+				this->device_ptr_b1, this->device_ptr_b2, this->device_ptr_c0,
+				this->device_ptr_c1, this->device_ptr_c2, this->device_ptr_d0,
+				this->device_ptr_d1, this->device_ptr_d2, this->rows_a,
+				this->cols_b, this->rows_b, this->alpha, this->beta,
 				this->device_is_memory_bad);
 
 		this->debug("device synchronize");
@@ -133,13 +121,9 @@ public:
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
 
-		simple_wmma_gemm<<<grid_dim, block_dim>>>(
-				this->device_ptr_a0, this->device_ptr_a1, this->device_ptr_a2,
-				this->device_ptr_b0, this->device_ptr_b1, this->device_ptr_b2,
-				this->device_ptr_c0, this->device_ptr_c1, this->device_ptr_c2,
-				this->device_ptr_d0, this->device_ptr_d1, this->device_ptr_d2,
-				this->rows_a, this->cols_b, this->rows_b, this->alpha, this->beta,
-				this->device_is_memory_bad);
+		simple_wmma_gemm<<<1, 1>>>(this->device_ptr_d0,
+				this->device_ptr_d1, this->device_ptr_d2, this->rows_a,
+				this->rows_b, this->alpha, this->beta);
 
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
@@ -147,7 +131,7 @@ public:
 	}
 
 	GEMMWMMA(const host_half_t* host_ptr_a0, const host_half_t* host_ptr_b0,
-			const real_t* host_ptr_c0, size_t rows_a, size_t cols_a,
+			const host_real_t* host_ptr_c0, size_t rows_a, size_t cols_a,
 			size_t cols_b, real_t alpha, real_t beta) {
 
 		//		//No double multiplication is allowed
@@ -236,7 +220,7 @@ public:
 	 */
 
 	void push_arrays(const host_half_t* host_ptr_a0,
-			const host_half_t* host_ptr_b0, const real_t* host_ptr_c0) {
+			const host_half_t* host_ptr_b0, const host_real_t* host_ptr_c0) {
 
 		this->debug("memset array D");
 		//set 0 to C's matrix
@@ -305,8 +289,8 @@ public:
 	 * PULL D array to host
 	 */
 
-	void pull_array(real_t* host_ptr_d0, real_t* host_ptr_d1,
-			real_t* host_ptr_d2) {
+	void pull_array(host_real_t* host_ptr_d0, host_real_t* host_ptr_d1,
+			host_real_t* host_ptr_d2) {
 
 		this->debug("memcpy array D to host");
 		// PULL D's
@@ -321,6 +305,16 @@ public:
 		check_framework_errors(
 				cudaMemcpy(host_ptr_d2, this->device_ptr_d2, this->byte_size_c,
 						cudaMemcpyDeviceToHost));
+
+		std::cout << "Values computed by one wmma core\n";
+		for(int i = 0; i < WMMA_M; i++){
+			for(int j = 0; j < WMMA_N; j++){
+				std::cout << "d0[" << i << "," << j << "] " << host_ptr_d0[i * WMMA_K + j] << " ";
+				std::cout << "d1[" << i << "," << j << "] " << host_ptr_d1[i * WMMA_K + j] << " ";
+				std::cout << "d2[" << i << "," << j << "] " << host_ptr_d2[i * WMMA_K + j] << "\n";
+			}
+			std::cout << "\n";
+		}
 	}
 
 	/**

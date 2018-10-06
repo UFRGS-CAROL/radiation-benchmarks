@@ -51,8 +51,6 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 			}
 		}
 
-	
-
 		host_half zero(0.0);
 		host_half nan_ = host_half(half_float::nanh("0"));
 		host_half inf_ = host_half(host_half(0x7C00));
@@ -277,7 +275,7 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 			if (checkFlag) {
 #pragma omp critical
 				{
-					 // std::cout << "val out: " << valOutput << std::endl;
+					// std::cout << "val out: " << valOutput << std::endl;
 
 					std::stringstream error_detail("");
 					error_detail << "p: [" << int(floor(i / log.size_matrices))
@@ -308,45 +306,42 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 	return res;
 }
 
-template<class real_t>
+template<class host_real_t, class real_t>
 void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		Log& log_obj) {
 
 // C matrix
-	std::vector<real_t> host_matrix_c(
+	std::vector<host_real_t> host_matrix_c(
 			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<real_t> host_gold(
+	std::vector<host_real_t> host_gold(
 			log_obj.size_matrices * log_obj.size_matrices);
 // D Matrix
-	std::vector<real_t> host_matrix_d0(
+	std::vector<host_real_t> host_matrix_d0(
 			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<real_t> host_matrix_d1(
+	std::vector<host_real_t> host_matrix_d1(
 			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<real_t> host_matrix_d2(
+	std::vector<host_real_t> host_matrix_d2(
 			log_obj.size_matrices * log_obj.size_matrices);
 
 	if (!log_obj.generate) {
-		retrieve_matrices<real_t>(host_matrix_a, host_matrix_b, host_matrix_c,
+		retrieve_matrices<host_real_t>(host_matrix_a, host_matrix_b, host_matrix_c,
 				host_gold, log_obj);
 	} else {
 
-		generate_matrices_files<real_t>(host_matrix_a, host_matrix_b,
+		generate_matrices_files<host_real_t>(host_matrix_a, host_matrix_b,
 				host_matrix_c, log_obj);
 	}
 
-//GOLD Matrix
-	std::vector<real_t> host_matrix_gold(
-			log_obj.size_matrices * log_obj.size_matrices);
 
-	GEMMWMMA<host_half, half, real_t> mult_enviroment(host_matrix_a.data(),
+	GEMMWMMA<host_half, half, host_real_t, real_t> mult_enviroment(host_matrix_a.data(),
 			host_matrix_b.data(), host_matrix_c.data(), log_obj.size_matrices,
-			log_obj.size_matrices, log_obj.size_matrices, 1.0, 1.0);
+			log_obj.size_matrices, log_obj.size_matrices, real_t(1.0), real_t(1.0));
 
 	int tries = 0;
 
 	for (int it = 0; it < log_obj.iterations; it++) {
 		log_obj.start_iteration_app();
-		if(log_obj.use_tensor_cores)
+		if (log_obj.use_tensor_cores)
 			mult_enviroment.mul_wmma();
 		else
 			mult_enviroment.mul_mxm();
@@ -362,8 +357,6 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		// 		std::cout << "d2: " << host_matrix_d2[i] << std::endl;
 		// }
 
-	
-
 		//TODO check this
 		if (log_obj.generate) {
 			tries++;
@@ -378,14 +371,12 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 						"More than 5 tries on matrix generate\n");
 			std::cout << "Iteration: " << it << std::endl;
 
-			for (int i = 0; i < 16; ++i)
-			{
-			// std::cout << "gold: " << host_gold[i] << std::endl;
+			for (int i = 0; i < 16; ++i) {
+				// std::cout << "gold: " << host_gold[i] << std::endl;
 			}
 		} else {
 			double start = log_obj.mysecond();
 
-		
 			std::pair<int, int> errors = compare_output_matrices(
 					mult_enviroment.get_memory_errors(), host_gold,
 					host_matrix_d0, host_matrix_d1, host_matrix_d2, log_obj);
@@ -398,15 +389,15 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
-				mult_enviroment.push_arrays(host_matrix_a.data(), host_matrix_b.data(),
-						host_matrix_c.data());
+				mult_enviroment.push_arrays(host_matrix_a.data(),
+						host_matrix_b.data(), host_matrix_c.data());
 			}
 
 		}
 
 	}
 	if (log_obj.generate) {
-		write_gold_to_file<real_t>(log_obj.gold_inout_path, host_gold);
+		write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_gold);
 	}
 }
 
@@ -436,12 +427,12 @@ int main(int argc, char** argv) {
 	half_vector host_matrix_b(log_obj.size_matrices * log_obj.size_matrices);
 
 	//TODO: To be implemented
-//	if(log_obj.precision == "half"){
-//		call_mxm<host_half>(host_matrix_a, host_matrix_b, log_obj);
-//
-//	}
+	if (log_obj.precision == "half") {
+		call_mxm<host_half, half>(host_matrix_a, host_matrix_b, log_obj);
+
+	}
 	if (log_obj.precision == "float") {
-		call_mxm<float>(host_matrix_a, host_matrix_b, log_obj);
+		call_mxm<float, float>(host_matrix_a, host_matrix_b, log_obj);
 	}
 //
 //	if (log_obj.precision == "double") {
