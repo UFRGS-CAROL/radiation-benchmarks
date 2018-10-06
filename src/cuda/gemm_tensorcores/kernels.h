@@ -235,7 +235,7 @@ __global__ void matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 		real_t *d1, real_t *d2, size_t M, size_t N, size_t K, real_t alpha,
 		real_t beta, unsigned long long int* is_memory_bad) {
 
-	printf("entrou kernel");
+	
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;

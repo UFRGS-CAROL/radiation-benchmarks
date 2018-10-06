@@ -346,7 +346,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		else
 
 		mult_enviroment.mul_mxm();
-		printf("passou mul_mxm \n");
+		
 		log_obj.end_iteration_app();
 
 		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),

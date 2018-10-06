@@ -71,12 +71,12 @@ public:
 	unsigned long long int* device_is_memory_bad = nullptr;
 
 	void mul_mxm() {
-		printf("entrou mul_mxm \n");
+		
 		this->debug("thread dim allocation");
 		//		// Setup execution parameters
 		// Setup execution parameters
-		dim3 threadsD(BLOCK_SIZE, BLOCK_SIZE);
-		dim3 gridD(std::ceil(this->cols_a / BLOCK_SIZE),
+		dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+		dim3 grid(std::ceil(this->cols_a / BLOCK_SIZE),
 				std::ceil(this->rows_a / BLOCK_SIZE));
 
 		this->debug("matrix multiplication");
@@ -88,7 +88,7 @@ public:
 
 
 
-		matrix_mul<half_t, real_t> <<<gridD, threadsD>>>(this->device_ptr_a0,
+		matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
 				this->device_ptr_a1, this->device_ptr_a2, this->device_ptr_b0,
 				this->device_ptr_b1, this->device_ptr_b2, this->device_ptr_c0,
 				this->device_ptr_c1, this->device_ptr_c2, this->device_ptr_d0,
@@ -96,7 +96,7 @@ public:
 				this->cols_b, this->rows_b, this->alpha, this->beta,
 				this->device_is_memory_bad);
 
-		printf("saiu kernel");
+		
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
 
