@@ -344,6 +344,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		if (log_obj.use_tensor_cores)
 			mult_enviroment.mul_wmma();
 		else
+			printf("entrou call_mxm\n");
 			mult_enviroment.mul_mxm();
 		log_obj.end_iteration_app();
 
