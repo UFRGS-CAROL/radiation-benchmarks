@@ -71,7 +71,7 @@ public:
 	unsigned long long int* device_is_memory_bad = nullptr;
 
 	void mul_mxm() {
-		
+		printf("entrou mul_mxm \n");
 		this->debug("thread dim allocation");
 		//		// Setup execution parameters
 		// Setup execution parameters
