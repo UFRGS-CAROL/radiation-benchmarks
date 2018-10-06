@@ -169,11 +169,11 @@ template<class real_t> void retrieve_matrices(half_vector& a_host_vector,
 
 		f_c.seekg(0, std::ios::beg);
 		f_c.read(reinterpret_cast<char*>(c_host_vector.data()),
-				sizeof(host_half) * c_host_vector.size());
+				sizeof(real_t) * c_host_vector.size());
 
 		f_gold.seekg(0, std::ios::beg);
 		f_gold.read(reinterpret_cast<char*>(gold_host_vector.data()),
-				sizeof(host_half) * gold_host_vector.size());
+				sizeof(real_t) * gold_host_vector.size());
 
 		f_a.close();
 		f_b.close();
