@@ -99,7 +99,7 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 
 	}
 
-	acc += read_voter<real_t>(c0, c1, c2, ty * N + tx, is_memory_bad);
+	// acc += read_voter<real_t>(c0, c1, c2, ty * N + tx, is_memory_bad);
 
 	d0[ty * N + tx] = (float)acc;
 	d1[ty * N + tx] = (float)acc;

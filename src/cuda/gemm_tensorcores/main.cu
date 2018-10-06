@@ -346,6 +346,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 	for (int it = 0; it < log_obj.iterations; it++) {
 		log_obj.start_iteration_app();
 		mult_enviroment.mul();
+		
 		log_obj.end_iteration_app();
 
 		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),
