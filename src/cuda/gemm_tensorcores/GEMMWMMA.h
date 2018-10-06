@@ -74,7 +74,8 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;
-
+	if(tx * ty > M * N)
+		return;
 //
 //	printf("\n wmma a0= %f  \n", __half2float(a0[ty * N + k]));
 //	printf("\n wmma a1= %f  \n", __half2float(a1[ty * N + k]));
@@ -119,17 +120,6 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 
 template<class host_half_t, class half_t, class real_t>
 class GEMMWMMA {
-
-	void make_dims(dim3& dim_block, dim3& dim_grid){
-		int grid_size = this->cols_a / BLOCK_SIZE < 1 ? 1 : this->cols_a / BLOCK_SIZE;
-		int block_size = this->cols_b / BLOCK_SIZE < 1 ? this->cols_c : BLOCK_SIZE;
-		dim_block.x = block_size;
-		dim_block.y = block_size;
-
-		dim_grid.x = grid_size;
-		dim_grid.y = grid_size;
-	}
-
 public:
 
 	// Memory pointers to device and host data
@@ -171,9 +161,10 @@ public:
 
 		this->debug("thread dim allocation");
 		//		// Setup execution parameters
-		dim3 grid_dim;
-		dim3 block_dim;
-		this->make_dims(block_dim, grid_dim);
+	    // Setup execution parameters
+	    dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+	    dim3 grid(ceil(this->cols_a / BLOCK_SIZE), ceil(this->cols_a / BLOCK_SIZE));
+
 
 		// blockDim.x must be a multple of warpSize
 		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
@@ -190,7 +181,7 @@ public:
 
 		check_framework_errors(cudaMemset(this->device_is_memory_bad, 0x0, sizeof(unsigned long long int)));
 
-		wmma_matrix_mul<half_t, real_t> <<<grid_dim, block_dim>>>(
+		wmma_matrix_mul<half_t, real_t> <<<grid, threads>>>(
 				this->device_ptr_a0, this->device_ptr_a1, this->device_ptr_a2,
 				this->device_ptr_b0, this->device_ptr_b1, this->device_ptr_b2,
 				this->device_ptr_c0, this->device_ptr_c1, this->device_ptr_c2,
