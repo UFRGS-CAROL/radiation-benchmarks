@@ -352,7 +352,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),
 				host_matrix_d2.data());
 
-		for (int i = 0; i < 16; ++i)
+		for (int i = 0; i < 100; ++i)
 		{
 				std::cout << "d0: " << host_matrix_d0[i] << std::endl;
 				std::cout << "d1: " << host_matrix_d1[i] << std::endl;

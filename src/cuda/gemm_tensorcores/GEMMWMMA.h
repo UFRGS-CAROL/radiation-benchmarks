@@ -75,19 +75,19 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;
 
-	for (size_t i = 0; i <16; i++) {
-		for (size_t j = 0; j < 16 ; j++) {
-			a0[i * 16+ j] = (half) 2.0;
-			a1[i * 16+ j] = (half) 2.0;
-			a2[i * 16+ j] = (half) 2.0;
-			b0[i * 16+ j] = (half) 2.0;
-			b1[i * 16+ j] = (half) 2.0;
-			b2[i * 16+ j] = (half) 2.0;
-			c0[i * 16+ j] = (float) 2.0;
-			c1[i * 16+ j] = (float) 2.0;
-			c2[i * 16+ j] = (float) 2.0;
-		}
-	}
+	// for (size_t i = 0; i <16; i++) {
+	// 	for (size_t j = 0; j < 16 ; j++) {
+	// 		a0[i * 16+ j] = (half) 2.0;
+	// 		a1[i * 16+ j] = (half) 2.0;
+	// 		a2[i * 16+ j] = (half) 2.0;
+	// 		b0[i * 16+ j] = (half) 2.0;
+	// 		b1[i * 16+ j] = (half) 2.0;
+	// 		b2[i * 16+ j] = (half) 2.0;
+	// 		c0[i * 16+ j] = (float) 2.0;
+	// 		c1[i * 16+ j] = (float) 2.0;
+	// 		c2[i * 16+ j] = (float) 2.0;
+	// 	}
+	// }
 
 //	printf("\n wmma a0= %f  \n", __half2float(a0[ty * N + k]));
 //	printf("\n wmma a1= %f  \n", __half2float(a1[ty * N + k]));
@@ -117,13 +117,6 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 	d0[ty * N + tx] = (float)acc;
 	d1[ty * N + tx] = (float)acc;
 	d2[ty * N + tx] = (float)acc;
-
-	// for (int i = 0; i < N; i++)
-	// 	printf("d0 %f\n", d0[i]);
-	// for (int i = 0; i < N; i++)
-	// 	printf("d1 %f\n", d1[i]);
-	// for (int i = 0; i < N; i++)
-	// 	printf("d2 %f\n", d2[i]);
 
 }
 
