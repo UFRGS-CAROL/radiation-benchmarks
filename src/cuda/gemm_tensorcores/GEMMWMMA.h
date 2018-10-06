@@ -121,8 +121,8 @@ public:
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
 
-		std::cout << "teste device_ptr_d0 =  " << device_ptr_d0[1] << std::endl;
-
+		std::cout << "teste device_ptr_d0 =  " << device_ptr_d0 << "\n";
+		
 		simple_wmma_gemm<<<1, 1>>>(this->device_ptr_d0,
 				this->device_ptr_d1, this->device_ptr_d2, this->rows_a,
 				this->rows_b, this->alpha, this->beta);
