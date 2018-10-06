@@ -351,12 +351,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),
 				host_matrix_d2.data());
 
-		for (int i = 0; i < 16; ++i)
-		{
-			std::cout << "d0: " << host_matrix_d0[i] << std::endl;
-			std::cout << "d1: " << host_matrix_d1[i] << std::endl;
-			std::cout << "d2: " << host_matrix_d2[i] << std::endl;
-		}
+	
 
 		//TODO check this
 		if (log_obj.generate) {
@@ -378,6 +373,13 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			}
 		} else {
 			double start = log_obj.mysecond();
+
+			for (int i = 0; i < 16; ++i)
+			{
+				std::cout << "d0: " << host_matrix_d0[i] << std::endl;
+				std::cout << "d1: " << host_matrix_d1[i] << std::endl;
+				std::cout << "d2: " << host_matrix_d2[i] << std::endl;
+			}
 
 			std::pair<int, int> errors = compare_output_matrices(
 					mult_enviroment.get_memory_errors(), host_gold,
