@@ -71,7 +71,7 @@ public:
 	unsigned long long int* device_is_memory_bad = nullptr;
 
 	void mul_mxm() {
-		printf("entrou mul_mxm \n");
+		
 		this->debug("thread dim allocation");
 		//		// Setup execution parameters
 		// Setup execution parameters
@@ -80,12 +80,12 @@ public:
 				std::ceil(this->rows_a / BLOCK_SIZE));
 
 		this->debug("matrix multiplication");
-		
+
 		check_framework_errors(
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
 	
-		
+
 
 
 		matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
