@@ -375,7 +375,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 						"More than 5 tries on matrix generate\n");
 			std::cout << "Iteration: " << it << std::endl;
 
-			for (int i = 0; i < 100; ++i)
+			for (int i = 0; i < 16; ++i)
 			{
 			std::cout << "gold: " << host_gold[i] << std::endl;
 			}
