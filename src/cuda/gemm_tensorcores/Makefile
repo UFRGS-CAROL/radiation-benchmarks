@@ -95,5 +95,5 @@ generate:
 	./$(TARGET) --size 1024 --generate 1 --verbose 1
 	
 test:
-	./$(TARGET) --size 1042 --generate 0 --verbose 1 --iterations 1
+	./$(TARGET) --size 1024 --generate 0 --verbose 1 --iterations 1
 	
