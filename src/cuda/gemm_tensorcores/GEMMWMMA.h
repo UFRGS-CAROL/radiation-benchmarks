@@ -84,6 +84,7 @@ public:
 		check_framework_errors(
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
+		printf("entrou mul_mxm \n");
 
 		matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
 				this->device_ptr_a1, this->device_ptr_a2, this->device_ptr_b0,
