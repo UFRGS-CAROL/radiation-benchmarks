@@ -80,11 +80,13 @@ public:
 				std::ceil(this->rows_a / BLOCK_SIZE));
 
 		this->debug("matrix multiplication");
-
+		printf("entrou mul_mxm \n");
 		check_framework_errors(
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
-		printf("entrou mul_mxm \n");
+	
+		
+
 
 		matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
 				this->device_ptr_a1, this->device_ptr_a2, this->device_ptr_b0,
@@ -309,14 +311,14 @@ public:
 						cudaMemcpyDeviceToHost));
 
 		std::cout << "Values computed by one wmma core\n";
-		for(int i = 0; i < WMMA_M; i++){
-			for(int j = 0; j < WMMA_N; j++){
-				std::cout << "d0[" << i << "," << j << "] " << host_ptr_d0[i * WMMA_K + j] << " ";
-				std::cout << "d1[" << i << "," << j << "] " << host_ptr_d1[i * WMMA_K + j] << " ";
-				std::cout << "d2[" << i << "," << j << "] " << host_ptr_d2[i * WMMA_K + j] << "\n";
-			}
-			std::cout << "\n";
-		}
+		// for(int i = 0; i < WMMA_M; i++){
+		// 	for(int j = 0; j < WMMA_N; j++){
+		// 		std::cout << "d0[" << i << "," << j << "] " << host_ptr_d0[i * WMMA_K + j] << " ";
+		// 		std::cout << "d1[" << i << "," << j << "] " << host_ptr_d1[i * WMMA_K + j] << " ";
+		// 		std::cout << "d2[" << i << "," << j << "] " << host_ptr_d2[i * WMMA_K + j] << "\n";
+		// 	}
+		// 	std::cout << "\n";
+		// }
 	}
 
 	/**
