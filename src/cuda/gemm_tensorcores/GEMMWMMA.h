@@ -76,7 +76,7 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 	register int k;
 
 	for (size_t i = 0; i <16; i++) {
-		for (size_t j = 0; j < 16j++) {
+		for (size_t j = 0; j < 16 ; j++) {
 			a0[i * 16+ j] = (half) 2.0;
 			a1[i * 16+ j] = (half) 2.0;
 			a2[i * 16+ j] = (half) 2.0;
