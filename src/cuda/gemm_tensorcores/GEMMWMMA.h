@@ -95,7 +95,7 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 
 		half_t tmp = read_voter<half_t>(a0, a1, a2, ty * N + k, is_memory_bad)
 				* read_voter<half_t>(b0, b1, b2, k * N + tx, is_memory_bad);
-		(half_t)acc = real_t(tmp) + acc;
+		acc = real_t(tmp) + acc;
 
 	}
 
