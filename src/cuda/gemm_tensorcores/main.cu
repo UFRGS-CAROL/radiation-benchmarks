@@ -277,11 +277,8 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 			if (checkFlag) {
 #pragma omp critical
 				{
-<<<<<<< HEAD
-=======
 					 std::cout << "val out: " << valOutput << std::endl;
 
->>>>>>> 16b253dfd6c8fae96b4b616d6e81480c77d81521
 					std::stringstream error_detail("");
 					error_detail << "p: [" << int(floor(i / log.size_matrices))
 							<< ", " << i % log.size_matrices << "], r: "
