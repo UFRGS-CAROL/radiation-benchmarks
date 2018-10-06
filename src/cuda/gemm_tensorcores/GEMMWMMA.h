@@ -95,15 +95,15 @@ __global__ void wmma_matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 
 		half_t tmp = read_voter<half_t>(a0, a1, a2, ty * N + k, is_memory_bad)
 				* read_voter<half_t>(b0, b1, b2, k * N + tx, is_memory_bad);
-		acc = real_t(tmp) + acc;
+		(half_t)acc = real_t(tmp) + acc;
 
 	}
 
-	acc += read_voter<real_t>(c0, c1, c2, ty * N + tx, is_memory_bad);
+	(float)acc += read_voter<real_t>(c0, c1, c2, ty * N + tx, is_memory_bad);
 
-	d0[ty * N + tx] = acc;
-	d1[ty * N + tx] = acc;
-	d2[ty * N + tx] = acc;
+	d0[ty * N + tx] = (float)acc;
+	d1[ty * N + tx] = (float)acc;
+	d2[ty * N + tx] = (float)acc;
 
 	// for (int i = 0; i < N; i++)
 	// 	printf("d0 %f\n", d0[i]);
