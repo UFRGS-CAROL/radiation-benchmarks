@@ -130,6 +130,7 @@ public:
 				this->device_ptr_d1, this->device_ptr_d2, this->rows_a,
 				this->rows_b, this->alpha, this->beta);
 
+		printf("teste\n");
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
 
