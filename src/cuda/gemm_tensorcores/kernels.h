@@ -27,7 +27,7 @@ using namespace nvcuda;
 
 __global__ void simple_wmma_gemm(float *d0, float *d1, float *d2, size_t m_ld, size_t n_ld, float alpha, float beta) {
 
-	printf("D0 = %f\n", d0[1]);
+	
 }
 
 __global__ void simple_wmma_gemm(half *d0, half *d1, half *d2, size_t m_ld, size_t n_ld, half alpha, half beta) {
@@ -36,7 +36,7 @@ __global__ void simple_wmma_gemm(half *d0, half *d1, half *d2, size_t m_ld, size
 	int ldb = WMMA_K;
 	int ldc = WMMA_M;
 	int ldc_c = m_ld;
-	printf("D0 = %f\n", d0[1]);
+	
 	// Tile using a 2D grid
 	int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / WARP_SIZE;
 	int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
@@ -238,6 +238,8 @@ __global__ void matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;
+
+	printf("entrou, a0 = \n", a0[1]);
 
 	if (tx * ty > M * N)
 		return;
