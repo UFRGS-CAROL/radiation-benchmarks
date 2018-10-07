@@ -1,5 +1,6 @@
 #include "darknet.h"
 #include "detection_gold_w.h"
+#include "cuda.h"
 #define PRINT_INTERVAL 10
 
 static int coco_ids[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17,
@@ -704,6 +705,26 @@ void free_all_images(image **imgs, image** sized_images, int list_size,
 	free(sized_images);
 }
 
+
+cudaStream_t* init_multi_streams(int smx_size){
+	cudaStream_t* stream_array = malloc(sizeof(cudaStream_t) * smx_size);
+	int smx;
+	for(smx = 0; smx < smx_size; smx++){
+		cudaError_t status = cudaStreamCreate(&stream_array[smx]);
+		check_error(status);
+	}
+	return stream_array;
+}
+
+void del_multi_streams(cudaStream_t* stream_array, int smx_size){
+	int smx;
+	for(smx = 0; smx < smx_size; smx++){
+		cudaError_t status = cudaStreamDestroy(stream_array[smx]);
+		check_error(status);
+	}
+	free(stream_array);
+}
+
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, real_t thresh, real_t hier_thresh, char *outfile,
 		int fullscreen, int argc, char** argv) {
@@ -713,7 +734,8 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	detection_gold_t *gold = create_detection_gold(argc, argv, thresh,
 			hier_thresh, filename, cfgfile, datacfg, "detector", weightfile);
 	int smx_redundancy = get_smx_redundancy(gold);
-	init_multi_streams(smx_redundancy);
+
+	cudaStream_t *stream_array = init_multi_streams(smx_redundancy);
 	printf("AQUI %d\n\n", smx_redundancy);
 	//--------------------------
 	network** net_array = malloc(sizeof(network*) * smx_redundancy);
@@ -737,7 +759,9 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		//Set tensor cores on the net
 		net->use_tensor_cores = get_use_tensor_cores(gold);
 		net->smx_redundancy = smx_redundancy;
+		net->st = stream_array[inet];
 		net_array[inet] = net;
+
 
 		//load images
 		printf("Loading images for %d network\n", inet);
@@ -769,8 +793,8 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 //			real_t *X = sized.data;
 			image im = image_array[0][img];
 			for(inet = 0; inet < smx_redundancy; inet++){
-				image sized = sized_array[inet][img];
-				X_arr[inet] = sized.data;
+//				image sized = sized_array[inet][img];
+				X_arr[inet] = sized_array[inet][img].data;
 			}
 			time = what_time_is_it_now();
 
@@ -815,7 +839,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		free_network(net_array[inet]);
 	}
 	free(net_array);
-	del_multi_streams(smx_redundancy);
+	del_multi_streams(stream_array, smx_redundancy);
 	destroy_detection_gold(gold);
 	free_all_images(image_array, sized_array, plist_size, smx_redundancy);
 	free(X_arr);
