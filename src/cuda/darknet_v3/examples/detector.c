@@ -768,8 +768,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			printf("aui antes do run\n");
 			//Save or compare
 			double start = what_time_is_it_now();
-			int curr_err = 0;
-			//run(gold, dets, nboxes, img, l.classes, im.w, im.h);
+			int curr_err = run(gold, dets, nboxes, img, l.classes, im.w, im.h);
 			double end = what_time_is_it_now();
 
 //			if ((iteration * img) % PRINT_INTERVAL == 0) {
