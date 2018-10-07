@@ -710,9 +710,8 @@ cudaStream_t* init_multi_streams(int smx_size){
 	cudaStream_t* stream_array = malloc(sizeof(cudaStream_t) * smx_size);
 	int smx;
 	for(smx = 0; smx < smx_size; smx++){
-//		cudaError_t status = cudaStreamCreateWithFlags(&stream_array[smx], cudaStreamPerThread);
-		stream_array[smx] = cudaStreamPerThread;
-//		check_error(status);
+		cudaError_t status = cudaStreamCreateWithFlags(&stream_array[smx], cudaStreamPerThread);
+		check_error(status);
 	}
 	return stream_array;
 }
