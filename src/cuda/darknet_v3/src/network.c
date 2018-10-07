@@ -796,7 +796,7 @@ void forward_network_gpu(network *netp) {
 
 	int i;
 	for (i = 0; i < net.n; ++i) {
-		printf("passou aqui layer %d\n", i);
+//		printf("passou aqui layer %d\n", i);
 		net.index = i;
 		layer l = net.layers[i];
 		if (l.delta_gpu) {
@@ -837,10 +837,10 @@ void forward_network_gpu_parallel(network **netp_array) {
 			error("ERROR ON FINISHING THREADs\n");
 		}
 	}
-	printf("APSSKKKKKdddd %d\n", mr);
+//	printf("APSSKKKKKdddd %d\n", mr);
 
 	free(threads);
-	printf("APSSKKKKKdddd dddddddddsfasdadfasddf%d\n", mr);
+//	printf("APSSKKKKKdddd dddddddddsfasdadfasddf%d\n", mr);
 
 }
 

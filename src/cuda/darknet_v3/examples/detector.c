@@ -804,7 +804,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			end_iteration_wrapper(gold);
 
 //			int nboxes = 0;
-			printf("aui antes do dets\n");
+//			printf("aui antes do dets\n");
 			for (inet = 0; inet < smx_redundancy; inet++) {
 				dets_array[inet] = get_network_boxes(net_array[inet], im.w,
 						im.h, thresh, hier_thresh, 0, 1, &nboxes_array[inet]);
@@ -813,7 +813,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 					do_nms_sort(dets_array[inet], nboxes_array[inet], l.classes,
 							nms);
 			}
-			printf("aui antes do run\n");
+//			printf("aui antes do run\n");
 			//Save or compare
 			double start = what_time_is_it_now();
 			int curr_err = run(gold, dets_array, nboxes_array, img, l.classes,
