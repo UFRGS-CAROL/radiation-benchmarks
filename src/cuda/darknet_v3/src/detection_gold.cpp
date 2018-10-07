@@ -152,8 +152,8 @@ bool operator!=(const std::tuple<real_t, real_t, real_t, real_t> f,
 
 int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 		int g_sort_class, int f_sort_class, const box& g_box, const box& f_box,
-		const std::string& img, int nb, int classes, const Detection* g_det,
-		detection f_det, int img_w, int img_h) {
+		const std::string& img, int nb, int classes, const real_t* g_probs,
+		const real_t* f_probs, int img_w, int img_h) {
 
 	real_t objs_diff = std::abs(g_objectness - f_objectness);
 	int sortc_diff = std::abs(g_sort_class - f_sort_class);
@@ -178,8 +178,8 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 	}
 
 	for (int cl = 0; cl < classes; ++cl) {
-		real_t g_prob = g_det->prob[cl];
-		real_t f_prob = f_det.prob[cl];
+		real_t g_prob = g_probs[cl];
+		real_t f_prob = f_probs[cl];
 		real_t prob_diff = std::abs(g_prob - f_prob);
 		if ((g_prob >= this->thresh || f_prob >= this->thresh)
 				&& prob_diff > THRESHOLD_ERROR) {
@@ -202,21 +202,25 @@ int DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 	int error_count = 0;
 
 	for (int nb = 0; nb < nboxes; nb++) {
-		Detection *g_det = &(this->gold_hash_var[img][nb]);
-		detection f_det = found_dets[nb];
+		const Detection g_det = this->gold_hash_var[img][nb];
+		const detection f_det = found_dets[nb];
 
-		box g_box = g_det->bbox;
+		box g_box = g_det.bbox;
 		box f_box = f_det.bbox;
 
-		real_t g_objectness = g_det->objectness;
+		real_t g_objectness = g_det.objectness;
 		real_t f_objectness = f_det.objectness;
 
-		int g_sort_class = g_det->sort_class;
+		int g_sort_class = g_det.sort_class;
 		int f_sort_class = f_det.sort_class;
 
+		const real_t* g_probs = g_det.prob.data();
+		const real_t* f_probs = f_det.prob;
+
+		//Only basic types are passed to this functions
 		error_count = this->compare_line(g_objectness, f_objectness,
 				g_sort_class, f_sort_class, g_box, f_box, img, nb, classes,
-				g_det, f_det, img_w, img_h);
+				g_probs, f_probs, img_w, img_h);
 	}
 	this->total_errors += error_count;
 	if (this->total_errors > MAX_ERROR_COUNT) {

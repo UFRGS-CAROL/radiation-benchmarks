@@ -59,10 +59,10 @@ struct Detection {
 					sort_class), classes(classes) {
 	}
 
-	Detection(const Detection& a) :
-			prob(a.prob), bbox(a.bbox), nboxes(a.nboxes), objectness(
-					a.objectness), sort_class(a.sort_class), classes(a.classes) {
-	}
+//	Detection(const Detection& a) :
+//			prob(a.prob), bbox(a.bbox), nboxes(a.nboxes), objectness(
+//					a.objectness), sort_class(a.sort_class), classes(a.classes) {
+//	}
 
 //	Detection& operator=(const Detection& other) // copy assignment
 //			{
@@ -134,10 +134,10 @@ struct DetectionGold {
 	std::ostringstream generate_gold_line(int bb, detection det, const box& b,
 			detection* dets);
 
-	int compare_line(real_t g_objectness, real_t f_objectness, int g_sort_class,
-			int f_sort_class, const box& g_box, const box& f_box,
-			const std::string& img, int nb, int classes, const Detection* g_det,
-			detection f_det, int img_w, int img_h);
+	int compare_line(real_t g_objectness, real_t f_objectness,
+			int g_sort_class, int f_sort_class, const box& g_box, const box& f_box,
+			const std::string& img, int nb, int classes, const real_t* g_probs,
+			const real_t* f_probs, int img_w, int img_h);
 };
 
 #endif /* DETECTIONGOLD_H_ */
