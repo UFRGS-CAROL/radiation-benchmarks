@@ -705,20 +705,19 @@ void free_all_images(image **imgs, image** sized_images, int list_size,
 	free(sized_images);
 }
 
-
-cudaStream_t* init_multi_streams(int smx_size){
+cudaStream_t* init_multi_streams(int smx_size) {
 	cudaStream_t* stream_array = malloc(sizeof(cudaStream_t) * smx_size);
 	int smx;
-	for(smx = 0; smx < smx_size; smx++){
+	for (smx = 0; smx < smx_size; smx++) {
 		cudaError_t status = cudaStreamCreate(&stream_array[smx]);
 		check_error(status);
 	}
 	return stream_array;
 }
 
-void del_multi_streams(cudaStream_t* stream_array, int smx_size){
+void del_multi_streams(cudaStream_t* stream_array, int smx_size) {
 	int smx;
-	for(smx = 0; smx < smx_size; smx++){
+	for (smx = 0; smx < smx_size; smx++) {
 		cudaError_t status = cudaStreamDestroy(stream_array[smx]);
 		check_error(status);
 	}
@@ -762,7 +761,6 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		net->st = stream_array[inet];
 		net_array[inet] = net;
 
-
 		//load images
 		printf("Loading images for %d network\n", inet);
 		image_array[inet] = (image*) malloc(sizeof(image) * plist_size);
@@ -781,6 +779,8 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 //	load_all_images(images, sized_images, img_names, plist_size,
 //			net_array[0]->w, net_array[0]->h);
 	real_t** X_arr = malloc(sizeof(real_t*) * smx_redundancy);
+	detection** dets_array = malloc(sizeof(detection*) * smx_redundancy);
+	int* nboxes_array = malloc(sizeof(int) * smx_redundancy);
 	//start the process
 	for (iteration = 0; iteration < max_it; iteration++) {
 		int last_errors = 0;
@@ -788,11 +788,9 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 
 			layer l = net_array[0]->layers[net_array[0]->n - 1];
 
-
-
 //			real_t *X = sized.data;
 			image im = image_array[0][img];
-			for(inet = 0; inet < smx_redundancy; inet++){
+			for (inet = 0; inet < smx_redundancy; inet++) {
 //				image sized = sized_array[inet][img];
 				X_arr[inet] = sized_array[inet][img].data;
 			}
@@ -804,38 +802,44 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			network_predict_smx_red(net_array, X_arr);
 			end_iteration_wrapper(gold);
 
-			int nboxes = 0;
+//			int nboxes = 0;
 			printf("aui antes do dets\n");
-			detection *dets = get_network_boxes(net_array[0], im.w, im.h,
-					thresh, hier_thresh, 0, 1, &nboxes);
+			for (inet = 0; inet < smx_redundancy; inet++) {
+				dets_array[inet] = get_network_boxes(net_array[inet], im.w,
+						im.h, thresh, hier_thresh, 0, 1, &nboxes_array[inet]);
 
-			printf("aui antes do nms\n");
-			if (nms)
-				do_nms_sort(dets, nboxes, l.classes, nms);
-
+				if (nms)
+					do_nms_sort(dets_array[inet], nboxes_array[inet], l.classes,
+							nms);
+			}
 			printf("aui antes do run\n");
 			//Save or compare
 			double start = what_time_is_it_now();
-			int curr_err = run(gold, dets, nboxes, img, l.classes, im.w, im.h);
+			int curr_err = run(gold, dets_array, nboxes_array, img, l.classes,
+					im.w, im.h);
 			double end = what_time_is_it_now();
-
-
-//			if ((iteration * img) % PRINT_INTERVAL == 0) {
-			printf(
-					"Iteration %d img %d, %d objects predicted in %f seconds. %d errors, coparisson took %lfs\n",
-					iteration, img, nboxes, what_time_is_it_now() - time,
-					curr_err, end - start);
-//			}
 
 			if (last_errors && curr_err) {
 				printf(
 						"IT IS LESS PROBLABLE THAT DARKNET GIVE US TWO ERRORS SEQUENTIALY, ABORTING\n");
 				exit(-1);
 			}
+			for (inet = 0; inet < smx_redundancy; inet++) {
+				//			if ((iteration * img) % PRINT_INTERVAL == 0) {
+				printf(
+						"Iteration %d img %d, %d objects predicted in %f seconds. %d errors, coparisson took %lfs\n",
+						iteration, img, nboxes_array[inet],
+						what_time_is_it_now() - time, curr_err, end - start);
+				//			}
+
+				free_detections(dets_array[inet], nboxes_array[inet]);
+			}
 			last_errors = curr_err;
 		}
 	}
 
+	free(dets_array);
+	free(nboxes_array);
 	for (inet = 0; inet < smx_redundancy; inet++) {
 		free_network(net_array[inet]);
 	}

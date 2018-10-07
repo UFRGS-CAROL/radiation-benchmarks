@@ -23,7 +23,7 @@ detection_gold_t* create_detection_gold(int argc, char **argv, real_t thresh,
 
 void destroy_detection_gold(detection_gold_t *m);
 
-int run(detection_gold_t *m, detection* dets, int nboxes, int img_index,
+int run(detection_gold_t *m, detection** dets, int* nboxes, int img_index,
 		int classes, int img_w, int img_h);
 
 void start_iteration_wrapper(detection_gold_t *m);

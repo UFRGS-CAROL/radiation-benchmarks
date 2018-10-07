@@ -33,7 +33,7 @@ void destroy_detection_gold(detection_gold_t *m) {
 	free(m);
 }
 
-int run(detection_gold_t *m, detection* dets, int nboxes, int img_index,
+int run(detection_gold_t *m, detection** dets, int* nboxes, int img_index,
 		int classes, int img_w, int img_h) {
 	DetectionGold *obj;
 	if (m == NULL)

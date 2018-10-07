@@ -116,7 +116,7 @@ struct DetectionGold {
 
 	virtual ~DetectionGold();
 
-	int run(detection* dets, int nboxes, int img_index, int classes, int img_w,
+	int run(detection** dets, int* nboxes, int img_index, int classes, int img_w,
 			int img_h);
 
 	void start_iteration();
@@ -129,7 +129,7 @@ struct DetectionGold {
 	void gen(detection* dets, int nboxes, int img_index,
 			std::ofstream& gold_file, int classes);
 	int cmp(detection* dets, int nboxes, int img_index, int classes, int img_w,
-			int img_h);
+			int img_h, int inet);
 
 	std::ostringstream generate_gold_line(int bb, detection det, const box& b,
 			detection* dets);
@@ -139,7 +139,7 @@ struct DetectionGold {
 	int compare_line(real_t g_objectness, real_t f_objectness,
 			int g_sort_class, int f_sort_class, const box& g_box, const box& f_box,
 			const std::string& img, int nb, int classes, const real_t* g_probs,
-			const real_t* f_probs, int img_w, int img_h);
+			const real_t* f_probs, int img_w, int img_h, int inet);
 };
 
 #endif /* DETECTIONGOLD_H_ */

@@ -153,7 +153,7 @@ bool operator!=(const std::tuple<real_t, real_t, real_t, real_t> f,
 int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 		int g_sort_class, int f_sort_class, const box& g_box, const box& f_box,
 		const std::string& img, int nb, int classes, const real_t* g_probs,
-		const real_t* f_probs, int img_w, int img_h) {
+		const real_t* f_probs, int img_w, int img_h, int inet) {
 
 	real_t objs_diff = std::abs(g_objectness - f_objectness);
 	int sortc_diff = std::abs(g_sort_class - f_sort_class);
@@ -165,7 +165,7 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 	if ((objs_diff > THRESHOLD_ERROR) || (sortc_diff > THRESHOLD_ERROR)
 			|| (g_box != f_box)) {
 		error_count++;
-		error_info << "img: " << img << " detection: " << nb << " x_e: "
+		error_info << "inet: " << inet << " img: " << img << " detection: " << nb << " x_e: "
 				<< g_box.x << " x_r: " << f_box.x << " y_e: " << g_box.y
 				<< " y_r: " << f_box.y << " h_e: " << g_box.h << " h_r: "
 				<< f_box.h << " w_e: " << g_box.w << " w_r: " << f_box.w
@@ -185,7 +185,7 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 				&& prob_diff > THRESHOLD_ERROR) {
 			error_info.clear();
 			error_info.precision(STORE_PRECISION);
-			error_info << "img: " << img << " detection: " << nb << " class: "
+			error_info << "inet: " << inet << " img: " << img << " detection: " << nb << " class: "
 					<< cl << " prob_e: " << g_prob << " prob_r: " << f_prob;
 			this->app_log->log_error_info(error_info.str());
 			std::cout << error_info.str() << "\n";
@@ -197,7 +197,7 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 }
 
 int DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
-		int classes, int img_w, int img_h) {
+		int classes, int img_w, int img_h, int inet) {
 	std::string img = this->gold_img_names[img_index];
 	int error_count = 0;
 
@@ -220,7 +220,7 @@ int DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 		//Only basic types are passed to this functions
 		error_count = this->compare_line(g_objectness, f_objectness,
 				g_sort_class, f_sort_class, g_box, f_box, img, nb, classes,
-				g_probs, f_probs, img_w, img_h);
+				g_probs, f_probs, img_w, img_h, inet);
 	}
 	this->total_errors += error_count;
 	if (this->total_errors > MAX_ERROR_COUNT) {
@@ -232,7 +232,7 @@ int DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 	return error_count;
 }
 
-int DetectionGold::run(detection *dets, int nboxes, int img_index, int classes,
+int DetectionGold::run(detection **dets, int* nboxes, int img_index, int classes,
 		int img_w, int img_h) {
 	int ret = 0;
 	// To generate function
@@ -244,12 +244,16 @@ int DetectionGold::run(detection *dets, int nboxes, int img_index, int classes,
 			std::cerr << "ERROR ON OPENING GOLD FILE\n";
 			exit(-1);
 		}
-		this->gen(dets, nboxes, img_index, gold_file, classes);
+
+		//assuming at least one execution is completed
+		this->gen(dets[0], nboxes[0], img_index, gold_file, classes);
 		gold_file.close();
 	} else {
 		// To compare function
 		//detection is allways nboxes size
-		ret = this->cmp(dets, nboxes, img_index, classes, img_w, img_h);
+		for(int inet = 0; inet < this->stream_mr; inet++){
+			ret += this->cmp(dets[inet], nboxes[inet], img_index, classes, img_w, img_h, inet);
+		}
 	}
 	return ret;
 }
