@@ -789,7 +789,7 @@ image get_network_image(network *net);
 real_t *network_predict(network *net, real_t *input);
 
 //TODO: Fernando
-void network_predict_smx_red(network **net, real_t *input);
+void network_predict_smx_red(network **net, real_t **input);
 void init_multi_streams(int smx_size);
 void del_multi_streams(int smx_size);
 

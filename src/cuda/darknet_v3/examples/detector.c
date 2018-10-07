@@ -140,7 +140,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 		if (i % 100 == 0) {
 #ifdef GPU
 			if (ngpus != 1)
-			sync_nets(nets, ngpus, 0);
+				sync_nets(nets, ngpus, 0);
 #endif
 			char buff[256];
 			sprintf(buff, "%s/%s.backup", backup_directory, base);
@@ -149,7 +149,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 		if (i % 10000 == 0 || (i < 1000 && i % 100 == 0)) {
 #ifdef GPU
 			if (ngpus != 1)
-			sync_nets(nets, ngpus, 0);
+				sync_nets(nets, ngpus, 0);
 #endif
 			char buff[256];
 			sprintf(buff, "%s/%s_%d.weights", backup_directory, base, i);
@@ -159,7 +159,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 	}
 #ifdef GPU
 	if (ngpus != 1)
-	sync_nets(nets, ngpus, 0);
+		sync_nets(nets, ngpus, 0);
 #endif
 	char buff[256];
 	sprintf(buff, "%s/%s_final.weights", backup_directory, base);
@@ -686,13 +686,22 @@ void load_all_images(image* imgs, image* sized_images, char** img_names,
 	}
 }
 
-void free_all_images(image *imgs, image* sized_images, int list_size) {
+void free_all_images(image **imgs, image** sized_images, int list_size,
+		int smx_red) {
 	//          free_image(im);
-	int i;
-	for (i = 0; i < list_size; i++) {
-		free_image(imgs[i]);
-		free_image(sized_images[i]);
+	int i, s;
+	for (s = 0; s < smx_red; s++) {
+
+		for (i = 0; i < list_size; i++) {
+			free_image(imgs[s][i]);
+			free_image(sized_images[s][i]);
+		}
+		free(imgs[s]);
+		free(sized_images[s]);
 	}
+
+	free(imgs);
+	free(sized_images);
 }
 
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
@@ -713,6 +722,14 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			"CFG FILE: %s\nDATA CFG: %s\nWeightfile: %s\nImage data path file: %s\nThresh: %f\n",
 			cfgfile, datacfg, weightfile, filename, thresh);
 
+	//load images
+	image** image_array = malloc(sizeof(image*) * smx_redundancy);
+	image** sized_array = malloc(sizeof(image*) * smx_redundancy);
+
+	char **img_names = get_labels(filename);
+	int max_it = get_iterations(gold);
+	int plist_size = get_img_num(gold);
+
 	int inet;
 	for (inet = 0; inet < smx_redundancy; inet++) {
 		network *net = load_network(cfgfile, weightfile, 0);
@@ -721,23 +738,25 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		net->use_tensor_cores = get_use_tensor_cores(gold);
 		net->smx_redundancy = smx_redundancy;
 		net_array[inet] = net;
+
+		//load images
+		printf("Loading images for %d network\n", inet);
+		image_array[inet] = (image*) malloc(sizeof(image) * plist_size);
+		sized_array[inet] = (image*) malloc(sizeof(image) * plist_size);
+		load_all_images(image_array[inet], sized_array[inet], img_names,
+				plist_size, net_array[inet]->w, net_array[inet]->h);
 	}
 	srand(2222222);
 	double time;
 	real_t nms = .45;
 
-	char **img_names = get_labels(filename);
-
 	int iteration, img;
-	int max_it = get_iterations(gold);
-	int plist_size = get_img_num(gold);
-
-	//load images
-	image* images = (image*) malloc(sizeof(image) * plist_size);
-	image* sized_images = (image*) malloc(sizeof(image) * plist_size);
-	load_all_images(images, sized_images, img_names, plist_size,
-			net_array[0]->w, net_array[0]->h);
-
+//
+//	image* images = (image*) malloc(sizeof(image) * plist_size);
+//	image* sized_images = (image*) malloc(sizeof(image) * plist_size);
+//	load_all_images(images, sized_images, img_names, plist_size,
+//			net_array[0]->w, net_array[0]->h);
+	real_t** X_arr = malloc(sizeof(real_t*) * smx_redundancy);
 	//start the process
 	for (iteration = 0; iteration < max_it; iteration++) {
 		int last_errors = 0;
@@ -745,16 +764,20 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 
 			layer l = net_array[0]->layers[net_array[0]->n - 1];
 
-			image im = images[img];
-			image sized = sized_images[img];
 
-			real_t *X = sized.data;
+
+//			real_t *X = sized.data;
+			image im = image_array[0][img];
+			for(inet = 0; inet < smx_redundancy; inet++){
+				image sized = sized_array[inet][img];
+				X_arr[inet] = sized.data;
+			}
 			time = what_time_is_it_now();
 
 			//Run one iteration
 			start_iteration_wrapper(gold);
 //			network_predict(net, X);
-			network_predict_smx_red(net_array, X);
+			network_predict_smx_red(net_array, X_arr);
 			end_iteration_wrapper(gold);
 
 			int nboxes = 0;
@@ -794,9 +817,8 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	free(net_array);
 	del_multi_streams(smx_redundancy);
 	destroy_detection_gold(gold);
-	free_all_images(images, sized_images, 10);
-	free(images);
-	free(sized_images);
+	free_all_images(image_array, sized_array, plist_size, smx_redundancy);
+	free(X_arr);
 }
 
 void run_detector(int argc, char **argv) {

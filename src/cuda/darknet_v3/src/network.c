@@ -515,7 +515,7 @@ void del_multi_streams(int smx_size){
 	free(stream_array);
 }
 
-void network_predict_smx_red(network **net, real_t *input) {
+void network_predict_smx_red(network **net, real_t **input) {
 	int i;
 	int smx_red = net[0]->smx_redundancy;
 
@@ -527,7 +527,7 @@ void network_predict_smx_red(network **net, real_t *input) {
 
 	for (i = 0; i < smx_red; i++) {
 		orig_array[i] = *net[i];
-		net[i]->input = input;
+		net[i]->input = input[i];
 		net[i]->truth = 0;
 		net[i]->train = 0;
 		net[i]->delta = 0;
