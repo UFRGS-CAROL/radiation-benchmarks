@@ -704,6 +704,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	detection_gold_t *gold = create_detection_gold(argc, argv, thresh,
 			hier_thresh, filename, cfgfile, datacfg, "detector", weightfile);
 	int smx_redundancy = get_smx_redundancy(gold);
+	init_multi_streams(smx_redundancy);
 	printf("AQUI %d\n\n", smx_redundancy);
 	//--------------------------
 	network** net_array = malloc(sizeof(network*) * smx_redundancy);
@@ -791,7 +792,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		free_network(net_array[inet]);
 	}
 	free(net_array);
-
+	del_multi_streams(smx_redundancy);
 	destroy_detection_gold(gold);
 	free_all_images(images, sized_images, 10);
 	free(images);

@@ -790,6 +790,9 @@ real_t *network_predict(network *net, real_t *input);
 
 //TODO: Fernando
 void network_predict_smx_red(network **net, real_t *input);
+void init_multi_streams(int smx_size);
+void del_multi_streams(int smx_size);
+
 
 int network_width(network *net);
 int network_height(network *net);

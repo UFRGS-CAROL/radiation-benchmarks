@@ -531,7 +531,7 @@ void network_predict_smx_red(network **net, real_t *input) {
 		net[i]->truth = 0;
 		net[i]->train = 0;
 		net[i]->delta = 0;
-		net[i]->st = 0x0;
+		net[i]->st = stream_array[i];
 	}
 
 	forward_network_gpu_parallel(net);
