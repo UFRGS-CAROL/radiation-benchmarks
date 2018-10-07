@@ -59,23 +59,24 @@ struct Detection {
 					sort_class), classes(classes) {
 	}
 
-//	Detection(const Detection& a) :
-//			prob(a.prob), bbox(a.bbox), nboxes(a.nboxes), objectness(
-//					a.objectness), sort_class(a.sort_class), classes(a.classes) {
-//	}
+	Detection(const Detection& a) :
+			prob(a.prob), bbox(a.bbox), nboxes(a.nboxes), objectness(
+					a.objectness), sort_class(a.sort_class), classes(a.classes) {
+	}
 
-//	Detection& operator=(const Detection& other) // copy assignment
-//			{
-//		if (this != &other) { // self-assignment check expected
-//			this->prob = std::vector < real_t > (other.prob);
-//			this->bbox = other.bbox;
-//			this->nboxes = other.nboxes;
-//			this->objectness = other.objectness;
-//			this->sort_class = other.sort_class;
-//			this->classes = other.classes;
-//		}
-//		return *this;
-//	}
+	Detection& operator=(const Detection& other) // copy assignment
+			{
+		if (this != &other) { // self-assignment check expected
+			printf("AQUI NO COPY ASSIGMENT\n");
+			this->prob = std::vector < real_t > (other.prob);
+			this->bbox = other.bbox;
+			this->nboxes = other.nboxes;
+			this->objectness = other.objectness;
+			this->sort_class = other.sort_class;
+			this->classes = other.classes;
+		}
+		return *this;
+	}
 
 };
 
@@ -133,6 +134,8 @@ struct DetectionGold {
 
 	std::ostringstream generate_gold_line(int bb, detection det, const box& b,
 			detection* dets);
+
+	Detection load_gold_line(std::ifstream& gold_file, int nboxes);
 
 	int compare_line(real_t g_objectness, real_t f_objectness,
 			int g_sort_class, int f_sort_class, const box& g_box, const box& f_box,
