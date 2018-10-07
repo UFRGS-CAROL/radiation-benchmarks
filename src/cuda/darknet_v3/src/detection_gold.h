@@ -64,18 +64,18 @@ struct Detection {
 					a.objectness), sort_class(a.sort_class), classes(a.classes) {
 	}
 
-	Detection& operator=(const Detection& other) // copy assignment
-			{
-		if (this != &other) { // self-assignment check expected
-			this->prob = std::vector < real_t > (other.prob);
-			this->bbox = other.bbox;
-			this->nboxes = other.nboxes;
-			this->objectness = other.objectness;
-			this->sort_class = other.sort_class;
-			this->classes = other.classes;
-		}
-		return *this;
-	}
+//	Detection& operator=(const Detection& other) // copy assignment
+//			{
+//		if (this != &other) { // self-assignment check expected
+//			this->prob = std::vector < real_t > (other.prob);
+//			this->bbox = other.bbox;
+//			this->nboxes = other.nboxes;
+//			this->objectness = other.objectness;
+//			this->sort_class = other.sort_class;
+//			this->classes = other.classes;
+//		}
+//		return *this;
+//	}
 
 };
 

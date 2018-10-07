@@ -225,26 +225,24 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 int DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 		int classes, int img_w, int img_h) {
 	std::string img = this->gold_img_names[img_index];
-	std::vector<Detection> gold_dets = this->gold_hash_var[img];
-
 	int error_count = 0;
 
 	for (int nb = 0; nb < nboxes; nb++) {
-		Detection g_det = gold_dets[nb];
+		Detection *g_det = &(this->gold_hash_var[img][nb]);
 		detection f_det = found_dets[nb];
 
-		box g_box = g_det.bbox;
+		box g_box = g_det->bbox;
 		box f_box = f_det.bbox;
 
-		real_t g_objectness = g_det.objectness;
+		real_t g_objectness = g_det->objectness;
 		real_t f_objectness = f_det.objectness;
 
-		int g_sort_class = g_det.sort_class;
+		int g_sort_class = g_det->sort_class;
 		int f_sort_class = f_det.sort_class;
 
 		error_count = this->compare_line(g_objectness, f_objectness,
 				g_sort_class, f_sort_class, g_box, f_box, img, nb, classes,
-				g_det, f_det, img_w, img_h);
+				*g_det, f_det, img_w, img_h);
 	}
 	this->total_errors += error_count;
 	if (this->total_errors > MAX_ERROR_COUNT) {
