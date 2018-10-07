@@ -33,6 +33,8 @@
 #include "data.h"
 #include <unistd.h>
 
+cudaStream_t *stream_array;
+
 load_args get_base_args(network *net) {
 	load_args args = { 0 };
 	args.w = net->w;
@@ -493,6 +495,24 @@ real_t *network_predict(network *net, real_t *input) {
 	real_t *out = net->output;
 	*net = orig;
 	return out;
+}
+
+void init_multi_streams(int smx_size){
+	stream_array = malloc(sizeof(cudaStream_t) * smx_size);
+	int smx;
+	for(smx = 0; smx < smx_size; smx++){
+		cudaError_t status = cudaStreamCreateWithFlags(&stream_array[smx], cudaStreamNonBlocking);
+		check_error(status);
+	}
+}
+
+void del_multi_streams(int smx_size){
+	int smx;
+	for(smx = 0; smx < smx_size; smx++){
+		cudaError_t status = cudaStreamDestroy(stream_array[smx]);
+		check_error(status);
+	}
+	free(stream_array);
 }
 
 void network_predict_smx_red(network **net, real_t *input) {
