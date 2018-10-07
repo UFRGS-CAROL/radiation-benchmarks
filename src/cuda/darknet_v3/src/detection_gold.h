@@ -136,7 +136,7 @@ struct DetectionGold {
 
 	int compare_line(real_t g_objectness, real_t f_objectness, int g_sort_class,
 			int f_sort_class, const box& g_box, const box& f_box,
-			const std::string& img, int nb, int classes, const Detection& g_det,
+			const std::string& img, int nb, int classes, const Detection* g_det,
 			detection f_det, int img_w, int img_h);
 };
 

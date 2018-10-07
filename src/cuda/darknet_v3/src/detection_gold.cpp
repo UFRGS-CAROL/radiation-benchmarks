@@ -152,46 +152,46 @@ bool operator!=(const std::tuple<real_t, real_t, real_t, real_t> f,
 
 int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 		int g_sort_class, int f_sort_class, const box& g_box, const box& f_box,
-		const std::string& img, int nb, int classes, const Detection& g_det,
+		const std::string& img, int nb, int classes, const Detection* g_det,
 		detection f_det, int img_w, int img_h) {
 
 	real_t objs_diff = std::abs(g_objectness - f_objectness);
 	int sortc_diff = std::abs(g_sort_class - f_sort_class);
-	std::tuple < real_t, real_t, real_t, real_t > g_box_tuple;
-	std::tuple < real_t, real_t, real_t, real_t > f_box_tuple;
+//	std::tuple < real_t, real_t, real_t, real_t > g_box_tuple;
+//	std::tuple < real_t, real_t, real_t, real_t > f_box_tuple;
 
 	std::ostringstream error_info("");
 	error_info.precision(STORE_PRECISION);
 	int error_count = 0;
 
-	if (this->normalized_coordinates) {
-		real_t left = std::max((g_box.x - g_box.w / 2.) * img_w, 0.0);
-		real_t right = std::min((g_box.x + g_box.w / 2.) * img_w, img_w - 1.0);
-		real_t top = std::max((g_box.y - g_box.h / 2.) * img_h, 0.0);
-		real_t bot = std::min((g_box.y + g_box.h / 2.) * img_h, img_h - 1.0);
-		g_box_tuple = std::tuple<real_t, real_t, real_t, real_t>(left, right, top, bot);
-
-		left = std::max((f_box.x - f_box.w / 2.) * img_w, 0.0);
-		right = std::min((f_box.x + f_box.w / 2.) * img_w, img_w - 1.0);
-		top = std::max((f_box.y - f_box.h / 2.) * img_h, 0.0);
-		bot = std::min((f_box.y + f_box.h / 2.) * img_h, img_h - 1.0);
-		f_box_tuple = std::tuple<real_t, real_t, real_t, real_t>(left, right, top, bot);
-
-		if ((objs_diff > THRESHOLD_ERROR) || (sortc_diff > THRESHOLD_ERROR)
-				|| (g_box_tuple != f_box_tuple)) {
-			error_count++;
-		}
-//		if (left < 0)	left = 0;
-//		if (right > im.w - 1)	right = im.w - 1;
-//		if (top < 0)	top = 0;
-//		if (bot > im.h - 1)	bot = im.h - 1;
-
-	} else {
-		if ((objs_diff > THRESHOLD_ERROR) || (sortc_diff > THRESHOLD_ERROR)
+//	if (this->normalized_coordinates) {
+//		real_t left = std::max((g_box.x - g_box.w / 2.) * img_w, 0.0);
+//		real_t right = std::min((g_box.x + g_box.w / 2.) * img_w, img_w - 1.0);
+//		real_t top = std::max((g_box.y - g_box.h / 2.) * img_h, 0.0);
+//		real_t bot = std::min((g_box.y + g_box.h / 2.) * img_h, img_h - 1.0);
+//		g_box_tuple = std::tuple<real_t, real_t, real_t, real_t>(left, right, top, bot);
+//
+//		left = std::max((f_box.x - f_box.w / 2.) * img_w, 0.0);
+//		right = std::min((f_box.x + f_box.w / 2.) * img_w, img_w - 1.0);
+//		top = std::max((f_box.y - f_box.h / 2.) * img_h, 0.0);
+//		bot = std::min((f_box.y + f_box.h / 2.) * img_h, img_h - 1.0);
+//		f_box_tuple = std::tuple<real_t, real_t, real_t, real_t>(left, right, top, bot);
+//
+//		if ((objs_diff > THRESHOLD_ERROR) || (sortc_diff > THRESHOLD_ERROR)
+//				|| (g_box_tuple != f_box_tuple)) {
+//			error_count++;
+//		}
+////		if (left < 0)	left = 0;
+////		if (right > im.w - 1)	right = im.w - 1;
+////		if (top < 0)	top = 0;
+////		if (bot > im.h - 1)	bot = im.h - 1;
+//
+//	} else {
+	if ((objs_diff > THRESHOLD_ERROR) || (sortc_diff > THRESHOLD_ERROR)
 				|| (g_box != f_box)) {
 			error_count++;
-		}
 	}
+//	}
 
 	if (error_count > 0) {
 		error_info << "img: " << img << " detection: " << nb << " x_e: "
@@ -203,10 +203,11 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 				<< " sort_class_r: " << f_sort_class << " img_w: " << img_w
 				<< " img_h: " << img_h;
 		this->app_log->log_error_info(error_info.str());
+		std::cout << error_info.str() << "\n";
 	}
 
 	for (int cl = 0; cl < classes; ++cl) {
-		real_t g_prob = g_det.prob[cl];
+		real_t g_prob = g_det->prob[cl];
 		real_t f_prob = f_det.prob[cl];
 		real_t prob_diff = std::abs(g_prob - f_prob);
 		if ((g_prob >= this->thresh || f_prob >= this->thresh)
@@ -216,6 +217,8 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 			error_info << "img: " << img << " detection: " << nb << " class: "
 					<< cl << " prob_e: " << g_prob << " prob_r: " << f_prob;
 			this->app_log->log_error_info(error_info.str());
+			std::cout << error_info.str() << "\n";
+
 			error_count++;
 		}
 	}
@@ -242,7 +245,7 @@ int DetectionGold::cmp(detection* found_dets, int nboxes, int img_index,
 
 		error_count = this->compare_line(g_objectness, f_objectness,
 				g_sort_class, f_sort_class, g_box, f_box, img, nb, classes,
-				*g_det, f_det, img_w, img_h);
+				g_det, f_det, img_w, img_h);
 	}
 	this->total_errors += error_count;
 	if (this->total_errors > MAX_ERROR_COUNT) {
