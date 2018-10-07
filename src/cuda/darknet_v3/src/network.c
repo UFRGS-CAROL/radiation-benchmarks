@@ -830,6 +830,7 @@ void forward_network_gpu_parallel(network **netp_array) {
 			error("ERROR ON CREATING THREADs\n");
 		}
 	}
+	cudaDeviceSynchronize();
 	printf("APSSKKKKK %d\n", mr);
 	sleep(0.001);
 	for (i = 0; i < mr; i++) {
