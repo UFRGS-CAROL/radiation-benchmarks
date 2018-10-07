@@ -796,6 +796,7 @@ void forward_network_gpu(network *netp) {
 
 	int i;
 	for (i = 0; i < net.n; ++i) {
+		printf("passou aqui layer %d\n", i);
 		net.index = i;
 		layer l = net.layers[i];
 		if (l.delta_gpu) {
@@ -814,7 +815,6 @@ void forward_network_gpu(network *netp) {
 }
 
 void* forward_network_gpu_caller(void *netp) {
-	printf("FORWARD NETWORK GPU %d\n", ((network*) netp)->smx_redundancy);
 	forward_network_gpu((network*) netp);
 	return NULL;
 }
@@ -831,8 +831,7 @@ void forward_network_gpu_parallel(network **netp_array) {
 		}
 	}
 	cudaDeviceSynchronize();
-	printf("APSSKKKKK %d\n", mr);
-	sleep(0.001);
+
 	for (i = 0; i < mr; i++) {
 		if (pthread_join(threads[i], NULL)) {
 			error("ERROR ON FINISHING THREADs\n");
