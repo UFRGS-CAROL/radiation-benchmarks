@@ -89,7 +89,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 			exit(-1);
 		}
 
-		std::vector<std::string> split_ret = split(line, ';');
+		std::vector < std::string > split_ret = split(line, ';');
 		//	0       1           2              3              4            5            6      7         8
 		//	thresh; hier_tresh; img_list_size; img_list_path; config_file; config_data; model;weights;tensor_core;
 		this->thresh = std::stof(split_ret[0]);
@@ -111,7 +111,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 		//reading the img list path content
 		std::ifstream tmp_img_file(this->img_list_path);
-		std::copy(std::istream_iterator<std::string>(tmp_img_file),
+		std::copy(std::istream_iterator < std::string > (tmp_img_file),
 				std::istream_iterator<std::string>(),
 				std::back_inserter(this->gold_img_names));
 
@@ -139,10 +139,10 @@ bool operator!=(const box& a, const box& b) {
 bool operator!=(const std::tuple<real_t, real_t, real_t, real_t> f,
 		std::tuple<real_t, real_t, real_t, real_t> g) {
 
-	real_t x1_diff = std::abs(std::get<0>(f) - std::get<0>(g));
-	real_t x2_diff = std::abs(std::get<1>(f) - std::get<1>(g));
-	real_t x3_diff = std::abs(std::get<2>(f) - std::get<2>(g));
-	real_t x4_diff = std::abs(std::get<3>(f) - std::get<3>(g));
+	real_t x1_diff = std::abs(std::get < 0 > (f) - std::get < 0 > (g));
+	real_t x2_diff = std::abs(std::get < 1 > (f) - std::get < 1 > (g));
+	real_t x3_diff = std::abs(std::get < 2 > (f) - std::get < 2 > (g));
+	real_t x4_diff = std::abs(std::get < 3 > (f) - std::get < 3 > (g));
 
 	return (x1_diff > THRESHOLD_ERROR_INTEGER
 			|| x2_diff > THRESHOLD_ERROR_INTEGER
@@ -157,8 +157,8 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 
 	real_t objs_diff = std::abs(g_objectness - f_objectness);
 	int sortc_diff = std::abs(g_sort_class - f_sort_class);
-	std::tuple<real_t, real_t, real_t, real_t> g_box_tuple;
-	std::tuple<real_t, real_t, real_t, real_t> f_box_tuple;
+	std::tuple < real_t, real_t, real_t, real_t > g_box_tuple;
+	std::tuple < real_t, real_t, real_t, real_t > f_box_tuple;
 
 	std::ostringstream error_info("");
 	error_info.precision(STORE_PRECISION);
@@ -169,13 +169,13 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 		real_t right = std::min((g_box.x + g_box.w / 2.) * img_w, img_w - 1.0);
 		real_t top = std::max((g_box.y - g_box.h / 2.) * img_h, 0.0);
 		real_t bot = std::min((g_box.y + g_box.h / 2.) * img_h, img_h - 1.0);
-		g_box_tuple = {left, right, top, bot};
+		g_box_tuple = std::tuple<real_t, real_t, real_t, real_t>(left, right, top, bot);
 
 		left = std::max((f_box.x - f_box.w / 2.) * img_w, 0.0);
 		right = std::min((f_box.x + f_box.w / 2.) * img_w, img_w - 1.0);
 		top = std::max((f_box.y - f_box.h / 2.) * img_h, 0.0);
 		bot = std::min((f_box.y + f_box.h / 2.) * img_h, img_h - 1.0);
-		f_box_tuple = {left, right, top, bot};
+		f_box_tuple = std::tuple<real_t, real_t, real_t, real_t>(left, right, top, bot);
 
 		if ((objs_diff > THRESHOLD_ERROR) || (sortc_diff > THRESHOLD_ERROR)
 				|| (g_box_tuple != f_box_tuple)) {
@@ -320,14 +320,14 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index,
 
 void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 //allocate detector
-	this->gold_img_names = std::vector<std::string>(this->plist_size);
+	this->gold_img_names = std::vector < std::string > (this->plist_size);
 	std::string line;
 
 	for (int i = 0; i < this->plist_size; i++) {
 
 		//	gold_file << img << ";" << nboxes << ";" << std::endl;
 		getline(gold_file, line);
-		std::vector<std::string> splited_line = split(line, ';');
+		std::vector < std::string > splited_line = split(line, ';');
 
 		// Set each img_name path
 		this->gold_img_names[i] = splited_line[0];
@@ -354,7 +354,7 @@ void DetectionGold::load_gold_hash(std::ifstream& gold_file) {
 			int classes = std::stoi(splited_line[6]);
 
 			// Getting the probabilities
-			std::vector<real_t> probs(classes, 0.0);
+			std::vector < real_t > probs(classes, 0.0);
 
 			if (getline(gold_file, line)) {
 				splited_line = split(line, ';');

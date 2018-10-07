@@ -82,7 +82,7 @@ int get_img_num(detection_gold_t *m) {
 	return it;
 }
 
-unsigned char get_use_tensor_cores(detection_gold_t *m){
+unsigned char get_use_tensor_cores(detection_gold_t *m) {
 	DetectionGold *obj;
 	if (m == NULL)
 		return 0;
@@ -92,7 +92,7 @@ unsigned char get_use_tensor_cores(detection_gold_t *m){
 	return it;
 }
 
-int get_smx_redundancy(detection_gold_t *m){
+int get_smx_redundancy(detection_gold_t *m) {
 	DetectionGold *obj;
 	if (m == NULL)
 		return 0;

@@ -10,8 +10,6 @@
 #include "cuda.h"
 #include <assert.h>
 
-
-
 /**
  * Read a file for all precisions
  */
@@ -103,8 +101,6 @@ __global__ void cuda_f16_to_f32(real_t_fp16 *X, size_t N, real_t *Y) {
 //	output_f32[idx] = __half2float(input_f16[idx]);
 //}
 
-
-
 //	run_cuda_gemm_half(TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
 void run_cuda_gemm_half(cublasHandle_t handle, int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc) {
@@ -154,8 +150,6 @@ void run_cuda_gemm_half(cublasHandle_t handle, int TA, int TB, int M, int N, int
 }
 
 #endif
-
-
 
 //
 //#ifdef __NVCC__

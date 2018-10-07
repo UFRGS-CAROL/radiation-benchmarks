@@ -19,12 +19,12 @@ __global__ void scale_bias_kernel(real_t *output, real_t *biases, int n,
 		output[(batch * n + filter) * size + offset] *= biases[filter];
 }
 
-void scale_bias_gpu(real_t *output, real_t *biases, int batch, int n,
-		int size) {
+void scale_bias_gpu(real_t *output, real_t *biases, int batch, int n, int size,
+		cudaStream_t st) {
 	dim3 dimGrid((size - 1) / BLOCK + 1, n, batch);
 	dim3 dimBlock(BLOCK, 1, 1);
 
-	scale_bias_kernel<<<dimGrid, dimBlock>>>(output, biases, n, size);
+	scale_bias_kernel<<<dimGrid, dimBlock, 0, st>>>(output, biases, n, size);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -50,8 +50,8 @@ __global__ void backward_scale_kernel(real_t *x_norm, real_t *delta, int batch,
 }
 
 void backward_scale_gpu(real_t *x_norm, real_t *delta, int batch, int n,
-		int size, real_t *scale_updates) {
-	backward_scale_kernel<<<n, BLOCK>>>(x_norm, delta, batch, n, size,
+		int size, real_t *scale_updates, cudaStream_t st) {
+	backward_scale_kernel<<<n, BLOCK, 0, st>>>(x_norm, delta, batch, n, size,
 			scale_updates);
 	check_error(cudaPeekAtLastError());
 }
@@ -71,11 +71,12 @@ __global__ void add_bias_kernel(real_t *output, real_t *biases, int batch,
 	output[(k * n + j) * size + i] += biases[j];
 }
 
-void add_bias_gpu(real_t *output, real_t *biases, int batch, int n, int size) {
+void add_bias_gpu(real_t *output, real_t *biases, int batch, int n, int size,
+		cudaStream_t st) {
 	int num = n * size * batch;
 
-	add_bias_kernel<<<cuda_gridsize(num), BLOCK>>>(output, biases, batch, n,
-			size);
+	add_bias_kernel<<<cuda_gridsize(num), BLOCK, 0, st>>>(output, biases, batch,
+			n, size);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -116,10 +117,10 @@ __global__ void backward_bias_kernel(real_t *bias_updates, real_t *delta,
 }
 
 void backward_bias_gpu(real_t *bias_updates, real_t *delta, int batch, int n,
-		int size) {
+		int size, cudaStream_t st) {
 	if (size == 1) {
-		backward_bias_conn_kernel<<<cuda_gridsize(n), BLOCK>>>(bias_updates,
-				delta, batch, n);
+		backward_bias_conn_kernel<<<cuda_gridsize(n), BLOCK, 0, st>>>(
+				bias_updates, delta, batch, n);
 	} else {
 		backward_bias_kernel<<<n, BLOCK>>>(bias_updates, delta, batch, n, size);
 	}
@@ -182,24 +183,25 @@ __global__ void adam_kernel(int N, real_t *x, real_t *m, real_t *v, real_t B1,
 }
 
 extern "C" void adam_gpu(int n, real_t *x, real_t *m, real_t *v, real_t B1,
-		real_t B2, real_t rate, real_t eps, int t) {
-	adam_kernel<<<cuda_gridsize(n), BLOCK>>>(n, x, m, v, B1, B2, rate, eps, t);
+		real_t B2, real_t rate, real_t eps, int t, cudaStream_t st) {
+	adam_kernel<<<cuda_gridsize(n), BLOCK, 0, st>>>(n, x, m, v, B1, B2, rate,
+			eps, t);
 	check_error(cudaPeekAtLastError());
 }
 
 extern "C" void adam_update_gpu(real_t *w, real_t *d, real_t *m, real_t *v,
 		real_t B1, real_t B2, real_t eps, real_t decay, real_t rate, int n,
-		int batch, int t) {
-	scal_gpu(n, B1, m, 1);
-	scal_gpu(n, B2, v, 1);
-	axpy_gpu(n, -decay * batch, w, 1, d, 1);
+		int batch, int t, cudaStream_t st) {
+	scal_gpu(n, B1, m, 1, st);
+	scal_gpu(n, B2, v, 1, st);
+	axpy_gpu(n, -decay * batch, w, 1, d, 1, st);
 
-	axpy_gpu(n, (1 - B1), d, 1, m, 1);
-	mul_gpu(n, d, 1, d, 1);
-	axpy_gpu(n, (1 - B2), d, 1, v, 1);
+	axpy_gpu(n, (1 - B1), d, 1, m, 1, st);
+	mul_gpu(n, d, 1, d, 1, st);
+	axpy_gpu(n, (1 - B2), d, 1, v, 1, st);
 
-	adam_gpu(n, w, m, v, B1, B2, rate, eps, t);
-	fill_gpu(n, 0, d, 1);
+	adam_gpu(n, w, m, v, B1, B2, rate, eps, t, st);
+	fill_gpu(n, 0, d, 1, st);
 }
 
 __global__ void normalize_kernel(int N, real_t *x, real_t *mean,
@@ -229,10 +231,11 @@ __global__ void normalize_delta_kernel(int N, real_t *x, real_t *mean,
 
 extern "C" void normalize_delta_gpu(real_t *x, real_t *mean, real_t *variance,
 		real_t *mean_delta, real_t *variance_delta, int batch, int filters,
-		int spatial, real_t *delta) {
+		int spatial, real_t *delta, cudaStream_t st) {
 	size_t N = batch * filters * spatial;
-	normalize_delta_kernel<<<cuda_gridsize(N), BLOCK>>>(N, x, mean, variance,
-			mean_delta, variance_delta, batch, filters, spatial, delta);
+	normalize_delta_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, x, mean,
+			variance, mean_delta, variance_delta, batch, filters, spatial,
+			delta);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -345,24 +348,24 @@ __global__ void mean_delta_kernel(real_t *delta, real_t *variance, int batch,
 }
 
 extern "C" void mean_delta_gpu(real_t *delta, real_t *variance, int batch,
-		int filters, int spatial, real_t *mean_delta) {
-	mean_delta_kernel<<<cuda_gridsize(filters), BLOCK>>>(delta, variance, batch,
-			filters, spatial, mean_delta);
+		int filters, int spatial, real_t *mean_delta, cudaStream_t st) {
+	mean_delta_kernel<<<cuda_gridsize(filters), BLOCK, 0, st>>>(delta, variance,
+			batch, filters, spatial, mean_delta);
 	check_error(cudaPeekAtLastError());
 }
 
 extern "C" void fast_mean_delta_gpu(real_t *delta, real_t *variance, int batch,
-		int filters, int spatial, real_t *mean_delta) {
-	fast_mean_delta_kernel<<<filters, BLOCK>>>(delta, variance, batch, filters,
-			spatial, mean_delta);
+		int filters, int spatial, real_t *mean_delta, cudaStream_t st) {
+	fast_mean_delta_kernel<<<filters, BLOCK, 0, st>>>(delta, variance, batch,
+			filters, spatial, mean_delta);
 	check_error(cudaPeekAtLastError());
 }
 
 extern "C" void fast_variance_delta_gpu(real_t *x, real_t *delta, real_t *mean,
 		real_t *variance, int batch, int filters, int spatial,
-		real_t *variance_delta) {
-	fast_variance_delta_kernel<<<filters, BLOCK>>>(x, delta, mean, variance,
-			batch, filters, spatial, variance_delta);
+		real_t *variance_delta, cudaStream_t st) {
+	fast_variance_delta_kernel<<<filters, BLOCK, 0, st>>>(x, delta, mean,
+			variance, batch, filters, spatial, variance_delta);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -501,10 +504,10 @@ __global__ void mul_kernel(int N, real_t *X, int INCX, real_t *Y, int INCY) {
 }
 
 extern "C" void normalize_gpu(real_t *x, real_t *mean, real_t *variance,
-		int batch, int filters, int spatial) {
+		int batch, int filters, int spatial, cudaStream_t st) {
 	size_t N = batch * filters * spatial;
-	normalize_kernel<<<cuda_gridsize(N), BLOCK>>>(N, x, mean, variance, batch,
-			filters, spatial);
+	normalize_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, x, mean, variance,
+			batch, filters, spatial);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -534,9 +537,9 @@ __global__ void l2norm_kernel(int N, real_t *x, real_t *dx, int batch,
 }
 
 extern "C" void l2normalize_gpu(real_t *x, real_t *dx, int batch, int filters,
-		int spatial) {
+		int spatial, cudaStream_t st) {
 	size_t N = batch * spatial;
-	l2norm_kernel<<<cuda_gridsize(N), BLOCK>>>(N, x, dx, batch, filters,
+	l2norm_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, x, dx, batch, filters,
 			spatial);
 	check_error(cudaPeekAtLastError());
 }
@@ -602,62 +605,66 @@ __global__ void fast_variance_kernel(real_t *x, real_t *mean, int batch,
 }
 
 extern "C" void fast_mean_gpu(real_t *x, int batch, int filters, int spatial,
-		real_t *mean) {
-	fast_mean_kernel<<<filters, BLOCK>>>(x, batch, filters, spatial, mean);
-	check_error(cudaPeekAtLastError());
-}
-
-extern "C" void fast_variance_gpu(real_t *x, real_t *mean, int batch,
-		int filters, int spatial, real_t *variance) {
-	fast_variance_kernel<<<filters, BLOCK>>>(x, mean, batch, filters, spatial,
-			variance);
-	check_error(cudaPeekAtLastError());
-}
-
-extern "C" void mean_gpu(real_t *x, int batch, int filters, int spatial,
-		real_t *mean) {
-	mean_kernel<<<cuda_gridsize(filters), BLOCK>>>(x, batch, filters, spatial,
+		real_t *mean, cudaStream_t st) {
+	fast_mean_kernel<<<filters, BLOCK, 0, st>>>(x, batch, filters, spatial,
 			mean);
 	check_error(cudaPeekAtLastError());
 }
 
-extern "C" void variance_gpu(real_t *x, real_t *mean, int batch, int filters,
-		int spatial, real_t *variance) {
-	variance_kernel<<<cuda_gridsize(filters), BLOCK>>>(x, mean, batch, filters,
+extern "C" void fast_variance_gpu(real_t *x, real_t *mean, int batch,
+		int filters, int spatial, real_t *variance, cudaStream_t st) {
+	fast_variance_kernel<<<filters, BLOCK, 0, st>>>(x, mean, batch, filters,
 			spatial, variance);
 	check_error(cudaPeekAtLastError());
 }
 
+extern "C" void mean_gpu(real_t *x, int batch, int filters, int spatial,
+		real_t *mean, cudaStream_t st) {
+	mean_kernel<<<cuda_gridsize(filters), BLOCK, 0, st>>>(x, batch, filters,
+			spatial, mean);
+	check_error(cudaPeekAtLastError());
+}
+
+extern "C" void variance_gpu(real_t *x, real_t *mean, int batch, int filters,
+		int spatial, real_t *variance, cudaStream_t st) {
+	variance_kernel<<<cuda_gridsize(filters), BLOCK, 0, st>>>(x, mean, batch,
+			filters, spatial, variance);
+	check_error(cudaPeekAtLastError());
+}
+
 extern "C" void axpy_gpu(int N, real_t ALPHA, real_t * X, int INCX, real_t * Y,
-		int INCY) {
-	axpy_gpu_offset(N, ALPHA, X, 0, INCX, Y, 0, INCY);
+		int INCY, cudaStream_t st) {
+	axpy_gpu_offset(N, ALPHA, X, 0, INCX, Y, 0, INCY, st);
 }
 
 extern "C" void pow_gpu(int N, real_t ALPHA, real_t * X, int INCX, real_t * Y,
-		int INCY) {
-	pow_kernel<<<cuda_gridsize(N), BLOCK>>>(N, ALPHA, X, INCX, Y, INCY);
+		int INCY, cudaStream_t st) {
+	pow_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, ALPHA, X, INCX, Y, INCY);
 	check_error(cudaPeekAtLastError());
 }
 
 extern "C" void axpy_gpu_offset(int N, real_t ALPHA, real_t * X, int OFFX,
-		int INCX, real_t * Y, int OFFY, int INCY) {
-	axpy_kernel<<<cuda_gridsize(N), BLOCK>>>(N, ALPHA, X, OFFX, INCX, Y, OFFY,
-			INCY);
+		int INCX, real_t * Y, int OFFY, int INCY, cudaStream_t st) {
+	axpy_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, ALPHA, X, OFFX, INCX, Y,
+			OFFY, INCY);
 	check_error(cudaPeekAtLastError());
 }
 
-extern "C" void copy_gpu(int N, real_t * X, int INCX, real_t * Y, int INCY) {
-	copy_gpu_offset(N, X, 0, INCX, Y, 0, INCY);
+extern "C" void copy_gpu(int N, real_t * X, int INCX, real_t * Y, int INCY,
+		cudaStream_t st) {
+	copy_gpu_offset(N, X, 0, INCX, Y, 0, INCY, st);
 }
 
-extern "C" void mul_gpu(int N, real_t * X, int INCX, real_t * Y, int INCY) {
-	mul_kernel<<<cuda_gridsize(N), BLOCK>>>(N, X, INCX, Y, INCY);
+extern "C" void mul_gpu(int N, real_t * X, int INCX, real_t * Y, int INCY,
+		cudaStream_t st) {
+	mul_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, X, INCX, Y, INCY);
 	check_error(cudaPeekAtLastError());
 }
 
 extern "C" void copy_gpu_offset(int N, real_t * X, int OFFX, int INCX,
-		real_t * Y, int OFFY, int INCY) {
-	copy_kernel<<<cuda_gridsize(N), BLOCK>>>(N, X, OFFX, INCX, Y, OFFY, INCY);
+		real_t * Y, int OFFY, int INCY, cudaStream_t st) {
+	copy_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, X, OFFX, INCX, Y, OFFY,
+			INCY);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -682,17 +689,17 @@ __global__ void flatten_kernel(int N, real_t *x, int spatial, int layers,
 }
 
 extern "C" void flatten_gpu(real_t *x, int spatial, int layers, int batch,
-		int forward, real_t *out) {
+		int forward, real_t *out, cudaStream_t st) {
 	int size = spatial * batch * layers;
-	flatten_kernel<<<cuda_gridsize(size), BLOCK>>>(size, x, spatial, layers,
-			batch, forward, out);
+	flatten_kernel<<<cuda_gridsize(size), BLOCK, 0, st>>>(size, x, spatial,
+			layers, batch, forward, out);
 	check_error(cudaPeekAtLastError());
 }
 
 extern "C" void reorg_gpu(real_t *x, int w, int h, int c, int batch, int stride,
-		int forward, real_t *out) {
+		int forward, real_t *out, cudaStream_t st) {
 	int size = w * h * c * batch;
-	reorg_kernel<<<cuda_gridsize(size), BLOCK>>>(size, x, w, h, c, batch,
+	reorg_kernel<<<cuda_gridsize(size), BLOCK, 0, st>>>(size, x, w, h, c, batch,
 			stride, forward, out);
 	check_error(cudaPeekAtLastError());
 }
@@ -705,8 +712,8 @@ __global__ void mask_kernel(int n, real_t *x, real_t mask_num, real_t *mask,
 }
 
 extern "C" void mask_gpu(int N, real_t * X, real_t mask_num, real_t * mask,
-		real_t val) {
-	mask_kernel<<<cuda_gridsize(N), BLOCK>>>(N, X, mask_num, mask, val);
+		real_t val, cudaStream_t st) {
+	mask_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, X, mask_num, mask, val);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -718,38 +725,45 @@ __global__ void scale_mask_kernel(int n, real_t *x, real_t mask_num,
 }
 
 extern "C" void scale_mask_gpu(int N, real_t * X, real_t mask_num,
-		real_t * mask, real_t scale) {
-	scale_mask_kernel<<<cuda_gridsize(N), BLOCK>>>(N, X, mask_num, mask, scale);
+		real_t * mask, real_t scale, cudaStream_t st) {
+	scale_mask_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, X, mask_num, mask,
+			scale);
 	check_error(cudaPeekAtLastError());
 }
 
-extern "C" void const_gpu(int N, real_t ALPHA, real_t * X, int INCX) {
-	const_kernel<<<cuda_gridsize(N), BLOCK>>>(N, ALPHA, X, INCX);
+extern "C" void const_gpu(int N, real_t ALPHA, real_t * X, int INCX,
+		cudaStream_t st) {
+	const_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, ALPHA, X, INCX);
 	check_error(cudaPeekAtLastError());
 }
 
-extern "C" void constrain_gpu(int N, real_t ALPHA, real_t * X, int INCX) {
-	constrain_kernel<<<cuda_gridsize(N), BLOCK>>>(N, ALPHA, X, INCX);
+extern "C" void constrain_gpu(int N, real_t ALPHA, real_t * X, int INCX,
+		cudaStream_t st) {
+	constrain_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, ALPHA, X, INCX);
 	check_error(cudaPeekAtLastError());
 }
 
-extern "C" void add_gpu(int N, real_t ALPHA, real_t * X, int INCX) {
-	add_kernel<<<cuda_gridsize(N), BLOCK>>>(N, ALPHA, X, INCX);
+extern "C" void add_gpu(int N, real_t ALPHA, real_t * X, int INCX,
+		cudaStream_t st) {
+	add_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, ALPHA, X, INCX);
 	check_error(cudaPeekAtLastError());
 }
 
-extern "C" void scal_gpu(int N, real_t ALPHA, real_t * X, int INCX) {
-	scal_kernel<<<cuda_gridsize(N), BLOCK>>>(N, ALPHA, X, INCX);
+extern "C" void scal_gpu(int N, real_t ALPHA, real_t * X, int INCX,
+		cudaStream_t st) {
+	scal_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, ALPHA, X, INCX);
 	check_error(cudaPeekAtLastError());
 }
 
-extern "C" void supp_gpu(int N, real_t ALPHA, real_t * X, int INCX) {
-	supp_kernel<<<cuda_gridsize(N), BLOCK>>>(N, ALPHA, X, INCX);
+extern "C" void supp_gpu(int N, real_t ALPHA, real_t * X, int INCX,
+		cudaStream_t st) {
+	supp_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, ALPHA, X, INCX);
 	check_error(cudaPeekAtLastError());
 }
 
-extern "C" void fill_gpu(int N, real_t ALPHA, real_t * X, int INCX) {
-	fill_kernel<<<cuda_gridsize(N), BLOCK>>>(N, ALPHA, X, INCX);
+extern "C" void fill_gpu(int N, real_t ALPHA, real_t * X, int INCX,
+		cudaStream_t st) {
+	fill_kernel<<<cuda_gridsize(N), BLOCK, 0, st>>>(N, ALPHA, X, INCX);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -774,7 +788,8 @@ __global__ void shortcut_kernel(int size, int minw, int minh, int minc,
 }
 
 extern "C" void shortcut_gpu(int batch, int w1, int h1, int c1, real_t *add,
-		int w2, int h2, int c2, real_t s1, real_t s2, real_t *out) {
+		int w2, int h2, int c2, real_t s1, real_t s2, real_t *out,
+		cudaStream_t st) {
 	int minw = (w1 < w2) ? w1 : w2;
 	int minh = (h1 < h2) ? h1 : h2;
 	int minc = (c1 < c2) ? c1 : c2;
@@ -789,8 +804,9 @@ extern "C" void shortcut_gpu(int batch, int w1, int h1, int c1, real_t *add,
 		sample = 1;
 
 	int size = batch * minw * minh * minc;
-	shortcut_kernel<<<cuda_gridsize(size), BLOCK>>>(size, minw, minh, minc,
-			stride, sample, batch, w1, h1, c1, add, w2, h2, c2, s1, s2, out);
+	shortcut_kernel<<<cuda_gridsize(size), BLOCK, 0, st>>>(size, minw, minh,
+			minc, stride, sample, batch, w1, h1, c1, add, w2, h2, c2, s1, s2,
+			out);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -811,8 +827,9 @@ __global__ void smooth_l1_kernel(int n, real_t *pred, real_t *truth,
 }
 
 extern "C" void smooth_l1_gpu(int n, real_t *pred, real_t *truth, real_t *delta,
-		real_t *error) {
-	smooth_l1_kernel<<<cuda_gridsize(n), BLOCK>>>(n, pred, truth, delta, error);
+		real_t *error, cudaStream_t st) {
+	smooth_l1_kernel<<<cuda_gridsize(n), BLOCK, 0, st>>>(n, pred, truth, delta,
+			error);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -828,9 +845,9 @@ __global__ void softmax_x_ent_kernel(int n, real_t *pred, real_t *truth,
 }
 
 extern "C" void softmax_x_ent_gpu(int n, real_t *pred, real_t *truth,
-		real_t *delta, real_t *error) {
-	softmax_x_ent_kernel<<<cuda_gridsize(n), BLOCK>>>(n, pred, truth, delta,
-			error);
+		real_t *delta, real_t *error, cudaStream_t st) {
+	softmax_x_ent_kernel<<<cuda_gridsize(n), BLOCK, 0, st>>>(n, pred, truth,
+			delta, error);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -846,9 +863,9 @@ __global__ void logistic_x_ent_kernel(int n, real_t *pred, real_t *truth,
 }
 
 extern "C" void logistic_x_ent_gpu(int n, real_t *pred, real_t *truth,
-		real_t *delta, real_t *error) {
-	logistic_x_ent_kernel<<<cuda_gridsize(n), BLOCK>>>(n, pred, truth, delta,
-			error);
+		real_t *delta, real_t *error, cudaStream_t st) {
+	logistic_x_ent_kernel<<<cuda_gridsize(n), BLOCK, 0, st>>>(n, pred, truth,
+			delta, error);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -863,8 +880,8 @@ __global__ void l2_kernel(int n, real_t *pred, real_t *truth, real_t *delta,
 }
 
 extern "C" void l2_gpu(int n, real_t *pred, real_t *truth, real_t *delta,
-		real_t *error) {
-	l2_kernel<<<cuda_gridsize(n), BLOCK>>>(n, pred, truth, delta, error);
+		real_t *error, cudaStream_t st) {
+	l2_kernel<<<cuda_gridsize(n), BLOCK, 0, st>>>(n, pred, truth, delta, error);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -879,8 +896,8 @@ __global__ void l1_kernel(int n, real_t *pred, real_t *truth, real_t *delta,
 }
 
 extern "C" void l1_gpu(int n, real_t *pred, real_t *truth, real_t *delta,
-		real_t *error) {
-	l1_kernel<<<cuda_gridsize(n), BLOCK>>>(n, pred, truth, delta, error);
+		real_t *error, cudaStream_t st) {
+	l1_kernel<<<cuda_gridsize(n), BLOCK, 0, st>>>(n, pred, truth, delta, error);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -894,8 +911,9 @@ __global__ void wgan_kernel(int n, real_t *pred, real_t *truth, real_t *delta,
 }
 
 extern "C" void wgan_gpu(int n, real_t *pred, real_t *truth, real_t *delta,
-		real_t *error) {
-	wgan_kernel<<<cuda_gridsize(n), BLOCK>>>(n, pred, truth, delta, error);
+		real_t *error, cudaStream_t st) {
+	wgan_kernel<<<cuda_gridsize(n), BLOCK, 0, st>>>(n, pred, truth, delta,
+			error);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -924,9 +942,9 @@ __global__ void deinter_kernel(int NX, real_t *X, int NY, real_t *Y, int B,
 }
 
 extern "C" void deinter_gpu(int NX, real_t *X, int NY, real_t *Y, int B,
-		real_t *OUT) {
-	deinter_kernel<<<cuda_gridsize((NX + NY) * B), BLOCK>>>(NX, X, NY, Y, B,
-			OUT);
+		real_t *OUT, cudaStream_t st) {
+	deinter_kernel<<<cuda_gridsize((NX + NY) * B), BLOCK, 0, st>>>(NX, X, NY, Y,
+			B, OUT);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -945,14 +963,15 @@ __global__ void inter_kernel(int NX, real_t *X, int NY, real_t *Y, int B,
 }
 
 extern "C" void inter_gpu(int NX, real_t *X, int NY, real_t *Y, int B,
-		real_t *OUT) {
-	inter_kernel<<<cuda_gridsize((NX + NY) * B), BLOCK>>>(NX, X, NY, Y, B, OUT);
+		real_t *OUT, cudaStream_t st) {
+	inter_kernel<<<cuda_gridsize((NX + NY) * B), BLOCK, 0, st>>>(NX, X, NY, Y,
+			B, OUT);
 	check_error(cudaPeekAtLastError());
 }
 
 extern "C" void weighted_sum_gpu(real_t *a, real_t *b, real_t *s, int num,
-		real_t *c) {
-	weighted_sum_kernel<<<cuda_gridsize(num), BLOCK>>>(num, a, b, s, c);
+		real_t *c, cudaStream_t st) {
+	weighted_sum_kernel<<<cuda_gridsize(num), BLOCK, 0, st>>>(num, a, b, s, c);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -969,9 +988,9 @@ __global__ void weighted_delta_kernel(int n, real_t *a, real_t *b, real_t *s,
 }
 
 extern "C" void weighted_delta_gpu(real_t *a, real_t *b, real_t *s, real_t *da,
-		real_t *db, real_t *ds, int num, real_t *dc) {
-	weighted_delta_kernel<<<cuda_gridsize(num), BLOCK>>>(num, a, b, s, da, db,
-			ds, dc);
+		real_t *db, real_t *ds, int num, real_t *dc, cudaStream_t st) {
+	weighted_delta_kernel<<<cuda_gridsize(num), BLOCK, 0, st>>>(num, a, b, s,
+			da, db, ds, dc);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -982,8 +1001,9 @@ __global__ void mult_add_into_kernel(int n, real_t *a, real_t *b, real_t *c) {
 	}
 }
 
-extern "C" void mult_add_into_gpu(int num, real_t *a, real_t *b, real_t *c) {
-	mult_add_into_kernel<<<cuda_gridsize(num), BLOCK>>>(num, a, b, c);
+extern "C" void mult_add_into_gpu(int num, real_t *a, real_t *b, real_t *c,
+		cudaStream_t st) {
+	mult_add_into_kernel<<<cuda_gridsize(num), BLOCK, 0, st>>>(num, a, b, c);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -1023,7 +1043,7 @@ __global__ void softmax_tree_kernel(real_t *input, int spatial, int batch,
 }
 
 extern "C" void softmax_tree(real_t *input, int spatial, int batch, int stride,
-		real_t temp, real_t *output, tree hier) {
+		real_t temp, real_t *output, tree hier, cudaStream_t st) {
 	int *tree_groups_size = cuda_make_int_array(hier.group_size, hier.groups);
 	int *tree_groups_offset = cuda_make_int_array(hier.group_offset,
 			hier.groups);
@@ -1036,8 +1056,8 @@ extern "C" void softmax_tree(real_t *input, int spatial, int batch, int stride,
 	 }
 	 */
 	int num = spatial * batch * hier.groups;
-	softmax_tree_kernel<<<cuda_gridsize(num), BLOCK>>>(input, spatial, batch,
-			stride, temp, output, hier.groups, tree_groups_size,
+	softmax_tree_kernel<<<cuda_gridsize(num), BLOCK, 0, st>>>(input, spatial,
+			batch, stride, temp, output, hier.groups, tree_groups_size,
 			tree_groups_offset);
 	check_error(cudaPeekAtLastError());
 	cuda_free((real_t *) tree_groups_size);
@@ -1057,9 +1077,10 @@ __global__ void softmax_kernel(real_t *input, int n, int batch,
 }
 
 extern "C" void softmax_gpu(real_t *input, int n, int batch, int batch_offset,
-		int groups, int group_offset, int stride, real_t temp, real_t *output) {
-	softmax_kernel<<<cuda_gridsize(batch * groups), BLOCK>>>(input, n, batch,
-			batch_offset, groups, group_offset, stride, temp, output);
+		int groups, int group_offset, int stride, real_t temp, real_t *output,
+		cudaStream_t st) {
+	softmax_kernel<<<cuda_gridsize(batch * groups), BLOCK, 0, st>>>(input, n,
+			batch, batch_offset, groups, group_offset, stride, temp, output);
 	check_error(cudaPeekAtLastError());
 }
 
@@ -1089,9 +1110,9 @@ __global__ void upsample_kernel(size_t N, real_t *x, int w, int h, int c,
 		atomicAdd(x + in_index, scale * out[out_index]);
 }
 extern "C" void upsample_gpu(real_t *in, int w, int h, int c, int batch,
-		int stride, int forward, real_t scale, real_t *out) {
+		int stride, int forward, real_t scale, real_t *out, cudaStream_t st) {
 	size_t size = w * h * c * batch * stride * stride;
-	upsample_kernel<<<cuda_gridsize(size), BLOCK>>>(size, in, w, h, c, batch,
-			stride, forward, scale, out);
+	upsample_kernel<<<cuda_gridsize(size), BLOCK, 0, st>>>(size, in, w, h, c,
+			batch, stride, forward, scale, out);
 	check_error(cudaPeekAtLastError());
 }
