@@ -8,7 +8,9 @@
 typedef layer crop_layer;
 
 image get_crop_image(crop_layer l);
-crop_layer make_crop_layer(int batch, int h, int w, int c, int crop_height, int crop_width, int flip, real_t angle, real_t saturation, real_t exposure);
+crop_layer make_crop_layer(int batch, int h, int w, int c, int crop_height,
+		int crop_width, int flip, real_t angle, real_t saturation,
+		real_t exposure);
 void forward_crop_layer(const crop_layer l, network net);
 void resize_crop_layer(layer *l, int w, int h);
 

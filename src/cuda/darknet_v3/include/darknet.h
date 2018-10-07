@@ -135,7 +135,7 @@ struct layer {
 	void (*update)(struct layer, update_args);
 	void (*forward_gpu)(struct layer, struct network);
 	void (*backward_gpu)(struct layer, struct network);
-	void (*update_gpu)(struct layer, update_args);
+	void (*update_gpu)(struct layer, update_args, cudaStream_t st);
 	int batch_normalize;
 	int shortcut;
 	int batch;
@@ -506,7 +506,7 @@ typedef struct network {
 	real_t *output_gpu;
 
 	unsigned char use_tensor_cores;
-
+	cudaStream_t st;
 	int smx_redundancy;
 #endif
 
@@ -656,10 +656,14 @@ void softmax(real_t *input, int n, real_t temp, int stride, real_t *output);
 
 int best_3d_shift_r(image a, image b, int min, int max);
 #ifdef GPU
-void axpy_gpu(int N, real_t ALPHA, real_t * X, int INCX, real_t * Y, int INCY);
-void fill_gpu(int N, real_t ALPHA, real_t * X, int INCX);
-void scal_gpu(int N, real_t ALPHA, real_t * X, int INCX);
-void copy_gpu(int N, real_t * X, int INCX, real_t * Y, int INCY);
+void axpy_gpu(int N, real_t ALPHA, real_t * X, int INCX, real_t * Y, int INCY,
+		cudaStream_t st);
+void fill_gpu(int N, real_t ALPHA, real_t * X, int INCX,
+		cudaStream_t st);
+void scal_gpu(int N, real_t ALPHA, real_t * X, int INCX,
+		cudaStream_t st);
+void copy_gpu(int N, real_t * X, int INCX, real_t * Y, int INCY,
+		cudaStream_t st);
 
 void cuda_set_device(int n);
 void cuda_free(real_t *x_gpu);

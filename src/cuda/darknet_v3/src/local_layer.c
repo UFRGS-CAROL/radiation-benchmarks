@@ -194,13 +194,13 @@ void forward_local_layer_gpu(const local_layer l, network net) {
 	int locations = out_h * out_w;
 
 	for (i = 0; i < l.batch; ++i) {
-		copy_gpu(l.outputs, l.biases_gpu, 1, l.output_gpu + i * l.outputs, 1);
+		copy_gpu(l.outputs, l.biases_gpu, 1, l.output_gpu + i * l.outputs, 1, net.st);
 	}
 
 	for (i = 0; i < l.batch; ++i) {
 		real_t *input = net.input_gpu + i * l.w * l.h * l.c;
 		im2col_gpu(input, l.c, l.h, l.w, l.size, l.stride, l.pad,
-				net.workspace);
+				net.workspace, net.st);
 		real_t *output = l.output_gpu + i * l.outputs;
 		for (j = 0; j < locations; ++j) {
 			real_t *a = l.weights_gpu + j * l.size * l.size * l.c * l.n;
@@ -211,10 +211,10 @@ void forward_local_layer_gpu(const local_layer l, network net) {
 			int n = 1;
 			int k = l.size * l.size * l.c;
 
-			gemm_gpu(0, 0, m, n, k, 1, a, k, b, locations, 1, c, locations, net.use_tensor_cores);
+			gemm_gpu(0, 0, m, n, k, 1, a, k, b, locations, 1, c, locations, net.use_tensor_cores, net.st);
 		}
 	}
-	activate_array_gpu(l.output_gpu, l.outputs * l.batch, l.activation);
+	activate_array_gpu(l.output_gpu, l.outputs * l.batch, l.activation, net.st);
 }
 
 void backward_local_layer_gpu(local_layer l, network net) {
@@ -222,16 +222,16 @@ void backward_local_layer_gpu(local_layer l, network net) {
 	int locations = l.out_w * l.out_h;
 
 	gradient_array_gpu(l.output_gpu, l.outputs * l.batch, l.activation,
-			l.delta_gpu);
+			l.delta_gpu, net.st);
 	for (i = 0; i < l.batch; ++i) {
 		axpy_gpu(l.outputs, 1, l.delta_gpu + i * l.outputs, 1,
-				l.bias_updates_gpu, 1);
+				l.bias_updates_gpu, 1, net.st);
 	}
 
 	for (i = 0; i < l.batch; ++i) {
 		real_t *input = net.input_gpu + i * l.w * l.h * l.c;
 		im2col_gpu(input, l.c, l.h, l.w, l.size, l.stride, l.pad,
-				net.workspace);
+				net.workspace, net.st);
 
 		for (j = 0; j < locations; ++j) {
 			real_t *a = l.delta_gpu + i * l.outputs + j;
@@ -241,7 +241,7 @@ void backward_local_layer_gpu(local_layer l, network net) {
 			int n = l.size * l.size * l.c;
 			int k = 1;
 
-			gemm_gpu(0, 1, m, n, k, 1, a, locations, b, locations, 1, c, n, net.use_tensor_cores);
+			gemm_gpu(0, 1, m, n, k, 1, a, locations, b, locations, 1, c, n, net.use_tensor_cores, net.st);
 		}
 
 		if (net.delta_gpu) {
@@ -254,16 +254,16 @@ void backward_local_layer_gpu(local_layer l, network net) {
 				int n = 1;
 				int k = l.n;
 
-				gemm_gpu(1, 0, m, n, k, 1, a, m, b, locations, 0, c, locations, net.use_tensor_cores);
+				gemm_gpu(1, 0, m, n, k, 1, a, m, b, locations, 0, c, locations, net.use_tensor_cores, net.st);
 			}
 
 			col2im_gpu(net.workspace, l.c, l.h, l.w, l.size, l.stride, l.pad,
-					net.delta_gpu + i * l.c * l.h * l.w);
+					net.delta_gpu + i * l.c * l.h * l.w, net.st);
 		}
 	}
 }
 
-void update_local_layer_gpu(local_layer l, update_args a) {
+void update_local_layer_gpu(local_layer l, update_args a, cudaStream_t st) {
 	real_t learning_rate = a.learning_rate * l.learning_rate_scale;
 	real_t momentum = a.momentum;
 	real_t decay = a.decay;
@@ -272,13 +272,13 @@ void update_local_layer_gpu(local_layer l, update_args a) {
 	int locations = l.out_w * l.out_h;
 	int size = l.size * l.size * l.c * l.n * locations;
 	axpy_gpu(l.outputs, learning_rate / batch, l.bias_updates_gpu, 1,
-			l.biases_gpu, 1);
-	scal_gpu(l.outputs, momentum, l.bias_updates_gpu, 1);
+			l.biases_gpu, 1, st);
+	scal_gpu(l.outputs, momentum, l.bias_updates_gpu, 1, st);
 
-	axpy_gpu(size, -decay * batch, l.weights_gpu, 1, l.weight_updates_gpu, 1);
+	axpy_gpu(size, -decay * batch, l.weights_gpu, 1, l.weight_updates_gpu, 1, st);
 	axpy_gpu(size, learning_rate / batch, l.weight_updates_gpu, 1,
-			l.weights_gpu, 1);
-	scal_gpu(size, momentum, l.weight_updates_gpu, 1);
+			l.weights_gpu, 1, st);
+	scal_gpu(size, momentum, l.weight_updates_gpu, 1, st);
 }
 
 void pull_local_layer(local_layer l) {

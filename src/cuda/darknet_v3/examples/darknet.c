@@ -50,16 +50,15 @@ void average(int argc, char *argv[]) {
 				axpy_cpu(num, (1), l.weights, 1, out.weights, 1);
 				if (l.batch_normalize) {
 					axpy_cpu(l.n, (1), l.scales, 1, out.scales, 1);
-					axpy_cpu(l.n, (1), l.rolling_mean, 1,
-							out.rolling_mean, 1);
+					axpy_cpu(l.n, (1), l.rolling_mean, 1, out.rolling_mean, 1);
 					axpy_cpu(l.n, (1), l.rolling_variance, 1,
 							out.rolling_variance, 1);
 				}
 			}
 			if (l.type == CONNECTED) {
 				axpy_cpu(l.outputs, (1), l.biases, 1, out.biases, 1);
-				axpy_cpu(l.outputs * l.inputs, (1), l.weights, 1,
-						out.weights, 1);
+				axpy_cpu(l.outputs * l.inputs, (1), l.weights, 1, out.weights,
+						1);
 			}
 		}
 	}
@@ -366,8 +365,7 @@ void denormalize_net(char *cfgfile, char *weightfile, char *outfile) {
 	save_weights(net, outfile);
 }
 
-void mkimg(char *cfgfile, char *weightfile, int h, int w, int num,
-		char *prefix) {
+void mkimg(char *cfgfile, char *weightfile, int h, int w, int num, char *prefix) {
 	network *net = load_network(cfgfile, weightfile, 0);
 	image *ims = get_weights(net->layers[0]);
 	int n = net->layers[0].n;
@@ -441,8 +439,8 @@ int main(int argc, char **argv) {
 		char *filename = (argc > 4) ? argv[4] : 0;
 		char *outfile = find_char_arg(argc, argv, "-out", 0);
 		int fullscreen = find_arg(argc, argv, "-fullscreen");
-		test_detector("cfg/coco.data", argv[2], argv[3], filename, thresh,
-				(.5), outfile, fullscreen);
+		test_detector("cfg/coco.data", argv[2], argv[3], filename, thresh, (.5),
+				outfile, fullscreen);
 	}
 
 //	else if (0 == strcmp(argv[1], "cifar")) {

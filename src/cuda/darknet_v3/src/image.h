@@ -11,7 +11,6 @@
 
 #include "type.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,15 +23,20 @@ int show_image_cv(image im, const char* name, int ms);
 #endif
 
 real_t get_color(int c, int x, int max);
-void draw_box(image a, int x1, int y1, int x2, int y2, real_t r, real_t g, real_t b);
+void draw_box(image a, int x1, int y1, int x2, int y2, real_t r, real_t g,
+		real_t b);
 void draw_bbox(image a, box bbox, int w, real_t r, real_t g, real_t b);
-void write_label(image a, int r, int c, image *characters, char *string, real_t *rgb);
+void write_label(image a, int r, int c, image *characters, char *string,
+		real_t *rgb);
 image image_distance(image a, image b);
 void scale_image(image m, real_t s);
-image rotate_crop_image(image im, real_t rad, real_t s, int w, int h, real_t dx, real_t dy, real_t aspect);
+image rotate_crop_image(image im, real_t rad, real_t s, int w, int h, real_t dx,
+		real_t dy, real_t aspect);
 image random_crop_image(image im, int w, int h);
-image random_augment_image(image im, real_t angle, real_t aspect, int low, int high, int w, int h);
-augment_args random_augment_args(image im, real_t angle, real_t aspect, int low, int high, int w, int h);
+image random_augment_image(image im, real_t angle, real_t aspect, int low,
+		int high, int w, int h);
+augment_args random_augment_args(image im, real_t angle, real_t aspect, int low,
+		int high, int w, int h);
 void letterbox_image_into(image im, int w, int h, image boxed);
 image resize_max(image im, int max);
 void translate_image(image m, real_t s);
@@ -46,7 +50,6 @@ void rgb_to_hsv(image im);
 void hsv_to_rgb(image im);
 void yuv_to_rgb(image im);
 void rgb_to_yuv(image im);
-
 
 image collapse_image_layers(image source, int border);
 image collapse_images_horz(image *ims, int n);

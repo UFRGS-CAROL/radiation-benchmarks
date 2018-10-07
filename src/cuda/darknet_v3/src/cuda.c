@@ -51,7 +51,7 @@ dim3 cuda_gridsize(size_t n) {
 		x = ceil(sqrt(k));
 		y = (n - 1) / (x * BLOCK) + 1;
 	}
-	dim3 d = { x, y, 1 };
+	dim3 d = {x, y, 1};
 	//printf("%ld %ld %ld %ld\n", n, x, y, x*y*BLOCK);
 	return d;
 }
@@ -71,7 +71,7 @@ cudnnHandle_t cudnn_handle()
 #endif
 
 cublasHandle_t blas_handle(unsigned char use_tensor_cores) {
-	static int init[16] = { 0 };
+	static int init[16] = {0};
 	static cublasHandle_t handle[16];
 	int i = cuda_get_device();
 	if (!init[i]) {
@@ -97,23 +97,22 @@ real_t *cuda_make_array(real_t *x, size_t n) {
 		status = cudaMemcpy(x_gpu, x, size, cudaMemcpyHostToDevice);
 		check_error(status);
 	} else {
-		fill_gpu(n, 0, x_gpu, 1);
+		fill_gpu(n, 0, x_gpu, 1, 0x0);
 	}
 	if (!x_gpu)
-		error("Cuda malloc failed\n");
+	error("Cuda malloc failed\n");
 	return x_gpu;
 }
 
 void cuda_random(real_t *x_gpu, size_t n) {
 	static curandGenerator_t gen[16];
-	static int init[16] = { 0 };
+	static int init[16] = {0};
 	int i = cuda_get_device();
 	if (!init[i]) {
 		curandCreateGenerator(&gen[i], CURAND_RNG_PSEUDO_DEFAULT);
 		curandSetPseudoRandomGeneratorSeed(gen[i], time(0));
 		init[i] = 1;
 	}
-
 
 #if REAL_TYPE == HALF || REAL_TYPE == FLOAT
 	curandGenerateUniform(gen[i], x_gpu, n);
@@ -145,7 +144,7 @@ int *cuda_make_int_array(int *x, size_t n) {
 		check_error(status);
 	}
 	if (!x_gpu)
-		error("Cuda malloc failed\n");
+	error("Cuda malloc failed\n");
 	return x_gpu;
 }
 

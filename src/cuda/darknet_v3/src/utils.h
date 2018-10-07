@@ -5,8 +5,6 @@
 #include "darknet.h"
 #include "list.h"
 
-
-
 #define TIME(a) \
     do { \
     double start = what_time_is_it_now(); \

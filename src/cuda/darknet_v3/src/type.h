@@ -47,7 +47,6 @@ typedef real_t real_t_device;
 //---------------------------------------------------------------------------------------------------
 #endif // REAL_TYPE MACRO DEFINITION
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,19 +59,17 @@ void run_cuda_gemm_half(cublasHandle_t handle, int TA, int TB, int M, int N, int
 #endif
 
 #ifdef __cplusplus
-} // EXTERN C MACRO
+}
+ // EXTERN C MACRO
 #endif
 
-
-typedef struct
-	__device_builtin__ {
-		real_t x;
-		real_t y;
-		real_t z;
-	} real_t3;
+typedef struct __device_builtin__ {
+real_t x;
+real_t y;
+real_t z;
+} real_t3;
 
 #define REAL_RAND_MAX FLT_MAX
-
 
 //#ifdef __NVCC__
 //__device__ __forceinline__ real_t_device exp_real(real_t_device x);

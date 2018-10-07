@@ -256,7 +256,7 @@ void push_connected_layer(layer l) {
 	}
 }
 
-void update_connected_layer_gpu(layer l, update_args a) {
+void update_connected_layer_gpu(layer l, update_args a, cudaStream_t st) {
 	real_t learning_rate = a.learning_rate * l.learning_rate_scale;
 	real_t momentum = a.momentum;
 	real_t decay = a.decay;
@@ -264,36 +264,36 @@ void update_connected_layer_gpu(layer l, update_args a) {
 	if (a.adam) {
 		adam_update_gpu(l.weights_gpu, l.weight_updates_gpu, l.m_gpu, l.v_gpu,
 				a.B1, a.B2, a.eps, decay, learning_rate, l.inputs * l.outputs,
-				batch, a.t);
+				batch, a.t, st);
 		adam_update_gpu(l.biases_gpu, l.bias_updates_gpu, l.bias_m_gpu,
 				l.bias_v_gpu, a.B1, a.B2, a.eps, decay, learning_rate,
-				l.outputs, batch, a.t);
+				l.outputs, batch, a.t, st);
 		if (l.scales_gpu) {
 			adam_update_gpu(l.scales_gpu, l.scale_updates_gpu, l.scale_m_gpu,
 					l.scale_v_gpu, a.B1, a.B2, a.eps, decay, learning_rate,
-					l.outputs, batch, a.t);
+					l.outputs, batch, a.t, st);
 		}
 	} else {
 		axpy_gpu(l.outputs, learning_rate / batch, l.bias_updates_gpu, 1,
-				l.biases_gpu, 1);
-		scal_gpu(l.outputs, momentum, l.bias_updates_gpu, 1);
+				l.biases_gpu, 1, st);
+		scal_gpu(l.outputs, momentum, l.bias_updates_gpu, 1, st);
 
 		if (l.batch_normalize) {
 			axpy_gpu(l.outputs, learning_rate / batch, l.scale_updates_gpu, 1,
-					l.scales_gpu, 1);
-			scal_gpu(l.outputs, momentum, l.scale_updates_gpu, 1);
+					l.scales_gpu, 1, st);
+			scal_gpu(l.outputs, momentum, l.scale_updates_gpu, 1, st);
 		}
 
 		axpy_gpu(l.inputs * l.outputs, -decay * batch, l.weights_gpu, 1,
-				l.weight_updates_gpu, 1);
+				l.weight_updates_gpu, 1, st);
 		axpy_gpu(l.inputs * l.outputs, learning_rate / batch,
-				l.weight_updates_gpu, 1, l.weights_gpu, 1);
-		scal_gpu(l.inputs * l.outputs, momentum, l.weight_updates_gpu, 1);
+				l.weight_updates_gpu, 1, l.weights_gpu, 1, st);
+		scal_gpu(l.inputs * l.outputs, momentum, l.weight_updates_gpu, 1, st);
 	}
 }
 
 void forward_connected_layer_gpu(layer l, network net) {
-	fill_gpu(l.outputs * l.batch, 0, l.output_gpu, 1);
+	fill_gpu(l.outputs * l.batch, 0, l.output_gpu, 1, net.st);
 
 	int m = l.batch;
 	int k = l.inputs;
@@ -301,25 +301,25 @@ void forward_connected_layer_gpu(layer l, network net) {
 	real_t * a = net.input_gpu;
 	real_t * b = l.weights_gpu;
 	real_t * c = l.output_gpu;
-	gemm_gpu(0, 1, m, n, k, 1, a, k, b, k, 1, c, n, net.use_tensor_cores);
+	gemm_gpu(0, 1, m, n, k, 1, a, k, b, k, 1, c, n, net.use_tensor_cores, net.st);
 
 	if (l.batch_normalize) {
 		forward_batchnorm_layer_gpu(l, net);
 	} else {
-		add_bias_gpu(l.output_gpu, l.biases_gpu, l.batch, l.outputs, 1);
+		add_bias_gpu(l.output_gpu, l.biases_gpu, l.batch, l.outputs, 1, net.st);
 	}
-	activate_array_gpu(l.output_gpu, l.outputs * l.batch, l.activation);
+	activate_array_gpu(l.output_gpu, l.outputs * l.batch, l.activation, net.st);
 }
 
 void backward_connected_layer_gpu(layer l, network net) {
-	constrain_gpu(l.outputs * l.batch, 1, l.delta_gpu, 1);
+	constrain_gpu(l.outputs * l.batch, 1, l.delta_gpu, 1, net.st);
 	gradient_array_gpu(l.output_gpu, l.outputs * l.batch, l.activation,
-			l.delta_gpu);
+			l.delta_gpu, net.st);
 	if (l.batch_normalize) {
 		backward_batchnorm_layer_gpu(l, net);
 	} else {
 		backward_bias_gpu(l.bias_updates_gpu, l.delta_gpu, l.batch, l.outputs,
-				1);
+				1, net.st);
 	}
 
 	int m = l.outputs;
@@ -328,7 +328,7 @@ void backward_connected_layer_gpu(layer l, network net) {
 	real_t * a = l.delta_gpu;
 	real_t * b = net.input_gpu;
 	real_t * c = l.weight_updates_gpu;
-	gemm_gpu(1, 0, m, n, k, 1, a, m, b, n, 1, c, n, net.use_tensor_cores);
+	gemm_gpu(1, 0, m, n, k, 1, a, m, b, n, 1, c, n, net.use_tensor_cores, net.st);
 
 	m = l.batch;
 	k = l.outputs;
@@ -339,6 +339,6 @@ void backward_connected_layer_gpu(layer l, network net) {
 	c = net.delta_gpu;
 
 	if (c)
-		gemm_gpu(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, net.use_tensor_cores);
+	gemm_gpu(0, 0, m, n, k, 1, a, k, b, n, 1, c, n, net.use_tensor_cores, net.st);
 }
 #endif

@@ -71,10 +71,10 @@ void reset_network_state(network *net, int b) {
 #ifdef GPU
 		layer l = net->layers[i];
 		if (l.state_gpu) {
-			fill_gpu(l.outputs, 0, l.state_gpu + l.outputs * b, 1);
+			fill_gpu(l.outputs, 0, l.state_gpu + l.outputs * b, 1, net->st);
 		}
 		if (l.h_gpu) {
-			fill_gpu(l.outputs, 0, l.h_gpu + l.outputs * b, 1);
+			fill_gpu(l.outputs, 0, l.h_gpu + l.outputs * b, 1, net->st);
 		}
 #endif
 	}
@@ -389,7 +389,8 @@ int resize_network(network *net, int w, int h) {
 		}
 		if (l.workspace_size > workspace_size)
 			workspace_size = l.workspace_size;
-		if(l.workspace_size > 2000000000) assert(0);
+		if (l.workspace_size > 2000000000)
+			assert(0);
 		inputs = l.outputs;
 		net->layers[i] = l;
 		w = l.out_w;
@@ -499,6 +500,10 @@ void network_predict_smx_red(network **net, real_t *input) {
 	int smx_red = net[0]->smx_redundancy;
 
 	network *orig_array = malloc(sizeof(network) * smx_red);
+	if(orig_array == NULL){
+		printf("Error while creating redundancy on network predict %d %s\n", __LINE__, __FILE__);
+		exit(1);
+	}
 
 	for (i = 0; i < smx_red; i++) {
 		orig_array[i] = *net[i];
@@ -506,6 +511,7 @@ void network_predict_smx_red(network **net, real_t *input) {
 		net[i]->truth = 0;
 		net[i]->train = 0;
 		net[i]->delta = 0;
+		net[i]->st = 0x0;
 	}
 
 	forward_network_gpu_parallel(net);
@@ -747,9 +753,9 @@ void free_network(network *net) {
 		free(net->truth);
 #ifdef GPU
 	if (net->input_gpu)
-		cuda_free(net->input_gpu);
+	cuda_free(net->input_gpu);
 	if (net->truth_gpu)
-		cuda_free(net->truth_gpu);
+	cuda_free(net->truth_gpu);
 #endif
 	free(net);
 }
@@ -793,7 +799,7 @@ void forward_network_gpu(network *netp) {
 		net.index = i;
 		layer l = net.layers[i];
 		if (l.delta_gpu) {
-			fill_gpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
+			fill_gpu(l.outputs * l.batch, 0, l.delta_gpu, 1, netp->st);
 		}
 		l.forward_gpu(l, net);
 		net.input_gpu = l.output_gpu;
@@ -810,7 +816,7 @@ void forward_network_gpu(network *netp) {
 void* forward_network_gpu_caller(void *netp) {
 	printf("FORWARD NETWORK GPU %d\n", ((network*) netp)->smx_redundancy);
 	forward_network_gpu((network*) netp);
-	return NULL ;
+	return NULL;
 }
 
 void forward_network_gpu_parallel(network **netp_array) {
@@ -820,7 +826,7 @@ void forward_network_gpu_parallel(network **netp_array) {
 	int i;
 	for (i = 0; i < mr; i++) {
 		if (pthread_create(&threads[i], NULL, forward_network_gpu_caller,
-				netp_array[i])) {
+						netp_array[i])) {
 			error("ERROR ON CREATING THREADs\n");
 		}
 	}
@@ -836,7 +842,6 @@ void forward_network_gpu_parallel(network **netp_array) {
 	free(threads);
 	printf("APSSKKKKKdddd dddddddddsfasdadfasddf%d\n", mr);
 
-
 }
 
 void backward_network_gpu(network *netp) {
@@ -847,7 +852,7 @@ void backward_network_gpu(network *netp) {
 	for (i = net.n - 1; i >= 0; --i) {
 		layer l = net.layers[i];
 		if (l.stopbackward)
-			break;
+		break;
 		if (i == 0) {
 			net = orig;
 		} else {
@@ -866,7 +871,7 @@ void update_network_gpu(network *netp) {
 	network net = *netp;
 	cuda_set_device(net.gpu_index);
 	int i;
-	update_args a = { 0 };
+	update_args a = {0};
 	a.batch = net.batch * net.subdivisions;
 	a.learning_rate = get_current_rate(netp);
 	a.momentum = net.momentum;
@@ -881,7 +886,7 @@ void update_network_gpu(network *netp) {
 	for (i = 0; i < net.n; ++i) {
 		layer l = net.layers[i];
 		if (l.update_gpu) {
-			l.update_gpu(l, a);
+			l.update_gpu(l, a, netp->st);
 		}
 	}
 }
@@ -893,11 +898,11 @@ void harmless_update_network_gpu(network *netp) {
 	for (i = 0; i < net.n; ++i) {
 		layer l = net.layers[i];
 		if (l.weight_updates_gpu)
-			fill_gpu(l.nweights, 0, l.weight_updates_gpu, 1);
+		fill_gpu(l.nweights, 0, l.weight_updates_gpu, 1, netp->st);
 		if (l.bias_updates_gpu)
-			fill_gpu(l.nbiases, 0, l.bias_updates_gpu, 1);
+		fill_gpu(l.nbiases, 0, l.bias_updates_gpu, 1, netp->st);
 		if (l.scale_updates_gpu)
-			fill_gpu(l.nbiases, 0, l.scale_updates_gpu, 1);
+		fill_gpu(l.nbiases, 0, l.scale_updates_gpu, 1, netp->st);
 	}
 }
 
@@ -905,7 +910,7 @@ typedef struct {
 	network *net;
 	data d;
 	real_t *err;
-} train_args;
+}train_args;
 
 void *train_thread(void *ptr) {
 	train_args args = *(train_args*) ptr;
@@ -922,7 +927,7 @@ pthread_t train_network_in_thread(network *net, data d, real_t *err) {
 	ptr->d = d;
 	ptr->err = err;
 	if (pthread_create(&thread, 0, train_thread, ptr))
-		error("Thread creation failed");
+	error("Thread creation failed");
 	return thread;
 }
 
@@ -957,7 +962,7 @@ void pull_weights(layer l) {
 		cuda_pull_array(l.biases_gpu, l.bias_updates, l.n);
 		cuda_pull_array(l.weights_gpu, l.weight_updates, l.nweights);
 		if (l.scales)
-			cuda_pull_array(l.scales_gpu, l.scale_updates, l.n);
+		cuda_pull_array(l.scales_gpu, l.scale_updates, l.n);
 	} else if (l.type == CONNECTED) {
 		cuda_pull_array(l.biases_gpu, l.bias_updates, l.outputs);
 		cuda_pull_array(l.weights_gpu, l.weight_updates, l.outputs * l.inputs);
@@ -969,7 +974,7 @@ void push_weights(layer l) {
 		cuda_push_array(l.biases_gpu, l.biases, l.n);
 		cuda_push_array(l.weights_gpu, l.weights, l.nweights);
 		if (l.scales)
-			cuda_push_array(l.scales_gpu, l.scales, l.n);
+		cuda_push_array(l.scales_gpu, l.scales, l.n);
 	} else if (l.type == CONNECTED) {
 		cuda_push_array(l.biases_gpu, l.biases, l.outputs);
 		cuda_push_array(l.weights_gpu, l.weights, l.outputs * l.inputs);
@@ -981,7 +986,7 @@ void distribute_weights(layer l, layer base) {
 		cuda_push_array(l.biases_gpu, base.biases, l.n);
 		cuda_push_array(l.weights_gpu, base.weights, l.nweights);
 		if (base.scales)
-			cuda_push_array(l.scales_gpu, base.scales, l.n);
+		cuda_push_array(l.scales_gpu, base.scales, l.n);
 	} else if (l.type == CONNECTED) {
 		cuda_push_array(l.biases_gpu, base.biases, l.outputs);
 		cuda_push_array(l.weights_gpu, base.weights, l.outputs * l.inputs);
@@ -1095,7 +1100,7 @@ typedef struct {
 	network **nets;
 	int n;
 	int j;
-} sync_args;
+}sync_args;
 
 void *sync_layer_thread(void *ptr) {
 	sync_args args = *(sync_args*) ptr;
@@ -1111,7 +1116,7 @@ pthread_t sync_layer_in_thread(network **nets, int n, int j) {
 	ptr->n = n;
 	ptr->j = j;
 	if (pthread_create(&thread, 0, sync_layer_thread, ptr))
-		error("Thread creation failed");
+	error("Thread creation failed");
 	return thread;
 }
 
@@ -1121,7 +1126,7 @@ void sync_nets(network **nets, int n, int interval) {
 	pthread_t *threads = (pthread_t *) calloc(layers, sizeof(pthread_t));
 
 	*(nets[0]->seen) += interval * (n - 1) * nets[0]->batch
-			* nets[0]->subdivisions;
+	* nets[0]->subdivisions;
 	for (j = 0; j < n; ++j) {
 		*(nets[j]->seen) = *(nets[0]->seen);
 	}

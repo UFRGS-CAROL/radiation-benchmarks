@@ -622,7 +622,7 @@ matrix load_regression_labels_paths(char **paths, int n, int k) {
 		for (j = 0; j < k; ++j) {
 			float yvals_;
 			fscanf(file, "%f", &(yvals_));
-			y.vals[i][j]  = yvals_;
+			y.vals[i][j] = yvals_;
 		}
 		fclose(file);
 	}

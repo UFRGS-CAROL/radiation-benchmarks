@@ -140,7 +140,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 		if (i % 100 == 0) {
 #ifdef GPU
 			if (ngpus != 1)
-				sync_nets(nets, ngpus, 0);
+			sync_nets(nets, ngpus, 0);
 #endif
 			char buff[256];
 			sprintf(buff, "%s/%s.backup", backup_directory, base);
@@ -149,7 +149,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 		if (i % 10000 == 0 || (i < 1000 && i % 100 == 0)) {
 #ifdef GPU
 			if (ngpus != 1)
-				sync_nets(nets, ngpus, 0);
+			sync_nets(nets, ngpus, 0);
 #endif
 			char buff[256];
 			sprintf(buff, "%s/%s_%d.weights", backup_directory, base, i);
@@ -159,7 +159,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
 	}
 #ifdef GPU
 	if (ngpus != 1)
-		sync_nets(nets, ngpus, 0);
+	sync_nets(nets, ngpus, 0);
 #endif
 	char buff[256];
 	sprintf(buff, "%s/%s_final.weights", backup_directory, base);
@@ -734,8 +734,8 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	//load images
 	image* images = (image*) malloc(sizeof(image) * plist_size);
 	image* sized_images = (image*) malloc(sizeof(image) * plist_size);
-	load_all_images(images, sized_images, img_names, plist_size, net_array[0]->w,
-			net_array[0]->h);
+	load_all_images(images, sized_images, img_names, plist_size,
+			net_array[0]->w, net_array[0]->h);
 
 	//start the process
 	for (iteration = 0; iteration < max_it; iteration++) {
@@ -758,13 +758,12 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 
 			int nboxes = 0;
 			printf("aui antes do dets\n");
-			detection *dets = get_network_boxes(net_array[0], im.w, im.h, thresh,
-					hier_thresh, 0, 1, &nboxes);
+			detection *dets = get_network_boxes(net_array[0], im.w, im.h,
+					thresh, hier_thresh, 0, 1, &nboxes);
 
 			printf("aui antes do nms\n");
 			if (nms)
 				do_nms_sort(dets, nboxes, l.classes, nms);
-
 
 			printf("aui antes do run\n");
 			//Save or compare
@@ -793,7 +792,6 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		free_network(net_array[inet]);
 	}
 	free(net_array);
-
 
 	destroy_detection_gold(gold);
 	free_all_images(images, sized_images, 10);

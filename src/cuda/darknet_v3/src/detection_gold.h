@@ -67,7 +67,7 @@ struct Detection {
 	Detection& operator=(const Detection& other) // copy assignment
 			{
 		if (this != &other) { // self-assignment check expected
-			this->prob = std::vector<real_t>(other.prob);
+			this->prob = std::vector < real_t > (other.prob);
 			this->bbox = other.bbox;
 			this->nboxes = other.nboxes;
 			this->objectness = other.objectness;
@@ -116,7 +116,8 @@ struct DetectionGold {
 
 	virtual ~DetectionGold();
 
-	int run(detection* dets, int nboxes, int img_index, int classes, int img_w, int img_h);
+	int run(detection* dets, int nboxes, int img_index, int classes, int img_w,
+			int img_h);
 
 	void start_iteration();
 	void end_iteration();
@@ -127,7 +128,8 @@ struct DetectionGold {
 
 	void gen(detection* dets, int nboxes, int img_index,
 			std::ofstream& gold_file, int classes);
-	int cmp(detection* dets, int nboxes, int img_index, int classes, int img_w, int img_h);
+	int cmp(detection* dets, int nboxes, int img_index, int classes, int img_w,
+			int img_h);
 
 	std::ostringstream generate_gold_line(int bb, detection det, const box& b,
 			detection* dets);

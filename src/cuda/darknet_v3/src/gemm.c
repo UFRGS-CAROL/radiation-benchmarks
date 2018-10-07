@@ -149,8 +149,10 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc,
-		unsigned char use_tensor_cores) {
+		unsigned char use_tensor_cores,
+		cudaStream_t st) {
 	cublasHandle_t handle = blas_handle(use_tensor_cores);
+	cublasSetStream(handle,st);
 
 #if REAL_TYPE == HALF
 	//run_cuda_gemm_half(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
@@ -178,22 +180,22 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 void time_gpu_random_matrix(int TA, int TB, int m, int k, int n) {
 	real_t *a;
 	if (!TA)
-		a = random_matrix(m, k);
+	a = random_matrix(m, k);
 	else
-		a = random_matrix(k, m);
+	a = random_matrix(k, m);
 	int lda = (!TA) ? k : m;
 	real_t *b;
 	if (!TB)
-		b = random_matrix(k, n);
+	b = random_matrix(k, n);
 	else
-		b = random_matrix(n, k);
+	b = random_matrix(n, k);
 	int ldb = (!TB) ? n : k;
 
 	real_t *c = random_matrix(m, n);
 	int i;
 	clock_t start = clock(), end;
 	for (i = 0; i < 32; ++i) {
-		gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c, n, 0);
+		gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c, n, 0, 0x0);
 	}
 	end = clock();
 	printf("Matrix Multiplication %dx%d * %dx%d, TA=%d, TB=%d: %lf s\n", m, k,
@@ -220,7 +222,7 @@ void time_gpu(int TA, int TB, int m, int k, int n) {
 	int i;
 	clock_t start = clock(), end;
 	for (i = 0; i < iter; ++i) {
-		gemm_gpu(TA, TB, m, n, k, 1, a_cl, lda, b_cl, ldb, 1, c_cl, n, 0);
+		gemm_gpu(TA, TB, m, n, k, 1, a_cl, lda, b_cl, ldb, 1, c_cl, n, 0, 0x0);
 		cudaDeviceSynchronize();
 	}
 	double flop = ((double) m) * n * (2. * k + 2.) * iter;
@@ -242,15 +244,15 @@ void test_gpu_accuracy(int TA, int TB, int m, int k, int n) {
 	srand(0);
 	real_t *a;
 	if (!TA)
-		a = random_matrix(m, k);
+	a = random_matrix(m, k);
 	else
-		a = random_matrix(k, m);
+	a = random_matrix(k, m);
 	int lda = (!TA) ? k : m;
 	real_t *b;
 	if (!TB)
-		b = random_matrix(k, n);
+	b = random_matrix(k, n);
 	else
-		b = random_matrix(n, k);
+	b = random_matrix(n, k);
 	int ldb = (!TB) ? n : k;
 
 	real_t *c = random_matrix(m, n);
@@ -259,7 +261,7 @@ void test_gpu_accuracy(int TA, int TB, int m, int k, int n) {
 	memset(c_gpu, 0, m * n * sizeof(real_t));
 	int i;
 	//pm(m,k,b);
-	gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c_gpu, n, 0);
+	gemm_gpu(TA, TB, m, n, k, 1, a, lda, b, ldb, 1, c_gpu, n, 0, 0x0);
 	//printf("GPU\n");
 	//pm(m, n, c_gpu);
 

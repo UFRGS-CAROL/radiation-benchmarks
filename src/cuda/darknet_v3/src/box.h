@@ -2,8 +2,8 @@
 #define BOX_H
 #include "darknet.h"
 
-typedef struct{
-    real_t dx, dy, dw, dh;
+typedef struct {
+	real_t dx, dy, dw, dh;
 } dbox;
 
 real_t box_rmse(box a, box b);

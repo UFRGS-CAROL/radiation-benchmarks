@@ -10,10 +10,9 @@
 
 #include <string>
 
-
 #ifdef LOGS
 #include "log_helper.h"
-static const char* ABFT_TYPES[] = { "none", "abft" };
+static const char* ABFT_TYPES[] = {"none", "abft"};
 #endif
 
 struct Log {
