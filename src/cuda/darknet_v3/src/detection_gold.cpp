@@ -157,44 +157,15 @@ int DetectionGold::compare_line(real_t g_objectness, real_t f_objectness,
 
 	real_t objs_diff = std::abs(g_objectness - f_objectness);
 	int sortc_diff = std::abs(g_sort_class - f_sort_class);
-//	std::tuple < real_t, real_t, real_t, real_t > g_box_tuple;
-//	std::tuple < real_t, real_t, real_t, real_t > f_box_tuple;
 
 	std::ostringstream error_info("");
 	error_info.precision(STORE_PRECISION);
 	int error_count = 0;
 
-//	if (this->normalized_coordinates) {
-//		real_t left = std::max((g_box.x - g_box.w / 2.) * img_w, 0.0);
-//		real_t right = std::min((g_box.x + g_box.w / 2.) * img_w, img_w - 1.0);
-//		real_t top = std::max((g_box.y - g_box.h / 2.) * img_h, 0.0);
-//		real_t bot = std::min((g_box.y + g_box.h / 2.) * img_h, img_h - 1.0);
-//		g_box_tuple = std::tuple<real_t, real_t, real_t, real_t>(left, right, top, bot);
-//
-//		left = std::max((f_box.x - f_box.w / 2.) * img_w, 0.0);
-//		right = std::min((f_box.x + f_box.w / 2.) * img_w, img_w - 1.0);
-//		top = std::max((f_box.y - f_box.h / 2.) * img_h, 0.0);
-//		bot = std::min((f_box.y + f_box.h / 2.) * img_h, img_h - 1.0);
-//		f_box_tuple = std::tuple<real_t, real_t, real_t, real_t>(left, right, top, bot);
-//
-//		if ((objs_diff > THRESHOLD_ERROR) || (sortc_diff > THRESHOLD_ERROR)
-//				|| (g_box_tuple != f_box_tuple)) {
-//			error_count++;
-//		}
-////		if (left < 0)	left = 0;
-////		if (right > im.w - 1)	right = im.w - 1;
-////		if (top < 0)	top = 0;
-////		if (bot > im.h - 1)	bot = im.h - 1;
-//
-//	} else {
 	if ((objs_diff > THRESHOLD_ERROR) || (sortc_diff > THRESHOLD_ERROR)
 				|| (g_box != f_box)) {
 			error_count++;
-	}
-//	}
-
-	if (error_count > 0) {
-		error_info << "img: " << img << " detection: " << nb << " x_e: "
+			error_info << "img: " << img << " detection: " << nb << " x_e: "
 				<< g_box.x << " x_r: " << f_box.x << " y_e: " << g_box.y
 				<< " y_r: " << f_box.y << " h_e: " << g_box.h << " h_r: "
 				<< f_box.h << " w_e: " << g_box.w << " w_r: " << f_box.w
