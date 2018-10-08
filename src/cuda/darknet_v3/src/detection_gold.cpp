@@ -77,7 +77,7 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		//		Log(std::string gold, int save_layer, int abft, int iterations,
 		//				std::string app, unsigned char use_tensor_core_mode)
 		this->app_log->start_log(this->gold_inout, 0, 0, this->iterations,
-				this->network_name, this->tensor_core_mode);
+				this->network_name, this->tensor_core_mode, this->stream_mr);
 
 		//	detection gold;
 		std::string line;

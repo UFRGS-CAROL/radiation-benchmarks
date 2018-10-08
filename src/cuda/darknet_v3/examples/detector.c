@@ -736,7 +736,6 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	int smx_redundancy = get_smx_redundancy(gold);
 
 	cudaStream_t *stream_array = init_multi_streams(smx_redundancy);
-	printf("AQUI %d\n\n", smx_redundancy);
 	//--------------------------
 	network** net_array = malloc(sizeof(network*) * smx_redundancy);
 
@@ -763,7 +762,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		net_array[inet] = net;
 
 		//load images
-		printf("Loading images for %d network\n", inet);
+		printf("Loading images for network %d\n", inet);
 		image_array[inet] = (image*) malloc(sizeof(image) * plist_size);
 		sized_array[inet] = (image*) malloc(sizeof(image) * plist_size);
 		load_all_images(image_array[inet], sized_array[inet], img_names,
