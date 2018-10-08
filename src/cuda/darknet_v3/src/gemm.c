@@ -157,7 +157,7 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 #if REAL_TYPE == HALF
 	//run_cuda_gemm_half(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 //	int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc)
-	run_cuda_gemm_half(handle, TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc);
+	run_cuda_gemm_half(handle, TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc, st);
 #elif REAL_TYPE == FLOAT
 	cudaError_t status = (cudaError_t) cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
 			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,

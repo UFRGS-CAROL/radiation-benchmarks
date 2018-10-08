@@ -55,7 +55,7 @@ int fread_float_to_real_t(real_t* dst, size_t siz, size_t times, FILE* fp);
 
 #if REAL_TYPE == HALF
 void run_cuda_gemm_half(cublasHandle_t handle, int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
-		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc);
+		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc, cudaStream_t st);
 #endif
 
 #ifdef __cplusplus
