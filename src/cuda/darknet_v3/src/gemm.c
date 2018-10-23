@@ -7,6 +7,10 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef OPENGEMM
+#include "gemm_kernels.h"
+#endif
+
 void gemm_bin(int M, int N, int K, real_t ALPHA, char *A, int lda, real_t *B,
 		int ldb, real_t *C, int ldc) {
 	int i, j, k;
@@ -149,10 +153,14 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 
 void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 		int lda, real_t *B_gpu, int ldb, real_t BETA, real_t *C_gpu, int ldc,
-		unsigned char use_tensor_cores,
-		cudaStream_t st) {
+		unsigned char use_tensor_cores, cudaStream_t st) {
 	cublasHandle_t handle = blas_handle(use_tensor_cores);
-	cublasSetStream(handle,st);
+	cublasSetStream(handle, st);
+//	if(TB || TA)
+//	{
+//		printf("Matrix need to be transposed %d %d\n", TB, TA);
+//	}
+#ifndef OPENGEMM
 
 #if REAL_TYPE == HALF
 	//run_cuda_gemm_half(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
@@ -170,6 +178,24 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 	check_error(status);
 #endif
 
+#else
+
+#if REAL_TYPE == HALF
+	run_cuda_gemm_half(handle, TA, TB, M, N, K, ALPHA, A_gpu, lda, B_gpu, ldb, BETA, C_gpu, ldc, st);
+#elif REAL_TYPE == FLOAT
+	sgemm((TB ? CUBLAS_OP_T : CUBLAS_OP_N),
+			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
+			A_gpu, lda, &BETA, C_gpu, ldc);
+
+#elif REAL_TYPE == DOUBLE
+	dgemm((TB ? CUBLAS_OP_T : CUBLAS_OP_N),
+			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
+			A_gpu, lda, &BETA, C_gpu, ldc);
+
+#endif
+
+#endif
+
 //	cublasHandle_t handle = blas_handle();
 //	cudaError_t status = cublasSgemm(handle, (TB ? CUBLAS_OP_T : CUBLAS_OP_N),
 //			(TA ? CUBLAS_OP_T : CUBLAS_OP_N), N, M, K, &ALPHA, B_gpu, ldb,
@@ -180,15 +206,15 @@ void gemm_gpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A_gpu,
 void time_gpu_random_matrix(int TA, int TB, int m, int k, int n) {
 	real_t *a;
 	if (!TA)
-	a = random_matrix(m, k);
+		a = random_matrix(m, k);
 	else
-	a = random_matrix(k, m);
+		a = random_matrix(k, m);
 	int lda = (!TA) ? k : m;
 	real_t *b;
 	if (!TB)
-	b = random_matrix(k, n);
+		b = random_matrix(k, n);
 	else
-	b = random_matrix(n, k);
+		b = random_matrix(n, k);
 	int ldb = (!TB) ? n : k;
 
 	real_t *c = random_matrix(m, n);
@@ -244,15 +270,15 @@ void test_gpu_accuracy(int TA, int TB, int m, int k, int n) {
 	srand(0);
 	real_t *a;
 	if (!TA)
-	a = random_matrix(m, k);
+		a = random_matrix(m, k);
 	else
-	a = random_matrix(k, m);
+		a = random_matrix(k, m);
 	int lda = (!TA) ? k : m;
 	real_t *b;
 	if (!TB)
-	b = random_matrix(k, n);
+		b = random_matrix(k, n);
 	else
-	b = random_matrix(n, k);
+		b = random_matrix(n, k);
 	int ldb = (!TB) ? n : k;
 
 	real_t *c = random_matrix(m, n);
@@ -297,7 +323,7 @@ int test_gpu_blas() {
 
 	 test_gpu_accuracy(0,0,10,10,10);
 
-	 time_gpu(0,0,64,2916,363);
+	 time_gpu(0,0,64,2916,363);(cudaError_t) cublasDgemm
 	 time_gpu(0,0,64,2916,363);
 	 time_gpu(0,0,64,2916,363);
 	 time_gpu(0,0,192,729,1600);

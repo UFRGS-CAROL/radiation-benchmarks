@@ -5,6 +5,7 @@ OPENMP=0
 DEBUG?=0
 REAL_TYPE?=float
 LOGS?=0
+OPENGEMM?=0
 
 RADIATIONDIR=/home/carol/radiation-benchmarks/
 
@@ -83,6 +84,11 @@ COMMON += -L$(RADIATIONDIR)/src/include
 LDFLAGS += -lLogHelper
 endif
 
+ifeq ($(OPENGEMM), 1)
+COMMON += -DOPENGEMM 
+NVCCFLAGS += -DOPENGEMM
+endif
+
 
 OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o image.o activations.o \
 im2col.o col2im.o blas.o crop_layer.o dropout_layer.o maxpool_layer.o softmax_layer.o data.o matrix.o \
@@ -98,7 +104,8 @@ EXECOBJA= yolo.o detector.o  darknet.o detection_gold.o detection_gold_w.o
 ifeq ($(GPU), 1) 
 LDFLAGS+= -lstdc++ 
 OBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2col_kernels.o col2im_kernels.o \
-blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o avgpool_layer_kernels.o  type.o
+blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o avgpool_layer_kernels.o  type.o \
+gemm_kernels.o
 endif
 
 EXECOBJ = $(addprefix $(OBJDIR), $(EXECOBJA))
@@ -146,4 +153,4 @@ generate:
 test:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3.cfg ../../../data/darknet/yolov3.weights \
 			../../../data/networks_img_list/caltech.pedestrians.100.txt \
-			-generate 0 -gold ./test.csv -iterations 1 -norm_coord 0 -tensor_cores 1 -smx_redundancy 2
+			-generate 0 -gold ./test.csv -iterations 1 -norm_coord 0 -tensor_cores 1 -smx_redundancy 1
