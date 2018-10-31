@@ -3,6 +3,7 @@ DEBUG?=0
 #for radiation setup
 LOGS?=0
 DEBUG_ON_TITAN?=1
+OMP?=0
 
 #
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
@@ -43,6 +44,12 @@ COMMON+= -DGPU -I/usr/local/cuda/include/
 CFLAGS+= -DGPU
 LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
 endif
+
+ifeq ($(OMP), 1) 
+CFLAGS+= -DOMP -fopenmp
+NVCCFLAGS += -Xcompiler -fopenmp
+endif
+
 
 OBJ= main.o 
 
@@ -92,8 +99,8 @@ clean:
 
 
 generate:
-	./$(TARGET) --size 1024 --generate 1 --verbose 1 --tensor_cores 1
+	./$(TARGET) --size 1024 --generate 1 --verbose 1 --tensor_cores 1 --triplicated 0
 	
 test:
-	./$(TARGET) --size 1024 --generate 0 --verbose 1 --iterations 1 --tensor_cores 1
+	./$(TARGET) --size 1024 --generate 0 --verbose 1 --iterations 1 --tensor_cores 1 --triplicated 0
 	

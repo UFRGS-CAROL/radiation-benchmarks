@@ -5,6 +5,10 @@
 #include <fstream>      // std::ifstream
 #include <sstream>      // std::stringstream
 
+#ifdef OMP
+#include <omp.h>
+#endif
+
 #include "half.hpp"
 #include "Log.h"
 #include "GEMMWMMA.h"
@@ -206,7 +210,9 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 		memory_errors++;
 	}
 
+#ifdef OMP
 #pragma omp parallel for shared(host_errors)
+#endif
 	for (size_t i = 0; i < gold.size(); i++) {
 		register bool checkFlag = true;
 		register real_t valGold = gold[i];
@@ -216,7 +222,9 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 		register real_t valOutput = valOutput0;
 
 		if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
+#ifdef OMP
 #pragma omp critical
+#endif
 			{
 				std::stringstream info_detail("");
 				info_detail << "m: [" << int(floor(i / log.size_matrices))
@@ -242,7 +250,9 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 				} else {
 					// NO VALUE MATCHES THE GOLD AND ALL 3 DIVERGE!
 					checkFlag = false;
+#ifdef OMP
 #pragma omp critical
+#endif
 					{
 						std::stringstream info_detail("");
 						info_detail << "t: ["
@@ -273,7 +283,9 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 		// std::cout << "val gold: " << valGold << std::endl;
 		if (valGold != valOutput) {
 			if (checkFlag) {
+#ifdef OMP
 #pragma omp critical
+#endif
 				{
 					// std::cout << "val out: " << valOutput << std::endl;
 
@@ -324,29 +336,33 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			log_obj.size_matrices * log_obj.size_matrices);
 
 	if (!log_obj.generate) {
-		retrieve_matrices<host_real_t>(host_matrix_a, host_matrix_b, host_matrix_c,
-				host_gold, log_obj);
+		retrieve_matrices<host_real_t>(host_matrix_a, host_matrix_b,
+				host_matrix_c, host_gold, log_obj);
 	} else {
 
 		generate_matrices_files<host_real_t>(host_matrix_a, host_matrix_b,
 				host_matrix_c, log_obj);
 	}
 
-
-	GEMMWMMA<host_half, half, host_real_t, real_t> mult_enviroment(host_matrix_a.data(),
-			host_matrix_b.data(), host_matrix_c.data(), log_obj.size_matrices,
-			log_obj.size_matrices, log_obj.size_matrices, real_t(1.0), real_t(1.0));
+	GEMMWMMA<host_half, half, host_real_t, real_t> mult_enviroment(
+			host_matrix_a.data(), host_matrix_b.data(), host_matrix_c.data(),
+			log_obj.size_matrices, log_obj.size_matrices, log_obj.size_matrices,
+			real_t(1.0), real_t(1.0));
 
 	int tries = 0;
 
 	for (int it = 0; it < log_obj.iterations; it++) {
 		log_obj.start_iteration_app();
-		if (log_obj.use_tensor_cores)
-			mult_enviroment.mul_wmma();
-		else
+		if (log_obj.triplicated) {
 
-		mult_enviroment.mul_mxm();
-		
+		} else {
+			if (log_obj.use_tensor_cores) {
+				mult_enviroment.mul_wmma();
+			} else {
+				mult_enviroment.mul_mxm();
+			}
+		}
+
 		log_obj.end_iteration_app();
 
 		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),

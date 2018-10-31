@@ -28,6 +28,7 @@ public:
 	std::string precision;
 	bool verbose;
 	bool use_tensor_cores;
+	bool triplicated;
 
 	Log(int argc, char** argv, int input_size) {
 
@@ -53,6 +54,8 @@ public:
 		this->use_tensor_cores = this->find_int_arg(argc, argv, "--tensor_cores", 0);
 
 		this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);
+
+		this->triplicated = this->find_int_arg(argc, argv, "--triplicated", 0);
 
 #ifdef LOGS
 		std::string test_info = std::string(" iterations: ")
