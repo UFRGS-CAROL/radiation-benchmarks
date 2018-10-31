@@ -5,6 +5,8 @@ LOGS?=0
 DEBUG_ON_TITAN?=1
 OMP?=0
 
+SIZE?=1024
+
 #
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
 #ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
@@ -99,8 +101,8 @@ clean:
 
 
 generate:
-	./$(TARGET) --size 1024 --generate 1 --verbose 1 --tensor_cores 1 --triplicated 0
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 0
 	
 test:
-	./$(TARGET) --size 1024 --generate 0 --verbose 1 --iterations 1 --tensor_cores 1 --triplicated 0
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 1000 --tensor_cores 1 --triplicated 0
 	

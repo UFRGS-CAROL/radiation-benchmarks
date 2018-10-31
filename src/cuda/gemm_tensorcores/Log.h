@@ -65,6 +65,8 @@ public:
 
 		test_info += " matrix_n_dim: " + std::to_string(this->size_matrices);
 
+		test_info += " triplicated: " + std::to_string(this->triplicated);
+
 		std::string app = "gemm_tensor_cores_" + this->precision;
 		set_iter_interval_print(10);
 

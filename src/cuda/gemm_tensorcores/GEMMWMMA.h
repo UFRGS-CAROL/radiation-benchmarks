@@ -135,8 +135,8 @@ public:
 		block_dim.x = 128;
 		block_dim.y = 4;
 
-		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / 32 - 1))
-				/ (WMMA_M * block_dim.x / 32);
+		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
+				/ (WMMA_M * block_dim.x / WARP_SIZE);
 		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
 				/ (WMMA_N * block_dim.y);
 
@@ -155,6 +155,12 @@ public:
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
 
+	}
+
+
+	void mul_wmma_triplicated() {
+		throw std::runtime_error(
+							"MxM WMMA TRIPLICATED NOT IMPLEMENTED\n");
 	}
 
 	GEMMWMMA(const host_half_t* host_ptr_a0, const host_half_t* host_ptr_b0,
@@ -321,8 +327,6 @@ public:
 
 		this->debug("memcpy array D to host");
 		// PULL D's
-
-//		printf("Dd= %f",);
 		check_framework_errors(
 				cudaMemcpy(host_ptr_d0, this->device_ptr_d0, this->byte_size_c,
 						cudaMemcpyDeviceToHost));
@@ -332,16 +336,6 @@ public:
 		check_framework_errors(
 				cudaMemcpy(host_ptr_d2, this->device_ptr_d2, this->byte_size_c,
 						cudaMemcpyDeviceToHost));
-
-		std::cout << "Values computed by one wmma core\n";
-		// for(int i = 0; i < WMMA_M; i++){
-		// 	for(int j = 0; j < WMMA_N; j++){
-		// 		std::cout << "d0[" << i << "," << j << "] " << host_ptr_d0[i * WMMA_K + j] << " ";
-		// 		std::cout << "d1[" << i << "," << j << "] " << host_ptr_d1[i * WMMA_K + j] << " ";
-		// 		std::cout << "d2[" << i << "," << j << "] " << host_ptr_d2[i * WMMA_K + j] << "\n";
-		// 	}
-		// 	std::cout << "\n";
-		// }
 	}
 
 	/**
