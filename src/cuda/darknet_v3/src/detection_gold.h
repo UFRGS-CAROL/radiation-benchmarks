@@ -131,7 +131,7 @@ struct DetectionGold {
 	int cmp(detection* dets, int nboxes, int img_index, int classes, int img_w,
 			int img_h, int inet);
 
-	std::ostringstream generate_gold_line(int bb, detection det, const box& b,
+	std::string generate_gold_line(int bb, detection det, const box& b,
 			detection* dets);
 
 	Detection load_gold_line(std::ifstream& gold_file, int nboxes);
