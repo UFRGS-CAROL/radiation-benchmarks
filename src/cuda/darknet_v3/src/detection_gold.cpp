@@ -271,13 +271,13 @@ void DetectionGold::gen(detection *dets, int nboxes, int img_index,
 		detection det = dets[bb];
 		box b = det.bbox;
 
-		std::ostringstream box_str = this->generate_gold_line(bb, det, b, dets);
-		gold_file << box_str.str() << std::endl;
+		std::string box_str = this->generate_gold_line(bb, det, b, dets);
+		gold_file << box_str << std::endl;
 	}
 
 }
 
-std::ostringstream DetectionGold::generate_gold_line(int bb, detection det,
+std::string DetectionGold::generate_gold_line(int bb, detection det,
 		const box& b, detection* dets) {
 	std::ostringstream box_str("");
 	box_str.precision(STORE_PRECISION);
@@ -293,7 +293,7 @@ std::ostringstream DetectionGold::generate_gold_line(int bb, detection det,
 	for (int cl = 0; cl < det.classes; cl++) {
 		box_str <<  det.prob[cl] << ";";
 	}
-	return box_str;
+	return box_str.str();
 }
 
 Detection DetectionGold::load_gold_line(std::ifstream& gold_file, int nboxes) {
