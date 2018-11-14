@@ -29,7 +29,7 @@ COMMON=
 CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas
 
 
-INCLUDE=-I/usr/local/cuda/include
+INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
@@ -86,7 +86,7 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@ $(INCLUDE) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" $(INCLUDE) -c $< -o $@ 
+	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) -lineinfo --compiler-options "$(CFLAGS)" $(INCLUDE) -c $< -o $@ 
 
 
 obj:
@@ -101,8 +101,8 @@ clean:
 
 
 generate:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 0
+	cuda-memcheck ./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 0
 	
 test:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 1000 --tensor_cores 1 --triplicated 0
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 1000 --tensor_cores 1 --triplicated 1
 	
