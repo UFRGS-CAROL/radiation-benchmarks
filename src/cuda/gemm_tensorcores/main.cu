@@ -380,6 +380,11 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			real_t(1.1f), real_t(1.2f));
 
 	int tries = 0;
+	
+	if (!log_obj.generate){
+		
+		
+	}
 
 	for (int it = 0; it < log_obj.iterations; it++) {
 		double start_computation = log_obj.mysecond();
@@ -419,6 +424,10 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		}
 
 		if (!log_obj.generate) {
+			
+			if(it == 2){
+			host_matrix_d0[2]= (real_t) 5.00;
+			}
 			std::pair<int, int> errors;
 			double start, end;
 			if (log_obj.triplicated) {

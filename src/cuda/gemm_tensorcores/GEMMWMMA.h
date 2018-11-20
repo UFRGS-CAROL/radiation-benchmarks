@@ -204,57 +204,38 @@ public:
 	}
 
 	void mul_wmma() {
-		this->debug("thread dim allocation");
-		//		// Setup execution parameters
-		// First: using WMMA
-		dim3 grid_dim;
-		dim3 block_dim;
+//		this->debug("thread dim allocation");
+//		//		// Setup execution parameters
+//		// First: using WMMA
+//		dim3 grid_dim;
+//		dim3 block_dim;
+//
+//		// block_dim.x must be a multple of warpSize
+//		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+//		block_dim.x = 128;
+//		block_dim.y = 4;
+//
+//		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
+//				/ (WMMA_M * block_dim.x / WARP_SIZE);
+//		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
+//				/ (WMMA_N * block_dim.y);
+//
+//		this->debug("matrix multiplication");
+//
+//		check_framework_errors(
+//				cudaMemset(this->device_is_memory_bad, 0x0,
+//						sizeof(unsigned long long int)));
 
-		// block_dim.x must be a multple of warpSize
-		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-		block_dim.x = 128;
-		block_dim.y = 4;
+		//		simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
+		//				this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+		//				this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
+		//				this->alpha, this->beta);
+//		this->debug("device synchronize");
+//		check_framework_errors(cudaDeviceSynchronize());
 
-		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-				/ (WMMA_M * block_dim.x / WARP_SIZE);
-		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
-				/ (WMMA_N * block_dim.y);
-
-		this->debug("matrix multiplication");
-
-		check_framework_errors(
-				cudaMemset(this->device_is_memory_bad, 0x0,
-						sizeof(unsigned long long int)));
-
-
-
-		cudaDeviceProp deviceProp;
-		int count = 0;
-		//printf("Get device:");
-		check_framework_errors(cudaGetDeviceCount(&count));
-		for (int i = 0; i < count; i++) {
-			check_framework_errors(cudaGetDeviceProperties(&deviceProp, i));
-			printf("GPU Device: %s\n", deviceProp.name);
-		}
-		int *ndevice;
 		int dev = 0;
-		ndevice = &dev;
-		check_framework_errors(cudaGetDevice(ndevice));
-
-		check_framework_errors(cudaSetDevice(0));
-		check_framework_errors(cudaGetDeviceProperties(&deviceProp, 0));
-		//printf("\ndevice: %d %s\n", *ndevice, prop.name);
-		//int dev = findCudaDevice(argc, (const char **)argv);
-
+		cudaDeviceProp deviceProp;
 		checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
-
-
-
-
-//		simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
-//				this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-//				this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
-//				this->alpha, this->beta);
 
 		enum {
 		    // Compute the right amount of shared memory to request.
@@ -269,6 +250,7 @@ public:
 					(BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(float))
 		};
 
+		printf("Required shared memory size: %lu Kb\n", SHMEM_SZ / 1024UL);
 		checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 		checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
 				(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
@@ -281,48 +263,34 @@ public:
 
 
 	void mul_wmma_triplicated() {
-		this->debug("thread dim allocation");
-				//		// Setup execution parameters
-				// First: using WMMA
-				dim3 grid_dim;
-				dim3 block_dim;
+//		this->debug("thread dim allocation");
+//				//		// Setup execution parameters
+//				// First: using WMMA
+//				dim3 grid_dim;
+//				dim3 block_dim;
+//
+//				// block_dim.x must be a multple of warpSize
+//				// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+//				block_dim.x = 128;
+//				block_dim.y = 4;
+//
+//				grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
+//						/ (WMMA_M * block_dim.x / WARP_SIZE);
+//				grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
+//						/ (WMMA_N * block_dim.y);
+//
+//				this->debug("matrix multiplication");
+//
+//				check_framework_errors(
+//						cudaMemset(this->device_is_memory_bad, 0x0,
+//								sizeof(unsigned long long int)));
 
-				// block_dim.x must be a multple of warpSize
-				// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-				block_dim.x = 128;
-				block_dim.y = 4;
 
-				grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-						/ (WMMA_M * block_dim.x / WARP_SIZE);
-				grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
-						/ (WMMA_N * block_dim.y);
 
-				this->debug("matrix multiplication");
 
-				check_framework_errors(
-						cudaMemset(this->device_is_memory_bad, 0x0,
-								sizeof(unsigned long long int)));
-
-				cudaDeviceProp deviceProp;
-				int count = 0;
-				//printf("Get device:");
-				check_framework_errors(cudaGetDeviceCount(&count));
-				for (int i = 0; i < count; i++) {
-					check_framework_errors(cudaGetDeviceProperties(&deviceProp, i));
-					printf("Name: %s\n", deviceProp.name);
-				}
-				int *ndevice;
 				int dev = 0;
-				ndevice = &dev;
-				check_framework_errors(cudaGetDevice(ndevice));
-
-				check_framework_errors(cudaSetDevice(0));
-				check_framework_errors(cudaGetDeviceProperties(&deviceProp, 0));
-				//printf("\ndevice: %d %s\n", *ndevice, prop.name);
-				//int dev = findCudaDevice(argc, (const char **)argv);
-
+				cudaDeviceProp deviceProp;
 				checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
-
 				enum {
 					// Compute the right amount of shared memory to request.
 					// We need shared memory to hold per-CTA C and D matrix tiles, and to cache
@@ -335,55 +303,48 @@ public:
 							M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
 							(BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(float))
 				};
+				checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+				checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
+						(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+								this->device_ptr_d0, this->alpha, this->beta)));
 
+					
 
-
-				//	int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta)
 //				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
 //						this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
 //						this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
 //						this->alpha, this->beta);
-
-				compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
-								(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-								this->device_ptr_d0, this->alpha, this->beta);
-
-
-
+				
 				this->debug("device synchronize");
 				check_framework_errors(cudaDeviceSynchronize());
 
-				//	int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta)
+//
+//				//SECOND MULT
+				checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+				checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
+						(this->device_ptr_a1, this->device_ptr_b1, this->device_ptr_c1,
+								this->device_ptr_d1, this->alpha, this->beta)));	
+				
 //				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
 //						this->device_ptr_a1, this->device_ptr_b1, this->device_ptr_c1,
 //						this->device_ptr_d1, this->rows_a, this->cols_b, this->cols_c,
 //						this->alpha, this->beta);
-
-				compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
-												(this->device_ptr_a1, this->device_ptr_b1, this->device_ptr_c1,
-												this->device_ptr_d1, this->alpha, this->beta);
-
 				this->debug("device synchronize");
 				check_framework_errors(cudaDeviceSynchronize());
-
-				//	int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta)
+//
+//
+//				//THIRD MULT
+				checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+				checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
+						(this->device_ptr_a2, this->device_ptr_b2, this->device_ptr_c2,
+								this->device_ptr_d2, this->alpha, this->beta)));
+				
 //				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
 //						this->device_ptr_a2, this->device_ptr_b2, this->device_ptr_c2,
 //						this->device_ptr_d2, this->rows_a, this->cols_b, this->cols_c,
 //						this->alpha, this->beta);
-
-				compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
-												(this->device_ptr_a2, this->device_ptr_b2, this->device_ptr_c2,
-												this->device_ptr_d2, this->alpha, this->beta);
-
 				this->debug("device synchronize");
 				check_framework_errors(cudaDeviceSynchronize());
-
-
-
-
-
-
 
 
 	}

@@ -5,7 +5,7 @@ LOGS?=0
 DEBUG_ON_TITAN?=1
 OMP?=0
 
-SIZE?=1024
+SIZE?= 4096 # 8192 
 
 #
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
@@ -86,7 +86,7 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@ $(INCLUDE) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) -lineinfo --compiler-options "$(CFLAGS)" $(INCLUDE) -c $< -o $@ 
+	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" $(INCLUDE) -c $< -o $@ 
 
 
 obj:
@@ -101,8 +101,8 @@ clean:
 
 
 generate:
-	cuda-memcheck ./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 0
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 0
 	
 test:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 1000 --tensor_cores 1 --triplicated 1
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 1000 --tensor_cores 1 --triplicated 0
 	
