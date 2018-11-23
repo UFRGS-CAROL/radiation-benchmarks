@@ -31,7 +31,7 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 	std::ofstream f_a(log.a_input_path, std::ios::out | std::ios::binary);
 	std::ofstream f_b(log.b_input_path, std::ios::out | std::ios::binary);
 	std::ofstream f_c(log.c_input_path, std::ios::out | std::ios::binary);
-//	std::cout << "entrou generate" << std::endl;
+
 
 	if (f_a.is_open() && f_b.is_open() && f_c.is_open()) {
 		std::random_device rd; //Will be used to obtain a seed for the random number engine
@@ -51,7 +51,7 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 			for (size_t j = 0; j < log.size_matrices; j++) {
 				a_host_vector[i * log.size_matrices + j] = (half) 2.0;
 				b_host_vector[i * log.size_matrices + j] = (half) 2.0;
-				c_host_vector[i * log.size_matrices + j] = (float) 2.0;
+				c_host_vector[i * log.size_matrices + j] = (real_t) 2.0;
 			}
 		}
 
@@ -380,12 +380,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			real_t(1.1f), real_t(1.2f));
 
 	int tries = 0;
-	
-	if (!log_obj.generate){
 		
-		
-	}
-
 	for (int it = 0; it < log_obj.iterations; it++) {
 		double start_computation = log_obj.mysecond();
 		log_obj.start_iteration_app();
@@ -493,6 +488,7 @@ int main(int argc, char** argv) {
 	//TODO: To be implemented
 	if (log_obj.precision == "half") {
 		call_mxm<host_half, half>(host_matrix_a, host_matrix_b, log_obj);
+		
 
 	}
 	if (log_obj.precision == "float") {
