@@ -39,21 +39,21 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 		std::uniform_real_distribution<double> dis(-GENERATOR_MAXABSVALUE,
 		GENERATOR_MAXABSVALUE);
 
-		for (size_t i = 0; i < log.size_matrices; i++) {
-			for (size_t j = 0; j < log.size_matrices; j++) {
-				a_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
-				b_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
-				c_host_vector[i * log.size_matrices + j] = real_t(dis(gen));
-			}
-		}
-
 //		for (size_t i = 0; i < log.size_matrices; i++) {
 //			for (size_t j = 0; j < log.size_matrices; j++) {
-//				a_host_vector[i * log.size_matrices + j] = (half) 2.0;
-//				b_host_vector[i * log.size_matrices + j] = (half) 2.0;
-//				c_host_vector[i * log.size_matrices + j] = (float) 2.0;
+//				a_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
+//				b_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
+//				c_host_vector[i * log.size_matrices + j] = real_t(dis(gen));
 //			}
 //		}
+
+		for (size_t i = 0; i < log.size_matrices; i++) {
+			for (size_t j = 0; j < log.size_matrices; j++) {
+				a_host_vector[i * log.size_matrices + j] = (half) 2.0;
+				b_host_vector[i * log.size_matrices + j] = (half) 2.0;
+				c_host_vector[i * log.size_matrices + j] = (float) 2.0;
+			}
+		}
 
 		host_half zero(0.0);
 		host_half nan_ = host_half(half_float::nanh("0"));
@@ -377,9 +377,14 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 	GEMMWMMA<host_half, half, host_real_t, real_t> mult_enviroment(
 			host_matrix_a.data(), host_matrix_b.data(), host_matrix_c.data(),
 			log_obj.size_matrices, log_obj.size_matrices, log_obj.size_matrices,
-			real_t(1.0), real_t(1.0));
+			real_t(1.1f), real_t(1.2f));
 
 	int tries = 0;
+	
+	if (!log_obj.generate){
+		
+		
+	}
 
 	for (int it = 0; it < log_obj.iterations; it++) {
 		double start_computation = log_obj.mysecond();
@@ -419,6 +424,10 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		}
 
 		if (!log_obj.generate) {
+			
+			if(it == 2){
+			host_matrix_d0[2]= (real_t) 5.00;
+			}
 			std::pair<int, int> errors;
 			double start, end;
 			if (log_obj.triplicated) {

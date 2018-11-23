@@ -5,7 +5,7 @@ LOGS?=0
 DEBUG_ON_TITAN?=1
 OMP?=0
 
-SIZE?=1024
+SIZE?= 4096 # 8192 
 
 #
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
@@ -29,7 +29,7 @@ COMMON=
 CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas
 
 
-INCLUDE=-I/usr/local/cuda/include
+INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
