@@ -360,6 +360,9 @@ __global__ void simple_wmma_gemm(half_t *a0,half_t *a1,half_t *a2, half_t *b0,ha
 //			wmma::load_matrix_sync(b0_frag, b0 + bCol + bRow * ldb, ldb);
 //			wmma::load_matrix_sync(b1_frag, b1 + bCol + bRow * ldb, ldb);
 //			wmma::load_matrix_sync(b2_frag, b2 + bCol + bRow * ldb, ldb);
+
+
+			read_voter_wmma(a0_frag,a1_frag,a2_frag);
 //
 //			// Perform the matrix multiplication
 //			wmma::mma_sync(acc_frag, read_voter_wmma_if(a0_frag , a1_frag, a2_frag, a0_frag.x, a0_frag.num_elements, is_memory_bad),
@@ -494,19 +497,59 @@ __device__ real_t inline read_voter(real_t *v1, real_t *v2, real_t *v3,
 //	printf("entrou read /n");
 //}
 
-__device__ void inline read_voter_wmma(wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half,
-		wmma::row_major> a_frag) {
+// __device__ void inline read_voter_wmma(wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half,
+// 		wmma::row_major> a_frag) {
 		
-	printf("teste frag = %d \n", a_frag.x[1]);
+// 	printf("teste frag = %d \n", a_frag.x[1]);
 	
+// }
+
+
+__device__ void inline read_voter_wmma_if(half* v1, half* v2, half* v3, int num_elements) {
+	
+	//printf("X= %d \n", x[]);
+	register half in1 = v1[0]];
+	register half in2 = v2[0];
+	register half in3 = v3[0];
+
+	for(int i = 0; i < num_elements ; i ++){
+		if (in1[i] == in2[i] || in1[i] == in3[i]) {
+			return in1;
+		}
+
+		if (in2[i] == in3[i]) {
+			return in2;
+		}
+
+		if (in1[i] != in2[i] && in2[i] != in3[i] && in1[i] != in3[i]) {
+			atomicAdd(is_memory_bad, 1);
+		}
+
+		return in1;
+	}
 }
 
-__device__ void inline read_voter_wmma(half* x) {
-	
-	printf("X= %d \n", x[]);
-	
-}
 
+__device__ void inline read_voter_wmma(half* v1, half* v2, half* v3, int offset) {
+	
+	register real_t in1 = v1[offset];
+	register real_t in2 = v2[offset];
+	register real_t in3 = v3[offset];
+
+	if (in1 == in2 || in1 == in3) {
+		return in1;
+	}
+
+	if (in2 == in3) {
+		return in2;
+	}
+
+	if (in1 != in2 && in2 != in3 && in1 != in3) {
+		atomicAdd(is_memory_bad, 1);
+	}
+
+	return in1;
+}
 //template<class half_t, class real_t>
 //__device__ real_t inline read_voter_wmma(real_t *v1, real_t *v2, real_t *v3,
 //		int* offset, unsigned long long int* is_memory_bad) {
@@ -534,25 +577,25 @@ __device__ void inline read_voter_wmma(half* x) {
 //__device__ real_t inline read_voter_wmma_if(half_t wmma::fragment<v1>, half_t wmma::fragment<v2>, half_t wmma::fragment<v3>,
 //		int* offset, int num_elements, unsigned long long int* is_memory_bad) {
 //
-//	register half_t in1 = v1[offset];
-//	register half_t in2 = v2[offset];
-//	register half_t in3 = v3[offset];
-//
-//	for(int i = 0; i < num_elements ; i ++){
-//		if (in1[i] == in2[i] || in1[i] == in3[i]) {
-//			return in1;
-//		}
-//
-//		if (in2[i] == in3[i]) {
-//			return in2;
-//		}
-//
-//		if (in1[i] != in2[i] && in2[i] != in3[i] && in1[i] != in3[i]) {
-//			atomicAdd(is_memory_bad, 1);
-//		}
-//
-//		return in1;
-//	}
+	// register half_t in1 = v1[offset];
+	// register half_t in2 = v2[offset];
+	// register half_t in3 = v3[offset];
+
+	// for(int i = 0; i < num_elements ; i ++){
+	// 	if (in1[i] == in2[i] || in1[i] == in3[i]) {
+	// 		return in1;
+	// 	}
+
+	// 	if (in2[i] == in3[i]) {
+	// 		return in2;
+	// 	}
+
+	// 	if (in1[i] != in2[i] && in2[i] != in3[i] && in1[i] != in3[i]) {
+	// 		atomicAdd(is_memory_bad, 1);
+	// 	}
+
+	// 	return in1;
+	// }
 //}	
 
 template<class half_t, class real_t>
