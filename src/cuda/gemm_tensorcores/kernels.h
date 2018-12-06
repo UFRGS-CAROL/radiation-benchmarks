@@ -138,8 +138,8 @@ __global__ void compute_gemm(const half_t *A0, const half_t *A1, const half_t *A
 //        // This warp's pointer to the C matrix data to copy memory from to shared memory.
 //        const size_t gmem_idx = (block_tile_i + warpId) * M * GLOBAL_MEM_STRIDE + block_tile_j * N;
 //        const real_t *src_gmem_warp_stream_ptr = &C0[gmem_idx];
-////        const real_t *src_gmem_warp_stream_ptr = &C1[gmem_idx];
-////        const real_t *src_gmem_warp_stream_ptr = &C2[gmem_idx];
+////      const real_t *src_gmem_warp_stream_ptr = &C1[gmem_idx];
+////      const real_t *src_gmem_warp_stream_ptr = &C2[gmem_idx];
 //
 //        // Stream multiple C tiles to shared memory.
 //#pragma unroll
@@ -269,7 +269,7 @@ __global__ void compute_gemm(const half_t *A0, const half_t *A1, const half_t *A
 //                // Uniform, point-wise transformations of ALL fragment elements by ALL threads in the
 //                // warp are well-defined even though element indices within fragment storage are not defined.
 //                for (int t = 0; t < c0[i][j].num_elements; t++)
-//                    c0[i][j].x[t] *= alpha;
+//                  c0[i][j].x[t] *= alpha;
 //                	c1[i][j].x[t] *= alpha;
 //                	c2[i][j].x[t] *= alpha;
 //
@@ -300,6 +300,7 @@ __global__ void compute_gemm(const half_t *A0, const half_t *A1, const half_t *A
 template<class real_t>
 __device__ real_t inline read_voter_wmma(real_t *v1, real_t *v2, real_t *v3, int offset, unsigned long long int* is_memory_bad) {
 	
+	
 	register real_t in1 = v1[offset];
 	register real_t in2 = v2[offset];
 	register real_t in3 = v3[offset];
@@ -318,21 +319,12 @@ __device__ real_t inline read_voter_wmma(real_t *v1, real_t *v2, real_t *v3, int
 
 	return in1;
 }
-
-//-------------------------------------------------------------------------------------------------
-// Performs an MxNxK GEMM (C=alpha*A*B + beta*C) assuming:
-//  1) Matrices are packed in memory.
-//  2) M, N and K are multiples of 16.
-//  3) Neither A nor B are transposed.
-// Note: This is a less performant version of the compute_gemm kernel. It is designed for
-//       demonstration purposes only to show the CUDA WMMA API use without relying on
-//       availability of the shared memory.
 template<class half_t, class real_t>
-__global__ void simple_wmma_gemm(half_t *a0,half_t *a1,half_t *a2, half_t *b0,half_t *b1,half_t *b2, real_t *c0,real_t *c1,real_t *c2, real_t *d0,
-		real_t *d1, real_t *d2,int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta, unsigned long long int* is_memory_bad) {
+__global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
+		int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
 	// Leading dimensions. Packed with no transpositions.
-	int lda = m_ld;
-	int ldb = k_ld;
+//	int lda = m_ld;
+//	int ldb = k_ld;
 	int ldc = n_ld;
 
 	// Tile using a 2D grid
@@ -341,26 +333,21 @@ __global__ void simple_wmma_gemm(half_t *a0,half_t *a1,half_t *a2, half_t *b0,ha
 
 	// Declare the fragments
 	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half_t,
-	wmma::row_major> a0_frag;
-	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half_t,
-	wmma::row_major> a1_frag;
-	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half_t,
-	wmma::row_major> a2_frag;
-
+	wmma::row_major> a_frag;
 	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,
-	wmma::col_major> b0_frag;
-	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,
-	wmma::col_major> b1_frag;
-	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,
-	wmma::col_major> b2_frag;
-
+	wmma::col_major> b_frag;
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> acc_frag;
+	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c_frag;
 
-	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c0_frag;
-	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c1_frag;
-	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c2_frag;
 
 	wmma::fill_fragment(acc_frag, 0.0f);
+	wmma::fill_fragment(a_frag, 2.0f);
+	wmma::fill_fragment(b_frag, 2.0f);
+	wmma::fill_fragment(c_frag, 2.0f);
+	
+	// Perform the matrix multiplication
+	//wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
+
 
 	// Loop over k
 	for (int i = 0; i < k_ld; i += WMMA_K) {
@@ -373,54 +360,146 @@ __global__ void simple_wmma_gemm(half_t *a0,half_t *a1,half_t *a2, half_t *b0,ha
 		// Bounds checking
 		if (aRow < m_ld && aCol < k_ld && bRow < k_ld && bCol < n_ld) {
 			// Load the inputs
-			wmma::load_matrix_sync(a0_frag, a0 + aCol + aRow * lda, lda);
-			wmma::load_matrix_sync(a1_frag, a1 + aCol + aRow * lda, lda);
-			wmma::load_matrix_sync(a2_frag, a2 + aCol + aRow * lda, lda);
-
-			wmma::load_matrix_sync(b0_frag, b0 + bCol + bRow * ldb, ldb);
-			wmma::load_matrix_sync(b1_frag, b1 + bCol + bRow * ldb, ldb);
-			wmma::load_matrix_sync(b2_frag, b2 + bCol + bRow * ldb, ldb);
-
-
-			//read_voter_wmma(a0_frag,a1_frag,a2_frag);			
-			
+//			wmma::load_matrix_sync(a_frag, a + aCol + aRow * lda, lda);
+//			wmma::load_matrix_sync(b_frag, b + bCol + bRow * ldb, ldb);
+	
 			// Perform the matrix multiplication
-//			wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
-			
-			wmma::mma_sync(acc_frag,read_voter_wmma_for_a(a0_frag,a1_frag,a2_frag,is_memory_bad),read_voter_wmma_for_b(b0_frag, b1_frag, b2_frag,is_memory_bad), acc_frag);
+			wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
 
-
-
-		}
-
-		// Load in the current value of c, scale it by beta, and add this our result scaled by alpha
-		int cCol = warpN * WMMA_N;
-		int cRow = warpM * WMMA_M;
-
-		if (cRow < m_ld && cCol < n_ld) {
-			wmma::load_matrix_sync(c0_frag, c0 + cCol + cRow * ldc, ldc,
-					wmma::mem_row_major);
-			wmma::load_matrix_sync(c1_frag, c1 + cCol + cRow * ldc, ldc,
-					wmma::mem_row_major);
-			wmma::load_matrix_sync(c2_frag, c2 + cCol + cRow * ldc, ldc,
-					wmma::mem_row_major);
-
-
-			for (int i = 0; i < c0_frag.num_elements; i++) {
-				c0_frag.x[i] = alpha * acc_frag.x[i] + beta * read_voter_wmma<real_t>(c0_frag.x, c1_frag.x,c2_frag.x,i, is_memory_bad);
-			}
-
-			// Store the output
-			wmma::store_matrix_sync(d0 + cCol + cRow * ldc, c0_frag, ldc,
-					wmma::mem_row_major);
-			wmma::store_matrix_sync(d1 + cCol + cRow * ldc, c0_frag, ldc,
-					wmma::mem_row_major);
-			wmma::store_matrix_sync(d2 + cCol + cRow * ldc, c0_frag, ldc,
-					wmma::mem_row_major);
 		}
 	}
+
+	// Load in the current value of c, scale it by beta, and add this our result scaled by alpha
+	int cCol = warpN * WMMA_N;
+	int cRow = warpM * WMMA_M;
+
+	if (cRow < m_ld && cCol < n_ld) {
+//		wmma::load_matrix_sync(c_frag, c + cCol + cRow * ldc, ldc,
+//				wmma::mem_row_major);
+
+		for (int i = 0; i < c_frag.num_elements; i++) {
+			c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
+		}
+
+		// Store the output
+		wmma::store_matrix_sync(d0 + cCol + cRow * ldc, c_frag, ldc,
+				wmma::mem_row_major);
+		// Store the output
+		wmma::store_matrix_sync(d1 + cCol + cRow * ldc, c_frag, ldc,
+				wmma::mem_row_major);
+		// Store the output
+		wmma::store_matrix_sync(d2 + cCol + cRow * ldc, c_frag, ldc,
+				wmma::mem_row_major);
+	}
 }	
-	
+
+
+
+
+
+
+
+//-------------------------------------------------------------------------------------------------
+// Performs an MxNxK GEMM (C=alpha*A*B + beta*C) assuming:
+//  1) Matrices are packed in memory.
+//  2) M, N and K are multiples of 16.
+//  3) Neither A nor B are transposed.
+// Note: This is a less performant version of the compute_gemm kernel. It is designed for
+//       demonstration purposes only to show the CUDA WMMA API use without relying on
+//       availability of the shared memory.
+//template<class half_t, class real_t>
+//__global__ void simple_wmma_gemm(half_t *a0,half_t *a1,half_t *a2, half_t *b0,half_t *b1,half_t *b2, real_t *c0,real_t *c1,real_t *c2, real_t *d0,
+//		real_t *d1, real_t *d2,int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta, unsigned long long int* is_memory_bad) {
+//	// Leading dimensions. Packed with no transpositions.
+//	int lda = m_ld;
+//	int ldb = k_ld;
+//	int ldc = n_ld;
+//	
+//	
+//
+//	// Tile using a 2D grid
+//	int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / WARP_SIZE;
+//	int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
+//
+//	// Declare the fragments
+//	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half_t,
+//	wmma::row_major> a0_frag;
+//	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half_t,
+//	wmma::row_major> a1_frag;
+//	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half_t,
+//	wmma::row_major> a2_frag;
+//
+//	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,
+//	wmma::col_major> b0_frag;
+//	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,
+//	wmma::col_major> b1_frag;
+//	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,
+//	wmma::col_major> b2_frag;
+//
+//	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> acc_frag;
+//
+//	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c0_frag;
+//	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c1_frag;
+//	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c2_frag;
+//
+//	wmma::fill_fragment(acc_frag, 0.0f);
+//	
+//	// Loop over k
+//	for (int i = 0; i < k_ld; i += WMMA_K) {
+//		int aCol = i;
+//		int aRow = warpM * WMMA_M;
+//
+//		int bCol = i;
+//		int bRow = warpN * WMMA_N;
+//
+//		// Bounds checking
+//		if (aRow < m_ld && aCol < k_ld && bRow < k_ld && bCol < n_ld) {
+//			// Load the inputs
+//			wmma::load_matrix_sync(a0_frag, a0 + aCol + aRow * lda, lda);
+//			wmma::load_matrix_sync(a1_frag, a1 + aCol + aRow * lda, lda);
+//			wmma::load_matrix_sync(a2_frag, a2 + aCol + aRow * lda, lda);
+//
+//			wmma::load_matrix_sync(b0_frag, b0 + bCol + bRow * ldb, ldb);
+//			wmma::load_matrix_sync(b1_frag, b1 + bCol + bRow * ldb, ldb);
+//			wmma::load_matrix_sync(b2_frag, b2 + bCol + bRow * ldb, ldb);
+//		
+//		
+//			
+//			
+//			wmma::mma_sync(acc_frag,read_voter_wmma_for_a(a0_frag,a1_frag,a2_frag,is_memory_bad),read_voter_wmma_for_b(b0_frag, b1_frag, b2_frag,is_memory_bad), acc_frag);
+//
+//
+//
+//		}
+//		
+//		// Load in the current value of c, scale it by beta, and add this our result scaled by alpha
+//		int cCol = warpN * WMMA_N;
+//		int cRow = warpM * WMMA_M;
+//
+//		if (cRow < m_ld && cCol < n_ld) {
+//			wmma::load_matrix_sync(c0_frag, c0 + cCol + cRow * ldc, ldc,
+//					wmma::mem_row_major);
+//			wmma::load_matrix_sync(c1_frag, c1 + cCol + cRow * ldc, ldc,
+//					wmma::mem_row_major);
+//			wmma::load_matrix_sync(c2_frag, c2 + cCol + cRow * ldc, ldc,
+//					wmma::mem_row_major);
+//
+//
+//			for (int i = 0; i < c0_frag.num_elements; i++) {
+//				c0_frag.x[i] = alpha * acc_frag.x[i] + beta * read_voter_wmma<real_t>(c0_frag.x, c1_frag.x,c2_frag.x,i, is_memory_bad);
+//			}
+//
+//			// Store the output
+//			wmma::store_matrix_sync(d0 + cCol + cRow * ldc, c0_frag, ldc,
+//					wmma::mem_row_major);
+//			wmma::store_matrix_sync(d1 + cCol + cRow * ldc, c0_frag, ldc,
+//					wmma::mem_row_major);
+//			wmma::store_matrix_sync(d2 + cCol + cRow * ldc, c0_frag, ldc,
+//					wmma::mem_row_major);
+//		}
+//	}
+//}	
+//	
 template<class half_t, class real_t>
 __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 		int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
@@ -458,12 +537,7 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 			// Load the inputs
 			wmma::load_matrix_sync(a_frag, a + aCol + aRow * lda, lda);
 			wmma::load_matrix_sync(b_frag, b + bCol + bRow * ldb, ldb);
-			
-		
-			//read_voter_wmma(a_frag.x, b_frag.num_elements);
-			//read_voter_wmma_for(a_frag);
-//			printf("test c_frag = %d \n", c_frag.x);
-
+	
 			// Perform the matrix multiplication
 			wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
 
@@ -527,12 +601,14 @@ __device__ wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half_t,
 		wmma::row_major> &v2, wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half_t,
 		wmma::row_major> &v3,unsigned long long int* is_memory_bad) {
 	
+	
 	for(int i = 0; i < v1.num_elements ; i ++){
 		if (v1.x[i] == v2.x[i] || v1.x[i] == v3.x[i]) {
 			return v1;
 		}
 
 		if (v2.x[i] == v3.x[i]) {
+			
 			return v2;
 		}
 
@@ -549,6 +625,8 @@ __device__ wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,
 			wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,wmma::col_major> &v2, 
 			wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,wmma::col_major> &v3, 
 			unsigned long long int* is_memory_bad) {
+	
+	
 	
 	for(int i = 0; i < v1.num_elements ; i ++){
 		if (v1.x[i] == v2.x[i] || v1.x[i] == v3.x[i]) {

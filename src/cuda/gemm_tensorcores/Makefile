@@ -5,7 +5,7 @@ LOGS?=0
 DEBUG_ON_TITAN?=1
 OMP?=0
 
-SIZE?= 4096 
+SIZE?=16384 #8192 #4096 
 
 #
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
@@ -101,7 +101,7 @@ clean:
 
 
 generate:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 1 --precision float
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 1 --precision float	
 	
 test:
 	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 1000 --tensor_cores 1 --triplicated 1 --precision float

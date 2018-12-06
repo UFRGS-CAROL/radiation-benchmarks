@@ -352,7 +352,8 @@ std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vect
 template<class host_real_t, class real_t>
 void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		Log& log_obj) {
-
+	cudaEvent_t start, stop;
+	float elapsedTime;
 // C matrix
 	std::vector<host_real_t> host_matrix_c(
 			log_obj.size_matrices * log_obj.size_matrices);
@@ -380,7 +381,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			real_t(1.1f), real_t(1.2f));
 
 	int tries = 0;
-		
+	cudaEventCreate(&start);
+	cudaEventRecord(start,0);	
 	for (int it = 0; it < log_obj.iterations; it++) {
 		double start_computation = log_obj.mysecond();
 		log_obj.start_iteration_app();
@@ -403,6 +405,12 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),
 				host_matrix_d2.data());
 
+		 cudaEventCreate(&stop);
+		 cudaEventRecord(stop,0);
+		 cudaEventSynchronize(stop);
+
+		 cudaEventElapsedTime(&elapsedTime, start,stop);
+		 printf("Elapsed time : %f ms\n" ,elapsedTime);
 
 		//TODO check this
 		if (log_obj.triplicated && log_obj.generate) {
@@ -450,8 +458,14 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			}
 
 		}
-
+		
 	}
+	cudaEventCreate(&stop);
+	cudaEventRecord(stop,0);
+	cudaEventSynchronize(stop);
+
+	cudaEventElapsedTime(&elapsedTime, start,stop);
+	printf("time : %f s\n" ,(elapsedTime/1000));
 	if (log_obj.generate) {
 		if (log_obj.triplicated)
 			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_gold);
