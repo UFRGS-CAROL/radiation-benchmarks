@@ -5,7 +5,7 @@ LOGS?=0
 DEBUG_ON_TITAN?=1
 OMP?=0
 
-SIZE?=16384 #8192 #4096 
+SIZE?=4096 #16384 #8192 #4096 
 
 #
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
