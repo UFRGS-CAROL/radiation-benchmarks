@@ -1,1 +1,0 @@
-obj-m := trace_capture.o
