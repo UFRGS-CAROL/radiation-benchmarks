@@ -156,7 +156,7 @@ __global__ void compute_gemm(real_t *D0, real_t *D1, real_t *D2, float alpha, fl
 		// along the K_GLOBAL dimension.
 		wmma::fragment<wmma::accumulator, M, N, K, real_t> c[WARP_COL_TILES][WARP_ROW_TILES];
 		
-		//wmma::fill_fragment(c[WARP_COL_TILES][WARP_ROW_TILES], 2.0f);
+		wmma::fill_fragment(c[WARP_COL_TILES][WARP_ROW_TILES], 2.0f);
 
 		// Load the C matrix tiles into fragments from shared memory.
 #pragma unroll
@@ -220,8 +220,8 @@ __global__ void compute_gemm(real_t *D0, real_t *D1, real_t *D2, float alpha, fl
 			for (int k_step = 0; k_step < CHUNK_K; k_step++) {
 				wmma::fragment<wmma::matrix_a, M, N, K, half_t, wmma::row_major> a[WARP_COL_TILES];
 				wmma::fragment<wmma::matrix_b, M, N, K, half_t, wmma::col_major> b[WARP_ROW_TILES];
-				//wmma::fill_fragment(a[WARP_COL_TILES], 2.0f);
-				//wmma::fill_fragment(b[WARP_ROW_TILES], 2.0f);
+				wmma::fill_fragment(a[WARP_COL_TILES], 2.0f);
+				wmma::fill_fragment(b[WARP_ROW_TILES], 2.0f);
 
 #pragma unroll
 				for (int i = 0; i < WARP_COL_TILES; i++) {
