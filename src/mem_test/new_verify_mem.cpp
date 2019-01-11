@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
 		    printf("Contador -1: %llu\n",contador);
 	    }
 #ifdef LOGS
-        log_error_count(contador);
+        log_error_count(contador);                
 #endif
 	    
         printf("***************Acabei com o 1111 *******************\n");
@@ -177,4 +177,7 @@ int main(int argc, char **argv) {
 	    }
 	    free(vetor);
 	}
+#ifdef LOGS
+    end_log_file();
+#endif	
 }
