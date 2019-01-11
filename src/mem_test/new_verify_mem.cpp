@@ -7,14 +7,18 @@
 
 #include <string.h>
 #include <unistd.h>
-
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <string.h>
 
+//*****************************************  LOG  *************************//
+#ifdef LOGS
+#include "log_helper.h"
+#endif
+//************************************************************************//
+
 // Debug params: -s 104857600 -e 2 -i 5 -w 2 
-// Params ---------------------------------------------------------------------
+// Params ------------------------------------------------------------------
 struct Params {
 
     unsigned long long          mem_size;
@@ -67,8 +71,17 @@ struct Params {
 int main(int argc, char **argv) {
 
     const Params p(argc, argv);
-    
     printf("%llu, %llu, %llu ,%d ,%d\n",p.mem_size,p.external_it,p.internal_it,p.wait_time,p.verbose);
+    
+#ifdef LOGS
+    set_iter_interval_print(1);
+    char test_info[300];
+    snprintf(test_info, 300, "-s %llu, -e %llu, -i %llu, -w %d, -v %d\n",p.mem_size,p.external_it,p.internal_it,p.wait_time,p.verbose);
+    start_log_file("memory_test", test_info);
+#endif
+
+
+
 
 	unsigned long long sys_mem = p.mem_size/4;	// Tamanho da memoria dividido 4
 	int* vetor;
@@ -76,6 +89,11 @@ int main(int argc, char **argv) {
 	int* gold;
 	unsigned long long cont = 0;
     for(cont = 0;cont< p.external_it ;cont++){
+
+#ifdef LOGS
+        start_iteration();
+#endif    
+    
 	    printf("********************************************************************\n");
 	    gold = (int*)malloc(sizeof(int));
 	    printf("Vetor de:%llu bytes \n",size);
@@ -84,7 +102,6 @@ int main(int argc, char **argv) {
 	    // TODO Verify if swap is used -> Exit and error message	    
 	    //system("cat /proc/swaps");
 	    
-
 	    int i = 0;
 	    int k = 0;
 	    unsigned long long contador = 0;
@@ -94,20 +111,37 @@ int main(int argc, char **argv) {
 	    memset(vetor,0xFF,size);
 
         sleep(p.wait_time); // Sleep Between Write/Read iteration for error accumulation in DDR
+#ifdef LOGS
+        end_iteration();
+#endif
 
     	for(k = 0; k< p.internal_it; k++){			
         #pragma omp parallel for reduction(+:contador) private(i) 
             for(i = 0 ; i< sys_mem; i++ ){
+                vetor[5]=12;
 			    //printf("Vetor[%d]:%d\n",i,vetor[i]);
 			    if(vetor[i] != gold[0] ){
 			        printf("Gold: 1, It_Externa: %llu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d \n",cont, k,i,gold[0],vetor[i]);
-				    vetor[i] = gold[0]; // Colocamos o valor certo na pos de memoria
-				    contador++; // Conta a ocorrencia de erros por iteracao			
+#ifdef LOGS
+		            char error_detail[200];
+            		sprintf(error_detail,"Gold: 1, It_Externa: %llu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d",cont, k,i,gold[0],vetor[i]);
+           			log_error_detail(error_detail);
+#endif				    
+				    vetor[i] = gold[0];         // Colocamos o valor certo na pos de memoria
+				    contador++;                 // Conta a ocorrencia de erros por iteracao			
 			    }
 		    }	
 		    printf("Contador -1: %llu\n",contador);
 	    }
+#ifdef LOGS
+        log_error_count(contador);
+#endif
+	    
         printf("***************Acabei com o 1111 *******************\n");
+
+#ifdef LOGS
+        start_iteration();
+#endif 
         contador = 0;
 	    gold[0] = 0;
 	
@@ -116,19 +150,31 @@ int main(int argc, char **argv) {
 	    memset(vetor,0x00,size);
 	    
         sleep(p.wait_time); // Sleep Between Write/Read iteration for error accumulation in DDR
-	    
+#ifdef LOGS
+        end_iteration();
+#endif	  
+
 	    for(k=0;k<p.internal_it;k++){	
 	    #pragma omp parallel for reduction(+:contador) private(i)
 		    for(i = 0 ; i< sys_mem; i++ ){
+                //vetor[5]=12;
 				    //printf("Vetor[%d]:%d\n",i,vetor[i]);
 			    if(vetor[i] != gold[0] ){
 			        printf("Gold: 0, It_Externa: %llu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d \n",cont, k,i,gold[0],vetor[i]);
+#ifdef LOGS
+		            char error_detail[200];
+            		sprintf(error_detail,"Gold: 0, It_Externa: %llu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d",cont, k,i,gold[0],vetor[i]);
+           			log_error_detail(error_detail);
+#endif				    			        
 				    vetor[i] = gold[0];
 				    contador++;			
 			    }
 		    }
-		    printf("Contador 0:%llu\n",contador);	
-	    }	
+		    printf("Contador 0:%llu\n",contador);		    	
+#ifdef LOGS
+        log_error_count(contador);
+#endif
+	    }
 	    free(vetor);
 	}
 }
