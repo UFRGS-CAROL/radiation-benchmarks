@@ -1,4 +1,3 @@
-
 //for C++ compilers this macro must exists
 
 #ifdef __cplusplus
@@ -15,6 +14,11 @@ unsigned long int set_max_infos_iter(unsigned long int max_infos);
 // Set the interval the program must print log details,
 // default is 1 (each iteration)
 int set_iter_interval_print(int interval);
+
+//Disable double error kill
+//this will disable double error kill if
+//two errors happened sequentially
+void disable_double_error_kill();
 
 // Update with current timestamp the file where the software watchdog watchs
 void update_timestamp();
