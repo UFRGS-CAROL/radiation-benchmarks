@@ -21,7 +21,7 @@ Compilation should generate 5 binaries:
 
 * How to generate input data and gold output
   - Input data
-    $ ./genMatrices <path of matrix a> <path of matrix b>
+    $ ./genMatrices <path of matrix a> <path of matrix b> <gold output (optional)>
   - gold output
     $ ./dgemm_gen <# threads> <matrix order> <tile size> <matrix A> <matrix B>
         - # threads: how many thread should the OpenMP create
