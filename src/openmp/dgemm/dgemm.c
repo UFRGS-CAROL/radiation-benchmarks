@@ -377,6 +377,7 @@ int main(int argc, char **argv) {
 		start_iteration();
 #endif
 		dgemm(A, B, C, order, block);
+
 #ifdef LOGS
 		end_iteration();
 #endif
@@ -415,7 +416,7 @@ int main(int argc, char **argv) {
 			read_input(A, B, inputA, inputB, order);
 			read_gold(gold, fileGold, order);
 		} else {
-			printf(".");
+			printf("Iteration %i\n", loop);
 		}
 
 #ifdef LOGS

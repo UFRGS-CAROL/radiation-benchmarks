@@ -257,9 +257,9 @@ int main(int argc, char **argv) {
 
 	printf("OpenMP Dense matrix-matrix multiplication\n");
 
-	if (argc != 6) {
+	if (argc < 6) {
 		printf(
-				"Usage: %s <# threads> <matrix order> <tile size> <matrix A> <matrix B>\n",
+				"Usage: %s <# threads> <matrix order> <tile size> <matrix A> <matrix B> <gold output (optional)>\n",
 				*argv);
 		exit(1);
 	}
@@ -311,9 +311,16 @@ int main(int argc, char **argv) {
 	dgemm(A, B, C, order, block);
 
 	FILE *file;
-	char output_gold[150];
-	snprintf(output_gold, 150, "gold_%ld_m-order_%d_ths_%d_blocks", order,
-			nthread_input, block);
+	char *output_gold;
+	char out_tmp[150];
+	if (argc == 7){
+		output_gold = *++argv;
+	}else{
+		output_gold = out_tmp;
+		snprintf(output_gold, 150, "gold_%ld_m-order_%d_ths_%d_blocks", order,
+				nthread_input, block);
+	}
+
 	if ((file = fopen(output_gold, "wb")) == 0)
 		printf("The GOLD file was not opened\n");
 	int zero_sum = 0;
