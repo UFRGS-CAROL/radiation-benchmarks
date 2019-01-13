@@ -2,9 +2,13 @@ DGEMM
 
 * How to compile
   - Intel Xeon Phi (icc native compilation):
-    $ make intel
+    $ make ARCH=xeon
   - General X86 (gcc):
-    $ make general
+    $ make 
+  - ARM
+    $ make ARCH=arm
+* To set the default input size on the generator
+  - make DEFAULT_INPUT=1024
 
 Compilation should generate 5 binaries:
   - genMatrices: used to generate the input matrices, it will generate 2 matrices of size 8192x8192 using double type and stored in a binary file.
@@ -17,7 +21,7 @@ Compilation should generate 5 binaries:
 
 * How to generate input data and gold output
   - Input data
-    $ ./genMatrices
+    $ ./genMatrices <path of matrix a> <path of matrix b> <gold output (optional)>
   - gold output
     $ ./dgemm_gen <# threads> <matrix order> <tile size> <matrix A> <matrix B>
         - # threads: how many thread should the OpenMP create
