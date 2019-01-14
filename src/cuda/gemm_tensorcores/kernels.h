@@ -153,17 +153,18 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 		// These fragments will accumulate the result of A and B matrix fragment multiplications
 		// along the K_GLOBAL dimension.
 		wmma::fragment<wmma::accumulator, M, N, K, float> c[WARP_COL_TILES][WARP_ROW_TILES];
+		wmma::fill_fragment(c[WARP_COL_TILES][WARP_ROW_TILES], 2.0f);
 
 		// Load the C matrix tiles into fragments from shared memory.
 #pragma unroll
-		for (int i = 0; i < WARP_COL_TILES; i++) {
-#pragma unroll
-			for (int j = 0; j < WARP_ROW_TILES; j++) {
-				const float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+// 		for (int i = 0; i < WARP_COL_TILES; i++) {
+// #pragma unroll
+// 			for (int j = 0; j < WARP_ROW_TILES; j++) {
+// 				const float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
-				wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
-			}
-		}
+// 				wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
+// 			}
+// 		}
 
 		__syncthreads();
 
@@ -181,8 +182,8 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 
 		// Select what warp copies what matrix to shared memory.
 		// Warps 0-3 copy the A matrix, warps 4-7 copy the B matrix.
-		const half *warp_ptr = (warpId < 4) ? (&A[block_tile_i * M * K_GLOBAL] + M * K_GLOBAL * (warpId % 4) * 2) :
-				(&B[block_tile_j * N * K_GLOBAL] + N * K_GLOBAL * (warpId % 4) * 2);
+		// const half *warp_ptr = (warpId < 4) ? (&A[block_tile_i * M * K_GLOBAL] + M * K_GLOBAL * (warpId % 4) * 2) :
+		// 		(&B[block_tile_j * N * K_GLOBAL] + N * K_GLOBAL * (warpId % 4) * 2);
 
 		// Go through the global K dimension by a fixed step at a time.
 #pragma unroll
@@ -216,28 +217,30 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 			for (int k_step = 0; k_step < CHUNK_K; k_step++) {
 				wmma::fragment<wmma::matrix_a, M, N, K, half, wmma::row_major> a[WARP_COL_TILES];
 				wmma::fragment<wmma::matrix_b, M, N, K, half, wmma::col_major> b[WARP_ROW_TILES];
+				wmma::fill_fragment(a[WARP_COL_TILES], 2.0f);
+ 				wmma::fill_fragment(b[WARP_ROW_TILES], 2.0f);
 
 #pragma unroll
-				for (int i = 0; i < WARP_COL_TILES; i++) {
-					size_t shmem_idx_a = (warpId/2) * M * 2 + (i * M);
-					const half *tile_ptr = &shmem[shmem_idx_a][k_step * K];
+				// for (int i = 0; i < WARP_COL_TILES; i++) 
+				// 	size_t shmem_idx_a = (warpId/2) * M * 2 + (i * M);
+				// 	const half *tile_ptr = &shmem[shmem_idx_a][k_step * K];
 
-					wmma::load_matrix_sync(a[i], tile_ptr, K * CHUNK_K + SKEW_HALF);
+				// 	wmma::load_matrix_sync(a[i], tile_ptr, K * CHUNK_K + SKEW_HALF);
 
 #pragma unroll
 for (int j = 0; j < WARP_ROW_TILES; j++) {
-	if (i == 0) {
-		// Load the B matrix fragment once, because it is going to be reused
-		// against the other A matrix fragments.
-		size_t shmem_idx_b = shmem_idx_b_off + (WARP_ROW_TILES * N) * (warpId%2) + (j * N);
-		const half *tile_ptr = &shmem[shmem_idx_b][k_step * K];
+	// if (i == 0) {
+	// 	// Load the B matrix fragment once, because it is going to be reused
+	// 	// against the other A matrix fragments.
+	// 	size_t shmem_idx_b = shmem_idx_b_off + (WARP_ROW_TILES * N) * (warpId%2) + (j * N);
+	// 	const half *tile_ptr = &shmem[shmem_idx_b][k_step * K];
 
-		wmma::load_matrix_sync(b[j], tile_ptr, K * CHUNK_K + SKEW_HALF);
-	}
+	// 	wmma::load_matrix_sync(b[j], tile_ptr, K * CHUNK_K + SKEW_HALF);
+	// }
 
 	wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
 }
-				}
+				
 			}
 
 			__syncthreads();
