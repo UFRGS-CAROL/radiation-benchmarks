@@ -309,9 +309,11 @@ public:
 							(BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(float))
 				};
 				checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-				checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
-						(this->device_ptr_d0,this->device_ptr_d1,this->device_ptr_d2, this->alpha, this->beta)));
+				//checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
+				//		(this->device_ptr_d0,this->device_ptr_d1,this->device_ptr_d2, this->alpha, this->beta)));
 				
+				checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
+						(this->device_ptr_d0, this->alpha, this->beta)));
 				this->debug("device synchronize");
 				check_framework_errors(cudaDeviceSynchronize());
 			
