@@ -101,7 +101,8 @@ using namespace nvcuda;
 //FULL gemm function
 //-------------------------------------------------------------------------------------------------
 template<class half_t, class real_t>
-__global__ void compute_gemm(real_t *D0, real_t *D1, real_t *D2, float alpha, float beta)
+//__global__ void compute_gemm(real_t *D0, real_t *D1, real_t *D2, float alpha, float beta)
+__global__ void compute_gemm(real_t *D0, float alpha, float beta)
 {
 	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
@@ -273,18 +274,22 @@ for (int j = 0; j < WARP_ROW_TILES; j++) {
 
 		// Now that shared memory contains all the D tiles, stream them to global memory.
 		real_t *dst_gmem_warp_stream_ptr_0 = &D0[gmem_idx];
+		/*
 		real_t *dst_gmem_warp_stream_ptr_1 = &D1[gmem_idx];
 		real_t *dst_gmem_warp_stream_ptr_2 = &D2[gmem_idx];
-
+		*/
 #pragma unroll
 		for (int i = 0; i < K; i++) {
 			*((int4*)(dst_gmem_warp_stream_ptr_0 + GLOBAL_MEM_STRIDE * i) + laneId) =
 					*((int4*)(shmem_warp_stream_ptr + SHMEM_STRIDE * i) + laneId);
+			/*
 			*((int4*)(dst_gmem_warp_stream_ptr_1 + GLOBAL_MEM_STRIDE * i) + laneId) =
 								*((int4*)(shmem_warp_stream_ptr + SHMEM_STRIDE * i) + laneId);
 			*((int4*)(dst_gmem_warp_stream_ptr_2 + GLOBAL_MEM_STRIDE * i) + laneId) =
 								*((int4*)(shmem_warp_stream_ptr + SHMEM_STRIDE * i) + laneId);
+			*/
 		}
+
 
 		__syncthreads();
 	}
