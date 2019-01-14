@@ -1,0 +1,55 @@
+DGEMM
+
+* How to compile
+  - Intel Xeon Phi (icc native compilation):
+    $ make ARCH=xeon
+  - General X86 (gcc):
+    $ make 
+  - ARM
+    $ make ARCH=arm
+* To set the default input size on the generator
+  - make DEFAULT_INPUT=1024
+
+* To set the float precision
+  - make PRECISION=<double or float>
+
+Compilation should generate 5 binaries:
+  - gemm_<precision>_gen: used to generate the a, b, and gold output. Gold will be used to check if the execution generates a correct output.
+  - gemm_<precision>_check: this binary will be used during radiation test, it will execute the benchmark kernel several times
+
+* How to generate input data and gold output
+  - Input data and gold output
+    $ ./gemm_<precision>_gen <# threads> <matrix order> <tile size> <matrix A> <matrix B>
+        - # threads: how many thread should the OpenMP create
+        - matrix order: one side of the square matrix (1024, 2048, 4096, ...)
+        - tile size: one size of the square tile, dgemm is the tiling algorithm 
+        - matrix A:: binary file for the first matrix
+        - matrix B: binary file for the second matrix
+
+
+
+* How to run a test
+
+Before running the benchmark, the script radiation-benchmarks/scripts/install.py should be executed. This script will create the folder to store the log files and create the conf file in /etc/radiation-benchmark.conf
+
+  $ ./gemm_<precision>_check <# threads> <matrix order> <tile size> <matrix A> <matrix B> <GOLD> <iterations>
+        - # threads: how many thread should the OpenMP create
+        - matrix order: one side of the square matrix (1024, 2048, 4096, ...)
+        - tile size: one size of the square tile, dgemm is the tiling algorithm 
+        - matrix A:: binary file for the first matrix
+        - matrix B: binary file for the second matrix
+        - gold: binary file with the gold output
+        - iterations: how many times the benchmark kernel should be executed, usually 100000 is enough for the radiation test (it will crash before reaching this number)
+
+
+
+* Configuration used for Xeon Phi 3120A
+  - input and gold generated
+    $ ./gemm_<precision>_gen 228 1024 8 dgemm_a_8192 dgemm_b_8192
+    $ ./gemm_<precision>_gen 228 2048 16 dgemm_a_8192 dgemm_b_8192
+    $ ./gemm_<precision>_gen 228 4096 32 dgemm_a_8192 dgemm_b_8192
+  - configurations executed
+    $ ./gemm_<precision>_check 228 1024 8 dgemm_a_8192 dgemm_b_8192 gold_1024_m-order_228_ths_8_blocks 1000000
+    $ ./gemm_<precision>_check 228 2048 16 dgemm_a_8192 dgemm_b_8192 gold_2048_m-order_228_ths_16_blocks 1000000
+    $ ./gemm_<precision>_check 228 4096 32 dgemm_a_8192 dgemm_b_8192 gold_4096_m-order_228_ths_32_blocks 1000000
+
