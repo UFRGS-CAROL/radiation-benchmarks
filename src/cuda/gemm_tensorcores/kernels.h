@@ -137,7 +137,7 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 
 		// This warp's pointer to the C matrix data to copy memory from to shared memory.
 		const size_t gmem_idx = (block_tile_i + warpId) * M * GLOBAL_MEM_STRIDE + block_tile_j * N;
-		const real_t *src_gmem_warp_stream_ptr = &C[gmem_idx];
+		// const real_t *src_gmem_warp_stream_ptr = &C[gmem_idx];
 
 		// Stream multiple C tiles to shared memory.
 #pragma unroll
@@ -195,20 +195,20 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 
 			// First half of the warp copies the first row / column of the matrix,
 			// the second half of the warp copies the next.
-			int4 *lane_ptr = (int4*)(warp_ptr + tile_k * K + (laneId / CHUNK_COPY_LINE_LANES) * K_GLOBAL) + (laneId % CHUNK_COPY_LINE_LANES);
+			// int4 *lane_ptr = (int4*)(warp_ptr + tile_k * K + (laneId / CHUNK_COPY_LINE_LANES) * K_GLOBAL) + (laneId % CHUNK_COPY_LINE_LANES);
 
 			// Shift the second half of the warp to the next row / column in the shared memory.
 			shmem_idx += laneId / CHUNK_COPY_LINE_LANES;
 
 #pragma unroll
 			for(int i = 0; i < ((WARP_SIZE/2) / CHUNK_COPY_LINES_PER_WARP) * 2; i++) {
-				// Copy 16 bytes at once in each lane.
-				*((int4*)&shmem[shmem_idx][0] + (laneId % CHUNK_COPY_LINE_LANES)) = *lane_ptr;
+			// 	// Copy 16 bytes at once in each lane.
+			// 	*((int4*)&shmem[shmem_idx][0] + (laneId % CHUNK_COPY_LINE_LANES)) = *lane_ptr;
 
-				// Advance the global memory pointer and the shared memory index.
-				lane_ptr = (int4*)((half*)lane_ptr + K_GLOBAL * CHUNK_COPY_LINES_PER_WARP);
-				shmem_idx += CHUNK_COPY_LINES_PER_WARP;
-			}
+			// 	// Advance the global memory pointer and the shared memory index.
+			// 	lane_ptr = (int4*)((half*)lane_ptr + K_GLOBAL * CHUNK_COPY_LINES_PER_WARP);
+			// 	shmem_idx += CHUNK_COPY_LINES_PER_WARP;
+			// }
 
 			__syncthreads();
 
@@ -236,7 +236,7 @@ for (int j = 0; j < WARP_ROW_TILES; j++) {
 	// 	const half *tile_ptr = &shmem[shmem_idx_b][k_step * K];
 
 	// 	wmma::load_matrix_sync(b[j], tile_ptr, K * CHUNK_K + SKEW_HALF);
-	// }
+	 }
 
 	wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
 }
