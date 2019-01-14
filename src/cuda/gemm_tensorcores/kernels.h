@@ -160,7 +160,8 @@ __global__ void compute_gemm(real_t *D0, real_t *D1, real_t *D2, float alpha, fl
 
 		// Load the C matrix tiles into fragments from shared memory.
 #pragma unroll
-		for (int i = 0; i < WARP_COL_TILES; i++) {
+		
+		/*for (int i = 0; i < WARP_COL_TILES; i++) {
 #pragma unroll
 			for (int j = 0; j < WARP_ROW_TILES; j++) {
 				const real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
@@ -168,6 +169,9 @@ __global__ void compute_gemm(real_t *D0, real_t *D1, real_t *D2, float alpha, fl
 				wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
 			}
 		}
+		*/
+
+		
 
 		__syncthreads();
 
