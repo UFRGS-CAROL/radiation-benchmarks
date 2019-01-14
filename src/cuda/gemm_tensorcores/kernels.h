@@ -141,12 +141,12 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 
 		// Stream multiple C tiles to shared memory.
 #pragma unroll
-		for (int i = 0; i < K; i++) {
-			typedef int4 copy_t;
+		// for (int i = 0; i < K; i++) {
+		// 	typedef int4 copy_t;
 
-			*((copy_t *)(shmem_warp_stream_ptr + SHMEM_STRIDE * i) + laneId) = 
-					*((copy_t *)(src_gmem_warp_stream_ptr + GLOBAL_MEM_STRIDE * i) + laneId);
-		}
+		// 	*((copy_t *)(shmem_warp_stream_ptr + SHMEM_STRIDE * i) + laneId) = 
+		// 			*((copy_t *)(src_gmem_warp_stream_ptr + GLOBAL_MEM_STRIDE * i) + laneId);
+		// }
 
 		__syncthreads();
 
@@ -201,7 +201,7 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 			shmem_idx += laneId / CHUNK_COPY_LINE_LANES;
 
 #pragma unroll
-			for(int i = 0; i < ((WARP_SIZE/2) / CHUNK_COPY_LINES_PER_WARP) * 2; i++) {
+			//for(int i = 0; i < ((WARP_SIZE/2) / CHUNK_COPY_LINES_PER_WARP) * 2; i++) {
 			// 	// Copy 16 bytes at once in each lane.
 			// 	*((int4*)&shmem[shmem_idx][0] + (laneId % CHUNK_COPY_LINE_LANES)) = *lane_ptr;
 
@@ -221,7 +221,7 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
  				wmma::fill_fragment(b[WARP_ROW_TILES], 2.0f);
 
 #pragma unroll
-				// for (int i = 0; i < WARP_COL_TILES; i++) 
+				 for (int i = 0; i < WARP_COL_TILES; i++) 
 				// 	size_t shmem_idx_a = (warpId/2) * M * 2 + (i * M);
 				// 	const half *tile_ptr = &shmem[shmem_idx_a][k_step * K];
 
@@ -240,11 +240,8 @@ for (int j = 0; j < WARP_ROW_TILES; j++) {
 
 	wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
 }
-				
-			}
-
-			__syncthreads();
-		}
+				}
+ 			}
 
 		// Store the D fragments to shared memory.
 #pragma unroll
