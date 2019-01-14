@@ -157,14 +157,14 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 
 		// Load the C matrix tiles into fragments from shared memory.
 #pragma unroll
-// 		for (int i = 0; i < WARP_COL_TILES; i++) {
-// #pragma unroll
-// 			for (int j = 0; j < WARP_ROW_TILES; j++) {
-// 				const float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+		for (int i = 0; i < WARP_COL_TILES; i++) {
+#pragma unroll
+			for (int j = 0; j < WARP_ROW_TILES; j++) {
+				const float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
-// 				wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
-// 			}
-// 		}
+				wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
+			}
+		}
 
 		__syncthreads();
 
