@@ -236,7 +236,7 @@ for (int j = 0; j < WARP_ROW_TILES; j++) {
 	// 	const half *tile_ptr = &shmem[shmem_idx_b][k_step * K];
 
 	// 	wmma::load_matrix_sync(b[j], tile_ptr, K * CHUNK_K + SKEW_HALF);
-	 }
+	//}
 
 	wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
 }
