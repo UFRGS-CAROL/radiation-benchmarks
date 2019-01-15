@@ -234,7 +234,7 @@ bool badass_memcmp(real_t *gold, real_t *found, unsigned long n) {
 
 void usage() {
 	printf(
-			"Usage: slud -size=N [-generate] [-input=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+			"Usage: lud -size=N [-generate] [-input=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
 template<typename real_t>
