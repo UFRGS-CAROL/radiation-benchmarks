@@ -534,7 +534,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	printf("CUDA %s LUD\n", PRECISION_STR);
-	test_lud_radiation<PRECISION>(matrixSize, verbose, generate, k, fault_injection,
+	test_lud_radiation<REAL_T>(matrixSize, verbose, generate, k, fault_injection,
 				iterations, device_warmup, input_matrix_path, gold_matrix_path);
 
 	return 0;

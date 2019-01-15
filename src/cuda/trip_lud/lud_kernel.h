@@ -10,12 +10,19 @@
 
 #include <cuda.h>
 
-#if PRECISION == float
-#define PRECISION_STR  "Float"
-#elif PRECISION == double
-#define PRECISION_STR  "Double"
-#else
+#if PRECISION == 16
+#define REAL_T half
 #define PRECISION_STR "Half"
+#endif
+
+#if PRECISION == 32
+#define REAL_T float
+#define PRECISION_STR "Float"
+#endif
+
+#if PRECISION == 64
+#define REAL_T double
+#define PRECISION_STR "Double"
 #endif
 
 template<typename real_t>

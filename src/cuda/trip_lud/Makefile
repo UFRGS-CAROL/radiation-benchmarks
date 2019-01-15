@@ -8,13 +8,7 @@ SAFE_MALLOC?=0
 DEF_INPUT?=/tmp/testmat
 DEF_GOLD?=/tmp/goldtest
 
-# Default vars
-NVCC_FLAGS= $(ARCH) -O3 -std=c++11 -DPRECISION=$(PRECISION)
-INCLUDE= -I/usr/local/cuda/include
-LIBRARY= -L/usr/local/cuda/lib64/
-CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11 -DPRECISION=$(PRECISION) 
-LOGHELPER_INC=../../include/
-LOGHELPER_LIB=../../include/
+
 
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
@@ -33,10 +27,33 @@ ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 endif
 
+# Default vars
+INCLUDE= -I/usr/local/cuda/include
+LIBRARY= -L/usr/local/cuda/lib64/
+CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
+LOGHELPER_INC=../../include/
+LOGHELPER_LIB=../../include/
+NVCCFLAGS+= $(ARCH)
+
+ifeq ($(PRECISION), float)
+NVCCFLAGS+= -DPRECISION=32
+CXXFLAGS+= -DPRECISION=32
+endif
+
+ifeq ($(PRECISION), double)
+NVCCFLAGS+= -DPRECISION=64
+CXXFLAGS+= -DPRECISION=64
+endif
+
+ifeq ($(PRECISION), half)
+NVCCFLAGS+= -DPRECISION=16
+CXXFLAGS+= -DPRECISION=16
+endif
+
 
 ifeq ($(LOGS), 1)
 INCLUDE+= -I$(LOGHELPER_INC)
-NVCC_FLAGS+= -DLOGS -lLogHelper 
+NVCCFLAGS+= -DLOGS -lLogHelper 
 LIBRARY+= -L$(LOGHELPER_LIB) 
 CXXFLAGS+= -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -DLOGS -lLogHelper 
 endif
@@ -51,7 +68,7 @@ CXXFLAGS+= -g
 endif
 
 ifeq ($(SAFE_MALLOC), 1)
-NVCC_FLAGS+= -I../../include/safe_memory -DSAFE_MALLOC -lSafeMemory 
+NVCCFLAGS+= -I../../include/safe_memory -DSAFE_MALLOC -lSafeMemory 
 LIBRARY+= -L../../include/safe_memory
 endif
 
