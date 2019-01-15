@@ -330,7 +330,7 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 #endif
 		//================== Device computation, HMxM
 		lud_cuda_float(d_INPUT, k);
-
+		printf("Passou\n");
 		checkCudaErrors(cudaPeekAtLastError());
 
 		checkCudaErrors(cudaDeviceSynchronize());
