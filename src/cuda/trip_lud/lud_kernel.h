@@ -9,8 +9,7 @@
 #define LUD_KERNEL_H_
 
 #include <cuda.h>
-
-void lud_cuda(float *m, int matrix_dim);
+void lud_cuda_float(float *m, int matrix_dim);
 
 #define max(a,b) \
    ({ __typeof__ (a) _a = (a); \
@@ -21,5 +20,6 @@ void lud_cuda(float *m, int matrix_dim);
    ({ __typeof__ (a) _a = (a); \
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
+
 
 #endif /* LUD_KERNEL_H_ */

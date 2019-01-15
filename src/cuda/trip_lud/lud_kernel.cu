@@ -12,9 +12,10 @@
 #define BLOCK_SIZE 16
 #endif
 
-__global__ void lud_diagonal(float *m, int matrix_dim, int offset) {
+template<typename real_t>
+__global__ void lud_diagonal(real_t *m, int matrix_dim, int offset) {
 	int i, j;
-	__shared__ float shadow[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ real_t shadow[BLOCK_SIZE][BLOCK_SIZE];
 
 	int array_offset = offset * matrix_dim + offset;
 	for (i = 0; i < BLOCK_SIZE; i++) {
@@ -53,10 +54,11 @@ __global__ void lud_diagonal(float *m, int matrix_dim, int offset) {
 	}
 }
 
-__global__ void lud_perimeter(float *m, int matrix_dim, int offset) {
-	__shared__ float dia[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ float peri_row[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ float peri_col[BLOCK_SIZE][BLOCK_SIZE];
+template<typename real_t>
+__global__ void lud_perimeter(real_t *m, int matrix_dim, int offset) {
+	__shared__ real_t dia[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ real_t peri_row[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ real_t peri_col[BLOCK_SIZE][BLOCK_SIZE];
 
 	int i, j, array_offset;
 	int idx;
@@ -165,9 +167,10 @@ __global__ void lud_perimeter(float *m, int matrix_dim, int offset) {
 
 }
 
-__global__ void lud_internal(float *m, int matrix_dim, int offset) {
-	__shared__ float peri_row[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ float peri_col[BLOCK_SIZE][BLOCK_SIZE];
+template<typename real_t>
+__global__ void lud_internal(real_t *m, int matrix_dim, int offset) {
+	__shared__ real_t peri_row[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ real_t peri_col[BLOCK_SIZE][BLOCK_SIZE];
 
 	int i;
 	float sum;
@@ -190,20 +193,37 @@ __global__ void lud_internal(float *m, int matrix_dim, int offset) {
 
 }
 
-void lud_cuda(float *m, int matrix_dim) {
+template<typename real_t>
+void lud_cuda(real_t *m, int matrix_dim) {
 	int i = 0;
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-	float *m_debug = (float*) malloc(
-			matrix_dim * matrix_dim * sizeof(float));
+	real_t *m_debug = (real_t*) malloc(
+			matrix_dim * matrix_dim * sizeof(real_t));
+
 	for (i = 0; i < matrix_dim - BLOCK_SIZE; i += BLOCK_SIZE) {
-		lud_diagonal<<<1, BLOCK_SIZE>>>(m, matrix_dim, i);
-		lud_perimeter<<<(matrix_dim - i) / BLOCK_SIZE - 1, BLOCK_SIZE * 2>>>(m,
+		lud_diagonal<real_t> <<<1, BLOCK_SIZE>>>(m, matrix_dim, i);
+
+		lud_perimeter<real_t> <<<(matrix_dim - i) / BLOCK_SIZE - 1, BLOCK_SIZE * 2>>>(m,
 				matrix_dim, i);
+
 		dim3 dimGrid((matrix_dim - i) / BLOCK_SIZE - 1,
 				(matrix_dim - i) / BLOCK_SIZE - 1);
-		lud_internal<<<dimGrid, dimBlock>>>(m, matrix_dim, i);
+
+		lud_internal<real_t> <<<dimGrid, dimBlock>>>(m, matrix_dim, i);
 	}
-	lud_diagonal<<<1, BLOCK_SIZE>>>(m, matrix_dim, i);
+	lud_diagonal<real_t> <<<1, BLOCK_SIZE>>>(m, matrix_dim, i);
 	cudaDeviceSynchronize();
 }
 
+
+void lud_cuda_float(float *m, int matrix_dim){
+	lud_cuda<float>(m, matrix_dim);
+}
+
+void lud_cuda_double(double *m, int matrix_dim){
+	lud_cuda<double>(m, matrix_dim);
+}
+//
+//void lud_cuda_half(half *m, int matrix_dim){
+//	lud_cuda<half>(m, matrix_dim);
+//}
