@@ -79,33 +79,6 @@ double mysecond() {
 }
 
 template<typename real_t>
-void alloc_cuda_memory(real_t *d_INPUT, real_t *d_OUTPUT, int matrixSize,
-		int generate) {
-//================== CUDA error handlers
-	cudaError_t malloc;
-	const char *erro;
-//====================================
-	malloc = cudaMalloc((void**) &d_INPUT, matrixSize * sizeof(real_t));
-	erro = cudaGetErrorString(malloc);
-	if (strcmp(erro, "no error") != 0) {
-#ifdef LOGS
-		if (!generate) log_error_detail(const_cast<char*>("error input")); end_log_file();
-#endif
-		exit(EXIT_FAILURE);
-	} //mem allocate failure
-
-	malloc = cudaMalloc((void**) &d_OUTPUT, matrixSize * sizeof(real_t));
-	erro = cudaGetErrorString(malloc);
-	if (strcmp(erro, "no error") != 0) {
-#ifdef LOGS
-		if (!generate) log_error_detail(const_cast<char*>("error output")); end_log_file();
-#endif
-		exit(EXIT_FAILURE);
-	} //mem allocate failure
-	printf("DENTRO %p %p\n", d_INPUT, d_OUTPUT);
-}
-
-template<typename real_t>
 void copy_cuda_memory(real_t *d_OUTPUT, real_t *d_INPUT, real_t *INPUT,
 		int matrixSize, int generate) {
 //================== CUDA error handlers
@@ -274,7 +247,6 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 
 	//================== CUDA error handlers
 	cudaError_t mcpy;
-	const char* erro;
 	int i, j, loop2;
 	//====================================
 	//================== Alloc HOST memory
@@ -308,7 +280,22 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 	//================== Init DEVICE memory
 	float* d_INPUT;
 	float* d_OUTPUT;
-	alloc_cuda_memory<float>(d_INPUT, d_OUTPUT, matrixSize, generate);
+	const char *erro = cudaGetErrorString(
+			cudaMalloc((void**) &d_INPUT, matrixSize * sizeof(float)));
+	if (strcmp(erro, "no error") != 0) {
+#ifdef LOGS
+		if (!generate) log_error_detail(const_cast<char*>("error input")); end_log_file();
+#endif
+		exit(EXIT_FAILURE);
+	}
+	erro = cudaGetErrorString(cudaMalloc((void**) &d_OUTPUT, matrixSize * sizeof(float)));
+	if (strcmp(erro, "no error") != 0) {
+#ifdef LOGS
+		if (!generate) log_error_detail(const_cast<char*>("error output")); end_log_file();
+#endif
+		exit(EXIT_FAILURE);
+	} //mem allocate failure
+
 	printf("Pointers %p %p\n", d_INPUT, d_OUTPUT);
 
 	copy_cuda_memory<float>(d_OUTPUT, d_INPUT, INPUT, matrixSize, generate);
@@ -338,10 +325,10 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		//================== Device computation, HMxM
 		lud_cuda_float(d_INPUT, k);
 		printf("Passou\n");
-		checkCudaErrors(cudaPeekAtLastError());
+		checkCudaErrors (cudaPeekAtLastError());
 
-		checkCudaErrors(cudaDeviceSynchronize());
-		checkCudaErrors(cudaPeekAtLastError());
+checkCudaErrors		(cudaDeviceSynchronize());checkCudaErrors
+		(cudaPeekAtLastError());
 		//====================================
 #ifdef LOGS
 		if (loop2 || !device_warmup)
@@ -404,16 +391,10 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 					}
 				}
 				if (host_errors != 0) {
-					//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
-					//				cudaFree(d_INPUT);
-					//				cudaFree(d_OUTPUT);
-					//====================================
+					//================== To ensure there is no corrupted data on the inputs of the next iteration
 					read_matrix_from_file(INPUT, GOLD, input_matrix_path,
 							gold_matrix_path, verbose, generate, k,
 							fault_injection);
-					//================== Init DEVICE memory
-					//				allocCudaMemory();
-					//				copyCudaMemory();
 					copy_cuda_memory(d_OUTPUT, d_INPUT, INPUT, matrixSize,
 							generate);
 				}
@@ -538,7 +519,7 @@ int main(int argc, char* argv[]) {
 	if (checkCmdLineFlag(argc, (const char **) argv, "debug")) {
 		fault_injection = 1;
 		printf("!! Will be injected an input error\n");
-	}else{
+	} else {
 		fault_injection = 0;
 	}
 
@@ -565,12 +546,12 @@ int main(int argc, char* argv[]) {
 		precision = std::string(tmp_precision);
 	}
 
-	if (precision == "float"){
+	if (precision == "float") {
 		test_lud_radiation(matrixSize, verbose, generate, k, fault_injection,
-			iterations, device_warmup, input_matrix_path, gold_matrix_path);
-	}else if (precision == "double"){
+				iterations, device_warmup, input_matrix_path, gold_matrix_path);
+	} else if (precision == "double") {
 		//TODO: DOUBLE
-	}else{
+	} else {
 		//TODO: HALF
 	}
 
