@@ -234,7 +234,7 @@ bool badass_memcmp(real_t *gold, real_t *found, unsigned long n) {
 
 void usage() {
 	printf(
-			"Usage: slud -size=N [-generate] [-input=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
+			"Usage: lud -size=N [-generate] [-input=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
 template<typename real_t>
@@ -273,8 +273,9 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 
 #ifdef LOGS
 	char test_info[90];
-	snprintf(test_info, 90, "size:%d type:single-precision", k);
-	if (!generate) start_log_file(const_cast<char*>("cudaSLUD"), test_info);
+	snprintf(test_info, 90, "size:%d type:%s-precision", k, PRECISION_STR);
+	std::string benchmark = std::string("cuda") + PRECISION_STR + "LUD";
+	if (!generate) start_log_file(const_cast<char*>(benchmark.c_str()), test_info);
 #endif
 
 	//================== Init DEVICE memory
