@@ -9,10 +9,10 @@ DEF_INPUT?=/tmp/testmat
 DEF_GOLD?=/tmp/goldtest
 
 # Default vars
-NVCC_FLAGS= $(ARCH) -O3 -std=c++11
+NVCC_FLAGS= $(ARCH) -O3 -std=c++11 -DPRECISION=$(PRECISION)
 INCLUDE= -I/usr/local/cuda/include
 LIBRARY= -L/usr/local/cuda/lib64/
-CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11 
+CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11 -DPRECISION=$(PRECISION) 
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 

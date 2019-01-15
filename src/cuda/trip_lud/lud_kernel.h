@@ -9,7 +9,17 @@
 #define LUD_KERNEL_H_
 
 #include <cuda.h>
-void lud_cuda_float(float *m, int matrix_dim);
+
+#if PRECISION == float
+#define PRECISION_STR  "Float"
+#elif PRECISION == double
+#define PRECISION_STR  "Double"
+#else
+#define PRECISION_STR "Half"
+#endif
+
+template<typename real_t>
+void lud_cuda(real_t *m, int matrix_dim);
 
 #define max(a,b) \
    ({ __typeof__ (a) _a = (a); \
