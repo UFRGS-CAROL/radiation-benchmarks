@@ -166,7 +166,7 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 			}
 		}
 
-		wmma::fill_fragment(c[WARP_COL_TILES][WARP_ROW_TILES], 2.0f);
+		//wmma::fill_fragment(c[WARP_COL_TILES][WARP_ROW_TILES], 2.0f);
 		
 		__syncthreads();
 
