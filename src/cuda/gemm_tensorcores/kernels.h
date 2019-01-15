@@ -202,7 +202,7 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 			// Shift the second half of the warp to the next row / column in the shared memory.
 			shmem_idx += laneId / CHUNK_COPY_LINE_LANES;
 
-#pragma unroll
+//#pragma unroll
 			//for(int i = 0; i < ((WARP_SIZE/2) / CHUNK_COPY_LINES_PER_WARP) * 2; i++) {
 			// 	// Copy 16 bytes at once in each lane.
 			// 	*((int4*)&shmem[shmem_idx][0] + (laneId % CHUNK_COPY_LINE_LANES)) = *lane_ptr;
@@ -224,21 +224,21 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 
 #pragma unroll
 				 for (int i = 0; i < WARP_COL_TILES; i++) 
-				// 	size_t shmem_idx_a = (warpId/2) * M * 2 + (i * M);
-				// 	const half *tile_ptr = &shmem[shmem_idx_a][k_step * K];
+					size_t shmem_idx_a = (warpId/2) * M * 2 + (i * M);
+					const half *tile_ptr = &shmem[shmem_idx_a][k_step * K];
 
-				// 	wmma::load_matrix_sync(a[i], tile_ptr, K * CHUNK_K + SKEW_HALF);
+					wmma::load_matrix_sync(a[i], tile_ptr, K * CHUNK_K + SKEW_HALF);
 
 #pragma unroll
 for (int j = 0; j < WARP_ROW_TILES; j++) {
-	// if (i == 0) {
-	// 	// Load the B matrix fragment once, because it is going to be reused
-	// 	// against the other A matrix fragments.
-	// 	size_t shmem_idx_b = shmem_idx_b_off + (WARP_ROW_TILES * N) * (warpId%2) + (j * N);
-	// 	const half *tile_ptr = &shmem[shmem_idx_b][k_step * K];
+	if (i == 0) {
+		// Load the B matrix fragment once, because it is going to be reused
+		// against the other A matrix fragments.
+		size_t shmem_idx_b = shmem_idx_b_off + (WARP_ROW_TILES * N) * (warpId%2) + (j * N);
+		const half *tile_ptr = &shmem[shmem_idx_b][k_step * K];
 
-	// 	wmma::load_matrix_sync(b[j], tile_ptr, K * CHUNK_K + SKEW_HALF);
-	//}
+		wmma::load_matrix_sync(b[j], tile_ptr, K * CHUNK_K + SKEW_HALF);
+	}
 
 	wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
 }
