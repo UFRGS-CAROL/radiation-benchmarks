@@ -308,9 +308,14 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 	float* d_INPUT;
 	float* d_OUTPUT;
 	alloc_cuda_memory<float>(d_INPUT, d_OUTPUT, matrixSize, generate);
+	printf("Passou5\n");
+
 	copy_cuda_memory<float>(d_OUTPUT, d_INPUT, INPUT, matrixSize, generate);
+	printf("Passou3\n");
+
 	//====================================
 	for (loop2 = 0; loop2 < iterations; loop2++) { //================== Global test loop
+		printf("Passou44\n");
 
 		if (!loop2 && device_warmup)
 			printf("First iteration: device warmup. Please wait...\n");
@@ -319,6 +324,7 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		global_time = mysecond();
 
 		cudaMemset(d_OUTPUT, 0, matrixSize * sizeof(float));
+		printf("Passou2\n");
 
 		if (verbose)
 			printf(",");
