@@ -102,6 +102,7 @@ void alloc_cuda_memory(real_t *d_INPUT, real_t *d_OUTPUT, int matrixSize,
 #endif
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
+	printf("DENTRO %p %p\n", d_INPUT, d_OUTPUT);
 }
 
 template<typename real_t>
@@ -308,7 +309,7 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 	float* d_INPUT;
 	float* d_OUTPUT;
 	alloc_cuda_memory<float>(d_INPUT, d_OUTPUT, matrixSize, generate);
-	printf("Passou5\n");
+	printf("Pointers %p %p\n", d_INPUT, d_OUTPUT);
 
 	copy_cuda_memory<float>(d_OUTPUT, d_INPUT, INPUT, matrixSize, generate);
 	printf("Passou3\n");
