@@ -184,15 +184,15 @@ void read_matrix_from_file(real_t *INPUT, real_t *GOLD, char *input_matrix_path,
 		int fault_injection) {
 //================== Read inputs to HOST memory
 	int i;
-	FILE *f_INPUT;
+
 	if (verbose)
-		printf("Reading matrices... ");
+		printf("Reading matrices...");
 	double time = mysecond();
-	f_INPUT = fopen(input_matrix_path, "rb");
-	if (generate && !f_INPUT) {
+
+	if (generate) {
 		generate_input_matrix<real_t>(INPUT, input_matrix_path);
 	}
-	f_INPUT = fopen(input_matrix_path, "rb");
+	FILE *f_INPUT = fopen(input_matrix_path, "rb");
 
 	if (f_INPUT) {
 		// open input successful
@@ -281,7 +281,7 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 	float* OUTPUT = (float*) (malloc(matrixSize * sizeof(float)));
 
 	float* GOLD = (float*) (malloc(matrixSize * sizeof(float)));
-	if (!(INPUT && GOLD)) {
+	if (!(INPUT && GOLD && OUTPUT)) {
 		printf("Failed on host malloc.\n");
 		exit(-3);
 	}
@@ -531,6 +531,8 @@ int main(int argc, char* argv[]) {
 	if (checkCmdLineFlag(argc, (const char **) argv, "debug")) {
 		fault_injection = 1;
 		printf("!! Will be injected an input error\n");
+	}else{
+		fault_injection = 0;
 	}
 
 	if (checkCmdLineFlag(argc, (const char **) argv, "no-warmup")) {
