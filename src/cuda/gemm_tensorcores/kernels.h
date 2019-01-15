@@ -219,8 +219,8 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 			for (int k_step = 0; k_step < CHUNK_K; k_step++) {
 				wmma::fragment<wmma::matrix_a, M, N, K, half, wmma::row_major> a[WARP_COL_TILES];
 				wmma::fragment<wmma::matrix_b, M, N, K, half, wmma::col_major> b[WARP_ROW_TILES];
-				wmma::fill_fragment(a[WARP_COL_TILES], 2.0f);
- 				wmma::fill_fragment(b[WARP_ROW_TILES], 2.0f);
+				wmma::fill_fragment(a[WARP_COL_TILES], 6.0f);
+ 				wmma::fill_fragment(b[WARP_ROW_TILES], 6.0f);
 #pragma unroll
 				for (int i = 0; i < WARP_COL_TILES; i++) {
 					size_t shmem_idx_a = (warpId/2) * M * 2 + (i * M);
