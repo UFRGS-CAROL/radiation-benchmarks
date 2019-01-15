@@ -263,12 +263,14 @@ void usage() {
 			"Usage: slud -size=N [-generate] [-input=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
-void test_lud_radiation(int matrixSize, double total_kernel_time,
-		double min_kernel_time, double max_kernel_time, int verbose,
-		int generate, int k, int fault_injection, int iterations,
-		int device_warmup, double global_time, double kernel_time, double time,
+void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
+		int fault_injection, int iterations, int device_warmup,
 		char* input_matrix_path, char* gold_matrix_path) {
 	//====================================
+	double time;
+	double kernel_time, global_time;
+	double total_kernel_time, min_kernel_time, max_kernel_time;
+
 	//================== CUDA error handlers
 	cudaError_t mcpy;
 	const char* erro;
@@ -394,7 +396,7 @@ void test_lud_radiation(int matrixSize, double total_kernel_time,
 						}
 					}
 				}
-				if (host_errors != 0){
+				if (host_errors != 0) {
 					//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
 					//				cudaFree(d_INPUT);
 					//				cudaFree(d_OUTPUT);
@@ -473,9 +475,6 @@ void test_lud_radiation(int matrixSize, double total_kernel_time,
 
 int main(int argc, char* argv[]) {
 //================== Test vars
-	double time;
-	double kernel_time, global_time;
-	double total_kernel_time, min_kernel_time, max_kernel_time;
 	int device_warmup = 1;
 	std::string precision = "float";
 
@@ -557,11 +556,8 @@ int main(int argc, char* argv[]) {
 		precision = std::string(tmp_precision);
 	}
 
-
-	test_lud_radiation(matrixSize, total_kernel_time, min_kernel_time,
-			max_kernel_time, verbose, generate, k, fault_injection, iterations,
-			device_warmup, global_time, kernel_time, time, input_matrix_path,
-			gold_matrix_path);
+	test_lud_radiation(matrixSize, verbose, generate, k, fault_injection,
+			iterations, device_warmup, input_matrix_path, gold_matrix_path);
 
 	return 0;
 }
