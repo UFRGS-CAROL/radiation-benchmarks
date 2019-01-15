@@ -223,12 +223,12 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
  				wmma::fill_fragment(b[WARP_ROW_TILES], 2.0f);
 
 #pragma unroll
-				 for (int i = 0; i < WARP_COL_TILES; i++) 
+				 for (int i = 0; i < WARP_COL_TILES; i++){ 
 					size_t shmem_idx_a = (warpId/2) * M * 2 + (i * M);
 					const half *tile_ptr = &shmem[shmem_idx_a][k_step * K];
 
 					wmma::load_matrix_sync(a[i], tile_ptr, K * CHUNK_K + SKEW_HALF);
-
+				}
 #pragma unroll
 for (int j = 0; j < WARP_ROW_TILES; j++) {
 	if (i == 0) {
