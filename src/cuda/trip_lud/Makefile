@@ -47,6 +47,7 @@ endif
 
 ifeq ($(DEBUG), 1)
 NVCC_FLAGS+= -g -G
+CXX_FLAGS+= -g
 endif
 
 ifeq ($(SAFE_MALLOC), 1)
@@ -69,13 +70,13 @@ EXEC=$(PRECISION)_trip_lud
 all: mkdir $(EXEC)
 
 $(EXEC): $(OBJS) 
-	$(CXX) $(COMMON)  $^ -o $@ $(LDFLAGS) $(CXXFLAGS)
+	$(CXX)  $^ -o $@ $(LDFLAGS) $(CXXFLAGS)
 
 $(OBJDIR)%.o: %.cpp
-	$(CXX) $(COMMON)  $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJDIR)%.o: %.cu 
-	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CXXFLAGS)" -c $< -o $@
+	$(NVCC) $(ARCH) $(NVCCFLAGS) --compiler-options "$(CXXFLAGS)" -c $< -o $@
 
 generate: 
 	./$(EXEC) -size=$(DEF_SIZE) -generate -input=$(DEF_INPUT) -gold=$(DEF_GOLD)
