@@ -228,7 +228,7 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 					const half *tile_ptr = &shmem[shmem_idx_a][k_step * K];
 
 					wmma::load_matrix_sync(a[i], tile_ptr, K * CHUNK_K + SKEW_HALF);
-				}
+				
 #pragma unroll
 for (int j = 0; j < WARP_ROW_TILES; j++) {
 	if (i == 0) {
