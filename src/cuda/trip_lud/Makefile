@@ -77,11 +77,11 @@ $(OBJDIR)%.o: %.cpp
 $(OBJDIR)%.o: %.cu 
 	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CXXFLAGS)" -c $< -o $@
 
-generate: $(GEN_EXEC)
-	$(RUN_EXEC) -size=$(DEF_SIZE) -generate -input=$(DEF_INPUT) -gold=$(DEF_GOLD)
+generate: 
+	./$(EXEC) -size=$(DEF_SIZE) -generate -input=$(DEF_INPUT) -gold=$(DEF_GOLD)
 
-test: $(RUN_EXEC) generate
-	$(RUN_EXEC) -size=$(DEF_SIZE) -input=$(DEF_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
+test: $(EXEC) generate
+	./$(EXEC) -size=$(DEF_SIZE) -input=$(DEF_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
 	
 mkdir:
 	mkdir -p ./obj

@@ -556,8 +556,14 @@ int main(int argc, char* argv[]) {
 		precision = std::string(tmp_precision);
 	}
 
-	test_lud_radiation(matrixSize, verbose, generate, k, fault_injection,
+	if (precision == "float"){
+		test_lud_radiation(matrixSize, verbose, generate, k, fault_injection,
 			iterations, device_warmup, input_matrix_path, gold_matrix_path);
+	}else if (precision == "double"){
+		//TODO: DOUBLE
+	}else{
+		//TODO: HALF
+	}
 
 	return 0;
 }
