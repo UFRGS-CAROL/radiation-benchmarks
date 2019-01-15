@@ -214,21 +214,20 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 
 			__syncthreads();
 
-			// Compute a grid of C matrix tiles in each warp.
+/ 			// Compute a grid of C matrix tiles in each warp.
 #pragma unroll
 			for (int k_step = 0; k_step < CHUNK_K; k_step++) {
 				wmma::fragment<wmma::matrix_a, M, N, K, half, wmma::row_major> a[WARP_COL_TILES];
 				wmma::fragment<wmma::matrix_b, M, N, K, half, wmma::col_major> b[WARP_ROW_TILES];
 				wmma::fill_fragment(a[WARP_COL_TILES], 2.0f);
  				wmma::fill_fragment(b[WARP_ROW_TILES], 2.0f);
-
 #pragma unroll
-				 for (int i = 0; i < WARP_COL_TILES; i++){ 
+				for (int i = 0; i < WARP_COL_TILES; i++) {
 					size_t shmem_idx_a = (warpId/2) * M * 2 + (i * M);
 					const half *tile_ptr = &shmem[shmem_idx_a][k_step * K];
 
 					wmma::load_matrix_sync(a[i], tile_ptr, K * CHUNK_K + SKEW_HALF);
-				
+
 #pragma unroll
 for (int j = 0; j < WARP_ROW_TILES; j++) {
 	if (i == 0) {
@@ -243,7 +242,10 @@ for (int j = 0; j < WARP_ROW_TILES; j++) {
 	wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
 }
 				}
- 			}
+			}
+
+			__syncthreads();
+		}
 
 		// Store the D fragments to shared memory.
 #pragma unroll
@@ -276,7 +278,6 @@ for (int j = 0; j < WARP_ROW_TILES; j++) {
 		__syncthreads();
 	}
 }
-
 
 
 
