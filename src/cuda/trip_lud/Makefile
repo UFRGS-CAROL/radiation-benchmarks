@@ -12,7 +12,7 @@ DEF_GOLD?=/tmp/goldtest
 NVCC_FLAGS= $(ARCH) -O3 -std=c++11
 INCLUDE= -I/usr/local/cuda/include
 LIBRARY= -L/usr/local/cuda/lib64/
-CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11 -fopenmp
+CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11 
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
@@ -42,12 +42,12 @@ CXXFLAGS+= -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -DLOGS -lLogHelper
 endif
 
 ifeq ($(USE_OMP), 1)
-NVCC_FLAGS+= -DUSE_OMP -Xcompiler " -fopenmp -O3"
+CXXFLAGS+= -DUSE_OMP -fopenmp
 endif
 
 ifeq ($(DEBUG), 1)
-NVCC_FLAGS+= -g -G
-CXX_FLAGS+= -g
+NVCCFLAGS+= -g -G
+CXXFLAGS+= -g
 endif
 
 ifeq ($(SAFE_MALLOC), 1)
@@ -57,7 +57,6 @@ endif
 
 ifeq ($(LOGS), 1)
 INCLUDE+= -I$(LOGHELPER_INC)
-NVCC_FLAGS+= -DLOGS -lLogHelper 
 LIBRARY+= -L$(LOGHELPER_LIB) 
 CXXFLAGS+= -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -DLOGS -lLogHelper 
 endif
