@@ -25,6 +25,17 @@
 #define PRECISION_STR "Double"
 #endif
 
+#ifdef RD_WG_SIZE_0_0
+#define BLOCK_SIZE RD_WG_SIZE_0_0
+#elif defined(RD_WG_SIZE_0)
+#define BLOCK_SIZE RD_WG_SIZE_0
+#elif defined(RD_WG_SIZE)
+#define BLOCK_SIZE RD_WG_SIZE
+#else
+#define BLOCK_SIZE 32
+#endif
+
+
 template<typename real_t>
 void lud_cuda(real_t *m, int matrix_dim);
 
