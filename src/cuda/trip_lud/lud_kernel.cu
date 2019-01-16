@@ -1,16 +1,12 @@
 #include <stdio.h>
 
 #include "lud_kernel.h"
+#include "lud_half_kernel.h"
 
-#ifdef RD_WG_SIZE_0_0
-#define BLOCK_SIZE RD_WG_SIZE_0_0
-#elif defined(RD_WG_SIZE_0)
-#define BLOCK_SIZE RD_WG_SIZE_0
-#elif defined(RD_WG_SIZE)
-#define BLOCK_SIZE RD_WG_SIZE
-#else
-#define BLOCK_SIZE 16
-#endif
+/**
+ * For float and double precision
+ * for half precision see lud_half_kernel.h
+ */
 
 template<typename real_t>
 __global__ void lud_diagonal(real_t *m, int matrix_dim, int offset) {

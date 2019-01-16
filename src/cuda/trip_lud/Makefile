@@ -33,7 +33,7 @@ LIBRARY= -L/usr/local/cuda/lib64/
 CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
-NVCCFLAGS+= $(ARCH)
+NVCCFLAGS+= $(ARCH) -std=c++11
 
 ifeq ($(PRECISION), float)
 NVCCFLAGS+= -DPRECISION=32
