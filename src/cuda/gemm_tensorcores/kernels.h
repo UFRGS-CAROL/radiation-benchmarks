@@ -221,7 +221,7 @@ __global__ void compute_gemm(real_t *D, float alpha, float beta)
 				wmma::fragment<wmma::matrix_b, M, N, K, half, wmma::col_major> b[WARP_ROW_TILES];
 				wmma::fill_fragment(a[WARP_COL_TILES], 2.0f);
  				wmma::fill_fragment(b[WARP_ROW_TILES], 2.0f);
- 				printf(a);
+ 				printf(a.x[k]);
  				//printf("frag B=  %f \n",b.x[0]);
 
 #pragma unroll
