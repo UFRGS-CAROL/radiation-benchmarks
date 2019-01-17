@@ -381,8 +381,6 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 							if (!generate) log_error_detail(error_detail);
 #endif
 							host_errors++;
-							//ea++;
-							//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
 
 						}
 					}
@@ -397,7 +395,6 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 
 				}
 				//====================================
-				// printf("numErrors:%d", host_errors);
 
 #ifdef LOGS
 				if (!generate) log_error_count(host_errors);
