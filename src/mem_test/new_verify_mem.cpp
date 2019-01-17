@@ -18,6 +18,8 @@
 #endif
 //************************************************************************//
 
+char time_now[200] = "";
+
 // Debug params: -s 104857600 -e 2 -i 5 -w 2 
 // Params ------------------------------------------------------------------
 struct Params {
@@ -33,7 +35,7 @@ struct Params {
         mem_size    =  3758096384; // 3,5 GB
         external_it =  100;
         internal_it =   50;
-        verbose     =    1;
+        verbose     =    0;
         wait_time   =    0;             
         int opt;
         while((opt = getopt(argc, argv, "hs:e:i:v:w:")) >= 0) {
@@ -90,6 +92,10 @@ void show_time(){
     snprintf(minute, sizeof(minute), "%02d", ptm->tm_min);
     snprintf(second, sizeof(second), "%02d", ptm->tm_sec);
 
+    	
+	snprintf(time_now,sizeof(char)*200, "Y:%s M:%s D:%s Time:%s:%s:%s\n", year, month, day,
+			hour, minute, second);
+
     printf("Y:%s M:%s D:%s Time:%s:%s:%s\n", year, month, day,hour, minute, second);    
     
 }
@@ -108,6 +114,7 @@ int main(int argc, char **argv) {
     show_time();
     
 #ifdef LOGS
+    disable_double_error_kill(); // Disable Double Kill Error 
     set_iter_interval_print(1);
     char test_info[300];
     snprintf(test_info, 300, "-s %llu, -e %llu, -i %llu, -w %d, -v %d\n",p.mem_size,p.external_it,p.internal_it,p.wait_time,p.verbose);
@@ -149,7 +156,10 @@ int main(int argc, char **argv) {
     	for(k = 0; k< p.internal_it; k++){			
         #pragma omp parallel for reduction(+:contador) private(i) 
             for(i = 0 ; i< sys_mem; i++ ){
-                //vetor[5]=12;
+                if(p.verbose == 1){
+                    vetor[5]=12;                
+                }
+
 			    //printf("Vetor[%d]:%d\n",i,vetor[i]);
 			    if(vetor[i] != gold[0] ){
 			        error_time = (double) (get_time() - init_time) / 1000000;
@@ -164,11 +174,11 @@ int main(int argc, char **argv) {
 			    }
 		    }	
 		    printf("Contador -1: %llu\n",contador);
+		    update_timestamp();    
 	    }
 #ifdef LOGS
         log_error_count(contador);                
-#endif
-	    
+#endif	
         printf("***************Acabei com o 1111 *******************\n");
 
 #ifdef LOGS
@@ -203,15 +213,18 @@ int main(int argc, char **argv) {
 				    contador++;			
 			    }
 		    }
-		    printf("Contador 0:%llu\n",contador);		    	
+		    printf("Contador 0:%llu\n",contador);	
+		    update_timestamp();	    	
+	    }
 #ifdef LOGS
         log_error_count(contador);
 #endif
-	    }
 	    free(vetor);
 	}
+    show_time();
 #ifdef LOGS
+    log_info_detail(time_now);
     end_log_file();
 #endif	
-    show_time();
+
 }
