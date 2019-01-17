@@ -15,7 +15,6 @@
  * For float and double precision
  * for half precision see lud_half_kernel.h
  */
-
 __global__ void lud_diagonal(half *m, int matrix_dim, int offset) {
 	int i, j;
 	const int half_block_size = BLOCK_SIZE / 2;

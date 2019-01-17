@@ -362,8 +362,8 @@ checkCudaErrors		(cudaDeviceSynchronize());checkCudaErrors
 						if (OUTPUT[i + k * j] != GOLD[i + k * j])
 #pragma omp critical
 								{
-							double r = (OUTPUT[i + k * j]);
-							double g = (GOLD[i + k * j]);
+							double r = OUTPUT[i + k * j];
+							double g = GOLD[i + k * j];
 							snprintf(error_detail, 150,
 									"p: [%d, %d], r: %1.16e, e: %1.16e", i, j,
 									r, g);
@@ -526,15 +526,16 @@ int main(int argc, char* argv[]) {
 		precision = std::string(tmp_precision);
 	}
 
-	if (precision == "float") {
-		test_lud_radiation<float, float>(matrixSize, verbose, generate, k,
-				fault_injection, iterations, device_warmup, input_matrix_path,
-				gold_matrix_path, precision);
-	} else if (precision == "double") {
-		test_lud_radiation<double, double>(matrixSize, verbose, generate, k,
-				fault_injection, iterations, device_warmup, input_matrix_path,
-				gold_matrix_path, precision);
-	} else if (precision == "half") {
+//	if (precision == "float") {
+//		test_lud_radiation<float, float>(matrixSize, verbose, generate, k,
+//				fault_injection, iterations, device_warmup, input_matrix_path,
+//				gold_matrix_path, precision);
+//	} else if (precision == "double") {
+//		test_lud_radiation<double, double>(matrixSize, verbose, generate, k,
+//				fault_injection, iterations, device_warmup, input_matrix_path,
+//				gold_matrix_path, precision);
+//	} else
+		if (precision == "half") {
 		test_lud_radiation<half_float::half, half>(matrixSize, verbose,
 				generate, k, fault_injection, iterations, device_warmup,
 				input_matrix_path, gold_matrix_path, precision);
