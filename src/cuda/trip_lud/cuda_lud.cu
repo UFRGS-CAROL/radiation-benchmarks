@@ -72,15 +72,17 @@ template<typename real_t, typename real_t_device>
 void copy_cuda_memory(real_t_device *dev_mem, real_t *host_mem, int matrixSize,
 		int generate, bool from_gpu = false) {
 	const char *error;
-	if (from_gpu){
+	if (from_gpu) {
 		error = cudaGetErrorString(
-					cudaMemcpy(dev_mem, host_mem, matrixSize * sizeof(real_t_device),
-							cudaMemcpyHostToDevice));
+				cudaMemcpy(dev_mem, host_mem,
+						matrixSize * sizeof(real_t_device),
+						cudaMemcpyHostToDevice));
 
-	}else{
+	} else {
 		error = cudaGetErrorString(
-					cudaMemcpy(host_mem, dev_mem, matrixSize * sizeof(real_t_device),
-							cudaMemcpyDeviceToHost));
+				cudaMemcpy(host_mem, dev_mem,
+						matrixSize * sizeof(real_t_device),
+						cudaMemcpyDeviceToHost));
 
 	}
 
@@ -242,11 +244,6 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		int fault_injection, int iterations, int device_warmup,
 		char* input_matrix_path, char* gold_matrix_path, std::string precision,
 		bool dbg = false) {
-	//====================================
-	double time;
-	double kernel_time, global_time;
-	double total_kernel_time, min_kernel_time, max_kernel_time;
-
 	//================== Alloc HOST memory
 	real_t* INPUT = (real_t*) (malloc(matrixSize * sizeof(real_t)));
 	real_t* OUTPUT = (real_t*) (malloc(matrixSize * sizeof(real_t)));
@@ -258,10 +255,6 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 	}
 	//====================================
 	//================== Init test environment
-	// kernel_errors=0;
-	total_kernel_time = 0;
-	min_kernel_time = UINT_MAX;
-	max_kernel_time = 0;
 	get_device();
 	read_matrix_from_file<real_t>(INPUT, GOLD, input_matrix_path,
 			gold_matrix_path, verbose, generate, k, fault_injection);
@@ -295,8 +288,12 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
-
 	//====================================
+	double total_kernel_time = 0;
+	double min_kernel_time = UINT_MAX;
+	double max_kernel_time = 0;
+	double time, kernel_time, global_time;
+
 	for (int iteration = 0; iteration < iterations; iteration++) { //================== Global test loop
 
 		if (!iteration && device_warmup)
@@ -319,10 +316,11 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		//================== Device computation, HMxM
 		lud_cuda<real_t_device>(d_OUTPUT, k);
 
-		checkCudaErrors (cudaPeekAtLastError());
-
-checkCudaErrors		(cudaDeviceSynchronize());checkCudaErrors
-		(cudaPeekAtLastError());
+		checkCudaErrors(cudaPeekAtLastError());
+		//====================================
+		checkCudaErrors(cudaDeviceSynchronize());
+		//====================================
+		checkCudaErrors(cudaPeekAtLastError());
 
 		//====================================
 #ifdef LOGS
@@ -352,7 +350,7 @@ checkCudaErrors		(cudaDeviceSynchronize());checkCudaErrors
 		copy_cuda_memory(d_OUTPUT, OUTPUT, matrixSize, generate, true);
 
 		if (generate) {
-//			write_gold_file<float>(INPUT, gold_matrix_path, k);
+			debug(INPUT, k);
 			write_gold_file<real_t>(OUTPUT, gold_matrix_path, k);
 			if (dbg) {
 				debug(OUTPUT, k);
