@@ -8,7 +8,6 @@
 #ifndef LUD_HALF_KERNEL_H_
 #define LUD_HALF_KERNEL_H_
 
-#include <cuda_fp16.h>
 #include "lud_kernel.h"
 
 
@@ -19,19 +18,27 @@
 
 __global__ void lud_diagonal(half *m, int matrix_dim, int offset) {
 	int i, j;
-	__shared__ half shadow[BLOCK_SIZE][BLOCK_SIZE];
+	const int half_block_size = BLOCK_SIZE / 2;
+	__shared__ half2 shadow[half_block_size][half_block_size];
 
 	int array_offset = offset * matrix_dim + offset;
-	for (i = 0; i < BLOCK_SIZE; i++) {
-		shadow[i][threadIdx.x] = m[array_offset + threadIdx.x];
+
+
+	for (i = 0; i < BLOCK_SIZE; i+=2) {
+//		shadow[i][threadIdx.x] = m[array_offset + threadIdx.x];
+		shadow[i][threadIdx.x] =  __halves2half2(m[array_offset + threadIdx.x], m[array_offset + threadIdx.x + 1]);
+
 		array_offset += matrix_dim;
 	}
 	__syncthreads();
-	for (i = 0; i < BLOCK_SIZE - 1; i++) {
+
+
+	for (i = 0; i < half_block_size - 1; i++) {
 
 		if (threadIdx.x > i) {
-			for (j = 0; j < i; j++)
+			for (j = 0; j < i; j++){
 				shadow[threadIdx.x][i] -= shadow[threadIdx.x][j] * shadow[j][i];
+			}
 			shadow[threadIdx.x][i] /= shadow[i][i];
 		}
 
@@ -53,11 +60,12 @@ __global__ void lud_diagonal(half *m, int matrix_dim, int offset) {
 	 */
 	array_offset = (offset + 1) * matrix_dim + offset;
 	for (i = 1; i < BLOCK_SIZE; i++) {
-		m[array_offset + threadIdx.x] = shadow[i][threadIdx.x];
+		m[array_offset + threadIdx.x] =  __low2half(shadow[i][threadIdx.x]);
+		m[array_offset + threadIdx.x + 1] =  __high2half(shadow[i][threadIdx.x]);
+
 		array_offset += matrix_dim;
 	}
 }
-
 
 
 #endif /* LUD_HALF_KERNEL_H_ */

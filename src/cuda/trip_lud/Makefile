@@ -79,7 +79,7 @@ CXXFLAGS+= -I$(LOGHELPER_INC) -L$(LOGHELPER_LIB) -DLOGS -lLogHelper
 endif
 
 OBJDIR=./obj/
-OBJ=lud_kernel.o cuda_lud.o
+OBJ= cuda_lud.o
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 EXEC=$(PRECISION)_trip_lud
 
