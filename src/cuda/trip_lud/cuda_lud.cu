@@ -293,6 +293,7 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 	double min_kernel_time = UINT_MAX;
 	double max_kernel_time = 0;
 	double time, kernel_time, global_time;
+	debug(INPUT, k);
 
 	for (int iteration = 0; iteration < iterations; iteration++) { //================== Global test loop
 
@@ -350,7 +351,6 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		copy_cuda_memory(d_OUTPUT, OUTPUT, matrixSize, generate, true);
 
 		if (generate) {
-			debug(INPUT, k);
 			write_gold_file<real_t>(OUTPUT, gold_matrix_path, k);
 			if (dbg) {
 				debug(OUTPUT, k);
