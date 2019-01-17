@@ -74,15 +74,15 @@ void copy_cuda_memory(real_t_device *dev_mem, real_t *host_mem, int matrixSize,
 	const char *error;
 	if (from_gpu) {
 		error = cudaGetErrorString(
-				cudaMemcpy(dev_mem, host_mem,
-						matrixSize * sizeof(real_t_device),
-						cudaMemcpyHostToDevice));
-
-	} else {
-		error = cudaGetErrorString(
 				cudaMemcpy(host_mem, dev_mem,
 						matrixSize * sizeof(real_t_device),
 						cudaMemcpyDeviceToHost));
+
+	} else {
+		error = cudaGetErrorString(
+						cudaMemcpy(dev_mem, host_mem,
+								matrixSize * sizeof(real_t_device),
+								cudaMemcpyHostToDevice));
 
 	}
 
@@ -303,7 +303,6 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		// preserve the INPUT value
 		copy_cuda_memory<real_t, real_t_device>(d_OUTPUT, INPUT, matrixSize,
 				generate, false);
-		debug(INPUT, k);
 
 		// Timer...
 		global_time = mysecond();
