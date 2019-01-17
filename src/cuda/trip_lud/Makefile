@@ -7,6 +7,7 @@ USE_OMP?=1
 SAFE_MALLOC?=0
 DEF_INPUT?=/tmp/testmat
 DEF_GOLD?=/tmp/goldtest
+BLOCK_SIZE?=32
 
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
@@ -31,7 +32,7 @@ LIBRARY= -L/usr/local/cuda/lib64/
 CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
-NVCCFLAGS+= $(ARCH) -std=c++11 
+NVCCFLAGS+= $(ARCH) -std=c++11 -DBLOCK_SIZE=$(BLOCK_SIZE)
 
 ifeq ($(LOGS), 1)
 INCLUDE+= -I$(LOGHELPER_INC)
