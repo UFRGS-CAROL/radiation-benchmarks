@@ -69,21 +69,21 @@ double mysecond() {
 }
 
 template<typename real_t, typename real_t_device>
-void copy_cuda_memory(real_t_device *d_INPUT, real_t *INPUT, int matrixSize,
-		int generate) {
+void copy_cuda_memory(real_t_device *dev_mem, real_t *host_mem, int matrixSize,
+		int generate, bool from_gpu = false) {
+	const char *error;
+	if (from_gpu){
+		error = cudaGetErrorString(
+					cudaMemcpy(dev_mem, host_mem, matrixSize * sizeof(real_t_device),
+							cudaMemcpyHostToDevice));
 
-//====================================
-//	erro = cudaGetErrorString(cudaMemset(d_OUTPUT, 0, matrixSize * sizeof(real_t_device)));
-//	if (strcmp(erro, "no error") != 0) {
-//#ifdef LOGS
-//		if (!generate) log_error_detail(const_cast<char*>("error gpu output load memset")); end_log_file();
-//#endif
-//		exit(EXIT_FAILURE);
-//	} //mem allocate failure
+	}else{
+		error = cudaGetErrorString(
+					cudaMemcpy(host_mem, dev_mem, matrixSize * sizeof(real_t_device),
+							cudaMemcpyDeviceToHost));
 
-	const char *erro = cudaGetErrorString(
-			cudaMemcpy(d_INPUT, INPUT, matrixSize * sizeof(real_t_device),
-					cudaMemcpyHostToDevice));
+	}
+
 	if (strcmp(erro, "no error") != 0) {
 #ifdef LOGS
 		if (!generate) log_error_detail(const_cast<char*>("error gpu load input")); end_log_file();
@@ -295,7 +295,6 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
-//	copy_cuda_memory<real_t, real_t_device>(d_INPUT, INPUT, matrixSize, generate);
 
 	//====================================
 	for (int iteration = 0; iteration < iterations; iteration++) { //================== Global test loop
@@ -305,7 +304,7 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 
 		// preserve the INPUT value
 		copy_cuda_memory<real_t, real_t_device>(d_OUTPUT, INPUT, matrixSize,
-				generate);
+				generate, false);
 		// Timer...
 		global_time = mysecond();
 
@@ -349,10 +348,9 @@ checkCudaErrors		(cudaDeviceSynchronize());checkCudaErrors
 		// Timer...
 		time = mysecond();
 
-		//if (kernel_errors != 0) {
-		checkCudaErrors(
-				cudaMemcpy(OUTPUT, d_OUTPUT, matrixSize * sizeof(real_t_device),
-						cudaMemcpyDeviceToHost));
+		// copy from gpu
+		copy_cuda_memory(d_OUTPUT, OUTPUT, matrixSize, generate, true);
+
 		if (generate) {
 //			write_gold_file<float>(INPUT, gold_matrix_path, k);
 			write_gold_file<real_t>(OUTPUT, gold_matrix_path, k);
@@ -396,7 +394,7 @@ checkCudaErrors		(cudaDeviceSynchronize());checkCudaErrors
 							input_matrix_path, gold_matrix_path, verbose,
 							generate, k, fault_injection);
 					copy_cuda_memory<real_t, real_t_device>(d_OUTPUT, INPUT,
-							matrixSize, generate);
+							matrixSize, generate, false);
 
 				}
 				//====================================
