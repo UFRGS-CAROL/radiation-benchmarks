@@ -229,11 +229,22 @@ void usage() {
 			"Usage: lud -size=N [-generate] [-input=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
+template<typename real_t>
+void debug(real_t *output, int size){
+	std::cout << "The matrix output " << size << "x" << size << std::endl;
+	for(int i = 0; i < size; i++){
+		for(int j = 0; j < size; j++){
+			std::cout << output[i * size + j] << " ";
+		}
+		std::cout << std::endl;
+	}
+}
+
 template<typename real_t, typename real_t_device>
 void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		int fault_injection, int iterations, int device_warmup,
 		char* input_matrix_path, char* gold_matrix_path,
-		std::string precision) {
+		std::string precision, bool dbg = false) {
 	//====================================
 	double time;
 	double kernel_time, global_time;
@@ -348,6 +359,9 @@ checkCudaErrors		(cudaDeviceSynchronize());checkCudaErrors
 		if (generate) {
 //			write_gold_file<float>(INPUT, gold_matrix_path, k);
 			write_gold_file<real_t>(OUTPUT, gold_matrix_path, k);
+			if (dbg){
+				debug(OUTPUT, k);
+			}
 		} else if (iteration || !device_warmup) {
 			//~ if (memcmp(A, GOLD, sizeof(float) * k*k)) {
 			if (badass_memcmp<real_t>(GOLD, OUTPUT, matrixSize)) {
@@ -538,7 +552,7 @@ int main(int argc, char* argv[]) {
 		if (precision == "half") {
 		test_lud_radiation<half_float::half, half>(matrixSize, verbose,
 				generate, k, fault_injection, iterations, device_warmup,
-				input_matrix_path, gold_matrix_path, precision);
+				input_matrix_path, gold_matrix_path, precision, true);
 	}
 
 	return 0;

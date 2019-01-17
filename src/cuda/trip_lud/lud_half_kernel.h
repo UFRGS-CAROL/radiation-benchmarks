@@ -23,7 +23,7 @@ __global__ void lud_diagonal(half *m, int matrix_dim, int offset) {
 	int array_offset = offset * matrix_dim + offset;
 
 
-	for (i = 0; i < BLOCK_SIZE; i+=2) {
+	for (i = 0; i < half_block_size; i++) {
 //		shadow[i][threadIdx.x] = m[array_offset + threadIdx.x];
 		shadow[i][threadIdx.x] =  __halves2half2(m[array_offset + threadIdx.x], m[array_offset + threadIdx.x + 1]);
 
