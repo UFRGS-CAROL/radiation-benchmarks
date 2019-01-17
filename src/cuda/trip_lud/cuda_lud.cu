@@ -84,7 +84,7 @@ void copy_cuda_memory(real_t_device *dev_mem, real_t *host_mem, int matrixSize,
 
 	}
 
-	if (strcmp(erro, "no error") != 0) {
+	if (strcmp(error, "no error") != 0) {
 #ifdef LOGS
 		if (!generate) log_error_detail(const_cast<char*>("error gpu load input")); end_log_file();
 #endif
