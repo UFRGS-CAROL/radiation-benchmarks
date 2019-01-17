@@ -1,7 +1,7 @@
 CXX=g++
 NVCC=/usr/local/cuda/bin/nvcc
 PRECISION?=float
-DEF_SIZE?=1024
+DEF_SIZE?=4
 LOGS?=1
 USE_OMP?=1
 SAFE_MALLOC?=0
