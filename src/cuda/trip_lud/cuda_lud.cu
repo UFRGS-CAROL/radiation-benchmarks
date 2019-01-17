@@ -303,6 +303,8 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		// preserve the INPUT value
 		copy_cuda_memory<real_t, real_t_device>(d_OUTPUT, INPUT, matrixSize,
 				generate, false);
+		debug(INPUT, k);
+
 		// Timer...
 		global_time = mysecond();
 
