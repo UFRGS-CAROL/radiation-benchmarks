@@ -69,24 +69,22 @@ double mysecond() {
 }
 
 template<typename real_t, typename real_t_device>
-void copy_cuda_memory(real_t_device *d_OUTPUT, real_t_device *d_INPUT,
-		real_t *INPUT, int matrixSize, int generate) {
+void copy_cuda_memory(real_t_device *d_INPUT, real_t *INPUT, int matrixSize,
+		int generate) {
 //================== CUDA error handlers
-	cudaError_t mcpy;
 	const char *erro;
 //====================================
-	mcpy = cudaMemset(d_OUTPUT, 0, matrixSize * sizeof(real_t_device));
-	erro = cudaGetErrorString(mcpy);
-	if (strcmp(erro, "no error") != 0) {
-#ifdef LOGS
-		if (!generate) log_error_detail(const_cast<char*>("error gpu output load memset")); end_log_file();
-#endif
-		exit(EXIT_FAILURE);
-	} //mem allocate failure
+//	erro = cudaGetErrorString(cudaMemset(d_OUTPUT, 0, matrixSize * sizeof(real_t_device)));
+//	if (strcmp(erro, "no error") != 0) {
+//#ifdef LOGS
+//		if (!generate) log_error_detail(const_cast<char*>("error gpu output load memset")); end_log_file();
+//#endif
+//		exit(EXIT_FAILURE);
+//	} //mem allocate failure
 
-	mcpy = cudaMemcpy(d_INPUT, INPUT, matrixSize * sizeof(real_t_device),
-			cudaMemcpyHostToDevice); // PUSH A
-	erro = cudaGetErrorString(mcpy);
+	erro =
+			cudaGetErrorString(
+					(d_INPUT, INPUT, matrixSize * sizeof(real_t_device), cudaMemcpyHostToDevice));
 	if (strcmp(erro, "no error") != 0) {
 #ifdef LOGS
 		if (!generate) log_error_detail(const_cast<char*>("error gpu load input")); end_log_file();
@@ -230,10 +228,10 @@ void usage() {
 }
 
 template<typename real_t>
-void debug(real_t *output, int size){
+void debug(real_t *output, int size) {
 	std::cout << "The matrix output " << size << "x" << size << std::endl;
-	for(int i = 0; i < size; i++){
-		for(int j = 0; j < size; j++){
+	for (int i = 0; i < size; i++) {
+		for (int j = 0; j < size; j++) {
 			std::cout << output[i * size + j] << " ";
 		}
 		std::cout << std::endl;
@@ -243,8 +241,8 @@ void debug(real_t *output, int size){
 template<typename real_t, typename real_t_device>
 void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		int fault_injection, int iterations, int device_warmup,
-		char* input_matrix_path, char* gold_matrix_path,
-		std::string precision, bool dbg = false) {
+		char* input_matrix_path, char* gold_matrix_path, std::string precision,
+		bool dbg = false) {
 	//====================================
 	double time;
 	double kernel_time, global_time;
@@ -298,8 +296,7 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
-	copy_cuda_memory<real_t, real_t_device>(d_OUTPUT, d_INPUT, INPUT,
-			matrixSize, generate);
+//	copy_cuda_memory<real_t, real_t_device>(d_INPUT, INPUT, matrixSize, generate);
 
 	//====================================
 	for (int iteration = 0; iteration < iterations; iteration++) { //================== Global test loop
@@ -307,10 +304,11 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		if (!iteration && device_warmup)
 			printf("First iteration: device warmup. Please wait...\n");
 
+		// preserve the INPUT value
+		copy_cuda_memory<real_t, real_t_device>(d_OUTPUT, INPUT, matrixSize,
+				generate);
 		// Timer...
 		global_time = mysecond();
-
-		cudaMemset(d_OUTPUT, 0, matrixSize * sizeof(real_t));
 
 		if (verbose)
 			printf(",");
@@ -321,7 +319,7 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		if (!generate) start_iteration();
 #endif
 		//================== Device computation, HMxM
-		lud_cuda<real_t_device>(d_INPUT, k);
+		lud_cuda<real_t_device>(d_OUTPUT, k);
 
 		checkCudaErrors (cudaPeekAtLastError());
 
@@ -359,7 +357,7 @@ checkCudaErrors		(cudaDeviceSynchronize());checkCudaErrors
 		if (generate) {
 //			write_gold_file<float>(INPUT, gold_matrix_path, k);
 			write_gold_file<real_t>(OUTPUT, gold_matrix_path, k);
-			if (dbg){
+			if (dbg) {
 				debug(OUTPUT, k);
 			}
 		} else if (iteration || !device_warmup) {
@@ -398,8 +396,9 @@ checkCudaErrors		(cudaDeviceSynchronize());checkCudaErrors
 					read_matrix_from_file<real_t>(INPUT, GOLD,
 							input_matrix_path, gold_matrix_path, verbose,
 							generate, k, fault_injection);
-					copy_cuda_memory<real_t, real_t_device>(d_OUTPUT, d_INPUT,
-							INPUT, matrixSize, generate);
+					copy_cuda_memory<real_t, real_t_device>(d_OUTPUT, INPUT,
+							matrixSize, generate);
+
 				}
 				//====================================
 				// printf("numErrors:%d", host_errors);
@@ -548,7 +547,7 @@ int main(int argc, char* argv[]) {
 		test_lud_radiation<double, double>(matrixSize, verbose, generate, k,
 				fault_injection, iterations, device_warmup, input_matrix_path,
 				gold_matrix_path, precision);
-	} else	if (precision == "half") {
+	} else if (precision == "half") {
 		test_lud_radiation<half_float::half, half>(matrixSize, verbose,
 				generate, k, fault_injection, iterations, device_warmup,
 				input_matrix_path, gold_matrix_path, precision, true);
