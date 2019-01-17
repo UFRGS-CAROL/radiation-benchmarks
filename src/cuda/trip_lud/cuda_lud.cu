@@ -543,8 +543,8 @@ int main(int argc, char* argv[]) {
 	if (precision == "float") {
 		test_lud_radiation<float, float>(matrixSize, verbose, generate, k,
 				fault_injection, iterations, device_warmup, input_matrix_path,
-				gold_matrix_path, precision);
-	} else if (precision == "double", true) {
+				gold_matrix_path, precision, true);
+	} else if (precision == "double") {
 		test_lud_radiation<double, double>(matrixSize, verbose, generate, k,
 				fault_injection, iterations, device_warmup, input_matrix_path,
 				gold_matrix_path, precision);
