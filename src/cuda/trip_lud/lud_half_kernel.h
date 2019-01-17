@@ -17,6 +17,7 @@
  */
 __global__ void lud_diagonal(half *m, int matrix_dim, int offset) {
 	int i, j;
+	//We need half number of threads
 	const int half_block_size = BLOCK_SIZE / 2;
 	__shared__ half2 shadow[half_block_size][half_block_size];
 
@@ -58,7 +59,7 @@ __global__ void lud_diagonal(half *m, int matrix_dim, int offset) {
 
 	 */
 	array_offset = (offset + 1) * matrix_dim + offset;
-	for (i = 1; i < BLOCK_SIZE; i++) {
+	for (i = 1; i < half_block_size; i++) {
 		m[array_offset + threadIdx.x] =  __low2half(shadow[i][threadIdx.x]);
 		m[array_offset + threadIdx.x + 1] =  __high2half(shadow[i][threadIdx.x]);
 
