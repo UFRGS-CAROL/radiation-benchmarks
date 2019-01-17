@@ -71,8 +71,7 @@ double mysecond() {
 template<typename real_t, typename real_t_device>
 void copy_cuda_memory(real_t_device *d_INPUT, real_t *INPUT, int matrixSize,
 		int generate) {
-//================== CUDA error handlers
-	const char *erro;
+
 //====================================
 //	erro = cudaGetErrorString(cudaMemset(d_OUTPUT, 0, matrixSize * sizeof(real_t_device)));
 //	if (strcmp(erro, "no error") != 0) {
@@ -82,9 +81,9 @@ void copy_cuda_memory(real_t_device *d_INPUT, real_t *INPUT, int matrixSize,
 //		exit(EXIT_FAILURE);
 //	} //mem allocate failure
 
-	erro =
-			cudaGetErrorString(
-					(d_INPUT, INPUT, matrixSize * sizeof(real_t_device), cudaMemcpyHostToDevice));
+	const char *erro = cudaGetErrorString(
+			cudaMemcpy(d_INPUT, INPUT, matrixSize * sizeof(real_t_device),
+					cudaMemcpyHostToDevice));
 	if (strcmp(erro, "no error") != 0) {
 #ifdef LOGS
 		if (!generate) log_error_detail(const_cast<char*>("error gpu load input")); end_log_file();
