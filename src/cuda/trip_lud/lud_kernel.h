@@ -13,43 +13,9 @@
 
 #include "half.hpp"
 
-#if PRECISION == 16
-#define REAL_T_DEVICE half
-#define REAL_T_HOST half_float::half
-#define PRECISION_STR "Half"
-#endif
-
-#if PRECISION == 32
-#define REAL_T_DEVICE float
-#define REAL_T_HOST REAL_T_DEVICE
-#define PRECISION_STR "Float"
-#endif
-
-#if PRECISION == 64
-#define REAL_T_DEVICE double
-#define REAL_T_HOST REAL_T_DEVICE
-#define PRECISION_STR "Double"
-#endif
-
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 32
 #endif
-
-
-template<typename real_t_device>
-void lud_cuda(real_t_device *m, int matrix_dim);
-
-#define max(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
-
-#define min(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a < _b ? _a : _b; })
-
-
 
 /**
  * For float and double precision

@@ -81,7 +81,7 @@ void copy_cuda_memory(real_t_device *d_OUTPUT, real_t_device *d_INPUT,
 #ifdef LOGS
 		if (!generate) log_error_detail(const_cast<char*>("error gpu output load memset")); end_log_file();
 #endif
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
 	mcpy = cudaMemcpy(d_INPUT, INPUT, matrixSize * sizeof(real_t_device),
@@ -91,7 +91,7 @@ void copy_cuda_memory(real_t_device *d_OUTPUT, real_t_device *d_INPUT,
 #ifdef LOGS
 		if (!generate) log_error_detail(const_cast<char*>("error gpu load input")); end_log_file();
 #endif
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	} //mem allocate failure
 }
 
@@ -101,7 +101,7 @@ void generate_input_matrix(real_t *m, char *input_matrix_path) {
 	if (!(f_INPUT = fopen(input_matrix_path, "wb"))) {
 		printf("Error: Could not open input file in wb mode. %s\n",
 				input_matrix_path);
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	} else {
 		printf("Generating input matrix of size %dx%d...\n", DEFAULT_INPUT_SIZE,
 		DEFAULT_INPUT_SIZE);
@@ -115,7 +115,7 @@ void generate_input_matrix(real_t *m, char *input_matrix_path) {
 					1, f_INPUT);
 			if (ret_value != 1) {
 				printf("Failure writing to input: %ld\n", ret_value);
-				exit (EXIT_FAILURE);
+				exit(EXIT_FAILURE);
 			}
 		}
 		fclose(f_INPUT);
@@ -128,14 +128,14 @@ void write_gold_file(real_t *m, char *gold_matrix_path, int k) {
 	if (!(f_GOLD = fopen(gold_matrix_path, "wb"))) {
 		printf("Error: Could not open gold file in wb mode. %s\n",
 				gold_matrix_path);
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	} else {
 		size_t ret_value = 0;
 		for (int i = 0; i < k; i++) {
 			ret_value = fwrite(&(m[i * k]), k * sizeof(real_t), 1, f_GOLD);
 			if (ret_value != 1) {
 				printf("Failure writing to gold: %ld\n", ret_value);
-				exit (EXIT_FAILURE);
+				exit(EXIT_FAILURE);
 			}
 		}
 		fclose(f_GOLD);
@@ -168,7 +168,7 @@ void read_matrix_from_file(real_t *INPUT, real_t *GOLD, char *input_matrix_path,
 #ifdef LOGS
 				log_error_detail(const_cast<char*>("Bad input formatting.")); end_log_file();
 #endif
-				exit (EXIT_FAILURE);
+				exit(EXIT_FAILURE);
 			}
 		}
 		fclose(f_INPUT);
@@ -177,7 +177,7 @@ void read_matrix_from_file(real_t *INPUT, real_t *GOLD, char *input_matrix_path,
 #ifdef LOGS
 		log_error_detail(const_cast<char*>("Cant open matrices")); end_log_file();
 #endif
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 
 	FILE *f_GOLD;
@@ -191,7 +191,7 @@ void read_matrix_from_file(real_t *INPUT, real_t *GOLD, char *input_matrix_path,
 #ifdef LOGS
 				log_error_detail(const_cast<char*>("Bad gold formatting.")); end_log_file();
 #endif
-				exit (EXIT_FAILURE);
+				exit(EXIT_FAILURE);
 			}
 		}
 		fclose(f_GOLD);
@@ -229,11 +229,11 @@ void usage() {
 			"Usage: lud -size=N [-generate] [-input=<path>] [-gold=<path>] [-iterations=N] [-verbose] [-no-warmup]\n");
 }
 
-
 template<typename real_t, typename real_t_device>
 void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		int fault_injection, int iterations, int device_warmup,
-		char* input_matrix_path, char* gold_matrix_path) {
+		char* input_matrix_path, char* gold_matrix_path,
+		std::string precision) {
 	//====================================
 	double time;
 	double kernel_time, global_time;
@@ -242,8 +242,8 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 	//================== Alloc HOST memory
 	real_t* INPUT = (real_t*) (malloc(matrixSize * sizeof(real_t)));
 	real_t* OUTPUT = (real_t*) (malloc(matrixSize * sizeof(real_t)));
-
 	real_t* GOLD = (real_t*) (malloc(matrixSize * sizeof(real_t)));
+
 	if (!(INPUT && GOLD && OUTPUT)) {
 		printf("Failed on host malloc.\n");
 		exit(-3);
@@ -257,13 +257,13 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 	get_device();
 	read_matrix_from_file<real_t>(INPUT, GOLD, input_matrix_path,
 			gold_matrix_path, verbose, generate, k, fault_injection);
-	fflush (stdout);
+	fflush(stdout);
 	//====================================
 
 #ifdef LOGS
 	char test_info[90];
-	snprintf(test_info, 90, "size:%d type:%s-precision", k, PRECISION_STR);
-	std::string benchmark = std::string("cuda") + PRECISION_STR + "LUD";
+	snprintf(test_info, 90, "size:%d type:%s-precision", k, precision.c_str());
+	std::string benchmark = std::string("cuda") + precision.c_str() + "LUD";
 	if (!generate) start_log_file(const_cast<char*>(benchmark.c_str()), test_info);
 #endif
 
@@ -276,7 +276,7 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 #ifdef LOGS
 		if (!generate) log_error_detail(const_cast<char*>("error input")); end_log_file();
 #endif
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 	erro = cudaGetErrorString(
 			cudaMalloc((void**) &d_OUTPUT, matrixSize * sizeof(real_t_device)));
@@ -284,16 +284,16 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 #ifdef LOGS
 		if (!generate) log_error_detail(const_cast<char*>("error output")); end_log_file();
 #endif
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	} //mem allocate failure
 
 	copy_cuda_memory<real_t, real_t_device>(d_OUTPUT, d_INPUT, INPUT,
 			matrixSize, generate);
 
 	//====================================
-	for (int loop2 = 0; loop2 < iterations; loop2++) { //================== Global test loop
+	for (int iteration = 0; iteration < iterations; iteration++) { //================== Global test loop
 
-		if (!loop2 && device_warmup)
+		if (!iteration && device_warmup)
 			printf("First iteration: device warmup. Please wait...\n");
 
 		// Timer...
@@ -306,34 +306,34 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 
 		kernel_time = mysecond();
 #ifdef LOGS
-		if (loop2 || !device_warmup)
+		if (iteration || !device_warmup)
 		if (!generate) start_iteration();
 #endif
 		//================== Device computation, HMxM
 		lud_cuda<real_t_device>(d_INPUT, k);
 
-		checkCudaErrors(cudaPeekAtLastError());
+		checkCudaErrors (cudaPeekAtLastError());
 
-		checkCudaErrors(cudaDeviceSynchronize());
-		checkCudaErrors(cudaPeekAtLastError());
+checkCudaErrors		(cudaDeviceSynchronize());checkCudaErrors
+		(cudaPeekAtLastError());
 
 		//====================================
 #ifdef LOGS
-		if (loop2 || !device_warmup)
+		if (iteration || !device_warmup)
 		if (!generate) end_iteration();
 #endif
 		kernel_time = mysecond() - kernel_time;
 
-		if (loop2 || !device_warmup) {
+		if (iteration || !device_warmup) {
 			total_kernel_time += kernel_time;
-			min_kernel_time = min(min_kernel_time, kernel_time);
-			max_kernel_time = max(max_kernel_time, kernel_time);
+			min_kernel_time = std::min(min_kernel_time, kernel_time);
+			max_kernel_time = std::max(max_kernel_time, kernel_time);
 		}
 
-		if (loop2 || !device_warmup)
+		if (iteration || !device_warmup)
 			if (verbose)
-				printf("Device kernel time for iteration %d: %.3fs\n", loop2,
-						kernel_time);
+				printf("Device kernel time for iteration %d: %.3fs\n",
+						iteration, kernel_time);
 
 		if (verbose)
 			printf(",");
@@ -348,7 +348,7 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		if (generate) {
 //			write_gold_file<float>(INPUT, gold_matrix_path, k);
 			write_gold_file<real_t>(OUTPUT, gold_matrix_path, k);
-		} else if (loop2 || !device_warmup) {
+		} else if (iteration || !device_warmup) {
 			//~ if (memcmp(A, GOLD, sizeof(float) * k*k)) {
 			if (badass_memcmp<real_t>(GOLD, OUTPUT, matrixSize)) {
 				char error_detail[150];
@@ -362,10 +362,11 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 						if (OUTPUT[i + k * j] != GOLD[i + k * j])
 #pragma omp critical
 								{
+							double r = (OUTPUT[i + k * j]);
+							double g = (GOLD[i + k * j]);
 							snprintf(error_detail, 150,
 									"p: [%d, %d], r: %1.16e, e: %1.16e", i, j,
-									(real_t) (OUTPUT[i + k * j]),
-									(real_t) (GOLD[i + k * j]));
+									r, g);
 							if (verbose && (host_errors < 10))
 								printf("%s\n", error_detail);
 #ifdef LOGS
@@ -380,11 +381,11 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 				}
 				if (host_errors != 0) {
 					//================== To ensure there is no corrupted data on the inputs of the next iteration
-					read_matrix_from_file<real_t>(INPUT, GOLD, input_matrix_path,
-							gold_matrix_path, verbose, generate, k,
-							fault_injection);
-					copy_cuda_memory<real_t, real_t_device>(d_OUTPUT, d_INPUT, INPUT, matrixSize,
-							generate);
+					read_matrix_from_file<real_t>(INPUT, GOLD,
+							input_matrix_path, gold_matrix_path, verbose,
+							generate, k, fault_injection);
+					copy_cuda_memory<real_t, real_t_device>(d_OUTPUT, d_INPUT,
+							INPUT, matrixSize, generate);
 				}
 				//====================================
 				// printf("numErrors:%d", host_errors);
@@ -401,12 +402,12 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 		//}
 		//====================================
 
-		if (loop2 || !device_warmup)
+		if (iteration || !device_warmup)
 			if (verbose)
-				printf("Gold check time for iteration %d: %.3fs\n", loop2,
+				printf("Gold check time for iteration %d: %.3fs\n", iteration,
 						mysecond() - time);
 
-		if (loop2 || !device_warmup)
+		if (iteration || !device_warmup)
 			if (verbose) {
 				/////////// PERF
 				double outputpersec = (double) matrixSize / kernel_time;
@@ -414,9 +415,9 @@ void test_lud_radiation(int matrixSize, int verbose, int generate, int k,
 				///////////
 			}
 
-		if (loop2 || !device_warmup)
+		if (iteration || !device_warmup)
 			if (verbose)
-				printf("Iteration #%d time: %.3fs\n\n\n", loop2,
+				printf("Iteration #%d time: %.3fs\n\n\n", iteration,
 						mysecond() - global_time);
 		fflush(stdout);
 	}
@@ -459,12 +460,12 @@ int main(int argc, char* argv[]) {
 
 		if ((k <= 0) || (k % 16 != 0)) {
 			printf("Invalid input size given on the command-line: %d\n", k);
-			exit (EXIT_FAILURE);
+			exit(EXIT_FAILURE);
 		}
 		matrixSize = k * k;
 	} else {
 		usage();
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 
 	if (checkCmdLineFlag(argc, (const char **) argv, "input")) {
@@ -525,10 +526,19 @@ int main(int argc, char* argv[]) {
 		precision = std::string(tmp_precision);
 	}
 
-	printf("CUDA %s LUD\n", PRECISION_STR);
-	test_lud_radiation<float, float>(matrixSize, verbose,
-			generate, k, fault_injection, iterations, device_warmup,
-			input_matrix_path, gold_matrix_path);
+	if (precision == "float") {
+		test_lud_radiation<float, float>(matrixSize, verbose, generate, k,
+				fault_injection, iterations, device_warmup, input_matrix_path,
+				gold_matrix_path, precision);
+	} else if (precision == "double") {
+		test_lud_radiation<double, double>(matrixSize, verbose, generate, k,
+				fault_injection, iterations, device_warmup, input_matrix_path,
+				gold_matrix_path, precision);
+	} else if (precision == "half") {
+		test_lud_radiation<half_float::half, half>(matrixSize, verbose,
+				generate, k, fault_injection, iterations, device_warmup,
+				input_matrix_path, gold_matrix_path, precision);
+	}
 
 	return 0;
 }

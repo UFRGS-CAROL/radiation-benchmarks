@@ -8,8 +8,6 @@ SAFE_MALLOC?=0
 DEF_INPUT?=/tmp/testmat
 DEF_GOLD?=/tmp/goldtest
 
-
-
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
@@ -33,23 +31,7 @@ LIBRARY= -L/usr/local/cuda/lib64/
 CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
-NVCCFLAGS+= $(ARCH) -std=c++11
-
-ifeq ($(PRECISION), float)
-NVCCFLAGS+= -DPRECISION=32
-CXXFLAGS+= -DPRECISION=32
-endif
-
-ifeq ($(PRECISION), double)
-NVCCFLAGS+= -DPRECISION=64
-CXXFLAGS+= -DPRECISION=64
-endif
-
-ifeq ($(PRECISION), half)
-NVCCFLAGS+= -DPRECISION=16
-CXXFLAGS+= -DPRECISION=16
-endif
-
+NVCCFLAGS+= $(ARCH) -std=c++11 
 
 ifeq ($(LOGS), 1)
 INCLUDE+= -I$(LOGHELPER_INC)
@@ -95,10 +77,10 @@ $(OBJDIR)%.o: %.cu
 	$(NVCC) $(ARCH) $(NVCCFLAGS) --compiler-options "$(CXXFLAGS)" -c $< -o $@
 
 generate: 
-	./$(EXEC) -size=$(DEF_SIZE) -generate -input=$(DEF_INPUT) -gold=$(DEF_GOLD)
+	./$(EXEC) -size=$(DEF_SIZE) -generate -input=$(DEF_INPUT) -gold=$(DEF_GOLD) -precision=$(PRECISION)
 
 test: $(EXEC) generate
-	./$(EXEC) -size=$(DEF_SIZE) -input=$(DEF_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
+	./$(EXEC) -size=$(DEF_SIZE) -input=$(DEF_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose -precision=$(PRECISION)
 	
 mkdir:
 	mkdir -p ./obj
