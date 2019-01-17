@@ -65,7 +65,7 @@ OBJ= cuda_lud.o
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 EXEC=$(PRECISION)_trip_lud
 
-all: mkdir $(EXEC)
+all: clean mkdir $(EXEC)
 
 $(EXEC): $(OBJS) 
 	$(CXX)  $^ -o $@ $(LDFLAGS) $(CXXFLAGS)
