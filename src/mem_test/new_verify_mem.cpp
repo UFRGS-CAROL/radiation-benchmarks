@@ -24,9 +24,9 @@ char time_now[200] = "";
 // Params ------------------------------------------------------------------
 struct Params {
 
-    unsigned long long          mem_size;
-    unsigned long long          external_it;
-    unsigned long long          internal_it;
+    unsigned long int          mem_size;
+    unsigned long int          external_it;
+    unsigned long int          internal_it;
     int         wait_time;
     int         verbose;    // Not implemented yet
 
@@ -44,7 +44,8 @@ struct Params {
                 usage();
                 exit(0);
                 break;
-            case 's': mem_size      = atoi(optarg); break;
+
+            case 's': mem_size      = strtoul(optarg, NULL, 0); break;
             case 'e': external_it   = atoi(optarg); break;
             case 'i': internal_it   = atoi(optarg); break;
             case 'v': verbose       = atoi(optarg); break;
@@ -104,7 +105,7 @@ void show_time(){
 int main(int argc, char **argv) {
 
     const Params p(argc, argv);
-    printf("%llu, %llu, %llu ,%d ,%d\n",p.mem_size,p.external_it,p.internal_it,p.wait_time,p.verbose);
+    printf("%lu, %lu, %lu ,%d ,%d\n",p.mem_size,p.external_it,p.internal_it,p.wait_time,p.verbose);
     
     long long init_time;
     double error_time = 0;
@@ -117,15 +118,15 @@ int main(int argc, char **argv) {
     disable_double_error_kill(); // Disable Double Kill Error 
     set_iter_interval_print(1);
     char test_info[300];
-    snprintf(test_info, 300, "-s %llu, -e %llu, -i %llu, -w %d, -v %d\n",p.mem_size,p.external_it,p.internal_it,p.wait_time,p.verbose);
+    snprintf(test_info, 300, "-s %lu, -e %lu, -i %lu, -w %d, -v %d\n",p.mem_size,p.external_it,p.internal_it,p.wait_time,p.verbose);
     start_log_file("memory_test", test_info);
 #endif
 
-	unsigned long long sys_mem = p.mem_size/4;	// Tamanho da memoria dividido 4
+	unsigned long int  sys_mem = p.mem_size/4;	// Tamanho da memoria dividido 4
 	int* vetor;
-	unsigned long long size = sizeof(int)* sys_mem;
+	unsigned long int size = sizeof(int)* sys_mem;
 	int* gold;
-	unsigned long long cont = 0;
+	unsigned long int  cont = 0;
     for(cont = 0;cont< p.external_it ;cont++){
 
 #ifdef LOGS
@@ -134,7 +135,7 @@ int main(int argc, char **argv) {
     
 	    printf("********************************************************************\n");
 	    gold = (int*)malloc(sizeof(int));
-	    printf("Vetor de:%llu bytes \n",size);
+	    printf("Vetor de:%lu bytes \n",size);
 	    vetor = (int*)malloc(size);
 
 	    // TODO Verify if swap is used -> Exit and error message	    
@@ -142,7 +143,7 @@ int main(int argc, char **argv) {
 	    
 	    int i = 0;
 	    int k = 0;
-	    unsigned long long contador = 0;
+	    unsigned long int contador = 0;
 	    gold[0] = -1;
 	    printf("Gold:%d\n",gold[0]);
 	    fflush(stdout);
@@ -163,17 +164,17 @@ int main(int argc, char **argv) {
 			    //printf("Vetor[%d]:%d\n",i,vetor[i]);
 			    if(vetor[i] != gold[0] ){
 			        error_time = (double) (get_time() - init_time) / 1000000;
-			        printf("[%f] Gold: 1, It_Externa: %llu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d \n",error_time,cont, k,i,gold[0],vetor[i]);
+			        printf("[%f] Gold: 1, It_Externa: %lu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d \n",error_time,cont, k,i,gold[0],vetor[i]);
 #ifdef LOGS
 		            char error_detail[200];
-            		sprintf(error_detail,"[%f] Gold: 1, It_Externa: %llu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d \n",error_time,cont, k,i,gold[0],vetor[i]);
+            		sprintf(error_detail,"[%f] Gold: 1, It_Externa: %lu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d \n",error_time,cont, k,i,gold[0],vetor[i]);
            			log_error_detail(error_detail);
 #endif				    
 				    vetor[i] = gold[0];         // Colocamos o valor certo na pos de memoria
 				    contador++;                 // Conta a ocorrencia de erros por iteracao			
 			    }
 		    }	
-		    printf("Contador -1: %llu\n",contador);
+		    printf("Contador -1: %lu\n",contador);
 		    update_timestamp();    
 	    }
 #ifdef LOGS
@@ -203,17 +204,17 @@ int main(int argc, char **argv) {
 				//printf("Vetor[%d]:%d\n",i,vetor[i]);
 			    if(vetor[i] != gold[0] ){
     			    error_time = (double) (get_time() - init_time) / 1000000;
-                    printf("[%f] Gold: 0, It_Externa: %llu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d \n",error_time,cont, k,i,gold[0],vetor[i]);
+                    printf("[%f] Gold: 0, It_Externa: %lu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d \n",error_time,cont, k,i,gold[0],vetor[i]);
 #ifdef LOGS
 		            char error_detail[200];
-            		sprintf(error_detail,"[%f] Gold: 0, It_Externa: %llu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d \n",error_time,cont, k,i,gold[0],vetor[i]);
+            		sprintf(error_detail,"[%f] Gold: 0, It_Externa: %lu, It_Interna: %d, Pos[%d]:Sou um erro de Memoria E= %d, R= %d \n",error_time,cont, k,i,gold[0],vetor[i]);
            			log_error_detail(error_detail);
 #endif				    			        
 				    vetor[i] = gold[0];
 				    contador++;			
 			    }
 		    }
-		    printf("Contador 0:%llu\n",contador);	
+		    printf("Contador 0:%lu\n",contador);	
 		    update_timestamp();	    	
 	    }
 #ifdef LOGS
