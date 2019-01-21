@@ -1,0 +1,1 @@
+g++ -save-temps -fverbose-asm -fopenmp -o teste soma.cpp
