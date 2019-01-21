@@ -14,8 +14,10 @@ namespace radiation {
 
 void ClientSocket::disconnect_host() {
 	if (this->connected) {
+		shutdown(this->sock, SHUT_RDWR);
 		close(this->sock);
 		this->connected = false;
+		this->sock = -1;
 	}
 }
 
@@ -38,35 +40,15 @@ void ClientSocket::connect_host() {
 		//Create socket
 		this->sock = socket(AF_INET, SOCK_STREAM, 0);
 		if (this->sock == -1) {
+			std::cout << "CLIENT_SOCKET - Could not create socket" << std::endl;
 			this->log.log_message_exception(
 					"CLIENT_SOCKET - Could not create socket");
 		}
 		std::cout << "Socket created" << std::endl;
 	}
-	//setup address structure
-	if (inet_addr(this->address.c_str()) == -1) {
-		struct hostent* he;
-		struct in_addr** addr_list;
-		//resolve the hostname, its not an ip address
-		if ((he = gethostbyname(this->address.c_str())) == NULL) {
-			//gethostbyname failed
-			herror("gethostbyname");
-			this->log.log_message_exception(
-					"CLIENT_SOCKET - Failed to resolve hostname");
-		}
-		//Cast the h_addr_list to in_addr , since h_addr_list also has the ip address in long format only
-		addr_list = (struct in_addr**) (he->h_addr_list);
-		for (int i = 0; addr_list[i] != NULL; i++) {
-			//strcpy(ip , inet_ntoa(*addr_list[i]) );
-			this->server.sin_addr = *addr_list[i];
-			std::cout << this->address << " resolved to "
-					<< inet_ntoa(*addr_list[i]) << std::endl;
-			break;
-		}
-	} else {
-		//plain ip address
-		this->server.sin_addr.s_addr = inet_addr(this->address.c_str());
-	}
+
+	//plain ip address
+	this->server.sin_addr.s_addr = inet_addr(this->address.c_str());
 	this->server.sin_family = AF_INET;
 	this->server.sin_port = htons(this->port);
 	//Connect to remote server

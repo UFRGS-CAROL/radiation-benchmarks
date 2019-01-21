@@ -9,6 +9,7 @@
 #define WATCHDOG_H_
 
 #include <string>
+#include <vector>
 
 #include "Log.h"
 #include "ClientSocket.h"
