@@ -37,9 +37,15 @@ private:
 	std::string server_address;
 	int port;
 
+	ClientSocket client_socket;
+
 
 	static void signal_handler(int signal);
 	static void interrupt_processing(int signal);
+    Command select_command(std::vector<Command>& command_list);
+    void kill_all(std::vector<Command>& command_list);
+    void connect_and_disconnect();
+
 
 public:
 //    installDir = config.get('DEFAULT', 'installdir') + "/"
@@ -52,9 +58,7 @@ public:
 
 	void watch(std::vector<Command>& command_list);
 
-    Command select_command(std::vector<Command>& command_list);
 
-    void kill_all(std::vector<Command>& command_list);
 
 };
 

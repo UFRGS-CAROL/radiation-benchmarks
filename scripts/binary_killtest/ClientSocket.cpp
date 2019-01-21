@@ -40,11 +40,10 @@ void ClientSocket::connect_host() {
 		//Create socket
 		this->sock = socket(AF_INET, SOCK_STREAM, 0);
 		if (this->sock == -1) {
-			std::cout << "CLIENT_SOCKET - Could not create socket" << std::endl;
 			this->log.log_message_exception(
 					"CLIENT_SOCKET - Could not create socket");
 		}
-		std::cout << "Socket created" << std::endl;
+//		std::cout << "Socket created" << std::endl;
 	}
 
 	//plain ip address
@@ -57,9 +56,11 @@ void ClientSocket::connect_host() {
 		this->log.log_message_exception(
 				"CLIENT_SOCKET - connect failed. Error");
 	}
-	std::cout << "Connected\n";
+//	std::cout << "Connected\n";
 	this->connected = true;
 }
+
+
 
 } /* namespace radiation */
 

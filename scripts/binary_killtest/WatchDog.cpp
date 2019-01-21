@@ -85,7 +85,7 @@ void WatchDog::watch(std::vector<Command>& command_list) {
 	kill_list = &command_list;
 
 	//Initialize socket
-	ClientSocket client_socket = ClientSocket(this->server_address, this->port,
+	this->client_socket = ClientSocket(this->server_address, this->port,
 			this->log);
 
 	this->kill_count = 0;
@@ -93,16 +93,17 @@ void WatchDog::watch(std::vector<Command>& command_list) {
 	curr_command.execute_command();
 
 	while (true) {
-		std::cout << "First\n";
-		client_socket.connect_host();
-		client_socket.disconnect_host();
-
+		//Telling to the server that we are alive
+		this->connect_and_disconnect();
 
 		// Get the current timestamp
 		auto now = get_time_since_epoch();
 
 		// timestampDiff = now - timestamp
 		auto timestamp_diff = now - timestamp_signal;
+
+		std::cout << "Timestamp diff: " << timestamp_diff << " Now: " << now <<
+				" Timestamp signal: " << timestamp_signal << std::endl;
 
 		// If timestamp was not update properly
 		if (timestamp_diff > this->timestamp_max_diff) {
@@ -119,11 +120,8 @@ void WatchDog::watch(std::vector<Command>& command_list) {
 								+ ", current command:"
 								+ curr_command.get_exec_command());
 
-				//Only open and close the connection
-
-				std::cout << "second\n";
-				client_socket.connect_host();
-				client_socket.disconnect_host();
+				//Telling to the server that we are alive
+				this->connect_and_disconnect();
 
 				system_reboot();
 				sleep(TIME_TO_SLEEP);
@@ -146,9 +144,8 @@ void WatchDog::watch(std::vector<Command>& command_list) {
 								+ curr_command.get_exec_command());
 
 
-				std::cout << "third\n";
-				client_socket.connect_host();
-				client_socket.disconnect_host();
+				//Telling to the server that we are alive
+				this->connect_and_disconnect();
 
 				system_reboot();
 				sleep(TIME_TO_SLEEP);
@@ -165,6 +162,13 @@ void WatchDog::watch(std::vector<Command>& command_list) {
 Command WatchDog::select_command(std::vector<Command>& command_list) {
 	//TODO: FINISH IT
 	return Command();
+}
+
+void WatchDog::connect_and_disconnect() {
+	//This function works only for radiation tests
+	//TODO: Change it to work with messages
+	this->client_socket.connect_host();
+	this->client_socket.disconnect_host();
 }
 
 } /* namespace radiation */
