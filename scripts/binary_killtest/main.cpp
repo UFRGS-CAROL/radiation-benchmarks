@@ -19,14 +19,11 @@
 
 #define TIMESTAMP_MAX_DIFF_DEFAULT 30
 #define CONFIG_FILE "/etc/radiation-benchmarks.conf"
-#define TIME_WIDOW 60 * 60
-
 #define MAX_TIME_KILL 5
 #define SOCK_SERVER_IP "192.168.0.9"
 #define SOCK_SERVER_PORT 1234
 
 #define MAX_KILL_TIMES 5
-
 
 std::unordered_map<std::string, std::string> parse_config_data(
 		std::string config_file_path) {
@@ -78,6 +75,25 @@ std::unordered_map<std::string, std::string> parse_config_data(
 	return config_file_data;
 }
 
+std::vector<std::string> read_json_paths(std::string text_path) {
+	std::ifstream file(text_path);
+	std::string str;
+	std::vector < std::string > ret;
+	if (file.good()) {
+		while (std::getline(file, str)) {
+			//Check if the json line is a file
+			std::ifstream test(str);
+			if (test) {
+				test.close();
+				ret.push_back(str);
+			}
+		}
+
+		file.close();
+	}
+	return ret;
+}
+
 int main(int argc, char **argv) {
 	if (argc < 2) {
 		throw std::runtime_error(
@@ -87,17 +103,23 @@ int main(int argc, char **argv) {
 
 	std::string json_file_path = argv[1];
 	if (access(argv[1], F_OK) != -1) {
-		//Json object to extract data from Json
-		radiation::JsonFile json_file(json_file_path);
-
-		//get the iterator for the lines
-		auto lines_iterator_pair = json_file.get_all_command_lines();
+		//Generate a vector with all commands
+		auto list_of_jsons = read_json_paths(json_file_path);
 		std::vector<radiation::Command> command_vector;
 
-		for (auto it = lines_iterator_pair.first;
-				it != lines_iterator_pair.second; ++it) {
-			radiation::Command tmp((*it).first, (*it).second, TIME_WIDOW);
-			command_vector.push_back(tmp);
+		//iterate over the json files
+		for (auto jf : list_of_jsons) {
+			//Json object to extract data from Json
+			radiation::JsonFile json_file(jf);
+
+			//get the iterator for the lines
+			auto lines_iterator_pair = json_file.get_all_command_lines();
+
+			for (auto it = lines_iterator_pair.first;
+					it != lines_iterator_pair.second; ++it) {
+				radiation::Command tmp((*it).first, (*it).second);
+				command_vector.push_back(tmp);
+			}
 		}
 
 		// Parse the configuration file
@@ -109,10 +131,12 @@ int main(int argc, char **argv) {
 		std::string var_dir = config_hash["vardir"];
 		std::string tmp_dir = config_hash["tmpdir"];
 
-		radiation::WatchDog lessie(TIMESTAMP_MAX_DIFF_DEFAULT, SOCK_SERVER_IP,
-		SOCK_SERVER_PORT, install_dir, var_dir, log_path, tmp_dir, MAX_KILL_TIMES);
+		radiation::WatchDog lessie(command_vector, TIMESTAMP_MAX_DIFF_DEFAULT,
+				SOCK_SERVER_IP,
+				SOCK_SERVER_PORT, install_dir, var_dir, log_path, tmp_dir,
+				MAX_KILL_TIMES);
 
-		lessie.watch(command_vector);
+		lessie.watch();
 	}
 
 	return 0;

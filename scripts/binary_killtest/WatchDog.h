@@ -39,26 +39,25 @@ private:
 
 	ClientSocket client_socket;
 
+	std::vector<Command> command_list;
 
 	static void signal_handler(int signal);
 	static void interrupt_processing(int signal);
-    Command select_command(std::vector<Command>& command_list);
-    void kill_all(std::vector<Command>& command_list);
-    void connect_and_disconnect();
+	Command select_command();
+	void kill_all();
+	void connect_and_disconnect();
+	bool check_command_list_changes();
+	void clean_command_exec_logs();
 
+	Command get_command(int index);
 
 public:
-//    installDir = config.get('DEFAULT', 'installdir') + "/"
-//    varDir = config.get('DEFAULT', 'vardir') + "/"
-//    logDir = config.get('DEFAULT', 'logdir') + "/"
-//    tmpDir = config.get('DEFAULT', 'tmpdir') + "/"
-	WatchDog(size_t timestamp_max_diff, std::string server_address,
+	WatchDog(const std::vector<Command>& command_list,
+			size_t timestamp_max_diff, std::string server_address,
 			int server_port, std::string install_dir, std::string var_dir,
 			std::string log_path, std::string tmp_dir, int max_kill_times);
 
-	void watch(std::vector<Command>& command_list);
-
-
+	void watch();
 
 };
 
