@@ -1,15 +1,27 @@
-# make static lib
-
+STATIC?=0
 CC=gcc
 
-CCFLAGS=-fPIC -Wall -Werror -Wextra -shared -Wno-unknown-pragmas
+LIBOUT=libLogHelper.so
+MODE=cvr
+CCFLAGS= -shared
+
+
+# make static lib
+ifeq ($(STATIC), 1)
+LIBOUT=libLogHelper.a
+CCFLAGS=
+MODE=rcs
+endif
+
+
+CCFLAGS+=-fPIC -Wall -Werror -Wextra -Wno-unknown-pragmas
+
 
 OBJ=log_helper.o
-LIBOUT=libLogHelper.so
 
 all: clean log_helper.c
 	$(CC) -c $(CCFLAGS) log_helper.c -o $(OBJ)
-	ar cvr $(LIBOUT) $(OBJ)
+	ar $(MODE) $(LIBOUT) $(OBJ)
 
 
 client: clean log_helper_sockclient.c

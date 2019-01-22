@@ -1,18 +1,37 @@
-arm64:CFLAGS = -O3
-arm64:LDFLAGS = -static -lm
-arm64:CC=aarch64-linux-gnu-gcc
-arm64:AS=aarch64-linux-gnu-as
-arm64:LD=aarch64-linux-gnu-ld
-arm64:AR=aarch64-linux-gnu-ar
+LOGS?=0
+ARCH?=arm
+CC=arm-linux-gnueabihf-gcc
+EXEC=matmul
 
-arm:CFLAGS = -O3 -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard
-arm:LDFLAGS = -static -lm
-arm:CC=arm-linux-gnueabihf-gcc
-arm:AS=arm-linux-gnueabihf-as
-arm:LD=arm-linux-gnueabihf-ld
-arm:AR=arm-linux-gnueabihf-ar
+CCFLAGS= -O3 -Wno-unused-result
+LDFLAGS= -static -lm
 
-arm64:
-	$(CC)  ${CFLAGS} -o matmul_500 matmul.c -lm
-arm:
-	$(CC)  ${CFLAGS} -o matmul_500 matmul.c -lm
+ifeq ($(LOGS), 1)
+INCLUDE= -I../../include
+LIBRARY= -L../../include -lLogHelper
+CCFLAGS+= -DLOGS
+endif
+
+ifeq ($(ARCH), arm64)
+CC=aarch64-linux-gnu-gcc
+AS=aarch64-linux-gnu-as
+LD=aarch64-linux-gnu-ld
+AR=aarch64-linux-gnu-ar
+endif
+
+ifeq ($(ARCH), arm)
+AS=arm-linux-gnueabihf-as
+LD=arm-linux-gnueabihf-ld
+AR=arm-linux-gnueabihf-ar
+CFLAGS+= -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard
+endif
+
+ifeq ($(ARCH), x86)
+CC=gcc
+endif
+
+EXEC:
+	$(CC) $(CCFLAGS) -o $(EXEC) matmul.c $(LDFLAGS) $(INCLUDE) $(LIBRARY)
+
+clean:
+	rm -f $(EXEC)
