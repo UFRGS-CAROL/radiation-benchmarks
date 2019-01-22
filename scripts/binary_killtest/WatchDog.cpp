@@ -17,8 +17,12 @@
 
 namespace radiation {
 
+//Default time to sleep
 #define TIME_TO_SLEEP 20
-#define TIME_WIDOW 60 * 60
+//Cross section is calculated based on
+//1h so the default time window is
+//60 * 60
+#define TIME_WINDOW 60 * 60
 
 size_t timestamp_signal;
 const std::vector<Command> *kill_list;
