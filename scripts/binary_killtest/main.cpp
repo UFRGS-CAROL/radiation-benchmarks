@@ -82,9 +82,7 @@ std::vector<std::string> read_json_paths(std::string text_path) {
 	if (file.good()) {
 		while (std::getline(file, str)) {
 			//Check if the json line is a file
-			std::ifstream test(str);
-			if (test) {
-				test.close();
+			if (is_file(str)) {
 				ret.push_back(str);
 			}
 		}

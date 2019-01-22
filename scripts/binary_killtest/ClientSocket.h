@@ -46,10 +46,17 @@ private:
 	/*! boolean to save the conection state. */
 	bool connected;
 
-	Log log;
-
 public:
+	//! Connect to host.
+	/*!
+	 Connect the socket using the ip address
+	 */
 	void connect_host();
+
+	//! Disconnect from the host
+	/*!
+	 Close the connection with the host server
+	 */
 	void disconnect_host();
 
 	//! Client Socket Constructor.
@@ -64,7 +71,7 @@ public:
 	 \param address the ip address
 	 \param log logfile obj
 	 */
-	ClientSocket(std::string address, int port, Log& log);
+	ClientSocket(std::string address, int port);
 
 	//! ClientSocket destructor.
 	/*!

@@ -88,12 +88,11 @@ void WatchDog::kill_all() {
 void WatchDog::watch() {
 
 	//Initialize socket
-	this->client_socket = ClientSocket(this->server_address, this->port,
-			this->log);
+	this->client_socket = ClientSocket(this->server_address, this->port);
 
 	this->kill_count = 0;
 	auto curr_command = this->select_command();
-	curr_command.execute_command();
+	this->exec_command(curr_command);
 
 	while (true) {
 		//Telling to the server that we are alive
@@ -153,13 +152,20 @@ void WatchDog::watch() {
 				sleep(TIME_TO_SLEEP);
 			} else {
 				curr_command = this->select_command(); // select properly the current command to be executed
-				curr_command.execute_command(); //start the command
+				this->exec_command(curr_command);
 			}
 		}
 		sleep(1);
 	}
 
 }
+
+void WatchDog::exec_command(const Command& cmd){
+	//start the command
+	if(cmd.execute_command() == false)
+		this->log.log_message_info("Error launching command '" + cmd.get_exec_command() + "';'");
+}
+
 
 Command WatchDog::select_command() {
 	if (this->check_command_list_changes()) {
@@ -182,6 +188,7 @@ Command WatchDog::select_command() {
 		return this->get_command(0);
 	}
 
+	//------------------------------------------------------------------------------------
 	// Check if last command executed is still in the defined time window for each command
 	// and return it
 
@@ -223,7 +230,6 @@ Command WatchDog::select_command() {
 	// Finally, select the next command not executed so far
 	timestamp_path = this->var_dir + "/command_execstart_" + std::to_string(i);
 	std::ofstream ofp(timestamp_path);
-
 	ofp << timestamp;
 	ofp.close();
 
@@ -233,7 +239,6 @@ Command WatchDog::select_command() {
 
 void WatchDog::connect_and_disconnect() {
 	//This function works only for radiation tests
-	//TODO: Change it to work with messages
 	this->client_socket.connect_host();
 	this->client_socket.disconnect_host();
 }

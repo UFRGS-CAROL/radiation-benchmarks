@@ -33,9 +33,9 @@ public:
 
 	bool kill();
 
-	bool execute_command();
+	bool execute_command() const;
 
-	std::string get_exec_command();
+	std::string get_exec_command() const;
 
 	size_t generate_hash_number();
 

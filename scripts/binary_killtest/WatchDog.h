@@ -51,6 +51,8 @@ private:
 
 	Command get_command(int index);
 
+	void exec_command(const Command& cmd);
+
 public:
 	WatchDog(const std::vector<Command>& command_list,
 			size_t timestamp_max_diff, std::string server_address,

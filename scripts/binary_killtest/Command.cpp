@@ -30,8 +30,7 @@ Command::Command(const Command& b) {
 }
 
 std::ostream& operator<<(std::ostream& stream, const Command& cmd) {
-	stream << cmd.kill_command << std::endl << cmd.exec_command << std::endl
-			<< cmd.time_acc;
+	stream << cmd.kill_command << cmd.exec_command;
 	return stream;
 }
 
@@ -48,8 +47,6 @@ bool Command::operator==(const Command& rhs) const {
 			&& this->time_acc == rhs.time_acc);
 }
 
-
-
 bool Command::kill() {
 	if (system(this->kill_command.c_str())) {
 		return true;
@@ -65,7 +62,7 @@ Command& Command::operator=(const Command arg) noexcept {
 	return *this;
 }
 
-bool Command::execute_command() {
+bool Command::execute_command() const {
 	std::string cmd = this->exec_command;
 	//Search & after half of the string
 	if (!(cmd.find('&', cmd.size() / 2) != std::string::npos))
@@ -73,13 +70,13 @@ bool Command::execute_command() {
 	return (system(cmd.c_str()) != 0);
 }
 
-std::string Command::get_exec_command() {
+std::string Command::get_exec_command() const {
 	return this->exec_command;
 }
 
 size_t Command::generate_hash_number() {
 	std::string final_string = this->exec_command + this->kill_command;
-	std::hash<std::string> hasher;
+	std::hash < std::string > hasher;
 	size_t hashed = hasher(final_string);
 	return hashed;
 }

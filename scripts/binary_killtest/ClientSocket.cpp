@@ -12,6 +12,18 @@
 
 namespace radiation {
 
+ClientSocket::ClientSocket() :
+		address(""), connected(false), port(0), sock(-1) {
+}
+
+ClientSocket::ClientSocket(std::string address, int port) :
+		address(address), port(port), connected(false), sock(-1) {
+}
+
+ClientSocket::~ClientSocket() {
+	this->disconnect_host();
+}
+
 void ClientSocket::disconnect_host() {
 	if (this->connected) {
 		shutdown(this->sock, SHUT_RDWR);
@@ -21,18 +33,6 @@ void ClientSocket::disconnect_host() {
 	}
 }
 
-ClientSocket::ClientSocket() :
-		address(""), connected(false), port(0), sock(-1) {
-}
-
-ClientSocket::ClientSocket(std::string address, int port, Log& log) :
-		address(address), connected(false), port(port), sock(-1), log(log) {
-}
-
-ClientSocket::~ClientSocket() {
-	this->disconnect_host();
-}
-
 void ClientSocket::connect_host() {
 	this->connected = false;
 	//create socket if it is not already created
@@ -40,27 +40,29 @@ void ClientSocket::connect_host() {
 		//Create socket
 		this->sock = socket(AF_INET, SOCK_STREAM, 0);
 		if (this->sock == -1) {
-			this->log.log_message_exception(
-					"CLIENT_SOCKET - Could not create socket");
+			std::cerr << "CLIENT_SOCKET - Could not create socket";
+			return;
 		}
-//		std::cout << "Socket created" << std::endl;
 	}
 
 	//plain ip address
 	this->server.sin_addr.s_addr = inet_addr(this->address.c_str());
 	this->server.sin_family = AF_INET;
 	this->server.sin_port = htons(this->port);
+
 	//Connect to remote server
 	if (connect(this->sock, (struct sockaddr*) (&this->server),
 			sizeof(this->server)) < 0) {
-		this->log.log_message_exception(
-				"CLIENT_SOCKET - connect failed. Error");
+		std::cerr << "CLIENT_SOCKET - connect failed. Error" << std::endl;
+
+		//Sock already open so close it first
+		shutdown(this->sock, SHUT_RDWR);
+		this->connected = false;
+		close(this->sock);
+		return;
 	}
-//	std::cout << "Connected\n";
 	this->connected = true;
 }
-
-
 
 } /* namespace radiation */
 
