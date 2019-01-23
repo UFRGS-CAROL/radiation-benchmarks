@@ -4,7 +4,7 @@ CC=arm-linux-gnueabihf-gcc
 EXEC=matmul
 MATRIXSIZE?=500
 
-CCFLAGS= -DMATRIXSIZE=$(MATRIXSIZE) -O3 -Wno-unused-result 
+CCFLAGS= -O3 -Wno-unused-result 
 LDFLAGS= -static -lm
 
 
@@ -45,7 +45,7 @@ clean:
 	
 generate: $(EXEC)
 	./input_matmul.py $(DEFAULTINPUT) $(MATRIXSIZE)
-	./$(EXEC) $(DEFAULTINPUT) $(DEFAULTGOLD) 1
+	./$(EXEC) $(DEFAULTINPUT) $(DEFAULTGOLD) 1 $(MATRIXSIZE)
 
 test: $(EXEC) generate 
-	./$(EXEC) $(DEFAULTINPUT) $(DEFAULTGOLD) 0
+	./$(EXEC) $(DEFAULTINPUT) $(DEFAULTGOLD) 0 $(MATRIXSIZE)

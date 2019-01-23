@@ -19,15 +19,22 @@
 #define NUM_EXEC 1
 #define PI 3.1415926535897932384626433
 
-#ifndef MATRIX_SIZE
-#define MATRIX_SIZE 500 // matrix size
-#endif
-
 #define SIZE ((MATRIX_SIZE)*(MATRIX_SIZE))
 
+#ifndef LOGS
+
+#define MATRIX_SIZE 500 // matrix size
 float mA[MATRIX_SIZE][MATRIX_SIZE];
 float mB[MATRIX_SIZE][MATRIX_SIZE];
 float mCS0[MATRIX_SIZE][MATRIX_SIZE];
+
+#else
+float **mA;
+float **mB;
+float **mCS0;
+int MATRIX_SIZE;
+#endif
+
 int s;
 struct sockaddr_in server;
 unsigned int buffer[4];
@@ -142,6 +149,7 @@ int main(int argc, char **argv) {
 	input = argv[1];
 	gold = argv[2];
 	generate = atoi(argv[3]);
+	MATRIX_SIZE = atoi(argv[4]);
 
 	if(!generate) {
 		char *benchmark_name = "sequential_mxm";
@@ -150,8 +158,21 @@ int main(int argc, char **argv) {
 
 		start_log_file(benchmark_name, test_info);
 	}
-#endif
 
+	if(generate) {
+		printf("Generating for %s with size %d\n", input, MATRIX_SIZE);
+	}
+	mA = malloc(sizeof(float*) * MATRIX_SIZE);
+	mB = malloc(sizeof(float*) * MATRIX_SIZE);
+	mCS0 = malloc(sizeof(float*) * MATRIX_SIZE);
+	int mt_siz;
+	for(mt_siz = 0; mt_siz < MATRIX_SIZE; mt_siz++) {
+		mA[mt_siz] = malloc(sizeof(float) * MATRIX_SIZE);
+		mB[mt_siz] = malloc(sizeof(float) * MATRIX_SIZE);
+		mCS0[mt_siz] = malloc(sizeof(float) * MATRIX_SIZE);
+	}
+
+#endif
 
 	int i = 0;
 	int j = 0;
@@ -233,6 +254,20 @@ int main(int argc, char **argv) {
 		}
 #endif
 	}
+
+#ifdef LOGS
+	if(!generate) {
+		end_log_file();
+	}
+	for(mt_siz = 0; mt_siz < MATRIX_SIZE; mt_siz++) {
+		free(mA[mt_siz]);
+		free(mB[mt_siz]);
+		free(mCS0[mt_siz]);
+	}
+	free(mA);
+	free(mB);
+	free(mCS0);
+#endif
 
 	return 0;
 }
