@@ -12,7 +12,6 @@ SIZES = [512, 1024]
 
 
 def config(board, debug):
-
     DATA_PATH_BASE = "mxm"
 
     benchmark_bin = "matmul"
@@ -42,55 +41,53 @@ def config(board, debug):
     elif 'zedboard' in board:
         arch = 'arm'
 
-
-    generate = ["sudo mkdir -p " + bin_path, 
-                "cd " + src_benchmark, 
-                "make clean", 
+    generate = [" mkdir -p " + bin_path,
+                "cd " + src_benchmark,
+                "make clean",
                 "make -C ../../include STATIC=1",
-                "make ARCH={} LOGS=1 MATRIXSIZE={}".format(),
-                "mkdir -p " + data_path, 
-                "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
-                "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
+                "make ARCH={} LOGS=1 ".format(arch),
+                "mkdir -p " + data_path,
+                " rm -f " + data_path + "/*" + benchmark_bin + "*",
+                " mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
     # gen only for max size, defined on cuda_trip_mxm.cu
-    max_size = 8192
     for i in SIZES:
-        for tc in USE_TENSOR_CORES:
-            input_file = data_path + "/"
+        input_file = "{}/matmul_input_{}.txt".format(data_path, i)
+        gold_file = "{}/matmul_gold_{}.txt".format(data_path, i)
 
-            gen = [None] * 8
-            gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
-            gen[1] = ['-size=' + str(i)]
-            gen[2] = ['-input_a=' + input_file + 'A_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
-            gen[3] = ['-input_b=' + input_file + 'B_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
-            gen[4] = ['-gold=' + input_file + "GOLD_" +  str(i) + "_use_tensor_" + str(tc) + ".matrix"]  # change for execute
-            gen[5] = []
-            gen[6] = ['-use_tensors=' + str(tc)]
-            gen[7] = ['-generate']
+        # ./ input_matmul.py. / matmul_input.dat     1024
+        generate.append('./input_matmul.py  {} {}'.format(input_file, i))
 
-            # change mode and iterations for exe
-            exe = copy.deepcopy(gen)
-            exe[0][1] = bin_path + '/' + benchmark_bin + " "
-            exe[5] = ['-iterations=' + str(ITERATIONS)]
-            exe[7] = []
+        # generate
+        # ./ matmul. / matmul_input.dat. / matmul_gold.txt 1 1024
+        gen = [None] * 5
+        gen[0] = [bin_path + "/" + benchmark_bin + " "]
+        gen[1] = [input_file]
+        gen[2] = [gold_file]
+        gen[3] = [1]  # change for execute
+        gen[4] = [i]
 
-            generate.append(' '.join(str(r) for v in gen for r in v))
-            execute.append(' '.join(str(r) for v in exe for r in v))
+        # change mode and iterations for exe
+        # ./ matmul. / matmul_input.dat. / matmul_gold.txt 0 1024
+        exe = copy.deepcopy(gen)
+        exe[3] = [0]
+
+        generate.append(' '.join(str(r) for v in gen for r in v))
+        execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 
 
-
 if __name__ == "__main__":
+    debug_mode = False
     try:
-        parameter = str(sys.argv[1:][1]).upper() 
+        parameter = str(sys.argv[1:][1]).upper()
         if parameter == 'DEBUG':
             debug_mode = True
     except:
         debug_mode = False
-    
+
     board, _ = discover_board()
-    for p in PRECISIONS:
-        config(board=board, arith_type=p, debug=debug_mode)
+    config(board=board, debug=debug_mode)
     print "Multiple jsons may have been generated."
