@@ -4,7 +4,7 @@ CC=arm-linux-gnueabihf-gcc
 EXEC=matmul
 MATRIXSIZE?=500
 
-CCFLAGS= -O3 -Wno-unused-result 
+CCFLAGS= -O3 -Wno-unused-result
 LDFLAGS= -static -lm
 
 
@@ -32,8 +32,8 @@ ifeq ($(ARCH), x86)
 CC=gcc
 endif
 
-DEFAULTGOLD=./matmul_gold.txt
-DEFAULTINPUT=./matmul_input.dat
+DEFAULTGOLD=./matmul_input_$(MATRIXSIZE).txt
+DEFAULTINPUT=./matmul_gold_$(MATRIXSIZE).txt
 
 all: clean $(EXEC)
 
@@ -42,10 +42,14 @@ $(EXEC): matmul.c
 
 clean:
 	rm -f $(EXEC) $(DEFAULTGOLD) $(DEFAULTINPUT)
-	
+
+geninput: $(EXEC)
+	./input_matmul.py $(DEFAULTINPUT) $(MATRIXSIZE)
+
+
 generate: $(EXEC)
 	./input_matmul.py $(DEFAULTINPUT) $(MATRIXSIZE)
 	./$(EXEC) $(DEFAULTINPUT) $(DEFAULTGOLD) 1 $(MATRIXSIZE)
 
-test: $(EXEC) generate 
+test: $(EXEC) generate
 	./$(EXEC) $(DEFAULTINPUT) $(DEFAULTGOLD) 0 $(MATRIXSIZE)
