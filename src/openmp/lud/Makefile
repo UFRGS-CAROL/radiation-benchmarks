@@ -2,10 +2,15 @@
 CC = gcc
 CC_FLAGS = -fopenmp -O3 -lm
 
-intel:CC=icc -mmic -DMIC_NATIVE 
+intel:CC=icc -mmic -DMIC_NATIVE
 intel:CC_FLAGS=-qopenmp
 
 SOURCES_CHECK=lud_check.c lud_omp.c ../../include/log_helper.c
+
+armv8:CC=aarch64-linux-gnu-gcc
+armv8:CC_FLAGS=-O3 -static -fopenmp -lm
+
+armv8: lud_gen lud_check lud_err_inj lud_timing
 
 general: lud_gen lud_check lud_err_inj lud_timing
 

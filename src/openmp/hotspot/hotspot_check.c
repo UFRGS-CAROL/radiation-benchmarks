@@ -3,6 +3,7 @@
 #include <omp.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <math.h>
 
 #ifdef LOGS
 #include "../../include/log_helper.h"
@@ -389,4 +390,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

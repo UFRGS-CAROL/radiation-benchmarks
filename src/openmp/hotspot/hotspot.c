@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <sys/time.h>
+#include <math.h>
 
 
 //using namespace std;
@@ -294,4 +295,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

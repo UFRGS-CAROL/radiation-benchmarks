@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-#define INPUTSIZE 134217728
-int main(){
-
+int INPUTSIZE=0;
+int main(int argc, char** argv){
+        if (argc == 2) {
+            INPUTSIZE = atoi(argv[1]);
+        } else {
+            fprintf(stderr, "Usage: %s <input size> \n", argv[0]);
+            exit(1);
+        }
         unsigned *ndata = (unsigned*)malloc(INPUTSIZE*sizeof(unsigned));//new unsigned[INPUTSIZE];
         printf("Generating input, this will take a long time..."); fflush(stdout);
 
