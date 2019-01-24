@@ -244,7 +244,7 @@ int main(int argc, char **argv) {
 		if (status_app == 0x00000000) { // sem erros
 			//printf("ok\n");
 			buffer[0] = APP_SUCCESS; //sem erros
-			//send_message(1);
+			send_message(1);
 		}
 
 #ifdef LOGS
