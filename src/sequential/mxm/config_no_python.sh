@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
 RADIATION_BENCHMARKS="/home/carol/radiation-benchmarks"
+#RADIATION_BENCHMARKS="/mnt/4E0AEF320AEF15AD/radiation-benchmarks"
 SIZE=1024
 ARCH=x86
  
@@ -18,4 +19,4 @@ str='[
 }
 ]'
 
-echo $str
+echo $str > "${RADIATION_BENCHMARKS}/scripts/json_files/matmul.json"
