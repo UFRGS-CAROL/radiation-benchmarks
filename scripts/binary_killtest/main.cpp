@@ -25,6 +25,11 @@
 
 #define MAX_KILL_TIMES 5
 
+//! Parse configuration data
+/*!
+ \param config_file_path where the config file is located
+ \return a hashmap that contains all configuration in config file based in its key
+ */
 std::unordered_map<std::string, std::string> parse_config_data(
 		std::string config_file_path) {
 	std::ifstream config_file_obj(config_file_path);
@@ -75,6 +80,11 @@ std::unordered_map<std::string, std::string> parse_config_data(
 	return config_file_data;
 }
 
+//! Read all json files path
+/*!
+ \param text_path file
+ \return vector that contain all json files
+ */
 std::vector<std::string> read_json_paths(std::string text_path) {
 	std::ifstream file(text_path);
 	std::string str;
@@ -130,9 +140,9 @@ int main(int argc, char **argv) {
 		std::string tmp_dir = config_hash["tmpdir"];
 
 		radiation::WatchDog lessie(command_vector, TIMESTAMP_MAX_DIFF_DEFAULT,
-				SOCK_SERVER_IP,
-				SOCK_SERVER_PORT, install_dir, var_dir, log_path, tmp_dir,
-				MAX_KILL_TIMES);
+		SOCK_SERVER_IP,
+		SOCK_SERVER_PORT, install_dir, var_dir, log_path, tmp_dir,
+		MAX_KILL_TIMES);
 
 		lessie.watch();
 	}

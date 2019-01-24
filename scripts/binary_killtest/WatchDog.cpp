@@ -40,7 +40,7 @@ WatchDog::WatchDog(const std::vector<Command>& command_list,
 	signal(SIGUSR2, this->signal_handler);
 
 	// SIGINT is necessary to crtl - c keys
-	signal(SIGINT, this->interrupt_processing);
+	signal(SIGINT, this->signal_handler);
 
 	//---------------------------------------------------------------------------
 	// Start last kill timestamp with an old enough timestamp
@@ -65,17 +65,21 @@ WatchDog::WatchDog(const std::vector<Command>& command_list,
 }
 
 void WatchDog::signal_handler(int signal) {
-	if (signal == SIGUSR1 || signal == SIGUSR1) {
+	switch (signal) {
+	case SIGUSR1:
 		timestamp_signal = get_time_since_epoch();
+		break;
+	case SIGUSR2:
+		timestamp_signal = get_time_since_epoch();
+		break;
+	case SIGINT:
+		for (auto cmd : *kill_list) {
+			cmd.kill();
+		}
+		throw std::runtime_error(
+				"\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )");
+		break;
 	}
-}
-
-void WatchDog::interrupt_processing(int signal) {
-	for (auto cmd : *kill_list) {
-		cmd.kill();
-	}
-	throw std::runtime_error(
-			"\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )");
 }
 
 void WatchDog::kill_all() {
@@ -164,12 +168,12 @@ void WatchDog::watch() {
 
 }
 
-void WatchDog::exec_command(const Command& cmd){
+void WatchDog::exec_command(const Command& cmd) {
 	//start the command
-	if(cmd.execute_command() == false)
-		this->log.log_message_info("Error launching command '" + cmd.get_exec_command() + "';'");
+	if (cmd.execute_command() == false)
+		this->log.log_message_info(
+				"Error launching command '" + cmd.get_exec_command() + "';'");
 }
-
 
 Command WatchDog::select_command() {
 	if (this->check_command_list_changes()) {
@@ -215,7 +219,7 @@ Command WatchDog::select_command() {
 	}
 
 	auto now = get_time_since_epoch();
-	if ((now - timestamp) < TIME_WIDOW) {
+	if ((now - timestamp) < TIME_WINDOW) {
 		return this->get_command(i);
 	}
 
