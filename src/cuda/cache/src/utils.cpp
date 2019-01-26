@@ -8,6 +8,8 @@
 #include "utils.h"
 #include <iostream> // std::cout and std::cerr
 #include <stdexcept>
+#include <chrono>
+#include <thread>
 
 /**
  * Check the return value of the CUDA runtime API call and exit
@@ -24,4 +26,12 @@ void check_cuda_error_(const char *file, unsigned line,
 
 void error(std::string err){
 	throw std::runtime_error("ERROR:" + err);
+}
+
+//!  sleep seconds.
+/*!
+ \param seconds to sleep
+ */
+void sleep(int seconds) {
+	std::this_thread::sleep_for(std::chrono::seconds(seconds));
 }

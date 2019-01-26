@@ -1,6 +1,6 @@
 CXX=g++
 NVCC=/usr/local/cuda/bin/nvcc
-CXXFLAGS= -std=c++11 -o3  -fPIC
+CXXFLAGS= -std=c++11 -o3  -fPIC -pthread
 EXEC=cudaCacheTest
 
 VPATH=./src/

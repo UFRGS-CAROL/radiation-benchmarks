@@ -10,6 +10,7 @@
 
 #include <nvml.h>
 #include <string>
+#include <thread>
 
 class NVMLWrapper {
 private:
@@ -19,8 +20,11 @@ private:
 	std::string driver_version;
 	std::string nvml_version;
 	nvmlDevice_t device;
+	std::thread profiler;
 
+	static void start(unsigned device_index);
 	void check_nvml_return(std::string info, nvmlReturn_t result);
+
 public:
 	NVMLWrapper(unsigned device_index);
 	virtual ~NVMLWrapper();

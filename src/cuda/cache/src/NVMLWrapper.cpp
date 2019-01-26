@@ -44,8 +44,27 @@ NVMLWrapper::~NVMLWrapper() {
 	this->check_nvml_return("initialize NVML library", result);
 }
 
-void NVMLWrapper::start_collecting_data() {
+void NVMLWrapper::start(unsigned device_index) {
+	nvmlUnit_t unit;
+	nvmlReturn_t result = nvmlUnitGetHandleByIndex(device_index, &unit);
 
+	if (NVML_SUCCESS != result) {
+		error(
+				"Failed to get unit handler from device "
+						+ std::to_string(device_index) + " error "
+						+ nvmlErrorString(result));
+	}
+
+	for (int i = 0; i < 10; i++) {
+		sleep(1);
+		unsigned temp;
+		result = nvmlUnitGetTemperature(unit, 0, &temp);
+
+	}
+}
+
+void NVMLWrapper::start_collecting_data() {
+	this->profiler = std::thread(NVMLWrapper::start, this->device_index);
 }
 
 void NVMLWrapper::check_nvml_return(std::string info, nvmlReturn_t result) {
@@ -58,6 +77,7 @@ void NVMLWrapper::check_nvml_return(std::string info, nvmlReturn_t result) {
 }
 
 void NVMLWrapper::end_collecting_data() {
+	this->profiler.join();
 }
 
 void NVMLWrapper::print_device_info() {
