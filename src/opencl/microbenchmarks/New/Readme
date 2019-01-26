@@ -1,1 +1,4 @@
 g++ -save-temps -fverbose-asm -fopenmp -o teste soma.cpp
+
+./MicroBench_ADD_INT 400000000 1
+
