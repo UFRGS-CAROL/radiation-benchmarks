@@ -70,6 +70,8 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 		unsigned info_count[10];
 		nvmlProcessInfo_t infos;
 		result = nvmlDeviceGetComputeRunningProcesses (*device, info_count, &infos);
+		for(auto t : info_count)
+			std::cout << "COUNT I " << t << std::endl;
 
 	}
 }
