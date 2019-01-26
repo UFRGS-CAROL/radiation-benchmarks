@@ -60,9 +60,11 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 				NVML_CLOCK_SM, &clock);
 
 
-		std::cout << "COUNT " << clock << std::endl;
+		std::cout << "SM " << clock << std::endl;
 		result = nvmlDeviceGetClockInfo(*device,
 				NVML_CLOCK_COUNT, &clock);
+		std::cout << "COUNT " << clock << std::endl;
+
 
 	}
 }
