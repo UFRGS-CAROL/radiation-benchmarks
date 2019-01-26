@@ -14,9 +14,15 @@ class NVMLWrapper {
 private:
 	nvmlReturn_t init_ok;
 	nvmlReturn_t shutdown_ok;
+	unsigned device_index;
+
 public:
-	NVMLWrapper();
+	NVMLWrapper(unsigned device_index);
 	virtual ~NVMLWrapper();
+
+	void start_collecting_data();
+
+	void end_collecting_data();
 };
 
 #endif /* NVMLWRAPPER_H_ */

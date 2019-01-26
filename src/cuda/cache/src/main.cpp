@@ -21,7 +21,10 @@ void setup_for_volta(){
 }
 
 int main(void) {
+	NVMLWrapper b(0);
 
+	b.start_collecting_data();
+	b.end_collecting_data();
 
 	return 0;
 }
