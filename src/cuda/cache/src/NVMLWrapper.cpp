@@ -25,18 +25,20 @@ NVMLWrapper::NVMLWrapper(unsigned device_index) :
 	//getting driver version
 	char driver_version[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE];
 	result = nvmlSystemGetDriverVersion(driver_version,
-			NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE);
+	NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE);
 	this->check_nvml_return("get driver version", result);
 
 	// nvml version
 	char nvml_version[NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE];
 	result = nvmlSystemGetNVMLVersion(nvml_version,
-			NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE);
+	NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE);
 	this->check_nvml_return("get nvml version", result);
 
 	this->device_name = device_name;
 	this->driver_version = driver_version;
 	this->nvml_version = nvml_version;
+	std::cout << device_name << " " << driver_version << " " << nvml_version
+			<< std::endl;
 
 }
 
