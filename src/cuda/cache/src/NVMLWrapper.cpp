@@ -16,27 +16,27 @@ NVMLWrapper::NVMLWrapper(unsigned device_index) :
 	this->check_nvml_return("initialize NVML library", result);
 
 	//getting device name
-	this->device_name.reserve(NVML_DEVICE_NAME_BUFFER_SIZE);
+	char device_name[NVML_DEVICE_NAME_BUFFER_SIZE];
 	result = nvmlDeviceGetHandleByIndex(this->device_index, &this->device);
 	this->check_nvml_return("get handle", result);
-	result = nvmlDeviceGetName(this->device,
-			const_cast<char*>(this->device_name.c_str()),
-			NVML_DEVICE_NAME_BUFFER_SIZE);
+	result = nvmlDeviceGetName(this->device, device_name,
+	NVML_DEVICE_NAME_BUFFER_SIZE);
 
 	//getting driver version
-	this->driver_version.reserve(NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE);
-	result = nvmlSystemGetDriverVersion(
-			const_cast<char*>(this->driver_version.c_str()),
+	char driver_version[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE];
+	result = nvmlSystemGetDriverVersion(driver_version,
 			NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE);
 	this->check_nvml_return("get driver version", result);
 
 	// nvml version
-	this->nvml_version.reserve(NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE);
 	char nvml_version[NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE];
-	result = nvmlSystemGetNVMLVersion(
-			const_cast<char*>(this->nvml_version.c_str()),
+	result = nvmlSystemGetNVMLVersion(nvml_version,
 			NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE);
 	this->check_nvml_return("get nvml version", result);
+
+	this->device_name = device_name;
+	this->driver_version = driver_version;
+	this->nvml_version = nvml_version;
 
 }
 
