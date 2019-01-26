@@ -66,6 +66,11 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 		result = nvmlDeviceGetComputeMode(*device, &mode);
 		std::cout << "COMPUTE MODE " << mode << std::endl;
 
+		//get info counts
+		unsigned info_count[10];
+		nvmlProcessInfo_t infos;
+		result = nvmlDeviceGetComputeRunningProcesses (*device, info_count, &infos);
+
 	}
 }
 
