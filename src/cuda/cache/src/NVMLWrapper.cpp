@@ -52,19 +52,19 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 				NVML_CLOCK_GRAPHICS, &clock);
 
 		std::cout << "GRAPHICS " << clock << std::endl;
-		result = nvmlDeviceGetClockInfo(*device,
-				NVML_CLOCK_MEM, &clock);
+		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_MEM, &clock);
 
 		std::cout << "MEMORY " << clock << std::endl;
-		result = nvmlDeviceGetClockInfo(*device,
-				NVML_CLOCK_SM, &clock);
-
+		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_SM, &clock);
 
 		std::cout << "SM " << clock << std::endl;
-		result = nvmlDeviceGetClockInfo(*device,
-				NVML_CLOCK_COUNT, &clock);
+		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_COUNT, &clock);
 		std::cout << "COUNT " << clock << std::endl;
 
+		//get compute mode
+		nvmlComputeMode_t mode;
+		result = nvmlDeviceGetComputeMode(*device, &mode);
+		std::cout << "COMPUTE MODE " << mode << std::endl;
 
 	}
 }
