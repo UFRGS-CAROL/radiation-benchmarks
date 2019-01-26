@@ -8,7 +8,7 @@
 #include "NVMLWrapper.h"
 
 NVMLWrapper::NVMLWrapper() {
-	// TODO Auto-generated constructor stub
+
 
 }
 

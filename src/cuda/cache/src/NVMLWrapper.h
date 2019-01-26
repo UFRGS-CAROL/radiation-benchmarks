@@ -8,7 +8,11 @@
 #ifndef NVMLWRAPPER_H_
 #define NVMLWRAPPER_H_
 
+#include <nvml.h>
+
 class NVMLWrapper {
+private:
+	nvmlReturn_t init_ok;
 public:
 	NVMLWrapper();
 	virtual ~NVMLWrapper();
