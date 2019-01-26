@@ -37,9 +37,6 @@ NVMLWrapper::NVMLWrapper(unsigned device_index) :
 	this->device_name = device_name;
 	this->driver_version = driver_version;
 	this->nvml_version = nvml_version;
-	std::cout << "INFO" << device_name << " " << driver_version << " " << nvml_version
-			<< std::endl;
-
 }
 
 NVMLWrapper::~NVMLWrapper() {
