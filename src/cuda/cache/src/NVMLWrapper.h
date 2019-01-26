@@ -11,11 +11,14 @@
 #include <nvml.h>
 #include <string>
 
-
 class NVMLWrapper {
 private:
 
 	unsigned device_index;
+	std::string device_name;
+	std::string driver_version;
+	std::string nvml_version;
+	nvmlDevice_t device;
 
 	void check_nvml_return(std::string info, nvmlReturn_t result);
 public:
