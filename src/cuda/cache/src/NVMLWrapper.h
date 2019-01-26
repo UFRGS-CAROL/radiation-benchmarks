@@ -28,6 +28,9 @@ public:
 	void start_collecting_data();
 
 	void end_collecting_data();
+
+
+	void print_device_info();
 };
 
 #endif /* NVMLWRAPPER_H_ */

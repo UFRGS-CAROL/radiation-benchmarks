@@ -16,27 +16,26 @@ NVMLWrapper::NVMLWrapper(unsigned device_index) :
 	this->check_nvml_return("initialize NVML library", result);
 
 	//getting device name
-	std::string device_name;
-	device_name.reserve(NVML_DEVICE_NAME_BUFFER_SIZE);
-//	char            name[NVML_DEVICE_NAME_BUFFER_SIZE];
+	this->device_name.reserve(NVML_DEVICE_NAME_BUFFER_SIZE);
 	result = nvmlDeviceGetHandleByIndex(this->device_index, &this->device);
 	this->check_nvml_return("get handle", result);
-
 	result = nvmlDeviceGetName(this->device,
 			const_cast<char*>(this->device_name.c_str()),
 			NVML_DEVICE_NAME_BUFFER_SIZE);
 
 	//getting driver version
-	char driver_version[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE];
-	result = nvmlSystemGetDriverVersion(driver_version,
-	NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE);
+	this->driver_version.reserve(NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE);
+	result = nvmlSystemGetDriverVersion(
+			const_cast<char*>(this->driver_version.c_str()),
+			NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE);
 	this->check_nvml_return("get driver version", result);
 
 	// nvml version
+	this->nvml_version.reserve(NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE);
 	char nvml_version[NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE];
-	result = nvmlSystemGetNVMLVersion(nvml_version,
-	NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE);
-
+	result = nvmlSystemGetNVMLVersion(
+			const_cast<char*>(this->nvml_version.c_str()),
+			NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE);
 	this->check_nvml_return("get nvml version", result);
 
 }
@@ -60,4 +59,10 @@ void NVMLWrapper::check_nvml_return(std::string info, nvmlReturn_t result) {
 }
 
 void NVMLWrapper::end_collecting_data() {
+}
+
+void NVMLWrapper::print_device_info() {
+	std::cout << "Device name: " << this->device_name << std::endl
+			<< "Driver version: " << this->driver_version << std::endl
+			<< "NVML version: " << this->nvml_version << std::endl;
 }

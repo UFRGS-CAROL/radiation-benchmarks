@@ -25,6 +25,7 @@ int main(void) {
 
 	b.start_collecting_data();
 	b.end_collecting_data();
+	b.print_device_info();
 
 	return 0;
 }
