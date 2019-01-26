@@ -69,9 +69,36 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 		//get info counts
 		unsigned info_count[10];
 		nvmlProcessInfo_t infos;
-		result = nvmlDeviceGetComputeRunningProcesses (*device, info_count, &infos);
-		for(auto t : info_count)
-			std::cout << "COUNT I " << t << std::endl;
+		result = nvmlDeviceGetComputeRunningProcesses(*device, info_count,
+				&infos);
+		for (auto t : info_count)
+			if (t != 0)
+				std::cout << "COUNT I " << t << " mem size "
+						<< infos.usedGpuMemory << std::endl;
+
+		//		nvmlMemoryErrorType_t
+//		NVML_MEMORY_ERROR_TYPE_CORRECTED
+//		NVML_MEMORY_ERROR_TYPE_UNCORRECTED
+//		NVML_MEMORY_ERROR_TYPE_COUNT
+
+//		nvmlEccCounterType_t counterType;
+		//NVML_VOLATILE_ECC - reset on reboot
+		//NVML_AGGREGATE_ECC - persistent
+		//NVML_ECC_COUNTER_TYPE_COUNT
+
+		for (auto error_type : { NVML_MEMORY_ERROR_TYPE_CORRECTED,
+				NVML_MEMORY_ERROR_TYPE_UNCORRECTED, NVML_MEMORY_ERROR_TYPE_COUNT })
+			for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC,
+					NVML_ECC_COUNTER_TYPE_COUNT }) {
+				nvmlEccErrorCounts_t ecc_counts;
+				result = nvmlDeviceGetDetailedEccErrors(*device, error_type,
+						counter_type, &ecc_counts);
+				std::cout << "ERROR TYPE " << error_type << " COUNTER_TYPE "
+						<< counter_type << " MEM " << ecc_counts.deviceMemory
+						<< " L1 " << ecc_counts.l1Cache << " L2 "
+						<< ecc_counts.l2Cache << " RF "
+						<< ecc_counts.registerFile << std::endl;
+			}
 
 	}
 }
