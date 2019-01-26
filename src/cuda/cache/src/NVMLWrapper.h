@@ -22,7 +22,7 @@ private:
 	nvmlDevice_t device;
 	std::thread profiler;
 
-	static void start(unsigned device_index);
+	static void start(nvmlDevice_t* device);
 	void check_nvml_return(std::string info, nvmlReturn_t result);
 
 public:

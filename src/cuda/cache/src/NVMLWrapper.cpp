@@ -44,27 +44,31 @@ NVMLWrapper::~NVMLWrapper() {
 	this->check_nvml_return("initialize NVML library", result);
 }
 
-void NVMLWrapper::start(unsigned device_index) {
-	nvmlUnit_t unit;
-	nvmlReturn_t result = nvmlUnitGetHandleByIndex(device_index, &unit);
-
-	if (NVML_SUCCESS != result) {
-		error(
-				"Failed to get unit handler from device "
-						+ std::to_string(device_index) + " error "
-						+ nvmlErrorString(result));
-	}
-
+void NVMLWrapper::start(nvmlDevice_t* device) {
 	for (int i = 0; i < 10; i++) {
 		sleep(1);
-		unsigned temp;
-		result = nvmlUnitGetTemperature(unit, 0, &temp);
+		unsigned clock;
+		nvmlReturn_t result = nvmlDeviceGetClockInfo(*device,
+				NVML_CLOCK_GRAPHICS, &clock);
+
+		std::cout << "GRAPHICS " << clock << std::endl;
+		result = nvmlDeviceGetClockInfo(*device,
+				NVML_CLOCK_MEM, &clock);
+
+		std::cout << "MEMORY " << clock << std::endl;
+		result = nvmlDeviceGetClockInfo(*device,
+				NVML_CLOCK_SM, &clock);
+
+
+		std::cout << "COUNT " << clock << std::endl;
+		result = nvmlDeviceGetClockInfo(*device,
+				NVML_CLOCK_COUNT, &clock);
 
 	}
 }
 
 void NVMLWrapper::start_collecting_data() {
-	this->profiler = std::thread(NVMLWrapper::start, this->device_index);
+	this->profiler = std::thread(NVMLWrapper::start, &this->device);
 }
 
 void NVMLWrapper::check_nvml_return(std::string info, nvmlReturn_t result) {
