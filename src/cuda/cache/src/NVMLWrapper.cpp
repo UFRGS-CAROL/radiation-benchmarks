@@ -74,8 +74,10 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 		for (auto t : info_count)
 			if (t != 0)
 				std::cout << "COUNT I " << t << " mem size "
-						<< infos.usedGpuMemory << std::endl;
+<< infos.usedGpuMemory << std::endl;
 
+		//for future uses
+		// nvmlReturn_t nvmlDeviceClearEccErrorCounts ( nvmlDevice_t device, nvmlEccCounterType_t counterType )
 		//		nvmlMemoryErrorType_t
 //		NVML_MEMORY_ERROR_TYPE_CORRECTED
 //		NVML_MEMORY_ERROR_TYPE_UNCORRECTED
@@ -99,6 +101,14 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 						<< ecc_counts.l2Cache << " RF "
 						<< ecc_counts.registerFile << std::endl;
 			}
+
+
+//		 nvmlReturn_t nvmlDeviceGetSamples ( nvmlDevice_t device, nvmlSamplingType_t type, unsigned long long lastSeenTimeStamp, nvmlValueType_t* sampleValType, unsigned int* sampleCount, nvmlSample_t* samples )
+//		 nvmlReturn_t nvmlDeviceGetRetiredPagesPendingStatus ( nvmlDevice_t device, nvmlEnableState_t* isPending )
+//		 nvmlReturn_t nvmlDeviceGetTotalEccErrors ( nvmlDevice_t device, nvmlMemoryErrorType_t errorType, nvmlEccCounterType_t counterType, unsigned long long* eccCounts )
+//		 nvmlReturn_t nvmlDeviceGetViolationStatus ( nvmlDevice_t device, nvmlPerfPolicyType_t perfPolicyType, nvmlViolationTime_t* violTime )
+//		 nvmlReturn_t nvmlDeviceRegisterEvents ( nvmlDevice_t device, unsigned long long eventTypes, nvmlEventSet_t set )
+//		 nvmlReturn_t nvmlDeviceGetSupportedEventTypes ( nvmlDevice_t device, unsigned long long* eventTypes )
 
 	}
 }
