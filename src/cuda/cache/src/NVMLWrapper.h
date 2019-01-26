@@ -13,6 +13,7 @@
 class NVMLWrapper {
 private:
 	nvmlReturn_t init_ok;
+	nvmlReturn_t shutdown_ok;
 public:
 	NVMLWrapper();
 	virtual ~NVMLWrapper();

@@ -22,7 +22,7 @@ CXXFLAGS+=-O0 -g
 NVCCFLAGS+= -G
 endif
 
-LDFLAGS= -L$(CUDAPATH)/lib64  -lcudart
+LDFLAGS= -L$(CUDAPATH)/lib64  -lcudart -L$(CUDAPATH)/lib64/stubs/ -lnvidia-ml
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile

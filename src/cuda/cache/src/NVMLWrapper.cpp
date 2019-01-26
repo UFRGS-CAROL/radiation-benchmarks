@@ -6,13 +6,16 @@
  */
 
 #include "NVMLWrapper.h"
+#include "utils.h"
 
 NVMLWrapper::NVMLWrapper() {
-
-
+	this->init_ok = nvmlInit();
+	if(this->init_ok != NVML_SUCCESS){
+		error("Cannot initialize NVML library");
+	}
 }
 
 NVMLWrapper::~NVMLWrapper() {
-	// TODO Auto-generated destructor stub
+	this->shutdown_ok = nvmlShutdown();
 }
 

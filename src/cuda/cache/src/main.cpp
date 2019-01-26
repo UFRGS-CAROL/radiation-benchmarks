@@ -12,6 +12,14 @@
 #include "kernels.h"
 
 
+void setup_for_kepler(){
+
+}
+
+void setup_for_volta(){
+
+}
+
 int main(void) {
 
 
