@@ -157,7 +157,18 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 
 			}
 		}
-//		 nvmlReturn_t nvmlDeviceGetViolationStatus ( nvmlDevice_t device, nvmlPerfPolicyType_t perfPolicyType, nvmlViolationTime_t* violTime )
+
+		for (auto policy_type : { NVML_PERF_POLICY_POWER,
+				NVML_PERF_POLICY_THERMAL, NVML_PERF_POLICY_COUNT }) {
+			nvmlViolationTime_st viol_time;
+			result = nvmlDeviceGetViolationStatus(*device, policy_type,
+					&viol_time);
+
+			std::cout << "POLICY TYPE " << policy_type << " VIOL TIME "
+					<< viol_time.violationTime << " REF TIME "
+					<< viol_time.referenceTime << std::endl;
+
+		}
 //		 nvmlReturn_t nvmlDeviceRegisterEvents ( nvmlDevice_t device, unsigned long long eventTypes, nvmlEventSet_t set )
 //		 nvmlReturn_t nvmlDeviceGetSupportedEventTypes ( nvmlDevice_t device, unsigned long long* eventTypes )
 
