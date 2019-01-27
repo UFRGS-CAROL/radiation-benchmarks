@@ -9,6 +9,7 @@
 #include "utils.h"
 
 #include <iostream>
+#include <vector>
 
 NVMLWrapper::NVMLWrapper(unsigned device_index) :
 		device_index(device_index) {
@@ -108,21 +109,27 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 				NVML_ENC_UTILIZATION_SAMPLES, NVML_DEC_UTILIZATION_SAMPLES,
 				NVML_PROCESSOR_CLK_SAMPLES, NVML_MEMORY_CLK_SAMPLES,
 				NVML_SAMPLINGTYPE_COUNT }) {
-			auto sample_val_type = NVML_VALUE_TYPE_DOUBLE;
+			nvmlValueType_t sample_val_type;
 			unsigned sample_count;
-			nvmlSample_t samples;
+			nvmlSample_t *samples;
 			result = nvmlDeviceGetSamples(*device, sample_type,
 					last_seen_timestamp, &sample_val_type, &sample_count,
-					&samples);
+					samples);
+			std::vector<nvmlSample_t> samples_array(samples, samples + sample_count);
 
 			std::cout << "SAMPLE TYPE " << sample_type << " SAMPLE VAL TYPE "
 					<< sample_val_type << " sample count " << sample_count
-					<< std::endl << "samples: sample timestamp "
-					<< samples.timeStamp << " sample val "
-					<< samples.sampleValue.dVal << " "
-					<< samples.sampleValue.uiVal << " "
-					<< samples.sampleValue.ulVal << " "
-					<< samples.sampleValue.ullVal << std::endl;
+					<< std::endl;
+
+			for(auto st : samples_array){
+				std::cout << "samples: sample timestamp "
+					<< st.timeStamp << " sample val "
+					<< st.sampleValue.dVal << " "
+					<< st.sampleValue.uiVal << " "
+					<< st.sampleValue.ulVal << " "
+					<< st.sampleValue.ullVal << std::endl;
+			}
+
 
 		}
 //		 nvmlReturn_t nvmlDeviceGetRetiredPagesPendingStatus ( nvmlDevice_t device, nvmlEnableState_t* isPending )
