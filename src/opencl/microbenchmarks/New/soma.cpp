@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 #ifdef INT			
 	unsigned long int gold = ins * sums; 		
 #elif FLOAT
-    float gold = 0.17*10*sums;
+    float gold = 1.7216606250000000e+06;
 #endif
 	unsigned long int i = 0;				// Loop iteration variable
 	unsigned long int j = 0;				// Loop iteration variable	
@@ -115,6 +115,7 @@ for(i=0;i<rep;i++){
 	}
 #elif FLOAT
     double delta = fabs(gold-re)/gold;
+    printf("Re:%1.16e\n",re);
 	if(delta >= 1e-8 ){
 		error = 1;
 #ifdef LOGS
