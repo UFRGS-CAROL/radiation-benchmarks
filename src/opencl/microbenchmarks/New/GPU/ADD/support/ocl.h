@@ -145,7 +145,7 @@ struct OpenCLSetup {
         }
         CL_ERR();
 
-        clKernel = clCreateKernel(clProgram, "StreamCompaction_kernel", &clStatus);
+        clKernel = clCreateKernel(clProgram, "simpleSum", &clStatus);
         CL_ERR();
     }
 

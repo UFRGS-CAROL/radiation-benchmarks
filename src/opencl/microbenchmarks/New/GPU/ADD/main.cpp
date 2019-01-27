@@ -33,7 +33,7 @@
  *
  */
 
-#include "kernel.h"
+//#include "kernel.h"
 #include "support/common.h"
 #include "support/ocl.h"
 #include "support/timer.h"
@@ -124,14 +124,14 @@ int main(int argc, char **argv) {
     cl_int       clStatus;
 	int err = 0;
 
-    printf("-p %d -d %d -i %d -g %d -a %.2f -t %d -n %d -c %d \n",p.platform , p.device, p.n_work_items,p.n_work_groups,p.alpha,p.n_threads,p.in_size,p.compaction_factor);
+    printf("-p %d -d %d -i %d -g %d \n",p.platform , p.device, p.n_work_items,p.n_work_groups);
 	
 	//printf("Main size:%d\n",p.in_size);
 	
 #ifdef LOGS
     set_iter_interval_print(10);
     char test_info[300];
-    snprintf(test_info, 300, "-i %d -g %d -a %.2f -t %d -n %d -c %d",p.n_work_items,        p.n_work_groups,p.alpha,p.n_threads,p.in_size,p.compaction_factor);
+    snprintf(test_info, 300, "-i %d -g %d\n ",p.n_work_items,p.n_work_groups);
     start_log_file("MicroBenchmark_ADD_INT_GPU", test_info);
 #endif
 
@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
         clSetKernelArg(ocl.clKernel, 0, sizeof(cl_mem), &d_A);
         clSetKernelArg(ocl.clKernel, 1, sizeof(cl_mem), &d_B);
         clSetKernelArg(ocl.clKernel, 2, sizeof(cl_mem), &d_C);
-        clSetKernelArg(ocl.clKernel, 4, sizeof(int), &n);
+        clSetKernelArg(ocl.clKernel, 3, sizeof(int), &n);
 
         size_t ls[1] = {(size_t)p.n_work_items};
         size_t gs[1] = {(size_t)p.n_work_items * p.n_work_groups};
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
            C[i] = 0 ;        
         }
         if(error != 0){
-            printf("Deu ruim %d\n",erorr);
+            printf("Deu ruim %d\n",error);
         }
         else{
             printf(".");
