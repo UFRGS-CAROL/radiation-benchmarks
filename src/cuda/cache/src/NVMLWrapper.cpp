@@ -11,15 +11,24 @@
 #include <iostream>
 #include <vector>
 
+void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device = 0) {
+	if (NVML_SUCCESS != result) {
+		error(
+				"Failed to " + info + " from device "
+						+ std::to_string(device) + " error "
+						+ nvmlErrorString(result));
+	}
+}
+
 NVMLWrapper::NVMLWrapper(unsigned device_index) :
 		device_index(device_index) {
 	nvmlReturn_t result = nvmlInit();
-	this->check_nvml_return("initialize NVML library", result);
+	check_nvml_return("initialize NVML library", result);
 
 	//getting device name
 	char device_name[NVML_DEVICE_NAME_BUFFER_SIZE];
 	result = nvmlDeviceGetHandleByIndex(this->device_index, &this->device);
-	this->check_nvml_return("get handle", result);
+	check_nvml_return("get handle", result);
 	result = nvmlDeviceGetName(this->device, device_name,
 	NVML_DEVICE_NAME_BUFFER_SIZE);
 
@@ -27,13 +36,13 @@ NVMLWrapper::NVMLWrapper(unsigned device_index) :
 	char driver_version[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE];
 	result = nvmlSystemGetDriverVersion(driver_version,
 	NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE);
-	this->check_nvml_return("get driver version", result);
+	check_nvml_return("get driver version", result);
 
 	// nvml version
 	char nvml_version[NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE];
 	result = nvmlSystemGetNVMLVersion(nvml_version,
 	NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE);
-	this->check_nvml_return("get nvml version", result);
+	check_nvml_return("get nvml version", result);
 
 	this->device_name = device_name;
 	this->driver_version = driver_version;
@@ -42,7 +51,7 @@ NVMLWrapper::NVMLWrapper(unsigned device_index) :
 
 NVMLWrapper::~NVMLWrapper() {
 	nvmlReturn_t result = nvmlShutdown();
-	this->check_nvml_return("initialize NVML library", result);
+	check_nvml_return("initialize NVML library", result);
 }
 
 void NVMLWrapper::start(nvmlDevice_t* device) {
@@ -50,37 +59,20 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 	nvmlReturn_t result = nvmlEventSetCreate(&set);
 	result = nvmlDeviceRegisterEvents(*device, nvmlEventTypeAll, set);
 
-
 	for (int i = 0; i < 10; i++) {
 		sleep(1);
-		unsigned clock;
-		result = nvmlDeviceGetClockInfo(*device,
-				NVML_CLOCK_GRAPHICS, &clock);
-
-		std::cout << "GRAPHICS " << clock << std::endl;
-		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_MEM, &clock);
-
-		std::cout << "MEMORY " << clock << std::endl;
-		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_SM, &clock);
-
-		std::cout << "SM " << clock << std::endl;
-		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_COUNT, &clock);
-		std::cout << "COUNT " << clock << std::endl;
+		unsigned graph_clock, mem_clock, sm_clock;
+		std::string output = "";
+		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_GRAPHICS,
+				&graph_clock);
+		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_MEM, &mem_clock);
+		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_SM, &sm_clock);
+		output += std::to_string(graph_clock) + "," + std::to_string(mem_clock)
+				+ "," + std::to_string(sm_clock) + ",";
 
 		//get compute mode
-		nvmlComputeMode_t mode;
-		result = nvmlDeviceGetComputeMode(*device, &mode);
-		std::cout << "COMPUTE MODE " << mode << std::endl;
-
-		//get info counts
-		unsigned info_count[10];
-		nvmlProcessInfo_t infos;
-		result = nvmlDeviceGetComputeRunningProcesses(*device, info_count,
-				&infos);
-		for (auto t : info_count)
-			if (t != 0)
-				std::cout << "COUNT I " << t << " mem size "
-						<< infos.usedGpuMemory << std::endl;
+		nvmlComputeMode_t compute_mode;
+		result = nvmlDeviceGetComputeMode(*device, &compute_mode);
 
 		//for future uses
 		// nvmlReturn_t nvmlDeviceClearEccErrorCounts ( nvmlDevice_t device, nvmlEccCounterType_t counterType )
@@ -95,65 +87,25 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 		//NVML_ECC_COUNTER_TYPE_COUNT
 
 		for (auto error_type : { NVML_MEMORY_ERROR_TYPE_CORRECTED,
-				NVML_MEMORY_ERROR_TYPE_UNCORRECTED, NVML_MEMORY_ERROR_TYPE_COUNT })
-			for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC,
-					NVML_ECC_COUNTER_TYPE_COUNT }) {
+				NVML_MEMORY_ERROR_TYPE_UNCORRECTED })
+			for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC }) {
 				nvmlEccErrorCounts_t ecc_counts;
 				result = nvmlDeviceGetDetailedEccErrors(*device, error_type,
 						counter_type, &ecc_counts);
-				std::cout << "ERROR TYPE " << error_type << " COUNTER_TYPE "
-						<< counter_type << " MEM " << ecc_counts.deviceMemory
-						<< " L1 " << ecc_counts.l1Cache << " L2 "
-						<< ecc_counts.l2Cache << " RF "
-						<< ecc_counts.registerFile << std::endl;
+				output += std::to_string(ecc_counts.deviceMemory) + ","
+						+ std::to_string(ecc_counts.l1Cache) + ","
+						+ std::to_string(ecc_counts.l2Cache) + ","
+						+ std::to_string(ecc_counts.registerFile) + ",";
 			}
 
-		if (0) {
-			size_t last_seen_timestamp = get_time_since_epoch();
-			for (auto sample_type : { NVML_TOTAL_POWER_SAMPLES,
-					NVML_GPU_UTILIZATION_SAMPLES,
-					NVML_MEMORY_UTILIZATION_SAMPLES,
-					NVML_ENC_UTILIZATION_SAMPLES, NVML_DEC_UTILIZATION_SAMPLES,
-					NVML_PROCESSOR_CLK_SAMPLES, NVML_MEMORY_CLK_SAMPLES,
-					NVML_SAMPLINGTYPE_COUNT }) {
-				nvmlValueType_t sample_val_type;
-				unsigned sample_count;
-
-				result = nvmlDeviceGetSamples(*device, sample_type,
-						last_seen_timestamp, &sample_val_type, &sample_count,
-						NULL);
-				std::vector<nvmlSample_t> samples_array(sample_count);
-
-				result = nvmlDeviceGetSamples(*device, sample_type,
-						last_seen_timestamp, &sample_val_type, &sample_count,
-						samples_array.data());
-				std::cout << "SAMPLE TYPE " << sample_type
-						<< " SAMPLE VAL TYPE " << sample_val_type
-						<< " sample count " << sample_count << std::endl;
-
-				for (auto st : samples_array) {
-					if (st.sampleValue.dVal || st.sampleValue.sllVal
-							|| st.sampleValue.uiVal || st.sampleValue.ulVal
-							|| st.sampleValue.ullVal)
-						std::cout << "samples: sample timestamp "
-								<< st.timeStamp << " sample val "
-								<< st.sampleValue.dVal << " "
-								<< st.sampleValue.uiVal << " "
-								<< st.sampleValue.ulVal << " "
-								<< st.sampleValue.ullVal << std::endl;
-				}
-
-			}
-		}
 		nvmlEnableState_t is_pending;
 		result = nvmlDeviceGetRetiredPagesPendingStatus(*device, &is_pending);
-		std::cout << "IS PENDING " << is_pending << std::endl;
+		output += std::to_string(is_pending);
 
 		unsigned long long ecc_counts;
 		for (auto error_type : { NVML_MEMORY_ERROR_TYPE_CORRECTED,
-				NVML_MEMORY_ERROR_TYPE_UNCORRECTED, NVML_MEMORY_ERROR_TYPE_COUNT }) {
-			for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC,
-					NVML_ECC_COUNTER_TYPE_COUNT }) {
+				NVML_MEMORY_ERROR_TYPE_UNCORRECTED }) {
+			for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC }) {
 				result = nvmlDeviceGetTotalEccErrors(*device, error_type,
 						counter_type, &ecc_counts);
 				std::cout << "ERROR TYPE " << error_type << " COUNTER TYPE "
@@ -163,17 +115,7 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 			}
 		}
 
-		for (auto policy_type : { NVML_PERF_POLICY_POWER,
-				NVML_PERF_POLICY_THERMAL, NVML_PERF_POLICY_COUNT }) {
-			nvmlViolationTime_st viol_time;
-			result = nvmlDeviceGetViolationStatus(*device, policy_type,
-					&viol_time);
-
-			std::cout << "POLICY TYPE " << policy_type << " VIOL TIME "
-					<< viol_time.violationTime << " REF TIME "
-					<< viol_time.referenceTime << std::endl;
-
-		}
+		std::cout << "OUT STRING: " << output << std::endl;
 
 	}
 	result = nvmlEventSetFree(set);
@@ -182,15 +124,6 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 
 void NVMLWrapper::start_collecting_data() {
 	this->profiler = std::thread(NVMLWrapper::start, &this->device);
-}
-
-void NVMLWrapper::check_nvml_return(std::string info, nvmlReturn_t result) {
-	if (NVML_SUCCESS != result) {
-		error(
-				"Failed to " + info + " from device "
-						+ std::to_string(this->device_index) + " error "
-						+ nvmlErrorString(result));
-	}
 }
 
 void NVMLWrapper::end_collecting_data() {

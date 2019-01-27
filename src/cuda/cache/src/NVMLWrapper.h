@@ -23,7 +23,6 @@ private:
 	std::thread profiler;
 
 	static void start(nvmlDevice_t* device);
-	void check_nvml_return(std::string info, nvmlReturn_t result);
 
 public:
 	NVMLWrapper(unsigned device_index);
