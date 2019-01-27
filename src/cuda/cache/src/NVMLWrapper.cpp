@@ -46,10 +46,15 @@ NVMLWrapper::~NVMLWrapper() {
 }
 
 void NVMLWrapper::start(nvmlDevice_t* device) {
+	nvmlEventSet_t set;
+	nvmlReturn_t result = nvmlEventSetCreate(&set);
+	result = nvmlDeviceRegisterEvents(*device, nvmlEventTypeAll, set);
+
+
 	for (int i = 0; i < 10; i++) {
 		sleep(1);
 		unsigned clock;
-		nvmlReturn_t result = nvmlDeviceGetClockInfo(*device,
+		result = nvmlDeviceGetClockInfo(*device,
 				NVML_CLOCK_GRAPHICS, &clock);
 
 		std::cout << "GRAPHICS " << clock << std::endl;
@@ -169,10 +174,10 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 					<< viol_time.referenceTime << std::endl;
 
 		}
-//		 nvmlReturn_t nvmlDeviceRegisterEvents ( nvmlDevice_t device, unsigned long long eventTypes, nvmlEventSet_t set )
-//		 nvmlReturn_t nvmlDeviceGetSupportedEventTypes ( nvmlDevice_t device, unsigned long long* eventTypes )
 
 	}
+	result = nvmlEventSetFree(set);
+
 }
 
 void NVMLWrapper::start_collecting_data() {
