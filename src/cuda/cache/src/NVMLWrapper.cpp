@@ -111,12 +111,15 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 				NVML_SAMPLINGTYPE_COUNT }) {
 			nvmlValueType_t sample_val_type;
 			unsigned sample_count;
-			nvmlSample_t *samples;
+
 			result = nvmlDeviceGetSamples(*device, sample_type,
 					last_seen_timestamp, &sample_val_type, &sample_count,
-					samples);
-			std::vector<nvmlSample_t> samples_array(samples, samples + sample_count);
+					NULL);
+			std::vector<nvmlSample_t> samples_array(sample_count);
 
+			result = nvmlDeviceGetSamples(*device, sample_type,
+								last_seen_timestamp, &sample_val_type, &sample_count,
+								samples_array.data());
 			std::cout << "SAMPLE TYPE " << sample_type << " SAMPLE VAL TYPE "
 					<< sample_val_type << " sample count " << sample_count
 					<< std::endl;
