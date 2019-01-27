@@ -103,40 +103,46 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 						<< ecc_counts.registerFile << std::endl;
 			}
 
-		size_t last_seen_timestamp = get_time_since_epoch();
-		for (auto sample_type : { NVML_TOTAL_POWER_SAMPLES,
-				NVML_GPU_UTILIZATION_SAMPLES, NVML_MEMORY_UTILIZATION_SAMPLES,
-				NVML_ENC_UTILIZATION_SAMPLES, NVML_DEC_UTILIZATION_SAMPLES,
-				NVML_PROCESSOR_CLK_SAMPLES, NVML_MEMORY_CLK_SAMPLES,
-				NVML_SAMPLINGTYPE_COUNT }) {
-			nvmlValueType_t sample_val_type;
-			unsigned sample_count;
+		if (0) {
+			size_t last_seen_timestamp = get_time_since_epoch();
+			for (auto sample_type : { NVML_TOTAL_POWER_SAMPLES,
+					NVML_GPU_UTILIZATION_SAMPLES,
+					NVML_MEMORY_UTILIZATION_SAMPLES,
+					NVML_ENC_UTILIZATION_SAMPLES, NVML_DEC_UTILIZATION_SAMPLES,
+					NVML_PROCESSOR_CLK_SAMPLES, NVML_MEMORY_CLK_SAMPLES,
+					NVML_SAMPLINGTYPE_COUNT }) {
+				nvmlValueType_t sample_val_type;
+				unsigned sample_count;
 
-			result = nvmlDeviceGetSamples(*device, sample_type,
-					last_seen_timestamp, &sample_val_type, &sample_count,
-					NULL);
-			std::vector<nvmlSample_t> samples_array(sample_count);
+				result = nvmlDeviceGetSamples(*device, sample_type,
+						last_seen_timestamp, &sample_val_type, &sample_count,
+						NULL);
+				std::vector<nvmlSample_t> samples_array(sample_count);
 
-			result = nvmlDeviceGetSamples(*device, sample_type,
-					last_seen_timestamp, &sample_val_type, &sample_count,
-					samples_array.data());
-			std::cout << "SAMPLE TYPE " << sample_type << " SAMPLE VAL TYPE "
-					<< sample_val_type << " sample count " << sample_count
-					<< std::endl;
+				result = nvmlDeviceGetSamples(*device, sample_type,
+						last_seen_timestamp, &sample_val_type, &sample_count,
+						samples_array.data());
+				std::cout << "SAMPLE TYPE " << sample_type
+						<< " SAMPLE VAL TYPE " << sample_val_type
+						<< " sample count " << sample_count << std::endl;
 
-			for (auto st : samples_array) {
-				if (st.sampleValue.dVal || st.sampleValue.sllVal
-						|| st.sampleValue.uiVal || st.sampleValue.ulVal
-						|| st.sampleValue.ullVal)
-					std::cout << "samples: sample timestamp " << st.timeStamp
-							<< " sample val " << st.sampleValue.dVal << " "
-							<< st.sampleValue.uiVal << " "
-							<< st.sampleValue.ulVal << " "
-							<< st.sampleValue.ullVal << std::endl;
+				for (auto st : samples_array) {
+					if (st.sampleValue.dVal || st.sampleValue.sllVal
+							|| st.sampleValue.uiVal || st.sampleValue.ulVal
+							|| st.sampleValue.ullVal)
+						std::cout << "samples: sample timestamp "
+								<< st.timeStamp << " sample val "
+								<< st.sampleValue.dVal << " "
+								<< st.sampleValue.uiVal << " "
+								<< st.sampleValue.ulVal << " "
+								<< st.sampleValue.ullVal << std::endl;
+				}
+
 			}
-
 		}
-//		 nvmlReturn_t nvmlDeviceGetRetiredPagesPendingStatus ( nvmlDevice_t device, nvmlEnableState_t* isPending )
+		nvmlEnableState_t is_pending;
+		result = nvmlDeviceGetRetiredPagesPendingStatus(*device, &is_pending);
+		std::cout << "IS PENDING " << is_pending << std::endl;
 //		 nvmlReturn_t nvmlDeviceGetTotalEccErrors ( nvmlDevice_t device, nvmlMemoryErrorType_t errorType, nvmlEccCounterType_t counterType, unsigned long long* eccCounts )
 //		 nvmlReturn_t nvmlDeviceGetViolationStatus ( nvmlDevice_t device, nvmlPerfPolicyType_t perfPolicyType, nvmlViolationTime_t* violTime )
 //		 nvmlReturn_t nvmlDeviceRegisterEvents ( nvmlDevice_t device, unsigned long long eventTypes, nvmlEventSet_t set )
