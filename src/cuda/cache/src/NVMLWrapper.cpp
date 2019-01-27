@@ -118,21 +118,22 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 			std::vector<nvmlSample_t> samples_array(sample_count);
 
 			result = nvmlDeviceGetSamples(*device, sample_type,
-								last_seen_timestamp, &sample_val_type, &sample_count,
-								samples_array.data());
+					last_seen_timestamp, &sample_val_type, &sample_count,
+					samples_array.data());
 			std::cout << "SAMPLE TYPE " << sample_type << " SAMPLE VAL TYPE "
 					<< sample_val_type << " sample count " << sample_count
 					<< std::endl;
 
-			for(auto st : samples_array){
-				std::cout << "samples: sample timestamp "
-					<< st.timeStamp << " sample val "
-					<< st.sampleValue.dVal << " "
-					<< st.sampleValue.uiVal << " "
-					<< st.sampleValue.ulVal << " "
-					<< st.sampleValue.ullVal << std::endl;
+			for (auto st : samples_array) {
+				if (st.sampleValue.dVal || st.sampleValue.sllVal
+						|| st.sampleValue.uiVal || st.sampleValue.ulVal
+						|| st.sampleValue.ullVal)
+					std::cout << "samples: sample timestamp " << st.timeStamp
+							<< " sample val " << st.sampleValue.dVal << " "
+							<< st.sampleValue.uiVal << " "
+							<< st.sampleValue.ulVal << " "
+							<< st.sampleValue.ullVal << std::endl;
 			}
-
 
 		}
 //		 nvmlReturn_t nvmlDeviceGetRetiredPagesPendingStatus ( nvmlDevice_t device, nvmlEnableState_t* isPending )
