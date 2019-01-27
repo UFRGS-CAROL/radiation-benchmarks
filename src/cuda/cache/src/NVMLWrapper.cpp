@@ -143,7 +143,20 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 		nvmlEnableState_t is_pending;
 		result = nvmlDeviceGetRetiredPagesPendingStatus(*device, &is_pending);
 		std::cout << "IS PENDING " << is_pending << std::endl;
-//		 nvmlReturn_t nvmlDeviceGetTotalEccErrors ( nvmlDevice_t device, nvmlMemoryErrorType_t errorType, nvmlEccCounterType_t counterType, unsigned long long* eccCounts )
+
+		unsigned long long ecc_counts;
+		for (auto error_type : { NVML_MEMORY_ERROR_TYPE_CORRECTED,
+				NVML_MEMORY_ERROR_TYPE_UNCORRECTED, NVML_MEMORY_ERROR_TYPE_COUNT }) {
+			for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC,
+					NVML_ECC_COUNTER_TYPE_COUNT }) {
+				result = nvmlDeviceGetTotalEccErrors(*device, error_type,
+						counter_type, &ecc_counts);
+				std::cout << "ERROR TYPE " << error_type << " COUNTER TYPE "
+						<< counter_type << " ECC COUNT " << ecc_counts
+						<< std::endl;
+
+			}
+		}
 //		 nvmlReturn_t nvmlDeviceGetViolationStatus ( nvmlDevice_t device, nvmlPerfPolicyType_t perfPolicyType, nvmlViolationTime_t* violTime )
 //		 nvmlReturn_t nvmlDeviceRegisterEvents ( nvmlDevice_t device, unsigned long long eventTypes, nvmlEventSet_t set )
 //		 nvmlReturn_t nvmlDeviceGetSupportedEventTypes ( nvmlDevice_t device, unsigned long long* eventTypes )
