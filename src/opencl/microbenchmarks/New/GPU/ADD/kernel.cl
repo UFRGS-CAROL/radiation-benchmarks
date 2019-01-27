@@ -4,8 +4,7 @@
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 #pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics : enable
 
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/support/common.h"
-#include "/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/support/partitioner.h"
+#include "/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/ADD/support/common.h"
 
 #pragma OPENCL EXTENSION cl_amd_fp64: enable
 __kernel void

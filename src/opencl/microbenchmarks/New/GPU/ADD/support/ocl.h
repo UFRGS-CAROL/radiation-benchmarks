@@ -112,9 +112,9 @@ struct OpenCLSetup {
         CL_ERR();
 
         std::filebuf clFile;
-        clFile.open("/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/kernel.cl", std::ios::in);
+        clFile.open("/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/ADD/kernel.cl", std::ios::in);
         if (!clFile.is_open()) {
-            std::cerr << "Unable to open /home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/kernel.cl. Exiting...\n";
+            std::cerr << "Unable to open /home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/ADD/kernel.cl. Exiting...\n";
             exit(EXIT_FAILURE);
         }
         std::istream in(&clFile);

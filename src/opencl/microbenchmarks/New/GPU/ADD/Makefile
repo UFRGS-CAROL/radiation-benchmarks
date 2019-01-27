@@ -54,9 +54,9 @@ endif
 ifndef CHAI_OCL_INC
     $(error CHAI_OCL_INC not defined. This environment variable must be defined to point to the location of the OpenCL header files)
 endif
-INC=-I$(CHAI_OCL_INC) -I/home/carol/radiation-benchmarks/src/opencl/Heterogenous_GPU_CPU/SC/ -I/home/carol/radiation-benchmarks/src/include/
+INC=-I$(CHAI_OCL_INC) -I/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/ADD/ -I/home/carol/radiation-benchmarks/src/include/
 
-SRC=main.cpp kernel.cpp /home/carol/radiation-benchmarks/src/include/log_helper.cpp
+SRC=main.cpp kernel.cpp #/home/carol/radiation-benchmarks/src/include/log_helper.cpp
 OBJECTS=$(SRC:.cpp=.o)
 DEPS=$(OBJECTS:.o=.d)
 EXE=sc
@@ -72,8 +72,8 @@ all: $(EXE)
 
 $(EXE): $(OBJECTS)
 	$(CXX) $(CXX_FLAGS) $(OBJECTS) $(LIB) -o $(EXE)
-	$(CXX) $(CXX_FLAGS) sc_gen_input.cpp -o gen_input
-	$(CXX) $(CXX_FLAGS) sc_gen_gold.cpp -o gen_gold
+	#$(CXX) $(CXX_FLAGS) sc_gen_input.cpp -o gen_input
+	#$(CXX) $(CXX_FLAGS) sc_gen_gold.cpp -o gen_gold
 clean:
 	rm -f $(EXE) *.o *.d
 
