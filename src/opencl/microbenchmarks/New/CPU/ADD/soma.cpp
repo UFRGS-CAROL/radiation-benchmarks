@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 #ifdef INT			
 	unsigned long int gold = ins * sums; 		
 #elif FLOAT
-    float gold = 0.17*10*sums;
+    float gold = 1.7216606250000000e+06;    // This number considers rounding error. 
 #endif
 	unsigned long int i = 0;				// Loop iteration variable
 	unsigned long int j = 0;				// Loop iteration variable	
@@ -51,9 +51,9 @@ int main(int argc, char **argv) {
     char test_info[300];
     snprintf(test_info, 300,"%lu,%lu,%lu",rep,sums,ins);
 #ifdef INT    
-    start_log_file("MicroBenchmark_ADD_INT", test_info);
+    start_log_file("MicroBenchmark_ADD_INT_CPU", test_info);
 #elif FLOAT
-    start_log_file("MicroBenchmark_ADD_FLOAT", test_info);
+    start_log_file("MicroBenchmark_ADD_FLOAT_CPU", test_info);
 #endif    
 #endif
 
@@ -115,6 +115,7 @@ for(i=0;i<rep;i++){
 	}
 #elif FLOAT
     double delta = fabs(gold-re)/gold;
+    printf("Re:%1.16e\n",re);
 	if(delta >= 1e-8 ){
 		error = 1;
 #ifdef LOGS
