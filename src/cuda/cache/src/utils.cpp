@@ -35,3 +35,12 @@ void error(std::string err){
 void sleep(int seconds) {
 	std::this_thread::sleep_for(std::chrono::seconds(seconds));
 }
+
+//!  get time since epoch .
+/*!
+ \return an int value representing the seconds since epoch
+ */
+size_t get_time_since_epoch() {
+	std::time_t result = std::time(nullptr);
+	return size_t(result);
+}

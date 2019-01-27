@@ -20,4 +20,7 @@ void check_cuda_error_(const char *file, unsigned line,
 void error(std::string err);
 void sleep(int seconds);
 
+
+size_t get_time_since_epoch();
+
 #endif /* UTILS_H_ */
