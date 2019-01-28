@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 #ifdef INT			
 	unsigned long int gold = ins * sums; 		
 #elif FLOAT
-    float gold = 1.7216606250000000e+06;    // This number considers rounding error. 
+    float gold = 0.0;    						// This number considers rounding error. 
 #endif
 	unsigned long int i = 0;				// Loop iteration variable
 	unsigned long int j = 0;				// Loop iteration variable	
@@ -92,11 +92,11 @@ for(i=0;i<rep;i++){
          re = re + 0.17;
          re = re + 0.17;
          re = re + 0.17;
-         re = re + 0.17;
-         re = re + 0.17;
-         re = re + 0.17;
-         re = re + 0.17;
-         re = re + 0.17;
+         re = re + (-0.17);
+         re = re + (-0.17);
+         re = re + (-0.17);
+         re = re + (-0.17);
+         re = re + (-0.17);
 #endif
 
 	}
@@ -114,9 +114,8 @@ for(i=0;i<rep;i++){
 #endif				    
 	}
 #elif FLOAT
-    double delta = fabs(gold-re)/gold;
-    printf("Re:%1.16e\n",re);
-	if(delta >= 1e-8 ){
+    //double delta = fabs(gold-re)/gold;
+	if( re >= 1e-8 ){
 		error = 1;
 #ifdef LOGS
 		char error_detail[200];
