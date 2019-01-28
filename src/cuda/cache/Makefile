@@ -12,7 +12,7 @@ NVCCFLAGS= -std=c++11 -O3
 
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
 ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
-INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc
+INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include
 
 
 OBJDIR=./obj/
