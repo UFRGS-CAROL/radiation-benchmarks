@@ -225,13 +225,20 @@ public:
 		check_framework_errors(
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
-
+//
 //		simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
 //				this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
 //				this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
 //				this->alpha, this->beta);
-//		this->debug("device synchronize");
-//		check_framework_errors(cudaDeviceSynchronize());
+		
+		simple_wmma_gemm<<<grid_dim, block_dim>>>(
+				this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+				this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
+				this->alpha, this->beta);
+		
+		
+		this->debug("device synchronize");
+		check_framework_errors(cudaDeviceSynchronize());
 
 		int dev = 0;
 		cudaDeviceProp deviceProp;
@@ -255,10 +262,6 @@ public:
 //		checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
 //				(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
 //				 this->device_ptr_d0, this->alpha, this->beta)));
-
-		checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
-						(this->device_ptr_d0, this->alpha, this->beta)));
-
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
 
@@ -290,9 +293,9 @@ public:
 								sizeof(unsigned long long int)));			
 				
 
-//				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
-//						this->device_ptr_d0, this->device_ptr_d1,this->device_ptr_d2,
-//						this->rows_a, this->cols_b, this->cols_c, this->alpha, this->beta);
+				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
+						this->device_ptr_d0, this->device_ptr_d1,this->device_ptr_d2,
+						this->rows_a, this->cols_b, this->cols_c, this->alpha, this->beta);
 				
 		
 							
@@ -311,7 +314,7 @@ public:
 							M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
 							(BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(float))
 				};
-				checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+//				checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 				//checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
 				//		(this->device_ptr_d0,this->device_ptr_d1,this->device_ptr_d2, this->alpha, this->beta)));
 			
