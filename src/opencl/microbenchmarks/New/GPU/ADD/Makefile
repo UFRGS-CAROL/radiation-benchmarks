@@ -39,7 +39,7 @@ else
     CXX=g++
     endif
 endif
-CXX_FLAGS=-std=c++11 -DLOGS -fopenmp
+CXX_FLAGS=-std=c++11 -DLOGS -fopenmp -DINT
 
 ifndef CHAI_OCL_LIB
     $(error CHAI_OCL_LIB not defined. This environment variable must be defined to point to the location of the OpenCL library)
@@ -59,7 +59,7 @@ INC=-I$(CHAI_OCL_INC) -I/home/carol/radiation-benchmarks/src/opencl/microbenchma
 SRC=main.cpp	 #/home/carol/radiation-benchmarks/src/include/log_helper.cpp
 OBJECTS=$(SRC:.cpp=.o)
 DEPS=$(OBJECTS:.o=.d)
-EXE=ADD_GPU
+EXE=ADD_GPU_INT
 
 .PHONY: all
 all: $(EXE)

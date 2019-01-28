@@ -13,7 +13,9 @@ simpleSum(__global T* A,
           __global T* C,
           int n)
 {
-    int tx = get_global_id(0);
+	int fator = 1 * get_global_id(0);
+
+    int tx = fator +  get_global_id(1);
 
     double value = A[tx];
     for (int k = 0; k < n; ++k) {
