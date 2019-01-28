@@ -100,7 +100,7 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 
 		nvmlEnableState_t is_pending;
 		result = nvmlDeviceGetRetiredPagesPendingStatus(*device, &is_pending);
-		output += std::to_string(is_pending);
+		output += std::to_string(is_pending) + ",";
 
 		unsigned long long ecc_counts;
 		for (auto error_type : { NVML_MEMORY_ERROR_TYPE_CORRECTED,
@@ -108,9 +108,7 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 			for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC }) {
 				result = nvmlDeviceGetTotalEccErrors(*device, error_type,
 						counter_type, &ecc_counts);
-				std::cout << "ERROR TYPE " << error_type << " COUNTER TYPE "
-						<< counter_type << " ECC COUNT " << ecc_counts
-						<< std::endl;
+				output += std::to_string(ecc_counts);
 
 			}
 		}
