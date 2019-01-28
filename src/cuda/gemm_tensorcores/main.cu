@@ -24,6 +24,17 @@ typedef half_float::half host_half;
 
 typedef std::vector<host_half> half_vector;
 
+//namespace experimental { 
+//    namespace precision { 
+//        struct u4; // 4-bit unsigned 
+//        struct s4; // 4-bit signed 
+//        struct b1; // 1-bit 
+//     } 
+//    enum bmmaBitOp { bmmaBitOpXOR = 1 }; 
+//    enum bmmaAccumulateOp { bmmaAccumulateOpPOPC = 1 }; 
+//} 
+
+
 template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 		half_vector& b_host_vector, std::vector<real_t>& c_host_vector,
 		Log& log) {
@@ -349,7 +360,7 @@ std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vect
 	return res;
 }
 
-template<class host_real_t, class real_t>
+template<class host_real_t, class real_t, class half_t>
 void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		Log& log_obj) {
 	cudaEvent_t start, stop;
@@ -375,7 +386,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				host_matrix_c, log_obj);
 	}
 
-	GEMMWMMA<host_half, half, host_real_t, real_t> mult_enviroment(
+	GEMMWMMA<host_half, half_t, host_real_t, real_t> mult_enviroment(
 			host_matrix_a.data(), host_matrix_b.data(), host_matrix_c.data(),
 			log_obj.size_matrices, log_obj.size_matrices, log_obj.size_matrices,
 			real_t(1.1f), real_t(1.2f));
@@ -499,19 +510,29 @@ int main(int argc, char** argv) {
 	half_vector host_matrix_a(log_obj.size_matrices * log_obj.size_matrices);
 	half_vector host_matrix_b(log_obj.size_matrices * log_obj.size_matrices);
 
-	//TODO: To be implemented
+	//TODO: To be implemented experimental precisions
 	if (log_obj.precision == "half") {
-		call_mxm<host_half, half>(host_matrix_a, host_matrix_b, log_obj);
-		
-
+		call_mxm<host_half, half, half>(host_matrix_a, host_matrix_b, log_obj);	
 	}
 	if (log_obj.precision == "float") {
-		call_mxm<float, float>(host_matrix_a, host_matrix_b, log_obj);
+		call_mxm<float, float, half>(host_matrix_a, host_matrix_b, log_obj);
 	}
-//
-//	if (log_obj.precision == "double") {
-//		call_mxm<double>(host_matrix_a, host_matrix_b, log_obj);
+	
+//	if (log_obj.precision == "uchar") {
+//		call_mxm<int,int,unsigned char>(host_matrix_a, host_matrix_b, log_obj);
 //	}
+	
+	
+//	if (log_obj.precision == "u4") {
+//		call_mxm<struct u4>(host_matrix_a, host_matrix_b, log_obj);
+//	}
+//	if (log_obj.precision == "s4") {
+//		call_mxm<struct s4>(host_matrix_a, host_matrix_b, log_obj);
+//	}
+//	if (log_obj.precision == "b1") {
+//		call_mxm<struct b1>(host_matrix_a, host_matrix_b, log_obj);
+//	}
+	
 
 	std::cout << "Finished computation\n";
 	return 0;

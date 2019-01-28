@@ -1,5 +1,5 @@
 
-INC=-I/home/gabriel/radiation-benchmarks/src/include/
+INC=-I/home/carol/radiation-benchmarks/src/include/
 LIB=-L/usr/lib/  -lm -fopenmp -L../../../../../include/ -lLogHelper
 
 SRC=new_verify_mem.cpp 
@@ -12,4 +12,4 @@ assembly:
 	g++ -save-temps -fverbose-asm -o assembly_int soma.cpp -DLOGS -DINT $(INC) $(LIB)
 	g++ -save-temps -fverbose-asm -o assembly_float soma.cpp -DLOGS -DFLOAT $(INC) $(LIB)
 clean: 
-	rm -f $(EXE)_INT_CPU $(EXE)_FLOAT_CPU  *.o *.d *.ii *.s teste
+	rm -f $(EXE)_INT_CPU $(EXE)_FLOAT_CPU  *.o *.d *.ii *.s teste assembly_int assembly_float
