@@ -11,12 +11,12 @@
 #include <iostream>
 #include <vector>
 
-void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device = 0) {
+void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device =
+		0) {
 	if (NVML_SUCCESS != result) {
 		error(
-				"Failed to " + info + " from device "
-						+ std::to_string(device) + " error "
-						+ nvmlErrorString(result));
+				"Failed to " + info + " from device " + std::to_string(device)
+						+ " error " + nvmlErrorString(result));
 	}
 }
 
@@ -73,18 +73,6 @@ void NVMLWrapper::start(nvmlDevice_t* device) {
 		//get compute mode
 		nvmlComputeMode_t compute_mode;
 		result = nvmlDeviceGetComputeMode(*device, &compute_mode);
-
-		//for future uses
-		// nvmlReturn_t nvmlDeviceClearEccErrorCounts ( nvmlDevice_t device, nvmlEccCounterType_t counterType )
-		//		nvmlMemoryErrorType_t
-//		NVML_MEMORY_ERROR_TYPE_CORRECTED
-//		NVML_MEMORY_ERROR_TYPE_UNCORRECTED
-//		NVML_MEMORY_ERROR_TYPE_COUNT
-
-//		nvmlEccCounterType_t counterType;
-		//NVML_VOLATILE_ECC - reset on reboot
-		//NVML_AGGREGATE_ECC - persistent
-		//NVML_ECC_COUNTER_TYPE_COUNT
 
 		for (auto error_type : { NVML_MEMORY_ERROR_TYPE_CORRECTED,
 				NVML_MEMORY_ERROR_TYPE_UNCORRECTED })
