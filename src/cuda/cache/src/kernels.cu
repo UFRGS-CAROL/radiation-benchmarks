@@ -6,13 +6,53 @@
  */
 
 #include "utils.h"
+#include "kernels.h"
 
 #include <cuda_runtime.h>
 
+//alignas(LINE_NUMBER * SIZE_OF_T)
+template<typename T, unsigned LINE_NUMBER, unsigned SIZE_OF_T>
+struct CacheLine {
+	T t[LINE_NUMBER];
 
-struct cacheLine { int t[32]; } __attribute__ ((aligned));
+	CacheLine(const CacheLine& a) {
+		for (int i = 0; i < LINE_NUMBER; i++)
+			t[i] = a.t[i];
+	}
+
+	CacheLine& operator=(const CacheLine& a) {
+		t = a.t;
+		return *this;
+	}
+
+	bool operator==(const CacheLine& a) {
+		for (int i = 0; i < LINE_NUMBER; i++) {
+			if (a.t[i] != t[i])
+				return false;
+		}
+		return true;
+	}
+
+	bool operator!=(const CacheLine& a) {
+		for (int i = 0; i < LINE_NUMBER; i++) {
+			if (a.t[i] != t[i])
+				return true;
+		}
+		return false;
+	}
+
+	CacheLine operator^(const CacheLine& rhs) {
+		CacheLine ret;
+		for (int i = 0; i < LINE_NUMBER; i++) {
+			ret.t[i] = t[i] ^ rhs.t[i];
+		}
+		return ret;
+	}
+};
 
 texture<int, 1, cudaReadModeElementType> tex_ref;
+
+__device__ std::uint32_t l1_cache_err;
 
 template<int READ_ONLY_MEM_SIZE>
 __global__ void test_read_only_mem(const unsigned int * __restrict__ my_array,
@@ -75,35 +115,60 @@ __global__ void test_texture(int * my_array, int size, int *index, int iter,
 	my_array[size + 1] = i;
 }
 
-template<int cache_line_size, typename int_t>
-__global__ void test_l1_cache(unsigned int * my_array, int array_length,
-		int iterations, unsigned int * duration, unsigned int *index) {
-	unsigned int j = 0;
+/*
+ * l1_size size of the L1 cache
+ * V_size = l1_size / sizeof(CacheLine)
+ */
+template<typename cache_line, typename int_t, std::uint32_t V_SIZE>
+__global__ void test_l1_cache_kernel(cache_line *v_array,
+		cache_line *l1_hit_array, cache_line *l1_miss_array,
+		std::uint32_t l1_size, cache_line t) {
+	register std::uint32_t tx = blockIdx.x * blockDim.x + threadIdx.x;
 
-	__shared__ unsigned int s_index[512];
+	__shared__ int_t l1_t_hit[V_SIZE];
+	__shared__ int_t l1_t_miss[V_SIZE];
 
-	int k;
-
-	for (k = 0; k < 512; k++) {
-		s_index[k] = 0;
+	for (std::uint32_t i = 0; i < V_SIZE; i++) {
+		int_t t1 = clock();
+		register cache_line r = v_array[i];
+		int_t t2 = clock();
+		l1_t_miss[i] = t2 - t1;
 	}
 
-	for (k = -iterations * 512; k < iterations * 512; k++) {
+	//wait for exposition to neutrons
 
-		if (k >= 0) {
-			j = my_array[j];
-			s_index[k] = j;
+	for (std::uint32_t i = 0; i < V_SIZE; i++) {
+		//last checking
+		int_t t1 = clock();
+		register cache_line r = v_array[i];
+		int_t t2 = clock();
+		l1_t_hit[i] = t2 - t1;
 
-		} else
-			j = my_array[j];
+		//bitwise operation
+		if ((r ^ t) != 0)
+			atomicAdd(&l1_cache_err, 1);
+
+		//saving the result
+		l1_hit_array[tx + i] = l1_t_hit[i];
+		l1_miss_array[tx + i] = l1_t_miss[i];
 	}
+}
 
-	my_array[array_length] = j;
-	my_array[array_length + 1] = my_array[j];
+void test_l1_cache(size_t number_of_sms) {
+	const std::uint32_t line_size = 128; //128 bytes
+	const std::uint32_t l1_size = 112 * 1024 * 1024;
+	const std::uint32_t v_size = l1_size / line_size;
+	const std::uint32_t siz_int = sizeof(int);
+	cudaError_t ret = cudaFuncSetCacheConfig(
+			test_l1_cache<CacheLine<int, v_size, siz_int>, int, v_size>,
+			cudaFuncCachePreferShared);
 
-	for (k = 0; k < 512; k++) {
-		index[k] = s_index[k];
-	}
+	//	template<typename cache_line, typename int_t, std::uint32_t V_SIZE>
+	test_l1_cache_kernel<CacheLine<int, v_size, siz_int>, int, v_size> <<<1,
+			1>>>(nullptr, nullptr, nullptr, 0, 0);
+
+	cuda_check(ret);
+
 }
 
 __global__ void test_l2_cache(unsigned int * my_array, int array_length,
@@ -146,14 +211,6 @@ __global__ void test_l2_cache(unsigned int * my_array, int array_length,
 		index[k] = s_index[k];
 		duration[k] = s_tvalue[k];
 	}
-}
-
-template<int CACHE_SIZE, int CACHE_LINE_SIZE>
-void test_l1_cache(size_t number_of_sms) {
-	cudaError_t ret = cudaFuncSetCacheConfig(test_l1_cache<2, int>,
-			cudaFuncCachePreferL1);
-	cuda_check(ret);
-
 }
 
 template<int CACHE_SIZE, int CACHE_LINE_SIZE>

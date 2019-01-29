@@ -8,6 +8,8 @@
 #ifndef KERNELS_H_
 #define KERNELS_H_
 
+
+
 void test_l1_cache(int l1_cache_size, int number_of_lines);
 void test_l2_cache(int l1_cache_size, int number_of_lines);
 
