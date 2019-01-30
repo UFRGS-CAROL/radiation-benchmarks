@@ -13,7 +13,7 @@
 //alignas(LINE_SIZE)
 
 template<std::uint32_t LINE_SIZE>
-struct  CacheLine  {
+struct CacheLine {
 	std::uint8_t t[LINE_SIZE]; //byte type
 
 //	CacheLine() {
@@ -29,7 +29,7 @@ struct  CacheLine  {
 //		return *this;
 //	}
 	inline CacheLine& operator=(const std::uint8_t T) {
-		for(int i = 0; i < LINE_SIZE; i++){
+		for (int i = 0; i < LINE_SIZE; i++) {
 			t[i] = T;
 		}
 		return *this;
@@ -146,9 +146,11 @@ __global__ void test_texture(int * my_array, int size, int *index, int iter,
  * l1_size size of the L1 cache
  * V_size = l1_size / sizeof(CacheLine)
  */
-template<typename int_t, const std::uint32_t V_SIZE, const std::uint32_t LINE_SIZE>
-__global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines, int_t *l1_hit_array, int_t *l1_miss_array,
-		int_t *v_array, int_t *v_output_array, std::int64_t sleep_cycles) {
+template<typename int_t, const std::uint32_t V_SIZE,
+		const std::uint32_t LINE_SIZE>
+__global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
+		int_t *l1_hit_array, int_t *l1_miss_array, int_t *v_array,
+		int_t *v_output_array, std::int64_t sleep_cycles) {
 	register std::uint32_t tx = blockIdx.x * blockDim.x + threadIdx.x;
 
 	__shared__ int_t l1_t_hit[V_SIZE];
@@ -207,17 +209,18 @@ void test_l1_cache_kepler(size_t number_of_sms) {
 	cudaMemset(v_array_device, 3939, sizeof(std::int32_t) * v_size);
 
 	CacheLine<cache_line_size> *V_dev, *V_host;
-	V_host = new CacheLine<cache_line_size>[v_size];
-	for(int i = 0; i < v_size; i++){
+	V_host = new CacheLine<cache_line_size> [v_size];
+	for (int i = 0; i < v_size; i++) {
 		V_host[i] = t_byte;
 	}
 
-	cudaMalloc(&V_dev, sizeof(CacheLine<cache_line_size>) * v_size);
-	cudaMemcpy(V_dev, V_host, sizeof(CacheLine<cache_line_size>) * v_size, cudaMemcpyDeviceToHost);
+	cudaMalloc(&V_dev, sizeof(CacheLine<cache_line_size> ) * v_size);
+	cudaMemcpy(V_dev, V_host, sizeof(CacheLine<cache_line_size> ) * v_size,
+			cudaMemcpyDeviceToHost);
 
-	test_l1_cache_kernel<std::int32_t, v_size> <<<1, 1>>>(V_dev, l1_hit_array_device,
-			l1_miss_array_device, v_array_device, v_output_array_device,
-			100000);
+	test_l1_cache_kernel<std::int32_t, v_size> <<<1, 1>>>(V_dev,
+			l1_hit_array_device, l1_miss_array_device, v_array_device,
+			v_output_array_device, 100000);
 	cuda_check(cudaDeviceSynchronize());
 
 	cudaMemcpy(l1_hit_array_host, l1_hit_array_device,
@@ -226,8 +229,9 @@ void test_l1_cache_kepler(size_t number_of_sms) {
 			sizeof(std::int32_t) * v_size, cudaMemcpyDeviceToHost);
 
 	for (int i = 0; i < v_size; i++) {
-		std::cout << " L1 hit " << l1_hit_array_host[i] << " L1 MISS "
-				<< l1_miss_array_host[i] << std::endl;
+		if (l1_hit_array_host[i] - l1_miss_array_host[i])
+			std::cout << " L1 hit " << l1_hit_array_host[i] << " L1 MISS "
+					<< l1_miss_array_host[i] << std::endl;
 	}
 
 	cudaFree(l1_hit_array_device);
