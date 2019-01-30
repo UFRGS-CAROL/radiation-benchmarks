@@ -229,7 +229,7 @@ void test_l1_cache_kepler(size_t number_of_sms) {
 			sizeof(std::int32_t) * v_size, cudaMemcpyDeviceToHost);
 
 	for (int i = 0; i < v_size; i++) {
-		if (l1_hit_array_host[i] - l1_miss_array_host[i])
+		if ((l1_hit_array_host[i] - l1_miss_array_host[i]) > 0)
 			std::cout << " L1 hit " << l1_hit_array_host[i] << " L1 MISS "
 					<< l1_miss_array_host[i] << std::endl;
 	}
