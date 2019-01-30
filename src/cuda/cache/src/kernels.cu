@@ -153,7 +153,7 @@ __global__ void test_l1_cache_kernel(int_t *l1_hit_array, int_t *l1_miss_array,
 		register int_t r = v_array[tx + i];
 		int_t t2 = clock();
 		l1_t_miss[i] = t2 - t1;
-
+		v_array[tx + i] = r;
 	}
 
 	//wait for exposition to neutrons
