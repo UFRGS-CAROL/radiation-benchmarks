@@ -176,6 +176,7 @@ void test_l1_cache(size_t number_of_sms) {
 	cudaError_t ret = cudaFuncSetCacheConfig(
 			test_l1_cache_kernel<CacheLine<int, line_size / siz_int>, int, v_size>,
 			cudaFuncCachePreferShared);
+	cuda_check(ret);
 
 	cudaMalloc(&a, sizeof(CacheLine<int, line_size / siz_int>) * v_size);
 	cudaMalloc(&b, sizeof(CacheLine<int, line_size / siz_int>) * v_size);
@@ -184,12 +185,11 @@ void test_l1_cache(size_t number_of_sms) {
 
 	//	template<typename cache_line, typename int_t, std::uint32_t V_SIZE>
 	test_l1_cache_kernel< CacheLine<int, line_size / siz_int>, int, v_size> <<<1, 1>>>(a, b, c, 0, t);
+	cuda_check(cudaDeviceSynchronize());
 
-
-	cudaFree(a);
-	cudaFree(b);
-	cudaFree(c);
-	cuda_check(ret);
+	cuda_check(cudaFree(a));
+	cuda_check(cudaFree(b));
+	cuda_check(cudaFree(c));
 
 }
 
