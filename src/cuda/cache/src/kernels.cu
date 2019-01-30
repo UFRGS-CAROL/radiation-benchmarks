@@ -158,7 +158,7 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 	for (std::uint32_t i = 0; i < V_SIZE; i++) {
 		int_t t1 = clock();
-		register auto r = lines[tx + i];
+		auto r = lines[tx + i];
 		int_t t2 = clock();
 		l1_t_miss[i] = t2 - t1;
 		lines[tx + i] = r;
@@ -172,7 +172,7 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 	for (std::uint32_t i = 0; i < V_SIZE; i++) {
 		//last checking
 		int_t t1 = clock();
-		register auto r = lines[tx + i];
+		auto r = lines[tx + i];
 		int_t t2 = clock();
 		l1_t_hit[i] = t2 - t1;
 
