@@ -159,13 +159,14 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines, int_t *l1_hit_
 		register auto r = lines[tx + i];
 		int_t t2 = clock();
 		l1_t_miss[i] = t2 - t1;
+		lines[tx + i] = r;
 	}
 
 	//wait for exposition to neutrons
 	sleep(sleep_cycles);
 
-#pragma NVCC push_options
-#pragma NVCC optimize("O0")
+//#pragma NVCC push_options
+//#pragma NVCC optimize("O0")
 	for (std::uint32_t i = 0; i < V_SIZE; i++) {
 		//last checking
 		int_t t1 = clock();
@@ -180,9 +181,9 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines, int_t *l1_hit_
 //		//saving the result
 		l1_hit_array[tx + i] = l1_t_hit[i];
 		l1_miss_array[tx + i] = l1_t_miss[i];
-//		v_output_array[tx + i] = ;
+		lines[tx + i] = r;
 	}
-#pragma NVCC pop_options
+//#pragma NVCC pop_options
 
 }
 
