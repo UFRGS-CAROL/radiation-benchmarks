@@ -164,6 +164,8 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines, int_t *l1_hit_
 	//wait for exposition to neutrons
 	sleep(sleep_cycles);
 
+#pragma NVCC push_options
+#pragma NVCC optimize("O0")
 	for (std::uint32_t i = 0; i < V_SIZE; i++) {
 		//last checking
 		int_t t1 = clock();
@@ -180,6 +182,8 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines, int_t *l1_hit_
 		l1_miss_array[tx + i] = l1_t_miss[i];
 //		v_output_array[tx + i] = ;
 	}
+#pragma NVCC pop_options
+
 }
 
 void test_l1_cache_kepler(size_t number_of_sms) {
