@@ -188,7 +188,7 @@ void test_l1_cache_kepler(size_t number_of_sms) {
 	cudaMalloc(&l1_miss_array_device, sizeof(std::int32_t) * v_size);
 
 	test_l1_cache_kernel<std::int32_t, v_size> <<<1, 1>>>(l1_hit_array_device,
-			l1_miss_array_device, 10000);
+			l1_miss_array_device, 100000);
 	cuda_check(cudaDeviceSynchronize());
 
 	cudaMemcpy(l1_hit_array_host, l1_hit_array_device,
