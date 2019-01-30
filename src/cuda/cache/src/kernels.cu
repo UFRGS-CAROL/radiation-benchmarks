@@ -6,10 +6,66 @@
  */
 
 #include "utils.h"
+#include "kernels.h"
 
 #include <cuda_runtime.h>
 
+//alignas(LINE_NUMBER * SIZE_OF_T)
+
+template<typename T, unsigned LINE_SIZE>
+struct CacheLine {
+	T t[LINE_SIZE];
+
+	CacheLine() {
+	}
+
+	CacheLine(const CacheLine& a) {
+		for (int i = 0; i < LINE_SIZE; i++)
+			t[i] = a.t[i];
+	}
+
+	inline CacheLine& operator=(const CacheLine& a) {
+		t = a.t;
+		return *this;
+	}
+
+	inline bool operator==(const CacheLine& a) {
+		for (int i = 0; i < LINE_SIZE; i++) {
+			if (a.t[i] != t[i])
+				return false;
+		}
+		return true;
+	}
+
+	inline bool operator!=(const CacheLine& a) {
+		for (int i = 0; i < LINE_SIZE; i++) {
+			if (a.t[i] != t[i])
+				return true;
+		}
+		return false;
+	}
+
+	inline bool operator!=(const T a) {
+		for (int i = 0; i < LINE_SIZE; i++) {
+			if (a != t[i])
+				return true;
+		}
+		return false;
+	}
+
+
+	inline CacheLine operator^(const CacheLine& rhs) {
+		CacheLine ret;
+		for (int i = 0; i < LINE_SIZE; i++) {
+			ret.t[i] = t[i] ^ rhs.t[i];
+		}
+		return ret;
+	}
+};
+
 texture<int, 1, cudaReadModeElementType> tex_ref;
+
+__device__ std::uint32_t l1_cache_err;
 
 template<int READ_ONLY_MEM_SIZE>
 __global__ void test_read_only_mem(const unsigned int * __restrict__ my_array,
@@ -72,44 +128,69 @@ __global__ void test_texture(int * my_array, int size, int *index, int iter,
 	my_array[size + 1] = i;
 }
 
-template<typename int_t = unsigned, int SHARED_MEM_SIZE = 512>
-__global__ void test_l1_cache(int_t * my_array, std::size_t array_length,
-		std::size_t iterations, int_t * duration, int_t *index) {
+/*
+ * l1_size size of the L1 cache
+ * V_size = l1_size / sizeof(CacheLine)
+ */
+template<typename cache_line, typename int_t, std::uint32_t V_SIZE>
+__global__ void test_l1_cache_kernel(cache_line *v_array,
+		cache_line *l1_hit_array, cache_line *l1_miss_array,
+		std::uint32_t l1_size, cache_line t) {
+	register std::uint32_t tx = blockIdx.x * blockDim.x + threadIdx.x;
 
-	unsigned int start_time, end_time;
-	unsigned int j = 0;
+//	__shared__ int_t l1_t_hit[V_SIZE];
+//	__shared__ int_t l1_t_miss[V_SIZE];
+//
+//	for (std::uint32_t i = 0; i < V_SIZE; i++) {
+//		int_t t1 = clock();
+//		register cache_line r = v_array[i];
+//		int_t t2 = clock();
+//		l1_t_miss[i] = t2 - t1;
+//	}
+//
+//	//wait for exposition to neutrons
+//
+//	for (std::uint32_t i = 0; i < V_SIZE; i++) {
+//		//last checking
+//		int_t t1 = clock();
+//		register cache_line r = v_array[i];
+//		int_t t2 = clock();
+//		l1_t_hit[i] = t2 - t1;
+//
+//		//bitwise operation
+//		if ((r ^ t) != 0)
+//			atomicAdd(&l1_cache_err, 1);
+//
+//		//saving the result
+//		l1_hit_array[tx + i] = l1_t_hit[i];
+//		l1_miss_array[tx + i] = l1_t_miss[i];
+//	}
+}
 
-	__shared__ int_t s_tvalue[SHARED_MEM_SIZE];
-	__shared__ int_t s_index[SHARED_MEM_SIZE];
+void test_l1_cache(size_t number_of_sms) {
+	const std::uint32_t line_size = 128; //128 bytes
+	const std::uint32_t l1_size = 112 * 1024 * 1024;
+	const std::uint32_t v_size = l1_size / line_size;
+	const std::uint32_t siz_int = sizeof(int);
+	CacheLine<int, line_size / siz_int> *a, *b, *c, t;
+	cudaError_t ret = cudaFuncSetCacheConfig(
+			test_l1_cache_kernel<CacheLine<int, line_size / siz_int>, int, v_size>,
+			cudaFuncCachePreferShared);
 
-	for (int k = 0; k < SHARED_MEM_SIZE; k++) {
-		s_index[k] = 0;
-		s_tvalue[k] = 0;
-	}
+	cudaMalloc(&a, sizeof(CacheLine<int, line_size / siz_int>) * v_size);
+	cudaMalloc(&b, sizeof(CacheLine<int, line_size / siz_int>) * v_size);
+	cudaMalloc(&c, sizeof(CacheLine<int, line_size / siz_int>) * v_size);
 
-	for (int k = -iterations * SHARED_MEM_SIZE;
-			k < iterations * SHARED_MEM_SIZE; k++) {
 
-		if (k >= 0) {
-			start_time = clock();
-			j = my_array[j];
-			s_index[k] = j;
-			end_time = clock();
+	//	template<typename cache_line, typename int_t, std::uint32_t V_SIZE>
+	test_l1_cache_kernel< CacheLine<int, line_size / siz_int>, int, v_size> <<<1, 1>>>(a, b, c, 0, t);
 
-			s_tvalue[k] = end_time - start_time;
 
-		} else {
-			j = my_array[j];
-		}
-	}
+	cudaFree(a);
+	cudaFree(b);
+	cudaFree(c);
+	cuda_check(ret);
 
-	my_array[array_length] = j;
-	my_array[array_length + 1] = my_array[j];
-
-	for (int k = 0; k < SHARED_MEM_SIZE; k++) {
-		index[k] = s_index[k];
-		duration[k] = s_tvalue[k];
-	}
 }
 
 __global__ void test_l2_cache(unsigned int * my_array, int array_length,
@@ -154,15 +235,6 @@ __global__ void test_l2_cache(unsigned int * my_array, int array_length,
 	}
 }
 
-template<int CACHE_SIZE, int CACHE_LINE_SIZE>
-void test_l1_cache(size_t number_of_sms) {
-	cudaError_t ret = cudaFuncSetCacheConfig(test_l1_cache<int>,
-			cudaFuncCachePreferL1);
-	cuda_check(ret);
-
-}
-
-template<int CACHE_SIZE, int CACHE_LINE_SIZE>
 void test_l2_cache() {
 
 }
