@@ -10,56 +10,62 @@
 #include <iostream>
 #include <cuda_runtime.h>
 
-//alignas(LINE_NUMBER * SIZE_OF_T)
+//alignas(LINE_SIZE)
 
-template<typename T, unsigned LINE_SIZE>
-struct CacheLine {
-	T t[LINE_SIZE];
+template<std::uint32_t LINE_SIZE>
+struct  CacheLine  {
+	std::uint8_t t[LINE_SIZE]; //byte type
 
-	CacheLine() {
-	}
-
-	CacheLine(const CacheLine& a) {
-		for (int i = 0; i < LINE_SIZE; i++)
-			t[i] = a.t[i];
-	}
-
-	inline CacheLine& operator=(const CacheLine& a) {
-		t = a.t;
+//	CacheLine() {
+//	}
+//
+//	CacheLine(const CacheLine& a) {
+//		for (int i = 0; i < LINE_SIZE; i++)
+//			t[i] = a.t[i];
+//	}
+//
+//	inline CacheLine& operator=(const CacheLine& a) {
+//		t = a.t;
+//		return *this;
+//	}
+	inline CacheLine& operator=(const std::uint8_t T) {
+		for(int i = 0; i < LINE_SIZE; i++){
+			t[i] = T;
+		}
 		return *this;
 	}
-
-	inline bool operator==(const CacheLine& a) {
-		for (int i = 0; i < LINE_SIZE; i++) {
-			if (a.t[i] != t[i])
-				return false;
-		}
-		return true;
-	}
-
-	inline bool operator!=(const CacheLine& a) {
-		for (int i = 0; i < LINE_SIZE; i++) {
-			if (a.t[i] != t[i])
-				return true;
-		}
-		return false;
-	}
-
-	inline bool operator!=(const T a) {
-		for (int i = 0; i < LINE_SIZE; i++) {
-			if (a != t[i])
-				return true;
-		}
-		return false;
-	}
-
-	inline CacheLine operator^(const CacheLine& rhs) {
-		CacheLine ret;
-		for (int i = 0; i < LINE_SIZE; i++) {
-			ret.t[i] = t[i] ^ rhs.t[i];
-		}
-		return ret;
-	}
+//
+//	inline bool operator==(const CacheLine& a) {
+//		for (int i = 0; i < LINE_SIZE; i++) {
+//			if (a.t[i] != t[i])
+//				return false;
+//		}
+//		return true;
+//	}
+//
+//	inline bool operator!=(const CacheLine& a) {
+//		for (int i = 0; i < LINE_SIZE; i++) {
+//			if (a.t[i] != t[i])
+//				return true;
+//		}
+//		return false;
+//	}
+//
+//	inline bool operator!=(const T a) {
+//		for (int i = 0; i < LINE_SIZE; i++) {
+//			if (a != t[i])
+//				return true;
+//		}
+//		return false;
+//	}
+//
+//	inline CacheLine operator^(const CacheLine& rhs) {
+//		CacheLine ret;
+//		for (int i = 0; i < LINE_SIZE; i++) {
+//			ret.t[i] = t[i] ^ rhs.t[i];
+//		}
+//		return ret;
+//	}
 };
 
 texture<int, 1, cudaReadModeElementType> tex_ref;
@@ -140,8 +146,8 @@ __global__ void test_texture(int * my_array, int size, int *index, int iter,
  * l1_size size of the L1 cache
  * V_size = l1_size / sizeof(CacheLine)
  */
-template<typename int_t, std::uint32_t V_SIZE>
-__global__ void test_l1_cache_kernel(int_t *l1_hit_array, int_t *l1_miss_array,
+template<typename int_t, const std::uint32_t V_SIZE, const std::uint32_t LINE_SIZE>
+__global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines, int_t *l1_hit_array, int_t *l1_miss_array,
 		int_t *v_array, int_t *v_output_array, std::int64_t sleep_cycles) {
 	register std::uint32_t tx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -150,10 +156,9 @@ __global__ void test_l1_cache_kernel(int_t *l1_hit_array, int_t *l1_miss_array,
 
 	for (std::uint32_t i = 0; i < V_SIZE; i++) {
 		int_t t1 = clock();
-		register int_t r = v_array[tx + i];
+		register auto r = lines[tx + i];
 		int_t t2 = clock();
 		l1_t_miss[i] = t2 - t1;
-		v_array[tx + i] = r;
 	}
 
 	//wait for exposition to neutrons
@@ -162,7 +167,7 @@ __global__ void test_l1_cache_kernel(int_t *l1_hit_array, int_t *l1_miss_array,
 	for (std::uint32_t i = 0; i < V_SIZE; i++) {
 		//last checking
 		int_t t1 = clock();
-		register int_t r = v_array[tx + i];
+		register auto r = lines[tx + i];
 		int_t t2 = clock();
 		l1_t_hit[i] = t2 - t1;
 
@@ -173,11 +178,12 @@ __global__ void test_l1_cache_kernel(int_t *l1_hit_array, int_t *l1_miss_array,
 //		//saving the result
 		l1_hit_array[tx + i] = l1_t_hit[i];
 		l1_miss_array[tx + i] = l1_t_miss[i];
-		v_output_array[tx + i] = r;
+//		v_output_array[tx + i] = ;
 	}
 }
 
 void test_l1_cache_kepler(size_t number_of_sms) {
+	const std::uint8_t t_byte = 39;
 	const std::uint32_t l1_size = 64 * 1024; // cache l1 has 65536 bytes
 	const std::uint32_t cache_line_size = 128; // size in bytes
 	const std::uint32_t v_size = l1_size / cache_line_size; // 512 lines
@@ -194,7 +200,17 @@ void test_l1_cache_kepler(size_t number_of_sms) {
 	cudaMalloc(&v_output_array_device, sizeof(std::int32_t) * v_size);
 
 	cudaMemset(v_array_device, 3939, sizeof(std::int32_t) * v_size);
-	test_l1_cache_kernel<std::int32_t, v_size> <<<1, 1>>>(l1_hit_array_device,
+
+	CacheLine<cache_line_size> *V_dev, *V_host;
+	V_host = new CacheLine<cache_line_size>[v_size];
+	for(int i = 0; i < v_size; i++){
+		V_host[i] = t_byte;
+	}
+
+	cudaMalloc(&V_dev, sizeof(CacheLine<cache_line_size>) * v_size);
+	cudaMemcpy(V_dev, V_host, sizeof(CacheLine<cache_line_size>) * v_size, cudaMemcpyDeviceToHost);
+
+	test_l1_cache_kernel<std::int32_t, v_size> <<<1, 1>>>(V_dev, l1_hit_array_device,
 			l1_miss_array_device, v_array_device, v_output_array_device,
 			100000);
 	cuda_check(cudaDeviceSynchronize());
@@ -213,6 +229,8 @@ void test_l1_cache_kepler(size_t number_of_sms) {
 	cudaFree(l1_miss_array_device);
 	cudaFree(v_output_array_device);
 	cudaFree(v_array_device);
+	cudaFree(V_dev);
+	delete[] V_host;
 	delete[] v_array_host;
 	delete[] l1_hit_array_host;
 	delete[] l1_miss_array_host;
