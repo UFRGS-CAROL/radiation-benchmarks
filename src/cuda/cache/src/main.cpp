@@ -170,7 +170,7 @@ void get_device_information(int dev) {
 
 int main(void) {
 	get_device_information(0);
-	test_l1_cache(10);
+	test_l1_cache_kepler(10);
 	return 0;
 }
 

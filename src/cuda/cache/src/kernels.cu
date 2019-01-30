@@ -7,7 +7,7 @@
 
 #include "utils.h"
 #include "kernels.h"
-
+#include <iostream>
 #include <cuda_runtime.h>
 
 //alignas(LINE_NUMBER * SIZE_OF_T)
@@ -53,7 +53,6 @@ struct CacheLine {
 		return false;
 	}
 
-
 	inline CacheLine operator^(const CacheLine& rhs) {
 		CacheLine ret;
 		for (int i = 0; i < LINE_SIZE; i++) {
@@ -64,6 +63,15 @@ struct CacheLine {
 };
 
 texture<int, 1, cudaReadModeElementType> tex_ref;
+
+__device__ inline void sleep(std::int64_t sleep_cycles) {
+
+	std::int64_t start = clock64();
+	std::int64_t cycles_elapsed;
+	do {
+		cycles_elapsed = clock64() - start;
+	} while (cycles_elapsed < sleep_cycles);
+}
 
 __device__ std::uint32_t l1_cache_err;
 
@@ -132,65 +140,71 @@ __global__ void test_texture(int * my_array, int size, int *index, int iter,
  * l1_size size of the L1 cache
  * V_size = l1_size / sizeof(CacheLine)
  */
-template<typename cache_line, typename int_t, std::uint32_t V_SIZE>
-__global__ void test_l1_cache_kernel(cache_line *v_array,
-		cache_line *l1_hit_array, cache_line *l1_miss_array,
-		std::uint32_t l1_size, cache_line t) {
+template<typename int_t, std::uint32_t V_SIZE>
+__global__ void test_l1_cache_kernel(int_t *l1_hit_array, int_t *l1_miss_array,
+		std::int64_t sleep_cycles) {
 	register std::uint32_t tx = blockIdx.x * blockDim.x + threadIdx.x;
 
-//	__shared__ int_t l1_t_hit[V_SIZE];
-//	__shared__ int_t l1_t_miss[V_SIZE];
-//
-//	for (std::uint32_t i = 0; i < V_SIZE; i++) {
-//		int_t t1 = clock();
+	__shared__ int_t l1_t_hit[V_SIZE];
+	__shared__ int_t l1_t_miss[V_SIZE];
+
+	for (std::uint32_t i = 0; i < V_SIZE; i++) {
+		int_t t1 = clock();
 //		register cache_line r = v_array[i];
-//		int_t t2 = clock();
-//		l1_t_miss[i] = t2 - t1;
-//	}
-//
-//	//wait for exposition to neutrons
-//
-//	for (std::uint32_t i = 0; i < V_SIZE; i++) {
-//		//last checking
-//		int_t t1 = clock();
+		int_t t2 = clock();
+		l1_t_miss[i] = t2 - t1;
+	}
+
+	//wait for exposition to neutrons
+	sleep(sleep_cycles);
+
+	for (std::uint32_t i = 0; i < V_SIZE; i++) {
+		//last checking
+		int_t t1 = clock();
 //		register cache_line r = v_array[i];
-//		int_t t2 = clock();
-//		l1_t_hit[i] = t2 - t1;
-//
-//		//bitwise operation
+		int_t t2 = clock();
+		l1_t_hit[i] = t2 - t1;
+
+		//bitwise operation
 //		if ((r ^ t) != 0)
 //			atomicAdd(&l1_cache_err, 1);
-//
+
 //		//saving the result
-//		l1_hit_array[tx + i] = l1_t_hit[i];
-//		l1_miss_array[tx + i] = l1_t_miss[i];
-//	}
+		l1_hit_array[tx + i] = l1_t_hit[i];
+		l1_miss_array[tx + i] = l1_t_miss[i];
+	}
 }
 
-void test_l1_cache(size_t number_of_sms) {
-	const std::uint32_t line_size = 128; //128 bytes
-	const std::uint32_t l1_size = 112 * 1024 * 1024;
-	const std::uint32_t v_size = l1_size / line_size;
-	const std::uint32_t siz_int = sizeof(int);
-	CacheLine<int, line_size / siz_int> *a, *b, *c, t;
-	cudaError_t ret = cudaFuncSetCacheConfig(
-			test_l1_cache_kernel<CacheLine<int, line_size / siz_int>, int, v_size>,
-			cudaFuncCachePreferShared);
-	cuda_check(ret);
+void test_l1_cache_kepler(size_t number_of_sms) {
+	const std::uint32_t l1_size = 64 * 1024; // cache l1 has 65536 bytes
+	const std::uint32_t cache_line_size = 128; // size in bytes
+	const std::uint32_t v_size = l1_size / cache_line_size; // 512 lines
 
-	cudaMalloc(&a, sizeof(CacheLine<int, line_size / siz_int>) * v_size);
-	cudaMalloc(&b, sizeof(CacheLine<int, line_size / siz_int>) * v_size);
-	cudaMalloc(&c, sizeof(CacheLine<int, line_size / siz_int>) * v_size);
+	std::int32_t *l1_hit_array_device, *l1_miss_array_device;
+	std::int32_t *l1_hit_array_host = new std::int32_t[v_size];
+	std::int32_t *l1_miss_array_host = new std::int32_t[v_size];
 
+	cudaMalloc(&l1_hit_array_device, sizeof(std::int32_t) * v_size);
+	cudaMalloc(&l1_miss_array_device, sizeof(std::int32_t) * v_size);
 
-	//	template<typename cache_line, typename int_t, std::uint32_t V_SIZE>
-	test_l1_cache_kernel< CacheLine<int, line_size / siz_int>, int, v_size> <<<1, 1>>>(a, b, c, 0, t);
+	test_l1_cache_kernel<std::int32_t, v_size> <<<1, 1>>>(l1_hit_array_device,
+			l1_miss_array_device, 1000);
 	cuda_check(cudaDeviceSynchronize());
 
-	cuda_check(cudaFree(a));
-	cuda_check(cudaFree(b));
-	cuda_check(cudaFree(c));
+	cudaMemcpy(l1_hit_array_host, l1_hit_array_device,
+			sizeof(std::int32_t) * v_size, cudaMemcpyDeviceToHost);
+	cudaMemcpy(l1_miss_array_host, l1_miss_array_device,
+			sizeof(std::int32_t) * v_size, cudaMemcpyDeviceToHost);
 
+	for (int i = 0; i < v_size; i++) {
+		std::cout << " L1 hit " << l1_hit_array_host[i] << " L1 MISS "
+				<< l1_miss_array_host << std::endl;
+	}
+
+	cudaFree(l1_hit_array_device);
+	cudaFree(l1_miss_array_device);
+	delete[] l1_hit_array_host;
+	delete[] l1_miss_array_host;
 }
 
 __global__ void test_l2_cache(unsigned int * my_array, int array_length,

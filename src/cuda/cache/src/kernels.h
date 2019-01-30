@@ -10,7 +10,7 @@
 
 
 
-void test_l1_cache(size_t number_of_sms);
+void test_l1_cache_kepler(size_t number_of_sms);
 void test_l2_cache(int l1_cache_size, int number_of_lines);
 
 
