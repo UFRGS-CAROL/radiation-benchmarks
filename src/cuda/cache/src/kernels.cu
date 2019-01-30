@@ -198,7 +198,7 @@ void test_l1_cache_kepler(size_t number_of_sms) {
 
 	for (int i = 0; i < v_size; i++) {
 		std::cout << " L1 hit " << l1_hit_array_host[i] << " L1 MISS "
-				<< l1_miss_array_host << std::endl;
+				<< l1_miss_array_host[i] << std::endl;
 	}
 
 	cudaFree(l1_hit_array_device);
