@@ -8,10 +8,18 @@
 #ifndef KERNELS_H_
 #define KERNELS_H_
 
+#include <cstdint>
 
+enum Board{
+	K40,
+	TEGRAX2,
+	TITANV,
+	BOARD_COUNT,
+};
 
-void test_l1_cache_kepler(size_t number_of_sms);
-void test_l2_cache(int l1_cache_size, int number_of_lines);
+void test_l1_cache(std::uint32_t number_of_sms, Board device);
+void test_l2_cache(std::uint32_t number_of_sms, Board device);
+
 
 
 #endif /* KERNELS_H_ */

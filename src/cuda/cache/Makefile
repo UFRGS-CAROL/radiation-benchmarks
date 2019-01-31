@@ -16,7 +16,8 @@ INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../
 
 
 OBJDIR=./obj/
-OBJ= NVMLWrapper.o utils.o kernels.o main.o
+OBJ= NVMLWrapper.o utils.o l1_cache_kernels.o l2_cache_kernels.o 
+OBJ+= read_only_cache_kernels.o shared_memory_kernels.o main.o
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g

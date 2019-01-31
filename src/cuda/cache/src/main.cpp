@@ -15,13 +15,6 @@
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
 
-void setup_for_kepler() {
-
-}
-
-void setup_for_volta() {
-
-}
 
 void get_device_information(int dev) {
 	int driverVersion = 0, runtimeVersion = 0;
@@ -32,8 +25,8 @@ void get_device_information(int dev) {
 	printf("\nDevice %d: \"%s\"\n", dev, deviceProp.name);
 
 	// Console log
-	cudaDriverGetVersion (&driverVersion);
-	cudaRuntimeGetVersion (&runtimeVersion);
+	cudaDriverGetVersion(&driverVersion);
+	cudaRuntimeGetVersion(&runtimeVersion);
 	printf("  CUDA Driver Version / Runtime Version          %d.%d / %d.%d\n",
 			driverVersion / 1000, (driverVersion % 100) / 10,
 			runtimeVersion / 1000, (runtimeVersion % 100) / 10);
@@ -170,7 +163,9 @@ void get_device_information(int dev) {
 
 int main(void) {
 	get_device_information(0);
-	test_l1_cache_kepler(10);
+	for (int iterations = 0; iterations < 1000; iterations++) {
+		test_l1_cache(15, K40);
+	}
 	return 0;
 }
 
