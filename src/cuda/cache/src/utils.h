@@ -11,18 +11,22 @@
 #include <cuda_runtime.h> // cudaError_t
 #include <string> // error message
 
-void check_cuda_error_(const char *file, unsigned line,
-		const char *statement, cudaError_t err);
+void check_cuda_error_(const char *file, unsigned line, const char *statement,
+		cudaError_t err);
 
 #define cuda_check(value) check_cuda_error_(__FILE__,__LINE__, #value, value)
-
 
 void error(std::string err);
 void sleep(int seconds);
 
-
 size_t get_time_since_epoch();
 
-
+template<typename T>
+T copy_from_symbol(std::string symbol) {
+	T mem;
+	cudaMemcpyFromSymbol(&mem, symbol.c_str(), sizeof(T), 0,
+			cudaMemcpyDeviceToHost);
+	return mem;
+}
 
 #endif /* UTILS_H_ */

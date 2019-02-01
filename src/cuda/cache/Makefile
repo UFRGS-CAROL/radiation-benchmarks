@@ -1,6 +1,7 @@
 CXX=g++
 CXXFLAGS= -std=c++11 -o3  -fPIC -pthread
 EXEC=cudaCacheTest
+DISABLEL1CACHE=0
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -24,6 +25,9 @@ CXXFLAGS+=-O0 -g
 NVCCFLAGS+= -G
 endif
 
+ifeq ($(DISABLEL1CACHE), 1)
+NVCCFLAGS+= -Xptxas -dlcm=cg
+endif
 LDFLAGS= -L$(CUDAPATH)/lib64  -lcudart -L$(CUDAPATH)/lib64/stubs/ -lnvidia-ml
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
