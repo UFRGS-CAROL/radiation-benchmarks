@@ -1,23 +1,53 @@
-arm64:CFLAGS = -O3
-arm64:LDFLAGS = -static -lm
-arm64:CC=aarch64-linux-gnu-gcc
-arm64:AS=aarch64-linux-gnu-as
-arm64:LD=aarch64-linux-gnu-ld
-arm64:AR=aarch64-linux-gnu-ar
+LOGS?=0
+ARCH?=arm
+CC=arm-linux-gnueabihf-gcc
+EXEC=rijndael_dec
+MATRIXSIZE?=500
 
-arm:CFLAGS = -O3 -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard
-arm:LDFLAGS = -static -lm
-arm:CC=arm-linux-gnueabihf-gcc
-arm:AS=arm-linux-gnueabihf-as
-arm:LD=arm-linux-gnueabihf-ld
-arm:AR=arm-linux-gnueabihf-ar
+CCFLAGS= -O3 -Wno-unused-result
+LDFLAGS= -static -lm -fopenmp
 
-arm64: rijndael_dec rijndael_enc
-arm: rijndael_dec rijndael_enc
 
-rijndael_dec: aes.c aes.h aestab.h aesxam.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o rijndael_dec aes.c aesxam.c
-rijndael_enc: aes.c aes.h aestab.h aesxam.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o rijndael_enc aes.c aesxam.c
+ifeq ($(LOGS), 1)
+INCLUDE= -I../../include
+LIBRARY= -L../../include -lLogHelper
+CCFLAGS+= -DLOGS
+endif
+
+ifeq ($(ARCH), arm64)
+CC=aarch64-linux-gnu-gcc
+AS=aarch64-linux-gnu-as
+LD=aarch64-linux-gnu-ld
+AR=aarch64-linux-gnu-ar
+endif
+
+ifeq ($(ARCH), arm)
+AS=arm-linux-gnueabihf-as
+LD=arm-linux-gnueabihf-ld
+AR=arm-linux-gnueabihf-ar
+CCFLAGS+= -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard
+endif
+
+ifeq ($(ARCH), x86)
+CC=gcc
+endif
+
+SOURCES= 
+
+DEFAULTGOLD=./$(EXEC)_gold_$(MATRIXSIZE).txt
+DEFAULTINPUT=./$(EXEC)_input_$(MATRIXSIZE).txt
+
+all: clean $(EXEC)
+
+$(EXEC): aes.c aes.h aestab.h aesxam.c aes.c aes.h aestab.h aesxam.c
+	$(CC) $(CCFLAGS) -o $(EXEC) aes.c aesxam.c   $(LDFLAGS) $(INCLUDE) $(LIBRARY)
+	$(CC) $(CFLAGS)  -o rijndael_enc aes.c aesxam.c $(LDFLAGS) $(INCLUDE) $(LIBRARY)
+
 clean:
-	rm -rf rijndael_enc rijndael_dec
+	rm -f $(EXEC) $(DEFAULTGOLD) $(DEFAULTINPUT) rijndael_enc
+
+generate: $(EXEC)
+	./$(EXEC) $(MATRIXSIZE) 1 $(DEFAULTGOLD) $(DEFAULTINPUT) 
+
+test: $(EXEC) generate
+	./$(EXEC) $(MATRIXSIZE) 0 $(DEFAULTGOLD) $(DEFAULTINPUT) 
