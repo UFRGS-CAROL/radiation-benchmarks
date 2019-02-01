@@ -6,6 +6,8 @@
  */
 #include <iostream>
 #include <vector>
+#include <curand.h>
+
 #include "kernels.h"
 #include "CacheLine.h"
 #include "utils.h"
@@ -41,6 +43,39 @@ __global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines,
 	}
 }
 
+__global__ void clear_cache_kenel(float *random_array) {
+	register uint32 tx = blockIdx.x * blockDim.x + threadIdx.x;
+	random_array[tx] += random_array[tx] * 339 + 1 * (-random_array[tx]);
+}
+
+void clear_cache(uint n) {
+	float *random_array_dev;
+	/* Allocate n floats on device */
+	cuda_check(cudaMalloc((void ** )&random_array_dev, n * sizeof(float)));
+
+	/* Create pseudo-random number generator */
+	curandGenerator_t gen;
+
+	cuda_check(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
+
+	/* Set seed */
+	cuda_check(curandSetPseudoRandomGeneratorSeed(gen, 1234ULL));
+
+	/* Generate n floats on device */
+	cuda_check(curandGenerateUniform(gen, random_array_dev, n));
+
+	uint thread_number = std::ceil(float(n) / (BLOCK_SIZE * BLOCK_SIZE));
+	uint block_number = std::ceil(n / float(thread_number));
+
+	clear_cache<<<block_number, thread_number>>>(random_array_dev);
+	cuda_check(cudaDeviceSynchronize());
+
+	cuda_check(curandDestroyGenerator(gen));
+
+	cuda_check(cudaFree(random_array_dev));
+
+}
+
 void test_l2_cache(uint32 number_of_sms, Board device) {
 	const byte t_byte = 39;
 	const uint32 l2_size = 1536 * 1024; // cache l1 has 65536 bytes
@@ -58,16 +93,15 @@ void test_l2_cache(uint32 number_of_sms, Board device) {
 	//Set each element of V array
 	CacheLine<cache_line_size> *V_dev;
 	std::vector<CacheLine<cache_line_size> > V_host(v_size, t_byte);
-//	V_host = new CacheLine<cache_line_size> [v_size];
-//	for (int i = 0; i < v_size; i++) {
-//		V_host[i] = t_byte;
-//	}
 
 	//copy to the gpu
 	cudaMalloc(&V_dev, sizeof(CacheLine<cache_line_size> ) * v_size);
 	cudaMemcpy(V_dev, V_host.data(),
 			sizeof(CacheLine<cache_line_size> ) * v_size,
 			cudaMemcpyDeviceToHost);
+
+	//Clear the L2 Cache
+
 
 	test_l2_cache_kernel<int32, v_size, cache_line_size> <<<1, 1>>>(V_dev,
 			l2_hit_array_device, l2_miss_array_device, 1000000000, t_byte);

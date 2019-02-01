@@ -17,6 +17,9 @@ typedef std::uint64_t uint64;
 typedef std::int32_t int32;
 typedef std::int64_t int64;
 
+
+#define BLOCK_SIZE 32
+
 enum Board {
 	K40, TEGRAX2, TITANV, BOARD_COUNT,
 };
