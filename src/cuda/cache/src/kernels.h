@@ -21,8 +21,21 @@ enum Board {
 	K40, TEGRAX2, TITANV, BOARD_COUNT,
 };
 
-void test_l1_cache(uint32 number_of_sms, Board device);
-void test_l2_cache(uint32 number_of_sms, Board device);
-void test_shared_memory(const uint32 number_of_sms, const Board device,
-		const uint32 shared_memory_size, const uint32 shared_line_size);
+
+struct Parameters {
+	uint32 number_of_sms;
+	Board device;
+	uint32 shared_memory_size;
+	uint32 shared_line_size;
+	uint32 l1_size;
+	uint32 l2_size;
+};
+
+
+void test_l1_cache(const Parameters&);
+void test_l2_cache(const Parameters&);
+void test_shared_memory(const Parameters&);
+void test_read_only_cache(const Parameters&);
+void test_register_file(const Parameters&);
+
 #endif /* KERNELS_H_ */

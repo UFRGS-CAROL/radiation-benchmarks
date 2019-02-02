@@ -66,15 +66,12 @@ void test_shared_memory(const uint32 number_of_sms, const byte t_byte,
 /**
  * Shared memory size is in bytes
  */
-void test_shared_memory(const uint32 number_of_sms, const Board device,
-		const uint32 shared_memory_size, const uint32 shared_line_size) {
+void test_shared_memory(const Parameters& parameters) {
 
 	for (byte t_byte : { 0x00, 0xff }) {
-		switch (device) {
+		switch (parameters.device) {
 		case K40: {
-			const uint32 shared_memory_size = 48 * 1024; // shared memory has 49152 bytes
-			const uint32 shared_line_size = 128; // size in bytes
-			uint64 cycles = 1000000000;
+
 			break;
 		}
 		case TITANV: {

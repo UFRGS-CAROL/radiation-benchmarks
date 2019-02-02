@@ -150,32 +150,36 @@ int main(int argc, char **argv) {
 		error("CANNOT FOUND THE DEVICE\n");
 
 	Log log(argc, argv, devices_name[device_name]);
+	Parameters test_parameter;
+	test_parameter.device = devices_name[device_name];
+	test_parameter.number_of_sms = device_info.multiProcessorCount;
+	test_parameter.shared_line_size = 128; // TODO: CHECK THIS OUT
+	test_parameter.shared_memory_size = device_info.sharedMemPerMultiprocessor;
+	test_parameter.l2_size = device_info.l2CacheSize;
+	test_parameter.l1_size = device_info.localL1CacheSupported;
 
 	for (int iterations = 0; iterations < 10; iterations++) {
 		log.start_iteration_app();
 		//test L1
 		if (log.test_mode == "L1") {
-
+			test_l1_cache(test_parameter);
 		}
-
 		//Test l2
 		if (log.test_mode == "L2") {
-
+			test_l2_cache(test_parameter);
 		}
-
 		//Test Shared
 		if (log.test_mode == "SHARED") {
 
+			test_shared_memory(test_parameter);
 		}
-
 		//Test Constant
 		if (log.test_mode == "CONSTANT") {
-
+			test_read_only_cache(test_parameter);
 		}
-
 		//Test Registers
 		if (log.test_mode == "REGISTERS") {
-
+			test_register_file(test_parameter);
 		}
 
 		log.end_iteration_app();

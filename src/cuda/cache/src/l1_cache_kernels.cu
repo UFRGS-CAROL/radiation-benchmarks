@@ -109,3 +109,7 @@ void test_l1_cache(uint32 number_of_sms, Board device) {
 	delete[] l1_hit_array_host;
 	delete[] l1_miss_array_host;
 }
+
+void test_l1_cache(const Parameters& parameters){
+
+}

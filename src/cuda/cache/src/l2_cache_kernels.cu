@@ -127,3 +127,7 @@ void test_l2_cache(uint32 number_of_sms, Board device) {
 	cudaFree(V_dev);
 }
 
+
+void test_l2_cache(const Parameters& parameters){
+
+}
