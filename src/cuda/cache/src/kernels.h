@@ -8,6 +8,10 @@
 #ifndef KERNELS_H_
 #define KERNELS_H_
 
+#include <vector>
+#include <string>
+#include "Log.h"
+
 typedef unsigned char byte;
 typedef unsigned int uint32;
 typedef unsigned long long int uint64;
@@ -29,10 +33,11 @@ struct Parameters {
 	uint32 shared_line_size;
 	uint32 l1_size;
 	uint32 l2_size;
+	Log *log;
 };
 
 
-void test_l1_cache(const Parameters&);
+std::vector<std::string> test_l1_cache(const Parameters&);
 void test_l2_cache(const Parameters&);
 void test_shared_memory(const Parameters&);
 void test_read_only_cache(const Parameters&);

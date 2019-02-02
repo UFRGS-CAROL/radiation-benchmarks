@@ -58,7 +58,8 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 }
 
-void test_l1_cache(uint32 number_of_sms, Board device) {
+std::vector<std::string> test_l1_cache(uint32 number_of_sms, Board device) {
+	std::vector<std::string> errors;
 	cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
 	const byte t_byte = 39;
 	const uint32 l1_size = 64 * 1024; // cache l1 has 65536 bytes
@@ -108,8 +109,11 @@ void test_l1_cache(uint32 number_of_sms, Board device) {
 	delete[] V_host;
 	delete[] l1_hit_array_host;
 	delete[] l1_miss_array_host;
+	return errors;
 }
 
-void test_l1_cache(const Parameters& parameters){
+std::vector<std::string> test_l1_cache(const Parameters& parameters){
+	std::vector<std::string> errors;
 
+	return errors;
 }

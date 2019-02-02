@@ -18,13 +18,7 @@
 #include "utils.h"
 #include "Log.h"
 
-std::unordered_map<std::string, Board> devices_name = {
-//Tesla K40
-		{ "Tesla K40c", K40 },
-// Titan V
-		{ "TITAN V", TITANV }
-//Other
-		};
+#define DEVICE_INDEX 0 //Radiation test can be done only one device at time
 
 cudaDeviceProp get_device_information(int dev) {
 	int driver_version, runtime_version;
@@ -142,12 +136,20 @@ cudaDeviceProp get_device_information(int dev) {
 }
 
 int main(int argc, char **argv) {
+	std::unordered_map<std::string, Board> devices_name = {
+	//Tesla K40
+			{ "Tesla K40c", K40 },
+	// Titan V
+			{ "TITAN V", TITANV }
+	//Other
+			};
+
 	//Const list of NVIDIA DEVICES
 	bool l2_checked = false;
 #ifdef L2TEST
 	l2_checked = true;
 #endif
-	auto device_info = get_device_information(0);
+	auto device_info = get_device_information(DEVICE_INDEX);
 	std::string device_name(device_info.name);
 	if (devices_name.find(device_name) == devices_name.end())
 		error("CANNOT FOUND THE DEVICE\n");
@@ -160,17 +162,27 @@ int main(int argc, char **argv) {
 	test_parameter.shared_memory_size = device_info.sharedMemPerMultiprocessor;
 	test_parameter.l2_size = device_info.l2CacheSize;
 	test_parameter.l1_size = device_info.localL1CacheSupported;
+	test_parameter.log = &log;
 
-	for (int iterations = 0; iterations < 10; iterations++) {
-		log.start_iteration_app();
+
+	/**
+	 * SETUP THE NVWL THREAD
+	 */
+	NVMLWrapper counter_thread(DEVICE_INDEX);
+
+
+	for(int iterations = 0; iterations < 10; iterations++) {
+		//Start collecting data
+		counter_thread.start_collecting_data();
+
 		//test L1
 		if (log.test_mode == "L1") {
 			test_l1_cache(test_parameter);
 		}
 		//Test l2
 		if (log.test_mode == "L2") {
-			if(l2_checked == false){
-				log.log_info("")
+			if (l2_checked == false) {
+				error("YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
 			}
 			test_l2_cache(test_parameter);
 		}
@@ -187,7 +199,10 @@ int main(int argc, char **argv) {
 			test_register_file(test_parameter);
 		}
 
-		log.end_iteration_app();
+		//End collecting the data
+		counter_thread.end_collecting_data();
+
+		//reset the device
 		cuda_check(cudaDeviceReset());
 	}
 	return 0;

@@ -15,7 +15,7 @@
 #endif
 
 #include <string>
-#include "kernels.h"
+//#include "kernels.h"
 
 class Log {
 public:
@@ -23,7 +23,7 @@ public:
 	bool verbose;
 	std::string test_mode;
 
-	Log(int argc, char** argv, Board device) {
+	Log(int argc, char** argv, int device) {
 		this->iterations = this->find_int_arg(argc, argv, "--iterations", 0);
 		this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);
 		this->test_mode = this->find_char_arg(argc, argv, "--memtotest",
