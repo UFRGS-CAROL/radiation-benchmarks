@@ -6,8 +6,8 @@ SRC=new_verify_mem.cpp
 EXE=MicroBench_MUL
 
 all: 
-	#g++ -o $(EXE)_INT_CPU mul.cpp -DLOGS  $(INC) $(LIB)  -DINT -fpermissive -g
-	g++ -o $(EXE)_FLOAT_CPU mul.cpp -DLOGS  $(INC) $(LIB)  -DFLOAT
+	g++ -o $(EXE)_INT_CPU mul.cpp -DLOGS  $(INC) $(LIB)  -DINT -fpermissive -g
+	#g++ -o $(EXE)_FLOAT_CPU mul.cpp -DLOGS  $(INC) $(LIB)  -DFLOAT
 assembly:
 	#g++ -save-temps -fverbose-asm -o assembly_int mul.cpp -DLOGS -DINT $(INC) $(LIB)
 	g++ -save-temps -fverbose-asm -o assembly_float mul.cpp -DLOGS -DFLOAT $(INC) $(LIB)
