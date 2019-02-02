@@ -143,7 +143,10 @@ cudaDeviceProp get_device_information(int dev) {
 
 int main(int argc, char **argv) {
 	//Const list of NVIDIA DEVICES
-
+	bool l2_checked = false;
+#ifdef L2TEST
+	l2_checked = true;
+#endif
 	auto device_info = get_device_information(0);
 	std::string device_name(device_info.name);
 	if (devices_name.find(device_name) == devices_name.end())
@@ -166,11 +169,13 @@ int main(int argc, char **argv) {
 		}
 		//Test l2
 		if (log.test_mode == "L2") {
+			if(l2_checked == false){
+				log.log_info("")
+			}
 			test_l2_cache(test_parameter);
 		}
 		//Test Shared
 		if (log.test_mode == "SHARED") {
-
 			test_shared_memory(test_parameter);
 		}
 		//Test Constant

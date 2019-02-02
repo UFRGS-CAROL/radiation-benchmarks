@@ -27,6 +27,7 @@ endif
 
 ifeq ($(DISABLEL1CACHE), 1)
 NVCCFLAGS+= -Xptxas -dlcm=cg
+CXXFLAGS+= -DL2TEST
 endif
 LDFLAGS= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs/ -lnvidia-ml 
 
