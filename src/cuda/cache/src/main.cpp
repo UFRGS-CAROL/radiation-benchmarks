@@ -22,7 +22,7 @@ std::unordered_map<std::string, Board> devices_name = {
 //Tesla K40
 		{ "Tesla K40c", K40 },
 // Titan V
-		{ "Volta", TITANV }
+		{ "TITAN V", TITANV }
 //Other
 		};
 
