@@ -10,6 +10,7 @@
 
 #include <cuda_runtime.h> // cudaError_t
 #include <string> // error message
+#include <iostream>
 
 void check_cuda_error_(const char *file, unsigned line, const char *statement,
 		cudaError_t err);
@@ -21,12 +22,6 @@ void sleep(int seconds);
 
 size_t get_time_since_epoch();
 
-template<typename T>
-T copy_from_symbol(std::string symbol) {
-	T mem;
-	cudaMemcpyFromSymbol(&mem, symbol.c_str(), sizeof(T), 0,
-			cudaMemcpyDeviceToHost);
-	return mem;
-}
+
 
 #endif /* UTILS_H_ */

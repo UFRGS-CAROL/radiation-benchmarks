@@ -165,9 +165,10 @@ void get_device_information(int dev) {
 int main(void) {
 	get_device_information(0);
 	for (int iterations = 0; iterations < 10; iterations++) {
+		cuda_check(cudaDeviceReset());
+
 //		test_l1_cache(15, K40);
 		test_shared_memory(15, K40);
-		cuda_check(cudaDeviceReset());
 
 	}
 	return 0;

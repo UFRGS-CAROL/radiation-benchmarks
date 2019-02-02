@@ -11,7 +11,7 @@
 
 #include <iostream>
 
-__device__ uint32 shared_mem_err;
+__device__ uint64 shared_mem_err;
 
 template<const uint32 V_SIZE, const uint32 LINE_SIZE>
 __global__ void test_shared_memory_kernel(CacheLine<LINE_SIZE> *lines,
@@ -43,6 +43,9 @@ void test_shared_memory(uint32 number_of_sms, Board device) {
 	const uint32 shared_line_size = 128; // size in bytes
 	const uint32 v_size = shared_memory_size / shared_line_size; // 384 lines
 
+	uint64 mem = 0;
+	cuda_check(cudaMemcpyToSymbol(shared_mem_err, &mem, sizeof(uint64), 0));
+
 	//Set each element of V array
 	CacheLine<shared_line_size> *V_dev;
 	cuda_check(
@@ -55,9 +58,9 @@ void test_shared_memory(uint32 number_of_sms, Board device) {
 			1000000000, t_byte);
 	cuda_check(cudaDeviceSynchronize());
 
-	auto bad = copy_from_symbol<uint32>("shared_mem_err");
+	cuda_check(cudaMemcpyFromSymbol(&mem, shared_mem_err, sizeof(uint64), 0));
 
-	std::cout << "TOTAL BAD " << bad << std::endl;
+	std::cout << "TOTAL BAD " << mem << std::endl;
 	cuda_check(cudaDeviceSetCacheConfig(cudaFuncCachePreferNone));
 	cuda_check(cudaFree(V_dev));
 }

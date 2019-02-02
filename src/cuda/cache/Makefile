@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS= -std=c++11 -o3  -fPIC -pthread
+CXXFLAGS= -std=c++11 -o3  -fPIC -pthread 
 EXEC=cudaCacheTest
 DISABLEL1CACHE=0
 
@@ -28,7 +28,7 @@ endif
 ifeq ($(DISABLEL1CACHE), 1)
 NVCCFLAGS+= -Xptxas -dlcm=cg
 endif
-LDFLAGS= -L$(CUDAPATH)/lib64  -lcudart -L$(CUDAPATH)/lib64/stubs/ -lnvidia-ml
+LDFLAGS= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs/ -lnvidia-ml 
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
@@ -44,7 +44,7 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
 	
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
+	$(NVCC) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
 
 mkdir:
 	mkdir -p $(OBJDIR)

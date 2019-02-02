@@ -8,14 +8,12 @@
 #ifndef KERNELS_H_
 #define KERNELS_H_
 
-#include <cstdint>
+typedef unsigned char byte;
+typedef unsigned int uint32;
+typedef unsigned long long int uint64;
 
-typedef std::uint8_t byte;
-typedef std::uint32_t uint32;
-typedef std::uint64_t uint64;
-
-typedef std::int32_t int32;
-typedef std::int64_t int64;
+typedef signed int int32;
+typedef signed long long int int64;
 
 
 #define BLOCK_SIZE 32

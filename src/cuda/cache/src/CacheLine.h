@@ -60,10 +60,9 @@ struct CacheLine {
 	}
 };
 
-__device__ static void sleep_cuda(std::int64_t clock_count) {
-
-	std::int64_t start = clock64();
-	std::int64_t clock_offset = 0;
+__device__ static void sleep_cuda(int64 clock_count) {
+	int64 start = clock64();
+	int64 clock_offset = 0;
 	while (clock_offset < clock_count) {
 		clock_offset = clock64() - start;
 	}
