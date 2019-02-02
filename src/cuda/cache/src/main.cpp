@@ -158,10 +158,8 @@ int main(int argc, char **argv) {
 	Parameters test_parameter;
 	test_parameter.device = devices_name[device_name];
 	test_parameter.number_of_sms = device_info.multiProcessorCount;
-	test_parameter.shared_line_size = 128; // TODO: CHECK THIS OUT
 	test_parameter.shared_memory_size = device_info.sharedMemPerMultiprocessor;
 	test_parameter.l2_size = device_info.l2CacheSize;
-	test_parameter.l1_size = device_info.localL1CacheSupported;
 	test_parameter.log = &log;
 
 

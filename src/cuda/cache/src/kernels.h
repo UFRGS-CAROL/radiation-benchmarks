@@ -30,8 +30,6 @@ struct Parameters {
 	uint32 number_of_sms;
 	Board device;
 	uint32 shared_memory_size;
-	uint32 shared_line_size;
-	uint32 l1_size;
 	uint32 l2_size;
 	Log *log;
 };
