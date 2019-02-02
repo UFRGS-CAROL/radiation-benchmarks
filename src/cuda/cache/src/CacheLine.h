@@ -22,7 +22,6 @@ struct CacheLine {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
 			this->t[i] = T.t[i];
-
 		}
 	}
 
