@@ -15,7 +15,6 @@ typedef unsigned long long int uint64;
 typedef signed int int32;
 typedef signed long long int int64;
 
-
 #define BLOCK_SIZE 32
 
 enum Board {
@@ -24,6 +23,6 @@ enum Board {
 
 void test_l1_cache(uint32 number_of_sms, Board device);
 void test_l2_cache(uint32 number_of_sms, Board device);
-void test_shared_memory(uint32 number_of_sms, Board device);
-
+void test_shared_memory(const uint32 number_of_sms, const Board device,
+		const uint32 shared_memory_size, const uint32 shared_line_size);
 #endif /* KERNELS_H_ */
