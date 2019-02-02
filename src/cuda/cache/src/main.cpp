@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
 	NVMLWrapper counter_thread(DEVICE_INDEX);
 
 
-	for(int iterations = 0; iterations < 10; iterations++) {
+	for(int iterations = 0; iterations < log.iterations; iterations++) {
 		//Start collecting data
 		counter_thread.start_collecting_data();
 
