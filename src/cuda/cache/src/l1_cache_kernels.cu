@@ -118,16 +118,17 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 			cudaMemcpy(l1_miss_array_host.data(), l1_miss_array_device,
 					sizeof(int32) * v_size_multiple_threads,
 					cudaMemcpyDeviceToHost));
-
-//	for (auto i = 0; i < v_size_multiple_threads; i++) {
-//		if ((l1_hit_array_host[i] - l1_miss_array_host[i]) > 0)
-//			bad++;
-//	}
+	auto bad = 0;
+	for (auto i = 0; i < v_size_multiple_threads; i++) {
+		if ((l1_hit_array_host[i] - l1_miss_array_host[i]) > 0)
+			bad++;
+	}
 	cuda_check(
 			cudaMemcpyFromSymbol(&l1_cache_err_host, l1_cache_err,
 					sizeof(uint64), 0));
 
-	std::cout << "TOTAL BAD " << l1_cache_err_host << std::endl;
+	std::cout << "TOTAL BAD " << bad << " total err " << l1_cache_err_host
+			<< std::endl;
 	cudaDeviceSetCacheConfig(cudaFuncCachePreferNone);
 
 	cuda_check(cudaFree(l1_hit_array_device));
