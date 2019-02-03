@@ -162,6 +162,7 @@ int main(int argc, char **argv) {
 	test_parameter.l2_size = device_info.l2CacheSize;
 	test_parameter.log = &log;
 	test_parameter.one_second_cycles = device_info.clockRate * 1000;
+	test_parameter.board_name = device_info.name;
 
 
 	/**

@@ -25,7 +25,6 @@ enum Board {
 	K40, TEGRAX2, TITANV, BOARD_COUNT,
 };
 
-
 struct Parameters {
 	uint32 number_of_sms;
 	Board device;
@@ -33,6 +32,7 @@ struct Parameters {
 	uint32 l2_size;
 	uint64 one_second_cycles; // the necessary number of cycles to count one second
 	Log *log;
+	std::string board_name;
 };
 
 

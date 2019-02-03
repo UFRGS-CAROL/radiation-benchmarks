@@ -97,7 +97,9 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 
 	//Set to zero err_check
 	uint64 l1_cache_err_host = 0;
-	cuda_check(cudaMemcpyToSymbol(l1_cache_err, &l1_cache_err_host, sizeof(uint64), 0));
+	cuda_check(
+			cudaMemcpyToSymbol(l1_cache_err, &l1_cache_err_host, sizeof(uint64),
+					0));
 
 	test_l1_cache_kernel<int32, v_size, L1_LINE_SIZE> <<<number_of_sms,
 	BLOCK_SIZE>>>(V_dev, l1_hit_array_device, l1_miss_array_device, cycles,
@@ -121,7 +123,9 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 //		if ((l1_hit_array_host[i] - l1_miss_array_host[i]) > 0)
 //			bad++;
 //	}
-	cuda_check(cudaMemcpyFromSymbol(&l1_cache_err_host, l1_cache_err, sizeof(uint64), 0));
+	cuda_check(
+			cudaMemcpyFromSymbol(&l1_cache_err_host, l1_cache_err,
+					sizeof(uint64), 0));
 
 	std::cout << "TOTAL BAD " << l1_cache_err_host << std::endl;
 	cudaDeviceSetCacheConfig(cudaFuncCachePreferNone);
@@ -135,6 +139,10 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 
 std::vector<std::string> test_l1_cache(const Parameters& parameters) {
 	std::vector<std::string> errors;
+	std::cout << "Testing " << parameters.board_name << " GPU. Using "
+			<< parameters.number_of_sms << "SMs, one second cycles "
+			<< parameters.one_second_cycles << std::endl;
+
 	//This switch is only to set manually the cache line size
 	//since it is hard to check it at runtime
 	switch (parameters.device) {
