@@ -95,7 +95,7 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 
 	//Host arrays
 	//Copy back to the host
-	std::vector<int32> l1_hit_array_host(v_size), l1_miss_array_host(v_size);
+	std::vector<int32> l1_hit_array_host(v_size_multiple_threads), l1_miss_array_host(v_size_multiple_threads);
 	cuda_check(cudaMemcpy(l1_hit_array_host.data(), l1_hit_array_device,
 			sizeof(int32) * v_size_multiple_threads, cudaMemcpyDeviceToHost));
 	cuda_check(cudaMemcpy(l1_miss_array_host.data(), l1_miss_array_device,
