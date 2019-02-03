@@ -9,6 +9,7 @@
 #define CACHELINE_H_
 
 #include "kernels.h"
+#include <ostream>
 
 //alignas(LINE_SIZE)
 template<uint32 LINE_SIZE>
@@ -40,7 +41,7 @@ struct CacheLine {
 		return *this;
 	}
 
-	__host__ __device__ inline byte operator^(const byte& rhs) volatile {
+	__host__  __device__  inline byte operator^(const byte& rhs) volatile {
 		byte ret = rhs;
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
@@ -56,6 +57,14 @@ struct CacheLine {
 				return true;
 		}
 		return false;
+	}
+
+	__host__  friend std::ostream& operator<<(std::ostream& stream,
+			const CacheLine<LINE_SIZE>& t) {
+		for (auto s : t.t) {
+			stream << " " << s;
+		}
+		return stream;
 	}
 };
 

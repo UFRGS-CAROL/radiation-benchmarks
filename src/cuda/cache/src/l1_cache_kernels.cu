@@ -30,7 +30,7 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 		for (uint32 i = 0; i < V_SIZE; i++) {
 			volatile int_t t1 = clock();
-			volatile auto r = lines[tx + i];
+			register volatile auto r = lines[tx + i];
 			volatile int_t t2 = clock();
 			l1_t_miss[i] = t2 - t1;
 		}
@@ -41,14 +41,15 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 		for (uint32 i = 0; i < V_SIZE; i++) {
 			//last checking
 			volatile int_t t1 = clock();
-			volatile auto r = lines[tx + i];
+			register volatile auto r = lines[tx + i];
 			volatile int_t t2 = clock();
 			l1_t_hit[i] = t2 - t1;
 
 			//bitwise operation
-			if ((r ^ t) != 0)
-				atomicAdd((unsigned long long*) &l1_cache_err, 1);
+			if ((r ^ t) != 0){
 
+				atomicAdd((unsigned long long*) &l1_cache_err, 1);
+			}
 //		//saving the result
 			l1_hit_array[tx + i] = l1_t_hit[i];
 			l1_miss_array[tx + i] = l1_t_miss[i];
@@ -118,10 +119,13 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 			cudaMemcpy(l1_miss_array_host.data(), l1_miss_array_device,
 					sizeof(int32) * v_size_multiple_threads,
 					cudaMemcpyDeviceToHost));
+	cuda_check(cudaMemcpy(V_host.data(), V_dev, sizeof(CacheLine<L1_LINE_SIZE>) * v_size_multiple_threads, cudaMemcpyDeviceToHost));
 	auto bad = 0;
 	for (auto i = 0; i < v_size_multiple_threads; i++) {
-		if ((l1_hit_array_host[i] - l1_miss_array_host[i]) > 0)
+		if ((l1_hit_array_host[i] - l1_miss_array_host[i]) > 0){
 			bad++;
+			std::cout << V_host[i] << std::endl;
+		}
 	}
 	cuda_check(
 			cudaMemcpyFromSymbol(&l1_cache_err_host, l1_cache_err,
