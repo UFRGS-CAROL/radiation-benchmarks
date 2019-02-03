@@ -63,7 +63,7 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 		const byte t_byte, const int64 cycles) {
 	std::vector<std::string> errors;
 	cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
-	const uint32 v_size = L1_MEMORY_SIZE / L1_LINE_SIZE; // 512 lines
+	const uint32 v_size = L1_MEMORY_SIZE / L1_LINE_SIZE;
 
 	const uint32 v_size_multiple_threads = v_size * number_of_sms; // Each block with one thread using all l1 cache
 
@@ -148,8 +148,10 @@ std::vector<std::string> test_l1_cache(const Parameters& parameters) {
 	switch (parameters.device) {
 	case K40: {
 		// cache l1 has 65536 bytes
+		//BUT, only 48kb are destined to L1 memory
+		//so alloc 49152 bytes
 		// cache line has 128 bytes
-		test_l1_cache<65536, 128>(parameters.number_of_sms, 0xff,
+		test_l1_cache<49152, 128>(parameters.number_of_sms, 0xff,
 				parameters.one_second_cycles);
 		break;
 	}
