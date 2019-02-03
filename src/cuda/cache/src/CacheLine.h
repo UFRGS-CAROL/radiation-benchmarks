@@ -50,7 +50,7 @@ struct CacheLine {
 		return ret;
 	}
 
-	__host__ __device__ inline bool operator !=(const byte& a) {
+	__host__ __device__ inline bool operator !=(const byte& a) volatile {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
 			if (a != t[i])
