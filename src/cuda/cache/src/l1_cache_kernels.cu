@@ -124,7 +124,9 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 	for (auto i = 0; i < v_size_multiple_threads; i++) {
 		if ((l1_hit_array_host[i] - l1_miss_array_host[i]) > 0){
 			bad++;
-			std::cout << V_host[i] << std::endl;
+			for(int st = 0; st < L1_LINE_SIZE; st++)
+				if(V_host[i][st] != t_byte)
+					std::cout << V_host[i][st] << std::endl;
 		}
 	}
 	cuda_check(

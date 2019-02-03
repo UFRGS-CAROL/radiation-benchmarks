@@ -66,6 +66,10 @@ struct CacheLine {
 		}
 		return stream;
 	}
+
+	__host__ byte operator [](int idx) const {
+        return t[idx];
+    }
 };
 
 __device__ static void sleep_cuda(int64 clock_count) {
