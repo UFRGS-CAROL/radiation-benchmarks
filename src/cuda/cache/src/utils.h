@@ -22,6 +22,16 @@ void sleep(int seconds);
 
 size_t get_time_since_epoch();
 
+template<typename T>
+inline void copy_to_gpu(std::string symbol, T mem) {
+	cuda_check(cudaMemcpyToSymbol(symbol.c_str(), &mem, sizeof(T), 0));
+}
 
+template<typename T>
+inline T copy_from_gpu(std::string symbol) {
+	T mem;
+	cuda_check(cudaMemcpyFromSymbol(&mem, symbol.c_str(), sizeof(T), 0));
+	return mem;
+}
 
 #endif /* UTILS_H_ */
