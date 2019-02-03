@@ -31,6 +31,7 @@ struct Parameters {
 	Board device;
 	uint32 shared_memory_size;
 	uint32 l2_size;
+	uint64 one_second_cycles; // the necessary number of cycles to count one second
 	Log *log;
 };
 

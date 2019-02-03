@@ -123,7 +123,7 @@ std::vector<std::string> test_l1_cache(const Parameters& parameters) {
 	case K40: {
 		// cache l1 has 65536 bytes
 		// cache line has 128 bytes
-		test_l1_cache<65536, 128>(parameters.number_of_sms, 0xff);
+		test_l1_cache<65536, 128>(parameters.number_of_sms, 0xff, parameters.one_second_cycles);
 		break;
 	}
 	case TITANV: {
