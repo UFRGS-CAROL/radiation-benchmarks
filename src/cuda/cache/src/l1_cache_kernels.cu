@@ -69,8 +69,8 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 
 	//device arrays
 	int32 *l1_hit_array_device, *l1_miss_array_device;
-	cudaMalloc(&l1_hit_array_device, sizeof(int32) * v_size_multiple_threads);
-	cudaMalloc(&l1_miss_array_device, sizeof(int32) * v_size_multiple_threads);
+	cuda_check(cudaMalloc(&l1_hit_array_device, sizeof(int32) * v_size_multiple_threads));
+	cuda_check(cudaMalloc(&l1_miss_array_device, sizeof(int32) * v_size_multiple_threads));
 
 	//Set each element of V array
 	CacheLine<L1_LINE_SIZE> *V_dev;
@@ -81,11 +81,12 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 	}
 
 	//copy to the gpu
-	cudaMalloc(&V_dev,
-			sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads);
-	cudaMemcpy(V_dev, V_host.data(),
+	cuda_check(cudaMalloc(&V_dev,
+			sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads));
+
+	cuda_check(cudaMemcpy(V_dev, V_host.data(),
 			sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads,
-			cudaMemcpyDeviceToHost);
+			cudaMemcpyDeviceToHost));
 
 	test_l1_cache_kernel<int32, v_size, L1_LINE_SIZE> <<<number_of_sms,
 			BLOCK_SIZE>>>(V_dev, l1_hit_array_device, l1_miss_array_device,
@@ -95,10 +96,10 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 	//Host arrays
 	//Copy back to the host
 	std::vector<int32> l1_hit_array_host(v_size), l1_miss_array_host(v_size);
-	cudaMemcpy(l1_hit_array_host.data(), l1_hit_array_device,
-			sizeof(int32) * v_size_multiple_threads, cudaMemcpyDeviceToHost);
-	cudaMemcpy(l1_miss_array_host.data(), l1_miss_array_device,
-			sizeof(int32) * v_size_multiple_threads, cudaMemcpyDeviceToHost);
+	cuda_check(cudaMemcpy(l1_hit_array_host.data(), l1_hit_array_device,
+			sizeof(int32) * v_size_multiple_threads, cudaMemcpyDeviceToHost));
+	cuda_check(cudaMemcpy(l1_miss_array_host.data(), l1_miss_array_device,
+			sizeof(int32) * v_size_multiple_threads, cudaMemcpyDeviceToHost));
 
 	auto bad = 0;
 	for (auto i = 0; i < v_size_multiple_threads; i++) {
@@ -108,9 +109,9 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 	std::cout << "TOTAL BAD " << bad << std::endl;
 	cudaDeviceSetCacheConfig(cudaFuncCachePreferNone);
 
-	cudaFree(l1_hit_array_device);
-	cudaFree(l1_miss_array_device);
-	cudaFree(V_dev);
+	cuda_check(cudaFree(l1_hit_array_device));
+	cuda_check(cudaFree(l1_miss_array_device));
+	cuda_check(cudaFree(V_dev));
 
 	return errors;
 }
