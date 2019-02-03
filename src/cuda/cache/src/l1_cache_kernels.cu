@@ -86,7 +86,7 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 
 	cuda_check(cudaMemcpy(V_dev, V_host.data(),
 			sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads,
-			cudaMemcpyDeviceToHost));
+			cudaMemcpyHostToDevice));
 
 	test_l1_cache_kernel<int32, v_size, L1_LINE_SIZE> <<<number_of_sms,
 			BLOCK_SIZE>>>(V_dev, l1_hit_array_device, l1_miss_array_device,
