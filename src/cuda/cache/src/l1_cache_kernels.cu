@@ -46,8 +46,7 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 			l1_t_hit[i] = t2 - t1;
 
 			//bitwise operation
-			if ((r ^ t) != 0){
-
+			if (r != t){
 				atomicAdd((unsigned long long*) &l1_cache_err, 1);
 			}
 //		//saving the result
