@@ -97,7 +97,7 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 
 	//Set to zero err_check
 	uint64 l1_cache_err_host = 0;
-	copy_to_gpu<uint64>("l1_cache_err", l1_cache_err_host);
+	cuda_check(cudaMemcpyToSymbol("l1_cache_err", &l1_cache_err_host, sizeof(uint64), 0));
 
 	test_l1_cache_kernel<int32, v_size, L1_LINE_SIZE> <<<number_of_sms,
 	BLOCK_SIZE>>>(V_dev, l1_hit_array_device, l1_miss_array_device, cycles,
@@ -121,7 +121,7 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 //		if ((l1_hit_array_host[i] - l1_miss_array_host[i]) > 0)
 //			bad++;
 //	}
-	l1_cache_err_host = copy_from_gpu<uint64>("l1_cache_err");
+	cuda_check(cudaMemcpyToSymbol(&l1_cache_err_host, "l1_cache_err", sizeof(uint64), 0));
 
 	std::cout << "TOTAL BAD " << l1_cache_err_host << std::endl;
 	cudaDeviceSetCacheConfig(cudaFuncCachePreferNone);
