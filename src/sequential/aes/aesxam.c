@@ -229,7 +229,7 @@ void send_message(size_t size) {
 int main(int argc, char *argv[]) {
 	//m5_checkpoint(0,0);
 	FILE *fin = 0, *fout = 0;
-	char *cp = argv[7], ch, key[32];
+	char ch, key[32];
 	int i = 0, by = 0, key_len = 0, err = 0;
 	aes ctx[1];
 	FILE *golden;
@@ -243,7 +243,8 @@ int main(int argc, char *argv[]) {
 	char *output_file_path = argv[4];
 	char *golden_file_path = argv[5];
 	char mode = toupper(argv[6][0]);
-
+	char *cp = argv[7];
+	unsigned long long int iterations = 0;
 	//-----------------------------------------------------
 
 	//struct timeb start, end;
@@ -373,6 +374,7 @@ int main(int argc, char *argv[]) {
 			if(errors){
 				log_error_count(errors);
 			}
+			printf("ITERATION: %lld errors %ld\n", iterations++, errors);
 #else
 			send_message(1);
 #endif

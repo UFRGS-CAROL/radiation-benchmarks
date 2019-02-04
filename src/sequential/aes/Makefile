@@ -12,6 +12,13 @@ ifeq ($(LOGS), 1)
 INCLUDE= -I../../include
 LIBRARY= -L../../include -lLogHelper
 CCFLAGS+= -DLOGS
+IPADDR=127.0.0.1
+PORT=999
+endif
+
+ifeq ($(LOGS), 0)
+IPADDR=127.0.0.1
+PORT=999
 endif
 
 ifeq ($(ARCH), arm64)
@@ -34,8 +41,10 @@ endif
 
 SOURCES= 
 
-DEFAULTGOLD=./$(EXEC)_gold_$(MATRIXSIZE).txt
-DEFAULTINPUT=./$(EXEC)_input_$(MATRIXSIZE).txt
+RADDATA=/home/fernando/git_pesquisa/radiation-benchmarks/data/aes
+DEC=$(RADDATA)/input_large.asc
+ENC=$(RADDATA)/input_large.enc
+OUTPUT=$(RADDATA)/tmp.file
 
 all: clean $(EXEC)
 
@@ -46,8 +55,20 @@ $(EXEC): aes.c aes.h aestab.h aesxam.c aes.c aes.h aestab.h aesxam.c
 clean:
 	rm -f $(EXEC) $(DEFAULTGOLD) $(DEFAULTINPUT) rijndael_enc
 
-generate: $(EXEC)
-	./$(EXEC) $(MATRIXSIZE) 1 $(DEFAULTGOLD) $(DEFAULTINPUT) 
+#  IF LOGS=1 the ip and port could be a random value
+#	char *ip_addr = argv[1];
+#	unsigned int port = atoi(argv[2]);
+#	char *input_file_path = argv[3];
+#	char *output_file_path = argv[4];
+#	char *golden_file_path = argv[5];
+#	char mode = toupper(argv[6][0]);
+#   char chave
 
-test: $(EXEC) generate
-	./$(EXEC) $(MATRIXSIZE) 0 $(DEFAULTGOLD) $(DEFAULTINPUT) 
+
+test: $(EXEC)
+	./$(EXEC) $(IPADDR) $(PORT) $(DEC) $(OUTPUT) $(ENC) E 1234567890abcdeffedcba09876543211234567890abcdeffedcba0987654321
+	./$(EXEC) $(IPADDR) $(PORT) $(ENC) $(OUTPUT) $(DEC) D 1234567890abcdeffedcba09876543211234567890abcdeffedcba0987654321
+	
+	
+	
+	
