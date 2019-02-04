@@ -8,17 +8,17 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [1024] #4096, 8192]
-PRECISIONS = ["single", "half"]
+SIZES = [4096] #, 8192]
+PRECISIONS = ["float", "half"]
 ITERATIONS = 10000
-USE_TENSOR_CORES = [0] #, 1]
+USE_TENSOR_CORES = [1] #, 0]
 
 
 def config(board, arith_type, debug):
 
-    DATA_PATH_BASE = "mxm_" + arith_type
+    DATA_PATH_BASE = "gemm_" + arith_type
 
-    benchmark_bin = "cuda_tensorcore_gemm_" + arith_type
+    benchmark_bin = "gemm_wmma"
     print "Generating " + benchmark_bin + " for CUDA, board:" + board
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -55,20 +55,20 @@ def config(board, arith_type, debug):
         for tc in USE_TENSOR_CORES:
             input_file = data_path + "/"
 
-            gen = [None] * 8
+            gen = [None] * 9
             gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
-            gen[1] = ['-size=' + str(i)]
-            gen[2] = ['-input_a=' + input_file + 'A_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
-            gen[3] = ['-input_b=' + input_file + 'B_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
-            gen[4] = ['-input_c=' + input_file + 'C_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
-            gen[5] = ['-gold=' + input_file + "GOLD_" +  str(i) + "_use_tensor_" + str(tc) + ".matrix"]  # change for execute
-            gen[6] = ['-use_tensors=' + str(tc)]
-            gen[7] = ['-generate']
-
+            gen[1] = ['--size ' + str(i)]
+            gen[2] = ['--input_a ' + input_file + 'A_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
+            gen[3] = ['--input_b ' + input_file + 'B_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
+            gen[4] = ['--input_c ' + input_file + 'C_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
+            gen[5] = ['--gold ' + input_file + "GOLD_" +  str(i) + "_use_tensor_" + str(tc) + ".matrix"]  # change for execute
+            gen[6] = ['--verbose 1']
+            gen[7] = ['--tensor_cores ' + str(tc)]
+            gen[8] = ['--generate 1']
             # change mode and iterations for exe
             exe = copy.deepcopy(gen)
             exe[0][1] = bin_path + '/' + benchmark_bin + " "
-            exe[7] = ['-iterations=' + str(ITERATIONS)]
+            exe[7] = ['--iterations ' + str(ITERATIONS)]
             
 
             generate.append(' '.join(str(r) for v in gen for r in v))
