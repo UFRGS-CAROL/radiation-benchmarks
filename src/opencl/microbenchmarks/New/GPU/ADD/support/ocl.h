@@ -125,11 +125,15 @@ struct OpenCLSetup {
         CL_ERR();
 
         char clOptions[50];
-#ifdef OCL_2_0
-        sprintf(clOptions, "-I. -cl-std=CL2.0");
-#else
-        sprintf(clOptions, "-I.");
-#endif
+//#ifdef OCL_2_0
+//        sprintf(clOptions, "-I. -cl-std=CL2.0");
+//#else
+	#ifdef INT
+        sprintf(clOptions, "-I. -DT=int");
+	#elif FLOAT
+        sprintf(clOptions, "-I. -DT=float");
+	#endif	
+//#endif
 
         clStatus = clBuildProgram(clProgram, 0, NULL, clOptions, NULL, NULL);
         if(clStatus == CL_BUILD_PROGRAM_FAILURE) {

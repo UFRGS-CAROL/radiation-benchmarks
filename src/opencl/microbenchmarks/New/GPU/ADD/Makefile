@@ -32,6 +32,7 @@
 #  THE SOFTWARE.
 # 
 
+TYPE=int
 ifndef CXX
     CXX=g++
 else
@@ -39,7 +40,17 @@ else
     CXX=g++
     endif
 endif
-CXX_FLAGS=-std=c++11 -DLOGS -fopenmp -DINT
+CXX_FLAGS=-std=c++11 -DLOGS -fopenmp
+
+ifeq ($(TYPE), int)
+CXX_FLAGS+= -DINT -DT=int
+EXE=ADD_GPU_INT
+endif
+
+ifeq ($(TYPE), float)
+CXX_FLAGS+= -DFLOAT -DT=float
+EXE=ADD_GPU_FLOAT
+endif
 
 ifndef CHAI_OCL_LIB
     $(error CHAI_OCL_LIB not defined. This environment variable must be defined to point to the location of the OpenCL library)
@@ -59,7 +70,7 @@ INC=-I$(CHAI_OCL_INC) -I/home/carol/radiation-benchmarks/src/opencl/microbenchma
 SRC=main.cpp	 #/home/carol/radiation-benchmarks/src/include/log_helper.cpp
 OBJECTS=$(SRC:.cpp=.o)
 DEPS=$(OBJECTS:.o=.d)
-EXE=ADD_GPU_INT
+
 
 .PHONY: all
 all: $(EXE)
@@ -72,8 +83,6 @@ all: $(EXE)
 
 $(EXE): $(OBJECTS)
 	$(CXX) $(CXX_FLAGS) $(OBJECTS) $(LIB) -o $(EXE)
-	#$(CXX) $(CXX_FLAGS) sc_gen_input.cpp -o gen_input
-	#$(CXX) $(CXX_FLAGS) sc_gen_gold.cpp -o gen_gold
 clean:
 	rm -f $(EXE) *.o *.d
 
