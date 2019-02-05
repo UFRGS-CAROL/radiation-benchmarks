@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [4096] #, 8192]
+SIZES = [4096, 8192, 16384]
 PRECISIONS = ["float", "half"]
 ITERATIONS = 10000
 USE_TENSOR_CORES = [1] #, 0]
@@ -55,7 +55,7 @@ def config(board, arith_type, debug):
         for tc in USE_TENSOR_CORES:
             input_file = data_path + "/"
 
-            gen = [None] * 9
+            gen = [None] * 10
             gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
             gen[1] = ['--size ' + str(i)]
             gen[2] = ['--input_a ' + input_file + 'A_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
@@ -65,6 +65,7 @@ def config(board, arith_type, debug):
             gen[6] = ['--verbose 1']
             gen[7] = ['--tensor_cores ' + str(tc)]
             gen[8] = ['--generate 1']
+            gen[9] = ['--triplicated 1']
             # change mode and iterations for exe
             exe = copy.deepcopy(gen)
             exe[0][1] = bin_path + '/' + benchmark_bin + " "
