@@ -105,6 +105,8 @@ int compare(char* gold, long iteration) {
 				snprintf(error_detail, 150,
 						"p: [%d, %d], r: %1.20e, e: %1.20e",
 						i, j, mCS0[i][j], golden);
+				log_error_detail(error_detail);
+
 #endif
 			}
 		}

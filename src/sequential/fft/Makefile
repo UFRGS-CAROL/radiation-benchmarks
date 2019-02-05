@@ -1,36 +1,74 @@
+LOGS?=0
+ARCH?=arm
+CC=arm-linux-gnueabihf-gcc
+EXEC=fft
+PORT=999
+ADDR=127.0.0.1
+
 OBJ = main.o fftmisc.o  fourier.o
 FILE = main.c fftmisc.c  fourier.c
 
-arm64:CFLAGS = -O3
-arm64:LDFLAGS = -static -lm
-arm64:CC=aarch64-linux-gnu-gcc
-arm64:AS=aarch64-linux-gnu-as
-arm64:LD=aarch64-linux-gnu-ld
-arm64:AR=aarch64-linux-gnu-ar
+CCFLAGS= -O3 -Wno-unused-result
+LDFLAGS= -static -lm
 
-arm:CFLAGS = -O3 -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard
-arm:LDFLAGS = -static -lm
-arm:CC=arm-linux-gnueabihf-gcc
-arm:AS=arm-linux-gnueabihf-as
-arm:LD=arm-linux-gnueabihf-ld
-arm:AR=arm-linux-gnueabihf-ar
 
-x86:CFLAGS = -O3
-x86:LDFLAGS = -static -lm
-x86:CC=gcc
-x86: ${OBJ}
-	$(CC)  ${CFLAGS} ${OBJ} -o fft -lm
+ifeq ($(LOGS), 1)
+INCLUDE= -I../../include
+LIBRARY= -L../../include -lLogHelper
+CCFLAGS+= -DLOGS
+endif
 
-arm: ${OBJ}
-	$(CC)  ${CFLAGS} ${OBJ} -o fft -lm
-arm64: ${OBJ}
-	$(CC)  ${CFLAGS} ${OBJ} -o fft -lm
-fftmisc.o: fftmisc.c
-	$(CC) ${CFLAGS} -c fftmisc.c
-fourierf.o: fourierf.c
-	$(CC) ${CFLAGS} -c fourierf.c
-main.o: main.c
-	$(CC) ${CFLAGS} -c main.c
+ifeq ($(ARCH), arm64)
+CC=aarch64-linux-gnu-gcc
+AS=aarch64-linux-gnu-as
+LD=aarch64-linux-gnu-ld
+AR=aarch64-linux-gnu-ar
+endif
+
+ifeq ($(ARCH), arm)
+AS=arm-linux-gnueabihf-as
+LD=arm-linux-gnueabihf-ld
+AR=arm-linux-gnueabihf-ar
+CCFLAGS+= -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard
+endif
+
+ifeq ($(ARCH), x86)
+CC=gcc
+endif
+
+
+OBJDIR=./
+OBJ= fftmisc.o  fourier.o  main.o
+
+OBJS = $(addprefix $(OBJDIR), $(OBJ))
+DEPS = $(wildcard *.h) Makefile 
+
+DEFAULTINPUT=./input.txt
+DEFAULTGOLD=./gold.txt
+
+all: clean $(EXEC)
+
+$(EXEC): $(OBJS)  
+	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(INCLUDE) $(LIBRARY)
+
+$(OBJDIR)%.o: %.c $(DEPS)
+	$(CC) $(CCFLAGS) -c $< -o $@ $(LDFLAGS) $(INCLUDE) 
 
 clean:
-	rm -rf *.o fft output*
+	rm -f $(EXEC) *.o
+
+
+#	unsigned int port = atoi(argv[2]);
+#	setup_socket(argv[1], port);
+#	char *fin_path = argv[3];
+#	char *f_golden_real_path = argv[4];
+#	int generate = atoi(argv[5]);
+#	MAXSIZE = atoi(argv[6]);
+#	MAXWAVES = atoi(argv[7]);
+generate: $(EXEC)
+	./$(EXEC) $(ADDR) $(PORT) $(DEFAULTINPUT) $(DEFAULTGOLD) 1 262144 8
+
+
+test: $(EXEC) generate
+	./$(EXEC) $(ADDR) $(PORT) $(DEFAULTINPUT) $(DEFAULTGOLD) 0 262144 8
+
