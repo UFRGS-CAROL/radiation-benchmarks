@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include<arpa/inet.h>
-#include<sys/socket.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <string.h>
 #include "fourier.h"
+
 #define  DDC_PI  (3.14159265358979323846)
 #define CHECKPOINTER(p)  CheckPointer(p,#p)
 void fft_float(unsigned NumSamples, int InverseTransform, float *RealIn,
@@ -45,13 +47,11 @@ void send_message(size_t size) {
 }
 
 void create_input(int max_size, int max_waves, char *fin_path) {
-	float* real_in = (float*) malloc(sizeof(float) * max_size);
-//	imag_in = (float*) malloc(sizeof(float) * max_size);
-//	real_out = (float*) malloc(sizeof(float) * max_size);
-//	imag_out = (float*) malloc(sizeof(float) * max_size);
 	float *coeff = (float*) malloc(sizeof(float) * max_waves);
 	float *amp = (float*) malloc(sizeof(float) * max_waves);
 	int i, j;
+	FILE* fin = fopen(fin_path, "wb");
+
 	for (i = 0; i < max_waves; i++) {
 
 		coeff[i] = rand() % 1000;
@@ -62,28 +62,25 @@ void create_input(int max_size, int max_waves, char *fin_path) {
 
 	for (i = 0; i < max_size; i++) {
 		/*   RealIn[i]=rand();*/
-		real_in[i] = 0;
+		float real_in = 0;
 		for (j = 0; j < max_waves; j++) {
 			/* randomly select sin or cos */
 			if (rand() % 2) {
 
-				real_in[i] += coeff[j] * cos(amp[j] * i);
+				real_in += coeff[j] * cos(amp[j] * i);
 
 			} else {
-				real_in[i] += coeff[j] * sin(amp[j] * i);
+				real_in += coeff[j] * sin(amp[j] * i);
 			}
-//			imag_in[i] = 0;
+
 		}
+//		fprintf(fin, "%f\n", real_in);
+		fwrite(&real_in, sizeof(float), 1, fin);
 	}
 
-	FILE* fin = fopen(fin_path, "w");
-	for (i = 0; i < MAXSIZE; i++) {
-		fprintf(fin, "%f\n", real_in[i]);
-	}
 	fclose(fin);
 	free(coeff);
 	free(amp);
-	free(real_in);
 }
 
 int main(int argc, char *argv[]) {
@@ -111,11 +108,13 @@ int main(int argc, char *argv[]) {
 #ifdef LOGS
 	int generate = atoi(argv[7]);
 
-	printf("Executing for infile %s golden file %s generate %d maxsize %d maxwaves %d\n", fin_path, f_golden_real_path, generate, MAXSIZE, MAXWAVES);
-
 	if(generate) {
+		printf("Generating for infile %s golden file %s generate %d maxsize %d maxwaves %d\n", fin_path, f_golden_real_path, generate, MAXSIZE, MAXWAVES);
+
 		create_input(MAXSIZE, MAXWAVES, fin_path);
 	} else {
+		printf("Executing for infile %s golden file %s generate %d maxsize %d maxwaves %d\n", fin_path, f_golden_real_path, generate, MAXSIZE, MAXWAVES);
+
 		char *benchmark_name = "SequentialFFT";
 		char test_info[100];
 		snprintf(test_info, 100, "size:%d waves_size:%d", MAXSIZE, MAXWAVES);
@@ -128,10 +127,6 @@ int main(int argc, char *argv[]) {
 #endif
 
 	while (1) {
-		fin = fopen(fin_path, "r");
-		if (!fin) {
-			printf("error at opening golden file real\n");
-		}
 		status_app = 0;
 		srand(1);
 
@@ -139,6 +134,13 @@ int main(int argc, char *argv[]) {
 		ImagIn = (float*) malloc(sizeof(float) * MAXSIZE);
 		RealOut = (float*) malloc(sizeof(float) * MAXSIZE);
 		ImagOut = (float*) malloc(sizeof(float) * MAXSIZE);
+
+#ifndef LOGS
+		fin = fopen(fin_path, "r");
+
+		if (!fin) {
+			printf("error at opening golden file real\n");
+		}
 
 		for (i = 0; i < MAXSIZE; i++) {
 			/*   RealIn[i]=rand();*/
@@ -148,6 +150,12 @@ int main(int argc, char *argv[]) {
 
 			// printf("%.22f ",RealIn[i]);
 		}
+#else
+		fin = fopen(fin_path, "rb");
+		fread(RealIn, sizeof(float), MAXSIZE, fin);
+		memset(ImagIn, 0, sizeof(float) * MAXSIZE);
+
+#endif
 
 		/* regular*/
 #ifdef LOGS
@@ -207,20 +215,22 @@ int main(int argc, char *argv[]) {
 
 #else
 		if(generate) {
-			f_golden_real = fopen(f_golden_real_path, "w");
-		} else {
-			f_golden_real = fopen(f_golden_real_path, "r");
-		}
-		unsigned int errors = 0;
-		for (i = 0; i < MAXSIZE; i++) {
-			if(generate) {
-				fprintf(f_golden_real, "%f %f\n", RealOut[i], ImagOut[i]);
+			f_golden_real = fopen(f_golden_real_path, "wb");
+			fwrite(RealOut, sizeof(float), MAXSIZE, f_golden_real);
+			fwrite(ImagOut, sizeof(float), MAXSIZE, f_golden_real);
 
-			} else {
-				fscanf(f_golden_real, "%f %f", &goldRealOut, &goldImagOut);
-				//printf("%.22f %.22f ", RealOut[i],ImagOut[i]);
-				//printf("%u\n", *(unsigned int*)&ImagOut[i]);
-				if ((RealOut[i] != goldRealOut) || (ImagOut[i] != goldImagOut)) {
+		} else {
+			float *gold_array = (float*) malloc(sizeof(float) * MAXSIZE);
+			float *gold_imag = (float*) malloc(sizeof(float) * MAXSIZE);
+
+			f_golden_real = fopen(f_golden_real_path, "rb");
+			fread(gold_array, sizeof(float), MAXSIZE, f_golden_real);
+			fread(gold_imag, sizeof(float), MAXSIZE, f_golden_real);
+
+			unsigned int errors = 0;
+			for (i = 0; i < MAXSIZE; i++) {
+				if ((RealOut[i] != gold_array[i]) || (ImagOut[i] != gold_imag[i])) {
+
 					errors++;
 
 					char error_detail[300];
@@ -228,20 +238,16 @@ int main(int argc, char *argv[]) {
 							"p: [%d], realOut_e: %1.20e, realOut_r: %1.20e imagOut_e: %1.20e imagOut_r: %1.20e",
 							i, goldRealOut, RealOut[i], goldImagOut, ImagOut[i]);
 					log_error_detail(error_detail);
-
 				}
-
 			}
 
-		}
-		if(errors) {
-			log_error_count(errors);
-		}
-		printf("ITERATION: %lld errors %d\n", iterations++, errors);
-		//  printf("ended\n");
-
-		if(generate) {
-			exit(0);
+			if(errors) {
+				log_error_count(errors);
+			}
+			printf("ITERATION: %lld errors %d\n", iterations++, errors);
+			free(gold_array);
+			free(gold_imag);
+			//  printf("ended\n");
 		}
 
 #endif
@@ -255,6 +261,11 @@ int main(int argc, char *argv[]) {
 		fclose(fin);
 		//printf("fff\n");
 		//return 0;
+#ifdef LOGS
+		if(generate) {
+			exit(0);
+		}
+#endif
 
 //return 0;
 	}

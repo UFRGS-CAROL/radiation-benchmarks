@@ -69,6 +69,6 @@ generate: $(EXEC)
 	./$(EXEC) $(ADDR) $(PORT) $(DEFAULTINPUT) $(DEFAULTGOLD) 262144 8 1
 
 
-test: $(EXEC) generate
+test: $(EXEC) 
 	./$(EXEC) $(ADDR) $(PORT) $(DEFAULTINPUT) $(DEFAULTGOLD) 262144 8 0
 
