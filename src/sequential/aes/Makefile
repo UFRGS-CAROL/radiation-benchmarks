@@ -1,7 +1,7 @@
 LOGS?=0
 ARCH?=arm
 CC=arm-linux-gnueabihf-gcc
-EXEC=rijndael_dec
+EXEC=rijndael
 MATRIXSIZE?=500
 
 CCFLAGS= -O3 -Wno-unused-result
@@ -50,7 +50,6 @@ all: clean $(EXEC)
 
 $(EXEC): aes.c aes.h aestab.h aesxam.c aes.c aes.h aestab.h aesxam.c
 	$(CC) $(CCFLAGS) -o $(EXEC) aes.c aesxam.c   $(LDFLAGS) $(INCLUDE) $(LIBRARY)
-	$(CC) $(CFLAGS)  -o rijndael_enc aes.c aesxam.c $(LDFLAGS) $(INCLUDE) $(LIBRARY)
 
 clean:
 	rm -f $(EXEC) $(DEFAULTGOLD) $(DEFAULTINPUT) rijndael_enc
@@ -65,8 +64,10 @@ clean:
 #   char chave
 
 
-test: $(EXEC)
+test_enc: $(EXEC)
 	./$(EXEC) $(IPADDR) $(PORT) $(DEC) $(OUTPUT) $(ENC) E 1234567890abcdeffedcba09876543211234567890abcdeffedcba0987654321
+
+test_dec: $(EXEC)
 	./$(EXEC) $(IPADDR) $(PORT) $(ENC) $(OUTPUT) $(DEC) D 1234567890abcdeffedcba09876543211234567890abcdeffedcba0987654321
 	
 	
