@@ -79,8 +79,8 @@ all: obj $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) $(COMMON) $(CFLAGS) $^ $(INCLUDE) -o $@  $(LDFLAGS)  
 
-#$(OBJDIR)%.o: %.c $(DEPS)
-#	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@  $(HELPFUL) $(LOGHELPER_LIB) $(LOGHELPER_INC)
+$(OBJDIR)%.o: %.c $(DEPS)
+	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@  $(HELPFUL) $(LOGHELPER_LIB) $(LOGHELPER_INC)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@ $(INCLUDE) 
@@ -96,9 +96,6 @@ obj:
 .PHONY: clean
 clean:
 	rm -rf $(OBJS) $(TARGET) ./*.matrix
-
-
-
 
 generate:
 	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 1 --precision float	

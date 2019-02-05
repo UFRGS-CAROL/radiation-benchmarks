@@ -321,20 +321,20 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
 
 	// Declare the fragments
-//	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half_t,
-//	wmma::row_major> a_frag;
-//	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,
-//	wmma::col_major> b_frag;
-//	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> acc_frag;
-//	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c_frag;
+	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half_t,
+	wmma::row_major> a_frag;
+	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,
+	wmma::col_major> b_frag;
+	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> acc_frag;
+	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c_frag;
 	
-	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, experimental::precision::u4 ,wmma::row_major> a_frag;
-	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, experimental::precision::u4 ,wmma::col_major> b_frag;
-//	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, int> acc_frag;
+//	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, experimental::precision::u4 ,wmma::row_major> a_frag;
+//	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, experimental::precision::u4 ,wmma::col_major> b_frag;
+//	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K,int> acc_frag;
 //	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, int> c_frag;
 
 
-	/*
+	
 	wmma::fill_fragment(acc_frag, 0.0f);
 	wmma::fill_fragment(a_frag, 2.0f);
 	wmma::fill_fragment(b_frag, 2.0f);
@@ -386,7 +386,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 		wmma::store_matrix_sync(d2 + cCol + cRow * ldc, c_frag, ldc,
 				wmma::mem_row_major);
 	}
-	*/
+	
 }	
 
 
