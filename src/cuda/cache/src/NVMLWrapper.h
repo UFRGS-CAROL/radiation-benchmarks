@@ -11,18 +11,23 @@
 #include <nvml.h>
 #include <string>
 #include <thread>
+#include <mutex>          // std::mutex
+#include <condition_variable>
+#include <atomic>
 
 class NVMLWrapper {
 private:
 
 	unsigned device_index;
-	std::string device_name;
-	std::string driver_version;
-	std::string nvml_version;
 	nvmlDevice_t device;
+
+	//Multithreading context
 	std::thread profiler;
 
-	static void start(nvmlDevice_t* device);
+	//NVML EVENT
+	nvmlEventSet_t set;
+
+	static void data_colector(nvmlDevice_t* device);
 
 public:
 	NVMLWrapper(unsigned device_index);
@@ -32,8 +37,6 @@ public:
 
 	void end_collecting_data();
 
-
-	void print_device_info();
 };
 
 #endif /* NVMLWRAPPER_H_ */

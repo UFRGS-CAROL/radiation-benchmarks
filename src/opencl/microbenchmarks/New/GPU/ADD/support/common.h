@@ -37,7 +37,7 @@
 #define _COMMON_H_
 
 
-#define T float
+//#define T float
 
 #ifdef REGISTERS
 #define REGS REGISTERS

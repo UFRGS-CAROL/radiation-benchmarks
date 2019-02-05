@@ -11,6 +11,10 @@
 #include <iostream>
 #include <vector>
 
+static std::mutex mutex_lock;
+static std::atomic<bool> is_locked;
+static bool thread_running = true;
+
 void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device =
 		0) {
 	if (NVML_SUCCESS != result) {
@@ -21,103 +25,146 @@ void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device =
 }
 
 NVMLWrapper::NVMLWrapper(unsigned device_index) :
-		device_index(device_index) {
-	nvmlReturn_t result = nvmlInit();
-	check_nvml_return("initialize NVML library", result);
-
-	//getting device name
-	char device_name[NVML_DEVICE_NAME_BUFFER_SIZE];
-	result = nvmlDeviceGetHandleByIndex(this->device_index, &this->device);
-	check_nvml_return("get handle", result);
-	result = nvmlDeviceGetName(this->device, device_name,
-	NVML_DEVICE_NAME_BUFFER_SIZE);
-
-	//getting driver version
-	char driver_version[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE];
-	result = nvmlSystemGetDriverVersion(driver_version,
-	NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE);
-	check_nvml_return("get driver version", result);
-
-	// nvml version
-	char nvml_version[NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE];
-	result = nvmlSystemGetNVMLVersion(nvml_version,
-	NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE);
-	check_nvml_return("get nvml version", result);
-
-	this->device_name = device_name;
-	this->driver_version = driver_version;
-	this->nvml_version = nvml_version;
+		device_index(device_index), device(nullptr), set(nullptr) {
+	this->profiler = std::thread(NVMLWrapper::data_colector, &this->device);
+	is_locked = true;
 }
 
 NVMLWrapper::~NVMLWrapper() {
-	nvmlReturn_t result = nvmlShutdown();
-	check_nvml_return("initialize NVML library", result);
-}
-
-void NVMLWrapper::start(nvmlDevice_t* device) {
-	nvmlEventSet_t set;
-	nvmlReturn_t result = nvmlEventSetCreate(&set);
-	result = nvmlDeviceRegisterEvents(*device, nvmlEventTypeAll, set);
-
-	for (int i = 0; i < 10; i++) {
-		sleep(1);
-		unsigned graph_clock, mem_clock, sm_clock;
-		std::string output = "";
-		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_GRAPHICS,
-				&graph_clock);
-		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_MEM, &mem_clock);
-		result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_SM, &sm_clock);
-		output += std::to_string(graph_clock) + "," + std::to_string(mem_clock)
-				+ "," + std::to_string(sm_clock) + ",";
-
-		//get compute mode
-		nvmlComputeMode_t compute_mode;
-		result = nvmlDeviceGetComputeMode(*device, &compute_mode);
-
-		for (auto error_type : { NVML_MEMORY_ERROR_TYPE_CORRECTED,
-				NVML_MEMORY_ERROR_TYPE_UNCORRECTED })
-			for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC }) {
-				nvmlEccErrorCounts_t ecc_counts;
-				result = nvmlDeviceGetDetailedEccErrors(*device, error_type,
-						counter_type, &ecc_counts);
-				output += std::to_string(ecc_counts.deviceMemory) + ","
-						+ std::to_string(ecc_counts.l1Cache) + ","
-						+ std::to_string(ecc_counts.l2Cache) + ","
-						+ std::to_string(ecc_counts.registerFile) + ",";
-			}
-
-		nvmlEnableState_t is_pending;
-		result = nvmlDeviceGetRetiredPagesPendingStatus(*device, &is_pending);
-		output += std::to_string(is_pending) + ",";
-
-		unsigned long long ecc_counts;
-		for (auto error_type : { NVML_MEMORY_ERROR_TYPE_CORRECTED,
-				NVML_MEMORY_ERROR_TYPE_UNCORRECTED }) {
-			for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC }) {
-				result = nvmlDeviceGetTotalEccErrors(*device, error_type,
-						counter_type, &ecc_counts);
-				output += std::to_string(ecc_counts);
-
-			}
-		}
-
-		std::cout << "OUT STRING: " << output << std::endl;
-
-	}
-	result = nvmlEventSetFree(set);
-
-}
-
-void NVMLWrapper::start_collecting_data() {
-	this->profiler = std::thread(NVMLWrapper::start, &this->device);
-}
-
-void NVMLWrapper::end_collecting_data() {
+	thread_running = false;
 	this->profiler.join();
 }
 
-void NVMLWrapper::print_device_info() {
-	std::cout << "Device name: " << this->device_name << std::endl
-			<< "Driver version: " << this->driver_version << std::endl
-			<< "NVML version: " << this->nvml_version << std::endl;
+void NVMLWrapper::data_colector(nvmlDevice_t* device) {
+	nvmlReturn_t result;
+
+	while (thread_running) {
+		mutex_lock.lock();
+
+		if (is_locked == false) {
+			std::string output = "";
+			//-----------------------------------------------------------------------
+			/**
+			 * Device and application clocks
+			 * May be useful in the future
+
+			 for (auto clock_type : { NVML_CLOCK_GRAPHICS, NVML_CLOCK_MEM,
+			 NVML_CLOCK_SM }) {
+			 //Get DEVICE Clocks
+			 unsigned dev_clock, app_clock;
+			 result = nvmlDeviceGetClockInfo(*device, clock_type,
+			 &dev_clock);
+
+			 //Get Application clocks
+			 result = nvmlDeviceGetApplicationsClock(*device, clock_type,
+			 &app_clock);
+
+			 output += std::to_string(dev_clock) + ","
+			 + std::to_string(app_clock) + ",";
+			 }
+			 */
+			//-----------------------------------------------------------------------
+			//Get ECC errors
+			nvmlComputeMode_t compute_mode;
+			result = nvmlDeviceGetComputeMode(*device, &compute_mode);
+
+			for (auto error_type : { NVML_MEMORY_ERROR_TYPE_CORRECTED,
+					NVML_MEMORY_ERROR_TYPE_UNCORRECTED }) {
+				for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC }) {
+					nvmlEccErrorCounts_t ecc_counts;
+					result = nvmlDeviceGetDetailedEccErrors(*device, error_type,
+							counter_type, &ecc_counts);
+
+					output += std::to_string(ecc_counts.deviceMemory) + ","
+							+ std::to_string(ecc_counts.l1Cache) + ","
+							+ std::to_string(ecc_counts.l2Cache) + ","
+							+ std::to_string(ecc_counts.registerFile) + ",";
+
+					unsigned long long total_eec_errors = 0;
+					result = nvmlDeviceGetTotalEccErrors(*device, error_type,
+							counter_type, &total_eec_errors);
+					output += std::to_string(total_eec_errors) + ",";
+				}
+			}
+
+			//-----------------------------------------------------------------------
+			//Get Performance state P0 to P12
+			nvmlPstates_t p_state;
+			result = nvmlDeviceGetPerformanceState(*device, &p_state);
+			output += std::to_string(p_state) + ",";
+
+			//-----------------------------------------------------------------------
+			//Clocks throttle
+			unsigned long long clocks_throttle_reasons;
+			result = nvmlDeviceGetCurrentClocksThrottleReasons(*device,
+					&clocks_throttle_reasons);
+			output += std::to_string(clocks_throttle_reasons) + ",";
+
+			//-----------------------------------------------------------------------
+			//Get utilization on GPU
+			nvmlUtilization_t utilization;
+			result = nvmlDeviceGetUtilizationRates(*device, &utilization);
+			output += std::to_string(utilization.gpu) + ","
+					+ std::to_string(utilization.memory) + ",";
+
+			//-----------------------------------------------------------------------
+			//Get retired pages
+			for (auto cause : {
+					NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS,
+					NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS }) {
+				unsigned int page_count = 0;
+				unsigned long long *addresses;
+				nvmlDeviceGetRetiredPages(*device, cause, &page_count,
+						addresses);
+				output += std::to_string(page_count) + ",";
+			}
+
+			//-----------------------------------------------------------------------
+			//Get retired pages pending status
+			nvmlEnableState_t is_pending;
+			result = nvmlDeviceGetRetiredPagesPendingStatus(*device,
+					&is_pending);
+			output += std::to_string(is_pending) + ",";
+
+			//-----------------------------------------------------------------------
+			//Get GPU temperature
+			unsigned int temperature;
+			result = nvmlDeviceGetTemperature(*device, NVML_TEMPERATURE_GPU,
+					&temperature);
+			output += std::to_string(temperature) + ",";
+
+			//-----------------------------------------------------------------------
+			//Get GPU power
+			unsigned int power;
+			result = nvmlDeviceGetPowerUsage(*device, &power);
+			output += std::to_string(power) + ",";
+
+			std::cout << "OUT STRING: " << output << std::endl;
+		}
+		mutex_lock.unlock();
+		std::this_thread::sleep_for(std::chrono::microseconds(200));
+	}
 }
+
+void NVMLWrapper::start_collecting_data() {
+	nvmlReturn_t result = nvmlInit();
+	check_nvml_return("initialize NVML library", result);
+	result = nvmlDeviceGetHandleByIndex(this->device_index, &this->device);
+	result = nvmlEventSetCreate(&this->set);
+	result = nvmlDeviceRegisterEvents(this->device, nvmlEventTypeAll,
+			this->set);
+
+	is_locked = false;
+}
+
+void NVMLWrapper::end_collecting_data() {
+	mutex_lock.lock();
+	is_locked = true;
+	mutex_lock.unlock();
+
+	nvmlReturn_t result;
+	result = nvmlEventSetFree(this->set);
+	result = nvmlShutdown();
+	check_nvml_return("shutdown NVML library", result);
+}
+

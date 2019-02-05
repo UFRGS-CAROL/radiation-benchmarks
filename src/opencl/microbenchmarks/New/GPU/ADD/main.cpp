@@ -175,8 +175,12 @@ int main(int argc, char **argv) {
     clFinish(ocl.clCommandQueue);
  
     const int max_wi = ocl.max_work_items(ocl.clKernel);
-    printf("Max WorkItems:%d\n",max_wi);  
+    printf("Max WorkItems:%d\n",max_wi);
+#ifdef INT  
 	printf("Gold:%d\n",gold);  
+#elif FLOAT
+	printf("Gold:%f\n",gold);  
+#endif
     
     for(int rep = 0; rep < p.n_reps; rep++) {
 
