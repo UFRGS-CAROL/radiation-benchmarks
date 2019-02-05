@@ -26,7 +26,7 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 	__shared__ int_t l1_t_hit[V_SIZE];
 	__shared__ int_t l1_t_miss[V_SIZE];
 
-	if (threadIdx.x == 0) {
+	if (threadIdx.x == 0 && threadIdx.y == 0) {
 
 		for (uint32 i = 0; i < V_SIZE; i++) {
 			volatile int_t t1 = clock();
