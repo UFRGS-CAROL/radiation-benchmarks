@@ -49,16 +49,14 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 			if (r != t) {
 				atomicAdd((unsigned long long*) &l1_cache_err, 1);
 			}
+
+			l1_miss_array[tx + i] = l1_t_miss[i];
+			l1_hit_array[tx + i] = l1_t_hit[i];
 		}
 
 	}
 	__syncthreads();
 
-	if (tx < V_SIZE) {
-		//saving the result
-		l1_hit_array[tx] = l1_t_hit[tx];
-		l1_miss_array[tx] = l1_t_miss[tx];
-	}
 }
 
 template<uint32 L1_MEMORY_SIZE, uint32 L1_LINE_SIZE>
@@ -104,9 +102,11 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 			cudaMemcpyToSymbol(l1_cache_err, &l1_cache_err_host, sizeof(uint64),
 					0));
 
-	test_l1_cache_kernel<int32, v_size, L1_LINE_SIZE> <<<number_of_sms,
-	BLOCK_SIZE>>>(V_dev, l1_hit_array_device, l1_miss_array_device, cycles,
-			t_byte);
+	dim3 block_size(number_of_sms), threads_per_block(BLOCK_SIZE * BLOCK_SIZE);
+
+	test_l1_cache_kernel<int32, v_size, L1_LINE_SIZE> <<<block_size,
+			threads_per_block>>>(V_dev, l1_hit_array_device,
+			l1_miss_array_device, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
 
 	//Host arrays
