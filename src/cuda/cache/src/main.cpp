@@ -210,9 +210,6 @@ int main(int argc, char **argv) {
 		cuda_check(cudaDeviceReset());
 
 		auto iteration_data = counter_thread.get_data_from_iteration();
-		for(auto lin : iteration_data){
-			std::cout << "OUT:" << lin << std::endl;
-		}
 	}
 	return 0;
 }

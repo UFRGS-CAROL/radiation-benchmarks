@@ -23,10 +23,10 @@ template<typename int_t, const uint32 V_SIZE, const uint32 LINE_SIZE>
 __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 		int_t *l1_hit_array, int_t *l1_miss_array, int64 sleep_cycles, byte t) {
 	register uint32 tx = blockIdx.x * blockDim.x + threadIdx.x;
+	__shared__ int_t l1_t_hit[V_SIZE];
+	__shared__ int_t l1_t_miss[V_SIZE];
 
 	if (threadIdx.x == 0) {
-		__shared__ int_t l1_t_hit[V_SIZE];
-		__shared__ int_t l1_t_miss[V_SIZE];
 
 		for (uint32 i = 0; i < V_SIZE; i++) {
 			volatile int_t t1 = clock();
@@ -46,16 +46,19 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 			l1_t_hit[i] = t2 - t1;
 
 			//bitwise operation
-			if (r != t){
+			if (r != t) {
 				atomicAdd((unsigned long long*) &l1_cache_err, 1);
 			}
-//		//saving the result
-			l1_hit_array[tx + i] = l1_t_hit[i];
-			l1_miss_array[tx + i] = l1_t_miss[i];
 		}
 
 	}
 	__syncthreads();
+
+	if (tx < V_SIZE) {
+		//saving the result
+		l1_hit_array[tx] = l1_t_hit[tx];
+		l1_miss_array[tx] = l1_t_miss[tx];
+	}
 }
 
 template<uint32 L1_MEMORY_SIZE, uint32 L1_LINE_SIZE>
@@ -118,14 +121,16 @@ std::vector<std::string> test_l1_cache(const uint32 number_of_sms,
 			cudaMemcpy(l1_miss_array_host.data(), l1_miss_array_device,
 					sizeof(int32) * v_size_multiple_threads,
 					cudaMemcpyDeviceToHost));
-	cuda_check(cudaMemcpy(V_host.data(), V_dev, sizeof(CacheLine<L1_LINE_SIZE>) * v_size_multiple_threads, cudaMemcpyDeviceToHost));
+	cuda_check(
+			cudaMemcpy(V_host.data(), V_dev,
+					sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads,
+					cudaMemcpyDeviceToHost));
 	auto bad = 0;
 	for (auto i = 0; i < v_size_multiple_threads; i++) {
-		if ((l1_hit_array_host[i] - l1_miss_array_host[i]) > 0){
+		if ((l1_hit_array_host[i] - l1_miss_array_host[i]) > 0) {
 			bad++;
-			for(int st = 0; st < L1_LINE_SIZE; st++)
-				if(V_host[i][st] != t_byte)
-					std::cout << V_host[i][st] << std::endl;
+			std::cout << l1_hit_array_host[i] << " " << l1_miss_array_host[i]
+					<< std::endl;
 		}
 	}
 	cuda_check(
@@ -162,6 +167,12 @@ std::vector<std::string> test_l1_cache(const Parameters& parameters) {
 		break;
 	}
 	case TITANV: {
+		// cache l1 has 128 Kbytes
+		//BUT, only 98304 bytes are destined to L1 memory
+		//so alloc 98304 bytes
+		// cache line has 128 bytes
+		test_l1_cache<98304, 128>(parameters.number_of_sms, 0xff,
+				parameters.one_second_cycles);
 		break;
 	}
 	}
