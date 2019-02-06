@@ -438,10 +438,11 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		}
 
 		if (!log_obj.generate) {
-			
-			if(it == 2){
-			host_matrix_d0[2]= (real_t) 5.00;
-			}
+			//fault test 
+//			if(it == 2){
+//			host_matrix_d0[2]= (real_t) 5.00;
+//			}
+			//
 			std::pair<int, int> errors;
 			double start, end;
 			if (log_obj.triplicated) {
