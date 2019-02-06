@@ -14,6 +14,8 @@
 #include <mutex>          // std::mutex
 #include <condition_variable>
 #include <atomic>
+#include <deque>
+
 
 class NVMLWrapper {
 private:
@@ -27,7 +29,10 @@ private:
 	//NVML EVENT
 	nvmlEventSet_t set;
 
-	static void data_colector(nvmlDevice_t* device);
+	std::deque<std::string> data_for_iteration;
+
+
+	static void data_colector(nvmlDevice_t* device, std::deque<std::string>* it_data);
 
 public:
 	NVMLWrapper(unsigned device_index);
@@ -36,6 +41,8 @@ public:
 	void start_collecting_data();
 
 	void end_collecting_data();
+
+	std::deque<std::string> get_data_from_iteration();
 
 };
 

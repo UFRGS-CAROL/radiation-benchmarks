@@ -8,6 +8,7 @@
 #include "NVMLWrapper.h"
 #include "utils.h"
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 
@@ -26,7 +27,8 @@ void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device =
 
 NVMLWrapper::NVMLWrapper(unsigned device_index) :
 		device_index(device_index), device(nullptr), set(nullptr) {
-	this->profiler = std::thread(NVMLWrapper::data_colector, &this->device);
+	this->profiler = std::thread(NVMLWrapper::data_colector, &this->device,
+			&this->data_for_iteration);
 	is_locked = true;
 }
 
@@ -35,7 +37,8 @@ NVMLWrapper::~NVMLWrapper() {
 	this->profiler.join();
 }
 
-void NVMLWrapper::data_colector(nvmlDevice_t* device) {
+void NVMLWrapper::data_colector(nvmlDevice_t* device,
+		std::deque<std::string>* it_data) {
 	nvmlReturn_t result;
 
 	while (thread_running) {
@@ -137,9 +140,13 @@ void NVMLWrapper::data_colector(nvmlDevice_t* device) {
 			//Get GPU power
 			unsigned int power;
 			result = nvmlDeviceGetPowerUsage(*device, &power);
-			output += std::to_string(power) + ",";
+			output += std::to_string(power);
 
-			std::cout << "OUT STRING: " << output << std::endl;
+//			auto timestamp = std::chrono::system_clock::to_time_t(
+//					std::chrono::system_clock::now());
+//			output += std::to_string(timestamp);
+
+			it_data->push_back(output);
 		}
 		mutex_lock.unlock();
 		std::this_thread::sleep_for(std::chrono::microseconds(200));
@@ -153,6 +160,10 @@ void NVMLWrapper::start_collecting_data() {
 	result = nvmlEventSetCreate(&this->set);
 	result = nvmlDeviceRegisterEvents(this->device, nvmlEventTypeAll,
 			this->set);
+
+	mutex_lock.lock();
+	this->data_for_iteration.clear();
+	mutex_lock.unlock();
 
 	is_locked = false;
 }
@@ -168,3 +179,9 @@ void NVMLWrapper::end_collecting_data() {
 	check_nvml_return("shutdown NVML library", result);
 }
 
+std::deque<std::string> NVMLWrapper::get_data_from_iteration() {
+	auto last = std::unique(this->data_for_iteration.begin(),
+			this->data_for_iteration.end());
+	this->data_for_iteration.erase(last, this->data_for_iteration.end());
+	return this->data_for_iteration;
+}

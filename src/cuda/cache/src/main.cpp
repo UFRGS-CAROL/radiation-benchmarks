@@ -17,6 +17,7 @@
 #include "kernels.h"
 #include "utils.h"
 #include "Log.h"
+//#include "CacheProfiler.h"
 
 #define DEVICE_INDEX 0 //Radiation test can be done only one device at time
 
@@ -174,6 +175,8 @@ int main(int argc, char **argv) {
 	for(int iterations = 0; iterations < log.iterations; iterations++) {
 		//Start collecting data
 		counter_thread.start_collecting_data();
+//		CacheProfiler profiler("L1", K40);
+//		profiler.start();
 
 		//test L1
 		if (log.test_mode == "L1") {
@@ -198,12 +201,18 @@ int main(int argc, char **argv) {
 		if (log.test_mode == "REGISTERS") {
 			test_register_file(test_parameter);
 		}
-
 		//End collecting the data
 		counter_thread.end_collecting_data();
+//		profiler.stop();
+//		std::cout << profiler.get_data() << std::endl;
 
 		//reset the device
 		cuda_check(cudaDeviceReset());
+
+		auto iteration_data = counter_thread.get_data_from_iteration();
+		for(auto lin : iteration_data){
+			std::cout << "OUT:" << lin << std::endl;
+		}
 	}
 	return 0;
 }

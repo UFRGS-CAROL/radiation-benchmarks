@@ -14,8 +14,9 @@ NVCCFLAGS= -std=c++11 -O3
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
 ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include
+#INCLUDE+= -I$(CUDAPATH)/extras/CUPTI/include
 
-
+#CacheProfiler.o
 OBJDIR=./obj/
 OBJ= NVMLWrapper.o utils.o l1_cache_kernels.o l2_cache_kernels.o register_file_kernels.o
 OBJ+= read_only_cache_kernels.o shared_memory_kernels.o main.o
@@ -30,6 +31,7 @@ NVCCFLAGS+= -Xptxas -dlcm=cg
 CXXFLAGS+= -DL2TEST
 endif
 LDFLAGS= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs/ -lnvidia-ml 
+#LDFLAGS+= -lcuda -L$(CUDAPATH)/extras/CUPTI/lib64 -lcupti
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
@@ -55,4 +57,5 @@ clean:
 	
 	
 test:
-	./$(EXEC) /home/fernando/git_pesquisa/radiation-benchmarks/scripts/json_files/dgemm_check.json
+	./$(EXEC) --iterations 10
+	
