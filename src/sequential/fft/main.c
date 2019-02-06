@@ -14,13 +14,14 @@ static void CheckPointer(void *p, char *name);
 #define NUM_EXEC 100
 #define BITS_PER_WORD   (sizeof(unsigned) * 8)
 
-#ifdef LOGS
-#include "log_helper.h"
 int MAXSIZE;
 int MAXWAVES;
-#else
-#define MAXSIZE 262144
-#define MAXWAVES 8
+
+#ifdef LOGS
+#include "log_helper.h"
+//#else
+//#define MAXSIZE 262144
+//#define MAXWAVES 8
 #endif
 
 int s;
@@ -105,10 +106,11 @@ int main(int argc, char *argv[]) {
 	char *fin_path = argv[3];
 	char *f_golden_real_path = argv[4];
 
+	MAXSIZE = atoi(argv[5]);
+	MAXWAVES = atoi(argv[6]);
 #ifdef LOGS
-	int generate = atoi(argv[5]);
-	MAXSIZE = atoi(argv[6]);
-	MAXWAVES = atoi(argv[7]);
+	int generate = atoi(argv[7]);
+
 	printf("Executing for infile %s golden file %s generate %d maxsize %d maxwaves %d\n", fin_path, f_golden_real_path, generate, MAXSIZE, MAXWAVES);
 
 	if(generate) {
@@ -221,8 +223,8 @@ int main(int argc, char *argv[]) {
 				if ((RealOut[i] != goldRealOut) || (ImagOut[i] != goldImagOut)) {
 					errors++;
 
-					char error_detail[150];
-					snprintf(error_detail, 150,
+					char error_detail[300];
+					snprintf(error_detail, 300,
 							"p: [%d], realOut_e: %1.20e, realOut_r: %1.20e imagOut_e: %1.20e imagOut_r: %1.20e",
 							i, goldRealOut, RealOut[i], goldImagOut, ImagOut[i]);
 					log_error_detail(error_detail);

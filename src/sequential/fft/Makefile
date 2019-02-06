@@ -66,9 +66,9 @@ clean:
 #	MAXSIZE = atoi(argv[6]);
 #	MAXWAVES = atoi(argv[7]);
 generate: $(EXEC)
-	./$(EXEC) $(ADDR) $(PORT) $(DEFAULTINPUT) $(DEFAULTGOLD) 1 262144 8
+	./$(EXEC) $(ADDR) $(PORT) $(DEFAULTINPUT) $(DEFAULTGOLD) 262144 8 1
 
 
 test: $(EXEC) generate
-	./$(EXEC) $(ADDR) $(PORT) $(DEFAULTINPUT) $(DEFAULTGOLD) 0 262144 8
+	./$(EXEC) $(ADDR) $(PORT) $(DEFAULTINPUT) $(DEFAULTGOLD) 262144 8 0
 
