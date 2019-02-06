@@ -26,27 +26,6 @@ void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device =
 
 NVMLWrapper::NVMLWrapper(unsigned device_index) :
 		device_index(device_index), device(nullptr), set(nullptr) {
-//	//getting device name
-//	char device_name[NVML_DEVICE_NAME_BUFFER_SIZE];
-//	check_nvml_return("get handle", result);
-//	result = nvmlDeviceGetName(this->device, device_name,
-//	NVML_DEVICE_NAME_BUFFER_SIZE);
-//
-//	//getting driver version
-//	char driver_version[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE];
-//	result = nvmlSystemGetDriverVersion(driver_version,
-//	NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE);
-//	check_nvml_return("get driver version", result);
-//
-//	// nvml version
-//	char nvml_version[NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE];
-//	result = nvmlSystemGetNVMLVersion(nvml_version,
-//	NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE);
-//	check_nvml_return("get nvml version", result);
-//
-//	this->device_name = device_name;
-//	this->driver_version = driver_version;
-//	this->nvml_version = nvml_version;
 	this->profiler = std::thread(NVMLWrapper::data_colector, &this->device);
 	is_locked = true;
 }
@@ -56,24 +35,6 @@ NVMLWrapper::~NVMLWrapper() {
 	this->profiler.join();
 }
 
-std::string exec(const std::string& cmd) {
-	std::array<char, 128> buffer;
-	std::string result;
-	std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
-			pclose);
-	if (!pipe) {
-		throw std::runtime_error("popen() failed!");
-	}
-	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-		result += buffer.data();
-	}
-	return result;
-}
-
-void get_data_from_nvidia_smi() {
-
-}
-
 void NVMLWrapper::data_colector(nvmlDevice_t* device) {
 	nvmlReturn_t result;
 
@@ -81,23 +42,34 @@ void NVMLWrapper::data_colector(nvmlDevice_t* device) {
 		mutex_lock.lock();
 
 		if (is_locked == false) {
-			unsigned graph_clock, mem_clock, sm_clock;
 			std::string output = "";
-//			result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_GRAPHICS,
-//					&graph_clock);
-//			result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_MEM,
-//					&mem_clock);
-//			result = nvmlDeviceGetClockInfo(*device, NVML_CLOCK_SM, &sm_clock);
-//			output += std::to_string(graph_clock) + ","
-//					+ std::to_string(mem_clock) + "," + std::to_string(sm_clock)
-//					+ ",";
+			//-----------------------------------------------------------------------
+			/**
+			 * Device and application clocks
+			 * May be useful in the future
 
-//get compute mode
+			 for (auto clock_type : { NVML_CLOCK_GRAPHICS, NVML_CLOCK_MEM,
+			 NVML_CLOCK_SM }) {
+			 //Get DEVICE Clocks
+			 unsigned dev_clock, app_clock;
+			 result = nvmlDeviceGetClockInfo(*device, clock_type,
+			 &dev_clock);
+
+			 //Get Application clocks
+			 result = nvmlDeviceGetApplicationsClock(*device, clock_type,
+			 &app_clock);
+
+			 output += std::to_string(dev_clock) + ","
+			 + std::to_string(app_clock) + ",";
+			 }
+			 */
+			//-----------------------------------------------------------------------
+			//Get ECC errors
 			nvmlComputeMode_t compute_mode;
 			result = nvmlDeviceGetComputeMode(*device, &compute_mode);
 
 			for (auto error_type : { NVML_MEMORY_ERROR_TYPE_CORRECTED,
-					NVML_MEMORY_ERROR_TYPE_UNCORRECTED })
+					NVML_MEMORY_ERROR_TYPE_UNCORRECTED }) {
 				for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC }) {
 					nvmlEccErrorCounts_t ecc_counts;
 					result = nvmlDeviceGetDetailedEccErrors(*device, error_type,
@@ -109,18 +81,65 @@ void NVMLWrapper::data_colector(nvmlDevice_t* device) {
 							+ std::to_string(ecc_counts.registerFile) + ",";
 
 					unsigned long long total_eec_errors = 0;
-
 					result = nvmlDeviceGetTotalEccErrors(*device, error_type,
 							counter_type, &total_eec_errors);
-					output += std::to_string(ecc_counts);
+					output += std::to_string(total_eec_errors) + ",";
 				}
+			}
 
+			//-----------------------------------------------------------------------
+			//Get Performance state P0 to P12
+			nvmlPstates_t p_state;
+			result = nvmlDeviceGetPerformanceState(*device, &p_state);
+			output += std::to_string(p_state) + ",";
+
+			//-----------------------------------------------------------------------
+			//Clocks throttle
+			unsigned long long clocks_throttle_reasons;
+			result = nvmlDeviceGetCurrentClocksThrottleReasons(*device,
+					&clocks_throttle_reasons);
+			output += std::to_string(clocks_throttle_reasons) + ",";
+
+			//-----------------------------------------------------------------------
+			//Get utilization on GPU
+			nvmlUtilization_t utilization;
+			result = nvmlDeviceGetUtilizationRates(*device, &utilization);
+			output += std::to_string(utilization.gpu) + ","
+					+ std::to_string(utilization.memory) + ",";
+
+			//-----------------------------------------------------------------------
+			//Get retired pages
+			for (auto cause : {
+					NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS,
+					NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS }) {
+				unsigned int page_count = 0;
+				unsigned long long *addresses;
+				nvmlDeviceGetRetiredPages(*device, cause, &page_count,
+						addresses);
+				output += std::to_string(page_count) + ",";
+			}
+
+			//-----------------------------------------------------------------------
+			//Get retired pages pending status
 			nvmlEnableState_t is_pending;
 			result = nvmlDeviceGetRetiredPagesPendingStatus(*device,
 					&is_pending);
 			output += std::to_string(is_pending) + ",";
 
-//			std::cout << "OUT STRING: " << output << std::endl;
+			//-----------------------------------------------------------------------
+			//Get GPU temperature
+			unsigned int temperature;
+			result = nvmlDeviceGetTemperature(*device, NVML_TEMPERATURE_GPU,
+					&temperature);
+			output += std::to_string(temperature) + ",";
+
+			//-----------------------------------------------------------------------
+			//Get GPU power
+			unsigned int power;
+			result = nvmlDeviceGetPowerUsage(*device, &power);
+			output += std::to_string(power) + ",";
+
+			std::cout << "OUT STRING: " << output << std::endl;
 		}
 		mutex_lock.unlock();
 		std::this_thread::sleep_for(std::chrono::microseconds(200));
