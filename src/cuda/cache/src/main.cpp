@@ -301,10 +301,10 @@ int main(int argc, char **argv) {
 
 			}
 
-			std::cout << "Iteration : " << iteration << " Time: "
-					<< end_it - start_it << " Device Reset: "
-					<< end_dev_reset - start_dev_reset << " Comparing: "
-					<< end_cmp - start_cmp << std::endl;
+			std::cout << "Iteration: " << iteration << " Time: "
+					<< end_it - start_it << " Errors: " << log.errors
+					<< " Device Reset: " << end_dev_reset - start_dev_reset
+					<< " Comparing: " << end_cmp - start_cmp << std::endl;
 
 			iteration++;
 		}
