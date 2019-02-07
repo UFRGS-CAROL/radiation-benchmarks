@@ -137,6 +137,7 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 	t.misses = std::move(l1_miss_array_host);
 
 	t.hits = std::move(l1_hit_array_host);
+	t.errors = l1_cache_err_host;
 
 	return t;
 }

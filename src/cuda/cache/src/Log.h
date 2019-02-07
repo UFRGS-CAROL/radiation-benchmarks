@@ -76,14 +76,14 @@ public:
 #endif
 	}
 
-	void log_error(std::string error_detail) {
+	void log_error(std::string& error_detail) {
 		this->errors++;
 #ifdef LOGS
 		log_error_detail(const_cast<char*>(error_detail.c_str()));
 #endif
 	}
 
-	void log_info(std::string info_detail) {
+	void log_info(std::string& info_detail) {
 		this->infos++;
 #ifdef LOGS
 		log_info_detail(const_cast<char*>(info_detail.c_str()));

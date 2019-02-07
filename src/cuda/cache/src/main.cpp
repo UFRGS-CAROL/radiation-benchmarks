@@ -147,29 +147,47 @@ void set_cache_config(const std::string memory) {
 	}
 }
 
-uint32 compare(const Tuple& t, const Log& log, const byte gold_byte) {
+void compare(const Tuple& t, Log& log, const byte gold_byte) {
 	//Checking the misses
 	uint32 hits = 0;
 	uint32 misses = t.misses.size();
 	uint32 false_hit = 0;
-	for(uint32 i = 0; i < t.hits; i++){
+	for (uint32 i = 0; i < t.hits.size(); i++) {
 		int32 hit = t.hits[i];
 		int32 miss = t.misses[i];
-		if(hit < miss){
+		if (hit < miss) {
 			hits++;
 		}
-		if(miss < hit){
+		if (miss < hit) {
 			false_hit++;
 		}
 	}
 
 	//Checking the errors
-	uint32 errors = 0;
-	for(uint32 i = 0; i < t.cache_lines.size(); i++){
+	for (uint32 i = 0; i < t.cache_lines.size(); i++) {
+		auto found_byte = t.cache_lines[i];
 
+		if (found_byte != gold_byte) {
+			auto cache_line = i / 128; //supposing that all lines have 128 bytes
+
+			std::string error_detail = "";
+
+			error_detail += " i:" + std::to_string(i);
+			error_detail += " cache_line:" + std::to_string(cache_line);
+			error_detail += " e:" + std::to_string(gold_byte);
+			error_detail += " r:" + std::to_string(found_byte);
+
+			//log error detail already increment error var
+			log.log_error(error_detail);
+		}
 	}
 
-	return errors;
+	if (log.errors != t.errors) {
+		std::string error_detail = "errors on the data path. expected:"
+				+ std::to_string(t.errors) + " found:"
+				+ std::to_string(log.errors);
+		log.log_error(error_detail);
+	}
 }
 
 int main(int argc, char **argv) {
@@ -270,10 +288,10 @@ int main(int argc, char **argv) {
 
 			//Comparing the output
 			double start_cmp = log.mysecond();
-			auto has_errors = compare(ret, log);
+			compare(ret, log, test_parameter.t_byte);
 			double end_cmp = log.mysecond();
 			//update errors
-			if (has_errors) {
+			if (log.errors) {
 				log.update_error_count();
 
 				auto iteration_data = counter_thread.get_data_from_iteration();

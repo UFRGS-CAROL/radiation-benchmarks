@@ -38,7 +38,7 @@ struct Tuple {
 	std::vector<int32> misses;
 	std::vector<int32> hits;
 	std::vector<byte> cache_lines;
-
+	uint64 errors;
 //	Tuple& operator=(const Tuple& T) {
 //		this->cache_lines = T.cache_lines;
 //		this->misses = T.misses;
