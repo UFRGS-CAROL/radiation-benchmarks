@@ -2,6 +2,7 @@ CXX=g++
 CXXFLAGS= -std=c++11 -o3  -fPIC -pthread 
 EXEC=cudaCacheTest
 DISABLEL1CACHE=0
+LOGS=0
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -30,6 +31,14 @@ ifeq ($(DISABLEL1CACHE), 1)
 NVCCFLAGS+= -Xptxas -dlcm=cg
 CXXFLAGS+= -DL2TEST
 endif
+
+ifeq ($(LOGS), 1)
+CXXFLAGS+= -DLOGS -lLogHelper
+LDFLAGS+= -L../../include
+INCLUDE+= -I../../include
+endif
+
+
 LDFLAGS= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs/ -lnvidia-ml 
 #LDFLAGS+= -lcuda -L$(CUDAPATH)/extras/CUPTI/lib64 -lcupti
 
