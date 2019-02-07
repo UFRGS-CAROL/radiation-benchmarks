@@ -33,14 +33,12 @@ CXXFLAGS+= -DL2TEST
 endif
 
 ifeq ($(LOGS), 1)
-CXXFLAGS+= -DLOGS -lLogHelper
-LDFLAGS+= -L../../include
-INCLUDE+= -I../../include
+CXXFLAGS+= -DLOGS
+LDFLAGS+= -L../../include  -lLogHelper
 endif
 
 
-LDFLAGS= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs/ -lnvidia-ml 
-#LDFLAGS+= -lcuda -L$(CUDAPATH)/extras/CUPTI/lib64 -lcupti
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs/ -lnvidia-ml 
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
