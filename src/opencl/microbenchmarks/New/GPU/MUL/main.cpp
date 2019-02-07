@@ -133,9 +133,9 @@ int main(int argc, char **argv) {
     int n = p.op;                                 												// Operations per WorkItem
     int size = p.n_work_items*p.n_work_items *p.n_work_items*p.n_work_groups ;    				// testar tamanho maximo
 #ifdef INT
-    int gold = 0;//5 + n*5;
+    int gold =1;// 5 + n*5;
 #elif FLOAT
-	float gold = 0.0;//5.5 + n*5.5;
+	float gold = 1.0;
 #endif
 
 
@@ -147,14 +147,14 @@ int main(int argc, char **argv) {
 
 #ifdef INT
     for(i=0;i<size;i++){
-        A[i] = 0;
+        A[i] = 1;
         B[i] = 5;
         C[i] = 0;         
      }
 
 #elif FLOAT
     for(i=0;i<size;i++){
-        A[i] = 0.0;
+        A[i] = 1.0;
         B[i] = 5.5;
         C[i] = 0.0;         
      }
@@ -223,9 +223,9 @@ int main(int argc, char **argv) {
 #ifdef INT
             if( C[i] != gold)
 #elif FLOAT
-			//double delta = fabs( C[i] - gold) / fabs(gold) ; 
+			double delta = fabs( C[i] - gold) / fabs(gold) ; 
 			//printf("Delta: %1.16e\n",delta);
-			if(C[i] >= 1e-8)
+			if(delta >= 1e-8)
 #endif
 {
                 error ++;

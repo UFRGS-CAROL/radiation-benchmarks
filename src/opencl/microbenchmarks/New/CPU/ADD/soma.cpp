@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	unsigned long int rep  = strtoul(argv[2],NULL,0);  //1000000000;
 	unsigned long int ins = 10;				// Quantity of sums inside inner loop	
 #ifdef INT			
-	unsigned long int gold = ins * sums; 		
+	unsigned long int gold = 0;		
 #elif FLOAT
     float gold = 0.0;    						// This number considers rounding error. 
 #endif
@@ -64,7 +64,7 @@ for(i=0;i<rep;i++){
 	start_iteration();
 #endif
 
-#pragma omp parallel for reduction(+:re) private(i)
+#pragma omp parallel for reduction(+:re) private(i,j)
 	for(j=0;j<sums;j++){
 #ifdef INT    
 // This Code works with unsigned long int variable (64 bits). Please modify "re" variable to unsigned long int
@@ -78,11 +78,11 @@ for(i=0;i<rep;i++){
                      "addl %1, %0;"
                      "addl %1, %0;"
                      "addl %1, %0;"
-                     "addl %1, %0;"
-                     "addl %1, %0;"
-                     "addl %1, %0;"
-                     "addl %1, %0;"
-                     "addl %1, %0;" : "+r" (re) : "r" (ref_int2));        
+                     "subl %1, %0;"
+                     "subl %1, %0;"
+                     "subl %1, %0;"
+                     "subl %1, %0;"
+                     "subl %1, %0;" : "+r" (re) : "r" (ref_int2));        
 #elif FLOAT  
     // Tried to make assembly code for FPU, but all efforts were in vain.
     // Reference: https://cs.fit.edu/~mmahoney/cse3101/float.html

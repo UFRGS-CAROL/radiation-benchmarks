@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "killall -9 MUL_GPU_FLOAT", 
+        "exec": "/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/MUL/MUL_GPU_FLOAT -o 100 -r 100000000"
+    }
+]

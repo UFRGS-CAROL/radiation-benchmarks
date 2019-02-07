@@ -27,8 +27,6 @@ int main(int argc, char **argv) {
 	}
 	//printf("%s\n",argv[1]);
 	//printf("%s\n",argv[2]);
-	int ref_int2 = 3;
-	float ref_float2 = 0.1;
 	unsigned long int sums = strtoul(argv[1],NULL,0);  //1000000000;
 	unsigned long int rep  = strtoul(argv[2],NULL,0);  //1000000000;
 	unsigned long int ins = 10;				// Quantity of multiplications inside inner loop	
@@ -67,10 +65,9 @@ for(i=0;i<rep;i++){
 	start_iteration();
 #endif
 
-//#pragma omp parallel for reduction(+:re) private(i)
+#pragma omp parallel for reduction(*:re) private(i,j)
 	for(j=0;j<sums;j++){
 #ifdef INT    
- 
  
         asm volatile("imul $0x3, %0;"
                      "imul $0x3, %0;"
@@ -85,17 +82,17 @@ for(i=0;i<rep;i++){
                      re = re/59049;
 #elif FLOAT  
     // Reference: https://cs.fit.edu/~mmahoney/cse3101/float.html
-                re = re *3;
-                re = re *3;                
-                re = re *3;                
-                re = re *3;                
-                re = re *3;                
-                re = re *3;                
-                re = re *3;                
-                re = re *3;                
-                re = re *3;                
-                re = re *3;  
-                re = re/59049; // To avoid Overflow               
+                re = re *3.1;
+                re = re *3.1;                
+                re = re *3.1;                
+                re = re *3.1;                
+                re = re *3.1;                
+                re = re *3.1;                
+                re = re *3.1;                
+                re = re *3.1;                
+                re = re *3.1;                
+                re = re *3.1;         
+                re = re/81962.82869808; // To avoid Overflow    
 #endif
 
 	}
@@ -113,9 +110,7 @@ for(i=0;i<rep;i++){
 #endif				    
 	}
 #elif FLOAT
-    double delta = fabs(gold-re)/gold;
-    printf("Re:%1.16e\n",re);
-	if(delta >= 1e-8 ){
+	if( re-(float)1.0>= 1e-8 ){
 		error = 1;
 #ifdef LOGS
 		char error_detail[200];

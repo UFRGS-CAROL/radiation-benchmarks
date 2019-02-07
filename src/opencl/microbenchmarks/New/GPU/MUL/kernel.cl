@@ -4,7 +4,7 @@
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 #pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics : enable
 
-#include "/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/ADD/support/common.h"
+#include "/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/MUL/support/common.h"
 
 #pragma OPENCL EXTENSION cl_amd_fp64: enable
 __kernel void
@@ -19,20 +19,22 @@ simpleSumINT(__global T* A,
 
     double value = A[tx];
     for (int k = 0; k < n/10; ++k) {
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-		value -= 50;
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value /= 9765625;
+
     }
     C[tx] = value;
 }
+
 __kernel void
 simpleSumFLOAT(__global T* A,
           __global T* B,
@@ -45,18 +47,20 @@ simpleSumFLOAT(__global T* A,
 
     double value = A[tx];
     for (int k = 0; k < n/10; ++k) {
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-        value += B[tx];
-		value -= 55.0000;
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value *= B[tx];
+        value /= 25329516.211914063;
     }
     C[tx] = value;
 }
+
+
 

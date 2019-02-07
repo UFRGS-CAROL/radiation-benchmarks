@@ -44,12 +44,12 @@ CXX_FLAGS=-std=c++11 -DLOGS -fopenmp
 
 ifeq ($(TYPE), int)
 CXX_FLAGS+= -DINT -DT=int
-EXE=ADD_GPU_INT
+EXE=MUL_GPU_INT
 endif
 
 ifeq ($(TYPE), float)
 CXX_FLAGS+= -DFLOAT -DT=float
-EXE=ADD_GPU_FLOAT
+EXE=MUL_GPU_FLOAT
 endif
 
 ifndef CHAI_OCL_LIB
@@ -84,6 +84,6 @@ all: $(EXE)
 $(EXE): $(OBJECTS)
 	$(CXX) $(CXX_FLAGS) $(OBJECTS) $(LIB) -o $(EXE)
 clean:
-	rm -f *.o *.d
+	rm -f  *.o *.d
 
 -include $(DEPS)

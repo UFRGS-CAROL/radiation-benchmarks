@@ -112,9 +112,9 @@ struct OpenCLSetup {
         CL_ERR();
 
         std::filebuf clFile;
-        clFile.open("/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/ADD/kernel.cl", std::ios::in);
+        clFile.open("/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/MUL/kernel.cl", std::ios::in);
         if (!clFile.is_open()) {
-            std::cerr << "Unable to open /home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/ADD/kernel.cl. Exiting...\n";
+            std::cerr << "Unable to open /home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/MUL/kernel.cl. Exiting...\n";
             exit(EXIT_FAILURE);
         }
         std::istream in(&clFile);
@@ -148,12 +148,12 @@ struct OpenCLSetup {
             fprintf(stderr, "%s\t", log);
         }
         CL_ERR();
+
 	#ifdef INT
         clKernel = clCreateKernel(clProgram, "simpleSumINT", &clStatus);
 	#elif FLOAT
-        clKernel = clCreateKernel(clProgram, "simpleSumFLOAT", &clStatus);
+        clKernel = clCreateKernel(clProgram, "simpleSumFLOAT", &clStatus);	
 	#endif	
-
         CL_ERR();
     }
 

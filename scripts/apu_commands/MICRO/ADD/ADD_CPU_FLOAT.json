@@ -1,0 +1,6 @@
+[
+    {
+        "killcmd": "killall -9 MicroBench_ADD_FLOAT_CPU", 
+        "exec": "/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/CPU/ADD/MicroBench_ADD_FLOAT_CPU 100000000 1000000000"
+    }
+]
