@@ -30,9 +30,10 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 		for (uint32 i = 0; i < V_SIZE; i++) {
 			volatile int_t t1 = clock();
-			register volatile auto r = lines[blockIdx.x * V_SIZE + i];
+			register volatile CacheLine<LINE_SIZE> r = lines[blockIdx.x * V_SIZE + i];
 			volatile int_t t2 = clock();
 			l1_t_miss[i] = t2 - t1;
+			lines[blockIdx.x * V_SIZE + i] = r;
 		}
 
 		//wait for exposition to neutrons
@@ -41,11 +42,14 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 		for (uint32 i = 0; i < V_SIZE; i++) {
 			//last checking
 			volatile int_t t1 = clock();
-			register volatile auto r = lines[blockIdx.x * V_SIZE + i];
+			register volatile CacheLine<LINE_SIZE> r = lines[blockIdx.x * V_SIZE + i];
 			volatile int_t t2 = clock();
 			l1_t_hit[i] = t2 - t1;
+			lines[blockIdx.x * V_SIZE + i] = r;
 
-
+			if(r != t){
+				atomicAdd(&l1_cache_err, 1);
+			}
 		}
 	}
 	__syncthreads();

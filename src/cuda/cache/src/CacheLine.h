@@ -35,7 +35,7 @@ struct CacheLine {
 		}
 	}
 
-	inline CacheLine& operator=(const byte& T) {
+	__host__ __device__ inline CacheLine& operator=( byte& T) volatile {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
 			t[i] = T;
@@ -44,10 +44,19 @@ struct CacheLine {
 	}
 
 
-	inline CacheLine& operator=(const CacheLine<LINE_SIZE>& T) {
+	__host__ __device__ inline CacheLine& operator=(const CacheLine<LINE_SIZE>& T) {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
-			t[i] = T[i];
+			t[i] = T.t[i];
+		}
+		return *this;
+	}
+
+
+	__host__ __device__ inline CacheLine& operator=(volatile CacheLine<LINE_SIZE>& T) {
+#pragma unroll
+		for (int i = 0; i < LINE_SIZE; i++) {
+			t[i] = T.t[i];
 		}
 		return *this;
 	}
@@ -78,7 +87,7 @@ struct CacheLine {
 		return stream;
 	}
 
-	__host__ byte operator [](int idx) const {
+	__host__ __device__ byte operator [](int idx) const {
         return t[idx];
     }
 };

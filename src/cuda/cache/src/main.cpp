@@ -147,7 +147,8 @@ void set_cache_config(const std::string memory) {
 	}
 }
 
-void compare(const Tuple& t, Log& log, const byte gold_byte) {
+std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
+		const byte gold_byte) {
 	//Checking the misses
 	uint32 hits = 0;
 	uint32 misses = t.misses.size();
@@ -176,6 +177,8 @@ void compare(const Tuple& t, Log& log, const byte gold_byte) {
 			error_detail += " cache_line:" + std::to_string(cache_line);
 			error_detail += " e:" + std::to_string(gold_byte);
 			error_detail += " r:" + std::to_string(found_byte);
+			error_detail += " hits: " + std::to_string(hits);
+			error_detail += " false_hit: " + std::to_string(false_hit);
 
 			//log error detail already increment error var
 			log.log_error(error_detail);
@@ -188,6 +191,8 @@ void compare(const Tuple& t, Log& log, const byte gold_byte) {
 				+ std::to_string(log.errors);
 		log.log_error(error_detail);
 	}
+
+	return std::make_tuple(hits, misses, false_hit);
 }
 
 int main(int argc, char **argv) {
@@ -288,7 +293,7 @@ int main(int argc, char **argv) {
 
 			//Comparing the output
 			double start_cmp = log.mysecond();
-			compare(ret, log, test_parameter.t_byte);
+			auto tuple_ret = compare(ret, log, test_parameter.t_byte);
 			double end_cmp = log.mysecond();
 			//update errors
 			if (log.errors) {
@@ -303,6 +308,9 @@ int main(int argc, char **argv) {
 
 			std::cout << "Iteration: " << iteration << " Time: "
 					<< end_it - start_it << " Errors: " << log.errors
+					<< " Hits: " <<  std::get<0>(tuple_ret)
+					<< " Misses: " <<  std::get<1>(tuple_ret)
+					<< " False hit: " <<  std::get<2>(tuple_ret)
 					<< " Device Reset: " << end_dev_reset - start_dev_reset
 					<< " Comparing: " << end_cmp - start_cmp << std::endl;
 
