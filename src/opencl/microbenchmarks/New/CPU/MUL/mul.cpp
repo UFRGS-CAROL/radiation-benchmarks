@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 	unsigned long int rep  = strtoul(argv[2],NULL,0);  //1000000000;
 	unsigned long int ins = 10;				// Quantity of multiplications inside inner loop	
 #ifdef INT			
-	unsigned long int gold = pow(ref_int2, ins*sums) ; 		
+	  int gold = 1 ; 		
 #elif FLOAT
     float gold = 1.0;   
 #endif
@@ -72,7 +72,7 @@ for(i=0;i<rep;i++){
 #ifdef INT    
  
  
-        /*asm volatile("imul $0x3, %0;"
+        asm volatile("imul $0x3, %0;"
                      "imul $0x3, %0;"
                      "imul $0x3, %0;"
                      "imul $0x3, %0;"
@@ -81,14 +81,8 @@ for(i=0;i<rep;i++){
                      "imul $0x3, %0;"
                      "imul $0x3, %0;"
                      "imul $0x3, %0;"
-                     "imul $0x3, %0;": "+r" (re) ); 
-        */
-       // asm volatile("movl $0x0, %%edx" : : : ); 
-        asm volatile("movl %0, %%eax" : : "r"(re) : "eax"); 
-        //asm volatile("movl $0x2, %%ebx" : : : ); 
-        //asm volatile("divl %%ebx" : : : "eax", "edx", "ebx"); \                   
-                       
-                     printf("Re:%d\n",re);     
+                     "imul $0x3, %0;": "+r" (re) );                
+                     re = re/59049;
 #elif FLOAT  
     // Reference: https://cs.fit.edu/~mmahoney/cse3101/float.html
                 re = re *3;
