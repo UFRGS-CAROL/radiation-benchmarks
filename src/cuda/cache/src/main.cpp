@@ -136,11 +136,22 @@ cudaDeviceProp get_device_information(int dev) {
 	return device_prop;
 }
 
+void set_cache_config(const std::string memory) {
+	if (memory == "L1") {
+		cuda_check(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
+//		cuda_check(cudaThreadSetCacheConfig(cudaFuncCachePreferL1));
+
+	} else if (memory == "SHARED") {
+		cuda_check(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
+//		cuda_check(cudaThreadSetCacheConfig(cudaFuncCachePreferShared));
+	}
+}
+
 int main(int argc, char **argv) {
 	std::unordered_map<std::string, Board> devices_name = {
 	//Tesla K40
 			{ "Tesla K40c", K40 },
-	// Titan V
+			// Titan V
 			{ "TITAN V", TITANV }
 	//Other
 			};
@@ -165,27 +176,29 @@ int main(int argc, char **argv) {
 	test_parameter.one_second_cycles = device_info.clockRate * 1000;
 	test_parameter.board_name = device_info.name;
 
+	//set memory config
+	set_cache_config(log.test_mode);
 
 	/**
 	 * SETUP THE NVWL THREAD
 	 */
 	NVMLWrapper counter_thread(DEVICE_INDEX);
 
-
-	for(int iterations = 0; iterations < log.iterations; iterations++) {
+	for (int iterations = 0; iterations < log.iterations; iterations++) {
 		//Start collecting data
 		counter_thread.start_collecting_data();
 //		CacheProfiler profiler("L1", K40);
 //		profiler.start();
 
-		//test L1
+//test L1
 		if (log.test_mode == "L1") {
 			test_l1_cache(test_parameter);
 		}
 		//Test l2
 		if (log.test_mode == "L2") {
 			if (l2_checked == false) {
-				error("YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
+				error(
+						"YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
 			}
 			test_l2_cache(test_parameter);
 		}
@@ -206,7 +219,7 @@ int main(int argc, char **argv) {
 //		profiler.stop();
 //		std::cout << profiler.get_data() << std::endl;
 
-		//reset the device
+//reset the device
 		cuda_check(cudaDeviceReset());
 
 		auto iteration_data = counter_thread.get_data_from_iteration();
