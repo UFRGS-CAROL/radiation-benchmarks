@@ -8,8 +8,8 @@
 #ifndef CACHELINE_H_
 #define CACHELINE_H_
 
-#include "kernels.h"
 #include <ostream>
+#include "utils.h"
 
 //alignas(LINE_SIZE)
 template<uint32 LINE_SIZE>
@@ -26,6 +26,8 @@ struct CacheLine {
 		}
 	}
 
+
+
 	__host__ __device__ CacheLine(const byte& T) {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
@@ -37,6 +39,15 @@ struct CacheLine {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
 			t[i] = T;
+		}
+		return *this;
+	}
+
+
+	inline CacheLine& operator=(const CacheLine<LINE_SIZE>& T) {
+#pragma unroll
+		for (int i = 0; i < LINE_SIZE; i++) {
+			t[i] = T[i];
 		}
 		return *this;
 	}
@@ -72,6 +83,7 @@ struct CacheLine {
     }
 };
 
+#ifdef __NVCC__
 __device__ static void sleep_cuda(int64 clock_count) {
 	int64 start = clock64();
 	int64 clock_offset = 0;
@@ -79,5 +91,6 @@ __device__ static void sleep_cuda(int64 clock_count) {
 		clock_offset = clock64() - start;
 	}
 }
+#endif
 
 #endif /* CACHELINE_H_ */

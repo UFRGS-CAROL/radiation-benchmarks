@@ -39,7 +39,8 @@ __global__ void test_read_only_kernel(const unsigned int * __restrict__ my_array
 
 
 
-void test_read_only_cache(const Parameters& ){
+Tuple test_read_only_cache(const Parameters& ){
 
+	return Tuple();
 }
 

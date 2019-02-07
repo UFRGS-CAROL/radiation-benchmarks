@@ -128,6 +128,6 @@ void test_l2_cache(uint32 number_of_sms, Board device) {
 }
 
 
-void test_l2_cache(const Parameters& parameters){
-
+Tuple test_l2_cache(const Parameters& parameters){
+	return Tuple();
 }

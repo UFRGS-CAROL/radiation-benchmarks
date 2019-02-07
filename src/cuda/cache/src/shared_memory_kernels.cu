@@ -66,7 +66,7 @@ void test_shared_memory(const uint32 number_of_sms, const byte t_byte,
 /**
  * Shared memory size is in bytes
  */
-void test_shared_memory(const Parameters& parameters) {
+Tuple test_shared_memory(const Parameters& parameters) {
 
 	for (byte t_byte : { 0x00, 0xff }) {
 		switch (parameters.device) {
@@ -79,5 +79,7 @@ void test_shared_memory(const Parameters& parameters) {
 		}
 		}
 	}
+
+	return Tuple();
 }
 

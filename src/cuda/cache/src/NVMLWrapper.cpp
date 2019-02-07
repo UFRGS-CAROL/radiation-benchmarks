@@ -149,7 +149,7 @@ void NVMLWrapper::data_colector(nvmlDevice_t* device,
 			it_data->push_back(output);
 		}
 		mutex_lock.unlock();
-		std::this_thread::sleep_for(std::chrono::microseconds(200));
+		std::this_thread::sleep_for(std::chrono::microseconds(100));
 	}
 }
 

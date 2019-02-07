@@ -12,6 +12,14 @@
 #include <string> // error message
 #include <iostream>
 
+
+typedef unsigned char byte;
+typedef unsigned int uint32;
+typedef unsigned long long int uint64;
+
+typedef signed int int32;
+typedef signed long long int int64;
+
 void check_cuda_error_(const char *file, unsigned line, const char *statement,
 		cudaError_t err);
 

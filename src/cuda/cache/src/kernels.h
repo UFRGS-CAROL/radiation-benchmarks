@@ -10,14 +10,11 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include "Log.h"
+#include "utils.h"
+#include "CacheLine.h"
 
-typedef unsigned char byte;
-typedef unsigned int uint32;
-typedef unsigned long long int uint64;
-
-typedef signed int int32;
-typedef signed long long int int64;
 
 #define BLOCK_SIZE 32
 
@@ -33,13 +30,27 @@ struct Parameters {
 	uint64 one_second_cycles; // the necessary number of cycles to count one second
 	Log *log;
 	std::string board_name;
+	byte t_byte;
 };
 
 
-std::vector<std::string> test_l1_cache(const Parameters&);
-void test_l2_cache(const Parameters&);
-void test_shared_memory(const Parameters&);
-void test_read_only_cache(const Parameters&);
-void test_register_file(const Parameters&);
+struct Tuple {
+	std::vector<int32> misses;
+	std::vector<int32> hits;
+	std::vector<byte> cache_lines;
+
+//	Tuple& operator=(const Tuple& T) {
+//		this->cache_lines = T.cache_lines;
+//		this->misses = T.misses;
+//		this->hits = T.hits;
+//		return *this;
+//	}
+};
+
+Tuple test_l1_cache(const Parameters&);
+Tuple test_l2_cache(const Parameters&);
+Tuple test_shared_memory(const Parameters&);
+Tuple test_read_only_cache(const Parameters&);
+Tuple test_register_file(const Parameters&);
 
 #endif /* KERNELS_H_ */

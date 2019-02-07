@@ -147,6 +147,31 @@ void set_cache_config(const std::string memory) {
 	}
 }
 
+uint32 compare(const Tuple& t, const Log& log, const byte gold_byte) {
+	//Checking the misses
+	uint32 hits = 0;
+	uint32 misses = t.misses.size();
+	uint32 false_hit = 0;
+	for(uint32 i = 0; i < t.hits; i++){
+		int32 hit = t.hits[i];
+		int32 miss = t.misses[i];
+		if(hit < miss){
+			hits++;
+		}
+		if(miss < hit){
+			false_hit++;
+		}
+	}
+
+	//Checking the errors
+	uint32 errors = 0;
+	for(uint32 i = 0; i < t.cache_lines.size(); i++){
+
+	}
+
+	return errors;
+}
+
 int main(int argc, char **argv) {
 	std::unordered_map<std::string, Board> devices_name = {
 	//Tesla K40
@@ -166,64 +191,107 @@ int main(int argc, char **argv) {
 	if (devices_name.find(device_name) == devices_name.end())
 		error("CANNOT FOUND THE DEVICE\n");
 
-	Log log(argc, argv, devices_name[device_name]);
+	//Parameter to the functions
 	Parameters test_parameter;
 	test_parameter.device = devices_name[device_name];
 	test_parameter.number_of_sms = device_info.multiProcessorCount;
 	test_parameter.shared_memory_size = device_info.sharedMemPerMultiprocessor;
 	test_parameter.l2_size = device_info.l2CacheSize;
-	test_parameter.log = &log;
 	test_parameter.one_second_cycles = device_info.clockRate * 1000;
 	test_parameter.board_name = device_info.name;
 
-	//set memory config
-	set_cache_config(log.test_mode);
+	//Log obj
+	Log log(argc, argv, device_name, test_parameter.shared_memory_size,
+			test_parameter.l2_size, test_parameter.number_of_sms,
+			test_parameter.one_second_cycles);
+	log.set_info_max(2000);
+
+	test_parameter.log = &log;
 
 	/**
 	 * SETUP THE NVWL THREAD
 	 */
 	NVMLWrapper counter_thread(DEVICE_INDEX);
+	std::cout << "Testing " << test_parameter.board_name << " GPU. Using "
+			<< test_parameter.number_of_sms << "SMs, one second cycles "
+			<< test_parameter.one_second_cycles << std::endl;
 
-	for (int iterations = 0; iterations < log.iterations; iterations++) {
-		//Start collecting data
-		counter_thread.start_collecting_data();
-//		CacheProfiler profiler("L1", K40);
-//		profiler.start();
+	for (uint64 iteration = 0; iteration < log.iterations;) {
+		//set memory config
+		set_cache_config(log.test_mode);
 
-//test L1
-		if (log.test_mode == "L1") {
-			test_l1_cache(test_parameter);
-		}
-		//Test l2
-		if (log.test_mode == "L2") {
-			if (l2_checked == false) {
-				error(
-						"YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
+		for (byte t_byte : { 0xff, 0x00 }) {
+			//Start collecting data
+			counter_thread.start_collecting_data();
+			test_parameter.t_byte = t_byte;
+
+			double start_it = log.mysecond();
+			//Start iteration
+			log.start_iteration_app();
+
+			Tuple ret;
+
+			//test L1
+			if (log.test_mode == "L1") {
+				ret = test_l1_cache(test_parameter);
 			}
-			test_l2_cache(test_parameter);
-		}
-		//Test Shared
-		if (log.test_mode == "SHARED") {
-			test_shared_memory(test_parameter);
-		}
-		//Test Constant
-		if (log.test_mode == "CONSTANT") {
-			test_read_only_cache(test_parameter);
-		}
-		//Test Registers
-		if (log.test_mode == "REGISTERS") {
-			test_register_file(test_parameter);
-		}
-		//End collecting the data
-		counter_thread.end_collecting_data();
-//		profiler.stop();
-//		std::cout << profiler.get_data() << std::endl;
+			//Test l2
+			if (log.test_mode == "L2") {
+				if (l2_checked == false) {
+					error(
+							"YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
+				}
+				ret = test_l2_cache(test_parameter);
+			}
+			//Test Shared
+			if (log.test_mode == "SHARED") {
+				ret = test_shared_memory(test_parameter);
+			}
+			//Test Constant
+			if (log.test_mode == "CONSTANT") {
+				ret = test_read_only_cache(test_parameter);
+			}
+			//Test Registers
+			if (log.test_mode == "REGISTERS") {
+				ret = test_register_file(test_parameter);
+			}
 
-//reset the device
-		cuda_check(cudaDeviceReset());
+			//end iteration
+			log.end_iteration_app();
+			double end_it = log.mysecond();
 
-		auto iteration_data = counter_thread.get_data_from_iteration();
+			//End collecting the data
+			counter_thread.end_collecting_data();
+
+			double start_dev_reset = log.mysecond();
+			//reset the device
+			cuda_check(cudaDeviceReset());
+			double end_dev_reset = log.mysecond();
+
+			//Comparing the output
+			double start_cmp = log.mysecond();
+			auto has_errors = compare(ret, log);
+			double end_cmp = log.mysecond();
+			//update errors
+			if (has_errors) {
+				log.update_error_count();
+
+				auto iteration_data = counter_thread.get_data_from_iteration();
+				for (auto info_line : iteration_data) {
+					log.log_info(info_line);
+				}
+
+			}
+
+			std::cout << "Iteration : " << iteration << " Time: "
+					<< end_it - start_it << " Device Reset: "
+					<< end_dev_reset - start_dev_reset << " Comparing: "
+					<< end_cmp - start_cmp << std::endl;
+
+			iteration++;
+		}
 	}
 	return 0;
+
 }
 
