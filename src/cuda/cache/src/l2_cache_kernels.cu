@@ -23,7 +23,7 @@ __global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 	for (uint32 i = 0; i < V_SIZE; i++) {
 		int_t t1 = clock();
-		volatile register auto r = lines[tx + i];
+//		volatile register auto r = lines[tx + i];
 		int_t t2 = clock();
 		l2_hit_array[tx + i] = t2 - t1;
 	}
@@ -34,13 +34,13 @@ __global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines,
 	for (uint32 i = 0; i < V_SIZE; i++) {
 		//last checking
 		int_t t1 = clock();
-		volatile register auto r = lines[tx + i];
+//		volatile register auto r = lines[tx + i];
 		int_t t2 = clock();
 		l2_miss_array[tx + i] = t2 - t1;
 
 		//bitwise operation
-		if ((r ^ t) != 0)
-			atomicAdd((unsigned long long*) &l2_cache_err, 1);
+//		if ((r ^ t) != 0)
+//			atomicAdd((unsigned long long*) &l2_cache_err, 1);
 	}
 }
 

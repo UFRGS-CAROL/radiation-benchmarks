@@ -151,7 +151,7 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 		const byte gold_byte) {
 	//Checking the misses
 	uint32 hits = 0;
-	uint32 misses = t.misses.size();
+	uint32 misses = 0;
 	uint32 false_hit = 0;
 	for (uint32 i = 0; i < t.hits.size(); i++) {
 		int32 hit = t.hits[i];
@@ -161,6 +161,8 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 		}
 		if (miss < hit) {
 			false_hit++;
+		}else{
+			misses++;
 		}
 	}
 
@@ -311,8 +313,9 @@ int main(int argc, char **argv) {
 					<< " Hits: " <<  std::get<0>(tuple_ret)
 					<< " Misses: " <<  std::get<1>(tuple_ret)
 					<< " False hit: " <<  std::get<2>(tuple_ret)
-					<< " Device Reset: " << end_dev_reset - start_dev_reset
-					<< " Comparing: " << end_cmp - start_cmp << std::endl;
+					<< " Byte: " << uint32(test_parameter.t_byte)
+					<< " Device Reset Time: " << end_dev_reset - start_dev_reset
+					<< " Comparing Time: " << end_cmp - start_cmp << std::endl;
 
 			iteration++;
 		}

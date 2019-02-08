@@ -28,10 +28,10 @@ __global__ void test_shared_memory_kernel(CacheLine<LINE_SIZE> *lines,
 	sleep_cuda(sleep_cycles);
 
 	for (uint32 i = 0; i < V_SIZE; i++) {
-		auto register r = V[i];
+//		auto register r = V[i];
 		//bitwise operation
-		if ((r ^ t) != 0)
-			atomicAdd(&shared_mem_err, 1);
+//		if ((r ^ t) != 0)
+//			atomicAdd(&shared_mem_err, 1);
 	}
 }
 

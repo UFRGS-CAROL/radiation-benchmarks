@@ -11,10 +11,11 @@
 #include <ostream>
 #include "utils.h"
 
-//alignas(LINE_SIZE)
 template<uint32 LINE_SIZE>
-struct CacheLine {
-	byte t[LINE_SIZE]; //byte type
+struct
+//alignas(LINE_SIZE)
+CacheLine {
+	volatile  byte t[LINE_SIZE]; //byte type
 
 	__host__ __device__ CacheLine() {
 	}
@@ -44,6 +45,14 @@ struct CacheLine {
 	}
 
 
+	__host__ __device__ inline volatile CacheLine& operator=(CacheLine<LINE_SIZE>& T) {
+#pragma unroll
+		for (int i = 0; i < LINE_SIZE; i++) {
+			t[i] = T.t[i];
+		}
+		return *this;
+	}
+
 	__host__ __device__ inline CacheLine& operator=(const CacheLine<LINE_SIZE>& T) {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
@@ -53,15 +62,15 @@ struct CacheLine {
 	}
 
 
-	__host__ __device__ inline CacheLine& operator=(register volatile CacheLine<LINE_SIZE>& T) {
-#pragma unroll
-		for (int i = 0; i < LINE_SIZE; i++) {
-			t[i] = T.t[i];
-		}
-		return *this;
-	}
+//	__host__ __device__ inline CacheLine& operator=(register volatile CacheLine<LINE_SIZE>& T) {
+//#pragma unroll
+//		for (int i = 0; i < LINE_SIZE; i++) {
+//			t[i] = T.t[i];
+//		}
+//		return *this;
+//	}
 
-	__host__  __device__  inline byte operator^(const byte& rhs) volatile {
+	__host__  __device__  inline byte operator^(const byte& rhs)  {
 		byte ret = rhs;
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
@@ -70,7 +79,7 @@ struct CacheLine {
 		return ret;
 	}
 
-	__host__ __device__ inline bool operator !=(const byte& a) volatile {
+	__host__ __device__ inline bool operator !=(const byte& a)  {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
 			if (a != t[i])
