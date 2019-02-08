@@ -13,9 +13,9 @@
 
 template<uint32 LINE_SIZE>
 struct
-//alignas(LINE_SIZE)
+alignas(LINE_SIZE)
 CacheLine {
-	volatile  byte t[LINE_SIZE]; //byte type
+	volatile byte t[LINE_SIZE]; //byte type
 
 	__host__ __device__ CacheLine() {
 	}
@@ -26,8 +26,6 @@ CacheLine {
 			this->t[i] = T.t[i];
 		}
 	}
-
-
 
 	__host__ __device__ CacheLine(const byte& T) {
 #pragma unroll
@@ -44,8 +42,8 @@ CacheLine {
 		return *this;
 	}
 
-
-	__host__ __device__ inline volatile CacheLine& operator=(CacheLine<LINE_SIZE>& T) {
+	__host__ __device__ inline volatile CacheLine& operator=(
+			CacheLine<LINE_SIZE>& T) {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
 			t[i] = T.t[i];
@@ -53,14 +51,14 @@ CacheLine {
 		return *this;
 	}
 
-	__host__ __device__ inline CacheLine& operator=(const CacheLine<LINE_SIZE>& T) {
+	__host__ __device__ inline CacheLine& operator=(
+			const CacheLine<LINE_SIZE>& T) {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
 			t[i] = T.t[i];
 		}
 		return *this;
 	}
-
 
 //	__host__ __device__ inline CacheLine& operator=(register volatile CacheLine<LINE_SIZE>& T) {
 //#pragma unroll
@@ -70,7 +68,7 @@ CacheLine {
 //		return *this;
 //	}
 
-	__host__  __device__  inline byte operator^(const byte& rhs)  {
+	__host__ __device__ inline byte operator^(const byte& rhs) {
 		byte ret = rhs;
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
@@ -79,7 +77,7 @@ CacheLine {
 		return ret;
 	}
 
-	__host__ __device__ inline bool operator !=(const byte& a)  {
+	__host__ __device__ inline bool operator !=(const byte& a) {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
 			if (a != t[i])
@@ -88,7 +86,7 @@ CacheLine {
 		return false;
 	}
 
-	__host__  friend std::ostream& operator<<(std::ostream& stream,
+	__host__ friend std::ostream& operator<<(std::ostream& stream,
 			const CacheLine<LINE_SIZE>& t) {
 		for (auto s : t.t) {
 			stream << " " << s;
@@ -97,8 +95,8 @@ CacheLine {
 	}
 
 	__host__ __device__ byte operator [](int idx) const {
-        return t[idx];
-    }
+		return t[idx];
+	}
 };
 
 #ifdef __NVCC__

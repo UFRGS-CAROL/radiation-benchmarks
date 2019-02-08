@@ -29,19 +29,18 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 	uint32 i = threadIdx.x;
 	if (threadIdx.x < V_SIZE) {
 
-		register CacheLine<LINE_SIZE> r;
+		CacheLine < LINE_SIZE > r;
 		volatile int_t t1 = clock();
 		r = lines[blockIdx.x * V_SIZE + i];
 		volatile int_t t2 = clock();
 		l1_t_miss[i] = t2 - t1;
-		lines[blockIdx.x * V_SIZE + i] = r;
 
 		//wait for exposition to neutrons
 		sleep_cuda(sleep_cycles);
 
 		//last checking
 		t1 = clock();
-		register CacheLine<LINE_SIZE> r2 = lines[blockIdx.x * V_SIZE + i];
+		CacheLine < LINE_SIZE > r2 = lines[blockIdx.x * V_SIZE + i];
 		t2 = clock();
 		l1_t_hit[i] = t2 - t1;
 		lines[blockIdx.x * V_SIZE + i] = r2;
@@ -49,15 +48,12 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 		if (r != t) {
 			atomicAdd(&l1_cache_err, 1);
 		}
+
+		l1_miss_array[blockIdx.x * V_SIZE + i] = l1_t_miss[i];
+		l1_hit_array[blockIdx.x * V_SIZE + i] = l1_t_hit[i];
 	}
 
 	__syncthreads();
-	if (threadIdx.x < V_SIZE) {
-		for (uint32 i = 0; i < V_SIZE; i++) {
-			l1_miss_array[blockIdx.x * V_SIZE + i] = l1_t_miss[i];
-			l1_hit_array[blockIdx.x * V_SIZE + i] = l1_t_hit[i];
-		}
-	}
 }
 
 template<const uint32 V_SIZE, const uint32 L1_LINE_SIZE,
@@ -78,11 +74,8 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 
 	//Set each element of V array
 	CacheLine < L1_LINE_SIZE > *V_dev;
-	std::vector<CacheLine<L1_LINE_SIZE> > V_host(v_size_multiple_threads);
-
-	for (int i = 0; i < v_size_multiple_threads; i++) {
-		V_host[i] = t_byte;
-	}
+	std::vector<CacheLine<L1_LINE_SIZE> > V_host(v_size_multiple_threads,
+			t_byte);
 
 	//copy to the GPU
 	cuda_check(
@@ -103,10 +96,15 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 
 	dim3 block_size(number_of_sms), threads_per_block(V_SIZE);
 
+	double start = Log::mysecond();
+
 	test_l1_cache_kernel<int32, V_SIZE, L1_LINE_SIZE, SHARED_PER_SM> <<<
 	block_size, threads_per_block>>>(V_dev, l1_hit_array_device,
 			l1_miss_array_device, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
+
+	double end = Log::mysecond();
+	std::cout << "KERNEL DURATION " << end - start << std::endl;
 
 	//Host arrays
 	//Copy back to the host
@@ -156,7 +154,6 @@ Tuple test_l1_cache(const Parameters& parameters) {
 		//so alloc 49152 bytes
 		// cache line has 128 bytes
 		//to force alloc maximum shared memory
-		std::cout << "KEPLER\n";
 		const uint32 max_l1_cache = 48 * 1024; //bytes
 		const uint32 max_shared_mem = 8 * 1024;
 		const uint32 cache_line_size = 128;
