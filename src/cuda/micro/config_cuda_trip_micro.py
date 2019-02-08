@@ -15,7 +15,7 @@ TYPES = ["fma", "add", "mul"]
 
 def config(board, test_type, arith_type, debug):
 
-    benchmark_bin = "cuda_trip_micro-" + test_type + "_" + arith_type
+    benchmark_bin = "cuda_micro-" + test_type + "_" + arith_type
     print "Generating " + benchmark_bin + " for CUDA, board:" + board
 
     conf_file = '/etc/radiation-benchmarks.conf'

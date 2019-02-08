@@ -222,8 +222,8 @@ __global__ void MicroBenchmarkKernel_FMA (tested_type *d_R0)
 	register half2 input_a_neg = __float2half2_rn(-INPUT_A);
 	register half2 input_b_neg = __float2half2_rn(-INPUT_B);
 	register half2 *d_R0_half2 = (half2*)d_R0;
-	register half2 *d_R1_half2 = (half2*)d_R1;
-	register half2 *d_R2_half2 = (half2*)d_R2;
+	//register half2 *d_R1_half2 = (half2*)d_R1;
+	//register half2 *d_R2_half2 = (half2*)d_R2;
 #endif
 
 #pragma unroll 512
@@ -269,8 +269,8 @@ __global__ void MicroBenchmarkKernel_ADD (tested_type *d_R0)
 	register half2 input_a = __float2half2_rn(OUTPUT_R);
 	register half2 input_a_neg = __float2half2_rn(-OUTPUT_R);
 	register half2 *d_R0_half2 = (half2*)d_R0;
-	register half2 *d_R1_half2 = (half2*)d_R1;
-	register half2 *d_R2_half2 = (half2*)d_R2;
+	//register half2 *d_R1_half2 = (half2*)d_R1;
+	//register half2 *d_R2_half2 = (half2*)d_R2;
 #endif
 
 #pragma unroll 512
@@ -316,8 +316,8 @@ __global__ void MicroBenchmarkKernel_MUL (tested_type *d_R0)
 	register half2 input_a = __float2half2_rn(INPUT_B);
 	register half2 input_a_inv = __float2half2_rn(1.0/INPUT_B);
 	register half2 *d_R0_half2 = (half2*)d_R0;
-	register half2 *d_R1_half2 = (half2*)d_R1;
-	register half2 *d_R2_half2 = (half2*)d_R2;
+	//register half2 *d_R1_half2 = (half2*)d_R1;
+	//register half2 *d_R2_half2 = (half2*)d_R2;
 #endif
 
 #pragma unroll 512

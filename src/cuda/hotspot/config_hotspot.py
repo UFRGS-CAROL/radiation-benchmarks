@@ -45,7 +45,7 @@ def config(board, arith_type, debug):
     generate = ["cd " + src_hotspot, 
                 "make clean", 
                 "make -C ../../include ", 
-                "make -C ../../include/safe_memory/", 
+               # "make -C ../../include/safe_memory/", 
                 "make PRECISION=" + arith_type, 
                 "mkdir -p " + data_path,
                 "mv ./" + benchmark_bin + " " + bin_path + "/"]
