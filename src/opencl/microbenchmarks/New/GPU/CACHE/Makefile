@@ -32,7 +32,6 @@
 #  THE SOFTWARE.
 # 
 
-TYPE=int
 ifndef CXX
     CXX=g++
 else
@@ -42,15 +41,9 @@ else
 endif
 CXX_FLAGS=-std=c++11 -DLOGS -fopenmp
 
-ifeq ($(TYPE), int)
-CXX_FLAGS+= -DINT -DT=int
-EXE=MUL_GPU_INT
-endif
 
-ifeq ($(TYPE), float)
-CXX_FLAGS+= -DFLOAT -DT=float
-EXE=MUL_GPU_FLOAT
-endif
+EXE=CACHE_GPU
+
 
 ifndef CHAI_OCL_LIB
     $(error CHAI_OCL_LIB not defined. This environment variable must be defined to point to the location of the OpenCL library)
@@ -65,7 +58,7 @@ endif
 ifndef CHAI_OCL_INC
     $(error CHAI_OCL_INC not defined. This environment variable must be defined to point to the location of the OpenCL header files)
 endif
-INC=-I$(CHAI_OCL_INC) -I/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/MUL/ -I/home/carol/radiation-benchmarks/src/include/
+INC=-I$(CHAI_OCL_INC) -I/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/CACHE/ -I/home/carol/radiation-benchmarks/src/include/
 
 SRC=main.cpp	 #/home/carol/radiation-benchmarks/src/include/log_helper.cpp
 OBJECTS=$(SRC:.cpp=.o)
@@ -84,6 +77,6 @@ all: $(EXE)
 $(EXE): $(OBJECTS)
 	$(CXX) $(CXX_FLAGS) $(OBJECTS) $(LIB) -o $(EXE)
 clean:
-	rm -f  *.o *.d
+	rm -f *.o *.d
 
 -include $(DEPS)
