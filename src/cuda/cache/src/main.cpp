@@ -239,7 +239,7 @@ int main(int argc, char **argv) {
 	NVMLWrapper counter_thread(DEVICE_INDEX);
 	std::cout << "Testing " << test_parameter.board_name << " GPU. Using "
 			<< test_parameter.number_of_sms << "SMs, one second cycles "
-			<< test_parameter.one_second_cycles << std::endl;
+			<< test_parameter.one_second_cycles <<  " Memory test: " << log.test_mode << std::endl;
 
 	for (uint64 iteration = 0; iteration < log.iterations;) {
 		//set memory config

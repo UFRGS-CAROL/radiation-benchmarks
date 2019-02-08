@@ -38,7 +38,7 @@ __global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 		//bitwise operation
 		if (r != t)
-			atomicAdd((unsigned long long*) &l2_cache_err, 1);
+			atomicAdd(&l2_cache_err, 1);
 
 		lines[i] = r2;
 	}
@@ -100,6 +100,13 @@ Tuple test_l2_cache(const byte t_byte, const int64 cycles,
 					sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE,
 					cudaMemcpyHostToDevice));
 
+
+	//Set to zero err_check
+	uint64 l2_cache_err_host = 0;
+	cuda_check(
+			cudaMemcpyToSymbol(l2_cache_err, &l2_cache_err_host, sizeof(uint64),
+					0));
+
 	//Clear the L2 Cache
 	clear_cache(l2_size / sizeof(float));
 
@@ -125,8 +132,7 @@ Tuple test_l2_cache(const byte t_byte, const int64 cycles,
 					sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE,
 					cudaMemcpyDeviceToHost));
 
-	//Set to zero err_check
-	uint64 l2_cache_err_host = 0;
+	//Copy from symbol
 	cuda_check(
 			cudaMemcpyFromSymbol(&l2_cache_err_host, l2_cache_err,
 					sizeof(uint64), 0));
@@ -159,7 +165,7 @@ Tuple test_l2_cache(const Parameters& parameters) {
 					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
 							+ std::to_string(parameters.l2_size));
 
-		const uint32 cache_line_size = 32;
+		const uint32 cache_line_size = 128;
 		const uint32 v_size = max_l2_cache / cache_line_size;
 		return test_l2_cache<v_size, cache_line_size>(parameters.t_byte,
 				parameters.one_second_cycles, max_l2_cache);
@@ -172,7 +178,7 @@ Tuple test_l2_cache(const Parameters& parameters) {
 					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
 							+ std::to_string(parameters.l2_size));
 
-		const uint32 cache_line_size = 64;
+		const uint32 cache_line_size = 128;
 		const uint32 v_size = max_l2_cache / cache_line_size;
 
 		return test_l2_cache<v_size, cache_line_size>(parameters.t_byte,

@@ -68,9 +68,12 @@ testl2:
 	./$(EXEC) --iterations 10 --memtotest L2
 
 testshared:
-	./$(EXEC) --iterations 10 --memtotest L2
+	./$(EXEC) --iterations 10 --memtotest SHARED
 	
 testregisters:
-	./$(EXEC) --iterations 10 --memtotest L2	
+	./$(EXEC) --iterations 10 --memtotest REGISTERS	
+	
+testconstant:
+	./$(EXEC) --iterations 10 --memtotest CONSTANT	
 	
 	

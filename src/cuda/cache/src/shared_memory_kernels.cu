@@ -15,69 +15,118 @@ __device__ uint64 shared_mem_err;
 
 template<const uint32 V_SIZE, const uint32 LINE_SIZE>
 __global__ void test_shared_memory_kernel(CacheLine<LINE_SIZE> *lines,
-		std::int64_t sleep_cycles, const register byte t) {
-	register uint32 tx = blockIdx.x * blockDim.x + threadIdx.x;
+		std::int64_t sleep_cycles, const byte t) {
 
 	__shared__ CacheLine<LINE_SIZE> V[V_SIZE];
 
-	for (uint32 i = 0; i < V_SIZE; i++) {
-		V[i] = lines[tx + i];
-	}
+	if (threadIdx.x < V_SIZE) {
+		V[threadIdx.x] = lines[blockIdx.x * V_SIZE + threadIdx.x];
 
-	//wait for exposition to neutrons
-	sleep_cuda(sleep_cycles);
+		//wait for exposition to neutrons
+		sleep_cuda(sleep_cycles);
 
-	for (uint32 i = 0; i < V_SIZE; i++) {
-//		auto register r = V[i];
+		register CacheLine<LINE_SIZE> r = V[threadIdx.x];
 		//bitwise operation
-//		if ((r ^ t) != 0)
-//			atomicAdd(&shared_mem_err, 1);
+		if (r != t)
+			atomicAdd(&shared_mem_err, 1);
+
+		lines[blockIdx.x * V_SIZE + threadIdx.x] = r;
+
 	}
+	__syncthreads();
 }
 
-template<uint32 SHARED_MEMORY_SIZE, uint32 SHARED_LINE_SIZE>
-void test_shared_memory(const uint32 number_of_sms, const byte t_byte,
+template<const uint32 V_SIZE, const uint32 SHARED_LINE_SIZE,
+		const uint32 SHARED_MEMORY_SIZE>
+Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte,
 		const uint64 cycles) {
-	cuda_check(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
-	const uint32 v_size = SHARED_MEMORY_SIZE / SHARED_LINE_SIZE; // 384 lines
-
-	uint64 mem = 0;
-	cuda_check(cudaMemcpyToSymbol(shared_mem_err, &mem, sizeof(uint64), 0));
-
-	//Set each element of V array
-	CacheLine<SHARED_LINE_SIZE> *V_dev;
+	uint32 v_size_multiple_threads = V_SIZE * number_of_sms;
+	uint64 shared_mem_err_host = 0;
 	cuda_check(
-			cudaMalloc(&V_dev, sizeof(CacheLine<SHARED_LINE_SIZE> ) * v_size));
+			cudaMemcpyToSymbol(shared_mem_err, &shared_mem_err_host,
+					sizeof(uint64), 0));
+
+//Set each element of V array
+	CacheLine < SHARED_LINE_SIZE > *V_dev;
+	cuda_check(
+			cudaMalloc(&V_dev,
+					sizeof(CacheLine<SHARED_LINE_SIZE> )
+							* v_size_multiple_threads));
 	cuda_check(
 			cudaMemset(V_dev, t_byte,
-					sizeof(CacheLine<SHARED_LINE_SIZE> ) * v_size));
+					sizeof(CacheLine<SHARED_LINE_SIZE> )
+							* v_size_multiple_threads));
 
-	test_shared_memory_kernel<v_size, SHARED_LINE_SIZE> <<<1, 1>>>(V_dev,
+//Set the number of threads
+	dim3 block_size(number_of_sms), threads_per_block(V_SIZE);
+
+	test_shared_memory_kernel<V_SIZE, SHARED_LINE_SIZE> <<<block_size, threads_per_block>>>(V_dev,
 			cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
 
-	cuda_check(cudaMemcpyFromSymbol(&mem, shared_mem_err, sizeof(uint64), 0));
+	cuda_check(
+			cudaMemcpyFromSymbol(&shared_mem_err_host, shared_mem_err,
+					sizeof(uint64), 0));
 
-	std::cout << "TOTAL BAD " << mem << std::endl;
-	cuda_check(cudaDeviceSetCacheConfig(cudaFuncCachePreferNone));
+//V array host
+	std::vector < CacheLine
+			< SHARED_LINE_SIZE >> V_host(v_size_multiple_threads, 0);
+	cuda_check(
+			cudaMemcpy(V_host.data(), V_dev,
+					sizeof(CacheLine<SHARED_LINE_SIZE> )
+							* v_size_multiple_threads, cudaMemcpyDeviceToHost));
+
 	cuda_check(cudaFree(V_dev));
+
+	Tuple t;
+
+	t.cache_lines.assign((byte*) V_host.data(),
+			(byte*) V_host.data()
+					+ (sizeof(CacheLine<SHARED_LINE_SIZE> ) * V_host.size()));
+	t.misses = {};
+
+	t.hits = {};
+	t.errors = shared_mem_err_host;
+	return t;
 }
 
 /**
  * Shared memory size is in bytes
  */
 Tuple test_shared_memory(const Parameters& parameters) {
+//This switch is only to set manually the cache line size
+//since it is hard to check it at runtime
+	switch (parameters.device) {
+	case K40: {
+		const uint32 max_shared_mem = 48 * 1024;
 
-	for (byte t_byte : { 0x00, 0xff }) {
-		switch (parameters.device) {
-		case K40: {
+		if (max_shared_mem != parameters.shared_memory_size)
+			error(
+					"SHARED DEFAULT SIZE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
+							+ std::to_string(parameters.shared_memory_size));
 
-			break;
-		}
-		case TITANV: {
-			break;
-		}
-		}
+		const uint32 cache_line_size = 128;
+		const uint32 v_size = max_shared_mem / cache_line_size;
+		return test_shared_memory<v_size, cache_line_size, max_shared_mem>(
+				parameters.number_of_sms, parameters.t_byte,
+				parameters.one_second_cycles);
+//		break;
+	}
+	case TITANV: {
+		const uint32 max_shared_mem = 48 * 1024;
+		if (max_shared_mem != parameters.shared_memory_size)
+			error(
+					"SHARED DEFAULT SIZE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
+							+ std::to_string(parameters.shared_memory_size));
+
+		const uint32 cache_line_size = 128;
+		const uint32 v_size = max_shared_mem / cache_line_size;
+
+		return test_shared_memory<v_size, cache_line_size, max_shared_mem>(
+				parameters.number_of_sms, parameters.t_byte,
+				parameters.one_second_cycles);
+//		break;
+	}
 	}
 
 	return Tuple();
