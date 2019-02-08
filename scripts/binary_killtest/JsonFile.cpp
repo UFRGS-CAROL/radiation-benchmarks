@@ -22,6 +22,7 @@ JsonFile::JsonFile(std::string file_path) {
 	if (f.good()) {
 		std::string file_content((std::istreambuf_iterator<char>(f)),
 				std::istreambuf_iterator<char>());
+		f.close();
 
 		int count = 0;
 		size_t pos = 0;
@@ -82,7 +83,6 @@ JsonFile::JsonFile(std::string file_path) {
 			}
 		}
 
-		f.close();
 	}
 }
 
