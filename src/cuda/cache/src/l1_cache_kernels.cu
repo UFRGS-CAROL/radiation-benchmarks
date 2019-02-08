@@ -26,31 +26,31 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 	__shared__ int_t l1_t_hit[SHARED_PER_SM / 2];
 	__shared__ int_t l1_t_miss[SHARED_PER_SM / 2];
-	uint32 i = threadIdx.x;
-	if (threadIdx.x < V_SIZE) {
+
+	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
 
 		CacheLine < LINE_SIZE > r;
 		volatile int_t t1 = clock();
-		r = lines[blockIdx.x * V_SIZE + i];
+		r = lines[blockIdx.x * V_SIZE + threadIdx.x];
 		volatile int_t t2 = clock();
-		l1_t_miss[i] = t2 - t1;
+		l1_t_miss[threadIdx.x] = t2 - t1;
 
 		//wait for exposition to neutrons
 		sleep_cuda(sleep_cycles);
 
 		//last checking
 		t1 = clock();
-		CacheLine < LINE_SIZE > r2 = lines[blockIdx.x * V_SIZE + i];
+		CacheLine < LINE_SIZE > r2 = lines[blockIdx.x * V_SIZE + threadIdx.x];
 		t2 = clock();
-		l1_t_hit[i] = t2 - t1;
-		lines[blockIdx.x * V_SIZE + i] = r2;
+		l1_t_hit[threadIdx.x] = t2 - t1;
+		lines[blockIdx.x * V_SIZE + threadIdx.x] = r2;
 
 		if (r != t) {
 			atomicAdd(&l1_cache_err, 1);
 		}
 
-		l1_miss_array[blockIdx.x * V_SIZE + i] = l1_t_miss[i];
-		l1_hit_array[blockIdx.x * V_SIZE + i] = l1_t_hit[i];
+		l1_miss_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_miss[threadIdx.x];
+		l1_hit_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_hit[threadIdx.x];
 	}
 
 	__syncthreads();
@@ -94,8 +94,11 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 			cudaMemcpyToSymbol(l1_cache_err, &l1_cache_err_host, sizeof(uint64),
 					0));
 
+#if __CUDA_ARCH__ >= 500
+	dim3 block_size(number_of_sms, number_of_sms), threads_per_block(V_SIZE);
+#else
 	dim3 block_size(number_of_sms), threads_per_block(V_SIZE);
-
+#endif
 	double start = Log::mysecond();
 
 	test_l1_cache_kernel<int32, V_SIZE, L1_LINE_SIZE, SHARED_PER_SM> <<<
