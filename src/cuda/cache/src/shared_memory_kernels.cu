@@ -19,7 +19,7 @@ __global__ void test_shared_memory_kernel(CacheLine<LINE_SIZE> *lines,
 
 	__shared__ CacheLine<LINE_SIZE> V[V_SIZE];
 
-	if (threadIdx.x < V_SIZE) {
+	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
 		V[threadIdx.x] = lines[blockIdx.x * V_SIZE + threadIdx.x];
 
 		//wait for exposition to neutrons
@@ -57,8 +57,13 @@ Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte,
 					sizeof(CacheLine<SHARED_LINE_SIZE> )
 							* v_size_multiple_threads));
 
-//Set the number of threads
+	//Set the number of threads
+	//These archs support two blocks per SM with 48KB of shared memory
+#if __CUDA_ARCH__ >= 500
+	dim3 block_size(number_of_sms, number_of_sms), threads_per_block(V_SIZE);
+#else
 	dim3 block_size(number_of_sms), threads_per_block(V_SIZE);
+#endif
 
 	test_shared_memory_kernel<V_SIZE, SHARED_LINE_SIZE> <<<block_size, threads_per_block>>>(V_dev,
 			cycles, t_byte);
@@ -114,6 +119,7 @@ Tuple test_shared_memory(const Parameters& parameters) {
 	}
 	case TITANV: {
 		const uint32 max_shared_mem = 48 * 1024;
+
 		if (max_shared_mem != parameters.shared_memory_size)
 			error(
 					"SHARED DEFAULT SIZE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
