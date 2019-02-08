@@ -11,6 +11,7 @@
 #include <fstream>
 #include <json.hpp>
 #include <iostream>
+#include "Utils.h"
 
 #define MIN_LINE_SIZE 7
 
@@ -31,23 +32,33 @@ JsonFile::JsonFile(std::string file_path) {
 
 		//count * 2 + 2
 		// I am counting the [] and commas
-		std::regex pattern("[({.*})]");
-		std::vector<std::string> vector_of_applications(100);
+//		std::regex pattern("[({.*})]");
+//		std::vector<std::string> vector_of_applications(100);
+//
+//		std::copy(
+//				std::sregex_token_iterator(file_content.begin(),
+//						file_content.end(), pattern, -1),
+//				std::sregex_token_iterator(), vector_of_applications.begin());
 
-		std::copy(
-				std::sregex_token_iterator(file_content.begin(),
-						file_content.end(), pattern, -1),
-				std::sregex_token_iterator(), vector_of_applications.begin());
+		//assuming that no , is inside the command
+		file_content.erase(
+				std::remove(file_content.begin(), file_content.end(), '['),
+				file_content.end());
+		file_content.erase(
+				std::remove(file_content.begin(), file_content.end(), ']'),
+				file_content.end());
+
+		auto vector_of_applications = split(file_content, ',');
 
 		//put it into the vector
 		for (auto command_line : vector_of_applications) {
 			if (command_line.size() > MIN_LINE_SIZE) {
-				command_line.insert(0, "{");
-				command_line.insert(command_line.size(), "}");
+//				command_line.insert(0, "{");
+//				command_line.insert(command_line.size(), "}");
 
 				auto json_line = nlohmann::json::parse(command_line);
 
-				std::pair<std::string, std::string> to_execute;
+				std::pair < std::string, std::string > to_execute;
 				json_line.at("killcmd").get_to(to_execute.first);
 				json_line.at("exec").get_to(to_execute.second);
 
