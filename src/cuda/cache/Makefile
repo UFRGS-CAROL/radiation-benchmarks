@@ -9,7 +9,7 @@ CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
 
-NVCCFLAGS= -std=c++11 -O3
+NVCCFLAGS= -std=c++11 -O3 -Xptxas -v
 
 
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
