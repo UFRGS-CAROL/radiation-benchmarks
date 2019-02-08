@@ -39,7 +39,7 @@ __global__ void test_shared_memory_kernel(CacheLine<LINE_SIZE> *lines,
 template<const uint32 V_SIZE, const uint32 SHARED_LINE_SIZE,
 		const uint32 SHARED_MEMORY_SIZE>
 Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte,
-		const uint64 cycles) {
+		const uint64 cycles, dim3& block_size, dim3& threads_per_block) {
 	uint32 v_size_multiple_threads = V_SIZE * number_of_sms;
 	uint64 shared_mem_err_host = 0;
 	cuda_check(
@@ -47,7 +47,7 @@ Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte,
 					sizeof(uint64), 0));
 
 //Set each element of V array
-	CacheLine < SHARED_LINE_SIZE > *V_dev;
+	CacheLine<SHARED_LINE_SIZE> *V_dev;
 	cuda_check(
 			cudaMalloc(&V_dev,
 					sizeof(CacheLine<SHARED_LINE_SIZE> )
@@ -59,14 +59,14 @@ Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte,
 
 	//Set the number of threads
 	//These archs support two blocks per SM with 48KB of shared memory
-#if __CUDA_ARCH__ >= 500
-	dim3 block_size(number_of_sms, number_of_sms), threads_per_block(V_SIZE);
-#else
-	dim3 block_size(number_of_sms), threads_per_block(V_SIZE);
-#endif
+//#if __CUDA_ARCH__ >= 500
+//	dim3 block_size(number_of_sms, number_of_sms), threads_per_block(V_SIZE);
+//#else
+//	dim3 block_size(number_of_sms), threads_per_block(V_SIZE);
+//#endif
 
-	test_shared_memory_kernel<V_SIZE, SHARED_LINE_SIZE> <<<block_size, threads_per_block>>>(V_dev,
-			cycles, t_byte);
+	test_shared_memory_kernel<V_SIZE, SHARED_LINE_SIZE> <<<block_size,
+			threads_per_block, SHARED_MEMORY_SIZE>>>(V_dev, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
 
 	cuda_check(
@@ -74,8 +74,7 @@ Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte,
 					sizeof(uint64), 0));
 
 //V array host
-	std::vector < CacheLine
-			< SHARED_LINE_SIZE >> V_host(v_size_multiple_threads, 0);
+	std::vector<CacheLine<SHARED_LINE_SIZE>> V_host(v_size_multiple_threads, 0);
 	cuda_check(
 			cudaMemcpy(V_host.data(), V_dev,
 					sizeof(CacheLine<SHARED_LINE_SIZE> )
@@ -112,9 +111,11 @@ Tuple test_shared_memory(const Parameters& parameters) {
 
 		const uint32 cache_line_size = 128;
 		const uint32 v_size = max_shared_mem / cache_line_size;
+		dim3 block_size(parameters.number_of_sms, 1), threads_per_block(v_size);
+
 		return test_shared_memory<v_size, cache_line_size, max_shared_mem>(
 				parameters.number_of_sms, parameters.t_byte,
-				parameters.one_second_cycles);
+				parameters.one_second_cycles, block_size, threads_per_block);
 //		break;
 	}
 	case TITANV: {
@@ -127,10 +128,11 @@ Tuple test_shared_memory(const Parameters& parameters) {
 
 		const uint32 cache_line_size = 128;
 		const uint32 v_size = max_shared_mem / cache_line_size;
+		dim3 block_size(parameters.number_of_sms, 1), threads_per_block(v_size);
 
 		return test_shared_memory<v_size, cache_line_size, max_shared_mem>(
 				parameters.number_of_sms, parameters.t_byte,
-				parameters.one_second_cycles);
+				parameters.one_second_cycles, block_size, threads_per_block);
 //		break;
 	}
 	}

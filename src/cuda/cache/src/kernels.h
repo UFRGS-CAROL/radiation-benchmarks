@@ -31,6 +31,10 @@ struct Parameters {
 	Log *log;
 	std::string board_name;
 	byte t_byte;
+
+	//register file size
+	uint32 registers_per_sm;
+
 };
 
 

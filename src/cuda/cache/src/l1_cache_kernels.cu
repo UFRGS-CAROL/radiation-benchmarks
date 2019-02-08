@@ -30,7 +30,7 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
 
 		volatile int_t t1 = clock();
-		CacheLine < LINE_SIZE > r = lines[blockIdx.x * V_SIZE + threadIdx.x];
+		CacheLine<LINE_SIZE> r = lines[blockIdx.x * V_SIZE + threadIdx.x];
 		volatile int_t t2 = clock();
 		l1_t_miss[threadIdx.x] = t2 - t1;
 
@@ -47,7 +47,8 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 			atomicAdd(&l1_cache_err, 1);
 		}
 
-		l1_miss_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_miss[threadIdx.x];
+		l1_miss_array[blockIdx.x * V_SIZE + threadIdx.x] =
+				l1_t_miss[threadIdx.x];
 		l1_hit_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_hit[threadIdx.x];
 		lines[blockIdx.x * V_SIZE + threadIdx.x] = r;
 
@@ -59,7 +60,7 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 template<const uint32 V_SIZE, const uint32 L1_LINE_SIZE,
 		const uint32 SHARED_PER_SM>
 Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
-		const int64 cycles) {
+		const int64 cycles, dim3& block_size, dim3& threads_per_block) {
 
 	const uint32 v_size_multiple_threads = V_SIZE * number_of_sms; // Each block with one thread using all l1 cache
 
@@ -73,7 +74,7 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 					sizeof(int32) * v_size_multiple_threads));
 
 	//Set each element of V array
-	CacheLine < L1_LINE_SIZE > *V_dev;
+	CacheLine<L1_LINE_SIZE> *V_dev;
 	std::vector<CacheLine<L1_LINE_SIZE> > V_host(v_size_multiple_threads,
 			t_byte);
 
@@ -94,20 +95,12 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 			cudaMemcpyToSymbol(l1_cache_err, &l1_cache_err_host, sizeof(uint64),
 					0));
 
-#if __CUDA_ARCH__ >= 500
-	dim3 block_size(number_of_sms, number_of_sms), threads_per_block(V_SIZE);
-#else
-	dim3 block_size(number_of_sms), threads_per_block(V_SIZE);
-#endif
-	double start = Log::mysecond();
+//	dim3 block_size(number_of_sms, number_of_sms), threads_per_block(V_SIZE);
 
 	test_l1_cache_kernel<int32, V_SIZE, L1_LINE_SIZE, SHARED_PER_SM> <<<
-	block_size, threads_per_block>>>(V_dev, l1_hit_array_device,
+			block_size, threads_per_block>>>(V_dev, l1_hit_array_device,
 			l1_miss_array_device, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
-
-	double end = Log::mysecond();
-	std::cout << "KERNEL DURATION " << end - start << std::endl;
 
 	//Host arrays
 	//Copy back to the host
@@ -161,9 +154,12 @@ Tuple test_l1_cache(const Parameters& parameters) {
 		const uint32 max_shared_mem = 8 * 1024;
 		const uint32 cache_line_size = 128;
 		const uint32 v_size = max_l1_cache / cache_line_size;
+
+		dim3 block_size(parameters.number_of_sms, 1), threads_per_block(v_size);
+
 		return test_l1_cache<v_size, cache_line_size, max_shared_mem>(
 				parameters.number_of_sms, parameters.t_byte,
-				parameters.one_second_cycles);
+				parameters.one_second_cycles, block_size, threads_per_block);
 //		break;
 	}
 	case TITANV: {
@@ -176,9 +172,12 @@ Tuple test_l1_cache(const Parameters& parameters) {
 		const uint32 cache_line_size = 128;
 		const uint32 v_size = max_l1_cache / cache_line_size;
 
+		//For Maxwell and above each SM can execute 4 blocks
+		dim3 block_size(parameters.number_of_sms, 1), threads_per_block(v_size);
+
 		return test_l1_cache<v_size, cache_line_size, max_shared_mem>(
 				parameters.number_of_sms, parameters.t_byte,
-				parameters.one_second_cycles);
+				parameters.one_second_cycles, block_size, threads_per_block);
 //		break;
 	}
 	}
