@@ -11,5 +11,6 @@
 /home/carol/radiation-benchmarks/scripts/apu_commands/MICRO/MUL/MUL_CPU_FLOAT.json
 /home/carol/radiation-benchmarks/scripts/apu_commands/MICRO/MUL/MUL_GPU_INT.json
 /home/carol/radiation-benchmarks/scripts/apu_commands/MICRO/MUL/MUL_GPU_FLOAT.json
-#--------------------------- Micro Cache ---------------------------
-
+#--------------------------- TODO Micro Cache ---------------------------
+#/home/carol/radiation-benchmarks/scripts/apu_commands/MICRO/CACHE/cache_CPU.json
+#/home/carol/radiation-benchmarks/scripts/apu_commands/MICRO/CACHE/cache_GPU.json

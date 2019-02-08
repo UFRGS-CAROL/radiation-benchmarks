@@ -1,6 +1,6 @@
 [
     {
         "killcmd": "killall -9 ADD_GPU_INT", 
-        "exec": "/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/ADD/ADD_GPU_INT -o 700"
+        "exec": "/home/carol/radiation-benchmarks/src/opencl/microbenchmarks/New/GPU/ADD/ADD_GPU_INT -o 700 -r 100000000"
     }
 ]
