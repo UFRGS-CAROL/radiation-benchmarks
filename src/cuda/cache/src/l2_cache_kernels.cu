@@ -23,7 +23,7 @@ __global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines,
 	if (i < V_SIZE) {
 
 		volatile int_t t1 = clock();
-		CacheLine < LINE_SIZE > r = lines[i];
+		CacheLine<LINE_SIZE> r = lines[i];
 		volatile int_t t2 = clock();
 		l2_miss_array[i] = t2 - t1;
 
@@ -32,13 +32,14 @@ __global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 		//last checking
 		t1 = clock();
-		CacheLine < LINE_SIZE > r2 = lines[i];
+		CacheLine<LINE_SIZE> r2 = lines[i];
 		t2 = clock();
 		l2_hit_array[i] = t2 - t1;
 
 		//bitwise operation
-		if (r != t)
-			atomicAdd(&l2_cache_err, 1);
+		for (uint32 it = 0; it < LINE_SIZE; it++)
+			if (r[it] != t)
+				atomicAdd(&l2_cache_err, 1);
 
 		lines[i] = r2;
 	}
@@ -90,7 +91,7 @@ Tuple test_l2_cache(const byte t_byte, const int64 cycles,
 	std::vector<int32> l2_hit_array_host(V_SIZE), l2_miss_array_host(V_SIZE);
 
 	//Set each element of V array
-	CacheLine < L2_LINE_SIZE > *V_dev;
+	CacheLine<L2_LINE_SIZE> *V_dev;
 	std::vector<CacheLine<L2_LINE_SIZE> > V_host(V_SIZE, t_byte);
 
 	//copy to the gpu
@@ -99,7 +100,6 @@ Tuple test_l2_cache(const byte t_byte, const int64 cycles,
 			cudaMemcpy(V_dev, V_host.data(),
 					sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE,
 					cudaMemcpyHostToDevice));
-
 
 	//Set to zero err_check
 	uint64 l2_cache_err_host = 0;

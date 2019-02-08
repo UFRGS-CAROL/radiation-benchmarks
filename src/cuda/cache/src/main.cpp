@@ -12,6 +12,7 @@
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
 #include <unordered_map>
+#include <cstring>
 
 #include "NVMLWrapper.h"
 #include "kernels.h"
@@ -161,29 +162,51 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 		}
 		if (miss < hit) {
 			false_hit++;
-		}else{
+		} else {
 			misses++;
 		}
 	}
 
-	//Checking the errors
-	for (uint32 i = 0; i < t.cache_lines.size(); i++) {
-		auto found_byte = t.cache_lines[i];
+	if (log.test_mode != "REGISTERS") {
+		//Checking the errors
+		for (uint32 i = 0; i < t.cache_lines.size(); i++) {
+			auto found_byte = t.cache_lines[i];
 
-		if (found_byte != gold_byte) {
-			auto cache_line = i / 128; //supposing that all lines have 128 bytes
+			if (found_byte != gold_byte) {
+				auto cache_line = i / 128; //supposing that all lines have 128 bytes
 
-			std::string error_detail = "";
+				std::string error_detail = "";
 
-			error_detail += " i:" + std::to_string(i);
-			error_detail += " cache_line:" + std::to_string(cache_line);
-			error_detail += " e:" + std::to_string(gold_byte);
-			error_detail += " r:" + std::to_string(found_byte);
-			error_detail += " hits: " + std::to_string(hits);
-			error_detail += " false_hit: " + std::to_string(false_hit);
+				error_detail += " i:" + std::to_string(i);
+				error_detail += " cache_line:" + std::to_string(cache_line);
+				error_detail += " e:" + std::to_string(gold_byte);
+				error_detail += " r:" + std::to_string(found_byte);
+				error_detail += " hits: " + std::to_string(hits);
+				error_detail += " false_hit: " + std::to_string(false_hit);
 
-			//log error detail already increment error var
-			log.log_error(error_detail);
+				//log error detail already increment error var
+				log.log_error(error_detail);
+			}
+		}
+	} else {
+		//Checking the errors
+		uint32 reg_data;
+		std::memset(&reg_data, gold_byte, sizeof(uint32));
+		for (uint32 i = 0; i < t.register_file.size(); i++) {
+			auto found_reg = t.register_file[i];
+
+
+			if (found_reg != reg_data) {
+				std::string error_detail = "";
+
+				error_detail += " i:" + std::to_string(i);
+				error_detail += " register:R" + std::to_string(i);
+				error_detail += " e:" + std::to_string(reg_data);
+				error_detail += " r:" + std::to_string(found_reg);
+
+				//log error detail already increment error var
+				log.log_error(error_detail);
+			}
 		}
 	}
 
@@ -222,8 +245,9 @@ int main(int argc, char **argv) {
 	test_parameter.number_of_sms = device_info.multiProcessorCount;
 	test_parameter.shared_memory_size = device_info.sharedMemPerMultiprocessor;
 	test_parameter.l2_size = device_info.l2CacheSize;
-	test_parameter.one_second_cycles = device_info.clockRate * 1000;
 	test_parameter.board_name = device_info.name;
+	test_parameter.registers_per_block = device_info.regsPerBlock;
+	test_parameter.const_memory_per_block = device_info.totalConstMem;
 
 	//Log obj
 	Log log(argc, argv, device_name, test_parameter.shared_memory_size,
@@ -232,6 +256,8 @@ int main(int argc, char **argv) {
 	log.set_info_max(2000);
 
 	test_parameter.log = &log;
+	test_parameter.one_second_cycles = device_info.clockRate * 1000 * log.seconds_sleep;
+
 
 	/**
 	 * SETUP THE NVWL THREAD
@@ -239,7 +265,8 @@ int main(int argc, char **argv) {
 	NVMLWrapper counter_thread(DEVICE_INDEX);
 	std::cout << "Testing " << test_parameter.board_name << " GPU. Using "
 			<< test_parameter.number_of_sms << "SMs, one second cycles "
-			<< test_parameter.one_second_cycles <<  " Memory test: " << log.test_mode << std::endl;
+			<< test_parameter.one_second_cycles << " Memory test: "
+			<< log.test_mode << std::endl;
 
 	for (uint64 iteration = 0; iteration < log.iterations;) {
 		//set memory config
@@ -299,23 +326,21 @@ int main(int argc, char **argv) {
 			double end_cmp = log.mysecond();
 			//update errors
 			if (log.errors) {
-				log.update_error_count();
-
 				auto iteration_data = counter_thread.get_data_from_iteration();
 				for (auto info_line : iteration_data) {
 					log.log_info(info_line);
 				}
-
+				log.update_error_count();
 			}
 
 			std::cout << "Iteration: " << iteration << " Time: "
 					<< end_it - start_it << " Errors: " << log.errors
-					<< " Hits: " <<  std::get<0>(tuple_ret)
-					<< " Misses: " <<  std::get<1>(tuple_ret)
-					<< " False hit: " <<  std::get<2>(tuple_ret)
-					<< " Byte: " << uint32(test_parameter.t_byte)
-					<< " Device Reset Time: " << end_dev_reset - start_dev_reset
-					<< " Comparing Time: " << end_cmp - start_cmp << std::endl;
+					<< " Hits: " << std::get<0>(tuple_ret) << " Misses: "
+					<< std::get<1>(tuple_ret) << " False hit: "
+					<< std::get<2>(tuple_ret) << " Byte: "
+					<< uint32(test_parameter.t_byte) << " Device Reset Time: "
+					<< end_dev_reset - start_dev_reset << " Comparing Time: "
+					<< end_cmp - start_cmp << std::endl;
 
 			iteration++;
 		}

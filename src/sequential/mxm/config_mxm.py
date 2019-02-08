@@ -62,7 +62,7 @@ def config(board, debug):
         # generate
         # ./ matmul. / matmul_input.dat. / matmul_gold.txt 1 1024
         gen = [None] * 5
-        gen[0] = [bin_path + "/" + benchmark_bin + " "]
+        gen[0] = ["sudo " + bin_path + "/" + benchmark_bin + " "]
         gen[1] = [input_file]
         gen[2] = [gold_file]
         gen[3] = [1]  # change for execute

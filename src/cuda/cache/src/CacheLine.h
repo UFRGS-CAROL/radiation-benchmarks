@@ -13,7 +13,7 @@
 
 template<uint32 LINE_SIZE>
 struct
-alignas(LINE_SIZE)
+//alignas(LINE_SIZE)
 CacheLine {
 	volatile byte t[LINE_SIZE]; //byte type
 
@@ -99,14 +99,5 @@ CacheLine {
 	}
 };
 
-#ifdef __NVCC__
-__device__ static void sleep_cuda(int64 clock_count) {
-	int64 start = clock64();
-	int64 clock_offset = 0;
-	while (clock_offset < clock_count) {
-		clock_offset = clock64() - start;
-	}
-}
-#endif
 
 #endif /* CACHELINE_H_ */

@@ -43,9 +43,10 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 		t2 = clock();
 		l1_t_hit[threadIdx.x] = t2 - t1;
 
-		if (r != t) {
-			atomicAdd(&l1_cache_err, 1);
-		}
+		for (uint32 it = 0; it < LINE_SIZE; it++)
+			if (r[it] != t) {
+				atomicAdd(&l1_cache_err, 1);
+			}
 
 		l1_miss_array[blockIdx.x * V_SIZE + threadIdx.x] =
 				l1_t_miss[threadIdx.x];
@@ -98,7 +99,7 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 //	dim3 block_size(number_of_sms, number_of_sms), threads_per_block(V_SIZE);
 
 	test_l1_cache_kernel<int32, V_SIZE, L1_LINE_SIZE, SHARED_PER_SM> <<<
-			block_size, threads_per_block>>>(V_dev, l1_hit_array_device,
+	block_size, threads_per_block>>>(V_dev, l1_hit_array_device,
 			l1_miss_array_device, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
 
