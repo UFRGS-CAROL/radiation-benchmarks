@@ -172,7 +172,7 @@ Tuple test_l2_cache(const Parameters& parameters) {
 //		break;
 	}
 	case TITANV: {
-		const uint32 max_l2_cache = 6144 * 1024; //bytes
+		const uint32 max_l2_cache = 4608 * 1024; //bytes
 		if (max_l2_cache != parameters.l2_size)
 			error(
 					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
