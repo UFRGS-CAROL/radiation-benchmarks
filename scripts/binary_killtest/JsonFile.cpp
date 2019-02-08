@@ -46,16 +46,17 @@ JsonFile::JsonFile(std::string file_path) {
 				std::remove(file_content.begin(), file_content.end(), '['),
 				file_content.end());
 
-		std::vector<std::string> vector_of_applications;
+		std::vector < std::string > vector_of_applications;
 		std::string slice = "";
 		bool ignore_next_comma = false;
 		for (auto ch : file_content) {
 			if (ch == ']')
 				break;
 
-			if (ch == ',' && ignore_next_comma == true)
+			if (ch == ',' && ignore_next_comma == true) {
 				ignore_next_comma = false;
 				continue;
+			}
 
 			slice += ch;
 
