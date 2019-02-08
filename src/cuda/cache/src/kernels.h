@@ -33,7 +33,10 @@ struct Parameters {
 	byte t_byte;
 
 	//register file size
-	uint32 registers_per_sm;
+	uint32 registers_per_block;
+
+	//const memory
+	uint32 const_memory_per_block;
 
 };
 
@@ -42,13 +45,9 @@ struct Tuple {
 	std::vector<int32> misses;
 	std::vector<int32> hits;
 	std::vector<byte> cache_lines;
+	std::vector<uint32> register_file;
 	uint64 errors;
-//	Tuple& operator=(const Tuple& T) {
-//		this->cache_lines = T.cache_lines;
-//		this->misses = T.misses;
-//		this->hits = T.hits;
-//		return *this;
-//	}
+
 };
 
 Tuple test_l1_cache(const Parameters&);

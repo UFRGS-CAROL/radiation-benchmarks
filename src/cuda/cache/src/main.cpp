@@ -161,7 +161,7 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 		}
 		if (miss < hit) {
 			false_hit++;
-		}else{
+		} else {
 			misses++;
 		}
 	}
@@ -224,6 +224,8 @@ int main(int argc, char **argv) {
 	test_parameter.l2_size = device_info.l2CacheSize;
 	test_parameter.one_second_cycles = device_info.clockRate * 1000;
 	test_parameter.board_name = device_info.name;
+	test_parameter.registers_per_block = device_info.regsPerBlock;
+	test_parameter.const_memory_per_block = device_info.totalConstMem;
 
 	//Log obj
 	Log log(argc, argv, device_name, test_parameter.shared_memory_size,
@@ -239,7 +241,8 @@ int main(int argc, char **argv) {
 	NVMLWrapper counter_thread(DEVICE_INDEX);
 	std::cout << "Testing " << test_parameter.board_name << " GPU. Using "
 			<< test_parameter.number_of_sms << "SMs, one second cycles "
-			<< test_parameter.one_second_cycles <<  " Memory test: " << log.test_mode << std::endl;
+			<< test_parameter.one_second_cycles << " Memory test: "
+			<< log.test_mode << std::endl;
 
 	for (uint64 iteration = 0; iteration < log.iterations;) {
 		//set memory config
@@ -310,12 +313,14 @@ int main(int argc, char **argv) {
 
 			std::cout << "Iteration: " << iteration << " Time: "
 					<< end_it - start_it << " Errors: " << log.errors
-					<< " Hits: " <<  std::get<0>(tuple_ret)
-					<< " Misses: " <<  std::get<1>(tuple_ret)
-					<< " False hit: " <<  std::get<2>(tuple_ret)
-					<< " Byte: " << uint32(test_parameter.t_byte)
-					<< " Device Reset Time: " << end_dev_reset - start_dev_reset
-					<< " Comparing Time: " << end_cmp - start_cmp << std::endl;
+					<< " Hits: " << std::get < 0
+					> (tuple_ret) << " Misses: " << std::get < 1
+					> (tuple_ret) << " False hit: " << std::get < 2
+					> (tuple_ret) << " Byte: " << uint32(test_parameter.t_byte)
+							<< " Device Reset Time: "
+							<< end_dev_reset - start_dev_reset
+							<< " Comparing Time: " << end_cmp - start_cmp
+							<< std::endl;
 
 			iteration++;
 		}
