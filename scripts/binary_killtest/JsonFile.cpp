@@ -44,15 +44,13 @@ JsonFile::JsonFile(std::string file_path) {
 		file_content.erase(
 				std::remove(file_content.begin(), file_content.end(), '['),
 				file_content.end());
-		file_content.erase(
-				std::remove(file_content.begin(), file_content.end(), ']'),
-				file_content.end());
 
 		std::vector<std::string> vector_of_applications;
 		std::string slice = "";
-		char char_found = '{';
 		bool ignore_next_comma = false;
 		for (auto ch : file_content) {
+			if (ch == ']')
+				break;
 
 			if (ch == ',' && ignore_next_comma == true)
 				ignore_next_comma = false;
@@ -70,6 +68,7 @@ JsonFile::JsonFile(std::string file_path) {
 		//put it into the vector
 		for (auto command_line : vector_of_applications) {
 			if (command_line.size() > MIN_LINE_SIZE) {
+				std::cout << command_line << std::endl;
 //				command_line.insert(0, "{");
 //				command_line.insert(command_line.size(), "}");
 
