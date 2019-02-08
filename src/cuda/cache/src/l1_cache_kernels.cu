@@ -29,9 +29,8 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
 
-		register CacheLine < LINE_SIZE > r;
 		volatile int_t t1 = clock();
-		r = lines[blockIdx.x * V_SIZE + threadIdx.x];
+		CacheLine < LINE_SIZE > r = lines[blockIdx.x * V_SIZE + threadIdx.x];
 		volatile int_t t2 = clock();
 		l1_t_miss[threadIdx.x] = t2 - t1;
 
@@ -40,11 +39,9 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 		//last checking
 		t1 = clock();
-//		CacheLine < LINE_SIZE > r2 = lines[blockIdx.x * V_SIZE + threadIdx.x];
 		r = lines[blockIdx.x * V_SIZE + threadIdx.x];
 		t2 = clock();
 		l1_t_hit[threadIdx.x] = t2 - t1;
-		lines[blockIdx.x * V_SIZE + threadIdx.x] = r;
 
 		if (r != t) {
 			atomicAdd(&l1_cache_err, 1);
@@ -52,6 +49,8 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 		l1_miss_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_miss[threadIdx.x];
 		l1_hit_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_hit[threadIdx.x];
+		lines[blockIdx.x * V_SIZE + threadIdx.x] = r;
+
 	}
 
 	__syncthreads();
