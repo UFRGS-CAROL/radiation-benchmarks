@@ -123,9 +123,8 @@ int main(int argc, char **argv) {
 			//get the iterator for the lines
 			auto lines_iterator_pair = json_file.get_all_command_lines();
 
-			for (auto it = lines_iterator_pair.first;
-					it != lines_iterator_pair.second; ++it) {
-				radiation::Command tmp((*it).first, (*it).second);
+			for (auto it : lines_iterator_pair) {
+				radiation::Command tmp(it.first, it.second);
 				command_vector.push_back(tmp);
 			}
 		}

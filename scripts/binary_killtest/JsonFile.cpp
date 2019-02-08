@@ -86,10 +86,8 @@ JsonFile::JsonFile(std::string file_path) {
 	}
 }
 
-std::pair<std::vector<std::pair<std::string, std::string> >::iterator,
-		std::vector<std::pair<std::string, std::string> >::iterator> JsonFile::get_all_command_lines() {
-	return std::make_pair(this->all_json_lines.begin(),
-			this->all_json_lines.end());
+std::vector<std::pair<std::string, std::string> > JsonFile::get_all_command_lines() {
+	return this->all_json_lines;
 }
 
 std::ostream& operator<<(std::ostream& stream, const JsonFile& jf) {

@@ -53,8 +53,7 @@ public:
 	 * second: command line
 	 \return the begin and the end iterator for the all lines vector
 	 */
-	std::pair<std::vector<std::pair<std::string, std::string> >::iterator,
-			std::vector<std::pair<std::string, std::string> >::iterator> get_all_command_lines();
+	std::vector<std::pair<std::string, std::string> > get_all_command_lines();
 
 };
 
