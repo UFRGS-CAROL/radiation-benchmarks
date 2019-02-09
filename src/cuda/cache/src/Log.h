@@ -22,10 +22,19 @@ public:
 	std::string test_mode;
 	uint64 errors;
 	uint64 infos;
+	uint32 seconds_sleep;
 
 	Log(int argc, char** argv, std::string device, uint32 shared_mem_size,
 			uint32 l2_size, uint32 number_of_sms, uint32 one_second_cycles) {
+		bool help = this->find_arg(argc, argv, "--help");
+		if (help) {
+			this->usage(argv[0]);
+			exit(0);
+		}
+
 		this->iterations = this->find_int_arg(argc, argv, "--iterations", 1);
+		this->seconds_sleep = this->find_int_arg(argc, argv, "--sleepongpu", 1);
+
 		this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);
 		this->test_mode = this->find_char_arg(argc, argv, "--memtotest", "L1");
 
@@ -48,6 +57,14 @@ public:
 		start_log_file(const_cast<char*>(app.c_str()),
 				const_cast<char*>(test_info.c_str()));
 #endif
+	}
+
+	void usage(std::string binary) {
+			std::cout << "USAGE: " << binary << " [arguments] that are:\n"
+				<< "--iterations <default 1>\n"
+						"--sleepongpu <default 1s>\n--verbose <default disabled>\n"
+						"--memtotest <default L1 - L2,SHARED,REGISTERS,CONSTANT>"
+				<< std::endl;
 	}
 
 	virtual ~Log() {
@@ -155,18 +172,18 @@ public:
 #endif
 	}
 //
-//	static int find_arg(int argc, char* argv[], std::string arg) {
-//		int i;
-//		for (i = 0; i < argc; ++i) {
-//			if (!argv[i])
-//				continue;
-//			if (std::string(argv[i]) == arg) {
-//				del_arg(argc, argv, i);
-//				return 1;
-//			}
-//		}
-//		return 0;
-//	}
+	static int find_arg(int argc, char* argv[], std::string arg) {
+		int i;
+		for (i = 0; i < argc; ++i) {
+			if (!argv[i])
+				continue;
+			if (std::string(argv[i]) == arg) {
+				del_arg(argc, argv, i);
+				return 1;
+			}
+		}
+		return 0;
+	}
 //
 //	static float find_float_arg(int argc, char **argv, char *arg, float def) {
 //		int i;

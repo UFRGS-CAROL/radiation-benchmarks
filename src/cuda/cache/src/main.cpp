@@ -245,7 +245,6 @@ int main(int argc, char **argv) {
 	test_parameter.number_of_sms = device_info.multiProcessorCount;
 	test_parameter.shared_memory_size = device_info.sharedMemPerMultiprocessor;
 	test_parameter.l2_size = device_info.l2CacheSize;
-	test_parameter.one_second_cycles = device_info.clockRate * 1000;
 	test_parameter.board_name = device_info.name;
 	test_parameter.registers_per_block = device_info.regsPerBlock;
 	test_parameter.const_memory_per_block = device_info.totalConstMem;
@@ -257,6 +256,8 @@ int main(int argc, char **argv) {
 	log.set_info_max(2000);
 
 	test_parameter.log = &log;
+	test_parameter.one_second_cycles = device_info.clockRate * 1000 * log.seconds_sleep;
+
 
 	/**
 	 * SETUP THE NVWL THREAD
