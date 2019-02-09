@@ -1,3 +1,4 @@
+
 /*
  * l2_cache_kernels.cu
  *
@@ -69,6 +70,10 @@ void clear_cache(uint32 n) {
 
 	uint32 thread_number = std::ceil(float(n) / (BLOCK_SIZE * BLOCK_SIZE));
 	uint32 block_number = std::ceil(n / float(thread_number));
+	if(thread_number > 1024)
+		thread_number = 1024;
+	if(block_number > 1024)
+		block_number = 1024;
 
 	clear_cache_kenel<<<block_number, thread_number>>>(random_array_dev);
 	cuda_check(cudaDeviceSynchronize());
