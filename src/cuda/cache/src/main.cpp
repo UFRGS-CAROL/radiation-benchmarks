@@ -222,6 +222,8 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 
 int main(int argc, char **argv) {
 	std::unordered_map<std::string, Board> devices_name = {
+	//Tesla K20
+			{ "Tesla K20c", K20},
 	//Tesla K40
 			{ "Tesla K40c", K40 },
 			// Titan V

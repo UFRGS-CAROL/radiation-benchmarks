@@ -19,7 +19,7 @@
 #define BLOCK_SIZE 32
 
 enum Board {
-	K40, TEGRAX2, TITANV, BOARD_COUNT,
+	K20, K40, TEGRAX2, TITANV, BOARD_COUNT,
 };
 
 struct Parameters {
