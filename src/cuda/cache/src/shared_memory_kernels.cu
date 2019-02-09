@@ -60,14 +60,9 @@ Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte,
 
 	//Set the number of threads
 	//These archs support two blocks per SM with 48KB of shared memory
-//#if __CUDA_ARCH__ >= 500
-//	dim3 block_size(number_of_sms, number_of_sms), threads_per_block(V_SIZE);
-//#else
-//	dim3 block_size(number_of_sms), threads_per_block(V_SIZE);
-//#endif
-
+	std::cout << block_size.x << " " << threads_per_block.x << " " << SHARED_MEMORY_SIZE << " " << V_SIZE << std::endl;
 	test_shared_memory_kernel<V_SIZE, SHARED_LINE_SIZE> <<<block_size,
-	threads_per_block, SHARED_MEMORY_SIZE>>>(V_dev, cycles, t_byte);
+	threads_per_block>>>(V_dev, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
 
 	cuda_check(
@@ -122,14 +117,14 @@ Tuple test_shared_memory(const Parameters& parameters) {
 	case TITANV: {
 		const uint32 max_shared_mem = 48 * 1024;
 
-		if (max_shared_mem != parameters.shared_memory_size)
+		if (max_shared_mem * 2 != parameters.shared_memory_size )
 			error(
 					"SHARED DEFAULT SIZE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
 							+ std::to_string(parameters.shared_memory_size));
 
 		const uint32 cache_line_size = 128;
 		const uint32 v_size = max_shared_mem / cache_line_size;
-		dim3 block_size(parameters.number_of_sms, 1), threads_per_block(v_size);
+		dim3 block_size(parameters.number_of_sms, 4), threads_per_block(v_size);
 
 		return test_shared_memory<v_size, cache_line_size, max_shared_mem>(
 				parameters.number_of_sms, parameters.t_byte,

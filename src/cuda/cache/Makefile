@@ -28,7 +28,7 @@ endif
 ifeq ($(DISABLEL1CACHE), 1)
 NVCCFLAGS+= -Xptxas -dlcm=cg
 CXXFLAGS+= -DL2TEST
-EXEC+=cudaCacheTestL2
+EXEC=cudaCacheTestL2
 endif
 
 ifeq ($(LOGS), 1)
@@ -59,7 +59,7 @@ mkdir:
 	mkdir -p $(OBJDIR)
 
 clean:
-	rm -f $(OBJDIR)* $(EXEC)
+	rm -f $(OBJDIR)* $(EXEC) cudaCacheTestL2
 	
 	
 test:
