@@ -13,7 +13,7 @@ SIZES=[1024]
 ITERATIONS=10000
 SIMTIME=[1000]
 STREAMS=10
-PRECISIONS = ["double", "single", "half"]
+PRECISIONS = ["double"] #, "single", "half"]
 
 def config(board, arith_type, debug):
     original_hotspot = "hotspot"
@@ -61,7 +61,7 @@ def config(board, arith_type, debug):
             gen[2] = ['-generate ']
             gen[3] = ['-input_temp=' + inputFile + "temp_" +  str(i)]
             gen[4] = ['-input_power=' + inputFile + "power_" + str(i)]  # change for execute
-            gen[5] = ['-gold=' + inputFile + "gold_" + str(i) + "_" + arith_type + "_"  + str(s)]
+            gen[5] = ['-gold_temp=' + inputFile + "gold_" + str(i) + "_" + arith_type + "_"  + str(s)]
             gen[6] = ['-sim_time=' + str(s)]
             gen[7] = ['-iterations=1']
             gen[8] = ['-streams=' + str(STREAMS)]
