@@ -28,6 +28,7 @@ endif
 ifeq ($(DISABLEL1CACHE), 1)
 NVCCFLAGS+= -Xptxas -dlcm=cg
 CXXFLAGS+= -DL2TEST
+EXEC+=cudaCacheTestL2
 endif
 
 ifeq ($(LOGS), 1)
