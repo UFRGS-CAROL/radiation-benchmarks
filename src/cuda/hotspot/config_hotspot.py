@@ -13,7 +13,7 @@ SIZES=[1024]
 ITERATIONS=10000
 SIMTIME=[1000]
 STREAMS=10
-PRECISIONS = ["double"] #, "single", "half"]
+PRECISIONS = ["double", "single", "half"]
 
 def config(board, arith_type, debug):
     original_hotspot = "hotspot"

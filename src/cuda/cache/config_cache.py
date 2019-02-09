@@ -9,7 +9,7 @@ import shutil
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-TYPES = ["L1", "L2", "SHARED", "REGISTERS"] #, "CONSTANT"]
+TYPES = ["L1", "SHARED", "REGISTERS"] #, "CONSTANT"]
 ITERATIONS = 100000
 SLEEPONGPU = 1
 
@@ -45,10 +45,8 @@ def config(board, debug):
 
     # gen only for max size, defined on cuda_trip_mxm.cu
     for i in TYPES:
-        cache_prefix = "L2" if "L2" == i else ""
         exe = [None] * 5
-        exe[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
-                  bin_path + "/" + benchmark_bin + cache_prefix + " "]
+        exe[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
         exe[1] = ['--iterations {}'.format(ITERATIONS)]
         exe[2] = ['--sleepongpu {}'.format(SLEEPONGPU)]
         exe[3] = ['--memtotest ' + i]
@@ -57,6 +55,19 @@ def config(board, debug):
         execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)  
+
+ 
+    benchmark_bin += "L2"
+    exe = [None] * 5
+    exe[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
+    exe[1] = ['--iterations {}'.format(ITERATIONS)]
+    exe[2] = ['--sleepongpu {}'.format(SLEEPONGPU)]
+    exe[3] = ['--memtotest ' + i]
+    exe[4] = ['--verbose 1']
+
+    execute = [(' '.join(str(r) for v in exe for r in v))]
+    execute_and_write_json_to_file(execute, [], install_dir, benchmark_bin, debug=debug)  
+
 
 if __name__ == "__main__":
     debug_mode = False
