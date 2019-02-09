@@ -16,15 +16,15 @@ __global__ void test_read_only_kernel(
 		const uint32 * __restrict__ constant_mem_array, uint32 *output_array, int64 sleep_cycles, uint32 t_int) {
 
 	__shared__ uint32 max_shared_mem[SHARED_PER_SM];
+	uint32 tx = blockIdx.x * READ_ONLY_MEM_SIZE + threadIdx.x + threadIdx.y;
 
-	if (threadIdx.x < READ_ONLY_MEM_SIZE && blockIdx.y == 0) {
 
-		uint32 tx = blockIdx.x * READ_ONLY_MEM_SIZE + threadIdx.x;
+	if (tx < READ_ONLY_MEM_SIZE) {
 
 		//ldg is a direct load to const memory
 		//first round
 		const volatile uint32 first_round = __ldg(&constant_mem_array[tx]);
-		max_shared_mem[tx] = first_round;
+		max_shared_mem[threadIdx.x] = first_round;
 
 		sleep_cuda(sleep_cycles);
 
@@ -100,16 +100,16 @@ Tuple test_read_only_cache(const Parameters& parameters) {
 	switch (parameters.device) {
 	case K20:
 	case K40: {
-		const uint32 max_constant_cache = 32 * 1024; //bytes
+		const uint32 max_constant_cache = 32 * 1024 / sizeof(uint32); //bytes
 		const uint32 max_shared_mem = 8 * 1024;
 		const uint32 v_size = max_constant_cache;
 
-		if (max_constant_cache != parameters.const_memory_per_block)
+		if (max_constant_cache * sizeof(uint32) != parameters.const_memory_per_block)
 					error(
 							"CONST DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
 									+ std::to_string(parameters.const_memory_per_block));
 
-		dim3 block_size(parameters.number_of_sms, 1), threads_per_block(v_size);
+		dim3 block_size(parameters.number_of_sms), threads_per_block(BLOCK_SIZE * BLOCK_SIZE, v_size / (BLOCK_SIZE * BLOCK_SIZE));
 
 		return test_read_only_cache<v_size, max_shared_mem>(
 				parameters.number_of_sms, const_data, parameters.one_second_cycles,
@@ -117,18 +117,19 @@ Tuple test_read_only_cache(const Parameters& parameters) {
 //		break;
 	}
 	case TITANV: {
-		const uint32 max_constant_cache = 64 * 1024; //bytes
+		const uint32 max_constant_cache = 64 * 1024 / sizeof(uint32); //bytes
 		const uint32 max_shared_mem = 8 * 1024;
 		const uint32 v_size = max_constant_cache;
 
-		if (max_constant_cache != parameters.const_memory_per_block)
+		if (max_constant_cache * sizeof(uint32) != parameters.const_memory_per_block)
 					error(
 							"CONST DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
 									+ std::to_string(parameters.const_memory_per_block));
 
 		//For Maxwell and above each SM can execute 4 blocks
-		dim3 block_size(parameters.number_of_sms, 1), threads_per_block(v_size);
-
+		dim3 block_size(parameters.number_of_sms), threads_per_block(BLOCK_SIZE * BLOCK_SIZE, v_size / (BLOCK_SIZE * BLOCK_SIZE));
+		std::cout << block_size.x << std::endl;
+		std::cout << threads_per_block.x << " " << threads_per_block.y <<  std::endl;
 		return test_read_only_cache<v_size, max_shared_mem>(
 				parameters.number_of_sms, const_data, parameters.one_second_cycles,
 				block_size, threads_per_block);
