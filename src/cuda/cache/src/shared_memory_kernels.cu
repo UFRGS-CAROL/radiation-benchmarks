@@ -27,8 +27,9 @@ __global__ void test_shared_memory_kernel(CacheLine<LINE_SIZE> *lines,
 
 		register CacheLine<LINE_SIZE> r = V[threadIdx.x];
 		//bitwise operation
-		if (r != t)
-			atomicAdd(&shared_mem_err, 1);
+		for (uint32 it = 0; it < LINE_SIZE; it++)
+			if (r[it] != t)
+				atomicAdd(&shared_mem_err, 1);
 
 		lines[blockIdx.x * V_SIZE + threadIdx.x] = r;
 
@@ -66,7 +67,7 @@ Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte,
 //#endif
 
 	test_shared_memory_kernel<V_SIZE, SHARED_LINE_SIZE> <<<block_size,
-			threads_per_block, SHARED_MEMORY_SIZE>>>(V_dev, cycles, t_byte);
+	threads_per_block, SHARED_MEMORY_SIZE>>>(V_dev, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
 
 	cuda_check(
