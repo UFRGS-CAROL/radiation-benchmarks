@@ -19,7 +19,7 @@ timestampMaxDiff = 30 # Time in seconds to wait for the timestamp update
 
 maxKill = 5 # Max number of kills allowed
 
-timeWindowCommands = 1 * 60 * 60 # How long each command will execute, time window in seconds
+timeWindowCommand = 10 # * 60 * 60 # How long each command will execute, time window in seconds
 
 # Log messages adding timestamp before the message
 def logMsg(msg):
@@ -168,7 +168,7 @@ try:
                         flagDiffSignal = True
 	
                 # Execute each command for 5 min only
-                if (now - execStart) > (60 * 3):
+                if (now - execStart) > timeWindowCommand:
                     killall()
                     logMsg("maxDiff from file: "+str(maxDiff))
                     logMsg("maxDiff from signal: "+str(maxDiffSignal))
