@@ -56,7 +56,7 @@ def config(board, debug):
         # ./fft 127.0.0.1 999 ./input.txt ./gold.txt 262144 8 1
 
         gen = [None] * 5
-        gen[0] = [bin_path + "/" + benchmark_bin + " "]
+        gen[0] = ["sudo " + bin_path + "/" + benchmark_bin + " "]
         gen[1] = ["127.0.0.1", "999"]
         gen[2] = [data_path + "/fft_input_{}_{}".format(size, wave)]
         gen[3] = [data_path + "/fft_gold_{}_{}".format(size, wave)]
