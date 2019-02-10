@@ -58,7 +58,7 @@ def config(board, debug):
         # generate
         # ./qsort 2000000 0 ./quicksort_gold_2000000.txt ./quicksort_input_2000000.txt
         gen = [None] * 5
-        gen[0] = [bin_path + "/" + benchmark_bin + " "]
+        gen[0] = ["sudo " + bin_path + "/" + benchmark_bin + " "]
         gen[1] = [i]
         gen[2] = [1]
         gen[3] = [gold_file]  # change for execute

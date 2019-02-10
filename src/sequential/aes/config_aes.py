@@ -51,7 +51,7 @@ def config(board, debug):
 
     for i in MODES:
         exe = [None] * 6
-        exe[0] = [bin_path + "/" + benchmark_bin + " "]
+        exe[0] = ["sudo " + bin_path + "/" + benchmark_bin + " "]
         exe[1] = ["127.0.0.1", "999"]
         if i == 'E':
             exe[2] = ["{}/input_large.asc".format(data_path)]
