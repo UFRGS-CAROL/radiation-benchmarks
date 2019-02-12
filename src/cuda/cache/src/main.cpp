@@ -148,6 +148,116 @@ void set_cache_config(const std::string memory) {
 	}
 }
 
+
+template<typename T, MEM MEMTYPE>
+std::string error_detail(uint32 i, T e, T r, uint32 hits = 0, uint32 false_hit = 0){
+		switch (MEMTYPE) {
+			case (RF): {
+				std::string error_detail = "";
+				error_detail += " i:" + std::to_string(i);
+				error_detail += " register:R" + std::to_string(i);
+				error_detail += " e:" + std::to_string(e);
+				error_detail += " r:" + std::to_string(r);
+				return error_detail;
+			}
+			case (L1):
+			case (L2):
+			case (SHARED): {
+				std::string error_detail = "";
+				error_detail += " i:" + std::to_string(i);
+				error_detail += " cache_line:" + std::to_string(i / 128);
+				error_detail += " e:" + std::to_string(e);
+				error_detail += " r:" + std::to_string(r);
+				error_detail += " hits: " + std::to_string(hits);
+				error_detail += " false_hit: " + std::to_string(false_hit);
+				return error_detail;
+			}
+		}
+	return "";
+}
+
+template<typename T>
+std::string info_detail(uint32 i, T r1, T r2, T r3, T gold){
+	std::string info_detail = "m: ["+std::to_string(i)+"], r1: "+std::to_string(r1)+", r2: "+ std::to_string(r2)+", r3: "+std::to_string(r3) + ", e: " + std::to_string(gold);
+	return info_detail;
+}
+
+// Returns true if no errors are found. False if otherwise.
+// Set votedOutput pointer to retrieve the voted matrix
+template<typename T, MEM MEMTYPE>
+bool check_output_errors(const std::vector<T>& v1, const std::vector<T>& v2, const std::vector<T>& v3, T valGold, Log& log, uint32 hits, uint32 false_hit,  bool verbose) {
+	
+#pragma omp parallel for shared(host_errors)
+	for (uint32 i = 0; i < v1.size(); i++) {
+		bool checkFlag = true;
+		auto valOutput0 = v1[i];
+		auto valOutput1 = v2[i];
+		auto valOutput2 = v3[i];
+		auto valOutput = valOutput0;
+		if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
+#pragma omp critical
+			{
+				std::string infdet(info_detail(i, valOutput0, valOutput1, valOutput2, valGold)); 
+				log.log_info(infdet);
+			}
+			if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2) && (valOutput0 != valOutput2)) {
+				// All 3 values diverge
+				if (valOutput0 == valGold) {
+					valOutput = valOutput0;
+				} else if (valOutput1 == valGold) {
+					valOutput = valOutput1;
+				} else if (valOutput2 == valGold) {
+					valOutput = valOutput2;
+				} else {
+					// NO VALUE MATCHES THE GOLD AND ALL 3 DIVERGE!
+					checkFlag = false;
+#pragma omp critical
+					{
+						std::string inf(info_detail(i, valOutput0, valOutput1, valOutput2, valGold));
+						log.log_error(inf);
+					}
+				}
+			} else if (valOutput1 == valOutput2) {
+				// Only value 0 diverge
+				valOutput = valOutput1;
+			} else if (valOutput0 == valOutput2) {
+				// Only value 1 diverge
+				valOutput = valOutput0;
+			} else if (valOutput0 == valOutput1) {
+				// Only value 2 diverge
+				valOutput = valOutput0;
+			}
+		}
+
+		if (valGold != valOutput) {
+			if (checkFlag) {
+#pragma omp critical
+				{
+					
+					std::string errdet = error_detail<T, MEMTYPE>(i, valGold, valOutput, hits, false_hit);
+					if (verbose && (log.errors < 10))
+						std::cout << errdet << std::endl;
+
+					log.log_error(errdet);
+				}
+			}
+		}
+	}
+
+
+	if (log.errors != 0 ) {
+		printf("#");
+		log.update_error_count();
+	}
+	if (log.infos != 0){
+		printf("M");
+		log.update_info_count();
+	}
+	return log.errors == 0 || log.infos == 0;
+}
+
+
+
 std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 		const byte gold_byte) {
 	//Checking the misses
@@ -167,7 +277,22 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 		}
 	}
 
-	if (log.test_mode != "REGISTERS") {
+	if (log.test_mode == "REGISTERS"){
+		uint32 reg_data;
+		std::memset(&reg_data, gold_byte, sizeof(uint32));
+		//bool check_output_errors( T valGold, Log& log, uint32 hits, uint32 false_hit,  bool verbose = false) {
+
+		check_output_errors<uint32, RF>(t.register_file, t.register_file2, t.register_file3, reg_data, log, hits, false_hit, true) ;
+	} else if (log.test_mode == "L1"){
+		check_output_errors<byte, L1>(t.cache_lines, t.cache_lines2, t.cache_lines3, gold_byte, log, hits, false_hit, true);
+		
+	} else if (log.test_mode == "L2"){
+		error("NOT IMPLEMENTED");
+	} else if (log.test_mode == "SHARED"){
+		error("NOT IMPLEMENTED");
+	}
+
+	/*if (log.test_mode != "REGISTERS") {
 		//Checking the errors
 		for (uint32 i = 0; i < t.cache_lines.size(); i++) {
 			auto found_byte = t.cache_lines[i];
@@ -175,14 +300,7 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 			if (found_byte != gold_byte) {
 				auto cache_line = i / 128; //supposing that all lines have 128 bytes
 
-				std::string error_detail = "";
-
-				error_detail += " i:" + std::to_string(i);
-				error_detail += " cache_line:" + std::to_string(cache_line);
-				error_detail += " e:" + std::to_string(gold_byte);
-				error_detail += " r:" + std::to_string(found_byte);
-				error_detail += " hits: " + std::to_string(hits);
-				error_detail += " false_hit: " + std::to_string(false_hit);
+				std::string error_detail = error_detail<byte>(log);
 
 				//log error detail already increment error var
 				log.log_error(error_detail);
@@ -197,18 +315,12 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 
 
 			if (found_reg != reg_data) {
-				std::string error_detail = "";
-
-				error_detail += " i:" + std::to_string(i);
-				error_detail += " register:R" + std::to_string(i);
-				error_detail += " e:" + std::to_string(reg_data);
-				error_detail += " r:" + std::to_string(found_reg);
 
 				//log error detail already increment error var
 				log.log_error(error_detail);
 			}
 		}
-	}
+	}*/
 
 	if (log.errors != t.errors) {
 		std::string error_detail = "errors on the data path. expected:"
@@ -303,7 +415,8 @@ int main(int argc, char **argv) {
 			}
 			//Test Constant
 			if (log.test_mode == "CONSTANT") {
-				ret = test_read_only_cache(test_parameter);
+				//ret = test_read_only_cache(test_parameter);
+				error("NOT IMPLEMENTED FUNCTION");
 			}
 			//Test Registers
 			if (log.test_mode == "REGISTERS") {

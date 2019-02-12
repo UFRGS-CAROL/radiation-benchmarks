@@ -17,45 +17,63 @@ Tuple test_register_file(const uint32 reg_data, const int64 cycles,
 
 	//Allocate an array of the size of all register bank
 	uint32 out_size = block_size.x * block_size.y * threads_per_block.x * RFSIZE;
-	uint32 *output_dev;
+	uint32 *output_dev1;
+    uint32 *output_dev2;
+    uint32 *output_dev3;
 
 	//error variable
-	uint64 register_file_errors_host = 0;
-	cuda_check(
-			cudaMemcpyToSymbol(register_file_errors, &register_file_errors_host,
-					sizeof(uint64), 0));
+	uint64 register_file_errors_host1 = 0;
+	uint64 register_file_errors_host2 = 0;
+	uint64 register_file_errors_host3 = 0;
+
+	cuda_check(cudaMemcpyToSymbol(register_file_errors1, &register_file_errors_host1, sizeof(uint64), 0));
+    cuda_check(cudaMemcpyToSymbol(register_file_errors2, &register_file_errors_host2, sizeof(uint64), 0));
+    cuda_check(cudaMemcpyToSymbol(register_file_errors3, &register_file_errors_host3, sizeof(uint64), 0));
 
 	//byte size
 	const uint32 byte_size = sizeof(uint32) * out_size;
 
 	//malloc on device
-	cuda_check(cudaMalloc(&output_dev, byte_size));
+	cuda_check(cudaMalloc(&output_dev1, byte_size));
+	cuda_check(cudaMalloc(&output_dev2, byte_size));
+	cuda_check(cudaMalloc(&output_dev3, byte_size));
 
 	//malloc on host
-	std::vector<uint32> output_host(out_size, reg_data);
+	std::vector<uint32> output_host1(out_size, reg_data);
+    std::vector<uint32> output_host2(out_size, reg_data);
+    std::vector<uint32> output_host3(out_size, reg_data);
 
-	cuda_check(
-			cudaMemcpy(output_dev, output_host.data(), byte_size,
-					cudaMemcpyHostToDevice));
+	cuda_check(cudaMemcpy(output_dev1, output_host1.data(), byte_size, cudaMemcpyHostToDevice));
+	cuda_check(cudaMemcpy(output_dev2, output_host2.data(), byte_size, cudaMemcpyHostToDevice));
+	cuda_check(cudaMemcpy(output_dev3, output_host3.data(), byte_size, cudaMemcpyHostToDevice));
+
+
 	double start = Log::mysecond();
-	test_register_file_kernel<<<block_size, threads_per_block>>>(output_dev, reg_data, cycles);
+	test_register_file_kernel<<<block_size, threads_per_block>>>(output_dev1, output_dev2, output_dev3, reg_data, cycles);
 	cuda_check(cudaDeviceSynchronize());
 
 	//Copy data back
-	cuda_check(
-			cudaMemcpy(output_host.data(), output_dev, byte_size,
-					cudaMemcpyDeviceToHost));
+	cuda_check(cudaMemcpy(output_host1.data(), output_dev1, byte_size, cudaMemcpyDeviceToHost));
+    cuda_check(cudaMemcpy(output_host2.data(), output_dev2, byte_size, cudaMemcpyDeviceToHost));
+    cuda_check(cudaMemcpy(output_host3.data(), output_dev3, byte_size, cudaMemcpyDeviceToHost));
 
 	//Copy error var
-	cuda_check(
-			cudaMemcpyFromSymbol(&register_file_errors_host,
-					register_file_errors, sizeof(uint64), 0));
+	cuda_check(cudaMemcpyFromSymbol(&register_file_errors_host1, register_file_errors1, sizeof(uint64), 0));
+    cuda_check(cudaMemcpyFromSymbol(&register_file_errors_host2, register_file_errors2, sizeof(uint64), 0));
+    cuda_check(cudaMemcpyFromSymbol(&register_file_errors_host3, register_file_errors3, sizeof(uint64), 0));
 
-	cuda_check(cudaFree(output_dev));
+	cuda_check(cudaFree(output_dev1));
+    cuda_check(cudaFree(output_dev2));
+    cuda_check(cudaFree(output_dev3));
 
 	Tuple t;
-	t.register_file = std::move(output_host);
-	t.errors = register_file_errors_host;
+	t.register_file = std::move(output_host1);
+	t.register_file2 = std::move(output_host2);
+	t.register_file3 = std::move(output_host3);
+	t.errors = register_file_errors_host1;
+	t.errors2 = register_file_errors_host2;
+	t.errors3 = register_file_errors_host3;
+
 	return t;
 
 }

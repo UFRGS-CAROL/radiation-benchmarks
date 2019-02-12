@@ -22,6 +22,10 @@ enum Board {
 	K20, K40, TEGRAX2, TITANV, BOARD_COUNT,
 };
 
+enum MEM {
+		L1, L2, SHARED, RF
+};
+
 struct Parameters {
 	uint32 number_of_sms;
 	Board device;
@@ -45,8 +49,15 @@ struct Tuple {
 	std::vector<int32> misses;
 	std::vector<int32> hits;
 	std::vector<byte> cache_lines;
+	std::vector<byte> cache_lines2;
+	std::vector<byte> cache_lines3;
+	
 	std::vector<uint32> register_file;
+	std::vector<uint32> register_file2;
+	std::vector<uint32> register_file3;
 	uint64 errors;
+	uint64 errors2;
+	uint64 errors3;
 
 };
 

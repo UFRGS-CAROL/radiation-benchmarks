@@ -16,6 +16,8 @@ static std::mutex mutex_lock;
 static std::atomic<bool> is_locked;
 static bool thread_running = true;
 
+#define SLEEP_NVML 500
+
 void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device =
 		0) {
 	if (NVML_SUCCESS != result) {
@@ -149,7 +151,7 @@ void NVMLWrapper::data_colector(nvmlDevice_t* device,
 			it_data->push_back(output);
 		}
 		mutex_lock.unlock();
-		std::this_thread::sleep_for(std::chrono::microseconds(100));
+		std::this_thread::sleep_for(std::chrono::microseconds(SLEEP_NVML));
 	}
 }
 

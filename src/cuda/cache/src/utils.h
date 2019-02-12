@@ -12,6 +12,10 @@
 #include <string> // error message
 #include <iostream>
 
+#include <vector>
+
+#define DEFAULT_INDEX -1;
+
 
 typedef unsigned char byte;
 typedef unsigned int uint32;

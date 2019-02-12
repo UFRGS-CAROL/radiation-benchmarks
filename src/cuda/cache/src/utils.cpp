@@ -10,6 +10,9 @@
 #include <stdexcept>
 #include <chrono>
 #include <thread>
+#include <vector>
+
+
 
 /**
  * Check the return value of the CUDA runtime API call and exit
@@ -51,4 +54,8 @@ size_t get_time_since_epoch() {
 	std::time_t result = std::time(nullptr);
 	return size_t(result);
 }
+
+
+
+
 
