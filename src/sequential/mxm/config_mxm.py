@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [512, 1024]
+SIZES = [500] #[512, 1024]
 
 
 def config(board, debug):
@@ -53,25 +53,29 @@ def config(board, debug):
 
     # gen only for max size, defined on cuda_trip_mxm.cu
     for i in SIZES:
-        input_file = "{}/matmul_input_{}.txt".format(data_path, i)
+        input_filea = "{}/matmul_input_a_{}.txt".format(data_path, i)
+        input_fileb = "{}/matmul_input_b_{}.txt".format(data_path, i)
         gold_file = "{}/matmul_gold_{}.txt".format(data_path, i)
 
         # ./ input_matmul.py. / matmul_input.dat     1024
-        generate.append('./input_matmul.py  {} {}'.format(input_file, i))
+        #generate.append('./input_matmul.py  {} {}'.format(input_file, i))
 
         # generate
-        # ./ matmul. / matmul_input.dat. / matmul_gold.txt 1 1024
-        gen = [None] * 5
-        gen[0] = ["sudo " + bin_path + "/" + benchmark_bin + " "]
-        gen[1] = [input_file]
-        gen[2] = [gold_file]
-        gen[3] = [1]  # change for execute
-        gen[4] = [i]
+        # /home/carol/radiation-benchmarks/bin/matmul 127.0.0.1 9999 /home/carol/radiation-benchmarks/data/mxm/matmul_inputa_500.bin  /home/carol/radiation-benchmarks/data/mxm/matmul_inputb_500.bin /home/carol/radiation-benchmarks/data/mxm/matmul_gold_500.bin 1 500
+
+        gen = [None] * 7
+        gen[0] = [" " + bin_path + "/" + benchmark_bin + " "]
+        gen[1] = ["127.0.0.1 9999"]
+        gen[2] = [input_filea]
+        gen[3] = [input_fileb]
+        gen[4] = [gold_file]
+        gen[5] = [1]  # change for execute
+        gen[6] = [i]
 
         # change mode and iterations for exe
         # ./ matmul. / matmul_input.dat. / matmul_gold.txt 0 1024
         exe = copy.deepcopy(gen)
-        exe[3] = [0]
+        exe[5] = [0]
 
         generate.append(' '.join(str(r) for v in gen for r in v))
         execute.append(' '.join(str(r) for v in exe for r in v))

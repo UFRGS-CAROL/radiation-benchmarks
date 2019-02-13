@@ -32,8 +32,14 @@ ifeq ($(ARCH), x86)
 CC=gcc
 endif
 
-DEFAULTGOLD=./matmul_input_$(MATRIXSIZE).txt
-DEFAULTINPUT=./matmul_gold_$(MATRIXSIZE).txt
+RADIATIONPATH=/home/carol/radiation-benchmarks
+DEFAULTGOLD=$(RADIATIONPATH)/data/mxm/matmul_gold_$(MATRIXSIZE).bin
+DEFAULTINPUTA=$(RADIATIONPATH)/data/mxm/matmul_inputa_$(MATRIXSIZE).bin
+DEFAULTINPUTB=$(RADIATIONPATH)/data/mxm/matmul_inputb_$(MATRIXSIZE).bin
+BINARYDEFAULT=$(RADIATIONPATH)/bin/$(EXEC)
+
+DEFAULTIP=127.0.0.1
+DEFAULTPORT=9999
 
 all: clean $(EXEC)
 
@@ -43,13 +49,13 @@ $(EXEC): matmul.c
 clean:
 	rm -f $(EXEC) $(DEFAULTGOLD) $(DEFAULTINPUT)
 
-geninput: $(EXEC)
-	./input_matmul.py $(DEFAULTINPUT) $(MATRIXSIZE)
 
 
 generate: $(EXEC)
-	./input_matmul.py $(DEFAULTINPUT) $(MATRIXSIZE)
-	./$(EXEC) $(DEFAULTINPUT) $(DEFAULTGOLD) 1 $(MATRIXSIZE)
+	$(BINARYDEFAULT) $(DEFAULTIP) $(DEFAULTPORT) $(DEFAULTINPUTA)  $(DEFAULTINPUTB) $(DEFAULTGOLD) 1 $(MATRIXSIZE)
 
 test: $(EXEC) generate
-	./$(EXEC) $(DEFAULTINPUT) $(DEFAULTGOLD) 0 $(MATRIXSIZE)
+	$(BINARYDEFAULT) $(DEFAULTIP) $(DEFAULTPORT) $(DEFAULTINPUTA)  $(DEFAULTINPUTB) $(DEFAULTGOLD) 0 $(MATRIXSIZE)
+
+mkdir:
+	mkdir -p $(RADIATIONPATH)/data/mxm
