@@ -19,6 +19,7 @@ simpleSumINT(__global T* A,
 
     double value = A[tx];
     for (int k = 0; k < n/10; ++k) {
+
         value *= B[tx];
         value *= B[tx];
         value *= B[tx];
@@ -47,6 +48,18 @@ simpleSumFLOAT(__global T* A,
 
     double value = A[tx];
     for (int k = 0; k < n/10; ++k) {
+	value *= B[tx];
+	value *=6.8212105343475049e-14;
+        value *= B[tx];
+        value *=6.8212105343475049e-14;
+        value *= B[tx];
+        value *=6.8212105343475049e-14;
+        value *= B[tx];
+        value *=6.8212105343475049e-14;
+        value *= B[tx];
+        value *=6.8212105343475049e-14;
+
+/*
         value *= B[tx];
         value *= B[tx];
         value *= B[tx];
@@ -58,7 +71,8 @@ simpleSumFLOAT(__global T* A,
         value *= B[tx];
         value *= B[tx];
         value /= 25329516.211914063;
-    }
+*/  
+  }
     C[tx] = value;
 }
 

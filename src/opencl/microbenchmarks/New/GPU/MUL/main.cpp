@@ -121,9 +121,9 @@ int main(int argc, char **argv) {
     char test_info[300];
     snprintf(test_info, 300, "-i %d -g %d -o %d\n ",p.n_work_items,p.n_work_groups,p.op);
 #ifdef INT
-    start_log_file("MicroBenchmark_ADD_INT_GPU", test_info);
+    start_log_file("MicroBenchmark_MUL_INT_GPU", test_info);
 #elif FLOAT
-    start_log_file("MicroBenchmark_ADD_FLOAT_GPU", test_info);
+    start_log_file("MicroBenchmark_MUL_FLOAT_GPU", test_info);
 #endif
 
 #endif
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
 #elif FLOAT
     for(i=0;i<size;i++){
         A[i] = 1.0;
-        B[i] = 5.5;
+        B[i] =  1.4660155E+13;
         C[i] = 0.0;         
      }
 #endif
@@ -224,8 +224,8 @@ int main(int argc, char **argv) {
             if( C[i] != gold)
 #elif FLOAT
 			double delta = fabs( C[i] - gold) / fabs(gold) ; 
-			//printf("Delta: %1.16e\n",delta);
-			if(delta >= 1e-8)
+			//printf("Delta: %1.16e ,%1.16e,%1.16e\n",delta,C[i],gold);
+			if(delta >= 1e-6)
 #endif
 {
                 error ++;
@@ -242,11 +242,11 @@ int main(int argc, char **argv) {
            }
            C[i] = 0 ;      // Cleaning output for next iteration  
         }
-        if(error != 0){
-            printf("Deu ruim %d\n",error);
+        if(error != 0){        
+    printf("Deu ruim %d\n",error);
         }
         else{
-            printf(".");
+			 printf(".");
 			fflush(stdout);
         }  
 #ifdef LOGS
