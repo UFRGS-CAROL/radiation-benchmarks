@@ -82,7 +82,18 @@ for(i=0;i<rep;i++){
                      re = re/59049;
 #elif FLOAT  
     // Reference: https://cs.fit.edu/~mmahoney/cse3101/float.html
-                re = re *3.1;
+                re = re *1.4660155E+13;
+                re = re * 6.8212105343475049e-14;
+                re = re *1.4660155E+13;
+                re = re * 6.8212105343475049e-14;
+                re = re *1.4660155E+13;
+                re = re * 6.8212105343475049e-14;
+                re = re *1.4660155E+13;
+                re = re * 6.8212105343475049e-14;
+                re = re *1.4660155E+13;
+                re = re * 6.8212105343475049e-14;
+/*
+                re = re *3.1; 
                 re = re *3.1;                
                 re = re *3.1;                
                 re = re *3.1;                
@@ -93,6 +104,7 @@ for(i=0;i<rep;i++){
                 re = re *3.1;                
                 re = re *3.1;         
                 re = re/81962.82869808; // To avoid Overflow    
+*/
 #endif
 
 	}
