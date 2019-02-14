@@ -37,7 +37,7 @@ LDFLAGS+= -L../../include  -lLogHelper
 endif
 
 
-LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs/ -lnvidia-ml 
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile

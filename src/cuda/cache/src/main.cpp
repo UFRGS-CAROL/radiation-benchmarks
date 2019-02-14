@@ -214,7 +214,7 @@ bool check_output_errors(const std::vector<T>& v1, const std::vector<T>& v2, con
 #pragma omp critical
 					{
 						std::string inf(info_detail(i, valOutput0, valOutput1, valOutput2, valGold));
-						log.log_error(inf);
+						log.log_info(inf);
 					}
 				}
 			} else if (valOutput1 == valOutput2) {
@@ -326,7 +326,7 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 		std::string error_detail = "errors on the data path. expected:"
 				+ std::to_string(t.errors) + " found:"
 				+ std::to_string(log.errors);
-		log.log_error(error_detail);
+		log.log_info(error_detail);
 	}
 
 	return std::make_tuple(hits, misses, false_hit);
@@ -339,7 +339,9 @@ int main(int argc, char **argv) {
 	//Tesla K40
 			{ "Tesla K40c", K40 },
 			// Titan V
-			{ "TITAN V", TITANV }
+			{ "TITAN V", TITANV },
+	//Xavier
+			{"Xavier",  XAVIER}
 	//Other
 			};
 
@@ -352,6 +354,8 @@ int main(int argc, char **argv) {
 	std::string device_name(device_info.name);
 	if (devices_name.find(device_name) == devices_name.end())
 		error("CANNOT FOUND THE DEVICE\n");
+
+	Board board = devices_name[device_name];
 
 	//Parameter to the functions
 	Parameters test_parameter;
@@ -388,7 +392,10 @@ int main(int argc, char **argv) {
 
 		for (byte t_byte : { 0xff, 0x00 }) {
 			//Start collecting data
-			counter_thread.start_collecting_data();
+			//not collecting if it is xavier
+			if(board != TEGRAX2 && board != XAVIER)
+				counter_thread.start_collecting_data();
+			
 			test_parameter.t_byte = t_byte;
 
 			double start_it = log.mysecond();
@@ -428,7 +435,8 @@ int main(int argc, char **argv) {
 			double end_it = log.mysecond();
 
 			//End collecting the data
-			counter_thread.end_collecting_data();
+			if(board != TEGRAX2 && board != XAVIER)
+				counter_thread.end_collecting_data();
 
 			double start_dev_reset = log.mysecond();
 			//reset the device
