@@ -285,9 +285,9 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 		check_output_errors<byte, L1>(t.cache_lines, t.cache_lines2, t.cache_lines3, gold_byte, log, hits, false_hit, true);
 		
 	} else if (log.test_mode == "L2"){
-		error("NOT IMPLEMENTED");
+		check_output_errors<byte, L2>(t.cache_lines, t.cache_lines2, t.cache_lines3, gold_byte, log, hits, false_hit, true);
 	} else if (log.test_mode == "SHARED"){
-		error("NOT IMPLEMENTED");
+		check_output_errors<byte, SHARED>(t.cache_lines, t.cache_lines2, t.cache_lines3, gold_byte, log, hits, false_hit, true);
 	}
 
 	//checking the error is corrupted

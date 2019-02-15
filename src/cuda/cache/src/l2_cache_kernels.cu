@@ -14,18 +14,19 @@
 #include "CacheLine.h"
 #include "utils.h"
 
-__device__ uint64 l2_cache_err;
+__device__ uint64 l2_cache_err1;
+__device__ uint64 l2_cache_err2;
+__device__ uint64 l2_cache_err3;
+
 
 template<typename int_t, const uint32 V_SIZE, const uint32 LINE_SIZE>
-__global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines,
-		int_t *l2_hit_array, int_t *l2_miss_array, std::int64_t sleep_cycles,
-		byte t) {
+__global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines1, CacheLine<LINE_SIZE> *lines2, CacheLine<LINE_SIZE> *lines3, int_t *l2_hit_array, int_t *l2_miss_array, std::int64_t sleep_cycles, byte t) {
 	uint32 i = blockIdx.x * blockDim.x + threadIdx.x;
 	if (i < V_SIZE) {
 
-		volatile int_t t1 = clock();
-		CacheLine<LINE_SIZE> r = lines[i];
-		volatile int_t t2 = clock();
+		register int_t t1 = clock();
+		lines1[i] = t;
+		register int_t t2 = clock();
 		l2_miss_array[i] = t2 - t1;
 
 		//wait for exposition to neutrons
@@ -33,16 +34,20 @@ __global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines,
 
 		//last checking
 		t1 = clock();
-		CacheLine<LINE_SIZE> r2 = lines[i];
+		CacheLine<LINE_SIZE> r = lines1[i];
 		t2 = clock();
 		l2_hit_array[i] = t2 - t1;
 
 		//bitwise operation
 		for (uint32 it = 0; it < LINE_SIZE; it++)
-			if (r[it] != t)
-				atomicAdd(&l2_cache_err, 1);
-
-		lines[i] = r2;
+			if (r[it] != t){
+				atomicAdd(&l2_cache_err1, 1);
+				atomicAdd(&l2_cache_err2, 1);
+				atomicAdd(&l2_cache_err3, 1);
+                        }
+		lines1[i] = r;
+                lines2[i] = r;
+                lines3[i] = r;
 	}
 	__syncthreads();
 }
@@ -85,8 +90,7 @@ void clear_cache(uint32 n) {
 }
 
 template<const uint32 V_SIZE, const uint32 L2_LINE_SIZE>
-Tuple test_l2_cache(const byte t_byte, const int64 cycles,
-		const uint32 l2_size) {
+Tuple test_l2_cache(const byte t_byte, const int64 cycles, const uint32 l2_size) {
 	//device arrays
 	int32 *l2_hit_array_device, *l2_miss_array_device;
 	cudaMalloc(&l2_hit_array_device, sizeof(int32) * V_SIZE);
@@ -96,21 +100,31 @@ Tuple test_l2_cache(const byte t_byte, const int64 cycles,
 	std::vector<int32> l2_hit_array_host(V_SIZE), l2_miss_array_host(V_SIZE);
 
 	//Set each element of V array
-	CacheLine<L2_LINE_SIZE> *V_dev;
-	std::vector<CacheLine<L2_LINE_SIZE> > V_host(V_SIZE, t_byte);
+	CacheLine<L2_LINE_SIZE> *V_dev1;
+        CacheLine<L2_LINE_SIZE> *V_dev2;
+        CacheLine<L2_LINE_SIZE> *V_dev3;
+	
+        std::vector<CacheLine<L2_LINE_SIZE> > V_host1(V_SIZE, t_byte);
+        std::vector<CacheLine<L2_LINE_SIZE> > V_host2(V_SIZE, t_byte);
+        std::vector<CacheLine<L2_LINE_SIZE> > V_host3(V_SIZE, t_byte);        
 
 	//copy to the gpu
-	cuda_check(cudaMalloc(&V_dev, sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE));
-	cuda_check(
-			cudaMemcpy(V_dev, V_host.data(),
-					sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE,
-					cudaMemcpyHostToDevice));
+	cuda_check(cudaMalloc(&V_dev1, sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE));
+	cuda_check(cudaMalloc(&V_dev2, sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE));
+	cuda_check(cudaMalloc(&V_dev3, sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE));
+
+	cuda_check(cudaMemcpy(V_dev1, V_host1.data(), sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE, cudaMemcpyHostToDevice));
+        cuda_check(cudaMemcpy(V_dev2, V_host2.data(), sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE, cudaMemcpyHostToDevice));
+        cuda_check(cudaMemcpy(V_dev3, V_host3.data(), sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE, cudaMemcpyHostToDevice));
 
 	//Set to zero err_check
-	uint64 l2_cache_err_host = 0;
-	cuda_check(
-			cudaMemcpyToSymbol(l2_cache_err, &l2_cache_err_host, sizeof(uint64),
-					0));
+	uint64 l2_cache_err_host1 = 0;
+	uint64 l2_cache_err_host2 = 0;
+	uint64 l2_cache_err_host3 = 0;
+
+	cuda_check(cudaMemcpyToSymbol(l2_cache_err1, &l2_cache_err_host1, sizeof(uint64), 	0));
+        cuda_check(cudaMemcpyToSymbol(l2_cache_err2, &l2_cache_err_host2, sizeof(uint64), 	0));
+        cuda_check(cudaMemcpyToSymbol(l2_cache_err3, &l2_cache_err_host3, sizeof(uint64), 	0));
 
 	//Clear the L2 Cache
 	clear_cache(l2_size / sizeof(float));
@@ -121,40 +135,42 @@ Tuple test_l2_cache(const byte t_byte, const int64 cycles,
 	dim3 block_size(V_SIZE / (BLOCK_SIZE * BLOCK_SIZE));
 	dim3 threads_per_block(BLOCK_SIZE * BLOCK_SIZE);
 
-	test_l2_cache_kernel<int32, V_SIZE, L2_LINE_SIZE> <<<block_size, threads_per_block>>>(V_dev,
-			l2_hit_array_device, l2_miss_array_device, cycles, t_byte);
+	test_l2_cache_kernel<int32, V_SIZE, L2_LINE_SIZE> <<<block_size, threads_per_block>>>(V_dev1, V_dev2, V_dev3, l2_hit_array_device, l2_miss_array_device, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
 
-	cuda_check(
-			cudaMemcpy(l2_hit_array_host.data(), l2_hit_array_device,
-					sizeof(int32) * V_SIZE, cudaMemcpyDeviceToHost));
-	cuda_check(
-			cudaMemcpy(l2_miss_array_host.data(), l2_miss_array_device,
-					sizeof(int32) * V_SIZE, cudaMemcpyDeviceToHost));
+	cuda_check(cudaMemcpy(l2_hit_array_host.data(), l2_hit_array_device,  sizeof(int32) * V_SIZE, cudaMemcpyDeviceToHost));
+	cuda_check(cudaMemcpy(l2_miss_array_host.data(), l2_miss_array_device, sizeof(int32) * V_SIZE, cudaMemcpyDeviceToHost));
+        
+        //copy the three vectors
+	cuda_check(cudaMemcpy(V_host1.data(), V_dev1, sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE, cudaMemcpyDeviceToHost));
+	cuda_check(cudaMemcpy(V_host2.data(), V_dev2, sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE, cudaMemcpyDeviceToHost));
+	cuda_check(cudaMemcpy(V_host3.data(), V_dev3, sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE, cudaMemcpyDeviceToHost));
 
-	cuda_check(
-			cudaMemcpy(V_host.data(), V_dev,
-					sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE,
-					cudaMemcpyDeviceToHost));
 
 	//Copy from symbol
-	cuda_check(
-			cudaMemcpyFromSymbol(&l2_cache_err_host, l2_cache_err,
-					sizeof(uint64), 0));
+	cuda_check(cudaMemcpyFromSymbol(&l2_cache_err_host1, l2_cache_err1, sizeof(uint64), 0));
+        cuda_check(cudaMemcpyFromSymbol(&l2_cache_err_host2, l2_cache_err2, sizeof(uint64), 0));
+        cuda_check(cudaMemcpyFromSymbol(&l2_cache_err_host3, l2_cache_err3, sizeof(uint64), 0));
 
 	cuda_check(cudaFree(l2_hit_array_device));
 	cuda_check(cudaFree(l2_miss_array_device));
-	cuda_check(cudaFree(V_dev));
+	
+        cuda_check(cudaFree(V_dev1));
+	cuda_check(cudaFree(V_dev2));
+	cuda_check(cudaFree(V_dev3));
 
 	Tuple t;
 
-	t.cache_lines.assign((byte*) V_host.data(),
-			(byte*) V_host.data()
-					+ (sizeof(CacheLine<L2_LINE_SIZE> ) * V_host.size()));
+	t.cache_lines.assign((byte*) V_host1.data(), (byte*) V_host1.data() + (sizeof(CacheLine<L2_LINE_SIZE> ) * V_host1.size()));
+        t.cache_lines2.assign((byte*) V_host2.data(), (byte*) V_host2.data() + (sizeof(CacheLine<L2_LINE_SIZE> ) * V_host2.size()));
+        t.cache_lines3.assign((byte*) V_host3.data(), (byte*) V_host3.data() + (sizeof(CacheLine<L2_LINE_SIZE> ) * V_host3.size()));
+        
 	t.misses = std::move(l2_miss_array_host);
-
 	t.hits = std::move(l2_hit_array_host);
-	t.errors = l2_cache_err_host;
+
+	t.errors = l2_cache_err_host1;
+        t.errors2 = l2_cache_err_host2;
+        t.errors3 = l2_cache_err_host3;
 
 	return t;
 }
@@ -175,6 +191,19 @@ Tuple test_l2_cache(const Parameters& parameters) {
 		return test_l2_cache<v_size, cache_line_size>(parameters.t_byte,
 				parameters.one_second_cycles, max_l2_cache);
 //		break;
+	}
+        case XAVIER: {
+                const uint32 max_l2_cache = 512 * 1024; //bytes
+                if (max_l2_cache != parameters.l2_size)
+                        error(
+                                        "L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
+                                                        + std::to_string(parameters.l2_size));
+
+                const uint32 cache_line_size = 128;
+                const uint32 v_size = max_l2_cache / cache_line_size;
+
+                return test_l2_cache<v_size, cache_line_size>(parameters.t_byte,
+				parameters.one_second_cycles, max_l2_cache);
 	}
 	case TITANV: {
 		const uint32 max_l2_cache = 4608 * 1024; //bytes

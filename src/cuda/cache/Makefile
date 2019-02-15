@@ -67,7 +67,7 @@ test:
 	./$(EXEC) --iterations 10
 	
 testl2:
-	./$(EXEC) --iterations 10 --memtotest L2
+	./$(EXEC)L2 --iterations 10 --memtotest L2
 
 testshared:
 	./$(EXEC) --iterations 10 --memtotest SHARED
