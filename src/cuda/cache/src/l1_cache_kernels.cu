@@ -44,13 +44,13 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,CacheLine<LINE_
 		t2 = clock();
 		l1_t_hit[threadIdx.x] = t2 - t1;
 
-		for (uint32 it = 0; it < LINE_SIZE; it++){
-			if (r[it] != t) {
-				atomicAdd(&l1_cache_err, 1);
-				atomicAdd(&l1_cache_err2, 1);
-				atomicAdd(&l1_cache_err3, 1);
-			}
-		}
+		//for (uint32 it = 0; it < LINE_SIZE; it++){
+		//	if (r[it] != t) {
+		//		atomicAdd(&l1_cache_err, 1);
+		//		atomicAdd(&l1_cache_err2, 1);
+		//		atomicAdd(&l1_cache_err3, 1);
+		//	}
+		//}
 		l1_miss_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_miss[threadIdx.x];
 		l1_hit_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_hit[threadIdx.x];
 		

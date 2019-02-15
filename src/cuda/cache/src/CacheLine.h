@@ -15,7 +15,7 @@ template<uint32 LINE_SIZE>
 struct
 //alignas(LINE_SIZE)
 CacheLine {
-	 byte t[LINE_SIZE]; //byte type
+	volatile byte t[LINE_SIZE]; //byte type
 
 	__host__ __device__ CacheLine() {
 	}
