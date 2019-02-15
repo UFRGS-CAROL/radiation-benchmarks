@@ -11,11 +11,11 @@ from common_config import discover_board, execute_and_write_json_to_file
 
 SIZES=[1024]
 ITERATIONS=10000
-SIMTIME=[1000]
 STREAMS=10
-PRECISIONS = ["double", "single", "half"]
+PRECISIONS = {"double": 1024, "single": 2048, "half": 4096}
 
 def config(board, arith_type, debug):
+    
     original_hotspot = "hotspot"
     benchmark_bin = "cuda_trip_hotspot_"+arith_type
     benchmark_src = "trip_hotspot"
@@ -50,29 +50,28 @@ def config(board, arith_type, debug):
                 "mkdir -p " + data_path,
                 "mv ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
-
+    s = PRECISIONS[arith_type]
     for i in SIZES:
-        for s in SIMTIME:
-            inputFile = data_path + "/"
+        inputFile = data_path + "/"
 
-            gen = [None] * 9
-            gen[0] = ['sudo ', bin_path + "/" + benchmark_bin + " "]
-            gen[1] = ['-size=' + str(i)]
-            gen[2] = ['-generate ']
-            gen[3] = ['-input_temp=' + inputFile + "temp_" +  str(i)]
-            gen[4] = ['-input_power=' + inputFile + "power_" + str(i)]  # change for execute
-            gen[5] = ['-gold=' + inputFile + "gold_" + str(i) + "_" + arith_type + "_"  + str(s)]
-            gen[6] = ['-sim_time=' + str(s)]
-            gen[7] = ['-iterations=1']
-            gen[8] = ['-streams=' + str(STREAMS)]
+        gen = [None] * 9
+        gen[0] = [' ', bin_path + "/" + benchmark_bin + " "]
+        gen[1] = ['-size=' + str(i)]
+        gen[2] = ['-generate ']
+        gen[3] = ['-input_temp=' + inputFile + "temp_" +  str(i)]
+        gen[4] = ['-input_power=' + inputFile + "power_" + str(i)]  # change for execute
+        gen[5] = ['-gold=' + inputFile + "gold_" + str(i) + "_" + arith_type + "_"  + str(s)]
+        gen[6] = ['-sim_time=' + str(s)]
+        gen[7] = ['-iterations=1']
+        gen[8] = ['-streams=' + str(STREAMS)]
 
-            # change mode and iterations for exe
-            exe = copy.deepcopy(gen)
-            exe[2] = []
-            exe[7] = ['-iterations=' + str(ITERATIONS)]
+        # change mode and iterations for exe
+        exe = copy.deepcopy(gen)
+        exe[2] = []
+        exe[7] = ['-iterations=' + str(ITERATIONS)]
 
-            generate.append(' '.join(str(r) for v in gen for r in v))
-            execute.append(' '.join(str(r) for v in exe for r in v))
+        generate.append(' '.join(str(r) for v in gen for r in v))
+        execute.append(' '.join(str(r) for v in exe for r in v))
 
 
     #execute, generate, install_dir, benchmark_bin, debug
