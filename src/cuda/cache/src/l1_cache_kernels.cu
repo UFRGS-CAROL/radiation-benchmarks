@@ -13,26 +13,25 @@
 #include "kernels.h"
 #include "CacheLine.h"
 
-__device__ uint64 l1_cache_err;
-__device__ uint64 l1_cache_err2;
-__device__ uint64 l1_cache_err3;
+//__device__ uint64 l1_cache_err;
+//__device__ uint64 l1_cache_err2;
+//__device__ uint64 l1_cache_err3;
 
 
 /*
  * l1_size size of the L1 cache
  * V_size = l1_size / sizeof(CacheLine)
  */
-template<typename int_t, const uint32 V_SIZE, const uint32 LINE_SIZE,
-		const uint32 SHARED_PER_SM>
+template<typename int_t, const uint32 V_SIZE, const uint32 LINE_SIZE, const uint32 SHARED_PER_SM>
 __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,CacheLine<LINE_SIZE> *lines2, CacheLine<LINE_SIZE> *lines3, int_t *l1_hit_array, int_t *l1_miss_array, int64 sleep_cycles, byte t) {
 
 	__shared__ int_t l1_t_hit[SHARED_PER_SM / 2];
 	__shared__ int_t l1_t_miss[SHARED_PER_SM / 2];
 
 	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
-		volatile register int_t t1 = clock();
+		register int_t t1 = clock();
 		lines[blockIdx.x * V_SIZE + threadIdx.x] = t;
-		volatile  register  int_t t2 = clock();
+		register  int_t t2 = clock();
 		l1_t_miss[threadIdx.x] = t2 - t1;
 
 		//wait for exposition to neutrons
@@ -58,15 +57,14 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,CacheLine<LINE_
 		lines[blockIdx.x * V_SIZE + threadIdx.x] = r;
 		lines2[blockIdx.x * V_SIZE + threadIdx.x] = r;
 		lines3[blockIdx.x * V_SIZE + threadIdx.x] = r;
+
 	}
 
 	__syncthreads();
 }
 
-template<const uint32 V_SIZE, const uint32 L1_LINE_SIZE,
-		const uint32 SHARED_PER_SM>
-Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
-		const int64 cycles, dim3& block_size, dim3& threads_per_block) {
+template<const uint32 V_SIZE, const uint32 L1_LINE_SIZE, const uint32 SHARED_PER_SM>
+Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte, const int64 cycles, dim3& block_size, dim3& threads_per_block) {
 
 	const uint32 v_size_multiple_threads = V_SIZE * number_of_sms; // Each block with one thread using all l1 cache
 
@@ -96,12 +94,12 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 
 	
 	//Set to zero err_check
-	uint64 l1_cache_err_host = 0;
-	uint64 l1_cache_err_host2 = 0;
-	uint64 l1_cache_err_host3 = 0;
-	cuda_check(cudaMemcpyToSymbol(l1_cache_err, &l1_cache_err_host, sizeof(uint64), 0));
-	cuda_check(cudaMemcpyToSymbol(l1_cache_err2, &l1_cache_err_host2, sizeof(uint64), 0));
-	cuda_check(cudaMemcpyToSymbol(l1_cache_err3, &l1_cache_err_host3, sizeof(uint64), 0));
+	//uint64 l1_cache_err_host = 0;
+	//uint64 l1_cache_err_host2 = 0;
+	//uint64 l1_cache_err_host3 = 0;
+	//cuda_check(cudaMemcpyToSymbol(l1_cache_err, &l1_cache_err_host, sizeof(uint64), 0));
+	//cuda_check(cudaMemcpyToSymbol(l1_cache_err2, &l1_cache_err_host2, sizeof(uint64), 0));
+	//cuda_check(cudaMemcpyToSymbol(l1_cache_err3, &l1_cache_err_host3, sizeof(uint64), 0));
 
 	test_l1_cache_kernel<int32, V_SIZE, L1_LINE_SIZE, SHARED_PER_SM> <<<block_size, threads_per_block>>>(V_dev, V_dev2, V_dev3, l1_hit_array_device, l1_miss_array_device, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
@@ -119,9 +117,9 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 	cuda_check(cudaMemcpy(V_host2.data(), V_dev2,	sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads,	cudaMemcpyDeviceToHost));
 	cuda_check(cudaMemcpy(V_host3.data(), V_dev3, sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads, cudaMemcpyDeviceToHost));
 
-	cuda_check(cudaMemcpyFromSymbol(&l1_cache_err_host, l1_cache_err, sizeof(uint64), 0));
-	cuda_check(cudaMemcpyFromSymbol(&l1_cache_err_host2, l1_cache_err2, sizeof(uint64), 0));
-	cuda_check(cudaMemcpyFromSymbol(&l1_cache_err_host3, l1_cache_err3, sizeof(uint64), 0));
+	//cuda_check(cudaMemcpyFromSymbol(&l1_cache_err_host, l1_cache_err, sizeof(uint64), 0));
+	//cuda_check(cudaMemcpyFromSymbol(&l1_cache_err_host2, l1_cache_err2, sizeof(uint64), 0));
+	//cuda_check(cudaMemcpyFromSymbol(&l1_cache_err_host3, l1_cache_err3, sizeof(uint64), 0));
 	
 	
 	cuda_check(cudaFree(l1_hit_array_device));
@@ -140,11 +138,10 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 	
 	
 	t.misses = std::move(l1_miss_array_host);
-
 	t.hits = std::move(l1_hit_array_host);
-	t.errors = l1_cache_err_host;
-	t.errors2 = l1_cache_err_host2;
-	t.errors3 = l1_cache_err_host3;
+	t.errors = 0;//l1_cache_err_host;
+	t.errors2 = 0;//l1_cache_err_host2;
+	t.errors3 = 0;//l1_cache_err_host3;
 
 	return t;
 }

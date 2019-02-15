@@ -299,12 +299,12 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 	}else if(t.errors2 == t.errors3){
 		errors = t.errors2;
 	}
-	if (log.errors != errors) {
+	/*if (log.errors != errors) {
 		std::string info_detail = "errors on the data path. expected:"
 				+ std::to_string(t.errors) + " found:"
 				+ std::to_string(log.errors);
 		log.log_info(info_detail);
-	}
+	}*/
 
 	return std::make_tuple(hits, misses, false_hit);
 }
