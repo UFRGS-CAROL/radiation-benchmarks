@@ -17,7 +17,7 @@ __device__ uint32 trip_mem3[256];
 
 __global__ void test_register_file_kernel(uint32 *output_rf1, uint32 *output_rf2, uint32 *output_rf3, uint32 reg_data, const uint64 sleep_cycles) {
 	const uint32 i = blockIdx.x * blockIdx.y + threadIdx.x;
-	uint32 reg_errors = 0;
+	register uint32 reg_errors = 0;
 	register uint32 r0 = reg_data | trip_mem1[0] | trip_mem2[0] | trip_mem3[0];
 	register uint32 r1 = reg_data | trip_mem1[1] | trip_mem2[1] | trip_mem3[1];
 	register uint32 r2 = reg_data | trip_mem1[2] | trip_mem2[2] | trip_mem3[2];

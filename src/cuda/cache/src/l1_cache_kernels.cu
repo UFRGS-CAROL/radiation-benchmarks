@@ -30,10 +30,9 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,CacheLine<LINE_
 	__shared__ int_t l1_t_miss[SHARED_PER_SM / 2];
 
 	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
+		volatile register int_t t1 = clock();
 		lines[blockIdx.x * V_SIZE + threadIdx.x] = t;
-		volatile int_t t1 = clock();
-		CacheLine<LINE_SIZE> r = lines[blockIdx.x * V_SIZE + threadIdx.x];
-		volatile int_t t2 = clock();
+		volatile  register  int_t t2 = clock();
 		l1_t_miss[threadIdx.x] = t2 - t1;
 
 		//wait for exposition to neutrons
@@ -41,7 +40,7 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,CacheLine<LINE_
 
 		//last checking
 		t1 = clock();
-		r = lines[blockIdx.x * V_SIZE + threadIdx.x];
+		CacheLine<LINE_SIZE> r = lines[blockIdx.x * V_SIZE + threadIdx.x];
 		t2 = clock();
 		l1_t_hit[threadIdx.x] = t2 - t1;
 
@@ -52,13 +51,6 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,CacheLine<LINE_
 				atomicAdd(&l1_cache_err3, 1);
 			}
 		}
-			
-			
-		//if(counter_this_thread){
-		//	indexes[blockIdx.x * V_SIZE + threadIdx.x]  = blockIdx.x * V_SIZE + threadIdx.x;
-		//}
-
-
 		l1_miss_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_miss[threadIdx.x];
 		l1_hit_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_hit[threadIdx.x];
 		
@@ -111,7 +103,6 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 	cuda_check(cudaMemcpyToSymbol(l1_cache_err2, &l1_cache_err_host2, sizeof(uint64), 0));
 	cuda_check(cudaMemcpyToSymbol(l1_cache_err3, &l1_cache_err_host3, sizeof(uint64), 0));
 
-
 	test_l1_cache_kernel<int32, V_SIZE, L1_LINE_SIZE, SHARED_PER_SM> <<<block_size, threads_per_block>>>(V_dev, V_dev2, V_dev3, l1_hit_array_device, l1_miss_array_device, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
 
@@ -152,6 +143,8 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte,
 
 	t.hits = std::move(l1_hit_array_host);
 	t.errors = l1_cache_err_host;
+	t.errors2 = l1_cache_err_host2;
+	t.errors3 = l1_cache_err_host3;
 
 	return t;
 }
@@ -160,6 +153,7 @@ Tuple test_l1_cache(const Parameters& parameters) {
 	//This switch is only to set manually the cache line size
 	//since it is hard to check it at runtime
 	switch (parameters.device) {
+	case K20:
 	case K40: {
 		// cache l1 has 65536 bytes
 		//BUT, only 48kb are destined to L1 memory
@@ -177,6 +171,20 @@ Tuple test_l1_cache(const Parameters& parameters) {
 				parameters.number_of_sms, parameters.t_byte,
 				parameters.one_second_cycles, block_size, threads_per_block);
 //		break;
+	}
+	case XAVIER:{
+		const uint32 max_l1_cache = 48 * 1024; //bytes
+		const uint32 max_shared_mem = 8 * 1024;
+		
+		const uint32 cache_line_size = 128;
+		const uint32 v_size = max_l1_cache / cache_line_size;
+
+		//For Maxwell and above each SM can execute 4 blocks
+		dim3 block_size(parameters.number_of_sms), threads_per_block(v_size);
+
+		return test_l1_cache<v_size, cache_line_size, max_shared_mem>(
+				parameters.number_of_sms, parameters.t_byte,
+				parameters.one_second_cycles, block_size, threads_per_block);
 	}
 	case TITANV: {
 		// cache l1 has 128 Kbytes

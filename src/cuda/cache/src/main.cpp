@@ -280,8 +280,6 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 	if (log.test_mode == "REGISTERS"){
 		uint32 reg_data;
 		std::memset(&reg_data, gold_byte, sizeof(uint32));
-		//bool check_output_errors( T valGold, Log& log, uint32 hits, uint32 false_hit,  bool verbose = false) {
-
 		check_output_errors<uint32, RF>(t.register_file, t.register_file2, t.register_file3, reg_data, log, hits, false_hit, true) ;
 	} else if (log.test_mode == "L1"){
 		check_output_errors<byte, L1>(t.cache_lines, t.cache_lines2, t.cache_lines3, gold_byte, log, hits, false_hit, true);
@@ -292,41 +290,20 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 		error("NOT IMPLEMENTED");
 	}
 
-	/*if (log.test_mode != "REGISTERS") {
-		//Checking the errors
-		for (uint32 i = 0; i < t.cache_lines.size(); i++) {
-			auto found_byte = t.cache_lines[i];
-
-			if (found_byte != gold_byte) {
-				auto cache_line = i / 128; //supposing that all lines have 128 bytes
-
-				std::string error_detail = error_detail<byte>(log);
-
-				//log error detail already increment error var
-				log.log_error(error_detail);
-			}
-		}
-	} else {
-		//Checking the errors
-		uint32 reg_data;
-		std::memset(&reg_data, gold_byte, sizeof(uint32));
-		for (uint32 i = 0; i < t.register_file.size(); i++) {
-			auto found_reg = t.register_file[i];
-
-
-			if (found_reg != reg_data) {
-
-				//log error detail already increment error var
-				log.log_error(error_detail);
-			}
-		}
-	}*/
-
-	if (log.errors != t.errors) {
-		std::string error_detail = "errors on the data path. expected:"
+	//checking the error is corrupted
+	uint64 errors = 0;
+	if(t.errors == t.errors2){
+		errors = t.errors;
+	}else if(t.errors == t.errors3){
+		errors = t.errors;
+	}else if(t.errors2 == t.errors3){
+		errors = t.errors2;
+	}
+	if (log.errors != errors) {
+		std::string info_detail = "errors on the data path. expected:"
 				+ std::to_string(t.errors) + " found:"
 				+ std::to_string(log.errors);
-		log.log_info(error_detail);
+		log.log_info(info_detail);
 	}
 
 	return std::make_tuple(hits, misses, false_hit);

@@ -14,6 +14,7 @@ NVCCFLAGS= -std=c++11 -O3 -Xptxas -v
 
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
 ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
+ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72] #XavierV
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include
 
 OBJDIR=./obj/
@@ -72,7 +73,7 @@ testshared:
 	./$(EXEC) --iterations 10 --memtotest SHARED
 	
 testregisters:
-	./$(EXEC) --iterations 10 --memtotest REGISTERS	
+	./$(EXEC) --iterations 10000 --memtotest REGISTERS	
 	
 testconstant:
 	./$(EXEC) --iterations 10 --memtotest CONSTANT	

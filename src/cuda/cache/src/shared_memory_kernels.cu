@@ -20,7 +20,7 @@ __global__ void test_shared_memory_kernel(CacheLine<LINE_SIZE> *lines,
 	__shared__ CacheLine<LINE_SIZE> V[V_SIZE];
 
 	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
-		V[threadIdx.x] = lines[blockIdx.x * V_SIZE + threadIdx.x];
+		V[threadIdx.x] = t; //lines[blockIdx.x * V_SIZE + threadIdx.x];
 
 		//wait for exposition to neutrons
 		sleep_cuda(sleep_cycles);
@@ -37,44 +37,27 @@ __global__ void test_shared_memory_kernel(CacheLine<LINE_SIZE> *lines,
 	__syncthreads();
 }
 
-template<const uint32 V_SIZE, const uint32 SHARED_LINE_SIZE,
-		const uint32 SHARED_MEMORY_SIZE>
-Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte,
-		const uint64 cycles, dim3& block_size, dim3& threads_per_block) {
+template<const uint32 V_SIZE, const uint32 SHARED_LINE_SIZE, const uint32 SHARED_MEMORY_SIZE>
+Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte, const uint64 cycles, dim3& block_size, dim3& threads_per_block) {
 	uint32 v_size_multiple_threads = V_SIZE * number_of_sms;
 	uint64 shared_mem_err_host = 0;
-	cuda_check(
-			cudaMemcpyToSymbol(shared_mem_err, &shared_mem_err_host,
-					sizeof(uint64), 0));
+	cuda_check(cudaMemcpyToSymbol(shared_mem_err, &shared_mem_err_host, sizeof(uint64), 0));
 
 //Set each element of V array
 	CacheLine<SHARED_LINE_SIZE> *V_dev;
-	cuda_check(
-			cudaMalloc(&V_dev,
-					sizeof(CacheLine<SHARED_LINE_SIZE> )
-							* v_size_multiple_threads));
-	cuda_check(
-			cudaMemset(V_dev, t_byte,
-					sizeof(CacheLine<SHARED_LINE_SIZE> )
-							* v_size_multiple_threads));
+	cuda_check(cudaMalloc(&V_dev, sizeof(CacheLine<SHARED_LINE_SIZE> ) * v_size_multiple_threads));
+	cuda_check(cudaMemset(V_dev, t_byte, sizeof(CacheLine<SHARED_LINE_SIZE> ) * v_size_multiple_threads));
 
 	//Set the number of threads
 	//These archs support two blocks per SM with 48KB of shared memory
-	std::cout << block_size.x << " " << threads_per_block.x << " " << SHARED_MEMORY_SIZE << " " << V_SIZE << std::endl;
-	test_shared_memory_kernel<V_SIZE, SHARED_LINE_SIZE> <<<block_size,
-	threads_per_block>>>(V_dev, cycles, t_byte);
+	test_shared_memory_kernel<V_SIZE, SHARED_LINE_SIZE> <<<block_size, threads_per_block>>>(V_dev, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
 
-	cuda_check(
-			cudaMemcpyFromSymbol(&shared_mem_err_host, shared_mem_err,
-					sizeof(uint64), 0));
+	cuda_check(cudaMemcpyFromSymbol(&shared_mem_err_host, shared_mem_err, sizeof(uint64), 0));
 
-//V array host
+        //V array host
 	std::vector<CacheLine<SHARED_LINE_SIZE>> V_host(v_size_multiple_threads, 0);
-	cuda_check(
-			cudaMemcpy(V_host.data(), V_dev,
-					sizeof(CacheLine<SHARED_LINE_SIZE> )
-							* v_size_multiple_threads, cudaMemcpyDeviceToHost));
+	cuda_check(cudaMemcpy(V_host.data(), V_dev, sizeof(CacheLine<SHARED_LINE_SIZE> ) * v_size_multiple_threads, cudaMemcpyDeviceToHost));
 
 	cuda_check(cudaFree(V_dev));
 

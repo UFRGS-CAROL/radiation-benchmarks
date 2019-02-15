@@ -17,7 +17,7 @@ with open("src/register_kernel.h", "w") as fp:
 
     fp.write("\n__global__ void test_register_file_kernel(uint32 *output_rf1, uint32 *output_rf2, uint32 *output_rf3, uint32 reg_data, const uint64 sleep_cycles) {\n")
     fp.write("\tconst uint32 i = blockIdx.x * blockIdx.y + threadIdx.x;\n")
-    fp.write("\tuint32 reg_errors = 0;\n")
+    fp.write("\tregister uint32 reg_errors = 0;\n")
     
     #setting the registers
     for i in range(0, MAXREGS, LINEWIDTH):
