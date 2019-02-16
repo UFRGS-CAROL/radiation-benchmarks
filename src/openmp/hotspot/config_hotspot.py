@@ -8,13 +8,15 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [4, 6]
+SIZES = [512]
 THREADS = 4
+GRID_COLS = 1024
+GRID_ROWS = 1024
 ITERATIONS = [100000]
 
 
 def config(board, debug):
-    DATA_PATH_BASE = "lavamd"
+    DATA_PATH_BASE = "hotspot"
 
     benchmark_bin = DATA_PATH_BASE + "_check"
     print("Generating {0} for OPENMP, board:{1}".format(benchmark_bin, board))
@@ -38,14 +40,15 @@ def config(board, debug):
 
     data_path = install_dir + "data/" + DATA_PATH_BASE
     bin_path = install_dir + "bin"
-    src_benchmark = install_dir + "src/openmp/lavaMD"
+    src_benchmark = install_dir + "src/openmp/hotspot"
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
-    input_distance = "{}/input_distance_{}_{}"
-    input_charges = "{}/input_charges_{}_{}"
+    #./hotspot_gen <grid_rows> <grid_cols> <sim_time> <no. of threads><temp_file> <power_file> <output_file>
+    temp_file = "{}/temp_1024"
+    power_file = "{}/power_1024"
     gold_output = "{}/output_gold_{}_{}"
     
 
@@ -53,36 +56,30 @@ def config(board, debug):
                 "cd " + src_benchmark,
                 "make clean",
                 "make -C ../../include ",
-                "make -j 4 LOGS=1",
+                "make -j 4 LOGS=1 general",
                 "mkdir -p " + data_path,
                 "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
 
     execute = []
 
     for size in SIZES:
-        #./lavamd_gen <# cores> <# boxes 1d>
-        gen = [""] * 3
-        gen[0] = ['{}/lavamd_gen'.format(src_benchmark)]
-        gen[1] = [THREADS]
-        gen[2] = [size]
+        #../hotspot_check <grid_rows> <grid_cols> <sim_time> <no. of threads><temp_file> <power_file> <output_file> <# iterations>
+        gen = [""] * 8
+        gen[0] = ['{}/hotspot_gen '.format(src_benchmark)]
+        gen[1] = [GRID_ROWS]
+        gen[2] = [GRID_COLS]
+        gen[3] = [size]
+        gen[4] = [THREADS]
+        gen[5] = [temp_file.format(data_path, THREADS, size)]
+        gen[6] = [power_file.format(data_path, THREADS, size)]
+        gen[7] = [gold_output.format(data_path, THREADS, size)]
         
-        # change mode and iterations for exe
-        # ./lavamd_check <# cores> <# boxes 1d> <input_distances> <input_charges> <gold_output> <#iterations>
-
         exe = copy.deepcopy(gen)
-        exe[0] = ['sudo {}/lavamd_check'.format(bin_path)]
-        current_input_distance = input_distance.format(data_path, THREADS, size)
-        current_input_charge = input_charges.format(data_path, THREADS, size)
-        current_gold = gold_output.format(data_path, THREADS, size)
-        exe.append([current_input_distance])
-        exe.append([current_input_charge])
-        exe.append([current_gold])
+        exe[0] = ['sudo {}/hotspot_check'.format(bin_path)]
         exe.append(ITERATIONS)
 
 
         generate.append(' '.join(str(r) for v in gen for r in v))
-        generate.append("mv {} {} {} {}/".format(input_distance.format(".", THREADS, size), input_charges.format(".", THREADS, size), gold_output.format(".", THREADS, size), data_path))
-
         execute.append(' '.join(str(r) for v in exe for r in v))
         
 
