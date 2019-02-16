@@ -130,12 +130,12 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte, const int64 c
 
 	Tuple t;
 
-	t.cache_lines.assign((byte*) V_host.data(),   (byte*) V_host.data()  + (sizeof(CacheLine<L1_LINE_SIZE> ) * V_host.size()));
-	
-	t.cache_lines2.assign((byte*) V_host2.data(), (byte*) V_host2.data() + (sizeof(CacheLine<L1_LINE_SIZE> ) * V_host2.size()));
-					
-	t.cache_lines3.assign((byte*) V_host3.data(), (byte*) V_host3.data() + (sizeof(CacheLine<L1_LINE_SIZE> ) * V_host3.size()));
-	
+	//t.cache_lines.assign((byte*) V_host.data(),   (byte*) V_host.data()  + (sizeof(CacheLine<L1_LINE_SIZE> ) * V_host.size()));
+	//t.cache_lines2.assign((byte*) V_host2.data(), (byte*) V_host2.data() + (sizeof(CacheLine<L1_LINE_SIZE> ) * V_host2.size()));
+	//t.cache_lines3.assign((byte*) V_host3.data(), (byte*) V_host3.data() + (sizeof(CacheLine<L1_LINE_SIZE> ) * V_host3.size()));
+        t.cache_lines = move_to_byte<L1_LINE_SIZE>(V_host);
+        t.cache_lines2 = move_to_byte<L1_LINE_SIZE>(V_host2);
+        t.cache_lines3 = move_to_byte<L1_LINE_SIZE>(V_host3);
 	
 	t.misses = std::move(l1_miss_array_host);
 	t.hits = std::move(l1_hit_array_host);

@@ -61,6 +61,20 @@ struct Tuple {
 
 };
 
+
+
+template<uint32 LINE_SIZE> 
+std::vector<byte> move_to_byte(const std::vector<CacheLine<LINE_SIZE> >& T){
+        std::vector<byte> ret(T.size() * LINE_SIZE);
+#pragma unroll
+        for(uint32 i = 0; i < T.size(); i++){
+                for (uint32 j = 0; j < LINE_SIZE; j++) {
+                        ret[i * LINE_SIZE + j] = T[i].t[j];
+                }
+        }
+        return ret;        
+}
+
 Tuple test_l1_cache(const Parameters&);
 Tuple test_l2_cache(const Parameters&);
 Tuple test_shared_memory(const Parameters&);

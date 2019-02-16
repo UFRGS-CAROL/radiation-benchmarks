@@ -10,6 +10,7 @@
 
 #include <ostream>
 #include "utils.h"
+#include <vector>
 
 template<uint32 LINE_SIZE>
 struct
