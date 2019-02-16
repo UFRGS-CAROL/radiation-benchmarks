@@ -53,7 +53,7 @@ def config(board, debug):
                 "cd " + src_benchmark,
                 "make clean",
                 "make -C ../../include ",
-                "make -j 4 LOGS=1",
+                "make -j 4 LOGS=1 general",
                 "mkdir -p " + data_path,
                 "mv -f ./" + benchmark_bin + " " + bin_path + "/"]
 

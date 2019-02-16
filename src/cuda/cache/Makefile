@@ -17,9 +17,10 @@ ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72] #XavierV
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include
 
+#read_only_cache_kernels.o
 OBJDIR=./obj/
 OBJ= NVMLWrapper.o utils.o l1_cache_kernels.o l2_cache_kernels.o register_file_kernels.o
-OBJ+= read_only_cache_kernels.o shared_memory_kernels.o main.o
+OBJ+= shared_memory_kernels.o main.o
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g

@@ -246,11 +246,11 @@ bool check_output_errors(const std::vector<T>& v1, const std::vector<T>& v2, con
 
 
 	if (log.errors != 0 ) {
-		printf("#");
+		std::cout << "#" << std::endl;
 		log.update_error_count();
 	}
 	if (log.infos != 0){
-		printf("M");
+		std::cout << "M" << std::endl;
 		log.update_info_count();
 	}
 	return log.errors == 0 || log.infos == 0;
@@ -280,32 +280,17 @@ std::tuple<uint32, uint32, uint32> compare(const Tuple& t, Log& log,
 	if (log.test_mode == "REGISTERS"){
 		uint32 reg_data;
 		std::memset(&reg_data, gold_byte, sizeof(uint32));
-		check_output_errors<uint32, RF>(t.register_file, t.register_file2, t.register_file3, reg_data, log, hits, false_hit, true) ;
+		check_output_errors<uint32, RF>(t.register_file1, t.register_file2, t.register_file3, reg_data, log, hits, false_hit, true) ;
 	} else if (log.test_mode == "L1"){
-		check_output_errors<byte, L1>(t.cache_lines, t.cache_lines2, t.cache_lines3, gold_byte, log, hits, false_hit, true);
+		check_output_errors<byte, L1>(t.cache_lines1, t.cache_lines2, t.cache_lines3, gold_byte, log, hits, false_hit, true);
 		
 	} else if (log.test_mode == "L2"){
-		check_output_errors<byte, L2>(t.cache_lines, t.cache_lines2, t.cache_lines3, gold_byte, log, hits, false_hit, true);
+		check_output_errors<byte, L2>(t.cache_lines1, t.cache_lines2, t.cache_lines3, gold_byte, log, hits, false_hit, true);
 	} else if (log.test_mode == "SHARED"){
-		check_output_errors<byte, SHARED>(t.cache_lines, t.cache_lines2, t.cache_lines3, gold_byte, log, hits, false_hit, true);
+		check_output_errors<byte, SHARED>(t.cache_lines1, t.cache_lines2, t.cache_lines3, gold_byte, log, hits, false_hit, true);
 	}
 
-	//checking the error is corrupted
-	uint64 errors = 0;
-	if(t.errors == t.errors2){
-		errors = t.errors;
-	}else if(t.errors == t.errors3){
-		errors = t.errors;
-	}else if(t.errors2 == t.errors3){
-		errors = t.errors2;
-	}
-	/*if (log.errors != errors) {
-		std::string info_detail = "errors on the data path. expected:"
-				+ std::to_string(t.errors) + " found:"
-				+ std::to_string(log.errors);
-		log.log_info(info_detail);
-	}*/
-
+        //returning the result
 	return std::make_tuple(hits, misses, false_hit);
 }
 

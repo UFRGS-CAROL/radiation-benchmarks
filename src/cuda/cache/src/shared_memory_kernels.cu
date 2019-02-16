@@ -26,13 +26,6 @@ __global__ void test_shared_memory_kernel(CacheLine<LINE_SIZE> *lines1, CacheLin
 		//wait for exposition to neutrons
 		sleep_cuda(sleep_cycles);
 
-		//bitwise operation
-		//for (uint32 it = 0; it < LINE_SIZE; it++)
-		//	if (V[threadIdx.x][it] != t){
-		//		atomicAdd(&shared_mem_err1, 1);
-                //                atomicAdd(&shared_mem_err2, 1);
-                //                atomicAdd(&shared_mem_err3, 1);
-                //       }
 		lines1[blockIdx.x * V_SIZE + threadIdx.x] = V[threadIdx.x];
 		lines2[blockIdx.x * V_SIZE + threadIdx.x] = V[threadIdx.x];
 		lines3[blockIdx.x * V_SIZE + threadIdx.x] = V[threadIdx.x];
@@ -46,15 +39,6 @@ Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte, const ui
 
         uint32 v_size_multiple_threads = V_SIZE * number_of_sms;
         
-        //set errors counters
-	//uint64 shared_mem_err_host1 = 0;
-	//uint64 shared_mem_err_host2 = 0;
-	//uint64 shared_mem_err_host3 = 0;
-
-	//cuda_check(cudaMemcpyToSymbol(shared_mem_err1, &shared_mem_err_host1, sizeof(uint64), 0));
-        //cuda_check(cudaMemcpyToSymbol(shared_mem_err2, &shared_mem_err_host2, sizeof(uint64), 0));
-        //cuda_check(cudaMemcpyToSymbol(shared_mem_err3, &shared_mem_err_host3, sizeof(uint64), 0));
-
         //Set each element of V array
 	CacheLine<SHARED_LINE_SIZE> *V_dev1, *V_dev2, *V_dev3;
 	cuda_check(cudaMalloc(&V_dev1, sizeof(CacheLine<SHARED_LINE_SIZE> ) * v_size_multiple_threads));
@@ -66,10 +50,6 @@ Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte, const ui
 	//These archs support two blocks per SM with 48KB of shared memory
 	test_shared_memory_kernel<V_SIZE, SHARED_LINE_SIZE> <<<block_size, threads_per_block>>>(V_dev1, V_dev2, V_dev3, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
-
-	//cuda_check(cudaMemcpyFromSymbol(&shared_mem_err_host1, shared_mem_err1, sizeof(uint64), 0));
-	//cuda_check(cudaMemcpyFromSymbol(&shared_mem_err_host2, shared_mem_err2, sizeof(uint64), 0));
-	//cuda_check(cudaMemcpyFromSymbol(&shared_mem_err_host3, shared_mem_err3, sizeof(uint64), 0));
 
 
         //V array host
@@ -86,21 +66,7 @@ Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte, const ui
 	cuda_check(cudaFree(V_dev3));
 
 	Tuple t;
-
-
-	//t.cache_lines.assign((byte*) V_host1.data(), (byte*) V_host1.data() + (sizeof(CacheLine<SHARED_LINE_SIZE> ) * V_host1.size()));
-	//t.cache_lines2.assign((byte*) V_host2.data(), (byte*) V_host2.data() + (sizeof(CacheLine<SHARED_LINE_SIZE> ) * V_host2.size()));
-	//t.cache_lines3.assign((byte*) V_host3.data(), (byte*) V_host3.data() + (sizeof(CacheLine<SHARED_LINE_SIZE> ) * V_host3.size()));
-        t.cache_lines = move_to_byte<SHARED_LINE_SIZE>(V_host1);
-        t.cache_lines2 = move_to_byte<SHARED_LINE_SIZE>(V_host2);
-        t.cache_lines3 = move_to_byte<SHARED_LINE_SIZE>(V_host3);
-        
-	t.misses = {};
-
-	t.hits = {};
-	t.errors = 0;//shared_mem_err_host1;
-	t.errors2 = 0;//shared_mem_err_host2;
-	t.errors3 = 0;//shared_mem_err_host3;
+        t.move_to_byte<SHARED_LINE_SIZE>(V_host1, V_host2, V_host3);
 	return t;
 }
 

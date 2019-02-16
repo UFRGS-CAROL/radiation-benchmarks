@@ -29,15 +29,6 @@ Tuple test_register_file(uint32 reg_data, const int64 cycles,
         uint32 *output_dev2;
         uint32 *output_dev3;
 
-	//error variable
-	//uint64 register_file_errors_host1 = 0;
-	//uint64 register_file_errors_host2 = 0;
-	//uint64 register_file_errors_host3 = 0;
-
-	//cuda_check(cudaMemcpyToSymbol(register_file_errors1, &register_file_errors_host1, sizeof(uint64), 0));
-        //cuda_check(cudaMemcpyToSymbol(register_file_errors2, &register_file_errors_host2, sizeof(uint64), 0));
-        //cuda_check(cudaMemcpyToSymbol(register_file_errors3, &register_file_errors_host3, sizeof(uint64), 0));
-
 	//byte size
 	const uint32 byte_size = sizeof(uint32) * out_size;
 
@@ -69,23 +60,12 @@ Tuple test_register_file(uint32 reg_data, const int64 cycles,
         cuda_check(cudaMemcpy(output_host2.data(), output_dev2, byte_size, cudaMemcpyDeviceToHost));
         cuda_check(cudaMemcpy(output_host3.data(), output_dev3, byte_size, cudaMemcpyDeviceToHost));
 
-	//Copy error var
-	//cuda_check(cudaMemcpyFromSymbol(&register_file_errors_host1, register_file_errors1, sizeof(uint64), 0));
-        //cuda_check(cudaMemcpyFromSymbol(&register_file_errors_host2, register_file_errors2, sizeof(uint64), 0));
-       // cuda_check(cudaMemcpyFromSymbol(&register_file_errors_host3, register_file_errors3, sizeof(uint64), 0));
-
 	cuda_check(cudaFree(output_dev1));
         cuda_check(cudaFree(output_dev2));
         cuda_check(cudaFree(output_dev3));
 
 	Tuple t;
-	t.register_file = std::move(output_host1);
-	t.register_file2 = std::move(output_host2);
-	t.register_file3 = std::move(output_host3);
-	t.errors =  0; //register_file_errors_host1;
-	t.errors2 = 0; //register_file_errors_host2;
-	t.errors3 = 0; // register_file_errors_host3;
-
+        t.move_register_file(output_host1, output_host2, output_host3);
 	return t;
 
 }

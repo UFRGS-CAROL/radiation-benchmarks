@@ -14,9 +14,9 @@
 #include "CacheLine.h"
 #include "utils.h"
 
-__device__ uint64 l2_cache_err1;
-__device__ uint64 l2_cache_err2;
-__device__ uint64 l2_cache_err3;
+//__device__ uint64 l2_cache_err1;
+//__device__ uint64 l2_cache_err2;
+//__device__ uint64 l2_cache_err3;
 
 
 template<typename int_t, const uint32 V_SIZE, const uint32 LINE_SIZE>
@@ -38,13 +38,6 @@ __global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines1, CacheLine<LIN
 		t2 = clock();
 		l2_hit_array[i] = t2 - t1;
 
-		//bitwise operation
-		for (uint32 it = 0; it < LINE_SIZE; it++)
-			if (r[it] != t){
-				atomicAdd(&l2_cache_err1, 1);
-				atomicAdd(&l2_cache_err2, 1);
-				atomicAdd(&l2_cache_err3, 1);
-                        }
 		lines1[i] = r;
                 lines2[i] = r;
                 lines3[i] = r;
@@ -117,14 +110,6 @@ Tuple test_l2_cache(const byte t_byte, const int64 cycles, const uint32 l2_size)
         cuda_check(cudaMemcpy(V_dev2, V_host2.data(), sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE, cudaMemcpyHostToDevice));
         cuda_check(cudaMemcpy(V_dev3, V_host3.data(), sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE, cudaMemcpyHostToDevice));
 
-	//Set to zero err_check
-	uint64 l2_cache_err_host1 = 0;
-	uint64 l2_cache_err_host2 = 0;
-	uint64 l2_cache_err_host3 = 0;
-
-	cuda_check(cudaMemcpyToSymbol(l2_cache_err1, &l2_cache_err_host1, sizeof(uint64), 	0));
-        cuda_check(cudaMemcpyToSymbol(l2_cache_err2, &l2_cache_err_host2, sizeof(uint64), 	0));
-        cuda_check(cudaMemcpyToSymbol(l2_cache_err3, &l2_cache_err_host3, sizeof(uint64), 	0));
 
 	//Clear the L2 Cache
 	clear_cache(l2_size / sizeof(float));
@@ -147,30 +132,18 @@ Tuple test_l2_cache(const byte t_byte, const int64 cycles, const uint32 l2_size)
 	cuda_check(cudaMemcpy(V_host3.data(), V_dev3, sizeof(CacheLine<L2_LINE_SIZE> ) * V_SIZE, cudaMemcpyDeviceToHost));
 
 
-	//Copy from symbol
-	cuda_check(cudaMemcpyFromSymbol(&l2_cache_err_host1, l2_cache_err1, sizeof(uint64), 0));
-        cuda_check(cudaMemcpyFromSymbol(&l2_cache_err_host2, l2_cache_err2, sizeof(uint64), 0));
-        cuda_check(cudaMemcpyFromSymbol(&l2_cache_err_host3, l2_cache_err3, sizeof(uint64), 0));
-
-	cuda_check(cudaFree(l2_hit_array_device));
+	//Free mem arrays
+        cuda_check(cudaFree(l2_hit_array_device));
 	cuda_check(cudaFree(l2_miss_array_device));
-	
         cuda_check(cudaFree(V_dev1));
 	cuda_check(cudaFree(V_dev2));
 	cuda_check(cudaFree(V_dev3));
 
+        //return the results
 	Tuple t;
-
-	t.cache_lines.assign((byte*) V_host1.data(), (byte*) V_host1.data() + (sizeof(CacheLine<L2_LINE_SIZE> ) * V_host1.size()));
-        t.cache_lines2.assign((byte*) V_host2.data(), (byte*) V_host2.data() + (sizeof(CacheLine<L2_LINE_SIZE> ) * V_host2.size()));
-        t.cache_lines3.assign((byte*) V_host3.data(), (byte*) V_host3.data() + (sizeof(CacheLine<L2_LINE_SIZE> ) * V_host3.size()));
-        
-	t.misses = std::move(l2_miss_array_host);
-	t.hits = std::move(l2_hit_array_host);
-
-	t.errors = l2_cache_err_host1;
-        t.errors2 = l2_cache_err_host2;
-        t.errors3 = l2_cache_err_host3;
+        t.move_to_byte<L2_LINE_SIZE>(V_host1, V_host2, V_host3);
+	t.set_misses(l2_miss_array_host);
+	t.set_hits(l2_hit_array_host);
 
 	return t;
 }

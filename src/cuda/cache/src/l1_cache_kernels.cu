@@ -43,13 +43,6 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines,CacheLine<LINE_
 		t2 = clock();
 		l1_t_hit[threadIdx.x] = t2 - t1;
 
-		//for (uint32 it = 0; it < LINE_SIZE; it++){
-		//	if (r[it] != t) {
-		//		atomicAdd(&l1_cache_err, 1);
-		//		atomicAdd(&l1_cache_err2, 1);
-		//		atomicAdd(&l1_cache_err3, 1);
-		//	}
-		//}
 		l1_miss_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_miss[threadIdx.x];
 		l1_hit_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_hit[threadIdx.x];
 		
@@ -84,22 +77,11 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte, const int64 c
 	cuda_check(cudaMalloc(&V_dev, sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads));
 	cuda_check(cudaMalloc(&V_dev2, sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads));
 	cuda_check(cudaMalloc(&V_dev3, sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads));
-	//cuda_check(cudaMalloc(&indexes_gpu, sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads));
-
 
 	//COPY TO GPU ----------------------------------------------
 	cuda_check(cudaMemcpy(V_dev, V_host.data(), sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads, 	cudaMemcpyHostToDevice));
 	cuda_check(cudaMemcpy(V_dev2, V_host2.data(), sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads, 	cudaMemcpyHostToDevice));
 	cuda_check(cudaMemcpy(V_dev3, V_host3.data(), sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads, 	cudaMemcpyHostToDevice));
-
-	
-	//Set to zero err_check
-	//uint64 l1_cache_err_host = 0;
-	//uint64 l1_cache_err_host2 = 0;
-	//uint64 l1_cache_err_host3 = 0;
-	//cuda_check(cudaMemcpyToSymbol(l1_cache_err, &l1_cache_err_host, sizeof(uint64), 0));
-	//cuda_check(cudaMemcpyToSymbol(l1_cache_err2, &l1_cache_err_host2, sizeof(uint64), 0));
-	//cuda_check(cudaMemcpyToSymbol(l1_cache_err3, &l1_cache_err_host3, sizeof(uint64), 0));
 
 	test_l1_cache_kernel<int32, V_SIZE, L1_LINE_SIZE, SHARED_PER_SM> <<<block_size, threads_per_block>>>(V_dev, V_dev2, V_dev3, l1_hit_array_device, l1_miss_array_device, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
@@ -117,11 +99,7 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte, const int64 c
 	cuda_check(cudaMemcpy(V_host2.data(), V_dev2,	sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads,	cudaMemcpyDeviceToHost));
 	cuda_check(cudaMemcpy(V_host3.data(), V_dev3, sizeof(CacheLine<L1_LINE_SIZE> ) * v_size_multiple_threads, cudaMemcpyDeviceToHost));
 
-	//cuda_check(cudaMemcpyFromSymbol(&l1_cache_err_host, l1_cache_err, sizeof(uint64), 0));
-	//cuda_check(cudaMemcpyFromSymbol(&l1_cache_err_host2, l1_cache_err2, sizeof(uint64), 0));
-	//cuda_check(cudaMemcpyFromSymbol(&l1_cache_err_host3, l1_cache_err3, sizeof(uint64), 0));
-	
-	
+
 	cuda_check(cudaFree(l1_hit_array_device));
 	cuda_check(cudaFree(l1_miss_array_device));
 	cuda_check(cudaFree(V_dev));
@@ -129,20 +107,10 @@ Tuple test_l1_cache(const uint32 number_of_sms, const byte t_byte, const int64 c
 	cuda_check(cudaFree(V_dev3));
 
 	Tuple t;
-
-	//t.cache_lines.assign((byte*) V_host.data(),   (byte*) V_host.data()  + (sizeof(CacheLine<L1_LINE_SIZE> ) * V_host.size()));
-	//t.cache_lines2.assign((byte*) V_host2.data(), (byte*) V_host2.data() + (sizeof(CacheLine<L1_LINE_SIZE> ) * V_host2.size()));
-	//t.cache_lines3.assign((byte*) V_host3.data(), (byte*) V_host3.data() + (sizeof(CacheLine<L1_LINE_SIZE> ) * V_host3.size()));
-        t.cache_lines = move_to_byte<L1_LINE_SIZE>(V_host);
-        t.cache_lines2 = move_to_byte<L1_LINE_SIZE>(V_host2);
-        t.cache_lines3 = move_to_byte<L1_LINE_SIZE>(V_host3);
+        t.move_to_byte(V_host, V_host2, V_host3);
+	t.set_misses(l1_miss_array_host);
+	t.set_hits(l1_hit_array_host);
 	
-	t.misses = std::move(l1_miss_array_host);
-	t.hits = std::move(l1_hit_array_host);
-	t.errors = 0;//l1_cache_err_host;
-	t.errors2 = 0;//l1_cache_err_host2;
-	t.errors3 = 0;//l1_cache_err_host3;
-
 	return t;
 }
 
