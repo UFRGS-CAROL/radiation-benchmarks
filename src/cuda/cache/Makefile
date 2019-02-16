@@ -64,13 +64,13 @@ clean:
 	
 	
 test:
-	./$(EXEC) --iterations 10
+	./$(EXEC) --iterations 10000
 	
 testl2:
 	./$(EXEC)L2 --iterations 10 --memtotest L2
 
 testshared:
-	./$(EXEC) --iterations 10 --memtotest SHARED
+	./$(EXEC) --iterations 10000 --memtotest SHARED
 	
 testregisters:
 	./$(EXEC) --iterations 10000 --memtotest REGISTERS	
