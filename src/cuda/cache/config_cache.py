@@ -9,7 +9,7 @@ import shutil
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-TYPES = ["L1", "SHARED"] #, "CONSTANT"]
+TYPES = ["L1", "L2", "SHARED"]
 ITERATIONS = 100000
 SLEEPONGPU = 1
 
@@ -36,7 +36,7 @@ def config(board, debug):
                 "cd " + src_benchmark, 
                 "make clean", 
                 "make -C ../../include ", 
-                "make DISABLEL1CACHE=0 -j 4 LOGS=1",
+                "make -j 4 LOGS=1",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/",
                 "make clean",
                 "make DISABLEL1CACHE=1 -j 4 LOGS=1",
@@ -57,12 +57,12 @@ def config(board, debug):
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)  
 
  
-    benchmark_bin += "L2"
+    benchmark_bin = benchmark_bin + "L2"
     exe = [None] * 5
     exe[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
     exe[1] = ['--iterations {}'.format(ITERATIONS)]
     exe[2] = ['--sleepongpu {}'.format(SLEEPONGPU)]
-    exe[3] = ['--memtotest ' + i]
+    exe[3] = ['--memtotest L2']
     exe[4] = ['--verbose 1']
 
     execute = [(' '.join(str(r) for v in exe for r in v))]
