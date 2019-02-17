@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 #ifdef INT			
 	unsigned long int gold = 0;		
 #elif FLOAT
-    float gold = 0.0;    						// This number considers rounding error. 
+    float gold =2.3437499476131052e-04 ;    						// This number considers rounding error. 
 #endif
 	unsigned long int i = 0;				// Loop iteration variable
 	unsigned long int j = 0;				// Loop iteration variable	
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 	printf("Gold is: %1.16e\n",gold);
 #endif
 	int error = 0 ;
-	int ref_int2 = 1;
+	int ref_int2 = 1525;
 	float ref_float2 = 0.1;
 #ifdef LOGS
     set_iter_interval_print(10);
@@ -87,16 +87,17 @@ for(i=0;i<rep;i++){
     // Tried to make assembly code for FPU, but all efforts were in vain.
     // Reference: https://cs.fit.edu/~mmahoney/cse3101/float.html
     // TODO At this moment rounding error needs to be fixed !! 
-         re = re + 0.17;
-         re = re + 0.17;
-         re = re + 0.17;
-         re = re + 0.17;
-         re = re + 0.17;
-         re = re + (-0.17);
-         re = re + (-0.17);
-         re = re + (-0.17);
-         re = re + (-0.17);
-         re = re + (-0.17);
+         re = re + 1525.74;
+         re = re + 1525.74;
+         re = re + 1525.74;
+         re = re + 1525.74;
+         re = re + 1525.74;
+         re = re + (-1525.74);
+         re = re + (-1525.74);
+         re = re + (-1525.74);
+         re = re + (-1525.74);
+         re = re + (-1525.74);
+         printf("%1.16e \n",re);
 #endif
 
 	}
@@ -115,7 +116,7 @@ for(i=0;i<rep;i++){
 	}
 #elif FLOAT
     //double delta = fabs(gold-re)/gold;
-	if( re >= 1e-8 ){
+	if( re - gold >= 1e-8 ){
 		error = 1;
 #ifdef LOGS
 		char error_detail[200];

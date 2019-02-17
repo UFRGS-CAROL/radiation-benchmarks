@@ -69,19 +69,40 @@ for(i=0;i<rep;i++){
 	for(j=0;j<sums;j++){
 #ifdef INT    
  
-        asm volatile("imul $0x3, %0;"
-                     "imul $0x3, %0;"
-                     "imul $0x3, %0;"
-                     "imul $0x3, %0;"
-                     "imul $0x3, %0;"
-                     "imul $0x3, %0;"
-                     "imul $0x3, %0;"
-                     "imul $0x3, %0;"
-                     "imul $0x3, %0;"
-                     "imul $0x3, %0;": "+r" (re) );                
-                     re = re/59049;
+        asm volatile("imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;": "+r" (re) );                
+                     re = re/9765625;
+        asm volatile("imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;"
+                     "imul $0x5, %0;": "+r" (re) );                
+                     re = re/9765625;                     
 #elif FLOAT  
     // Reference: https://cs.fit.edu/~mmahoney/cse3101/float.html
+                re = re *1.4660155E+13;
+                re = re * 6.8212105343475049e-14;
+                re = re *1.4660155E+13;
+                re = re * 6.8212105343475049e-14;
+                re = re *1.4660155E+13;
+                re = re * 6.8212105343475049e-14;
+                re = re *1.4660155E+13;
+                re = re * 6.8212105343475049e-14;
+                re = re *1.4660155E+13;
+                re = re * 6.8212105343475049e-14;
                 re = re *1.4660155E+13;
                 re = re * 6.8212105343475049e-14;
                 re = re *1.4660155E+13;
@@ -122,6 +143,8 @@ for(i=0;i<rep;i++){
 #endif				    
 	}
 #elif FLOAT
+        //printf("%1.16e\n",re);
+        //printf("%1.16e\n",re-(float)1.0);
 	if( re-(float)1.0>= 1e-8 ){
 		error = 1;
 #ifdef LOGS
