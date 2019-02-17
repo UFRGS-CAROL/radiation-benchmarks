@@ -14,10 +14,6 @@
 #include "CacheLine.h"
 #include "utils.h"
 
-//__device__ uint64 l2_cache_err1;
-//__device__ uint64 l2_cache_err2;
-//__device__ uint64 l2_cache_err3;
-
 
 template<typename int_t, const uint32 V_SIZE, const uint32 LINE_SIZE>
 __global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines1, CacheLine<LINE_SIZE> *lines2, CacheLine<LINE_SIZE> *lines3, int_t *l2_hit_array, int_t *l2_miss_array, std::int64_t sleep_cycles, byte t) {
@@ -117,11 +113,17 @@ Tuple test_l2_cache(const byte t_byte, const int64 cycles, const uint32 l2_size)
 	/**
 	 * Split alongside the blocks
 	 */
-	dim3 block_size(V_SIZE / (BLOCK_SIZE * BLOCK_SIZE));
-	dim3 threads_per_block(BLOCK_SIZE * BLOCK_SIZE);
+//	dim3 block_size(V_SIZE / (BLOCK_SIZE * BLOCK_SIZE));
+//	dim3 threads_per_block(BLOCK_SIZE * BLOCK_SIZE);
+	dim3 block_size(V_SIZE / BLOCK_SIZE);
+	dim3 threads_per_block(BLOCK_SIZE);
 
+       	double start = Log::mysecond();
 	test_l2_cache_kernel<int32, V_SIZE, L2_LINE_SIZE> <<<block_size, threads_per_block>>>(V_dev1, V_dev2, V_dev3, l2_hit_array_device, l2_miss_array_device, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
+        double end = Log::mysecond();
+    
+       // std::cout << "KERNEL TIME " << end - start << std::endl;
 
 	cuda_check(cudaMemcpy(l2_hit_array_host.data(), l2_hit_array_device,  sizeof(int32) * V_SIZE, cudaMemcpyDeviceToHost));
 	cuda_check(cudaMemcpy(l2_miss_array_host.data(), l2_miss_array_device, sizeof(int32) * V_SIZE, cudaMemcpyDeviceToHost));
@@ -167,16 +169,15 @@ Tuple test_l2_cache(const Parameters& parameters) {
 	}
         case XAVIER: {
                 const uint32 max_l2_cache = 512 * 1024; //bytes
-                if (max_l2_cache != parameters.l2_size)
-                        error(
-                                        "L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
-                                                        + std::to_string(parameters.l2_size));
+                //if (max_l2_cache != parameters.l2_size)
+                      //  error(
+                      //                  "L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
+                        //                                + std::to_string(parameters.l2_size));
 
                 const uint32 cache_line_size = 128;
                 const uint32 v_size = max_l2_cache / cache_line_size;
 
-                return test_l2_cache<v_size, cache_line_size>(parameters.t_byte,
-				parameters.one_second_cycles, max_l2_cache);
+                return test_l2_cache<v_size, cache_line_size>(parameters.t_byte, parameters.one_second_cycles, max_l2_cache);
 	}
 	case TITANV: {
 		const uint32 max_l2_cache = 4608 * 1024; //bytes
