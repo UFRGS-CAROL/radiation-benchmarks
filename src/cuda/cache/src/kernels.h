@@ -75,18 +75,20 @@ struct Tuple {
         
         template<typename T = std::vector<uint32> >
         void move_register_file(T& rf1, T& rf2, T& rf3){
-                this->register_file1 = std::move(rf1);
-                this->register_file2 = std::move(rf2);
-                this->register_file3 = std::move(rf3);
+                this->register_file1 = rf1;
+                this->register_file2 = rf2;
+                this->register_file3 = rf3;
         }
         
         void set_misses(std::vector<int32>& miss){
-                this->misses = std::move(miss);
+                this->misses = miss;
         }
         
         void set_hits(std::vector<int32>& hits){
-                this->hits = std::move(hits);
+                this->hits = hits;
         }
+        
+
 };
 
 

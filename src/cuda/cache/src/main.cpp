@@ -155,7 +155,7 @@ std::string error_detail(uint32 i, T e, T r, uint32 hits = 0, uint32 false_hit =
 			case (RF): {
 				std::string error_detail = "";
 				error_detail += " i:" + std::to_string(i);
-				error_detail += " register:R" + std::to_string(i);
+				error_detail += " register:R" + std::to_string(i % 256);
 				error_detail += " e:" + std::to_string(e);
 				error_detail += " r:" + std::to_string(r);
 				return error_detail;
