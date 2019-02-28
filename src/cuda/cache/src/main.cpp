@@ -247,11 +247,9 @@ bool check_output_errors(const std::vector<T>& v1, const std::vector<T>& v2, con
 
     if (log.errors != 0 ) {
         std::cout << "#" << std::endl;
-        //log.update_error_count();
     }
     if (log.infos != 0){
         std::cout << "M" << std::endl;
-        //log.update_info_count();
     }
     return log.errors == 0 || log.infos == 0;
 }
@@ -416,6 +414,7 @@ int main(int argc, char **argv) {
                     log.log_info(info_line);
                 }
                 log.update_error_count();
+                log.update_info_count();
             }
 
             std::cout << "Iteration: " << iteration << " Time: "
