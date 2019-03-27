@@ -11,6 +11,9 @@
 #include <sys/time.h>
 #include <stdio.h>
 
+#ifdef LOGS
+#include "log_helper.h"
+#endif
 
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
 

@@ -13,24 +13,33 @@
 #include "cuda_utils.h"
 
 template<class T>
-class DeviceVector{
-private:
-	T *device_data = nullptr;
-
-	bool allocated = false;
+struct DeviceVector{
+	T *data;
+	bool allocated;
 	size_t v_size;
 
-public:
+	DeviceVector(){
+		this->v_size = 0;
+		this->allocated = 0;
+		this->data = nullptr;
+	}
+
+	DeviceVector(const DeviceVector<T>& b){
+		this->v_size = b.v_size;
+		checkFrameworkErrors(cudaMalloc(&this->data, sizeof(T) * this->v_size));
+		this->allocated = true;
+		checkFrameworkErrors(cudaMemcpy(this->data, b.data(), sizeof(T) * this->v_size, cudaMemcpyDeviceToDevice));
+	}
 
 	DeviceVector(size_t size){
 		this->v_size = size;
-		checkFrameworkErrors(cudaMalloc(&this->device_data, sizeof(T) * this->v_size));
+		checkFrameworkErrors(cudaMalloc(&this->data, sizeof(T) * this->v_size));
 		this->allocated = true;
 	}
 
 	virtual ~DeviceVector(){
 		if(this->allocated){
-			checkFrameworkErrors(cudaFree(this->device_data));
+			checkFrameworkErrors(cudaFree(this->data));
 		}
 
 		this->allocated = false;
@@ -42,18 +51,18 @@ public:
 
 	DeviceVector<T>& operator=(const std::vector<T>& other) {
 		if(this->v_size != other.size()){
-			checkFrameworkErrors(cudaFree(this->device_data));
+			checkFrameworkErrors(cudaFree(this->data));
 			this->allocated = false;
 		}
 
 		if (this->allocated == false) {
 			this->v_size = other.size();
-			checkFrameworkErrors(cudaMalloc(&this->device_data, sizeof(T) * this->v_size));
+			checkFrameworkErrors(cudaMalloc(&this->data, sizeof(T) * this->v_size));
 			this->allocated = true;
 		}
 
 
-		checkFrameworkErrors(cudaMemcpy(this->device_data, other.data(), sizeof(T) * this->v_size,
+		checkFrameworkErrors(cudaMemcpy(this->data, other.data(), sizeof(T) * this->v_size,
 								cudaMemcpyHostToDevice));
 
 		return *this;
@@ -63,7 +72,7 @@ public:
 	std::vector<T> to_vector(){
 		std::vector<T> ret(this->v_size);
 
-		checkFrameworkErrors(cudaMemcpy(ret.data(), this->device_data, sizeof(T) * this->v_size, cudaMemcpyDeviceToHost));
+		checkFrameworkErrors(cudaMemcpy(ret.data(), this->data, sizeof(T) * this->v_size, cudaMemcpyDeviceToHost));
 		return ret;
 	}
 
