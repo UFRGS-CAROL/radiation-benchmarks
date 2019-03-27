@@ -60,10 +60,10 @@ public:
 	}
 
 
-	std::vector<T> to_vector(const DeviceVector<T>& other){
-		std::vector<T> ret(other.v_size);
+	std::vector<T> to_vector(){
+		std::vector<T> ret(this->v_size);
 
-		checkFrameworkErrors(cudaMemcpy(ret.data(), other.device_data, sizeof(T) * other->v_size, cudaMemcpyDeviceToHost));
+		checkFrameworkErrors(cudaMemcpy(ret.data(), this->device_data, sizeof(T) * this->v_size, cudaMemcpyDeviceToHost));
 		return ret;
 	}
 
