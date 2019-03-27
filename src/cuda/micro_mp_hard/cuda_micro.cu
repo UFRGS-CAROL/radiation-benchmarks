@@ -159,6 +159,7 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 #endif
 		checkFrameworkErrors(cudaPeekAtLastError());
 		checkFrameworkErrors(cudaDeviceSynchronize());
+		checkFrameworkErrors(cudaPeekAtLastError());
 
 		//====================================
 #ifdef LOGS
