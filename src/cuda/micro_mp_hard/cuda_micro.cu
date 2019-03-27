@@ -126,7 +126,7 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 	std::printf("cuda_micro-%s_%s\n", test_type_description, test_precision_description);
 	//====================================
 	std::vector<incomplete> host_vector_inc(r_size, 0);
-	std::vector<full> host_vector_ful;
+	std::vector<full> host_vector_ful(r_size, 0);
 
 	DeviceVector<incomplete> device_vector_inc;
 	DeviceVector<full> device_vector_ful;
@@ -157,9 +157,9 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 #ifdef MUL
 		MicroBenchmarkKernel_MUL_DMR<<<gridsize, blocksize>>>(d_R);
 #endif
-
-		checkFrameworkErrors(cudaDeviceSynchronize());
 		checkFrameworkErrors(cudaPeekAtLastError());
+		checkFrameworkErrors(cudaDeviceSynchronize());
+
 		//====================================
 #ifdef LOGS
 		end_iteration();

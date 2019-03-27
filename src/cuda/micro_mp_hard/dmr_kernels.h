@@ -21,7 +21,7 @@ __device__ void inline check_relative_error(half acc_incomplete, float acc_full,
 
 __device__ void inline check_relative_error(float acc_incomplete,
 		double acc_full, double e) {
-	register float relative_error = fabs(acc_full - acc_incomplete) / acc_full;
+	register float relative_error = fabs(acc_full - double(acc_incomplete)) / acc_full;
 	if (relative_error > e) {
 		atomicAdd(&errors, 1);
 	}
