@@ -9,6 +9,7 @@
 #define CUDA_UTILS_H_
 
 #include <sys/time.h>
+#include <stdio.h>
 
 
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
