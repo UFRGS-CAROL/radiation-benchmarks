@@ -12,14 +12,6 @@
 #include <vector>
 #include "cuda_utils.h"
 
-std::vector<T> operator=(const DeviceVector<T>& other){
-	std::vector<T> ret(other.v_size);
-
-	checkFrameworkErrors(cudaMemcpy(ret.data(), other.device_data, sizeof(T) * other->v_size, cudaMemcpyDeviceToHost));
-	return ret;
-}
-
-
 template<class T>
 class DeviceVector{
 private:
@@ -68,6 +60,12 @@ public:
 	}
 
 
+	std::vector<T> operator=(const DeviceVector<T>& other){
+		std::vector<T> ret(other.v_size);
+
+		checkFrameworkErrors(cudaMemcpy(ret.data(), other.device_data, sizeof(T) * other->v_size, cudaMemcpyDeviceToHost));
+		return ret;
+	}
 
 };
 
