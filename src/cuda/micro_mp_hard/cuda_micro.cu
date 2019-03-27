@@ -144,19 +144,17 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 #endif
 		//================== Device computation
 //#ifdef FMA
-//		template<typename incomplete, typename full, int OUTPUT_R, int INPUT_A, int INPUT_B, int OPS_THREAD>
-//		__global__ void MicroBenchmarkKernel_FMA_DMR(incomplete *d_R0_one, full *d_R0_second, full error_threshold)
 		MicroBenchmarkKernel_FMA_DMR<incomplete, full> <<<gridsize, blocksize>>>
 				(device_vector_inc.data, device_vector_ful.data, 0.1,  OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF);
 //#endif
 
-#ifdef ADD
-		MicroBenchmarkKernel_ADD_DMR<<<gridsize, blocksize>>>(d_R);
-#endif
-
-#ifdef MUL
-		MicroBenchmarkKernel_MUL_DMR<<<gridsize, blocksize>>>(d_R);
-#endif
+//#ifdef ADD
+//		MicroBenchmarkKernel_ADD_DMR<<<gridsize, blocksize>>>(d_R);
+//#endif
+//
+//#ifdef MUL
+//		MicroBenchmarkKernel_MUL_DMR<<<gridsize, blocksize>>>(d_R);
+//#endif
 		checkFrameworkErrors(cudaPeekAtLastError());
 		checkFrameworkErrors(cudaDeviceSynchronize());
 		checkFrameworkErrors(cudaPeekAtLastError());

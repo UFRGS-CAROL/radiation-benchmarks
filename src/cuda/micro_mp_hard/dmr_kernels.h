@@ -49,13 +49,13 @@ __global__ void MicroBenchmarkKernel_FMA_DMR(incomplete *d_R0_one,
 	register incomplete input_b_neg_incomplete = -INPUT_B;
 #endif
 
-#ifdef SINGLE
-	register incomplete acc_incomplete = __float2half_rn(OUTPUT_R);
-	register incomplete input_a_incomplete = __float2half_rn(INPUT_A);
-	register incomplete input_b_incomplete = __float2half_rn(INPUT_B);
-	register incomplete input_a_neg_incomplete = __float2half_rn(-INPUT_A);
-	register incomplete input_b_neg_incomplete = __float2half_rn(-INPUT_B);
-#endif
+//#ifdef SINGLE
+//	register incomplete acc_incomplete = __float2half_rn(OUTPUT_R);
+//	register incomplete input_a_incomplete = __float2half_rn(INPUT_A);
+//	register incomplete input_b_incomplete = __float2half_rn(INPUT_B);
+//	register incomplete input_a_neg_incomplete = __float2half_rn(-INPUT_A);
+//	register incomplete input_b_neg_incomplete = __float2half_rn(-INPUT_B);
+//#endif
 
 #pragma unroll 512
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
@@ -71,21 +71,21 @@ __global__ void MicroBenchmarkKernel_FMA_DMR(incomplete *d_R0_one,
 		acc_incomplete = __fmaf_rn(input_a_neg_incomplete, input_b_neg_incomplete, acc_incomplete);
 #endif
 
-#ifdef SINGLE
-		acc_full = __fmaf_rn(input_a_full, input_b_full, acc_full);
-		acc_full = __fmaf_rn(input_a_neg_full, input_b_full, acc_full);
-		acc_full = __fmaf_rn(input_a_full, input_b_neg_full, acc_full);
-		acc_full = __fmaf_rn(input_a_neg_full, input_b_neg_full, acc_full);
-
-		acc_incomplete = __hfma(input_a_incomplete, input_b_incomplete,
-				acc_incomplete);
-		acc_incomplete = __hfma(input_a_neg_incomplete, input_b_incomplete,
-				acc_incomplete);
-		acc_incomplete = __hfma(input_a_incomplete, input_b_neg_incomplete,
-				acc_incomplete);
-		acc_incomplete = __hfma(input_a_neg_incomplete, input_b_neg_incomplete,
-				acc_incomplete);
-#endif
+//#ifdef SINGLE
+//		acc_full = __fmaf_rn(input_a_full, input_b_full, acc_full);
+//		acc_full = __fmaf_rn(input_a_neg_full, input_b_full, acc_full);
+//		acc_full = __fmaf_rn(input_a_full, input_b_neg_full, acc_full);
+//		acc_full = __fmaf_rn(input_a_neg_full, input_b_neg_full, acc_full);
+//
+//		acc_incomplete = __hfma(input_a_incomplete, input_b_incomplete,
+//				acc_incomplete);
+//		acc_incomplete = __hfma(input_a_neg_incomplete, input_b_incomplete,
+//				acc_incomplete);
+//		acc_incomplete = __hfma(input_a_incomplete, input_b_neg_incomplete,
+//				acc_incomplete);
+//		acc_incomplete = __hfma(input_a_neg_incomplete, input_b_neg_incomplete,
+//				acc_incomplete);
+//#endif
 
 	}
 
