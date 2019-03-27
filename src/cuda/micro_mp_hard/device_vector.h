@@ -60,7 +60,7 @@ public:
 	}
 
 
-	std::vector<T> operator=(const DeviceVector<T>& other){
+	std::vector<T> to_vector(const DeviceVector<T>& other){
 		std::vector<T> ret(other.v_size);
 
 		checkFrameworkErrors(cudaMemcpy(ret.data(), other.device_data, sizeof(T) * other->v_size, cudaMemcpyDeviceToHost));
