@@ -8,6 +8,8 @@
 #ifndef CUDA_UTILS_H_
 #define CUDA_UTILS_H_
 
+#include <sys/time.h>
+
 
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
 
