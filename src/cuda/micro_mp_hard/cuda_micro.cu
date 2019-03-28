@@ -72,6 +72,14 @@ const char test_precision_description[] = "single";
 const char test_precision_description[] = "double";
 #endif
 
+
+unsigned long long copy_errors(){
+	unsigned long long errors_host = 0;
+	checkFrameworkErrors(cudaMemcpyFromSymbol(&errors_host, errors, sizeof(unsigned long long), 0, cudaMemcpyDeviceToHost));
+	return errors_host;
+}
+
+
 void usage(int argc, char* argv[]) {
 	printf("Usage: %s [-iterations=N] [-verbose]\n", argv[0]);
 }
@@ -158,6 +166,8 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 		checkFrameworkErrors(cudaPeekAtLastError());
 		checkFrameworkErrors(cudaDeviceSynchronize());
 		checkFrameworkErrors(cudaPeekAtLastError());
+
+		std::printf("ERRORS %lld\n", copy_errors());
 
 		//====================================
 #ifdef LOGS
