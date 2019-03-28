@@ -59,7 +59,15 @@ double mysecond() {
 	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
 }
 
+__device__ unsigned long long errors = 0;
 
+unsigned long long copy_errors() {
+	unsigned long long errors_host = 0;
+	checkFrameworkErrors(
+			cudaMemcpyFromSymbol(&errors_host, errors,
+					sizeof(unsigned long long), 0, cudaMemcpyDeviceToHost));
+	return errors_host;
+}
 
 
 

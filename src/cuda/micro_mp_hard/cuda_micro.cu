@@ -72,14 +72,6 @@ const char test_precision_description[] = "single";
 const char test_precision_description[] = "double";
 #endif
 
-
-unsigned long long copy_errors(){
-	unsigned long long errors_host = 0;
-	checkFrameworkErrors(cudaMemcpyFromSymbol(&errors_host, errors, sizeof(unsigned long long), 0, cudaMemcpyDeviceToHost));
-	return errors_host;
-}
-
-
 void usage(int argc, char* argv[]) {
 	printf("Usage: %s [-iterations=N] [-verbose]\n", argv[0]);
 }
@@ -123,7 +115,8 @@ bool checkOutputErrors(std::vector<T> &R, bool verbose) {
 
 template<typename incomplete, typename full>
 void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
-		int blocksize) {
+		int blocksize, const incomplete OUTPUT_R, const incomplete INPUT_A,
+		const incomplete INPUT_B) {
 	//================== Init test environment
 	// kernel_errors=0;
 	double total_kernel_time = 0;
@@ -131,7 +124,8 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 	double max_kernel_time = 0;
 	double global_time;
 
-	std::printf("cuda_micro-%s_%s\n", test_type_description, test_precision_description);
+	std::printf("cuda_micro-%s_%s\n", test_type_description,
+			test_precision_description);
 	//====================================
 	std::vector<incomplete> host_vector_inc(r_size, 0);
 	std::vector<full> host_vector_ful(r_size, 0);
@@ -151,18 +145,20 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 		start_iteration();
 #endif
 		//================== Device computation
-//#ifdef FMA
+#ifdef FMA
 		MicroBenchmarkKernel_FMA_DMR<incomplete, full> <<<gridsize, blocksize>>>
-				(device_vector_inc.data, device_vector_ful.data, 0.1,  OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF);
-//#endif
+		(device_vector_inc.data, device_vector_ful.data, 0.1, OUTPUT_R, INPUT_A, INPUT_B);
+#endif
 
-//#ifdef ADD
-//		MicroBenchmarkKernel_ADD_DMR<<<gridsize, blocksize>>>(d_R);
-//#endif
-//
-//#ifdef MUL
-//		MicroBenchmarkKernel_MUL_DMR<<<gridsize, blocksize>>>(d_R);
-//#endif
+#ifdef ADD
+		MicroBenchmarkKernel_ADD_DMR<incomplete, full> <<<gridsize, blocksize>>>
+		(device_vector_inc.data, device_vector_ful.data, 0.1, OUTPUT_R, INPUT_A, INPUT_B);
+#endif
+
+#ifdef MUL
+		MicroBenchmarkKernel_MUL_DMR<incomplete, full> <<<gridsize, blocksize>>>
+		(device_vector_inc.data, device_vector_ful.data, 0.1, OUTPUT_R, INPUT_A, INPUT_B);
+#endif
 		checkFrameworkErrors(cudaPeekAtLastError());
 		checkFrameworkErrors(cudaDeviceSynchronize());
 		checkFrameworkErrors(cudaPeekAtLastError());
@@ -206,7 +202,7 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 					mysecond() - global_time);
 	}
 
-	double gflops = r_size * OPS * OPS_PER_THREAD_OPERATION / 1000000000; // Bilion FLoating-point OPerationS
+	double gflops = r_size * OPS * OPS_PER_THREAD_OPERATION / 1000000000; // Billion FLoating-point OPerationS
 	double averageKernelTime = total_kernel_time / iterations;
 	std::printf("\n-- END --\n"
 			"Total kernel time: %.3fs\n"
@@ -240,22 +236,48 @@ int main(int argc, char* argv[]) {
 
 	int r_size = gridsize * blocksize * OPS_PER_THREAD_OPERATION;
 //====================================
-
+	std::string mixed = "plain";
+#ifdef MIXED
+	mixed = "mixed";
+#endif
 //================== Init logs
 #ifdef LOGS
 	char test_info[250];
 	char test_name[250];
-	snprintf(test_info, 250, "ops:%d gridsize:%d blocksize:%d type:%s-%s-precision", OPS, gridsize, blocksize, test_type_description, test_precision_description);
+	snprintf(test_info, 250, "ops:%d gridsize:%d blocksize:%d type:%s-%s-precision hard:%s", OPS, gridsize, blocksize,
+			test_type_description, test_precision_description, mixed.c_str());
 	snprintf(test_name, 250, "cuda_%s_micro-%s", test_precision_description, test_type_description);
 	start_log_file(test_name, test_info);
 #endif
+	printf("dfdfd %d\n\n\n", MIXED);
+#if MIXED == 1
+#ifdef DOUBLE
+		test_radiation<float, double>(iterations, verbose, r_size, gridsize,
+				blocksize, OUTPUT_R_SINGLE, INPUT_A_SINGLE, INPUT_B_SINGLE);
+#endif
 
-	test_radiation<float, double>(iterations, verbose, r_size, gridsize,
-			blocksize);
+#ifdef SINGLE
+		test_radiation<half, float>(iterations, verbose, r_size, gridsize,
+				blocksize, OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF);
+#endif
 
-	test_radiation<half, float>(iterations, verbose, r_size, gridsize,
-			blocksize);
+#else
 
+#ifdef HALF
+		test_radiation<double, double>(iterations, verbose, r_size, gridsize,
+				blocksize, OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF);
+#endif
+
+#ifdef SINGLE
+		test_radiation<float, float>(iterations, verbose, r_size, gridsize,
+				blocksize, OUTPUT_R_SINGLE, INPUT_A_SINGLE, INPUT_B_SINGLE);
+#endif
+
+#ifdef DOUBLE
+		test_radiation<half, half>(iterations, verbose, r_size, gridsize,
+				blocksize, OUTPUT_R_DOUBLE, INPUT_A_DOUBLE, INPUT_B_DOUBLE);
+#endif
+#endif
 
 #ifdef LOGS
 	end_log_file();
