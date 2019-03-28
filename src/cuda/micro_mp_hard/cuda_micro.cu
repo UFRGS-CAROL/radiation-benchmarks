@@ -249,7 +249,7 @@ int main(int argc, char* argv[]) {
 	snprintf(test_name, 250, "cuda_%s_micro-%s", test_precision_description, test_type_description);
 	start_log_file(test_name, test_info);
 #endif
-	printf("dfdfd %d\n\n\n", MIXED);
+
 #if MIXED == 1
 #ifdef DOUBLE
 		test_radiation<float, double>(iterations, verbose, r_size, gridsize,
@@ -264,7 +264,7 @@ int main(int argc, char* argv[]) {
 #else
 
 #ifdef HALF
-		test_radiation<double, double>(iterations, verbose, r_size, gridsize,
+		test_radiation<half, half>(iterations, verbose, r_size, gridsize,
 				blocksize, OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF);
 #endif
 
@@ -274,7 +274,7 @@ int main(int argc, char* argv[]) {
 #endif
 
 #ifdef DOUBLE
-		test_radiation<half, half>(iterations, verbose, r_size, gridsize,
+		test_radiation<double, double>(iterations, verbose, r_size, gridsize,
 				blocksize, OUTPUT_R_DOUBLE, INPUT_A_DOUBLE, INPUT_B_DOUBLE);
 #endif
 #endif
