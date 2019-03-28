@@ -217,9 +217,6 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 			max_kernel_time, gflops / averageKernelTime,
 			gflops / min_kernel_time, gflops / max_kernel_time);
 
-#ifdef LOGS
-	end_log_file();
-#endif
 }
 
 int main(int argc, char* argv[]) {
@@ -255,5 +252,13 @@ int main(int argc, char* argv[]) {
 
 	test_radiation<float, double>(iterations, verbose, r_size, gridsize,
 			blocksize);
+
+	test_radiation<half, float>(iterations, verbose, r_size, gridsize,
+			blocksize);
+
+
+#ifdef LOGS
+	end_log_file();
+#endif
 	return 0;
 }
