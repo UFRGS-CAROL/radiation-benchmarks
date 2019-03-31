@@ -17,7 +17,7 @@
  */
 
 template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_FMA_DMR(incomplete *d_R0_one,
+__global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 		full *d_R0_second, full error_threshold, const full OUTPUT_R,
 		const full INPUT_A, const full INPUT_B) {
 	register full acc_full = OUTPUT_R;
@@ -64,7 +64,7 @@ __global__ void MicroBenchmarkKernel_FMA_DMR(incomplete *d_R0_one,
  */
 
 template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_ADD_DMR(incomplete *d_R0_one,
+__global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 		full *d_R0_second, full error_threshold, const full OUTPUT_R,
 		const full INPUT_A, const full INPUT_B) {
 // ========================================== Double and Single precision
@@ -102,7 +102,7 @@ __global__ void MicroBenchmarkKernel_ADD_DMR(incomplete *d_R0_one,
  */
 
 template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_MUL_DMR(incomplete *d_R0_one,
+__global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 		full *d_R0_second, full error_threshold, const full OUTPUT_R,
 		const full INPUT_A, const full INPUT_B) {
 
