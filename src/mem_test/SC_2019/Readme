@@ -1,0 +1,52 @@
+/***************************************************************************
+//                  Memory Test Developed for radiation benchmarks. 
+//                        Gabriel Piscoya Dávila - 00246031
+//                               README
+***************************************************************************/
+
+Inside the folder must be: 
+    * new_verify_mem.cpp -> Source Code
+    * Makefile
+        * g++ compiler and openmp library are used.    
+Pre-Requisites: 
+    * Download the Radiation Benchmarks Repo available on https://github.com/UFRGS-CAROL/radiation-benchmarks
+    * Go to the scripts folder and run install.py script in order to compile the necessary libraries (LogHelper)
+ 
+Usage:  ./mem_test -h
+        Memory_Test  Usage:  ./mem_test [options]
+
+        General options:
+         -s <S> Memory Size in Bytes
+         -e <E> Malloc (External) Iterations
+         -i <I> Verification (Internal, same for 0x00 and 0xFF) Iterations
+         -v <V> Verbose Mode
+         -w <W> Wait Time between Write and Read in Seconds
+
+Default Parameters: 
+
+        ./mem_test is equivalent to ./mem_test -s 3758096384 -e 100 -i 50 -w 0
+
+Output:
+    * The output is logged using LogHelper Library and also is writen in the terminal. 
+    
+
+/*******************************************************************************           
+//                              Test Reproducibility
+*******************************************************************************/  
+
+
+** DDR3 Memory ** 
+    
+    * Ubuntu 14.04.5 LTS (GNU/Linux 3.13.0-153-generic x86_64)
+    * Memory Stick have 4GB and 8 Memory banks
+    * ./mem_test -s 3758096384 -e 100 -i 50 -w 0
+    
+    
+
+
+** DDR4 Memory **
+    
+    * Memory Stick have 8GB
+    * ./mem_test -s 7516192768 -e 100 -i 50 -w 0
+
+
