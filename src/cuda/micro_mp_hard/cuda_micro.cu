@@ -12,9 +12,9 @@
 #include "none_kernels.h"
 #include "device_vector.h"
 #include "cuda_utils.h"
+#include "Parameters.h"
 
 // helper functions
-#include "helper_string.h"
 #include "helper_cuda.h"
 
 #define HALF_ROUND_STYLE 1
@@ -46,32 +46,6 @@
 #define OUTPUT_R_HALF 4.44 // 0x4471
 
 #define OPS_PER_THREAD_OPERATION 1
-
-//=====================================================
-
-#ifdef FMA
-const char test_type_description[] = "fma_dmr";
-#endif
-
-#ifdef ADD
-const char test_type_description[] = "add_dmr";
-#endif
-
-#ifdef MUL
-const char test_type_description[] = "mul_dmr";
-#endif
-
-#ifdef HALF
-const char test_precision_description[] = "half";
-#endif
-
-#ifdef SINGLE
-const char test_precision_description[] = "single";
-#endif
-
-#ifdef DOUBLE
-const char test_precision_description[] = "double";
-#endif
 
 void usage(int argc, char* argv[]) {
 	printf("Usage: %s [-iterations=N] [-verbose]\n", argv[0]);
@@ -117,7 +91,7 @@ bool checkOutputErrors(std::vector<T> &R, bool verbose) {
 template<typename incomplete, typename full>
 void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 		int blocksize, const incomplete OUTPUT_R, const incomplete INPUT_A,
-		const incomplete INPUT_B) {
+		const incomplete INPUT_B, Parameters& parameters) {
 	//================== Init test environment
 	// kernel_errors=0;
 	double total_kernel_time = 0;
@@ -125,8 +99,7 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 	double max_kernel_time = 0;
 	double global_time;
 
-	std::printf("cuda_micro-%s_%s\n", test_type_description,
-			test_precision_description);
+	parameters.print_details();
 	//====================================
 	std::vector<incomplete> host_vector_inc(r_size, 0);
 	std::vector<full> host_vector_ful(r_size, 0);
@@ -146,23 +119,24 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 		start_iteration();
 #endif
 		//================== Device computation
-#ifdef FMA
-		MicroBenchmarkKernel_FMA<incomplete, full> <<<gridsize, blocksize>>>(
-				device_vector_inc.data, device_vector_ful.data, 0.1, OUTPUT_R,
-				INPUT_A, INPUT_B);
-#endif
+		switch (parameters.micro) {
+		case ADD:
+			MicroBenchmarkKernel_ADD<incomplete, full> <<<gridsize, blocksize>>>(
+					device_vector_inc.data, device_vector_ful.data, 0.1,
+					OUTPUT_R, INPUT_A, INPUT_B);
+			break;
+		case MUL:
+			MicroBenchmarkKernel_MUL<incomplete, full> <<<gridsize, blocksize>>>(
+					device_vector_inc.data, device_vector_ful.data, 0.1,
+					OUTPUT_R, INPUT_A, INPUT_B);
+			break;
+		case FMA:
+			MicroBenchmarkKernel_FMA<incomplete, full> <<<gridsize, blocksize>>>(
+					device_vector_inc.data, device_vector_ful.data, 0.1,
+					OUTPUT_R, INPUT_A, INPUT_B);
+			break;
+		}
 
-#ifdef ADD
-		MicroBenchmarkKernel_ADD<incomplete, full> <<<gridsize, blocksize>>>(
-				device_vector_inc.data, device_vector_ful.data, 0.1, OUTPUT_R,
-				INPUT_A, INPUT_B);
-#endif
-
-#ifdef MUL
-		MicroBenchmarkKernel_MUL<incomplete, full> <<<gridsize, blocksize>>>(
-				device_vector_inc.data, device_vector_ful.data, 0.1, OUTPUT_R,
-				INPUT_A, INPUT_B);
-#endif
 		checkFrameworkErrors(cudaPeekAtLastError());
 		checkFrameworkErrors(cudaDeviceSynchronize());
 		checkFrameworkErrors(cudaPeekAtLastError());
@@ -222,7 +196,7 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 template<typename full>
 void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 		int blocksize, const full OUTPUT_R, const full INPUT_A,
-		const full INPUT_B) {
+		const full INPUT_B, Parameters& parameters) {
 	//================== Init test environment
 	// kernel_errors=0;
 	double total_kernel_time = 0;
@@ -230,8 +204,7 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 	double max_kernel_time = 0;
 	double global_time;
 
-	std::printf("cuda_micro-%s_%s\n", test_type_description,
-			test_precision_description);
+	parameters.print_details();
 	//====================================
 	std::vector<full> host_vector_ful(r_size, 0);
 	DeviceVector<full> device_vector_ful;
@@ -247,20 +220,21 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 		start_iteration();
 #endif
 		//================== Device computation
-#ifdef FMA
-		MicroBenchmarkKernel_FMA<full> <<<gridsize, blocksize>>>(
-				device_vector_ful.data, OUTPUT_R, INPUT_A, INPUT_B);
-#endif
+		switch (parameters.micro) {
+		case ADD:
+			MicroBenchmarkKernel_ADD<full> <<<gridsize, blocksize>>>(
+					device_vector_ful.data, OUTPUT_R, INPUT_A, INPUT_B);
+			break;
+		case MUL:
+			MicroBenchmarkKernel_MUL<full> <<<gridsize, blocksize>>>(
+					device_vector_ful.data, OUTPUT_R, INPUT_A, INPUT_B);
+			break;
+		case FMA:
+			MicroBenchmarkKernel_FMA<full> <<<gridsize, blocksize>>>(
+					device_vector_ful.data, OUTPUT_R, INPUT_A, INPUT_B);
+			break;
+		}
 
-#ifdef ADD
-		MicroBenchmarkKernel_ADD<full> <<<gridsize, blocksize>>>(
-				device_vector_ful.data, OUTPUT_R, INPUT_A, INPUT_B);
-#endif
-
-#ifdef MUL
-		MicroBenchmarkKernel_MUL<full> <<<gridsize, blocksize>>>(
-				device_vector_ful.data, OUTPUT_R, INPUT_A, INPUT_B);
-#endif
 		checkFrameworkErrors(cudaPeekAtLastError());
 		checkFrameworkErrors(cudaDeviceSynchronize());
 		checkFrameworkErrors(cudaPeekAtLastError());
@@ -317,102 +291,92 @@ void test_radiation(int iterations, bool verbose, int r_size, int gridsize,
 
 }
 
-void dmr(int iterations, bool verbose, int r_size, int gridsize,
-		int blocksize) {
-#if MIXED == 1
-#ifdef DOUBLE
-	test_radiation<float, double>(iterations, verbose, r_size, gridsize,
-			blocksize, OUTPUT_R_SINGLE, INPUT_A_SINGLE, INPUT_B_SINGLE);
-#endif
+void dmr(Parameters& parameters) {
+	switch (parameters.redundancy) {
+	//NONE REDUNDANCY ----------------------------------------------------------
+	case NONE:
+		switch (parameters.precision) {
+		case DOUBLE:
+			test_radiation<half>(parameters.iterations, parameters.verbose, r_size, gridsize,
+					blocksize, OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF);
+			break;
+		case SINGLE:
+			test_radiation<float>(parameters.iterations, parameters.verbose, r_size, gridsize,
+					blocksize,
+					OUTPUT_R_SINGLE, INPUT_A_SINGLE, INPUT_B_SINGLE);
+			break;
 
-#ifdef SINGLE
-	test_radiation<half, float>(iterations, verbose, r_size, gridsize,
-			blocksize, OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF);
-#endif
+		case DOUBLE:
+			test_radiation<double>(parameters.iterations, parameters.verbose, r_size, gridsize,
+					blocksize,
+					OUTPUT_R_DOUBLE, INPUT_A_DOUBLE, INPUT_B_DOUBLE);
+			break;
+		}
+		break;
 
-#else // ELSE IFDEF MIXED == 1
+		//DMR MIXED REDUNDANCY -------------------------------------------------------
+	case DMRMIXED:
+		switch (parameters.precision) {
+		case DOUBLE:
+			test_radiation<float, double>(parameters.iterations, parameters.verbose, r_size, gridsize,
+					blocksize, OUTPUT_R_SINGLE, INPUT_A_SINGLE, INPUT_B_SINGLE);
+			break;
+		case SINGLE:
+			test_radiation<half, float>(iterations, verbose, r_size, gridsize,
+					blocksize, OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF);
+			break;
+		}
+		break;
 
-#ifdef HALF
-	test_radiation<half, half>(iterations, verbose, r_size, gridsize, blocksize,
-			OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF);
-#endif
+		//DMR REDUNDANCY -------------------------------------------------------
+	case DMR:
+		switch (parameters.precision) {
+		case DOUBLE:
+			test_radiation<double, double>(iterations, verbose, r_size,
+					gridsize, blocksize, OUTPUT_R_DOUBLE, INPUT_A_DOUBLE,
+					INPUT_B_DOUBLE);
+			break;
+		case SINGLE:
+			test_radiation<float, float>(iterations, verbose, r_size, gridsize,
+					blocksize, OUTPUT_R_SINGLE, INPUT_A_SINGLE, INPUT_B_SINGLE);
+			break;
+		case HALF:
+			test_radiation<half, half>(iterations, verbose, r_size, gridsize,
+					blocksize,
+					OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF);
+			break;
+		}
+		break;
 
-#ifdef SINGLE
-	test_radiation<float, float>(iterations, verbose, r_size, gridsize,
-			blocksize, OUTPUT_R_SINGLE, INPUT_A_SINGLE, INPUT_B_SINGLE);
-#endif
+	}
 
-#ifdef DOUBLE
-	test_radiation<double, double>(iterations, verbose, r_size, gridsize,
-			blocksize, OUTPUT_R_DOUBLE, INPUT_A_DOUBLE, INPUT_B_DOUBLE);
-#endif
-
-#endif // ENDIF IFDEF MIXED
-}
-
-void none(int iterations, bool verbose, int r_size, int gridsize,
-		int blocksize) {
-#ifdef HALF
-	test_radiation<half>(iterations, verbose, r_size, gridsize, blocksize,
-	OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF);
-#endif
-
-#ifdef SINGLE
-	test_radiation<float>(iterations, verbose, r_size, gridsize, blocksize,
-	OUTPUT_R_SINGLE, INPUT_A_SINGLE, INPUT_B_SINGLE);
-#endif
-
-#ifdef DOUBLE
-	test_radiation<double>(iterations, verbose, r_size, gridsize, blocksize,
-	OUTPUT_R_DOUBLE, INPUT_A_DOUBLE, INPUT_B_DOUBLE);
-#endif
 }
 
 int main(int argc, char* argv[]) {
-	int iterations;
-	bool verbose;
-	bool is_dmr = false;
-//================== Read test parameters
-	if (checkCmdLineFlag(argc, (const char **) argv, "iterations")) {
-		iterations = getCmdLineArgumentInt(argc, (const char **) argv,
-				"iterations");
-	}
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "verbose")) {
-		verbose = 1;
-	}
-
-	if (checkCmdLineFlag(argc, (const char **) argv, "dmr")) {
-		is_dmr = getCmdLineArgumentInt(argc, (const char **) argv, "dmr");
-	}
 //================== Set block and grid size for MxM kernel
 	cudaDeviceProp prop = GetDevice();
-	int gridsize = prop.multiProcessorCount;
-	int blocksize = 256;
+	Parameters parameters(argc, argv);
 
-	std::printf("grid size = %d ; block size = %d\n", gridsize, blocksize);
+	parameters.gridsize = prop.multiProcessorCount;
+	parameters.blocksize = 256;
+	parameters.r_size = gridsize * blocksize * OPS_PER_THREAD_OPERATION;
+	parameters.print_details();
 
-	int r_size = gridsize * blocksize * OPS_PER_THREAD_OPERATION;
 //====================================
-	std::string mixed = "plain";
-#ifdef MIXED
-	mixed = "mixed";
-#endif
+
 //================== Init logs
 #ifdef LOGS
-	char test_info[250];
-	char test_name[250];
-	snprintf(test_info, 250, "ops:%d gridsize:%d blocksize:%d type:%s-%s-precision hard:%s", OPS, gridsize, blocksize,
-			test_type_description, test_precision_description, mixed.c_str());
-	snprintf(test_name, 250, "cuda_%s_micro-%s", test_precision_description, test_type_description);
-	start_log_file(test_name, test_info);
+	std::string test_info = std::string("ops:") + std::to_string(OPS) + " gridsize:" + std::to_string(gridsize) +
+		" blocksize:" + std::to_string(blocksize) + " type:" + parameters.test_type_description +
+		"-" + parameters.test_precision_description + "-precision hard:" + parameters.hardening;
+
+	std::string test_name = std::string("cuda_") +  parameters.test_precision_description + "_micro-" +
+	parameters.test_type_description;
+	start_log_file(const_cast<char*>(test_name.c_str()), const_cast<char*>(test_info.c_str()));
 #endif
 
-	if (is_dmr == true) {
-		dmr(iterations, verbose, r_size, gridsize, blocksize);
-	} else {
-		none(iterations, verbose, r_size, gridsize, blocksize);
-	}
+	dmr(parameters);
 
 #ifdef LOGS
 	end_log_file();

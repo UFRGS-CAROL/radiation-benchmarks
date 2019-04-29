@@ -17,8 +17,7 @@
  */
 
 template<typename full>
-__global__ void MicroBenchmarkKernel_FMA(full *d_R0_one,
-		const full OUTPUT_R, const full INPUT_A, const full INPUT_B) {
+__global__ void MicroBenchmarkKernel_FMA(full *d_R0_one, const full OUTPUT_R, const full INPUT_A, const full INPUT_B) {
 	register full acc_full = OUTPUT_R;
 	register full input_a_full = INPUT_A;
 	register full input_b_full = INPUT_B;
@@ -43,8 +42,7 @@ __global__ void MicroBenchmarkKernel_FMA(full *d_R0_one,
  */
 
 template<typename full>
-__global__ void MicroBenchmarkKernel_ADD(full *d_R0_one,
-		const full OUTPUT_R, const full INPUT_A, const full INPUT_B) {
+__global__ void MicroBenchmarkKernel_ADD(full *d_R0_one, const full OUTPUT_R, const full INPUT_A, const full INPUT_B) {
 	register full acc_full = OUTPUT_R;
 	register full input_a = OUTPUT_R;
 	register full input_a_neg = -OUTPUT_R;
@@ -66,8 +64,7 @@ __global__ void MicroBenchmarkKernel_ADD(full *d_R0_one,
  */
 
 template<typename full>
-__global__ void MicroBenchmarkKernel_MUL(full *d_R0_one,
-		const full OUTPUT_R, const full INPUT_A, const full INPUT_B) {
+__global__ void MicroBenchmarkKernel_MUL(full *d_R0_one, const full OUTPUT_R, const full INPUT_A, const full INPUT_B) {
 
 	register full acc_full = OUTPUT_R;
 	register full input_a_full = INPUT_A;
