@@ -12,19 +12,10 @@ NVCC=/usr/local/cuda/bin/nvcc
 LOWERCASED_TYPE=$(shell echo $(TYPE) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 
-#ifeq ($(LOWERCASED_PRECISION),half)
-ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
-#else
-#ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]  	# Tesla K40
-#ARCH+= 	-gencode arch=compute_53,code=[sm_53,compute_53]  	# Tegra X1
-#ARCH+= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
+#ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
 #ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
 #ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-#ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
-#endif
+ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
 
 NVCC_FLAGS= $(ARCH) -Xptxas -v
@@ -40,7 +31,7 @@ endif
 
 SOURCES=./cuda_micro.cu
 EXEC_RADIX=./cuda_micro-
-EXEC=$(EXEC_RADIX)$(LOWERCASED_TYPE)_$(LOWERCASED_PRECISION)
+EXEC=$(EXEC_RADIX)_mp_hardening
 
 FLAGS=-I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DOPS=$(OPS) -DLOGS  -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS)
 
