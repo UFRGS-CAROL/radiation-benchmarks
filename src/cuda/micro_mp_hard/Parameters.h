@@ -48,6 +48,12 @@ enum REDUNDANCY {
 	NONE, DMR, TMR, DMRMIXED, TMRMIXED
 };
 
+std::string redundancy_char[] = {"NONE", "DMR", "DMRMIXED", "TMRMIXED"};
+std::string precision_char[] = {"HALF", "SINGLE", "DOUBLE"};
+std::string microinstruction_char[] = {"ADD", "MUL", "FMA"};
+
+
+
 class Parameters {
 public:
 
@@ -55,7 +61,6 @@ public:
 	PRECISION precision;
 	REDUNDANCY redundancy;
 
-	bool is_dmr;
 	int iterations;
 	bool verbose;
 	std::string test_type_description;
@@ -74,15 +79,37 @@ public:
 		this->micro = ADD;
 		this->precision = SINGLE;
 		this->redundancy = NONE;
+		this->iterations = 10;
+		this->verbose = 0;
 
 		if (checkCmdLineFlag(argc, (const char**) (argv), "iterations")) {
-			iterations = getCmdLineArgumentInt(argc, (const char**) (argv),
+			this->iterations = getCmdLineArgumentInt(argc, (const char**) (argv),
 					"iterations");
 		}
 		if (checkCmdLineFlag(argc, (const char**) (argv), "verbose")) {
-			verbose = 1;
+			this->verbose = 1;
 		}
-		is_dmr = getCmdLineArgumentInt(argc, (const char**) (argv), "dmr");
+
+		if (checkCmdLineFlag(argc, (const char**) (argv), "redundancy")) {
+			this->redundancy =  REDUNDANCY(getCmdLineArgumentInt(argc, (const char**) (argv),
+					"redundancy"));
+		}
+
+		if (checkCmdLineFlag(argc, (const char**) (argv), "inst")) {
+			this->micro =  MICROINSTRUCTION(getCmdLineArgumentInt(argc, (const char**) (argv),
+					"inst"));
+		}
+
+		if (checkCmdLineFlag(argc, (const char**) (argv), "precision")) {
+			this->precision = PRECISION(getCmdLineArgumentInt(argc, (const char**) (argv),
+					"precision"));
+		}
+
+
+		this->test_type_description = precision_char[this->precision];
+		this->test_precision_description =  microinstruction_char[this->micro];
+		this->hardening = redundancy_char[this->redundancy];
+
 	}
 
 	void print_details() {

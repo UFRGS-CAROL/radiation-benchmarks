@@ -1,20 +1,9 @@
 OPS?=1000000000
-PRECISION?=single
 DEBUG?=0
-
-TYPE=MUL
-PRECISION=double
-MIXED=0
 
 CC=g++
 NVCC=/usr/local/cuda/bin/nvcc
 
-LOWERCASED_TYPE=$(shell echo $(TYPE) | tr a-z A-Z)
-LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
-
-#ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-#ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-#ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
 
@@ -37,12 +26,7 @@ FLAGS=-I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DOPS=$(
 
 all: $(EXEC)
 
-check-benchtype:
-	echo "syntax: make TYPE=<fma|add|mul> PRECISION=<double|half|single>"
-	test $(TYPE)
-	test $(PRECISION)
-
-$(EXEC): check-benchtype $(RUN_SOURCES)
+$(EXEC): clean $(SOURCES)
 	$(NVCC) $(FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
 
 clean:
