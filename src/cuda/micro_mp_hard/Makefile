@@ -19,8 +19,7 @@ NVCC_FLAGS+= -g -G
 endif
 
 SOURCES=./cuda_micro.cu
-EXEC_RADIX=./cuda_micro
-EXEC=$(EXEC_RADIX)_mp_hardening
+EXEC=./cuda_micro_mp_hardening
 
 FLAGS=-I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DOPS=$(OPS) -DLOGS  -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS)
 
@@ -30,7 +29,7 @@ $(EXEC): clean $(SOURCES)
 	$(NVCC) $(FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
 
 clean:
-	rm -rf $(EXEC_RADIX)*
+	rm -rf $(EXEC)
 
 test:
 	$(EXEC) -verbose -iterations=10
