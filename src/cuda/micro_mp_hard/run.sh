@@ -1,5 +1,7 @@
 #!/bin/bash
 
+make
+
 
 for p in half single double;
 do
@@ -7,7 +9,7 @@ do
     do
         for m in add mul fma;
         do
-          echo ./cuda_micro_mp_hardening -verbose -iterations=10 -precision=$p -redundancy=$h -inst=$m
+          ./cuda_micro_mp_hardening -verbose -iterations=10 -precision=$p -redundancy=$h -inst=$m
         done
     done
 done
