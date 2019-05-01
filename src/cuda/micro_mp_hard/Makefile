@@ -19,7 +19,7 @@ NVCC_FLAGS+= -g -G
 endif
 
 SOURCES=./cuda_micro.cu
-EXEC_RADIX=./cuda_micro-
+EXEC_RADIX=./cuda_micro
 EXEC=$(EXEC_RADIX)_mp_hardening
 
 FLAGS=-I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DOPS=$(OPS) -DLOGS  -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS)
