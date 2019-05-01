@@ -86,8 +86,8 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 	// SECOND PRECISION ONLY IF IT IS DEFINED
 	DeviceVector<incomplete> device_vector_inc;
 	std::vector<incomplete> host_vector_inc;
-	if (std::is_void<incomplete>::value != true) {
-		host_vector_inc = std::vector<incomplete>(parameters.r_size, 0);
+	if (std::is_void < incomplete > ::value != true) {
+		host_vector_inc = std::vector < incomplete > (parameters.r_size, 0);
 		device_vector_inc = host_vector_inc;
 	}
 	device_vector_ful = host_vector_ful;
@@ -101,19 +101,22 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 		start_iteration();
 #endif
 		//================== Device computation
-		if (std::is_void<incomplete>::value) {
+		if (std::is_void < incomplete > ::value) {
 			switch (parameters.micro) {
 			case ADD:
-				MicroBenchmarkKernel_ADD<full> <<<parameters.grid_size, parameters.block_size>>>(
-						device_vector_ful.data, OUTPUT_R, INPUT_A, INPUT_B);
+				MicroBenchmarkKernel_ADD<full> <<<parameters.grid_size,
+						parameters.block_size>>>(device_vector_ful.data,
+						OUTPUT_R, INPUT_A, INPUT_B);
 				break;
 			case MUL:
-				MicroBenchmarkKernel_MUL<full> <<<parameters.grid_size, parameters.block_size>>>(
-						device_vector_ful.data, OUTPUT_R, INPUT_A, INPUT_B);
+				MicroBenchmarkKernel_MUL<full> <<<parameters.grid_size,
+						parameters.block_size>>>(device_vector_ful.data,
+						OUTPUT_R, INPUT_A, INPUT_B);
 				break;
 			case FMA:
-				MicroBenchmarkKernel_FMA<full> <<<parameters.grid_size, parameters.block_size>>>(
-						device_vector_ful.data, OUTPUT_R, INPUT_A, INPUT_B);
+				MicroBenchmarkKernel_FMA<full> <<<parameters.grid_size,
+						parameters.block_size>>>(device_vector_ful.data,
+						OUTPUT_R, INPUT_A, INPUT_B);
 				break;
 			}
 		} else {
@@ -183,7 +186,7 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 					mysecond() - global_time);
 	}
 
-	double gflops = parameters.r_size * OPS	/ 1e9; // Billion FLoating-point OPerationS
+	double gflops = parameters.r_size * OPS / 1e9; // Billion FLoating-point OPerationS
 	double averageKernelTime = total_kernel_time / parameters.iterations;
 	std::printf("\n-- END --\n"
 			"Total kernel time: %.3fs\n"
@@ -207,12 +210,12 @@ void dmr(Parameters& parameters) {
 			break;
 		case SINGLE:
 			test_radiation<float>(OUTPUT_R_SINGLE, INPUT_A_SINGLE,
-					INPUT_B_SINGLE, parameters);
+			INPUT_B_SINGLE, parameters);
 			break;
 
 		case DOUBLE:
 			test_radiation<double>(OUTPUT_R_DOUBLE, INPUT_A_DOUBLE,
-					INPUT_B_DOUBLE, parameters);
+			INPUT_B_DOUBLE, parameters);
 			break;
 		}
 		break;
@@ -222,11 +225,11 @@ void dmr(Parameters& parameters) {
 		switch (parameters.precision) {
 		case DOUBLE:
 			test_radiation<double, float>(OUTPUT_R_SINGLE, INPUT_A_SINGLE,
-					INPUT_B_SINGLE, parameters);
+			INPUT_B_SINGLE, parameters);
 			break;
 		case SINGLE:
 			test_radiation<float, half>(OUTPUT_R_HALF, INPUT_A_HALF,
-					INPUT_B_HALF, parameters);
+			INPUT_B_HALF, parameters);
 			break;
 		}
 		break;
@@ -235,13 +238,16 @@ void dmr(Parameters& parameters) {
 	case DMR:
 		switch (parameters.precision) {
 		case DOUBLE:
-			test_radiation<double, double>(OUTPUT_R_DOUBLE, INPUT_A_DOUBLE,	INPUT_B_DOUBLE, parameters);
+			test_radiation<double, double>(OUTPUT_R_DOUBLE, INPUT_A_DOUBLE,
+					INPUT_B_DOUBLE, parameters);
 			break;
 		case SINGLE:
-			test_radiation<float, float>(OUTPUT_R_SINGLE, INPUT_A_SINGLE, INPUT_B_SINGLE, parameters);
+			test_radiation<float, float>(OUTPUT_R_SINGLE, INPUT_A_SINGLE,
+					INPUT_B_SINGLE, parameters);
 			break;
 		case HALF:
-			test_radiation<half, half>(OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF, parameters);
+			test_radiation<half, half>(OUTPUT_R_HALF, INPUT_A_HALF,
+					INPUT_B_HALF, parameters);
 			break;
 		}
 		break;
@@ -258,13 +264,16 @@ int main(int argc, char* argv[]) {
 	parameters.print_details();
 //================== Init logs
 #ifdef LOGS
-	std::string test_info = std::string("ops:") + std::to_string(OPS) + " gridsize:" + std::to_string(parameters.grid_size) +
-	" blocksize:" + std::to_string(parameters.block_size) + " type:" + parameters.test_type_description +
-	"-" + parameters.test_precision_description + "-precision hard:" + parameters.hardening;
+	std::string test_info = std::string("ops:") + std::to_string(OPS)
+			+ " gridsize:" + std::to_string(parameters.grid_size)
+			+ " blocksize:" + std::to_string(parameters.block_size) + " type:"
+			+ parameters.instruction_str + "-" + parameters.precision_str
+			+ "-precision hard:" + parameters.hardening_str;
 
-	std::string test_name = std::string("cuda_") + parameters.test_precision_description + "_micro-" +
-	parameters.test_type_description;
-	start_log_file(const_cast<char*>(test_name.c_str()), const_cast<char*>(test_info.c_str()));
+	std::string test_name = std::string("cuda_") + parameters.precision_str
+			+ "_micro-" + parameters.instruction_str;
+	start_log_file(const_cast<char*>(test_name.c_str()),
+			const_cast<char*>(test_info.c_str()));
 #endif
 
 	dmr(parameters);

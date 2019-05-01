@@ -10,8 +10,9 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
-#include "helper_string.h"
+//#include "helper_string.h"
 
 //===================================== DEFINE TESTED PRECISION
 //FOR DMR APPROACH I NEED to use the smallest precision
@@ -33,21 +34,44 @@
 #define INPUT_B_HALF 4.166E-2 // 0x2955
 #define OUTPUT_R_HALF 4.44 // 0x4471
 
-enum MICROINSTRUCTION {
+typedef enum {
 	ADD, MUL, FMA
-};
+} MICROINSTRUCTION;
 
-enum PRECISION {
+typedef enum {
 	HALF, SINGLE, DOUBLE
-};
+} PRECISION;
 
-enum REDUNDANCY {
+typedef enum {
 	NONE, DMR, TMR, DMRMIXED, TMRMIXED
-};
+} REDUNDANCY;
 
-std::string redundancy_char[] = { "NONE", "DMR", "DMRMIXED", "TMRMIXED" };
-std::string precision_char[] = { "HALF", "SINGLE", "DOUBLE" };
-std::string microinstruction_char[] = { "ADD", "MUL", "FMA" };
+std::unordered_map<std::string, REDUNDANCY> red = {
+//NONE
+		{ "none", NONE },
+		//DMR
+		{ "dmr", DMR },
+		// DMRMIXED
+		{ "dmrmixed", DMRMIXED },
+//TMRMIXED
+//         {"TMRMIXED",  XAVIER}
+		};
+
+std::unordered_map<std::string, PRECISION> pre = {
+//HALF
+		{ "half", HALF },
+		//SINGLE
+		{ "single", SINGLE },
+		// DOUBLE
+		{ "double", DOUBLE }, };
+
+std::unordered_map<std::string, MICROINSTRUCTION> mic = {
+//ADD
+		{ "add", ADD },
+		//MUL
+		{ "mul", MUL },
+		//FMA
+		{ "fma", FMA }, };
 
 struct Parameters {
 
@@ -57,9 +81,9 @@ struct Parameters {
 
 	int iterations;
 	bool verbose;
-	std::string test_type_description;
-	std::string test_precision_description;
-	std::string hardening;
+	std::string instruction_str;
+	std::string precision_str;
+	std::string hardening_str;
 
 	int grid_size;
 	int block_size;
@@ -69,53 +93,66 @@ struct Parameters {
 		this->grid_size = grid_size;
 		this->block_size = block_size;
 		this->r_size = grid_size * block_size;
+		this->iterations = find_int_arg(argc, argv, "iterations", 10);
 
-		this->micro = ADD;
-		this->precision = SINGLE;
-		this->redundancy = NONE;
-		this->iterations = 10;
-		this->verbose = 0;
+		this->verbose = find_int_arg(argc, argv, "verbose", 0);
 
-		if (checkCmdLineFlag(argc, (const char**) (argv), "iterations")) {
-			this->iterations = getCmdLineArgumentInt(argc,
-					(const char**) (argv), "iterations");
-		}
-		if (checkCmdLineFlag(argc, (const char**) (argv), "verbose")) {
-			this->verbose = 1;
-		}
+		this->hardening_str = find_char_arg(argc, argv, "redundancy", "none");
+		this->instruction_str = find_char_arg(argc, argv, "inst", "add");
+		this->precision_str = find_char_arg(argc, argv, "precision", "single");
 
-		if (checkCmdLineFlag(argc, (const char**) (argv), "redundancy")) {
-			this->redundancy = REDUNDANCY(
-					getCmdLineArgumentInt(argc, (const char**) (argv),
-							"redundancy"));
-		}
-
-		if (checkCmdLineFlag(argc, (const char**) (argv), "inst")) {
-			this->micro = MICROINSTRUCTION(
-					getCmdLineArgumentInt(argc, (const char**) (argv), "inst"));
-		}
-
-		if (checkCmdLineFlag(argc, (const char**) (argv), "precision")) {
-			this->precision = PRECISION(
-					getCmdLineArgumentInt(argc, (const char**) (argv),
-							"precision"));
-		}
-
-		this->test_type_description = precision_char[this->precision];
-		this->test_precision_description = microinstruction_char[this->micro];
-		this->hardening = redundancy_char[this->redundancy];
-
+		this->redundancy = red[this->hardening_str];
+		this->precision = pre[this->precision_str];
+		this->micro = mic[this->instruction_str];
 	}
 
 	void print_details() {
-		std::cout << "cuda micro type - " << this->test_precision_description
-				<< " precision " << this->test_type_description << std::endl;
+		std::cout << "cuda micro type - " << this->precision_str
+				<< " precision " << this->instruction_str << std::endl;
 		std::cout << "grid size = " << this->grid_size << " block size = "
 				<< this->block_size << std::endl;
 	}
 
-	virtual ~Parameters() {
+private:
+	void del_arg(int argc, char **argv, int index) {
+		int i;
+		for (i = index; i < argc - 1; ++i)
+			argv[i] = argv[i + 1];
+		argv[i] = 0;
 	}
+
+	int find_int_arg(int argc, char **argv, std::string arg, int def) {
+		int i;
+		for (i = 0; i < argc - 1; ++i) {
+			if (!argv[i])
+				continue;
+			if (std::string(argv[i]) == arg) {
+				def = atoi(argv[i + 1]);
+				del_arg(argc, argv, i);
+				del_arg(argc, argv, i);
+				break;
+			}
+		}
+		return def;
+	}
+
+	std::string find_char_arg(int argc, char **argv, std::string arg,
+			std::string def) {
+		int i;
+		for (i = 0; i < argc - 1; ++i) {
+			if (!argv[i])
+				continue;
+			if (std::string(argv[i]) == arg) {
+				def = std::string(argv[i + 1]);
+				del_arg(argc, argv, i);
+				del_arg(argc, argv, i);
+				break;
+			}
+		}
+		return def;
+	}
+
+
 };
 
 #endif /* PARAMETERS_H_ */
