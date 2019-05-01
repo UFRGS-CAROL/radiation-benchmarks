@@ -32,5 +32,5 @@ $(EXEC): clean $(SOURCES)
 clean:
 	rm -rf $(EXEC_RADIX)*
 
-test: $(EXEC)
+test:
 	$(EXEC) -verbose -iterations=10
