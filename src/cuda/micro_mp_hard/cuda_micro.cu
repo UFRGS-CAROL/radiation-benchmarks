@@ -169,7 +169,7 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 
 		if (parameters.verbose) {
 			/////////// PERF
-			double flops = parameters.r_size * OPS * OPS_PER_THREAD_OPERATION;
+			double flops = parameters.r_size * OPS;
 			double gflops = flops / kernel_time;
 			double outputpersec = (double) parameters.r_size / kernel_time;
 			std::printf("SIZE:%d OUTPUT/S:%f FLOPS:%f (GFLOPS:%.2f)\n",
@@ -183,8 +183,7 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 					mysecond() - global_time);
 	}
 
-	double gflops = parameters.r_size * OPS * OPS_PER_THREAD_OPERATION
-			/ 1000000000; // Billion FLoating-point OPerationS
+	double gflops = parameters.r_size * OPS	/ 1e9; // Billion FLoating-point OPerationS
 	double averageKernelTime = total_kernel_time / parameters.iterations;
 	std::printf("\n-- END --\n"
 			"Total kernel time: %.3fs\n"

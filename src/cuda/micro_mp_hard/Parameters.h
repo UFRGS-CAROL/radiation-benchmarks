@@ -33,9 +33,6 @@
 #define INPUT_B_HALF 4.166E-2 // 0x2955
 #define OUTPUT_R_HALF 4.44 // 0x4471
 
-#define OPS_PER_THREAD_OPERATION 1
-
-
 enum MICROINSTRUCTION {
 	ADD, MUL, FMA
 };
@@ -48,14 +45,11 @@ enum REDUNDANCY {
 	NONE, DMR, TMR, DMRMIXED, TMRMIXED
 };
 
-std::string redundancy_char[] = {"NONE", "DMR", "DMRMIXED", "TMRMIXED"};
-std::string precision_char[] = {"HALF", "SINGLE", "DOUBLE"};
-std::string microinstruction_char[] = {"ADD", "MUL", "FMA"};
+std::string redundancy_char[] = { "NONE", "DMR", "DMRMIXED", "TMRMIXED" };
+std::string precision_char[] = { "HALF", "SINGLE", "DOUBLE" };
+std::string microinstruction_char[] = { "ADD", "MUL", "FMA" };
 
-
-
-class Parameters {
-public:
+struct Parameters {
 
 	MICROINSTRUCTION micro;
 	PRECISION precision;
@@ -74,7 +68,7 @@ public:
 	Parameters(int argc, char* argv[], int grid_size, int block_size) {
 		this->grid_size = grid_size;
 		this->block_size = block_size;
-		this->r_size = grid_size * block_size * OPS_PER_THREAD_OPERATION;
+		this->r_size = grid_size * block_size;
 
 		this->micro = ADD;
 		this->precision = SINGLE;
@@ -83,31 +77,32 @@ public:
 		this->verbose = 0;
 
 		if (checkCmdLineFlag(argc, (const char**) (argv), "iterations")) {
-			this->iterations = getCmdLineArgumentInt(argc, (const char**) (argv),
-					"iterations");
+			this->iterations = getCmdLineArgumentInt(argc,
+					(const char**) (argv), "iterations");
 		}
 		if (checkCmdLineFlag(argc, (const char**) (argv), "verbose")) {
 			this->verbose = 1;
 		}
 
 		if (checkCmdLineFlag(argc, (const char**) (argv), "redundancy")) {
-			this->redundancy =  REDUNDANCY(getCmdLineArgumentInt(argc, (const char**) (argv),
-					"redundancy"));
+			this->redundancy = REDUNDANCY(
+					getCmdLineArgumentInt(argc, (const char**) (argv),
+							"redundancy"));
 		}
 
 		if (checkCmdLineFlag(argc, (const char**) (argv), "inst")) {
-			this->micro =  MICROINSTRUCTION(getCmdLineArgumentInt(argc, (const char**) (argv),
-					"inst"));
+			this->micro = MICROINSTRUCTION(
+					getCmdLineArgumentInt(argc, (const char**) (argv), "inst"));
 		}
 
 		if (checkCmdLineFlag(argc, (const char**) (argv), "precision")) {
-			this->precision = PRECISION(getCmdLineArgumentInt(argc, (const char**) (argv),
-					"precision"));
+			this->precision = PRECISION(
+					getCmdLineArgumentInt(argc, (const char**) (argv),
+							"precision"));
 		}
 
-
 		this->test_type_description = precision_char[this->precision];
-		this->test_precision_description =  microinstruction_char[this->micro];
+		this->test_precision_description = microinstruction_char[this->micro];
 		this->hardening = redundancy_char[this->redundancy];
 
 	}
@@ -119,7 +114,8 @@ public:
 				<< this->block_size << std::endl;
 	}
 
-	virtual ~Parameters(){}
+	virtual ~Parameters() {
+	}
 };
 
 #endif /* PARAMETERS_H_ */
