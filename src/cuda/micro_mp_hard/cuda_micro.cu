@@ -165,23 +165,21 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 			double outputpersec = double(parameters.r_size) / kernel_time;
 			std::cout << "SIZE:" << parameters.r_size;
 			std::cout << " OUTPUT/S:" << outputpersec;
-			std::cout << " ITERATION " << iteration << " time: " << kernel_time
-					<< std::endl;
+			std::cout << " ITERATION " << iteration;
+			std::cout << " time: " << kernel_time;
+			std::cout << " output errors: " << errors;
+			std::cout << " relative errors: " << relative_errors << std::endl;
 
 		}
 	}
 
-	double gflops = parameters.r_size * OPS / 1e9; // Billion FLoating-point OPerationS
 	double averageKernelTime = total_kernel_time / parameters.iterations;
-	std::printf("\n-- END --\n"
-			"Total kernel time: %.3fs\n"
-			"Iterations: %d\n"
-			"Average kernel time: %.3fs (best: %.3fs ; worst: %.3fs)\n"
-			"Average GFLOPs: %.2f (best: %.2f ; worst: %.2f)\n",
-			total_kernel_time, parameters.iterations, averageKernelTime,
-			min_kernel_time, max_kernel_time, gflops / averageKernelTime,
-			gflops / min_kernel_time, gflops / max_kernel_time);
-
+	std::cout << std::endl << "-- END --" << std::endl;
+	std::cout << "Total kernel time: " << total_kernel_time << std::endl;
+	std::cout << "Iterations: " << parameters.iterations << std::endl;
+	std::cout << "Average kernel time: " << averageKernelTime << std::endl;
+	std::cout << "Best: " << min_kernel_time << std::endl;
+	std::cout << "Worst: " << max_kernel_time << std::endl;
 }
 
 void dmr(Parameters& parameters) {

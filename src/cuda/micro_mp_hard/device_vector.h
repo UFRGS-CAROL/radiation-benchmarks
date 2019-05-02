@@ -24,38 +24,18 @@ struct DeviceVector {
 	}
 
 	DeviceVector(const DeviceVector<T>& b) {
-		this->free_data();
-
-		this->v_size = b.v_size;
-		checkFrameworkErrors(cudaMalloc(&this->data, sizeof(T) * this->v_size));
-		this->allocated = true;
+		this->alloc_data(b.v_size);
 		checkFrameworkErrors(
 				cudaMemcpy(this->data, b.data(), sizeof(T) * this->v_size,
 						cudaMemcpyDeviceToDevice));
 	}
 
 	DeviceVector(size_t size) {
-		this->free_data();
-
-		this->v_size = size;
-		checkFrameworkErrors(cudaMalloc(&this->data, sizeof(T) * this->v_size));
-		this->allocated = true;
+		this->alloc_data(size);
 	}
 
 	virtual ~DeviceVector() {
 		this->free_data();
-	}
-
-	void free_data() {
-		if (this->allocated == false)
-			return;
-
-		if (this->data != nullptr)
-			checkFrameworkErrors(cudaFree(this->data));
-
-		this->allocated = false;
-		this->data = nullptr;
-		this->v_size = 0;
 	}
 
 	T& operator [](int i) const {
@@ -68,10 +48,7 @@ struct DeviceVector {
 		}
 
 		if (this->allocated == false) {
-			this->v_size = other.size();
-			checkFrameworkErrors(
-					cudaMalloc(&this->data, sizeof(T) * this->v_size));
-			this->allocated = true;
+			this->alloc_data(other.size());
 		}
 
 		checkFrameworkErrors(
@@ -87,10 +64,8 @@ struct DeviceVector {
 		}
 
 		if (this->allocated == false) {
-			this->v_size = other.v_size;
-			checkFrameworkErrors(
-					cudaMalloc(&this->data, sizeof(T) * this->v_size));
-			this->allocated = true;
+			this->alloc_data(other.v_size);
+
 		}
 
 		checkFrameworkErrors(
@@ -107,6 +82,25 @@ struct DeviceVector {
 				cudaMemcpy(ret.data(), this->data, sizeof(T) * this->v_size,
 						cudaMemcpyDeviceToHost));
 		return ret;
+	}
+
+private:
+	void alloc_data(size_t size) {
+		this->v_size = size;
+		checkFrameworkErrors(cudaMalloc(&this->data, sizeof(T) * this->v_size));
+		this->allocated = true;
+	}
+
+	void free_data() {
+		if (this->allocated == false)
+			return;
+
+		if (this->data != nullptr)
+			checkFrameworkErrors(cudaFree(this->data));
+
+		this->allocated = false;
+		this->data = nullptr;
+		this->v_size = 0;
 	}
 
 };
