@@ -9,7 +9,7 @@ do
     do
         for m in add mul fma;
         do
-          ./cuda_micro_mp_hardening -verbose -iterations=10 -precision=$p -redundancy=$h -inst=$m
+          ./cuda_micro_mp_hardening --verbose --iterations 10 --precision $p --redundancy $h --inst $m
         done
     done
 done
