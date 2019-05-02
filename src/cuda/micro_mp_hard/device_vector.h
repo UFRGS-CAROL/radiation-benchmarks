@@ -13,9 +13,9 @@
 
 template<class T>
 struct DeviceVector {
-	T *data;
-	bool allocated;
-	size_t v_size;
+	T *data = nullptr;
+	bool allocated = false;
+	size_t v_size = 0;
 
 	DeviceVector() {
 		this->v_size = 0;
@@ -50,7 +50,8 @@ struct DeviceVector {
 		if (this->allocated == false)
 			return;
 
-		checkFrameworkErrors(cudaFree(this->data));
+		if (this->data != nullptr)
+			checkFrameworkErrors(cudaFree(this->data));
 
 		this->allocated = false;
 		this->data = nullptr;
