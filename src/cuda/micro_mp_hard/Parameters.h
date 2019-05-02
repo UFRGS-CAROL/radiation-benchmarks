@@ -95,7 +95,7 @@ struct Parameters {
 		this->r_size = grid_size * block_size;
 		this->iterations = find_int_arg(argc, argv, "iterations", 10);
 
-		this->verbose = find_int_arg(argc, argv, "verbose", 0);
+		this->verbose = find_arg(argc, argv, "verbose");
 
 		this->hardening_str = find_char_arg(argc, argv, "redundancy", "none");
 		this->instruction_str = find_char_arg(argc, argv, "inst", "add");
@@ -152,6 +152,18 @@ private:
 		return def;
 	}
 
+	bool find_arg(int argc, char* argv[], std::string arg) {
+		int i;
+		for (i = 0; i < argc; ++i) {
+			if (!argv[i])
+				continue;
+			if (std::string(argv[i]) == arg) {
+				del_arg(argc, argv, i);
+				return true;
+			}
+		}
+		return false;
+	}
 
 };
 
