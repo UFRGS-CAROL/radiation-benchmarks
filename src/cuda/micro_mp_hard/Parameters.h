@@ -111,6 +111,9 @@ struct Parameters {
 				<< " precision " << this->instruction_str << std::endl;
 		std::cout << "grid size = " << this->grid_size << " block size = "
 				<< this->block_size << std::endl;
+		std::cout << "Verbose: " << this->verbose << std::endl;
+		std::cout << "Iterations: " << this->iterations << std::endl <<
+				"Hardening: " << this->hardening_str << std::endl;
 	}
 
 private:
