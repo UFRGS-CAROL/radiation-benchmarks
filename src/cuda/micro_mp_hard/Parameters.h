@@ -93,13 +93,13 @@ struct Parameters {
 		this->grid_size = grid_size;
 		this->block_size = block_size;
 		this->r_size = grid_size * block_size;
-		this->iterations = find_int_arg(argc, argv, "iterations", 10);
+		this->iterations = find_int_arg(argc, argv, "--iterations", 10);
 
-		this->verbose = find_arg(argc, argv, "verbose");
+		this->verbose = find_arg(argc, argv, "--verbose");
 
-		this->hardening_str = find_char_arg(argc, argv, "redundancy", "none");
-		this->instruction_str = find_char_arg(argc, argv, "inst", "add");
-		this->precision_str = find_char_arg(argc, argv, "precision", "single");
+		this->hardening_str = find_char_arg(argc, argv, "--redundancy", "none");
+		this->instruction_str = find_char_arg(argc, argv, "--inst", "add");
+		this->precision_str = find_char_arg(argc, argv, "--precision", "single");
 
 		this->redundancy = red[this->hardening_str];
 		this->precision = pre[this->precision_str];
