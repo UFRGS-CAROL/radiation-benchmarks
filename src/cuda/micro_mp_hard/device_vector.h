@@ -20,7 +20,7 @@ struct DeviceVector{
 
 	DeviceVector(){
 		this->v_size = 0;
-		this->allocated = 0;
+		this->allocated = false;
 		this->data = nullptr;
 	}
 
@@ -38,6 +38,7 @@ struct DeviceVector{
 	}
 
 	virtual ~DeviceVector(){
+		printf("%p\n", this->data);
 		if(this->allocated){
 			checkFrameworkErrors(cudaFree(this->data));
 		}

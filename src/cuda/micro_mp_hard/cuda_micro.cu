@@ -162,13 +162,9 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 			unsigned long long relative_errors = copy_errors();
 
 			/////////// PERF
-			double flops = parameters.r_size * OPS;
-			double gflops = flops / kernel_time;
 			double outputpersec = double(parameters.r_size) / kernel_time;
 			std::cout << "SIZE:" << parameters.r_size;
 			std::cout << " OUTPUT/S:" << outputpersec;
-			std::cout << " FLOPS: " << gflops;
-			std::cout << " GFLOPS:" << gflops / 1e9;
 			std::cout << " ITERATION " << iteration << " time: " << kernel_time
 					<< std::endl;
 
