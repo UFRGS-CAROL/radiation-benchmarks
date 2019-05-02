@@ -157,19 +157,19 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 		if (parameters.verbose) {
 			//check output
 			host_vector_full = device_vector_full.to_vector();
-			int errors = check_output_errors<full>(
-					host_vector_full, OUTPUT_R, parameters.verbose);
-
-			std::cout << "ERRORS " << copy_errors() << std::endl;
+			int errors = check_output_errors<full>(host_vector_full, OUTPUT_R,
+					parameters.verbose);
+			unsigned long long relative_errors = copy_errors();
 
 			/////////// PERF
 			double flops = parameters.r_size * OPS;
 			double gflops = flops / kernel_time;
 			double outputpersec = double(parameters.r_size) / kernel_time;
-			std::cout << "SIZE:" << parameters.r_size << " OUTPUT/S:"
-					<< outputpersec << " FLOPS: " << gflops << " (GFLOPS:"
-					<< gflops / 1e9 << ")";
-			std::cout << "Iteration " << iteration << " time: " << kernel_time
+			std::cout << "SIZE:" << parameters.r_size;
+			std::cout << " OUTPUT/S:" << outputpersec;
+			std::cout << " FLOPS: " << gflops;
+			std::cout << " GFLOPS:" << gflops / 1e9;
+			std::cout << " ITERATION " << iteration << " time: " << kernel_time
 					<< std::endl;
 
 		}
