@@ -19,12 +19,16 @@ struct DeviceVector{
 	size_t v_size;
 
 	DeviceVector(){
+		printf("%p\n", this->data);
+
 		this->v_size = 0;
 		this->allocated = false;
 		this->data = nullptr;
 	}
 
 	DeviceVector(const DeviceVector<T>& b){
+		printf("%p\n", this->data);
+
 		this->v_size = b.v_size;
 		checkFrameworkErrors(cudaMalloc(&this->data, sizeof(T) * this->v_size));
 		this->allocated = true;
@@ -32,6 +36,8 @@ struct DeviceVector{
 	}
 
 	DeviceVector(size_t size){
+		printf("%p\n", this->data);
+
 		this->v_size = size;
 		checkFrameworkErrors(cudaMalloc(&this->data, sizeof(T) * this->v_size));
 		this->allocated = true;
@@ -44,6 +50,7 @@ struct DeviceVector{
 		}
 
 		this->allocated = false;
+		this->data = nullptr;
 	}
 
 	T& operator [](int i) const {
