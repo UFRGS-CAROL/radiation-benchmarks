@@ -81,6 +81,25 @@ struct DeviceVector {
 		return *this;
 	}
 
+	DeviceVector<T>& operator=(const DeviceVector<T>& other) {
+		if (this->v_size != other.v_size) {
+			this->free_data();
+		}
+
+		if (this->allocated == false) {
+			this->v_size = other.v_size;
+			checkFrameworkErrors(
+					cudaMalloc(&this->data, sizeof(T) * this->v_size));
+			this->allocated = true;
+		}
+
+		checkFrameworkErrors(
+				cudaMemcpy(this->data, other.data, sizeof(T) * this->v_size,
+						cudaMemcpyHostToDevice));
+
+		return *this;
+	}
+
 	std::vector<T> to_vector() {
 		std::vector<T> ret(this->v_size);
 
