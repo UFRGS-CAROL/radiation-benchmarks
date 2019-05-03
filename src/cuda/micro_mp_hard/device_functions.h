@@ -46,7 +46,7 @@ __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
 	return __fmaf_rn(a, b, acc);
 }
 
-__device__              __forceinline__ half fma_dmr(half a, half b, half acc) {
+__device__ __forceinline__ half fma_dmr(half a, half b, half acc) {
 	return __hfma(a, b, acc);
 }
 
@@ -64,7 +64,7 @@ __device__ __forceinline__ float add_dmr(float a, float b) {
 	return __fadd_rn(a, b);
 }
 
-__device__              __forceinline__ half add_dmr(half a, half b) {
+__device__ __forceinline__ half add_dmr(half a, half b) {
 	return __hadd(a, b);
 }
 
