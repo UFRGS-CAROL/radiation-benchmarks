@@ -52,7 +52,7 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 	check_relative_error(acc_incomplete, acc_full, error_threshold);
 
 	//d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
-	//d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 
 }
 
@@ -90,7 +90,7 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 	check_relative_error(acc_incomplete, acc_full, error_threshold);
 
 	//d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
-	//d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
 
 /**
@@ -127,7 +127,7 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 	check_relative_error(acc_incomplete, acc_full, error_threshold);
 
 	//d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
-	//d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
 
 #endif /* DMR_KERNELS_CU_ */

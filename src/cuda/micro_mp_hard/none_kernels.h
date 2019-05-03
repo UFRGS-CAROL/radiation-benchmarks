@@ -12,7 +12,7 @@
 
 /**
  * ----------------------------------------
- * FMA DMR
+ * FMA
  * ----------------------------------------
  */
 
@@ -31,12 +31,12 @@ __global__ void MicroBenchmarkKernel_FMA(full *d_R0_one, const full OUTPUT_R, co
 		acc_full = fma_dmr(input_a_neg_full, input_b_neg_full, acc_full);
 
 	}
-	//d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
 
 /**
  * ----------------------------------------
- * ADD DMR
+ * ADD
  * ----------------------------------------
  */
 
@@ -52,12 +52,12 @@ __global__ void MicroBenchmarkKernel_ADD(full *d_R0_one, const full OUTPUT_R, co
 		acc_full = add_dmr(acc_full, input_a_neg);
 		acc_full = add_dmr(acc_full, input_a);
 	}
-	//d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
 
 /**
  * ----------------------------------------
- * MUL DMR
+ * MUL
  * ----------------------------------------
  */
 
@@ -74,7 +74,7 @@ __global__ void MicroBenchmarkKernel_MUL(full *d_R0_one, const full OUTPUT_R, co
 		acc_full = mul_dmr(acc_full, input_a_full);
 	}
 
-	//d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
 
 #endif /* NONE_KERNELS_H_ */
