@@ -1,7 +1,6 @@
 #!/bin/bash
 
-#make
-
+metrics=ipc,issued_ipc,inst_executed
 
 for p in half single double;
 do
@@ -9,9 +8,9 @@ do
     do
         for m in add mul fma;
         do
-	   out_file="${p}_${h}_${m}.csv"
-	   nvprof --quiet --csv ./cuda_micro_mp_hardening --verbose --iterations 10 --precision $p --redundancy $h --inst $m > nvprof_out.txt 2>$out_file
-	   sed -i '1d;3d' $out_file
+            out_file="${p}_${h}_${m}.csv"
+            nvprof --metrics $metrics --quiet --csv ./cuda_micro_mp_hardening --verbose --iterations 10 --precision $p --redundancy $h --inst $m > nvprof_out.txt 2>$out_file
+            sed -i '1d;3d' $out_file
         done
     done
 done
