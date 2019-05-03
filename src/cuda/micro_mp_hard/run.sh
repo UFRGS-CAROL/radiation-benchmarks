@@ -1,6 +1,6 @@
 #!/bin/bash
 
-make
+#make
 
 
 for p in half single double;
@@ -9,7 +9,11 @@ do
     do
         for m in add mul fma;
         do
-          ./cuda_micro_mp_hardening --verbose --iterations 10 --precision $p --redundancy $h --inst $m
+	   out_file="${p}_${h}_${m}.csv"
+	   nvprof --quiet --csv ./cuda_micro_mp_hardening --verbose --iterations 10 --precision $p --redundancy $h --inst $m > nvprof_out.txt 2>$out_file
+	   sed -i '1d;3d' $out_file
         done
     done
 done
+
+rm nvprof_out.txt 
