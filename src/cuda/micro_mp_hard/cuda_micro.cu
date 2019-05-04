@@ -7,6 +7,7 @@
 #include <random>
 #include <cuda_fp16.h>
 #include <vector>
+#include <sstream>
 
 #include "dmr_kernels.h"
 #include "none_kernels.h"
@@ -21,16 +22,8 @@
 #define HALF_ROUND_TIES_TO_EVEN 1
 #include "half.hpp"
 
-#define BLOCK_SIZE 32
-
-#define DEFAULT_INPUT_SIZE 8192
-
-void usage(int argc, char* argv[]) {
-	printf("Usage: %s [-iterations=N] [-verbose]\n", argv[0]);
-}
-
-// Returns true if no errors are found. False if otherwise.
-// Set votedOutput pointer to retrieve the voted matrix
+// Returns the number of errors found
+// if no errors were found it returns 0
 template<typename T>
 int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
 	int host_errors = 0;
@@ -43,13 +36,18 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
 			if (checkFlag) {
 #pragma omp critical
 				{
-					char error_detail[150];
-					snprintf(error_detail, 150, "p: [%d], r: %1.20e, e: %1.20e",
-							i, (double) valOutput, (double) valGold);
+//					char error_detail[150];
+//					snprintf(error_detail, 150, "p: [%d], r: %1.20e, e: %1.20e",
+//							i, (double) valOutput, (double) valGold);
+
+					std::stringstream error_detail;
+					error_detail << "p: [" << i << "], r: " << std::scientific
+							<< double(valOutput) << ", e: " << double(valGold);
+
 					if (verbose && (host_errors < 10))
-						printf("%s\n", error_detail);
+						std::cout << error_detail.str() << std::endl;
 #ifdef LOGS
-					log_error_detail(error_detail);
+					log_error_detail(const_cast<char*>(error_detail.str().c_str()));
 #endif
 					host_errors++;
 				}
@@ -58,7 +56,7 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
 	}
 
 	if (host_errors != 0) {
-		printf("#");
+		std::cout << "#";
 #ifdef LOGS
 		log_error_count(host_errors);
 #endif
@@ -69,14 +67,13 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
 template<typename full, typename incomplete = void>
 void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 		const incomplete INPUT_B, Parameters& parameters) {
-	//================== Init test environment
+	// Init test environment
 	// kernel_errors=0;
 	double total_kernel_time = 0;
 	double min_kernel_time = UINT_MAX;
 	double max_kernel_time = 0;
-
-	parameters.print_details();
 	//====================================
+
 	// FULL PRECIISON
 	std::vector<full> host_vector_full(parameters.r_size, 0);
 	DeviceVector<full> device_vector_full(parameters.r_size);
@@ -257,6 +254,8 @@ int main(int argc, char* argv[]) {
 	start_log_file(const_cast<char*>(test_name.c_str()),
 			const_cast<char*>(test_info.c_str()));
 #endif
+
+	parameters.print_details();
 
 	dmr(parameters);
 
