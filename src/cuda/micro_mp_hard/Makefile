@@ -33,7 +33,7 @@ FLAGS+=-I$(NVIDIA_INC) -L$(NVIDIA_LIB) -DOPS=$(OPS) -O3 -lLogHelper -std=c++11 -
 all: $(EXEC)
 
 $(EXEC): clean $(SOURCES)
-	$(NVCC) $(FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
+	$(NVCC) $(FLAGS) -Xcompiler "-fopenmp -O3" $(SOURCES) -o $(EXEC)
 
 clean:
 	rm -rf $(EXEC)
