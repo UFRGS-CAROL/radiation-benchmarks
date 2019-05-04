@@ -29,11 +29,8 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
 	int host_errors = 0;
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < R.size(); i++) {
-		register bool checkFlag = true;
-		register T valGold = (OUTPUT_R);
-		register T valOutput = R[i];
-		if (valGold != valOutput) {
-			if (checkFlag) {
+		T valOutput = R[i];
+		if (OUTPUT_R != valOutput) {
 #pragma omp critical
 				{
 //					char error_detail[150];
@@ -42,7 +39,7 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
 
 					std::stringstream error_detail;
 					error_detail << "p: [" << i << "], r: " << std::scientific
-							<< double(valOutput) << ", e: " << double(valGold);
+							<< double(valOutput) << ", e: " << double(OUTPUT_R);
 
 					if (verbose && (host_errors < 10))
 						std::cout << error_detail.str() << std::endl;
@@ -52,7 +49,6 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
 					host_errors++;
 				}
 			}
-		}
 	}
 
 	if (host_errors != 0) {

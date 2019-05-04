@@ -76,7 +76,7 @@ struct DeviceVector {
 	}
 
 	std::vector<T> to_vector() {
-		std::vector<T> ret(this->v_size);
+		std::vector<T> ret(this->v_size, 0);
 
 		checkFrameworkErrors(
 				cudaMemcpy(ret.data(), this->data, sizeof(T) * this->v_size,

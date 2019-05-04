@@ -1,4 +1,5 @@
 OPS?=100000000
+LOGS=1
 DEBUG?=0
 
 CC=g++
@@ -9,19 +10,25 @@ ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
 NVCC_FLAGS= $(ARCH) -Xptxas -v
 
-NVIDIA_INC=/usr/local/cuda/include/,./
+NVIDIA_INC=/usr/local/cuda/include/
 NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
 ifeq ($(DEBUG), 1)
+OPS=1000
 NVCC_FLAGS+= -g -G
+endif
+
+ifeq ($(LOGS), 1)
+NVCC_FLAGS+= -DLOGS
+FLAGS=-I$(LOGHELPER_INC) -L$(LOGHELPER_INC) 
 endif
 
 SOURCES=./cuda_micro.cu
 EXEC=./cuda_micro_mp_hardening
 
-FLAGS=-I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DOPS=$(OPS) -DLOGS  -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS)
+FLAGS+=-I$(NVIDIA_INC) -L$(NVIDIA_LIB) -DOPS=$(OPS) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS)
 
 all: $(EXEC)
 
