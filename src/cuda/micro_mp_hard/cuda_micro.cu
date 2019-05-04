@@ -27,28 +27,29 @@
 template<typename T>
 int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
 	int host_errors = 0;
+	double gold = double(OUTPUT_R);
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < R.size(); i++) {
-		T valOutput = R[i];
-		if (OUTPUT_R != valOutput) {
+		double output = double(R[i]);
+		if (gold != output) {
 #pragma omp critical
-				{
+			{
 //					char error_detail[150];
 //					snprintf(error_detail, 150, "p: [%d], r: %1.20e, e: %1.20e",
-//							i, (double) valOutput, (double) valGold);
+//							i, (double) output, (double) valGold);
 
-					std::stringstream error_detail;
-					error_detail << "p: [" << i << "], r: " << std::scientific
-							<< double(valOutput) << ", e: " << double(OUTPUT_R);
+				std::stringstream error_detail;
+				error_detail << "p: [" << i << "], r: " << std::scientific
+						<< output << ", e: " << gold;
 
-					if (verbose && (host_errors < 10))
-						std::cout << error_detail.str() << std::endl;
+				if (verbose && (host_errors < 10))
+					std::cout << error_detail.str() << std::endl;
 #ifdef LOGS
-					log_error_detail(const_cast<char*>(error_detail.str().c_str()));
+				log_error_detail(const_cast<char*>(error_detail.str().c_str()));
 #endif
-					host_errors++;
-				}
+				host_errors++;
 			}
+		}
 	}
 
 	if (host_errors != 0) {
@@ -147,13 +148,14 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 		max_kernel_time = std::max(max_kernel_time, kernel_time);
 
 		std::cout << ".";
-		if (parameters.verbose) {
-			//check output
-			host_vector_full = device_vector_full.to_vector();
-			int errors = check_output_errors<full>(host_vector_full, OUTPUT_R,
-					parameters.verbose);
-			unsigned long long relative_errors = copy_errors();
 
+		//check output
+		host_vector_full = device_vector_full.to_vector();
+		int errors = check_output_errors<full>(host_vector_full, OUTPUT_R,
+				parameters.verbose);
+		unsigned long long relative_errors = copy_errors();
+
+		if (parameters.verbose) {
 			/////////// PERF
 			double outputpersec = double(parameters.r_size) / kernel_time;
 			std::cout << "SIZE:" << parameters.r_size;
