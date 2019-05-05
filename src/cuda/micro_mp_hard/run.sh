@@ -1,6 +1,6 @@
 #!/bin/bash
 
-metrics=ipc,issued_ipc,inst_executed
+metrics=ipc,issued_ipc,inst_executed,flop_count_dp,flop_count_dp_add,flop_count_dp_fma,flop_count_dp_mul,flop_count_sp,flop_count_sp_add,flop_count_sp_fma,flop_count_sp_mul,flop_count_sp_special,flop_count_hp,flop_count_hp_add,flop_count_hp_mul,flop_count_hp_fma
 
 for p in half single double;
 do
@@ -15,4 +15,4 @@ do
     done
 done
 
-rm nvprof_out.txt 
+rm nvprof_out.txt
