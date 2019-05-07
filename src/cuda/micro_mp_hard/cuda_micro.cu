@@ -168,10 +168,10 @@ void test_radiation(Type<incomplete>& type_, Parameters& parameters) {
 
 		} else {
 			// CSV format
-			std::cout << outputpersec;
-			std::cout << iteration;
-			std::cout << kernel_time;
-			std::cout << errors;
+			std::cout << outputpersec << ",";
+			std::cout << iteration << ",";
+			std::cout << kernel_time << ",";
+			std::cout << errors << ",";
 			std::cout << relative_errors << std::endl;
 
 		}
