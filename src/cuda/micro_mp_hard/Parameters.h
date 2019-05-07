@@ -78,7 +78,7 @@ template<> struct Type<half> {
 	half output_r;
 	half input_a;
 	half input_b;
-	Type(){
+	Type() {
 		this->output_r = OUTPUT_R_HALF;
 		this->input_a = INPUT_A_HALF;
 		this->input_b = INPUT_B_HALF;
@@ -89,7 +89,7 @@ template<> struct Type<float> {
 	float output_r;
 	float input_a;
 	float input_b;
-	Type(){
+	Type() {
 		this->output_r = OUTPUT_R_SINGLE;
 		this->input_a = INPUT_A_SINGLE;
 		this->input_b = INPUT_B_SINGLE;
@@ -100,7 +100,7 @@ template<> struct Type<double> {
 	double output_r;
 	double input_a;
 	double input_b;
-	Type(){
+	Type() {
 		this->output_r = OUTPUT_R_DOUBLE;
 		this->input_a = INPUT_A_DOUBLE;
 		this->input_b = INPUT_B_DOUBLE;
@@ -142,13 +142,15 @@ struct Parameters {
 	}
 
 	void print_details() {
-		std::cout << "cuda micro type - " << this->precision_str
-				<< " precision " << this->instruction_str << std::endl;
-		std::cout << "grid size = " << this->grid_size << " block size = "
-				<< this->block_size << std::endl;
-		std::cout << "Verbose: " << this->verbose << std::endl;
-		std::cout << "Iterations: " << this->iterations << std::endl
-				<< "Hardening: " << this->hardening_str << std::endl;
+		if (this->verbose == true) {
+			std::cout << "cuda micro type - " << this->precision_str
+					<< " precision " << this->instruction_str << std::endl;
+			std::cout << "grid size = " << this->grid_size << " block size = "
+					<< this->block_size << std::endl;
+			std::cout << "Verbose: " << this->verbose << std::endl;
+			std::cout << "Iterations: " << this->iterations << std::endl
+					<< "Hardening: " << this->hardening_str << std::endl;
+		}
 	}
 
 private:
