@@ -36,11 +36,10 @@ cudaDeviceProp GetDevice() {
 //================== Retrieve and set the default CUDA device
 	cudaDeviceProp prop;
 	int count = 0;
-	printf("Get device:");
+
 	checkFrameworkErrors(cudaGetDeviceCount(&count));
 	for (int i = 0; i < count; i++) {
 		checkFrameworkErrors(cudaGetDeviceProperties(&prop, i));
-		printf("Name: %s\n", prop.name);
 	}
 	int *ndevice;
 	int dev = 0;
@@ -49,7 +48,7 @@ cudaDeviceProp GetDevice() {
 
 	checkFrameworkErrors(cudaSetDevice(0));
 	checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
-	printf("\ndevice: %d %s\n", *ndevice, prop.name);
+
 	return prop;
 }
 

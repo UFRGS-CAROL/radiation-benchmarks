@@ -232,6 +232,9 @@ int main(int argc, char* argv[]) {
 //================== Set block and grid size for MxM kernel
 	cudaDeviceProp prop = GetDevice();
 	Parameters parameters(argc, argv, prop.multiProcessorCount, 256);
+	if(parameters.verbose){
+		std::cout << "Get device Name: " << prop.name << std::endl;
+	}
 //================== Init logs
 #ifdef LOGS
 	std::string test_info = std::string("ops:") + std::to_string(OPS)
