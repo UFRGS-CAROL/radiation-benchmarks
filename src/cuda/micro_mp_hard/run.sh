@@ -10,7 +10,9 @@ do
         do
             out_file="${p}_${h}_${m}.csv"
             nvprof --metrics $metrics --csv ./cuda_micro_mp_hardening --verbose --iterations 10 --precision $p --redundancy $h --inst $m > nvprof_out.txt 2>$out_file
-            sed -i '1d;3d' $out_file
+            sed -i "1,4d" "$out_file"
+            cat $out_file
+	    exit 0
         done
     done
 done
