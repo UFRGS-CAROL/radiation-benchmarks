@@ -61,7 +61,7 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
 	return host_errors;
 }
 
-template<typename full, typename incomplete>
+template<typename incomplete, typename full>
 void test_radiation(Type<incomplete>& type_, Parameters& parameters) {
 	// Init test environment
 	// kernel_errors=0;
@@ -79,6 +79,11 @@ void test_radiation(Type<incomplete>& type_, Parameters& parameters) {
 	std::vector<incomplete> host_vector_inc(parameters.r_size, 0);
 	DeviceVector<incomplete> device_vector_inc(parameters.r_size);
 	//====================================
+	// Verbose in csv format
+	if (parameters.verbose == false) {
+		std::cout << "output/s,iteration,time,output errors,relative errors"
+				<< std::endl;
+	}
 
 	for (int iteration = 0; iteration < parameters.iterations; iteration++) {
 		//================== Global test loop
@@ -144,17 +149,16 @@ void test_radiation(Type<incomplete>& type_, Parameters& parameters) {
 		min_kernel_time = std::min(min_kernel_time, kernel_time);
 		max_kernel_time = std::max(max_kernel_time, kernel_time);
 
-		std::cout << ".";
 
 		//check output
 		host_vector_full = device_vector_full.to_vector();
 		int errors = check_output_errors<full>(host_vector_full, type_.output_r,
 				parameters.verbose);
 		unsigned long long relative_errors = copy_errors();
+		double outputpersec = double(parameters.r_size) / kernel_time;
 
 		if (parameters.verbose) {
 			/////////// PERF
-			double outputpersec = double(parameters.r_size) / kernel_time;
 			std::cout << "SIZE:" << parameters.r_size;
 			std::cout << " OUTPUT/S:" << outputpersec;
 			std::cout << " ITERATION " << iteration;
@@ -162,54 +166,46 @@ void test_radiation(Type<incomplete>& type_, Parameters& parameters) {
 			std::cout << " output errors: " << errors;
 			std::cout << " relative errors: " << relative_errors << std::endl;
 
+		} else {
+			// CSV format
+			std::cout << outputpersec;
+			std::cout << iteration;
+			std::cout << kernel_time;
+			std::cout << errors;
+			std::cout << relative_errors << std::endl;
+
 		}
 	}
 
-	double averageKernelTime = total_kernel_time / parameters.iterations;
-	std::cout << std::endl << "-- END --" << std::endl;
-	std::cout << "Total kernel time: " << total_kernel_time << std::endl;
-	std::cout << "Iterations: " << parameters.iterations << std::endl;
-	std::cout << "Average kernel time: " << averageKernelTime << std::endl;
-	std::cout << "Best: " << min_kernel_time << std::endl;
-	std::cout << "Worst: " << max_kernel_time << std::endl;
+	if (parameters.verbose) {
+		double averageKernelTime = total_kernel_time / parameters.iterations;
+		std::cout << std::endl << "-- END --" << std::endl;
+		std::cout << "Total kernel time: " << total_kernel_time << std::endl;
+		std::cout << "Iterations: " << parameters.iterations << std::endl;
+		std::cout << "Average kernel time: " << averageKernelTime << std::endl;
+		std::cout << "Best: " << min_kernel_time << std::endl;
+		std::cout << "Worst: " << max_kernel_time << std::endl;
+	}
 }
 
 void dmr(Parameters& parameters) {
-	switch (parameters.redundancy) {
-//		if(parameters.precision == HALF){
-//			Type<half> type_;
-//			test_radiation<half>(type_, parameters);
-//		}
-//
-//		if(parameters.precision == SINGLE){
-//			Type<float> type_;
-//			test_radiation<float>(type_, parameters);
-//		}
-//
-//		if(parameters.precision == DOUBLE){
-//			Type<double> type_;
-//			test_radiation<double>(type_, parameters);
-//		}
-//
-//		break;
+	/* DMRMIXED REDUNDANCY -------------------------------------------------- */
+	if (parameters.redundancy == DMRMIXED) {
 
-	/* DMR MIXED REDUNDANCY ------------------------------------------------------- */
-	case DMRMIXED:
 		if (parameters.precision == DOUBLE) {
 			Type<float> type_;
-			test_radiation<double, float>(type_, parameters);
+			test_radiation<float, double>(type_, parameters);
 		}
 
 		if (parameters.precision == SINGLE) {
 			Type<half> type_;
-			test_radiation<float, half>(type_, parameters);
+			test_radiation<half, float>(type_, parameters);
 		}
-		break;
+	}
 
-		/* DMR REDUNDANCY ------------------------------------------------------- */
-		/* NONE REDUNDANCY ------------------------------------------------------ */
-	case NONE:
-	case DMR:
+	/* DMR REDUNDANCY ------------------------------------------------------- */
+	/* NONE REDUNDANCY ------------------------------------------------------ */
+	if (parameters.redundancy == NONE || parameters.redundancy == DMR) {
 		if (parameters.precision == HALF) {
 			Type<half> type_;
 			test_radiation<half, half>(type_, parameters);
@@ -226,7 +222,6 @@ void dmr(Parameters& parameters) {
 			Type<double> type_;
 			test_radiation<double, double>(type_, parameters);
 		}
-		break;
 
 	}
 
