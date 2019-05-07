@@ -73,6 +73,40 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		//FMA
 		{ "fma", FMA }, };
 
+template<typename T> struct Type;
+template<> struct Type<half> {
+	half output_r;
+	half input_a;
+	half input_b;
+	Type(){
+		this->output_r = OUTPUT_R_HALF;
+		this->input_a = INPUT_A_HALF;
+		this->input_b = INPUT_B_HALF;
+	}
+};
+
+template<> struct Type<float> {
+	float output_r;
+	float input_a;
+	float input_b;
+	Type(){
+		this->output_r = OUTPUT_R_SINGLE;
+		this->input_a = INPUT_A_SINGLE;
+		this->input_b = INPUT_B_SINGLE;
+	}
+};
+
+template<> struct Type<double> {
+	double output_r;
+	double input_a;
+	double input_b;
+	Type(){
+		this->output_r = OUTPUT_R_DOUBLE;
+		this->input_a = INPUT_A_DOUBLE;
+		this->input_b = INPUT_B_DOUBLE;
+	}
+};
+
 struct Parameters {
 
 	MICROINSTRUCTION micro;
@@ -99,7 +133,8 @@ struct Parameters {
 
 		this->hardening_str = find_char_arg(argc, argv, "--redundancy", "none");
 		this->instruction_str = find_char_arg(argc, argv, "--inst", "add");
-		this->precision_str = find_char_arg(argc, argv, "--precision", "single");
+		this->precision_str = find_char_arg(argc, argv, "--precision",
+				"single");
 
 		this->redundancy = red[this->hardening_str];
 		this->precision = pre[this->precision_str];
@@ -112,8 +147,8 @@ struct Parameters {
 		std::cout << "grid size = " << this->grid_size << " block size = "
 				<< this->block_size << std::endl;
 		std::cout << "Verbose: " << this->verbose << std::endl;
-		std::cout << "Iterations: " << this->iterations << std::endl <<
-				"Hardening: " << this->hardening_str << std::endl;
+		std::cout << "Iterations: " << this->iterations << std::endl
+				<< "Hardening: " << this->hardening_str << std::endl;
 	}
 
 private:

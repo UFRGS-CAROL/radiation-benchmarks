@@ -61,9 +61,8 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
 	return host_errors;
 }
 
-template<typename full, typename incomplete = void>
-void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
-		const incomplete INPUT_B, Parameters& parameters) {
+template<typename full, typename incomplete>
+void test_radiation(Type<incomplete>& type_, Parameters& parameters) {
 	// Init test environment
 	// kernel_errors=0;
 	double total_kernel_time = 0;
@@ -74,15 +73,12 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 	// FULL PRECIISON
 	std::vector<full> host_vector_full(parameters.r_size, 0);
 	DeviceVector<full> device_vector_full(parameters.r_size);
-
 	//====================================
+
 	// SECOND PRECISION ONLY IF IT IS DEFINED
-	DeviceVector<incomplete> device_vector_inc;
-	std::vector<incomplete> host_vector_inc;
-	if (std::is_void<incomplete>::value != true) {
-		host_vector_inc = std::vector<incomplete>(parameters.r_size, 0);
-		device_vector_inc = DeviceVector<incomplete>(parameters.r_size);
-	}
+	std::vector<incomplete> host_vector_inc(parameters.r_size, 0);
+	DeviceVector<incomplete> device_vector_inc(parameters.r_size);
+	//====================================
 
 	for (int iteration = 0; iteration < parameters.iterations; iteration++) {
 		//================== Global test loop
@@ -91,43 +87,44 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 		start_iteration();
 #endif
 		//================== Device computation
-		if (std::is_void<incomplete>::value) {
+		if (parameters.redundancy == NONE) {
 			switch (parameters.micro) {
 			case ADD:
 				MicroBenchmarkKernel_ADD<full> <<<parameters.grid_size,
 						parameters.block_size>>>(device_vector_full.data,
-						OUTPUT_R, INPUT_A, INPUT_B);
+						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			case MUL:
 				MicroBenchmarkKernel_MUL<full> <<<parameters.grid_size,
 						parameters.block_size>>>(device_vector_full.data,
-						OUTPUT_R, INPUT_A, INPUT_B);
+						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			case FMA:
 				MicroBenchmarkKernel_FMA<full> <<<parameters.grid_size,
 						parameters.block_size>>>(device_vector_full.data,
-						OUTPUT_R, INPUT_A, INPUT_B);
+						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			}
+
 		} else {
 			switch (parameters.micro) {
 			case ADD:
 				MicroBenchmarkKernel_ADD<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data, device_vector_full.data, 0.1,
-						OUTPUT_R, INPUT_A, INPUT_B);
+						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			case MUL:
 				MicroBenchmarkKernel_MUL<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data, device_vector_full.data, 0.1,
-						OUTPUT_R, INPUT_A, INPUT_B);
+						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			case FMA:
 				MicroBenchmarkKernel_FMA<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data, device_vector_full.data, 0.1,
-						OUTPUT_R, INPUT_A, INPUT_B);
+						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			}
 		}
@@ -151,7 +148,7 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 
 		//check output
 		host_vector_full = device_vector_full.to_vector();
-		int errors = check_output_errors<full>(host_vector_full, OUTPUT_R,
+		int errors = check_output_errors<full>(host_vector_full, type_.output_r,
 				parameters.verbose);
 		unsigned long long relative_errors = copy_errors();
 
@@ -179,54 +176,55 @@ void test_radiation(const incomplete OUTPUT_R, const incomplete INPUT_A,
 
 void dmr(Parameters& parameters) {
 	switch (parameters.redundancy) {
-	//NONE REDUNDANCY ----------------------------------------------------------
-	case NONE:
-		switch (parameters.precision) {
-		case HALF:
-			test_radiation<half>(OUTPUT_R_HALF, INPUT_A_HALF, INPUT_B_HALF,
-					parameters);
-			break;
-		case SINGLE:
-			test_radiation<float>(OUTPUT_R_SINGLE, INPUT_A_SINGLE,
-			INPUT_B_SINGLE, parameters);
-			break;
+//		if(parameters.precision == HALF){
+//			Type<half> type_;
+//			test_radiation<half>(type_, parameters);
+//		}
+//
+//		if(parameters.precision == SINGLE){
+//			Type<float> type_;
+//			test_radiation<float>(type_, parameters);
+//		}
+//
+//		if(parameters.precision == DOUBLE){
+//			Type<double> type_;
+//			test_radiation<double>(type_, parameters);
+//		}
+//
+//		break;
 
-		case DOUBLE:
-			test_radiation<double>(OUTPUT_R_DOUBLE, INPUT_A_DOUBLE,
-			INPUT_B_DOUBLE, parameters);
-			break;
-		}
-		break;
-
-		//DMR MIXED REDUNDANCY -------------------------------------------------------
+	/* DMR MIXED REDUNDANCY ------------------------------------------------------- */
 	case DMRMIXED:
-		switch (parameters.precision) {
-		case DOUBLE:
-			test_radiation<double, float>(OUTPUT_R_SINGLE, INPUT_A_SINGLE,
-			INPUT_B_SINGLE, parameters);
-			break;
-		case SINGLE:
-			test_radiation<float, half>(OUTPUT_R_HALF, INPUT_A_HALF,
-			INPUT_B_HALF, parameters);
-			break;
+		if (parameters.precision == DOUBLE) {
+			Type<float> type_;
+			test_radiation<double, float>(type_, parameters);
+		}
+
+		if (parameters.precision == SINGLE) {
+			Type<half> type_;
+			test_radiation<float, half>(type_, parameters);
 		}
 		break;
 
-//		//DMR REDUNDANCY -------------------------------------------------------
+		/* DMR REDUNDANCY ------------------------------------------------------- */
+		/* NONE REDUNDANCY ------------------------------------------------------ */
+	case NONE:
 	case DMR:
-		switch (parameters.precision) {
-		case DOUBLE:
-			test_radiation<double, double>(OUTPUT_R_DOUBLE, INPUT_A_DOUBLE,
-			INPUT_B_DOUBLE, parameters);
-			break;
-		case SINGLE:
-			test_radiation<float, float>(OUTPUT_R_SINGLE, INPUT_A_SINGLE,
-			INPUT_B_SINGLE, parameters);
-			break;
-		case HALF:
-			test_radiation<half, half>(OUTPUT_R_HALF, INPUT_A_HALF,
-			INPUT_B_HALF, parameters);
-			break;
+		if (parameters.precision == HALF) {
+			Type<half> type_;
+			test_radiation<half, half>(type_, parameters);
+
+		}
+
+		if (parameters.precision == SINGLE) {
+			Type<float> type_;
+
+			test_radiation<float, float>(type_, parameters);
+		}
+
+		if (parameters.precision == DOUBLE) {
+			Type<double> type_;
+			test_radiation<double, double>(type_, parameters);
 		}
 		break;
 
