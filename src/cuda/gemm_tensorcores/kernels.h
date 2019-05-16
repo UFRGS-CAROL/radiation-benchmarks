@@ -415,9 +415,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 		wmma::store_matrix_sync(d2 + cCol + cRow * ldc, c_frag, ldc,
 				wmma::mem_row_major);
 	}
-	cudaEventRecord(stop);
-	cudaEventSynchronize(stop);
-	cudaEventElapsedTime(&milliseconds, start, stop);
+	
 	
 }	
 
