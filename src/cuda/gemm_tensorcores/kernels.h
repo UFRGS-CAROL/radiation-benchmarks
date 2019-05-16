@@ -348,7 +348,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	}
 
 	d_shared[threadIdx.x][threadIdx.y] = acc + c_shared[threadIdx.x][threadIdx.y];
-
+	printf("%d\n", d_shared);
 
 
 //	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_M, WMMA_M, signed char ,wmma::row_major> a_frag;
