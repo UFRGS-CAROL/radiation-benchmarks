@@ -8,8 +8,7 @@
 #ifndef KERNELS_H_
 #define KERNELS_H_
 
-#include <cuda.h>
-#include <assert.h>
+
 #include <mma.h>
 #include <cuda_fp16.h>
 
@@ -366,7 +365,6 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 //	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K,int> acc_frag;
 //	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, int> c_frag;
 
-	cudaEventRecord(start);
 	// if (threadIdx.x == 0){}
 	wmma::fill_fragment(acc_frag, 0.0f);
 	wmma::fill_fragment(a_frag, 2.0f);
