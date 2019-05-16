@@ -9,6 +9,7 @@
 #define KERNELS_H_
 
 #include <cuda.h>
+#include <assert.h>
 #include <mma.h>
 #include <cuda_fp16.h>
 
