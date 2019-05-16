@@ -311,6 +311,11 @@ template<class half_t, class real_t>
 __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 		int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
 	
+
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+
 	// Leading dimensions. Packed with no transpositions.
 //	int lda = m_ld;
 //	int ldb = k_ld;
@@ -343,20 +348,23 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	real_t acc = 0;
 
 	__syncthreads();
+	cudaEventRecord(start);
 	for(int i = 0; i < WMMA_N; i++){
 		 acc += real_t(a_shared[threadIdx.x][i] * b_shared[i][threadIdx.y]);
 	}
 
 	d_shared[threadIdx.x][threadIdx.y] = acc + c_shared[threadIdx.x][threadIdx.y];
-	printf("%d\n", d_shared);
-
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	float milliseconds = 0;
+	cudaEventElapsedTime(&milliseconds, start, stop);
 
 //	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_M, WMMA_M, signed char ,wmma::row_major> a_frag;
 //	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, signed char ,wmma::col_major> b_frag;
 //	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K,int> acc_frag;
 //	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, int> c_frag;
 
-
+	cudaEventRecord(start);
 	// if (threadIdx.x == 0){}
 	wmma::fill_fragment(acc_frag, 0.0f);
 	wmma::fill_fragment(a_frag, 2.0f);
@@ -407,6 +415,10 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 		wmma::store_matrix_sync(d2 + cCol + cRow * ldc, c_frag, ldc,
 				wmma::mem_row_major);
 	}
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	float milliseconds = 0;
+	cudaEventElapsedTime(&milliseconds, start, stop);
 	
 }	
 
