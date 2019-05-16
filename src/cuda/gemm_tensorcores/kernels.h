@@ -417,7 +417,6 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	}
 	cudaEventRecord(stop);
 	cudaEventSynchronize(stop);
-	float milliseconds = 0;
 	cudaEventElapsedTime(&milliseconds, start, stop);
 	
 }	
