@@ -333,13 +333,13 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
 	__shared__ real_t d_shared[WMMA_M][WMMA_N];
 
-	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0);
+	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0);
+	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0);
+	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
 
-	d_shared[threadIdx.x][threadIdx.y] = real_t(0);
+	d_shared[threadIdx.x][threadIdx.y] = real_t(0f);
 	real_t acc = 0;
 
 	__syncthreads();
