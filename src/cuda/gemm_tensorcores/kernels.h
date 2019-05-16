@@ -8,6 +8,7 @@
 #ifndef KERNELS_H_
 #define KERNELS_H_
 
+#include <cuda.h>
 #include <mma.h>
 #include <cuda_fp16.h>
 
