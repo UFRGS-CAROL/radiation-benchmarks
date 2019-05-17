@@ -400,6 +400,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		if (log_obj.triplicated) {
 			if (log_obj.use_tensor_cores) {
 				mult_enviroment.mul_wmma_triplicated();
+				// mult_enviroment.mul_wmma_MDR();
 			} else {
 				mult_enviroment.mul_mxm_triplicated();
 			}
