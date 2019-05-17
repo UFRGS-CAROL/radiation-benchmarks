@@ -352,6 +352,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	__syncthreads();
 	for(int i = 0; i < WMMA_N; i++){
 		 acc += real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
+		 __syncthreads();
 	}
 
 	d_shared[threadIdx.x][threadIdx.y] = acc + c_shared[threadIdx.x][threadIdx.y];
