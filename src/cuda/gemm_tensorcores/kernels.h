@@ -334,10 +334,10 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> acc_frag;
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c_frag;
 
-	__shared__ half_t a_shared[WMMA_M][WMMA_N];
-	__shared__ half_t b_shared[WMMA_M][WMMA_N];
-	__shared__ real_t c_shared[WMMA_M][WMMA_N];
-	__shared__ real_t d_shared[WMMA_M][WMMA_N];
+	// __shared__ half_t a_shared[WMMA_M][WMMA_N];
+	// __shared__ half_t b_shared[WMMA_M][WMMA_N];
+	// __shared__ real_t c_shared[WMMA_M][WMMA_N];
+	// __shared__ real_t d_shared[WMMA_M][WMMA_N];
 
 	// a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
