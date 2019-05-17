@@ -348,7 +348,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	d_shared[threadIdx.x][threadIdx.y] = (0.0f);
 	real_t acc = 0;
 
-	__syncthreads();
+	// __syncthreads();
 	// cudaEventRecord(start);
 	for(int i = 0; i < WMMA_N; i++){
 		 acc += real_t(a_shared[threadIdx.x][i] * b_shared[i][threadIdx.y]);
