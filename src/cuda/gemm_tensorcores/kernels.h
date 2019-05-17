@@ -334,27 +334,27 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> acc_frag;
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c_frag;
 
-	// __shared__ half_t a_shared[WMMA_M][WMMA_N];
-	// __shared__ half_t b_shared[WMMA_M][WMMA_N];
-	// __shared__ real_t c_shared[WMMA_M][WMMA_N];
-	// __shared__ real_t d_shared[WMMA_M][WMMA_N];
+	__shared__ half_t a_shared[WMMA_M][WMMA_N];
+	__shared__ half_t b_shared[WMMA_M][WMMA_N];
+	__shared__ real_t c_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d_shared[WMMA_M][WMMA_N];
 
-	// a_shared[threadIdx.x][threadIdx.y] = (2.0f);
+	a_shared[threadIdx.x][threadIdx.y] = (2.0f);
 
-	// b_shared[threadIdx.x][threadIdx.y] = (2.0f);
+	b_shared[threadIdx.x][threadIdx.y] = (2.0f);
 
-	// c_shared[threadIdx.x][threadIdx.y] = (2.0f);
+	c_shared[threadIdx.x][threadIdx.y] = (2.0f);
 
-	// d_shared[threadIdx.x][threadIdx.y] = (0.0f);
-	// real_t acc = 0;
+	d_shared[threadIdx.x][threadIdx.y] = (0.0f);
+	real_t acc = 0;
 
-	// __syncthreads();
-	// // cudaEventRecord(start);
-	// for(int i = 0; i < WMMA_N; i++){
-	// 	 acc += real_t(a_shared[threadIdx.x][i] * b_shared[i][threadIdx.y]);
-	// }
+	__syncthreads();
+	// cudaEventRecord(start);
+	for(int i = 0; i < WMMA_N; i++){
+		 acc += real_t(a_shared[threadIdx.x][i] * b_shared[i][threadIdx.y]);
+	}
 
-	// d_shared[threadIdx.x][threadIdx.y] = acc + c_shared[threadIdx.x][threadIdx.y];
+	d_shared[threadIdx.x][threadIdx.y] = acc + c_shared[threadIdx.x][threadIdx.y];
 	// cudaEventRecord(stop);
 	// cudaEventSynchronize(stop);
 	// float milliseconds = 0;
