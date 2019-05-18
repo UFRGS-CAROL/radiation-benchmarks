@@ -265,13 +265,16 @@ public:
 		this->debug("thread dim allocation");
 		//		// Setup execution parameters
 				// First: using WMMA
-				dim3 grid_dim;
-				dim3 block_dim;
+				// dim3 grid_dim;
+				// dim3 block_dim;
 
 				// block_dim.x must be a multple of warpSize
 				// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-				block_dim.x = 128;
-				block_dim.y = 4;
+				// block_dim.x = 128;
+				// block_dim.y = 4;
+			   	dim3 grid_dim((this->rows_a/WMMA_M) + 1, (rows_a/WMMA_M) + 1, 1);//Number of Blocks required
+    			dim3 block_dim(WMMA_M, WMMA_M, 1);//Number of threads in each block
+
 
 				grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
 						/ (WMMA_M * block_dim.x / WARP_SIZE);
