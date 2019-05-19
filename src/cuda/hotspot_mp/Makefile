@@ -34,7 +34,7 @@ LDFLAGS= $(LIBRARY) -lcudart -lcublas -lcurand -lstdc++
 OBJ=Log.o Parameters.o HotspotExecute.o cuda_utils.o main.o
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
-DEPS = $(wildcard src/*.h) Makefile
+DEPS = $(wildcard *.h) Makefile
 
 all: obj  $(EXEC)
 
