@@ -144,7 +144,7 @@ struct DataManagement {
 
 	}
 
-	void readInput() {
+	void read_input() {
 		double timestamp = Log::mysecond();
 		// =================== Read all files
 		std::fstream temp_file, power_file, gold_file;
@@ -246,7 +246,7 @@ struct DataManagement {
 					<< std::endl;
 	}
 
-	void writeOutput() {
+	void write_output() {
 		// =================== Write output to gold file
 		std::fstream gold_file(this->parameters.ofile,
 				std::fstream::out | std::fstream::binary);

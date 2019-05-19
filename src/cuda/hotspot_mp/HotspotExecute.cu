@@ -85,7 +85,7 @@ template<typename full>
 void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		int borderCols, int borderRows) {
 	DataManagement<full> hotspot_data(this->setup_params);
-	hotspot_data.readInput();
+	hotspot_data.read_input();
 
 	// ====================== MAIN BENCHMARK CYCLE ======================
 	for (int loop1 = 0; loop1 < (this->setup_params.setup_loops); loop1++) {
@@ -147,7 +147,7 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		hotspot_data.copy_from_gpu();
 
 		if (this->setup_params.generate) {
-			hotspot_data.writeOutput();
+			hotspot_data.write_output();
 		} else {
 			hotspot_data.check_output_errors();
 		}
