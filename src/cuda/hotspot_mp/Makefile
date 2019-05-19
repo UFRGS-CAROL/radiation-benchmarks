@@ -1,6 +1,7 @@
 LOGS=1
 DEBUG?=0
 PRECISION=double
+REDUNDANCY=none
 
 CXX=g++
 NVCC=/usr/local/cuda/bin/nvcc
@@ -53,5 +54,17 @@ obj:
 clean:
 	rm -rf $(EXEC) $(OBJDIR)/*
 
+generate:
+	./$(EXEC) -size=1024 -generate -verbose -sim_time=1000 \
+		-input_temp=../../../data/hotspot/temp_1024 \
+		-input_power=../../../data/hotspot/power_1024 \
+		-gold_temp=./gold_1024 -streams=10 -debug \
+		-redundancy=$(REDUNDANCY) -precision=$(PRECISION) 
+		
 test:
-	$(EXEC) --verbose --iterations 10
+	./$(EXEC) -size=1024  -verbose -sim_time=1000 \
+		-input_temp=../../../data/hotspot/temp_1024 \
+		-input_power=../../../data/hotspot/power_1024 \
+		-gold_temp=./gold_1024 -streams=10 -debug \
+		-redundancy=$(REDUNDANCY) -precision=$(PRECISION) 
+	
