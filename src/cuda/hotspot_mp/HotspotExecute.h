@@ -25,27 +25,25 @@
 /* capacitance fitting factor	*/
 #define FACTOR_CHIP	0.5
 
+# define EXPAND_RATE 2// add one iteration will extend the pyramid base by 2 per each borderline
+
 struct HotspotExecute {
-	Parameters setupParams;
-	Log log;
-
-	HotspotExecute(int argc, char** argv);
+	HotspotExecute(Parameters& setup_parameters);
 	virtual ~HotspotExecute();
-
 	void run();
-	void usage(int argc, char** argv);
-
 
 private:
-	template<typename full>
-	void generic_execute(int size, double globaltime, double timestamp,
-			int blockCols, int blockRows, int borderCols, int borderRows);
+	Parameters setup_params;
+	Log log;
 
 	template<typename full>
-	int compute_tran_temp(DataManagement<full>& hotspot_data, int col, int row, int sim_time,
-			int num_iterations, int blockCols, int blockRows, int borderCols,
-			int borderRows, cudaStream_t streamm);
+	void generic_execute(int size, int blockCols, int blockRows, int borderCols,
+			int borderRows);
+
+	template<typename full>
+	int compute_tran_temp(DataManagement<full>& hotspot_data, int col, int row,
+			int sim_time, int num_iterations, int blockCols, int blockRows,
+			int borderCols, int borderRows, cudaStream_t streamm, double& flops);
 };
-
 
 #endif /* HOTSPOTEXECUTE_H_ */

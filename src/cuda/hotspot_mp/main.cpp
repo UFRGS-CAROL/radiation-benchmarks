@@ -11,5 +11,9 @@
 
 int main(int argc, char** argv) {
 
+	Parameters setup_parameters(argc, argv);
+	HotspotExecute setup_execution(setup_parameters);
+
+	setup_execution.run();
 	return 0;
 }

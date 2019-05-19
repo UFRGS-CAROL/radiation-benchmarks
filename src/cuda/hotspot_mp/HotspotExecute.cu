@@ -13,23 +13,22 @@
 #endif
 // The timestamp is updated on every log_helper function call.
 
-HotspotExecute::HotspotExecute(int argc, char** argv) {
-	std::cout << "WG size of kernel = " << BLOCK_SIZE << " " << BLOCK_SIZE
-			<< std::endl;
-
-	this->setupParams = Parameters(argc, argv);
+HotspotExecute::HotspotExecute(Parameters& setup_parameters) {
+	this->setup_params = setup_parameters;
 
 	std::string test_info = std::string("streams:")
-			+ std::to_string(this->setupParams.nstreams) + " precision:"
-			+ this->setupParams.test_precision_description + " size:"
-			+ std::to_string(this->setupParams.grid_rows) + +" pyramidHeight:"
-			+ std::to_string(this->setupParams.pyramid_height) + " simTime:"
-			+ std::to_string(this->setupParams.sim_time);
+			+ std::to_string(this->setup_params.nstreams) + " precision:"
+			+ this->setup_params.test_precision_description + " size:"
+			+ std::to_string(this->setup_params.grid_rows) + +" pyramidHeight:"
+			+ std::to_string(this->setup_params.pyramid_height) + " simTime:"
+			+ std::to_string(this->setup_params.sim_time);
 	std::string test_name = "cuda_hotspot_"
-			+ this->setupParams.test_precision_description;
+			+ this->setup_params.test_precision_description;
 
-	this->log = Log(test_name, test_info, this->setupParams.generate);
+	this->log = Log(test_name, test_info, this->setup_params.generate);
 
+	std::cout << "WG size of kernel = " << BLOCK_SIZE << " " << BLOCK_SIZE
+			<< std::endl;
 	std::cout << std::endl << test_name << std::endl << test_info << std::endl;
 
 }
@@ -37,7 +36,7 @@ HotspotExecute::HotspotExecute(int argc, char** argv) {
 template<typename full>
 int HotspotExecute::compute_tran_temp(DataManagement<full>& hotspot_data,
 		int col, int row, int sim_time, int num_iterations, int blockCols,
-		int blockRows, int borderCols, int borderRows, cudaStream_t stream) {
+		int blockRows, int borderCols, int borderRows, cudaStream_t stream, double& flops) {
 
 //	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 //	dim3 dimGrid(blockCols, blockRows);
@@ -79,38 +78,36 @@ int HotspotExecute::compute_tran_temp(DataManagement<full>& hotspot_data,
 }
 
 template<typename full>
-void HotspotExecute::generic_execute(int size, double globaltime,
-		double timestamp, int blockCols, int blockRows, int borderCols,
-		int borderRows) {
-	DataManagement<full> hotspot_data(this->setupParams.nstreams, size);
-
-	//TODO: FIX IT
+void HotspotExecute::generic_execute(int size, int blockCols, int blockRows,
+		int borderCols, int borderRows) {
+	DataManagement<full> hotspot_data(this->setup_params.nstreams, size);
 	hotspot_data.readInput();
 
 	// ====================== MAIN BENCHMARK CYCLE ======================
-	for (int loop1 = 0; loop1 < (this->setupParams.setup_loops); loop1++) {
-		if (this->setupParams.verbose)
+	for (int loop1 = 0; loop1 < (this->setup_params.setup_loops); loop1++) {
+		if (this->setup_params.verbose)
 			printf("======== Iteration #%06u ========\n", loop1);
 
-		globaltime = this->log.mysecond();
+		double globaltime = this->log.mysecond();
 		// ============ PREPARE ============
-		std::vector<int> ret(this->setupParams.nstreams);
-		timestamp = this->log.mysecond();
+		std::vector<int> ret(this->setup_params.nstreams);
+		double timestamp = this->log.mysecond();
 		hotspot_data.reload();
-		if (this->setupParams.verbose)
+		if (this->setup_params.verbose)
 			printf("GPU prepare time: %.4fs\n",
 					this->log.mysecond() - timestamp);
 
 		// ============ COMPUTE ============
 		double kernel_time = this->log.mysecond();
 		this->log.start_iteration_app();
-		for (int streamIdx = 0; streamIdx < (this->setupParams.nstreams);
+		double flops = 0;
+		for (int streamIdx = 0; streamIdx < (this->setup_params.nstreams);
 				streamIdx++) {
 			ret[streamIdx] = compute_tran_temp(hotspot_data,
-					this->setupParams.grid_cols, this->setupParams.grid_rows,
-					this->setupParams.sim_time,
-					this->setupParams.pyramid_height, blockCols, blockRows,
-					borderCols, borderRows, hotspot_data.streams[streamIdx]);
+					this->setup_params.grid_cols, this->setup_params.grid_rows,
+					this->setup_params.sim_time,
+					this->setup_params.pyramid_height, blockCols, blockRows,
+					borderCols, borderRows, hotspot_data.streams[streamIdx], flops);
 		}
 
 		for (auto stream : hotspot_data.streams) {
@@ -119,42 +116,45 @@ void HotspotExecute::generic_execute(int size, double globaltime,
 		this->log.end_iteration_app();
 		kernel_time = this->log.mysecond() - kernel_time;
 		// ============ MEASURE PERFORMANCE ============
-		if (this->setupParams.verbose) {
-			double outputpersec = (double) (((this->setupParams.grid_rows
-					* this->setupParams.grid_rows * this->setupParams.nstreams)
-					/ kernel_time));
-			printf("Kernel time: %.4lfs\n", kernel_time);
-//			printf(
-//					"Performance - SIZE:%d OUTPUT/S:%f FLOPS: %f (GFLOPS: %.2f)\n",
-//					this->setupParams.grid_rows, outputpersec,
-//					(double) (flops) / kernel_time,
-//					(double) (flops) / (kernel_time * 1000000000));
+		if (this->setup_params.verbose) {
+			double outputpersec =
+					(double) (((this->setup_params.grid_rows
+							* this->setup_params.grid_rows
+							* this->setup_params.nstreams) / kernel_time));
+			std::cout << "Kernel time: " << kernel_time << std::endl;
+			std::cout << "Performance - SIZE:"
+					  << this->setup_params.grid_rows
+					  << " OUTPUT/S: "
+					  << outputpersec
+					  << " FLOPS: "
+					  << flops / kernel_time
+					  << " (GFLOPS: " << flops / (kernel_time * 1e9) << std::endl;
 		}
-//		flops = 0;
 		// ============ VALIDATE OUTPUT ============
 		timestamp = this->log.mysecond();
 		int kernel_errors = 0;
 
 		hotspot_data.copy_from_gpu();
 
-		if (this->setupParams.generate) {
+		if (this->setup_params.generate) {
 			hotspot_data.writeOutput();
 		} else {
-				hotspot_data.check_output_errors();
+			hotspot_data.check_output_errors();
 		}
 
-		if (this->setupParams.verbose)
-			printf("Gold check time: %.4fs\n", this->log.mysecond() - timestamp);
+		if (this->setup_params.verbose)
+			printf("Gold check time: %.4fs\n",
+					this->log.mysecond() - timestamp);
 
-		if ((kernel_errors != 0) && !(this->setupParams.verbose))
+		if ((kernel_errors != 0) && !(this->setup_params.verbose))
 			printf(".");
 
 		double iteration_time = this->log.mysecond() - globaltime;
-		if (this->setupParams.verbose)
+		if (this->setup_params.verbose)
 			printf("Iteration time: %.4fs (%3.1f%% Device)\n", iteration_time,
 					(kernel_time / iteration_time) * 100.0);
 
-		if (this->setupParams.verbose)
+		if (this->setup_params.verbose)
 			printf("===================================\n");
 
 		fflush(stdout);
@@ -165,30 +165,19 @@ HotspotExecute::~HotspotExecute() {
 }
 
 void HotspotExecute::run() {
-	//int streamIdx;
-	double timestamp, globaltime;
-
-//		parameters *setupParams = (parameters *) malloc(sizeof(parameters));
-
-// =============== Get setup parameters from command line
-//		getParams(argc, argv, setupParams);
-	// =======================
-
 	// ===============  pyramid parameters
-# define EXPAND_RATE 2// add one iteration will extend the pyramid base by 2 per each borderline
-	int borderCols = (this->setupParams.pyramid_height) * EXPAND_RATE / 2;
-	int borderRows = (this->setupParams.pyramid_height) * EXPAND_RATE / 2;
+	int borderCols = (this->setup_params.pyramid_height) * EXPAND_RATE / 2;
+	int borderRows = (this->setup_params.pyramid_height) * EXPAND_RATE / 2;
 	int smallBlockCol = BLOCK_SIZE
-			- (this->setupParams.pyramid_height) * EXPAND_RATE;
+			- (this->setup_params.pyramid_height) * EXPAND_RATE;
 	int smallBlockRow = BLOCK_SIZE
-			- (this->setupParams.pyramid_height) * EXPAND_RATE;
-	int blockCols = this->setupParams.grid_cols / smallBlockCol
-			+ ((this->setupParams.grid_cols % smallBlockCol == 0) ? 0 : 1);
-	int blockRows = this->setupParams.grid_rows / smallBlockRow
-			+ ((this->setupParams.grid_rows % smallBlockRow == 0) ? 0 : 1);
+			- (this->setup_params.pyramid_height) * EXPAND_RATE;
+	int blockCols = this->setup_params.grid_cols / smallBlockCol
+			+ ((this->setup_params.grid_cols % smallBlockCol == 0) ? 0 : 1);
+	int blockRows = this->setup_params.grid_rows / smallBlockRow
+			+ ((this->setup_params.grid_rows % smallBlockRow == 0) ? 0 : 1);
 
-	int size = (this->setupParams.grid_cols) * (this->setupParams.grid_rows);
+	int size = (this->setup_params.grid_cols) * (this->setup_params.grid_rows);
 
-	generic_execute<float>(size, globaltime, timestamp, blockCols, blockRows,
-			borderCols, borderRows);
+	generic_execute<float>(size, blockCols, blockRows, borderCols, borderRows);
 }
