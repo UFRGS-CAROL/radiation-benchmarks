@@ -53,12 +53,14 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	full grid_height = chip_height / full(row);
 	full grid_width = chip_width / full(col);
 
-	full Cap = full(FACTOR_CHIP) * full(SPEC_HEAT_SI) * t_chip * grid_width * grid_height;
+	full Cap = full(FACTOR_CHIP) * full(SPEC_HEAT_SI) * t_chip * grid_width
+			* grid_height;
 	full Rx = grid_width / (full(2.0) * full(K_SI) * t_chip * grid_height);
 	full Ry = grid_height / (full(2.0) * full(K_SI) * t_chip * grid_width);
 	full Rz = t_chip / (full(K_SI) * grid_height * grid_width);
 
-	full max_slope = full(MAX_PD) / (full(FACTOR_CHIP) * t_chip * full(SPEC_HEAT_SI));
+	full max_slope = full(MAX_PD)
+			/ (full(FACTOR_CHIP) * t_chip * full(SPEC_HEAT_SI));
 	full step = full(PRECISION) / max_slope;
 //	full t;
 	full time_elapsed = 0.001;
@@ -80,9 +82,9 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 }
 
 template<typename full>
-void HotspotExecute::generic_execute(int size, int blockCols, int blockRows,
+void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		int borderCols, int borderRows) {
-	DataManagement<full> hotspot_data(this->setup_params.nstreams, size);
+	DataManagement<full> hotspot_data(this->setup_params);
 	hotspot_data.readInput();
 
 	// ====================== MAIN BENCHMARK CYCLE ======================
@@ -185,24 +187,22 @@ void HotspotExecute::run() {
 	int blockRows = this->setup_params.grid_rows / smallBlockRow
 			+ ((this->setup_params.grid_rows % smallBlockRow == 0) ? 0 : 1);
 
-	int size = (this->setup_params.grid_cols) * (this->setup_params.grid_rows);
+	this->setup_params.size = (this->setup_params.grid_cols)
+			* (this->setup_params.grid_rows);
 
 	switch (this->setup_params.precision) {
 	case HALF:
-		generic_execute<half>(size, blockCols, blockRows, borderCols,
-				borderRows);
+		generic_execute<half>(blockCols, blockRows, borderCols, borderRows);
 
 		break;
 
 	case SINGLE:
-		generic_execute<float>(size, blockCols, blockRows, borderCols,
-				borderRows);
+		generic_execute<float>(blockCols, blockRows, borderCols, borderRows);
 
 		break;
 
 	case DOUBLE:
-		generic_execute<double>(size, blockCols, blockRows, borderCols,
-				borderRows);
+		generic_execute<double>(blockCols, blockRows, borderCols, borderRows);
 
 		break;
 

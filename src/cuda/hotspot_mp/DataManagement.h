@@ -10,6 +10,8 @@
 
 #include "DeviceVector.h"
 #include "cuda_utils.h"
+#include <fstream>      // std::fstream
+#include <cmath>
 
 template<typename full>
 struct DataManagement {
@@ -18,35 +20,35 @@ struct DataManagement {
 	std::vector<std::vector<full>> matrix_power_host;
 
 	std::vector<full> gold_temperature;
-
 	std::vector<cudaStream_t> streams;
-
-	int size;
+	const Parameters& parameters;
 
 	// Alloc for multiple streams
 	std::vector<DeviceVector<full> > matrix_temperature_input_device;
 	std::vector<DeviceVector<full> > matrix_temperature_output_device;
 	std::vector<DeviceVector<full> > matrix_power_device;
 
-	DataManagement(int n_streams, int size) :
-			size(size) {
+	DataManagement(Parameters& parameters) :
+			parameters(parameters) {
 
-		this->matrix_power_device.resize(n_streams);
-		this->matrix_temperature_input_device.resize(n_streams);
-		this->matrix_temperature_output_device.resize(n_streams);
+		this->matrix_power_device.resize(this->parameters.nstreams);
+		this->matrix_temperature_input_device.resize(this->parameters.nstreams);
+		this->matrix_temperature_output_device.resize(
+				this->parameters.nstreams);
 
-		this->matrix_power_host.resize(n_streams);
-		this->matrix_temperature_input_host.resize(n_streams);
-		this->matrix_temperature_output_host.resize(n_streams);
+		this->matrix_power_host.resize(this->parameters.nstreams);
+		this->matrix_temperature_input_host.resize(this->parameters.nstreams);
+		this->matrix_temperature_output_host.resize(this->parameters.nstreams);
 
-		this->streams = std::vector<cudaStream_t>(n_streams);
-		for (int stream = 0; stream < n_streams; stream++) {
+		this->streams = std::vector<cudaStream_t>(this->parameters.nstreams);
+		for (int stream = 0; stream < this->parameters.nstreams; stream++) {
 
-			this->matrix_power_host[stream] = std::vector<full>(size);
+			this->matrix_power_host[stream] = std::vector<full>(
+					this->parameters.size);
 			this->matrix_temperature_input_host[stream] = std::vector<full>(
-					size);
+					this->parameters.size);
 			this->matrix_temperature_output_host[stream] = std::vector<full>(
-					size);
+					this->parameters.size);
 
 			this->matrix_power_device[stream] = this->matrix_power_host[stream];
 			this->matrix_temperature_input_device[stream] =
@@ -60,7 +62,7 @@ struct DataManagement {
 
 		}
 
-		this->gold_temperature = std::vector<full>(size);
+		this->gold_temperature = std::vector<full>(this->parameters.size);
 
 	}
 
@@ -142,88 +144,105 @@ struct DataManagement {
 	}
 
 	void readInput() {
-//		double timestamp = Log.mysecond();
-//		// =================== Read all files
-//		int i, j;
-//		FILE *ftemp, *fpower, *fgold;
-//		char str[STR_SIZE];
-//		float val;
-//		int num_zeros = 0;
-//		int num_nans = 0;
-//
-//		if ((ftemp = fopen(this->tfile, "r")) == 0)
-//			fatal(params, "The temp file was not opened");
-//		if ((fpower = fopen(this->pfile, "r")) == 0)
-//			fatal(params, "The power file was not opened");
-//
-//		if (!(this->generate))
-//			if ((fgold = fopen(this->ofile, "rb")) == 0)
-//				fatal(params, "The gold was not opened");
-//
-//		for (i = 0; i <= (this->grid_rows) - 1; i++) {
-//			for (j = 0; j <= (this->grid_cols) - 1; j++) {
-//				if (!fgets(str, STR_SIZE, ftemp)) {
-//					fatal(params, "not enough lines in temp file");
-//				}
-//				if (feof(ftemp)) {
-//					printf("[%d,%d] size: %d ", i, j, this->grid_rows);
-//					fatal(params, "not enough lines in temp file");
-//				}
-//				if ((sscanf(str, "%f", &val) != 1))
-//					fatal(params, "invalid temp file format");
-//
-//				this->temperature_input[i * (this->grid_cols) + j] =
-//						tested_type_host(val);
-//
-//				if (tested_type_host(val) == 0)
-//					num_zeros++;
-//				if (isnan(tested_type_host(val)))
-//					num_nans++;
-//
-//				if (!fgets(str, STR_SIZE, fpower)) {
-//					fatal(params, "not enough lines in power file");
-//				}
-//				if (feof(fpower))
-//					fatal(params, "not enough lines in power file");
-//				if ((sscanf(str, "%f", &val) != 1))
-//					fatal(params, "invalid power file format");
-//
-//				this->power[i * (this->grid_cols) + j] = tested_type_host(val);
-//
-//				if (tested_type_host(val) == 0)
-//					num_zeros++;
-//				if (isnan(tested_type_host(val)))
-//					num_nans++;
-//
-//				if (!(this->generate)) {
-//					assert(
-//							fread(
-//									&(this->gold_temperature[i
-//											* (this->grid_cols) + j]),
-//									sizeof(tested_type), 1, fgold) == 1);
-//				}
-//			}
-//		}
-//
-//		printf("Zeros in the input: %d\n", num_zeros);
-//		printf("NaNs in the input: %d\n", num_nans);
-//
-//		// =================== FAULT INJECTION
-//		if (this->fault_injection) {
-//			this->in_temperature[32] = 6.231235;
-//			printf("!!!!!!!!! Injected error: in_temperature[32] = %f\n",
-//					(double) this->temperature_input[32]);
-//		}
-//		// ==================================
-//
-//		fclose(ftemp);
-//		fclose(fpower);
-//		if (!(this->generate))
-//			fclose(fgold);
-//
-//		if (this->verbose)
-//			std::cout << "readInput time: " << Log.mysecond() - timestamp
-//					<< std::endl;
+		double timestamp = Log::mysecond();
+		// =================== Read all files
+		std::fstream temp_file, power_file, gold_file;
+		temp_file.open(this->parameters.tfile, std::fstream::in);
+		power_file.open(this->parameters.pfile, std::fstream::in);
+		gold_file.open(this->parameters.ofile,
+				std::fstream::in | std::fstream::binary);
+
+		int num_zeros = 0;
+		int num_nans = 0;
+
+		if (!temp_file.is_open()) {
+			std::cerr << ("The temp file was not opened");
+			exit(EXIT_FAILURE);
+		}
+
+		if (!power_file.is_open()) {
+			std::cerr << ("The power file was not opened");
+			exit(EXIT_FAILURE);
+		}
+
+		if (this->parameters.generate) {
+			if (!gold_file.is_open()) {
+				std::cerr << ("The gold file was not opened");
+				exit(EXIT_FAILURE);
+			}
+
+			gold_file.read((char*)this->gold_temperature.data(),
+					sizeof(full) * this->parameters.size);
+		}
+
+		std::vector<full> temperature(this->parameters.size);
+		std::vector<full> power(this->parameters.size);
+
+		// reading from gold
+
+		for (int i = 0; i < this->parameters.grid_rows; i++) {
+			for (int j = 0; j < this->parameters.grid_cols; j++) {
+				if (temp_file.eof()) {
+					std::cerr << "[" << i << "," << j << "] size: "
+							<< this->parameters.size << std::endl;
+					std::cerr << "not enough lines in temp file" << std::endl;
+					exit(EXIT_FAILURE);
+				}
+
+				float temp_val;
+				temp_file >> temp_val;
+
+				temperature[i * this->parameters.grid_cols + j] = full(
+						temp_val);
+
+				if (temp_val == 0)
+					num_zeros++;
+				if (std::isnan(temp_val))
+					num_nans++;
+
+				float power_val;
+				if (power_file.eof()) {
+					std::cerr << "[" << i << "," << j << "] size: "
+							<< this->parameters.size << std::endl;
+					std::cerr << "not enough lines in power file" << std::endl;
+					exit(EXIT_FAILURE);
+				}
+
+				power_file >> power_val;
+
+				power[i * this->parameters.grid_cols + j] = full(power_val);
+
+				if (power_val == 0)
+					num_zeros++;
+				if (std::isnan(power_val))
+					num_nans++;
+			}
+		}
+
+		std::cout << "Zeros in the input: " << num_zeros << std::endl;
+		std::cout << "NaNs in the input: " << num_nans << std::endl;
+
+		// =================== FAULT INJECTION
+		if (this->parameters.fault_injection) {
+			temperature[32] = 6.231235;
+			std::cout << "!!!!!!!!! Injected error: temperature[32] = "
+					<< float(temperature[32]) << std::endl;
+		}
+
+		for (int stream = 0; stream < this->streams.size(); stream++) {
+			this->matrix_power_host[stream] = power;
+			this->matrix_temperature_input_host[stream] = temperature;
+		}
+		// ==================================
+
+		power_file.close();
+		temp_file.close();
+		if (this->parameters.generate)
+			gold_file.close();
+
+		if (this->parameters.verbose)
+			std::cout << "readInput time: " << Log::mysecond() - timestamp
+					<< std::endl;
 	}
 
 	void writeOutput() {

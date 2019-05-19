@@ -38,6 +38,7 @@ Parameters::Parameters(int argc, char** argv) {
 	this->verbose = 0;
 	this->fault_injection = 0;
 	this->generate = 0;
+	this->size = 0;
 
 	this->precision = SINGLE;
 	this->redundancy = NONE;
@@ -173,6 +174,7 @@ Parameters::Parameters() {
 	this->verbose = 0;
 	this->fault_injection = 0;
 	this->generate = 0;
+	this->size = 0;
 
 	this->precision = SINGLE;
 	this->redundancy = NONE;

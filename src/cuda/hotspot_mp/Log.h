@@ -19,6 +19,8 @@
 struct Log {
 	bool generate;
 	double tic_;
+	size_t error_count;
+	size_t info_count;
 
 	Log(std::string& app, std::string& test_info, bool generate);
 	Log();
@@ -38,9 +40,9 @@ struct Log {
 
 	void log_info(std::string info_detail);
 
-	void update_error_count(long error_count);
+	void update_error_count();
 
-	void update_info_count(long info_count);
+	void update_info_count();
 
 	void tic();
 	double toc();

@@ -25,6 +25,7 @@ struct Parameters {
 	int grid_cols, grid_rows;
 	int nstreams;
 	int sim_time;
+	int size;
 	int pyramid_height;
 
 	long setup_loops;

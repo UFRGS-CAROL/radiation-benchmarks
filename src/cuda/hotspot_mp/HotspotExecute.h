@@ -37,7 +37,7 @@ private:
 	Log log;
 
 	template<typename full>
-	void generic_execute(int size, int blockCols, int blockRows, int borderCols,
+	void generic_execute(int blockCols, int blockRows, int borderCols,
 			int borderRows);
 
 	template<typename full>
