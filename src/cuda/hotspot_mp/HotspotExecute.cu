@@ -193,17 +193,14 @@ void HotspotExecute::run() {
 	switch (this->setup_params.precision) {
 	case HALF:
 		generic_execute<half>(blockCols, blockRows, borderCols, borderRows);
-
 		break;
 
 	case SINGLE:
 		generic_execute<float>(blockCols, blockRows, borderCols, borderRows);
-
 		break;
 
 	case DOUBLE:
 		generic_execute<double>(blockCols, blockRows, borderCols, borderRows);
-
 		break;
 
 	}

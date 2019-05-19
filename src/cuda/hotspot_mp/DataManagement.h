@@ -157,18 +157,18 @@ struct DataManagement {
 		int num_nans = 0;
 
 		if (!temp_file.is_open()) {
-			std::cerr << ("The temp file was not opened");
+			std::cerr << "The temp file was not opened" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 
 		if (!power_file.is_open()) {
-			std::cerr << ("The power file was not opened");
+			std::cerr << "The power file was not opened" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 
 		if (this->parameters.generate) {
 			if (!gold_file.is_open()) {
-				std::cerr << ("The gold file was not opened");
+				std::cerr << "The gold file was not opened" << std::endl;
 				exit(EXIT_FAILURE);
 			}
 
@@ -252,7 +252,7 @@ struct DataManagement {
 				std::fstream::out | std::fstream::binary);
 
 		if (!gold_file.is_open()) {
-			std::cerr << ("The gold file was not opened");
+			std::cerr << "The gold file was not opened" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 
