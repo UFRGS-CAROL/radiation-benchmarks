@@ -15,27 +15,27 @@
 
 
 
-template<typename tested_type>
+template<typename full>
 __global__ void calculate_temp(int iteration,  //number of iteration
-		tested_type* power,   //power input
-		tested_type* temp_src,    //temperature input/output
-		tested_type* temp_dst,    //temperature input/output
+		full* power,   //power input
+		full* temp_src,    //temperature input/output
+		full* temp_dst,    //temperature input/output
 		int grid_cols,  //Col of grid
 		int grid_rows,  //Row of grid
 		int border_cols,  // border offset
 		int border_rows,  // border offset
-		float Cap,      //Capacitance
-		float Rx, float Ry, float Rz, float step, float time_elapsed) {
+		full Cap,      //Capacitance
+		full Rx, full Ry, full Rz, full step, full time_elapsed) {
 
 	//----------------------------------------------------
-	__shared__ tested_type temp_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ tested_type power_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
-	__shared__ tested_type t_temp[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
+	__shared__ full temp_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ full power_on_cuda[BLOCK_SIZE][BLOCK_SIZE];
+	__shared__ full t_temp[BLOCK_SIZE][BLOCK_SIZE]; // saving temporary temperature result
 	//----------------------------------------------------
 
-	tested_type amb_temp(80.0);
-	tested_type step_div_Cap;
-	tested_type Rx_1, Ry_1, Rz_1;
+	full amb_temp(80.0);
+	full step_div_Cap;
+	full Rx_1, Ry_1, Rz_1;
 
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -45,9 +45,9 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 
 	step_div_Cap = step / Cap;
 
-	Rx_1 = tested_type(1 / Rx);
-	Ry_1 = tested_type(1 / Ry);
-	Rz_1 = tested_type(1 / Rz);
+	Rx_1 = full(1) / Rx;
+	Ry_1 = full(1) / Ry;
+	Rz_1 = full(1) / Rz;
 
 	// each block finally computes result for a small block
 	// after N iterations.
@@ -112,15 +112,15 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 		IN_RANGE(tx, validXmin, validXmax) &&
 		IN_RANGE(ty, validYmin, validYmax)) {
 			computed = true;
-			register tested_type calculated = temp_on_cuda[ty][tx]
+			register full calculated = temp_on_cuda[ty][tx]
 					+ step_div_Cap
 							* (power_on_cuda[ty][tx]
 									+ (temp_on_cuda[S][tx] + temp_on_cuda[N][tx]
-											- tested_type(2.0)
+											- full(2.0)
 													* temp_on_cuda[ty][tx])
 											* Ry_1
 									+ (temp_on_cuda[ty][E] + temp_on_cuda[ty][W]
-											- tested_type(2.0)
+											- full(2.0)
 													* temp_on_cuda[ty][tx])
 											* Rx_1
 									+ (amb_temp - temp_on_cuda[ty][tx]) * Rz_1);

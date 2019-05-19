@@ -41,9 +41,12 @@ private:
 			int borderRows);
 
 	template<typename full>
-	int compute_tran_temp(DataManagement<full>& hotspot_data, int col, int row,
+	int compute_tran_temp(DeviceVector<full>& power_array,
+			DeviceVector<full>& temp_array_input,
+			DeviceVector<full>& temp_array_output, int col, int row,
 			int sim_time, int num_iterations, int blockCols, int blockRows,
-			int borderCols, int borderRows, cudaStream_t streamm, double& flops);
+			int borderCols, int borderRows, cudaStream_t streamm,
+			double& flops);
 };
 
 #endif /* HOTSPOTEXECUTE_H_ */
