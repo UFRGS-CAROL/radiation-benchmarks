@@ -129,7 +129,7 @@ void HotspotExecute::generic_execute(int size, int blockCols, int blockRows,
 					  << outputpersec
 					  << " FLOPS: "
 					  << flops / kernel_time
-					  << " (GFLOPS: " << flops / (kernel_time * 1e9) << std::endl;
+					  << " (GFLOPS: " << flops / (kernel_time * 1e9) << ")" << std::endl;
 		}
 		// ============ VALIDATE OUTPUT ============
 		timestamp = this->log.mysecond();
