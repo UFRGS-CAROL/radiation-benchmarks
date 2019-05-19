@@ -157,21 +157,22 @@ struct DataManagement {
 		int num_nans = 0;
 
 		if (!temp_file.is_open()) {
-			std::cerr << "The temp file was not opened" << std::endl;
+			std::cerr << "The temp file was not opened"<< std::endl;
 			exit(EXIT_FAILURE);
 		}
 
 		if (!power_file.is_open()) {
-			std::cerr << "The power file was not opened" << std::endl;
+			std::cerr << "The power file was not opened"<< std::endl;
 			exit(EXIT_FAILURE);
 		}
 
-		if (this->parameters.generate) {
-			if (!gold_file.is_open()) {
+		if (this->parameters.generate == false && !gold_file.is_open()) {
 				std::cerr << "The gold file was not opened" << std::endl;
 				exit(EXIT_FAILURE);
-			}
 
+		}
+
+		if(this->parameters.generate){
 			gold_file.read((char*) this->gold_temperature.data(),
 					sizeof(full) * this->parameters.size);
 		}
