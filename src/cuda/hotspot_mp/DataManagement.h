@@ -11,7 +11,8 @@
 #include "DeviceVector.h"
 #include "cuda_utils.h"
 #include <fstream>      // std::fstream
-#include <cmath>
+#include <cmath> // isnan
+#include <algorithm> // count
 
 template<typename full>
 struct DataManagement {
@@ -171,7 +172,7 @@ struct DataManagement {
 				exit(EXIT_FAILURE);
 			}
 
-			gold_file.read((char*)this->gold_temperature.data(),
+			gold_file.read((char*) this->gold_temperature.data(),
 					sizeof(full) * this->parameters.size);
 		}
 
@@ -246,36 +247,30 @@ struct DataManagement {
 	}
 
 	void writeOutput() {
-//		// =================== Write output to gold file
-//		int i, j;
-//		FILE *fgold;
-//		// char str[STR_SIZE];
-//		int num_zeros = 0;
-//		int num_nans = 0;
-//
-//		if ((fgold = fopen(this->ofile, "wb")) == 0)
-//			fatal(params, "The gold was not opened");
-//
-//		for (i = 0; i <= (this->grid_rows) - 1; i++) {
-//			for (j = 0; j <= (this->grid_cols) - 1; j++) {
-//				// =======================
-//				//HARDENING AGAINST BAD BOARDS
-//				//-----------------------------------------------------------------------------------
-//
-//				if (this->temperature_output[i * (this->grid_cols) + j] == 0)
-//					num_zeros++;
-//
-//				if (isnan(this->out_temperature[i * (this->grid_cols) + j]))
-//					num_nans++;
-//
-//				//-----------------------------------------------------------------------------------
-//				fwrite(&(this->temperature_output[i * (this->grid_cols) + j]),
-//						sizeof(tested_type), 1, fgold);
-//			}
-//		}
-//		fclose(fgold);
-//		printf("Zeros in the output: %d\n", num_zeros);
-//		printf("NaNs in the output: %d\n", num_nans);
+		// =================== Write output to gold file
+		std::fstream gold_file(this->parameters.ofile,
+				std::fstream::out | std::fstream::binary);
+
+		if (!gold_file.is_open()) {
+			std::cerr << ("The gold file was not opened");
+			exit(EXIT_FAILURE);
+		}
+
+		gold_file.write((char*) this->gold_temperature.data(),
+				sizeof(full) * this->parameters.size);
+
+		gold_file.close();
+
+		int nan = 0;
+		int zero = 0;
+		for (auto n : this->gold_temperature) {
+			if (std::isnan(float(n)))
+				nan++;
+			if (float(n) == 0)
+				zero++;
+		}
+		std::cout << "Zeros in the output: " << zero << std::endl;
+		std::cout << "NaNs in the output: " << nan << std::endl;
 	}
 };
 
