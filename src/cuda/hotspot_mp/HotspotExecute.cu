@@ -21,7 +21,8 @@ HotspotExecute::HotspotExecute(Parameters& setup_parameters) {
 			+ this->setup_params.test_precision_description + " size:"
 			+ std::to_string(this->setup_params.grid_rows) + +" pyramidHeight:"
 			+ std::to_string(this->setup_params.pyramid_height) + " simTime:"
-			+ std::to_string(this->setup_params.sim_time);
+			+ std::to_string(this->setup_params.sim_time) + " redundancy:"
+			+ this->setup_params.test_redundancy_description;
 	std::string test_name = "cuda_hotspot_"
 			+ this->setup_params.test_precision_description;
 

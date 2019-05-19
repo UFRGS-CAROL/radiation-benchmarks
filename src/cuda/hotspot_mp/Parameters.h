@@ -33,6 +33,8 @@ struct Parameters {
 	bool generate;
 
 	std::string test_precision_description;
+	std::string test_redundancy_description;
+
 	std::string test_name;
 	std::string tfile, pfile, ofile;
 

@@ -41,6 +41,8 @@ Parameters::Parameters(int argc, char** argv) {
 
 	this->precision = SINGLE;
 	this->redundancy = NONE;
+	this->test_precision_description = "single";
+	this->test_redundancy_description =  "none";
 
 	if (argc < 2) {
 		usage(argc, argv);
@@ -52,7 +54,8 @@ Parameters::Parameters(int argc, char** argv) {
 		getCmdLineArgumentString(argc, (const char **) argv, "precision",
 				&precision);
 		if (precision) {
-			this->precision = pre[std::string(precision)];
+			this->test_precision_description = std::string(precision);
+			this->precision = pre[this->test_precision_description];
 		}
 	}
 
@@ -61,7 +64,8 @@ Parameters::Parameters(int argc, char** argv) {
 		getCmdLineArgumentString(argc, (const char **) argv, "redundancy",
 				&redundancy);
 		if (redundancy) {
-			this->redundancy = red[std::string(redundancy)];
+			this->test_redundancy_description = std::string(redundancy);
+			this->redundancy = red[this->test_redundancy_description];
 		}
 	}
 
