@@ -115,7 +115,6 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		for (auto stream : hotspot_data.streams) {
 			checkFrameworkErrors(cudaStreamSynchronize(stream));
 		}
-		checkFrameworkErrors(cudaPeekAtLastError());
 		checkFrameworkErrors(cudaDeviceSynchronize());
 		checkFrameworkErrors(cudaPeekAtLastError());
 

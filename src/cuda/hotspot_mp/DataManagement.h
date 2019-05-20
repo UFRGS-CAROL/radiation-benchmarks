@@ -261,6 +261,8 @@ struct DataManagement {
 			return;
 		}
 
+		this->gold_temperature = this->matrix_temperature_output_host[0];
+
 		// =================== Write output to gold file
 		std::fstream gold_file(this->parameters.ofile,
 				std::fstream::out | std::fstream::binary);
