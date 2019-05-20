@@ -21,6 +21,7 @@ struct DataManagement {
 	std::vector<std::vector<full>> matrix_power_host;
 
 	std::vector<full> gold_temperature;
+	std::vector<full> zero_vector;
 	std::vector<cudaStream_t> streams;
 	const Parameters& parameters;
 
@@ -69,6 +70,7 @@ struct DataManagement {
 		}
 
 		this->gold_temperature = std::vector<full>(this->parameters.size);
+		this->zero_vector = std::vector<full>(this->parameters.size, 0);
 
 	}
 
@@ -88,7 +90,7 @@ struct DataManagement {
 			this->matrix_power_device[stream] = this->matrix_power_host[stream];
 			this->matrix_temperature_input_device[stream] =
 					this->matrix_temperature_input_host[stream];
-			this->matrix_temperature_output_device[stream].fill(0);
+			this->matrix_temperature_output_device[stream] = this->zero_vector;
 		}
 	}
 

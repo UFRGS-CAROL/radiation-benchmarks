@@ -86,13 +86,6 @@ struct DeviceVector {
 		return ret;
 	}
 
-	void fill(const T value) {
-		if (this->allocated) {
-			checkFrameworkErrors(
-					cudaMemset(this->data, value, sizeof(T) * this->v_size));
-		}
-	}
-
 private:
 	void alloc_data(size_t size) {
 		this->v_size = size;
