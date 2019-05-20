@@ -68,8 +68,9 @@ template<typename full>
 void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		int borderCols, int borderRows) {
 	DataManagement<full> hotspot_data(this->setup_params);
+	std::cout << "ALLOC MEMORY\n";
 	hotspot_data.read_input();
-
+	std::cout << "READ INPUT\n";
 	// ====================== MAIN BENCHMARK CYCLE ======================
 	for (int loop = 0; loop < this->setup_params.setup_loops; loop++) {
 		if (this->setup_params.verbose)
@@ -176,6 +177,7 @@ void HotspotExecute::run() {
 
 	switch (this->setup_params.precision) {
 	case HALF:
+
 		generic_execute<half>(blockCols, blockRows, borderCols, borderRows);
 		break;
 
