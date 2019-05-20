@@ -21,6 +21,7 @@ EXEC=cuda_hotspot_mp
 
 ifeq ($(DEBUG), 1)
 NVCCFLAGS+= -g -G
+CXXFLAGS+= -g
 endif
 
 ifeq ($(LOGS), 1)

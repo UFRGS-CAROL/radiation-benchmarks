@@ -99,6 +99,8 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 			DeviceVector<full>& temp_array_output_stream =
 					hotspot_data.matrix_temperature_output_device[streamIdx];
 
+			std::cout << "REFERENCE GIVEN\n";
+
 			ret[streamIdx] = compute_tran_temp(power_array_stream,
 					temp_array_input_stream, temp_array_output_stream,
 					this->setup_params.grid_cols, this->setup_params.grid_rows,
