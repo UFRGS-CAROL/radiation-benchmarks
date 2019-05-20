@@ -86,6 +86,11 @@ struct DeviceVector {
 		return ret;
 	}
 
+	void clear() {
+		checkFrameworkErrors(
+				cudaMemset(this->data, 0, sizeof(T) * this->v_size));
+	}
+
 private:
 	void alloc_data(size_t size) {
 		this->v_size = size;

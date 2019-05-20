@@ -19,6 +19,7 @@
 struct Log {
 	bool to_log;
 	double tic_;
+	double toc_;
 	size_t error_count;
 	size_t info_count;
 
@@ -45,7 +46,8 @@ struct Log {
 	void update_info_count();
 
 	void tic();
-	double toc();
+	void toc();
+	double iteration_time();
 
 	static double mysecond();
 	void fatal(std::string& s);

@@ -9,7 +9,7 @@
 #include <iostream>
 
 Log::Log(std::string& app, std::string& test_info, bool to_log) :
-		to_log(to_log), tic_(0), info_count(0), error_count(0) {
+		to_log(to_log), tic_(0), toc_(0), info_count(0), error_count(0) {
 
 #ifdef LOGS
 	if (!this->to_log)
@@ -19,7 +19,7 @@ Log::Log(std::string& app, std::string& test_info, bool to_log) :
 }
 
 Log::Log() :
-		to_log(false), tic_(0), info_count(0), error_count(0) {
+		to_log(false), tic_(0), toc_(0), info_count(0), error_count(0) {
 }
 
 Log::Log(const Log& a) {
@@ -27,6 +27,7 @@ Log::Log(const Log& a) {
 	this->tic_ = a.tic_;
 	this->error_count = a.error_count;
 	this->info_count = a.info_count;
+	this->toc_ = a.toc_;
 }
 
 Log::~Log() {
@@ -37,6 +38,7 @@ Log::~Log() {
 }
 
 void Log::end_iteration_app() {
+	this->toc();
 #ifdef LOGS
 	if (!this->to_log)
 		end_iteration();
@@ -44,6 +46,7 @@ void Log::end_iteration_app() {
 }
 
 void Log::start_iteration_app() {
+	this->tic();
 #ifdef LOGS
 	if (!this->to_log)
 		start_iteration();
@@ -93,9 +96,11 @@ void Log::tic() {
 	this->tic_ = this->mysecond();
 }
 
-double Log::toc() {
-	return this->mysecond() - this->tic_;
+void Log::toc() {
+	this->toc_ = this->mysecond();
 }
+
+
 
 double Log::mysecond() {
 	struct timeval tp;
@@ -129,4 +134,8 @@ Log& Log::operator =(const Log& other) {
 	this->tic_ = other.tic_;
 
 	return *this;
+}
+
+double Log::iteration_time() {
+	return this->toc_ - this->tic_;
 }

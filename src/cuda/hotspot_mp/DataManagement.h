@@ -90,7 +90,7 @@ struct DataManagement {
 			this->matrix_power_device[stream] = this->matrix_power_host[stream];
 			this->matrix_temperature_input_device[stream] =
 					this->matrix_temperature_input_host[stream];
-			this->matrix_temperature_output_device[stream] = this->zero_vector;
+			this->matrix_temperature_output_device[stream].clear();
 		}
 	}
 
@@ -103,6 +103,9 @@ struct DataManagement {
 
 	// Returns true if no errors are found. False if otherwise.
 	int check_output_errors() {
+		if(this->parameters.generate == true){
+			return 0;
+		}
 		//	int host_errors = 0;
 		//
 		//#pragma omp parallel for shared(host_errors)
@@ -173,18 +176,17 @@ struct DataManagement {
 			exit(EXIT_FAILURE);
 		}
 
-		if (this->parameters.generate == false && !gold_file.is_open()) {
-			std::cerr << "The gold file was not opened" << std::endl;
-			exit(EXIT_FAILURE);
 
-		}
-
-		// reading from gold
-
-		if (this->parameters.generate) {
+		if(this->parameters.generate == false){
+			if(gold_file.is_open() == false){
+				std::cerr << "The gold file was not opened" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			// reading from gold
 			gold_file.read((char*) this->gold_temperature.data(),
-					sizeof(full) * this->parameters.size);
+								sizeof(full) * this->parameters.size);
 		}
+
 
 		std::vector<full> temperature(this->parameters.size);
 		std::vector<full> power(this->parameters.size);
@@ -255,6 +257,10 @@ struct DataManagement {
 	}
 
 	void write_output() {
+		if(this->parameters.generate == false){
+			return;
+		}
+
 		// =================== Write output to gold file
 		std::fstream gold_file(this->parameters.ofile,
 				std::fstream::out | std::fstream::binary);

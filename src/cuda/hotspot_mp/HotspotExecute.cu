@@ -35,7 +35,8 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	DefaultType chip_width(0.016);
 	DefaultType grid_height = chip_height / row;
 	DefaultType grid_width = chip_width / col;
-	DefaultType Cap = FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width * grid_height;
+	DefaultType Cap = FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width
+			* grid_height;
 	DefaultType Rx = grid_width / (2.0 * K_SI * t_chip * grid_height);
 	DefaultType Ry = grid_height / (2.0 * K_SI * t_chip * grid_width);
 	DefaultType Rz = t_chip / (K_SI * grid_height * grid_width);
@@ -54,13 +55,14 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	full* MatrixPower = power_array.data;
 	full* MatrixTemp[2] = { temp_array_input.data, temp_array_output.data };
 
-	std::cout << " output " << MatrixTemp[0] << " input " << MatrixTemp[1] << std::endl;
+	std::cout << " output " << MatrixTemp[0] << " input " << MatrixTemp[1]
+			<< std::endl;
 
 	for (int t = 0; t < sim_time; t += num_iterations) {
 		calculate_temp<full> <<<dimGrid, dimBlock, 0, stream>>>(
 				MIN(num_iterations, sim_time - t), MatrixPower, MatrixTemp[src],
-				MatrixTemp[dst], col, row, borderCols, borderRows, Cap_, Rx_, Ry_,
-				Rz_, step_, time_elapsed);
+				MatrixTemp[dst], col, row, borderCols, borderRows, Cap_, Rx_,
+				Ry_, Rz_, step_, time_elapsed);
 		flops += col * row * MIN(num_iterations, sim_time - t) * 15;
 		std::swap(src, dst);
 	}
@@ -72,16 +74,15 @@ template<typename full>
 void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		int borderCols, int borderRows) {
 	DataManagement<full> hotspot_data(this->setup_params);
-	std::cout << "ALLOC MEMORY\n";
 	hotspot_data.read_input();
-	std::cout << "READ INPUT\n";
+
 	// ====================== MAIN BENCHMARK CYCLE ======================
 	for (int loop = 0; loop < this->setup_params.setup_loops; loop++) {
 		if (this->setup_params.verbose)
 			std::cout << "======== Iteration #" << loop << " ========"
 					<< std::endl;
-
 		double globaltime = this->log.mysecond();
+
 		// ============ PREPARE ============
 		std::vector<int> ret(this->setup_params.nstreams);
 		double timestamp = this->log.mysecond();
@@ -91,7 +92,6 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 					<< this->log.mysecond() - timestamp << "s" << std::endl;
 
 		// ============ COMPUTE ============
-		double kernel_time = this->log.mysecond();
 		this->log.start_iteration_app();
 		double flops = 0;
 		for (int streamIdx = 0; streamIdx < (this->setup_params.nstreams);
@@ -103,10 +103,10 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 			DeviceVector<full>& temp_array_output_stream =
 					hotspot_data.matrix_temperature_output_device[streamIdx];
 
-			ret[streamIdx] = compute_tran_temp<full>(power_array_stream,
-					temp_array_input_stream, temp_array_output_stream,
-					this->setup_params.grid_cols, this->setup_params.grid_rows,
-					this->setup_params.sim_time,
+//			ret[streamIdx] =
+			compute_tran_temp<full>(power_array_stream, temp_array_input_stream,
+					temp_array_output_stream, this->setup_params.grid_cols,
+					this->setup_params.grid_rows, this->setup_params.sim_time,
 					this->setup_params.pyramid_height, blockCols, blockRows,
 					borderCols, borderRows, hotspot_data.streams[streamIdx],
 					flops);
@@ -116,30 +116,27 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 			checkFrameworkErrors(cudaStreamSynchronize(stream));
 		}
 		this->log.end_iteration_app();
-		kernel_time = this->log.mysecond() - kernel_time;
 		// ============ MEASURE PERFORMANCE ============
 		if (this->setup_params.verbose) {
 			double outputpersec =
 					(double) (((this->setup_params.grid_rows
 							* this->setup_params.grid_rows
-							* this->setup_params.nstreams) / kernel_time));
-			std::cout << "Kernel time: " << kernel_time << std::endl;
+							* this->setup_params.nstreams)
+							/ this->log.iteration_time()));
+			std::cout << "Kernel time: " << this->log.iteration_time()
+					<< std::endl;
 			std::cout << "Performance - SIZE:" << this->setup_params.grid_rows
 					<< " OUTPUT/S: " << outputpersec << " FLOPS: "
-					<< flops / kernel_time << " (GFLOPS: "
-					<< flops / (kernel_time * 1e9) << ")" << std::endl;
+					<< flops / this->log.iteration_time() << " (GFLOPS: "
+					<< flops / (this->log.iteration_time() * 1e9) << ")"
+					<< std::endl;
 		}
 		// ============ VALIDATE OUTPUT ============
 		timestamp = this->log.mysecond();
 		int kernel_errors = 0;
 
 		hotspot_data.copy_from_gpu();
-
-		if (this->setup_params.generate) {
-			hotspot_data.write_output();
-		} else {
-			hotspot_data.check_output_errors();
-		}
+		hotspot_data.check_output_errors();
 
 		if (this->setup_params.verbose)
 			std::cout << "Gold check time: " << this->log.mysecond() - timestamp
@@ -148,16 +145,22 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		if ((kernel_errors != 0) && !(this->setup_params.verbose))
 			std::cout << ".";
 
-		double iteration_time = this->log.mysecond() - globaltime;
-		if (this->setup_params.verbose)
-			std::cout << "Iteration time: " << iteration_time << " ("
-					<< (kernel_time / iteration_time) * 100.0 << "% Device)\n"
-					<< std::endl;
+		if (this->setup_params.verbose) {
+			//computing if the overall time is enough
+			double iteration_time = this->log.mysecond() - globaltime;
 
+			std::cout << "Iteration time: " << iteration_time << " ("
+					<< (this->log.iteration_time() / iteration_time) * 100.0
+					<< "% Device)\n" << std::endl;
+		}
 		if (this->setup_params.verbose)
 			std::cout << ("==============================\n");
 
 	}
+
+	//this function already check if must generate a gold
+	// or not
+	hotspot_data.write_output();
 }
 
 HotspotExecute::~HotspotExecute() {
