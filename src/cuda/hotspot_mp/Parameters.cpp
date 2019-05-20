@@ -165,7 +165,7 @@ Parameters::Parameters(int argc, char** argv) {
 	}
 
 	if(this->generate)
-		this->setup_loops = 0;
+		this->setup_loops = 1;
 
 }
 
@@ -195,11 +195,12 @@ Parameters::~Parameters() {
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
+	os << std::boolalpha;
 	os << "N streams: " << p.nstreams << std::endl;
 	os << "sim time: " << p.sim_time << std::endl;
 	os << "pyramid height: " << p.pyramid_height << std::endl;
 	os << "setup loops: " << p.setup_loops << std::endl;
-	os << "verbose: " << p.verbose;
+	os << "verbose: " << p.verbose << std::endl;
 	os << "fault injection: " << p.fault_injection << std::endl;
 	os << "generate: " << p.generate << std::endl;
 	os << "size: " << p.size << std::endl;
