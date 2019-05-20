@@ -198,7 +198,7 @@ struct DataManagement {
 					exit(EXIT_FAILURE);
 				}
 
-				float temp_val;
+				DefaultType temp_val;
 				temp_file >> temp_val;
 
 				temperature[i * this->parameters.grid_cols + j] = full(
@@ -209,7 +209,7 @@ struct DataManagement {
 				if (std::isnan(temp_val))
 					num_nans++;
 
-				float power_val;
+				DefaultType power_val;
 				if (power_file.eof()) {
 					std::cerr << "[" << i << "," << j << "] size: "
 							<< this->parameters.size << std::endl;
@@ -235,7 +235,7 @@ struct DataManagement {
 		if (this->parameters.fault_injection) {
 			temperature[32] = 6.231235;
 			std::cout << "!!!!!!!!! Injected error: temperature[32] = "
-					<< float(temperature[32]) << std::endl;
+					<< DefaultType(temperature[32]) << std::endl;
 		}
 
 		for (int stream = 0; stream < this->streams.size(); stream++) {
@@ -272,9 +272,9 @@ struct DataManagement {
 		int nan = 0;
 		int zero = 0;
 		for (auto n : this->gold_temperature) {
-			if (std::isnan(float(n)))
+			if (std::isnan(DefaultType(n)))
 				nan++;
-			if (float(n) == 0)
+			if (DefaultType(n) == 0)
 				zero++;
 		}
 		std::cout << "Gold Zeros in the output: " << zero << std::endl;
