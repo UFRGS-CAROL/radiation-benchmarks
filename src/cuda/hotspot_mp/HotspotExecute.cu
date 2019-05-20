@@ -54,7 +54,6 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	full* MatrixPower = power_array.data;
 	full* MatrixTemp[2] = { temp_array_input.data, temp_array_output.data };
 
-	std::cout << "Passou aqui\n";
 	for (int t = 0; t < sim_time; t += num_iterations) {
 		calculate_temp<full> <<<dimGrid, dimBlock, 0, stream>>>(
 				MIN(num_iterations, sim_time - t), MatrixPower, MatrixTemp[src],
