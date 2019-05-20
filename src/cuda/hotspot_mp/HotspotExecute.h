@@ -27,7 +27,12 @@
 
 #define EXPAND_RATE 2// add one iteration will extend the pyramid base by 2 per each borderline
 
-#define BIGGEST_TYPE_CAST(value) double(value)
+/**
+ * Hotspot needs to start values with float
+ */
+typedef float DefaultType;
+#define DEFAULT_TYPE_CAST(value) float(value)
+
 
 struct HotspotExecute {
 	HotspotExecute(Parameters& setup_parameters, Log& log);

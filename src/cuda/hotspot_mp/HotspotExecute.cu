@@ -29,42 +29,37 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dimGrid(blockCols, blockRows);
 
-	incomplete t_chip(0.0005);
-	incomplete chip_height(0.016);
-	incomplete chip_width(0.016);
+	// Default values of hotpsot
+	DefaultType t_chip(0.0005);
+	DefaultType chip_height(0.016);
+	DefaultType chip_width(0.016);
+	DefaultType grid_height = chip_height / row;
+	DefaultType grid_width = chip_width / col;
+	DefaultType Cap = FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width * grid_height;
+	DefaultType Rx = grid_width / (2.0 * K_SI * t_chip * grid_height);
+	DefaultType Ry = grid_height / (2.0 * K_SI * t_chip * grid_width);
+	DefaultType Rz = t_chip / (K_SI * grid_height * grid_width);
+	DefaultType max_slope = MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI);
+	DefaultType step = PRECISION / max_slope;
 
-	incomplete grid_height = chip_height / incomplete(row);
-	incomplete grid_width = chip_width / incomplete(col);
-
-	full Cap =
-			BIGGEST_TYPE_CAST(
-					incomplete(FACTOR_CHIP) * incomplete(SPEC_HEAT_SI) * t_chip * grid_width * grid_height);
-	full Rx =
-			BIGGEST_TYPE_CAST(
-					grid_width / (incomplete(2.0) * incomplete(K_SI) * t_chip * grid_height));
-	full Ry =
-			BIGGEST_TYPE_CAST(
-					grid_height / (incomplete(2.0) * incomplete(K_SI) * t_chip * grid_width));
-	full Rz = BIGGEST_TYPE_CAST(
-			t_chip / (incomplete(K_SI) * grid_height * grid_width));
-
-	incomplete max_slope = incomplete(MAX_PD)
-			/ (incomplete(FACTOR_CHIP) * t_chip * incomplete(SPEC_HEAT_SI));
-	full step = BIGGEST_TYPE_CAST(incomplete(PRECISION) / max_slope);
-	full time_elapsed = (0.001);
-
-	std::cout << BIGGEST_TYPE_CAST(Cap) << " " << BIGGEST_TYPE_CAST(Rx) << " "
-			<< BIGGEST_TYPE_CAST(Ry) << " " << BIGGEST_TYPE_CAST(Rz) << "\n";
+	//New precision converted types
+	full time_elapsed = 0.001;
+	full Cap_ = Cap;
+	full Rx_ = Rx;
+	full Ry_ = Ry;
+	full Rz_ = Rz;
+	full step_ = step;
 
 	int src = 0, dst = 1;
 	full* MatrixPower = power_array.data;
 	full* MatrixTemp[2] = { temp_array_input.data, temp_array_output.data };
 
+	std::cout << "Passou aqui\n";
 	for (int t = 0; t < sim_time; t += num_iterations) {
 		calculate_temp<full> <<<dimGrid, dimBlock, 0, stream>>>(
 				MIN(num_iterations, sim_time - t), MatrixPower, MatrixTemp[src],
-				MatrixTemp[dst], col, row, borderCols, borderRows, Cap, Rx, Ry,
-				Rz, step, time_elapsed);
+				MatrixTemp[dst], col, row, borderCols, borderRows, Cap_, Rx_, Ry_,
+				Rz_, step_, time_elapsed);
 		flops += col * row * MIN(num_iterations, sim_time - t) * 15;
 		std::swap(src, dst);
 	}
@@ -76,7 +71,9 @@ template<typename full, typename incomplete>
 void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		int borderCols, int borderRows) {
 	DataManagement<full> hotspot_data(this->setup_params);
+	std::cout << "ALLOC MEMORY\n";
 	hotspot_data.read_input();
+	std::cout << "READ INPUT\n";
 	// ====================== MAIN BENCHMARK CYCLE ======================
 	for (int loop = 0; loop < this->setup_params.setup_loops; loop++) {
 		if (this->setup_params.verbose)
@@ -105,10 +102,12 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 			DeviceVector<full>& temp_array_output_stream =
 					hotspot_data.matrix_temperature_output_device[streamIdx];
 
-			ret[streamIdx] = compute_tran_temp<full, incomplete>(
-					power_array_stream, temp_array_input_stream,
-					temp_array_output_stream, this->setup_params.grid_cols,
-					this->setup_params.grid_rows, this->setup_params.sim_time,
+			std::cout << "REFERENCE GIVEN\n";
+
+			ret[streamIdx] = compute_tran_temp<full, incomplete>(power_array_stream,
+					temp_array_input_stream, temp_array_output_stream,
+					this->setup_params.grid_cols, this->setup_params.grid_rows,
+					this->setup_params.sim_time,
 					this->setup_params.pyramid_height, blockCols, blockRows,
 					borderCols, borderRows, hotspot_data.streams[streamIdx],
 					flops);
@@ -184,18 +183,15 @@ void HotspotExecute::run() {
 	switch (this->setup_params.precision) {
 	case HALF:
 
-		generic_execute<half, half_float::half>(blockCols, blockRows,
-				borderCols, borderRows);
+		generic_execute<half, half_float::half>(blockCols, blockRows, borderCols, borderRows);
 		break;
 
 	case SINGLE:
-		generic_execute<float, float>(blockCols, blockRows, borderCols,
-				borderRows);
+		generic_execute<float, float>(blockCols, blockRows, borderCols, borderRows);
 		break;
 
 	case DOUBLE:
-		generic_execute<double, double>(blockCols, blockRows, borderCols,
-				borderRows);
+		generic_execute<double, double>(blockCols, blockRows, borderCols, borderRows);
 		break;
 
 	}

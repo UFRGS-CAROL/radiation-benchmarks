@@ -277,8 +277,8 @@ struct DataManagement {
 			if (float(n) == 0)
 				zero++;
 		}
-		std::cout << "Zeros in the output: " << zero << std::endl;
-		std::cout << "NaNs in the output: " << nan << std::endl;
+		std::cout << "Gold Zeros in the output: " << zero << std::endl;
+		std::cout << "Gold NaNs in the output: " << nan << std::endl;
 	}
 };
 
