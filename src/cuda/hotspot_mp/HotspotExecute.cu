@@ -15,7 +15,7 @@
 #endif
 // The timestamp is updated on every log_helper function call.
 
-HotspotExecute::HotspotExecute(Parameters& setup_parameters) : setup_params(setup_parameters) {
+HotspotExecute::HotspotExecute(Parameters& setup_parameters) : setup_params(setup_parameters){
 
 	std::string test_info = std::string("streams:")
 			+ std::to_string(this->setup_params.nstreams) + " precision:"
@@ -28,11 +28,6 @@ HotspotExecute::HotspotExecute(Parameters& setup_parameters) : setup_params(setu
 			+ this->setup_params.test_precision_description;
 
 	this->log = Log(test_name, test_info, this->setup_params.generate);
-
-	std::cout << "WG size of kernel = " << BLOCK_SIZE << " x " << BLOCK_SIZE
-			<< std::endl;
-	std::cout << std::endl << test_name << std::endl << test_info << std::endl;
-
 }
 
 template<typename full>
@@ -41,6 +36,8 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 		DeviceVector<full>& temp_array_output, int col, int row, int sim_time,
 		int num_iterations, int blockCols, int blockRows, int borderCols,
 		int borderRows, cudaStream_t stream, double& flops) {
+
+	std::cout << "Passou antes la\n";
 
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dimGrid(blockCols, blockRows);
@@ -166,7 +163,7 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 					<< std::endl;
 
 		if (this->setup_params.verbose)
-			std::cout << ("===================================\n");
+			std::cout << ("==============================\n");
 
 	}
 }

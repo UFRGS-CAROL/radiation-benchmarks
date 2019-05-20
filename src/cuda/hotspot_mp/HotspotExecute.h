@@ -12,7 +12,7 @@
 #include "Log.h"
 #include "DataManagement.h"
 
-#define BLOCK_SIZE 16
+#define BLOCK_SIZE 32
 
 #define STR_SIZE 256
 

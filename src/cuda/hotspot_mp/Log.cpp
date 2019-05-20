@@ -30,6 +30,7 @@ Log::Log(const Log& a) {
 }
 
 Log::~Log() {
+	std::cout << "Passou aqui\n";
 #ifdef LOGS
 	if (!this->generate)
 		end_log_file();
