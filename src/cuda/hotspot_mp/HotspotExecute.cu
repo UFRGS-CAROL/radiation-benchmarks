@@ -55,9 +55,6 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	full* MatrixPower = power_array.data;
 	full* MatrixTemp[2] = { temp_array_input.data, temp_array_output.data };
 
-	std::cout << " output " << MatrixTemp[0] << " input " << MatrixTemp[1]
-			<< std::endl;
-
 	for (int t = 0; t < sim_time; t += num_iterations) {
 		calculate_temp<full> <<<dimGrid, dimBlock, 0, stream>>>(
 				MIN(num_iterations, sim_time - t), MatrixPower, MatrixTemp[src],
@@ -73,7 +70,7 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 template<typename full>
 void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		int borderCols, int borderRows) {
-	DataManagement<full> hotspot_data(this->setup_params);
+	DataManagement<full> hotspot_data(this->setup_params, this->log);
 	hotspot_data.read_input();
 
 	// ====================== MAIN BENCHMARK CYCLE ======================
@@ -84,7 +81,7 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		double globaltime = this->log.mysecond();
 
 		// ============ PREPARE ============
-		std::vector<int> ret(this->setup_params.nstreams);
+//		std::vector<int> ret(this->setup_params.nstreams);
 		double timestamp = this->log.mysecond();
 		hotspot_data.reload();
 		if (this->setup_params.verbose)

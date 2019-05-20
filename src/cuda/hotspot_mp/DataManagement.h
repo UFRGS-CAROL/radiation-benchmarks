@@ -14,6 +14,8 @@
 #include <cmath> // isnan
 #include <algorithm> // count
 
+#include <omp.h>
+
 template<typename full>
 struct DataManagement {
 	std::vector<std::vector<full>> matrix_temperature_input_host;
@@ -24,14 +26,15 @@ struct DataManagement {
 	std::vector<full> zero_vector;
 	std::vector<cudaStream_t> streams;
 	const Parameters& parameters;
+	Log& log;
 
 	// Alloc for multiple streams
 	std::vector<DeviceVector<full> > matrix_temperature_input_device;
 	std::vector<DeviceVector<full> > matrix_temperature_output_device;
 	std::vector<DeviceVector<full> > matrix_power_device;
 
-	DataManagement(Parameters& parameters) :
-			parameters(parameters) {
+	DataManagement(Parameters& parameters, Log& log) :
+			parameters(parameters), log(log) {
 
 		this->matrix_power_device = std::vector<DeviceVector<full>>(
 				this->parameters.nstreams);
@@ -102,56 +105,49 @@ struct DataManagement {
 	}
 
 	// Returns true if no errors are found. False if otherwise.
-	int check_output_errors() {
-		if(this->parameters.generate == true){
-			return 0;
+	void check_output_errors() {
+		if (this->parameters.generate == true) {
+			return;
 		}
-		//	int host_errors = 0;
-		//
-		//#pragma omp parallel for shared(host_errors)
-		//	for (int i = 0; i < setup_parameters->grid_rows; i++) {
-		//		for (int j = 0; j < setup_parameters->grid_cols; j++) {
-		//			int index = i * setup_parameters->grid_rows + j;
-		//
-		//			register tested_type_host valGold =
-		//					setup_parameters->gold_temperature[index];
-		//			register tested_type_host valOutput =
-		//					setup_parameters->out_temperature[index];
-		//
-		//			if (valGold != valOutput) {
-		//#pragma omp critical
-		//				{
-		//					char error_detail[150];
-		//					snprintf(error_detail, 150,
-		//							"stream: %d, p: [%d, %d], r: %1.20e, e: %1.20e",
-		//							streamIdx, i, j, (double) valOutput,
-		//							(double) valGold);
-		//					if (setup_parameters->verbose && (host_errors < 10))
-		//						printf("%s\n", error_detail);
-		//#ifdef LOGS
-		//					if (!setup_parameters->generate)
-		//					log_error_detail(error_detail);
-		//#endif
-		//					host_errors++;
-		//
-		//				}
-		//			}
-		//		}
-		//	}
-		//
-		//#ifdef LOGS
-		//	if (!setup_parameters->generate) {
-		//		log_error_count(host_errors);
-		//	}
-		//#endif
-		//	if ((host_errors != 0) && (!setup_parameters->verbose))
-		//		printf("#");
-		//	if ((host_errors != 0) && (setup_parameters->verbose))
-		//		printf("Output errors: %d\n", host_errors);
-		//
-		//	return (host_errors == 0);
-		return 0;
 
+		size_t& host_errors = this->log.error_count;
+		for (int stream = 0; stream < this->parameters.nstreams; stream++) {
+
+#pragma omp parallel for shared(host_errors)
+			for (int i = 0; i < this->parameters.grid_rows; i++) {
+				for (int j = 0; j < this->parameters.grid_cols; j++) {
+					int index = i * this->parameters.grid_rows + j;
+
+					full valGold = this->gold_temperature[index];
+					full valOutput =
+							this->matrix_temperature_output_host[stream][index];
+
+					if (valGold != valOutput) {
+#pragma omp critical
+						{
+							char error_detail[150];
+							snprintf(error_detail, 150,
+									"stream: %d, p: [%d, %d], r: %1.20e, e: %1.20e",
+									stream, i, j, (double) valOutput,
+									(double) valGold);
+							if (this->parameters.verbose && (host_errors < 10))
+								printf("%s\n", error_detail);
+							this->log.log_error(std::string(error_detail));
+
+						}
+					}
+				}
+			}
+		}
+
+		this->log.update_error_count();
+
+		if (host_errors != 0){
+			if(!this->parameters.verbose)
+				std::cout << "#";
+			else
+				std::cout << "Output errors: " << host_errors << std::endl;
+		}
 	}
 
 	void read_input() {
@@ -176,17 +172,15 @@ struct DataManagement {
 			exit(EXIT_FAILURE);
 		}
 
-
-		if(this->parameters.generate == false){
-			if(gold_file.is_open() == false){
+		if (this->parameters.generate == false) {
+			if (gold_file.is_open() == false) {
 				std::cerr << "The gold file was not opened" << std::endl;
 				exit(EXIT_FAILURE);
 			}
 			// reading from gold
 			gold_file.read((char*) this->gold_temperature.data(),
-								sizeof(full) * this->parameters.size);
+					sizeof(full) * this->parameters.size);
 		}
-
 
 		std::vector<full> temperature(this->parameters.size);
 		std::vector<full> power(this->parameters.size);
@@ -257,7 +251,7 @@ struct DataManagement {
 	}
 
 	void write_output() {
-		if(this->parameters.generate == false){
+		if (this->parameters.generate == false) {
 			return;
 		}
 
