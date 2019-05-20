@@ -43,11 +43,11 @@ private:
 	Parameters& setup_params;
 	Log& log;
 
-	template<typename full, typename incomplete>
+	template<typename full>
 	void generic_execute(int blockCols, int blockRows, int borderCols,
 			int borderRows);
 
-	template<typename full, typename incomplete>
+	template<typename full>
 	int compute_tran_temp(DeviceVector<full>& power_array,
 			DeviceVector<full>& temp_array_input,
 			DeviceVector<full>& temp_array_output, int col, int row,

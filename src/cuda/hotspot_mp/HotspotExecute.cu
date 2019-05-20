@@ -20,7 +20,7 @@ HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
 		setup_params(setup_parameters), log(log) {
 }
 
-template<typename full, typename incomplete>
+template<typename full>
 int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 		DeviceVector<full>& temp_array_input,
 		DeviceVector<full>& temp_array_output, int col, int row, int sim_time,
@@ -67,7 +67,7 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	return dst;
 }
 
-template<typename full, typename incomplete>
+template<typename full>
 void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		int borderCols, int borderRows) {
 	DataManagement<full> hotspot_data(this->setup_params);
@@ -104,7 +104,7 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 
 			std::cout << "REFERENCE GIVEN\n";
 
-			ret[streamIdx] = compute_tran_temp<full, incomplete>(power_array_stream,
+			ret[streamIdx] = compute_tran_temp<full>(power_array_stream,
 					temp_array_input_stream, temp_array_output_stream,
 					this->setup_params.grid_cols, this->setup_params.grid_rows,
 					this->setup_params.sim_time,
@@ -183,15 +183,15 @@ void HotspotExecute::run() {
 	switch (this->setup_params.precision) {
 	case HALF:
 
-		generic_execute<half, half_float::half>(blockCols, blockRows, borderCols, borderRows);
+		generic_execute<half>(blockCols, blockRows, borderCols, borderRows);
 		break;
 
 	case SINGLE:
-		generic_execute<float, float>(blockCols, blockRows, borderCols, borderRows);
+		generic_execute<float>(blockCols, blockRows, borderCols, borderRows);
 		break;
 
 	case DOUBLE:
-		generic_execute<double, double>(blockCols, blockRows, borderCols, borderRows);
+		generic_execute<double>(blockCols, blockRows, borderCols, borderRows);
 		break;
 
 	}
