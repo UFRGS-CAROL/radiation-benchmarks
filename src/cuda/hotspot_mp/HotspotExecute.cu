@@ -15,8 +15,7 @@
 #endif
 // The timestamp is updated on every log_helper function call.
 
-HotspotExecute::HotspotExecute(Parameters& setup_parameters) {
-	this->setup_params = setup_parameters;
+HotspotExecute::HotspotExecute(Parameters& setup_parameters) : setup_params(setup_parameters) {
 
 	std::string test_info = std::string("streams:")
 			+ std::to_string(this->setup_params.nstreams) + " precision:"
@@ -88,9 +87,10 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 	hotspot_data.read_input();
 
 	// ====================== MAIN BENCHMARK CYCLE ======================
-	for (int loop1 = 0; loop1 < (this->setup_params.setup_loops); loop1++) {
+	for (int loop = 0; loop < this->setup_params.setup_loops; loop++) {
 		if (this->setup_params.verbose)
-			printf("======== Iteration #%06u ========\n", loop1);
+			std::cout << "======== Iteration #" << loop << " ========"
+					<< std::endl;
 
 		double globaltime = this->log.mysecond();
 		// ============ PREPARE ============
@@ -98,8 +98,8 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		double timestamp = this->log.mysecond();
 		hotspot_data.reload();
 		if (this->setup_params.verbose)
-			printf("GPU prepare time: %.4fs\n",
-					this->log.mysecond() - timestamp);
+			std::cout << "GPU prepare time: "
+					<< this->log.mysecond() - timestamp << "s" << std::endl;
 
 		// ============ COMPUTE ============
 		double kernel_time = this->log.mysecond();
@@ -157,7 +157,7 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 					<< std::endl;
 
 		if ((kernel_errors != 0) && !(this->setup_params.verbose))
-			printf(".");
+			std::cout << ".";
 
 		double iteration_time = this->log.mysecond() - globaltime;
 		if (this->setup_params.verbose)

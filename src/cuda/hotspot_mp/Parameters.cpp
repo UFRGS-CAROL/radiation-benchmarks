@@ -164,6 +164,9 @@ Parameters::Parameters(int argc, char** argv) {
 		std::cout << "!! Will be injected an input error\n";
 	}
 
+	if(this->generate)
+		this->setup_loops = 0;
+
 }
 
 Parameters::Parameters() {

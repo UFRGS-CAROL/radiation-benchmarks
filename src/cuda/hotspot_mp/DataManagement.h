@@ -172,6 +172,8 @@ struct DataManagement {
 
 		}
 
+		// reading from gold
+
 		if(this->parameters.generate){
 			gold_file.read((char*) this->gold_temperature.data(),
 					sizeof(full) * this->parameters.size);
@@ -180,7 +182,6 @@ struct DataManagement {
 		std::vector<full> temperature(this->parameters.size);
 		std::vector<full> power(this->parameters.size);
 
-		// reading from gold
 
 		for (int i = 0; i < this->parameters.grid_rows; i++) {
 			for (int j = 0; j < this->parameters.grid_cols; j++) {

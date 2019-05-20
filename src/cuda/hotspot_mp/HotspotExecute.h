@@ -33,7 +33,7 @@ struct HotspotExecute {
 	void run();
 
 private:
-	Parameters setup_params;
+	Parameters& setup_params;
 	Log log;
 
 	template<typename full>
