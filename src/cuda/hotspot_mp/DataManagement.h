@@ -140,14 +140,13 @@ struct DataManagement {
 			}
 		}
 
-		this->log.update_error_count();
-
 		if (host_errors != 0){
 			if(!this->parameters.verbose)
 				std::cout << "#";
 			else
 				std::cout << "Output errors: " << host_errors << std::endl;
 		}
+		this->log.update_error_count();
 	}
 
 	void read_input() {
