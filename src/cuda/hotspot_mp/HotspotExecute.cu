@@ -25,9 +25,6 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 		DeviceVector<full>& temp_array_output, int col, int row, int sim_time,
 		int num_iterations, int blockCols, int blockRows, int borderCols,
 		int borderRows, cudaStream_t stream, double& flops) {
-
-	std::cout << "Passou antes la\n";
-
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dimGrid(blockCols, blockRows);
 
