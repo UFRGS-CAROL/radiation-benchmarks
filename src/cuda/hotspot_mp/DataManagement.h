@@ -23,7 +23,6 @@ struct DataManagement {
 	std::vector<std::vector<full>> matrix_power_host;
 
 	std::vector<full> gold_temperature;
-	std::vector<full> zero_vector;
 	std::vector<cudaStream_t> streams;
 
 	std::vector<int> output_index;
@@ -36,10 +35,13 @@ struct DataManagement {
 	std::vector<DeviceVector<full> > matrix_temperature_output_device;
 	std::vector<DeviceVector<full> > matrix_power_device;
 
+	std::vector<std::vector<full>> out_vector;
+
 	DataManagement(Parameters& parameters, Log& log) :
 			parameters(parameters), log(log) {
 
 		this->output_index = std::vector<int>(this->parameters.nstreams);
+		this->out_vector = std::vector<std::vector<full>>(this->parameters.nstreams);
 
 		this->matrix_power_device = std::vector<DeviceVector<full>>(
 				this->parameters.nstreams);
@@ -75,21 +77,30 @@ struct DataManagement {
 					cudaStreamCreateWithFlags(&this->streams[stream],
 							cudaStreamNonBlocking));
 
+			this->out_vector[stream] = std::vector<full>(this->parameters.size);
+
 		}
 
 		this->gold_temperature = std::vector<full>(this->parameters.size);
-		this->zero_vector = std::vector<full>(this->parameters.size, 0);
 
 	}
 
 	void copy_from_gpu() {
 		for (int stream = 0; stream < this->streams.size(); stream++) {
-			this->matrix_power_host[stream] =
-					this->matrix_power_device[stream].to_vector();
-			this->matrix_temperature_input_host[stream] =
-					this->matrix_temperature_input_device[stream].to_vector();
-			this->matrix_temperature_output_host[stream] =
-					this->matrix_temperature_output_device[stream].to_vector();
+
+			DeviceVector<full>* output[2] = {
+					&this->matrix_temperature_input_device[stream],
+					&this->matrix_temperature_output_device[stream] };
+
+			this->out_vector[stream] =
+					output[this->output_index[stream]]->to_vector();
+
+//			this->matrix_power_host[stream] =
+//					this->matrix_power_device[stream].to_vector();
+//			this->matrix_temperature_input_host[stream] =
+//					this->matrix_temperature_input_device[stream].to_vector();
+//			this->matrix_temperature_output_host[stream] =
+//					this->matrix_temperature_output_device[stream].to_vector();
 		}
 	}
 
@@ -118,17 +129,13 @@ struct DataManagement {
 		size_t& host_errors = this->log.error_count;
 		for (int stream = 0; stream < this->parameters.nstreams; stream++) {
 
-			full* output[2] = {
-					this->matrix_temperature_input_host[stream].data(),
-					this->matrix_temperature_output_host[stream].data() };
-
 #pragma omp parallel for shared(host_errors)
 			for (int i = 0; i < this->parameters.grid_rows; i++) {
 				for (int j = 0; j < this->parameters.grid_cols; j++) {
 					int index = i * this->parameters.grid_rows + j;
 
 					double valGold = this->gold_temperature[index];
-					double valOutput = output[this->output_index[stream]][index];
+					double valOutput = this->out_vector[stream][index];
 
 					if (valGold != valOutput) {
 #pragma omp critical
