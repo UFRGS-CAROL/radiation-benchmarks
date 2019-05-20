@@ -25,6 +25,9 @@ struct DataManagement {
 	std::vector<full> gold_temperature;
 	std::vector<full> zero_vector;
 	std::vector<cudaStream_t> streams;
+
+	std::vector<int> output_index;
+
 	const Parameters& parameters;
 	Log& log;
 
@@ -35,6 +38,8 @@ struct DataManagement {
 
 	DataManagement(Parameters& parameters, Log& log) :
 			parameters(parameters), log(log) {
+
+		this->output_index = std::vector<int>(this->parameters.nstreams);
 
 		this->matrix_power_device = std::vector<DeviceVector<full>>(
 				this->parameters.nstreams);
@@ -118,9 +123,13 @@ struct DataManagement {
 				for (int j = 0; j < this->parameters.grid_cols; j++) {
 					int index = i * this->parameters.grid_rows + j;
 
-					full valGold = this->gold_temperature[index];
-					full valOutput =
-							this->matrix_temperature_output_host[stream][index];
+					full* output[2] =
+							{
+									this->matrix_temperature_input_host[stream].data(),
+									this->matrix_temperature_output_host[stream].data() };
+
+					double valGold = this->gold_temperature[index];
+					double valOutput = output[this->output_index[stream]][index];
 
 					if (valGold != valOutput) {
 #pragma omp critical
@@ -140,8 +149,8 @@ struct DataManagement {
 			}
 		}
 
-		if (host_errors != 0){
-			if(!this->parameters.verbose)
+		if (host_errors != 0) {
+			if (!this->parameters.verbose)
 				std::cout << "#";
 			else
 				std::cout << "Output errors: " << host_errors << std::endl;

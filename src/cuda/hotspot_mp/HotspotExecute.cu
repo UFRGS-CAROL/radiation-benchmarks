@@ -51,17 +51,18 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	full Rz_ = Rz;
 	full step_ = step;
 
-	int src = 0, dst = 1;
+	int src = 1, dst = 0;
 	full* MatrixPower = power_array.data;
 	full* MatrixTemp[2] = { temp_array_input.data, temp_array_output.data };
 
 	for (int t = 0; t < sim_time; t += num_iterations) {
+		std::swap(src, dst);
+
 		calculate_temp<full> <<<dimGrid, dimBlock, 0, stream>>>(
 				MIN(num_iterations, sim_time - t), MatrixPower, MatrixTemp[src],
 				MatrixTemp[dst], col, row, borderCols, borderRows, Cap_, Rx_,
 				Ry_, Rz_, step_, time_elapsed);
 		flops += col * row * MIN(num_iterations, sim_time - t) * 15;
-		std::swap(src, dst);
 	}
 //	cudaStreamSynchronize(stream);
 	return dst;
@@ -81,7 +82,6 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		double globaltime = this->log.mysecond();
 
 		// ============ PREPARE ============
-//		std::vector<int> ret(this->setup_params.nstreams);
 		double timestamp = this->log.mysecond();
 		hotspot_data.reload();
 		if (this->setup_params.verbose)
@@ -100,8 +100,8 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 			DeviceVector<full>& temp_array_output_stream =
 					hotspot_data.matrix_temperature_output_device[streamIdx];
 
-//			ret[streamIdx] =
-			compute_tran_temp<full>(power_array_stream, temp_array_input_stream,
+			hotspot_data.output_index[streamIdx] = compute_tran_temp<full>(
+					power_array_stream, temp_array_input_stream,
 					temp_array_output_stream, this->setup_params.grid_cols,
 					this->setup_params.grid_rows, this->setup_params.sim_time,
 					this->setup_params.pyramid_height, blockCols, blockRows,
