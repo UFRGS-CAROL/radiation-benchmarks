@@ -15,7 +15,7 @@
 #endif
 // The timestamp is updated on every log_helper function call.
 
-HotspotExecute::HotspotExecute(Parameters& setup_parameters) : setup_params(setup_parameters){
+HotspotExecute::HotspotExecute(Parameters& setup_parameters) : setup_params(setup_parameters), log(){
 
 	std::string test_info = std::string("streams:")
 			+ std::to_string(this->setup_params.nstreams) + " precision:"
