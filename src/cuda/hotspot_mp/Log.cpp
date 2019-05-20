@@ -8,52 +8,51 @@
 #include "Log.h"
 #include <iostream>
 
-Log::Log(std::string& app, std::string& test_info, bool generate) :
-		generate(generate), tic_(0), info_count(0), error_count(0) {
+Log::Log(std::string& app, std::string& test_info, bool to_log) :
+		to_log(to_log), tic_(0), info_count(0), error_count(0) {
 
 #ifdef LOGS
-	if (!this->generate)
+	if (!this->to_log)
 		start_log_file(const_cast<char*>(app.c_str()),
 				const_cast<char*>(test_info.c_str()));
 #endif
 }
 
 Log::Log() :
-		generate(false), tic_(0), info_count(0), error_count(0) {
+		to_log(false), tic_(0), info_count(0), error_count(0) {
 }
 
 Log::Log(const Log& a) {
-	this->generate = a.generate;
+	this->to_log = a.to_log;
 	this->tic_ = a.tic_;
 	this->error_count = a.error_count;
 	this->info_count = a.info_count;
 }
 
 Log::~Log() {
-	std::cout << "Passou aqui\n";
 #ifdef LOGS
-	if (!this->generate)
+	if (!this->to_log)
 		end_log_file();
 #endif
 }
 
 void Log::end_iteration_app() {
 #ifdef LOGS
-	if (!this->generate)
+	if (!this->to_log)
 		end_iteration();
 #endif
 }
 
 void Log::start_iteration_app() {
 #ifdef LOGS
-	if (!this->generate)
+	if (!this->to_log)
 		start_iteration();
 #endif
 }
 
 void Log::update_timestamp_app() {
 #ifdef LOGS
-	if (!this->generate)
+	if (!this->to_log)
 		update_timestamp();
 #endif
 }
@@ -61,7 +60,7 @@ void Log::update_timestamp_app() {
 void Log::log_error(std::string error_detail) {
 	this->error_count++;
 #ifdef LOGS
-	if (!this->generate)
+	if (!this->to_log)
 		log_error_detail(const_cast<char*>(error_detail.c_str()));
 #endif
 }
@@ -69,14 +68,14 @@ void Log::log_error(std::string error_detail) {
 void Log::log_info(std::string info_detail) {
 	this->info_count++;
 #ifdef LOGS
-	if (!this->generate)
+	if (!this->to_log)
 		log_info_detail(const_cast<char*>(info_detail.c_str()));
 #endif
 }
 
 void Log::update_error_count() {
 #ifdef LOGS
-	if (error_count && !this->generate)
+	if (error_count && !this->to_log)
 		log_error_count(this->error_count);
 #endif
 	this->error_count = 0;
@@ -84,7 +83,7 @@ void Log::update_error_count() {
 
 void Log::update_info_count() {
 #ifdef LOGS
-	if (info_count && !this->generate)
+	if (info_count && !this->to_log)
 		log_info_count(this->info_count);
 #endif
 	this->info_count = 0;
@@ -108,7 +107,7 @@ double Log::mysecond() {
 void Log::fatal(std::string& s) {
 	std::cerr << "error: " << s << std::endl;
 #ifdef LOGS
-	if (!this->generate) {
+	if (!this->to_log) {
 		end_log_file();
 	}
 #endif
@@ -122,12 +121,12 @@ void Log::force_end(std::string& error) {
 #endif
 }
 
-Log& Log::operator =(const Log& other) {
-	if (&other == this)
-		return *this;
-
-	this->generate = other.generate;
-	this->tic_ = other.tic_;
-
-	return *this;
-}
+//Log& Log::operator =(const Log& other) {
+//	if (&other == this)
+//		return *this;
+//
+//	this->to_log = other.to_log;
+//	this->tic_ = other.tic_;
+//
+//	return *this;
+//}

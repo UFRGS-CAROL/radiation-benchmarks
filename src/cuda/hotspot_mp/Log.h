@@ -17,7 +17,7 @@
 #include <string>
 
 struct Log {
-	bool generate;
+	bool to_log;
 	double tic_;
 	size_t error_count;
 	size_t info_count;
@@ -50,7 +50,7 @@ struct Log {
 	static double mysecond();
 	void fatal(std::string& s);
 
-	Log& operator=(const Log& other);
+//	Log& operator=(const Log& other);
 
 };
 
