@@ -16,7 +16,20 @@ int main(int argc, char** argv) {
 	std::cout << setup_parameters << std::endl;
 	std::cout << "WG size of kernel = " << BLOCK_SIZE << " x " << BLOCK_SIZE
 			<< std::endl;
-	HotspotExecute setup_execution(setup_parameters);
+	std::string test_info = std::string("streams:")
+			+ std::to_string(setup_parameters.nstreams) + " precision:"
+			+ setup_parameters.test_precision_description + " size:"
+			+ std::to_string(setup_parameters.grid_rows) + +" pyramidHeight:"
+			+ std::to_string(setup_parameters.pyramid_height) + " simTime:"
+			+ std::to_string(setup_parameters.sim_time) + " redundancy:"
+			+ setup_parameters.test_redundancy_description;
+	std::string test_name = "cuda_hotspot_"
+			+ setup_parameters.test_precision_description;
+
+	Log log(test_name, test_info, setup_parameters.generate);
+
+
+	HotspotExecute setup_execution(setup_parameters, log);
 
 	setup_execution.run();
 	return 0;

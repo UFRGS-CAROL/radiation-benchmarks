@@ -121,12 +121,12 @@ void Log::force_end(std::string& error) {
 #endif
 }
 
-//Log& Log::operator =(const Log& other) {
-//	if (&other == this)
-//		return *this;
-//
-//	this->to_log = other.to_log;
-//	this->tic_ = other.tic_;
-//
-//	return *this;
-//}
+Log& Log::operator =(const Log& other) {
+	if (&other == this)
+		return *this;
+
+	this->to_log = other.to_log;
+	this->tic_ = other.tic_;
+
+	return *this;
+}

@@ -50,7 +50,7 @@ struct Log {
 	static double mysecond();
 	void fatal(std::string& s);
 
-//	Log& operator=(const Log& other);
+	Log& operator=(const Log& other);
 
 };
 

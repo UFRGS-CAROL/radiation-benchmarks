@@ -28,13 +28,13 @@
 # define EXPAND_RATE 2// add one iteration will extend the pyramid base by 2 per each borderline
 
 struct HotspotExecute {
-	HotspotExecute(Parameters& setup_parameters);
+	HotspotExecute(Parameters& setup_parameters, Log& log);
 	virtual ~HotspotExecute();
 	void run();
 
 private:
 	Parameters& setup_params;
-	Log log;
+	Log& log;
 
 	template<typename full>
 	void generic_execute(int blockCols, int blockRows, int borderCols,

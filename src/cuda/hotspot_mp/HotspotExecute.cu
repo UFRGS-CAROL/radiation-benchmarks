@@ -15,19 +15,8 @@
 #endif
 // The timestamp is updated on every log_helper function call.
 
-HotspotExecute::HotspotExecute(Parameters& setup_parameters) : setup_params(setup_parameters), log(){
-
-	std::string test_info = std::string("streams:")
-			+ std::to_string(this->setup_params.nstreams) + " precision:"
-			+ this->setup_params.test_precision_description + " size:"
-			+ std::to_string(this->setup_params.grid_rows) + +" pyramidHeight:"
-			+ std::to_string(this->setup_params.pyramid_height) + " simTime:"
-			+ std::to_string(this->setup_params.sim_time) + " redundancy:"
-			+ this->setup_params.test_redundancy_description;
-	std::string test_name = "cuda_hotspot_"
-			+ this->setup_params.test_precision_description;
-
-	this->log = Log(test_name, test_info, this->setup_params.generate);
+HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
+		setup_params(setup_parameters), log(log) {
 }
 
 template<typename full>
