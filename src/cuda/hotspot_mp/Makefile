@@ -32,7 +32,7 @@ endif
 COMMON= $(INCLUDE) 
 LDFLAGS= $(LIBRARY) -lcudart -lcublas -lcurand -lstdc++
 
-OBJ=Log.o Parameters.o HotspotExecute.o cuda_utils.o main.o
+OBJ=HotspotExecute.o Log.o Parameters.o cuda_utils.o main.o
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard *.h) Makefile
