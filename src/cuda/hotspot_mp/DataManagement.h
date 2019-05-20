@@ -32,14 +32,19 @@ struct DataManagement {
 	DataManagement(Parameters& parameters) :
 			parameters(parameters) {
 
-		this->matrix_power_device.resize(this->parameters.nstreams);
-		this->matrix_temperature_input_device.resize(this->parameters.nstreams);
-		this->matrix_temperature_output_device.resize(
+		this->matrix_power_device = std::vector<DeviceVector<full>>(
 				this->parameters.nstreams);
+		this->matrix_temperature_input_device = std::vector<DeviceVector<full>>(
+				this->parameters.nstreams);
+		this->matrix_temperature_output_device =
+				std::vector<DeviceVector<full>>(this->parameters.nstreams);
 
-		this->matrix_power_host.resize(this->parameters.nstreams);
-		this->matrix_temperature_input_host.resize(this->parameters.nstreams);
-		this->matrix_temperature_output_host.resize(this->parameters.nstreams);
+		this->matrix_power_host = std::vector<std::vector<full>>(
+				this->parameters.nstreams);
+		this->matrix_temperature_input_host = std::vector<std::vector<full>>(
+				this->parameters.nstreams);
+		this->matrix_temperature_output_host = std::vector<std::vector<full>>(
+				this->parameters.nstreams);
 
 		this->streams = std::vector<cudaStream_t>(this->parameters.nstreams);
 		for (int stream = 0; stream < this->parameters.nstreams; stream++) {
@@ -157,31 +162,30 @@ struct DataManagement {
 		int num_nans = 0;
 
 		if (!temp_file.is_open()) {
-			std::cerr << "The temp file was not opened"<< std::endl;
+			std::cerr << "The temp file was not opened" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 
 		if (!power_file.is_open()) {
-			std::cerr << "The power file was not opened"<< std::endl;
+			std::cerr << "The power file was not opened" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 
 		if (this->parameters.generate == false && !gold_file.is_open()) {
-				std::cerr << "The gold file was not opened" << std::endl;
-				exit(EXIT_FAILURE);
+			std::cerr << "The gold file was not opened" << std::endl;
+			exit(EXIT_FAILURE);
 
 		}
 
 		// reading from gold
 
-		if(this->parameters.generate){
+		if (this->parameters.generate) {
 			gold_file.read((char*) this->gold_temperature.data(),
 					sizeof(full) * this->parameters.size);
 		}
 
 		std::vector<full> temperature(this->parameters.size);
 		std::vector<full> power(this->parameters.size);
-
 
 		for (int i = 0; i < this->parameters.grid_rows; i++) {
 			for (int j = 0; j < this->parameters.grid_cols; j++) {

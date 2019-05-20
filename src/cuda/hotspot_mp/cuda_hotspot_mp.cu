@@ -41,7 +41,8 @@ typedef half_float::half tested_type_host;
 #error TEST TYPE NOT DEFINED OR INCORRECT. USE PRECISION=<double|single|half>.
 #endif
 
-#define BLOCK_SIZE 16
+//#define BLOCK_SIZE 16
+#define BLOCK_SIZE 32
 
 #define STR_SIZE 256
 

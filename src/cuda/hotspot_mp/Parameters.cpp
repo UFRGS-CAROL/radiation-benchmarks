@@ -191,4 +191,20 @@ void Parameters::usage(int argc, char** argv) {
 
 }
 
-Parameters::~Parameters() {}
+Parameters::~Parameters() {
+}
+
+std::ostream& operator<<(std::ostream& os, const Parameters& p) {
+	os << "N streams: " << p.nstreams << std::endl;
+	os << "sim time: " << p.sim_time << std::endl;
+	os << "pyramid height: " << p.pyramid_height << std::endl;
+	os << "setup loops: " << p.setup_loops << std::endl;
+	os << "verbose: " << p.verbose;
+	os << "fault injection: " << p.fault_injection << std::endl;
+	os << "generate: " << p.generate << std::endl;
+	os << "size: " << p.size << std::endl;
+	os << "precision: " << p.test_precision_description << std::endl;
+	os << "redundancy: " << p.test_redundancy_description << std::endl;
+	os << "cols x rows: " << p.grid_cols << "x" << p.grid_rows;
+	return os;
+}

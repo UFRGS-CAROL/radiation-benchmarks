@@ -12,6 +12,9 @@
 int main(int argc, char** argv) {
 
 	Parameters setup_parameters(argc, argv);
+	std::cout << "Parameters" << std::endl;
+	std::cout << setup_parameters << std::endl;
+
 	HotspotExecute setup_execution(setup_parameters);
 
 	setup_execution.run();

@@ -47,6 +47,8 @@ struct Parameters {
 	virtual ~Parameters();
 
 	void usage(int argc, char** argv);
+
+	friend std::ostream& operator<<(std::ostream& os, const Parameters& p);
 };
 
 #endif /* PARAMETERS_H_ */

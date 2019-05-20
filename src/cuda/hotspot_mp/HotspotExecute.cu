@@ -29,7 +29,7 @@ HotspotExecute::HotspotExecute(Parameters& setup_parameters) : setup_params(setu
 
 	this->log = Log(test_name, test_info, this->setup_params.generate);
 
-	std::cout << "WG size of kernel = " << BLOCK_SIZE << " " << BLOCK_SIZE
+	std::cout << "WG size of kernel = " << BLOCK_SIZE << " x " << BLOCK_SIZE
 			<< std::endl;
 	std::cout << std::endl << test_name << std::endl << test_info << std::endl;
 
@@ -124,7 +124,7 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		}
 
 		for (auto stream : hotspot_data.streams) {
-			cudaStreamSynchronize(stream);
+			checkFrameworkErrors(cudaStreamSynchronize(stream));
 		}
 		this->log.end_iteration_app();
 		kernel_time = this->log.mysecond() - kernel_time;
