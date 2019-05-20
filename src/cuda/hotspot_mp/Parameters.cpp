@@ -27,6 +27,8 @@ std::unordered_map<std::string, PRECISION> pre = {
 		{ "half", HALF },
 		//SINGLE
 		{ "single", SINGLE },
+		//SINGLE
+		{ "float", SINGLE },
 		// DOUBLE
 		{ "double", DOUBLE }, };
 
