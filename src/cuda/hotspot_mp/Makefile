@@ -58,13 +58,13 @@ generate:
 	./$(EXEC) -size=1024 -generate -verbose -sim_time=1000 \
 		-input_temp=../../../data/hotspot/temp_1024 \
 		-input_power=../../../data/hotspot/power_1024 \
-		-gold_temp=./gold_1024 -streams=10 -debug \
+		-gold_temp=./gold_1024 -streams=10 \
 		-redundancy=$(REDUNDANCY) -precision=$(PRECISION) 
 		
 test:
 	./$(EXEC) -size=1024  -verbose -sim_time=1000 \
 		-input_temp=../../../data/hotspot/temp_1024 \
 		-input_power=../../../data/hotspot/power_1024 \
-		-gold_temp=./gold_1024 -streams=10 -debug \
+		-gold_temp=./gold_1024 -streams=10 \
 		-redundancy=$(REDUNDANCY) -precision=$(PRECISION) 
 	
