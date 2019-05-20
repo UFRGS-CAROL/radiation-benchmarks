@@ -119,8 +119,8 @@ struct DataManagement {
 		for (int stream = 0; stream < this->parameters.nstreams; stream++) {
 
 			full* output[2] = {
-					this->matrix_temperature_output_host[stream].data(),
-					this->matrix_temperature_input_host[stream].data() };
+					this->matrix_temperature_input_host[stream].data(),
+					this->matrix_temperature_output_host[stream].data() };
 
 #pragma omp parallel for shared(host_errors)
 			for (int i = 0; i < this->parameters.grid_rows; i++) {
@@ -139,7 +139,7 @@ struct DataManagement {
 									stream, i, j, valOutput, valGold);
 							this->log.log_error(std::string(error_detail));
 							if (this->parameters.verbose && (host_errors < 10))
-								printf("%s\n", error_detail);
+								std::cout << error_detail << std::endl;
 
 						}
 					}
