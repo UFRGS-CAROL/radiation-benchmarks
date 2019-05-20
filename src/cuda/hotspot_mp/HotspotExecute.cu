@@ -7,6 +7,7 @@
 
 #include "HotspotExecute.h"
 #include "none_kernels.h"
+#include "half.hpp"
 
 #include <cuda_fp16.h>
 
@@ -19,7 +20,7 @@ HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
 		setup_params(setup_parameters), log(log) {
 }
 
-template<typename full>
+template<typename full, typename incomplete>
 int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 		DeviceVector<full>& temp_array_input,
 		DeviceVector<full>& temp_array_output, int col, int row, int sim_time,
@@ -28,24 +29,23 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dimGrid(blockCols, blockRows);
 
-	full t_chip(0.0005);
-	full chip_height(0.016);
-	full chip_width(0.016);
+	incomplete t_chip(0.0005);
+	incomplete chip_height(0.016);
+	incomplete chip_width(0.016);
 
-	full grid_height = chip_height / full(row);
-	full grid_width = chip_width / full(col);
+	incomplete grid_height = chip_height / incomplete(row);
+	incomplete grid_width = chip_width / incomplete(col);
 
-	full Cap = full(FACTOR_CHIP) * full(SPEC_HEAT_SI) * t_chip * grid_width
-			* grid_height;
-	full Rx = grid_width / (full(2.0) * full(K_SI) * t_chip * grid_height);
-	full Ry = grid_height / (full(2.0) * full(K_SI) * t_chip * grid_width);
-	full Rz = t_chip / (full(K_SI) * grid_height * grid_width);
+	full Cap = BIGGEST_TYPE_CAST(incomplete(FACTOR_CHIP) * incomplete(SPEC_HEAT_SI) * t_chip * grid_width
+			* grid_height);
+	full Rx = BIGGEST_TYPE_CAST(grid_width / (incomplete(2.0) * incomplete(K_SI) * t_chip * grid_height));
+	full Ry = BIGGEST_TYPE_CAST(grid_height / (incomplete(2.0) * incomplete(K_SI) * t_chip * grid_width));
+	full Rz = BIGGEST_TYPE_CAST(t_chip / (incomplete(K_SI) * grid_height * grid_width));
 
-	full max_slope = full(MAX_PD)
-			/ (full(FACTOR_CHIP) * t_chip * full(SPEC_HEAT_SI));
-	full step = full(PRECISION) / max_slope;
-//	full t;
-	full time_elapsed = 0.001;
+	incomplete max_slope = incomplete(MAX_PD)
+			/ (incomplete(FACTOR_CHIP) * t_chip * incomplete(SPEC_HEAT_SI));
+	full step = BIGGEST_TYPE_CAST(incomplete(PRECISION) / max_slope);
+	full time_elapsed = (0.001);
 
 	int src = 0, dst = 1;
 	full* MatrixPower = power_array.data;
@@ -64,7 +64,7 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	return dst;
 }
 
-template<typename full>
+template<typename full, typename incomplete>
 void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		int borderCols, int borderRows) {
 	DataManagement<full> hotspot_data(this->setup_params);
@@ -101,7 +101,7 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 
 			std::cout << "REFERENCE GIVEN\n";
 
-			ret[streamIdx] = compute_tran_temp(power_array_stream,
+			ret[streamIdx] = compute_tran_temp<full, incomplete>(power_array_stream,
 					temp_array_input_stream, temp_array_output_stream,
 					this->setup_params.grid_cols, this->setup_params.grid_rows,
 					this->setup_params.sim_time,
@@ -180,15 +180,15 @@ void HotspotExecute::run() {
 	switch (this->setup_params.precision) {
 	case HALF:
 
-		generic_execute<half>(blockCols, blockRows, borderCols, borderRows);
+		generic_execute<half, half_float::half>(blockCols, blockRows, borderCols, borderRows);
 		break;
 
 	case SINGLE:
-		generic_execute<float>(blockCols, blockRows, borderCols, borderRows);
+		generic_execute<float, float>(blockCols, blockRows, borderCols, borderRows);
 		break;
 
 	case DOUBLE:
-		generic_execute<double>(blockCols, blockRows, borderCols, borderRows);
+		generic_execute<double, double>(blockCols, blockRows, borderCols, borderRows);
 		break;
 
 	}

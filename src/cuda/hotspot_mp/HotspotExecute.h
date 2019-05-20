@@ -25,7 +25,9 @@
 /* capacitance fitting factor	*/
 #define FACTOR_CHIP	0.5
 
-# define EXPAND_RATE 2// add one iteration will extend the pyramid base by 2 per each borderline
+#define EXPAND_RATE 2// add one iteration will extend the pyramid base by 2 per each borderline
+
+#define BIGGEST_TYPE_CAST(value) double(value)
 
 struct HotspotExecute {
 	HotspotExecute(Parameters& setup_parameters, Log& log);
@@ -36,11 +38,11 @@ private:
 	Parameters& setup_params;
 	Log& log;
 
-	template<typename full>
+	template<typename full, typename incomplete>
 	void generic_execute(int blockCols, int blockRows, int borderCols,
 			int borderRows);
 
-	template<typename full>
+	template<typename full, typename incomplete>
 	int compute_tran_temp(DeviceVector<full>& power_array,
 			DeviceVector<full>& temp_array_input,
 			DeviceVector<full>& temp_array_output, int col, int row,

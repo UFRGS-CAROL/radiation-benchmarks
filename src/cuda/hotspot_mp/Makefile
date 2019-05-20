@@ -11,7 +11,7 @@ ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]	# Jetson Xavier
 
 NVCCFLAGS= $(ARCH) -Xptxas -v -std=c++11
 CXXFLAGS= -std=c++11 
-INCLUDE= -I/usr/local/cuda/include/ -I../../include/
+INCLUDE= -I/usr/local/cuda/include/ -I../../include/ -I../micro_mp_hard/
 LIBRARY= -L/usr/local/cuda/lib64/  -L../../include/ 
 
 OBJDIR=./obj/
