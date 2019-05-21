@@ -485,6 +485,7 @@ wmma::row_major> &acc_frag){
 		atomicAdd(&errors, 1);
 		return errors;
 	}
+	return 0;
 }
 
 template<class real_t>
