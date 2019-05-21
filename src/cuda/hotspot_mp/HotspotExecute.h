@@ -11,8 +11,8 @@
 #include "Parameters.h"
 #include "Log.h"
 #include "DataManagement.h"
+#include "device_functions.h"
 
-#define BLOCK_SIZE 32
 
 #define STR_SIZE 256
 
@@ -40,18 +40,18 @@ struct HotspotExecute {
 private:
 	Parameters& setup_params;
 	Log& log;
+	float flops;
 
-	template<typename full>
+	template<typename full, typename incomplete>
 	void generic_execute(int blockCols, int blockRows, int borderCols,
 			int borderRows);
 
-	template<typename full>
+	template<typename full, typename incomplete>
 	int compute_tran_temp(DeviceVector<full>& power_array,
 			DeviceVector<full>& temp_array_input,
 			DeviceVector<full>& temp_array_output, int col, int row,
 			int sim_time, int num_iterations, int blockCols, int blockRows,
-			int borderCols, int borderRows, cudaStream_t streamm,
-			double& flops);
+			int borderCols, int borderRows, cudaStream_t streamm);
 };
 
 #endif /* HOTSPOTEXECUTE_H_ */

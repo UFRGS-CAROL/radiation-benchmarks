@@ -6,26 +6,25 @@
  */
 
 #include "HotspotExecute.h"
-#include "none_kernels.h"
-#include "half.hpp"
-
-#include <cuda_fp16.h>
-
+#include "kernels.h"
+#include "device_functions.h"
 #ifdef LOGS
 #include "log_helper.h"
 #endif
-// The timestamp is updated on every log_helper function call.
+
+#include <cuda_fp16.h>
+
 
 HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
-		setup_params(setup_parameters), log(log) {
+		setup_params(setup_parameters), log(log), flops(0) {
 }
 
-template<typename full>
+template<typename full, typename incomplete>
 int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 		DeviceVector<full>& temp_array_input,
 		DeviceVector<full>& temp_array_output, int col, int row, int sim_time,
 		int num_iterations, int blockCols, int blockRows, int borderCols,
-		int borderRows, cudaStream_t stream, double& flops) {
+		int borderRows, cudaStream_t stream) {
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dimGrid(blockCols, blockRows);
 
@@ -55,20 +54,31 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	full* MatrixPower = power_array.data;
 	full* MatrixTemp[2] = { temp_array_input.data, temp_array_output.data };
 
-	for (int t = 0; t < sim_time; t += num_iterations) {
-		std::swap(src, dst);
-
-		calculate_temp<full> <<<dimGrid, dimBlock, 0, stream>>>(
-				MIN(num_iterations, sim_time - t), MatrixPower, MatrixTemp[src],
-				MatrixTemp[dst], col, row, borderCols, borderRows, Cap_, Rx_,
-				Ry_, Rz_, step_, time_elapsed);
-		flops += col * row * MIN(num_iterations, sim_time - t) * 15;
+	if (this->setup_params.redundancy == NONE) {
+		for (int t = 0; t < sim_time; t += num_iterations) {
+			std::swap(src, dst);
+			calculate_temp<full> <<<dimGrid, dimBlock, 0, stream>>>(
+					MIN(num_iterations, sim_time - t), MatrixPower,
+					MatrixTemp[src], MatrixTemp[dst], col, row, borderCols,
+					borderRows, Cap_, Rx_, Ry_, Rz_, step_, time_elapsed);
+			this->flops += col * row * MIN(num_iterations, sim_time - t) * 15;
+		}
+	} else {
+		for (int t = 0; t < sim_time; t += num_iterations) {
+			std::swap(src, dst);
+			calculate_temp<full, incomplete> <<<dimGrid, dimBlock, 0, stream>>>(
+					MIN(num_iterations, sim_time - t), MatrixPower,
+					MatrixTemp[src], MatrixTemp[dst], col, row, borderCols,
+					borderRows, Cap_, Rx_, Ry_, Rz_, step_, time_elapsed);
+			this->flops += col * row * MIN(num_iterations, sim_time - t) * 15;
+		}
 	}
+
 //	cudaStreamSynchronize(stream);
 	return dst;
 }
 
-template<typename full>
+template<typename full, typename incomplete>
 void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		int borderCols, int borderRows) {
 	DataManagement<full> hotspot_data(this->setup_params, this->log);
@@ -90,7 +100,7 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 
 		// ============ COMPUTE ============
 		this->log.start_iteration_app();
-		double flops = 0;
+		this->flops = 0;
 		for (int streamIdx = 0; streamIdx < (this->setup_params.nstreams);
 				streamIdx++) {
 			DeviceVector<full>& power_array_stream =
@@ -100,13 +110,12 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 			DeviceVector<full>& temp_array_output_stream =
 					hotspot_data.matrix_temperature_output_device[streamIdx];
 
-			hotspot_data.output_index[streamIdx] = compute_tran_temp<full>(
-					power_array_stream, temp_array_input_stream,
+			hotspot_data.output_index[streamIdx] = compute_tran_temp<full,
+					incomplete>(power_array_stream, temp_array_input_stream,
 					temp_array_output_stream, this->setup_params.grid_cols,
 					this->setup_params.grid_rows, this->setup_params.sim_time,
 					this->setup_params.pyramid_height, blockCols, blockRows,
-					borderCols, borderRows, hotspot_data.streams[streamIdx],
-					flops);
+					borderCols, borderRows, hotspot_data.streams[streamIdx]);
 		}
 
 		for (auto stream : hotspot_data.streams) {
@@ -182,18 +191,42 @@ void HotspotExecute::run() {
 	this->setup_params.size = (this->setup_params.grid_cols)
 			* (this->setup_params.grid_rows);
 
-	switch (this->setup_params.precision) {
-	case HALF:
+	switch (this->setup_params.redundancy) {
+	case NONE:
+	case DMR:
+		switch (this->setup_params.precision) {
+		case HALF:
 
-		generic_execute<half>(blockCols, blockRows, borderCols, borderRows);
+			generic_execute<half, half>(blockCols, blockRows, borderCols,
+					borderRows);
+			break;
+
+		case SINGLE:
+			generic_execute<float, float>(blockCols, blockRows, borderCols,
+					borderRows);
+			break;
+
+		case DOUBLE:
+			generic_execute<double, double>(blockCols, blockRows, borderCols,
+					borderRows);
+			break;
+
+		}
 		break;
 
-	case SINGLE:
-		generic_execute<float>(blockCols, blockRows, borderCols, borderRows);
-		break;
+	case DMRMIXED:
+		switch (this->setup_params.precision) {
+		case SINGLE:
+			generic_execute<float, half>(blockCols, blockRows, borderCols,
+					borderRows);
+			break;
 
-	case DOUBLE:
-		generic_execute<double>(blockCols, blockRows, borderCols, borderRows);
+		case DOUBLE:
+			generic_execute<double, float>(blockCols, blockRows, borderCols,
+					borderRows);
+			break;
+
+		}
 		break;
 
 	}
