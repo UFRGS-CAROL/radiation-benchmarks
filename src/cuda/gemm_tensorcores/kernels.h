@@ -479,8 +479,8 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 
 template<class real_t>
 __device__ real_t inline error_voter (real_t d_shared, real_t acc_frag){
-	__device__ errors = 0;
-	register full relative_error = d_shared - acc_frag;
+	__device__ real_t errors = 0;
+	register real_t error_checker = d_shared - acc_frag;
 	if (relative_error > 0) {
 		atomicAdd(&errors, 1);
 		return errors;
