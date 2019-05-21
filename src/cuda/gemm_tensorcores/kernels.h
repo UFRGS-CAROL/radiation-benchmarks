@@ -481,7 +481,7 @@ template<class real_t>
 __device__ real_t inline error_voter (real_t d_shared, real_t acc_frag){
 	__device__ real_t errors = 0;
 	register real_t error_checker = d_shared - acc_frag;
-	if (relative_error > 0) {
+	if (error_checker > 0) {
 		atomicAdd(&errors, 1);
 		return errors;
 	}
