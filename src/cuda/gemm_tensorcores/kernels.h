@@ -331,30 +331,29 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c_frag;
 
 	// if ((threadIdx.x | threadIdx.y ) == 0 ){
-		__shared__ half_t a_shared[WMMA_M][WMMA_N];
-		__shared__ half_t b_shared[WMMA_M][WMMA_N];
-		__shared__ real_t c_shared[WMMA_M][WMMA_N];
-		__shared__ real_t d_shared[WMMA_M][WMMA_N];
+	__shared__ half_t a_shared[WMMA_M][WMMA_N];
+	__shared__ half_t b_shared[WMMA_M][WMMA_N];
+	__shared__ real_t c_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d_shared[WMMA_M][WMMA_N];
 
-		a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-		b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-		c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
+	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
 
-		d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
-		real_t acc = 0;
+	d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	real_t acc = 0;
 
-		__syncthreads();
-		if(threadIdx.x == 0)
-			printf("%d\n", threadIdx.y);
+	__syncthreads();
+	
 
-		for(int i = 0; i < WMMA_N; i++){
-			 acc += real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
+	for(int i = 0; i < WMMA_N; i++){
+		 acc += real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
 
-		}
+	}
 
-		d_shared[threadIdx.x][threadIdx.y] = acc + c_shared[threadIdx.x][threadIdx.y];
+	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
 
 	// }
 	
@@ -398,6 +397,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 			for (int i = 0; i < c_frag.num_elements; i++) {
 				c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
 			}
+			error_voter(d_shared, c_frag);
 
 			// Store the output
 			wmma::store_matrix_sync(d0 + cCol + cRow * ldc, c_frag, ldc,
@@ -474,7 +474,19 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 		wmma::store_matrix_sync(d + cCol + cRow * ldc, c_frag, ldc,
 				wmma::mem_row_major);
 	}
-}	
+}
+
+template<class real_t>
+__device__ real_t inline error_voter (real_t d_shared, wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t,
+wmma::row_major> &acc_frag){
+	__device__ real_t errors = 0;
+	register real_t error_checker = d_shared - acc_frag;
+	if (error_checker > 0) {
+		atomicAdd(&errors, 1);
+		return errors;
+	}
+	return 0;
+}
 
 template<class real_t>
 __device__ real_t inline read_voter(real_t *v1, real_t *v2, real_t *v3,
