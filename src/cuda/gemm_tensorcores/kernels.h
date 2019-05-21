@@ -349,19 +349,14 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 
 	// for(int i = 0; i < WMMA_N; i++){
 	// 	 acc += real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
-		 
+
 	// }
 
 	// d_shared[threadIdx.x][threadIdx.y] = acc + c_shared[threadIdx.x][threadIdx.y];
 	// }
 
 
-//	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_M, WMMA_M, signed char ,wmma::row_major> a_frag;
-//	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, signed char ,wmma::col_major> b_frag;
-//	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K,int> acc_frag;
-//	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, int> c_frag;
 
-	
 		wmma::fill_fragment(acc_frag, 0.0f);
 		wmma::fill_fragment(a_frag, 2.0f);
 		wmma::fill_fragment(b_frag, 2.0f);
