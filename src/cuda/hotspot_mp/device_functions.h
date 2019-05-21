@@ -55,7 +55,7 @@ __device__    __forceinline__ half abs__(half a) {
 template<typename full, typename incomplete>
 __device__ __forceinline__ void compare(const full lhs, const incomplete rhs) {
 	const full diff = abs__(lhs - full(rhs));
-	const full zero = full(smallest<incomplete>());
+	const full zero = full(0.000000001);
 	if (diff > zero) {
 		atomicAdd(&errors, 1);
 	}
