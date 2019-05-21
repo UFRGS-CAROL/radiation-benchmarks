@@ -87,20 +87,12 @@ struct DataManagement {
 
 	void copy_from_gpu() {
 		for (int stream = 0; stream < this->streams.size(); stream++) {
-
 			DeviceVector<full>* output[2] = {
 					&this->matrix_temperature_input_device[stream],
 					&this->matrix_temperature_output_device[stream] };
 
 			this->out_vector[stream] =
 					output[this->output_index[stream]]->to_vector();
-
-//			this->matrix_power_host[stream] =
-//					this->matrix_power_device[stream].to_vector();
-//			this->matrix_temperature_input_host[stream] =
-//					this->matrix_temperature_input_device[stream].to_vector();
-//			this->matrix_temperature_output_host[stream] =
-//					this->matrix_temperature_output_device[stream].to_vector();
 		}
 	}
 
@@ -268,8 +260,6 @@ struct DataManagement {
 			return;
 		}
 
-		this->gold_temperature = this->matrix_temperature_output_host[0];
-
 		// =================== Write output to gold file
 		std::fstream gold_file(this->parameters.ofile,
 				std::fstream::out | std::fstream::binary);
@@ -279,14 +269,14 @@ struct DataManagement {
 			exit(EXIT_FAILURE);
 		}
 
-		gold_file.write((char*) this->gold_temperature.data(),
+		gold_file.write((char*)  this->out_vector[0].data(),
 				sizeof(full) * this->parameters.size);
 
 		gold_file.close();
 
 		int nan = 0;
 		int zero = 0;
-		for (auto n : this->gold_temperature) {
+		for (auto n :  this->out_vector[0]) {
 			if (std::isnan(float(n)))
 				nan++;
 			if (float(n) == 0)
