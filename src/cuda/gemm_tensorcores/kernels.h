@@ -479,8 +479,8 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 
 __device__ float inline error_voter (float d_shared, wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float,
 wmma::row_major> &acc_frag){
-	__device__ float errors = 0;
-	register real_t error_checker = d_shared - acc_frag;
+	float errors = 0;
+	register float error_checker = d_shared - acc_frag;
 	if (error_checker > 0) {
 		atomicAdd(&errors, 1);
 		return errors;
