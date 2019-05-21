@@ -61,6 +61,21 @@ __device__ __forceinline__ void compare(const full lhs, const incomplete rhs) {
 	}
 }
 
+unsigned long long copy_errors() {
+	unsigned long long errors_host = 0;
+	//Copy errors first
+	checkFrameworkErrors(
+			cudaMemcpyFromSymbol(&errors_host, errors,
+					sizeof(unsigned long long), 0, cudaMemcpyDeviceToHost));
+
+
+	//Reset the errors variable
+	checkFrameworkErrors(
+				cudaMemcpyToSymbol(errors, 0,
+						sizeof(unsigned long long), 0, cudaMemcpyHostToDevice));
+	return errors_host;
+}
+
 #endif
 
 #endif /* DEVICE_FUNCTIONS_H_ */

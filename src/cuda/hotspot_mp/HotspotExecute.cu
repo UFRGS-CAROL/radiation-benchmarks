@@ -14,7 +14,6 @@
 
 #include <cuda_fp16.h>
 
-
 HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
 		setup_params(setup_parameters), log(log), flops(0) {
 }
@@ -147,6 +146,8 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		hotspot_data.copy_from_gpu();
 		hotspot_data.check_output_errors();
 
+		auto dmr_errors = copy_errors();
+
 		if (this->setup_params.verbose)
 			std::cout << "Gold check time: " << this->log.mysecond() - timestamp
 					<< std::endl;
@@ -160,7 +161,9 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 
 			std::cout << "Iteration time: " << iteration_time << " ("
 					<< (this->log.iteration_time() / iteration_time) * 100.0
-					<< "% Device)\n" << std::endl;
+					<< "% Device)" << std::endl;
+			std::cout << "Overall errors " << this->log.error_count
+					<< " DMR errors " << dmr_errors << std::endl;
 		}
 		if (this->setup_params.verbose)
 			std::cout << ("==============================\n");
