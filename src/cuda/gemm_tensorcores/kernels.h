@@ -329,7 +329,8 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	wmma::col_major> b_frag;
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> acc_frag;
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c_frag;
-	
+	__syncthreads();
+	if ((threadIdx.x | threadIdx.y ) == 0 ){
 	__shared__ half_t a_shared[WMMA_M][WMMA_N];
 	__shared__ half_t b_shared[WMMA_M][WMMA_N];
 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
@@ -345,8 +346,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	real_t acc = 0;
 
 	
-	__syncthreads();
-	if ((threadIdx.x | threadIdx.y ) == 0 ){
+
 	for(int i = 0; i < WMMA_N; i++){
 		 acc += real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
 
@@ -354,7 +354,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 
 	d_shared[threadIdx.x][threadIdx.y] = acc + c_shared[threadIdx.x][threadIdx.y];
 	}
-	
+
 
 //	wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_M, WMMA_M, signed char ,wmma::row_major> a_frag;
 //	wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, signed char ,wmma::col_major> b_frag;
