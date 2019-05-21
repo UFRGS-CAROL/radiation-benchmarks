@@ -398,7 +398,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 			for (int i = 0; i < c_frag.num_elements; i++) {
 				c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
 			}
-			error_voter(d_shared, c_frag);
+			// error_voter(d_shared, c_frag);
 
 			// Store the output
 			wmma::store_matrix_sync(d0 + cCol + cRow * ldc, c_frag, ldc,
