@@ -10,6 +10,7 @@
 
 #include "device_functions.h"
 
+#define BLOCK_SIZE 32
 
 template<typename full>
 __global__ void calculate_temp(int iteration,  //number of iteration

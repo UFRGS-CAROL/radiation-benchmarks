@@ -14,6 +14,10 @@
 #include "device_functions.h"
 
 
+#define IN_RANGE(x, min, max)   ((x)>=(min) && (x)<=(max))
+#define CLAMP_RANGE(x, min, max) x = (x<(min)) ? min : ((x>(max)) ? max : x )
+#define MIN(a, b) ((a)<=(b) ? (a) : (b))
+
 #define STR_SIZE 256
 
 /* maximum power density possible (say 300W for a 10mm x 10mm chip)	*/

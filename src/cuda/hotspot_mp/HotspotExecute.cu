@@ -16,6 +16,8 @@
 
 HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
 		setup_params(setup_parameters), log(log), flops(0) {
+	std::cout << "WG size of kernel = " << BLOCK_SIZE << " x " << BLOCK_SIZE
+			<< std::endl;
 }
 
 template<typename full, typename incomplete>

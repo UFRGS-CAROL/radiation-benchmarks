@@ -10,12 +10,6 @@
 
 #include <cuda_fp16.h>
 
-#define IN_RANGE(x, min, max)   ((x)>=(min) && (x)<=(max))
-#define CLAMP_RANGE(x, min, max) x = (x<(min)) ? min : ((x>(max)) ? max : x )
-#define MIN(a, b) ((a)<=(b) ? (a) : (b))
-
-#define BLOCK_SIZE 32
-
 #define ZERO_FLOAT 1e-37
 #define ZERO_HALF 1e-13
 

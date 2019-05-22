@@ -14,8 +14,7 @@ int main(int argc, char** argv) {
 	Parameters setup_parameters(argc, argv);
 	std::cout << "Parameters" << std::endl;
 	std::cout << setup_parameters << std::endl;
-	std::cout << "WG size of kernel = " << BLOCK_SIZE << " x " << BLOCK_SIZE
-			<< std::endl;
+
 	std::string test_info = std::string("streams:")
 			+ std::to_string(setup_parameters.nstreams) + " precision:"
 			+ setup_parameters.test_precision_description + " size:"
