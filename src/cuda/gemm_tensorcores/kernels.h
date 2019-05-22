@@ -399,7 +399,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 			for (int i = 0; i < c_frag.num_elements; i++) {
 				c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
 			}
-			error_voter(d_shared, c_frag);
+			float d_errors = error_voter(c_frag);
 
 			// Store the output
 			wmma::store_matrix_sync(d0 + cCol + cRow * ldc, c_frag, ldc,
@@ -490,10 +490,10 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 // 	return 0;
 // }
 
-__device__ float inline error_voter (float d_shared[][threadIdx.y], wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float,
+__device__ float inline error_voter (wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float,
 wmma::row_major> &acc_frag){
 	
-	register float error_checker = d_shared - acc_frag;
+	register float error_checker = acc_frag;
 	if (error_checker > 0) {
 		atomicAdd(&errors, 1);
 		return errors;
