@@ -52,7 +52,6 @@ __device__ __forceinline__ void compare(const float lhs, const half rhs) {
 	}
 }
 
-
 __device__ __forceinline__ void compare(const double lhs, const float rhs) {
 	const double diff = abs__(lhs - double(rhs));
 	const double zero = double(ZERO_FLOAT);

@@ -83,19 +83,24 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 	DataManagement<full> hotspot_data(this->setup_params, this->log);
 	hotspot_data.read_input();
 
+	//====================================
+	// Verbose in csv format
+	if (this->setup_params.verbose == false) {
+		std::cout << "output/s,iteration,time,output errors,relative errors"
+				<< std::endl;
+	}
+
 	// ====================== MAIN BENCHMARK CYCLE ======================
 	for (int loop = 0; loop < this->setup_params.setup_loops; loop++) {
 		if (this->setup_params.verbose)
 			std::cout << "======== Iteration #" << loop << " ========"
 					<< std::endl;
-		double globaltime = this->log.mysecond();
+		double global_time = this->log.mysecond();
 
 		// ============ PREPARE ============
-		double timestamp = this->log.mysecond();
+		double reload_time = this->log.mysecond();
 		hotspot_data.reload();
-		if (this->setup_params.verbose)
-			std::cout << "GPU prepare time: "
-					<< this->log.mysecond() - timestamp << "s" << std::endl;
+		reload_time = this->log.mysecond();
 
 		// ============ COMPUTE ============
 		this->log.start_iteration_app();
@@ -117,30 +122,12 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 					borderCols, borderRows, hotspot_data.streams[streamIdx]);
 		}
 
-		for (auto stream : hotspot_data.streams) {
-			checkFrameworkErrors(cudaStreamSynchronize(stream));
-		}
-		checkFrameworkErrors(cudaDeviceSynchronize());
-		checkFrameworkErrors(cudaPeekAtLastError());
+		hotspot_data.sync();
 
 		this->log.end_iteration_app();
-		// ============ MEASURE PERFORMANCE ============
-		if (this->setup_params.verbose) {
-			double outputpersec =
-					(double) (((this->setup_params.grid_rows
-							* this->setup_params.grid_rows
-							* this->setup_params.nstreams)
-							/ this->log.iteration_time()));
-			std::cout << "Kernel time: " << this->log.iteration_time()
-					<< std::endl;
-			std::cout << "Performance - SIZE:" << this->setup_params.grid_rows
-					<< " OUTPUT/S: " << outputpersec << " FLOPS: "
-					<< flops / this->log.iteration_time() << " (GFLOPS: "
-					<< flops / (this->log.iteration_time() * 1e9) << ")"
-					<< std::endl;
-		}
+
 		// ============ VALIDATE OUTPUT ============
-		timestamp = this->log.mysecond();
+		double copy_and_check_time = this->log.mysecond();
 		int kernel_errors = 0;
 
 		hotspot_data.copy_from_gpu();
@@ -148,25 +135,58 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 
 		auto dmr_errors = copy_errors();
 
-		if (this->setup_params.verbose)
-			std::cout << "Gold check time: " << this->log.mysecond() - timestamp
-					<< std::endl;
+		copy_and_check_time = this->log.mysecond();
 
-		if ((kernel_errors != 0) && !(this->setup_params.verbose))
-			std::cout << ".";
+		if ((kernel_errors != 0) && !(this->setup_params.verbose)){
+//			std::cout << ".";
+			// CSV format
+			double outputpersec =
+					double(((this->setup_params.grid_rows
+							* this->setup_params.grid_rows
+							* this->setup_params.nstreams)
+							/ this->log.iteration_time()));
+			std::cout << outputpersec << ",";
+			std::cout << loop << ",";
+			std::cout << this->log.iteration_time() << ",";
+			std::cout << this->log.error_count << ",";
+			std::cout << dmr_errors << std::endl;
+		}
 
 		if (this->setup_params.verbose) {
+			std::cout << "GPU prepare time: " << reload_time << "s"
+					<< std::endl;
+
+			// ============ MEASURE PERFORMANCE ============
+			double outputpersec =
+					double(((this->setup_params.grid_rows
+							* this->setup_params.grid_rows
+							* this->setup_params.nstreams)
+							/ this->log.iteration_time()));
+			std::cout << "Kernel time: " << this->log.iteration_time()
+					<< std::endl;
+
+
+			std::cout << "Performance - SIZE:" << this->setup_params.grid_rows
+					<< " OUTPUT/S: " << outputpersec << " FLOPS: "
+					<< flops / this->log.iteration_time() << " (GFLOPS: "
+					<< flops / (this->log.iteration_time() * 1e9) << ")"
+					<< std::endl;
+
+			std::cout << "Gold check time: " << copy_and_check_time
+					<< std::endl;
+
 			//computing if the overall time is enough
-			double iteration_time = this->log.mysecond() - globaltime;
+			double iteration_time = this->log.mysecond() - global_time;
 
 			std::cout << "Iteration time: " << iteration_time << " ("
 					<< (this->log.iteration_time() / iteration_time) * 100.0
 					<< "% Device)" << std::endl;
-			std::cout << "Overall errors " << this->log.error_count
+			std::cout << "Iteration errors " << this->log.error_count
 					<< " DMR errors " << dmr_errors << std::endl;
+
+			std::cout << "==============================" << std::endl;
+
 		}
-		if (this->setup_params.verbose)
-			std::cout << ("==============================\n");
 
 	}
 

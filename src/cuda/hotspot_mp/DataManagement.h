@@ -105,6 +105,14 @@ struct DataManagement {
 		}
 	}
 
+	void sync(){
+		for (auto stream : this->streams) {
+			checkFrameworkErrors(cudaStreamSynchronize(stream));
+		}
+		checkFrameworkErrors(cudaDeviceSynchronize());
+		checkFrameworkErrors(cudaPeekAtLastError());
+	}
+
 	virtual ~DataManagement() {
 		//Only destroy stream, the others will be automatically destroyed
 		for (auto stream : this->streams) {
