@@ -16,13 +16,24 @@
 #include <cuda_runtime.h>
 
 #include "cuda_utils.h"
+#include "types.h"
+#include "DeviceVector.h"
 
 template<typename full>
-class DataManagement {
+struct DataManagement {
 	Parameters& setup_parameters;
 	std::vector<cudaStream_t> streams;
 
-public:
+	//=====================================================================
+	//	VECTORS
+	//=====================================================================
+	std::vector<DeviceVector<box_str>> d_box_gpu;
+	std::vector<DeviceVector<FOUR_VECTOR<full>>> d_rv_gpu;
+	std::vector<DeviceVector<full>> d_qv_gpu;
+	std::vector<DeviceVector<FOUR_VECTOR<full>>> d_fv_gpu;
+	std::vector<DeviceVector<FOUR_VECTOR<full>>> d_fv_gold_gpu;
+
+
 	DataManagement(Parameters& setup_parameters) :
 			setup_parameters(setup_parameters) {
 //		for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
@@ -335,7 +346,7 @@ public:
 
 	// Returns true if no errors are found. False if otherwise.
 	// Set votedOutput pointer to retrieve the voted matrix
-	void checkOutputErrors() {
+	bool checkOutputErrors() {
 //		int host_errors = 0;
 //
 //	// #pragma omp parallel for shared(host_errors)
@@ -373,6 +384,7 @@ public:
 //			printf("#");
 //
 //		return (host_errors == 0);
+		return false;
 	}
 
 };

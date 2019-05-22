@@ -13,102 +13,102 @@
 
 template<class T>
 struct DeviceVector {
-	T *data = nullptr;
-	bool allocated = false;
-	size_t v_size = 0;
+    T *data = nullptr;
+    bool allocated = false;
+    size_t v_size = 0;
 
-	DeviceVector() {
-		this->v_size = 0;
-		this->allocated = false;
-		this->data = nullptr;
-	}
+    DeviceVector() {
+        this->v_size = 0;
+        this->allocated = false;
+        this->data = nullptr;
+    }
 
-	DeviceVector(const DeviceVector<T>& b) {
-		this->alloc_data(b.v_size);
-		if (this->allocated) {
-			checkFrameworkErrors(
-					cudaMemcpy(this->data, b.data, sizeof(T) * this->v_size,
-							cudaMemcpyDeviceToDevice));
-		}
-	}
+    DeviceVector(const DeviceVector<T>& b) {
+        this->alloc_data(b.v_size);
+        if (this->allocated) {
+            checkFrameworkErrors(
+                    cudaMemcpy(this->data, b.data, sizeof(T) * this->v_size,
+                            cudaMemcpyDeviceToDevice));
+        }
+    }
 
-	DeviceVector(size_t size) {
-		this->alloc_data(size);
-	}
+    DeviceVector(size_t size) {
+        this->alloc_data(size);
+    }
 
-	virtual ~DeviceVector() {
-		this->free_data();
-	}
+    virtual ~DeviceVector() {
+        this->free_data();
+    }
 
-	T& operator [](int i) const {
-		return this->host_data[i];
-	}
+    T& operator [](int i) const {
+        return this->host_data[i];
+    }
 
-	DeviceVector<T>& operator=(const std::vector<T>& other) {
-		if (this->v_size != other.size()) {
-			this->free_data();
-		}
+    DeviceVector<T>& operator=(const std::vector<T>& other) {
+        if (this->v_size != other.size()) {
+            this->free_data();
+        }
 
-		if (this->allocated == false) {
-			this->alloc_data(other.size());
-		}
+        if (this->allocated == false) {
+            this->alloc_data(other.size());
+        }
 
-		checkFrameworkErrors(
-				cudaMemcpy(this->data, other.data(), sizeof(T) * this->v_size,
-						cudaMemcpyHostToDevice));
+        checkFrameworkErrors(
+                cudaMemcpy(this->data, other.data(), sizeof(T) * this->v_size,
+                        cudaMemcpyHostToDevice));
 
-		return *this;
-	}
+        return *this;
+    }
 
-	DeviceVector<T>& operator=(const DeviceVector<T>& other) {
-		if (this->v_size != other.v_size) {
-			this->free_data();
-		}
+    DeviceVector<T>& operator=(const DeviceVector<T>& other) {
+        if (this->v_size != other.v_size) {
+            this->free_data();
+        }
 
-		if (this->allocated == false) {
-			this->alloc_data(other.v_size);
+        if (this->allocated == false) {
+            this->alloc_data(other.v_size);
 
-		}
+        }
 
-		checkFrameworkErrors(
-				cudaMemcpy(this->data, other.data, sizeof(T) * this->v_size,
-						cudaMemcpyHostToDevice));
+        checkFrameworkErrors(
+                cudaMemcpy(this->data, other.data, sizeof(T) * this->v_size,
+                        cudaMemcpyHostToDevice));
 
-		return *this;
-	}
+        return *this;
+    }
 
-	std::vector<T> to_vector() {
-		std::vector<T> ret(this->v_size, 0);
+    std::vector<T> to_vector() {
+        std::vector<T> ret(this->v_size);
 
-		checkFrameworkErrors(
-				cudaMemcpy(ret.data(), this->data, sizeof(T) * this->v_size,
-						cudaMemcpyDeviceToHost));
-		return ret;
-	}
+        checkFrameworkErrors(
+                cudaMemcpy(ret.data(), this->data, sizeof(T) * this->v_size,
+                        cudaMemcpyDeviceToHost));
+        return ret;
+    }
 
-	void clear() {
-		checkFrameworkErrors(
-				cudaMemset(this->data, 0, sizeof(T) * this->v_size));
-	}
+    void clear() {
+        checkFrameworkErrors(
+                cudaMemset(this->data, 0, sizeof(T) * this->v_size));
+    }
 
 private:
-	void alloc_data(size_t size) {
-		this->v_size = size;
-		checkFrameworkErrors(cudaMalloc(&this->data, sizeof(T) * this->v_size));
-		this->allocated = true;
-	}
+    void alloc_data(size_t size) {
+        this->v_size = size;
+        checkFrameworkErrors(cudaMalloc(&this->data, sizeof(T) * this->v_size));
+        this->allocated = true;
+    }
 
-	void free_data() {
-		if (this->allocated == false)
-			return;
+    void free_data() {
+        if (this->allocated == false)
+            return;
 
-		if (this->data != nullptr)
-			checkFrameworkErrors(cudaFree(this->data));
+        if (this->data != nullptr)
+            checkFrameworkErrors(cudaFree(this->data));
 
-		this->allocated = false;
-		this->data = nullptr;
-		this->v_size = 0;
-	}
+        this->allocated = false;
+        this->data = nullptr;
+        this->v_size = 0;
+    }
 
 };
 

@@ -21,6 +21,8 @@ template<typename T>
 struct FOUR_VECTOR {
 	T v, x, y, z;
 
+
+
 	__host__ __device__ inline  bool operator==(const FOUR_VECTOR& rhs) {
 		return (this->x == rhs.x) && (this->y == rhs.y) && (this->z == rhs.z)
 				&& (this->v == rhs.v);

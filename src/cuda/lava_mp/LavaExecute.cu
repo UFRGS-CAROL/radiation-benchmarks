@@ -8,6 +8,7 @@
 #include "LavaExecute.h"
 #include "types.h"
 #include "DataManagement.h"
+#include "kernels.h"
 
 #include <cuda_fp16.h>
 #include <vector>
@@ -62,7 +63,7 @@ inline void LavaExecute::generic_execute() {
 
 	// how many particles space has in each direction
 	dim_cpu.space_elem = dim_cpu.number_boxes * NUMBER_PAR_PER_BOX;
-	dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR<full>);
+	dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR<full> );
 	dim_cpu.space_mem2 = dim_cpu.space_elem * sizeof(full);
 
 	// box array
@@ -75,20 +76,20 @@ inline void LavaExecute::generic_execute() {
 	// prepare host memory to receive kernel output
 	// output (forces)
 	std::vector<FOUR_VECTOR<full>> fv_cpu[this->setup_parameters.nstreams];
-	for (int streamIdx = 0; streamIdx < this->setup_parameters.nstreams; streamIdx++) {
+	for (int streamIdx = 0; streamIdx < this->setup_parameters.nstreams;
+			streamIdx++) {
 		fv_cpu[streamIdx] = std::vector<FOUR_VECTOR<full>>(dim_cpu.space_mem);
 	}
 
-	std::vector<FOUR_VECTOR<full>> fv_cpu_GOLD = std::vector<FOUR_VECTOR<full>>(dim_cpu.space_mem);
-
+	std::vector<FOUR_VECTOR<full>> fv_cpu_GOLD = std::vector<FOUR_VECTOR<full>>(
+			dim_cpu.space_mem);
 
 	//=====================================================================
 	//	BOX
 	//=====================================================================
 
 	// allocate boxes
-	std::vector<box_str>  box_cpu = std::vector<box_str>(dim_cpu.box_mem);
-
+	std::vector<box_str> box_cpu = std::vector<box_str>(dim_cpu.box_mem);
 
 	// initialize number of home boxes
 	int nh = 0;
@@ -177,237 +178,158 @@ inline void LavaExecute::generic_execute() {
 	threads.x = NUMBER_THREADS;
 	threads.y = 1;
 
+	DataManagement<full>& ld = lava_data;
 
-	//=====================================================================
-	//	VECTORS
-	//=====================================================================
-	std::vector<box_str> d_box_gpu[nstreams];
-	std::vector<FOUR_VECTOR<full>> d_rv_gpu[nstreams];
-	std::vector<full> d_qv_gpu[nstreams];
-	std::vector<FOUR_VECTOR<full>> d_fv_gpu[nstreams];
-	std::vector<FOUR_VECTOR<full>> d_fv_gold_gpu;
-//
-//	//=====================================================================
-//	//	GPU MEMORY SETUP
-//	//=====================================================================
-//	gpu_memory_setup(nstreams, gpu_check, dim_cpu, d_box_gpu, box_cpu, d_rv_gpu,
-//			rv_cpu, d_qv_gpu, qv_cpu, d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD);
-//
-//	////////////// GOLD CHECK Kernel /////////////////
-//	// dim3 gck_blockSize = dim3(	GOLDCHK_BLOCK_SIZE,
-//	// 	GOLDCHK_BLOCK_SIZE);
-//	// dim3 gck_gridSize = dim3(	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE),
-//	// 	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
-//	// //////////////////////////////////////////////////
-//
-//	//LOOP START
-//	int loop;
-//	for (loop = 0; loop < iterations; loop++) {
-//
-//		if (verbose)
-//			printf("======== Iteration #%06u ========\n", loop);
-//
-//		double globaltimer = mysecond();
-//		timestamp = mysecond();
-//
-//		// for(i=0; i<dim_cpu.space_elem; i=i+1) {
-//		// 	// set to 0, because kernels keeps adding to initial value
-//		// 	fv_cpu[i].v = tested_type_host(0.0);
-//		// 	fv_cpu[i].x = tested_type_host(0.0);
-//		// 	fv_cpu[i].y = tested_type_host(0.0);
-//		// 	fv_cpu[i].z = tested_type_host(0.0);
-//		// }
-//
-//		//=====================================================================
-//		//	GPU SETUP
-//		//=====================================================================
-//		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-//			memset(fv_cpu[streamIdx], 0x00, dim_cpu.space_elem);
-//			checkFrameworkErrors(
-//					cudaMemset(d_fv_gpu[streamIdx], 0x00, dim_cpu.space_mem));
-//		}
-//
-//		if (verbose)
-//			printf("Setup prepare time: %.4fs\n", mysecond() - timestamp);
-//
-//		//=====================================================================
-//		//	KERNEL
-//		//=====================================================================
-//
-//		double kernel_time = mysecond();
-//#ifdef LOGS
-//		if (!generate) start_iteration();
-//#endif
-//		// launch kernel - all boxes
-//		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-//			kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx]>>>(par_cpu,
-//					dim_cpu, d_box_gpu[streamIdx], d_rv_gpu[streamIdx],
-//					d_qv_gpu[streamIdx], d_fv_gpu[streamIdx]);
-//			checkFrameworkErrors (cudaPeekAtLastError());}
-//			//printf("All kernels were commited.\n");
-//		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-//			checkFrameworkErrors(cudaStreamSynchronize(streams[streamIdx]));
-//			checkFrameworkErrors (cudaPeekAtLastError());}
-//#ifdef LOGS
-//			if (!generate) end_iteration();
-//#endif
-//		kernel_time = mysecond() - kernel_time;
-//
-//		//=====================================================================
-//		//	COMPARE OUTPUTS / WRITE GOLD
-//		//=====================================================================
-//		if (generate) {
-//			checkFrameworkErrors(
-//					cudaMemcpy(fv_cpu_GOLD, d_fv_gpu[0], dim_cpu.space_mem,
-//							cudaMemcpyDeviceToHost));
-//			writeGold(dim_cpu, output_gold, &fv_cpu_GOLD);
-//		} else {
-//			timestamp = mysecond();
-//			bool checkOnHost = false;
-//			// if (test_gpu_check) {
-//			// 	assert (d_GOLD != NULL);
-//
-//			// 	// Send to device
-//			// 	unsigned long long int gck_errors = 0;
-//			// 	checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyToSymbol(gck_device_errors, &gck_errors, sizeof(unsigned long long int)) );
-//			// 	// GOLD is already on device.
-//
-//			// 	/////////////////// Run kernel
-//			// 	GoldChkKernel<<<gck_gridSize, gck_blockSize>>>(d_GOLD, d_C, k);
-//			// 	checkOnHost |= checkFrameworkErrorsNoFail( cudaPeekAtLastError() );
-//			// 	checkOnHost |= checkFrameworkErrorsNoFail( cudaDeviceSynchronize() );
-//			// 	///////////////////
-//
-//			// 	// Receive from device
-//			// 	checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyFromSymbol(&gck_errors, gck_device_errors, sizeof(unsigned long long int)) );
-//			// 	if (gck_errors != 0) {
-//			// 		printf("$(%u)", (unsigned int)gck_errors);
-//			// 		checkOnHost = true;
-//			// 	}
-//			// } else {
-//			checkOnHost = true;
-//			// }
-//			if (checkOnHost) {
-//				bool reloadFlag = false;
-//#pragma omp parallel for shared(reloadFlag)
-//				for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-//					checkFrameworkErrors(
-//							cudaMemcpy(fv_cpu[streamIdx], d_fv_gpu[streamIdx],
-//									dim_cpu.space_mem, cudaMemcpyDeviceToHost));
-//					reloadFlag = reloadFlag
-//							|| checkOutputErrors(verbose, dim_cpu, streamIdx,
-//									fv_cpu[streamIdx], fv_cpu_GOLD);
-//				}
-//				if (reloadFlag) {
-//					readInput(dim_cpu, input_distances, &rv_cpu, input_charges,
-//							&qv_cpu, fault_injection);
-//					readGold(dim_cpu, output_gold, fv_cpu_GOLD);
-//
-//					gpu_memory_unset(nstreams, gpu_check, d_box_gpu, d_rv_gpu,
-//							d_qv_gpu, d_fv_gpu, d_fv_gold_gpu);
-//					gpu_memory_setup(nstreams, gpu_check, dim_cpu, d_box_gpu,
-//							box_cpu, d_rv_gpu, rv_cpu, d_qv_gpu, qv_cpu,
-//							d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD);
-//				}
-//			}
-//			if (verbose)
-//				printf("Gold check time: %f\n", mysecond() - timestamp);
-//		}
-//
-//		//================= PERF
-//		// iterate for each neighbor of a box (number_nn)
-//		double flop = number_nn;
-//		// The last for iterate NUMBER_PAR_PER_BOX times
-//		flop *= NUMBER_PAR_PER_BOX;
-//		// the last for uses 46 operations plus 2 exp() functions
-//		flop *= 46;
-//		flop *= nstreams;
-//		double flops = (double) flop / kernel_time;
-//		double outputpersec = (double) dim_cpu.space_elem * 4 * nstreams
-//				/ kernel_time;
-//		if (verbose)
-//			printf("BOXES:%d BLOCK:%d OUTPUT/S:%.2f FLOPS:%.2f (GFLOPS:%.2f)\n",
-//					dim_cpu.boxes1d_arg, NUMBER_THREADS, outputpersec, flops,
-//					flops / 1000000000);
-//		if (verbose)
-//			printf("Kernel time:%f\n", kernel_time);
-//		//=====================
-//
-//		printf(".");
-//		fflush(stdout);
-//
-//		double iteration_time = mysecond() - globaltimer;
-//		if (verbose)
-//			printf("Iteration time: %.4fs (%3.1f%% Device)\n", iteration_time,
-//					(kernel_time / iteration_time) * 100.0);
-//		if (verbose)
-//			printf("===================================\n");
-//
-//		fflush(stdout);
-//	}
-//
-//	gpu_memory_unset(nstreams, gpu_check, d_box_gpu, d_rv_gpu, d_qv_gpu,
-//			d_fv_gpu, d_fv_gold_gpu);
-//
-//	//=====================================================================
-//	//	SYSTEM MEMORY DEALLOCATION
-//	//=====================================================================
-//
-//	if (!generate && fv_cpu_GOLD)
-//		free(fv_cpu_GOLD);
-//
-//	//if (fv_cpu) free(fv_cpu);
-//	for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-//		free(fv_cpu[streamIdx]);
-//	}
-//
-//	if (rv_cpu)
-//		free(rv_cpu);
-//	if (qv_cpu)
-//		free(qv_cpu);
-//	if (box_cpu)
-//		free(box_cpu);
-//	printf("\n");
-//
-//#ifdef LOGS
-//	if (!generate) end_log_file();
-//#endif
+	//LOOP START
+	for (int loop = 0; loop < this->setup_parameters.iterations; loop++) {
+
+		if (this->setup_parameters.verbose)
+			std::cout << "======== Iteration  #" << loop << "  ========\n";
+
+		double globaltimer = Log::mysecond();
+		timestamp = Log::mysecond();
+
+		// for(i=0; i<dim_cpu.space_elem; i=i+1) {
+		// 	// set to 0, because kernels keeps adding to initial value
+		// 	fv_cpu[i].v = tested_type_host(0.0);
+		// 	fv_cpu[i].x = tested_type_host(0.0);
+		// 	fv_cpu[i].y = tested_type_host(0.0);
+		// 	fv_cpu[i].z = tested_type_host(0.0);
+		// }
+
+		//=====================================================================
+		//	GPU SETUP
+		//=====================================================================
+		for (int streamIdx = 0; streamIdx < this->setup_parameters.nstreams; streamIdx++) {
+			memset(fv_cpu[streamIdx].data(), 0x00, sizeof(FOUR_VECTOR<full>) * fv_cpu[streamIdx].size());
+
+			ld.d_fv_gpu[streamIdx].clear();
+		}
+
+		if (this->setup_parameters.verbose)
+			std::cout << "Setup prepare time: " << Log::mysecond() - timestamp
+					<< std::endl;
+
+		//=====================================================================
+		//	KERNEL
+		//=====================================================================
+
+		double kernel_time = Log::mysecond();
+		this->log.start_iteration_app();
+
+		// launch kernel - all boxes
+		for (int streamIdx = 0; streamIdx < this->setup_parameters.nstreams; streamIdx++) {
+			kernel_gpu_cuda<<<blocks, threads, 0, ld.streams[streamIdx]>>>(par_cpu,
+					dim_cpu, ld.d_box_gpu[streamIdx].data, ld.d_rv_gpu[streamIdx].data,
+					ld.d_qv_gpu[streamIdx].data, ld.d_fv_gpu[streamIdx].data);
+			checkFrameworkErrors(cudaPeekAtLastError());
+		}
+
+		for (int streamIdx = 0; streamIdx < this->setup_parameters.nstreams; streamIdx++) {
+			checkFrameworkErrors(cudaStreamSynchronize(ld.streams[streamIdx]));
+			checkFrameworkErrors(cudaPeekAtLastError());
+		}
+
+		this->log.end_iteration_app();
+
+		kernel_time = Log::mysecond() - kernel_time;
+
+		//=====================================================================
+		//	COMPARE OUTPUTS / WRITE GOLD
+		//=====================================================================
+		if (this->setup_parameters.generate) {
+			fv_cpu_GOLD = ld.d_fv_gpu[0].to_vector();
+			ld.writeGold();
+		} else {
+			timestamp = Log::mysecond();
+			bool checkOnHost = false;
+			checkOnHost = true;
+			if (checkOnHost) {
+				bool reloadFlag = false;
+#pragma omp parallel for shared(reloadFlag)
+				for (int streamIdx = 0; streamIdx < this->setup_parameters.nstreams; streamIdx++) {
+						fv_cpu[streamIdx] = ld.d_fv_gpu[streamIdx].to_vector();
+
+					reloadFlag = reloadFlag
+							|| ld.checkOutputErrors();
+				}
+				if (reloadFlag) {
+					ld.readInput();
+					ld.readGold();
+				}
+			}
+			if (this->setup_parameters.verbose)
+				std::cout << "Gold check time: " << Log::mysecond() - timestamp << std::endl;
+		}
+
+		//================= PERF
+		// iterate for each neighbor of a box (number_nn)
+		double flop = number_nn;
+		// The last for iterate NUMBER_PAR_PER_BOX times
+		flop *= NUMBER_PAR_PER_BOX;
+		// the last for uses 46 operations plus 2 exp() functions
+		flop *= 46;
+		flop *= this->setup_parameters.nstreams;
+		double flops = (double) flop / kernel_time;
+		double outputpersec = (double) dim_cpu.space_elem * 4 * this->setup_parameters.nstreams
+				/ kernel_time;
+		if (this->setup_parameters.verbose)
+			printf("BOXES:%d BLOCK:%d OUTPUT/S:%.2f FLOPS:%.2f (GFLOPS:%.2f)\n",
+					dim_cpu.boxes1d_arg, NUMBER_THREADS, outputpersec, flops,
+					flops / 1000000000);
+		if (this->setup_parameters.verbose)
+			printf("Kernel time:%f\n", kernel_time);
+		//=====================
+
+		printf(".");
+		fflush(stdout);
+
+		double iteration_time = Log::mysecond() - globaltimer;
+		if (this->setup_parameters.verbose)
+			printf("Iteration time: %.4fs (%3.1f%% Device)\n", iteration_time,
+					(kernel_time / iteration_time) * 100.0);
+		if (this->setup_parameters.verbose)
+			printf("===================================\n");
+
+		fflush(stdout);
+	}
+
 
 }
 
 void LavaExecute::execute() {
 	switch (this->setup_parameters.redundancy) {
-		case NONE:
-		case DMR:
-			switch (this->setup_parameters.precision) {
-			case HALF:
+	case NONE:
+	case DMR:
+		switch (this->setup_parameters.precision) {
+		case HALF:
 
-				generic_execute<half, half>();
-				break;
-
-			case SINGLE:
-				generic_execute<float, float>();
-				break;
-
-			case DOUBLE:
-				generic_execute<double, double>();
-				break;
-
-			}
+			generic_execute<half, half>();
 			break;
 
-		case DMRMIXED:
-			switch (this->setup_parameters.precision) {
-			case SINGLE:
-				generic_execute<float, half>();
-				break;
+		case SINGLE:
+			generic_execute<float, float>();
+			break;
 
-			case DOUBLE:
-				generic_execute<double, float>();
-				break;
-
-			}
+		case DOUBLE:
+			generic_execute<double, double>();
 			break;
 
 		}
+		break;
+
+	case DMRMIXED:
+		switch (this->setup_parameters.precision) {
+		case SINGLE:
+			generic_execute<float, half>();
+			break;
+
+		case DOUBLE:
+			generic_execute<double, float>();
+			break;
+
+		}
+		break;
+
+	}
 }

@@ -41,10 +41,11 @@
 //	plasmaKernel_gpu_2
 //-----------------------------------------------------------------------------
 // #if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
-__global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu,
-		box_str* d_box_gpu, FOUR_VECTOR* d_rv_gpu, tested_type* d_qv_gpu,
-		FOUR_VECTOR* d_fv_gpu) {
-
+template<typename full>
+__global__ void kernel_gpu_cuda(par_str<full> d_par_gpu, dim_str d_dim_gpu,
+		box_str* d_box_gpu, FOUR_VECTOR<full>* d_rv_gpu, full* d_qv_gpu,
+		FOUR_VECTOR<full>* d_fv_gpu) {
+/*
 	//---------------------------------------------------------------------
 	//	THREAD PARAMETERS
 	//---------------------------------------------------------------------
@@ -221,6 +222,7 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu,
 		//	nei box loop END
 		//------------------------------------------------------------------------------------------------------------------------------------------------------160
 	}
+*/
 }
 
 
