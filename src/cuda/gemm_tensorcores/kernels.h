@@ -107,7 +107,7 @@ namespace experimental {
     enum bmmaAccumulateOp { bmmaAccumulateOpPOPC = 1 }; 
 } 
 
-__device__ real_t errors = 0;
+__device__ float errors = 0;
 //-------------------------------------------------------------------------------------------------
 //FULL gemm function
 //-------------------------------------------------------------------------------------------------
@@ -479,7 +479,7 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 template<class half_t, class real_t, class fragment>
 __device__ real_t inline error_voter (real_t d_shared, wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t,
 wmma::row_major> &acc_frag){
-	
+	__device__ real_t errors = 0;
 	register real_t error_checker = d_shared - acc_frag;
 	if (error_checker > 0) {
 		atomicAdd(&errors, 1);
