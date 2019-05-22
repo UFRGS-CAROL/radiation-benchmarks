@@ -490,10 +490,9 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 // 	return 0;
 // }
 
-__device__ float inline error_voter (wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half,
-wmma::row_major> &acc_frag){
+__device__ float inline error_voter (float* acc_frag){
 	
-	register half error_checker = acc_frag;
+	register float error_checker = acc_frag;
 	if (error_checker > 0) {
 		atomicAdd(&errors, 1);
 		return errors;
