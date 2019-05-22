@@ -108,6 +108,9 @@ namespace experimental {
 } 
 
 __device__ float errors = 0;
+
+template<typename Use, int m, int n, int k, typename T, typename Layout=void> class fragment;
+
 //-------------------------------------------------------------------------------------------------
 //FULL gemm function
 //-------------------------------------------------------------------------------------------------
