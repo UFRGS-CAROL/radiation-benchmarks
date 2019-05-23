@@ -10,6 +10,10 @@
 
 #include "cuda_utils.h"
 
+#define ZERO_FLOAT 1e-37
+#define ZERO_HALF 1e-13
+
+
 __device__ __forceinline__ double abs__(double a) {
 	return fabs(a);
 }
@@ -22,14 +26,27 @@ __device__ __forceinline__ half abs__(half a) {
 	return fabsf(a);
 }
 
-template<typename incomplete, typename full>
-__device__ __forceinline__ void check_relative_error(incomplete acc_incomplete,
-		full acc_full, full e) {
-	register full relative_error = abs__(acc_full - full(acc_incomplete))
-			/ acc_full;
-	if (relative_error > e) {
+__device__ __forceinline__ void compare(const float lhs, const half rhs) {
+	const float diff = abs__(lhs - float(rhs));
+	const float zero = float(ZERO_HALF);
+	if (diff > zero) {
 		atomicAdd(&errors, 1);
 	}
+}
+
+__device__ __forceinline__ void compare(const double lhs, const float rhs) {
+	const double diff = abs__(lhs - double(rhs));
+	const double zero = double(ZERO_FLOAT);
+	if (diff > zero) {
+		atomicAdd(&errors, 1);
+	}
+}
+
+
+template<typename incomplete, typename full>
+__device__ __forceinline__ void check_relative_error(incomplete acc_incomplete,
+		full acc_full) {
+	compare(acc_full, acc_incomplete);
 }
 
 /**

@@ -18,8 +18,8 @@
 
 template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
-		full *d_R0_second, full error_threshold, const full OUTPUT_R,
-		const full INPUT_A, const full INPUT_B) {
+		full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
+		const full INPUT_B) {
 	volatile register full acc_full = OUTPUT_R;
 	volatile register full input_a_full = INPUT_A;
 	volatile register full input_b_full = INPUT_B;
@@ -49,7 +49,7 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 
 	}
 
-	check_relative_error(acc_incomplete, acc_full, error_threshold);
+	check_relative_error(acc_incomplete, acc_full);
 
 	//d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
@@ -64,8 +64,8 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 
 template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
-		full *d_R0_second, full error_threshold, const full OUTPUT_R,
-		const full INPUT_A, const full INPUT_B) {
+		full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
+		const full INPUT_B) {
 // ========================================== Double and Single precision
 	volatile register full acc_full = OUTPUT_R;
 	volatile register full input_a = OUTPUT_R;
@@ -87,7 +87,7 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 		acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
 	}
 
-	check_relative_error(acc_incomplete, acc_full, error_threshold);
+	check_relative_error(acc_incomplete, acc_full);
 
 	//d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
@@ -101,8 +101,8 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 
 template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
-		full *d_R0_second, full error_threshold, const full OUTPUT_R,
-		const full INPUT_A, const full INPUT_B) {
+		full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
+		const full INPUT_B) {
 
 	volatile register full acc_full = OUTPUT_R;
 	volatile register full input_a_full = INPUT_A;
@@ -110,7 +110,8 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 
 	volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
 	volatile register incomplete input_a_incomplete = incomplete(INPUT_B);
-	volatile register incomplete input_a_inv_incomplete = incomplete(1.0) / incomplete(INPUT_B);
+	volatile register incomplete input_a_inv_incomplete = incomplete(1.0)
+			/ incomplete(INPUT_B);
 
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
 		acc_full = mul_dmr(acc_full, input_a_full);
@@ -124,7 +125,7 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 		acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
 	}
 
-	check_relative_error(acc_incomplete, acc_full, error_threshold);
+	check_relative_error(acc_incomplete, acc_full);
 
 	//d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
