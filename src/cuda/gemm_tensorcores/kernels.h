@@ -109,7 +109,6 @@ namespace experimental {
 
 __device__ float errors = 0;
 
-fragment<real_t> frag;
 
 
 //-------------------------------------------------------------------------------------------------
@@ -483,7 +482,7 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 	}
 }
 
-template<class real_t, class frag>
+template<class real_t, class real_t>
 __device__ void inline error_voter (real_t d_shared, wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t,
 wmma::row_major> &acc_frag){
 	
@@ -506,7 +505,7 @@ wmma::row_major> &acc_frag){
 // }
 
 // template<class real_t>
-// __device__ void inline error_voter (real_t d_shared, wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> &c_frag){
+// __device__ void inline error_voter (real_t d_shared){
 	
 // 	 printf("%f \n ",d_shared[threadIdx.x][threadIdx.y]);
 // 	//if (error_checker > 0) {
