@@ -583,13 +583,22 @@ __global__ void matrix_mul(half_t *a0, half_t *b0, real_t *c0, real_t*d0,
 	d0[ty * mul_N + tx] = (real_t) acc;
 }
 
-__device__ __forceinline__ float mul_(float a, ) {
-        return fabsf(a);
+__device__ __forceinline__ float mul_(float a, float b ) {
+        return fmul_ru(a, b);
 }
 
-__device__    __forceinline__ half mul_(half a) {
-        return fabsf(a);
+__device__    __forceinline__ half mul_(half a, half b) {
+        return hmul(a, b);
 }
+
+__device__ __forceinline__ float sum_(float a, float b ) {
+        return fadd_ru(a, b);
+}
+
+__device__    __forceinline__ half sum_(half a, half b) {
+        return hadd(a, b);
+}
+
 
 
 template<class half_t, class real_t>
@@ -611,17 +620,23 @@ __global__ void simple_wmma_gemm_no_tensor(half_t *a, half_t *b, real_t *c, real
 	
 	real_t acc1 = 0;
 	real_t acc2 = 0;
+	real_t d1 = 0;
+	real_t d2 = 0;
 
 	__syncthreads();
 	
 
 	for(int i = 0; i < WMMA_N; i++){
-		 acc += //fma real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
+		 acc1 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
+		 acc2 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
 
 	}
 	//intrinsics mul e add - declarar dois d variáveis e depois salvar em d_shared
-	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
+	d1 = sum_(mul_(acc1,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
+	d2 = sum_(mul_(acc2,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
+	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
+	d_shared[threadIdx.x][threadIdx.y] = d1; 
 
 }			
 
