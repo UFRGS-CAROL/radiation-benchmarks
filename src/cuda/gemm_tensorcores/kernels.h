@@ -497,7 +497,7 @@ __device__ void inline error_voter (wmma::fragment<wmma::accumulator, WMMA_M, WM
 	//register real_t error_checker = c_frag;
 	//if (error_checker > 0) {
 	//	atomicAdd(&errors, 1);		
-	}
+	// }
 	
 }
 
