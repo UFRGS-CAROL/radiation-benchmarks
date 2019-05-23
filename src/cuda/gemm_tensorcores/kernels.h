@@ -491,7 +491,7 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 // }
 
 template<class fragment>
-__device__ half inline error_voter (wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> &c_frag;{
+__device__ half inline error_voter (wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> &c_frag;{
 	
 	register float error_checker = c_frag;
 	if (error_checker > 0) {
