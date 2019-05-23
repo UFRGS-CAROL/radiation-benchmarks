@@ -400,6 +400,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 			for (int i = 0; i < c_frag.num_elements; i++) {
 				c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
 			}
+			printf("%f \n ",c_frag);
 			error_voter(c_frag);
 
 			// Store the output
@@ -494,7 +495,7 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 template<class real_t>
 __device__ void inline error_voter (wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> &c_frag){
 	
-	printf("%f \n ",c_frag);
+	// printf("%f \n ",c_frag);
 	//if (error_checker > 0) {
 	//	atomicAdd(&errors, 1);		
 	// }
