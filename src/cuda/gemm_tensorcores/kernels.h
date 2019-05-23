@@ -357,7 +357,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	}
 
 	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
-
+	printf("%f \n ",d_shared);
 	// }
 	
 
@@ -506,7 +506,7 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 template<class real_t>
 __device__ void inline error_voter (real_t d_shared){
 	
-	 printf("%f \n ",d_shared);
+	 // printf("%f \n ",d_shared);
 	//if (error_checker > 0) {
 	//	atomicAdd(&errors, 1);		
 	// }
