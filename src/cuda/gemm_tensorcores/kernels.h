@@ -506,7 +506,7 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 template<class real_t>
 __device__ void inline error_voter (real_t d_shared){
 	
-	// printf("%f \n ",c_frag);
+	 printf("%f \n ",d_shared);
 	//if (error_checker > 0) {
 	//	atomicAdd(&errors, 1);		
 	// }
