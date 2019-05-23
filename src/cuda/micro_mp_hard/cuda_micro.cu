@@ -25,7 +25,7 @@
 // Returns the number of errors found
 // if no errors were found it returns 0
 template<typename T>
-int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
+int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose, unsigned long long dmr_errors) {
 	int host_errors = 0;
 	double gold = double(OUTPUT_R);
 #pragma omp parallel for shared(host_errors)
@@ -50,6 +50,14 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose) {
 				host_errors++;
 			}
 		}
+	}
+
+	if(dmr_errors != 0){
+		std::stringstream error_detail;
+		error_detail << "detected_dmr_errors: " << dmr_errors;;
+#ifdef LOGS
+				log_error_detail(const_cast<char*>(error_detail.str().c_str()));
+#endif
 	}
 
 	if (host_errors != 0) {
@@ -116,19 +124,19 @@ void test_radiation(Type<incomplete>& type_, Parameters& parameters) {
 			case ADD:
 				MicroBenchmarkKernel_ADD<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data, device_vector_full.data, 0.1,
+						device_vector_inc.data, device_vector_full.data,
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			case MUL:
 				MicroBenchmarkKernel_MUL<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data, device_vector_full.data, 0.1,
+						device_vector_inc.data, device_vector_full.data,
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			case FMA:
 				MicroBenchmarkKernel_FMA<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data, device_vector_full.data, 0.1,
+						device_vector_inc.data, device_vector_full.data,
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			}
@@ -149,14 +157,16 @@ void test_radiation(Type<incomplete>& type_, Parameters& parameters) {
 		min_kernel_time = std::min(min_kernel_time, kernel_time);
 		max_kernel_time = std::max(max_kernel_time, kernel_time);
 
-
 		//check output
 		host_vector_full = device_vector_full.to_vector();
-		int errors = check_output_errors<full>(host_vector_full, type_.output_r,
-				parameters.verbose);
 		unsigned long long relative_errors = copy_errors();
-		double outputpersec = double(parameters.r_size) / kernel_time;
 
+		int errors = check_output_errors<full>(host_vector_full, type_.output_r,
+				parameters.verbose, relative_errors);
+
+
+
+		double outputpersec = double(parameters.r_size) / kernel_time;
 		if (parameters.verbose) {
 			/////////// PERF
 			std::cout << "SIZE:" << parameters.r_size;
@@ -232,7 +242,7 @@ int main(int argc, char* argv[]) {
 //================== Set block and grid size for MxM kernel
 	cudaDeviceProp prop = GetDevice();
 	Parameters parameters(argc, argv, prop.multiProcessorCount, 256);
-	if(parameters.verbose){
+	if (parameters.verbose) {
 		std::cout << "Get device Name: " << prop.name << std::endl;
 	}
 //================== Init logs
