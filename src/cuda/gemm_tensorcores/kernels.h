@@ -357,7 +357,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	}
 
 	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
-	printf("%f \n ",d_shared);
+	printf("%f \n ",d_shared[threadIdx.x][threadIdx.y]);
 	// }
 	
 
