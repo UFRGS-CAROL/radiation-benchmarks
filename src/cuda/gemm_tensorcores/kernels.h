@@ -358,7 +358,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	}
 
 	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
-	printf("%f \n ",d_shared[threadIdx.x][threadIdx.y]);
+	// printf("%f \n ",d_shared[threadIdx.x][threadIdx.y]);
 	// }
 	
 
@@ -402,8 +402,8 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 				c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
 			}
 
-			// error_voter(c_frag);
-			error_voter(d_shared, c_frag);
+			error_voter(c_frag);
+			// error_voter(d_shared, c_frag);
 
 			// Store the output
 			wmma::store_matrix_sync(d0 + cCol + cRow * ldc, c_frag, ldc,
@@ -482,27 +482,27 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 	}
 }
 
-template<class real_t, class half_t>
-__device__ void inline error_voter (real_t d_shared, wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t,
-wmma::row_major> &acc_frag){
-	
-	register real_t error_checker = d_shared - acc_frag;
-	if (error_checker > 0) {
-		atomicAdd(&errors, 1);
-		return errors;
-	}
-	return 0;
-}
-
 // template<class real_t>
-// __device__ void inline error_voter (wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> &c_frag){
+// __device__ void inline error_voter (real_t d_shared, wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t,
+// wmma::row_major> &acc_frag){
 	
-// 	// printf("%f \n ",c_frag);
-// 	//if (error_checker > 0) {
-// 	//	atomicAdd(&errors, 1);		
-// 	// }
-	
+// 	register real_t error_checker = d_shared - acc_frag;
+// 	if (error_checker > 0) {
+// 		atomicAdd(&errors, 1);
+// 		return errors;
+// 	}
+// 	return 0;
 // }
+
+template<class real_t>
+__device__ void inline error_voter (wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> &c_frag){
+	
+	// printf("%f \n ",c_frag);
+	//if (error_checker > 0) {
+	//	atomicAdd(&errors, 1);		
+	// }
+	
+}
 
 // template<class real_t>
 // __device__ void inline error_voter (real_t d_shared){
