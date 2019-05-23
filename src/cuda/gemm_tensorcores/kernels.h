@@ -11,7 +11,8 @@
 
 #include <mma.h>
 #include <cuda_fp16.h>
-
+//#include <cuda_runtime_api.h>
+#include "cuda_utils.h"
 
 // helper functions and utilities to work with CUDA
 #include <helper_cuda.h>
@@ -352,29 +353,29 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c_frag;
 
 
-	// // if ((threadIdx.x | threadIdx.y ) == 0 ){
-	// __shared__ half_t a_shared[WMMA_M][WMMA_N];
-	// __shared__ half_t b_shared[WMMA_M][WMMA_N];
-	// __shared__ real_t c_shared[WMMA_M][WMMA_N];
-	// __shared__ real_t d_shared[WMMA_M][WMMA_N];
 
-	// a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	__shared__ half_t a_shared[WMMA_M][WMMA_N];
+	__shared__ half_t b_shared[WMMA_M][WMMA_N];
+	__shared__ real_t c_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d_shared[WMMA_M][WMMA_N];
 
-	// b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-	// c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
+	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-	// d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
-	// real_t acc = 0;
+	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
 
-	// __syncthreads();
+	d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	real_t acc = 0;
+
+	__syncthreads();
 	
 
-	// for(int i = 0; i < WMMA_N; i++){
-	// 	 acc += real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
+	for(int i = 0; i < WMMA_N; i++){
+		 acc += real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
 
-	// }
-	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
+	}
+	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
 
 	
 
@@ -419,13 +420,13 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 			}
 
 
-		// for(int i = 0; i < WMMA_N; i++)
-		// 	for(int j = 0; j < WMMA_M; j++){
-		// 		register real_t error_checker = abs_(d_shared[i][j] - acc_frag.x[i * WMMA_M + j]);
-		// 		if (error_checker > real_t(0.0)) {
-		// 			atomicAdd(&errors, 1);					
-		// 		}
-		// }	
+		for(int i = 0; i < WMMA_N; i++)
+			for(int j = 0; j < WMMA_M; j++){
+				register real_t error_checker = abs_(d_shared[i][j] - acc_frag.x[i * WMMA_M + j]);
+				if (error_checker > real_t(0.0)) {
+					atomicAdd(&errors, 1);					
+				}
+		}	
 
 
 
@@ -506,31 +507,7 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 	}
 }
 
-/*template<class real_t>
-__device__ void inline error_voter (__shared__ real_t **d_shared, wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t>& acc_frag){
-	
-	return 0;
-}*/
 
-// template<class real_t>
-// __device__ void inline error_voter (wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> &c_frag){
-	
-// 	// printf("%f \n ",c_frag);
-// 	//if (error_checker > 0) {
-// 	//	atomicAdd(&errors, 1);		
-// 	// }
-	
-// }
-
-// template<class real_t>
-// __device__ void inline error_voter (real_t d_shared){
-	
-// 	 printf("%f \n ",d_shared[threadIdx.x][threadIdx.y]);
-// 	//if (error_checker > 0) {
-// 	//	atomicAdd(&errors, 1);		
-// 	// }
-	
-// }
 
 template<class real_t>
 __device__ real_t inline read_voter(real_t *v1, real_t *v2, real_t *v3,
@@ -606,5 +583,61 @@ __global__ void matrix_mul(half_t *a0, half_t *b0, real_t *c0, real_t*d0,
 
 	d0[ty * mul_N + tx] = (real_t) acc;
 }
+
+__device__ __forceinline__ float mul_(float a, float b ) {
+        return fmul_ru(a,b);
+}
+
+__device__    __forceinline__ half mul_(half a, half b) {
+        return hmul(a, b);
+}
+
+__device__ __forceinline__ float sum_(float a, float b ) {
+        return fadd_ru(a, b);
+}
+
+__device__    __forceinline__ half sum_(half a, half b) {
+        return hadd(a, b);
+}
+
+
+
+template<class half_t, class real_t>
+__global__ void simple_wmma_gemm_no_tensor(real_t alpha, real_t beta) {
+
+	__shared__ half_t a_shared[WMMA_M][WMMA_N];
+	__shared__ half_t b_shared[WMMA_M][WMMA_N];
+	__shared__ real_t c_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d_shared[WMMA_M][WMMA_N];
+
+	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+
+	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+
+	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
+
+	d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	
+	real_t acc1 = 0;
+	real_t acc2 = 0;
+	real_t d1 = 0;
+	real_t d2 = 0;
+
+	__syncthreads();
+	
+
+	for(int i = 0; i < WMMA_N; i++){
+		 acc1 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
+		 acc2 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
+
+	}
+	//intrinsics mul e add - declarar dois d variáveis e depois salvar em d_shared
+	d1 = sum_(mul_(acc1,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
+	d2 = sum_(mul_(acc2,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
+
+	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
+	d_shared[threadIdx.x][threadIdx.y] = d1; 
+
+}			
 
 #endif /* KERNELS_H_ */
