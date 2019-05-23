@@ -11,6 +11,7 @@
 
 #include <mma.h>
 #include <cuda_fp16.h>
+#include <math.h>
 
 
 // helper functions and utilities to work with CUDA
