@@ -66,6 +66,12 @@ unsigned long long copy_errors() {
 	checkFrameworkErrors(
 			cudaMemcpyFromSymbol(&errors_host, errors,
 					sizeof(unsigned long long), 0, cudaMemcpyDeviceToHost));
+
+	unsigned long long temp = 0;
+	//Reset the errors variable
+	checkFrameworkErrors(
+				cudaMemcpyToSymbol(errors, &temp,
+						sizeof(unsigned long long), 0, cudaMemcpyHostToDevice));
 	return errors_host;
 }
 
