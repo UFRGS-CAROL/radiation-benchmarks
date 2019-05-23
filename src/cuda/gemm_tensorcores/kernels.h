@@ -402,7 +402,7 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 				c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
 			}
 
-			error_voter(d_shared, c_frag;
+			error_voter(d_shared, c_frag);
 			// error_voter(d_shared, c_frag);
 
 			// Store the output
