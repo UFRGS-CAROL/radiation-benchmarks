@@ -640,7 +640,7 @@ __global__ void simple_wmma_gemm_no_tensor(real_t alpha, real_t beta) {
 
 	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
 	d_shared[threadIdx.x][threadIdx.y] = d1; 
-	}
+	
 
 }			
 
