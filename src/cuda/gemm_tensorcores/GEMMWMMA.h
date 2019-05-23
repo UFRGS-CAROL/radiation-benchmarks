@@ -297,7 +297,39 @@ public:
 
 	}
 
+	void mul_wmma_MDR_no_tensor(){
+		this->debug("thread dim allocation");
+		//		// Setup execution parameters
+				// First: using WMMA
+				dim3 grid_dim;
+				dim3 block_dim;
+
+				// block_dim.x must be a multple of warpSize
+				// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+				block_dim.x = WMMA_M; //128;
+		    		block_dim.y = WMMA_N; //4;
 	
+
+				grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
+						/ (WMMA_M * block_dim.x / WARP_SIZE);
+				grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
+						/ (WMMA_N * block_dim.y);
+
+			 	
+				this->debug("matrix multiplication");
+				
+				
+				check_framework_errors(
+						cudaMemset(this->device_is_memory_bad, 0x0,
+								sizeof(unsigned long long int)));			
+				
+
+				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->alpha, this->beta);
+
+
+
+
+	}	
 
 	void mul_wmma_triplicated() {
 		this->debug("thread dim allocation");

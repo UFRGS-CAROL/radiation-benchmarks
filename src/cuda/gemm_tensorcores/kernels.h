@@ -11,8 +11,7 @@
 
 #include <mma.h>
 #include <cuda_fp16.h>
-//#include <cuda_runtime_api.h>
-#include <cuda_utils.h>
+
 
 // helper functions and utilities to work with CUDA
 #include <helper_cuda.h>
@@ -635,8 +634,13 @@ __global__ void simple_wmma_gemm_no_tensor(real_t alpha, real_t beta) {
 	d1 = sum_(mul_(acc1,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 	d2 = sum_(mul_(acc2,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
+	if ((d1 - d2) != 0){
+		atomicAdd(&errors, 1);
+	}	
+
 	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
 	d_shared[threadIdx.x][threadIdx.y] = d1; 
+	
 
 }			
 
