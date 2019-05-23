@@ -12,7 +12,7 @@
 #include <mma.h>
 #include <cuda_fp16.h>
 //#include <cuda_runtime_api.h>
-#include "cuda_utils.h"
+#include <cuda_utils.h>
 
 // helper functions and utilities to work with CUDA
 #include <helper_cuda.h>
@@ -585,19 +585,19 @@ __global__ void matrix_mul(half_t *a0, half_t *b0, real_t *c0, real_t*d0,
 }
 
 __device__ __forceinline__ float mul_(float a, float b ) {
-        return fmul_ru(a,b);
+        return __fmul_ru(a,b);
 }
 
 __device__    __forceinline__ half mul_(half a, half b) {
-        return hmul(a, b);
+        return __hmul(a, b);
 }
 
 __device__ __forceinline__ float sum_(float a, float b ) {
-        return fadd_ru(a, b);
+        return __fadd_ru(a, b);
 }
 
 __device__    __forceinline__ half sum_(half a, half b) {
-        return hadd(a, b);
+        return __hadd(a, b);
 }
 
 
@@ -631,7 +631,7 @@ __global__ void simple_wmma_gemm_no_tensor(real_t alpha, real_t beta) {
 		 acc2 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
 
 	}
-	//intrinsics mul e add - declarar dois d variáveis e depois salvar em d_shared
+	
 	d1 = sum_(mul_(acc1,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 	d2 = sum_(mul_(acc2,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
