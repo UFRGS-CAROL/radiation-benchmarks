@@ -311,6 +311,24 @@ __device__ real_t inline read_voter_wmma(real_t *v1, real_t *v2, real_t *v3, int
 
 	return in1;
 }
+
+
+
+__device__ __forceinline__ double abs_(double a) {
+        return fabs(a);
+}
+
+__device__ __forceinline__ float abs_(float a) {
+        return fabsf(a);
+}
+
+__device__    __forceinline__ half abs_(half a) {
+        return fabsf(a);
+}
+
+
+
+
 template<class half_t, class real_t>
 __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 		int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
@@ -402,8 +420,18 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 				c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
 			}
 
-			error_voter(d_shared, c_frag);
+			//error_voter(d_shared, c_frag);
 			// error_voter(d_shared, c_frag);
+		for(int i = 0; i < WMMA_N; i++)
+			for(int j = 0; j < WMMA_M; j++){
+				register real_t error_checker = abs_(d_shared[i][j] - acc_frag.x[i * WMMA_M + j]);
+				if (error_checker > real_t(0.0)) {
+					atomicAdd(&errors, 1);
+					//return errors;
+				}
+		}	
+
+
 
 			// Store the output
 			wmma::store_matrix_sync(d0 + cCol + cRow * ldc, c_frag, ldc,
@@ -482,17 +510,11 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 	}
 }
 
-template<class real_t>
-__device__ void inline error_voter (real_t d_shared, wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t,
-wmma::row_major> &acc_frag){
+/*template<class real_t>
+__device__ void inline error_voter (__shared__ real_t **d_shared, wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t>& acc_frag){
 	
-	register real_t error_checker = d_shared - acc_frag;
-	if (error_checker > 0) {
-		atomicAdd(&errors, 1);
-		return errors;
-	}
 	return 0;
-}
+}*/
 
 // template<class real_t>
 // __device__ void inline error_voter (wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> &c_frag){
