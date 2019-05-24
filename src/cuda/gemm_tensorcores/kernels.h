@@ -750,8 +750,8 @@ __global__ void simple_gemm_no_dmr(size_t mul_N, real_t*d0, real_t alpha, real_t
 	for(int i = 0; i < WMMA_N; i++){
 		 // acc1 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
 		 //acc2 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
-		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc);
-		 ;
+		 acc= fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc);
+		 
 
 	}
 	
