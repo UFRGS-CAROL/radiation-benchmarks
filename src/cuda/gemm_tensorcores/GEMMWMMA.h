@@ -180,6 +180,7 @@ public:
 
 	void mul_mxm() {
 
+//		printf("entrou \n");
 		this->debug("thread dim allocation");
 		//		// Setup execution parameters
 		// Setup execution parameters
@@ -289,10 +290,9 @@ public:
 				
 
 				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
-						this->device_ptr_d0, this->device_ptr_d1,this->device_ptr_d2,
-						this->rows_a, this->cols_b, this->cols_c, this->alpha, this->beta);
-
-
+				this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+				this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
+				this->alpha, this->beta);
 
 
 	}
@@ -307,7 +307,7 @@ public:
 				// block_dim.x must be a multple of warpSize
 				// 128x4 means we have 16 warps and a block computes a 64x64 output tile
 				block_dim.x = WMMA_M; //128;
-		    		block_dim.y = WMMA_N; //4;
+		    	block_dim.y = WMMA_N; //4;
 	
 
 				grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
@@ -323,8 +323,9 @@ public:
 						cudaMemset(this->device_is_memory_bad, 0x0,
 								sizeof(unsigned long long int)));			
 				
-
-				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->alpha, this->beta);
+ 
+				// simple_wmma_gemm_no_tensor<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->alpha, this->beta);
+				 simple_wmma_gemm_no<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->alpha, this->beta);
 
 
 
