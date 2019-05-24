@@ -737,10 +737,10 @@ __global__ void simple_wmma_gemm_no(size_t mul_N, real_t*d0, real_t alpha, real_
 
 	}
 	
-	d1 = sum_(mul_(acc1,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
+	d = sum_(mul_(acc,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
 	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
-	d0[ty * mul_N + tx] = d1; 
+	d0[ty * mul_N + tx] = d; 
 	
 
 }				
