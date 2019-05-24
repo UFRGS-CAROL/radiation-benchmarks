@@ -600,6 +600,14 @@ __device__    __forceinline__ half sum_(half a, half b) {
 }
 
 
+__device__ __forceinline__ float fma_(float a, float b, float c ) {
+        return fmaf(a, b,c);
+}
+
+__device__    __forceinline__ half fma_(half a, half b, half c) {
+        return __hfma(a, b, c);
+}
+
 
 template<class half_t, class real_t>
 __global__ void simple_wmma_gemm_no_tensor(real_t alpha, real_t beta) {
@@ -626,8 +634,10 @@ __global__ void simple_wmma_gemm_no_tensor(real_t alpha, real_t beta) {
 	
 
 	for(int i = 0; i < WMMA_N; i++){
-		 acc1 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
+		 // acc1 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
 		 acc2 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
+		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc1);
+		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc2);
 
 	}
 	
