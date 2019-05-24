@@ -324,7 +324,7 @@ public:
 								sizeof(unsigned long long int)));			
 				
 
-				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->alpha, this->beta);
+				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->rows_a, this->device_ptr_d0, this->alpha, this->beta);
 
 
 

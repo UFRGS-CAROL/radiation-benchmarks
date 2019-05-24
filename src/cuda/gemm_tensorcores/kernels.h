@@ -610,7 +610,7 @@ __device__    __forceinline__ half fma_(half a, half b, half c) {
 
 
 template<class half_t, class real_t>
-__global__ void simple_wmma_gemm_no_tensor(real_t alpha, real_t beta) {
+__global__ void simple_wmma_gemm_no_tensor(size_t mul_M, real_t*d0, real_t alpha, real_t beta) {
 
 	__shared__ half_t a_shared[WMMA_M][WMMA_N];
 	__shared__ half_t b_shared[WMMA_M][WMMA_N];
@@ -646,10 +646,13 @@ __global__ void simple_wmma_gemm_no_tensor(real_t alpha, real_t beta) {
 
 	if ((d1 - d2) != 0){
 		atomicAdd(&errors, 1);
-	}	
+	}
+
+	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 
 	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
-	d_shared[threadIdx.x][threadIdx.y] = d1; 
+	d0[ty * mul_N + tx] = d1; 
 	
 
 }			
