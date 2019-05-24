@@ -324,7 +324,8 @@ public:
 						cudaMemset(this->device_is_memory_bad, 0x0,
 								sizeof(unsigned long long int)));			
 				
-
+ 
+ 
 				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->alpha, this->beta);
 
 

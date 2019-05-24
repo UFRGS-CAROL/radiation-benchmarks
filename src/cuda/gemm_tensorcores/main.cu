@@ -411,7 +411,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				 mult_enviroment.mul_wmma_MDR();
 
 			} else {
-				mult_enviroment.mul_mxm();
+				//mult_enviroment.mul_mxm();
+				mult_enviroment.mul_wmma_MDR_no_tensor();
 			}
 		}
 		log_obj.end_iteration_app();
