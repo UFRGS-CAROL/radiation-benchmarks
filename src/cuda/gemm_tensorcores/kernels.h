@@ -658,7 +658,7 @@ __global__ void simple_wmma_gemm_no_tensor(size_t mul_N, real_t*d0, real_t alpha
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	
-	printf("entrou fma sem tensor \n");
+	
 	__shared__ half_t a_shared[WMMA_M][WMMA_N];
 	__shared__ half_t b_shared[WMMA_M][WMMA_N];
 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
@@ -709,7 +709,6 @@ __global__ void simple_wmma_gemm_no(size_t mul_N, real_t*d0, real_t alpha, real_
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	
-	printf("entrou fma sem tensor \n");
 	__shared__ half_t a_shared[WMMA_M][WMMA_N];
 	__shared__ half_t b_shared[WMMA_M][WMMA_N];
 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
