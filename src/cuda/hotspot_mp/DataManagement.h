@@ -237,10 +237,10 @@ struct DataManagement {
 					num_nans++;
 			}
 		}
-
-		std::cout << "Zeros in the input: " << num_zeros << std::endl;
-		std::cout << "NaNs in the input: " << num_nans << std::endl;
-
+		if (this->parameters.verbose) {
+			std::cout << "Zeros in the input: " << num_zeros << std::endl;
+			std::cout << "NaNs in the input: " << num_nans << std::endl;
+		}
 		// =================== FAULT INJECTION
 		if (this->parameters.fault_injection) {
 			temperature[32] = 6.231235;
