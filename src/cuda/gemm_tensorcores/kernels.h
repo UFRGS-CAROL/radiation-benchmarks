@@ -658,7 +658,7 @@ __global__ void simple_wmma_gemm_no_tensor(size_t mul_N, real_t*d0, real_t alpha
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	
-
+	printf("entrou fma sem tensor \n");
 	__shared__ half_t a_shared[WMMA_M][WMMA_N];
 	__shared__ half_t b_shared[WMMA_M][WMMA_N];
 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
@@ -701,6 +701,48 @@ __global__ void simple_wmma_gemm_no_tensor(size_t mul_N, real_t*d0, real_t alpha
 	d0[ty * mul_N + tx] = d1; 
 	
 
-}			
+}
+
+template<class half_t, class real_t>
+__global__ void simple_wmma_gemm_no(size_t mul_N, real_t*d0, real_t alpha, real_t beta) {
+
+	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+	
+	printf("entrou fma sem tensor \n");
+	__shared__ half_t a_shared[WMMA_M][WMMA_N];
+	__shared__ half_t b_shared[WMMA_M][WMMA_N];
+	__shared__ real_t c_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d_shared[WMMA_M][WMMA_N];
+
+	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+
+	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+
+	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
+
+	d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	
+	real_t acc = 0;	
+	real_t d = 0;
+	
+	__syncthreads();
+	
+
+	for(int i = 0; i < WMMA_N; i++){
+		 // acc1 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
+		 //acc2 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
+		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc);
+		 ;
+
+	}
+	
+	d1 = sum_(mul_(acc1,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
+
+	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
+	d0[ty * mul_N + tx] = d1; 
+	
+
+}				
 
 #endif /* KERNELS_H_ */
