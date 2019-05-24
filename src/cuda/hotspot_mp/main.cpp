@@ -11,8 +11,10 @@
 int main(int argc, char** argv) {
 
 	Parameters setup_parameters(argc, argv);
-	std::cout << setup_parameters << std::endl;
+	if (setup_parameters.verbose) {
 
+		std::cout << setup_parameters << std::endl;
+	}
 	std::string test_info = std::string("streams:")
 			+ std::to_string(setup_parameters.nstreams) + " precision:"
 			+ setup_parameters.test_precision_description + " size:"
