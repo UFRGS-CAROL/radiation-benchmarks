@@ -643,7 +643,7 @@ __device__    __forceinline__ half sum_(half a, half b) {
 }
 
 
-__device__ __forceinline__ float fma_(half a, half_t b, float c ) {
+__device__ __forceinline__ float fma_(half a, half b, float c ) {
         return fmaf(a, b,c);
 }
 
