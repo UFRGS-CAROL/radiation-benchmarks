@@ -130,7 +130,6 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 
 		// ============ VALIDATE OUTPUT ============
 		double copy_and_check_time = this->log.mysecond();
-		int kernel_errors = 0;
 
 		hotspot_data.copy_from_gpu();
 		hotspot_data.check_output_errors();
@@ -139,34 +138,18 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 
 		copy_and_check_time = this->log.mysecond();
 
-		if ((kernel_errors != 0) && !(this->setup_params.verbose)){
-//			std::cout << ".";
-			// CSV format
-			double outputpersec =
-					double(((this->setup_params.grid_rows
-							* this->setup_params.grid_rows
-							* this->setup_params.nstreams)
-							/ this->log.iteration_time()));
-			std::cout << outputpersec << ",";
-			std::cout << loop << ",";
-			std::cout << this->log.iteration_time() << ",";
-			std::cout << this->log.error_count << ",";
-			std::cout << dmr_errors << std::endl;
-		}
-
 		if (this->setup_params.verbose) {
 			std::cout << "GPU prepare time: " << reload_time << "s"
 					<< std::endl;
 
 			// ============ MEASURE PERFORMANCE ============
-			double outputpersec =
-					double(((this->setup_params.grid_rows
+			double outputpersec = double(
+					((this->setup_params.grid_rows
 							* this->setup_params.grid_rows
 							* this->setup_params.nstreams)
 							/ this->log.iteration_time()));
 			std::cout << "Kernel time: " << this->log.iteration_time()
 					<< std::endl;
-
 
 			std::cout << "Performance - SIZE:" << this->setup_params.grid_rows
 					<< " OUTPUT/S: " << outputpersec << " FLOPS: "
@@ -188,6 +171,19 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 
 			std::cout << "==============================" << std::endl;
 
+		} else {
+			//			std::cout << ".";
+			// CSV format
+			double outputpersec = double(
+					((this->setup_params.grid_rows
+							* this->setup_params.grid_rows
+							* this->setup_params.nstreams)
+							/ this->log.iteration_time()));
+			std::cout << outputpersec << ",";
+			std::cout << loop << ",";
+			std::cout << this->log.iteration_time() << ",";
+			std::cout << this->log.error_count << ",";
+			std::cout << dmr_errors << std::endl;
 		}
 
 	}

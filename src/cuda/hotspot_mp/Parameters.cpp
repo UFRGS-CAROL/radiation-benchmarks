@@ -45,7 +45,7 @@ Parameters::Parameters(int argc, char** argv) {
 	this->precision = SINGLE;
 	this->redundancy = NONE;
 	this->test_precision_description = "single";
-	this->test_redundancy_description =  "none";
+	this->test_redundancy_description = "none";
 
 	if (argc < 2) {
 		usage(argc, argv);
@@ -166,7 +166,7 @@ Parameters::Parameters(int argc, char** argv) {
 		std::cout << "!! Will be injected an input error\n";
 	}
 
-	if(this->generate)
+	if (this->generate)
 		this->setup_loops = 1;
 
 }
@@ -197,17 +197,19 @@ Parameters::~Parameters() {
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
-	os << std::boolalpha;
-	os << "N streams: " << p.nstreams << std::endl;
-	os << "sim time: " << p.sim_time << std::endl;
-	os << "pyramid height: " << p.pyramid_height << std::endl;
-	os << "setup loops: " << p.setup_loops << std::endl;
-	os << "verbose: " << p.verbose << std::endl;
-	os << "fault injection: " << p.fault_injection << std::endl;
-	os << "generate: " << p.generate << std::endl;
-	os << "size: " << p.size << std::endl;
-	os << "precision: " << p.test_precision_description << std::endl;
-	os << "redundancy: " << p.test_redundancy_description << std::endl;
-	os << "cols x rows: " << p.grid_cols << "x" << p.grid_rows;
+	os << std::boolalpha << "";
+	if (p.verbose) {
+		os << "N streams: " << p.nstreams << std::endl;
+		os << "sim time: " << p.sim_time << std::endl;
+		os << "pyramid height: " << p.pyramid_height << std::endl;
+		os << "setup loops: " << p.setup_loops << std::endl;
+		os << "verbose: " << p.verbose << std::endl;
+		os << "fault injection: " << p.fault_injection << std::endl;
+		os << "generate: " << p.generate << std::endl;
+		os << "size: " << p.size << std::endl;
+		os << "precision: " << p.test_precision_description << std::endl;
+		os << "redundancy: " << p.test_redundancy_description << std::endl;
+		os << "cols x rows: " << p.grid_cols << "x" << p.grid_rows;
+	}
 	return os;
 }
