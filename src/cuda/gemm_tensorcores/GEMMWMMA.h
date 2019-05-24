@@ -180,6 +180,7 @@ public:
 
 	void mul_mxm() {
 
+		printf("entrou \n");
 		this->debug("thread dim allocation");
 		//		// Setup execution parameters
 		// Setup execution parameters
