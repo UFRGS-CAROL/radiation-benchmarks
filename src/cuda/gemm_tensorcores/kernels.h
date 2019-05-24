@@ -643,7 +643,7 @@ __device__    __forceinline__ half sum_(half a, half b) {
 }
 
 
-__device__ __forceinline__ float fma_(float a, float b, float c ) {
+__device__ __forceinline__ float fma_(half a, half_t b, float c ) {
         return fmaf(a, b,c);
 }
 
@@ -682,7 +682,7 @@ __global__ void simple_wmma_gemm_no_tensor(size_t mul_N, real_t*d0, real_t alpha
 
 	for(int i = 0; i < WMMA_N; i++){
 		 // acc1 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
-		 acc2 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
+		 //acc2 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
 		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc1);
 		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc2);
 
@@ -691,7 +691,7 @@ __global__ void simple_wmma_gemm_no_tensor(size_t mul_N, real_t*d0, real_t alpha
 	d1 = sum_(mul_(acc1,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 	d2 = sum_(mul_(acc2,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
-	if ((d1 - d2) != 0){
+	if ((d1 - d2) != real_t(0.0)){
 		atomicAdd(&errors, 1);
 	}
 
