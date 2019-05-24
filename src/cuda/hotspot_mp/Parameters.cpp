@@ -189,7 +189,8 @@ Parameters::Parameters() {
 void Parameters::usage(int argc, char** argv) {
 	std::cout << "Usage: " << argv[0]
 			<< " [-size=N] [-generate] [-sim_time=N] [-input_temp=<path>] [-input_power=<path>] "
-					"[-gold_temp=<path>] [-iterations=N] [-streams=N] [-debug] [-verbose] [-redundancy=<redundancy>] [-precision=<precision>] \n";
+					"[-gold_temp=<path>] [-iterations=N] [-streams=N] "
+					"[-debug] [-verbose] [-redundancy=<redundancy>] [-precision=<precision>] \n";
 
 }
 
