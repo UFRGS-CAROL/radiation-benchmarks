@@ -399,21 +399,20 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		log_obj.start_iteration_app();
 		if (log_obj.triplicated) {
 			if (log_obj.use_tensor_cores) {
-				//mult_enviroment.mul_wmma_triplicated();
-				mult_enviroment.mul_wmma_MDR();
+				mult_enviroment.mul_gemm_wmma_triplicated();
+				
 			} else {
 				mult_enviroment.mul_mxm_triplicated();
 				
 			}
 		} else {
 			if (log_obj.use_tensor_cores) {
-				//mult_enviroment.mul_wmma();
-
-				mult_enviroment.mul_wmma_MDR();
+				//mult_enviroment.mul_gemm_wmma();
+				mult_enviroment.mul_gemm_wmma_DMR();
 
 			} else {
-				//mult_enviroment.mul_mxm();
-				mult_enviroment.mul_wmma_MDR_no_tensor();
+				//mult_enviroment.mul_wmma();
+				mult_enviroment.mul_wmma_DMR();
 			}
 		}
 		log_obj.end_iteration_app();
