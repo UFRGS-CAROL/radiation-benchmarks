@@ -353,28 +353,28 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 
 
 
-	// __shared__ half_t a_shared[WMMA_M][WMMA_N];
-	// __shared__ half_t b_shared[WMMA_M][WMMA_N];
-	// __shared__ real_t c_shared[WMMA_M][WMMA_N];
-	// __shared__ real_t d_shared[WMMA_M][WMMA_N];
+	__shared__ half_t a_shared[WMMA_M][WMMA_N];
+	__shared__ half_t b_shared[WMMA_M][WMMA_N];
+	__shared__ real_t c_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d_shared[WMMA_M][WMMA_N];
 
-	// a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-	// b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-	// c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
+	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
 
-	// d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
-	// real_t acc = 0;
+	d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	real_t acc = 0;
 
-	// __syncthreads();
+	__syncthreads();
 	
 
-	// for(int i = 0; i < WMMA_N; i++){
-	// 	 acc += real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
+	for(int i = 0; i < WMMA_N; i++){
+		 acc += real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
 
-	// }
-	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
+	}
+	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
 
 	
 
@@ -419,13 +419,13 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 			}
 
 
-		// for(int i = 0; i < WMMA_N; i++)
-		// 	for(int j = 0; j < WMMA_M; j++){
-		// 		register real_t error_checker = abs_(d_shared[i][j] - acc_frag.x[i * WMMA_M + j]);
-		// 		if (error_checker > real_t(0.0)) {
-		// 			atomicAdd(&errors, 1);					
-		// 		}
-		// }	
+		for(int i = 0; i < WMMA_N; i++)
+			for(int j = 0; j < WMMA_M; j++){
+				register real_t error_checker = abs_(d_shared[i][j] - acc_frag.x[i * WMMA_M + j]);
+				if (error_checker > real_t(0.0)) {
+					atomicAdd(&errors, 1);					
+				}
+		}	
 
 
 
@@ -465,32 +465,6 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c_frag;
 
 
-	__shared__ half_t a_shared[WMMA_M][WMMA_N];
-	__shared__ half_t b_shared[WMMA_M][WMMA_N];
-	__shared__ real_t c_shared[WMMA_M][WMMA_N];
-	__shared__ real_t d_shared[WMMA_M][WMMA_N];
-
-	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
-
-	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
-
-	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
-
-	d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
-	real_t acc = 0;
-
-	__syncthreads();
-	
-
-	for(int i = 0; i < WMMA_N; i++){
-		 acc += real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
-
-	}
-	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
-
-
-
-
 	wmma::fill_fragment(acc_frag, 0.0f);
 
 
@@ -525,15 +499,6 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 		for (int i = 0; i < c_frag.num_elements; i++) {
 			c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
 		}
-
-		 for(int i = 0; i < WMMA_N; i++)
-		 	for(int j = 0; j < WMMA_M; j++){
-		 		register real_t error_checker = abs_(d_shared[i][j] - acc_frag.x[i * WMMA_M + j]);
-		 		if (error_checker > real_t(0.0)) {
-		 			atomicAdd(&errors, 1);					
-		 		}
-		 }	
-
 
 		// Store the output
 		wmma::store_matrix_sync(d + cCol + cRow * ldc, c_frag, ldc,
