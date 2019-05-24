@@ -433,11 +433,11 @@ __global__ void simple_wmma_gemm(real_t *d0, real_t *d1, real_t *d2,
 			wmma::store_matrix_sync(d0 + cCol + cRow * ldc, c_frag, ldc,
 					wmma::mem_row_major);
 			// Store the output
-			wmma::store_matrix_sync(d1 + cCol + cRow * ldc, c_frag, ldc,
-					wmma::mem_row_major);
-			// Store the output
-			wmma::store_matrix_sync(d2 + cCol + cRow * ldc, c_frag, ldc,
-					wmma::mem_row_major);
+			// wmma::store_matrix_sync(d1 + cCol + cRow * ldc, c_frag, ldc,
+			// 		wmma::mem_row_major);
+			// // Store the output
+			// wmma::store_matrix_sync(d2 + cCol + cRow * ldc, c_frag, ldc,
+			// 		wmma::mem_row_major);
 		}
 	// }
 	
@@ -463,6 +463,8 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 	wmma::col_major> b_frag;
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> acc_frag;
 	wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c_frag;
+
+	
 
 
 	wmma::fill_fragment(acc_frag, 0.0f);
