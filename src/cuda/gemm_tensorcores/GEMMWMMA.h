@@ -290,10 +290,9 @@ public:
 				
 
 				simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
-						this->device_ptr_d0, this->device_ptr_d1,this->device_ptr_d2,
-						this->rows_a, this->cols_b, this->cols_c, this->alpha, this->beta);
-
-
+				this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+				this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
+				this->alpha, this->beta);
 
 
 	}
