@@ -41,7 +41,8 @@ struct DataManagement {
 			parameters(parameters), log(log) {
 
 		this->output_index = std::vector<int>(this->parameters.nstreams);
-		this->out_vector = std::vector<std::vector<full>>(this->parameters.nstreams);
+		this->out_vector = std::vector<std::vector<full>>(
+				this->parameters.nstreams);
 
 		this->matrix_power_device = std::vector<DeviceVector<full>>(
 				this->parameters.nstreams);
@@ -105,7 +106,7 @@ struct DataManagement {
 		}
 	}
 
-	void sync(){
+	void sync() {
 		for (auto stream : this->streams) {
 			checkFrameworkErrors(cudaStreamSynchronize(stream));
 		}
@@ -277,21 +278,24 @@ struct DataManagement {
 			exit(EXIT_FAILURE);
 		}
 
-		gold_file.write((char*)  this->out_vector[0].data(),
+		gold_file.write((char*) this->out_vector[0].data(),
 				sizeof(full) * this->parameters.size);
 
 		gold_file.close();
 
 		int nan = 0;
 		int zero = 0;
-		for (auto n :  this->out_vector[0]) {
+		for (auto n : this->out_vector[0]) {
 			if (std::isnan(float(n)))
 				nan++;
 			if (float(n) == 0)
 				zero++;
 		}
-		std::cout << "Gold Zeros in the output: " << zero << std::endl;
-		std::cout << "Gold NaNs in the output: " << nan << std::endl;
+
+		if (this->parameters.verbose) {
+			std::cout << "Gold Zeros in the output: " << zero << std::endl;
+			std::cout << "Gold NaNs in the output: " << nan << std::endl;
+		}
 	}
 };
 

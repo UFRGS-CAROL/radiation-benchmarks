@@ -200,6 +200,7 @@ Parameters::~Parameters() {
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << std::boolalpha << "";
 	if (p.verbose) {
+		os << "Parameters" << std::endl;
 		os << "N streams: " << p.nstreams << std::endl;
 		os << "sim time: " << p.sim_time << std::endl;
 		os << "pyramid height: " << p.pyramid_height << std::endl;
