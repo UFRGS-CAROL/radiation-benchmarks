@@ -98,8 +98,8 @@ clean:
 	rm -rf $(OBJS) $(TARGET) ./*.matrix
 
 generate:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 1 --precision float	
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 0 --precision half	
 	
 test:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 10000 --tensor_cores 1 --triplicated 1 --precision float
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 10000 --tensor_cores 1 --triplicated 0 --precision half
 	

@@ -553,14 +553,14 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, real_t *d,
 		}
 
 		
-		for(int i = 0; i < WMMA_N; i++)
-			for(int j = 0; j < WMMA_M; j++){
-				register real_t error_checker = abs_(d_shared[i][j] - acc_frag.x[i * WMMA_M + j]);
-				if (error_checker > real_t(0.0)) {
-					atomicAdd(&errors, 1);
-					//return errors;
-				}
-		}			
+		// for(int i = 0; i < WMMA_N; i++)
+		// 	for(int j = 0; j < WMMA_M; j++){
+		// 		register real_t error_checker = abs_(d_shared[i][j] - acc_frag.x[i * WMMA_M + j]);
+		// 		if (error_checker > real_t(0.0)) {
+		// 			atomicAdd(&errors, 1);
+		// 			//return errors;
+		// 		}
+		// }			
 
 		// Store the output
 		wmma::store_matrix_sync(d + cCol + cRow * ldc, c_frag, ldc,
