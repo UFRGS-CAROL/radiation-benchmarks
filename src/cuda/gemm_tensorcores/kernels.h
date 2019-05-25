@@ -467,7 +467,7 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 
 
 template<class half_t, class real_t>
-__global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, real_t *d,
+__global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, real_t *d, real_t *d_frag, 
 		int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
 	// Leading dimensions. Packed with no transpositions.
 	int lda = m_ld;
@@ -512,7 +512,7 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, real_t *d,
 	}
 
 	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
-	// printf("%f \n ",d_shared[threadIdx.x][threadIdx.y]);
+	d[ty * mul_N + tx] = d_shared[threadIdx.x][threadIdx.y];
 	
 	
 
@@ -563,7 +563,7 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, real_t *d,
 		// }			
 
 		// Store the output
-		wmma::store_matrix_sync(d + cCol + cRow * ldc, c_frag, ldc,
+		wmma::store_matrix_sync(d_frag + cCol + cRow * ldc, c_frag, ldc,
 				wmma::mem_row_major);
 	}
 }
