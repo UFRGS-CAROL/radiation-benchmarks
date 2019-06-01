@@ -127,10 +127,10 @@ __device__ float errors = 0;
  	const size_t shmem_idx_b_off = BLOCK_COL_TILES * M;
 
  	// This pointer is used to access the C and D matrix tiles this warp computes.
- 	float *shmem_warp_tile_ptr = (float*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
+ 	real_t *shmem_warp_tile_ptr = (float*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
 
  	// This pointer is used to stream the C and D matrices block-wide tile to and from shared memory.
- 	float *shmem_warp_stream_ptr = (float*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
+ 	real_t *shmem_warp_stream_ptr = (float*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
 
  	// Adjust the beta scaler, as it'll be multiplied by alpha at the end of
  	// each tile computation
@@ -207,7 +207,7 @@ __device__ float errors = 0;
  		for (int i = 0; i < WARP_COL_TILES; i++) {
  #pragma unroll
  			for (int j = 0; j < WARP_ROW_TILES; j++) {
- 				const float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+ 				const real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
  				wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
  			}
@@ -302,7 +302,7 @@ __device__ float errors = 0;
  				for (int t = 0; t < c[i][j].num_elements; t++)
  					c[i][j].x[t] *= alpha;
 
- 				float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+ 				real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
  				wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE, C_LAYOUT);
  			}
