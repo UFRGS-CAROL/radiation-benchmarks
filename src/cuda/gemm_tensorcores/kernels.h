@@ -115,7 +115,7 @@ __device__ float errors = 0;
 //FULL gemm function
 //-------------------------------------------------------------------------------------------------
  template<class half_t, class real_t>
- __global__ void compute_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D, float alpha, float beta)
+ __global__ void compute_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D,real_t *d float alpha, float beta)
  {
  	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
@@ -173,7 +173,7 @@ __device__ float errors = 0;
 	
 
 
-	
+
  	for(unsigned int block_pos = blockIdx.x;; block_pos += gridDim.x) {
  		const unsigned int block_tile_i = ((block_pos * BLOCK_ROW_TILES) / N_TILES) * (BLOCK_COL_TILES);
  		const unsigned int block_tile_j = (block_pos * BLOCK_COL_TILES) % N_TILES;
