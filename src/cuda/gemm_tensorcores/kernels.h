@@ -627,7 +627,7 @@ __global__ void matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 
 template<class half_t, class real_t>
 __global__ void matrix_mul(half_t *a0, half_t *b0, real_t *c0, real_t*d0,
-		size_t mul_M, size_t mul_N, size_t mul_K, float alpha, float beta) {
+		size_t mul_M, size_t mul_N, size_t mul_K, real_t alpha, real_t beta) {
 
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
