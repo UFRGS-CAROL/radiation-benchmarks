@@ -328,7 +328,7 @@ __device__    __forceinline__ half abs_(half a) {
 }
 
 
-
+/*
 template<class half_t, class real_t>
 __global__ void simple_wmma_gemm_triplicated(real_t *d0, real_t *d1, real_t *d2,
 		int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
@@ -570,6 +570,8 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, real_t *d,
 	}
 }
 
+
+*/
 
 
 template<class real_t>
