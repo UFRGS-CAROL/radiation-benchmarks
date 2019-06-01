@@ -207,7 +207,7 @@ __device__ float errors = 0;
  		for (int i = 0; i < WARP_COL_TILES; i++) {
  #pragma unroll
  			for (int j = 0; j < WARP_ROW_TILES; j++) {
- 				const real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+ 				const float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
  				wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
  			}
@@ -302,7 +302,7 @@ __device__ float errors = 0;
  				for (int t = 0; t < c[i][j].num_elements; t++)
  					c[i][j].x[t] *= alpha;
 
- 				real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+ 				float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
  				wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE, C_LAYOUT);
  			}
