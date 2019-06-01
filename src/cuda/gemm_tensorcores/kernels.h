@@ -115,7 +115,7 @@ __device__ float errors = 0;
 //FULL gemm function
 //-------------------------------------------------------------------------------------------------
  template<class half_t, class real_t>
- __global__ void compute_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D,real_t *d float alpha, float beta)
+ __global__ void compute_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D,real_t *d, float alpha, float beta)
  {
  	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
