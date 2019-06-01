@@ -412,7 +412,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 
 			} else {
 				
-				mul_mxm();
+				mult_enviroment.mul_mxm();
 				//mult_enviroment.mul_wmma();
 				//mult_enviroment.mul_wmma_DMR();
 			}
