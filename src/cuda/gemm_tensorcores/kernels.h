@@ -142,6 +142,38 @@ __device__ float errors = 0;
  	// right and down, and selects the next tile to compute. Once there's no such tile,
  	// all warps in this CTA exit.
 	
+
+	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+	
+	__shared__ half_t a_shared[WMMA_M][WMMA_N];
+	__shared__ half_t b_shared[WMMA_M][WMMA_N];
+	__shared__ real_t c_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d_shared[WMMA_M][WMMA_N];
+
+	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+
+	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+
+	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
+
+	d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	real_t acc = 0;
+
+	__syncthreads();
+	
+
+	for(int i = 0; i < WMMA_N; i++){
+		 acc += real_t(a_shared[threadIdx.y][i] * b_shared[i][threadIdx.x]);
+
+	}
+
+	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
+	d[ty * WMMA_N + tx] = d_shared[threadIdx.x][threadIdx.y];
+	
+
+
+	
  	for(unsigned int block_pos = blockIdx.x;; block_pos += gridDim.x) {
  		const unsigned int block_tile_i = ((block_pos * BLOCK_ROW_TILES) / N_TILES) * (BLOCK_COL_TILES);
  		const unsigned int block_tile_j = (block_pos * BLOCK_COL_TILES) % N_TILES;
@@ -328,7 +360,7 @@ __device__    __forceinline__ half abs_(half a) {
 }
 
 
-/*
+
 template<class half_t, class real_t>
 __global__ void simple_wmma_gemm_triplicated(real_t *d0, real_t *d1, real_t *d2,
 		int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
@@ -570,8 +602,6 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, real_t *d,
 	}
 }
 
-
-*/
 
 
 template<class real_t>
