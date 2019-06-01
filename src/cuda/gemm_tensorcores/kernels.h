@@ -744,7 +744,7 @@ __global__ void simple_gemm_no_dmr(size_t mul_N, real_t*d0, real_t alpha, real_t
 	d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
 	
 	real_t acc = 0;	
-	real_t d = 0;
+	//real_t d = 0;
 	
 	__syncthreads();
 	
@@ -757,7 +757,7 @@ __global__ void simple_gemm_no_dmr(size_t mul_N, real_t*d0, real_t alpha, real_t
 
 	}
 	
-	d = sum_(mul_(acc,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
+	d_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
 	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
 	d0[ty * mul_N + tx] = d; 
