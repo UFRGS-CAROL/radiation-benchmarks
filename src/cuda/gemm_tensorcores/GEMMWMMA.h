@@ -252,12 +252,26 @@ public:
 					M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
 					(BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(float))
 		};
+		dim3 grid_dim;
+		dim3 block_dim;
+
+		// block_dim.x must be a multple of warpSize
+		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+		block_dim.x = WMMA_M; //128;
+    	block_dim.y = WMMA_N; //4;
 
 		//printf("Required shared memory size: %lu Kb\n", SHMEM_SZ / 1024UL);
+
+
 		checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-		checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
+		// checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
+		// 		(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+		// 		 this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta)));
+
+		checkKernelErrors((compute_gemm<half_t, real_t> <<<grid_dim, block_dim>>>
 				(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
 				 this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta)));
+		
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
 
