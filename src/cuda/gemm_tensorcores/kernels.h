@@ -168,7 +168,7 @@ __device__ float errors = 0;
 
 	}
 
-	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
+	d_shared[threadIdx.x][threadIdx.y] = (real_t) (alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y]);
 	d[ty * WMMA_N + tx] = d_shared[threadIdx.x][threadIdx.y];
 	
 
