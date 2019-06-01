@@ -525,9 +525,9 @@ int main(int argc, char** argv) {
 	if (log_obj.precision == "float") {
 		call_mxm<float, float, half>(host_matrix_a, host_matrix_b, log_obj);
 	}
-	if (log_obj.precision == "double") {
-		call_mxm<double, double, half>(host_matrix_a, host_matrix_b, log_obj);
-	}
+	// if (log_obj.precision == "double") {
+	// 	call_mxm<double, double, half>(host_matrix_a, host_matrix_b, log_obj);
+	// }
 
 	
 //	if (log_obj.precision == "uchar") {
