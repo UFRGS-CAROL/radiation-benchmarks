@@ -127,10 +127,10 @@ __device__ float errors = 0;
  	const size_t shmem_idx_b_off = BLOCK_COL_TILES * M;
 
  	// This pointer is used to access the C and D matrix tiles this warp computes.
- 	real_t *shmem_warp_tile_ptr = (float*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
+ 	real_t *shmem_warp_tile_ptr = (real_t*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
 
  	// This pointer is used to stream the C and D matrices block-wide tile to and from shared memory.
- 	real_t *shmem_warp_stream_ptr = (float*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
+ 	real_t *shmem_warp_stream_ptr = (real_t*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
 
  	// Adjust the beta scaler, as it'll be multiplied by alpha at the end of
  	// each tile computation
