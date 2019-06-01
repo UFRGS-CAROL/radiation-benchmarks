@@ -141,6 +141,7 @@ __device__ float errors = 0;
  	// Each CTA slides along the 128 x 128 tiles from the top left corner of the matrix to the
  	// right and down, and selects the next tile to compute. Once there's no such tile,
  	// all warps in this CTA exit.
+	
  	for(unsigned int block_pos = blockIdx.x;; block_pos += gridDim.x) {
  		const unsigned int block_tile_i = ((block_pos * BLOCK_ROW_TILES) / N_TILES) * (BLOCK_COL_TILES);
  		const unsigned int block_tile_j = (block_pos * BLOCK_COL_TILES) % N_TILES;

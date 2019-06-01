@@ -407,12 +407,12 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			}
 		} else {
 			if (log_obj.use_tensor_cores) {
-				//mult_enviroment.mul_gemm_wmma();
-				mult_enviroment.mul_gemm_wmma_DMR();
+				mult_enviroment.mul_gemm_wmma();
+				//mult_enviroment.mul_gemm_wmma_DMR();
 
 			} else {
-				//mult_enviroment.mul_wmma();
-				mult_enviroment.mul_wmma_DMR();
+				mult_enviroment.mul_wmma();
+				//mult_enviroment.mul_wmma_DMR();
 			}
 		}
 		log_obj.end_iteration_app();
