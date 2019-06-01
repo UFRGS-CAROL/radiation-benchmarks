@@ -528,7 +528,7 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, real_t *d,
 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
 	__shared__ real_t d_shared[WMMA_M][WMMA_N];
 
-	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	a_shared[threadIdx.x][threadIdx.y] = half_t(4.0f);
 
 	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
