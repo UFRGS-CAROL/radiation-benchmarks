@@ -891,7 +891,7 @@ __device__    __forceinline__ half fma_(half a, half b, half c) {
 
 
 template<class half_t, class real_t>
-__global__ void simple_gemm(size_t mul_N, real_t*d0, real_t*d1, real_t alpha, real_t beta) {
+__global__ void simple_gemm_DMR(size_t mul_N, real_t*d0, real_t*d1, real_t alpha, real_t beta) {
 
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
@@ -939,7 +939,8 @@ __global__ void simple_gemm(size_t mul_N, real_t*d0, real_t*d1, real_t alpha, re
 }
 
 template<class half_t, class real_t>
-__global__ void simple_gemm_no_dmr(size_t mul_N, real_t*d0, real_t alpha, real_t beta) {
+__global__ void simple_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
+		int mul_M, int mul_N, int mul_K, real_t alpha, real_t beta) {
 
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
@@ -949,15 +950,15 @@ __global__ void simple_gemm_no_dmr(size_t mul_N, real_t*d0, real_t alpha, real_t
 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
 	__shared__ real_t d_shared[WMMA_M][WMMA_N];
 
-	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	a_shared[threadIdx.x][threadIdx.y] = a;
 
-	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	b_shared[threadIdx.x][threadIdx.y] = b;
 
-	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
+	c_shared[threadIdx.x][threadIdx.y] = c;
 
-	d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	d_shared[threadIdx.x][threadIdx.y] = d;
 	
-	real_t acc = 0;	
+	register real_t acc = 0;	
 	
 	
 	__syncthreads();
