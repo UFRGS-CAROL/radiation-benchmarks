@@ -25,6 +25,11 @@ using namespace nvcuda;
 #define N 16
 #define K 16
 
+
+// #define M 16
+// #define N 16
+// #define K 16
+
 // The only dimensions currently supported by WMMA
 #define WMMA_M 16
 #define WMMA_N 16
@@ -883,52 +888,10 @@ __device__    __forceinline__ half fma_(half a, half b, half c) {
 }
 
 
-// template<class half_t, class real_t>
-// __global__ void matrix_mul_dmr(half_t *a0, half_t *b0, real_t *c0, real_t*d0, real_t *d1,
-// 		size_t mul_M, size_t mul_N, size_t mul_K, real_t alpha, real_t beta) {
-
-// 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-// 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-// 	register int k;
-
-
-// 	__shared__ half_t a_shared[WMMA_M][WMMA_N];
-// 	__shared__ half_t b_shared[WMMA_M][WMMA_N];
-// 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
-// 	__shared__ real_t d_shared[WMMA_M][WMMA_N];
-
-// 	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
-
-// 	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
-
-// 	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
-
-// 	d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
-
-
-// 	if (tx * ty > mul_M * mul_N)
-// 		return;
-
-// 	register real_t acc = 0.0;
-// 	register real_t acc1 = 0.0;
-// 	for (k = 0; k < mul_N; k++) {
-// 		acc = real_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc;
-// 		acc1 = real_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc;
-// 	}
-
-// 	acc = alpha * acc
-// 			+ beta * c0[ty * mul_N + tx];
-
-//  	d_shared[threadIdx.x][threadIdx.y] = alpha * acc1 + beta * c_shared[threadIdx.x][threadIdx.y];
-
-//  	d1[ty * mul_N + tx] = (real_t) acc1;
-// 	d0[ty * mul_N + tx] = (real_t) acc;
-// }
-
 
 
 template<class half_t, class real_t>
-__global__ void simple_gemm(size_t mul_N, real_t*d0, real_t*d1, real_t alpha, real_t beta) {
+__global__ void simple_gemm_DMR(size_t mul_N, real_t*d0, real_t*d1, real_t alpha, real_t beta) {
 
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
@@ -952,15 +915,13 @@ __global__ void simple_gemm(size_t mul_N, real_t*d0, real_t*d1, real_t alpha, re
 	
 	real_t acc1 = 0;
 	real_t acc2 = 0;
-	// real_t d1 = 0;
-	// real_t d2 = 0;
+
 
 	__syncthreads();
 	
 
 	for(int i = 0; i < WMMA_N; i++){
-		 // acc1 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
-		 //acc2 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
+
 		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc1);
 		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc2);
 
@@ -969,7 +930,7 @@ __global__ void simple_gemm(size_t mul_N, real_t*d0, real_t*d1, real_t alpha, re
 	d0_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc1,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 	d1_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc2,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
-	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
+
 	
 	d0[ty * mul_N + tx] = d0_shared[threadIdx.x][threadIdx.y]; 
 	d1[ty * mul_N + tx] = d1_shared[threadIdx.x][threadIdx.y]; 
@@ -978,7 +939,8 @@ __global__ void simple_gemm(size_t mul_N, real_t*d0, real_t*d1, real_t alpha, re
 }
 
 template<class half_t, class real_t>
-__global__ void simple_gemm_no_dmr(size_t mul_N, real_t*d0, real_t alpha, real_t beta) {
+__global__ void simple_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
+		int mul_M, int mul_N, int mul_K, real_t alpha, real_t beta) {
 
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
@@ -988,23 +950,22 @@ __global__ void simple_gemm_no_dmr(size_t mul_N, real_t*d0, real_t alpha, real_t
 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
 	__shared__ real_t d_shared[WMMA_M][WMMA_N];
 
-	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	a_shared[threadIdx.x][threadIdx.y] = a[ty * mul_N + tx];
 
-	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	b_shared[threadIdx.x][threadIdx.y] = b[ty * mul_N + tx];
 
-	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
+	c_shared[threadIdx.x][threadIdx.y] = c[ty * mul_N + tx];
 
-	d_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	d_shared[threadIdx.x][threadIdx.y] = d[ty * mul_N + tx];
 	
-	real_t acc = 0;	
-	//real_t d = 0;
+	register real_t acc = 0;	
+	
 	
 	__syncthreads();
 	
 
 	for(int i = 0; i < WMMA_N; i++){
-		 // acc1 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
-		 //acc2 += real_t(mul_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x]));
+		
 		 acc= fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc);
 		 
 
@@ -1012,8 +973,8 @@ __global__ void simple_gemm_no_dmr(size_t mul_N, real_t*d0, real_t alpha, real_t
 	
 	d_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
-	// d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[threadIdx.x][threadIdx.y];
-	d0[ty * mul_N + tx] = d_shared[threadIdx.x][threadIdx.y]; 
+	
+	d[ty * mul_N + tx] = d_shared[threadIdx.x][threadIdx.y]; 
 	
 
 }				
