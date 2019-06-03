@@ -760,7 +760,9 @@ __global__ void simple_gemm(size_t mul_N, real_t*d0, real_t*d1, real_t alpha, re
 	__shared__ half_t a_shared[WMMA_M][WMMA_N];
 	__shared__ half_t b_shared[WMMA_M][WMMA_N];
 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
-	__shared__ real_t d_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d0_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d1_shared[WMMA_M][WMMA_N];
+
 
 	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
