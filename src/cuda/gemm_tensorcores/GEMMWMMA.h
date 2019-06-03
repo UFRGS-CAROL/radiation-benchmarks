@@ -307,7 +307,7 @@ public:
 	void mul_wmma_DMR(){
 		this->debug("thread dim allocation");
 				// Setup execution parameters
-				First: using WMMA
+				//First: using WMMA
 				dim3 grid_dim;
 				dim3 block_dim;
 
@@ -332,12 +332,9 @@ public:
 				
  
 				//no tensor with DMR
-				//simple_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->alpha, this->beta);
+				simple_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta);
 
-				matrix_mul_dmr<half_t, real_t> <<<grid_dim, block_dim>>>(this->device_ptr_a0,
-						this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0, this->device_ptr_d0,
-						this->rows_a, this->cols_b, this->rows_b, this->alpha,
-						this->beta);
+	
 
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
@@ -372,7 +369,7 @@ public:
 				
  
 			
-				//simple_gemm_no_dmr<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->alpha, this->beta);
+				simple_gemm_no_dmr<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->alpha, this->beta);
 
 
 	}	
