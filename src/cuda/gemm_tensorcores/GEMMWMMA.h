@@ -382,7 +382,7 @@ public:
 				
  
 			
-				simple_gemm_no_dmr<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->alpha, this->beta);
+				//simple_gemm_no_dmr<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->alpha, this->beta);
 
 
 	}	
