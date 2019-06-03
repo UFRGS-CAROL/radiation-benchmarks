@@ -25,6 +25,11 @@ using namespace nvcuda;
 #define N 16
 #define K 16
 
+
+// #define M 16
+// #define N 16
+// #define K 16
+
 // The only dimensions currently supported by WMMA
 #define WMMA_M 16
 #define WMMA_N 16
