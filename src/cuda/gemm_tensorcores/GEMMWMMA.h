@@ -259,7 +259,7 @@ public:
 		checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 		checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
 				(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-				 this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta)));
+				 this->device_ptr_d0, this->alpha, this->beta)));
 
 		// checkKernelErrors((compute_gemm<half_t, real_t> <<<grid_dim, block_dim>>>
 		// 		(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
