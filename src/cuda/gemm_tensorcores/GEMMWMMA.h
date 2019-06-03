@@ -308,31 +308,49 @@ public:
 		this->debug("thread dim allocation");
 		//		// Setup execution parameters
 				// First: using WMMA
-				dim3 grid_dim;
-				dim3 block_dim;
+				// dim3 grid_dim;
+				// dim3 block_dim;
 
-				// block_dim.x must be a multple of warpSize
-				// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-				block_dim.x = WMMA_M; //128;
-		    	block_dim.y = WMMA_N; //4;
+				// // block_dim.x must be a multple of warpSize
+				// // 128x4 means we have 16 warps and a block computes a 64x64 output tile
+				// block_dim.x = WMMA_M; //128;
+		  //   	block_dim.y = WMMA_N; //4;
 	
 
-				grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-						/ (WMMA_M * block_dim.x / WARP_SIZE);
-				grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
-						/ (WMMA_N * block_dim.y);
+				// grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
+				// 		/ (WMMA_M * block_dim.x / WARP_SIZE);
+				// grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
+				// 		/ (WMMA_N * block_dim.y);
 
 			 	
-				this->debug("matrix multiplication");
+				// this->debug("matrix multiplication");
 				
 				
-				check_framework_errors(
-						cudaMemset(this->device_is_memory_bad, 0x0,
-								sizeof(unsigned long long int)));			
+				// check_framework_errors(
+				// 		cudaMemset(this->device_is_memory_bad, 0x0,
+				// 				sizeof(unsigned long long int)));			
 				
  
-				//no tensor with DMR
-				simple_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->alpha, this->beta);
+				// //no tensor with DMR
+				// simple_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->alpha, this->beta);
+
+		dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+		dim3 grid(std::ceil(this->cols_a / BLOCK_SIZE),
+				std::ceil(this->rows_a / BLOCK_SIZE));
+
+		this->debug("matrix multiplication");
+
+		check_framework_errors(
+				cudaMemset(this->device_is_memory_bad, 0x0,
+						sizeof(unsigned long long int)));
+
+		matrix_mul_dmr<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
+				this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0, this->device_ptr_d0,
+				this->rows_a, this->cols_b, this->rows_b, this->alpha,
+				this->beta);
+
+		this->debug("device synchronize");
+		check_framework_errors(cudaDeviceSynchronize());
 				
 	}	
 
