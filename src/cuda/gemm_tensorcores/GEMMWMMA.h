@@ -227,10 +227,10 @@ public:
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
 
-		 // simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
-		 // 		this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-		 // 		this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
-		 // 		this->alpha, this->beta);
+		 simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
+		 		this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+		 		this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
+		 		this->alpha, this->beta);
 
 		
 		this->debug("device synchronize");
@@ -240,33 +240,33 @@ public:
 		cudaDeviceProp deviceProp;
 		checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
-		enum {
-		    // Compute the right amount of shared memory to request.
-		    // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
-		    // per-CTA chunks
-		    // of the A and B matrices. Therefore, the right amount to request is the
-		    // maximum of those
-		    // two numbers.
-			SHMEM_SZ = MAX(
-					sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
-					M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
-					(BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(float))
-		};
+		// enum {
+		//     // Compute the right amount of shared memory to request.
+		//     // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
+		//     // per-CTA chunks
+		//     // of the A and B matrices. Therefore, the right amount to request is the
+		//     // maximum of those
+		//     // two numbers.
+		// 	SHMEM_SZ = MAX(
+		// 			sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
+		// 			M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
+		// 			(BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(float))
+		// };
 
 		//printf("Required shared memory size: %lu Kb\n", SHMEM_SZ / 1024UL);
 
 
-		checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-		checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
-				(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-				 this->device_ptr_d0, this->alpha, this->beta)));
+		// checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+		// checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
+		// 		(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+		// 		 this->device_ptr_d0, this->alpha, this->beta)));
 
 		// checkKernelErrors((compute_gemm<half_t, real_t> <<<grid_dim, block_dim>>>
 		// 		(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
 		// 		 this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta)));
 
-		this->debug("device synchronize");
-		check_framework_errors(cudaDeviceSynchronize());
+		// this->debug("device synchronize");
+		// check_framework_errors(cudaDeviceSynchronize());
 
 	}
 	void mul_gemm_wmma_DMR(){
