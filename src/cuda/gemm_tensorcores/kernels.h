@@ -950,13 +950,13 @@ __global__ void simple_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
 	__shared__ real_t d_shared[WMMA_M][WMMA_N];
 
-	a_shared[threadIdx.x][threadIdx.y] = a;
+	a_shared[threadIdx.x][threadIdx.y] = a[ty * mul_N + tx];
 
-	b_shared[threadIdx.x][threadIdx.y] = b;
+	b_shared[threadIdx.x][threadIdx.y] = b[ty * mul_N + tx];
 
-	c_shared[threadIdx.x][threadIdx.y] = c;
+	c_shared[threadIdx.x][threadIdx.y] = c[ty * mul_N + tx];
 
-	d_shared[threadIdx.x][threadIdx.y] = d;
+	d_shared[threadIdx.x][threadIdx.y] = d[ty * mul_N + tx];
 	
 	register real_t acc = 0;	
 	
@@ -974,7 +974,7 @@ __global__ void simple_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 	d_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
 	
-	d0[ty * mul_N + tx] = d_shared[threadIdx.x][threadIdx.y]; 
+	d[ty * mul_N + tx] = d_shared[threadIdx.x][threadIdx.y]; 
 	
 
 }				
