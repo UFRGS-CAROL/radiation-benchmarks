@@ -3,7 +3,7 @@ LOGS=1
 DEBUG?=0
 
 CC=g++
-NVCC=/usr/local/cuda/bin/nvcc
+NVCC=nvcc
 
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
