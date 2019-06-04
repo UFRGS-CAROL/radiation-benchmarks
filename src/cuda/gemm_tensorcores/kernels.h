@@ -999,8 +999,8 @@ __global__ void simple_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 	
 	//d_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
-	d_shared[threadIdx.x][threadIdx.y] = alpha * acc + beta * c_shared[ty * mul_N + tx];
-	d[ty * mul_N + tx] = (real_t) d_shared[threadIdx.x][threadIdx.y]; 
+	acc = alpha * acc + beta * c_shared[ty * mul_N + tx];
+	d[ty * mul_N + tx] = (real_t) acc; 
 	
 
 }				
