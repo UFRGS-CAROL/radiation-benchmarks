@@ -948,7 +948,7 @@ __global__ void matrix_mul(half_t *a0, half_t *b0, real_t *c0, real_t*d0,
 
 	register real_t acc = 0.0;
 	for (k = 0; k < mul_N; k++) {
-		acc = (real_t)(a_shared[threadIdx.y][k], * b_shared[k][threadIdx.x]) + acc;
+		acc = (real_t)(a_shared[threadIdx.y][k] * b_shared[k][threadIdx.x]) + acc;
 		
 	}
 
