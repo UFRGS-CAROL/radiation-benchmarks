@@ -958,93 +958,93 @@ __global__ void matrix_mul_dmr(half_t *a0, half_t *b0, real_t *c0, real_t*d0,rea
 // 	d0[ty * mul_N + tx] = (real_t) acc;
 // }
 
-// template<class half_t, class real_t>
-// __global__ void simple_gemm_DMR(size_t mul_N, real_t*d0, real_t*d1, real_t alpha, real_t beta) {
+template<class half_t, class real_t>
+__global__ void simple_gemm_DMR(size_t mul_N, real_t*d0, real_t*d1, real_t alpha, real_t beta) {
 
-// 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-// 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	
 	
-	// __shared__ half_t a_shared[WMMA_M][WMMA_N];
-	// __shared__ half_t b_shared[WMMA_M][WMMA_N];
-	// __shared__ real_t c_shared[WMMA_M][WMMA_N];
-	// __shared__ real_t d0_shared[WMMA_M][WMMA_N];
-	// __shared__ real_t d1_shared[WMMA_M][WMMA_N];
+	__shared__ half_t a_shared[WMMA_M][WMMA_N];
+	__shared__ half_t b_shared[WMMA_M][WMMA_N];
+	__shared__ real_t c_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d0_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d1_shared[WMMA_M][WMMA_N];
 
 
-	// a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-	// b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-	// c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
+	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
 
-	// d0_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
-	// d1_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	d0_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	d1_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
 	
-// 	real_t acc1 = 0;
-// 	real_t acc2 = 0;
+	real_t acc1 = 0;
+	real_t acc2 = 0;
 
 
-// 	__syncthreads();
-	
-
-// 	for(int i = 0; i < WMMA_N; i++){
-
-// 		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc1);
-// 		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc2);
-
-// 	}
-	
-// 	d0_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc1,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
-// 	d1_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc2,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
-
-
-	
-// 	d0[ty * mul_N + tx] = d0_shared[threadIdx.x][threadIdx.y]; 
-// 	d1[ty * mul_N + tx] = d1_shared[threadIdx.x][threadIdx.y]; 
+	__syncthreads();
 	
 
-// }
+	for(int i = 0; i < WMMA_N; i++){
 
-// template<class half_t, class real_t>
-// __global__ void simple_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
-// 		int mul_M, int mul_N, int mul_K, real_t alpha, real_t beta) {
+		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc1);
+		 fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc2);
 
-// 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-// 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+	}
 	
-// 	__shared__ half_t a_shared[WMMA_M][WMMA_N];
-// 	__shared__ half_t b_shared[WMMA_M][WMMA_N];
-// 	__shared__ real_t c_shared[WMMA_M][WMMA_N];
-// 	__shared__ real_t d_shared[WMMA_M][WMMA_N];
+	d0_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc1,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
+	d1_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc2,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
-// 	a_shared[threadIdx.x][threadIdx.y] = a[ty * mul_N + tx];
 
-// 	b_shared[threadIdx.x][threadIdx.y] = b[ty * mul_N + tx];
-
-// 	c_shared[threadIdx.x][threadIdx.y] = c[ty * mul_N + tx];
-
-// 	d_shared[threadIdx.x][threadIdx.y] = d[ty * mul_N + tx];
 	
-// 	register real_t acc = 0;	
-	
-	
-// 	__syncthreads();
+	d0[ty * mul_N + tx] = d0_shared[threadIdx.x][threadIdx.y]; 
+	d1[ty * mul_N + tx] = d1_shared[threadIdx.x][threadIdx.y]; 
 	
 
-// 	for(int i = 0; i < WMMA_N; i++){
+}
+
+template<class half_t, class real_t>
+__global__ void simple_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
+		int mul_M, int mul_N, int mul_K, real_t alpha, real_t beta) {
+
+	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+	
+	__shared__ half_t a_shared[WMMA_M][WMMA_N];
+	__shared__ half_t b_shared[WMMA_M][WMMA_N];
+	__shared__ real_t c_shared[WMMA_M][WMMA_N];
+	__shared__ real_t d_shared[WMMA_M][WMMA_N];
+
+	a_shared[threadIdx.x][threadIdx.y] = a[ty * mul_N + tx];
+
+	b_shared[threadIdx.x][threadIdx.y] = b[ty * mul_N + tx];
+
+	c_shared[threadIdx.x][threadIdx.y] = c[ty * mul_N + tx];
+
+	d_shared[threadIdx.x][threadIdx.y] = d[ty * mul_N + tx];
+	
+	register real_t acc = 0;	
+	
+	
+	__syncthreads();
+	
+
+	for(int i = 0; i < WMMA_N; i++){
 		
-// 		 acc= fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc);
+		 acc= fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc);
 		 
 
-// 	}
+	}
 	
-// 	d_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
+	d_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
 	
-// 	d[ty * mul_N + tx] = d_shared[threadIdx.x][threadIdx.y]; 
+	d[ty * mul_N + tx] = d_shared[threadIdx.x][threadIdx.y]; 
 	
 
-// }				
+}				
 
 #endif /* KERNELS_H_ */
