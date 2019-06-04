@@ -901,20 +901,24 @@ __global__ void matrix_mul_dmr(half_t *a0, half_t *b0, real_t *c0, real_t*d0,rea
 	if (tx * ty > mul_M * mul_N)
 		return;
 
-	register half_t acc = 0.0;
+	register real_t acc = 0.0;
 	register real_t acc1 = 0.0;
 	for (k = 0; k < mul_N; k++) {
-		acc = half_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc;
-		acc1 = real_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc1;
+		// acc = real_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc;
+		// acc1 = real_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc1;
+		 fma_(a0[ty * mul_N + k], b0[k * mul_N + tx]], acc);
+		 fma_(a0[ty * mul_N + k], b0[k * mul_N + tx], acc1);
 
 	}
 
-	acc = half_t (alpha * acc
-			+ beta * c0[ty * mul_N + tx]);
-	acc1 = alpha * acc1
-			+ beta * c0[ty * mul_N + tx];		
+	acc = sum_(mul_(acc,alpha), mul_(beta, c0[k * mul_N + tx],));
+	acc1 = sum_(mul_(acc1,alpha), mul_(beta, c0[k * mul_N + tx],));
+	// acc = alpha * acc
+	// 		+ beta * c0[ty * mul_N + tx];
+	// acc1 = alpha * acc1
+	// 		+ beta * c0[ty * mul_N + tx];		
 
-	d0[ty * mul_N + tx] = (half_t) acc;
+	d0[ty * mul_N + tx] = (real_t) acc;
 	d1[ty * mul_N + tx] = (real_t) acc1;
 }
 
