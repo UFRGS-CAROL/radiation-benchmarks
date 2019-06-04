@@ -194,16 +194,18 @@ public:
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
 
-		matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
-				this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0,
+		// matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
+		// 		this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0,
+		// 		this->rows_a, this->cols_b, this->rows_b, this->alpha,
+		// 		this->beta);
+
+
+		matrix_mul_dmr<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
+				this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0,this->device_ptr_d1,
 				this->rows_a, this->cols_b, this->rows_b, this->alpha,
 				this->beta);
 
 
-		// matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
-		// 		this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0,this->device_ptr_d1,
-		// 		this->rows_a, this->cols_b, this->rows_b, this->alpha,
-		// 		this->beta);
 
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
@@ -233,10 +235,10 @@ public:
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
 
-		 simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
-		 		this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-		 		this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
-		 		this->alpha, this->beta);
+		 // simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
+		 // 		this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+		 // 		this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
+		 // 		this->alpha, this->beta);
 
 		
 		this->debug("device synchronize");
@@ -302,10 +304,10 @@ public:
 								sizeof(unsigned long long int)));			
 				
 
-				simple_wmma_gemm_DMR<half_t, real_t> <<<grid_dim, block_dim>>>(
-				this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-				this->device_ptr_d0,this->device_ptr_d1, this->rows_a, this->cols_b, this->cols_c,
-				this->alpha, this->beta);
+				// simple_wmma_gemm_DMR<half_t, real_t> <<<grid_dim, block_dim>>>(
+				// this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+				// this->device_ptr_d0,this->device_ptr_d1, this->rows_a, this->cols_b, this->cols_c,
+				// this->alpha, this->beta);
 
 
 	}
@@ -408,9 +410,9 @@ public:
 								sizeof(unsigned long long int)));			
 				
 
-				simple_wmma_gemm_triplicated<half_t, real_t> <<<grid_dim, block_dim>>>(
-						this->device_ptr_d0, this->device_ptr_d1,this->device_ptr_d2,
-						this->rows_a, this->cols_b, this->cols_c, this->alpha, this->beta);
+				// simple_wmma_gemm_triplicated<half_t, real_t> <<<grid_dim, block_dim>>>(
+				// 		this->device_ptr_d0, this->device_ptr_d1,this->device_ptr_d2,
+				// 		this->rows_a, this->cols_b, this->cols_c, this->alpha, this->beta);
 				
 		
 							
