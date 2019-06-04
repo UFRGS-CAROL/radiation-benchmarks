@@ -965,21 +965,21 @@ __global__ void matrix_mul_dmr(half_t *a0, half_t *b0, real_t *c0, real_t*d0,rea
 // 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	
 	
-	__shared__ half_t a_shared[WMMA_M][WMMA_N];
-	__shared__ half_t b_shared[WMMA_M][WMMA_N];
-	__shared__ real_t c_shared[WMMA_M][WMMA_N];
-	__shared__ real_t d0_shared[WMMA_M][WMMA_N];
-	__shared__ real_t d1_shared[WMMA_M][WMMA_N];
+	// __shared__ half_t a_shared[WMMA_M][WMMA_N];
+	// __shared__ half_t b_shared[WMMA_M][WMMA_N];
+	// __shared__ real_t c_shared[WMMA_M][WMMA_N];
+	// __shared__ real_t d0_shared[WMMA_M][WMMA_N];
+	// __shared__ real_t d1_shared[WMMA_M][WMMA_N];
 
 
-	a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	// a_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-	b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
+	// b_shared[threadIdx.x][threadIdx.y] = half_t(2.0f);
 
-	c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
+	// c_shared[threadIdx.x][threadIdx.y] = real_t(2.0f);
 
-	d0_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
-	d1_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	// d0_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
+	// d1_shared[threadIdx.x][threadIdx.y] = real_t(0.0f);
 	
 // 	real_t acc1 = 0;
 // 	real_t acc2 = 0;
