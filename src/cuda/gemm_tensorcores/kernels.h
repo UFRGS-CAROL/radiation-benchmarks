@@ -993,13 +993,13 @@ __global__ void simple_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 	for(int i = 0; i < WMMA_N; i++){
 		
 		 //acc= fma_(a_shared[threadIdx.y][i], b_shared[i][threadIdx.x], acc);
-		 acc+= (real_t)a_shared[threadIdx.y][i]* b_shared[i][threadIdx.x];
+		 acc+= real_t(a_shared[threadIdx.y][i]* b_shared[i][threadIdx.x]);
 
 	}
 	
 	//d_shared[threadIdx.x][threadIdx.y] = sum_(mul_(acc,alpha), mul_(beta, c_shared[threadIdx.x][threadIdx.y]));
 
-	d_shared[threadIdx.x][threadIdx.y] = real_t (alpha * acc + beta * c[ty * mul_N + tx]);
+	d_shared[threadIdx.x][threadIdx.y] = real_t (alpha * acc + beta * c_shared[ty * mul_N + tx]);
 	d[ty * mul_N + tx] = d_shared[threadIdx.x][threadIdx.y]; 
 	
 
