@@ -553,15 +553,15 @@ public:
 						this->rows_a * this->cols_a * sizeof(half_t),
 						cudaMemcpyHostToDevice));
 // //		printf("a0 = %f \n", host_ptr_a0[1]);
-// 		check_framework_errors(
-// 				cudaMemcpy(this->device_ptr_a1, host_ptr_a0,
-// 						this->rows_a * this->cols_a * sizeof(half_t),
-// 						cudaMemcpyHostToDevice));
+		check_framework_errors(
+				cudaMemcpy(this->device_ptr_a1, host_ptr_a0,
+						this->rows_a * this->cols_a * sizeof(half_t),
+						cudaMemcpyHostToDevice));
 // //		printf("a1 = %f \n", host_ptr_a0[1]);
 
-		check_framework_errors(
-				cudaMemset(this->device_ptr_a1, 0x09,
-						this->rows_a * this->cols_a * sizeof(half_t)));
+		// check_framework_errors(
+		// 		cudaMemset(this->device_ptr_a1, 0x09,
+		// 				this->rows_a * this->cols_a * sizeof(half_t)));
 
 		check_framework_errors(
 				cudaMemcpy(this->device_ptr_a2, host_ptr_a0,
