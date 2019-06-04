@@ -73,8 +73,11 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		//FMA
 		{ "fma", FMA }, };
 
-template<typename T> struct Type;
-template<> struct Type<half> {
+template<typename...>
+struct Type;
+
+template<>
+struct Type<half> {
 	half output_r;
 	half input_a;
 	half input_b;
@@ -85,7 +88,8 @@ template<> struct Type<half> {
 	}
 };
 
-template<> struct Type<float> {
+template<>
+struct Type<float> {
 	float output_r;
 	float input_a;
 	float input_b;
@@ -96,7 +100,8 @@ template<> struct Type<float> {
 	}
 };
 
-template<> struct Type<double> {
+template<>
+struct Type<double> {
 	double output_r;
 	double input_a;
 	double input_b;
@@ -106,6 +111,35 @@ template<> struct Type<double> {
 		this->input_b = INPUT_B_DOUBLE;
 	}
 };
+
+
+template<>
+struct Type<float, half>{
+	float output_r;
+	float input_a;
+	float input_b;
+	Type(){
+		Type<float> temp;
+		this->output_r = temp.output_r;
+		this->input_a = temp.input_a;
+		this->input_b = temp.input_b;
+	}
+
+};
+
+template<>
+struct Type<double, float>{
+	double output_r;
+	double input_a;
+	double input_b;
+	Type(){
+		Type<double> temp;
+		this->output_r = temp.output_r;
+		this->input_a = temp.input_a;
+		this->input_b = temp.input_b;
+	}
+};
+
 
 struct Parameters {
 

@@ -69,8 +69,8 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose, unsigned lo
 	return host_errors;
 }
 
-template<typename incomplete, typename full>
-void test_radiation(Type<incomplete>& type_, Parameters& parameters) {
+template<typename incomplete, typename full, typename... TypeArgs>
+void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 	// Init test environment
 	// kernel_errors=0;
 	double total_kernel_time = 0;
@@ -203,12 +203,12 @@ void dmr(Parameters& parameters) {
 	if (parameters.redundancy == DMRMIXED) {
 
 		if (parameters.precision == DOUBLE) {
-			Type<float> type_;
+			Type<double, float> type_;
 			test_radiation<float, double>(type_, parameters);
 		}
 
 		if (parameters.precision == SINGLE) {
-			Type<half> type_;
+			Type<float, half> type_;
 			test_radiation<half, float>(type_, parameters);
 		}
 	}
