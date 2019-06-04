@@ -935,7 +935,7 @@ __global__ void matrix_mul(half_t *a0, half_t *b0, real_t *c0, real_t*d0,
 
 
 
-	a_shared[threadIdx.x][threadIdx.y] = (half_t)a0a[ty * mul_N + tx];
+	a_shared[threadIdx.x][threadIdx.y] = (half_t)a0[ty * mul_N + tx];
 
 	b_shared[threadIdx.x][threadIdx.y] =(half_t)b0[ty * mul_N + tx];
  
