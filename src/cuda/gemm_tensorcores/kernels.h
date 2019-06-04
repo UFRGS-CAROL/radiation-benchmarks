@@ -891,7 +891,7 @@ __device__    __forceinline__ half fma_(half a, half b, half c) {
 
 
 template<class half_t, class real_t>
-__global__ void matrix_mul_dmr(half_t *a0, half_t *b0, real_t *c0, real_t*d0,real_t*d1,
+__global__ void matrix_mul_dmr(half_t *a0, half_t *a1, half_t *b0, real_t *c0, real_t*d0,real_t*d1,
 		size_t mul_M, size_t mul_N, size_t mul_K, real_t alpha, real_t beta) {
 
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
@@ -904,7 +904,7 @@ __global__ void matrix_mul_dmr(half_t *a0, half_t *b0, real_t *c0, real_t*d0,rea
 	register float acc = 0.0;
 	register real_t acc1 = 0.0;
 	for (k = 0; k < mul_N; k++) {
-		 acc = float(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc;
+		 acc = float(a1[ty * mul_N + k] * b0[k * mul_N + tx]) + acc;
 		 acc1 = real_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc1;
 
 
