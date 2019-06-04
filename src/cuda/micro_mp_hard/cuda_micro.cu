@@ -71,6 +71,7 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose, unsigned lo
 
 template<typename incomplete, typename full, typename... TypeArgs>
 void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
+	std::cout << "Printing the input values " << type_ << std::endl;
 	// Init test environment
 	// kernel_errors=0;
 	double total_kernel_time = 0;
@@ -203,13 +204,13 @@ void dmr(Parameters& parameters) {
 	if (parameters.redundancy == DMRMIXED) {
 
 		if (parameters.precision == DOUBLE) {
-			Type<double, float> type_;
-			test_radiation<float, double>(type_, parameters);
+			Type<float, double> type_;
+			test_radiation<float, double, float, double>(type_, parameters);
 		}
 
 		if (parameters.precision == SINGLE) {
-			Type<float, half> type_;
-			test_radiation<half, float>(type_, parameters);
+			Type<half, float> type_;
+			test_radiation<half, float, half, float>(type_, parameters);
 		}
 	}
 
