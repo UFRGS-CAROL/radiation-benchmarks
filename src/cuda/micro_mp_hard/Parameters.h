@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <iostream>
 
 //#include "helper_string.h"
 
@@ -73,8 +74,10 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		//FMA
 		{ "fma", FMA }, };
 
-template<typename...>
-struct Type;
+template<typename ...TypeArgs>
+struct Type {
+//	friend std::ostream& operator<<(std::ostream&, const Type<TypeArgs...>&);
+};
 
 template<>
 struct Type<half> {
@@ -112,13 +115,12 @@ struct Type<double> {
 	}
 };
 
-
 template<>
-struct Type<float, half>{
+struct Type<half, float> {
 	float output_r;
 	float input_a;
 	float input_b;
-	Type(){
+	Type() {
 		Type<float> temp;
 		this->output_r = temp.output_r;
 		this->input_a = temp.input_a;
@@ -128,11 +130,11 @@ struct Type<float, half>{
 };
 
 template<>
-struct Type<double, float>{
+struct Type<float, double> {
 	double output_r;
 	double input_a;
 	double input_b;
-	Type(){
+	Type() {
 		Type<double> temp;
 		this->output_r = temp.output_r;
 		this->input_a = temp.input_a;
@@ -140,6 +142,17 @@ struct Type<double, float>{
 	}
 };
 
+std::ostream& operator<<(std::ostream& os, const half& t){
+	float tmp = float(t);
+	os << tmp;
+	return os;
+}
+
+template<typename...TypeArgs>
+std::ostream& operator<<(std::ostream& os, const Type<TypeArgs...>& t) {
+	os << t.output_r << " " << t.input_a << " " << t.input_b;
+	return os;
+}
 
 struct Parameters {
 
