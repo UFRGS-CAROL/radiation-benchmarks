@@ -839,28 +839,28 @@ __global__ void matrix_mul(half_t *a0, half_t *a1, half_t *a2, half_t *b0,
 
 }
 
-// template<class half_t, class real_t>
-// __global__ void matrix_mul(half_t *a0, half_t *b0, real_t *c0, real_t*d0,
-// 		size_t mul_M, size_t mul_N, size_t mul_K, real_t alpha, real_t beta) {
+template<class half_t, class real_t>
+__global__ void matrix_mul(half_t *a0, half_t *b0, real_t *c0, real_t*d0,
+		size_t mul_M, size_t mul_N, size_t mul_K, real_t alpha, real_t beta) {
 
-// 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-// 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-// 	register int k;
+	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+	register int k;
 
-// 	if (tx * ty > mul_M * mul_N)
-// 		return;
+	if (tx * ty > mul_M * mul_N)
+		return;
 
-// 	register real_t acc = 0.0;
-// 	for (k = 0; k < mul_N; k++) {
-// 		acc = real_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc;
+	register real_t acc = 0.0;
+	for (k = 0; k < mul_N; k++) {
+		acc = real_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc;
 		
-// 	}
+	}
 
-// 	acc = alpha * acc
-// 			+ beta * c0[ty * mul_N + tx];
+	acc = alpha * acc
+			+ beta * c0[ty * mul_N + tx];
 
-// 	d0[ty * mul_N + tx] = (real_t) acc;
-// }
+	d0[ty * mul_N + tx] = (real_t) acc;
+}
 
 __device__ __forceinline__ float mul_(float a, float b ) {
         return __fmul_ru(a,b);
@@ -892,70 +892,28 @@ template<class half_t, class real_t>
 __global__ void matrix_mul_dmr(half_t *a0, half_t *b0, real_t *c0, real_t*d0,real_t*d1,
 		size_t mul_M, size_t mul_N, size_t mul_K, real_t alpha, real_t beta) {
 
-// 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-// 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-// 	register int k;
-
-// 	if (tx * ty > mul_M * mul_N)
-// 		return;
-
-// 	register half_t acc = 0.0;
-// 	register real_t acc1 = 0.0;
-// 	for (k = 0; k < mul_N; k++) {
-// 		acc = half_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc;
-// 		acc1 = real_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc1;
-
-// 	}
-
-// 	acc = half_t (alpha * acc
-// 			+ beta * c0[ty * mul_N + tx]);
-// 	acc1 = alpha * acc1
-// 			+ beta * c0[ty * mul_N + tx];		
-
-// 	d0[ty * mul_N + tx] = (half_t) acc;
-// 	d1[ty * mul_N + tx] = (real_t) acc1;
-}
-
-
-
-
-template<class half_t, class real_t>
-__global__ void matrix_mul(half_t *a0, half_t *b0, real_t *c0, real_t*d0,
-		size_t mul_M, size_t mul_N, size_t mul_K, real_t alpha, real_t beta) {
-
 	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
 	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 	register int k;
 
-
-	__shared__ half_t a_shared[WMMA_M][WMMA_N];
-	__shared__ half_t b_shared[WMMA_M][WMMA_N];
-	__shared__ real_t c_shared[WMMA_M][WMMA_N];
-	//__shared__ real_t d0_shared[WMMA_M][WMMA_N];
-
-
-
-	a_shared[threadIdx.x][threadIdx.y] = (half_t)a0[ty * mul_N + tx];
-
-	b_shared[threadIdx.x][threadIdx.y] =(half_t)b0[ty * mul_N + tx];
- 
-	c_shared[threadIdx.x][threadIdx.y] = (real_t)c0[ty * mul_N + tx];
-
-	//d_shared[threadIdx.x][threadIdx.y] = real_t(d0[ty * mul_N + k]);
-
 	if (tx * ty > mul_M * mul_N)
 		return;
 
-	register real_t acc = 0.0;
+	register half_t acc = 0.0;
+	register real_t acc1 = 0.0;
 	for (k = 0; k < mul_N; k++) {
-		acc = (real_t)(a_shared[threadIdx.y][k] * b_shared[k][threadIdx.x]) + acc;
-		
+		acc = half_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc;
+		acc1 = real_t(a0[ty * mul_N + k] * b0[k * mul_N + tx]) + acc1;
+
 	}
 
-	acc = alpha * acc
-			+ beta *c_shared[threadIdx.x][threadIdx.y];
+	acc = half_t (alpha * acc
+			+ beta * c0[ty * mul_N + tx]);
+	acc1 = alpha * acc1
+			+ beta * c0[ty * mul_N + tx];		
 
-	d0[ty * mul_N + tx] = (real_t) acc;
+	d0[ty * mul_N + tx] = (half_t) acc;
+	d1[ty * mul_N + tx] = (real_t) acc1;
 }
 
 template<class half_t, class real_t>
