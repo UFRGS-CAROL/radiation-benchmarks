@@ -911,8 +911,8 @@ __global__ void matrix_mul_dmr(half_t *a0, half_t *b0, real_t *c0, real_t*d0,rea
 	}
 
 	
-	 acc = float(alpha * acc
-	 		+ beta * c0[ty * mul_N + tx]);
+	 acc = (float)alpha * acc
+	 		+ (float)beta * (float)c0[ty * mul_N + tx];
 	 acc1 = alpha * acc1
 	 		+ beta * c0[ty * mul_N + tx];		
 
