@@ -199,6 +199,12 @@ public:
 				this->rows_a, this->cols_b, this->rows_b, this->alpha,
 				this->beta);
 
+
+		// matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
+		// 		this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0,this->device_ptr_d1,
+		// 		this->rows_a, this->cols_b, this->rows_b, this->alpha,
+		// 		this->beta);
+
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
 
