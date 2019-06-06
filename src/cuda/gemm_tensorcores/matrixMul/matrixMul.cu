@@ -51,7 +51,7 @@
 #include <helper_cuda.h>
 
 #include <cuda_fp16.h>
-#include "half.hpp"
+//#include "half.hpp"
 
 /**
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
@@ -154,8 +154,8 @@ int MatrixMultiply(int argc, char **argv,
 
   // Initialize host memory
   // const float valB = 0.01f;
-  const half valA = 2.0f;
-  const half valB = 2.0f;
+  const half valA = 2.0;
+  const half valB = 2.0;
   ConstantInit(h_A, size_A, valA);
   ConstantInit(h_B, size_B, valB);
   //printf("h_A = %f\n", h_A[0]);
@@ -214,7 +214,7 @@ int MatrixMultiply(int argc, char **argv,
   checkCudaErrors(cudaEventRecord(start, NULL));
 
   // Execute the kernel
-  int nIter = 1000;
+  int nIter = 10;
 
   for (int j = 0; j < nIter; j++) {
     if (block_size == 16) {
