@@ -255,21 +255,21 @@ int MatrixMultiply(int argc, char **argv,
   //     |<x, y>_cpu - <x,y>_gpu|/<|x|, |y|>  < eps
   double eps = 1.e-6;  // machine zero
 
-  for (int i = 0; i < static_cast<int>(dimsC.x * dimsC.y); i++) {
-    double abs_err = fabs(h_C[i] - (dimsA.x * valB));
-    double dot_length = dimsA.x;
-    double abs_val = fabs(h_C[i]);
-    double rel_err = abs_err / abs_val / dot_length;
+  // for (int i = 0; i < static_cast<int>(dimsC.x * dimsC.y); i++) {
+  //   double abs_err = fabs(h_C[i] - (dimsA.x * valB));
+  //   double dot_length = dimsA.x;
+  //   double abs_val = fabs(h_C[i]);
+  //   double rel_err = abs_err / abs_val / dot_length;
 
-    if (rel_err > eps) {
-      printf("Error! Matrix[%05d]=%.8f, ref=%.8f error term is > %E\n",
-             i, h_C[i], dimsA.x * valB, eps);
-      correct = false;
-    }
-  }
+  //   if (rel_err > eps) {
+  //     printf("Error! Matrix[%05d]=%.8f, ref=%.8f error term is > %E\n",
+  //            i, h_C[i], dimsA.x * valB, eps);
+  //     correct = false;
+  //   }
+  // }
 
-  printf("%s\n", correct ? "Result = PASS" : "Result = FAIL");
-
+  // printf("%s\n", correct ? "Result = PASS" : "Result = FAIL");
+  printf(" A= %f B= %f  C = %f \n", d_A, d_B, d_C);
   // Clean up memory
   free(h_A);
   free(h_B);
