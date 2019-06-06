@@ -71,6 +71,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
   // Index of the last sub-matrix of A processed by the block
   int aEnd   = aBegin + wA - 1;
 
+  printf("aEnd = %i \n", aEnd);
+
   // Step size used to iterate through the sub-matrices of A
   int aStep  = BLOCK_SIZE;
 
