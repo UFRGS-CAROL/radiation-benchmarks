@@ -312,14 +312,14 @@ int main(int argc, char **argv) {
 
   int block_size = 32;
 
-  // dim3 dimsA(5 * 2 * block_size, 5 * 2 * block_size, 1);
-  // dim3 dimsB(5 * 4 * block_size, 5 * 2 * block_size, 1);
+  dim3 dimsA(5 * 2 * block_size, 5 * 2 * block_size, 1);
+  dim3 dimsB(5 * 4 * block_size, 5 * 2 * block_size, 1);
 
-  dim3 dimsA.x = 8192;
-  dim3 dimsA.y = 8192;
+  dimsA.x = 8192;
+  dimsA.y = 8192;
 
-  dim3 dimsB.x = 8192;
-  dim3 dimsB.y = 8192; 
+  dimsB.x = 8192;
+  dimsB.y = 8192; 
 
 
   // // width of Matrix A
