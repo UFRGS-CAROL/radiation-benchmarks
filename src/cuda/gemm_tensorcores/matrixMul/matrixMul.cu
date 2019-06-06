@@ -153,7 +153,7 @@ int MatrixMultiply(int argc, char **argv,
   const float valB = 2.0f;
   ConstantInit(h_A, size_A, valA);
   ConstantInit(h_B, size_B, valB);
-  printf("h_A = %f\n", h_A[0]);
+  //printf("h_A = %f\n", h_A[0]);
   // Allocate device memory
   float *d_A, *d_B, *d_C;
 
@@ -209,7 +209,7 @@ int MatrixMultiply(int argc, char **argv,
   checkCudaErrors(cudaEventRecord(start, NULL));
 
   // Execute the kernel
-  int nIter = 10;
+  int nIter = 1000;
 
   for (int j = 0; j < nIter; j++) {
     if (block_size == 16) {
