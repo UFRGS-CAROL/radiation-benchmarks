@@ -240,16 +240,22 @@ ALL_LDFLAGS += $(addprefix -Xlinker ,$(LDFLAGS))
 ALL_LDFLAGS += $(addprefix -Xlinker ,$(EXTRA_LDFLAGS))
 
 # Common includes and paths for CUDA
-INCLUDES  := -I../../Common
+INCLUDES  := -I../../Common -I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc
 LIBRARIES :=
 
 ################################################################################
 
 # Gencode arguments
+#ifeq ($(TARGET_ARCH),$(filter $(TARGET_ARCH),armv7l aarch64))
+#SMS ?= 30 35 37 50 52 60 61 70 72 75
+#else
+#SMS ?= 30 35 37 50 52 60 61 70 75
+#endif
+
 ifeq ($(TARGET_ARCH),$(filter $(TARGET_ARCH),armv7l aarch64))
-SMS ?= 30 35 37 50 52 60 61 70 72 75
+SMS ?= 70
 else
-SMS ?= 30 35 37 50 52 60 61 70 75
+SMS ?= 70
 endif
 
 ifeq ($(SMS),)

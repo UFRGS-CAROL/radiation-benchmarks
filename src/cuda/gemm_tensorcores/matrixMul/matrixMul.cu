@@ -148,7 +148,9 @@ int MatrixMultiply(int argc, char **argv,
   float *h_B = reinterpret_cast<float *>(malloc(mem_size_B));
 
   // Initialize host memory
-  const float valB = 0.01f;
+  // const float valB = 0.01f;
+  valA =
+  valB = 
   ConstantInit(h_A, size_A, 1.0f);
   ConstantInit(h_B, size_B, valB);
 
@@ -207,7 +209,7 @@ int MatrixMultiply(int argc, char **argv,
   checkCudaErrors(cudaEventRecord(start, NULL));
 
   // Execute the kernel
-  int nIter = 300;
+  int nIter = 10;
 
   for (int j = 0; j < nIter; j++) {
     if (block_size == 16) {
@@ -276,8 +278,8 @@ int MatrixMultiply(int argc, char **argv,
   checkCudaErrors(cudaFree(d_B));
   checkCudaErrors(cudaFree(d_C));
 
-  printf("\nNOTE: The CUDA Samples are not meant for performance"\
-         "measurements. Results may vary when GPU Boost is enabled.\n");
+  // printf("\nNOTE: The CUDA Samples are not meant for performance"\
+  //        "measurements. Results may vary when GPU Boost is enabled.\n");
 
   if (correct) {
     return EXIT_SUCCESS;
@@ -310,34 +312,37 @@ int main(int argc, char **argv) {
 
   int block_size = 32;
 
-  dim3 dimsA(5 * 2 * block_size, 5 * 2 * block_size, 1);
-  dim3 dimsB(5 * 4 * block_size, 5 * 2 * block_size, 1);
+  // dim3 dimsA(5 * 2 * block_size, 5 * 2 * block_size, 1);
+  // dim3 dimsB(5 * 4 * block_size, 5 * 2 * block_size, 1);
 
-  // width of Matrix A
-  if (checkCmdLineFlag(argc, (const char **)argv, "wA")) {
-    dimsA.x = getCmdLineArgumentInt(argc, (const char **)argv, "wA");
-  }
+  dim3 dimsA = 8192;
+  dim3 dimsB = 8192;
 
-  // height of Matrix A
-  if (checkCmdLineFlag(argc, (const char **)argv, "hA")) {
-    dimsA.y = getCmdLineArgumentInt(argc, (const char **)argv, "hA");
-  }
+  // // width of Matrix A
+  // if (checkCmdLineFlag(argc, (const char **)argv, "wA")) {
+  //   dimsA.x = getCmdLineArgumentInt(argc, (const char **)argv, "wA");
+  // }
 
-  // width of Matrix B
-  if (checkCmdLineFlag(argc, (const char **)argv, "wB")) {
-    dimsB.x = getCmdLineArgumentInt(argc, (const char **)argv, "wB");
-  }
+  // // height of Matrix A
+  // if (checkCmdLineFlag(argc, (const char **)argv, "hA")) {
+  //   dimsA.y = getCmdLineArgumentInt(argc, (const char **)argv, "hA");
+  // }
 
-  // height of Matrix B
-  if (checkCmdLineFlag(argc, (const char **)argv, "hB")) {
-    dimsB.y = getCmdLineArgumentInt(argc, (const char **)argv, "hB");
-  }
+  // // width of Matrix B
+  // if (checkCmdLineFlag(argc, (const char **)argv, "wB")) {
+  //   dimsB.x = getCmdLineArgumentInt(argc, (const char **)argv, "wB");
+  // }
 
-  if (dimsA.x != dimsB.y) {
-    printf("Error: outer matrix dimensions must be equal. (%d != %d)\n",
-           dimsA.x, dimsB.y);
-    exit(EXIT_FAILURE);
-  }
+  // // height of Matrix B
+  // if (checkCmdLineFlag(argc, (const char **)argv, "hB")) {
+  //   dimsB.y = getCmdLineArgumentInt(argc, (const char **)argv, "hB");
+  // }
+
+  // if (dimsA.x != dimsB.y) {
+  //   printf("Error: outer matrix dimensions must be equal. (%d != %d)\n",
+  //          dimsA.x, dimsB.y);
+  //   exit(EXIT_FAILURE);
+  // }
 
   printf("MatrixA(%d,%d), MatrixB(%d,%d)\n", dimsA.x, dimsA.y,
          dimsB.x, dimsB.y);
