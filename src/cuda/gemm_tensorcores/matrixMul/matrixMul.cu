@@ -269,7 +269,7 @@ int MatrixMultiply(int argc, char **argv,
   // }
 
   // printf("%s\n", correct ? "Result = PASS" : "Result = FAIL");
-  printf(" A= %f B= %f  C = %f \n", d_A, d_B, d_C);
+  printf(" A= %d B= %d  C = %d \n", h_A, h_B, h_C);
   // Clean up memory
   free(h_A);
   free(h_B);
