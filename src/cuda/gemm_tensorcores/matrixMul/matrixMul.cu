@@ -51,6 +51,8 @@
 #include <helper_cuda.h>
 
 #include <cuda_fp16.h>
+#include "half.hpp"
+
 /**
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
