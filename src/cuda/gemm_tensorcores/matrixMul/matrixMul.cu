@@ -315,8 +315,8 @@ int main(int argc, char **argv) {
   // dim3 dimsA(5 * 2 * block_size, 5 * 2 * block_size, 1);
   // dim3 dimsB(5 * 4 * block_size, 5 * 2 * block_size, 1);
 
-  dim3 dimsA = 8192;
-  dim3 dimsB = 8192;
+  dim3 dimsA(8192,1);
+  dim3 dimsB(8192,1);
 
   // // width of Matrix A
   // if (checkCmdLineFlag(argc, (const char **)argv, "wA")) {
