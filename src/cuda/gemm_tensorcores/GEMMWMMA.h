@@ -341,7 +341,7 @@ public:
  
 				//no tensor with DMR
 
-				//simple_gemm_DMR<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta);
+				simple_gemm_DMR<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta);
 
 	
 
