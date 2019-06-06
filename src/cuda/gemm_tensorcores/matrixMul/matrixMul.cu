@@ -258,7 +258,7 @@ int MatrixMultiply(int argc, char **argv,
 
   // test relative error by the formula
   //     |<x, y>_cpu - <x,y>_gpu|/<|x|, |y|>  < eps
-  double eps = 1.e-6;  // machine zero
+  //double eps = 1.e-6;  // machine zero
 
   // for (int i = 0; i < static_cast<int>(dimsC.x * dimsC.y); i++) {
   //   double abs_err = fabs(h_C[i] - (dimsA.x * valB));
@@ -274,7 +274,7 @@ int MatrixMultiply(int argc, char **argv,
   // }
 
   // printf("%s\n", correct ? "Result = PASS" : "Result = FAIL");
-  printf(" A= %f B= %f  C = %f \n", h_A[0], h_B[0], h_C[0]);
+  //printf(" A= %f B= %f  C = %f \n", h_A[0], h_B[0], h_C[0]);
   // Clean up memory
   free(h_A);
   free(h_B);
