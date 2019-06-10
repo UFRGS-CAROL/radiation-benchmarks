@@ -39,4 +39,4 @@ clean:
 	rm -rf $(EXEC)
 
 test:
-	$(EXEC) --verbose --iterations 10 --precision single --redundancy dmrmixed
+	$(EXEC) --verbose --iterations 10 --precision single --redundancy dmrmixed --inst fma

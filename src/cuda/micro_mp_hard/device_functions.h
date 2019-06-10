@@ -10,9 +10,8 @@
 
 #include "cuda_utils.h"
 
-#define ZERO_FLOAT 3.0316488E-13 //1e-37
-#define ZERO_HALF 4.166E-2 //1e-13
-
+#define ZERO_FLOAT 3.0316488E-20 //1e-37
+#define ZERO_HALF 4.166E-5 //1e-13
 
 __device__ __forceinline__ double abs__(double a) {
 	return fabs(a);
@@ -22,7 +21,7 @@ __device__ __forceinline__ float abs__(float a) {
 	return fabsf(a);
 }
 
-__device__ __forceinline__ half abs__(half a) {
+__device__  __forceinline__ half abs__(half a) {
 	return fabsf(a);
 }
 
@@ -42,11 +41,35 @@ __device__ __forceinline__ void compare(const double lhs, const float rhs) {
 	}
 }
 
-
 template<typename incomplete, typename full>
 __device__ __forceinline__ void check_relative_error(incomplete acc_incomplete,
 		full acc_full) {
 	compare(acc_full, acc_incomplete);
+}
+
+template<typename T>
+__device__ __forceinline__ void cast(volatile T& lhs, const T& rhs) {
+	lhs = rhs;
+}
+
+/*
+ * __float2half_rd  round-down mode
+ * __float2half_rn round-to-nearest-even mode
+ * __float2half_ru  round-up mode
+ * __float2half_rz round-towards-zero mode
+ */
+__device__ __forceinline__ void cast(volatile half& lhs, const float& rhs) {
+	lhs = __float2half_rn(rhs);
+}
+
+/*
+ *__double2float_rd Convert a double to a float in round-down mode.
+ *__double2float_rn Convert a double to a float in round-to-nearest-even mode.
+ *__double2float_ru Convert a double to a float in round-up mode.
+ *__double2float_rz Convert a double to a float in round-towards-zero mode.
+ */
+__device__ __forceinline__ void cast(volatile float& lhs, const double& rhs) {
+	lhs = __double2float_rn(rhs);
 }
 
 /**
@@ -63,7 +86,7 @@ __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
 	return __fmaf_rn(a, b, acc);
 }
 
-__device__ __forceinline__ half fma_dmr(half a, half b, half acc) {
+__device__  __forceinline__ half fma_dmr(half a, half b, half acc) {
 	return __hfma(a, b, acc);
 }
 
@@ -81,7 +104,7 @@ __device__ __forceinline__ float add_dmr(float a, float b) {
 	return __fadd_rn(a, b);
 }
 
-__device__ __forceinline__ half add_dmr(half a, half b) {
+__device__  __forceinline__ half add_dmr(half a, half b) {
 	return __hadd(a, b);
 }
 
@@ -99,7 +122,7 @@ __device__ __forceinline__ float mul_dmr(float a, float b) {
 	return __fmul_rn(a, b);
 }
 
-__device__ __forceinline__ half mul_dmr(half a, half b) {
+__device__  __forceinline__ half mul_dmr(half a, half b) {
 	return __hmul(a, b);
 }
 
