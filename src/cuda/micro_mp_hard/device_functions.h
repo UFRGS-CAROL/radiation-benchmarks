@@ -10,8 +10,8 @@
 
 #include "cuda_utils.h"
 
-#define ZERO_FLOAT 3.0316488E-20 //1e-37
-#define ZERO_HALF 4.166E-5 //1e-13
+#define ZERO_FLOAT 3.0316488E-37 //1e-37
+#define ZERO_HALF 4.166E-13 //1e-13
 
 __device__ __forceinline__ double abs__(double a) {
 	return fabs(a);
