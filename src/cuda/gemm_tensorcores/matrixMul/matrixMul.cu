@@ -57,7 +57,7 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
+template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *C1 float *A,
     float *B, int wA,
     int wB) {
   // Block index
@@ -166,7 +166,7 @@ int MatrixMultiply(int argc, char **argv,
   ConstantInit(h_B, size_B, valB);
   //printf("h_A = %f\n", h_A[0]);
   // Allocate device memory
-  float *d_A, *d_B, *d_C;
+  float *d_A, *d_B, *d_C, *d_C1;
 
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
@@ -184,6 +184,8 @@ int MatrixMultiply(int argc, char **argv,
 
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_C), mem_size_C));
 
+  checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_C1), mem_size_C));
+
   // copy host memory to device
   checkCudaErrors(cudaMemcpy(d_A, h_A, mem_size_A, cudaMemcpyHostToDevice));
 
@@ -198,10 +200,10 @@ int MatrixMultiply(int argc, char **argv,
 
   // Performs warmup operation using matrixMul CUDA kernel
   if (block_size == 16) {
-    MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_A, d_B,
+    MatrixMulCUDA<16> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
                                             dimsA.x, dimsB.x);
   } else {
-    MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_A, d_B,
+    MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                             dimsA.x, dimsB.x);
   }
 
@@ -224,10 +226,10 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
     if (block_size == 16) {
-      MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_A, d_B,
+      MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1 d_A, d_B,
                                               dimsA.x, dimsB.x);
     } else {
-      MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_A, d_B,
+      MatrixMulCUDA<32> <<< grid, threads >>>(d_C,d_C1  d_A, d_B,
                                               dimsA.x, dimsB.x);
     }
   }
@@ -288,6 +290,7 @@ int MatrixMultiply(int argc, char **argv,
   checkCudaErrors(cudaFree(d_A));
   checkCudaErrors(cudaFree(d_B));
   checkCudaErrors(cudaFree(d_C));
+  checkCudaErrors(cudaFree(d_C1));
 
   // printf("\nNOTE: The CUDA Samples are not meant for performance"\
   //        "measurements. Results may vary when GPU Boost is enabled.\n");
