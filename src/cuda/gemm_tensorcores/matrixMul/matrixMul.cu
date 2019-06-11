@@ -87,8 +87,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-  float Csub = 0;
-  float Csub1= 0;
+  volatile float Csub = 0;
+  //float Csub1= 0;
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -118,10 +118,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
 #pragma unroll
 
     for (int k = 0; k < BLOCK_SIZE; ++k) {
+      
       fma_dmr(As[ty][k], Bs[k][tx],Csub);
-      fma_dmr(As[ty][k], Bs[k][tx],C1sub);
+      fma_dmr(As[ty][k], Bs[k][tx],Csub);
 
-      // Csub1 += As[ty][k] * Bs[k][tx];
+      // Csub += As[ty][k] * Bs[k][tx];
     }
 
     // Synchronize to make sure that the preceding
