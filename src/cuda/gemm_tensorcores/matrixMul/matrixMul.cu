@@ -57,7 +57,7 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *C1 float *A,
+template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *C1, float *A,
     float *B, int wA,
     int wB) {
   // Block index
@@ -226,10 +226,10 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
     if (block_size == 16) {
-      MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1 d_A, d_B,
+      MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                               dimsA.x, dimsB.x);
     } else {
-      MatrixMulCUDA<32> <<< grid, threads >>>(d_C,d_C1  d_A, d_B,
+      MatrixMulCUDA<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
                                               dimsA.x, dimsB.x);
     }
   }
