@@ -118,8 +118,9 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
 #pragma unroll
 
     for (int k = 0; k < BLOCK_SIZE; ++k) {
-      Csub += As[ty][k] * Bs[k][tx];
-      Csub1 += As[ty][k] * Bs[k][tx];
+      fma_dmr(As[ty][k], Bs[k][tx],Csub);
+      // Csub += As[ty][k] * Bs[k][tx];
+      // Csub1 += As[ty][k] * Bs[k][tx];
     }
 
     // Synchronize to make sure that the preceding
@@ -361,4 +362,16 @@ int main(int argc, char **argv) {
   int matrix_result = MatrixMultiply(argc, argv, block_size, dimsA, dimsB);
 
   exit(matrix_result);
+}
+
+__device__ __forceinline__ double fma_dmr(double a, double b, double acc) {
+  return fma(a, b, acc);
+}
+
+__device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
+  return __fmaf_rn(a, b, acc);
+}
+
+__device__  __forceinline__ half fma_dmr(half a, half b, half acc) {
+  return __hfma(a, b, acc);
 }
