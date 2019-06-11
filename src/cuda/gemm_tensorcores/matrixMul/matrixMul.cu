@@ -88,7 +88,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
   float Csub = 0;
-
+  
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
   for (int a = aBegin, b = bBegin;
@@ -117,6 +117,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
 #pragma unroll
 
     for (int k = 0; k < BLOCK_SIZE; ++k) {
+      Csub += As[ty][k] * Bs[k][tx];
       Csub += As[ty][k] * Bs[k][tx];
     }
 
