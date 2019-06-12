@@ -24,23 +24,23 @@
 
 // Returns the number of errors found
 // if no errors were found it returns 0
-template<typename T>
-int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose, unsigned long long dmr_errors) {
+template<typename incomplete, typename full>
+int check_output_errors(std::vector<incomplete> &R_incomplete,
+		std::vector<full> &R, full OUTPUT_R, bool verbose,
+		unsigned long long dmr_errors) {
 	int host_errors = 0;
 	double gold = double(OUTPUT_R);
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < R.size(); i++) {
 		double output = double(R[i]);
+		double output_inc = double(R_incomplete[i]);
 		if (gold != output) {
 #pragma omp critical
 			{
-//					char error_detail[150];
-//					snprintf(error_detail, 150, "p: [%d], r: %1.20e, e: %1.20e",
-//							i, (double) output, (double) valGold);
-
 				std::stringstream error_detail;
 				error_detail << "p: [" << i << "], r: " << std::scientific
-						<< output << ", e: " << gold;
+						<< output << ", e: " << gold << " smaller_precision: "
+						<< output_inc;
 
 				if (verbose && (host_errors < 10))
 					std::cout << error_detail.str() << std::endl;
@@ -52,11 +52,12 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose, unsigned lo
 		}
 	}
 
-	if(dmr_errors != 0){
+	if (dmr_errors != 0) {
 		std::stringstream error_detail;
-		error_detail << "detected_dmr_errors: " << dmr_errors;;
+		error_detail << "detected_dmr_errors: " << dmr_errors;
+		;
 #ifdef LOGS
-				log_error_detail(const_cast<char*>(error_detail.str().c_str()));
+		log_error_detail(const_cast<char*>(error_detail.str().c_str()));
 #endif
 	}
 
@@ -69,7 +70,7 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose, unsigned lo
 	return host_errors;
 }
 
-template<typename incomplete, typename full, typename... TypeArgs>
+template<typename incomplete, typename full, typename ... TypeArgs>
 void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 	std::cout << "Printing the input values " << type_ << std::endl;
 	// Init test environment
@@ -160,12 +161,11 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 
 		//check output
 		host_vector_full = device_vector_full.to_vector();
+		host_vector_inc = device_vector_inc.to_vector();
 		unsigned long long relative_errors = copy_errors();
 
-		int errors = check_output_errors<full>(host_vector_full, type_.output_r,
-				parameters.verbose, relative_errors);
-
-
+		int errors = check_output_errors(host_vector_inc, host_vector_full,
+				type_.output_r, parameters.verbose, relative_errors);
 
 		double outputpersec = double(parameters.r_size) / kernel_time;
 		if (parameters.verbose) {
