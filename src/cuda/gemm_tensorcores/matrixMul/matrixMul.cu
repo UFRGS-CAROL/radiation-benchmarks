@@ -237,16 +237,16 @@ int MatrixMultiply(int argc, char **argv,
                    const dim3 &dimsB) {
   // Allocate host memory for matrices A and B
   unsigned int size_A = dimsA.x * dimsA.y;
-  unsigned int mem_size_A = sizeof(half_h) * size_A;
+  unsigned int mem_size_A = sizeof(half) * size_A;
   half_h *h_A = reinterpret_cast<half_h *>(malloc(mem_size_A));
   unsigned int size_B = dimsB.x * dimsB.y;
-  unsigned int mem_size_B = sizeof(half_h) * size_B;
+  unsigned int mem_size_B = sizeof(half) * size_B;
   half_h *h_B = reinterpret_cast<half_h *>(malloc(mem_size_B));
 
   // Initialize host memory
   
-  const half_h valA = 2;
-  const half_h valB = 2;
+  const half_h valA = 2.0;
+  const half_h valB = 2.0;
   ConstantInit(h_A, size_A, valA);
   ConstantInit(h_B, size_B, valB);
   //printf("h_A = %f\n", h_A[0]);
@@ -255,7 +255,7 @@ int MatrixMultiply(int argc, char **argv,
 
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
-  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(half_h);
+  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(half);
   half_h *h_C = reinterpret_cast<half_h *>(malloc(mem_size_C));
 
   if (h_C == NULL) {
