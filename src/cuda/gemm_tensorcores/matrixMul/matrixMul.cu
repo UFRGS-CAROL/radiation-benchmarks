@@ -52,6 +52,7 @@
 
 #include <cuda_fp16.h>
 #include "half.hpp"
+#include <math.h>
 
 typedef half_float::half half_h;
 
@@ -244,7 +245,7 @@ int MatrixMultiply(int argc, char **argv,
 
   // Initialize host memory
   
-  const half_h  valA = 2.0f;
+  const half_h valA = 2.0f;
   const half_h valB = 2.0f;
   ConstantInit(h_A, size_A, valA);
   ConstantInit(h_B, size_B, valB);
