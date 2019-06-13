@@ -183,11 +183,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, 
        a += aStep, b += bStep) {
     // Declaration of the shared memory array As used to
     // store the sub-matrix of A
-    __shared__ const volatile half2 As[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ half2 As[BLOCK_SIZE][BLOCK_SIZE];
 
     // Declaration of the shared memory array Bs used to
     // store the sub-matrix of B
-    __shared__ const volatile half2 Bs[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ half2 Bs[BLOCK_SIZE][BLOCK_SIZE];
 
     // Load the matrices from device memory
     // to shared memory; each thread loads
@@ -204,7 +204,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, 
 #pragma unroll
 
     for (int k = 0; k < BLOCK_SIZE; ++k) {
-      Csub = __hfma2(As[ty][k], Bs[k][tx],Csub);
+      //Csub = __hfma2(As[ty][k], Bs[k][tx],Csub);
+
+      Csub += __hmul2(As[ty][k], Bs[k][tx]);
+
+
      // Csub1 =__hfma2((As[ty][k]), (Bs[k][tx]),Csub1);
 
       
