@@ -192,8 +192,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, 
     // Load the matrices from device memory
     // to shared memory; each thread loads
     // one element of each matrix
-    As[ty][tx] = A[a + wA * ty + tx];
-    Bs[ty][tx] = B[b + wB/2 * ty + tx];
+    As[ty][tx] = __half2half2(A[a + wA * ty + tx]);
+    Bs[ty][tx] = __half2half2(B[b + wB/2 * ty + tx]);
 
     // Synchronize to make sure the matrices are loaded
     __syncthreads();
