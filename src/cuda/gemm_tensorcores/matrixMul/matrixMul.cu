@@ -171,11 +171,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, 
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-  // volatile half2 Csub = __float2half2_rn(0.0);
+  volatile half2 Csub = __float2half2_rn(0.0);
   volatile half2 Csub1= __float2half2_rn(0.0);
 
-  volatile half2& Csub =(volatile half2&) volatile;
-  Csub = __float2half2_rn(0.0);
+
+
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
   for (int a = aBegin, b = bBegin;
@@ -183,11 +183,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, 
        a += aStep, b += bStep) {
     // Declaration of the shared memory array As used to
     // store the sub-matrix of A
-    __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ half2 As[BLOCK_SIZE][BLOCK_SIZE];
 
     // Declaration of the shared memory array Bs used to
     // store the sub-matrix of B
-    __shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ half2 Bs[BLOCK_SIZE][BLOCK_SIZE];
 
     // Load the matrices from device memory
     // to shared memory; each thread loads
