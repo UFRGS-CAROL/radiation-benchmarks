@@ -223,7 +223,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, 
 }
 
 
-void ConstantInit(half *data, int size, half val) {
+void ConstantInit(half_h *data, int size, half_h val) {
   for (int i = 0; i < size; ++i) {
     data[i] = val;
   }
