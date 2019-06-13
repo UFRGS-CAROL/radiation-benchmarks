@@ -245,8 +245,8 @@ int MatrixMultiply(int argc, char **argv,
 
   // Initialize host memory
   
-  const half_h valA = 2.0f;
-  const half_h valB = 2.0f;
+  const half_h valA = 2;
+  const half_h valB = 2;
   ConstantInit(h_A, size_A, valA);
   ConstantInit(h_B, size_B, valB);
   //printf("h_A = %f\n", h_A[0]);
