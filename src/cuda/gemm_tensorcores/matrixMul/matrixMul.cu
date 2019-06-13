@@ -204,11 +204,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, 
 #pragma unroll
 
     for (int k = 0; k < BLOCK_SIZE; ++k) {
-      //Csub = __hfma2(As[ty][k], Bs[k][tx],Csub);
-
-      Csub += __half2half2(__hmul2(As[ty][k], Bs[k][tx]));
-
-
+      Csub = __hfma2(As[ty][k], Bs[k][tx],Csub);
      // Csub1 =__hfma2((As[ty][k]), (Bs[k][tx]),Csub1);
 
       
