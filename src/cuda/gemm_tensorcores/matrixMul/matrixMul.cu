@@ -171,8 +171,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, 
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-  half2 Csub = __float2half2_rn(0.0);
-  half2 Csub1= __float2half2_rn(0.0);
+  volatile half2 Csub = ((half2)0.0);
+ // half2 Csub1= __float2half2_rn(0.0);
 
 
 
@@ -205,7 +205,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, 
 
     for (int k = 0; k < BLOCK_SIZE; ++k) {
       Csub = __hfma2(As[ty][k], Bs[k][tx],Csub);
-      Csub1 =__hfma2((As[ty][k]), (Bs[k][tx]),Csub1);
+     // Csub1 =__hfma2((As[ty][k]), (Bs[k][tx]),Csub1);
 
       
     }
@@ -220,7 +220,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, 
   // each thread writes one element
   int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
   ((half2*)C)[c + wB/2 * ty + tx] = Csub;
-  ((half2*)C1)[c + wB/2 * ty + tx] = Csub1;
+  //((half2*)C1)[c + wB/2 * ty + tx] = Csub1;
  
 }
 
