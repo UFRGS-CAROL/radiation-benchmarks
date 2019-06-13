@@ -219,8 +219,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, 
   // Write the block sub-matrix to device memory;
   // each thread writes one element
   int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-  // ((half2*)C)[c + wB/2 * ty + tx] = Csub;
-  // ((half2*)C1)[c + wB/2 * ty + tx] = Csub1;
+  ((half2*)C)[c + wB/2 * ty + tx] = Csub;
+  ((half2*)C1)[c + wB/2 * ty + tx] = Csub1;
  
 }
 
