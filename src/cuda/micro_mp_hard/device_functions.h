@@ -87,7 +87,8 @@ __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
 }
 
 __device__  __forceinline__ half fma_dmr(half a, half b, half acc) {
-	return __hfma(a, b, acc);
+//	return __hfma(a, b, acc);
+	return __hfma_sat(a, b, acc);
 }
 
 /**
