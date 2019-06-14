@@ -306,7 +306,7 @@ int MatrixMultiply(int argc, char **argv,
   MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                          dimsA.x, dimsB.x);
   //MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
-                                            dimsA.x, dimsB.x);
+  //                                          dimsA.x, dimsB.x);
 
   
 
