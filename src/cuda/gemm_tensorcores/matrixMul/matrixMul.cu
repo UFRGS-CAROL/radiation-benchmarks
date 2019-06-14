@@ -283,16 +283,16 @@ int MatrixMultiply(int argc, char **argv,
 
 
   // Setup execution parameters
-  // dim3 threads(block_size, block_size);
-  // dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
-
-
-
-
-  // HALF parameters 
-
-  dim3 threads(block_size/2.0, block_size);
+  dim3 threads(block_size, block_size);
   dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
+
+
+
+
+  // // HALF parameters 
+
+  // dim3 threads(block_size/2.0, block_size);
+  // dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
 
 
 
