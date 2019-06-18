@@ -24,9 +24,9 @@
 
 // Returns the number of errors found
 // if no errors were found it returns 0
-template<typename incomplete, typename full>
+template<typename incomplete, typename full, typename output_type = incomplete>
 int check_output_errors(std::vector<incomplete> &R_incomplete,
-		std::vector<full> &R, full OUTPUT_R, bool verbose,
+		std::vector<full> &R, output_type OUTPUT_R, bool verbose,
 		unsigned long long dmr_errors) {
 	int host_errors = 0;
 	double gold = double(OUTPUT_R);
@@ -204,13 +204,19 @@ void dmr(Parameters& parameters) {
 	if (parameters.redundancy == DMRMIXED) {
 
 		if (parameters.precision == DOUBLE) {
-			Type<float, double> type_;
-			test_radiation<float, double, float, double>(type_, parameters);
+//			Type<float, double> type_;
+			Type<float> type_;
+//			test_radiation<float, double, float, double>(type_, parameters);
+			test_radiation<float, double>(type_, parameters);
+
 		}
 
 		if (parameters.precision == SINGLE) {
-			Type<half, float> type_;
-			test_radiation<half, float, half, float>(type_, parameters);
+//			Type<half, float> type_;
+			Type<half> type_;
+//			test_radiation<half, float, half, float>(type_, parameters);
+			test_radiation<half, float>(type_, parameters);
+
 		}
 	}
 
