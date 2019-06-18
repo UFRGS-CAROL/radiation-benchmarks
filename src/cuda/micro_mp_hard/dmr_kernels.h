@@ -26,21 +26,21 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 	volatile register full input_a_neg_full = -INPUT_A;
 	volatile register full input_b_neg_full = -INPUT_B;
 
-//	volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
-//	volatile register incomplete input_a_incomplete = incomplete(INPUT_A);
-//	volatile register incomplete input_b_incomplete = incomplete(INPUT_B);
-//	volatile register incomplete input_a_neg_incomplete = incomplete(-INPUT_A);
-//	volatile register incomplete input_b_neg_incomplete = incomplete(-INPUT_B);
-	volatile register incomplete acc_incomplete;
-	cast(acc_incomplete, OUTPUT_R);
-	volatile register incomplete input_a_incomplete;
-	cast(input_a_incomplete, INPUT_A);
-	volatile register incomplete input_b_incomplete;
-	cast(input_b_incomplete, INPUT_B);
-	volatile register incomplete input_a_neg_incomplete;
-	cast(input_a_neg_incomplete, -INPUT_A);
-	volatile register incomplete input_b_neg_incomplete;
-	cast(input_b_neg_incomplete, -INPUT_B);
+	volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
+	volatile register incomplete input_a_incomplete = incomplete(INPUT_A);
+	volatile register incomplete input_b_incomplete = incomplete(INPUT_B);
+	volatile register incomplete input_a_neg_incomplete = incomplete(-INPUT_A);
+	volatile register incomplete input_b_neg_incomplete = incomplete(-INPUT_B);
+//	volatile register incomplete acc_incomplete;
+//	cast(acc_incomplete, OUTPUT_R);
+//	volatile register incomplete input_a_incomplete;
+//	cast(input_a_incomplete, INPUT_A);
+//	volatile register incomplete input_b_incomplete;
+//	cast(input_b_incomplete, INPUT_B);
+//	volatile register incomplete input_a_neg_incomplete;
+//	cast(input_a_neg_incomplete, -INPUT_A);
+//	volatile register incomplete input_b_neg_incomplete;
+//	cast(input_b_neg_incomplete, -INPUT_B);
 
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
 		acc_full = fma_dmr(input_a_full, input_b_full, acc_full);
