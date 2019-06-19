@@ -456,9 +456,12 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu,
 		FOUR_VECTOR* d_fv_gpu) {
 
 	PersistentKernel pk;
-	while(pk.keep_working()){
+	while (pk.keep_working()) {
 		pk.wait_for_work();
-		process_data(d_dim_gpu, d_par_gpu, d_box_gpu, d_rv_gpu, d_fv_gpu, d_qv_gpu);
+		if (pk.is_able_to_process()) {
+			process_data(d_dim_gpu, d_par_gpu, d_box_gpu, d_rv_gpu, d_fv_gpu,
+					d_qv_gpu);
+		}
 		pk.iteration_finished();
 	}
 }
@@ -693,25 +696,25 @@ void gpu_memory_setup(int nstreams, bool gpu_check, dim_str dim_cpu,
 		//	boxes
 		//==================================================
 		checkFrameworkErrors(
-				cudaMalloc((void ** )&(d_box_gpu[streamIdx]), dim_cpu.box_mem));
+				cudaMalloc((void **) &(d_box_gpu[streamIdx]), dim_cpu.box_mem));
 		//==================================================
 		//	rv
 		//==================================================
 		checkFrameworkErrors(
-				cudaMalloc((void ** )&(d_rv_gpu[streamIdx]),
+				cudaMalloc((void **) &(d_rv_gpu[streamIdx]),
 						dim_cpu.space_mem));
 		//==================================================
 		//	qv
 		//==================================================
 		checkFrameworkErrors(
-				cudaMalloc((void ** )&(d_qv_gpu[streamIdx]),
+				cudaMalloc((void **) &(d_qv_gpu[streamIdx]),
 						dim_cpu.space_mem2));
 
 		//==================================================
 		//	fv
 		//==================================================
 		checkFrameworkErrors(
-				cudaMalloc((void ** )&(d_fv_gpu[streamIdx]),
+				cudaMalloc((void **) &(d_fv_gpu[streamIdx]),
 						dim_cpu.space_mem));
 
 		//=====================================================================
@@ -752,7 +755,7 @@ void gpu_memory_setup(int nstreams, bool gpu_check, dim_str dim_cpu,
 	//==================================================
 	if (gpu_check) {
 		checkFrameworkErrors(
-				cudaMalloc((void** )&d_fv_gold_gpu, dim_cpu.space_mem));
+				cudaMalloc((void**) &d_fv_gold_gpu, dim_cpu.space_mem));
 		checkFrameworkErrors(
 				cudaMemcpy(d_fv_gold_gpu, fv_cpu_GOLD, dim_cpu.space_mem2,
 						cudaMemcpyHostToDevice));
@@ -818,6 +821,25 @@ bool checkOutputErrors(int verbose, dim_str dim_cpu, int streamIdx,
 		printf("#");
 
 	return (host_errors == 0);
+}
+
+void launch_kernel(int nstreams, dim3 blocks, dim3 threads,
+		par_str par_cpu, cudaStream_t* streams, dim_str& dim_cpu,
+		box_str** d_box_gpu, FOUR_VECTOR** d_rv_gpu,
+		tested_type** d_qv_gpu, FOUR_VECTOR** d_fv_gpu) {
+	////////////// GOLD CHECK Kernel /////////////////
+	// dim3 gck_blockSize = dim3(	GOLDCHK_BLOCK_SIZE, 
+	// 	GOLDCHK_BLOCK_SIZE);
+	// dim3 gck_gridSize = dim3(	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE), 
+	// 	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
+	// //////////////////////////////////////////////////
+	for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+		kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx]>>>(par_cpu,
+				dim_cpu, d_box_gpu[streamIdx], d_rv_gpu[streamIdx],
+				d_qv_gpu[streamIdx], d_fv_gpu[streamIdx]);
+		checkFrameworkErrors(cudaPeekAtLastError());
+		//kernel launched
+	}
 }
 
 ///////////////////////////////////////// GOLD CHECK ON DEVICE ////////////////////////
@@ -1061,7 +1083,7 @@ int main(int argc, char *argv[]) {
 	threads.x = NUMBER_THREADS;
 	threads.y = 1;
 
-	HostPersistentControler pt_control(blocks, threads);
+	HostPersistentControler pt_control(blocks);
 
 	//=====================================================================
 	//	GPU_CUDA
@@ -1099,16 +1121,11 @@ int main(int argc, char *argv[]) {
 	// dim3 gck_gridSize = dim3(	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE), 
 	// 	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
 	// //////////////////////////////////////////////////
-	for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-		kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx]>>>(par_cpu,
-				dim_cpu, d_box_gpu[streamIdx], d_rv_gpu[streamIdx],
-				d_qv_gpu[streamIdx], d_fv_gpu[streamIdx]);
-		checkFrameworkErrors(cudaPeekAtLastError());
-	}
+	launch_kernel(nstreams, blocks, threads, par_cpu,
+			streams, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
 
 	//LOOP START
-	int loop;
-	for (loop = 0; loop < iterations; loop++) {
+	for (int loop = 0; loop < iterations; loop++) {
 
 		if (verbose)
 			printf("======== Iteration #%06u ========\n", loop);
@@ -1145,9 +1162,7 @@ int main(int argc, char *argv[]) {
 		if (!generate) start_iteration();
 #endif
 		// launch kernel - all boxes
-		pt_control.start_processing();
-
-		pt_control.wait_gpu();
+		pt_control.process_data_on_kernel();
 
 		//printf("All kernels were commited.\n");
 //		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
@@ -1200,11 +1215,14 @@ int main(int argc, char *argv[]) {
 					checkFrameworkErrors(
 							cudaMemcpy(fv_cpu[streamIdx], d_fv_gpu[streamIdx],
 									dim_cpu.space_mem, cudaMemcpyDeviceToHost));
+
 					reloadFlag = reloadFlag
-							|| checkOutputErrors(verbose, dim_cpu, streamIdx,
-									fv_cpu[streamIdx], fv_cpu_GOLD);
+							|| !(checkOutputErrors(verbose, dim_cpu, streamIdx,
+									fv_cpu[streamIdx], fv_cpu_GOLD));
 				}
 				if (reloadFlag) {
+					pt_control.end_kernel();
+
 					readInput(dim_cpu, input_distances, &rv_cpu, input_charges,
 							&qv_cpu, fault_injection);
 					readGold(dim_cpu, output_gold, fv_cpu_GOLD);
@@ -1214,6 +1232,10 @@ int main(int argc, char *argv[]) {
 					gpu_memory_setup(nstreams, gpu_check, dim_cpu, d_box_gpu,
 							box_cpu, d_rv_gpu, rv_cpu, d_qv_gpu, qv_cpu,
 							d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD);
+
+					pt_control.start_kernel();
+					launch_kernel(nstreams, blocks, threads, par_cpu,
+							streams, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
 				}
 			}
 			if (verbose)
@@ -1252,7 +1274,6 @@ int main(int argc, char *argv[]) {
 		fflush(stdout);
 	}
 	pt_control.end_kernel();
-
 
 	gpu_memory_unset(nstreams, gpu_check, d_box_gpu, d_rv_gpu, d_qv_gpu,
 			d_fv_gpu, d_fv_gold_gpu);

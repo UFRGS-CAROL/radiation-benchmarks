@@ -548,27 +548,29 @@ template<typename real> __global__ void MatrixMulKernel(real *C, real *A,
 	PersistentKernel pk;
 	while (pk.keep_working()) {
 		pk.wait_for_work();
-		process_data(wA, wB, A, B, C);
+		if (pk.is_able_to_process()) {
+			process_data(wA, wB, A, B, C);
+		}
 		pk.iteration_finished();
 	}
 }
 
-__global__ void MatrixMulKernel(half *d_A0, half *d_B0, half *d_C0, int wA,
-		int wB) {
-	register int tx = (blockIdx.x * BLOCK_SIZE) / 2.0 + threadIdx.x;
-	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-	register int k;
-
-	register half2 acc = __float2half2_rn(0.0);
-	for (k = 0; k < wA; k++) {
-
-		acc = __hfma2(__half2half2(d_A0[ty * wA + k]),
-				__half2half2(d_B0[k * (wA / 2) + tx]), acc);
-		// n/2 is needed because we changed how we iterate d_B
-	}
-
-	((half2*) d_C0)[ty * (wA / 2) + tx] = acc;
-}
+//__global__ void MatrixMulKernel(half *d_A0, half *d_B0, half *d_C0, int wA,
+//		int wB) {
+//	register int tx = (blockIdx.x * BLOCK_SIZE) / 2.0 + threadIdx.x;
+//	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+//	register int k;
+//
+//	register half2 acc = __float2half2_rn(0.0);
+//	for (k = 0; k < wA; k++) {
+//
+//		acc = __hfma2(__half2half2(d_A0[ty * wA + k]),
+//				__half2half2(d_B0[k * (wA / 2) + tx]), acc);
+//		// n/2 is needed because we changed how we iterate d_B
+//	}
+//
+//	((half2*) d_C0)[ty * (wA / 2) + tx] = acc;
+//}
 
 void usage(int argc, char* argv[]) {
 	printf(
@@ -710,8 +712,8 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL,
 void launch_kernel(dim3 dimGrid, dim3 dimBlock) {
 	//Starting persistent kernel
 	MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A0, d_B0, d_C0, k, k);
-	checkFrameworkErrors (cudaPeekAtLastError());printf
-	("Kernel LAUCHED\n");
+	checkFrameworkErrors(cudaPeekAtLastError());
+	printf("Kernel LAUCHED\n");
 }
 
 int main(int argc, char* argv[]) {
@@ -919,19 +921,17 @@ int main(int argc, char* argv[]) {
 #endif
 		//================== Device computation, MxM
 
-		pt_control.start_processing();
-
-		pt_control.wait_gpu();
+		pt_control.process_data_on_kernel();
 
 //		checkFrameworkErrors(cudaDeviceSynchronize());
-		checkFrameworkErrors (cudaPeekAtLastError());
+		checkFrameworkErrors(cudaPeekAtLastError());
 		//====================================
 #ifdef LOGS
 		if (!generate)
 		if (loop2 || !device_warmup)
 		end_iteration();
 #endif
-kernel_time		= mysecond() - kernel_time;
+		kernel_time = mysecond() - kernel_time;
 
 		if (loop2 || !device_warmup) {
 			total_kernel_time += kernel_time;

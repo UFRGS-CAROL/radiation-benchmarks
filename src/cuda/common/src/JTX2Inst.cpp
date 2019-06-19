@@ -5,12 +5,15 @@
  *      Author: fernando
  */
 
-#include "NVMLWrapper.h"
-//#include "utils.h"
-
+#include <mutex>          // std::mutex
+#include <condition_variable>
+#include <atomic>
 #include <algorithm>
 #include <iostream>
 #include <vector>
+
+#include "JTX2Inst.h"
+
 
 static std::mutex mutex_lock;
 static std::atomic<bool> is_locked;
