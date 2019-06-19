@@ -23,9 +23,16 @@
 //If double it means that DMR will be double and float
 //so the limits are the float ones
 
-#define INPUT_A_DOUBLE 1.1945305291614955E+103 // 0x5555555555555555
-#define INPUT_B_DOUBLE 3.7206620809969885E-103 // 0x2AAAAAAAAAAAAAAA
-#define OUTPUT_R_DOUBLE 4.444444444444444 //0x4011C71C71C71C71
+//#define INPUT_A_DOUBLE 1.1945305291614955E+103 // 0x5555555555555555
+//#define INPUT_B_DOUBLE 3.7206620809969885E-103 // 0x2AAAAAAAAAAAAAAA
+//#define OUTPUT_R_DOUBLE 4.444444444444444 //0x4011C71C71C71C71
+
+//CHANGING FOR DMR
+//I'm going to use 15 digits for double and 7 digits for float
+#define INPUT_A_DOUBLE 1.1945305291614955E+02 // 0x5555555555555555
+#define INPUT_B_DOUBLE 3.7206620809969885E-10 // 0x2AAAAAAAAAAAAAAA
+#define OUTPUT_R_DOUBLE 4.4444444493750508e+0  //0x4011C71C71C71C71
+
 
 #define INPUT_A_SINGLE 1.4660155E+13 // 0x55555555
 #define INPUT_B_SINGLE 3.0316488E-13 // 0x2AAAAAAA
@@ -74,10 +81,7 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		//FMA
 		{ "fma", FMA }, };
 
-template<typename ...TypeArgs>
-struct Type {
-//	friend std::ostream& operator<<(std::ostream&, const Type<TypeArgs...>&);
-};
+template<typename ...TypeArgs> struct Type;
 
 template<>
 struct Type<half> {

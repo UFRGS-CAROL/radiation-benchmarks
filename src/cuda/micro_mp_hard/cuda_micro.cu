@@ -22,6 +22,26 @@
 #define HALF_ROUND_TIES_TO_EVEN 1
 #include "half.hpp"
 
+std::string get_double_representation(double val) {
+	std::string output = "";
+	if (sizeof(double) == 8) {
+
+		uint64_t int_val;
+
+		memcpy(&int_val, &val, sizeof(double));
+		for (uint64_t i = uint64_t(1) << 63; i > 0; i = i / 2) {
+			if (int_val & i) {
+				output += "1";
+			} else {
+				output += "0";
+			}
+		}
+	} else {
+		std::cerr << "USING more than 64 bits double" << std::endl;
+	}
+	return output;
+}
+
 // Returns the number of errors found
 // if no errors were found it returns 0
 template<typename incomplete, typename full, typename output_type = incomplete>
@@ -38,6 +58,7 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 #pragma omp critical
 			{
 				std::stringstream error_detail;
+				error_detail.precision(16);
 				error_detail << "p: [" << i << "], r: " << std::scientific
 						<< output << ", e: " << gold << " smaller_precision: "
 						<< output_inc;
@@ -204,10 +225,10 @@ void dmr(Parameters& parameters) {
 	if (parameters.redundancy == DMRMIXED) {
 
 		if (parameters.precision == DOUBLE) {
-//			Type<float, double> type_;
-			Type<float> type_;
-//			test_radiation<float, double, float, double>(type_, parameters);
-			test_radiation<float, double>(type_, parameters);
+			Type<float, double> type_;
+//			Type<float> type_;
+			test_radiation<float, double, float, double>(type_, parameters);
+//			test_radiation<float, double>(type_, parameters);
 
 		}
 
