@@ -23,7 +23,20 @@
 #define OPEN
 //#define NUM_THREAD 4
 
+/* Define the precision to float or double depending on compiling flags */
+#if FP == 32
 typedef float FLOAT;
+#define FP_STR "Float"
+#endif
+#if FP == 64
+typedef double FLOAT;
+#define FP_STR "Double"
+#endif
+/* Default to double if no compiling flags are used */
+#ifndef FP_STR
+typedef double FLOAT;
+#define FP_STR "Double"
+#endif
 
 /* chip parameters	*/
 const FLOAT t_chip = 0.0005;
@@ -186,29 +199,30 @@ void fatal(char *s)
 
 void writeoutput(FLOAT *vect, int grid_rows, int grid_cols, char *file) {
 
-    int i,j, index=0;
+    int i,j;
     FILE *fp;
     char str[STR_SIZE];
 
-    if( (fp = fopen(file, "w" )) == 0 )
+    if( (fp = fopen(file, "wb" )) == 0 )
         printf( "The file was not opened\n" );
 
 
-    for (i=0; i < grid_rows; i++)
-        for (j=0; j < grid_cols; j++)
-        {
+    fwrite(&vect[0], grid_rows*grid_cols, sizeof(FLOAT), fp);
+    //for (i=0; i < grid_rows; i++)
+    //    for (j=0; j < grid_cols; j++)
+    //    {
 
-            sprintf(str, "%f\n", vect[i*grid_cols+j]);
-            fputs(str,fp);
-            index++;
-        }
+    //        //sprintf(str, "%f\n", vect[i*grid_cols+j]);
+    //        //fputs(str,fp);
+    //        fwrite(&vect[i*grid_cols+j], 1, sizeof(FLOAT), fp);
+    //    }
 
     fclose(fp);
 }
 
 void read_input(FLOAT *vect, int grid_rows, int grid_cols, char *file)
 {
-    int i, index;
+    int i;
     FILE *fp;
     char str[STR_SIZE];
     FLOAT val;
