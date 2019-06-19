@@ -407,12 +407,14 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			}
 		} else {
 			if (log_obj.use_tensor_cores) {
-				//mult_enviroment.mul_gemm_wmma();
-				mult_enviroment.mul_gemm_wmma_DMR();
+				mult_enviroment.mul_gemm_wmma();
+				//mult_enviroment.mul_gemm_wmma_DMR();
 
 			} else {
-				//mult_enviroment.mul_wmma();
-				mult_enviroment.mul_wmma_DMR();
+				
+				//mult_enviroment.mul_mxm();
+				mult_enviroment.mul_gemm();
+				//mult_enviroment.mul_gemm_DMR();
 			}
 		}
 		log_obj.end_iteration_app();
@@ -523,6 +525,10 @@ int main(int argc, char** argv) {
 	if (log_obj.precision == "float") {
 		call_mxm<float, float, half>(host_matrix_a, host_matrix_b, log_obj);
 	}
+	if (log_obj.precision == "double") {
+		call_mxm<double, double, half>(host_matrix_a, host_matrix_b, log_obj);
+	}
+
 	
 //	if (log_obj.precision == "uchar") {
 //		call_mxm<int,int,unsigned char>(host_matrix_a, host_matrix_b, log_obj);

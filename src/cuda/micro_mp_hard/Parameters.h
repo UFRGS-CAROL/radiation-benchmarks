@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <iostream>
 
 //#include "helper_string.h"
 
@@ -22,9 +23,16 @@
 //If double it means that DMR will be double and float
 //so the limits are the float ones
 
-#define INPUT_A_DOUBLE 1.1945305291614955E+103 // 0x5555555555555555
-#define INPUT_B_DOUBLE 3.7206620809969885E-103 // 0x2AAAAAAAAAAAAAAA
-#define OUTPUT_R_DOUBLE 4.444444444444444 //0x4011C71C71C71C71
+//#define INPUT_A_DOUBLE 1.1945305291614955E+103 // 0x5555555555555555
+//#define INPUT_B_DOUBLE 3.7206620809969885E-103 // 0x2AAAAAAAAAAAAAAA
+//#define OUTPUT_R_DOUBLE 4.444444444444444 //0x4011C71C71C71C71
+
+//CHANGING FOR DMR
+//I'm going to use 15 digits for double and 7 digits for float
+#define INPUT_A_DOUBLE 1.1945305291614955E+02 // 0x5555555555555555
+#define INPUT_B_DOUBLE 3.7206620809969885E-10 // 0x2AAAAAAAAAAAAAAA
+#define OUTPUT_R_DOUBLE 4.4444444493750508 //0x4011C71C71C71C71
+
 
 #define INPUT_A_SINGLE 1.4660155E+13 // 0x55555555
 #define INPUT_B_SINGLE 3.0316488E-13 // 0x2AAAAAAA
@@ -73,8 +81,10 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		//FMA
 		{ "fma", FMA }, };
 
-template<typename T> struct Type;
-template<> struct Type<half> {
+template<typename ...TypeArgs> struct Type;
+
+template<>
+struct Type<half> {
 	half output_r;
 	half input_a;
 	half input_b;
@@ -85,7 +95,8 @@ template<> struct Type<half> {
 	}
 };
 
-template<> struct Type<float> {
+template<>
+struct Type<float> {
 	float output_r;
 	float input_a;
 	float input_b;
@@ -96,7 +107,8 @@ template<> struct Type<float> {
 	}
 };
 
-template<> struct Type<double> {
+template<>
+struct Type<double> {
 	double output_r;
 	double input_a;
 	double input_b;
@@ -106,6 +118,46 @@ template<> struct Type<double> {
 		this->input_b = INPUT_B_DOUBLE;
 	}
 };
+
+template<>
+struct Type<half, float> {
+	float output_r;
+	float input_a;
+	float input_b;
+	Type() {
+		Type<float> temp;
+		this->output_r = temp.output_r;
+		this->input_a = temp.input_a;
+		this->input_b = temp.input_b;
+	}
+
+};
+
+template<>
+struct Type<float, double> {
+	double output_r;
+	double input_a;
+	double input_b;
+	Type() {
+		Type<double> temp;
+		this->output_r = temp.output_r;
+		this->input_a = temp.input_a;
+		this->input_b = temp.input_b;
+	}
+};
+
+std::ostream& operator<<(std::ostream& os, const half& t){
+	float tmp = float(t);
+	os << tmp;
+	return os;
+}
+
+template<typename...TypeArgs>
+std::ostream& operator<<(std::ostream& os, const Type<TypeArgs...>& t) {
+	os << std::scientific;
+	os << t.output_r << " " << t.input_a << " " << t.input_b;
+	return os;
+}
 
 struct Parameters {
 

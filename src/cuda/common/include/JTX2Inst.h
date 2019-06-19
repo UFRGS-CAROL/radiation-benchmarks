@@ -10,11 +10,8 @@
 
 #include <nvml.h>
 #include <string>
-#include <thread>
-#include <mutex>          // std::mutex
-#include <condition_variable>
-#include <atomic>
 #include <deque>
+#include <thread>
 
 
 class NVMLWrapper {

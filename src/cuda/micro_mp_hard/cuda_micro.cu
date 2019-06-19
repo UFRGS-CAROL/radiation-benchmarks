@@ -22,25 +22,46 @@
 #define HALF_ROUND_TIES_TO_EVEN 1
 #include "half.hpp"
 
+std::string get_double_representation(double val) {
+	std::string output = "";
+	if (sizeof(double) == 8) {
+
+		uint64_t int_val;
+
+		memcpy(&int_val, &val, sizeof(double));
+		for (uint64_t i = uint64_t(1) << 63; i > 0; i = i / 2) {
+			if (int_val & i) {
+				output += "1";
+			} else {
+				output += "0";
+			}
+		}
+	} else {
+		std::cerr << "USING more than 64 bits double" << std::endl;
+	}
+	return output;
+}
+
 // Returns the number of errors found
 // if no errors were found it returns 0
-template<typename T>
-int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose, unsigned long long dmr_errors) {
+template<typename incomplete, typename full, typename output_type = incomplete>
+int check_output_errors(std::vector<incomplete> &R_incomplete,
+		std::vector<full> &R, output_type OUTPUT_R, bool verbose,
+		unsigned long long dmr_errors) {
 	int host_errors = 0;
 	double gold = double(OUTPUT_R);
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < R.size(); i++) {
 		double output = double(R[i]);
+		double output_inc = double(R_incomplete[i]);
 		if (gold != output) {
 #pragma omp critical
 			{
-//					char error_detail[150];
-//					snprintf(error_detail, 150, "p: [%d], r: %1.20e, e: %1.20e",
-//							i, (double) output, (double) valGold);
-
 				std::stringstream error_detail;
+				error_detail.precision(16);
 				error_detail << "p: [" << i << "], r: " << std::scientific
-						<< output << ", e: " << gold;
+						<< output << ", e: " << gold << " smaller_precision: "
+						<< output_inc;
 
 				if (verbose && (host_errors < 10))
 					std::cout << error_detail.str() << std::endl;
@@ -52,11 +73,12 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose, unsigned lo
 		}
 	}
 
-	if(dmr_errors != 0){
+	if (dmr_errors != 0) {
 		std::stringstream error_detail;
-		error_detail << "detected_dmr_errors: " << dmr_errors;;
+		error_detail << "detected_dmr_errors: " << dmr_errors;
+		;
 #ifdef LOGS
-				log_error_detail(const_cast<char*>(error_detail.str().c_str()));
+		log_error_detail(const_cast<char*>(error_detail.str().c_str()));
 #endif
 	}
 
@@ -69,8 +91,9 @@ int check_output_errors(std::vector<T> &R, T OUTPUT_R, bool verbose, unsigned lo
 	return host_errors;
 }
 
-template<typename incomplete, typename full>
-void test_radiation(Type<incomplete>& type_, Parameters& parameters) {
+template<typename incomplete, typename full, typename ... TypeArgs>
+void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
+	std::cout << "Printing the input values " << type_ << std::endl;
 	// Init test environment
 	// kernel_errors=0;
 	double total_kernel_time = 0;
@@ -159,12 +182,11 @@ void test_radiation(Type<incomplete>& type_, Parameters& parameters) {
 
 		//check output
 		host_vector_full = device_vector_full.to_vector();
+		host_vector_inc = device_vector_inc.to_vector();
 		unsigned long long relative_errors = copy_errors();
 
-		int errors = check_output_errors<full>(host_vector_full, type_.output_r,
-				parameters.verbose, relative_errors);
-
-
+		int errors = check_output_errors(host_vector_inc, host_vector_full,
+				type_.output_r, parameters.verbose, relative_errors);
 
 		double outputpersec = double(parameters.r_size) / kernel_time;
 		if (parameters.verbose) {
@@ -203,13 +225,19 @@ void dmr(Parameters& parameters) {
 	if (parameters.redundancy == DMRMIXED) {
 
 		if (parameters.precision == DOUBLE) {
-			Type<float> type_;
-			test_radiation<float, double>(type_, parameters);
+			Type<float, double> type_;
+//			Type<float> type_;
+			test_radiation<float, double, float, double>(type_, parameters);
+//			test_radiation<float, double>(type_, parameters);
+
 		}
 
 		if (parameters.precision == SINGLE) {
+//			Type<half, float> type_;
 			Type<half> type_;
+//			test_radiation<half, float, half, float>(type_, parameters);
 			test_radiation<half, float>(type_, parameters);
+
 		}
 	}
 

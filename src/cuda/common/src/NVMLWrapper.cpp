@@ -5,12 +5,14 @@
  *      Author: fernando
  */
 
-#include "NVMLWrapper.h"
-#include "utils.h"
-
+#include <mutex>          // std::mutex
+#include <condition_variable>
+#include <atomic>
 #include <algorithm>
 #include <iostream>
 #include <vector>
+
+#include "NVMLWrapper.h"
 
 static std::mutex mutex_lock;
 static std::atomic<bool> is_locked;
@@ -21,9 +23,11 @@ static bool thread_running = true;
 void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device =
 		0) {
 	if (NVML_SUCCESS != result) {
-		error(
+		/*error(
 				"Failed to " + info + " from device " + std::to_string(device)
-						+ " error " + nvmlErrorString(result));
+						+ " error " + nvmlErrorString(result));*/
+		std::cerr << "Failed to " + info + " from device " + std::to_string(device)
+		+ " error " + nvmlErrorString(result);
 	}
 }
 
@@ -72,7 +76,7 @@ void NVMLWrapper::data_colector(nvmlDevice_t* device,
 			//Get ECC errors
 			nvmlComputeMode_t compute_mode;
 			result = nvmlDeviceGetComputeMode(*device, &compute_mode);
-
+			std::cout << result << std::endl;
 			for (auto error_type : { NVML_MEMORY_ERROR_TYPE_CORRECTED,
 					NVML_MEMORY_ERROR_TYPE_UNCORRECTED }) {
 				for (auto counter_type : { NVML_VOLATILE_ECC, NVML_AGGREGATE_ECC }) {
@@ -118,7 +122,8 @@ void NVMLWrapper::data_colector(nvmlDevice_t* device,
 					NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS,
 					NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS }) {
 				unsigned int page_count = 0;
-				unsigned long long *addresses;
+				unsigned long long *addresses = nullptr;
+				device = 0;
 				nvmlDeviceGetRetiredPages(*device, cause, &page_count,
 						addresses);
 				output += std::to_string(page_count) + ",";
