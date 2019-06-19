@@ -154,6 +154,7 @@ std::ostream& operator<<(std::ostream& os, const half& t){
 
 template<typename...TypeArgs>
 std::ostream& operator<<(std::ostream& os, const Type<TypeArgs...>& t) {
+	os << std::scientific;
 	os << t.output_r << " " << t.input_a << " " << t.input_b;
 	return os;
 }
