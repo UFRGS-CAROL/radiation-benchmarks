@@ -41,7 +41,21 @@ long long check_start, check_end;
 long long int flops=0;
 #endif
 
+/* Define the precision to float or double depending on compiling flags */
+#if FP == 32
+typedef float FLOAT;
+#define FP_STR "Float"
+#endif
+#if FP == 64
 typedef double FLOAT;
+#define FP_STR "Double"
+#endif
+/* Default to double if no compiling flags are used */
+#ifndef FP_STR
+typedef double FLOAT;
+#define FP_STR "Double"
+#endif
+
 
 /* chip parameters	*/
 const FLOAT t_chip = 0.0005;
@@ -207,6 +221,21 @@ void fatal(char *s)
 }
 
 
+void read_gold(FLOAT *vect, int grid_rows, int grid_cols, char *file)
+{
+    int i, index;
+    FILE *fp;
+    char str[STR_SIZE];
+    FLOAT val;
+
+    fp = fopen (file, "rb");
+    if (!fp)
+        fatal ("file could not be opened for reading");
+
+    fread(&vect[0], grid_rows*grid_cols, sizeof(FLOAT), fp);
+
+    fclose(fp);
+}
 void read_input(FLOAT *vect, int grid_rows, int grid_cols, char *file)
 {
     int i, index;
@@ -289,7 +318,7 @@ int main(int argc, char **argv)
 
     read_input(temp, grid_rows, grid_cols, tfile);
     read_input(power, grid_rows, grid_cols, pfile);
-    read_input(gold, grid_rows, grid_cols, ofile);
+    read_gold(gold, grid_rows, grid_cols, ofile);
 
 #ifdef TIMING
     setup_end = timing_get_time();
@@ -358,7 +387,7 @@ int main(int argc, char **argv)
             log_error_count(errors);
 #endif /* LOGS */
             read_input(power, grid_rows, grid_cols, pfile);
-            read_input(gold, grid_rows, grid_cols, ofile);
+            read_gold(gold, grid_rows, grid_cols, ofile);
         }
         else
         {
