@@ -10,6 +10,17 @@
 
 #include "device_functions.h"
 
+template<typename real>
+struct Input {
+	real OUTPUT_R;
+	real INPUT_A;
+	real INPUT_B;
+
+	Input(real out, real inp_a, real inp_b) :
+			OUTPUT_R(out), INPUT_A(inp_a), INPUT_B(INPUT_B) {
+	}
+};
+
 /**
  * ----------------------------------------
  * FMA
@@ -24,6 +35,28 @@ __global__ void MicroBenchmarkKernel_FMA(full *d_R0_one, const full OUTPUT_R,
 	volatile register full input_b_full = INPUT_B;
 	volatile register full input_a_neg_full = -INPUT_A;
 	volatile register full input_b_neg_full = -INPUT_B;
+
+	for (register unsigned int count = 0; count < (OPS / 4); count++) {
+		acc_full = fma_dmr(input_a_full, input_b_full, acc_full);
+		acc_full = fma_dmr(input_a_neg_full, input_b_full, acc_full);
+		acc_full = fma_dmr(input_a_full, input_b_neg_full, acc_full);
+		acc_full = fma_dmr(input_a_neg_full, input_b_neg_full, acc_full);
+
+	}
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+}
+
+template<typename full>
+__global__ void MicroBenchmarkKernel_FMA(full *d_R0_one,
+		const Input<full>* input) {
+	int id = blockIdx.x * blockDim.x + threadIdx.x;
+	const Input<full>& inp_id = input[id];
+
+	volatile register full acc_full = inp_id.OUTPUT_R;
+	volatile register full input_a_full = inp_id.INPUT_A;
+	volatile register full input_b_full = inp_id.INPUT_B;
+	volatile register full input_a_neg_full = -inp_id.INPUT_A;
+	volatile register full input_b_neg_full = -inp_id.INPUT_B;
 
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
 		acc_full = fma_dmr(input_a_full, input_b_full, acc_full);

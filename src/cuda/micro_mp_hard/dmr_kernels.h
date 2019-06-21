@@ -57,9 +57,12 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 		acc_incomplete = fma_dmr(input_a_neg_incomplete, input_b_neg_incomplete,
 				acc_incomplete);
 
+		if(count % 1000){
+			check_relative_error(acc_incomplete, acc_full);
+		}
+
 	}
 
-	check_relative_error(acc_incomplete, acc_full);
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;

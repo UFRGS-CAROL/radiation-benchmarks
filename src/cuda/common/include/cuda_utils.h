@@ -13,7 +13,7 @@
 
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
 
-void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
+static void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 	if (error == cudaSuccess) {
 		return;
 	}
@@ -31,8 +31,16 @@ void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 /*!
  \param seconds to sleep
  */
-void sleep(int seconds) {
+static void sleep(int seconds) {
 	std::this_thread::sleep_for(std::chrono::seconds(seconds));
+}
+
+
+double mysecond() {
+	struct timeval tp;
+	struct timezone tzp;
+	int i = gettimeofday(&tp, &tzp);
+	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
 }
 
 

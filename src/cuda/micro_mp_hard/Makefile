@@ -28,7 +28,8 @@ endif
 SOURCES=./cuda_micro.cu
 EXEC=./cuda_micro_mp_hardening
 
-FLAGS+=-I$(NVIDIA_INC) -L$(NVIDIA_LIB) -DOPS=$(OPS) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS)
+FLAGS+=-I$(NVIDIA_INC) -I../common -L$(NVIDIA_LIB) -DOPS=$(OPS) 
+FLAGS+= -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS)
 
 all: $(EXEC)
 

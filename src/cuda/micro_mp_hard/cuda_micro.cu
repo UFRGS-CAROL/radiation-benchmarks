@@ -11,7 +11,7 @@
 
 #include "dmr_kernels.h"
 #include "none_kernels.h"
-#include "device_vector.h"
+#include "include/device_vector.h"
 #include "cuda_utils.h"
 #include "Parameters.h"
 
@@ -92,7 +92,8 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 }
 
 template<typename incomplete, typename full, typename ... TypeArgs>
-void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
+void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters,
+		const std::vector<Input<full>>& defined_input = { }) {
 	std::cout << "Printing the input values " << type_ << std::endl;
 	// Init test environment
 	// kernel_errors=0;
@@ -104,6 +105,12 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 	// FULL PRECIISON
 	std::vector<full> host_vector_full(parameters.r_size, 0);
 	DeviceVector<full> device_vector_full(parameters.r_size);
+
+	//For defined input only
+	DeviceVector<Input<full>> device_defined_input;
+	if (defined_input.size() == device_vector_full.size()) {
+		device_defined_input = defined_input;
+	}
 	//====================================
 
 	// SECOND PRECISION ONLY IF IT IS DEFINED
@@ -127,18 +134,24 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 			switch (parameters.micro) {
 			case ADD:
 				MicroBenchmarkKernel_ADD<full> <<<parameters.grid_size,
-						parameters.block_size>>>(device_vector_full.data,
+						parameters.block_size>>>(device_vector_full.data(),
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			case MUL:
 				MicroBenchmarkKernel_MUL<full> <<<parameters.grid_size,
-						parameters.block_size>>>(device_vector_full.data,
+						parameters.block_size>>>(device_vector_full.data(),
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			case FMA:
-				MicroBenchmarkKernel_FMA<full> <<<parameters.grid_size,
-						parameters.block_size>>>(device_vector_full.data,
-						type_.output_r, type_.input_a, type_.input_b);
+				if (defined_input.size() == device_vector_full.size()) {
+					MicroBenchmarkKernel_FMA<full> <<<parameters.grid_size,
+							parameters.block_size>>>(device_vector_full.data(),
+							device_defined_input.data());
+				} else {
+					MicroBenchmarkKernel_FMA<full> <<<parameters.grid_size,
+							parameters.block_size>>>(device_vector_full.data(),
+							type_.output_r, type_.input_a, type_.input_b);
+				}
 				break;
 			}
 
@@ -147,19 +160,19 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 			case ADD:
 				MicroBenchmarkKernel_ADD<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data, device_vector_full.data,
+						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			case MUL:
 				MicroBenchmarkKernel_MUL<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data, device_vector_full.data,
+						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			case FMA:
 				MicroBenchmarkKernel_FMA<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data, device_vector_full.data,
+						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			}
@@ -252,8 +265,11 @@ void dmr(Parameters& parameters) {
 
 		if (parameters.precision == SINGLE) {
 			Type<float> type_;
+			Input<float> input(type_.output_r, type_.input_a, type_.input_b);
+			std::vector<Input<float>> input_vector(
+					parameters.grid_size * parameters.block_size, input);
 
-			test_radiation<float, float>(type_, parameters);
+			test_radiation<float, float>(type_, parameters, input_vector);
 		}
 
 		if (parameters.precision == DOUBLE) {
