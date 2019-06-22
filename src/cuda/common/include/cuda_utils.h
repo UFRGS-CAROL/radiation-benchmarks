@@ -10,10 +10,15 @@
 
 #include <chrono>
 #include <thread>
+#include <sys/time.h>
 
-#define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
+#ifdef LOGS
+#include "log_helper.h"
+#endif
 
-static void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
+namespace rad {
+
+void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 	if (error == cudaSuccess) {
 		return;
 	}
@@ -27,14 +32,21 @@ static void __checkFrameworkErrors(cudaError_t error, int line, const char* file
 	exit(EXIT_FAILURE);
 }
 
+
+#define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
+
 //!  sleep seconds.
 /*!
  \param seconds to sleep
  */
-static void sleep(int seconds) {
+void sleep(int seconds) {
 	std::this_thread::sleep_for(std::chrono::seconds(seconds));
 }
 
+void sleep(double seconds) {
+	int milli = seconds * 1000.0;
+	std::this_thread::sleep_for(std::chrono::milliseconds(milli));
+}
 
 double mysecond() {
 	struct timeval tp;
@@ -43,6 +55,7 @@ double mysecond() {
 	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
 }
 
+}
 
 
 #endif /* CUDA_UTILS_H_ */

@@ -14,36 +14,39 @@
 
 #include "NVMLWrapper.h"
 
+namespace rad {
+
 static std::mutex mutex_lock;
 static std::atomic<bool> is_locked;
 static bool thread_running = true;
 
 #define SLEEP_NVML 500
-
 void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device =
 		0) {
 	if (NVML_SUCCESS != result) {
 		/*error(
-				"Failed to " + info + " from device " + std::to_string(device)
-						+ " error " + nvmlErrorString(result));*/
-		std::cerr << "Failed to " + info + " from device " + std::to_string(device)
-		+ " error " + nvmlErrorString(result);
+		 "Failed to " + info + " from device " + std::to_string(device)
+		 + " error " + nvmlErrorString(result));*/
+		std::cerr
+				<< "Failed to " + info + " from device "
+						+ std::to_string(device) + " error "
+						+ nvmlErrorString(result);
 	}
 }
 
-NVMLWrapper::NVMLWrapper(unsigned device_index) :
+rad::NVMLWrapper::NVMLWrapper(unsigned device_index) :
 		device_index(device_index), device(nullptr), set(nullptr) {
 	this->profiler = std::thread(NVMLWrapper::data_colector, &this->device,
 			&this->data_for_iteration);
 	is_locked = true;
 }
 
-NVMLWrapper::~NVMLWrapper() {
+rad::NVMLWrapper::~NVMLWrapper() {
 	thread_running = false;
 	this->profiler.join();
 }
 
-void NVMLWrapper::data_colector(nvmlDevice_t* device,
+void rad::NVMLWrapper::data_colector(nvmlDevice_t* device,
 		std::deque<std::string>* it_data) {
 	nvmlReturn_t result;
 
@@ -160,7 +163,7 @@ void NVMLWrapper::data_colector(nvmlDevice_t* device,
 	}
 }
 
-void NVMLWrapper::start_collecting_data() {
+void rad::NVMLWrapper::start_collecting_data() {
 	nvmlReturn_t result = nvmlInit();
 	check_nvml_return("initialize NVML library", result);
 	result = nvmlDeviceGetHandleByIndex(this->device_index, &this->device);
@@ -175,7 +178,7 @@ void NVMLWrapper::start_collecting_data() {
 	is_locked = false;
 }
 
-void NVMLWrapper::end_collecting_data() {
+void rad::NVMLWrapper::end_collecting_data() {
 	mutex_lock.lock();
 	is_locked = true;
 	mutex_lock.unlock();
@@ -186,9 +189,12 @@ void NVMLWrapper::end_collecting_data() {
 	check_nvml_return("shutdown NVML library", result);
 }
 
-std::deque<std::string> NVMLWrapper::get_data_from_iteration() {
+std::deque<std::string> rad::NVMLWrapper::get_data_from_iteration() {
 	auto last = std::unique(this->data_for_iteration.begin(),
 			this->data_for_iteration.end());
 	this->data_for_iteration.erase(last, this->data_for_iteration.end());
 	return this->data_for_iteration;
 }
+
+}
+
