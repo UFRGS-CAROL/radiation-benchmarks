@@ -12,15 +12,14 @@
 #include <deque>
 #include <thread>
 
+namespace rad {
 class JTX2Inst {
 	unsigned device_index;
 
 	//Multithreading context
 	std::thread profiler;
 
-
 	std::deque<std::string> data_for_iteration;
-
 
 	static void data_colector(std::deque<std::string>* it_data);
 
@@ -33,9 +32,6 @@ public:
 	void end_collecting_data();
 
 	std::deque<std::string> get_data_from_iteration();
-
-	void check_jtx2_result(std::string info, unsigned device =
-			0);
 };
-
+}
 #endif /* NVMLWRAPPER_H_ */
