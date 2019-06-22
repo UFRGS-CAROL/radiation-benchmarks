@@ -455,14 +455,15 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu,
 		box_str* d_box_gpu, FOUR_VECTOR* d_rv_gpu, tested_type* d_qv_gpu,
 		FOUR_VECTOR* d_fv_gpu) {
 
-	PersistentKernel pk;
+	rad::PersistentKernel pk;
 	while (pk.keep_working()) {
 		pk.wait_for_work();
 		if (pk.is_able_to_process()) {
 			process_data(d_dim_gpu, d_par_gpu, d_box_gpu, d_rv_gpu, d_fv_gpu,
 					d_qv_gpu);
+			pk.iteration_finished();
 		}
-		pk.iteration_finished();
+
 	}
 }
 
@@ -695,25 +696,25 @@ void gpu_memory_setup(int nstreams, bool gpu_check, dim_str dim_cpu,
 		//==================================================
 		//	boxes
 		//==================================================
-		checkFrameworkErrors(
+		rad::checkFrameworkErrors(
 				cudaMalloc((void **) &(d_box_gpu[streamIdx]), dim_cpu.box_mem));
 		//==================================================
 		//	rv
 		//==================================================
-		checkFrameworkErrors(
+		rad::checkFrameworkErrors(
 				cudaMalloc((void **) &(d_rv_gpu[streamIdx]),
 						dim_cpu.space_mem));
 		//==================================================
 		//	qv
 		//==================================================
-		checkFrameworkErrors(
+		rad::checkFrameworkErrors(
 				cudaMalloc((void **) &(d_qv_gpu[streamIdx]),
 						dim_cpu.space_mem2));
 
 		//==================================================
 		//	fv
 		//==================================================
-		checkFrameworkErrors(
+		rad::checkFrameworkErrors(
 				cudaMalloc((void **) &(d_fv_gpu[streamIdx]),
 						dim_cpu.space_mem));
 
@@ -725,21 +726,21 @@ void gpu_memory_setup(int nstreams, bool gpu_check, dim_str dim_cpu,
 		//	boxes
 		//==================================================
 
-		checkFrameworkErrors(
+		rad::checkFrameworkErrors(
 				cudaMemcpy(d_box_gpu[streamIdx], box_cpu, dim_cpu.box_mem,
 						cudaMemcpyHostToDevice));
 		//==================================================
 		//	rv
 		//==================================================
 
-		checkFrameworkErrors(
+		rad::checkFrameworkErrors(
 				cudaMemcpy(d_rv_gpu[streamIdx], rv_cpu, dim_cpu.space_mem,
 						cudaMemcpyHostToDevice));
 		//==================================================
 		//	qv
 		//==================================================
 
-		checkFrameworkErrors(
+		rad::checkFrameworkErrors(
 				cudaMemcpy(d_qv_gpu[streamIdx], qv_cpu, dim_cpu.space_mem2,
 						cudaMemcpyHostToDevice));
 		//==================================================
@@ -747,16 +748,16 @@ void gpu_memory_setup(int nstreams, bool gpu_check, dim_str dim_cpu,
 		//==================================================
 
 		// This will be done with memset at the start of each iteration.
-		// checkFrameworkErrors( cudaMemcpy( d_fv_gpu[streamIdx], fv_cpu, dim_cpu.space_mem, cudaMemcpyHostToDevice) );
+		// rad::checkFrameworkErrors( cudaMemcpy( d_fv_gpu[streamIdx], fv_cpu, dim_cpu.space_mem, cudaMemcpyHostToDevice) );
 	}
 
 	//==================================================
 	//	fv_gold for GoldChkKernel
 	//==================================================
 	if (gpu_check) {
-		checkFrameworkErrors(
+		rad::checkFrameworkErrors(
 				cudaMalloc((void**) &d_fv_gold_gpu, dim_cpu.space_mem));
-		checkFrameworkErrors(
+		rad::checkFrameworkErrors(
 				cudaMemcpy(d_fv_gold_gpu, fv_cpu_GOLD, dim_cpu.space_mem2,
 						cudaMemcpyHostToDevice));
 	}
@@ -837,7 +838,7 @@ void launch_kernel(int nstreams, dim3 blocks, dim3 threads,
 		kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx]>>>(par_cpu,
 				dim_cpu, d_box_gpu[streamIdx], d_rv_gpu[streamIdx],
 				d_qv_gpu[streamIdx], d_fv_gpu[streamIdx]);
-		checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 		//kernel launched
 	}
 }
@@ -1083,7 +1084,7 @@ int main(int argc, char *argv[]) {
 	threads.x = NUMBER_THREADS;
 	threads.y = 1;
 
-	HostPersistentControler pt_control(blocks);
+	rad::HostPersistentControler pt_control(blocks);
 
 	//=====================================================================
 	//	GPU_CUDA
@@ -1095,7 +1096,7 @@ int main(int argc, char *argv[]) {
 	cudaStream_t *streams = (cudaStream_t *) malloc(
 			nstreams * sizeof(cudaStream_t));
 	for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-		checkFrameworkErrors(
+		rad::checkFrameworkErrors(
 				cudaStreamCreateWithFlags(&(streams[streamIdx]),
 						cudaStreamNonBlocking));
 	}
@@ -1146,7 +1147,7 @@ int main(int argc, char *argv[]) {
 		//=====================================================================
 		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
 			memset(fv_cpu[streamIdx], 0x00, dim_cpu.space_elem);
-			checkFrameworkErrors(
+			rad::checkFrameworkErrors(
 					cudaMemset(d_fv_gpu[streamIdx], 0x00, dim_cpu.space_mem));
 		}
 
@@ -1166,8 +1167,8 @@ int main(int argc, char *argv[]) {
 
 		//printf("All kernels were commited.\n");
 //		for (streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-//			checkFrameworkErrors(cudaStreamSynchronize(streams[streamIdx]));
-//			checkFrameworkErrors(cudaPeekAtLastError());
+//			rad::checkFrameworkErrors(cudaStreamSynchronize(streams[streamIdx]));
+//			rad::checkFrameworkErrors(cudaPeekAtLastError());
 //		}
 #ifdef LOGS
 		if (!generate) end_iteration();
@@ -1178,7 +1179,7 @@ int main(int argc, char *argv[]) {
 		//	COMPARE OUTPUTS / WRITE GOLD
 		//=====================================================================
 		if (generate) {
-			checkFrameworkErrors(
+			rad::checkFrameworkErrors(
 					cudaMemcpy(fv_cpu_GOLD, d_fv_gpu[0], dim_cpu.space_mem,
 							cudaMemcpyDeviceToHost));
 			writeGold(dim_cpu, output_gold, &fv_cpu_GOLD);
@@ -1190,17 +1191,17 @@ int main(int argc, char *argv[]) {
 
 			// 	// Send to device
 			// 	unsigned long long int gck_errors = 0;
-			// 	checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyToSymbol(gck_device_errors, &gck_errors, sizeof(unsigned long long int)) );
+			// 	checkOnHost |= rad::checkFrameworkErrorsNoFail( cudaMemcpyToSymbol(gck_device_errors, &gck_errors, sizeof(unsigned long long int)) );
 			// 	// GOLD is already on device.
 
 			// 	/////////////////// Run kernel
 			// 	GoldChkKernel<<<gck_gridSize, gck_blockSize>>>(d_GOLD, d_C, k);
-			// 	checkOnHost |= checkFrameworkErrorsNoFail( cudaPeekAtLastError() );
-			// 	checkOnHost |= checkFrameworkErrorsNoFail( cudaDeviceSynchronize() );
+			// 	checkOnHost |= rad::checkFrameworkErrorsNoFail( cudaPeekAtLastError() );
+			// 	checkOnHost |= rad::checkFrameworkErrorsNoFail( cudaDeviceSynchronize() );
 			// 	///////////////////
 
 			// 	// Receive from device
-			// 	checkOnHost |= checkFrameworkErrorsNoFail( cudaMemcpyFromSymbol(&gck_errors, gck_device_errors, sizeof(unsigned long long int)) );
+			// 	checkOnHost |= rad::checkFrameworkErrorsNoFail( cudaMemcpyFromSymbol(&gck_errors, gck_device_errors, sizeof(unsigned long long int)) );
 			// 	if (gck_errors != 0) {
 			// 		printf("$(%u)", (unsigned int)gck_errors);
 			// 		checkOnHost = true;
@@ -1212,7 +1213,7 @@ int main(int argc, char *argv[]) {
 				bool reloadFlag = false;
 #pragma omp parallel for shared(reloadFlag)
 				for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-					checkFrameworkErrors(
+					rad::checkFrameworkErrors(
 							cudaMemcpy(fv_cpu[streamIdx], d_fv_gpu[streamIdx],
 									dim_cpu.space_mem, cudaMemcpyDeviceToHost));
 

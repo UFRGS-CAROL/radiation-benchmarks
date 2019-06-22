@@ -11,6 +11,9 @@
 #include <vector>
 #include "cuda_utils.h"
 
+namespace rad{
+
+
 template<class T>
 class DeviceVector {
 	T *data_ = nullptr;
@@ -65,10 +68,6 @@ public:
 		this->free_data();
 	}
 
-	T& operator [](int i) const {
-		return this->host_data[i];
-	}
-
 	DeviceVector<T>& operator=(const std::vector<T>& other) {
 		if (this->v_size != other.size()) {
 			this->free_data();
@@ -119,5 +118,7 @@ public:
 		return this->v_size;
 	}
 };
+
+}
 
 #endif /* DEVICE_VECTOR_H_ */

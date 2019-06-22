@@ -13,10 +13,10 @@
 #include <deque>
 #include <thread>
 
+namespace rad
+{
 
 class NVMLWrapper {
-private:
-
 	unsigned device_index;
 	nvmlDevice_t device;
 
@@ -43,4 +43,5 @@ public:
 
 };
 
+}
 #endif /* NVMLWRAPPER_H_ */

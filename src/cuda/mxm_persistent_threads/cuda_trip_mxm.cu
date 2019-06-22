@@ -104,18 +104,18 @@ void GetDevice() {
 	cudaDeviceProp prop;
 	int count = 0;
 	printf("Get device:");
-	checkFrameworkErrors(cudaGetDeviceCount(&count));
+	rad::checkFrameworkErrors(cudaGetDeviceCount(&count));
 	for (int i = 0; i < count; i++) {
-		checkFrameworkErrors(cudaGetDeviceProperties(&prop, i));
+		rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, i));
 		printf("Name: %s\n", prop.name);
 	}
 	int *ndevice;
 	int dev = 0;
 	ndevice = &dev;
-	checkFrameworkErrors(cudaGetDevice(ndevice));
+	rad::checkFrameworkErrors(cudaGetDevice(ndevice));
 
-	checkFrameworkErrors(cudaSetDevice(0));
-	checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
+	rad::checkFrameworkErrors(cudaSetDevice(0));
+	rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
 	printf("\ndevice: %d %s\n", *ndevice, prop.name);
 }
 
@@ -132,7 +132,7 @@ void* safe_cudaMalloc(size_t size) {
 	void* outputPtr;
 
 	// First, alloc DEVICE proposed memory and HOST memory for device memory checking
-	checkFrameworkErrors(cudaMalloc(&devicePtr, size));
+	rad::checkFrameworkErrors(cudaMalloc(&devicePtr, size));
 	outputPtr = malloc(size);
 	goldPtr = malloc(size);
 	if ((outputPtr == NULL) || (goldPtr == NULL)) {
@@ -143,33 +143,33 @@ void* safe_cudaMalloc(size_t size) {
 	}
 
 	// ===> FIRST PHASE: CHECK SETTING BITS TO 10101010
-	checkFrameworkErrors(cudaMemset(devicePtr, 0xAA, size));
+	rad::checkFrameworkErrors(cudaMemset(devicePtr, 0xAA, size));
 	memset(goldPtr, 0xAA, size);
 
-	checkFrameworkErrors(
+	rad::checkFrameworkErrors(
 			cudaMemcpy(outputPtr, devicePtr, size, cudaMemcpyDeviceToHost));
 	if (memcmp(outputPtr, goldPtr, size)) {
 		// Failed
 		free(outputPtr);
 		free(goldPtr);
 		void* newDevicePtr = safe_cudaMalloc(size);
-		checkFrameworkErrors(cudaFree(devicePtr));
+		rad::checkFrameworkErrors(cudaFree(devicePtr));
 		return newDevicePtr;
 	}
 	// ===> END FIRST PHASE
 
 	// ===> SECOND PHASE: CHECK SETTING BITS TO 01010101
-	checkFrameworkErrors(cudaMemset(devicePtr, 0x55, size));
+	rad::checkFrameworkErrors(cudaMemset(devicePtr, 0x55, size));
 	memset(goldPtr, 0x55, size);
 
-	checkFrameworkErrors(
+	rad::checkFrameworkErrors(
 			cudaMemcpy(outputPtr, devicePtr, size, cudaMemcpyDeviceToHost));
 	if (memcmp(outputPtr, goldPtr, size)) {
 		// Failed
 		free(outputPtr);
 		free(goldPtr);
 		void* newDevicePtr = safe_cudaMalloc(size);
-		checkFrameworkErrors(cudaFree(devicePtr));
+		rad::checkFrameworkErrors(cudaFree(devicePtr));
 		return newDevicePtr;
 	}
 	// ===> END SECOND PHASE
@@ -194,63 +194,63 @@ void allocCudaMemory() {
 //	d_C1 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 //	d_C2 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 #else
-	checkFrameworkErrors(cudaMalloc(&d_A0, matrixSize * sizeof(tested_type)));
-//	checkFrameworkErrors(cudaMalloc(&d_A1, matrixSize * sizeof(tested_type)));
-//	checkFrameworkErrors(cudaMalloc(&d_A2, matrixSize * sizeof(tested_type)));
+	rad::checkFrameworkErrors(cudaMalloc(&d_A0, matrixSize * sizeof(tested_type)));
+//	rad::checkFrameworkErrors(cudaMalloc(&d_A1, matrixSize * sizeof(tested_type)));
+//	rad::checkFrameworkErrors(cudaMalloc(&d_A2, matrixSize * sizeof(tested_type)));
 
-	checkFrameworkErrors(cudaMalloc(&d_B0, matrixSize * sizeof(tested_type)));
-//	checkFrameworkErrors(cudaMalloc(&d_B1, matrixSize * sizeof(tested_type)));
-//	checkFrameworkErrors(cudaMalloc(&d_B2, matrixSize * sizeof(tested_type)));
+	rad::checkFrameworkErrors(cudaMalloc(&d_B0, matrixSize * sizeof(tested_type)));
+//	rad::checkFrameworkErrors(cudaMalloc(&d_B1, matrixSize * sizeof(tested_type)));
+//	rad::checkFrameworkErrors(cudaMalloc(&d_B2, matrixSize * sizeof(tested_type)));
 
-	checkFrameworkErrors(cudaMalloc(&d_C0, matrixSize * sizeof(tested_type)));
-//	checkFrameworkErrors(cudaMalloc(&d_C1, matrixSize * sizeof(tested_type)));
-//	checkFrameworkErrors(cudaMalloc(&d_C2, matrixSize * sizeof(tested_type)));
+	rad::checkFrameworkErrors(cudaMalloc(&d_C0, matrixSize * sizeof(tested_type)));
+//	rad::checkFrameworkErrors(cudaMalloc(&d_C1, matrixSize * sizeof(tested_type)));
+//	rad::checkFrameworkErrors(cudaMalloc(&d_C2, matrixSize * sizeof(tested_type)));
 #endif
 
 }
 
 void freeCudaMemory() {
-	checkFrameworkErrors(cudaFree(d_A0));
-//	checkFrameworkErrors(cudaFree(d_A1));
-//	checkFrameworkErrors(cudaFree(d_A2));
+	rad::checkFrameworkErrors(cudaFree(d_A0));
+//	rad::checkFrameworkErrors(cudaFree(d_A1));
+//	rad::checkFrameworkErrors(cudaFree(d_A2));
 
-	checkFrameworkErrors(cudaFree(d_B0));
-//	checkFrameworkErrors(cudaFree(d_B1));
-//	checkFrameworkErrors(cudaFree(d_B2));
+	rad::checkFrameworkErrors(cudaFree(d_B0));
+//	rad::checkFrameworkErrors(cudaFree(d_B1));
+//	rad::checkFrameworkErrors(cudaFree(d_B2));
 
-	checkFrameworkErrors(cudaFree(d_C0));
-//	checkFrameworkErrors(cudaFree(d_C1));
-//	checkFrameworkErrors(cudaFree(d_C2));
+	rad::checkFrameworkErrors(cudaFree(d_C0));
+//	rad::checkFrameworkErrors(cudaFree(d_C1));
+//	rad::checkFrameworkErrors(cudaFree(d_C2));
 }
 
-void copyCudaMemory(HostPersistentControler& pt_control) {
-	checkFrameworkErrors(
+void copyCudaMemory(rad::HostPersistentControler& pt_control) {
+	rad::checkFrameworkErrors(
 			cudaMemsetAsync(d_C0, 0x00, matrixSize * sizeof(tested_type),
 					pt_control.st));
-//	checkFrameworkErrors(
+//	rad::checkFrameworkErrors(
 //			cudaMemset(d_C1, 0x00, matrixSize * sizeof(tested_type)));
-//	checkFrameworkErrors(
+//	rad::checkFrameworkErrors(
 //			cudaMemset(d_C2, 0x00, matrixSize * sizeof(tested_type)));
 	pt_control.sync_stream();
 
-	checkFrameworkErrors(
+	rad::checkFrameworkErrors(
 			cudaMemcpyAsync(d_A0, A, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice, pt_control.st)); // PUSH A
-//	checkFrameworkErrors(
+//	rad::checkFrameworkErrors(
 //			cudaMemcpy(d_A1, A, matrixSize * sizeof(tested_type),
 //					cudaMemcpyHostToDevice)); // PUSH A
-//	checkFrameworkErrors(
+//	rad::checkFrameworkErrors(
 //			cudaMemcpy(d_A2, A, matrixSize * sizeof(tested_type),
 //					cudaMemcpyHostToDevice)); // PUSH A
 	pt_control.sync_stream();
 
-	checkFrameworkErrors(
+	rad::checkFrameworkErrors(
 			cudaMemcpyAsync(d_B0, B, matrixSize * sizeof(tested_type),
 					cudaMemcpyHostToDevice, pt_control.st)); // PUSH B
-//	checkFrameworkErrors(
+//	rad::checkFrameworkErrors(
 //			cudaMemcpy(d_B1, B, matrixSize * sizeof(tested_type),
 //					cudaMemcpyHostToDevice)); // PUSH B
-//	checkFrameworkErrors(
+//	rad::checkFrameworkErrors(
 //			cudaMemcpy(d_B2, B, matrixSize * sizeof(tested_type),
 //					cudaMemcpyHostToDevice)); // PUSH B
 	pt_control.sync_stream();
@@ -545,13 +545,13 @@ __device__ void process_data(int wA, int wB, real* A, real* B, real* C) {
  */
 template<typename real> __global__ void MatrixMulKernel(real *C, real *A,
 		real *B, int wA, int wB) {
-	PersistentKernel pk;
+	rad::PersistentKernel pk;
 	while (pk.keep_working()) {
 		pk.wait_for_work();
 		if (pk.is_able_to_process()) {
 			process_data(wA, wB, A, B, C);
+			pk.iteration_finished();
 		}
-		pk.iteration_finished();
 	}
 }
 
@@ -701,8 +701,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL,
 		log_error_count(host_errors);
 	}
 #endif
-//	if (memory_errors != 0)
-	printf("M");
+
 	if (host_errors != 0)
 		printf("#");
 
@@ -712,7 +711,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL,
 void launch_kernel(dim3 dimGrid, dim3 dimBlock) {
 	//Starting persistent kernel
 	MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A0, d_B0, d_C0, k, k);
-	checkFrameworkErrors(cudaPeekAtLastError());
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	printf("Kernel LAUCHED\n");
 }
 
@@ -875,7 +874,7 @@ int main(int argc, char* argv[]) {
 	int generate_safechecks_count = 0;
 //====================================
 //================== Init Persistent threads controler
-	HostPersistentControler pt_control(dimGrid);
+	rad::HostPersistentControler pt_control(dimGrid);
 
 //====================================
 //================== Init DEVICE memory
@@ -895,17 +894,17 @@ int main(int argc, char* argv[]) {
 
 		global_time = mysecond();
 
-		checkFrameworkErrors(
+		rad::checkFrameworkErrors(
 				cudaMemsetAsync(d_C0, 0, matrixSize * sizeof(tested_type),
 						pt_control.st));
 		pt_control.sync_stream();
 		printf("CUDAMEMSET ISSUED\n");
-//		checkFrameworkErrors(
+//		rad::checkFrameworkErrors(
 //				cudaMemset(d_C1, 0, matrixSize * sizeof(tested_type)));
-//		checkFrameworkErrors(
+//		rad::checkFrameworkErrors(
 //				cudaMemset(d_C2, 0, matrixSize * sizeof(tested_type)));
 
-//		checkFrameworkErrors(
+//		rad::checkFrameworkErrors(
 //				cudaMemcpyToSymbol(is_memory_bad, &host_is_memory_bad,
 //						sizeof(unsigned long long int), 0,
 //						cudaMemcpyHostToDevice));
@@ -923,8 +922,8 @@ int main(int argc, char* argv[]) {
 
 		pt_control.process_data_on_kernel();
 
-//		checkFrameworkErrors(cudaDeviceSynchronize());
-		checkFrameworkErrors(cudaPeekAtLastError());
+//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 		//====================================
 #ifdef LOGS
 		if (!generate)
@@ -951,7 +950,7 @@ int main(int argc, char* argv[]) {
 		time = mysecond();
 
 		if (loop2 || !device_warmup) {
-			checkFrameworkErrors(
+			rad::checkFrameworkErrors(
 					cudaMemcpyAsync(C0, d_C0, matrixSize * sizeof(tested_type),
 							cudaMemcpyDeviceToHost, pt_control.st));
 			pt_control.sync_stream();
@@ -965,7 +964,7 @@ int main(int argc, char* argv[]) {
 				printf("\n");
 			}
 
-//			checkFrameworkErrors(
+//			rad::checkFrameworkErrors(
 //					cudaMemcpy(C1, d_C1, matrixSize * sizeof(tested_type),
 //							cudaMemcpyDeviceToHost));
 //			if ((generate) && (k <= 16)) {
@@ -978,7 +977,7 @@ int main(int argc, char* argv[]) {
 //				printf("\n");
 //			}
 //
-//			checkFrameworkErrors(
+//			rad::checkFrameworkErrors(
 //					cudaMemcpy(C2, d_C2, matrixSize * sizeof(tested_type),
 //							cudaMemcpyDeviceToHost));
 //			if ((generate) && (k <= 16)) {
@@ -990,7 +989,7 @@ int main(int argc, char* argv[]) {
 //				}
 //				printf("\n");
 //			}
-//			checkFrameworkErrors(
+//			rad::checkFrameworkErrors(
 //					cudaMemcpyFromSymbol(&host_is_memory_bad, is_memory_bad,
 //							sizeof(unsigned long long int), 0,
 //							cudaMemcpyDeviceToHost));

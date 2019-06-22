@@ -11,6 +11,8 @@
 #include <iostream>
 #include "include/cuda_utils.h"
 
+namespace rad {
+
 #define BLOCK_SIZE 32
 
 #ifndef DEBUG
@@ -26,17 +28,13 @@ volatile __device__ byte running;
 volatile __device__ byte allow_threads_process;
 volatile __device__ uint32 gpu_mutex;
 
-__global__ void set_gpu_mutex(const uint32 value) {
-	gpu_mutex = value;
-}
-
-__global__ void set_gpu_running(const byte value) {
-	running = value;
-}
+#define DEFAULT_TIME_TO_WAIT 0.01
 
 struct HostPersistentControler {
 	cudaStream_t st;
 	uint32 block_number;
+	double best_time_to_wait;
+	bool do_not_check_more;
 
 	HostPersistentControler(dim3 grid_dim) {
 		this->block_number = grid_dim.x * grid_dim.y * grid_dim.z;
@@ -48,7 +46,8 @@ struct HostPersistentControler {
 		this->set_allow_threads_to_process(0);
 		//reset the mutex
 		this->set_mutex(0);
-
+		this->best_time_to_wait = DEFAULT_TIME_TO_WAIT;
+		this->do_not_check_more = false;
 	}
 
 	virtual ~HostPersistentControler() {
@@ -62,17 +61,24 @@ struct HostPersistentControler {
 	}
 
 	void start_kernel() {
+		//do not allow threads to process
+		this->set_allow_threads_to_process(0);
+		//make the kernel iterate in the loop
 		this->set_running(1);
 	}
 
 	void end_kernel() {
+		//make the kernel exit
 		this->set_running(0);
+		//sync the device
 		checkFrameworkErrors(cudaDeviceSynchronize());
 	}
 
 	void start_processing() {
-		this->set_allow_threads_to_process(1);
+		//set the mutex to 0
 		this->set_mutex(0);
+		//allow threads to process
+		this->set_allow_threads_to_process(1);
 	}
 
 	void wait_gpu() {
@@ -85,19 +91,24 @@ struct HostPersistentControler {
 							this->st));
 			checkFrameworkErrors(cudaStreamSynchronize(this->st));
 #ifdef DEBUG
-			std::cout << "FINISHED " << counter << " " << this->block_number
-					<< std::endl;
+			std::cout << "FINISHED " << counter << " " << this->block_number << " " <<
+					best_time_to_wait << std::endl;
 #endif
 			//it saves 1 second
-			if(this->block_number <= counter){
+			if (this->block_number <= counter) {
+				this->do_not_check_more = true;
 				break;
 			}
-			sleep(1);
+			rad::sleep(this->best_time_to_wait);
+
+			if(this->do_not_check_more == false)
+				this->best_time_to_wait *= 2;
 		}
 		checkFrameworkErrors(cudaGetLastError());
 	}
 
 	void end_processing() {
+		//do not allow threads to process
 		this->set_allow_threads_to_process(0);
 	}
 
@@ -153,24 +164,29 @@ private:
 struct PersistentKernel {
 	uint32 blocks_to_synch;
 	uint32 tid_in_block;
+	bool it_has_processed;
 
 	__device__ PersistentKernel() {
 		//thread ID in a block
 		this->tid_in_block = threadIdx.x + threadIdx.y + threadIdx.z;
 		this->blocks_to_synch = gridDim.x * gridDim.y * gridDim.z;
+		this->it_has_processed = false;
 	}
 
 	__device__ void wait_for_work() {
-		__syncthreads();
-		if (this->tid_in_block == 0) {
-			while (running == 1) {
-				if (gpu_mutex == 0) {
-					break;
-				}
-			}
-		}
-		__syncthreads();
-
+//		__syncthreads();
+//
+//		// only thread 0 is used for synchronization
+//		if (this->tid_in_block == 0) {
+//			while (running == 1) {
+//				if (gpu_mutex == 0) {
+//					break;
+//				}
+//			}
+//		}
+//		__syncthreads();
+		if(gpu_mutex == 0)
+			this->it_has_processed = false;
 	}
 
 	__device__ void iteration_finished() {
@@ -186,12 +202,12 @@ struct PersistentKernel {
 				}
 			}
 		}
+		this->it_has_processed = true;
 		__syncthreads();
-
 	}
 
 	__device__ bool is_able_to_process() {
-		return (allow_threads_process == 1);
+		return (allow_threads_process == 1 && this->it_has_processed == false);
 	}
 
 	__device__ bool keep_working() {
@@ -199,5 +215,6 @@ struct PersistentKernel {
 	}
 
 };
+}
 
 #endif /* PERSISTENT_LIB_H_ */

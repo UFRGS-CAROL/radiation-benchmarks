@@ -8,32 +8,25 @@
 #ifndef NVMLWRAPPER_H_
 #define NVMLWRAPPER_H_
 
-#include <nvml.h>
 #include <string>
 #include <deque>
 #include <thread>
 
-
-class NVMLWrapper {
-private:
-
+class JTX2Inst {
 	unsigned device_index;
-	nvmlDevice_t device;
 
 	//Multithreading context
 	std::thread profiler;
 
-	//NVML EVENT
-	nvmlEventSet_t set;
 
 	std::deque<std::string> data_for_iteration;
 
 
-	static void data_colector(nvmlDevice_t* device, std::deque<std::string>* it_data);
+	static void data_colector(std::deque<std::string>* it_data);
 
 public:
-	NVMLWrapper(unsigned device_index);
-	virtual ~NVMLWrapper();
+	JTX2Inst(unsigned device_index);
+	virtual ~JTX2Inst();
 
 	void start_collecting_data();
 
@@ -41,6 +34,8 @@ public:
 
 	std::deque<std::string> get_data_from_iteration();
 
+	void check_jtx2_result(std::string info, unsigned device =
+			0);
 };
 
 #endif /* NVMLWRAPPER_H_ */
