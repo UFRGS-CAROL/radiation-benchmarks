@@ -122,8 +122,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
 
     for (int k = 0; k < BLOCK_SIZE; ++k) {
       
-      // Csub = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub);
-      Csub = fma_dmr(As[ty][k], Bs[k][tx], Csub);
+      Csub = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub);
       Csub1 = fma_dmr(As[ty][k], Bs[k][tx],Csub1);
 
       
@@ -138,7 +137,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
   // Write the block sub-matrix to device memory;
   // each thread writes one element
   int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-  C[c + wB * ty + tx] = Csub;
+  C[c + wB * ty + tx] = (float)Csub;
   C1[c + wB * ty + tx] = Csub1;
 }
 
@@ -304,7 +303,7 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
-  MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+  MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                          dimsA.x, dimsB.x);
   //MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
   //                                          dimsA.x, dimsB.x);
@@ -330,7 +329,7 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      MatrixMulCUDA<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
+      MatrixMulCUDA<16> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
                                               dimsA.x, dimsB.x);
       // MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
       //                                       dimsA.x, dimsB.x);
@@ -427,26 +426,26 @@ int main(int argc, char **argv) {
   // override the device ID based on input provided at the command line
   int dev = findCudaDevice(argc, (const char **)argv);
 
-  int block_size = 32;
+  int block_size = 16;
 
-  // dim3 dimsA(8192, 8192, 1);
-  // dim3 dimsB(8192, 8192, 1);
+  dim3 dimsA(8192, 8192, 1);
+  dim3 dimsB(8192, 8192, 1);
 
-  // dimsA.x = 8192;
-  // dimsA.y = 8192;
+  dimsA.x = 8192;
+  dimsA.y = 8192;
 
-  // dimsB.x = 8192;
-  // dimsB.y = 8192; 
+  dimsB.x = 8192;
+  dimsB.y = 8192; 
 
 
-  dim3 dimsA(4096, 4096, 1);
-  dim3 dimsB(4096, 4096, 1);
+  // dim3 dimsA(4096, 4096, 1);
+  // dim3 dimsB(4096, 4096, 1);
 
-  dimsA.x = 4096;
-  dimsA.y = 4096;
+  // dimsA.x = 4096;
+  // dimsA.y = 4096;
 
-  dimsB.x = 4096;
-  dimsB.y = 4096; 
+  // dimsB.x = 4096;
+  // dimsB.y = 4096; 
 
 
   // // width of Matrix A
