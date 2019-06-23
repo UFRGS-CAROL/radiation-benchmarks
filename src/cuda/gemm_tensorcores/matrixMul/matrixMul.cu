@@ -312,7 +312,7 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
-  MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+  MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                          dimsA.x, dimsB.x);
   //MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
   //                                          dimsA.x, dimsB.x);
@@ -338,7 +338,7 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      MatrixMulCUDA<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
+      MatrixMulCUDA<16> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
                                               dimsA.x, dimsB.x);
       // MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
       //                                       dimsA.x, dimsB.x);
@@ -435,7 +435,7 @@ int main(int argc, char **argv) {
   // override the device ID based on input provided at the command line
   int dev = findCudaDevice(argc, (const char **)argv);
 
-  int block_size = 32;
+  int block_size = 16;
 
   dim3 dimsA(8192, 8192, 1);
   dim3 dimsB(8192, 8192, 1);
