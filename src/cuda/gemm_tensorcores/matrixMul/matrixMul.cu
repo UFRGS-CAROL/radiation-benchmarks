@@ -251,10 +251,12 @@ int MatrixMultiply(int argc, char **argv,
   unsigned int size_A = dimsA.x * dimsA.y;
   unsigned int mem_size_A = sizeof(double) * size_A;
   double *h_A = reinterpret_cast<double *>(malloc(mem_size_A));
+  double *h_A1 = reinterpret_cast<double *>(malloc(mem_size_A));
+
   unsigned int size_B = dimsB.x * dimsB.y;
   unsigned int mem_size_B = sizeof(double) * size_B;
   double *h_B = reinterpret_cast<double *>(malloc(mem_size_B));
-
+  double *h_B1 = reinterpret_cast<double *>(malloc(mem_size_B));
   // Initialize host memory
   
   const double valA = 2.0f;
@@ -289,10 +291,10 @@ int MatrixMultiply(int argc, char **argv,
 
   // copy host memory to device
   checkCudaErrors(cudaMemcpy(d_A, h_A, mem_size_A, cudaMemcpyHostToDevice));
-  checkCudaErrors(cudaMemcpy(d_A1, h_A, mem_size_A, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_A1, h_A1, mem_size_A, cudaMemcpyHostToDevice));
 
   checkCudaErrors(cudaMemcpy(d_B, h_B, mem_size_B, cudaMemcpyHostToDevice));
-  checkCudaErrors(cudaMemcpy(d_B1, h_B, mem_size_B, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_B1, h_B1, mem_size_B, cudaMemcpyHostToDevice));
 
   
 
@@ -318,7 +320,7 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
-  MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
+  MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
                                          dimsA.x, dimsB.x);
   //MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
   //                                          dimsA.x, dimsB.x);
@@ -344,7 +346,7 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
+      MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
                                               dimsA.x, dimsB.x);
       // MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
       //                                       dimsA.x, dimsB.x);
@@ -441,7 +443,7 @@ int main(int argc, char **argv) {
   // override the device ID based on input provided at the command line
   int dev = findCudaDevice(argc, (const char **)argv);
 
-  int block_size = 16;
+  int block_size = 32;
 
   dim3 dimsA(8192, 8192, 1);
   dim3 dimsB(8192, 8192, 1);
