@@ -90,8 +90,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-    volatile double Csub = 0;
-    // volatile float Csub1= 0;
+    volatile float Csub = 0;
+    volatile double Csub1= 0;
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -106,11 +106,19 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
     // store the sub-matrix of B
     __shared__ double Bs[BLOCK_SIZE][BLOCK_SIZE];
 
+
+
+    __shared__ double As1[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ double Bs1[BLOCK_SIZE][BLOCK_SIZE];
+
     // Load the matrices from device memory
     // to shared memory; each thread loads
     // one element of each matrix
     As[ty][tx] = A[a + wA * ty + tx];
     Bs[ty][tx] = B[b + wB * ty + tx];
+
+    As1[ty][tx] = A[a + wA * ty + tx];
+    Bs1[ty][tx] = B[b + wB * ty + tx];
 
     // Synchronize to make sure the matrices are loaded
     __syncthreads();
@@ -122,9 +130,9 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
 
     for (int k = 0; k < BLOCK_SIZE; ++k) {
       
-      // Csub = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub);
-      Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
-      // Csub1 = fma_dmr(As[ty][k], Bs[k][tx],Csub1);
+      Csub = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub);
+      // Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
+      Csub1 = fma_dmr(As1[ty][k], Bs1[k][tx],Csub1);
 
       
     }
@@ -138,8 +146,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
   // Write the block sub-matrix to device memory;
   // each thread writes one element
   int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-  C[c + wB * ty + tx] = Csub;
-  // C1[c + wB * ty + tx] = Csub1;
+  C[c + wB * ty + tx] = (float)Csub;
+  C1[c + wB * ty + tx] = Csub1;
 }
 
 // template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, half *A,
@@ -304,7 +312,7 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
-  MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+  MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                          dimsA.x, dimsB.x);
   //MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
   //                                          dimsA.x, dimsB.x);
@@ -330,7 +338,7 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      MatrixMulCUDA<16> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
+      MatrixMulCUDA<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
                                               dimsA.x, dimsB.x);
       // MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
       //                                       dimsA.x, dimsB.x);
@@ -427,7 +435,7 @@ int main(int argc, char **argv) {
   // override the device ID based on input provided at the command line
   int dev = findCudaDevice(argc, (const char **)argv);
 
-  int block_size = 16;
+  int block_size = 32;
 
   dim3 dimsA(8192, 8192, 1);
   dim3 dimsB(8192, 8192, 1);
