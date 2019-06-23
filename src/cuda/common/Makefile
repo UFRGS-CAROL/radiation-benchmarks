@@ -6,7 +6,7 @@ CUDAPATH=/usr/local/cuda
 SRC=./src
 JTX2SRC=$(SRC)/jtx2/src
 LIB=./lib
-CXXFLAGS+=-fPIC -Wall -Wextra -Wno-unknown-pragmas -std=c++11 -o3  -pthread
+CXXFLAGS+=-fPIC -Wall -Wextra -Wno-unknown-pragmas -std=c++11 -o3  -pthread -li2c
 
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 

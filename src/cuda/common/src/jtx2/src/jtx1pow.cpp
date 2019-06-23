@@ -12,8 +12,12 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdint.h>
+extern "C"{
+
 #include <linux/i2c-dev.h>
 #include <i2c/smbus.h>
+
+}
 #include <byteswap.h>
 
 #include "../include/jtx1inst.h"
