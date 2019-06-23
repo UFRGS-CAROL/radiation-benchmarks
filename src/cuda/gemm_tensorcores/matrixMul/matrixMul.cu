@@ -60,8 +60,8 @@ typedef half_float::half half_h;
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, double *A,
-    double *B, int wA,
+template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, double *A,double *A1,
+    double *B,double *B1, int wA,
     int wB) {
   // Block index
   int bx = blockIdx.x;
@@ -117,8 +117,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
     As[ty][tx] = A[a + wA * ty + tx];
     Bs[ty][tx] = B[b + wB * ty + tx];
 
-    As1[ty][tx] = A[a + wA * ty + tx];
-    Bs1[ty][tx] = B[b + wB * ty + tx];
+    As1[ty][tx] = A1[a + wA * ty + tx];
+    Bs1[ty][tx] = B1[b + wB * ty + tx];
 
     // Synchronize to make sure the matrices are loaded
     __syncthreads();
@@ -263,7 +263,7 @@ int MatrixMultiply(int argc, char **argv,
   ConstantInit(h_B, size_B, valB);
   //printf("h_A = %f\n", h_A[0]);
   // Allocate device memory
-  double *d_A, *d_B, *d_C, *d_C1;
+  double *d_A, *d_A1,*d_B, *d_B1, *d_C, *d_C1;
 
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
@@ -277,7 +277,11 @@ int MatrixMultiply(int argc, char **argv,
 
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_A), mem_size_A));
 
+  checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_A1), mem_size_A));
+
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_B), mem_size_B));
+
+  checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_B1), mem_size_B));
 
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_C), mem_size_C));
 
@@ -285,8 +289,10 @@ int MatrixMultiply(int argc, char **argv,
 
   // copy host memory to device
   checkCudaErrors(cudaMemcpy(d_A, h_A, mem_size_A, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_A1, h_A, mem_size_A, cudaMemcpyHostToDevice));
 
   checkCudaErrors(cudaMemcpy(d_B, h_B, mem_size_B, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_B1, h_B, mem_size_B, cudaMemcpyHostToDevice));
 
   
 
@@ -312,7 +318,7 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
-  MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+  MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
                                          dimsA.x, dimsB.x);
   //MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
   //                                          dimsA.x, dimsB.x);
@@ -338,7 +344,7 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      MatrixMulCUDA<16> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
+      MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
                                               dimsA.x, dimsB.x);
       // MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
       //                                       dimsA.x, dimsB.x);
@@ -435,7 +441,7 @@ int main(int argc, char **argv) {
   // override the device ID based on input provided at the command line
   int dev = findCudaDevice(argc, (const char **)argv);
 
-  int block_size = 16;
+  int block_size = 32;
 
   dim3 dimsA(8192, 8192, 1);
   dim3 dimsB(8192, 8192, 1);
