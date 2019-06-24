@@ -1,6 +1,6 @@
 
 all:
-	g++ -I../../../include ../src/*.cpp ../../JTX2Inst.cpp sample.cpp -li2c -pthread -o sample_jtx2
+	g++ -I../../../include sample.cpp -o sample_jtx2 -L../../../lib -lJTX2Inst -li2c -pthread 
 
 clean:
 	rm -f sample_jtx2

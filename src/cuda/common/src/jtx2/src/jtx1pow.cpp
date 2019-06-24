@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdint.h>
-extern "C"{
+extern "C" {
 
 #include <linux/i2c-dev.h>
 #include <i2c/smbus.h>
@@ -92,7 +92,9 @@ static void jtx1_get_ina3221_sysf(jtx2_rail rail, jtx2_rail_type measure,
 	int addr;
 	int ans;
 	char buff[MAX_BUFF];
-	char *mea = "voltage";
+//	char *mea = "voltage";
+	char mea[10];
+	strcpy(mea, "voltage");
 
 	if (rail >= 0 && rail <= 2) {
 		addr = 0;
@@ -109,15 +111,21 @@ static void jtx1_get_ina3221_sysf(jtx2_rail rail, jtx2_rail_type measure,
 
 	switch (measure) {
 	case 0: {
-		mea = "voltage";
+//		mea = "voltage";
+		strcpy(mea, "voltage");
+
 		break;
 	}
 	case 1: {
-		mea = "power";
+//		mea = "power";
+		strcpy(mea, "power");
+
 		break;
 	}
 	case 2: {
-		mea = "current";
+//		mea = "current";
+		strcpy(mea, "current");
+
 		break;
 	}
 	default:

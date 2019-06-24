@@ -24,10 +24,13 @@ static std::mutex mutex_lock;
 static std::atomic<bool> is_locked;
 static bool thread_running = true;
 
+#ifndef SLEEP_TIME
 #define SLEEP_JTX2INST 500
+#else
+#define SLEEP_JTX2INST SLEEP_TIME
+#endif
 
-JTX2Inst::JTX2Inst(unsigned device_index) :
-		device_index(device_index) {
+JTX2Inst::JTX2Inst() {
 	this->profiler = std::thread(JTX2Inst::data_colector,
 			&this->data_for_iteration);
 	is_locked = true;
@@ -40,7 +43,7 @@ JTX2Inst::~JTX2Inst() {
 
 void JTX2Inst::data_colector(std::deque<std::string>* it_data) {
 	unsigned int val;
-	unsigned long rate;
+//	unsigned long rate;
 	float convFromMilli;
 	std::string wunit, aunit, vunit;
 	int convert;
@@ -64,7 +67,7 @@ void JTX2Inst::data_colector(std::deque<std::string>* it_data) {
 		if (is_locked == false) {
 			std::stringstream out_stream;
 
-			out_stream << std::scientific << std::setprecision(7);
+//			out_stream << std::scientific << std::setprecision(7);
 			//***********************************************************************************************
 			jtx1_get_ina3221(VDD_IN, POWER, &val);
 //			printf("[POWER] module power input: %.3f%s\n", convFromMilli * val,
@@ -341,7 +344,7 @@ void JTX2Inst::data_colector(std::deque<std::string>* it_data) {
 			it_data->push_back(out_stream.str());
 		}
 		mutex_lock.unlock();
-		std::this_thread::sleep_for(std::chrono::microseconds(SLEEP_JTX2INST));
+		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_JTX2INST));
 	}
 }
 

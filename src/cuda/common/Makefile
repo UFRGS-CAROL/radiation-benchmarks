@@ -1,3 +1,5 @@
+SLEEP_TIME=1000 #in miliseconds
+
 CXX=g++
 
 MODE=cvr
@@ -7,6 +9,10 @@ SRC=./src
 JTX2SRC=$(SRC)/jtx2/src
 LIB=./lib
 CXXFLAGS+=-fPIC -Wall -Wextra -Wno-unknown-pragmas -std=c++11 -o3  -pthread -li2c
+
+ifneq ($(SLEEP_TIME), 0)
+CXXFLAGS+= -DSLEEP_TIME=$(SLEEP_TIME)
+endif
 
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
@@ -23,12 +29,12 @@ LIBS=JTX2Inst.so NVMLWrapper.so
 all: clean $(OBJS) $(LIBS)
 
 JTX2Inst.so: JTX2Inst.o 
-	ar $(MODE) $(LIB)/JTX2Inst.so JTX2Inst.o $(JTX2OBJ)
-	rm -f JTX2Inst.o
+	ar $(MODE) -o $(LIB)/libJTX2Inst.so JTX2Inst.o $(JTX2OBJ)
+	rm -f libJTX2Inst.o $(JTX2OBJ)
 
 NVMLWrapper.so: NVMLWrapper.o
-	ar $(MODE) $(LIB)/NVMLWrapper.so NVMLWrapper.o
-	rm -f NVMLWrapper.o
+	ar $(MODE) $(LIB)/libNVMLWrapper.so NVMLWrapper.o
+	rm -f libNVMLWrapper.o
 
 %.o:  $(JTX2SRC)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(LDFLAGS) $(INCLUDE)

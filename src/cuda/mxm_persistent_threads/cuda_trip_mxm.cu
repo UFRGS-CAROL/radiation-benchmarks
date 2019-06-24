@@ -26,10 +26,6 @@
 #undef max
 #define max( x, y ) ( (x) > (y) ? (x) : (y) )
 
-#ifndef BLOCK_SIZE
-#define BLOCK_SIZE 32
-#endif
-
 #define DEFAULT_INPUT_SIZE 8192
 
 //=========== DEFINE TESTED TYPE
@@ -194,15 +190,18 @@ void allocCudaMemory() {
 //	d_C1 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 //	d_C2 = (tested_type*) safe_cudaMalloc(matrixSize * sizeof(tested_type));
 #else
-	rad::checkFrameworkErrors(cudaMalloc(&d_A0, matrixSize * sizeof(tested_type)));
+	rad::checkFrameworkErrors(
+			cudaMalloc(&d_A0, matrixSize * sizeof(tested_type)));
 //	rad::checkFrameworkErrors(cudaMalloc(&d_A1, matrixSize * sizeof(tested_type)));
 //	rad::checkFrameworkErrors(cudaMalloc(&d_A2, matrixSize * sizeof(tested_type)));
 
-	rad::checkFrameworkErrors(cudaMalloc(&d_B0, matrixSize * sizeof(tested_type)));
+	rad::checkFrameworkErrors(
+			cudaMalloc(&d_B0, matrixSize * sizeof(tested_type)));
 //	rad::checkFrameworkErrors(cudaMalloc(&d_B1, matrixSize * sizeof(tested_type)));
 //	rad::checkFrameworkErrors(cudaMalloc(&d_B2, matrixSize * sizeof(tested_type)));
 
-	rad::checkFrameworkErrors(cudaMalloc(&d_C0, matrixSize * sizeof(tested_type)));
+	rad::checkFrameworkErrors(
+			cudaMalloc(&d_C0, matrixSize * sizeof(tested_type)));
 //	rad::checkFrameworkErrors(cudaMalloc(&d_C1, matrixSize * sizeof(tested_type)));
 //	rad::checkFrameworkErrors(cudaMalloc(&d_C2, matrixSize * sizeof(tested_type)));
 #endif
@@ -835,10 +834,11 @@ int main(int argc, char* argv[]) {
 //================== Init logs
 #ifdef LOGS
 	if (!generate) {
-		char test_info[90];
-		char test_name[90];
-		snprintf(test_info, 90, "size:%d type:%s-precision", k, test_precision_description);
-		snprintf(test_name, 90, "cuda_%s_mxm", test_precision_description);
+		char test_info[150];
+		char test_name[150];
+		snprintf(test_info, 150, "size:%d type:%s-precision block_size:%d", k,
+				test_precision_description, BLOCK_SIZE);
+		snprintf(test_name, 150, "cuda_%s_mxm", test_precision_description);
 		start_log_file(test_name, test_info);
 	}
 #endif

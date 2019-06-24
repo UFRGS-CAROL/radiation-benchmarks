@@ -14,8 +14,6 @@
 
 namespace rad {
 class JTX2Inst {
-	unsigned device_index;
-
 	//Multithreading context
 	std::thread profiler;
 
@@ -24,7 +22,7 @@ class JTX2Inst {
 	static void data_colector(std::deque<std::string>* it_data);
 
 public:
-	JTX2Inst(unsigned device_index);
+	JTX2Inst();
 	virtual ~JTX2Inst();
 
 	void start_collecting_data();

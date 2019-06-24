@@ -33,9 +33,13 @@
 //=============================================================================
 //	DEFINE / INCLUDE
 //=============================================================================
-#define NUMBER_PAR_PER_BOX 192	 // keep this low to allow more blocks that share shared memory to run concurrently, code does not work for larger than 110, more speedup can be achieved with larger number and no shared memory used
-
-#define NUMBER_THREADS 192		 // this should be roughly equal to NUMBER_PAR_PER_BOX for best performance
+ // keep this low to allow more blocks that share shared memory to run concurrently,
+//code does not work for larger than 110, more speedup can be achieved with larger
+//number and no shared memory used
+//default value was 192, but for evaluation i keep BLOCK_SIZE * 6
+#define NUMBER_PAR_PER_BOX BLOCK_SIZE * 6 //192
+// this should be roughly equal to NUMBER_PAR_PER_BOX for best performance
+#define NUMBER_THREADS NUMBER_PAR_PER_BOX //192
 
 //#define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
 
@@ -914,6 +918,10 @@ int main(int argc, char *argv[]) {
 
 	char test_info[200];
 	char test_name[200];
+	//VALID ONLY FOR PERSISTENT THREADS
+	if(BLOCK_SIZE == 16){
+		dim_cpu.boxes1d_arg *= 2;
+	}
 	snprintf(test_info, 200,
 			"type:%s-precision streams:%d boxes:%d block_size:%d",
 			test_precision_description, nstreams, dim_cpu.boxes1d_arg,
