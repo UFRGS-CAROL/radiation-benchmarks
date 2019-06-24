@@ -60,8 +60,8 @@ typedef half_float::half half_h;
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, double *A,
-    double *B, int wA,
+template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, double *A,double *A1,
+    double *B,double *B1, int wA,
     int wB) {
   // Block index
   int bx = blockIdx.x;
@@ -106,11 +106,19 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
     // store the sub-matrix of B
     __shared__ double Bs[BLOCK_SIZE][BLOCK_SIZE];
 
+
+
+    __shared__ double As1[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ double Bs1[BLOCK_SIZE][BLOCK_SIZE];
+
     // Load the matrices from device memory
     // to shared memory; each thread loads
     // one element of each matrix
     As[ty][tx] = A[a + wA * ty + tx];
     Bs[ty][tx] = B[b + wB * ty + tx];
+
+    As1[ty][tx] = A1[a + wA * ty + tx];
+    Bs1[ty][tx] = B1[b + wB * ty + tx];
 
     // Synchronize to make sure the matrices are loaded
     __syncthreads();
@@ -123,7 +131,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
     for (int k = 0; k < BLOCK_SIZE; ++k) {
       
       Csub = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub);
-      Csub1 = fma_dmr(As[ty][k], Bs[k][tx],Csub1);
+      // Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
+      Csub1 = fma_dmr(As1[ty][k], Bs1[k][tx],Csub1);
 
       
     }
@@ -242,10 +251,12 @@ int MatrixMultiply(int argc, char **argv,
   unsigned int size_A = dimsA.x * dimsA.y;
   unsigned int mem_size_A = sizeof(double) * size_A;
   double *h_A = reinterpret_cast<double *>(malloc(mem_size_A));
+  double *h_A1 = reinterpret_cast<double *>(malloc(mem_size_A));
+
   unsigned int size_B = dimsB.x * dimsB.y;
   unsigned int mem_size_B = sizeof(double) * size_B;
   double *h_B = reinterpret_cast<double *>(malloc(mem_size_B));
-
+  double *h_B1 = reinterpret_cast<double *>(malloc(mem_size_B));
   // Initialize host memory
   
   const double valA = 2.0f;
@@ -254,7 +265,7 @@ int MatrixMultiply(int argc, char **argv,
   ConstantInit(h_B, size_B, valB);
   //printf("h_A = %f\n", h_A[0]);
   // Allocate device memory
-  double *d_A, *d_B, *d_C, *d_C1;
+  double *d_A, *d_A1,*d_B, *d_B1, *d_C, *d_C1;
 
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
@@ -268,7 +279,11 @@ int MatrixMultiply(int argc, char **argv,
 
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_A), mem_size_A));
 
+  checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_A1), mem_size_A));
+
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_B), mem_size_B));
+
+  checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_B1), mem_size_B));
 
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_C), mem_size_C));
 
@@ -276,8 +291,10 @@ int MatrixMultiply(int argc, char **argv,
 
   // copy host memory to device
   checkCudaErrors(cudaMemcpy(d_A, h_A, mem_size_A, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_A1, h_A1, mem_size_A, cudaMemcpyHostToDevice));
 
   checkCudaErrors(cudaMemcpy(d_B, h_B, mem_size_B, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_B1, h_B1, mem_size_B, cudaMemcpyHostToDevice));
 
   
 
@@ -303,7 +320,7 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
-  MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+  MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
                                          dimsA.x, dimsB.x);
   //MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
   //                                          dimsA.x, dimsB.x);
@@ -329,7 +346,7 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      MatrixMulCUDA<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
+      MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
                                               dimsA.x, dimsB.x);
       // MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
       //                                       dimsA.x, dimsB.x);
@@ -436,6 +453,16 @@ int main(int argc, char **argv) {
 
   dimsB.x = 8192;
   dimsB.y = 8192; 
+
+
+  // dim3 dimsA(4096, 4096, 1);
+  // dim3 dimsB(4096, 4096, 1);
+
+  // dimsA.x = 4096;
+  // dimsA.y = 4096;
+
+  // dimsB.x = 4096;
+  // dimsB.y = 4096; 
 
 
   // // width of Matrix A
