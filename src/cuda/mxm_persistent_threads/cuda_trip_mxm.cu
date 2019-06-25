@@ -13,6 +13,8 @@
 #endif
 
 #include "include/persistent_lib.h"
+#include "include/JTX2Inst.h"
+
 // The timestamp is updated on every log_helper function call.
 
 // helper functions
@@ -710,13 +712,13 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL,
 void launch_kernel(dim3 dimGrid, dim3 dimBlock) {
 	//Starting persistent kernel
 	MatrixMulKernel<<<dimGrid, dimBlock>>>(d_A0, d_B0, d_C0, k, k);
-	rad::checkFrameworkErrors(cudaPeekAtLastError());
-	printf("Kernel LAUCHED\n");
+	rad::checkFrameworkErrors (cudaPeekAtLastError());printf
+	("Kernel LAUCHED\n");
 }
 
 int main(int argc, char* argv[]) {
 //================== Test vars
-	int loop2;
+	size_t loop2;
 	// int kernel_errors=0;
 	// int zero = 0;
 	double time;
@@ -840,7 +842,16 @@ int main(int argc, char* argv[]) {
 				test_precision_description, BLOCK_SIZE);
 		snprintf(test_name, 150, "cuda_%s_mxm", test_precision_description);
 		start_log_file(test_name, test_info);
+		set_iter_interval_print(30);
 	}
+
+	std::string log_file_name(get_log_file_name());
+	if(generate){
+		log_file_name = "/tmp/generate.log";
+	}
+	rad::JTX2Inst profiler_thread(log_file_name);
+	//START PROFILER THREAD
+	profiler_thread.start_profile();
 #endif
 //====================================
 
@@ -898,7 +909,7 @@ int main(int argc, char* argv[]) {
 				cudaMemsetAsync(d_C0, 0, matrixSize * sizeof(tested_type),
 						pt_control.st));
 		pt_control.sync_stream();
-		printf("CUDAMEMSET ISSUED\n");
+//		printf("CUDAMEMSET ISSUED\n");
 //		rad::checkFrameworkErrors(
 //				cudaMemset(d_C1, 0, matrixSize * sizeof(tested_type)));
 //		rad::checkFrameworkErrors(
@@ -923,14 +934,14 @@ int main(int argc, char* argv[]) {
 		pt_control.process_data_on_kernel();
 
 //		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors (cudaPeekAtLastError());
 		//====================================
 #ifdef LOGS
 		if (!generate)
 		if (loop2 || !device_warmup)
 		end_iteration();
 #endif
-		kernel_time = mysecond() - kernel_time;
+kernel_time		= mysecond() - kernel_time;
 
 		if (loop2 || !device_warmup) {
 			total_kernel_time += kernel_time;
@@ -1039,6 +1050,9 @@ int main(int argc, char* argv[]) {
 			} else {
 				bool executed_ok = checkOutputErrors();
 				if (executed_ok == false) { // (memory_errors != 0)
+#ifdef LOGS
+					profiler_thread.end_profile();
+#endif
 					pt_control.end_kernel();
 
 					//================== Release device memory to ensure there is no corrupted data on the inputs of the next iteration
@@ -1049,6 +1063,9 @@ int main(int argc, char* argv[]) {
 					allocCudaMemory();
 					copyCudaMemory(pt_control);
 					//====================================
+#ifdef LOGS
+					profiler_thread.start_profile();
+#endif
 					// Re-launch the kernel
 					pt_control.start_kernel();
 					launch_kernel(dimGrid, dimBlock);

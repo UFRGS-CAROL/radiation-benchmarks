@@ -13,10 +13,10 @@ ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
 
-NVCC_FLAGS= $(ARCH) -O3 -std=c++11
+NVCC_FLAGS= $(ARCH) -O3 -std=c++11 -L../common/lib -lJTX2Inst -li2c
 INCLUDE= -I/usr/local/cuda/include -I../common
 LIBRARY= -L/usr/local/cuda/lib64/
-CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++11
+CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/  -lcudart  -std=c++11 
 
 TARGET=cuda_lava_$(LOWERCASED_PRECISION)
 RUN_SOURCES=./cuda_lava.cu
@@ -42,7 +42,7 @@ endif
 NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
 DATA_DIR=.
-DEF_SIZE=7
+DEF_SIZE=2
 DEF_CHARGES_INPUT=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_charges_$(DEF_SIZE)
 DEF_DISTANCES_INPUT=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_distances_$(DEF_SIZE)
 DEF_GOLD=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_gold_$(DEF_SIZE)

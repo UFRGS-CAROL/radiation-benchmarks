@@ -13,35 +13,36 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>      // std::setprecision
+#include <fstream>
 
 #include "JTX2Inst.h"
 
 #include "jtx2/include/jtx1inst.h"
 
 namespace rad {
-
-static std::mutex mutex_lock;
-static std::atomic<bool> is_locked;
-static bool thread_running = true;
-
 #ifndef SLEEP_TIME
 #define SLEEP_JTX2INST 500
 #else
 #define SLEEP_JTX2INST SLEEP_TIME
 #endif
 
-JTX2Inst::JTX2Inst() {
+JTX2Inst::JTX2Inst(std::string& output_file) :
+		output_log_file(output_file), thread_running(true) {
+	std::string to_replace = ".log";
+	size_t start_pos = this->output_log_file.find(to_replace);
+	this->output_log_file.replace(start_pos, to_replace.size(), "JTX2INST.csv");
+
 	this->profiler = std::thread(JTX2Inst::data_colector,
-			&this->data_for_iteration);
-	is_locked = true;
+			&this->output_log_file, &this->thread_running, &this->collect_data);
 }
 
 JTX2Inst::~JTX2Inst() {
-	thread_running = false;
+	this->thread_running = false;
 	this->profiler.join();
 }
 
-void JTX2Inst::data_colector(std::deque<std::string>* it_data) {
+void JTX2Inst::data_colector(std::string* output_log_file, bool* thread_running,
+		bool* collect_data) {
 	unsigned int val;
 //	unsigned long rate;
 	float convFromMilli;
@@ -61,11 +62,33 @@ void JTX2Inst::data_colector(std::deque<std::string>* it_data) {
 		aunit = "mA";
 		vunit = "mV";
 	}
-	while (thread_running) {
-		mutex_lock.lock();
 
-		if (is_locked == false) {
-			std::stringstream out_stream;
+	std::ofstream out_stream(*output_log_file);
+	if (out_stream.good() == false) {
+		std::runtime_error(*output_log_file + " NOT GOOD FOR WRITING");
+	}
+	out_stream << "POWER UNIT:" << wunit << ";CURRENT UNIT:" << aunit
+			<< ";VOLTAGE UNIT:" << vunit << ";convFromMili:" << convFromMilli
+			<< std::endl;
+	out_stream
+			<< "TIMESTAMP;VDD_IN_POWER;VDD_SYS_SOC_POWER;VDD_SYS_GPU_POWER;VDD_SYS_CPU_POWER;"
+					"VDD_SYS_DDR_POWER;VDD_MUX_POWER;VDD_5V0_IO_SYS_POWER;VDD_3V3_SYS_POWER;"
+					"VDD_3V3_IO_SLP_POWER;VDD_1V8_IO_POWER;VDD_3V3_SYS_M2_POWER;VDD_4V0_WIFI_POWER;"
+					"VDD_IN_CURRENT;VDD_SYS_SOC_CURRENT;VDD_SYS_GPU_CURRENT;VDD_SYS_CPU_CURRENT;"
+					"VDD_SYS_DDR_CURRENT;VDD_MUX_CURRENT;VDD_5V0_IO_SYS_CURRENT;VDD_3V3_SYS_CURRENT;"
+					"VDD_3V3_IO_SLP_CURRENT;VDD_1V8_IO_CURRENT;VDD_3V3_SYS_M2_CURRENT;VDD_4V0_WIFI_CURRENT;"
+					"VDD_IN_VOLTAGE;VDD_SYS_SOC_VOLTAGE;VDD_SYS_GPU_VOLTAGE;VDD_SYS_CPU_VOLTAGE;"
+					"VDD_SYS_DDR_VOLTAGE;VDD_MUX_VOLTAGE;VDD_5V0_IO_SYS_VOLTAGE;VDD_3V3_SYS_VOLTAGE;"
+					"VDD_3V3_IO_SLP_VOLTAGE;VDD_1V8_IO_VOLTAGE;VDD_3V3_SYS_M2_VOLTAGE;VDD_4V0_WIFI_VOLTAGE;"
+					"A0_TEMPERATURE;CPU_TEMPERATURE;GPU_TEMPERATURE;PLL_TEMPERATURE;PMIC_TEMPERATURE;"
+					"TDIODE_TEMPERATURE;TBOARD_TEMPERATURE;FAN_TEMPERATURE"
+			<< std::endl;
+	while (*thread_running) {
+		if (*collect_data) {
+			std::time_t result = std::time(nullptr);
+			std::string asc_time(std::asctime(std::localtime(&result)));
+			asc_time.pop_back();
+			out_stream << "[" << asc_time << "];";
 
 //			out_stream << std::scientific << std::setprecision(7);
 			//***********************************************************************************************
@@ -73,72 +96,72 @@ void JTX2Inst::data_colector(std::deque<std::string>* it_data) {
 //			printf("[POWER] module power input: %.3f%s\n", convFromMilli * val,
 //							wunit);
 			float power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_SOC, POWER, &val);
 //			printf("[POWER] SoC power: %.3f%s\n", convFromMilli * val, wunit);
 			power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_GPU, POWER, &val);
 //			printf("[POWER] GPU power rail: %.3f%s\n", convFromMilli * val,
 //					wunit);
 			power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_CPU, POWER, &val);
 //			printf("[POWER] CPU power rail: %.3f%s\n", convFromMilli * val,
 //					wunit);
 			power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_DDR, POWER, &val);
 //			printf("[POWER] (DDR) memory power rail: %.3f%s\n",
 //					convFromMilli * val, wunit);
 			power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 			jtx1_get_ina3221(VDD_MUX, POWER, &val);
 //			printf("[POWER] (MUX) main carrier board power input: %.3f%s\n",
 //					convFromMilli * val, wunit);
 			power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 			jtx1_get_ina3221(VDD_5V0_IO_SYS, POWER, &val);
 //			printf("[POWER] main carrier board 5V supply: %.3f%s\n",
 //					convFromMilli * val, wunit);
 			power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 			jtx1_get_ina3221(VDD_3V3_SYS, POWER, &val);
 //			printf("[POWER] main carrier board 3.3V supply: %.3f%s\n",
 //					convFromMilli * val, wunit);
 			power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 			jtx1_get_ina3221(VDD_3V3_IO_SLP, POWER, &val);
 //			printf("[POWER] carrier board 3.3V Sleep supply: %.3f%s\n",
 //					convFromMilli * val, wunit);
 			power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 			jtx1_get_ina3221(VDD_1V8_IO, POWER, &val);
 //			printf("[POWER] main carrier board 1.8V supply: %.3f%s\n",
 //					convFromMilli * val, wunit);
 			power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 			jtx1_get_ina3221(VDD_3V3_SYS_M2, POWER, &val);
 //			printf("[POWER] 3.3V supply for M.2 Key E connector: %.3f%s\n",
 //					convFromMilli * val, wunit);
 			power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 			jtx1_get_ina3221(VDD_4V0_WIFI, POWER, &val);
 //			printf("[POWER] (WIFI) Antenna (?): %.3f%s\n", convFromMilli * val,
 //					wunit);
 			power_out = convFromMilli * val;
-			out_stream << power_out << wunit << ",";
+			out_stream << power_out << ";";
 
 //			printf("\n");
 
@@ -147,80 +170,80 @@ void JTX2Inst::data_colector(std::deque<std::string>* it_data) {
 //			printf("[CURRENT] module power input: %.3f%s\n",
 //					convFromMilli * val, aunit);
 			float current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_SOC, CURRENT, &val);
 //			printf("[CURRENT] SoC power: %.3f%s\n", convFromMilli * val, aunit);
 			current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_GPU, CURRENT, &val);
 //			printf("[CURRENT] GPU power rail: %.3f%s\n", convFromMilli * val,
 //					aunit);
 
 			current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_CPU, CURRENT, &val);
 //			printf("[CURRENT] CPU power rail: %.3f%s\n", convFromMilli * val,
 //					aunit);
 			current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_DDR, CURRENT, &val);
 //			printf("[CURRENT] (DDR) memory power rail: %.3f%s\n",
 //					convFromMilli * val, aunit);
 
 			current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 
 			jtx1_get_ina3221(VDD_MUX, CURRENT, &val);
 //			printf("[CURRENT] (MUX) main carrier board power input: %.3f%s\n",
 //					convFromMilli * val, aunit);
 			current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 
 			jtx1_get_ina3221(VDD_5V0_IO_SYS, CURRENT, &val);
 //			printf("[CURRENT] main carrier board 5V supply: %.3f%s\n",
 //					convFromMilli * val, aunit);
 
 			current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 
 			jtx1_get_ina3221(VDD_3V3_SYS, CURRENT, &val);
 //			printf("[CURRENT] main carrier board 3.3V supply: %.3f%s\n",
 //					convFromMilli * val, aunit);
 
 			current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 
 			jtx1_get_ina3221(VDD_3V3_IO_SLP, CURRENT, &val);
 //			printf("[CURRENT] carrier board 3.3V Sleep supply: %.3f%s\n",
 //					convFromMilli * val, aunit);
 
 			current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 
 			jtx1_get_ina3221(VDD_1V8_IO, CURRENT, &val);
 //			printf("[CURRENT] main carrier board 1.8V supply: %.3f%s\n",
 //					convFromMilli * val, aunit);
 
 			current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 
 			jtx1_get_ina3221(VDD_3V3_SYS_M2, CURRENT, &val);
 //			printf("[CURRENT] 3.3V supply for M.2 Key E connector: %.3f%s\n",
 //					convFromMilli * val, aunit);
 
 			current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 
 			jtx1_get_ina3221(VDD_4V0_WIFI, CURRENT, &val);
 //			printf("[CURRENT] (WIFI) Antenna (?): %.3f%s\n",
 //					convFromMilli * val, aunit);
 
 			current_out = convFromMilli * val;
-			out_stream << current_out << aunit << ",";
+			out_stream << current_out << ";";
 //			printf("\n");
 			//************************************************************************************************
 			jtx1_get_ina3221(VDD_IN, VOLTAGE, &val);
@@ -228,145 +251,146 @@ void JTX2Inst::data_colector(std::deque<std::string>* it_data) {
 //					convFromMilli * val, vunit);
 
 			float voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_SOC, VOLTAGE, &val);
 //			printf("[VOLTAGE] SoC power rail: %.3f%s\n", convFromMilli * val,
 //					vunit);
 
 			voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_GPU, VOLTAGE, &val);
 //			printf("[VOLTAGE] GPU power rail: %.3f%s\n", convFromMilli * val,
 //					vunit);
 
 			voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_CPU, VOLTAGE, &val);
 //			printf("[VOLTAGE] CPU power rail: %.3f%s\n", convFromMilli * val,
 //					vunit);
 
 			voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 
 			jtx1_get_ina3221(VDD_SYS_DDR, VOLTAGE, &val);
 //			printf("[VOLTAGE] (DDR) memory power rail: %.3f%s\n",
 //					convFromMilli * val, vunit);
 
 			voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 
 			jtx1_get_ina3221(VDD_MUX, VOLTAGE, &val);
 //			printf("[VOLTAGE] (MUX) main carrier board power input: %.3f%s\n",
 //					convFromMilli * val, vunit);
 
 			voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 
 			jtx1_get_ina3221(VDD_5V0_IO_SYS, VOLTAGE, &val);
 //			printf("[VOLTAGE] main carrier board 5V supply: %.3f%s\n",
 //					convFromMilli * val, vunit);
 
 			voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 
 			jtx1_get_ina3221(VDD_3V3_SYS, VOLTAGE, &val);
 //			printf("[VOLTAGE] main carrier board 3.3V supply: %.3f%s\n",
 //					convFromMilli * val, vunit);
 
 			voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 
 			jtx1_get_ina3221(VDD_3V3_IO_SLP, VOLTAGE, &val);
 //			printf("[VOLTAGE] carrier board 3.3V Sleep supply: %.3f%s\n",
 //					convFromMilli * val, vunit);
 
 			voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 
 			jtx1_get_ina3221(VDD_1V8_IO, VOLTAGE, &val);
 //			printf("[VOLTAGE] main carrier board 1.8V supply: %.3f%s\n",
 //					convFromMilli * val, vunit);
 
 			voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 
 			jtx1_get_ina3221(VDD_3V3_SYS_M2, VOLTAGE, &val);
 //			printf("[VOLTAGE] 3.3V supply for M.2 Key E connector: %.3f%s\n",
 //					convFromMilli * val, vunit);
 
 			voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 
 			jtx1_get_ina3221(VDD_4V0_WIFI, VOLTAGE, &val);
 //			printf("[VOLTAGE] (WIFI) Antenna (?): %.3f%s\n",
 //					convFromMilli * val, vunit);
 
 			voltage_out = convFromMilli * val;
-			out_stream << voltage_out << vunit << ",";
+			out_stream << voltage_out << ";";
 //			printf("\n");
 			//************************************************************************************************
 			jtx1_get_temp(A0, &val);
 //			printf("[TEMPERATURE] A0: %dmC\n", val);
-			out_stream << val << ",";
+			out_stream << val << ";";
 
 			jtx1_get_temp(CPU, &val);
 //			printf("[TEMPERATURE] CPU: %dmC\n", val);
-			out_stream << val << ",";
+			out_stream << val << ";";
 
 			jtx1_get_temp(GPU, &val);
 //			printf("[TEMPERATURE] GPU: %dmC\n", val);
-			out_stream << val << ",";
+			out_stream << val << ";";
 
 			jtx1_get_temp(PLL, &val);
 //			printf("[TEMPERATURE] PLL: %dmC\n", val);
-			out_stream << val << ",";
+			out_stream << val << ";";
 
 			jtx1_get_temp(PMIC, &val);
 //			printf("[TEMPERATURE] PMIC: %dmC\n", val);
-			out_stream << val << ",";
+			out_stream << val << ";";
 
 			jtx1_get_temp(TDIODE, &val);
 //			printf("[TEMPERATURE] TDIODE: %dmC\n", val);
-			out_stream << val << ",";
+			out_stream << val << ";";
 
 			jtx1_get_temp(TBOARD, &val);
 //			printf("[TEMPERATURE] TBOARD: %dmC\n", val);
-			out_stream << val << ",";
+			out_stream << val << ";";
 
 			jtx1_get_temp(FAN, &val);
 //			printf("[TEMPERATURE] FAN: %dmC\n", val);
 //			printf("\n");
-			out_stream << val;
-
-			it_data->push_back(out_stream.str());
+			out_stream << val << std::endl;
 		}
-		mutex_lock.unlock();
 		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_JTX2INST));
 	}
+
+	out_stream.close();
 }
 
-void JTX2Inst::start_collecting_data() {
-	mutex_lock.lock();
-	this->data_for_iteration.clear();
-	mutex_lock.unlock();
-
-	is_locked = false;
+void JTX2Inst::start_profile() {
+//	mutex_lock.lock();
+//	this->data_for_iteration.clear();
+//	mutex_lock.unlock();
+//
+//	is_locked = false;
+	this->collect_data = true;
 }
 
-void JTX2Inst::end_collecting_data() {
-	mutex_lock.lock();
-	is_locked = true;
-	mutex_lock.unlock();
+void JTX2Inst::end_profile() {
+//	mutex_lock.lock();
+//	is_locked = true;
+//	mutex_lock.unlock();
+	this->collect_data = false;
 }
 
-std::deque<std::string> JTX2Inst::get_data_from_iteration() {
-	auto last = std::unique(this->data_for_iteration.begin(),
-			this->data_for_iteration.end());
-	this->data_for_iteration.erase(last, this->data_for_iteration.end());
-	return this->data_for_iteration;
-}
+//std::deque<std::string> JTX2Inst::get_data_from_iteration() {
+//	auto last = std::unique(this->data_for_iteration.begin(),
+//			this->data_for_iteration.end());
+//	this->data_for_iteration.erase(last, this->data_for_iteration.end());
+//	return this->data_for_iteration;
+//}
 
 }

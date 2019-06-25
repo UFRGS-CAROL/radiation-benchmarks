@@ -8,10 +8,9 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [4096, 2048, 512]
-PRECISIONS = ["double", "single", "half"]
-ITERATIONS = 10000
-USE_TENSOR_CORES = [0] #, 1]
+SIZES = [64]
+PRECISIONS = ["single"]
+ITERATIONS = int(1e9)
 
 
 def config(board, arith_type, debug):
@@ -50,29 +49,24 @@ def config(board, arith_type, debug):
     execute = []
 
     # gen only for max size, defined on cuda_trip_mxm.cu
-    max_size = 8192
     for i in SIZES:
-        for tc in USE_TENSOR_CORES:
-            input_file = data_path + "/"
+        input_file = data_path + "/"
 
-            gen = [None] * 8
-            gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
-            gen[1] = ['-size=' + str(i)]
-            gen[2] = ['-input_a=' + input_file + 'A_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
-            gen[3] = ['-input_b=' + input_file + 'B_' + str(max_size) + "_use_tensor_" + str(tc) + '.matrix']
-            gen[4] = ['-gold=' + input_file + "GOLD_" +  str(i) + "_use_tensor_" + str(tc) + ".matrix"]  # change for execute
-            gen[5] = []
-            gen[6] = ['-use_tensors=' + str(tc)]
-            gen[7] = ['-generate']
+        gen = [None] * 6
+        gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
+        gen[1] = ['-size=' + str(i)]
+        gen[2] = ['-input_a=' + input_file + 'A_' + str(i) + '.matrix']
+        gen[3] = ['-input_b=' + input_file + 'B_' + str(i) +  '.matrix']
+        gen[4] = ['-gold=' + input_file + "GOLD_" +  str(i) + ".matrix"]  # change for execute
+        gen[5] = ['-generate']
 
-            # change mode and iterations for exe
-            exe = copy.deepcopy(gen)
-            exe[0][1] = bin_path + '/' + benchmark_bin + " "
-            exe[5] = ['-iterations=' + str(ITERATIONS)]
-            exe[7] = []
+        # change mode and iterations for exe
+        exe = copy.deepcopy(gen)
+        exe[0][1] = bin_path + '/' + benchmark_bin + " "
+        exe[5] = ['-iterations=' + str(ITERATIONS)]
 
-            generate.append(' '.join(str(r) for v in gen for r in v))
-            execute.append(' '.join(str(r) for v in exe for r in v))
+        generate.append(' '.join(str(r) for v in gen for r in v))
+        execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 

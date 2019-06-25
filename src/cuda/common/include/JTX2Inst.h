@@ -16,20 +16,22 @@ namespace rad {
 class JTX2Inst {
 	//Multithreading context
 	std::thread profiler;
+	std::string output_log_file;
 
 	std::deque<std::string> data_for_iteration;
+	bool thread_running;
+	bool collect_data;
 
-	static void data_colector(std::deque<std::string>* it_data);
+	static void data_colector(std::string* output_log_file,
+			bool* thread_running, bool* colllect_data);
 
 public:
-	JTX2Inst();
+	JTX2Inst(std::string& output_file);
 	virtual ~JTX2Inst();
+	void start_profile();
+	void end_profile();
 
-	void start_collecting_data();
-
-	void end_collecting_data();
-
-	std::deque<std::string> get_data_from_iteration();
+//	std::deque<std::string> get_data_from_iteration();
 };
 }
 #endif /* NVMLWRAPPER_H_ */

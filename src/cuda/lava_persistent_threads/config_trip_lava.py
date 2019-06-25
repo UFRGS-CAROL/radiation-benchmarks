@@ -8,15 +8,15 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [15]
-PRECISIONS = ["double", "single", "half"]
-ITERATIONS = 10000
+SIZES = [2]
+PRECISIONS = ["single"]
+ITERATIONS = int(1e9)
 
 def config(board, arith_type, debug):
 
     DATA_PATH_BASE = "lava_" + arith_type
 
-    benchmark_bin = "cuda_trip_lava_" + arith_type
+    benchmark_bin = "cuda_lava_" + arith_type
     print "Generating " + benchmark_bin + " for CUDA, board:" + board
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -49,20 +49,18 @@ def config(board, arith_type, debug):
     for size in SIZES:
         input_file = data_path + "/"
 
-        gen = [None] * 7
+        gen = [None] * 6
         gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
         gen[1] = ['-boxes=' + str(size)]
         gen[2] = ['-input_distances=' + input_file + 'lava_distances_' + arith_type + '_' + str(size)]
         gen[3] = ['-input_charges=' + input_file + 'lava_charges_' + arith_type + '_' + str(size)]
         gen[4] = ['-output_gold=' + input_file + "lava_gold_" + arith_type +  '_' + str(size)]
-        gen[5] = []
-        gen[6] = ['-generate']
+        gen[5] = ['-generate']
 
         # change mode and iterations for exe
         exe = copy.deepcopy(gen)
         exe[0][1] = bin_path + '/' + benchmark_bin + " "
         exe[5] = ['-iterations=' + str(ITERATIONS)]
-        exe[6] = []
 
         generate.append(' '.join(str(r) for v in gen for r in v))
         execute.append(' '.join(str(r) for v in exe for r in v))

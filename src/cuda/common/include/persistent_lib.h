@@ -15,9 +15,9 @@ namespace rad {
 
 #define BLOCK_SIZE 32
 
-#ifndef DEBUG
-#define DEBUG 1
-#endif
+//#ifndef DEBUG
+//#define DEBUG 0
+//#endif
 
 #define UINTCAST(x) ((unsigned int*)(x))
 
