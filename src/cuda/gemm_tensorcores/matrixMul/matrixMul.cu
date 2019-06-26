@@ -264,6 +264,8 @@ int MatrixMultiply(int argc, char **argv,
   const double valB = 2.0f;
   ConstantInit(h_A, size_A, valA);
   ConstantInit(h_B, size_B, valB);
+  ConstantInit(h_A1, size_A, valA);
+  ConstantInit(h_B1, size_B, valB);
   //printf("h_A = %f\n", h_A[0]);
   // Allocate device memory
   double *d_A, *d_A1,*d_B, *d_B1, *d_C, *d_C1;
@@ -321,7 +323,7 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
-  MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
+  MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
                                          dimsA.x, dimsB.x);
   //MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
   //                                          dimsA.x, dimsB.x);
@@ -347,7 +349,7 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
+      MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
                                               dimsA.x, dimsB.x);
       // MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
       //                                       dimsA.x, dimsB.x);
@@ -444,26 +446,26 @@ int main(int argc, char **argv) {
   // override the device ID based on input provided at the command line
   int dev = findCudaDevice(argc, (const char **)argv);
 
-  int block_size = 16;
+  int block_size = 32;
 
-  // dim3 dimsA(8192, 8192, 1);
-  // dim3 dimsB(8192, 8192, 1);
+  dim3 dimsA(8192, 8192, 1);
+  dim3 dimsB(8192, 8192, 1);
 
-  // dimsA.x = 8192;
-  // dimsA.y = 8192;
+  dimsA.x = 8192;
+  dimsA.y = 8192;
 
-  // dimsB.x = 8192;
-  // dimsB.y = 8192; 
+  dimsB.x = 8192;
+  dimsB.y = 8192; 
 
 
-  dim3 dimsA(4096, 4096, 1);
-  dim3 dimsB(4096, 4096, 1);
+  // dim3 dimsA(4096, 4096, 1);
+  // dim3 dimsB(4096, 4096, 1);
 
-  dimsA.x = 4096;
-  dimsA.y = 4096;
+  // dimsA.x = 4096;
+  // dimsA.y = 4096;
 
-  dimsB.x = 4096;
-  dimsB.y = 4096; 
+  // dimsB.x = 4096;
+  // dimsB.y = 4096; 
 
 
   // // width of Matrix A
