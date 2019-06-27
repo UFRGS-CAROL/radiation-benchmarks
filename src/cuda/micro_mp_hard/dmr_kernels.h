@@ -10,6 +10,9 @@
 
 #include "device_functions.h"
 
+#define THOUSAND 1000
+#define HUNDRED 100
+
 /**
  * ----------------------------------------
  * FMA DMR
@@ -57,7 +60,7 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 		acc_incomplete = fma_dmr(input_a_neg_incomplete, input_b_neg_incomplete,
 				acc_incomplete);
 
-		if(count % 1000){
+		if(count % THOUSAND){
 			check_relative_error(acc_incomplete, acc_full);
 		}
 
@@ -98,9 +101,13 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 		acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
 		acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
 		acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
+
+		if(count % THOUSAND){
+			check_relative_error(acc_incomplete, acc_full);
+		}
 	}
 
-	check_relative_error(acc_incomplete, acc_full);
+//	check_relative_error(acc_incomplete, acc_full);
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
