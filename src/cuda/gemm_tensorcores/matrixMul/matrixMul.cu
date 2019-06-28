@@ -235,6 +235,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, double *C1, fl
  
 // }
 
+void ConstantInit(float *data, int size, float val) {
+  for (int i = 0; i < size; ++i) {
+    data[i] = val;
+  }
+}
 
 void ConstantInit(double *data, int size, double val) {
   for (int i = 0; i < size; ++i) {
@@ -267,10 +272,10 @@ int MatrixMultiply(int argc, char **argv,
   const double valB = 2.0f;
   // const double valB1 = 4.0f;
   ConstantInit(h_A, size_A, valA);
-  // ConstantInit(h_A1, size_A, valA1);
+  ConstantInit(h_A1, size_A, valA1);
   
   ConstantInit(h_B, size_B, valB); 
-  // ConstantInit(h_B1, size_B, valB1);
+  ConstantInit(h_B1, size_B, valB1);
   //printf("h_A = %f\n", h_A[0]);
   // Allocate device memory
   float *d_A, *d_B, *d_C;
