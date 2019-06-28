@@ -252,13 +252,13 @@ int MatrixMultiply(int argc, char **argv,
   unsigned int size_A = dimsA.x * dimsA.y;
   unsigned int mem_size_A = sizeof(float) * size_A;
   unsigned int mem_size_A1 = sizeof(double) * size_A;
-  double *h_A = reinterpret_cast<float *>(malloc(mem_size_A));
+  float *h_A = reinterpret_cast<float *>(malloc(mem_size_A));
   double *h_A1 = reinterpret_cast<double *>(malloc(mem_size_A1));
 
   unsigned int size_B = dimsB.x * dimsB.y;
   unsigned int mem_size_B = sizeof(float) * size_B;
   unsigned int mem_size_B1 = sizeof(double) * size_B;
-  double *h_B = reinterpret_cast<float *>(malloc(mem_size_B));
+  float *h_B = reinterpret_cast<float *>(malloc(mem_size_B));
   double *h_B1 = reinterpret_cast<double *>(malloc(mem_size_B1));
   // Initialize host memory
   
@@ -273,8 +273,9 @@ int MatrixMultiply(int argc, char **argv,
   // ConstantInit(h_B1, size_B, valB1);
   //printf("h_A = %f\n", h_A[0]);
   // Allocate device memory
-  double *d_A, *d_A1,*d_B, *d_B1, *d_C, *d_C1;
-
+  float *d_A, *d_B, *d_C;
+  // double *d_A, *d_A1,*d_B, *d_B1, *d_C, *d_C1;
+  double d_A1, d_B1, d_C1;
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
   unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(double);
