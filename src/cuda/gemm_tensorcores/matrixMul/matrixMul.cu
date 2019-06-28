@@ -293,15 +293,15 @@ int MatrixMultiply(int argc, char **argv,
 
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_A), mem_size_A));
 
-  checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_A1), mem_size_A));
+  checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_A1), mem_size_A1));
 
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_B), mem_size_B));
 
-  checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_B1), mem_size_B));
+  checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_B1), mem_size_B1));
 
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_C), mem_size_C));
 
-  checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_C1), mem_size_C));
+  checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_C1), mem_size_C1));
 
   // copy host memory to device
   checkCudaErrors(cudaMemcpy(d_A, h_A, mem_size_A, cudaMemcpyHostToDevice));
