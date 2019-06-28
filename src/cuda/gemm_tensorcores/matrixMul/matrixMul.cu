@@ -449,7 +449,7 @@ int main(int argc, char **argv) {
   // override the device ID based on input provided at the command line
   int dev = findCudaDevice(argc, (const char **)argv);
 
-  int block_size = 16;
+  int block_size = 32;
 
   dim3 dimsA(8192, 8192, 1);
   dim3 dimsB(8192, 8192, 1);
