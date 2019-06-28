@@ -117,8 +117,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
     As[ty][tx] = A[a + wA * ty + tx];
     Bs[ty][tx] = B[b + wB * ty + tx];
 
-    // As1[ty][tx] = A1[a + wA * ty + tx];
-    // Bs1[ty][tx] = B1[b + wB * ty + tx];
+    As1[ty][tx] = A1[a + wA * ty + tx];
+    Bs1[ty][tx] = B1[b + wB * ty + tx];
 
     // Synchronize to make sure the matrices are loaded
     __syncthreads();
@@ -260,10 +260,10 @@ int MatrixMultiply(int argc, char **argv,
   double *h_B1 = reinterpret_cast<double *>(malloc(mem_size_B));
   // Initialize host memory
   
-  volatile const double valA = 2.0f;
-  volatile const double valA1 = 4.0f;
-  volatile const double valB = 2.0f;
-  volatile const double valB1 = 4.0f;
+  const double valA = 2.0f;
+  const double valA1 = 4.0f;
+  const double valB = 2.0f;
+  const double valB1 = 4.0f;
   ConstantInit(h_A, size_A, valA);
   ConstantInit(h_A1, size_A, valA1);
   
@@ -326,7 +326,7 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
-  MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
+  MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
                                          dimsA.x, dimsB.x);
   //MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
   //                                          dimsA.x, dimsB.x);
@@ -352,7 +352,7 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
+      MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_A1, d_B, d_B1,
                                               dimsA.x, dimsB.x);
       // MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
       //                                       dimsA.x, dimsB.x);
