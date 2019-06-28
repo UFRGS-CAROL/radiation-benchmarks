@@ -412,7 +412,7 @@ int MatrixMultiply(int argc, char **argv,
   free(h_A);
   free(h_A1);
   free(h_B);
-  free(h_B2);
+  free(h_B1);
   free(h_C);
   checkCudaErrors(cudaFree(d_A));
   checkCudaErrors(cudaFree(d_A1));
