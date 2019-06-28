@@ -261,14 +261,14 @@ int MatrixMultiply(int argc, char **argv,
   // Initialize host memory
   
   const double valA = 2.0f;
-  const double valA1 = 4.0f;
+  // const double valA1 = 4.0f;
   const double valB = 2.0f;
-  const double valB1 = 4.0f;
+  // const double valB1 = 4.0f;
   ConstantInit(h_A, size_A, valA);
-  ConstantInit(h_A1, size_A, valA1);
+  // ConstantInit(h_A1, size_A, valA1);
   
   ConstantInit(h_B, size_B, valB); 
-  ConstantInit(h_B1, size_B, valB1);
+  // ConstantInit(h_B1, size_B, valB1);
   //printf("h_A = %f\n", h_A[0]);
   // Allocate device memory
   double *d_A, *d_A1,*d_B, *d_B1, *d_C, *d_C1;
@@ -297,10 +297,10 @@ int MatrixMultiply(int argc, char **argv,
 
   // copy host memory to device
   checkCudaErrors(cudaMemcpy(d_A, h_A, mem_size_A, cudaMemcpyHostToDevice));
-  checkCudaErrors(cudaMemcpy(d_A1, h_A1, mem_size_A, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_A1, h_A, mem_size_A, cudaMemcpyHostToDevice));
 
   checkCudaErrors(cudaMemcpy(d_B, h_B, mem_size_B, cudaMemcpyHostToDevice));
-  checkCudaErrors(cudaMemcpy(d_B1, h_B1, mem_size_B, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_B1, h_B, mem_size_B, cudaMemcpyHostToDevice));
 
   
 
