@@ -280,7 +280,7 @@ int MatrixMultiply(int argc, char **argv,
   // Allocate device memory
   float *d_A, *d_B, *d_C;
   // double *d_A, *d_A1,*d_B, *d_B1, *d_C, *d_C1;
-  double d_A1, d_B1, d_C1;
+  double *d_A1, *d_B1, *d_C1;
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
   unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(float);
