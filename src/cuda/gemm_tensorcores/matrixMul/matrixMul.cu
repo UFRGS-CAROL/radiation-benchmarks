@@ -283,8 +283,11 @@ int MatrixMultiply(int argc, char **argv,
   double d_A1, d_B1, d_C1;
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
-  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(double);
+  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(float);
+  unsigned int mem_size_C1 = dimsC.x * dimsC.y * sizeof(double);
+
   double *h_C = reinterpret_cast<double *>(malloc(mem_size_C));
+
 
   if (h_C == NULL) {
     fprintf(stderr, "Failed to allocate host matrix C!\n");
