@@ -410,10 +410,14 @@ int MatrixMultiply(int argc, char **argv,
   //printf(" A= %f B= %f  C = %f \n", h_A[0], h_B[0], h_C[0]);
   // Clean up memory
   free(h_A);
+  free(h_A1);
   free(h_B);
+  free(h_B2);
   free(h_C);
   checkCudaErrors(cudaFree(d_A));
+  checkCudaErrors(cudaFree(d_A1));
   checkCudaErrors(cudaFree(d_B));
+  checkCudaErrors(cudaFree(d_B1));
   checkCudaErrors(cudaFree(d_C));
   checkCudaErrors(cudaFree(d_C1));
 
