@@ -268,9 +268,9 @@ int MatrixMultiply(int argc, char **argv,
   // Initialize host memory
   
   const float valA = 2.0f;
-  const double valA1 = 4.0f;
+  const double valA1 = 2.0f;
   const float valB = 2.0f;
-  const double valB1 = 4.0f;
+  const double valB1 = 2.0f;
   ConstantInit(h_A, size_A, valA);
   ConstantInit(h_A1, size_A, valA1);
   
@@ -286,7 +286,7 @@ int MatrixMultiply(int argc, char **argv,
   unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(float);
   unsigned int mem_size_C1 = dimsC.x * dimsC.y * sizeof(double);
 
-  double *h_C = reinterpret_cast<double *>(malloc(mem_size_C));
+  float *h_C = reinterpret_cast<float *>(malloc(mem_size_C));
 
 
   if (h_C == NULL) {
