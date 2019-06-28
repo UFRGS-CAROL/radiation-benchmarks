@@ -272,10 +272,10 @@ int MatrixMultiply(int argc, char **argv,
   const double valB = 2.0f;
   // const double valB1 = 4.0f;
   ConstantInit(h_A, size_A, valA);
-  ConstantInit(h_A1, size_A, valA1);
+  ConstantInit(h_A1, size_A, valA);
   
   ConstantInit(h_B, size_B, valB); 
-  ConstantInit(h_B1, size_B, valB1);
+  ConstantInit(h_B1, size_B, valB);
   //printf("h_A = %f\n", h_A[0]);
   // Allocate device memory
   float *d_A, *d_B, *d_C;
@@ -305,10 +305,10 @@ int MatrixMultiply(int argc, char **argv,
 
   // copy host memory to device
   checkCudaErrors(cudaMemcpy(d_A, h_A, mem_size_A, cudaMemcpyHostToDevice));
-  checkCudaErrors(cudaMemcpy(d_A1, h_A, mem_size_A, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_A1, h_A1, mem_size_A, cudaMemcpyHostToDevice));
 
   checkCudaErrors(cudaMemcpy(d_B, h_B, mem_size_B, cudaMemcpyHostToDevice));
-  checkCudaErrors(cudaMemcpy(d_B1, h_B, mem_size_B, cudaMemcpyHostToDevice));
+  checkCudaErrors(cudaMemcpy(d_B1, h_B1, mem_size_B, cudaMemcpyHostToDevice));
 
   
 
