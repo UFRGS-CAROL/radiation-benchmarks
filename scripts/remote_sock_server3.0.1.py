@@ -23,57 +23,57 @@ IPmachines = [
     # "192.168.1.6",  #CarolXeon1
     # "192.168.1.7",  # CarolXeon2
     # "192.168.1.10",  # CarolAPU1
-    "192.168.1.11",  # CarolAPU2
+    # "192.168.1.11",  # CarolAPU2
     # "192.168.1.12", #CarolX2A
-    # "192.168.1.13", #CarolX2B
+    "192.168.1.21", #caroltx21
 ]
 
 # Set the machine names for each IP
 IPtoDiffReboot = {
-    "192.168.1.14": 50,  # CarolTitanX1
-    "192.168.1.2": 30,  # CarolK401
-    "192.168.1.6": 120,  # CarolXeon1
-    "192.168.1.7": 120,  # CarolXeon2
-    "192.168.1.10": 30,  # CarolAPU1
-    "192.168.1.11": 30,  # CarolAPU2
-    "192.168.1.12": 30,  # CarolX2A
-    "192.168.1.13": 30,  # CarolX2B
+    # "192.168.1.14": 50,  # CarolTitanX1
+    # "192.168.1.2": 30,  # CarolK401
+    # "192.168.1.6": 120,  # CarolXeon1
+    # "192.168.1.7": 120,  # CarolXeon2
+    # "192.168.1.10": 30,  # CarolAPU1
+    # "192.168.1.11": 30,  # CarolAPU2
+    # "192.168.1.12": 30,  # CarolX2A
+    "192.168.1.21": 60,  # caroltx21
 }
 
 # Set the machine names for each IP
 IPtoNames = {
-    "192.168.1.14": "CarolTitanX1",
-    "192.168.1.2": "CarolK401",
-    "192.168.1.6": "CarolXeon1",
-    "192.168.1.7": "CarolXeon2",
-    "192.168.1.10": "CarolAPU1",
-    "192.168.1.11": "CarolAPU2",
-    "192.168.1.12": "CarolX2A",
-    "192.168.1.13": "CarolX2B",
+    # "192.168.1.14": "CarolTitanX1",
+    # "192.168.1.2": "CarolK401",
+    # "192.168.1.6": "CarolXeon1",
+    # "192.168.1.7": "CarolXeon2",
+    # "192.168.1.10": "CarolAPU1",
+    # "192.168.1.11": "CarolAPU2",
+    # "192.168.1.12": "CarolX2A",
+    "192.168.1.21": "caroltx21",
 }
 
 # Set the switch IP that a machine IP is connected
 IPtoSwitchIP = {
-    "192.168.1.14": "192.168.1.101",  # CarolTitanX1
-    "192.168.1.2": "192.168.1.100",  # CarolK401
-    "192.168.1.6": "192.168.1.100",  # CarolXeon1
-    "192.168.1.7": "192.168.1.102",  # CarolXeon2
-    "192.168.1.10": "192.168.1.101",  # CarolAPU1
-    "192.168.1.11": "192.168.1.104",  # CarolAPU2
-    "192.168.1.12": "192.168.1.101",  # CarolX2A
-    "192.168.1.13": "192.168.1.102",  # CarolX2B
+    # "192.168.1.14": "192.168.1.101",  # CarolTitanX1
+    # "192.168.1.2": "192.168.1.100",  # CarolK401
+    # "192.168.1.6": "192.168.1.100",  # CarolXeon1
+    # "192.168.1.7": "192.168.1.102",  # CarolXeon2
+    # "192.168.1.10": "192.168.1.101",  # CarolAPU1
+    # "192.168.1.11": "192.168.1.104",  # CarolAPU2
+    # "192.168.1.12": "192.168.1.101",  # CarolX2A
+    "192.168.1.21": "192.168.1.100",  # CarolX2B
 }
 
 # Set the switch Port that a machine IP is connected
 IPtoSwitchPort = {
-    "192.168.1.14": 3,  # CarolTitanX1
-    "192.168.1.2": 3,  # CarolK401
-    "192.168.1.6": 1,  # CarolXeon1
-    "192.168.1.7": 1,  # CarolXeon2
-    "192.168.1.10": 1,  # CarolAPU1
-    "192.168.1.11": 2,  # CarolAPU2
-    "192.168.1.12": 4,  # CarolX2A
-    "192.168.1.13": 4,  # CarolX2B
+    # "192.168.1.14": 3,  # CarolTitanX1
+    # "192.168.1.2": 3,  # CarolK401
+    # "192.168.1.6": 1,  # CarolXeon1
+    # "192.168.1.7": 1,  # CarolXeon2
+    # "192.168.1.10": 1,  # CarolAPU1
+    # "192.168.1.11": 2,  # CarolAPU2
+    # "192.168.1.12": 4,  # CarolX2A
+    "192.168.1.21": 1,  # CarolX2B
 }
 
 SwitchIPtoModel = {
@@ -120,7 +120,7 @@ class RebootMachine(threading.Thread):
         """
         port = IPtoSwitchPort[self.address]
         switchIP = IPtoSwitchIP[self.address]
-        print "\tRebooting machine: " + self.address + ", switch IP: " + str(switchIP) + ", switch port: " + str(port)
+        print("\tRebooting machine: " + self.address + ", switch IP: " + str(switchIP) + ", switch port: " + str(port))
         set_ip_switch(port, "Off", switchIP)
         time.sleep(10)
         set_ip_switch(port, "On", switchIP)
@@ -190,7 +190,7 @@ class HandleMachines(threading.Thread):
         Overriding for run method
         :return: None
         """
-        print "\tStarting thread to check machine connections"
+        print("\tStarting thread to check machine connections")
         while 1:
             check_machines()
             time.sleep(sleepTime)
@@ -209,9 +209,10 @@ def log_msg(msg):
     :return: None
     """
     now = datetime.now()
-    fp = open(logFile, 'a')
-    print >> fp, now.ctime() + ": " + str(msg)
-    fp.close()
+
+    with open(logFile, 'a') as fp:
+        fp.write(now.ctime() + ": " + str(msg))
+
 
 
 ################################################
@@ -303,14 +304,14 @@ def start_socket():
     """
     # Bind the socket to a public host, and a well-known port
     serverSocket.bind((serverIP, socketPort))
-    print "\tServer bind to: ", serverIP
+    print("\tServer bind to: ", serverIP)
     # Become a server socket
     serverSocket.listen(15)
 
     while 1:
         # Accept connections from outside
         (clientSocket, address) = serverSocket.accept()
-        print "connection from " + str(address[0])
+        print("connection from " + str(address[0]))
         if address[0] in IPmachines:
             IPLastConn[address[0]] = time.time()  # Set new timestamp
             # If machine was set to not check again, now it's alive so start to check again
@@ -371,10 +372,10 @@ def check_machines():
             if (now - reboot).total_seconds() > IPtoDiffReboot[address] and check_reboot_interval(address=address):
                 rebooting[address] = time.time()
                 if address in IPtoNames:
-                    print "Rebooting IP " + address + " (" + IPtoNames[address] + ")"
+                    print("Rebooting IP " + address + " (" + IPtoNames[address] + ")")
                     log_msg("Rebooting IP " + address + " (" + IPtoNames[address] + ")")
                 else:
-                    print "Rebooting IP " + address
+                    print("Rebooting IP " + address)
                     log_msg("Rebooting IP " + address)
                 # Reboot machine in another thread
                 RebootMachine(address).start()
@@ -382,20 +383,20 @@ def check_machines():
         # If machine did not reboot, log this and set it to not check again
         elif 3 * IPtoDiffReboot[address] < seconds < 10 * IPtoDiffReboot[address]:
             if address in IPtoNames:
-                print "Boot Problem IP " + address + " (" + IPtoNames[address] + ")"
+                print("Boot Problem IP " + address + " (" + IPtoNames[address] + ")")
                 log_msg("Boot Problem IP " + address + " (" + IPtoNames[address] + ")")
             else:
-                print "Boot Problem IP " + address
+                print("Boot Problem IP " + address)
                 log_msg("Boot Problem IP " + address)
 
             IPActiveTest[address] = False
 
         elif seconds > 10 * IPtoDiffReboot[address]:
             if address in IPtoNames:
-                print "Rebooting IP " + address + " (" + IPtoNames[address] + ")"
+                print("Rebooting IP " + address + " (" + IPtoNames[address] + ")")
                 log_msg("Rebooting IP " + address + " (" + IPtoNames[address] + ")")
             else:
-                print "Rebooting IP " + address
+                print("Rebooting IP " + address)
                 log_msg("Rebooting IP " + address)
             RebootMachine(address).start()
 
@@ -433,7 +434,7 @@ def main():
         handle.start()
         start_socket()
     except KeyboardInterrupt:
-        print "\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )"
+        print("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
         serverSocket.close()
         sys.exit(1)
 
