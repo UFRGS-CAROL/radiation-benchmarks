@@ -11,6 +11,8 @@
 #include <chrono>
 #include <thread>
 #include <sys/time.h>
+#include <cuda.h>
+#include <cuda_runtime_api.h>
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -18,7 +20,7 @@
 
 namespace rad {
 
-void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
+static void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 	if (error == cudaSuccess) {
 		return;
 	}
@@ -39,16 +41,16 @@ void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 /*!
  \param seconds to sleep
  */
-void sleep(int seconds) {
+static void sleep(int seconds) {
 	std::this_thread::sleep_for(std::chrono::seconds(seconds));
 }
 
-void sleep(double seconds) {
+static void sleep(double seconds) {
 	int milli = seconds * 1000.0;
 	std::this_thread::sleep_for(std::chrono::milliseconds(milli));
 }
 
-double mysecond() {
+static double mysecond() {
 	struct timeval tp;
 	struct timezone tzp;
 	int i = gettimeofday(&tp, &tzp);

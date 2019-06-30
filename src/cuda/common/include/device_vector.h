@@ -13,6 +13,7 @@
 
 namespace rad{
 
+#define VOIDCAST(x) reinterpret_cast<void**>(x)
 
 template<class T>
 class DeviceVector {
@@ -23,7 +24,7 @@ class DeviceVector {
 	void alloc_data(size_t size) {
 		this->v_size = size;
 		checkFrameworkErrors(
-				cudaMalloc(&this->data_, sizeof(T) * this->v_size));
+				cudaMalloc(VOIDCAST(&this->data_), sizeof(T) * this->v_size));
 		this->allocated = true;
 	}
 
