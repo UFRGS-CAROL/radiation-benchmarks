@@ -16,8 +16,8 @@ def config(board, arith_type, debug):
 
     DATA_PATH_BASE = "lava_" + arith_type
 
-    benchmark_bin = "cuda_lava_" + arith_type
-    print "Generating " + benchmark_bin + " for CUDA, board:" + board
+    benchmark_bin = "cuda_lava_persistent_threads_" + arith_type
+    print("Generating " + benchmark_bin + " for CUDA, board:" + board)
 
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
@@ -31,7 +31,7 @@ def config(board, arith_type, debug):
 
     data_path = install_dir + "data/" + DATA_PATH_BASE
     bin_path = install_dir + "bin"
-    src_benchmark = install_dir + "src/cuda/trip_lava"
+    src_benchmark = install_dir + "src/cuda/lava_persistent_threads"
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
@@ -40,7 +40,8 @@ def config(board, arith_type, debug):
     generate = ["sudo mkdir -p " + bin_path, 
                 "cd " + src_benchmark, 
                 "make clean", 
-                "make -C ../../include ", 
+                "make -C ../../include ",
+                "make -C ../common ",
                 "make PRECISION=" + arith_type + " -j 4",
                 "mkdir -p " + data_path, 
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
@@ -80,4 +81,4 @@ if __name__ == "__main__":
     board, _ = discover_board()
     for p in PRECISIONS:
         config(board=board, arith_type=p, debug=debug_mode)
-    print "Multiple jsons may have been generated."
+    print("Multiple jsons may have been generated.")
