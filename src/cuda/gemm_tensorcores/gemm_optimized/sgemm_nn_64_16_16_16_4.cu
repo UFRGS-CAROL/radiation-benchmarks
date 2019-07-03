@@ -21,6 +21,12 @@ __device__ __forceinline__ void fma__(const double a, const double b,
 	c = __fmaf_rn(__double2float_rn(a), __double2float_rn(b), c);
 }
 
+__device__ __forceinline__ void fma__(const float a, const float b,
+		float& c) {
+	c = __fma_rn(a, b, c);
+}
+
+
 __device__ __forceinline__ void fma__(const double a, const double b,
 		double& c) {
 	c = __fma_rn(a, b, c);
