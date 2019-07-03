@@ -354,7 +354,7 @@ __global__ void sgemm_kernel(half_real_t* C_inc, real_t *C, const real_t *A, con
 }
 
 
-void sgemm_dmr(cudaStream_t stream, double *C, double *C_inc, const double *A, const double *B,
+void sgemm_dmr(cudaStream_t stream, double *C, float *C_inc, const double *A, const double *B,
 		int32_t m, int32_t n, int32_t k, int32_t lda, int32_t ldb, int32_t ldc,
 		double alpha, double beta) {
 	dim3 threads(16, 4);
