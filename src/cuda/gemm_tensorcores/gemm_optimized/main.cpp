@@ -14,8 +14,8 @@
 #include <vector>
 #include <iostream>
 
-typedef double real_t;
-typedef double half_real_t;
+typedef float real_t;
+typedef float half_real_t;
 
 void gemm_host(std::vector<real_t>& a, std::vector<real_t>& b,
 		std::vector<real_t>& c, real_t alpha, real_t beta, int m, int n,
@@ -60,14 +60,14 @@ int main(int argc, char **argv) {
 
 
 	for (int t = 0; t < 10; t++) {
-		device_c = zero_vector;
-		device_c_inc = zero_vector_inc;
-		sgemm(st, device_c.data(), device_a.data(), device_b.data(), m, n, k,
-				lda, ldb, ldc, alpha, beta);
 		// device_c = zero_vector;
 		// device_c_inc = zero_vector_inc;
-		// sgemm_dmr(st, device_c.data(), device_c_inc.data(), device_a.data(),
-		// 		device_b.data(), m, n, k, lda, ldb, ldc, alpha, beta);
+		// sgemm(st, device_c.data(), device_a.data(), device_b.data(), m, n, k,
+		// 		lda, ldb, ldc, alpha, beta);
+		device_c = zero_vector;
+		device_c_inc = zero_vector_inc;
+		sgemm_dmr(st, device_c.data(), device_c_inc.data(), device_a.data(),
+				device_b.data(), m, n, k, lda, ldb, ldc, alpha, beta);
 
 	}
 
