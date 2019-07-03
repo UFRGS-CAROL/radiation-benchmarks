@@ -9,6 +9,11 @@
 
  */
 
+// CUDA runtime
+#include <cuda_runtime.h>
+// Helper functions and utilities to work with CUDA
+#include <helper_functions.h>
+#include <helper_cuda.h>
 #include "cuda_utils.h"
 
 __device__ __forceinline__ void fma__(const double a, const double b,
