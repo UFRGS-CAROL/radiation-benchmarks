@@ -131,7 +131,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
       
 
       Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
-      Csub1 = fma_dmr(As1[ty][k], Bs1[k][tx],Csub1);
+      Csub1 = fma_dmr(As[ty][k], Bs[k][tx],Csub1);
       // Csub1 = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub1);
       
     }
