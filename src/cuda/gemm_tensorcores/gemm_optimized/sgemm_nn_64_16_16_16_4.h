@@ -16,6 +16,15 @@ void sgemm_dmr(cudaStream_t stream, double *C, float *C_inc, const double *A,
 		const double *B, int32_t m, int32_t n, int32_t k, int32_t lda,
 		int32_t ldb, int32_t ldc, double alpha, double beta);
 
+void sgemm_dmr(cudaStream_t stream, float *C, float *C_inc, const float *A,
+		const float *B, int32_t m, int32_t n, int32_t k, int32_t lda,
+		int32_t ldb, int32_t ldc, float alpha, float beta);
+
+void sgemm_dmr(cudaStream_t stream, double *C, double *C_inc, const double *A,
+		const double *B, int32_t m, int32_t n, int32_t k, int32_t lda,
+		int32_t ldb, int32_t ldc, double alpha, double beta);
+
+
 void sgemm(cudaStream_t stream, double *C, const double *A, const double *B,
 		int32_t m, int32_t n, int32_t k, int32_t lda, int32_t ldb, int32_t ldc,
 		double alpha, double beta);
