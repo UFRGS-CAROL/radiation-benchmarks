@@ -353,10 +353,10 @@ __global__ void sgemm_kernel(half_real_t* C_inc, real_t *C, const real_t *A, con
 	}
 }
 
-template<typename real_t, typename half_real_t>
-void sgemm_dmr(cudaStream_t stream, real_t *C, half_real_t *C_inc, const real_t *A, const real_t *B,
+
+void sgemm_dmr(cudaStream_t stream, float *C, float *C_inc, const float *A, const float *B,
 		int32_t m, int32_t n, int32_t k, int32_t lda, int32_t ldb, int32_t ldc,
-		real_t alpha, real_t beta) {
+		float alpha, float beta) {
 	dim3 threads(16, 4);
 	dim3 grid(m / 64, n / 16);
 			// Allocate CUDA events that we'll use for timing
