@@ -58,6 +58,16 @@ int main(int argc, char **argv) {
 	cudaStreamCreate(&st);
 	assert(m > 512 && n > 512 && m % 64 == 0 && n % 16 == 0 && k % 16 == 0);
 
+	  // Allocate CUDA events that we'll use for timing
+  	cudaEvent_t start;
+  	checkCudaErrors(cudaEventCreate(&start));
+
+  	cudaEvent_t stop;
+  	checkCudaErrors(cudaEventCreate(&stop));	
+
+  	// Record the start event
+  	checkCudaErrors(cudaEventRecord(start, NULL));
+
 	for (int t = 0; t < 10; t++) {
 		device_c = zero_vector;
 		device_c_inc = zero_vector_inc;
@@ -69,6 +79,18 @@ int main(int argc, char **argv) {
 		// 		device_b.data(), m, n, k, lda, ldb, ldc, alpha, beta);
 
 	}
+
+	 // Record the stop event
+  	checkCudaErrors(cudaEventRecord(stop, NULL));
+
+  	// Wait for the stop event to complete
+  	checkCudaErrors(cudaEventSynchronize(stop));
+
+  	float msecTotal = 0.0f;
+  	checkCudaErrors(cudaEventElapsedTime(&msecTotal, start, stop));
+  	float msecPerMatrixMul = msecTotal / 10;
+
+  	std::cout << "Time: " << msecPerMatrixMul << std::endl;
 
 	host_c = device_c.to_vector();
 	host_c_inc = device_c_inc.to_vector();
