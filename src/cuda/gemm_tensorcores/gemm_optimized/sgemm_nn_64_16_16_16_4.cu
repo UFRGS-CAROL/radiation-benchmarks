@@ -187,8 +187,31 @@ void sgemm(cudaStream_t stream, double *C, const double *A, const double *B,
 		double alpha, double beta) {
 	dim3 threads(16, 4);
 	dim3 grid(m / 64, n / 16);
+
+	// Allocate CUDA events that we'll use for timing
+  	cudaEvent_t start;
+  	checkCudaErrors(cudaEventCreate(&start));
+
+  	cudaEvent_t stop;
+  	checkCudaErrors(cudaEventCreate(&stop));	
+
+  	// Record the start event
+  	checkCudaErrors(cudaEventRecord(start, NULL));
+
+
 	sgemm_kernel<<<grid, threads, 0, stream>>>(C, A, B, m, n, k, lda, ldb, ldc,
 			alpha, beta);
+
+	// Record the stop event
+  	checkCudaErrors(cudaEventRecord(stop, NULL));
+
+  	// Wait for the stop event to complete
+  	checkCudaErrors(cudaEventSynchronize(stop));
+
+  	float msecTotal = 0.0f;
+  	checkCudaErrors(cudaEventElapsedTime(&msecTotal, start, stop));
+  	
+ 	std::cout << "Time: " << msecTotal << std::endl;
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	//end
 }
