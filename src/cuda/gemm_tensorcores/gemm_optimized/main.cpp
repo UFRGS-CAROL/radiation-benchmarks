@@ -8,7 +8,8 @@
  * is strictly prohibited.
  */
 
-#include "device_vector.h"
+// #include "device_vector.h"
+#include <thrust/device_vector.h>
 #include "sgemm_nn_64_16_16_16_4.h"
 #include <cassert>
 #include <vector>
