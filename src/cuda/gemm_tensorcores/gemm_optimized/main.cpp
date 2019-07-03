@@ -15,7 +15,7 @@
 #include <iostream>
 
 typedef float real_t;
-// typedef float half_real_t;
+typedef float half_real_t;
 
 void gemm_host(std::vector<real_t>& a, std::vector<real_t>& b,
 		std::vector<real_t>& c, real_t alpha, real_t beta, int m, int n,
