@@ -79,24 +79,24 @@ int main(int argc, char **argv) {
 		}
 		std::cout << std::endl;
 	}
-	std::cout << "Incomplete type" << std::endl;
-	for (int i = 0; i < 10; i++) {
-		for (int j = 0; j < 10; j++) {
-			std::cout << host_c_inc[i * m + j] << " ";
-		}
-		std::cout << std::endl;
-	}
+	// std::cout << "Incomplete type" << std::endl;
+	// for (int i = 0; i < 10; i++) {
+	// 	for (int j = 0; j < 10; j++) {
+	// 		std::cout << host_c_inc[i * m + j] << " ";
+	// 	}
+	// 	std::cout << std::endl;
+	// }
 
-	std::vector<real_t> test_gemm(m * k, 0);
-	gemm_host(host_a, host_b, test_gemm, alpha, beta, m, n, k);
+	// std::vector<real_t> test_gemm(m * k, 0);
+	// gemm_host(host_a, host_b, test_gemm, alpha, beta, m, n, k);
 
-	for (int i = 0; i < test_gemm.size(); i++) {
-		auto g = test_gemm[i], f = host_c[i];
-		if (g != f) {
-			std::cout << "HOST " << g << " GPU " << f << std::endl;
-			break;
-		}
-	}
+	// for (int i = 0; i < test_gemm.size(); i++) {
+	// 	auto g = test_gemm[i], f = host_c[i];
+	// 	if (g != f) {
+	// 		std::cout << "HOST " << g << " GPU " << f << std::endl;
+	// 		break;
+	// 	}
+	// }
 	cudaStreamDestroy(st);
 	return 0;
 }
