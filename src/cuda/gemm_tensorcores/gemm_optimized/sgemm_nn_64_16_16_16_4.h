@@ -14,7 +14,7 @@ void sgemm(cudaStream_t stream, float *C, const float *A, const float *B,
 		int32_t m, int32_t n, int32_t k, int32_t lda, int32_t ldb, int32_t ldc,
 		float alpha, float beta);
 
-template<typename real_t, typename half_real_t>
+// template<typename real_t, typename half_real_t>
 void sgemm_dmr(cudaStream_t stream, real_t *C, half_real_t *C_inc, const real_t *A, const real_t *B,
 		int32_t m, int32_t n, int32_t k, int32_t lda, int32_t ldb, int32_t ldc,
 		real_t alpha, real_t beta);

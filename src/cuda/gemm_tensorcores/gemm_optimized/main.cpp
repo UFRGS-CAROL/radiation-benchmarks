@@ -60,12 +60,12 @@ int main(int argc, char **argv) {
 
 
 	for (int t = 0; t < 10; t++) {
-		device_c = zero_vector;
-		device_c_inc = zero_vector_inc;
-		// sgemm(st, device_c.data(), device_a.data(), device_b.data(), m, n, k,
-		// 		lda, ldb, ldc, alpha, beta);
 		// device_c = zero_vector;
 		// device_c_inc = zero_vector_inc;
+		// sgemm(st, device_c.data(), device_a.data(), device_b.data(), m, n, k,
+		// 		lda, ldb, ldc, alpha, beta);
+		device_c = zero_vector;
+		device_c_inc = zero_vector_inc;
 		sgemm_dmr<real_t, half_real_t>(st, device_c.data(), device_c_inc.data(), device_a.data(),
 				device_b.data(), m, n, k, lda, ldb, ldc, alpha, beta);
 

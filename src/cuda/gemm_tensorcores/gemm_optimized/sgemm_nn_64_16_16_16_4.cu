@@ -352,6 +352,7 @@ __global__ void sgemm_kernel(half_real_t* C_inc, real_t *C, const real_t *A, con
 		C_inc[0] =  alpha_inc * Cb_inc[i] + beta_inc * C_inc[0];
 	}
 }
+
 template<typename real_t, typename half_real_t>
 void sgemm_dmr(cudaStream_t stream, real_t *C, half_real_t *C_inc, const real_t *A, const real_t *B,
 		int32_t m, int32_t n, int32_t k, int32_t lda, int32_t ldb, int32_t ldc,
