@@ -91,7 +91,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, float *C1, do
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
     volatile double Csub = 0;
-    // volatile float Csub1= 0;
+    volatile float Csub1= 0;
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -130,11 +130,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, float *C1, do
 
     for (int k = 0; k < BLOCK_SIZE; ++k) {
       
-      // Csub = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub);
+      
 
       Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
       // Csub1 = fma_dmr(As1[ty][k], Bs1[k][tx],Csub1);
-
+      Csub1 = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub1);
       
     }
 
@@ -148,7 +148,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, float *C1, do
   // each thread writes one element
   int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
   C[c + wB * ty + tx] = Csub;
-  // C1[c + wB * ty + tx] = Csub1;
+  C1[c + wB * ty + tx] = Csub1;
 }
 
 // template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, half *A,
@@ -407,25 +407,8 @@ int MatrixMultiply(int argc, char **argv,
   printf("Checking computed result for correctness: ");
   bool correct = true;
 
-  // test relative error by the formula
-  //     |<x, y>_cpu - <x,y>_gpu|/<|x|, |y|>  < eps
-  //double eps = 1.e-6;  // machine zero
 
-  // for (int i = 0; i < static_cast<int>(dimsC.x * dimsC.y); i++) {
-  //   double abs_err = fabs(h_C[i] - (dimsA.x * valB));
-  //   double dot_length = dimsA.x;
-  //   double abs_val = fabs(h_C[i]);
-  //   double rel_err = abs_err / abs_val / dot_length;
 
-  //   if (rel_err > eps) {
-  //     printf("Error! Matrix[%05d]=%.8f, ref=%.8f error term is > %E\n",
-  //            i, h_C[i], dimsA.x * valB, eps);
-  //     correct = false;
-  //   }
-  // }
-
-  // printf("%s\n", correct ? "Result = PASS" : "Result = FAIL");
-  //printf(" A= %f B= %f  C = %f \n", h_A[0], h_B[0], h_C[0]);
   // Clean up memory
   free(h_A);
   // free(h_A1);
@@ -438,9 +421,6 @@ int MatrixMultiply(int argc, char **argv,
   // checkCudaErrors(cudaFree(d_B1));
   checkCudaErrors(cudaFree(d_C));
   checkCudaErrors(cudaFree(d_C1));
-
-  // printf("\nNOTE: The CUDA Samples are not meant for performance"\
-  //        "measurements. Results may vary when GPU Boost is enabled.\n");
 
   if (correct) {
     return EXIT_SUCCESS;
@@ -493,31 +473,6 @@ int main(int argc, char **argv) {
   // dimsB.y = 4096; 
 
 
-  // // width of Matrix A
-  // if (checkCmdLineFlag(argc, (const char **)argv, "wA")) {
-  //   dimsA.x = getCmdLineArgumentInt(argc, (const char **)argv, "wA");
-  // }
-
-  // // height of Matrix A
-  // if (checkCmdLineFlag(argc, (const char **)argv, "hA")) {
-  //   dimsA.y = getCmdLineArgumentInt(argc, (const char **)argv, "hA");
-  // }
-
-  // // width of Matrix B
-  // if (checkCmdLineFlag(argc, (const char **)argv, "wB")) {
-  //   dimsB.x = getCmdLineArgumentInt(argc, (const char **)argv, "wB");
-  // }
-
-  // // height of Matrix B
-  // if (checkCmdLineFlag(argc, (const char **)argv, "hB")) {
-  //   dimsB.y = getCmdLineArgumentInt(argc, (const char **)argv, "hB");
-  // }
-
-  // if (dimsA.x != dimsB.y) {
-  //   printf("Error: outer matrix dimensions must be equal. (%d != %d)\n",
-  //          dimsA.x, dimsB.y);
-  //   exit(EXIT_FAILURE);
-  // }
 
   printf("MatrixA(%d,%d), MatrixB(%d,%d)\n", dimsA.x, dimsA.y,
          dimsB.x, dimsB.y);
