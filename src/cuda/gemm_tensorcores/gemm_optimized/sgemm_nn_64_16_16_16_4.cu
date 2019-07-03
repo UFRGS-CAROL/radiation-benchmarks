@@ -211,7 +211,7 @@ void sgemm(cudaStream_t stream, double *C, const double *A, const double *B,
   	float msecTotal = 0.0f;
   	checkCudaErrors(cudaEventElapsedTime(&msecTotal, start, stop));
   	
- 	std::cout << "Time: " << msecTotal << std::endl;
+ 	printf("Time %.3f ms \n", msecTotal);
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	//end
 }
