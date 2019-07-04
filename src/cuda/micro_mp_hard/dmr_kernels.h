@@ -10,9 +10,6 @@
 
 #include "device_functions.h"
 
-#define THOUSAND 1000
-#define HUNDRED 100
-
 /**
  * ----------------------------------------
  * FMA DMR
@@ -60,12 +57,17 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 		acc_incomplete = fma_dmr(input_a_neg_incomplete, input_b_neg_incomplete,
 				acc_incomplete);
 
-		if(count % THOUSAND){
+#ifdef CHECKBLOCK
+		if(count % CHECKBLOCK) {
 			check_relative_error(acc_incomplete, acc_full);
 		}
+#endif
 
 	}
 
+#ifndef CHECKBLOCK
+	check_relative_error(acc_incomplete, acc_full);
+#endif
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
@@ -102,12 +104,17 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 		acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
 		acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
 
-		if(count % THOUSAND){
+#ifdef CHECKBLOCK
+		if(count % CHECKBLOCK) {
 			check_relative_error(acc_incomplete, acc_full);
 		}
+#endif
+
 	}
 
-//	check_relative_error(acc_incomplete, acc_full);
+#ifndef CHECKBLOCK
+	check_relative_error(acc_incomplete, acc_full);
+#endif
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
@@ -129,9 +136,9 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 	volatile register full input_a_inv_full = full(1.0) / INPUT_A;
 
 	volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
-	volatile register incomplete input_a_incomplete = incomplete(INPUT_B);
+	volatile register incomplete input_a_incomplete = incomplete(INPUT_A);
 	volatile register incomplete input_a_inv_incomplete = incomplete(1.0)
-			/ incomplete(INPUT_B);
+			/ incomplete(INPUT_A);
 
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
 		acc_full = mul_dmr(acc_full, input_a_full);
@@ -143,9 +150,18 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 		acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
 		acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
 		acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
+
+#ifdef CHECKBLOCK
+		if(count % CHECKBLOCK) {
+			check_relative_error(acc_incomplete, acc_full);
+		}
+#endif
+
 	}
 
+#ifndef CHECKBLOCK
 	check_relative_error(acc_incomplete, acc_full);
+#endif
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;

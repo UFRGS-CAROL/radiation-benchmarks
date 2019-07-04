@@ -42,6 +42,15 @@ std::string get_double_representation(double val) {
 	return output;
 }
 
+bool cmp(const double lhs, const double rhs) {
+	const double diff = abs(lhs - rhs);
+	const double zero = double(ZERO_FLOAT);
+	if (diff > zero) {
+		return false;
+	}
+	return true;
+}
+
 // Returns the number of errors found
 // if no errors were found it returns 0
 template<typename incomplete, typename full, typename output_type = incomplete>
@@ -54,11 +63,11 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 	for (int i = 0; i < R.size(); i++) {
 		double output = double(R[i]);
 		double output_inc = double(R_incomplete[i]);
-		if (gold != output) {
+		if (gold != output || !cmp(output, output_inc)) {
 #pragma omp critical
 			{
 				std::stringstream error_detail;
-				error_detail.precision(16);
+				error_detail.precision(18);
 				error_detail << "p: [" << i << "], r: " << std::scientific
 						<< output << ", e: " << gold << " smaller_precision: "
 						<< output_inc;
@@ -94,7 +103,10 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 template<typename incomplete, typename full, typename ... TypeArgs>
 void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters,
 		const std::vector<Input<full>>& defined_input = { }) {
-	std::cout << "Printing the input values " << type_ << std::endl;
+	std::cout << "Input values " << type_ << std::endl;
+#ifdef CHECKBLOCK
+	std::cout << "Instruction block checking size " << CHECKBLOCK << std::endl;
+#endif
 	// Init test environment
 	// kernel_errors=0;
 	double total_kernel_time = 0;
@@ -104,10 +116,10 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters,
 
 	// FULL PRECIISON
 	std::vector<full> host_vector_full(parameters.r_size, 0);
-	DeviceVector<full> device_vector_full(parameters.r_size);
+	rad::DeviceVector<full> device_vector_full(parameters.r_size);
 
 	//For defined input only
-	DeviceVector<Input<full>> device_defined_input;
+	rad::DeviceVector<Input<full>> device_defined_input;
 	if (defined_input.size() == device_vector_full.size()) {
 		device_defined_input = defined_input;
 	}
@@ -115,7 +127,7 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters,
 
 	// SECOND PRECISION ONLY IF IT IS DEFINED
 	std::vector<incomplete> host_vector_inc(parameters.r_size, 0);
-	DeviceVector<incomplete> device_vector_inc(parameters.r_size);
+	rad::DeviceVector<incomplete> device_vector_inc(parameters.r_size);
 	//====================================
 	// Verbose in csv format
 	if (parameters.verbose == false) {

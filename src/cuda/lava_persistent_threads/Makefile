@@ -18,7 +18,7 @@ INCLUDE= -I/usr/local/cuda/include -I../common
 LIBRARY= -L/usr/local/cuda/lib64/
 CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/  -lcudart  -std=c++11 
 
-TARGET=cuda_lava_$(LOWERCASED_PRECISION)
+TARGET=cuda_lava_persistent_threads_$(LOWERCASED_PRECISION)
 RUN_SOURCES=./cuda_lava.cu
 
 LOGHELPER_INC=../../include/

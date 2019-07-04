@@ -1,6 +1,7 @@
 OPS?=100000000
 LOGS=1
 DEBUG?=0
+CHECKBLOCK=1000
 
 CC=g++
 NVCC=nvcc
@@ -19,6 +20,11 @@ ifeq ($(DEBUG), 1)
 OPS=1000
 NVCC_FLAGS+= -g -G
 endif
+
+ifneq ($(CHECKBLOCK)), 0)
+NVCC_FLAGS+= -DCHECKBLOCK=$(CHECKBLOCK)
+endif
+
 
 ifeq ($(LOGS), 1)
 NVCC_FLAGS+= -DLOGS
