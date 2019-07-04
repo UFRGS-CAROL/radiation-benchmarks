@@ -294,7 +294,9 @@ int start_log_file(char *benchmark_name, char *test_info) {
 	char log_file_name[190] = "";
 
 	file_time = time(NULL);
-	ptm = gmtime(&file_time);
+	//CHANGE FOR LOCAL TIME
+//	ptm = gmtime(&file_time);
+	ptm = localtime(&file_time);
 
 	snprintf(day, sizeof(day), "%02d", ptm->tm_mday);
 	snprintf(month, sizeof(month), "%02d", ptm->tm_mon + 1);
