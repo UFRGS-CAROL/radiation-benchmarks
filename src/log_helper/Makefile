@@ -14,13 +14,13 @@ LIBOUTA=libLogHelper.a
 
 LIB=lib
 
-SRCCXX=lib/log_helper.cpp
-SRCCC=lib/log_helper.c
-SRCWRAPPER=lib/log_helper_wrapper.cpp
+SRCCXX=src/log_helper.cpp
+SRCCC=src/log_helper.c
+SRCWRAPPER=src/log_helper_wrapper.cpp
 
 INCLUDE=-I./
 
-all: clean cxx cc $(SRCCXX) $(SRCWRAPPER)
+all: mklib clean cxx cc $(SRCCXX) $(SRCWRAPPER)
 
 
 cc: 
@@ -41,6 +41,11 @@ client: clean log_helper_sockclient.c
 
 server: log_helper_sockserver.c
 	$(CC) log_helper_sockserver.c -o server -lpthread
+
+
+mklib:
+	mkdir -p ./lib
+
 
 clean:
 	rm -rf $(LIB)/$(LIBOUT) $(LIB)/*.o $(LIB)/*.a server
