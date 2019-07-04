@@ -34,7 +34,7 @@
 //=============================================================================
 //	DEFINE / INCLUDE
 //=============================================================================
- // keep this low to allow more blocks that share shared memory to run concurrently,
+// keep this low to allow more blocks that share shared memory to run concurrently,
 //code does not work for larger than 110, more speedup can be achieved with larger
 //number and no shared memory used
 //default value was 192, but for evaluation i keep BLOCK_SIZE * 6
@@ -829,10 +829,10 @@ bool checkOutputErrors(int verbose, dim_str dim_cpu, int streamIdx,
 	return (host_errors == 0);
 }
 
-void launch_kernel(int nstreams, dim3 blocks, dim3 threads,
-		par_str par_cpu, cudaStream_t* streams, dim_str& dim_cpu,
-		box_str** d_box_gpu, FOUR_VECTOR** d_rv_gpu,
-		tested_type** d_qv_gpu, FOUR_VECTOR** d_fv_gpu) {
+void launch_kernel(int nstreams, dim3 blocks, dim3 threads, par_str par_cpu,
+		cudaStream_t* streams, dim_str& dim_cpu, box_str** d_box_gpu,
+		FOUR_VECTOR** d_rv_gpu, tested_type** d_qv_gpu,
+		FOUR_VECTOR** d_fv_gpu) {
 	////////////// GOLD CHECK Kernel /////////////////
 	// dim3 gck_blockSize = dim3(	GOLDCHK_BLOCK_SIZE, 
 	// 	GOLDCHK_BLOCK_SIZE);
@@ -843,10 +843,9 @@ void launch_kernel(int nstreams, dim3 blocks, dim3 threads,
 		kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx]>>>(par_cpu,
 				dim_cpu, d_box_gpu[streamIdx], d_rv_gpu[streamIdx],
 				d_qv_gpu[streamIdx], d_fv_gpu[streamIdx]);
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors (cudaPeekAtLastError());
 		//kernel launched
-	}
-}
+}	}
 
 ///////////////////////////////////////// GOLD CHECK ON DEVICE ////////////////////////
 // #define GOLDCHK_BLOCK_SIZE 8
@@ -920,14 +919,15 @@ int main(int argc, char *argv[]) {
 	char test_info[200];
 	char test_name[200];
 	//VALID ONLY FOR PERSISTENT THREADS
-	if(BLOCK_SIZE == 16){
+	if (BLOCK_SIZE == 16) {
 		dim_cpu.boxes1d_arg *= 2;
 	}
 	snprintf(test_info, 200,
 			"type:%s-precision streams:%d boxes:%d block_size:%d",
 			test_precision_description, nstreams, dim_cpu.boxes1d_arg,
 			NUMBER_THREADS);
-	snprintf(test_name, 200, "cuda_%s_lava_persistent_threads", test_precision_description);
+	snprintf(test_name, 200, "cuda_%s_lava_persistent_threads",
+			test_precision_description);
 	printf(
 			"\n=================================\n%s\n%s\n=================================\n\n",
 			test_name, test_info);
@@ -940,7 +940,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	std::string log_file_name(get_log_file_name());
-	if(generate){
+	if(generate) {
 		log_file_name = "/tmp/generate.log";
 	}
 	rad::JTX2Inst profiler_thread(log_file_name);
@@ -1080,7 +1080,6 @@ int main(int argc, char *argv[]) {
 	//=====================================================================
 	//	PARAMETERS, DISTANCE, CHARGE AND FORCE
 	//=====================================================================
-
 	if (generate) {
 		generateInput(dim_cpu, input_distances, &rv_cpu, input_charges,
 				&qv_cpu);
@@ -1127,7 +1126,7 @@ int main(int argc, char *argv[]) {
 	FOUR_VECTOR *d_rv_gpu[nstreams];
 	tested_type *d_qv_gpu[nstreams];
 	FOUR_VECTOR *d_fv_gpu[nstreams];
-	FOUR_VECTOR *d_fv_gold_gpu;
+	FOUR_VECTOR *d_fv_gold_gpu = nullptr;
 
 	//=====================================================================
 	//	GPU MEMORY SETUP
@@ -1141,14 +1140,14 @@ int main(int argc, char *argv[]) {
 	// dim3 gck_gridSize = dim3(	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE), 
 	// 	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
 	// //////////////////////////////////////////////////
-	launch_kernel(nstreams, blocks, threads, par_cpu,
-			streams, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
+	launch_kernel(nstreams, blocks, threads, par_cpu, streams, dim_cpu,
+			d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
 
 	//LOOP START
 	for (size_t loop = 0; loop < iterations; loop++) {
 
 		if (verbose)
-			printf("======== Iteration #%06u ========\n", loop);
+			printf("======== Iteration #%06lu ========\n", loop);
 
 		double globaltimer = mysecond();
 		timestamp = mysecond();
@@ -1235,7 +1234,6 @@ int main(int argc, char *argv[]) {
 					rad::checkFrameworkErrors(
 							cudaMemcpy(fv_cpu[streamIdx], d_fv_gpu[streamIdx],
 									dim_cpu.space_mem, cudaMemcpyDeviceToHost));
-
 					reloadFlag = reloadFlag
 							|| !(checkOutputErrors(verbose, dim_cpu, streamIdx,
 									fv_cpu[streamIdx], fv_cpu_GOLD));
@@ -1260,8 +1258,8 @@ int main(int argc, char *argv[]) {
 					profiler_thread.start_profile();
 #endif
 					pt_control.start_kernel();
-					launch_kernel(nstreams, blocks, threads, par_cpu,
-							streams, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
+					launch_kernel(nstreams, blocks, threads, par_cpu, streams,
+							dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
 				}
 			}
 			if (verbose)
