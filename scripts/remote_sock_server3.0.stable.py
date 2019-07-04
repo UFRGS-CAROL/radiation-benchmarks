@@ -23,7 +23,7 @@ IPmachines = [
 
 # Set the machine names for each IP
 IPtoDiffReboot = {
-    "192.168.1.21": 120,  # caroltegrax21
+    "192.168.1.21": 60,  # caroltegrax21
     # "192.168.1.20": 50,  # CarolK401
     # "192.168.1.6": 120,  # CarolXeon1
     # "192.168.1.7": 200,  # CarolXeon2

@@ -13,7 +13,9 @@
 
 namespace rad {
 
+#ifndef BLOCK_SIZE
 #define BLOCK_SIZE 32
+#endif
 
 //#ifndef DEBUG
 //#define DEBUG 0
