@@ -1,6 +1,7 @@
 CC=g++
 NVCC=/usr/local/cuda/bin/nvcc
 PRECISION?=single
+BLOCK_SIZE=32
 
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
@@ -12,6 +13,10 @@ ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 
 NVCC_FLAGS= $(ARCH)
 
+ifneq ($(BLOCK_SIZE), 32)
+NVCC_FLAGS += -DBLOCK_SIZE=16
+endif
+
 NVIDIA_INC=/usr/local/cuda/include/,./
 NVIDIA_LIB=/usr/local/cuda/lib64/,../common/lib
 LOGHELPER_INC=../../include/
@@ -20,7 +25,7 @@ LOGHELPER_LIB=../../include/
 PERSISTENT_INC=../common/
 
 SOURCES=./cuda_trip_mxm.cu
-EXEC_RADIX=./cuda_trip_mxm_
+EXEC_RADIX=./cuda_mxm_persistent_threads_
 EXEC=$(EXEC_RADIX)$(LOWERCASED_PRECISION)
 
 DEF_SIZE=64
@@ -48,5 +53,5 @@ clean:
 generate: $(EXEC)
 	$(EXEC) -generate -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD)
 
-test: $(EXEC) generate
+test: $(EXEC) 
 	$(EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
