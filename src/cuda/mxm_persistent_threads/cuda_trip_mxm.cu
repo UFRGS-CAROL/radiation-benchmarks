@@ -8,13 +8,22 @@
 #include <random>
 #include <cuda_fp16.h>
 
+#include <memory>
+
 #ifdef LOGS
 #include "log_helper.h"
+
+#ifdef FORJETSON
+#include "include/JTX2Inst.h"
+#define OBJTYPE JTX2Inst
+#else
+#include "include/NVMLWrapper.h"
+#define OBJTYPE NVMLWrapper
+#endif
+
 #endif
 
 #include "include/persistent_lib.h"
-#include "include/JTX2Inst.h"
-
 
 // The timestamp is updated on every log_helper function call.
 
@@ -91,7 +100,6 @@ tested_type_host *B;
 tested_type_host *C0; //, *C1, *C2;
 tested_type_host *GOLD;
 tested_type *d_C0; //, *d_C1, *d_C2;
-
 
 tested_type *d_A0; //, *d_A1, *d_A2;
 tested_type *d_B0; //, *d_B1, *d_B2;
@@ -604,9 +612,11 @@ int main(int argc, char* argv[]) {
 	if(generate) {
 		log_file_name = "/tmp/generate.log";
 	}
-	rad::JTX2Inst profiler_thread(log_file_name);
+//	rad::Profiler profiler_thread = new rad::JTX2Inst(log_file_name);
+	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
+
 //START PROFILER THREAD
-	profiler_thread.start_profile();
+	profiler_thread->start_profile();
 #endif
 //====================================
 
@@ -614,7 +624,7 @@ int main(int argc, char* argv[]) {
 	A = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 	B = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
 	GOLD = (tested_type_host*) malloc(matrixSize * sizeof(tested_type));
-	if (!(A && B)){
+	if (!(A && B)) {
 		printf("Failed on host malloc.\n");
 		exit(-3);
 	}
@@ -629,7 +639,6 @@ int main(int argc, char* argv[]) {
 		printf("Failed on host malloc.\n");
 		exit(-3);
 	}
-
 
 	total_kernel_time = 0;
 	min_kernel_time = UINT_MAX;
@@ -697,7 +706,6 @@ kernel_time		= rad::mysecond() - kernel_time;
 				cudaMemcpy(C0, d_C0, matrixSize * sizeof(tested_type),
 						cudaMemcpyDeviceToHost));
 
-
 		if ((generate) && (k <= 16)) {
 			printf("\nMatrix C (0): \n");
 			for (int i = 0; i < k * k; i++) {
@@ -716,7 +724,7 @@ kernel_time		= rad::mysecond() - kernel_time;
 			bool executed_ok = checkOutputErrors();
 			if (executed_ok == false) { // (memory_errors != 0)
 #ifdef LOGS
-					profiler_thread.end_profile();
+					profiler_thread->end_profile();
 #endif
 				pt_control.end_kernel();
 
@@ -730,7 +738,7 @@ kernel_time		= rad::mysecond() - kernel_time;
 
 				//====================================
 #ifdef LOGS
-				profiler_thread.start_profile();
+				profiler_thread->start_profile();
 #endif
 				// Re-launch the kernel
 				pt_control.start_kernel();

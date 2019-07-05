@@ -1,9 +1,12 @@
 CC=g++
-NVCC=/usr/local/cuda/bin/nvcc
+CUDAPATH=/usr/local/cuda
+NVCC=$(CUDAPATH)/bin/nvcc
 PRECISION?=single
 BLOCK_SIZE=32
 
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
+
+FORJETSON=1
 
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
 #ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
@@ -16,6 +19,14 @@ NVCC_FLAGS= $(ARCH)
 ifneq ($(BLOCK_SIZE), 32)
 NVCC_FLAGS += -DBLOCK_SIZE=16
 endif
+
+ifeq ($(FORJETSON), 1)
+NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
+else
+NVCC_FLAGS += -L$(CUDAPATH)/lib64/stubs -lnvidia-ml  -lNVMLWrapper
+
+endif
+
 
 NVIDIA_INC=/usr/local/cuda/include/,./
 NVIDIA_LIB=/usr/local/cuda/lib64/,../common/lib
@@ -43,7 +54,7 @@ check-benchtype:
 	test $(PRECISION)
 
 $(EXEC): check-benchtype $(RUN_SOURCES)
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC),$(PERSISTENT_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -lJTX2Inst -li2c \
+	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC),$(PERSISTENT_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB)  \
 		 -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) \
 		 -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
 
