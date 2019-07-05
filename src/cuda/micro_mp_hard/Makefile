@@ -1,7 +1,7 @@
 OPS?=100000000
 LOGS=1
 DEBUG?=0
-CHECKBLOCK=1000
+CHECKBLOCK=0
 
 CC=g++
 NVCC=nvcc
@@ -21,10 +21,6 @@ OPS=1000
 NVCC_FLAGS+= -g -G
 endif
 
-ifneq ($(CHECKBLOCK)), 0)
-NVCC_FLAGS+= -DCHECKBLOCK=$(CHECKBLOCK)
-endif
-
 
 ifeq ($(LOGS), 1)
 NVCC_FLAGS+= -DLOGS
@@ -33,6 +29,9 @@ endif
 
 SOURCES=./cuda_micro.cu
 EXEC=./cuda_micro_mp_hardening
+
+NVCC_FLAGS+= -DCHECKBLOCK=$(CHECKBLOCK)
+
 
 FLAGS+=-I$(NVIDIA_INC) -I../common -L$(NVIDIA_LIB) -DOPS=$(OPS) 
 FLAGS+= -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS)
