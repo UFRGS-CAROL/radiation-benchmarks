@@ -20,29 +20,20 @@
 #include "jtx2/include/jtx1inst.h"
 
 namespace rad {
-#ifndef SLEEP_TIME
-#define SLEEP_JTX2INST 500
-#else
-#define SLEEP_JTX2INST SLEEP_TIME
-#endif
 
-JTX2Inst::JTX2Inst(std::string& output_file) :
-		output_log_file(output_file), thread_running(true) {
-	std::string to_replace = ".log";
-	size_t start_pos = this->output_log_file.find(to_replace);
-	this->output_log_file.replace(start_pos, to_replace.size(), "JTX2INST.csv");
 
-	this->profiler = std::thread(JTX2Inst::data_colector,
-			&this->output_log_file, &this->thread_running, &this->collect_data);
+JTX2Inst::JTX2Inst(unsigned device_index, std::string& output_file) : Profiler(device_index, output_file){
+	this->_thread_profiler = std::thread(JTX2Inst::data_colector,
+			&this->_output_log_file, &this->_thread_running, &this->_is_locked);
 }
 
 JTX2Inst::~JTX2Inst() {
-	this->thread_running = false;
-	this->profiler.join();
+	this->_thread_running = false;
+	this->_thread_profiler.join();
 }
 
-void JTX2Inst::data_colector(std::string* output_log_file, bool* thread_running,
-		bool* collect_data) {
+void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _thread_running,
+		std::atomic<bool>* _is_locked) {
 	unsigned int val;
 //	unsigned long rate;
 	float convFromMilli;
@@ -83,8 +74,8 @@ void JTX2Inst::data_colector(std::string* output_log_file, bool* thread_running,
 					"A0_TEMPERATURE;CPU_TEMPERATURE;GPU_TEMPERATURE;PLL_TEMPERATURE;PMIC_TEMPERATURE;"
 					"TDIODE_TEMPERATURE;TBOARD_TEMPERATURE;FAN_TEMPERATURE"
 			<< std::endl;
-	while (*thread_running) {
-		if (*collect_data) {
+	while (*_thread_running) {
+		if (*_is_locked) {
 			std::time_t result = std::time(nullptr);
 			std::string asc_time(std::asctime(std::localtime(&result)));
 			asc_time.pop_back();
@@ -364,7 +355,7 @@ void JTX2Inst::data_colector(std::string* output_log_file, bool* thread_running,
 //			printf("\n");
 			out_stream << val << std::endl;
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_JTX2INST));
+		std::this_thread::sleep_for(std::chrono::milliseconds(PROFILER_SLEEP));
 	}
 
 	out_stream.close();
@@ -376,21 +367,13 @@ void JTX2Inst::start_profile() {
 //	mutex_lock.unlock();
 //
 //	is_locked = false;
-	this->collect_data = true;
+	this->_is_locked = true;
 }
 
 void JTX2Inst::end_profile() {
 //	mutex_lock.lock();
 //	is_locked = true;
 //	mutex_lock.unlock();
-	this->collect_data = false;
+	this->_is_locked = false;
 }
-
-//std::deque<std::string> JTX2Inst::get_data_from_iteration() {
-//	auto last = std::unique(this->data_for_iteration.begin(),
-//			this->data_for_iteration.end());
-//	this->data_for_iteration.erase(last, this->data_for_iteration.end());
-//	return this->data_for_iteration;
-//}
-
 }

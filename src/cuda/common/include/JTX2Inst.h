@@ -12,21 +12,19 @@
 #include <deque>
 #include <thread>
 
-namespace rad {
-class JTX2Inst {
-	//Multithreading context
-	std::thread profiler;
-	std::string output_log_file;
+#include "Profiler.h"
 
+
+namespace rad {
+class JTX2Inst : public Profiler {
 	std::deque<std::string> data_for_iteration;
-	bool thread_running;
-	bool collect_data;
+protected:
 
 	static void data_colector(std::string* output_log_file,
-			bool* thread_running, bool* colllect_data);
+			std::atomic<bool>* thread_running, std::atomic<bool>* _is_locked);
 
 public:
-	JTX2Inst(std::string& output_file);
+	JTX2Inst(unsigned device_index, std::string& output_file);
 	virtual ~JTX2Inst();
 	void start_profile();
 	void end_profile();

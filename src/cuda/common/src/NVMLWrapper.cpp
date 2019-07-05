@@ -5,9 +5,8 @@
  *      Author: fernando
  */
 
-#include <mutex>          // std::mutex
 #include <condition_variable>
-#include <atomic>
+
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -16,11 +15,6 @@
 
 namespace rad {
 
-static std::mutex mutex_lock;
-static std::atomic<bool> is_locked;
-static bool thread_running = true;
-
-#define SLEEP_NVML 500
 void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device =
 		0) {
 	if (NVML_SUCCESS != result) {
@@ -34,26 +28,28 @@ void check_nvml_return(std::string info, nvmlReturn_t result, unsigned device =
 	}
 }
 
-rad::NVMLWrapper::NVMLWrapper(unsigned device_index) :
-		device_index(device_index), device(nullptr), set(nullptr) {
-	this->profiler = std::thread(NVMLWrapper::data_colector, &this->device,
-			&this->data_for_iteration);
-	is_locked = true;
+NVMLWrapper::NVMLWrapper(unsigned device_index, std::string& output_file) :
+		Profiler(device_index, output_file), _nvml_set(nullptr), _nvml_device(
+				nullptr) {
+	this->_thread_profiler = std::thread(NVMLWrapper::data_colector,
+			&this->_nvml_device, &this->data_for_iteration, &this->_mutex_lock,
+			&this->_is_locked, &this->_thread_running);
 }
 
-rad::NVMLWrapper::~NVMLWrapper() {
-	thread_running = false;
-	this->profiler.join();
+NVMLWrapper::~NVMLWrapper() {
+	_thread_running = false;
+	this->_thread_profiler.join();
 }
 
-void rad::NVMLWrapper::data_colector(nvmlDevice_t* device,
-		std::deque<std::string>* it_data) {
+void NVMLWrapper::data_colector(nvmlDevice_t* device,
+		std::deque<std::string>* it_data, std::mutex* mutex_lock,
+		std::atomic<bool>* is_locked, std::atomic<bool>* _thread_running) {
 	nvmlReturn_t result;
 
-	while (thread_running) {
-		mutex_lock.lock();
+	while (*_thread_running) {
+		mutex_lock->lock();
 
-		if (is_locked == false) {
+		if (*is_locked == false) {
 			std::string output = "";
 			//-----------------------------------------------------------------------
 			/**
@@ -158,38 +154,39 @@ void rad::NVMLWrapper::data_colector(nvmlDevice_t* device,
 
 			it_data->push_back(output);
 		}
-		mutex_lock.unlock();
-		std::this_thread::sleep_for(std::chrono::microseconds(SLEEP_NVML));
+		mutex_lock->unlock();
+		std::this_thread::sleep_for(std::chrono::microseconds(PROFILER_SLEEP));
 	}
 }
 
-void rad::NVMLWrapper::start_collecting_data() {
+void NVMLWrapper::start_profile() {
 	nvmlReturn_t result = nvmlInit();
 	check_nvml_return("initialize NVML library", result);
-	result = nvmlDeviceGetHandleByIndex(this->device_index, &this->device);
-	result = nvmlEventSetCreate(&this->set);
-	result = nvmlDeviceRegisterEvents(this->device, nvmlEventTypeAll,
-			this->set);
+	result = nvmlDeviceGetHandleByIndex(this->_device_index,
+			&this->_nvml_device);
+	result = nvmlEventSetCreate(&this->_nvml_set);
+	result = nvmlDeviceRegisterEvents(this->_nvml_device, nvmlEventTypeAll,
+			this->_nvml_set);
 
-	mutex_lock.lock();
+	this->_mutex_lock.lock();
 	this->data_for_iteration.clear();
-	mutex_lock.unlock();
+	this->_mutex_lock.unlock();
 
-	is_locked = false;
+	this->_is_locked = false;
 }
 
-void rad::NVMLWrapper::end_collecting_data() {
-	mutex_lock.lock();
-	is_locked = true;
-	mutex_lock.unlock();
+void NVMLWrapper::end_profile() {
+	this->_mutex_lock.lock();
+	this->_is_locked = true;
+	this->_mutex_lock.unlock();
 
 	nvmlReturn_t result;
-	result = nvmlEventSetFree(this->set);
+	result = nvmlEventSetFree(this->_nvml_set);
 	result = nvmlShutdown();
 	check_nvml_return("shutdown NVML library", result);
 }
 
-std::deque<std::string> rad::NVMLWrapper::get_data_from_iteration() {
+std::deque<std::string> NVMLWrapper::get_data_from_iteration() {
 	auto last = std::unique(this->data_for_iteration.begin(),
 			this->data_for_iteration.end());
 	this->data_for_iteration.erase(last, this->data_for_iteration.end());

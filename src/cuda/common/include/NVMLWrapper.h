@@ -11,33 +11,36 @@
 #include <nvml.h>
 #include <string>
 #include <deque>
-#include <thread>
+#include <mutex>        // std::mutex
 
-namespace rad
-{
+#include "Profiler.h"
 
-class NVMLWrapper {
-	unsigned device_index;
-	nvmlDevice_t device;
+namespace rad {
 
-	//Multithreading context
-	std::thread profiler;
-
+class NVMLWrapper : public Profiler{
 	//NVML EVENT
-	nvmlEventSet_t set;
+	nvmlEventSet_t _nvml_set;
+
+	nvmlDevice_t _nvml_device;
 
 	std::deque<std::string> data_for_iteration;
 
 
-	static void data_colector(nvmlDevice_t* device, std::deque<std::string>* it_data);
+	std::mutex _mutex_lock;
+
+protected:
+
+	static void data_colector(nvmlDevice_t* device,
+			std::deque<std::string>* it_data, std::mutex* mutex_lock,
+			std::atomic<bool>* is_locked, std::atomic<bool>* thread_running);
 
 public:
-	NVMLWrapper(unsigned device_index);
+	NVMLWrapper(unsigned device_index, std::string& output_file);
 	virtual ~NVMLWrapper();
 
-	void start_collecting_data();
+	void start_profile();
 
-	void end_collecting_data();
+	void end_profile();
 
 	std::deque<std::string> get_data_from_iteration();
 
