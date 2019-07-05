@@ -308,6 +308,12 @@ int main(int argc, char* argv[]) {
 	+ " blocksize:" + std::to_string(parameters.block_size) + " type:"
 	+ parameters.instruction_str + "-" + parameters.precision_str
 	+ "-precision hard:" + parameters.hardening_str;
+	test_info += " checkblock:";
+#ifdef CHECKBLOCK
+	test_info += std::to_string(CHECKBLOCK);
+#else
+	test_info += std::to_string(OPS);
+#endif
 
 	std::string test_name = std::string("cuda_") + parameters.precision_str
 	+ "_micro-" + parameters.instruction_str;
