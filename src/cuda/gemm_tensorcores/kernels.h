@@ -709,10 +709,10 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d,
   	int ty = threadIdx.y;
 
   	// Index of the first sub-matrix of A processed by the block
-  	int aBegin = wA * BLOCK_SIZE * by;
+  	int aBegin = m_ld * BLOCK_SIZE * by;
 
   	// Index of the last sub-matrix of A processed by the block
-  	int aEnd   = aBegin + wA - 1;
+  	int aEnd   = aBegin + m_ld - 1;
 
 
 
@@ -723,7 +723,7 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d,
   	int bBegin = BLOCK_SIZE * bx;
 
   	// Step size used to iterate through the sub-matrices of B
-  	int bStep  = BLOCK_SIZE * wB;
+  	int bStep  = BLOCK_SIZE * n_ld;
 
 
 
@@ -738,8 +738,8 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d,
 
     	__shared__ double Bs[BLOCK_SIZE][BLOCK_SIZE];
 
-    	As[ty][tx] = a[A + wA * ty + tx];
-    	Bs[ty][tx] = b[A + wB * ty + tx];
+    	As[ty][tx] = a[A + m_ld * ty + tx];
+    	Bs[ty][tx] = b[A + n_ld * ty + tx];
 
     	// Synchronize to make sure the matrices are loaded
     	__syncthreads();
@@ -759,8 +759,8 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d,
 
   	// Write the block sub-matrix to device memory;
   	// each thread writes one element
-  	int c_p = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-  	d[c_p + wB * ty + tx] = Csub;
+  	int c_p = n_ld * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+  	d[c_p + n_ld * ty + tx] = Csub;
  
 
 	wmma::fill_fragment(acc_frag, 0.0f);

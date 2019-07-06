@@ -314,73 +314,73 @@ public:
 
 	void mul_gemm_DMR(){
 		this->debug("thread dim allocation");
-				// Setup execution parameters
-				//First: using WMMA
-				dim3 grid_dim;
-				dim3 block_dim;
+		// 		// Setup execution parameters
+		// 		//First: using WMMA
+		// 		dim3 grid_dim;
+		// 		dim3 block_dim;
 
-				// block_dim.x must be a multple of warpSize
-				// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-				block_dim.x = WMMA_M; //128;
-		    	block_dim.y = WMMA_N; //4;
+		// 		// block_dim.x must be a multple of warpSize
+		// 		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+		// 		block_dim.x = WMMA_M; //128;
+		//     	block_dim.y = WMMA_N; //4;
 	
 
-				grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-						/ (WMMA_M * block_dim.x / WARP_SIZE);
-				grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
-						/ (WMMA_N * block_dim.y);
+		// 		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
+		// 				/ (WMMA_M * block_dim.x / WARP_SIZE);
+		// 		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
+		// 				/ (WMMA_N * block_dim.y);
 
 			 	
-				this->debug("matrix multiplication");
+		// 		this->debug("matrix multiplication");
 				
 				
-				check_framework_errors(
-						cudaMemset(this->device_is_memory_bad, 0x0,
-								sizeof(unsigned long long int)));			
+		// 		check_framework_errors(
+		// 				cudaMemset(this->device_is_memory_bad, 0x0,
+		// 						sizeof(unsigned long long int)));			
 				
  
-				//no tensor with DMR
+		// 		//no tensor with DMR
 
-				simple_gemm_DMR<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta);
+		// 		simple_gemm_DMR<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta);
 
 	
 
-		this->debug("device synchronize");
-		check_framework_errors(cudaDeviceSynchronize());
+		// this->debug("device synchronize");
+		// check_framework_errors(cudaDeviceSynchronize());
 				
 	}	
 
 	void mul_gemm(){
-		this->debug("thread dim allocation");
-		//		// Setup execution parameters
-				// First: using WMMA
-				dim3 grid_dim;
-				dim3 block_dim;
+		// this->debug("thread dim allocation");
+		// //		// Setup execution parameters
+		// 		// First: using WMMA
+		// 		dim3 grid_dim;
+		// 		dim3 block_dim;
 
-				// block_dim.x must be a multple of warpSize
-				// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-				block_dim.x = WMMA_M; //128;
-		    	block_dim.y = WMMA_N; //4;
+		// 		// block_dim.x must be a multple of warpSize
+		// 		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+		// 		block_dim.x = WMMA_M; //128;
+		//     	block_dim.y = WMMA_N; //4;
 	
 
-				grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-						/ (WMMA_M * block_dim.x / WARP_SIZE);
-				grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
-						/ (WMMA_N * block_dim.y);
+		// 		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
+		// 				/ (WMMA_M * block_dim.x / WARP_SIZE);
+		// 		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
+		// 				/ (WMMA_N * block_dim.y);
 
 			 	
-				this->debug("matrix multiplication");
+		// 		this->debug("matrix multiplication");
 				
 				
-				check_framework_errors(
-						cudaMemset(this->device_is_memory_bad, 0x0,
-								sizeof(unsigned long long int)));			
+		// 		check_framework_errors(
+		// 				cudaMemset(this->device_is_memory_bad, 0x0,
+		// 						sizeof(unsigned long long int)));			
 				
  						
 		 		
-				simple_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-		 		this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
-		 		this->alpha, this->beta);
+		// 		// simple_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+		//  	// 	this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
+		//  	// 	this->alpha, this->beta);
 
 
 	}	
