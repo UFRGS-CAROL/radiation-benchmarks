@@ -431,52 +431,52 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		 printf("Elapsed time : %f ms\n" ,elapsedTime);
 
 		//TODO check this
-		if (log_obj.triplicated && log_obj.generate) {
-			tries++;
-			int has_errors = is_output_ok(host_matrix_d0, host_matrix_d1,
-					host_matrix_d2, host_gold);
-			if (has_errors != 0)
-				it--;
+		// if (log_obj.triplicated && log_obj.generate) {
+		// 	tries++;
+		// 	int has_errors = is_output_ok(host_matrix_d0, host_matrix_d1,
+		// 			host_matrix_d2, host_gold);
+		// 	if (has_errors != 0)
+		// 		it--;
 
-			if (tries > 5)
-				throw std::runtime_error(
-						"More than 5 tries on matrix generate\n");
-			std::cout << "Iteration: " << it << std::endl;
-		}
+		// 	if (tries > 5)
+		// 		throw std::runtime_error(
+		// 				"More than 5 tries on matrix generate\n");
+		// 	std::cout << "Iteration: " << it << std::endl;
+		// }
 
-		if (!log_obj.generate) {
-			//fault test 
-//			if(it == 2){
-//			host_matrix_d0[2]= (real_t) 5.00;
-//			}
-			//
-			std::pair<int, int> errors;
-			double start, end;
-			if (log_obj.triplicated) {
-				start = log_obj.mysecond();
-				errors = compare_output_matrices(
-						mult_enviroment.get_memory_errors(), host_gold,
-						host_matrix_d0, host_matrix_d1, host_matrix_d2,
-						log_obj);
-				end = log_obj.mysecond();
-			}else{
-				start = log_obj.mysecond();
-				errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
-				end = log_obj.mysecond();
-			}
-			std::cout << "Iteration: " << it << " memory errors "
-					<< errors.first << " radiation errors " << errors.second
-					<< ". Time spent on computation " << end_computation - start_computation
-					<< "s. Time spent on comparing " << end - start << "s."
-					<< std::endl;
+// 		if (!log_obj.generate) {
+// 			//fault test 
+// //			if(it == 2){
+// //			host_matrix_d0[2]= (real_t) 5.00;
+// //			}
+// 			//
+// 			std::pair<int, int> errors;
+// 			double start, end;
+// 			if (log_obj.triplicated) {
+// 				start = log_obj.mysecond();
+// 				errors = compare_output_matrices(
+// 						mult_enviroment.get_memory_errors(), host_gold,
+// 						host_matrix_d0, host_matrix_d1, host_matrix_d2,
+// 						log_obj);
+// 				end = log_obj.mysecond();
+// 			}else{
+// 				start = log_obj.mysecond();
+// 				errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
+// 				end = log_obj.mysecond();
+// 			}
+// 			std::cout << "Iteration: " << it << " memory errors "
+// 					<< errors.first << " radiation errors " << errors.second
+// 					<< ". Time spent on computation " << end_computation - start_computation
+// 					<< "s. Time spent on comparing " << end - start << "s."
+// 					<< std::endl;
 
-			//If errors != 0 reload matrices to gpu
-			if (errors.first != 0 || errors.second != 0) {
-				mult_enviroment.push_arrays(host_matrix_a.data(),
-						host_matrix_b.data(), host_matrix_c.data());
-			}
+// 			//If errors != 0 reload matrices to gpu
+// 			if (errors.first != 0 || errors.second != 0) {
+// 				mult_enviroment.push_arrays(host_matrix_a.data(),
+// 						host_matrix_b.data(), host_matrix_c.data());
+// 			}
 
-		}
+// 		}
 		
 	}
 	cudaEventCreate(&stop);
