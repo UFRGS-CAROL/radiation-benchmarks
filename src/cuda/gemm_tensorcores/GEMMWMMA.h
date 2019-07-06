@@ -606,7 +606,7 @@ public:
 	 * PULL D array to host
 	 */
 
-	void pull_array(host_real_t* host_ptr_d0, half_t* host_ptr_d1,
+	void pull_array(host_real_t* host_ptr_d0, host_real_t* host_ptr_d1,
 			host_real_t* host_ptr_d2) {
 
 		this->debug("memcpy array D to host");
