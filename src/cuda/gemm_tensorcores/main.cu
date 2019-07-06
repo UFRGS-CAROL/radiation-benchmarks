@@ -373,7 +373,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 // D Matrix
 	std::vector<host_real_t> host_matrix_d0(
 			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<half_t> host_matrix_d1(
+	std::vector<host_real_t> host_matrix_d1(
 			log_obj.size_matrices * log_obj.size_matrices);
 	std::vector<host_real_t> host_matrix_d2(
 			log_obj.size_matrices * log_obj.size_matrices);
