@@ -898,6 +898,10 @@ __device__  __forceinline__ half fma_dmr(half a, half b, half acc) {
 }
 
 
+__device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
+  return __fmaf_rn(a, b, acc);
+}
+
 // __device__ __forceinline__ float mul_(float a, float b ) {
 //         return __fmul_ru(a,b);
 // }
