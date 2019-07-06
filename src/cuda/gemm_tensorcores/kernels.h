@@ -727,16 +727,16 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d,
 
 
 
- 	volatile double Csub = 0;
+ 	volatile half_t Csub = 0;
   
 	// Loop over all the sub-matrices of A and B
   	// required to compute the block sub-matrix
   	for (int A = aBegin, B = bBegin; A <= aEnd;  A += aStep, B += bStep) {
     
 
-    	__shared__ double As[BLOCK_SIZE][BLOCK_SIZE];
+    	__shared__ half_t As[BLOCK_SIZE][BLOCK_SIZE];
 
-    	__shared__ double Bs[BLOCK_SIZE][BLOCK_SIZE];
+    	__shared__ half_t Bs[BLOCK_SIZE][BLOCK_SIZE];
 
     	As[ty][tx] = a[A + m_ld * ty + tx];
     	Bs[ty][tx] = b[A + n_ld * ty + tx];
