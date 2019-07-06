@@ -166,13 +166,13 @@ public:
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
 
-		matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
-				this->device_ptr_a1, this->device_ptr_a2, this->device_ptr_b0,
-				this->device_ptr_b1, this->device_ptr_b2, this->device_ptr_c0,
-				this->device_ptr_c1, this->device_ptr_c2, this->device_ptr_d0,
-				this->device_ptr_d1, this->device_ptr_d2, this->rows_a,
-				this->cols_b, this->rows_b, this->alpha, this->beta,
-				this->device_is_memory_bad);
+		// matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
+		// 		this->device_ptr_a1, this->device_ptr_a2, this->device_ptr_b0,
+		// 		this->device_ptr_b1, this->device_ptr_b2, this->device_ptr_c0,
+		// 		this->device_ptr_c1, this->device_ptr_c2, this->device_ptr_d0,
+		// 		this->device_ptr_d1, this->device_ptr_d2, this->rows_a,
+		// 		this->cols_b, this->rows_b, this->alpha, this->beta,
+		// 		this->device_is_memory_bad);
 
 		this->debug("device synchronize");
 		check_framework_errors(cudaDeviceSynchronize());
@@ -201,10 +201,10 @@ public:
 		// 		this->beta);
 
 
-		matrix_mul_dmr<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0, this->device_ptr_a1,
-				this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0,this->device_ptr_d1,
-				this->rows_a, this->cols_b, this->rows_b, this->alpha,
-				this->beta);
+		// matrix_mul_dmr<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0, this->device_ptr_a1,
+		// 		this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0,this->device_ptr_d1,
+		// 		this->rows_a, this->cols_b, this->rows_b, this->alpha,
+		// 		this->beta);
 
 
 
