@@ -306,7 +306,7 @@ public:
 
 				simple_wmma_gemm_DMR<half_t, real_t> <<<grid_dim, block_dim>>>(
 				this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-				this->device_ptr_d0,this->device_ptr_d1, this->rows_a, this->cols_b, this->cols_c,
+				this->device_ptr_d1,this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
 				this->alpha, this->beta);
 
 
@@ -503,7 +503,7 @@ public:
 							this->rows_c * this->cols_c * sizeof(real_t)));
 			check_framework_errors(
 					cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d1),
-							this->rows_c * this->cols_c * sizeof(real_t)));
+							this->rows_c * this->cols_c * sizeof(half_t)));
 			check_framework_errors(
 					cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d2),
 							this->rows_c * this->cols_c * sizeof(real_t)));
@@ -605,7 +605,7 @@ public:
 	 * PULL D array to host
 	 */
 
-	void pull_array(host_real_t* host_ptr_d0, host_real_t* host_ptr_d1,
+	void pull_array(host_real_t* host_ptr_d0, host_half* host_ptr_d1,
 			host_real_t* host_ptr_d2) {
 
 		this->debug("memcpy array D to host");
