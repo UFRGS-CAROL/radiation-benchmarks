@@ -328,8 +328,8 @@ public:
 				// printf("Required shared memory size: %lu Kb\n", SHMEM_SZ / 1024UL);
 
 
-				checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-				checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
+				checkCudaErrors(cudaFuncSetAttribute(compute_gemm_DMR<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+				checkKernelErrors((compute_gemm_<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
 						(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
 						 this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta)));
 
