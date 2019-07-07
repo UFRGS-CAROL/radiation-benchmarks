@@ -134,8 +134,8 @@ public:
 	real_t* device_ptr_c2 = nullptr;
 
 	real_t* device_ptr_d0 = nullptr;
-	// real_t* device_ptr_d1 = nullptr;
-	half_t* device_ptr_d1 = nullptr;
+	real_t* device_ptr_d1 = nullptr;
+	// half_t* device_ptr_d1 = nullptr;
 	real_t* device_ptr_d2 = nullptr;
 
 	// Size of the matrix
@@ -238,10 +238,10 @@ public:
 				cudaMemset(this->device_is_memory_bad, 0x0,
 						sizeof(unsigned long long int)));
 
-		 // simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
-		 // 		this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-		 // 		this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
-		 // 		this->alpha, this->beta);
+		 simple_wmma_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
+		 		this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+		 		this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
+		 		this->alpha, this->beta);
 
 		
 		this->debug("device synchronize");
@@ -267,10 +267,10 @@ public:
 		// printf("Required shared memory size: %lu Kb\n", SHMEM_SZ / 1024UL);
 
 
-		checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-		checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
-				(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-				 this->device_ptr_d0, this->alpha, this->beta)));
+		// checkCudaErrors(cudaFuncSetAttribute(compute_gemm<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+		// checkKernelErrors((compute_gemm<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ>>>
+		// 		(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+		// 		 this->device_ptr_d0, this->alpha, this->beta)));
 
 		// checkKernelErrors((compute_gemm<half_t, real_t> <<<grid_dim, block_dim>>>
 		// 		(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
@@ -533,12 +533,12 @@ public:
 			check_framework_errors(
 					cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d0),
 							this->rows_c * this->cols_c * sizeof(real_t)));
-			// check_framework_errors(
-					// cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d1),
-					// 		this->rows_c * this->cols_c * sizeof(real_t)));
 			check_framework_errors(
 					cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d1),
-							this->rows_c * this->cols_c * sizeof(half_t)));
+							this->rows_c * this->cols_c * sizeof(real_t)));
+			// check_framework_errors(
+			// 		cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d1),
+			// 				this->rows_c * this->cols_c * sizeof(half_t)));
 			check_framework_errors(
 					cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d2),
 							this->rows_c * this->cols_c * sizeof(real_t)));
@@ -573,12 +573,12 @@ public:
 		check_framework_errors(
 				cudaMemset(this->device_ptr_d0, 0x00,
 						this->rows_c * this->cols_c * sizeof(real_t)));
-		// check_framework_errors(
-				// cudaMemset(this->device_ptr_d1, 0x00,
-				// 		this->rows_c * this->cols_c * sizeof(real_t)));
-			check_framework_errors(
+		check_framework_errors(
 				cudaMemset(this->device_ptr_d1, 0x00,
-						this->rows_c * this->cols_c * sizeof(half_t)));
+						this->rows_c * this->cols_c * sizeof(real_t)));
+			// check_framework_errors(
+			// 	cudaMemset(this->device_ptr_d1, 0x00,
+			// 			this->rows_c * this->cols_c * sizeof(half_t)));
 		check_framework_errors(
 				cudaMemset(this->device_ptr_d2, 0x00,
 						this->rows_c * this->cols_c * sizeof(real_t)));
