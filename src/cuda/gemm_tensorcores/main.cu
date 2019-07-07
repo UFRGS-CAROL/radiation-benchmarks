@@ -391,7 +391,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			log_obj.size_matrices, log_obj.size_matrices, log_obj.size_matrices,
 			real_t(1.1f), real_t(1.2f));
 
-	int tries = 0;
+	// int tries = 0;
 	cudaEventCreate(&start);
 	cudaEventRecord(start,0);	
 	for (int it = 0; it < log_obj.iterations; it++) {
@@ -407,8 +407,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			}
 		} else {
 			if (log_obj.use_tensor_cores) {
-				mult_enviroment.mul_gemm_wmma();
-				// mult_enviroment.mul_gemm_wmma_DMR();
+				// mult_enviroment.mul_gemm_wmma();
+				mult_enviroment.mul_gemm_wmma_DMR();
 
 			} else {
 				
