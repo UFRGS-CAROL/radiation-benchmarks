@@ -310,7 +310,9 @@ public:
 				// this->device_ptr_d1,this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
 				// this->alpha, this->beta);
 
-
+				int dev = 0;
+				cudaDeviceProp deviceProp;
+				checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
 				enum {
 				    // Compute the right amount of shared memory to request.
