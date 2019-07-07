@@ -222,9 +222,11 @@ public:
 
 		// block_dim.x must be a multple of warpSize
 		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-		block_dim.x = 128;
-		block_dim.y = 4;
-
+		// block_dim.x = 128;
+		// block_dim.y = 4;
+		block_dim.x = WMMA_M; //128;
+    	block_dim.y = WMMA_N;
+		
 		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
 				/ (WMMA_M * block_dim.x / WARP_SIZE);
 		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
