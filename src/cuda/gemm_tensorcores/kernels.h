@@ -300,28 +300,6 @@ __device__ float errors = 0;
  template<class half_t, class real_t>
  __global__ void compute_gemm_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, half_t *d, float alpha, float beta)
  {
- 	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
-
- 	// Warp and lane identification.
- 	const unsigned int warpId = threadIdx.x / WARP_SIZE;
- 	const unsigned int laneId = threadIdx.x % WARP_SIZE;
-
- 	// Offset in shared memory from which the B matrix is stored.
- 	const size_t shmem_idx_b_off = BLOCK_COL_TILES * M;
-
- 	// This pointer is used to access the C and D matrix tiles this warp computes.
- 	float *shmem_warp_tile_ptr = (float*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
-
- 	// This pointer is used to stream the C and D matrices block-wide tile to and from shared memory.
- 	float *shmem_warp_stream_ptr = (float*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
-
- 	// Adjust the beta scaler, as it'll be multiplied by alpha at the end of
- 	// each tile computation
- 	// Technically this is not generally correct (may result
- 	// in a loss of precision). Zero still needs to be specially handled though.
- 	beta /= alpha;
-
-
  	// Block index
 	int bx = blockIdx.x;
   	int by = blockIdx.y;
@@ -383,6 +361,27 @@ __device__ float errors = 0;
   	// each thread writes one element
   	int c_p = N * BLOCK_SIZE * by + BLOCK_SIZE * bx;
   	d[c_p + N * ty + tx] = Csub;
+
+  	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
+
+ 	// Warp and lane identification.
+ 	const unsigned int warpId = threadIdx.x / WARP_SIZE;
+ 	const unsigned int laneId = threadIdx.x % WARP_SIZE;
+
+ 	// Offset in shared memory from which the B matrix is stored.
+ 	const size_t shmem_idx_b_off = BLOCK_COL_TILES * M;
+
+ 	// This pointer is used to access the C and D matrix tiles this warp computes.
+ 	float *shmem_warp_tile_ptr = (float*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
+
+ 	// This pointer is used to stream the C and D matrices block-wide tile to and from shared memory.
+ 	float *shmem_warp_stream_ptr = (float*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
+
+ 	// Adjust the beta scaler, as it'll be multiplied by alpha at the end of
+ 	// each tile computation
+ 	// Technically this is not generally correct (may result
+ 	// in a loss of precision). Zero still needs to be specially handled though.
+ 	beta /= alpha;
  
 
  	// Each CTA slides along the 128 x 128 tiles from the top left corner of the matrix to the
