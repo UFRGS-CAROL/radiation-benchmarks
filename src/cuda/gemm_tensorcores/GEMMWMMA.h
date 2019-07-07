@@ -573,10 +573,10 @@ public:
 		check_framework_errors(
 				cudaMemset(this->device_ptr_d0, 0x00,
 						this->rows_c * this->cols_c * sizeof(real_t)));
+		// check_framework_errors(
+		// 		cudaMemset(this->device_ptr_d1, 0x00,
+		// 				this->rows_c * this->cols_c * sizeof(real_t)));
 		check_framework_errors(
-				// cudaMemset(this->device_ptr_d1, 0x00,
-				// 		this->rows_c * this->cols_c * sizeof(real_t)));
-			check_framework_errors(
 				cudaMemset(this->device_ptr_d1, 0x00,
 						this->rows_c * this->cols_c * sizeof(half_t)));
 		check_framework_errors(
