@@ -260,22 +260,22 @@ int MatrixMultiply(int argc, char **argv,
                    const dim3 &dimsB) {
   // Allocate host memory for matrices A and B
   unsigned int size_A = dimsA.x * dimsA.y;
-  unsigned int mem_size_A = sizeof(half) * size_A;
+  unsigned int mem_size_A = sizeof(half2) * size_A;
   // unsigned int mem_size_A1 = sizeof(double) * size_A;
-  half *h_A = reinterpret_cast<half *>(malloc(mem_size_A));
+  half2 *h_A = reinterpret_cast<half2 *>(malloc(mem_size_A));
   // double *h_A1 = reinterpret_cast<double *>(malloc(mem_size_A1));
 
   unsigned int size_B = dimsB.x * dimsB.y;
-  unsigned int mem_size_B = sizeof(half) * size_B;
+  unsigned int mem_size_B = sizeof(half2) * size_B;
   // unsigned int mem_size_B1 = sizeof(double) * size_B;
-  half *h_B = reinterpret_cast<half *>(malloc(mem_size_B));
+  half2 *h_B = reinterpret_cast<half2 *>(malloc(mem_size_B));
 
   // double *h_B1 = reinterpret_cast<double *>(malloc(mem_size_B1));
   // Initialize host memory
   
-  const half valA = 2.0f;
+  const half2 valA = 2.0f;
   // const double valA1 = 2.0f;
-  const half valB = 2.0f;
+  const half2 valB = 2.0f;
   // const double valB1 = 2.0f;
   ConstantInit(h_A, size_A, valA);
   // ConstantInit(h_A1, size_A, valA1);
@@ -286,18 +286,18 @@ int MatrixMultiply(int argc, char **argv,
 
 
   // Allocate device memory
-  half *d_A, *d_B, *d_C, *d_C1;
+  half2 *d_A, *d_B, *d_C, *d_C1;
   // float *d_C1;
   // double *d_A, *d_A1,*d_B, *d_B1, *d_C, *d_C1;
   // double *d_A1, *d_B1, * d_C1;
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
-  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(half);
-  unsigned int mem_size_C1 = dimsC.x * dimsC.y * sizeof(half);
+  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(half2);
+  unsigned int mem_size_C1 = dimsC.x * dimsC.y * sizeof(half2);
 
-  half *h_C = reinterpret_cast<half *>(malloc(mem_size_C));
+  half2 *h_C = reinterpret_cast<half2 *>(malloc(mem_size_C));
 
-  half *h_C1 = reinterpret_cast<half *>(malloc(mem_size_C1));
+  half2 *h_C1 = reinterpret_cast<half2 *>(malloc(mem_size_C1));
 
   if (h_C == NULL) {
     fprintf(stderr, "Failed to allocate host matrix C!\n");
@@ -495,6 +495,6 @@ __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
   return __fmaf_rn(a, b, acc);
 }
 
-__device__  __forceinline__ half fma_dmr(half a, half b, half acc) {
-  return __hfma(a, b, acc);
+__device__  __forceinline__ half2 fma_dmr(half a, half b, half acc) {
+  return __half2(a, b, acc);
 }
