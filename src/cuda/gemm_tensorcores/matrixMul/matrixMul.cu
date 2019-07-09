@@ -59,7 +59,7 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half2 *C, half2 *C1, half2 *A,
+template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(const half2 *C, half2 *C1, half2 *A,
     half2 *B, int wA, int wB) {
   // Block index
   int bx = blockIdx.x;
@@ -89,7 +89,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half2 *C, half2 *C1, hal
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
   const float valO = 0.0f;
-  volatile half2 Csub =__float2half2_rn(valO); ;
+  const half2 Csub =__float2half2_rn(valO); ;
   // volatile float Csub = 0;
   // volatile double Csub1= 0;
 
@@ -100,11 +100,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half2 *C, half2 *C1, hal
        a += aStep, b += bStep) {
     // Declaration of the shared memory array As used to
     // store the sub-matrix of A
-    __shared__ half2 As[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ const half2 As[BLOCK_SIZE][BLOCK_SIZE];
 
     // Declaration of the shared memory array Bs used to
     // store the sub-matrix of B
-    __shared__ half2 Bs[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ const half2 Bs[BLOCK_SIZE][BLOCK_SIZE];
 
 
 
@@ -503,6 +503,6 @@ __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
   return __fmaf_rn(a, b, acc);
 }
 
-__device__  __forceinline__ half2 fma_dmr(half2 a, half2 b, half2 acc) {
+__device__  __forceinline__ const half2 fma_dmr(const half2 a,const half2 b, const half2 acc) {
   return __hfma2(a, b, acc);
 }
