@@ -504,5 +504,5 @@ __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
 }
 
 __device__  __forceinline__ half2 fma_dmr(half2 a, half2 b, half2 acc) {
-  return __half2(a, b, acc);
+  return __hfma2(a, b, acc);
 }
