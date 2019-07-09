@@ -59,8 +59,8 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half *C, half *C1, half *A,
-    half *B, int wA, int wB) {
+template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half2 *C, half2 *C1, half2 *A,
+    half2 *B, int wA, int wB) {
   // Block index
   int bx = blockIdx.x;
   int by = blockIdx.y;
@@ -88,7 +88,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half *C, half *C1, half 
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-    volatile half Csub = 0;
+    volatile half2 Csub = 0;
     // volatile double Csub1= 0;
 
   // Loop over all the sub-matrices of A and B
@@ -98,11 +98,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half *C, half *C1, half 
        a += aStep, b += bStep) {
     // Declaration of the shared memory array As used to
     // store the sub-matrix of A
-    __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ half2 As[BLOCK_SIZE][BLOCK_SIZE];
 
     // Declaration of the shared memory array Bs used to
     // store the sub-matrix of B
-    __shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ half2 Bs[BLOCK_SIZE][BLOCK_SIZE];
 
 
 
@@ -233,7 +233,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half *C, half *C1, half 
  
 // }
 
-void ConstantInit(half *data, int size, half val) {
+void ConstantInit(half2 *data, int size, half2 val) {
   for (int i = 0; i < size; ++i) {
     data[i] = val;
   }
@@ -273,9 +273,9 @@ int MatrixMultiply(int argc, char **argv,
   // double *h_B1 = reinterpret_cast<double *>(malloc(mem_size_B1));
   // Initialize host memory
   
-  const half2 valA = 2.0f;
+  const half2 valA = 2.0;
   // const double valA1 = 2.0f;
-  const half2 valB = 2.0f;
+  const half2 valB = 2.0;
   // const double valB1 = 2.0f;
   ConstantInit(h_A, size_A, valA);
   // ConstantInit(h_A1, size_A, valA1);
@@ -495,6 +495,6 @@ __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
   return __fmaf_rn(a, b, acc);
 }
 
-__device__  __forceinline__ half2 fma_dmr(half a, half b, half acc) {
+__device__  __forceinline__ half2 fma_dmr(half2 a, half2 b, half2 acc) {
   return __half2(a, b, acc);
 }
