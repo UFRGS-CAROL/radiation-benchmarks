@@ -714,7 +714,7 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 
 
 template<class half_t, class real_t>
-__global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d, real_t *d_frag, 
+__global__ void simple_wmma_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c, half_t *d, real_t *d_frag, 
 		int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
 	// Leading dimensions. Packed with no transpositions.
 	int lda = m_ld;
@@ -770,7 +770,7 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d,
 
     	__shared__ half_t Bs[BLOCK_SIZE][BLOCK_SIZE];
 
-    	As[ty][tx] = a[A + m_ld * ty + tx];
+    	As[ty][tx] = a1[A + m_ld * ty + tx];
     	Bs[ty][tx] = b[B + n_ld * ty + tx];
 
     	// Synchronize to make sure the matrices are loaded
