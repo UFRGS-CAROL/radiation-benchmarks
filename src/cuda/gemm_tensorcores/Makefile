@@ -5,7 +5,7 @@ LOGS?=0
 DEBUG_ON_TITAN?=1
 OMP?=0
 
-SIZE?=8192 #16384 #8192 #4096 
+SIZE?=8192  #16384 #8192 #4096 
 
 #
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
@@ -98,8 +98,8 @@ clean:
 	rm -rf $(OBJS) $(TARGET) ./*.matrix
 
 generate:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 0 --triplicated 0 --precision double
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --tensor_cores 1 --triplicated 0 --precision half
 	
 test:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 10 --tensor_cores 0 --triplicated 0 --precision double
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --iterations 10 --tensor_cores 1 --triplicated 0 --precision half
 	
