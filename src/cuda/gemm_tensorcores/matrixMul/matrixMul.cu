@@ -59,8 +59,8 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, double *A,
-    double *B, int wA, int wB) {
+template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half *C, half *C1, half *A,
+    half *B, int wA, int wB) {
   // Block index
   int bx = blockIdx.x;
   int by = blockIdx.y;
@@ -88,8 +88,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-    volatile double Csub = 0;
-    volatile double Csub1= 0;
+    volatile half Csub = 0;
+    // volatile double Csub1= 0;
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -98,11 +98,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
        a += aStep, b += bStep) {
     // Declaration of the shared memory array As used to
     // store the sub-matrix of A
-    __shared__ double As[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
 
     // Declaration of the shared memory array Bs used to
     // store the sub-matrix of B
-    __shared__ double Bs[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
 
 
 
@@ -131,7 +131,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
       
 
       Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
-      Csub1 = fma_dmr(As[ty][k], Bs[k][tx],Csub1);
+      // Csub1 = fma_dmr(As[ty][k], Bs[k][tx],Csub1);
       // Csub1 = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub1);
       
     }
@@ -146,7 +146,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
   // each thread writes one element
   int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
   C[c + wB * ty + tx] = Csub;
-  C1[c + wB * ty + tx] = Csub1;
+  // C1[c + wB * ty + tx] = Csub1;
 }
 
 // template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, half *A,
