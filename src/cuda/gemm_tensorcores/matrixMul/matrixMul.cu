@@ -88,8 +88,10 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half2 *C, half2 *C1, hal
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-    volatile half2 Csub = 0;
-    // volatile double Csub1= 0;
+  const float valO = 0.0f;
+  const half2 Csub =__float2half2_rn(valO); ;
+  // volatile float Csub = 0;
+  // volatile double Csub1= 0;
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
