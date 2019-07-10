@@ -8,6 +8,34 @@
 #include "Parameters.h"
 #include "HotspotExecute.h"
 
+//#include <sys/time.h>
+//#include <stdio.h>
+#include <cuda_runtime.h>
+#include <cuda.h>
+#include "cuda_utils.h"
+
+cudaDeviceProp GetDevice() {
+//================== Retrieve and set the default CUDA device
+	cudaDeviceProp prop;
+	int count = 0;
+
+	rad::checkFrameworkErrors(cudaGetDeviceCount(&count));
+	for (int i = 0; i < count; i++) {
+		rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, i));
+	}
+	int *ndevice;
+	int dev = 0;
+	ndevice = &dev;
+	rad::checkFrameworkErrors(cudaGetDevice(ndevice));
+
+	rad::checkFrameworkErrors(cudaSetDevice(0));
+	rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
+
+	return prop;
+}
+
+
+
 int main(int argc, char** argv) {
 
 	Parameters setup_parameters(argc, argv);

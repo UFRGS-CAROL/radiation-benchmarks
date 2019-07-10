@@ -8,13 +8,14 @@
 #ifndef DATAMANAGEMENT_H_
 #define DATAMANAGEMENT_H_
 
-#include "DeviceVector.h"
-#include "cuda_utils.h"
 #include <fstream>      // std::fstream
 #include <cmath> // isnan
 #include <algorithm> // count
-
 #include <omp.h>
+
+#include "device_functions.h"
+#include "cuda_utils.h"
+#include "device_vector.h"
 
 template<typename full>
 struct DataManagement {
@@ -31,9 +32,9 @@ struct DataManagement {
 	Log& log;
 
 	// Alloc for multiple streams
-	std::vector<DeviceVector<full> > matrix_temperature_input_device;
-	std::vector<DeviceVector<full> > matrix_temperature_output_device;
-	std::vector<DeviceVector<full> > matrix_power_device;
+	std::vector<rad::DeviceVector<full> > matrix_temperature_input_device;
+	std::vector<rad::DeviceVector<full> > matrix_temperature_output_device;
+	std::vector<rad::DeviceVector<full> > matrix_power_device;
 
 	std::vector<std::vector<full>> out_vector;
 
@@ -44,12 +45,12 @@ struct DataManagement {
 		this->out_vector = std::vector<std::vector<full>>(
 				this->parameters.nstreams);
 
-		this->matrix_power_device = std::vector<DeviceVector<full>>(
+		this->matrix_power_device = std::vector<rad::DeviceVector<full>>(
 				this->parameters.nstreams);
-		this->matrix_temperature_input_device = std::vector<DeviceVector<full>>(
+		this->matrix_temperature_input_device = std::vector<rad::DeviceVector<full>>(
 				this->parameters.nstreams);
 		this->matrix_temperature_output_device =
-				std::vector<DeviceVector<full>>(this->parameters.nstreams);
+				std::vector<rad::DeviceVector<full>>(this->parameters.nstreams);
 
 		this->matrix_power_host = std::vector<std::vector<full>>(
 				this->parameters.nstreams);
@@ -74,7 +75,7 @@ struct DataManagement {
 			this->matrix_temperature_output_device[stream] =
 					this->matrix_temperature_output_host[stream];
 
-			checkFrameworkErrors(
+			rad::checkFrameworkErrors(
 					cudaStreamCreateWithFlags(&this->streams[stream],
 							cudaStreamNonBlocking));
 
@@ -88,7 +89,7 @@ struct DataManagement {
 
 	void copy_from_gpu() {
 		for (int stream = 0; stream < this->streams.size(); stream++) {
-			DeviceVector<full>* output[2] = {
+			rad::DeviceVector<full>* output[2] = {
 					&this->matrix_temperature_input_device[stream],
 					&this->matrix_temperature_output_device[stream] };
 
@@ -108,16 +109,16 @@ struct DataManagement {
 
 	void sync() {
 		for (auto stream : this->streams) {
-			checkFrameworkErrors(cudaStreamSynchronize(stream));
+			rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
 		}
-		checkFrameworkErrors(cudaDeviceSynchronize());
-		checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 	}
 
 	virtual ~DataManagement() {
 		//Only destroy stream, the others will be automatically destroyed
 		for (auto stream : this->streams) {
-			checkFrameworkErrors(cudaStreamDestroy(stream));
+			rad::checkFrameworkErrors(cudaStreamDestroy(stream));
 		}
 	}
 

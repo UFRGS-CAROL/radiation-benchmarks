@@ -9,11 +9,15 @@
 #define DEVICE_FUNCTIONS_H_
 
 #include <cuda_fp16.h>
+#include "cuda_utils.h"
 
 #define ZERO_FLOAT 1e-6
 #define ZERO_HALF 1e-4
 
 #ifdef __NVCC__
+
+
+
 
 __device__ unsigned long long errors;
 
@@ -57,13 +61,13 @@ __device__ __forceinline__ void compare(const double lhs, const float rhs) {
 unsigned long long copy_errors() {
 	unsigned long long errors_host = 0;
 	//Copy errors first
-	checkFrameworkErrors(
+	rad::checkFrameworkErrors(
 			cudaMemcpyFromSymbol(&errors_host, errors,
 					sizeof(unsigned long long), 0, cudaMemcpyDeviceToHost));
 
 	unsigned long long temp = 0;
 	//Reset the errors variable
-	checkFrameworkErrors(
+	rad::checkFrameworkErrors(
 				cudaMemcpyToSymbol(errors, &temp,
 						sizeof(unsigned long long), 0, cudaMemcpyHostToDevice));
 	return errors_host;

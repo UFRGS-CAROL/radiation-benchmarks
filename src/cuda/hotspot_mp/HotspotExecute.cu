@@ -14,6 +14,9 @@
 
 #include <cuda_fp16.h>
 
+#include "device_vector.h"
+
+
 HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
 		setup_params(setup_parameters), log(log), flops(0) {
 	if (this->setup_params.verbose)
@@ -22,9 +25,9 @@ HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
 }
 
 template<typename full, typename incomplete>
-int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
-		DeviceVector<full>& temp_array_input,
-		DeviceVector<full>& temp_array_output, int col, int row, int sim_time,
+int HotspotExecute::compute_tran_temp(rad::DeviceVector<full>& power_array,
+		rad::DeviceVector<full>& temp_array_input,
+		rad::DeviceVector<full>& temp_array_output, int col, int row, int sim_time,
 		int num_iterations, int blockCols, int blockRows, int borderCols,
 		int borderRows, cudaStream_t stream) {
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
@@ -53,8 +56,8 @@ int HotspotExecute::compute_tran_temp(DeviceVector<full>& power_array,
 	full step_ = step;
 
 	int src = 1, dst = 0;
-	full* MatrixPower = power_array.data;
-	full* MatrixTemp[2] = { temp_array_input.data, temp_array_output.data };
+	full* MatrixPower = power_array.data();
+	full* MatrixTemp[2] = { temp_array_input.data(), temp_array_output.data() };
 
 	if (this->setup_params.redundancy == NONE) {
 		for (int t = 0; t < sim_time; t += num_iterations) {
@@ -110,11 +113,11 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		this->flops = 0;
 		for (int streamIdx = 0; streamIdx < (this->setup_params.nstreams);
 				streamIdx++) {
-			DeviceVector<full>& power_array_stream =
+			rad::DeviceVector<full>& power_array_stream =
 					hotspot_data.matrix_power_device[streamIdx];
-			DeviceVector<full>& temp_array_input_stream =
+			rad::DeviceVector<full>& temp_array_input_stream =
 					hotspot_data.matrix_temperature_input_device[streamIdx];
-			DeviceVector<full>& temp_array_output_stream =
+			rad::DeviceVector<full>& temp_array_output_stream =
 					hotspot_data.matrix_temperature_output_device[streamIdx];
 
 			hotspot_data.output_index[streamIdx] = compute_tran_temp<full,

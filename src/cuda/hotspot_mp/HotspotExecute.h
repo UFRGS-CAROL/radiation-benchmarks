@@ -13,6 +13,7 @@
 #include "DataManagement.h"
 #include "device_functions.h"
 
+#include "device_vector.h"
 
 #define IN_RANGE(x, min, max)   ((x)>=(min) && (x)<=(max))
 #define CLAMP_RANGE(x, min, max) x = (x<(min)) ? min : ((x>(max)) ? max : x )
@@ -51,11 +52,11 @@ private:
 			int borderRows);
 
 	template<typename full, typename incomplete>
-	int compute_tran_temp(DeviceVector<full>& power_array,
-			DeviceVector<full>& temp_array_input,
-			DeviceVector<full>& temp_array_output, int col, int row,
+	int compute_tran_temp(rad::DeviceVector<full>& power_array,
+			rad::DeviceVector<full>& temp_array_input,
+			rad::DeviceVector<full>& temp_array_output, int col, int row,
 			int sim_time, int num_iterations, int blockCols, int blockRows,
-			int borderCols, int borderRows, cudaStream_t streamm);
+			int borderCols, int borderRows, cudaStream_t stream);
 };
 
 #endif /* HOTSPOTEXECUTE_H_ */

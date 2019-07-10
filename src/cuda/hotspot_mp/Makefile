@@ -9,9 +9,9 @@ NVCC=/usr/local/cuda/bin/nvcc
 ARCH= -gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]	# Jetson Xavier
 
-NVCCFLAGS= $(ARCH) -Xptxas -v -std=c++11 -Xcompiler " -fopenmp -O3"
+NVCCFLAGS= $(ARCH) -Xptxas -v -std=c++11
 CXXFLAGS= -std=c++11 -fopenmp -O3
-INCLUDE= -I/usr/local/cuda/include/ -I../../include/
+INCLUDE= -I/usr/local/cuda/include/ -I../../include/ -I../common/include/
 LIBRARY= -L/usr/local/cuda/lib64/  -L../../include/ 
 
 OBJDIR=./obj/
@@ -32,7 +32,7 @@ endif
 COMMON= $(INCLUDE) 
 LDFLAGS= $(LIBRARY) -lcudart -lcublas -lcurand -lstdc++
 
-OBJ=HotspotExecute.o Log.o Parameters.o cuda_utils.o main.o
+OBJ=HotspotExecute.o Log.o Parameters.o main.o
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard *.h) Makefile
@@ -40,13 +40,13 @@ DEPS = $(wildcard *.h) Makefile
 all: obj  $(EXEC)
 
 $(EXEC): $(OBJS) $(EXECOBJ)  
-	$(CXX) $(COMMON) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CXX) $(COMMON) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) 
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON)  $(CXXFLAGS) -c $< -o $@
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CXXFLAGS)" -c $< -o $@
+	$(NVCC) $(COMMON) $(ARCH)  $(NVCCFLAGS) -c $< -o $@
 
 obj:
 	mkdir -p obj
