@@ -1,4 +1,4 @@
-OPS?=100000000
+OPS?=1000000
 LOGS=1
 DEBUG?=0
 CHECKBLOCK=0
@@ -44,5 +44,11 @@ $(EXEC): clean $(SOURCES)
 clean:
 	rm -rf $(EXEC)
 
-test:
+test_mul:
+	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed --inst mul
+
+test_fma:
 	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed --inst fma
+
+test_add:
+	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed --inst add

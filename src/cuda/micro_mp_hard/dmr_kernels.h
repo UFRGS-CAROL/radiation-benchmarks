@@ -79,28 +79,20 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 		full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
 		const full INPUT_B) {
 // ========================================== Double and Single precision
-	volatile register full acc_full = OUTPUT_R;
-	volatile register full input_a = OUTPUT_R;
-	volatile register full input_a_neg = -OUTPUT_R;
+	volatile register full sum_full = full(1.0) / full(OPS);
+	volatile register incomplete sum_incomplete = incomplete(1.0)
+			/ incomplete(OPS);
 
-	volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
-	volatile register incomplete input_a_incomplete = incomplete(OUTPUT_R);
-	volatile register incomplete input_a_neg_incomplete = incomplete(-OUTPUT_R);
+	volatile register full acc_full = 0.0;
+	volatile register incomplete acc_incomplete = 0.0;
 
-	for (register unsigned int count = 0; count < (OPS / 4); count++) {
-		acc_full = add_dmr(acc_full, input_a);
-		acc_full = add_dmr(acc_full, input_a_neg);
-		acc_full = add_dmr(acc_full, input_a_neg);
-		acc_full = add_dmr(acc_full, input_a);
-
-		acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
-		acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
-		acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
-		acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
-
+	for (register unsigned int count = 0; count < OPS; count++) {
+		acc_full = add_dmr(acc_full, sum_full);
+		acc_incomplete = add_dmr(acc_incomplete, sum_incomplete);
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
+
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
@@ -114,10 +106,58 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
 #endif
-
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
+
+/**
+ *
+ *
+ template<typename incomplete, typename full>
+ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
+ full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
+ const full INPUT_B) {
+ // ========================================== Double and Single precision
+ volatile register full acc_full = OUTPUT_R;
+ volatile register full input_a = OUTPUT_R;
+ volatile register full input_a_neg = -OUTPUT_R;
+
+ volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
+ volatile register incomplete input_a_incomplete = incomplete(OUTPUT_R);
+ volatile register incomplete input_a_neg_incomplete = incomplete(-OUTPUT_R);
+
+ for (register unsigned int count = 0; count < (OPS / 4); count++) {
+ acc_full = add_dmr(acc_full, input_a);
+ acc_full = add_dmr(acc_full, input_a_neg);
+ acc_full = add_dmr(acc_full, input_a_neg);
+ acc_full = add_dmr(acc_full, input_a);
+
+ acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
+ acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
+ acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
+ acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
+
+ // if CHECKBLOCK is 1 each iteration will be verified
+ #if CHECKBLOCK == 1
+ check_relative_error(acc_incomplete, acc_full);
+ // if CHECKBLOCK is >1 perform the % operation
+ #elif CHECKBLOCK > 1
+ if((count % CHECKBLOCK) == 0) {
+ check_relative_error(acc_incomplete, acc_full);
+ }
+ #endif
+
+ }
+
+ //if CHECKBLOCK is 0 only after OPS iterations it will be verified
+ #if CHECKBLOCK == 0
+ check_relative_error(acc_incomplete, acc_full);
+ #endif
+
+ d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
+ d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+ }
+ */
 
 /**
  * ----------------------------------------
@@ -153,7 +193,6 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
-		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
@@ -170,5 +209,54 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
+
+/**
+ *
+ template<typename incomplete, typename full>
+ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
+ full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
+ const full INPUT_B) {
+
+ volatile register full acc_full = OUTPUT_R;
+ volatile register full input_a_full = INPUT_A;
+ volatile register full input_a_inv_full = full(1.0) / INPUT_A;
+
+ volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
+ volatile register incomplete input_a_incomplete = incomplete(INPUT_A);
+ volatile register incomplete input_a_inv_incomplete = incomplete(1.0)
+ / incomplete(INPUT_A);
+
+ for (register unsigned int count = 0; count < (OPS / 4); count++) {
+ acc_full = mul_dmr(acc_full, input_a_full);
+ acc_full = mul_dmr(acc_full, input_a_inv_full);
+ acc_full = mul_dmr(acc_full, input_a_inv_full);
+ acc_full = mul_dmr(acc_full, input_a_full);
+
+ acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
+ acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
+ acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
+ acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
+
+ // if CHECKBLOCK is 1 each iteration will be verified
+ #if CHECKBLOCK == 1
+ check_relative_error(acc_incomplete, acc_full);
+ // if CHECKBLOCK is >1 perform the % operation
+ #elif CHECKBLOCK > 1
+ if((count % CHECKBLOCK) == 0) {
+ check_relative_error(acc_incomplete, acc_full);
+ }
+ #endif
+
+ }
+
+ //if CHECKBLOCK is 0 only after OPS iterations it will be verified
+ #if CHECKBLOCK == 0
+ check_relative_error(acc_incomplete, acc_full);
+ #endif
+
+ d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
+ d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+ }
+ */
 
 #endif /* DMR_KERNELS_CU_ */
