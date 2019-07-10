@@ -10,8 +10,8 @@
 
 #include <cuda_fp16.h>
 
-#define ZERO_FLOAT 1e-37
-#define ZERO_HALF 1e-13
+#define ZERO_FLOAT 1e-6
+#define ZERO_HALF 1e-4
 
 #ifdef __NVCC__
 
