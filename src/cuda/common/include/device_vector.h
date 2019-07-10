@@ -11,7 +11,7 @@
 #include <vector>
 #include "cuda_utils.h"
 
-namespace rad{
+namespace rad {
 
 #define VOIDCAST(x) reinterpret_cast<void**>(x)
 
@@ -115,8 +115,13 @@ public:
 		return this->data_;
 	}
 
-	size_t size(){
+	size_t size() {
 		return this->v_size;
+	}
+
+	void clear() {
+		checkFrameworkErrors(
+				cudaMemset(this->data_, 0x0, sizeof(T) * this->v_size));
 	}
 };
 
