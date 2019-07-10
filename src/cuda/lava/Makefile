@@ -4,6 +4,9 @@ PRECISION?=single
 LOGS?=1
 USE_OMP?=1
 
+FORJETSON=0
+
+
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
@@ -30,8 +33,16 @@ CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -lcudart  -std=c++1
 TARGET=cuda_lava_$(LOWERCASED_PRECISION)
 RUN_SOURCES=./cuda_lava.cu
 
-LOGHELPER_INC=../../include/
-LOGHELPER_LIB=../../include/
+LOGHELPER_INC=../../include/,../common
+LOGHELPER_LIB=../../include/,../common/lib
+
+
+ifeq ($(FORJETSON), 1)
+NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
+else
+NVCC_FLAGS += -L$(CUDAPATH)/lib64/stubs -lnvidia-ml  -lNVMLWrapper
+
+endif
 
 ifeq ($(LOGS), 1)
 INCLUDE+= -I$(LOGHELPER_INC)

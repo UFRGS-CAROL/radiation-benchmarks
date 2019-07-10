@@ -419,7 +419,8 @@ __device__ void process_data(int wA, int wB, const real* A, const real* B,
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template<typename real> __global__ void MatrixMulKernel(real *A, real *B,
+template<typename real> __global__
+void MatrixMulKernel(real *A, real *B,
 		real *C, int wA, int wB) {
 	rad::PersistentKernel pk;
 	while (pk.keep_working()) {

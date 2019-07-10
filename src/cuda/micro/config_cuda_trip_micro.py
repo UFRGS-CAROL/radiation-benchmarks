@@ -8,9 +8,9 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-ITERATIONS = 10000
-PRECISIONS = ["double", "single", "half"]
-TYPES = ["fma", "add", "mul"]
+ITERATIONS = int(1e9)
+PRECISIONS = ["single"]
+TYPES = ["fma"]
 
 
 def config(board, test_type, arith_type, debug):
@@ -33,15 +33,22 @@ def config(board, test_type, arith_type, debug):
     
     
     # This will define how many instructions will be executed
-    ops = 1000000000
+    ops = 10000000
+
+    for_jetson = 0
+    lib = "NVMLWrapper.so"
     if "X1" in board or "X2" in board:
-        ops = 100000000
+        ops = 1000000
+        for_jetson = 1
+        lib = ""
 
     generate = ["sudo mkdir -p " + bin_path, 
                 "cd " + src_benchmark, 
                 "make clean", 
-                "make -C ../../include ", 
-                "make TYPE=" + test_type + " PRECISION=" + arith_type + " -j 4 OPS=" + str(ops),
+                "make -C ../../include ",
+                "make -C ../common {}".format(lib),
+                "make TYPE=" + test_type + " FORJETSON={} PRECISION=".format(for_jetson) + arith_type +
+                " -j 4 OPS=" + str(ops),
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
 
@@ -63,9 +70,9 @@ if __name__ == "__main__":
     except:
         debug_mode = False
     
-    board, _ = discover_board()
+    board, hostname = discover_board()
     for test_type in TYPES:
         for arith_type in PRECISIONS:
-            config(board=board, test_type=test_type, arith_type=arith_type, debug=debug_mode)
+            config(board=hostname, test_type=test_type, arith_type=arith_type, debug=debug_mode)
     print "Multiple jsons may have been generated."
     

@@ -5,8 +5,8 @@ from socket import gethostname
 POSSIBLE_BOARDS_BRANDS = {"NVIDIA": "nvidia-smi --query-gpu=gpu_name --format=csv,noheader",
                           "AMD": "clinfo",
                           "INTEL": "something_here",
-                          "TX1": "cat /etc/hostname",
-                          "TX2": "cat /etc/hostname"}
+                          "TX1": "cat /etc/nv_tegra_release",
+                          "TX2": "cat /etc/nv_tegra_release"}
 
 
 def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug):

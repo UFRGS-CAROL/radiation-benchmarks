@@ -29,7 +29,14 @@
 #endif
 
 #include "include/persistent_lib.h"
+
+#ifdef FORJETSON
 #include "include/JTX2Inst.h"
+#define OBJTYPE JTX2Inst
+#else
+#include "include/NVMLWrapper.h"
+#define OBJTYPE NVMLWrapper
+#endif
 
 //=============================================================================
 //	DEFINE / INCLUDE
@@ -843,37 +850,10 @@ void launch_kernel(int nstreams, dim3 blocks, dim3 threads, par_str par_cpu,
 		kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx]>>>(par_cpu,
 				dim_cpu, d_box_gpu[streamIdx], d_rv_gpu[streamIdx],
 				d_qv_gpu[streamIdx], d_fv_gpu[streamIdx]);
-		rad::checkFrameworkErrors (cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 		//kernel launched
-}	}
-
-///////////////////////////////////////// GOLD CHECK ON DEVICE ////////////////////////
-// #define GOLDCHK_BLOCK_SIZE 8
-// #define GOLDCHK_TILE_SIZE 8
-
-// __device__ unsigned long long int gck_device_errors;
-
-// __global__ void GoldChkKernel(tested_type *gk, tested_type *ck, int n) {
-// //================== HW Accelerated output validation
-// 	int tx = (blockIdx.x * GOLDCHK_BLOCK_SIZE + threadIdx.x) * GOLDCHK_TILE_SIZE;
-// 	int ty = (blockIdx.y * GOLDCHK_BLOCK_SIZE + threadIdx.y)  * GOLDCHK_TILE_SIZE;
-// 	int tz = (blockIdx.z * GOLDCHK_BLOCK_SIZE + threadIdx.z)  * GOLDCHK_TILE_SIZE;
-// 	register unsigned int i, j, k, row, plan;
-
-// 	for (k=tz; k<tz+GOLDCHK_TILE_SIZE; k++) {
-// 		plan = k * n * n;
-// 		for (i=ty; i<ty+GOLDCHK_TILE_SIZE; i++) {
-// 			row = i * n;
-// 			for (j=tx; j<tx+GOLDCHK_TILE_SIZE; j++) {
-// 				if (gk[plan + row + j] != ck[plan + row + j]) {
-// 					atomicAdd(&gck_device_errors, 1);
-// 				}
-// 			}
-// 		}
-// 	}
-
-// }
-///////////////////////////////////////// GOLD CHECK ON DEVICE ////////////////////////
+	}
+}
 
 //=============================================================================
 //	MAIN FUNCTION
@@ -943,9 +923,10 @@ int main(int argc, char *argv[]) {
 	if(generate) {
 		log_file_name = "/tmp/generate.log";
 	}
-	rad::JTX2Inst profiler_thread(log_file_name);
+	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
+
 	//START PROFILER THREAD
-	profiler_thread.start_profile();
+	profiler_thread->start_profile();
 #endif
 
 	//=====================================================================
@@ -1240,7 +1221,7 @@ int main(int argc, char *argv[]) {
 				}
 				if (reloadFlag) {
 #ifdef LOGS
-					profiler_thread.end_profile();
+					profiler_thread->end_profile();
 #endif
 					pt_control.end_kernel();
 
@@ -1255,7 +1236,7 @@ int main(int argc, char *argv[]) {
 							d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD);
 
 #ifdef LOGS
-					profiler_thread.start_profile();
+					profiler_thread->start_profile();
 #endif
 					pt_control.start_kernel();
 					launch_kernel(nstreams, blocks, threads, par_cpu, streams,

@@ -8,9 +8,9 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [4096, 2048, 512]
-PRECISIONS = ["double", "single", "half"]
-ITERATIONS = 10000
+SIZES = [160]
+PRECISIONS = ["single"]
+ITERATIONS = int(1e9)
 USE_TENSOR_CORES = [0] #, 1]
 
 
@@ -18,7 +18,7 @@ def config(board, arith_type, debug):
 
     DATA_PATH_BASE = "mxm_" + arith_type
 
-    benchmark_bin = "cuda_trip_mxm_" + arith_type
+    benchmark_bin = "cuda_mxm_" + arith_type
     print "Generating " + benchmark_bin + " for CUDA, board:" + board
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -39,11 +39,18 @@ def config(board, arith_type, debug):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
+    for_jetson = 0
+    lib = "NVMLWrapper.so"
+    if "X1" in board or "X2" in board:
+        for_jetson = 1
+        lib = ""
+
     generate = ["sudo mkdir -p " + bin_path, 
                 "cd " + src_benchmark, 
                 "make clean", 
-                "make -C ../../include ", 
-                "make PRECISION=" + arith_type + " -j 4",
+                "make -C ../../include ",
+                "make -C ../common {}".format(lib),
+                "make FORJETSON={} PRECISION=".format(for_jetson) + arith_type + " -j 4",
                 "mkdir -p " + data_path, 
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
@@ -86,7 +93,7 @@ if __name__ == "__main__":
     except:
         debug_mode = False
     
-    board, _ = discover_board()
+    board, hostname = discover_board()
     for p in PRECISIONS:
-        config(board=board, arith_type=p, debug=debug_mode)
+        config(board=hostname, arith_type=p, debug=debug_mode)
     print "Multiple jsons may have been generated."

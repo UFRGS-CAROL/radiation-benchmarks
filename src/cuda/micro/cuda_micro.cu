@@ -10,6 +10,14 @@
 
 #ifdef LOGS
 #include "log_helper.h"
+
+#ifdef FORJETSON
+#include "include/JTX2Inst.h"
+#define OBJTYPE JTX2Inst
+#else
+#include "include/NVMLWrapper.h"
+#define OBJTYPE NVMLWrapper
+#endif
 #endif
 // The timestamp is updated on every log_helper function call.
 
@@ -497,6 +505,12 @@ int main(int argc, char* argv[]) {
 	snprintf(test_info, 250, "ops:%d gridsize:%d blocksize:%d type:%s-%s-precision", OPS, gridsize, blocksize, test_type_description, test_precision_description);
 	snprintf(test_name, 250, "cuda_%s_micro-%s", test_precision_description, test_type_description);
 	start_log_file(test_name, test_info);
+
+	std::string log_file_name(get_log_file_name());
+	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
+
+//START PROFILER THREAD
+	profiler_thread->start_profile();
 #endif
 //====================================
 
@@ -632,6 +646,7 @@ int main(int argc, char* argv[]) {
 //	free(R[1]);
 //	free(R[2]);
 #ifdef LOGS
+	profiler_thread->end_profile();
 	end_log_file();
 #endif
 

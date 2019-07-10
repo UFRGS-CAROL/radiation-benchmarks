@@ -1,6 +1,8 @@
 CC=g++
 NVCC=/usr/local/cuda/bin/nvcc
 PRECISION?=single
+FORJETSON=0
+
 
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
@@ -22,11 +24,19 @@ NVCC_FLAGS= $(ARCH)
 
 NVIDIA_INC=/usr/local/cuda/include/,./
 NVIDIA_LIB=/usr/local/cuda/lib64/
-LOGHELPER_INC=../../include/
-LOGHELPER_LIB=../../include/
+LOGHELPER_INC=../../include/,../common
+LOGHELPER_LIB=../../include/,../common/lib
 
-SOURCES=./cuda_trip_mxm.cu
-EXEC_RADIX=./cuda_trip_mxm_
+
+ifeq ($(FORJETSON), 1)
+NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
+else
+NVCC_FLAGS += -L/usr/local/cuda/lib64/lib64/stubs -lnvidia-ml  -lNVMLWrapper
+
+endif
+
+SOURCES=./cuda_mxm.cu
+EXEC_RADIX=./cuda_mxm_
 EXEC=$(EXEC_RADIX)$(LOWERCASED_PRECISION)
 
 DEF_SIZE=1024

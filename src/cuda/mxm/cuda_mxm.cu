@@ -10,6 +10,19 @@
 
 #ifdef LOGS
 #include "log_helper.h"
+
+#ifdef FORJETSON
+
+#include "include/JTX2Inst.h"
+#define OBJTYPE JTX2Inst
+
+#else
+
+#include "include/NVMLWrapper.h"
+#define OBJTYPE NVMLWrapper
+
+#endif
+
 #endif
 // The timestamp is updated on every log_helper function call.
 
@@ -877,7 +890,20 @@ int main(int argc, char* argv[]) {
 		snprintf(test_info, 90, "size:%d type:%s-precision", k, test_precision_description);
 		snprintf(test_name, 90, "cuda_%s_mxm", test_precision_description);
 		start_log_file(test_name, test_info);
+
+
 	}
+
+
+	std::string log_file_name(get_log_file_name());
+	if(generate) {
+		log_file_name = "/tmp/generate.log";
+	}
+//	rad::Profiler profiler_thread = new rad::JTX2Inst(log_file_name);
+	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
+
+//START PROFILER THREAD
+	profiler_thread->start_profile();
 #endif
 //====================================
 
@@ -1096,6 +1122,7 @@ int main(int argc, char* argv[]) {
 		fflush(stdout);
 	}
 
+
 	double gflops = 2.0 * (double) k * k * k / 1000000000; // Bilion FLoating-point OPerationS
 	double averageKernelTime = total_kernel_time
 			/ (iterations - (device_warmup ? 1 : 0));
@@ -1119,6 +1146,8 @@ int main(int argc, char* argv[]) {
 //	free (C2);
 	free(GOLD);
 #ifdef LOGS
+	profiler_thread->end_profile();
+
 	if (!generate)
 	end_log_file();
 #endif

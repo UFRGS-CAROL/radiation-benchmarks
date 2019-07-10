@@ -4,18 +4,19 @@ PRECISION?=single
 LOGS?=1
 USE_OMP?=1
 
-CONSTINPUT=1
+FORJETSON=0
+
 
 UPPERCASED_PRECISION=$(shell echo $(PRECISION) | tr a-z A-Z)
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
-ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
+ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]	# Tesla P100
+#ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
 ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+#ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
 
-NVCC_FLAGS= $(ARCH) -O3 -std=c++11 -L../common/lib -lJTX2Inst -li2c
+NVCC_FLAGS= $(ARCH) -O3 -std=c++11 -L../common/lib
 INCLUDE= -I/usr/local/cuda/include -I../common
 LIBRARY= -L/usr/local/cuda/lib64/
 CXXFLAGS= -I/usr/local/cuda/include -L/usr/local/cuda/lib64/  -lcudart  -std=c++11 
@@ -37,13 +38,17 @@ ifeq ($(USE_OMP), 1)
 NVCC_FLAGS+= -DUSE_OMP -Xcompiler " -fopenmp -O3"
 endif
 
-ifeq ($(CONSTINPUT), 1)
-NVCC_FLAGS+= -DCONSTINPUT=1 -DARRAY_SIZE=1536
-endif
-
 ifeq ($(DEBUG), 1)
 NVCC_FLAGS+= -g -G
 endif
+
+
+ifeq ($(FORJETSON), 1)
+NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
+else
+NVCC_FLAGS += -L/usr/local/cuda/lib64/stubs -lnvidia-ml  -lNVMLWrapper
+endif
+
 
 NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 

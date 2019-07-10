@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [2]
+SIZES = [4]
 PRECISIONS = ["single"]
 ITERATIONS = int(1e9)
 
@@ -37,12 +37,17 @@ def config(board, arith_type, debug):
         os.mkdir(data_path, 0777)
         os.chmod(data_path, 0777)
 
+    for_jetson = 0
+    lib = "NVMLWrapper.so"
+    if "X1" in board or "X2" in board:
+        for_jetson = 1
+        lib = ""
     generate = ["sudo mkdir -p " + bin_path, 
                 "cd " + src_benchmark, 
                 "make clean", 
                 "make -C ../../include ",
-                "make -C ../common ",
-                "make PRECISION=" + arith_type + " -j 4",
+                "make -C ../common {}".format(lib),
+                "make FORJETSON={} PRECISION=".format(for_jetson) + arith_type + " -j 4",
                 "mkdir -p " + data_path, 
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
@@ -53,9 +58,9 @@ def config(board, arith_type, debug):
         gen = [None] * 6
         gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
         gen[1] = ['-boxes=' + str(size)]
-        gen[2] = ['-input_distances=' + input_file + 'lava_distances_' + arith_type + '_' + str(size)]
-        gen[3] = ['-input_charges=' + input_file + 'lava_charges_' + arith_type + '_' + str(size)]
-        gen[4] = ['-output_gold=' + input_file + "lava_gold_" + arith_type +  '_' + str(size)]
+        gen[2] = ['-input_distances=' + input_file + 'lava_distances_pt_' + arith_type + '_' + str(size)]
+        gen[3] = ['-input_charges=' + input_file + 'lava_charges_pt_' + arith_type + '_' + str(size)]
+        gen[4] = ['-output_gold=' + input_file + "lava_gold_pt_" + arith_type +  '_' + str(size)]
         gen[5] = ['-generate']
 
         # change mode and iterations for exe
@@ -78,7 +83,7 @@ if __name__ == "__main__":
     except:
         debug_mode = False
     
-    board, _ = discover_board()
+    board, hostname = discover_board()
     for p in PRECISIONS:
-        config(board=board, arith_type=p, debug=debug_mode)
+        config(board=hostname, arith_type=p, debug=debug_mode)
     print("Multiple jsons may have been generated.")

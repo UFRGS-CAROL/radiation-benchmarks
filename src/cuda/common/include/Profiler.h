@@ -42,7 +42,7 @@ public:
 		const std::string to_replace = ".log";
 		size_t start_pos = this->_output_log_file.find(to_replace);
 		this->_output_log_file.replace(start_pos, to_replace.size(),
-				"JTX2INST.csv");
+				"Profiler.csv");
 	}
 	virtual ~Profiler() = default;
 

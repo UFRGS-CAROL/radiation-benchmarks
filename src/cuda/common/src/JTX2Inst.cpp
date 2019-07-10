@@ -79,7 +79,7 @@ void JTX2Inst::data_colector(std::string* output_log_file, std::atomic<bool>* _t
 			std::time_t result = std::time(nullptr);
 			std::string asc_time(std::asctime(std::localtime(&result)));
 			asc_time.pop_back();
-			out_stream << "[" << asc_time << "];";
+			out_stream << asc_time << ";";
 
 //			out_stream << std::scientific << std::setprecision(7);
 			//***********************************************************************************************
