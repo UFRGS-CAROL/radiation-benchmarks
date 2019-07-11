@@ -16,7 +16,6 @@
 
 #include "device_vector.h"
 
-
 HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
 		setup_params(setup_parameters), log(log), flops(0) {
 	if (this->setup_params.verbose)
@@ -27,9 +26,10 @@ HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
 template<typename full, typename incomplete>
 int HotspotExecute::compute_tran_temp(rad::DeviceVector<full>& power_array,
 		rad::DeviceVector<full>& temp_array_input,
-		rad::DeviceVector<full>& temp_array_output, int col, int row, int sim_time,
-		int num_iterations, int blockCols, int blockRows, int borderCols,
-		int borderRows, cudaStream_t stream) {
+		rad::DeviceVector<full>& temp_array_output,
+		rad::DeviceVector<incomplete>& temp_array_output_incomplete, int col,
+		int row, int sim_time, int num_iterations, int blockCols, int blockRows,
+		int borderCols, int borderRows, cudaStream_t stream) {
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 dimGrid(blockCols, blockRows);
 
@@ -58,7 +58,7 @@ int HotspotExecute::compute_tran_temp(rad::DeviceVector<full>& power_array,
 	int src = 1, dst = 0;
 	full* MatrixPower = power_array.data();
 	full* MatrixTemp[2] = { temp_array_input.data(), temp_array_output.data() };
-
+	incomplete* MatrixTempIncomplete = temp_array_output_incomplete.data();
 	if (this->setup_params.redundancy == NONE) {
 		for (int t = 0; t < sim_time; t += num_iterations) {
 			std::swap(src, dst);
@@ -73,8 +73,9 @@ int HotspotExecute::compute_tran_temp(rad::DeviceVector<full>& power_array,
 			std::swap(src, dst);
 			calculate_temp<full, incomplete> <<<dimGrid, dimBlock, 0, stream>>>(
 					MIN(num_iterations, sim_time - t), MatrixPower,
-					MatrixTemp[src], MatrixTemp[dst], col, row, borderCols,
-					borderRows, Cap_, Rx_, Ry_, Rz_, step_, time_elapsed);
+					MatrixTemp[src], MatrixTemp[dst], MatrixTempIncomplete, col,
+					row, borderCols, borderRows, Cap_, Rx_, Ry_, Rz_, step_,
+					time_elapsed);
 			this->flops += col * row * MIN(num_iterations, sim_time - t) * 15;
 		}
 	}
@@ -86,7 +87,8 @@ int HotspotExecute::compute_tran_temp(rad::DeviceVector<full>& power_array,
 template<typename full, typename incomplete>
 void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		int borderCols, int borderRows) {
-	DataManagement<full> hotspot_data(this->setup_params, this->log);
+	DataManagement<full, incomplete> hotspot_data(this->setup_params,
+			this->log);
 	hotspot_data.read_input();
 
 	//====================================
@@ -120,9 +122,12 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 			rad::DeviceVector<full>& temp_array_output_stream =
 					hotspot_data.matrix_temperature_output_device[streamIdx];
 
+			rad::DeviceVector<incomplete>& output_incomplete =
+					hotspot_data.matrix_temperature_output_incomplete_device[streamIdx];
+
 			hotspot_data.output_index[streamIdx] = compute_tran_temp<full,
 					incomplete>(power_array_stream, temp_array_input_stream,
-					temp_array_output_stream, this->setup_params.grid_cols,
+					temp_array_output_stream, output_incomplete, this->setup_params.grid_cols,
 					this->setup_params.grid_rows, this->setup_params.sim_time,
 					this->setup_params.pyramid_height, blockCols, blockRows,
 					borderCols, borderRows, hotspot_data.streams[streamIdx]);
@@ -139,6 +144,7 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		hotspot_data.check_output_errors();
 
 		auto dmr_errors = copy_errors();
+
 
 		copy_and_check_time = this->log.mysecond();
 

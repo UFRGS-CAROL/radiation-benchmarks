@@ -54,7 +54,9 @@ private:
 	template<typename full, typename incomplete>
 	int compute_tran_temp(rad::DeviceVector<full>& power_array,
 			rad::DeviceVector<full>& temp_array_input,
-			rad::DeviceVector<full>& temp_array_output, int col, int row,
+			rad::DeviceVector<full>& temp_array_output,
+			rad::DeviceVector<incomplete>& temp_array_output_incomplete,
+			int col, int row,
 			int sim_time, int num_iterations, int blockCols, int blockRows,
 			int borderCols, int borderRows, cudaStream_t stream);
 };

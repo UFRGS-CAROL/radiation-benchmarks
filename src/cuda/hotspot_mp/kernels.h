@@ -146,6 +146,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 		full* power,   //power input
 		full* temp_src,    //temperature input/output
 		full* temp_dst,    //temperature input/output
+		incomplete* temp_dst_incomplete, //DMR saving values
 		int grid_cols,  //Col of grid
 		int grid_rows,  //Row of grid
 		int border_cols,  // border offset
@@ -300,6 +301,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	// small block perform the calculation and switch on ``computed''
 	if (computed) {
 		temp_dst[index] = t_temp[ty][tx];
+		temp_dst_incomplete[index] = t_temp_inc[ty][tx];
 	}
 }
 
