@@ -178,12 +178,12 @@ struct DataManagement {
 				}
 			}
 
-			if (dmr_errors != 0) {
-				std::stringstream error_detail;
-				error_detail << "detected_dmr_errors: " << detected_errors;
+			if (detected_errors != 0) {
+				std::string error_detail;
+				error_detail = "detected_dmr_errors: " + std::to_string(detected_errors);
 
 #ifdef LOGS
-				log_error_detail(const_cast<char*>(error_detail.str().c_str()));
+				log_error_detail(const_cast<char*>(error_detail.c_str()));
 #endif
 			}
 

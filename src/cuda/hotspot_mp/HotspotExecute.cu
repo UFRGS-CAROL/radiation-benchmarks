@@ -5,16 +5,34 @@
  *      Author: fernando
  */
 
+#include <cuda_fp16.h>
+
+
 #include "HotspotExecute.h"
 #include "kernels.h"
-#include "device_functions.h"
+
 #ifdef LOGS
 #include "log_helper.h"
 #endif
 
-#include <cuda_fp16.h>
-
 #include "device_vector.h"
+
+
+unsigned long long copy_errors() {
+	unsigned long long errors_host = 0;
+	//Copy errors first
+	rad::checkFrameworkErrors(
+			cudaMemcpyFromSymbol((void*)&errors_host, errors,
+					sizeof(unsigned long long), 0));
+
+	unsigned long long temp = 0;
+	//Reset the errors variable
+	rad::checkFrameworkErrors(
+				cudaMemcpyToSymbol(errors, (void*)&temp,
+						sizeof(unsigned long long), 0));
+	return errors_host;
+}
+
 
 HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
 		setup_params(setup_parameters), log(log), flops(0) {

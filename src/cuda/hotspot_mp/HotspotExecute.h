@@ -11,8 +11,6 @@
 #include "Parameters.h"
 #include "Log.h"
 #include "DataManagement.h"
-#include "device_functions.h"
-
 #include "device_vector.h"
 
 #define IN_RANGE(x, min, max)   ((x)>=(min) && (x)<=(max))

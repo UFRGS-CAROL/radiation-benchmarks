@@ -1,7 +1,9 @@
 LOGS=1
 DEBUG?=0
 PRECISION=double
-REDUNDANCY=none
+REDUNDANCY=dmrmixed
+CHECKBLOCK=0
+
 
 CXX=g++
 NVCC=/usr/local/cuda/bin/nvcc
@@ -37,6 +39,8 @@ OBJ=HotspotExecute.o Log.o Parameters.o main.o
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard *.h) Makefile
 
+NVCCFLAGS+= -DCHECKBLOCK=$(CHECKBLOCK)
+
 all: obj  $(EXEC)
 
 $(EXEC): $(OBJS) $(EXECOBJ)  
@@ -55,17 +59,23 @@ obj:
 clean:
 	rm -rf $(EXEC) $(OBJDIR)/*
 
+
+SIMTIME=1000
+PYRAMIDH=10
+
 generate:
-	./$(EXEC) -size=1024 -generate -verbose -sim_time=1000 \
+	./$(EXEC) -size=1024 -generate -verbose -sim_time=$(SIMTIME) \
 		-input_temp=../../../data/hotspot/temp_1024 \
 		-input_power=../../../data/hotspot/power_1024 \
 		-gold_temp=./gold_1024 -streams=10 \
-		-redundancy=$(REDUNDANCY) -precision=$(PRECISION) 
+		-redundancy=$(REDUNDANCY) -precision=$(PRECISION) \
+		 -pyramid_height=$(PYRAMIDH)
 		
 test:
-	./$(EXEC) -size=1024  -verbose -sim_time=1000 \
+	./$(EXEC) -size=1024  -verbose -sim_time=$(SIMTIME) \
 		-input_temp=../../../data/hotspot/temp_1024 \
 		-input_power=../../../data/hotspot/power_1024 \
 		-gold_temp=./gold_1024 -streams=10 -iterations=10 \
-		-redundancy=$(REDUNDANCY) -precision=$(PRECISION) 
+		-redundancy=$(REDUNDANCY) -precision=$(PRECISION) \
+		 -pyramid_height=$(PYRAMIDH)
 	

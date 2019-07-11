@@ -52,6 +52,11 @@ Parameters::Parameters(int argc, char** argv) {
 		exit(EXIT_FAILURE);
 	}
 
+	if (checkCmdLineFlag(argc, (const char **) argv, "pyramid_height")) {
+		this->pyramid_height = getCmdLineArgumentInt(argc, (const char **) argv,
+				"pyramid_height");
+	}
+
 	if (checkCmdLineFlag(argc, (const char **) argv, "precision")) {
 		char* precision = nullptr;
 		getCmdLineArgumentString(argc, (const char **) argv, "precision",

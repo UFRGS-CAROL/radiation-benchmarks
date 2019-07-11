@@ -8,8 +8,6 @@
 #include "Parameters.h"
 #include "HotspotExecute.h"
 
-//#include <sys/time.h>
-//#include <stdio.h>
 #include <cuda_runtime.h>
 #include <cuda.h>
 #include "cuda_utils.h"

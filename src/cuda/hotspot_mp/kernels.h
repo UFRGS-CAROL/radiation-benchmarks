@@ -12,6 +12,45 @@
 
 #define BLOCK_SIZE 32
 
+__device__ unsigned long long errors;
+
+__device__ __forceinline__ double abs__(double a) {
+	return fabs(a);
+}
+
+__device__ __forceinline__ float abs__(float a) {
+	return fabsf(a);
+}
+
+__device__      __forceinline__ half abs__(half a) {
+	return fabsf(a);
+}
+
+template<typename full>
+__device__ __forceinline__ void compare(const full lhs, const full rhs) {
+	const full diff = abs__(lhs - rhs);
+	const full zero = 0.0;
+	if (diff > zero) {
+		atomicAdd(&errors, 1);
+	}
+}
+
+__device__ __forceinline__ void compare(const float lhs, const half rhs) {
+	const float diff = abs__(lhs - float(rhs));
+	const float zero = float(ZERO_HALF);
+	if (diff > zero) {
+		atomicAdd(&errors, 1);
+	}
+}
+
+__device__ __forceinline__ void compare(const double lhs, const float rhs) {
+	const double diff = abs__(lhs - double(rhs));
+	const double zero = double(ZERO_FLOAT);
+	if (diff > zero) {
+		atomicAdd(&errors, 1);
+	}
+}
+
 template<typename full>
 __global__ void calculate_temp(int iteration,  //number of iteration
 		full* power,   //power input
@@ -70,8 +109,8 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	int loadYidx = yidx, loadXidx = xidx;
 	int index = grid_cols * loadYidx + loadXidx;
 
-	if (IN_RANGE(loadYidx, 0, grid_rows - 1) &&
-	IN_RANGE(loadXidx, 0, grid_cols - 1)) {
+	if (IN_RANGE(loadYidx, 0, grid_rows - 1)
+			&& IN_RANGE(loadXidx, 0, grid_cols - 1)) {
 
 		temp_on_cuda[ty][tx] = temp_src[index];
 		power_on_cuda[ty][tx] = power[index];
@@ -83,13 +122,13 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	// the valid range of the input data
 	// used to rule out computation outside the boundary.
 	int validYmin = (blkY < 0) ? -blkY : 0;
-	int validYmax =
-			(blkYmax > grid_rows - 1) ?
-					BLOCK_SIZE - 1 - (blkYmax - grid_rows + 1) : BLOCK_SIZE - 1;
+	int validYmax = (blkYmax > grid_rows - 1) ?
+	BLOCK_SIZE - 1 - (blkYmax - grid_rows + 1) :
+												BLOCK_SIZE - 1;
 	int validXmin = (blkX < 0) ? -blkX : 0;
-	int validXmax =
-			(blkXmax > grid_cols - 1) ?
-					BLOCK_SIZE - 1 - (blkXmax - grid_cols + 1) : BLOCK_SIZE - 1;
+	int validXmax = (blkXmax > grid_cols - 1) ?
+	BLOCK_SIZE - 1 - (blkXmax - grid_cols + 1) :
+												BLOCK_SIZE - 1;
 
 	int N = ty - 1;
 	int S = ty + 1;
@@ -104,21 +143,19 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	bool computed;
 	for (int i = 0; i < iteration; i++) {
 		computed = false;
-		if ( IN_RANGE(tx, i + 1, BLOCK_SIZE-i-2) &&
-		IN_RANGE(ty, i+1, BLOCK_SIZE-i-2) &&
-		IN_RANGE(tx, validXmin, validXmax) &&
-		IN_RANGE(ty, validYmin, validYmax)) {
+		if (IN_RANGE(tx, i + 1, BLOCK_SIZE - i - 2)
+				&& IN_RANGE(ty, i + 1, BLOCK_SIZE - i - 2)
+				&& IN_RANGE(tx, validXmin, validXmax)
+				&& IN_RANGE(ty, validYmin, validYmax)) {
 			computed = true;
 			register full calculated = temp_on_cuda[ty][tx]
 					+ step_div_Cap
 							* (power_on_cuda[ty][tx]
 									+ (temp_on_cuda[S][tx] + temp_on_cuda[N][tx]
-											- full(2.0)
-													* temp_on_cuda[ty][tx])
+											- full(2.0) * temp_on_cuda[ty][tx])
 											* Ry_1
 									+ (temp_on_cuda[ty][E] + temp_on_cuda[ty][W]
-											- full(2.0)
-													* temp_on_cuda[ty][tx])
+											- full(2.0) * temp_on_cuda[ty][tx])
 											* Rx_1
 									+ (amb_temp - temp_on_cuda[ty][tx]) * Rz_1);
 			t_temp[ty][tx] = calculated;
@@ -207,8 +244,8 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	int loadYidx = yidx, loadXidx = xidx;
 	int index = grid_cols * loadYidx + loadXidx;
 
-	if (IN_RANGE(loadYidx, 0, grid_rows - 1) &&
-	IN_RANGE(loadXidx, 0, grid_cols - 1)) {
+	if (IN_RANGE(loadYidx, 0, grid_rows - 1)
+			&& IN_RANGE(loadXidx, 0, grid_cols - 1)) {
 
 		temp_on_cuda[ty][tx] = temp_src[index];
 		power_on_cuda[ty][tx] = power[index];
@@ -223,13 +260,13 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	// the valid range of the input data
 	// used to rule out computation outside the boundary.
 	int validYmin = (blkY < 0) ? -blkY : 0;
-	int validYmax =
-			(blkYmax > grid_rows - 1) ?
-					BLOCK_SIZE - 1 - (blkYmax - grid_rows + 1) : BLOCK_SIZE - 1;
+	int validYmax = (blkYmax > grid_rows - 1) ?
+	BLOCK_SIZE - 1 - (blkYmax - grid_rows + 1) :
+												BLOCK_SIZE - 1;
 	int validXmin = (blkX < 0) ? -blkX : 0;
-	int validXmax =
-			(blkXmax > grid_cols - 1) ?
-					BLOCK_SIZE - 1 - (blkXmax - grid_cols + 1) : BLOCK_SIZE - 1;
+	int validXmax = (blkXmax > grid_cols - 1) ?
+	BLOCK_SIZE - 1 - (blkXmax - grid_cols + 1) :
+												BLOCK_SIZE - 1;
 
 	int N = ty - 1;
 	int S = ty + 1;
@@ -244,21 +281,19 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	bool computed;
 	for (int i = 0; i < iteration; i++) {
 		computed = false;
-		if ( IN_RANGE(tx, i + 1, BLOCK_SIZE-i-2) &&
-		IN_RANGE(ty, i+1, BLOCK_SIZE-i-2) &&
-		IN_RANGE(tx, validXmin, validXmax) &&
-		IN_RANGE(ty, validYmin, validYmax)) {
+		if (IN_RANGE(tx, i + 1, BLOCK_SIZE - i - 2)
+				&& IN_RANGE(ty, i + 1, BLOCK_SIZE - i - 2)
+				&& IN_RANGE(tx, validXmin, validXmax)
+				&& IN_RANGE(ty, validYmin, validYmax)) {
 			computed = true;
 			register full calculated = temp_on_cuda[ty][tx]
 					+ step_div_Cap
 							* (power_on_cuda[ty][tx]
 									+ (temp_on_cuda[S][tx] + temp_on_cuda[N][tx]
-											- full(2.0)
-													* temp_on_cuda[ty][tx])
+											- full(2.0) * temp_on_cuda[ty][tx])
 											* Ry_1
 									+ (temp_on_cuda[ty][E] + temp_on_cuda[ty][W]
-											- full(2.0)
-													* temp_on_cuda[ty][tx])
+											- full(2.0) * temp_on_cuda[ty][tx])
 											* Rx_1
 									+ (amb_temp - temp_on_cuda[ty][tx]) * Rz_1);
 			t_temp[ty][tx] = calculated;
@@ -268,15 +303,18 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 			register incomplete calculated_inc = temp_on_cuda_inc[ty][tx]
 					+ step_div_Cap_inc
 							* (power_on_cuda_inc[ty][tx]
-									+ (temp_on_cuda_inc[S][tx] + temp_on_cuda_inc[N][tx]
+									+ (temp_on_cuda_inc[S][tx]
+											+ temp_on_cuda_inc[N][tx]
 											- incomplete(2.0)
 													* temp_on_cuda_inc[ty][tx])
 											* Ry_1_inc
-									+ (temp_on_cuda_inc[ty][E] + temp_on_cuda_inc[ty][W]
+									+ (temp_on_cuda_inc[ty][E]
+											+ temp_on_cuda_inc[ty][W]
 											- incomplete(2.0)
 													* temp_on_cuda_inc[ty][tx])
 											* Rx_1_inc
-									+ (amb_temp_inc - temp_on_cuda_inc[ty][tx]) * Rz_1_inc);
+									+ (amb_temp_inc - temp_on_cuda_inc[ty][tx])
+											* Rz_1_inc);
 			t_temp_inc[ty][tx] = calculated_inc;
 		}
 		__syncthreads();
@@ -289,17 +327,27 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 			//DMR
 			temp_on_cuda_inc[ty][tx] = t_temp_inc[ty][tx];
 
+#if CHECKBLOCK == 1
+			compare(t_temp[ty][tx], t_temp_inc[ty][tx]);
+			// if CHECKBLOCK is >1 perform the % operation
+#elif CHECKBLOCK > 1
+			if((iteration % CHECKBLOCK) == 0) {
+				compare(t_temp[ty][tx], t_temp_inc[ty][tx]);
+			}
+#endif
 		}
 		__syncthreads();
 	}
-
-	compare(t_temp[ty][tx], t_temp_inc[ty][tx]);
-
 
 	// update the global memory
 	// after the last iteration, only threads coordinated within the
 	// small block perform the calculation and switch on ``computed''
 	if (computed) {
+
+#if CHECKBLOCK == 0
+		compare(t_temp[ty][tx], t_temp_inc[ty][tx]);
+#endif
+
 		temp_dst[index] = t_temp[ty][tx];
 		temp_dst_incomplete[index] = t_temp_inc[ty][tx];
 	}
