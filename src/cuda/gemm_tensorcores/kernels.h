@@ -356,7 +356,7 @@ __device__ float errors = 0;
     	// sub-matrices of A and B in the next iteration
     	__syncthreads();
   	}
-  	Csub = fma_dmr((Csub*alpha), (Csub*beta), Csub);
+  	Csub = fma_dmr((Csub*(half_t)alpha), (Csub*(half_t)beta), Csub);
   	// Write the block sub-matrix to device memory;
   	// each thread writes one element
   	int c_p = N * BLOCK_SIZE * by + BLOCK_SIZE * bx;
