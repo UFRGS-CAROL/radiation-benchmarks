@@ -53,10 +53,11 @@ endif
 NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
 DATA_DIR=.
-DEF_SIZE=2
-DEF_CHARGES_INPUT=$(DATA_DIR)/lava_charges_$(LOWERCASED_PRECISION)_$(DEF_SIZE)
-DEF_DISTANCES_INPUT=$(DATA_DIR)/lava_distances_$(LOWERCASED_PRECISION)_$(DEF_SIZE)
-DEF_GOLD=$(DATA_DIR)/lava_gold_$(LOWERCASED_PRECISION)_$(DEF_SIZE)
+DEF_SIZE=4
+NSTREAMS=100 #for persistent threads the size is NSTREAMS * DEF_SIZE
+DEF_CHARGES_INPUT=$(DATA_DIR)/lava_charges_$(LOWERCASED_PRECISION)_$(DEF_SIZE)_$(NSTREAMS)
+DEF_DISTANCES_INPUT=$(DATA_DIR)/lava_distances_$(LOWERCASED_PRECISION)_$(DEF_SIZE)_$(NSTREAMS)
+DEF_GOLD=$(DATA_DIR)/lava_gold_$(LOWERCASED_PRECISION)_$(DEF_SIZE)_$(NSTREAMS)
 
 all: $(TARGET)
 
@@ -67,7 +68,11 @@ clean:
 	rm -rf ./$(TARGET) $(DEF_CHARGES_INPUT) $(DEF_DISTANCES_INPUT) $(DEF_GOLD)
 
 generate: $(TARGET)
-	./$(TARGET) -boxes=$(DEF_SIZE) -generate -streams=1 -iterations=1 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
+	./$(TARGET) -boxes=$(DEF_SIZE) -generate -streams=$(NSTREAMS) -iterations=1 \
+				-verbose -input_distances=$(DEF_DISTANCES_INPUT) \
+				-input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
 
 test: $(RUN_EXEC) generate
-	./$(TARGET) -boxes=$(DEF_SIZE) -streams=1 -iterations=10 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
+	./$(TARGET) -boxes=$(DEF_SIZE) -streams=$(NSTREAMS) -iterations=10 \
+				-verbose -input_distances=$(DEF_DISTANCES_INPUT) \
+				-input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)

@@ -464,15 +464,17 @@ __device__ void process_data(const dim_str& d_dim_gpu, const par_str& d_par_gpu,
 //-----------------------------------------------------------------------------
 // #if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
 __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu,
-		box_str* d_box_gpu, FOUR_VECTOR* d_rv_gpu, tested_type* d_qv_gpu,
-		FOUR_VECTOR* d_fv_gpu) {
+		box_str** d_box_gpu, FOUR_VECTOR** d_rv_gpu, tested_type** d_qv_gpu,
+		FOUR_VECTOR** d_fv_gpu, int nstreams) {
 
 	rad::PersistentKernel pk;
 	while (pk.keep_working()) {
 		pk.wait_for_work();
 		if (pk.is_able_to_process()) {
-			process_data(d_dim_gpu, d_par_gpu, d_box_gpu, d_rv_gpu, d_fv_gpu,
-					d_qv_gpu);
+			for (int i = 0; i < nstreams; i++) {
+				process_data(d_dim_gpu, d_par_gpu, d_box_gpu[i], d_rv_gpu[i],
+						d_fv_gpu[i], d_qv_gpu[i]);
+			}
 			pk.iteration_finished();
 		}
 
@@ -846,13 +848,12 @@ void launch_kernel(int nstreams, dim3 blocks, dim3 threads, par_str par_cpu,
 	// dim3 gck_gridSize = dim3(	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE), 
 	// 	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
 	// //////////////////////////////////////////////////
-	for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-		kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx]>>>(par_cpu,
-				dim_cpu, d_box_gpu[streamIdx], d_rv_gpu[streamIdx],
-				d_qv_gpu[streamIdx], d_fv_gpu[streamIdx]);
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
-		//kernel launched
-	}
+//	for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+	kernel_gpu_cuda<<<blocks, threads, 0, streams[0]>>>(par_cpu, dim_cpu,
+			d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu, nstreams);
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
+	//kernel launched
+//	}
 }
 
 //=============================================================================
@@ -1103,17 +1104,46 @@ int main(int argc, char *argv[]) {
 	//=====================================================================
 	//	VECTORS
 	//=====================================================================
-	box_str *d_box_gpu[nstreams];
-	FOUR_VECTOR *d_rv_gpu[nstreams];
-	tested_type *d_qv_gpu[nstreams];
-	FOUR_VECTOR *d_fv_gpu[nstreams];
+	box_str **d_box_gpu = new box_str*[nstreams];
+	FOUR_VECTOR **d_rv_gpu = new FOUR_VECTOR*[nstreams];
+	tested_type **d_qv_gpu = new tested_type*[nstreams];
+	FOUR_VECTOR **d_fv_gpu = new FOUR_VECTOR*[nstreams];
 	FOUR_VECTOR *d_fv_gold_gpu = nullptr;
 
+	box_str **d_box_gpu_ptr;
+	FOUR_VECTOR **d_rv_gpu_ptr;
+	tested_type **d_qv_gpu_ptr;
+	FOUR_VECTOR **d_fv_gpu_ptr;
+
+	rad::checkFrameworkErrors(
+			cudaMalloc((void**) &d_box_gpu_ptr, sizeof(box_str*) * nstreams));
+	rad::checkFrameworkErrors(
+			cudaMalloc((void**) &d_rv_gpu_ptr,
+					sizeof(FOUR_VECTOR*) * nstreams));
+	rad::checkFrameworkErrors(
+			cudaMalloc((void**) &d_qv_gpu_ptr,
+					sizeof(tested_type*) * nstreams));
+	rad::checkFrameworkErrors(
+			cudaMalloc((void**) &d_fv_gpu_ptr,
+					sizeof(FOUR_VECTOR*) * nstreams));
 	//=====================================================================
 	//	GPU MEMORY SETUP
 	//=====================================================================
 	gpu_memory_setup(nstreams, gpu_check, dim_cpu, d_box_gpu, box_cpu, d_rv_gpu,
 			rv_cpu, d_qv_gpu, qv_cpu, d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD);
+
+	rad::checkFrameworkErrors(
+			cudaMemcpy(d_box_gpu_ptr, d_box_gpu, sizeof(box_str*) * nstreams,
+					cudaMemcpyHostToDevice));
+	rad::checkFrameworkErrors(
+			cudaMemcpy(d_rv_gpu_ptr, d_rv_gpu, sizeof(FOUR_VECTOR*) * nstreams,
+					cudaMemcpyHostToDevice));
+	rad::checkFrameworkErrors(
+			cudaMemcpy(d_qv_gpu_ptr, d_qv_gpu, sizeof(tested_type*) * nstreams,
+					cudaMemcpyHostToDevice));
+	rad::checkFrameworkErrors(
+			cudaMemcpy(d_fv_gpu_ptr, d_fv_gpu, sizeof(FOUR_VECTOR*) * nstreams,
+					cudaMemcpyHostToDevice));
 
 	////////////// GOLD CHECK Kernel /////////////////
 	// dim3 gck_blockSize = dim3(	GOLDCHK_BLOCK_SIZE, 
@@ -1122,7 +1152,7 @@ int main(int argc, char *argv[]) {
 	// 	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
 	// //////////////////////////////////////////////////
 	launch_kernel(nstreams, blocks, threads, par_cpu, streams, dim_cpu,
-			d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
+			d_box_gpu_ptr, d_rv_gpu_ptr, d_qv_gpu_ptr, d_fv_gpu_ptr);
 
 	//LOOP START
 	for (size_t loop = 0; loop < iterations; loop++) {
@@ -1240,7 +1270,8 @@ int main(int argc, char *argv[]) {
 #endif
 					pt_control.start_kernel();
 					launch_kernel(nstreams, blocks, threads, par_cpu, streams,
-							dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
+							dim_cpu, d_box_gpu_ptr, d_rv_gpu_ptr, d_qv_gpu_ptr,
+							d_fv_gpu_ptr);
 				}
 			}
 			if (verbose)
@@ -1303,7 +1334,14 @@ int main(int argc, char *argv[]) {
 		free(box_cpu);
 	printf("\n");
 
+	delete [] d_box_gpu;
+	delete [] d_rv_gpu;
+	delete [] d_qv_gpu;
+	delete [] d_fv_gpu;
+
+
 #ifdef LOGS
+	profiler_thread->end_profile();
 	if (!generate) end_log_file();
 #endif
 
