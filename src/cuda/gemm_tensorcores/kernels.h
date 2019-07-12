@@ -327,8 +327,8 @@ __device__ float errors = 0;
 
 
 
- 	volatile half_t Csub = 0;
-  
+ 	//volatile half_t Csub = 0;
+  	half_t Csub = 0;
 	// Loop over all the sub-matrices of A and B
   	// required to compute the block sub-matrix
   	for (int a = aBegin, b = bBegin; a <= aEnd;  a += aStep, b += bStep) {
