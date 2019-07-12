@@ -47,7 +47,9 @@ int main(int argc, char** argv) {
 			+ std::to_string(setup_parameters.grid_rows) + +" pyramidHeight:"
 			+ std::to_string(setup_parameters.pyramid_height) + " simTime:"
 			+ std::to_string(setup_parameters.sim_time) + " redundancy:"
-			+ setup_parameters.test_redundancy_description;
+			+ setup_parameters.test_redundancy_description + " checkblock:"
+			+ std::to_string(CHECKBLOCK);
+
 	std::string test_name = "cuda_hotspot_"
 			+ setup_parameters.test_precision_description;
 

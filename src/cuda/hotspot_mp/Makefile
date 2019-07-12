@@ -31,7 +31,7 @@ CXXFLAGS+= -DLOGS
 LIBRARY+= -lLogHelper
 endif
 
-COMMON= $(INCLUDE) 
+COMMON= $(INCLUDE) -DCHECKBLOCK=$(CHECKBLOCK)
 LDFLAGS= $(LIBRARY) -lcudart -lcublas -lcurand -lstdc++
 
 OBJ=HotspotExecute.o Log.o Parameters.o main.o
@@ -39,7 +39,7 @@ OBJ=HotspotExecute.o Log.o Parameters.o main.o
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard *.h) Makefile
 
-NVCCFLAGS+= -DCHECKBLOCK=$(CHECKBLOCK)
+NVCCFLAGS+= 
 
 all: obj  $(EXEC)
 
