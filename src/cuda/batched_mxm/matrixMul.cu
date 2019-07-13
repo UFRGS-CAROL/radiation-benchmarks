@@ -71,15 +71,15 @@ struct Parameters {
 
 	friend std::ostream& operator<<(std::ostream& os, const Parameters& dt) {
 		os << "Matrix memory space size: " << dt.k << "x" << dt.k << std::endl;
-		os << "Batched matrix size: " << dt.n_streams << std::endl ;
-		os << "Input a: " << dt.input_a<< std::endl;
-		os << "Input_b: " << dt.input_b<< std::endl;
+		os << "Batched matrix size: " << dt.n_streams << std::endl;
+		os << "Input a: " << dt.input_a << std::endl;
+		os << "Input_b: " << dt.input_b << std::endl;
 		os << "Gold: " << dt.gold << std::endl;
 		os << "Iterations: " << dt.iterations << std::endl;
 		os << std::boolalpha << "Generate: " << dt.verbose << std::endl;
-		os << "Generate: " << dt.generate  << std::endl;
+		os << "Generate: " << dt.generate << std::endl;
 		os << "Fault injection: " << dt.fault_injection << std::endl;
-
+		os << "Kernel type: " << dt.execution_type << std::endl;
 		return os;
 	}
 
@@ -379,7 +379,7 @@ int main(int argc, char **argv) {
 	}
 
 	//Debug fault injection
-	if(parameters.fault_injection){
+	if (parameters.fault_injection) {
 		a_host[a_host.size() / 3] = 3939393;
 	}
 
