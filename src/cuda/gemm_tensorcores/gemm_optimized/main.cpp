@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 
 	for (int i = 0; i < test_gemm.size(); i++) {
 		auto g = test_gemm[i], f = host_c[i];
-		if ((g - f) > THRESHOLD) {
+		if (abs(g - f) > THRESHOLD) {
 			std::cout << "HOST " << g << " GPU " << f << std::endl;
 			break;
 		}
