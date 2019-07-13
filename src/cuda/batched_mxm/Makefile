@@ -66,7 +66,7 @@ generate: $(EXEC)
 	./$(EXEC) -generate -size=$(DEF_SIZE) -batch=$(BATCH_SIZE) -kernel_type=0 \
 			-input_a=$(DEF_A_INPUT) \
 			-input_b=$(DEF_B_INPUT) \
-			 -gold=$(DEF_GOLD)
+			 -gold=$(DEF_GOLD) -verbose
 
 test: $(EXEC) 
 	./$(EXEC) -size=$(DEF_SIZE) -batch=$(BATCH_SIZE) -kernel_type=0 \

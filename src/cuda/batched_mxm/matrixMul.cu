@@ -76,7 +76,7 @@ struct Parameters {
 		os << "Input_b: " << dt.input_b << std::endl;
 		os << "Gold: " << dt.gold << std::endl;
 		os << "Iterations: " << dt.iterations << std::endl;
-		os << std::boolalpha << "Generate: " << dt.verbose << std::endl;
+		os << std::boolalpha << "Verbose: " << dt.verbose << std::endl;
 		os << "Generate: " << dt.generate << std::endl;
 		os << "Fault injection: " << dt.fault_injection << std::endl;
 		os << "Kernel type: " << dt.execution_type;
