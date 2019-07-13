@@ -164,7 +164,7 @@ struct Parameters {
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "kernel_type")) {
-			int ty = getCmdLineArgumentInt(argc, (const char **) argv, "size");
+			int ty = getCmdLineArgumentInt(argc, (const char **) argv, "kernel_type");
 			if (ty > 0 && ty < COUNT) {
 				this->execution_type = KernelType(ty);
 			} else {
