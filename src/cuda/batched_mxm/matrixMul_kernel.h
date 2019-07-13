@@ -17,19 +17,20 @@
  * Only to manage cuda Streams
  */
 struct CudaStream {
-	cudaStream_t stream;
-	CudaStream() {
+	std::shared_ptr<cudaStream_t> stream;
+	CudaStream() :
+			stream(new cudaStream_t) {
 		rad::checkFrameworkErrors(
-				cudaStreamCreateWithFlags(&this->stream,
+				cudaStreamCreateWithFlags(this->stream.get(),
 						cudaStreamNonBlocking));
 	}
 
 	virtual ~CudaStream() {
-		rad::checkFrameworkErrors(cudaStreamDestroy(this->stream));
+		rad::checkFrameworkErrors(cudaStreamDestroy(*this->stream));
 	}
 
 	void sync() {
-		rad::checkFrameworkErrors(cudaStreamSynchronize(this->stream));
+		rad::checkFrameworkErrors(cudaStreamSynchronize(*this->stream));
 	}
 };
 

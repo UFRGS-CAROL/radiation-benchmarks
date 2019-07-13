@@ -143,7 +143,7 @@ void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
 	auto streamSize = streams.size();
 	switch (t) {
 	case PERSISTENT: {
-		matrixMulCUDAPersistent<<<gridDim, blockDim, 0, streams[0].stream>>>(C,
+		matrixMulCUDAPersistent<<<gridDim, blockDim, 0, *streams[0].stream>>>(C,
 				A, B, wA, wB, streamSize);
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
@@ -156,7 +156,7 @@ void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
 			float* a_i_ptr = A + ptr_index;
 			float* b_i_ptr = B + ptr_index;
 			matrixMulCUDANonpersistent<<<gridDim, blockDim, 0,
-					streams[streamI].stream>>>(c_i_ptr, a_i_ptr, b_i_ptr, wA,
+					*streams[streamI].stream>>>(c_i_ptr, a_i_ptr, b_i_ptr, wA,
 					wB);
 		}
 
