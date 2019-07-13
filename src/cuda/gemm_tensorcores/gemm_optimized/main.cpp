@@ -37,8 +37,8 @@ int main(int argc, char **argv) {
 	int m;
 	int n;
 	int k;
-	// m = n = k = 4096;
-	m = n = k = 8192;
+	m = n = k = 4096;
+	// m = n = k = 8192;
 	int lda = m;
 	int ldb = n;
 	int ldc = k;
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
 	// 	std::cout << std::endl;
 	// }
 
-	//std::vector<real_t> test_gemm(m * k, 0);
+	std::vector<real_t> test_gemm(m * k, 0);
 	gemm_host(host_a, host_b, test_gemm, alpha, beta, m, n, k);
 
 	// for (int i = 0; i < test_gemm.size(); i++) {

@@ -60,5 +60,5 @@ clean:
 	
 	
 test:
-	./$(EXEC) -dimX=8192 -dimY=8192
+	./$(EXEC) -dimX=4096 -dimY=4096
 
