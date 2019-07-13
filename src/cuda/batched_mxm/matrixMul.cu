@@ -79,7 +79,7 @@ struct Parameters {
 		os << std::boolalpha << "Generate: " << dt.verbose << std::endl;
 		os << "Generate: " << dt.generate << std::endl;
 		os << "Fault injection: " << dt.fault_injection << std::endl;
-		os << "Kernel type: " << dt.execution_type << std::endl;
+		os << "Kernel type: " << dt.execution_type;
 		return os;
 	}
 
@@ -303,7 +303,8 @@ int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
 
 int main(int argc, char **argv) {
 	Parameters parameters(argc, argv);
-
+	std::cout << "Benchmarks parameters" << std::endl;
+	std::cout << parameters << std::endl;
 	//================== Init logs
 #ifdef LOGS
 	if (!parameters.generate) {
