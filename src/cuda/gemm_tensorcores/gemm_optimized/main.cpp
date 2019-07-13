@@ -93,12 +93,13 @@ int main(int argc, char **argv) {
 	std::vector<real_t> test_gemm(m * k, 0);
 	gemm_host(host_a, host_b, test_gemm, alpha, beta, m, n, k);
 
-	for (int i = 0; i < test_gemm.size(); i++) {
+	// for (int i = 0; i < test_gemm.size(); i++) {
+	for (int i = 0; i < 100; i++) {
 		auto g = test_gemm[i], f = host_c[i];
-		if (g != f) {
+		//if (g != f) {
 			std::cout << "HOST " << g << " GPU " << f << std::endl;
-			break;
-		}
+			//break;
+		//}
 	}
 	cudaStreamDestroy(st);
 	return 0;
