@@ -8,7 +8,6 @@
 #ifndef MATRIXMUL_KERNEL_H_
 #define MATRIXMUL_KERNEL_H_
 
-
 // CUDA runtime
 #include <cuda_runtime.h>
 #include "cuda_utils.h"
@@ -21,24 +20,38 @@ struct CudaStream {
 	cudaStream_t stream;
 	CudaStream() {
 		rad::checkFrameworkErrors(
-				cudaStreamCreateWithFlags(&this->stream, cudaStreamNonBlocking));
+				cudaStreamCreateWithFlags(&this->stream,
+						cudaStreamNonBlocking));
 	}
 
 	virtual ~CudaStream() {
 		rad::checkFrameworkErrors(cudaStreamDestroy(this->stream));
 	}
 
-	void sync(){
+	void sync() {
 		rad::checkFrameworkErrors(cudaStreamSynchronize(this->stream));
 	}
 };
 
 typedef enum {
-	STATIC,
-	PERSISTENT,
-	GEMM,
-	COUNT
-}KernelType;
+	STATIC, PERSISTENT, GEMM, COUNT
+
+} KernelType;
+
+static std::ostream& operator<<(std::ostream& os, const KernelType& dt) {
+	switch (dt) {
+	case STATIC:
+		os << std::string("NON-PERSISTENT threads");
+		break;
+	case PERSISTENT:
+		os << std::string("PERSISTENT threads");
+		break;
+	case GEMM:
+		os << std::string("cuBLAS kernel");
+		break;
+	}
+	return os;
+}
 
 void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
 		const std::vector<CudaStream>& streams, KernelType t, dim3 gridDim,

@@ -70,8 +70,16 @@ struct Parameters {
 	KernelType execution_type;
 
 	friend std::ostream& operator<<(std::ostream& os, const Parameters& dt) {
-		std::cout << "Matrix memory space size: " << dt.k << "x" << dt.k;
-		std::cout << "Batched matrix size ";
+		os << "Matrix memory space size: " << dt.k << "x" << dt.k << std::endl;
+		os << "Batched matrix size: " << dt.n_streams << std::endl ;
+		os << "Input a: " << dt.input_a<< std::endl;
+		os << "Input_b: " << dt.input_b<< std::endl;
+		os << "Gold: " << dt.gold << std::endl;
+		os << "Iterations: " << dt.iterations << std::endl;
+		os << std::boolalpha << "Generate: " << dt.verbose << std::endl;
+		os << "Generate: " << dt.generate  << std::endl;
+		os << "Fault injection: " << dt.fault_injection << std::endl;
+
 		return os;
 	}
 
@@ -197,8 +205,8 @@ void generate_input(std::vector<real_t>& a_vector,
 			numInfs++;
 	}
 
-	std::cout << "Number of zeros/NaNs/INFs on matrix A: " << numZeros
-			<< numNans << numInfs;
+	std::cout << "Number of zeros/NaNs/INFs on matrix A: " << numZeros << " "
+			<< numNans << " " << numInfs << std::endl;
 
 	numZeros = 0;
 	numNans = 0;
@@ -211,8 +219,8 @@ void generate_input(std::vector<real_t>& a_vector,
 		if (isinf(val))
 			numInfs++;
 	}
-	std::cout << "Number of zeros/NaNs/INFs on matrix B: " << numZeros
-			<< numNans << numInfs;
+	std::cout << "Number of zeros/NaNs/INFs on matrix B: " << numZeros << " "
+			<< numNans << " " << numInfs << std::endl;
 }
 
 template<typename real_t>
@@ -368,6 +376,11 @@ int main(int argc, char **argv) {
 		load_file_data(parameters.input_b, b_host);
 		load_file_data(parameters.gold, gold);
 
+	}
+
+	//Debug fault injection
+	if(parameters.fault_injection){
+		a_host[a_host.size() / 3] = 3939393;
 	}
 
 	//Device memory allocation
