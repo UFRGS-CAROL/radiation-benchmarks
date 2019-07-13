@@ -298,7 +298,7 @@ __device__ float errors = 0;
 
 
  template<class half_t, class real_t>
- __global__ void compute_gemm_DMR( half_t *A, half_t *A1, half_t *B,  real_t *C, real_t *D, half_t *d, float alpha, float beta)
+ __global__ void compute_gemm_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, half_t *d, float alpha, float beta)
  {
  	// Block index
 	int bx = blockIdx.x;
@@ -327,8 +327,8 @@ __device__ float errors = 0;
 
 
 
- 	volatile half_t Csub = 0;
-  
+ 	//volatile half_t Csub = 0;
+  	half_t Csub = 0;
 	// Loop over all the sub-matrices of A and B
   	// required to compute the block sub-matrix
   	for (int a = aBegin, b = bBegin; a <= aEnd;  a += aStep, b += bStep) {
@@ -338,7 +338,7 @@ __device__ float errors = 0;
 
     	__shared__ half_t Bs[BLOCK_SIZE][BLOCK_SIZE];
 
-    	As[ty][tx] = A1[a + M * ty + tx];
+    	As[ty][tx] = A[a + M * ty + tx];
     	Bs[ty][tx] = B[b + N * ty + tx];
 
     	// Synchronize to make sure the matrices are loaded
@@ -356,7 +356,7 @@ __device__ float errors = 0;
     	// sub-matrices of A and B in the next iteration
     	__syncthreads();
   	}
-
+  	Csub = fma_dmr((Csub*(half_t)alpha), (Csub*(half_t)beta), Csub);
   	// Write the block sub-matrix to device memory;
   	// each thread writes one element
   	int c_p = N * BLOCK_SIZE * by + BLOCK_SIZE * bx;

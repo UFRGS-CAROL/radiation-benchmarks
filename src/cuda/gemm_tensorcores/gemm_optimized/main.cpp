@@ -14,7 +14,9 @@
 #include <vector>
 #include <iostream>
 
-typedef double real_t;
+#define THRESHOLD 1.0E-6  
+
+typedef float real_t;
 typedef float half_real_t;
 
 void gemm_host(std::vector<real_t>& a, std::vector<real_t>& b,
@@ -38,6 +40,7 @@ int main(int argc, char **argv) {
 	int n;
 	int k;
 	m = n = k = 4096;
+	// m = n = k = 8192;
 	int lda = m;
 	int ldb = n;
 	int ldc = k;
@@ -89,16 +92,16 @@ int main(int argc, char **argv) {
 	// 	std::cout << std::endl;
 	// }
 
-	// std::vector<real_t> test_gemm(m * k, 0);
-	// gemm_host(host_a, host_b, test_gemm, alpha, beta, m, n, k);
+	std::vector<real_t> test_gemm(m * k, 0);
+	gemm_host(host_a, host_b, test_gemm, alpha, beta, m, n, k);
 
-	// for (int i = 0; i < test_gemm.size(); i++) {
-	// 	auto g = test_gemm[i], f = host_c[i];
-	// 	if (g != f) {
-	// 		std::cout << "HOST " << g << " GPU " << f << std::endl;
-	// 		break;
-	// 	}
-	// }
+	for (int i = 0; i < test_gemm.size(); i++) {
+		auto g = test_gemm[i], f = host_c[i];
+		if (abs(g - f) > THRESHOLD) {
+			std::cout << "HOST " << g << " GPU " << f << std::endl;
+			break;
+		}
+	}
 	cudaStreamDestroy(st);
 	return 0;
 }
