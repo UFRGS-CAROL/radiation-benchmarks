@@ -138,7 +138,7 @@ __global__ void matrixMulCUDAPersistent(real_t* c, real_t* a, real_t* b, int wA,
 }
 
 void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
-		const std::vector<CudaStream>& streams, KernelType t, dim3 gridDim,
+		std::vector<CudaStream> const &streams, KernelType t, dim3 gridDim,
 		dim3 blockDim) {
 	auto streamSize = streams.size();
 	switch (t) {
