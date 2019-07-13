@@ -9,7 +9,7 @@
 #define PERSISTENT_LIB_H_
 
 #include <iostream>
-#include "include/cuda_utils.h"
+#include "cuda_utils.h"
 
 namespace rad {
 
@@ -53,6 +53,7 @@ struct HostPersistentControler {
 	}
 
 	virtual ~HostPersistentControler() {
+		this->end_kernel();
 		checkFrameworkErrors(cudaStreamDestroy(this->st));
 		checkFrameworkErrors(cudaDeviceSynchronize());
 

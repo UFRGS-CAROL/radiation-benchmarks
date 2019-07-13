@@ -15,7 +15,7 @@
 namespace rad {
 
 #ifndef SLEEP_TIME
-#define PROFILER_SLEEP 500
+#define PROFILER_SLEEP 1000
 #else
 #define PROFILER_SLEEP SLEEP_TIME
 #endif
