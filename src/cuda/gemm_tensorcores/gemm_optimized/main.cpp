@@ -39,8 +39,8 @@ int main(int argc, char **argv) {
 	int m;
 	int n;
 	int k;
-	m = n = k = 4096;
-	// m = n = k = 8192;
+	// m = n = k = 4096;
+	m = n = k = 8192;
 	int lda = m;
 	int ldb = n;
 	int ldc = k;
