@@ -171,7 +171,7 @@ break;	}
 		float alpha = 1;
 		float beta = 0;
 		cublasStatus_t status = cublasSgemmBatched(handle, CUBLAS_OP_N, CUBLAS_OP_N, wA, wB, wB, &alpha,
-				A, wA, B, wB, &beta, C, wB, streamSize);
+				(const float *const *)A, wA, (const float *const *)B, wB, &beta, (float *const *)C, wB, streamSize);
 		break;
 	}
 
