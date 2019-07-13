@@ -16,8 +16,8 @@
 
 #define THRESHOLD 1.0E-6  
 
-typedef double real_t;
-typedef double half_real_t;
+typedef float real_t;
+typedef float half_real_t;
 
 void gemm_host(std::vector<real_t>& a, std::vector<real_t>& b,
 		std::vector<real_t>& c, real_t alpha, real_t beta, int m, int n,
@@ -39,8 +39,8 @@ int main(int argc, char **argv) {
 	int m;
 	int n;
 	int k;
-	m = n = k = 4096;
-	// m = n = k = 8192;
+	// m = n = k = 4096;
+	m = n = k = 8192;
 	int lda = m;
 	int ldb = n;
 	int ldc = k;
