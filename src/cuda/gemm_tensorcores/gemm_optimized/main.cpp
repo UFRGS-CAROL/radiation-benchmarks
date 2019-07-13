@@ -14,7 +14,7 @@
 #include <vector>
 #include <iostream>
 
-#define THRESHOLD 1.0E-5  
+#define THRESHOLD 1.0E-6  
 
 typedef float real_t;
 typedef float half_real_t;
