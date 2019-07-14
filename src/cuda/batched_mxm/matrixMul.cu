@@ -376,7 +376,7 @@ int main(int argc, char **argv) {
 
 	//Streams allocation
 	std::vector < std::shared_ptr < CudaStream >> streams(args.n_streams);
-	for (auto st : streams) {
+	for (auto& st : streams) {
 		st =  std::make_shared<CudaStream>();
 	}
 
