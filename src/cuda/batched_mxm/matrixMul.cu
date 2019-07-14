@@ -241,28 +241,30 @@ int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
 
 #pragma omp parallel for shared(host_errors)
 	for (int stream = 0; stream < n_k_times; stream++) {
-		for (int i = stream * k * k; i < gold.size(); i++) {
-			register double valGold = gold[i];
-			register double valOutput = found[i];
+		for (int i = 0; i < k; i++) {
+			for (int j = 0; i < k; j++) {
+				int index = stream * k * k + i * k + j;
+				register double valGold = gold[index];
+				register double valOutput = found[index];
 
-			if (valGold != valOutput) {
+				if (valGold != valOutput) {
 #pragma omp critical
-				{
-					std::stringstream error_detail;
-					error_detail << std::scientific << std::setprecision(20);
-					error_detail << "stream:" << stream << ",";
-					error_detail << " p: [" << int(floor(i / k)) << ", "
-							<< i % k << "],";
-					error_detail << " r: " << valOutput << ", e: " << valGold;
-
-					if (verbose && (host_errors < 10))
-						std::cout << error_detail.str() << std::endl;
+					{
+						std::stringstream error_detail;
+						error_detail << std::scientific
+								<< std::setprecision(20);
+						error_detail << "stream:" << stream << ",";
+						error_detail << " p: [" << i << ", " << j << "],";
+						error_detail << " r: " << valOutput << ", e: " << valGold;
+						if (verbose && (host_errors < 10))
+							std::cout << error_detail.str() << std::endl;
 #ifdef LOGS
-					if (!generate)
-					log_error_detail(
-							const_cast<char*>(error_detail.str().c_str()));
+						if (!generate)
+						log_error_detail(
+								const_cast<char*>(error_detail.str().c_str()));
 #endif
-					host_errors++;
+						host_errors++;
+					}
 				}
 			}
 		}
