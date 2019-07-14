@@ -18,10 +18,10 @@ namespace rad {
 void check_nvml_return(std::string info, nvmlReturn_t result,
 		unsigned device_index = 0) {
 	if (NVML_SUCCESS != result) {
-		std::cerr
-				<< "Failed to " + info + " from device "
-						+ std::to_string(device_index) + " error "
-						+ nvmlErrorString(result);
+//		std::cerr
+//				<< "Failed to " + info + " from device "
+//						+ std::to_string(device_index) + " error "
+//						+ nvmlErrorString(result) << std::endl;
 	}
 }
 

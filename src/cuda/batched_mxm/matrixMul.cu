@@ -240,29 +240,30 @@ int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
 	int host_errors = 0;
 
 #pragma omp parallel for shared(host_errors)
-	for (int i = 0; i < gold.size(); i++) {
-		register double valGold = gold[i];
-		register double valOutput = found[i];
+	for (int stream = 0; stream < n_k_times; stream++) {
+		for (int i = stream * k * k; i < gold.size(); i++) {
+			register double valGold = gold[i];
+			register double valOutput = found[i];
 
-		if (valGold != valOutput) {
+			if (valGold != valOutput) {
 #pragma omp critical
-			{
-				int stream = i / n_k_times;
-				std::stringstream error_detail;
-				error_detail << std::scientific << std::setprecision(20);
-				error_detail << "stream:" << stream << ",";
-				error_detail << " p: [" << int(floor(i / k)) << ", " << i % k
-						<< "],";
-				error_detail << " r: " << valOutput << ", e: " << valGold;
+				{
+					std::stringstream error_detail;
+					error_detail << std::scientific << std::setprecision(20);
+					error_detail << "stream:" << stream << ",";
+					error_detail << " p: [" << int(floor(i / k)) << ", "
+							<< i % k << "],";
+					error_detail << " r: " << valOutput << ", e: " << valGold;
 
-				if (verbose && (host_errors < 10))
-					std::cout << error_detail.str();
+					if (verbose && (host_errors < 10))
+						std::cout << error_detail.str();
 #ifdef LOGS
-				if (!generate)
-				log_error_detail(
-						const_cast<char*>(error_detail.str().c_str()));
+					if (!generate)
+					log_error_detail(
+							const_cast<char*>(error_detail.str().c_str()));
 #endif
-				host_errors++;
+					host_errors++;
+				}
 			}
 		}
 	}
@@ -377,7 +378,7 @@ int main(int argc, char **argv) {
 	//Streams allocation
 	std::vector < std::shared_ptr < CudaStream >> streams(args.n_streams);
 	for (auto& st : streams) {
-		st =  std::make_shared<CudaStream>();
+		st = std::make_shared<CudaStream>();
 	}
 
 	//Execute before if it is persistent
