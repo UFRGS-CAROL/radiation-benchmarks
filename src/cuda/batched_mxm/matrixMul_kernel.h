@@ -21,18 +21,13 @@
 struct CudaStream {
 	cudaStream_t stream;
 	CudaStream() {
-		static int t = 0;
-
 		rad::checkFrameworkErrors(
 				cudaStreamCreateWithFlags(&this->stream,
 						cudaStreamNonBlocking));
-		std::cout << "CREATED " << t++ << std::endl;
 	}
 
 	virtual ~CudaStream() {
 		rad::checkFrameworkErrors(cudaStreamDestroy(this->stream));
-		static int t4 = 0;
-		std::cout << "DESTROYED " << t4++ << std::endl;
 	}
 
 	void sync() {
