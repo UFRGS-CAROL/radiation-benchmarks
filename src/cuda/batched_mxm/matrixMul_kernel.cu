@@ -138,8 +138,9 @@ __global__ void matrixMulCUDAPersistent(real_t* c, real_t* a, real_t* b, int wA,
 }
 
 void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
-		const CudaStream*  streams, KernelType t, dim3 gridDim,
-		dim3 blockDim, int streamSize) {
+		const std::vector<CudaStream>& streams, KernelType t, dim3 gridDim,
+		dim3 blockDim) {
+	auto streamSize = streams.size();
 	switch (t) {
 	case PERSISTENT: {
 		matrixMulCUDAPersistent<<<gridDim, blockDim, 0, streams[0].stream>>>(C,
@@ -158,8 +159,7 @@ break;	}
 					wB);
 		}
 
-		for (int i = 0; i < streamSize; i++) {
-			auto stream = streams[i];
+		for (auto stream : streams) {
 			stream.sync();
 		}
 		break;

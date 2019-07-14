@@ -24,14 +24,14 @@ struct CudaStream {
 						cudaStreamNonBlocking));
 	}
 
-//	CudaStream(const CudaStream& b){
-//		this->stream = b.stream;
-//	}
-//
-//	CudaStream& operator=(const CudaStream&  b){
-//		this->stream = b.stream;
-//		return *this;
-//	}
+	CudaStream(const CudaStream& b){
+		this->stream = b.stream;
+	}
+
+	CudaStream& operator=(const CudaStream&  b){
+		this->stream = b.stream;
+		return *this;
+	}
 
 	virtual ~CudaStream() {
 		rad::checkFrameworkErrors(cudaStreamDestroy(this->stream));
@@ -63,7 +63,7 @@ static std::ostream& operator<<(std::ostream& os, const KernelType& dt) {
 }
 
 void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
-		const CudaStream* streams, KernelType t, dim3 gridDim,
-		dim3 blockDim, int streamSize);
+		const std::vector<CudaStream>& streams, KernelType t, dim3 gridDim,
+		dim3 blockDim);
 
 #endif /* MATRIXMUL_KERNEL_H_ */

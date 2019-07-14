@@ -164,8 +164,7 @@ struct Parameters {
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "kernel_type")) {
-			int ty = getCmdLineArgumentInt(argc, (const char **) argv,
-					"kernel_type");
+			int ty = getCmdLineArgumentInt(argc, (const char **) argv, "kernel_type");
 			if (ty > 0 && ty < COUNT) {
 				this->execution_type = KernelType(ty);
 			} else {
@@ -303,17 +302,17 @@ int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
  */
 
 int main(int argc, char **argv) {
-	Parameters parameters(argc, argv);
+	Parameters args(argc, argv);
 	std::cout << "Benchmarks parameters" << std::endl;
-	std::cout << parameters << std::endl;
+	std::cout << args << std::endl;
 	//================== Init logs
 #ifdef LOGS
-	if (!parameters.generate) {
+	if (!args.generate) {
 		std::string test_info = "";
 		std::string test_name = "cuda_float_mxm_";
 
-		test_info += "size:" + std::to_string(parameters.k) + " type:float-";
-		switch (parameters.execution_type) {
+		test_info += "size:" + std::to_string(args.k) + " type:float-";
+		switch (args.execution_type) {
 			case STATIC:
 			test_info += "static";
 			test_name += "static";
@@ -329,7 +328,7 @@ int main(int argc, char **argv) {
 		}
 
 		test_info += " block_size:" + std::to_string(BLOCK_SIZE);
-		test_info += " batch_size:" + std::to_string(parameters.n_streams);
+		test_info += " batch_size:" + std::to_string(args.n_streams);
 
 		start_log_file(const_cast<char*>(test_name.c_str()),
 				const_cast<char*>(test_info.c_str()));
@@ -337,7 +336,7 @@ int main(int argc, char **argv) {
 	}
 
 	std::string log_file_name(get_log_file_name());
-	if (parameters.generate) {
+	if (args.generate) {
 		log_file_name = "/tmp/generate.log";
 	}
 	//	rad::Profiler profiler_thread = new rad::JTX2Inst(log_file_name);
@@ -349,7 +348,7 @@ int main(int argc, char **argv) {
 #endif
 
 	//Batched gemm memory size
-	auto num_elements = parameters.k * parameters.k * parameters.n_streams;
+	auto num_elements = args.k * args.k * args.n_streams;
 
 	//Host memory allocation
 	std::vector<float> a_host(num_elements);
@@ -358,30 +357,31 @@ int main(int argc, char **argv) {
 	std::vector<float> gold(num_elements);
 
 	//Streams allocation
-	std::vector<CudaStream> streams(parameters.n_streams);
+	std::vector<CudaStream> streams(args.n_streams);
+	std::cout << "STREAMS SIZE " << streams.size() << std::endl;
 
 	//Define the grid size
 	int gridsize =
-			parameters.k / BLOCK_SIZE < 1 ? 1 : parameters.k / BLOCK_SIZE;
-	int blocksize = parameters.k / BLOCK_SIZE < 1 ? parameters.k : BLOCK_SIZE;
+			args.k / BLOCK_SIZE < 1 ? 1 : args.k / BLOCK_SIZE;
+	int blocksize = args.k / BLOCK_SIZE < 1 ? args.k : BLOCK_SIZE;
 	dim3 dim_block(blocksize, blocksize);
 	dim3 dim_grid(gridsize, gridsize);
 
 	//Load or write the values to files
-	if (parameters.generate) {
+	if (args.generate) {
 		//generate input
 		generate_input(a_host, b_host);
-		write_to_file(parameters.input_a, a_host);
-		write_to_file(parameters.input_b, b_host);
+		write_to_file(args.input_a, a_host);
+		write_to_file(args.input_b, b_host);
 	} else {
-		load_file_data(parameters.input_a, a_host);
-		load_file_data(parameters.input_b, b_host);
-		load_file_data(parameters.gold, gold);
+		load_file_data(args.input_a, a_host);
+		load_file_data(args.input_b, b_host);
+		load_file_data(args.gold, gold);
 
 	}
 
 	//Debug fault injection
-	if (parameters.fault_injection) {
+	if (args.fault_injection) {
 		a_host[a_host.size() / 3] = 3939393;
 	}
 
@@ -398,14 +398,14 @@ int main(int argc, char **argv) {
 	//Persistent case
 	rad::HostPersistentControler pk(dim_grid);
 
-	if (parameters.execution_type == PERSISTENT) {
+	if (args.execution_type == PERSISTENT) {
 		pk.start_kernel();
-		matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, parameters.k,
-				parameters.k, streams.data(), parameters.execution_type,
-				dim_grid, dim_block, streams.size());
+		matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k,
+				args.k, streams, args.execution_type, dim_grid,
+				dim_block);
 	}
 
-	for (auto it = 0; it < parameters.iterations; it++) {
+	for (auto it = 0; it < args.iterations; it++) {
 
 		c_device.clear();
 
@@ -413,12 +413,12 @@ int main(int argc, char **argv) {
 #ifdef LOGS
 		start_iteration();
 #endif
-		if (parameters.execution_type == PERSISTENT) {
+		if (args.execution_type == PERSISTENT) {
 			pk.process_data_on_kernel();
 		} else {
-			matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, parameters.k,
-					parameters.k, streams.data(), parameters.execution_type,
-					dim_grid, dim_block, streams.size());
+			matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k,
+					args.k, streams, args.execution_type, dim_grid,
+					dim_block);
 		}
 #ifdef LOGS
 		end_iteration();
@@ -432,32 +432,31 @@ int main(int argc, char **argv) {
 
 		auto comparison_time = rad::mysecond();
 		auto errors = 0;
-		if (parameters.generate == false) {
-			errors = check_output(gold, c_host, parameters.n_streams,
-					parameters.k, parameters.verbose, parameters.generate);
+		if (args.generate == false) {
+			errors = check_output(gold, c_host, args.n_streams,
+					args.k, args.verbose, args.generate);
 
 			//Reload the values in the GPU DDR
 			if (errors != 0) {
 #ifdef LOGS
 				profiler_thread->end_profile();
 #endif
-				if (parameters.execution_type == PERSISTENT) {
+				if (args.execution_type == PERSISTENT) {
 					pk.end_kernel();
 				}
-				load_file_data(parameters.input_a, a_host);
-				load_file_data(parameters.input_b, b_host);
-				load_file_data(parameters.gold, gold);
+				load_file_data(args.input_a, a_host);
+				load_file_data(args.input_b, b_host);
+				load_file_data(args.gold, gold);
 
 				a_device = a_host;
 				b_device = b_host;
 				c_device = c_host;
 
-				if (parameters.execution_type == PERSISTENT) {
+				if (args.execution_type == PERSISTENT) {
 					pk.start_kernel();
-					matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, parameters.k,
-							parameters.k, streams.data(),
-							parameters.execution_type, dim_grid, dim_block,
-							streams.size());
+					matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k,
+							args.k, streams, args.execution_type,
+							dim_grid, dim_block);
 				}
 #ifdef LOGS
 				profiler_thread->start_profile();
@@ -467,7 +466,7 @@ int main(int argc, char **argv) {
 
 		comparison_time = rad::mysecond() - comparison_time;
 
-		if (parameters.verbose) {
+		if (args.verbose) {
 			std::cout << "Iteration: " << it << std::endl;
 			std::cout << "Kernel time: " << kernel_time << std::endl;
 			std::cout << "Comparison time: " << comparison_time << std::endl;
@@ -476,8 +475,8 @@ int main(int argc, char **argv) {
 
 	}
 
-	if (parameters.generate) {
-		write_to_file(parameters.gold, c_host);
+	if (args.generate) {
+		write_to_file(args.gold, c_host);
 	}
 
 #ifdef LOGS
