@@ -29,23 +29,6 @@ struct CudaStream {
 		std::cout << "CREATED " << t++ << std::endl;
 	}
 
-	CudaStream(const CudaStream& b){
-		static int t2 = 0;
-
-		this->stream = b.stream;
-
-		std::cout << "COPIED " << t2++ << std::endl;
-
-	}
-
-	CudaStream& operator=(const CudaStream&  b){
-		this->stream = b.stream;
-		static int t3 = 0;
-		std::cout << "OVERRIDED " << t3++ << std::endl;
-
-		return *this;
-	}
-
 	virtual ~CudaStream() {
 		rad::checkFrameworkErrors(cudaStreamDestroy(this->stream));
 		static int t4 = 0;
@@ -78,7 +61,7 @@ static std::ostream& operator<<(std::ostream& os, const KernelType& dt) {
 }
 
 void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
-		const std::vector<CudaStream>& streams, KernelType t, dim3 gridDim,
-		dim3 blockDim);
+		const std::vector<std::shared_ptr<CudaStream>>& streams, KernelType t,
+		dim3 gridDim, dim3 blockDim);
 
 #endif /* MATRIXMUL_KERNEL_H_ */

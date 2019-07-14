@@ -138,16 +138,17 @@ __global__ void matrixMulCUDAPersistent(real_t* c, real_t* a, real_t* b, int wA,
 }
 
 void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
-		const std::vector<CudaStream>& streams, KernelType t, dim3 gridDim,
-		dim3 blockDim) {
+		const std::vector<std::shared_ptr<CudaStream>>& streams, KernelType t,
+		dim3 gridDim, dim3 blockDim) {
 	auto streamSize = streams.size();
 	switch (t) {
 	case PERSISTENT: {
-		matrixMulCUDAPersistent<<<gridDim, blockDim, 0, streams[0].stream>>>(C,
+		matrixMulCUDAPersistent<<<gridDim, blockDim, 0, streams[0]->stream>>>(C,
 				A, B, wA, wB, streamSize);
-		rad::checkFrameworkErrors (cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
-break;	}
+		break;
+	}
 	case STATIC: {
 		for (int streamI = 0; streamI < streamSize; streamI++) {
 			int ptr_index = streamI * wA * wB;
@@ -155,12 +156,12 @@ break;	}
 			float* a_i_ptr = A + ptr_index;
 			float* b_i_ptr = B + ptr_index;
 			matrixMulCUDANonpersistent<<<gridDim, blockDim, 0,
-			streams[streamI].stream>>>(c_i_ptr, a_i_ptr, b_i_ptr, wA,
+					streams[streamI]->stream>>>(c_i_ptr, a_i_ptr, b_i_ptr, wA,
 					wB);
 		}
 
 		for (auto stream : streams) {
-			stream.sync();
+			stream->sync();
 		}
 		break;
 	}
@@ -179,14 +180,14 @@ break;	}
 			a_array[streamI] = A + ptr_index;
 			b_array[streamI] = B + ptr_index;
 		}
-		cublasStatus_t status = cublasSgemmBatched(handle,
-				CUBLAS_OP_N, CUBLAS_OP_N, wA, wB, wB, &alpha,
-				(const float *const *)a_array, wA, (const float *const *)b_array,
-				wB, &beta, (float *const *)c_array,
-				wB, streamSize);
+		cublasStatus_t status = cublasSgemmBatched(handle, CUBLAS_OP_N,
+				CUBLAS_OP_N, wA, wB, wB, &alpha,
+				(const float * const *) a_array, wA,
+				(const float * const *) b_array, wB, &beta,
+				(float * const *) c_array, wB, streamSize);
 		break;
 	}
 
-}
+	}
 }
 

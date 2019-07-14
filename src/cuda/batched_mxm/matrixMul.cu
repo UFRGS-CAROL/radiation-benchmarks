@@ -375,7 +375,10 @@ int main(int argc, char **argv) {
 	rad::HostPersistentControler pk(dim_grid);
 
 	//Streams allocation
-	std::vector<CudaStream> streams(args.n_streams);
+	std::vector < std::shared_ptr < CudaStream >> streams(args.n_streams);
+	for (auto st : streams) {
+		st =  std::make_shared<CudaStream>();
+	}
 
 	//Execute before if it is persistent
 	if (args.execution_type == PERSISTENT) {
