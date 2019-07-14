@@ -62,18 +62,18 @@ BATCH_SIZE=32
 DEF_A_INPUT=./mxm_A_$(DEF_SIZE)_$(BATCH_SIZE).matrix
 DEF_B_INPUT=./mxm_B_$(DEF_SIZE)_$(BATCH_SIZE).matrix
 DEF_GOLD=./mxm_GOLD_$(DEF_SIZE)_$(BATCH_SIZE).matrix
+KERNELTYPE=0
 
 generate: $(EXEC)
-	./$(EXEC) -generate -size=$(DEF_SIZE) -batch=$(BATCH_SIZE) -kernel_type=0 \
+	./$(EXEC) -generate -size=$(DEF_SIZE) -batch=$(BATCH_SIZE) -kernel_type=$(KERNELTYPE) \
 			-input_a=$(DEF_A_INPUT) \
 			-input_b=$(DEF_B_INPUT) \
 			 -gold=$(DEF_GOLD) -verbose
 
 test: $(EXEC) 
-	./$(EXEC) -size=$(DEF_SIZE) -batch=$(BATCH_SIZE) -kernel_type=0 \
+	./$(EXEC) -size=$(DEF_SIZE) -batch=$(BATCH_SIZE) -kernel_type=$(KERNELTYPE) \
 			-input_a=$(DEF_A_INPUT) \
 			-input_b=$(DEF_B_INPUT) \
 			-gold=$(DEF_GOLD) \
 			-iterations=10 -verbose
-
 	
