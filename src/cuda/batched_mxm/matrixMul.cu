@@ -164,7 +164,8 @@ struct Parameters {
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "kernel_type")) {
-			int ty = getCmdLineArgumentInt(argc, (const char **) argv, "kernel_type");
+			int ty = getCmdLineArgumentInt(argc, (const char **) argv,
+					"kernel_type");
 			if (ty > 0 && ty < COUNT) {
 				this->execution_type = KernelType(ty);
 			} else {
@@ -400,8 +401,8 @@ int main(int argc, char **argv) {
 	if (parameters.execution_type == PERSISTENT) {
 		pk.start_kernel();
 		matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, parameters.k,
-				parameters.k, streams, parameters.execution_type, dim_grid,
-				dim_block);
+				parameters.k, streams.data(), parameters.execution_type,
+				dim_grid, dim_block, streams.size());
 	}
 
 	for (auto it = 0; it < parameters.iterations; it++) {
@@ -416,8 +417,8 @@ int main(int argc, char **argv) {
 			pk.process_data_on_kernel();
 		} else {
 			matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, parameters.k,
-					parameters.k, streams, parameters.execution_type, dim_grid,
-					dim_block);
+					parameters.k, streams.data(), parameters.execution_type,
+					dim_grid, dim_block, streams.size());
 		}
 #ifdef LOGS
 		end_iteration();
@@ -454,8 +455,9 @@ int main(int argc, char **argv) {
 				if (parameters.execution_type == PERSISTENT) {
 					pk.start_kernel();
 					matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, parameters.k,
-							parameters.k, streams, parameters.execution_type,
-							dim_grid, dim_block);
+							parameters.k, streams.data(),
+							parameters.execution_type, dim_grid, dim_block,
+							streams.size());
 				}
 #ifdef LOGS
 				profiler_thread->start_profile();

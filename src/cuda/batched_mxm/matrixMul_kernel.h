@@ -63,7 +63,7 @@ static std::ostream& operator<<(std::ostream& os, const KernelType& dt) {
 }
 
 void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
-		std::vector<CudaStream> const &streams, KernelType t, dim3 gridDim,
-		dim3 blockDim);
+		const CudaStream* streams, KernelType t, dim3 gridDim,
+		dim3 blockDim, int streamSize);
 
 #endif /* MATRIXMUL_KERNEL_H_ */
