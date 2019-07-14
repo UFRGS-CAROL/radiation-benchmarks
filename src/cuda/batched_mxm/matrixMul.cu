@@ -456,10 +456,13 @@ int main(int argc, char **argv) {
 		comparison_time = rad::mysecond() - comparison_time;
 
 		if (args.verbose) {
+			std::cout << "----------------------------------------------------" << std::endl;
 			std::cout << "Iteration: " << it << std::endl;
 			std::cout << "Kernel time: " << kernel_time << std::endl;
 			std::cout << "Comparison time: " << comparison_time << std::endl;
 			std::cout << "Errors: " << errors << std::endl;
+			std::cout << "----------------------------------------------------" << std::endl;
+
 		}
 
 	}
