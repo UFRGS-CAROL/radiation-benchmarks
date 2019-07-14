@@ -17,9 +17,9 @@ namespace rad {
 #define BLOCK_SIZE 32
 #endif
 
-//#ifndef DEBUG
-//#define DEBUG 0
-//#endif
+#ifdef DEBUGPLIB
+#define DEBUG 1
+#endif
 
 #define UINTCAST(x) ((unsigned int*)(x))
 
@@ -130,7 +130,7 @@ struct HostPersistentControler {
 private:
 	void set_allow_threads_to_process(byte value) {
 		checkFrameworkErrors(
-				cudaMemcpyToSymbolAsync(allow_threads_process, &value, 1, 0,
+				cudaMemcpyToSymbolAsync(allow_threads_process, &value, sizeof(byte), 0,
 						cudaMemcpyHostToDevice, this->st));
 		checkFrameworkErrors(cudaGetLastError());
 		checkFrameworkErrors(cudaStreamSynchronize(this->st));
@@ -142,7 +142,7 @@ private:
 
 	void set_running(byte value) {
 		checkFrameworkErrors(
-				cudaMemcpyToSymbolAsync(running, &value, 1, 0,
+				cudaMemcpyToSymbolAsync(running, &value, sizeof(byte), 0,
 						cudaMemcpyHostToDevice, this->st));
 		checkFrameworkErrors(cudaGetLastError());
 		checkFrameworkErrors(cudaStreamSynchronize(this->st));

@@ -699,8 +699,11 @@ void writeGold(dim_str dim_cpu, char *output_gold, FOUR_VECTOR_HOST **fv_cpu) {
 void gpu_memory_setup(int nstreams, bool gpu_check, dim_str dim_cpu,
 		box_str **d_box_gpu, box_str *box_cpu, FOUR_VECTOR **d_rv_gpu,
 		FOUR_VECTOR_HOST *rv_cpu, tested_type **d_qv_gpu,
-		tested_type_host *qv_cpu, FOUR_VECTOR **d_fv_gpu,//,		FOUR_VECTOR_HOST *fv_cpu
-		FOUR_VECTOR *d_fv_gold_gpu, FOUR_VECTOR_HOST *fv_cpu_GOLD) {
+		tested_type_host *qv_cpu,
+		FOUR_VECTOR **d_fv_gpu,	//,		FOUR_VECTOR_HOST *fv_cpu
+		FOUR_VECTOR *d_fv_gold_gpu, FOUR_VECTOR_HOST *fv_cpu_GOLD,
+		box_str**& d_box_gpu_ptr, FOUR_VECTOR**& d_rv_gpu_ptr,
+		tested_type**& d_qv_gpu_ptr, FOUR_VECTOR**& d_fv_gpu_ptr) {
 
 	for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
 		//=====================================================================
@@ -775,11 +778,39 @@ void gpu_memory_setup(int nstreams, bool gpu_check, dim_str dim_cpu,
 				cudaMemcpy(d_fv_gold_gpu, fv_cpu_GOLD, dim_cpu.space_mem2,
 						cudaMemcpyHostToDevice));
 	}
+
+	//For Persistent Threads
+	rad::checkFrameworkErrors(
+			cudaMalloc((void**) (&d_box_gpu_ptr), sizeof(box_str*) * nstreams));
+	rad::checkFrameworkErrors(
+			cudaMalloc((void**) (&d_rv_gpu_ptr),
+					sizeof(FOUR_VECTOR*) * nstreams));
+	rad::checkFrameworkErrors(
+			cudaMalloc((void**) (&d_qv_gpu_ptr),
+					sizeof(tested_type*) * nstreams));
+	rad::checkFrameworkErrors(
+			cudaMalloc((void**) (&d_fv_gpu_ptr),
+					sizeof(FOUR_VECTOR*) * nstreams));
+
+	rad::checkFrameworkErrors(
+			cudaMemcpy(d_box_gpu_ptr, d_box_gpu, sizeof(box_str*) * nstreams,
+					cudaMemcpyHostToDevice));
+	rad::checkFrameworkErrors(
+			cudaMemcpy(d_rv_gpu_ptr, d_rv_gpu, sizeof(FOUR_VECTOR*) * nstreams,
+					cudaMemcpyHostToDevice));
+	rad::checkFrameworkErrors(
+			cudaMemcpy(d_qv_gpu_ptr, d_qv_gpu, sizeof(tested_type*) * nstreams,
+					cudaMemcpyHostToDevice));
+	rad::checkFrameworkErrors(
+			cudaMemcpy(d_fv_gpu_ptr, d_fv_gpu, sizeof(FOUR_VECTOR*) * nstreams,
+					cudaMemcpyHostToDevice));
 }
 
 void gpu_memory_unset(int nstreams, int gpu_check, box_str **d_box_gpu,
 		FOUR_VECTOR **d_rv_gpu, tested_type **d_qv_gpu, FOUR_VECTOR **d_fv_gpu,
-		FOUR_VECTOR *d_fv_gold_gpu) {
+		FOUR_VECTOR *d_fv_gold_gpu, box_str**& d_box_gpu_ptr,
+		FOUR_VECTOR**& d_rv_gpu_ptr, tested_type**& d_qv_gpu_ptr,
+		FOUR_VECTOR**& d_fv_gpu_ptr) {
 
 	//=====================================================================
 	//	GPU MEMORY DEALLOCATION
@@ -793,6 +824,11 @@ void gpu_memory_unset(int nstreams, int gpu_check, box_str **d_box_gpu,
 	if (gpu_check) {
 		cudaFree(d_fv_gold_gpu);
 	}
+
+	cudaFree(d_box_gpu_ptr);
+	cudaFree(d_rv_gpu_ptr);
+	cudaFree(d_qv_gpu_ptr);
+	cudaFree(d_fv_gpu_ptr);
 }
 
 // Returns true if no errors are found. False if otherwise.
@@ -1115,35 +1151,12 @@ int main(int argc, char *argv[]) {
 	tested_type **d_qv_gpu_ptr;
 	FOUR_VECTOR **d_fv_gpu_ptr;
 
-	rad::checkFrameworkErrors(
-			cudaMalloc((void**) &d_box_gpu_ptr, sizeof(box_str*) * nstreams));
-	rad::checkFrameworkErrors(
-			cudaMalloc((void**) &d_rv_gpu_ptr,
-					sizeof(FOUR_VECTOR*) * nstreams));
-	rad::checkFrameworkErrors(
-			cudaMalloc((void**) &d_qv_gpu_ptr,
-					sizeof(tested_type*) * nstreams));
-	rad::checkFrameworkErrors(
-			cudaMalloc((void**) &d_fv_gpu_ptr,
-					sizeof(FOUR_VECTOR*) * nstreams));
 	//=====================================================================
 	//	GPU MEMORY SETUP
 	//=====================================================================
 	gpu_memory_setup(nstreams, gpu_check, dim_cpu, d_box_gpu, box_cpu, d_rv_gpu,
-			rv_cpu, d_qv_gpu, qv_cpu, d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD);
-
-	rad::checkFrameworkErrors(
-			cudaMemcpy(d_box_gpu_ptr, d_box_gpu, sizeof(box_str*) * nstreams,
-					cudaMemcpyHostToDevice));
-	rad::checkFrameworkErrors(
-			cudaMemcpy(d_rv_gpu_ptr, d_rv_gpu, sizeof(FOUR_VECTOR*) * nstreams,
-					cudaMemcpyHostToDevice));
-	rad::checkFrameworkErrors(
-			cudaMemcpy(d_qv_gpu_ptr, d_qv_gpu, sizeof(tested_type*) * nstreams,
-					cudaMemcpyHostToDevice));
-	rad::checkFrameworkErrors(
-			cudaMemcpy(d_fv_gpu_ptr, d_fv_gpu, sizeof(FOUR_VECTOR*) * nstreams,
-					cudaMemcpyHostToDevice));
+			rv_cpu, d_qv_gpu, qv_cpu, d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD,
+			d_box_gpu_ptr, d_rv_gpu_ptr, d_qv_gpu_ptr, d_fv_gpu_ptr);
 
 	////////////// GOLD CHECK Kernel /////////////////
 	// dim3 gck_blockSize = dim3(	GOLDCHK_BLOCK_SIZE, 
@@ -1260,10 +1273,13 @@ int main(int argc, char *argv[]) {
 					readGold(dim_cpu, output_gold, fv_cpu_GOLD);
 
 					gpu_memory_unset(nstreams, gpu_check, d_box_gpu, d_rv_gpu,
-							d_qv_gpu, d_fv_gpu, d_fv_gold_gpu);
+							d_qv_gpu, d_fv_gpu, d_fv_gold_gpu, d_box_gpu_ptr,
+							d_rv_gpu_ptr, d_qv_gpu_ptr, d_fv_gpu_ptr);
+
 					gpu_memory_setup(nstreams, gpu_check, dim_cpu, d_box_gpu,
 							box_cpu, d_rv_gpu, rv_cpu, d_qv_gpu, qv_cpu,
-							d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD);
+							d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD, d_box_gpu_ptr, d_rv_gpu_ptr, d_qv_gpu_ptr,
+							d_fv_gpu_ptr);
 
 #ifdef LOGS
 					profiler_thread->start_profile();
@@ -1312,7 +1328,8 @@ int main(int argc, char *argv[]) {
 	pt_control.end_kernel();
 
 	gpu_memory_unset(nstreams, gpu_check, d_box_gpu, d_rv_gpu, d_qv_gpu,
-			d_fv_gpu, d_fv_gold_gpu);
+			d_fv_gpu, d_fv_gold_gpu, d_box_gpu_ptr, d_rv_gpu_ptr, d_qv_gpu_ptr,
+			d_fv_gpu_ptr);
 
 	//=====================================================================
 	//	SYSTEM MEMORY DEALLOCATION
@@ -1334,11 +1351,10 @@ int main(int argc, char *argv[]) {
 		free(box_cpu);
 	printf("\n");
 
-	delete [] d_box_gpu;
-	delete [] d_rv_gpu;
-	delete [] d_qv_gpu;
-	delete [] d_fv_gpu;
-
+	delete[] d_box_gpu;
+	delete[] d_rv_gpu;
+	delete[] d_qv_gpu;
+	delete[] d_fv_gpu;
 
 #ifdef LOGS
 	profiler_thread->end_profile();

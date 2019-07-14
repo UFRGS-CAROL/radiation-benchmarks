@@ -11,6 +11,7 @@ from common_config import discover_board, execute_and_write_json_to_file
 SIZES = [4]
 PRECISIONS = ["single"]
 ITERATIONS = int(1e9)
+STREAMS=128
 
 def config(board, arith_type, debug):
 
@@ -61,14 +62,13 @@ def config(board, arith_type, debug):
         gen[2] = ['-input_distances=' + input_file + 'lava_distances_' + arith_type + '_' + str(size)]
         gen[3] = ['-input_charges=' + input_file + 'lava_charges_' + arith_type + '_' + str(size)]
         gen[4] = ['-output_gold=' + input_file + "lava_gold_" + arith_type +  '_' + str(size)]
-        gen[5] = []
-        gen[6] = ['-generate']
+        gen[5] = ['-generate']
+        gen[6] = ['-streams={}'.format(STREAMS)]
 
         # change mode and iterations for exe
         exe = copy.deepcopy(gen)
         exe[0][1] = bin_path + '/' + benchmark_bin + " "
         exe[5] = ['-iterations=' + str(ITERATIONS)]
-        exe[6] = []
 
         generate.append(' '.join(str(r) for v in gen for r in v))
         execute.append(' '.join(str(r) for v in exe for r in v))

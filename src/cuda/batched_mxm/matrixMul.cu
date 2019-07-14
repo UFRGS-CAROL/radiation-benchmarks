@@ -167,8 +167,8 @@ struct Parameters {
 		if (checkCmdLineFlag(argc, (const char **) argv, "kernel_type")) {
 			int ty = getCmdLineArgumentInt(argc, (const char **) argv,
 					"kernel_type");
-			if (ty > 0 && ty < COUNT) {
-				this->execution_type = KernelType(ty);
+			if (ty >= 0 && ty < COUNT) {
+				this->execution_type = kernel_types[ty];
 			} else {
 				std::cerr << "Kernel type not int the range:" << std::endl
 						<< " 0 for nonpersistent threads, 1 for persistent, and 2 for batched cublas GEMM"
@@ -235,39 +235,51 @@ void write_to_file(std::string& path, std::vector<real_t>& array) {
 }
 
 template<typename real_t>
-int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
-		int n_k_times, int k, bool verbose, bool generate) {
-	int host_errors = 0, stream;
-#pragma omp parallel for shared(host_errors, stream)
-	for (stream = 0; stream < n_k_times; stream++) {
-		for (int i = 0; i < k; i++) {
-			for (int j = 0; j < k; j++) {
-				int index = stream * k * k + i * k + j;
-				register double valGold = gold[index];
-				register double valOutput = found[index];
+int compare_small_matrix(const int k, const int stream, bool verbose,
+		bool generate, const real_t* gold, const real_t* found) {
+	int host_errors = 0;
+	for (int i = 0; i < k; i++) {
+		for (int j = 0; j < k; j++) {
+			int index = i * k + j;
+			register double valGold = gold[index];
+			register double valOutput = found[index];
+			if (valGold != valOutput) {
+#pragma OMP critical
+				{
+					std::stringstream error_detail;
+					error_detail << std::scientific << std::setprecision(20);
+					error_detail << "stream:" << stream << ",";
+					error_detail << " p: [" << i << ", " << j << "],";
+					error_detail << " r: " << valOutput << ", e: " << valGold;
+					if (verbose && (host_errors < 10))
+						std::cout << error_detail.str() << std::endl;
+					host_errors++;
 
-				if (valGold != valOutput) {
-#pragma omp critical
-					{
-						std::stringstream error_detail;
-						error_detail << std::scientific
-								<< std::setprecision(20);
-						error_detail << "stream:" << stream << ",";
-						error_detail << " p: [" << i << ", " << j << "],";
-						error_detail << " r: " << valOutput << ", e: "
-								<< valGold;
-						if (verbose && (host_errors < 10))
-							std::cout << error_detail.str() << std::endl;
 #ifdef LOGS
-						if (!generate)
-						log_error_detail(
-								const_cast<char*>(error_detail.str().c_str()));
+					if (!generate)
+					log_error_detail(
+							const_cast<char*>(error_detail.str().c_str()));
 #endif
-						host_errors++;
-					}
+
 				}
 			}
 		}
+	}
+	return host_errors;
+}
+
+template<typename real_t>
+int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
+		int n_k_times, int k, bool verbose, bool generate) {
+	int host_errors = 0, stream;
+
+#pragma omp parallel for shared(host_errors, stream)
+	for (stream = 0; stream < n_k_times; stream++) {
+		int global_index = stream * k * k;
+		const real_t* g_data = gold.data() + global_index;
+		const real_t* f_data = found.data() + global_index;
+		host_errors += compare_small_matrix(k, stream, verbose, generate,
+				g_data, f_data);
 	}
 
 #ifdef LOGS
@@ -374,22 +386,37 @@ int main(int argc, char **argv) {
 	float* b_dev_ptr = b_device.data();
 	float* c_dev_ptr = c_device.data();
 
+	//Streams and handles cannot be copied
+	//Otherwise it is necessary to destroy and realocate streams
+	//so it is better to use smart pointers
+	std::shared_ptr<CublasHandle> cublas_handle;
+
+	//Streams allocation
+	std::vector < std::shared_ptr
+			< CudaStream >> streams(args.n_streams, nullptr);
+
 	//Persistent case
 	rad::HostPersistentControler pk(dim_grid);
 
-	//Streams allocation
-	std::vector < std::shared_ptr < CudaStream >> streams(args.n_streams);
-	for (auto& st : streams) {
-		st = std::make_shared<CudaStream>();
-	}
+	//SETUP for the type kernel
+	switch (args.execution_type) {
+	case PERSISTENT:
+		streams[0] = std::make_shared<CudaStream>();
 
-	//Execute before if it is persistent
-	if (args.execution_type == PERSISTENT) {
-		pk.start_kernel();
 		matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k, args.k, streams,
-				args.execution_type, dim_grid, dim_block);
+				args.execution_type, dim_grid, dim_block, cublas_handle);
+		break;
+	case STATIC:
+		for (auto& st : streams) {
+			st = std::make_shared<CudaStream>();
+		}
+		break;
+	case GEMM:
+		cublas_handle = std::make_shared<CublasHandle>();
+		break;
 	}
 
+	//START the processing
 	for (auto it = 0; it < args.iterations; it++) {
 
 		c_device.clear();
@@ -404,8 +431,10 @@ int main(int argc, char **argv) {
 			pk.process_data_on_kernel();
 		} else {
 			matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k, args.k,
-					streams, args.execution_type, dim_grid, dim_block);
+					streams, args.execution_type, dim_grid, dim_block,
+					cublas_handle);
 		}
+
 #ifdef LOGS
 		if(args.generate == false) {
 			end_iteration();
@@ -414,8 +443,6 @@ int main(int argc, char **argv) {
 		kernel_time = rad::mysecond() - kernel_time;
 
 		//Copy back to host
-		a_host = a_device.to_vector();
-		b_host = b_device.to_vector();
 		c_host = c_device.to_vector();
 
 		auto comparison_time = rad::mysecond();
@@ -444,7 +471,7 @@ int main(int argc, char **argv) {
 					pk.start_kernel();
 					matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k,
 							args.k, streams, args.execution_type, dim_grid,
-							dim_block);
+							dim_block, cublas_handle);
 				}
 #ifdef LOGS
 				profiler_thread->start_profile();
@@ -468,7 +495,9 @@ int main(int argc, char **argv) {
 
 	}
 
+
 	if (args.generate) {
+		std::cout << gold[10] << " " << c_host[10] << std::endl;
 		write_to_file(args.gold, c_host);
 	}
 

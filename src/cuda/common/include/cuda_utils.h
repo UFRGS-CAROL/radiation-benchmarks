@@ -13,6 +13,9 @@
 #include <sys/time.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include <cublas_v2.h>
+#include <helper_cuda.h>
+
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -36,6 +39,25 @@ static void __checkFrameworkErrors(cudaError_t error, int line, const char* file
 
 
 #define checkFrameworkErrors(error) __checkFrameworkErrors(error, __LINE__, __FILE__)
+
+
+static void __checkCublasErrors(cublasStatus_t error, int line, const char* file) {
+	if (error == CUBLAS_STATUS_SUCCESS) {
+		return;
+	}
+	char errorDescription[250];
+	snprintf(errorDescription, 250, "CUDA CUBLAS error: %d. Bailing.",
+			(error));
+#ifdef LOGS
+	log_error_detail((char *)errorDescription); end_log_file();
+#endif
+	printf("%s - Line: %d at %s\n", errorDescription, line, file);
+	exit(EXIT_FAILURE);
+}
+
+
+#define checkCublasErrors(error) __checkCublasErrors(error, __LINE__, __FILE__)
+
 
 //!  sleep seconds.
 /*!

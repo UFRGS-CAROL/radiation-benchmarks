@@ -8,16 +8,16 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [4]
+SIZES = [160]
 PRECISIONS = ["single"]
 ITERATIONS = int(1e9)
-STREAMS=128
+
 
 def config(board, arith_type, debug):
 
-    DATA_PATH_BASE = "lava_" + arith_type
+    DATA_PATH_BASE = "mxm_" + arith_type
 
-    benchmark_bin = "cuda_lava_persistent_threads_" + arith_type
+    benchmark_bin = "cuda_mxm_persistent_threads_" + arith_type
     print("Generating " + benchmark_bin + " for CUDA, board:" + board)
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -32,7 +32,7 @@ def config(board, arith_type, debug):
 
     data_path = install_dir + "data/" + DATA_PATH_BASE
     bin_path = install_dir + "bin"
-    src_benchmark = install_dir + "src/cuda/lava_persistent_threads"
+    src_benchmark = install_dir + "src/cuda/mxm_persistent_threads"
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
@@ -43,28 +43,29 @@ def config(board, arith_type, debug):
     if "X1" in board or "X2" in board:
         for_jetson = 1
         lib = ""
+
     generate = ["sudo mkdir -p " + bin_path, 
                 "cd " + src_benchmark, 
                 "make clean", 
                 "make -C ../../include ",
                 "make -C ../common {}".format(lib),
                 "make FORJETSON={} PRECISION=".format(for_jetson) + arith_type + " -j 4",
-                "mkdir -p " + data_path, 
+                "mkdir -p " + data_path,
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
-    for size in SIZES:
+
+    # gen only for max size, defined on cuda_trip_mxm.cu
+    for i in SIZES:
         input_file = data_path + "/"
 
-        gen = [None] * 7
+        gen = [None] * 6
         gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
-        gen[1] = ['-boxes=' + str(size)]
-        gen[2] = ['-input_distances=' + input_file + 'lava_distances_pt_' + arith_type + '_' + str(size)]
-        gen[3] = ['-input_charges=' + input_file + 'lava_charges_pt_' + arith_type + '_' + str(size)]
-        gen[4] = ['-output_gold=' + input_file + "lava_gold_pt_" + arith_type +  '_' + str(size)]
+        gen[1] = ['-size=' + str(i)]
+        gen[2] = ['-input_a=' + input_file + 'A_pt' + str(i) + '.matrix']
+        gen[3] = ['-input_b=' + input_file + 'B_pt' + str(i) +  '.matrix']
+        gen[4] = ['-gold=' + input_file + "GOLD_pt" +  str(i) + ".matrix"]  # change for execute
         gen[5] = ['-generate']
-        gen[6] = ['-streams={}'.format(STREAMS)]
-
 
         # change mode and iterations for exe
         exe = copy.deepcopy(gen)
@@ -80,7 +81,7 @@ def config(board, arith_type, debug):
 
 if __name__ == "__main__":
     try:
-        parameter = str(sys.argv[0:][1]).upper() 
+        parameter = str(sys.argv[1:][1]).upper() 
         if parameter == 'DEBUG':
             debug_mode = True
     except:

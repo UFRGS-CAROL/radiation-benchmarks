@@ -1,5 +1,6 @@
 LOGS=1
 DEBUG?=0
+FI=0
 
 CXX=g++
 CUDAPATH=/usr/local/cuda
@@ -18,6 +19,9 @@ OBJDIR=./obj/
 
 EXEC=cuda_batched_mxm
 
+ifeq ($(FI), 1)
+FIDEBUG= -debug
+endif
 
 ifeq ($(DEBUG), 1)
 NVCCFLAGS+= -g -G
@@ -33,7 +37,7 @@ endif
 COMMON= $(INCLUDE)
 LDFLAGS= $(LIBRARY) -lcudart -lcublas -lcurand -lstdc++   -lnvidia-ml -lNVMLWrapper
 
-OBJ=matrixMul.o matrixMul_kernel.o
+OBJ=matrixMul.o
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard *.h) Makefile
@@ -54,7 +58,7 @@ obj:
 
 
 clean:
-	rm -rf $(EXEC) $(OBJDIR)/*
+	rm -rf $(EXEC) $(OBJDIR)/* mxm_*
 	
 	
 DEF_SIZE=128
@@ -75,5 +79,5 @@ test: $(EXEC)
 			-input_a=$(DEF_A_INPUT) \
 			-input_b=$(DEF_B_INPUT) \
 			-gold=$(DEF_GOLD) \
-			-iterations=10 -verbose
+			-iterations=10 -verbose $(FIDEBUG)
 	
