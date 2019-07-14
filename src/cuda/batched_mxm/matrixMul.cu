@@ -256,7 +256,7 @@ int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
 					error_detail << " r: " << valOutput << ", e: " << valGold;
 
 					if (verbose && (host_errors < 10))
-						std::cout << error_detail.str();
+						std::cout << error_detail.str() << std::endl;
 #ifdef LOGS
 					if (!generate)
 					log_error_detail(
