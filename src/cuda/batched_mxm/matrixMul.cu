@@ -338,10 +338,6 @@ int main(int argc, char **argv) {
 	std::vector<float> c_host(num_elements);
 	std::vector<float> gold(num_elements);
 
-	//Streams allocation
-	std::vector<CudaStream> streams(args.n_streams);
-	std::cout << "STREAMS SIZE " << streams.size() << std::endl;
-
 	//Define the grid size
 	int gridsize = args.k / BLOCK_SIZE < 1 ? 1 : args.k / BLOCK_SIZE;
 	int blocksize = args.k / BLOCK_SIZE < 1 ? args.k : BLOCK_SIZE;
@@ -378,6 +374,10 @@ int main(int argc, char **argv) {
 	//Persistent case
 	rad::HostPersistentControler pk(dim_grid);
 
+	//Streams allocation
+	std::vector<CudaStream> streams(args.n_streams);
+
+	//Execute before if it is persistent
 	if (args.execution_type == PERSISTENT) {
 		pk.start_kernel();
 		matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k, args.k, streams,
