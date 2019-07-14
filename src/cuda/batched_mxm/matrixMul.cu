@@ -410,7 +410,7 @@ int main(int argc, char **argv) {
 
 		auto kernel_time = rad::mysecond();
 #ifdef LOGS
-		if(args.generate) {
+		if(!args.generate) {
 			start_iteration();
 		}
 #endif
@@ -421,7 +421,7 @@ int main(int argc, char **argv) {
 					streams, args.execution_type, dim_grid, dim_block);
 		}
 #ifdef LOGS
-		if(args.generate) {
+		if(!args.generate) {
 			end_iteration();
 		}
 #endif
@@ -482,7 +482,7 @@ int main(int argc, char **argv) {
 	}
 
 #ifdef LOGS
-	if(args.generate) {
+	if(!args.generate) {
 		end_log_file();
 	}
 	profiler_thread->end_profile();
