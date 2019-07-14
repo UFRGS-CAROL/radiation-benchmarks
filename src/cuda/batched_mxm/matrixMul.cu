@@ -238,11 +238,11 @@ template<typename real_t>
 int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
 		int n_k_times, int k, bool verbose, bool generate) {
 	int host_errors = 0;
-
-#pragma omp parallel for shared(host_errors)
-	for (int stream = 0; stream < n_k_times; stream++) {
-		for (int i = 0; i < k; i++) {
-			for (int j = 0; i < k; j++) {
+	int i, j, stream;
+#pragma omp parallel for shared(host_errors,i,j,stream)
+	for (stream = 0; stream < n_k_times; stream++) {
+		for (i = 0; i < k; i++) {
+			for (j = 0; j < k; j++) {
 				int index = stream * k * k + i * k + j;
 				register double valGold = gold[index];
 				register double valOutput = found[index];
@@ -255,7 +255,8 @@ int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
 								<< std::setprecision(20);
 						error_detail << "stream:" << stream << ",";
 						error_detail << " p: [" << i << ", " << j << "],";
-						error_detail << " r: " << valOutput << ", e: " << valGold;
+						error_detail << " r: " << valOutput << ", e: "
+								<< valGold;
 						if (verbose && (host_errors < 10))
 							std::cout << error_detail.str() << std::endl;
 #ifdef LOGS
