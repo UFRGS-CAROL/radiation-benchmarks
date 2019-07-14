@@ -13,28 +13,43 @@
 #include "cuda_utils.h"
 
 #include <vector>
+
+#include <iostream>
 /**
  * Only to manage cuda Streams
  */
 struct CudaStream {
 	cudaStream_t stream;
 	CudaStream() {
+		static int t = 0;
+
 		rad::checkFrameworkErrors(
 				cudaStreamCreateWithFlags(&this->stream,
 						cudaStreamNonBlocking));
+		std::cout << "CREATED " << t++ << std::endl;
 	}
 
 	CudaStream(const CudaStream& b){
+		static int t2 = 0;
+
 		this->stream = b.stream;
+
+		std::cout << "COPIED " << t2++ << std::endl;
+
 	}
 
 	CudaStream& operator=(const CudaStream&  b){
 		this->stream = b.stream;
+		static int t3 = 0;
+		std::cout << "OVERRIDED " << t3++ << std::endl;
+
 		return *this;
 	}
 
 	virtual ~CudaStream() {
 		rad::checkFrameworkErrors(cudaStreamDestroy(this->stream));
+		static int t4 = 0;
+		std::cout << "DESTROYED " << t4++ << std::endl;
 	}
 
 	void sync() {

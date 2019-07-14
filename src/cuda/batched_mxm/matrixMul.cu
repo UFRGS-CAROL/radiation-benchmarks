@@ -42,10 +42,11 @@
 #include <omp.h>
 
 //STD LIBS
-#include <random>
-#include <fstream>
-#include <iostream>
-#include <iomanip>
+#include <random>	//generate A and B matrices
+#include <fstream>  //Input/output files
+#include <iostream> //Output messages
+#include <iomanip>	// random generator
+#include <algorithm>    // std::count_if
 
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 32
@@ -193,33 +194,22 @@ void generate_input(std::vector<real_t>& a_vector,
 	generate(begin(a_vector), end(a_vector), generator);
 	generate(begin(b_vector), end(b_vector), generator);
 
-	int numZeros = 0;
-	int numNans = 0;
-	int numInfs = 0;
+	int numZeros = std::count(a_vector.begin(), a_vector.end(), real_t(0.0));
 
-	for (auto val : a_vector) {
-		if (val == 0)
-			numZeros++;
-		if (isnan(val))
-			numNans++;
-		if (isinf(val))
-			numInfs++;
-	}
+	int numNans = std::count_if(a_vector.begin(), a_vector.end(),
+			[](real_t i) {return std::isnan(i);});
+	int numInfs = std::count_if(a_vector.begin(), a_vector.end(),
+			[](real_t i) {return std::isinf(i);});
 
 	std::cout << "Number of zeros/NaNs/INFs on matrix A: " << numZeros << " "
 			<< numNans << " " << numInfs << std::endl;
 
-	numZeros = 0;
-	numNans = 0;
-	numInfs = 0;
-	for (auto val : b_vector) {
-		if (val == 0)
-			numZeros++;
-		if (isnan(val))
-			numNans++;
-		if (isinf(val))
-			numInfs++;
-	}
+	numZeros = std::count(b_vector.begin(), b_vector.end(), real_t(0.0));
+	numNans = std::count_if(b_vector.begin(), b_vector.end(),
+			[](real_t i) {return std::isnan(i);});
+	numInfs = std::count_if(b_vector.begin(), b_vector.end(),
+			[](real_t i) {return std::isinf(i);});
+
 	std::cout << "Number of zeros/NaNs/INFs on matrix B: " << numZeros << " "
 			<< numNans << " " << numInfs << std::endl;
 }
@@ -265,15 +255,6 @@ int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
 						<< "],";
 				error_detail << " r: " << valOutput << ", e: " << valGold;
 
-				char test[200];
-				snprintf(test, 150, "p: [%d, %d], r: %1.20e, e: %1.20e",
-						(int) floor(i / k), i % k, valOutput, valGold);
-				if (std::string(test) != error_detail.str()) {
-					std::cout << error_detail.str() << std::endl;
-					std::cout << test << std::endl;
-					std::cout << "PAU\n";
-					assert(0);
-				}
 				if (verbose && (host_errors < 10))
 					std::cout << error_detail.str();
 #ifdef LOGS
@@ -308,7 +289,7 @@ int main(int argc, char **argv) {
 	std::cout << args << std::endl;
 	//================== Init logs
 #ifdef LOGS
-	if (!args.generate) {
+	if (args.generate == false) {
 		std::string test_info = "";
 		std::string test_name = "cuda_float_mxm_";
 
@@ -377,7 +358,6 @@ int main(int argc, char **argv) {
 		load_file_data(args.input_a, a_host);
 		load_file_data(args.input_b, b_host);
 		load_file_data(args.gold, gold);
-
 	}
 
 	//Debug fault injection
@@ -410,7 +390,7 @@ int main(int argc, char **argv) {
 
 		auto kernel_time = rad::mysecond();
 #ifdef LOGS
-		if(!args.generate) {
+		if(args.generate == false) {
 			start_iteration();
 		}
 #endif
@@ -421,7 +401,7 @@ int main(int argc, char **argv) {
 					streams, args.execution_type, dim_grid, dim_block);
 		}
 #ifdef LOGS
-		if(!args.generate) {
+		if(args.generate == false) {
 			end_iteration();
 		}
 #endif
