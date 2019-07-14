@@ -237,12 +237,11 @@ void write_to_file(std::string& path, std::vector<real_t>& array) {
 template<typename real_t>
 int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
 		int n_k_times, int k, bool verbose, bool generate) {
-	int host_errors = 0;
-	int i, j, stream;
-#pragma omp parallel for shared(host_errors,i,j,stream)
+	int host_errors = 0, stream;
+#pragma omp parallel for shared(host_errors, stream)
 	for (stream = 0; stream < n_k_times; stream++) {
-		for (i = 0; i < k; i++) {
-			for (j = 0; j < k; j++) {
+		for (int i = 0; i < k; i++) {
+			for (int j = 0; j < k; j++) {
 				int index = stream * k * k + i * k + j;
 				register double valGold = gold[index];
 				register double valOutput = found[index];
@@ -456,12 +455,14 @@ int main(int argc, char **argv) {
 		comparison_time = rad::mysecond() - comparison_time;
 
 		if (args.verbose) {
-			std::cout << "----------------------------------------------------" << std::endl;
+			std::cout << "----------------------------------------------------"
+					<< std::endl;
 			std::cout << "Iteration: " << it << std::endl;
 			std::cout << "Kernel time: " << kernel_time << std::endl;
 			std::cout << "Comparison time: " << comparison_time << std::endl;
 			std::cout << "Errors: " << errors << std::endl;
-			std::cout << "----------------------------------------------------" << std::endl;
+			std::cout << "----------------------------------------------------"
+					<< std::endl;
 
 		}
 
