@@ -164,7 +164,8 @@ struct Parameters {
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "kernel_type")) {
-			int ty = getCmdLineArgumentInt(argc, (const char **) argv, "kernel_type");
+			int ty = getCmdLineArgumentInt(argc, (const char **) argv,
+					"kernel_type");
 			if (ty > 0 && ty < COUNT) {
 				this->execution_type = KernelType(ty);
 			} else {
@@ -361,8 +362,7 @@ int main(int argc, char **argv) {
 	std::cout << "STREAMS SIZE " << streams.size() << std::endl;
 
 	//Define the grid size
-	int gridsize =
-			args.k / BLOCK_SIZE < 1 ? 1 : args.k / BLOCK_SIZE;
+	int gridsize = args.k / BLOCK_SIZE < 1 ? 1 : args.k / BLOCK_SIZE;
 	int blocksize = args.k / BLOCK_SIZE < 1 ? args.k : BLOCK_SIZE;
 	dim3 dim_block(blocksize, blocksize);
 	dim3 dim_grid(gridsize, gridsize);
@@ -400,9 +400,8 @@ int main(int argc, char **argv) {
 
 	if (args.execution_type == PERSISTENT) {
 		pk.start_kernel();
-		matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k,
-				args.k, streams, args.execution_type, dim_grid,
-				dim_block);
+		matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k, args.k, streams,
+				args.execution_type, dim_grid, dim_block);
 	}
 
 	for (auto it = 0; it < args.iterations; it++) {
@@ -411,17 +410,20 @@ int main(int argc, char **argv) {
 
 		auto kernel_time = rad::mysecond();
 #ifdef LOGS
-		start_iteration();
+		if(args.generate) {
+			start_iteration();
+		}
 #endif
 		if (args.execution_type == PERSISTENT) {
 			pk.process_data_on_kernel();
 		} else {
-			matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k,
-					args.k, streams, args.execution_type, dim_grid,
-					dim_block);
+			matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k, args.k,
+					streams, args.execution_type, dim_grid, dim_block);
 		}
 #ifdef LOGS
-		end_iteration();
+		if(args.generate) {
+			end_iteration();
+		}
 #endif
 		kernel_time = rad::mysecond() - kernel_time;
 
@@ -433,8 +435,8 @@ int main(int argc, char **argv) {
 		auto comparison_time = rad::mysecond();
 		auto errors = 0;
 		if (args.generate == false) {
-			errors = check_output(gold, c_host, args.n_streams,
-					args.k, args.verbose, args.generate);
+			errors = check_output(gold, c_host, args.n_streams, args.k,
+					args.verbose, args.generate);
 
 			//Reload the values in the GPU DDR
 			if (errors != 0) {
@@ -455,8 +457,8 @@ int main(int argc, char **argv) {
 				if (args.execution_type == PERSISTENT) {
 					pk.start_kernel();
 					matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k,
-							args.k, streams, args.execution_type,
-							dim_grid, dim_block);
+							args.k, streams, args.execution_type, dim_grid,
+							dim_block);
 				}
 #ifdef LOGS
 				profiler_thread->start_profile();
@@ -480,7 +482,9 @@ int main(int argc, char **argv) {
 	}
 
 #ifdef LOGS
-	end_log_file();
+	if(args.generate) {
+		end_log_file();
+	}
 	profiler_thread->end_profile();
 #endif
 	return 0;
