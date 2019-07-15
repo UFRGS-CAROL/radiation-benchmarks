@@ -20,19 +20,13 @@
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
 
+
+#define M 8192
+#define N 8192
+#define K 8192
+
 typedef half_float::half host_half;
-
 typedef std::vector<host_half> half_vector;
-
-//namespace experimental { 
-//    namespace precision { 
-//        struct u4; // 4-bit unsigned 
-//        struct s4; // 4-bit signed 
-//        struct b1; // 1-bit 
-//     } 
-//    enum bmmaBitOp { bmmaBitOpXOR = 1 }; 
-//    enum bmmaAccumulateOp { bmmaAccumulateOpPOPC = 1 }; 
-//} 
 
 
 template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
@@ -393,7 +387,10 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 
 	int tries = 0;
 	cudaEventCreate(&start);
-	cudaEventRecord(start,0);	
+	cudaEventRecord(start,0);
+	cudaStream_t st;
+	cudaStreamCreate(&st);	
+	assert(M > 512 && N > 512 && M % 64 == 0 && N % 16 == 0 && K % 16 == 0);
 	for (int it = 0; it < log_obj.iterations; it++) {
 		double start_computation = log_obj.mysecond();
 		log_obj.start_iteration_app();
@@ -408,8 +405,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		} else {
 			if (log_obj.use_tensor_cores) {
 				// mult_enviroment.mul_gemm_wmma();
-				 mult_enviroment.mul_gemm_wmma_DMR();
-
+				// mult_enviroment.mul_gemm_wmma_DMR();
+				mult_enviroment.mul_gemm_wmma_op_DMR(st);
 			} else {
 				
 				//mult_enviroment.mul_mxm();
@@ -479,6 +476,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		}
 		
 	}
+	cudaStreamDestroy(st);
 	cudaEventCreate(&stop);
 	cudaEventRecord(stop,0);
 	cudaEventSynchronize(stop);
