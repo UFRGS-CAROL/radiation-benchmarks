@@ -8,17 +8,18 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [160]
-PRECISIONS = ["single"]
+SIZES = [128]
+STREAMS = 1024
+KERNELTYPE=[0, 1, 2] # STATIC, PERSISTENT, GEMM
 ITERATIONS = int(1e9)
 
 
-def config(board, arith_type, debug):
+def config(board, debug):
 
-    DATA_PATH_BASE = "mxm_" + arith_type
+    DATA_PATH_BASE = "mxm_single"
 
-    benchmark_bin = "cuda_mxm_persistent_threads_" + arith_type
-    print("Generating " + benchmark_bin + " for CUDA, board:" + board)
+    benchmark_bin = "cuda_batched_mxm"
+    print("Generating {} for CUDA, board: {}".format(benchmark_bin, board))
 
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
@@ -32,7 +33,7 @@ def config(board, arith_type, debug):
 
     data_path = install_dir + "data/" + DATA_PATH_BASE
     bin_path = install_dir + "bin"
-    src_benchmark = install_dir + "src/cuda/mxm_persistent_threads"
+    src_benchmark = install_dir + "src/cuda/batched_mxm"
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
@@ -49,7 +50,7 @@ def config(board, arith_type, debug):
                 "make clean", 
                 "make -C ../../include ",
                 "make -C ../common {}".format(lib),
-                "make FORJETSON={} PRECISION=".format(for_jetson) + arith_type + " -j 4",
+                "make FORJETSON={} -j2".format(for_jetson),
                 "mkdir -p " + data_path,
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
@@ -57,29 +58,33 @@ def config(board, arith_type, debug):
 
     # gen only for max size, defined on cuda_trip_mxm.cu
     for i in SIZES:
-        input_file = data_path + "/"
+        for k in KERNELTYPE:
+            input_file = data_path + "/"
 
-        gen = [None] * 6
-        gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ', bin_path + "/" + benchmark_bin + " "]
-        gen[1] = ['-size=' + str(i)]
-        gen[2] = ['-input_a=' + input_file + 'A_pt' + str(i) + '.matrix']
-        gen[3] = ['-input_b=' + input_file + 'B_pt' + str(i) +  '.matrix']
-        gen[4] = ['-gold=' + input_file + "GOLD_pt" +  str(i) + ".matrix"]  # change for execute
-        gen[5] = ['-generate']
+            gen = [None] * 8
+            gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
+                      bin_path + "/" + benchmark_bin + " "]
+            gen[1] = ['-size={}'.format(i)]
+            gen[2] = ['-input_a={}A_pt_streams_{}_ktype_{}_size_{}.matrix'.format(input_file, STREAMS, k, i)]
+            gen[3] = ['-input_b={}B_pt_streams_{}_ktype_{}_size_{}.matrix'.format(input_file, STREAMS, k, i)]
+            gen[4] = ['-gold={}GOLD_pt_streams_{}_ktype_{}_size_{}.matrix'.format(input_file, STREAMS, k, i)]
+            gen[5] = ['-generate']
+            gen[6] = ['-kernel_type={}'.format(k)]
+            gen[7] = ['-batch={}'.format(STREAMS)]
 
-        # change mode and iterations for exe
-        exe = copy.deepcopy(gen)
-        exe[0][1] = bin_path + '/' + benchmark_bin + " "
-        exe[5] = ['-iterations=' + str(ITERATIONS)]
+            # change mode and iterations for exe
+            exe = copy.deepcopy(gen)
+            exe[5] = ['-iterations={}'.format(ITERATIONS)]
 
-        generate.append(' '.join(str(r) for v in gen for r in v))
-        execute.append(' '.join(str(r) for v in exe for r in v))
+            generate.append(' '.join(str(r) for v in gen for r in v))
+            execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 
 
 
 if __name__ == "__main__":
+    debug_mode = None
     try:
         parameter = str(sys.argv[1:][1]).upper() 
         if parameter == 'DEBUG':
@@ -88,6 +93,7 @@ if __name__ == "__main__":
         debug_mode = False
     
     board, hostname = discover_board()
-    for p in PRECISIONS:
-        config(board=hostname, arith_type=p, debug=debug_mode)
+    if hostname is None:
+        hostname = "carolgeneric"
+    config(board=hostname, debug=debug_mode)
     print("Multiple jsons may have been generated.")
