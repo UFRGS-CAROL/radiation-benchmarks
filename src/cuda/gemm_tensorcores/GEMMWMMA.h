@@ -329,8 +329,7 @@ public:
 				checkCudaErrors(cudaFuncSetAttribute(compute_gemm_op_DMR<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 				checkKernelErrors((compute_gemm_op_DMR<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ, stream>>>
 						(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-						 this->device_ptr_d0, this->device_ptr_d1, int M_O, int N_O, int K_O,
-					     this->alpha, this->beta)));
+						 this->device_ptr_d0, this->device_ptr_d1, M_O, N_O, K_O, this->alpha, this->beta)));
 
 
 				this->debug("device synchronize");
@@ -538,7 +537,7 @@ public:
 
 	GEMMWMMA(const host_half_t* host_ptr_a0, const host_half_t* host_ptr_b0,
 			const host_real_t* host_ptr_c0, size_t rows_a, size_t cols_a,
-			size_t cols_b, float alpha, float beta) {
+			size_t cols_b, real_t alpha, real_t beta) {
 
 		//		//No double multiplication is allowed
 		if (std::is_same<half_t, float>::value) {

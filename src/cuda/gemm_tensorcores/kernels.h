@@ -315,7 +315,7 @@ __device__ void saxpy(half_t a, half_t *b, half_t *c) {
 }
 
 template<class half_t, class real_t>
- __global__ void compute_gemm_op_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, half_t *d, int m, int n, int k, float alpha, float beta)
+ __global__ void compute_gemm_op_DMR( half_t *A, half_t *B, real_t *C, real_t *D, half_t *d, int m, int n, int k, real_t alpha, real_t beta)
  {
 
 
@@ -395,7 +395,7 @@ template<class half_t, class real_t>
 
 #pragma unroll 16
   for (int i = 0; i < 16; i++, C += ldc) {
-    C[0] = alpha * Cb[i] + beta * C[0];
+    d[0] = alpha * Cb[i] + beta * C[0];
   }
 
 
