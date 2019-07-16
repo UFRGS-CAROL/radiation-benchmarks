@@ -318,7 +318,7 @@ __device__ void saxpy(half_t a, half_t *b, half_t *c) {
 // d - sw output
 
 template<class half_t, class real_t>
- __global__ void op_tensor_gemm_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, half_t *d, float  alpha, float beta)
+ __global__ void op_tensor_gemm_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, real_t *d, float  alpha, float beta)
  {
  	// Block index
 	  int bx = blockIdx.x;
