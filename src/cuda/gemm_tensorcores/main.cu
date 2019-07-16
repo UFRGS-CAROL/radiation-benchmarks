@@ -446,18 +446,18 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			//
 			std::pair<int, int> errors;
 			double start, end;
-			// if (log_obj.triplicated) {
-			// 	start = log_obj.mysecond();
-			// 	errors = compare_output_matrices(
-			// 			mult_enviroment.get_memory_errors(), host_gold,
-			// 			host_matrix_d0, host_matrix_d1, host_matrix_d2,
-			// 			log_obj);
-			// 	end = log_obj.mysecond();
-			// }else{
-			// 	start = log_obj.mysecond();
-			// 	errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
-			// 	end = log_obj.mysecond();
-			// }
+			if (log_obj.triplicated) {
+				start = log_obj.mysecond();
+				errors = compare_output_matrices(
+						mult_enviroment.get_memory_errors(), host_gold,
+						host_matrix_d0, host_matrix_d1, host_matrix_d2,
+						log_obj);
+				end = log_obj.mysecond();
+			}else{
+				start = log_obj.mysecond();
+				errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
+				end = log_obj.mysecond();
+			}
 			std::cout << "Iteration: " << it << " memory errors "
 					<< errors.first << " radiation errors " << errors.second
 					<< ". Time spent on computation " << end_computation - start_computation
@@ -484,7 +484,10 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		if (log_obj.triplicated)
 			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_gold);
 		else
-			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d1);
+			
+			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d0);
+			write_gold_to_file<host_real_t>(log_obj.gold_inout_path_1, host_matrix_d1);
+
 	}
 }
 
@@ -512,6 +515,7 @@ int main(int argc, char** argv) {
 // Alloc all memories on host
 	half_vector host_matrix_a(log_obj.size_matrices * log_obj.size_matrices);
 	half_vector host_matrix_b(log_obj.size_matrices * log_obj.size_matrices);
+
 
 
 	if (log_obj.precision == "half") {

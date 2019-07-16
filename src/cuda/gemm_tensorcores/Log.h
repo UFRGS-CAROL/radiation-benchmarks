@@ -25,6 +25,7 @@ public:
 	std::string b_input_path;
 	std::string c_input_path;
 	std::string gold_inout_path;
+	std::string gold_inout_path_1;
 	std::string precision;
 	bool verbose;
 	bool use_tensor_cores;
@@ -47,6 +48,8 @@ public:
 				"./input_c.matrix");
 		this->gold_inout_path = this->find_char_arg(argc, argv, "--gold",
 				"./gold.matrix");
+		this->gold_inout_path_1 = this->find_char_arg(argc, argv, "--gold",
+				"./gold1.matrix");
 
 		this->precision = this->find_char_arg(argc, argv, "--precision",
 				"float");
@@ -56,6 +59,7 @@ public:
 		this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);
 
 		this->triplicated = this->find_int_arg(argc, argv, "--triplicated", 0);
+
 
 #ifdef LOGS
 		std::string test_info = std::string(" iterations: ")
