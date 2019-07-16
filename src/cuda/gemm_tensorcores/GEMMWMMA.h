@@ -462,7 +462,7 @@ public:
 
 	GEMMWMMA(const host_half_t* host_ptr_a0, const host_half_t* host_ptr_b0,
 			const host_real_t* host_ptr_c0, size_t rows_a, size_t cols_a,
-			size_t cols_b, real_t alpha, real_t beta) {
+			size_t cols_b, float alpha, float beta) {
 
 		//No double multiplication is allowed
 		if (std::is_same<half_t, float>::value) {
