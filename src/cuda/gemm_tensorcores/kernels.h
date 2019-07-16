@@ -25,10 +25,11 @@ using namespace nvcuda;
 #define N 16
 #define K 16
 
+#define M_O 8192
+#define N_O 8192
+#define K_O 8192
 
-// #define M 16
-// #define N 16
-// #define K 16
+
 
 // The only dimensions currently supported by WMMA
 #define WMMA_M 16
@@ -328,6 +329,10 @@ template<class half_t, class real_t>
 
   const int idt = ty * 16 + tx;
 
+  int lda = M_O;
+  int ldb = N_O;
+  int ldc = K_O;
+
   B += tx + __mul24(iby + ty, ldb);
   A += ibx + idt;
   C += ibx + idt + __mul24(iby, ldc);
@@ -335,12 +340,12 @@ template<class half_t, class real_t>
   const half_t *Bend = B + k;
 
   half_t Cb[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-  m = 2 * lda;
-  n = 3 * lda;
+  M_O = 2 * lda;
+  N_O = 3 * lda;
 
   do {
     //float Ab[4] = {A[0], A[lda], A[2*lda], A[3*lda]};
-    half_t Ab[4] = { A[0], A[lda], A[m], A[n] };
+    half_t Ab[4] = { A[0], A[lda], A[M_O], A[N_O] };
     __shared__ half_t Bb[16][17];
     Bb[tx][ty + 0] = B[0];
     Bb[tx][ty + 4] = B[4 * ldb];
@@ -355,9 +360,9 @@ template<class half_t, class real_t>
     saxpy(Ab[1], &Bb[1][0], Cb);
     Ab[1] = A[lda];
     saxpy(Ab[2], &Bb[2][0], Cb);
-    Ab[2] = A[m];
+    Ab[2] = A[M_O];
     saxpy(Ab[3], &Bb[3][0], Cb);
-    Ab[3] = A[n];
+    Ab[3] = A[N_O];
 
     A += 4 * lda;
     saxpy(Ab[0], &Bb[4][0], Cb);
@@ -365,9 +370,9 @@ template<class half_t, class real_t>
     saxpy(Ab[1], &Bb[5][0], Cb);
     Ab[1] = A[lda];
     saxpy(Ab[2], &Bb[6][0], Cb);
-    Ab[2] = A[m];
+    Ab[2] = A[M_O];
     saxpy(Ab[3], &Bb[7][0], Cb);
-    Ab[3] = A[n];
+    Ab[3] = A[N_O];
 
     A += 4 * lda;
     saxpy(Ab[0], &Bb[8][0], Cb);
@@ -375,9 +380,9 @@ template<class half_t, class real_t>
     saxpy(Ab[1], &Bb[9][0], Cb);
     Ab[1] = A[lda];
     saxpy(Ab[2], &Bb[10][0], Cb);
-    Ab[2] = A[m];
+    Ab[2] = A[M_O];
     saxpy(Ab[3], &Bb[11][0], Cb);
-    Ab[3] = A[n];
+    Ab[3] = A[N_O];
 
     A += 4 * lda;
     saxpy(Ab[0], &Bb[12][0], Cb);

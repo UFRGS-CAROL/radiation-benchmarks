@@ -21,9 +21,6 @@
 #define GENERATOR_MINABSVALUE 0
 
 
-#define M 8192
-#define N 8192
-#define K 8192
 
 typedef half_float::half host_half;
 typedef std::vector<host_half> half_vector;
@@ -390,7 +387,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 	cudaEventRecord(start,0);
 	cudaStream_t st;
 	cudaStreamCreate(&st);	
-	assert(M > 512 && N > 512 && M % 64 == 0 && N % 16 == 0 && K % 16 == 0);
+	assert(M_O > 512 && N_O > 512 && M_O % 64 == 0 && N_O % 16 == 0 && K_O % 16 == 0);
 	for (int it = 0; it < log_obj.iterations; it++) {
 		double start_computation = log_obj.mysecond();
 		log_obj.start_iteration_app();
