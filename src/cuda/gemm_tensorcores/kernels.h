@@ -473,7 +473,7 @@ template<class half_t, class real_t>
       for (int j = 0; j < WARP_ROW_TILES; j++) {
  #pragma unroll
         for (int t = 0; t < c[i][j].num_elements; t++) {
-          c[i][j].x[t] *= beta;
+          c[i][j].x[t] *= (real_t) beta;
         }
       }
     }
@@ -551,7 +551,7 @@ template<class half_t, class real_t>
         // Uniform, point-wise transformations of ALL fragment elements by ALL threads in the
         // warp are well-defined even though element indices within fragment storage are not defined.
         for (int t = 0; t < c[i][j].num_elements; t++)
-          c[i][j].x[t] *= alpha;
+          c[i][j].x[t] *= (real_t)alpha;
 
         real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
