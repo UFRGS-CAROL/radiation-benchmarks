@@ -34,7 +34,7 @@ NVCC_FLAGS+= -DCHECKBLOCK=$(CHECKBLOCK)
 
 
 FLAGS+=-I$(NVIDIA_INC) -I../common -L$(NVIDIA_LIB) -DOPS=$(OPS) 
-FLAGS+= -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS)
+FLAGS+= -O3 -lLogHelper -std=c++11  $(NVCC_FLAGS)
 
 all: $(EXEC)
 

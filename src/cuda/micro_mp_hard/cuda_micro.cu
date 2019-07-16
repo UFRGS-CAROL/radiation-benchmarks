@@ -59,15 +59,17 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 		unsigned long long dmr_errors) {
 	int host_errors = 0;
 	double gold = double(OUTPUT_R);
+	double threshold = -3;
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < R.size(); i++) {
 		double output = double(R[i]);
 		double output_inc = double(R_incomplete[i]);
+		threshold = max(threshold, fabs(output - output_inc));
 		if (gold != output || !cmp(output, output_inc)) {
 #pragma omp critical
 			{
 				std::stringstream error_detail;
-				error_detail.precision(18);
+				error_detail.precision(20);
 				error_detail << "p: [" << i << "], r: " << std::scientific
 						<< output << ", e: " << gold << " smaller_precision: "
 						<< output_inc;
@@ -81,6 +83,7 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 			}
 		}
 	}
+	std::cout << "MAX THRESHOLD " << threshold << std::endl;
 
 	if (dmr_errors != 0) {
 		std::stringstream error_detail;
