@@ -50,10 +50,12 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
+		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
+			acc_incomplete = incomplete(acc_full);
 		}
 #endif
 
@@ -78,86 +80,47 @@ template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 		full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
 		const full INPUT_B) {
-// ========================================== Double and Single precision
-	volatile register full sum_full = full(1.0) / full(OPS);
-	volatile register incomplete sum_incomplete = incomplete(1.0)
-			/ incomplete(OPS);
+	// ========================================== Double and Single precision
+	volatile register full acc_full = OUTPUT_R;
+	volatile register full input_a = OUTPUT_R;
+	volatile register full input_a_neg = -OUTPUT_R;
 
-	volatile register full acc_full = 0.0;
-	volatile register incomplete acc_incomplete = 0.0;
+	volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
+	volatile register incomplete input_a_incomplete = incomplete(OUTPUT_R);
+	volatile register incomplete input_a_neg_incomplete = incomplete(-OUTPUT_R);
 
-	for (register unsigned int count = 0; count < OPS; count++) {
-		acc_full = add_dmr(acc_full, sum_full);
-		acc_incomplete = add_dmr(acc_incomplete, sum_incomplete);
+	for (register unsigned int count = 0; count < (OPS / 4); count++) {
+		acc_full = add_dmr(acc_full, input_a);
+		acc_full = add_dmr(acc_full, input_a_neg);
+		acc_full = add_dmr(acc_full, input_a_neg);
+		acc_full = add_dmr(acc_full, input_a);
+
+		acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
+		acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
+		acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
+		acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
+
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
-
+		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
+			acc_incomplete = incomplete(acc_full);
 		}
 #endif
-
 	}
 
 	//if CHECKBLOCK is 0 only after OPS iterations it will be verified
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
 #endif
+
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
-
-/**
- *
- *
- template<typename incomplete, typename full>
- __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
- full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
- const full INPUT_B) {
- // ========================================== Double and Single precision
- volatile register full acc_full = OUTPUT_R;
- volatile register full input_a = OUTPUT_R;
- volatile register full input_a_neg = -OUTPUT_R;
-
- volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
- volatile register incomplete input_a_incomplete = incomplete(OUTPUT_R);
- volatile register incomplete input_a_neg_incomplete = incomplete(-OUTPUT_R);
-
- for (register unsigned int count = 0; count < (OPS / 4); count++) {
- acc_full = add_dmr(acc_full, input_a);
- acc_full = add_dmr(acc_full, input_a_neg);
- acc_full = add_dmr(acc_full, input_a_neg);
- acc_full = add_dmr(acc_full, input_a);
-
- acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
- acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
- acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
- acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
-
- // if CHECKBLOCK is 1 each iteration will be verified
- #if CHECKBLOCK == 1
- check_relative_error(acc_incomplete, acc_full);
- // if CHECKBLOCK is >1 perform the % operation
- #elif CHECKBLOCK > 1
- if((count % CHECKBLOCK) == 0) {
- check_relative_error(acc_incomplete, acc_full);
- }
- #endif
-
- }
-
- //if CHECKBLOCK is 0 only after OPS iterations it will be verified
- #if CHECKBLOCK == 0
- check_relative_error(acc_incomplete, acc_full);
- #endif
-
- d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
- d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
- }
- */
 
 /**
  * ----------------------------------------
@@ -169,95 +132,62 @@ template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 		full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
 		const full INPUT_B) {
-	register unsigned int multiplier = 10;
-	register unsigned int s = OPS / multiplier;
 
-	volatile register full acc_full = full(1.0) / full(multiplier);
-	volatile register incomplete acc_incomplete = incomplete(1.0) / incomplete(multiplier);
+	volatile register full acc_full = OUTPUT_R;
+	volatile register full input_a_full = INPUT_A;
+	volatile register full input_a_inv_full = full(1.0) / INPUT_A;
 
-	volatile register full full_const = full(1.000001);
-	volatile register incomplete incomplete_const = incomplete(1.000001);
+	volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
+	volatile register incomplete input_a_incomplete = incomplete(INPUT_A);
+	volatile register incomplete input_a_inv_incomplete = incomplete(1.0)
+			/ incomplete(INPUT_A);
 
-	for (register unsigned int count = 0; count < multiplier; count++) {
+	for (register unsigned int count = 0; count < (OPS / 4); count++) {
+		acc_full = mul_dmr(acc_full, input_a_full);
+		acc_full = mul_dmr(acc_full, input_a_inv_full);
+		acc_full = mul_dmr(acc_full, input_a_inv_full);
+		acc_full = mul_dmr(acc_full, input_a_full);
 
-		full dacc = full(1.0);
-		incomplete facc = incomplete(1.0);
-
-		for (register unsigned int t = 0; t < s; t++) {
-			dacc = dacc * full(full_const);
-			facc = facc * incomplete(incomplete_const);
-		}
-
-		acc_full = full(acc_full) * dacc;
-		acc_incomplete = incomplete(acc_incomplete) * facc;
+		acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
+		acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
+		acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
+		acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
 
 		// if CHECKBLOCK is 1 each iteration will be verified
-//#if CHECKBLOCK == 1
-//		check_relative_error(acc_incomplete, acc_full);
-//#elif CHECKBLOCK > 1
-//		if((count % CHECKBLOCK) == 0) {
-//			check_relative_error(acc_incomplete, acc_full);
-//		}
-//#endif
+#if CHECKBLOCK == 1
+		check_relative_error(acc_incomplete, acc_full);
+		acc_incomplete = incomplete(acc_full);
+		// if CHECKBLOCK is >1 perform the % operation
+#elif CHECKBLOCK > 1
+		if((count % CHECKBLOCK) == 0) {
+			check_relative_error(acc_incomplete, acc_full);
+			acc_incomplete = incomplete(acc_full);
+		}
+#endif
 
 	}
 
-//	//if CHECKBLOCK is 0 only after OPS iterations it will be verified
-//#if CHECKBLOCK == 0
-//	check_relative_error(acc_incomplete, acc_full);
-//#endif
+	//if CHECKBLOCK is 0 only after OPS iterations it will be verified
+#if CHECKBLOCK == 0
+	check_relative_error(acc_incomplete, acc_full);
+#endif
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
 
-/**
- *
- template<typename incomplete, typename full>
- __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
- full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
- const full INPUT_B) {
 
- volatile register full acc_full = OUTPUT_R;
- volatile register full input_a_full = INPUT_A;
- volatile register full input_a_inv_full = full(1.0) / INPUT_A;
+template<typename incomplete, typename full>
+__global__ void MicroBenchmarkKernel_SQRT(incomplete *d_R0_one,
+		full *d_R0_second, const full INPUT_A) {
 
- volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
- volatile register incomplete input_a_incomplete = incomplete(INPUT_A);
- volatile register incomplete input_a_inv_incomplete = incomplete(1.0)
- / incomplete(INPUT_A);
+}
 
- for (register unsigned int count = 0; count < (OPS / 4); count++) {
- acc_full = mul_dmr(acc_full, input_a_full);
- acc_full = mul_dmr(acc_full, input_a_inv_full);
- acc_full = mul_dmr(acc_full, input_a_inv_full);
- acc_full = mul_dmr(acc_full, input_a_full);
 
- acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
- acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
- acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
- acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
+template<typename incomplete, typename full>
+__global__ void MicroBenchmarkKernel_EXP(incomplete *d_R0_one,
+		full *d_R0_second, const full INPUT_A) {
 
- // if CHECKBLOCK is 1 each iteration will be verified
- #if CHECKBLOCK == 1
- check_relative_error(acc_incomplete, acc_full);
- // if CHECKBLOCK is >1 perform the % operation
- #elif CHECKBLOCK > 1
- if((count % CHECKBLOCK) == 0) {
- check_relative_error(acc_incomplete, acc_full);
- }
- #endif
-
- }
-
- //if CHECKBLOCK is 0 only after OPS iterations it will be verified
- #if CHECKBLOCK == 0
- check_relative_error(acc_incomplete, acc_full);
- #endif
-
- d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
- d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
- }
- */
+}
 
 #endif /* DMR_KERNELS_CU_ */
