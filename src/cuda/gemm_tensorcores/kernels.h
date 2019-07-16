@@ -315,7 +315,7 @@ __device__ void saxpy(half_t a, half_t *b, half_t *c) {
 }
 
 template<class half_t, class real_t>
- __global__ void compute_gemm_op_DMR( half_t *A, half_t *B, real_t *C, real_t *D, half_t *d, int m, int n, int k, real_t alpha, real_t beta)
+ __global__ void compute_gemm_op_DMR( half_t *A, half_t *B, real_t *C, real_t *D, half_t *d, int m, int n, int k, half_t alpha, half_t beta)
  {
 
 
@@ -458,7 +458,7 @@ template<class half_t, class real_t>
     for (int i = 0; i < WARP_COL_TILES; i++) {
  #pragma unroll
       for (int j = 0; j < WARP_ROW_TILES; j++) {
-        const float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+        const real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
         wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
       }
@@ -553,7 +553,7 @@ template<class half_t, class real_t>
         for (int t = 0; t < c[i][j].num_elements; t++)
           c[i][j].x[t] *= alpha;
 
-        float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+        real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
         wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE, C_LAYOUT);
       }
