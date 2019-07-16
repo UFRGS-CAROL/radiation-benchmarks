@@ -32,7 +32,7 @@ LIBRARY+= -lLogHelper
 endif
 
 COMMON= $(INCLUDE) -DCHECKBLOCK=$(CHECKBLOCK)
-LDFLAGS= $(LIBRARY) -lcudart -lcublas -lcurand -lstdc++
+LDFLAGS= $(LIBRARY) -lcudart  -lcurand -lstdc++
 
 OBJ=HotspotExecute.o Log.o Parameters.o main.o
 
