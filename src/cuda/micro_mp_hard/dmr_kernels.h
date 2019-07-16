@@ -203,7 +203,7 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
-		if((count % CHECKBLOCK) == 0) {
+		if((i % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
 			acc_incomplete = incomplete(acc_full);
 		}
