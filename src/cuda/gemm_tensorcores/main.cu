@@ -503,7 +503,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 
       if(largest < host_matrix_d1[z])
          largest = host_matrix_d1[z];
-       std::cout << "d1 array is: " << host_matrix_d1[2] <<std::endl;
+       
    } 
   
 
@@ -512,10 +512,13 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 
       if(lowest < host_matrix_d0[z])
          lowest = host_matrix_d0[z];
-      std::cout << "d0 array is: " << host_matrix_d0[2] <<std::endl;
+     
    } 
    std::cout << "Largest element in array is: " << largest <<std::endl;
    std::cout << "lowest element in array is: " << lowest<<std::endl;
+
+   std::cout << "treshold is: " <<(largest-lowest)<<std::endl;
+
 
 }   
 
