@@ -329,10 +329,12 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 
 #if CHECKBLOCK == 1
 			compare(t_temp[ty][tx], t_temp_inc[ty][tx]);
+			t_temp_inc[ty][tx] = incomplete(t_temp[ty][tx]);
 			// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 			if((iteration % CHECKBLOCK) == 0) {
 				compare(t_temp[ty][tx], t_temp_inc[ty][tx]);
+				t_temp_inc[ty][tx] = incomplete(t_temp[ty][tx]);
 			}
 #endif
 		}
@@ -346,6 +348,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 
 #if CHECKBLOCK == 0
 		compare(t_temp[ty][tx], t_temp_inc[ty][tx]);
+		t_temp_inc[ty][tx] = incomplete(t_temp[ty][tx]);
 #endif
 
 		temp_dst[index] = t_temp[ty][tx];
