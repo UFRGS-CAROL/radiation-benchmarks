@@ -395,7 +395,7 @@ template<class half_t, class real_t>
 
 #pragma unroll 16
   for (int i = 0; i < 16; i++, C += ldc) {
-    d[0] = alpha * Cb[i] + beta * C[0];
+    d[0] = alpha * Cb[i] + beta * d[0];
   }
 
 
@@ -451,7 +451,7 @@ template<class half_t, class real_t>
 
     // These fragments will accumulate the result of A and B matrix fragment multiplications
     // along the K_GLOBAL dimension.
-    wmma::fragment<wmma::accumulator, M, N, K, float> c[WARP_COL_TILES][WARP_ROW_TILES];
+    wmma::fragment<wmma::accumulator, M, N, K, real_t> c[WARP_COL_TILES][WARP_ROW_TILES];
 
     // Load the C matrix tiles into fragments from shared memory.
  #pragma unroll
