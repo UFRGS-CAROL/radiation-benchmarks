@@ -5,6 +5,7 @@
 #include <fstream>      // std::ifstream
 #include <sstream>      // std::stringstream
 
+
 #ifdef OMP
 #include <omp.h>
 #endif
@@ -497,10 +498,15 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 
 	}
 
-   
-    cout <<  "min: " << std::min(host_matrix_d1, comp) << "\n"; 
-    cout <<  "max: " << std::max(host_matrix_d0, comp) << "\n"; 
+   real_t largest = host_matrix_d0[0];
+   for(int z = 1;z <(log_obj.size_matrices * log_obj.size_matrices) ; z++) {
+
+      if(largest < host_matrix_d0[z])
+         largest = host_matrix_d0[z];
+   } 
+   cout<<"Largest element in array is: "<<largest;
 }
+
 
 void usage(char **argv) {
 	std::cout << "./" << argv[0]
