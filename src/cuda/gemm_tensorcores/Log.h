@@ -25,6 +25,7 @@ public:
 	std::string b_input_path;
 	std::string c_input_path;
 	std::string gold_inout_path;
+	std::string gold_inout_path_1;
 	std::string precision;
 	bool verbose;
 	bool use_tensor_cores;
