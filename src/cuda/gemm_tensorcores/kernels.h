@@ -138,7 +138,7 @@ __device__ void saxpy(half_t a, half_t *b, half_t *c) {
 
   //OPTIMIZED GEMM USING TENSOR CORES, UNHARDENED  
   template<class half_t, class real_t>
- __global__ void op_tensor_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D, float alpha, float beta)
+ __global__ void op_tensor_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D, real_t alpha, real_t beta)
  {
  	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
@@ -318,10 +318,10 @@ __device__ void saxpy(half_t a, half_t *b, half_t *c) {
 // d - sw output
 
 template<class half_t, class real_t>
- __global__ void op_tensor_gemm_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, half_t *d, float alpha, float beta)
+ __global__ void op_tensor_gemm_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, half_t *d, real_t alpha, real_t beta)
  {
  	// Block index
-	int bx = blockIdx.x;
+	  int bx = blockIdx.x;
   	int by = blockIdx.y;
 
   	// Thread index
