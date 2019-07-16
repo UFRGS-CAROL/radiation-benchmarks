@@ -504,8 +504,16 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
       if(largest < host_matrix_d0[z])
          largest = host_matrix_d0[z];
    } 
-   cout<<"Largest element in array is: "<<largest;
-}
+  
+
+   real_t lowest = host_matrix_d1[0];
+   for(int z = 1;z <(log_obj.size_matrices * log_obj.size_matrices) ; z++) {
+
+      if(lowest < host_matrix_d1[z])
+         lowest = host_matrix_d1[z];
+   } 
+   std::cout<<"Largest element in array is: "<<largest <<std::endl;
+   std::cout<<"lowest element in array is: "<<lowest<<std::endl;
 
 
 void usage(char **argv) {
