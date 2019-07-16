@@ -402,8 +402,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		} else {
 			if (log_obj.use_tensor_cores) {
 				// mult_enviroment.mul_gemm_wmma();
-				// mult_enviroment.mul_gemm_wmma_DMR();
-				mult_enviroment.mul_gemm_wmma_op_DMR(st);
+				 mult_enviroment.mul_gemm_wmma_DMR();
+				//mult_enviroment.mul_gemm_wmma_op_DMR(st);
 			} else {
 				
 				//mult_enviroment.mul_mxm();
@@ -446,18 +446,18 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			//
 			std::pair<int, int> errors;
 			double start, end;
-			if (log_obj.triplicated) {
-				start = log_obj.mysecond();
-				errors = compare_output_matrices(
-						mult_enviroment.get_memory_errors(), host_gold,
-						host_matrix_d0, host_matrix_d1, host_matrix_d2,
-						log_obj);
-				end = log_obj.mysecond();
-			}else{
-				start = log_obj.mysecond();
-				errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
-				end = log_obj.mysecond();
-			}
+			// if (log_obj.triplicated) {
+			// 	start = log_obj.mysecond();
+			// 	errors = compare_output_matrices(
+			// 			mult_enviroment.get_memory_errors(), host_gold,
+			// 			host_matrix_d0, host_matrix_d1, host_matrix_d2,
+			// 			log_obj);
+			// 	end = log_obj.mysecond();
+			// }else{
+			// 	start = log_obj.mysecond();
+			// 	errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
+			// 	end = log_obj.mysecond();
+			// }
 			std::cout << "Iteration: " << it << " memory errors "
 					<< errors.first << " radiation errors " << errors.second
 					<< ". Time spent on computation " << end_computation - start_computation
@@ -513,7 +513,7 @@ int main(int argc, char** argv) {
 	half_vector host_matrix_a(log_obj.size_matrices * log_obj.size_matrices);
 	half_vector host_matrix_b(log_obj.size_matrices * log_obj.size_matrices);
 
-	//TODO: To be implemented experimental precisions
+
 	if (log_obj.precision == "half") {
 		call_mxm<host_half, half, half>(host_matrix_a, host_matrix_b, log_obj);	
 	}
@@ -523,22 +523,6 @@ int main(int argc, char** argv) {
 	// if (log_obj.precision == "double") {
 	// 	call_mxm<double, double, half>(host_matrix_a, host_matrix_b, log_obj);
 	// }
-
-	
-//	if (log_obj.precision == "uchar") {
-//		call_mxm<int,int,unsigned char>(host_matrix_a, host_matrix_b, log_obj);
-//	}
-	
-	
-//	if (log_obj.precision == "u4") {
-//		call_mxm<struct u4>(host_matrix_a, host_matrix_b, log_obj);
-//	}
-//	if (log_obj.precision == "s4") {
-//		call_mxm<struct s4>(host_matrix_a, host_matrix_b, log_obj);
-//	}
-//	if (log_obj.precision == "b1") {
-//		call_mxm<struct b1>(host_matrix_a, host_matrix_b, log_obj);
-//	}
 	
 
 	std::cout << "Finished computation\n";
