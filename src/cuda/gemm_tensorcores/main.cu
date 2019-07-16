@@ -351,6 +351,11 @@ std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vect
 	return res;
 }
 
+bool comp(int a, int b) 
+{ 
+    return (a < b); 
+} 
+
 template<class host_real_t, class real_t, class half_t>
 void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		Log& log_obj) {
@@ -493,8 +498,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 	}
 
    
-    cout <<  "min: " << std::min(host_matrix_d1) << "\n"; 
-    cout <<  "max: " << std::max(host_matrix_d0) << "\n"; 
+    cout <<  "min: " << std::min(host_matrix_d1, comp) << "\n"; 
+    cout <<  "max: " << std::max(host_matrix_d0, comp) << "\n"; 
 }
 
 void usage(char **argv) {
