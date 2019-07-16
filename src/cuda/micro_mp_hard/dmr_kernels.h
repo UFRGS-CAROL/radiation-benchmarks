@@ -176,17 +176,48 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
 
-
 template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_SQRT(incomplete *d_R0_one,
 		full *d_R0_second, const full INPUT_A) {
 
 }
 
-
 template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_EXP(incomplete *d_R0_one,
-		full *d_R0_second, const full INPUT_A) {
+__global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
+		full *d_R0_second, const full OUTPUT_R) {
+	int n = 10000000;
+	const full divisor = full(n);
+	volatile full acc_full = 0.0;
+	volatile full slice_full = OUTPUT_R / divisor;
+
+	volatile full acc_incomplete = 0.0;
+	volatile full slice_incomplete = incomplete(OUTPUT_R) / incomplete(divisor);
+
+	for (int i = 0; i < n; i++) {
+		acc_full = add_dmr(slice_full, acc_full);
+
+		acc_incomplete = add_dmr(slice_incomplete, acc_incomplete);
+
+#if CHECKBLOCK == 1
+		check_relative_error(acc_incomplete, acc_full);
+		acc_incomplete = incomplete(acc_full);
+		// if CHECKBLOCK is >1 perform the % operation
+#elif CHECKBLOCK > 1
+		if((count % CHECKBLOCK) == 0) {
+			check_relative_error(acc_incomplete, acc_full);
+			acc_incomplete = incomplete(acc_full);
+		}
+#endif
+
+	}
+
+	//if CHECKBLOCK is 0 only after OPS iterations it will be verified
+#if CHECKBLOCK == 0
+	check_relative_error(acc_incomplete, acc_full);
+#endif
+
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 
 }
 
