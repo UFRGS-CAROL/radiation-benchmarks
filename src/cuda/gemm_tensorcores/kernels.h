@@ -115,11 +115,30 @@ __device__ float errors = 0;
 
 
 
-//-------------------------------------------------------------------------------------------------
-//FULL gemm function
-//-------------------------------------------------------------------------------------------------
+  template<typename half_t>
+__device__ void saxpy(half_t a, half_t *b, half_t *c) {
+  c[0] += a * b[0];
+  c[1] += a * b[1];
+  c[2] += a * b[2];
+  c[3] += a * b[3];
+  c[4] += a * b[4];
+  c[5] += a * b[5];
+  c[6] += a * b[6];
+  c[7] += a * b[7];
+  c[8] += a * b[8];
+  c[9] += a * b[9];
+  c[10] += a * b[10];
+  c[11] += a * b[11];
+  c[12] += a * b[12];
+  c[13] += a * b[13];
+  c[14] += a * b[14];
+  c[15] += a * b[15];
+}
+
+
+  //OPTIMIZED GEMM USING TENSOR CORES, UNHARDENED  
   template<class half_t, class real_t>
- __global__ void compute_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D, float alpha, float beta)
+ __global__ void op_tensor_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D, float alpha, float beta)
  {
  	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
@@ -294,288 +313,12 @@ __device__ float errors = 0;
  	}
  }
 
-template<typename half_t>
-__device__ void saxpy(half_t a, half_t *b, half_t *c) {
-  c[0] += a * b[0];
-  c[1] += a * b[1];
-  c[2] += a * b[2];
-  c[3] += a * b[3];
-  c[4] += a * b[4];
-  c[5] += a * b[5];
-  c[6] += a * b[6];
-  c[7] += a * b[7];
-  c[8] += a * b[8];
-  c[9] += a * b[9];
-  c[10] += a * b[10];
-  c[11] += a * b[11];
-  c[12] += a * b[12];
-  c[13] += a * b[13];
-  c[14] += a * b[14];
-  c[15] += a * b[15];
-}
+// DMR - OPTIMIZED GEMM USING TENSOR CORES + GEMM SW
+// D - tensor output
+// d - sw output
 
 template<class half_t, class real_t>
- __global__ void compute_gemm_op_DMR( half_t *A, half_t *B, real_t *C, real_t *D, half_t *d, int m, int n, int k, half_t alpha, half_t beta)
- {
-
-
-  const int tx = threadIdx.x;
-  const int ty = threadIdx.y;
-
-  const int ibx = blockIdx.x * 64;
-  const int iby = blockIdx.y * 16;
-
-  const int idt = ty * 16 + tx;
-
-  int lda = m;
-  int ldb = n;
-  int ldc = k;
-
-  B += tx + __mul24(iby + ty, ldb);
-  A += ibx + idt;
-  C += ibx + idt + __mul24(iby, ldc);
-
-  const half_t *Bend = B + k;
-
-  half_t Cb[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-  m = 2 * lda;
-  n = 3 * lda;
-
-  do {
-    //float Ab[4] = {A[0], A[lda], A[2*lda], A[3*lda]};
-    half_t Ab[4] = { A[0], A[lda], A[m], A[n] };
-    __shared__ half_t Bb[16][17];
-    Bb[tx][ty + 0] = B[0];
-    Bb[tx][ty + 4] = B[4 * ldb];
-    Bb[tx][ty + 8] = B[8 * ldb];
-    Bb[tx][ty + 12] = B[12 * ldb];
-
-    __syncthreads();
-
-    A += 4 * lda;
-    saxpy(Ab[0], &Bb[0][0], Cb);
-    Ab[0] = A[0];
-    saxpy(Ab[1], &Bb[1][0], Cb);
-    Ab[1] = A[lda];
-    saxpy(Ab[2], &Bb[2][0], Cb);
-    Ab[2] = A[m];
-    saxpy(Ab[3], &Bb[3][0], Cb);
-    Ab[3] = A[n];
-
-    A += 4 * lda;
-    saxpy(Ab[0], &Bb[4][0], Cb);
-    Ab[0] = A[0];
-    saxpy(Ab[1], &Bb[5][0], Cb);
-    Ab[1] = A[lda];
-    saxpy(Ab[2], &Bb[6][0], Cb);
-    Ab[2] = A[m];
-    saxpy(Ab[3], &Bb[7][0], Cb);
-    Ab[3] = A[n];
-
-    A += 4 * lda;
-    saxpy(Ab[0], &Bb[8][0], Cb);
-    Ab[0] = A[0];
-    saxpy(Ab[1], &Bb[9][0], Cb);
-    Ab[1] = A[lda];
-    saxpy(Ab[2], &Bb[10][0], Cb);
-    Ab[2] = A[m];
-    saxpy(Ab[3], &Bb[11][0], Cb);
-    Ab[3] = A[n];
-
-    A += 4 * lda;
-    saxpy(Ab[0], &Bb[12][0], Cb);
-    saxpy(Ab[1], &Bb[13][0], Cb);
-    saxpy(Ab[2], &Bb[14][0], Cb);
-    saxpy(Ab[3], &Bb[15][0], Cb);
-
-    B += 16;
-
-    __syncthreads();
-  } while (B < Bend);
-
-#pragma unroll 16
-  for (int i = 0; i < 16; i++, C += ldc) {
-    d[0] = alpha * Cb[i] + beta * d[0];
-  }
-
-
-
-  extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
-
-  // Warp and lane identification.
-  const unsigned int warpId = threadIdx.x / WARP_SIZE;
-  const unsigned int laneId = threadIdx.x % WARP_SIZE;
-
-  // Offset in shared memory from which the B matrix is stored.
-  const size_t shmem_idx_b_off = BLOCK_COL_TILES * M;
-
-  // This pointer is used to access the C and D matrix tiles this warp computes.
-  real_t *shmem_warp_tile_ptr = (real_t*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
-
-  // This pointer is used to stream the C and D matrices block-wide tile to and from shared memory.
-  real_t *shmem_warp_stream_ptr = (real_t*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
-
-  // Adjust the beta scaler, as it'll be multiplied by alpha at the end of
-  // each tile computation
-  // Technically this is not generally correct (may result
-  // in a loss of precision). Zero still needs to be specially handled though.
-  beta /= alpha;
- 
-
-  // Each CTA slides along the 128 x 128 tiles from the top left corner of the matrix to the
-  // right and down, and selects the next tile to compute. Once there's no such tile,
-  // all warps in this CTA exit.
-  for(unsigned int block_pos = blockIdx.x;; block_pos += gridDim.x) {
-    const unsigned int block_tile_i = ((block_pos * BLOCK_ROW_TILES) / N_TILES) * (BLOCK_COL_TILES);
-    const unsigned int block_tile_j = (block_pos * BLOCK_COL_TILES) % N_TILES;
-
-    // Stop when there are no more D matrix tiles to compute in this CTA.
-    if (block_tile_i >= M_TILES) {
-      break;
-    }
-
-    // This warp's pointer to the C matrix data to copy memory from to shared memory.
-    const size_t gmem_idx = (block_tile_i + warpId) * M * GLOBAL_MEM_STRIDE + block_tile_j * N;
-    const real_t *src_gmem_warp_stream_ptr = &C[gmem_idx];
-
-    // Stream multiple C tiles to shared memory.
- #pragma unroll
-    for (int i = 0; i < K; i++) {
-      typedef int4 copy_t;
-
-      *((copy_t *)(shmem_warp_stream_ptr + SHMEM_STRIDE * i) + laneId) = 
-          *((copy_t *)(src_gmem_warp_stream_ptr + GLOBAL_MEM_STRIDE * i) + laneId);
-    }
-
-    __syncthreads();
-
-    // These fragments will accumulate the result of A and B matrix fragment multiplications
-    // along the K_GLOBAL dimension.
-    wmma::fragment<wmma::accumulator, M, N, K, real_t> c[WARP_COL_TILES][WARP_ROW_TILES];
-
-    // Load the C matrix tiles into fragments from shared memory.
- #pragma unroll
-    for (int i = 0; i < WARP_COL_TILES; i++) {
- #pragma unroll
-      for (int j = 0; j < WARP_ROW_TILES; j++) {
-        const real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
-
-        wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
-      }
-    }
-
-    __syncthreads();
-
-    // Scale the C matrix.
- #pragma unroll
-    for (int i = 0; i < WARP_COL_TILES; i++) {
- #pragma unroll
-      for (int j = 0; j < WARP_ROW_TILES; j++) {
- #pragma unroll
-        for (int t = 0; t < c[i][j].num_elements; t++) {
-          c[i][j].x[t] *= (real_t) beta;
-        }
-      }
-    }
-
-    // Select what warp copies what matrix to shared memory.
-    // Warps 0-3 copy the A matrix, warps 4-7 copy the B matrix.
-    const half *warp_ptr = (warpId < 4) ? (&A[block_tile_i * M * K_GLOBAL] + M * K_GLOBAL * (warpId % 4) * 2) :
-        (&B[block_tile_j * N * K_GLOBAL] + N * K_GLOBAL * (warpId % 4) * 2);
-
-    // Go through the global K dimension by a fixed step at a time.
- #pragma unroll
-    for (int tile_k = 0; tile_k < K_TILES; tile_k += CHUNK_K) {
-      // Copy slices of the A and B matrices to shared memory.
-      // The first half of the warps in the CTA copy the A matrix, the rest copy the B matrix.
-      size_t shmem_idx = warpId < (WARPS_PER_BLOCK/2) ? (M * (warpId % (WARPS_PER_BLOCK/2)) * 2) : 
-          (N * (warpId % (WARPS_PER_BLOCK/2)) * 2 + shmem_idx_b_off);
-
-      // First half of the warp copies the first row / column of the matrix,
-      // the second half of the warp copies the next.
-      int4 *lane_ptr = (int4*)(warp_ptr + tile_k * K + (laneId / CHUNK_COPY_LINE_LANES) * K_GLOBAL) + (laneId % CHUNK_COPY_LINE_LANES);
-
-      // Shift the second half of the warp to the next row / column in the shared memory.
-      shmem_idx += laneId / CHUNK_COPY_LINE_LANES;
-
- #pragma unroll
-      for(int i = 0; i < ((WARP_SIZE/2) / CHUNK_COPY_LINES_PER_WARP) * 2; i++) {
-        // Copy 16 bytes at once in each lane.
-        *((int4*)&shmem[shmem_idx][0] + (laneId % CHUNK_COPY_LINE_LANES)) = *lane_ptr;
-
-        // Advance the global memory pointer and the shared memory index.
-        lane_ptr = (int4*)((half*)lane_ptr + K_GLOBAL * CHUNK_COPY_LINES_PER_WARP);
-        shmem_idx += CHUNK_COPY_LINES_PER_WARP;
-      }
-
-      __syncthreads();
-
-      // Compute a grid of C matrix tiles in each warp.
- #pragma unroll
-      for (int k_step = 0; k_step < CHUNK_K; k_step++) {
-        wmma::fragment<wmma::matrix_a, M, N, K, half, wmma::row_major> a[WARP_COL_TILES];
-        wmma::fragment<wmma::matrix_b, M, N, K, half, wmma::col_major> b[WARP_ROW_TILES];
-
- #pragma unroll
-        for (int i = 0; i < WARP_COL_TILES; i++) {
-          size_t shmem_idx_a = (warpId/2) * M * 2 + (i * M);
-          const half *tile_ptr = &shmem[shmem_idx_a][k_step * K];
-
-          wmma::load_matrix_sync(a[i], tile_ptr, K * CHUNK_K + SKEW_HALF);
-
- #pragma unroll
- for (int j = 0; j < WARP_ROW_TILES; j++) {
-  if (i == 0) {
-    // Load the B matrix fragment once, because it is going to be reused
-    // against the other A matrix fragments.
-    size_t shmem_idx_b = shmem_idx_b_off + (WARP_ROW_TILES * N) * (warpId%2) + (j * N);
-    const half *tile_ptr = &shmem[shmem_idx_b][k_step * K];
-
-    wmma::load_matrix_sync(b[j], tile_ptr, K * CHUNK_K + SKEW_HALF);
-  }
-
-  wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
- }
-        }
-      }
-
-      __syncthreads();
-    }
-
-    // Store the D fragments to shared memory.
- #pragma unroll
-    for (int i = 0; i < WARP_COL_TILES; i++) {
- #pragma unroll
-      for (int j = 0; j < WARP_ROW_TILES; j++) {
- #pragma unroll
-        // Uniform, point-wise transformations of ALL fragment elements by ALL threads in the
-        // warp are well-defined even though element indices within fragment storage are not defined.
-        for (int t = 0; t < c[i][j].num_elements; t++)
-          c[i][j].x[t] *= (real_t)alpha;
-
-        real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
-
-        wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE, C_LAYOUT);
-      }
-    }
-
-    __syncthreads();
-
-    // Now that shared memory contains all the D tiles, stream them to global memory.
-    real_t *dst_gmem_warp_stream_ptr = &D[gmem_idx];
-
- #pragma unroll
-    for (int i = 0; i < K; i++) {
-      *((int4*)(dst_gmem_warp_stream_ptr + GLOBAL_MEM_STRIDE * i) + laneId) =
-          *((int4*)(shmem_warp_stream_ptr + SHMEM_STRIDE * i) + laneId);
-    }
-
-    __syncthreads();
-  }
- }
-
-template<class half_t, class real_t>
- __global__ void compute_gemm_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, half_t *d, float alpha, float beta)
+ __global__ void op_tensor_gemm_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, half_t *d, float alpha, float beta)
  {
  	// Block index
 	int bx = blockIdx.x;
@@ -852,8 +595,10 @@ __device__    __forceinline__ half abs_(half a) {
 
 
 
+
+//TRIPLICATE SIMPLE GEMM USING TENSOR CORES
 template<class half_t, class real_t>
-__global__ void simple_wmma_gemm_triplicated(real_t *d0, real_t *d1, real_t *d2,
+__global__ void s_tensor_gemm_triplicate(real_t *d0, real_t *d1, real_t *d2,
 		int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
 	
 
@@ -927,8 +672,9 @@ __global__ void simple_wmma_gemm_triplicated(real_t *d0, real_t *d1, real_t *d2,
 	
 }
 
+//UNHARDENED SIMPLE GEMM USING TENSOR CORES
 template<class half_t, class real_t>
-__global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
+__global__ void s_tensor_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 		int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
 	// Leading dimensions. Packed with no transpositions.
 	int lda = m_ld;
@@ -989,9 +735,9 @@ __global__ void simple_wmma_gemm(half_t *a, half_t *b, real_t *c, real_t *d,
 	}
 }
 
-
+//DMR - SIMPLE GEMM USING TENSOR CORES + GEMM SW
 template<class half_t, class real_t>
-__global__ void simple_wmma_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c, half_t *d, real_t *d_frag, 
+__global__ void s_tensor_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c, half_t *d, real_t *d_frag, 
 		int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
 	// Leading dimensions. Packed with no transpositions.
 	int lda = m_ld;
