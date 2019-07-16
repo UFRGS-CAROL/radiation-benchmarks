@@ -351,6 +351,11 @@ std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vect
 	return res;
 }
 
+bool comp(int a, int b) 
+{ 
+    return (a < b); 
+} 
+
 template<class host_real_t, class real_t, class half_t>
 void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		Log& log_obj) {
@@ -483,12 +488,18 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 	if (log_obj.generate) {
 		if (log_obj.triplicated)
 			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_gold);
+		else if(log_obj.use_tensor_cores)			
+			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d0);
 		else
-			
+			//DMR SW
 			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d0);
 			write_gold_to_file<host_real_t>(log_obj.gold_inout_path_1, host_matrix_d1);
 
 	}
+
+   
+    cout <<  "min: " << std::min(host_matrix_d1, comp) << "\n"; 
+    cout <<  "max: " << std::max(host_matrix_d0, comp) << "\n"; 
 }
 
 void usage(char **argv) {
