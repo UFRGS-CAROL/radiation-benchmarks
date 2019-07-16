@@ -29,8 +29,6 @@ using namespace nvcuda;
 #define N_O 8192
 #define K_O 8192
 
-
-
 // The only dimensions currently supported by WMMA
 #define WMMA_M 16
 #define WMMA_N 16
@@ -317,7 +315,7 @@ __device__ void saxpy(half_t a, half_t *b, half_t *c) {
 }
 
 template<class half_t, class real_t>
- __global__ void compute_gemm_op_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, half_t *d, float alpha, float beta)
+ __global__ void compute_gemm_op_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, half_t *d, int m, int n, int k, float alpha, float beta)
  {
 
 
@@ -329,9 +327,9 @@ template<class half_t, class real_t>
 
   const int idt = ty * 16 + tx;
 
-  int lda = M_O;
-  int ldb = N_O;
-  int ldc = K_O;
+  int lda = m;
+  int ldb = n;
+  int ldc = k;
 
   B += tx + __mul24(iby + ty, ldb);
   A += ibx + idt;
@@ -340,12 +338,12 @@ template<class half_t, class real_t>
   const half_t *Bend = B + k;
 
   half_t Cb[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-  M_O = 2 * lda;
-  N_O = 3 * lda;
+  m = 2 * lda;
+  n = 3 * lda;
 
   do {
     //float Ab[4] = {A[0], A[lda], A[2*lda], A[3*lda]};
-    half_t Ab[4] = { A[0], A[lda], A[M_O], A[N_O] };
+    half_t Ab[4] = { A[0], A[lda], A[m], A[n] };
     __shared__ half_t Bb[16][17];
     Bb[tx][ty + 0] = B[0];
     Bb[tx][ty + 4] = B[4 * ldb];
@@ -360,9 +358,9 @@ template<class half_t, class real_t>
     saxpy(Ab[1], &Bb[1][0], Cb);
     Ab[1] = A[lda];
     saxpy(Ab[2], &Bb[2][0], Cb);
-    Ab[2] = A[M_O];
+    Ab[2] = A[m];
     saxpy(Ab[3], &Bb[3][0], Cb);
-    Ab[3] = A[N_O];
+    Ab[3] = A[n];
 
     A += 4 * lda;
     saxpy(Ab[0], &Bb[4][0], Cb);
@@ -370,9 +368,9 @@ template<class half_t, class real_t>
     saxpy(Ab[1], &Bb[5][0], Cb);
     Ab[1] = A[lda];
     saxpy(Ab[2], &Bb[6][0], Cb);
-    Ab[2] = A[M_O];
+    Ab[2] = A[m];
     saxpy(Ab[3], &Bb[7][0], Cb);
-    Ab[3] = A[N_O];
+    Ab[3] = A[n];
 
     A += 4 * lda;
     saxpy(Ab[0], &Bb[8][0], Cb);
@@ -380,9 +378,9 @@ template<class half_t, class real_t>
     saxpy(Ab[1], &Bb[9][0], Cb);
     Ab[1] = A[lda];
     saxpy(Ab[2], &Bb[10][0], Cb);
-    Ab[2] = A[M_O];
+    Ab[2] = A[m];
     saxpy(Ab[3], &Bb[11][0], Cb);
-    Ab[3] = A[N_O];
+    Ab[3] = A[n];
 
     A += 4 * lda;
     saxpy(Ab[0], &Bb[12][0], Cb);

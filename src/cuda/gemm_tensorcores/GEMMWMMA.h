@@ -329,7 +329,8 @@ public:
 				checkCudaErrors(cudaFuncSetAttribute(compute_gemm_op_DMR<half_t, real_t> , cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 				checkKernelErrors((compute_gemm_op_DMR<half_t, real_t> <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,SHMEM_SZ, stream>>>
 						(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-						 this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta)));
+						 this->device_ptr_d0, this->device_ptr_d1, int M_O, int N_O, int K_O,
+					     this->alpha, this->beta)));
 
 
 				this->debug("device synchronize");
