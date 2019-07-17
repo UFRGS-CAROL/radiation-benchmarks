@@ -208,10 +208,10 @@ bool cmp(const host_real_t lhs, const host_real_t rhs) {
 // Returns the number of errors found
 // if no errors were found it returns 0
 template<class real_t>
-int check_output_errors(std::vector<real_t> &R_incomplete,
-		std::vector<real_t> &R, std::vector<real_t> &OUTPUT_R) {
+int check_output_errors(std::vector<real_t>& R_incomplete,
+		std::vector<real_t>& R, std::vector<real_t>& OUTPUT_R) {
 	int host_errors = 0;
-	printf("r = %f \n", r[2]);
+	printf("r = %f \n", R[2]);
 	R[2] = 45464;
 	double threshold = -3;
 #pragma omp parallel for shared(host_errors)
