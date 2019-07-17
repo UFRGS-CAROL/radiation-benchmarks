@@ -258,6 +258,9 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 	int host_errors = 0;
 	int memory_errors = 0;
 
+	// printf("r = %f \n", c0[2]);
+
+
 	std::cout << "host_is_memory_bad: " << host_is_memory_bad << std::endl;
 
 	if (host_is_memory_bad != 0) {
@@ -514,11 +517,11 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				end = log_obj.mysecond();
 			}else{
 				start = log_obj.mysecond();
-				// errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
-				int dmr_errors = 0;
-				printf("%f\n", host_matrix_d0[0]);
+				errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
+				// int dmr_errors = 0;
+				//printf("%f\n", host_matrix_d0[0]);
 				
-				dmr_errors = check_output_errors(host_matrix_d0, host_matrix_d1, host_gold);
+				// dmr_errors = check_output_errors(host_matrix_d0, host_matrix_d1, host_gold);
 				end = log_obj.mysecond();
 			}
 			std::cout << "Iteration: " << it << " memory errors "
