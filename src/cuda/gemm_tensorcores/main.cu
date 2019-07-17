@@ -21,6 +21,8 @@
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
 
+#define ZERO_HALF 1376.45
+
 
 
 typedef half_float::half host_half;
@@ -193,6 +195,61 @@ template<class real_t> void retrieve_matrices(half_vector& a_host_vector,
 			<< "s\n";
 }
 
+template<class host_real_t>
+bool cmp(const host_real_t lhs, const host_real_t rhs) {
+	const host_real_t diff = abs(lhs - rhs);
+	const host_real_t zero = host_real_t(ZERO_HALF);
+	if (diff > zero) {
+		return false;
+	}
+	return true;
+}
+
+// Returns the number of errors found
+// if no errors were found it returns 0
+template<class real_t>
+int check_output_errors(std::vector<real_t>& R_incomplete,
+		std::vector<real_t>& R, std::vector<real_t>& OUTPUT_R) {
+	int host_errors = 0;
+	printf("r = %f \n", R[2]);
+	R[2] = 45464;
+	double threshold = -3;
+#pragma omp parallel for shared(host_errors)
+	for (int i = 0; i < R.size(); i++) {
+		real_t gold = real_t(OUTPUT_R[i]);
+		real_t output = real_t(R[i]);
+		real_t output_inc = real_t(R_incomplete[i]);
+		threshold = max(threshold, fabs(output - output_inc));
+		if (gold != output || !cmp(output, output_inc)) {
+#pragma omp critical
+			{
+				std::stringstream error_detail;
+				error_detail.precision(20);
+				error_detail << "p: [" << i << "], r: " << std::scientific
+						<< output << ", e: " << gold << " smaller_precision: "
+						<< output_inc;
+
+// 				if (verbose && (host_errors < 10))
+// 					std::cout << error_detail.str() << std::endl;
+// #ifdef LOGS
+// 				log_error_detail(const_cast<char*>(error_detail.str().c_str()));
+// #endif
+				host_errors++;
+			}
+		}
+	}
+	// std::ofstream of("test.txt", std::ofstream::out | std::ofstream::app);
+
+	// of << "BLOCK " << CHECKBLOCK << " MAX DIFF " << threshold << std::endl;
+	// of.close();
+
+
+	if (host_errors != 0) {
+		std::cout << "#";
+	}
+	return host_errors;
+}
+
 template<class real_t>
 std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 		std::vector<real_t>& gold, std::vector<real_t>& c0,
@@ -352,10 +409,6 @@ std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vect
 	return res;
 }
 
-bool comp(int a, int b) 
-{ 
-    return (a < b); 
-} 
 
 template<class host_real_t, class real_t, class half_t>
 void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
@@ -461,7 +514,11 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				end = log_obj.mysecond();
 			}else{
 				start = log_obj.mysecond();
-				errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
+				// errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
+				int dmr_errors = 0;
+				printf("%f\n", host_matrix_d0[0]);
+				
+				dmr_errors = check_output_errors(host_matrix_d0, host_matrix_d1, host_gold);
 				end = log_obj.mysecond();
 			}
 			std::cout << "Iteration: " << it << " memory errors "
@@ -489,23 +546,34 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 	if (log_obj.generate) {
 		if (log_obj.triplicated)
 			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_gold);
-		else if(log_obj.use_tensor_cores)			
-			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d0);
-		else
-			//DMR SW
-			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d0);
-			write_gold_to_file<host_real_t>(log_obj.gold_inout_path_1, host_matrix_d1);
-
+		else 			
+			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d1);
+		
 	}
 
-   real_t largest = host_matrix_d0[0];
-   for(int z = 1;z <(log_obj.size_matrices * log_obj.size_matrices) ; z++) {
+   // host_real_t largest = host_matrix_d1[0];
+   // for(int z = 1;z <(log_obj.size_matrices * log_obj.size_matrices) ; z++) {
 
-      if(largest < host_matrix_d0[z])
-         largest = host_matrix_d0[z];
-   } 
-   cout<<"Largest element in array is: "<<largest;
-}
+   //    if(largest < host_matrix_d1[z])
+   //       largest = host_matrix_d1[z];
+       
+   // } 
+  
+
+   // host_real_t lowest = host_matrix_d0[0];
+   // for(int z = 1;z <(log_obj.size_matrices * log_obj.size_matrices) ; z++) {
+
+   //    if(lowest < host_matrix_d0[z])
+   //       lowest = host_matrix_d0[z];
+     
+   // } 
+   // std::cout << "Largest element in array is: " << largest <<std::endl;
+   // std::cout << "lowest element in array is: " << lowest<<std::endl;
+
+   // std::cout << "treshold is: " <<(largest-lowest)<<std::endl;
+
+
+}   
 
 
 void usage(char **argv) {
