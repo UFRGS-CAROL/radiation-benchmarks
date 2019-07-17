@@ -216,16 +216,15 @@ __global__ void MicroBenchmarkKernel_SQRT(incomplete *d_R0_one,
 template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 		full *d_R0_second, const full OUTPUT_R) {
-	int n = 10000000;
-	const full divisor = full(n);
-	volatile full acc_full = 0.0;
-	volatile full slice_full = OUTPUT_R / divisor;
+	register full divisor = full(NUM_COMPOSE_DIVISOR);
+	volatile register full acc_full = 0.0;
+	volatile register full slice_full = OUTPUT_R / divisor;
 
-	volatile full acc_incomplete = 0.0;
-	volatile full slice_incomplete = incomplete(OUTPUT_R) / incomplete(divisor);
+	volatile register full acc_incomplete = 0.0;
+	volatile register full slice_incomplete = incomplete(OUTPUT_R) / incomplete(divisor);
 	double theshold = -2222;
 
-	for (int count = 0; count < n; count++) {
+	for (int count = 0; count < NUM_COMPOSE_DIVISOR; count++) {
 		acc_full = add_dmr(slice_full, acc_full);
 
 		acc_incomplete = add_dmr(slice_incomplete, acc_incomplete);
