@@ -83,10 +83,10 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 			}
 		}
 	}
-	std::ofstream of("test.txt", std::ofstream::out | std::ofstream::app);
-
-	of << "BLOCK " << CHECKBLOCK << " MAX DIFF " << threshold << std::endl;
-	of.close();
+//	std::ofstream of("test.txt", std::ofstream::out | std::ofstream::app);
+//
+//	of << "BLOCK " << CHECKBLOCK << " MAX DIFF " << threshold << std::endl;
+//	of.close();
 	if (dmr_errors != 0) {
 		std::stringstream error_detail;
 		error_detail << "detected_dmr_errors: " << dmr_errors;
@@ -175,15 +175,15 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters,
 		} else {
 			switch (parameters.micro) {
 			case ADD:
-				MicroBenchmarkKernel_ADD<incomplete, full> <<<
-						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data(), device_vector_full.data(),
-						type_.output_r, type_.input_a, type_.input_b);
-
-//				MicroBenchmarkKernel_NumCompose<incomplete, full> <<<
+//				MicroBenchmarkKernel_ADD<incomplete, full> <<<
 //						parameters.grid_size, parameters.block_size>>>(
 //						device_vector_inc.data(), device_vector_full.data(),
-//						type_.output_r);
+//						type_.output_r, type_.input_a, type_.input_b);
+
+				MicroBenchmarkKernel_NumCompose<incomplete, full> <<<
+						parameters.grid_size, parameters.block_size>>>(
+						device_vector_inc.data(), device_vector_full.data(),
+						type_.output_r);
 				break;
 			case MUL:
 				MicroBenchmarkKernel_MUL<incomplete, full> <<<

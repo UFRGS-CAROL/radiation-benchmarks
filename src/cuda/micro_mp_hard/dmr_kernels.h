@@ -223,6 +223,7 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 
 	volatile full acc_incomplete = 0.0;
 	volatile full slice_incomplete = incomplete(OUTPUT_R) / incomplete(divisor);
+	double theshold = -2222;
 
 	for (int i = 0; i < n; i++) {
 		acc_full = add_dmr(slice_full, acc_full);
@@ -231,21 +232,30 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
+		theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
-		if((i % CHECKBLOCK) == 0) {
+		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
+			theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 			acc_incomplete = incomplete(acc_full);
 		}
 #endif
 
 	}
 
-	//if CHECKBLOCK is 0 only after OPS iterations it will be verified
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
+	theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 #endif
+
+	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
+	}
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
