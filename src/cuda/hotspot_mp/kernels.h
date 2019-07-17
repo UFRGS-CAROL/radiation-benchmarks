@@ -364,11 +364,13 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 
 		temp_dst[index] = t_temp[ty][tx];
 		temp_dst_incomplete[index] = t_temp_inc[ty][tx];
+
+		if (ty + tx == 0) {
+			printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", threshold, CHECKBLOCK);
+		}
 	}
 
-	if (ty + tx == 0) {
-		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", threshold, CHECKBLOCK);
-	}
+
 }
 
 #endif /* NONE_KERNELS_H_ */
