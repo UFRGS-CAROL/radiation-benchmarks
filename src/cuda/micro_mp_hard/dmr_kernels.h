@@ -226,9 +226,9 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 	double theshold = -2222;
 
 	for (int count = 0; count < n; count++) {
-		acc_full = add_dmr(slice_full, acc_full);
+		acc_full = add_dmr(OUTPUT_R, acc_full);
 
-		acc_incomplete = add_dmr(slice_incomplete, acc_incomplete);
+		acc_incomplete = add_dmr(incomplete(OUTPUT_R), incomplete(acc_incomplete));
 
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
@@ -256,6 +256,9 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
 		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 	}
+
+	acc_full = OUTPUT_R / full(n);
+	acc_incomplete = incomplete(OUTPUT_R) / incomplete(n);
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
