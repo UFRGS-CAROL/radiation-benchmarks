@@ -209,7 +209,7 @@ bool cmp(const host_real_t lhs, const host_real_t rhs) {
 // if no errors were found it returns 0
 template<class host_real_t>
 int check_output_errors(std::vector<host_real_t> &R_incomplete,
-		std::vector<host_real_t> &R, output_type OUTPUT_R, bool verbose) {
+		std::vector<host_real_t> &R, host_real_t OUTPUT_R) {
 	int host_errors = 0;
 	host_real_t gold = OUTPUT_R;
 	double threshold = -3;
@@ -513,7 +513,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			}else{
 				start = log_obj.mysecond();
 				// errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
-				 errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
+				errors = check_output_errors(host_matrix_d0, host_matrix_d1, host_gold);
 				end = log_obj.mysecond();
 			}
 			std::cout << "Iteration: " << it << " memory errors "
