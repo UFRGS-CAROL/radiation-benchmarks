@@ -225,7 +225,7 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 	volatile full slice_incomplete = incomplete(OUTPUT_R) / incomplete(divisor);
 	double theshold = -2222;
 
-	for (int i = 0; i < n; i++) {
+	for (int count = 0; count < n; count++) {
 		acc_full = add_dmr(slice_full, acc_full);
 
 		acc_incomplete = add_dmr(slice_incomplete, acc_incomplete);
