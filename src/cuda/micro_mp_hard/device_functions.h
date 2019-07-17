@@ -15,6 +15,8 @@
 
 #define ZERO_HALF 4.166E-13 //1e-13
 
+#define NUM_COMPOSE_DIVISOR 10000000
+
 __device__ __forceinline__ double abs__(double a) {
 	return fabs(a);
 }
