@@ -362,7 +362,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 		t_temp_inc[ty][tx] = incomplete(t_temp[ty][tx]);
 #endif
 
-		if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
+		if (ty + tx == 0) {
 			printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", threshold, CHECKBLOCK);
 		}
 
