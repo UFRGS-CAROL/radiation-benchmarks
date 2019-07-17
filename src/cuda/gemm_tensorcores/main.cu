@@ -207,16 +207,17 @@ bool cmp(const host_real_t lhs, const host_real_t rhs) {
 
 // Returns the number of errors found
 // if no errors were found it returns 0
-template<class host_real_t>
-int check_output_errors(std::vector<host_real_t> &R_incomplete,
-		std::vector<host_real_t> &R, host_real_t OUTPUT_R) {
+template<class real_t>
+int check_output_errors(std::vector<real_t> &R_incomplete,
+		std::vector<real_t> &R, std::vector<real_t> &OUTPUT_R) {
 	int host_errors = 0;
-	host_real_t gold = OUTPUT_R;
-	double threshold = -3;
+	
+	real_t threshold = -3;
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < R.size(); i++) {
-		host_real_t output = host_real_t(R[i]);
-		host_real_t output_inc = host_real_t(R_incomplete[i]);
+		real_t gold = OUTPUT_R;
+		real_t output = real_t(R[i]);
+		real_t output_inc = real_t(R_incomplete[i]);
 		threshold = max(threshold, fabs(output - output_inc));
 		if (gold != output || !cmp(output, output_inc)) {
 #pragma omp critical
