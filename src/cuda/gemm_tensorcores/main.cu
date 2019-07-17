@@ -385,6 +385,8 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 template<class real_t>
 std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vector<real_t>& c0, Log& log) {
 	int host_errors = 0;
+
+	printf("gold = %f \n", gold);
 #ifdef OMP
 #pragma omp parallel for shared(host_errors)
 #endif
