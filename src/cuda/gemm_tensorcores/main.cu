@@ -258,7 +258,7 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 	int host_errors = 0;
 	int memory_errors = 0;
 
-	printf("r = %f \n", c0[2]);
+	// printf("r = %f \n", c0[2]);
 
 
 	std::cout << "host_is_memory_bad: " << host_is_memory_bad << std::endl;
