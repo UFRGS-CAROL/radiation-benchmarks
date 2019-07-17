@@ -195,60 +195,9 @@ template<class real_t> void retrieve_matrices(half_vector& a_host_vector,
 			<< "s\n";
 }
 
-template<class host_real_t>
-bool cmp(const host_real_t lhs, const host_real_t rhs) {
-	const host_real_t diff = abs(lhs - rhs);
-	const host_real_t zero = host_real_t(ZERO_HALF);
-	if (diff > zero) {
-		return false;
-	}
-	return true;
-}
-
-// Returns the number of errors found
-// if no errors were found it returns 0
-template<class real_t>
-int check_output_errors(std::vector<real_t>& R_incomplete,
-		std::vector<real_t>& R, std::vector<real_t>& OUTPUT_R) {
-	int host_errors = 0;
-	printf("r = %f \n", R[2]);
-	R[2] = 45464;
-	double threshold = -3;
-#pragma omp parallel for shared(host_errors)
-	for (int i = 0; i < R.size(); i++) {
-		real_t gold = real_t(OUTPUT_R[i]);
-		real_t output = real_t(R[i]);
-		real_t output_inc = real_t(R_incomplete[i]);
-		threshold = max(threshold, fabs(output - output_inc));
-		if (gold != output || !cmp(output, output_inc)) {
-#pragma omp critical
-			{
-				std::stringstream error_detail;
-				error_detail.precision(20);
-				error_detail << "p: [" << i << "], r: " << std::scientific
-						<< output << ", e: " << gold << " smaller_precision: "
-						<< output_inc;
-
-// 				if (verbose && (host_errors < 10))
-// 					std::cout << error_detail.str() << std::endl;
-// #ifdef LOGS
-// 				log_error_detail(const_cast<char*>(error_detail.str().c_str()));
-// #endif
-				host_errors++;
-			}
-		}
-	}
-	// std::ofstream of("test.txt", std::ofstream::out | std::ofstream::app);
-
-	// of << "BLOCK " << CHECKBLOCK << " MAX DIFF " << threshold << std::endl;
-	// of.close();
 
 
-	if (host_errors != 0) {
-		std::cout << "#";
-	}
-	return host_errors;
-}
+
 
 template<class real_t>
 std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
@@ -381,12 +330,57 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 	return res;
 }
 
+template<class host_real_t>
+bool cmp(const host_real_t lhs, const host_real_t rhs) {
+	const host_real_t diff = abs(lhs - rhs);
+	const host_real_t zero = host_real_t(ZERO_HALF);
+	if (diff > zero) {
+		return false;
+	}
+	return true;
+}
+
+
+template<class real_t>
+std::pair<int, int> check_output_errors(std::vector<real_t>& gold,  std::vector<real_t>& d0, std::vector<real_t>& d1, Log& log) {
+	int host_errors = 0;
+
+#ifdef OMP
+#pragma omp parallel for shared(host_errors)
+#endif
+	for (size_t i = 0; i < gold.size(); i++) {
+		real_t valGold = gold[i];
+		real_t valOutput0 = d0[i];
+		real_t valOutput1 = d1[i];
+
+		if (gold != valOutput0 || !cmp(valOutput0, valOutput1)) {
+					std::stringstream error_detail("");
+					error_detail << "p: [" << int(floor(i / log.size_matrices))
+							<< ", " << i % log.size_matrices << "], r: "
+							<< valOutput1 << ", e: " << valGold << " smaller_precision: " << valOutput0;
+
+					if (log.verbose && (host_errors < 10))
+						std::cout << error_detail.str() << std::endl;
+
+					log.log_error(error_detail.str());
+					host_errors++;
+		}
+	}
+	log.update_error_count(host_errors);
+	if (host_errors != 0)
+		std::cout << "#";
+
+	std::pair<int, int> res(0, host_errors);
+	return res;
+}
+
+
+
 
 template<class real_t>
 std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vector<real_t>& c0, Log& log) {
 	int host_errors = 0;
 
-	printf("gold = %f \n", gold[1]);
 #ifdef OMP
 #pragma omp parallel for shared(host_errors)
 #endif
@@ -523,7 +517,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				// int dmr_errors = 0;
 				//printf("%f\n", host_matrix_d0[0]);
 				
-				// dmr_errors = check_output_errors(host_matrix_d0, host_matrix_d1, host_gold);
+				dmr_errors = check_output_errors(host_gold, host_matrix_d0, host_matrix_d1,log_obj);
 				end = log_obj.mysecond();
 			}
 			std::cout << "Iteration: " << it << " memory errors "
