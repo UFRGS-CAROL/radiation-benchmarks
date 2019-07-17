@@ -513,11 +513,11 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				end = log_obj.mysecond();
 			}else{
 				start = log_obj.mysecond();
-				errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
+				//errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
 				int dmr_errors = 0;
 				//printf("%f\n", host_matrix_d0[0]);
 				
-				dmr_errors = check_output_errors(host_gold, host_matrix_d0, host_matrix_d1,log_obj);
+				errors = check_output_errors(host_gold, host_matrix_d0, host_matrix_d1,log_obj);
 				end = log_obj.mysecond();
 			}
 			std::cout << "Iteration: " << it << " memory errors "
