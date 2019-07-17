@@ -32,6 +32,7 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 	volatile register incomplete input_a_neg_incomplete = incomplete(-INPUT_A);
 	volatile register incomplete input_b_neg_incomplete = incomplete(-INPUT_B);
 
+	double theshold = -2222;
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
 		acc_full = fma_dmr(input_a_full, input_b_full, acc_full);
 		acc_full = fma_dmr(input_a_neg_full, input_b_full, acc_full);
@@ -50,11 +51,15 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
+		theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
+			theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 			acc_incomplete = incomplete(acc_full);
 		}
 #endif
@@ -63,7 +68,13 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
+	theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 #endif
+
+	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
+	}
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
@@ -88,6 +99,7 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 	volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
 	volatile register incomplete input_a_incomplete = incomplete(OUTPUT_R);
 	volatile register incomplete input_a_neg_incomplete = incomplete(-OUTPUT_R);
+	double theshold = -2222;
 
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
 		acc_full = add_dmr(acc_full, input_a);
@@ -103,20 +115,30 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
+		theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
+			theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 			acc_incomplete = incomplete(acc_full);
 		}
 #endif
+
 	}
 
-	//if CHECKBLOCK is 0 only after OPS iterations it will be verified
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
+	theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 #endif
+
+	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
+	}
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
@@ -141,6 +163,7 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 	volatile register incomplete input_a_incomplete = incomplete(INPUT_A);
 	volatile register incomplete input_a_inv_incomplete = incomplete(1.0)
 			/ incomplete(INPUT_A);
+	double theshold = -2222;
 
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
 		acc_full = mul_dmr(acc_full, input_a_full);
@@ -156,22 +179,30 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
+		theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
+			theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 			acc_incomplete = incomplete(acc_full);
 		}
 #endif
 
 	}
 
-	//if CHECKBLOCK is 0 only after OPS iterations it will be verified
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
+	theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 #endif
 
+	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
+	}
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
@@ -192,29 +223,39 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 
 	volatile full acc_incomplete = 0.0;
 	volatile full slice_incomplete = incomplete(OUTPUT_R) / incomplete(divisor);
+	double theshold = -2222;
 
-	for (int i = 0; i < n; i++) {
+	for (int count = 0; count < n; count++) {
 		acc_full = add_dmr(slice_full, acc_full);
 
 		acc_incomplete = add_dmr(slice_incomplete, acc_incomplete);
 
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
+		theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
-		if((i % CHECKBLOCK) == 0) {
+		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
+			theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 			acc_incomplete = incomplete(acc_full);
 		}
 #endif
 
 	}
 
-	//if CHECKBLOCK is 0 only after OPS iterations it will be verified
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
+	theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 #endif
+
+	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
+	}
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;

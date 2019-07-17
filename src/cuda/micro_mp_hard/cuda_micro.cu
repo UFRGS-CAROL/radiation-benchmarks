@@ -83,10 +83,10 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 			}
 		}
 	}
-	std::ofstream of("test.txt", std::ofstream::out | std::ofstream::app);
-
-	of << "BLOCK " << CHECKBLOCK << " MAX DIFF " << threshold << std::endl;
-	of.close();
+//	std::ofstream of("test.txt", std::ofstream::out | std::ofstream::app);
+//
+//	of << "BLOCK " << CHECKBLOCK << " MAX DIFF " << threshold << std::endl;
+//	of.close();
 	if (dmr_errors != 0) {
 		std::stringstream error_detail;
 		error_detail << "detected_dmr_errors: " << dmr_errors;
