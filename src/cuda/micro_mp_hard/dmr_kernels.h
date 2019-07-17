@@ -218,17 +218,19 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 		full *d_R0_second, const full OUTPUT_R) {
 	int n = 10000000;
 	const full divisor = full(n);
-	volatile full acc_full = 0.0;
-	volatile full slice_full = OUTPUT_R / divisor;
+	volatile register full acc_full = 0.0;
+	volatile register full slice_full = OUTPUT_R / divisor;
 
-	volatile full acc_incomplete = 0.0;
-	volatile full slice_incomplete = incomplete(OUTPUT_R) / incomplete(divisor);
+	volatile register full acc_incomplete = 0.0;
+	volatile register full slice_incomplete = incomplete(OUTPUT_R) / incomplete(divisor);
 	double theshold = -2222;
+	const full one = full(1.0);
+	const incomplete one_i = incomplete(1.0);
 
 	for (int count = 0; count < n; count++) {
-		acc_full = add_dmr(OUTPUT_R, acc_full);
+		acc_full = add_dmr(one, acc_full);
 
-		acc_incomplete = add_dmr(incomplete(OUTPUT_R), incomplete(acc_incomplete));
+		acc_incomplete = add_dmr(one_i, incomplete(acc_incomplete));
 
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
@@ -256,9 +258,6 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
 		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 	}
-
-	acc_full = OUTPUT_R / full(n);
-	acc_incomplete = incomplete(OUTPUT_R) / incomplete(n);
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
