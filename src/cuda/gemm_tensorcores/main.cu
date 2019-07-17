@@ -211,11 +211,12 @@ template<class real_t>
 int check_output_errors(std::vector<real_t> &R_incomplete,
 		std::vector<real_t> &R, std::vector<real_t> &OUTPUT_R) {
 	int host_errors = 0;
-	OUTPUT_R[2] = 45464;
+	printf("r = %f \n", r[2]);
+	R[2] = 45464;
 	double threshold = -3;
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < R.size(); i++) {
-		real_t gold = OUTPUT_R[i];
+		real_t gold = real_t(OUTPUT_R[i]);
 		real_t output = real_t(R[i]);
 		real_t output_inc = real_t(R_incomplete[i]);
 		threshold = max(threshold, fabs(output - output_inc));
