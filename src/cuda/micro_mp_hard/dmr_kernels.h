@@ -216,7 +216,7 @@ __global__ void MicroBenchmarkKernel_SQRT(incomplete *d_R0_one,
 template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 		full *d_R0_second, const full OUTPUT_R) {
-	volatile register full divisor = full(NUM_COMPOSE_DIVISOR);
+	register full divisor = full(NUM_COMPOSE_DIVISOR);
 	volatile register full acc_full = 0.0;
 	volatile register full slice_full = OUTPUT_R / divisor;
 
