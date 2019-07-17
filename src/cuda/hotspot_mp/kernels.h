@@ -362,12 +362,12 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 		t_temp_inc[ty][tx] = incomplete(t_temp[ty][tx]);
 #endif
 
-		if (ty + tx == 0) {
-			printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", threshold, CHECKBLOCK);
-		}
-
 		temp_dst[index] = t_temp[ty][tx];
 		temp_dst_incomplete[index] = t_temp_inc[ty][tx];
+	}
+
+	if (ty + tx == 0) {
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", threshold, CHECKBLOCK);
 	}
 }
 
