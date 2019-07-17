@@ -212,10 +212,10 @@ int check_output_errors(std::vector<real_t> &R_incomplete,
 		std::vector<real_t> &R, std::vector<real_t> &OUTPUT_R) {
 	int host_errors = 0;
 	
-	real_t threshold = -3;
+	double threshold = -3;
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < R.size(); i++) {
-		real_t gold = OUTPUT_R;
+		real_t gold = OUTPUT_R[i];
 		real_t output = real_t(R[i]);
 		real_t output_inc = real_t(R_incomplete[i]);
 		threshold = max(threshold, fabs(output - output_inc));
@@ -514,7 +514,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			}else{
 				start = log_obj.mysecond();
 				// errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
-				errors = check_output_errors(host_matrix_d0, host_matrix_d1, host_gold);
+				int dmr_errors = 0;
+				dmr_errors = check_output_errors(host_matrix_d0, host_matrix_d1, host_gold);
 				end = log_obj.mysecond();
 			}
 			std::cout << "Iteration: " << it << " memory errors "
