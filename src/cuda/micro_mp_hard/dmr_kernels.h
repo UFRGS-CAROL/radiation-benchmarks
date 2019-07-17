@@ -32,6 +32,7 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 	volatile register incomplete input_a_neg_incomplete = incomplete(-INPUT_A);
 	volatile register incomplete input_b_neg_incomplete = incomplete(-INPUT_B);
 
+	double theshold = -2222;
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
 		acc_full = fma_dmr(input_a_full, input_b_full, acc_full);
 		acc_full = fma_dmr(input_a_neg_full, input_b_full, acc_full);
@@ -50,11 +51,15 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
+		theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
+			theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 			acc_incomplete = incomplete(acc_full);
 		}
 #endif
@@ -63,7 +68,13 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
+	theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+
 #endif
+
+	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
+		printf("THRESHOLD CHECKBLOCK, %lf, %lf\n", theshold, CHECKBLOCK);
+	}
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
