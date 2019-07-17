@@ -516,6 +516,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				start = log_obj.mysecond();
 				// errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
 				int dmr_errors = 0;
+				printf("%f\n", host_matrix_d0);
+				
 				dmr_errors = check_output_errors(host_matrix_d0, host_matrix_d1, host_gold);
 				end = log_obj.mysecond();
 			}
