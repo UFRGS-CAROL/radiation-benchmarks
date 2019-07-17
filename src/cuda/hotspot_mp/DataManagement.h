@@ -182,10 +182,10 @@ struct DataManagement {
 				}
 			}
 		}
-		std::ofstream of("test.txt", std::ofstream::out | std::ofstream::app);
-
-		 of << "BLOCK " << CHECKBLOCK << " MAX DIFF " << max_t << std::endl;
-		 of.close();
+//		std::ofstream of("test.txt", std::ofstream::out | std::ofstream::app);
+//
+//		 of << "BLOCK " << CHECKBLOCK << " MAX DIFF " << max_t << std::endl;
+//		 of.close();
 
 		if (detected_errors != 0) {
 			std::string error_detail;
