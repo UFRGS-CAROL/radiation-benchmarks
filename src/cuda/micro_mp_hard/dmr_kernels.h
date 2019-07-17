@@ -73,7 +73,7 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 #endif
 
 	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
-		printf("THRESHOLD CHECKBLOCK, %lf, %lf\n", theshold, CHECKBLOCK);
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 	}
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
@@ -137,7 +137,7 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 #endif
 
 	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
-		printf("THRESHOLD CHECKBLOCK, %lf, %lf\n", theshold, CHECKBLOCK);
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 	}
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
@@ -201,7 +201,7 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 #endif
 
 	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
-		printf("THRESHOLD CHECKBLOCK, %lf, %lf\n", theshold, CHECKBLOCK);
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 	}
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
