@@ -42,9 +42,9 @@ std::string get_double_representation(double val) {
 	return output;
 }
 
-bool cmp(const double lhs, const double rhs) {
+bool cmp(const double lhs, const double rhs, const double zero) {
 	const double diff = abs(lhs - rhs);
-	const double zero = double(ZERO_FLOAT);
+//	const double zero = double(ZERO_FLOAT);
 	if (diff > zero) {
 		return false;
 	}
@@ -65,7 +65,8 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 		double output = double(R[i]);
 		double output_inc = double(R_incomplete[i]);
 		threshold = max(threshold, fabs(output - output_inc));
-		if (gold != output || !cmp(output, output_inc)) {
+		if (!cmp(gold, output, 0.000000001)
+				|| !cmp(output, output_inc, ZERO_FLOAT)) {
 #pragma omp critical
 			{
 				std::stringstream error_detail;
