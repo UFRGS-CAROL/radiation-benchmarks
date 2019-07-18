@@ -356,7 +356,7 @@ std::pair<int, int> check_output_errors(std::vector<real_t>& gold,  std::vector<
 		real_t valOutput1 = d1[i];
 
 		// if (valGold != valOutput1 || !cmp(valOutput0, valOutput1)) {
-		if (valGold != valOutput1){
+		if (!cmp(valOutput0, valOutput1)){
 					std::stringstream error_detail("");
 					error_detail << "p: [" << int(floor(i / log.size_matrices))
 							<< ", " << i % log.size_matrices << "], r: "
