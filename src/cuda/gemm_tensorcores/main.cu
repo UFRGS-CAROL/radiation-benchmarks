@@ -339,7 +339,7 @@ template<class host_real_t>
 bool cmp(const host_real_t lhs, const host_real_t rhs) {
 	const host_real_t diff = abs(lhs - rhs);
 
-	std::cout << "d0= " << valOutput0 << "d1 = " << valOutput1 << std::endl;	
+	std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
 	const host_real_t zero = host_real_t(ZERO_HALF);
 	if (diff > zero) {
 		return false;
