@@ -220,8 +220,8 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 	volatile register full acc_full = 0.0;
 	volatile register full slice_full = OUTPUT_R / divisor;
 
-	volatile register full acc_incomplete = 0.0;
-	volatile register full slice_incomplete = incomplete(OUTPUT_R) / incomplete(divisor);
+	volatile register incomplete acc_incomplete = 0.0;
+	volatile register incomplete slice_incomplete = incomplete(slice_full);
 	double theshold = -2222;
 
 	for (int count = 0; count < NUM_COMPOSE_DIVISOR; count++) {

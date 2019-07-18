@@ -10,8 +10,9 @@
 
 #include "cuda_utils.h"
 
-//THIS IS FOR MULL
+#ifndef ZERO_FLOAT
 #define ZERO_FLOAT 2.2e-07
+#endif
 
 #define ZERO_HALF 4.166E-13 //1e-13
 
