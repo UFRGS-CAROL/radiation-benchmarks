@@ -5,7 +5,8 @@
 #include <fstream>      // std::ifstream
 #include <sstream>      // std::stringstream
 
-#include <boost/lexical_cast.hpp>
+#include <iomanip>
+#include <limits>
 
 
 #ifdef OMP
@@ -337,10 +338,8 @@ template<class host_real_t>
 bool cmp(const host_real_t lhs, const host_real_t rhs) {
 	const host_real_t diff = abs(lhs - rhs);
 
-	using boost::lexical_cast;
-	using std::string;
-	
-	cout << "diff: " << lexical_cast<string>(diff) << endl;
+	int precision = std::numeric_limits<host_real_t>::max_digits10;
+	std::cout << "diff: " std::setprecision(precision) << diff << std::endl;
 	
 	const host_real_t zero = host_real_t(ZERO_HALF);
 	if (diff > zero) {
