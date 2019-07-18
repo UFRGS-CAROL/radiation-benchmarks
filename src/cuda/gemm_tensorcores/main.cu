@@ -5,6 +5,8 @@
 #include <fstream>      // std::ifstream
 #include <sstream>      // std::stringstream
 
+#include <boost/lexical_cast.hpp>
+
 
 #ifdef OMP
 #include <omp.h>
@@ -334,7 +336,12 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 template<class host_real_t>
 bool cmp(const host_real_t lhs, const host_real_t rhs) {
 	const host_real_t diff = abs(lhs - rhs);
-	std::cout << "diff: "<< diff << std::endl;
+
+	using boost::lexical_cast;
+	using std::string;
+	
+	cout << "diff: " << lexical_cast<string>(diff) << endl;
+	
 	const host_real_t zero = host_real_t(ZERO_HALF);
 	if (diff > zero) {
 		return false;
