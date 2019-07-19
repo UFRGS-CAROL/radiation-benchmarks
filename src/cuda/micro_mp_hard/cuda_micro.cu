@@ -44,7 +44,6 @@ std::string get_double_representation(double val) {
 
 bool cmp(const double lhs, const double rhs, const double zero) {
 	const double diff = abs(lhs - rhs);
-//	const double zero = double(ZERO_FLOAT);
 	if (diff > zero) {
 		return false;
 	}
@@ -84,10 +83,7 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 			}
 		}
 	}
-//	std::ofstream of("test.txt", std::ofstream::out | std::ofstream::app);
-//
-//	of << "BLOCK " << CHECKBLOCK << " MAX DIFF " << threshold << std::endl;
-//	of.close();
+
 	if (dmr_errors != 0) {
 		std::stringstream error_detail;
 		error_detail << "detected_dmr_errors: " << dmr_errors;
@@ -107,8 +103,7 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 }
 
 template<typename incomplete, typename full, typename ... TypeArgs>
-void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters,
-		const std::vector<Input<full>>& defined_input = { }) {
+void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 	std::cout << "Input values " << type_ << std::endl;
 #ifdef CHECKBLOCK
 	std::cout << "Instruction block checking size " << CHECKBLOCK << std::endl;
@@ -124,11 +119,6 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters,
 	std::vector<full> host_vector_full(parameters.r_size, 0);
 	rad::DeviceVector<full> device_vector_full(parameters.r_size);
 
-	//For defined input only
-	rad::DeviceVector<Input<full>> device_defined_input;
-	if (defined_input.size() == device_vector_full.size()) {
-		device_defined_input = defined_input;
-	}
 	//====================================
 
 	// SECOND PRECISION ONLY IF IT IS DEFINED
@@ -153,50 +143,46 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters,
 			case ADD:
 				MicroBenchmarkKernel_ADD<full> <<<parameters.grid_size,
 						parameters.block_size>>>(device_vector_full.data(),
-						type_.output_r, type_.input_a, type_.input_b);
+						type_.output_r, type_.input_a);
 				break;
 			case MUL:
 				MicroBenchmarkKernel_MUL<full> <<<parameters.grid_size,
 						parameters.block_size>>>(device_vector_full.data(),
-						type_.output_r, type_.input_a, type_.input_b);
+						type_.output_r, type_.input_a);
 				break;
 			case FMA:
-				if (defined_input.size() == device_vector_full.size()) {
-					MicroBenchmarkKernel_FMA<full> <<<parameters.grid_size,
-							parameters.block_size>>>(device_vector_full.data(),
-							device_defined_input.data());
-				} else {
-					MicroBenchmarkKernel_FMA<full> <<<parameters.grid_size,
-							parameters.block_size>>>(device_vector_full.data(),
-							type_.output_r, type_.input_a, type_.input_b);
-				}
+				MicroBenchmarkKernel_FMA<full> <<<parameters.grid_size,
+						parameters.block_size>>>(device_vector_full.data(),
+						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			}
 
 		} else {
 			switch (parameters.micro) {
 			case ADD:
-//				MicroBenchmarkKernel_ADD<incomplete, full> <<<
-//						parameters.grid_size, parameters.block_size>>>(
-//						device_vector_inc.data(), device_vector_full.data(),
-//						type_.output_r, type_.input_a, type_.input_b);
-
-				MicroBenchmarkKernel_NumCompose<incomplete, full> <<<
+				MicroBenchmarkKernel_ADD<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
-						type_.output_r);
+						type_.output_r, type_.input_a);
 				break;
 			case MUL:
 				MicroBenchmarkKernel_MUL<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
-						type_.output_r, type_.input_a, type_.input_b);
+						type_.output_r, type_.input_a);
 				break;
 			case FMA:
 				MicroBenchmarkKernel_FMA<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r, type_.input_a, type_.input_b);
+				break;
+
+			case NUMCOMPOSE:
+				MicroBenchmarkKernel_NumCompose<incomplete, full> <<<
+						parameters.grid_size, parameters.block_size>>>(
+						device_vector_inc.data(), device_vector_full.data(),
+						type_.output_r);
 				break;
 			}
 		}
@@ -288,11 +274,7 @@ void dmr(Parameters& parameters) {
 
 		if (parameters.precision == SINGLE) {
 			Type<float> type_;
-			Input<float> input(type_.output_r, type_.input_a, type_.input_b);
-			std::vector<Input<float>> input_vector(
-					parameters.grid_size * parameters.block_size, input);
-
-			test_radiation<float, float>(type_, parameters, input_vector);
+			test_radiation<float, float>(type_, parameters);
 		}
 
 		if (parameters.precision == DOUBLE) {

@@ -20,17 +20,17 @@ template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 		full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
 		const full INPUT_B) {
-	volatile register full acc_full = OUTPUT_R;
-	volatile register full input_a_full = INPUT_A;
-	volatile register full input_b_full = INPUT_B;
-	volatile register full input_a_neg_full = -INPUT_A;
-	volatile register full input_b_neg_full = -INPUT_B;
+	register full acc_full = OUTPUT_R;
+	register full input_a_full = INPUT_A;
+	register full input_b_full = INPUT_B;
+	register full input_a_neg_full = -INPUT_A;
+	register full input_b_neg_full = -INPUT_B;
 
-	volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
-	volatile register incomplete input_a_incomplete = incomplete(INPUT_A);
-	volatile register incomplete input_b_incomplete = incomplete(INPUT_B);
-	volatile register incomplete input_a_neg_incomplete = incomplete(-INPUT_A);
-	volatile register incomplete input_b_neg_incomplete = incomplete(-INPUT_B);
+	register incomplete acc_incomplete = incomplete(OUTPUT_R);
+	register incomplete input_a_incomplete = incomplete(INPUT_A);
+	register incomplete input_b_incomplete = incomplete(INPUT_B);
+	register incomplete input_a_neg_incomplete = incomplete(-INPUT_A);
+	register incomplete input_b_neg_incomplete = incomplete(-INPUT_B);
 
 	double theshold = -2222;
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
@@ -51,14 +51,14 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
-		theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+		theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
-			theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 			acc_incomplete = incomplete(acc_full);
 		}
@@ -68,7 +68,7 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
-	theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+	theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 #endif
 
@@ -89,16 +89,15 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 
 template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
-		full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
-		const full INPUT_B) {
+		full *d_R0_second, const full OUTPUT_R, const full INPUT_A) {
 	// ========================================== Double and Single precision
-	volatile register full acc_full = OUTPUT_R;
-	volatile register full input_a = OUTPUT_R;
-	volatile register full input_a_neg = -OUTPUT_R;
+	register full acc_full = OUTPUT_R;
+	register full input_a = OUTPUT_R;
+	register full input_a_neg = -OUTPUT_R;
 
-	volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
-	volatile register incomplete input_a_incomplete = incomplete(OUTPUT_R);
-	volatile register incomplete input_a_neg_incomplete = incomplete(-OUTPUT_R);
+	register incomplete acc_incomplete = incomplete(OUTPUT_R);
+	register incomplete input_a_incomplete = incomplete(OUTPUT_R);
+	register incomplete input_a_neg_incomplete = incomplete(-OUTPUT_R);
 	double theshold = -2222;
 
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
@@ -115,14 +114,14 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
-		theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+		theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
-			theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 			acc_incomplete = incomplete(acc_full);
 		}
@@ -132,7 +131,7 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
-	theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+	theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 #endif
 
@@ -152,17 +151,15 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 
 template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
-		full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
-		const full INPUT_B) {
+		full *d_R0_second, const full OUTPUT_R, const full INPUT_A) {
 
-	volatile register full acc_full = OUTPUT_R;
-	volatile register full input_a_full = INPUT_A;
-	volatile register full input_a_inv_full = full(1.0) / INPUT_A;
+	register full acc_full = OUTPUT_R;
+	register full input_a_full = INPUT_A;
+	register full input_a_inv_full = full(1.0) / INPUT_A;
 
-	volatile register incomplete acc_incomplete = incomplete(OUTPUT_R);
-	volatile register incomplete input_a_incomplete = incomplete(INPUT_A);
-	volatile register incomplete input_a_inv_incomplete = incomplete(1.0)
-			/ incomplete(INPUT_A);
+	register incomplete acc_incomplete = incomplete(acc_full);
+	register incomplete input_a_incomplete = incomplete(input_a_full);
+	register incomplete input_a_inv_incomplete = incomplete(input_a_inv_full);
 	double theshold = -2222;
 
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
@@ -179,14 +176,14 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
-		theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+		theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 		acc_incomplete = incomplete(acc_full);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
-			theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 			acc_incomplete = incomplete(acc_full);
 		}
@@ -196,7 +193,7 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
-	theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+	theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 #endif
 
@@ -208,20 +205,14 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 }
 
 template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_SQRT(incomplete *d_R0_one,
-		full *d_R0_second, const full INPUT_A) {
-
-}
-
-template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 		full *d_R0_second, const full OUTPUT_R) {
 	register full divisor = full(NUM_COMPOSE_DIVISOR);
-	volatile register full acc_full = 0.0;
-	volatile register full slice_full = OUTPUT_R / divisor;
+	register full acc_full = 0.0;
+	register full slice_full = OUTPUT_R / divisor;
 
-	volatile register incomplete acc_incomplete = 0.0;
-	volatile register incomplete slice_incomplete = incomplete(slice_full);
+	register incomplete acc_incomplete = 0.0;
+	register incomplete slice_incomplete = incomplete(slice_full);
 //	double theshold = -2222;
 
 	for (int count = 0; count < NUM_COMPOSE_DIVISOR; count++) {
@@ -231,14 +222,14 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
-//		theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+//		theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 		acc_incomplete = incomplete(acc_full);
-		// if CHECKBLOCK is >1 perform the % operation
+// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
-//			theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+			//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 			acc_incomplete = incomplete(acc_full);
 		}
@@ -248,7 +239,7 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
-//	theshold = fmax(theshold, fabs(double(full(acc_full)) - double(incomplete(acc_incomplete))));
+	//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 #endif
 
