@@ -339,7 +339,7 @@ template<class host_real_t>
 bool cmp(const host_real_t lhs, const host_real_t rhs) {
 	const host_real_t diff = abs(lhs - rhs);
 
-	std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
+	// std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
 	const host_real_t zero = host_real_t(ZERO_HALF);
 	if (diff > zero) {
 		return false;
@@ -360,8 +360,8 @@ std::pair<int, int> check_output_errors(std::vector<real_t>& gold,  std::vector<
 		real_t valOutput0 = d0[i];
 		real_t valOutput1 = d1[i];
 
-		// if (valGold != valOutput1 || !cmp(valOutput0, valOutput1)) {
-		if (!cmp(valOutput0, valOutput1)){
+		if (valGold != valOutput1 || !cmp(valOutput0, valOutput1)) {
+		
 					std::stringstream error_detail("");
 					error_detail << "p: [" << int(floor(i / log.size_matrices))
 							<< ", " << i % log.size_matrices << "], r: "
@@ -417,7 +417,7 @@ std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vect
 }
 
 
-template<class host_real_t, class real_t, class half_t>
+template<class host_real_t, class real_t, class half_t, class half_real_t>
 void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		Log& log_obj) {
 	cudaEvent_t start, stop;
@@ -430,7 +430,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 // D Matrix
 	std::vector<host_real_t> host_matrix_d0(
 			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<host_real_t> host_matrix_d1(
+	std::vector<half_real_t> host_matrix_d1(
 			log_obj.size_matrices * log_obj.size_matrices);
 	std::vector<host_real_t> host_matrix_d2(
 			log_obj.size_matrices * log_obj.size_matrices);
@@ -443,7 +443,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				host_matrix_c, log_obj);
 	}
 
-	GEMMWMMA<host_half, half_t, host_real_t, real_t> mult_enviroment(
+	GEMMWMMA<host_half, half_t, host_real_t, real_t, half_real_t> mult_enviroment(
 			host_matrix_a.data(), host_matrix_b.data(), host_matrix_c.data(),
 			log_obj.size_matrices, log_obj.size_matrices, log_obj.size_matrices,
 			real_t(1.1f), real_t(1.2f));
@@ -467,14 +467,14 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			}
 		} else {
 			if (log_obj.use_tensor_cores) {
-				// mult_enviroment.mul_gemm_wmma();
-				 mult_enviroment.mul_gemm_wmma_DMR();
-				//mult_enviroment.mul_gemm_wmma_op_DMR(st);
-			} else {
 				
-				//mult_enviroment.mul_mxm();
-				mult_enviroment.mul_gemm();
-				//mult_enviroment.mul_gemm_DMR();
+				 // mult_enviroment.mul_gemm_wmma();
+				 mult_enviroment.mul_gemm_wmma_DMR();
+				
+			} else {			
+			
+				// mult_enviroment.mul_gemm();
+				mult_enviroment.mul_gemm_DMR(st);
 			}
 		}
 		log_obj.end_iteration_app();
@@ -525,7 +525,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				int dmr_errors = 0;
 				//printf("%f\n", host_matrix_d0[0]);
 				
-				errors = check_output_errors(host_gold, host_matrix_d0, host_matrix_d1,log_obj);
+				// errors = check_output_errors(host_gold, host_matrix_d0, host_matrix_d1,log_obj);
 				end = log_obj.mysecond();
 			}
 			std::cout << "Iteration: " << it << " memory errors "
@@ -610,16 +610,22 @@ int main(int argc, char** argv) {
 
 
 
-	if (log_obj.precision == "half") {
-		call_mxm<host_half, half, half>(host_matrix_a, host_matrix_b, log_obj);	
+	if (log_obj.use_tensor_cores)
+	{		
+		call_mxm<host_half, half, half, half>(host_matrix_a, host_matrix_b, log_obj);		
 	}
-	if (log_obj.precision == "float") {
-		call_mxm<float, float, half>(host_matrix_a, host_matrix_b, log_obj);
-	}
-	// if (log_obj.precision == "double") {
-	// 	call_mxm<double, double, half>(host_matrix_a, host_matrix_b, log_obj);
-	// }
 	
+	if (log_obj.precision == "float") {
+		call_mxm<float, float, half, float>(host_matrix_a, host_matrix_b, log_obj);
+	}
+	if (log_obj.precision == "double") {
+		call_mxm<double, double, half, float>(host_matrix_a, host_matrix_b, log_obj);
+	}
+	if (log_obj.precision == "DMR") {
+		call_mxm<double, double, half, float>(host_matrix_a, host_matrix_b, log_obj);
+	}
+	
+
 
 	std::cout << "Finished computation\n";
 	return 0;
