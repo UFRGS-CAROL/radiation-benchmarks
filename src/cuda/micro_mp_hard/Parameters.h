@@ -33,7 +33,6 @@
 #define INPUT_B_DOUBLE 3.720662080996988E-10 // 0x2AAAAAAAAAAAAAAA
 #define OUTPUT_R_DOUBLE 4.194530529161495 //0x4011C71C71C71C71
 
-
 #define INPUT_A_SINGLE 1.4660155E+13 // 0x55555555
 #define INPUT_B_SINGLE 3.0316488E-13 // 0x2AAAAAAA
 #define OUTPUT_R_SINGLE 4.444444 //0x408E38E3
@@ -43,7 +42,7 @@
 #define OUTPUT_R_HALF 4.44 // 0x4471
 
 typedef enum {
-	ADD, MUL, FMA
+	ADD, MUL, FMA, NUMCOMPOSE
 } MICROINSTRUCTION;
 
 typedef enum {
@@ -79,7 +78,9 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		//MUL
 		{ "mul", MUL },
 		//FMA
-		{ "fma", FMA }, };
+		{ "fma", FMA },
+		//NUMCOMPOSE
+		{ "compose", NUMCOMPOSE }, };
 
 template<typename ...TypeArgs> struct Type;
 
@@ -146,13 +147,13 @@ struct Type<float, double> {
 	}
 };
 
-std::ostream& operator<<(std::ostream& os, const half& t){
+std::ostream& operator<<(std::ostream& os, const half& t) {
 	float tmp = float(t);
 	os << tmp;
 	return os;
 }
 
-template<typename...TypeArgs>
+template<typename ...TypeArgs>
 std::ostream& operator<<(std::ostream& os, const Type<TypeArgs...>& t) {
 	os << std::scientific;
 	os << t.output_r << " " << t.input_a << " " << t.input_b;

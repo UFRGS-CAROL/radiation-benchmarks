@@ -46,28 +46,6 @@ __global__ void MicroBenchmarkKernel_FMA(full *d_R0_one, const full OUTPUT_R,
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 }
 
-template<typename full>
-__global__ void MicroBenchmarkKernel_FMA(full *d_R0_one,
-		const Input<full>* input) {
-	int id = blockIdx.x * blockDim.x + threadIdx.x;
-	const Input<full>& inp_id = input[id];
-
-	volatile register full acc_full = inp_id.OUTPUT_R;
-	volatile register full input_a_full = inp_id.INPUT_A;
-	volatile register full input_b_full = inp_id.INPUT_B;
-	volatile register full input_a_neg_full = -inp_id.INPUT_A;
-	volatile register full input_b_neg_full = -inp_id.INPUT_B;
-
-	for (register unsigned int count = 0; count < (OPS / 4); count++) {
-		acc_full = fma_dmr(input_a_full, input_b_full, acc_full);
-		acc_full = fma_dmr(input_a_neg_full, input_b_full, acc_full);
-		acc_full = fma_dmr(input_a_full, input_b_neg_full, acc_full);
-		acc_full = fma_dmr(input_a_neg_full, input_b_neg_full, acc_full);
-
-	}
-	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
-}
-
 /**
  * ----------------------------------------
  * ADD
@@ -76,7 +54,7 @@ __global__ void MicroBenchmarkKernel_FMA(full *d_R0_one,
 
 template<typename full>
 __global__ void MicroBenchmarkKernel_ADD(full *d_R0_one, const full OUTPUT_R,
-		const full INPUT_A, const full INPUT_B) {
+		const full INPUT_A) {
 	volatile register full acc_full = OUTPUT_R;
 	volatile register full input_a = OUTPUT_R;
 	volatile register full input_a_neg = -OUTPUT_R;
@@ -98,7 +76,7 @@ __global__ void MicroBenchmarkKernel_ADD(full *d_R0_one, const full OUTPUT_R,
 
 template<typename full>
 __global__ void MicroBenchmarkKernel_MUL(full *d_R0_one, const full OUTPUT_R,
-		const full INPUT_A, const full INPUT_B) {
+		const full INPUT_A) {
 	volatile register full acc_full = OUTPUT_R;
 	volatile register full input_a_full = INPUT_A;
 	volatile register full input_a_inv_full = full(1.0) / INPUT_A;

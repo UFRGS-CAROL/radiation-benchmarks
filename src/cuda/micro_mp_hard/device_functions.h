@@ -10,11 +10,13 @@
 
 #include "cuda_utils.h"
 
+#define ZERO_FULL 1e-13
+
 #ifndef ZERO_FLOAT
 #define ZERO_FLOAT 2.2e-07
 #endif
 
-#define ZERO_HALF 4.166E-13 //1e-13
+#define ZERO_HALF 4.166E-13
 
 #define NUM_COMPOSE_DIVISOR 10000000
 
@@ -46,16 +48,25 @@ __device__ __forceinline__ void compare(const double lhs, const float rhs) {
 	}
 }
 
+template<typename T>
+__device__ __forceinline__ void compare(const T lhs, const T rhs){
+	const T diff = abs__(lhs - rhs);
+	const T zero = T(ZERO_FULL);
+	if (diff > zero) {
+		atomicAdd(&errors, 1);
+	}
+}
+
 template<typename incomplete, typename full>
 __device__ __forceinline__ void check_relative_error(incomplete acc_incomplete,
 		full acc_full) {
 	compare(acc_full, acc_incomplete);
 }
 
-template<typename T>
-__device__ __forceinline__ void cast(volatile T& lhs, const T& rhs) {
-	lhs = rhs;
-}
+//template<typename T>
+//__device__ __forceinline__ void cast(volatile T& lhs, const T& rhs) {
+//	lhs = rhs;
+//}
 
 /*
  * __float2half_rd  round-down mode
@@ -63,9 +74,9 @@ __device__ __forceinline__ void cast(volatile T& lhs, const T& rhs) {
  * __float2half_ru  round-up mode
  * __float2half_rz round-towards-zero mode
  */
-__device__ __forceinline__ void cast(volatile half& lhs, const float& rhs) {
-	lhs = __float2half_rn(rhs);
-}
+//__device__ __forceinline__ void cast(volatile half& lhs, const float& rhs) {
+//	lhs = __float2half_rn(rhs);
+//}
 
 /*
  *__double2float_rd Convert a double to a float in round-down mode.
@@ -73,9 +84,9 @@ __device__ __forceinline__ void cast(volatile half& lhs, const float& rhs) {
  *__double2float_ru Convert a double to a float in round-up mode.
  *__double2float_rz Convert a double to a float in round-towards-zero mode.
  */
-__device__ __forceinline__ void cast(volatile float& lhs, const double& rhs) {
-	lhs = __double2float_rn(rhs);
-}
+//__device__ __forceinline__ void cast(volatile float& lhs, const double& rhs) {
+//	lhs = __double2float_rn(rhs);
+//}
 
 /**
  * ----------------------------------------
@@ -84,7 +95,7 @@ __device__ __forceinline__ void cast(volatile float& lhs, const double& rhs) {
  */
 
 __device__ __forceinline__ double fma_dmr(double a, double b, double acc) {
-	return fma(a, b, acc);
+	return __fma_rn(a, b, acc);
 }
 
 __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
@@ -92,8 +103,7 @@ __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
 }
 
 __device__  __forceinline__ half fma_dmr(half a, half b, half acc) {
-//	return __hfma(a, b, acc);
-	return __hfma_sat(a, b, acc);
+	return __hfma(a, b, acc);
 }
 
 /**
