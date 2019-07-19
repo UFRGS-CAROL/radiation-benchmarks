@@ -61,7 +61,7 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 			for (size_t j = 0; j < log.size_matrices; j++) {
 				a_host_vector[i * log.size_matrices + j] = (half) 2.0;
 				b_host_vector[i * log.size_matrices + j] = (half) 2.0;
-				c_host_vector[i * log.size_matrices + j] = (real_t) 2.0;
+				c_host_vector[i * log.size_matrices + j] = (real_t) 0.0;
 			}
 		}
 

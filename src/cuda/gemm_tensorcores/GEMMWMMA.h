@@ -364,7 +364,7 @@ public:
   	
 
 	this->debug("device synchronize");
-	rad::checkFrameworkErrors(cudaDeviceSynchronize());
+	check_framework_errors(cudaDeviceSynchronize());
 	//end
 	}
 
