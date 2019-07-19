@@ -34,7 +34,7 @@ typedef half_float::half host_half;
 typedef std::vector<host_half> half_vector;
 
 
-template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
+template<class real_t, class half_t> void generate_matrices_files(half_vector& a_host_vector,
 		half_vector& b_host_vector, std::vector<real_t>& c_host_vector,
 		Log& log) {
 
@@ -59,8 +59,8 @@ template<class real_t> void generate_matrices_files(half_vector& a_host_vector,
 
 		for (size_t i = 0; i < log.size_matrices; i++) {
 			for (size_t j = 0; j < log.size_matrices; j++) {
-				a_host_vector[i * log.size_matrices + j] = (half) 2.0;
-				b_host_vector[i * log.size_matrices + j] = (half) 2.0;
+				a_host_vector[i * log.size_matrices + j] = (half_t) 1.0;
+				b_host_vector[i * log.size_matrices + j] = (half_t) 1.0;
 				c_host_vector[i * log.size_matrices + j] = (real_t) 0.0;
 			}
 		}
