@@ -339,7 +339,9 @@ template<class host_real_t>
 bool cmp(const host_real_t lhs, const host_real_t rhs) {
 	const host_real_t diff = abs(lhs - rhs);
 
-	// std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
+	
+	std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
+	std::cout << "diff= " << diff << std::endl;	
 	const host_real_t zero = host_real_t(ZERO_HALF);
 	if (diff > zero) {
 		return false;
@@ -525,7 +527,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				
 				//printf("%f\n", host_matrix_d0[0]);
 				
-				// errors = check_output_errors(host_gold, host_matrix_d0, host_matrix_d1,log_obj);
+				errors = check_output_errors(host_gold, host_matrix_d0, host_matrix_d1,log_obj);
 				end = log_obj.mysecond();
 			}
 			std::cout << "Iteration: " << it << " memory errors "
@@ -554,7 +556,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		if (log_obj.triplicated)
 			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_gold);
 		else 			
-			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d0);
+			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d1);
 		
 	}
 
