@@ -9,15 +9,15 @@
  */
 
 #include "device_vector.h"
-#include "kernels.h"
+#include "sgemm_nn_64_16_16_16_4.h"
 #include <cassert>
 #include <vector>
 #include <iostream>
 
 #define THRESHOLD 1.0E-6  
 
-typedef float real_t;
-typedef float half_real_t;
+typedef double real_t;
+typedef double half_real_t;
 
 void gemm_host(std::vector<real_t>& a, std::vector<real_t>& b,
 		std::vector<real_t>& c, real_t alpha, real_t beta, int m, int n,

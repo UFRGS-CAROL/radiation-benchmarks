@@ -357,14 +357,17 @@ public:
 
 	dim3 threads(16, 4);
 	dim3 grid(M_O / 64, N_O / 16);
-		
+	
+	check_framework_errors(
+						cudaMemset(this->device_is_memory_bad, 0x0,
+								sizeof(unsigned long long int)));	
   	
-	s_gemm_DMR<<<grid, threads, 0, stream>>>(this->device_ptr_d1, this->device_ptr_d0, this->device_ptr_a0, this->device_ptr_b0, M_O, N_O, K_O, LDA, LDB, LDC,
+	s_gemm_DMR <real_t,half_real_t><<<grid, threads, 0, stream>>>(this->device_ptr_d1, this->device_ptr_d0, this->device_ptr_a0, this->device_ptr_b0, M_O, N_O, K_O, LDA, LDB, LDC,
 			this->alpha, this->beta);
   	
 
 	this->debug("device synchronize");
-	rad::checkFrameworkErrors(cudaDeviceSynchronize());
+	check_framework_errors(cudaDeviceSynchronize());
 	//end
 	}
 
