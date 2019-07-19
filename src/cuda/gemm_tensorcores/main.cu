@@ -441,7 +441,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		retrieve_matrices<host_real_t>(host_matrix_a, host_matrix_b,
 				host_matrix_c, host_gold, log_obj);
 	} else {
-		generate_matrices_files<host_real_t>(host_matrix_a, host_matrix_b,
+		generate_matrices_files<host_real_t,half_t>(host_matrix_a, host_matrix_b,
 				host_matrix_c, log_obj);
 	}
 
