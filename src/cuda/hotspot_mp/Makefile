@@ -61,7 +61,7 @@ clean:
 
 
 SIMTIME=1000
-PYRAMIDH=8
+PYRAMIDH=10
 
 generate:
 	./$(EXEC) -size=1024 -generate -verbose -sim_time=$(SIMTIME) \
