@@ -560,7 +560,9 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		
 	}
 
-	std::cout << "d0= " << host_matrix_d0 [0] << "d1 = " << host_matrix_d1 [0] << std::endl;	
+	for(int z = 1;z < 15 ; z++) {
+	std::cout << "d0 = " << host_matrix_d0 [z] << " ||  d1 = " << host_matrix_d1 [z] << std::endl;
+	}	
    // host_real_t largest = host_matrix_d1[0];
    // for(int z = 1;z <(log_obj.size_matrices * log_obj.size_matrices) ; z++) {
 
