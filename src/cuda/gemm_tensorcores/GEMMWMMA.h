@@ -116,7 +116,7 @@ void __error(const char* error, int line, const char* file) {
 #define error(error) __error(error, __LINE__, __FILE__)
 
 //host_half, half, host_real_t, real_t
-template<class host_half_t, class half_t, class host_real_t, class real_t>
+template<class host_half_t, class half_t, class host_real_t, class real_t, class half_real_t>
 class GEMMWMMA {
 public:
 
@@ -134,8 +134,8 @@ public:
 	real_t* device_ptr_c2 = nullptr;
 
 	real_t* device_ptr_d0 = nullptr;
-	real_t* device_ptr_d1 = nullptr;
-	// half_t* device_ptr_d1 = nullptr;
+	half_real_t* device_ptr_d1 = nullptr;
+	
 	
 	real_t* device_ptr_d2 = nullptr;
 
@@ -182,7 +182,7 @@ public:
 
 	void mul_mxm() {
 
-//		printf("entrou \n");
+
 		this->debug("thread dim allocation");
 		//		// Setup execution parameters
 		// Setup execution parameters
@@ -281,9 +281,7 @@ public:
 		check_framework_errors(cudaDeviceSynchronize());
 
 	}
-	void mul_gemm_wmma_op_DMR(cudaStream_t stream){
-	
-	}
+
 
 	void mul_gemm_wmma_DMR(){
 		this->debug("thread dim allocation");
@@ -353,43 +351,26 @@ public:
 
 	}
 
-	void mul_gemm_DMR(){
-		this->debug("thread dim allocation");
-		// 		// Setup execution parameters
-		// 		//First: using WMMA
-		// 		dim3 grid_dim;
-		// 		dim3 block_dim;
+	void mul_gemm_DMR(cudaStream_t stream){
+	this->debug("thread dim allocation");
 
-		// 		// block_dim.x must be a multple of warpSize
-		// 		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-		// 		block_dim.x = WMMA_M; //128;
-		//     	block_dim.y = WMMA_N; //4;
+
+	dim3 threads(16, 4);
+	dim3 grid(M_O / 64, N_O / 16);
+		
+  	
+	s_gemm_DMR<<<grid, threads, 0, stream>>>(this->device_ptr_d1, this->device_ptr_d0, this->device_ptr_a0, this->device_ptr_b0, M_O, N_O, K_O, LDA, LDB, LDC,
+			this->alpha, this->beta);
+  	
+
+	this->debug("device synchronize");
+	rad::checkFrameworkErrors(cudaDeviceSynchronize());
+	//end
+	}
+
+
+				
 	
-
-		// 		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-		// 				/ (WMMA_M * block_dim.x / WARP_SIZE);
-		// 		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
-		// 				/ (WMMA_N * block_dim.y);
-
-			 	
-		// 		this->debug("matrix multiplication");
-				
-				
-		// 		check_framework_errors(
-		// 				cudaMemset(this->device_is_memory_bad, 0x0,
-		// 						sizeof(unsigned long long int)));			
-				
- 
-		// 		//no tensor with DMR
-
-		// 		simple_gemm_DMR<half_t, real_t> <<<grid_dim, block_dim>>>(this->cols_b, this->device_ptr_d0, this->device_ptr_d1, this->alpha, this->beta);
-
-	
-
-		// this->debug("device synchronize");
-		// check_framework_errors(cudaDeviceSynchronize());
-				
-	}	
 
 	void mul_gemm(){
 		// this->debug("thread dim allocation");
@@ -522,10 +503,8 @@ public:
 							this->rows_c * this->cols_c * sizeof(real_t)));
 			check_framework_errors(
 					cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d1),
-							this->rows_c * this->cols_c * sizeof(real_t)));
-			 // check_framework_errors(
-			 // 		cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d1),
-			 // 				this->rows_c * this->cols_c * sizeof(half_t)));
+							this->rows_c * this->cols_c * sizeof(half_real_t)));
+			 
 			check_framework_errors(
 					cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d2),
 							this->rows_c * this->cols_c * sizeof(real_t)));
@@ -562,10 +541,8 @@ public:
 						this->rows_c * this->cols_c * sizeof(real_t)));
 		check_framework_errors(
 				cudaMemset(this->device_ptr_d1, 0x00,
-						this->rows_c * this->cols_c * sizeof(real_t)));
-	 	// check_framework_errors(
-		 // 		cudaMemset(this->device_ptr_d1, 0x00,
-		 // 				this->rows_c * this->cols_c * sizeof(half_t)));
+						this->rows_c * this->cols_c * sizeof(half_real_t)));
+
 		check_framework_errors(
 				cudaMemset(this->device_ptr_d2, 0x00,
 						this->rows_c * this->cols_c * sizeof(real_t)));
