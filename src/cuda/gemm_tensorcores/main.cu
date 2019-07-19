@@ -339,7 +339,9 @@ template<class host_real_t>
 bool cmp(const host_real_t lhs, const host_real_t rhs) {
 	const host_real_t diff = abs(lhs - rhs);
 
-	// std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
+	
+	std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
+	std::cout << "diff= " << diff << std::endl;	
 	const host_real_t zero = host_real_t(ZERO_HALF);
 	if (diff > zero) {
 		return false;
@@ -417,7 +419,7 @@ std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vect
 }
 
 
-template<class host_real_t, class real_t, class half_t, class half_real_t>
+template<class host_real_t, class real_t, class half_t>
 void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		Log& log_obj) {
 	cudaEvent_t start, stop;
@@ -430,7 +432,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 // D Matrix
 	std::vector<host_real_t> host_matrix_d0(
 			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<half_real_t> host_matrix_d1(
+	std::vector<host_real_t> host_matrix_d1(
 			log_obj.size_matrices * log_obj.size_matrices);
 	std::vector<host_real_t> host_matrix_d2(
 			log_obj.size_matrices * log_obj.size_matrices);
@@ -443,7 +445,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				host_matrix_c, log_obj);
 	}
 
-	GEMMWMMA<host_half, half_t, host_real_t, real_t, half_real_t> mult_enviroment(
+	GEMMWMMA<host_half, half_t, host_real_t, real_t> mult_enviroment(
 			host_matrix_a.data(), host_matrix_b.data(), host_matrix_c.data(),
 			log_obj.size_matrices, log_obj.size_matrices, log_obj.size_matrices,
 			real_t(1.1f), real_t(1.2f));
@@ -558,6 +560,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		
 	}
 
+	std::cout << "d0= " << host_matrix_d0 [0] << "d1 = " << host_matrix_d1 [0] << std::endl;	
    // host_real_t largest = host_matrix_d1[0];
    // for(int z = 1;z <(log_obj.size_matrices * log_obj.size_matrices) ; z++) {
 
@@ -612,18 +615,18 @@ int main(int argc, char** argv) {
 
 	if (log_obj.use_tensor_cores)
 	{		
-		call_mxm<host_half, half, half, half>(host_matrix_a, host_matrix_b, log_obj);		
+		call_mxm<host_half, half, half>(host_matrix_a, host_matrix_b, log_obj);		
 	}
 	
-	if (log_obj.precision == "float") {
-		call_mxm<float, float, half, float>(host_matrix_a, host_matrix_b, log_obj);
-	}
-	if (log_obj.precision == "double") {
-		call_mxm<double, double, half, double>(host_matrix_a, host_matrix_b, log_obj);
-	}
-	if (log_obj.precision == "DMR") {
-		call_mxm<double, double, half, float>(host_matrix_a, host_matrix_b, log_obj);
-	}
+	// if (log_obj.precision == "float") {
+	// 	call_mxm<float, float, half, float>(host_matrix_a, host_matrix_b, log_obj);
+	// }
+	// if (log_obj.precision == "double") {
+	// 	call_mxm<double, double, half, double>(host_matrix_a, host_matrix_b, log_obj);
+	// }
+	// if (log_obj.precision == "DMR") {
+	// 	call_mxm<double, double, half, float>(host_matrix_a, host_matrix_b, log_obj);
+	// }
 	
 
 
