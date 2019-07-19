@@ -175,16 +175,20 @@ std::pair<int, int> check_output_errors(std::vector<real_t>& gold,  std::vector<
 }
 
 template<class host_real_t, class real_t, class half_t>
-void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
-		Log& log_obj) {
+void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b, half_vector& host_matrix_c,
+	 half_vector& host_matrix_c_inc, Log& log_obj) {
 	cudaEvent_t start, stop;
 	float elapsedTime;
 
-	generate_matrices_files<host_real_t>(host_matrix_a, host_matrix_b,
-				host_matrix_c, log_obj);
+	//TODO
+	generate_matrices_files<host_real_t>(host_matrix_a, host_matrix_b,log_obj);
 	
 
 
+
+	rad::DeviceVector<real_t> device_c(host_matrix_c), device_a(host_matrix_a), device_b(
+			host_matrix_c);
+	rad::DeviceVector<half_real_t> device_c_inc(host_matrix_c_inc);
 
 	int tries = 0;
 	cudaEventCreate(&start);
@@ -196,7 +200,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		double start_computation = log_obj.mysecond();
 		log_obj.start_iteration_app();
 				
-		
+
+		//TODO
 		gemm_dmr();
 			
 	
@@ -226,6 +231,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		    //errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
 			//printf("%f\n", host_matrix_d0[0]);
 			
+			//TODO
 			errors = check_output_errors(host_gold, host_matrix_d0, host_matrix_d1,log_obj);
 			end = log_obj.mysecond();
 			
@@ -237,8 +243,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
-				rad::DeviceVector<real_t> device_c(host_c), device_a(host_a), device_b(
-				host_b);
+				rad::DeviceVector<real_t> device_c(host_matrix_c), device_a(host_matrix_a), device_b(
+				host_matrix_b);
 			}
 
 		}
@@ -320,21 +326,18 @@ int main(int argc, char** argv) {
 	std::vector<real_t> host_c(m * k, 0.0);
 	std::vector<half_real_t> host_c_inc(m * k, 0.0);
 
-	rad::DeviceVector<real_t> device_c(host_c), device_a(host_a), device_b(
-			host_b);
-	rad::DeviceVector<half_real_t> device_c_inc(host_c_inc);
 
 
-
+	// TODO 
 	if (log_obj.precision == "float") {
-		call_mxm<float, float, half>(host_matrix_a, host_matrix_b, log_obj);
+		call_mxm<float, float, half>(host_a, host_b, host_c, host_c_inc, log_obj);
 	}
 	if (log_obj.precision == "double") {
-		call_mxm<double, double, half>(host_matrix_a, host_matrix_b, log_obj);
+		call_mxm<double, double, half>(host_a, host_b, host_c, host_c_inc, log_obj);
 	}	
 	if (log_obj.precision == "mixed") {
 		
-		call_mxm<host_half, half, half>(host_matrix_a, host_matrix_b, log_obj);	
+		call_mxm<double, float, half>(host_a, host_b, host_c, host_c_inc, log_obj);
 	}
 
 	std::cout << "Finished computation\n";
