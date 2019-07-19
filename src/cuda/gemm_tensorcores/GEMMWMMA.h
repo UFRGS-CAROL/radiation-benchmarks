@@ -116,7 +116,7 @@ void __error(const char* error, int line, const char* file) {
 #define error(error) __error(error, __LINE__, __FILE__)
 
 //host_half, half, host_real_t, real_t
-template<class host_half_t, class half_t, class host_real_t, class real_t>
+template<class host_half_t, class half_t, class host_real_t, class real_t, class half_real_t>
 class GEMMWMMA {
 public:
 
@@ -134,8 +134,8 @@ public:
 	real_t* device_ptr_c2 = nullptr;
 
 	real_t* device_ptr_d0 = nullptr;
-	real_t* device_ptr_d1 = nullptr;
-	// half_t* device_ptr_d1 = nullptr;
+	half_real_t* device_ptr_d1 = nullptr;
+	
 	
 	real_t* device_ptr_d2 = nullptr;
 
