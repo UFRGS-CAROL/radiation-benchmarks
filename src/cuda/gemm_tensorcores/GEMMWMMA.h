@@ -366,11 +366,11 @@ public:
 	this->debug("device synchronize");
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 	//end
-}
+	}
 
 
 				
-	}	
+	
 
 	void mul_gemm(){
 		// this->debug("thread dim allocation");
