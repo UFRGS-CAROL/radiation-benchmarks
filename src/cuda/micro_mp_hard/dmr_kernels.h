@@ -163,15 +163,25 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 	double theshold = -2222;
 
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
-		acc_full = mul_dmr(acc_full, input_a_full);
-		acc_full = mul_dmr(acc_full, input_a_inv_full);
-		acc_full = mul_dmr(acc_full, input_a_inv_full);
-		acc_full = mul_dmr(acc_full, input_a_full);
+//		acc_full = mul_dmr(acc_full, input_a_full);
+//		acc_full = mul_dmr(acc_full, input_a_inv_full);
+//		acc_full = mul_dmr(acc_full, input_a_inv_full);
+//		acc_full = mul_dmr(acc_full, input_a_full);
 
-		acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
-		acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
-		acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
-		acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
+		acc_full *= input_a_full;
+		acc_full *= input_a_inv_full;
+		acc_full *= input_a_inv_full;
+		acc_full *= input_a_full;
+
+//		acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
+//		acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
+//		acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
+//		acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
+
+		acc_incomplete *= input_a_incomplete;
+		acc_incomplete *= input_a_inv_incomplete;
+		acc_incomplete *= input_a_inv_incomplete;
+		acc_incomplete *= input_a_incomplete;
 
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
