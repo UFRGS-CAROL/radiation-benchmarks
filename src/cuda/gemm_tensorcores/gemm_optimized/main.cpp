@@ -9,7 +9,7 @@
  */
 
 #include "device_vector.h"
-#include "sgemm_nn_64_16_16_16_4.h"
+#include "kernels.h"
 #include <cassert>
 #include <vector>
 #include <iostream>
