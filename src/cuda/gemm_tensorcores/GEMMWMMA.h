@@ -116,7 +116,7 @@ void __error(const char* error, int line, const char* file) {
 #define error(error) __error(error, __LINE__, __FILE__)
 
 //host_half, half, host_real_t, real_t
-template<class host_half_t, class half_t, class host_real_t, class real_t, class half_real_t>
+template<class host_half_t, class half_t, class host_real_t, class real_t>
 class GEMMWMMA {
 public:
 
@@ -134,7 +134,7 @@ public:
 	real_t* device_ptr_c2 = nullptr;
 
 	real_t* device_ptr_d0 = nullptr;
-	half_real_t* device_ptr_d1 = nullptr;
+	real_t* device_ptr_d1 = nullptr;
 	
 	
 	real_t* device_ptr_d2 = nullptr;
@@ -362,8 +362,8 @@ public:
 						cudaMemset(this->device_is_memory_bad, 0x0,
 								sizeof(unsigned long long int)));	
   	
-	s_gemm_DMR <real_t,half_real_t><<<grid, threads, 0, stream>>>(this->device_ptr_d1, this->device_ptr_d0, this->device_ptr_a0, this->device_ptr_b0, M_O, N_O, K_O, LDA, LDB, LDC,
-			this->alpha, this->beta);
+	// s_gemm_DMR <real_t,half_real_t><<<grid, threads, 0, stream>>>(this->device_ptr_d1, this->device_ptr_d0, this->device_ptr_a0, this->device_ptr_b0, M_O, N_O, K_O, LDA, LDB, LDC,
+	// 		this->alpha, this->beta);
   	
 
 	this->debug("device synchronize");
@@ -506,7 +506,7 @@ public:
 							this->rows_c * this->cols_c * sizeof(real_t)));
 			check_framework_errors(
 					cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d1),
-							this->rows_c * this->cols_c * sizeof(half_real_t)));
+							this->rows_c * this->cols_c * sizeof(real_t)));
 			 
 			check_framework_errors(
 					cudaMalloc(reinterpret_cast<void **>(&this->device_ptr_d2),
