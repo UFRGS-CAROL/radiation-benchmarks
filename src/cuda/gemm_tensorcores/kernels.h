@@ -358,7 +358,7 @@ __device__ __forceinline__ void fma__(const double a, const double b,
 // d - sw output
 
 template<class half_t, class real_t>
- __global__ void op_tensor_gemm_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, real_t *d, float alpha, float beta)
+ __global__ void op_tensor_gemm_DMR( half_t *A, half_t *B,  real_t *C, real_t *D, real_t *d, half_t alpha, half_t beta)
  {
  	// Block index
 	  int bx = blockIdx.x;
@@ -432,10 +432,10 @@ template<class half_t, class real_t>
  	const size_t shmem_idx_b_off = BLOCK_COL_TILES * M;
 
  	// This pointer is used to access the C and D matrix tiles this warp computes.
- 	float *shmem_warp_tile_ptr = (float*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
+ 	real_t *shmem_warp_tile_ptr = (real_t*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
 
  	// This pointer is used to stream the C and D matrices block-wide tile to and from shared memory.
- 	float *shmem_warp_stream_ptr = (float*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
+ 	real_t *shmem_warp_stream_ptr = (real_t*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
 
  	// Adjust the beta scaler, as it'll be multiplied by alpha at the end of
  	// each tile computation
@@ -473,7 +473,7 @@ template<class half_t, class real_t>
 
  		// These fragments will accumulate the result of A and B matrix fragment multiplications
  		// along the K_GLOBAL dimension.
- 		wmma::fragment<wmma::accumulator, M, N, K, float> c[WARP_COL_TILES][WARP_ROW_TILES];
+ 		wmma::fragment<wmma::accumulator, M, N, K, real_t> c[WARP_COL_TILES][WARP_ROW_TILES];
 
  		// Load the C matrix tiles into fragments from shared memory.
  #pragma unroll
@@ -535,8 +535,8 @@ template<class half_t, class real_t>
  			// Compute a grid of C matrix tiles in each warp.
  #pragma unroll
  			for (int k_step = 0; k_step < CHUNK_K; k_step++) {
- 				wmma::fragment<wmma::matrix_a, M, N, K, half, wmma::row_major> a[WARP_COL_TILES];
- 				wmma::fragment<wmma::matrix_b, M, N, K, half, wmma::col_major> b[WARP_ROW_TILES];
+ 				wmma::fragment<wmma::matrix_a, M, N, K, half_t, wmma::row_major> a[WARP_COL_TILES];
+ 				wmma::fragment<wmma::matrix_b, M, N, K, half_t, wmma::col_major> b[WARP_ROW_TILES];
 
  #pragma unroll
  				for (int i = 0; i < WARP_COL_TILES; i++) {
