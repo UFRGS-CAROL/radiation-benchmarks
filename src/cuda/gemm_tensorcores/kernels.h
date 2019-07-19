@@ -178,7 +178,7 @@ __device__ __forceinline__ void fma__(const double a, const double b,
 
   //OPTIMIZED GEMM USING TENSOR CORES, UNHARDENED  
   template<class half_t, class real_t>
- __global__ void op_tensor_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D, float alpha, float beta)
+ __global__ void op_tensor_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D, half_t alpha, half_t  beta)
  {
  	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
@@ -190,10 +190,10 @@ __device__ __forceinline__ void fma__(const double a, const double b,
  	const size_t shmem_idx_b_off = BLOCK_COL_TILES * M;
 
  	// This pointer is used to access the C and D matrix tiles this warp computes.
- 	float *shmem_warp_tile_ptr = (float*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
+ 	real_t *shmem_warp_tile_ptr = (real_t*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
 
  	// This pointer is used to stream the C and D matrices block-wide tile to and from shared memory.
- 	float *shmem_warp_stream_ptr = (float*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
+ 	real_t *shmem_warp_stream_ptr = (real_t*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
 
  	// Adjust the beta scaler, as it'll be multiplied by alpha at the end of
  	// each tile computation
@@ -230,14 +230,14 @@ __device__ __forceinline__ void fma__(const double a, const double b,
 
  		// These fragments will accumulate the result of A and B matrix fragment multiplications
  		// along the K_GLOBAL dimension.
- 		wmma::fragment<wmma::accumulator, M, N, K, float> c[WARP_COL_TILES][WARP_ROW_TILES];
+ 		wmma::fragment<wmma::accumulator, M, N, K, real_t> c[WARP_COL_TILES][WARP_ROW_TILES];
 
  		// Load the C matrix tiles into fragments from shared memory.
  #pragma unroll
  		for (int i = 0; i < WARP_COL_TILES; i++) {
  #pragma unroll
  			for (int j = 0; j < WARP_ROW_TILES; j++) {
- 				const float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+ 				const real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
  				wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
  			}
@@ -292,8 +292,8 @@ __device__ __forceinline__ void fma__(const double a, const double b,
  			// Compute a grid of C matrix tiles in each warp.
  #pragma unroll
  			for (int k_step = 0; k_step < CHUNK_K; k_step++) {
- 				wmma::fragment<wmma::matrix_a, M, N, K, half, wmma::row_major> a[WARP_COL_TILES];
- 				wmma::fragment<wmma::matrix_b, M, N, K, half, wmma::col_major> b[WARP_ROW_TILES];
+ 				wmma::fragment<wmma::matrix_a, M, N, K, half_t, wmma::row_major> a[WARP_COL_TILES];
+ 				wmma::fragment<wmma::matrix_b, M, N, K, half_t, wmma::col_major> b[WARP_ROW_TILES];
 
  #pragma unroll
  				for (int i = 0; i < WARP_COL_TILES; i++) {
@@ -332,7 +332,7 @@ __device__ __forceinline__ void fma__(const double a, const double b,
  				for (int t = 0; t < c[i][j].num_elements; t++)
  					c[i][j].x[t] *= alpha;
 
- 				float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+ 				real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
  				wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE, C_LAYOUT);
  			}
@@ -422,7 +422,7 @@ template<class half_t, class real_t>
   	int c_p = N * BLOCK_SIZE * by + BLOCK_SIZE * bx;
   	d[c_p + N * ty + tx] = Csub;
 
-  	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
+  extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
  	// Warp and lane identification.
  	const unsigned int warpId = threadIdx.x / WARP_SIZE;
