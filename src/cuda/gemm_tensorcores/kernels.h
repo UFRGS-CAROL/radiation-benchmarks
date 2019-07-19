@@ -117,6 +117,12 @@ namespace experimental {
 
 __device__ float errors = 0;
 
+
+__device__  __forceinline__ half fma__(half a, half b, half acc) {
+  
+  return __hfma(a, b, acc);
+}
+
 __device__ __forceinline__ void fma__(const double a, const double b,
     float& c) {
   c = __fmaf_rn(__double2float_rn(a), __double2float_rn(b), c);
@@ -1087,31 +1093,6 @@ __global__ void matrix_mul(half_t *a0, half_t *b0, real_t *c0, real_t*d0,
 }
 
 
-
-// __device__ __forceinline__ float mul_(float a, float b ) {
-//         return __fmul_ru(a,b);
-// }
-
-// __device__    __forceinline__ half mul_(half a, half b) {
-//         return __hmul(a, b);
-// }
-
-// __device__ __forceinline__ float sum_(float a, float b ) {
-//         return __fadd_ru(a, b);
-// }
-
-// __device__    __forceinline__ half sum_(half a, half b) {
-//         return __hadd(a, b);
-// }
-
-
-// __device__ __forceinline__ float fma_(half a, half b, float c ) {
-//         return fmaf(a, b,c);
-// }
-
-// __device__    __forceinline__ half fma_(half a, half b, half c) {
-//         return __hfma(a, b, c);
-// }
 
 
 #endif /* KERNELS_H_ */
