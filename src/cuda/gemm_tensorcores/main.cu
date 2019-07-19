@@ -554,7 +554,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		if (log_obj.triplicated)
 			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_gold);
 		else 			
-			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d1);
+			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d0);
 		
 	}
 
