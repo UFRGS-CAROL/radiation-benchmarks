@@ -356,7 +356,7 @@ public:
 
 
   	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-  	dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
+  	dim3 grid(N_O / threads.x, M_O / threads.y);
 
 	check_framework_errors(
 						cudaMemset(this->device_is_memory_bad, 0x0,
@@ -365,7 +365,7 @@ public:
 	
 
  	  s_gemm_DMR<half_t, real_t><32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
-                                         dimsA.x, dimsB.x);
+                                         M_O, N_O);
   	
 
 	this->debug("device synchronize");
