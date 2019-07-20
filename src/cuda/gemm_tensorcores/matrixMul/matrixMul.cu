@@ -59,7 +59,7 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, float *C1, double *A,
+template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, double *A,
     double *B, int wA, int wB) {
   // Block index
   int bx = blockIdx.x;
@@ -91,7 +91,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, float *C1, do
   
   volatile double Csub = 0.0; ;
   // volatile float Csub = 0;
-  volatile float Csub1= 0.0;
+  volatile double Csub1= 0.0;
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -129,8 +129,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, float *C1, do
       
 
       Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
-      // Csub1 = fma_dmr(As[ty][k], Bs[k][tx],Csub1);
-      Csub1 = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub1);
+      Csub1 = fma_dmr(As[ty][k], Bs[k][tx],Csub1);
+      // Csub1 = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub1);
       
     }
 
@@ -288,18 +288,18 @@ int MatrixMultiply(int argc, char **argv,
 
 
   // Allocate device memory
-  double *d_A, *d_B, *d_C; //*d_C1;
-  float *d_C1;
+  double *d_A, *d_B, *d_C, d_C1;
+  // float *d_C1;
   // double *d_A, *d_A1,*d_B, *d_B1, *d_C, *d_C1;
   // double *d_A1, *d_B1, * d_C1;
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
   unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(double);
-  unsigned int mem_size_C1 = dimsC.x * dimsC.y * sizeof(float);
+  unsigned int mem_size_C1 = dimsC.x * dimsC.y * sizeof(double);
 
   double *h_C = reinterpret_cast<double *>(malloc(mem_size_C));
 
-  float *h_C1 = reinterpret_cast<float *>(malloc(mem_size_C1));
+  double *h_C1 = reinterpret_cast<double *>(malloc(mem_size_C1));
 
   if (h_C == NULL) {
     fprintf(stderr, "Failed to allocate host matrix C!\n");
