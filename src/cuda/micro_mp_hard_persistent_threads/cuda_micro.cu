@@ -136,11 +136,10 @@ void launch_kernel(Type<full>& type_,
 			parameters.block_size, 0, stream>>>(device_vector_full.data(),
 			type_.output_r, type_.input_a, type_.input_b);
 
-	rad::checkFrameworkErrors (cudaPeekAtLastError());
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
 //	rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
 
 }
-
 
 template<typename full>
 void test_radiation(Type<full>& type_, Parameters& parameters,
