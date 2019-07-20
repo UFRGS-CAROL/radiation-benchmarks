@@ -984,7 +984,7 @@ template<class half_t, class real_t>
       
 
       Csub = fma__(As[ty][k], Bs[k][tx],Csub);
-      Csub1 = fma__(__double2float_rn(As1[ty][k]), __double2float_rn(Bs2[k][tx]), Csub1);
+      Csub1 = fma__(__double2float_rn(As1[ty][k]), __double2float_rn(Bs1[k][tx]), Csub1);
       
     }
 

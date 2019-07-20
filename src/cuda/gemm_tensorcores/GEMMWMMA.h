@@ -364,7 +364,7 @@ public:
   	
 	
 
- 	  s_gemm_DMR<half_t, real_t><32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+ 	  s_gemm_DMR<half_t, real_t><32> <<< grid, threads >>>(this->device_ptr_d0, this->device_ptr_d1, this->device_ptr_a0,this->device_ptr_b0,
                                          M_O, N_O);
   	
 
