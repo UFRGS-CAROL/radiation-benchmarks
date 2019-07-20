@@ -341,7 +341,7 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 }
 
 template<class host_real_t>
-bool cmp(const host_real_t lhs, const host_real_t rhs) {
+bool cmp(const host_real_t lhs, const host_real_t rhs, Log& log) {
 	const host_real_t diff = abs(lhs - rhs);
 
 	
@@ -349,18 +349,18 @@ bool cmp(const host_real_t lhs, const host_real_t rhs) {
 	std::cout << "diff= " << diff << std::endl;
 
     
-	if (log_obj.use_tensor_cores)
+	if (log.use_tensor_cores)
 	{
 		const host_real_t zero = host_real_t(ZERO_HALF);
 	}
     else{
-    	if (log_obj.precision == "float") 
+    	if (log.precision == "float") 
     		const host_real_t zero = host_real_t(ZERO_FlOAT);
 	
-		if (log_obj.precision == "double") 
+		if (log.precision == "double") 
 			const host_real_t zero = host_real_t(ZERO_DOUBLE);	
 	 
-		if (log_obj.precision == "DMR") 
+		if (log.precision == "DMR") 
 			const host_real_t zero = host_real_t(ZERO_DMR);	
     }
 	if (diff > zero) {
@@ -382,7 +382,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,  std::vec
 		real_t valOutput0 = d0[i];
 		real_t valOutput1 = d1[i];
 
-		if (valGold != valOutput1 || !cmp(valOutput0, valOutput1)) {
+		if (valGold != valOutput1 || !cmp(valOutput0, valOutput1, log)) {
 		
 					std::stringstream error_detail("");
 					error_detail << "p: [" << int(floor(i / log.size_matrices))

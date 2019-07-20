@@ -911,7 +911,7 @@ __global__ void s_tensor_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c, h
 
 template<class half_t, class real_t>
 
- __global__ void s_gemm_DMR(real_t *C, half_t *C1, real_t *A, real_t *B) {
+__global__ void s_gemm_DMR(real_t *C, half_t *C1, real_t *A, real_t *B) {
 
 
   int wA = M_O;
