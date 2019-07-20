@@ -117,8 +117,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
     As[ty][tx] = A[a + wA * ty + tx];
     Bs[ty][tx] = B[b + wB * ty + tx];
 
-    As1[ty][tx] = A[a + wA * ty + tx];
-    Bs1[ty][tx] = B[b + wB * ty + tx];
+    // As1[ty][tx] = A[a + wA * ty + tx];
+    // Bs1[ty][tx] = B[b + wB * ty + tx];
 
     // Synchronize to make sure the matrices are loaded
     __syncthreads();
@@ -133,7 +133,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
       
 
       Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
-      Csub1 = fma_dmr(As1[ty][k], Bs1[k][tx],Csub1);
+      Csub1 = fma_dmr(As[ty][k], Bs[k][tx],Csub1);
       // Csub1 = fma_dmr(__double2float_rn(As1[ty][k]), __double2float_rn(Bs1[k][tx]), Csub1);
       
     }
