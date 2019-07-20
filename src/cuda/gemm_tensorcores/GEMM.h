@@ -73,9 +73,9 @@ public:
 	//to check memory errors
 	rad::DeviceVector<unsigned long long int> device_is_memory_bad;
 
-	GEMM(const std::vector<host_half_t>& host_a0, //Matrix A
-			const std::vector<host_half_t>& host_b0, // MAtrix B
-			const std::vector<host_real_t>&host_c0, // Matric C
+	GEMM(const std::vector<half_t>& host_a0, //Matrix A
+			const std::vector<half_t>& host_b0, // MAtrix B
+			const std::vector<real_t>&host_c0, // Matric C
 			size_t k, real_t alpha, real_t beta, GEMMTYPE gemm_type) :
 			alpha(alpha), beta(beta), gemm_type(gemm_type) { //Alpha and Beta
 		if (this->k > 0) {
@@ -97,9 +97,9 @@ public:
 	 * PUSH arrays to gpu and set 0x0 to C matrix
 	 */
 
-	void push_arrays(const std::vector<host_half_t>& host_a0, //Matrix A
-			const std::vector<host_half_t>& host_b0, // Matrix B
-			const std::vector<host_real_t>&host_c0) { //Matrix C
+	void push_arrays(const std::vector<half_t>& host_a0, //Matrix A
+			const std::vector<half_t>& host_b0, // Matrix B
+			const std::vector<real_t>&host_c0) { //Matrix C
 
 		this->debug("memset array D");
 		//set 0 to C's matrix
@@ -132,9 +132,9 @@ public:
 	 * PULL D array to host
 	 */
 
-	void pull_array(std::vector<host_real_t>& host_d0,
-			std::vector<host_real_t>& host_d1,
-			std::vector<host_real_t>& host_d2) {
+	void pull_array(std::vector<real_t>& host_d0,
+			std::vector<real_t>& host_d1,
+			std::vector<real_t>& host_d2) {
 
 		this->debug("memcpy array D to host");
 		// PULL D's
@@ -316,7 +316,7 @@ private:
 		this->debug("thread dim allocation");
 
 		dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-		dim3 grid(N_O / threads.x, M_O / threads.y);
+		dim3 grid(this->k/ threads.x, this->k / threads.y);
 
 		this->device_is_memory_bad.clear();
 
@@ -332,7 +332,7 @@ private:
 		this->debug("thread dim allocation");
 
 		dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-		dim3 grid(N_O / threads.x, M_O / threads.y);
+		dim3 grid(this->k / threads.x, this->k/ threads.y);
 
 		this->device_is_memory_bad.clear();
 
