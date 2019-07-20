@@ -837,7 +837,7 @@ bool checkOutputErrors(int verbose, dim_str dim_cpu, int streamIdx,
 		FOUR_VECTOR_HOST* fv_cpu, FOUR_VECTOR_HOST* fv_cpu_GOLD) {
 	int host_errors = 0;
 
-// #pragma omp parallel for shared(host_errors)
+#pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < dim_cpu.space_elem; i = i + 1) {
 		FOUR_VECTOR_HOST valGold = fv_cpu_GOLD[i];
 		FOUR_VECTOR_HOST valOutput = fv_cpu[i];
