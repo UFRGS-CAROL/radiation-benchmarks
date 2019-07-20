@@ -8,6 +8,10 @@
 #ifndef NONDMR_KERNELS_H_
 #define NONDMR_KERNELS_H_
 
+#ifndef BLOCK_SIZE
+#define BLOCK_SIZE 32
+#endif
+
 #ifndef SHARED_MEMORY_LIMIT_64K
 // Set this to 0 to use more than 64 Kb of shared memory to cache data, to
 // improve the performance of the computations on GPU.

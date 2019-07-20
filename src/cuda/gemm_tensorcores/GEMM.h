@@ -34,12 +34,12 @@ void __error(const char* error, int line, const char* file) {
 
 #define error(error) __error(error, __LINE__, __FILE__)
 
-typedef enum GEMMTYPE {
+typedef enum  {
 	NONDMR, DMRGEMM, NONDMRWMMA, DMRWMA
-};
+}GEMMTYPE;
 
 //host_half, half, host_real_t, real_t
-template<class host_half_t, class half_t, class host_real_t, class real_t>
+template<class half_t, class real_t>
 class GEMM {
 public:
 

@@ -8,14 +8,13 @@
 #include <iomanip>
 #include <limits>
 
-
 #ifdef OMP
 #include <omp.h>
 #endif
 
-#include "half.hpp"
+//#include "half.hpp"
 #include "Log.h"
-#include "GEMMWMMA.h"
+#include "GEMM.h"
 
 #ifndef DEFAULT_INPUT_SIZE
 #define DEFAULT_INPUT_SIZE 8192
@@ -24,29 +23,22 @@
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
 
-
 // THRESHOLDS
 #define ZERO_HALF 6.5469
 #define ZERO_FlOAT 0.0
 #define ZERO_DOUBLE 0.0
 #define ZERO_DMR 0.0
 
+//typedef half_float::half host_half;
+//typedef std::vector<host_half> half_vector;
 
-
-
-
-typedef half_float::half host_half;
-typedef std::vector<host_half> half_vector;
-
-
-template<class real_t, class half_t> void generate_matrices_files(half_vector& a_host_vector,
-		half_vector& b_host_vector, std::vector<real_t>& c_host_vector,
-		Log& log) {
+template<class half_t, class real_t> void generate_matrices_files(
+		std::vector<half_t>& a_host_vector, std::vector<half_t>& b_host_vector,
+		std::vector<real_t>& c_host_vector, Log& log) {
 
 	std::ofstream f_a(log.a_input_path, std::ios::out | std::ios::binary);
 	std::ofstream f_b(log.b_input_path, std::ios::out | std::ios::binary);
 	std::ofstream f_c(log.c_input_path, std::ios::out | std::ios::binary);
-
 
 	if (f_a.is_open() && f_b.is_open() && f_c.is_open()) {
 		std::random_device rd; //Will be used to obtain a seed for the random number engine
@@ -70,9 +62,9 @@ template<class real_t, class half_t> void generate_matrices_files(half_vector& a
 			}
 		}
 
-		host_half zero(0.0);
-		host_half nan_ = host_half(half_float::nanh("0"));
-		host_half inf_ = host_half(host_half(0x7C00));
+		half_t zero(0.0);
+		half_t nan_ = half_t(half_float::nanh("0"));
+		half_t inf_ = half_t(half_t(0x7C00));
 
 		int numZeros = std::count(a_host_vector.begin(), a_host_vector.end(),
 				zero);
@@ -100,9 +92,9 @@ template<class real_t, class half_t> void generate_matrices_files(half_vector& a
 				<< numNans << numInfs << std::endl;
 
 		f_a.write(reinterpret_cast<char*>(a_host_vector.data()),
-				a_host_vector.size() * sizeof(host_half));
+				a_host_vector.size() * sizeof(half_t));
 		f_b.write(reinterpret_cast<char*>(b_host_vector.data()),
-				b_host_vector.size() * sizeof(host_half));
+				b_host_vector.size() * sizeof(half_t));
 		f_c.write(reinterpret_cast<char*>(c_host_vector.data()),
 				c_host_vector.size() * sizeof(real_t));
 
@@ -163,8 +155,9 @@ template<class real_t> int is_output_ok(std::vector<real_t>& d0,
 	return memory_errors;
 }
 
-template<class real_t> void retrieve_matrices(half_vector& a_host_vector,
-		half_vector& b_host_vector, std::vector<real_t>& c_host_vector,
+template<class half_t, class real_t> void retrieve_matrices(
+		std::vector<half_t>& a_host_vector, std::vector<half_t>& b_host_vector,
+		std::vector<real_t>& c_host_vector,
 		std::vector<real_t>& gold_host_vector, Log& log) {
 
 	double start = log.mysecond();
@@ -178,11 +171,11 @@ template<class real_t> void retrieve_matrices(half_vector& a_host_vector,
 
 		f_a.seekg(0, std::ios::beg);
 		f_a.read(reinterpret_cast<char*>(a_host_vector.data()),
-				sizeof(host_half) * a_host_vector.size());
+				sizeof(half_t) * a_host_vector.size());
 
 		f_b.seekg(0, std::ios::beg);
 		f_b.read(reinterpret_cast<char*>(b_host_vector.data()),
-				sizeof(host_half) * b_host_vector.size());
+				sizeof(half_t) * b_host_vector.size());
 
 		f_c.seekg(0, std::ios::beg);
 		f_c.read(reinterpret_cast<char*>(c_host_vector.data()),
@@ -205,10 +198,6 @@ template<class real_t> void retrieve_matrices(half_vector& a_host_vector,
 			<< "s\n";
 }
 
-
-
-
-
 template<class real_t>
 std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 		std::vector<real_t>& gold, std::vector<real_t>& c0,
@@ -218,7 +207,6 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 	int memory_errors = 0;
 
 	// printf("r = %f \n", c0[2]);
-
 
 	std::cout << "host_is_memory_bad: " << host_is_memory_bad << std::endl;
 
@@ -340,29 +328,26 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 	return res;
 }
 
-template<class host_real_t>
-bool cmp(const host_real_t lhs, const host_real_t rhs, Log& log) {
-	const host_real_t diff = abs(lhs - rhs);
-	const host_real_t zero;
-	
+template<class real_t>
+bool cmp(const real_t lhs, const real_t rhs, Log& log) {
+	const real_t diff = abs(lhs - rhs);
+	const real_t zero;
+
 	// std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
 	// std::cout << "diff= " << diff << std::endl;
 
-    
-	if (log.use_tensor_cores)
-	{
-		zero = host_real_t(ZERO_HALF);
+	if (log.use_tensor_cores) {
+		zero = real_t(ZERO_HALF);
+	} else {
+		if (log.precision == "float")
+			zero = real_t(ZERO_FlOAT);
+
+		if (log.precision == "double")
+			zero = real_t(ZERO_DOUBLE);
+
+		if (log.precision == "DMR")
+			zero = real_t(ZERO_DMR);
 	}
-    else{
-    	if (log.precision == "float") 
-    		zero = host_real_t(ZERO_FlOAT);
-	
-		if (log.precision == "double") 
-			zero = host_real_t(ZERO_DOUBLE);	
-	 
-		if (log.precision == "DMR") 
-			zero = host_real_t(ZERO_DMR);	
-    }
 
 	if (diff > zero) {
 		return false;
@@ -370,9 +355,9 @@ bool cmp(const host_real_t lhs, const host_real_t rhs, Log& log) {
 	return true;
 }
 
-
 template<class real_t>
-std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,  std::vector<real_t>& d0, std::vector<real_t>& d1, Log& log) {
+std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
+		std::vector<real_t>& d0, std::vector<real_t>& d1, Log& log) {
 	int host_errors = 0;
 
 #ifdef OMP
@@ -384,17 +369,18 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,  std::vec
 		real_t valOutput1 = d1[i];
 
 		if (valGold != valOutput1 || !cmp(valOutput0, valOutput1, log)) {
-		
-					std::stringstream error_detail("");
-					error_detail << "p: [" << int(floor(i / log.size_matrices))
-							<< ", " << i % log.size_matrices << "], r: "
-							<< valOutput1 << ", e: " << valGold << " smaller_precision: " << valOutput0;
 
-					if (log.verbose && (host_errors < 10))
-						std::cout << error_detail.str() << std::endl;
+			std::stringstream error_detail("");
+			error_detail << "p: [" << int(floor(i / log.size_matrices)) << ", "
+					<< i % log.size_matrices << "], r: " << valOutput1
+					<< ", e: " << valGold << " smaller_precision: "
+					<< valOutput0;
 
-					log.log_error(error_detail.str());
-					host_errors++;
+			if (log.verbose && (host_errors < 10))
+				std::cout << error_detail.str() << std::endl;
+
+			log.log_error(error_detail.str());
+			host_errors++;
 		}
 	}
 	log.update_error_count(host_errors);
@@ -405,11 +391,9 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,  std::vec
 	return res;
 }
 
-
-
-
 template<class real_t>
-std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vector<real_t>& c0, Log& log) {
+std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold,
+		std::vector<real_t>& c0, Log& log) {
 	int host_errors = 0;
 
 #ifdef OMP
@@ -419,16 +403,16 @@ std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vect
 		real_t valGold = gold[i];
 		real_t valOutput = c0[i];
 		if (valGold != valOutput) {
-					std::stringstream error_detail("");
-					error_detail << "p: [" << int(floor(i / log.size_matrices))
-							<< ", " << i % log.size_matrices << "], r: "
-							<< valOutput << ", e: " << valGold;
+			std::stringstream error_detail("");
+			error_detail << "p: [" << int(floor(i / log.size_matrices)) << ", "
+					<< i % log.size_matrices << "], r: " << valOutput << ", e: "
+					<< valGold;
 
-					if (log.verbose && (host_errors < 10))
-						std::cout << error_detail.str() << std::endl;
+			if (log.verbose && (host_errors < 10))
+				std::cout << error_detail.str() << std::endl;
 
-					log.log_error(error_detail.str());
-					host_errors++;
+			log.log_error(error_detail.str());
+			host_errors++;
 		}
 	}
 	log.update_error_count(host_errors);
@@ -439,79 +423,66 @@ std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold, std::vect
 	return res;
 }
 
-
-template<class host_real_t, class real_t, class half_t>
-void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
-		Log& log_obj) {
+template<class half_t, class real_t>
+void call_mxm(Log& log_obj) {
 	cudaEvent_t start, stop;
 	float elapsedTime;
-// C matrix
-	std::vector<host_real_t> host_matrix_c(
+	// Matrices A and B
+	std::vector<half_t> host_matrix_a(
 			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<host_real_t> host_gold(
+	std::vector<half_t> host_matrix_b(
+			log_obj.size_matrices * log_obj.size_matrices);
+
+// C matrix
+	std::vector<real_t> host_matrix_c(
+			log_obj.size_matrices * log_obj.size_matrices);
+	std::vector<real_t> host_gold(
 			log_obj.size_matrices * log_obj.size_matrices);
 // D Matrix
-	std::vector<host_real_t> host_matrix_d0(
+	std::vector<real_t> host_matrix_d0(
 			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<host_real_t> host_matrix_d1(
+	std::vector<real_t> host_matrix_d1(
 			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<host_real_t> host_matrix_d2(
+	std::vector<real_t> host_matrix_d2(
 			log_obj.size_matrices * log_obj.size_matrices);
 
 	if (!log_obj.generate) {
-		retrieve_matrices<host_real_t>(host_matrix_a, host_matrix_b,
+		retrieve_matrices<half_t, real_t>(host_matrix_a, host_matrix_b,
 				host_matrix_c, host_gold, log_obj);
 	} else {
-		generate_matrices_files<host_real_t,half_t>(host_matrix_a, host_matrix_b,
+		generate_matrices_files<real_t, half_t>(host_matrix_a, host_matrix_b,
 				host_matrix_c, log_obj);
 	}
 
-	GEMMWMMA<host_half, half_t, host_real_t, real_t> mult_enviroment(
-			host_matrix_a.data(), host_matrix_b.data(), host_matrix_c.data(),
-			log_obj.size_matrices, log_obj.size_matrices, log_obj.size_matrices,
-			real_t(1.1f), real_t(1.2f));
+	//TODO
+	//Set the correct version
+	GEMMTYPE gemm_t = NONDMR;
+
+	GEMM<half_t, real_t> mult_enviroment(host_matrix_a, host_matrix_b,
+			host_matrix_c, log_obj.size_matrices, real_t(1.1f), real_t(1.2f));
 
 	int tries = 0;
 	cudaEventCreate(&start);
-	cudaEventRecord(start,0);
+	cudaEventRecord(start, 0);
 	// cudaStream_t st;
 	// cudaStreamCreate(&st);	
 	// assert(M_O > 512 && N_O > 512 && M_O % 64 == 0 && N_O % 16 == 0 && K_O % 16 == 0);
 	for (int it = 0; it < log_obj.iterations; it++) {
 		double start_computation = log_obj.mysecond();
 		log_obj.start_iteration_app();
-		if (log_obj.triplicated) {
-			if (log_obj.use_tensor_cores) {
-				mult_enviroment.mul_gemm_wmma_triplicated();
-				
-			} else {
-				mult_enviroment.mul_mxm_triplicated();
-				
-			}
-		} else {
-			if (log_obj.use_tensor_cores) {
-				
-				 mult_enviroment.mul_gemm_wmma();
-				 // mult_enviroment.mul_gemm_wmma_DMR();
-				
-			} else {			
-			
-				// mult_enviroment.mul_gemm();
-				mult_enviroment.mul_gemm_DMR();
-			}
-		}
+		mult_enviroment.gemm();
 		log_obj.end_iteration_app();
 		double end_computation = log_obj.mysecond();
 
-		mult_enviroment.pull_array(host_matrix_d0.data(), host_matrix_d1.data(),
-				host_matrix_d2.data());
+		mult_enviroment.pull_array(host_matrix_d0, host_matrix_d1,
+				host_matrix_d2);
 
-		 cudaEventCreate(&stop);
-		 cudaEventRecord(stop,0);
-		 cudaEventSynchronize(stop);
+		cudaEventCreate(&stop);
+		cudaEventRecord(stop, 0);
+		cudaEventSynchronize(stop);
 
-		 cudaEventElapsedTime(&elapsedTime, start,stop);
-		 printf("Elapsed time : %f ms\n" ,elapsedTime);
+		cudaEventElapsedTime(&elapsedTime, start, stop);
+		printf("Elapsed time : %f ms\n", elapsedTime);
 
 		//TODO check this
 		if (log_obj.triplicated && log_obj.generate) {
@@ -542,17 +513,17 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 						host_matrix_d0, host_matrix_d1, host_matrix_d2,
 						log_obj);
 				end = log_obj.mysecond();
-			}else{
+			} else {
 				start = log_obj.mysecond();
 				//errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
-				
-						
+
 				// errors = check_output_errors_dmr(host_gold, host_matrix_d0, host_matrix_d1,log_obj);
 				end = log_obj.mysecond();
 			}
 			std::cout << "Iteration: " << it << " memory errors "
 					<< errors.first << " radiation errors " << errors.second
-					<< ". Time spent on computation " << end_computation - start_computation
+					<< ". Time spent on computation "
+					<< end_computation - start_computation
 					<< "s. Time spent on comparing " << end - start << "s."
 					<< std::endl;
 
@@ -563,21 +534,22 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			}
 
 		}
-		
+
 	}
 	// cudaStreamDestroy(st);
 	cudaEventCreate(&stop);
-	cudaEventRecord(stop,0);
+	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
 
-	cudaEventElapsedTime(&elapsedTime, start,stop);
-	printf("time : %f s\n" ,(elapsedTime/1000));
+	cudaEventElapsedTime(&elapsedTime, start, stop);
+	printf("time : %f s\n", (elapsedTime / 1000));
 	if (log_obj.generate) {
 		if (log_obj.triplicated)
 			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_gold);
-		else 			
-			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d1);
-		
+		else
+			write_gold_to_file<host_real_t>(log_obj.gold_inout_path,
+					host_matrix_d1);
+
 	}
 
 	// for(int z = 1;z < 15 ; z++) {
@@ -585,10 +557,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 	// std::cout << "diff = " << (host_matrix_d0[0] - host_matrix_d1[0])<< std::endl;
 	// }	
 
-
-
-}   
-
+}
 
 void usage(char **argv) {
 	std::cout << "./" << argv[0]
@@ -612,16 +581,10 @@ int main(int argc, char** argv) {
 	std::cout << "Verbose: " << log_obj.verbose << std::endl;
 
 // Alloc all memories on host
-	half_vector host_matrix_a(log_obj.size_matrices * log_obj.size_matrices);
-	half_vector host_matrix_b(log_obj.size_matrices * log_obj.size_matrices);
-
-
-
-	if (log_obj.use_tensor_cores)
-	{		
-		call_mxm<host_half, half, half>(host_matrix_a, host_matrix_b, log_obj);		
+	if (log_obj.use_tensor_cores) {
+		call_mxm<half, half>(log_obj);
 	}
-	
+
 	// if (log_obj.precision == "float") {
 	// 	call_mxm<float, float, half, float>(host_matrix_a, host_matrix_b, log_obj);
 	// }
@@ -631,8 +594,6 @@ int main(int argc, char** argv) {
 	// if (log_obj.precision == "DMR") {
 	// 	call_mxm<double, double, half, float>(host_matrix_a, host_matrix_b, log_obj);
 	// }
-	
-
 
 	std::cout << "Finished computation\n";
 	return 0;
