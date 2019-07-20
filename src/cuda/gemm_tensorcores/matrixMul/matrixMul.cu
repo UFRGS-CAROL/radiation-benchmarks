@@ -91,7 +91,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, double *C1, d
   
   volatile double Csub = 0.0; ;
   // volatile float Csub = 0;
-  volatile double Csub1= 0;
+  volatile double Csub1= 0.0;
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -340,25 +340,13 @@ int MatrixMultiply(int argc, char **argv,
 
 
 
-
-  // // HALF parameters 
-
-  // dim3 threads(block_size/2.0, block_size);
-  // dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
-
-
-
-
-
-
   // Create and start timer
   printf("Computing result using CUDA Kernel...\n");
 
 
   MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                          dimsA.x, dimsB.x);
-  //MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
-  //                                          dimsA.x, dimsB.x);
+
 
   
 
@@ -383,8 +371,7 @@ int MatrixMultiply(int argc, char **argv,
    
       MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                               dimsA.x, dimsB.x);
-      // MatrixMulCUDA_Half<32> <<< grid, threads >>>(d_C,d_C1, d_A, d_B,
-      //                                       dimsA.x, dimsB.x);
+
     
   }
 
