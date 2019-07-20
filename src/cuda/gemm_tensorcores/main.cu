@@ -63,7 +63,7 @@ template<class half_t, class real_t> void generate_matrices_files(
 		}
 
 		half_t zero(0.0);
-		half_t nan_ = half_t(half_float::nanh("0"));
+		half_t nan_ = half_t(half_float::nan("0")); //half_t nan_ = half_t(half_float::nanh("0"));
 		half_t inf_ = half_t(half_t(0x7C00));
 
 		int numZeros = std::count(a_host_vector.begin(), a_host_vector.end(),
@@ -456,7 +456,7 @@ void call_mxm(Log& log_obj) {
 
 	//TODO
 	//Set the correct version
-	GEMMTYPE gemm_t = NONDMR;
+	GEMMTYPE gemm_t = DMRGEMM;
 
 	GEMM<half_t, real_t> mult_enviroment(host_matrix_a, host_matrix_b,
 			host_matrix_c, log_obj.size_matrices, real_t(1.1f), real_t(1.2f));
@@ -545,9 +545,9 @@ void call_mxm(Log& log_obj) {
 	printf("time : %f s\n", (elapsedTime / 1000));
 	if (log_obj.generate) {
 		if (log_obj.triplicated)
-			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_gold);
+			write_gold_to_file<real_t>(log_obj.gold_inout_path, host_gold);
 		else
-			write_gold_to_file<host_real_t>(log_obj.gold_inout_path,
+			write_gold_to_file<real_t>(log_obj.gold_inout_path,
 					host_matrix_d1);
 
 	}
