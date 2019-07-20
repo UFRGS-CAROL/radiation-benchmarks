@@ -271,12 +271,10 @@ int MatrixMultiply(int argc, char **argv,
   // double *h_B1 = reinterpret_cast<double *>(malloc(mem_size_B1));
   // Initialize host memory
   
-  const float valA1 = 2.0f;
-  const float valB1 = 2.0f;
   
-  const double valA = valA1;
+  const double valA = 2.0f;
   
-  const double valB = valB1;
+  const double valB = 2.0f;
 
 
 
