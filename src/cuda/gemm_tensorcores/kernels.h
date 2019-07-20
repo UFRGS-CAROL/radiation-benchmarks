@@ -178,7 +178,7 @@ __device__ __forceinline__ void fma__(const double a, const double b,
 
   //OPTIMIZED GEMM USING TENSOR CORES, UNHARDENED  
   template<class half_t, class real_t>
- __global__ void op_tensor_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D, float alpha, float beta)
+ __global__ void op_tensor_gemm(const half_t *A, const half_t *B, const real_t *C, real_t *D, half_t alpha, half_t  beta)
  {
  	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
@@ -190,10 +190,10 @@ __device__ __forceinline__ void fma__(const double a, const double b,
  	const size_t shmem_idx_b_off = BLOCK_COL_TILES * M;
 
  	// This pointer is used to access the C and D matrix tiles this warp computes.
- 	float *shmem_warp_tile_ptr = (float*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
+ 	real_t *shmem_warp_tile_ptr = (real_t*)&shmem[0][0] + (warpId/2) * SHMEM_STRIDE * K * 2 + (warpId%2) * SHMEM_OFFSET;
 
  	// This pointer is used to stream the C and D matrices block-wide tile to and from shared memory.
- 	float *shmem_warp_stream_ptr = (float*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
+ 	real_t *shmem_warp_stream_ptr = (real_t*)&shmem[0][0] + warpId * SHMEM_STRIDE * K;
 
  	// Adjust the beta scaler, as it'll be multiplied by alpha at the end of
  	// each tile computation
@@ -230,14 +230,14 @@ __device__ __forceinline__ void fma__(const double a, const double b,
 
  		// These fragments will accumulate the result of A and B matrix fragment multiplications
  		// along the K_GLOBAL dimension.
- 		wmma::fragment<wmma::accumulator, M, N, K, float> c[WARP_COL_TILES][WARP_ROW_TILES];
+ 		wmma::fragment<wmma::accumulator, M, N, K, real_t> c[WARP_COL_TILES][WARP_ROW_TILES];
 
  		// Load the C matrix tiles into fragments from shared memory.
  #pragma unroll
  		for (int i = 0; i < WARP_COL_TILES; i++) {
  #pragma unroll
  			for (int j = 0; j < WARP_ROW_TILES; j++) {
- 				const float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+ 				const real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
  				wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
  			}
@@ -292,8 +292,8 @@ __device__ __forceinline__ void fma__(const double a, const double b,
  			// Compute a grid of C matrix tiles in each warp.
  #pragma unroll
  			for (int k_step = 0; k_step < CHUNK_K; k_step++) {
- 				wmma::fragment<wmma::matrix_a, M, N, K, half, wmma::row_major> a[WARP_COL_TILES];
- 				wmma::fragment<wmma::matrix_b, M, N, K, half, wmma::col_major> b[WARP_ROW_TILES];
+ 				wmma::fragment<wmma::matrix_a, M, N, K, half_t, wmma::row_major> a[WARP_COL_TILES];
+ 				wmma::fragment<wmma::matrix_b, M, N, K, half_t, wmma::col_major> b[WARP_ROW_TILES];
 
  #pragma unroll
  				for (int i = 0; i < WARP_COL_TILES; i++) {
@@ -332,7 +332,7 @@ __device__ __forceinline__ void fma__(const double a, const double b,
  				for (int t = 0; t < c[i][j].num_elements; t++)
  					c[i][j].x[t] *= alpha;
 
- 				float *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
+ 				real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K + j * N;
 
  				wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE, C_LAYOUT);
  			}
@@ -422,7 +422,7 @@ template<class half_t, class real_t>
   	int c_p = N * BLOCK_SIZE * by + BLOCK_SIZE * bx;
   	d[c_p + N * ty + tx] = Csub;
 
-  	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
+  extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
  	// Warp and lane identification.
  	const unsigned int warpId = threadIdx.x / WARP_SIZE;
@@ -909,7 +909,100 @@ __global__ void s_tensor_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c, h
 	}
 }
 
+template<class half_t, class real_t>
 
+__global__ void s_gemm_DMR(real_t *C, half_t *C1, real_t *A, real_t *B) {
+
+
+  int wA = M_O;
+  int wB = N_O;
+  // Block index
+  int bx = blockIdx.x;
+  int by = blockIdx.y;
+
+  // Thread index
+  int tx = threadIdx.x;
+  int ty = threadIdx.y;
+
+  // Index of the first sub-matrix of A processed by the block
+  int aBegin = wA * BLOCK_SIZE * by;
+
+  // Index of the last sub-matrix of A processed by the block
+  int aEnd   = aBegin + wA - 1;
+
+
+
+  // Step size used to iterate through the sub-matrices of A
+  int aStep  = BLOCK_SIZE;
+
+  // Index of the first sub-matrix of B processed by the block
+  int bBegin = BLOCK_SIZE * bx;
+
+  // Step size used to iterate through the sub-matrices of B
+  int bStep  = BLOCK_SIZE * wB;
+
+  // Csub is used to store the element of the block sub-matrix
+  // that is computed by the thread
+;
+  volatile real_t Csub = 0; ;
+  volatile half_t Csub1= 0;
+
+  // Loop over all the sub-matrices of A and B
+  // required to compute the block sub-matrix
+  for (int a = aBegin, b = bBegin;
+       a <= aEnd;
+       a += aStep, b += bStep) {
+    // Declaration of the shared memory array As used to
+    // store the sub-matrix of A
+    __shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Declaration of the shared memory array Bs used to
+    // store the sub-matrix of B
+    __shared__ real_t Bs[BLOCK_SIZE][BLOCK_SIZE];
+
+
+
+    __shared__ half_t As1[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ half_t Bs1[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Load the matrices from device memory
+    // to shared memory; each thread loads
+    // one element of each matrix
+    As[ty][tx] = A[a + wA * ty + tx];
+    Bs[ty][tx] = B[b + wB * ty + tx];
+
+    // As1[ty][tx] = A1[a + wA * ty + tx];
+    // Bs1[ty][tx] = B1[b + wB * ty + tx];
+
+    // Synchronize to make sure the matrices are loaded
+    __syncthreads();
+
+    // Multiply the two matrices together;
+    // each thread computes one element
+    // of the block sub-matrix
+#pragma unroll
+
+    for (int k = 0; k < BLOCK_SIZE; ++k) {
+      
+      
+
+      Csub = fma__(As[ty][k], Bs[k][tx],Csub);
+      Csub1 = fma__(__double2float_rn(As1[ty][k]), __double2float_rn(Bs1[k][tx]), Csub1);
+      
+    }
+
+    // Synchronize to make sure that the preceding
+    // computation is done before loading two new
+    // sub-matrices of A and B in the next iteration
+    __syncthreads();
+  }
+
+  // Write the block sub-matrix to device memory;
+  // each thread writes one element
+  int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+  C[c + wB * ty + tx] = Csub;
+  C1[c + wB * ty + tx] = Csub1;
+}
 
 // //DMR KERNEL
 // template<typename real_t, typename half_real_t

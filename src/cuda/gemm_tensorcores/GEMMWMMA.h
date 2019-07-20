@@ -351,19 +351,20 @@ public:
 
 	}
 
-	void mul_gemm_DMR(cudaStream_t stream){
+	void mul_gemm_DMR(){
 	this->debug("thread dim allocation");
 
 
-	dim3 threads(16, 4);
-	dim3 grid(M_O / 64, N_O / 16);
-	
+  	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+  	dim3 grid(N_O / threads.x, M_O / threads.y);
+
 	check_framework_errors(
 						cudaMemset(this->device_is_memory_bad, 0x0,
 								sizeof(unsigned long long int)));	
   	
-	// s_gemm_DMR <real_t,half_real_t><<<grid, threads, 0, stream>>>(this->device_ptr_d1, this->device_ptr_d0, this->device_ptr_a0, this->device_ptr_b0, M_O, N_O, K_O, LDA, LDB, LDC,
-	// 		this->alpha, this->beta);
+	
+
+	s_gemm_DMR<half_t, real_t><<< grid, threads >>>(this->device_ptr_d0, this->device_ptr_d1, this->device_ptr_a0,this->device_ptr_b0);
   	
 
 	this->debug("device synchronize");
