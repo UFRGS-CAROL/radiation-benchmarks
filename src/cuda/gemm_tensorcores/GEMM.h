@@ -63,8 +63,9 @@ public:
 
 	// Size of the matrix
 	// Only square matrices now
-	size_t k;
+	size_t k, cols_a, cols_b;
 	real_t alpha, beta;
+	
 
 	bool to_debug = false;
 
@@ -320,8 +321,12 @@ private:
 
 		this->device_is_memory_bad.clear();
 
+
+
 		sw_mxm_kernel<real_t> <<<grid, threads>>>(this->device_ptr_d0,
-				this->device_ptr_c0, this->device_ptr_a0, this->device_ptr_b0);
+				this->device_ptr_c0, this->device_ptr_a0, this->device_ptr_b0, this->alpha,
+				this->beta, this->k, this->k);
+
 
 		this->debug("device synchronize");
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
@@ -337,8 +342,8 @@ private:
 		this->device_is_memory_bad.clear();
 
 		sw_mxm_dmr_kernel<half_t, real_t> <<<grid, threads>>>(
-				this->device_ptr_d0, this->device_ptr_c0, this->device_ptr_a0,
-				this->device_ptr_b0);
+				this->device_ptr_d0,this->device_ptr_d1, this->device_ptr_c0, this->device_ptr_a0,
+				this->device_ptr_b0,  this->alpha,this->beta, this->k, this->k);
 
 		this->debug("device synchronize");
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
