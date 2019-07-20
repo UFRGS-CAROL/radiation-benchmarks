@@ -29,7 +29,7 @@ COMMON=
 CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas
 
 
-INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc
+INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I../common/include
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
