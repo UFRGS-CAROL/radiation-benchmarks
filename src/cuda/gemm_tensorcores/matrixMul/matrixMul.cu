@@ -288,7 +288,7 @@ int MatrixMultiply(int argc, char **argv,
 
 
   // Allocate device memory
-  double *d_A, *d_B, *d_C, d_C1;
+  double *d_A, *d_B, *d_C, *d_C1;
   // float *d_C1;
   // double *d_A, *d_A1,*d_B, *d_B1, *d_C, *d_C1;
   // double *d_A1, *d_B1, * d_C1;
