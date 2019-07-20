@@ -343,26 +343,27 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 template<class host_real_t>
 bool cmp(const host_real_t lhs, const host_real_t rhs, Log& log) {
 	const host_real_t diff = abs(lhs - rhs);
-
+	const host_real_t zero;
 	
-	std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
-	std::cout << "diff= " << diff << std::endl;
+	// std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
+	// std::cout << "diff= " << diff << std::endl;
 
     
 	if (log.use_tensor_cores)
 	{
-		const host_real_t zero = host_real_t(ZERO_HALF);
+		zero = host_real_t(ZERO_HALF);
 	}
     else{
     	if (log.precision == "float") 
-    		const host_real_t zero = host_real_t(ZERO_FlOAT);
+    		zero = host_real_t(ZERO_FlOAT);
 	
 		if (log.precision == "double") 
-			const host_real_t zero = host_real_t(ZERO_DOUBLE);	
+			zero = host_real_t(ZERO_DOUBLE);	
 	 
 		if (log.precision == "DMR") 
-			const host_real_t zero = host_real_t(ZERO_DMR);	
+			zero = host_real_t(ZERO_DMR);	
     }
+
 	if (diff > zero) {
 		return false;
 	}
