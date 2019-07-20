@@ -24,8 +24,13 @@
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
 
-// #define ZERO_HALF 1376.45
+
+// THRESHOLDS
 #define ZERO_HALF 6.5469
+#define ZERO_FlOAT 0.0
+#define ZERO_DOUBLE 0.0
+#define ZERO_DMR 0.0
+
 
 
 
@@ -341,8 +346,23 @@ bool cmp(const host_real_t lhs, const host_real_t rhs) {
 
 	
 	std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
-	std::cout << "diff= " << diff << std::endl;	
-	const host_real_t zero = host_real_t(ZERO_HALF);
+	std::cout << "diff= " << diff << std::endl;
+
+    
+	if (log_obj.use_tensor_cores)
+	{
+		const host_real_t zero = host_real_t(ZERO_HALF);
+	}
+    else{
+    	if (log_obj.precision == "float") 
+    		const host_real_t zero = host_real_t(ZERO_FlOAT);
+	
+		if (log_obj.precision == "double") 
+			const host_real_t zero = host_real_t(ZERO_DOUBLE);	
+	 
+		if (log_obj.precision == "DMR") 
+			const host_real_t zero = host_real_t(ZERO_DMR);	
+    }
 	if (diff > zero) {
 		return false;
 	}
@@ -351,7 +371,7 @@ bool cmp(const host_real_t lhs, const host_real_t rhs) {
 
 
 template<class real_t>
-std::pair<int, int> check_output_errors(std::vector<real_t>& gold,  std::vector<real_t>& d0, std::vector<real_t>& d1, Log& log) {
+std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,  std::vector<real_t>& d0, std::vector<real_t>& d1, Log& log) {
 	int host_errors = 0;
 
 #ifdef OMP
@@ -453,9 +473,9 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 	int tries = 0;
 	cudaEventCreate(&start);
 	cudaEventRecord(start,0);
-	cudaStream_t st;
-	cudaStreamCreate(&st);	
-	assert(M_O > 512 && N_O > 512 && M_O % 64 == 0 && N_O % 16 == 0 && K_O % 16 == 0);
+	// cudaStream_t st;
+	// cudaStreamCreate(&st);	
+	// assert(M_O > 512 && N_O > 512 && M_O % 64 == 0 && N_O % 16 == 0 && K_O % 16 == 0);
 	for (int it = 0; it < log_obj.iterations; it++) {
 		double start_computation = log_obj.mysecond();
 		log_obj.start_iteration_app();
@@ -476,7 +496,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 			} else {			
 			
 				// mult_enviroment.mul_gemm();
-				mult_enviroment.mul_gemm_DMR(st);
+				mult_enviroment.mul_gemm_DMR();
 			}
 		}
 		log_obj.end_iteration_app();
@@ -525,9 +545,8 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 				start = log_obj.mysecond();
 				//errors = compare_output_matrices(host_gold, host_matrix_d0, log_obj);
 				
-				//printf("%f\n", host_matrix_d0[0]);
-				
-				// errors = check_output_errors(host_gold, host_matrix_d0, host_matrix_d1,log_obj);
+						
+				// errors = check_output_errors_dmr(host_gold, host_matrix_d0, host_matrix_d1,log_obj);
 				end = log_obj.mysecond();
 			}
 			std::cout << "Iteration: " << it << " memory errors "
@@ -545,7 +564,7 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		}
 		
 	}
-	cudaStreamDestroy(st);
+	// cudaStreamDestroy(st);
 	cudaEventCreate(&stop);
 	cudaEventRecord(stop,0);
 	cudaEventSynchronize(stop);
@@ -556,33 +575,15 @@ void call_mxm(half_vector& host_matrix_a, half_vector& host_matrix_b,
 		if (log_obj.triplicated)
 			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_gold);
 		else 			
-			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d0);
+			write_gold_to_file<host_real_t>(log_obj.gold_inout_path, host_matrix_d1);
 		
 	}
 
-	for(int z = 1;z < 15 ; z++) {
-	std::cout << "d0 = " << host_matrix_d0 [z] << " ||  d1 = " << host_matrix_d1 [z] << std::endl;
-	}	
-   // host_real_t largest = host_matrix_d1[0];
-   // for(int z = 1;z <(log_obj.size_matrices * log_obj.size_matrices) ; z++) {
+	// for(int z = 1;z < 15 ; z++) {
+	// std::cout << "d0 = " << host_matrix_d0 [z] << " ||  d1 = " << host_matrix_d1 [z] << std::endl;
+	// std::cout << "diff = " << (host_matrix_d0[0] - host_matrix_d1[0])<< std::endl;
+	// }	
 
-   //    if(largest < host_matrix_d1[z])
-   //       largest = host_matrix_d1[z];
-       
-   // } 
-  
-
-   // host_real_t lowest = host_matrix_d0[0];
-   // for(int z = 1;z <(log_obj.size_matrices * log_obj.size_matrices) ; z++) {
-
-   //    if(lowest < host_matrix_d0[z])
-   //       lowest = host_matrix_d0[z];
-     
-   // } 
-   // std::cout << "Largest element in array is: " << largest <<std::endl;
-   // std::cout << "lowest element in array is: " << lowest<<std::endl;
-
-   // std::cout << "treshold is: " <<(largest-lowest)<<std::endl;
 
 
 }   
