@@ -425,9 +425,9 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
-  MatrixMulCUDA<real_t><32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+  MatrixMulCUDA<32, real_t><<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                               dimsA.x, dimsB.x);
-  // MatrixMulCUDA_DMR<half_t, real_t><32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+  // MatrixMulCUDA_DMR<32,half_t, real_t><<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                               // dimsA.x, dimsB.x);
 
   
@@ -451,9 +451,9 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      MatrixMulCUDA<real_t><32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+      MatrixMulCUDA<32,eal_t> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                               dimsA.x, dimsB.x);
-      // MatrixMulCUDA_DMR<half_t, real_t><32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+      // MatrixMulCUDA_DMR<32,half_t, real_t> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                               // dimsA.x, dimsB.x);
 
     
