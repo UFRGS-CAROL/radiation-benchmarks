@@ -279,12 +279,13 @@ private:
 //		rad::checkFrameworkErrors(
 //				cudaFuncSetAttribute(hw_mxm<real_t>,
 //						cudaFuncAttributeMaxDynamicSharedMemorySize, this->SHMEM_SZ));
+/*
 		hw_mxm_kernel<real_t> <<<this->deviceProp.multiProcessorCount,
 		THREADS_PER_BLOCK, this->shared_memory>>>(this->device_ptr_d0.data(),
 				this->device_ptr_c0.data(), this->device_ptr_a0.data(),
 				this->device_ptr_b0.data(), this->alpha, this->beta, this->k,
 				this->k);
-
+*/
 		this->debug("hw_mxm device synchronize");
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 

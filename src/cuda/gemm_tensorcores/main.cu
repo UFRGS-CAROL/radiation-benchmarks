@@ -584,7 +584,7 @@ int main(int argc, char** argv) {
 	// call_mxm<half, half>(log_obj, gemm_type);
 	// call_mxm<half, float>(log_obj, gemm_type);
 	call_mxm<float, float>(log_obj, gemm_type);
-    //call_mxm<double, float>(log_obj, gemm_type);
+    	//call_mxm<double, float>(log_obj, gemm_type);
 	//call_mxm<double, double>(log_obj, gemm_type);
 
 	std::cout << "Finished computation\n";
