@@ -13,7 +13,6 @@
 #include <algorithm> // count
 #include <omp.h>
 
-#include "device_functions.h"
 #include "cuda_utils.h"
 #include "device_vector.h"
 

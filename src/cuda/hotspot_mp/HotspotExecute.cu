@@ -97,8 +97,7 @@ int HotspotExecute::compute_tran_temp(rad::DeviceVector<full>& power_array,
 			this->flops += col * row * MIN(num_iterations, sim_time - t) * 15;
 		}
 	}
-
-//	cudaStreamSynchronize(stream);
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	return dst;
 }
 

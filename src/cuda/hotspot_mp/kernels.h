@@ -8,7 +8,7 @@
 #ifndef NONE_KERNELS_H_
 #define NONE_KERNELS_H_
 
-#include "device_functions.h"
+//#include "device_functions.h"
 
 #define BLOCK_SIZE 32
 
@@ -179,20 +179,6 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 }
 
 
-//__device__ double threshold = -2222;
-//
-//
-//__device__ static float atomicMax(double* address, double val) {
-//	unsigned long long* address_as_i = (unsigned long long*) address;
-//	unsigned long long old = *address_as_i, assumed;
-//	do {
-//		assumed = old;
-//		old = atomicCAS(address_as_i, assumed,
-//				__double_as_longlong(fmax(val, __longlong_as_double(assumed))));
-//	} while (assumed != old);
-//	return __longlong_as_double(old);
-//}
-
 template<typename full, typename incomplete>
 __global__ void calculate_temp(int iteration,  //number of iteration
 		full* power,   //power input
@@ -293,6 +279,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	W = (W < validXmin) ? validXmin : W;
 	E = (E > validXmax) ? validXmax : E;
 	bool computed;
+
 	for (int i = 0; i < iteration; i++) {
 		computed = false;
 		if (IN_RANGE(tx, i + 1, BLOCK_SIZE - i - 2)
@@ -341,28 +328,14 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 			//DMR
 			temp_on_cuda_inc[ty][tx] = t_temp_inc[ty][tx];
 
-#if CHECKBLOCK == 1
-//			atomicMax(&threshold,
-//					fabs(double(full(t_temp[ty][tx])) - double(incomplete(t_temp_inc[ty][tx]))));
-
-			compare(t_temp[ty][tx], t_temp_inc[ty][tx]);
-			t_temp_inc[ty][tx] = incomplete(t_temp[ty][tx]);
-			// if CHECKBLOCK is >1 perform the % operation
-
-#elif CHECKBLOCK > 1
+#if CHECKBLOCK >= 1
 			if((iteration % CHECKBLOCK) == 0) {
-//				atomicMax(&threshold,
-//						fabs(double(full(t_temp[ty][tx])) - double(incomplete(t_temp_inc[ty][tx]))));
 				compare(t_temp[ty][tx], t_temp_inc[ty][tx]);
 				t_temp_inc[ty][tx] = incomplete(t_temp[ty][tx]);
 			}
 #endif
 		}
-//		__syncthreads();
-//
-//		if (ty + tx == 21) {
-//			printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", threshold, CHECKBLOCK);
-//		}
+		__syncthreads();
 	}
 
 	// update the global memory
@@ -371,18 +344,11 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 	if (computed) {
 
 #if CHECKBLOCK == 0
-//		atomicMax(&threshold,
-//				fabs(double(full(t_temp[ty][tx])) - double(incomplete(t_temp_inc[ty][tx]))));
 		compare(t_temp[ty][tx], t_temp_inc[ty][tx]);
 #endif
 
 		temp_dst[index] = t_temp[ty][tx];
 		temp_dst_incomplete[index] = t_temp_inc[ty][tx];
-
-//		__syncthreads();
-//		if (ty + tx == 21) {
-//			printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", threshold, CHECKBLOCK);
-//		}
 	}
 
 }
