@@ -8,6 +8,9 @@
 #ifndef NONDMR_KERNELS_H_
 #define NONDMR_KERNELS_H_
 
+#include <mma.h>
+#include <cuda_fp16.h>
+
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 32
 #endif
@@ -44,7 +47,7 @@
 #define N_GLOBAL (N * N_TILES)
 #define K_GLOBAL (K * K_TILES)
 
-#define C_LAYOUT wmma::mem_row_major
+#define C_LAYOUT nvcuda::wmma::mem_row_major
 
 // Implementation constants.
 
@@ -86,8 +89,8 @@
 
 // The macro below is used to shift rows of the A matrix and columns of the B matrix
 // in shared memory to minimize possible bank conflicts.
-// Before performing the nvcuda::wmma::mma_sync operation, the warp must load the matrix
-// data using the nvcuda::wmma::load_matrix_sync operation. Although the memory access pattern
+// Before performing the nvcuda::nvcuda::wmma::mma_sync operation, the warp must load the matrix
+// data using the nvcuda::nvcuda::wmma::load_matrix_sync operation. Although the memory access pattern
 // is not specified for that function, each lane in the warp can read one or multiple matrix
 // elements from different matrix rows or columns.
 // For shared memory, such access can result in bank conflicts if different rows / columns
@@ -95,12 +98,12 @@
 // make sure that they map to different banks, thus reducing the number of possible bank
 // conflicts.
 // The number of 8 two-byte "half" elements is chosen as the minimum possible shift because
-// we must keep each row and column 128-bit aligned, as required by nvcuda::wmma::load_matrix_sync.
+// we must keep each row and column 128-bit aligned, as required by nvcuda::nvcuda::wmma::load_matrix_sync.
 #define SKEW_HALF 8
 
 template<class real_t>
 __device__ __forceinline__ void hw_mxm_device(real_t* D, real_t *C, real_t *A,
-		real_t *B, const real_t alpha, const real_t beta, int wA, int wB) {
+		real_t *B, real_t alpha, real_t beta, int wA, int wB) {
 	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
 	// Warp and lane identification.
@@ -156,7 +159,7 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, real_t *C, real_t *A,
 
 		// These fragments will accumulate the result of A and B matrix fragment multiplications
 		// along the K_GLOBAL dimension.
-		wmma::fragment<wmma::accumulator, M, N, K, real_t> c[WARP_COL_TILES][WARP_ROW_TILES];
+		nvcuda::wmma::fragment<nvcuda::wmma::accumulator, M, N, K, real_t> c[WARP_COL_TILES][WARP_ROW_TILES];
 
 		// Load the C matrix tiles into fragments from shared memory.
 #pragma unroll
@@ -166,7 +169,7 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, real_t *C, real_t *A,
 				const real_t *tile_ptr = shmem_warp_tile_ptr
 						+ i * SHMEM_STRIDE * K + j * N;
 
-				wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE,
+				nvcuda::wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE,
 				C_LAYOUT);
 			}
 		}
@@ -233,9 +236,9 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, real_t *C, real_t *A,
 			// Compute a grid of C matrix tiles in each warp.
 #pragma unroll
 			for (int k_step = 0; k_step < CHUNK_K; k_step++) {
-				wmma::fragment < wmma::matrix_a, M, N, K, half, wmma::row_major
+				nvcuda::wmma::fragment < nvcuda::wmma::matrix_a, M, N, K, half, nvcuda::wmma::row_major
 						> a[WARP_COL_TILES];
-				wmma::fragment < wmma::matrix_b, M, N, K, half, wmma::col_major
+				nvcuda::wmma::fragment < nvcuda::wmma::matrix_b, M, N, K, half, nvcuda::wmma::col_major
 						> b[WARP_ROW_TILES];
 
 #pragma unroll
@@ -243,7 +246,7 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, real_t *C, real_t *A,
 					size_t shmem_idx_a = (warpId / 2) * M * 2 + (i * M);
 					const half *tile_ptr = &shmem[shmem_idx_a][k_step * K];
 
-					wmma::load_matrix_sync(a[i], tile_ptr,
+					nvcuda::wmma::load_matrix_sync(a[i], tile_ptr,
 					K * CHUNK_K + SKEW_HALF);
 
 #pragma unroll
@@ -257,11 +260,11 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, real_t *C, real_t *A,
 							const half *tile_ptr = &shmem[shmem_idx_b][k_step
 									* K];
 
-							wmma::load_matrix_sync(b[j], tile_ptr,
+							nvcuda::wmma::load_matrix_sync(b[j], tile_ptr,
 							K * CHUNK_K + SKEW_HALF);
 						}
 
-						wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
+						nvcuda::wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
 					}
 				}
 			}
@@ -283,7 +286,7 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, real_t *C, real_t *A,
 				real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K
 						+ j * N;
 
-				wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE,
+				nvcuda::wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE,
 				C_LAYOUT);
 			}
 		}
@@ -306,7 +309,7 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, real_t *C, real_t *A,
 
 template<class real_t>
 __device__ __forceinline__ void sw_mxm_device(real_t* D, real_t *C, real_t *A,
-		real_t *B, const real_t alpha, const real_t beta, int wA, int wB) {
+		real_t *B,  real_t alpha, real_t beta, int wA, int wB) {
 // Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -377,14 +380,14 @@ __device__ __forceinline__ void sw_mxm_device(real_t* D, real_t *C, real_t *A,
 
 template<class real_t>
 __global__ void hw_mxm_kernel(real_t *D, real_t *C, real_t *A, real_t *B,
-		const real_t alpha, const real_t beta, int wA, int wB) {
+		 real_t alpha,  real_t beta, int wA, int wB) {
 	hw_mxm_device(D, C, A, B, alpha, beta, wA, wB);
 
 }
 
 template<class real_t>
 __global__ void sw_mxm_kernel(real_t *D, real_t *C, real_t *A, real_t *B,
-		const real_t alpha, const real_t beta, int wA, int wB) {
+		 real_t alpha, real_t beta, int wA, int wB) {
 	sw_mxm_device(D, C, A, B, alpha, beta, wA, wB);
 }
 

@@ -34,9 +34,9 @@ void __error(const char* error, int line, const char* file) {
 
 #define error(error) __error(error, __LINE__, __FILE__)
 
-typedef enum  {
+typedef enum {
 	NONDMR, DMRGEMM, NONDMRWMMA, DMRWMA
-}GEMMTYPE;
+} GEMMTYPE;
 
 //host_half, half, host_real_t, real_t
 template<class half_t, class real_t>
@@ -63,9 +63,8 @@ public:
 
 	// Size of the matrix
 	// Only square matrices now
-	size_t k, cols_a, cols_b;
+	size_t k;
 	real_t alpha, beta;
-	
 
 	bool to_debug = false;
 
@@ -73,25 +72,92 @@ public:
 
 	//to check memory errors
 	rad::DeviceVector<unsigned long long int> device_is_memory_bad;
+	std::vector<unsigned long long int> host_is_memory_bad;
 
-	GEMM(const std::vector<half_t>& host_a0, //Matrix A
+	dim3 block_dim;
+	dim3 grid_dim;
+
+	cudaDeviceProp deviceProp;
+
+	size_t shared_memory;
+
+	GEMM(
+			const std::vector<half_t>& host_a0, //Matrix A
 			const std::vector<half_t>& host_b0, // MAtrix B
 			const std::vector<real_t>&host_c0, // Matric C
-			size_t k, real_t alpha, real_t beta, GEMMTYPE gemm_type) :
-			alpha(alpha), beta(beta), gemm_type(gemm_type) { //Alpha and Beta
-		if (this->k > 0) {
-			this->device_is_memory_bad = std::vector<unsigned long long int>(1,
-					0x0);
-			this->debug("device memory allocation and push memory to device");
-			this->device_ptr_d0 = std::vector < real_t > (this->k * this->k, 0);
-			this->device_ptr_d1 = std::vector < real_t > (this->k * this->k, 0);
-			this->device_ptr_d2 = std::vector < real_t > (this->k * this->k, 0);
+			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
+			real_t beta, GEMMTYPE gemm_type) :
+			alpha(alpha), beta(beta), gemm_type(gemm_type), device_ptr_d0(
+					host_d0), device_ptr_d1(host_d0), device_ptr_d2(host_d0) // allocating D vectors
 
-			this->push_arrays(host_a0, host_b0, host_c0);
-		} else {
+	{ //Alpha and Beta
+		if (this->k <= 0) {
 			error("columns or rows equal to zero, or less than zero");
 		}
 
+		this->host_is_memory_bad.push_back(0);
+		this->device_is_memory_bad = this->host_is_memory_bad;
+
+		this->debug("device memory allocation and push memory to device");
+		this->push_arrays(host_a0, host_b0, host_c0);
+
+		// Setup execution parameters
+		this->debug("thread dim allocation");
+
+		switch (this->gemm_type) {
+		case NONDMR:
+		case DMRGEMM:
+			this->block_dim.x = BLOCK_SIZE;
+			this->block_dim.y = BLOCK_SIZE;
+			this->grid_dim.x = this->k / this->block_dim.x;
+			this->grid_dim.y = this->k / this->block_dim.y;
+			break;
+		case NONDMRWMMA:
+		case DMRWMA:
+			this->block_dim.x = WMMA_M; //128;
+			this->block_dim.y = WMMA_N;
+
+			this->grid_dim.x = (this->k
+					+ (WMMA_M * this->block_dim.x / WARP_SIZE - 1))
+					/ (WMMA_M * this->block_dim.x / WARP_SIZE);
+			this->grid_dim.y = (this->k + WMMA_N * this->block_dim.y - 1)
+					/ (WMMA_N * this->block_dim.y);
+			break;
+		}
+
+		// Compute the right amount of shared memory to request.
+		// We need shared memory to hold per-CTA C and D matrix tiles, and to cache
+		// per-CTA chunks
+		// of the A and B matrices. Therefore, the right amount to request is the
+		// maximum of those
+		// two numbers.
+		this->shared_memory = std::max(
+				sizeof(half_t) * (BLOCK_COL_TILES * M)
+						* (CHUNK_K * K + SKEW_HALF) * 2,
+				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
+						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(real_t));
+
+		//SET ALL THE KERNELS TO USE THE MAXIMUM OF SHARED MEMORY
+		rad::checkFrameworkErrors(
+				cudaFuncSetAttribute(hw_mxm_kernel<half_t>,
+						cudaFuncAttributeMaxDynamicSharedMemorySize,
+						this->shared_memory));
+		rad::checkFrameworkErrors(
+				cudaFuncSetAttribute(hw_mxm_dmr_kernel<half_t, real_t>,
+						cudaFuncAttributeMaxDynamicSharedMemorySize,
+						this->shared_memory));
+		rad::checkFrameworkErrors(
+				cudaFuncSetAttribute(sw_mxm_kernel<half_t>,
+						cudaFuncAttributeMaxDynamicSharedMemorySize,
+						this->shared_memory));
+		rad::checkFrameworkErrors(
+				cudaFuncSetAttribute(sw_mxm_dmr_kernel<half_t, real_t>,
+						cudaFuncAttributeMaxDynamicSharedMemorySize,
+						this->shared_memory));
+
+		int dev = 0;
+		rad::checkFrameworkErrors(
+				cudaGetDeviceProperties(&this->deviceProp, dev));
 	}
 
 	/**
@@ -133,8 +199,7 @@ public:
 	 * PULL D array to host
 	 */
 
-	void pull_array(std::vector<real_t>& host_d0,
-			std::vector<real_t>& host_d1,
+	void pull_array(std::vector<real_t>& host_d0, std::vector<real_t>& host_d1,
 			std::vector<real_t>& host_d2) {
 
 		this->debug("memcpy array D to host");
@@ -159,9 +224,8 @@ public:
 	}
 
 	size_t get_memory_errors() {
-		std::vector < size_t > host_is_memory_bad;
-		host_is_memory_bad = this->device_is_memory_bad.to_vector();
-		return host_is_memory_bad[0];
+		this->host_is_memory_bad = this->device_is_memory_bad.to_vector();
+		return this->host_is_memory_bad[0];
 	}
 
 	void gemm() {
@@ -184,166 +248,82 @@ public:
 private:
 
 	void hw_mxm() {
-		this->debug("thread dim allocation");
-		//		// Setup execution parameters
-		// First: using WMMA
-		dim3 grid_dim;
-		dim3 block_dim;
-
-		// block_dim.x must be a multple of warpSize
-		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-		// block_dim.x = 128;
-		// block_dim.y = 4;
-		block_dim.x = WMMA_M; //128;
-		block_dim.y = WMMA_N;
-
-		grid_dim.x = (this->k + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-				/ (WMMA_M * block_dim.x / WARP_SIZE);
-		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
-				/ (WMMA_N * block_dim.y);
-
 		this->debug("matrix multiplication");
 
-		rad::checkFrameworkErrors(
-				cudaMemset(this->device_is_memory_bad, 0x0,
-						sizeof(unsigned long long int)));
+		this->device_is_memory_bad.clear();
 
-		// s_tensor_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(
-		// 		this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-		// 		this->device_ptr_d0, this->k, this->cols_b, this->cols_c,
-		// 		this->alpha, this->beta);
+//		this->debug("device synchronize");
+//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+//
+//		int dev = 0;
+//		cudaDeviceProp deviceProp;
+//		rad::checkFrameworkErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
-		this->debug("device synchronize");
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-
-		int dev = 0;
-		cudaDeviceProp deviceProp;
-		checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
-
-		enum {
-			// Compute the right amount of shared memory to request.
-			// We need shared memory to hold per-CTA C and D matrix tiles, and to cache
-			// per-CTA chunks
-			// of the A and B matrices. Therefore, the right amount to request is the
-			// maximum of those
-			// two numbers.
-			SHMEM_SZ = MAX(
-					sizeof(half) * (BLOCK_COL_TILES * M)
-							* (CHUNK_K * K + SKEW_HALF) * 2,
-					M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
-							* (BLOCK_COL_WARPS * WARP_COL_TILES)
-							* sizeof(float))
-		};
+//		enum {
+//			// Compute the right amount of shared memory to request.
+//			// We need shared memory to hold per-CTA C and D matrix tiles, and to cache
+//			// per-CTA chunks
+//			// of the A and B matrices. Therefore, the right amount to request is the
+//			// maximum of those
+//			// two numbers.
+//			SHMEM_SZ = MAX(
+//					sizeof(half_t) * (BLOCK_COL_TILES * M)
+//							* (CHUNK_K * K + SKEW_HALF) * 2,
+//					M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
+//							* (BLOCK_COL_WARPS * WARP_COL_TILES)
+//							* sizeof(real_t))
+//		};
 
 		// printf("Required shared memory size: %lu Kb\n", SHMEM_SZ / 1024UL);
+//
+//		rad::checkFrameworkErrors(
+//				cudaFuncSetAttribute(hw_mxm<real_t>,
+//						cudaFuncAttributeMaxDynamicSharedMemorySize, this->SHMEM_SZ));
+		hw_mxm_kernel<real_t> <<<this->deviceProp.multiProcessorCount,
+		THREADS_PER_BLOCK, this->shared_memory>>>(this->device_ptr_d0.data(),
+				this->device_ptr_c0.data(), this->device_ptr_a0.data(),
+				this->device_ptr_b0.data(), this->alpha, this->beta, this->k,
+				this->k);
 
-		rad::checkFrameworkErrors(
-				cudaFuncSetAttribute(hw_mxm<real_t>,
-						cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-		hw_mxm<real_t> <<<deviceProp.multiProcessorCount,
-		THREADS_PER_BLOCK, SHMEM_SZ>>>(this->device_ptr_d0, this->device_ptr_c0,
-				this->device_ptr_a0, this->device_ptr_b0, this->alpha,
-				this->beta, this->cols_a, this->rows_b);
-
-		this->debug("device synchronize");
+		this->debug("hw_mxm device synchronize");
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 
 	}
 
 	void hw_mxm_dmr() {
-		this->debug("thread dim allocation");
-		//		// Setup execution parameters
-		// First: using WMMA
-		dim3 grid_dim;
-		dim3 block_dim;
-
-		// block_dim.x must be a multple of warpSize
-		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-		block_dim.x = WMMA_M; //128;
-		block_dim.y = WMMA_N; //4;
-
-		grid_dim.x = (this->k + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-				/ (WMMA_M * block_dim.x / WARP_SIZE);
-		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
-				/ (WMMA_N * block_dim.y);
-
-		this->debug("matrix multiplication");
-
-		this->device_is_memory_bad.clear();
-
-		// SIMPLE TENSOR + SIMPLE MXM
-
-		// s_tensor_gemm_DMR<half_t, real_t> <<<grid_dim, block_dim>>>(
-		// this->device_ptr_a0, this->device_ptr_a1, this->device_ptr_b0, this->device_ptr_c0,
-		// this->device_ptr_d1,this->device_ptr_d0, this->k, this->cols_b, this->cols_c,
-		// this->alpha, this->beta);
-
-		int dev = 0;
-		cudaDeviceProp deviceProp;
-		checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
-
-		enum {
-			// Compute the right amount of shared memory to request.
-			// We need shared memory to hold per-CTA C and D matrix tiles, and to cache
-			// per-CTA chunks
-			// of the A and B matrices. Therefore, the right amount to request is the
-			// maximum of those
-			// two numbers.
-			SHMEM_SZ = MAX(
-					sizeof(half) * (BLOCK_COL_TILES * M)
-							* (CHUNK_K * K + SKEW_HALF) * 2,
-					M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
-							* (BLOCK_COL_WARPS * WARP_COL_TILES)
-							* sizeof(float))
-		};
-
-		// printf("Required shared memory size: %lu Kb\n", SHMEM_SZ / 1024UL);
-
 		// OPTIMIZED TENSOR + GEMM SW
-		checkCudaErrors(
-				cudaFuncSetAttribute(hw_mxm_dmr<half_t, real_t>,
-						cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-		hw_mxm_dmr_kernel<half_t, real_t> <<<deviceProp.multiProcessorCount,
-		THREADS_PER_BLOCK, SHMEM_SZ>>>(this->device_ptr_d0, this->device_ptr_c0,
-				this->device_ptr_a0, this->device_ptr_b0, this->alpha,
-				this->beta, this->cols_a, this->rows_b);
+		hw_mxm_dmr_kernel<half_t, real_t> <<<
+				this->deviceProp.multiProcessorCount,
+				THREADS_PER_BLOCK, this->shared_memory>>>(this->device_ptr_d0.data(),
+				this->device_ptr_d1.data(), this->device_ptr_c0.data(),
+				this->device_ptr_a0.data(), this->device_ptr_b0.data(),
+				this->alpha, this->beta, this->k, this->k);
 
-		this->debug("device synchronize");
+		this->debug("hw_mxm_dmr device synchronize");
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 
 	}
 
 	void sw_mxm() {
-		this->debug("thread dim allocation");
-
-		dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-		dim3 grid(this->k/ threads.x, this->k / threads.y);
-
 		this->device_is_memory_bad.clear();
 
+		sw_mxm_kernel<real_t> <<<this->grid_dim, this->block_dim, this->shared_memory>>>(
+				this->device_ptr_d0.data(), this->device_ptr_c0.data(),
+				this->device_ptr_a0.data(), this->device_ptr_b0.data(),
+				this->alpha, this->beta, this->k, this->k);
 
-
-		sw_mxm_kernel<real_t> <<<grid, threads>>>(this->device_ptr_d0,
-				this->device_ptr_c0, this->device_ptr_a0, this->device_ptr_b0, this->alpha,
-				this->beta, this->k, this->k);
-
-
-		this->debug("device synchronize");
+		this->debug("sw_mxm device synchronize");
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		//end
 	}
 
 	void sw_mxm_dmr() {
-		this->debug("thread dim allocation");
-
-		dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-		dim3 grid(this->k / threads.x, this->k/ threads.y);
-
 		this->device_is_memory_bad.clear();
-
-		sw_mxm_dmr_kernel<half_t, real_t> <<<grid, threads>>>(
-				this->device_ptr_d0,this->device_ptr_d1, this->device_ptr_c0, this->device_ptr_a0,
-				this->device_ptr_b0,  this->alpha,this->beta, this->k, this->k);
+		sw_mxm_dmr_kernel<half_t, real_t> <<<this->grid_dim, this->block_dim,
+				this->shared_memory>>>(this->device_ptr_d0.data(),
+				this->device_ptr_d1.data(), this->device_ptr_c0.data(),
+				this->device_ptr_a0.data(), this->device_ptr_b0.data(),
+				this->alpha, this->beta, this->k, this->k);
 
 		this->debug("device synchronize");
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
@@ -353,123 +333,123 @@ private:
 	/**
 	 * DEPRECATED
 	 */
-	//	void mul_mxm_triplicated() {
-	//
-	//		this->debug("thread dim allocation");
-	//		//		// Setup execution parameters
-	//		// Setup execution parameters
-	//		dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-	//		dim3 grid(std::ceil(this->cols_a / BLOCK_SIZE),
-	//				std::ceil(this->rows_a / BLOCK_SIZE));
-	//
-	//		this->debug("matrix multiplication");
-	//
-	//		rad::checkFrameworkErrors(
-	//				cudaMemset(this->device_is_memory_bad, 0x0,
-	//						sizeof(unsigned long long int)));
-	//
-	//		// matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
-	//		// 		this->device_ptr_a1, this->device_ptr_a2, this->device_ptr_b0,
-	//		// 		this->device_ptr_b1, this->device_ptr_b2, this->device_ptr_c0,
-	//		// 		this->device_ptr_c1, this->device_ptr_c2, this->device_ptr_d0,
-	//		// 		this->device_ptr_d1, this->device_ptr_d2, this->rows_a,
-	//		// 		this->cols_b, this->rows_b, this->alpha, this->beta,
-	//		// 		this->device_is_memory_bad);
-	//
-	//		this->debug("device synchronize");
-	//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-	//
-	//	}
-	//	void mul_mxm() {
-	//
-	//
-	//		this->debug("thread dim allocation");
-	//		//		// Setup execution parameters
-	//		// Setup execution parameters
-	//		dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-	//		dim3 grid(std::ceil(this->cols_a / BLOCK_SIZE),
-	//				std::ceil(this->rows_a / BLOCK_SIZE));
-	//
-	//		this->debug("matrix multiplication");
-	//
-	//		rad::checkFrameworkErrors(
-	//				cudaMemset(this->device_is_memory_bad, 0x0,
-	//						sizeof(unsigned long long int)));
-	//
-	//		// matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
-	//		// 		this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0,
-	//		// 		this->rows_a, this->cols_b, this->rows_b, this->alpha,
-	//		// 		this->beta);
-	//
-	//
-	//		// matrix_mul_dmr<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0, this->device_ptr_a1,
-	//		// 		this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0,this->device_ptr_d1,
-	//		// 		this->rows_a, this->cols_b, this->rows_b, this->alpha,
-	//		// 		this->beta);
-	//
-	//
-	//
-	//		this->debug("device synchronize");
-	//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-	//
-	//	}
-	//	void mul_gemm() {
-	//		 this->debug("thread dim allocation");
-	//		 //		// Setup execution parameters
-	//		 		// First: using WMMA
-	//		 		dim3 grid_dim;
-	//		 		dim3 block_dim;
-	//
-	//		 		// block_dim.x must be a multple of warpSize
-	//		 		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-	//		 		block_dim.x = WMMA_M; //128;
-	//		     	block_dim.y = WMMA_N; //4;
-	//
-	//		 		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-	//		 				/ (WMMA_M * block_dim.x / WARP_SIZE);
-	//		 		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
-	//		 				/ (WMMA_N * block_dim.y);
-	//
-	//		 		this->debug("matrix multiplication");
-	//
-	//		 		rad::checkFrameworkErrors(
-	//		 				cudaMemset(this->device_is_memory_bad, 0x0,
-	//		 						sizeof(unsigned long long int)));
-	//
-	//		 		// simple_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
-	//		  	// 	this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
-	//		  	// 	this->alpha, this->beta);
-	//
-	//	}
-	//	void mul_gemm_wmma_triplicated() {
-	//		this->debug("thread dim allocation");
-	//		//		// Setup execution parameters
-	//		// First: using WMMA
-	//		dim3 grid_dim;
-	//		dim3 block_dim;
-	//
-	//		// block_dim.x must be a multple of warpSize
-	//		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-	//		block_dim.x = 128;
-	//		block_dim.y = 4;
-	//
-	//		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-	//				/ (WMMA_M * block_dim.x / WARP_SIZE);
-	//		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
-	//				/ (WMMA_N * block_dim.y);
-	//
-	//		this->debug("matrix multiplication");
-	//
-	//		rad::checkFrameworkErrors(
-	//				cudaMemset(this->device_is_memory_bad, 0x0,
-	//						sizeof(unsigned long long int)));
-	//
-	//		// s_tensor_gemm_triplicate<half_t, real_t> <<<grid_dim, block_dim>>>(
-	//		// 		this->device_ptr_d0, this->device_ptr_d1,this->device_ptr_d2,
-	//		// 		this->rows_a, this->cols_b, this->cols_c, this->alpha, this->beta);
-	//
-	//		//OPTIMIZED TENSOR GEMM NOT IMPLEMENTED
-	//	}
+//	void mul_mxm_triplicated() {
+//
+//		this->debug("thread dim allocation");
+//		//		// Setup execution parameters
+//		// Setup execution parameters
+//		dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+//		dim3 grid(std::ceil(this->cols_a / BLOCK_SIZE),
+//				std::ceil(this->rows_a / BLOCK_SIZE));
+//
+//		this->debug("matrix multiplication");
+//
+//		rad::checkFrameworkErrors(
+//				cudaMemset(this->device_is_memory_bad, 0x0,
+//						sizeof(unsigned long long int)));
+//
+//		// matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
+//		// 		this->device_ptr_a1, this->device_ptr_a2, this->device_ptr_b0,
+//		// 		this->device_ptr_b1, this->device_ptr_b2, this->device_ptr_c0,
+//		// 		this->device_ptr_c1, this->device_ptr_c2, this->device_ptr_d0,
+//		// 		this->device_ptr_d1, this->device_ptr_d2, this->rows_a,
+//		// 		this->cols_b, this->rows_b, this->alpha, this->beta,
+//		// 		this->device_is_memory_bad);
+//
+//		this->debug("device synchronize");
+//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+//
+//	}
+//	void mul_mxm() {
+//
+//
+//		this->debug("thread dim allocation");
+//		//		// Setup execution parameters
+//		// Setup execution parameters
+//		dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+//		dim3 grid(std::ceil(this->cols_a / BLOCK_SIZE),
+//				std::ceil(this->rows_a / BLOCK_SIZE));
+//
+//		this->debug("matrix multiplication");
+//
+//		rad::checkFrameworkErrors(
+//				cudaMemset(this->device_is_memory_bad, 0x0,
+//						sizeof(unsigned long long int)));
+//
+//		// matrix_mul<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0,
+//		// 		this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0,
+//		// 		this->rows_a, this->cols_b, this->rows_b, this->alpha,
+//		// 		this->beta);
+//
+//
+//		// matrix_mul_dmr<half_t, real_t> <<<grid, threads>>>(this->device_ptr_a0, this->device_ptr_a1,
+//		// 		this->device_ptr_b0, this->device_ptr_c0, this->device_ptr_d0,this->device_ptr_d1,
+//		// 		this->rows_a, this->cols_b, this->rows_b, this->alpha,
+//		// 		this->beta);
+//
+//
+//
+//		this->debug("device synchronize");
+//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+//
+//	}
+//	void mul_gemm() {
+//		 this->debug("thread dim allocation");
+//		 //		// Setup execution parameters
+//		 		// First: using WMMA
+//		 		dim3 grid_dim;
+//		 		dim3 block_dim;
+//
+//		 		// block_dim.x must be a multple of warpSize
+//		 		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+//		 		block_dim.x = WMMA_M; //128;
+//		     	block_dim.y = WMMA_N; //4;
+//
+//		 		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
+//		 				/ (WMMA_M * block_dim.x / WARP_SIZE);
+//		 		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
+//		 				/ (WMMA_N * block_dim.y);
+//
+//		 		this->debug("matrix multiplication");
+//
+//		 		rad::checkFrameworkErrors(
+//		 				cudaMemset(this->device_is_memory_bad, 0x0,
+//		 						sizeof(unsigned long long int)));
+//
+//		 		// simple_gemm<half_t, real_t> <<<grid_dim, block_dim>>>(this->device_ptr_a0, this->device_ptr_b0, this->device_ptr_c0,
+//		  	// 	this->device_ptr_d0, this->rows_a, this->cols_b, this->cols_c,
+//		  	// 	this->alpha, this->beta);
+//
+//	}
+//	void mul_gemm_wmma_triplicated() {
+//		this->debug("thread dim allocation");
+//		//		// Setup execution parameters
+//		// First: using WMMA
+//		dim3 grid_dim;
+//		dim3 block_dim;
+//
+//		// block_dim.x must be a multple of warpSize
+//		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+//		block_dim.x = 128;
+//		block_dim.y = 4;
+//
+//		grid_dim.x = (this->rows_a + (WMMA_M * block_dim.x / WARP_SIZE - 1))
+//				/ (WMMA_M * block_dim.x / WARP_SIZE);
+//		grid_dim.y = (this->cols_a + WMMA_N * block_dim.y - 1)
+//				/ (WMMA_N * block_dim.y);
+//
+//		this->debug("matrix multiplication");
+//
+//		rad::checkFrameworkErrors(
+//				cudaMemset(this->device_is_memory_bad, 0x0,
+//						sizeof(unsigned long long int)));
+//
+//		// s_tensor_gemm_triplicate<half_t, real_t> <<<grid_dim, block_dim>>>(
+//		// 		this->device_ptr_d0, this->device_ptr_d1,this->device_ptr_d2,
+//		// 		this->rows_a, this->cols_b, this->cols_c, this->alpha, this->beta);
+//
+//		//OPTIMIZED TENSOR GEMM NOT IMPLEMENTED
+//	}
 };
 
 #endif /* GEMMWMMA_H_ */

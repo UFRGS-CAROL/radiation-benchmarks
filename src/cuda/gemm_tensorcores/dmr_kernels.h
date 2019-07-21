@@ -18,17 +18,17 @@
 
 template<class half_t, class real_t>
 __global__ void hw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C, real_t *A,
-		real_t *B, const real_t alpha, const real_t beta, int wA, int wB) {
+		real_t *B,  real_t alpha,  real_t beta, int wA, int wB) {
 	/**
 	 * Uma vez que eles sao inline functions eu espero que funcione
 	 */
-	sw_mxm_device(D, C, A, B, alpha, beta, wA, wB);
+	sw_mxm_device(D_r, C, A, B, alpha, beta, wA, wB);
 	hw_mxm_device(D_h, C, A, B, alpha, beta, wA, wB);
 }
 
 template<class half_t, class real_t>
 __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C, real_t *A,
-		real_t *B, const real_t alpha, const real_t beta, int wA, int wB) {
+		real_t *B,  real_t alpha,  real_t beta, int wA, int wB) {
 	// Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;

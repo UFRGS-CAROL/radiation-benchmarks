@@ -29,6 +29,8 @@
 #define ZERO_DOUBLE 0.0
 #define ZERO_DMR 0.0
 
+typedef double BiggestPrecision;
+
 //typedef half_float::half host_half;
 //typedef std::vector<host_half> half_vector;
 
@@ -48,9 +50,9 @@ template<class half_t, class real_t> void generate_matrices_files(
 
 //		for (size_t i = 0; i < log.size_matrices; i++) {
 //			for (size_t j = 0; j < log.size_matrices; j++) {
-//				a_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
-//				b_host_vector[i * log.size_matrices + j] = host_half(dis(gen));
-//				c_host_vector[i * log.size_matrices + j] = real_t(dis(gen));
+//				a_host_vector[i * log.size_matrices + j] = host_half(dis(gen)) + GENERATOR_MAXABSVALUE / 10.0;
+//				b_host_vector[i * log.size_matrices + j] = host_half(dis(gen))+ GENERATOR_MAXABSVALUE / 10.0;
+//				c_host_vector[i * log.size_matrices + j] = real_t(dis(gen))+ GENERATOR_MAXABSVALUE / 10.0;
 //			}
 //		}
 
@@ -62,34 +64,34 @@ template<class half_t, class real_t> void generate_matrices_files(
 			}
 		}
 
-		half_t zero(0.0);
-		half_t nan_ = half_t(half_float::nan("0")); //half_t nan_ = half_t(half_float::nanh("0"));
-		half_t inf_ = half_t(half_t(0x7C00));
-
-		int numZeros = std::count(a_host_vector.begin(), a_host_vector.end(),
-				zero);
-		int numNans = std::count(a_host_vector.begin(), a_host_vector.end(),
-				nan_);
-
-		int numInfs = std::count(a_host_vector.begin(), a_host_vector.end(),
-				inf_);
-		std::cout << "Number of zeros/NaNs/INFs on matrix A: " << numZeros
-				<< numNans << numInfs << std::endl;
-
-//		std::cout << "entrou generate3" << std::endl;
-		numZeros = std::count(b_host_vector.begin(), b_host_vector.end(), zero);
-		numNans = std::count(b_host_vector.begin(), b_host_vector.end(), nan_);
-		numInfs = std::count(b_host_vector.begin(), b_host_vector.end(), inf_);
-
-		std::cout << "Number of zeros/NaNs/INFs on matrix B: " << numZeros
-				<< numNans << numInfs << std::endl;
-
-		numZeros = std::count(c_host_vector.begin(), c_host_vector.end(), zero);
-		numNans = std::count(c_host_vector.begin(), c_host_vector.end(), nan_);
-		numInfs = std::count(c_host_vector.begin(), c_host_vector.end(), inf_);
-
-		std::cout << "Number of zeros/NaNs/INFs on matrix C: " << numZeros
-				<< numNans << numInfs << std::endl;
+//		half_t zero(0.0);
+//		half_t nan_ = half_t(half_float::nan("0")); //half_t nan_ = half_t(half_float::nanh("0"));
+//		half_t inf_ = half_t();
+//
+//		int numZeros = std::count(a_host_vector.begin(), a_host_vector.end(),
+//				zero);
+//		int numNans = std::count(a_host_vector.begin(), a_host_vector.end(),
+//				nan_);
+//
+//		int numInfs = std::count(a_host_vector.begin(), a_host_vector.end(),
+//				inf_);
+//		std::cout << "Number of zeros/NaNs/INFs on matrix A: " << numZeros
+//				<< numNans << numInfs << std::endl;
+//
+////		std::cout << "entrou generate3" << std::endl;
+//		numZeros = std::count(b_host_vector.begin(), b_host_vector.end(), zero);
+//		numNans = std::count(b_host_vector.begin(), b_host_vector.end(), nan_);
+//		numInfs = std::count(b_host_vector.begin(), b_host_vector.end(), inf_);
+//
+//		std::cout << "Number of zeros/NaNs/INFs on matrix B: " << numZeros
+//				<< numNans << numInfs << std::endl;
+//
+//		numZeros = std::count(c_host_vector.begin(), c_host_vector.end(), zero);
+//		numNans = std::count(c_host_vector.begin(), c_host_vector.end(), nan_);
+//		numInfs = std::count(c_host_vector.begin(), c_host_vector.end(), inf_);
+//
+//		std::cout << "Number of zeros/NaNs/INFs on matrix C: " << numZeros
+//				<< numNans << numInfs << std::endl;
 
 		f_a.write(reinterpret_cast<char*>(a_host_vector.data()),
 				a_host_vector.size() * sizeof(half_t));
@@ -225,11 +227,11 @@ std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
 #endif
 	for (size_t i = 0; i < gold.size(); i++) {
 		register bool checkFlag = true;
-		register real_t valGold = gold[i];
-		register real_t valOutput0 = c0[i];
-		register real_t valOutput1 = c1[i];
-		register real_t valOutput2 = c2[i];
-		register real_t valOutput = valOutput0;
+		register BiggestPrecision valGold = gold[i];
+		register BiggestPrecision valOutput0 = c0[i];
+		register BiggestPrecision valOutput1 = c1[i];
+		register BiggestPrecision valOutput2 = c2[i];
+		register BiggestPrecision valOutput = valOutput0;
 
 		if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
 #ifdef OMP
@@ -424,7 +426,7 @@ std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold,
 }
 
 template<class half_t, class real_t>
-void call_mxm(Log& log_obj) {
+void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 	cudaEvent_t start, stop;
 	float elapsedTime;
 	// Matrices A and B
@@ -440,11 +442,11 @@ void call_mxm(Log& log_obj) {
 			log_obj.size_matrices * log_obj.size_matrices);
 // D Matrix
 	std::vector<real_t> host_matrix_d0(
-			log_obj.size_matrices * log_obj.size_matrices);
+			log_obj.size_matrices * log_obj.size_matrices, 0);
 	std::vector<real_t> host_matrix_d1(
-			log_obj.size_matrices * log_obj.size_matrices);
+			log_obj.size_matrices * log_obj.size_matrices, 0);
 	std::vector<real_t> host_matrix_d2(
-			log_obj.size_matrices * log_obj.size_matrices);
+			log_obj.size_matrices * log_obj.size_matrices, 0);
 
 	if (!log_obj.generate) {
 		retrieve_matrices<half_t, real_t>(host_matrix_a, host_matrix_b,
@@ -454,12 +456,9 @@ void call_mxm(Log& log_obj) {
 				host_matrix_c, log_obj);
 	}
 
-	//TODO
-	//Set the correct version
-	GEMMTYPE gemm_t = DMRGEMM;
-
 	GEMM<half_t, real_t> mult_enviroment(host_matrix_a, host_matrix_b,
-			host_matrix_c, log_obj.size_matrices, real_t(1.1f), real_t(1.2f));
+			host_matrix_c, host_matrix_d0, log_obj.size_matrices, real_t(1.1f),
+			real_t(1.2f), gemm_t);
 
 	int tries = 0;
 	cudaEventCreate(&start);
@@ -529,8 +528,8 @@ void call_mxm(Log& log_obj) {
 
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
-				mult_enviroment.push_arrays(host_matrix_a.data(),
-						host_matrix_b.data(), host_matrix_c.data());
+				mult_enviroment.push_arrays(host_matrix_a, host_matrix_b,
+						host_matrix_c);
 			}
 
 		}
@@ -547,8 +546,7 @@ void call_mxm(Log& log_obj) {
 		if (log_obj.triplicated)
 			write_gold_to_file<real_t>(log_obj.gold_inout_path, host_gold);
 		else
-			write_gold_to_file<real_t>(log_obj.gold_inout_path,
-					host_matrix_d1);
+			write_gold_to_file<real_t>(log_obj.gold_inout_path, host_matrix_d1);
 
 	}
 
@@ -580,20 +578,14 @@ int main(int argc, char** argv) {
 	std::cout << "Precision: " << log_obj.precision << std::endl;
 	std::cout << "Verbose: " << log_obj.verbose << std::endl;
 
-// Alloc all memories on host
-	if (log_obj.use_tensor_cores) {
-		call_mxm<half, half>(log_obj);
-	}
+	//TODO FIX CONDITION
+	GEMMTYPE gemm_type = NONDMR;
 
-	// if (log_obj.precision == "float") {
-	// 	call_mxm<float, float, half, float>(host_matrix_a, host_matrix_b, log_obj);
-	// }
-	// if (log_obj.precision == "double") {
-	// 	call_mxm<double, double, half, double>(host_matrix_a, host_matrix_b, log_obj);
-	// }
-	// if (log_obj.precision == "DMR") {
-	// 	call_mxm<double, double, half, float>(host_matrix_a, host_matrix_b, log_obj);
-	// }
+	call_mxm<half, half>(log_obj, gemm_type);
+//	call_mxm<half, float>(log_obj, gemm_type);
+//	call_mxm<float, float>(log_obj, gemm_type);
+//	call_mxm<double, float>(log_obj, gemm_type);
+//	call_mxm<double, double>(log_obj, gemm_type);
 
 	std::cout << "Finished computation\n";
 	return 0;

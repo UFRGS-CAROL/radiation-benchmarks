@@ -2,8 +2,8 @@ GPU?=1
 DEBUG?=0
 #for radiation setup
 LOGS?=0
-DEBUG_ON_TITAN?=1
-OMP?=0
+DEBUG_ON_TITAN?=0
+OMP?=1
 
 SIZE?=8192  #16384 #8192 #4096 
 
@@ -44,7 +44,7 @@ COMMON+= $(STDVERSION)
 ifeq ($(GPU), 1) 
 COMMON+= -DGPU -I/usr/local/cuda/include/
 CFLAGS+= -DGPU
-LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
+LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcurand
 endif
 
 ifeq ($(OMP), 1) 
