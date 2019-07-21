@@ -325,7 +325,7 @@ private:
 				this->device_ptr_a0.data(), this->device_ptr_b0.data(),
 				this->alpha, this->beta, this->k, this->k);
 
-		this->debug("device synchronize");
+		this->debug("sw_mxm_dmr device synchronize");
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		//end
 	}
