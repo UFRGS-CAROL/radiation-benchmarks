@@ -59,8 +59,8 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, float *C1, double *A,
-    double *B, int wA, int wB) {
+template <int BLOCK_SIZE, class half_t, class real_t> __global__ void MatrixMulCUDA_DMR(real_t *C, half_t *C1, real_t *A,
+    real_t *B, int wA, int wB) {
   // Block index
   int bx = blockIdx.x;
   int by = blockIdx.y;
@@ -89,9 +89,9 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, float *C1, do
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
   
-  volatile double Csub = 0.0; ;
-  // volatile double Csub1 = 0;
-  volatile float Csub1= 0.0;
+  volatile real_t Csub = 0.0; ;
+  // volatile real_t Csub1 = 0;
+  volatile half_t Csub1= 0.0;
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -100,11 +100,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, float *C1, do
        a += aStep, b += bStep) {
     // Declaration of the shared memory array As used to
     // store the sub-matrix of A
-    __shared__ double As[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
 
     // Declaration of the shared memory array Bs used to
     // store the sub-matrix of B
-    __shared__ double Bs[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ real_t Bs[BLOCK_SIZE][BLOCK_SIZE];
 
 
 
@@ -145,6 +145,92 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(double *C, float *C1, do
   int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
   C[c + wB * ty + tx] = Csub;
   C1[c + wB * ty + tx] = Csub1;
+}
+
+template <int BLOCK_SIZE, real_t> __global__ void MatrixMulCUDA(real_t *C, real_t *A,
+    real_t *B, int wA, int wB) {
+  // Block index
+  int bx = blockIdx.x;
+  int by = blockIdx.y;
+
+  // Thread index
+  int tx = threadIdx.x;
+  int ty = threadIdx.y;
+
+  // Index of the first sub-matrix of A processed by the block
+  int aBegin = wA * BLOCK_SIZE * by;
+
+  // Index of the last sub-matrix of A processed by the block
+  int aEnd   = aBegin + wA - 1;
+
+
+
+  // Step size used to iterate through the sub-matrices of A
+  int aStep  = BLOCK_SIZE;
+
+  // Index of the first sub-matrix of B processed by the block
+  int bBegin = BLOCK_SIZE * bx;
+
+  // Step size used to iterate through the sub-matrices of B
+  int bStep  = BLOCK_SIZE * wB;
+
+  // Csub is used to store the element of the block sub-matrix
+  // that is computed by the thread
+  
+  volatile real_t Csub = 0.0; ;
+
+
+  // Loop over all the sub-matrices of A and B
+  // required to compute the block sub-matrix
+  for (int a = aBegin, b = bBegin;
+       a <= aEnd;
+       a += aStep, b += bStep) {
+    // Declaration of the shared memory array As used to
+    // store the sub-matrix of A
+    __shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Declaration of the shared memory array Bs used to
+    // store the sub-matrix of B
+    __shared__ real_t Bs[BLOCK_SIZE][BLOCK_SIZE];
+
+
+
+
+    // Load the matrices from device memory
+    // to shared memory; each thread loads
+    // one element of each matrix
+    As[ty][tx] = A[a + wA * ty + tx];
+    Bs[ty][tx] = B[b + wB * ty + tx];
+
+
+    // Synchronize to make sure the matrices are loaded
+    __syncthreads();
+
+    // Multiply the two matrices together;
+    // each thread computes one element
+    // of the block sub-matrix
+#pragma unroll
+
+    for (int k = 0; k < BLOCK_SIZE; ++k) {
+      
+      
+
+      Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
+     
+      
+    }
+
+    // Synchronize to make sure that the preceding
+    // computation is done before loading two new
+    // sub-matrices of A and B in the next iteration
+    __syncthreads();
+  }
+
+  // Write the block sub-matrix to device memory;
+  // each thread writes one element
+  int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+  C[c + wB * ty + tx] = Csub;
+ 
 }
 
 // template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, half *A,
@@ -253,28 +339,29 @@ void ConstantInit(double *data, int size, double val) {
 /**
  * Run a simple test of matrix multiplication using CUDA
  */
+template<class half_t, class real_t>
 int MatrixMultiply(int argc, char **argv,
                    int block_size, const dim3 &dimsA,
                    const dim3 &dimsB) {
   // Allocate host memory for matrices A and B
   unsigned int size_A = dimsA.x * dimsA.y;
-  unsigned int mem_size_A = sizeof(double) * size_A;
-  // unsigned int mem_size_A1 = sizeof(double) * size_A;
-  double *h_A = reinterpret_cast<double *>(malloc(mem_size_A));
+  unsigned int mem_size_A = sizeof(real_t) * size_A;
+ 
+  real_t *h_A = reinterpret_cast<real_t *>(malloc(mem_size_A));
   // double *h_A1 = reinterpret_cast<double *>(malloc(mem_size_A1));
 
   unsigned int size_B = dimsB.x * dimsB.y;
-  unsigned int mem_size_B = sizeof(double) * size_B;
-  // unsigned int mem_size_B1 = sizeof(double) * size_B;
-  double *h_B = reinterpret_cast<double *>(malloc(mem_size_B));
+  unsigned int mem_size_B = sizeof(real_t) * size_B;
+  // unsigned int mem_size_B1 = sizeof(real_t) * size_B;
+  real_t *h_B = reinterpret_cast<real_t *>(malloc(mem_size_B));
 
   // double *h_B1 = reinterpret_cast<double *>(malloc(mem_size_B1));
   // Initialize host memory
   
   
-  const double valA = 2.0f;
+  const real_t valA = 2.0f;
   
-  const double valB = 2.0f;
+  const real_t valB = 2.0f;
 
 
 
@@ -288,18 +375,18 @@ int MatrixMultiply(int argc, char **argv,
 
 
   // Allocate device memory
-  double *d_A, *d_B, *d_C;// *d_C1;
-  float *d_C1;
+  real_t *d_A, *d_B, *d_C;// *d_C1;
+  half_t *d_C1;
   // double *d_A, *d_A1,*d_B, *d_B1, *d_C, *d_C1;
   // double *d_A1, *d_B1, * d_C1;
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
-  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(double);
-  unsigned int mem_size_C1 = dimsC.x * dimsC.y * sizeof(float);
+  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(real_t);
+  unsigned int mem_size_C1 = dimsC.x * dimsC.y * sizeof(half_t);
 
-  double *h_C = reinterpret_cast<double *>(malloc(mem_size_C));
+  real_t *h_C = reinterpret_cast<real_t *>(malloc(mem_size_C));
 
-  double *h_C1 = reinterpret_cast<float *>(malloc(mem_size_C1));
+  half_t *h_C1 = reinterpret_cast<half_t *>(malloc(mem_size_C1));
 
   if (h_C == NULL) {
     fprintf(stderr, "Failed to allocate host matrix C!\n");
@@ -338,9 +425,10 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
-  MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
-                                         dimsA.x, dimsB.x);
-
+  MatrixMulCUDA<real_t><32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+                                              dimsA.x, dimsB.x);
+  // MatrixMulCUDA_DMR<half_t, real_t><32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+                                              // dimsA.x, dimsB.x);
 
   
 
@@ -363,8 +451,10 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+      MatrixMulCUDA<real_t><32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                               dimsA.x, dimsB.x);
+      // MatrixMulCUDA_DMR<half_t, real_t><32> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+                                              // dimsA.x, dimsB.x);
 
     
   }
@@ -445,7 +535,8 @@ int main(int argc, char **argv) {
   // override the device ID based on input provided at the command line
   int dev = findCudaDevice(argc, (const char **)argv);
 
-  int block_size = 16;
+  int block_size = 32;
+  int matrix_size = 128;
 
   // dim3 dimsA(8192, 8192, 1);
   // dim3 dimsB(8192, 8192, 1);
@@ -457,21 +548,21 @@ int main(int argc, char **argv) {
   // dimsB.y = 8192; 
 
 
-  dim3 dimsA(1024, 1024, 1);
-  dim3 dimsB(1024, 1024, 1);
+  dim3 dimsA(matrix_size, matrix_size, 1);
+  dim3 dimsB(matrix_size, matrix_size, 1);
 
-  dimsA.x = 1024;
-  dimsA.y = 1024;
+  dimsA.x = matrix_size;
+  dimsA.y = matrix_size;
 
-  dimsB.x = 1024;
-  dimsB.y = 1024; 
+  dimsB.x = matrix_size;
+  dimsB.y = matrix_size; 
 
 
 
   printf("MatrixA(%d,%d), MatrixB(%d,%d)\n", dimsA.x, dimsA.y,
          dimsB.x, dimsB.y);
 
-  int matrix_result = MatrixMultiply(argc, argv, block_size, dimsA, dimsB);
+  int matrix_result = MatrixMultiply<double,double>(argc, argv, block_size, dimsA, dimsB);
 
   exit(matrix_result);
 }
