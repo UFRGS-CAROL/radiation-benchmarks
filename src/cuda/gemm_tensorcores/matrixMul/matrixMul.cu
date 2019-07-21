@@ -447,24 +447,24 @@ int main(int argc, char **argv) {
 
   int block_size = 16;
 
-  dim3 dimsA(8192, 8192, 1);
-  dim3 dimsB(8192, 8192, 1);
+  // dim3 dimsA(8192, 8192, 1);
+  // dim3 dimsB(8192, 8192, 1);
 
-  dimsA.x = 8192;
-  dimsA.y = 8192;
+  // dimsA.x = 8192;
+  // dimsA.y = 8192;
 
-  dimsB.x = 8192;
-  dimsB.y = 8192; 
+  // dimsB.x = 8192;
+  // dimsB.y = 8192; 
 
 
-  // dim3 dimsA(4096, 4096, 1);
-  // dim3 dimsB(4096, 4096, 1);
+  dim3 dimsA(1024, 1024, 1);
+  dim3 dimsB(1024, 1024, 1);
 
-  // dimsA.x = 4096;
-  // dimsA.y = 4096;
+  dimsA.x = 1024;
+  dimsA.y = 1024;
 
-  // dimsB.x = 4096;
-  // dimsB.y = 4096; 
+  dimsB.x = 1024;
+  dimsB.y = 1024; 
 
 
 
