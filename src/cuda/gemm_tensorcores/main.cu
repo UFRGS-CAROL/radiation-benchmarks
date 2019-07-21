@@ -452,7 +452,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 		retrieve_matrices<half_t, real_t>(host_matrix_a, host_matrix_b,
 				host_matrix_c, host_gold, log_obj);
 	} else {
-		generate_matrices_files<real_t, half_t>(host_matrix_a, host_matrix_b,
+		generate_matrices_files<half_t, real_t>(host_matrix_a, host_matrix_b,
 				host_matrix_c, log_obj);
 	}
 
@@ -581,8 +581,8 @@ int main(int argc, char** argv) {
 	//TODO FIX CONDITION
 	GEMMTYPE gemm_type = NONDMR;
 
-	call_mxm<half, half>(log_obj, gemm_type);
-//	call_mxm<half, float>(log_obj, gemm_type);
+	// call_mxm<half, half>(log_obj, gemm_type);
+	call_mxm<half, float>(log_obj, gemm_type);
 //	call_mxm<float, float>(log_obj, gemm_type);
 ////	call_mxm<double, float>(log_obj, gemm_type);
 //	call_mxm<double, double>(log_obj, gemm_type);
