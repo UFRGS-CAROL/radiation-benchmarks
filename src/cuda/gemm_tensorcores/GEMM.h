@@ -307,8 +307,10 @@ private:
 
 	void sw_mxm() {
 		this->device_is_memory_bad.clear();
+		dim3 threads(32, 32);
 
-		sw_mxm_kernel<real_t> <<<this->grid_dim, this->block_dim, this->shared_memory>>>(
+		// sw_mxm_kernel<real_t> <<<this->grid_dim, this->block_dim, this->shared_memory>>>(
+		sw_mxm_kernel<real_t> <<<this->grid_dim, this->block_dim, threads>>>(
 				this->device_ptr_d0.data(), this->device_ptr_c0.data(),
 				this->device_ptr_a0.data(), this->device_ptr_b0.data(),
 				this->alpha, this->beta, this->k, this->k);
