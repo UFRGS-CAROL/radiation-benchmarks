@@ -147,7 +147,7 @@ template <int BLOCK_SIZE, class half_t, class real_t> __global__ void MatrixMulC
   C1[c + wB * ty + tx] = Csub1;
 }
 
-template <int BLOCK_SIZE, real_t> __global__ void MatrixMulCUDA(real_t *C, real_t *A,
+template <int BLOCK_SIZE, class real_t> __global__ void MatrixMulCUDA(real_t *C, real_t *A,
     real_t *B, int wA, int wB) {
   // Block index
   int bx = blockIdx.x;
