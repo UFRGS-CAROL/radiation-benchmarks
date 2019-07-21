@@ -140,7 +140,7 @@ struct DataManagement {
 	}
 
 	// Returns true if no errors are found. False if otherwise.
-	void check_output_errors() {
+	void check_output_errors(unsigned long long dmr_errors) {
 		if (this->parameters.generate == true) {
 			return;
 		}
@@ -186,7 +186,7 @@ struct DataManagement {
 //		 of << "BLOCK " << CHECKBLOCK << " MAX DIFF " << max_t << std::endl;
 //		 of.close();
 
-		if (detected_errors != 0) {
+		if (dmr_errors != 0) {
 			std::string error_detail;
 			error_detail = "detected_dmr_errors: "
 					+ std::to_string(detected_errors);
