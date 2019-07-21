@@ -73,7 +73,7 @@ PYRAMIDH=7
 generate:
 	./$(EXEC) -size=1024 -generate -verbose -sim_time=$(SIMTIME) \
 		-input_temp=$(RADDIR)/data/hotspot/temp_1024 \
-		-input_power=.$(RADDIR)/data/hotspot/power_1024 \
+		-input_power=$(RADDIR)/data/hotspot/power_1024 \
 		-gold_temp=./gold_1024 -streams=10 \
 		-redundancy=$(REDUNDANCY) -precision=$(PRECISION) \
 		 -pyramid_height=$(PYRAMIDH)
