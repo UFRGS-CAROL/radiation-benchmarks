@@ -97,8 +97,7 @@ int HotspotExecute::compute_tran_temp(rad::DeviceVector<full>& power_array,
 			this->flops += col * row * MIN(num_iterations, sim_time - t) * 15;
 		}
 	}
-
-//	cudaStreamSynchronize(stream);
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	return dst;
 }
 
@@ -159,9 +158,9 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 		double copy_and_check_time = this->log.mysecond();
 
 		hotspot_data.copy_from_gpu();
-		hotspot_data.check_output_errors();
 
 		auto dmr_errors = copy_errors();
+		hotspot_data.check_output_errors(dmr_errors);
 
 
 		copy_and_check_time = this->log.mysecond();
