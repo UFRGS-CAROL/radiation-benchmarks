@@ -579,13 +579,13 @@ int main(int argc, char** argv) {
 	std::cout << "Verbose: " << log_obj.verbose << std::endl;
 
 	//TODO FIX CONDITION
-	GEMMTYPE gemm_type = NONDMR;
+	GEMMTYPE gemm_type = DMRGEMM;
 
 	// call_mxm<half, half>(log_obj, gemm_type);
-	call_mxm<half, float>(log_obj, gemm_type);
-//	call_mxm<float, float>(log_obj, gemm_type);
-////	call_mxm<double, float>(log_obj, gemm_type);
-//	call_mxm<double, double>(log_obj, gemm_type);
+	// call_mxm<half, float>(log_obj, gemm_type);
+	call_mxm<float, float>(log_obj, gemm_type);
+    //call_mxm<double, float>(log_obj, gemm_type);
+	//call_mxm<double, double>(log_obj, gemm_type);
 
 	std::cout << "Finished computation\n";
 	return 0;
