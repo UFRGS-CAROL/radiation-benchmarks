@@ -129,8 +129,8 @@ template <int BLOCK_SIZE, class half_t, class real_t> __global__ void MatrixMulC
       
 
       Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
-      // Csub1 = fma_dmr(As[ty][k], Bs[k][tx],Csub1);
-      Csub1 = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub1);
+      Csub1 = fma_dmr(As[ty][k], Bs[k][tx],Csub1);
+      //Csub1 = fma_dmr(__double2float_rn(As[ty][k]), __double2float_rn(Bs[k][tx]), Csub1);
       
     }
 
@@ -425,10 +425,10 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
-  MatrixMulCUDA<32, real_t><<< grid, threads >>>(d_C, d_C1, d_A, d_B,
-                                              dimsA.x, dimsB.x);
-  // MatrixMulCUDA_DMR<32,half_t, real_t><<< grid, threads >>>(d_C, d_C1, d_A, d_B,
-                                              // dimsA.x, dimsB.x);
+ // MatrixMulCUDA<32, real_t><<< grid, threads >>>(d_C, d_A, d_B,
+   //                                           dimsA.x, dimsB.x);
+   MatrixMulCUDA_DMR<32,half_t, real_t><<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+  	                                           dimsA.x, dimsB.x);
 
   
 
@@ -451,10 +451,10 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      MatrixMulCUDA<32,eal_t> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
-                                              dimsA.x, dimsB.x);
-      // MatrixMulCUDA_DMR<32,half_t, real_t> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
-                                              // dimsA.x, dimsB.x);
+      //MatrixMulCUDA<32, real_t> <<< grid, threads >>>(d_C, d_A, d_B,
+      //                                        dimsA.x, dimsB.x);
+       MatrixMulCUDA_DMR<32,half_t, real_t> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+                                               dimsA.x, dimsB.x);
 
     
   }
@@ -536,7 +536,7 @@ int main(int argc, char **argv) {
   int dev = findCudaDevice(argc, (const char **)argv);
 
   int block_size = 32;
-  int matrix_size = 128;
+  int matrix_size = 32;
 
   // dim3 dimsA(8192, 8192, 1);
   // dim3 dimsB(8192, 8192, 1);
