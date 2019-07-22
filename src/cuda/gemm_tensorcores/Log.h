@@ -16,6 +16,25 @@
 
 #include <string>
 
+//typedef enum {
+//	HALF_HALF, FLOAT_FLOAT, HALF_FLOAT, FLOAT_DOUBLE
+//} PrecisionCombination;
+//
+//std::ostream& operator<<(std::ostream& os, const PrecisionCombination& t) {
+//	switch (t) {
+//	case FLOAT_FLOAT:
+//		os << std::string("Float DMR");
+//		break;
+//	case HALF_FLOAT:
+//		os << std::string("Half/Float DMR");
+//		break;
+//	case FLOAT_DOUBLE:
+//		os << std::string("Float/Double DMR");
+//		break;
+//	}
+//	return os;
+//}
+
 class Log {
 public:
 	bool generate;
@@ -30,6 +49,7 @@ public:
 	bool verbose;
 	bool use_tensor_cores;
 	bool triplicated;
+	std::string dmr;
 
 	Log(int argc, char** argv, int input_size) {
 
@@ -53,6 +73,9 @@ public:
 
 		this->precision = this->find_char_arg(argc, argv, "--precision",
 				"float");
+
+		this->dmr = this->find_char_arg(argc, argv, "--dmr",
+				"nondmr");
 
 		this->use_tensor_cores = this->find_int_arg(argc, argv, "--tensor_cores", 0);
 

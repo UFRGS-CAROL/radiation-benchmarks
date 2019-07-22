@@ -101,6 +101,19 @@
 // we must keep each row and column 128-bit aligned, as required by nvcuda::nvcuda::wmma::load_matrix_sync.
 #define SKEW_HALF 8
 
+template<class T>
+__device__ __forceinline__ void hw_mxm_device(T* D, T *C, float *A, float *B,
+		T alpha, T beta, int wA, int wB) {
+	assert(0 && "DOES NOT SUPPORT FLOAT");
+}
+
+
+ template<class T>
+ __device__ __forceinline__ void hw_mxm_device(T* D, T *C, double *A, double *B,
+ 		T alpha, T beta, int wA, int wB) {
+ 	assert(0 && "DOES NOT SUPPORT DOUBLE");
+ }
+
 template<class real_t>
 __device__ __forceinline__ void hw_mxm_device(real_t* D, real_t *C, half *A,
 		half *B, real_t alpha, real_t beta, int wA, int wB) {
@@ -309,7 +322,7 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, real_t *C, half *A,
 
 template<class real_t>
 __device__ __forceinline__ void sw_mxm_device(real_t* D, real_t *C, real_t *A,
-		real_t *B,  real_t alpha, real_t beta, int wA, int wB) {
+		real_t *B, real_t alpha, real_t beta, int wA, int wB) {
 // Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -378,17 +391,23 @@ __device__ __forceinline__ void sw_mxm_device(real_t* D, real_t *C, real_t *A,
 	D[c + wB * ty + tx] = alpha * Csub + beta * C[c + wB * ty + tx];
 }
 
-template<class real_t>
-__global__ void hw_mxm_kernel(real_t *D, real_t *C, half *A, half *B,
-		 real_t alpha,  real_t beta, int wA, int wB) {
+template<class half_t, class real_t>
+__global__ void hw_mxm_kernel(real_t *D, real_t *C, half_t *A, half_t *B,
+		real_t alpha, real_t beta, int wA, int wB) {
 	hw_mxm_device(D, C, A, B, alpha, beta, wA, wB);
 
 }
 
 template<class real_t>
 __global__ void sw_mxm_kernel(real_t *D, real_t *C, real_t *A, real_t *B,
-		 real_t alpha, real_t beta, int wA, int wB) {
+		real_t alpha, real_t beta, int wA, int wB) {
 	sw_mxm_device(D, C, A, B, alpha, beta, wA, wB);
+}
+
+template<class half_t, class real_t>
+__global__ void sw_mxm_kernel(real_t *D, real_t *C, half_t *A, half_t *B,
+		real_t alpha, real_t beta, int wA, int wB) {
+	assert(0 && "NOT A VALID CONFIGURATION");
 }
 
 #endif /* NONDMR_KERNELS_H_ */
