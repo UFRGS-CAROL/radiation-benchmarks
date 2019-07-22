@@ -53,3 +53,6 @@ test_fma:
 
 test_add:
 	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed --inst add
+
+test_compose:
+	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed --inst compose
