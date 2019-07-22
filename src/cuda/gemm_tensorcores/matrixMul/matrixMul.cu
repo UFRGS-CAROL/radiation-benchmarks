@@ -484,7 +484,7 @@ int main(int argc, char **argv) {
 }
 
 __device__ __forceinline__ double fma_dmr(double a, double b, double acc) {
-  return __fmaf_rn(a, b, acc);
+  return __fma_rn(a, b, acc);
 }
 
 __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
