@@ -402,7 +402,42 @@ void setup_execute(std::shared_ptr<GEMMBase<half_t, real_t>> mult_enviroment,
 		std::vector<real_t>& host_matrix_c) {
 	cudaEvent_t start, stop;
 	float elapsedTime;
+<<<<<<< HEAD
 //	int tries = 0;
+=======
+	// Matrices A and B
+	std::vector<half_t> host_matrix_a(
+			log_obj.size_matrices * log_obj.size_matrices);
+	std::vector<half_t> host_matrix_b(
+			log_obj.size_matrices * log_obj.size_matrices);
+
+// C matrix
+	std::vector<real_t> host_matrix_c(
+			log_obj.size_matrices * log_obj.size_matrices);
+	std::vector<real_t> host_gold(
+			log_obj.size_matrices * log_obj.size_matrices);
+// D Matrix
+	std::vector<real_t> host_matrix_d0(
+			log_obj.size_matrices * log_obj.size_matrices, 0);
+	std::vector<real_t> host_matrix_d1(
+			log_obj.size_matrices * log_obj.size_matrices, 0);
+	std::vector<real_t> host_matrix_d2(
+			log_obj.size_matrices * log_obj.size_matrices, 0);
+
+	if (!log_obj.generate) {
+		retrieve_matrices<half_t, real_t>(host_matrix_a, host_matrix_b,
+				host_matrix_c, host_gold, log_obj);
+	} else {
+		generate_matrices_files<half_t, real_t>(host_matrix_a, host_matrix_b,
+				host_matrix_c, log_obj);
+	}
+
+	GEMM<half_t, real_t> mult_enviroment(host_matrix_a, host_matrix_b,
+			host_matrix_c, host_matrix_d0, log_obj.size_matrices, real_t(1.1f),
+			real_t(1.2f), gemm_t);
+
+	int tries = 0;
+>>>>>>> eb1f16f8781b5c2314b7ffc5f89951dc4f099d3a
 	cudaEventCreate(&start);
 	cudaEventRecord(start, 0);
 
@@ -623,6 +658,7 @@ int main(int argc, char** argv) {
 	std::cout << "DMR type: " << log_obj.dmr << std::endl;
 
 	//TODO FIX CONDITION
+<<<<<<< HEAD
 	GEMMTYPE gemm_type = NONDMR;
 	//NONDMR, DMRGEMM, NONDMRWMMA, DMRWMA
 	//DMR TYPES
@@ -671,6 +707,15 @@ int main(int argc, char** argv) {
 			call_mxm<double>(log_obj, gemm_type);
 		}
 	}
+=======
+	GEMMTYPE gemm_type = DMRGEMM;
+
+	// call_mxm<half, half>(log_obj, gemm_type);
+	// call_mxm<half, float>(log_obj, gemm_type);
+	call_mxm<float, float>(log_obj, gemm_type);
+    	//call_mxm<double, float>(log_obj, gemm_type);
+	//call_mxm<double, double>(log_obj, gemm_type);
+>>>>>>> eb1f16f8781b5c2314b7ffc5f89951dc4f099d3a
 
 	std::cout << "Finished computation\n";
 	return 0;

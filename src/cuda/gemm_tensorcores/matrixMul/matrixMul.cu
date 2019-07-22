@@ -233,90 +233,6 @@ template <int BLOCK_SIZE, class real_t> __global__ void MatrixMulCUDA(real_t *C,
  
 }
 
-// template <int BLOCK_SIZE> __global__ void MatrixMulCUDA_Half(half *C, half *C1, half *A,
-//     half *B, int wA,
-//     int wB) {
-//   // Block index
-//   int bx = blockIdx.x;
-//   int by = blockIdx.y;
-
-//   // Thread index
-//   int tx = threadIdx.x;
-//   int ty = threadIdx.y;
-
-//   // Index of the first sub-matrix of A processed by the block
-//   int aBegin = wA * BLOCK_SIZE * by;
-
-//   // Index of the last sub-matrix of A processed by the block
-//   int aEnd   = aBegin + wA - 1;
-
-
-
-//   // Step size used to iterate through the sub-matrices of A
-//   int aStep  = BLOCK_SIZE;
-
-//   // Index of the first sub-matrix of B processed by the block
-//   int bBegin = BLOCK_SIZE * bx;
-
-//   // Step size used to iterate through the sub-matrices of B
-//   int bStep  = BLOCK_SIZE * wB;
-
-//   // Csub is used to store the element of the block sub-matrix
-//   // that is computed by the thread
-//   volatile half2 Csub = __float2half2_rn(0.0);
-
-//  // half2 Csub1= __float2half2_rn(0.0);
-
-
-
-//   // Loop over all the sub-matrices of A and B
-//   // required to compute the block sub-matrix
-//   for (int a = aBegin, b = bBegin;
-//        a <= aEnd;
-//        a += aStep, b += bStep) {
-//     // Declaration of the shared memory array As used to
-//     // store the sub-matrix of A
-//     __shared__ half2 As[BLOCK_SIZE][BLOCK_SIZE];
-
-//     // Declaration of the shared memory array Bs used to
-//     // store the sub-matrix of B
-//     __shared__ half2 Bs[BLOCK_SIZE][BLOCK_SIZE];
-
-//     // Load the matrices from device memory
-//     // to shared memory; each thread loads
-//     // one element of each matrix
-//     As[ty][tx] = __half2half2(A[a + wA * ty + tx]);
-//     Bs[ty][tx] = __half2half2(B[b + wB/2 * ty + tx]);
-
-//     // Synchronize to make sure the matrices are loaded
-//     __syncthreads();
-
-//     // Multiply the two matrices together;
-//     // each thread computes one element
-//     // of the block sub-matrix
-// #pragma unroll
-
-//     for (int k = 0; k < BLOCK_SIZE; ++k) {
-//       Csub = __hfma2(As[ty][k], Bs[k][tx],Csub);
-//      // Csub1 =__hfma2((As[ty][k]), (Bs[k][tx]),Csub1);
-
-      
-//     }
-
-//     // Synchronize to make sure that the preceding
-//     // computation is done before loading two new
-//     // sub-matrices of A and B in the next iteration
-//     __syncthreads();
-//   }
-
-//   // Write the block sub-matrix to device memory;
-//   // each thread writes one element
-//   int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-//   ((half2*)C)[c + wB/2 * ty + tx] = Csub;
-//   //((half2*)C1)[c + wB/2 * ty + tx] = Csub1;
- 
-// }
-
 void ConstantInit(half2 *data, int size, half2 val) {
   for (int i = 0; i < size; ++i) {
     data[i] = val;
@@ -451,9 +367,11 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      //MatrixMulCUDA<32, real_t> <<< grid, threads >>>(d_C, d_A, d_B,
-      //                                        dimsA.x, dimsB.x);
-       MatrixMulCUDA_DMR<32,half_t, real_t> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+      MatrixMulCUDA<32, real_t> <<< grid, threads >>>(d_C, d_A, d_B,
+                                             dimsA.x, dimsB.x);
+      MatrixMulCUDA<32, real_t> <<< grid, threads >>>(d_C1, d_A, d_B,
+                                             dimsA.x, dimsB.x);
+       // MatrixMulCUDA_DMR<32,half_t, real_t> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                                dimsA.x, dimsB.x);
 
     
@@ -568,7 +486,7 @@ int main(int argc, char **argv) {
 }
 
 __device__ __forceinline__ double fma_dmr(double a, double b, double acc) {
-  return __fmaf_rn(a, b, acc);
+  return __fma_rn(a, b, acc);
 }
 
 __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
