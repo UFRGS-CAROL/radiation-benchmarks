@@ -367,9 +367,11 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      //MatrixMulCUDA<32, real_t> <<< grid, threads >>>(d_C, d_A, d_B,
-      //                                        dimsA.x, dimsB.x);
-       MatrixMulCUDA_DMR<32,half_t, real_t> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+      MatrixMulCUDA<32, real_t> <<< grid, threads >>>(d_C, d_A, d_B,
+                                             dimsA.x, dimsB.x);
+      MatrixMulCUDA<32, real_t> <<< grid, threads >>>(d_C1, d_A, d_B,
+                                             dimsA.x, dimsB.x);
+       // MatrixMulCUDA_DMR<32,half_t, real_t> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
                                                dimsA.x, dimsB.x);
 
     
