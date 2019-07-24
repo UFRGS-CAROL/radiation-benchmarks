@@ -269,14 +269,14 @@ __global__ void MicroBenchmarkKernel_MULNOTBIASAED(incomplete *d_R0_one,
 
 #if CHECKBLOCK == 1
 		check_relative_error(acc_incomplete, acc_full);
-		theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+//		theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 		acc_incomplete = incomplete(acc_full);
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
 
-			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+//			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 			acc_incomplete = incomplete(acc_full);
 		}
