@@ -197,7 +197,10 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 				break;
 			}
 			case FMANOTBIASED: {
-				throw "FMA NOT BIASED NOT READY!";
+				MicroBenchmarkKernel_FMANOTBIASAED<incomplete, full> <<<
+						parameters.grid_size, parameters.block_size>>>(
+						device_vector_inc.data(), device_vector_full.data(),
+						type_.output_r);
 				break;
 			}
 			}
