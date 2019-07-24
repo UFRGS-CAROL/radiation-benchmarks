@@ -256,8 +256,9 @@ template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_MULNOTBIASAED(incomplete *d_R0_one,
 		full *d_R0_second, const full OUTPUT_R) {
 	register full acc_full = OUTPUT_R / full(DIV_FOR_MUL);
-	register incomplete acc_incomplete = incomplete(OUTPUT_R) / incomplete(DIV_FOR_MUL);
-	double theshold = -2222;
+	register incomplete acc_incomplete = incomplete(OUTPUT_R)
+			/ incomplete(DIV_FOR_MUL);
+//	double theshold = -2222;
 
 	const register full f = acc_full;
 	const register incomplete i = acc_incomplete;
@@ -272,6 +273,52 @@ __global__ void MicroBenchmarkKernel_MULNOTBIASAED(incomplete *d_R0_one,
 
 		acc_incomplete = incomplete(acc_full);
 #elif CHECKBLOCK > 1
+		if((count % CHECKBLOCK) == 0) {
+			check_relative_error(acc_incomplete, acc_full);
+
+			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+
+			acc_incomplete = incomplete(acc_full);
+		}
+#endif
+
+	}
+
+#if CHECKBLOCK == 0
+	check_relative_error(acc_incomplete, acc_full);
+//	theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+
+#endif
+
+//	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
+//		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
+//	}
+
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+
+}
+
+template<typename incomplete, typename full>
+__global__ void MicroBenchmarkKernel_FMANOTBIASAED(incomplete *d_R0_one,
+		full *d_R0_second, const full OUTPUT_R) {
+	register full acc_full = OUTPUT_R / full(DIV_FOR_MUL);
+	register incomplete acc_incomplete = incomplete(OUTPUT_R) / incomplete(DIV_FOR_MUL);
+
+	register full b_full = acc_full / full(NUM_MUL_OP);
+	register incomplete b_incomplete = acc_incomplete / incomplete(NUM_MUL_OP);
+
+
+	const register full a_full = acc_full;
+	const register incomplete a_incomplete = acc_incomplete;
+
+	double theshold = -2222;
+
+	for (int count = 0; count < NUM_MUL_OP; count++) {
+		acc_full = fma_dmr(a_full, b_full, acc_full);
+		acc_incomplete = fma_dmr(a_incomplete, b_incomplete, acc_incomplete);
+
+#if CHECKBLOCK >= 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
 
