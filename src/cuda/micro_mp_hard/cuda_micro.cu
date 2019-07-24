@@ -193,6 +193,7 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r);
+				gold = 1.11532903497274960003;
 				break;
 			}
 			case FMANOTBIASED: {
@@ -223,7 +224,7 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 		unsigned long long relative_errors = copy_errors();
 
 		int errors = check_output_errors(host_vector_inc, host_vector_full,
-				type_.output_r, parameters.verbose, relative_errors);
+				gold, parameters.verbose, relative_errors);
 
 		double outputpersec = double(parameters.r_size) / kernel_time;
 		if (parameters.verbose) {
