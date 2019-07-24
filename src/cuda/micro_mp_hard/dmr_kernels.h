@@ -293,8 +293,8 @@ __global__ void MicroBenchmarkKernel_MULNOTBIASAED(incomplete *d_R0_one,
 		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 	}
 
-	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete * incomplete(REBUILD_MUL);
-	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full * full(REBUILD_MUL);
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
 
 }
 

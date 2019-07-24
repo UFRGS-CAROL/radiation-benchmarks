@@ -131,6 +131,7 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 				<< std::endl;
 	}
 
+	auto gold = type_.output_r;
 	for (int iteration = 0; iteration < parameters.iterations; iteration++) {
 		//================== Global test loop
 		double kernel_time = mysecond();
