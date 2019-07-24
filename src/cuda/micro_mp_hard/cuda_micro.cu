@@ -178,11 +178,22 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
 
-			case NUMCOMPOSE:
-				MicroBenchmarkKernel_NumCompose<incomplete, full> <<<
+			case ADDNOTBIASED:
+				MicroBenchmarkKernel_ADDNOTBIASAED<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r);
+				break;
+
+			case MULNOTBIASED:
+				auto new_grid_size = parameters.grid_size * 32;
+				MicroBenchmarkKernel_MULNOTBIASAED<incomplete, full> <<<
+						parameters.grid_size, parameters.block_size>>>(
+						device_vector_inc.data(), device_vector_full.data(),
+						type_.output_r);
+				break;
+			case FMANOTBIASED:
+				throw "FMA NOT BIASED NOT READY!";
 				break;
 			}
 		}

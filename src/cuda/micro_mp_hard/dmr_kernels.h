@@ -205,7 +205,7 @@ __global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
 }
 
 template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
+__global__ void MicroBenchmarkKernel_ADDNOTBIASAED(incomplete *d_R0_one,
 		full *d_R0_second, const full OUTPUT_R) {
 	register full divisor = full(NUM_COMPOSE_DIVISOR);
 	register full acc_full = 0.0;
@@ -246,6 +246,52 @@ __global__ void MicroBenchmarkKernel_NumCompose(incomplete *d_R0_one,
 //	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
 //		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 //	}
+
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+
+}
+
+template<typename incomplete, typename full>
+__global__ void MicroBenchmarkKernel_MULNOTBIASAED(incomplete *d_R0_one,
+		full *d_R0_second, const full OUTPUT_R) {
+	register full acc_full = OUTPUT_R;
+	register incomplete acc_incomplete = incomplete(OUTPUT_R);
+	double theshold = -2222;
+
+	register full f = OUTPUT_R;
+	register incomplete i = incomplete(OUTPUT_R);
+
+	for (int count = 0; count < NUM_MUL_OP; count++) {
+		acc_full = mul_dmr(acc_full, f);
+		acc_incomplete = mul_dmr(acc_incomplete, i);
+
+#if CHECKBLOCK == 1
+		check_relative_error(acc_incomplete, acc_full);
+		theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+
+		acc_incomplete = incomplete(acc_full);
+#elif CHECKBLOCK > 1
+		if((count % CHECKBLOCK) == 0) {
+			check_relative_error(acc_incomplete, acc_full);
+
+			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+
+			acc_incomplete = incomplete(acc_full);
+		}
+#endif
+
+	}
+
+#if CHECKBLOCK == 0
+	check_relative_error(acc_incomplete, acc_full);
+	theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+
+#endif
+
+	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
+	}
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;

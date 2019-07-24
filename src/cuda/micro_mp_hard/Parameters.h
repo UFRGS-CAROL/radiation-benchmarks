@@ -42,7 +42,7 @@
 #define OUTPUT_R_HALF 4.44 // 0x4471
 
 typedef enum {
-	ADD, MUL, FMA, NUMCOMPOSE
+	ADD, MUL, FMA, ADDNOTBIASED, MULNOTBIASED, FMANOTBIASED
 } MICROINSTRUCTION;
 
 typedef enum {
@@ -79,8 +79,11 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		{ "mul", MUL },
 		//FMA
 		{ "fma", FMA },
-		//NUMCOMPOSE
-		{ "compose", NUMCOMPOSE }, };
+		// NUMCOMPOSE (add not biased)
+		{ "compose", ADDNOTBIASED },
+		// MUL not biased
+		{ "mulnotbiased", MULNOTBIASED}
+};
 
 template<typename ...TypeArgs> struct Type;
 

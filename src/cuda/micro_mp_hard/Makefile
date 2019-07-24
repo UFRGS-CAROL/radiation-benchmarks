@@ -56,3 +56,6 @@ test_add:
 
 test_compose:
 	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed --inst compose
+
+test_mulnotbiased:
+	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed --inst mulnotbiased
