@@ -188,9 +188,8 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 				break;
 			}
 			case MULNOTBIASED: {
-				int new_grid_size = parameters.grid_size * 32;
 				MicroBenchmarkKernel_MULNOTBIASAED<incomplete, full> <<<
-						new_grid_size, parameters.block_size>>>(
+						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r);
 				break;

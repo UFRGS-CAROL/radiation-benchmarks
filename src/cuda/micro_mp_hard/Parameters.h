@@ -195,6 +195,11 @@ struct Parameters {
 		this->redundancy = red[this->hardening_str];
 		this->precision = pre[this->precision_str];
 		this->micro = mic[this->instruction_str];
+
+		if (this->micro == MULNOTBIASED){
+			this->grid_size *= 32;
+
+		}
 	}
 
 	void print_details() {
