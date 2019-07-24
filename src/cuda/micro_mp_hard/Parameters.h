@@ -82,7 +82,9 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		// NUMCOMPOSE (add not biased)
 		{ "compose", ADDNOTBIASED },
 		// MUL not biased
-		{ "mulnotbiased", MULNOTBIASED } };
+		{ "mulnotbiased", MULNOTBIASED },
+		// MUL not biased
+		{ "fmanotbiased", FMANOTBIASED } };
 
 template<typename ...TypeArgs> struct Type;
 
@@ -195,7 +197,7 @@ struct Parameters {
 		this->precision = pre[this->precision_str];
 		this->micro = mic[this->instruction_str];
 
-		if (this->micro == MULNOTBIASED) {
+		if (this->micro == MULNOTBIASED || this->micro == FMANOTBIASED) {
 			this->grid_size *= 32;
 			this->r_size *= 32;
 		}
