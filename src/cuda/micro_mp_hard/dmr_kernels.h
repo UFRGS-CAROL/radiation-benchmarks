@@ -255,12 +255,12 @@ __global__ void MicroBenchmarkKernel_ADDNOTBIASAED(incomplete *d_R0_one,
 template<typename incomplete, typename full>
 __global__ void MicroBenchmarkKernel_MULNOTBIASAED(incomplete *d_R0_one,
 		full *d_R0_second, const full OUTPUT_R) {
-	register full acc_full = OUTPUT_R;
-	register incomplete acc_incomplete = incomplete(OUTPUT_R);
+	register full acc_full = OUTPUT_R / full(DIV_FOR_MUL);
+	register incomplete acc_incomplete = incomplete(OUTPUT_R) / incomplete(DIV_FOR_MUL);
 	double theshold = -2222;
 
-	register full f = OUTPUT_R;
-	register incomplete i = incomplete(OUTPUT_R);
+	const register full f = acc_full;
+	const register incomplete i = acc_incomplete;
 
 	for (int count = 0; count < NUM_MUL_OP; count++) {
 		acc_full = mul_dmr(acc_full, f);

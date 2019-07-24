@@ -20,6 +20,7 @@
 
 #define NUM_COMPOSE_DIVISOR 10000000
 #define NUM_MUL_OP 100
+#define DIV_FOR_MUL 4.19
 
 __device__ __forceinline__ double abs__(double a) {
 	return fabs(a);

@@ -159,42 +159,46 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 
 		} else {
 			switch (parameters.micro) {
-			case ADD:
+			case ADD: {
 				MicroBenchmarkKernel_ADD<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r, type_.input_a);
 				break;
-			case MUL:
+			}
+			case MUL: {
 				MicroBenchmarkKernel_MUL<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r, type_.input_a);
 				break;
-			case FMA:
+			}
+			case FMA: {
 				MicroBenchmarkKernel_FMA<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
-
-			case ADDNOTBIASED:
+			}
+			case ADDNOTBIASED: {
 				MicroBenchmarkKernel_ADDNOTBIASAED<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r);
 				break;
-
-			case MULNOTBIASED:
-				auto new_grid_size = parameters.grid_size * 32;
+			}
+			case MULNOTBIASED: {
+				int new_grid_size = parameters.grid_size * 32;
 				MicroBenchmarkKernel_MULNOTBIASAED<incomplete, full> <<<
-						parameters.grid_size, parameters.block_size>>>(
+						new_grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r);
 				break;
-			case FMANOTBIASED:
+			}
+			case FMANOTBIASED: {
 				throw "FMA NOT BIASED NOT READY!";
 				break;
+			}
 			}
 		}
 
