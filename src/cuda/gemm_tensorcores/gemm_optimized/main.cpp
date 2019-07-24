@@ -67,6 +67,7 @@ int main(int argc, char **argv) {
 		// device_c_inc = zero_vector_inc;
 		// sgemm(st, device_c.data(), device_a.data(), device_b.data(), m, n, k,
 		// 		lda, ldb, ldc, alpha, beta);
+		
 		device_c = zero_vector;
 		device_c_inc = zero_vector_inc;
 		sgemm_dmr(st, device_c.data(), device_c_inc.data(), device_a.data(),
