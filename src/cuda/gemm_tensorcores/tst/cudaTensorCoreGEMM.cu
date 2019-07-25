@@ -201,7 +201,7 @@ __device__  __forceinline__ half fma_dmr(half a, half b, half acc) {
 }
 
 __global__ void MatrixMulCUDA(float *C, half *A,
-    half *B, int wA, int wB, float alpha)   
+    half *B, int wA, int wB, float alpha, float beta)   
 {
   // Block index
   int bx = blockIdx.x;
@@ -281,7 +281,7 @@ __global__ void MatrixMulCUDA(float *C, half *A,
   // Write the block sub-matrix to device memory;
   // each thread writes one element
   int c = M_GLOBAL * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-  D1[c + M_GLOBAL * ty + tx] = alpha * Csub + beta * C[c + M_GLOBAL * ty + tx];
+  C[c + M_GLOBAL * ty + tx] = alpha * Csub + beta * C[c + M_GLOBAL * ty + tx];
 
 }
 
@@ -922,7 +922,7 @@ checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
                     SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
 
-checkKernelErrors((MatrixMulCUDA<32,half_t, real_t> <<< grid, threads >>>(D1, A, B,
+checkKernelErrors((MatrixMulCUDA<<< grid, threads >>>(D1, A, B,
                                                M_GLOBAL, M_GLOBAL, alpha)));
 
 
