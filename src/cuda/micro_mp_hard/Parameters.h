@@ -198,8 +198,8 @@ struct Parameters {
 		this->micro = mic[this->instruction_str];
 
 		if (this->micro == MULNOTBIASED || this->micro == FMANOTBIASED) {
-			this->grid_size *= 32;
-			this->r_size *= 32;
+			this->grid_size *= 128;
+			this->r_size *= 128;
 		}
 	}
 
