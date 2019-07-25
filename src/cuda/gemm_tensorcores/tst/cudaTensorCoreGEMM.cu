@@ -395,6 +395,7 @@ __global__ void compute_gemm(const half *A, const half *B, const float *C,
 }
 
 
+
 __host__ void matMultiplyOnHost(half *A, half *B, float *C, float alpha,
                                 float beta, int numARows, int numAColumns,
                                 int numBRows, int numBColumns, int numCRows,
@@ -437,7 +438,7 @@ int main(int argc, char **argv) {
   float *C_h = NULL;
 
   float *result_hD = NULL;
-  // float *result_host = NULL;
+  float *result_host = NULL;
 
 
   A_h = (half *)malloc(sizeof(half) * M_GLOBAL * K_GLOBAL);
@@ -445,7 +446,7 @@ int main(int argc, char **argv) {
   C_h = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
 
   result_hD = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
-  // result_host = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
+  result_host = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
 
 
   half *A = NULL;
@@ -517,7 +518,7 @@ checkCudaErrors(cudaMemcpy(result_hD, D,
                            sizeof(float) * M_GLOBAL * N_GLOBAL,
                            cudaMemcpyDeviceToHost));
 
-printf("result_h D= %f \n",result_hD[0]);
+printf("result_h D= %f \n",result_hD);
 
   
 
@@ -528,16 +529,17 @@ printf("result_h D= %f \n",result_hD[0]);
 
   memcpy(result_host, C_h, sizeof(float) * M_GLOBAL * N_GLOBAL);
 
-  /* 
+   
   matMultiplyOnHost(A_h, B_h, result_host, alpha, beta, M_GLOBAL, K_GLOBAL,
                     K_GLOBAL, N_GLOBAL, M_GLOBAL, N_GLOBAL);
 
-  for (int i = 0; i < N_GLOBAL * M_GLOBAL; i++) {
-    if (fabs(result_hD[i] - result_host[i]) > 0.1f)
-      printf("mismatch i=%d result_hD=%f result_host=%f\n", i, result_hD[i],
-             result_host[i]);
+
+  for (int i = 0; i < 10; i++) {
+      
+    printf(" diff = %f, HW = %f, SW = %f \n", (result_hD[i] - result_host[i]),result_hD[i], result_host[i]);
+               
   }
-  */
+  
   
   free(result_hD);
   free(result_host);
