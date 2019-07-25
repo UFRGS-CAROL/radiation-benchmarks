@@ -893,11 +893,11 @@ int main(int argc, char **argv) {
   
   printf("Computing... using high performance kernel compute_gemm \n");
 
-// checkCudaErrors(cudaFuncSetAttribute(
-//         compute_gemm_dmr, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+checkCudaErrors(cudaFuncSetAttribute(
+        compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                        SHMEM_SZ>>>(A, B, C, D, alpha, beta)))
+                        SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
 
 // dim3 block_dim;
 // dim3 grid_dim;
@@ -921,9 +921,9 @@ checkKernelErrors(
 // checkKernelErrors(
 //         (compute_gemm_dmr<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
                     // SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
-checkKernelErrors(
-        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                    SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
+// checkKernelErrors(
+//         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+//                     SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
 
 checkKernelErrors((MatrixMulCUDA<<<grid, threads >>>(D1, A, B,
                                                M_GLOBAL, M_GLOBAL, alpha, beta)));
