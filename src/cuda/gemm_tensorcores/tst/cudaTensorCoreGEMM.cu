@@ -922,8 +922,8 @@ checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
                     SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
 
-checkKernelErrors(MatrixMulCUDA<32,half_t, real_t> <<< grid, threads >>>(D1, A, B,
-                                               M_GLOBAL, M_GLOBAL, alpha));
+checkKernelErrors((MatrixMulCUDA<32,half_t, real_t> <<< grid, threads >>>(D1, A, B,
+                                               M_GLOBAL, M_GLOBAL, alpha)));
 
 
 
