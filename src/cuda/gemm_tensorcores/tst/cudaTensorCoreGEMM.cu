@@ -814,6 +814,9 @@ checkCudaErrors(cudaFuncSetAttribute(
 //         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
 //                     SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
 
+dim3 block_dim;
+dim3 grid_dim;
+
 block_dim.x = WMMA_M; 
 block_dim.y = WMMA_N;
 
