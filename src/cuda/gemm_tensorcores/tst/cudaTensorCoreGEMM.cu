@@ -93,9 +93,9 @@
 
 // MMA matrix tile dimensions.
 
-#define M 32
-#define N 32
-#define K 32
+#define M 16
+#define N 16
+#define K 16
 
 #define WMMA_M 16
 #define WMMA_N 16
@@ -583,11 +583,13 @@ int main(int argc, char **argv) {
     checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
                         SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
-#if CPU_DEBUG
+
     checkCudaErrors(cudaMemcpy(result_hD, D,
                                sizeof(float) * M_GLOBAL * N_GLOBAL,
                                cudaMemcpyDeviceToHost));
-#endif
+
+  printf("result_hD=%f", result_hD[0]);
+
   } else {
     dim3 gridDim;
     dim3 blockDim;
@@ -627,7 +629,7 @@ int main(int argc, char **argv) {
       printf("mismatch i=%d result_hD=%f result_host=%f\n", i, result_hD[i],
              result_host[i]);
   }
-  printf("result_hD=%f", result_hD[0]);
+  
   
   free(result_hD);
   free(result_host);
