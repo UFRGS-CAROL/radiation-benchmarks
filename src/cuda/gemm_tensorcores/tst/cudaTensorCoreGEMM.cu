@@ -897,7 +897,7 @@ int main(int argc, char **argv) {
 //         compute_gemm_dmr, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                    SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
+                        SHMEM_SZ>>>(A, B, C, D, alpha, beta)))
 
 // dim3 block_dim;
 // dim3 grid_dim;
