@@ -829,14 +829,14 @@ checkCudaErrors(cudaFuncSetAttribute(
 //         (compute_gemm_dmr<<< grid_dim,block_dim,
 //                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
 
-dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+dim3 threads(16, 16);
 dim3 grid(M_GLOBAL / threads.x, N_GLOBAL / threads.y);
 
 // checkKernelErrors(
 //         (compute_gemm_dmr<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
 //                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
 checkKernelErrors(
-        (compute_gemm_dmr<<<grid, THREADS_PER_BLOCK,
+        (compute_gemm_dmr<<<grid, threads,
                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
 
 checkCudaErrors(cudaMemcpy(result_hD, D,
