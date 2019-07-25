@@ -201,7 +201,7 @@ __device__  __forceinline__ half fma_dmr(half a, half b, half acc) {
 }
 
 
-__global__ void compute_gemm_dmr((const half *A, const half *B, const float *C,
+__global__ void compute_gemm_dmr(const half *A, const half *B, const float *C,
                              float *D, float *D1, float alpha, float beta){
 
   // Block index
@@ -232,7 +232,7 @@ __global__ void compute_gemm_dmr((const half *A, const half *B, const float *C,
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
   
-  volatile real_t Csub = 0.0; ;
+  volatile float Csub = 0.0; ;
 
 
   // Loop over all the sub-matrices of A and B
@@ -242,11 +242,11 @@ __global__ void compute_gemm_dmr((const half *A, const half *B, const float *C,
        a += aStep, b += bStep) {
     // Declaration of the shared memory array As used to
     // store the sub-matrix of A
-    __shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ float As[BLOCK_SIZE][BLOCK_SIZE];
 
     // Declaration of the shared memory array Bs used to
     // store the sub-matrix of B
-    __shared__ real_t Bs[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ float Bs[BLOCK_SIZE][BLOCK_SIZE];
 
 
     // Load the matrices from device memory
