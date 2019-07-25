@@ -899,20 +899,23 @@ checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
                     SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
 
-dim3 block_dim;
-dim3 grid_dim;
+// dim3 block_dim;
+// dim3 grid_dim;
 
-block_dim.x = WMMA_M; 
-block_dim.y = WMMA_N;
+// block_dim.x = WMMA_M; 
+// block_dim.y = WMMA_N;
 
-grid_dim.x = (M_GLOBAL
-    + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-    / (WMMA_M * block_dim.x / WARP_SIZE);
-grid_dim.y = (M_GLOBAL + WMMA_N * block_dim.y - 1)
-    / (WMMA_N * block_dim.y);
+// grid_dim.x = (M_GLOBAL
+//     + (WMMA_M * block_dim.x / WARP_SIZE - 1))
+//     / (WMMA_M * block_dim.x / WARP_SIZE);
+// grid_dim.y = (M_GLOBAL + WMMA_N * block_dim.y - 1)
+//     / (WMMA_N * block_dim.y);
 // checkKernelErrors(
 //         (compute_gemm_dmr<<< grid_dim,block_dim,
 //                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
+
+  dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+  dim3 grid( M_GLOBAL/ threads.x, M_GLOBAL / threads.y);
 
 
 // checkKernelErrors(
@@ -922,7 +925,7 @@ checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
                     SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
 
-checkKernelErrors((MatrixMulCUDA<<< grid, threads >>>(D1, A, B,
+checkKernelErrors((MatrixMulCUDA<<<grid, threads >>>(D1, A, B,
                                                M_GLOBAL, M_GLOBAL, alpha)));
 
 
