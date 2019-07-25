@@ -98,9 +98,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 256
-#define N_TILES 256
-#define K_TILES 256
+#define M_TILES 16
+#define N_TILES 16
+#define K_TILES 16
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)
@@ -198,6 +198,91 @@ __host__ void init_host_matrices(half *a, half *b, float *c) {
 __device__  __forceinline__ half fma_dmr(half a, half b, half acc) {
   
   return __hfma(a, b, acc);
+}
+
+__global__ void MatrixMulCUDA(float *C, half *A,
+    half *B, int wA, int wB, float alpha, float beta)   
+{
+  // Block index
+  int bx = blockIdx.x;
+  int by = blockIdx.y;
+
+  // Thread index
+  int tx = threadIdx.x;
+  int ty = threadIdx.y;
+
+  // Index of the first sub-matrix of A processed by the block
+  int aBegin = M_GLOBAL * BLOCK_SIZE * by;
+
+  // Index of the last sub-matrix of A processed by the block
+  int aEnd   = aBegin + M_GLOBAL - 1;
+
+
+
+  // Step size used to iterate through the sub-matrices of A
+  int aStep  = BLOCK_SIZE;
+
+  // Index of the first sub-matrix of B processed by the block
+  int bBegin = BLOCK_SIZE * bx;
+
+  // Step size used to iterate through the sub-matrices of B
+  int bStep  = BLOCK_SIZE * M_GLOBAL;
+
+  // Csub is used to store the element of the block sub-matrix
+  // that is computed by the thread
+  
+  volatile float Csub = 0.0; ;
+
+
+  // Loop over all the sub-matrices of A and B
+  // required to compute the block sub-matrix
+  for (int a = aBegin, b = bBegin;
+       a <= aEnd;
+       a += aStep, b += bStep) {
+    // Declaration of the shared memory array As used to
+    // store the sub-matrix of A
+    __shared__ float As[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Declaration of the shared memory array Bs used to
+    // store the sub-matrix of B
+    __shared__ float Bs[BLOCK_SIZE][BLOCK_SIZE];
+
+
+    // Load the matrices from device memory
+    // to shared memory; each thread loads
+    // one element of each matrix
+    As[ty][tx] = A[a + M_GLOBAL * ty + tx];
+    Bs[ty][tx] = B[b + M_GLOBAL * ty + tx];
+
+
+    // Synchronize to make sure the matrices are loaded
+    __syncthreads();
+
+    // Multiply the two matrices together;
+    // each thread computes one element
+    // of the block sub-matrix
+#pragma unroll
+
+    for (int k = 0; k < BLOCK_SIZE; ++k) {
+      
+      
+
+      Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
+     
+      
+    }
+
+    // Synchronize to make sure that the preceding
+    // computation is done before loading two new
+    // sub-matrices of A and B in the next iteration
+    __syncthreads();
+  }
+
+  // Write the block sub-matrix to device memory;
+  // each thread writes one element
+  int c = M_GLOBAL * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+  C[c + M_GLOBAL * ty + tx] = alpha * Csub + beta * C[c + M_GLOBAL * ty + tx];
+
 }
 
 
@@ -808,31 +893,26 @@ int main(int argc, char **argv) {
   
   printf("Computing... using high performance kernel compute_gemm \n");
 
+
+cudaStream_t st;
+cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);  
+
 checkCudaErrors(cudaFuncSetAttribute(
-        compute_gemm_dmr, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-// checkKernelErrors(
-//         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-//                     SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
-
-dim3 block_dim;
-dim3 grid_dim;
-
-block_dim.x = WMMA_M; 
-block_dim.y = WMMA_N;
-
-grid_dim.x = (M_GLOBAL
-    + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-    / (WMMA_M * block_dim.x / WARP_SIZE);
-grid_dim.y = (M_GLOBAL + WMMA_N * block_dim.y - 1)
-    / (WMMA_N * block_dim.y);
-// checkKernelErrors(
-//         (compute_gemm_dmr<<< grid_dim,block_dim,
-//                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
-
-
+        compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 checkKernelErrors(
-        (compute_gemm_dmr<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                    SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
+        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+                        SHMEM_SZ, st>>>(A, B, C, D, alpha, beta)));
+
+
+  dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+  dim3 grid( M_GLOBAL/ threads.x, M_GLOBAL / threads.y);
+
+
+
+checkKernelErrors((MatrixMulCUDA<<<grid, threads, 0, st>>>(D1, A, B,
+                                               M_GLOBAL, M_GLOBAL, alpha, beta)));
+
+
 
 checkCudaErrors(cudaMemcpy(result_hD, D,
                            sizeof(float) * M_GLOBAL * N_GLOBAL,
@@ -844,6 +924,7 @@ checkCudaErrors(cudaMemcpy(result_host, D1,
 
 
   
+  cudaDeviceSynchronize();
 
   checkCudaErrors(cudaEventRecord(stop));
   checkCudaErrors(cudaEventSynchronize(stop));
@@ -886,5 +967,6 @@ checkCudaErrors(cudaMemcpy(result_host, D1,
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(C)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(D)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(D1)));
+  cudaStreamDestroy(st);
   return 0;
 }
