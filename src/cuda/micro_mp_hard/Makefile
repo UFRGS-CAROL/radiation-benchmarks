@@ -54,7 +54,7 @@ test_fma:
 test_add:
 	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed --inst add
 
-test_compose:
+test_addnotbiased:
 	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed --inst addnotbiased
 
 test_mulnotbiased:

@@ -80,7 +80,7 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		//FMA
 		{ "fma", FMA },
 		// NUMCOMPOSE (add not biased)
-		{ "compose", ADDNOTBIASED },
+		{ "addnotbiased", ADDNOTBIASED },
 		// MUL not biased
 		{ "mulnotbiased", MULNOTBIASED },
 		// MUL not biased
