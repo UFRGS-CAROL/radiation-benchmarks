@@ -282,7 +282,7 @@ __global__ void compute_gemm_dmr(const half *A, const half *B, const float *C,
   // Write the block sub-matrix to device memory;
   // each thread writes one element
   int c = M_GLOBAL * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-  D1[c + M_GLOBAL * ty + tx] = alpha * Csub;
+  D1[c + M_GLOBAL * ty + tx] = alpha * Csub + beta * C[c + M_GLOBAL * ty + tx];
 
   extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
@@ -814,23 +814,29 @@ checkCudaErrors(cudaFuncSetAttribute(
 //         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
 //                     SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
 
-dim3 block_dim;
-dim3 grid_dim;
+// dim3 block_dim;
+// dim3 grid_dim;
 
-block_dim.x = WMMA_M; 
-block_dim.y = WMMA_N;
+// block_dim.x = WMMA_M; 
+// block_dim.y = WMMA_N;
 
-grid_dim.x = (M_GLOBAL
-    + (WMMA_M * block_dim.x / WARP_SIZE - 1))
-    / (WMMA_M * block_dim.x / WARP_SIZE);
-grid_dim.y = (M_GLOBAL + WMMA_N * block_dim.y - 1)
-    / (WMMA_N * block_dim.y);
+// grid_dim.x = (M_GLOBAL
+//     + (WMMA_M * block_dim.x / WARP_SIZE - 1))
+//     / (WMMA_M * block_dim.x / WARP_SIZE);
+// grid_dim.y = (M_GLOBAL + WMMA_N * block_dim.y - 1)
+//     / (WMMA_N * block_dim.y);
 // checkKernelErrors(
 //         (compute_gemm_dmr<<< grid_dim,block_dim,
 //                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
 
-  checkKernelErrors(
-        (compute_gemm_dmr<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+dim3 grid(M_GLOBAL / threads.x, N_GLOBAL / threads.y);
+
+// checkKernelErrors(
+//         (compute_gemm_dmr<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+//                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
+checkKernelErrors(
+        (compute_gemm_dmr<<<grid, threads,
                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
 
 checkCudaErrors(cudaMemcpy(result_hD, D,
