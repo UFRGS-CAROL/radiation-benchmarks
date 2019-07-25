@@ -926,7 +926,7 @@ checkKernelErrors(
                     SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
 
 checkKernelErrors((MatrixMulCUDA<<<grid, threads >>>(D1, A, B,
-                                               M_GLOBAL, M_GLOBAL, alpha)));
+                                               M_GLOBAL, M_GLOBAL, alpha, beta)));
 
 
 
