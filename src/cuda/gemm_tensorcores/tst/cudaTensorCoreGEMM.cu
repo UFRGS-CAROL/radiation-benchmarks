@@ -825,8 +825,12 @@ grid_dim.x = (M_GLOBAL
     / (WMMA_M * block_dim.x / WARP_SIZE);
 grid_dim.y = (M_GLOBAL + WMMA_N * block_dim.y - 1)
     / (WMMA_N * block_dim.y);
-checkKernelErrors(
-        (compute_gemm_dmr<<< grid_dim,block_dim,
+// checkKernelErrors(
+//         (compute_gemm_dmr<<< grid_dim,block_dim,
+//                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
+
+  checkKernelErrors(
+        (compute_gemm_dmr<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
 
 checkCudaErrors(cudaMemcpy(result_hD, D,
