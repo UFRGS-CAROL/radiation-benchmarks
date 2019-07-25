@@ -258,7 +258,7 @@ __global__ void MicroBenchmarkKernel_MULNOTBIASAED(incomplete *d_R0_one,
 	register full acc_full = OUTPUT_R / full(DIV_FOR_MUL);
 	register incomplete acc_incomplete = incomplete(OUTPUT_R)
 			/ incomplete(DIV_FOR_MUL);
-//	double theshold = -2222;
+	double theshold = -2222;
 
 	const register full f = acc_full;
 	const register incomplete i = acc_incomplete;
@@ -267,16 +267,11 @@ __global__ void MicroBenchmarkKernel_MULNOTBIASAED(incomplete *d_R0_one,
 		acc_full = mul_dmr(acc_full, f);
 		acc_incomplete = mul_dmr(acc_incomplete, i);
 
-#if CHECKBLOCK == 1
-		check_relative_error(acc_incomplete, acc_full);
-//		theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
-
-		acc_incomplete = incomplete(acc_full);
-#elif CHECKBLOCK > 1
+#if CHECKBLOCK >= 1
 		if((count % CHECKBLOCK) == 0) {
 			check_relative_error(acc_incomplete, acc_full);
 
-//			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 			acc_incomplete = incomplete(acc_full);
 		}
@@ -286,13 +281,13 @@ __global__ void MicroBenchmarkKernel_MULNOTBIASAED(incomplete *d_R0_one,
 
 #if CHECKBLOCK == 0
 	check_relative_error(acc_incomplete, acc_full);
-//	theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+	theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 #endif
 
-//	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
-//		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
-//	}
+	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
+	}
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
