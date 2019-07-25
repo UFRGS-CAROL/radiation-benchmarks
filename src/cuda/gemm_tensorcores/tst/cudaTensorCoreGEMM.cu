@@ -826,12 +826,12 @@ grid_dim.x = (M_GLOBAL
 grid_dim.y = (M_GLOBAL + WMMA_N * block_dim.y - 1)
     / (WMMA_N * block_dim.y);
 
-    // checkKernelErrors(
+// checkKernelErrors(
 //         (compute_gemm_dmr<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
 //                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
 
 checkKernelErrors(
-        (compute_gemm_dmr<<< grid_dim,block_dim,
+        (compute_gemm_dmr<<< deviceProp.multiProcessorCount, THREADS_PER_BLOCK,grid_dim,block_dim,
                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
 
 
