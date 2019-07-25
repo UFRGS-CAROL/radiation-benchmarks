@@ -885,6 +885,6 @@ checkCudaErrors(cudaMemcpy(result_host, D1,
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(B)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(C)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(D)));
-
+  checkCudaErrors(cudaFree(reinterpret_cast<void *>(D1)));
   return 0;
 }
