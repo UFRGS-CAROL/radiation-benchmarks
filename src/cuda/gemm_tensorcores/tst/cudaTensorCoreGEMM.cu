@@ -627,7 +627,8 @@ int main(int argc, char **argv) {
       printf("mismatch i=%d result_hD=%f result_host=%f\n", i, result_hD[i],
              result_host[i]);
   }
-  printf("result_hD = &d \n",result_hD[0]);
+  printf("result_hD=%f", result_hD[0]);
+  
   free(result_hD);
   free(result_host);
 #endif

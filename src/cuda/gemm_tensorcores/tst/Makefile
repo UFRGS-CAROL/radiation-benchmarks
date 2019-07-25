@@ -1,4 +1,3 @@
-
 ################################################################################
 # Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
 #
@@ -253,8 +252,8 @@ ALL_LDFLAGS += $(addprefix -Xlinker ,$(LDFLAGS))
 ALL_LDFLAGS += $(addprefix -Xlinker ,$(EXTRA_LDFLAGS))
 
 # Common includes and paths for CUDA
-INCLUDES  := -I../../Common -I/usr/local/cuda/include/
-LIBRARIES :=
+INCLUDES  := -I../../Common I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I../common/include
+LIBRARIES := 
 
 ################################################################################
 
@@ -296,24 +295,24 @@ build: cudaTensorCoreGemm
 
 check.deps:
 ifeq ($(SAMPLE_ENABLED),0)
-	@echo "Sample will be waived due to the above missing dependencies"
+    @echo "Sample will be waived due to the above missing dependencies"
 else
-	@echo "Sample is ready - all dependencies have been met"
+    @echo "Sample is ready - all dependencies have been met"
 endif
 
 cudaTensorCoreGemm.o:cudaTensorCoreGemm.cu
-	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+    $(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
 cudaTensorCoreGemm: cudaTensorCoreGemm.o
-	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
-	$(EXEC) mkdir -p ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
-	$(EXEC) cp $@ ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
+    $(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
+    $(EXEC) mkdir -p ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
+    $(EXEC) cp $@ ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
 
 run: build
-	$(EXEC) ./cudaTensorCoreGemm
+    $(EXEC) ./cudaTensorCoreGemm
 
 clean:
-	rm -f cudaTensorCoreGemm cudaTensorCoreGemm.o
-	rm -rf ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)/cudaTensorCoreGemm
+    rm -f cudaTensorCoreGemm cudaTensorCoreGemm.o
+    rm -rf ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)/cudaTensorCoreGemm
 
 clobber: clean
