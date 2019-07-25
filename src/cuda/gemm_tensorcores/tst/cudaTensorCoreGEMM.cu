@@ -832,7 +832,7 @@ checkKernelErrors(
 checkCudaErrors(cudaMemcpy(result_hD, D,
                            sizeof(float) * M_GLOBAL * N_GLOBAL,
                            cudaMemcpyDeviceToHost));
-checkCudaErrors(cudaMemcpy(result_host, D,
+checkCudaErrors(cudaMemcpy(result_host, D1,
                            sizeof(float) * M_GLOBAL * N_GLOBAL,
                            cudaMemcpyDeviceToHost));
 
