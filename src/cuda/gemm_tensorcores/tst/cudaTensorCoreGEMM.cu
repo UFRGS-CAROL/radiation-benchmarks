@@ -909,7 +909,7 @@ checkKernelErrors(
 
 
 
-checkKernelErrors((MatrixMulCUDA<<<grid, threads, st >>>(D1, A, B,
+checkKernelErrors((MatrixMulCUDA<<<grid, threads, 0, st>>>(D1, A, B,
                                                M_GLOBAL, M_GLOBAL, alpha, beta)));
 
 
