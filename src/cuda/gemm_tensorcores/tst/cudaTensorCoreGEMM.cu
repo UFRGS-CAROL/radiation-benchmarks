@@ -506,10 +506,10 @@ int main(int argc, char **argv) {
   half *A_h = NULL;
   half *B_h = NULL;
   float *C_h = NULL;
-#if CPU_DEBUG
+
   float *result_hD = NULL;
   float *result_host = NULL;
-#endif
+
 
   A_h = (half *)malloc(sizeof(half) * M_GLOBAL * K_GLOBAL);
   B_h = (half *)malloc(sizeof(half) * K_GLOBAL * N_GLOBAL);
@@ -588,7 +588,7 @@ int main(int argc, char **argv) {
                                sizeof(float) * M_GLOBAL * N_GLOBAL,
                                cudaMemcpyDeviceToHost));
 
-  printf("result_hD=%f", result_hD[0]);
+  	printf("result_h D= %f \n",result_hD);
 
   } else {
     dim3 gridDim;
