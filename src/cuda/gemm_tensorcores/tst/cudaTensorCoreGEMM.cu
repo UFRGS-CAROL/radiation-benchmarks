@@ -836,7 +836,7 @@ dim3 grid(M_GLOBAL / threads.x, N_GLOBAL / threads.y);
 //         (compute_gemm_dmr<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
 //                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
 checkKernelErrors(
-        (compute_gemm_dmr<<<grid, threads,
+        (compute_gemm_dmr<<<grid, THREADS_PER_BLOCK,
                     SHMEM_SZ>>>(A, B, C, D, D1, alpha, beta)));
 
 checkCudaErrors(cudaMemcpy(result_hD, D,
