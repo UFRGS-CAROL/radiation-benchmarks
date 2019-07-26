@@ -201,7 +201,7 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data(),
 						type_.output_r);
-				gold = 2.0;
+				gold = 1.00000020000149449334e+06;
 				break;
 			}
 			}
