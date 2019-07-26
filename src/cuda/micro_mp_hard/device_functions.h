@@ -19,9 +19,7 @@
 #define ZERO_HALF 4.166E-13
 
 #define NUM_COMPOSE_DIVISOR 1000000
-#define NUM_MUL_OP 100
-#define DIV_FOR_MUL 4.19
-#define REBUILD_MUL 3.760800981
+#define MUL_FMA_INPUT 1.0000001
 
 __device__ __forceinline__ double abs__(double a) {
 	return fabs(a);
