@@ -191,16 +191,14 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 			case MULNOTBIASED: {
 				MicroBenchmarkKernel_MULNOTBIASAED<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data(), device_vector_full.data(),
-						type_.output_r);
+						device_vector_inc.data(), device_vector_full.data());
 				gold = 1.10517102313140469505;
 				break;
 			}
 			case FMANOTBIASED: {
 				MicroBenchmarkKernel_FMANOTBIASAED<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data(), device_vector_full.data(),
-						type_.output_r);
+						device_vector_inc.data(), device_vector_full.data());
 				gold = 1.00000020000149449334e+06;
 				break;
 			}
