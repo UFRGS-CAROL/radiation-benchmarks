@@ -8,12 +8,12 @@
 #include <iomanip>
 #include <limits>
 #include  <memory>
+#include <stdexcept>
 
 #ifdef OMP
 #include <omp.h>
 #endif
 
-//#include "half.hpp"
 #include "Log.h"
 #include "GEMM.h"
 #include "GEMMWMMA.h"
@@ -26,6 +26,12 @@
 #define GENERATOR_MINABSVALUE 0.0001
 
 typedef double BiggestPrecision;
+
+void exception(std::string msg, std::string file, int line) {
+	throw std::runtime_error(msg + " at " + file + ":" + std::to_string(line));
+}
+
+#define throw_line(msg) exception(msg, __FILE__, __LINE__)
 
 template<class half_t, class real_t>
 struct HostVectors {
@@ -101,8 +107,7 @@ struct HostVectors {
 			f_c.close();
 
 		} else {
-			throw std::runtime_error(
-					"Some of the imput files could not be generated\n");
+			throw_line("Some of the imput files could not be generated\n");
 		}
 
 	}
@@ -115,7 +120,7 @@ struct HostVectors {
 					sizeof(real_t) * host_gold.size());
 			f_gold.close();
 		} else {
-			throw std::runtime_error("Could not write gold file\n");
+			throw_line("Could not write gold file\n");
 		}
 	}
 
@@ -152,7 +157,7 @@ struct HostVectors {
 			f_gold.close();
 		} else {
 			log.log_error("Could not retrieve the matrices");
-			throw std::runtime_error("Could not retrieve the matrices\n");
+			throw_line("Could not retrieve the matrices\n");
 		}
 
 		std::cout << "Done with reading matrices " << log.mysecond() - start
@@ -298,7 +303,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 	switch (gemm_t) {
 	case NONDMRGEMM:
 	case DMRWMA:
-		throw "Not implemented!";
+		throw_line("Not implemented!");
 		break;
 	case NONDMRWMMA:
 		mt = std::make_shared<GEMMWMMAMIXED<half_t, real_t>>(hd.host_matrix_a,
@@ -345,7 +350,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 		break;
 	case DMRGEMMMIXED:
 	case NONDMRWMMA:
-		throw "Not implemented!";
+		throw_line( "Not implemented!");
 	}
 
 	setup_execute(mt, log_obj, hd);
@@ -364,7 +369,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 	case NONDMRWMMA:
 	case NONDMRGEMM:
 	case DMRGEMM:
-		throw "not implemented!";
+		throw_line( "Not implemented!");
 
 	case DMRGEMMMIXED:
 		mt = std::make_shared<GEMMDMRMIXED<real_t, real_t, mixed_real_t>>(
@@ -428,7 +433,7 @@ int main(int argc, char** argv) {
 		gemm_type = DMRGEMM;
 		if (log_obj.precision == "float") {
 //			call_mxm<half, float>(log_obj, gemm_type);
-			throw "NOT IMPLEMENTED FUNCTION\n";
+			throw_line( "Not implemented function!");
 		}
 
 		if (log_obj.precision == "double") {
