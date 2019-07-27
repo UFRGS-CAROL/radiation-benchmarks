@@ -102,22 +102,22 @@ public:
 						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(real_t));
 
 		//SET ALL THE KERNELS TO USE THE MAXIMUM OF SHARED MEMORY
-		rad::checkFrameworkErrors(
-				cudaFuncSetAttribute(hw_mxm_kernel<half_t, real_t>,
-						cudaFuncAttributeMaxDynamicSharedMemorySize,
-						this->shared_memory));
-		rad::checkFrameworkErrors(
-				cudaFuncSetAttribute(hw_mxm_dmr_kernel<real_t>,
-						cudaFuncAttributeMaxDynamicSharedMemorySize,
-						this->shared_memory));
-		rad::checkFrameworkErrors(
-				cudaFuncSetAttribute(sw_mxm_kernel<half_t>,
-						cudaFuncAttributeMaxDynamicSharedMemorySize,
-						this->shared_memory));
-		rad::checkFrameworkErrors(
-				cudaFuncSetAttribute(sw_mxm_dmr_kernel<half_t, real_t>,
-						cudaFuncAttributeMaxDynamicSharedMemorySize,
-						this->shared_memory));
+//		rad::checkFrameworkErrors(
+//				cudaFuncSetAttribute(hw_mxm_kernel<half_t, real_t>,
+//						cudaFuncAttributeMaxDynamicSharedMemorySize,
+//						this->shared_memory));
+//		rad::checkFrameworkErrors(
+//				cudaFuncSetAttribute(hw_mxm_dmr_kernel<real_t>,
+//						cudaFuncAttributeMaxDynamicSharedMemorySize,
+//						this->shared_memory));
+//		rad::checkFrameworkErrors(
+//				cudaFuncSetAttribute(sw_mxm_kernel<half_t>,
+//						cudaFuncAttributeMaxDynamicSharedMemorySize,
+//						this->shared_memory));
+//		rad::checkFrameworkErrors(
+//				cudaFuncSetAttribute(sw_mxm_dmr_kernel<half_t, real_t>,
+//						cudaFuncAttributeMaxDynamicSharedMemorySize,
+//						this->shared_memory));
 
 		int dev = 0;
 		rad::checkFrameworkErrors(
