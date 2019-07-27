@@ -171,7 +171,7 @@ bool cmp(const BiggestPrecision lhs, const BiggestPrecision rhs, Log& log) {
 			zero = BiggestPrecision(ZERO_FLOAT);
 
 		if (log.precision == "double")
-			zero = BiggestPrecision(ZERO_DOUBLE);
+			zero = BiggestPrecision(ZERO_FLOAT);
 	}
 
 	if (diff > zero) {
@@ -189,11 +189,11 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 #pragma omp parallel for shared(host_errors)
 #endif
 	for (size_t i = 0; i < gold.size(); i++) {
-		BiggestPrecision valGold = gold[i];
-		BiggestPrecision valOutput0 = d0[i];
-		BiggestPrecision valOutput1 = d1[i];
+		BiggestPrecision gold_value = gold[i];
+		BiggestPrecision half_precision = d0[i];
+		BiggestPrecision full_precision = d1[i];
 
-		if (valGold != valOutput1 || !cmp(valOutput0, valOutput1, log)) {
+		if (gold_value != full_precision || !cmp(half_precision, full_precision, log)) {
 #ifdef OMP
 #pragma omp critical
 			{
@@ -202,9 +202,9 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			std::stringstream error_detail("");
 			error_detail << std::setprecision(20) << std::scientific;
 			error_detail << "p: [" << int(floor(i / log.size_matrices)) << ", "
-					<< i % log.size_matrices << "], r: " << valOutput1
-					<< ", e: " << valGold << " smaller_precision: "
-					<< valOutput0;
+					<< i % log.size_matrices << "], r: " << full_precision
+					<< ", e: " << gold_value << " smaller_precision: "
+					<< half_precision;
 
 			if (log.verbose && (host_errors < 10))
 				std::cout << error_detail.str() << std::endl;

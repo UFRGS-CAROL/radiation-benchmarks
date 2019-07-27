@@ -11,7 +11,7 @@
 #define ZERO_FULL 1e-13
 
 #ifndef ZERO_FLOAT
-#define ZERO_FLOAT 2.2e-07
+#define ZERO_FLOAT 2.2e-05
 #endif
 
 #ifndef ZERO_HALF
