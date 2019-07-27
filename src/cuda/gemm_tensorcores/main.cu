@@ -370,7 +370,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 	case NONDMRGEMM:
 	case DMRGEMM:
 		throw_line( "Not implemented!");
-
+		break;
 	case DMRGEMMMIXED:
 		mt = std::make_shared<GEMMDMRMIXED<real_t, real_t, mixed_real_t>>(
 				hd.host_matrix_a, hd.host_matrix_b, hd.host_matrix_c,
@@ -430,7 +430,7 @@ int main(int argc, char** argv) {
 			call_mxm<double>(log_obj, gemm_type);
 		}
 	} else if (log_obj.dmr == "dmrmixed") {
-		gemm_type = DMRGEMM;
+		gemm_type = DMRGEMMMIXED;
 		if (log_obj.precision == "float") {
 //			call_mxm<half, float>(log_obj, gemm_type);
 			throw_line( "Not implemented function!");
