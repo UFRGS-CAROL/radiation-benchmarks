@@ -15,6 +15,7 @@
  */
 
 #include "nondmr_kernels.h"
+#include "device_functions.h"
 
 template<class real_t>
 __global__ void hw_mxm_dmr_kernel(real_t *D_r, real_t *D_h, real_t *C, real_t *A,
@@ -86,6 +87,16 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C, real_t *A
 			Csub += As[ty][k] * Bs[k][tx];
 			Csub_half += half_t(As[ty][k]) * half_t(Bs[k][tx]);
 
+#if CHECKBLOCK >= 1
+		if((k % CHECKBLOCK) == 0) {
+			check_relative_error(Csub_half, Csub);
+
+//			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+
+			Csub_half = half_t(Csub);
+		}
+#endif
+
 		}
 
 		// Synchronize to make sure that the preceding
@@ -93,6 +104,12 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C, real_t *A
 		// sub-matrices of A and B in the next iteration
 		__syncthreads();
 	}
+
+#if CHECKBLOCK == 0
+	check_relative_error(Csub_half, Csub);
+//	theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+
+#endif
 
 // Write the block sub-matrix to device memory;
 // each thread writes one element

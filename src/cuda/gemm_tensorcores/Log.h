@@ -50,8 +50,11 @@ public:
 	bool use_tensor_cores;
 	bool triplicated;
 	std::string dmr;
+	double alpha;
+	double beta;
 
-	Log(int argc, char** argv, int input_size) {
+	Log(int argc, char** argv, int input_size) :
+			alpha(1.1), beta(1.2) {
 
 		this->generate = this->find_int_arg(argc, argv, "--generate", 0);
 
@@ -74,15 +77,14 @@ public:
 		this->precision = this->find_char_arg(argc, argv, "--precision",
 				"float");
 
-		this->dmr = this->find_char_arg(argc, argv, "--dmr",
-				"nondmr");
+		this->dmr = this->find_char_arg(argc, argv, "--dmr", "nondmr");
 
-		this->use_tensor_cores = this->find_int_arg(argc, argv, "--tensor_cores", 0);
+		this->use_tensor_cores = this->find_int_arg(argc, argv,
+				"--tensor_cores", 0);
 
 		this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);
 
 		this->triplicated = this->find_int_arg(argc, argv, "--triplicated", 0);
-
 
 #ifdef LOGS
 		std::string test_info = std::string(" iterations: ")
@@ -145,7 +147,7 @@ public:
 #endif
 	}
 
-	 void update_info_count(long info_count) {
+	void update_info_count(long info_count) {
 #ifdef LOGS
 		if (info_count)
 		log_info_count (info_count);

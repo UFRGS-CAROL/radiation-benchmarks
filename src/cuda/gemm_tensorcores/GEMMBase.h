@@ -35,11 +35,11 @@ void __error(const char* error, int line, const char* file) {
 #define error(error) __error(error, __LINE__, __FILE__)
 
 typedef enum {
-	NONDMR, DMRGEMM, NONDMRWMMA, DMRWMA
+	NONDMRGEMM, DMRGEMM, DMRGEMMMIXED, NONDMRWMMA, DMRWMA
 } GEMMTYPE;
 
 //host_half, half, host_real_t, real_t
-template<class half_t, class real_t>
+template<class half_t, class real_t, class dmr_mixed_real_t>
 class GEMMBase {
 public:
 	GEMMBase(
@@ -62,11 +62,14 @@ public:
 		this->debug("device memory allocation and push memory to device");
 		this->push_arrays(host_a0, host_b0, host_c0);
 
+		this->device_ptr_mixed_dmr = std::vector<dmr_mixed_real_t>(this->device_ptr_d0.size(), 0);
+
 		// Setup execution parameters
 		this->debug("thread dim allocation");
 
 		switch (this->gemm_type) {
-		case NONDMR:
+		case DMRGEMMMIXED:
+		case NONDMRGEMM:
 		case DMRGEMM:
 			this->block_dim.x = BLOCK_SIZE;
 			this->block_dim.y = BLOCK_SIZE;
@@ -189,6 +192,8 @@ protected:
 	rad::DeviceVector<half_t> device_ptr_b0;
 	rad::DeviceVector<real_t> device_ptr_c0;
 	rad::DeviceVector<real_t> device_ptr_d0;
+
+	rad::DeviceVector<dmr_mixed_real_t> device_ptr_mixed_dmr;
 
 	// Size of the matrix
 	// Only square matrices now

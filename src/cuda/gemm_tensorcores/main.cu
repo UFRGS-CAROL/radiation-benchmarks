@@ -23,301 +23,155 @@
 #endif
 
 #define GENERATOR_MAXABSVALUE 2.0
-#define GENERATOR_MINABSVALUE 0
-
-// THRESHOLDS
-#define ZERO_HALF 6.5469
-#define ZERO_FlOAT 0.0
-#define ZERO_DOUBLE 0.0
-#define ZERO_DMR 0.0
+#define GENERATOR_MINABSVALUE 0.0001
 
 typedef double BiggestPrecision;
 
-//typedef half_float::half host_half;
-//typedef std::vector<host_half> half_vector;
+template<class half_t, class real_t>
+struct HostVectors {
+	// Matrices A and B
+	std::vector<half_t> host_matrix_a;
+	std::vector<half_t> host_matrix_b;
 
-template<class half_t, class real_t> void generate_matrices_files(
-		std::vector<half_t>& a_host_vector, std::vector<half_t>& b_host_vector,
-		std::vector<real_t>& c_host_vector, Log& log) {
+// C matrix
+	std::vector<real_t> host_matrix_c;
 
-	std::ofstream f_a(log.a_input_path, std::ios::out | std::ios::binary);
-	std::ofstream f_b(log.b_input_path, std::ios::out | std::ios::binary);
-	std::ofstream f_c(log.c_input_path, std::ios::out | std::ios::binary);
+// D Matrix
+	std::vector<real_t> host_matrix_d;
 
-	if (f_a.is_open() && f_b.is_open() && f_c.is_open()) {
-		std::random_device rd; //Will be used to obtain a seed for the random number engine
-		std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-		std::uniform_real_distribution<double> dis(-GENERATOR_MAXABSVALUE,
-		GENERATOR_MAXABSVALUE);
+	std::vector<real_t> host_gold;
+	std::vector<half_t> host_matrix_smaller;
 
-		for (size_t i = 0; i < log.size_matrices; i++) {
-			for (size_t j = 0; j < log.size_matrices; j++) {
-				//Make sure that it is not 0
-				a_host_vector[i * log.size_matrices + j] = half_t(
-						dis(gen) + GENERATOR_MAXABSVALUE / 10.0);
-				b_host_vector[i * log.size_matrices + j] = half_t(
-						dis(gen) + GENERATOR_MAXABSVALUE / 10.0);
-				c_host_vector[i * log.size_matrices + j] = real_t(
-						dis(gen) + GENERATOR_MAXABSVALUE / 10.0);
-			}
+	HostVectors(int matrix_size) {
+		// Matrices A and B
+		this->host_matrix_a = std::vector < half_t > (matrix_size);
+		this->host_matrix_b = std::vector < half_t > (matrix_size);
+
+		// C matrix
+		this->host_matrix_c = std::vector < real_t > (matrix_size);
+
+		// D Matrix
+		this->host_matrix_d = std::vector < real_t > (matrix_size, 0);
+
+		this->host_gold = std::vector < real_t > (matrix_size);
+		this->host_matrix_smaller = std::vector < half_t > (matrix_size, 0);
+	}
+
+	void load_matrices_files(Log& log) {
+		if (!log.generate) {
+			this->retrieve_matrices(log);
+		} else {
+			this->generate_matrices_files(log);
 		}
-
-		f_a.write(reinterpret_cast<char*>(a_host_vector.data()),
-				a_host_vector.size() * sizeof(half_t));
-		f_b.write(reinterpret_cast<char*>(b_host_vector.data()),
-				b_host_vector.size() * sizeof(half_t));
-		f_c.write(reinterpret_cast<char*>(c_host_vector.data()),
-				c_host_vector.size() * sizeof(real_t));
-
-		f_a.close();
-		f_b.close();
-		f_c.close();
-
-	} else {
-		throw std::runtime_error(
-				"Some of the imput files could not be generated\n");
 	}
 
-}
+	void generate_matrices_files(Log& log) {
 
-template<class real_t>
-void write_gold_to_file(std::string gold_path, std::vector<real_t>& gold) {
-	std::ofstream f_gold(gold_path, std::ofstream::out | std::ofstream::binary);
-	if (f_gold.is_open()) {
-		f_gold.write(reinterpret_cast<char*>(gold.data()),
-				sizeof(real_t) * gold.size());
-		f_gold.close();
-	} else {
-		throw std::runtime_error("Could not write gold file\n");
-	}
-}
+		std::ofstream f_a(log.a_input_path, std::ios::out | std::ios::binary);
+		std::ofstream f_b(log.b_input_path, std::ios::out | std::ios::binary);
+		std::ofstream f_c(log.c_input_path, std::ios::out | std::ios::binary);
 
-template<class real_t> int is_output_ok(std::vector<real_t>& d0,
-		std::vector<real_t>& d1, std::vector<real_t>& d2,
-		std::vector<real_t>& correct_vector) {
+		if (f_a.is_open() && f_b.is_open() && f_c.is_open()) {
+			std::random_device rd; //Will be used to obtain a seed for the random number engine
+			std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+			std::uniform_real_distribution<double> dis(-GENERATOR_MAXABSVALUE,
+			GENERATOR_MAXABSVALUE);
 
-	int memory_errors = 0;
-	for (size_t i = 0; i < d0.size(); i++) {
-		real_t val_output0 = d0[i];
-		real_t val_output1 = d1[i];
-		real_t val_output2 = d2[i];
-		real_t val_output = val_output0;
-
-		if ((val_output0 != val_output1) || (val_output0 != val_output2)) {
-			memory_errors++;
-
-			if ((val_output0 != val_output1) && (val_output1 != val_output2)
-					&& (val_output0 != val_output2)) {
-				// All 3 values diverge
-				memory_errors++;
-			} else if (val_output1 == val_output2) {
-				// Only value 0 diverge
-				val_output = val_output1;
-			} else if (val_output0 == val_output2) {
-				// Only value 1 diverge
-				val_output = val_output0;
-			} else if (val_output0 == val_output1) {
-				// Only value 2 diverge
-				val_output = val_output0;
-			}
-		}
-		correct_vector[i] = val_output;
-	}
-	return memory_errors;
-}
-
-template<class half_t, class real_t> void retrieve_matrices(
-		std::vector<half_t>& a_host_vector, std::vector<half_t>& b_host_vector,
-		std::vector<real_t>& c_host_vector,
-		std::vector<real_t>& gold_host_vector, Log& log) {
-
-	double start = log.mysecond();
-	std::ifstream f_a(log.a_input_path, std::ios::in | std::ios::binary);
-	std::ifstream f_b(log.b_input_path, std::ios::in | std::ios::binary);
-	std::ifstream f_c(log.c_input_path, std::ios::in | std::ios::binary);
-	std::ifstream f_gold(log.gold_inout_path,
-			std::ifstream::in | std::ifstream::binary);
-
-	if (f_a.is_open() && f_b.is_open() && f_c.is_open() && f_gold) {
-
-		f_a.seekg(0, std::ios::beg);
-		f_a.read(reinterpret_cast<char*>(a_host_vector.data()),
-				sizeof(half_t) * a_host_vector.size());
-
-		f_b.seekg(0, std::ios::beg);
-		f_b.read(reinterpret_cast<char*>(b_host_vector.data()),
-				sizeof(half_t) * b_host_vector.size());
-
-		f_c.seekg(0, std::ios::beg);
-		f_c.read(reinterpret_cast<char*>(c_host_vector.data()),
-				sizeof(real_t) * c_host_vector.size());
-
-		f_gold.seekg(0, std::ios::beg);
-		f_gold.read(reinterpret_cast<char*>(gold_host_vector.data()),
-				sizeof(real_t) * gold_host_vector.size());
-
-		f_a.close();
-		f_b.close();
-		f_c.close();
-		f_gold.close();
-	} else {
-		log.log_error("Could not retrieve the matrices");
-		throw std::runtime_error("Could not retrieve the matrices\n");
-	}
-
-	std::cout << "Done with reading matrices " << log.mysecond() - start
-			<< "s\n";
-}
-
-template<class real_t>
-std::pair<int, int> compare_output_matrices(long long host_is_memory_bad,
-		std::vector<real_t>& gold, std::vector<real_t>& c0,
-		std::vector<real_t>& c1, std::vector<real_t>& c2, Log& log) {
-
-	int host_errors = 0;
-	int memory_errors = 0;
-
-	// printf("r = %f \n", c0[2]);
-
-	std::cout << "host_is_memory_bad: " << host_is_memory_bad << std::endl;
-
-	if (host_is_memory_bad != 0) {
-		std::string info_detail = "b: is_memory_bad: "
-				+ std::to_string(host_is_memory_bad);
-		if (log.verbose)
-			std::cout << info_detail << std::endl;
-
-		log.log_error(info_detail);
-		memory_errors++;
-	}
-
-#ifdef OMP
-#pragma omp parallel for shared(host_errors)
-#endif
-	for (size_t i = 0; i < gold.size(); i++) {
-		register bool checkFlag = true;
-		register BiggestPrecision valGold = gold[i];
-		register BiggestPrecision valOutput0 = c0[i];
-		register BiggestPrecision valOutput1 = c1[i];
-		register BiggestPrecision valOutput2 = c2[i];
-		register BiggestPrecision valOutput = valOutput0;
-
-		if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
-#ifdef OMP
-#pragma omp critical
-#endif
-			{
-				std::stringstream info_detail("");
-				info_detail << "m: [" << int(floor(i / log.size_matrices))
-						<< ", " << i % log.size_matrices << "], r0: "
-						<< valOutput0 << ", r1: " << valOutput1 << ", r2: "
-						<< valOutput2;
-
-				if (log.verbose && (memory_errors < 10))
-					std::cout << info_detail.str() << std::endl;
-
-				log.log_info(info_detail.str());
-				memory_errors++;
-			}
-			if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2)
-					&& (valOutput0 != valOutput2)) {
-				// All 3 values diverge
-				if (valOutput0 == valGold) {
-					valOutput = valOutput0;
-				} else if (valOutput1 == valGold) {
-					valOutput = valOutput1;
-				} else if (valOutput2 == valGold) {
-					valOutput = valOutput2;
-				} else {
-					// NO VALUE MATCHES THE GOLD AND ALL 3 DIVERGE!
-					checkFlag = false;
-#ifdef OMP
-#pragma omp critical
-#endif
-					{
-						std::stringstream info_detail("");
-						info_detail << "t: ["
-								<< int(floor(i / log.size_matrices)) << ", "
-								<< i % log.size_matrices << "], r0: "
-								<< valOutput0 << ", r1: " << valOutput1
-								<< ", r2: " << valOutput2 << ", e: " << valGold;
-
-						if (log.verbose && (memory_errors < 10))
-							std::cout << info_detail.str() << std::endl;
-
-						log.log_info(std::string(info_detail.str()));
-
-						memory_errors++;
-					}
-				}
-			} else if (valOutput1 == valOutput2) {
-				// Only value 0 diverge
-				valOutput = valOutput1;
-			} else if (valOutput0 == valOutput2) {
-				// Only value 1 diverge
-				valOutput = valOutput0;
-			} else if (valOutput0 == valOutput1) {
-				// Only value 2 diverge
-				valOutput = valOutput0;
-			}
-		}
-		// std::cout << "val gold: " << valGold << std::endl;
-		if (valGold != valOutput) {
-			if (checkFlag) {
-#ifdef OMP
-#pragma omp critical
-#endif
-				{
-					// std::cout << "val out: " << valOutput << std::endl;
-
-					std::stringstream error_detail("");
-					error_detail << "p: [" << int(floor(i / log.size_matrices))
-							<< ", " << i % log.size_matrices << "], r: "
-							<< valOutput << ", e: " << valGold;
-
-					if (log.verbose && (host_errors < 10))
-						std::cout << error_detail.str() << std::endl;
-
-					log.log_error(error_detail.str());
-					host_errors++;
+			for (size_t i = 0; i < log.size_matrices; i++) {
+				for (size_t j = 0; j < log.size_matrices; j++) {
+					//Make sure that it is not 0
+					host_matrix_a[i * log.size_matrices + j] = half_t(
+							dis(gen) + GENERATOR_MAXABSVALUE / 10.0);
+					host_matrix_b[i * log.size_matrices + j] = half_t(
+							dis(gen) + GENERATOR_MAXABSVALUE / 10.0);
+					host_matrix_c[i * log.size_matrices + j] = real_t(
+							dis(gen) + GENERATOR_MAXABSVALUE / 10.0);
 				}
 			}
+
+			f_a.write(reinterpret_cast<char*>(host_matrix_a.data()),
+					host_matrix_a.size() * sizeof(half_t));
+			f_b.write(reinterpret_cast<char*>(host_matrix_b.data()),
+					host_matrix_b.size() * sizeof(half_t));
+			f_c.write(reinterpret_cast<char*>(host_matrix_c.data()),
+					host_matrix_c.size() * sizeof(real_t));
+
+			f_a.close();
+			f_b.close();
+			f_c.close();
+
+		} else {
+			throw std::runtime_error(
+					"Some of the imput files could not be generated\n");
+		}
+
+	}
+
+	void write_gold_to_file(std::string gold_path) {
+		std::ofstream f_gold(gold_path,
+				std::ofstream::out | std::ofstream::binary);
+		if (f_gold.is_open()) {
+			f_gold.write(reinterpret_cast<char*>(host_gold.data()),
+					sizeof(real_t) * host_gold.size());
+			f_gold.close();
+		} else {
+			throw std::runtime_error("Could not write gold file\n");
 		}
 	}
 
-// printf("numErrors:%d", host_errors);
+	void retrieve_matrices(Log& log) {
 
-	log.update_info_count(memory_errors);
-	log.update_error_count(host_errors);
+		double start = log.mysecond();
+		std::ifstream f_a(log.a_input_path, std::ios::in | std::ios::binary);
+		std::ifstream f_b(log.b_input_path, std::ios::in | std::ios::binary);
+		std::ifstream f_c(log.c_input_path, std::ios::in | std::ios::binary);
+		std::ifstream f_gold(log.gold_inout_path,
+				std::ifstream::in | std::ifstream::binary);
 
-	if (memory_errors != 0)
-		std::cout << "M";
-	if (host_errors != 0)
-		std::cout << "#";
+		if (f_a.is_open() && f_b.is_open() && f_c.is_open() && f_gold) {
 
-	std::pair<int, int> res(memory_errors, host_errors);
-	return res;
-}
+			f_a.seekg(0, std::ios::beg);
+			f_a.read(reinterpret_cast<char*>(host_matrix_a.data()),
+					sizeof(half_t) * host_matrix_a.size());
 
-template<class real_t>
-bool cmp(const real_t lhs, const real_t rhs, Log& log) {
-	const real_t diff = abs(lhs - rhs);
-	real_t zero;
+			f_b.seekg(0, std::ios::beg);
+			f_b.read(reinterpret_cast<char*>(host_matrix_b.data()),
+					sizeof(half_t) * host_matrix_b.size());
 
-	// std::cout << "d0= " << lhs << "d1 = " << rhs << std::endl;	
-	// std::cout << "diff= " << diff << std::endl;
+			f_c.seekg(0, std::ios::beg);
+			f_c.read(reinterpret_cast<char*>(host_matrix_c.data()),
+					sizeof(real_t) * host_matrix_c.size());
+
+			f_gold.seekg(0, std::ios::beg);
+			f_gold.read(reinterpret_cast<char*>(host_gold.data()),
+					sizeof(real_t) * host_gold.size());
+
+			f_a.close();
+			f_b.close();
+			f_c.close();
+			f_gold.close();
+		} else {
+			log.log_error("Could not retrieve the matrices");
+			throw std::runtime_error("Could not retrieve the matrices\n");
+		}
+
+		std::cout << "Done with reading matrices " << log.mysecond() - start
+				<< "s\n";
+	}
+};
+
+bool cmp(const BiggestPrecision lhs, const BiggestPrecision rhs, Log& log) {
+	const BiggestPrecision diff = abs(lhs - rhs);
+	BiggestPrecision zero;
 
 	if (log.use_tensor_cores) {
-		zero = real_t(ZERO_HALF);
+		zero = BiggestPrecision(ZERO_HALF);
 	} else {
 		if (log.precision == "float")
-			zero = real_t(ZERO_FlOAT);
+			zero = BiggestPrecision(ZERO_FLOAT);
 
 		if (log.precision == "double")
-			zero = real_t(ZERO_DOUBLE);
-
-		if (log.precision == "DMR")
-			zero = real_t(ZERO_DMR);
+			zero = BiggestPrecision(ZERO_DOUBLE);
 	}
 
 	if (diff > zero) {
@@ -354,38 +208,14 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			host_errors++;
 		}
 	}
-	log.update_error_count(host_errors);
-	if (host_errors != 0)
-		std::cout << "#";
 
-	std::pair<int, int> res(0, host_errors);
-	return res;
-}
-
-template<class real_t>
-std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold,
-		std::vector<real_t>& c0, Log& log) {
-	int host_errors = 0;
-
-#ifdef OMP
-#pragma omp parallel for shared(host_errors)
-#endif
-	for (size_t i = 0; i < gold.size(); i++) {
-		real_t valGold = gold[i];
-		real_t valOutput = c0[i];
-		if (valGold != valOutput) {
-			std::stringstream error_detail("");
-			error_detail << "p: [" << int(floor(i / log.size_matrices)) << ", "
-					<< i % log.size_matrices << "], r: " << valOutput << ", e: "
-					<< valGold;
-
-			if (log.verbose && (host_errors < 10))
-				std::cout << error_detail.str() << std::endl;
-
-			log.log_error(error_detail.str());
-			host_errors++;
-		}
+	auto dmr_err = dmr_errors();
+	if (dmr_err != 0) {
+		std::string error_detail;
+		error_detail = "detected_dmr_errors: " + std::to_string(dmr_err);
+		log.log_error(error_detail);
 	}
+
 	log.update_error_count(host_errors);
 	if (host_errors != 0)
 		std::cout << "#";
@@ -394,12 +224,10 @@ std::pair<int, int> compare_output_matrices(std::vector<real_t>& gold,
 	return res;
 }
 
-template<class half_t, class real_t>
-void setup_execute(std::shared_ptr<GEMMBase<half_t, real_t>> mult_enviroment,
-		Log& log_obj, std::vector<half_t>& host_matrix_smaller,
-		std::vector<real_t>& host_matrix_d0, std::vector<real_t>& host_gold,
-		std::vector<half_t>& host_matrix_a, std::vector<half_t>& host_matrix_b,
-		std::vector<real_t>& host_matrix_c) {
+template<class half_t, class real_t, class mixed_t>
+void setup_execute(
+		std::shared_ptr<GEMMBase<half_t, real_t, mixed_t>> mult_enviroment,
+		Log& log_obj, HostVectors<half_t, real_t>& hd) {
 	cudaEvent_t start, stop;
 	float elapsedTime;
 
@@ -413,7 +241,7 @@ void setup_execute(std::shared_ptr<GEMMBase<half_t, real_t>> mult_enviroment,
 		log_obj.end_iteration_app();
 		double end_computation = log_obj.mysecond();
 
-		mult_enviroment->pull_array(host_matrix_d0);
+		mult_enviroment->pull_array(hd.host_matrix_d);
 
 		cudaEventCreate(&stop);
 		cudaEventRecord(stop, 0);
@@ -422,37 +250,15 @@ void setup_execute(std::shared_ptr<GEMMBase<half_t, real_t>> mult_enviroment,
 		cudaEventElapsedTime(&elapsedTime, start, stop);
 		printf("Elapsed time : %f ms\n", elapsedTime);
 
-//		//TODO check this
-//		if (log_obj.triplicated && log_obj.generate) {
-//			tries++;
-//			int has_errors = is_output_ok(host_matrix_d0, host_matrix_d1,
-//					host_matrix_d2, host_gold);
-//			if (has_errors != 0)
-//				it--;
-//
-//			if (tries > 5)
-//				throw std::runtime_error(
-//						"More than 5 tries on matrix generate\n");
-//			std::cout << "Iteration: " << it << std::endl;
-//		}
-
 		if (!log_obj.generate) {
 			std::pair<int, int> errors;
 			double start, end;
-//			if (log_obj.triplicated) {
-//				start = log_obj.mysecond();
-//				errors = compare_output_matrices(
-//						mult_enviroment->get_memory_errors(), host_gold,
-//						host_matrix_d0, host_matrix_d1, host_matrix_d2,
-//						log_obj);
-//				end = log_obj.mysecond();
-//			} else
-			{
-				start = log_obj.mysecond();
-				errors = check_output_errors_dmr(host_gold, host_matrix_smaller,
-						host_matrix_d0, log_obj);
-				end = log_obj.mysecond();
-			}
+
+			start = log_obj.mysecond();
+			errors = check_output_errors_dmr(hd.host_gold,
+					hd.host_matrix_smaller, hd.host_matrix_d, log_obj);
+			end = log_obj.mysecond();
+
 			std::cout << "Iteration: " << it << " memory errors "
 					<< errors.first << " radiation errors " << errors.second
 					<< ". Time spent on computation "
@@ -462,8 +268,8 @@ void setup_execute(std::shared_ptr<GEMMBase<half_t, real_t>> mult_enviroment,
 
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
-				mult_enviroment->push_arrays(host_matrix_a, host_matrix_b,
-						host_matrix_c);
+				mult_enviroment->push_arrays(hd.host_matrix_a, hd.host_matrix_b,
+						hd.host_matrix_c);
 			}
 
 		}
@@ -477,127 +283,98 @@ void setup_execute(std::shared_ptr<GEMMBase<half_t, real_t>> mult_enviroment,
 	cudaEventElapsedTime(&elapsedTime, start, stop);
 	printf("time : %f s\n", (elapsedTime / 1000));
 	if (log_obj.generate) {
-		write_gold_to_file<real_t>(log_obj.gold_inout_path, host_gold);
+		hd.write_gold_to_file(log_obj.gold_inout_path);
 	}
 }
 
 template<class half_t, class real_t>
 void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
-	// Matrices A and B
-	std::vector<half_t> host_matrix_a(
-			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<half_t> host_matrix_b(
+	HostVectors<half_t, real_t> hd(
 			log_obj.size_matrices * log_obj.size_matrices);
 
-// C matrix
-	std::vector<real_t> host_matrix_c(
-			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<real_t> host_gold(
-			log_obj.size_matrices * log_obj.size_matrices);
-// D Matrix
-	std::vector<real_t> host_matrix_d0(
-			log_obj.size_matrices * log_obj.size_matrices, 0);
-	std::vector<real_t> host_matrix_d1(
-			log_obj.size_matrices * log_obj.size_matrices, 0);
-	std::vector<real_t> host_matrix_d2(
-			log_obj.size_matrices * log_obj.size_matrices, 0);
+	hd.load_matrices_files(log_obj);
 
-	std::vector<half_t> host_matrix_smaller(
-			log_obj.size_matrices * log_obj.size_matrices, 0);
-
-	if (!log_obj.generate) {
-		retrieve_matrices<half_t, real_t>(host_matrix_a, host_matrix_b,
-				host_matrix_c, host_gold, log_obj);
-	} else {
-		generate_matrices_files<half_t, real_t>(host_matrix_a, host_matrix_b,
-				host_matrix_c, log_obj);
-	}
-
-	std::shared_ptr<GEMMBase<half_t, real_t>> mt;
+	std::shared_ptr<GEMMBase<half_t, real_t, half_t>> mt;
 	switch (gemm_t) {
-	case NONDMR:
-		throw "NON DMR GEMM for mixed not implemented!";
-		break;
-	case DMRGEMM:
-		mt = std::make_shared<GEMMDMRMIXED<half_t, real_t>>(host_matrix_a,
-				host_matrix_b, host_matrix_c, host_matrix_d0,
-				log_obj.size_matrices, real_t(1.1f), real_t(1.2f), gemm_t);
-		break;
+	case NONDMRGEMM:
 	case DMRWMA:
-		throw "DMR WMA for mixed not implemented!";
+		throw "Not implemented!";
 		break;
 	case NONDMRWMMA:
-		mt = std::make_shared<GEMMWMMAMIXED<half_t, real_t>>(host_matrix_a,
-				host_matrix_b, host_matrix_c, host_matrix_d0,
-				log_obj.size_matrices, real_t(1.1f), real_t(1.2f), gemm_t);
+		mt = std::make_shared<GEMMWMMAMIXED<half_t, real_t>>(hd.host_matrix_a,
+				hd.host_matrix_b, hd.host_matrix_c, hd.host_matrix_d,
+				log_obj.size_matrices, real_t(log_obj.alpha),
+				real_t(log_obj.beta), gemm_t);
 		break;
 	}
 
-	setup_execute(mt, log_obj, host_matrix_smaller, host_matrix_d0, host_gold,
-			host_matrix_a, host_matrix_b, host_matrix_c);
+	setup_execute(mt, log_obj, hd);
 }
 
 template<class real_t>
 void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
-	// Matrices A and B
-	std::vector<real_t> host_matrix_a(
-			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<real_t> host_matrix_b(
+	HostVectors<real_t, real_t> hd(
 			log_obj.size_matrices * log_obj.size_matrices);
 
-// C matrix
-	std::vector<real_t> host_matrix_c(
-			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<real_t> host_gold(
-			log_obj.size_matrices * log_obj.size_matrices);
-// D Matrix
-	std::vector<real_t> host_matrix_d0(
-			log_obj.size_matrices * log_obj.size_matrices, 0);
-	std::vector<real_t> host_matrix_d1(
-			log_obj.size_matrices * log_obj.size_matrices, 0);
-	std::vector<real_t> host_matrix_d2(
-			log_obj.size_matrices * log_obj.size_matrices, 0);
+	hd.load_matrices_files(log_obj);
 
-	if (!log_obj.generate) {
-		retrieve_matrices<real_t, real_t>(host_matrix_a, host_matrix_b,
-				host_matrix_c, host_gold, log_obj);
-	} else {
-		generate_matrices_files<real_t, real_t>(host_matrix_a, host_matrix_b,
-				host_matrix_c, log_obj);
-	}
-
-	std::vector<real_t> host_matrix_smaller(
-			log_obj.size_matrices * log_obj.size_matrices, 0);
-
-	std::shared_ptr<GEMMBase<real_t, real_t> > mt;
+	std::shared_ptr<GEMMBase<real_t, real_t, real_t> > mt;
 	switch (gemm_t) {
-	case NONDMR:
+	case NONDMRGEMM:
 		mt =
 				std::make_shared < GEMM
 						< real_t
-								>> (host_matrix_a, host_matrix_b, host_matrix_c, host_matrix_d0, log_obj.size_matrices, real_t(
-										1.1f), real_t(1.2f), gemm_t);
+								>> (hd.host_matrix_a, hd.host_matrix_b, hd.host_matrix_c, hd.host_matrix_d, log_obj.size_matrices, real_t(
+										log_obj.alpha), real_t(log_obj.beta), gemm_t);
 		break;
+
 	case DMRGEMM:
 		mt =
 				std::make_shared < GEMMDMR
 						< real_t
-								>> (host_matrix_a, host_matrix_b, host_matrix_c, host_matrix_d0, log_obj.size_matrices, real_t(
-										1.1f), real_t(1.2f), gemm_t);
+								>> (hd.host_matrix_a, hd.host_matrix_b, hd.host_matrix_c, hd.host_matrix_d, log_obj.size_matrices, real_t(
+										log_obj.alpha), real_t(log_obj.beta), gemm_t);
 		break;
+
 	case DMRWMA:
 		mt =
 				std::make_shared < GEMMWMMADMR
 						< real_t
-								>> (host_matrix_a, host_matrix_b, host_matrix_c, host_matrix_d0, log_obj.size_matrices, real_t(
-										1.1f), real_t(1.2f), gemm_t);
+								>> (hd.host_matrix_a, hd.host_matrix_b, hd.host_matrix_c, hd.host_matrix_d, log_obj.size_matrices, real_t(
+										log_obj.alpha), real_t(log_obj.beta), gemm_t);
 		break;
+	case DMRGEMMMIXED:
 	case NONDMRWMMA:
-		throw "NON DMR WMMA not implemented!";
+		throw "Not implemented!";
 	}
 
-	setup_execute(mt, log_obj, host_matrix_smaller, host_matrix_d0, host_gold,
-			host_matrix_a, host_matrix_b, host_matrix_c);
+	setup_execute(mt, log_obj, hd);
+}
+
+template<class half_t, class real_t, class mixed_real_t>
+void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
+	HostVectors<real_t, real_t> hd(
+			log_obj.size_matrices * log_obj.size_matrices);
+
+	hd.load_matrices_files(log_obj);
+
+	std::shared_ptr<GEMMBase<real_t, real_t, mixed_real_t> > mt;
+	switch (gemm_t) {
+	case DMRWMA:
+	case NONDMRWMMA:
+	case NONDMRGEMM:
+	case DMRGEMM:
+		throw "not implemented!";
+
+	case DMRGEMMMIXED:
+		mt = std::make_shared<GEMMDMRMIXED<real_t, real_t, mixed_real_t>>(
+				hd.host_matrix_a, hd.host_matrix_b, hd.host_matrix_c,
+				hd.host_matrix_d, log_obj.size_matrices, real_t(log_obj.alpha),
+				real_t(log_obj.beta), gemm_t);
+		break;
+	}
+
+	setup_execute(mt, log_obj, hd);
 }
 
 void usage(char **argv) {
@@ -623,7 +400,7 @@ int main(int argc, char** argv) {
 	std::cout << "DMR type: " << log_obj.dmr << std::endl;
 
 	GEMMTYPE gemm_type;
-	//NONDMR, DMRGEMM, NONDMRWMMA, DMRWMA
+	//NONDMRGEMM, DMRGEMM, NONDMRWMMA, DMRWMA
 	//DMR TYPES
 	if (log_obj.dmr == "dmr") {
 		gemm_type = DMRGEMM;
@@ -650,14 +427,15 @@ int main(int argc, char** argv) {
 	} else if (log_obj.dmr == "dmrmixed") {
 		gemm_type = DMRGEMM;
 		if (log_obj.precision == "float") {
-			call_mxm<half, float>(log_obj, gemm_type);
+//			call_mxm<half, float>(log_obj, gemm_type);
+			throw "NOT IMPLEMENTED FUNCTION\n";
 		}
 
 		if (log_obj.precision == "double") {
-			call_mxm<float, double>(log_obj, gemm_type);
+			call_mxm<double, double, float>(log_obj, gemm_type);
 		}
 	} else if (log_obj.dmr == "nondmr") {
-		gemm_type = NONDMR;
+		gemm_type = NONDMRGEMM;
 		if (log_obj.precision == "half") {
 			call_mxm<half>(log_obj, gemm_type);
 		}

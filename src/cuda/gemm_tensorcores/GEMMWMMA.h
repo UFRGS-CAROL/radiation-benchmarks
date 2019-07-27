@@ -11,7 +11,7 @@
 #include "GEMMBase.h"
 
 template<class half_t, class real_t>
-class GEMMWMMA: public GEMMBase<half_t, real_t> {
+class GEMMWMMA: public GEMMBase<half_t, real_t, half_t> {
 public:
 
 	GEMMWMMA(
@@ -20,7 +20,7 @@ public:
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
 			real_t beta, GEMMTYPE gemm_type) :
-			GEMMBase<half_t, real_t>(host_a0, host_b0, host_c0, host_d0, k,
+			GEMMBase<half_t, real_t, half_t>(host_a0, host_b0, host_c0, host_d0, k,
 					alpha, beta, gemm_type) {
 
 
@@ -41,7 +41,7 @@ public:
 };
 
 template<class half_t, class real_t>
-class GEMMWMMAMIXED: public GEMMBase<half_t, real_t> {
+class GEMMWMMAMIXED: public GEMMBase<half_t, real_t, half_t> {
 public:
 
 	GEMMWMMAMIXED(
@@ -50,7 +50,7 @@ public:
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
 			real_t beta, GEMMTYPE gemm_type) :
-			GEMMBase<half_t, real_t>(host_a0, host_b0, host_c0, host_d0, k,
+			GEMMBase<half_t, real_t, half_t>(host_a0, host_b0, host_c0, host_d0, k,
 					alpha, beta, gemm_type) {
 
 	}
@@ -70,7 +70,7 @@ public:
 };
 
 template<class real_t>
-class GEMMWMMADMR: public GEMMBase<real_t, real_t> {
+class GEMMWMMADMR: public GEMMBase<real_t, real_t, real_t> {
 public:
 
 	GEMMWMMADMR(
@@ -79,7 +79,7 @@ public:
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
 			real_t beta, GEMMTYPE gemm_type) :
-			GEMMBase<real_t, real_t>(host_a0, host_b0, host_c0, host_d0, k,
+			GEMMBase<real_t, real_t, real_t>(host_a0, host_b0, host_c0, host_d0, k,
 					alpha, beta, gemm_type) {
 
 	}
