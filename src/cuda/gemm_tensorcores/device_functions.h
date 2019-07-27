@@ -74,7 +74,7 @@ __host__ unsigned long long dmr_errors() {
 
 	unsigned long long tmp = 0;
 	rad::checkFrameworkErrors(
-			cudaMemcpyToSymbol(&errors, &tmp, sizeof(unsigned long long), 0));
+			cudaMemcpyToSymbol(errors, &tmp, sizeof(unsigned long long), 0));
 
 	return ret;
 }
