@@ -183,7 +183,9 @@ public:
 		return this->host_is_memory_bad[0];
 	}
 
-	virtual void gemm() = 0;
+	virtual void gemm() {
+		throw_line("PAU");
+	}
 
 protected:
 
