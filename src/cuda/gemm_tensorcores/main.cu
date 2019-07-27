@@ -27,7 +27,7 @@
 
 typedef double BiggestPrecision;
 
-template<class half_t, class real_t>
+template<class half_t, class real_t, class mixed_t>
 struct HostVectors {
 	// Matrices A and B
 	std::vector<half_t> host_matrix_a;
@@ -40,7 +40,7 @@ struct HostVectors {
 	std::vector<real_t> host_matrix_d;
 
 	std::vector<real_t> host_gold;
-	std::vector<half_t> host_matrix_smaller;
+	std::vector<mixed_t> host_matrix_smaller;
 
 	HostVectors(int matrix_size) {
 		// Matrices A and B
@@ -54,7 +54,7 @@ struct HostVectors {
 		this->host_matrix_d = std::vector < real_t > (matrix_size, 0);
 
 		this->host_gold = std::vector < real_t > (matrix_size);
-		this->host_matrix_smaller = std::vector < half_t > (matrix_size, 0);
+		this->host_matrix_smaller = std::vector < mixed_t > (matrix_size, 0);
 	}
 
 	void load_matrices_files(Log& log) {
@@ -234,7 +234,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 template<class half_t, class real_t, class mixed_t>
 void setup_execute(
 		std::shared_ptr<GEMMBase<half_t, real_t, mixed_t>> mult_enviroment,
-		Log& log_obj, HostVectors<half_t, real_t>& hd) {
+		Log& log_obj, HostVectors<half_t, real_t, mixed_t>& hd) {
 	cudaEvent_t start, stop;
 	float elapsedTime;
 
@@ -248,7 +248,7 @@ void setup_execute(
 		log_obj.end_iteration_app();
 		double end_computation = log_obj.mysecond();
 
-		mult_enviroment->pull_array(hd.host_matrix_d);
+		mult_enviroment->pull_array(hd.host_matrix_d, hd.host_matrix_smaller);
 
 		cudaEventCreate(&stop);
 		cudaEventRecord(stop, 0);
@@ -296,7 +296,7 @@ void setup_execute(
 
 template<class half_t, class real_t>
 void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
-	HostVectors<half_t, real_t> hd(
+	HostVectors<half_t, real_t, half_t> hd(
 			log_obj.size_matrices * log_obj.size_matrices);
 
 	hd.load_matrices_files(log_obj);
@@ -320,7 +320,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 
 template<class real_t>
 void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
-	HostVectors<real_t, real_t> hd(
+	HostVectors<real_t, real_t, real_t> hd(
 			log_obj.size_matrices * log_obj.size_matrices);
 
 	hd.load_matrices_files(log_obj);
@@ -360,7 +360,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 
 template<class half_t, class real_t, class mixed_real_t>
 void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
-	HostVectors<real_t, real_t> hd(
+	HostVectors<real_t, real_t, mixed_real_t> hd(
 			log_obj.size_matrices * log_obj.size_matrices);
 
 	hd.load_matrices_files(log_obj);

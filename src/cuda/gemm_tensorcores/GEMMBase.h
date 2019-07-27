@@ -157,11 +157,15 @@ public:
 	 * PULL D array to host
 	 */
 
-	void pull_array(std::vector<real_t>& host_d0) {
+	void pull_array(std::vector<real_t>& host_d0, std::vector<dmr_mixed_real_t>& host_mixed) {
 
 		this->debug("memcpy array D to host");
 		// PULL D's
 		host_d0 = this->device_ptr_d0.to_vector();
+
+		this->debug("memcpy array D mixed to host");
+		// PULL D's
+		host_mixed = this->device_ptr_mixed_dmr.to_vector();
 	}
 
 	/**
@@ -183,9 +187,7 @@ public:
 		return this->host_is_memory_bad[0];
 	}
 
-	virtual void gemm() {
-		throw_line("PAU");
-	}
+	virtual void gemm() = 0;
 
 protected:
 
