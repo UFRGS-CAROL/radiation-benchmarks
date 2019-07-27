@@ -92,7 +92,10 @@ public:
 				this->k);
 
 		this->debug("device synchronize");
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+
 		//end
 	}
 };
