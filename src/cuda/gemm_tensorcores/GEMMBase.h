@@ -27,12 +27,11 @@
 //#include "kernels.h"
 #include "dmr_kernels.h"
 
-void __error(const char* error, int line, const char* file) {
-	printf("%s - Line: %d at %s\n", error, line, file);
-	exit (EXIT_FAILURE);
+void exception(std::string msg, std::string file, int line) {
+	throw std::runtime_error(msg + " at " + file + ":" + std::to_string(line));
 }
 
-#define error(error) __error(error, __LINE__, __FILE__)
+#define throw_line(msg) exception(msg, __FILE__, __LINE__)
 
 typedef enum {
 	NONDMRGEMM, DMRGEMM, DMRGEMMMIXED, NONDMRWMMA, DMRWMA
@@ -48,12 +47,12 @@ public:
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
 			real_t beta, GEMMTYPE gemm_type) :
-			alpha(alpha), beta(beta), gemm_type(gemm_type), device_ptr_d0(
+			k(k), alpha(alpha), beta(beta), gemm_type(gemm_type), device_ptr_d0(
 					host_d0) // allocating D vectors
 
 	{ //Alpha and Beta
 		if (this->k <= 0) {
-			error("columns or rows equal to zero, or less than zero");
+			throw_line("columns or rows equal to zero, or less than zero");
 		}
 
 		this->host_is_memory_bad.push_back(0);
@@ -62,7 +61,8 @@ public:
 		this->debug("device memory allocation and push memory to device");
 		this->push_arrays(host_a0, host_b0, host_c0);
 
-		this->device_ptr_mixed_dmr = std::vector<dmr_mixed_real_t>(this->device_ptr_d0.size(), 0);
+		this->device_ptr_mixed_dmr = std::vector < dmr_mixed_real_t
+				> (this->device_ptr_d0.size(), 0);
 
 		// Setup execution parameters
 		this->debug("thread dim allocation");

@@ -27,12 +27,6 @@
 
 typedef double BiggestPrecision;
 
-void exception(std::string msg, std::string file, int line) {
-	throw std::runtime_error(msg + " at " + file + ":" + std::to_string(line));
-}
-
-#define throw_line(msg) exception(msg, __FILE__, __LINE__)
-
 template<class half_t, class real_t>
 struct HostVectors {
 	// Matrices A and B
