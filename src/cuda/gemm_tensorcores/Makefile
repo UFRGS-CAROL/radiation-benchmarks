@@ -101,5 +101,5 @@ generate:
 	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision double --dmr dmrmixed
 	
 test:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr dmrmixed
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr dmrmixed --iterations 10
 	

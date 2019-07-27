@@ -193,8 +193,13 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		BiggestPrecision valOutput1 = d1[i];
 
 		if (valGold != valOutput1 || !cmp(valOutput0, valOutput1, log)) {
+#ifdef OMP
+#pragma omp critical
+			{
+#endif
 
 			std::stringstream error_detail("");
+			error_detail << std::setprecision(20) << std::scientific;
 			error_detail << "p: [" << int(floor(i / log.size_matrices)) << ", "
 					<< i % log.size_matrices << "], r: " << valOutput1
 					<< ", e: " << valGold << " smaller_precision: "
@@ -205,6 +210,9 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 
 			log.log_error(error_detail.str());
 			host_errors++;
+#ifdef OMP
+			}
+#endif
 		}
 	}
 
@@ -219,7 +227,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 	if (host_errors != 0)
 		std::cout << "#";
 
-	std::pair<int, int> res(0, host_errors);
+	std::pair<int, int> res(dmr_err, host_errors);
 	return res;
 }
 
@@ -258,7 +266,7 @@ void setup_execute(
 					hd.host_matrix_smaller, hd.host_matrix_d, log_obj);
 			end = log_obj.mysecond();
 
-			std::cout << "Iteration: " << it << " memory errors "
+			std::cout << "Iteration: " << it << " dmr errors "
 					<< errors.first << " radiation errors " << errors.second
 					<< ". Time spent on computation "
 					<< end_computation - start_computation
