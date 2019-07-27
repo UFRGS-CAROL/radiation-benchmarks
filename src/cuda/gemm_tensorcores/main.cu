@@ -109,8 +109,9 @@ struct HostVectors {
 	void write_gold_to_file(std::string gold_path) {
 		std::ofstream f_gold(gold_path,
 				std::ofstream::out | std::ofstream::binary);
+
 		if (f_gold.is_open()) {
-			f_gold.write(reinterpret_cast<char*>(host_gold.data()),
+			f_gold.write(reinterpret_cast<char*>(this->host_matrix_d.data()),
 					sizeof(real_t) * host_gold.size());
 			f_gold.close();
 		} else {
