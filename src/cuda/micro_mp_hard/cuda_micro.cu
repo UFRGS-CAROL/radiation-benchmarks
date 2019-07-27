@@ -199,7 +199,7 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 				MicroBenchmarkKernel_FMANOTBIASAED<incomplete, full> <<<
 						parameters.grid_size, parameters.block_size>>>(
 						device_vector_inc.data(), device_vector_full.data());
-				gold = 1.00000020000149449334e+06;
+				gold = 2.50000000001979527653e-01;
 				break;
 			}
 			}
