@@ -4,6 +4,9 @@ DEBUG?=0
 LOGS?=0
 DEBUG_ON_TITAN?=0
 OMP?=1
+ZERO_FLOAT=1e-2
+ZERO_HALF=1e-1
+CHECKBLOCK=0
 
 SIZE?=8192  #16384 #8192 #4096 
 
@@ -72,7 +75,7 @@ OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard ./*.h) Makefile
 
 RAD_DIR=/home/carol/radiation-benchmarks
-
+COMMON+= -DCHECKBLOCK=$(CHECKBLOCK) -DZERO_FLOAT=$(ZERO_FLOAT) -DZERO_HALF=$(ZERO_HALF)
 
 all: obj $(TARGET)
 
