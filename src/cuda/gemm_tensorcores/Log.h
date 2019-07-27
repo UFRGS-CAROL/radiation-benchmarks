@@ -96,6 +96,12 @@ public:
 
 		test_info += " triplicated: " + std::to_string(this->triplicated);
 
+		test_info += " dmr: " + this->dmr;
+
+		test_info += " use_tensorcores: " + this->use_tensor_cores;
+
+		test_info += " checkblock: " + std::to_string(CHECKBLOCK);
+
 		std::string app = "gemm_tensor_cores_" + this->precision;
 		set_iter_interval_print(10);
 

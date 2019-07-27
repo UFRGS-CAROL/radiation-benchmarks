@@ -1,7 +1,7 @@
 GPU?=1
 DEBUG?=0
 #for radiation setup
-LOGS?=0
+LOGS?=1
 DEBUG_ON_TITAN?=0
 OMP?=1
 ZERO_FLOAT=1e-2
