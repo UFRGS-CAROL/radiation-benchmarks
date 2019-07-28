@@ -168,7 +168,7 @@ bool cmp(const BiggestPrecision lhs, const BiggestPrecision rhs, Log& log) {
 			zero = BiggestPrecision(ZERO_FLOAT);
 
 		if (log.precision == "double")
-			zero = BiggestPrecision(ZERO_FLOAT);
+			zero = BiggestPrecision(0.0002);
 	}
 
 	if (diff > zero) {
