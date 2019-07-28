@@ -22,7 +22,7 @@
 #define DEFAULT_INPUT_SIZE 8192
 #endif
 
-#define GENERATOR_MAXABSVALUE 2.0
+#define GENERATOR_MAXABSVALUE 0.9
 #define GENERATOR_MINABSVALUE 0.0001
 
 typedef double BiggestPrecision;
