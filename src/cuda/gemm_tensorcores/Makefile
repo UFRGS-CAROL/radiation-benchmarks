@@ -34,7 +34,7 @@ RAD_DIR=/home/carol/radiation-benchmarks
 
 
 
-INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I$(RAD_DIR)/common/include
+INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I$(RAD_DIR)/src/cuda/common/include
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
