@@ -30,9 +30,11 @@ OPTS=-Ofast
 LDFLAGS= -lm -pthread -lstdc++ 
 COMMON= 
 CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas
+RAD_DIR=/home/carol/radiation-benchmarks
 
 
-INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I../common/include
+
+INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I$(RAD_DIR)/common/include
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
@@ -74,7 +76,6 @@ endif
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard ./*.h) Makefile
 
-RAD_DIR=/home/carol/radiation-benchmarks
 COMMON+= -DCHECKBLOCK=$(CHECKBLOCK) -DZERO_FLOAT=$(ZERO_FLOAT) -DZERO_HALF=$(ZERO_HALF)
 
 all: obj $(TARGET)

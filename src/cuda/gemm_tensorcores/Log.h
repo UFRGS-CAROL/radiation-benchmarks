@@ -98,7 +98,7 @@ public:
 
 		test_info += " dmr: " + this->dmr;
 
-		test_info += " use_tensorcores: " + this->use_tensor_cores;
+		test_info += " use_tensorcores: " + std::to_string(this->use_tensor_cores);
 
 		test_info += " checkblock: " + std::to_string(CHECKBLOCK);
 
