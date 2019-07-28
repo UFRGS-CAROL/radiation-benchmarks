@@ -85,8 +85,15 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 #pragma unroll
 
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			Csub += As[ty][k] * Bs[k][tx];
-			Csub_half += half_t(As[ty][k]) * half_t(Bs[k][tx]);
+			//	Csub += As[ty][k] * Bs[k][tx];
+
+			fma_dmr(As[ty][k], Bs[k][tx], Csub);
+
+			half_t a = half_t(As[ty][k]);
+			half_t b = half_t(Bs[k][tx]);
+
+			//Csub_half += half_t(As[ty][k]) * half_t(Bs[k][tx]);
+			fma_dmr(a, b, Csub_half);
 
 #if CHECKBLOCK >= 1
 			if((k % CHECKBLOCK) == 0) {
@@ -105,22 +112,23 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 		// sub-matrices of A and B in the next iteration
 		__syncthreads();
 	}
+	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
+
+	const real_t d_r = alpha * Csub + beta * C[index];
+	const half_t d_h = half_t(alpha) * Csub_half
+			+ half_t(beta) * half_t(C[index]);
 
 #if CHECKBLOCK == 0
-	check_relative_error(Csub_half, Csub);
+	check_relative_error(d_h, d_r);
 //	threshold = fmax(threshold, fabs(double(Csub) - double(Csub_half)));
-
 #endif
 
 //	printf("%.20e\n", threshold);
 
 // Write the block sub-matrix to device memory;
 // each thread writes one element
-	int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-	D_r[c + wB * ty + tx] = alpha * Csub + beta * C[c + wB * ty + tx];
-	D_h[c + wB * ty + tx] = half_t(alpha) * Csub_half
-			+ half_t(beta) * half_t(C[c + wB * ty + tx]);
-
+	D_r[index] = d_r;
+	D_h[index] = d_h;
 }
 
 #endif /* DMR_KERNELS_H_ */

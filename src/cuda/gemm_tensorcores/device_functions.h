@@ -32,7 +32,7 @@ __device__ __forceinline__ float abs__(float a) {
 	return fabsf(a);
 }
 
-__device__     __forceinline__ half abs__(half a) {
+__device__      __forceinline__ half abs__(half a) {
 	return fabsf(a);
 }
 
@@ -77,6 +77,24 @@ __host__ unsigned long long dmr_errors() {
 			cudaMemcpyToSymbol(errors, &tmp, sizeof(unsigned long long), 0));
 
 	return ret;
+}
+
+/**
+ * ----------------------------------------
+ * FMA DMR
+ * ----------------------------------------
+ */
+
+__device__ __forceinline__ void fma_dmr(double& a, double& b, double& acc) {
+	acc = __fma_rn(a, b, acc);
+}
+
+__device__ __forceinline__ void fma_dmr(float& a, float& b, float& acc) {
+	acc = __fmaf_rn(a, b, acc);
+}
+
+__device__ __forceinline__ void fma_dmr(half& a, half& b, half& acc) {
+	acc = __hfma(a, b, acc);
 }
 
 #endif /* DEVICE_FUNCTIONS_H_ */

@@ -74,18 +74,15 @@ struct HostVectors {
 		if (f_a.is_open() && f_b.is_open() && f_c.is_open()) {
 			std::random_device rd; //Will be used to obtain a seed for the random number engine
 			std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-			std::uniform_real_distribution<double> dis(-GENERATOR_MAXABSVALUE,
+			std::uniform_real_distribution<double> dis(GENERATOR_MINABSVALUE,
 			GENERATOR_MAXABSVALUE);
 
 			for (size_t i = 0; i < log.size_matrices; i++) {
 				for (size_t j = 0; j < log.size_matrices; j++) {
 					//Make sure that it is not 0
-					host_matrix_a[i * log.size_matrices + j] = half_t(
-							dis(gen) + GENERATOR_MAXABSVALUE / 10.0);
-					host_matrix_b[i * log.size_matrices + j] = half_t(
-							dis(gen) + GENERATOR_MAXABSVALUE / 10.0);
-					host_matrix_c[i * log.size_matrices + j] = real_t(
-							dis(gen) + GENERATOR_MAXABSVALUE / 10.0);
+					host_matrix_a[i * log.size_matrices + j] = half_t(dis(gen));
+					host_matrix_b[i * log.size_matrices + j] = half_t(dis(gen));
+					host_matrix_c[i * log.size_matrices + j] = real_t(dis(gen));
 				}
 			}
 
@@ -184,7 +181,7 @@ template<class half_t, class real_t>
 std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<half_t>& d0, std::vector<real_t>& d1, Log& log) {
 	int host_errors = 0;
-//	double threshold = -3222;
+	double threshold = -3222;
 #ifdef OMP
 #pragma omp parallel for shared(host_errors)
 #endif
@@ -192,7 +189,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		BiggestPrecision gold_value = gold[i];
 		BiggestPrecision half_precision = d0[i];
 		BiggestPrecision full_precision = d1[i];
-//		threshold = std::fmax(threshold, fabs(half_precision - full_precision));
+		threshold = std::fmax(threshold, fabs(half_precision - full_precision));
 		if (gold_value != full_precision || !cmp(half_precision, full_precision, log)) {
 #ifdef OMP
 #pragma omp critical
@@ -216,7 +213,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 #endif
 		}
 	}
-//	std::cout << "THRESHOLD 0 " << threshold << std::endl;
+	std::cout << "THRESHOLD 0 " << threshold << std::endl;
 	auto dmr_err = dmr_errors();
 	if (dmr_err != 0) {
 		std::string error_detail;

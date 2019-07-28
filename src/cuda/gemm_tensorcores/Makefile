@@ -8,7 +8,7 @@ ZERO_FLOAT=1e-2
 ZERO_HALF=1e-1
 CHECKBLOCK=0
 
-SIZE?=8192  #16384 #8192 #4096 
+SIZE?=1024 #6384 #8192 #4096 
 
 #
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
@@ -77,6 +77,7 @@ OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard ./*.h) Makefile
 
 COMMON+= -DCHECKBLOCK=$(CHECKBLOCK) -DZERO_FLOAT=$(ZERO_FLOAT) -DZERO_HALF=$(ZERO_HALF)
+NVCCFLAGS+= -Xptxas -v
 
 all: obj $(TARGET)
 
