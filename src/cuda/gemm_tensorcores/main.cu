@@ -191,7 +191,8 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		BiggestPrecision full_precision = d1[i];
 		threshold = std::fmax(threshold, fabs(half_precision - full_precision));
 
-		if (gold_value != full_precision || !cmp(half_precision, full_precision, log)) {
+		if (gold_value != full_precision
+				|| !cmp(half_precision, full_precision, log)) {
 #ifdef OMP
 #pragma omp critical
 			{
@@ -210,7 +211,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			log.log_error(error_detail.str());
 			host_errors++;
 #ifdef OMP
-			}
+		}
 #endif
 		}
 	}
@@ -265,8 +266,8 @@ void setup_execute(
 					hd.host_matrix_smaller, hd.host_matrix_d, log_obj);
 			end = log_obj.mysecond();
 
-			std::cout << "Iteration: " << it << " dmr errors "
-					<< errors.first << " radiation errors " << errors.second
+			std::cout << "Iteration: " << it << " dmr errors " << errors.first
+					<< " radiation errors " << errors.second
 					<< ". Time spent on computation "
 					<< end_computation - start_computation
 					<< "s. Time spent on comparing " << end - start << "s."
@@ -351,7 +352,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 		break;
 	case DMRGEMMMIXED:
 	case NONDMRWMMA:
-		throw_line( "Not implemented!");
+		throw_line("Not implemented!");
 	}
 
 	setup_execute(mt, log_obj, hd);
@@ -370,7 +371,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 	case NONDMRWMMA:
 	case NONDMRGEMM:
 	case DMRGEMM:
-		throw_line( "Not implemented!");
+		throw_line("Not implemented!");
 		break;
 	case DMRGEMMMIXED:
 		mt = std::make_shared<GEMMDMRMIXED<real_t, real_t, mixed_real_t>>(
@@ -393,18 +394,7 @@ void usage(char **argv) {
 
 int main(int argc, char** argv) {
 	Log log_obj(argc, argv, DEFAULT_INPUT_SIZE);
-
-	std::cout << "Generate: " << log_obj.generate << std::endl;
-	std::cout << "A input path: " << log_obj.a_input_path << std::endl;
-	std::cout << "B input path: " << log_obj.b_input_path << std::endl;
-	std::cout << "C input path: " << log_obj.c_input_path << std::endl;
-	std::cout << "Gold in/out path: " << log_obj.gold_inout_path << std::endl;
-	std::cout << "Iterations: " << log_obj.iterations << std::endl;
-	std::cout << "Matrix size: " << log_obj.size_matrices << std::endl;
-	std::cout << "Precision: " << log_obj.precision << std::endl;
-	std::cout << "Verbose: " << log_obj.verbose << std::endl;
-	std::cout << "DMR type: " << log_obj.dmr << std::endl;
-	std::cout << "Tensor cores: " << log_obj.use_tensor_cores << std::endl;
+	std::cout << log_obj << std::endl;
 
 	GEMMTYPE gemm_type;
 	//NONDMRGEMM, DMRGEMM, NONDMRWMMA, DMRWMA
@@ -435,7 +425,7 @@ int main(int argc, char** argv) {
 		gemm_type = DMRGEMMMIXED;
 		if (log_obj.precision == "float") {
 //			call_mxm<half, float>(log_obj, gemm_type);
-			throw_line( "Not implemented function!");
+			throw_line("Not implemented function!");
 		}
 
 		if (log_obj.precision == "double") {
