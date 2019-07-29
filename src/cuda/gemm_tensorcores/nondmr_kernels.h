@@ -406,10 +406,4 @@ __global__ void sw_mxm_kernel(real_t *D, real_t *C, real_t *A, real_t *B,
 	sw_mxm_device(D, C, A, B, alpha, beta, wA, wB);
 }
 
-//template<class half_t, class real_t>
-//__global__ void sw_mxm_kernel(real_t *D, real_t *C, half_t *A, half_t *B,
-//		real_t alpha, real_t beta, int wA, int wB) {
-//	assert(0 && "NOT A VALID CONFIGURATION");
-//}
-
 #endif /* NONDMR_KERNELS_H_ */
