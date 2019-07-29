@@ -110,7 +110,7 @@
     }                                                       \
   } while (0)
 
-using namespace nvcuda;
+//using namespace nvcuda;
 
 __host__ void init_host_matrices(half *a, half *b, half *c) {
 	for (int t = 0; t < M_GLOBAL * N_GLOBAL; t++) {
