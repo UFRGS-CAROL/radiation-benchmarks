@@ -144,11 +144,11 @@ public:
 		}
 
 		//SOFTWARE CALL
-		sw_mxm_kernel<real_t, real_t> <<<this->grid_dim, this->block_dim, 0,
-				this->two_streams[1].stream>>>(this->device_ptr_d0.data(),
-				this->device_ptr_c0.data(), this->device_ptr_a0.data(),
-				this->device_ptr_b0.data(), this->alpha, this->beta, this->k,
-				this->k);
+//		sw_mxm_kernel<real_t, real_t> <<<this->grid_dim, this->block_dim, 0,
+//				this->two_streams[1].stream>>>(this->device_ptr_d0.data(),
+//				this->device_ptr_c0.data(), this->device_ptr_a0.data(),
+//				this->device_ptr_b0.data(), this->alpha, this->beta, this->k,
+//				this->k);
 
 		this->debug("hw_mxm_dmr device synchronize");
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
