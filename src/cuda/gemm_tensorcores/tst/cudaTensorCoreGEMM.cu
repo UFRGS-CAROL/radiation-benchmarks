@@ -113,101 +113,102 @@
 using namespace nvcuda;
 
 __host__ void init_host_matrices(half *a, half *b, half *c) {
-	for (int i = 0; i < M_GLOBAL; i++) {
-		for (int j = 0; j < K_GLOBAL; j++) {
-			a[i * K_GLOBAL + j] = (half) 1.0;
-		}
-	}
-
-	for (int i = 0; i < N_GLOBAL; i++) {
-		for (int j = 0; j < K_GLOBAL; j++) {
-			b[i * K_GLOBAL + j] = (half) 1.0;
-		}
-	}
+//	for (int i = 0; i < M_GLOBAL; i++) {
+//		for (int j = 0; j < K_GLOBAL; j++) {
+//			a[i * K_GLOBAL + j] = (half) 1.0;
+//		}
+//	}
+//
+//	for (int i = 0; i < N_GLOBAL; i++) {
+//		for (int j = 0; j < K_GLOBAL; j++) {
+//			b[i * K_GLOBAL + j] = (half) 1.0;
+//		}
+//	}
 
 	for (int t = 0; t < M_GLOBAL * N_GLOBAL; t++) {
+		a[t] = (half) 1.0;
+
+		b[t] = (half) 1.0;
+
 		c[t] = 0.0;
 	}
 }
-
-__device__     __forceinline__ half fma_dmr(half a, half b, half acc) {
-
-	return __hfma(a, b, acc);
-}
+//
+//__device__      __forceinline__ half fma_dmr(half a, half b, half acc) {
+//
+//	return __hfma(a, b, acc);
+//}
 
 __global__ void MatrixMulCUDA(half *A, half *B, half *C, half* D, half alpha,
 		half beta, int wA, int wB) {
-	// Block index
-	int bx = blockIdx.x;
-	int by = blockIdx.y;
+	 // Block index
+	    int bx = blockIdx.x;
+	    int by = blockIdx.y;
 
-	// Thread index
-	int tx = threadIdx.x;
-	int ty = threadIdx.y;
+	    // Thread index
+	    int tx = threadIdx.x;
+	    int ty = threadIdx.y;
 
-	// Index of the first sub-matrix of A processed by the block
-	int aBegin = M_GLOBAL * BLOCK_SIZE * by;
+	    // Index of the first sub-matrix of A processed by the block
+	    int aBegin = wA * BLOCK_SIZE * by;
 
-	// Index of the last sub-matrix of A processed by the block
-	int aEnd = aBegin + M_GLOBAL - 1;
+	    // Index of the last sub-matrix of A processed by the block
+	    int aEnd   = aBegin + wA - 1;
 
-	// Step size used to iterate through the sub-matrices of A
-	int aStep = BLOCK_SIZE;
+	    // Step size used to iterate through the sub-matrices of A
+	    int aStep  = BLOCK_SIZE;
 
-	// Index of the first sub-matrix of B processed by the block
-	int bBegin = BLOCK_SIZE * bx;
+	    // Index of the first sub-matrix of B processed by the block
+	    int bBegin = BLOCK_SIZE * bx;
 
-	// Step size used to iterate through the sub-matrices of B
-	int bStep = BLOCK_SIZE * M_GLOBAL;
+	    // Step size used to iterate through the sub-matrices of B
+	    int bStep  = BLOCK_SIZE * wB;
 
-	// Csub is used to store the element of the block sub-matrix
-	// that is computed by the thread
+	    // Csub is used to store the element of the block sub-matrix
+	    // that is computed by the thread
+	    half Csub = 0;
 
-	half Csub = 0.0;
-	;
+	    // Loop over all the sub-matrices of A and B
+	    // required to compute the block sub-matrix
+	    for (int a = aBegin, b = bBegin;
+	            a <= aEnd;
+	            a += aStep, b += bStep) {
+	        // Declaration of the shared memory array As used to
+	        // store the sub-matrix of A
+	        __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
 
-	// Loop over all the sub-matrices of A and B
-	// required to compute the block sub-matrix
-	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
-		// Declaration of the shared memory array As used to
-		// store the sub-matrix of A
-		__shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
+	        // Declaration of the shared memory array Bs used to
+	        // store the sub-matrix of B
+	        __shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
 
-		// Declaration of the shared memory array Bs used to
-		// store the sub-matrix of B
-		__shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
+	        // Load the matrices from device memory
+	        // to shared memory; each thread loads
+	        // one element of each matrix
+	        As[ty][tx] = A[a + wA * ty + tx];
+	        Bs[ty][tx] = B[b + wB * ty + tx];
 
-		// Load the matrices from device memory
-		// to shared memory; each thread loads
-		// one element of each matrix
-		As[ty][tx] = (half) A[a + M_GLOBAL * ty + tx];
-		Bs[ty][tx] = (half) B[b + M_GLOBAL * ty + tx];
+	        // Synchronize to make sure the matrices are loaded
+	        __syncthreads();
 
-		// Synchronize to make sure the matrices are loaded
-		__syncthreads();
+	        // Multiply the two matrices together;
+	        // each thread computes one element
+	        // of the block sub-matrix
+	#pragma unroll
 
-		// Multiply the two matrices together;
-		// each thread computes one element
-		// of the block sub-matrix
-#pragma unroll
+	        for (int k = 0; k < BLOCK_SIZE; ++k) {
+	            Csub += As[ty][k] * Bs[k][tx];
+	        }
 
-		for (int k = 0; k < BLOCK_SIZE; ++k) {
+	        // Synchronize to make sure that the preceding
+	        // computation is done before loading two new
+	        // sub-matrices of A and B in the next iteration
+	        __syncthreads();
+	    }
 
-			Csub = fma_dmr(As[ty][k], Bs[k][tx], Csub);
-
-		}
-
-		// Synchronize to make sure that the preceding
-		// computation is done before loading two new
-		// sub-matrices of A and B in the next iteration
-		__syncthreads();
-	}
-
-	// Write the block sub-matrix to device memory;
-	// each thread writes one element
-	int c = M_GLOBAL * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-	D[c + M_GLOBAL * ty + tx] = alpha * Csub + beta * C[c + M_GLOBAL * ty + tx];
-
+	    // Write the block sub-matrix to device memory;
+	    // each thread writes one element
+	    int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+	    D[c + wB * ty + tx] = alpha * Csub + beta * C[c + wB * ty + tx];
 }
 
 __global__ void compute_gemm(const half *A, const half *B, const half *C,
@@ -567,7 +568,8 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < 10; i++) {
 
 		printf(" diff = %f, HW = %f, SW = %f \n",
-				(double(result_hD[i]) - double(result_host[i])), double(result_hD[i]), double(result_host[i]));
+				(double(result_hD[i]) - double(result_host[i])),
+				double(result_hD[i]), double(result_host[i]));
 
 	}
 
