@@ -11,6 +11,9 @@
 #include <mma.h>
 #include <cuda_fp16.h>
 
+using namespace nvcuda;
+
+
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 32
 #endif
@@ -107,17 +110,17 @@ __device__ __forceinline__ void hw_mxm_device(T* D, T *C, float *A, float *B,
 	assert(0 && "DOES NOT SUPPORT FLOAT");
 }
 
-
- template<class T>
- __device__ __forceinline__ void hw_mxm_device(T* D, T *C, double *A, double *B,
- 		T alpha, T beta, int wA, int wB) {
- 	assert(0 && "DOES NOT SUPPORT DOUBLE");
- }
+template<class T>
+__device__ __forceinline__ void hw_mxm_device(T* D, T *C, double *A, double *B,
+		T alpha, T beta, int wA, int wB) {
+	assert(0 && "DOES NOT SUPPORT DOUBLE");
+}
 
 template<class half_t, class real_t>
-__device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C, const half_t *A,
-		const half_t *B, real_t alpha, real_t beta, int wA, int wB) {
-	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
+__device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C,
+		const half_t *A, const half_t *B, real_t alpha, real_t beta, int wA,
+		int wB) {
+	extern __shared__ half_t shmem[][CHUNK_K * K + SKEW_HALF];
 
 	// Warp and lane identification.
 	const unsigned int warpId = threadIdx.x / WARP_SIZE;
@@ -128,7 +131,7 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C, const 
 
 	// This pointer is used to access the C and D matrix tiles this warp computes.
 	real_t *shmem_warp_tile_ptr = (real_t*) &shmem[0][0]
-			+ (warpId / 2) * SHMEM_STRIDE * K * 2+ (warpId % 2) * SHMEM_OFFSET;
+			+ (warpId / 2) * SHMEM_STRIDE * K * 2+ (warpId%2) * SHMEM_OFFSET;
 
 	// This pointer is used to stream the C and D matrices block-wide tile to and from shared memory.
 	real_t *shmem_warp_stream_ptr = (real_t*) &shmem[0][0]
@@ -172,7 +175,7 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C, const 
 
 		// These fragments will accumulate the result of A and B matrix fragment multiplications
 		// along the K_GLOBAL dimension.
-		nvcuda::wmma::fragment<nvcuda::wmma::accumulator, M, N, K, real_t> c[WARP_COL_TILES][WARP_ROW_TILES];
+		wmma::fragment<wmma::accumulator, M, N, K, real_t> c[WARP_COL_TILES][WARP_ROW_TILES];
 
 		// Load the C matrix tiles into fragments from shared memory.
 #pragma unroll
@@ -182,8 +185,7 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C, const 
 				const real_t *tile_ptr = shmem_warp_tile_ptr
 						+ i * SHMEM_STRIDE * K + j * N;
 
-				nvcuda::wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE,
-				C_LAYOUT);
+				wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
 			}
 		}
 
@@ -203,7 +205,7 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C, const 
 
 		// Select what warp copies what matrix to shared memory.
 		// Warps 0-3 copy the A matrix, warps 4-7 copy the B matrix.
-		const half *warp_ptr =
+		const half_t *warp_ptr =
 				(warpId < 4) ?
 						(&A[block_tile_i * M * K_GLOBAL]
 								+ M * K_GLOBAL * (warpId % 4) * 2) :
@@ -249,18 +251,18 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C, const 
 			// Compute a grid of C matrix tiles in each warp.
 #pragma unroll
 			for (int k_step = 0; k_step < CHUNK_K; k_step++) {
-				nvcuda::wmma::fragment < nvcuda::wmma::matrix_a, M, N, K, half, nvcuda::wmma::row_major
+				wmma::fragment < wmma::matrix_a, M, N, K, half_t, wmma::row_major
 						> a[WARP_COL_TILES];
-				nvcuda::wmma::fragment < nvcuda::wmma::matrix_b, M, N, K, half, nvcuda::wmma::col_major
+				wmma::fragment < wmma::matrix_b, M, N, K, half_t, wmma::col_major
 						> b[WARP_ROW_TILES];
 
 #pragma unroll
 				for (int i = 0; i < WARP_COL_TILES; i++) {
 					size_t shmem_idx_a = (warpId / 2) * M * 2 + (i * M);
-					const half *tile_ptr = &shmem[shmem_idx_a][k_step * K];
+					const half_t *tile_ptr = &shmem[shmem_idx_a][k_step * K];
 
-					nvcuda::wmma::load_matrix_sync(a[i], tile_ptr,
-					K * CHUNK_K + SKEW_HALF);
+					wmma::load_matrix_sync(a[i], tile_ptr,
+							K * CHUNK_K + SKEW_HALF);
 
 #pragma unroll
 					for (int j = 0; j < WARP_ROW_TILES; j++) {
@@ -270,14 +272,14 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C, const 
 							size_t shmem_idx_b = shmem_idx_b_off
 									+ (WARP_ROW_TILES * N) * (warpId % 2)
 									+ (j * N);
-							const half *tile_ptr = &shmem[shmem_idx_b][k_step
+							const half_t *tile_ptr = &shmem[shmem_idx_b][k_step
 									* K];
 
-							nvcuda::wmma::load_matrix_sync(b[j], tile_ptr,
-							K * CHUNK_K + SKEW_HALF);
+							wmma::load_matrix_sync(b[j], tile_ptr,
+									K * CHUNK_K + SKEW_HALF);
 						}
 
-						nvcuda::wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
+						wmma::mma_sync(c[i][j], a[i], b[j], c[i][j]);
 					}
 				}
 			}
@@ -299,8 +301,8 @@ __device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C, const 
 				real_t *tile_ptr = shmem_warp_tile_ptr + i * SHMEM_STRIDE * K
 						+ j * N;
 
-				nvcuda::wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE,
-				C_LAYOUT);
+				wmma::store_matrix_sync(tile_ptr, c[i][j], SHMEM_STRIDE,
+						C_LAYOUT);
 			}
 		}
 
