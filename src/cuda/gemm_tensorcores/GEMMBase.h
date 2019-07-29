@@ -66,19 +66,12 @@ public:
 		// Setup execution parameters
 		this->debug("thread dim allocation");
 
-		switch (this->gemm_type) {
-		case DMRGEMMMIXED:
-		case NONDMRGEMM:
-		case DMRGEMM:
-			this->block_dim.x = BLOCK_SIZE;
-			this->block_dim.y = BLOCK_SIZE;
-			this->grid_dim.x = this->k / this->block_dim.x;
-			this->grid_dim.y = this->k / this->block_dim.y;
-			break;
-		case NONDMRWMMA:
-		case DMRWMA:
-			break;
-		}
+		//Standard threads allocation for all types
+		//Specified on each class
+		this->block_dim.x = BLOCK_SIZE;
+		this->block_dim.y = BLOCK_SIZE;
+		this->grid_dim.x = this->k / this->block_dim.x;
+		this->grid_dim.y = this->k / this->block_dim.y;
 
 		int dev = 0;
 		rad::checkFrameworkErrors(
@@ -116,7 +109,8 @@ public:
 	 * PULL D array to host
 	 */
 
-	void pull_array(std::vector<real_t>& host_d0, std::vector<dmr_mixed_real_t>& host_mixed) {
+	void pull_array(std::vector<real_t>& host_d0,
+			std::vector<dmr_mixed_real_t>& host_mixed) {
 
 		this->debug("memcpy array D to host");
 		// PULL D's
