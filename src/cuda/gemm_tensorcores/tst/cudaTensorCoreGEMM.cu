@@ -113,23 +113,9 @@
 using namespace nvcuda;
 
 __host__ void init_host_matrices(half *a, half *b, half *c) {
-//	for (int i = 0; i < M_GLOBAL; i++) {
-//		for (int j = 0; j < K_GLOBAL; j++) {
-//			a[i * K_GLOBAL + j] = (half) 1.0;
-//		}
-//	}
-//
-//	for (int i = 0; i < N_GLOBAL; i++) {
-//		for (int j = 0; j < K_GLOBAL; j++) {
-//			b[i * K_GLOBAL + j] = (half) 1.0;
-//		}
-//	}
-
 	for (int t = 0; t < M_GLOBAL * N_GLOBAL; t++) {
 		a[t] = 1.0;
-
 		b[t] = 1.0;
-
 		c[t] = 1.0;
 	}
 }
@@ -531,14 +517,15 @@ int main(int argc, char **argv) {
 	checkCudaErrors(
 			cudaFuncSetAttribute(compute_gemm,
 					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-	checkCudaErrors(
-			cudaFuncSetAttribute(MatrixMulCUDA,
-					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+//	checkCudaErrors(
+//			cudaFuncSetAttribute(MatrixMulCUDA,
+//					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
-	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ, st>>>(A, B, C, D, alpha, beta, M_GLOBAL, M_GLOBAL);
+	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
+			st>>>(A, B, C, D, alpha, beta, M_GLOBAL, M_GLOBAL);
 
-
-	MatrixMulCUDA<<<grid, threads, SHMEM_SZ>>>(A, B, C, D1, alpha, beta, M_GLOBAL, M_GLOBAL);
+	MatrixMulCUDA<<<grid, threads>>>(A, B, C, D1, alpha, beta,
+			M_GLOBAL, M_GLOBAL);
 
 	checkKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
