@@ -480,54 +480,54 @@ int main(int argc, char **argv) {
 
 	checkCudaErrors(cudaMemset(D1, 0, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
-	enum {
-		// Compute the right amount of shared memory to request.
-		// We need shared memory to hold per-CTA C and D matrix tiles, and to cache
-		// per-CTA chunks
-		// of the A and B matrices. Therefore, the right amount to request is the
-		// maximum of those
-		// two numbers.
-		SHMEM_SZ = MAX(
-				sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF)
-						* 2,
-				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
-						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
-	};
-
-	printf("Required shared memory size: %lu Kb\n", SHMEM_SZ / 1024UL);
+//	enum {
+//		// Compute the right amount of shared memory to request.
+//		// We need shared memory to hold per-CTA C and D matrix tiles, and to cache
+//		// per-CTA chunks
+//		// of the A and B matrices. Therefore, the right amount to request is the
+//		// maximum of those
+//		// two numbers.
+//		SHMEM_SZ = MAX(
+//				sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF)
+//						* 2,
+//				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
+//						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
+//	};
+//
+//	printf("Required shared memory size: %lu Kb\n", SHMEM_SZ / 1024UL);
 
 	const half alpha = 1.0;
 	const half beta = 1.0;
 
-	cudaEvent_t start, stop;
-
-	checkCudaErrors(cudaEventCreate(&start));
-	checkCudaErrors(cudaEventCreate(&stop));
-	checkCudaErrors(cudaEventRecord(start));
+//	cudaEvent_t start, stop;
+//
+//	checkCudaErrors(cudaEventCreate(&start));
+//	checkCudaErrors(cudaEventCreate(&stop));
+//	checkCudaErrors(cudaEventRecord(start));
 
 	// If enough shared memory available on the GPU use high performant kernel
 
 	printf("Computing... using high performance kernel compute_gemm \n");
 
-	cudaStream_t st;
-	cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
+//	cudaStream_t st;
+//	cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid( M_GLOBAL / threads.x, M_GLOBAL / threads.y);
 
-	checkCudaErrors(
-			cudaFuncSetAttribute(compute_gemm,
-					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+//	checkCudaErrors(
+//			cudaFuncSetAttribute(compute_gemm,
+//					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 //	checkCudaErrors(
 //			cudaFuncSetAttribute(MatrixMulCUDA,
 //					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
-	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-			st>>>(A, B, C, D, alpha, beta, M_GLOBAL, M_GLOBAL);
+//	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
+//			st>>>(A, B, C, D, alpha, beta, M_GLOBAL, M_GLOBAL);
 
 	MatrixMulCUDA<<<grid, threads>>>(A, B, C, D1, alpha, beta,
 			M_GLOBAL, M_GLOBAL);
 
-	checkKernelErrors(cudaStreamSynchronize(st));
+//	checkKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
 	checkKernelErrors(cudaDeviceSynchronize());
 
@@ -538,8 +538,8 @@ int main(int argc, char **argv) {
 			cudaMemcpy(result_host, D1, sizeof(half) * M_GLOBAL * N_GLOBAL,
 					cudaMemcpyDeviceToHost));
 
-	checkCudaErrors(cudaEventRecord(stop));
-	checkCudaErrors(cudaEventSynchronize(stop));
+//	checkCudaErrors(cudaEventRecord(stop));
+//	checkCudaErrors(cudaEventSynchronize(stop));
 
 	printf("Verifying correctness of the computations...\n");
 
@@ -558,12 +558,12 @@ int main(int argc, char **argv) {
 
 	float milliseconds = 0;
 
-	checkCudaErrors(cudaEventElapsedTime(&milliseconds, start, stop));
+//	checkCudaErrors(cudaEventElapsedTime(&milliseconds, start, stop));
 
-	printf("Time: %f ms\n", milliseconds);
-	printf("TFLOPS: %.2f\n",
-			static_cast<double>((static_cast<double>(M_GLOBAL) *
-			N_GLOBAL * K_GLOBAL * 2) / (milliseconds / 1000.)) / 1e12);
+//	printf("Time: %f ms\n", milliseconds);
+//	printf("TFLOPS: %.2f\n",
+//			static_cast<double>((static_cast<double>(M_GLOBAL) *
+//			N_GLOBAL * K_GLOBAL * 2) / (milliseconds / 1000.)) / 1e12);
 
 	free(A_h);
 	free(B_h);
@@ -575,6 +575,6 @@ int main(int argc, char **argv) {
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(C)));
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(D)));
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(D1)));
-	cudaStreamDestroy(st);
+//	cudaStreamDestroy(st);
 	return 0;
 }
