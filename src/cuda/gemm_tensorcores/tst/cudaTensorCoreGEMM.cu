@@ -832,9 +832,8 @@ int main(int argc, char **argv) {
   
   printf("Computing... using high performance kernel compute_gemm \n");
 
-
-  //cudaStream_t st;
-  //cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);  
+  cudaStream_t st;
+  cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);  
 
   checkCudaErrors(cudaFuncSetAttribute(
           compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
@@ -848,10 +847,10 @@ int main(int argc, char **argv) {
 
 
 
-  //checkKernelErrors((MatrixMulCUDA<<<grid, threads, 0, st>>>(D1, A, B,
-  //                                               M_GLOBAL, M_GLOBAL, alpha, beta)));
+  checkKernelErrors((MatrixMulCUDA<<<grid, threads, 0, st>>>(D1, A, B,
+                                                 M_GLOBAL, M_GLOBAL, alpha, beta)));
 
-  //cudaStreamSynchronize(st);
+  cudaStreamSynchronize(st);
  
   //cudaDeviceSynchronize();
 
