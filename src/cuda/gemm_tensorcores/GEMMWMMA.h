@@ -90,7 +90,6 @@ class GEMMWMMADMR: public GEMMBase<real_t, real_t, real_t> {
 public:
 	size_t shared_memory;
 	std::vector<CudaStream> two_streams;
-	rad::DeviceVector<real_t> hw_data;
 
 	GEMMWMMADMR(
 			const std::vector<real_t>& host_a0, //Matrix A
@@ -120,12 +119,10 @@ public:
 		std::cout << "K: " << K_GLOBAL << " (" << K << " x " << K_TILES << ")"
 				<< std::endl;
 
-		this->hw_data = this->device_ptr_d0;
-
 	}
 
 	void gemm() {
-
+		static auto hw_data = this->device_ptr_d0;
 		// OPTIMIZED TENSOR + GEMM SW
 		//HARDWARE CALL
 		// If enough shared memory available on the GPU use high performant kernel
@@ -134,7 +131,7 @@ public:
 			hw_mxm_kernel<real_t, real_t> <<<
 					this->deviceProp.multiProcessorCount,
 					THREADS_PER_BLOCK, this->shared_memory,
-					this->two_streams[0].stream>>>(this->hw_data.data(),
+					this->two_streams[0].stream>>>(hw_data.data(),
 					this->device_ptr_c0.data(), this->device_ptr_a0.data(),
 					this->device_ptr_b0.data(), this->alpha, this->beta,
 					this->k, this->k);
