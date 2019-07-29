@@ -960,15 +960,13 @@ int main(int argc, char **argv) {
   free(A_h);
   free(B_h);
   free(C_h);
-  //free(result_hD);
-  //free(result_host);
+  free(result_hD);
+  free(result_host);
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(A)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(B)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(C)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(D)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(D1)));
-  checkCudaErrors(cudaFree(reinterpret_cast<void *>(result_host)));
-  checkCudaErrors(cudaFree(reinterpret_cast<void *>(result_hD)))
   cudaStreamDestroy(st);
   return 0;
 }
