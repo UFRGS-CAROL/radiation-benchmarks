@@ -121,6 +121,10 @@ public:
 
 		this->two_streams.resize(2);
 
+	    printf("M: %d (%d x %d)\n", M_GLOBAL, M, M_TILES);
+	    printf("N: %d (%d x %d)\n", N_GLOBAL, N, N_TILES);
+	    printf("K: %d (%d x %d)\n", K_GLOBAL, K, K_TILES);
+
 	}
 
 	void gemm() {
