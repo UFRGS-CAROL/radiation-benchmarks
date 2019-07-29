@@ -1,67 +1,4 @@
-/* Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of NVIDIA CORPORATION nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 
-// CUDA sample demonstrating a GEMM computation using the Warp Matrix Multiply
-// and Accumulate API introduced in CUDA 9.
-
-// In this program, the compute_gemm kernel computes the result of a matrix
-// multiplication and addition: D = alpha * A * B + beta * C. The dimensions of
-// both C and D matrices are M_GLOBAL x N_GLOBAL. The A matrix is M_GLOBAL x
-// K_GLOBAL (row-major), the B matrix is K_GLOBAL x N_GLOBAL (column-major). In
-// that kernel, each CTA computes one 128 x 128 tile of the resulting matrix per
-// iteration. When the tile is computed, the CTA stores it to the global memory
-// and begins a new iteration, selecting a new 128 x 128 tile to compute.
-// Each CTA consists of eight warps. For the 128 x 128 tile, each warp computes
-// eight 16 x 16 subtiles, organized in a 2 x 4 two-dimensional array. Warps
-// compute the 16 x 16 subtiles using nvcuda::wmma::mma_sync operations by
-// moving through the K_GLOBAL dimension of the A and B matrices and
-// accumulating the intermediate result in the local thread state.
-
-// There are a number of simple optimizations used in the algorithm:
-// - The CTA copies the 128 x 128 tile of the C matrix from the global memory to
-//   shared memory. After that is done, each warp loads the C matrix fragments
-//   from shared memory, thus avoiding a random global memory access.
-// - On each internal iteration, the CTA copies a portion of the A and B
-// matrices from
-//   global memory to shared memory. After that, all warps in the CTA reuse the
-//   A and B data from shared memory, thus reducing the number of data copies
-//   from global memory.
-// - The portions of the A and B matrices are stored in shared memory with an
-// additional
-//   padding (skew) to reduce the number of shared memory access bank conflicts.
-//   (See a detailed explanation near the SKEW_HALF macro definition.)
-// - When the CTA finishes computing the tiles of the resulting matrix, each
-// warp stores
-//   its subtiles to shared memory. The CTA then copies the shared memory
-//   contents to global memory, again avoiding redundant random global memory
-//   accesses.
-// - Note that the CTA tile size is chosen to maximize the GPU register
-// utilization,
-//   but carefully enough to avoid local memory use.
 
 #include <assert.h>
 #include <cuda.h>
@@ -98,9 +35,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 16
-#define N_TILES 16
-#define K_TILES 16
+#define M_TILES 256
+#define N_TILES 256
+#define K_TILES 256
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)
@@ -180,13 +117,13 @@ using namespace nvcuda;
 __host__ void init_host_matrices(half *a, half *b, float *c) {
   for (int i = 0; i < M_GLOBAL; i++) {
     for (int j = 0; j < K_GLOBAL; j++) {
-      a[i * K_GLOBAL + j] = (half)1;
+      a[i * K_GLOBAL + j] = (half)1.0;
     }
   }
 
   for (int i = 0; i < N_GLOBAL; i++) {
     for (int j = 0; j < K_GLOBAL; j++) {
-      b[i * K_GLOBAL + j] = (half)1;
+      b[i * K_GLOBAL + j] = (half)1.0;
     }
   }
 
@@ -251,8 +188,8 @@ __global__ void MatrixMulCUDA(float *C, half *A,
     // Load the matrices from device memory
     // to shared memory; each thread loads
     // one element of each matrix
-    As[ty][tx] = A[a + M_GLOBAL * ty + tx];
-    Bs[ty][tx] = B[b + M_GLOBAL * ty + tx];
+    As[ty][tx] = (float) A[a + M_GLOBAL * ty + tx];
+    Bs[ty][tx] = (float) B[b + M_GLOBAL * ty + tx];
 
 
     // Synchronize to make sure the matrices are loaded
@@ -852,6 +789,8 @@ int main(int argc, char **argv) {
 
   init_host_matrices(A_h, B_h, C_h);
 
+
+
   printf("Preparing data for GPU...\n");
 
   checkCudaErrors(cudaMemcpy(A, A_h, sizeof(half) * M_GLOBAL * K_GLOBAL,
@@ -893,15 +832,14 @@ int main(int argc, char **argv) {
   
   printf("Computing... using high performance kernel compute_gemm \n");
 
+  cudaStream_t st;
+  cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);  
 
-cudaStream_t st;
-cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);  
-
-checkCudaErrors(cudaFuncSetAttribute(
-        compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-checkKernelErrors(
-        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                        SHMEM_SZ, st>>>(A, B, C, D, alpha, beta)));
+  checkCudaErrors(cudaFuncSetAttribute(
+          compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+  checkKernelErrors(
+          (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+                          SHMEM_SZ, st>>>(A, B, C, D, alpha, beta)));
 
 
   dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -909,22 +847,22 @@ checkKernelErrors(
 
 
 
-checkKernelErrors((MatrixMulCUDA<<<grid, threads, 0, st>>>(D1, A, B,
-                                               M_GLOBAL, M_GLOBAL, alpha, beta)));
+  checkKernelErrors((MatrixMulCUDA<<<grid, threads, 0, st>>>(D1, A, B,
+                                                 M_GLOBAL, M_GLOBAL, alpha, beta)));
+
+  cudaStreamSynchronize(st);
+ 
+  cudaDeviceSynchronize();
 
 
-
-checkCudaErrors(cudaMemcpy(result_hD, D,
-                           sizeof(float) * M_GLOBAL * N_GLOBAL,
-                           cudaMemcpyDeviceToHost));
-checkCudaErrors(cudaMemcpy(result_host, D1,
-                           sizeof(float) * M_GLOBAL * N_GLOBAL,
-                           cudaMemcpyDeviceToHost));
-
+  checkCudaErrors(cudaMemcpy(result_hD, D,
+                             sizeof(float) * M_GLOBAL * N_GLOBAL,
+                             cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaMemcpy(result_host, D1,
+                             sizeof(float) * M_GLOBAL * N_GLOBAL,
+                             cudaMemcpyDeviceToHost));
 
 
-  
- // cudaDeviceSynchronize();
 
   checkCudaErrors(cudaEventRecord(stop));
   checkCudaErrors(cudaEventSynchronize(stop));
@@ -945,8 +883,6 @@ checkCudaErrors(cudaMemcpy(result_host, D1,
   }
   
   
-  free(result_hD);
-  free(result_host);
 
 
   float milliseconds = 0;
@@ -962,6 +898,8 @@ checkCudaErrors(cudaMemcpy(result_host, D1,
   free(A_h);
   free(B_h);
   free(C_h);
+  free(result_hD);
+  free(result_host);
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(A)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(B)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(C)));
