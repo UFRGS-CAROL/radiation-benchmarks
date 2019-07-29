@@ -511,6 +511,7 @@ int main(int argc, char **argv) {
 
 //	cudaStream_t st;
 //	cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
+	std::cout << BLOCK_SIZE << " " << M_GLOBAL << std::endl;
 	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid( M_GLOBAL / threads.x, M_GLOBAL / threads.y);
 
