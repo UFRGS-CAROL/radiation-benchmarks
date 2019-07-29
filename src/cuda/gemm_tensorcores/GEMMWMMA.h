@@ -122,16 +122,15 @@ public:
 	}
 
 	void gemm() {
-		static auto hw_data = this->device_ptr_d0;
 		// OPTIMIZED TENSOR + GEMM SW
 		//HARDWARE CALL
 		// If enough shared memory available on the GPU use high performant kernel
 		if (this->deviceProp.sharedMemPerMultiprocessor
 				>= this->shared_memory) {
-			hw_mxm_kernel<real_t, real_t> <<<
+			hw_mxm_kernel <<<
 					this->deviceProp.multiProcessorCount,
 					THREADS_PER_BLOCK, this->shared_memory,
-					this->two_streams[0].stream>>>(hw_data.data(),
+					this->two_streams[0].stream>>>(this->device_ptr_mixed_dmr.data(),
 					this->device_ptr_c0.data(), this->device_ptr_a0.data(),
 					this->device_ptr_b0.data(), this->alpha, this->beta,
 					this->k, this->k);
