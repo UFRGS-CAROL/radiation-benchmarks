@@ -123,6 +123,11 @@ public:
 		checkFrameworkErrors(
 				cudaMemset(this->data_, 0x0, sizeof(T) * this->v_size));
 	}
+
+	void resize(size_t size){
+		this->free_data();
+		this->alloc_data(size);
+	}
 };
 
 }

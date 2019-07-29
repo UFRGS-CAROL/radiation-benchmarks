@@ -61,8 +61,7 @@ public:
 		this->debug("device memory allocation and push memory to device");
 		this->push_arrays(host_a0, host_b0, host_c0);
 
-		this->device_ptr_mixed_dmr = std::vector < dmr_mixed_real_t
-				> (this->device_ptr_d0.size(), 0);
+		this->device_ptr_mixed_dmr.resize(host_d0.size());
 
 		// Setup execution parameters
 		this->debug("thread dim allocation");

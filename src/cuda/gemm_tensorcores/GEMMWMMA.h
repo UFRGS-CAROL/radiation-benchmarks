@@ -139,7 +139,7 @@ public:
 					this->deviceProp.multiProcessorCount,
 					THREADS_PER_BLOCK, this->shared_memory,
 					this->two_streams[0].stream>>>(
-							this->device_ptr_d0.data(),
+					this->device_ptr_mixed_dmr.data(),
 					this->device_ptr_c0.data(), this->device_ptr_a0.data(),
 					this->device_ptr_b0.data(), this->alpha, this->beta,
 					this->k, this->k);
