@@ -143,6 +143,7 @@ int MatrixMultiply(int argc, char **argv,
 
     // Allocate host matrix C
     dim3 dimsC(dimsB.x, dimsA.y, 1);
+    printf("%d\n", sizeof(half));
     unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(half);
     half *h_C = reinterpret_cast<half *>(malloc(mem_size_C));
 
