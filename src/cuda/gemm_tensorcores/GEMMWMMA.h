@@ -122,9 +122,6 @@ public:
 			throw_line("M_GLOBAL AND K sizes must be the same!");
 		}
 
-		for(int i = 0; i < 10; i++)
-			std::cout << double(host_c0[i]) << std::endl;
-
 	}
 
 	void gemm() {
