@@ -110,6 +110,24 @@ public:
 #endif
 	}
 
+	friend std::ostream& operator<<(std::ostream& os, const Log& log_obj) {
+		os << "Generate: " << log_obj.generate << std::endl;
+		os << "A input path: " << log_obj.a_input_path << std::endl;
+		os << "B input path: " << log_obj.b_input_path << std::endl;
+		os << "C input path: " << log_obj.c_input_path << std::endl;
+		os << "Gold in/out path: " << log_obj.gold_inout_path << std::endl;
+		os << "Iterations: " << log_obj.iterations << std::endl;
+		os << "Matrix size: " << log_obj.size_matrices << std::endl;
+		os << "Precision: " << log_obj.precision << std::endl;
+		os << "Verbose: " << log_obj.verbose << std::endl;
+		os << "DMR type: " << log_obj.dmr << std::endl;
+		os << "Tensor cores: " << log_obj.use_tensor_cores << std::endl;
+		os << "Alpha: " << log_obj.alpha << std::endl;
+		os << "Beta: " << log_obj.beta;
+
+		return os;
+	}
+
 	virtual ~Log() {
 #ifdef LOGS
 		end_log_file();
