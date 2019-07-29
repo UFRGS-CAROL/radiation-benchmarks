@@ -852,6 +852,8 @@ int main(int argc, char **argv) {
 
   init_host_matrices(A_h, B_h, C_h);
 
+  std::cout<< "A = " << A_h[0] << std::endl;
+
   printf("Preparing data for GPU...\n");
 
   checkCudaErrors(cudaMemcpy(A, A_h, sizeof(half) * M_GLOBAL * K_GLOBAL,
