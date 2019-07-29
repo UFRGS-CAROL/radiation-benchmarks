@@ -8,7 +8,7 @@ ZERO_FLOAT=1e-7
 ZERO_HALF=1e-1
 CHECKBLOCK=1
 
-SIZE?=1024 #6384 #8192 #4096 
+SIZE?=4096 #6384 #8192 #4096 
 
 #
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
