@@ -538,11 +538,15 @@ int main(int argc, char **argv) {
 	checkCudaErrors(
 			cudaFuncSetAttribute(compute_gemm,
 					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+	checkCudaErrors(
+			cudaFuncSetAttribute(MatrixMulCUDA,
+					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+
 	checkKernelErrors(
 			(compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ, st>>>(A, B, C, D, alpha, beta, M_GLOBAL, M_GLOBAL)));
 
 	checkKernelErrors(
-			(MatrixMulCUDA<<<grid, threads, 0, st>>>(A, B, C, D1, alpha, beta, M_GLOBAL, M_GLOBAL)));
+			(MatrixMulCUDA<<<grid, threads, SHMEM_SZ>>>(A, B, C, D1, alpha, beta, M_GLOBAL, M_GLOBAL)));
 
 	cudaStreamSynchronize(st);
 
