@@ -100,7 +100,7 @@ obj:
 
 .PHONY: clean
 clean:
-	rm -rf $(OBJS) $(TARGET) ./*.matrix
+	rm -rf $(OBJS) $(TARGET)
 
 generate:
 	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision double --dmr dmrmixed
