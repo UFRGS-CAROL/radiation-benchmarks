@@ -122,6 +122,9 @@ public:
 			throw_line("M_GLOBAL AND K sizes must be the same!");
 		}
 
+		for(int i = 0; i < 10; i++)
+			std::cout << double(host_c0[i]) << std::endl;
+
 	}
 
 	void gemm() {
@@ -141,9 +144,6 @@ public:
 			throw_line("NOT SUPPORTED\n");
 		}
 
-		auto tmp = this->device_ptr_c0.to_vector();
-		for(int i = 0; i < 10; i++)
-			std::cout << double(tmp[i]) << std::endl;
 		//SOFTWARE CALL
 		sw_mxm_kernel<<<this->grid_dim, this->block_dim, 0,
 				this->two_streams[1].stream>>>(this->device_ptr_d0.data(),
