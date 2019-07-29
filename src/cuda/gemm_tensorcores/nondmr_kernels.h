@@ -114,9 +114,9 @@ __device__ __forceinline__ void hw_mxm_device(T* D, T *C, float *A, float *B,
  	assert(0 && "DOES NOT SUPPORT DOUBLE");
  }
 
-template<class real_t>
-__device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C, const half *A,
-		const half *B, real_t alpha, real_t beta, int wA, int wB) {
+template<class half_t, class real_t>
+__device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C, const half_t *A,
+		const half_t *B, real_t alpha, real_t beta, int wA, int wB) {
 	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
 	// Warp and lane identification.
@@ -404,10 +404,10 @@ __global__ void sw_mxm_kernel(real_t *D, real_t *C, real_t *A, real_t *B,
 	sw_mxm_device(D, C, A, B, alpha, beta, wA, wB);
 }
 
-template<class half_t, class real_t>
-__global__ void sw_mxm_kernel(real_t *D, real_t *C, half_t *A, half_t *B,
-		real_t alpha, real_t beta, int wA, int wB) {
-	assert(0 && "NOT A VALID CONFIGURATION");
-}
+//template<class half_t, class real_t>
+//__global__ void sw_mxm_kernel(real_t *D, real_t *C, half_t *A, half_t *B,
+//		real_t alpha, real_t beta, int wA, int wB) {
+//	assert(0 && "NOT A VALID CONFIGURATION");
+//}
 
 #endif /* NONDMR_KERNELS_H_ */
