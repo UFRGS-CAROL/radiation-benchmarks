@@ -90,6 +90,7 @@ class GEMMWMMADMR: public GEMMBase<real_t, real_t, real_t> {
 public:
 	size_t shared_memory;
 	std::vector<CudaStream> two_streams;
+	rad::DeviceVector<real_t> hw_data;
 
 	GEMMWMMADMR(
 			const std::vector<real_t>& host_a0, //Matrix A
@@ -112,9 +113,14 @@ public:
 
 		this->two_streams.resize(2);
 
-	    printf("M: %d (%d x %d)\n", M_GLOBAL, M, M_TILES);
-	    printf("N: %d (%d x %d)\n", N_GLOBAL, N, N_TILES);
-	    printf("K: %d (%d x %d)\n", K_GLOBAL, K, K_TILES);
+		std::cout << "M: " << M_GLOBAL << " (" << M << " x " << M_TILES << ")"
+				<< std::endl;
+		std::cout << "N: " << N_GLOBAL << " (" << N << " x " << N_TILES << ")"
+				<< std::endl;
+		std::cout << "K: " << K_GLOBAL << " (" << K << " x " << K_TILES << ")"
+				<< std::endl;
+
+		this->hw_data = this->device_ptr_d0;
 
 	}
 
@@ -122,16 +128,13 @@ public:
 
 		// OPTIMIZED TENSOR + GEMM SW
 		//HARDWARE CALL
-		rad::DeviceVector<real_t> tmp = this->device_ptr_d0;
-
 		// If enough shared memory available on the GPU use high performant kernel
 		if (this->deviceProp.sharedMemPerMultiprocessor
 				>= this->shared_memory) {
 			hw_mxm_kernel<real_t, real_t> <<<
 					this->deviceProp.multiProcessorCount,
 					THREADS_PER_BLOCK, this->shared_memory,
-					this->two_streams[0].stream>>>(
-					tmp.data(),
+					this->two_streams[0].stream>>>(this->hw_data.data(),
 					this->device_ptr_c0.data(), this->device_ptr_a0.data(),
 					this->device_ptr_b0.data(), this->alpha, this->beta,
 					this->k, this->k);
