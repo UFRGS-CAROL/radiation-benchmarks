@@ -99,21 +99,12 @@ public:
 			real_t beta, GEMMTYPE gemm_type) :
 			GEMMBase<real_t, real_t, real_t>(host_a0, host_b0, host_c0, host_d0,
 					k, alpha, beta, gemm_type) {
-//		enum {
-//			// Compute the right amount of shared memory to request.
-//			// We need shared memory to hold per-CTA C and D matrix tiles, and to cache per-CTA chunks
-//			// of the A and B matrices. Therefore, the right amount to request is the maximum of those
-//			// two numbers.
-//			SHMEM_SZ
-//		};
-
 		this->shared_memory = std::max(
 				sizeof(real_t) * (BLOCK_COL_TILES * M)
 						* (CHUNK_K * K + SKEW_HALF) * 2,
 				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
 						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(float));
 
-//		this->shared_memory = SHMEM_SZ;
 		rad::checkFrameworkErrors(
 				cudaFuncSetAttribute(hw_mxm_kernel<real_t, real_t>,
 						cudaFuncAttributeMaxDynamicSharedMemorySize,
@@ -131,6 +122,7 @@ public:
 
 		// OPTIMIZED TENSOR + GEMM SW
 		//HARDWARE CALL
+		rad::DeviceVector<real_t> tmp = this->device_ptr_d0;
 
 		// If enough shared memory available on the GPU use high performant kernel
 		if (this->deviceProp.sharedMemPerMultiprocessor
@@ -139,7 +131,7 @@ public:
 					this->deviceProp.multiProcessorCount,
 					THREADS_PER_BLOCK, this->shared_memory,
 					this->two_streams[0].stream>>>(
-					this->device_ptr_mixed_dmr.data(),
+					tmp.data(),
 					this->device_ptr_c0.data(), this->device_ptr_a0.data(),
 					this->device_ptr_b0.data(), this->alpha, this->beta,
 					this->k, this->k);
