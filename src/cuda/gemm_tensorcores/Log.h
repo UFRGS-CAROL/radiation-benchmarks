@@ -7,33 +7,13 @@
 
 #ifndef LOG_H_
 #define LOG_H_
-#include <string>
 #include <sys/time.h>
+#include <string>
 
 #ifdef LOGS
 #include "log_helper.h"
 #endif
 
-#include <string>
-
-//typedef enum {
-//	HALF_HALF, FLOAT_FLOAT, HALF_FLOAT, FLOAT_DOUBLE
-//} PrecisionCombination;
-//
-//std::ostream& operator<<(std::ostream& os, const PrecisionCombination& t) {
-//	switch (t) {
-//	case FLOAT_FLOAT:
-//		os << std::string("Float DMR");
-//		break;
-//	case HALF_FLOAT:
-//		os << std::string("Half/Float DMR");
-//		break;
-//	case FLOAT_DOUBLE:
-//		os << std::string("Float/Double DMR");
-//		break;
-//	}
-//	return os;
-//}
 
 class Log {
 public:

@@ -109,7 +109,7 @@ struct HostVectors {
 
 		if (f_gold.is_open()) {
 			f_gold.write(reinterpret_cast<char*>(this->host_matrix_d.data()),
-					sizeof(real_t) * host_gold.size());
+					sizeof(real_t) * this->host_matrix_d.size());
 			f_gold.close();
 		} else {
 			throw_line("Could not write gold file\n");
