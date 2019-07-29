@@ -115,8 +115,8 @@ __device__ __forceinline__ void hw_mxm_device(T* D, T *C, float *A, float *B,
  }
 
 template<class real_t>
-__device__ __forceinline__ void hw_mxm_device(real_t* D, real_t *C, half *A,
-		half *B, real_t alpha, real_t beta, int wA, int wB) {
+__device__ __forceinline__ void hw_mxm_device(real_t* D, const real_t *C, const half *A,
+		const half *B, real_t alpha, real_t beta, int wA, int wB) {
 	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
 	// Warp and lane identification.

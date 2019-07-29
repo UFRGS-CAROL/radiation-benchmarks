@@ -403,6 +403,7 @@ int main(int argc, char** argv) {
 	std::cout << "Precision: " << log_obj.precision << std::endl;
 	std::cout << "Verbose: " << log_obj.verbose << std::endl;
 	std::cout << "DMR type: " << log_obj.dmr << std::endl;
+	std::cout << "Tensor cores: " << log_obj.use_tensor_cores << std::endl;
 
 	GEMMTYPE gemm_type;
 	//NONDMRGEMM, DMRGEMM, NONDMRWMMA, DMRWMA
