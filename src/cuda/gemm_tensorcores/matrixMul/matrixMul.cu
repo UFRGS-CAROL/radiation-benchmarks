@@ -233,6 +233,7 @@ template <int BLOCK_SIZE, class real_t> __global__ void MatrixMulCUDA(real_t *C,
  
 }
 
+/*
 void ConstantInit(half2 *data, int size, half2 val) {
   for (int i = 0; i < size; ++i) {
     data[i] = val;
@@ -249,6 +250,22 @@ void ConstantInit(float *data, int size, float val) {
 void ConstantInit(double *data, int size, double val) {
   for (int i = 0; i < size; ++i) {
     data[i] = val;
+  }
+}
+
+*/
+template<class real_t>
+__host__ void init_host_matrices(real_t *a, real_t *b, real_t *c) {
+  for (int i = 0; i < M_GLOBAL; i++) {
+    for (int j = 0; j < K_GLOBAL; j++) {
+      a[i * K_GLOBAL + j] = (half)1.0;
+    }
+  }
+
+  for (int i = 0; i < N_GLOBAL; i++) {
+    for (int j = 0; j < K_GLOBAL; j++) {
+      b[i * K_GLOBAL + j] = (half)1.0;
+    }
   }
 }
 
@@ -284,11 +301,11 @@ int MatrixMultiply(int argc, char **argv,
 
 
   
-  ConstantInit(h_A, size_A, valA);
-  // ConstantInit(h_A1, size_A, valA1);
+  //ConstantInit(h_A, size_A, valA);
+  ConstantInit(h_A1,valA, size_A);
   
-  ConstantInit(h_B, size_B, valB); 
-  // ConstantInit(h_B1, size_B, valB1);
+  //ConstantInit(h_B, size_B, valB); 
+  ConstantInit(h_B, valB, size_B);
   
 
 
