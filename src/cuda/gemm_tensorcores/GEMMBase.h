@@ -27,6 +27,11 @@
 //#include "kernels.h"
 #include "dmr_kernels.h"
 
+std::ostream& operator<<(std::ostream& os, dim3 s) {
+	os << "x: " << s.x << " y: " << s.y << " z: " << s.z;
+	return os;
+}
+
 void exception(std::string msg, std::string file, int line) {
 	throw std::runtime_error(msg + " at " + file + ":" + std::to_string(line));
 }

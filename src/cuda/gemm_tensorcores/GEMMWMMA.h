@@ -153,6 +153,8 @@ public:
 //		} else {
 //			throw_line("NOT SUPPORTED\n");
 //		}
+		std::cout << this->grid_dim << std::endl;
+		std::cout << this->block_dim << std::endl;
 
 		//SOFTWARE CALL
 		sw_mxm_kernel<<<this->grid_dim, this->block_dim, 0,
@@ -161,7 +163,7 @@ public:
 				this->device_ptr_b0.data(), this->alpha, this->beta, this->k,
 				this->k);
 
-		for (auto st : this->two_streams)
+		for (auto& st : this->two_streams)
 			st.sync();
 		this->debug("hw_mxm_dmr device synchronize");
 		rad::checkFrameworkErrors(cudaPeekAtLastError());

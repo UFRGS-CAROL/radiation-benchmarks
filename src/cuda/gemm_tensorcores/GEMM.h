@@ -25,6 +25,9 @@ public:
 
 	}
 	void gemm() {
+		std::cout << this->grid_dim << std::endl;
+		std::cout << this->block_dim << std::endl;
+
 		sw_mxm_kernel<<<this->grid_dim, this->block_dim>>>(
 				this->device_ptr_d0.data(), this->device_ptr_c0.data(),
 				this->device_ptr_a0.data(), this->device_ptr_b0.data(),
