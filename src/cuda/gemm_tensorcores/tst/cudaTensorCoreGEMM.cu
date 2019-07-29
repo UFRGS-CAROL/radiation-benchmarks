@@ -251,8 +251,8 @@ __global__ void MatrixMulCUDA(float *C, half *A,
     // Load the matrices from device memory
     // to shared memory; each thread loads
     // one element of each matrix
-    As[ty][tx] = A[a + M_GLOBAL * ty + tx];
-    Bs[ty][tx] = B[b + M_GLOBAL * ty + tx];
+    As[ty][tx] = (float) A[a + M_GLOBAL * ty + tx];
+    Bs[ty][tx] = (float) B[b + M_GLOBAL * ty + tx];
 
 
     // Synchronize to make sure the matrices are loaded
