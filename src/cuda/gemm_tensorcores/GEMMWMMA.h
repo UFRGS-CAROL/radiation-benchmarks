@@ -118,7 +118,7 @@ public:
 				<< std::endl;
 		std::cout << "K: " << K_GLOBAL << " (" << K << " x " << K_TILES << ")"
 				<< std::endl;
-		if(M_GLOBAL != this->k){
+		if (M_GLOBAL != this->k) {
 			throw_line("M_GLOBAL AND K sizes must be the same!");
 		}
 
@@ -128,30 +128,31 @@ public:
 		// OPTIMIZED TENSOR + GEMM SW
 		//HARDWARE CALL
 
-        dim3 gridDim;
-        dim3 blockDim;
+		dim3 gridDim;
+		dim3 blockDim;
 
-        // blockDim.x must be a multple of warpSize
-        // 128x4 means we have 16 warps and a block computes a 64x64 output tile
-        blockDim.x = 128;
-        blockDim.y = 4;
+		// blockDim.x must be a multple of warpSize
+		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+		blockDim.x = 128;
+		blockDim.y = 4;
 
-        gridDim.x = (M_GLOBAL + (WMMA_M * blockDim.x / 32 - 1)) / (WMMA_M * blockDim.x / 32);
-        gridDim.y = (N_GLOBAL + WMMA_N * blockDim.y - 1) / (WMMA_N * blockDim.y);
+		gridDim.x = (M_GLOBAL + (WMMA_M * blockDim.x / 32 - 1))
+				/ (WMMA_M * blockDim.x / 32);
+		gridDim.y = (N_GLOBAL + WMMA_N * blockDim.y - 1)
+				/ (WMMA_N * blockDim.y);
 
 		// If enough shared memory available on the GPU use high performant kernel
 //		if (this->deviceProp.sharedMemPerMultiprocessor
 //				>= this->shared_memory) {
-			hw_mxm_kernel <<<
-					gridDim, blockDim, 0,
-					this->two_streams[0].stream>>>(this->device_ptr_mixed_dmr.data(),
-					this->device_ptr_c0.data(), this->device_ptr_a0.data(),
-					this->device_ptr_b0.data(), this->alpha, this->beta,
-					this->k, this->k);
+//			hw_mxm_kernel <<<
+//					gridDim, blockDim, 0,
+//					this->two_streams[0].stream>>>(this->device_ptr_mixed_dmr.data(),
+//					this->device_ptr_c0.data(), this->device_ptr_a0.data(),
+//					this->device_ptr_b0.data(), this->alpha, this->beta,
+//					this->k, this->k);
 //		} else {
 //			throw_line("NOT SUPPORTED\n");
 //		}
-
 
 		//SOFTWARE CALL
 		sw_mxm_kernel<<<this->grid_dim, this->block_dim, 0,
@@ -160,6 +161,8 @@ public:
 				this->device_ptr_b0.data(), this->alpha, this->beta, this->k,
 				this->k);
 
+		for (auto st : this->two_streams)
+			st.sync();
 		this->debug("hw_mxm_dmr device synchronize");
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
