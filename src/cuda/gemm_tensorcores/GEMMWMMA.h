@@ -116,7 +116,8 @@ public:
 //		this->shared_memory = SHMEM_SZ;
 		rad::checkFrameworkErrors(
 				cudaFuncSetAttribute(hw_mxm_kernel<real_t, real_t>,
-						cudaFuncAttributeMaxDynamicSharedMemorySize, this->shared_memory));
+						cudaFuncAttributeMaxDynamicSharedMemorySize,
+						this->shared_memory));
 
 		this->two_streams.resize(2);
 
@@ -128,22 +129,26 @@ public:
 		//HARDWARE CALL
 
 		// If enough shared memory available on the GPU use high performant kernel
-		if (this->deviceProp.sharedMemPerMultiprocessor >= this->shared_memory) {
-			hw_mxm_kernel<real_t, real_t> <<<this->deviceProp.multiProcessorCount,
-			THREADS_PER_BLOCK, this->shared_memory, this->two_streams[0].stream>>>(
-					this->device_ptr_d0.data(), this->device_ptr_c0.data(),
-					this->device_ptr_a0.data(), this->device_ptr_b0.data(),
-					this->alpha, this->beta, this->k, this->k);
+		if (this->deviceProp.sharedMemPerMultiprocessor
+				>= this->shared_memory) {
+			hw_mxm_kernel<real_t, real_t> <<<
+					this->deviceProp.multiProcessorCount,
+					THREADS_PER_BLOCK, this->shared_memory,
+					this->two_streams[0].stream>>>(
+					this->device_ptr_mixed_dmr.data(),
+					this->device_ptr_c0.data(), this->device_ptr_a0.data(),
+					this->device_ptr_b0.data(), this->alpha, this->beta,
+					this->k, this->k);
 		} else {
 			throw_line("NOT SUPPORTED\n");
 		}
 
 		//SOFTWARE CALL
 		sw_mxm_kernel<real_t, real_t> <<<this->grid_dim, this->block_dim, 0,
-				this->two_streams[1].stream>>>(
-				this->device_ptr_mixed_dmr.data(), this->device_ptr_c0.data(),
-				this->device_ptr_a0.data(), this->device_ptr_b0.data(),
-				this->alpha, this->beta, this->k, this->k);
+				this->two_streams[1].stream>>>(this->device_ptr_d0.data(),
+				this->device_ptr_c0.data(), this->device_ptr_a0.data(),
+				this->device_ptr_b0.data(), this->alpha, this->beta, this->k,
+				this->k);
 
 		this->debug("hw_mxm_dmr device synchronize");
 		rad::checkFrameworkErrors(cudaPeekAtLastError());

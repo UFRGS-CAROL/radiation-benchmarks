@@ -110,5 +110,13 @@ test_dmr_mixed:
 	
 test_non_drm:
 	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr nondmr --iterations 10
+
+
+generate_tensor:
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision half --dmr dmr --tensor_cores 1
+	
+
+test_tensor:
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision half --dmr dmr --tensor_cores 1 --iterations 10
 	
 	
