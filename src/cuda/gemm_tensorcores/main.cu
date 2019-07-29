@@ -190,6 +190,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		BiggestPrecision half_precision = d0[i];
 		BiggestPrecision full_precision = d1[i];
 		threshold = std::fmax(threshold, fabs(half_precision - full_precision));
+
 		if (gold_value != full_precision || !cmp(half_precision, full_precision, log)) {
 #ifdef OMP
 #pragma omp critical
@@ -309,7 +310,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 		mt = std::make_shared<GEMMWMMAMIXED<half_t, real_t>>(hd.host_matrix_a,
 				hd.host_matrix_b, hd.host_matrix_c, hd.host_matrix_d,
 				log_obj.size_matrices, real_t(log_obj.alpha),
-				real_t(log_obj.beta), gemm_t);
+				real_t(log_obj.beta));
 		break;
 	}
 
@@ -330,7 +331,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 				std::make_shared < GEMM
 						< real_t
 								>> (hd.host_matrix_a, hd.host_matrix_b, hd.host_matrix_c, hd.host_matrix_d, log_obj.size_matrices, real_t(
-										log_obj.alpha), real_t(log_obj.beta), gemm_t);
+										log_obj.alpha), real_t(log_obj.beta));
 		break;
 
 	case DMRGEMM:
@@ -338,7 +339,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 				std::make_shared < GEMMDMR
 						< real_t
 								>> (hd.host_matrix_a, hd.host_matrix_b, hd.host_matrix_c, hd.host_matrix_d, log_obj.size_matrices, real_t(
-										log_obj.alpha), real_t(log_obj.beta), gemm_t);
+										log_obj.alpha), real_t(log_obj.beta));
 		break;
 
 	case DMRWMA:
@@ -346,7 +347,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 				std::make_shared < GEMMWMMADMR
 						< real_t
 								>> (hd.host_matrix_a, hd.host_matrix_b, hd.host_matrix_c, hd.host_matrix_d, log_obj.size_matrices, real_t(
-										log_obj.alpha), real_t(log_obj.beta), gemm_t);
+										log_obj.alpha), real_t(log_obj.beta));
 		break;
 	case DMRGEMMMIXED:
 	case NONDMRWMMA:
@@ -375,7 +376,7 @@ void call_mxm(Log& log_obj, GEMMTYPE gemm_t) {
 		mt = std::make_shared<GEMMDMRMIXED<real_t, real_t, mixed_real_t>>(
 				hd.host_matrix_a, hd.host_matrix_b, hd.host_matrix_c,
 				hd.host_matrix_d, log_obj.size_matrices, real_t(log_obj.alpha),
-				real_t(log_obj.beta), gemm_t);
+				real_t(log_obj.beta));
 		break;
 	}
 

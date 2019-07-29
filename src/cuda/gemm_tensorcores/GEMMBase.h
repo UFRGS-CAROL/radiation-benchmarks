@@ -51,8 +51,8 @@ public:
 			const std::vector<half_t>& host_b0, // MAtrix B
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
-			real_t beta, GEMMTYPE gemm_type) :
-			k(k), alpha(alpha), beta(beta), gemm_type(gemm_type), device_ptr_d0(
+			real_t beta) :
+			k(k), alpha(alpha), beta(beta), device_ptr_d0(
 					host_d0) // allocating D vectors
 
 	{ //Alpha and Beta
@@ -163,8 +163,6 @@ protected:
 	real_t alpha, beta;
 
 	bool to_debug = false;
-
-	GEMMTYPE gemm_type;
 
 	//to check memory errors
 	rad::DeviceVector<unsigned long long int> device_is_memory_bad;

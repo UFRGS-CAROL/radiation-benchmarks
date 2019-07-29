@@ -19,9 +19,9 @@ public:
 			const std::vector<real_t>& host_b0, // MAtrix B
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
-			real_t beta, GEMMTYPE gemm_type) :
+			real_t beta) :
 			GEMMBase<real_t, real_t, real_t>(host_a0, host_b0, host_c0, host_d0,
-					k, alpha, beta, gemm_type) {
+					k, alpha, beta) {
 
 	}
 	void gemm() {
@@ -49,9 +49,9 @@ public:
 			const std::vector<real_t>& host_b0, // MAtrix B
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
-			real_t beta, GEMMTYPE gemm_type) :
+			real_t beta) :
 			GEMMBase<real_t, real_t, mixed_t>(host_a0, host_b0, host_c0,
-					host_d0, k, alpha, beta, gemm_type) {
+					host_d0, k, alpha, beta) {
 
 	}
 
@@ -81,9 +81,9 @@ public:
 			const std::vector<real_t>& host_b0, // MAtrix B
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
-			real_t beta, GEMMTYPE gemm_type) :
+			real_t beta) :
 			GEMMBase<real_t, real_t, real_t>(host_a0, host_b0, host_c0, host_d0,
-					k, alpha, beta, gemm_type) {
+					k, alpha, beta) {
 
 	}
 

@@ -36,9 +36,9 @@ public:
 			const std::vector<half_t>& host_b0, // MAtrix B
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
-			real_t beta, GEMMTYPE gemm_type) :
+			real_t beta) :
 			GEMMBase<half_t, real_t, half_t>(host_a0, host_b0, host_c0, host_d0,
-					k, alpha, beta, gemm_type) {
+					k, alpha, beta) {
 
 	}
 
@@ -65,9 +65,9 @@ public:
 			const std::vector<half_t>& host_b0, // MAtrix B
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
-			real_t beta, GEMMTYPE gemm_type) :
+			real_t beta) :
 			GEMMBase<half_t, real_t, half_t>(host_a0, host_b0, host_c0, host_d0,
-					k, alpha, beta, gemm_type) {
+					k, alpha, beta) {
 
 	}
 
@@ -96,14 +96,14 @@ public:
 			const std::vector<real_t>& host_b0, // MAtrix B
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
-			real_t beta, GEMMTYPE gemm_type) :
+			real_t beta) :
 			GEMMBase<real_t, real_t, real_t>(host_a0, host_b0, host_c0, host_d0,
-					k, alpha, beta, gemm_type) {
+					k, alpha, beta) {
 		this->shared_memory = std::max(
 				sizeof(real_t) * (BLOCK_COL_TILES * M)
 						* (CHUNK_K * K + SKEW_HALF) * 2,
 				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
-						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(float));
+						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(real_t));
 
 //		rad::checkFrameworkErrors(
 //				cudaFuncSetAttribute(hw_mxm_kernel<real_t, real_t>,
@@ -128,18 +128,18 @@ public:
 		// OPTIMIZED TENSOR + GEMM SW
 		//HARDWARE CALL
 
-		dim3 gridDim;
-		dim3 blockDim;
-
-		// blockDim.x must be a multple of warpSize
-		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-		blockDim.x = 128;
-		blockDim.y = 4;
-
-		gridDim.x = (M_GLOBAL + (WMMA_M * blockDim.x / 32 - 1))
-				/ (WMMA_M * blockDim.x / 32);
-		gridDim.y = (N_GLOBAL + WMMA_N * blockDim.y - 1)
-				/ (WMMA_N * blockDim.y);
+//		dim3 gridDim;
+//		dim3 blockDim;
+//
+//		// blockDim.x must be a multple of warpSize
+//		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+//		blockDim.x = 128;
+//		blockDim.y = 4;
+//
+//		gridDim.x = (M_GLOBAL + (WMMA_M * blockDim.x / 32 - 1))
+//				/ (WMMA_M * blockDim.x / 32);
+//		gridDim.y = (N_GLOBAL + WMMA_N * blockDim.y - 1)
+//				/ (WMMA_N * blockDim.y);
 
 		// If enough shared memory available on the GPU use high performant kernel
 //		if (this->deviceProp.sharedMemPerMultiprocessor
