@@ -52,14 +52,14 @@ __device__ __forceinline__ void compare(const double lhs, const float rhs) {
 	}
 }
 
-template<typename T>
-__device__ __forceinline__ void compare(const T lhs, const T rhs) {
-	const T diff = abs__(lhs - rhs);
-	const T zero = T(ZERO_FULL);
-	if (diff > zero) {
-		atomicAdd(&errors, 1);
-	}
-}
+//template<typename T>
+//__device__ __forceinline__ void compare(const T lhs, const T rhs) {
+//	const T diff = abs__(lhs - rhs);
+//	const T zero = T(ZERO_FULL);
+//	if (diff > zero) {
+//		atomicAdd(&errors, 1);
+//	}
+//}
 
 template<typename incomplete, typename full>
 __device__ __forceinline__ void check_relative_error(incomplete acc_incomplete,
