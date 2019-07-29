@@ -894,14 +894,14 @@ int main(int argc, char **argv) {
   printf("Computing... using high performance kernel compute_gemm \n");
 
 
-cudaStream_t st;
-cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);  
+  cudaStream_t st;
+  cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);  
 
-checkCudaErrors(cudaFuncSetAttribute(
-        compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-checkKernelErrors(
-        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                        SHMEM_SZ, st>>>(A, B, C, D, alpha, beta)));
+  checkCudaErrors(cudaFuncSetAttribute(
+          compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+  checkKernelErrors(
+          (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+                          SHMEM_SZ, st>>>(A, B, C, D, alpha, beta)));
 
 
   dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -909,25 +909,22 @@ checkKernelErrors(
 
 
 
-checkKernelErrors((MatrixMulCUDA<<<grid, threads, 0, st>>>(D1, A, B,
-                                               M_GLOBAL, M_GLOBAL, alpha, beta)));
+  checkKernelErrors((MatrixMulCUDA<<<grid, threads, 0, st>>>(D1, A, B,
+                                                 M_GLOBAL, M_GLOBAL, alpha, beta)));
 
-
-
-checkCudaErrors(cudaMemcpy(result_hD, D,
-                           sizeof(float) * M_GLOBAL * N_GLOBAL,
-                           cudaMemcpyDeviceToHost));
-checkCudaErrors(cudaMemcpy(result_host, D1,
-                           sizeof(float) * M_GLOBAL * N_GLOBAL,
-                           cudaMemcpyDeviceToHost));
-
-
-cudaStreamSynchronize(st);
-
-
-
-  
+  cudaStreamSynchronize(st);
+ 
   cudaDeviceSynchronize();
+
+
+  checkCudaErrors(cudaMemcpy(result_hD, D,
+                             sizeof(float) * M_GLOBAL * N_GLOBAL,
+                             cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaMemcpy(result_host, D1,
+                             sizeof(float) * M_GLOBAL * N_GLOBAL,
+                             cudaMemcpyDeviceToHost));
+
+
 
   checkCudaErrors(cudaEventRecord(stop));
   checkCudaErrors(cudaEventSynchronize(stop));
@@ -948,8 +945,6 @@ cudaStreamSynchronize(st);
   }
   
   
-  free(result_hD);
-  free(result_host);
 
 
   float milliseconds = 0;
@@ -965,11 +960,15 @@ cudaStreamSynchronize(st);
   free(A_h);
   free(B_h);
   free(C_h);
+  //free(result_hD);
+  //free(result_host);
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(A)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(B)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(C)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(D)));
   checkCudaErrors(cudaFree(reinterpret_cast<void *>(D1)));
+  checkCudaErrors(cudaFree(reinterpret_cast<void *>(result_host)));
+  checkCudaErrors(cudaFree(reinterpret_cast<void *>(result_hD)))
   cudaStreamDestroy(st);
   return 0;
 }
