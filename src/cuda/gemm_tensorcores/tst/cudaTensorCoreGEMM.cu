@@ -922,6 +922,9 @@ checkCudaErrors(cudaMemcpy(result_host, D1,
                            cudaMemcpyDeviceToHost));
 
 
+cudaStreamSynchronize(st);
+
+
 
   
   cudaDeviceSynchronize();
