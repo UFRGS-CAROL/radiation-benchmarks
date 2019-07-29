@@ -275,9 +275,9 @@ int MatrixMultiply(int argc, char **argv,
   // Initialize host memory
   
   
-  const real_t valA = 2.0f;
+  const real_t valA = 1.0f;
   
-  const real_t valB = 2.0f;
+  const real_t valB = 1.0f;
 
   const real_t alpha = 1.1f;
 
@@ -343,10 +343,10 @@ int MatrixMultiply(int argc, char **argv,
   printf("Computing result using CUDA Kernel...\n");
 
 
- // MatrixMulCUDA<32, real_t><<< grid, threads >>>(d_C, d_A, d_B,
-   //                                           dimsA.x, dimsB.x, alpha);
-   MatrixMulCUDA_DMR<32,half_t, real_t><<< grid, threads >>>(d_C, d_C1, d_A, d_B,
-  	                                           dimsA.x, dimsB.x, alpha);
+ MatrixMulCUDA<32, real_t><<< grid, threads >>>(d_C, d_A, d_B,
+                                            dimsA.x, dimsB.x, alpha);
+  // MatrixMulCUDA_DMR<32,half_t, real_t><<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+  //	                                           dimsA.x, dimsB.x, alpha);
 
   
 
@@ -369,11 +369,11 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int j = 0; j < nIter; j++) {
    
-      // MatrixMulCUDA<32, real_t> <<< grid, threads >>>(d_C, d_A, d_B,
-                                             // dimsA.x, dimsB.x, alpha);
+       MatrixMulCUDA<32, real_t> <<< grid, threads >>>(d_C, d_A, d_B,
+                                              dimsA.x, dimsB.x, alpha);
       
-       MatrixMulCUDA_DMR<32,half_t, real_t> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
-                                               dimsA.x, dimsB.x, alpha);
+        //MatrixMulCUDA_DMR<32,half_t, real_t> <<< grid, threads >>>(d_C, d_C1, d_A, d_B,
+        //                                       dimsA.x, dimsB.x, alpha);
 
     
   }
@@ -456,7 +456,7 @@ int main(int argc, char **argv) {
   int dev = findCudaDevice(argc, (const char **)argv);
 
   int block_size = 32;
-  int matrix_size = 8192;
+  int matrix_size = 4096;
 
   // dim3 dimsA(8192, 8192, 1);
   // dim3 dimsB(8192, 8192, 1);

@@ -98,9 +98,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 16
-#define N_TILES 16
-#define K_TILES 16
+#define M_TILES 256
+#define N_TILES 256
+#define K_TILES 256
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)
@@ -852,7 +852,7 @@ int main(int argc, char **argv) {
 
   init_host_matrices(A_h, B_h, C_h);
 
-  std::cout<< "A = " << A_h[0] << std::endl;
+  std::cout << "A = " << (A_h[0]) << std::endl;
 
   printf("Preparing data for GPU...\n");
 
@@ -911,8 +911,8 @@ int main(int argc, char **argv) {
 
 
 
-  checkKernelErrors((MatrixMulCUDA<<<grid, threads, 0, st>>>(D1, A, B,
-                                                 M_GLOBAL, M_GLOBAL, alpha, beta)));
+  //checkKernelErrors((MatrixMulCUDA<<<grid, threads, 0, st>>>(D1, A, B,
+  //                                               M_GLOBAL, M_GLOBAL, alpha, beta)));
 
   cudaStreamSynchronize(st);
  
