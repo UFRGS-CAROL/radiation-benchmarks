@@ -924,7 +924,7 @@ checkCudaErrors(cudaMemcpy(result_host, D1,
 
 
   
- // cudaDeviceSynchronize();
+  cudaDeviceSynchronize();
 
   checkCudaErrors(cudaEventRecord(stop));
   checkCudaErrors(cudaEventSynchronize(stop));
