@@ -38,7 +38,7 @@ INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I$(RAD_D
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
-NVCCFLAGS+=-G -DDEBUG
+NVCCFLAGS+= -g -G -DDEBUG
 endif
 
 CFLAGS+=$(OPTS)
