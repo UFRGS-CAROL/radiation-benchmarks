@@ -78,52 +78,12 @@ public:
 			break;
 		case NONDMRWMMA:
 		case DMRWMA:
-			this->block_dim.x = WMMA_M; //128;
-			this->block_dim.y = WMMA_N;
-
-			this->grid_dim.x = (this->k
-					+ (WMMA_M * this->block_dim.x / WARP_SIZE - 1))
-					/ (WMMA_M * this->block_dim.x / WARP_SIZE);
-			this->grid_dim.y = (this->k + WMMA_N * this->block_dim.y - 1)
-					/ (WMMA_N * this->block_dim.y);
 			break;
 		}
-
-		// Compute the right amount of shared memory to request.
-		// We need shared memory to hold per-CTA C and D matrix tiles, and to cache
-		// per-CTA chunks
-		// of the A and B matrices. Therefore, the right amount to request is the
-		// maximum of those
-		// two numbers.
-		this->shared_memory = std::max(
-				sizeof(half_t) * (BLOCK_COL_TILES * M)
-						* (CHUNK_K * K + SKEW_HALF) * 2,
-				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
-						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(real_t));
-
-		//SET ALL THE KERNELS TO USE THE MAXIMUM OF SHARED MEMORY
-//		rad::checkFrameworkErrors(
-//				cudaFuncSetAttribute(hw_mxm_kernel<half_t, real_t>,
-//						cudaFuncAttributeMaxDynamicSharedMemorySize,
-//						this->shared_memory));
-//		rad::checkFrameworkErrors(
-//				cudaFuncSetAttribute(hw_mxm_dmr_kernel<real_t>,
-//						cudaFuncAttributeMaxDynamicSharedMemorySize,
-//						this->shared_memory));
-//		rad::checkFrameworkErrors(
-//				cudaFuncSetAttribute(sw_mxm_kernel<half_t>,
-//						cudaFuncAttributeMaxDynamicSharedMemorySize,
-//						this->shared_memory));
-//		rad::checkFrameworkErrors(
-//				cudaFuncSetAttribute(sw_mxm_dmr_kernel<half_t, real_t>,
-//						cudaFuncAttributeMaxDynamicSharedMemorySize,
-//						this->shared_memory));
 
 		int dev = 0;
 		rad::checkFrameworkErrors(
 				cudaGetDeviceProperties(&this->deviceProp, dev));
-
-//		this->device_ptr_mixed_dmr = std::vector < half_t > (host_d0.size());
 	}
 
 	/**
