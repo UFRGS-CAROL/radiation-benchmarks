@@ -196,8 +196,7 @@ __global__ void MatrixMulCUDA(float *A, float *B, float *C, float* D,
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-	if(tx + ty + bx + by == 0)
-		printf("%f %f\n", beta, C[c + wB * ty + tx]);
+
 	D[c + wB * ty + tx] = alpha * Csub + beta * C[c + wB * ty + tx];
 }
 
@@ -589,11 +588,12 @@ int main(int argc, char **argv) {
 	// matMultiplyOnHost(A_h, B_h, result_host, alpha, beta, M_GLOBAL, K_GLOBAL,
 	//                   K_GLOBAL, N_GLOBAL, M_GLOBAL, N_GLOBAL);
 
-	for (int i = 0; i < 10; i++) {
-
+	for (int i = 0; i < M_GLOBAL * N_GLOBAL; i++) {
+		if((double(D_h[i]) - double(dt[i])) == 0){
 		printf(" diff = %f, HW = %f, SW = %f \n",
 				(double(D_h[i]) - double(dt[i])), double(D_h[i]),
 				double(dt[i]));
+		}
 
 	}
 
