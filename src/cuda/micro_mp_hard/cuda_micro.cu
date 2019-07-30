@@ -9,10 +9,8 @@
 #include <vector>
 #include <sstream>
 
-
 //#include "include/cuda_utils.h"
 #include "include/device_vector.h"
-
 
 #include "utils.h"
 
@@ -40,7 +38,6 @@ cudaDeviceProp get_device() {
 
 	return prop;
 }
-
 
 std::string get_double_representation(double val) {
 	std::string output = "";
@@ -112,7 +109,6 @@ int check_output_errors(std::vector<half_t> &R_half_t, std::vector<real_t> &R,
 	}
 	return host_errors;
 }
-
 
 template<typename half_t, typename real_t, typename ... TypeArgs>
 void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
@@ -272,7 +268,6 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 	}
 }
 
-
 void dmr(Parameters& parameters) {
 	/* DMRMIXED REDUNDANCY -------------------------------------------------- */
 	if (parameters.redundancy == DMRMIXED) {
@@ -339,6 +334,9 @@ int main(int argc, char* argv[]) {
 	test_info += std::to_string(OPS);
 #endif
 
+	test_info += " nonconst:" + std::to_string(parameters.nonconstant);
+	test_info += " numop:" + std::to_string(parameters.operation_num);
+
 	std::string test_name = std::string("cuda_") + parameters.precision_str
 	+ "_micro-" + parameters.instruction_str;
 	start_log_file(const_cast<char*>(test_name.c_str()),
@@ -347,9 +345,11 @@ int main(int argc, char* argv[]) {
 
 	std::cout << parameters << std::endl;
 
+	if (parameters.nonconstant) {
 
-	dmr(parameters);
-
+	} else {
+		dmr(parameters);
+	}
 #ifdef LOGS
 	end_log_file();
 #endif
