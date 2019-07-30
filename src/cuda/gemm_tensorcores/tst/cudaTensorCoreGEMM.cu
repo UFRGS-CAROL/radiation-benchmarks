@@ -271,7 +271,7 @@ __global__ void compute_gemm(const half *A, const half *B, const half *C,
 						+ i * SHMEM_STRIDE * K + j * N;
 
 				nvcuda::wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE,
-						C_LAYOUT);
+				C_LAYOUT);
 			}
 		}
 
@@ -433,22 +433,16 @@ int main(int argc, char **argv) {
 	float *A_h = NULL;
 	float *B_h = NULL;
 	float *C_h = NULL;
-
-	float *result_hD = NULL;
-	float *result_host = NULL;
+	float *D_h = NULL;
 
 	A_h = (float *) malloc(sizeof(float) * M_GLOBAL * K_GLOBAL);
 	B_h = (float *) malloc(sizeof(float) * K_GLOBAL * N_GLOBAL);
 	C_h = (float *) malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
-
-	result_hD = (float *) malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
-	result_host = (float *) malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
-
+	D_h = (float *) malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
 	float *A = NULL;
 	float *B = NULL;
 	float *C = NULL;
 	float *D = NULL;
-	float *D1 = NULL;
 
 	checkCudaErrors(
 			cudaMalloc(reinterpret_cast<void **>(&A),
@@ -462,23 +456,16 @@ int main(int argc, char **argv) {
 	checkCudaErrors(
 			cudaMalloc(reinterpret_cast<void **>(&D),
 					sizeof(float) * M_GLOBAL * N_GLOBAL));
-	checkCudaErrors(
-			cudaMalloc(reinterpret_cast<void **>(&D1),
-					sizeof(float) * M_GLOBAL * N_GLOBAL));
 
 	assert(((unsigned long long) A) % 128 == 0);
 	assert(((unsigned long long) B) % 128 == 0);
 	assert(((unsigned long long) C) % 128 == 0);
 	assert(((unsigned long long) D) % 128 == 0);
-	assert(((unsigned long long) D1) % 128 == 0);
-
-	init_host_matrices(A_h, B_h, C_h);
 
 	half* at = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
 	half* bt = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
 	half* ct = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
 	half* dt = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
-	init_host_matrices(at, bt, ct);
 	half* atd;
 	half* btd;
 	half* ctd;
@@ -497,15 +484,21 @@ int main(int argc, char **argv) {
 			cudaMalloc(reinterpret_cast<void **>(&dtd),
 					sizeof(half) * M_GLOBAL * N_GLOBAL));
 
+	//INIT HOST
+	init_host_matrices(A_h, B_h, C_h);
+	init_host_matrices(at, bt, ct);
+
 	checkCudaErrors(
-				cudaMemcpy(atd, at, sizeof(half) * M_GLOBAL * K_GLOBAL,
-						cudaMemcpyHostToDevice));
-		checkCudaErrors(
-				cudaMemcpy(btd, bt, sizeof(half) * N_GLOBAL * K_GLOBAL,
-						cudaMemcpyHostToDevice));
-		checkCudaErrors(
-				cudaMemcpy(ctd, ct, sizeof(half) * M_GLOBAL * N_GLOBAL,
-						cudaMemcpyHostToDevice));
+			cudaMemcpy(atd, at, sizeof(half) * M_GLOBAL * K_GLOBAL,
+					cudaMemcpyHostToDevice));
+	checkCudaErrors(
+			cudaMemcpy(btd, bt, sizeof(half) * N_GLOBAL * K_GLOBAL,
+					cudaMemcpyHostToDevice));
+	checkCudaErrors(
+			cudaMemcpy(ctd, ct, sizeof(half) * M_GLOBAL * N_GLOBAL,
+					cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemset(dtd, 0, sizeof(half) * M_GLOBAL * N_GLOBAL));
+
 
 	printf("Preparing data for GPU...\n");
 
@@ -520,7 +513,6 @@ int main(int argc, char **argv) {
 					cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemset(D, 0, sizeof(float) * M_GLOBAL * N_GLOBAL));
 
-	checkCudaErrors(cudaMemset(D1, 0, sizeof(float) * M_GLOBAL * N_GLOBAL));
 
 	enum {
 		// Compute the right amount of shared memory to request.
@@ -540,6 +532,8 @@ int main(int argc, char **argv) {
 
 	const float alpha = 1.0;
 	const float beta = 1.0;
+	const half alpha_h = 1.0;
+	const half beta_h = 1.0;
 
 	cudaEvent_t start, stop;
 
@@ -565,8 +559,8 @@ int main(int argc, char **argv) {
 					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
 	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-			st>>>(atd, btd, ctd, dtd, half(alpha), half(beta), M_GLOBAL,
-			M_GLOBAL);
+			st>>>(atd, btd, ctd, dtd, alpha_h, beta_h, M_GLOBAL,
+	M_GLOBAL);
 
 	MatrixMulCUDA<<<grid, threads, SHMEM_SZ>>>(A, B, C, D, alpha, beta,
 	M_GLOBAL, M_GLOBAL);
@@ -576,7 +570,7 @@ int main(int argc, char **argv) {
 	checkKernelErrors(cudaDeviceSynchronize());
 
 	checkCudaErrors(
-			cudaMemcpy(result_hD, D, sizeof(float) * M_GLOBAL * N_GLOBAL,
+			cudaMemcpy(D_h, D, sizeof(float) * M_GLOBAL * N_GLOBAL,
 					cudaMemcpyDeviceToHost));
 	checkCudaErrors(
 			cudaMemcpy(dt, dtd, sizeof(half) * M_GLOBAL * N_GLOBAL,
@@ -595,8 +589,8 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < 10; i++) {
 
 		printf(" diff = %f, HW = %f, SW = %f \n",
-				(double(result_hD[i]) - double(dt[i])),
-				double(result_hD[i]), double(dt[i]));
+				(double(D_h[i]) - double(dt[i])), double(D_h[i]),
+				double(dt[i]));
 
 	}
 
@@ -612,9 +606,7 @@ int main(int argc, char **argv) {
 	free(A_h);
 	free(B_h);
 	free(C_h);
-	free(result_hD);
-	free(result_host);
-
+	free(D_h);
 	free(at);
 	free(bt);
 	free(ct);
@@ -628,7 +620,7 @@ int main(int argc, char **argv) {
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(B)));
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(C)));
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(D)));
-	checkCudaErrors(cudaFree(reinterpret_cast<void *>(D1)));
+
 	cudaStreamDestroy(st);
 
 	return 0;
