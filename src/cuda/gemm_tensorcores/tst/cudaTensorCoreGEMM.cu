@@ -187,7 +187,7 @@ __global__ void MatrixMulCUDA(float *A, float *B, float *C, float* D, float alph
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-	D[c + wB * ty + tx] = Csub; //alpha * Csub + beta * C[c + wB * ty + tx];
+	D[c + wB * ty + tx] = alpha * Csub + beta * C[c + wB * ty + tx];
 }
 
 __global__ void compute_gemm(const half *A, const half *B, const half *C,
