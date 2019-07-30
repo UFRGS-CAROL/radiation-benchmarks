@@ -107,10 +107,10 @@ public:
 				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
 						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(real_t));
 
-		rad::checkFrameworkErrors(
-				cudaFuncSetAttribute(hw_mxm_kernel<half, half>,
-						cudaFuncAttributeMaxDynamicSharedMemorySize,
-						this->shared_memory));
+//		rad::checkFrameworkErrors(
+//				cudaFuncSetAttribute(hw_mxm_kernel<half, half>,
+//						cudaFuncAttributeMaxDynamicSharedMemorySize,
+//						this->shared_memory));
 
 		rad::checkFrameworkErrors(
 				cudaFuncSetAttribute(sw_mxm_kernel<half>,
@@ -147,7 +147,7 @@ public:
 		// If enough shared memory available on the GPU use high performant kernel
 //		if (this->deviceProp.sharedMemPerMultiprocessor
 //				>= this->shared_memory) {
-		hw_mxm_kernel<<<tensor_grid, tensor_block, this->shared_memory,
+		hw_mxm_kernel<<<tensor_grid, tensor_block, 0,
 				this->two_streams[0].stream>>>(
 				this->device_ptr_mixed_dmr.data(), this->device_ptr_c0.data(),
 				this->device_ptr_a0.data(), this->device_ptr_b0.data(),
