@@ -9,18 +9,38 @@
 #include <vector>
 #include <sstream>
 
+
+//#include "include/cuda_utils.h"
+#include "include/device_vector.h"
+
+
+#include "utils.h"
+
 #include "dmr_kernels.h"
 #include "none_kernels.h"
-#include "include/device_vector.h"
-#include "cuda_utils.h"
 #include "Parameters.h"
+#include "nonconstant_setup.h"
 
-// helper functions
-#include "helper_cuda.h"
+cudaDeviceProp get_device() {
+//================== Retrieve and set the default CUDA device
+	cudaDeviceProp prop;
+	int count = 0;
 
-//#define HALF_ROUND_STYLE 1
-//#define HALF_ROUND_TIES_TO_EVEN 1
-//#include "half.hpp"
+	rad::checkFrameworkErrors(cudaGetDeviceCount(&count));
+	for (int i = 0; i < count; i++) {
+		rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, i));
+	}
+	int *ndevice;
+	int dev = 0;
+	ndevice = &dev;
+	rad::checkFrameworkErrors(cudaGetDevice(ndevice));
+
+	rad::checkFrameworkErrors(cudaSetDevice(0));
+	rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
+
+	return prop;
+}
+
 
 std::string get_double_representation(double val) {
 	std::string output = "";
@@ -42,27 +62,18 @@ std::string get_double_representation(double val) {
 	return output;
 }
 
-bool cmp(const double lhs, const double rhs, const double zero) {
-	const double diff = abs(lhs - rhs);
-	if (diff > zero) {
-		return false;
-	}
-	return true;
-}
-
 // Returns the number of errors found
 // if no errors were found it returns 0
-template<typename incomplete, typename full, typename output_type = incomplete>
-int check_output_errors(std::vector<incomplete> &R_incomplete,
-		std::vector<full> &R, output_type OUTPUT_R, bool verbose,
-		unsigned long long dmr_errors) {
+template<typename half_t, typename real_t, typename output_type = half_t>
+int check_output_errors(std::vector<half_t> &R_half_t, std::vector<real_t> &R,
+		output_type OUTPUT_R, bool verbose, unsigned long long dmr_errors) {
 	int host_errors = 0;
 	double gold = double(OUTPUT_R);
 	double threshold = -3;
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < R.size(); i++) {
 		double output = double(R[i]);
-		double output_inc = double(R_incomplete[i]);
+		double output_inc = double(R_half_t[i]);
 		threshold = max(threshold, fabs(output - output_inc));
 		if (!cmp(gold, output, 0.000000001)
 				|| !cmp(output, output_inc, ZERO_FLOAT)) {
@@ -102,7 +113,8 @@ int check_output_errors(std::vector<incomplete> &R_incomplete,
 	return host_errors;
 }
 
-template<typename incomplete, typename full, typename ... TypeArgs>
+
+template<typename half_t, typename real_t, typename ... TypeArgs>
 void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 	std::cout << "Input values " << type_ << std::endl;
 #ifdef CHECKBLOCK
@@ -115,15 +127,15 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 	double max_kernel_time = 0;
 	//====================================
 
-	// FULL PRECIISON
-	std::vector<full> host_vector_full(parameters.r_size, 0);
-	rad::DeviceVector<full> device_vector_full(parameters.r_size);
+	// real_t PRECIISON
+	std::vector<real_t> host_vector_real_t(parameters.r_size, 0);
+	rad::DeviceVector<real_t> device_vector_real_t(parameters.r_size);
 
 	//====================================
 
 	// SECOND PRECISION ONLY IF IT IS DEFINED
-	std::vector<incomplete> host_vector_inc(parameters.r_size, 0);
-	rad::DeviceVector<incomplete> device_vector_inc(parameters.r_size);
+	std::vector<half_t> host_vector_inc(parameters.r_size, 0);
+	rad::DeviceVector<half_t> device_vector_inc(parameters.r_size);
 	//====================================
 	// Verbose in csv format
 	if (parameters.verbose == false) {
@@ -134,7 +146,7 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 	auto gold = type_.output_r;
 	for (int iteration = 0; iteration < parameters.iterations; iteration++) {
 		//================== Global test loop
-		double kernel_time = mysecond();
+		double kernel_time = rad::mysecond();
 #ifdef LOGS
 		start_iteration();
 #endif
@@ -142,18 +154,18 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 		if (parameters.redundancy == NONE) {
 			switch (parameters.micro) {
 			case ADD:
-				MicroBenchmarkKernel_ADD<full> <<<parameters.grid_size,
-						parameters.block_size>>>(device_vector_full.data(),
+				MicroBenchmarkKernel_ADD<real_t> <<<parameters.grid_size,
+						parameters.block_size>>>(device_vector_real_t.data(),
 						type_.output_r, type_.input_a);
 				break;
 			case MUL:
-				MicroBenchmarkKernel_MUL<full> <<<parameters.grid_size,
-						parameters.block_size>>>(device_vector_full.data(),
+				MicroBenchmarkKernel_MUL<real_t> <<<parameters.grid_size,
+						parameters.block_size>>>(device_vector_real_t.data(),
 						type_.output_r, type_.input_a);
 				break;
 			case FMA:
-				MicroBenchmarkKernel_FMA<full> <<<parameters.grid_size,
-						parameters.block_size>>>(device_vector_full.data(),
+				MicroBenchmarkKernel_FMA<real_t> <<<parameters.grid_size,
+						parameters.block_size>>>(device_vector_real_t.data(),
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			}
@@ -161,55 +173,55 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 		} else {
 			switch (parameters.micro) {
 			case ADD: {
-				MicroBenchmarkKernel_ADD<incomplete, full> <<<
+				MicroBenchmarkKernel_ADD<half_t, real_t> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data(), device_vector_full.data(),
+						device_vector_inc.data(), device_vector_real_t.data(),
 						type_.output_r, type_.input_a);
 				break;
 			}
 			case MUL: {
-				MicroBenchmarkKernel_MUL<incomplete, full> <<<
+				MicroBenchmarkKernel_MUL<half_t, real_t> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data(), device_vector_full.data(),
+						device_vector_inc.data(), device_vector_real_t.data(),
 						type_.output_r, type_.input_a);
 				break;
 			}
 			case FMA: {
-				MicroBenchmarkKernel_FMA<incomplete, full> <<<
+				MicroBenchmarkKernel_FMA<half_t, real_t> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data(), device_vector_full.data(),
+						device_vector_inc.data(), device_vector_real_t.data(),
 						type_.output_r, type_.input_a, type_.input_b);
 				break;
 			}
 			case ADDNOTBIASED: {
-				MicroBenchmarkKernel_ADDNOTBIASAED<incomplete, full> <<<
+				MicroBenchmarkKernel_ADDNOTBIASAED<half_t, real_t> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data(), device_vector_full.data(),
+						device_vector_inc.data(), device_vector_real_t.data(),
 						type_.output_r);
 				break;
 			}
 			case MULNOTBIASED: {
-				MicroBenchmarkKernel_MULNOTBIASAED<incomplete, full> <<<
+				MicroBenchmarkKernel_MULNOTBIASAED<half_t, real_t> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data(), device_vector_full.data());
+						device_vector_inc.data(), device_vector_real_t.data());
 				gold = 1.10517102313140469505;
 				break;
 			}
 			case FMANOTBIASED: {
-				MicroBenchmarkKernel_FMANOTBIASAED<incomplete, full> <<<
+				MicroBenchmarkKernel_FMANOTBIASAED<half_t, real_t> <<<
 						parameters.grid_size, parameters.block_size>>>(
-						device_vector_inc.data(), device_vector_full.data());
+						device_vector_inc.data(), device_vector_real_t.data());
 				gold = 2.50000000001979527653e-01;
 				break;
 			}
 			}
 		}
 
-		checkFrameworkErrors(cudaPeekAtLastError());
-		checkFrameworkErrors(cudaDeviceSynchronize());
-		checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
-		kernel_time = mysecond() - kernel_time;
+		kernel_time = rad::mysecond() - kernel_time;
 
 		//====================================
 #ifdef LOGS
@@ -221,11 +233,11 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 		max_kernel_time = std::max(max_kernel_time, kernel_time);
 
 		//check output
-		host_vector_full = device_vector_full.to_vector();
+		host_vector_real_t = device_vector_real_t.to_vector();
 		host_vector_inc = device_vector_inc.to_vector();
 		unsigned long long relative_errors = copy_errors();
 
-		int errors = check_output_errors(host_vector_inc, host_vector_full,
+		int errors = check_output_errors(host_vector_inc, host_vector_real_t,
 				gold, parameters.verbose, relative_errors);
 
 		double outputpersec = double(parameters.r_size) / kernel_time;
@@ -259,6 +271,7 @@ void test_radiation(Type<TypeArgs...>& type_, Parameters& parameters) {
 		std::cout << "Worst: " << max_kernel_time << std::endl;
 	}
 }
+
 
 void dmr(Parameters& parameters) {
 	/* DMRMIXED REDUNDANCY -------------------------------------------------- */
@@ -307,7 +320,7 @@ void dmr(Parameters& parameters) {
 int main(int argc, char* argv[]) {
 
 //================== Set block and grid size for MxM kernel
-	cudaDeviceProp prop = GetDevice();
+	cudaDeviceProp prop = get_device();
 	Parameters parameters(argc, argv, prop.multiProcessorCount, 256);
 	if (parameters.verbose) {
 		std::cout << "Get device Name: " << prop.name << std::endl;
@@ -332,7 +345,8 @@ int main(int argc, char* argv[]) {
 			const_cast<char*>(test_info.c_str()));
 #endif
 
-	parameters.print_details();
+	std::cout << parameters << std::endl;
+
 
 	dmr(parameters);
 

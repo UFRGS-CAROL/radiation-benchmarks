@@ -16,59 +16,59 @@
  * ----------------------------------------
  */
 
-template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
-		full *d_R0_second, const full OUTPUT_R, const full INPUT_A,
-		const full INPUT_B) {
-	register full acc_full = OUTPUT_R;
-	register full input_a_full = INPUT_A;
-	register full input_b_full = INPUT_B;
-	register full input_a_neg_full = -INPUT_A;
-	register full input_b_neg_full = -INPUT_B;
+template<typename half_t, typename real_t>
+__global__ void MicroBenchmarkKernel_FMA(half_t *d_R0_one,
+		real_t *d_R0_second, const real_t OUTPUT_R, const real_t INPUT_A,
+		const real_t INPUT_B) {
+	register real_t acc_real_t = OUTPUT_R;
+	register real_t input_a_real_t = INPUT_A;
+	register real_t input_b_real_t = INPUT_B;
+	register real_t input_a_neg_real_t = -INPUT_A;
+	register real_t input_b_neg_real_t = -INPUT_B;
 
-	register incomplete acc_incomplete = incomplete(OUTPUT_R);
-	register incomplete input_a_incomplete = incomplete(INPUT_A);
-	register incomplete input_b_incomplete = incomplete(INPUT_B);
-	register incomplete input_a_neg_incomplete = incomplete(-INPUT_A);
-	register incomplete input_b_neg_incomplete = incomplete(-INPUT_B);
+	register half_t acc_half_t = half_t(OUTPUT_R);
+	register half_t input_a_half_t = half_t(INPUT_A);
+	register half_t input_b_half_t = half_t(INPUT_B);
+	register half_t input_a_neg_half_t = half_t(-INPUT_A);
+	register half_t input_b_neg_half_t = half_t(-INPUT_B);
 
 	//double theshold = -2222;
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
-		acc_full = fma_dmr(input_a_full, input_b_full, acc_full);
-		acc_full = fma_dmr(input_a_neg_full, input_b_full, acc_full);
-		acc_full = fma_dmr(input_a_full, input_b_neg_full, acc_full);
-		acc_full = fma_dmr(input_a_neg_full, input_b_neg_full, acc_full);
+		acc_real_t = fma_dmr(input_a_real_t, input_b_real_t, acc_real_t);
+		acc_real_t = fma_dmr(input_a_neg_real_t, input_b_real_t, acc_real_t);
+		acc_real_t = fma_dmr(input_a_real_t, input_b_neg_real_t, acc_real_t);
+		acc_real_t = fma_dmr(input_a_neg_real_t, input_b_neg_real_t, acc_real_t);
 
-		acc_incomplete = fma_dmr(input_a_incomplete, input_b_incomplete,
-				acc_incomplete);
-		acc_incomplete = fma_dmr(input_a_neg_incomplete, input_b_incomplete,
-				acc_incomplete);
-		acc_incomplete = fma_dmr(input_a_incomplete, input_b_neg_incomplete,
-				acc_incomplete);
-		acc_incomplete = fma_dmr(input_a_neg_incomplete, input_b_neg_incomplete,
-				acc_incomplete);
+		acc_half_t = fma_dmr(input_a_half_t, input_b_half_t,
+				acc_half_t);
+		acc_half_t = fma_dmr(input_a_neg_half_t, input_b_half_t,
+				acc_half_t);
+		acc_half_t = fma_dmr(input_a_half_t, input_b_neg_half_t,
+				acc_half_t);
+		acc_half_t = fma_dmr(input_a_neg_half_t, input_b_neg_half_t,
+				acc_half_t);
 
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
-		check_relative_error(acc_incomplete, acc_full);
-		//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+		check_relative_error(acc_half_t, acc_real_t);
+		//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
-		acc_incomplete = incomplete(acc_full);
+		acc_half_t = half_t(acc_real_t);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
-			check_relative_error(acc_incomplete, acc_full);
-			//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+			check_relative_error(acc_half_t, acc_real_t);
+			//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
-			acc_incomplete = incomplete(acc_full);
+			acc_half_t = half_t(acc_real_t);
 		}
 #endif
 
 	}
 
 #if CHECKBLOCK == 0
-	check_relative_error(acc_incomplete, acc_full);
-//	theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+	check_relative_error(acc_half_t, acc_real_t);
+//	theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
 #endif
 
@@ -76,8 +76,8 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
 //		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 //	}
 
-	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
-	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_half_t;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_real_t;
 
 }
 
@@ -87,51 +87,51 @@ __global__ void MicroBenchmarkKernel_FMA(incomplete *d_R0_one,
  * ----------------------------------------
  */
 
-template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
-		full *d_R0_second, const full OUTPUT_R, const full INPUT_A) {
+template<typename half_t, typename real_t>
+__global__ void MicroBenchmarkKernel_ADD(half_t *d_R0_one,
+		real_t *d_R0_second, const real_t OUTPUT_R, const real_t INPUT_A) {
 	// ========================================== Double and Single precision
-	register full acc_full = OUTPUT_R;
-	register full input_a = OUTPUT_R;
-	register full input_a_neg = -OUTPUT_R;
+	register real_t acc_real_t = OUTPUT_R;
+	register real_t input_a = OUTPUT_R;
+	register real_t input_a_neg = -OUTPUT_R;
 
-	register incomplete acc_incomplete = incomplete(OUTPUT_R);
-	register incomplete input_a_incomplete = incomplete(OUTPUT_R);
-	register incomplete input_a_neg_incomplete = incomplete(-OUTPUT_R);
+	register half_t acc_half_t = half_t(OUTPUT_R);
+	register half_t input_a_half_t = half_t(OUTPUT_R);
+	register half_t input_a_neg_half_t = half_t(-OUTPUT_R);
 	//double theshold = -2222;
 
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
-		acc_full = add_dmr(acc_full, input_a);
-		acc_full = add_dmr(acc_full, input_a_neg);
-		acc_full = add_dmr(acc_full, input_a_neg);
-		acc_full = add_dmr(acc_full, input_a);
+		acc_real_t = add_dmr(acc_real_t, input_a);
+		acc_real_t = add_dmr(acc_real_t, input_a_neg);
+		acc_real_t = add_dmr(acc_real_t, input_a_neg);
+		acc_real_t = add_dmr(acc_real_t, input_a);
 
-		acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
-		acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
-		acc_incomplete = add_dmr(acc_incomplete, input_a_neg_incomplete);
-		acc_incomplete = add_dmr(acc_incomplete, input_a_incomplete);
+		acc_half_t = add_dmr(acc_half_t, input_a_half_t);
+		acc_half_t = add_dmr(acc_half_t, input_a_neg_half_t);
+		acc_half_t = add_dmr(acc_half_t, input_a_neg_half_t);
+		acc_half_t = add_dmr(acc_half_t, input_a_half_t);
 
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
-		check_relative_error(acc_incomplete, acc_full);
-		//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+		check_relative_error(acc_half_t, acc_real_t);
+		//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
-		acc_incomplete = incomplete(acc_full);
+		acc_half_t = half_t(acc_real_t);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
-			check_relative_error(acc_incomplete, acc_full);
-			//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+			check_relative_error(acc_half_t, acc_real_t);
+			//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
-			acc_incomplete = incomplete(acc_full);
+			acc_half_t = half_t(acc_real_t);
 		}
 #endif
 
 	}
 
 #if CHECKBLOCK == 0
-	check_relative_error(acc_incomplete, acc_full);
-	//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+	check_relative_error(acc_half_t, acc_real_t);
+	//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
 #endif
 
@@ -139,8 +139,8 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
 	//	printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 	//}
 
-	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
-	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_half_t;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_real_t;
 }
 
 /**
@@ -149,91 +149,91 @@ __global__ void MicroBenchmarkKernel_ADD(incomplete *d_R0_one,
  * ----------------------------------------
  */
 
-template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_MUL(incomplete *d_R0_one,
-		full *d_R0_second, const full OUTPUT_R, const full INPUT_A) {
+template<typename half_t, typename real_t>
+__global__ void MicroBenchmarkKernel_MUL(half_t *d_R0_one,
+		real_t *d_R0_second, const real_t OUTPUT_R, const real_t INPUT_A) {
 
-	register full acc_full = OUTPUT_R;
-	register full input_a_full = INPUT_A;
-	register full input_a_inv_full = full(1.0) / INPUT_A;
+	register real_t acc_real_t = OUTPUT_R;
+	register real_t input_a_real_t = INPUT_A;
+	register real_t input_a_inv_real_t = real_t(1.0) / INPUT_A;
 
-	register incomplete acc_incomplete = incomplete(acc_full);
-	register incomplete input_a_incomplete = incomplete(input_a_full);
-	register incomplete input_a_inv_incomplete = incomplete(input_a_inv_full);
+	register half_t acc_half_t = half_t(acc_real_t);
+	register half_t input_a_half_t = half_t(input_a_real_t);
+	register half_t input_a_inv_half_t = half_t(input_a_inv_real_t);
 	//double theshold = -2222;
 
 	for (register unsigned int count = 0; count < (OPS / 4); count++) {
-		acc_full = mul_dmr(acc_full, input_a_full);
-		acc_full = mul_dmr(acc_full, input_a_inv_full);
-		acc_full = mul_dmr(acc_full, input_a_inv_full);
-		acc_full = mul_dmr(acc_full, input_a_full);
+		acc_real_t = mul_dmr(acc_real_t, input_a_real_t);
+		acc_real_t = mul_dmr(acc_real_t, input_a_inv_real_t);
+		acc_real_t = mul_dmr(acc_real_t, input_a_inv_real_t);
+		acc_real_t = mul_dmr(acc_real_t, input_a_real_t);
 
-		acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
-		acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
-		acc_incomplete = mul_dmr(acc_incomplete, input_a_inv_incomplete);
-		acc_incomplete = mul_dmr(acc_incomplete, input_a_incomplete);
+		acc_half_t = mul_dmr(acc_half_t, input_a_half_t);
+		acc_half_t = mul_dmr(acc_half_t, input_a_inv_half_t);
+		acc_half_t = mul_dmr(acc_half_t, input_a_inv_half_t);
+		acc_half_t = mul_dmr(acc_half_t, input_a_half_t);
 
 		// if CHECKBLOCK is 1 each iteration will be verified
 #if CHECKBLOCK == 1
-		check_relative_error(acc_incomplete, acc_full);
-		//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+		check_relative_error(acc_half_t, acc_real_t);
+		//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
-		acc_incomplete = incomplete(acc_full);
+		acc_half_t = half_t(acc_real_t);
 		// if CHECKBLOCK is >1 perform the % operation
 #elif CHECKBLOCK > 1
 		if((count % CHECKBLOCK) == 0) {
-			check_relative_error(acc_incomplete, acc_full);
-			//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+			check_relative_error(acc_half_t, acc_real_t);
+			//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
-			acc_incomplete = incomplete(acc_full);
+			acc_half_t = half_t(acc_real_t);
 		}
 #endif
 
 	}
 
 #if CHECKBLOCK == 0
-	check_relative_error(acc_incomplete, acc_full);
-	//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+	check_relative_error(acc_half_t, acc_real_t);
+	//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
 #endif
 
 	//if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
 	//	printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 	//}
-	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
-	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_half_t;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_real_t;
 }
 
-template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_ADDNOTBIASAED(incomplete *d_R0_one,
-		full *d_R0_second, const full OUTPUT_R) {
-	register full acc_full = 0.0;
-	register full slice_full = full(OUTPUT_R) / full(NUM_COMPOSE_DIVISOR);
+template<typename half_t, typename real_t>
+__global__ void MicroBenchmarkKernel_ADDNOTBIASAED(half_t *d_R0_one,
+		real_t *d_R0_second, const real_t OUTPUT_R) {
+	register real_t acc_real_t = 0.0;
+	register real_t slice_real_t = real_t(OUTPUT_R) / real_t(NUM_COMPOSE_DIVISOR);
 
-	register incomplete acc_incomplete = 0.0;
-	register incomplete slice_incomplete = incomplete(OUTPUT_R)
-			/ incomplete(NUM_COMPOSE_DIVISOR);
+	register half_t acc_half_t = 0.0;
+	register half_t slice_half_t = half_t(OUTPUT_R)
+			/ half_t(NUM_COMPOSE_DIVISOR);
 //	double theshold = -2222;
 
 	for (int count = 0; count < NUM_COMPOSE_DIVISOR; count++) {
-		acc_full = add_dmr(slice_full, acc_full);
+		acc_real_t = add_dmr(slice_real_t, acc_real_t);
 
-		acc_incomplete = add_dmr(slice_incomplete, acc_incomplete);
+		acc_half_t = add_dmr(slice_half_t, acc_half_t);
 
 #if CHECKBLOCK >= 1
 		if((count % CHECKBLOCK) == 0) {
-			check_relative_error(acc_incomplete, acc_full);
-			//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+			check_relative_error(acc_half_t, acc_real_t);
+			//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
-			acc_incomplete = incomplete(acc_full);
+			acc_half_t = half_t(acc_real_t);
 		}
 #endif
 
 	}
 
 #if CHECKBLOCK == 0
-	check_relative_error(acc_incomplete, acc_full);
-	//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+	check_relative_error(acc_half_t, acc_real_t);
+	//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
 #endif
 
@@ -241,40 +241,40 @@ __global__ void MicroBenchmarkKernel_ADDNOTBIASAED(incomplete *d_R0_one,
 //		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 //	}
 
-	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
-	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_half_t;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_real_t;
 
 }
 
-template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_MULNOTBIASAED(incomplete *d_R0_one,
-		full *d_R0_second) {
-	register full acc_full = full(MUL_INPUT);
-	register incomplete acc_incomplete = incomplete(MUL_INPUT);
+template<typename half_t, typename real_t>
+__global__ void MicroBenchmarkKernel_MULNOTBIASAED(half_t *d_R0_one,
+		real_t *d_R0_second) {
+	register real_t acc_real_t = real_t(MUL_INPUT);
+	register half_t acc_half_t = half_t(MUL_INPUT);
 	//double theshold = -2222;
 
-	const register full f = acc_full;
-	const register incomplete i = acc_incomplete;
+	const register real_t f = acc_real_t;
+	const register half_t i = acc_half_t;
 
 	for (int count = 0; count < NUM_COMPOSE_DIVISOR; count++) {
-		acc_full = mul_dmr(acc_full, f);
-		acc_incomplete = mul_dmr(acc_incomplete, i);
+		acc_real_t = mul_dmr(acc_real_t, f);
+		acc_half_t = mul_dmr(acc_half_t, i);
 
 #if CHECKBLOCK >= 1
 		if((count % CHECKBLOCK) == 0) {
-			check_relative_error(acc_incomplete, acc_full);
+			check_relative_error(acc_half_t, acc_real_t);
 
-			//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+			//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
-			acc_incomplete = incomplete(acc_full);
+			acc_half_t = half_t(acc_real_t);
 		}
 #endif
 
 	}
 
 #if CHECKBLOCK == 0
-	check_relative_error(acc_incomplete, acc_full);
-	//theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+	check_relative_error(acc_half_t, acc_real_t);
+	//theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
 #endif
 
@@ -282,40 +282,40 @@ __global__ void MicroBenchmarkKernel_MULNOTBIASAED(incomplete *d_R0_one,
 	//	printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 	//}
 
-	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
-	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_half_t;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_real_t;
 
 }
 
-template<typename incomplete, typename full>
-__global__ void MicroBenchmarkKernel_FMANOTBIASAED(incomplete *d_R0_one,
-		full *d_R0_second) {
-	register full acc_full = 0.0;
-	register incomplete acc_incomplete = 0.0;
+template<typename half_t, typename real_t>
+__global__ void MicroBenchmarkKernel_FMANOTBIASAED(half_t *d_R0_one,
+		real_t *d_R0_second) {
+	register real_t acc_real_t = 0.0;
+	register half_t acc_half_t = 0.0;
 	double theshold = -2222;
 
-	const register full f = full(FMA_INPUT);
-	const register incomplete i = incomplete(FMA_INPUT);
+	const register real_t f = real_t(FMA_INPUT);
+	const register half_t i = half_t(FMA_INPUT);
 
 	for (int count = 0; count < NUM_COMPOSE_DIVISOR; count++) {
-		acc_full = fma_dmr(f, f, acc_full);
-		acc_incomplete = fma_dmr(i, i, acc_incomplete);
+		acc_real_t = fma_dmr(f, f, acc_real_t);
+		acc_half_t = fma_dmr(i, i, acc_half_t);
 
 #if CHECKBLOCK == 1
 //		if((count % CHECKBLOCK) == 0) {
-//			check_relative_error(acc_incomplete, acc_full);
+//			check_relative_error(acc_half_t, acc_real_t);
 
-			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+			theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
-			acc_incomplete = incomplete(acc_full);
+			acc_half_t = half_t(acc_real_t);
 //		}
 #endif
 
 	}
 
 #if CHECKBLOCK == 0
-	check_relative_error(acc_incomplete, acc_full);
-//	theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+	check_relative_error(acc_half_t, acc_real_t);
+//	theshold = fmax(theshold, fabs(double(acc_real_t) - double(acc_half_t)));
 
 #endif
 
@@ -323,8 +323,8 @@ __global__ void MicroBenchmarkKernel_FMANOTBIASAED(incomplete *d_R0_one,
 		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
 	}
 
-	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
-	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
+	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_half_t;
+	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_real_t;
 }
 
 #endif /* DMR_KERNELS_CU_ */

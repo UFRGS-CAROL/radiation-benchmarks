@@ -13,8 +13,6 @@
 #include <unordered_map>
 #include <iostream>
 
-//#include "helper_string.h"
-
 //===================================== DEFINE TESTED PRECISION
 //FOR DMR APPROACH I NEED to use the smallest precision
 //as a limit, since it is not possible to store the bigger precisions
@@ -176,15 +174,34 @@ struct Parameters {
 	std::string precision_str;
 	std::string hardening_str;
 
+	bool generate;
+	bool nonconstant;
+
 	int grid_size;
 	int block_size;
 	int r_size;
+
+	int operation_num;
+
+	std::string gold_file;
+	std::string input_file;
+	double min_random, max_random;
 
 	Parameters(int argc, char* argv[], int grid_size, int block_size) {
 		this->grid_size = grid_size;
 		this->block_size = block_size;
 		this->r_size = grid_size * block_size;
 		this->iterations = find_int_arg(argc, argv, "--iterations", 10);
+		this->operation_num = find_int_arg(argc, argv, "--opnum",
+				NUM_COMPOSE_DIVISOR);
+
+		this->nonconstant = find_arg(argc, argv, "--nonconstant");
+
+		this->min_random = find_float_arg(argc, argv, "--minrand", 0);
+		this->max_random = find_float_arg(argc, argv, "--maxrand", 1000);
+
+		this->gold_file = find_char_arg(argc, argv, "--gold", "./gold.data");
+		this->input_file = find_char_arg(argc, argv, "--input", "./input.data");
 
 		this->verbose = find_arg(argc, argv, "--verbose");
 
@@ -197,22 +214,34 @@ struct Parameters {
 		this->precision = pre[this->precision_str];
 		this->micro = mic[this->instruction_str];
 
+		this->generate = find_arg(argc, argv, "--generate");
+
 		if (this->micro == MULNOTBIASED || this->micro == FMANOTBIASED) {
 			this->grid_size *= 128;
 			this->r_size *= 128;
 		}
+
+		if (this->generate) {
+			this->iterations = 1;
+		}
 	}
 
-	void print_details() {
-		if (this->verbose == true) {
-			std::cout << "cuda micro type - " << this->precision_str
-					<< " precision " << this->instruction_str << std::endl;
-			std::cout << "grid size = " << this->grid_size << " block size = "
-					<< this->block_size << std::endl;
-			std::cout << "Verbose: " << this->verbose << std::endl;
-			std::cout << "Iterations: " << this->iterations << std::endl
-					<< "Hardening: " << this->hardening_str << std::endl;
-		}
+	friend std::ostream& operator<<(std::ostream& os, const Parameters& p) {
+		os << "cuda micro type - " << p.precision_str << std::endl;
+		os << "Precision " << p.instruction_str << std::endl;
+		os << "Grid size = " << p.grid_size << std::endl;
+		os << "Block size = " << p.block_size << std::endl;
+		os << "Verbose: " << p.verbose << std::endl;
+		os << "Iterations: " << p.iterations << std::endl;
+		os << "Hardening: " << p.hardening_str << std::endl;
+		os << "Gold file: " << p.gold_file << std::endl;
+		os << "Input file: " << p.input_file << std::endl;
+		os << "Min and max random: " << p.min_random << "-"
+				<< p.max_random << std::endl;
+		os << "Generate: " << p.generate << std::endl;
+		os << "Number of operations per thread: " << p.operation_num;
+
+		return os;
 	}
 
 private:
@@ -230,6 +259,20 @@ private:
 				continue;
 			if (std::string(argv[i]) == arg) {
 				def = atoi(argv[i + 1]);
+				del_arg(argc, argv, i);
+				del_arg(argc, argv, i);
+				break;
+			}
+		}
+		return def;
+	}
+
+	int find_float_arg(int argc, char **argv, std::string arg, float def) {
+		for (int i = 0; i < argc - 1; ++i) {
+			if (!argv[i])
+				continue;
+			if (std::string(argv[i]) == arg) {
+				def = atof(argv[i + 1]);
 				del_arg(argc, argv, i);
 				del_arg(argc, argv, i);
 				break;

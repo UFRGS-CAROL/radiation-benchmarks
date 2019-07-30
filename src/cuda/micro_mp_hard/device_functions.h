@@ -8,7 +8,6 @@
 #ifndef DEVICE_FUNCTIONS_H_
 #define DEVICE_FUNCTIONS_H_
 
-#include "cuda_utils.h"
 
 #define ZERO_FULL 1e-13
 
@@ -21,6 +20,9 @@
 #define NUM_COMPOSE_DIVISOR 1000000
 #define MUL_INPUT  1.0000001
 #define FMA_INPUT 0.0005
+
+__device__ unsigned long long errors = 0;
+
 
 __device__ __forceinline__ double abs__(double a) {
 	return fabs(a);
