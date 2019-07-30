@@ -136,7 +136,7 @@ __global__ void MatrixMulCUDA(const T *A, const T *B, const T *C, T* D,
 
 	register T acc = 0.0;
 	for (int k = 0; k < wB; k++) {
-		acc = A[ty * wA + k] * B[k * wB + tx] + acc;
+		acc += A[ty * wA + k] * B[k * wB + tx];
 	}
 
 	D[ty * wA + tx] = acc * alpha + beta * C[ty * wA + tx];
