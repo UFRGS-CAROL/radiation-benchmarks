@@ -120,6 +120,14 @@ __host__ void init_host_matrices(float *a, float *b, float *c) {
 	}
 }
 
+__host__ void init_host_matrices(half *a, half *b, half *c) {
+	for (int t = 0; t < M_GLOBAL * N_GLOBAL; t++) {
+		a[t] = 1.0;
+		b[t] = 1.0;
+		c[t] = 1.0;
+	}
+}
+
 __global__ void MatrixMulCUDA(float *A, float *B, float *C, float* D,
 		float alpha, float beta, int wA, int wB) {
 	// Block index
@@ -470,7 +478,7 @@ int main(int argc, char **argv) {
 	half* bt = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
 	half* ct = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
 	half* dt = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
-
+	init_host_matrices(at, bt, ct);
 	half* atd;
 	half* btd;
 	half* ctd;
@@ -488,6 +496,16 @@ int main(int argc, char **argv) {
 	checkCudaErrors(
 			cudaMalloc(reinterpret_cast<void **>(&dtd),
 					sizeof(half) * M_GLOBAL * N_GLOBAL));
+
+	checkCudaErrors(
+				cudaMemcpy(atd, at, sizeof(half) * M_GLOBAL * K_GLOBAL,
+						cudaMemcpyHostToDevice));
+		checkCudaErrors(
+				cudaMemcpy(btd, bt, sizeof(half) * N_GLOBAL * K_GLOBAL,
+						cudaMemcpyHostToDevice));
+		checkCudaErrors(
+				cudaMemcpy(ctd, ct, sizeof(half) * M_GLOBAL * N_GLOBAL,
+						cudaMemcpyHostToDevice));
 
 	printf("Preparing data for GPU...\n");
 
@@ -550,7 +568,7 @@ int main(int argc, char **argv) {
 			st>>>(atd, btd, ctd, dtd, half(alpha), half(beta), M_GLOBAL,
 			M_GLOBAL);
 
-	MatrixMulCUDA<<<grid, threads, SHMEM_SZ>>>(A, B, C, D1, alpha, beta,
+	MatrixMulCUDA<<<grid, threads, SHMEM_SZ>>>(A, B, C, D, alpha, beta,
 	M_GLOBAL, M_GLOBAL);
 
 	checkKernelErrors(cudaStreamSynchronize(st));
