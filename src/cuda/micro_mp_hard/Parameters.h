@@ -216,9 +216,10 @@ struct Parameters {
 
 		this->generate = find_arg(argc, argv, "--generate");
 
-		if (this->micro == MULNOTBIASED || this->micro == FMANOTBIASED) {
-			this->grid_size *= 128;
-			this->r_size *= 128;
+		if (this->micro == MULNOTBIASED || this->micro == FMANOTBIASED
+				|| this->micro == ADDNOTBIASED || this->nonconstant == true) {
+			this->grid_size *= 32;
+			this->r_size *= 32;
 		}
 
 		if (this->generate) {
@@ -236,8 +237,8 @@ struct Parameters {
 		os << "Hardening: " << p.hardening_str << std::endl;
 		os << "Gold file: " << p.gold_file << std::endl;
 		os << "Input file: " << p.input_file << std::endl;
-		os << "Min and max random: " << p.min_random << "-"
-				<< p.max_random << std::endl;
+		os << "Min and max random: " << p.min_random << "-" << p.max_random
+				<< std::endl;
 		os << "Generate: " << p.generate << std::endl;
 		os << "Number of operations per thread: " << p.operation_num;
 
