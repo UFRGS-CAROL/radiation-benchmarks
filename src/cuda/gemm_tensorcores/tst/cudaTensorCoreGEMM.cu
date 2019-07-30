@@ -586,13 +586,10 @@ int main(int argc, char **argv) {
 	// matMultiplyOnHost(A_h, B_h, result_host, alpha, beta, M_GLOBAL, K_GLOBAL,
 	//                   K_GLOBAL, N_GLOBAL, M_GLOBAL, N_GLOBAL);
 
-	for (int i = 0; i < M_GLOBAL * N_GLOBAL; i++) {
-		if ((double(D_h[i]) - double(dt[i])) == 0) {
+	for (int i = 0; i < 10; i++) {
 			printf(" diff = %f, HW = %f, SW = %f \n",
 					(double(D_h[i]) - double(dt[i])), double(D_h[i]),
 					double(dt[i]));
-		}
-
 	}
 
 	float milliseconds = 0;
