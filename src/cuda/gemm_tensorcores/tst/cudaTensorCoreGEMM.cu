@@ -532,37 +532,16 @@ int main(int argc, char **argv) {
 	assert(((unsigned long long) C) % 128 == 0);
 	assert(((unsigned long long) D) % 128 == 0);
 
-	half* at = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
-	half* bt = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
-	half* ct = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
-	half* dt = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
-	half* atd = nullptr;
-	half* btd = nullptr;
-	half* ctd = nullptr;
-	half* dtd = nullptr;
 
-	checkCudaErrors(
-			cudaMalloc((void**) &atd, sizeof(half) * M_GLOBAL * K_GLOBAL));
-	checkCudaErrors(
-			cudaMalloc((void**) &btd, sizeof(half) * N_GLOBAL * K_GLOBAL));
-	checkCudaErrors(
-			cudaMalloc((void**) &ctd, sizeof(half) * M_GLOBAL * N_GLOBAL));
+	half* dtd = nullptr;
+	half* dt = (half *) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
+
 	checkCudaErrors(
 			cudaMalloc((void**) &dtd, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
 	//INIT HOST
 	init_host_matrices(A_h, B_h, C_h);
-	init_host_matrices(at, bt, ct);
 
-	checkCudaErrors(
-			cudaMemcpy(atd, at, sizeof(half) * M_GLOBAL * K_GLOBAL,
-					cudaMemcpyHostToDevice));
-	checkCudaErrors(
-			cudaMemcpy(btd, bt, sizeof(half) * N_GLOBAL * K_GLOBAL,
-					cudaMemcpyHostToDevice));
-	checkCudaErrors(
-			cudaMemcpy(ctd, ct, sizeof(half) * M_GLOBAL * N_GLOBAL,
-					cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemset(dtd, 0, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
 	printf("Preparing data for GPU...\n");
@@ -620,7 +599,7 @@ int main(int argc, char **argv) {
 					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
 	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-			st>>>(atd, btd, ctd, dtd, alpha, beta, M_GLOBAL,
+			st>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
 	M_GLOBAL);
 
 	MatrixMulCUDA<half> <<<grid, threads, SHMEM_SZ>>>(A, B, C, D, alpha, beta,
@@ -666,13 +645,7 @@ int main(int argc, char **argv) {
 	free(B_h);
 	free(C_h);
 	free(D_h);
-	free(at);
-	free(bt);
-	free(ct);
 	free(dt);
-	checkCudaErrors(cudaFree(reinterpret_cast<void *>(atd)));
-	checkCudaErrors(cudaFree(reinterpret_cast<void *>(btd)));
-	checkCudaErrors(cudaFree(reinterpret_cast<void *>(ctd)));
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(dtd)));
 
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(A)));
