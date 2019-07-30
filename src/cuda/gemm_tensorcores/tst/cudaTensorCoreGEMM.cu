@@ -588,8 +588,8 @@ int main(int argc, char **argv) {
 
 	for (int i = 0; i < 10; i++) {
 			printf(" diff = %f, HW = %f, SW = %f \n",
-					(double(D_h[i]) - double(dt[i])), double(D_h[i]),
-					double(dt[i]));
+					(double(D_h[i]) - double(dt[i])), double(dt[i]),
+					double(D_h[i]));
 	}
 
 	float milliseconds = 0;
