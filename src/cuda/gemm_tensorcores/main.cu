@@ -80,9 +80,9 @@ struct HostVectors {
 			for (size_t i = 0; i < log.size_matrices; i++) {
 				for (size_t j = 0; j < log.size_matrices; j++) {
 					//Make sure that it is not 0
-					host_matrix_a[i * log.size_matrices + j] = half_t(dis(gen) + 0.001);
-					host_matrix_b[i * log.size_matrices + j] = half_t(dis(gen) + 0.001);
-					host_matrix_c[i * log.size_matrices + j] = real_t(dis(gen) + 0.001);
+					host_matrix_a[i * log.size_matrices + j] = half_t(dis(gen));
+					host_matrix_b[i * log.size_matrices + j] = half_t(dis(gen));
+					host_matrix_c[i * log.size_matrices + j] = real_t(dis(gen));
 				}
 			}
 
