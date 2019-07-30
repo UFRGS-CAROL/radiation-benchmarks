@@ -225,7 +225,7 @@ __global__ void compute_gemm(const half *A, const half *B, const half *C,
 	// each tile computation. Technically this is not generally correct (may
 	// result in a loss of precision). Zero still needs to be specially handled
 	// though.
-	beta /= alpha;
+	//beta /= alpha;
 
 	// Each CTA slides along the 128 x 128 tiles from the top left corner of the
 	// matrix to the right and down, and selects the next tile to compute. Once
