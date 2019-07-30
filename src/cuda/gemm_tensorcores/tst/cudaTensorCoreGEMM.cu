@@ -128,6 +128,78 @@ __host__ void init_host_matrices(half *a, half *b, half *c) {
 	}
 }
 
+template<typename T>
+__global__ void MatrixMulCUDA(const T *A, const T *B, const T *C, T* D,
+		const T alpha, const T beta, const int wA, const int wB) {
+	// Block index
+	int bx = blockIdx.x;
+	int by = blockIdx.y;
+
+	// Thread index
+	int tx = threadIdx.x;
+	int ty = threadIdx.y;
+
+	// Index of the first sub-matrix of A processed by the block
+	int aBegin = wA * BLOCK_SIZE * by;
+
+	// Index of the last sub-matrix of A processed by the block
+	int aEnd = aBegin + wA - 1;
+
+	// Step size used to iterate through the sub-matrices of A
+	int aStep = BLOCK_SIZE;
+
+	// Index of the first sub-matrix of B processed by the block
+	int bBegin = BLOCK_SIZE * bx;
+
+	// Step size used to iterate through the sub-matrices of B
+	int bStep = BLOCK_SIZE * wB;
+
+	// Csub is used to store the element of the block sub-matrix
+	// that is computed by the thread
+	T Csub = 0;
+
+	// Loop over all the sub-matrices of A and B
+	// required to compute the block sub-matrix
+	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
+		// Declaration of the shared memory array As used to
+		// store the sub-matrix of A
+		__shared__ T As[BLOCK_SIZE][BLOCK_SIZE];
+
+		// Declaration of the shared memory array Bs used to
+		// store the sub-matrix of B
+		__shared__ T Bs[BLOCK_SIZE][BLOCK_SIZE];
+
+		// Load the matrices from device memory
+		// to shared memory; each thread loads
+		// one element of each matrix
+		As[ty][tx] = A[a + wA * ty + tx];
+		Bs[ty][tx] = B[b + wB * ty + tx];
+
+		// Synchronize to make sure the matrices are loaded
+		__syncthreads();
+
+		// Multiply the two matrices together;
+		// each thread computes one element
+		// of the block sub-matrix
+#pragma unroll
+
+		for (int k = 0; k < BLOCK_SIZE; ++k) {
+			Csub += As[ty][k] * Bs[k][tx];
+		}
+
+		// Synchronize to make sure that the preceding
+		// computation is done before loading two new
+		// sub-matrices of A and B in the next iteration
+		__syncthreads();
+	}
+
+	// Write the block sub-matrix to device memory;
+	// each thread writes one element
+	int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+
+	D[c + wB * ty + tx] = alpha * Csub + beta * C[c + wB * ty + tx];
+}
+
 __global__ void MatrixMulCUDA(const float *A, const float *B, const float *C,
 		float* D, const float alpha, const float beta, const int wA,
 		const int wB) {
@@ -225,7 +297,7 @@ __global__ void compute_gemm(const half *A, const half *B, const half *C,
 	// each tile computation. Technically this is not generally correct (may
 	// result in a loss of precision). Zero still needs to be specially handled
 	// though.
-	//beta /= alpha;
+	beta /= alpha;
 
 	// Each CTA slides along the 128 x 128 tiles from the top left corner of the
 	// matrix to the right and down, and selects the next tile to compute. Once
@@ -432,32 +504,24 @@ int main(int argc, char **argv) {
 	printf("N: %d (%d x %d)\n", N_GLOBAL, N, N_TILES);
 	printf("K: %d (%d x %d)\n", K_GLOBAL, K, K_TILES);
 
-	float *A_h = NULL;
-	float *B_h = NULL;
-	float *C_h = NULL;
-	float *D_h = NULL;
+	half *A_h = NULL;
+	half *B_h = NULL;
+	half *C_h = NULL;
+	half *D_h = NULL;
 
-	A_h = (float *) malloc(sizeof(float) * M_GLOBAL * K_GLOBAL);
-	B_h = (float *) malloc(sizeof(float) * K_GLOBAL * N_GLOBAL);
-	C_h = (float *) malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
-	D_h = (float *) malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
-	float *A = NULL;
-	float *B = NULL;
-	float *C = NULL;
-	float *D = NULL;
+	A_h = (half *) malloc(sizeof(half) * M_GLOBAL * K_GLOBAL);
+	B_h = (half *) malloc(sizeof(half) * K_GLOBAL * N_GLOBAL);
+	C_h = (half *) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
+	D_h = (half *) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
+	half *A = NULL;
+	half *B = NULL;
+	half *C = NULL;
+	half *D = NULL;
 
-	checkCudaErrors(
-			cudaMalloc(reinterpret_cast<void **>(&A),
-					sizeof(float) * M_GLOBAL * K_GLOBAL));
-	checkCudaErrors(
-			cudaMalloc(reinterpret_cast<void **>(&B),
-					sizeof(float) * N_GLOBAL * K_GLOBAL));
-	checkCudaErrors(
-			cudaMalloc(reinterpret_cast<void **>(&C),
-					sizeof(float) * M_GLOBAL * N_GLOBAL));
-	checkCudaErrors(
-			cudaMalloc(reinterpret_cast<void **>(&D),
-					sizeof(float) * M_GLOBAL * N_GLOBAL));
+	checkCudaErrors(cudaMalloc((void**)A, sizeof(half) * M_GLOBAL * K_GLOBAL));
+	checkCudaErrors(cudaMalloc((void**)B, sizeof(half) * N_GLOBAL * K_GLOBAL));
+	checkCudaErrors(cudaMalloc((void**)C, sizeof(half) * M_GLOBAL * N_GLOBAL));
+	checkCudaErrors(cudaMalloc((void**)D, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
 	assert(((unsigned long long) A) % 128 == 0);
 	assert(((unsigned long long) B) % 128 == 0);
@@ -473,18 +537,10 @@ int main(int argc, char **argv) {
 	half* ctd;
 	half* dtd;
 
-	checkCudaErrors(
-			cudaMalloc(reinterpret_cast<void **>(&atd),
-					sizeof(half) * M_GLOBAL * K_GLOBAL));
-	checkCudaErrors(
-			cudaMalloc(reinterpret_cast<void **>(&btd),
-					sizeof(half) * N_GLOBAL * K_GLOBAL));
-	checkCudaErrors(
-			cudaMalloc(reinterpret_cast<void **>(&ctd),
-					sizeof(half) * M_GLOBAL * N_GLOBAL));
-	checkCudaErrors(
-			cudaMalloc(reinterpret_cast<void **>(&dtd),
-					sizeof(half) * M_GLOBAL * N_GLOBAL));
+	checkCudaErrors(cudaMalloc((void**)atd, sizeof(half) * M_GLOBAL * K_GLOBAL));
+	checkCudaErrors(cudaMalloc((void**)btd, sizeof(half) * N_GLOBAL * K_GLOBAL));
+	checkCudaErrors(cudaMalloc((void**)ctd, sizeof(half) * M_GLOBAL * N_GLOBAL));
+	checkCudaErrors(cudaMalloc((void**)dtd, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
 	//INIT HOST
 	init_host_matrices(A_h, B_h, C_h);
@@ -504,15 +560,15 @@ int main(int argc, char **argv) {
 	printf("Preparing data for GPU...\n");
 
 	checkCudaErrors(
-			cudaMemcpy(A, A_h, sizeof(float) * M_GLOBAL * K_GLOBAL,
+			cudaMemcpy(A, A_h, sizeof(half) * M_GLOBAL * K_GLOBAL,
 					cudaMemcpyHostToDevice));
 	checkCudaErrors(
-			cudaMemcpy(B, B_h, sizeof(float) * N_GLOBAL * K_GLOBAL,
+			cudaMemcpy(B, B_h, sizeof(half) * N_GLOBAL * K_GLOBAL,
 					cudaMemcpyHostToDevice));
 	checkCudaErrors(
-			cudaMemcpy(C, C_h, sizeof(float) * M_GLOBAL * N_GLOBAL,
+			cudaMemcpy(C, C_h, sizeof(half) * M_GLOBAL * N_GLOBAL,
 					cudaMemcpyHostToDevice));
-	checkCudaErrors(cudaMemset(D, 0, sizeof(float) * M_GLOBAL * N_GLOBAL));
+	checkCudaErrors(cudaMemset(D, 0, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
 	enum {
 		// Compute the right amount of shared memory to request.
@@ -530,11 +586,8 @@ int main(int argc, char **argv) {
 
 	printf("Required shared memory size: %lu Kb\n", SHMEM_SZ / 1024UL);
 
-	const float alpha = 1.0;
-	const float beta = 1.0;
-	const half alpha_h = 1.0;
-	const half beta_h = 1.0;
-
+	const half alpha = 1.0;
+	const half beta = 1.0;
 	cudaEvent_t start, stop;
 
 	checkCudaErrors(cudaEventCreate(&start));
@@ -555,14 +608,14 @@ int main(int argc, char **argv) {
 			cudaFuncSetAttribute(compute_gemm,
 					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 	checkCudaErrors(
-			cudaFuncSetAttribute(MatrixMulCUDA,
+			cudaFuncSetAttribute(MatrixMulCUDA<half>,
 					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
 	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-			st>>>(atd, btd, ctd, dtd, alpha_h, beta_h, M_GLOBAL,
+			st>>>(atd, btd, ctd, dtd, alpha, beta, M_GLOBAL,
 	M_GLOBAL);
 
-	MatrixMulCUDA<<<grid, threads, SHMEM_SZ>>>(A, B, C, D, alpha, beta,
+	MatrixMulCUDA<half><<<grid, threads, SHMEM_SZ>>>(A, B, C, D, alpha, beta,
 	M_GLOBAL, M_GLOBAL);
 
 	checkKernelErrors(cudaStreamSynchronize(st));
@@ -570,7 +623,7 @@ int main(int argc, char **argv) {
 	checkKernelErrors(cudaDeviceSynchronize());
 
 	checkCudaErrors(
-			cudaMemcpy(D_h, D, sizeof(float) * M_GLOBAL * N_GLOBAL,
+			cudaMemcpy(D_h, D, sizeof(half) * M_GLOBAL * N_GLOBAL,
 					cudaMemcpyDeviceToHost));
 	checkCudaErrors(
 			cudaMemcpy(dt, dtd, sizeof(half) * M_GLOBAL * N_GLOBAL,
@@ -587,9 +640,9 @@ int main(int argc, char **argv) {
 	//                   K_GLOBAL, N_GLOBAL, M_GLOBAL, N_GLOBAL);
 
 	for (int i = 0; i < 10; i++) {
-			printf(" diff = %f, HW = %f, SW = %f \n",
-					(double(D_h[i]) - double(dt[i])), double(dt[i]),
-					double(D_h[i]));
+		printf(" diff = %f, HW = %f, SW = %f \n",
+				(double(D_h[i]) - double(dt[i])), double(dt[i]),
+				double(D_h[i]));
 	}
 
 	float milliseconds = 0;
