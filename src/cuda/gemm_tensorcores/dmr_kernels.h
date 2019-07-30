@@ -48,7 +48,7 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 	real_t Csub = 0;
 
 	half_t Csub_half = 0;
-//	double threshold = -2222;
+	double threshold = -2222;
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
 	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
@@ -83,8 +83,8 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 #if CHECKBLOCK == 1
 			check_relative_error(Csub_half, Csub);
 
-//			double diff = fabs(double(Csub) - double(Csub_half));
-//			threshold = fmax(threshold, diff);
+			double diff = fabs(double(Csub) - double(Csub_half));
+			threshold = fmax(threshold, diff);
 
 			Csub_half = half_t(Csub);
 //#elif CHECKBLOCK >= 1
@@ -111,12 +111,12 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 	const half_t d_h = half_t(alpha) * Csub_half
 			+ half_t(beta) * half_t(C[index]);
 
-#if CHECKBLOCK == 0
-	check_relative_error(d_h, d_r);
+//#if CHECKBLOCK == 0
+//	check_relative_error(d_h, d_r);
 //	threshold = fabs(double(Csub) - double(Csub_half));
-#endif
+//#endif
 
-//	printf("%.20e\n", threshold);
+	printf("%.20e\n", threshold);
 
 // Write the block sub-matrix to device memory;
 // each thread writes one element
