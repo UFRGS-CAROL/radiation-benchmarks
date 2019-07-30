@@ -34,7 +34,7 @@ public:
 	double beta;
 
 	Log(int argc, char** argv, int input_size) :
-			alpha(1.1), beta(.2) {
+			alpha(1), beta(0) {
 
 		this->generate = this->find_int_arg(argc, argv, "--generate", 0);
 
