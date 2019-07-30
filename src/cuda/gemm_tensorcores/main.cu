@@ -18,10 +18,6 @@
 #include "GEMM.h"
 #include "GEMMWMMA.h"
 
-#ifndef DEFAULT_INPUT_SIZE
-#define DEFAULT_INPUT_SIZE 8192
-#endif
-
 #define GENERATOR_MAXABSVALUE 1.1
 #define GENERATOR_MINABSVALUE -0.09
 
@@ -393,7 +389,7 @@ void usage(char **argv) {
 }
 
 int main(int argc, char** argv) {
-	Log log_obj(argc, argv, DEFAULT_INPUT_SIZE);
+	Log log_obj(argc, argv);
 	std::cout << log_obj << std::endl;
 
 	GEMMTYPE gemm_type;

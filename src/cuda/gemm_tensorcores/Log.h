@@ -14,7 +14,6 @@
 #include "log_helper.h"
 #endif
 
-
 class Log {
 public:
 	bool generate;
@@ -33,13 +32,12 @@ public:
 	double alpha;
 	double beta;
 
-	Log(int argc, char** argv, int input_size) :
+	Log(int argc, char** argv) :
 			alpha(1), beta(0) {
 
 		this->generate = this->find_int_arg(argc, argv, "--generate", 0);
 
-		this->size_matrices = this->find_int_arg(argc, argv, "--size",
-				input_size);
+		this->size_matrices = this->find_int_arg(argc, argv, "--size", 1024);
 
 		this->iterations = this->find_int_arg(argc, argv, "--iterations", 1);
 
