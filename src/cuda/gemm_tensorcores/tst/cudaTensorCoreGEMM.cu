@@ -518,10 +518,14 @@ int main(int argc, char **argv) {
 	half *C = NULL;
 	half *D = NULL;
 
-	checkCudaErrors(cudaMalloc((void**)A, sizeof(half) * M_GLOBAL * K_GLOBAL));
-	checkCudaErrors(cudaMalloc((void**)B, sizeof(half) * N_GLOBAL * K_GLOBAL));
-	checkCudaErrors(cudaMalloc((void**)C, sizeof(half) * M_GLOBAL * N_GLOBAL));
-	checkCudaErrors(cudaMalloc((void**)D, sizeof(half) * M_GLOBAL * N_GLOBAL));
+	checkCudaErrors(
+			cudaMalloc((void**) &A, sizeof(half) * M_GLOBAL * K_GLOBAL));
+	checkCudaErrors(
+			cudaMalloc((void**) &B, sizeof(half) * N_GLOBAL * K_GLOBAL));
+	checkCudaErrors(
+			cudaMalloc((void**) &C, sizeof(half) * M_GLOBAL * N_GLOBAL));
+	checkCudaErrors(
+			cudaMalloc((void**) &D, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
 	assert(((unsigned long long) A) % 128 == 0);
 	assert(((unsigned long long) B) % 128 == 0);
@@ -532,15 +536,19 @@ int main(int argc, char **argv) {
 	half* bt = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
 	half* ct = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
 	half* dt = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
-	half* atd;
-	half* btd;
-	half* ctd;
-	half* dtd;
+	half* atd = nullptr;
+	half* btd = nullptr;
+	half* ctd = nullptr;
+	half* dtd = nullptr;
 
-	checkCudaErrors(cudaMalloc((void**)atd, sizeof(half) * M_GLOBAL * K_GLOBAL));
-	checkCudaErrors(cudaMalloc((void**)btd, sizeof(half) * N_GLOBAL * K_GLOBAL));
-	checkCudaErrors(cudaMalloc((void**)ctd, sizeof(half) * M_GLOBAL * N_GLOBAL));
-	checkCudaErrors(cudaMalloc((void**)dtd, sizeof(half) * M_GLOBAL * N_GLOBAL));
+	checkCudaErrors(
+			cudaMalloc((void**) &atd, sizeof(half) * M_GLOBAL * K_GLOBAL));
+	checkCudaErrors(
+			cudaMalloc((void**) &btd, sizeof(half) * N_GLOBAL * K_GLOBAL));
+	checkCudaErrors(
+			cudaMalloc((void**) &ctd, sizeof(half) * M_GLOBAL * N_GLOBAL));
+	checkCudaErrors(
+			cudaMalloc((void**) &dtd, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
 	//INIT HOST
 	init_host_matrices(A_h, B_h, C_h);
@@ -615,7 +623,7 @@ int main(int argc, char **argv) {
 			st>>>(atd, btd, ctd, dtd, alpha, beta, M_GLOBAL,
 	M_GLOBAL);
 
-	MatrixMulCUDA<half><<<grid, threads, SHMEM_SZ>>>(A, B, C, D, alpha, beta,
+	MatrixMulCUDA<half> <<<grid, threads, SHMEM_SZ>>>(A, B, C, D, alpha, beta,
 	M_GLOBAL, M_GLOBAL);
 
 	checkKernelErrors(cudaStreamSynchronize(st));
