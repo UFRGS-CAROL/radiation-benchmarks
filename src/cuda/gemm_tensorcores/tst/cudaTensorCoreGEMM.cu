@@ -562,7 +562,7 @@ int main(int argc, char **argv) {
 			st>>>(atd, btd, ctd, dtd, alpha_h, beta_h, M_GLOBAL,
 	M_GLOBAL);
 
-	MatrixMulCUDA<<<grid, threads, SHMEM_SZ>>>(A, B, C, D, alpha, beta,
+	MatrixMulCUDA<<<grid, threads, SHMEM_SZ>>>(A, B, C, D, alpha, 0.0,
 	M_GLOBAL, M_GLOBAL);
 
 	checkKernelErrors(cudaStreamSynchronize(st));
