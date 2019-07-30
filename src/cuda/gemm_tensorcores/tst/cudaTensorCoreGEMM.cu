@@ -138,6 +138,7 @@ __global__ void MatrixMulCUDA(float *A, float *B, float *C, float* D,
 	int tx = threadIdx.x;
 	int ty = threadIdx.y;
 
+
 	// Index of the first sub-matrix of A processed by the block
 	int aBegin = wA * BLOCK_SIZE * by;
 
@@ -195,6 +196,8 @@ __global__ void MatrixMulCUDA(float *A, float *B, float *C, float* D,
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+	if(tx + ty + bx + by == 0)
+		printf("%f %f\n", beta, C[c + wB * ty + tx]);
 	D[c + wB * ty + tx] = alpha * Csub + beta * C[c + wB * ty + tx];
 }
 
