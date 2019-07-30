@@ -346,7 +346,7 @@ int main(int argc, char* argv[]) {
 	std::cout << parameters << std::endl;
 
 	if (parameters.nonconstant) {
-
+		dmr_nonconstant(parameters);
 	} else {
 		dmr(parameters);
 	}
