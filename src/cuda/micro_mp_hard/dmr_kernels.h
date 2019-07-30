@@ -292,7 +292,7 @@ __global__ void MicroBenchmarkKernel_FMANOTBIASAED(incomplete *d_R0_one,
 		full *d_R0_second) {
 	register full acc_full = 0.0;
 	register incomplete acc_incomplete = 0.0;
-//	double theshold = -2222;
+	double theshold = -2222;
 
 	const register full f = full(FMA_INPUT);
 	const register incomplete i = incomplete(FMA_INPUT);
@@ -301,14 +301,14 @@ __global__ void MicroBenchmarkKernel_FMANOTBIASAED(incomplete *d_R0_one,
 		acc_full = fma_dmr(f, f, acc_full);
 		acc_incomplete = fma_dmr(i, i, acc_incomplete);
 
-#if CHECKBLOCK >= 1
-		if((count % CHECKBLOCK) == 0) {
-			check_relative_error(acc_incomplete, acc_full);
+#if CHECKBLOCK == 1
+//		if((count % CHECKBLOCK) == 0) {
+//			check_relative_error(acc_incomplete, acc_full);
 
-//			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
+			theshold = fmax(theshold, fabs(double(acc_full) - double(acc_incomplete)));
 
 			acc_incomplete = incomplete(acc_full);
-		}
+//		}
 #endif
 
 	}
@@ -319,9 +319,9 @@ __global__ void MicroBenchmarkKernel_FMANOTBIASAED(incomplete *d_R0_one,
 
 #endif
 
-//	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
-//		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
-//	}
+	if (blockIdx.x * blockDim.x + threadIdx.x == 0) {
+		printf("THRESHOLD CHECKBLOCK, %.20e, %d\n", theshold, CHECKBLOCK);
+	}
 
 	d_R0_one[blockIdx.x * blockDim.x + threadIdx.x] = acc_incomplete;
 	d_R0_second[blockIdx.x * blockDim.x + threadIdx.x] = acc_full;
