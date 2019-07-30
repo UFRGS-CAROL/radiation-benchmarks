@@ -36,7 +36,7 @@ __device__      __forceinline__ half abs__(half a) {
 	return fabsf(a);
 }
 
-__device__ __forceinline__ void compare(const float lhs, const half rhs) {
+__device__ __forceinline__ void compare(const float& lhs, const half& rhs) {
 	const float diff = abs__(lhs - float(rhs));
 	const float zero = float(ZERO_HALF);
 	if (diff > zero) {
@@ -44,7 +44,7 @@ __device__ __forceinline__ void compare(const float lhs, const half rhs) {
 	}
 }
 
-__device__ __forceinline__ void compare(const double lhs, const float rhs) {
+__device__ __forceinline__ void compare(const double& lhs, const float& rhs) {
 	const double diff = abs__(lhs - double(rhs));
 	const double zero = double(ZERO_FLOAT);
 	if (diff > zero) {
@@ -52,18 +52,9 @@ __device__ __forceinline__ void compare(const double lhs, const float rhs) {
 	}
 }
 
-//template<typename T>
-//__device__ __forceinline__ void compare(const T lhs, const T rhs) {
-//	const T diff = abs__(lhs - rhs);
-//	const T zero = T(ZERO_FULL);
-//	if (diff > zero) {
-//		atomicAdd(&errors, 1);
-//	}
-//}
-
 template<typename incomplete, typename full>
-__device__ __forceinline__ void check_relative_error(incomplete acc_incomplete,
-		full acc_full) {
+__device__ __forceinline__ void check_relative_error(const incomplete& acc_incomplete,
+		const full& acc_full) {
 	compare(acc_full, acc_incomplete);
 }
 
@@ -85,15 +76,15 @@ __host__ unsigned long long dmr_errors() {
  * ----------------------------------------
  */
 
-__device__ __forceinline__ void fma_dmr(double& a, double& b, double& acc) {
+__device__ __forceinline__ void fma_dmr(const double a, const double b, double& acc) {
 	acc = __fma_rn(a, b, acc);
 }
 
-__device__ __forceinline__ void fma_dmr(float& a, float& b, float& acc) {
+__device__ __forceinline__ void fma_dmr(const float a, const float b, float& acc) {
 	acc = __fmaf_rn(a, b, acc);
 }
 
-__device__ __forceinline__ void fma_dmr(half& a, half& b, half& acc) {
+__device__ __forceinline__ void fma_dmr(const half a, const half b, half& acc) {
 	acc = __hfma(a, b, acc);
 }
 
