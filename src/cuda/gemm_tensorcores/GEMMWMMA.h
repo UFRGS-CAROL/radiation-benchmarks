@@ -91,6 +91,8 @@ public:
 	size_t shared_memory;
 	std::vector<CudaStream> two_streams;
 
+	dim3 tensor_grid;
+	dim3 tensor_block;
 	GEMMWMMADMR(
 			const std::vector<real_t>& host_a0, //Matrix A
 			const std::vector<real_t>& host_b0, // MAtrix B
@@ -105,10 +107,15 @@ public:
 				M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N
 						* (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(real_t));
 
-//		rad::checkFrameworkErrors(
-//				cudaFuncSetAttribute(hw_mxm_kernel<real_t, real_t>,
-//						cudaFuncAttributeMaxDynamicSharedMemorySize,
-//						this->shared_memory));
+		rad::checkFrameworkErrors(
+				cudaFuncSetAttribute(hw_mxm_kernel<half, half>,
+						cudaFuncAttributeMaxDynamicSharedMemorySize,
+						this->shared_memory));
+
+		rad::checkFrameworkErrors(
+				cudaFuncSetAttribute(sw_mxm_kernel<half>,
+						cudaFuncAttributeMaxDynamicSharedMemorySize,
+						this->shared_memory));
 
 		this->two_streams.resize(2);
 
@@ -122,42 +129,35 @@ public:
 			throw_line("M_GLOBAL AND K sizes must be the same!");
 		}
 
+		// blockDim.x must be a multple of warpSize
+		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
+		tensor_block.x = 128;
+		tensor_block.y = 4;
+
+		tensor_grid.x = (M_GLOBAL + (WMMA_M * tensor_block.x / 32 - 1))
+				/ (WMMA_M * tensor_block.x / 32);
+		tensor_grid.y = (N_GLOBAL + WMMA_N * tensor_block.y - 1)
+				/ (WMMA_N * tensor_block.y);
+
 	}
 
 	void gemm() {
 		// OPTIMIZED TENSOR + GEMM SW
 		//HARDWARE CALL
-
-		dim3 gridDim;
-		dim3 blockDim;
-
-		// blockDim.x must be a multple of warpSize
-		// 128x4 means we have 16 warps and a block computes a 64x64 output tile
-		blockDim.x = 128;
-		blockDim.y = 4;
-
-		gridDim.x = (M_GLOBAL + (WMMA_M * blockDim.x / 32 - 1))
-				/ (WMMA_M * blockDim.x / 32);
-		gridDim.y = (N_GLOBAL + WMMA_N * blockDim.y - 1)
-				/ (WMMA_N * blockDim.y);
-
 		// If enough shared memory available on the GPU use high performant kernel
 //		if (this->deviceProp.sharedMemPerMultiprocessor
 //				>= this->shared_memory) {
-			hw_mxm_kernel <<<
-					gridDim, blockDim, 0,
-					this->two_streams[0].stream>>>(this->device_ptr_mixed_dmr.data(),
-					this->device_ptr_c0.data(), this->device_ptr_a0.data(),
-					this->device_ptr_b0.data(), this->alpha, this->beta,
-					this->k, this->k);
+		hw_mxm_kernel<<<tensor_grid, tensor_block, this->shared_memory,
+				this->two_streams[0].stream>>>(
+				this->device_ptr_mixed_dmr.data(), this->device_ptr_c0.data(),
+				this->device_ptr_a0.data(), this->device_ptr_b0.data(),
+				this->alpha, this->beta, this->k, this->k);
 //		} else {
 //			throw_line("NOT SUPPORTED\n");
 //		}
-		std::cout << this->grid_dim << std::endl;
-		std::cout << this->block_dim << std::endl;
 
 		//SOFTWARE CALL
-		sw_mxm_kernel<<<this->grid_dim, this->block_dim, 0,
+		sw_mxm_kernel<<<this->grid_dim, this->block_dim, this->shared_memory,
 				this->two_streams[1].stream>>>(this->device_ptr_d0.data(),
 				this->device_ptr_c0.data(), this->device_ptr_a0.data(),
 				this->device_ptr_b0.data(), this->alpha, this->beta, this->k,

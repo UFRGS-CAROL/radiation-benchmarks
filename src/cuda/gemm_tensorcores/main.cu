@@ -23,7 +23,7 @@
 #endif
 
 #define GENERATOR_MAXABSVALUE 0.9
-#define GENERATOR_MINABSVALUE 0.0001
+#define GENERATOR_MINABSVALUE 0.1
 
 typedef double BiggestPrecision;
 
