@@ -120,8 +120,8 @@ __host__ void init_host_matrices(float *a, float *b, float *c) {
 	}
 }
 
-__global__ void MatrixMulCUDA(float *A, float *B, float *C, float* D, float alpha,
-		float beta, int wA, int wB) {
+__global__ void MatrixMulCUDA(float *A, float *B, float *C, float* D,
+		float alpha, float beta, int wA, int wB) {
 	// Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -262,7 +262,8 @@ __global__ void compute_gemm(const half *A, const half *B, const half *C,
 				const half *tile_ptr = shmem_warp_tile_ptr
 						+ i * SHMEM_STRIDE * K + j * N;
 
-				nvcuda::wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE, C_LAYOUT);
+				nvcuda::wmma::load_matrix_sync(c[i][j], tile_ptr, SHMEM_STRIDE,
+						C_LAYOUT);
 			}
 		}
 
@@ -331,7 +332,7 @@ __global__ void compute_gemm(const half *A, const half *B, const half *C,
 			for (int k_step = 0; k_step < CHUNK_K; k_step++) {
 				nvcuda::wmma::fragment < nvcuda::wmma::matrix_a, M, N, K, half, nvcuda::wmma::row_major
 						> a[WARP_COL_TILES];
-				nvcuda::wmma::fragment <nvcuda::wmma::matrix_b, M, N, K, half, nvcuda::wmma::col_major
+				nvcuda::wmma::fragment < nvcuda::wmma::matrix_b, M, N, K, half, nvcuda::wmma::col_major
 						> b[WARP_ROW_TILES];
 
 #pragma unroll
@@ -465,6 +466,29 @@ int main(int argc, char **argv) {
 
 	init_host_matrices(A_h, B_h, C_h);
 
+	half* at = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
+	half* bt = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
+	half* ct = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
+	half* dt = (half*) malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
+
+	half* atd;
+	half* btd;
+	half* ctd;
+	half* dtd;
+
+	checkCudaErrors(
+			cudaMalloc(reinterpret_cast<void **>(&atd),
+					sizeof(half) * M_GLOBAL * K_GLOBAL));
+	checkCudaErrors(
+			cudaMalloc(reinterpret_cast<void **>(&btd),
+					sizeof(half) * N_GLOBAL * K_GLOBAL));
+	checkCudaErrors(
+			cudaMalloc(reinterpret_cast<void **>(&ctd),
+					sizeof(half) * M_GLOBAL * N_GLOBAL));
+	checkCudaErrors(
+			cudaMalloc(reinterpret_cast<void **>(&dtd),
+					sizeof(half) * M_GLOBAL * N_GLOBAL));
+
 	printf("Preparing data for GPU...\n");
 
 	checkCudaErrors(
@@ -522,11 +546,12 @@ int main(int argc, char **argv) {
 			cudaFuncSetAttribute(MatrixMulCUDA,
 					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
-//	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-//			st>>>(A, B, C, D, alpha, beta, M_GLOBAL, M_GLOBAL);
+	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
+			st>>>(atd, btd, ctd, dtd, half(alpha), half(beta), M_GLOBAL,
+			M_GLOBAL);
 
 	MatrixMulCUDA<<<grid, threads, SHMEM_SZ>>>(A, B, C, D1, alpha, beta,
-			M_GLOBAL, M_GLOBAL);
+	M_GLOBAL, M_GLOBAL);
 
 	checkKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
@@ -536,7 +561,7 @@ int main(int argc, char **argv) {
 			cudaMemcpy(result_hD, D, sizeof(float) * M_GLOBAL * N_GLOBAL,
 					cudaMemcpyDeviceToHost));
 	checkCudaErrors(
-			cudaMemcpy(result_host, D1, sizeof(float) * M_GLOBAL * N_GLOBAL,
+			cudaMemcpy(dt, dtd, sizeof(half) * M_GLOBAL * N_GLOBAL,
 					cudaMemcpyDeviceToHost));
 
 	checkCudaErrors(cudaEventRecord(stop));
@@ -552,8 +577,8 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < 10; i++) {
 
 		printf(" diff = %f, HW = %f, SW = %f \n",
-				(double(result_hD[i]) - double(result_host[i])),
-				double(result_hD[i]), double(result_host[i]));
+				(double(result_hD[i]) - double(dt[i])),
+				double(result_hD[i]), double(dt[i]));
 
 	}
 
@@ -571,11 +596,22 @@ int main(int argc, char **argv) {
 	free(C_h);
 	free(result_hD);
 	free(result_host);
+
+	free(at);
+	free(bt);
+	free(ct);
+	free(dt);
+	checkCudaErrors(cudaFree(reinterpret_cast<void *>(atd)));
+	checkCudaErrors(cudaFree(reinterpret_cast<void *>(btd)));
+	checkCudaErrors(cudaFree(reinterpret_cast<void *>(ctd)));
+	checkCudaErrors(cudaFree(reinterpret_cast<void *>(dtd)));
+
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(A)));
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(B)));
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(C)));
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(D)));
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(D1)));
 	cudaStreamDestroy(st);
+
 	return 0;
 }
