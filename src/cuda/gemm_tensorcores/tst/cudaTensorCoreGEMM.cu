@@ -128,8 +128,9 @@ __host__ void init_host_matrices(half *a, half *b, half *c) {
 	}
 }
 
-__global__ void MatrixMulCUDA(float *A, float *B, float *C, float* D,
-		float alpha, float beta, int wA, int wB) {
+__global__ void MatrixMulCUDA(const float *A, const float *B, const float *C,
+		float* D, const float alpha, const float beta, const int wA,
+		const int wB) {
 	// Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -137,7 +138,6 @@ __global__ void MatrixMulCUDA(float *A, float *B, float *C, float* D,
 	// Thread index
 	int tx = threadIdx.x;
 	int ty = threadIdx.y;
-
 
 	// Index of the first sub-matrix of A processed by the block
 	int aBegin = wA * BLOCK_SIZE * by;
@@ -501,7 +501,6 @@ int main(int argc, char **argv) {
 					cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemset(dtd, 0, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
-
 	printf("Preparing data for GPU...\n");
 
 	checkCudaErrors(
@@ -514,7 +513,6 @@ int main(int argc, char **argv) {
 			cudaMemcpy(C, C_h, sizeof(float) * M_GLOBAL * N_GLOBAL,
 					cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemset(D, 0, sizeof(float) * M_GLOBAL * N_GLOBAL));
-
 
 	enum {
 		// Compute the right amount of shared memory to request.
@@ -589,10 +587,10 @@ int main(int argc, char **argv) {
 	//                   K_GLOBAL, N_GLOBAL, M_GLOBAL, N_GLOBAL);
 
 	for (int i = 0; i < M_GLOBAL * N_GLOBAL; i++) {
-		if((double(D_h[i]) - double(dt[i])) == 0){
-		printf(" diff = %f, HW = %f, SW = %f \n",
-				(double(D_h[i]) - double(dt[i])), double(D_h[i]),
-				double(dt[i]));
+		if ((double(D_h[i]) - double(dt[i])) == 0) {
+			printf(" diff = %f, HW = %f, SW = %f \n",
+					(double(D_h[i]) - double(dt[i])), double(D_h[i]),
+					double(dt[i]));
 		}
 
 	}
