@@ -78,7 +78,7 @@ std::tuple<real_t, real_t, real_t, int> get_thresholds(
 		std::vector<real_t> threshold_array) {
 	real_t max_ = real_t(FLT_MIN_EXP);
 	real_t min_ = real_t(FLT_MAX_EXP);
-	int last_max_i;
+	int last_max_i = 0;
 
 	for (auto i = 0; i < threshold_array.size(); i++) {
 		max_ = std::max(max_, threshold_array[i]);
