@@ -10,6 +10,7 @@
 
 #include "Parameters.h"
 #include "device_functions.h"
+#include "BinaryDouble.h"
 
 template<typename half_t, typename real_t>
 __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
@@ -48,18 +49,18 @@ __global__ void MicroBenchmarkKernel_MULNONCONSTANT(real_t* input,
 	register real_t acc_real_t = this_thread_input_real_t;
 	register half_t acc_half_t = this_thread_input_half_t;
 
-	register real_t threshold;
+	register BinaryDouble threshold;
 	for (int count = 0; count < num_op; count++) {
 		acc_real_t = mul_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = mul_dmr(this_thread_input_half_t, acc_half_t);
 
-		threshold = acc_real_t - real_t(acc_half_t);
+		threshold = BinaryDouble(acc_real_t) ^ BinaryDouble(real_t(acc_half_t));
 
 	}
 
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
-	threshold_out[thread_id] = fabs(threshold);
+	threshold_out[thread_id] = real_t(threshold);
 }
 
 template<typename half_t, typename real_t>
