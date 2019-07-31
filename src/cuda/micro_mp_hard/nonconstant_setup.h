@@ -242,15 +242,16 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 		std::cout << std::scientific << std::setprecision(18);
 		if (parameters.verbose) {
 			/////////// PERF
-			std::cout << "SIZE:" << parameters.r_size;
-			std::cout << " OUTPUT/S:" << outputpersec;
-			std::cout << " ITERATION " << iteration;
-			std::cout << " time: " << kernel_time;
-			std::cout << " output errors: " << errors;
-			std::cout << " relative errors: " << relative_errors;
-			std::cout << " max threshold: " << max_threshold;
-			std::cout << " min threshold: " << min_threshold;
-			std::cout << " median threshold: " << median << std::endl;
+			std::cout << "ITERATION " << iteration << " -------------------------------------" << std::endl;
+			std::cout << "SIZE:" << parameters.r_size << std::endl;
+			std::cout << "OUTPUT/S:" << outputpersec << std::endl;
+			std::cout << "TIME: " << kernel_time << std::endl;
+			std::cout << "OUTPUT ERRORS: " << errors << std::endl;
+			std::cout << "RELATIVE ERRORS: " << relative_errors << std::endl;
+			std::cout << "MAX THRESHOLD: " << max_threshold << std::endl;
+			std::cout << "MIN THRESHOLD: " << min_threshold << std::endl;
+			std::cout << "MEDIAN THRESHOLD: " << median << std::endl;
+			std::cout << "-----------------------------------------------" << std::endl;
 
 		} else {
 			// CSV format
