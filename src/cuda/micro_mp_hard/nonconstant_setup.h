@@ -9,6 +9,8 @@
 #define NONCONSTANT_SETUP_H_
 #include <fstream>
 #include <iomanip>
+#include <tuple>
+#include <algorithm>
 
 #include "include/cuda_utils.h"
 #include "include/device_vector.h"
@@ -69,13 +71,18 @@ void write_to_file(std::string& path, std::vector<real_t>& array) {
 }
 
 template<typename real_t>
-real_t get_max_threshold(std::vector<real_t>& threshold_array) {
-	real_t maxth = -2222;
-	for (auto i : threshold_array) {
-		maxth = std::fmax(maxth, i);
-	}
+std::tuple<real_t, real_t, real_t> get_max_threshold(
+		std::vector<real_t>& threshold_array) {
+//	for(auto i = 0; i < input_array.size(); i++){
+//		max_threshold = std::max(max_threshold, threshold_array[i]);
+//		min_threshold = std::min(min_threshold, threshold_array[i]);
+//	}
 
-	return maxth;
+	std::sort(threshold_array.begin(), threshold_array.end());
+	real_t max_ = *threshold_array.begin();
+	real_t min_ = *threshold_array.end();
+	real_t median = threshold_array[threshold_array.size() / 2];
+	return std::make_tuple(max_, min_, median);
 }
 
 // Returns the number of errors found
@@ -199,10 +206,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 				output_device_vector_half_t.data(), 		// output half
 				parameters.operation_num);			//number of operations
 
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
-		;
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
+		rad::checkFrameworkErrors (cudaPeekAtLastError());;
+		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		kernel_time = rad::mysecond() - kernel_time;
@@ -221,7 +226,9 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 		output_host_vector_half_t = output_device_vector_half_t.to_vector();
 		threshold_host_real_t = threshold_device_real_t.to_vector();
 
-		auto max_threshold = get_max_threshold(threshold_host_real_t);
+		real_t max_threshold, min_threshold, median;
+		std::tie(max_threshold, min_threshold, median) = get_max_threshold(
+				threshold_host_real_t);
 
 		unsigned long long relative_errors = copy_errors();
 
@@ -240,6 +247,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::cout << " output errors: " << errors;
 			std::cout << " relative errors: " << relative_errors;
 			std::cout << " max threshold: " << max_threshold << std::endl;
+			std::cout << " min threshold: " << min_threshold << std::endl;
+			std::cout << " median threshold: " << median << std::endl;
 
 		} else {
 			// CSV format
@@ -248,7 +257,9 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::cout << kernel_time << ",";
 			std::cout << errors << ",";
 			std::cout << relative_errors << ",";
-			std::cout << max_threshold << std::endl;
+			std::cout << max_threshold << ",";
+			std::cout << min_threshold << ",";
+			std::cout << median << std::endl;
 		}
 	}
 
