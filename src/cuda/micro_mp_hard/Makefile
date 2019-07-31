@@ -1,4 +1,5 @@
-OPS?=1
+OPS?=100
+OPSNUM=1
 LOGS=1
 DEBUG?=0
 CHECKBLOCK=0
@@ -51,7 +52,7 @@ clean:
 
 generate:
 	$(EXEC) --precision double --redundancy dmrmixed \
-		--inst $(MICRO) --generate --opnum $(OPS) --nonconstant \
+		--inst $(MICRO) --generate --opnum $(OPSNUM) --nonconstant \
 		--minrand $(MINRAND) --maxrand $(MAXRAND) \
 		--gold ./gold_mul.data
 		

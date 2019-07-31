@@ -177,10 +177,11 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 	//====================================
 	// Verbose in csv format
 	std::ofstream out(
-			"./temp_" + parameters.instruction_str + "_"
+			"./temp_" + std::to_string(parameters.operation_num) + "_"
+					+ parameters.instruction_str + "_"
 					+ std::to_string(parameters.min_random) + "_"
-					+ std::to_string(parameters.max_random) + "_"
-					+ ".csv", std::ios::out);
+					+ std::to_string(parameters.max_random) + "_" + ".csv",
+			std::ios::out);
 	if (parameters.verbose == false) {
 		out
 				<< "output/s,iteration,time,output_errors,max_threshold,max_output_real,"
@@ -222,10 +223,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 				output_device_vector_half_t.data(), 		// output half
 				parameters.operation_num);			//number of operations
 
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
-		;
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
+		rad::checkFrameworkErrors (cudaPeekAtLastError());;
+		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		kernel_time = rad::mysecond() - kernel_time;
