@@ -56,10 +56,11 @@ generate:
 		--minrand $(MINRAND) --maxrand $(MAXRAND) \
 		--gold ./gold_mul.data
 		
-test_mul:
-	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed \
-		--inst mul --opnum 1 --nonconstant --minrand 0 --maxrand 100 \
-		--gold ./gold_mul.data --input ./input_mul.data
+test:
+	$(EXEC) --precision double --redundancy dmrmixed \
+		--inst $(MICRO) --opnum $(OPSNUM) --nonconstant \
+		--minrand $(MINRAND) --maxrand $(MAXRAND) \
+		--gold ./gold_mul.data --iterations 10
 
 test_fma:
 	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed --inst fma
