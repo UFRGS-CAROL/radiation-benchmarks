@@ -262,9 +262,9 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::cout << "MAX THRESHOLD: " << max_threshold << std::endl;
 			std::cout << "MIN THRESHOLD: " << min_threshold << std::endl;
 			std::cout << "MEDIAN THRESHOLD: " << median << std::endl;
-			std::cout << "input[" << std::fixed << last_i;
-			std::cout << "] for MAX THRESHOLD: " << std::scientific
-					<< input_array[last_i] << std::endl;
+			std::cout << "input[" << std::setprecision(0) << std::fixed << last_i;
+			std::cout << "] for MAX THRESHOLD: " << std::scientific << std::setprecision(20);
+			std::cout << input_array[last_i] << std::endl;
 			std::cout << "-----------------------------------------------"
 					<< std::endl;
 
