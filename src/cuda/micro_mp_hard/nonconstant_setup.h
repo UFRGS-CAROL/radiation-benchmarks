@@ -176,8 +176,11 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 
 	//====================================
 	// Verbose in csv format
+	std::ofstream out(
+			"./temp_" + parameters.instruction_str + "_"
+					+ std::to_string(parameters.max_random) + ".csv");
 	if (parameters.verbose == false) {
-		std::cout
+		out
 				<< "output/s,iteration,time,output errors,max threshold,max output real_t, "
 						"output half_t,threshold most significant bit, xor result"
 				<< std::endl;
@@ -288,18 +291,19 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			BinaryDouble xor_result = biggest_threshold_output_real_t
 					^ biggest_threshold_output_half_t;
 			// CSV format
-			std::cout << outputpersec << ",";
-			std::cout << iteration << ",";
-			std::cout << kernel_time << ",";
-			std::cout << errors << ",";
-			std::cout << max_threshold << ",";
-			std::cout << output_host_vector_real_t[last_i] << ",";
-			std::cout << output_host_vector_half_t[last_i] << ",";
-			std::cout << xor_result.most_significant_bit() << ",";
-			std::cout << xor_result << std::endl;
+			out << outputpersec << ",";
+			out << iteration << ",";
+			out << kernel_time << ",";
+			out << errors << ",";
+			out << max_threshold << ",";
+			out << output_host_vector_real_t[last_i] << ",";
+			out << output_host_vector_half_t[last_i] << ",";
+			out << xor_result.most_significant_bit() << ",";
+			out << xor_result << std::endl;
 		}
 	}
 
+	out.close();
 	if (parameters.verbose) {
 		double averageKernelTime = total_kernel_time / parameters.iterations;
 		std::cout << std::endl << "-- END --" << std::endl;
