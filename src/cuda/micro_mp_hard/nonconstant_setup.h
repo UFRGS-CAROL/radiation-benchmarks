@@ -76,8 +76,8 @@ void write_to_file(std::string& path, std::vector<real_t>& array) {
 template<typename real_t>
 std::tuple<real_t, real_t, real_t, int> get_thresholds(
 		std::vector<real_t> threshold_array) {
-	real_t max_ = real_t(FLT_MIN_EXP);
-	real_t min_ = real_t(FLT_MAX_EXP);
+	real_t max_ = real_t(-FLT_MAX);
+	real_t min_ = real_t(FLT_MAX);
 	int last_max_i = 0;
 
 	for (auto i = 0; i < threshold_array.size(); i++) {
@@ -86,6 +86,14 @@ std::tuple<real_t, real_t, real_t, int> get_thresholds(
 		if (max_ == threshold_array[i]) {
 			last_max_i = i;
 		}
+	}
+
+	if(max_ == real_t(-FLT_MAX)){
+		max_ = std::nan("nan");
+	}
+
+	if(min_ == real_t(FLT_MAX)){
+		min_ = std::nan("nan");
 	}
 
 	std::sort(threshold_array.begin(), threshold_array.end());
