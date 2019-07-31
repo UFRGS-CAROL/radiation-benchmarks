@@ -246,8 +246,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::cout << " time: " << kernel_time;
 			std::cout << " output errors: " << errors;
 			std::cout << " relative errors: " << relative_errors;
-			std::cout << " max threshold: " << max_threshold << std::endl;
-			std::cout << " min threshold: " << min_threshold << std::endl;
+			std::cout << " max threshold: " << max_threshold;
+			std::cout << " min threshold: " << min_threshold;
 			std::cout << " median threshold: " << median << std::endl;
 
 		} else {

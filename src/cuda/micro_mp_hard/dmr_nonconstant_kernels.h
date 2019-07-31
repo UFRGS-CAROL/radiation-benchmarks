@@ -42,11 +42,12 @@ __global__ void MicroBenchmarkKernel_MULNONCONSTANT(real_t* input,
 		int num_op) {
 	int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
 
-	register real_t acc_real_t = 0.0;
-	register half_t acc_half_t = 0.0;
-
 	register real_t this_thread_input_real_t = input[thread_id];
 	register half_t this_thread_input_half_t = half_t(input[thread_id]);
+
+	register real_t acc_real_t = this_thread_input_real_t;
+	register half_t acc_half_t = this_thread_input_half_t;
+
 	register real_t threshold;
 	for (int count = 0; count < num_op; count++) {
 		acc_real_t = mul_dmr(this_thread_input_real_t, acc_real_t);
