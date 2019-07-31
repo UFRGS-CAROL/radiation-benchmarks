@@ -183,8 +183,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 					+ ".csv", std::ios::out);
 	if (parameters.verbose == false) {
 		out
-				<< "output/s,iteration,time,output errors,max threshold,max output real_t, "
-						"output half_t,threshold most significant bit,xor result"
+				<< "output/s,iteration,time,output_errors,max_threshold,max_output_real, "
+						"max_output_half,threshold_most_significant_bit,xor_result"
 				<< std::endl;
 	}
 
