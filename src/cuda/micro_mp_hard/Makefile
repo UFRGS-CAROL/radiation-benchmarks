@@ -42,6 +42,9 @@ NVCC_FLAGS+= -DCHECKBLOCK=$(CHECKBLOCK) -DZERO_FLOAT=$(ZERO_FLOAT)
 FLAGS+=-I$(NVIDIA_INC) -I../common -L$(NVIDIA_LIB) -DOPS=$(OPS) 
 FLAGS+= -O3 -lLogHelper -std=c++11  $(NVCC_FLAGS)
 
+
+.PHONY: all test clean generate
+
 all: $(EXEC)
 
 $(EXEC): clean $(SOURCES)
