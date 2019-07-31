@@ -1,8 +1,12 @@
-OPS?=1000000
+OPS?=1
 LOGS=1
 DEBUG?=0
 CHECKBLOCK=0
 ZERO_FLOAT=2.2e-07
+
+MINRAND=0
+MAXRAND=100
+BENCH=mul
 
 CC=g++
 NVCC=nvcc
@@ -47,7 +51,8 @@ clean:
 
 generate_mul:
 	$(EXEC) --verbose --precision double --redundancy dmrmixed \
-		--inst mul --generate --opnum 1 --nonconstant --minrand 0 --maxrand 100 \
+		--inst mul --generate --opnum $(OPS) --nonconstant \
+		--minrand $(MINRAND) --maxrand $(MAXRAND) \
 		--gold ./gold_mul.data
 		
 test_mul:
