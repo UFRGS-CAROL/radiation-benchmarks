@@ -8,6 +8,7 @@
 #ifndef NONCONSTANT_SETUP_H_
 #define NONCONSTANT_SETUP_H_
 #include <fstream>
+#include <iomanip>
 
 #include "include/cuda_utils.h"
 #include "include/device_vector.h"
@@ -33,7 +34,6 @@ bool cmp(const double lhs, const double rhs, const double zero) {
 	return true;
 }
 
-
 unsigned long long copy_errors() {
 	unsigned long long errors_host = 0;
 	rad::checkFrameworkErrors(
@@ -43,8 +43,8 @@ unsigned long long copy_errors() {
 	unsigned long long temp = 0;
 	//Reset the errors variable
 	rad::checkFrameworkErrors(
-				cudaMemcpyToSymbol(errors, &temp,
-						sizeof(unsigned long long), 0, cudaMemcpyHostToDevice));
+			cudaMemcpyToSymbol(errors, &temp, sizeof(unsigned long long), 0,
+					cudaMemcpyHostToDevice));
 	return errors_host;
 }
 
@@ -66,6 +66,16 @@ void write_to_file(std::string& path, std::vector<real_t>& array) {
 				array.size() * sizeof(real_t));
 	}
 	output.close();
+}
+
+template<typename real_t>
+real_t get_max_threshold(std::vector<real_t>& threshold_array) {
+	real_t maxth = -2222;
+	for (auto i : threshold_array) {
+		maxth = std::fmax(maxth, i);
+	}
+
+	return maxth;
 }
 
 // Returns the number of errors found
@@ -120,8 +130,8 @@ int check_output_errors(std::vector<real_t> &output_real_t,
 }
 
 template<typename half_t, typename real_t>
-void test_radiation(Parameters& parameters,
-		std::vector<real_t>& input_array, std::vector<real_t>& gold_array) {
+void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
+		std::vector<real_t>& gold_array) {
 #ifdef CHECKBLOCK
 	std::cout << "Instruction block checking size " << CHECKBLOCK << std::endl;
 #endif
@@ -209,6 +219,9 @@ void test_radiation(Parameters& parameters,
 		//check output
 		output_host_vector_real_t = output_device_vector_real_t.to_vector();
 		output_host_vector_half_t = output_device_vector_half_t.to_vector();
+		threshold_host_real_t = threshold_device_real_t.to_vector();
+
+		auto max_threshold = get_max_threshold(threshold_host_real_t);
 
 		unsigned long long relative_errors = copy_errors();
 
@@ -217,6 +230,7 @@ void test_radiation(Parameters& parameters,
 				relative_errors);
 
 		double outputpersec = double(parameters.r_size) / kernel_time;
+		std::cout << std::scientific << std::setprecision(18);
 		if (parameters.verbose) {
 			/////////// PERF
 			std::cout << "SIZE:" << parameters.r_size;
@@ -224,7 +238,8 @@ void test_radiation(Parameters& parameters,
 			std::cout << " ITERATION " << iteration;
 			std::cout << " time: " << kernel_time;
 			std::cout << " output errors: " << errors;
-			std::cout << " relative errors: " << relative_errors << std::endl;
+			std::cout << " relative errors: " << relative_errors;
+			std::cout << " max threshold: " << max_threshold << std::endl;
 
 		} else {
 			// CSV format
@@ -232,8 +247,8 @@ void test_radiation(Parameters& parameters,
 			std::cout << iteration << ",";
 			std::cout << kernel_time << ",";
 			std::cout << errors << ",";
-			std::cout << relative_errors << std::endl;
-
+			std::cout << relative_errors << ",";
+			std::cout << max_threshold << std::endl;
 		}
 	}
 

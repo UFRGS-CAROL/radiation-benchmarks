@@ -46,13 +46,13 @@ clean:
 	rm -rf $(EXEC)
 
 generate_mul:
-	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed \
+	$(EXEC) --verbose --precision double --redundancy dmrmixed \
 		--inst mul --generate --opnum 1 --nonconstant --minrand 0 --maxrand 100 \
 		--gold ./gold_mul.data
 		
 test_mul:
 	$(EXEC) --verbose --iterations 10 --precision double --redundancy dmrmixed \
-		--inst mul --generate --opnum 1 --nonconstant --minrand 0 --maxrand 100 \
+		--inst mul --opnum 1 --nonconstant --minrand 0 --maxrand 100 \
 		--gold ./gold_mul.data --input ./input_mul.data
 
 test_fma:
