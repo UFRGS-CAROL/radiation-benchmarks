@@ -32,11 +32,16 @@ void exception(std::string msg, std::string file, int line) {
 #define throw_line(msg) exception(msg, __FILE__, __LINE__)
 
 bool cmp(const double lhs, const double rhs, const double zero) {
-	const double diff = abs(lhs - rhs);
-	if (diff > zero) {
-		return false;
-	}
-	return true;
+//	const double diff = abs(lhs - rhs);
+//	if (diff > zero) {
+//		return false;
+//	}
+	BinaryDouble rhs_ = rhs;
+	BinaryDouble lhs_ = lhs;
+	uint64 mask = 0xffffffff00000000;
+	BinaryDouble test = (rhs_ ^ lhs_) & mask;
+
+	return test == uint64(0);
 }
 
 unsigned long long copy_errors() {

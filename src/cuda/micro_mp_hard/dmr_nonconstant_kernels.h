@@ -12,12 +12,13 @@
 #include "device_functions.h"
 //#include "BinaryDouble.h"
 
-__device__ double xor_(double a, double b) {
+__device__ double xor_(const double& a, const double& b) {
 	long long a_i = __double_as_longlong(a);
 	long long b_i = __double_as_longlong(b);
 	long long c_i = a_i ^ b_i;
 	return __longlong_as_double(c_i);
 }
+
 
 template<typename half_t, typename real_t>
 __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,

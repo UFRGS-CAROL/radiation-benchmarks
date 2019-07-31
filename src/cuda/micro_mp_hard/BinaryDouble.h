@@ -30,6 +30,19 @@ struct BinaryDouble {
 		return BinaryDouble(r.bin & this->bin);
 	}
 
+	__DEVICE_HOST_ BinaryDouble operator&(const uint64& r) {
+		return BinaryDouble(r & this->bin);
+	}
+
+	__DEVICE_HOST_ bool operator!=(const uint64& r) {
+		return r != this->bin;
+	}
+
+	__DEVICE_HOST_ bool operator==(const uint64& r) {
+		return r == this->bin;
+	}
+
+
 	__DEVICE_HOST_ BinaryDouble operator^(const BinaryDouble& r) {
 		return BinaryDouble(r.bin ^ this->bin);
 	}
