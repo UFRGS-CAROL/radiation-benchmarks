@@ -75,15 +75,15 @@ struct BinaryDouble {
 		assert(sizeof(double) == sizeof(uint64));
 		uint64 int_val;
 		memcpy(&int_val, &this->bin, sizeof(double));
-		uint64 bit = 63;
+		uint64 bit = 0;
 		for (uint64 i = uint64(1) << 63; i > 0; i = i / 2) {
-			bit--;
+			bit++;
 			if (int_val & i) {
-				return bit;
+				break;
 			}
 		}
 
-		return 0;
+		return bit;
 	}
 };
 

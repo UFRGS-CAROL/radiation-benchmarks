@@ -177,7 +177,9 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 	//====================================
 	// Verbose in csv format
 	if (parameters.verbose == false) {
-		std::cout << "output/s,iteration,time,output errors,relative errors"
+		std::cout
+				<< "output/s,iteration,time,output errors,max threshold,max output real_t, "
+						"output half_t,threshold most significant bit, xor result"
 				<< std::endl;
 	}
 
@@ -257,7 +259,7 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			/////////// PERF
 			std::cout << "-----------------------------------------------"
 					<< std::endl;
-			auto relative_error = max_threshold / input_array[last_i];
+
 			std::cout << "ITERATION " << iteration << std::endl;
 			std::cout << "SIZE:" << parameters.r_size << std::endl;
 			std::cout << "OUTPUT/S:" << outputpersec << std::endl;
@@ -268,24 +270,33 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::cout << "MIN THRESHOLD: " << min_threshold << std::endl;
 			std::cout << "MEDIAN THRESHOLD: " << median << std::endl;
 			std::cout << std::setprecision(0) << std::fixed;
-			std::cout << "MOST SIGNIFICANT biT: " << bd.most_significant_bit() << std::endl;
+			std::cout << "MOST SIGNIFICANT biT: " << bd.most_significant_bit()
+					<< std::endl;
 			std::cout << "MAX BINARY: " << bd << std::endl;
 			std::cout << "input[" << last_i << "] for MAX THRESHOLD: ";
-			std::cout << std::scientific << std::setprecision(20) <<input_array[last_i] << std::endl;
+			std::cout << std::scientific << std::setprecision(20)
+					<< input_array[last_i] << std::endl;
 
 			std::cout << "-----------------------------------------------"
 					<< std::endl;
 
 		} else {
+			BinaryDouble biggest_threshold_output_real_t =
+					output_host_vector_real_t[last_i];
+			BinaryDouble biggest_threshold_output_half_t =
+					output_host_vector_half_t[last_i];
+			BinaryDouble xor_result = biggest_threshold_output_real_t
+					^ biggest_threshold_output_half_t;
 			// CSV format
 			std::cout << outputpersec << ",";
 			std::cout << iteration << ",";
 			std::cout << kernel_time << ",";
 			std::cout << errors << ",";
-			std::cout << relative_errors << ",";
 			std::cout << max_threshold << ",";
-			std::cout << bd.most_significant_bit()  << ",";
-			std::cout << bd << std::endl;
+			std::cout << output_host_vector_real_t[last_i] << ",";
+			std::cout << output_host_vector_half_t[last_i] << ",";
+			std::cout << xor_result.most_significant_bit() << ",";
+			std::cout << xor_result << std::endl;
 		}
 	}
 

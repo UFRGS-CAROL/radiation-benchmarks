@@ -35,13 +35,13 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
 
-		threshold =  xor_(acc_real_t, real_t(acc_half_t));
+		threshold = acc_real_t - real_t(acc_half_t);
 
 	}
 
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
-	threshold_out[thread_id] = threshold;
+	threshold_out[thread_id] = fabs(threshold);
 }
 
 template<typename half_t, typename real_t>
@@ -61,13 +61,13 @@ __global__ void MicroBenchmarkKernel_MULNONCONSTANT(real_t* input,
 		acc_real_t = mul_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = mul_dmr(this_thread_input_half_t, acc_half_t);
 
-		threshold = xor_(acc_real_t, real_t(acc_half_t));
+		threshold = (acc_real_t) - (real_t(acc_half_t));
 
 	}
 
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
-	threshold_out[thread_id] = (threshold);
+	threshold_out[thread_id] = fabs(threshold);
 }
 
 template<typename half_t, typename real_t>
@@ -89,13 +89,13 @@ __global__ void MicroBenchmarkKernel_FMANONCONSTANT(real_t* input,
 		acc_half_t = fma_dmr(this_thread_input_half_t, this_thread_input_half_t,
 				acc_half_t);
 
-		threshold =  xor_(acc_real_t, real_t(acc_half_t));
+		threshold = acc_real_t - real_t(acc_half_t);
 
 	}
 
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
-	threshold_out[thread_id] = threshold;
+	threshold_out[thread_id] = fabs(threshold);
 }
 
 #endif /* DMR_NONCONSTANT_KERNELS_H_ */
