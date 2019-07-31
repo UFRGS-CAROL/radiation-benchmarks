@@ -72,19 +72,24 @@ void write_to_file(std::string& path, std::vector<real_t>& array) {
 }
 
 template<typename real_t>
-std::tuple<real_t, real_t, real_t> get_thresholds(
+std::tuple<real_t, real_t, real_t, int> get_thresholds(
 		std::vector<real_t> threshold_array) {
 	real_t max_ = real_t(FLT_MIN_EXP);
 	real_t min_ = real_t(FLT_MAX_EXP);
+	int last_max_i;
+
 	for (auto i = 0; i < threshold_array.size(); i++) {
 		max_ = std::max(max_, threshold_array[i]);
 		min_ = std::min(min_, threshold_array[i]);
+		if (max_ == threshold_array[i]) {
+			last_max_i = i;
+		}
 	}
 
 	std::sort(threshold_array.begin(), threshold_array.end());
 
 	real_t median = threshold_array[threshold_array.size() / 2];
-	return std::make_tuple(max_, min_, median);
+	return std::make_tuple(max_, min_, median, last_max_i);
 }
 
 // Returns the number of errors found
@@ -208,10 +213,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 				output_device_vector_half_t.data(), 		// output half
 				parameters.operation_num);			//number of operations
 
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
-		;
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
+		rad::checkFrameworkErrors (cudaPeekAtLastError());;
+		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		kernel_time = rad::mysecond() - kernel_time;
@@ -230,8 +233,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 		output_host_vector_half_t = output_device_vector_half_t.to_vector();
 		threshold_host_real_t = threshold_device_real_t.to_vector();
 
-		real_t max_threshold, min_threshold, median;
-		std::tie(max_threshold, min_threshold, median) = get_thresholds(
+		real_t max_threshold, min_threshold, median, last_i;
+		std::tie(max_threshold, min_threshold, median, last_i) = get_thresholds(
 				threshold_host_real_t);
 
 		unsigned long long relative_errors = copy_errors();
@@ -255,6 +258,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::cout << "OUTPUT ERRORS: " << errors << std::endl;
 			std::cout << "RELATIVE ERRORS: " << relative_errors << std::endl;
 			std::cout << "MAX THRESHOLD: " << max_threshold << std::endl;
+			std::cout << "input[" << last_i << "] for MAX THRESHOLD: "
+					<< input_array[last_i] << std::endl;
 			std::cout << "MIN THRESHOLD: " << min_threshold << std::endl;
 			std::cout << "MEDIAN THRESHOLD: " << median << std::endl;
 			std::cout << "-----------------------------------------------"
