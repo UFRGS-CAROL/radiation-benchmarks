@@ -3,7 +3,7 @@ LOGS=1
 DEBUG?=0
 CHECKBLOCK=0
 ZERO_FLOAT=2.2e-07
-
+MICRO=mul
 MINRAND=0
 MAXRAND=100
 BENCH=mul
@@ -49,9 +49,9 @@ $(EXEC): clean $(SOURCES)
 clean:
 	rm -rf $(EXEC)
 
-generate_mul:
-	$(EXEC) --verbose --precision double --redundancy dmrmixed \
-		--inst mul --generate --opnum $(OPS) --nonconstant \
+generate:
+	$(EXEC) --precision double --redundancy dmrmixed \
+		--inst $(MICRO) --generate --opnum $(OPS) --nonconstant \
 		--minrand $(MINRAND) --maxrand $(MAXRAND) \
 		--gold ./gold_mul.data
 		

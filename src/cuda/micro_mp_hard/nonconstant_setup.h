@@ -23,6 +23,8 @@
 #include "log_helper.h"
 #endif
 
+#include "BinaryDouble.h"
+
 void exception(std::string msg, std::string file, int line) {
 	throw std::runtime_error(msg + " at " + file + ":" + std::to_string(line));
 }
@@ -249,11 +251,12 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 
 		double outputpersec = double(parameters.r_size) / kernel_time;
 		std::cout << std::scientific << std::setprecision(20);
+		BinaryDouble bd = max_threshold;
+
 		if (parameters.verbose) {
 			/////////// PERF
 			std::cout << "-----------------------------------------------"
 					<< std::endl;
-			BinaryDouble bd = max_threshold;
 			auto relative_error = max_threshold / input_array[last_i];
 			std::cout << "ITERATION " << iteration << std::endl;
 			std::cout << "SIZE:" << parameters.r_size << std::endl;
@@ -281,8 +284,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::cout << errors << ",";
 			std::cout << relative_errors << ",";
 			std::cout << max_threshold << ",";
-			std::cout << min_threshold << ",";
-			std::cout << median << std::endl;
+			std::cout << bd.most_significant_bit()  << ",";
+			std::cout << bd << std::endl;
 		}
 	}
 
