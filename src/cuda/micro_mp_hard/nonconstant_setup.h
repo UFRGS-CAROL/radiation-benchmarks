@@ -264,11 +264,11 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::cout << "MAX THRESHOLD: " << max_threshold << std::endl;
 			std::cout << "MIN THRESHOLD: " << min_threshold << std::endl;
 			std::cout << "MEDIAN THRESHOLD: " << median << std::endl;
-			std::cout << "input[" << std::setprecision(0) << std::fixed << last_i;
+			std::cout << std::setprecision(0) << std::fixed;
 			std::cout << "MOST SIGNIFICANT biT: " << bd.most_significant_bit() << std::endl;
-
-			std::cout << "] for MAX THRESHOLD: " << std::scientific << std::setprecision(20);
-			std::cout << input_array[last_i] << std::endl;
+			std::cout << "MAX BINARY: " << bd << std::endl;
+			std::cout << "input[" << last_i << "] for MAX THRESHOLD: ";
+			std::cout << std::scientific << std::setprecision(20) <<input_array[last_i] << std::endl;
 
 			std::cout << "-----------------------------------------------"
 					<< std::endl;
