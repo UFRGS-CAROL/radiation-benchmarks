@@ -178,11 +178,13 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 	// Verbose in csv format
 	std::ofstream out(
 			"./temp_" + parameters.instruction_str + "_"
-					+ std::to_string(parameters.max_random) + ".csv");
+					+ std::to_string(parameters.min_random) + "_"
+					+ std::to_string(parameters.max_random) + "_"
+					+ ".csv", std::ios::out);
 	if (parameters.verbose == false) {
 		out
 				<< "output/s,iteration,time,output errors,max threshold,max output real_t, "
-						"output half_t,threshold most significant bit, xor result"
+						"output half_t,threshold most significant bit,xor result"
 				<< std::endl;
 	}
 
@@ -256,6 +258,7 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 
 		double outputpersec = double(parameters.r_size) / kernel_time;
 		std::cout << std::scientific << std::setprecision(20);
+		out << std::scientific << std::setprecision(20);
 		BinaryDouble bd = max_threshold;
 
 		if (parameters.verbose) {
