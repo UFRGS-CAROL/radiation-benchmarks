@@ -55,7 +55,7 @@ generate:
 		--inst $(MICRO) --generate --opnum $(OPSNUM) --nonconstant \
 		--minrand $(MINRAND) --maxrand $(MAXRAND) \
 		--gold ./gold_mul.data
-
+		
 test:
 	$(EXEC) --precision double --redundancy dmrmixed \
 		--inst $(MICRO) --opnum $(OPSNUM) --nonconstant \
