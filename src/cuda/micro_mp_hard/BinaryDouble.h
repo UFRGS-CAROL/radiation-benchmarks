@@ -8,14 +8,21 @@
 #ifndef BINARYDOUBLE_H_
 #define BINARYDOUBLE_H_
 
+#include <assert.h>
+
 #define __DEVICE_HOST_ __device__ __host__
+#define __HOST__ __host__
+
+typedef uint64_t uint64;
 
 struct BinaryDouble {
-	uint64_t bin;
+	uint64 bin;
 
 	__DEVICE_HOST_ operator double() {
 		double val;
+		assert(sizeof(double) == sizeof(uint64));
 		memcpy(&val, &this->bin, sizeof(double));
+
 		return val;
 	}
 
@@ -28,40 +35,55 @@ struct BinaryDouble {
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const BinaryDouble& r) {
-		if (sizeof(double) == 8) {
+		assert(sizeof(double) == sizeof(uint64));
 
-			uint64_t int_val;
+		uint64 int_val;
 
-			memcpy(&int_val, &r.bin, sizeof(double));
-			for (uint64_t i = uint64_t(1) << 63; i > 0; i = i / 2) {
-				if (int_val & i) {
-					os << 1;
-				} else {
-					os << 0;
-				}
+		memcpy(&int_val, &r.bin, sizeof(double));
+		for (uint64 i = uint64(1) << 63; i > 0; i = i / 2) {
+			if (int_val & i) {
+				os << 1;
+			} else {
+				os << 0;
 			}
 		}
+
 		return os;
 	}
 
 	__DEVICE_HOST_ BinaryDouble& operator=(const double& val) {
-		if (sizeof(double) == 8) {
-			memcpy(&this->bin, &val, sizeof(double));
-		}
+		assert(sizeof(double) == sizeof(uint64));
+		memcpy(&this->bin, &val, sizeof(double));
+
 		return *this;
 	}
 
 	__DEVICE_HOST_ BinaryDouble(const double& val) {
-		if (sizeof(double) == 8) {
-			memcpy(&this->bin, &val, sizeof(double));
-		}
+		assert(sizeof(double) == sizeof(uint64));
+		memcpy(&this->bin, &val, sizeof(double));
+
 	}
 
-	__DEVICE_HOST_ BinaryDouble(const uint64_t& val) :
+	__DEVICE_HOST_ BinaryDouble(const uint64& val) :
 			bin(val) {
 	}
 
 	__DEVICE_HOST_ BinaryDouble() {
+	}
+
+	__HOST__ uint64 most_significant_bit() {
+		assert(sizeof(double) == sizeof(uint64));
+		uint64 int_val;
+		memcpy(&int_val, &this->bin, sizeof(double));
+		uint64 bit = 63;
+		for (uint64 i = uint64(1) << 63; i > 0; i = i / 2) {
+			bit--;
+			if (int_val & i) {
+				return bit;
+			}
+		}
+
+		return 0;
 	}
 };
 
