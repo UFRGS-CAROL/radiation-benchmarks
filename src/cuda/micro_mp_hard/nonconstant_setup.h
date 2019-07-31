@@ -213,8 +213,10 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 				output_device_vector_half_t.data(), 		// output half
 				parameters.operation_num);			//number of operations
 
-		rad::checkFrameworkErrors (cudaPeekAtLastError());;
-		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		;
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		kernel_time = rad::mysecond() - kernel_time;
@@ -246,7 +248,7 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 		}
 
 		double outputpersec = double(parameters.r_size) / kernel_time;
-		std::cout << std::scientific << std::setprecision(18);
+		std::cout << std::scientific << std::setprecision(20);
 		if (parameters.verbose) {
 			/////////// PERF
 			std::cout << "-----------------------------------------------"
@@ -258,10 +260,11 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::cout << "OUTPUT ERRORS: " << errors << std::endl;
 			std::cout << "RELATIVE ERRORS: " << relative_errors << std::endl;
 			std::cout << "MAX THRESHOLD: " << max_threshold << std::endl;
-			std::cout << "input[" << last_i << "] for MAX THRESHOLD: "
-					<< input_array[last_i] << std::endl;
 			std::cout << "MIN THRESHOLD: " << min_threshold << std::endl;
 			std::cout << "MEDIAN THRESHOLD: " << median << std::endl;
+			std::cout << "input[" << last_i << std::fixed
+					<< "] for MAX THRESHOLD: " << std::scientific
+					<< input_array[last_i] << std::endl;
 			std::cout << "-----------------------------------------------"
 					<< std::endl;
 
