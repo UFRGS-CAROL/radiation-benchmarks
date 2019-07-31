@@ -242,7 +242,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 		std::cout << std::scientific << std::setprecision(18);
 		if (parameters.verbose) {
 			/////////// PERF
-			std::cout << "ITERATION " << iteration << " -------------------------------------" << std::endl;
+			std::cout << "-----------------------------------------------" << std::endl;
+			std::cout << "ITERATION " << iteration << std::endl;
 			std::cout << "SIZE:" << parameters.r_size << std::endl;
 			std::cout << "OUTPUT/S:" << outputpersec << std::endl;
 			std::cout << "TIME: " << kernel_time << std::endl;
