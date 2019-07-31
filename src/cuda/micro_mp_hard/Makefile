@@ -57,10 +57,10 @@ generate:
 	$(EXEC) --precision double --redundancy dmrmixed \
 		--inst $(MICRO) --generate --opnum $(OPSNUM) --nonconstant \
 		--minrand $(MINRAND) --maxrand $(MAXRAND) \
-		--gold ./gold_mul.data
+		--gold ./gold_mul.data --verbose
 		
 test:
 	$(EXEC) --precision double --redundancy dmrmixed \
 		--inst $(MICRO) --opnum $(OPSNUM) --nonconstant \
 		--minrand $(MINRAND) --maxrand $(MAXRAND) \
-		--gold ./gold_mul.data --iterations 10
+		--gold ./gold_mul.data --verbose --iterations 10
