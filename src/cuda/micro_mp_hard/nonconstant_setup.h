@@ -231,10 +231,12 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 				threshold_host_real_t);
 
 		unsigned long long relative_errors = copy_errors();
-
-		int errors = check_output_errors(output_host_vector_real_t,
-				output_host_vector_half_t, gold_array, parameters.verbose,
-				relative_errors);
+		int errors = 0;
+		if (parameters.generate == false) {
+			errors = check_output_errors(output_host_vector_real_t,
+					output_host_vector_half_t, gold_array, parameters.verbose,
+					relative_errors);
+		}
 
 		double outputpersec = double(parameters.r_size) / kernel_time;
 		std::cout << std::scientific << std::setprecision(18);
@@ -271,6 +273,10 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 		std::cout << "Average kernel time: " << averageKernelTime << std::endl;
 		std::cout << "Best: " << min_kernel_time << std::endl;
 		std::cout << "Worst: " << max_kernel_time << std::endl;
+	}
+
+	if (parameters.generate) {
+		gold_array = output_host_vector_real_t;
 	}
 }
 
