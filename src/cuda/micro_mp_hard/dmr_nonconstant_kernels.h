@@ -19,6 +19,41 @@ __device__ double xor_(const double& a, const double& b) {
 	return __longlong_as_double(c_i);
 }
 
+__device__ double uint64_to_double(const uint64& d){
+	return __longlong_as_double(d);
+}
+
+__device__ int count_most_signficant_bit(const uint64 bin){
+	assert(sizeof(double) == sizeof(uint64));
+	uint64 int_val;
+	memcpy(&int_val, bin, sizeof(double));
+	uint64 bit = 0;
+	for (uint64 i = uint64(1) << 63; i > 0; i = i / 2) {
+		bit++;
+		if (int_val & i) {
+			break;
+		}
+	}
+
+	return bit;
+}
+
+__device__ uint64 double_to_uint64(const double& d){
+	return __double_as_longlong(d);
+}
+
+__device__ void check_bit_error(const float& lhs, const double rhs, uint64 mask = 0xffffffff00000000){
+	double lhs_double = double(lhs);
+	uint64 lhs_ll = double_to_uint64(lhs_double);
+	uitn64 rhs_ll = double_to_uint64(rhs);
+	uint64 xor_result = lhs_ll ^ rhs_ll;
+	uint64 and_result = xor_result & mask;
+
+	if(and_result != 0){
+		atomicAdd(&errors, 1);
+	}
+
+}
 
 template<typename half_t, typename real_t>
 __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
@@ -39,6 +74,8 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 		threshold = acc_real_t - real_t(acc_half_t);
 
 	}
+
+	check_bit_error(acc_half_t, acc_real_t);
 
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
@@ -81,7 +118,6 @@ __global__ void MicroBenchmarkKernel_FMANONCONSTANT(real_t* input,
 
 	register real_t acc_real_t = this_thread_input_real_t;
 	register half_t acc_half_t = this_thread_input_half_t;
-
 
 	register real_t threshold;
 	for (int count = 0; count < num_op; count++) {

@@ -40,7 +40,6 @@ bool cmp(const double lhs, const double rhs, const double zero) {
 	BinaryDouble lhs_ = lhs;
 	uint64 mask = 0xffffffff00000000;
 	BinaryDouble test = (rhs_ ^ lhs_) & mask;
-
 	return test == uint64(0);
 }
 
