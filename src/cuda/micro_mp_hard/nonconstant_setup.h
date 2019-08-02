@@ -31,14 +31,10 @@ void exception(std::string msg, std::string file, int line) {
 
 #define throw_line(msg) exception(msg, __FILE__, __LINE__)
 
-bool cmp(const double lhs, const double rhs, const double zero) {
-//	const double diff = abs(lhs - rhs);
-//	if (diff > zero) {
-//		return false;
-//	}
+bool cmp(const double lhs, const double rhs, const uint64 mask =
+DEFAULT_64_BIT_MASK) {
 	BinaryDouble rhs_ = rhs;
 	BinaryDouble lhs_ = lhs;
-	uint64 mask = 0xffffffff00000000;
 	BinaryDouble test = (rhs_ ^ lhs_) & mask;
 	return test == uint64(0);
 }
@@ -92,11 +88,11 @@ std::tuple<real_t, real_t, real_t, int> get_thresholds(
 		}
 	}
 
-	if(max_ == real_t(-FLT_MAX)){
+	if (max_ == real_t(-FLT_MAX)) {
 		max_ = std::nan("nan");
 	}
 
-	if(min_ == real_t(FLT_MAX)){
+	if (min_ == real_t(FLT_MAX)) {
 		min_ = std::nan("nan");
 	}
 
@@ -120,7 +116,7 @@ int check_output_errors(std::vector<real_t> &output_real_t,
 		double output_inc = double(output_half_t[i]);
 		double gold = double(gold_real_t[i]);
 
-		if (output != gold || !cmp(output, output_inc, ZERO_FLOAT)) {
+		if (output != gold || !cmp(output, output_inc)) {
 #pragma omp critical
 			{
 				std::stringstream error_detail;
@@ -235,8 +231,10 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 				output_device_vector_half_t.data(), 		// output half
 				parameters.operation_num);			//number of operations
 
-		rad::checkFrameworkErrors (cudaPeekAtLastError());;
-		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		;
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		kernel_time = rad::mysecond() - kernel_time;

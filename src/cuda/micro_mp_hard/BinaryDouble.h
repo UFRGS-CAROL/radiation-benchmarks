@@ -9,11 +9,7 @@
 #define BINARYDOUBLE_H_
 
 #include <assert.h>
-
-#define __DEVICE_HOST_ __device__ __host__
-#define __HOST__ __host__
-
-typedef uint64_t uint64;
+#include "Parameters.h"
 
 struct BinaryDouble {
 	uint64 bin;

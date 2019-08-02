@@ -51,6 +51,13 @@ typedef enum {
 	NONE, DMR, TMR, DMRMIXED, TMRMIXED
 } REDUNDANCY;
 
+
+
+#define __DEVICE_HOST_ __device__ __host__
+#define __HOST__ __host__
+
+typedef uint64_t uint64;
+
 std::unordered_map<std::string, REDUNDANCY> red = {
 //NONE
 		{ "none", NONE },
