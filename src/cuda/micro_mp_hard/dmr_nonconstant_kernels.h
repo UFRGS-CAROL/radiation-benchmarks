@@ -35,6 +35,8 @@ __device__ void check_bit_error(const float lhs, const double rhs,
 //	BinaryDouble and_result = xor_result & mask;
 
 	if (xor_result.most_significant_bit() < 32) {
+		printf("%X %X %X\n", lhs_ll.bin, rhs_ll.bin, xor_result.bin);
+
 		atomicAdd(&errors, 1);
 	}
 }
