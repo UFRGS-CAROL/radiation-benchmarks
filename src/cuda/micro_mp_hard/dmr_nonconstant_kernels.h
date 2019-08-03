@@ -17,13 +17,9 @@
 #define DEFAULT_64_BIT_MASK 0xffffffff00000000
 #endif
 
-__device__ double uint64_to_double(const uint64& d) {
-	return __longlong_as_double(d);
-}
-
-__device__ uint64 double_to_uint64(const double& d) {
+__device__ uint64 double_to_uint64(const double d) {
 	const double* ptr = &d;
-	uint64* ptr_i = (uint64*) ptr;
+	const uint64* ptr_i = (uint64*) ptr;
 	return *ptr_i;
 }
 
