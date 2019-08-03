@@ -24,28 +24,17 @@ __device__ uint64 double_to_uint64(const double d){
 	return *ptr_i;
 }
 
-__device__ uint64 double_to_uint64_mem(const double d){
-	uint64 ret;
-	memcpy(&ret, &d, sizeof(double));
-
-	return ret;
-}
-
 
 __device__ void check_bit_error(const float lhs, const double rhs,
 		uint64 mask = DEFAULT_64_BIT_MASK) {
 	double lhs_double = double(lhs);
 	double diff = fabs(lhs_double - rhs);
+	if(diff < ZERO_FULL)
+		return;
+
 	uint64 lhs_ll = double_to_uint64(lhs_double);
 	uint64 rhs_ll = double_to_uint64(rhs);
 
-	if(blockIdx.x * blockDim.x + threadIdx.x == 0){
-		printf("ASDOUBLE %X %X\n", lhs_ll, rhs_ll);
-		printf("MEMCPY %X %X\n", double_to_uint64_mem(lhs_double), double_to_uint64_mem(rhs));
-	}
-
-	if(diff < ZERO_FULL)
-		return;
 
 	uint64 xor_result = lhs_ll ^ rhs_ll;
 	uint64 and_result = xor_result & mask;
@@ -68,8 +57,10 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 	register half_t this_thread_input_half_t = half_t(input[thread_id]);
 	register real_t threshold;
 	for (int count = 0; count < OPS; count++) {
-		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
-		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
+//		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
+//		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
+		acc_real_t += this_thread_input_real_t;
+		acc_half_t += this_thread_input_half_t;
 
 		if ((count % num_op) == 0) {
 			check_bit_error(acc_half_t, acc_real_t);
