@@ -12,34 +12,29 @@
 
 #include "Parameters.h"
 #include "device_functions.h"
+#include "BinaryDouble.h"
 
 #ifndef DEFAULT_64_BIT_MASK
 #define DEFAULT_64_BIT_MASK 0xffffffff00000000
 #endif
 
 
-__device__ uint64 double_to_uint64(const double d){
-	const double* ptr = &d;
-	const uint64* ptr_i = (const uint64*) ptr;
-	return *ptr_i;
-}
-
-
 __device__ void check_bit_error(const float lhs, const double rhs,
 		uint64 mask = DEFAULT_64_BIT_MASK) {
 	double lhs_double = double(lhs);
 	double diff = fabs(lhs_double - rhs);
+
+
 	if(diff < ZERO_FULL)
 		return;
 
-	uint64 lhs_ll = double_to_uint64(lhs_double);
-	uint64 rhs_ll = double_to_uint64(rhs);
+	BinaryDouble lhs_ll = (lhs_double);
+	BinaryDouble rhs_ll = (rhs);
 
+	BinaryDouble xor_result = lhs_ll ^ rhs_ll;
+	BinaryDouble and_result = xor_result & mask;
 
-	uint64 xor_result = lhs_ll ^ rhs_ll;
-	uint64 and_result = xor_result & mask;
-
-	if (and_result != 0) {
+	if (and_result != uint64(0)) {
 		atomicAdd(&errors, 1);
 	}
 }
@@ -57,10 +52,8 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 	register half_t this_thread_input_half_t = half_t(input[thread_id]);
 	register real_t threshold;
 	for (int count = 0; count < OPS; count++) {
-//		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
-//		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
-		acc_real_t += this_thread_input_real_t;
-		acc_half_t += this_thread_input_half_t;
+		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
+		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
 
 		if ((count % num_op) == 0) {
 			check_bit_error(acc_half_t, acc_real_t);

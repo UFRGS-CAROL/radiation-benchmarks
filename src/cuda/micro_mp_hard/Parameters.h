@@ -53,8 +53,9 @@ typedef enum {
 
 
 
-#define __DEVICE_HOST_ __device__ __host__
+#define __DEVICE_HOST__ __device__ __host__
 #define __HOST__ __host__
+#define __DEVICE__ __device__
 
 typedef uint64_t uint64;
 
