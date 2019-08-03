@@ -25,18 +25,21 @@ __device__ uint64 double_to_uint64(const double& d) {
 	return __double_as_longlong(d);
 }
 
-__device__ void check_bit_error(const float& lhs, const double rhs,
+__device__ void check_bit_error(const float lhs, const double rhs,
 		uint64 mask = DEFAULT_64_BIT_MASK) {
 	double lhs_double = double(lhs);
+	double diff = fabs(lhs_double - rhs);
+	if(diff < ZERO_FLOAT)
+		return;
+
 	uint64 lhs_ll = double_to_uint64(lhs_double);
 	uint64 rhs_ll = double_to_uint64(rhs);
-	uint64 xor_result = lhs_ll & rhs_ll;
-	uint64 and_result = xor_result ^ mask;
+	uint64 xor_result = lhs_ll ^ rhs_ll;
+	uint64 and_result = xor_result & mask;
 
 	if (and_result != 0) {
 		atomicAdd(&errors, 1);
 	}
-
 }
 
 template<typename half_t, typename real_t>
