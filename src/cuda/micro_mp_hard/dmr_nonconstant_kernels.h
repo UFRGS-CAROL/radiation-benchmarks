@@ -14,7 +14,7 @@
 #include "device_functions.h"
 
 #ifndef DEFAULT_64_BIT_MASK
-#define DEFAULT_64_BIT_MASK 0xffffffff00000000
+#define DEFAULT_64_BIT_MASK 0xffff000000000000
 #endif
 
 __device__ double xor_(const double& a, const double& b) {
