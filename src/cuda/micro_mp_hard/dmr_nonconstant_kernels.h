@@ -19,7 +19,7 @@
 
 __device__ uint64 double_to_uint64(const double d) {
 	const double* ptr = &d;
-	const uint64* ptr_i = (uint64*) ptr;
+	const uint64* ptr_i = (const uint64*) ptr;
 	return *ptr_i;
 }
 
