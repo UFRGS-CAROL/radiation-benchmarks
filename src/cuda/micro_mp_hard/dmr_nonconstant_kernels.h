@@ -77,9 +77,10 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
 
-		threshold = acc_real_t - real_t(acc_half_t);
 		if ((count % num_op) == 0) {
 			check_bit_error(acc_half_t, acc_real_t);
+			threshold = acc_real_t - real_t(acc_half_t);
+			acc_half_t = acc_real_t;
 		}
 	}
 	output_real_t[thread_id] = acc_real_t;
