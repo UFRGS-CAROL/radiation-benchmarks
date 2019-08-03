@@ -14,33 +14,11 @@
 #include "device_functions.h"
 
 #ifndef DEFAULT_64_BIT_MASK
-#define DEFAULT_64_BIT_MASK 0xffff000000000000
+#define DEFAULT_64_BIT_MASK 0xffffffff00000000
 #endif
-
-__device__ double xor_(const double& a, const double& b) {
-	long long a_i = __double_as_longlong(a);
-	long long b_i = __double_as_longlong(b);
-	long long c_i = a_i ^ b_i;
-	return __longlong_as_double(c_i);
-}
 
 __device__ double uint64_to_double(const uint64& d) {
 	return __longlong_as_double(d);
-}
-
-__device__ int count_most_signficant_bit(const uint64 bin) {
-	assert(sizeof(double) == sizeof(uint64));
-	uint64 int_val;
-	memcpy(&int_val, &bin, sizeof(double));
-	uint64 bit = 0;
-	for (uint64 i = uint64(1) << 63; i > 0; i = i / 2) {
-		bit++;
-		if (int_val & i) {
-			break;
-		}
-	}
-
-	return bit;
 }
 
 __device__ uint64 double_to_uint64(const double& d) {
@@ -52,8 +30,8 @@ __device__ void check_bit_error(const float& lhs, const double rhs,
 	double lhs_double = double(lhs);
 	uint64 lhs_ll = double_to_uint64(lhs_double);
 	uint64 rhs_ll = double_to_uint64(rhs);
-	uint64 xor_result = lhs_ll ^ rhs_ll;
-	uint64 and_result = xor_result & mask;
+	uint64 xor_result = lhs_ll & rhs_ll;
+	uint64 and_result = xor_result ^ mask;
 
 	if (and_result != 0) {
 		atomicAdd(&errors, 1);
