@@ -33,6 +33,10 @@ void exception(std::string msg, std::string file, int line) {
 
 bool cmp(const double lhs, const double rhs, const uint64 mask =
 DEFAULT_64_BIT_MASK) {
+	double diff = std::fabs(lhs - rhs);
+	if(diff < ZERO_FLOAT)
+		return true;
+
 	BinaryDouble rhs_ = rhs;
 	BinaryDouble lhs_ = lhs;
 	BinaryDouble test = (rhs_ ^ lhs_) & mask;
