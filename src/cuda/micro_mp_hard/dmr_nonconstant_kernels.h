@@ -17,9 +17,9 @@
 #define DEFAULT_64_BIT_MASK 0xffffffff00000000
 #endif
 
-__device__ uint64 double_to_uint64(const double d) {
-	const double* ptr = &d;
-	const uint64* ptr_i = (const uint64*) ptr;
+__device__ uint64 double_to_uint64(void* d) {
+//	const double* ptr = &d;
+	const uint64* ptr_i = (const uint64*) d;
 	return *ptr_i;
 }
 
@@ -27,8 +27,9 @@ __device__ void check_bit_error(const float lhs, const double rhs,
 		uint64 mask = DEFAULT_64_BIT_MASK) {
 	double lhs_double = double(lhs);
 	double diff = fabs(lhs_double - rhs);
-	uint64 lhs_ll = double_to_uint64(lhs_double);
-	uint64 rhs_ll = double_to_uint64(rhs);
+	uint64 lhs_ll = double_to_uint64(&lhs_double);
+	double rhs_double = rhs;
+	uint64 rhs_ll = double_to_uint64(&rhs_double);
 
 	if(blockIdx.x * blockDim.x + threadIdx.x == 0){
 		printf("%X %X\n", lhs_ll, rhs_ll);
