@@ -29,11 +29,16 @@ __device__ void check_bit_error(const float lhs, const double rhs,
 		uint64 mask = DEFAULT_64_BIT_MASK) {
 	double lhs_double = double(lhs);
 	double diff = fabs(lhs_double - rhs);
-	if(diff < ZERO_FLOAT)
-		return;
-
 	uint64 lhs_ll = double_to_uint64(lhs_double);
 	uint64 rhs_ll = double_to_uint64(rhs);
+
+	if(blockIdx.x * blockDim.x + threadIdx.x == 0){
+		printf("%X %X\n", lhs_ll, rhs_ll);
+	}
+
+	if(diff < ZERO_FULL)
+		return;
+
 	uint64 xor_result = lhs_ll ^ rhs_ll;
 	uint64 and_result = xor_result & mask;
 

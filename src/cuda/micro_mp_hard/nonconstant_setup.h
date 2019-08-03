@@ -34,7 +34,7 @@ void exception(std::string msg, std::string file, int line) {
 bool cmp(const double lhs, const double rhs, const uint64 mask =
 DEFAULT_64_BIT_MASK) {
 	double diff = std::fabs(lhs - rhs);
-	if(diff < ZERO_FLOAT)
+	if(diff < ZERO_FULL)
 		return true;
 
 	BinaryDouble rhs_ = rhs;
