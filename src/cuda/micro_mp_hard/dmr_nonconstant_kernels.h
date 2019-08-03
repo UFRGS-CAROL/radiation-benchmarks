@@ -28,13 +28,13 @@ __device__ void check_bit_error(const float lhs, const double rhs,
 	if(diff < ZERO_FULL)
 		return;
 
-	BinaryDouble lhs_ll = (lhs_double);
-	BinaryDouble rhs_ll = (rhs);
+	BinaryDouble lhs_ll = lhs_double;
+	BinaryDouble rhs_ll = rhs;
 
 	BinaryDouble xor_result = lhs_ll ^ rhs_ll;
-	BinaryDouble and_result = xor_result & mask;
+//	BinaryDouble and_result = xor_result & mask;
 
-	if (and_result != uint64(0)) {
+	if (xor_result.most_significant_bit() < 32) {
 		atomicAdd(&errors, 1);
 	}
 }

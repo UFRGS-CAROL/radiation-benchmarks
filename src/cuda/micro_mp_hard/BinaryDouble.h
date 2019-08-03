@@ -83,7 +83,7 @@ struct BinaryDouble {
 	__DEVICE_HOST__ BinaryDouble() {
 	}
 
-	__HOST__ uint64 most_significant_bit() {
+	__DEVICE_HOST__ uint64 most_significant_bit() {
 		assert(sizeof(double) == sizeof(uint64));
 
 		uint64 bit = 0;
