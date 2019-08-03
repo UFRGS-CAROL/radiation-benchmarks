@@ -17,11 +17,23 @@
 #define DEFAULT_64_BIT_MASK 0xffffffff00000000
 #endif
 
-__device__ uint64 double_to_uint64(const double d) {
+__device__ uint64 double_to_uint64(const double& d) {
+	return __double_as_longlong(d);
+}
+
+__device__ uint64 double_to_uint64_ptr(const double& d){
+	const double* ptr = &d;
+	const uint64* ptr_i = (const uint64*) ptr;
+	return *ptr_i;
+}
+
+__device__ uint64 double_to_uint64_mem(const double& d){
 	uint64 ret;
 	memcpy(&ret, &d, sizeof(double));
+
 	return ret;
 }
+
 
 __device__ void check_bit_error(const float lhs, const double rhs,
 		uint64 mask = DEFAULT_64_BIT_MASK) {
@@ -31,7 +43,9 @@ __device__ void check_bit_error(const float lhs, const double rhs,
 	uint64 rhs_ll = double_to_uint64(rhs);
 
 	if(blockIdx.x * blockDim.x + threadIdx.x == 0){
-		printf("%X %X\n", lhs_ll, rhs_ll);
+		printf("ASDOUBLE %X %X\n", lhs_ll, rhs_ll);
+		printf("MEMCPY %X %X\n", double_to_uint64_mem(lhs_double), double_to_uint64_mem(rhs));
+		printf("PTR %X %X\n",    double_to_uint64_ptr(lhs_double), double_to_uint64_ptr(rhs));
 	}
 
 	if(diff < ZERO_FULL)
