@@ -22,7 +22,9 @@ __device__ double uint64_to_double(const uint64& d) {
 }
 
 __device__ uint64 double_to_uint64(const double& d) {
-	return __double_as_longlong(d);
+	const double* ptr = &d;
+	uint64* ptr_i = (uint64*) ptr;
+	return *ptr_i;
 }
 
 __device__ void check_bit_error(const float lhs, const double rhs,

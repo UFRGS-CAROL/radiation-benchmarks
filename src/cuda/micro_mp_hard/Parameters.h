@@ -56,7 +56,7 @@ typedef enum {
 #define __DEVICE_HOST_ __device__ __host__
 #define __HOST__ __host__
 
-typedef long long uint64;
+typedef uint64_t uint64;
 
 std::unordered_map<std::string, REDUNDANCY> red = {
 //NONE
