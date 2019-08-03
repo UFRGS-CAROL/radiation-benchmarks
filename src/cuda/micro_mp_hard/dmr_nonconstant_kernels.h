@@ -24,11 +24,11 @@ __device__ double xor_(const double& a, const double& b) {
 	return __longlong_as_double(c_i);
 }
 
-__device__ double uint64_to_double(const uint64& d){
+__device__ double uint64_to_double(const uint64& d) {
 	return __longlong_as_double(d);
 }
 
-__device__ int count_most_signficant_bit(const uint64 bin){
+__device__ int count_most_signficant_bit(const uint64 bin) {
 	assert(sizeof(double) == sizeof(uint64));
 	uint64 int_val;
 	memcpy(&int_val, &bin, sizeof(double));
@@ -43,18 +43,19 @@ __device__ int count_most_signficant_bit(const uint64 bin){
 	return bit;
 }
 
-__device__ uint64 double_to_uint64(const double& d){
+__device__ uint64 double_to_uint64(const double& d) {
 	return __double_as_longlong(d);
 }
 
-__device__ void check_bit_error(const float& lhs, const double rhs, uint64 mask = DEFAULT_64_BIT_MASK){
+__device__ void check_bit_error(const float& lhs, const double rhs,
+		uint64 mask = DEFAULT_64_BIT_MASK) {
 	double lhs_double = double(lhs);
 	uint64 lhs_ll = double_to_uint64(lhs_double);
 	uint64 rhs_ll = double_to_uint64(rhs);
 	uint64 xor_result = lhs_ll ^ rhs_ll;
 	uint64 and_result = xor_result & mask;
 
-	if(and_result != 0){
+	if (and_result != 0) {
 		atomicAdd(&errors, 1);
 	}
 
@@ -72,16 +73,15 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 	register real_t this_thread_input_real_t = input[thread_id];
 	register half_t this_thread_input_half_t = half_t(input[thread_id]);
 	register real_t threshold;
-	for (int count = 0; count < num_op; count++) {
+	for (int count = 0; count < OPS; count++) {
 		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
 
 		threshold = acc_real_t - real_t(acc_half_t);
-
+		if ((count % num_op) == 0) {
+			check_bit_error(acc_half_t, acc_real_t);
+		}
 	}
-
-	check_bit_error(acc_half_t, acc_real_t);
-
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
 	threshold_out[thread_id] = fabs(threshold);
@@ -137,7 +137,6 @@ __global__ void MicroBenchmarkKernel_FMANONCONSTANT(real_t* input,
 	}
 
 	check_bit_error(acc_half_t, acc_real_t);
-
 
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
