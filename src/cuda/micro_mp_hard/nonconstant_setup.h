@@ -106,7 +106,7 @@ std::tuple<uint32, uint32, uint32, uint32, uint32> get_thresholds(
 		BinaryFloat biggest_threshold_output_real_t = float(real_array[i]);
 		BinaryFloat biggest_threshold_output_half_t = float(half_array[i]);
 		xor_array[i] = biggest_threshold_output_real_t - biggest_threshold_output_half_t;
-		auto most_significant = xor_array[i].most_significant_bit();
+		auto most_significant = xor_array[i].bin;
 
 		min_ = std::min(most_significant, min_);
 		max_ = std::max(most_significant, max_);
