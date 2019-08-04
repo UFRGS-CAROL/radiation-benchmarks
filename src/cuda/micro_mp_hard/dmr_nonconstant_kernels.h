@@ -18,24 +18,26 @@
 #define DEFAULT_64_BIT_MASK 0xffffffff00000000
 #endif
 
+#define DEFAULT_32_BIT_MASK 0xffff0000
+
+__device__ unsigned int float_to_int(float f){
+	unsigned int* fl = (unsigned int*)&f;
+	return *fl;
+}
 
 __device__ void check_bit_error(const float lhs, const double rhs,
 		uint64 mask = DEFAULT_64_BIT_MASK) {
-	double lhs_double = double(lhs);
-	double diff = fabs(lhs_double - rhs);
-
-
+	float rhs_float = float(rhs);
+	float diff = fabs(rhs_float - lhs);
 	if(diff < ZERO_FULL)
 		return;
 
-	BinaryDouble lhs_ll = lhs_double;
-	BinaryDouble rhs_ll = rhs;
+	unsigned int rhs_ = float_to_int(rhs_float);
+	unsigned int lhs_ = float_to_int(lhs);
+	unsigned int ret = (rhs_ ^ lhs_) & DEFAULT_32_BIT_MASK;
 
-	BinaryDouble xor_result = lhs_ll ^ rhs_ll;
-//	BinaryDouble and_result = xor_result & mask;
-
-	if (xor_result.most_significant_bit() < 32) {
-		printf("%X %X %X\n", lhs_ll.bin, rhs_ll.bin, xor_result.bin);
+	if (ret != 0) {
+		printf("%X %X %X\n", rhs_, lhs_, ret);
 
 		atomicAdd(&errors, 1);
 	}

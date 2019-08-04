@@ -52,8 +52,6 @@ struct BinaryDouble {
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const BinaryDouble& r) {
-		assert(sizeof(double) == sizeof(uint64));
-
 		for (uint64 i = uint64(1) << 63; i > 0; i = i / 2) {
 			if (r.bin & i) {
 				os << 1;
@@ -66,7 +64,6 @@ struct BinaryDouble {
 	}
 
 	__DEVICE_HOST__ BinaryDouble& operator=(const double& val) {
-		assert(sizeof(double) == sizeof(uint64));
 		this->bin = this->double_to_uint64(val);
 		return *this;
 	}
@@ -78,14 +75,15 @@ struct BinaryDouble {
 
 	__DEVICE_HOST__ BinaryDouble(const uint64& val) :
 			bin(val) {
+		assert(sizeof(double) == sizeof(uint64));
+
 	}
 
 	__DEVICE_HOST__ BinaryDouble() {
+		assert(sizeof(double) == sizeof(uint64));
 	}
 
 	__DEVICE_HOST__ uint64 most_significant_bit() {
-		assert(sizeof(double) == sizeof(uint64));
-
 		uint64 bit = 0;
 		for (uint64 i = uint64(1) << 63; i > 0; i = i / 2) {
 			bit++;
