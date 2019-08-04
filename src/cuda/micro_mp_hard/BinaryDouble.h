@@ -14,13 +14,13 @@
 struct BinaryDouble {
 	uint64 bin;
 
-	__DEVICE_HOST__ uint64 double_to_uint64(const double d){
+	__DEVICE_HOST__ uint64 double_to_uint64(const double d) {
 		const double* ptr = &d;
 		const uint64* ptr_i = (const uint64*) ptr;
 		return *ptr_i;
 	}
 
-	__DEVICE_HOST__ double uint64_to_double(const uint64 u){
+	__DEVICE_HOST__ double uint64_to_double(const uint64 u) {
 		const uint64* ptr = &u;
 		const double* ptr_d = (const double*) ptr;
 		return *ptr_d;
@@ -45,7 +45,6 @@ struct BinaryDouble {
 	__DEVICE_HOST__ bool operator==(const uint64& r) {
 		return r == this->bin;
 	}
-
 
 	__DEVICE_HOST__ BinaryDouble operator^(const BinaryDouble& r) {
 		return BinaryDouble(r.bin ^ this->bin);
@@ -83,7 +82,7 @@ struct BinaryDouble {
 		assert(sizeof(double) == sizeof(uint64));
 	}
 
-	__DEVICE_HOST__ uint64 most_significant_bit() {
+	__DEVICE_HOST__ uint64 most_significant_bit() const {
 		uint64 bit = 0;
 		for (uint64 i = uint64(1) << 63; i > 0; i = i / 2) {
 			bit++;
@@ -93,6 +92,12 @@ struct BinaryDouble {
 		}
 
 		return bit;
+	}
+
+	bool operator<(const BinaryDouble& rhs) const {
+		auto key_this = this->most_significant_bit();
+		auto key_rhs = rhs.most_significant_bit();
+		return (key_this < key_rhs);
 	}
 };
 
