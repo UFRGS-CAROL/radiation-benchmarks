@@ -81,26 +81,36 @@ void write_to_file(std::string& path, std::vector<real_t>& array) {
 }
 
 template<typename half_t, typename real_t>
-std::tuple<uint64, uint64, uint64> get_thresholds(
+std::tuple<uint64, uint64, uint64, uint64, uint64> get_thresholds(
 		std::vector<half_t>& half_array, std::vector<real_t>& real_array) {
 
 	std::vector<BinaryDouble> xor_array(real_array.size());
+	std::vector<uint64> indexes(real_array.size());
 
+	uint64 min_ = 999999999999999, max_ = 0;
+	uint64 max_i, min_i;
 	for (int i = 0; i < real_array.size(); i++) {
 		BinaryDouble biggest_threshold_output_real_t = real_array[i];
 		BinaryDouble biggest_threshold_output_half_t = half_array[i];
 		xor_array[i] = biggest_threshold_output_real_t
 				^ biggest_threshold_output_half_t;
+		auto most_significant = xor_array[i].most_significant_bit();
+
+		min_ = std::min(most_significant, min_);
+		max_ = std::max(most_significant, max_);
+		if(min_ == most_significant){
+			min_i = i;
+		}
+
+		if(max_ == most_significant){
+			max_i = i;
+		}
 	}
 
 	std::sort(xor_array.begin(), xor_array.end(), std::greater<BinaryDouble>());
 
-	BinaryDouble min_ = xor_array.front();
-	BinaryDouble max_ = xor_array.back();
-
 	BinaryDouble median = xor_array[xor_array.size() / 2];
-	return std::make_tuple(max_.most_significant_bit(),
-			min_.most_significant_bit(), median.most_significant_bit());
+	return std::make_tuple(max_, min_, median.most_significant_bit(), max_i, min_i);
 }
 
 // Returns the number of errors found
@@ -194,9 +204,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::ios::out);
 	if (parameters.verbose == false) {
 		out
-				<< "output/s,iteration,time,output_errors,max_threshold,min_threshold,"
-						"median_threshold"
-				<< std::endl;
+				<< "output/s,iteration,time,output_errors,max_threshold,max_real,max_half,min_threshold,"
+						"min_real,min_half,median_threshold,median_real,median_half" << std::endl;
 	}
 
 	for (int iteration = 0; iteration < parameters.iterations; iteration++) {
@@ -253,8 +262,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 		output_host_vector_half_t = output_device_vector_half_t.to_vector();
 		threshold_host_real_t = threshold_device_real_t.to_vector();
 
-		uint64 max_threshold, min_threshold, median;
-		std::tie(max_threshold, min_threshold, median) = get_thresholds(
+		uint64 max_threshold, min_threshold, median, min_i, max_i;
+		std::tie(max_threshold, min_threshold, median, max_i, min_i) = get_thresholds(
 				output_host_vector_half_t, output_host_vector_real_t);
 
 		unsigned long long relative_errors = copy_errors();
@@ -300,9 +309,20 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			out << iteration << ",";
 			out << kernel_time << ",";
 			out << errors << ",";
+
 			out << max_threshold << ",";
+			out << output_host_vector_real_t[max_i] <<",";
+			out << output_host_vector_half_t[max_i] <<",";
+
 			out << min_threshold << ",";
+			out << output_host_vector_real_t[min_i] <<",";
+			out << output_host_vector_half_t[min_i] <<",";
+
+
 			out << median << ",";
+			out << output_host_vector_real_t[output_host_vector_half_t.size()/2] <<",";
+			out << output_host_vector_half_t[output_host_vector_half_t.size()/2];
+
 //			out << xor_result.most_significant_bit() << ",";
 //			out << xor_result << std::endl;
 			out << std::endl;
