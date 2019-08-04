@@ -99,6 +99,12 @@ struct BinaryDouble {
 		auto key_rhs = rhs.most_significant_bit();
 		return (key_this < key_rhs);
 	}
+
+	bool operator>(const BinaryDouble& rhs) const {
+		auto key_this = this->most_significant_bit();
+		auto key_rhs = rhs.most_significant_bit();
+		return (key_this > key_rhs);
+	}
 };
 
 #endif /* BINARYDOUBLE_H_ */

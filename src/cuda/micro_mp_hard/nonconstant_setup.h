@@ -93,7 +93,7 @@ std::tuple<uint64, uint64, uint64> get_thresholds(
 				^ biggest_threshold_output_half_t;
 	}
 
-	std::sort(xor_array.begin(), xor_array.end());
+	std::sort(xor_array.begin(), xor_array.end(), std::greater<BinaryDouble>());
 
 	BinaryDouble min_ = xor_array.front();
 	BinaryDouble max_ = xor_array.back();
