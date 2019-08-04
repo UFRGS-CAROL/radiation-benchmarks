@@ -98,7 +98,7 @@ std::tuple<uint64, uint64, uint64> get_thresholds(
 	BinaryDouble min_ = xor_array.front();
 	BinaryDouble max_ = xor_array.back();
 
-	BinaryDouble median = real_array[real_array.size() / 2];
+	BinaryDouble median = xor_array[xor_array.size() / 2];
 	return std::make_tuple(max_.most_significant_bit(),
 			min_.most_significant_bit(), median.most_significant_bit());
 }
