@@ -89,7 +89,7 @@ __global__ void MicroBenchmarkKernel_MULNONCONSTANT(real_t* input,
 		threshold = (acc_real_t) - (real_t(acc_half_t));
 
 	}
-	check_bit_error(acc_half_t, acc_real_t);
+	//check_bit_error(acc_half_t, acc_real_t);
 
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
@@ -118,7 +118,7 @@ __global__ void MicroBenchmarkKernel_FMANONCONSTANT(real_t* input,
 
 	}
 
-	check_bit_error(acc_half_t, acc_real_t);
+	//check_bit_error(acc_half_t, acc_real_t);
 
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
