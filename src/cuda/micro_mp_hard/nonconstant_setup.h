@@ -98,11 +98,11 @@ std::tuple<uint64, uint64, uint64, uint64, uint64> get_thresholds(
 
 		min_ = std::min(most_significant, min_);
 		max_ = std::max(most_significant, max_);
-		if(min_ == most_significant){
+		if (min_ == most_significant) {
 			min_i = i;
 		}
 
-		if(max_ == most_significant){
+		if (max_ == most_significant) {
 			max_i = i;
 		}
 	}
@@ -110,7 +110,8 @@ std::tuple<uint64, uint64, uint64, uint64, uint64> get_thresholds(
 	std::sort(xor_array.begin(), xor_array.end(), std::greater<BinaryDouble>());
 
 	BinaryDouble median = xor_array[xor_array.size() / 2];
-	return std::make_tuple(max_, min_, median.most_significant_bit(), max_i, min_i);
+	return std::make_tuple(min_, max_, median.most_significant_bit(), min_i,
+			max_i);
 }
 
 // Returns the number of errors found
@@ -205,7 +206,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 	if (parameters.verbose == false) {
 		out
 				<< "output/s,iteration,time,output_errors,max_threshold,max_real,max_half,min_threshold,"
-						"min_real,min_half,median_threshold,median_real,median_half" << std::endl;
+						"min_real,min_half,median_threshold,median_real,median_half"
+				<< std::endl;
 	}
 
 	for (int iteration = 0; iteration < parameters.iterations; iteration++) {
@@ -242,8 +244,10 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 				output_device_vector_half_t.data(), 		// output half
 				parameters.operation_num);			//number of operations
 
-		rad::checkFrameworkErrors (cudaPeekAtLastError());;
-		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		;
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		kernel_time = rad::mysecond() - kernel_time;
@@ -263,8 +267,9 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 		threshold_host_real_t = threshold_device_real_t.to_vector();
 
 		uint64 max_threshold, min_threshold, median, min_i, max_i;
-		std::tie(max_threshold, min_threshold, median, max_i, min_i) = get_thresholds(
-				output_host_vector_half_t, output_host_vector_real_t);
+		std::tie(max_threshold, min_threshold, median, max_i, min_i) =
+				get_thresholds(output_host_vector_half_t,
+						output_host_vector_real_t);
 
 		unsigned long long relative_errors = copy_errors();
 		int errors = 0;
@@ -311,17 +316,20 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			out << errors << ",";
 
 			out << max_threshold << ",";
-			out << output_host_vector_real_t[max_i] <<",";
-			out << output_host_vector_half_t[max_i] <<",";
+			out << output_host_vector_real_t[max_i] << ",";
+			out << output_host_vector_half_t[max_i] << ",";
 
 			out << min_threshold << ",";
-			out << output_host_vector_real_t[min_i] <<",";
-			out << output_host_vector_half_t[min_i] <<",";
-
+			out << output_host_vector_real_t[min_i] << ",";
+			out << output_host_vector_half_t[min_i] << ",";
 
 			out << median << ",";
-			out << output_host_vector_real_t[output_host_vector_half_t.size()/2] <<",";
-			out << output_host_vector_half_t[output_host_vector_half_t.size()/2];
+			out
+					<< output_host_vector_real_t[output_host_vector_half_t.size()
+							/ 2] << ",";
+			out
+					<< output_host_vector_half_t[output_host_vector_half_t.size()
+							/ 2];
 
 //			out << xor_result.most_significant_bit() << ",";
 //			out << xor_result << std::endl;
