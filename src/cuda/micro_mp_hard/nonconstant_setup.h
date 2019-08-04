@@ -194,8 +194,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::ios::out);
 	if (parameters.verbose == false) {
 		out
-				<< "output/s,iteration,time,output_errors,max_threshold,max_output_real,"
-						"max_output_half,threshold_most_significant_bit,xor_result"
+				<< "output/s,iteration,time,output_errors,max_threshold,min_threshold,"
+						"median_threshold"
 				<< std::endl;
 	}
 
@@ -301,10 +301,11 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			out << kernel_time << ",";
 			out << errors << ",";
 			out << max_threshold << ",";
-//			out << output_host_vector_real_t[last_i] << ",";
-//			out << output_host_vector_half_t[last_i] << ",";
+			out << min_threshold << ",";
+			out << median << ",";
 //			out << xor_result.most_significant_bit() << ",";
 //			out << xor_result << std::endl;
+			out << std::endl;
 		}
 	}
 
