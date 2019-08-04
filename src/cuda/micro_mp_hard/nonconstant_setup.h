@@ -26,7 +26,7 @@
 #include "BinaryDouble.h"
 
 #ifndef MAX_VALUE
-#define MAX_VALUE 8
+#define MAX_VALUE 255
 #endif
 
 void exception(std::string msg, std::string file, int line) {
@@ -46,6 +46,14 @@ DEFAULT_64_BIT_MASK) {
 	BinaryDouble test = (rhs_ ^ lhs_);
 
 	return (test.most_significant_bit() < MAX_VALUE);
+}
+
+bool cmp(const float lhs, const double rhs) {
+	BinaryFloat rhs_ = float(rhs);
+	BinaryFloat lhs_ = lhs;
+	BinaryFloat test = (rhs_ - lhs_);
+
+	return (test.bin < MAX_VALUE);
 }
 
 unsigned long long copy_errors() {
@@ -142,7 +150,7 @@ int check_output_errors(std::vector<real_t> &output_real_t,
 		double output = double(output_real_t[i]);
 		double output_inc = double(output_half_t[i]);
 		double gold = double(gold_real_t[i]);
-		bool cmp_dmr = cmp(output, output_inc);
+		bool cmp_dmr = cmp(output_half_t[i], output_real_t[i]);
 		dmr_int_error += !cmp_dmr;
 		if (output != gold || !cmp_dmr) {
 #pragma omp critical
