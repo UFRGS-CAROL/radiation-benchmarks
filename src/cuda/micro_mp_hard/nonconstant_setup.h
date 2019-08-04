@@ -94,19 +94,19 @@ uint(FP32) - unit(FP32) > threshold?
 sim -> erro
 não -> de boa
  */
-template<typename half_t, typename real_t>
-std::tuple<uint32, uint32, uint32, uint32, uint32> get_thresholds(
+template<typename half_t, typename real_t, typename int_t>
+std::tuple<int_t, int_t, int_t, int_t, int_t> get_thresholds(
 		std::vector<half_t>& half_array, std::vector<real_t>& real_array) {
 
 	std::vector<BinaryFloat> xor_array(real_array.size());
 
-	uint32 min_ = 9999999, max_ = 0;
-	uint32 max_i, min_i;
+	int_t min_ = 9999999, max_ = 0;
+	int_t max_i, min_i;
 	for (int i = 0; i < real_array.size(); i++) {
 		BinaryFloat biggest_threshold_output_real_t = float(real_array[i]);
 		BinaryFloat biggest_threshold_output_half_t = float(half_array[i]);
 		xor_array[i] = biggest_threshold_output_real_t - biggest_threshold_output_half_t;
-		auto most_significant = xor_array[i].bin;
+		int_t most_significant = xor_array[i].bin;
 
 		min_ = std::min(most_significant, min_);
 		max_ = std::max(most_significant, max_);
@@ -278,9 +278,9 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 		output_host_vector_half_t = output_device_vector_half_t.to_vector();
 		threshold_host_real_t = threshold_device_real_t.to_vector();
 
-		uint64 max_threshold, min_threshold, median, min_i, max_i;
+		uint32 max_threshold, min_threshold, median, min_i, max_i;
 		std::tie(max_threshold, min_threshold, median, max_i, min_i) =
-				get_thresholds(output_host_vector_half_t,
+				get_thresholds<half_t, real_t, uint32>(output_host_vector_half_t,
 						output_host_vector_real_t);
 
 		unsigned long long relative_errors = copy_errors();
