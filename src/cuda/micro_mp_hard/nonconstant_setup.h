@@ -25,6 +25,10 @@
 
 #include "BinaryDouble.h"
 
+#ifndef MAX_VALUE
+#define MAX_VALUE 8
+#endif
+
 void exception(std::string msg, std::string file, int line) {
 	throw std::runtime_error(msg + " at " + file + ":" + std::to_string(line));
 }
@@ -40,10 +44,8 @@ DEFAULT_64_BIT_MASK) {
 	BinaryDouble rhs_ = rhs;
 	BinaryDouble lhs_ = lhs;
 	BinaryDouble test = (rhs_ ^ lhs_);
-	if (test.most_significant_bit() < 25) {
-		std::cout << test.most_significant_bit() << std::endl;
-	}
-	return (test.most_significant_bit() < 25);
+
+	return (test.most_significant_bit() < MAX_VALUE);
 }
 
 unsigned long long copy_errors() {
@@ -81,17 +83,16 @@ void write_to_file(std::string& path, std::vector<real_t>& array) {
 }
 
 template<typename half_t, typename real_t>
-std::tuple<uint64, uint64, uint64, uint64, uint64> get_thresholds(
+std::tuple<uint32, uint32, uint32, uint32, uint32> get_thresholds(
 		std::vector<half_t>& half_array, std::vector<real_t>& real_array) {
 
-	std::vector<BinaryDouble> xor_array(real_array.size());
-	std::vector<uint64> indexes(real_array.size());
+	std::vector<BinaryFloat> xor_array(real_array.size());
 
-	uint64 min_ = 999999999999999, max_ = 0;
-	uint64 max_i, min_i;
+	uint32 min_ = 9999999, max_ = 0;
+	uint32 max_i, min_i;
 	for (int i = 0; i < real_array.size(); i++) {
-		BinaryDouble biggest_threshold_output_real_t = real_array[i];
-		BinaryDouble biggest_threshold_output_half_t = half_array[i];
+		BinaryFloat biggest_threshold_output_real_t = float(real_array[i]);
+		BinaryFloat biggest_threshold_output_half_t = float(half_array[i]);
 		xor_array[i] = biggest_threshold_output_real_t
 				^ biggest_threshold_output_half_t;
 		auto most_significant = xor_array[i].most_significant_bit();
@@ -107,9 +108,9 @@ std::tuple<uint64, uint64, uint64, uint64, uint64> get_thresholds(
 		}
 	}
 
-	std::sort(xor_array.begin(), xor_array.end(), std::greater<BinaryDouble>());
+	std::sort(xor_array.begin(), xor_array.end(), std::greater<BinaryFloat>());
 
-	BinaryDouble median = xor_array[xor_array.size() / 2];
+	BinaryFloat median = xor_array[xor_array.size() / 2];
 	return std::make_tuple(min_, max_, median.most_significant_bit(), min_i,
 			max_i);
 }

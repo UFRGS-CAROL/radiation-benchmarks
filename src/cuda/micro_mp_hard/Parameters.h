@@ -58,6 +58,8 @@ typedef enum {
 #define __DEVICE__ __device__
 
 typedef uint64_t uint64;
+typedef uint32_t uint32;
+typedef unsigned char byte;
 
 std::unordered_map<std::string, REDUNDANCY> red = {
 //NONE

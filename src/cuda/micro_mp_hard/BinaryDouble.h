@@ -11,6 +11,7 @@
 #include <assert.h>
 #include "Parameters.h"
 
+
 struct BinaryDouble {
 	uint64 bin;
 
@@ -101,6 +102,103 @@ struct BinaryDouble {
 	}
 
 	bool operator>(const BinaryDouble& rhs) const {
+		auto key_this = this->most_significant_bit();
+		auto key_rhs = rhs.most_significant_bit();
+		return (key_this > key_rhs);
+	}
+};
+
+
+struct BinaryFloat {
+	uint32 bin;
+
+	__DEVICE_HOST__ uint32 float_to_uint32(const float d) {
+		const float* ptr = &d;
+		const uint32* ptr_i = (const uint32*) ptr;
+		return *ptr_i;
+	}
+
+	__DEVICE_HOST__ float uint32_to_float(const uint32 u) {
+		const uint32* ptr = &u;
+		const float* ptr_d = (const float*) ptr;
+		return *ptr_d;
+	}
+
+	__DEVICE_HOST__ operator float() {
+		return this->uint32_to_float(this->bin);
+	}
+
+	__DEVICE_HOST__ BinaryFloat operator&(const BinaryFloat& r) {
+		return BinaryFloat(r.bin & this->bin);
+	}
+
+	__DEVICE_HOST__ BinaryFloat operator&(const uint32& r) {
+		return BinaryFloat(r & this->bin);
+	}
+
+	__DEVICE_HOST__ bool operator!=(const uint32& r) {
+		return r != this->bin;
+	}
+
+	__DEVICE_HOST__ bool operator==(const uint32& r) {
+		return r == this->bin;
+	}
+
+	__DEVICE_HOST__ BinaryFloat operator^(const BinaryFloat& r) {
+		return BinaryFloat(r.bin ^ this->bin);
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, const BinaryFloat& r) {
+		for (uint32 i = uint32(1) << 31; i > 0; i = i / 2) {
+			if (r.bin & i) {
+				os << 1;
+			} else {
+				os << 0;
+			}
+		}
+
+		return os;
+	}
+
+	__DEVICE_HOST__ BinaryFloat& operator=(const float& val) {
+		this->bin = this->float_to_uint32(val);
+		return *this;
+	}
+
+	__DEVICE_HOST__ BinaryFloat(const float& val) {
+		assert(sizeof(float) == sizeof(uint32));
+		this->bin = this->float_to_uint32(val);
+	}
+
+	__DEVICE_HOST__ BinaryFloat(const uint32& val) :
+			bin(val) {
+		assert(sizeof(float) == sizeof(uint32));
+
+	}
+
+	__DEVICE_HOST__ BinaryFloat() {
+		assert(sizeof(float) == sizeof(uint32));
+	}
+
+	__DEVICE_HOST__ uint32 most_significant_bit() const {
+		uint32 bit = 0;
+		for (uint32 i = uint32(1) << 31; i > 0; i = i / 2) {
+			bit++;
+			if (this->bin & i) {
+				break;
+			}
+		}
+
+		return bit;
+	}
+
+	bool operator<(const BinaryFloat& rhs) const {
+		auto key_this = this->most_significant_bit();
+		auto key_rhs = rhs.most_significant_bit();
+		return (key_this < key_rhs);
+	}
+
+	bool operator>(const BinaryFloat& rhs) const {
 		auto key_this = this->most_significant_bit();
 		auto key_rhs = rhs.most_significant_bit();
 		return (key_this > key_rhs);
