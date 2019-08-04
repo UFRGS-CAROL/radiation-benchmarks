@@ -21,8 +21,7 @@
 #define DEFAULT_32_BIT_MASK 0xffff0000
 
 __device__ unsigned int float_to_int(float f){
-	unsigned int* fl = (unsigned int*)&f;
-	return *fl;
+	return *((unsigned int*)&f);
 }
 
 __device__ void check_bit_error(const float lhs, const double rhs,
@@ -55,16 +54,15 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 	register real_t this_thread_input_real_t = input[thread_id];
 	register half_t this_thread_input_half_t = half_t(input[thread_id]);
 	register real_t threshold;
-	for (int count = 0; count < OPS; count++) {
+	for (int count = 0; count < num_op; count++) {
 		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
 
-		if ((count % num_op) == 0) {
-			check_bit_error(acc_half_t, acc_real_t);
-
-			threshold = acc_real_t - real_t(acc_half_t);
-			acc_half_t = half_t(acc_real_t);
-		}
+//		if ((count % num_op) == 0) {
+//			check_bit_error(acc_half_t, acc_real_t);
+		threshold = acc_real_t - real_t(acc_half_t);
+//			acc_half_t = half_t(acc_real_t);
+//		}
 	}
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
