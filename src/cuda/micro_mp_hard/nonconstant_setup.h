@@ -125,7 +125,7 @@ std::tuple<int_t, int_t, int_t, int_t, int_t> get_thresholds(
 	std::sort(xor_array.begin(), xor_array.end(), std::greater<BinaryFloat>());
 
 	BinaryFloat median = xor_array[xor_array.size() / 2];
-	return std::make_tuple(max_, min_, median.most_significant_bit(), max_i,
+	return std::make_tuple(max_, min_, median.bin, max_i,
 			min_i);
 }
 
