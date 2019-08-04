@@ -40,6 +40,9 @@ DEFAULT_64_BIT_MASK) {
 	BinaryDouble rhs_ = rhs;
 	BinaryDouble lhs_ = lhs;
 	BinaryDouble test = (rhs_ ^ lhs_);
+	if(test.most_significant_bit() < 25){
+		std::cout << test.most_significant_bit() << std::endl;
+	}
 	return (test.most_significant_bit() < 25);
 }
 
