@@ -82,6 +82,18 @@ void write_to_file(std::string& path, std::vector<real_t>& array) {
 	output.close();
 }
 
+/**
+ * a gente pega o FP64, vai pra FP32
+a gente pega os dois 32 bit e considera como INT
+a gente faz SUB
+unsigned
+que a ultima coisa que queremos e ligar com sinal agora
+esse valor vai ser a thresold
+o seja, na injecao tu faz o mesmo, FP64 -> FP32
+uint(FP32) - unit(FP32) > threshold?
+sim -> erro
+não -> de boa
+ */
 template<typename half_t, typename real_t>
 std::tuple<uint32, uint32, uint32, uint32, uint32> get_thresholds(
 		std::vector<half_t>& half_array, std::vector<real_t>& real_array) {
@@ -93,8 +105,7 @@ std::tuple<uint32, uint32, uint32, uint32, uint32> get_thresholds(
 	for (int i = 0; i < real_array.size(); i++) {
 		BinaryFloat biggest_threshold_output_real_t = float(real_array[i]);
 		BinaryFloat biggest_threshold_output_half_t = float(half_array[i]);
-		xor_array[i] = biggest_threshold_output_real_t
-				^ biggest_threshold_output_half_t;
+		xor_array[i] = biggest_threshold_output_real_t - biggest_threshold_output_half_t;
 		auto most_significant = xor_array[i].most_significant_bit();
 
 		min_ = std::min(most_significant, min_);

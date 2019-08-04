@@ -108,7 +108,7 @@ struct BinaryDouble {
 	}
 };
 
-
+#define SHFT_FLOAT 31
 struct BinaryFloat {
 	uint32 bin;
 
@@ -136,6 +136,10 @@ struct BinaryFloat {
 		return BinaryFloat(r & this->bin);
 	}
 
+	__DEVICE_HOST__ BinaryFloat operator-(const BinaryFloat& r){
+		return BinaryFloat(r.bin > this->bin ? r.bin - this->bin : this->bin - r.bin);
+	}
+
 	__DEVICE_HOST__ bool operator!=(const uint32& r) {
 		return r != this->bin;
 	}
@@ -149,7 +153,7 @@ struct BinaryFloat {
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const BinaryFloat& r) {
-		for (uint32 i = uint32(1) << 31; i > 0; i = i / 2) {
+		for (uint32 i = uint32(1) << SHFT_FLOAT; i > 0; i = i / 2) {
 			if (r.bin & i) {
 				os << 1;
 			} else {
@@ -182,7 +186,7 @@ struct BinaryFloat {
 
 	__DEVICE_HOST__ uint32 most_significant_bit() const {
 		uint32 bit = 0;
-		for (uint32 i = uint32(1) << 31; i > 0; i = i / 2) {
+		for (uint32 i = uint32(1) << SHFT_FLOAT; i > 0; i = i / 2) {
 			bit++;
 			if (this->bin & i) {
 				break;
