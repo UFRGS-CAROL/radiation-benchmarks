@@ -18,25 +18,22 @@
 #define DEFAULT_64_BIT_MASK 0xffffffff00000000
 #endif
 
-#define DEFAULT_32_BIT_MASK 0xffff0000
+__device__ void check_bit_error(const float lhs, const double rhs, uint64 mask =
+		DEFAULT_64_BIT_MASK) {
+	double lhs_double = double(lhs);
+	double diff = fabs(lhs_double - rhs);
 
-__device__ unsigned int float_to_int(float f){
-	return *((unsigned int*)&f);
-}
-
-__device__ void check_bit_error(const float lhs, const double rhs,
-		uint64 mask = DEFAULT_64_BIT_MASK) {
-	float rhs_float = float(rhs);
-	float diff = fabs(rhs_float - lhs);
-	if(diff < ZERO_FULL)
+	if (diff < ZERO_FULL)
 		return;
 
-	unsigned int rhs_ = float_to_int(rhs_float);
-	unsigned int lhs_ = float_to_int(lhs);
-	unsigned int ret = (rhs_ ^ lhs_) & DEFAULT_32_BIT_MASK;
+	BinaryDouble lhs_ll = lhs_double;
+	BinaryDouble rhs_ll = rhs;
 
-	if (ret != 0) {
-		printf("%X %X %X\n", rhs_, lhs_, ret);
+	BinaryDouble xor_result = lhs_ll ^ rhs_ll;
+//	BinaryDouble and_result = xor_result & mask;
+
+	if (xor_result.most_significant_bit() < 32) {
+		printf("%X %X %X\n", lhs_ll.bin, rhs_ll.bin, xor_result.bin);
 
 		atomicAdd(&errors, 1);
 	}
@@ -60,10 +57,13 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 
 //		if ((count % num_op) == 0) {
 //			check_bit_error(acc_half_t, acc_real_t);
-		threshold = acc_real_t - real_t(acc_half_t);
+
 //			acc_half_t = half_t(acc_real_t);
 //		}
 	}
+
+	threshold = acc_real_t - real_t(acc_half_t);
+
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
 	threshold_out[thread_id] = fabs(threshold);

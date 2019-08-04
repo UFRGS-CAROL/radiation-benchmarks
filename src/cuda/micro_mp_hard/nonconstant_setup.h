@@ -34,13 +34,13 @@ void exception(std::string msg, std::string file, int line) {
 bool cmp(const double lhs, const double rhs, const uint64 mask =
 DEFAULT_64_BIT_MASK) {
 	double diff = std::fabs(lhs - rhs);
-	if(diff < ZERO_FULL)
+	if (diff < ZERO_FULL)
 		return true;
 
 	BinaryDouble rhs_ = rhs;
 	BinaryDouble lhs_ = lhs;
-	BinaryDouble test = (rhs_ ^ lhs_) & mask;
-	return test == uint64(0);
+	BinaryDouble test = (rhs_ ^ lhs_);
+	return (test.most_significant_bit() < 32);
 }
 
 unsigned long long copy_errors() {
@@ -272,8 +272,12 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 		double outputpersec = double(parameters.r_size) / kernel_time;
 		std::cout << std::scientific << std::setprecision(20);
 		out << std::scientific << std::setprecision(20);
-		BinaryDouble bd = max_threshold;
-
+		BinaryDouble biggest_threshold_output_real_t =
+				output_host_vector_real_t[last_i];
+		BinaryDouble biggest_threshold_output_half_t =
+				output_host_vector_half_t[last_i];
+		BinaryDouble xor_result = biggest_threshold_output_real_t
+				^ biggest_threshold_output_half_t;
 		if (parameters.verbose) {
 			/////////// PERF
 			std::cout << "-----------------------------------------------"
@@ -289,9 +293,9 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 			std::cout << "MIN THRESHOLD: " << min_threshold << std::endl;
 			std::cout << "MEDIAN THRESHOLD: " << median << std::endl;
 			std::cout << std::setprecision(0) << std::fixed;
-			std::cout << "MOST SIGNIFICANT biT: " << bd.most_significant_bit()
+			std::cout << "MOST SIGNIFICANT biT: " << xor_result.most_significant_bit()
 					<< std::endl;
-			std::cout << "MAX BINARY: " << bd << std::endl;
+			std::cout << "MAX BINARY: " << BinaryDouble(max_threshold) << std::endl;
 			std::cout << "input[" << last_i << "] for MAX THRESHOLD: ";
 			std::cout << std::scientific << std::setprecision(20)
 					<< input_array[last_i] << std::endl;
@@ -300,12 +304,6 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 					<< std::endl;
 
 		} else {
-			BinaryDouble biggest_threshold_output_real_t =
-					output_host_vector_real_t[last_i];
-			BinaryDouble biggest_threshold_output_half_t =
-					output_host_vector_half_t[last_i];
-			BinaryDouble xor_result = biggest_threshold_output_real_t
-					^ biggest_threshold_output_half_t;
 			// CSV format
 			out << outputpersec << ",";
 			out << iteration << ",";
