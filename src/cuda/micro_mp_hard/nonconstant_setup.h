@@ -84,15 +84,15 @@ void write_to_file(std::string& path, std::vector<real_t>& array) {
 
 /**
  * a gente pega o FP64, vai pra FP32
-a gente pega os dois 32 bit e considera como INT
-a gente faz SUB
-unsigned
-que a ultima coisa que queremos e ligar com sinal agora
-esse valor vai ser a thresold
-o seja, na injecao tu faz o mesmo, FP64 -> FP32
-uint(FP32) - unit(FP32) > threshold?
-sim -> erro
-não -> de boa
+ a gente pega os dois 32 bit e considera como INT
+ a gente faz SUB
+ unsigned
+ que a ultima coisa que queremos e ligar com sinal agora
+ esse valor vai ser a thresold
+ o seja, na injecao tu faz o mesmo, FP64 -> FP32
+ uint(FP32) - unit(FP32) > threshold?
+ sim -> erro
+ não -> de boa
  */
 template<typename half_t, typename real_t, typename int_t>
 std::tuple<int_t, int_t, int_t, int_t, int_t> get_thresholds(
@@ -100,12 +100,15 @@ std::tuple<int_t, int_t, int_t, int_t, int_t> get_thresholds(
 
 	std::vector<BinaryFloat> xor_array(real_array.size());
 
-	int_t min_ = 9999999, max_ = 0;
-	int_t max_i, min_i;
+	int_t min_ = 0xffffffff;
+	int_t max_ = 0;
+	int_t max_i = 0;
+	int_t min_i = 0;
 	for (int i = 0; i < real_array.size(); i++) {
 		BinaryFloat biggest_threshold_output_real_t = float(real_array[i]);
 		BinaryFloat biggest_threshold_output_half_t = float(half_array[i]);
-		xor_array[i] = biggest_threshold_output_real_t - biggest_threshold_output_half_t;
+		xor_array[i] = biggest_threshold_output_real_t
+				- biggest_threshold_output_half_t;
 		int_t most_significant = xor_array[i].bin;
 
 		min_ = std::min(most_significant, min_);
@@ -122,8 +125,8 @@ std::tuple<int_t, int_t, int_t, int_t, int_t> get_thresholds(
 	std::sort(xor_array.begin(), xor_array.end(), std::greater<BinaryFloat>());
 
 	BinaryFloat median = xor_array[xor_array.size() / 2];
-	return std::make_tuple(min_, max_, median.most_significant_bit(), min_i,
-			max_i);
+	return std::make_tuple(max_, min_, median.most_significant_bit(), max_i,
+			min_i);
 }
 
 // Returns the number of errors found
@@ -280,8 +283,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 
 		uint32 max_threshold, min_threshold, median, min_i, max_i;
 		std::tie(max_threshold, min_threshold, median, max_i, min_i) =
-				get_thresholds<half_t, real_t, uint32>(output_host_vector_half_t,
-						output_host_vector_real_t);
+				get_thresholds<half_t, real_t, uint32>(
+						output_host_vector_half_t, output_host_vector_real_t);
 
 		unsigned long long relative_errors = copy_errors();
 		int errors = 0;
