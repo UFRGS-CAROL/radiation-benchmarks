@@ -40,7 +40,7 @@ DEFAULT_64_BIT_MASK) {
 	BinaryDouble rhs_ = rhs;
 	BinaryDouble lhs_ = lhs;
 	BinaryDouble test = (rhs_ ^ lhs_);
-	return (test.most_significant_bit() < 32);
+	return (test.most_significant_bit() < 25);
 }
 
 unsigned long long copy_errors() {
@@ -113,14 +113,15 @@ int check_output_errors(std::vector<real_t> &output_real_t,
 		std::vector<half_t> &output_half_t, std::vector<real_t>& gold_real_t,
 		bool verbose, unsigned long long dmr_errors) {
 	int host_errors = 0;
-
+	unsigned dmr_int_error = 0;
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < output_real_t.size(); i++) {
 		double output = double(output_real_t[i]);
 		double output_inc = double(output_half_t[i]);
 		double gold = double(gold_real_t[i]);
-
-		if (output != gold || !cmp(output, output_inc)) {
+		bool cmp_dmr = cmp(output, output_inc);
+		dmr_int_error += !cmp_dmr;
+		if (output != gold || !cmp_dmr) {
 #pragma omp critical
 			{
 				std::stringstream error_detail;
@@ -139,7 +140,7 @@ int check_output_errors(std::vector<real_t> &output_real_t,
 		}
 	}
 
-	if (dmr_errors != 0) {
+	if (dmr_int_error != 0) {
 		std::stringstream error_detail;
 		error_detail << "detected_dmr_errors: " << dmr_errors;
 
