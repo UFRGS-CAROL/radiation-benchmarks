@@ -226,11 +226,11 @@ struct Parameters {
 
 		this->generate = find_arg(argc, argv, "--generate");
 
-		if (this->micro == MULNOTBIASED || this->micro == FMANOTBIASED
-				|| this->micro == ADDNOTBIASED || this->nonconstant == true) {
-			this->grid_size *= 32;
-			this->r_size *= 32;
-		}
+//		if (this->micro == MULNOTBIASED || this->micro == FMANOTBIASED
+//				|| this->micro == ADDNOTBIASED || this->nonconstant == true) {
+//			this->grid_size *= 32;
+//			this->r_size *= 32;
+//		}
 
 		if (this->generate) {
 			this->iterations = 1;
