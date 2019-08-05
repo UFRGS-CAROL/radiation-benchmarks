@@ -32,8 +32,7 @@ void exception(std::string msg, std::string file, int line) {
 
 #define throw_line(msg) exception(msg, __FILE__, __LINE__)
 
-bool cmp(const double lhs, const double rhs, const uint64 mask =
-DEFAULT_64_BIT_MASK) {
+bool cmp(const double lhs, const double rhs, const double t) {
 
 	BinaryDouble rhs_ = rhs;
 	BinaryDouble lhs_ = lhs;
@@ -42,7 +41,7 @@ DEFAULT_64_BIT_MASK) {
 	return (test.most_significant_bit() < MAX_VALUE);
 }
 
-bool cmp(const float lhs, const double rhs) {
+bool is_bigger_than_threshold(const float lhs, const double rhs) {
 	float rhs_float = float(rhs);
 
 	uint32* lhs_ptr = (uint32*) &lhs;
@@ -54,7 +53,7 @@ bool cmp(const float lhs, const double rhs) {
 	uint32 sub_res =
 			(lhs_int > rhs_int) ? lhs_int - rhs_int : rhs_int - lhs_int;
 
-	return (sub_res < MAX_VALUE);
+	return (sub_res > MAX_VALUE);
 }
 
 unsigned long long copy_errors() {
@@ -153,15 +152,15 @@ int check_output_errors(std::vector<real_t> &output_real_t,
 		std::vector<half_t> &output_half_t, std::vector<real_t>& gold_real_t,
 		bool verbose, unsigned long long dmr_errors) {
 	int host_errors = 0;
-//	unsigned dmr_int_error = 0;
+	unsigned dmr_int_error = 0;
 #pragma omp parallel for shared(host_errors)
 	for (int i = 0; i < output_real_t.size(); i++) {
 		double output = double(output_real_t[i]);
 		double output_inc = double(output_half_t[i]);
 		double gold = double(gold_real_t[i]);
-		bool cmp_dmr = cmp(output_half_t[i], output_real_t[i]);
-//		dmr_int_error += !cmp_dmr;
-		if (output != gold || !cmp_dmr) {
+		bool cmp_dmr = is_bigger_than_threshold(output_half_t[i], output_real_t[i]);
+		dmr_int_error += cmp_dmr;
+		if (output != gold || cmp_dmr) {
 #pragma omp critical
 			{
 				std::stringstream error_detail;
@@ -180,7 +179,7 @@ int check_output_errors(std::vector<real_t> &output_real_t,
 		}
 	}
 
-	if (dmr_errors != 0) {
+	if (dmr_errors != 0 || dmr_int_error) {
 		std::stringstream error_detail;
 		error_detail << "detected_dmr_errors: " << dmr_errors;
 
