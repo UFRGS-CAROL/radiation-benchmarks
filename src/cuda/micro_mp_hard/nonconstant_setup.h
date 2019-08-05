@@ -158,7 +158,7 @@ int check_output_errors(std::vector<real_t> &output_real_t,
 		double output = double(output_real_t[i]);
 		double output_inc = double(output_half_t[i]);
 		double gold = double(gold_real_t[i]);
-		bool cmp_dmr = is_bigger_than_threshold(output_half_t[i], output_real_t[i]);
+		bool cmp_dmr = is_bigger_than_threshold(output_half_t[i], gold);
 		dmr_int_error += cmp_dmr;
 		if (output != gold || cmp_dmr) {
 #pragma omp critical
