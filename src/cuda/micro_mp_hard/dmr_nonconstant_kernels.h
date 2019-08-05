@@ -80,15 +80,16 @@ __global__ void MicroBenchmarkKernel_MULNONCONSTANT(real_t* input,
 	register half_t acc_half_t = this_thread_input_half_t;
 
 	register real_t threshold;
-	for (int count = 0; count < num_op; count++) {
+	for (int count = 0; count < OPS; count++) {
 		acc_real_t = mul_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = mul_dmr(this_thread_input_half_t, acc_half_t);
 
-		threshold = (acc_real_t) - (real_t(acc_half_t));
-
+		if ((count % num_op) == 0) {
+			threshold = acc_real_t - real_t(acc_half_t);
+			check_bit_error(acc_half_t, acc_real_t);
+			acc_half_t = half_t(acc_real_t);
+		}
 	}
-	//check_bit_error(acc_half_t, acc_real_t);
-
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
 	threshold_out[thread_id] = fabs(threshold);
@@ -106,18 +107,18 @@ __global__ void MicroBenchmarkKernel_FMANONCONSTANT(real_t* input,
 	register half_t acc_half_t = this_thread_input_half_t;
 
 	register real_t threshold;
-	for (int count = 0; count < num_op; count++) {
+	for (int count = 0; count < OPS; count++) {
 		acc_real_t = fma_dmr(this_thread_input_real_t, this_thread_input_real_t,
 				acc_real_t);
 		acc_half_t = fma_dmr(this_thread_input_half_t, this_thread_input_half_t,
 				acc_half_t);
 
-		threshold = acc_real_t - real_t(acc_half_t);
-
+		if ((count % num_op) == 0) {
+			threshold = acc_real_t - real_t(acc_half_t);
+			check_bit_error(acc_half_t, acc_real_t);
+			acc_half_t = half_t(acc_real_t);
+		}
 	}
-
-	//check_bit_error(acc_half_t, acc_real_t);
-
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
 	threshold_out[thread_id] = fabs(threshold);
