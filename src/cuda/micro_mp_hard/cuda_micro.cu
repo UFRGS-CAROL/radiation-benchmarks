@@ -341,6 +341,9 @@ int main(int argc, char* argv[]) {
 	+ "_micro-" + parameters.instruction_str;
 	start_log_file(const_cast<char*>(test_name.c_str()),
 			const_cast<char*>(test_info.c_str()));
+
+	std::cout << "LOGFILENAME:" << get_log_file_name() << std::endl;
+
 #endif
 
 	std::cout << parameters << std::endl;

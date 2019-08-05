@@ -18,26 +18,28 @@
 #define DEFAULT_64_BIT_MASK 0xffffffff00000000
 #endif
 
-//__device__ void check_bit_error(const float lhs, const double rhs, uint64 mask =
-//		DEFAULT_64_BIT_MASK) {
-//	double lhs_double = double(lhs);
-//	double diff = fabs(lhs_double - rhs);
-//
-//	if (diff < ZERO_FULL)
-//		return;
-//
-//	BinaryReal lhs_ll = lhs_double;
-//	BinaryReal rhs_ll = rhs;
-//
-//	BinaryReal xor_result = lhs_ll ^ rhs_ll;
-////	BinaryDouble and_result = xor_result & mask;
-//
-//	if (xor_result.most_significant_bit() < 32) {
-//		printf("%X %X %X\n", lhs_ll.bin, rhs_ll.bin, xor_result.bin);
-//
-//		atomicAdd(&errors, 1);
-//	}
-//}
+#ifndef MAX_VALUE
+#define MAX_VALUE 255
+#endif
+
+__DEVICE__ void check_bit_error(const float lhs, const double rhs) {
+	float rhs_float = float(rhs);
+
+	uint32* lhs_ptr = (uint32*) &lhs;
+	uint32* rhs_ptr = (uint32*) &rhs_float;
+
+	uint32 lhs_int = *lhs_ptr;
+	uint32 rhs_int = *rhs_ptr;
+
+	uint32 sub_res =
+			(lhs_int > rhs_int) ? lhs_int - rhs_int : rhs_int - lhs_int;
+
+	if (sub_res > MAX_VALUE) {
+		printf("%X %X %X\n", lhs_int, rhs_int, sub_res);
+
+		atomicAdd(&errors, 1);
+	}
+}
 
 template<typename half_t, typename real_t>
 __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
@@ -51,12 +53,16 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 	register real_t this_thread_input_real_t = input[thread_id];
 	register half_t this_thread_input_half_t = half_t(input[thread_id]);
 	register real_t threshold;
-	for (int count = 0; count < num_op; count++) {
+	for (int count = 0; count < OPS; count++) {
 		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
-	}
 
-	threshold = acc_real_t - real_t(acc_half_t);
+		if ((count % num_op) == 0) {
+			threshold = acc_real_t - real_t(acc_half_t);
+			check_bit_error(acc_half_t, acc_real_t);
+			acc_half_t = half_t(acc_real_t);
+		}
+	}
 
 	output_real_t[thread_id] = acc_real_t;
 	output_half_t[thread_id] = acc_half_t;
