@@ -35,8 +35,6 @@ __DEVICE__ void check_bit_error(const float lhs, const double rhs) {
 			(lhs_int > rhs_int) ? lhs_int - rhs_int : rhs_int - lhs_int;
 
 	if (sub_res > MAX_VALUE) {
-		printf("%X %X %X\n", lhs_int, rhs_int, sub_res);
-
 		atomicAdd(&errors, 1);
 	}
 }

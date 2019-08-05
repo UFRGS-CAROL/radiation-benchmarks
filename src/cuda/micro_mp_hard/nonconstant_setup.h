@@ -43,11 +43,18 @@ DEFAULT_64_BIT_MASK) {
 }
 
 bool cmp(const float lhs, const double rhs) {
-	BinaryFloat rhs_ = float(rhs);
-	BinaryFloat lhs_ = lhs;
-	BinaryFloat test = (rhs_ - lhs_);
+	float rhs_float = float(rhs);
 
-	return (test.bin < MAX_VALUE);
+	uint32* lhs_ptr = (uint32*) &lhs;
+	uint32* rhs_ptr = (uint32*) &rhs_float;
+
+	uint32 lhs_int = *lhs_ptr;
+	uint32 rhs_int = *rhs_ptr;
+
+	uint32 sub_res =
+			(lhs_int > rhs_int) ? lhs_int - rhs_int : rhs_int - lhs_int;
+
+	return (sub_res < MAX_VALUE);
 }
 
 unsigned long long copy_errors() {
@@ -100,18 +107,26 @@ template<typename half_t, typename real_t, typename int_t>
 std::tuple<int_t, int_t, int_t, int_t, int_t> get_thresholds(
 		std::vector<half_t>& half_array, std::vector<real_t>& real_array) {
 
-	std::vector<BinaryFloat> xor_array(real_array.size());
+	assert(sizeof(int_t) == sizeof(half_t));
+	std::vector<int_t> xor_array(real_array.size());
 
 	int_t min_ = 0xffffffff;
 	int_t max_ = 0;
 	int_t max_i = 0;
 	int_t min_i = 0;
 	for (int i = 0; i < real_array.size(); i++) {
-		BinaryFloat biggest_threshold_output_real_t = float(real_array[i]);
-		BinaryFloat biggest_threshold_output_half_t = float(half_array[i]);
-		xor_array[i] = biggest_threshold_output_real_t
-				- biggest_threshold_output_half_t;
-		int_t most_significant = xor_array[i].bin;
+		half_t output_half_t_float = half_t(half_array[i]);
+		half_t output_real_t_float = half_t(real_array[i]);
+
+		int_t* lhs_ptr = (int_t*)&output_half_t_float;
+		int_t* rhs_ptr = (int_t*)&output_real_t_float;
+
+		int_t lhs_int = *lhs_ptr;
+		int_t rhs_int = *rhs_ptr;
+
+		int_t most_significant =
+				(lhs_int > rhs_int) ? lhs_int - rhs_int : rhs_int - lhs_int;
+
 
 		min_ = std::min(most_significant, min_);
 		max_ = std::max(most_significant, max_);
@@ -124,10 +139,10 @@ std::tuple<int_t, int_t, int_t, int_t, int_t> get_thresholds(
 		}
 	}
 
-	std::sort(xor_array.begin(), xor_array.end(), std::greater<BinaryFloat>());
+	std::sort(xor_array.begin(), xor_array.end(), std::greater<int_t>());
 
-	BinaryFloat median = xor_array[xor_array.size() / 2];
-	return std::make_tuple(max_, min_, median.bin, max_i,
+	int_t median = xor_array[xor_array.size() / 2];
+	return std::make_tuple(max_, min_, median, max_i,
 			min_i);
 }
 
