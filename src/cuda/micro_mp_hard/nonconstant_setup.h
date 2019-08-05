@@ -362,6 +362,8 @@ void test_radiation(Parameters& parameters, std::vector<real_t>& input_array,
 
 	out.close();
 	if (parameters.verbose) {
+		std::cout << std::scientific << std::setprecision(20);
+
 		double averageKernelTime = total_kernel_time / parameters.iterations;
 		std::cout << std::endl << "-- END --" << std::endl;
 		std::cout << "Total kernel time: " << total_kernel_time << std::endl;
