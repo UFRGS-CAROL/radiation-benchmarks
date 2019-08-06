@@ -278,7 +278,7 @@ private:
 		return def;
 	}
 
-	int find_float_arg(int argc, char **argv, std::string arg, float def) {
+	float find_float_arg(int argc, char **argv, std::string arg, float def) {
 		for (int i = 0; i < argc - 1; ++i) {
 			if (!argv[i])
 				continue;
