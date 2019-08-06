@@ -283,7 +283,9 @@ private:
 			if (!argv[i])
 				continue;
 			if (std::string(argv[i]) == arg) {
-				def = atof(argv[i + 1]);
+				std::string to_convert(argv[i + 1]);
+
+				def = std::stof(to_convert);
 				del_arg(argc, argv, i);
 				del_arg(argc, argv, i);
 				break;
