@@ -20,7 +20,7 @@
 
 #include "persistent_lib.h"
 
-#include <cooperative_groups.h>
+//#include <cooperative_groups.h>
 #include <stdexcept>
 
 #include "device_vector.h"
@@ -85,8 +85,8 @@ template<typename real_t>
 __device__ void process_mxm_ii(real_t *C, real_t *A, real_t *B, int wA,
 		int wB) {
 	// Handle to thread block group
-	cooperative_groups::thread_block cta =
-			cooperative_groups::this_thread_block();
+//	cooperative_groups::thread_block cta =
+//			cooperative_groups::this_thread_block();
 	// Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -132,7 +132,8 @@ __device__ void process_mxm_ii(real_t *C, real_t *A, real_t *B, int wA,
 		Bs[ty][tx] = B[b + wB * ty + tx];
 
 		// Synchronize to make sure the matrices are loaded
-		cooperative_groups::sync(cta);
+//		cooperative_groups::sync(cta);
+		__syncthreads();
 
 		// Multiply the two matrices together;
 		// each thread computes one element
@@ -145,7 +146,7 @@ __device__ void process_mxm_ii(real_t *C, real_t *A, real_t *B, int wA,
 		// Synchronize to make sure that the preceding
 		// computation is done before loading two new
 		// sub-matrices of A and B in the next iteration
-		cooperative_groups::sync(cta);
+		__syncthreads();
 
 	}
 

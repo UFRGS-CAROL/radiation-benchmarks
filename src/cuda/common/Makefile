@@ -26,7 +26,7 @@ DEPS = $(wildcard ./include/*.h ./src/include/*.h) Makefile
 
 LIBS=JTX2Inst.so NVMLWrapper.so
 
-all: clean $(OBJS) $(LIBS)
+all: mklib clean $(OBJS) $(LIBS)
 
 JTX2Inst.so: JTX2Inst.o 
 	ar $(MODE) -o $(LIB)/libJTX2Inst.so JTX2Inst.o $(JTX2OBJ)
@@ -35,6 +35,9 @@ JTX2Inst.so: JTX2Inst.o
 NVMLWrapper.so: NVMLWrapper.o
 	ar $(MODE) $(LIB)/libNVMLWrapper.so NVMLWrapper.o
 	rm -f libNVMLWrapper.o
+
+mklib:
+	mkdir -p ./lib
 
 %.o:  $(JTX2SRC)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(LDFLAGS) $(INCLUDE)

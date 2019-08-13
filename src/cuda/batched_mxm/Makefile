@@ -1,6 +1,7 @@
 LOGS=1
 DEBUG?=0
 FI=0
+BUILDPROFILER=1
 
 CXX=g++
 CUDAPATH=/usr/local/cuda
@@ -34,8 +35,13 @@ NVCCFLAGS+= -DLOGS
 LIBRARY+= -lLogHelper
 endif
 
+ifeq ($(BUILDPROFILER), 1)
+NVCCFLAGS+= -DBUILDPROFILER
+LDFLAGS+= -lnvidia-ml -lNVMLWrapper
+endif
+
 COMMON= $(INCLUDE)
-LDFLAGS= $(LIBRARY) -lcudart -lcublas -lcurand -lstdc++   -lnvidia-ml -lNVMLWrapper
+LDFLAGS= $(LIBRARY) -lcudart -lcublas -lcurand -lstdc++ 
 
 OBJ=matrixMul.o
 
