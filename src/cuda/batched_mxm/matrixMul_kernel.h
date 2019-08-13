@@ -229,9 +229,12 @@ void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
 		float beta = 0;
 		cublasStatus_t status = cublasSgemmBatched(handle->cublas_handle,
 				CUBLAS_OP_N, CUBLAS_OP_N, wA, wB, wB, &alpha,
-				(const float * const *) a_array_dev.data(), wA,
-				(const float * const *) b_array_dev.data(), wB, &beta,
-				(float * const *) c_array_dev.data(), wB, streamSize);
+				//(const float * const *)
+				a_array_dev.data(), wA,
+				//(const float * const *)
+				b_array_dev.data(), wB, &beta,
+				//(float * const *)
+				c_array_dev.data(), wB, streamSize);
 		rad::checkCublasErrors(status);
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		;
