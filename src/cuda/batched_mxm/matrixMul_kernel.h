@@ -227,12 +227,12 @@ void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
 	case GEMM: {
 		float alpha = 1;
 		float beta = 0;
+		const float** ptr_a = const_cast<const float**>(a_array_dev.data());
+		const float** ptr_b = const_cast<const float**>(b_array_dev.data());
 		cublasStatus_t status = cublasSgemmBatched(handle->cublas_handle,
 				CUBLAS_OP_N, CUBLAS_OP_N, wA, wB, wB, &alpha,
-				//(const float * const *)
-				a_array_dev.data(), wA,
-				//(const float * const *)
-				b_array_dev.data(), wB, &beta,
+				ptr_a, wA,
+				ptr_b, wB, &beta,
 				//(float * const *)
 				c_array_dev.data(), wB, streamSize);
 		rad::checkCublasErrors(status);
