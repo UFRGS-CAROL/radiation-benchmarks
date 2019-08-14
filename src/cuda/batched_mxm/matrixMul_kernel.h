@@ -68,17 +68,18 @@ static std::ostream& operator<<(std::ostream& os, const KernelType& dt) {
 	switch (dt) {
 	case STATIC:
 		os << std::string("NON-PERSISTENT threads");
-		break;
+		return os;
 	case PERSISTENT:
 		os << std::string("PERSISTENT threads");
-		break;
+		return os;
 	case GEMM:
 		os << std::string("cuBLAS kernel");
-		break;
+		return os;
 	case DYNAMICPARALLELISM:
 		os << std::string("Dynamic parallelism");
+		return os;
+
 	}
-	return os;
 }
 
 static const KernelType kernel_types[COUNT] = { STATIC, PERSISTENT, GEMM,
@@ -216,7 +217,8 @@ void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
 		matrixMulCUDAPersistent<<<gridDim, blockDim, 0, streams[0]->stream>>>(
 				c_array_dev.data(), a_array_dev.data(), b_array_dev.data(), wA,
 				wB, streamSize);
-		rad::checkFrameworkErrors (cudaPeekAtLastError());;
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		;
 		break;
 	}
 	case STATIC: {
@@ -247,7 +249,8 @@ void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
 				//(float * const *)
 				c_array_dev.data(), wB, streamSize);
 		rad::checkCublasErrors(status);
-		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
 		break;
 	}
 
@@ -256,7 +259,8 @@ void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
 				c_array_dev.data(), a_array_dev.data(), b_array_dev.data(),
 				gridDim, blockDim, wA, wB, streamSize);
 
-		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
 		break;
 	}
 
