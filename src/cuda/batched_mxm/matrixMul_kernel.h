@@ -80,6 +80,8 @@ static std::ostream& operator<<(std::ostream& os, const KernelType& dt) {
 		return os;
 
 	}
+	return os;
+
 }
 
 static const KernelType kernel_types[COUNT] = { STATIC, PERSISTENT, GEMM,

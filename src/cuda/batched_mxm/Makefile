@@ -51,7 +51,7 @@ DEPS = $(wildcard *.h) Makefile
 all: obj  $(EXEC)
 
 $(EXEC): $(OBJS) $(EXECOBJ)  
-	$(NVCC) $(COMMON) -Xcompiler "$(CXXFLAGS)" $^ -o $@ $(LDFLAGS) $(NVCCFLAGS)
+	$(NVCC) $(COMMON) -Xcompiler "$(CXXFLAGS)" $^ -o $@ $(LDFLAGS) $(ARCH)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON)  $(CXXFLAGS) -c $< -o $@
