@@ -421,6 +421,10 @@ int main(int argc, char **argv) {
 	case GEMM:
 		cublas_handle = std::make_shared<CublasHandle>();
 		break;
+
+	case DYNAMICPARALLELISM:
+		streams[0] = std::make_shared<CudaStream>();
+		break;
 	}
 
 	//START the processing
