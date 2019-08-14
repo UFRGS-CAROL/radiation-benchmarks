@@ -11,7 +11,7 @@ NVCC=$(CUDAPATH)/bin/nvcc
 ARCH+= -gencode arch=compute_35,code=[sm_35,compute_35]	# Titan V | Tesla V100
 #ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]	# Jetson Xavier
 
-NVCCFLAGS= $(ARCH) -Xptxas -v -std=c++11  -O3 -D_FORCE_INLINES 
+NVCCFLAGS= $(ARCH) -Xptxas -v -std=c++11  -O3 -D_FORCE_INLINES -dc
 CXXFLAGS= -fopenmp
 INCLUDE= -I$(CUDAPATH)/include/ -I../../include/ -I../common/include/ -I$(CUDAPATH)/samples/common/inc/
 LIBRARY= -L$(CUDAPATH)/lib64/  -L../../include/ -L../common/lib -L$(CUDAPATH)/lib64/stubs
@@ -51,7 +51,7 @@ DEPS = $(wildcard *.h) Makefile
 all: obj  $(EXEC)
 
 $(EXEC): $(OBJS) $(EXECOBJ)  
-	$(NVCC) $(COMMON) -Xcompiler "$(CXXFLAGS)" $^ -o $@ $(LDFLAGS) 
+	$(NVCC) $(COMMON) -Xcompiler "$(CXXFLAGS)" $^ -o $@ $(LDFLAGS) $(NVCCFLAGS)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON)  $(CXXFLAGS) -c $< -o $@

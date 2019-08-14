@@ -60,7 +60,7 @@ struct CublasHandle {
 };
 
 typedef enum {
-	STATIC, PERSISTENT, GEMM, COUNT
+	STATIC, PERSISTENT, GEMM, DYNAMICPARALLELISM, COUNT
 
 } KernelType;
 
@@ -75,11 +75,14 @@ static std::ostream& operator<<(std::ostream& os, const KernelType& dt) {
 	case GEMM:
 		os << std::string("cuBLAS kernel");
 		break;
+	case DYNAMICPARALLELISM:
+		os << std::string("Dynamic parallelism");
 	}
 	return os;
 }
 
-static const KernelType kernel_types[COUNT] = { STATIC, PERSISTENT, GEMM };
+static const KernelType kernel_types[COUNT] = { STATIC, PERSISTENT, GEMM,
+		DYNAMICPARALLELISM };
 
 template<typename real_t>
 __device__ void process_mxm_ii(real_t *C, real_t *A, real_t *B, int wA,
@@ -178,6 +181,15 @@ __global__ void matrixMulCUDAPersistent(real_t** c, real_t** a, real_t** b,
 	}
 }
 
+template<typename real_t>
+__global__ void matrixMulCUDADynamicParallelism(real_t** c, real_t** a,
+		real_t** b, dim3 gridDim, dim3 blockDim, int wA, int wB, int nKernels) {
+	for (int i = 0; i < nKernels; i++) {
+		matrixMulCUDANonpersistent<<<gridDim, blockDim>>>(c[i], a[i], b[i], wA,
+				wB);
+	}
+}
+
 void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
 		const std::vector<std::shared_ptr<CudaStream>>& streams, KernelType t,
 		dim3 gridDim, dim3 blockDim, std::shared_ptr<CublasHandle>& handle) {
@@ -230,14 +242,21 @@ void matrixMulCUDA(float *C, float *A, float *B, int wA, int wB,
 		const float** ptr_a = const_cast<const float**>(a_array_dev.data());
 		const float** ptr_b = const_cast<const float**>(b_array_dev.data());
 		cublasStatus_t status = cublasSgemmBatched(handle->cublas_handle,
-				CUBLAS_OP_N, CUBLAS_OP_N, wA, wB, wB, &alpha,
-				ptr_a, wA,
-				ptr_b, wB, &beta,
+				CUBLAS_OP_N, CUBLAS_OP_N, wA, wB, wB, &alpha, ptr_a, wA, ptr_b,
+				wB, &beta,
 				//(float * const *)
 				c_array_dev.data(), wB, streamSize);
 		rad::checkCublasErrors(status);
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
+		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
+		break;
+	}
+
+	case DYNAMICPARALLELISM: {
+		matrixMulCUDADynamicParallelism<<<1, 1, 0, streams[0]->stream>>>(
+				c_array_dev.data(), a_array_dev.data(), b_array_dev.data(),
+				gridDim, blockDim, wA, wB, streamSize);
+
+		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
 		break;
 	}
 
