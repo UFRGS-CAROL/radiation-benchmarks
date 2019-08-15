@@ -304,8 +304,10 @@ int check_output(std::vector<real_t>& gold, std::vector<real_t>& found,
 
 int main(int argc, char **argv) {
 	Parameters args(argc, argv);
-	std::cout << "Benchmarks parameters" << std::endl;
-	std::cout << args << std::endl;
+	if (args.verbose) {
+		std::cout << "Benchmarks parameters" << std::endl;
+		std::cout << args << std::endl;
+	}
 	//================== Init logs
 #ifdef LOGS
 	if (args.generate == false) {
@@ -509,7 +511,6 @@ int main(int argc, char **argv) {
 		}
 
 	}
-
 
 	if (args.generate) {
 		std::cout << gold[10] << " " << c_host[10] << std::endl;
