@@ -41,10 +41,8 @@ class DeviceVector {
 	}
 
 public:
-	DeviceVector() {
-		this->v_size = 0;
-		this->allocated = false;
-		this->data_ = nullptr;
+	DeviceVector() :
+			v_size(0), allocated(false), data_(nullptr) {
 	}
 
 	DeviceVector(const DeviceVector<T>& b) {
@@ -97,13 +95,13 @@ public:
 
 		checkFrameworkErrors(
 				cudaMemcpy(this->data_, other.data_, sizeof(T) * this->v_size,
-						cudaMemcpyHostToDevice));
+						cudaMemcpyDeviceToDevice));
 
 		return *this;
 	}
 
 	std::vector<T> to_vector() {
-		std::vector<T> ret(this->v_size, 0);
+		std::vector < T > ret(this->v_size, 0);
 
 		checkFrameworkErrors(
 				cudaMemcpy(ret.data(), this->data_, sizeof(T) * this->v_size,
@@ -124,7 +122,7 @@ public:
 				cudaMemset(this->data_, 0x0, sizeof(T) * this->v_size));
 	}
 
-	void resize(size_t size){
+	void resize(size_t size) {
 		this->free_data();
 		this->alloc_data(size);
 	}
