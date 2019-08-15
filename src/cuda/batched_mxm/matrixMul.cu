@@ -68,9 +68,9 @@ struct Parameters {
 
 	size_t iterations;
 
-	bool verbose;
-	bool generate;
-	bool fault_injection;
+	bool verbose = false;
+	bool generate = false;
+	bool fault_injection = false;
 
 	KernelType execution_type;
 
