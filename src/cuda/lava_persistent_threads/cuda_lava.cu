@@ -30,12 +30,16 @@
 
 #include "include/persistent_lib.h"
 
+#ifdef BUILDPROFILER
+
 #ifdef FORJETSON
 #include "include/JTX2Inst.h"
 #define OBJTYPE JTX2Inst
 #else
 #include "include/NVMLWrapper.h"
 #define OBJTYPE NVMLWrapper
+#endif
+
 #endif
 
 //=============================================================================
@@ -196,7 +200,7 @@ void getParams(int argc, char** argv, int *boxes, int *generate,
 		int *gpu_check) {
 	if (argc < 2) {
 		usage(argc, argv);
-		exit(EXIT_FAILURE);
+		exit (EXIT_FAILURE);
 	}
 
 	*generate = 0;
@@ -212,11 +216,11 @@ void getParams(int argc, char** argv, int *boxes, int *generate,
 		if (*boxes <= 0) {
 			printf("Invalid input size given on the command-line: %d\n",
 					*boxes);
-			exit(EXIT_FAILURE);
+			exit (EXIT_FAILURE);
 		}
 	} else {
 		usage(argc, argv);
-		exit(EXIT_FAILURE);
+		exit (EXIT_FAILURE);
 	}
 
 	if (checkCmdLineFlag(argc, (const char **) argv, "input_distances")) {
@@ -497,10 +501,10 @@ void generateInput(dim_str dim_cpu, char *input_distances,
 
 	printf("Generating input...\n");
 
-	srand(time(NULL));
+	srand (time(NULL));
 
 	// input (distances)
-	if ((fp = fopen(input_distances, "wb")) == 0) {
+if(	(fp = fopen(input_distances, "wb")) == 0) {
 		printf("The file 'input_distances' was not opened\n");
 		exit(EXIT_FAILURE);
 	}
@@ -524,7 +528,7 @@ void generateInput(dim_str dim_cpu, char *input_distances,
 	// input (charge)
 	if ((fp = fopen(input_charges, "wb")) == 0) {
 		printf("The file 'input_charges' was not opened\n");
-		exit(EXIT_FAILURE);
+		exit (EXIT_FAILURE);
 	}
 
 	*qv_cpu = (tested_type_host*) malloc(dim_cpu.space_mem2);
@@ -547,7 +551,7 @@ void readInput(dim_str dim_cpu, char *input_distances,
 	// input (distances)
 	if ((fp = fopen(input_distances, "rb")) == 0) {
 		printf("The file 'input_distances' was not opened\n");
-		exit(EXIT_FAILURE);
+		exit (EXIT_FAILURE);
 	}
 
 	*rv_cpu = (FOUR_VECTOR_HOST*) malloc(dim_cpu.space_mem);
@@ -587,7 +591,7 @@ void readInput(dim_str dim_cpu, char *input_distances,
 	// input (charge)
 	if ((fp = fopen(input_charges, "rb")) == 0) {
 		printf("The file 'input_charges' was not opened\n");
-		exit(EXIT_FAILURE);
+		exit (EXIT_FAILURE);
 	}
 
 	*qv_cpu = (tested_type_host*) malloc(dim_cpu.space_mem2);
@@ -637,7 +641,7 @@ void readGold(dim_str dim_cpu, char *output_gold,
 
 	if ((fp = fopen(output_gold, "rb")) == 0) {
 		printf("The file 'output_forces' was not opened\n");
-		exit(EXIT_FAILURE);
+		exit (EXIT_FAILURE);
 	}
 
 	// return_value = fread(fv_cpu_GOLD, sizeof(FOUR_VECTOR_HOST), dim_cpu.space_elem, fp);
@@ -675,7 +679,7 @@ void writeGold(dim_str dim_cpu, char *output_gold, FOUR_VECTOR_HOST **fv_cpu) {
 
 	if ((fp = fopen(output_gold, "wb")) == 0) {
 		printf("The file 'output_forces' was not opened\n");
-		exit(EXIT_FAILURE);
+		exit (EXIT_FAILURE);
 	}
 	int number_zeros = 0;
 	for (i = 0; i < dim_cpu.space_elem; i = i + 1) {
@@ -956,6 +960,7 @@ int main(int argc, char *argv[]) {
 
 	}
 
+#ifdef BUILDPROFILER
 	std::string log_file_name(get_log_file_name());
 	if(generate) {
 		log_file_name = "/tmp/generate.log";
@@ -964,6 +969,8 @@ int main(int argc, char *argv[]) {
 
 	//START PROFILER THREAD
 	profiler_thread->start_profile();
+#endif
+
 #endif
 
 	//=====================================================================
@@ -1264,7 +1271,11 @@ int main(int argc, char *argv[]) {
 				}
 				if (reloadFlag) {
 #ifdef LOGS
+
+#ifdef BUILDPROFILER
 					profiler_thread->end_profile();
+#endif
+
 #endif
 					pt_control.end_kernel();
 
@@ -1278,11 +1289,13 @@ int main(int argc, char *argv[]) {
 
 					gpu_memory_setup(nstreams, gpu_check, dim_cpu, d_box_gpu,
 							box_cpu, d_rv_gpu, rv_cpu, d_qv_gpu, qv_cpu,
-							d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD, d_box_gpu_ptr, d_rv_gpu_ptr, d_qv_gpu_ptr,
-							d_fv_gpu_ptr);
+							d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD, d_box_gpu_ptr,
+							d_rv_gpu_ptr, d_qv_gpu_ptr, d_fv_gpu_ptr);
 
 #ifdef LOGS
+#ifdef BUILDPROFILER
 					profiler_thread->start_profile();
+#endif
 #endif
 					pt_control.start_kernel();
 					launch_kernel(nstreams, blocks, threads, par_cpu, streams,
@@ -1314,7 +1327,7 @@ int main(int argc, char *argv[]) {
 		//=====================
 
 		printf(".");
-		fflush(stdout);
+		fflush (stdout);
 
 		double iteration_time = mysecond() - globaltimer;
 		if (verbose)
@@ -1357,7 +1370,9 @@ int main(int argc, char *argv[]) {
 	delete[] d_fv_gpu;
 
 #ifdef LOGS
+#ifdef BUILDPROFILER
 	profiler_thread->end_profile();
+#endif
 	if (!generate) end_log_file();
 #endif
 
