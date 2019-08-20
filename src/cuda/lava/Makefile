@@ -3,7 +3,7 @@ NVCC=/usr/local/cuda/bin/nvcc
 PRECISION?=single
 LOGS?=1
 USE_OMP?=1
-
+BUILDPROFILER=0
 FORJETSON=0
 
 
@@ -58,6 +58,14 @@ endif
 ifeq ($(DEBUG), 1)
 NVCC_FLAGS+= -g -G
 endif
+
+ifeq ($(BUILDPROFILER), 1)
+	ifeq ($(FORJETSON), 1)
+	NVCC_FLAGS += -DBUILDPROFILER -DFORJETSON=1 -lJTX2Inst -li2c
+	else
+	NVCC_FLAGS += -DBUILDPROFILER -L$(CUDAPATH)/lib64/stubs -lnvidia-ml  -lNVMLWrapper
+	endif
+endif 
 
 NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
