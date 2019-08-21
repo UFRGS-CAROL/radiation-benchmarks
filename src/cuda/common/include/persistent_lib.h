@@ -93,19 +93,21 @@ struct HostPersistentControler {
 							sizeof(uint32), 0, cudaMemcpyDeviceToHost,
 							this->st));
 			checkFrameworkErrors(cudaStreamSynchronize(this->st));
-#ifdef DEBUG
-			std::cout << "FINISHED " << counter << " " << this->block_number << " " <<
-					best_time_to_wait << std::endl;
-#endif
+
 			//it saves 1 second
 			if (this->block_number <= counter) {
 				this->do_not_check_more = true;
 				break;
 			}
-			rad::sleep(this->best_time_to_wait);
 
+#ifdef DEBUG
 			if(this->do_not_check_more == false)
 				this->best_time_to_wait *= 2;
+
+			std::cout << "FINISHED " << counter << " " << this->block_number << " " <<
+					best_time_to_wait << std::endl;
+			rad::sleep(this->best_time_to_wait);
+#endif
 		}
 		checkFrameworkErrors(cudaGetLastError());
 	}
