@@ -12,6 +12,7 @@ SIZES = [128]
 STREAMS = 8192
 KERNELTYPE=[0, 1, 2] # STATIC, PERSISTENT, GEMM
 ITERATIONS = int(1e9)
+BUILPROFILER = 0
 
 
 def config(board, debug):
@@ -50,7 +51,7 @@ def config(board, debug):
                 "make clean", 
                 "make -C ../../include ",
                 "make -C ../common {}".format(lib),
-                "make FORJETSON={} -j2".format(for_jetson),
+                "make BUILDPROFILER={} FORJETSON={} -j2".format(BUILPROFILER, for_jetson),
                 "mkdir -p " + data_path,
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
