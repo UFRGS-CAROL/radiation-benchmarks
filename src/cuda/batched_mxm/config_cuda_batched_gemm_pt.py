@@ -49,12 +49,14 @@ def config(board, debug):
     generate = ["sudo mkdir -p " + bin_path, 
                 "cd " + src_benchmark, 
                 "make clean", 
-                "make -C ../../include ",
-                "make -C ../common {}".format(lib),
-                "make BUILDPROFILER={} FORJETSON={} -j2".format(BUILPROFILER, for_jetson),
+                "make -C ../../include "]
+    if BUILPROFILER != 0:
+        generate.append("make -C ../common {}".format(lib))
+
+    generate.extend(["make BUILDPROFILER={} FORJETSON={} -j2".format(BUILPROFILER, for_jetson),
                 "mkdir -p " + data_path,
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
-                "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
+                "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"])
     execute = []
 
     # gen only for max size, defined on cuda_trip_mxm.cu
