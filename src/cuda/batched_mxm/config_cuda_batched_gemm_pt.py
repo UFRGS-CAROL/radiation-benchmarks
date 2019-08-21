@@ -9,7 +9,7 @@ sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 SIZES = [128]
-STREAMS = 1024
+STREAMS = 8192
 KERNELTYPE=[0, 1, 2] # STATIC, PERSISTENT, GEMM
 ITERATIONS = int(1e9)
 
