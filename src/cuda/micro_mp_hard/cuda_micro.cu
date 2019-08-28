@@ -326,7 +326,7 @@ int main(int argc, char* argv[]) {
 	+ " gridsize:" + std::to_string(parameters.grid_size)
 	+ " blocksize:" + std::to_string(parameters.block_size) + " type:"
 	+ parameters.instruction_str + "-" + parameters.precision_str
-	+ "-precision hard:" + parameters.hardening_str;
+	+ "-precision hard:" + parameters.hardening_str + " kernel_type:non-persistent";
 	test_info += " checkblock:";
 #ifdef CHECKBLOCK
 	test_info += std::to_string(CHECKBLOCK);
