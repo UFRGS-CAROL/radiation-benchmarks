@@ -328,6 +328,10 @@ int main(int argc, char **argv) {
 			test_info += "gemm";
 			test_name += "gemm";
 			break;
+			case DYNAMICPARALLELISM:
+			test_info += "dynamicparallelism";
+			test_name += "dynamicparallelism";
+			break;
 		}
 
 		test_info += " block_size:" + std::to_string(BLOCK_SIZE);

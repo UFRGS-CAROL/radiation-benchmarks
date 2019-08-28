@@ -37,7 +37,7 @@ endif
 
 ifeq ($(BUILDPROFILER), 1)
 NVCCFLAGS+= -DBUILDPROFILER
-LDFLAGS+= -lnvidia-ml -lNVMLWrapper
+LIBRARY+= -lnvidia-ml -lNVMLWrapper
 endif
 
 COMMON= $(INCLUDE)
