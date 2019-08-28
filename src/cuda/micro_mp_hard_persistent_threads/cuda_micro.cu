@@ -14,12 +14,16 @@
 //#include "cuda_utils.h"
 #include "Parameters.h"
 
+#ifdef BUILDPROFILER
+
 #ifdef FORJETSON
 #include "include/JTX2Inst.h"
 #define OBJTYPE JTX2Inst
 #else
 #include "include/NVMLWrapper.h"
 #define OBJTYPE NVMLWrapper
+#endif
+
 #endif
 
 #include "include/persistent_lib.h"
@@ -175,12 +179,13 @@ void test_radiation(Type<full>& type_, Parameters& parameters,
 
 	//Profiler thread
 #ifdef LOGS
+#ifdef BUILDPROFILER
 	std::string log_file_name(get_log_file_name());
 	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
 
 	//START PROFILER THREAD
 	profiler_thread->start_profile();
-
+#endif
 #endif
 
 	rad::HostPersistentControler pt_control(parameters.grid_size);
@@ -215,12 +220,16 @@ void test_radiation(Type<full>& type_, Parameters& parameters,
 
 		if (errors != 0) {
 #ifdef LOGS
+#ifdef BUILDPROFILER
 			profiler_thread->end_profile();
+#endif
 #endif
 			pt_control.end_kernel();
 			device_defined_input = defined_input;
 #ifdef LOGS
+#ifdef BUILDPROFILER
 			profiler_thread->start_profile();
+#endif
 #endif
 			pt_control.start_kernel();
 			launch_kernel(type_, device_vector_full, device_defined_input,

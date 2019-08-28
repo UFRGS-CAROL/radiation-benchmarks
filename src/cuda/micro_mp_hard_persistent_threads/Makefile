@@ -2,6 +2,7 @@ OPS?=1000000
 LOGS=1
 DEBUG?=0
 FORJETSON=0
+BUILDPROFILER=0
 
 CC=g++
 NVCC=/usr/local/cuda/bin/nvcc
@@ -17,11 +18,15 @@ NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/,../common/lib
 LOGHELPER_LIB=../../include/,../common/lib
 
+ifeq ($(BUILDPROFILER), 1)
+NVCC_FLAGS+= -DBUILDPROFILER=1
 
 ifeq ($(FORJETSON), 1)
 NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
 else
 NVCC_FLAGS += -L$(NVIDIA_LIB)/stubs -lnvidia-ml  -lNVMLWrapper
+endif
+
 endif
 
 
