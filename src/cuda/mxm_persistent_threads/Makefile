@@ -1,68 +1,105 @@
-CC=g++
+LOGS=1
+DEBUG?=0
+FI=0
+BUILDPROFILER=0
+
+CXX=g++
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
-PRECISION?=single
-BLOCK_SIZE=32
 
-LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
+#ARCH= -gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+ARCH+= -gencode arch=compute_35,code=[sm_35,compute_35]	# Titan V | Tesla V100
+#ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]	# Jetson Xavier
 
-FORJETSON=0
+NVCCFLAGS= $(ARCH) -Xptxas -v -std=c++11  -O3 -D_FORCE_INLINES -dc $(EXTRA_NVCC_FLAGS)  $(EXTRA_LINK_FLAGS)
+CXXFLAGS= -fopenmp -O3
+INCLUDE= -I$(CUDAPATH)/include/ -I../../include/ -I/home/carol/radiation-benchmarks/src/cuda/common/include/ -I$(CUDAPATH)/samples/common/inc/
+LIBRARY= -L$(CUDAPATH)/lib64/  -L../../include/  -L/home/carol/radiation-benchmarks/src/cuda/common/lib -L$(CUDAPATH)/lib64/stubs
 
-ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]	# Tesla P100
-#ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-#ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+OBJDIR=./obj/
 
+EXEC=cuda_batched_mxm
 
-NVCC_FLAGS= $(ARCH)
+LD_LIB=LD_LIBRARY_PATH=/usr/local/sassi7/lib64/
 
-ifneq ($(BLOCK_SIZE), 32)
-NVCC_FLAGS += -DBLOCK_SIZE=16
+ifeq ($(FI), 1)
+FIDEBUG= -debug
 endif
 
-ifeq ($(FORJETSON), 1)
-NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
-else
-NVCC_FLAGS += -L$(CUDAPATH)/lib64/stubs -lnvidia-ml  -lNVMLWrapper
-
+ifeq ($(DEBUG), 1)
+NVCCFLAGS+= -g -G
+CXXFLAGS+= -g
 endif
 
+ifeq ($(LOGS), 1)
+CXXFLAGS+= -DLOGS
+NVCCFLAGS+= -DLOGS
+LIBRARY+= -lLogHelper
+endif
 
-NVIDIA_INC=/usr/local/cuda/include/,./
-NVIDIA_LIB=/usr/local/cuda/lib64/,../common/lib
-LOGHELPER_INC=../../include/
-LOGHELPER_LIB=../../include/
+ifeq ($(BUILDPROFILER), 1)
+NVCCFLAGS+= -DBUILDPROFILER
+LDFLAGS+= -lnvidia-ml -lNVMLWrapper
+endif
 
-PERSISTENT_INC=../common/
+COMMON= $(INCLUDE)
+LDFLAGS= $(LIBRARY) -lcudart -lcublas -lcurand -lstdc++ 
 
-SOURCES=./cuda_trip_mxm.cu
-EXEC_RADIX=./cuda_mxm_persistent_threads_
-EXEC=$(EXEC_RADIX)$(LOWERCASED_PRECISION)
+OBJ=matrixMul.o
 
-DEF_SIZE=64
+OBJS = $(addprefix $(OBJDIR), $(OBJ))
+DEPS = $(wildcard *.h) Makefile
 
-DEF_A_INPUT=./mxm_$(LOWERCASED_PRECISION)_A_$(DEF_SIZE).matrix
-DEF_B_INPUT=./mxm_$(LOWERCASED_PRECISION)_B_$(DEF_SIZE).matrix
-DEF_GOLD=./mxm_$(LOWERCASED_PRECISION)_GOLD_$(DEF_TEST_SIZE).matrix
 
-MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./mxm*.matrix
+all: clean obj  $(EXEC) #install
 
-all: $(EXEC)
+$(EXEC): $(OBJS) $(EXECOBJ)  
+	$(NVCC) $(COMMON) -Xcompiler "$(CXXFLAGS)" $^ -o $@ $(LDFLAGS) $(ARCH) $(EXTRA_NVCC_FLAGS)  $(EXTRA_LINK_FLAGS)
 
-check-benchtype:
-	echo "syntax: make PRECISION=<double|half|single>"
-	test $(PRECISION)
+$(OBJDIR)%.o: %.cpp $(DEPS)
+	$(CXX) $(COMMON)  $(CXXFLAGS) -c $< -o $@
 
-$(EXEC): check-benchtype $(RUN_SOURCES)
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC),$(PERSISTENT_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB)  \
-		 -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) \
-		 -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
+$(OBJDIR)%.o: %.cu $(DEPS)
+	$(NVCC) $(COMMON) $(ARCH) -Xcompiler "$(CXXFLAGS)"  $(NVCCFLAGS) -c $< -o $@
+
+obj:
+	mkdir -p obj
+
+
+#install:
+#	mkdir -p $(REGRESSION_HOME)/bin/$(OPTION)/$(SUITE_NAME)/
+#	cp $(EXEC) $(REGRESSION_HOME)/bin/$(OPTION)/$(SUITE_NAME)/
 
 clean:
-	rm -rf $(EXEC_RADIX)* $(MATRIX_NAMES)
+	rm -rf $(EXEC) $(OBJDIR)/* 
+
+DEF_SIZE=112
+BATCH_SIZE=32
+DEF_A_INPUT=`pwd`/mxm_A_$(DEF_SIZE)_$(BATCH_SIZE).matrix
+DEF_B_INPUT=`pwd`/mxm_B_$(DEF_SIZE)_$(BATCH_SIZE).matrix
+DEF_GOLD=`pwd`/mxm_GOLD_$(DEF_SIZE)_$(BATCH_SIZE).matrix
+KERNELTYPE=1
+
+
+golden: $(EXEC)
+	./$(EXEC) -size=$(DEF_SIZE) -batch=$(BATCH_SIZE) -kernel_type=$(KERNELTYPE) \
+			-input_a=$(DEF_A_INPUT) \
+                        -input_b=$(DEF_B_INPUT) \
+                        -gold=$(DEF_GOLD) \
+			-iterations=1 > golden_stdout.txt 2>golden_stderr.txt
+
+
 
 generate: $(EXEC)
-	$(EXEC) -generate -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD)
+	./$(EXEC) -generate -size=$(DEF_SIZE) -batch=$(BATCH_SIZE) -kernel_type=$(KERNELTYPE) \
+			-input_a=$(DEF_A_INPUT) \
+			-input_b=$(DEF_B_INPUT) \
+			 -gold=$(DEF_GOLD) -verbose
 
 test: $(EXEC) 
-	$(EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
+	./$(EXEC) -size=$(DEF_SIZE) -batch=$(BATCH_SIZE) -kernel_type=$(KERNELTYPE) \
+			-input_a=$(DEF_A_INPUT) \
+			-input_b=$(DEF_B_INPUT) \
+			-gold=$(DEF_GOLD) \
+			-iterations=1 $(FIDEBUG) 
+	
