@@ -381,7 +381,7 @@ int main(int argc, char **argv) {
 	// -------------------------------------------------------------------------------------
 	cudaDeviceProp prop = GetDevice();
 
-	dim3 dim_grid_full(prop.multiProcessorCount);
+	dim3 dim_grid_full(prop.multiProcessorCount * 4);
 	int num_block_slice = (gridsize * gridsize) / prop.multiProcessorCount;
 	dim3 bl_dim(gridsize, gridsize, 1);
 	BlockList bl(bl_dim);
@@ -428,7 +428,7 @@ int main(int argc, char **argv) {
 	std::vector<std::shared_ptr<CudaStream>> streams(args.n_streams, nullptr);
 
 	//Persistent case
-	rad::HostPersistentControler pk(dim_grid);
+	rad::HostPersistentControler pk(dim_grid_full);
 
 	//SETUP for the type kernel
 	streams[0] = std::make_shared<CudaStream>();
