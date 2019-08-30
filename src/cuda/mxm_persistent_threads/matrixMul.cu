@@ -441,7 +441,7 @@ int main(int argc, char **argv) {
 	tmp.streams = &streams;
 	tmp.t = args.execution_type;
 	tmp.gridDim = dim_grid_full;
-	tmp.blockDim = dim_grid;
+	tmp.blockDim = dim_block;
 	tmp.handle = cublas_handle;
 	std::thread thread_persistent;
 
