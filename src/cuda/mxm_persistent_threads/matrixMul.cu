@@ -381,7 +381,7 @@ int main(int argc, char **argv) {
 	// -------------------------------------------------------------------------------------
 	cudaDeviceProp prop = GetDevice();
 
-	dim3 dim_grid_full(prop.multiProcessorCount * 4);
+	dim3 dim_grid_full(prop.multiProcessorCount);
 	int num_block_slice = (gridsize * gridsize) / prop.multiProcessorCount;
 	dim3 bl_dim(gridsize, gridsize, 1);
 	BlockList bl(bl_dim);
