@@ -15,11 +15,12 @@ struct BlockList{
 	rad::DeviceVector<dim3> data_;
 
 	BlockList(dim3 grid_size){
-		std::vector<dim3> temp_vector;
+		std::vector<dim3> temp_vector; //(grid_size.x * grid_size.y * grid_size.z);
 		for(auto x = 0; x < grid_size.x; x++){
 			for(auto y = 0; y < grid_size.y; y++){
 				for (auto z = 0; z < grid_size.z; z++) {
 					temp_vector.push_back(dim3(x, y, z));
+//					temp_vector[x * grid_size.y * grid_size.z + y * grid_size.z + z] = dim3(x, y, z);
 				}
 			}
 		}
