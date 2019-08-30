@@ -13,7 +13,7 @@ ARCH+= -gencode arch=compute_35,code=[sm_35,compute_35]	# Titan V | Tesla V100
 
 NVCCFLAGS= $(ARCH) -Xptxas -v -std=c++11  -O3 -D_FORCE_INLINES -dc $(EXTRA_NVCC_FLAGS)  $(EXTRA_LINK_FLAGS)
 CXXFLAGS= -fopenmp -O3
-INCLUDE= -I$(CUDAPATH)/include/ -I../../include/ -I/home/carol/radiation-benchmarks/src/cuda/common/include/ -I$(CUDAPATH)/samples/common/inc/
+INCLUDE= -I$(CUDAPATH)/include/ -I../../include/ -I../common/include/ -I$(CUDAPATH)/samples/common/inc/
 LIBRARY= -L$(CUDAPATH)/lib64/  -L../../include/  -L/home/carol/radiation-benchmarks/src/cuda/common/lib -L$(CUDAPATH)/lib64/stubs
 
 OBJDIR=./obj/

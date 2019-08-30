@@ -111,12 +111,12 @@ struct Parameters {
 			if ((k <= 0) || (k % 16 != 0)) {
 				std::cerr << "Invalid input size given on the command-line: "
 						<< k << std::endl;
-				exit (EXIT_FAILURE);
+				exit(EXIT_FAILURE);
 			}
 
 		} else {
 			usage(argv);
-			exit (EXIT_FAILURE);
+			exit(EXIT_FAILURE);
 		}
 
 		if (checkCmdLineFlag(argc, (const char **) argv, "batch")) {
@@ -124,7 +124,7 @@ struct Parameters {
 					"batch");
 			if (this->n_streams < 1) {
 				usage(argv);
-				exit (EXIT_FAILURE);
+				exit(EXIT_FAILURE);
 			}
 		}
 
@@ -194,7 +194,7 @@ void generate_input(std::vector<real_t>& a_vector,
 	std::random_device rd; //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 	std::uniform_real_distribution<real_t> dis(-GENERATOR_MAXABSVALUE,
-			GENERATOR_MAXABSVALUE);
+	GENERATOR_MAXABSVALUE);
 
 	auto generator = [&dis, &gen]() {
 		return dis(gen);
@@ -275,7 +275,7 @@ int check_output(std::vector<real_t>& gold, std::vector<real_t>& found, int k) {
 		}
 	}
 #ifdef LOGS
-		log_error_count(host_errors);
+	log_error_count(host_errors);
 #endif
 
 	if (host_errors != 0)
@@ -382,8 +382,6 @@ int main(int argc, char **argv) {
 	cudaDeviceProp prop = GetDevice();
 
 	dim3 dim_grid_full(prop.multiProcessorCount);
-	dim3 dim_block_full(args.k/prop.multiProcessorCount, args.k / prop.multiProcessorCount);
-
 	int num_block_slice = (gridsize * gridsize) / prop.multiProcessorCount;
 	dim3 bl_dim(gridsize, gridsize, 1);
 	BlockList bl(bl_dim);
@@ -427,8 +425,7 @@ int main(int argc, char **argv) {
 	std::shared_ptr<CublasHandle> cublas_handle;
 
 	//Streams allocation
-	std::vector<std::shared_ptr<CudaStream>>
-	streams(args.n_streams, nullptr);
+	std::vector<std::shared_ptr<CudaStream>> streams(args.n_streams, nullptr);
 
 	//Persistent case
 	rad::HostPersistentControler pk(dim_grid);
@@ -444,7 +441,7 @@ int main(int argc, char **argv) {
 	tmp.streams = &streams;
 	tmp.t = args.execution_type;
 	tmp.gridDim = dim_grid;
-	tmp.blockDim = dim_block;
+	tmp.blockDim = dim_grid_full;
 	tmp.handle = cublas_handle;
 	std::thread thread_persistent;
 
