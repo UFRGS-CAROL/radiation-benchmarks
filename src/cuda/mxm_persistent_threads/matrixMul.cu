@@ -284,26 +284,6 @@ int check_output(std::vector<real_t>& gold, std::vector<real_t>& found, int k) {
 	return host_errors;
 }
 
-cudaDeviceProp GetDevice() {
-//================== Retrieve and set the default CUDA device
-	cudaDeviceProp prop;
-	int count = 0;
-
-	rad::checkFrameworkErrors(cudaGetDeviceCount(&count));
-	for (int i = 0; i < count; i++) {
-		rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, i));
-	}
-	int *ndevice;
-	int dev = 0;
-	ndevice = &dev;
-	rad::checkFrameworkErrors(cudaGetDevice(ndevice));
-
-	rad::checkFrameworkErrors(cudaSetDevice(0));
-	rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
-
-	return prop;
-}
-
 /**
  * Program main
  */
@@ -378,15 +358,6 @@ int main(int argc, char **argv) {
 	dim3 dim_block(blocksize, blocksize);
 	dim3 dim_grid(gridsize, gridsize);
 
-	// -------------------------------------------------------------------------------------
-	cudaDeviceProp prop = GetDevice();
-
-	dim3 dim_grid_full(prop.multiProcessorCount);
-	int num_block_slice = std::ceil(float(gridsize * gridsize) / prop.multiProcessorCount);
-	dim3 bl_dim(gridsize, gridsize, 1);
-	BlockList bl(bl_dim);
-	// -------------------------------------------------------------------------------------
-
 	//Load or write the values to files
 	if (args.generate) {
 		//std::cout << "generating the inputs\n";
@@ -425,7 +396,7 @@ int main(int argc, char **argv) {
 	std::shared_ptr<CublasHandle> cublas_handle;
 
 	//Streams allocation
-	std::vector<std::shared_ptr<CudaStream>> streams(args.n_streams, nullptr);
+	std::shared_ptr<CudaStream> stream;
 
 	//Persistent case
 	rad::HostPersistentControler pk(dim_grid_full);
@@ -438,7 +409,7 @@ int main(int argc, char **argv) {
 	tmp.B = b_dev_ptr;
 	tmp.wA = args.k;
 	tmp.wB = args.k;
-	tmp.streams = &streams;
+	tmp.stream = stream;
 	tmp.t = args.execution_type;
 	tmp.gridDim = dim_grid_full;
 	tmp.blockDim = dim_block;
