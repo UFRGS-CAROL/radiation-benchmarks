@@ -340,7 +340,7 @@ int main(int argc, char **argv) {
 #endif
 
 	//Batched gemm memory size
-	auto num_elements = args.k * args.k * args.n_streams;
+	auto num_elements = args.k * args.k;
 
 	//std::cout << "Memory allocation\n";
 
