@@ -405,27 +405,26 @@ int main(int argc, char **argv) {
 	rad::HostPersistentControler pk(bl.sm_count_to_dim3());
 
 	// -------------------------------
-
 	//SETUP for the type kernel
-	th_par tmp;
-	tmp.C = c_dev_ptr;
-	tmp.A = a_dev_ptr;
-	tmp.B = b_dev_ptr;
-	tmp.wA = args.k;
-	tmp.wB = args.k;
-	tmp.stream = stream;
-	tmp.t = args.execution_type;
-	tmp.gridDim = bl.sm_count_to_dim3();
-	tmp.blockDim = dim_block;
-	tmp.handle = cublas_handle;
 	std::thread thread_persistent;
-
-	tmp.bl_list = bl.data();
-	tmp.strea_slice = bl.block_slice;
+	th_par thread_arguments;
 
 	switch (args.execution_type) {
 	case PERSISTENT:
-		thread_persistent = std::thread(thread_call, &tmp);
+		thread_arguments.C = c_dev_ptr;
+		thread_arguments.A = a_dev_ptr;
+		thread_arguments.B = b_dev_ptr;
+		thread_arguments.wA = args.k;
+		thread_arguments.wB = args.k;
+		thread_arguments.stream = stream;
+		thread_arguments.t = args.execution_type;
+		thread_arguments.gridDim = bl.sm_count_to_dim3();
+		thread_arguments.blockDim = dim_block;
+		thread_arguments.handle = cublas_handle;
+		thread_arguments.bl_list = bl.data();
+		thread_arguments.strea_slice = bl.block_slice;
+
+		thread_persistent = std::thread(thread_call, &thread_arguments);
 		break;
 	case STATIC:
 		break;

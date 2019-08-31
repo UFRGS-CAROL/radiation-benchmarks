@@ -11,23 +11,23 @@
 #include "device_vector.h"
 #include <vector>
 
-struct BlockList{
+struct BlockList {
 	rad::DeviceVector<dim3> data_;
 	int block_slice;
 	int sm_count;
 
-
-	BlockList(dim3 old_grid_size) : sm_count(1){
+	BlockList(dim3 old_grid_size) :
+			sm_count(1) {
 		// -------------------------------------------------------------------------------------
-		 this->get_device();
+		this->get_device();
 
-    	auto grid_size = old_grid_size.x * old_grid_size.y * old_grid_size.z;
-		this->block_slice = std::ceil(float(grid_size) / this->sm_count);
-
+		auto grid_size = old_grid_size.x * old_grid_size.y * old_grid_size.z;
+		this->block_slice = std::floor(float(grid_size) / this->sm_count);
+		this->block_slice += grid_size % this->sm_count;
 		// -------------------------------------------------------------------------------------
 		std::vector<dim3> temp_vector;
-		for(auto x = 0; x < old_grid_size.x; x++){
-			for(auto y = 0; y < old_grid_size.y; y++){
+		for (auto x = 0; x < old_grid_size.x; x++) {
+			for (auto y = 0; y < old_grid_size.y; y++) {
 				for (auto z = 0; z < old_grid_size.z; z++) {
 					temp_vector.push_back(dim3(x, y, z));
 				}
@@ -36,21 +36,20 @@ struct BlockList{
 		this->data_ = temp_vector;
 	}
 
-	size_t size(){
+	size_t size() {
 		return this->data_.size();
 	}
 
-
-	dim3* data(){
+	dim3* data() {
 		return this->data_.data();
 	}
 
-	dim3 sm_count_to_dim3(){
+	dim3 sm_count_to_dim3() {
 		return dim3(this->sm_count, 1, 1);
 	}
 
 	cudaDeviceProp get_device() {
-	//================== Retrieve and set the default CUDA device
+		//================== Retrieve and set the default CUDA device
 		cudaDeviceProp prop;
 		int count = 0;
 
