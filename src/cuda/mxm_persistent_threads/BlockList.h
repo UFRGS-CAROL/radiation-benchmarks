@@ -23,7 +23,7 @@ struct BlockList{
 
     	auto grid_size = old_grid_size.x * old_grid_size.y * old_grid_size.z;
 		this->block_slice = std::ceil(float(grid_size) / this->sm_count);
-//		this->block_slice -= (grid_size % this->sm_count);
+
 		// -------------------------------------------------------------------------------------
 		std::vector<dim3> temp_vector;
 		for(auto x = 0; x < old_grid_size.x; x++){
@@ -48,6 +48,7 @@ struct BlockList{
 	dim3 sm_count_to_dim3(){
 		return dim3(this->sm_count, 1, 1);
 	}
+
 	cudaDeviceProp get_device() {
 	//================== Retrieve and set the default CUDA device
 		cudaDeviceProp prop;

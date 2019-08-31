@@ -177,18 +177,16 @@ __global__ void matrixMulCUDAPersistent(real_t* c, real_t* a, real_t* b, int wA,
 
 	rad::PersistentKernel pk;
 
-	//split the work between threads
-
+	int thread_work_start = blockIdx.x * block_slice;
+	int thread_work_end = thread_work_start + block_slice;
 	while (pk.keep_working()) {
-		//printf("AQUI\n");
 		pk.wait_for_work();
 		if (pk.is_able_to_process()) {
-			for (int i = 0; i < block_slice; i++) {
-				process_mxm_ii(c, a, b, wA, wB, block_list[blockIdx.x * block_slice + i]);
+			for (int i = thread_work_start; i < thread_work_end; i++) {
+				process_mxm_ii(c, a, b, wA, wB, block_list[i]);
 			}
 			pk.iteration_finished();
 		}
-
 	}
 }
 
@@ -200,10 +198,8 @@ void matrixMulCUDA(float *C, float *A, float *B, int& wA, int& wB,
 	switch (t) {
 	case PERSISTENT: {
 		//Persistent case
-		//std::cout << "before kernel\n";
 		matrixMulCUDAPersistent<<<gridDim, blockDim, 0, stream->stream>>>(C,
 				A, B, wA, wB, bll, block_slice);
-		//std::cout << "after kernel\n";
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 		;
 		break;
