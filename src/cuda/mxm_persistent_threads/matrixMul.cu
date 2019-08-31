@@ -396,13 +396,17 @@ int main(int argc, char **argv) {
 	std::shared_ptr<CublasHandle> cublas_handle;
 
 	//Streams allocation
-	std::shared_ptr<CudaStream> stream;
+	std::shared_ptr<CudaStream> stream= std::make_shared<CudaStream>();
 
+	//EVERYTHING is normal untill here
+	// -------------------------------
+	BlockList bl(dim_grid);
 	//Persistent case
-	rad::HostPersistentControler pk(dim_grid_full);
+	rad::HostPersistentControler pk(bl.sm_count_to_dim3());
+
+	// -------------------------------
 
 	//SETUP for the type kernel
-	streams[0] = std::make_shared<CudaStream>();
 	th_par tmp;
 	tmp.C = c_dev_ptr;
 	tmp.A = a_dev_ptr;
@@ -411,29 +415,25 @@ int main(int argc, char **argv) {
 	tmp.wB = args.k;
 	tmp.stream = stream;
 	tmp.t = args.execution_type;
-	tmp.gridDim = dim_grid_full;
+	tmp.gridDim = bl.sm_count_to_dim3();
 	tmp.blockDim = dim_block;
 	tmp.handle = cublas_handle;
 	std::thread thread_persistent;
 
-	tmp.bl_list = bl.data_.data();
-	tmp.strea_slice = num_block_slice;
+	tmp.bl_list = bl.data();
 
 	switch (args.execution_type) {
 	case PERSISTENT:
 		thread_persistent = std::thread(thread_call, &tmp);
 		break;
 	case STATIC:
-		for (auto& st : streams) {
-			st = std::make_shared<CudaStream>();
-		}
 		break;
 	case GEMM:
 		cublas_handle = std::make_shared<CublasHandle>();
 		break;
 
 	case DYNAMICPARALLELISM:
-		streams[0] = std::make_shared<CudaStream>();
+		stream = std::make_shared<CudaStream>();
 		break;
 	}
 
@@ -452,7 +452,7 @@ int main(int argc, char **argv) {
 			pk.process_data_on_kernel();
 		} else {
 			matrixMulCUDA(c_dev_ptr, a_dev_ptr, b_dev_ptr, args.k, args.k,
-					streams, args.execution_type, dim_grid, dim_block,
+					stream, args.execution_type, dim_grid, dim_block,
 					cublas_handle);
 		}
 

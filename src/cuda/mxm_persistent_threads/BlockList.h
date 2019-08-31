@@ -12,25 +12,24 @@
 #include <vector>
 
 struct BlockList{
+	rad::DeviceVector<dim3> data_;
+	int block_slice;
+	int sm_count;
 
-	BlockList(dim3 old_grid_size){
+
+	BlockList(dim3 old_grid_size) : sm_count(1){
 		// -------------------------------------------------------------------------------------
-		cudaDeviceProp prop = GetDevice();
+		 this->get_device();
 
-		dim3 dim_grid_full(prop.multiProcessorCount);
-		auto grid_size = old_grid_size.x * old_grid_size.y * old_grid_size.z;
-		this->block_slice = std::floor(float(grid_size) / prop.multiProcessorCount);
-		this->block_slice += grid_size % prop.multiProcessorCount;
-		dim3 new_grid_size(gridsize, gridsize, 1);
+    	auto grid_size = old_grid_size.x * old_grid_size.y * old_grid_size.z;
+		this->block_slice = std::floor(float(grid_size) / this->sm_count);
+		this->block_slice += (grid_size % this->sm_count);
 		// -------------------------------------------------------------------------------------
-
-
-		std::vector<dim3> temp_vector; //(grid_size.x * grid_size.y * grid_size.z);
-		for(auto x = 0; x < new_grid_size.x; x++){
-			for(auto y = 0; y < new_grid_size.y; y++){
-				for (auto z = 0; z < new_grid_size.z; z++) {
+		std::vector<dim3> temp_vector;
+		for(auto x = 0; x < old_grid_size.x; x++){
+			for(auto y = 0; y < old_grid_size.y; y++){
+				for (auto z = 0; z < old_grid_size.z; z++) {
 					temp_vector.push_back(dim3(x, y, z));
-//					temp_vector[x * grid_size.y * grid_size.z + y * grid_size.z + z] = dim3(x, y, z);
 				}
 			}
 		}
@@ -43,14 +42,13 @@ struct BlockList{
 
 
 	dim3* data(){
-		return this->data_;
+		return this->data_.data();
 	}
 
-private:
-	rad::DeviceVector<dim3> data_;
-	int block_slice;
-
-	cudaDeviceProp GetDevice() {
+	dim3 sm_count_to_dim3(){
+		return dim3(this->sm_count, 1, 1);
+	}
+	cudaDeviceProp get_device() {
 	//================== Retrieve and set the default CUDA device
 		cudaDeviceProp prop;
 		int count = 0;
@@ -67,6 +65,7 @@ private:
 		rad::checkFrameworkErrors(cudaSetDevice(0));
 		rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
 
+		this->sm_count = prop.multiProcessorCount;
 		return prop;
 	}
 

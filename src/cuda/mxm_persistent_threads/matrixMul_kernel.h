@@ -173,19 +173,18 @@ __global__ void matrixMulCUDANonpersistent(real_t* c, real_t* a, real_t* b,
 
 template<typename real_t>
 __global__ void matrixMulCUDAPersistent(real_t* c, real_t* a, real_t* b, int wA,
-		int wB, int nStreams, const dim3* block_list, int block_slice) {
+		int wB, const dim3* block_list, int block_slice) {
 
 	rad::PersistentKernel pk;
 
 	//split the work between threads
-	int start_block = blockIdx.x;
 
 	while (pk.keep_working()) {
 		//printf("AQUI\n");
 		pk.wait_for_work();
 		if (pk.is_able_to_process()) {
 			for (int i = 0; i < block_slice; i++) {
-				process_mxm_ii(c, a, b, wA, wB, block_list[start_block * block_slice + i]);
+				process_mxm_ii(c, a, b, wA, wB, block_list[blockIdx.x * block_slice + i]);
 			}
 			pk.iteration_finished();
 		}
@@ -194,27 +193,26 @@ __global__ void matrixMulCUDAPersistent(real_t* c, real_t* a, real_t* b, int wA,
 }
 
 void matrixMulCUDA(float *C, float *A, float *B, int& wA, int& wB,
-		std::vector<std::shared_ptr<CudaStream>>& streams, KernelType& t,
+		std::shared_ptr<CudaStream>& stream, KernelType& t,
 		dim3& gridDim, dim3& blockDim, std::shared_ptr<CublasHandle>& handle,
 		dim3* bll = NULL, int block_slice = 0) {
-	auto streamSize = streams.size();
 
 	switch (t) {
 	case PERSISTENT: {
 		//Persistent case
 		//std::cout << "before kernel\n";
-		matrixMulCUDAPersistent<<<gridDim, blockDim, 0, streams[0]->stream>>>(C,
-				A, B, wA, wB, streamSize, bll, block_slice);
+		matrixMulCUDAPersistent<<<gridDim, blockDim, 0, stream->stream>>>(C,
+				A, B, wA, wB, bll, block_slice);
 		//std::cout << "after kernel\n";
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 		;
 		break;
 	}
 	case STATIC: {
-		matrixMulCUDANonpersistent<<<gridDim, blockDim, 0, streams[0]->stream>>>(
+		matrixMulCUDANonpersistent<<<gridDim, blockDim, 0, stream->stream>>>(
 				C, A, B, wA, wB);
 
-		streams[0]->sync();
+		stream->sync();
 		break;
 	}
 
@@ -242,7 +240,7 @@ struct th_par {
 	float *B;
 	int wA;
 	int wB;
-	std::vector<std::shared_ptr<CudaStream>>* streams;
+	std::shared_ptr<CudaStream> stream;
 	KernelType t;
 	dim3 gridDim, blockDim;
 	std::shared_ptr<CublasHandle> handle;
@@ -252,7 +250,7 @@ struct th_par {
 
 void thread_call(th_par* th_ptr) {
 	matrixMulCUDA(th_ptr->C, th_ptr->A, th_ptr->B, th_ptr->wA, th_ptr->wB,
-			*th_ptr->streams, th_ptr->t, th_ptr->gridDim, th_ptr->blockDim,
+			th_ptr->stream, th_ptr->t, th_ptr->gridDim, th_ptr->blockDim,
 			th_ptr->handle, th_ptr->bl_list, th_ptr->strea_slice);
 	rad::checkFrameworkErrors (cudaDeviceSynchronize());}
 
