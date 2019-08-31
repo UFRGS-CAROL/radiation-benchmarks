@@ -421,6 +421,7 @@ int main(int argc, char **argv) {
 	std::thread thread_persistent;
 
 	tmp.bl_list = bl.data();
+	tmp.strea_slice = bl.block_slice;
 
 	switch (args.execution_type) {
 	case PERSISTENT:
