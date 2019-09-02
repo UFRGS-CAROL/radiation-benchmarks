@@ -1179,7 +1179,7 @@ int main(int argc, char *argv[]) {
 	// dim3 gck_gridSize = dim3(	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE), 
 	// 	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
 	// //////////////////////////////////////////////////
-	launch_kernel(nstreams, blocks, threads, par_cpu, streams, dim_cpu,
+	launch_kernel(nstreams, bl.sm_count_to_dim3(), threads, par_cpu, streams, dim_cpu,
 			d_box_gpu_ptr, d_rv_gpu_ptr, d_qv_gpu_ptr, d_fv_gpu_ptr, bl.data(), bl.block_slice);
 
 	//LOOP START
@@ -1306,7 +1306,7 @@ int main(int argc, char *argv[]) {
 #endif
 #endif
 					pt_control.start_kernel();
-					launch_kernel(nstreams, blocks, threads, par_cpu, streams,
+					launch_kernel(nstreams, bl.sm_count_to_dim3(), threads, par_cpu, streams,
 							dim_cpu, d_box_gpu_ptr, d_rv_gpu_ptr, d_qv_gpu_ptr,
 							d_fv_gpu_ptr, bl.data(), bl.block_slice);
 				}
