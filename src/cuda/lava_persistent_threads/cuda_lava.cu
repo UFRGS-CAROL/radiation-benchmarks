@@ -481,9 +481,10 @@ __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu,
 		pk.wait_for_work();
 		if (pk.is_able_to_process()) {
 //			for (int i = 0; i < nstreams; i++) {
-				for (int i = thread_work_start; i < thread_work_end; i++) {
+				int i = 0;
+				for (int b = thread_work_start; b < thread_work_end; b++) {
 					process_data(d_dim_gpu, d_par_gpu, d_box_gpu[i], d_rv_gpu[i],
-							d_fv_gpu[i], d_qv_gpu[i], block_list[i]);
+							d_fv_gpu[i], d_qv_gpu[i], block_list[b]);
 				}
 //			}
 			pk.iteration_finished();
