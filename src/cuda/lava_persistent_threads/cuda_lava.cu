@@ -29,6 +29,7 @@
 #endif
 
 #include "include/persistent_lib.h"
+#include "BlockList.h"
 
 #ifdef BUILDPROFILER
 
@@ -41,6 +42,8 @@
 #endif
 
 #endif
+
+
 
 //=============================================================================
 //	DEFINE / INCLUDE
@@ -287,11 +290,11 @@ void getParams(int argc, char** argv, int *boxes, int *generate,
 
 __device__ void process_data(const dim_str& d_dim_gpu, const par_str& d_par_gpu,
 		box_str* d_box_gpu, FOUR_VECTOR* d_rv_gpu, FOUR_VECTOR* d_fv_gpu,
-		tested_type* d_qv_gpu) {
+		tested_type* d_qv_gpu, dim3 block) {
 	//---------------------------------------------------------------------
 	//	THREAD PARAMETERS
 	//---------------------------------------------------------------------
-	int bx = blockIdx.x; // get current horizontal block index (0-n)
+	int bx = block.x; //blockIdx.x; // get current horizontal block index (0-n)
 	int tx = threadIdx.x; // get current horizontal thread index (0-n)
 	int wtx = tx;
 	//---------------------------------------------------------------------
@@ -469,16 +472,20 @@ __device__ void process_data(const dim_str& d_dim_gpu, const par_str& d_par_gpu,
 // #if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
 __global__ void kernel_gpu_cuda(par_str d_par_gpu, dim_str d_dim_gpu,
 		box_str** d_box_gpu, FOUR_VECTOR** d_rv_gpu, tested_type** d_qv_gpu,
-		FOUR_VECTOR** d_fv_gpu, int nstreams) {
+		FOUR_VECTOR** d_fv_gpu, int nstreams, dim3* block_list, int block_slice) {
 
 	rad::PersistentKernel pk;
+	int thread_work_start = blockIdx.x * block_slice;
+	int thread_work_end = thread_work_start + block_slice;
 	while (pk.keep_working()) {
 		pk.wait_for_work();
 		if (pk.is_able_to_process()) {
-			for (int i = 0; i < nstreams; i++) {
-				process_data(d_dim_gpu, d_par_gpu, d_box_gpu[i], d_rv_gpu[i],
-						d_fv_gpu[i], d_qv_gpu[i]);
-			}
+//			for (int i = 0; i < nstreams; i++) {
+				for (int i = thread_work_start; i < thread_work_end; i++) {
+					process_data(d_dim_gpu, d_par_gpu, d_box_gpu[i], d_rv_gpu[i],
+							d_fv_gpu[i], d_qv_gpu[i], block_list[i]);
+				}
+//			}
 			pk.iteration_finished();
 		}
 
@@ -881,7 +888,7 @@ bool checkOutputErrors(int verbose, dim_str dim_cpu, int streamIdx,
 void launch_kernel(int nstreams, dim3 blocks, dim3 threads, par_str par_cpu,
 		cudaStream_t* streams, dim_str& dim_cpu, box_str** d_box_gpu,
 		FOUR_VECTOR** d_rv_gpu, tested_type** d_qv_gpu,
-		FOUR_VECTOR** d_fv_gpu) {
+		FOUR_VECTOR** d_fv_gpu, dim3* block_list, int block_slice) {
 	////////////// GOLD CHECK Kernel /////////////////
 	// dim3 gck_blockSize = dim3(	GOLDCHK_BLOCK_SIZE, 
 	// 	GOLDCHK_BLOCK_SIZE);
@@ -890,7 +897,7 @@ void launch_kernel(int nstreams, dim3 blocks, dim3 threads, par_str par_cpu,
 	// //////////////////////////////////////////////////
 //	for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
 	kernel_gpu_cuda<<<blocks, threads, 0, streams[0]>>>(par_cpu, dim_cpu,
-			d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu, nstreams);
+			d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu, nstreams, block_list, block_slice);
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	//kernel launched
 //	}
@@ -1127,7 +1134,8 @@ int main(int argc, char *argv[]) {
 	threads.x = NUMBER_THREADS;
 	threads.y = 1;
 
-	rad::HostPersistentControler pt_control(blocks);
+	BlockList bl(blocks);
+	rad::HostPersistentControler pt_control(bl.sm_count_to_dim3());
 
 	//=====================================================================
 	//	GPU_CUDA
@@ -1172,7 +1180,7 @@ int main(int argc, char *argv[]) {
 	// 	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
 	// //////////////////////////////////////////////////
 	launch_kernel(nstreams, blocks, threads, par_cpu, streams, dim_cpu,
-			d_box_gpu_ptr, d_rv_gpu_ptr, d_qv_gpu_ptr, d_fv_gpu_ptr);
+			d_box_gpu_ptr, d_rv_gpu_ptr, d_qv_gpu_ptr, d_fv_gpu_ptr, bl.data(), bl.block_slice);
 
 	//LOOP START
 	for (size_t loop = 0; loop < iterations; loop++) {
@@ -1300,7 +1308,7 @@ int main(int argc, char *argv[]) {
 					pt_control.start_kernel();
 					launch_kernel(nstreams, blocks, threads, par_cpu, streams,
 							dim_cpu, d_box_gpu_ptr, d_rv_gpu_ptr, d_qv_gpu_ptr,
-							d_fv_gpu_ptr);
+							d_fv_gpu_ptr, bl.data(), bl.block_slice);
 				}
 			}
 			if (verbose)

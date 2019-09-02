@@ -18,7 +18,7 @@ ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 
 
 NVCC_FLAGS= $(ARCH) -O3 -std=c++11 -L../common/lib
-INCLUDE= -I$(CUDAPATH)/include -I../common -I$(CUDAPATH)/samples/common/inc/
+INCLUDE= -I$(CUDAPATH)/include -I../common -I$(CUDAPATH)/samples/common/inc/ -I../mxm_persistent_threads -I../common/include
 LIBRARY= -L$(CUDAPATH)/lib64/
 CXXFLAGS= -I$(CUDAPATH)/include -L$(CUDAPATH)/lib64/  -lcudart  -std=c++11 
 
