@@ -14,7 +14,6 @@
 #include "CacheLine.h"
 #include "utils.h"
 
-
 template<typename int_t, const uint32 V_SIZE, const uint32 LINE_SIZE>
 __global__ void test_l2_cache_kernel(CacheLine<LINE_SIZE> *lines1, CacheLine<LINE_SIZE> *lines2, CacheLine<LINE_SIZE> *lines3, int_t *l2_hit_array, int_t *l2_miss_array, std::int64_t sleep_cycles, byte t) {
 	uint32 i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -45,6 +44,7 @@ __global__ void clear_cache_kenel(float *random_array) {
 	register uint32 tx = blockIdx.x * blockDim.x + threadIdx.x;
 	random_array[tx] += random_array[tx] * 339 + 1 * (-random_array[tx]);
 }
+
 
 void clear_cache(uint32 n) {
 	float *random_array_dev;
@@ -118,10 +118,10 @@ Tuple test_l2_cache(const byte t_byte, const int64 cycles, const uint32 l2_size)
 	dim3 block_size(V_SIZE / BLOCK_SIZE);
 	dim3 threads_per_block(BLOCK_SIZE);
 
-       	double start = Log::mysecond();
+       	double start = rad::mysecond();
 	test_l2_cache_kernel<int32, V_SIZE, L2_LINE_SIZE> <<<block_size, threads_per_block>>>(V_dev1, V_dev2, V_dev3, l2_hit_array_device, l2_miss_array_device, cycles, t_byte);
 	cuda_check(cudaDeviceSynchronize());
-        double end = Log::mysecond();
+        double end =  rad::mysecond();
     
        // std::cout << "KERNEL TIME " << end - start << std::endl;
 

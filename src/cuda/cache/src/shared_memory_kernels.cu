@@ -34,6 +34,19 @@ __global__ void test_shared_memory_kernel(CacheLine<LINE_SIZE> *lines1, CacheLin
 	__syncthreads();
 }
 
+template<uint32 V_SIZE, uint32 LINE_SIZE>
+struct Shared: public Memory<CacheLine<LINE_SIZE>> {
+
+	Shared() : Shared(SHARED){
+
+	}
+
+	void test() {
+
+	}
+};
+
+
 template<const uint32 V_SIZE, const uint32 SHARED_LINE_SIZE, const uint32 SHARED_MEMORY_SIZE>
 Tuple test_shared_memory(const uint32 number_of_sms, const byte t_byte, const uint64 cycles, dim3& block_size, dim3& threads_per_block) {
 

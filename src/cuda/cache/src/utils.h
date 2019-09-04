@@ -14,6 +14,8 @@
 
 #include <vector>
 
+#include "cuda_utils.h"
+
 #define DEFAULT_INDEX -1;
 
 
@@ -24,15 +26,11 @@ typedef unsigned long long int uint64;
 typedef signed int int32;
 typedef signed long long int int64;
 
-void check_cuda_error_(const char *file, unsigned line, const char *statement,
-		cudaError_t err);
+#define cuda_check(error) rad::__checkFrameworkErrors(error, __LINE__, __FILE__)
 
-#define cuda_check(value) check_cuda_error_(__FILE__,__LINE__, #value, value)
-
-void error(std::string err);
-void sleep(int seconds);
-
-size_t get_time_since_epoch();
+static void error(std::string err) {
+	throw std::runtime_error("ERROR:" + err);
+}
 
 template<typename T>
 inline void copy_to_gpu(char* symbol, T mem) {

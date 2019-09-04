@@ -13,9 +13,7 @@
 #include <vector>
 
 template<uint32 LINE_SIZE>
-struct
-//alignas(LINE_SIZE)
-CacheLine {
+struct CacheLine {
 	volatile byte t[LINE_SIZE]; //byte type
 
 	__host__ __device__ CacheLine() {
@@ -43,7 +41,7 @@ CacheLine {
 		return *this;
 	}
 
-	__host__ __device__ inline volatile CacheLine& operator=(
+	__host__ __device__ inline CacheLine& operator=(
 			CacheLine<LINE_SIZE>& T) {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
@@ -61,14 +59,6 @@ CacheLine {
 		return *this;
 	}
 
-//	__host__ __device__ inline CacheLine& operator=(register volatile CacheLine<LINE_SIZE>& T) {
-//#pragma unroll
-//		for (int i = 0; i < LINE_SIZE; i++) {
-//			t[i] = T.t[i];
-//		}
-//		return *this;
-//	}
-
 	__host__ __device__ inline byte operator^(const byte& rhs) {
 		byte ret = rhs;
 #pragma unroll
@@ -78,7 +68,7 @@ CacheLine {
 		return ret;
 	}
 
-	__host__ __device__ inline bool operator !=(const byte& a) volatile{
+	__host__ __device__ inline bool operator !=(const byte& a) volatile {
 #pragma unroll
 		for (int i = 0; i < LINE_SIZE; i++) {
 			if (a != t[i])
@@ -99,6 +89,5 @@ CacheLine {
 		return t[idx];
 	}
 };
-
 
 #endif /* CACHELINE_H_ */

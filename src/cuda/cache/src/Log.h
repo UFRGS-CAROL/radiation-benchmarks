@@ -107,13 +107,6 @@ public:
 #endif
 	}
 
-	static double mysecond() {
-		struct timeval tp;
-		struct timezone tzp;
-		int i = gettimeofday(&tp, &tzp);
-		return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
-	}
-
 	static void del_arg(int argc, char **argv, int index) {
 		int i;
 		for (i = index; i < argc - 1; ++i)
