@@ -19,7 +19,7 @@
 #define DEFAULT_INDEX -1;
 
 
-typedef unsigned char byte;
+//typedef unsigned char byte;
 typedef unsigned int uint32;
 typedef unsigned long long int uint64;
 

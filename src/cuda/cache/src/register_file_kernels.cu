@@ -21,7 +21,7 @@ RegisterFile::RegisterFile(const Parameters& parameters) :
 	//256 threads
 	this->number_of_threads = parameters.registers_per_block / RF_SIZE;
 
-	uint32 out_size = parameters.number_of_sms * number_of_threads * RF_SIZE;
+	uint32 out_size = parameters.number_of_sms * parameters.registers_per_block;
 	this->number_of_sms = parameters.number_of_sms;
 	this->input_host_1 = std::vector<uint32>(RF_SIZE);
 	this->input_host_2 = std::vector<uint32>(RF_SIZE);
@@ -32,15 +32,11 @@ RegisterFile::RegisterFile(const Parameters& parameters) :
 	this->output_host_3 = std::vector<uint32>(out_size);
 
 }
-
-void RegisterFile::test(byte t_byte) {
-	uint32 reg_data;
-	std::memset((uint32*) &reg_data, t_byte, sizeof(uint32));
-
+void RegisterFile::test(const uint32& mem) {
 	//Set values to GPU
-	std::fill(this->input_host_1.begin(), this->input_host_1.end(), reg_data);
-	std::fill(this->input_host_2.begin(), this->input_host_2.end(), reg_data);
-	std::fill(this->input_host_3.begin(), this->input_host_3.end(), reg_data);
+	std::fill(this->input_host_1.begin(), this->input_host_1.end(), mem);
+	std::fill(this->input_host_2.begin(), this->input_host_2.end(), mem);
+	std::fill(this->input_host_3.begin(), this->input_host_3.end(), mem);
 
 	rad::DeviceVector<uint32> input_device_1 = this->input_host_1;
 	rad::DeviceVector<uint32> input_device_2 = this->input_host_2;
@@ -48,19 +44,20 @@ void RegisterFile::test(byte t_byte) {
 	rad::DeviceVector<uint32> output_device_1 = this->output_host_1;
 	rad::DeviceVector<uint32> output_device_2 = this->output_host_2;
 	rad::DeviceVector<uint32> output_device_3 = this->output_host_3;
-
+	std::cout << output_device_1.size() << std::endl;
 	double start = rad::mysecond();
-	if (reg_data == 4294967295) {
-		test_register_file_kernel_or<<<number_of_sms, number_of_threads>>>(
-				output_device_1.data(), output_device_2.data(),
-				output_device_3.data(), input_device_1.data(),
-				input_device_2.data(), input_device_3.data(), reg_data, cycles);
-	} else if (reg_data == 0) {
-		test_register_file_kernel_and<<<number_of_sms, number_of_threads>>>(
-				output_device_1.data(), output_device_2.data(),
-				output_device_3.data(), input_device_1.data(),
-				input_device_2.data(), input_device_3.data(), reg_data, cycles);
-	}
+//	if (mem == 4294967295) {
+	test_register_file_kernel_or<<<number_of_sms, number_of_threads>>>(
+			output_device_1.data(), output_device_2.data(),
+			output_device_3.data(), input_device_1.data(),
+			input_device_2.data(), input_device_3.data(), mem, cycles);
+//	}
+//	else if (mem == 0) {
+//		test_register_file_kernel_and<<<number_of_sms, number_of_threads>>>(
+//				output_device_1.data(), output_device_2.data(),
+//				output_device_3.data(), input_device_1.data(),
+//				input_device_2.data(), input_device_3.data(), mem, cycles);
+//	}
 	cuda_check(cudaDeviceSynchronize());
 	double end = rad::mysecond();
 
@@ -82,12 +79,9 @@ std::string RegisterFile::error_detail(uint32 i, uint32 e, uint32 r,
 
 void RegisterFile::call_checker(const std::vector<uint32>& v1,
 		const std::vector<uint32>& v2, const std::vector<uint32>& v3,
-		byte valGold, Log& log, uint64 hits, uint64 misses, uint64 false_hits,
-		bool verbose) {
-	uint32 val_gold_tmp;
-	std::memset((uint32*) &val_gold_tmp, valGold, sizeof(uint32));
-
-	this->check_output_errors(v1.data(), v2.data(), v3.data(), val_gold_tmp,
-			log, hits, misses, false_hits, verbose, v1.size());
+		const uint32& valGold, Log& log, uint64 hits, uint64 misses,
+		uint64 false_hits, bool verbose) {
+	this->check_output_errors(v1.data(), v2.data(), v3.data(), valGold, log,
+			hits, misses, false_hits, verbose, v1.size());
 }
 

@@ -25,12 +25,12 @@
 #include "Memory.h"
 
 template<typename data_>
-void setup_execute(Log& log, Parameters& test_parameter, Memory<data_>& mem,
+void setup_execute(Log& log, Parameters& test_parameter, Memory<data_>& memory_obj,
 		bool l2_checked) {
 
 	std::cout << std::fixed << std::setprecision(6);
 	for (uint64 iteration = 0; iteration < log.iterations;) {
-		for (byte t_byte : { 0xff, 0x00 }) {
+		for (auto mem :  std::vector<uint32>{ 0xffffffff, 0x00000000 }) {
 #ifdef BUILDPROFILER
 			//Start collecting data
 			counter_thread.start_collecting_data();
@@ -39,7 +39,7 @@ void setup_execute(Log& log, Parameters& test_parameter, Memory<data_>& mem,
 			//Start iteration
 			log.start_iteration_app();
 
-			mem.test(t_byte);
+			memory_obj.test(mem);
 
 			//end iteration
 			log.end_iteration_app();
@@ -57,7 +57,7 @@ void setup_execute(Log& log, Parameters& test_parameter, Memory<data_>& mem,
 			//Comparing the output
 			double start_cmp = rad::mysecond();
 			uint32 hits, misses, false_hits;
-			std::tie(hits, misses, false_hits) = mem.compare(log, t_byte);
+			std::tie(hits, misses, false_hits) = memory_obj.compare(log, mem);
 			double end_cmp = rad::mysecond();
 
 			//update errors
@@ -78,7 +78,7 @@ void setup_execute(Log& log, Parameters& test_parameter, Memory<data_>& mem,
 			std::cout << " Hits: " << hits;
 			std::cout << " Misses: " << misses;
 			std::cout << " False hits: " << false_hits;
-			std::cout << " Byte: " << uint32(t_byte);
+			std::cout << " Byte: " << mem;
 			std::cout << " Device Reset Time: "	<< end_dev_reset - start_dev_reset;
 			std::cout << " Comparing Time: " << end_cmp - start_cmp;
 			std::cout << std::endl;

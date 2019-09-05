@@ -34,10 +34,10 @@ struct Memory {
 	std::vector<data_> input_host_2;
 	std::vector<data_> input_host_3;
 
-	virtual void test(const byte t_byte) = 0;
+	virtual void test(const uint32& mem) = 0;
 	virtual void call_checker(const std::vector<data_>& v1,
-			const std::vector<data_>& v2, const std::vector<data_>& v3,
-			byte valGold, Log& log, uint64 hits, uint64 misses, uint64 false_hits,
+			const std::vector<data_>& v2, const std::vector<data_>& v3, const
+			uint32& valGold, Log& log, uint64 hits, uint64 misses, uint64 false_hits,
 			bool verbose) = 0;
 
 	virtual std::string error_detail(uint32 i, uint32 e, uint32 r, uint64 hits,
@@ -48,7 +48,7 @@ struct Memory {
 	Memory(const Parameters& parameter) {
 		this->cycles = parameter.one_second_cycles;
 		this->device = parameter.device;
-		this->block_size = dim3(parameter.number_of_sms, BLOCK_PER_SM);
+		this->block_size = dim3(parameter.number_of_sms);
 
 		this->cycles = parameter.one_second_cycles;
 		this->device = parameter.device;
@@ -99,7 +99,7 @@ struct Memory {
 	// Set votedOutput pointer to retrieve the voted matrix
 	template<typename raw_data_>
 	bool check_output_errors(const raw_data_* v1, const raw_data_* v2,
-			const raw_data_* v3, raw_data_ valGold, Log& log, uint64 hits,
+			const raw_data_* v3, const raw_data_& valGold, Log& log, uint64 hits,
 			uint64 misses, uint64 false_hits, bool verbose, uint32 size) {
 
 #pragma omp parallel for shared(host_errors)
@@ -175,7 +175,7 @@ struct Memory {
 		return log.errors == 0 || log.infos == 0;
 	}
 
-	std::tuple<uint64, uint64, uint64> compare(Log& log, const byte& t_byte) {
+	std::tuple<uint64, uint64, uint64> compare(Log& log, const uint32& mem) {
 		//Checking the misses
 		uint64 hits = 0;
 		uint64 misses = 0;
@@ -183,7 +183,7 @@ struct Memory {
 		for (uint32 i = 0; i < this->hit_vector_host.size(); i++) {
 			uint64 hit = this->hit_vector_host[i];
 			uint64 miss = this->miss_vector_host[i];
-			if (hit < miss) {
+			if (hit <= miss) {
 				hits++;
 			}
 			if (miss < hit) {
@@ -194,7 +194,7 @@ struct Memory {
 		}
 
 		this->call_checker(this->output_host_1, this->output_host_2,
-				this->output_host_3, t_byte, log, hits, misses, false_hits, true);
+				this->output_host_3, mem, log, hits, misses, false_hits, true);
 
 		//returning the result
 		return std::make_tuple(hits, misses, false_hits);

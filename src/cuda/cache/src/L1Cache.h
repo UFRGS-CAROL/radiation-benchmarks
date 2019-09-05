@@ -16,12 +16,12 @@ struct L1Cache: public Memory<CacheLine<CACHE_LINE_SIZE>> {
 
 	L1Cache();
 	L1Cache(const Parameters& parameters);
-	virtual void test(const byte t_byte);
+	virtual void test(const uint32& mem);
 	virtual std::string error_detail(uint32 i, uint32 e, uint32 r, uint64 hits, uint64 misses, uint64 false_hits) override;
 
 	virtual void call_checker(const std::vector<CacheLine<CACHE_LINE_SIZE>>& v1,
 			const std::vector<CacheLine<CACHE_LINE_SIZE>>& v2,
-			const std::vector<CacheLine<CACHE_LINE_SIZE>>& v3, byte valGold,
+			const std::vector<CacheLine<CACHE_LINE_SIZE>>& v3, const uint32& valGold,
 			Log& log, uint64 hits, uint64 misses, uint64 false_hits, bool verbose) override;
 };
 

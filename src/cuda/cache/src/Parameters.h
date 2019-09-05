@@ -12,7 +12,6 @@
 #include <unordered_map>
 
 #define BLOCK_SIZE 32
-#define MAX_REG_OCCUPATION 186
 
 /**
  * It was 256 registers per threads when this program was created
