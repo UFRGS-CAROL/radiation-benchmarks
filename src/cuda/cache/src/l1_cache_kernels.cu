@@ -29,12 +29,12 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines1,
 
 	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
 		const int_t t1_miss = clock();
-//		lines1[blockIdx.x * V_SIZE + threadIdx.x] = t;
-		CacheLine<LINE_SIZE> rt = lines1[blockIdx.x * V_SIZE + threadIdx.x];
+		lines1[blockIdx.x * V_SIZE + threadIdx.x] = t;
+//		CacheLine<LINE_SIZE> rt = lines1[blockIdx.x * V_SIZE + threadIdx.x];
 		const int_t t2_miss = clock();
 		l1_t_miss[threadIdx.x] = t2_miss - t1_miss;
 
-		rt &= t;
+//		rt &= t;
 		//wait for exposition to neutrons
 		sleep_cuda(sleep_cycles);
 
@@ -49,8 +49,8 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines1,
 
 		//triplication
 		lines1[blockIdx.x * V_SIZE + threadIdx.x] = r;
-		lines2[blockIdx.x * V_SIZE + threadIdx.x] = r;
-		lines3[blockIdx.x * V_SIZE + threadIdx.x] = r;
+//		lines2[blockIdx.x * V_SIZE + threadIdx.x] = r;
+//		lines3[blockIdx.x * V_SIZE + threadIdx.x] = r;
 	}
 
 	__syncthreads();
@@ -157,8 +157,8 @@ void L1Cache::test(const byte t_byte) {
 	this->hit_vector_host = hit_vector_device.to_vector();
 	this->miss_vector_host = miss_vector_device.to_vector();
 	this->output_host_1 = input_device_1.to_vector();
-	this->output_host_2 = input_device_2.to_vector();
-	this->output_host_3 = input_device_3.to_vector();
+//	this->output_host_2 = input_device_2.to_vector();
+//	this->output_host_3 = input_device_3.to_vector();
 
 //	this->output_host_1[33] = this->output_host_2[33] = this->output_host_3[33] = CacheLine<CACHE_LINE_SIZE>(byte(33));
 }
