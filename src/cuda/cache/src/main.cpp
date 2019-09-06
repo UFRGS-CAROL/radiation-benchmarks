@@ -19,14 +19,16 @@
 #endif
 
 #include "L1Cache.h"
+#include "L2Cache.h"
+#include "SharedMemory.h"
 #include "RegisterFile.h"
+
 #include "utils.h"
 #include "Log.h"
 #include "Memory.h"
 
 template<typename data_>
-void setup_execute(Log& log, Parameters& test_parameter, Memory<data_>& memory_obj,
-		bool l2_checked) {
+void setup_execute(Log& log, Parameters& test_parameter, Memory<data_>& memory_obj) {
 
 	std::cout << std::fixed << std::setprecision(6);
 	for (uint64 iteration = 0; iteration < log.iterations;) {
@@ -113,14 +115,13 @@ int main(int argc, char **argv) {
 	//Test Registers
 	if (log.test_mode == "REGISTERS") {
 		RegisterFile rf(test_parameter);
-		setup_execute<uint32>(log, test_parameter, rf, l2_checked);
+		setup_execute<uint32>(log, test_parameter, rf);
 	}
 
 	//test L1
 	if (log.test_mode == "L1") {
 		L1Cache l1(test_parameter);
-		setup_execute<CacheLine<CACHE_LINE_SIZE>>(log, test_parameter, l1,
-				l2_checked);
+		setup_execute<CacheLine<CACHE_LINE_SIZE>>(log, test_parameter, l1);
 	}
 
 	//Test l2
@@ -128,12 +129,14 @@ int main(int argc, char **argv) {
 		if (l2_checked == false) {
 			error("YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
 		}
-		error("NOT IMPLEMENTED");
+		L2Cache l2(test_parameter);
+		setup_execute<CacheLine<CACHE_LINE_SIZE>>(log, test_parameter, l2);
 	}
 
 	//Test Shared
 	if (log.test_mode == "SHARED") {
-		error("NOT IMPLEMENTED");
+		SharedMemory shared(test_parameter);
+		setup_execute<CacheLine<CACHE_LINE_SIZE>>(log, test_parameter, shared);
 	}
 
 	return 0;

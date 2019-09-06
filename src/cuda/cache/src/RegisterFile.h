@@ -27,8 +27,7 @@ struct RegisterFile: public Memory<uint32> {
 	override;
 
 	virtual void call_checker(const std::vector<uint32>& v1,
-			const std::vector<uint32>& v2, const std::vector<uint32>& v3,
-			const uint32&  valGold, Log& log, uint64 hits, uint64 misses,
+			const uint32& valGold, Log& log, uint64 hits, uint64 misses,
 			uint64 false_hits, bool verbose)
 	override;
 };

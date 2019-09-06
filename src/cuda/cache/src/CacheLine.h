@@ -38,7 +38,7 @@ struct CacheLine {
 		}
 	}
 
-	__CUDA_HOST_DEVICE__ CacheLine& operator=(const memory_type& T) {
+	__CUDA_HOST_DEVICE__ CacheLine& operator=(volatile memory_type& T)  {
 #pragma unroll
 		for (int i = 0; i < CHUNK_SIZE(LINE_SIZE, memory_type); i++) {
 			t[i] = T;

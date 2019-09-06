@@ -1,21 +1,21 @@
 /*
- * L1Cache.h
+ * SharedMemory.h
  *
- *  Created on: Sep 4, 2019
+ *  Created on: Sep 6, 2019
  *      Author: carol
  */
 
-#ifndef L1CACHE_H_
-#define L1CACHE_H_
+#ifndef SHAREDMEMORY_H_
+#define SHAREDMEMORY_H_
 
 #include "Memory.h"
 #include "CacheLine.h"
 
-struct L1Cache: public Memory<CacheLine<CACHE_LINE_SIZE>> {
+struct SharedMemory: public Memory<CacheLine<CACHE_LINE_SIZE>> {
 	dim3 threads_per_block;
 
-	L1Cache();
-	L1Cache(const Parameters& parameters);
+	SharedMemory();
+	SharedMemory(const Parameters& parameters);
 	virtual void test(const uint32& mem);
 	virtual std::string error_detail(uint32 i, uint32 e, uint32 r, uint64 hits, uint64 misses, uint64 false_hits) override;
 
@@ -24,4 +24,4 @@ struct L1Cache: public Memory<CacheLine<CACHE_LINE_SIZE>> {
 };
 
 
-#endif /* L1CACHE_H_ */
+#endif /* SHAREDMEMORY_H_ */

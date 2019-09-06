@@ -10,7 +10,6 @@
 #include <vector>
 #include <cstring>
 
-
 #include "utils.h"
 #include "CacheLine.h"
 #include "Memory.h"
@@ -22,26 +21,26 @@
  */
 template<typename int_t, const uint32 V_SIZE, const uint32 LINE_SIZE,
 		const uint32 SHARED_PER_SM>
-__global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines1,
-		CacheLine<LINE_SIZE> *lines2, CacheLine<LINE_SIZE> *lines3,
-		int_t *l1_hit_array, int_t *l1_miss_array, int64 sleep_cycles, uint32 t) {
+__global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *input_lines,
+		CacheLine<LINE_SIZE> *output_lines, int_t *l1_hit_array,
+		int_t *l1_miss_array, int64 sleep_cycles, uint32 t) {
 
 	__shared__ int_t l1_t_hit[SHARED_PER_SM / 2];
 	__shared__ int_t l1_t_miss[SHARED_PER_SM / 2];
 
 	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
 		const int_t t1_miss = clock();
-		volatile CacheLine<LINE_SIZE> r = lines1[blockIdx.x * V_SIZE + threadIdx.x];
+		volatile CacheLine<LINE_SIZE> rt = input_lines[blockIdx.x * V_SIZE
+				+ threadIdx.x];
 		const int_t t2_miss = clock();
 		l1_t_miss[threadIdx.x] = t2_miss - t1_miss;
 
-		r &= t;
 		//wait for exposition to neutrons
 		sleep_cuda(sleep_cycles);
 
 		//last checking
 		const int_t t1_hit = clock();
-	    r = lines1[blockIdx.x * V_SIZE + threadIdx.x];
+		rt = input_lines[blockIdx.x * V_SIZE + threadIdx.x];
 		const int_t t2_hit = clock();
 		l1_t_hit[threadIdx.x] = t2_hit - t1_hit;
 
@@ -50,19 +49,18 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *lines1,
 		l1_hit_array[blockIdx.x * V_SIZE + threadIdx.x] = l1_t_hit[threadIdx.x];
 
 		//triplication
-		lines1[blockIdx.x * V_SIZE + threadIdx.x] = r;
-		lines2[blockIdx.x * V_SIZE + threadIdx.x] = r;
-		lines3[blockIdx.x * V_SIZE + threadIdx.x] = r;
+		output_lines[blockIdx.x * V_SIZE + threadIdx.x] = r;
+		rt &= t;
+		input_lines[blockIdx.x * V_SIZE + threadIdx.x] = rt;
 	}
 }
 
 void L1Cache::call_checker(const std::vector<CacheLine<CACHE_LINE_SIZE>>& v1,
-		const std::vector<CacheLine<CACHE_LINE_SIZE>>& v2,
-		const std::vector<CacheLine<CACHE_LINE_SIZE>>& v3, const uint32& valGold,
-		Log& log, uint64 hits, uint64 misses, uint64 false_hits, bool verbose) {
+		const uint32& valGold, Log& log, uint64 hits, uint64 misses,
+		uint64 false_hits, bool verbose) {
 
-	this->check_output_errors((uint32*)v1.data(), (uint32*)v2.data(),
-			(uint32*)v3.data(), valGold, log, hits, misses, false_hits, verbose,
+	this->check_output_errors((uint32*) v1.data(), valGold, log, hits, misses,
+			false_hits, verbose,
 			v1.size() * CHUNK_SIZE(CACHE_LINE_SIZE, uint32));
 }
 
@@ -84,34 +82,22 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms; // Each block with one thread using all l1 cache
 
 	this->input_host_1.resize(v_size_multiple_threads);
-	this->input_host_2.resize(v_size_multiple_threads);
-	this->input_host_3.resize(v_size_multiple_threads);
 	this->hit_vector_host.resize(v_size_multiple_threads);
 	this->miss_vector_host.resize(v_size_multiple_threads);
 
-	this->output_host_1 = std::vector<CacheLine<CACHE_LINE_SIZE>>(
-			v_size_multiple_threads);
-	this->output_host_2 = std::vector<CacheLine<CACHE_LINE_SIZE>>(
-			v_size_multiple_threads);
-	this->output_host_3 = std::vector<CacheLine<CACHE_LINE_SIZE>>(
-			v_size_multiple_threads);
+	this->output_host_1.resize(v_size_multiple_threads);
 }
 
 void L1Cache::test(const uint32& mem) {
 	//Set values to GPU
 	std::fill(this->input_host_1.begin(), this->input_host_1.end(), mem);
-	std::fill(this->input_host_2.begin(), this->input_host_2.end(), mem);
-	std::fill(this->input_host_3.begin(), this->input_host_3.end(), mem);
-
 	rad::DeviceVector<uint64> hit_vector_device(this->hit_vector_host);
 	rad::DeviceVector<uint64> miss_vector_device(this->miss_vector_host);
 
 	rad::DeviceVector<CacheLine<CACHE_LINE_SIZE>> input_device_1 =
 			this->input_host_1;
-	rad::DeviceVector<CacheLine<CACHE_LINE_SIZE>> input_device_2 =
-			this->input_host_2;
-	rad::DeviceVector<CacheLine<CACHE_LINE_SIZE>> input_device_3 =
-			this->input_host_3;
+	rad::DeviceVector<CacheLine<CACHE_LINE_SIZE>> output_device_1 =
+			this->output_host_1;
 
 	//This switch is only to set manually the cache line size
 	//since it is hard to check it at runtime
@@ -125,11 +111,9 @@ void L1Cache::test(const uint32& mem) {
 		//to force alloc maximum shared memory
 		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
 
-
 		test_l1_cache_kernel<uint64, v_size, CACHE_LINE_SIZE,
 		MAX_KEPLER_SHARED_MEMORY> <<<block_size, threads_per_block>>>(
-				input_device_1.data(), input_device_2.data(),
-				input_device_3.data(), hit_vector_device.data(),
+				input_device_1.data(), output_device_1.data(), hit_vector_device.data(),
 				miss_vector_device.data(), cycles, mem);
 
 		break;
@@ -144,8 +128,7 @@ void L1Cache::test(const uint32& mem) {
 
 		test_l1_cache_kernel<uint64, v_size, CACHE_LINE_SIZE,
 		MAX_VOLTA_SHARED_MEMORY> <<<block_size, threads_per_block>>>(
-				input_device_1.data(), input_device_2.data(),
-				input_device_3.data(), hit_vector_device.data(),
+				input_device_1.data(), output_device_1.data(), hit_vector_device.data(),
 				miss_vector_device.data(), cycles, mem);
 		break;
 	}
@@ -158,8 +141,6 @@ void L1Cache::test(const uint32& mem) {
 	this->hit_vector_host = hit_vector_device.to_vector();
 	this->miss_vector_host = miss_vector_device.to_vector();
 	this->output_host_1 = input_device_1.to_vector();
-	this->output_host_2 = input_device_2.to_vector();
-	this->output_host_3 = input_device_3.to_vector();
 
 //	this->output_host_1[33] = this->output_host_2[33] = this->output_host_3[33] = CacheLine<CACHE_LINE_SIZE>(byte(33));
 }

@@ -5,7 +5,8 @@ DISABLEL1CACHE=0
 LOGS=1
 
 VPATH=./src/
-CUDAPATH=/usr/local/cuda
+CUDAPATH=/home/carol/cuda/cuda-toolkit
+#/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
 
@@ -19,8 +20,8 @@ INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../
 
 #read_only_cache_kernels.o
 OBJDIR=./obj/
-OBJ= l1_cache_kernels.o register_file_kernels.o # l2_cache_kernels.o
-OBJ+= main.o #shared_memory_kernels.o 
+OBJ= l1_cache_kernels.o register_file_kernels.o 
+OBJ+= l2_cache_kernels.o shared_memory_kernels.o main.o 
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g
@@ -31,6 +32,8 @@ ifeq ($(DISABLEL1CACHE), 1)
 NVCCFLAGS+= -Xptxas -dlcm=cg
 CXXFLAGS+= -DL2TEST
 EXEC=cudaCacheTestL2
+else
+NVCCFLAGS+= -Xptxas -dlcm=ca
 endif
 
 ifeq ($(LOGS), 1)
