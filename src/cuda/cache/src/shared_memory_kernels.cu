@@ -43,7 +43,7 @@ void SharedMemory::test(const uint32& mem) {
 	switch (this->device) {
 	case K20:
 	case K40: {
-		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
+		constexpr uint32 v_size = MAX_KEPLER_SHARED_MEMORY / CACHE_LINE_SIZE;
 		test_shared_memory_kernel<v_size, CACHE_LINE_SIZE> <<<block_size,
 				threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), cycles);
@@ -51,7 +51,7 @@ void SharedMemory::test(const uint32& mem) {
 	}
 	case XAVIER:
 	case TITANV: {
-		constexpr uint32 v_size = MAX_VOLTA_L1_MEMORY / CACHE_LINE_SIZE;
+		constexpr uint32 v_size = MAX_VOLTA_SHARED_MEMORY / CACHE_LINE_SIZE;
 		test_shared_memory_kernel<v_size, CACHE_LINE_SIZE> <<<block_size,
 				threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), cycles);
@@ -80,13 +80,13 @@ SharedMemory::SharedMemory(const Parameters& parameters) :
 	switch (parameters.device) {
 	case K20:
 	case K40:
-		v_size = MAX_KEPLER_SHARED_MEMORY / CACHE_LINE_SIZE;
-		max_shared_mem = MAX_KEPLER_L1_MEMORY;
+		max_shared_mem = MAX_KEPLER_SHARED_MEMORY;
+		v_size = max_shared_mem / CACHE_LINE_SIZE;
 		break;
 	case XAVIER:
 	case TITANV:
 		max_shared_mem = MAX_VOLTA_SHARED_MEMORY;
-		v_size = MAX_VOLTA_L1_MEMORY / CACHE_LINE_SIZE;
+		v_size = max_shared_mem / CACHE_LINE_SIZE;
 		break;
 	}
 

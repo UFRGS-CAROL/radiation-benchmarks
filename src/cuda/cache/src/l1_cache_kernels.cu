@@ -112,7 +112,7 @@ void L1Cache::test(const uint32& mem) {
 		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
 
 		test_l1_cache_kernel<uint64, v_size, CACHE_LINE_SIZE,
-		MAX_KEPLER_SHARED_MEMORY> <<<block_size, threads_per_block>>>(
+		MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<block_size, threads_per_block>>>(
 				input_device_1.data(), output_device_1.data(), hit_vector_device.data(),
 				miss_vector_device.data(), cycles, mem);
 
@@ -127,7 +127,7 @@ void L1Cache::test(const uint32& mem) {
 		constexpr uint32 v_size = MAX_VOLTA_L1_MEMORY / CACHE_LINE_SIZE;
 
 		test_l1_cache_kernel<uint64, v_size, CACHE_LINE_SIZE,
-		MAX_VOLTA_SHARED_MEMORY> <<<block_size, threads_per_block>>>(
+		MAX_VOLTA_SHARED_MEMORY_TO_TEST_L1> <<<block_size, threads_per_block>>>(
 				input_device_1.data(), output_device_1.data(), hit_vector_device.data(),
 				miss_vector_device.data(), cycles, mem);
 		break;
