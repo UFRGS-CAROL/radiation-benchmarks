@@ -5,8 +5,8 @@ DISABLEL1CACHE=0
 LOGS=1
 
 VPATH=./src/
-CUDAPATH=/home/carol/cuda/cuda-toolkit
-#/usr/local/cuda
+#CUDAPATH=/home/carol/cuda/cuda-toolkit
+CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
 

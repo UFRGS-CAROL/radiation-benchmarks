@@ -30,7 +30,7 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *input_lines,
 
 	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
 		const int_t t1_miss = clock();
-		volatile CacheLine<LINE_SIZE> rt = input_lines[blockIdx.x * V_SIZE
+		volatile CacheLine<LINE_SIZE> r = input_lines[blockIdx.x * V_SIZE
 				+ threadIdx.x];
 		const int_t t2_miss = clock();
 		l1_t_miss[threadIdx.x] = t2_miss - t1_miss;
@@ -40,7 +40,7 @@ __global__ void test_l1_cache_kernel(CacheLine<LINE_SIZE> *input_lines,
 
 		//last checking
 		const int_t t1_hit = clock();
-		rt = input_lines[blockIdx.x * V_SIZE + threadIdx.x];
+		volatile CacheLine<LINE_SIZE> rt = input_lines[blockIdx.x * V_SIZE + threadIdx.x];
 		const int_t t2_hit = clock();
 		l1_t_hit[threadIdx.x] = t2_hit - t1_hit;
 

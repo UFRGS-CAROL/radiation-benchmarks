@@ -46,6 +46,14 @@ struct CacheLine {
 		return *this;
 	}
 
+	__CUDA_HOST_DEVICE__ CacheLine& operator=(memory_type& T) {
+#pragma unroll
+		for (int i = 0; i < CHUNK_SIZE(LINE_SIZE, memory_type); i++) {
+			t[i] = T;
+		}
+		return *this;
+	}
+
 	__CUDA_HOST_DEVICE__ CacheLine& operator=(CacheLine& T) {
 #pragma unroll
 		for (int i = 0; i < CHUNK_SIZE(LINE_SIZE, memory_type); i++) {
@@ -54,7 +62,7 @@ struct CacheLine {
 		return *this;
 	}
 
-	__CUDA_HOST_DEVICE__ volatile CacheLine& operator=(CacheLine& T) volatile {
+	__CUDA_HOST_DEVICE__ volatile CacheLine& operator=(const CacheLine& T) volatile {
 #pragma unroll
 		for (int i = 0; i < CHUNK_SIZE(LINE_SIZE, memory_type); i++) {
 			t[i] = T.t[i];

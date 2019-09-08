@@ -32,17 +32,17 @@ static void error(std::string err) {
 	throw std::runtime_error("ERROR:" + err);
 }
 
-template<typename T>
-inline void copy_to_gpu(char* symbol, T mem) {
-	cuda_check(cudaMemcpyToSymbol(symbol, &mem, sizeof(T), 0));
-}
-
-template<typename T>
-inline T copy_from_gpu(char *symbol) {
-	T mem;
-	cuda_check(cudaMemcpyFromSymbol(&mem, symbol, sizeof(T), 0));
-	return mem;
-}
+//template<typename T>
+//inline void copy_to_gpu(char* symbol, T mem) {
+//	cuda_check(cudaMemcpyToSymbol(symbol, &mem, sizeof(T), 0));
+//}
+//
+//template<typename T>
+//inline T copy_from_gpu(char *symbol) {
+//	T mem;
+//	cuda_check(cudaMemcpyFromSymbol(&mem, symbol, sizeof(T), 0));
+//	return mem;
+//}
 
 #ifdef __NVCC__
 __device__ __forceinline__ static void sleep_cuda(const int64& clock_count) {
