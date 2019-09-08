@@ -82,18 +82,23 @@ SharedMemory::SharedMemory(const Parameters& parameters) :
 	case K40:
 		max_shared_mem = MAX_KEPLER_SHARED_MEMORY;
 		v_size = max_shared_mem / CACHE_LINE_SIZE;
+
+		if (max_shared_mem != parameters.shared_memory_size)
+			error(
+					"SHARED DEFAULT SIZE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
+							+ std::to_string(parameters.shared_memory_size));
 		break;
 	case XAVIER:
 	case TITANV:
 		max_shared_mem = MAX_VOLTA_SHARED_MEMORY;
 		v_size = max_shared_mem / CACHE_LINE_SIZE;
+
+		if (max_shared_mem * 2 != parameters.shared_memory_size)
+			error(
+					"SHARED DEFAULT SIZE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
+							+ std::to_string(parameters.shared_memory_size));
 		break;
 	}
-
-	if (max_shared_mem != parameters.shared_memory_size)
-		error(
-				"SHARED DEFAULT SIZE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
-						+ std::to_string(parameters.shared_memory_size));
 
 	this->threads_per_block = dim3(v_size);
 	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms;
