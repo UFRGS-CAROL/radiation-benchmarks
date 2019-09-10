@@ -40,6 +40,8 @@ class DeviceVector {
 		this->v_size = 0;
 	}
 
+
+
 public:
 	DeviceVector() :
 			v_size(0), allocated(false), data_(nullptr) {

@@ -18,21 +18,29 @@ namespace rad {
 void check_nvml_return(std::string info, nvmlReturn_t result,
 		unsigned device_index = 0) {
 	if (NVML_SUCCESS != result) {
-//		std::cerr
-//				<< "Failed to " + info + " from device "
-//						+ std::to_string(device_index) + " error "
-//						+ nvmlErrorString(result) << std::endl;
+		std::cerr
+				<< "Failed to " + info + " from device "
+						+ std::to_string(device_index) + " error "
+						+ nvmlErrorString(result) << std::endl;
 	}
 }
 
 NVMLWrapper::NVMLWrapper(unsigned device_index, std::string& output_file) :
 		Profiler(device_index, output_file), _nvml_set(nullptr), _nvml_device(
-				nullptr), _persistent_threads(false) {
+				nullptr), _persistent_threads(false), _is_locked(false) {
 	this->_thread_profiler = std::thread(NVMLWrapper::data_colector,
 			&this->_nvml_device, &this->_mutex_lock, &this->_is_locked,
 			&this->_thread_running, &this->_output_log_file,
-			this->_persistent_threads);
+			&this->data_for_iteration, this->_persistent_threads);
 
+}
+
+NVMLWrapper::NVMLWrapper(unsigned device_index) :
+		Profiler(device_index, "/tmp/temp.log"), _nvml_set(nullptr), _nvml_device(
+				nullptr), _persistent_threads(false), _is_locked(true) {
+	this->_thread_profiler = std::thread(NVMLWrapper::data_colector,
+			&this->_nvml_device, &this->_mutex_lock, &this->_is_locked,
+			&this->_thread_running,	&this->data_for_iteration, this->_persistent_threads);
 }
 
 NVMLWrapper::~NVMLWrapper() {
@@ -42,7 +50,8 @@ NVMLWrapper::~NVMLWrapper() {
 
 void NVMLWrapper::data_colector(nvmlDevice_t* device, std::mutex* mutex_lock,
 		std::atomic<bool>* is_locked, std::atomic<bool>* _thread_running,
-		std::string* output_log_file, bool persistent_threads) {
+		std::string* output_log_file,
+		std::deque<std::string>* data_for_iteration, bool persistent_threads) {
 
 	std::ofstream out_stream(*output_log_file);
 	if (out_stream.good() == false) {
@@ -71,6 +80,24 @@ void NVMLWrapper::data_colector(nvmlDevice_t* device, std::mutex* mutex_lock,
 
 }
 
+
+void NVMLWrapper::data_colector(nvmlDevice_t* device, std::mutex* mutex_lock,
+		std::atomic<bool>* is_locked, std::atomic<bool>* _thread_running,
+		std::deque<std::string>* data_for_iteration, bool persistent_threads) {
+	while (*_thread_running) {
+		mutex_lock->lock();
+
+		if (*is_locked == false) {
+			auto output = NVMLWrapper::generate_line_info(device,
+					persistent_threads);
+
+			data_for_iteration->push_back(output);
+		}
+		mutex_lock->unlock();
+		std::this_thread::sleep_for(std::chrono::milliseconds(PROFILER_SLEEP));
+	}
+}
+
 void NVMLWrapper::start_profile() {
 	nvmlReturn_t result = nvmlInit();
 	check_nvml_return("initialize NVML library", result);
@@ -81,11 +108,35 @@ void NVMLWrapper::start_profile() {
 			this->_nvml_set);
 
 	this->_mutex_lock.lock();
-//	this->data_for_iteration.clear();
 	this->_is_locked = false;
-
 	this->_mutex_lock.unlock();
 
+}
+
+void NVMLWrapper::start_collecting_data() {
+	nvmlReturn_t result = nvmlInit();
+	check_nvml_return("initialize NVML library", result);
+	result = nvmlDeviceGetHandleByIndex(this->device_index, &this->device);
+	result = nvmlEventSetCreate(&this->set);
+	result = nvmlDeviceRegisterEvents(this->device, nvmlEventTypeAll,
+			this->set);
+
+	this->_mutex_lock.lock();
+	this->data_for_iteration.clear();
+	this->_mutex_lock.unlock();
+
+	this->_is_locked = false;
+}
+
+void NVMLWrapper::end_collecting_data() {
+	this->_mutex_lock.lock();
+	is_locked = true;
+	this->_mutex_lock.unlock();
+
+	nvmlReturn_t result;
+	result = nvmlEventSetFree(this->set);
+	result = nvmlShutdown();
+	check_nvml_return("shutdown NVML library", result);
 }
 
 void NVMLWrapper::end_profile() {
@@ -106,22 +157,20 @@ std::string NVMLWrapper::generate_line_info(nvmlDevice_t* device,
 	/**
 	 * Device and application clocks
 	 * May be useful in the future
-
-	 for (auto clock_type : { NVML_CLOCK_GRAPHICS, NVML_CLOCK_MEM,
-	 NVML_CLOCK_SM }) {
-	 //Get DEVICE Clocks
-	 unsigned dev_clock, app_clock;
-	 result = nvmlDeviceGetClockInfo(*device, clock_type,
-	 &dev_clock);
-
-	 //Get Application clocks
-	 result = nvmlDeviceGetApplicationsClock(*device, clock_type,
-	 &app_clock);
-
-	 output += std::to_string(dev_clock) + ";"
-	 + std::to_string(app_clock) + ";";
-	 }
 	 */
+	for (auto clock_type : { NVML_CLOCK_GRAPHICS, NVML_CLOCK_MEM, NVML_CLOCK_SM }) {
+		//Get DEVICE Clocks
+		unsigned dev_clock, app_clock;
+		result = nvmlDeviceGetClockInfo(*device, clock_type, &dev_clock);
+
+		//Get Application clocks
+		result = nvmlDeviceGetApplicationsClock(*device, clock_type,
+				&app_clock);
+
+		output += std::to_string(dev_clock) + ";" + std::to_string(app_clock)
+				+ ";";
+	}
+
 	//-----------------------------------------------------------------------
 	//Get ECC errors
 	nvmlComputeMode_t compute_mode;
@@ -159,7 +208,6 @@ std::string NVMLWrapper::generate_line_info(nvmlDevice_t* device,
 
 	output += std::to_string(p_state) + ";";
 
-
 	//-----------------------------------------------------------------------
 	//Clocks throttle
 	unsigned long long clocks_throttle_reasons;
@@ -169,9 +217,8 @@ std::string NVMLWrapper::generate_line_info(nvmlDevice_t* device,
 
 	output += std::to_string(clocks_throttle_reasons) + ";";
 
-
 	//-----------------------------------------------------------------------
-	if (persistent_threads) {
+	if (persistent_threads == false) {
 		//Get utilization on GPU
 		nvmlUtilization_t utilization;
 		result = nvmlDeviceGetUtilizationRates(*device, &utilization);
@@ -220,19 +267,15 @@ std::string NVMLWrapper::generate_line_info(nvmlDevice_t* device,
 	check_nvml_return("POWER USAGE", result);
 
 	output += std::to_string(power);
-
-	//			auto timestamp = std::chrono::system_clock::to_time_t(
-	//					std::chrono::system_clock::now());
-	//			output += std::to_string(timestamp);
 	return output;
 }
 
-//std::deque<std::string> NVMLWrapper::get_data_from_iteration() {
-//	auto last = std::unique(this->data_for_iteration.begin(),
-//			this->data_for_iteration.end());
-//	this->data_for_iteration.erase(last, this->data_for_iteration.end());
-//	return this->data_for_iteration;
-//}
+std::deque<std::string> NVMLWrapper::get_data_from_iteration() {
+	auto last = std::unique(this->data_for_iteration.begin(),
+			this->data_for_iteration.end());
+	this->data_for_iteration.erase(last, this->data_for_iteration.end());
+	return this->data_for_iteration;
+}
 
 }
 
