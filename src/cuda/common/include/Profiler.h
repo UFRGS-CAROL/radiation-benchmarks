@@ -36,7 +36,7 @@ protected:
 	static void data_colector();
 
 public:
-	Profiler(unsigned device_index, std::string& output_file) :
+	Profiler(unsigned device_index, std::string output_file = "/tmp/temp.log") :
 			_device_index(device_index), _is_locked(true),  _thread_running(true), _output_log_file(
 					output_file) {
 		const std::string to_replace = ".log";

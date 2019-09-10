@@ -10,7 +10,7 @@
 
 #include <nvml.h>
 #include <string>
-//#include <deque>
+#include <deque>
 #include <mutex>        // std::mutex
 #include "Profiler.h"
 
@@ -31,13 +31,11 @@ protected:
 
 	static void data_colector(nvmlDevice_t* device, std::mutex* mutex_lock,
 			std::atomic<bool>* is_locked, std::atomic<bool>* _thread_running,
-			std::string* output_log_file,
-			std::deque<std::string>* data_for_iteration,
-			bool persistent_threads);
-	static void data_colector(nvmlDevice_t* device, std::mutex* mutex_lock,
-			std::atomic<bool>* is_locked, std::atomic<bool>* _thread_running,
-			std::deque<std::string>* data_for_iteration,
-			bool persistent_threads);
+			std::string* output_log_file, bool persistent_threads);
+	static void data_colector_parralel(nvmlDevice_t* device,
+			std::mutex* mutex_lock, std::atomic<bool>* is_locked,
+			std::atomic<bool>* _thread_running,
+			std::deque<std::string>* data_for_iteration);
 
 public:
 	NVMLWrapper(unsigned device_index, std::string& output_file);

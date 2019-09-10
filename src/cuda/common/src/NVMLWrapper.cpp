@@ -27,20 +27,19 @@ void check_nvml_return(std::string info, nvmlReturn_t result,
 
 NVMLWrapper::NVMLWrapper(unsigned device_index, std::string& output_file) :
 		Profiler(device_index, output_file), _nvml_set(nullptr), _nvml_device(
-				nullptr), _persistent_threads(false), _is_locked(false) {
+				nullptr), _persistent_threads(false) {
 	this->_thread_profiler = std::thread(NVMLWrapper::data_colector,
 			&this->_nvml_device, &this->_mutex_lock, &this->_is_locked,
-			&this->_thread_running, &this->_output_log_file,
-			&this->data_for_iteration, this->_persistent_threads);
+			&this->_thread_running, &this->_output_log_file, this->_persistent_threads);
 
 }
 
 NVMLWrapper::NVMLWrapper(unsigned device_index) :
-		Profiler(device_index, "/tmp/temp.log"), _nvml_set(nullptr), _nvml_device(
-				nullptr), _persistent_threads(false), _is_locked(true) {
-	this->_thread_profiler = std::thread(NVMLWrapper::data_colector,
+		Profiler(device_index), _nvml_set(nullptr), _nvml_device(
+				nullptr), _persistent_threads(false) {
+	this->_thread_profiler = std::thread(NVMLWrapper::data_colector_parralel,
 			&this->_nvml_device, &this->_mutex_lock, &this->_is_locked,
-			&this->_thread_running,	&this->data_for_iteration, this->_persistent_threads);
+			&this->_thread_running,	&this->data_for_iteration);
 }
 
 NVMLWrapper::~NVMLWrapper() {
@@ -50,8 +49,7 @@ NVMLWrapper::~NVMLWrapper() {
 
 void NVMLWrapper::data_colector(nvmlDevice_t* device, std::mutex* mutex_lock,
 		std::atomic<bool>* is_locked, std::atomic<bool>* _thread_running,
-		std::string* output_log_file,
-		std::deque<std::string>* data_for_iteration, bool persistent_threads) {
+		std::string* output_log_file, bool persistent_threads) {
 
 	std::ofstream out_stream(*output_log_file);
 	if (out_stream.good() == false) {
@@ -81,15 +79,14 @@ void NVMLWrapper::data_colector(nvmlDevice_t* device, std::mutex* mutex_lock,
 }
 
 
-void NVMLWrapper::data_colector(nvmlDevice_t* device, std::mutex* mutex_lock,
+void NVMLWrapper::data_colector_parralel(nvmlDevice_t* device, std::mutex* mutex_lock,
 		std::atomic<bool>* is_locked, std::atomic<bool>* _thread_running,
-		std::deque<std::string>* data_for_iteration, bool persistent_threads) {
+		std::deque<std::string>* data_for_iteration) {
 	while (*_thread_running) {
 		mutex_lock->lock();
 
 		if (*is_locked == false) {
-			auto output = NVMLWrapper::generate_line_info(device,
-					persistent_threads);
+			auto output = NVMLWrapper::generate_line_info(device, false);
 
 			data_for_iteration->push_back(output);
 		}
@@ -110,16 +107,15 @@ void NVMLWrapper::start_profile() {
 	this->_mutex_lock.lock();
 	this->_is_locked = false;
 	this->_mutex_lock.unlock();
-
 }
 
 void NVMLWrapper::start_collecting_data() {
 	nvmlReturn_t result = nvmlInit();
 	check_nvml_return("initialize NVML library", result);
-	result = nvmlDeviceGetHandleByIndex(this->device_index, &this->device);
-	result = nvmlEventSetCreate(&this->set);
-	result = nvmlDeviceRegisterEvents(this->device, nvmlEventTypeAll,
-			this->set);
+	result = nvmlDeviceGetHandleByIndex(this->_device_index, &this->_nvml_device);
+	result = nvmlEventSetCreate(&this->_nvml_set);
+	result = nvmlDeviceRegisterEvents(this->_nvml_device, nvmlEventTypeAll,
+			this->_nvml_set);
 
 	this->_mutex_lock.lock();
 	this->data_for_iteration.clear();
@@ -130,11 +126,11 @@ void NVMLWrapper::start_collecting_data() {
 
 void NVMLWrapper::end_collecting_data() {
 	this->_mutex_lock.lock();
-	is_locked = true;
+	this->_is_locked = true;
 	this->_mutex_lock.unlock();
 
 	nvmlReturn_t result;
-	result = nvmlEventSetFree(this->set);
+	result = nvmlEventSetFree(this->_nvml_set);
 	result = nvmlShutdown();
 	check_nvml_return("shutdown NVML library", result);
 }
@@ -161,11 +157,12 @@ std::string NVMLWrapper::generate_line_info(nvmlDevice_t* device,
 	for (auto clock_type : { NVML_CLOCK_GRAPHICS, NVML_CLOCK_MEM, NVML_CLOCK_SM }) {
 		//Get DEVICE Clocks
 		unsigned dev_clock, app_clock;
-		result = nvmlDeviceGetClockInfo(*device, clock_type, &dev_clock);
+		auto result = nvmlDeviceGetClockInfo(*device, clock_type, &dev_clock);
 
 		//Get Application clocks
 		result = nvmlDeviceGetApplicationsClock(*device, clock_type,
 				&app_clock);
+		check_nvml_return("APP AND DEVICE CLOCKS", result);
 
 		output += std::to_string(dev_clock) + ";" + std::to_string(app_clock)
 				+ ";";
@@ -231,13 +228,21 @@ std::string NVMLWrapper::generate_line_info(nvmlDevice_t* device,
 		//Get retired pages
 		for (auto cause : {
 				NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS,
-				NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS }) {
+				NVML_PAGE_RETIREMENT_CAUSE_DOUBLE_BIT_ECC_ERROR }) {
 			unsigned int page_count = 0;
-			unsigned long long *addresses = nullptr;
-			device = 0;
+			unsigned long long addresses;
+
 			result = nvmlDeviceGetRetiredPages(*device, cause, &page_count,
-					addresses);
-			check_nvml_return("RETIRED PAGES", result);
+					&addresses);
+
+//			unsigned long long addresses_arr[page_count];
+//			result = nvmlDeviceGetRetiredPages(*device, cause, &page_count,
+//								addresses_arr);
+//
+//			std::cout << page_count << std::endl;
+//			for(auto t : addresses_arr)
+//				std::cout << t << std::endl;
+//			check_nvml_return("RETIRED PAGES", result);
 
 			output += std::to_string(page_count) + ";";
 		}
