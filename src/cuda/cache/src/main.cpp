@@ -14,10 +14,6 @@
 #include <cstring>
 #include <iomanip>
 
-#ifdef BUILDPROFILER
-#include "NVMLWrapper.h"
-#endif
-
 #include "L1Cache.h"
 #include "L2Cache.h"
 #include "SharedMemory.h"
@@ -27,12 +23,22 @@
 #include "Log.h"
 #include "Memory.h"
 
+//GET ECC DATA
+#ifdef BUILDPROFILER
+#include "NVMLWrapper.h"
+#endif
+
+
 template<typename data_>
 void setup_execute(Log& log, Parameters& test_parameter,
 		Memory<data_>& memory_obj) {
 
 	std::cout << std::fixed << std::setprecision(6);
 	data_ dt = data_(0xffffffffffffffff);
+	// SETUP THE NVWL THREAD
+#ifdef BUILDPROFILER
+	rad::NVMLWrapper counter_thread(DEVICE_INDEX);
+#endif
 	for (uint64 iteration = 0; iteration < log.iterations;) {
 		for (auto mem : std::vector<data_> { dt, 0x00000000 }) {
 			//set CUDA configuration each iteration
@@ -68,16 +74,18 @@ void setup_execute(Log& log, Parameters& test_parameter,
 			double end_cmp = rad::mysecond();
 
 			//update errors
-			if (log.errors) {
+//			if (log.errors) {
 #ifdef BUILDPROFILER
+				std::cout << "PROFILER INFO\n";
 				auto iteration_data = counter_thread.get_data_from_iteration();
 				for (auto info_line : iteration_data) {
 					log.log_info(info_line);
+					std::cout << info_line << std::endl;
 				}
 #endif
-				log.update_error_count();
-				log.update_info_count();
-			}
+//				log.update_error_count();
+//				log.update_info_count();
+//			}
 
 			std::cout << "Iteration: " << iteration;
 			std::cout << " Time: " << end_it - start_it;
@@ -114,10 +122,6 @@ int main(int argc, char **argv) {
 	log.set_info_max(2000);
 	test_parameter.set_setup_sleep_time(log.seconds_sleep);
 
-	// SETUP THE NVWL THREAD
-#ifdef BUILDPROFILER
-	NVMLWrapper counter_thread(DEVICE_INDEX);
-#endif
 	std::cout << test_parameter << " Memory test: " << log.test_mode
 			<< std::endl;
 

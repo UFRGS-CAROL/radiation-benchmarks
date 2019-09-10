@@ -3,10 +3,11 @@ CXXFLAGS= -std=c++11 -o3  -fPIC -pthread
 EXEC=cudaCacheTest
 DISABLEL1=0
 LOGS=1
+BUILDPROFILER=0
 
 VPATH=./src/
-#CUDAPATH=/home/carol/cuda/cuda-toolkit
-CUDAPATH=/usr/local/cuda
+CUDAPATH=/home/carol/cuda/cuda-toolkit
+#CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
 
@@ -43,12 +44,12 @@ LDFLAGS+= -L../../include  -lLogHelper
 endif
 
 ifeq ($(BUILDPROFILER), 1)
-NVCCFLAGS+= -DBUILDPROFILER
-LDFLAGS+= -L$(CUDAPATH)/lib64/stubs -L../common/lib -lnvidia-ml -lNVMLWrapper
+CXXFLAGS+= -DBUILDPROFILER
+LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
 
 
-LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
@@ -83,5 +84,5 @@ testshared:
 	./$(EXEC) --iterations 10 --memtotest SHARED
 	
 testregisters:
-	./$(EXEC) --iterations 10 --memtotest REGISTERS	
+	env LD_LIBRARY_PATH=/home/carol/cuda/cuda-toolkit/lib64 ./$(EXEC) --iterations 10 --memtotest REGISTERS	
 	
