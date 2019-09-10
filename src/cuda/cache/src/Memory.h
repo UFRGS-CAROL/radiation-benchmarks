@@ -14,14 +14,14 @@
 #include "device_vector.h"
 #include "Parameters.h"
 
-template<typename data_>
+template<typename data_, typename hit_miss_data_ = int64>
 struct Memory {
-	uint64 cycles;
+	hit_miss_data_ cycles;
 	Board device;
 	dim3 block_size;
 
-	std::vector<uint64> hit_vector_host;
-	std::vector<uint64> miss_vector_host;
+	std::vector<hit_miss_data_> hit_vector_host;
+	std::vector<hit_miss_data_> miss_vector_host;
 
 	//Host memory output
 	std::vector<data_> output_host_1;
@@ -29,22 +29,34 @@ struct Memory {
 	//Host memory input
 	std::vector<data_> input_host_1;
 
-	virtual void test(const uint32& mem) = 0;
-	virtual void call_checker(const std::vector<data_>& v1,
-			const uint32& valGold, Log& log, uint64 hits, uint64 misses,
-			uint64 false_hits, bool verbose) = 0;
+	virtual void test(const data_& mem) = 0;
 
-	virtual std::string error_detail(uint32 i, uint32 e, uint32 r, uint64 hits,
-			uint64 misses, uint64 false_hits) = 0;
+	virtual std::string error_detail(hit_miss_data_ i, data_ e, data_ r,
+			hit_miss_data_ hits, hit_miss_data_ misses,
+			hit_miss_data_ false_hits) {
+		std::string error_detail = "";
+		error_detail += " i:" + std::to_string(i);
+		error_detail += " cache_line:" + std::to_string(i / CACHE_LINE_SIZE);
+		error_detail += " e:" + std::to_string(e);
+		error_detail += " r:" + std::to_string(r);
+		error_detail += " hits: " + std::to_string(hits);
+		error_detail += " misses: " + std::to_string(misses);
+		error_detail += " false_hits: " + std::to_string(false_hits);
+		return error_detail;
+	}
 
 	virtual ~Memory() = default;
 
+	friend std::ostream& operator<<(std::ostream& os, Memory& mem) {
+		os << "Cycles: " << mem.cycles << std::endl;
+		os << "Device: " << mem.device << std::endl;
+		os << "Block Size: " << mem.block_size.x;
+		return os;
+	}
+
 	Memory(const Parameters& parameter) {
 		this->cycles = parameter.one_second_cycles;
-		this->device = parameter.device;
 		this->block_size = dim3(parameter.number_of_sms);
-
-		this->cycles = parameter.one_second_cycles;
 		this->device = parameter.device;
 	}
 
@@ -65,16 +77,16 @@ struct Memory {
 		return *this;
 	}
 
-	void set_cache_config(std::string mem_type) {
-		if (mem_type == "L1" || mem_type == "L2" || mem_type == "REGISTERS") {
+	void set_cache_config(std::string& mem_type) {
+		if (mem_type == "L1" || mem_type == "REGISTERS") {
 			cuda_check(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
 		} else {
 			cuda_check(cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
 		}
 	}
 
-	std::string info_detail(uint32 i, uint32 r1, uint32 r2, uint32 r3,
-			uint32 gold) {
+	std::string info_detail(hit_miss_data_ i, data_ r1, data_ r2, data_ r3,
+			data_ gold) {
 		std::string info_detail = "m: [" + std::to_string(i) + "], r1: "
 				+ std::to_string(r1) + ", r2: " + std::to_string(r2) + ", r3: "
 				+ std::to_string(r3) + ", e: " + std::to_string(gold);
@@ -83,26 +95,25 @@ struct Memory {
 
 	// Returns true if no errors are found. False if otherwise.
 	// Set votedOutput pointer to retrieve the voted matrix
-	template<typename raw_data_>
-	bool check_output_errors(const raw_data_* v1, const raw_data_& val_gold,
-			Log& log, uint64 hits, uint64 misses, uint64 false_hits,
-			bool verbose, uint32 size) {
+	bool check_output_errors(const std::vector<data_>& v1,
+			const data_& val_gold, Log& log, hit_miss_data_ hits,
+			hit_miss_data_ misses, hit_miss_data_ false_hits, bool verbose) {
 
 #pragma omp parallel for shared(host_errors)
-		for (uint32 i = 0; i < size; i++) {
+		for (auto i = 0; i < v1.size(); i++) {
 			auto val_output = v1[i];
 
 			if (val_gold != val_output) {
 #pragma omp critical
-					{
+				{
 
-						std::string errdet = this->error_detail(i, val_gold,
-								val_output, hits, misses, false_hits);
-						if (verbose && (log.errors < 10))
-							std::cout << errdet << std::endl;
+					std::string errdet = this->error_detail(i, val_gold,
+							val_output, hits, misses, false_hits);
+					if (verbose && (log.errors < 10))
+						std::cout << errdet << std::endl;
 
-						log.log_error(errdet);
-					}
+					log.log_error(errdet);
+				}
 			}
 		}
 
@@ -115,14 +126,15 @@ struct Memory {
 		return log.errors == 0 || log.infos == 0;
 	}
 
-	std::tuple<uint64, uint64, uint64> compare(Log& log, const uint32& mem) {
+	std::tuple<hit_miss_data_, hit_miss_data_, hit_miss_data_> compare(Log& log,
+			const data_& mem) {
 		//Checking the misses
-		uint64 hits = 0;
-		uint64 misses = 0;
-		uint64 false_hits = 0;
+		auto hits = 0;
+		auto misses = 0;
+		auto false_hits = 0;
 		for (uint32 i = 0; i < this->hit_vector_host.size(); i++) {
-			uint64 hit = this->hit_vector_host[i];
-			uint64 miss = this->miss_vector_host[i];
+			auto hit = this->hit_vector_host[i];
+			auto miss = this->miss_vector_host[i];
 			if (hit <= miss) {
 				hits++;
 			}
@@ -133,12 +145,13 @@ struct Memory {
 			}
 		}
 
-		this->call_checker(this->output_host_1, mem, log, hits, misses,
+		this->check_output_errors(this->output_host_1, mem, log, hits, misses,
 				false_hits, log.verbose);
 
 		//returning the result
 		return std::make_tuple(hits, misses, false_hits);
 	}
+
 };
 
 #endif /* MEMORY_H_ */

@@ -35,7 +35,7 @@ public:
 		this->iterations = this->find_int_arg(argc, argv, "--iterations", 1);
 		this->seconds_sleep = this->find_int_arg(argc, argv, "--sleepongpu", 1);
 
-		this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);
+		this->verbose = this->find_int_arg(argc, argv, "--verbose", 1);
 		this->test_mode = this->find_char_arg(argc, argv, "--memtotest", "L1");
 
 		this->errors = 0;

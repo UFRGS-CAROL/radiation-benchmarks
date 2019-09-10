@@ -33,7 +33,6 @@ void RegisterFile::test(const uint32& mem) {
 
 	rad::DeviceVector<uint32> input_device_1 = this->input_host_1;
 	rad::DeviceVector<uint32> output_device_1 = this->output_host_1;
-	std::cout << output_device_1.size() << std::endl;
 	double start = rad::mysecond();
 
 	test_register_file_kernel<<<number_of_sms, number_of_threads>>>(
@@ -45,8 +44,8 @@ void RegisterFile::test(const uint32& mem) {
 	this->output_host_1 = output_device_1.to_vector();
 }
 
-std::string RegisterFile::error_detail(uint32 i, uint32 e, uint32 r,
-		uint64 hits, uint64 misses, uint64 false_hits) {
+std::string RegisterFile::error_detail(int64 i, uint32 e, uint32 r,
+		int64 hits, int64 misses, int64 false_hits) {
 	std::string error_detail = "";
 	error_detail += " i:" + std::to_string(i);
 	error_detail += " register:R" + std::to_string(i % 256);
@@ -54,11 +53,3 @@ std::string RegisterFile::error_detail(uint32 i, uint32 e, uint32 r,
 	error_detail += " r:" + std::to_string(r);
 	return error_detail;
 }
-
-void RegisterFile::call_checker(const std::vector<uint32>& v1,
-		const uint32& valGold, Log& log, uint64 hits, uint64 misses,
-		uint64 false_hits, bool verbose) {
-	this->check_output_errors(v1.data(), valGold, log, hits, misses, false_hits,
-			verbose, v1.size());
-}
-

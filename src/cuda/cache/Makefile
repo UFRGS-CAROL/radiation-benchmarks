@@ -1,7 +1,7 @@
 CXX=g++
 CXXFLAGS= -std=c++11 -o3  -fPIC -pthread 
 EXEC=cudaCacheTest
-DISABLEL1CACHE=0
+DISABLEL1=0
 LOGS=1
 
 VPATH=./src/
@@ -14,21 +14,21 @@ NVCCFLAGS= -std=c++11 -O3 -Xptxas -v
 
 
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
-ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
+#ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 #ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72] #XavierV
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
 
 #read_only_cache_kernels.o
 OBJDIR=./obj/
-OBJ= l1_cache_kernels.o register_file_kernels.o 
-OBJ+= l2_cache_kernels.o shared_memory_kernels.o main.o 
+OBJ= l1_cache_kernels.o register_file_kernels.o main.o 
+OBJ+= l2_cache_kernels.o shared_memory_kernels.o 
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g
 NVCCFLAGS+= -g -G
 endif
 
-ifeq ($(DISABLEL1CACHE), 1)
+ifeq ($(DISABLEL1), 1)
 NVCCFLAGS+= -Xptxas -dlcm=cg
 CXXFLAGS+= -DL2TEST
 EXEC=cudaCacheTestL2

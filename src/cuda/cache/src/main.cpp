@@ -28,11 +28,16 @@
 #include "Memory.h"
 
 template<typename data_>
-void setup_execute(Log& log, Parameters& test_parameter, Memory<data_>& memory_obj) {
+void setup_execute(Log& log, Parameters& test_parameter,
+		Memory<data_>& memory_obj) {
 
 	std::cout << std::fixed << std::setprecision(6);
+	data_ dt = data_(0xffffffffffffffff);
 	for (uint64 iteration = 0; iteration < log.iterations;) {
-		for (auto mem :  std::vector<uint32>{ 0xffffffff, 0x00000000 }) {
+		for (auto mem : std::vector<data_> { dt, 0x00000000 }) {
+			//set CUDA configuration each iteration
+			memory_obj.set_cache_config(log.test_mode);
+
 #ifdef BUILDPROFILER
 			//Start collecting data
 			counter_thread.start_collecting_data();
@@ -53,7 +58,7 @@ void setup_execute(Log& log, Parameters& test_parameter, Memory<data_>& memory_o
 #endif
 			double start_dev_reset = rad::mysecond();
 			//reset the device
-			cuda_check(cudaDeviceReset());
+//			cuda_check(cudaDeviceReset());
 			double end_dev_reset = rad::mysecond();
 
 			//Comparing the output
@@ -80,8 +85,11 @@ void setup_execute(Log& log, Parameters& test_parameter, Memory<data_>& memory_o
 			std::cout << " Hits: " << hits;
 			std::cout << " Misses: " << misses;
 			std::cout << " False hits: " << false_hits;
+			std::cout << std::hex;
 			std::cout << " Byte: " << mem;
-			std::cout << " Device Reset Time: "	<< end_dev_reset - start_dev_reset;
+			std::cout << std::fixed;
+			std::cout << " Device Reset Time: "
+					<< end_dev_reset - start_dev_reset;
 			std::cout << " Comparing Time: " << end_cmp - start_cmp;
 			std::cout << std::endl;
 
@@ -100,28 +108,29 @@ int main(int argc, char **argv) {
 	Parameters test_parameter;
 
 	//Log obj
-	Log log(argc, argv, test_parameter.board_name, test_parameter.shared_memory_size,
-			test_parameter.l2_size, test_parameter.number_of_sms,
-			test_parameter.one_second_cycles);
+	Log log(argc, argv, test_parameter.board_name,
+			test_parameter.shared_memory_size, test_parameter.l2_size,
+			test_parameter.number_of_sms, test_parameter.one_second_cycles);
 	log.set_info_max(2000);
 	test_parameter.set_setup_sleep_time(log.seconds_sleep);
 
-	 // SETUP THE NVWL THREAD
+	// SETUP THE NVWL THREAD
 #ifdef BUILDPROFILER
 	NVMLWrapper counter_thread(DEVICE_INDEX);
 #endif
-	std::cout << test_parameter << " Memory test: " << log.test_mode << std::endl;
+	std::cout << test_parameter << " Memory test: " << log.test_mode
+			<< std::endl;
 
 	//Test Registers
 	if (log.test_mode == "REGISTERS") {
 		RegisterFile rf(test_parameter);
-		setup_execute<uint32>(log, test_parameter, rf);
+		setup_execute(log, test_parameter, rf);
 	}
 
 	//test L1
 	if (log.test_mode == "L1") {
 		L1Cache l1(test_parameter);
-		setup_execute<CacheLine<CACHE_LINE_SIZE>>(log, test_parameter, l1);
+		setup_execute(log, test_parameter, l1);
 	}
 
 	//Test l2
@@ -130,13 +139,13 @@ int main(int argc, char **argv) {
 			error("YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
 		}
 		L2Cache l2(test_parameter);
-		setup_execute<CacheLine<CACHE_LINE_SIZE>>(log, test_parameter, l2);
+		setup_execute(log, test_parameter, l2);
 	}
 
 	//Test Shared
 	if (log.test_mode == "SHARED") {
 		SharedMemory shared(test_parameter);
-		setup_execute<CacheLine<CACHE_LINE_SIZE>>(log, test_parameter, shared);
+		setup_execute(log, test_parameter, shared);
 	}
 
 	return 0;
