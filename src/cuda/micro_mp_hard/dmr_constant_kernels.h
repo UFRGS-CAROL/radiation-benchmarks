@@ -14,16 +14,8 @@
 #include "device_functions.h"
 #include "BinaryDouble.h"
 
-#ifndef DEFAULT_64_BIT_MASK
-#define DEFAULT_64_BIT_MASK 0xffffffff00000000
-#endif
 
-#ifndef MAX_VALUE
-#define MAX_VALUE 255
-#endif
-
-
-template<typename half_t, typename real_t>
+template<const uint32 COUNT, typename half_t, typename real_t>
 __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 		real_t* output_real_t, real_t* threshold_out, half_t* output_half_t,
 		int num_op) {
@@ -35,6 +27,8 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 	register real_t this_thread_input_real_t = input[thread_id];
 	register half_t this_thread_input_half_t = half_t(input[thread_id]);
 	register real_t threshold;
+
+#pragma unroll
 	for (int count = 0; count < OPS; count++) {
 		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);

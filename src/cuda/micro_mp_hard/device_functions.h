@@ -21,6 +21,11 @@
 #define MUL_INPUT  1.0000001
 #define FMA_INPUT 0.0005
 
+#define __DEVICE_HOST__ __device__ __host__ __forceinline__
+#define __HOST__ __host__ __forceinline__
+#define __DEVICE__ __device__ __forceinline__
+
+
 __device__ unsigned long long errors = 0;
 
 
@@ -145,5 +150,23 @@ __device__ __forceinline__ float mul_dmr(float a, float b) {
 __device__  __forceinline__ half mul_dmr(half a, half b) {
 	return __hmul(a, b);
 }
+
+__DEVICE__ void check_bit_error(const float lhs, const double rhs) {
+	float rhs_float = float(rhs);
+
+	uint32* lhs_ptr = (uint32*) &lhs;
+	uint32* rhs_ptr = (uint32*) &rhs_float;
+
+	uint32 lhs_int = *lhs_ptr;
+	uint32 rhs_int = *rhs_ptr;
+
+	uint32 sub_res =
+			(lhs_int > rhs_int) ? lhs_int - rhs_int : rhs_int - lhs_int;
+
+	if (sub_res > MAX_VALUE) {
+		atomicAdd(&errors, 1);
+	}
+}
+
 
 #endif /* DEVICE_FUNCTIONS_H_ */

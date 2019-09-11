@@ -52,11 +52,6 @@ typedef enum {
 } REDUNDANCY;
 
 
-
-#define __DEVICE_HOST__ __device__ __host__ __forceinline__
-#define __HOST__ __host__ __forceinline__
-#define __DEVICE__ __device__ __forceinline__
-
 typedef uint64_t uint64;
 typedef uint32_t uint32;
 typedef unsigned char byte;
