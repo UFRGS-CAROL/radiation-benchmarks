@@ -9,7 +9,6 @@
 #define L1CACHE_H_
 
 #include "Memory.h"
-//#include "CacheLine.h"
 
 struct L1Cache: public Memory<uint64> {
 	dim3 threads_per_block;

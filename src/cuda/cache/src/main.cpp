@@ -18,6 +18,7 @@
 #include "L2Cache.h"
 #include "SharedMemory.h"
 #include "RegisterFile.h"
+#include "ReadOnly.h"
 
 #include "utils.h"
 #include "Log.h"
@@ -149,6 +150,12 @@ int main(int argc, char **argv) {
 	if (log.test_mode == "SHARED") {
 		SharedMemory shared(test_parameter);
 		setup_execute(log, test_parameter, shared);
+	}
+
+	//Test ReadOnly
+	if (log.test_mode == "READONLY") {
+		ReadOny constant(test_parameter);
+		setup_execute(log, test_parameter, constant);
 	}
 
 	return 0;

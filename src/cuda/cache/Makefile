@@ -19,10 +19,9 @@ ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
 #ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72] #XavierV
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
 
-#read_only_cache_kernels.o
 OBJDIR=./obj/
 OBJ= l1_cache_kernels.o register_file_kernels.o main.o 
-OBJ+= l2_cache_kernels.o shared_memory_kernels.o 
+OBJ+= l2_cache_kernels.o shared_memory_kernels.o  read_only_cache_kernels.o
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g
@@ -85,4 +84,7 @@ testshared:
 	
 testregisters:
 	env LD_LIBRARY_PATH=/home/carol/cuda/cuda-toolkit/lib64 ./$(EXEC) --iterations 10 --memtotest REGISTERS	
+	
+testconstant:
+	env LD_LIBRARY_PATH=/home/carol/cuda/cuda-toolkit/lib64 ./$(EXEC) --iterations 10 --memtotest READONLY	
 	
