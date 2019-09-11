@@ -13,13 +13,13 @@ __global__ void test_read_only_kernel(
 		const __restrict__ uint64* constant_mem_array, uint64 *output_array,
 		int64 sleep_cycles) {
 
-	const register uint32 tx = (blockIdx.x + blockIdx.y * gridDim.x)
+	register uint32 tx = (blockIdx.x + blockIdx.y * gridDim.x)
 			* (blockDim.x * blockDim.y) + (threadIdx.y * blockDim.x)
 			+ threadIdx.x;
 
 	//ldg is a direct load to const memory
 	//first round
-	const register uint64 first_round = __ldg(constant_mem_array + tx);
+	const uint64 first_round = __ldg(constant_mem_array + tx);
 
 	sleep_cuda(sleep_cycles);
 
@@ -84,13 +84,13 @@ ReadOny::ReadOny(const Parameters& parameters) :
 	}
 	}
 
-	auto const_element_per_block = v_size / (BLOCK_SIZE * BLOCK_SIZE);
-	threads_per_block = dim3((BLOCK_SIZE * BLOCK_SIZE));
-	block_size = dim3(parameters.number_of_sms, const_element_per_block);
+	auto block_max_threads = BLOCK_SIZE * BLOCK_SIZE;
+	auto slice = v_size / block_max_threads;
+	threads_per_block = dim3(block_max_threads);
+	block_size = dim3(slice);
 
-	auto v_size_multiple_threads = v_size * parameters.number_of_sms;
 	// Each block with one thread using all read-only cache
-	this->input_host_1.resize(v_size_multiple_threads);
-	this->output_host_1.resize(v_size_multiple_threads);
+	this->input_host_1.resize(v_size);
+	this->output_host_1.resize(v_size);
 }
 
