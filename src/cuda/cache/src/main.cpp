@@ -74,18 +74,17 @@ void setup_execute(Log& log, Parameters& test_parameter,
 			double end_cmp = rad::mysecond();
 
 			//update errors
-//			if (log.errors) {
+			if (log.errors) {
 #ifdef BUILDPROFILER
-				std::cout << "PROFILER INFO\n";
 				auto iteration_data = counter_thread.get_data_from_iteration();
 				for (auto info_line : iteration_data) {
 					log.log_info(info_line);
 					std::cout << info_line << std::endl;
 				}
 #endif
-//				log.update_error_count();
-//				log.update_info_count();
-//			}
+				log.update_error_count();
+				log.update_info_count();
+			}
 
 			std::cout << "Iteration: " << iteration;
 			std::cout << " Time: " << end_it - start_it;
