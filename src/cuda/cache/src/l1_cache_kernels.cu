@@ -129,8 +129,8 @@ void L1Cache::test(const uint64& mem) {
 	}
 	}
 
+	cuda_check(cudaPeekAtLastError());
 	cuda_check(cudaDeviceSynchronize());
-
 	//Host arrays
 	//Copy back to the host
 	this->hit_vector_host = hit_vector_device.to_vector();

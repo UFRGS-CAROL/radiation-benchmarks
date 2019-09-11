@@ -33,13 +33,12 @@ void RegisterFile::test(const uint32& mem) {
 
 	rad::DeviceVector<uint32> input_device_1 = this->input_host_1;
 	rad::DeviceVector<uint32> output_device_1 = this->output_host_1;
-	double start = rad::mysecond();
 
 	test_register_file_kernel<<<number_of_sms, number_of_threads>>>(
 			output_device_1.data(), input_device_1.data(), cycles);
 
+	cuda_check(cudaPeekAtLastError());
 	cuda_check(cudaDeviceSynchronize());
-	double end = rad::mysecond();
 
 	this->output_host_1 = output_device_1.to_vector();
 }

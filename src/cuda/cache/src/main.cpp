@@ -65,7 +65,7 @@ void setup_execute(Log& log, Parameters& test_parameter,
 #endif
 			double start_dev_reset = rad::mysecond();
 			//reset the device
-//			cuda_check(cudaDeviceReset());
+			cuda_check(cudaDeviceReset());
 			double end_dev_reset = rad::mysecond();
 
 			//Comparing the output
