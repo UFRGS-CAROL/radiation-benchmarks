@@ -50,6 +50,9 @@ all: $(EXEC)
 $(EXEC): clean $(SOURCES)
 	$(NVCC) $(FLAGS) -Xcompiler "-fopenmp -O3" $(SOURCES) -o $(EXEC)
 
+generate_input:
+	$(CC) -O3 -std=c++11 -o generate_input generate_input.cpp
+
 clean:
 	rm -rf $(EXEC)
 
