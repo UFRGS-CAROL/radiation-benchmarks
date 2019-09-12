@@ -235,15 +235,6 @@ std::string NVMLWrapper::generate_line_info(nvmlDevice_t* device,
 			result = nvmlDeviceGetRetiredPages(*device, cause, &page_count,
 					&addresses);
 
-//			unsigned long long addresses_arr[page_count];
-//			result = nvmlDeviceGetRetiredPages(*device, cause, &page_count,
-//								addresses_arr);
-//
-//			std::cout << page_count << std::endl;
-//			for(auto t : addresses_arr)
-//				std::cout << t << std::endl;
-//			check_nvml_return("RETIRED PAGES", result);
-
 			output += std::to_string(page_count) + ";";
 		}
 
