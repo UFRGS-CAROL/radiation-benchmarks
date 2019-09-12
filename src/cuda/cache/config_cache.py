@@ -1,10 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 import ConfigParser
-import copy
-import os
 import sys
-import shutil
 
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
