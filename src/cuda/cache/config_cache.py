@@ -17,7 +17,7 @@ SLEEPONGPU = 1
 def config(board, debug):
 
     benchmark_bin = "cudaCacheTest"
-    print("Generating " + benchmark_bin + " for CUDA, board:" + board)
+    print("Generating {} for CUDA, board:{}".format(benchmark_bin, board))
 
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
