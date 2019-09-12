@@ -2,6 +2,8 @@
 run command: 
 	$ sudo dpkg-reconfigure tzdata
 
+# This method is outdated, since 2019 loghelper lib uses localtime instead
+# Global time.
 It will apper a screen to choose 'Geographic area", do as follows:
 	1- Choose option: "None of the above"
 	2- Choose option: "GMT-0"
@@ -9,12 +11,18 @@ It will apper a screen to choose 'Geographic area", do as follows:
 Set the time whith the command "date -s", for example:
 	$ sudo date -s "19 JUL 2015 19:50:00"
 
+# Do that instead
+	1- choose the option that is the test that you are running
+	For example:
+	Los Alamos is MDT - Mountain Time Zone
+	ChipIR is GMT+1
+
 Now you are good to go, or at least you should be
 Check with commands:
 	$ date
 and
 	$ date -u
-The output should be the same time
+The commands should output the local and the universal time respectively
 
 ****************************
 ***Red Hat/CentOS/Fedora****
