@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-TYPES = ["L1", "L2", "SHARED"]
+TYPES = ["REGISTERS", "L1", "L2", "SHARED", "READONLY"]
 ITERATIONS = 100000
 SLEEPONGPU = 1
 
@@ -31,12 +31,13 @@ def config(board, debug):
 
     generate = ["sudo mkdir -p " + bin_path,
                 "cd " + src_benchmark, 
-                "make clean", 
+                "make clean",
+                "make -C ../common/ NVMLWrapper.so",
                 "make -C ../../include ", 
-                "make -j 4 LOGS=1",
+                "make -j 4 LOGS=1 BUILDPROFILER=1",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/",
                 "make clean",
-                "make DISABLEL1CACHE=1 -j 4 LOGS=1",
+                "make DISABLEL1=1 BUILDPROFILER=1 -j 4 LOGS=1",
                 "sudo mv -f ./" + benchmark_bin + "L2 " + bin_path + "/"]
     execute = []
 
