@@ -17,7 +17,7 @@ SLEEPONGPU = 1
 def config(board, debug):
 
     benchmark_bin = "cudaCacheTest"
-    print "Generating " + benchmark_bin + " for CUDA, board:" + board
+    print("Generating " + benchmark_bin + " for CUDA, board:" + board)
 
     conf_file = '/etc/radiation-benchmarks.conf'
     try:
@@ -26,7 +26,7 @@ def config(board, debug):
         install_dir = config.get('DEFAULT', 'installdir') + "/"
 
     except IOError as e:
-        print >> sys.stderr, "Configuration setup error: " + str(e)
+        print("Configuration setup error: " + str(e), file=sys.stderr)
         sys.exit(1)
 
     bin_path = install_dir + "bin"
@@ -80,4 +80,4 @@ if __name__ == "__main__":
     
     board, _ = discover_board()
     config(board=board, debug=debug_mode)
-    print "A json has been generated."
+    print("A json has been generated.")
