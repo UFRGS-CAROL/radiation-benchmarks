@@ -6,8 +6,8 @@ LOGS=1
 BUILDPROFILER=0
 
 VPATH=./src/
-CUDAPATH=/home/carol/cuda/cuda-toolkit
-#CUDAPATH=/usr/local/cuda
+#CUDAPATH=/home/carol/cuda/cuda-toolkit
+CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
 
@@ -15,7 +15,7 @@ NVCCFLAGS= -std=c++11 -O3 -Xptxas -v
 
 
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
-#ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
+ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 #ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72] #XavierV
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
 
