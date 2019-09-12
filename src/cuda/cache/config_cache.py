@@ -23,7 +23,7 @@ def config(board, debug):
         install_dir = config.get('DEFAULT', 'installdir') + "/"
 
     except IOError as e:
-        print("Configuration setup error: " + str(e), file=sys.stderr)
+        sys.stderr.write("Configuration setup error: " + str(e))
         sys.exit(1)
 
     bin_path = install_dir + "bin"
