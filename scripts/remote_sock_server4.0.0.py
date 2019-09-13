@@ -5,7 +5,6 @@ import socket
 import time
 import os
 from datetime import datetime
-import sys
 import requests
 import json
 
@@ -77,7 +76,7 @@ class Switch():
         cmd = 'curl --data \"'
 
         # the port list is indexed from 0, so fix it
-        port = port - 1
+        port -= 1
 
         for i in range(0, self.portCount):
             if i == (port):
@@ -122,11 +121,11 @@ class RebootMachine(threading.Thread):
 
         print("\tRebooting machine: " + self.address + ", switch IP: " + str(switchIP) + ", switch port: " + str(port))
         if setIPSwitch(port, "Off", switchIP) != 0:
-            raise ValueError("setIPSwitch not working, maybe curl is not installed")
+            raise ValueError("setIPSwitch not working")
 
         time.sleep(10)
         if setIPSwitch(port, "On", switchIP) != 0:
-            raise ValueError("setIPSwitch not working, maybe curl is not installed")
+            raise ValueError("setIPSwitch not working")
 
 
 ################################################
@@ -221,6 +220,13 @@ class handleMachines(threading.Thread):
 
 def main():
     global IPLastConn, IPActiveTest, rebooting
+
+    # Test if curl is installed
+    os_sys_return = os.system("curl --help > /dev/null 2>/dev/null")
+    if os_sys_return != 0:
+        raise ValueError("curl is not installed. Type sudo apt install curl to install it.")
+
+
     try:
         # Set the initial timestamp for all IPs
         IPLastConn = dict()
@@ -239,9 +245,8 @@ def main():
         handle.start()
         startSocket()
     except KeyboardInterrupt:
-        print("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
         serverSocket.close()
-        sys.exit(1)
+        raise EnvironmentError("\n\tKeyboardInterrupt detected, exiting gracefully!( at least trying :) )")
 
 
 if __name__ == "__main__":
