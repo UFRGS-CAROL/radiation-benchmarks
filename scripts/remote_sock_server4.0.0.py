@@ -119,10 +119,14 @@ class RebootMachine(threading.Thread):
     def run(self):
         port = par.IPtoSwitchPort[self.address]
         switchIP = par.IPtoSwitchIP[self.address]
+
         print("\tRebooting machine: " + self.address + ", switch IP: " + str(switchIP) + ", switch port: " + str(port))
-        setIPSwitch(port, "Off", switchIP)
+        if setIPSwitch(port, "Off", switchIP) != 0:
+            raise ValueError("setIPSwitch not working, maybe curl is not instaled")
+
         time.sleep(10)
-        setIPSwitch(port, "On", switchIP)
+        if setIPSwitch(port, "On", switchIP) != 0:
+            raise ValueError("setIPSwitch not working, maybe curl is not instaled")
 
 
 ################################################
@@ -139,7 +143,7 @@ def startSocket():
     # Become a server socket
     serverSocket.listen(15)
 
-    while 1:
+    while True:
         # Accept connections from outside
         (clientSocket, address) = serverSocket.accept()
         now = datetime.now()
