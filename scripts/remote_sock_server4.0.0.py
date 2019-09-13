@@ -14,9 +14,6 @@ import remote_sock_parameters as par
 # Log messages adding timestamp before the message
 def logMsg(msg):
     now = datetime.now()
-    # fp = open(logFile, 'a')
-    # print >> fp, now.ctime() + ": " + str(msg)
-    # fp.close()
 
     with open(par.logFile, 'a') as fp:
         fp.write(now.ctime() + ": " + str(msg) + "\n")
@@ -53,13 +50,14 @@ def lindySwitch(portNumber, status, switchIP):
 
     try:
         return requests.post(url, data=json.dumps(payload), headers=headers)
-    except:
+    except requests.exceptions.RequestException as err:
         logMsg("Could not change Lindy IP switch status, portNumber: " + str(
             portNumber) + ", status" + status + ", switchIP:" + switchIP)
+        print(str(err))
         return 1
 
 
-class Switch():
+class Switch:
     def __init__(self, ip, portCount):
         self.ip = ip
         self.portCount = portCount
@@ -79,13 +77,13 @@ class Switch():
         port -= 1
 
         for i in range(0, self.portCount):
-            if i == (port):
+            if i == port:
                 cmd += self.portList[i] % c
             else:
                 cmd += self.portList[i]
 
         cmd += '&Apply=Apply\" '
-        cmd += 'http://%s/tgi/iocontrol.tgi ' % (self.ip)
+        cmd += 'http://%s/tgi/iocontrol.tgi ' % self.ip
         cmd += '-o /dev/null 2>/dev/null'
         return os.system(cmd)
 
@@ -128,14 +126,8 @@ class RebootMachine(threading.Thread):
             raise ValueError("setIPSwitch not working")
 
 
-################################################
-# Socket server
-################################################
-# Create an INET, STREAMing socket
-serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-
 def startSocket():
+    global serverSocket
     # Bind the socket to a public host, and a well-known port
     serverSocket.bind((par.serverIP, par.socketPort))
     print("\tServer bind to: ", par.serverIP)
@@ -219,19 +211,15 @@ class handleMachines(threading.Thread):
 ################################################
 
 def main():
-    global IPLastConn, IPActiveTest, rebooting
+    global IPLastConn, IPActiveTest, rebooting, serverSocket
 
     # Test if curl is installed
     os_sys_return = os.system("curl --help > /dev/null 2>/dev/null")
     if os_sys_return != 0:
         raise ValueError("curl is not installed. Type sudo apt install curl to install it.")
 
-
     try:
         # Set the initial timestamp for all IPs
-        IPLastConn = dict()
-        IPActiveTest = dict()
-        rebooting = dict()
         for ip in par.IPmachines:
             rebooting[ip] = time.time()
             IPLastConn[ip] = time.time()  # Current timestamp
@@ -250,4 +238,15 @@ def main():
 
 
 if __name__ == "__main__":
+    ################################################
+    # Socket server
+    ################################################
+    # Create an INET, STREAMing socket
+    serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Set global vars to a void dict
+    IPLastConn = dict()
+    IPActiveTest = dict()
+    rebooting = dict()
+
     main()
