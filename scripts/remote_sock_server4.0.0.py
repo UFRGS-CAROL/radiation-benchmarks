@@ -122,11 +122,11 @@ class RebootMachine(threading.Thread):
 
         print("\tRebooting machine: " + self.address + ", switch IP: " + str(switchIP) + ", switch port: " + str(port))
         if setIPSwitch(port, "Off", switchIP) != 0:
-            raise ValueError("setIPSwitch not working, maybe curl is not instaled")
+            raise ValueError("setIPSwitch not working, maybe curl is not installed")
 
         time.sleep(10)
         if setIPSwitch(port, "On", switchIP) != 0:
-            raise ValueError("setIPSwitch not working, maybe curl is not instaled")
+            raise ValueError("setIPSwitch not working, maybe curl is not installed")
 
 
 ################################################
