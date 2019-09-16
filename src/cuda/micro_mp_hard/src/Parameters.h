@@ -13,6 +13,10 @@
 #include <unordered_map>
 #include <iostream>
 
+#include "cuda_utils.h"
+
+#define BLOCK_SIZE 32
+
 //===================================== DEFINE TESTED PRECISION
 //FOR DMR APPROACH I NEED to use the smallest precision
 //as a limit, since it is not possible to store the bigger precisions
@@ -39,6 +43,7 @@
 #define INPUT_B_HALF 4.166E-2 // 0x2955
 #define OUTPUT_R_HALF 4.44 // 0x4471
 
+
 typedef enum {
 	ADD, MUL, FMA, ADDNOTBIASED, MULNOTBIASED, FMANOTBIASED
 } MICROINSTRUCTION;
@@ -55,6 +60,31 @@ typedef enum {
 typedef uint64_t uint64;
 typedef uint32_t uint32;
 typedef unsigned char byte;
+
+#define ZERO_FULL 1e-5
+
+#ifndef ZERO_FLOAT
+#define ZERO_FLOAT 2.2e-07
+#endif
+
+#define ZERO_HALF 4.166E-13
+
+#define NUM_COMPOSE_DIVISOR 1000000
+#define MUL_INPUT  1.0000001
+#define FMA_INPUT 0.0005
+
+#define __DEVICE_HOST__ __device__ __host__ __forceinline__
+#define __HOST__ __host__ __forceinline__
+#define __DEVICE__ __device__ __forceinline__
+
+
+#ifndef DEFAULT_64_BIT_MASK
+#define DEFAULT_64_BIT_MASK 0xffffffff00000000
+#endif
+
+#ifndef MAX_VALUE
+#define MAX_VALUE 255
+#endif
 
 std::unordered_map<std::string, REDUNDANCY> red = {
 //NONE
@@ -89,6 +119,7 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		// MUL not biased
 		{ "fmanotbiased", FMANOTBIASED } };
 
+/*
 template<typename ...TypeArgs> struct Type;
 
 template<>
@@ -166,6 +197,7 @@ std::ostream& operator<<(std::ostream& os, const Type<TypeArgs...>& t) {
 	os << t.output_r << " " << t.input_a << " " << t.input_b;
 	return os;
 }
+*/
 
 struct Parameters {
 
@@ -190,11 +222,14 @@ struct Parameters {
 
 	std::string gold_file;
 	std::string input_file;
+	std::string device;
 	double min_random, max_random;
 
-	Parameters(int argc, char* argv[], int grid_size, int block_size) {
-		this->grid_size = grid_size;
-		this->block_size = block_size;
+	Parameters(int argc, char* argv[]) {
+		auto dev_prop = this->get_device();
+		this->grid_size = dev_prop.multiProcessorCount;
+		this->device = dev_prop.name;
+		this->block_size = BLOCK_SIZE * BLOCK_SIZE;
 		this->r_size = grid_size * block_size;
 		this->iterations = find_int_arg(argc, argv, "--iterations", 10);
 		this->operation_num = find_int_arg(argc, argv, "--opnum",
@@ -221,15 +256,29 @@ struct Parameters {
 
 		this->generate = find_arg(argc, argv, "--generate");
 
-//		if (this->micro == MULNOTBIASED || this->micro == FMANOTBIASED
-//				|| this->micro == ADDNOTBIASED || this->nonconstant == true) {
-//			this->grid_size *= 32;
-//			this->r_size *= 32;
-//		}
-
 		if (this->generate) {
 			this->iterations = 1;
 		}
+	}
+
+	cudaDeviceProp get_device() {
+	//================== Retrieve and set the default CUDA device
+		cudaDeviceProp prop;
+		int count = 0;
+
+		rad::checkFrameworkErrors(cudaGetDeviceCount(&count));
+		for (int i = 0; i < count; i++) {
+			rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, i));
+		}
+		int *ndevice;
+		int dev = 0;
+		ndevice = &dev;
+		rad::checkFrameworkErrors(cudaGetDevice(ndevice));
+
+		rad::checkFrameworkErrors(cudaSetDevice(0));
+		rad::checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
+
+		return prop;
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const Parameters& p) {

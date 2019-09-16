@@ -5,8 +5,8 @@
  *      Author: fernando
  */
 
-#ifndef DMR_NONCONSTANT_KERNELS_H_
-#define DMR_NONCONSTANT_KERNELS_H_
+#ifndef DMR_CONSTANT_KERNELS_H_
+#define DMR_CONSTANT_KERNELS_H_
 
 #include <assert.h>
 
@@ -14,19 +14,12 @@
 #include "device_functions.h"
 #include "BinaryDouble.h"
 
-#ifndef DEFAULT_64_BIT_MASK
-#define DEFAULT_64_BIT_MASK 0xffffffff00000000
-#endif
 
-#ifndef MAX_VALUE
-#define MAX_VALUE 255
-#endif
-
-
-template<typename half_t, typename real_t>
-__global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
+template<const uint32 COUNT, const uint32 MAX_SHARED, typename half_t, typename real_t>
+__global__ void MicroBenchmarkKernel_ADDCONSTANT(real_t* input,
 		real_t* output_real_t, real_t* threshold_out, half_t* output_half_t,
 		int num_op) {
+	__shared__ uint32 shared_mem_[MAX_SHARED];
 	int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
 
 	register real_t acc_real_t = 0.0;
@@ -35,6 +28,8 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 	register real_t this_thread_input_real_t = input[thread_id];
 	register half_t this_thread_input_half_t = half_t(input[thread_id]);
 	register real_t threshold;
+
+#pragma unroll COUNT
 	for (int count = 0; count < OPS; count++) {
 		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
@@ -52,7 +47,7 @@ __global__ void MicroBenchmarkKernel_ADDNONCONSTANT(real_t* input,
 }
 
 template<typename half_t, typename real_t>
-__global__ void MicroBenchmarkKernel_MULNONCONSTANT(real_t* input,
+__global__ void MicroBenchmarkKernel_MULCONSTANT(real_t* input,
 		real_t* output_real_t, real_t* threshold_out, half_t* output_half_t,
 		int num_op) {
 	int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -80,7 +75,7 @@ __global__ void MicroBenchmarkKernel_MULNONCONSTANT(real_t* input,
 }
 
 template<typename half_t, typename real_t>
-__global__ void MicroBenchmarkKernel_FMANONCONSTANT(real_t* input,
+__global__ void MicroBenchmarkKernel_FMACONSTANT(real_t* input,
 		real_t* output_real_t, real_t* threshold_out, half_t* output_half_t,
 		int num_op) {
 	int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -108,4 +103,4 @@ __global__ void MicroBenchmarkKernel_FMANONCONSTANT(real_t* input,
 	threshold_out[thread_id] = fabs(threshold);
 }
 
-#endif /* DMR_NONCONSTANT_KERNELS_H_ */
+#endif /* DMR_CONSTANT_KERNELS_H_ */

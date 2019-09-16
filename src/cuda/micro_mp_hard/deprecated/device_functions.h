@@ -8,22 +8,7 @@
 #ifndef DEVICE_FUNCTIONS_H_
 #define DEVICE_FUNCTIONS_H_
 
-
-#define ZERO_FULL 1e-5
-
-#ifndef ZERO_FLOAT
-#define ZERO_FLOAT 2.2e-07
-#endif
-
-#define ZERO_HALF 4.166E-13
-
-#define NUM_COMPOSE_DIVISOR 1000000
-#define MUL_INPUT  1.0000001
-#define FMA_INPUT 0.0005
-
-#define __DEVICE_HOST__ __device__ __host__ __forceinline__
-#define __HOST__ __host__ __forceinline__
-#define __DEVICE__ __device__ __forceinline__
+#include "Parameters.h"
 
 
 __device__ unsigned long long errors = 0;
@@ -151,21 +136,23 @@ __device__  __forceinline__ half mul_dmr(half a, half b) {
 	return __hmul(a, b);
 }
 
-__DEVICE__ void check_bit_error(const float lhs, const double rhs) {
-	float rhs_float = float(rhs);
-
-	uint32* lhs_ptr = (uint32*) &lhs;
-	uint32* rhs_ptr = (uint32*) &rhs_float;
-
-	uint32 lhs_int = *lhs_ptr;
-	uint32 rhs_int = *rhs_ptr;
-
-	uint32 sub_res =
+__DEVICE__ void check_bit_error(const uint32* lhs_ptr, const uint32* rhs_ptr) {
+	const uint32 lhs_int = *lhs_ptr;
+	const uint32 rhs_int = *rhs_ptr;
+	const uint32 sub_res =
 			(lhs_int > rhs_int) ? lhs_int - rhs_int : rhs_int - lhs_int;
-
 	if (sub_res > MAX_VALUE) {
 		atomicAdd(&errors, 1);
 	}
+}
+
+__DEVICE__ void check_bit_error(const float lhs, const double rhs) {
+	const float rhs_float = float(rhs);
+
+	const uint32* lhs_ptr = (uint32*) &lhs;
+	const uint32* rhs_ptr = (uint32*) &rhs_float;
+
+	check_bit_error(lhs_ptr, rhs_ptr);
 }
 
 
