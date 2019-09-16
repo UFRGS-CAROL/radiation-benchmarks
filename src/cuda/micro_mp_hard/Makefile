@@ -1,22 +1,16 @@
-OPS?=1000000
+OPS?=10000
 OPSNUM=1
 LOGS=1
 DEBUG?=0
 CHECKBLOCK=0
 ZERO_FLOAT=2.2e-07
 MICRO=mul
-MINRAND=0
-MAXRAND=100
 BENCH=mul
 
 CC=g++
 NVCC=nvcc
-
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
-
-
 NVCC_FLAGS= $(ARCH) -Xptxas -v
-
 NVIDIA_INC=/usr/local/cuda/include/
 NVIDIA_LIB=/usr/local/cuda/lib64/
 LOGHELPER_INC=../../include/
@@ -57,13 +51,11 @@ clean:
 	rm -rf $(EXEC) generate_input
 
 generate:
-	$(EXEC) --precision double --redundancy dmrmixed \
-		--inst $(MICRO) --generate --opnum $(OPSNUM) --nonconstant \
-		--minrand $(MINRAND) --maxrand $(MAXRAND) \
+	$(EXEC) --precision double --redundancy none \
+		--inst $(MICRO) --generate --opnum $(OPSNUM) \
 		--gold ./gold_$(MICRO).data --verbose
 		
 test:
-	$(EXEC) --precision double --redundancy dmrmixed \
-		--inst $(MICRO) --opnum $(OPSNUM) --nonconstant \
-		--minrand $(MINRAND) --maxrand $(MAXRAND) \
+	$(EXEC) --precision double --redundancy none \
+		--inst $(MICRO) --opnum $(OPSNUM) \
 		--gold ./gold_$(MICRO).data --verbose --iterations 10
