@@ -10,6 +10,7 @@
 
 
 #define BLOCK_SIZE 32
+#define MAX_THREAD_BLOCK BLOCK_SIZE * BLOCK_SIZE
 
 typedef enum {
 	ADD, MUL, FMA, ADDNOTBIASED, MULNOTBIASED, FMANOTBIASED
@@ -50,6 +51,8 @@ typedef unsigned char byte;
 #ifndef MAXSHAREDMEMORY
 #define MAXSHAREDMEMORY 48 * 1024
 #endif
+
+#define VOLTA_BLOCK_MULTIPLIER 40.9f
 
 std::unordered_map<std::string, REDUNDANCY> red = {
 //NONE

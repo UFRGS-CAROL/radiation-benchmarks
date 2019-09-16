@@ -45,7 +45,7 @@ struct Parameters {
 
 	Parameters(int argc, char* argv[]) {
 		auto dev_prop = this->get_device();
-		this->grid_size = dev_prop.multiProcessorCount;
+		this->grid_size = MAX_THREAD_BLOCK * 64;
 		this->device = dev_prop.name;
 		this->block_size = BLOCK_SIZE * BLOCK_SIZE;
 		this->r_size = grid_size * block_size;

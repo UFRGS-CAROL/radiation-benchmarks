@@ -13,7 +13,7 @@
 #include <fstream>
 #include <iostream>
 
-#define V100_STREAM_MULTIPROCESSOR 84
+#define V100_STREAM_MULTIPROCESSOR 1024
 
 void create_input_file(std::string& output_file, std::vector<double>& vect_data,
 		double min_, double max_, std::ofstream& ofs) {
