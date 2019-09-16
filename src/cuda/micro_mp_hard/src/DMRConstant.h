@@ -11,9 +11,12 @@
 #include "Microbenchmark.h"
 
 template<uint32 CHECK_BLOCK, typename half_t, typename real_t>
-struct DMRConstant : public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
+struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 
+	DMRConstant(const Parameters& parameters) :
+			Microbenchmark<CHECK_BLOCK, half_t, real_t>(parameters) {
+
+	}
 };
-
 
 #endif /* DMRCONSTANT_H_ */

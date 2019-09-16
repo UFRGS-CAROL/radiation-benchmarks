@@ -10,9 +10,10 @@
 
 #include "Microbenchmark.h"
 
-template<uint32 CHECK_BLOCK, typename half_t, typename real_t>
-struct UnhardenedConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
+template<uint32 CHECK_BLOCK, typename real_t>
+struct UnhardenedConstant: public Microbenchmark<CHECK_BLOCK, real_t, real_t> {
 
+	UnhardenedConstant(const Parameters& parameters) : Microbenchmark<CHECK_BLOCK, real_t, real_t>(parameters){}
 };
 
 #endif /* UNHARDENEDCONSTANT_H_ */

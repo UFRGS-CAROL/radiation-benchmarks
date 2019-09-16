@@ -73,12 +73,12 @@ void setup(Parameters& parameters) {
 		}
 
 		if (parameters.precision == SINGLE) {
-			Microbenchmark<CHECK_BLOCK, float, float> micro_test(parameters);
+			UnhardenedConstant<CHECK_BLOCK, float> micro_test(parameters);
 			test_radiation<CHECK_BLOCK>(micro_test);
 		}
 
 		if (parameters.precision == DOUBLE) {
-			Microbenchmark<CHECK_BLOCK, double, double> micro_test(parameters);
+			UnhardenedConstant<CHECK_BLOCK, double> micro_test(parameters);
 			test_radiation<CHECK_BLOCK>(micro_test);
 		}
 	}
@@ -91,12 +91,12 @@ void setup(Parameters& parameters) {
 		}
 
 		if (parameters.precision == SINGLE) {
-			Microbenchmark<CHECK_BLOCK, float, float> micro_test(parameters);
+			DMRConstant<CHECK_BLOCK, float, float> micro_test(parameters);
 			test_radiation<CHECK_BLOCK>(micro_test);
 		}
 
 		if (parameters.precision == DOUBLE) {
-			Microbenchmark<CHECK_BLOCK, double, double> micro_test(parameters);
+			DMRConstant<CHECK_BLOCK, double, double> micro_test(parameters);
 			test_radiation<CHECK_BLOCK>(micro_test);
 		}
 	}
@@ -105,7 +105,7 @@ void setup(Parameters& parameters) {
 	if (parameters.redundancy == DMRMIXED) {
 
 		if (parameters.precision == DOUBLE) {
-			Microbenchmark<CHECK_BLOCK, float, double> micro_test(parameters);
+			DMRConstant<CHECK_BLOCK, float, double> micro_test(parameters);
 			test_radiation<CHECK_BLOCK>(micro_test);
 		}
 
@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
 
 	switch (parameters.operation_num) {
 	case 1:
-		setup<0>(parameters);
+		setup<1>(parameters);
 		break;
 	case 10:
 		setup<10>(parameters);
