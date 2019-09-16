@@ -14,190 +14,8 @@
 #include <iostream>
 
 #include "cuda_utils.h"
+#include "common.h"
 
-#define BLOCK_SIZE 32
-
-//===================================== DEFINE TESTED PRECISION
-//FOR DMR APPROACH I NEED to use the smallest precision
-//as a limit, since it is not possible to store the bigger precisions
-//on smaller precisions
-
-//If double it means that DMR will be double and float
-//so the limits are the float ones
-
-//#define INPUT_A_DOUBLE 1.1945305291614955E+103 // 0x5555555555555555
-//#define INPUT_B_DOUBLE 3.7206620809969885E-103 // 0x2AAAAAAAAAAAAAAA
-//#define OUTPUT_R_DOUBLE 4.444444444444444 //0x4011C71C71C71C71
-
-//CHANGING FOR DMR
-//I'm going to use 15 digits for double and 7 digits for float
-#define INPUT_A_DOUBLE 1.194530529161495E+02 // 0x5555555555555555
-#define INPUT_B_DOUBLE 3.720662080996988E-10 // 0x2AAAAAAAAAAAAAAA
-#define OUTPUT_R_DOUBLE 4.194530529161495 //0x4011C71C71C71C71
-
-#define INPUT_A_SINGLE 1.4660155E+13 // 0x55555555
-#define INPUT_B_SINGLE 3.0316488E-13 // 0x2AAAAAAA
-#define OUTPUT_R_SINGLE 4.444444 //0x408E38E3
-
-#define INPUT_A_HALF 1.066E+2 // 0x56AA
-#define INPUT_B_HALF 4.166E-2 // 0x2955
-#define OUTPUT_R_HALF 4.44 // 0x4471
-
-
-typedef enum {
-	ADD, MUL, FMA, ADDNOTBIASED, MULNOTBIASED, FMANOTBIASED
-} MICROINSTRUCTION;
-
-typedef enum {
-	HALF, SINGLE, DOUBLE
-} PRECISION;
-
-typedef enum {
-	NONE, DMR, TMR, DMRMIXED, TMRMIXED
-} REDUNDANCY;
-
-
-typedef uint64_t uint64;
-typedef uint32_t uint32;
-typedef unsigned char byte;
-
-#define ZERO_FULL 1e-5
-
-#ifndef ZERO_FLOAT
-#define ZERO_FLOAT 2.2e-07
-#endif
-
-#define ZERO_HALF 4.166E-13
-
-#define NUM_COMPOSE_DIVISOR 1000000
-#define MUL_INPUT  1.0000001
-#define FMA_INPUT 0.0005
-
-#define __DEVICE_HOST__ __device__ __host__ __forceinline__
-#define __HOST__ __host__ __forceinline__
-#define __DEVICE__ __device__ __forceinline__
-
-
-#ifndef DEFAULT_64_BIT_MASK
-#define DEFAULT_64_BIT_MASK 0xffffffff00000000
-#endif
-
-#ifndef MAX_VALUE
-#define MAX_VALUE 255
-#endif
-
-std::unordered_map<std::string, REDUNDANCY> red = {
-//NONE
-		{ "none", NONE },
-		//DMR
-		{ "dmr", DMR },
-		// DMRMIXED
-		{ "dmrmixed", DMRMIXED },
-//TMRMIXED
-//         {"TMRMIXED",  XAVIER}
-		};
-
-std::unordered_map<std::string, PRECISION> pre = {
-//HALF
-		{ "half", HALF },
-		//SINGLE
-		{ "single", SINGLE },
-		// DOUBLE
-		{ "double", DOUBLE }, };
-
-std::unordered_map<std::string, MICROINSTRUCTION> mic = {
-//ADD
-		{ "add", ADD },
-		//MUL
-		{ "mul", MUL },
-		//FMA
-		{ "fma", FMA },
-		// NUMCOMPOSE (add not biased)
-		{ "addnotbiased", ADDNOTBIASED },
-		// MUL not biased
-		{ "mulnotbiased", MULNOTBIASED },
-		// MUL not biased
-		{ "fmanotbiased", FMANOTBIASED } };
-
-/*
-template<typename ...TypeArgs> struct Type;
-
-template<>
-struct Type<half> {
-	half output_r;
-	half input_a;
-	half input_b;
-	Type() {
-		this->output_r = OUTPUT_R_HALF;
-		this->input_a = INPUT_A_HALF;
-		this->input_b = INPUT_B_HALF;
-	}
-};
-
-template<>
-struct Type<float> {
-	float output_r;
-	float input_a;
-	float input_b;
-	Type() {
-		this->output_r = OUTPUT_R_SINGLE;
-		this->input_a = INPUT_A_SINGLE;
-		this->input_b = INPUT_B_SINGLE;
-	}
-};
-
-template<>
-struct Type<double> {
-	double output_r;
-	double input_a;
-	double input_b;
-	Type() {
-		this->output_r = OUTPUT_R_DOUBLE;
-		this->input_a = INPUT_A_DOUBLE;
-		this->input_b = INPUT_B_DOUBLE;
-	}
-};
-
-template<>
-struct Type<half, float> {
-	float output_r;
-	float input_a;
-	float input_b;
-	Type() {
-		Type<float> temp;
-		this->output_r = temp.output_r;
-		this->input_a = temp.input_a;
-		this->input_b = temp.input_b;
-	}
-
-};
-
-template<>
-struct Type<float, double> {
-	double output_r;
-	double input_a;
-	double input_b;
-	Type() {
-		Type<double> temp;
-		this->output_r = temp.output_r;
-		this->input_a = temp.input_a;
-		this->input_b = temp.input_b;
-	}
-};
-
-std::ostream& operator<<(std::ostream& os, const half& t) {
-	float tmp = float(t);
-	os << tmp;
-	return os;
-}
-
-template<typename ...TypeArgs>
-std::ostream& operator<<(std::ostream& os, const Type<TypeArgs...>& t) {
-	os << std::scientific;
-	os << t.output_r << " " << t.input_a << " " << t.input_b;
-	return os;
-}
-*/
 
 struct Parameters {
 
@@ -233,7 +51,7 @@ struct Parameters {
 		this->r_size = grid_size * block_size;
 		this->iterations = find_int_arg(argc, argv, "--iterations", 10);
 		this->operation_num = find_int_arg(argc, argv, "--opnum",
-				NUM_COMPOSE_DIVISOR);
+		NUM_COMPOSE_DIVISOR);
 
 		this->nonconstant = find_arg(argc, argv, "--nonconstant");
 
@@ -262,7 +80,7 @@ struct Parameters {
 	}
 
 	cudaDeviceProp get_device() {
-	//================== Retrieve and set the default CUDA device
+		//================== Retrieve and set the default CUDA device
 		cudaDeviceProp prop;
 		int count = 0;
 

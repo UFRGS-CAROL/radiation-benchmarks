@@ -14,23 +14,27 @@
 #include <stdexcept>
 #include <string>
 
-
-static void errorat(const char* error_string, const char* file, unsigned line){
+static void errorat(const char* error_string, const char* file, unsigned line) {
 
 	std::string err_(error_string);
-	err_ += std::string("\nERROR AT: ") + std::string(file) + ":" + std::to_string(line);
+	err_ += std::string("\nERROR AT: ") + std::string(file) + ":"
+			+ std::to_string(line);
 	throw std::runtime_error(err_);
 }
 
 #define fatalerror(str) errorat(str, __FILE__, __LINE__)
 
 struct Log {
-	uint32 error;
-	uint32 info;
+	uint64 error;
+	uint64 info;
 
-	Log(const Log& l) :	error(l.error), info(l.info) {}
+	Log(const Log& l) :
+			error(l.error), info(l.info) {
+	}
 
-	Log() :	error(0), info(0) {}
+	Log() :
+			error(0), info(0) {
+	}
 
 	Log(std::string& test_name, std::string& test_info) :
 			error(0), info(0) {
@@ -53,7 +57,7 @@ struct Log {
 #endif
 	}
 
-	void log_inf_detail(std::string& info_detail) {
+	void log_info_detail(std::string info_detail) {
 		this->info++;
 #ifdef LOGS
 		log_info_detail(const_cast<char*>(info_detail.c_str()));
@@ -74,15 +78,31 @@ struct Log {
 #endif
 	}
 
-	void update_errors(){
+	void update_errors() {
+		if (this->error != 0) {
 #ifdef LOGS
-		log_error_count(this->error);
+			log_error_count(this->error);
+#endif
+		}
+	}
+
+	void update_infos() {
+		if (this->info != 0) {
+#ifdef LOGS
+			log_info_count(this->info);
+#endif
+		}
+	}
+
+	void update_errors(uint64 errors) {
+#ifdef LOGS
+			log_error_count(errors);
 #endif
 	}
 
-	void update_infos(){
+	void update_infos(uint64 infos) {
 #ifdef LOGS
-		log_info_count(this->info);
+			log_info_count(infos);
 #endif
 	}
 };

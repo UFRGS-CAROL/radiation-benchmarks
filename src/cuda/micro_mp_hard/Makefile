@@ -45,7 +45,7 @@ FLAGS+= -O3 -lLogHelper -std=c++11  $(NVCC_FLAGS)
 
 .PHONY: all test clean generate
 
-all: $(EXEC)
+all: $(EXEC) generate_input
 
 $(EXEC): clean $(SOURCES)
 	$(NVCC) $(FLAGS) -Xcompiler "-fopenmp -O3" $(SOURCES) -o $(EXEC)

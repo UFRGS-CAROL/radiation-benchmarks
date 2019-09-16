@@ -17,6 +17,10 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 				<< std::endl;
 	}
 
+	if(micro_test.parameters_.generate == false){
+		micro_test.load_gold();
+	}
+
 	for (auto iteration = 0; iteration < micro_test.parameters_.iterations;
 			iteration++) {
 		//================== Global test loop
@@ -50,6 +54,10 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 			std::cout << relative_errors << std::endl;
 
 		}
+	}
+
+	if(micro_test.parameters_.generate == true){
+		micro_test.write_gold();
 	}
 
 	if (micro_test.parameters_.verbose) {

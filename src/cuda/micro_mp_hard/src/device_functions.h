@@ -10,9 +10,7 @@
 
 #include "Parameters.h"
 
-
 __device__ unsigned long long errors = 0;
-
 
 __device__ __forceinline__ double abs__(double a) {
 	return fabs(a);
@@ -22,7 +20,7 @@ __device__ __forceinline__ float abs__(float a) {
 	return fabsf(a);
 }
 
-__device__  __forceinline__ half abs__(half a) {
+__device__   __forceinline__ half abs__(half a) {
 	return fabsf(a);
 }
 
@@ -43,10 +41,22 @@ __device__ __forceinline__ void compare(const double lhs, const float rhs) {
 }
 
 template<typename T>
-__device__ __forceinline__ void compare(const T lhs, const T rhs){
+__device__ __forceinline__ void compare(const T lhs, const T rhs) {
 	const T diff = abs__(lhs - rhs);
 	const T zero = T(ZERO_FULL);
 	if (diff > zero) {
+		atomicAdd(&errors, 1);
+	}
+}
+
+__DEVICE__ void check_bit_error(const float lhs, const double rhs) {
+	const float rhs_float = float(rhs);
+
+	const uint32* lhs_ptr = (uint32*) &lhs;
+	const uint32* rhs_ptr = (uint32*) &rhs_float;
+	const uint32 sub_res =
+			(*lhs_ptr > *rhs_ptr) ? *lhs_ptr - *rhs_ptr : *rhs_ptr - *lhs_ptr;
+	if (sub_res > ZERO_FLOAT) {
 		atomicAdd(&errors, 1);
 	}
 }
@@ -71,7 +81,6 @@ __device__ __forceinline__ void check_relative_error(incomplete acc_incomplete,
 //__device__ __forceinline__ void cast(volatile half& lhs, const float& rhs) {
 //	lhs = __float2half_rn(rhs);
 //}
-
 /*
  *__double2float_rd Convert a double to a float in round-down mode.
  *__double2float_rn Convert a double to a float in round-to-nearest-even mode.
@@ -81,7 +90,6 @@ __device__ __forceinline__ void check_relative_error(incomplete acc_incomplete,
 //__device__ __forceinline__ void cast(volatile float& lhs, const double& rhs) {
 //	lhs = __double2float_rn(rhs);
 //}
-
 /**
  * ----------------------------------------
  * FMA DMR
@@ -96,7 +104,7 @@ __device__ __forceinline__ float fma_dmr(float a, float b, float acc) {
 	return __fmaf_rn(a, b, acc);
 }
 
-__device__  __forceinline__ half fma_dmr(half a, half b, half acc) {
+__device__   __forceinline__ half fma_dmr(half a, half b, half acc) {
 	return __hfma(a, b, acc);
 }
 
@@ -114,7 +122,7 @@ __device__ __forceinline__ float add_dmr(float a, float b) {
 	return __fadd_rn(a, b);
 }
 
-__device__  __forceinline__ half add_dmr(half a, half b) {
+__device__   __forceinline__ half add_dmr(half a, half b) {
 	return __hadd(a, b);
 }
 
@@ -132,28 +140,8 @@ __device__ __forceinline__ float mul_dmr(float a, float b) {
 	return __fmul_rn(a, b);
 }
 
-__device__  __forceinline__ half mul_dmr(half a, half b) {
+__device__   __forceinline__ half mul_dmr(half a, half b) {
 	return __hmul(a, b);
 }
-
-__DEVICE__ void check_bit_error(const uint32* lhs_ptr, const uint32* rhs_ptr) {
-	const uint32 lhs_int = *lhs_ptr;
-	const uint32 rhs_int = *rhs_ptr;
-	const uint32 sub_res =
-			(lhs_int > rhs_int) ? lhs_int - rhs_int : rhs_int - lhs_int;
-	if (sub_res > MAX_VALUE) {
-		atomicAdd(&errors, 1);
-	}
-}
-
-__DEVICE__ void check_bit_error(const float lhs, const double rhs) {
-	const float rhs_float = float(rhs);
-
-	const uint32* lhs_ptr = (uint32*) &lhs;
-	const uint32* rhs_ptr = (uint32*) &rhs_float;
-
-	check_bit_error(lhs_ptr, rhs_ptr);
-}
-
 
 #endif /* DEVICE_FUNCTIONS_H_ */

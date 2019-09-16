@@ -17,8 +17,9 @@
 
 void create_input_file(std::string& output_file, std::vector<double>& vect_data,
 		double min_, double max_, std::ofstream& ofs) {
-	ofs << "__device__ __constant__ double input_volta_";
-	ofs << min_ << "_" << max_ << "[V100_STREAM_MULTIPROCESSOR] = {"
+	ofs << "__device__ __constant__ double input_constant";
+
+	ofs << "[STREAM_MULTIPROCESSOR] = {"
 			<< std::endl;
 
 	for (auto t : vect_data) {
@@ -42,11 +43,11 @@ std::vector<double> generate_input_random(double& min_random,
 }
 
 int main(int argc, char **argv) {
-	std::string input_constant_h_file_path = "input_constant.h";
+	std::string input_constant_h_file_path = "src/input_constant.h";
 
 	std::vector<std::pair<double, double> > possible_inputs = { { 0, 10 }, // 0 to 10
-			{ 10, 100 }, // 10 to 100
-			{ 100, 1000 }, // 100 to 1000
+//			{ 10, 100 }, // 10 to 100
+//			{ 100, 1000 }, // 100 to 1000
 			};
 
 	std::ofstream ofs(input_constant_h_file_path, std::ofstream::out);
@@ -55,7 +56,11 @@ int main(int argc, char **argv) {
 		ofs << "#ifndef INPUT_CONSTANT_H_" << std::endl;
 		ofs << "#define INPUT_CONSTANT_H_" << std::endl << std::endl;
 		ofs << "#define V100_STREAM_MULTIPROCESSOR "
-				<< V100_STREAM_MULTIPROCESSOR << std::endl << std::endl;
+						<< V100_STREAM_MULTIPROCESSOR << std::endl << std::endl;
+
+		ofs << "#ifndef STREAM_MULTIPROCESSOR" << std::endl;
+		ofs << "#define STREAM_MULTIPROCESSOR V100_STREAM_MULTIPROCESSOR" << std::endl;
+		ofs << "#endif" << std::endl << std::endl;
 
 		for (auto in : possible_inputs) {
 			auto generated_input = generate_input_random(in.first, in.second,
