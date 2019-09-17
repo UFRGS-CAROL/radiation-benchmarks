@@ -45,34 +45,28 @@ struct Parameters {
 
 	Parameters(int argc, char* argv[]) {
 		auto dev_prop = this->get_device();
-		this->grid_size = MAX_THREAD_BLOCK * 64;
 		this->device = dev_prop.name;
-		this->block_size = BLOCK_SIZE * BLOCK_SIZE;
+
+		this->grid_size = NUMBER_THREAD_PER_BLOCK;
+		this->block_size = MAX_THREAD_BLOCK;
 		this->r_size = grid_size * block_size;
+
 		this->iterations = find_int_arg(argc, argv, "--iterations", 10);
-		this->operation_num = find_int_arg(argc, argv, "--opnum",
-		NUM_COMPOSE_DIVISOR);
-
+		this->operation_num = find_int_arg(argc, argv, "--opnum", NUM_COMPOSE_DIVISOR);
 		this->nonconstant = find_arg(argc, argv, "--nonconstant");
-
 		this->min_random = find_float_arg(argc, argv, "--minrand", 0);
 		this->max_random = find_float_arg(argc, argv, "--maxrand", 1000);
-
 		this->gold_file = find_char_arg(argc, argv, "--gold", "./gold.data");
 		this->input_file = find_char_arg(argc, argv, "--input", "./input.data");
-
 		this->verbose = find_arg(argc, argv, "--verbose");
-
 		this->hardening_str = find_char_arg(argc, argv, "--redundancy", "none");
 		this->instruction_str = find_char_arg(argc, argv, "--inst", "add");
-		this->precision_str = find_char_arg(argc, argv, "--precision",
-				"single");
+		this->precision_str = find_char_arg(argc, argv, "--precision", "single");
+		this->generate = find_arg(argc, argv, "--generate");
 
 		this->redundancy = red[this->hardening_str];
 		this->precision = pre[this->precision_str];
 		this->micro = mic[this->instruction_str];
-
-		this->generate = find_arg(argc, argv, "--generate");
 
 		if (this->generate) {
 			this->iterations = 1;

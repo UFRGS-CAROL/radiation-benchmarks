@@ -17,18 +17,18 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 				<< std::endl;
 	}
 
-	if(micro_test.parameters_.generate == false){
+	if (micro_test.parameters_.generate == false) {
 		micro_test.load_gold();
 	}
 
-	for (auto iteration = 0; iteration < micro_test.parameters_.iterations;
-			iteration++) {
+	for (auto it = 0; it < micro_test.parameters_.iterations; it++) {
 		//================== Global test loop
 		auto kernel_time = micro_test.test();
-		uint64 relative_errors, errors;
+		uint64 memory_errors, errors;
 		double cmp_time;
 
-		std::tie(cmp_time, errors, relative_errors) = micro_test.check_output_errors();
+		std::tie(cmp_time, errors, memory_errors) =
+				micro_test.check_output_errors();
 		//====================================
 
 		total_kernel_time += kernel_time;
@@ -40,31 +40,33 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 			/////////// PERF
 			std::cout << "SIZE:" << micro_test.parameters_.r_size;
 			std::cout << " OUTPUT/S:" << outputpersec;
-			std::cout << " ITERATION " << iteration;
-			std::cout << " time: " << kernel_time;
-			std::cout << " output errors: " << errors;
-			std::cout << " relative errors: " << relative_errors << std::endl;
+			std::cout << " ITERATION " << it;
+			std::cout << " Time: " << kernel_time;
+			std::cout << " Output errors: " << errors;
+			std::cout << " Memory errors: " << memory_errors << std::endl;
 
 		} else {
 			// CSV format
 			std::cout << outputpersec << ",";
-			std::cout << iteration << ",";
+			std::cout << it << ",";
 			std::cout << kernel_time << ",";
 			std::cout << errors << ",";
-			std::cout << relative_errors << std::endl;
+			std::cout << memory_errors << std::endl;
 
 		}
 	}
 
-	if(micro_test.parameters_.generate == true){
+	if (micro_test.parameters_.generate == true) {
 		micro_test.write_gold();
 	}
 
 	if (micro_test.parameters_.verbose) {
-		auto averageKernelTime = total_kernel_time / micro_test.parameters_.iterations;
+		auto averageKernelTime = total_kernel_time
+				/ micro_test.parameters_.iterations;
 		std::cout << std::endl << "-- END --" << std::endl;
 		std::cout << "Total kernel time: " << total_kernel_time << std::endl;
-		std::cout << "Iterations: " << micro_test.parameters_.iterations << std::endl;
+		std::cout << "Iterations: " << micro_test.parameters_.iterations
+				<< std::endl;
 		std::cout << "Average kernel time: " << averageKernelTime << std::endl;
 		std::cout << "Best: " << min_kernel_time << std::endl;
 		std::cout << "Worst: " << max_kernel_time << std::endl;
@@ -72,7 +74,7 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 }
 
 template<const uint32 CHECK_BLOCK>
-void setup(Parameters& parameters) {
+void setup(Parameters& parameters, Log& log) {
 	/* NONE REDUNDANCY ------------------------------------------------------ */
 	if (parameters.redundancy == NONE) {
 		if (parameters.precision == HALF) {
@@ -81,12 +83,12 @@ void setup(Parameters& parameters) {
 		}
 
 		if (parameters.precision == SINGLE) {
-			UnhardenedConstant<CHECK_BLOCK, float> micro_test(parameters);
+			UnhardenedConstant<CHECK_BLOCK, float> micro_test(parameters, log);
 			test_radiation<CHECK_BLOCK>(micro_test);
 		}
 
 		if (parameters.precision == DOUBLE) {
-			UnhardenedConstant<CHECK_BLOCK, double> micro_test(parameters);
+			UnhardenedConstant<CHECK_BLOCK, double> micro_test(parameters, log);
 			test_radiation<CHECK_BLOCK>(micro_test);
 		}
 	}
@@ -99,12 +101,13 @@ void setup(Parameters& parameters) {
 		}
 
 		if (parameters.precision == SINGLE) {
-			DMRConstant<CHECK_BLOCK, float, float> micro_test(parameters);
+			DMRConstant<CHECK_BLOCK, float, float> micro_test(parameters, log);
 			test_radiation<CHECK_BLOCK>(micro_test);
 		}
 
 		if (parameters.precision == DOUBLE) {
-			DMRConstant<CHECK_BLOCK, double, double> micro_test(parameters);
+			DMRConstant<CHECK_BLOCK, double, double> micro_test(parameters,
+					log);
 			test_radiation<CHECK_BLOCK>(micro_test);
 		}
 	}
@@ -113,7 +116,7 @@ void setup(Parameters& parameters) {
 	if (parameters.redundancy == DMRMIXED) {
 
 		if (parameters.precision == DOUBLE) {
-			DMRConstant<CHECK_BLOCK, float, double> micro_test(parameters);
+			DMRConstant<CHECK_BLOCK, float, double> micro_test(parameters, log);
 			test_radiation<CHECK_BLOCK>(micro_test);
 		}
 
@@ -148,27 +151,27 @@ int main(int argc, char* argv[]) {
 
 	std::string test_name = std::string("cuda_") + parameters.precision_str
 			+ "_micro-" + parameters.instruction_str;
-	start_log_file(const_cast<char*>(test_name.c_str()),
-			const_cast<char*>(test_info.c_str()));
 
-	std::cout << "LOGFILENAME:" << get_log_file_name() << std::endl;
+	Log log(test_name, test_info);
+
+	std::cout << log << std::endl;
 	std::cout << parameters << std::endl;
 
 	switch (parameters.operation_num) {
 	case 1:
-		setup<1>(parameters);
+		setup<1>(parameters, log);
 		break;
 	case 10:
-		setup<10>(parameters);
+		setup<10>(parameters, log);
 		break;
 	case 100:
-		setup<100>(parameters);
+		setup<100>(parameters, log);
 		break;
 	case 1000:
-		setup<1000>(parameters);
+		setup<1000>(parameters, log);
 		break;
 	default:
-		setup<OPS>(parameters);
+		setup<OPS>(parameters, log);
 	}
 
 	return 0;

@@ -13,7 +13,7 @@
 template<uint32 CHECK_BLOCK, typename real_t>
 struct UnhardenedConstant: public Microbenchmark<CHECK_BLOCK, real_t, real_t> {
 
-	UnhardenedConstant(const Parameters& parameters) : Microbenchmark<CHECK_BLOCK, real_t, real_t>(parameters){}
+	UnhardenedConstant(const Parameters& parameters, Log& log) : Microbenchmark<CHECK_BLOCK, real_t, real_t>(parameters, log){}
 };
 
 #endif /* UNHARDENEDCONSTANT_H_ */

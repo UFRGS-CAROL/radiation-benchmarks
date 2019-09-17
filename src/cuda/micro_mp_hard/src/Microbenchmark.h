@@ -24,27 +24,24 @@ struct Microbenchmark {
 	std::vector<real_t> output_host_1, output_host_2, output_host_3;
 	std::vector<real_t> gold_vector;
 
-	Log log_;
+	Log& log_;
 
 	const Parameters& parameters_;
 
-	Microbenchmark(const Parameters& parameters) :
-			parameters_(parameters) {
+	Microbenchmark(const Parameters& parameters, Log& log) :
+			parameters_(parameters), log_(log) {
 		this->output_host_1.resize(this->parameters_.r_size);
 		this->output_host_2.resize(this->parameters_.r_size);
 		this->output_host_3.resize(this->parameters_.r_size);
 		this->output_dev_1.resize(this->parameters_.r_size);
 		this->output_dev_2.resize(this->parameters_.r_size);
 		this->output_dev_3.resize(this->parameters_.r_size);
-
 		this->gold_vector.resize(this->parameters_.r_size);
 	}
 
-//	virtual ~Microbenchmark() {
-//	}
-
 	double test() {
 		auto kernel_time = rad::mysecond();
+		this->log_.start_iteration();
 
 		//================== Device computation
 		switch (parameters_.micro) {
@@ -67,6 +64,8 @@ struct Microbenchmark {
 
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		this->log_.end_iteration();
+		std::cout << " PASSOU\n";
 		return rad::mysecond() - kernel_time;
 	}
 
@@ -75,7 +74,7 @@ struct Microbenchmark {
 		this->output_host_2 = this->output_dev_2.to_vector();
 		this->output_host_3 = this->output_dev_3.to_vector();
 
-		if(this->parameters_.generate == true)
+		if (this->parameters_.generate == true)
 			return {0.0, 0, 0};
 
 		auto cmp_time = rad::mysecond();
@@ -84,15 +83,16 @@ struct Microbenchmark {
 
 #pragma omp parallel for shared(host_errors, memory_errors)
 		for (uint32 i = 0; i < this->output_host_1.size(); i++) {
-			register bool checkFlag = true;
-			auto valGold = this->gold_vector[i];
-			auto valOutput = this->output_host_1[i];
+			auto check_flag = true;
+			auto val_gold = this->gold_vector[i];
 
-			auto valOutput0 = this->output_host_1[i];
-			auto valOutput1 = this->output_host_2[i];
-			auto valOutput2 = this->output_host_3[i];
+			auto val_output_1 = this->output_host_1[i];
+			auto val_output_2 = this->output_host_2[i];
+			auto val_output_3 = this->output_host_3[i];
+			auto val_output = val_output_1;
 
-			if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
+			if ((val_output_1 != val_output_2)
+					|| (val_output_1 != val_output_3)) {
 #pragma omp critical
 				{
 //					char info_detail[150];
@@ -109,10 +109,10 @@ struct Microbenchmark {
 					std::stringstream info_detail;
 					info_detail.precision(20);
 					info_detail << std::scientific;
-					info_detail << "m: [" << i << "], r0: " << valOutput0;
-					info_detail << ", r1: " << valOutput1;
-					info_detail << ", r2: " << valOutput2;
-					info_detail << ", e: " << valGold;
+					info_detail << "m: [" << i << "], r0: " << val_output_1;
+					info_detail << ", r1: " << val_output_2;
+					info_detail << ", r2: " << val_output_3;
+					info_detail << ", e: " << val_gold;
 
 					if (this->parameters_.verbose && (host_errors < 10))
 						std::cout << info_detail.str() << std::endl;
@@ -120,28 +120,29 @@ struct Microbenchmark {
 					memory_errors++;
 				}
 
-				if ((valOutput0 != valOutput1) && (valOutput1 != valOutput2)
-						&& (valOutput0 != valOutput2)) {
+				if ((val_output_1 != val_output_2)
+						&& (val_output_2 != val_output_3)
+						&& (val_output_1 != val_output_3)) {
 					// All 3 values diverge
-					if (valOutput0 == valGold) {
-						valOutput = valOutput0;
-					} else if (valOutput1 == valGold) {
-						valOutput = valOutput1;
-					} else if (valOutput2 == valGold) {
-						valOutput = valOutput2;
+					if (val_output_1 == val_gold) {
+						val_output = val_output_1;
+					} else if (val_output_2 == val_gold) {
+						val_output = val_output_2;
+					} else if (val_output_3 == val_gold) {
+						val_output = val_output_3;
 					} else {
 						// NO VALUE MATCHES THE GOLD AND ALL 3 DIVERGE!
-						checkFlag = false;
+						check_flag = false;
 #pragma omp critical
 						{
 							std::stringstream info_detail;
 							info_detail.precision(20);
 							info_detail << std::scientific;
 							info_detail << "f: [" << i << "], r0: "
-									<< valOutput0;
-							info_detail << ", r1: " << valOutput1;
-							info_detail << ", r2: " << valOutput2;
-							info_detail << ", e: " << valGold;
+									<< val_output_1;
+							info_detail << ", r1: " << val_output_2;
+							info_detail << ", r2: " << val_output_3;
+							info_detail << ", e: " << val_gold;
 
 							if (this->parameters_.verbose && (host_errors < 10))
 								std::cout << info_detail.str() << std::endl;
@@ -157,25 +158,25 @@ struct Microbenchmark {
 //								printf("%s\n", info_detail);
 						}
 					}
-				} else if (valOutput1 == valOutput2) {
+				} else if (val_output_2 == val_output_3) {
 					// Only value 0 diverge
-					valOutput = valOutput1;
-				} else if (valOutput0 == valOutput2) {
+					val_output = val_output_2;
+				} else if (val_output_1 == val_output_3) {
 					// Only value 1 diverge
-					valOutput = valOutput0;
-				} else if (valOutput0 == valOutput1) {
+					val_output = val_output_1;
+				} else if (val_output_1 == val_output_2) {
 					// Only value 2 diverge
-					valOutput = valOutput0;
+					val_output = val_output_1;
 				}
 			}
 
-			if (valGold != valOutput && checkFlag) {
+			if (val_gold != val_output && check_flag) {
 #pragma omp critical
 				{
 					std::stringstream error_detail;
 					error_detail.precision(20);
 					error_detail << "p: [" << i << "], r: " << std::scientific
-							<< valOutput << ", e: " << valGold;
+							<< val_output << ", e: " << val_gold;
 
 					if (this->parameters_.verbose && (host_errors < 10))
 						std::cout << error_detail.str() << std::endl;
@@ -205,31 +206,52 @@ struct Microbenchmark {
 
 	uint64 check_which_one_is_right() {
 		uint64 memory_errors = 0;
+		uint64 nan_count = 0;
+		uint64 inf_count = 0;
+		uint64 zero_count = 0;
 
 #pragma omp parallel for shared(memory_errors)
 		for (uint32 i = 0; i < this->gold_vector.size(); i++) {
-			auto valOutput0 = this->output_host_1[i];
-			auto valOutput1 = this->output_host_2[i];
-			auto valOutput2 = this->output_host_3[i];
+			auto val_output_1 = this->output_host_1[i];
+			auto val_output_2 = this->output_host_2[i];
+			auto val_output_3 = this->output_host_3[i];
 
-			if ((valOutput0 != valOutput1) || (valOutput0 != valOutput2)) {
+			nan_count += std::isnan(val_output_1);
+			inf_count += std::isinf(val_output_1);
+
+			nan_count += std::isnan(val_output_2);
+			inf_count += std::isinf(val_output_2);
+
+			nan_count += std::isnan(val_output_3);
+			inf_count += std::isinf(val_output_3);
+
+			zero_count += (val_output_1 == 0.0);
+			zero_count += (val_output_2 == 0.0);
+			zero_count += (val_output_3 == 0.0);
+
+			this->gold_vector[i] = val_output_1;
+			if ((val_output_1 != val_output_2)
+					|| (val_output_1 != val_output_3)) {
 #pragma omp critical
 				{
 					memory_errors++;
 				}
 
-				if (valOutput1 == valOutput2) {
+				if (val_output_2 == val_output_3) {
 					// Only value 0 diverge
-					this->gold_vector[i] = valOutput1;
-				} else if (valOutput0 == valOutput2) {
+					this->gold_vector[i] = val_output_2;
+				} else if (val_output_1 == val_output_3) {
 					// Only value 1 diverge
-					this->gold_vector[i] = valOutput0;
-				} else if (valOutput0 == valOutput1) {
+					this->gold_vector[i] = val_output_1;
+				} else if (val_output_1 == val_output_2) {
 					// Only value 2 diverge
-					this->gold_vector[i] = valOutput0;
+					this->gold_vector[i] = val_output_1;
 				}
 			}
 		}
+
+		std::cout << nan_count << " " << inf_count << " " << zero_count
+				<< std::endl;
 
 		return memory_errors;
 	}
