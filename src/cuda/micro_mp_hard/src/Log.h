@@ -46,14 +46,14 @@ struct Log {
 #endif
 	}
 
-	friend std::ostream& operator<<(std::ostream& os, Log& d){
+	friend std::ostream& operator<<(std::ostream& os, Log& d) {
 		std::string file_name = "No log file name, build with the libraries";
 #ifdef LOGS
 		file_name = get_log_file_name();
 #endif
 		os << "Logfilename: " << file_name << std::endl;
 		os << "Error: " << d.error << std::endl;
-		os << "Info: " << d.info;
+		os << "Info: " << d.info << std::endl;
 		os << "Test info: " << d.test_info << std::endl;
 		os << "Test name: " << d.test_name;
 		return os;
@@ -110,7 +110,7 @@ struct Log {
 	}
 
 	void update_errors(uint64 errors) {
-		if(errors != 0){
+		if (errors != 0) {
 #ifdef LOGS
 			::log_error_count(errors);
 #endif
@@ -118,7 +118,7 @@ struct Log {
 	}
 
 	void update_infos(uint64 infos) {
-		if(infos != 0){
+		if (infos != 0) {
 #ifdef LOGS
 			::log_info_count(infos);
 #endif

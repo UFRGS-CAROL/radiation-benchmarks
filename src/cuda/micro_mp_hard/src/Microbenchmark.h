@@ -28,6 +28,8 @@ struct Microbenchmark {
 
 	const Parameters& parameters_;
 
+	virtual ~Microbenchmark() = default;
+
 	Microbenchmark(const Parameters& parameters, Log& log) :
 			parameters_(parameters), log_(log) {
 		this->output_host_1.resize(this->parameters_.r_size);
@@ -39,7 +41,7 @@ struct Microbenchmark {
 		this->gold_vector.resize(this->parameters_.r_size);
 	}
 
-	virtual void call_kernel(){
+	virtual void call_kernel() {
 		//================== Device computation
 		switch (parameters_.micro) {
 		case ADD:
@@ -69,18 +71,16 @@ struct Microbenchmark {
 		this->log_.end_iteration();
 	}
 
-	std::tuple<uint64, uint64> check_output_errors() {
-		this->output_host_1 = this->output_dev_1.to_vector();
-		this->output_host_2 = this->output_dev_2.to_vector();
-		this->output_host_3 = this->output_dev_3.to_vector();
-
-		if (this->parameters_.generate == true)
-			return {0, 0};
+	std::tuple<uint64, uint64, uint64> check_output_errors() {
+		if (this->parameters_.generate == true) {
+			return {0, 0, 0};
+		}
 
 		uint64 host_errors = 0;
 		uint64 memory_errors = 0;
+		uint64 relative_errors = 0;
 
-#pragma omp parallel for shared(host_errors, memory_errors)
+#pragma omp parallel for shared(host_errors, memory_errors, relative_errors)
 		for (uint32 i = 0; i < this->output_host_1.size(); i++) {
 			auto check_flag = true;
 			auto val_gold = this->gold_vector[i];
@@ -169,13 +169,24 @@ struct Microbenchmark {
 				}
 			}
 
-			if (val_gold != val_output && check_flag) {
+			//check the output with lower precision
+			//if available
+			double val_output_lower_precision =
+					this->check_with_lower_precision(val_output, i,
+							relative_errors);
+			double val_output_bigger_precision = double(val_output);
+
+			if ((val_gold != val_output
+					|| this->cmp(val_output_lower_precision,
+							val_output_bigger_precision)) && check_flag) {
 #pragma omp critical
 				{
 					std::stringstream error_detail;
 					error_detail.precision(20);
 					error_detail << "p: [" << i << "], r: " << std::scientific
-							<< val_output << ", e: " << val_gold;
+							<< val_output << ", e: " << val_gold
+							<< ", smaller_precision: "
+							<< val_output_lower_precision;
 
 					if (this->parameters_.verbose && (host_errors < 10))
 						std::cout << error_detail.str() << std::endl;
@@ -198,7 +209,20 @@ struct Microbenchmark {
 			std::cout << "M";
 		}
 
-		return {host_errors, memory_errors};
+		return {host_errors, memory_errors, relative_errors};
+	}
+
+	virtual inline double check_with_lower_precision(const half_t& val,
+			const uint64& i, uint64& memory_errors) {
+		return double(val);
+	}
+
+	inline bool cmp(double& lhs, double& rhs) {
+		double diff = std::fabs(lhs - rhs);
+		if (diff > ZERO_FLOAT) {
+			return true;
+		}
+		return false;
 	}
 
 	uint64 check_which_one_is_right() {
@@ -247,8 +271,8 @@ struct Microbenchmark {
 			}
 		}
 
-		std::cout << nan_count << " " << inf_count << " " << zero_count
-				<< std::endl;
+		std::cout << nan_count << " " << inf_count;
+		std::cout << " " << zero_count << " " << memory_errors << std::endl;
 
 		return memory_errors;
 	}
@@ -286,6 +310,12 @@ struct Microbenchmark {
 		output.close();
 	}
 
+	virtual inline uint64 copy_data_back() {
+		this->output_host_1 = this->output_dev_1.to_vector();
+		this->output_host_2 = this->output_dev_2.to_vector();
+		this->output_host_3 = this->output_dev_3.to_vector();
+		return 0;
+	}
 };
 
 #endif /* MICROBENCHMARK_H_ */

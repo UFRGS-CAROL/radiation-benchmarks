@@ -1,8 +1,8 @@
 OPS?=1000
-OPSNUM=1
 LOGS=1
 DEBUG?=0
 MICRO=mul
+DMR=none
 
 CC=g++
 NVCC=nvcc
@@ -45,11 +45,16 @@ clean:
 	rm -rf $(EXEC) generate_input
 
 generate:
-	$(EXEC) --precision double --redundancy none \
-		--inst $(MICRO) --generate --opnum $(OPSNUM) \
-		--gold ./gold_$(MICRO).data --verbose
+	$(EXEC) --precision double  \
+			--redundancy $(DMR) \
+			--inst $(MICRO)     \
+			--generate \
+			--gold ./gold_$(MICRO)_$(DMR).data \
+			--verbose
 		
 test:
-	$(EXEC) --precision double --redundancy none \
-		--inst $(MICRO) --opnum $(OPSNUM) \
-		--gold ./gold_$(MICRO).data --verbose --iterations 10
+	$(EXEC) --precision double  \
+			--redundancy $(DMR) \
+			--inst $(MICRO)     \
+			--gold ./gold_$(MICRO)_$(DMR).data \
+			--verbose --iterations 10

@@ -12,25 +12,32 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 	double max_kernel_time = 0.0f;
 	//====================================
 	// Verbose in csv format
-	if (micro_test.parameters_.verbose == false) {
-		std::cout << "output/s,iteration,time,output errors,relative errors"
-				<< std::endl;
-	}
+//	if (micro_test.parameters_.verbose == false) {
+//		std::cout << "output/s,iteration,time,output errors,relative errors"
+//				<< std::endl;
+//	}
 
 	if (micro_test.parameters_.generate == false) {
 		micro_test.load_gold();
 	}
 
+	uint64 memory_errors, errors, relative_errors_host, relative_errors_gpu;
+	// Global test loop
 	for (auto it = 0; it < micro_test.parameters_.iterations; it++) {
-		//================== Global test loop
+		// Execute the test
 		auto kernel_time = rad::mysecond();
 		micro_test.test();
 		kernel_time = rad::mysecond() - kernel_time;
 
-		uint64 memory_errors, errors;
+		// Copy data from GPU
+		auto copy_time = rad::mysecond();
+		relative_errors_gpu = micro_test.copy_data_back();
+		copy_time = rad::mysecond() - copy_time;
+
+		//Check the output at the end
 		auto cmp_time = rad::mysecond();
-		std::tie(errors, memory_errors) =
-				micro_test.check_output_errors();
+		std::tie(errors, memory_errors, relative_errors_host) =
+		micro_test.check_output_errors();
 		cmp_time = rad::mysecond() - cmp_time;
 
 		//====================================
@@ -39,24 +46,28 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 		min_kernel_time = std::min(min_kernel_time, kernel_time);
 		max_kernel_time = std::max(max_kernel_time, kernel_time);
 
-		auto outputpersec = double(micro_test.parameters_.r_size) / kernel_time;
+//		auto outputpersec = double(micro_test.parameters_.r_size) / kernel_time;
 		if (micro_test.parameters_.verbose) {
 			/////////// PERF
-			std::cout << "SIZE:" << micro_test.parameters_.r_size;
-			std::cout << " OUTPUT/S:" << outputpersec;
-			std::cout << " ITERATION " << it;
+//			std::cout << "SIZE:" << micro_test.parameters_.r_size;
+//			std::cout << " OUTPUT/S:" << outputpersec;
+			std::cout << "Iteration " << it;
 			std::cout << " Time: " << kernel_time;
 			std::cout << " Comparison time: " << cmp_time;
+			std::cout << " Copy time: " << copy_time;
 			std::cout << " Output errors: " << errors;
-			std::cout << " Memory errors: " << memory_errors << std::endl;
+			std::cout << " Memory errors: " << memory_errors;
+			std::cout << " Hardening errors host: " << relative_errors_host;
+			std::cout << " Hardening errors GPU: " << relative_errors_gpu
+					<< std::endl;
 
 		} else {
-			// CSV format
-			std::cout << outputpersec << ",";
-			std::cout << it << ",";
-			std::cout << kernel_time << ",";
-			std::cout << errors << ",";
-			std::cout << memory_errors << std::endl;
+//			// CSV format
+//			std::cout << outputpersec << ",";
+//			std::cout << it << ",";
+//			std::cout << kernel_time << ",";
+//			std::cout << errors << ",";
+//			std::cout << memory_errors << std::endl;
 
 		}
 	}
@@ -143,7 +154,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "Get device Name: " << parameters.device << std::endl;
 	}
 //================== Init logs
-	std::string test_info = std::string("ops:") + std::to_string(OPS);
+	std::string test_info = "";
 	test_info += " gridsize:" + std::to_string(parameters.grid_size);
 	test_info += " blocksize:" + std::to_string(parameters.block_size);
 	test_info += " type:" + parameters.instruction_str;
@@ -172,9 +183,9 @@ int main(int argc, char* argv[]) {
 	case 100:
 		setup<100>(parameters, log);
 		break;
-	case 1000:
-		setup<1000>(parameters, log);
-		break;
+//	case 1000:
+//		setup<1000>(parameters, log);
+//		break;
 	default:
 		setup<OPS>(parameters, log);
 	}

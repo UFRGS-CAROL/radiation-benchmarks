@@ -52,7 +52,7 @@ struct Parameters {
 		this->r_size = grid_size * block_size;
 
 		this->iterations = find_int_arg(argc, argv, "--iterations", 10);
-		this->operation_num = find_int_arg(argc, argv, "--opnum", NUM_COMPOSE_DIVISOR);
+		this->operation_num = find_int_arg(argc, argv, "--opnum", OPS);
 		this->nonconstant = find_arg(argc, argv, "--nonconstant");
 		this->min_random = find_float_arg(argc, argv, "--minrand", 0);
 		this->max_random = find_float_arg(argc, argv, "--maxrand", 1000);

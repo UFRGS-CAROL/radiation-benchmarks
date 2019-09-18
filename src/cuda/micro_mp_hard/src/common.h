@@ -11,7 +11,7 @@
 
 #define BLOCK_SIZE 32
 #define MAX_THREAD_BLOCK BLOCK_SIZE * BLOCK_SIZE
-#define NUMBER_OF_THREAD_BLOCK MAX_THREAD_BLOCK * 64
+#define NUMBER_OF_THREAD_BLOCK MAX_THREAD_BLOCK * 128
 
 typedef enum {
 	ADD, MUL, FMA, ADDNOTBIASED, MULNOTBIASED, FMANOTBIASED
@@ -40,10 +40,6 @@ typedef unsigned char byte;
 #ifndef ZERO_FULL
 #define ZERO_FULL 0.0L
 #endif
-
-#define NUM_COMPOSE_DIVISOR 1000000
-#define MUL_INPUT  1.0000001
-#define FMA_INPUT 0.0005
 
 #define __DEVICE_HOST__ __device__ __host__ __forceinline__
 #define __HOST__ __host__ __forceinline__
