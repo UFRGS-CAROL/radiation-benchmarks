@@ -47,7 +47,7 @@ struct Parameters {
 		auto dev_prop = this->get_device();
 		this->device = dev_prop.name;
 
-		this->grid_size = NUMBER_THREAD_PER_BLOCK;
+		this->grid_size = NUMBER_OF_THREAD_BLOCK;
 		this->block_size = MAX_THREAD_BLOCK;
 		this->r_size = grid_size * block_size;
 

@@ -2,10 +2,7 @@ OPS?=1000
 OPSNUM=1
 LOGS=1
 DEBUG?=0
-CHECKBLOCK=0
-ZERO_FLOAT=2.2e-07
 MICRO=mul
-BENCH=mul
 
 CC=g++
 NVCC=nvcc
@@ -29,9 +26,6 @@ endif
 
 SOURCES=./src/main.cu
 EXEC=./cuda_micro_mp_hardening
-
-NVCC_FLAGS+= -DCHECKBLOCK=$(CHECKBLOCK) -DZERO_FLOAT=$(ZERO_FLOAT)
-
 
 FLAGS+=-I$(NVIDIA_INC) -I../common/include -L$(NVIDIA_LIB) -DOPS=$(OPS) 
 FLAGS+= -O3 -lLogHelper -std=c++11  $(NVCC_FLAGS)

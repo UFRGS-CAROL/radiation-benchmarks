@@ -23,12 +23,16 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 
 	for (auto it = 0; it < micro_test.parameters_.iterations; it++) {
 		//================== Global test loop
-		auto kernel_time = micro_test.test();
-		uint64 memory_errors, errors;
-		double cmp_time;
+		auto kernel_time = rad::mysecond();
+		micro_test.test();
+		kernel_time = rad::mysecond() - kernel_time;
 
-		std::tie(cmp_time, errors, memory_errors) =
+		uint64 memory_errors, errors;
+		auto cmp_time = rad::mysecond();
+		std::tie(errors, memory_errors) =
 				micro_test.check_output_errors();
+		cmp_time = rad::mysecond() - cmp_time;
+
 		//====================================
 
 		total_kernel_time += kernel_time;
@@ -42,6 +46,7 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 			std::cout << " OUTPUT/S:" << outputpersec;
 			std::cout << " ITERATION " << it;
 			std::cout << " Time: " << kernel_time;
+			std::cout << " Comparison time: " << cmp_time;
 			std::cout << " Output errors: " << errors;
 			std::cout << " Memory errors: " << memory_errors << std::endl;
 

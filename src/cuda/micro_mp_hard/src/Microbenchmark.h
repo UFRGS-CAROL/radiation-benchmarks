@@ -39,10 +39,7 @@ struct Microbenchmark {
 		this->gold_vector.resize(this->parameters_.r_size);
 	}
 
-	double test() {
-		auto kernel_time = rad::mysecond();
-		this->log_.start_iteration();
-
+	virtual void call_kernel(){
 		//================== Device computation
 		switch (parameters_.micro) {
 		case ADD:
@@ -61,23 +58,25 @@ struct Microbenchmark {
 					output_dev_2.data(), output_dev_3.data());
 			break;
 		}
+	}
+
+	void test() {
+		this->log_.start_iteration();
+		this->call_kernel();
 
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 		this->log_.end_iteration();
-		std::cout << " PASSOU\n";
-		return rad::mysecond() - kernel_time;
 	}
 
-	std::tuple<double, uint64, uint64> check_output_errors() {
+	std::tuple<uint64, uint64> check_output_errors() {
 		this->output_host_1 = this->output_dev_1.to_vector();
 		this->output_host_2 = this->output_dev_2.to_vector();
 		this->output_host_3 = this->output_dev_3.to_vector();
 
 		if (this->parameters_.generate == true)
-			return {0.0, 0, 0};
+			return {0, 0};
 
-		auto cmp_time = rad::mysecond();
 		uint64 host_errors = 0;
 		uint64 memory_errors = 0;
 
@@ -188,8 +187,6 @@ struct Microbenchmark {
 			}
 		}
 
-		cmp_time -= rad::mysecond();
-
 		this->log_.update_errors(host_errors);
 		this->log_.update_infos(memory_errors);
 
@@ -201,7 +198,7 @@ struct Microbenchmark {
 			std::cout << "M";
 		}
 
-		return {cmp_time, host_errors, memory_errors};
+		return {host_errors, memory_errors};
 	}
 
 	uint64 check_which_one_is_right() {
