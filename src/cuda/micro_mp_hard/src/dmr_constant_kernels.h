@@ -14,28 +14,26 @@
 #include "device_functions.h"
 
 template<const uint32 COUNT, typename real_t, typename half_t>
-__global__ void microbenchmark_kernel_add(
-		real_t* output_real_t_1,
-		real_t* output_real_t_2,
-		real_t* output_real_t_3,
-		half_t* output_half_t_1,
-		half_t* output_half_t_2,
-		half_t* output_half_t_3
-		) {
+__global__ void microbenchmark_kernel_add(real_t* output_real_t_1,
+		real_t* output_real_t_2, real_t* output_real_t_3,
+		half_t* output_half_t_1, half_t* output_half_t_2,
+		half_t* output_half_t_3) {
 
-    register real_t acc_real_t = 0.0;
+	register real_t acc_real_t = 0.0;
 	register half_t acc_half_t = 0.0;
 
-	const register real_t this_thread_input_real_t = real_t(input_constant[threadIdx.x]);
-	const register half_t this_thread_input_half_t = half_t(this_thread_input_real_t);
+	const register real_t this_thread_input_real_t = real_t(
+			input_constant[threadIdx.x]);
+	const register half_t this_thread_input_half_t = half_t(
+			this_thread_input_real_t);
 
 #pragma unroll COUNT
-	for (int count = 0; count < OPS; count++) {
+	for (uint32 count = 0; count < OPS; count++) {
 		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
 
 		if ((count % COUNT) == 0) {
-			check_bit_error(acc_half_t, acc_real_t);
+			check_bit_error<ADD_UINT32_THRESHOLD>(acc_half_t, acc_real_t);
 			acc_half_t = half_t(acc_real_t);
 		}
 	}
@@ -51,30 +49,28 @@ __global__ void microbenchmark_kernel_add(
 	output_half_t_3[thread_id] = acc_half_t;
 }
 
-
 template<const uint32 COUNT, typename real_t, typename half_t>
-__global__ void microbenchmark_kernel_mul(
-		real_t* output_real_t_1,
-		real_t* output_real_t_2,
-		real_t* output_real_t_3,
-		half_t* output_half_t_1,
-		half_t* output_half_t_2,
-		half_t* output_half_t_3
-		) {
+__global__ void microbenchmark_kernel_mul(real_t* output_real_t_1,
+		real_t* output_real_t_2, real_t* output_real_t_3,
+		half_t* output_half_t_1, half_t* output_half_t_2,
+		half_t* output_half_t_3) {
 
-    register real_t acc_real_t = 0.0;
-	register half_t acc_half_t = 0.0;
+	const register real_t this_thread_input_real_t = real_t(
+			input_constant[threadIdx.x]);
+	const register half_t this_thread_input_half_t = half_t(
+			this_thread_input_real_t);
 
-	const register real_t this_thread_input_real_t = real_t(input_constant[threadIdx.x]);
-	const register half_t this_thread_input_half_t = half_t(this_thread_input_real_t);
+	register real_t acc_real_t = this_thread_input_real_t;
+	register half_t acc_half_t = this_thread_input_half_t;
+
 
 #pragma unroll COUNT
-	for (int count = 0; count < OPS; count++) {
+	for (uint32 count = 0; count < OPS; count++) {
 		acc_real_t = mul_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = mul_dmr(this_thread_input_half_t, acc_half_t);
 
 		if ((count % COUNT) == 0) {
-			check_bit_error(acc_half_t, acc_real_t);
+			check_bit_error<MUL_UINT32_THRESHOLD>(acc_half_t, acc_real_t);
 			acc_half_t = half_t(acc_real_t);
 		}
 	}
@@ -90,30 +86,29 @@ __global__ void microbenchmark_kernel_mul(
 	output_half_t_3[thread_id] = acc_half_t;
 }
 
-
 template<const uint32 COUNT, typename real_t, typename half_t>
-__global__ void microbenchmark_kernel_fma(
-		real_t* output_real_t_1,
-		real_t* output_real_t_2,
-		real_t* output_real_t_3,
-		half_t* output_half_t_1,
-		half_t* output_half_t_2,
-		half_t* output_half_t_3
-		) {
+__global__ void microbenchmark_kernel_fma(real_t* output_real_t_1,
+		real_t* output_real_t_2, real_t* output_real_t_3,
+		half_t* output_half_t_1, half_t* output_half_t_2,
+		half_t* output_half_t_3) {
 
-    register real_t acc_real_t = 0.0;
+	register real_t acc_real_t = 0.0;
 	register half_t acc_half_t = 0.0;
 
-	const register real_t this_thread_input_real_t = real_t(input_constant[threadIdx.x]);
-	const register half_t this_thread_input_half_t = half_t(this_thread_input_real_t);
+	const register real_t this_thread_input_real_t = real_t(
+			input_constant[threadIdx.x]);
+	const register half_t this_thread_input_half_t = half_t(
+			this_thread_input_real_t);
 
 #pragma unroll COUNT
-	for (int count = 0; count < OPS; count++) {
-		acc_real_t = fma_dmr(this_thread_input_real_t, this_thread_input_real_t, acc_real_t);
-		acc_half_t = fma_dmr(this_thread_input_half_t, this_thread_input_half_t, acc_half_t);
+	for (uint32 count = 0; count < OPS; count++) {
+		acc_real_t = fma_dmr(this_thread_input_real_t, this_thread_input_real_t,
+				acc_real_t);
+		acc_half_t = fma_dmr(this_thread_input_half_t, this_thread_input_half_t,
+				acc_half_t);
 
 		if ((count % COUNT) == 0) {
-			check_bit_error(acc_half_t, acc_real_t);
+			check_bit_error<FMA_UINT32_THRESHOLD>(acc_half_t, acc_real_t);
 			acc_half_t = half_t(acc_real_t);
 		}
 	}

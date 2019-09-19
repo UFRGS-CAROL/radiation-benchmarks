@@ -21,16 +21,11 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 	std::vector<half_t> output_host_1_lower, output_host_2_lower,
 			output_host_3_lower;
 
-
 	virtual ~DMRConstant() = default;
 
 	DMRConstant(const Parameters& parameters, Log& log) :
 			Microbenchmark<CHECK_BLOCK, half_t, real_t>(parameters, log) {
 		auto r_size = this->parameters_.r_size;
-		this->output_host_1_lower.resize(r_size);
-		this->output_host_2_lower.resize(r_size);
-		this->output_host_3_lower.resize(r_size);
-
 		this->output_dev_1_lower.resize(r_size);
 		this->output_dev_2_lower.resize(r_size);
 		this->output_dev_3_lower.resize(r_size);
@@ -66,7 +61,7 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		}
 	}
 
-	virtual inline double check_with_lower_precision(const half_t& val,
+	virtual inline double check_with_lower_precision(const real_t& val,
 			const uint64& i, uint64& memory_errors) override {
 		auto val_output_1 = this->output_host_1_lower[i];
 		auto val_output_2 = this->output_host_2_lower[i];
@@ -104,6 +99,7 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		rad::checkFrameworkErrors(
 				cudaMemcpyFromSymbol(&relative_errors, errors, sizeof(uint64),
 						0, cudaMemcpyDeviceToHost));
+
 		return relative_errors;
 
 	}

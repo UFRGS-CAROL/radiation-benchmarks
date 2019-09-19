@@ -32,9 +32,6 @@ struct Microbenchmark {
 
 	Microbenchmark(const Parameters& parameters, Log& log) :
 			parameters_(parameters), log_(log) {
-		this->output_host_1.resize(this->parameters_.r_size);
-		this->output_host_2.resize(this->parameters_.r_size);
-		this->output_host_3.resize(this->parameters_.r_size);
 		this->output_dev_1.resize(this->parameters_.r_size);
 		this->output_dev_2.resize(this->parameters_.r_size);
 		this->output_dev_3.resize(this->parameters_.r_size);
@@ -94,19 +91,8 @@ struct Microbenchmark {
 					|| (val_output_1 != val_output_3)) {
 #pragma omp critical
 				{
-//					char info_detail[150];
-//					snprintf(info_detail, 150,
-//							"m: [%d], r0: %1.20e, r1: %1.20e, r2: %1.20e", i,
-//							(double) valOutput0, (double) valOutput1,
-//							(double) valOutput2);
-//					if (this->parameters_.verbose && (memory_errors < 10))
-//						printf("%s\n", info_detail);
-//					auto s = std::string(info_detail);
-//					this->log_.log_info_detail(s);
-//					memory_errors++;
-
 					std::stringstream info_detail;
-					info_detail.precision(20);
+					info_detail.precision(PRECISION_PLACES);
 					info_detail << std::scientific;
 					info_detail << "m: [" << i << "], r0: " << val_output_1;
 					info_detail << ", r1: " << val_output_2;
@@ -135,7 +121,7 @@ struct Microbenchmark {
 #pragma omp critical
 						{
 							std::stringstream info_detail;
-							info_detail.precision(20);
+							info_detail.precision(PRECISION_PLACES);
 							info_detail << std::scientific;
 							info_detail << "f: [" << i << "], r0: "
 									<< val_output_1;
@@ -147,14 +133,6 @@ struct Microbenchmark {
 								std::cout << info_detail.str() << std::endl;
 							this->log_.log_info_detail(info_detail.str());
 							memory_errors++;
-
-//							char info_detail[150];
-//							snprintf(info_detail, 150,
-//									"f: [%d], r0: %1.20e, r1: %1.20e, r2: %1.20e, e: %1.20e",
-//									i, (double) valOutput0, (double) valOutput1,
-//									(double) valOutput2, (double) valGold);
-//							if (this->parameters_.verbose && (host_errors < 10))
-//								printf("%s\n", info_detail);
 						}
 					}
 				} else if (val_output_2 == val_output_3) {
@@ -182,7 +160,7 @@ struct Microbenchmark {
 #pragma omp critical
 				{
 					std::stringstream error_detail;
-					error_detail.precision(20);
+					error_detail.precision(PRECISION_PLACES);
 					error_detail << "p: [" << i << "], r: " << std::scientific
 							<< val_output << ", e: " << val_gold
 							<< ", smaller_precision: "
@@ -212,7 +190,7 @@ struct Microbenchmark {
 		return {host_errors, memory_errors, relative_errors};
 	}
 
-	virtual inline double check_with_lower_precision(const half_t& val,
+	virtual inline double check_with_lower_precision(const real_t& val,
 			const uint64& i, uint64& memory_errors) {
 		return double(val);
 	}

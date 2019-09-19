@@ -49,6 +49,7 @@ __device__ __forceinline__ void compare(const T lhs, const T rhs) {
 	}
 }
 
+template<const uint32 THRESHOLD_UINT32>
 __DEVICE__ void check_bit_error(const float lhs, const double rhs) {
 	const float rhs_float = float(rhs);
 
@@ -56,7 +57,7 @@ __DEVICE__ void check_bit_error(const float lhs, const double rhs) {
 	const uint32* rhs_ptr = (uint32*) &rhs_float;
 	const uint32 sub_res =
 			(*lhs_ptr > *rhs_ptr) ? *lhs_ptr - *rhs_ptr : *rhs_ptr - *lhs_ptr;
-	if (sub_res > ZERO_FLOAT) {
+	if (sub_res > THRESHOLD_UINT32) {
 		atomicAdd(&errors, 1);
 	}
 }

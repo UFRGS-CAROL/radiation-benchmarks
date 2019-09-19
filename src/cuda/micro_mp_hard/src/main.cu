@@ -37,7 +37,7 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 		//Check the output at the end
 		auto cmp_time = rad::mysecond();
 		std::tie(errors, memory_errors, relative_errors_host) =
-		micro_test.check_output_errors();
+				micro_test.check_output_errors();
 		cmp_time = rad::mysecond() - cmp_time;
 
 		//====================================

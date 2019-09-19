@@ -13,6 +13,8 @@
 #define MAX_THREAD_BLOCK BLOCK_SIZE * BLOCK_SIZE
 #define NUMBER_OF_THREAD_BLOCK MAX_THREAD_BLOCK * 128
 
+#define PRECISION_PLACES 20
+
 typedef enum {
 	ADD, MUL, FMA, ADDNOTBIASED, MULNOTBIASED, FMANOTBIASED
 } MICROINSTRUCTION;
@@ -40,6 +42,16 @@ typedef unsigned char byte;
 #ifndef ZERO_FULL
 #define ZERO_FULL 0.0L
 #endif
+
+/**
+ * Define the threshold to use on
+ * the comparison method
+ */
+
+#define ADD_UINT32_THRESHOLD 255
+#define MUL_UINT32_THRESHOLD 255
+#define FMA_UINT32_THRESHOLD 255
+
 
 #define __DEVICE_HOST__ __device__ __host__ __forceinline__
 #define __HOST__ __host__ __forceinline__
