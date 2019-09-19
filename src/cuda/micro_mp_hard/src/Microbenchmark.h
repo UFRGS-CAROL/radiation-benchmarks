@@ -76,8 +76,9 @@ struct Microbenchmark {
 		uint64 host_errors = 0;
 		uint64 memory_errors = 0;
 		uint64 relative_errors = 0;
+		double min_diff = UINT32_MAX;
 
-#pragma omp parallel for shared(host_errors, memory_errors, relative_errors)
+#pragma omp parallel for shared(host_errors, memory_errors, relative_errors, min_diff)
 		for (uint32 i = 0; i < this->output_host_1.size(); i++) {
 			auto check_flag = true;
 			auto val_gold = this->gold_vector[i];
@@ -153,6 +154,13 @@ struct Microbenchmark {
 					this->check_with_lower_precision(val_output, i,
 							relative_errors);
 			double val_output_bigger_precision = double(val_output);
+#pragma omp critical
+			{
+				min_diff = std::min(min_diff,
+						std::fabs(
+								val_output_bigger_precision
+										- val_output_lower_precision));
+			}
 
 			if ((val_gold != val_output
 					|| this->cmp(val_output_lower_precision,
@@ -175,6 +183,8 @@ struct Microbenchmark {
 
 			}
 		}
+
+//		std::cout << "MIN DIFFERENCE IN FLOAT "
 
 		this->log_.update_errors(host_errors);
 		this->log_.update_infos(memory_errors);
@@ -248,9 +258,6 @@ struct Microbenchmark {
 				}
 			}
 		}
-
-		std::cout << nan_count << " " << inf_count;
-		std::cout << " " << zero_count << " " << memory_errors << std::endl;
 
 		return memory_errors;
 	}
