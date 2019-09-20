@@ -14,7 +14,7 @@
 #include "Memory.h"
 #include "L1Cache.h"
 
-#define NUMBEROFELEMENTS 96
+#define NUMBEROFELEMENTS 48
 #include "l1_move_function.h"
 
 template<const uint32 SHARED_PER_SM>
