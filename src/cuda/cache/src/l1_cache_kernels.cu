@@ -14,7 +14,7 @@
 #include "Memory.h"
 #include "L1Cache.h"
 
-#define NUMBEROFELEMENTS 48
+#define NUMBEROFELEMENTS 128
 #include "l1_move_function.h"
 
 template<const uint32 SHARED_PER_SM>
@@ -27,7 +27,7 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 //	printf("block idx %d block dim %d thread idx %d\n", blockIdx.x, blockDim.x, threadIdx.x);
 	const register uint64 i = (blockIdx.x * blockDim.x + threadIdx.x) * NUMBEROFELEMENTS;
 
-	register uint64 rs[NUMBEROFELEMENTS], rt[NUMBEROFELEMENTS];
+	register uint64 rs[NUMBEROFELEMENTS]; //, rt[NUMBEROFELEMENTS];
 
 	const int64 t1_miss = clock64();
 	mov_cache_data(rs, in + i);
@@ -38,11 +38,11 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 
 	//last checking
 	const register int64 t1_hit = clock64();
-	mov_cache_data(rt, in + i);
+	mov_cache_data(rs, in + i);
 	const register int64 t2_hit = clock64();
 
-	mov_cache_data(out + i, rt);
-	mov_cache_data(in + i, rs);
+	mov_cache_data(out + i, rs);
+//	mov_cache_data(in + i, rs);
 
 //saving miss and hit
 	l1_t_miss[threadIdx.x] = t2_miss - t1_miss;
