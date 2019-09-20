@@ -14,7 +14,10 @@
 #include "Memory.h"
 #include "L1Cache.h"
 
-template<const uint32 V_SIZE, const uint32 SHARED_PER_SM>
+#define NUMBEROFELEMENTS 128
+#include "l1_move_function.h"
+
+template<const uint32 SHARED_PER_SM>
 __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 		int64 *miss, const int64 sleep_cycles) {
 
@@ -22,15 +25,12 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	__shared__ int64 l1_t_miss[SHARED_PER_SM];
 
 //	printf("block idx %d block dim %d thread idx %d\n", blockIdx.x, blockDim.x, threadIdx.x);
-	uint64 i = blockIdx.x * V_SIZE;
+	const register uint64 i = (blockIdx.x * blockDim.x + threadIdx.x) * NUMBEROFELEMENTS;
 
-	uint64 rs[V_SIZE], rt[V_SIZE];
+	register uint64 rs[NUMBEROFELEMENTS], rt[NUMBEROFELEMENTS];
 
 	const int64 t1_miss = clock64();
-#pragma unroll
-	for(uint32 k = 0; k < V_SIZE; k++){
-		rs[k] = in[i + k];
-	}
+	mov_cache_data(rs, in + i);
 	const int64 t2_miss = clock64();
 
 	//wait for exposition to neutrons
@@ -38,17 +38,11 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 
 	//last checking
 	const register int64 t1_hit = clock64();
-#pragma unroll
-	for(uint32 k = 0; k < V_SIZE; k++){
-		rt[k] = in[i + k];
-	}
+	mov_cache_data(rt, in + i);
 	const register int64 t2_hit = clock64();
 
-#pragma unroll
-	for(uint32 k = 0; k < V_SIZE; k++){
-		out[i + k] = rt[k];
-		in[i + k] = rs[k];
-	}
+	mov_cache_data(out + i, rt);
+	mov_cache_data(in + i, rs);
 
 //saving miss and hit
 	l1_t_miss[threadIdx.x] = t2_miss - t1_miss;
@@ -117,7 +111,7 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	}
 
 //	this->threads_per_block = dim3(v_size);
-	this->threads_per_block = dim3(1);
+	this->threads_per_block = dim3(v_size / NUMBEROFELEMENTS);
 
 	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms;
 //			* CACHE_LINE_SIZE_BY_INT32; // Each block with one thread using all l1 cache
@@ -149,9 +143,8 @@ void L1Cache::test(const uint64& mem) {
 		// cache line has 128 bytes
 		//to force alloc maximum shared memory
 //		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
-		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / sizeof(uint64);
 
-		test_l1_cache_kernel<v_size, MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<
+		test_l1_cache_kernel<MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<
 				block_size, threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), hit_vector_device.data(),
 				miss_vector_device.data(), cycles);
@@ -164,12 +157,12 @@ void L1Cache::test(const uint64& mem) {
 		//BUT, only 98304 bytes are destined to L1 memory
 		//so alloc 98304 bytes
 		// cache line has 128 bytes
-		constexpr uint32 v_size = MAX_VOLTA_L1_MEMORY / CACHE_LINE_SIZE;
+//		constexpr uint32 v_size = MAX_VOLTA_L1_MEMORY / CACHE_LINE_SIZE;
 
-		test_l1_cache_kernel<v_size, MAX_VOLTA_SHARED_MEMORY_TO_TEST_L1> <<<
-				block_size, threads_per_block>>>(input_device_1.data(),
-				output_device_1.data(), hit_vector_device.data(),
-				miss_vector_device.data(), cycles);
+//		test_l1_cache_kernel<v_size, MAX_VOLTA_SHARED_MEMORY_TO_TEST_L1> <<<
+//				block_size, threads_per_block>>>(input_device_1.data(),
+//				output_device_1.data(), hit_vector_device.data(),
+//				miss_vector_device.data(), cycles);
 		break;
 	}
 	}
