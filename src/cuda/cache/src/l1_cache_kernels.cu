@@ -11,9 +11,42 @@
 #include <cstring>
 
 #include "utils.h"
-//#include "CacheLine.h"
 #include "Memory.h"
 #include "L1Cache.h"
+
+template<const uint32 SHARED_PER_SM>
+__global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
+		int64 *miss, const int64 sleep_cycles) {
+
+	__shared__ int64 l1_t_hit[SHARED_PER_SM];
+	__shared__ int64 l1_t_miss[SHARED_PER_SM];
+	const register uint64 i = blockIdx.x * blockDim.x * blockDim.y
+			+ threadIdx.y * blockDim.x + threadIdx.x;
+
+//	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
+	const int64 t1_miss = clock64();
+	register uint64 rs = in[i];
+	const int64 t2_miss = clock64();
+
+	//wait for exposition to neutrons
+	sleep_cuda(sleep_cycles);
+
+	//last checking
+	const register int64 t1_hit = clock64();
+	register uint64 rt = in[i];
+	const register int64 t2_hit = clock64();
+
+	//triplication
+	out[i] = rt;
+	in[i] = rs;
+
+//saving miss and hit
+	l1_t_miss[threadIdx.x] = t2_miss - t1_miss;
+	l1_t_hit[threadIdx.x] = t2_hit - t1_hit;
+	miss[i] = l1_t_miss[threadIdx.x];
+	hits[i] = l1_t_hit[threadIdx.x];
+//	}
+}
 
 /*
  * l1_size size of the L1 cache
@@ -57,16 +90,19 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 		hits[i] = l1_t_hit[threadIdx.x];
 	}
 
-
 }
 
 L1Cache::L1Cache(const Parameters& parameters) :
 		Memory<uint64>(parameters) {
 	uint32 v_size;
+	uint32 x_block, y_block;
 	switch (device) {
 	case K20:
 	case K40:
-		v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
+//		v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
+		v_size = MAX_KEPLER_L1_MEMORY / sizeof(uint64);
+		x_block = 1024;
+		y_block = v_size / 1024;
 		break;
 	case XAVIER:
 	case TITANV:
@@ -74,9 +110,11 @@ L1Cache::L1Cache(const Parameters& parameters) :
 		break;
 	}
 
-	this->threads_per_block = dim3(v_size);
-	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms
-			* CACHE_LINE_SIZE_BY_INT32; // Each block with one thread using all l1 cache
+//	this->threads_per_block = dim3(v_size);
+	this->threads_per_block = dim3(x_block, y_block);
+	std::cout << v_size << " " << parameters.number_of_sms << std::endl;
+	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms;
+//			* CACHE_LINE_SIZE_BY_INT32; // Each block with one thread using all l1 cache
 
 	this->hit_vector_host.resize(v_size_multiple_threads);
 	this->miss_vector_host.resize(v_size_multiple_threads);
@@ -91,8 +129,8 @@ void L1Cache::test(const uint64& mem) {
 	rad::DeviceVector<int64> hit_vector_device(this->hit_vector_host);
 	rad::DeviceVector<int64> miss_vector_device(this->miss_vector_host);
 
-	rad::DeviceVector<uint64> input_device_1 = this->input_host_1;
-	rad::DeviceVector<uint64> output_device_1 = this->output_host_1;
+	rad::DeviceVector<uint64> input_device_1(this->input_host_1);
+	rad::DeviceVector<uint64> output_device_1(this->output_host_1);
 
 	//This switch is only to set manually the cache line size
 	//since it is hard to check it at runtime
@@ -104,9 +142,9 @@ void L1Cache::test(const uint64& mem) {
 		//so alloc 49152 bytes
 		// cache line has 128 bytes
 		//to force alloc maximum shared memory
-		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
+//		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
 
-		test_l1_cache_kernel<v_size, MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<
+		test_l1_cache_kernel<MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<
 				block_size, threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), hit_vector_device.data(),
 				miss_vector_device.data(), cycles);
