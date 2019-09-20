@@ -27,7 +27,7 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 //	printf("block idx %d block dim %d thread idx %d\n", blockIdx.x, blockDim.x, threadIdx.x);
 	const register uint64 i = (blockIdx.x * blockDim.x + threadIdx.x) * NUMBEROFELEMENTS;
 
-	register uint64 rs[NUMBEROFELEMENTS]; //, rt[NUMBEROFELEMENTS];
+	volatile register uint64 rs[NUMBEROFELEMENTS]; //, rt[NUMBEROFELEMENTS];
 
 	const int64 t1_miss = clock64();
 	mov_cache_data(rs, in + i);
