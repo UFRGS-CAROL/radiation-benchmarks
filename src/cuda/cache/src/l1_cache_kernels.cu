@@ -20,10 +20,9 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 
 	__shared__ int64 l1_t_hit[SHARED_PER_SM];
 	__shared__ int64 l1_t_miss[SHARED_PER_SM];
-	const register uint64 i = blockIdx.x * blockDim.x * blockDim.y
-			+ threadIdx.y * blockDim.x + threadIdx.x;
 
-//	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
+	const register uint64 i = (blockIdx.y* gridDim.x+ blockIdx.x) * blockDim.x + threadIdx.x;
+
 	const int64 t1_miss = clock64();
 	register uint64 rs = in[i];
 	const int64 t2_miss = clock64();
@@ -36,7 +35,6 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	register uint64 rt = in[i];
 	const register int64 t2_hit = clock64();
 
-	//triplication
 	out[i] = rt;
 	in[i] = rs;
 
@@ -45,7 +43,7 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	l1_t_hit[threadIdx.x] = t2_hit - t1_hit;
 	miss[i] = l1_t_miss[threadIdx.x];
 	hits[i] = l1_t_hit[threadIdx.x];
-//	}
+
 }
 
 /*
@@ -95,14 +93,14 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 L1Cache::L1Cache(const Parameters& parameters) :
 		Memory<uint64>(parameters) {
 	uint32 v_size;
-	uint32 x_block, y_block;
+	uint32 x_block, y_grid;
 	switch (device) {
 	case K20:
 	case K40:
 //		v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
 		v_size = MAX_KEPLER_L1_MEMORY / sizeof(uint64);
-		x_block = 1024;
-		y_block = v_size / 1024;
+		x_block = BLOCK_SIZE * BLOCK_SIZE;
+		y_grid = v_size / 1024;
 		break;
 	case XAVIER:
 	case TITANV:
@@ -111,9 +109,12 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	}
 
 //	this->threads_per_block = dim3(v_size);
-	this->threads_per_block = dim3(x_block, y_block);
+	this->threads_per_block = dim3(x_block);
+	this->block_size.y = y_grid;
+
 	std::cout << v_size << " " << parameters.number_of_sms << std::endl;
 	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms;
+
 //			* CACHE_LINE_SIZE_BY_INT32; // Each block with one thread using all l1 cache
 
 	this->hit_vector_host.resize(v_size_multiple_threads);
