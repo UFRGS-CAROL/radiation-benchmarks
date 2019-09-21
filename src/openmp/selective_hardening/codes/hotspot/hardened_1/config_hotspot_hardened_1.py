@@ -31,8 +31,10 @@ def config(board, debug):
 
     bin_path = install_dir + "bin"
     src_benchmark = install_dir + "src/openmp/selective_hardening/codes/hotspot/hardened_1"
+    selective_hardening_dir = "/var/selective_hardening/"
 
     generate = ["sudo mkdir -p " + bin_path,
+                "sudo mkdir -p " + selective_hardening_dir,
                 "cd " + src_benchmark, 
                 "make clean",
                 "make",

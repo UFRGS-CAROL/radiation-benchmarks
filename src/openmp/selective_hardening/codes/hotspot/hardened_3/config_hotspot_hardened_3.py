@@ -16,7 +16,7 @@ ITERATIONS = 100000
 
 def config(board, debug):
 
-    benchmark_bin = "hotspot_check_not_hardened"
+    benchmark_bin = "hotspot_check_hardened_3"
     print("Generating {} for OpenMP, board:{}".format(benchmark_bin, board))
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -30,7 +30,7 @@ def config(board, debug):
         sys.exit(1)
 
     bin_path = install_dir + "bin"
-    src_benchmark = install_dir + "src/openmp/selective_hardening/codes/hotspot/not_hardened"
+    src_benchmark = install_dir + "src/openmp/selective_hardening/codes/hotspot/hardened_3"
     selective_hardening_dir = "/var/selective_hardening/"
 
     generate = ["sudo mkdir -p " + bin_path,

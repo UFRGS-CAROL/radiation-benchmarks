@@ -7,16 +7,14 @@ sys.path.insert(0, '../../../../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 NUM_THREADS = 4
-MATRIX_ORDER = 1024
-ITER_SIZE = 512
-TEMP_MATRIX = "../temp_" + str(MATRIX_ORDER)
-POWER_MATRIX = "../power_" + str(MATRIX_ORDER)
-GOLD_MATRIX = "../gold_" + str(MATRIX_ORDER)
+INPUT_SIZE = 8388608
+INPUT_FILE = "inputsort_" + str(INPUT_SIZE)
+GOLD_FILE = "gold_" + str(INPUT_SIZE)
 ITERATIONS = 100000
 
 def config(board, debug):
 
-    benchmark_bin = "hotspot_check_not_hardened"
+    benchmark_bin = "merge_check_not_hardened"
     print("Generating {} for OpenMP, board:{}".format(benchmark_bin, board))
 
     conf_file = '/etc/radiation-benchmarks.conf'
@@ -30,7 +28,7 @@ def config(board, debug):
         sys.exit(1)
 
     bin_path = install_dir + "bin"
-    src_benchmark = install_dir + "src/openmp/selective_hardening/codes/hotspot/not_hardened"
+    src_benchmark = install_dir + "src/openmp/selective_hardening/codes/mergesort/not_hardened"
     selective_hardening_dir = "/var/selective_hardening/"
 
     generate = ["sudo mkdir -p " + bin_path,
@@ -38,22 +36,20 @@ def config(board, debug):
                 "cd " + src_benchmark, 
                 "make clean",
                 "make",
-                "./hotspot_gen {} {} {} {} {} {} {}".format(str(MATRIX_ORDER), str(MATRIX_ORDER), str(ITER_SIZE), str(NUM_THREADS), TEMP_MATRIX, POWER_MATRIX, GOLD_MATRIX),
+                "./generateInput {}".format(str(INPUT_SIZE)),
+                "./merge_gen {} {} {}".format(str(INPUT_SIZE), str(NUM_THREADS), INPUT_FILE),
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/",
                 "make clean"]
-
+    
     execute = []
 
-    exe = [None] * 9
+    exe = [None] * 6
     exe[0] = [bin_path + "/" + benchmark_bin]
-    exe[1] = [str(MATRIX_ORDER)]
-    exe[2] = [str(MATRIX_ORDER)]
-    exe[3] = [str(ITER_SIZE)]
-    exe[4] = [str(NUM_THREADS)]
-    exe[5] = [TEMP_MATRIX]
-    exe[6] = [POWER_MATRIX]
-    exe[7] = [GOLD_MATRIX]
-    exe[8] = [str(ITERATIONS)]
+    exe[1] = [str(INPUT_SIZE)]
+    exe[2] = [str(NUM_THREADS)]
+    exe[3] = [INPUT_FILE]
+    exe[4] = [GOLD_FILE]
+    exe[5] = [str(ITERATIONS)]
 
     execute = [(' '.join(str(r) for v in exe for r in v))]
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)  
