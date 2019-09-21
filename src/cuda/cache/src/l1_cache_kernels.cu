@@ -21,7 +21,7 @@
  * l1_size size of the L1 cache
  * V_size = l1_size / sizeof(CacheLine)
  */
-template<const uint32 COUNT, const uint32 SHARED_PER_SM>
+template<const uint32 SHARED_PER_SM>
 __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 		int64 *miss, const int64 sleep_cycles) {
 
@@ -30,7 +30,7 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 
 	const uint64 i = (blockIdx.x * blockDim.x + threadIdx.x) * NUMBEROFELEMENTS;
 
-	uint64 rs[COUNT], rt[COUNT];
+	uint64 rs[NUMBEROFELEMENTS], rt[NUMBEROFELEMENTS];
 
 	const int64 t1_miss = clock64();
 	mov_cache_data(rs, in + i);
@@ -113,7 +113,7 @@ void L1Cache::test(const uint64& mem) {
 		//to force alloc maximum shared memory
 //		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
 
-		test_l1_cache_kernel<NUMBEROFELEMENTS, MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<
+		test_l1_cache_kernel<MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<
 				block_size, threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), hit_vector_device.data(),
 				miss_vector_device.data(), cycles);
