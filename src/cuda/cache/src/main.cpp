@@ -95,7 +95,7 @@ void setup_execute(Log& log, Parameters& test_parameter,
 			std::cout << " False hits: " << false_hits;
 			std::cout << std::hex;
 
-			std::cout << " Byte: "<< std::setw(sizeof(uint64)) << std::setfill('0') << mem;
+			std::cout << " Byte: "<< std::setw(sizeof(uint64) * 2) << std::setfill('0') << mem;
 			std::cout << std::dec;
 			std::cout << " Device Reset Time: "
 					<< end_dev_reset - start_dev_reset;
