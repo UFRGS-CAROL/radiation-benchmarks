@@ -14,48 +14,49 @@
 #include "Memory.h"
 #include "L1Cache.h"
 
-#define NUMBEROFELEMENTS 64
-#include "l1_move_function.h"
+//#define NUMBEROFELEMENTS 64
+//#include "l1_move_function.h"
 
-__device__ __forceinline__ uint32 get_global_id() {
-	const uint32 blockId = blockIdx.y * gridDim.x + blockIdx.x;
-	const uint32 threadId = blockId * blockDim.x + threadIdx.x;
-	return threadId;
+__device__    __forceinline__ uint32 get_global_id() {
+	return (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 }
 
-template<const uint32 SHARED_PER_SM>
+template<const uint32 COUNT> __device__ __forceinline__
+void mov_cache_data(volatile uint64* dst, volatile uint64* src) {
+#pragma unroll COUNT
+	for (uint32 i = 0; i < COUNT; i++) {
+		dst[i] = src[i];
+	}
+}
+
+template<const uint32 NUMBEROFELEMENTS, const uint32 SHARED_PER_SM>
 __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
-		int64 *miss, const int64 sleep_cycles, const uint64 t) {
+		int64 *miss, const int64 sleep_cycles) {
 
 	__shared__ int64 l1_t_hit[SHARED_PER_SM];
-//	__shared__ int64 l1_t_miss[SHARED_PER_SM];
+	__shared__ int64 l1_t_miss[SHARED_PER_SM];
 
 	const uint32 i = get_global_id() * NUMBEROFELEMENTS;
 
-	volatile uint64 rs[NUMBEROFELEMENTS];
+	volatile register uint64 rs[NUMBEROFELEMENTS];
 
 	const int64 t1_miss = clock64();
-	for(uint32 k = 0; k < NUMBEROFELEMENTS; k++){
-		in[i + k] = t;
-	}
-	const int64 t2_miss = clock64();
-//	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
+	mov_cache_data<NUMBEROFELEMENTS>(rs, in + i);
+	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
 
-//wait for exposition to neutrons
+	//wait for exposition to neutrons
 	sleep_cuda(sleep_cycles);
 
-//last checking
+	//last checking
 	const int64 t1_hit = clock64();
-	mov_cache_data(rs, in + i);
-	const int64 t2_hit = clock64();
-//	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
+	mov_cache_data<NUMBEROFELEMENTS>(rs, in + i);
+	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
 
-	mov_cache_data(out + i, rs);
-	l1_t_hit[threadIdx.x] = t;
+	mov_cache_data<NUMBEROFELEMENTS>(out + i, rs);
 
 //saving miss and hit
-	miss[i] = t2_miss - t1_miss; // l1_t_miss[threadIdx.x];
-	hits[i] = t2_hit - t1_hit; //l1_t_hit[threadIdx.x];
+	miss[i] = l1_t_miss[threadIdx.x];
+	hits[i] = l1_t_hit[threadIdx.x];
 }
 
 L1Cache::L1Cache(const Parameters& parameters) :
@@ -64,7 +65,7 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	switch (device) {
 	case K20:
 	case K40:
-		v_size = MAX_KEPLER_L1_MEMORY / sizeof(uint64);
+		v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
 		break;
 	case XAVIER:
 	case TITANV:
@@ -72,14 +73,16 @@ L1Cache::L1Cache(const Parameters& parameters) :
 		break;
 	}
 
-//	this->threads_per_block = dim3(v_size);
-	this->threads_per_block = dim3((v_size / NUMBEROFELEMENTS));
+	this->threads_per_block = dim3(v_size);
 
-	std::cout << "BLOCK SIZE " << this->threads_per_block.x << "x" << this->threads_per_block.y << std::endl;
-	std::cout << "GRID SIZE " << this->block_size.x << "x" << this->block_size.y << std::endl;
+	std::cout << "BLOCK SIZE " << this->threads_per_block.x << "x"
+			<< this->threads_per_block.y << std::endl;
+	std::cout << "GRID SIZE " << this->block_size.x << "x" << this->block_size.y
+			<< std::endl;
 
-	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms;
-//			* CACHE_LINE_SIZE_BY_INT32; // Each block with one thread using all l1 cache
+	// Each block with one thread using all l1 cache
+	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms
+			* CACHE_LINE_SIZE_BY_INT64;
 
 	this->hit_vector_host.resize(v_size_multiple_threads);
 	this->miss_vector_host.resize(v_size_multiple_threads);
@@ -110,12 +113,13 @@ void L1Cache::test(const uint64& mem) {
 		//so alloc 49152 bytes
 		// cache line has 128 bytes
 		//to force alloc maximum shared memory
-//		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
+		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
+		constexpr uint32 number_of_elements = v_size / sizeof(uint64);
 
-		test_l1_cache_kernel<MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<block_size,
-				threads_per_block>>>(input_device_1.data(),
-				output_device_1.data(), hit_vector_device.data(),
-				miss_vector_device.data(), cycles, mem);
+		test_l1_cache_kernel<number_of_elements,
+		MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<block_size, threads_per_block>>>(
+				input_device_1.data(), output_device_1.data(),
+				hit_vector_device.data(), miss_vector_device.data(), cycles);
 
 		break;
 	}
@@ -127,10 +131,10 @@ void L1Cache::test(const uint64& mem) {
 		// cache line has 128 bytes
 //		constexpr uint32 v_size = MAX_VOLTA_L1_MEMORY / CACHE_LINE_SIZE;
 
-		test_l1_cache_kernel<MAX_VOLTA_SHARED_MEMORY_TO_TEST_L1> <<<block_size,
-				threads_per_block>>>(input_device_1.data(),
-				output_device_1.data(), hit_vector_device.data(),
-				miss_vector_device.data(), cycles, mem);
+//		test_l1_cache_kernel<MAX_VOLTA_SHARED_MEMORY_TO_TEST_L1> <<<block_size,
+//				threads_per_block>>>(input_device_1.data(),
+//				output_device_1.data(), hit_vector_device.data(),
+//				miss_vector_device.data(), cycles, mem);
 		break;
 	}
 	}
