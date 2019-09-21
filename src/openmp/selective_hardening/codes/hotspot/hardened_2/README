@@ -1,0 +1,52 @@
+Hotspot OpenMP
+
+* How to compile
+  - Intel Xeon Phi (icc native compilation):
+    $ make intel
+  - General X86 (gcc):
+    $ make general
+
+Compilation should generate 5 binaries:
+  - hotspot_gen: used to generate the gold output. Gold will be used to check if the execution generates a correct output.
+  - hotspot_check: this binary will be used during radiation test, it will execute the benchmark kernel several times
+  - hotspot_timing: this binary is used only for testing purposes, it will measure the time spent in every part of the benchmark. This binary will not record any log information
+  - hotspot_err_inj: this binary is used only for testing purposes, it will change the input value to check if the gold verification is working. This binary will also enter into an infinite loop to test the setup that needs to kill hanging benchmarks.
+
+
+
+* How to generate input data and gold output
+  - gold output
+    $ ./hotspot_gen <grid_rows> <grid_cols> <sim_time> <no. of threads><temp_file> <power_file> <output_file>
+        - grid_rows: row dimension of the matrix
+        - grid_cols: column dimension of the matrix
+        - sim_time: how many step it will simulate, eventually the simulation data will converge
+        - no. of thread: how many thread the openmp should create
+        - temp_file: location of the tempratures input file (some input files can be located in radiation-benchmarks/data)
+        - power_file: location of the power input file (some input files can be located in radiation-benchmarks/data)
+        - output_file: name of the gold file that will be created
+
+
+* How to run a test
+
+Before running the benchmark, the script radiation-benchmarks/scripts/install.py should be executed. This script will create the folder to store the log files and create the conf file in /etc/radiation-benchmark.conf
+
+    $ ./hotspot_check <grid_rows> <grid_cols> <sim_time> <no. of threads><temp_file> <power_file> <output_file> <# iterations>
+        - grid_rows: row dimension of the matrix
+        - grid_cols: column dimension of the matrix
+        - sim_time: how many step it will simulate, eventually the simulation data will converge
+        - no. of thread: how many thread the openmp should create
+        - temp_file: location of the tempratures input file
+        - power_file: locations of the power input file
+        - output_file: name of the gold output file
+        - # iterations: how many times the benchmark kernel should be executed, usually 100000 is enough for the radiation test (it will crash before reaching this number)
+
+
+
+* Configuration used for Xeon Phi 3120A
+  - input and gold generated
+    $ ./hotspot_gen 1024 1024 1000 4 ../../../data/hotspot/temp_1024 ../../../data/hotspot/power_1024 gold_1024_1000
+    $ ./hotspot_gen 1024 1024 10000 4 ../../../data/hotspot/temp_1024 ../../../data/hotspot/power_1024 gold_1024_10000
+  - configurations executed
+    $ ./hotspot_check 1024 1024 1000 4 ../../../data/hotspot/temp_1024 ../../../data/hotspot/power_1024 gold_1024_1000 1000000
+    $ ./hotspot_check 1024 1024 10000 4 ../../../data/hotspot/temp_1024 ../../../data/hotspot/power_1024 gold_1024_10000 1000000
+

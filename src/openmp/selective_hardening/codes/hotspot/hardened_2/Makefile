@@ -1,4 +1,4 @@
-SOURCES_CHECK=hotspot_check.c ../../../../../include/log_helper.c
+SOURCES_CHECK=hotspot_check.c ../../../../../include/log_helper.c ../../../src/selective_hardening.c
 PRECISION = 32
 
 CC = gcc
@@ -6,7 +6,7 @@ CC_FLAGS = -std=c99 -O0 -fopenmp
 
 EXE_BASENAME=hotspot
 
-NAME_SUFFIX=_not_hardened
+NAME_SUFFIX=_hardened_2
 
 all: hotspot hotspot_check hotspot_err_inj hotspot_timing
 

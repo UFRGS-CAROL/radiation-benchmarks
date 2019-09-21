@@ -1,6 +1,6 @@
 # C compiler
 CC = gcc
-CC_FLAGS = -std=c99 -g -O0 -fopenmp
+CC_FLAGS = -std=c99 -O0 -fopenmp
 
 SOURCES_CHECK=quicksort_check.c ../../../../../include/log_helper.c ../../../src/selective_hardening.c
 
