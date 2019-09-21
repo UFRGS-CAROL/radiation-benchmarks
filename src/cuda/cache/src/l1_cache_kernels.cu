@@ -24,7 +24,6 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	__shared__ int64 l1_t_hit[SHARED_PER_SM];
 	__shared__ int64 l1_t_miss[SHARED_PER_SM];
 
-//	printf("block idx %d block dim %d thread idx %d\n", blockIdx.x, blockDim.x, threadIdx.x);
 	const register uint64 i = (blockIdx.x * blockDim.x + threadIdx.x) * NUMBEROFELEMENTS;
 
 	register uint64 rs[NUMBEROFELEMENTS]; //, rt[NUMBEROFELEMENTS];
@@ -32,6 +31,8 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	const int64 t1_miss = clock64();
 	mov_cache_data(rs, in + i);
 	const int64 t2_miss = clock64();
+
+	rs[NUMBEROFELEMENTS / 2] = 34;
 
 	//wait for exposition to neutrons
 	sleep_cuda(sleep_cycles);
