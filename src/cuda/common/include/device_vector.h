@@ -103,7 +103,7 @@ public:
 	}
 
 	std::vector<T> to_vector() {
-		std::vector < T > ret(this->v_size, 0);
+		std::vector <T> ret(this->v_size);
 
 		checkFrameworkErrors(
 				cudaMemcpy(ret.data(), this->data_, sizeof(T) * this->v_size,
