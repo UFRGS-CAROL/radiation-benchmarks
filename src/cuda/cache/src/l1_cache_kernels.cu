@@ -17,9 +17,6 @@
 //#define NUMBEROFELEMENTS 64
 //#include "l1_move_function.h"
 
-__device__      __forceinline__ uint32 get_global_id() {
-	return blockIdx.x * blockDim.x + threadIdx.x;
-}
 __device__ __forceinline__
 void mov_cache_data(volatile uint64* dst, volatile uint64* src) {
 	dst[0] = src[0];
@@ -39,13 +36,6 @@ void mov_cache_data(volatile uint64* dst, volatile uint64* src) {
 	dst[14] = src[14];
 	dst[15] = src[15];
 }
-//__device__ __forceinline__
-//void mov_cache_data(volatile uint64* dst, volatile uint64* src) {
-//#pragma unroll COUNT
-//	for (uint32 i = 0; i < COUNT; i++) {
-//		dst[i] = src[i];
-//	}
-//}
 
 template<const uint32 SHARED_PER_SM>
 __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
@@ -54,7 +44,7 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	__shared__ int64 l1_t_hit[SHARED_PER_SM];
 	__shared__ int64 l1_t_miss[SHARED_PER_SM];
 
-	const uint32 index = get_global_id();
+	const uint32 index = blockIdx.x * blockDim.x + threadIdx.x;;
 	const uint32 i = index * CACHE_LINE_SIZE_BY_INT64;
 
 	volatile register uint64 rs[CACHE_LINE_SIZE_BY_INT64];
@@ -94,8 +84,9 @@ L1Cache::L1Cache(const Parameters& parameters) :
 
 	this->threads_per_block = dim3(v_size);
 	// Each block with one thread using all l1 cache
-	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms
-			* CACHE_LINE_SIZE_BY_INT64;
+	uint32 total_size = v_size * parameters.number_of_sms;
+
+	uint32 v_size_multiple_threads = total_size	* CACHE_LINE_SIZE_BY_INT64;
 
 	std::cout << "BLOCK SIZE " << this->threads_per_block.x << "x"
 			<< this->threads_per_block.y << std::endl;
@@ -103,8 +94,8 @@ L1Cache::L1Cache(const Parameters& parameters) :
 			<< std::endl;
 	std::cout << "TOTAL SIZE " << v_size_multiple_threads << std::endl;
 
-	this->hit_vector_host.resize(v_size_multiple_threads);
-	this->miss_vector_host.resize(v_size_multiple_threads);
+	this->hit_vector_host.resize(total_size);
+	this->miss_vector_host.resize(total_size);
 
 	this->input_host_1.resize(v_size_multiple_threads);
 	this->output_host_1.resize(v_size_multiple_threads);
