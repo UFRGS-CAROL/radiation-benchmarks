@@ -17,13 +17,12 @@
 //#define NUMBEROFELEMENTS 64
 //#include "l1_move_function.h"
 
-__device__  __forceinline__ uint32 get_global_id() {
+__device__    __forceinline__ uint32 get_global_id() {
 	return (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
 }
 
-template<const uint32 COUNT>
-__device__ __forceinline__ void mov_cache_data(volatile uint64* dst,
-		volatile __const  __restrict__ uint64* src) {
+template<const uint32 COUNT> __device__ __forceinline__
+void mov_cache_data(volatile uint64* dst, volatile uint64* src) {
 #pragma unroll COUNT
 	for (uint32 i = 0; i < COUNT; i++) {
 		dst[i] = src[i];
@@ -82,7 +81,8 @@ L1Cache::L1Cache(const Parameters& parameters) :
 			<< std::endl;
 
 	// Each block with one thread using all l1 cache
-	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms * CACHE_LINE_SIZE_BY_INT64;
+	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms
+			* CACHE_LINE_SIZE_BY_INT64;
 
 	this->hit_vector_host.resize(v_size_multiple_threads);
 	this->miss_vector_host.resize(v_size_multiple_threads);
@@ -116,10 +116,10 @@ void L1Cache::test(const uint64& mem) {
 		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
 		constexpr uint32 number_of_elements = v_size / sizeof(uint64);
 
-		test_l1_cache_kernel<number_of_elements, MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<block_size,
-				threads_per_block>>>(input_device_1.data(),
-				output_device_1.data(), hit_vector_device.data(),
-				miss_vector_device.data(), cycles);
+		test_l1_cache_kernel<number_of_elements,
+		MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<block_size, threads_per_block>>>(
+				input_device_1.data(), output_device_1.data(),
+				hit_vector_device.data(), miss_vector_device.data(), cycles);
 
 		break;
 	}

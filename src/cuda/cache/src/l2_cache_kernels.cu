@@ -20,8 +20,8 @@ __global__ void test_l2_cache_kernel(uint64 *in, uint64* out,
 	const register uint32 i = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (i < V_SIZE) {
-		register uint64 rs[CACHE_LINE_SIZE_BY_INT32];
-		register uint64 rt[CACHE_LINE_SIZE_BY_INT32];
+		register uint64 rs[CACHE_LINE_SIZE_BY_INT64];
+		register uint64 rt[CACHE_LINE_SIZE_BY_INT64];
 
 		register const int64 t1_miss = clock64();
 		move_cache_line(rs, in + i);

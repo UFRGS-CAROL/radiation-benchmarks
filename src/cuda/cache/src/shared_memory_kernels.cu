@@ -13,11 +13,11 @@
 template<const uint32 V_SIZE, const uint32 LINE_SIZE>
 __global__ void test_shared_memory_kernel(uint64 *input, uint64 *output, const int64 sleep_cycles) {
 
-	__shared__  uint64 V[V_SIZE * CACHE_LINE_SIZE_BY_INT32];
+	__shared__  uint64 V[V_SIZE * CACHE_LINE_SIZE_BY_INT64];
 
 	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
 		const register uint64 i = blockIdx.x * V_SIZE + threadIdx.x;
-		const register uint64 index = i * CACHE_LINE_SIZE_BY_INT32;
+		const register uint64 index = i * CACHE_LINE_SIZE_BY_INT64;
 
 		move_cache_line(V + threadIdx.x, input + index);
 
@@ -91,7 +91,7 @@ SharedMemory::SharedMemory(const Parameters& parameters) :
 	}
 
 	this->threads_per_block = dim3(v_size);
-	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms * CACHE_LINE_SIZE_BY_INT32;
+	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms * CACHE_LINE_SIZE_BY_INT64;
 	this->input_host_1.resize(v_size_multiple_threads);
 	this->output_host_1.resize(v_size_multiple_threads);
 }
