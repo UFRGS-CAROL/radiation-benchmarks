@@ -32,13 +32,10 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 
 	const uint32 i = get_global_id() * NUMBEROFELEMENTS;
 
-	uint64 rs[NUMBEROFELEMENTS];
+	volatile uint64 rs[NUMBEROFELEMENTS];
 
 	const int64 t1_miss = clock64();
-	uint64 temp = 0;
-	for (uint32 k = 0; k < NUMBEROFELEMENTS; k++) {
-		temp &= in[i + k];
-	}
+	mov_cache_data(rs, in + i);
 	const int64 t2_miss = clock64();
 //	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
 
@@ -52,8 +49,6 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 //	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
 
 	mov_cache_data(out + i, rs);
-//	mov_cache_data(in + i, rs);
-	in[i] = temp;
 
 //saving miss and hit
 	miss[i] = t2_miss - t1_miss; // l1_t_miss[threadIdx.x];
