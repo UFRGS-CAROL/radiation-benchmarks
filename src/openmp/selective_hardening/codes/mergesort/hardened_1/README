@@ -1,0 +1,48 @@
+Mergesort OpenMP
+
+* How to compile
+  - Intel Xeon Phi (icc native compilation):
+    $ make intel
+  - General X86 (gcc):
+    $ make general
+
+Compilation should generate 5 binaries:
+  - genInput: used to generate the input array, it will generate oen array of size 134217728 using unsigned int type and stored in a binary file.
+  - merge_gen: used to generate the gold output. Gold will be used to check if the execution generates a correct output.
+  - merge_check: this binary will be used during radiation test, it will execute the benchmark kernel several times
+  - merge_timing: this binary is used only for testing purposes, it will measure the time spent in every part of the benchmark. This binary will not record any log information
+  - merge_err_inj: this binary is used only for testing purposes, it will change the input value to check if the gold verification is working. This binary will also enter into an infinite loop to test the setup that needs to kill hanging benchmarks.
+
+
+
+* How to generate input data and gold output
+  - Input data
+    $ ./genInput
+  - gold output
+    $ ./merge_gen <input size> <num_threads> <input file>
+        - input size: size of the unsigned int array used
+        - num_threads: how many thread should the OpenMP create
+        - input file: binary file for the unsigned int array
+
+
+
+* How to run a test
+
+Before running the benchmark, the script radiation-benchmarks/scripts/install.py should be executed. This script will create the folder to store the log files and create the conf file in /etc/radiation-benchmark.conf
+
+  $ ./merge_gen <input size> <num_threads> <input file> <gold file> <iterations>
+        - input size: size of the unsigned int array used
+        - num_threads: how many thread should the OpenMP create
+        - input file: binary file for the unsigned int array
+        - gold: binary file with the gold output
+        - iterations: how many times the benchmark kernel should be executed, usually 100000 is enough for the radiation test (it will crash before reaching this number)
+
+
+
+* Configuration used for Xeon Phi 3120A
+  - input and gold generated
+    $ ./genInput
+    $ ./merge_gen 134217728 228 inputsort_134217728
+  - configurations executed
+    $ ./merge_check 134217728 228 inputsort_134217728 gold_134217728 1000000
+

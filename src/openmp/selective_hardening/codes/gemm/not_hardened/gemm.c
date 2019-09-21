@@ -346,7 +346,7 @@ int main(int argc, char **argv) {
 	snprintf(test_info, 300, "matrix_dim:%ld threads:%d block_size:%d block_offset:%d precision:%s",
 			order, nthread_input, block, BOFFSET, PRECISION_STR);
 	char benchmark_name[100];
-	snprintf(benchmark_name, 100, "openmp%sGEMM", PRECISION_STR);
+	snprintf(benchmark_name, 100, "openmp%sGEMM_SH_not_hardened", PRECISION_STR);
 	start_log_file(benchmark_name, test_info);
 #endif
 #ifdef TIMING

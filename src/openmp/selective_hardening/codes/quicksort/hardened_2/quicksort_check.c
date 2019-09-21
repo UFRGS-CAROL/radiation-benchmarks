@@ -84,7 +84,7 @@ int main(int argc, char** argv)
     set_iter_interval_print(10);
     char test_info[200];
     snprintf(test_info, 200, "size:%d omp_num_threads:%d", size, omp_num_threads);
-    start_log_file("openmpQuicksort", test_info);
+    start_log_file("openmpQuicksort_SH_hardened_2", test_info);
 #endif
     data = (unsigned *)malloc(size*sizeof(unsigned));
     gold = (unsigned *)malloc(size*sizeof(unsigned));
