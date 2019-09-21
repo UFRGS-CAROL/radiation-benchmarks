@@ -95,13 +95,13 @@ void single_iteration(FLOAT *result, FLOAT *temp, FLOAT *power, int row, int col
         int r_start_hardened_2 = BLOCK_SIZE_R*(chunk/chunks_in_col);
         int c_start_hardened_1 = BLOCK_SIZE_C*(chunk%chunks_in_row);
 	int c_start_hardened_2 = BLOCK_SIZE_C*(chunk%chunks_in_row);
-        int r_end = SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start") + BLOCK_SIZE_R > row ? row : SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start") + BLOCK_SIZE_R;
-        int c_end = SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start") + BLOCK_SIZE_C > col ? col : SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start") + BLOCK_SIZE_C;
+        int r_end = SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start", "hotspot_hardened_2") + BLOCK_SIZE_R > row ? row : SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start", "hotspot_hardened_2") + BLOCK_SIZE_R;
+        int c_end = SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start", "hotspot_hardened_2") + BLOCK_SIZE_C > col ? col : SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start", "hotspot_hardened_2") + BLOCK_SIZE_C;
 
-        if ( SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start") == 0 || SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start") == 0 || r_end == row || c_end == col )
+        if ( SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start", "hotspot_hardened_2") == 0 || SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start", "hotspot_hardened_2") == 0 || r_end == row || c_end == col )
         {
-            for ( r = SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start"); r < SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start") + BLOCK_SIZE_R; ++r ) {
-                for ( c = SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start"); c < SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start") + BLOCK_SIZE_C; ++c ) {
+            for ( r = SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start", "hotspot_hardened_2"); r < SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start", "hotspot_hardened_2") + BLOCK_SIZE_R; ++r ) {
+                for ( c = SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start", "hotspot_hardened_2"); c < SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start", "hotspot_hardened_2") + BLOCK_SIZE_C; ++c ) {
                     /* Corner 1 */
                     if ( (r == 0) && (c == 0) ) {
                         delta = (Cap_1) * (power[0] +
@@ -157,9 +157,9 @@ void single_iteration(FLOAT *result, FLOAT *temp, FLOAT *power, int row, int col
             continue;
         }
 
-        for ( r = SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start"); r < SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start") + BLOCK_SIZE_R; ++r ) {
+        for ( r = SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start", "hotspot_hardened_2"); r < SELECTIVE_HARDENING_INT(r_start_hardened_1, r_start_hardened_2, "r_start", "hotspot_hardened_2") + BLOCK_SIZE_R; ++r ) {
             #pragma omp simd
-            for ( c = SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start"); c < SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start") + BLOCK_SIZE_C; ++c ) {
+            for ( c = SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start", "hotspot_hardened_2"); c < SELECTIVE_HARDENING_INT(c_start_hardened_1, c_start_hardened_2, "c_start", "hotspot_hardened_2") + BLOCK_SIZE_C; ++c ) {
                 /* Update Temperatures */
                 result[r*col+c] =temp[r*col+c]+
                                  ( Cap_1 * (power[r*col+c] +
@@ -310,7 +310,7 @@ int main(int argc, char **argv)
 #ifdef LOGS
     char test_info[100];
     snprintf(test_info, 100, "simIter:%d gridSize:%dx%d",sim_time, grid_rows, grid_cols);
-    start_log_file((char *)"openMPDHotspot", test_info);
+    start_log_file((char *)"openMPDHotspot_SH_hardened_2", test_info);
     set_max_errors_iter(MAX_ERR_ITER_LOG);
     set_iter_interval_print(10);
 #endif /* LOGS */

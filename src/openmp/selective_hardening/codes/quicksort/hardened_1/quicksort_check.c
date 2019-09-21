@@ -33,12 +33,12 @@ void qsort_parallel(unsigned *a,int l,int r){
 		int more_hardened_1;
 		int more_hardened_2;
 
-		for(more_hardened_1=l, more_hardened_2=l;SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more")<=r;more_hardened_1++, more_hardened_2++){
-			if(a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more")]<=pivot){
+		for(more_hardened_1=l, more_hardened_2=l;SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more", "quicksort_hardened_1")<=r;more_hardened_1++, more_hardened_2++){
+			if(a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more", "quicksort_hardened_1")]<=pivot){
 				less++;
 				tmp=a[less];
-				a[less]=a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more")];
-				a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more")]=tmp;
+				a[less]=a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more", "quicksort_hardened_1")];
+				a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more", "quicksort_hardened_1")]=tmp;
 			}
 		}
 			#pragma omp task
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     set_iter_interval_print(10);
     char test_info[200];
     snprintf(test_info, 200, "size:%d omp_num_threads:%d", size, omp_num_threads);
-    start_log_file("openmpQuicksort", test_info);
+    start_log_file("openmpQuicksort_SH_hardened_1", test_info);
 #endif
     data = (unsigned *)malloc(size*sizeof(unsigned));
     gold = (unsigned *)malloc(size*sizeof(unsigned));
