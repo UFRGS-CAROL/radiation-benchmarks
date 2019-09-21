@@ -14,8 +14,14 @@
 #include "Memory.h"
 #include "L1Cache.h"
 
-//#define NUMBEROFELEMENTS 64
 //#include "l1_move_function.h"
+#if __CUDA_ARCH__ <= 350
+#define SHARED_PER_SM MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1
+#elif __CUDA_ARCH__ == 700
+#define SHARED_PER_SM MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1
+#else
+#error CUDA ARCH NOT SPECIFIED.
+#endif
 
 __device__ __forceinline__
 void mov_cache_data(volatile uint64* dst, volatile uint64* src) {
@@ -37,7 +43,6 @@ void mov_cache_data(volatile uint64* dst, volatile uint64* src) {
 	dst[15] = src[15];
 }
 
-template<const uint32 SHARED_PER_SM>
 __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 		int64 *miss, const int64 sleep_cycles) {
 
@@ -125,7 +130,7 @@ void L1Cache::test(const uint64& mem) {
 		//to force alloc maximum shared memory
 //		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
 
-		test_l1_cache_kernel<MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<block_size, threads_per_block>>>(
+		test_l1_cache_kernel<<<block_size, threads_per_block>>>(
 				input_device_1.data(), output_device_1.data(),
 				hit_vector_device.data(), miss_vector_device.data(), cycles);
 
