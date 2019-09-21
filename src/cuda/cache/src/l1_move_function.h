@@ -1,7 +1,7 @@
 #ifndef L1_MOVE_FUNCTION_H_
 #define L1_MOVE_FUNCTION_H_
 
-__device__ __forceinline__ void mov_cache_data(uint64* dst, uint64* src) {
+__device__ __forceinline__ void mov_cache_data(volatile uint64* dst,volatile  uint64* src) {
 	dst[0] = src[0];
 	dst[1] = src[1];
 	dst[2] = src[2];
@@ -66,6 +66,10 @@ __device__ __forceinline__ void mov_cache_data(uint64* dst, uint64* src) {
 	dst[61] = src[61];
 	dst[62] = src[62];
 	dst[63] = src[63];
+}
+
+#endif
+/*
 	dst[64] = src[64];
 	dst[65] = src[65];
 	dst[66] = src[66];
@@ -1026,6 +1030,7 @@ __device__ __forceinline__ void mov_cache_data(uint64* dst, uint64* src) {
 	dst[1021] = src[1021];
 	dst[1022] = src[1022];
 	dst[1023] = src[1023];
+
 	dst[1024] = src[1024];
 	dst[1025] = src[1025];
 	dst[1026] = src[1026];
@@ -6148,4 +6153,4 @@ __device__ __forceinline__ void mov_cache_data(uint64* dst, uint64* src) {
 	dst[6143] = src[6143];
 }
 
-#endif
+#endif */

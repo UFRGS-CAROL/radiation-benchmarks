@@ -14,43 +14,45 @@
 #include "Memory.h"
 #include "L1Cache.h"
 
-#define NUMBEROFELEMENTS 6144
+#define NUMBEROFELEMENTS 64
 #include "l1_move_function.h"
+
+__device__ __forceinline__ uint32 get_global_id() {
+	const uint32 blockId = blockIdx.y * gridDim.x + blockIdx.x;
+	const uint32 threadId = blockId * blockDim.x + threadIdx.x;
+	return threadId;
+}
 
 template<const uint32 SHARED_PER_SM>
 __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 		int64 *miss, const int64 sleep_cycles) {
 
-	__shared__ int64 l1_t_hit[SHARED_PER_SM];
-	__shared__ int64 l1_t_miss[SHARED_PER_SM];
+//	__shared__ int64 l1_t_hit[SHARED_PER_SM];
+//	__shared__ int64 l1_t_miss[SHARED_PER_SM];
 
-	const uint64 i = (blockIdx.x * blockDim.x + threadIdx.x) * NUMBEROFELEMENTS;
+	const uint32 i = get_global_id() * NUMBEROFELEMENTS;
 
-	uint64 rs[NUMBEROFELEMENTS]; //, rt[NUMBEROFELEMENTS];
+	volatile uint64 rs[NUMBEROFELEMENTS];
 
 	const int64 t1_miss = clock64();
-	uint64 temp = 0;
-	for(uint32 k = 0; k < NUMBEROFELEMENTS; k++){
-		temp &= in[i + k];
-	}
-//	mov_cache_data(rs, in + i);
-	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
+	mov_cache_data(rs, in + i);
+	const int64 t2_miss = clock64();
+//	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
 
-	//wait for exposition to neutrons
+//wait for exposition to neutrons
 	sleep_cuda(sleep_cycles);
 
-	//last checking
-	const register int64 t1_hit = clock64();
+//last checking
+	const int64 t1_hit = clock64();
 	mov_cache_data(rs, in + i);
-	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
+	const int64 t2_hit = clock64();
+//	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
 
 	mov_cache_data(out + i, rs);
-//	mov_cache_data(in + i, rs);
-	in[i] = temp;
 
-	//saving miss and hit
-	miss[i] = l1_t_miss[threadIdx.x];
-    hits[i] = l1_t_hit[threadIdx.x];
+//saving miss and hit
+	miss[i] = t2_miss - t1_miss; // l1_t_miss[threadIdx.x];
+	hits[i] = t2_hit - t1_hit; //l1_t_hit[threadIdx.x];
 }
 
 L1Cache::L1Cache(const Parameters& parameters) :
@@ -68,7 +70,10 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	}
 
 //	this->threads_per_block = dim3(v_size);
-	this->threads_per_block = dim3(v_size / NUMBEROFELEMENTS);
+	this->threads_per_block = dim3((v_size / NUMBEROFELEMENTS) / 4);
+	this->block_size.y = 4;
+	std::cout << "BLOCK SIZE " << this->threads_per_block.x << "x" << this->threads_per_block.y << std::endl;
+	std::cout << "GRID SIZE " << this->block_size.x << "x" << this->block_size.y << std::endl;
 
 	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms;
 //			* CACHE_LINE_SIZE_BY_INT32; // Each block with one thread using all l1 cache
@@ -81,7 +86,7 @@ L1Cache::L1Cache(const Parameters& parameters) :
 }
 
 void L1Cache::test(const uint64& mem) {
-	//Set values to GPU
+//Set values to GPU
 	std::fill(this->input_host_1.begin(), this->input_host_1.end(), mem);
 	std::fill(this->hit_vector_host.begin(), this->hit_vector_host.end(), 0);
 	std::fill(this->miss_vector_host.begin(), this->miss_vector_host.end(), 0);
@@ -92,8 +97,8 @@ void L1Cache::test(const uint64& mem) {
 	rad::DeviceVector<uint64> input_device_1(this->input_host_1);
 	rad::DeviceVector<uint64> output_device_1(this->output_host_1);
 
-	//This switch is only to set manually the cache line size
-	//since it is hard to check it at runtime
+//This switch is only to set manually the cache line size
+//since it is hard to check it at runtime
 	switch (device) {
 	case K20:
 	case K40: {
@@ -104,8 +109,8 @@ void L1Cache::test(const uint64& mem) {
 		//to force alloc maximum shared memory
 //		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
 
-		test_l1_cache_kernel<MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<
-				block_size, threads_per_block>>>(input_device_1.data(),
+		test_l1_cache_kernel<MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<block_size,
+				threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), hit_vector_device.data(),
 				miss_vector_device.data(), cycles);
 
@@ -119,8 +124,8 @@ void L1Cache::test(const uint64& mem) {
 		// cache line has 128 bytes
 //		constexpr uint32 v_size = MAX_VOLTA_L1_MEMORY / CACHE_LINE_SIZE;
 
-		test_l1_cache_kernel<MAX_VOLTA_SHARED_MEMORY_TO_TEST_L1> <<<
-				block_size, threads_per_block>>>(input_device_1.data(),
+		test_l1_cache_kernel<MAX_VOLTA_SHARED_MEMORY_TO_TEST_L1> <<<block_size,
+				threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), hit_vector_device.data(),
 				miss_vector_device.data(), cycles);
 		break;
@@ -129,8 +134,8 @@ void L1Cache::test(const uint64& mem) {
 
 	cuda_check(cudaPeekAtLastError());
 	cuda_check(cudaDeviceSynchronize());
-	//Host arrays
-	//Copy back to the host
+//Host arrays
+//Copy back to the host
 	this->hit_vector_host = hit_vector_device.to_vector();
 	this->miss_vector_host = miss_vector_device.to_vector();
 	this->output_host_1 = output_device_1.to_vector();
