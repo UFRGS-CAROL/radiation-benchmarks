@@ -100,72 +100,72 @@ void single_iteration(FLOAT *result, FLOAT *temp, FLOAT *power, int row, int col
 
         if ( r_start == 0 || c_start == 0 || r_end == row || c_end == col )
         {
-            for ( r_hardened_1 = r_start, r_hardened_2 = r_start; SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r") < r_start + BLOCK_SIZE_R; ++r_hardened_1, ++r_hardened_2 ) {
+            for ( r_hardened_1 = r_start, r_hardened_2 = r_start; SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3") < r_start + BLOCK_SIZE_R; ++r_hardened_1, ++r_hardened_2 ) {
                 for ( c = c_start; c < c_start + BLOCK_SIZE_C; ++c ) {
                     /* Corner 1 */
-                    if ( (SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r") == 0) && (c == 0) ) {
+                    if ( (SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3") == 0) && (c == 0) ) {
                         delta = (Cap_1) * (power[0] +
                                            (temp[1] - temp[0]) * Rx_1 +
                                            (temp[col] - temp[0]) * Ry_1 +
                                            (amb_temp - temp[0]) * Rz_1);
                     }	/* Corner 2 */
-                    else if ((SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r") == 0) && (c == col-1)) {
+                    else if ((SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3") == 0) && (c == col-1)) {
                         delta = (Cap_1) * (power[c] +
                                            (temp[c-1] - temp[c]) * Rx_1 +
                                            (temp[c+col] - temp[c]) * Ry_1 +
                                            (   amb_temp - temp[c]) * Rz_1);
                     }	/* Corner 3 */
-                    else if ((SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r") == row-1) && (c == col-1)) {
-                        delta = (Cap_1) * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c] +
-                                           (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c-1] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Rx_1 +
-                                           (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")-1)*col+c] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Ry_1 +
-                                           (   amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Rz_1);
+                    else if ((SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3") == row-1) && (c == col-1)) {
+                        delta = (Cap_1) * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c] +
+                                           (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c-1] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Rx_1 +
+                                           (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")-1)*col+c] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Ry_1 +
+                                           (   amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Rz_1);
                     }	/* Corner 4	*/
-                    else if ((SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r") == row-1) && (c == 0)) {
-                        delta = (Cap_1) * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col] +
-                                           (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+1] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col]) * Rx_1 +
-                                           (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")-1)*col] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col]) * Ry_1 +
-                                           (amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col]) * Rz_1);
+                    else if ((SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3") == row-1) && (c == 0)) {
+                        delta = (Cap_1) * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col] +
+                                           (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+1] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col]) * Rx_1 +
+                                           (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")-1)*col] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col]) * Ry_1 +
+                                           (amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col]) * Rz_1);
                     }	/* Edge 1 */
-                    else if (SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r") == 0) {
+                    else if (SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3") == 0) {
                         delta = (Cap_1) * (power[c] +
                                            (temp[c+1] + temp[c-1] - 2.0*temp[c]) * Rx_1 +
                                            (temp[col+c] - temp[c]) * Ry_1 +
                                            (amb_temp - temp[c]) * Rz_1);
                     }	/* Edge 2 */
                     else if (c == col-1) {
-                        delta = (Cap_1) * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c] +
-                                           (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")+1)*col+c] + temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")-1)*col+c] - 2.0*temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Ry_1 +
-                                           (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c-1] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Rx_1 +
-                                           (amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Rz_1);
+                        delta = (Cap_1) * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c] +
+                                           (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")+1)*col+c] + temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")-1)*col+c] - 2.0*temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Ry_1 +
+                                           (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c-1] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Rx_1 +
+                                           (amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Rz_1);
                     }	/* Edge 3 */
-                    else if (SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r") == row-1) {
-                        delta = (Cap_1) * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c] +
-                                           (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c+1] + temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c-1] - 2.0*temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Rx_1 +
-                                           (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")-1)*col+c] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Ry_1 +
-                                           (amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Rz_1);
+                    else if (SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3") == row-1) {
+                        delta = (Cap_1) * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c] +
+                                           (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c+1] + temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c-1] - 2.0*temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Rx_1 +
+                                           (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")-1)*col+c] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Ry_1 +
+                                           (amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Rz_1);
                     }	/* Edge 4 */
                     else if (c == 0) {
-                        delta = (Cap_1) * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col] +
-                                           (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")+1)*col] + temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")-1)*col] - 2.0*temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col]) * Ry_1 +
-                                           (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+1] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col]) * Rx_1 +
-                                           (amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col]) * Rz_1);
+                        delta = (Cap_1) * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col] +
+                                           (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")+1)*col] + temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")-1)*col] - 2.0*temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col]) * Ry_1 +
+                                           (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+1] - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col]) * Rx_1 +
+                                           (amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col]) * Rz_1);
                     }
-                    result[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c] =temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]+ delta;
+                    result[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c] =temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]+ delta;
                 }
             }
             continue;
         }
 
-        for ( r_hardened_1 = r_start, r_hardened_2 = r_start; SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r") < r_start + BLOCK_SIZE_R; ++r_hardened_1, ++r_hardened_2 ) {
+        for ( r_hardened_1 = r_start, r_hardened_2 = r_start; SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3") < r_start + BLOCK_SIZE_R; ++r_hardened_1, ++r_hardened_2 ) {
             #pragma omp simd
             for ( c = c_start; c < c_start + BLOCK_SIZE_C; ++c ) {
                 /* Update Temperatures */
-                result[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c] =temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]+
-                                 ( Cap_1 * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c] +
-                                            (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")+1)*col+c] + temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")-1)*col+c] - 2.f*temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Ry_1 +
-                                            (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c+1] + temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c-1] - 2.f*temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Rx_1 +
-                                            (amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r")*col+c]) * Rz_1));
+                result[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c] =temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]+
+                                 ( Cap_1 * (power[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c] +
+                                            (temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")+1)*col+c] + temp[(SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")-1)*col+c] - 2.f*temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Ry_1 +
+                                            (temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c+1] + temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c-1] - 2.f*temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Rx_1 +
+                                            (amb_temp - temp[SELECTIVE_HARDENING_INT(r_hardened_1, r_hardened_2, "r", "hotspot_hardened_3")*col+c]) * Rz_1));
             }
         }
     }

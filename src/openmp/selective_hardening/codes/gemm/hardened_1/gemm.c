@@ -206,20 +206,20 @@ void dgemm(real_t *A, real_t *B, real_t *C, long order, int block) {
 			for (kk = 0; kk < order; kk += block) {
 
 				for (jg = jj, j = 0; jg < MIN(jj + block, order); j++, jg++)
-					for (kg_hardened_1 = kk, kg_hardened_2 = kk, k = 0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg") < MIN(kk + block, order); k++, kg_hardened_1++, kg_hardened_2++)
-						BB_arr(j,k)= B_arr(SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg"),jg);
+					for (kg_hardened_1 = kk, kg_hardened_2 = kk, k = 0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg", "gemm_hardened_1") < MIN(kk + block, order); k++, kg_hardened_1++, kg_hardened_2++)
+						BB_arr(j,k)= B_arr(SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg", "gemm_hardened_1"),jg);
 
 						for(ii = 0; ii < order; ii+=block) {
 
-							for (kg_hardened_1=kk, kg_hardened_2=kk, k=0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg")<MIN(kk+block,order); k++, kg_hardened_1++, kg_hardened_2++)
+							for (kg_hardened_1=kk, kg_hardened_2=kk, k=0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg", "gemm_hardened_1")<MIN(kk+block,order); k++, kg_hardened_1++, kg_hardened_2++)
 							for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
-							AA_arr(i,k) = A_arr(ig,SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg"));
+							AA_arr(i,k) = A_arr(ig,SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg", "gemm_hardened_1"));
 
 							for (jg=jj,j=0; jg<MIN(jj+block,order); j++,jg++)
 							for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
 							CC_arr(i,j) = 0.0;
 
-							for (kg_hardened_1=kk, kg_hardened_2=kk, k=0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg")<MIN(kk+block,order); k++, kg_hardened_1++, kg_hardened_2++)
+							for (kg_hardened_1=kk, kg_hardened_2=kk, k=0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg", "gemm_hardened_1")<MIN(kk+block,order); k++, kg_hardened_1++, kg_hardened_2++)
 							for (jg=jj,j=0; jg<MIN(jj+block,order); j++,jg++)
 							for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
 							CC_arr(i,j) += AA_arr(i,k)*BB_arr(j,k);

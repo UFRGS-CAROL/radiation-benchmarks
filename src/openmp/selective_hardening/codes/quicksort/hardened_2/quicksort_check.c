@@ -33,19 +33,19 @@ void qsort_parallel(unsigned *a,int l,int r){
 		int more_hardened_1;
 		int more_hardened_2;
 
-		for(more_hardened_1=l, more_hardened_2=l;SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more")<=r;more_hardened_1++, more_hardened_2++){
-			if(a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more")]<=pivot){
+		for(more_hardened_1=l, more_hardened_2=l;SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more", "quicksort_hardened_2")<=r;more_hardened_1++, more_hardened_2++){
+			if(a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more", "quicksort_hardened_2")]<=pivot){
 				less_hardened_1++;
 				less_hardened_2++;
-				tmp=a[SELECTIVE_HARDENING_INT(less_hardened_1, less_hardened_2, "less")];
-				a[SELECTIVE_HARDENING_INT(less_hardened_1, less_hardened_2, "less")]=a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more")];
-				a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more")]=tmp;
+				tmp=a[SELECTIVE_HARDENING_INT(less_hardened_1, less_hardened_2, "less", "quicksort_hardened_2")];
+				a[SELECTIVE_HARDENING_INT(less_hardened_1, less_hardened_2, "less", "quicksort_hardened_2")]=a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more", "quicksort_hardened_2")];
+				a[SELECTIVE_HARDENING_INT(more_hardened_1, more_hardened_2, "more", "quicksort_hardened_2")]=tmp;
 			}
 		}
 			#pragma omp task
-			qsort_parallel(a, l,SELECTIVE_HARDENING_INT(less_hardened_1, less_hardened_2, "less")-1);
+			qsort_parallel(a, l,SELECTIVE_HARDENING_INT(less_hardened_1, less_hardened_2, "less", "quicksort_hardened_2")-1);
 			#pragma omp task
-			qsort_parallel(a, SELECTIVE_HARDENING_INT(less_hardened_1, less_hardened_2, "less")+1,r);
+			qsort_parallel(a, SELECTIVE_HARDENING_INT(less_hardened_1, less_hardened_2, "less", "quicksort_hardened_2")+1,r);
 			#pragma omp taskwait
 	}
 }

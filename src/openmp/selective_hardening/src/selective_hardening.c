@@ -2,15 +2,16 @@
 #include <stdlib.h>
 #include "../include/selective_hardening.h"
 
-int throw_error_int(int var1, int var2, const char* variable_name)
+int throw_error_int(int var1, int var2, const char* variable_name, const char* executable_name)
 {
 	if(var1 != var2)
 	{
 		printf("FATAL ERROR\n");
 	
-		FILE* error_file = fopen("/tmp/quicksort/ERROR_FILE.txt", "a");
+		FILE* error_file = fopen("/var/selective_hardening/error_data", "a");
 		
 		fprintf(error_file, "Fatal error detected:\n");
+		fprintf(error_file, "\tExecutable name: %s\n", executable_name);
 		fprintf(error_file, "\tVariable: %s\n", variable_name);
 		fprintf(error_file, "\t1st value: %d\n", var1);
 		fprintf(error_file, "\t2nd value: %d\n", var2);

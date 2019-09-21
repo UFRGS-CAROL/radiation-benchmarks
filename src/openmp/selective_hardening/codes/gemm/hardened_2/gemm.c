@@ -207,28 +207,28 @@ void dgemm(real_t *A, real_t *B, real_t *C, long order, int block) {
 		for (jj = 0; jj < order; jj += block) {
 			for (kk = 0; kk < order; kk += block) {
 
-				for (jg_hardened_1 = jj, jg_hardened_2 = jj, j = 0; SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg") < MIN(jj + block, order); j++, jg_hardened_1++, jg_hardened_2++)
-					for (kg_hardened_1 = kk, kg_hardened_2 = kk, k = 0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg") < MIN(kk + block, order); k++, kg_hardened_1++, kg_hardened_2++)
-						BB_arr(j,k)= B_arr(SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg"),SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg"));
+				for (jg_hardened_1 = jj, jg_hardened_2 = jj, j = 0; SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg", "gemm_hardened_2") < MIN(jj + block, order); j++, jg_hardened_1++, jg_hardened_2++)
+					for (kg_hardened_1 = kk, kg_hardened_2 = kk, k = 0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg", "gemm_hardened_2") < MIN(kk + block, order); k++, kg_hardened_1++, kg_hardened_2++)
+						BB_arr(j,k)= B_arr(SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg", "gemm_hardened_2"),SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg", "gemm_hardened_2"));
 
 						for(ii = 0; ii < order; ii+=block) {
 
-							for (kg_hardened_1=kk, kg_hardened_2=kk, k=0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg")<MIN(kk+block,order); k++, kg_hardened_1++, kg_hardened_2++)
+							for (kg_hardened_1=kk, kg_hardened_2=kk, k=0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg", "gemm_hardened_2")<MIN(kk+block,order); k++, kg_hardened_1++, kg_hardened_2++)
 							for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
-							AA_arr(i,k) = A_arr(ig,SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg"));
+							AA_arr(i,k) = A_arr(ig,SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg", "gemm_hardened_2"));
 
-							for (jg_hardened_1=jj, jg_hardened_2=jj, j=0; SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg")<MIN(jj+block,order); j++, jg_hardened_1++, jg_hardened_2++)
+							for (jg_hardened_1=jj, jg_hardened_2=jj, j=0; SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg", "gemm_hardened_2")<MIN(jj+block,order); j++, jg_hardened_1++, jg_hardened_2++)
 							for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
 							CC_arr(i,j) = 0.0;
 
-							for (kg_hardened_1=kk, kg_hardened_2=kk, k=0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg")<MIN(kk+block,order); k++, kg_hardened_1++, kg_hardened_2++)
-							for (jg_hardened_1=jj, jg_hardened_2=jj, j=0; SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg")<MIN(jj+block,order); j++, jg_hardened_1++, jg_hardened_2++)
+							for (kg_hardened_1=kk, kg_hardened_2=kk, k=0; SELECTIVE_HARDENING_INT(kg_hardened_1, kg_hardened_2, "kg", "gemm_hardened_2")<MIN(kk+block,order); k++, kg_hardened_1++, kg_hardened_2++)
+							for (jg_hardened_1=jj, jg_hardened_2=jj, j=0; SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg", "gemm_hardened_2")<MIN(jj+block,order); j++, jg_hardened_1++, jg_hardened_2++)
 							for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
 							CC_arr(i,j) += AA_arr(i,k)*BB_arr(j,k);
 
-							for (jg_hardened_1=jj, jg_hardened_2=jj, j=0; SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg")<MIN(jj+block,order); j++, jg_hardened_1++, jg_hardened_2++)
+							for (jg_hardened_1=jj, jg_hardened_2=jj, j=0; SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg", "gemm_hardened_2")<MIN(jj+block,order); j++, jg_hardened_1++, jg_hardened_2++)
 							for (ig=ii,i=0; ig<MIN(ii+block,order); i++,ig++)
-							C_arr(ig,SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg")) += CC_arr(i,j);
+							C_arr(ig,SELECTIVE_HARDENING_INT(jg_hardened_1, jg_hardened_2, "jg", "gemm_hardened_2")) += CC_arr(i,j);
 
 						}
 					}
