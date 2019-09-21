@@ -15,6 +15,7 @@
 #include "L1Cache.h"
 
 #define NUMBEROFELEMENTS 48
+#include "l1_move_function.h"
 
 /*
  * l1_size size of the L1 cache
@@ -32,10 +33,11 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	uint64 rs[COUNT], rt[COUNT];
 
 	const int64 t1_miss = clock64();
-#pragma unroll COUNT
-	for(uint32 k = 0; k < COUNT; k++){
-		rs[k] = in[i + k];
-	}
+	mov_cache_data(rs, in + i);
+//#pragma unroll COUNT
+//	for(uint32 k = 0; k < COUNT; k++){
+//		rs[k] = in[i + k];
+//	}
 	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
 
 	//wait for exposition to neutrons
@@ -43,17 +45,20 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 
 	//last checking
 	const register int64 t1_hit = clock64();
-#pragma unroll COUNT
-	for(uint32 k = 0; k < COUNT; k++){
-		rt[k] = in[i + k];
-	}
+	mov_cache_data(rt, in + i);
+//#pragma unroll COUNT
+//	for(uint32 k = 0; k < COUNT; k++){
+//		rt[k] = in[i + k];
+//	}
 	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
 
-#pragma unroll COUNT
-	for(uint32 k = 0; k < COUNT; k++){
-		in[i + k] = rs[k];
-		out[i + k] = rt[k];
-	}
+	mov_cache_data(out + i, rt);
+	mov_cache_data(in + i, rs);
+//#pragma unroll COUNT
+//	for(uint32 k = 0; k < COUNT; k++){
+//		in[i + k] = rs[k];
+//		out[i + k] = rt[k];
+//	}
 
 	//saving miss and hit
 	miss[i] = l1_t_miss[threadIdx.x];
