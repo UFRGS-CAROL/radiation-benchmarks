@@ -77,6 +77,8 @@ L1Cache::L1Cache(const Parameters& parameters) :
 //	this->threads_per_block = dim3(v_size);
 	this->threads_per_block = dim3((v_size / NUMBEROFELEMENTS) / 4);
 	this->block_size.y = 4;
+	std::cout << "BLOCK SIZE " << this->threads_per_block.x << "x" << this->threads_per_block.y << std::endl;
+	std::cout << "GRID SIZE " << this->block_size.x << "x" << this->block_size.y << std::endl;
 
 	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms;
 //			* CACHE_LINE_SIZE_BY_INT32; // Each block with one thread using all l1 cache

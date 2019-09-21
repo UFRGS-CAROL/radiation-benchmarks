@@ -95,7 +95,7 @@ void setup_execute(Log& log, Parameters& test_parameter,
 			std::cout << " False hits: " << false_hits;
 			std::cout << std::hex;
 			std::cout << " Byte: " << mem;
-			std::cout << std::fixed;
+			std::cout << std::dec;
 			std::cout << " Device Reset Time: "
 					<< end_dev_reset - start_dev_reset;
 			std::cout << " Comparing Time: " << end_cmp - start_cmp;
