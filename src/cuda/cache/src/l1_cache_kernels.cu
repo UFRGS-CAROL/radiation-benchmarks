@@ -14,7 +14,7 @@
 #include "Memory.h"
 #include "L1Cache.h"
 
-#define NUMBEROFELEMENTS 256
+#define NUMBEROFELEMENTS 6144
 #include "l1_move_function.h"
 
 template<const uint32 SHARED_PER_SM>
@@ -31,7 +31,7 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	const int64 t1_miss = clock64();
 	uint64 temp = 0;
 	for(uint32 k = 0; k < NUMBEROFELEMENTS; k++){
-		temp = in[i + k];
+		temp &= in[i + k];
 	}
 //	mov_cache_data(rs, in + i);
 	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
