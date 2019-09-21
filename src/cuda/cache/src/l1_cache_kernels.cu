@@ -25,9 +25,9 @@ __device__ __forceinline__ uint32 get_global_id() {
 
 template<const uint32 SHARED_PER_SM>
 __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
-		int64 *miss, const int64 sleep_cycles) {
+		int64 *miss, const int64 sleep_cycles, const uint64 t) {
 
-//	__shared__ int64 l1_t_hit[SHARED_PER_SM];
+	__shared__ int64 l1_t_hit[SHARED_PER_SM];
 //	__shared__ int64 l1_t_miss[SHARED_PER_SM];
 
 	const uint32 i = get_global_id() * NUMBEROFELEMENTS;
@@ -35,7 +35,9 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	volatile uint64 rs[NUMBEROFELEMENTS];
 
 	const int64 t1_miss = clock64();
-	mov_cache_data(rs, in + i);
+	for(uint32 k = 0; k < NUMBEROFELEMENTS; k++){
+		in[i + k] = t;
+	}
 	const int64 t2_miss = clock64();
 //	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
 
@@ -49,6 +51,7 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 //	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
 
 	mov_cache_data(out + i, rs);
+	l1_t_hit[threadIdx.x] = t;
 
 //saving miss and hit
 	miss[i] = t2_miss - t1_miss; // l1_t_miss[threadIdx.x];
@@ -70,8 +73,8 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	}
 
 //	this->threads_per_block = dim3(v_size);
-	this->threads_per_block = dim3((v_size / NUMBEROFELEMENTS) / 4);
-	this->block_size.y = 4;
+	this->threads_per_block = dim3((v_size / NUMBEROFELEMENTS));
+
 	std::cout << "BLOCK SIZE " << this->threads_per_block.x << "x" << this->threads_per_block.y << std::endl;
 	std::cout << "GRID SIZE " << this->block_size.x << "x" << this->block_size.y << std::endl;
 
@@ -112,7 +115,7 @@ void L1Cache::test(const uint64& mem) {
 		test_l1_cache_kernel<MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<block_size,
 				threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), hit_vector_device.data(),
-				miss_vector_device.data(), cycles);
+				miss_vector_device.data(), cycles, mem);
 
 		break;
 	}
@@ -127,7 +130,7 @@ void L1Cache::test(const uint64& mem) {
 		test_l1_cache_kernel<MAX_VOLTA_SHARED_MEMORY_TO_TEST_L1> <<<block_size,
 				threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), hit_vector_device.data(),
-				miss_vector_device.data(), cycles);
+				miss_vector_device.data(), cycles, mem);
 		break;
 	}
 	}
