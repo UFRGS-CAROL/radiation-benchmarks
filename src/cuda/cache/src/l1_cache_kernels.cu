@@ -54,7 +54,8 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	__shared__ int64 l1_t_hit[SHARED_PER_SM];
 	__shared__ int64 l1_t_miss[SHARED_PER_SM];
 
-	const uint32 i = get_global_id() * CACHE_LINE_SIZE_BY_INT64;
+	const uint32 index = get_global_id();
+	const uint32 i = index * CACHE_LINE_SIZE_BY_INT64;
 
 	volatile register uint64 rs[CACHE_LINE_SIZE_BY_INT64];
 
@@ -73,8 +74,8 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	mov_cache_data(out + i, rs);
 
 //saving miss and hit
-	miss[i] = l1_t_miss[threadIdx.x];
-	hits[i] = l1_t_hit[threadIdx.x];
+	miss[index] = l1_t_miss[threadIdx.x];
+	hits[index] = l1_t_hit[threadIdx.x];
 }
 
 L1Cache::L1Cache(const Parameters& parameters) :
