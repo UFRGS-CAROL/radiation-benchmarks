@@ -132,6 +132,7 @@ struct Memory {
 		auto hits = 0;
 		auto misses = 0;
 		auto false_hits = 0;
+		auto zero_cout = 0;
 		for (uint32 i = 0; i < this->hit_vector_host.size(); i++) {
 			auto hit = this->hit_vector_host[i];
 			auto miss = this->miss_vector_host[i];
@@ -143,11 +144,16 @@ struct Memory {
 			} else {
 				misses++;
 			}
+
+			zero_cout += (hit == 0 || miss == 0);
 		}
 
 		this->check_output_errors(this->output_host_1, mem, log, hits, misses,
 				false_hits, log.verbose);
 
+		if(zero_cout != 0){
+			error("Zero count is different from 0: " + std::to_string(zero_cout));
+		}
 		//returning the result
 		return std::make_tuple(hits, misses, false_hits);
 	}
