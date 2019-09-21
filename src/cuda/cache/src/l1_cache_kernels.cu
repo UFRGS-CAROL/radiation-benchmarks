@@ -81,8 +81,8 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	std::cout << "GRID SIZE " << this->block_size.x << "x" << this->block_size.y
 			<< std::endl;
 
-	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms;
-//			* CACHE_LINE_SIZE_BY_INT32; // Each block with one thread using all l1 cache
+	// Each block with one thread using all l1 cache
+	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms * CACHE_LINE_SIZE_BY_INT64;
 
 	this->hit_vector_host.resize(v_size_multiple_threads);
 	this->miss_vector_host.resize(v_size_multiple_threads);
@@ -114,9 +114,9 @@ void L1Cache::test(const uint64& mem) {
 		// cache line has 128 bytes
 		//to force alloc maximum shared memory
 		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
-		constexpr uint32 number_of_elments = v_size / sizeof(uint64);
+		constexpr uint32 number_of_elements = v_size / sizeof(uint64);
 
-		test_l1_cache_kernel<number_of_elments, MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<block_size,
+		test_l1_cache_kernel<number_of_elements, MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1> <<<block_size,
 				threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), hit_vector_device.data(),
 				miss_vector_device.data(), cycles);
