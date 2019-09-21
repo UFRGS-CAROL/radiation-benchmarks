@@ -24,7 +24,7 @@
 #endif
 
 __device__ __forceinline__
-void mov_cache_data(volatile uint64* dst, volatile uint64* src) {
+void mov_cache_data(uint64* dst, uint64* src) {
 	dst[0] = src[0];
 	dst[1] = src[1];
 	dst[2] = src[2];
@@ -52,10 +52,10 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	const uint32 index = blockIdx.x * blockDim.x + threadIdx.x;;
 	const uint32 i = index * CACHE_LINE_SIZE_BY_INT64;
 
-	volatile register uint64 rs[CACHE_LINE_SIZE_BY_INT64];
+	uint64 rs[CACHE_LINE_SIZE_BY_INT64], rt[CACHE_LINE_SIZE_BY_INT64];
 
 	const int64 t1_miss = clock64();
-	mov_cache_data(rs, in + i);
+	mov_cache_data(rt, in + i);
 	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
 
 	//wait for exposition to neutrons
@@ -67,6 +67,7 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
 
 	mov_cache_data(out + i, rs);
+	mov_cache_data(in + i, rt);
 
 //saving miss and hit
 	miss[index] = l1_t_miss[threadIdx.x];
