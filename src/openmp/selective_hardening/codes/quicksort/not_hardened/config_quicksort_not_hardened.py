@@ -7,7 +7,7 @@ sys.path.insert(0, '../../../../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 NUM_THREADS = 4
-INPUT_SIZE = 8388608
+INPUT_SIZE = 1048576
 INPUT_FILE = "inputsort_" + str(INPUT_SIZE)
 GOLD_FILE = "gold_" + str(INPUT_SIZE)
 ITERATIONS = 100000
