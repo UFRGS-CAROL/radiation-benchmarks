@@ -241,11 +241,6 @@ struct Microbenchmark {
 			this->gold_vector[i] = val_output_1;
 			if ((val_output_1 != val_output_2)
 					|| (val_output_1 != val_output_3)) {
-#pragma omp critical
-				{
-					memory_errors++;
-				}
-
 				if (val_output_2 == val_output_3) {
 					// Only value 0 diverge
 					this->gold_vector[i] = val_output_2;
@@ -255,6 +250,14 @@ struct Microbenchmark {
 				} else if (val_output_1 == val_output_2) {
 					// Only value 2 diverge
 					this->gold_vector[i] = val_output_1;
+				}
+			}
+
+			//all three diverge
+			if((val_output_1 != val_output_2) && (val_output_2 != val_output_3) && (val_output_1 != val_output_3)){
+#pragma omp critical
+				{
+					memory_errors++;
 				}
 			}
 		}
