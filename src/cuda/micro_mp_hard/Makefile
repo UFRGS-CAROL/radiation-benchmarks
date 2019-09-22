@@ -51,7 +51,7 @@ generate:
 			--inst $(MICRO)     \
 			--generate \
 			--gold ./gold_$(MICRO)_$(DMR).data \
-			--opnum $(CHECK_BLOCK)
+			--opnum $(CHECK_BLOCK) \
 			--verbose
 		
 test:
@@ -59,5 +59,6 @@ test:
 			--redundancy $(DMR) \
 			--inst $(MICRO)     \
 			--gold ./gold_$(MICRO)_$(DMR).data \
-			--opnum $(CHECK_BLOCK)
-			--verbose --iterations 1
+			--opnum $(CHECK_BLOCK) \ 
+			--verbose \
+			--iterations 1
