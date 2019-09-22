@@ -49,13 +49,14 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	__shared__ int64 l1_t_hit[SHARED_PER_SM];
 	__shared__ int64 l1_t_miss[SHARED_PER_SM];
 
-	const uint32 index = blockIdx.x * blockDim.x + threadIdx.x;;
-	const uint32 i = index * CACHE_LINE_SIZE_BY_INT64;
+	const uint32 i = (blockIdx.y* gridDim.x+ blockIdx.x) * blockDim.x + threadIdx.x;;
+//	const uint32 i = index * CACHE_LINE_SIZE_BY_INT64;
 
-	volatile uint64 rs[CACHE_LINE_SIZE_BY_INT64];
+//	volatile uint64 rs[CACHE_LINE_SIZE_BY_INT64];
 
 	const int64 t1_miss = clock64();
-	mov_cache_data(rs, in + i);
+//	mov_cache_data(rs, in + i);
+	volatile uint64 rs = in[i];
 	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
 
 	//wait for exposition to neutrons
@@ -63,14 +64,16 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 
 	//last checking
 	const int64 t1_hit = clock64();
-	mov_cache_data(rs, in + i);
+//	mov_cache_data(rs, in + i);
+	volatile uint64 rt = in[i];
 	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
 
-	mov_cache_data(out + i, rs);
-
+//	mov_cache_data(out + i, rs);
+	out[i] = rt;
+	in[i] = rs;
 //saving miss and hit
-	miss[index] = l1_t_miss[threadIdx.x];
-	hits[index] = l1_t_hit[threadIdx.x];
+	miss[i] = l1_t_miss[threadIdx.x];
+	hits[i] = l1_t_hit[threadIdx.x];
 }
 
 L1Cache::L1Cache(const Parameters& parameters) :
@@ -79,7 +82,7 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	switch (device) {
 	case K20:
 	case K40:
-		v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
+		v_size = MAX_KEPLER_L1_MEMORY / sizeof(uint64);
 		break;
 	case XAVIER:
 	case TITANV:
@@ -87,11 +90,13 @@ L1Cache::L1Cache(const Parameters& parameters) :
 		break;
 	}
 
-	this->threads_per_block = dim3(v_size);
+	this->threads_per_block = dim3(BLOCK_SIZE * BLOCK_SIZE);
+	this->block_size.y = v_size / (BLOCK_SIZE * BLOCK_SIZE);
+
 	// Each block with one thread using all l1 cache
 	uint32 total_size = v_size * parameters.number_of_sms;
 
-	uint32 v_size_multiple_threads = total_size	* CACHE_LINE_SIZE_BY_INT64;
+	uint32 v_size_multiple_threads = total_size; //	* CACHE_LINE_SIZE_BY_INT64;
 
 	std::cout << "BLOCK SIZE " << this->threads_per_block.x << "x"
 			<< this->threads_per_block.y << std::endl;
