@@ -52,7 +52,7 @@ generate:
 			--redundancy $(DMR) \
 			--inst $(MICRO)     \
 			--generate \
-			--gold ./gold_$(MICRO)_$(DMR).data \
+			--gold ./gold_$(MICRO).data \
 			--opnum $(CHECK_BLOCK) \
 			--verbose
 
@@ -60,7 +60,7 @@ test:
 	$(EXEC) --precision double  \
 			--redundancy $(DMR) \
 			--inst $(MICRO)     \
-			--gold ./gold_$(MICRO)_$(DMR).data \
+			--gold ./gold_$(MICRO).data \
 			--opnum $(CHECK_BLOCK) \
 			--verbose --iterations 10
 
