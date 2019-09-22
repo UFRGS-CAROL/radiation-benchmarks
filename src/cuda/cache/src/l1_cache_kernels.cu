@@ -22,7 +22,7 @@
 #error CUDA ARCH NOT SPECIFIED.
 #endif
 
-#define NUMBER_OF_ELEMENTS 96
+#define NUMBER_OF_ELEMENTS 48
 #include "l1_move_function.h"
 
 
@@ -35,7 +35,7 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	const uint32 index = blockIdx.x * blockDim.x + threadIdx.x;;
 	const uint32 i = index * NUMBER_OF_ELEMENTS;
 
-	volatile uint64 rs[NUMBER_OF_ELEMENTS];
+	uint64 rs[NUMBER_OF_ELEMENTS], rt[NUMBER_OF_ELEMENTS];
 
 	const int64 t1_miss = clock64();
 	mov_cache_data(rs, in + i);
@@ -46,10 +46,11 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 
 	//last checking
 	const int64 t1_hit = clock64();
-	mov_cache_data(rs, in + i);
+	mov_cache_data(rt, in + i);
 	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
 
-	mov_cache_data(out + i, rs);
+	mov_cache_data(out + i, rt);
+	mov_cache_data(in + i, rs);
 
 //saving miss and hit
 	miss[index] = l1_t_miss[threadIdx.x];
