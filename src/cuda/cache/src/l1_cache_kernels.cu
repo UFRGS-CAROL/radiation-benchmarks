@@ -14,7 +14,6 @@
 #include "Memory.h"
 #include "L1Cache.h"
 
-//#include "l1_move_function.h"
 #if __CUDA_ARCH__ <= 350
 #define SHARED_PER_SM MAX_KEPLER_SHARED_MEMORY_TO_TEST_L1
 #elif __CUDA_ARCH__ == 700
@@ -23,25 +22,9 @@
 #error CUDA ARCH NOT SPECIFIED.
 #endif
 
-__device__ __forceinline__
-void mov_cache_data(volatile uint64 dst[CACHE_LINE_SIZE_BY_INT64], volatile uint64 src[CACHE_LINE_SIZE_BY_INT64]) {
-	dst[0] = src[0];
-	dst[1] = src[1];
-	dst[2] = src[2];
-	dst[3] = src[3];
-	dst[4] = src[4];
-	dst[5] = src[5];
-	dst[6] = src[6];
-	dst[7] = src[7];
-	dst[8] = src[8];
-	dst[9] = src[9];
-	dst[10] = src[10];
-	dst[11] = src[11];
-	dst[12] = src[12];
-	dst[13] = src[13];
-	dst[14] = src[14];
-	dst[15] = src[15];
-}
+#define NUMBER_OF_ELEMENTS 96
+#include "l1_move_function.h"
+
 
 __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 		int64 *miss, const int64 sleep_cycles) {
@@ -49,14 +32,13 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	__shared__ int64 l1_t_hit[SHARED_PER_SM];
 	__shared__ int64 l1_t_miss[SHARED_PER_SM];
 
-	const uint32 i = (blockIdx.y* gridDim.x+ blockIdx.x) * blockDim.x + threadIdx.x;;
-//	const uint32 i = index * CACHE_LINE_SIZE_BY_INT64;
+	const uint32 index = blockIdx.x * blockDim.x + threadIdx.x;;
+	const uint32 i = index * NUMBER_OF_ELEMENTS;
 
-//	volatile uint64 rs[CACHE_LINE_SIZE_BY_INT64];
+	volatile uint64 rs[NUMBER_OF_ELEMENTS];
 
 	const int64 t1_miss = clock64();
-//	mov_cache_data(rs, in + i);
-	volatile uint64 rs = in[i];
+	mov_cache_data(rs, in + i);
 	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
 
 	//wait for exposition to neutrons
@@ -64,16 +46,14 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 
 	//last checking
 	const int64 t1_hit = clock64();
-//	mov_cache_data(rs, in + i);
-	volatile uint64 rt = in[i];
+	mov_cache_data(rs, in + i);
 	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
 
-//	mov_cache_data(out + i, rs);
-	out[i] = rt;
-	in[i] = rs;
+	mov_cache_data(out + i, rs);
+
 //saving miss and hit
-	miss[i] = l1_t_miss[threadIdx.x];
-	hits[i] = l1_t_hit[threadIdx.x];
+	miss[index] = l1_t_miss[threadIdx.x];
+	hits[index] = l1_t_hit[threadIdx.x];
 }
 
 L1Cache::L1Cache(const Parameters& parameters) :
@@ -82,7 +62,7 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	switch (device) {
 	case K20:
 	case K40:
-		v_size = MAX_KEPLER_L1_MEMORY / sizeof(uint64);
+		v_size = MAX_KEPLER_L1_MEMORY / (sizeof(uint64) * NUMBER_OF_ELEMENTS);
 		break;
 	case XAVIER:
 	case TITANV:
@@ -90,13 +70,11 @@ L1Cache::L1Cache(const Parameters& parameters) :
 		break;
 	}
 
-	this->threads_per_block = dim3(BLOCK_SIZE * BLOCK_SIZE);
-	this->block_size.y = v_size / (BLOCK_SIZE * BLOCK_SIZE);
-
+	this->threads_per_block = dim3(v_size);
 	// Each block with one thread using all l1 cache
 	uint32 total_size = v_size * parameters.number_of_sms;
 
-	uint32 v_size_multiple_threads = total_size; //	* CACHE_LINE_SIZE_BY_INT64;
+	uint32 v_size_multiple_threads = total_size	* NUMBER_OF_ELEMENTS;
 
 	std::cout << "BLOCK SIZE " << this->threads_per_block.x << "x"
 			<< this->threads_per_block.y << std::endl;
