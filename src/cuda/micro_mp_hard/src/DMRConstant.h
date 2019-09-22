@@ -13,7 +13,7 @@
 #include "common.h"
 #include "Parameters.h"
 
-template<uint32 CHECK_BLOCK, typename half_t, typename real_t>
+template<const uint32 CHECK_BLOCK, typename half_t, typename real_t>
 struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 
 	rad::DeviceVector<half_t> output_dev_1_lower, output_dev_2_lower,
@@ -32,33 +32,113 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 	}
 
 	virtual void call_kernel() override {
+		void (*kernel)(real_t* output_real_t_1, real_t* output_real_t_2,
+				real_t* output_real_t_3, half_t* output_half_t_1,
+				half_t* output_half_t_2, half_t* output_half_t_3);
+
 		//================== Device computation
+
 		switch (this->parameters_.micro) {
-		case ADD:
-			microbenchmark_kernel_add<ADD_UINT32_THRESHOLD, CHECK_BLOCK> <<<
-					this->parameters_.grid_size, this->parameters_.block_size>>>(
-					this->output_dev_1.data(), this->output_dev_2.data(),
-					this->output_dev_3.data(), this->output_dev_1_lower.data(),
-					this->output_dev_2_lower.data(),
-					this->output_dev_3_lower.data());
-			break;
-		case MUL:
-			microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD, CHECK_BLOCK> <<<
-					this->parameters_.grid_size, this->parameters_.block_size>>>(
-					this->output_dev_1.data(), this->output_dev_2.data(),
-					this->output_dev_3.data(), this->output_dev_1_lower.data(),
-					this->output_dev_2_lower.data(),
-					this->output_dev_3_lower.data());
-			break;
-		case FMA:
-			microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD, CHECK_BLOCK> <<<
-					this->parameters_.grid_size, this->parameters_.block_size>>>(
-					this->output_dev_1.data(), this->output_dev_2.data(),
-					this->output_dev_3.data(), this->output_dev_1_lower.data(),
-					this->output_dev_2_lower.data(),
-					this->output_dev_3_lower.data());
+		case ADD: {
+			switch (this->parameters_.operation_num) {
+			case 1: {
+				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_add<threshold,
+						CHECK_BLOCK>;
+
+				break;
+			}
+			case 10: {
+				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_add<threshold,
+						CHECK_BLOCK>;
+				break;
+			}
+			case 100: {
+				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_add<threshold,
+						CHECK_BLOCK>;
+				break;
+			}
+			default: {
+				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_add<threshold,
+						CHECK_BLOCK>;
+			}
+			}
+
+
 			break;
 		}
+		case MUL: {
+			switch (this->parameters_.operation_num) {
+			case 1: {
+				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_mul<threshold,
+						CHECK_BLOCK>;
+				break;
+			}
+			case 10: {
+				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_mul<threshold,
+						CHECK_BLOCK>;
+				break;
+			}
+			case 100: {
+				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_mul<threshold,
+						CHECK_BLOCK>;
+				break;
+			}
+			default: {
+				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_mul<threshold,
+						CHECK_BLOCK>;
+			}
+			}
+
+			break;
+		}
+		case FMA: {
+			switch (this->parameters_.operation_num) {
+			case 1: {
+				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_fma<threshold,
+						CHECK_BLOCK>;
+
+				break;
+			}
+			case 10: {
+				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_fma<threshold,
+						CHECK_BLOCK>;
+
+				break;
+			}
+			case 100: {
+				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_fma<threshold,
+						CHECK_BLOCK>;
+
+				break;
+			}
+			default: {
+				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
+				kernel = &microbenchmark_kernel_fma<threshold,
+						CHECK_BLOCK>;
+
+			}
+			}
+
+			break;
+		}
+		}
+
+		kernel<<<this->parameters_.grid_size, this->parameters_.block_size>>>(
+				this->output_dev_1.data(), this->output_dev_2.data(),
+				this->output_dev_3.data(), this->output_dev_1_lower.data(),
+				this->output_dev_2_lower.data(),
+				this->output_dev_3_lower.data());
 	}
 
 	virtual inline double check_with_lower_precision(const real_t& val,
