@@ -1,8 +1,7 @@
 #ifndef L1_MOVE_FUNCTION_H_
 #define L1_MOVE_FUNCTION_H_
 
-__device__ __forceinline__ void mov_cache_data(volatile uint64* dst,
-		volatile uint64* src) {
+__device__ __forceinline__ void mov_cache_data(uint64* dst, uint64* src) {
 	dst[0] = src[0];
 	dst[1] = src[1];
 	dst[2] = src[2];
