@@ -6,7 +6,9 @@ DMR=none
 CHECK_BLOCK=$(OPS)
 
 CC=g++
-NVCC=nvcc
+CUDAPATH=/usr/local/cuda
+NVCC=$(CUDAPATH)/bin/nvcc
+
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 NVCC_FLAGS= $(ARCH) -Xptxas -v
 NVIDIA_INC=/usr/local/cuda/include/
