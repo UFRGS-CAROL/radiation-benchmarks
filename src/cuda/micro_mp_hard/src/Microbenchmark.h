@@ -72,11 +72,9 @@ struct Microbenchmark {
 		if (this->parameters_.generate == true) {
 			return {0, 0, 0};
 		}
-
 		uint64 host_errors = 0;
 		uint64 memory_errors = 0;
 		uint64 relative_errors = 0;
-//		double min_diff = UINT32_MAX;
 
 #pragma omp parallel for shared(host_errors, memory_errors, relative_errors)
 		for (uint32 i = 0; i < this->output_host_1.size(); i++) {
@@ -245,7 +243,8 @@ struct Microbenchmark {
 			}
 
 			//all three diverge
-			if((val_output_1 != val_output_2) && (val_output_2 != val_output_3) && (val_output_1 != val_output_3)){
+			if ((val_output_1 != val_output_2) && (val_output_2 != val_output_3)
+					&& (val_output_1 != val_output_3)) {
 #pragma omp critical
 				{
 					memory_errors++;
@@ -296,7 +295,7 @@ struct Microbenchmark {
 		return 0;
 	}
 
-	virtual uint32 get_max_threshold(){
+	virtual uint32 get_max_threshold() {
 		return 0;
 	}
 };

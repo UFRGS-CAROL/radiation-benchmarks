@@ -181,12 +181,17 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		this->output_host_2_lower = this->output_dev_2_lower.to_vector();
 		this->output_host_3_lower = this->output_dev_3_lower.to_vector();
 
-		uint64 relative_errors = 0;
+		uint64 dmr_errors = 0;
 		rad::checkFrameworkErrors(
-				cudaMemcpyFromSymbol(&relative_errors, errors, sizeof(uint64),
+				cudaMemcpyFromSymbol(&dmr_errors, errors, sizeof(uint64),
 						0, cudaMemcpyDeviceToHost));
 
-		return relative_errors;
+		if (dmr_errors != 0) {
+			std::stringstream error_detail;
+			error_detail << "detected_dmr_errors: " << dmr_errors;
+			this->log_.log_error_detail(error_detail.str());
+		}
+		return dmr_errors;
 
 	}
 
