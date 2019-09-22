@@ -60,6 +60,5 @@ test:
 			--inst $(MICRO)     \
 			--gold ./gold_$(MICRO)_$(DMR).data \
 			--opnum $(CHECK_BLOCK) \ 
-			--verbose \
-			--iterations 10
+			--verbose --iterations 10
 			
