@@ -68,6 +68,7 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 //			std::cout << kernel_time << ",";
 //			std::cout << errors << ",";
 //			std::cout << memory_errors << std::endl;
+			std::cout << ".";
 
 		}
 	}

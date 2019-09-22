@@ -35,7 +35,7 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		//================== Device computation
 		switch (this->parameters_.micro) {
 		case ADD:
-			microbenchmark_kernel_add<CHECK_BLOCK> <<<
+			microbenchmark_kernel_add<ADD_UINT32_THRESHOLD, CHECK_BLOCK> <<<
 					this->parameters_.grid_size, this->parameters_.block_size>>>(
 					this->output_dev_1.data(), this->output_dev_2.data(),
 					this->output_dev_3.data(), this->output_dev_1_lower.data(),
@@ -43,7 +43,7 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 					this->output_dev_3_lower.data());
 			break;
 		case MUL:
-			microbenchmark_kernel_mul<CHECK_BLOCK> <<<
+			microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD, CHECK_BLOCK> <<<
 					this->parameters_.grid_size, this->parameters_.block_size>>>(
 					this->output_dev_1.data(), this->output_dev_2.data(),
 					this->output_dev_3.data(), this->output_dev_1_lower.data(),
@@ -51,7 +51,7 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 					this->output_dev_3_lower.data());
 			break;
 		case FMA:
-			microbenchmark_kernel_fma<CHECK_BLOCK> <<<
+			microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD, CHECK_BLOCK> <<<
 					this->parameters_.grid_size, this->parameters_.block_size>>>(
 					this->output_dev_1.data(), this->output_dev_2.data(),
 					this->output_dev_3.data(), this->output_dev_1_lower.data(),
