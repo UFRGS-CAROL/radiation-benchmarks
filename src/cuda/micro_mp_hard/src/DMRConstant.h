@@ -190,7 +190,8 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 			std::string error_detail = "detected_dmr_errors: " + std::to_string(dmr_errors);
 			if (this->parameters_.verbose)
 				std::cout << error_detail << std::endl;
-			this->log_.log_error_detail(error_detail);
+			this->log_.log_info_detail(error_detail);
+			this->log_.update_infos(1);
 		}
 		return dmr_errors;
 	}
