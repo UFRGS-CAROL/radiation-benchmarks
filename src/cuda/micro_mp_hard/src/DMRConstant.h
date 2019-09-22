@@ -145,7 +145,10 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 			} else if (val_output_1 == val_output_2) {
 				// Only value 2 diverge
 				val_voted = val_output_1;
-			} else {
+			}
+
+			//all three diverge
+			if((val_output_1 != val_output_2) && (val_output_2 != val_output_3) && (val_output_1 != val_output_3)){
 #pragma omp critical
 				{
 					memory_errors++;
