@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-TYPES = ["REGISTERS", "L1", "L2", "SHARED", "READONLY"]
+TYPES = ["REGISTERS", "SHARED", "READONLY"]
 ITERATIONS = 100000
 SLEEPONGPU = 1
 
