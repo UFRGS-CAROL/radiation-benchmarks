@@ -1,9 +1,12 @@
 #!/bin/bash
 
+set -x
+set -e
+
 make clean
 make
 
-for h in none dmr dmrmixed
+for h in none dmr dmrmixed;
 do
     for b in 1 10 100 1000;
     do
