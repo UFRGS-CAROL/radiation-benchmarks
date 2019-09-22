@@ -21,10 +21,13 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 	std::vector<half_t> output_host_1_lower, output_host_2_lower,
 			output_host_3_lower;
 
+	uint32 threshold_diff;
+
 	virtual ~DMRConstant() = default;
 
 	DMRConstant(const Parameters& parameters, Log& log) :
-			Microbenchmark<CHECK_BLOCK, half_t, real_t>(parameters, log) {
+			Microbenchmark<CHECK_BLOCK, half_t, real_t>(parameters, log), threshold_diff(
+					0) {
 		auto r_size = this->parameters_.r_size;
 		this->output_dev_1_lower.resize(r_size);
 		this->output_dev_2_lower.resize(r_size);
@@ -44,22 +47,27 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 			case 1: {
 				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_add<threshold, CHECK_BLOCK>;
-
+				this->threshold_diff = threshold;
 				break;
 			}
 			case 10: {
 				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_add<threshold, CHECK_BLOCK>;
+				this->threshold_diff = threshold;
 				break;
 			}
 			case 100: {
 				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_add<threshold, CHECK_BLOCK>;
+
+				this->threshold_diff = threshold;
 				break;
 			}
 			default: {
 				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_add<threshold, CHECK_BLOCK>;
+
+				this->threshold_diff = threshold;
 			}
 			}
 
@@ -70,21 +78,29 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 			case 1: {
 				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_mul<threshold, CHECK_BLOCK>;
+
+				this->threshold_diff = threshold;
 				break;
 			}
 			case 10: {
 				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_mul<threshold, CHECK_BLOCK>;
+
+				this->threshold_diff = threshold;
 				break;
 			}
 			case 100: {
 				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_mul<threshold, CHECK_BLOCK>;
+
+				this->threshold_diff = threshold;
 				break;
 			}
 			default: {
 				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_mul<threshold, CHECK_BLOCK>;
+
+				this->threshold_diff = threshold;
 			}
 			}
 
@@ -96,11 +112,15 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_fma<threshold, CHECK_BLOCK>;
 
+				this->threshold_diff = threshold;
+
 				break;
 			}
 			case 10: {
 				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_fma<threshold, CHECK_BLOCK>;
+
+				this->threshold_diff = threshold;
 
 				break;
 			}
@@ -108,11 +128,15 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_fma<threshold, CHECK_BLOCK>;
 
+				this->threshold_diff = threshold;
+
 				break;
 			}
 			default: {
 				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
 				kernel = &microbenchmark_kernel_fma<threshold, CHECK_BLOCK>;
+
+				this->threshold_diff = threshold;
 
 			}
 			}
@@ -148,7 +172,8 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 			}
 
 			//all three diverge
-			if((val_output_1 != val_output_2) && (val_output_2 != val_output_3) && (val_output_1 != val_output_3)){
+			if ((val_output_1 != val_output_2) && (val_output_2 != val_output_3)
+					&& (val_output_1 != val_output_3)) {
 #pragma omp critical
 				{
 					memory_errors++;
@@ -172,6 +197,22 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 
 		return relative_errors;
 
+	}
+
+	virtual inline bool cmp(double& lhs, double& rhs) override {
+		const float rhs_float = float(rhs);
+		const float lhs_float = float(lhs);
+		const uint32* lhs_ptr = (uint32*) &lhs_float;
+		const uint32* rhs_ptr = (uint32*) &rhs_float;
+		const uint32 lhs_data = *lhs_ptr;
+		const uint32 rhs_data = *rhs_ptr;
+		const uint32 sub_res =
+				(lhs_data > rhs_data) ?
+						lhs_data - rhs_data : rhs_data - lhs_data;
+		if (sub_res > this->threshold_diff) {
+			return true;
+		}
+		return false;
 	}
 
 };

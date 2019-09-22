@@ -205,7 +205,7 @@ struct Microbenchmark {
 		return double(val);
 	}
 
-	inline bool cmp(double& lhs, double& rhs) {
+	virtual inline bool cmp(double& lhs, double& rhs) {
 		double diff = std::fabs(lhs - rhs);
 		if (diff > ZERO_FLOAT) {
 			return true;
