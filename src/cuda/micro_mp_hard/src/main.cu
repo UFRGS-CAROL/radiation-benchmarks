@@ -75,6 +75,7 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 
 	if (micro_test.parameters_.generate == true) {
 		micro_test.write_gold();
+		std::cout << "MAX DIFF " << micro_test.get_max_threshold() << std::endl;
 	}
 
 	if (micro_test.parameters_.verbose) {
@@ -184,11 +185,12 @@ int main(int argc, char* argv[]) {
 	case 100:
 		setup<100>(parameters, log);
 		break;
-//	case 1000:
-//		setup<1000>(parameters, log);
-//		break;
+	case 1000:
+		setup<1000>(parameters, log);
+		break;
 	default:
-		setup<OPS>(parameters, log);
+		std::string result = "OPERATION NUM = " + std::to_string(parameters.operation_num) + " OPTION NOT COVERED";
+		fatalerror(result.c_str());
 	}
 
 	return 0;

@@ -154,13 +154,6 @@ struct Microbenchmark {
 					this->check_with_lower_precision(val_output, i,
 							relative_errors);
 			double val_output_bigger_precision = double(val_output);
-//#pragma omp critical
-//			{
-//				min_diff = std::min(min_diff,
-//						std::fabs(
-//								val_output_bigger_precision
-//										- val_output_lower_precision));
-//			}
 
 			if ((val_gold != val_output
 					|| this->cmp(val_output_lower_precision,
@@ -183,8 +176,6 @@ struct Microbenchmark {
 
 			}
 		}
-
-//		std::cout << "MIN DIFFERENCE IN FLOAT "
 
 		this->log_.update_errors(host_errors);
 		this->log_.update_infos(memory_errors);
@@ -302,6 +293,10 @@ struct Microbenchmark {
 		this->output_host_1 = this->output_dev_1.to_vector();
 		this->output_host_2 = this->output_dev_2.to_vector();
 		this->output_host_3 = this->output_dev_3.to_vector();
+		return 0;
+	}
+
+	virtual uint32 get_max_threshold(){
 		return 0;
 	}
 };

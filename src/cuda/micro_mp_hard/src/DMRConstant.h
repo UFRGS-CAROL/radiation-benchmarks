@@ -39,35 +39,34 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 				real_t* output_real_t_3, half_t* output_half_t_1,
 				half_t* output_half_t_2, half_t* output_half_t_3);
 
-		//================== Device computation
-
 		switch (this->parameters_.micro) {
 		case ADD: {
 			switch (this->parameters_.operation_num) {
 			case 1: {
-				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_add<threshold, CHECK_BLOCK>;
-				this->threshold_diff = threshold;
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1,
+						CHECK_BLOCK>;
+				this->threshold_diff = ADD_UINT32_THRESHOLD_1;
 				break;
 			}
 			case 10: {
-				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_add<threshold, CHECK_BLOCK>;
-				this->threshold_diff = threshold;
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_10,
+						CHECK_BLOCK>;
+				this->threshold_diff = ADD_UINT32_THRESHOLD_10;
 				break;
 			}
 			case 100: {
-				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_add<threshold, CHECK_BLOCK>;
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_100,
+						CHECK_BLOCK>;
 
-				this->threshold_diff = threshold;
+				this->threshold_diff = ADD_UINT32_THRESHOLD_100;
 				break;
 			}
-			default: {
-				constexpr uint32 threshold = ADD_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_add<threshold, CHECK_BLOCK>;
+			case 1000: {
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1000,
+						CHECK_BLOCK>;
 
-				this->threshold_diff = threshold;
+				this->threshold_diff = ADD_UINT32_THRESHOLD_1000;
+				break;
 			}
 			}
 
@@ -76,31 +75,30 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		case MUL: {
 			switch (this->parameters_.operation_num) {
 			case 1: {
-				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_mul<threshold, CHECK_BLOCK>;
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1,
+						CHECK_BLOCK>;
 
-				this->threshold_diff = threshold;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_1;
 				break;
 			}
 			case 10: {
-				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_mul<threshold, CHECK_BLOCK>;
-
-				this->threshold_diff = threshold;
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_10,
+						CHECK_BLOCK>;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_10;
 				break;
 			}
 			case 100: {
-				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_mul<threshold, CHECK_BLOCK>;
-
-				this->threshold_diff = threshold;
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_100,
+						CHECK_BLOCK>;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_100;
 				break;
 			}
-			default: {
-				constexpr uint32 threshold = MUL_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_mul<threshold, CHECK_BLOCK>;
 
-				this->threshold_diff = threshold;
+			case 1000: {
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1000,
+						CHECK_BLOCK>;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_1000;
+				break;
 			}
 			}
 
@@ -109,38 +107,31 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		case FMA: {
 			switch (this->parameters_.operation_num) {
 			case 1: {
-				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_fma<threshold, CHECK_BLOCK>;
-
-				this->threshold_diff = threshold;
-
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_1,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_1;
 				break;
 			}
 			case 10: {
-				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_fma<threshold, CHECK_BLOCK>;
-
-				this->threshold_diff = threshold;
-
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_10,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_10;
 				break;
 			}
 			case 100: {
-				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_fma<threshold, CHECK_BLOCK>;
-
-				this->threshold_diff = threshold;
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_100,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_100;
 
 				break;
 			}
-			default: {
-				constexpr uint32 threshold = FMA_UINT32_THRESHOLD;
-				kernel = &microbenchmark_kernel_fma<threshold, CHECK_BLOCK>;
-
-				this->threshold_diff = threshold;
-
+			case 1000: {
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_1000,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_1000;
 			}
+				break;
 			}
-
 			break;
 		}
 		}
@@ -209,12 +200,40 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		const uint32 sub_res =
 				(lhs_data > rhs_data) ?
 						lhs_data - rhs_data : rhs_data - lhs_data;
+
 		if (sub_res > this->threshold_diff) {
 			return true;
 		}
 		return false;
 	}
 
+	virtual uint32 get_max_threshold() override {
+		uint32 max_diff = 0;
+		uint64 memory_errors = 0;
+
+#pragma omp parallel for shared(memory_errors, max_diff)
+		for (uint32 i = 0; i < this->gold_vector.size(); i++) {
+			auto bigger = this->gold_vector[i];
+			auto smaller = this->check_with_lower_precision(bigger, i,
+					memory_errors);
+
+			const float rhs_float = float(bigger);
+			const float lhs_float = float(smaller);
+			const uint32* lhs_ptr = (uint32*) &lhs_float;
+			const uint32* rhs_ptr = (uint32*) &rhs_float;
+			const uint32 lhs_data = *lhs_ptr;
+			const uint32 rhs_data = *rhs_ptr;
+			const uint32 sub_res =
+					(lhs_data > rhs_data) ?
+							lhs_data - rhs_data : rhs_data - lhs_data;
+
+#pragma omp critical
+			{
+				max_diff = max(max_diff, sub_res);
+			}
+		}
+		return max_diff;
+	}
 };
 
 #endif /* DMRCONSTANT_H_ */

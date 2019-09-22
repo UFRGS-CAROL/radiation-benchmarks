@@ -8,7 +8,6 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
-
 #define BLOCK_SIZE 32
 #define MAX_THREAD_BLOCK BLOCK_SIZE * BLOCK_SIZE
 #define NUMBER_OF_THREAD_BLOCK MAX_THREAD_BLOCK * 128
@@ -42,16 +41,6 @@ typedef unsigned char byte;
 #ifndef ZERO_FULL
 #define ZERO_FULL 0.0L
 #endif
-
-/**
- * Define the threshold to use on
- * the comparison method
- */
-
-#define ADD_UINT32_THRESHOLD 255
-#define MUL_UINT32_THRESHOLD 255
-#define FMA_UINT32_THRESHOLD 255
-
 
 #define __DEVICE_HOST__ __device__ __host__ __forceinline__
 #define __HOST__ __host__ __forceinline__
@@ -89,6 +78,30 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 		{ "mul", MUL },
 		//FMA
 		{ "fma", FMA }, };
+
+/**
+ * Define the threshold to use on
+ * the comparison method
+ */
+//For 1 iteration
+#define ADD_UINT32_THRESHOLD_1 255
+#define MUL_UINT32_THRESHOLD_1 965
+#define FMA_UINT32_THRESHOLD_1 255
+
+//For 10 iterations
+#define ADD_UINT32_THRESHOLD_10 255
+#define MUL_UINT32_THRESHOLD_10 965
+#define FMA_UINT32_THRESHOLD_10 255
+
+//For 100 iterations
+#define ADD_UINT32_THRESHOLD_100 255
+#define MUL_UINT32_THRESHOLD_100 965
+#define FMA_UINT32_THRESHOLD_100 255
+
+//For 1K iterations
+#define ADD_UINT32_THRESHOLD_1000 255
+#define MUL_UINT32_THRESHOLD_1000 965
+#define FMA_UINT32_THRESHOLD_1000 255
 
 
 #endif /* COMMON_H_ */

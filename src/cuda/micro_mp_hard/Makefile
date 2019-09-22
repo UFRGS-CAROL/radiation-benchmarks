@@ -3,6 +3,7 @@ LOGS=1
 DEBUG?=0
 MICRO=mul
 DMR=none
+CHECK_BLOCK=$(OPS)
 
 CC=g++
 NVCC=nvcc
@@ -50,6 +51,7 @@ generate:
 			--inst $(MICRO)     \
 			--generate \
 			--gold ./gold_$(MICRO)_$(DMR).data \
+			--opnum $(CHECK_BLOCK)
 			--verbose
 		
 test:
@@ -57,4 +59,5 @@ test:
 			--redundancy $(DMR) \
 			--inst $(MICRO)     \
 			--gold ./gold_$(MICRO)_$(DMR).data \
-			--verbose --iterations 10
+			--opnum $(CHECK_BLOCK)
+			--verbose --iterations 1
