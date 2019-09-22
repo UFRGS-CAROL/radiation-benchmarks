@@ -187,9 +187,10 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 						0, cudaMemcpyDeviceToHost));
 
 		if (dmr_errors != 0) {
-			std::stringstream error_detail;
-			error_detail << "detected_dmr_errors: " << dmr_errors;
-			this->log_.log_error_detail(error_detail.str());
+			std::string error_detail = "detected_dmr_errors: " + std::to_string(dmr_errors);
+			if (this->parameters_.verbose)
+				std::cout << error_detail << std::endl;
+			this->log_.log_error_detail(error_detail);
 		}
 		return dmr_errors;
 	}

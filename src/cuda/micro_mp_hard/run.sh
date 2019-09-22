@@ -6,13 +6,14 @@ set -e
 make clean
 make
 
-for h in none dmr dmrmixed;
+for  m in add mul fma;
 do
+    make generate MICRO=${m}
+
     for b in 1 10 100 1000;
     do
-        for m in add mul fma;
+        for h in dmrmixed; #none dmr dmrmixed;
         do
-            make generate DMR=${h} CHECK_BLOCK=${b} MICRO=${m}
             make test DMR=${h} CHECK_BLOCK=${b} MICRO=${m}
         done
     done

@@ -84,18 +84,18 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
  * the comparison method
  */
 //For 1 iteration
-#define ADD_UINT32_THRESHOLD_1 0
-#define MUL_UINT32_THRESHOLD_1 0
-#define FMA_UINT32_THRESHOLD_1 0
+#define ADD_UINT32_THRESHOLD_1 5
+#define MUL_UINT32_THRESHOLD_1 11
+#define FMA_UINT32_THRESHOLD_1 10
 
 //For 10 iterations
 #define ADD_UINT32_THRESHOLD_10 5
-#define MUL_UINT32_THRESHOLD_10 11
-#define FMA_UINT32_THRESHOLD_10 5
+#define MUL_UINT32_THRESHOLD_10 22
+#define FMA_UINT32_THRESHOLD_10 10
 
 //For 100 iterations
 #define ADD_UINT32_THRESHOLD_100 50
-#define MUL_UINT32_THRESHOLD_100 95
+#define MUL_UINT32_THRESHOLD_100 190
 #define FMA_UINT32_THRESHOLD_100 49
 
 //For 1K iterations
