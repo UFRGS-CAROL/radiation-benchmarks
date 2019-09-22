@@ -96,7 +96,7 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 //For 100 iterations
 #define ADD_UINT32_THRESHOLD_100 50
 #define MUL_UINT32_THRESHOLD_100 190
-#define FMA_UINT32_THRESHOLD_100 49
+#define FMA_UINT32_THRESHOLD_100 98
 
 //For 1K iterations
 #define ADD_UINT32_THRESHOLD_1000 246
