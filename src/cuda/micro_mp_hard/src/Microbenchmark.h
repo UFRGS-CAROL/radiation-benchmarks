@@ -78,7 +78,7 @@ struct Microbenchmark {
 		uint64 relative_errors = 0;
 //		double min_diff = UINT32_MAX;
 
-#pragma omp parallel for shared(host_errors, memory_errors, relative_errors, min_diff)
+#pragma omp parallel for shared(host_errors, memory_errors, relative_errors)
 		for (uint32 i = 0; i < this->output_host_1.size(); i++) {
 			auto check_flag = true;
 			auto val_gold = this->gold_vector[i];
