@@ -97,13 +97,13 @@ __device__ __forceinline__ void mov_cache_data(volatile uint64* dst,
 	dst[91] = src[91];
 	dst[92] = src[92];
 	dst[93] = src[93];
-
+	dst[94] = src[94];
+	dst[95] = src[95];
 }
 
 #endif
 /*
- dst[94] = src[94];
- dst[95] = src[95];
+
  dst[96] = src[96];
  dst[97] = src[97];
  dst[98] = src[98];
