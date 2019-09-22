@@ -192,7 +192,6 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 			this->log_.log_error_detail(error_detail.str());
 		}
 		return dmr_errors;
-
 	}
 
 	virtual inline bool cmp(double& lhs, double& rhs) override {
