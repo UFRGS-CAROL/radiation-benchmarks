@@ -40,7 +40,7 @@ __global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
 	const int64 t1_miss = clock64();
 #pragma unroll 48
 	for(uint32 k = 0; k < NUMBER_OF_ELEMENTS; k++){
-		rs &= in[i + k];
+		rs = in[i + k];
 	}
 //	mov_cache_data(rs, in + i);
 	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
