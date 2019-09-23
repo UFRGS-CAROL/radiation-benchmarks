@@ -208,24 +208,26 @@ struct Microbenchmark {
 		uint64 inf_count = 0;
 		uint64 zero_count = 0;
 
-#pragma omp parallel for shared(memory_errors)
+#pragma omp parallel for shared(memory_errors, nan_count, inf_count, zero_count)
 		for (uint32 i = 0; i < this->gold_vector.size(); i++) {
 			auto val_output_1 = this->output_host_1[i];
 			auto val_output_2 = this->output_host_2[i];
 			auto val_output_3 = this->output_host_3[i];
+#pragma omp critical
+			{
+				nan_count += std::isnan(val_output_1);
+				inf_count += std::isinf(val_output_1);
 
-			nan_count += std::isnan(val_output_1);
-			inf_count += std::isinf(val_output_1);
+				nan_count += std::isnan(val_output_2);
+				inf_count += std::isinf(val_output_2);
 
-			nan_count += std::isnan(val_output_2);
-			inf_count += std::isinf(val_output_2);
+				nan_count += std::isnan(val_output_3);
+				inf_count += std::isinf(val_output_3);
 
-			nan_count += std::isnan(val_output_3);
-			inf_count += std::isinf(val_output_3);
-
-			zero_count += (val_output_1 == 0.0);
-			zero_count += (val_output_2 == 0.0);
-			zero_count += (val_output_3 == 0.0);
+				zero_count += (val_output_1 == 0.0);
+				zero_count += (val_output_2 == 0.0);
+				zero_count += (val_output_3 == 0.0);
+			}
 
 			this->gold_vector[i] = val_output_1;
 			if ((val_output_1 != val_output_2)
@@ -251,6 +253,9 @@ struct Microbenchmark {
 				}
 			}
 		}
+
+		std::cout << "FULL PRECISION " << zero_count << " " << nan_count << " " << inf_count
+				<< std::endl;
 
 		return memory_errors;
 	}

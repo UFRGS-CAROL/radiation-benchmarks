@@ -45,7 +45,7 @@ std::vector<double> generate_input_random(double& min_random,
 int main(int argc, char **argv) {
 	std::string input_constant_h_file_path = "src/input_constant.h";
 
-	std::vector<std::pair<double, double> > possible_inputs = { { 1.001, 1.01 }, // 0 to 10
+	std::vector<std::pair<double, double> > possible_inputs = { { 1.00001, 1.0001 }, // 0 to 10
 //			{ 10, 100 }, // 10 to 100
 //			{ 100, 1000 }, // 100 to 1000
 			};

@@ -75,7 +75,8 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 
 	if (micro_test.parameters_.generate == true) {
 		micro_test.write_gold();
-		std::cout << "MAX DIFF " << micro_test.get_max_threshold() << std::endl;
+		auto max_diff =  micro_test.get_max_threshold();
+		std::cout << "MAX DIFF " << max_diff << std::endl;
 	}
 
 	if (micro_test.parameters_.verbose) {

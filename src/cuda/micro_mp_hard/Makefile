@@ -1,9 +1,9 @@
-OPS?=1000
+OPS?=100000
 LOGS=1
 DEBUG?=0
 MICRO=mul
 DMR=none
-CHECK_BLOCK=$(OPS)
+CHECK_BLOCK=1000
 
 CC=g++
 CUDAPATH=/usr/local/cuda

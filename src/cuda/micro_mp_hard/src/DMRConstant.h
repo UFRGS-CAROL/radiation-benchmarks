@@ -216,12 +216,17 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 	virtual uint32 get_max_threshold() override {
 		uint32 max_diff = 0;
 		uint64 memory_errors = 0;
+		uint64 nan_count = 0;
+		uint64 inf_count = 0;
+		uint64 zero_count = 0;
 
-#pragma omp parallel for shared(memory_errors, max_diff)
+#pragma omp parallel for shared(memory_errors, max_diff, nan_count, inf_count, zero_count)
 		for (uint32 i = 0; i < this->gold_vector.size(); i++) {
 			auto bigger = this->gold_vector[i];
 			auto smaller = this->check_with_lower_precision(bigger, i,
 					memory_errors);
+
+
 
 			const float rhs_float = float(bigger);
 			const float lhs_float = float(smaller);
@@ -235,9 +240,16 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 
 #pragma omp critical
 			{
-				max_diff = max(max_diff, sub_res);
+				nan_count += std::isnan(smaller);
+				inf_count += std::isinf(smaller);
+    			zero_count += (smaller == 0.0);
+
+    			max_diff = max(max_diff, sub_res);
 			}
 		}
+
+		std::cout << "SMALL PRECISION " << zero_count << " " << nan_count << " " << inf_count
+				<< std::endl;
 		return max_diff;
 	}
 };
