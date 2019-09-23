@@ -72,15 +72,15 @@ def iceboxSwitch(portNumber, status, switchIP):
     send "quit\r"
     """
 
-    child = pexpect.spawn('telnet {} {}'.format(switchIP, par.socketPort))
+    child = pexpect.spawn('telnet {} {}'.format(switchIP, 23))
     child.expect('Icebox login:')
     child.sendline('admin')
     child.expect('Password:')
     child.sendline('icebox')
     child.expect('#')
-    child.sendline('power {} {}\r'.format(status.lower(), portNumber))
+    child.sendline('power {} {}'.format(status.lower(), portNumber))
     child.expect('OK')
-    child.sendline('quit\r')
+    child.sendline('quit')
     return 1
 
 
