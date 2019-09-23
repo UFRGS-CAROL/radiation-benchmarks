@@ -32,7 +32,7 @@ IPtoNames = {
 IPtoSwitchIP = {
     # "192.168.1.21": "192.168.1.100",  # caroltegrax21
     # "192.168.1.10": "192.168.1.100",  # carolk201
-    "192.168.1.12": "192.168.1.100",    # caroltitanv2
+    "192.168.1.12": "192.168.1.21",    # caroltitanv2
     # "192.168.1.6": "192.168.1.102",   # CarolXeon1
     # "192.168.1.7": "192.168.1.104",   # CarolXeon2
 }
@@ -41,7 +41,7 @@ IPtoSwitchIP = {
 IPtoSwitchPort = {
     # "192.168.1.21": 1,  # caroltegrax2
     # "192.168.1.10": 1,  # carolk201
-    "192.168.1.12": 1,    # caroltitanv2
+    "192.168.1.12": 2,    # caroltitanv2
     # "192.168.1.6": 1,   # CarolXeon1
     # "192.168.1.7": 4,   # CarolXeon2
 }

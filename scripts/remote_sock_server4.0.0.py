@@ -249,10 +249,6 @@ def main():
     if os_sys_return != 0:
         raise ValueError("curl is not installed. Type sudo apt install curl to install it.")
 
-    os_sys_return = os.system("telnet --help > /dev/null 2>/dev/null")
-    if os_sys_return != 1:
-        raise ValueError("telnet is not installed. Type sudo apt install telnet to install it.")
-
     os_sys_return = os.system("ntpq --help > /dev/null 2>/dev/null")
     if os_sys_return != 0:
         raise ValueError("ntp is not installed. Type sudo apt install ntp to install it.")
