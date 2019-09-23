@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+import pexpect
 import threading
 import socket
 import time
@@ -7,6 +7,8 @@ import os
 from datetime import datetime
 import requests
 import json
+
+import subprocess
 
 import remote_sock_parameters as par
 
@@ -55,6 +57,31 @@ def lindySwitch(portNumber, status, switchIP):
             portNumber) + ", status" + status + ", switchIP:" + switchIP)
         print(str(err))
         return 1
+
+
+def iceboxSwitch(portNumber, status, switchIP):
+    """
+    spawn telnet $srvrIP $srvrPort
+    expect "Icebox login:"
+    send "$loginID\r"
+    expect "Password:"
+    send "$loginPW\r"
+    expect "#"
+    send "power off 1\r"
+    expect "OK"
+    send "quit\r"
+    """
+
+    child = pexpect.spawn('telnet {} {}'.format(switchIP, par.socketPort))
+    child.expect('Icebox login:')
+    child.sendline('admin')
+    child.expect('Password:')
+    child.sendline('icebox')
+    child.expect('#')
+    child.sendline('power {} {}\r'.format(status.lower(), portNumber))
+    child.expect('OK')
+    child.sendline('quit\r')
+    return 1
 
 
 class Switch:
@@ -106,6 +133,8 @@ def setIPSwitch(portNumber, status, switchIP):
         return s.cmd(int(portNumber), cmd)
     elif par.SwitchIPtoModel[switchIP] == "lindy":
         return lindySwitch(int(portNumber), cmd, switchIP)
+    elif par.SwitchIPtoModel[switchIP] == "icebox":
+        return iceboxSwitch(int(portNumber), cmd, switchIP)
 
 
 class RebootMachine(threading.Thread):
@@ -215,8 +244,18 @@ def main():
 
     # Test if curl is installed
     os_sys_return = os.system("curl --help > /dev/null 2>/dev/null")
+    os_sys_return = os.system("curl --help > /dev/null 2>/dev/null")
+
     if os_sys_return != 0:
         raise ValueError("curl is not installed. Type sudo apt install curl to install it.")
+
+    os_sys_return = os.system("telnet --help > /dev/null 2>/dev/null")
+    if os_sys_return != 1:
+        raise ValueError("telnet is not installed. Type sudo apt install telnet to install it.")
+
+    os_sys_return = os.system("ntpq --help > /dev/null 2>/dev/null")
+    if os_sys_return != 0:
+        raise ValueError("ntp is not installed. Type sudo apt install ntp to install it.")
 
     try:
         # Set the initial timestamp for all IPs

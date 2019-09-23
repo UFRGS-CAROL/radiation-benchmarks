@@ -49,6 +49,7 @@ IPtoSwitchPort = {
 SwitchIPtoModel = {
     "192.168.1.100": "default",
     "192.168.1.101": "default",
+    "192.168.1.21" : "icebox"
     # "192.168.1.102": "default",
     # "192.168.1.103": "lindy",
     # "192.168.1.104": "default",
