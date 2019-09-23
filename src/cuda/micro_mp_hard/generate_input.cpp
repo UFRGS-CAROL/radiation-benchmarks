@@ -12,6 +12,8 @@
 #include <random>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <limits>
 
 #define V100_STREAM_MULTIPROCESSOR 1024
 
@@ -21,7 +23,7 @@ void create_input_file(std::string& output_file, std::vector<double>& vect_data,
 
 	ofs << "[STREAM_MULTIPROCESSOR] = {"
 			<< std::endl;
-
+	ofs <<  std::setprecision(std::numeric_limits<double>::digits10);
 	for (auto t : vect_data) {
 		ofs << "\t\t" << t << "," << std::endl;
 	}
@@ -45,7 +47,7 @@ std::vector<double> generate_input_random(double& min_random,
 int main(int argc, char **argv) {
 	std::string input_constant_h_file_path = "src/input_constant.h";
 
-	std::vector<std::pair<double, double> > possible_inputs = { { 1.00001, 1.0001 }, // 0 to 10
+	std::vector<std::pair<double, double> > possible_inputs = { { 1.0000001, 1.0001 }, // 0 to 10
 //			{ 10, 100 }, // 10 to 100
 //			{ 100, 1000 }, // 100 to 1000
 			};

@@ -46,12 +46,6 @@ typedef unsigned char byte;
 #define __HOST__ __host__ __forceinline__
 #define __DEVICE__ __device__ __forceinline__
 
-#ifndef MAXSHAREDMEMORY
-#define MAXSHAREDMEMORY 48 * 1024
-#endif
-
-#define VOLTA_BLOCK_MULTIPLIER 40.9f
-
 std::unordered_map<std::string, REDUNDANCY> red = {
 //NONE
 		{ "none", NONE },
