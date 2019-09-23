@@ -81,7 +81,7 @@ def iceboxSwitch(portNumber, status, switchIP):
     child.sendline('power {} {}'.format(status.lower(), portNumber))
     child.expect('OK')
     child.sendline('quit')
-    return 1
+    return 0
 
 
 class Switch:
@@ -244,8 +244,6 @@ def main():
 
     # Test if curl is installed
     os_sys_return = os.system("curl --help > /dev/null 2>/dev/null")
-    os_sys_return = os.system("curl --help > /dev/null 2>/dev/null")
-
     if os_sys_return != 0:
         raise ValueError("curl is not installed. Type sudo apt install curl to install it.")
 
