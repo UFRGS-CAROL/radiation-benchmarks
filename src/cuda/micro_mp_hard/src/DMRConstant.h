@@ -257,6 +257,7 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 
 		std::cout << "SMALL PRECISION " << zero_count << " " << nan_count << " " << inf_count
 				<< std::endl;
+		std::cout << float(*((float*)(&max_diff))) << std::endl;
 		return max_diff;
 	}
 };
