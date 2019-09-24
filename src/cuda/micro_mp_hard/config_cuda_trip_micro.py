@@ -7,11 +7,11 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-ITERATIONS = int(1e10)
+ITERATIONS = int(1e8)
 PRECISIONS = ["double"]
 DMR = ["dmr", "dmrmixed", "none"]
 TYPES = ["fma", "add", "mul"]
-CHECK_BLOCK = [1, 10, 100, 1000]
+CHECK_BLOCK = [1, 10, 100, 1000, 100000]
 
 
 def config(board, debug):
@@ -47,7 +47,8 @@ def config(board, debug):
 
             for dmr in DMR:
                     for op in CHECK_BLOCK:
-                        gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
+                        gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${'
+                                  'LD_LIBRARY_PATH}} ',
                                   bin_path + '/' + benchmark_bin + " "]
                         gen[1] = ['--iterations {}'.format(ITERATIONS)]
                         gen[2] = ['--redundancy {}'.format(dmr)]
