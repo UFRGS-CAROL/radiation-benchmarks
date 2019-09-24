@@ -62,8 +62,7 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 						break;
 					}
 					case 1000: {
-						kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1000,
-								CHECK_BLOCK>;
+						kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1000,	CHECK_BLOCK>;
 
 						this->threshold_diff = ADD_UINT32_THRESHOLD_1000;
 						break;
@@ -219,16 +218,15 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		return dmr_errors;
 	}
 
-	virtual inline bool cmp(double& lhs, double& rhs) override {
-		const float rhs_float = float(rhs);
-		const float lhs_float = float(lhs);
-		const uint32* lhs_ptr = (uint32*) &lhs_float;
-		const uint32* rhs_ptr = (uint32*) &rhs_float;
-		const uint32 lhs_data = *lhs_ptr;
-		const uint32 rhs_data = *rhs_ptr;
-		const uint32 sub_res =
-				(lhs_data > rhs_data) ?
-						lhs_data - rhs_data : rhs_data - lhs_data;
+	virtual inline bool cmp(float& lhs, float& rhs) override {
+		uint32 lhs_data = reinterpret_cast<uint32&>(lhs);
+		uint32 rhs_data = reinterpret_cast<uint32&>(rhs);
+		uint32 sub_res;
+		if(lhs_data > rhs_data){
+			sub_res = lhs_data - rhs_data;
+		}else{
+			sub_res = rhs_data - lhs_data;
+		}
 
 		if (sub_res > this->threshold_diff) {
 			return true;

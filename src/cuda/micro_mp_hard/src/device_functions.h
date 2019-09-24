@@ -51,14 +51,15 @@ __DEVICE__ void compare(const T lhs, const T rhs) {
 
 template<const uint32 THRESHOLD_UINT32>
 __DEVICE__ void check_bit_error(const float lhs, const double rhs) {
-	const float rhs_float = float(rhs);
+	const uint32 lhs_data = __float_as_uint(lhs);
+	const uint32 rhs_data = __float_as_uint(float(rhs));
+	uint32 sub_res;
+	if(lhs_data > rhs_data){
+		sub_res = lhs_data - rhs_data;
+	}else{
+		sub_res = rhs_data - lhs_data;
+	}
 
-	const uint32* lhs_ptr = (uint32*) &lhs;
-	const uint32* rhs_ptr = (uint32*) &rhs_float;
-	const uint32 lhs_data = *lhs_ptr;
-	const uint32 rhs_data = *rhs_ptr;
-	const uint32 sub_res =
-			(lhs_data > rhs_data) ?  lhs_data - rhs_data: rhs_data - lhs_data;
 	if (sub_res > THRESHOLD_UINT32) {
 		atomicAdd(&errors, 1);
 	}

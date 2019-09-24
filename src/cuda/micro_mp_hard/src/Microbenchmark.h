@@ -148,10 +148,10 @@ struct Microbenchmark {
 
 			//check the output with lower precision
 			//if available
-			double val_output_lower_precision =
+			float val_output_lower_precision =
 					this->check_with_lower_precision(val_output, i,
 							relative_errors);
-			double val_output_bigger_precision = double(val_output);
+			float val_output_bigger_precision = val_output;
 
 			if ((val_gold != val_output
 					|| this->cmp(val_output_lower_precision,
@@ -194,8 +194,8 @@ struct Microbenchmark {
 		return double(val);
 	}
 
-	virtual inline bool cmp(double& lhs, double& rhs) {
-		double diff = std::fabs(lhs - rhs);
+	virtual inline bool cmp(float& lhs, float& rhs) {
+		float diff = std::fabs(lhs - rhs);
 		if (diff > ZERO_FLOAT) {
 			return true;
 		}
