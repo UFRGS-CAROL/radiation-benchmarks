@@ -68,8 +68,6 @@ __global__ void microbenchmark_kernel_add(real_t* output_real_t_1,
 
 	const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
 
-//	test_max(acc_real_t, acc_half_t, thread_id);
-
 	output_real_t_1[thread_id] = acc_real_t;
 	output_real_t_2[thread_id] = acc_real_t;
 	output_real_t_3[thread_id] = acc_real_t;

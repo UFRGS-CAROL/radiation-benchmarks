@@ -18,12 +18,12 @@
 #define V100_STREAM_MULTIPROCESSOR 1024
 
 void create_input_file(std::string& output_file, std::vector<double>& vect_data,
-		double min_, double max_, std::ofstream& ofs) {
-	ofs << "__device__ __constant__ double input_constant";
+		double min_, double max_, std::string& micro_bench,
+		std::ofstream& ofs) {
 
-	ofs << "[STREAM_MULTIPROCESSOR] = {"
-			<< std::endl;
-	ofs <<  std::setprecision(std::numeric_limits<double>::digits10);
+	ofs << "__device__ __constant__ double input_constant_" + micro_bench;
+	ofs << "[STREAM_MULTIPROCESSOR] = {" << std::endl;
+	ofs << std::setprecision(std::numeric_limits<double>::digits10);
 	for (auto t : vect_data) {
 		ofs << "\t\t" << t << "," << std::endl;
 	}
@@ -47,10 +47,12 @@ std::vector<double> generate_input_random(double& min_random,
 int main(int argc, char **argv) {
 	std::string input_constant_h_file_path = "src/input_constant.h";
 
-	std::vector<std::pair<double, double> > possible_inputs = { { 1.0000001, 1.0001 }, // 0 to 10
-//			{ 10, 100 }, // 10 to 100
-//			{ 100, 1000 }, // 100 to 1000
-			};
+	std::vector<std::tuple<double, double, std::string> > possible_inputs = {
+	//all inputs
+			{ 1.0, 100.0, "add" },	// ADD input
+			{ 1.0000001, 1.0001, "mul" }, // MUL input
+			{ 1.0, 100.0, "fma" } // FMA input
+	};
 
 	std::ofstream ofs(input_constant_h_file_path, std::ofstream::out);
 	if (ofs.good()) {
@@ -58,17 +60,22 @@ int main(int argc, char **argv) {
 		ofs << "#ifndef INPUT_CONSTANT_H_" << std::endl;
 		ofs << "#define INPUT_CONSTANT_H_" << std::endl << std::endl;
 		ofs << "#define V100_STREAM_MULTIPROCESSOR "
-						<< V100_STREAM_MULTIPROCESSOR << std::endl << std::endl;
+				<< V100_STREAM_MULTIPROCESSOR << std::endl << std::endl;
 
 		ofs << "#ifndef STREAM_MULTIPROCESSOR" << std::endl;
-		ofs << "#define STREAM_MULTIPROCESSOR V100_STREAM_MULTIPROCESSOR" << std::endl;
+		ofs << "#define STREAM_MULTIPROCESSOR V100_STREAM_MULTIPROCESSOR"
+				<< std::endl;
 		ofs << "#endif" << std::endl << std::endl;
 
 		for (auto in : possible_inputs) {
-			auto generated_input = generate_input_random(in.first, in.second,
+			double min_, max_;
+			std::string mic;
+			std::tie(min_, max_, mic) = in;
+
+			auto generated_input = generate_input_random(min_, max_,
 			V100_STREAM_MULTIPROCESSOR);
-			create_input_file(input_constant_h_file_path, generated_input,
-					in.first, in.second, ofs);
+			create_input_file(input_constant_h_file_path, generated_input, min_,
+					max_, mic, ofs);
 		}
 
 	}
