@@ -68,6 +68,14 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 				this->threshold_diff = ADD_UINT32_THRESHOLD_1000;
 				break;
 			}
+
+
+			case OPS: {
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_100000,
+						CHECK_BLOCK>;
+				this->threshold_diff = ADD_UINT32_THRESHOLD_100000;
+				break;
+			}
 			}
 
 			break;
@@ -102,9 +110,9 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 			}
 
 			case OPS: {
-				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1000,
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_100000,
 						CHECK_BLOCK>;
-				this->threshold_diff = MUL_UINT32_THRESHOLD_1000;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_100000;
 				break;
 			}
 			}
@@ -137,8 +145,15 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 						CHECK_BLOCK>;
 				this->threshold_diff = FMA_UINT32_THRESHOLD_1000;
 			}
+
+			case OPS: {
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_100000,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_100000;
 				break;
 			}
+			}
+
 			break;
 		}
 		}
@@ -226,8 +241,9 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		uint64 nan_count = 0;
 		uint64 inf_count = 0;
 		uint64 zero_count = 0;
+		float t, z;
 
-#pragma omp parallel for shared(memory_errors, max_diff, nan_count, inf_count, zero_count)
+#pragma omp parallel for shared(memory_errors, max_diff, nan_count, inf_count, zero_count, t, z)
 		for (uint32 i = 0; i < this->gold_vector.size(); i++) {
 			auto bigger = this->gold_vector[i];
 			auto smaller = this->check_with_lower_precision(bigger, i,
@@ -250,14 +266,17 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 				nan_count += std::isnan(smaller);
 				inf_count += std::isinf(smaller);
     			zero_count += (smaller == 0.0);
-
     			max_diff = max(max_diff, sub_res);
+    			if(max_diff == sub_res){
+    				t = rhs_float;
+    				z = lhs_float;
+    			}
 			}
 		}
 
 		std::cout << "SMALL PRECISION " << zero_count << " " << nan_count << " " << inf_count
 				<< std::endl;
-		std::cout << float(*((float*)(&max_diff))) << std::endl;
+		std::cout << t << " " << z << std::endl;
 		return max_diff;
 	}
 };
