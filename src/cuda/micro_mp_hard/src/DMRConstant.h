@@ -100,6 +100,13 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 				this->threshold_diff = MUL_UINT32_THRESHOLD_1000;
 				break;
 			}
+
+			case OPS: {
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1000,
+						CHECK_BLOCK>;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_1000;
+				break;
+			}
 			}
 
 			break;
