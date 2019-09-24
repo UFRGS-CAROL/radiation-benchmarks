@@ -17,7 +17,6 @@ LOGHELPER_INC=../../include/
 LOGHELPER_LIB=../../include/
 
 ifeq ($(DEBUG), 1)
-OPS=1000
 NVCC_FLAGS+= -g -G
 endif
 
