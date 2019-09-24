@@ -20,9 +20,9 @@ def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin
     :return:
     """
     for i in generate:
-        print i
+        print(i)
         if not debug and os.system(str(i)) != 0:
-                print "Something went wrong with generate of ", str(i)
+                print("Something went wrong with generate of ", str(i))
                 exit(1)
 
     list_to_print = ["[\n"]
@@ -36,7 +36,7 @@ def execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin
     with open(install_dir + "scripts/json_files/" + benchmark_bin + ".json", 'w') as fp:
         fp.writelines(list_to_print)
 
-    print "\nConfiguring done, to run check file: " + install_dir + "scripts/json_files/" + benchmark_bin + ".json"
+    print("\nConfiguring done, to run check file: " + install_dir + "scripts/json_files/" + benchmark_bin + ".json")
 
 
 def discover_board():
