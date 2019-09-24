@@ -189,6 +189,9 @@ int main(int argc, char* argv[]) {
 	case 1000:
 		setup<1000>(parameters, log);
 		break;
+	case OPS:
+		setup<OPS>(parameters, log);
+		break;
 	default:
 		std::string result = "OPERATION NUM = " + std::to_string(parameters.operation_num) + " OPTION NOT COVERED";
 		fatalerror(result.c_str());

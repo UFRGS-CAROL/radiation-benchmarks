@@ -3,7 +3,7 @@ LOGS=1
 DEBUG?=0
 MICRO=mul
 DMR=none
-CHECK_BLOCK=1000
+CHECK_BLOCK=$(OPS)
 
 CC=g++
 CUDAPATH=/usr/local/cuda
