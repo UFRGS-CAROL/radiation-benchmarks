@@ -34,128 +34,128 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		this->output_dev_3_lower.resize(r_size);
 	}
 
-	virtual void call_kernel() override {
+	void call_kernel() {
 		void (*kernel)(real_t* output_real_t_1, real_t* output_real_t_2,
 				real_t* output_real_t_3, half_t* output_half_t_1,
 				half_t* output_half_t_2, half_t* output_half_t_3);
 
 		switch (this->parameters_.micro) {
-			case ADD: {
-				switch (this->parameters_.operation_num) {
-					case 1: {
-						kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1,
-								CHECK_BLOCK>;
-						this->threshold_diff = ADD_UINT32_THRESHOLD_1;
-						break;
-					}
-					case 10: {
-						kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_10,
-								CHECK_BLOCK>;
-						this->threshold_diff = ADD_UINT32_THRESHOLD_10;
-						break;
-					}
-					case 100: {
-						kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_100,
-								CHECK_BLOCK>;
+		case ADD: {
+			switch (this->parameters_.operation_num) {
+			case 1: {
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1,
+						CHECK_BLOCK>;
+				this->threshold_diff = ADD_UINT32_THRESHOLD_1;
+				break;
+			}
+			case 10: {
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_10,
+						CHECK_BLOCK>;
+				this->threshold_diff = ADD_UINT32_THRESHOLD_10;
+				break;
+			}
+			case 100: {
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_100,
+						CHECK_BLOCK>;
 
-						this->threshold_diff = ADD_UINT32_THRESHOLD_100;
-						break;
-					}
-					case 1000: {
-						kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1000,	CHECK_BLOCK>;
+				this->threshold_diff = ADD_UINT32_THRESHOLD_100;
+				break;
+			}
+			case 1000: {
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_1000,
+						CHECK_BLOCK>;
 
-						this->threshold_diff = ADD_UINT32_THRESHOLD_1000;
-						break;
-					}
-
-
-					case OPS: {
-						kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_100000,
-								CHECK_BLOCK>;
-						this->threshold_diff = ADD_UINT32_THRESHOLD_100000;
-						break;
-					}
-				}
-
+				this->threshold_diff = ADD_UINT32_THRESHOLD_1000;
 				break;
 			}
 
-			case MUL: {
-				switch (this->parameters_.operation_num) {
-					case 1: {
-						kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1,
-								CHECK_BLOCK>;
+			case OPS: {
+				kernel = &microbenchmark_kernel_add<ADD_UINT32_THRESHOLD_100000,
+						CHECK_BLOCK>;
+				this->threshold_diff = ADD_UINT32_THRESHOLD_100000;
+				break;
+			}
+			}
 
-						this->threshold_diff = MUL_UINT32_THRESHOLD_1;
-						break;
-					}
-					case 10: {
-						kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_10,
-								CHECK_BLOCK>;
-						this->threshold_diff = MUL_UINT32_THRESHOLD_10;
-						break;
-					}
-					case 100: {
-						kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_100,
-								CHECK_BLOCK>;
-						this->threshold_diff = MUL_UINT32_THRESHOLD_100;
-						break;
-					}
+			break;
+		}
 
-					case 1000: {
-						kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1000,
-								CHECK_BLOCK>;
-						this->threshold_diff = MUL_UINT32_THRESHOLD_1000;
-						break;
-					}
+		case MUL: {
+			switch (this->parameters_.operation_num) {
+			case 1: {
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1,
+						CHECK_BLOCK>;
 
-					case OPS: {
-						kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_100000,
-								CHECK_BLOCK>;
-						this->threshold_diff = MUL_UINT32_THRESHOLD_100000;
-						break;
-					}
-				}
+				this->threshold_diff = MUL_UINT32_THRESHOLD_1;
+				break;
+			}
+			case 10: {
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_10,
+						CHECK_BLOCK>;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_10;
+				break;
+			}
+			case 100: {
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_100,
+						CHECK_BLOCK>;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_100;
 				break;
 			}
 
-			case FMA: {
-				switch (this->parameters_.operation_num) {
-					case 1: {
-						kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_1,
-								CHECK_BLOCK>;
-						this->threshold_diff = FMA_UINT32_THRESHOLD_1;
-						break;
-					}
-					case 10: {
-						kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_10,
-								CHECK_BLOCK>;
-						this->threshold_diff = FMA_UINT32_THRESHOLD_10;
-						break;
-					}
-					case 100: {
-						kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_100,
-								CHECK_BLOCK>;
-						this->threshold_diff = FMA_UINT32_THRESHOLD_100;
+			case 1000: {
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_1000,
+						CHECK_BLOCK>;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_1000;
+				break;
+			}
 
-						break;
-					}
-					case 1000: {
-						kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_1000,
-								CHECK_BLOCK>;
-						this->threshold_diff = FMA_UINT32_THRESHOLD_1000;
-					}
+			case OPS: {
+				kernel = &microbenchmark_kernel_mul<MUL_UINT32_THRESHOLD_100000,
+						CHECK_BLOCK>;
+				this->threshold_diff = MUL_UINT32_THRESHOLD_100000;
+				break;
+			}
+			}
+			break;
+		}
 
-					case OPS: {
-						kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_100000,
-								CHECK_BLOCK>;
-						this->threshold_diff = FMA_UINT32_THRESHOLD_100000;
-						break;
-					}
-				}
+		case FMA: {
+			switch (this->parameters_.operation_num) {
+			case 1: {
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_1,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_1;
+				break;
+			}
+			case 10: {
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_10,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_10;
+				break;
+			}
+			case 100: {
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_100,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_100;
 
 				break;
 			}
+			case 1000: {
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_1000,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_1000;
+			}
+
+			case OPS: {
+				kernel = &microbenchmark_kernel_fma<FMA_UINT32_THRESHOLD_100000,
+						CHECK_BLOCK>;
+				this->threshold_diff = FMA_UINT32_THRESHOLD_100000;
+				break;
+			}
+			}
+
+			break;
+		}
 		}
 
 		kernel<<<this->parameters_.grid_size, this->parameters_.block_size>>>(
@@ -165,8 +165,8 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 				this->output_dev_3_lower.data());
 	}
 
-	virtual inline double check_with_lower_precision(const real_t& val,
-			const uint64& i, uint64& memory_errors) override {
+	inline half_t check_with_lower_precision(const uint64& i,
+			uint64& memory_errors) override {
 		auto val_output_1 = this->output_host_1_lower[i];
 		auto val_output_2 = this->output_host_2_lower[i];
 		auto val_output_3 = this->output_host_3_lower[i];
@@ -194,22 +194,52 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 			}
 		}
 
-		return double(val_voted);
+		return val_voted;
 	}
 
-	virtual inline uint64 copy_data_back() override {
-		Microbenchmark<CHECK_BLOCK, half_t, real_t>::copy_data_back();
+	bool cmp(double& lhs, double& rhs) {
+		real_t diff = std::fabs(real_t(lhs) - rhs);
+		if (diff > ZERO_DOUBLE) {
+			return true;
+		}
+		return false;
+	}
+
+	bool cmp(float& lhs, double& rhs) {
+		float rhs_ = float(rhs);
+		uint32 lhs_data = reinterpret_cast<uint32&>(lhs);
+		uint32 rhs_data = reinterpret_cast<uint32&>(rhs_);
+		uint32 sub_res;
+		if (lhs_data > rhs_data) {
+			sub_res = lhs_data - rhs_data;
+		} else {
+			sub_res = rhs_data - lhs_data;
+		}
+
+		if (sub_res > this->threshold_diff) {
+			return true;
+		}
+
+		return false;
+	}
+
+	uint64 copy_data_back() {
+		this->output_host_1 = this->output_dev_1.to_vector();
+		this->output_host_2 = this->output_dev_2.to_vector();
+		this->output_host_3 = this->output_dev_3.to_vector();
+
 		this->output_host_1_lower = this->output_dev_1_lower.to_vector();
 		this->output_host_2_lower = this->output_dev_2_lower.to_vector();
 		this->output_host_3_lower = this->output_dev_3_lower.to_vector();
 
 		uint64 dmr_errors = 0;
 		rad::checkFrameworkErrors(
-				cudaMemcpyFromSymbol(&dmr_errors, errors, sizeof(uint64),
-						0, cudaMemcpyDeviceToHost));
+				cudaMemcpyFromSymbol(&dmr_errors, errors, sizeof(uint64), 0,
+						cudaMemcpyDeviceToHost));
 
 		if (dmr_errors != 0) {
-			std::string error_detail = "detected_dmr_errors: " + std::to_string(dmr_errors);
+			std::string error_detail = "detected_dmr_errors: "
+					+ std::to_string(dmr_errors);
 			if (this->parameters_.verbose)
 				std::cout << error_detail << std::endl;
 			this->log_.log_info_detail(error_detail);
@@ -218,23 +248,7 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		return dmr_errors;
 	}
 
-	virtual inline bool cmp(float& lhs, float& rhs) override {
-		uint32 lhs_data = reinterpret_cast<uint32&>(lhs);
-		uint32 rhs_data = reinterpret_cast<uint32&>(rhs);
-		uint32 sub_res;
-		if(lhs_data > rhs_data){
-			sub_res = lhs_data - rhs_data;
-		}else{
-			sub_res = rhs_data - lhs_data;
-		}
-
-		if (sub_res > this->threshold_diff) {
-			return true;
-		}
-		return false;
-	}
-
-	virtual uint32 get_max_threshold() override {
+	uint32 get_max_threshold() {
 		uint32 max_diff = 0;
 		uint64 memory_errors = 0;
 		uint64 nan_count = 0;
@@ -245,10 +259,7 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 #pragma omp parallel for shared(memory_errors, max_diff, nan_count, inf_count, zero_count, t, z)
 		for (uint32 i = 0; i < this->gold_vector.size(); i++) {
 			auto bigger = this->gold_vector[i];
-			auto smaller = this->check_with_lower_precision(bigger, i,
-					memory_errors);
-
-
+			auto smaller = this->check_with_lower_precision(i, memory_errors);
 
 			const float rhs_float = float(bigger);
 			const float lhs_float = float(smaller);
@@ -264,17 +275,17 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 			{
 				nan_count += std::isnan(smaller);
 				inf_count += std::isinf(smaller);
-    			zero_count += (smaller == 0.0);
-    			max_diff = max(max_diff, sub_res);
-    			if(max_diff == sub_res){
-    				t = rhs_float;
-    				z = lhs_float;
-    			}
+				zero_count += (smaller == 0.0);
+				max_diff = max(max_diff, sub_res);
+				if (max_diff == sub_res) {
+					t = rhs_float;
+					z = lhs_float;
+				}
 			}
 		}
 
-		std::cout << "SMALL PRECISION " << zero_count << " " << nan_count << " " << inf_count
-				<< std::endl;
+		std::cout << "SMALL PRECISION " << zero_count << " " << nan_count << " "
+				<< inf_count << std::endl;
 		std::cout << t << " " << z << std::endl;
 		return max_diff;
 	}

@@ -31,7 +31,11 @@ typedef uint32_t uint32;
 typedef unsigned char byte;
 
 #ifndef ZERO_FLOAT
-#define ZERO_FLOAT 2.2e-07
+#define ZERO_FLOAT 2.2e-20
+#endif
+
+#ifndef ZERO_DOUBLE
+#define ZERO_DOUBLE 1.4e-40
 #endif
 
 #ifndef ZERO_HALF

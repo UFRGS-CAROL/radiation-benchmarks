@@ -15,7 +15,6 @@
 #include "device_vector.h"
 #include "Parameters.h"
 #include "Log.h"
-#include "none_kernels.h"
 
 template<const uint32 CHECK_BLOCK, typename half_t, typename real_t>
 struct Microbenchmark {
@@ -29,6 +28,11 @@ struct Microbenchmark {
 	const Parameters& parameters_;
 
 	virtual ~Microbenchmark() = default;
+	virtual half_t check_with_lower_precision(const uint64& i, uint64& memory_errors) = 0;
+	virtual bool cmp(half_t& lhs, real_t& rhs) = 0;
+	virtual uint32 get_max_threshold() = 0;
+	virtual uint64 copy_data_back()  = 0;
+	virtual void call_kernel() = 0;
 
 	Microbenchmark(const Parameters& parameters, Log& log) :
 			parameters_(parameters), log_(log) {
@@ -36,27 +40,6 @@ struct Microbenchmark {
 		this->output_dev_2.resize(this->parameters_.r_size);
 		this->output_dev_3.resize(this->parameters_.r_size);
 		this->gold_vector.resize(this->parameters_.r_size);
-	}
-
-	virtual void call_kernel() {
-		//================== Device computation
-		switch (parameters_.micro) {
-		case ADD:
-			microbenchmark_kernel_add<<<parameters_.grid_size,
-					parameters_.block_size>>>(output_dev_1.data(),
-					output_dev_2.data(), output_dev_3.data());
-			break;
-		case MUL:
-			microbenchmark_kernel_mul<<<parameters_.grid_size,
-					parameters_.block_size>>>(output_dev_1.data(),
-					output_dev_2.data(), output_dev_3.data());
-			break;
-		case FMA:
-			microbenchmark_kernel_fma<<<parameters_.grid_size,
-					parameters_.block_size>>>(output_dev_1.data(),
-					output_dev_2.data(), output_dev_3.data());
-			break;
-		}
 	}
 
 	void test() {
@@ -148,14 +131,11 @@ struct Microbenchmark {
 
 			//check the output with lower precision
 			//if available
-			float val_output_lower_precision =
-					this->check_with_lower_precision(val_output, i,
-							relative_errors);
-			float val_output_bigger_precision = val_output;
+			auto val_output_lower_precision = this->check_with_lower_precision(i, relative_errors);
 
-			if ((val_gold != val_output
-					|| this->cmp(val_output_lower_precision,
-							val_output_bigger_precision)) && check_flag) {
+			bool cmp_val = this->cmp(val_output_lower_precision, val_output);
+
+			if ((val_gold != val_output || cmp_val) && check_flag) {
 #pragma omp critical
 				{
 					std::stringstream error_detail;
@@ -187,19 +167,6 @@ struct Microbenchmark {
 		}
 
 		return {host_errors, memory_errors, relative_errors};
-	}
-
-	virtual inline double check_with_lower_precision(const real_t& val,
-			const uint64& i, uint64& memory_errors) {
-		return double(val);
-	}
-
-	virtual inline bool cmp(float& lhs, float& rhs) {
-		float diff = std::fabs(lhs - rhs);
-		if (diff > ZERO_FLOAT) {
-			return true;
-		}
-		return false;
 	}
 
 	uint64 check_which_one_is_right() {
@@ -254,8 +221,8 @@ struct Microbenchmark {
 			}
 		}
 
-		std::cout << "FULL PRECISION " << zero_count << " " << nan_count << " " << inf_count
-				<< std::endl;
+		std::cout << "FULL PRECISION " << zero_count << " " << nan_count << " "
+				<< inf_count << std::endl;
 
 		return memory_errors;
 	}
@@ -293,16 +260,6 @@ struct Microbenchmark {
 		output.close();
 	}
 
-	virtual inline uint64 copy_data_back() {
-		this->output_host_1 = this->output_dev_1.to_vector();
-		this->output_host_2 = this->output_dev_2.to_vector();
-		this->output_host_3 = this->output_dev_3.to_vector();
-		return 0;
-	}
-
-	virtual uint32 get_max_threshold() {
-		return 0;
-	}
 };
 
 #endif /* MICROBENCHMARK_H_ */

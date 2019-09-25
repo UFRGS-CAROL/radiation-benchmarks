@@ -65,6 +65,15 @@ __DEVICE__ void check_bit_error(const float lhs, const double rhs) {
 	}
 }
 
+template<const uint32 THRESHOLD_UINT32>
+__DEVICE__ void check_bit_error(const double lhs, const double rhs) {
+	double diff = fabs(lhs - rhs);
+	if (diff > ZERO_DOUBLE) {
+		atomicAdd(&errors, 1);
+	}
+}
+
+
 template<typename incomplete, typename full>
 __DEVICE__ void check_relative_error(incomplete acc_incomplete,
 		full acc_full) {

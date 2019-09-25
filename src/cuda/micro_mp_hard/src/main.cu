@@ -1,7 +1,6 @@
 #include "Log.h"
 #include "Microbenchmark.h"
 #include "DMRConstant.h"
-#include "DMRNonConstant.h"
 #include "UnhardenedConstant.h"
 
 template<const uint32 CHECK_BLOCK, typename half_t, typename real_t>
@@ -102,8 +101,10 @@ void setup(Parameters& parameters, Log& log) {
 		}
 
 		if (parameters.precision == SINGLE) {
-			UnhardenedConstant<CHECK_BLOCK, float> micro_test(parameters, log);
-			test_radiation<CHECK_BLOCK>(micro_test);
+//			UnhardenedConstant<CHECK_BLOCK, float> micro_test(parameters, log);
+//			test_radiation<CHECK_BLOCK>(micro_test);
+			fatalerror("Not implemented yet");
+
 		}
 
 		if (parameters.precision == DOUBLE) {
@@ -120,8 +121,9 @@ void setup(Parameters& parameters, Log& log) {
 		}
 
 		if (parameters.precision == SINGLE) {
-			DMRConstant<CHECK_BLOCK, float, float> micro_test(parameters, log);
-			test_radiation<CHECK_BLOCK>(micro_test);
+//			DMRConstant<CHECK_BLOCK, float, float> micro_test(parameters, log);
+//			test_radiation<CHECK_BLOCK>(micro_test);
+			fatalerror("Not implemented yet");
 		}
 
 		if (parameters.precision == DOUBLE) {
