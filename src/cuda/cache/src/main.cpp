@@ -41,7 +41,7 @@ void setup_execute(Log& log, Parameters& test_parameter,
 	rad::NVMLWrapper counter_thread(DEVICE_INDEX);
 #endif
 	for (uint64 iteration = 0; iteration < log.iterations;) {
-		for (auto mem : std::vector<data_> { dt, 0x00000000 }) {
+		for (auto mem : std::vector<data_> { dt, 0x0000000000000000 }) {
 			//set CUDA configuration each iteration
 			memory_obj.set_cache_config(log.test_mode);
 

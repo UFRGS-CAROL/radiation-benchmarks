@@ -158,6 +158,8 @@ struct Memory {
 		return std::make_tuple(hits, misses, false_hits);
 	}
 
+	virtual void check_output_errors_caller(data_* found_array, data& gold, Log& log, hit)
+
 };
 
 #endif /* MEMORY_H_ */

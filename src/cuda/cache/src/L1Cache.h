@@ -10,12 +10,15 @@
 
 #include "Memory.h"
 
-struct L1Cache: public Memory<uint64> {
+struct cacheline{
+	uint64 line[CACHE_LINE_SIZE_BY_INT64];
+};
+struct L1Cache: public Memory<cacheline> {
 	dim3 threads_per_block;
 
 	L1Cache();
 	L1Cache(const Parameters& parameters);
-	virtual void test(const uint64& mem) override;
+	virtual void test(const cacheline& mem) override;
 };
 
 

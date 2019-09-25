@@ -22,56 +22,44 @@
 #error CUDA ARCH NOT SPECIFIED.
 #endif
 
-#define NUMBER_OF_ELEMENTS (48)
-#include "l1_move_function.h"
+//#include "l1_move_function.h"
 
+__global__ void test_l1_cache_kernel(cacheline *src, cacheline *dst,
+		int64 *hits, int64 *miss, const int64 sleep_cycles) {
 
-__global__ void test_l1_cache_kernel(uint64 *in, uint64 *out, int64 *hits,
-		int64 *miss, const int64 sleep_cycles) {
+	__shared__ int64 t_hits[SHARED_PER_SM];
+	__shared__ int64 t_miss[SHARED_PER_SM];
 
-	__shared__ int64 l1_t_hit[SHARED_PER_SM];
-	__shared__ int64 l1_t_miss[SHARED_PER_SM];
+	const uint32 i = blockIdx.x * blockDim.x + threadIdx.x;
 
-	const uint32 index = blockIdx.x * blockDim.x + threadIdx.x;;
-	const uint32 i = index * NUMBER_OF_ELEMENTS;
+	t_miss[threadIdx.x] = clock64();
+	cacheline rm = src[i];
+	t_miss[threadIdx.x] = clock64() - t_miss[threadIdx.x];
 
-	volatile uint64 rs = 0xffffffffffffffff, rt[NUMBER_OF_ELEMENTS];
-
-	const int64 t1_miss = clock64();
-#pragma unroll 48
-	for(uint32 k = 0; k < NUMBER_OF_ELEMENTS; k++){
-		rs = in[i + k];
-	}
-//	mov_cache_data(rs, in + i);
-	l1_t_miss[threadIdx.x] = clock64() - t1_miss;
-
-	//wait for exposition to neutrons
 	sleep_cuda(sleep_cycles);
 
-	//last checking
-	const int64 t1_hit = clock64();
-	mov_cache_data(rt, in + i);
-	l1_t_hit[threadIdx.x] = clock64() - t1_hit;
+	t_hits[threadIdx.x] = clock64();
+	cacheline rh = src[i];
+	t_hits[threadIdx.x] = clock64() - t_hits[threadIdx.x];
 
-	mov_cache_data(out + i, rt);
+	hits[i] = t_hits[threadIdx.x];
+	miss[i] = t_miss[threadIdx.x];
 
-	in[i] = rs;
-//saving miss and hit
-	miss[index] = l1_t_miss[threadIdx.x];
-	hits[index] = l1_t_hit[threadIdx.x];
+	src[i] = rm;
+	dst[i] = rh;
 }
 
 L1Cache::L1Cache(const Parameters& parameters) :
-		Memory<uint64>(parameters) {
+		Memory<cacheline>(parameters) {
 	uint32 v_size;
 	switch (device) {
 	case K20:
 	case K40:
-		v_size = MAX_KEPLER_L1_MEMORY / (sizeof(uint64) * NUMBER_OF_ELEMENTS);
+		v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
 		break;
 	case XAVIER:
 	case TITANV:
-		v_size = MAX_VOLTA_L1_MEMORY / sizeof(uint64);
+		v_size = MAX_VOLTA_L1_MEMORY / CACHE_LINE_SIZE;
 		break;
 	}
 
@@ -79,7 +67,7 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	// Each block with one thread using all l1 cache
 	uint32 total_size = v_size * parameters.number_of_sms;
 
-	uint32 v_size_multiple_threads = total_size	* NUMBER_OF_ELEMENTS;
+	uint32 v_size_multiple_threads = total_size;
 
 	std::cout << "BLOCK SIZE " << this->threads_per_block.x << "x"
 			<< this->threads_per_block.y << std::endl;
@@ -94,7 +82,7 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	this->output_host_1.resize(v_size_multiple_threads);
 }
 
-void L1Cache::test(const uint64& mem) {
+void L1Cache::test(const cacheline& mem) {
 //Set values to GPU
 	std::fill(this->input_host_1.begin(), this->input_host_1.end(), mem);
 	std::fill(this->hit_vector_host.begin(), this->hit_vector_host.end(), 0);
@@ -103,8 +91,8 @@ void L1Cache::test(const uint64& mem) {
 	rad::DeviceVector<int64> hit_vector_device(this->hit_vector_host);
 	rad::DeviceVector<int64> miss_vector_device(this->miss_vector_host);
 
-	rad::DeviceVector<uint64> input_device_1(this->input_host_1);
-	rad::DeviceVector<uint64> output_device_1(this->output_host_1);
+	rad::DeviceVector<cacheline> input_device_1(this->input_host_1);
+	rad::DeviceVector<cacheline> output_device_1(this->output_host_1);
 
 //This switch is only to set manually the cache line size
 //since it is hard to check it at runtime
