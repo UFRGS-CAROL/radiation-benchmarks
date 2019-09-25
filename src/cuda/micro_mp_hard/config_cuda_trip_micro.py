@@ -12,7 +12,7 @@ ITERATIONS = int(1e8)
 PRECISIONS = ["double"]
 DMR = ["dmr", "dmrmixed", "none"]
 MICROBENCHMARKS = ["fma", "add", "mul"]
-CHECK_BLOCK = [1, 10, 100, 1000, 100000]
+CHECK_BLOCK = [1, 100, 1000]
 
 
 def config(board, debug):

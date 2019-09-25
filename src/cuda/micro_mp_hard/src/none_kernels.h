@@ -8,8 +8,8 @@
 #ifndef NONE_KERNELS_H_
 #define NONE_KERNELS_H_
 
-#include "device_functions.h"
 #include "common.h"
+#include "device_functions.h"
 #include "input_constant.h"
 
 /**

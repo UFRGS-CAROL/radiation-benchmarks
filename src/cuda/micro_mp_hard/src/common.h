@@ -42,10 +42,6 @@ typedef unsigned char byte;
 #define ZERO_HALF 4.166E-05
 #endif
 
-#ifndef ZERO_FULL
-#define ZERO_FULL 0.0L
-#endif
-
 #define __DEVICE_HOST__ __device__ __host__ __forceinline__
 #define __HOST__ __host__ __forceinline__
 #define __DEVICE__ __device__ __forceinline__

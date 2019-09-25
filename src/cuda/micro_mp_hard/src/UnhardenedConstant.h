@@ -11,7 +11,6 @@
 #include "Microbenchmark.h"
 #include "none_kernels.h"
 
-
 template<uint32 CHECK_BLOCK, typename real_t>
 struct UnhardenedConstant: public Microbenchmark<CHECK_BLOCK, real_t, real_t> {
 
@@ -41,21 +40,21 @@ struct UnhardenedConstant: public Microbenchmark<CHECK_BLOCK, real_t, real_t> {
 
 	void call_kernel() {
 		//================== Device computation
-		switch (parameters_.micro) {
+		switch (this->parameters_.micro) {
 		case ADD:
-			microbenchmark_kernel_add<<<parameters_.grid_size,
-					parameters_.block_size>>>(output_dev_1.data(),
-					output_dev_2.data(), output_dev_3.data());
+			microbenchmark_kernel_add<<<this->parameters_.grid_size,
+					this->parameters_.block_size>>>(this->output_dev_1.data(),
+					this->output_dev_2.data(), this->output_dev_3.data());
 			break;
 		case MUL:
-			microbenchmark_kernel_mul<<<parameters_.grid_size,
-					parameters_.block_size>>>(output_dev_1.data(),
-					output_dev_2.data(), output_dev_3.data());
+			microbenchmark_kernel_mul<<<this->parameters_.grid_size,
+					this->parameters_.block_size>>>(this->output_dev_1.data(),
+					this->output_dev_2.data(), this->output_dev_3.data());
 			break;
 		case FMA:
-			microbenchmark_kernel_fma<<<parameters_.grid_size,
-					parameters_.block_size>>>(output_dev_1.data(),
-					output_dev_2.data(), output_dev_3.data());
+			microbenchmark_kernel_fma<<<this->parameters_.grid_size,
+					this->parameters_.block_size>>>(this->output_dev_1.data(),
+					this->output_dev_2.data(), this->output_dev_3.data());
 			break;
 		}
 	}
