@@ -85,9 +85,9 @@ def config(board, debug):
                     if '_mul_' in d['exec']:
                         new_data_mul.append(d)
 
-                json.dump(new_data_fma, fma_fp)
-                json.dump(new_data_add, add_fp)
-                json.dump(new_data_mul, mul_fp)
+                json.dump(new_data_fma, fma_fp, indent=4)
+                json.dump(new_data_add, add_fp, indent=4)
+                json.dump(new_data_mul, mul_fp, indent=4)
 
     else:
         for g in generate:
