@@ -15,41 +15,41 @@
 #include "utils.h"
 
 template<const uint32 V_SIZE>
-__global__ void test_l2_cache_kernel(uint64 *in, uint64* out,
+__global__ void test_l2_cache_kernel(cacheline *in, cacheline* out,
 		int64 *l2_hit_array, int64 *l2_miss_array, int64 sleep_cycles) {
 	const register uint32 i = blockIdx.x * blockDim.x + threadIdx.x;
 
-	if (i < V_SIZE) {
-		register uint64 rs[CACHE_LINE_SIZE_BY_INT64];
-		register uint64 rt[CACHE_LINE_SIZE_BY_INT64];
+	register const int64 t1_miss = clock64();
+	cacheline rs = in[i];
+	register const int64 t2_miss = clock64();
 
-		register const int64 t1_miss = clock64();
-		move_cache_line(rs, in + i);
-		register const int64 t2_miss = clock64();
+	//wait for exposition to neutrons
+	sleep_cuda(sleep_cycles);
 
-		//wait for exposition to neutrons
-		sleep_cuda(sleep_cycles);
+	//last checking
+	register const int64 t1_hit = clock64();
+	cacheline rt = in[i];
+	register const int64 t2_hit = clock64();
 
-		//last checking
-		register const int64 t1_hit = clock64();
-		move_cache_line(rt, in + i);
-		register const int64 t2_hit = clock64();
+	out[i] = rt;
+	in[i] = rs;
 
-		move_cache_line(in + i, rs);
-		move_cache_line(out + i, rt);
-
-		l2_hit_array[i] = t2_hit - t1_hit;
-		l2_miss_array[i] = t2_miss - t1_miss;
-	}
+	l2_hit_array[i] = t2_hit - t1_hit;
+	l2_miss_array[i] = t2_miss - t1_miss;
 }
 
 void L2Cache::test(const uint64& mem) {
-	std::fill(this->input_host_1.begin(), this->input_host_1.end(), mem);
+	cacheline cl;
+	for(auto& l : cl.line){
+		l = mem;
+	}
+
+	std::fill(this->input_host_1.begin(), this->input_host_1.end(), cl);
 	rad::DeviceVector<int64> hit_vector_device(this->hit_vector_host);
 	rad::DeviceVector<int64> miss_vector_device(this->miss_vector_host);
 
-	rad::DeviceVector<uint64> input_device_1 = this->input_host_1;
-	rad::DeviceVector<uint64> output_device_1 = this->input_host_1;
+	rad::DeviceVector<cacheline> input_device_1 = this->input_host_1;
+	rad::DeviceVector<cacheline> output_device_1 = this->input_host_1;
 
 	switch (this->device) {
 	case K20: {
@@ -60,10 +60,9 @@ void L2Cache::test(const uint64& mem) {
 							+ std::to_string(this->l2_size));
 
 		constexpr uint32 v_size = max_l2_cache / CACHE_LINE_SIZE;
-		test_l2_cache_kernel<v_size> <<<block_size,
-				threads_per_block>>>(input_device_1.data(),
-				output_device_1.data(), hit_vector_device.data(),
-				miss_vector_device.data(), cycles);
+		test_l2_cache_kernel<v_size> <<<block_size, threads_per_block>>>(
+				input_device_1.data(), output_device_1.data(),
+				hit_vector_device.data(), miss_vector_device.data(), cycles);
 		break;
 	}
 
@@ -75,10 +74,9 @@ void L2Cache::test(const uint64& mem) {
 							+ std::to_string(this->l2_size));
 
 		constexpr uint32 v_size = max_l2_cache / CACHE_LINE_SIZE;
-		test_l2_cache_kernel<v_size> <<<block_size,
-				threads_per_block>>>(input_device_1.data(),
-				output_device_1.data(), hit_vector_device.data(),
-				miss_vector_device.data(), cycles);
+		test_l2_cache_kernel<v_size> <<<block_size, threads_per_block>>>(
+				input_device_1.data(), output_device_1.data(),
+				hit_vector_device.data(), miss_vector_device.data(), cycles);
 		break;
 	}
 	case XAVIER: {
@@ -89,10 +87,9 @@ void L2Cache::test(const uint64& mem) {
 							+ std::to_string(this->l2_size));
 
 		constexpr uint32 v_size = max_l2_cache / CACHE_LINE_SIZE;
-		test_l2_cache_kernel<v_size> <<<block_size,
-				threads_per_block>>>(input_device_1.data(),
-				output_device_1.data(), hit_vector_device.data(),
-				miss_vector_device.data(), cycles);
+		test_l2_cache_kernel<v_size> <<<block_size, threads_per_block>>>(
+				input_device_1.data(), output_device_1.data(),
+				hit_vector_device.data(), miss_vector_device.data(), cycles);
 		break;
 	}
 	case TITANV: {
@@ -103,10 +100,9 @@ void L2Cache::test(const uint64& mem) {
 							+ std::to_string(this->l2_size));
 
 		constexpr uint32 v_size = max_l2_cache / CACHE_LINE_SIZE;
-		test_l2_cache_kernel<v_size> <<<block_size,
-				threads_per_block>>>(input_device_1.data(),
-				output_device_1.data(), hit_vector_device.data(),
-				miss_vector_device.data(), cycles);
+		test_l2_cache_kernel<v_size> <<<block_size, threads_per_block>>>(
+				input_device_1.data(), output_device_1.data(),
+				hit_vector_device.data(), miss_vector_device.data(), cycles);
 		break;
 	}
 	}
@@ -122,7 +118,7 @@ void L2Cache::test(const uint64& mem) {
 }
 
 L2Cache::L2Cache(const Parameters& parameters) :
-		Memory<uint64>(parameters) {
+		Memory<cacheline>(parameters) {
 	//This switch is only to set manually the cache line size
 	//since it is hard to check it at runtime
 	/**
@@ -179,7 +175,7 @@ L2Cache::L2Cache(const Parameters& parameters) :
 
 	this->hit_vector_host.resize(v_size, 0);
 	this->miss_vector_host.resize(v_size, 0);
-	this->input_host_1.resize(v_size, 0);
+	this->input_host_1.resize(v_size);
 	this->l2_size = parameters.l2_size;
 }
 
@@ -218,4 +214,12 @@ void L2Cache::clear_cache(uint32 n) {
 
 	cuda_check(cudaFree(random_array_dev));
 
+}
+
+bool L2Cache::call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
+		int64& false_hits, bool verbose) {
+
+	return this->check_output_errors((uint64*) (this->output_host_1.data()),
+			gold, log, hits, misses, false_hits, verbose,
+			this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64);
 }

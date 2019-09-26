@@ -21,7 +21,7 @@ INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../
 
 OBJDIR=./obj/
 OBJ= l1_cache_kernels.o register_file_kernels.o main.o 
-OBJ+=  shared_memory_kernels.o  read_only_cache_kernels.o #l2_cache_kernels.o
+OBJ+=  shared_memory_kernels.o  read_only_cache_kernels.o l2_cache_kernels.o
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g

@@ -13,10 +13,9 @@
 #include <vector>
 #include "Parameters.h"
 
-#define __CUDA_HOST_DEVICE__ __host__ __device__ __forceinline__
-
-#define CHUNK_SIZE(line_n, t) (line_n / sizeof(t))
-
+struct cacheline {
+	uint64 line[CACHE_LINE_SIZE_BY_INT64];
+};
 
 
 /*

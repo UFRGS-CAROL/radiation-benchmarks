@@ -9,15 +9,19 @@
 #define L2CACHE_H_
 
 #include "Memory.h"
+#include "CacheLine.h"
 
-struct L2Cache: public Memory<uint64> {
+struct L2Cache: public Memory<cacheline> {
 	dim3 threads_per_block;
 	uint32 l2_size;
 
 	L2Cache();
 	L2Cache(const Parameters& parameters);
 	virtual void test(const uint64& mem);
+
 	void clear_cache(uint32 n);
+	bool call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
+			int64& false_hits, bool verbose) override;
 };
 
 #endif /* L2CACHE_H_ */
