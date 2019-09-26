@@ -50,10 +50,12 @@ __DEVICE__ float fma_dmr(float a, float b, float acc) {
 	return __fmaf_rn(a, b, acc);
 }
 
+#if __CUDA_ARCH__ >= 600
+
 __DEVICE__ half fma_dmr(half a, half b, half acc) {
 	return __hfma(a, b, acc);
 }
-
+#endif
 /**
  * ----------------------------------------
  * ADD DMR
@@ -68,10 +70,12 @@ __DEVICE__ float add_dmr(float a, float b) {
 	return __fadd_rn(a, b);
 }
 
+#if __CUDA_ARCH__ >= 600
+
 __DEVICE__ half add_dmr(half a, half b) {
 	return __hadd(a, b);
 }
-
+#endif
 /**
  * ----------------------------------------
  * MUL DMR
@@ -86,10 +90,11 @@ __DEVICE__ float mul_dmr(float a, float b) {
 	return __fmul_rn(a, b);
 }
 
+#if __CUDA_ARCH__ >= 600
 __DEVICE__ half mul_dmr(half a, half b) {
 	return __hmul(a, b);
 }
-
+#endif
 
 //
 //__DEVICE__ double abs__(double a) {
