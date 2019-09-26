@@ -20,9 +20,9 @@ struct RegisterFile: public Memory<uint32> {
 
 	RegisterFile(const Parameters& parameters);
 
-	virtual void test(const uint32& mem);
+	virtual void test(const uint64& mem);
 
-	virtual std::string error_detail(int64 i, uint32 e, uint32 r, int64 hits,
+	virtual std::string error_detail(int64 i, uint64 e, uint64 r, int64 hits,
 			int64 misses, int64 false_hits)
 	override;
 

@@ -29,19 +29,19 @@
 #include "NVMLWrapper.h"
 #endif
 
-
 template<typename data_>
 void setup_execute(Log& log, Parameters& test_parameter,
 		Memory<data_>& memory_obj) {
 
 	std::cout << std::fixed << std::setprecision(6);
-	data_ dt = data_(0xffffffffffffffff);
+	std::vector<uint64> vet = { 0xffffffffffffffff, 0x0000000000000000 };
 	// SETUP THE NVWL THREAD
 #ifdef BUILDPROFILER
 	rad::NVMLWrapper counter_thread(DEVICE_INDEX);
 #endif
 	for (uint64 iteration = 0; iteration < log.iterations;) {
-		for (auto mem : std::vector<data_> { dt, 0x0000000000000000 }) {
+
+		for (auto mem : vet) {
 			//set CUDA configuration each iteration
 			memory_obj.set_cache_config(log.test_mode);
 
@@ -95,7 +95,8 @@ void setup_execute(Log& log, Parameters& test_parameter,
 			std::cout << " False hits: " << false_hits;
 			std::cout << std::hex;
 
-			std::cout << " Byte: "<< std::setw(sizeof(uint64) * 2) << std::setfill('0') << mem;
+			std::cout << " Byte: " << std::setw(sizeof(uint64) * 2)
+					<< std::setfill('0') << mem;
 			std::cout << std::dec;
 			std::cout << " Device Reset Time: "
 					<< end_dev_reset - start_dev_reset;
@@ -108,6 +109,17 @@ void setup_execute(Log& log, Parameters& test_parameter,
 }
 
 int main(int argc, char **argv) {
+	/**
+	 * CHECKING THE SIZES BEFORE START
+	 */
+	if (sizeof(uint64) != 8) {
+		error("UINT64 is not 8 bytes it is " + std::to_string(sizeof(uint64)));
+	}
+
+	if (sizeof(uint32) != 4) {
+		error("UINT4 is not 4  bytes it is " + std::to_string(sizeof(uint32)));
+	}
+
 	bool l2_checked = false;
 #ifdef L2TEST
 	l2_checked = true;
@@ -137,17 +149,17 @@ int main(int argc, char **argv) {
 		L1Cache l1(test_parameter);
 		setup_execute(log, test_parameter, l1);
 	}
+//
+//	//Test l2
+//	if (log.test_mode == "L2") {
+//		if (l2_checked == false) {
+//			error("YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
+//		}
+//		L2Cache l2(test_parameter);
+//		setup_execute(log, test_parameter, l2);
+//	}
 
-	//Test l2
-	if (log.test_mode == "L2") {
-		if (l2_checked == false) {
-			error("YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
-		}
-		L2Cache l2(test_parameter);
-		setup_execute(log, test_parameter, l2);
-	}
-
-	//Test Shared
+//Test Shared
 	if (log.test_mode == "SHARED") {
 		SharedMemory shared(test_parameter);
 		setup_execute(log, test_parameter, shared);

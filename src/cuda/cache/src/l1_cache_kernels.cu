@@ -82,9 +82,14 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	this->output_host_1.resize(v_size_multiple_threads);
 }
 
-void L1Cache::test(const cacheline& mem) {
+void L1Cache::test(const uint64& mem) {
+	cacheline cl;
+	for(auto& l : cl.line){
+		l = mem;
+	}
+
 //Set values to GPU
-	std::fill(this->input_host_1.begin(), this->input_host_1.end(), mem);
+	std::fill(this->input_host_1.begin(), this->input_host_1.end(), cl);
 	std::fill(this->hit_vector_host.begin(), this->hit_vector_host.end(), 0);
 	std::fill(this->miss_vector_host.begin(), this->miss_vector_host.end(), 0);
 
@@ -94,39 +99,10 @@ void L1Cache::test(const cacheline& mem) {
 	rad::DeviceVector<cacheline> input_device_1(this->input_host_1);
 	rad::DeviceVector<cacheline> output_device_1(this->output_host_1);
 
-//This switch is only to set manually the cache line size
-//since it is hard to check it at runtime
-	switch (device) {
-	case K20:
-	case K40: {
-		// cache l1 has 65536 bytes
-		//BUT, only 48kb are destined to L1 memory
-		//so alloc 49152 bytes
-		// cache line has 128 bytes
-		//to force alloc maximum shared memory
-//		constexpr uint32 v_size = MAX_KEPLER_L1_MEMORY / CACHE_LINE_SIZE;
+	test_l1_cache_kernel<<<block_size, threads_per_block>>>(
+			input_device_1.data(), output_device_1.data(),
+			hit_vector_device.data(), miss_vector_device.data(), cycles);
 
-		test_l1_cache_kernel<<<block_size, threads_per_block>>>(
-				input_device_1.data(), output_device_1.data(),
-				hit_vector_device.data(), miss_vector_device.data(), cycles);
-
-		break;
-	}
-	case XAVIER:
-	case TITANV: {
-		// cache l1 has 128 Kbytes
-		//BUT, only 98304 bytes are destined to L1 memory
-		//so alloc 98304 bytes
-		// cache line has 128 bytes
-//		constexpr uint32 v_size = MAX_VOLTA_L1_MEMORY / CACHE_LINE_SIZE;
-
-//		test_l1_cache_kernel<MAX_VOLTA_SHARED_MEMORY_TO_TEST_L1> <<<block_size,
-//				threads_per_block>>>(input_device_1.data(),
-//				output_device_1.data(), hit_vector_device.data(),
-//				miss_vector_device.data(), cycles, mem);
-		break;
-	}
-	}
 
 	cuda_check(cudaPeekAtLastError());
 	cuda_check(cudaDeviceSynchronize());
@@ -135,4 +111,11 @@ void L1Cache::test(const cacheline& mem) {
 	this->hit_vector_host = hit_vector_device.to_vector();
 	this->miss_vector_host = miss_vector_device.to_vector();
 	this->output_host_1 = output_device_1.to_vector();
+}
+
+bool L1Cache::call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
+		int64& false_hits, bool verbose){
+
+	return this->check_output_errors((uint64*)(this->output_host_1.data()), gold, log, hits, misses,
+				false_hits, verbose, this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64);
 }

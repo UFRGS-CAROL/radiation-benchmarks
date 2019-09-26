@@ -29,9 +29,9 @@ struct Memory {
 	//Host memory input
 	std::vector<data_> input_host_1;
 
-	virtual void test(const data_& mem) = 0;
+	virtual void test(const uint64& mem) = 0;
 
-	virtual std::string error_detail(hit_miss_data_ i, data_ e, data_ r,
+	virtual std::string error_detail(hit_miss_data_ i, uint64 e, uint64 r,
 			hit_miss_data_ hits, hit_miss_data_ misses,
 			hit_miss_data_ false_hits) {
 		std::string error_detail = "";
@@ -85,22 +85,14 @@ struct Memory {
 		}
 	}
 
-	std::string info_detail(hit_miss_data_ i, data_ r1, data_ r2, data_ r3,
-			data_ gold) {
-		std::string info_detail = "m: [" + std::to_string(i) + "], r1: "
-				+ std::to_string(r1) + ", r2: " + std::to_string(r2) + ", r3: "
-				+ std::to_string(r3) + ", e: " + std::to_string(gold);
-		return info_detail;
-	}
-
 	// Returns true if no errors are found. False if otherwise.
 	// Set votedOutput pointer to retrieve the voted matrix
-	bool check_output_errors(const std::vector<data_>& v1,
-			const data_& val_gold, Log& log, hit_miss_data_ hits,
-			hit_miss_data_ misses, hit_miss_data_ false_hits, bool verbose) {
+	virtual bool check_output_errors(const uint64* v1, const uint64& val_gold, Log& log,
+			hit_miss_data_ hits, hit_miss_data_ misses,
+			hit_miss_data_ false_hits, bool verbose, size_t size) {
 
 #pragma omp parallel for shared(host_errors)
-		for (auto i = 0; i < v1.size(); i++) {
+		for (auto i = 0; i < size; i++) {
 			auto val_output = v1[i];
 
 			if (val_gold != val_output) {
@@ -127,7 +119,7 @@ struct Memory {
 	}
 
 	std::tuple<hit_miss_data_, hit_miss_data_, hit_miss_data_> compare(Log& log,
-			const data_& mem) {
+			const uint64& mem) {
 		//Checking the misses
 		auto hits = 0;
 		auto misses = 0;
@@ -148,17 +140,23 @@ struct Memory {
 			zero_cout += (hit == 0 || miss == 0);
 		}
 
-		this->check_output_errors(this->output_host_1, mem, log, hits, misses,
-				false_hits, log.verbose);
+//		this->check_output_errors(this->output_host_1.data(), mem, log, hits,
+//				misses, false_hits, log.verbose, this->output_host_1.size());
 
-		if(zero_cout != 0){
-			error("Zero count is different from 0: " + std::to_string(zero_cout));
+		if (zero_cout != 0) {
+			error(
+					"Zero count is different from 0: "
+							+ std::to_string(zero_cout));
 		}
 		//returning the result
 		return std::make_tuple(hits, misses, false_hits);
 	}
 
-	virtual void check_output_errors_caller(data_* found_array, data& gold, Log& log, hit)
+	virtual bool call_checker(uint64& gold, Log& log, hit_miss_data_& hits, hit_miss_data_& misses,
+			hit_miss_data_& false_hits, bool verbose) {
+		return this->check_output_errors((uint64*)this->output_host_1.data(), gold, log, hits, misses,
+				false_hits, verbose, this->output_host_1.size());
+	}
 
 };
 

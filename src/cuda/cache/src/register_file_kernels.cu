@@ -8,7 +8,6 @@
 #include <cstring>
 #include <ctime>
 #include <bitset>
-
 #include "RegisterFile.h"
 #include "Parameters.h"
 #include "utils.h"
@@ -27,10 +26,11 @@ RegisterFile::RegisterFile(const Parameters& parameters) :
 	this->input_host_1 = std::vector<uint32>(RF_SIZE);
 	this->output_host_1 = std::vector<uint32>(out_size);
 }
-void RegisterFile::test(const uint32& mem) {
+
+void RegisterFile::test(const uint64& mem_) {
+	uint32 mem = mem_;
 	//Set values to GPU
 	std::fill(this->input_host_1.begin(), this->input_host_1.end(), mem);
-
 	rad::DeviceVector<uint32> input_device_1 = this->input_host_1;
 	rad::DeviceVector<uint32> output_device_1 = this->output_host_1;
 
@@ -39,12 +39,11 @@ void RegisterFile::test(const uint32& mem) {
 
 	cuda_check(cudaPeekAtLastError());
 	cuda_check(cudaDeviceSynchronize());
-
 	this->output_host_1 = output_device_1.to_vector();
 }
 
-std::string RegisterFile::error_detail(int64 i, uint32 e, uint32 r,
-		int64 hits, int64 misses, int64 false_hits) {
+std::string RegisterFile::error_detail(int64 i, uint64 e, uint64 r, int64 hits,
+		int64 misses, int64 false_hits) {
 	std::string error_detail = "";
 	error_detail += " i:" + std::to_string(i);
 	error_detail += " register:R" + std::to_string(i % 256);
