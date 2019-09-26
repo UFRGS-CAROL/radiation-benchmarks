@@ -12,7 +12,7 @@ SIZES = [160]
 PRECISIONS = ["single"]
 ITERATIONS = int(1e9)
 USE_TENSOR_CORES = [0] #, 1]
-
+BUILDPROFILER=0
 
 def config(board, arith_type, debug):
 
@@ -33,7 +33,7 @@ def config(board, arith_type, debug):
 
     data_path = install_dir + "data/" + DATA_PATH_BASE
     bin_path = install_dir + "bin"
-    src_benchmark = install_dir + "src/cuda/trip_mxm"
+    src_benchmark = install_dir + "src/cuda/mxm"
 
     if not os.path.isdir(data_path):
         os.mkdir(data_path, 0777)
@@ -50,7 +50,7 @@ def config(board, arith_type, debug):
                 "make clean", 
                 "make -C ../../include ",
                 "make -C ../common {}".format(lib),
-                "make FORJETSON={} PRECISION=".format(for_jetson) + arith_type + " -j 4",
+                "make FORJETSON={} BUILDPROFILER={} PRECISION=".format(for_jetson, BUILDPROFILER) + arith_type + " -j 4",
                 "mkdir -p " + data_path, 
                 "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
