@@ -12,6 +12,7 @@
 #include <unordered_map>
 
 #define BLOCK_SIZE 32
+#define MAX_THREAD_PER_BLOCK BLOCK_SIZE * BLOCK_SIZE
 
 /**
  * It was 256 registers per threads when this program was created
@@ -34,7 +35,7 @@
 
 //KEPLER L1 MEMORY PARAMETERS
 #define MAX_VOLTA_L1_MEMORY 48 * 1024
-#define MAX_KEPLER_L1_MEMORY 48 * 1024
+#define MAX_KEPLER_L1_MEMORY 24 * 1024
 
 //READ ONLY PARAMETERS FOR KEPLER
 #define MAX_VOLTA_CONSTANT_MEMORY 64 * 1024

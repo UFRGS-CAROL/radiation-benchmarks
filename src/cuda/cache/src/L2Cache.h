@@ -13,15 +13,14 @@
 
 struct L2Cache: public Memory<cacheline> {
 	dim3 threads_per_block;
+	uint32 lines;
 	uint32 l2_size;
 
 	L2Cache();
 	L2Cache(const Parameters& parameters);
-	virtual void test(const uint64& mem);
-
-	void clear_cache(uint32 n);
+	void test(const uint64& mem);
 	bool call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
-			int64& false_hits, bool verbose) override;
+			int64& false_hits) override;
 };
 
 #endif /* L2CACHE_H_ */

@@ -40,15 +40,15 @@ void setup_execute(Log& log, Parameters& test_parameter,
 	rad::NVMLWrapper counter_thread(DEVICE_INDEX);
 #endif
 	for (uint64 iteration = 0; iteration < log.iterations;) {
+#ifdef BUILDPROFILER
+		//Start collecting data
+		counter_thread.start_collecting_data();
+#endif
 
 		for (auto mem : vet) {
 			//set CUDA configuration each iteration
 			memory_obj.set_cache_config(log.test_mode);
 
-#ifdef BUILDPROFILER
-			//Start collecting data
-			counter_thread.start_collecting_data();
-#endif
 			double start_it = rad::mysecond();
 			//Start iteration
 			log.start_iteration_app();
@@ -59,10 +59,6 @@ void setup_execute(Log& log, Parameters& test_parameter,
 			log.end_iteration_app();
 			double end_it = rad::mysecond();
 
-			//End collecting the data
-#ifdef BUILDPROFILER
-			counter_thread.end_collecting_data();
-#endif
 			double start_dev_reset = rad::mysecond();
 			//reset the device
 			cuda_check(cudaDeviceReset());
@@ -76,13 +72,6 @@ void setup_execute(Log& log, Parameters& test_parameter,
 
 			//update errors
 			if (log.errors) {
-#ifdef BUILDPROFILER
-				auto iteration_data = counter_thread.get_data_from_iteration();
-				for (auto info_line : iteration_data) {
-					log.log_info(info_line);
-					std::cout << info_line << std::endl;
-				}
-#endif
 				log.update_error_count();
 				log.update_info_count();
 			}
@@ -105,6 +94,17 @@ void setup_execute(Log& log, Parameters& test_parameter,
 
 			iteration++;
 		}
+
+		//End collecting the data
+#ifdef BUILDPROFILER
+		counter_thread.end_collecting_data();
+
+		auto iteration_data = counter_thread.get_data_from_iteration();
+		for (auto info_line : iteration_data) {
+			log.log_info(info_line);
+			//std::cout << info_line << std::endl;
+		}
+#endif
 	}
 }
 
@@ -146,8 +146,9 @@ int main(int argc, char **argv) {
 
 	//test L1
 	if (log.test_mode == "L1") {
-		L1Cache l1(test_parameter);
-		setup_execute(log, test_parameter, l1);
+		//L1Cache l1(test_parameter);
+		//setup_execute(log, test_parameter, l1);
+		error("NOT WORKING");
 	}
 
 	//Test l2
@@ -159,7 +160,7 @@ int main(int argc, char **argv) {
 		setup_execute(log, test_parameter, l2);
 	}
 
-//Test Shared
+	//Test Shared
 	if (log.test_mode == "SHARED") {
 		SharedMemory shared(test_parameter);
 		setup_execute(log, test_parameter, shared);

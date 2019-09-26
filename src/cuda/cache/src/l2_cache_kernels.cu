@@ -11,25 +11,31 @@
 
 #include "CacheLine.h"
 #include "L2Cache.h"
-
 #include "utils.h"
 
-template<const uint32 V_SIZE>
+// We allocate two times each thread
+#define FACTOR 2
+#define MAX_K20_L2_CACHE (1280 * 1024) / FACTOR
+
 __global__ void test_l2_cache_kernel(cacheline *in, cacheline* out,
 		int64 *l2_hit_array, int64 *l2_miss_array, int64 sleep_cycles) {
 	const register uint32 i = blockIdx.x * blockDim.x + threadIdx.x;
 
-	register const int64 t1_miss = clock64();
-	cacheline rs = in[i];
-	register const int64 t2_miss = clock64();
+	cacheline rs;
+	const int64 t1_miss = clock64();
+	rs = in[i];
+	const int64 t2_miss = clock64();
 
 	//wait for exposition to neutrons
 	sleep_cuda(sleep_cycles);
 
 	//last checking
-	register const int64 t1_hit = clock64();
-	cacheline rt = in[i];
-	register const int64 t2_hit = clock64();
+	cacheline rt;
+	const int64 t1_hit = clock64();
+	rt = in[i];
+	const int64 t2_hit = clock64();
+
+	__syncthreads();
 
 	out[i] = rt;
 	in[i] = rs;
@@ -40,7 +46,7 @@ __global__ void test_l2_cache_kernel(cacheline *in, cacheline* out,
 
 void L2Cache::test(const uint64& mem) {
 	cacheline cl;
-	for(auto& l : cl.line){
+	for (auto& l : cl.line) {
 		l = mem;
 	}
 
@@ -51,61 +57,9 @@ void L2Cache::test(const uint64& mem) {
 	rad::DeviceVector<cacheline> input_device_1 = this->input_host_1;
 	rad::DeviceVector<cacheline> output_device_1 = this->input_host_1;
 
-	switch (this->device) {
-	case K20: {
-		const uint32 max_l2_cache = 1280 * 1024; //bytes
-		if (max_l2_cache != this->l2_size)
-			error(
-					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
-							+ std::to_string(this->l2_size));
-
-		constexpr uint32 v_size = max_l2_cache / CACHE_LINE_SIZE;
-		test_l2_cache_kernel<v_size> <<<block_size, threads_per_block>>>(
-				input_device_1.data(), output_device_1.data(),
-				hit_vector_device.data(), miss_vector_device.data(), cycles);
-		break;
-	}
-
-	case K40: {
-		const uint32 max_l2_cache = 1536 * 1024; //bytes
-		if (max_l2_cache != this->l2_size)
-			error(
-					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
-							+ std::to_string(this->l2_size));
-
-		constexpr uint32 v_size = max_l2_cache / CACHE_LINE_SIZE;
-		test_l2_cache_kernel<v_size> <<<block_size, threads_per_block>>>(
-				input_device_1.data(), output_device_1.data(),
-				hit_vector_device.data(), miss_vector_device.data(), cycles);
-		break;
-	}
-	case XAVIER: {
-		const uint32 max_l2_cache = 512 * 1024; //bytes
-		if (max_l2_cache != this->l2_size)
-			error(
-					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
-							+ std::to_string(this->l2_size));
-
-		constexpr uint32 v_size = max_l2_cache / CACHE_LINE_SIZE;
-		test_l2_cache_kernel<v_size> <<<block_size, threads_per_block>>>(
-				input_device_1.data(), output_device_1.data(),
-				hit_vector_device.data(), miss_vector_device.data(), cycles);
-		break;
-	}
-	case TITANV: {
-		const uint32 max_l2_cache = 4608 * 1024; //bytes
-		if (max_l2_cache != this->l2_size)
-			error(
-					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
-							+ std::to_string(this->l2_size));
-
-		constexpr uint32 v_size = max_l2_cache / CACHE_LINE_SIZE;
-		test_l2_cache_kernel<v_size> <<<block_size, threads_per_block>>>(
-				input_device_1.data(), output_device_1.data(),
-				hit_vector_device.data(), miss_vector_device.data(), cycles);
-		break;
-	}
-	}
+	test_l2_cache_kernel<<<block_size, threads_per_block>>>(
+			input_device_1.data(), output_device_1.data(),
+			hit_vector_device.data(), miss_vector_device.data(), cycles);
 
 	cuda_check(cudaPeekAtLastError());
 	cuda_check(cudaDeviceSynchronize());
@@ -114,7 +68,6 @@ void L2Cache::test(const uint64& mem) {
 	this->hit_vector_host = hit_vector_device.to_vector();
 	this->miss_vector_host = miss_vector_device.to_vector();
 	this->output_host_1 = input_device_1.to_vector();
-
 }
 
 L2Cache::L2Cache(const Parameters& parameters) :
@@ -124,102 +77,123 @@ L2Cache::L2Cache(const Parameters& parameters) :
 	/**
 	 * Split alongside the blocks
 	 */
-	this->threads_per_block = dim3(BLOCK_SIZE);
-	uint32 v_size;
+	auto thread_per_block = MAX_THREAD_PER_BLOCK / 2;
+	auto block_number = 1;
+
 	switch (this->device) {
 	case K20: {
-		const uint32 max_l2_cache = 1280 * 1024;
-		if (max_l2_cache != parameters.l2_size)
+		if (MAX_K20_L2_CACHE * FACTOR != parameters.l2_size)
 			error(
 					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
 							+ std::to_string(parameters.l2_size));
 
-		v_size = max_l2_cache / CACHE_LINE_SIZE;
-		this->block_size = dim3(v_size / BLOCK_SIZE);
+		//i will load double the lines in each thread
+		block_number = MAX_K20_L2_CACHE / (thread_per_block * CACHE_LINE_SIZE);
 		break;
 	}
-	case K40: {
-		const uint32 max_l2_cache = 1536 * 1024; //bytes
-		if (max_l2_cache != parameters.l2_size)
-			error(
-					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
-							+ std::to_string(parameters.l2_size));
-
-		v_size = max_l2_cache / CACHE_LINE_SIZE;
-		this->block_size = dim3(v_size / BLOCK_SIZE);
+	case K40:
+	case XAVIER:
+	case TITANV:
+		error("NOT IMPLEMENTED");
 		break;
 	}
-	case XAVIER: {
-		const uint32 max_l2_cache = 512 * 1024; //bytes
-		if (max_l2_cache != parameters.l2_size)
-			error(
-					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
-							+ std::to_string(parameters.l2_size));
 
-		v_size = max_l2_cache / CACHE_LINE_SIZE;
-		this->block_size = dim3(v_size / BLOCK_SIZE);
-		break;
-	}
-	case TITANV: {
-		const uint32 max_l2_cache = 4608 * 1024; //bytes
-		if (max_l2_cache != parameters.l2_size)
-			error(
-					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
-							+ std::to_string(parameters.l2_size));
+	this->threads_per_block = thread_per_block;
+	this->block_size = block_number;
+	auto total_threads = thread_per_block * block_number;
 
-		v_size = max_l2_cache / CACHE_LINE_SIZE;
-		this->block_size = dim3(v_size / BLOCK_SIZE);
-		break;
-	}
-	}
-
-	this->hit_vector_host.resize(v_size, 0);
-	this->miss_vector_host.resize(v_size, 0);
-	this->input_host_1.resize(v_size);
+	this->hit_vector_host.resize(total_threads, 0);
+	this->miss_vector_host.resize(total_threads, 0);
+	this->input_host_1.resize(total_threads);
 	this->l2_size = parameters.l2_size;
 }
 
-__global__ void clear_cache_kenel(float *random_array) {
-	register uint32 tx = blockIdx.x * blockDim.x + threadIdx.x;
-	random_array[tx] += random_array[tx] * 339 + 1 * (-random_array[tx]);
-}
-
-void L2Cache::clear_cache(uint32 n) {
-	float *random_array_dev;
-	/* Allocate n floats on device */
-	cuda_check(cudaMalloc((void ** )&random_array_dev, n * sizeof(float)));
-
-	/* Create pseudo-random number generator */
-	curandGenerator_t gen;
-
-	(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
-
-	/* Set seed */
-	(curandSetPseudoRandomGeneratorSeed(gen, std::rand()));
-
-	/* Generate n floats on device */
-	(curandGenerateUniform(gen, random_array_dev, n));
-
-	uint32 thread_number = std::ceil(float(n) / (BLOCK_SIZE * BLOCK_SIZE));
-	uint32 block_number = std::ceil(n / float(thread_number));
-	if (thread_number > 1024)
-		thread_number = 1024;
-	if (block_number > 1024)
-		block_number = 1024;
-
-	clear_cache_kenel<<<block_number, thread_number>>>(random_array_dev);
-	cuda_check(cudaDeviceSynchronize());
-
-	(curandDestroyGenerator(gen));
-
-	cuda_check(cudaFree(random_array_dev));
-
-}
-
 bool L2Cache::call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
-		int64& false_hits, bool verbose) {
+		int64& false_hits) {
 
 	return this->check_output_errors((uint64*) (this->output_host_1.data()),
-			gold, log, hits, misses, false_hits, verbose,
-			this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64);
+			gold, log, hits, misses, false_hits, this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64);
 }
+
+//__global__ void clear_cache_kenel(float *random_array) {
+//	register uint32 tx = blockIdx.x * blockDim.x + threadIdx.x;
+//	random_array[tx] += random_array[tx] * 339 + 1 * (-random_array[tx]);
+//}
+
+//void L2Cache::clear_cache(uint32 n) {
+//	float *random_array_dev;
+//	/* Allocate n floats on device */
+//	cuda_check(cudaMalloc((void ** )&random_array_dev, n * sizeof(float)));
+//
+//	/* Create pseudo-random number generator */
+//	curandGenerator_t gen;
+//
+//	(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
+//
+//	/* Set seed */
+//	(curandSetPseudoRandomGeneratorSeed(gen, std::rand()));
+//
+//	/* Generate n floats on device */
+//	(curandGenerateUniform(gen, random_array_dev, n));
+//
+//	uint32 thread_number = std::ceil(float(n) / (BLOCK_SIZE * BLOCK_SIZE));
+//	uint32 block_number = std::ceil(n / float(thread_number));
+//	if (thread_number > 1024)
+//		thread_number = 1024;
+//	if (block_number > 1024)
+//		block_number = 1024;
+//
+//	clear_cache_kenel<<<block_number, thread_number>>>(random_array_dev);
+//	cuda_check(cudaDeviceSynchronize());
+//
+//	(curandDestroyGenerator(gen));
+//
+//	cuda_check(cudaFree(random_array_dev));
+//
+//}
+
+//	switch (this->device) {
+//	case K20: {
+//
+//		break;
+//	}
+//	case K40: {
+//		const uint32 max_l2_cache = 1536 * 1024; //bytes
+//		if (max_l2_cache != this->l2_size)
+//			error(
+//					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
+//							+ std::to_string(this->l2_size));
+//
+//		constexpr uint32 v_size = max_l2_cache / CACHE_LINE_SIZE;
+//		test_l2_cache_kernel<v_size> <<<block_size, threads_per_block>>>(
+//				input_device_1.data(), output_device_1.data(),
+//				hit_vector_device.data(), miss_vector_device.data(), cycles);
+//		break;
+//	}
+//	case XAVIER: {
+//		const uint32 max_l2_cache = 512 * 1024; //bytes
+//		if (max_l2_cache != this->l2_size)
+//			error(
+//					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
+//							+ std::to_string(this->l2_size));
+//
+//		constexpr uint32 v_size = max_l2_cache / CACHE_LINE_SIZE;
+//		test_l2_cache_kernel<v_size> <<<block_size, threads_per_block>>>(
+//				input_device_1.data(), output_device_1.data(),
+//				hit_vector_device.data(), miss_vector_device.data(), cycles);
+//		break;
+//	}
+//	case TITANV: {
+//		const uint32 max_l2_cache = 4608 * 1024; //bytes
+//		if (max_l2_cache != this->l2_size)
+//			error(
+//					"L2 DEFAULT CACHE AND DRIVER OBTAINED VALUE DOES NOT MACH. REAL VALUE:"
+//							+ std::to_string(this->l2_size));
+//
+//		constexpr uint32 v_size = max_l2_cache / CACHE_LINE_SIZE;
+//		test_l2_cache_kernel<v_size> <<<block_size, threads_per_block>>>(
+//				input_device_1.data(), output_device_1.data(),
+//				hit_vector_device.data(), miss_vector_device.data(), cycles);
+//		break;
+//	}
+//	}

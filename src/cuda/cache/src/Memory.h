@@ -87,9 +87,9 @@ struct Memory {
 
 	// Returns true if no errors are found. False if otherwise.
 	// Set votedOutput pointer to retrieve the voted matrix
-	virtual bool check_output_errors(const uint64* v1, const uint64& val_gold, Log& log,
-			hit_miss_data_ hits, hit_miss_data_ misses,
-			hit_miss_data_ false_hits, bool verbose, size_t size) {
+	virtual bool check_output_errors(const uint64* v1, const uint64& val_gold,
+			Log& log, hit_miss_data_ hits, hit_miss_data_ misses,
+			hit_miss_data_ false_hits, size_t size) {
 
 #pragma omp parallel for shared(host_errors)
 		for (auto i = 0; i < size; i++) {
@@ -101,7 +101,7 @@ struct Memory {
 
 					std::string errdet = this->error_detail(i, val_gold,
 							val_output, hits, misses, false_hits);
-					if (verbose && (log.errors < 10))
+					if (log.verbose && (log.errors < 10))
 						std::cout << errdet << std::endl;
 
 					log.log_error(errdet);
@@ -119,11 +119,11 @@ struct Memory {
 	}
 
 	std::tuple<hit_miss_data_, hit_miss_data_, hit_miss_data_> compare(Log& log,
-			const uint64& mem) {
+			uint64& mem) {
 		//Checking the misses
-		auto hits = 0;
-		auto misses = 0;
-		auto false_hits = 0;
+		hit_miss_data_ hits = 0;
+		hit_miss_data_ misses = 0;
+		hit_miss_data_ false_hits = 0;
 		auto zero_cout = 0;
 		for (uint32 i = 0; i < this->hit_vector_host.size(); i++) {
 			auto hit = this->hit_vector_host[i];
@@ -140,22 +140,21 @@ struct Memory {
 			zero_cout += (hit == 0 || miss == 0);
 		}
 
-//		this->check_output_errors(this->output_host_1.data(), mem, log, hits,
-//				misses, false_hits, log.verbose, this->output_host_1.size());
+		this->call_checker(mem, log, hits, misses, false_hits);
 
-		if (zero_cout != 0) {
-			error(
-					"Zero count is different from 0: "
-							+ std::to_string(zero_cout));
-		}
+//		if (zero_cout != 0) {
+//			error(
+//					"Zero count is different from 0: "
+//							+ std::to_string(zero_cout));
+//		}
 		//returning the result
 		return std::make_tuple(hits, misses, false_hits);
 	}
 
-	virtual bool call_checker(uint64& gold, Log& log, hit_miss_data_& hits, hit_miss_data_& misses,
-			hit_miss_data_& false_hits, bool verbose) {
-		return this->check_output_errors((uint64*)this->output_host_1.data(), gold, log, hits, misses,
-				false_hits, verbose, this->output_host_1.size());
+	virtual bool call_checker(uint64& gold, Log& log, hit_miss_data_& hits,
+			hit_miss_data_& misses, hit_miss_data_& false_hits) {
+		return this->check_output_errors((uint64*) this->output_host_1.data(),
+				gold, log, hits, misses, false_hits, this->output_host_1.size());
 	}
 
 };

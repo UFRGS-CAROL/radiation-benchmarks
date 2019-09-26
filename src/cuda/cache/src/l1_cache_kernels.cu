@@ -31,20 +31,24 @@ __global__ void test_l1_cache_kernel(cacheline *src, cacheline *dst,
 	__shared__ int64 t_miss[SHARED_PER_SM];
 
 	const uint32 i = blockIdx.x * blockDim.x + threadIdx.x;
+	cacheline rm, rh;
+
+	__syncthreads();
 
 	t_miss[threadIdx.x] = clock64();
-	cacheline rm = src[i];
+	rm = src[i];
 	t_miss[threadIdx.x] = clock64() - t_miss[threadIdx.x];
 
 	sleep_cuda(sleep_cycles);
 
 	t_hits[threadIdx.x] = clock64();
-	cacheline rh = src[i];
+	rh = src[i];
 	t_hits[threadIdx.x] = clock64() - t_hits[threadIdx.x];
 
-	hits[i] = t_hits[threadIdx.x];
-	miss[i] = t_miss[threadIdx.x];
+	__syncthreads();
 
+	hits[i] = t_hits[threadIdx.x];
+		miss[i] = t_miss[threadIdx.x];
 	src[i] = rm;
 	dst[i] = rh;
 }
@@ -67,24 +71,22 @@ L1Cache::L1Cache(const Parameters& parameters) :
 	// Each block with one thread using all l1 cache
 	uint32 total_size = v_size * parameters.number_of_sms;
 
-	uint32 v_size_multiple_threads = total_size;
-
 	std::cout << "BLOCK SIZE " << this->threads_per_block.x << "x"
 			<< this->threads_per_block.y << std::endl;
 	std::cout << "GRID SIZE " << this->block_size.x << "x" << this->block_size.y
 			<< std::endl;
-	std::cout << "TOTAL SIZE " << v_size_multiple_threads << std::endl;
+	std::cout << "TOTAL SIZE " << total_size << std::endl;
 
 	this->hit_vector_host.resize(total_size);
 	this->miss_vector_host.resize(total_size);
 
-	this->input_host_1.resize(v_size_multiple_threads);
-	this->output_host_1.resize(v_size_multiple_threads);
+	this->input_host_1.resize(total_size);
+	this->output_host_1.resize(total_size);
 }
 
 void L1Cache::test(const uint64& mem) {
 	cacheline cl;
-	for(auto& l : cl.line){
+	for (auto& l : cl.line) {
 		l = mem;
 	}
 
@@ -103,7 +105,6 @@ void L1Cache::test(const uint64& mem) {
 			input_device_1.data(), output_device_1.data(),
 			hit_vector_device.data(), miss_vector_device.data(), cycles);
 
-
 	cuda_check(cudaPeekAtLastError());
 	cuda_check(cudaDeviceSynchronize());
 //Host arrays
@@ -114,8 +115,8 @@ void L1Cache::test(const uint64& mem) {
 }
 
 bool L1Cache::call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
-		int64& false_hits, bool verbose){
+		int64& false_hits) {
 
-	return this->check_output_errors((uint64*)(this->output_host_1.data()), gold, log, hits, misses,
-				false_hits, verbose, this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64);
+	return this->check_output_errors((uint64*) (this->output_host_1.data()),
+			gold, log, hits, misses, false_hits, this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64);
 }

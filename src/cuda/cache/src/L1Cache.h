@@ -16,10 +16,10 @@ struct L1Cache: public Memory<cacheline> {
 
 	L1Cache();
 	L1Cache(const Parameters& parameters);
-	void test(const uint64& mem) ;
+	void test(const uint64& mem);
 
 	bool call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
-			int64& false_hits, bool verbose) override;
+			int64& false_hits) override;
 
 };
 
