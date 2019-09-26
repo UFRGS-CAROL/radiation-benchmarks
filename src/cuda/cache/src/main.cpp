@@ -149,15 +149,15 @@ int main(int argc, char **argv) {
 		L1Cache l1(test_parameter);
 		setup_execute(log, test_parameter, l1);
 	}
-//
-//	//Test l2
-//	if (log.test_mode == "L2") {
-//		if (l2_checked == false) {
-//			error("YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
-//		}
-//		L2Cache l2(test_parameter);
-//		setup_execute(log, test_parameter, l2);
-//	}
+
+	//Test l2
+	if (log.test_mode == "L2") {
+		if (l2_checked == false) {
+			error("YOU MUST BUILD CUDA CACHE TEST WITH: make DISABLEL1CACHE=1");
+		}
+		L2Cache l2(test_parameter);
+		setup_execute(log, test_parameter, l2);
+	}
 
 //Test Shared
 	if (log.test_mode == "SHARED") {
