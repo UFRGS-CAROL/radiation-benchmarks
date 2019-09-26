@@ -14,14 +14,19 @@
 #include "device_vector.h"
 #include "Parameters.h"
 
-template<typename data_, typename hit_miss_data_ = int64>
+//template<typename data_t, typename counter_t>
+//struct Comparator{
+//
+//};
+
+template<typename data_>
 struct Memory {
-	hit_miss_data_ cycles;
+	int64 cycles;
 	Board device;
 	dim3 block_size;
 
-	std::vector<hit_miss_data_> hit_vector_host;
-	std::vector<hit_miss_data_> miss_vector_host;
+	std::vector<int64> hit_vector_host;
+	std::vector<int64> miss_vector_host;
 
 	//Host memory output
 	std::vector<data_> output_host_1;
@@ -30,10 +35,11 @@ struct Memory {
 	std::vector<data_> input_host_1;
 
 	virtual void test(const uint64& mem) = 0;
+	virtual bool call_checker(uint64& gold, Log& log, int64& hits,
+			int64& misses, int64& false_hits) = 0;
 
-	virtual std::string error_detail(hit_miss_data_ i, uint64 e, uint64 r,
-			hit_miss_data_ hits, hit_miss_data_ misses,
-			hit_miss_data_ false_hits) {
+	virtual std::string error_detail(uint64& i, uint64 e, uint64 r, int64& hits,
+			int64& misses, int64& false_hits) {
 		std::string error_detail = "";
 		error_detail += " i:" + std::to_string(i);
 		error_detail += " cache_line:" + std::to_string(i / CACHE_LINE_SIZE);
@@ -87,12 +93,12 @@ struct Memory {
 
 	// Returns true if no errors are found. False if otherwise.
 	// Set votedOutput pointer to retrieve the voted matrix
-	virtual bool check_output_errors(const uint64* v1, const uint64& val_gold,
-			Log& log, hit_miss_data_ hits, hit_miss_data_ misses,
-			hit_miss_data_ false_hits, size_t size) {
+	template<typename T>
+	bool check_output_errors(const T* v1, const T& val_gold, Log& log,
+			int64 hits, int64 misses, int64 false_hits, size_t size) {
 
 #pragma omp parallel for shared(host_errors)
-		for (auto i = 0; i < size; i++) {
+		for (uint64 i = 0; i < size; i++) {
 			auto val_output = v1[i];
 
 			if (val_gold != val_output) {
@@ -118,12 +124,11 @@ struct Memory {
 		return log.errors == 0 || log.infos == 0;
 	}
 
-	std::tuple<hit_miss_data_, hit_miss_data_, hit_miss_data_> compare(Log& log,
-			uint64& mem) {
+	std::tuple<int64, int64, int64> compare(Log& log, uint64& mem) {
 		//Checking the misses
-		hit_miss_data_ hits = 0;
-		hit_miss_data_ misses = 0;
-		hit_miss_data_ false_hits = 0;
+		int64 hits = 0;
+		int64 misses = 0;
+		int64 false_hits = 0;
 		auto zero_cout = 0;
 		for (uint32 i = 0; i < this->hit_vector_host.size(); i++) {
 			auto hit = this->hit_vector_host[i];
@@ -142,21 +147,14 @@ struct Memory {
 
 		this->call_checker(mem, log, hits, misses, false_hits);
 
-//		if (zero_cout != 0) {
-//			error(
-//					"Zero count is different from 0: "
-//							+ std::to_string(zero_cout));
-//		}
+		if (zero_cout != 0) {
+			error(
+					"Zero count is different from 0: "
+							+ std::to_string(zero_cout));
+		}
 		//returning the result
 		return std::make_tuple(hits, misses, false_hits);
 	}
-
-	virtual bool call_checker(uint64& gold, Log& log, hit_miss_data_& hits,
-			hit_miss_data_& misses, hit_miss_data_& false_hits) {
-		return this->check_output_errors((uint64*) this->output_host_1.data(),
-				gold, log, hits, misses, false_hits, this->output_host_1.size());
-	}
-
 };
 
 #endif /* MEMORY_H_ */

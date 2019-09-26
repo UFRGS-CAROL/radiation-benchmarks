@@ -51,3 +51,9 @@ std::string RegisterFile::error_detail(int64 i, uint64 e, uint64 r, int64 hits,
 	error_detail += " r:" + std::to_string(r);
 	return error_detail;
 }
+
+bool RegisterFile::call_checker(uint32& gold, Log& log, int64& hits,
+		int64& misses, int64& false_hits) {
+	return this->check_output_errors((uint32*) this->output_host_1.data(),
+			gold, log, hits, misses, false_hits, this->output_host_1.size());
+}

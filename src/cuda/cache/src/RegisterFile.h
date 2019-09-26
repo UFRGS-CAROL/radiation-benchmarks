@@ -26,6 +26,9 @@ struct RegisterFile: public Memory<uint32> {
 			int64 misses, int64 false_hits)
 	override;
 
+	bool call_checker(uint32& gold, Log& log, int64& hits,
+			int64& misses, int64& false_hits);
+
 };
 
 #endif /* REGISTERFILE_H_ */
