@@ -10,8 +10,9 @@ from common_config import discover_board, execute_and_write_json_to_file
 
 ITERATIONS = int(1e9)
 PRECISIONS = ["single"]
-TYPES = ["fma"]
-
+TYPES = ["fma", "add", "mul"]
+OPS=100000000
+BUILDPROFILER=0
 
 def config(board, test_type, arith_type, debug):
 
@@ -29,11 +30,11 @@ def config(board, test_type, arith_type, debug):
         sys.exit(1)
 
     bin_path = install_dir + "bin"
-    src_benchmark = install_dir + "src/cuda/trip_micro"
+    src_benchmark = install_dir + "src/cuda/micro"
     
     
     # This will define how many instructions will be executed
-    ops = 10000000
+    ops = OPS
 
     for_jetson = 0
     lib = "NVMLWrapper.so"
@@ -47,7 +48,7 @@ def config(board, test_type, arith_type, debug):
                 "make clean", 
                 "make -C ../../include ",
                 "make -C ../common {}".format(lib),
-                "make TYPE=" + test_type + " FORJETSON={} PRECISION=".format(for_jetson) + arith_type +
+                "make TYPE=" + test_type + " BUILDPROFILER={} FORJETSON={} PRECISION=".format(BUILDPROFILER, for_jetson) + arith_type +
                 " -j 4 OPS=" + str(ops),
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
