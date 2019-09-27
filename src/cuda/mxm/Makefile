@@ -1,5 +1,6 @@
 CC=g++
-NVCC=/usr/local/cuda/bin/nvcc
+CUDAPATH=/usr/local/cuda-10.1
+NVCC=$(CUDAPATH)/bin/nvcc
 PRECISION?=single
 FORJETSON=0
 
@@ -22,8 +23,8 @@ endif
 
 NVCC_FLAGS= $(ARCH)
 
-NVIDIA_INC=/usr/local/cuda/include/,./
-NVIDIA_LIB=/usr/local/cuda/lib64/
+NVIDIA_INC=$(CUDAPATH)/include/,./
+NVIDIA_LIB=$(CUDAPATH)/lib64/
 LOGHELPER_INC=../../include/,../common
 LOGHELPER_LIB=../../include/,../common/lib
 
@@ -31,7 +32,7 @@ LOGHELPER_LIB=../../include/,../common/lib
 ifeq ($(FORJETSON), 1)
 NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
 else
-NVCC_FLAGS += -L/usr/local/cuda/lib64/lib64/stubs -lnvidia-ml  -lNVMLWrapper
+NVCC_FLAGS += -L$(CUDAPATH)/lib64/stubs 
 
 endif
 
@@ -39,7 +40,7 @@ SOURCES=./cuda_mxm.cu
 EXEC_RADIX=./cuda_mxm_
 EXEC=$(EXEC_RADIX)$(LOWERCASED_PRECISION)
 
-DEF_SIZE=1024
+DEF_SIZE=4096
 
 DEF_A_INPUT=./mxm_$(LOWERCASED_PRECISION)_A_8192.matrix
 DEF_B_INPUT=./mxm_$(LOWERCASED_PRECISION)_B_8192.matrix
@@ -54,7 +55,8 @@ check-benchtype:
 	test $(PRECISION)
 
 $(EXEC): check-benchtype $(RUN_SOURCES)
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
+	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -O3 \
+			-std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC) -lNVMLWrapper -lnvidia-ml -lLogHelper
 
 clean:
 	rm -rf $(EXEC_RADIX)* $(MATRIX_NAMES)
