@@ -66,6 +66,7 @@ __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_B0,
 	d_C0[ty * ldc + tx] = acc;
 }
 
+#if __CUDA_ARCH__ > 600
 void hgemm(int b_operation, int a_operation, int N, int M, int K,
 		half *alpha, half* b_gpu, int ldb, half* a_gpu, int lda, half* beta,
 		half* c_gpu, int ldc) {
@@ -92,6 +93,7 @@ void sgemm(int b_operation, int a_operation, int N, int M, int K,
 	MatrixMulKernel<float> <<<grid, threads>>>(a_gpu, b_gpu, c_gpu, N, M, K, lda, ldb, ldc);
 	check_error(cudaError_t(cudaPeekAtLastError()));
 }
+#endif
 
 void dgemm(int b_operation, int a_operation, int N, int M, int K,
 		double *alpha, double* b_gpu, int ldb, double* a_gpu, int lda,
