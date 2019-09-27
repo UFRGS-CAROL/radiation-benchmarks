@@ -98,6 +98,6 @@ bool ReadOny::call_checker(uint64& gold, Log& log, int64& hits,
 		int64& misses, int64& false_hits) {
 	uint64* out_ptr = (uint64*) (this->output_host_1.data());
 	return this->check_output_errors(out_ptr, gold, log, hits, misses,
-			false_hits, this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64);
+			false_hits, this->output_host_1.size());
 }
 
