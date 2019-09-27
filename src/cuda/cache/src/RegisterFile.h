@@ -20,14 +20,14 @@ struct RegisterFile: public Memory<uint32> {
 
 	RegisterFile(const Parameters& parameters);
 
-	virtual void test(const uint64& mem);
+	void test(const uint64& mem);
 
-	virtual std::string error_detail(int64 i, uint64 e, uint64 r, int64 hits,
-			int64 misses, int64 false_hits)
-	override;
+	std::string error_detail(uint64 i, uint64 e, uint64 r, int64 hits,
+			int64 misses, int64 false_hits) override;
 
-	bool call_checker(uint32& gold, Log& log, int64& hits,
-			int64& misses, int64& false_hits);
+	bool call_checker(uint64& gold, Log& log, int64& hits,
+			int64& misses, int64& false_hits) override;
+
 
 };
 

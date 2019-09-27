@@ -17,45 +17,42 @@
 #define FACTOR 2
 #define MAX_K20_L2_CACHE (1280 * 1024) / FACTOR
 
-__global__ void test_l2_cache_kernel(cacheline *in, cacheline* out,
+__global__ void test_l2_cache_kernel(uint64 *in, uint64* out,
 		int64 *l2_hit_array, int64 *l2_miss_array, int64 sleep_cycles) {
 	const register uint32 i = blockIdx.x * blockDim.x + threadIdx.x;
 
-	cacheline rs;
+	uint64 rs[CACHE_LINE_SIZE_BY_INT64];
 	const int64 t1_miss = clock64();
-	rs = in[i];
+	move_cache_line(rs, in + i);
 	const int64 t2_miss = clock64();
 
 	//wait for exposition to neutrons
 	sleep_cuda(sleep_cycles);
 
 	//last checking
-	cacheline rt;
+	uint64 rt[CACHE_LINE_SIZE_BY_INT64];
 	const int64 t1_hit = clock64();
-	rt = in[i];
+	move_cache_line(rt, in + i);
 	const int64 t2_hit = clock64();
 
 	__syncthreads();
 
-	out[i] = rt;
-	in[i] = rs;
+//	out[i] = rt;
+//	in[i] = rs;
+	move_cache_line(out + i, rt);
+	move_cache_line(in + i, rs);
 
 	l2_hit_array[i] = t2_hit - t1_hit;
 	l2_miss_array[i] = t2_miss - t1_miss;
 }
 
 void L2Cache::test(const uint64& mem) {
-	cacheline cl;
-	for (auto& l : cl.line) {
-		l = mem;
-	}
-
-	std::fill(this->input_host_1.begin(), this->input_host_1.end(), cl);
+	std::fill(this->input_host_1.begin(), this->input_host_1.end(), mem);
 	rad::DeviceVector<int64> hit_vector_device(this->hit_vector_host);
 	rad::DeviceVector<int64> miss_vector_device(this->miss_vector_host);
 
-	rad::DeviceVector<cacheline> input_device_1 = this->input_host_1;
-	rad::DeviceVector<cacheline> output_device_1 = this->input_host_1;
+	rad::DeviceVector<uint64> input_device_1 = this->input_host_1;
+	rad::DeviceVector<uint64> output_device_1 = this->input_host_1;
 
 	test_l2_cache_kernel<<<block_size, threads_per_block>>>(
 			input_device_1.data(), output_device_1.data(),
@@ -71,7 +68,7 @@ void L2Cache::test(const uint64& mem) {
 }
 
 L2Cache::L2Cache(const Parameters& parameters) :
-		Memory<cacheline>(parameters) {
+		Memory<uint64>(parameters) {
 	//This switch is only to set manually the cache line size
 	//since it is hard to check it at runtime
 	/**
@@ -100,7 +97,7 @@ L2Cache::L2Cache(const Parameters& parameters) :
 
 	this->threads_per_block = thread_per_block;
 	this->block_size = block_number;
-	auto total_threads = thread_per_block * block_number;
+	auto total_threads = thread_per_block * block_number * CACHE_LINE_SIZE_BY_INT64;
 
 	this->hit_vector_host.resize(total_threads, 0);
 	this->miss_vector_host.resize(total_threads, 0);
@@ -112,7 +109,7 @@ bool L2Cache::call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
 		int64& false_hits) {
 
 	return this->check_output_errors((uint64*) (this->output_host_1.data()),
-			gold, log, hits, misses, false_hits, this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64);
+			gold, log, hits, misses, false_hits, this->output_host_1.size());
 }
 
 //__global__ void clear_cache_kenel(float *random_array) {

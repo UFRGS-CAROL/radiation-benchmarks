@@ -11,9 +11,8 @@
 #include "Memory.h"
 #include "CacheLine.h"
 
-struct L2Cache: public Memory<cacheline> {
+struct L2Cache: public Memory<uint64> {
 	dim3 threads_per_block;
-	uint32 lines;
 	uint32 l2_size;
 
 	L2Cache();

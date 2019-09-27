@@ -38,8 +38,8 @@ struct Memory {
 	virtual bool call_checker(uint64& gold, Log& log, int64& hits,
 			int64& misses, int64& false_hits) = 0;
 
-	virtual std::string error_detail(uint64& i, uint64 e, uint64 r, int64& hits,
-			int64& misses, int64& false_hits) {
+	virtual std::string error_detail(uint64 i, uint64 e, uint64 r, int64 hits,
+			int64 misses, int64 false_hits) {
 		std::string error_detail = "";
 		error_detail += " i:" + std::to_string(i);
 		error_detail += " cache_line:" + std::to_string(i / CACHE_LINE_SIZE);
@@ -147,11 +147,11 @@ struct Memory {
 
 		this->call_checker(mem, log, hits, misses, false_hits);
 
-		if (zero_cout != 0) {
-			error(
-					"Zero count is different from 0: "
-							+ std::to_string(zero_cout));
-		}
+//		if (zero_cout != 0) {
+//			error(
+//					"Zero count is different from 0: "
+//							+ std::to_string(zero_cout));
+//		}
 		//returning the result
 		return std::make_tuple(hits, misses, false_hits);
 	}

@@ -11,21 +11,22 @@
 #include "SharedMemory.h"
 
 template<const uint32 V_SIZE, const uint32 LINE_SIZE>
-__global__ void test_shared_memory_kernel(uint64 *input, uint64 *output, const int64 sleep_cycles) {
+__global__ void test_shared_memory_kernel(uint64 *input, uint64 *output,
+		const int64 sleep_cycles) {
 
-	__shared__  uint64 V[V_SIZE * CACHE_LINE_SIZE_BY_INT64];
+	__shared__ uint64 V[V_SIZE * CACHE_LINE_SIZE_BY_INT64];
 
-	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
-		const register uint64 i = blockIdx.x * V_SIZE + threadIdx.x;
-		const register uint64 index = i * CACHE_LINE_SIZE_BY_INT64;
+//	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
+	const register uint64 i = blockIdx.x * V_SIZE + threadIdx.x;
+	const register uint64 index = i * CACHE_LINE_SIZE_BY_INT64;
 
-		move_cache_line(V + threadIdx.x, input + index);
+	move_cache_line(V + threadIdx.x, input + index);
 
-		//wait for exposition to neutrons
-		sleep_cuda(sleep_cycles);
+	//wait for exposition to neutrons
+	sleep_cuda(sleep_cycles);
 
-		move_cache_line(output + index, V + threadIdx.x);
-	}
+	move_cache_line(output + index, V + threadIdx.x);
+//	}
 }
 
 void SharedMemory::test(const uint64& mem) {
@@ -35,21 +36,23 @@ void SharedMemory::test(const uint64& mem) {
 	rad::DeviceVector<uint64> input_device_1 = this->input_host_1;
 	rad::DeviceVector<uint64> output_device_1 = this->output_host_1;
 
-//	//Set the number of threads
-//	//These archs support two blocks per SM with 48KB of shared memory
+	//Set the number of threads
+	//These archs support two blocks per SM with 48KB of shared memory
 	switch (this->device) {
 	case K20:
 	case K40: {
 		constexpr uint32 v_size = MAX_KEPLER_SHARED_MEMORY / CACHE_LINE_SIZE;
 		test_shared_memory_kernel<v_size, CACHE_LINE_SIZE> <<<block_size,
-				threads_per_block>>>(input_device_1.data(), output_device_1.data(), cycles);
+				threads_per_block>>>(input_device_1.data(),
+				output_device_1.data(), cycles);
 		break;
 	}
 	case XAVIER:
 	case TITANV: {
 		constexpr uint32 v_size = MAX_VOLTA_SHARED_MEMORY / CACHE_LINE_SIZE;
 		test_shared_memory_kernel<v_size, CACHE_LINE_SIZE> <<<block_size,
-				threads_per_block>>>(input_device_1.data(), output_device_1.data(), cycles);
+				threads_per_block>>>(input_device_1.data(),
+				output_device_1.data(), cycles);
 		break;
 	}
 	}
@@ -91,7 +94,15 @@ SharedMemory::SharedMemory(const Parameters& parameters) :
 	}
 
 	this->threads_per_block = dim3(v_size);
-	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms * CACHE_LINE_SIZE_BY_INT64;
+	uint32 v_size_multiple_threads = v_size * parameters.number_of_sms
+			* CACHE_LINE_SIZE_BY_INT64;
 	this->input_host_1.resize(v_size_multiple_threads);
 	this->output_host_1.resize(v_size_multiple_threads);
+}
+
+bool SharedMemory::call_checker(uint64& gold, Log& log, int64& hits,
+		int64& misses, int64& false_hits) {
+	uint64* out_ptr = (uint64*) (this->output_host_1.data());
+	return this->check_output_errors(out_ptr, gold, log, hits, misses,
+			false_hits, this->output_host_1.size());
 }

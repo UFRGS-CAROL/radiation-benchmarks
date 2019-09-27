@@ -42,7 +42,7 @@ void RegisterFile::test(const uint64& mem_) {
 	this->output_host_1 = output_device_1.to_vector();
 }
 
-std::string RegisterFile::error_detail(int64 i, uint64 e, uint64 r, int64 hits,
+std::string RegisterFile::error_detail(uint64 i, uint64 e, uint64 r, int64 hits,
 		int64 misses, int64 false_hits) {
 	std::string error_detail = "";
 	error_detail += " i:" + std::to_string(i);
@@ -52,8 +52,11 @@ std::string RegisterFile::error_detail(int64 i, uint64 e, uint64 r, int64 hits,
 	return error_detail;
 }
 
-bool RegisterFile::call_checker(uint32& gold, Log& log, int64& hits,
+bool RegisterFile::call_checker(uint64& gold, Log& log, int64& hits,
 		int64& misses, int64& false_hits) {
-	return this->check_output_errors((uint32*) this->output_host_1.data(),
-			gold, log, hits, misses, false_hits, this->output_host_1.size());
+	uint32* out_ptr = (uint32*) this->output_host_1.data();
+	uint32 gold_ = gold;
+
+	return this->check_output_errors(out_ptr, gold_, log, hits, misses,
+			false_hits, this->output_host_1.size());
 }
