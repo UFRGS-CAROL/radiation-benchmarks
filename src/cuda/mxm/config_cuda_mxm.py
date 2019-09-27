@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [4096]
+SIZES = [8192]
 PRECISIONS = ["single"]
 ITERATIONS = int(1e9)
 USE_TENSOR_CORES = [0] #, 1]
