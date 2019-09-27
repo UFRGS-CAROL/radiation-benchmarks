@@ -88,22 +88,23 @@ void setup_execute(Log& log, Parameters& test_parameter,
 				log.update_info_count();
 			}
 
-			std::cout << "Iteration: " << iteration;
-			std::cout << " Time: " << end_it - start_it;
-			std::cout << " Errors: " << log.errors;
-			std::cout << " Hits: " << hits;
-			std::cout << " Misses: " << misses;
-			std::cout << " False hits: " << false_hits;
-			std::cout << std::hex;
+			if (log.verbose) {
+				std::cout << "Iteration: " << iteration;
+				std::cout << " Time: " << end_it - start_it;
+				std::cout << " Errors: " << log.errors;
+				std::cout << " Hits: " << hits;
+				std::cout << " Misses: " << misses;
+				std::cout << " False hits: " << false_hits;
+				std::cout << std::hex;
 
-			std::cout << " Byte: " << std::setw(sizeof(uint64) * 2)
-					<< std::setfill('0') << mem;
-			std::cout << std::dec;
-			std::cout << " Device Reset Time: "
-					<< end_dev_reset - start_dev_reset;
-			std::cout << " Comparing Time: " << end_cmp - start_cmp;
-			std::cout << std::endl;
-
+				std::cout << " Byte: " << std::setw(sizeof(uint64) * 2)
+						<< std::setfill('0') << mem;
+				std::cout << std::dec;
+				std::cout << " Device Reset Time: "
+						<< end_dev_reset - start_dev_reset;
+				std::cout << " Comparing Time: " << end_cmp - start_cmp;
+				std::cout << std::endl;
+			}
 			iteration++;
 		}
 	}
@@ -133,7 +134,7 @@ int main(int argc, char **argv) {
 	Log log(argc, argv, test_parameter.board_name,
 			test_parameter.shared_memory_size, test_parameter.l2_size,
 			test_parameter.number_of_sms, test_parameter.one_second_cycles);
-	log.set_info_max(2000);
+	log.set_info_max(10000);
 	test_parameter.set_setup_sleep_time(log.seconds_sleep);
 
 	std::cout << test_parameter << " Memory test: " << log.test_mode
