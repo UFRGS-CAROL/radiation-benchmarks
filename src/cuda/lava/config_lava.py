@@ -8,11 +8,11 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [4]
+SIZES = [23]
 PRECISIONS = ["single"]
 ITERATIONS = int(1e9)
-STREAMS=128
-BUILDPROFILER=0
+STREAMS=8
+BUILDPROFILER=1
 
 def config(board, arith_type, debug):
 
