@@ -118,9 +118,9 @@ struct Memory {
 		if (log.errors != 0) {
 			std::cout << "#" << std::endl;
 		}
-		if (log.infos != 0) {
-			std::cout << "M" << std::endl;
-		}
+//		if (log.infos != 0) {
+//			std::cout << "M" << std::endl;
+//		}
 		return log.errors == 0 || log.infos == 0;
 	}
 
@@ -146,12 +146,12 @@ struct Memory {
 		}
 
 		this->call_checker(mem, log, hits, misses, false_hits);
-
-		if (zero_cout != 0) {
-			error(
-					"Zero count is different from 0: "
-							+ std::to_string(zero_cout));
-		}
+//
+//		if (zero_cout != 0) {
+//			error(
+//					"Zero count is different from 0: "
+//							+ std::to_string(zero_cout));
+//		}
 		//returning the result
 		return std::make_tuple(hits, misses, false_hits);
 	}
