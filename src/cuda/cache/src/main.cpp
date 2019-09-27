@@ -40,12 +40,12 @@ void setup_execute(Log& log, Parameters& test_parameter,
 	rad::NVMLWrapper counter_thread(DEVICE_INDEX);
 #endif
 	for (uint64 iteration = 0; iteration < log.iterations;) {
+		for (auto mem : vet) {
 #ifdef BUILDPROFILER
-		//Start collecting data
-		counter_thread.start_collecting_data();
+			//Start collecting data
+			counter_thread.start_collecting_data();
 #endif
 
-		for (auto mem : vet) {
 			//set CUDA configuration each iteration
 			memory_obj.set_cache_config(log.test_mode);
 
@@ -58,6 +58,18 @@ void setup_execute(Log& log, Parameters& test_parameter,
 			//end iteration
 			log.end_iteration_app();
 			double end_it = rad::mysecond();
+
+			//End collecting the data
+			//This thing must be done before device reset
+#ifdef BUILDPROFILER
+			counter_thread.end_collecting_data();
+
+			auto iteration_data = counter_thread.get_data_from_iteration();
+			for (auto info_line : iteration_data) {
+				log.log_info(info_line);
+				//std::cout << info_line << std::endl;
+			}
+#endif
 
 			double start_dev_reset = rad::mysecond();
 			//reset the device
@@ -94,17 +106,6 @@ void setup_execute(Log& log, Parameters& test_parameter,
 
 			iteration++;
 		}
-
-		//End collecting the data
-#ifdef BUILDPROFILER
-		counter_thread.end_collecting_data();
-
-		auto iteration_data = counter_thread.get_data_from_iteration();
-		for (auto info_line : iteration_data) {
-			log.log_info(info_line);
-			//std::cout << info_line << std::endl;
-		}
-#endif
 	}
 }
 

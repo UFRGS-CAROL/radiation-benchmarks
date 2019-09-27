@@ -99,7 +99,7 @@ struct Memory {
 
 #pragma omp parallel for shared(host_errors)
 		for (uint64 i = 0; i < size; i++) {
-			auto val_output = v1[i];
+			T val_output = v1[i];
 
 			if (val_gold != val_output) {
 #pragma omp critical
@@ -147,11 +147,11 @@ struct Memory {
 
 		this->call_checker(mem, log, hits, misses, false_hits);
 
-//		if (zero_cout != 0) {
-//			error(
-//					"Zero count is different from 0: "
-//							+ std::to_string(zero_cout));
-//		}
+		if (zero_cout != 0) {
+			error(
+					"Zero count is different from 0: "
+							+ std::to_string(zero_cout));
+		}
 		//returning the result
 		return std::make_tuple(hits, misses, false_hits);
 	}

@@ -10,15 +10,12 @@
 #include "utils.h"
 #include "SharedMemory.h"
 
-template<const uint32 V_SIZE, const uint32 LINE_SIZE>
+template<const uint32 V_SIZE>
 __global__ void test_shared_memory_kernel(uint64 *input, uint64 *output,
 		const int64 sleep_cycles) {
 
 	__shared__ uint64 V[V_SIZE * CACHE_LINE_SIZE_BY_INT64];
-
-//	if (threadIdx.x < V_SIZE && blockIdx.y == 0) {
-	const register uint64 i = blockIdx.x * V_SIZE + threadIdx.x;
-	const register uint64 index = i * CACHE_LINE_SIZE_BY_INT64;
+	const register uint64 index = (blockIdx.x * V_SIZE + threadIdx.x) * CACHE_LINE_SIZE_BY_INT64;
 
 	move_cache_line(V + threadIdx.x, input + index);
 
@@ -26,7 +23,6 @@ __global__ void test_shared_memory_kernel(uint64 *input, uint64 *output,
 	sleep_cuda(sleep_cycles);
 
 	move_cache_line(output + index, V + threadIdx.x);
-//	}
 }
 
 void SharedMemory::test(const uint64& mem) {
@@ -42,7 +38,7 @@ void SharedMemory::test(const uint64& mem) {
 	case K20:
 	case K40: {
 		constexpr uint32 v_size = MAX_KEPLER_SHARED_MEMORY / CACHE_LINE_SIZE;
-		test_shared_memory_kernel<v_size, CACHE_LINE_SIZE> <<<block_size,
+		test_shared_memory_kernel<v_size> <<<block_size,
 				threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), cycles);
 		break;
@@ -50,7 +46,7 @@ void SharedMemory::test(const uint64& mem) {
 	case XAVIER:
 	case TITANV: {
 		constexpr uint32 v_size = MAX_VOLTA_SHARED_MEMORY / CACHE_LINE_SIZE;
-		test_shared_memory_kernel<v_size, CACHE_LINE_SIZE> <<<block_size,
+		test_shared_memory_kernel<v_size> <<<block_size,
 				threads_per_block>>>(input_device_1.data(),
 				output_device_1.data(), cycles);
 		break;

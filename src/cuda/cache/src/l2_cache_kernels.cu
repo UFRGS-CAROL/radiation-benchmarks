@@ -37,8 +37,6 @@ __global__ void test_l2_cache_kernel(uint64 *in, uint64* out,
 
 	__syncthreads();
 
-//	out[i] = rt;
-//	in[i] = rs;
 	move_cache_line(out + i, rt);
 	move_cache_line(in + i, rs);
 
