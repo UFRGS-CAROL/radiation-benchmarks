@@ -44,16 +44,13 @@
 //=========== DEFINE TESTED TYPE
 #if defined(test_precision_double)
 
-
 #define GENERATOR_MAXABSVALUE 4.1e+16
 #define GENERATOR_MINABSVALUE 0
 const char test_precision_description[] = "double";
 typedef double tested_type;
 typedef double tested_type_host;
 
-
 #elif defined(test_precision_single)
-
 
 #define GENERATOR_MAXABSVALUE 4.1e+2
 #define GENERATOR_MINABSVALUE 0
@@ -61,16 +58,13 @@ const char test_precision_description[] = "single";
 typedef float tested_type;
 typedef float tested_type_host;
 
-
 #elif defined(test_precision_half)
-
 
 #define GENERATOR_MAXABSVALUE 2.0
 #define GENERATOR_MINABSVALUE 0
 const char test_precision_description[] = "half";
 typedef half tested_type;
 typedef half_float::half tested_type_host;
-
 
 #else 
 #error TEST TYPE NOT DEFINED OR INCORRECT. USE TYPE=<double|single|half>.
@@ -128,7 +122,7 @@ void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 	log_error_detail((char *)errorDescription); end_log_file();
 #endif
 	printf("%s - Line: %d at %s\n", errorDescription, line, file);
-	exit (EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 }
 
 void GetDevice() {
@@ -171,7 +165,7 @@ void* safe_cudaMalloc(size_t size) {
 		log_error_detail((char *) "error host malloc");
 		end_log_file();
 		printf("error host malloc\n");
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 
 	// ===> FIRST PHASE: CHECK SETTING BITS TO 10101010
@@ -347,7 +341,7 @@ void generateInputMatrices() {
 		DEFAULT_INPUT_SIZE * DEFAULT_INPUT_SIZE * sizeof(tested_type));
 		if (!(h_A && h_B)) {
 			printf("Could not alloc h_A or h_B");
-			exit (EXIT_FAILURE);
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -385,7 +379,7 @@ void generateInputMatrices() {
 	f_B = fopen(b_matrix_path, "wb");
 	if (!(f_A && f_B)) {
 		printf("Could not open f_A or f_B\n");
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 
 	tested_type_host val;
@@ -496,7 +490,7 @@ void writeGoldtoFile() {
 	f_GOLD = fopen(gold_matrix_path, "wb");
 	if (!f_GOLD) {
 		printf("Could not open f_GOLD\n");
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 
 	for (i = 0; i < k; i++) {
@@ -578,24 +572,95 @@ void writeGoldtoFile() {
 //}
 //#endif
 
+template<int BS, typename real_t>
+__device__ void matrix_mul_cuda(real_t *C, real_t *A, real_t *B, int wA,
+		int wB) {
+	// Block index
+	int bx = blockIdx.x;
+	int by = blockIdx.y;
+
+	// Thread index
+	int tx = threadIdx.x;
+	int ty = threadIdx.y;
+
+	// Index of the first sub-matrix of A processed by the block
+	int aBegin = wA * BS * by;
+
+	// Index of the last sub-matrix of A processed by the block
+	int aEnd = aBegin + wA - 1;
+
+	// Step size used to iterate through the sub-matrices of A
+	int aStep = BS;
+
+	// Index of the first sub-matrix of B processed by the block
+	int bBegin = BS * bx;
+
+	// Step size used to iterate through the sub-matrices of B
+	int bStep = BS * wB;
+
+	// Csub is used to store the element of the block sub-matrix
+	// that is computed by the thread
+	real_t Csub = 0;
+
+	// Loop over all the sub-matrices of A and B
+	// required to compute the block sub-matrix
+	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
+		// Declaration of the shared memory array As used to
+		// store the sub-matrix of A
+		__shared__ real_t As[BS][BS];
+
+		// Declaration of the shared memory array Bs used to
+		// store the sub-matrix of B
+		__shared__ real_t Bs[BS][BS];
+
+		// Load the matrices from device memory
+		// to shared memory; each thread loads
+		// one element of each matrix
+		As[ty][tx] = A[a + wA * ty + tx];
+		Bs[ty][tx] = B[b + wB * ty + tx];
+
+		// Synchronize to make sure the matrices are loaded
+		__syncthreads();
+
+		// Multiply the two matrices together;
+		// each thread computes one element
+		// of the block sub-matrix
+#pragma unroll
+
+		for (int k = 0; k < BS; ++k) {
+			Csub += As[ty][k] * Bs[k][tx];
+		}
+
+		// Synchronize to make sure that the preceding
+		// computation is done before loading two new
+		// sub-matrices of A and B in the next iteration
+		__syncthreads();
+	}
+
+	// Write the block sub-matrix to device memory;
+	// each thread writes one element
+	int c = wB * BS * by + BS * bx;
+	C[c + wB * ty + tx] = Csub;
+}
+
 __global__ void MatrixMulKernel(tested_type *d_A0, tested_type *d_B0,
 		tested_type *d_C0, int n) {
 //		tested_type *d_A1,
 //		tested_type *d_A2, tested_type *d_B0, tested_type *d_B1,
 //		tested_type *d_B2, tested_type *d_C0, tested_type *d_C1,
 //		tested_type *d_C2, int n) {
-
 #if defined(test_precision_double) or defined(test_precision_single)
-	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
-	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
-	register int k;
-
-	register tested_type acc = 0.0;
-	for (k = 0; k < n; k++) {
-		acc = d_A0[ty * n + k] * d_B0[k * n + tx] + acc;
-	}
-
-	d_C0[ty * n + tx] = acc;
+//	register int tx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+//	register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+//	register int k;
+//
+//	register tested_type acc = 0.0;
+//	for (k = 0; k < n; k++) {
+//		acc = d_A0[ty * n + k] * d_B0[k * n + tx] + acc;
+//	}
+//
+//	d_C0[ty * n + tx] = acc;
+	matrix_mul_cuda<BLOCK_SIZE>(d_C0, d_A0, d_B0, n, n);
 
 #elif defined(test_precision_half)
 
@@ -711,8 +776,6 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL,
 //			}
 //		}
 
-
-
 		if (votedOutput != NULL)
 			votedOutput[i] = valOutput;
 		// if ((fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)||(fabs((tested_type_host)(valOutput-valGold)/valGold) > 1e-10)) {
@@ -748,7 +811,7 @@ bool checkOutputErrors(tested_type_host* votedOutput = NULL,
 	}
 #endif
 //	if (memory_errors != 0)
-		printf("M");
+	printf("M");
 	if (host_errors != 0)
 		printf("#");
 
@@ -788,12 +851,12 @@ int main(int argc, char* argv[]) {
 
 		if ((k <= 0) || (k % 16 != 0)) {
 			printf("Invalid input size given on the command-line: %d\n", k);
-			exit (EXIT_FAILURE);
+			exit(EXIT_FAILURE);
 		}
 		matrixSize = k * k;
 	} else {
 		usage(argc, argv);
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 
 	if (checkCmdLineFlag(argc, (const char **) argv, "input_a")) {
@@ -891,9 +954,7 @@ int main(int argc, char* argv[]) {
 		snprintf(test_name, 90, "cuda_%s_mxm", test_precision_description);
 		start_log_file(test_name, test_info);
 
-
 	}
-
 
 	std::string log_file_name(get_log_file_name());
 	if(generate) {
@@ -930,7 +991,7 @@ int main(int argc, char* argv[]) {
 	GetDevice();
 	retrieveInputMatrices();
 	printf("cuda_%s_mxm\n", test_precision_description);
-	fflush (stdout);
+	fflush(stdout);
 //====================================
 
 //================== Init generator if enabled
@@ -1121,7 +1182,6 @@ int main(int argc, char* argv[]) {
 						mysecond() - global_time);
 		fflush(stdout);
 	}
-
 
 	double gflops = 2.0 * (double) k * k * k / 1000000000; // Bilion FLoating-point OPerationS
 	double averageKernelTime = total_kernel_time

@@ -1,5 +1,5 @@
 CC=g++
-CUDAPATH=/usr/local/cuda-10.1
+CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 PRECISION?=single
 FORJETSON=0
@@ -21,7 +21,7 @@ ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 endif
 
-NVCC_FLAGS= $(ARCH)
+NVCC_FLAGS= $(ARCH) -Xptxas -v
 
 NVIDIA_INC=$(CUDAPATH)/include/,./
 NVIDIA_LIB=$(CUDAPATH)/lib64/
