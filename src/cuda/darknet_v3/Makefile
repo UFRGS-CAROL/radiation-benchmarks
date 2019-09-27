@@ -26,12 +26,13 @@ OBJDIR=./obj/
 
 CC=gcc
 CXX=g++
-NVCC=/usr/local/cuda/bin/nvcc 
+CUDAPATH=/usr/local/cuda
+NVCC=$(CUDAPATH)/bin/nvcc 
 AR=ar
 ARFLAGS=rcs
 OPTS=-Ofast
 LDFLAGS= -lm -pthread -lcublas 
-LDFLAGS +=  -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
+LDFLAGS +=  -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
 COMMON= -Iinclude/ -Isrc/
 CFLAGS=-Wall -Wno-unused-result -Wno-unknown-pragmas -Wfatal-errors -Wno-write-strings -Werror -fPIC 
 
@@ -68,9 +69,9 @@ COMMON+= `pkg-config --cflags opencv`
 endif
 
 ifeq ($(GPU), 1) 
-COMMON+= -DGPU -I/usr/local/cuda/include/
+COMMON+= -DGPU -I$(CUDAPATH)/include/
 CFLAGS+= -DGPU
-LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcublas -lcurand
+LDFLAGS+= -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
 endif
 
 ifeq ($(CUDNN), 1) 
