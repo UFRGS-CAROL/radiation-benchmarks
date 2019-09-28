@@ -9,8 +9,10 @@ int gpu_index = 0;
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef LOGS
 #ifdef BUILDPROFILER
 #include "include/cuda_utils.h"
+#endif
 #endif
 
 void cuda_set_device(int n) {
@@ -30,9 +32,11 @@ void check_error(cudaError_t status) {
 	//cudaDeviceSynchronize();
 	cudaError_t status2 = cudaGetLastError();
 
+#ifdef LOGS
 #ifdef BUILDPROFILER
 	checkFrameworkErrors(status);
 	checkFrameworkErrors(status2);
+#endif
 #endif
 
 	if (status != cudaSuccess) {
