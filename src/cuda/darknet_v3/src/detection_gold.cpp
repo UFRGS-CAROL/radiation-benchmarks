@@ -108,6 +108,16 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 		this->load_gold_hash(gold_file);
 
 		gold_file.close();
+
+#ifdef LOGS
+#ifdef BUILDPROFILER
+		auto str = this->app_log->get_log_path();
+		this->profiler_thread = std::make_shared<rad::OBJTYPE>(0, str);
+
+		//START PROFILER THREAD
+		profiler_thread->start_profile();
+#endif
+#endif
 	} else {
 		this->img_list_path = std::string(img_list_path);
 
@@ -125,16 +135,6 @@ DetectionGold::DetectionGold(int argc, char **argv, real_t thresh,
 
 		this->write_gold_header();
 		this->iterations = 1;
-
-#ifdef LOGS
-#ifdef BUILDPROFILER
-		auto str = this->app_log->get_log_path();
-		this->profiler_thread = std::make_shared<rad::OBJTYPE>(0, str);
-
-		//START PROFILER THREAD
-		profiler_thread->start_profile();
-#endif
-#endif
 	}
 }
 

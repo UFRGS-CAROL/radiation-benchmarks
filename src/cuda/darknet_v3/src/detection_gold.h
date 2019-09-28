@@ -125,9 +125,10 @@ struct DetectionGold {
 	GoldHash gold_hash_var;
 
 	Log* app_log;
-
+#ifdef LOGS
 #ifdef BUILDPROFILER
 	std::shared_ptr<rad::Profiler> profiler_thread;
+#endif
 #endif
 
 	DetectionGold(int argc, char **argv, real_t thresh, real_t hier_thresh,
