@@ -48,7 +48,7 @@ def config(board, debug):
             exe[1] = ['--iterations {}'.format(ITERATIONS)]
             exe[2] = ['--sleepongpu {}'.format(SLEEPONGPU)]
             exe[3] = ['--memtotest ' + i]
-            exe[4] = ['--verbose 1']
+            exe[4] = ['--verbose 0']
 
             execute.append(' '.join(str(r) for v in exe for r in v))
 
@@ -61,7 +61,7 @@ def config(board, debug):
         exe[1] = ['--iterations {}'.format(ITERATIONS)]
         exe[2] = ['--sleepongpu {}'.format(SLEEPONGPU)]
         exe[3] = ['--memtotest L2']
-        exe[4] = ['--verbose 1']
+        exe[4] = ['--verbose 0']
 
         execute = [(' '.join(str(r) for v in exe for r in v))]
         execute_and_write_json_to_file(execute, [], install_dir, benchmark_bin, debug=debug)  
