@@ -8,7 +8,7 @@ LOGS?=0
 OPENGEMM?=0
 BUILDPROFILER=1
 
-RADIATIONDIR=/home/fernando/git_pesquisa/radiation-benchmarks/
+RADIATIONDIR=/home/carol/radiation-benchmarks/
 
 ARCH= -gencode arch=compute_35,code=sm_35
 #-gencode arch=compute_60,code=sm_60 \
@@ -62,10 +62,6 @@ else
 	endif
 endif
 
-ifeq ($(BUILDPROFILER), 1)
-COMMON+= -DBUILDPROFILER -I$(RADIATIONDIR)/src/cuda/common
-LDFLAGS+= -L$(CUDAPATH)/lib64/stubs -L$(RADIATIONDIR)/src/cuda/common/lib -lNVMLWrapper -lnvidia-ml
-endif
 
 ifeq ($(OPENCV), 1) 
 COMMON+= -DOPENCV
@@ -90,6 +86,12 @@ ifeq ($(LOGS), 1)
 COMMON += -DLOGS -I$(RADIATIONDIR)/src/include
 COMMON += -L$(RADIATIONDIR)/src/include 
 LDFLAGS += -lLogHelper
+
+ifeq ($(BUILDPROFILER), 1)
+COMMON+= -DBUILDPROFILER -I$(RADIATIONDIR)/src/cuda/common
+LDFLAGS+= -L$(CUDAPATH)/lib64/stubs -L$(RADIATIONDIR)/src/cuda/common/lib -lNVMLWrapper -lnvidia-ml
+endif
+
 endif
 
 ifeq ($(OPENGEMM), 1)
