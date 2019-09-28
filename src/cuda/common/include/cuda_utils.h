@@ -8,20 +8,28 @@
 #ifndef CUDA_UTILS_H_
 #define CUDA_UTILS_H_
 
-#include <chrono>
-#include <thread>
+
 #include <sys/time.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cublas_v2.h>
+
+#ifdef __cplusplus
+#include <chrono>
+#include <thread>
 #include <helper_cuda.h>
+
+#endif //C++ compiler defined
 
 
 #ifdef LOGS
 #include "log_helper.h"
 #endif
 
+#ifdef __cplusplus
 namespace rad {
+#endif //C++ compiler defined
+
 
 static void __checkFrameworkErrors(cudaError_t error, int line, const char* file) {
 	if (error == cudaSuccess) {
@@ -58,6 +66,7 @@ static void __checkCublasErrors(cublasStatus_t error, int line, const char* file
 
 #define checkCublasErrors(error) __checkCublasErrors(error, __LINE__, __FILE__)
 
+#ifdef __cplusplus
 
 //!  sleep seconds.
 /*!
@@ -81,5 +90,6 @@ static double mysecond() {
 
 }
 
+#endif  //C++ compiler defined
 
 #endif /* CUDA_UTILS_H_ */
