@@ -81,7 +81,7 @@ struct Log {
 	static std::string get_log_path(){
 		std::string ret = "";
 #ifdef LOGS
-		ret = get_log_file_name()
+		ret = get_log_file_name();
 #endif
 		return ret;
 	}
