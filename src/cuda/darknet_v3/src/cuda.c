@@ -9,6 +9,8 @@ int gpu_index = 0;
 #include <stdlib.h>
 #include <time.h>
 
+#include "include/cuda_utils.h"
+
 void cuda_set_device(int n) {
 	gpu_index = n;
 	cudaError_t status = cudaSetDevice(n);
@@ -25,6 +27,9 @@ int cuda_get_device() {
 void check_error(cudaError_t status) {
 	//cudaDeviceSynchronize();
 	cudaError_t status2 = cudaGetLastError();
+	checkFrameworkErrors(status);
+	checkFrameworkErrors(status2);
+
 	if (status != cudaSuccess) {
 		const char *s = cudaGetErrorString(status);
 		char buffer[256];

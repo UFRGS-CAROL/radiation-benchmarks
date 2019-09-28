@@ -18,13 +18,29 @@
 #include <tuple>
 #include <unordered_map>
 
+#include <memory>
+
+#ifdef BUILDPROFILER
+#include "include/Profiler.h"
+#include "include/NVMLWrapper.h"
+
+#ifdef FORJETSON
+#include "include/JTX2Inst.h"
+#define OBJTYPE JTX2Inst
+#else
+#include "include/NVMLWrapper.h"
+#define OBJTYPE NVMLWrapper
+#endif // FORJETSON
+
+#endif
+
 #if REAL_TYPE == HALF
 #define THRESHOLD_ERROR 1e-2
 #define STORE_PRECISION 4
 
 #elif REAL_TYPE == FLOAT
 #define THRESHOLD_ERROR 1e-3
-#define STORE_PRECISION 7
+#define STORE_PRECISION 8
 
 #elif REAL_TYPE == DOUBLE
 #define THRESHOLD_ERROR 1e-5
@@ -109,6 +125,10 @@ struct DetectionGold {
 	GoldHash gold_hash_var;
 
 	Log* app_log;
+
+#ifdef BUILDPROFILER
+	std::shared_ptr<rad::Profiler> profiler_thread;
+#endif
 
 	DetectionGold(int argc, char **argv, real_t thresh, real_t hier_thresh,
 			char *img_list_path, char *config_file, char *config_data,

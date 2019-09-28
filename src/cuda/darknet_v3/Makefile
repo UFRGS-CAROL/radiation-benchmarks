@@ -6,8 +6,9 @@ DEBUG?=0
 REAL_TYPE?=float
 LOGS?=0
 OPENGEMM?=0
+BUILDPROFILER=1
 
-RADIATIONDIR=/home/carol/radiation-benchmarks/
+RADIATIONDIR=/home/fernando/git_pesquisa/radiation-benchmarks/
 
 ARCH= -gencode arch=compute_35,code=sm_35
 #-gencode arch=compute_60,code=sm_60 \
@@ -36,7 +37,7 @@ LDFLAGS +=  -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
 COMMON= -Iinclude/ -Isrc/
 CFLAGS=-Wall -Wno-unused-result -Wno-unknown-pragmas -Wfatal-errors -Wno-write-strings -Werror -fPIC 
 
-NVCCFLAGS=  --std=c++11 
+NVCCFLAGS= -std=c++11
 #-disable-warnings 
 
 ifeq ($(OPENMP), 1) 
@@ -49,7 +50,7 @@ NVCCFLAGS+= -G
 endif
 
 CFLAGS+=$(OPTS) -lstdc++
-CXXFLAGS+= $(CFLAGS) --std=c++11
+CXXFLAGS+= $(CFLAGS) -std=c++11
 
 ifeq ($(REAL_TYPE), double)
 COMMON+= -DREAL_TYPE=64
@@ -59,6 +60,11 @@ else
 	else
 	COMMON+= -DREAL_TYPE=32
 	endif
+endif
+
+ifeq ($(BUILDPROFILER), 1)
+COMMON+= -DBUILDPROFILER -I$(RADIATIONDIR)/src/cuda/common
+LDFLAGS+= -L$(CUDAPATH)/lib64/stubs -L$(RADIATIONDIR)/src/cuda/common/lib -lNVMLWrapper -lnvidia-ml
 endif
 
 ifeq ($(OPENCV), 1) 

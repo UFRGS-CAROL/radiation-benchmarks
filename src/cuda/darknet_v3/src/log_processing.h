@@ -77,6 +77,14 @@ struct Log {
 		log_error_count(error_count);
 #endif
 	}
+
+	static std::string get_log_path(){
+		std::string ret = "";
+#ifdef LOGS
+		ret = get_log_file_name()
+#endif
+		return ret;
+	}
 };
 
 #endif /* LOG_PROCESSING_H_ */

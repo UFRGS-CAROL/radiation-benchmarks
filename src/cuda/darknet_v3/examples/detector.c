@@ -783,7 +783,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 	int* nboxes_array = malloc(sizeof(int) * smx_redundancy);
 	//start the process
 	for (iteration = 0; iteration < max_it; iteration++) {
-		int last_errors = 0;
+//		int last_errors = 0;
 		for (img = 0; img < plist_size; img++) {
 
 			layer l = net_array[0]->layers[net_array[0]->n - 1];
@@ -819,11 +819,12 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 					im.w, im.h);
 			double end = what_time_is_it_now();
 
+			/*
 			if (last_errors && curr_err) {
 				printf(
 						"IT IS LESS PROBLABLE THAT DARKNET GIVE US TWO ERRORS SEQUENTIALY, ABORTING\n");
 				exit(-1);
-			}
+			}*/
 			for (inet = 0; inet < smx_redundancy; inet++) {
 				//			if ((iteration * img) % PRINT_INTERVAL == 0) {
 				printf(
@@ -834,7 +835,7 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 
 				free_detections(dets_array[inet], nboxes_array[inet]);
 			}
-			last_errors = curr_err;
+//			last_errors = curr_err;
 		}
 	}
 
