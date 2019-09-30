@@ -13,7 +13,9 @@
 struct Parameters {
 	int boxes, generate;
 	std::string input_distances, input_charges, output_gold;
-	int iterations, verbose, fault_injection, nstreams, gpu_check;
+	int iterations, fault_injection, nstreams;
+	bool verbose;
+	bool gpu_check;
 	std::string test_precision_description;
 
 	Parameters();
@@ -23,6 +25,14 @@ struct Parameters {
 	virtual ~Parameters();
 
 	void usage(int argc, char** argv);
+	friend std::ostream& operator<<(std::ostream& os, const Parameters& p);
+
+private:
+	void del_arg(int argc, char **argv, int index);
+	int find_int_arg(int argc, char **argv, std::string arg, int def);
+	std::string find_char_arg(int argc, char **argv, std::string arg,
+			std::string def);
+	bool find_arg(int argc, char** argv, std::string arg);
 };
 
 #endif /* PARAMETERS_H_ */

@@ -9,103 +9,67 @@
 #include <iostream>
 
 #include "Parameters.h"
+#include "common.h"
 
 // Helper functions
-#include "helper_cuda.h"
-#include "helper_string.h"
+//#include "helper_cuda.h"
+//#include "helper_string.h"
 
 Parameters::Parameters(int argc, char** argv) {
 	if (argc < 2) {
 		usage(argc, argv);
-		exit(EXIT_FAILURE);
+		error("");
 	}
 
-	generate = 0;
-	iterations = 1000000;
-	nstreams = 1;
-	fault_injection = 0;
-	verbose = 0;
-	gpu_check = 0;
+	this->boxes = this->find_int_arg(argc, argv, "-boxes", 10);
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "boxes")) {
-		boxes = getCmdLineArgumentInt(argc, (const char **) argv, "boxes");
-
-		if (boxes <= 0) {
-			printf("Invalid input size given on the command-line: %d\n", boxes);
-			exit(EXIT_FAILURE);
-		}
-	} else {
-		usage(argc, argv);
-		exit(EXIT_FAILURE);
+	if (this->boxes <= 0) {
+		error(
+				"Invalid input size given on the command-line: "
+						+ std::to_string(this->boxes));
 	}
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "input_distances")) {
-		char **str_ptr;
-		getCmdLineArgumentString(argc, (const char **) argv, "input_distances",
-				str_ptr);
-		this->input_distances = std::string(*str_ptr);
-	} else {
-		this->input_distances = "lava_" + this->test_precision_description
-				+ "_distances_" + std::to_string(this->boxes);
-		std::cout << "Using default input_distances path: "
-				<< this->input_distances << std::endl;
+	this->input_distances = "lava_" + this->test_precision_description
+			+ "_distances_" + std::to_string(this->boxes);
+	this->input_distances = this->find_char_arg(argc, argv, "-input_distances",
+			this->input_distances);
 
-	}
+	this->input_charges = "lava_" + this->test_precision_description
+			+ "_charges_" + std::to_string(boxes);
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "input_charges")) {
-		char **str_ptr;
+	this->input_charges = this->find_char_arg(argc, argv, "-input_charges",
+			this->input_charges);
 
-		getCmdLineArgumentString(argc, (const char **) argv, "input_charges",
-				str_ptr);
-		this->input_charges = std::string(*str_ptr);
-	} else {
-		this->input_charges = "lava_" + this->test_precision_description
-				+ "_charges_" + std::to_string(boxes);
-		std::cout << "Using default input_charges path: " << this->input_charges
-				<< std::endl;
-	}
+	this->output_gold = "lava_" + this->test_precision_description + "_gold_"
+			+ std::to_string(boxes);
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "output_gold")) {
-		char **str_ptr;
+	this->output_gold = this->find_char_arg(argc, argv, "-output_gold",
+			this->output_gold);
 
-		getCmdLineArgumentString(argc, (const char **) argv, "output_gold",
-				str_ptr);
-		this->output_gold = std::string(*str_ptr);
-	} else {
-		this->output_gold = "lava_" + this->test_precision_description
-				+ "_gold_" + std::to_string(boxes);
-		std::cout << "Using default output_gold path: " << output_gold
-				<< std::endl;
-	}
+	this->iterations = this->find_int_arg(argc, argv, "-iterations", 1);
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "iterations")) {
-		iterations = getCmdLineArgumentInt(argc, (const char **) argv,
-				"iterations");
-	}
+	this->nstreams = this->find_int_arg(argc, argv, "-streams", 1);
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "streams")) {
-		nstreams = getCmdLineArgumentInt(argc, (const char **) argv, "streams");
-	}
+	this->verbose = this->find_arg(argc, argv, "-verbose");
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "verbose")) {
-		verbose = 1;
-	}
+	this->fault_injection = this->find_arg(argc, argv, "-debug");
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "debug")) {
+	if (this->fault_injection) {
 		fault_injection = 1;
 		std::cout << ("!! Will be injected an input error\n");
 	}
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "generate")) {
-		generate = 1;
-		iterations = 1;
+	this->generate = this->find_arg(argc, argv, "-generate");
+
+	if (this->generate) {
+		this->iterations = 1;
 		std::cout
 				<< ">> Output will be written to file. Only stream #0 output will be considered.\n";
 	}
 
-	if (checkCmdLineFlag(argc, (const char **) argv, "gpu_check")) {
-		gpu_check = 1;
-		std::cout << ">>Output will be checked in gpu.\n";
+	this->gpu_check = this->find_arg(argc, argv, "-gpu_check");
+	if(this->gpu_check){
+		error("Function not implemented");
 	}
 
 }
@@ -115,7 +79,71 @@ Parameters::~Parameters() {
 }
 
 void Parameters::usage(int argc, char** argv) {
-	printf(
-			"Usage: %s -boxes=N [-generate] [-input_distances=<path>] [-input_charges=<path>] [-output_gold=<path>] [-iterations=N] [-streams=N] [-debug] [-verbose]\n",
-			argv[0]);
+	printf("Usage: %s -boxes=N [-generate] [-input_distances=<path>] "
+			"[-input_charges=<path>] [-output_gold=<path>] [-iterations=N] "
+			"[-streams=N] [-debug] [-verbose]\n", argv[0]);
+}
+
+void Parameters::del_arg(int argc, char **argv, int index) {
+	int i;
+	for (i = index; i < argc - 1; ++i)
+		argv[i] = argv[i + 1];
+	argv[i] = 0;
+}
+
+int Parameters::find_int_arg(int argc, char **argv, std::string arg, int def) {
+	int i;
+	for (i = 0; i < argc - 1; ++i) {
+		if (!argv[i])
+			continue;
+		if (std::string(argv[i]) == arg) {
+			def = atoi(argv[i + 1]);
+			del_arg(argc, argv, i);
+			del_arg(argc, argv, i);
+			break;
+		}
+	}
+	return def;
+}
+
+std::string Parameters::find_char_arg(int argc, char **argv, std::string arg,
+		std::string def) {
+	int i;
+	for (i = 0; i < argc - 1; ++i) {
+		if (!argv[i])
+			continue;
+
+		if (std::string(argv[i]) == arg) {
+			def = std::string(argv[i + 1]);
+			del_arg(argc, argv, i);
+			del_arg(argc, argv, i);
+			break;
+		}
+	}
+	return def;
+}
+
+bool Parameters::find_arg(int argc, char** argv, std::string arg) {
+	int i;
+	for (i = 0; i < argc; ++i) {
+		if (!argv[i])
+			continue;
+		if (std::string(argv[i]) == arg) {
+			del_arg(argc, argv, i);
+			return true;
+		}
+	}
+	return false;
+}
+
+std::ostream& operator<<(std::ostream& os, const Parameters& p){
+	os << "Boxes " << p.boxes << std::endl;
+	os << "Streams " << p.nstreams << std::endl;
+	os << "Fault injection " << p.fault_injection << std::endl;
+	os << "Verbose " << p.verbose << std::endl;
+	os << "Iterations " << p.iterations << std::endl;
+	os << "Input distances " << p.input_distances << std::endl;
+	os << "Input charges " << p.input_charges << std::endl;
+	os << "Output gold " << p.output_gold;
+	return os;
 }

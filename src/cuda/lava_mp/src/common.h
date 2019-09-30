@@ -25,4 +25,8 @@
 #define DOT(A,B) ((A.x)*(B.x)+(A.y)*(B.y)+(A.z)*(B.z))
 #define MAX_LOGGED_ERRORS_PER_STREAM 100
 
+static void error(std::string err) {
+	throw std::runtime_error("ERROR:" + err);
+}
+
 #endif /* COMMON_H_ */

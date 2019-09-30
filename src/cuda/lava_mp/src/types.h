@@ -8,6 +8,10 @@
 #ifndef THREE_VECTOR_H_
 #define THREE_VECTOR_H_
 
+
+#include <vector>
+#include "DeviceVector.h"
+
 template<typename tested_type>
 struct THREE_VECTOR {
 	tested_type x, y, z;
@@ -25,6 +29,25 @@ struct FOUR_VECTOR {
 	inline bool operator!=(const FOUR_VECTOR& rhs) {
 		return !(*this == rhs);
 	}
+
+	friend std::ofstream& operator<<(std::ofstream& f, const FOUR_VECTOR& fv) {
+		f << fv.v;
+		f << fv.x;
+		f << fv.y;
+		f << fv.y;
+		f << fv.z;
+		return f;
+	}
+
+	friend std::ifstream& operator>>(std::ifstream& f, const FOUR_VECTOR& fv) {
+		f >> fv.v;
+		f >> fv.x;
+		f >> fv.y;
+		f >> fv.y;
+		f >> fv.z;
+		return f;
+	}
+
 };
 
 template<typename tested_type>
@@ -68,6 +91,16 @@ struct box_str {
 	}
 	__host__ __device__ inline bool operator!=(const box_str& rhs) {
 		return !(*this == rhs);
+	}
+};
+
+
+template<typename T>
+struct VectorOfDeviceVector{
+	std::vector<rad::DeviceVector<T>> data_;
+
+	rad::DeviceVector& operator[](const int i){
+		return this->data_[i];
 	}
 };
 

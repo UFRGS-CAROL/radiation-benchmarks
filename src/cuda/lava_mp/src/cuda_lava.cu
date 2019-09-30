@@ -6,7 +6,8 @@
 //  2014-2018 Caio Lunardi
 //  2018 Fernando Fernandes dos Santos
 
-#include <stdio.h>
+//#include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <stdbool.h>
@@ -42,6 +43,7 @@
 #include "common.h"
 #include "nondmr_kernels.h"
 
+#include <fstream>
 //=============================================================================
 //	DEFINE TEST TYPE WITH INTRINSIC TYPES
 //=============================================================================
@@ -72,247 +74,190 @@ typedef half tested_type;
 
 template<typename tested_type>
 void generateInput(dim_str dim_cpu, const std::string& input_distances,
-		FOUR_VECTOR<tested_type> **rv_cpu, const std::string& input_charges,
-		tested_type **qv_cpu) {
+		std::vector<FOUR_VECTOR<tested_type>>& rv_cpu,
+		const std::string& input_charges, std::vector<tested_type>& qv_cpu) {
 	// random generator seed set to random value - time in this case
-	FILE *fp;
-	int i;
-
-	printf("Generating input...\n");
+	std::cout << ("Generating input...\n");
 
 	srand(time(NULL));
 
-	// input (distances)
-	if ((fp = fopen(input_distances.c_str(), "wb")) == 0) {
-		printf("The file 'input_distances' was not opened\n");
-		exit(EXIT_FAILURE);
-	}
-	*rv_cpu = (FOUR_VECTOR<tested_type>*) malloc(dim_cpu.space_mem);
-	for (i = 0; i < dim_cpu.space_elem; i = i + 1) {
-		// get a number in the range 0.1 - 1.0
-		(*rv_cpu)[i].v = (tested_type) (rand() % 10 + 1) / tested_type(10.0);
-		fwrite(&((*rv_cpu)[i].v), 1, sizeof(tested_type), fp);
-		// get a number in the range 0.1 - 1.0
-		(*rv_cpu)[i].x = (tested_type) (rand() % 10 + 1) / tested_type(10.0);
-		fwrite(&((*rv_cpu)[i].x), 1, sizeof(tested_type), fp);
-		// get a number in the range 0.1 - 1.0
-		(*rv_cpu)[i].y = (tested_type) (rand() % 10 + 1) / tested_type(10.0);
-		fwrite(&((*rv_cpu)[i].y), 1, sizeof(tested_type), fp);
-		// get a number in the range 0.1 - 1.0
-		(*rv_cpu)[i].z = (tested_type) (rand() % 10 + 1) / tested_type(10.0);
-		fwrite(&((*rv_cpu)[i].z), 1, sizeof(tested_type), fp);
-	}
-	fclose(fp);
+	std::ofstream input_distances_file(input_distances, std::ofstream::binary);
 
-	// input (charge)
-	if ((fp = fopen(input_charges.c_str(), "wb")) == 0) {
-		printf("The file 'input_charges' was not opened\n");
-		exit(EXIT_FAILURE);
+	if (input_distances_file.good()) {
+		rv_cpu.resize(dim_cpu.space_elem);
+
+		for (auto& rv_cpu_i : rv_cpu) {
+			// get a number in the range 0.1 - 1.0
+			rv_cpu_i.v = tested_type((rand() % 10 + 1) / tested_type(10.0));
+			rv_cpu_i.x = tested_type((rand() % 10 + 1) / tested_type(10.0));
+			rv_cpu_i.y = tested_type((rand() % 10 + 1) / tested_type(10.0));
+			rv_cpu_i.z = tested_type((rand() % 10 + 1) / tested_type(10.0));
+
+			//operator already overloaded
+			input_distances_file << rv_cpu_i;
+		}
+		input_distances_file.close();
+
+	} else {
+		error("The file 'input_distances' was not opened\n");
 	}
 
-	*qv_cpu = (tested_type*) malloc(dim_cpu.space_mem2);
-	for (i = 0; i < dim_cpu.space_elem; i = i + 1) {
-		// get a number in the range 0.1 - 1.0
-		(*qv_cpu)[i] = (tested_type) (rand() % 10 + 1) / tested_type(10.0);
-		fwrite(&((*qv_cpu)[i]), 1, sizeof(tested_type), fp);
+	std::ofstream input_charges_file(input_charges, std::ofstream::binary);
+	if (input_charges_file.good()) {
+
+		qv_cpu.resize(dim_cpu.space_elem);
+		for (auto& qv_cpu_i : qv_cpu) {
+			// get a number in the range 0.1 - 1.0
+			qv_cpu_i = tested_type((rand() % 10 + 1) / tested_type(10.0));
+
+			input_charges_file << qv_cpu_i;
+		}
+		input_charges_file.close();
+	} else {
+		error("The file 'input_charges' was not opened\n");
 	}
-	fclose(fp);
 }
 
 template<typename tested_type>
 void readInput(dim_str dim_cpu, const std::string& input_distances,
-		FOUR_VECTOR<tested_type> **rv_cpu, const std::string& input_charges,
-		tested_type **qv_cpu, int fault_injection) {
-	FILE *fp;
-	int i;
-	size_t return_value[4];
-	// size_t return_value;
+		std::vector<FOUR_VECTOR<tested_type>>& rv_cpu,
+		const std::string& input_charges, std::vector<tested_type>& qv_cpu,
+		int fault_injection) {
 
-	// input (distances)
-	if ((fp = fopen(input_distances.c_str(), "rb")) == 0) {
-		printf("The file 'input_distances' was not opened\n");
-		exit(EXIT_FAILURE);
-	}
+	std::ifstream input_distances_file(input_distances, std::ifstream::binary);
 
-	*rv_cpu = (FOUR_VECTOR<tested_type>*) malloc(dim_cpu.space_mem);
-	if (*rv_cpu == NULL) {
-		printf("error rv_cpu malloc\n");
-#ifdef LOGS
-		log_error_detail((char *)"error rv_cpu malloc"); end_log_file();
-#endif
-		exit(1);
-	}
+	if (input_distances_file.good()) {
+		rv_cpu.resize(dim_cpu.space_elem);
 
-	// return_value = fread(*rv_cpu, sizeof(FOUR_VECTOR), dim_cpu.space_elem, fp);
-	// if (return_value != dim_cpu.space_elem) {
-	// 	printf("error reading rv_cpu from file\n");
-	// 	#ifdef LOGS
-	// 		log_error_detail((char *)"error reading rv_cpu from file"); end_log_file();
-	// 	#endif
-	// 	exit(1);
-	// }
+		for (auto& rv_cpu_i : rv_cpu) {
+			bool return_value = !(input_distances_file >> rv_cpu_i);
+			if (return_value) {
+				error("error reading rv_cpu from file");
+			}
 
-	for (i = 0; i < dim_cpu.space_elem; i = i + 1) {
-		return_value[0] = fread(&((*rv_cpu)[i].v), 1, sizeof(tested_type), fp);
-		return_value[1] = fread(&((*rv_cpu)[i].x), 1, sizeof(tested_type), fp);
-		return_value[2] = fread(&((*rv_cpu)[i].y), 1, sizeof(tested_type), fp);
-		return_value[3] = fread(&((*rv_cpu)[i].z), 1, sizeof(tested_type), fp);
-		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0
-				|| return_value[3] == 0) {
-			printf("error reading rv_cpu from file\n");
-#ifdef LOGS
-			log_error_detail((char *)"error reading rv_cpu from file"); end_log_file();
-#endif
-			exit(1);
 		}
-	}
-	fclose(fp);
-
-	// input (charge)
-	if ((fp = fopen(input_charges.c_str(), "rb")) == 0) {
-		printf("The file 'input_charges' was not opened\n");
-		exit(EXIT_FAILURE);
+		input_distances_file.close();
+	} else {
+		error("The file 'input_distances' was not opened\n");
 	}
 
-	*qv_cpu = (tested_type*) malloc(dim_cpu.space_mem2);
-	if (*qv_cpu == NULL) {
-		printf("error qv_cpu malloc\n");
-#ifdef LOGS
-		log_error_detail((char *)"error qv_cpu malloc"); end_log_file();
-#endif
-		exit(1);
-	}
+	std::ifstream input_charges_file(input_charges, std::ifstream::binary);
 
-	// return_value = fread(*qv_cpu, sizeof(tested_type), dim_cpu.space_elem, fp);
-	// if (return_value != dim_cpu.space_elem) {
-	// 	printf("error reading qv_cpu from file\n");
-	// 	#ifdef LOGS
-	// 		log_error_detail((char *)"error reading qv_cpu from file"); end_log_file();
-	// 	#endif
-	// 	exit(1);
-	// }
+	if (input_charges_file.good()) {
+		qv_cpu.resize(dim_cpu.space_elem);
 
-	for (i = 0; i < dim_cpu.space_elem; i = i + 1) {
-		return_value[0] = fread(&((*qv_cpu)[i]), 1, sizeof(tested_type), fp);
-		if (return_value[0] == 0) {
-			printf("error reading qv_cpu from file\n");
-#ifdef LOGS
-			log_error_detail((char *)"error reading qv_cpu from file"); end_log_file();
-#endif
-			exit(1);
+		for (auto& qv_cpu_i : qv_cpu) {
+			bool return_value = !(input_charges_file >> qv_cpu_i);
+			if (return_value) {
+				error("error reading qv_cpu from file\n");
+			}
 		}
+		input_charges_file.close();
+	} else {
+		error("The file 'input_charges' was not opened\n");
 	}
-	fclose(fp);
-
 	// =============== Fault injection
 	if (fault_injection) {
-		(*qv_cpu)[2] = 0.732637263; // must be in range 0.1 - 1.0
-		printf("!!> Fault injection: qv_cpu[2]=%f\n", (double) (*qv_cpu)[2]);
+		qv_cpu[2] = 0.732637263; // must be in range 0.1 - 1.0
+		std::cout << "!!> Fault injection: qv_cpu[2]= " << qv_cpu[2]
+				<< std::endl;
 	}
 	// ========================
 }
 
 template<typename tested_type>
 void readGold(dim_str dim_cpu, const std::string& output_gold,
-		FOUR_VECTOR<tested_type> *fv_cpu_GOLD) {
-	FILE *fp;
-	size_t return_value[4];
-	// size_t return_value;
-	int i;
+		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu_GOLD) {
 
-	if ((fp = fopen(output_gold.c_str(), "rb")) == 0) {
-		printf("The file 'output_forces' was not opened\n");
-		exit(EXIT_FAILURE);
-	}
+	std::ifstream gold_file(output_gold, std::ifstream::binary);
 
-	for (i = 0; i < dim_cpu.space_elem; i = i + 1) {
-		return_value[0] = fread(&(fv_cpu_GOLD[i].v), 1, sizeof(tested_type),
-				fp);
-		return_value[1] = fread(&(fv_cpu_GOLD[i].x), 1, sizeof(tested_type),
-				fp);
-		return_value[2] = fread(&(fv_cpu_GOLD[i].y), 1, sizeof(tested_type),
-				fp);
-		return_value[3] = fread(&(fv_cpu_GOLD[i].z), 1, sizeof(tested_type),
-				fp);
-		if (return_value[0] == 0 || return_value[1] == 0 || return_value[2] == 0
-				|| return_value[3] == 0) {
-			printf("error reading rv_cpu from file\n");
-#ifdef LOGS
-			log_error_detail((char *)"error reading rv_cpu from file"); end_log_file();
-#endif
-			exit(1);
+	if (gold_file.good()) {
+		for (auto& gold_i : fv_cpu_GOLD) {
+			bool return_value = !(gold_file >> gold_i);
+			if (return_value) {
+				error("error reading rv_cpu from file\n");
+			}
 		}
+
+		gold_file.close();
+	} else {
+		error("The file 'output_forces' was not opened\n");
 	}
-	fclose(fp);
 }
 
 template<typename tested_type>
 void writeGold(dim_str dim_cpu, const std::string& output_gold,
-		FOUR_VECTOR<tested_type> **fv_cpu) {
-	FILE *fp;
-	int i;
+		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu) {
 
-	if ((fp = fopen(output_gold.c_str(), "wb")) == 0) {
-		printf("The file 'output_forces' was not opened\n");
-		exit(EXIT_FAILURE);
-	}
+	std::ofstream gold_file(output_gold, std::ifstream::binary);
 	int number_zeros = 0;
-	for (i = 0; i < dim_cpu.space_elem; i = i + 1) {
-		if ((*fv_cpu)[i].v == tested_type(0.0))
-			number_zeros++;
-		if ((*fv_cpu)[i].x == tested_type(0.0))
-			number_zeros++;
-		if ((*fv_cpu)[i].y == tested_type(0.0))
-			number_zeros++;
-		if ((*fv_cpu)[i].z == tested_type(0.0))
-			number_zeros++;
 
-		fwrite(&((*fv_cpu)[i].v), 1, sizeof(tested_type), fp);
-		fwrite(&((*fv_cpu)[i].x), 1, sizeof(tested_type), fp);
-		fwrite(&((*fv_cpu)[i].y), 1, sizeof(tested_type), fp);
-		fwrite(&((*fv_cpu)[i].z), 1, sizeof(tested_type), fp);
+	if (gold_file.good()) {
+		for (auto& fv_cpu_i : fv_cpu) {
+
+			if (fv_cpu_i.v == tested_type(0.0))
+				number_zeros++;
+			if (fv_cpu_i.x == tested_type(0.0))
+				number_zeros++;
+			if (fv_cpu_i.y == tested_type(0.0))
+				number_zeros++;
+			if (fv_cpu_i.z == tested_type(0.0))
+				number_zeros++;
+
+			bool return_value = !(gold_file << gold_i);
+			if (return_value) {
+				error("error writing rv_cpu from file\n");
+			}
+		}
+
+		gold_file.close();
+	} else {
+		error("The file 'output_forces' was not opened\n");
 	}
-	fclose(fp);
+
+	std::cout << "Number of zeros " << number_zeros << std::endl;
 }
 
 template<typename tested_type>
-void gpu_memory_setup(int nstreams, bool gpu_check, dim_str dim_cpu,
-		box_str **d_box_gpu, box_str *box_cpu,
-		FOUR_VECTOR<tested_type> **d_rv_gpu, FOUR_VECTOR<tested_type> *rv_cpu,
-		tested_type **d_qv_gpu, tested_type *qv_cpu,
-		FOUR_VECTOR<tested_type> **d_fv_gpu,
-		FOUR_VECTOR<tested_type> *d_fv_gold_gpu,
-		FOUR_VECTOR<tested_type> *fv_cpu_GOLD) {
+void gpu_memory_setup(const Parameters& parameters, dim_str dim_cpu,
+		VectorOfDeviceVector<box_str>& d_box_gpu, std::vector<box_str>& box_cpu,
+		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_rv_gpu,
+		std::vector<FOUR_VECTOR < tested_type>& rv_cpu,
+		VectorOfDeviceVector<tested_type>& d_qv_gpu,
+		std::vector<tested_type>& qv_cpu,
+		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gpu,
+		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gold_gpu,
+		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu_GOLD) {
 
-	for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-		//=====================================================================
-		//	GPU SETUP MEMORY
-		//=====================================================================
-
-		//==================================================
-		//	boxes
-		//==================================================
-		rad::checkFrameworkErrors(
-				cudaMalloc((void **) &(d_box_gpu[streamIdx]), dim_cpu.box_mem));
-		//==================================================
-		//	rv
-		//==================================================
-		rad::checkFrameworkErrors(
-				cudaMalloc((void **) &(d_rv_gpu[streamIdx]),
-						dim_cpu.space_mem));
-		//==================================================
-		//	qv
-		//==================================================
-		rad::checkFrameworkErrors(
-				cudaMalloc((void **) &(d_qv_gpu[streamIdx]),
-						dim_cpu.space_mem2));
-
-		//==================================================
-		//	fv
-		//==================================================
-		rad::checkFrameworkErrors(
-				cudaMalloc((void **) &(d_fv_gpu[streamIdx]),
-						dim_cpu.space_mem));
+	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
+//		//=====================================================================
+//		//	GPU SETUP MEMORY
+//		//=====================================================================
+//
+//		//==================================================
+//		//	boxes
+//		//==================================================
+//		rad::checkFrameworkErrors(
+//				cudaMalloc((void **) &(d_box_gpu[streamIdx]), dim_cpu.box_mem));
+//		//==================================================
+//		//	rv
+//		//==================================================
+//		rad::checkFrameworkErrors(
+//				cudaMalloc((void **) &(d_rv_gpu[streamIdx]),
+//						dim_cpu.space_mem));
+//		//==================================================
+//		//	qv
+//		//==================================================
+//		rad::checkFrameworkErrors(
+//				cudaMalloc((void **) &(d_qv_gpu[streamIdx]),
+//						dim_cpu.space_mem2));
+//
+//		//==================================================
+//		//	fv
+//		//==================================================
+//		rad::checkFrameworkErrors(
+//				cudaMalloc((void **) &(d_fv_gpu[streamIdx]),
+//						dim_cpu.space_mem));
 
 		//=====================================================================
 		//	GPU MEMORY			COPY
@@ -322,23 +267,26 @@ void gpu_memory_setup(int nstreams, bool gpu_check, dim_str dim_cpu,
 		//	boxes
 		//==================================================
 
-		rad::checkFrameworkErrors(
-				cudaMemcpy(d_box_gpu[streamIdx], box_cpu, dim_cpu.box_mem,
-						cudaMemcpyHostToDevice));
+//		rad::checkFrameworkErrors(
+//				cudaMemcpy(d_box_gpu[streamIdx], box_cpu, dim_cpu.box_mem,
+//						cudaMemcpyHostToDevice));
+		d_box_gpu[streamIdx] = box_cpu;
+
 		//==================================================
 		//	rv
 		//==================================================
+//		rad::checkFrameworkErrors(
+//				cudaMemcpy(d_rv_gpu[streamIdx], rv_cpu, dim_cpu.space_mem,
+//						cudaMemcpyHostToDevice));
+		d_rv_gpu[streamIdx] = rv_cpu;
 
-		rad::checkFrameworkErrors(
-				cudaMemcpy(d_rv_gpu[streamIdx], rv_cpu, dim_cpu.space_mem,
-						cudaMemcpyHostToDevice));
 		//==================================================
 		//	qv
 		//==================================================
-
-		rad::checkFrameworkErrors(
-				cudaMemcpy(d_qv_gpu[streamIdx], qv_cpu, dim_cpu.space_mem2,
-						cudaMemcpyHostToDevice));
+//		rad::checkFrameworkErrors(
+//				cudaMemcpy(d_qv_gpu[streamIdx], qv_cpu, dim_cpu.space_mem2,
+//						cudaMemcpyHostToDevice));
+		d_qv_gpu[streamIdx] = qv_cpu;
 		//==================================================
 		//	fv
 		//==================================================
@@ -350,76 +298,79 @@ void gpu_memory_setup(int nstreams, bool gpu_check, dim_str dim_cpu,
 	//==================================================
 	//	fv_gold for GoldChkKernel
 	//==================================================
-	if (gpu_check) {
-		rad::checkFrameworkErrors(
-				cudaMalloc((void**) &d_fv_gold_gpu, dim_cpu.space_mem));
-		rad::checkFrameworkErrors(
-				cudaMemcpy(d_fv_gold_gpu, fv_cpu_GOLD, dim_cpu.space_mem2,
-						cudaMemcpyHostToDevice));
+	if (parameters.gpu_check) {
+//		rad::checkFrameworkErrors(
+//				cudaMalloc((void**) &d_fv_gold_gpu, dim_cpu.space_mem));
+//		rad::checkFrameworkErrors(
+//				cudaMemcpy(d_fv_gold_gpu, fv_cpu_GOLD, dim_cpu.space_mem2,
+//						cudaMemcpyHostToDevice));
+		d_fv_gold_gpu = fv_cpu_GOLD;
 	}
 }
 
 template<typename tested_type>
-void gpu_memory_unset(int nstreams, int gpu_check, box_str **d_box_gpu,
-		FOUR_VECTOR<tested_type> **d_rv_gpu, tested_type **d_qv_gpu,
-		FOUR_VECTOR<tested_type> **d_fv_gpu,
-		FOUR_VECTOR<tested_type> *d_fv_gold_gpu) {
+void gpu_memory_unset(int nstreams, int gpu_check,
+		VectorOfDeviceVector<box_str>& d_box_gpu,
+		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_rv_gpu,
+		VectorOfDeviceVector<tested_type>& d_qv_gpu,
+		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gpu,
+		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gold_gpu) {
 
 	//=====================================================================
 	//	GPU MEMORY DEALLOCATION
 	//=====================================================================
-	for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-		cudaFree(d_rv_gpu[streamIdx]);
-		cudaFree(d_qv_gpu[streamIdx]);
-		cudaFree(d_fv_gpu[streamIdx]);
-		cudaFree(d_box_gpu[streamIdx]);
-	}
-	if (gpu_check) {
-		cudaFree(d_fv_gold_gpu);
-	}
+//	for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+//		cudaFree(d_rv_gpu[streamIdx]);
+//		cudaFree(d_qv_gpu[streamIdx]);
+//		cudaFree(d_fv_gpu[streamIdx]);
+//		cudaFree(d_box_gpu[streamIdx]);
+//	}
+//	if (gpu_check) {
+//		cudaFree(d_fv_gold_gpu);
+//	}
 }
 
 // Returns true if no errors are found. False if otherwise.
 // Set votedOutput pointer to retrieve the voted matrix
 template<typename tested_type>
 bool checkOutputErrors(int verbose, dim_str dim_cpu, int streamIdx,
-		FOUR_VECTOR<tested_type>* fv_cpu,
-		FOUR_VECTOR<tested_type>* fv_cpu_GOLD) {
+		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu,
+		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu_GOLD) {
 	int host_errors = 0;
 
-#pragma omp parallel for shared(host_errors)
-	for (int i = 0; i < dim_cpu.space_elem; i = i + 1) {
-		FOUR_VECTOR<tested_type> valGold = fv_cpu_GOLD[i];
-		FOUR_VECTOR<tested_type> valOutput = fv_cpu[i];
-		if (valGold != valOutput) {
-#pragma omp critical
-			{
-				char error_detail[500];
-				host_errors++;
-
-				snprintf(error_detail, 500,
-						"stream: %d, p: [%d], v_r: %1.20e, v_e: %1.20e, x_r: %1.20e, x_e: %1.20e, y_r: %1.20e, y_e: %1.20e, z_r: %1.20e, z_e: %1.20e\n",
-						streamIdx, i, (double) valOutput.v, (double) valGold.v,
-						(double) valOutput.x, (double) valGold.x,
-						(double) valOutput.y, (double) valGold.y,
-						(double) valOutput.z, (double) valGold.z);
-				if (verbose && (host_errors < 10))
-					printf("%s\n", error_detail);
-#ifdef LOGS
-				if ((host_errors<MAX_LOGGED_ERRORS_PER_STREAM))
-				log_error_detail(error_detail);
-#endif
-			}
-		}
-	}
-
-	// printf("numErrors:%d", host_errors);
-
-#ifdef LOGS
-	log_error_count(host_errors);
-#endif
-	if (host_errors != 0)
-		printf("#");
+//#pragma omp parallel for shared(host_errors)
+//	for (int i = 0; i < dim_cpu.space_elem; i = i + 1) {
+//		FOUR_VECTOR<tested_type> valGold = fv_cpu_GOLD[i];
+//		FOUR_VECTOR<tested_type> valOutput = fv_cpu[i];
+//		if (valGold != valOutput) {
+//#pragma omp critical
+//			{
+//				char error_detail[500];
+//				host_errors++;
+//
+//				snprintf(error_detail, 500,
+//						"stream: %d, p: [%d], v_r: %1.20e, v_e: %1.20e, x_r: %1.20e, x_e: %1.20e, y_r: %1.20e, y_e: %1.20e, z_r: %1.20e, z_e: %1.20e\n",
+//						streamIdx, i, (double) valOutput.v, (double) valGold.v,
+//						(double) valOutput.x, (double) valGold.x,
+//						(double) valOutput.y, (double) valGold.y,
+//						(double) valOutput.z, (double) valGold.z);
+//				if (verbose && (host_errors < 10))
+//					printf("%s\n", error_detail);
+//#ifdef LOGS
+//				if ((host_errors<MAX_LOGGED_ERRORS_PER_STREAM))
+//				log_error_detail(error_detail);
+//#endif
+//			}
+//		}
+//	}
+//
+//	// printf("numErrors:%d", host_errors);
+//
+//#ifdef LOGS
+//	log_error_count(host_errors);
+//#endif
+//	if (host_errors != 0)
+//		printf("#");
 
 	return (host_errors == 0);
 }
@@ -438,10 +389,10 @@ void setup_execution(const Parameters& parameters, Log& log) {
 	// system memory
 	par_str<tested_type> par_cpu;
 	dim_str dim_cpu;
-	box_str* box_cpu;
-	FOUR_VECTOR<tested_type>* rv_cpu;
-	tested_type* qv_cpu;
-	FOUR_VECTOR<tested_type>* fv_cpu_GOLD;
+	std::vector<box_str> box_cpu;
+	std::vector<FOUR_VECTOR<tested_type>> rv_cpu;
+	std::vector<tested_type> qv_cpu;
+	std::vector<FOUR_VECTOR<tested_type>> fv_cpu_GOLD;
 	int nh;
 //	int nstreams, streamIdx;
 
@@ -464,7 +415,7 @@ void setup_execution(const Parameters& parameters, Log& log) {
 			* dim_cpu.boxes1d_arg;
 	// how many particles space has in each direction
 	dim_cpu.space_elem = dim_cpu.number_boxes * NUMBER_PAR_PER_BOX;
-	dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR<tested_type> );
+	dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR<tested_type>);
 	dim_cpu.space_mem2 = dim_cpu.space_elem * sizeof(tested_type);
 	// box array
 	dim_cpu.box_mem = dim_cpu.number_boxes * sizeof(box_str);
@@ -473,26 +424,29 @@ void setup_execution(const Parameters& parameters, Log& log) {
 	//=====================================================================
 	// prepare host memory to receive kernel output
 	// output (forces)
-	FOUR_VECTOR<tested_type>* fv_cpu[parameters.nstreams];
+	std::vector<FOUR_VECTOR<tested_type>> fv_cpu[parameters.nstreams];
+
 	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-		fv_cpu[streamIdx] = (FOUR_VECTOR<tested_type>*) malloc(
-				dim_cpu.space_mem);
-		if (fv_cpu[streamIdx] == NULL) {
-			printf("error fv_cpu malloc\n");
-#ifdef LOGS
-			if (!parameters.generate) log_error_detail((char *)"error fv_cpu malloc"); end_log_file();
-#endif
-			exit(1);
-		}
+//		fv_cpu[streamIdx] = (FOUR_VECTOR<tested_type>*) malloc(
+//				dim_cpu.space_mem);
+//		if (fv_cpu[streamIdx] == NULL) {
+//			printf("error fv_cpu malloc\n");
+//#ifdef LOGS
+//			if (!parameters.generate) log_error_detail((char *)"error fv_cpu malloc"); end_log_file();
+//#endif
+//			exit(1);
+//		}
+		fv_cpu[streamIdx].resize(dim_cpu.space_elem);
 	}
-	fv_cpu_GOLD = (FOUR_VECTOR<tested_type>*) (malloc(dim_cpu.space_mem));
-	if (fv_cpu_GOLD == NULL) {
-		printf("error fv_cpu_GOLD malloc\n");
-#ifdef LOGS
-		log_error_detail((char *)"error fv_cpu_GOLD malloc"); end_log_file();
-#endif
-		exit(1);
-	}
+
+	fv_cpu_GOLD.resize(dim_cpu.space_elem);
+//	if (fv_cpu_GOLD == NULL) {
+//		printf("error fv_cpu_GOLD malloc\n");
+//#ifdef LOGS
+//		log_error_detail((char *)"error fv_cpu_GOLD malloc"); end_log_file();
+//#endif
+//		exit(1);
+//	}
 	//=====================================================================
 	//	BOX
 	//=====================================================================
@@ -606,15 +560,9 @@ void setup_execution(const Parameters& parameters, Log& log) {
 	//=====================================================================
 	//	GPU MEMORY SETUP
 	//=====================================================================
-	gpu_memory_setup(parameters.nstreams, parameters.gpu_check, dim_cpu,
-			d_box_gpu, box_cpu, d_rv_gpu, rv_cpu, d_qv_gpu, qv_cpu, d_fv_gpu,
-			d_fv_gold_gpu, fv_cpu_GOLD);
-	////////////// GOLD CHECK Kernel /////////////////
-	// dim3 gck_blockSize = dim3(	GOLDCHK_BLOCK_SIZE, 
-	// 	GOLDCHK_BLOCK_SIZE);
-	// dim3 gck_gridSize = dim3(	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE), 
-	// 	k / (GOLDCHK_BLOCK_SIZE * GOLDCHK_TILE_SIZE));
-	// //////////////////////////////////////////////////
+	gpu_memory_setup(parameters, dim_cpu, d_box_gpu, box_cpu, d_rv_gpu, rv_cpu,
+			d_qv_gpu, qv_cpu, d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD);
+
 	//LOOP START
 	for (int loop = 0; loop < parameters.iterations; loop++) {
 
@@ -699,10 +647,9 @@ void setup_execution(const Parameters& parameters, Log& log) {
 					gpu_memory_unset(parameters.nstreams, parameters.gpu_check,
 							d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
 							d_fv_gold_gpu);
-					gpu_memory_setup(parameters.nstreams, parameters.gpu_check,
-							dim_cpu, d_box_gpu, box_cpu, d_rv_gpu, rv_cpu,
-							d_qv_gpu, qv_cpu, d_fv_gpu, d_fv_gold_gpu,
-							fv_cpu_GOLD);
+					gpu_memory_setup(parameters, dim_cpu, d_box_gpu, box_cpu,
+							d_rv_gpu, rv_cpu, d_qv_gpu, qv_cpu, d_fv_gpu,
+							d_fv_gold_gpu, fv_cpu_GOLD);
 				}
 			}
 			if (parameters.verbose)
@@ -775,7 +722,7 @@ int main(int argc, char *argv[]) {
 	//=====================================================================
 	Parameters parameters(argc, argv);
 	Log log;
-
+	std::cout << parameters << std::endl;
 //	char test_info[200];
 //	char test_name[200];
 //	snprintf(test_info, 200,

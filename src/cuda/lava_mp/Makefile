@@ -1,6 +1,7 @@
 CXX=g++
 CXXFLAGS= -std=c++11 -o3  -fPIC -pthread 
 EXEC=cuda_lava
+PRECISION=single
 
 LOGS=0
 BUILDPROFILER=0
@@ -25,7 +26,8 @@ GOLD=$(DATA_DIR)/lava_$(PRECISION)_gold_$(DEF_SIZE)
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
 ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 #ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72] #XavierV
-INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
+#-I$(CUDAPATH)/samples/common/inc 
+INCLUDE= -I./src -I$(CUDAPATH)/include -I../../include -I../common/include
 
 OBJDIR=./obj/
 OBJ= Parameters.o cuda_lava.o
@@ -73,11 +75,11 @@ clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
 generate: $(EXEC)
-	./$(EXEC) -boxes=$(DEF_SIZE) -generate -streams=$(STREAMS) \
-				-iterations=1 -verbose \
-				-input_distances=$(DISTANCES_INPUT) \
-				-input_charges=$(CHARGES_INPUT) 	\
-				-output_gold=$(GOLD)
+	./$(EXEC) -boxes $(DEF_SIZE) -generate -streams $(STREAMS) \
+				-iterations 1 -verbose \
+				-input_distances $(DISTANCES_INPUT) \
+				-input_charges $(CHARGES_INPUT)	\
+				-output_gold $(GOLD)
 
 test: $(RUN_EXEC) generate
 	./$(EXEC) -boxes=$(DEF_SIZE) -streams=$(STREAMS) \
