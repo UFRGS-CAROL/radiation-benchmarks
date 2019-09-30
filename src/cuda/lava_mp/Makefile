@@ -72,15 +72,15 @@ mkdir:
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
-generate: $(TARGET)
-	./$(TARGET) -boxes=$(DEF_SIZE) -generate -streams=$(STREAMS) \
+generate: $(EXEC)
+	./$(EXEC) -boxes=$(DEF_SIZE) -generate -streams=$(STREAMS) \
 				-iterations=1 -verbose \
 				-input_distances=$(DISTANCES_INPUT) \
 				-input_charges=$(CHARGES_INPUT) 	\
 				-output_gold=$(GOLD)
 
 test: $(RUN_EXEC) generate
-	./$(TARGET) -boxes=$(DEF_SIZE) -streams=$(STREAMS) \
+	./$(EXEC) -boxes=$(DEF_SIZE) -streams=$(STREAMS) \
 				-iterations=10 -verbose \
 				-input_distances=$(DISTANCES_INPUT) \
 				-input_charges=$(CHARGES_INPUT) \
