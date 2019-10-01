@@ -194,13 +194,14 @@ void gpu_memory_setup(const Parameters& parameters, dim_str dim_cpu,
 		VectorOfDeviceVector<tested_type>& d_qv_gpu,
 		std::vector<tested_type>& qv_cpu,
 		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gpu,
-		rad::DeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gold_gpu,
-		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu_GOLD) {
+		std::vector<std::vector<FOUR_VECTOR<tested_type>>>& fv_cpu,
+rad::DeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gold_gpu, std::vector<FOUR_VECTOR<tested_type>>& fv_cpu_GOLD) {
 
 	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
 		d_box_gpu[streamIdx] = box_cpu;
 		d_rv_gpu[streamIdx] = rv_cpu;
 		d_qv_gpu[streamIdx] = qv_cpu;
+		d_fv_gpu[streamIdx] = fv_cpu[streamIdx];
 	}
 
 	if (parameters.gpu_check) {
@@ -324,10 +325,10 @@ void setup_execution(const Parameters& parameters, Log& log) {
 	//=====================================================================
 	// prepare host memory to receive kernel output
 	// output (forces)
-	std::vector<FOUR_VECTOR<tested_type>> fv_cpu[parameters.nstreams];
+	std::vector<std::vector<FOUR_VECTOR<tested_type>>>fv_cpu(parameters.nstreams);
 
-	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-		fv_cpu[streamIdx].resize(dim_cpu.space_elem);
+	for (auto& fv_cpu_i : fv_cpu) {
+		fv_cpu_i.resize(dim_cpu.space_elem);
 	}
 
 	fv_cpu_GOLD.resize(dim_cpu.space_elem);
@@ -435,18 +436,8 @@ void setup_execution(const Parameters& parameters, Log& log) {
 	//=====================================================================
 	//	GPU MEMORY SETUP
 	//=====================================================================
-	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-		d_box_gpu[streamIdx] = box_cpu;
-		d_rv_gpu[streamIdx] = rv_cpu;
-		d_qv_gpu[streamIdx] = qv_cpu;
-	}
-
-	if (parameters.gpu_check) {
-		d_fv_gold_gpu = fv_cpu_GOLD;
-	}
-
-//	gpu_memory_setup(parameters, dim_cpu, d_box_gpu, box_cpu, d_rv_gpu, rv_cpu,
-//			d_qv_gpu, qv_cpu, d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD);
+	gpu_memory_setup(parameters, dim_cpu, d_box_gpu, box_cpu, d_rv_gpu, rv_cpu,
+			d_qv_gpu, qv_cpu, d_fv_gpu, fv_cpu, d_fv_gold_gpu, fv_cpu_GOLD);
 
 	//LOOP START
 	for (int loop = 0; loop < parameters.iterations; loop++) {
@@ -490,13 +481,11 @@ void setup_execution(const Parameters& parameters, Log& log) {
 					par_cpu, dim_cpu, d_box_gpu[streamIdx].data(),
 					d_rv_gpu[streamIdx].data(), d_qv_gpu[streamIdx].data(),
 					d_fv_gpu[streamIdx].data());
-			rad::checkFrameworkErrors(cudaPeekAtLastError());
-		}
+			rad::checkFrameworkErrors (cudaPeekAtLastError());}
 
 		for (auto& st : streams) {
 			st.sync();
-			rad::checkFrameworkErrors(cudaPeekAtLastError());
-		}
+			rad::checkFrameworkErrors (cudaPeekAtLastError());}
 
 		log.end_iteration();
 		kernel_time = rad::mysecond() - kernel_time;
@@ -530,7 +519,7 @@ void setup_execution(const Parameters& parameters, Log& log) {
 							d_fv_gold_gpu);
 					gpu_memory_setup(parameters, dim_cpu, d_box_gpu, box_cpu,
 							d_rv_gpu, rv_cpu, d_qv_gpu, qv_cpu, d_fv_gpu,
-							d_fv_gold_gpu, fv_cpu_GOLD);
+							fv_cpu, d_fv_gold_gpu, fv_cpu_GOLD);
 				}
 			}
 			if (parameters.verbose)
