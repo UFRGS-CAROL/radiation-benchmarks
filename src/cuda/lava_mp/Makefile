@@ -81,12 +81,12 @@ generate: $(EXEC)
 				-input_charges $(CHARGES_INPUT)	\
 				-output_gold $(GOLD)
 
-test: $(RUN_EXEC) generate
-	./$(EXEC) -boxes=$(DEF_SIZE) -streams=$(STREAMS) \
-				-iterations=10 -verbose \
-				-input_distances=$(DISTANCES_INPUT) \
-				-input_charges=$(CHARGES_INPUT) \
-				-output_gold=$(GOLD)
+test: $(RUN_EXEC)
+	./$(EXEC) -boxes $(DEF_SIZE) -streams $(STREAMS) \
+				-iterations 10 -verbose \
+				-input_distances $(DISTANCES_INPUT) \
+				-input_charges $(CHARGES_INPUT) \
+				-output_gold $(GOLD)
 
 	
 	

@@ -30,23 +30,21 @@ struct FOUR_VECTOR {
 		return !(*this == rhs);
 	}
 
-	friend std::ofstream& operator<<(std::ofstream& f, const FOUR_VECTOR& fv) {
-		f << fv.v;
-		f << fv.x;
-		f << fv.y;
-		f << fv.y;
-		f << fv.z;
-		return f;
-	}
-
-	friend std::ifstream& operator>>(std::ifstream& f, FOUR_VECTOR& fv) {
-		f >> fv.v;
-		f >> fv.x;
-		f >> fv.y;
-		f >> fv.y;
-		f >> fv.z;
-		return f;
-	}
+//	friend std::ofstream& operator<<(std::ofstream& f, const FOUR_VECTOR& fv) {
+//		f << fv.v;
+//		f << fv.x;
+//		f << fv.y;
+//		f << fv.z;
+//		return f;
+//	}
+//
+//	friend std::ifstream& operator>>(std::ifstream& f, FOUR_VECTOR& fv) {
+//		f >> fv.v;
+//		f >> fv.x;
+//		f >> fv.y;
+//		f >> fv.z;
+//		return f;
+//	}
 
 };
 
