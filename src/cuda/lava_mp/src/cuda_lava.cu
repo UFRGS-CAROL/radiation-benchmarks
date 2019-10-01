@@ -397,11 +397,8 @@ void setup_execution(Parameters& parameters, Log& log) {
 		//	GPU SETUP
 		//=====================================================================
 		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-			std::fill(CHAR_CAST(fv_cpu.data()),
-					CHAR_CAST(
-							fv_cpu.data()
-									+ (sizeof(FOUR_VECTOR<tested_type> )
-											* fv_cpu.size())), 0);
+			auto& it = fv_cpu[streamIdx];
+			std::fill(it.begin(), it.end(), FOUR_VECTOR<tested_type>());
 			d_fv_gpu[streamIdx].clear();
 		}
 
