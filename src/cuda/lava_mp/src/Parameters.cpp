@@ -139,6 +139,7 @@ bool Parameters::find_arg(int argc, char** argv, std::string arg) {
 std::ostream& operator<<(std::ostream& os, const Parameters& p){
 	os << "Boxes " << p.boxes << std::endl;
 	os << "Streams " << p.nstreams << std::endl;
+	os << "Generate " << p.generate << std::endl;
 	os << "Fault injection " << p.fault_injection << std::endl;
 	os << "Verbose " << p.verbose << std::endl;
 	os << "Iterations " << p.iterations << std::endl;

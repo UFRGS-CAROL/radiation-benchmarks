@@ -38,6 +38,14 @@ struct Log {
 #endif
 	}
 
+	Log& operator=(const Log& rhs) {
+		this->error = rhs.error;
+		this->info = rhs.info;
+		this->test_info = rhs.test_info;
+		this->test_name = rhs.test_name;
+		return *this;
+	}
+
 	friend std::ostream& operator<<(std::ostream& os, Log& d) {
 		std::string file_name = "No log file name, build with the libraries";
 #ifdef LOGS
@@ -54,6 +62,20 @@ struct Log {
 	virtual ~Log() {
 #ifdef LOGS
 		::end_log_file();
+#endif
+	}
+
+	std::string get_log_file_name() {
+#ifdef LOGS
+		return std::string(::get_log_file_name());
+#else
+		return "";
+#endif
+	}
+
+	void set_max_errors_iter(size_t max_errors) {
+#ifdef LOGS
+		::set_max_errors_iter(max_max_errors);
 #endif
 	}
 

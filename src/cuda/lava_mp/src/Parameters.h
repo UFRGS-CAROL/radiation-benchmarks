@@ -11,11 +11,12 @@
 #include <string>
 
 struct Parameters {
-	int boxes, generate;
+	int boxes;
 	std::string input_distances, input_charges, output_gold;
 	int iterations, fault_injection, nstreams;
 	bool verbose;
 	bool gpu_check;
+	bool generate;
 	std::string test_precision_description;
 
 	Parameters();

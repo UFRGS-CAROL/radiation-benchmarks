@@ -7,9 +7,8 @@
 //  2018 Fernando Fernandes dos Santos
 
 #include <iostream>
-#include <sys/time.h>
 #include <cuda_fp16.h>
-#include <fstream>
+#include <random>
 
 #ifdef USE_OMP
 #include <omp.h>
@@ -39,103 +38,64 @@
 #include "types.h"
 #include "common.h"
 #include "nondmr_kernels.h"
-
-#define CHAR_CAST(x) (reinterpret_cast<char*>(x))
+#include "File.h"
 
 template<typename tested_type>
-void generateInput(dim_str dim_cpu, const std::string& input_distances,
+void generateInput(dim_str dim_cpu, std::string& input_distances,
 		std::vector<FOUR_VECTOR<tested_type>>& rv_cpu,
-		const std::string& input_charges, std::vector<tested_type>& qv_cpu) {
+		std::string& input_charges, std::vector<tested_type>& qv_cpu) {
 	// random generator seed set to random value - time in this case
 	std::cout << ("Generating input...\n");
 
-	srand(time(NULL));
+	// get a number in the range 0.1 - 1.0
+	std::random_device rd; //Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+	std::uniform_real_distribution<tested_type> dis(0.1, 1.0);
 
-	std::ofstream input_distances_file(input_distances, std::ofstream::binary);
+	rv_cpu.resize(dim_cpu.space_elem);
+	qv_cpu.resize(dim_cpu.space_elem);
 
-	if (input_distances_file.good()) {
-		rv_cpu.resize(dim_cpu.space_elem);
-
-		for (auto& rv_cpu_i : rv_cpu) {
-			// get a number in the range 0.1 - 1.0
-			rv_cpu_i.v = tested_type((rand() % 10 + 1) / tested_type(10.0));
-			rv_cpu_i.x = tested_type((rand() % 10 + 1) / tested_type(10.0));
-			rv_cpu_i.y = tested_type((rand() % 10 + 1) / tested_type(10.0));
-			rv_cpu_i.z = tested_type((rand() % 10 + 1) / tested_type(10.0));
-		}
-
-		input_distances_file.write(CHAR_CAST(rv_cpu.data()),
-				rv_cpu.size() * sizeof(FOUR_VECTOR<tested_type> ));
-
-		if (!(input_distances_file)) {
-			error("error writing rv_cpu from file\n");
-		}
-
-		input_distances_file.close();
-
-	} else {
-		error("The file 'input_distances' was not opened\n");
+	for (auto& rv_cpu_i : rv_cpu) {
+		rv_cpu_i.v = tested_type(dis(gen));
+		rv_cpu_i.x = tested_type(dis(gen));
+		rv_cpu_i.y = tested_type(dis(gen));
+		rv_cpu_i.z = tested_type(dis(gen));
 	}
 
-	std::ofstream input_charges_file(input_charges, std::ofstream::binary);
-	if (input_charges_file.good()) {
-
-		qv_cpu.resize(dim_cpu.space_elem);
-		for (auto& qv_cpu_i : qv_cpu) {
-			// get a number in the range 0.1 - 1.0
-			qv_cpu_i = tested_type((rand() % 10 + 1) / tested_type(10.0));
-		}
-
-		input_charges_file.write(CHAR_CAST(qv_cpu.data()),
-				qv_cpu.size() * sizeof(tested_type));
-
-		if (!(input_charges_file)) {
-			error("error writing qv_cpu from file\n");
-		}
-
-		input_charges_file.close();
-	} else {
-		error("The file 'input_charges' was not opened\n");
+	if (File<FOUR_VECTOR<tested_type>>::write_to_file(input_distances,
+			rv_cpu)) {
+		error("error writing rv_cpu from file\n");
 	}
+
+	for (auto& qv_cpu_i : qv_cpu) {
+		// get a number in the range 0.1 - 1.0
+		qv_cpu_i = tested_type(dis(gen));
+	}
+
+	if (File<tested_type>::write_to_file(input_charges, qv_cpu)) {
+		error("error writing qv_cpu from file\n");
+	}
+
 }
 
 template<typename tested_type>
-void readInput(dim_str dim_cpu, const std::string& input_distances,
+void readInput(dim_str dim_cpu, std::string& input_distances,
 		std::vector<FOUR_VECTOR<tested_type>>& rv_cpu,
-		const std::string& input_charges, std::vector<tested_type>& qv_cpu,
+		std::string& input_charges, std::vector<tested_type>& qv_cpu,
 		int fault_injection) {
 
-	std::ifstream input_distances_file(input_distances, std::ifstream::binary);
+	rv_cpu.resize(dim_cpu.space_elem);
+	qv_cpu.resize(dim_cpu.space_elem);
 
-	if (input_distances_file.good()) {
-		rv_cpu.resize(dim_cpu.space_elem);
-		input_distances_file.read(CHAR_CAST(rv_cpu.data()),
-				rv_cpu.size() * sizeof(FOUR_VECTOR<tested_type> ));
-
-		if (!(input_distances_file)) {
-			error("error reading rv_cpu from file\n");
-		}
-
-		input_distances_file.close();
-	} else {
-		error("The file 'input_distances' was not opened\n");
+	if (File<FOUR_VECTOR<tested_type>>::read_from_file(input_distances,
+			rv_cpu)) {
+		error("error reading rv_cpu from file\n");
 	}
 
-	std::ifstream input_charges_file(input_charges, std::ifstream::binary);
-
-	if (input_charges_file.good()) {
-		qv_cpu.resize(dim_cpu.space_elem);
-		input_charges_file.read(CHAR_CAST(qv_cpu.data()),
-				qv_cpu.size() * sizeof(tested_type));
-
-		if (!(input_charges_file)) {
-			error("error reading qv_cpu from file\n");
-		}
-
-		input_charges_file.close();
-	} else {
-		error("The file 'input_charges' was not opened\n");
+	if (File<tested_type>::read_from_file(input_charges, qv_cpu)) {
+		error("error reading qv_cpu from file\n");
 	}
+
 	// =============== Fault injection
 	if (fault_injection) {
 		qv_cpu[2] = 0.732637263; // must be in range 0.1 - 1.0
@@ -146,52 +106,32 @@ void readInput(dim_str dim_cpu, const std::string& input_distances,
 }
 
 template<typename tested_type>
-void readGold(dim_str dim_cpu, const std::string& output_gold,
+void readGold(dim_str dim_cpu, std::string& output_gold,
 		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu_GOLD) {
-
-	std::ifstream gold_file(output_gold, std::ifstream::binary);
-
-	if (gold_file.good()) {
-		gold_file.read(CHAR_CAST(fv_cpu_GOLD.data()),
-				fv_cpu_GOLD.size() * sizeof(FOUR_VECTOR<tested_type> ));
-
-		if (!(gold_file)) {
-			error("error reading fv_cpu_GOLD from file\n");
-		}
-		gold_file.close();
-	} else {
-		error("The file 'output_forces' was not opened\n");
+	if (File<FOUR_VECTOR<tested_type>>::read_from_file(output_gold,
+			fv_cpu_GOLD)) {
+		error("error reading fv_cpu_GOLD from file\n");
 	}
 }
 
 template<typename tested_type>
-void writeGold(dim_str dim_cpu, const std::string& output_gold,
+void writeGold(dim_str dim_cpu, std::string& output_gold,
 		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu) {
 
-	std::ofstream gold_file(output_gold, std::ifstream::binary);
 	int number_zeros = 0;
+	for (auto& fv_cpu_i : fv_cpu) {
+		if (fv_cpu_i.v == tested_type(0.0))
+			number_zeros++;
+		if (fv_cpu_i.x == tested_type(0.0))
+			number_zeros++;
+		if (fv_cpu_i.y == tested_type(0.0))
+			number_zeros++;
+		if (fv_cpu_i.z == tested_type(0.0))
+			number_zeros++;
+	}
 
-	if (gold_file.good()) {
-		for (auto& fv_cpu_i : fv_cpu) {
-			if (fv_cpu_i.v == tested_type(0.0))
-				number_zeros++;
-			if (fv_cpu_i.x == tested_type(0.0))
-				number_zeros++;
-			if (fv_cpu_i.y == tested_type(0.0))
-				number_zeros++;
-			if (fv_cpu_i.z == tested_type(0.0))
-				number_zeros++;
-		}
-
-		gold_file.write(CHAR_CAST(fv_cpu.data()),
-				fv_cpu.size() * sizeof(FOUR_VECTOR<tested_type> ));
-		if (!(gold_file)) {
-			error("error writing fv_cpu from file\n");
-		}
-
-		gold_file.close();
-	} else {
-		error("The file 'output_forces' was not opened\n");
+	if (File<FOUR_VECTOR<tested_type>>::write_to_file(output_gold, fv_cpu)) {
+		error("error writing fv_cpu from file\n");
 	}
 
 	std::cout << "Number of zeros " << number_zeros << std::endl;
@@ -261,7 +201,8 @@ bool checkOutputErrors(int verbose, int streamIdx,
 				host_errors++;
 
 				snprintf(error_detail, 500,
-						"stream: %d, p: [%d], v_r: %1.20e, v_e: %1.20e, x_r: %1.20e, x_e: %1.20e, y_r: %1.20e, y_e: %1.20e, z_r: %1.20e, z_e: %1.20e\n",
+						"stream: %d, p: [%d], v_r: %1.20e, v_e: %1.20e, x_r: %1.20e, "
+								"x_e: %1.20e, y_r: %1.20e, y_e: %1.20e, z_r: %1.20e, z_e: %1.20e",
 						streamIdx, i, (double) valOutput.v, (double) valGold.v,
 						(double) valOutput.x, (double) valGold.x,
 						(double) valOutput.y, (double) valGold.y,
@@ -285,7 +226,7 @@ bool checkOutputErrors(int verbose, int streamIdx,
 }
 
 template<typename tested_type>
-void setup_execution(const Parameters& parameters, Log& log) {
+void setup_execution(Parameters& parameters, Log& log) {
 	//=====================================================================
 	//	CPU/MCPU VARIABLES
 	//=====================================================================
@@ -455,8 +396,6 @@ void setup_execution(const Parameters& parameters, Log& log) {
 		//	GPU SETUP
 		//=====================================================================
 		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-			std::fill(fv_cpu[streamIdx].begin(), fv_cpu[streamIdx].end(),
-					FOUR_VECTOR<tested_type>());
 			d_fv_gpu[streamIdx].clear();
 		}
 
@@ -476,13 +415,11 @@ void setup_execution(const Parameters& parameters, Log& log) {
 					par_cpu, dim_cpu, d_box_gpu[streamIdx].data(),
 					d_rv_gpu[streamIdx].data(), d_qv_gpu[streamIdx].data(),
 					d_fv_gpu[streamIdx].data());
-			rad::checkFrameworkErrors(cudaPeekAtLastError());
-		}
+			rad::checkFrameworkErrors (cudaPeekAtLastError());}
 
 		for (auto& st : streams) {
 			st.sync();
-			rad::checkFrameworkErrors(cudaPeekAtLastError());
-		}
+			rad::checkFrameworkErrors (cudaPeekAtLastError());}
 
 		log.end_iteration();
 		kernel_time = rad::mysecond() - kernel_time;
@@ -567,46 +504,46 @@ int main(int argc, char *argv[]) {
 	//=====================================================================
 	Parameters parameters(argc, argv);
 	Log log;
+
 	std::cout << parameters << std::endl;
-//	char test_info[200];
-//	char test_name[200];
-//	snprintf(test_info, 200,
-//			"type:%s-precision streams:%d boxes:%d block_size:%d",
-//			test_precision_description, parameters.nstreams, dim_cpu.boxes1d_arg,
-//			NUMBER_THREADS);
-//	snprintf(test_name, 200, "cuda_%s_lava", test_precision_description);
-//	printf(
-//			"\n=================================\n%s\n%s\n=================================\n\n",
-//			test_name, test_info);
+	auto test_precision_description = "float";
+
+	std::string test_info = std::string("type:") + test_precision_description
+			+ "-precision streams:" + std::to_string(parameters.nstreams)
+			+ " boxes:" + std::to_string(parameters.boxes) + " block_size:"
+			+ std::to_string(NUMBER_THREADS);
+
+	std::string test_name = std::string("cuda_") + test_precision_description
+			+ "_lava";
+	std::cout << "=================================" << std::endl;
+	std::cout << test_precision_description << " " << test_name << std::endl;
+	std::cout << "=================================" << std::endl;
 
 	// timer
-#ifdef LOGS
-	if (!generate) {
-		start_log_file(test_name, test_info);
-		set_max_errors_iter(MAX_LOGGED_ERRORS_PER_STREAM * nstreams + 32);
+	if (!parameters.generate) {
+		log = Log(test_name, test_info);
 	}
+
+	log.set_max_errors_iter(
+	MAX_LOGGED_ERRORS_PER_STREAM * parameters.nstreams + 32);
 
 #ifdef BUILDPROFILER
 
-	std::string log_file_name(get_log_file_name());
-	if(generate) {
+	std::string log_file_name = log.get_log_file_name();
+	if(parameters.generate) {
 		log_file_name = "/tmp/generate.log";
 	}
-//	rad::Profiler profiler_thread = new rad::JTX2Inst(log_file_name);
+
 	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
 
 //START PROFILER THREAD
 	profiler_thread->start_profile();
 #endif
-#endif
 
 	setup_execution<float>(parameters, log);
 
-#ifdef LOGS
 #ifdef BUILDPROFILER
 	profiler_thread->end_profile();
-#endif
-	if (!generate) end_log_file();
 #endif
 
 	return 0;
