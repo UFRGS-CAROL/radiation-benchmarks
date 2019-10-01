@@ -198,80 +198,12 @@ void gpu_memory_setup(const Parameters& parameters, dim_str dim_cpu,
 		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu_GOLD) {
 
 	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-//		//=====================================================================
-//		//	GPU SETUP MEMORY
-//		//=====================================================================
-//
-//		//==================================================
-//		//	boxes
-//		//==================================================
-//		rad::checkFrameworkErrors(
-//				cudaMalloc((void **) &(d_box_gpu[streamIdx]), dim_cpu.box_mem));
-//		//==================================================
-//		//	rv
-//		//==================================================
-//		rad::checkFrameworkErrors(
-//				cudaMalloc((void **) &(d_rv_gpu[streamIdx]),
-//						dim_cpu.space_mem));
-//		//==================================================
-//		//	qv
-//		//==================================================
-//		rad::checkFrameworkErrors(
-//				cudaMalloc((void **) &(d_qv_gpu[streamIdx]),
-//						dim_cpu.space_mem2));
-//
-//		//==================================================
-//		//	fv
-//		//==================================================
-//		rad::checkFrameworkErrors(
-//				cudaMalloc((void **) &(d_fv_gpu[streamIdx]),
-//						dim_cpu.space_mem));
-
-		//=====================================================================
-		//	GPU MEMORY			COPY
-		//=====================================================================
-
-		//==================================================
-		//	boxes
-		//==================================================
-
-//		rad::checkFrameworkErrors(
-//				cudaMemcpy(d_box_gpu[streamIdx], box_cpu, dim_cpu.box_mem,
-//						cudaMemcpyHostToDevice));
 		d_box_gpu[streamIdx] = box_cpu;
-
-		//==================================================
-		//	rv
-		//==================================================
-//		rad::checkFrameworkErrors(
-//				cudaMemcpy(d_rv_gpu[streamIdx], rv_cpu, dim_cpu.space_mem,
-//						cudaMemcpyHostToDevice));
 		d_rv_gpu[streamIdx] = rv_cpu;
-
-		//==================================================
-		//	qv
-		//==================================================
-//		rad::checkFrameworkErrors(
-//				cudaMemcpy(d_qv_gpu[streamIdx], qv_cpu, dim_cpu.space_mem2,
-//						cudaMemcpyHostToDevice));
 		d_qv_gpu[streamIdx] = qv_cpu;
-		//==================================================
-		//	fv
-		//==================================================
-
-		// This will be done with memset at the start of each iteration.
-		// rad::checkFrameworkErrors( cudaMemcpy( d_fv_gpu[streamIdx], fv_cpu, dim_cpu.space_mem, cudaMemcpyHostToDevice) );
 	}
 
-	//==================================================
-	//	fv_gold for GoldChkKernel
-	//==================================================
 	if (parameters.gpu_check) {
-//		rad::checkFrameworkErrors(
-//				cudaMalloc((void**) &d_fv_gold_gpu, dim_cpu.space_mem));
-//		rad::checkFrameworkErrors(
-//				cudaMemcpy(d_fv_gold_gpu, fv_cpu_GOLD, dim_cpu.space_mem2,
-//						cudaMemcpyHostToDevice));
 		d_fv_gold_gpu = fv_cpu_GOLD;
 	}
 }
@@ -395,39 +327,16 @@ void setup_execution(const Parameters& parameters, Log& log) {
 	std::vector<FOUR_VECTOR<tested_type>> fv_cpu[parameters.nstreams];
 
 	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-//		fv_cpu[streamIdx] = (FOUR_VECTOR<tested_type>*) malloc(
-//				dim_cpu.space_mem);
-//		if (fv_cpu[streamIdx] == NULL) {
-//			printf("error fv_cpu malloc\n");
-//#ifdef LOGS
-//			if (!parameters.generate) log_error_detail((char *)"error fv_cpu malloc"); end_log_file();
-//#endif
-//			exit(1);
-//		}
 		fv_cpu[streamIdx].resize(dim_cpu.space_elem);
 	}
 
 	fv_cpu_GOLD.resize(dim_cpu.space_elem);
-//	if (fv_cpu_GOLD == NULL) {
-//		printf("error fv_cpu_GOLD malloc\n");
-//#ifdef LOGS
-//		log_error_detail((char *)"error fv_cpu_GOLD malloc"); end_log_file();
-//#endif
-//		exit(1);
-//	}
 	//=====================================================================
 	//	BOX
 	//=====================================================================
 	// allocate boxes
 	box_cpu.resize(dim_cpu.number_boxes);
-//	box_cpu = (box_str*) (malloc(dim_cpu.box_mem));
-//	if (box_cpu == NULL) {
-//		printf("error box_cpu malloc\n");
-//#ifdef LOGS
-//		if (!parameters.generate) log_error_detail((char *)"error box_cpu malloc"); end_log_file();
-//#endif
-//		exit(1);
-//	}
+
 	// initialize number of home boxes
 	nh = 0;
 	// home boxes in z direction
@@ -526,8 +435,18 @@ void setup_execution(const Parameters& parameters, Log& log) {
 	//=====================================================================
 	//	GPU MEMORY SETUP
 	//=====================================================================
-	gpu_memory_setup(parameters, dim_cpu, d_box_gpu, box_cpu, d_rv_gpu, rv_cpu,
-			d_qv_gpu, qv_cpu, d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD);
+	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
+		d_box_gpu[streamIdx] = box_cpu;
+		d_rv_gpu[streamIdx] = rv_cpu;
+		d_qv_gpu[streamIdx] = qv_cpu;
+	}
+
+	if (parameters.gpu_check) {
+		d_fv_gold_gpu = fv_cpu_GOLD;
+	}
+
+//	gpu_memory_setup(parameters, dim_cpu, d_box_gpu, box_cpu, d_rv_gpu, rv_cpu,
+//			d_qv_gpu, qv_cpu, d_fv_gpu, d_fv_gold_gpu, fv_cpu_GOLD);
 
 	//LOOP START
 	for (int loop = 0; loop < parameters.iterations; loop++) {
