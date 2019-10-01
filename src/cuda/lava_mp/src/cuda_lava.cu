@@ -54,13 +54,14 @@ void generateInput(dim_str dim_cpu, std::string& input_distances,
 
 	rv_cpu.resize(dim_cpu.space_elem);
 	qv_cpu.resize(dim_cpu.space_elem);
-
 	for (auto& rv_cpu_i : rv_cpu) {
 		rv_cpu_i.v = tested_type(dis(gen));
 		rv_cpu_i.x = tested_type(dis(gen));
 		rv_cpu_i.y = tested_type(dis(gen));
 		rv_cpu_i.z = tested_type(dis(gen));
 	}
+
+	std::cout << "TESTE " << rv_cpu[35].x << std::endl;
 
 	if (File<FOUR_VECTOR<tested_type>>::write_to_file(input_distances,
 			rv_cpu)) {
@@ -396,6 +397,11 @@ void setup_execution(Parameters& parameters, Log& log) {
 		//	GPU SETUP
 		//=====================================================================
 		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
+			std::fill(CHAR_CAST(fv_cpu.data()),
+					CHAR_CAST(
+							fv_cpu.data()
+									+ (sizeof(FOUR_VECTOR<tested_type> )
+											* fv_cpu.size())), 0);
 			d_fv_gpu[streamIdx].clear();
 		}
 

@@ -76,18 +76,21 @@ struct box_str {
 	}
 };
 
-template<typename T>
-struct VectorOfDeviceVector {
-	std::vector<rad::DeviceVector<T>> data_;
+//template<typename T>
+//struct VectorOfDeviceVector {
+//	std::vector<rad::DeviceVector<T>> data_;
+//
+//	VectorOfDeviceVector(size_t n) :
+//			data_(std::vector<rad::DeviceVector<T>>(n)) {
+//	}
+//
+//	rad::DeviceVector<T>& operator[](const int i) {
+//		return this->data_[i];
+//	}
+//};
 
-	VectorOfDeviceVector(size_t n) :
-			data_(std::vector<rad::DeviceVector<T>>(n)) {
-	}
-
-	rad::DeviceVector<T>& operator[](const int i) {
-		return this->data_[i];
-	}
-};
+template <typename T>
+using VectorOfDeviceVector = std::vector<rad::DeviceVector<T>>;
 
 struct CudaStream {
 	cudaStream_t stream;
