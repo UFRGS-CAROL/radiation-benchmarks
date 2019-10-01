@@ -8,9 +8,9 @@
 #ifndef THREE_VECTOR_H_
 #define THREE_VECTOR_H_
 
-
 #include <vector>
-#include "DeviceVector.h"
+#include "device_vector.h"
+#include "cuda_utils.h"
 
 template<typename tested_type>
 struct THREE_VECTOR {
@@ -39,7 +39,7 @@ struct FOUR_VECTOR {
 		return f;
 	}
 
-	friend std::ifstream& operator>>(std::ifstream& f, const FOUR_VECTOR& fv) {
+	friend std::ifstream& operator>>(std::ifstream& f, FOUR_VECTOR& fv) {
 		f >> fv.v;
 		f >> fv.x;
 		f >> fv.y;
@@ -94,13 +94,34 @@ struct box_str {
 	}
 };
 
-
 template<typename T>
-struct VectorOfDeviceVector{
+struct VectorOfDeviceVector {
 	std::vector<rad::DeviceVector<T>> data_;
 
-	rad::DeviceVector& operator[](const int i){
+	VectorOfDeviceVector(size_t n) :
+			data_(std::vector<rad::DeviceVector<T>>(n)) {
+	}
+
+	rad::DeviceVector<T>& operator[](const int i) {
 		return this->data_[i];
+	}
+};
+
+struct CudaStream {
+	cudaStream_t stream;
+
+	CudaStream() {
+		rad::checkFrameworkErrors(
+				cudaStreamCreateWithFlags(&this->stream,
+						cudaStreamNonBlocking));
+	}
+
+	~CudaStream() {
+		rad::checkFrameworkErrors(cudaStreamDestroy(this->stream));
+	}
+
+	void sync() {
+		rad::checkFrameworkErrors(cudaStreamSynchronize(this->stream));
 	}
 };
 

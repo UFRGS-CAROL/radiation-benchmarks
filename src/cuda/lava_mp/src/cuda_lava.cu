@@ -6,11 +6,10 @@
 //  2014-2018 Caio Lunardi
 //  2018 Fernando Fernandes dos Santos
 
-//#include <stdio.h>
 #include <iostream>
-#include <stdlib.h>
 #include <sys/time.h>
-#include <stdbool.h>
+#include <cuda_fp16.h>
+#include <fstream>
 
 #ifdef USE_OMP
 #include <omp.h>
@@ -34,43 +33,12 @@
 
 #endif // LOGHELPER
 
-#include <cuda_fp16.h>
 #include "cuda_utils.h"
-
 #include "Parameters.h"
 #include "Log.h"
 #include "types.h"
 #include "common.h"
 #include "nondmr_kernels.h"
-
-#include <fstream>
-//=============================================================================
-//	DEFINE TEST TYPE WITH INTRINSIC TYPES
-//=============================================================================
-#if defined(PRECISION_DOUBLE)
-
-const char test_precision_description[] = "double";
-typedef double tested_type;
-typedef double tested_type;
-
-#elif defined(PRECISION_SINGLE)
-
-const char test_precision_description[] = "single";
-typedef float tested_type;
-typedef float tested_type;
-
-#elif defined(PRECISION_HALF)
-
-#define H2_DOT(A,B) (__hfma2((A.x), (B.x), __hfma2((A.y), (B.y), __hmul2((A.z), (B.z)))))
-
-const char test_precision_description[] = "half";
-typedef half tested_type;
-//typedef half_float::half tested_type;
-typedef half tested_type;
-
-//#else
-//#error TEST TYPE NOT DEFINED OR INCORRECT. USE PRECISION=<double|single|half>.
-#endif
 
 template<typename tested_type>
 void generateInput(dim_str dim_cpu, const std::string& input_distances,
@@ -204,7 +172,7 @@ void writeGold(dim_str dim_cpu, const std::string& output_gold,
 			if (fv_cpu_i.z == tested_type(0.0))
 				number_zeros++;
 
-			bool return_value = !(gold_file << gold_i);
+			bool return_value = !(gold_file << fv_cpu_i);
 			if (return_value) {
 				error("error writing rv_cpu from file\n");
 			}
@@ -222,11 +190,11 @@ template<typename tested_type>
 void gpu_memory_setup(const Parameters& parameters, dim_str dim_cpu,
 		VectorOfDeviceVector<box_str>& d_box_gpu, std::vector<box_str>& box_cpu,
 		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_rv_gpu,
-		std::vector<FOUR_VECTOR < tested_type>& rv_cpu,
+		std::vector<FOUR_VECTOR<tested_type>>& rv_cpu,
 		VectorOfDeviceVector<tested_type>& d_qv_gpu,
 		std::vector<tested_type>& qv_cpu,
 		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gpu,
-		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gold_gpu,
+		rad::DeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gold_gpu,
 		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu_GOLD) {
 
 	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
@@ -314,20 +282,20 @@ void gpu_memory_unset(int nstreams, int gpu_check,
 		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_rv_gpu,
 		VectorOfDeviceVector<tested_type>& d_qv_gpu,
 		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gpu,
-		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gold_gpu) {
+		rad::DeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gold_gpu) {
 
 	//=====================================================================
 	//	GPU MEMORY DEALLOCATION
 	//=====================================================================
-//	for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
-//		cudaFree(d_rv_gpu[streamIdx]);
-//		cudaFree(d_qv_gpu[streamIdx]);
-//		cudaFree(d_fv_gpu[streamIdx]);
-//		cudaFree(d_box_gpu[streamIdx]);
-//	}
-//	if (gpu_check) {
-//		cudaFree(d_fv_gold_gpu);
-//	}
+	for (int streamIdx = 0; streamIdx < nstreams; streamIdx++) {
+		d_rv_gpu[streamIdx].resize(0);
+		d_qv_gpu[streamIdx].resize(0);
+		d_fv_gpu[streamIdx].resize(0);
+		d_box_gpu[streamIdx].resize(0);
+	}
+	if (gpu_check) {
+		d_fv_gold_gpu.resize(0);
+	}
 }
 
 // Returns true if no errors are found. False if otherwise.
@@ -415,7 +383,7 @@ void setup_execution(const Parameters& parameters, Log& log) {
 			* dim_cpu.boxes1d_arg;
 	// how many particles space has in each direction
 	dim_cpu.space_elem = dim_cpu.number_boxes * NUMBER_PAR_PER_BOX;
-	dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR<tested_type>);
+	dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR<tested_type> );
 	dim_cpu.space_mem2 = dim_cpu.space_elem * sizeof(tested_type);
 	// box array
 	dim_cpu.box_mem = dim_cpu.number_boxes * sizeof(box_str);
@@ -451,14 +419,15 @@ void setup_execution(const Parameters& parameters, Log& log) {
 	//	BOX
 	//=====================================================================
 	// allocate boxes
-	box_cpu = (box_str*) (malloc(dim_cpu.box_mem));
-	if (box_cpu == NULL) {
-		printf("error box_cpu malloc\n");
-#ifdef LOGS
-		if (!parameters.generate) log_error_detail((char *)"error box_cpu malloc"); end_log_file();
-#endif
-		exit(1);
-	}
+	box_cpu.resize(dim_cpu.number_boxes);
+//	box_cpu = (box_str*) (malloc(dim_cpu.box_mem));
+//	if (box_cpu == NULL) {
+//		printf("error box_cpu malloc\n");
+//#ifdef LOGS
+//		if (!parameters.generate) log_error_detail((char *)"error box_cpu malloc"); end_log_file();
+//#endif
+//		exit(1);
+//	}
 	// initialize number of home boxes
 	nh = 0;
 	// home boxes in z direction
@@ -519,11 +488,11 @@ void setup_execution(const Parameters& parameters, Log& log) {
 	  //	PARAMETERS, DISTANCE, CHARGE AND FORCE
 	  //=====================================================================
 	if (parameters.generate) {
-		generateInput(dim_cpu, parameters.input_distances, &rv_cpu,
-				parameters.input_charges, &qv_cpu);
+		generateInput(dim_cpu, parameters.input_distances, rv_cpu,
+				parameters.input_charges, qv_cpu);
 	} else {
-		readInput(dim_cpu, parameters.input_distances, &rv_cpu,
-				parameters.input_charges, &qv_cpu, parameters.fault_injection);
+		readInput(dim_cpu, parameters.input_distances, rv_cpu,
+				parameters.input_charges, qv_cpu, parameters.fault_injection);
 		readGold(dim_cpu, parameters.output_gold, fv_cpu_GOLD);
 	}
 	//=====================================================================
@@ -542,21 +511,18 @@ void setup_execution(const Parameters& parameters, Log& log) {
 	//=====================================================================
 	//	STREAMS
 	//=====================================================================
-	cudaStream_t* streams = (cudaStream_t*) (malloc(
-			parameters.nstreams * sizeof(cudaStream_t)));
-	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-		rad::checkFrameworkErrors(
-				cudaStreamCreateWithFlags(&(streams[streamIdx]),
-						cudaStreamNonBlocking));
-	}
+	std::vector<CudaStream> streams(parameters.nstreams);
+
 	//=====================================================================
 	//	VECTORS
 	//=====================================================================
-	box_str* d_box_gpu[parameters.nstreams];
-	FOUR_VECTOR<tested_type>* d_rv_gpu[parameters.nstreams];
-	tested_type* d_qv_gpu[parameters.nstreams];
-	FOUR_VECTOR<tested_type>* d_fv_gpu[parameters.nstreams];
-	FOUR_VECTOR<tested_type>* d_fv_gold_gpu = nullptr;
+	VectorOfDeviceVector<box_str> d_box_gpu(parameters.nstreams);
+	VectorOfDeviceVector<FOUR_VECTOR<tested_type>> d_rv_gpu(
+			parameters.nstreams);
+	VectorOfDeviceVector<tested_type> d_qv_gpu(parameters.nstreams);
+	VectorOfDeviceVector<FOUR_VECTOR<tested_type>> d_fv_gpu(
+			parameters.nstreams);
+	rad::DeviceVector<FOUR_VECTOR<tested_type>> d_fv_gold_gpu;
 	//=====================================================================
 	//	GPU MEMORY SETUP
 	//=====================================================================
@@ -584,9 +550,9 @@ void setup_execution(const Parameters& parameters, Log& log) {
 		//	GPU SETUP
 		//=====================================================================
 		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-			memset(fv_cpu[streamIdx], 0x00, dim_cpu.space_elem);
-			rad::checkFrameworkErrors(
-					cudaMemset(d_fv_gpu[streamIdx], 0x00, dim_cpu.space_mem));
+			std::fill(fv_cpu[streamIdx].begin(), fv_cpu[streamIdx].end(),
+					FOUR_VECTOR<tested_type>());
+			d_fv_gpu[streamIdx].clear();
 		}
 
 		if (parameters.verbose)
@@ -601,15 +567,15 @@ void setup_execution(const Parameters& parameters, Log& log) {
 
 		// launch kernel - all boxes
 		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-			kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx]>>>(par_cpu,
-					dim_cpu, d_box_gpu[streamIdx], d_rv_gpu[streamIdx],
-					d_qv_gpu[streamIdx], d_fv_gpu[streamIdx]);
+			kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx].stream>>>(
+					par_cpu, dim_cpu, d_box_gpu[streamIdx].data(),
+					d_rv_gpu[streamIdx].data(), d_qv_gpu[streamIdx].data(),
+					d_fv_gpu[streamIdx].data());
 			rad::checkFrameworkErrors(cudaPeekAtLastError());
 		}
 
-		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-			rad::checkFrameworkErrors(
-					cudaStreamSynchronize(streams[streamIdx]));
+		for (auto& st : streams) {
+			st.sync();
 			rad::checkFrameworkErrors(cudaPeekAtLastError());
 		}
 
@@ -620,10 +586,8 @@ void setup_execution(const Parameters& parameters, Log& log) {
 		//	COMPARE OUTPUTS / WRITE GOLD
 		//=====================================================================
 		if (parameters.generate) {
-			rad::checkFrameworkErrors(
-					cudaMemcpy(fv_cpu_GOLD, d_fv_gpu[0], dim_cpu.space_mem,
-							cudaMemcpyDeviceToHost));
-			writeGold(dim_cpu, parameters.output_gold, &fv_cpu_GOLD);
+			fv_cpu_GOLD = d_fv_gpu[0].to_vector();
+			writeGold(dim_cpu, parameters.output_gold, fv_cpu_GOLD);
 		} else {
 			timestamp = rad::mysecond();
 			{
@@ -631,16 +595,14 @@ void setup_execution(const Parameters& parameters, Log& log) {
 #pragma omp parallel for shared(reloadFlag)
 				for (int streamIdx = 0; streamIdx < parameters.nstreams;
 						streamIdx++) {
-					rad::checkFrameworkErrors(
-							cudaMemcpy(fv_cpu[streamIdx], d_fv_gpu[streamIdx],
-									dim_cpu.space_mem, cudaMemcpyDeviceToHost));
+					fv_cpu[streamIdx] = d_fv_gpu[streamIdx].to_vector();
 					reloadFlag = reloadFlag
 							|| checkOutputErrors(parameters.verbose, dim_cpu,
 									streamIdx, fv_cpu[streamIdx], fv_cpu_GOLD);
 				}
 				if (reloadFlag) {
-					readInput(dim_cpu, parameters.input_distances, &rv_cpu,
-							parameters.input_charges, &qv_cpu,
+					readInput(dim_cpu, parameters.input_distances, rv_cpu,
+							parameters.input_charges, qv_cpu,
 							parameters.fault_injection);
 					readGold(dim_cpu, parameters.output_gold, fv_cpu_GOLD);
 
@@ -664,51 +626,32 @@ void setup_execution(const Parameters& parameters, Log& log) {
 		// the last for uses 46 operations plus 2 exp() functions
 		flop *= 46;
 		flop *= parameters.nstreams;
-		double flops = (double) flop / kernel_time;
-		double outputpersec = (double) dim_cpu.space_elem * 4
-				* parameters.nstreams / kernel_time;
-		if (parameters.verbose)
-			printf("BOXES:%d BLOCK:%d OUTPUT/S:%.2f FLOPS:%.2f (GFLOPS:%.2f)\n",
-					dim_cpu.boxes1d_arg, NUMBER_THREADS, outputpersec, flops,
-					flops / 1000000000);
-		if (parameters.verbose)
-			printf("Kernel time:%f\n", kernel_time);
-		//=====================
-
-		printf(".");
-		fflush(stdout);
-
+		double flops = flop / kernel_time;
+		double outputpersec = dim_cpu.space_elem * 4 * parameters.nstreams
+				/ kernel_time;
 		double iteration_time = rad::mysecond() - globaltimer;
-		if (parameters.verbose)
-			printf("Iteration time: %.4fs (%3.1f%% Device)\n", iteration_time,
-					(kernel_time / iteration_time) * 100.0);
-		if (parameters.verbose)
-			printf("===================================\n");
 
-		fflush(stdout);
+		if (parameters.verbose) {
+			std::cout << "BOXES: " << dim_cpu.boxes1d_arg;
+			std::cout << " BLOCK:%d " << NUMBER_THREADS;
+			std::cout << " OUTPUT/S:" << outputpersec;
+			std::cout << " FLOPS:" << flops;
+			std::cout << "(GFLOPS:" << flops / 1.0e9 << ") ";
+			std::cout << "Kernel time:" << kernel_time << std::endl;
+
+			std::cout << "Iteration time: " << iteration_time << "s ("
+					<< (kernel_time / iteration_time) * 100.0 << "% of Device)"
+					<< std::endl;
+
+			std::cout << "===================================" << std::endl;
+		} else {
+			std::cout << ".";
+		}
+
 	}
 	gpu_memory_unset(parameters.nstreams, parameters.gpu_check, d_box_gpu,
 			d_rv_gpu, d_qv_gpu, d_fv_gpu, d_fv_gold_gpu);
-	//=====================================================================
-	//	SYSTEM MEMORY DEALLOCATION
-	//=====================================================================
-	if (!parameters.generate && fv_cpu_GOLD)
-		free(fv_cpu_GOLD);
 
-	//if (fv_cpu) free(fv_cpu);
-	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-		free(fv_cpu[streamIdx]);
-	}
-	if (rv_cpu)
-		free(rv_cpu);
-
-	if (qv_cpu)
-		free(qv_cpu);
-
-	if (box_cpu)
-		free(box_cpu);
-
-	printf("\n");
 }
 
 //=============================================================================
