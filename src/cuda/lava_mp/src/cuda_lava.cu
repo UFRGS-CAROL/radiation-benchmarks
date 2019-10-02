@@ -398,7 +398,7 @@ void setup_execution(Parameters& parameters, Log& log) {
 		//=====================================================================
 		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
 			auto& it = fv_cpu[streamIdx];
-			std::fill(it.begin(), it.end(), FOUR_VECTOR<tested_type>());
+//			std::fill(it.begin(), it.end(), FOUR_VECTOR<tested_type>());
 			d_fv_gpu[streamIdx].clear();
 		}
 
@@ -418,11 +418,13 @@ void setup_execution(Parameters& parameters, Log& log) {
 					par_cpu, dim_cpu, d_box_gpu[streamIdx].data(),
 					d_rv_gpu[streamIdx].data(), d_qv_gpu[streamIdx].data(),
 					d_fv_gpu[streamIdx].data());
-			rad::checkFrameworkErrors (cudaPeekAtLastError());}
+			rad::checkFrameworkErrors(cudaPeekAtLastError());
+		}
 
 		for (auto& st : streams) {
 			st.sync();
-			rad::checkFrameworkErrors (cudaPeekAtLastError());}
+			rad::checkFrameworkErrors(cudaPeekAtLastError());
+		}
 
 		log.end_iteration();
 		kernel_time = rad::mysecond() - kernel_time;
@@ -435,31 +437,32 @@ void setup_execution(Parameters& parameters, Log& log) {
 			writeGold(dim_cpu, parameters.output_gold, fv_cpu_GOLD);
 		} else {
 			timestamp = rad::mysecond();
-			{
-				bool reloadFlag = false;
-#pragma omp parallel for shared(reloadFlag)
-				for (int streamIdx = 0; streamIdx < parameters.nstreams;
-						streamIdx++) {
-					fv_cpu[streamIdx] = d_fv_gpu[streamIdx].to_vector();
-					reloadFlag = reloadFlag
-							|| checkOutputErrors(parameters.verbose, streamIdx,
-									fv_cpu[streamIdx], fv_cpu_GOLD, log);
-				}
-				if (reloadFlag) {
-					readInput(dim_cpu, parameters.input_distances, rv_cpu,
-							parameters.input_charges, qv_cpu,
-							parameters.fault_injection);
-					readGold(dim_cpu, parameters.output_gold, fv_cpu_GOLD);
 
-					gpu_memory_unset(parameters, d_box_gpu, d_rv_gpu, d_qv_gpu,
-							d_fv_gpu, d_fv_gold_gpu);
-					gpu_memory_setup(parameters, d_box_gpu, box_cpu, d_rv_gpu,
-							rv_cpu, d_qv_gpu, qv_cpu, d_fv_gpu, fv_cpu,
-							d_fv_gold_gpu, fv_cpu_GOLD);
-				}
+			bool reloadFlag = false;
+#pragma omp parallel for shared(reloadFlag, fv_cpu, fv_cpu_GOLD, log)
+			for (int streamIdx = 0; streamIdx < parameters.nstreams;
+					streamIdx++) {
+				fv_cpu[streamIdx] = d_fv_gpu[streamIdx].to_vector();
+				reloadFlag = reloadFlag
+						|| checkOutputErrors(parameters.verbose, streamIdx,
+								fv_cpu[streamIdx], fv_cpu_GOLD, log);
 			}
+
+			if (reloadFlag) {
+				readInput(dim_cpu, parameters.input_distances, rv_cpu,
+						parameters.input_charges, qv_cpu,
+						parameters.fault_injection);
+				readGold(dim_cpu, parameters.output_gold, fv_cpu_GOLD);
+
+				gpu_memory_unset(parameters, d_box_gpu, d_rv_gpu, d_qv_gpu,
+						d_fv_gpu, d_fv_gold_gpu);
+				gpu_memory_setup(parameters, d_box_gpu, box_cpu, d_rv_gpu,
+						rv_cpu, d_qv_gpu, qv_cpu, d_fv_gpu, fv_cpu,
+						d_fv_gold_gpu, fv_cpu_GOLD);
+			}
+
 			if (parameters.verbose)
-				printf("Gold check time: %f\n", rad::mysecond() - timestamp);
+				std::cout << "Gold check time: " << rad::mysecond() - timestamp;
 		}
 
 		//================= PERF
