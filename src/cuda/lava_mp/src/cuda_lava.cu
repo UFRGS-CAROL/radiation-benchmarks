@@ -38,6 +38,7 @@
 #include "types.h"
 #include "common.h"
 #include "nondmr_kernels.h"
+#include "dmr_kernels.h"
 #include "File.h"
 
 template<typename tested_type>
