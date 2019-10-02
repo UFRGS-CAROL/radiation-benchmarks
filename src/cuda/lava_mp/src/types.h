@@ -29,7 +29,6 @@ struct FOUR_VECTOR {
 	inline bool operator!=(const FOUR_VECTOR& rhs) {
 		return !(*this == rhs);
 	}
-
 };
 
 template<typename tested_type>
@@ -76,21 +75,8 @@ struct box_str {
 	}
 };
 
-//template<typename T>
-//struct VectorOfDeviceVector {
-//	std::vector<rad::DeviceVector<T>> data_;
-//
-//	VectorOfDeviceVector(size_t n) :
-//			data_(std::vector<rad::DeviceVector<T>>(n)) {
-//	}
-//
-//	rad::DeviceVector<T>& operator[](const int i) {
-//		return this->data_[i];
-//	}
-//};
 
-template <typename T>
-using VectorOfDeviceVector = std::vector<rad::DeviceVector<T>>;
+template <typename T> using VectorOfDeviceVector = std::vector<rad::DeviceVector<T>>;
 
 struct CudaStream {
 	cudaStream_t stream;

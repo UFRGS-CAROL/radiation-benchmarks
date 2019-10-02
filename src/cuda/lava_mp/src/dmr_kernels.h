@@ -5,8 +5,8 @@
  *      Author: fernando
  */
 
-#ifndef NONDMR_KERNELS_H_
-#define NONDMR_KERNELS_H_
+#ifndef DMR_KERNELS_H_
+#define DMR_KERNELS_H_
 
 #include "device_funtions.h"
 #include "types.h"
@@ -15,10 +15,11 @@
 //	plasmaKernel_gpu_2
 //-----------------------------------------------------------------------------
 // #if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
-template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t, typename real_t>
+template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t,
+		typename real_t>
 __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 		box_str* d_box_gpu, FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
-		FOUR_VECTOR<real_t>* d_fv_gpu) {
+		FOUR_VECTOR<real_t>* d_fv_gpu_rt, FOUR_VECTOR<half_t>* d_fv_gpu_ht) {
 
 	//---------------------------------------------------------------------
 	//	THREAD PARAMETERS
@@ -39,34 +40,54 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 		//-------------------------------------------------------------
 
 		// parameters
-		real_t a2 = real_t(2.0) * d_par_gpu.alpha * d_par_gpu.alpha;
-		half_t a2_ht = half_t(a2);
+		real_t a2_rt = real_t(2.0) * d_par_gpu.alpha * d_par_gpu.alpha;
+
+		//mixed dmr
+		half_t a2_ht = half_t(a2_rt);
 
 		// home box
 		int first_i;
-		FOUR_VECTOR<real_t> *rA;
-		FOUR_VECTOR<real_t> *fA;
-		__shared__ FOUR_VECTOR<real_t> rA_shared[200];
+		FOUR_VECTOR<real_t> *rA_rt;
+		FOUR_VECTOR<real_t> *fA_rt;
+		__shared__ FOUR_VECTOR<real_t> rA_shared_rt[200];
+
+		//DMR
+		FOUR_VECTOR<half_t> *fA_ht;
+		__shared__ FOUR_VECTOR<half_t> rA_shared_ht[200];
 
 		// nei box
 		int pointer;
 		int k = 0;
 		int first_j;
-		FOUR_VECTOR<real_t> *rB;
-		real_t *qB;
+		FOUR_VECTOR<real_t> *rB_rt;
+		real_t *qB_rt;
 		int j = 0;
-		__shared__ FOUR_VECTOR<real_t> rB_shared[200];
-		__shared__ real_t qB_shared[200];
+		__shared__ FOUR_VECTOR<real_t> rB_shared_rt[200];
+		__shared__ real_t qB_shared_rt[200];
+
+		//DMR
+		__shared__ FOUR_VECTOR<half_t> rB_shared_ht[200];
+		__shared__ half_t qB_shared_ht[200];
 
 		// common
-		real_t r2;
-		real_t u2;
-		real_t vij;
-		real_t fs;
-		real_t fxij;
-		real_t fyij;
-		real_t fzij;
-		THREE_VECTOR<real_t> d;
+		real_t r2_rt;
+		real_t u2_rt;
+		real_t vij_rt;
+		real_t fs_rt;
+		real_t fxij_rt;
+		real_t fyij_rt;
+		real_t fzij_rt;
+		THREE_VECTOR<real_t> d_rt;
+
+		//DMR
+		half_t r2_ht;
+		half_t u2_ht;
+		half_t vij_ht;
+		half_t fs_ht;
+		half_t fxij_ht;
+		half_t fyij_ht;
+		half_t fzij_ht;
+		THREE_VECTOR<half_t> d_ht;
 
 		//-------------------------------------------------------------
 		//	Home box
@@ -80,8 +101,11 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 		first_i = d_box_gpu[bx].offset;
 
 		// home box - distance, force, charge and type parameters
-		rA = &d_rv_gpu[first_i];
-		fA = &d_fv_gpu[first_i];
+		rA_rt = &d_rv_gpu[first_i];
+		fA_rt = &d_fv_gpu_rt[first_i];
+
+		//DMR
+		fA_ht = &d_fv_gpu_ht[first_i];
 
 		//-------------------------------------------------------------
 		//	Copy to shared memory
@@ -89,7 +113,10 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 
 		// home box - shared memory
 		while (wtx < NUMBER_PAR_PER_BOX) {
-			rA_shared[wtx] = rA[wtx];
+			rA_shared_rt[wtx] = rA_rt[wtx];
+			//DMR
+			cast_four_vector(rA_shared_ht[wtx], rA_shared_rt[wtx]);
+
 			wtx = wtx + NUMBER_THREADS;
 		}
 		wtx = tx;
@@ -123,8 +150,8 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 			first_j = d_box_gpu[pointer].offset;
 
 			// nei box - distance, (force), charge and (type) parameters
-			rB = &d_rv_gpu[first_j];
-			qB = &d_qv_gpu[first_j];
+			rB_rt = &d_rv_gpu[first_j];
+			qB_rt = &d_qv_gpu[first_j];
 
 			//-----------------------------------------------------
 			//	Setup parameters
@@ -132,8 +159,13 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 
 			// nei box - shared memory
 			while (wtx < NUMBER_PAR_PER_BOX) {
-				rB_shared[wtx] = rB[wtx];
-				qB_shared[wtx] = qB[wtx];
+				rB_shared_rt[wtx] = rB_rt[wtx];
+				qB_shared_rt[wtx] = qB_rt[wtx];
+
+				//DMR
+				cast_four_vector(rB_shared_ht[wtx], rB_shared_rt[wtx]);
+				qB_shared_ht[wtx] = half_t(qB_shared_rt[wtx]);
+
 				wtx = wtx + NUMBER_THREADS;
 			}
 			wtx = tx;
@@ -146,35 +178,76 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 			//-----------------------------------------------------
 			while (wtx < NUMBER_PAR_PER_BOX) {
 
+#pragma unroll COUNT
 				for (j = 0; j < NUMBER_PAR_PER_BOX; j++) {
 
-					r2 = rA_shared[wtx].v + rB_shared[j].v -
-					DOT(
-							rA_shared[wtx],
-							rB_shared[j]
-					);
+					r2_rt = rA_shared_rt[wtx].v + rB_shared_rt[j].v
+							- DOT(rA_shared_rt[wtx], rB_shared_rt[j]);
 
-					u2 = a2 * r2;
-					vij= exp__(-u2);
+					//DMR
+					r2_ht = rA_shared_ht[wtx].v + rB_shared_ht[j].v
+							- DOT(rA_shared_ht[wtx], rB_shared_ht[j]);
 
-					fs = real_t(2.0) * vij;
+					u2_rt = a2_rt * r2_rt;
 
-					d.x = rA_shared[wtx].x - rB_shared[j].x;
+					//DMR
+					u2_ht = a2_ht * r2_ht;
 
-					fxij = fs * d.x;
+					vij_rt = exp__(-u2_rt);
 
-					d.y = rA_shared[wtx].y - rB_shared[j].y;
+					//DMR
+					vij_ht = exp__(-u2_ht);
 
-					fyij = fs * d.y;
+					fs_rt = real_t(2.0) * vij_rt;
 
-					d.z = rA_shared[wtx].z - rB_shared[j].z;
+					//DMR
+					fs_ht = half_t(2.0) * vij_ht;
 
-					fzij = fs * d.z;
+					d_rt.x = rA_shared_rt[wtx].x - rB_shared_rt[j].x;
 
-					fA[wtx].v += (real_t)(qB_shared[j] * vij);
-					fA[wtx].x += (real_t)(qB_shared[j] * fxij);
-					fA[wtx].y += (real_t)(qB_shared[j] * fyij);
-					fA[wtx].z += (real_t)(qB_shared[j] * fzij);
+					//DMR
+					d_ht.x = rA_shared_ht[wtx].x - rB_shared_ht[j].x;
+
+					fxij_rt = fs_rt * d_rt.x;
+
+					//DMR
+					fxij_ht = fs_ht * d_ht.x;
+
+					d_rt.y = rA_shared_rt[wtx].y - rB_shared_rt[j].y;
+
+					//DMR
+					d_ht.y = rA_shared_ht[wtx].y - rB_shared_ht[j].y;
+
+					fyij_rt = fs_rt * d_rt.y;
+
+					//DMR
+					fyij_ht = fs_ht * d_ht.y;
+
+					d_rt.z = rA_shared_rt[wtx].z - rB_shared_rt[j].z;
+
+					//DMR
+					d_ht.z = rA_shared_ht[wtx].z - rB_shared_ht[j].z;
+
+					fzij_rt = fs_rt * d_rt.z;
+
+					//DMR
+					fzij_ht = fs_ht * d_ht.z;
+
+					fA_rt[wtx].v += real_t(qB_shared_rt[j] * vij_rt);
+					fA_rt[wtx].x += real_t(qB_shared_rt[j] * fxij_rt);
+					fA_rt[wtx].y += real_t(qB_shared_rt[j] * fyij_rt);
+					fA_rt[wtx].z += real_t(qB_shared_rt[j] * fzij_rt);
+
+					//DMR
+					fA_ht[wtx].v += half_t(qB_shared_ht[j] * vij_ht);
+					fA_ht[wtx].x += half_t(qB_shared_ht[j] * fxij_ht);
+					fA_ht[wtx].y += half_t(qB_shared_ht[j] * fyij_ht);
+					fA_ht[wtx].z += half_t(qB_shared_ht[j] * fzij_ht);
+
+					//------------------------------------------------
+					//DMR CHECKING
+					check_bit_error<THRESHOLD>(fA_ht[wtx], fA_rt[wtx]);
+					//------------------------------------------------
 				}
 				// increment work thread index
 				wtx = wtx + NUMBER_THREADS;
@@ -196,6 +269,4 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 	}
 }
 
-
-
-#endif /* NONDMR_KERNELS_H_ */
+#endif /* DMR_KERNELS_H_ */

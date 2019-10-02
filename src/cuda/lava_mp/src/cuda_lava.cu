@@ -37,64 +37,61 @@
 #include "Log.h"
 #include "types.h"
 #include "common.h"
-#include "nondmr_kernels.h"
-#include "dmr_kernels.h"
 #include "File.h"
 
-template<typename tested_type>
+#include "KernelCaller.h"
+
+template<typename real_t>
 void generateInput(dim_str dim_cpu, std::string& input_distances,
-		std::vector<FOUR_VECTOR<tested_type>>& rv_cpu,
-		std::string& input_charges, std::vector<tested_type>& qv_cpu) {
+		std::vector<FOUR_VECTOR<real_t>>& rv_cpu, std::string& input_charges,
+		std::vector<real_t>& qv_cpu) {
 	// random generator seed set to random value - time in this case
 	std::cout << ("Generating input...\n");
 
 	// get a number in the range 0.1 - 1.0
 	std::random_device rd; //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-	std::uniform_real_distribution<tested_type> dis(0.1, 1.0);
+	std::uniform_real_distribution<real_t> dis(0.1, 1.0);
 
 	rv_cpu.resize(dim_cpu.space_elem);
 	qv_cpu.resize(dim_cpu.space_elem);
 	for (auto& rv_cpu_i : rv_cpu) {
-		rv_cpu_i.v = tested_type(dis(gen));
-		rv_cpu_i.x = tested_type(dis(gen));
-		rv_cpu_i.y = tested_type(dis(gen));
-		rv_cpu_i.z = tested_type(dis(gen));
+		rv_cpu_i.v = real_t(dis(gen));
+		rv_cpu_i.x = real_t(dis(gen));
+		rv_cpu_i.y = real_t(dis(gen));
+		rv_cpu_i.z = real_t(dis(gen));
 	}
 
 	std::cout << "TESTE " << rv_cpu[35].x << std::endl;
 
-	if (File<FOUR_VECTOR<tested_type>>::write_to_file(input_distances,
-			rv_cpu)) {
+	if (File<FOUR_VECTOR<real_t>>::write_to_file(input_distances, rv_cpu)) {
 		error("error writing rv_cpu from file\n");
 	}
 
 	for (auto& qv_cpu_i : qv_cpu) {
 		// get a number in the range 0.1 - 1.0
-		qv_cpu_i = tested_type(dis(gen));
+		qv_cpu_i = real_t(dis(gen));
 	}
 
-	if (File<tested_type>::write_to_file(input_charges, qv_cpu)) {
+	if (File<real_t>::write_to_file(input_charges, qv_cpu)) {
 		error("error writing qv_cpu from file\n");
 	}
 
 }
 
-template<typename tested_type>
+template<typename real_t>
 void readInput(dim_str dim_cpu, std::string& input_distances,
-		std::vector<FOUR_VECTOR<tested_type>>& rv_cpu,
-		std::string& input_charges, std::vector<tested_type>& qv_cpu,
-		int fault_injection) {
+		std::vector<FOUR_VECTOR<real_t>>& rv_cpu, std::string& input_charges,
+		std::vector<real_t>& qv_cpu, int fault_injection) {
 
 	rv_cpu.resize(dim_cpu.space_elem);
 	qv_cpu.resize(dim_cpu.space_elem);
 
-	if (File<FOUR_VECTOR<tested_type>>::read_from_file(input_distances,
-			rv_cpu)) {
+	if (File<FOUR_VECTOR<real_t>>::read_from_file(input_distances, rv_cpu)) {
 		error("error reading rv_cpu from file\n");
 	}
 
-	if (File<tested_type>::read_from_file(input_charges, qv_cpu)) {
+	if (File<real_t>::read_from_file(input_charges, qv_cpu)) {
 		error("error reading qv_cpu from file\n");
 	}
 
@@ -107,48 +104,46 @@ void readInput(dim_str dim_cpu, std::string& input_distances,
 	// ========================
 }
 
-template<typename tested_type>
+template<typename real_t>
 void readGold(dim_str dim_cpu, std::string& output_gold,
-		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu_GOLD) {
-	if (File<FOUR_VECTOR<tested_type>>::read_from_file(output_gold,
-			fv_cpu_GOLD)) {
+		std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD) {
+	if (File<FOUR_VECTOR<real_t>>::read_from_file(output_gold, fv_cpu_GOLD)) {
 		error("error reading fv_cpu_GOLD from file\n");
 	}
 }
 
-template<typename tested_type>
+template<typename real_t>
 void writeGold(dim_str dim_cpu, std::string& output_gold,
-		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu) {
+		std::vector<FOUR_VECTOR<real_t>>& fv_cpu) {
 
 	int number_zeros = 0;
 	for (auto& fv_cpu_i : fv_cpu) {
-		if (fv_cpu_i.v == tested_type(0.0))
+		if (fv_cpu_i.v == real_t(0.0))
 			number_zeros++;
-		if (fv_cpu_i.x == tested_type(0.0))
+		if (fv_cpu_i.x == real_t(0.0))
 			number_zeros++;
-		if (fv_cpu_i.y == tested_type(0.0))
+		if (fv_cpu_i.y == real_t(0.0))
 			number_zeros++;
-		if (fv_cpu_i.z == tested_type(0.0))
+		if (fv_cpu_i.z == real_t(0.0))
 			number_zeros++;
 	}
 
-	if (File<FOUR_VECTOR<tested_type>>::write_to_file(output_gold, fv_cpu)) {
+	if (File<FOUR_VECTOR<real_t>>::write_to_file(output_gold, fv_cpu)) {
 		error("error writing fv_cpu from file\n");
 	}
 
 	std::cout << "Number of zeros " << number_zeros << std::endl;
 }
 
-template<typename tested_type>
+template<typename real_t>
 void gpu_memory_setup(const Parameters& parameters,
 		VectorOfDeviceVector<box_str>& d_box_gpu, std::vector<box_str>& box_cpu,
-		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_rv_gpu,
-		std::vector<FOUR_VECTOR<tested_type>>& rv_cpu,
-		VectorOfDeviceVector<tested_type>& d_qv_gpu,
-		std::vector<tested_type>& qv_cpu,
-		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gpu,
-		std::vector<std::vector<FOUR_VECTOR<tested_type>>>& fv_cpu,
-rad::DeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gold_gpu, std::vector<FOUR_VECTOR<tested_type>>& fv_cpu_GOLD) {
+		VectorOfDeviceVector<FOUR_VECTOR<real_t>>& d_rv_gpu,
+		std::vector<FOUR_VECTOR<real_t>>& rv_cpu,
+		VectorOfDeviceVector<real_t>& d_qv_gpu, std::vector<real_t>& qv_cpu,
+		VectorOfDeviceVector<FOUR_VECTOR<real_t>>& d_fv_gpu,
+		std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu,
+rad::DeviceVector<FOUR_VECTOR<real_t>>& d_fv_gold_gpu, std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD) {
 
 	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
 		d_box_gpu[streamIdx] = box_cpu;
@@ -162,13 +157,13 @@ rad::DeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gold_gpu, std::vector<FOUR_VEC
 	}
 }
 
-template<typename tested_type>
+template<typename real_t>
 void gpu_memory_unset(const Parameters& parameters,
 		VectorOfDeviceVector<box_str>& d_box_gpu,
-		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_rv_gpu,
-		VectorOfDeviceVector<tested_type>& d_qv_gpu,
-		VectorOfDeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gpu,
-		rad::DeviceVector<FOUR_VECTOR<tested_type>>& d_fv_gold_gpu) {
+		VectorOfDeviceVector<FOUR_VECTOR<real_t>>& d_rv_gpu,
+		VectorOfDeviceVector<real_t>& d_qv_gpu,
+		VectorOfDeviceVector<FOUR_VECTOR<real_t>>& d_fv_gpu,
+		rad::DeviceVector<FOUR_VECTOR<real_t>>& d_fv_gold_gpu) {
 
 	//=====================================================================
 	//	GPU MEMORY DEALLOCATION
@@ -186,10 +181,10 @@ void gpu_memory_unset(const Parameters& parameters,
 
 // Returns true if no errors are found. False if otherwise.
 // Set votedOutput pointer to retrieve the voted matrix
-template<typename tested_type>
+template<typename real_t>
 bool checkOutputErrors(int verbose, int streamIdx,
-		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu,
-		std::vector<FOUR_VECTOR<tested_type>>& fv_cpu_GOLD, Log& log) {
+		std::vector<FOUR_VECTOR<real_t>>& fv_cpu,
+		std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD, Log& log) {
 	int host_errors = 0;
 
 #pragma omp parallel for shared(host_errors)
@@ -227,8 +222,9 @@ bool checkOutputErrors(int verbose, int streamIdx,
 	return (host_errors == 0);
 }
 
-template<typename tested_type>
-void setup_execution(Parameters& parameters, Log& log) {
+template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t, typename real_t>
+void setup_execution(Parameters& parameters, Log& log,
+		KernelCaller<COUNT, THRESHOLD, half_t, real_t>& kernel_caller) {
 	//=====================================================================
 	//	CPU/MCPU VARIABLES
 	//=====================================================================
@@ -236,12 +232,12 @@ void setup_execution(Parameters& parameters, Log& log) {
 	double timestamp;
 
 	// system memory
-	par_str<tested_type> par_cpu;
+	par_str<real_t> par_cpu;
 	dim_str dim_cpu;
 	std::vector<box_str> box_cpu;
-	std::vector<FOUR_VECTOR<tested_type>> rv_cpu;
-	std::vector<tested_type> qv_cpu;
-	std::vector<FOUR_VECTOR<tested_type>> fv_cpu_GOLD;
+	std::vector<FOUR_VECTOR<real_t>> rv_cpu;
+	std::vector<real_t> qv_cpu;
+	std::vector<FOUR_VECTOR<real_t>> fv_cpu_GOLD;
 	int nh;
 	int number_nn = 0;
 	//=====================================================================
@@ -262,8 +258,8 @@ void setup_execution(Parameters& parameters, Log& log) {
 			* dim_cpu.boxes1d_arg;
 	// how many particles space has in each direction
 	dim_cpu.space_elem = dim_cpu.number_boxes * NUMBER_PAR_PER_BOX;
-	dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR<tested_type> );
-	dim_cpu.space_mem2 = dim_cpu.space_elem * sizeof(tested_type);
+	dim_cpu.space_mem = dim_cpu.space_elem * sizeof(FOUR_VECTOR<real_t> );
+	dim_cpu.space_mem2 = dim_cpu.space_elem * sizeof(real_t);
 	// box array
 	dim_cpu.box_mem = dim_cpu.number_boxes * sizeof(box_str);
 	//=====================================================================
@@ -271,7 +267,7 @@ void setup_execution(Parameters& parameters, Log& log) {
 	//=====================================================================
 	// prepare host memory to receive kernel output
 	// output (forces)
-	std::vector<std::vector<FOUR_VECTOR<tested_type>>> fv_cpu(parameters.nstreams);
+	std::vector<std::vector<FOUR_VECTOR<real_t>>>fv_cpu(parameters.nstreams);
 
 	for (auto& fv_cpu_i : fv_cpu) {
 		fv_cpu_i.resize(dim_cpu.space_elem);
@@ -373,12 +369,14 @@ void setup_execution(Parameters& parameters, Log& log) {
 	//	VECTORS
 	//=====================================================================
 	VectorOfDeviceVector<box_str> d_box_gpu(parameters.nstreams);
-	VectorOfDeviceVector<FOUR_VECTOR<tested_type>> d_rv_gpu(
-			parameters.nstreams);
-	VectorOfDeviceVector<tested_type> d_qv_gpu(parameters.nstreams);
-	VectorOfDeviceVector<FOUR_VECTOR<tested_type>> d_fv_gpu(
-			parameters.nstreams);
-	rad::DeviceVector<FOUR_VECTOR<tested_type>> d_fv_gold_gpu;
+	VectorOfDeviceVector<FOUR_VECTOR<real_t>> d_rv_gpu(parameters.nstreams);
+	VectorOfDeviceVector<real_t> d_qv_gpu(parameters.nstreams);
+	VectorOfDeviceVector<FOUR_VECTOR<real_t>> d_fv_gpu(parameters.nstreams);
+
+	//DMR
+	VectorOfDeviceVector<FOUR_VECTOR<half_t>> d_fv_gpu_ht(parameters.nstreams);
+
+	rad::DeviceVector<FOUR_VECTOR<real_t>> d_fv_gold_gpu;
 	//=====================================================================
 	//	GPU MEMORY SETUP
 	//=====================================================================
@@ -399,7 +397,7 @@ void setup_execution(Parameters& parameters, Log& log) {
 		//=====================================================================
 		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
 			auto& it = fv_cpu[streamIdx];
-			std::fill(it.begin(), it.end(), FOUR_VECTOR<tested_type>());
+			std::fill(it.begin(), it.end(), FOUR_VECTOR<real_t>());
 			d_fv_gpu[streamIdx].clear();
 		}
 
@@ -415,10 +413,13 @@ void setup_execution(Parameters& parameters, Log& log) {
 
 		// launch kernel - all boxes
 		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-			kernel_gpu_cuda<<<blocks, threads, 0, streams[streamIdx].stream>>>(
-					par_cpu, dim_cpu, d_box_gpu[streamIdx].data(),
-					d_rv_gpu[streamIdx].data(), d_qv_gpu[streamIdx].data(),
-					d_fv_gpu[streamIdx].data());
+
+			kernel_caller.kernel_call(blocks, threads,
+					streams[streamIdx], par_cpu, dim_cpu,
+					d_box_gpu[streamIdx].data(), d_rv_gpu[streamIdx].data(),
+					d_qv_gpu[streamIdx].data(), d_fv_gpu[streamIdx].data(),
+					d_fv_gpu_ht[streamIdx].data());
+
 			rad::checkFrameworkErrors(cudaPeekAtLastError());
 		}
 
@@ -500,6 +501,15 @@ void setup_execution(Parameters& parameters, Log& log) {
 
 }
 
+template<typename T, typename U>
+void setup(Parameters& parameters, Log& log) {
+	DMRKernelCaller<1, 1, T, U> kc;
+	setup_execution(parameters, log, kc);
+
+	UnhardenedKernelCaller<T> kf;
+	setup_execution(parameters, log, kf);
+}
+
 //=============================================================================
 //	MAIN FUNCTION
 //=============================================================================
@@ -547,7 +557,7 @@ int main(int argc, char *argv[]) {
 	profiler_thread->start_profile();
 #endif
 
-	setup_execution<float>(parameters, log);
+	setup<float, double>(parameters, log);
 
 #ifdef BUILDPROFILER
 	profiler_thread->end_profile();
