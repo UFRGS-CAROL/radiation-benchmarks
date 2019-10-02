@@ -270,7 +270,7 @@ void setup_execution(Parameters& parameters, Log& log) {
 	//=====================================================================
 	// prepare host memory to receive kernel output
 	// output (forces)
-	std::vector<std::vector<FOUR_VECTOR<tested_type>>>fv_cpu(parameters.nstreams);
+	std::vector<std::vector<FOUR_VECTOR<tested_type>>> fv_cpu(parameters.nstreams);
 
 	for (auto& fv_cpu_i : fv_cpu) {
 		fv_cpu_i.resize(dim_cpu.space_elem);
@@ -398,7 +398,7 @@ void setup_execution(Parameters& parameters, Log& log) {
 		//=====================================================================
 		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
 			auto& it = fv_cpu[streamIdx];
-//			std::fill(it.begin(), it.end(), FOUR_VECTOR<tested_type>());
+			std::fill(it.begin(), it.end(), FOUR_VECTOR<tested_type>());
 			d_fv_gpu[streamIdx].clear();
 		}
 
