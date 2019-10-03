@@ -25,6 +25,22 @@
 #define DOT(A,B) ((A.x)*(B.x)+(A.y)*(B.y)+(A.z)*(B.z))
 #define MAX_LOGGED_ERRORS_PER_STREAM 100
 
+//Subtraction considering the signal
+#define SUB_ABS(lhs, rhs) ((lhs > rhs) ? (lhs - rhs) : (rhs - lhs))
+
+
+#ifndef ZERO_FLOAT
+#define ZERO_FLOAT 2.2e-20
+#endif
+
+#ifndef ZERO_DOUBLE
+#define ZERO_DOUBLE 1.4e-40
+#endif
+
+#ifndef ZERO_HALF
+#define ZERO_HALF 4.166E-05
+#endif
+
 static void __error(std::string err, const char* file, const int line) {
 	throw std::runtime_error(
 			"ERROR:" + err + " at file:" + std::string(file)

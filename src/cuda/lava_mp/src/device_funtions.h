@@ -9,10 +9,10 @@
 #define DEVICE_FUNTIONS_H_
 
 #include "cuda_fp16.h"
+#include "common.h"
 
 #define __DEVICE_INLINE__ __device__ __forceinline__
 
-#define SUB_ABS(lhs, rhs) ((lhs > rhs) ? (lhs - rhs) : (rhs - lhs))
 
 __device__ unsigned long long errors;
 
@@ -30,6 +30,31 @@ __DEVICE_INLINE__ float exp__(float lhs) {
 
 __DEVICE_INLINE__ double exp__(double& lhs) {
 	return exp(lhs);
+}
+
+
+__DEVICE_INLINE__ double abs__(double a) {
+	return fabs(a);
+}
+
+__DEVICE_INLINE__ float abs__(float a) {
+	return fabsf(a);
+}
+
+__DEVICE_INLINE__ half abs__(half a) {
+	return fabsf(a);
+}
+
+
+template<const uint32_t THRESHOLD, typename real_t>
+__DEVICE_INLINE__ void check_bit_error(const FOUR_VECTOR<real_t>& lhs,
+		const FOUR_VECTOR<real_t>& rhs) {
+	if ((abs__(lhs.v - rhs.v) > ZERO_DOUBLE) ||	//V
+			(abs__(lhs.x - rhs.x) > ZERO_DOUBLE) ||	//X
+			(abs__(lhs.y - rhs.y) > ZERO_DOUBLE) ||	//Y
+			(abs__(lhs.z - rhs.z) > ZERO_DOUBLE)) {	//Z
+		atomicAdd(&errors, 1);
+	}
 }
 
 template<const uint32_t THRESHOLD>
@@ -64,5 +89,24 @@ __DEVICE_INLINE__ void cast_four_vector(FOUR_VECTOR<float>& lhs,
 	lhs.y = rhs.y;
 	lhs.z = rhs.z;
 }
+
+template<typename real_t>
+__DEVICE_INLINE__ void cast_four_vector(FOUR_VECTOR<real_t>& lhs,
+		FOUR_VECTOR<real_t>& rhs) {
+	lhs.v = rhs.v;
+	lhs.x = rhs.x;
+	lhs.y = rhs.y;
+	lhs.z = rhs.z;
+}
+
+
+inline uint64_t get_dmr_error(){
+	uint64_t dmr_errors;
+	rad::checkFrameworkErrors(
+			cudaMemcpyFromSymbol(&dmr_errors, errors, sizeof(uint64_t), 0,
+					cudaMemcpyDeviceToHost));
+	return dmr_errors;
+}
+
 
 #endif /* DEVICE_FUNTIONS_H_ */

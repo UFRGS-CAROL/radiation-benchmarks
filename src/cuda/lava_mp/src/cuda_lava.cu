@@ -145,11 +145,11 @@ void gpu_memory_setup(const Parameters& parameters,
 		std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu,
 rad::DeviceVector<FOUR_VECTOR<real_t>>& d_fv_gold_gpu, std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD) {
 
-	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-		d_box_gpu[streamIdx] = box_cpu;
-		d_rv_gpu[streamIdx] = rv_cpu;
-		d_qv_gpu[streamIdx] = qv_cpu;
-		d_fv_gpu[streamIdx] = fv_cpu[streamIdx];
+	for (int stream_idx = 0; stream_idx < parameters.nstreams; stream_idx++) {
+		d_box_gpu[stream_idx] = box_cpu;
+		d_rv_gpu[stream_idx] = rv_cpu;
+		d_qv_gpu[stream_idx] = qv_cpu;
+		d_fv_gpu[stream_idx] = fv_cpu[stream_idx];
 	}
 
 	if (parameters.gpu_check) {
@@ -168,11 +168,11 @@ void gpu_memory_unset(const Parameters& parameters,
 	//=====================================================================
 	//	GPU MEMORY DEALLOCATION
 	//=====================================================================
-	for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-		d_rv_gpu[streamIdx].resize(0);
-		d_qv_gpu[streamIdx].resize(0);
-		d_fv_gpu[streamIdx].resize(0);
-		d_box_gpu[streamIdx].resize(0);
+	for (int stream_idx = 0; stream_idx < parameters.nstreams; stream_idx++) {
+		d_rv_gpu[stream_idx].resize(0);
+		d_qv_gpu[stream_idx].resize(0);
+		d_fv_gpu[stream_idx].resize(0);
+		d_box_gpu[stream_idx].resize(0);
 	}
 	if (parameters.gpu_check) {
 		d_fv_gold_gpu.resize(0);
@@ -226,6 +226,7 @@ void setup_execution(Parameters& parameters, Log& log,
 	// prepare host memory to receive kernel output
 	// output (forces)
 	std::vector<std::vector<FOUR_VECTOR<real_t>>>fv_cpu(parameters.nstreams);
+	kernel_caller.set_half_t_vectors(parameters.nstreams, dim_cpu.space_elem);
 
 	for (auto& fv_cpu_i : fv_cpu) {
 		fv_cpu_i.resize(dim_cpu.space_elem);
@@ -342,7 +343,7 @@ void setup_execution(Parameters& parameters, Log& log,
 	for (int loop = 0; loop < parameters.iterations; loop++) {
 
 		if (parameters.verbose)
-			printf("======== Iteration #%06u ========\n", loop);
+			std::cout << "======== Iteration #" << loop << "========\n";
 
 		double globaltimer = rad::mysecond();
 		timestamp = rad::mysecond();
@@ -350,14 +351,16 @@ void setup_execution(Parameters& parameters, Log& log,
 		//=====================================================================
 		//	GPU SETUP
 		//=====================================================================
-		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
-			auto& it = fv_cpu[streamIdx];
+		for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
+				stream_idx++) {
+			auto& it = fv_cpu[stream_idx];
 			std::fill(it.begin(), it.end(), FOUR_VECTOR<real_t>());
-			d_fv_gpu[streamIdx].clear();
+			d_fv_gpu[stream_idx].clear();
 		}
+		kernel_caller.clear_half_t();
 
 		if (parameters.verbose)
-			printf("Setup prepare time: %.4fs\n", rad::mysecond() - timestamp);
+			std::cout << "Setup prepare time: " << rad::mysecond() - timestamp << "s\n";
 
 		//=====================================================================
 		//	KERNEL
@@ -367,18 +370,21 @@ void setup_execution(Parameters& parameters, Log& log,
 		log.start_iteration();
 
 		// launch kernel - all boxes
-		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
+		for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
+				stream_idx++) {
 
-			kernel_caller.kernel_call(blocks, threads, streams[streamIdx],
-					par_cpu, dim_cpu, d_box_gpu[streamIdx].data(),
-					d_rv_gpu[streamIdx].data(), d_qv_gpu[streamIdx].data(),
-					d_fv_gpu[streamIdx].data());
+			kernel_caller.kernel_call(blocks, threads, streams[stream_idx],
+					par_cpu, dim_cpu, d_box_gpu[stream_idx].data(),
+					d_rv_gpu[stream_idx].data(), d_qv_gpu[stream_idx].data(),
+					d_fv_gpu[stream_idx].data(), stream_idx);
 
-			rad::checkFrameworkErrors (cudaPeekAtLastError());}
+			rad::checkFrameworkErrors (cudaPeekAtLastError());;
+		}
 
 		for (auto& st : streams) {
 			st.sync();
-			rad::checkFrameworkErrors (cudaPeekAtLastError());}
+			rad::checkFrameworkErrors (cudaPeekAtLastError());;
+		}
 
 		log.end_iteration();
 		kernel_time = rad::mysecond() - kernel_time;
@@ -394,12 +400,13 @@ void setup_execution(Parameters& parameters, Log& log,
 
 			bool reloadFlag = false;
 #pragma omp parallel for shared(reloadFlag, fv_cpu, fv_cpu_GOLD, log)
-			for (uint32_t streamIdx = 0; streamIdx < parameters.nstreams;
-					streamIdx++) {
-				fv_cpu[streamIdx] = d_fv_gpu[streamIdx].to_vector();
+			for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
+					stream_idx++) {
+				fv_cpu[stream_idx] = d_fv_gpu[stream_idx].to_vector();
 				reloadFlag = reloadFlag
 						|| kernel_caller.check_output_errors(parameters.verbose,
-								streamIdx, fv_cpu[streamIdx], fv_cpu_GOLD, log);
+								stream_idx, fv_cpu[stream_idx], fv_cpu_GOLD,
+								log);
 			}
 
 			if (reloadFlag) {
@@ -455,13 +462,11 @@ void setup_execution(Parameters& parameters, Log& log,
 
 template<typename T, typename U>
 void setup(Parameters& parameters, Log& log) {
-	DMRKernelCaller<1, 1, T, U> kc(parameters.nstreams,
-			parameters.boxes * parameters.boxes * parameters.boxes
-					* NUMBER_PAR_PER_BOX);
+	DMRKernelCaller<1, 1, T, U> kc;
 	setup_execution(parameters, log, kc);
 
-	UnhardenedKernelCaller<T> kf;
-	setup_execution(parameters, log, kf);
+//	UnhardenedKernelCaller<U> kf;
+//	setup_execution(parameters, log, kf);
 }
 
 //=============================================================================
@@ -511,7 +516,7 @@ int main(int argc, char *argv[]) {
 	profiler_thread->start_profile();
 #endif
 
-	setup<float, double>(parameters, log);
+	setup<double, double>(parameters, log);
 
 #ifdef BUILDPROFILER
 	profiler_thread->end_profile();

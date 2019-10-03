@@ -23,15 +23,18 @@ struct KernelCaller {
 	VectorOfDeviceVector<FOUR_VECTOR<half_t>> d_fv_gpu_ht;
 	std::vector<std::vector<FOUR_VECTOR<half_t>>>fv_cpu_ht;
 
-	virtual ~KernelCaller() {
-	}
+	virtual ~KernelCaller() {}
+
+	virtual void set_half_t_vectors(uint32_t nstreams, uint32_t element_per_stream) {}
+	virtual void sync_half_t() {}
+	virtual void clear_half_t() {}
 
 	KernelCaller() {}
 
 	virtual void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream,
 			par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
-			FOUR_VECTOR<real_t>* d_fv_gpu) = 0;
+			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) = 0;
 
 	virtual void cmp(std::vector<FOUR_VECTOR<real_t>>& fv_cpu_rt, std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD,
 			Log& log, uint32_t streamIdx, bool verbose, uint32_t i, uint32_t& host_errors) {
@@ -43,8 +46,11 @@ struct KernelCaller {
 				host_errors++;
 				std::stringstream error_detail;
 				error_detail << std::scientific << std::setprecision(20);
-				error_detail << "stream: " << streamIdx << ", p: [" << i << "], v_r: " << val_output.v << ", v_e: " << val_gold.v;
-				error_detail << ", x_r: " << val_output.x << ", x_e: " << val_gold.x << ", y_r: " << val_output.y << ", y_e: " << val_gold.y;
+				error_detail << "stream: " << streamIdx;
+				error_detail << ", p: [" << i << "]";
+				error_detail << ", v_r: " << val_output.v << ", v_e: " << val_gold.v;
+				error_detail << ", x_r: " << val_output.x << ", x_e: " << val_gold.x;
+				error_detail << ", y_r: " << val_output.y << ", y_e: " << val_gold.y;
 				error_detail << ", z_r: " << val_output.z << ", z_e: " << val_gold.z;
 
 				if (verbose && (host_errors < 10)) {
@@ -69,12 +75,26 @@ struct KernelCaller {
 			Log& log) {
 		uint32_t host_errors = 0;
 
+		this->sync_half_t();
+
 #pragma omp parallel for shared(host_errors)
-		for (uint32_t i = 0; i < fv_cpu_GOLD.size(); i = i + 1) {
+		for (uint32_t i = 0; i < fv_cpu_GOLD.size(); i++) {
 			this->cmp(fv_cpu_rt, fv_cpu_GOLD, log, streamIdx, verbose, i, host_errors);
 		}
 
+
+		auto dmr_errors = get_dmr_error();
+		if (dmr_errors != 0) {
+			std::string error_detail = "detected_dmr_errors: "
+					+ std::to_string(dmr_errors);
+			if (verbose)
+				std::cout << error_detail << std::endl;
+			log.log_info_detail(error_detail);
+			log.update_infos(1);
+		}
+
 		log.update_errors(host_errors);
+
 
 		if (host_errors != 0) {
 			std::cout << "#";
@@ -88,7 +108,21 @@ template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t,
 		typename real_t>
 struct DMRKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t, real_t> {
 
-	DMRKernelCaller(uint32_t nstreams, uint32_t element_per_stream) {
+	void sync_half_t() override {
+		for (uint32_t i = 0; i < this->d_fv_gpu_ht.size(); i++) {
+			this->fv_cpu_ht[i] = this->d_fv_gpu_ht[i].to_vector();
+		}
+	}
+
+	void clear_half_t() override {
+		for (uint32_t i = 0; i < this->d_fv_gpu_ht.size(); i++) {
+			std::fill(this->fv_cpu_ht[i].begin(), this->fv_cpu_ht[i].end(), FOUR_VECTOR<half_t>());
+			this->d_fv_gpu_ht[i].clear();
+		}
+
+	}
+
+	void set_half_t_vectors(uint32_t nstreams, uint32_t element_per_stream) {
 		this->d_fv_gpu_ht.resize(nstreams);
 		this->fv_cpu_ht.resize(nstreams);
 
@@ -104,22 +138,30 @@ struct DMRKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t, real_t> {
 					override {
 		auto val_gold = fv_cpu_GOLD[i];
 		auto val_output = fv_cpu_rt[i];
-		auto val_output_ht = this->fv_cpu_ht[i];
+		auto val_output_ht = this->fv_cpu_ht[streamIdx][i];
 
-		if (val_gold != val_output || check_bit_error()) {
+		if (val_gold != val_output
+				|| check_bit_error(val_output_ht, val_output)) {
 #pragma omp critical
 			{
 				host_errors++;
 				std::stringstream error_detail;
 				error_detail << std::scientific << std::setprecision(20);
-				error_detail << "stream: " << streamIdx << ", p: [" << i
-						<< "], v_r: " << val_output.v << ", v_e: "
+				error_detail << "stream: " << streamIdx;
+				error_detail << ", p: [" << i << "]";
+				error_detail << ", v_r: " << val_output.v << ", v_e: "
 						<< val_gold.v;
 				error_detail << ", x_r: " << val_output.x << ", x_e: "
-						<< val_gold.x << ", y_r: " << val_output.y << ", y_e: "
+						<< val_gold.x;
+				error_detail << ", y_r: " << val_output.y << ", y_e: "
 						<< val_gold.y;
 				error_detail << ", z_r: " << val_output.z << ", z_e: "
 						<< val_gold.z;
+
+				error_detail << ", s_v_r: " << val_output_ht.v;
+				error_detail << ", s_x_r: " << val_output_ht.x;
+				error_detail << ", s_y_r: " << val_output_ht.y;
+				error_detail << ", s_z_r: " << val_output_ht.z;
 
 				if (verbose && (host_errors < 10)) {
 					std::cout << error_detail.str() << std::endl;
@@ -132,10 +174,49 @@ struct DMRKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t, real_t> {
 	void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream,
 			par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
-			FOUR_VECTOR<real_t>* d_fv_gpu) {
+			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
 		kernel_gpu_cuda<COUNT, THRESHOLD> <<<blocks, threads, 0, stream.stream>>>(
 				par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
-				this->d_fv_gpu_ht[0].data());
+				this->d_fv_gpu_ht[stream_idx].data());
+	}
+
+	bool check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs) {
+		float rhs_float_v = float(rhs.v);
+		float rhs_float_x = float(rhs.x);
+		float rhs_float_y = float(rhs.y);
+		float rhs_float_z = float(rhs.z);
+
+		//To INT
+		uint32_t rhs_data_v = reinterpret_cast<uint32_t&>(rhs_float_v);
+		uint32_t rhs_data_x = reinterpret_cast<uint32_t&>(rhs_float_x);
+		uint32_t rhs_data_y = reinterpret_cast<uint32_t&>(rhs_float_y);
+		uint32_t rhs_data_z = reinterpret_cast<uint32_t&>(rhs_float_z);
+
+		uint32_t lhs_data_v = reinterpret_cast<uint32_t&>(lhs.v);
+		uint32_t lhs_data_x = reinterpret_cast<uint32_t&>(lhs.x);
+		uint32_t lhs_data_y = reinterpret_cast<uint32_t&>(lhs.y);
+		uint32_t lhs_data_z = reinterpret_cast<uint32_t&>(lhs.z);
+
+		uint32_t sub_res_v = SUB_ABS(lhs_data_v, rhs_data_v);
+		uint32_t sub_res_x = SUB_ABS(lhs_data_x, rhs_data_x);
+		uint32_t sub_res_y = SUB_ABS(lhs_data_y, rhs_data_y);
+		uint32_t sub_res_z = SUB_ABS(lhs_data_z, rhs_data_z);
+
+		if ((sub_res_v > THRESHOLD) || (sub_res_x > THRESHOLD)
+				|| (sub_res_y > THRESHOLD) || (sub_res_z > THRESHOLD)) {
+			return true;
+		}
+		return false;
+	}
+
+	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs) {
+		if ((std::fabs(lhs.v - rhs.v) > THRESHOLD) ||	//V
+				(std::fabs(lhs.x - rhs.x) > THRESHOLD) ||	//X
+				(std::fabs(lhs.y - rhs.y) > THRESHOLD) ||	//Y
+				(std::fabs(lhs.z - rhs.z) > THRESHOLD)) {	//Z
+			return true;
+		}
+		return false;
 	}
 };
 
@@ -145,7 +226,7 @@ struct UnhardenedKernelCaller: public KernelCaller<0, 0, real_t, real_t> {
 	void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream,
 			par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
-			FOUR_VECTOR<real_t>* d_fv_gpu) {
+			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
 		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(par_cpu, dim_cpu,
 				d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
 	}

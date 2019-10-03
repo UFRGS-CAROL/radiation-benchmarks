@@ -17,7 +17,7 @@ NVCCFLAGS= -std=c++11 -O3 -Xptxas -v
 PRECISION?=single
 DATA_DIR=../../../data/lava
 DEF_SIZE=20
-STREAMS=10
+STREAMS=1
 CHARGES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_charges_$(DEF_SIZE)
 DISTANCES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_distances_$(DEF_SIZE)
 GOLD=$(DATA_DIR)/lava_$(PRECISION)_gold_$(DEF_SIZE)
