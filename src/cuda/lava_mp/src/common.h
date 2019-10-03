@@ -8,6 +8,8 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#include <unordered_map>
+
 /**
  =============================================================================
  DEFINE / INCLUDE
@@ -28,7 +30,6 @@
 //Subtraction considering the signal
 #define SUB_ABS(lhs, rhs) ((lhs > rhs) ? (lhs - rhs) : (rhs - lhs))
 
-
 #ifndef ZERO_FLOAT
 #define ZERO_FLOAT 2.2e-20
 #endif
@@ -43,11 +44,35 @@
 
 static void __error(std::string err, const char* file, const int line) {
 	throw std::runtime_error(
-			"ERROR:" + err + " at file:" + std::string(file)
-					+ " at line:" + std::to_string(line));
+			"ERROR:" + err + " at file:" + std::string(file) + " at line:"
+					+ std::to_string(line));
 }
 
 #define error(str) __error(str, __FILE__, __LINE__)
 
+typedef enum {
+	HALF, SINGLE, DOUBLE
+} PRECISION;
+
+typedef enum {
+	NONE, DMR, TMR, DMRMIXED
+} REDUNDANCY;
+
+std::unordered_map<std::string, REDUNDANCY> RED = {
+//NONE
+		{ "none", NONE },
+		//DMR
+		{ "dmr", DMR },
+		// DMRMIXED
+		{ "dmrmixed", DMRMIXED },
+		};
+
+std::unordered_map<std::string, PRECISION> PRE = {
+//HALF
+		{ "half", HALF },
+		//SINGLE
+		{ "single", SINGLE },
+		// DOUBLE
+		{ "double", DOUBLE }, };
 
 #endif /* COMMON_H_ */

@@ -9,6 +9,7 @@
 #define PARAMETERS_H_
 
 #include <string>
+#include "common.h"
 
 struct Parameters {
 	int boxes;
@@ -18,8 +19,12 @@ struct Parameters {
 	bool gpu_check;
 	bool generate;
 	std::string test_precision_description;
+	std::string test_redundancy_description;
 
-	Parameters();
+	REDUNDANCY redundancy;
+	PRECISION precision;
+
+//	Parameters();
 
 	Parameters(int argc, char** argv);
 

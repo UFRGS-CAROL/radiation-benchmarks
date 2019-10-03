@@ -21,6 +21,17 @@ Parameters::Parameters(int argc, char** argv) {
 		error("");
 	}
 
+	//=============================================================
+	this->test_precision_description = this->find_char_arg(argc, argv,
+			"-precision", "single");
+	this->precision = PRE[this->test_precision_description];
+
+	this->test_redundancy_description = this->find_char_arg(argc, argv,
+			"-redundancy", "none");
+	this->redundancy = RED[this->test_redundancy_description];
+
+	//=============================================================
+
 	this->boxes = this->find_int_arg(argc, argv, "-boxes", 10);
 
 	if (this->boxes <= 0) {
@@ -68,7 +79,7 @@ Parameters::Parameters(int argc, char** argv) {
 	}
 
 	this->gpu_check = this->find_arg(argc, argv, "-gpu_check");
-	if(this->gpu_check){
+	if (this->gpu_check) {
 		error("Function not implemented");
 	}
 
@@ -136,7 +147,7 @@ bool Parameters::find_arg(int argc, char** argv, std::string arg) {
 	return false;
 }
 
-std::ostream& operator<<(std::ostream& os, const Parameters& p){
+std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Boxes " << p.boxes << std::endl;
 	os << "Streams " << p.nstreams << std::endl;
 	os << "Generate " << p.generate << std::endl;
