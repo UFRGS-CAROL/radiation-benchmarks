@@ -57,7 +57,8 @@ __DEVICE_INLINE__ void check_bit_error(const FOUR_VECTOR<float>& lhs,
 	}
 }
 
-__DEVICE_INLINE__ void cast_four_vector(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs) {
+__DEVICE_INLINE__ void cast_four_vector(FOUR_VECTOR<float>& lhs,
+		FOUR_VECTOR<double>& rhs) {
 	lhs.v = rhs.v;
 	lhs.x = rhs.x;
 	lhs.y = rhs.y;

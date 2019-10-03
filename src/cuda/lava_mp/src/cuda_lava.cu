@@ -179,50 +179,8 @@ void gpu_memory_unset(const Parameters& parameters,
 	}
 }
 
-// Returns true if no errors are found. False if otherwise.
-// Set votedOutput pointer to retrieve the voted matrix
-template<typename real_t>
-bool checkOutputErrors(int verbose, int streamIdx,
-		std::vector<FOUR_VECTOR<real_t>>& fv_cpu,
-		std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD, Log& log) {
-	int host_errors = 0;
-
-#pragma omp parallel for shared(host_errors)
-	for (int i = 0; i < fv_cpu_GOLD.size(); i = i + 1) {
-		auto valGold = fv_cpu_GOLD[i];
-		auto valOutput = fv_cpu[i];
-		if (valGold != valOutput) {
-#pragma omp critical
-			{
-				char error_detail[500];
-				host_errors++;
-
-				snprintf(error_detail, 500,
-						"stream: %d, p: [%d], v_r: %1.20e, v_e: %1.20e, x_r: %1.20e, "
-								"x_e: %1.20e, y_r: %1.20e, y_e: %1.20e, z_r: %1.20e, z_e: %1.20e",
-						streamIdx, i, (double) valOutput.v, (double) valGold.v,
-						(double) valOutput.x, (double) valGold.x,
-						(double) valOutput.y, (double) valGold.y,
-						(double) valOutput.z, (double) valGold.z);
-				if (verbose && (host_errors < 10))
-					std::cout << error_detail << std::endl;
-
-				log.log_error_detail(std::string(error_detail));
-			}
-		}
-	}
-
-	// printf("numErrors:%d", host_errors);
-
-	log.update_errors(host_errors);
-
-	if (host_errors != 0)
-		printf("#");
-
-	return (host_errors == 0);
-}
-
-template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t, typename real_t>
+template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t,
+		typename real_t>
 void setup_execution(Parameters& parameters, Log& log,
 		KernelCaller<COUNT, THRESHOLD, half_t, real_t>& kernel_caller) {
 	//=====================================================================
@@ -373,9 +331,6 @@ void setup_execution(Parameters& parameters, Log& log,
 	VectorOfDeviceVector<real_t> d_qv_gpu(parameters.nstreams);
 	VectorOfDeviceVector<FOUR_VECTOR<real_t>> d_fv_gpu(parameters.nstreams);
 
-	//DMR
-	VectorOfDeviceVector<FOUR_VECTOR<half_t>> d_fv_gpu_ht(parameters.nstreams);
-
 	rad::DeviceVector<FOUR_VECTOR<real_t>> d_fv_gold_gpu;
 	//=====================================================================
 	//	GPU MEMORY SETUP
@@ -414,19 +369,16 @@ void setup_execution(Parameters& parameters, Log& log,
 		// launch kernel - all boxes
 		for (int streamIdx = 0; streamIdx < parameters.nstreams; streamIdx++) {
 
-			kernel_caller.kernel_call(blocks, threads,
-					streams[streamIdx], par_cpu, dim_cpu,
-					d_box_gpu[streamIdx].data(), d_rv_gpu[streamIdx].data(),
-					d_qv_gpu[streamIdx].data(), d_fv_gpu[streamIdx].data(),
-					d_fv_gpu_ht[streamIdx].data());
+			kernel_caller.kernel_call(blocks, threads, streams[streamIdx],
+					par_cpu, dim_cpu, d_box_gpu[streamIdx].data(),
+					d_rv_gpu[streamIdx].data(), d_qv_gpu[streamIdx].data(),
+					d_fv_gpu[streamIdx].data());
 
-			rad::checkFrameworkErrors(cudaPeekAtLastError());
-		}
+			rad::checkFrameworkErrors (cudaPeekAtLastError());}
 
 		for (auto& st : streams) {
 			st.sync();
-			rad::checkFrameworkErrors(cudaPeekAtLastError());
-		}
+			rad::checkFrameworkErrors (cudaPeekAtLastError());}
 
 		log.end_iteration();
 		kernel_time = rad::mysecond() - kernel_time;
@@ -442,12 +394,12 @@ void setup_execution(Parameters& parameters, Log& log,
 
 			bool reloadFlag = false;
 #pragma omp parallel for shared(reloadFlag, fv_cpu, fv_cpu_GOLD, log)
-			for (int streamIdx = 0; streamIdx < parameters.nstreams;
+			for (uint32_t streamIdx = 0; streamIdx < parameters.nstreams;
 					streamIdx++) {
 				fv_cpu[streamIdx] = d_fv_gpu[streamIdx].to_vector();
 				reloadFlag = reloadFlag
-						|| checkOutputErrors(parameters.verbose, streamIdx,
-								fv_cpu[streamIdx], fv_cpu_GOLD, log);
+						|| kernel_caller.check_output_errors(parameters.verbose,
+								streamIdx, fv_cpu[streamIdx], fv_cpu_GOLD, log);
 			}
 
 			if (reloadFlag) {
@@ -503,7 +455,9 @@ void setup_execution(Parameters& parameters, Log& log,
 
 template<typename T, typename U>
 void setup(Parameters& parameters, Log& log) {
-	DMRKernelCaller<1, 1, T, U> kc;
+	DMRKernelCaller<1, 1, T, U> kc(parameters.nstreams,
+			parameters.boxes * parameters.boxes * parameters.boxes
+					* NUMBER_PAR_PER_BOX);
 	setup_execution(parameters, log, kc);
 
 	UnhardenedKernelCaller<T> kf;
