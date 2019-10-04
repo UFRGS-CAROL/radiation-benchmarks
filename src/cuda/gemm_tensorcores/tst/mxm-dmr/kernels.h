@@ -25,6 +25,9 @@ typedef __half half_t_device;
     #define ZERO_HALF 4.166e-05
 #endif
 
+__device__ __forceinline__ double abs__(double a) {
+    return fabs(a);
+}
 
 __device__ __forceinline__ void axpy__(const double a, const double b, double &c) {
     c = __fma_rn(a, b, c);
@@ -66,10 +69,10 @@ __device__ void check_bit_error(const float &lhs, const float &rhs) {
 	}
 }
 template<const uint32_t THRESHOLD_uint32_t>
-__device__ __forceinline__ void check_bit_error(const double& lhs, const float& rhs) {
-    const double diff = abs__(lhs - double(rhs));
+__device__ __forceinline__ void check_bit_error(const float& lhs, const double& rhs) {
+    const double diff = abs__(rhs - double(lhs));
     printf("diff = %f \n ",diff);
-    const double zero = double(ZERO_FLOAT);
+    const double zero = double(ZERO_DOUBLE);
     if (diff > zero) {
         atomicAdd(&errors, 1);
     }
