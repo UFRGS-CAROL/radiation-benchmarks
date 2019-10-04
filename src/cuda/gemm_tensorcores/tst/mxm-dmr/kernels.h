@@ -60,15 +60,15 @@ __device__ void check_bit_error(const __half &lhs, const float &rhs) {
 template<const uint32_t THRESHOLD_uint32_t>
 __device__ void check_bit_error(const float &lhs, const float &rhs) {
 	float diff = fabs(lhs - rhs);
-    printf("diff = %f \n ",diff);
+    printf("diff float = %f \n ",diff);
 	if (diff > ZERO_FLOAT) {
 		atomicAdd(&errors, 1);
 	}
 }
 template<const uint32_t THRESHOLD_uint32_t>
 __device__ __forceinline__ void check_bit_error(const float& lhs, const double& rhs) {
-    const double diff = fabs(rhs - double(lhs));
-    printf("diff = %f \n ",diff);
+    const double diff = fabs(rhs - lhs);
+    printf("diff mixed = %f \n ",diff);
     const double zero = double(ZERO_DOUBLE);
     if (diff > zero) {
         atomicAdd(&errors, 1);
