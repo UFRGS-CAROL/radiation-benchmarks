@@ -68,6 +68,7 @@ __device__ void check_bit_error(const float &lhs, const float &rhs) {
 template<const uint32_t THRESHOLD_uint32_t>
 __device__ __forceinline__ void check_bit_error(const double& lhs, const float& rhs) {
     const double diff = abs__(lhs - double(rhs));
+    printf("diff = %f \n ",diff);
     const double zero = double(ZERO_FLOAT);
     if (diff > zero) {
         atomicAdd(&errors, 1);
