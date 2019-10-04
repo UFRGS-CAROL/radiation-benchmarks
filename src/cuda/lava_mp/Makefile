@@ -1,20 +1,12 @@
 CXX=g++
 CXXFLAGS= -std=c++11 -o3  -fPIC -pthread 
 EXEC=cuda_lava
-PRECISION=single
 
 LOGS=0
 BUILDPROFILER=0
 
-VPATH=./src
-#CUDAPATH=/home/carol/cuda/cuda-toolkit
-CUDAPATH=/usr/local/cuda
-NVCC=$(CUDAPATH)/bin/nvcc
-
-
-NVCCFLAGS= -std=c++11 -O3 -Xptxas -v
-
-PRECISION?=single
+PRECISION=double
+DMR=dmrmixed
 DATA_DIR=../../../data/lava
 DEF_SIZE=20
 STREAMS=1
@@ -22,6 +14,11 @@ CHARGES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_charges_$(DEF_SIZE)
 DISTANCES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_distances_$(DEF_SIZE)
 GOLD=$(DATA_DIR)/lava_$(PRECISION)_gold_$(DEF_SIZE)
 
+
+VPATH=./src
+CUDAPATH=/usr/local/cuda
+NVCC=$(CUDAPATH)/bin/nvcc
+NVCCFLAGS= -std=c++11 -O3 -Xptxas -v
 
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
 ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
@@ -80,14 +77,16 @@ generate: $(EXEC)
 				-input_distances $(DISTANCES_INPUT) \
 				-input_charges $(CHARGES_INPUT)	\
 				-output_gold $(GOLD) \
-				-opnum 100 -precision single -redundancy dmrmixed
+				-opnum 100 -precision $(PRECISION) -redundancy $(DMR)
 
 test: $(RUN_EXEC)
 	./$(EXEC) -boxes $(DEF_SIZE) -streams $(STREAMS) \
 				-iterations 10 -verbose \
 				-input_distances $(DISTANCES_INPUT) \
 				-input_charges $(CHARGES_INPUT) \
-				-output_gold $(GOLD)
+				-output_gold $(GOLD) \
+				-opnum 100 -precision $(PRECISION) -redundancy $(DMR)
+				
 
 	
 	
