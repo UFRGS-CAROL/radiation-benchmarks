@@ -93,7 +93,7 @@ __device__ void check_bit_error(const float &lhs, const float &rhs) {
 // }
 
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
-void matrix_mult_dmr(real_t *A, real_t *B, int M, int N, int K, real_t *D, half_t *D_h, alpha, beta, real_t C) {
+void matrix_mult_dmr(real_t *A, real_t *B, int M, int N, int K, real_t *D, half_t *D_h, real_t alpha, real_t beta, real_t C) {
     unsigned int grid_rows = (M + BLOCK_SIZE - 1) / BLOCK_SIZE;
     unsigned int grid_cols = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
     dim3 dimGrid(grid_cols, grid_rows);
