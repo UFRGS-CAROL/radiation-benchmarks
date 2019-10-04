@@ -60,9 +60,18 @@ __device__ void check_bit_error(const __half &lhs, const float &rhs) {
 template<const uint32_t THRESHOLD_uint32_t>
 __device__ void check_bit_error(const float &lhs, const float &rhs) {
 	float diff = fabs(lhs - rhs);
+    printf("diff = %f \n ",diff);
 	if (diff > ZERO_FLOAT) {
 		atomicAdd(&errors, 1);
 	}
+}
+template<const uint32_t THRESHOLD_uint32_t>
+__device__ __forceinline__ void check_bit_error(const double& lhs, const float& rhs) {
+    const double diff = abs__(lhs - double(rhs));
+    const double zero = double(ZERO_FLOAT);
+    if (diff > zero) {
+        atomicAdd(&errors, 1);
+    }
 }
 
 // template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
