@@ -98,15 +98,16 @@ void matrix_mult_dmr(real_t *A, real_t *B, int M, int N, int K, real_t *D, half_
     unsigned int grid_cols = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
     dim3 dimGrid(grid_cols, grid_rows);
     dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-    matrix_mult_dmr_kernel<THRESHOLD, COUNT><<<dimGrid,dimBlock>>>(D,(__half*)D_h, C, A, B, alpha, beta, M, N);
+    matrix_mult_dmr_kernel<THRESHOLD, COUNT,half_t, real_t><<<dimGrid,dimBlock>>>(D,(__half*)D_h, C, A, B, alpha, beta, M, N);
 }
 
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
-__device__ void matrix_mult_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
+__global__ void matrix_mult_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
         real_t *A, real_t *B, real_t alpha, real_t beta, int wA, int wB) {
     // Block index
     int bx = blockIdx.x;
     int by = blockIdx.y;
+
 
     // Thread index
     int tx = threadIdx.x;

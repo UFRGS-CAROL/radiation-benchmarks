@@ -25,3 +25,4 @@ $(EXEC): main.cu $(DEPS)
 
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
+	
