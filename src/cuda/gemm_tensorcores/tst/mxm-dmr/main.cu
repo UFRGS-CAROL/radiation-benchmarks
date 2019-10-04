@@ -42,8 +42,8 @@ int main(int argc, char **argv) {
 
 	matrix_mult_dmr<THRESHOLD, CHECK_BLOCK>(device_a, device_b, m, n, k, device_d, device_d_half, alpha, beta, device_c);
 
-	cudaMemcpy(host_d, device_c, m * n * sizeof(real_t), cudaMemcpyDeviceToHost);
-	cudaMemcpy(host_d_half, device_c_half, m * n * sizeof(half_t), cudaMemcpyDeviceToHost);
+	cudaMemcpy(host_d, device_d, m * n * sizeof(real_t), cudaMemcpyDeviceToHost);
+	cudaMemcpy(host_d_half, device_d_half, m * n * sizeof(half_t), cudaMemcpyDeviceToHost);
 
     std::cout << "FLOAT" << std::endl;
 	for (int i = 0; i < 10; i++) {
