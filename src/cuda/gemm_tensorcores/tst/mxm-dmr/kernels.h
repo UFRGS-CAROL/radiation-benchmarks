@@ -7,7 +7,7 @@
 using half_float::half;
 using namespace half_float::literal;
 
-typedef float real_t;
+//typedef float real_t;
 //typedef half_float::half half_t;
 typedef __half half_t_device;
 
@@ -60,15 +60,17 @@ __device__ void check_bit_error(const __half &lhs, const float &rhs) {
 template<const uint32_t THRESHOLD_uint32_t>
 __device__ void check_bit_error(const float &lhs, const float &rhs) {
 	float diff = fabs(lhs - rhs);
-    printf("diff = %f \n ",diff);
+    printf("diff float = %f \n ",diff);
 	if (diff > ZERO_FLOAT) {
 		atomicAdd(&errors, 1);
 	}
 }
 template<const uint32_t THRESHOLD_uint32_t>
-__device__ __forceinline__ void check_bit_error(const double& lhs, const float& rhs) {
-    const double diff = abs__(lhs - double(rhs));
-    const double zero = double(ZERO_FLOAT);
+__device__ __forceinline__ void check_bit_error(const float& lhs, const double& rhs) {
+    const double diff = fabs(rhs - double(lhs));
+    THRESHOLD_uint32_t = fmax(THRESHOLD_uint32_t, diff);
+    printf("THRESHOLD: %.20e \n",THRESHOLD_uint32_t);
+    const double zero = double(ZERO_DOUBLE);
     if (diff > zero) {
         atomicAdd(&errors, 1);
     }
@@ -166,10 +168,14 @@ __global__ void matrix_mult_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
             axpy__(As[ty][k], Bs[k][tx], Csub);
             axpy__(half_t(As[ty][k]), half_t(Bs[k][tx]), Csub_half);
 
-#if CHECKBLOCK == 1
-            check_bit_error<THRESHOLD>(Csub_half, Csub);
-
+//#if CHECKBLOCK == 1
+            if ((k % COUNT) == 0)
+            {
+            check_bit_error<THRESHOLD>(Csub_half, Csub);    
             Csub_half = half_t(Csub);
+            }
+           
+
 //#elif CHECKBLOCK >= 1
 //          if((k % CHECKBLOCK) == 0) {
 //              check_relative_error(Csub_half, Csub);
@@ -179,7 +185,7 @@ __global__ void matrix_mult_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 //
 //              Csub_half = half_t(Csub);
 //          }
-#endif
+//#endif
 
         }
 
@@ -213,5 +219,5 @@ void matrix_mult_dmr(real_t *A, real_t *B, int M, int N, int K, real_t *D, half_
     unsigned int grid_cols = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
     dim3 dimGrid(grid_cols, grid_rows);
     dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-    matrix_mult_dmr_kernel<THRESHOLD, COUNT,half_t, real_t><<<dimGrid,dimBlock>>>(D, D_h, C, A, B, alpha, beta, M, N);
+    matrix_mult_dmr_kernel<THRESHOLD, COUNT><<<dimGrid,dimBlock>>>(D, D_h, C, A, B, alpha, beta, M, N);
 }
