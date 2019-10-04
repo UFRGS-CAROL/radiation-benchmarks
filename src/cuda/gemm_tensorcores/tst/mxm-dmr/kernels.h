@@ -7,7 +7,7 @@
 using half_float::half;
 using namespace half_float::literal;
 
-typedef float real_t;
+//typedef float real_t;
 //typedef half_float::half half_t;
 typedef __half half_t_device;
 
