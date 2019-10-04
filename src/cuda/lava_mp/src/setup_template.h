@@ -438,8 +438,11 @@ void setup_execution(Parameters& parameters, Log& log,
 
 	}
 
+	if (parameters.generate) {
+		std::cout << "Max element threshold "
+				<< kernel_caller.get_max_threshold(fv_cpu) << std::endl;
+	}
+
 }
-
-
 
 #endif /* SETUP_TEMPLATE_H_ */
