@@ -16,22 +16,22 @@
 #include <string>
 
 struct Log {
-	size_t error;
+	size_t error_;
 	size_t info;
 	std::string test_name;
 	std::string test_info;
 
 	Log(const Log& l) :
-			error(l.error), info(l.info), test_info(l.test_info), test_name(
+			error_(l.error_), info(l.info), test_info(l.test_info), test_name(
 					l.test_name) {
 	}
 
 	Log() :
-			error(0), info(0) {
+			error_(0), info(0) {
 	}
 
 	Log(std::string& test_name, std::string& test_info) :
-			error(0), info(0), test_name(test_name), test_info(test_info) {
+			error_(0), info(0), test_name(test_name), test_info(test_info) {
 #ifdef LOGS
 		start_log_file(const_cast<char*>(test_name.c_str()),
 				const_cast<char*>(test_info.c_str()));
@@ -39,7 +39,7 @@ struct Log {
 	}
 
 	Log& operator=(const Log& rhs) {
-		this->error = rhs.error;
+		this->error_ = rhs.error_;
 		this->info = rhs.info;
 		this->test_info = rhs.test_info;
 		this->test_name = rhs.test_name;
@@ -52,7 +52,7 @@ struct Log {
 		file_name = get_log_file_name();
 #endif
 		os << "Logfilename: " << file_name << std::endl;
-		os << "Error: " << d.error << std::endl;
+		os << "error_: " << d.error_ << std::endl;
 		os << "Info: " << d.info << std::endl;
 		os << "Test info: " << d.test_info << std::endl;
 		os << "Test name: " << d.test_name;
@@ -73,16 +73,16 @@ struct Log {
 #endif
 	}
 
-	void set_max_errors_iter(size_t max_errors) {
+	void set_max_errors_iter(size_t max_error_s) {
 #ifdef LOGS
-		::set_max_errors_iter(max_max_errors);
+		::set_max_errors_iter(max_max_error_s);
 #endif
 	}
 
-	void log_error_detail(std::string error_detail) {
-		this->error++;
+	void log_error_detail(std::string error__detail) {
+		this->error_++;
 #ifdef LOGS
-		::log_error_detail(const_cast<char*>(error_detail.c_str()));
+		::log_error_detail(const_cast<char*>(error__detail.c_str()));
 #endif
 	}
 
@@ -94,7 +94,7 @@ struct Log {
 	}
 
 	void start_iteration() {
-		this->error = 0;
+		this->error_ = 0;
 		this->info = 0;
 #ifdef LOGS
 		::start_iteration();
@@ -107,10 +107,10 @@ struct Log {
 #endif
 	}
 
-	void update_errors() {
-		if (this->error != 0) {
+	void update_error_s() {
+		if (this->error_ != 0) {
 #ifdef LOGS
-			::log_error_count(this->error);
+			::log_error__count(this->error_);
 #endif
 		}
 	}
@@ -123,10 +123,10 @@ struct Log {
 		}
 	}
 
-	void update_errors(size_t errors) {
-		if (errors != 0) {
+	void update_errors(size_t error_s) {
+		if (error_s != 0) {
 #ifdef LOGS
-			::log_error_count(errors);
+			::log_error_count(error_s);
 #endif
 		}
 	}

@@ -30,6 +30,9 @@ Parameters::Parameters(int argc, char** argv) {
 			"-redundancy", "none");
 	this->redundancy = RED[this->test_redundancy_description];
 
+	//if not defined set the max number
+	this->block_check = this->find_int_arg(argc, argv, "-opnum",
+	NUMBER_PAR_PER_BOX);
 	//=============================================================
 
 	this->boxes = this->find_int_arg(argc, argv, "-boxes", 10);
@@ -151,6 +154,9 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Boxes " << p.boxes << std::endl;
 	os << "Streams " << p.nstreams << std::endl;
 	os << "Generate " << p.generate << std::endl;
+	os << "Precision " << p.test_precision_description << std::endl;
+	os << "Redundancy " << p.test_redundancy_description << std::endl;
+	os << "Block check " << p.block_check << std::endl;
 	os << "Fault injection " << p.fault_injection << std::endl;
 	os << "Verbose " << p.verbose << std::endl;
 	os << "Iterations " << p.iterations << std::endl;

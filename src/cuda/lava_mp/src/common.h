@@ -58,7 +58,7 @@ typedef enum {
 	NONE, DMR, TMR, DMRMIXED
 } REDUNDANCY;
 
-std::unordered_map<std::string, REDUNDANCY> RED = {
+static std::unordered_map<std::string, REDUNDANCY> RED = {
 //NONE
 		{ "none", NONE },
 		//DMR
@@ -67,7 +67,7 @@ std::unordered_map<std::string, REDUNDANCY> RED = {
 		{ "dmrmixed", DMRMIXED },
 		};
 
-std::unordered_map<std::string, PRECISION> PRE = {
+static std::unordered_map<std::string, PRECISION> PRE = {
 //HALF
 		{ "half", HALF },
 		//SINGLE

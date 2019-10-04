@@ -24,6 +24,8 @@ struct Parameters {
 	REDUNDANCY redundancy;
 	PRECISION precision;
 
+	int block_check;
+
 //	Parameters();
 
 	Parameters(int argc, char** argv);

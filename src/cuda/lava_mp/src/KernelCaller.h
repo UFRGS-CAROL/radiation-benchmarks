@@ -25,9 +25,15 @@ struct KernelCaller {
 
 	virtual ~KernelCaller() {}
 
-	virtual void set_half_t_vectors(uint32_t nstreams, uint32_t element_per_stream) {}
-	virtual void sync_half_t() {}
-	virtual void clear_half_t() {}
+	virtual void set_half_t_vectors(uint32_t nstreams, uint32_t element_per_stream) {
+
+	}
+	virtual void sync_half_t() {
+
+	}
+	virtual void clear_half_t() {
+
+	}
 
 	KernelCaller() {}
 
@@ -106,7 +112,7 @@ struct KernelCaller {
 
 template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t,
 		typename real_t>
-struct DMRKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t, real_t> {
+struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t, real_t> {
 
 	void sync_half_t() override {
 		for (uint32_t i = 0; i < this->d_fv_gpu_ht.size(); i++) {
@@ -230,6 +236,10 @@ struct UnhardenedKernelCaller: public KernelCaller<0, 0, real_t, real_t> {
 		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(par_cpu, dim_cpu,
 				d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
 	}
+};
+
+template<const uint32_t COUNT, typename real_t>
+struct DMRKernelCaller: public DMRMixedKernelCaller<COUNT, 0, real_t, real_t> {
 };
 
 #endif /* KERNELCALLER_H_ */

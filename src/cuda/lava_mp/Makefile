@@ -30,7 +30,7 @@ ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 INCLUDE= -I./src -I$(CUDAPATH)/include -I../../include -I../common/include
 
 OBJDIR=./obj/
-OBJ= Parameters.o cuda_lava.o
+OBJ= Parameters.o cuda_lava.o setup_double.o
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g
@@ -79,7 +79,8 @@ generate: $(EXEC)
 				-iterations 1 -verbose \
 				-input_distances $(DISTANCES_INPUT) \
 				-input_charges $(CHARGES_INPUT)	\
-				-output_gold $(GOLD)
+				-output_gold $(GOLD) \
+				-opnum 100 -precision single -redundancy dmrmixed
 
 test: $(RUN_EXEC)
 	./$(EXEC) -boxes $(DEF_SIZE) -streams $(STREAMS) \

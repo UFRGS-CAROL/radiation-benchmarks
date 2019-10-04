@@ -26,52 +26,11 @@
 
 #endif // LOGHELPER
 
-#include "setup_template.h"
+#include "Parameters.h"
+#include "Log.h"
 
-void choose_setup_option(Parameters& parameters, Log& log) {
-	if (parameters.precision == HALF) {
-		if (parameters.redundancy == NONE) {
-			error("Not implemented");
-		}
-
-		if (parameters.redundancy == DMR) {
-			error("Not implemented");
-		}
-
-		if (parameters.redundancy == DMRMIXED) {
-			error("Cannot execute DMRMIXED mode on half");
-		}
-
-	}
-
-	if (parameters.precision == SINGLE) {
-		if (parameters.redundancy == NONE) {
-			error("Not implemented");
-		}
-
-		if (parameters.redundancy == DMR) {
-			error("Not implemented");
-		}
-
-		if (parameters.redundancy == DMRMIXED) {
-			error("Not implemented");
-		}
-	}
-
-	if (parameters.precision == DOUBLE) {
-		if (parameters.redundancy == NONE) {
-			setup_double_unhardened(parameters, log);
-		}
-
-		if (parameters.redundancy == DMR) {
-			setup_double_dmr_full(parameters, log);
-		}
-
-		if (parameters.redundancy == DMRMIXED) {
-			setup_double_dmr_mixed(parameters, log);
-		}
-	}
-}
+#include "setup_double.h"
+#include "common.h"
 
 //=============================================================================
 //	MAIN FUNCTION
@@ -123,7 +82,18 @@ int main(int argc, char *argv[]) {
 	/**
 	 * Do the magic here
 	 */
-	choose_setup_option(parameters, log);
+
+	switch (parameters.precision) {
+	case HALF:
+	case SINGLE:
+		error("Not implemented");
+		break;
+	case DOUBLE:
+		setup_double(parameters, log);
+		break;
+	default:
+		error("Precision not valid");
+	}
 
 #ifdef BUILDPROFILER
 	profiler_thread->end_profile();
