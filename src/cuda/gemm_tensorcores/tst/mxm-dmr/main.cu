@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 	cudaMemcpy(device_d, host_d, m * n * sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(device_d_half, host_d_half, m * n * sizeof(float), cudaMemcpyHostToDevice);
 
-	matrix_mult_dmr_kernel<THRESHOLD, CHECK_BLOCK, float, float>(device_a, device_b, m, n, k, device_d, device_d_half, alpha, beta, device_c);
+	matrix_mult_dmr<THRESHOLD, CHECK_BLOCK, float, float>(device_a, device_b, m, n, k, device_d, device_d_half, alpha, beta, device_c);
 
 	
 	cudaMemcpy(host_d, device_d, m * n * sizeof(float), cudaMemcpyDeviceToHost);
