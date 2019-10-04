@@ -19,6 +19,7 @@
 /// \file
 /// Main header file for half precision functionality.
 
+
 #ifndef HALF_HALF_HPP
 #define HALF_HALF_HPP
 
