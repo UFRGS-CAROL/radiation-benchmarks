@@ -369,12 +369,19 @@ void setup_execution(Parameters& parameters, Log& log,
 		log.end_iteration();
 		kernel_time = rad::mysecond() - kernel_time;
 
+		auto cpy_time = rad::mysecond();
+		for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
+				stream_idx++) {
+			fv_cpu[stream_idx] = d_fv_gpu[stream_idx].to_vector();
+		}
+		cpy_time = rad::mysecond() - cpy_time;
+
 		//=====================================================================
 		//	COMPARE OUTPUTS / WRITE GOLD
 		//=====================================================================
 		if (parameters.generate) {
-			fv_cpu_GOLD = d_fv_gpu[0].to_vector();
-			writeGold(dim_cpu, parameters.output_gold, fv_cpu_GOLD);
+//			fv_cpu_GOLD = d_fv_gpu[0].to_vector();
+			writeGold(dim_cpu, parameters.output_gold, fv_cpu[0]);
 		} else {
 			timestamp = rad::mysecond();
 
@@ -382,7 +389,7 @@ void setup_execution(Parameters& parameters, Log& log,
 #pragma omp parallel for shared(reloadFlag, fv_cpu, fv_cpu_GOLD, log)
 			for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
 					stream_idx++) {
-				fv_cpu[stream_idx] = d_fv_gpu[stream_idx].to_vector();
+//				fv_cpu[stream_idx] = d_fv_gpu[stream_idx].to_vector();
 				reloadFlag = reloadFlag
 						|| kernel_caller.check_output_errors(parameters.verbose,
 								stream_idx, fv_cpu[stream_idx], fv_cpu_GOLD,
@@ -426,7 +433,7 @@ void setup_execution(Parameters& parameters, Log& log,
 			std::cout << " FLOPS:" << flops;
 			std::cout << " (GFLOPS:" << flops / 1.0e9 << ") ";
 			std::cout << "Kernel time:" << kernel_time << std::endl;
-
+			std::cout << "Copy time:" << cpy_time << std::endl;
 			std::cout << "Iteration time: " << iteration_time << "s ("
 					<< (kernel_time / iteration_time) * 100.0 << "% of Device)"
 					<< std::endl;

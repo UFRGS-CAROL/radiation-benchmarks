@@ -29,6 +29,14 @@ struct FOUR_VECTOR {
 	inline bool operator!=(const FOUR_VECTOR& rhs) {
 		return !(*this == rhs);
 	}
+
+	friend std::ostream& operator<<(std::ostream& os, const FOUR_VECTOR& lhs) {
+		os << lhs.v;
+		os << lhs.x;
+		os << lhs.y;
+		os << lhs.z;
+		return os;
+	}
 };
 
 template<typename tested_type>
@@ -75,8 +83,7 @@ struct box_str {
 	}
 };
 
-
-template <typename T> using VectorOfDeviceVector = std::vector<rad::DeviceVector<T>>;
+template<typename T> using VectorOfDeviceVector = std::vector<rad::DeviceVector<T>>;
 
 struct CudaStream {
 	cudaStream_t stream;
