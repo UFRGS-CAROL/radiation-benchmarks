@@ -25,9 +25,6 @@ typedef __half half_t_device;
     #define ZERO_HALF 4.166e-05
 #endif
 
-__device__ __forceinline__ double abs__(double a) {
-    return fabs(a);
-}
 
 __device__ __forceinline__ void axpy__(const double a, const double b, double &c) {
     c = __fma_rn(a, b, c);
@@ -70,7 +67,7 @@ __device__ void check_bit_error(const float &lhs, const float &rhs) {
 }
 template<const uint32_t THRESHOLD_uint32_t>
 __device__ __forceinline__ void check_bit_error(const float& lhs, const double& rhs) {
-    const double diff = abs__(rhs - double(lhs));
+    const double diff = fabs(rhs - double(lhs));
     printf("diff = %f \n ",diff);
     const double zero = double(ZERO_DOUBLE);
     if (diff > zero) {
@@ -170,10 +167,14 @@ __global__ void matrix_mult_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
             axpy__(As[ty][k], Bs[k][tx], Csub);
             axpy__(half_t(As[ty][k]), half_t(Bs[k][tx]), Csub_half);
 
-#if CHECKBLOCK == 1
-            check_bit_error<THRESHOLD>(Csub_half, Csub);
-
+//#if CHECKBLOCK == 1
+            if ((k % COUNT) == 0)
+            {
+            check_bit_error<THRESHOLD>(Csub_half, Csub);    
             Csub_half = half_t(Csub);
+            }
+           
+
 //#elif CHECKBLOCK >= 1
 //          if((k % CHECKBLOCK) == 0) {
 //              check_relative_error(Csub_half, Csub);
@@ -183,7 +184,7 @@ __global__ void matrix_mult_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 //
 //              Csub_half = half_t(Csub);
 //          }
-#endif
+//#endif
 
         }
 
