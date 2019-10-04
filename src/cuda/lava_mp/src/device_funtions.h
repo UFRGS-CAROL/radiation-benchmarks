@@ -105,6 +105,11 @@ inline uint64_t get_dmr_error(){
 	rad::checkFrameworkErrors(
 			cudaMemcpyFromSymbol(&dmr_errors, errors, sizeof(uint64_t), 0,
 					cudaMemcpyDeviceToHost));
+
+	const uint64_t zero_value = 0;
+	rad::checkFrameworkErrors(
+			cudaMemcpyToSymbol(errors, &zero_value, sizeof(uint64_t), 0,
+					cudaMemcpyHostToDevice));
 	return dmr_errors;
 }
 
