@@ -31,10 +31,7 @@ struct FOUR_VECTOR {
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const FOUR_VECTOR& lhs) {
-		os << lhs.v;
-		os << lhs.x;
-		os << lhs.y;
-		os << lhs.z;
+		os << lhs.v << " " << lhs.x << " " << lhs.y << " " << lhs.z;
 		return os;
 	}
 };
