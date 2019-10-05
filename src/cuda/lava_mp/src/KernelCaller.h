@@ -121,7 +121,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 		real_t> {
 
 	uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
-		uint32_t threshold_array[5] = {0, 0, 0, 0, 0};
+		uint32_t max_threshold = 0;
 
 		for (uint32_t i = 0; i < fv_cpu_rt.size(); i++) {
 			auto& fv_rt_i = fv_cpu_rt[i];
@@ -131,15 +131,13 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 				auto& fv_rt_ij = fv_rt_i[j];
 				auto& fv_ht_ij = fv_ht_i[j];
 
-				std::tie(threshold_array[0], threshold_array[1], threshold_array[2], threshold_array[3]) =
-				this->get_4vector_diffs(fv_ht_ij, fv_rt_ij);
-
-				threshold_array[4] =
-						*std::max_element(threshold_array, threshold_array + 5);
+				auto diff_vector = this->get_4vector_diffs(fv_ht_ij, fv_rt_ij);
+				diff_vector.push_back(max_threshold);
+				max_threshold =	*std::max_element(diff_vector.begin(), diff_vector.end());
 			}
 		}
 
-		return threshold_array[4];
+		return max_threshold;
 	}
 
 	void sync_half_t() override {
@@ -214,7 +212,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 		this->d_fv_gpu_ht[stream_idx].data());
 	}
 
-	inline std::tuple<uint32_t, uint32_t, uint32_t, uint32_t>
+	inline std::vector<uint32_t>
 	get_4vector_diffs(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs) {
 		float rhs_float_v = float(rhs.v);
 		float rhs_float_x = float(rhs.x);
@@ -240,20 +238,25 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 		return {sub_res_v, sub_res_x, sub_res_y, sub_res_z};
 	}
 
-	inline std::tuple<uint32_t, uint32_t, uint32_t, uint32_t>
+	inline std::vector<uint32_t>
 	get_4vector_diffs(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs) {
 		return {0, 0, 0, 0};
 	}
 
 	bool check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs) {
-		uint32_t sub_res_v, sub_res_x, sub_res_y, sub_res_z;
-		std::tie(sub_res_v, sub_res_x, sub_res_y, sub_res_z) = this->get_4vector_diffs(lhs, rhs);
+		auto diff_vec = this->get_4vector_diffs(lhs, rhs);
 
-		if ((sub_res_v > THRESHOLD) || (sub_res_x > THRESHOLD)
-		|| (sub_res_y > THRESHOLD) || (sub_res_z > THRESHOLD)) {
-			return true;
+		for(auto it : diff_vec) {
+			if(it > THRESHOLD) {
+				return true;
+			}
 		}
 		return false;
+
+//		if ((sub_res_v > THRESHOLD) || (sub_res_x > THRESHOLD)
+//		|| (sub_res_y > THRESHOLD) || (sub_res_z > THRESHOLD)) {
+//			return true;
+//		}
 	}
 
 	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs) {
