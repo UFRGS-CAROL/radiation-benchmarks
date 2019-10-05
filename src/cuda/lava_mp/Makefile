@@ -4,7 +4,7 @@ EXEC=cuda_lava
 
 LOGS=0
 BUILDPROFILER=0
-
+OPERATIONNUM=1
 PRECISION=double
 DMR=dmrmixed
 DATA_DIR=../../../data/lava
@@ -77,7 +77,7 @@ generate: $(EXEC)
 				-input_distances $(DISTANCES_INPUT) \
 				-input_charges $(CHARGES_INPUT)	\
 				-output_gold $(GOLD) \
-				-opnum 100 -precision $(PRECISION) -redundancy $(DMR)
+				-opnum $(OPERATIONNUM) -precision $(PRECISION) -redundancy $(DMR)
 
 test: $(RUN_EXEC)
 	./$(EXEC) -boxes $(DEF_SIZE) -streams $(STREAMS) \
@@ -85,7 +85,7 @@ test: $(RUN_EXEC)
 				-input_distances $(DISTANCES_INPUT) \
 				-input_charges $(CHARGES_INPUT) \
 				-output_gold $(GOLD) \
-				-opnum 100 -precision $(PRECISION) -redundancy $(DMR)
+				-opnum $(OPERATIONNUM) -precision $(PRECISION) -redundancy $(DMR)
 				
 
 	
