@@ -24,5 +24,5 @@ $(EXEC): main.cu $(DEPS)
 	$(NVCC) $(ARCH) $(NVCCFLAGS) $< -o $@ $(INCLUDE) 
 
 clean:
-	rm -f $(OBJDIR)* $(EXEC)
+	rm -rf $(OBJS) $(TARGET)
 	
