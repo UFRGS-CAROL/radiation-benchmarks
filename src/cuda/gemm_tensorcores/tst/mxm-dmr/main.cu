@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 	int k;
 	m = n = k = 4096;
 
-	real_t alpha = 1;
+	real_t alpha = 3.565075;
 	real_t beta = 1;
 
 	real_t* host_a = (real_t*)calloc(m * k, sizeof(real_t));
