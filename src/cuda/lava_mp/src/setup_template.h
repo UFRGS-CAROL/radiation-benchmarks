@@ -446,6 +446,7 @@ void setup_execution(Parameters& parameters, Log& log,
 	}
 
 	if (parameters.generate) {
+		kernel_caller.sync_half_t();
 		std::cout << "Max element threshold "
 				<< kernel_caller.get_max_threshold(fv_cpu) << std::endl;
 	}
