@@ -67,9 +67,8 @@ __device__ void check_bit_error(const float &lhs, const float &rhs) {
 }
 template<const uint32_t THRESHOLD_uint32_t>
 __device__ __forceinline__ void check_bit_error(const float& lhs, const double& rhs) {
-    const double diff = fabs(rhs - double(lhs));
-    THRESHOLD_uint32_t = fmax(THRESHOLD_uint32_t, diff);
-    printf("THRESHOLD: %.20e \n",THRESHOLD_uint32_t);
+    const double diff = fabs(rhs -lhs);
+    printf("THRESHOLD: %.20e \n", diff);
     const double zero = double(ZERO_DOUBLE);
     if (diff > zero) {
         atomicAdd(&errors, 1);
