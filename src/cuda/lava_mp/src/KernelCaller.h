@@ -122,6 +122,9 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 
 	uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
 		uint32_t max_threshold = 0;
+		auto max_before = max_threshold;
+		auto& t = fv_cpu_rt[0][0];
+		auto& s = this->fv_cpu_ht[0][0];
 
 		for (uint32_t i = 0; i < fv_cpu_rt.size(); i++) {
 			auto& fv_rt_i = fv_cpu_rt[i];
@@ -134,6 +137,12 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 				auto diff_vector = this->get_4vector_diffs(fv_ht_ij, fv_rt_ij);
 				diff_vector.push_back(max_threshold);
 				max_threshold =	*std::max_element(diff_vector.begin(), diff_vector.end());
+
+				if(max_before < max_threshold){
+					max_before = max_threshold;
+					t = fv_rt_ij;
+					s = fv_ht_ij;
+				}
 			}
 		}
 
