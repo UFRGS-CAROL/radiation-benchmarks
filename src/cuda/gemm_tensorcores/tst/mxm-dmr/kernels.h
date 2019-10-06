@@ -52,6 +52,12 @@ __device__ __forceinline__ void axpy__(const float a, const float b, __half &c) 
     c = __hfma(__float2half(a), __float2half(b), c);
 }
 
+__device__  __forceinline__ half axpy__(half a, half b, half acc) {
+  return __hfma(a, b, acc);
+}
+
+
+
 __device__ unsigned long long errors = 0;
 
 template<const uint32_t THRESHOLD_uint32_t>
@@ -157,7 +163,7 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d,
 
         for (int k = 0; k < BLOCK_SIZE; ++k) {
         
-            Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
+            Csub = axpy__(As[ty][k], Bs[k][tx],Csub);
         }
 
         // Synchronize to make sure that the preceding
