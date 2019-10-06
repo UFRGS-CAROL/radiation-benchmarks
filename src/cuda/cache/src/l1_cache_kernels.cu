@@ -48,7 +48,7 @@ __global__ void test_l1_cache_kernel(cacheline *src, cacheline *dst,
 	__syncthreads();
 
 	hits[i] = t_hits[threadIdx.x];
-		miss[i] = t_miss[threadIdx.x];
+	miss[i] = t_miss[threadIdx.x];
 	src[i] = rm;
 	dst[i] = rh;
 }
@@ -118,5 +118,7 @@ bool L1Cache::call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
 		int64& false_hits) {
 
 	return this->check_output_errors((uint64*) (this->output_host_1.data()),
-			gold, log, hits, misses, false_hits, this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64);
+			(uint64*) (this->output_host_2.data()),
+			(uint64*) (this->output_host_3.data()), gold, log, hits, misses,
+			false_hits, this->output_host_1.size() * CACHE_LINE_SIZE_BY_INT64);
 }

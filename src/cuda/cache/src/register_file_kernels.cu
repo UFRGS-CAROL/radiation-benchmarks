@@ -43,8 +43,8 @@ void RegisterFile::test(const uint64& mem_) {
 		break;
 	case TITANV:
 	case XAVIER:
-		output_device_2 = this->output_host_2;
-		output_device_3 = this->output_host_3;
+		output_device_2 = this->output_host_1;
+		output_device_3 = this->output_host_1;
 		uint32 zero_or_one = (mem_ == 0);
 		test_register_file_kernel_volta<<<number_of_sms, number_of_threads>>>(
 				output_device_1.data(), output_device_2.data(),
@@ -72,9 +72,12 @@ std::string RegisterFile::error_detail(uint64 i, uint64 e, uint64 r, int64 hits,
 
 bool RegisterFile::call_checker(uint64& gold, Log& log, int64& hits,
 		int64& misses, int64& false_hits) {
-	uint32* out_ptr = (uint32*) this->output_host_1.data();
+	uint32* out_ptr1 = (uint32*) this->output_host_1.data();
+	uint32* out_ptr2 = (uint32*) this->output_host_2.data();
+	uint32* out_ptr3 = (uint32*) this->output_host_3.data();
+
 	uint32 gold_ = gold;
 
-	return this->check_output_errors(out_ptr, gold_, log, hits, misses,
-			false_hits, this->output_host_1.size());
+	return this->check_output_errors(out_ptr1, out_ptr2, out_ptr3, gold_, log,
+			hits, misses, false_hits, this->output_host_1.size());
 }

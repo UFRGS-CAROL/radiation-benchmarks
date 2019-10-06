@@ -9,6 +9,7 @@
 #define MEMORY_H_
 
 #include <vector>
+#include <sstream>
 
 #include "utils.h"
 #include "device_vector.h"
@@ -93,17 +94,96 @@ struct Memory {
 		}
 	}
 
+	template<typename T>
+	std::tuple<T, bool> get_correct_tmr_value(const T* v1, const T* v2,
+			const T* v3, const T& val_gold, const uint64 i, Log& log) {
+		//For this case we don't need to check
+		if(this->device == K20 || this->device == K40){
+			return {true, v1[i]};
+		}
+
+		auto check_flag = true;
+		auto val_output_1 = v1[i];
+		auto val_output_2 = v2[i];
+		auto val_output_3 = v3[i];
+		auto val_output = val_output_1;
+		auto memory_errors = 0;
+
+		if ((val_output_1 != val_output_2) || (val_output_1 != val_output_3)) {
+#pragma omp critical
+			{
+				std::stringstream info_detail;
+				info_detail << "m: [" << i << "], r0: " << val_output_1;
+				info_detail << ", r1: " << val_output_2;
+				info_detail << ", r2: " << val_output_3;
+				info_detail << ", e: " << val_gold;
+
+				if (log.verbose && (log.errors < 10))
+					std::cout << info_detail.str() << std::endl;
+
+				auto inf_det = info_detail.str();
+				log.log_info(inf_det);
+				memory_errors++;
+			}
+
+			if ((val_output_1 != val_output_2) && (val_output_2 != val_output_3)
+					&& (val_output_1 != val_output_3)) {
+				// All 3 values diverge
+				if (val_output_1 == val_gold) {
+					val_output = val_output_1;
+				} else if (val_output_2 == val_gold) {
+					val_output = val_output_2;
+				} else if (val_output_3 == val_gold) {
+					val_output = val_output_3;
+				} else {
+					// NO VALUE MATCHES THE GOLD AND ALL 3 DIVERGE!
+					check_flag = false;
+#pragma omp critical
+					{
+						std::stringstream info_detail;
+						info_detail << "f: [" << i << "], r0: " << val_output_1;
+						info_detail << ", r1: " << val_output_2;
+						info_detail << ", r2: " << val_output_3;
+						info_detail << ", e: " << val_gold;
+
+						if (log.verbose && (log.errors < 10))
+							std::cout << info_detail.str() << std::endl;
+
+						auto inf_det = info_detail.str();
+						log.log_info(inf_det);
+						memory_errors++;
+					}
+				}
+			} else if (val_output_2 == val_output_3) {
+				// Only value 0 diverge
+				val_output = val_output_2;
+			} else if (val_output_1 == val_output_3) {
+				// Only value 1 diverge
+				val_output = val_output_1;
+			} else if (val_output_1 == val_output_2) {
+				// Only value 2 diverge
+				val_output = val_output_1;
+			}
+		}
+
+		return {val_output, check_flag};
+	}
+
 	// Returns true if no errors are found. False if otherwise.
 	// Set votedOutput pointer to retrieve the voted matrix
 	template<typename T>
-	bool check_output_errors(const T* v1, const T& val_gold, Log& log,
-			int64 hits, int64 misses, int64 false_hits, size_t size) {
+	bool check_output_errors(const T* v1, const T* v2, const T* v3,
+			const T& val_gold, Log& log, int64 hits, int64 misses,
+			int64 false_hits, size_t size) {
 
-#pragma omp parallel for shared(host_errors)
+#pragma omp parallel for shared(log)
 		for (uint64 i = 0; i < size; i++) {
-			T val_output = v1[i];
+			T val_output;
+			bool check_flag;
+			std::tie(val_output, check_flag) = this->get_correct_tmr_value(v1,
+					v2, v3, val_gold, i, log);
 
-			if (val_gold != val_output) {
+			if (val_gold != val_output && check_flag) {
 #pragma omp critical
 				{
 
@@ -120,9 +200,9 @@ struct Memory {
 		if (log.errors != 0) {
 			std::cout << "#" << std::endl;
 		}
-//		if (log.infos != 0) {
-//			std::cout << "M" << std::endl;
-//		}
+		if (log.infos != 0) {
+			std::cout << "M" << std::endl;
+		}
 		return log.errors == 0 || log.infos == 0;
 	}
 
@@ -148,12 +228,7 @@ struct Memory {
 		}
 
 		this->call_checker(mem, log, hits, misses, false_hits);
-//
-//		if (zero_cout != 0) {
-//			error(
-//					"Zero count is different from 0: "
-//							+ std::to_string(zero_cout));
-//		}
+
 		//returning the result
 		return std::make_tuple(hits, misses, false_hits);
 	}
