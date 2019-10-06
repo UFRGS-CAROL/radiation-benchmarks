@@ -54,20 +54,20 @@ int main(int argc, char **argv) {
 	cudaMemcpy(host_d, device_d, m * n * sizeof(real_t), cudaMemcpyDeviceToHost);
 	cudaMemcpy(host_d_half, device_d_half, m * n * sizeof(half_t), cudaMemcpyDeviceToHost);
 
-    std::cout << "FLOAT" << std::endl;
-	for (int i = 0; i < 10; i++) {
-		for (int j = 0; j < 10; j++) {
-			std::cout << host_d[i * m + j] << " ";
-		}
-		std::cout << std::endl;
-	}
-	std::cout << "HALF" << std::endl;
-	for (int i = 0; i < 10; i++) {
-		for (int j = 0; j < 10; j++) {
-			std::cout << host_d_half[i * m + j] << " ";
-		}
-		std::cout << std::endl;
-	}
+ //    std::cout << "FLOAT" << std::endl;
+	// for (int i = 0; i < 10; i++) {
+	// 	for (int j = 0; j < 10; j++) {
+	// 		std::cout << host_d[i * m + j] << " ";
+	// 	}
+	// 	std::cout << std::endl;
+	// }
+	// std::cout << "HALF" << std::endl;
+	// for (int i = 0; i < 10; i++) {
+	// 	for (int j = 0; j < 10; j++) {
+	// 		std::cout << host_d_half[i * m + j] << " ";
+	// 	}
+	// 	std::cout << std::endl;
+	// }
     
 	return 0;
 }

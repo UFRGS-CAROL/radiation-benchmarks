@@ -213,7 +213,10 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c
         // Store the output
         wmma::store_matrix_sync(d_frag + cCol + cRow * ldc, c_frag, ldc,
                 wmma::mem_row_major);
-        check_bit_error<THRESHOLD>(Csub, d_frag);    
+        
+
+
+        //check_bit_error<THRESHOLD>(Csub, d_frag);    
     }
 }
 
