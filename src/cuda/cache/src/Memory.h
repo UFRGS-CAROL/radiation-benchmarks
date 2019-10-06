@@ -30,6 +30,8 @@ struct Memory {
 
 	//Host memory output
 	std::vector<data_> output_host_1;
+	std::vector<data_> output_host_2;
+	std::vector<data_> output_host_3;
 
 	//Host memory input
 	std::vector<data_> input_host_1;

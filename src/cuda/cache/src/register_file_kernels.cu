@@ -12,6 +12,7 @@
 #include "Parameters.h"
 #include "utils.h"
 #include "register_kernel.h"
+#include "register_kernel_volta.h"
 
 RegisterFile::RegisterFile(const Parameters& parameters) :
 		Memory<uint32>(parameters) {
@@ -33,13 +34,30 @@ void RegisterFile::test(const uint64& mem_) {
 	std::fill(this->input_host_1.begin(), this->input_host_1.end(), mem);
 	rad::DeviceVector<uint32> input_device_1 = this->input_host_1;
 	rad::DeviceVector<uint32> output_device_1 = this->output_host_1;
-
-	test_register_file_kernel<<<number_of_sms, number_of_threads>>>(
-			output_device_1.data(), input_device_1.data(), cycles);
+	rad::DeviceVector<uint32> output_device_2, output_device_3;
+	switch (this->device) {
+	case K20:
+	case K40:
+		test_register_file_kernel<<<number_of_sms, number_of_threads>>>(
+				output_device_1.data(), input_device_1.data(), cycles);
+		break;
+	case TITANV:
+	case XAVIER:
+		output_device_2 = this->output_host_2;
+		output_device_3 = this->output_host_3;
+		uint32 zero_or_one = (mem_ == 0);
+		test_register_file_kernel_volta<<<number_of_sms, number_of_threads>>>(
+				output_device_1.data(), output_device_2.data(),
+				output_device_3.data(), zero_or_one, this->cycles);
+		break;
+	};
 
 	cuda_check(cudaPeekAtLastError());
 	cuda_check(cudaDeviceSynchronize());
 	this->output_host_1 = output_device_1.to_vector();
+	this->output_host_2 = output_device_2.to_vector();
+	this->output_host_3 = output_device_3.to_vector();
+
 }
 
 std::string RegisterFile::error_detail(uint64 i, uint64 e, uint64 r, int64 hits,

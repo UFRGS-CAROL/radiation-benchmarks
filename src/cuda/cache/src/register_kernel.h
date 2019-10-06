@@ -3,9 +3,10 @@
 
 #include "utils.h"
 
-__global__ void test_register_file_kernel(uint32 *rf,
-		const __restrict__ uint32 *mem1, const uint64 sleep_cycles) {
-	const uint32 i = (blockDim.x * blockIdx.x + threadIdx.x) * 256;
+#include "Parameters.h"
+
+__global__ void test_register_file_kernel(uint32 *rf, const __restrict__ uint32 *mem1, const uint64 sleep_cycles) {
+	const uint32 i =  (blockDim.x * blockIdx.x + threadIdx.x) * RF_SIZE;
 	register uint32 r0 = __ldg(mem1 + 0);
 	register uint32 r1 = __ldg(mem1 + 1);
 	register uint32 r2 = __ldg(mem1 + 2);
