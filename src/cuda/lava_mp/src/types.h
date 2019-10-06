@@ -34,6 +34,22 @@ struct FOUR_VECTOR {
 		os << lhs.v << " " << lhs.x << " " << lhs.y << " " << lhs.z;
 		return os;
 	}
+
+	__device__ FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<double>& rhs){
+		this->v = rhs.v;
+		this->x = rhs.x;
+		this->y = rhs.y;
+		this->z = rhs.z;
+		return *this;
+	}
+
+	__device__ FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<float>& rhs){
+		this->v = rhs.v;
+		this->x = rhs.x;
+		this->y = rhs.y;
+		this->z = rhs.z;
+		return *this;
+	}
 };
 
 template<typename tested_type>

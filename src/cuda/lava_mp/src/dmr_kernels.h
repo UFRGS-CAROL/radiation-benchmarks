@@ -115,7 +115,8 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 		while (wtx < NUMBER_PAR_PER_BOX) {
 			rA_shared_rt[wtx] = rA_rt[wtx];
 			//DMR
-			cast_four_vector(rA_shared_ht[wtx], rA_shared_rt[wtx]);
+//			cast_four_vector(rA_shared_ht[wtx], rA_shared_rt[wtx]);
+			rA_shared_ht[wtx] = rA_shared_rt[wtx];
 
 			wtx = wtx + NUMBER_THREADS;
 		}
@@ -163,7 +164,8 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 				qB_shared_rt[wtx] = qB_rt[wtx];
 
 				//DMR
-				cast_four_vector(rB_shared_ht[wtx], rB_shared_rt[wtx]);
+//				cast_four_vector(rB_shared_ht[wtx], rB_shared_rt[wtx]);
+				rB_shared_ht[wtx] = rB_shared_rt[wtx];
 				qB_shared_ht[wtx] = half_t(qB_shared_rt[wtx]);
 
 				wtx = wtx + NUMBER_THREADS;
@@ -250,6 +252,7 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 					//DMR CHECKING
 					if ((j % COUNT) == 0) {
 						check_bit_error<THRESHOLD>(fA_ht[wtx], fA_rt[wtx]);
+
 					}
 					//------------------------------------------------
 				}
