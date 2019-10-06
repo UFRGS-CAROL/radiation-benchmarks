@@ -375,5 +375,5 @@ void matrix_mult_tensor_dmr(real_t *A, real_t *B, int M, int N, int K, real_t *D
     block_dim.x = WMMA_M; //128;
     block_dim.y = WMMA_N;
 
-    simple_wmma_gemm_DMR<THRESHOLD, COUNT><<<dimGrid,dimBlock>>>(D, D_h, C, A, B, alpha, beta, M, N);
+    simple_wmma_gemm_DMR<THRESHOLD, COUNT><<<grid_dim,block_dim>>>(D, D_h, C, A, B, alpha, beta, M, N);
 }
