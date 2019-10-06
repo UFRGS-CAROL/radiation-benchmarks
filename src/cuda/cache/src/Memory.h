@@ -107,7 +107,6 @@ struct Memory {
 		auto val_output_2 = v2[i];
 		auto val_output_3 = v3[i];
 		auto val_output = val_output_1;
-		auto memory_errors = 0;
 
 		if ((val_output_1 != val_output_2) || (val_output_1 != val_output_3)) {
 #pragma omp critical
@@ -123,7 +122,6 @@ struct Memory {
 
 				auto inf_det = info_detail.str();
 				log.log_info(inf_det);
-				memory_errors++;
 			}
 
 			if ((val_output_1 != val_output_2) && (val_output_2 != val_output_3)
@@ -151,7 +149,6 @@ struct Memory {
 
 						auto inf_det = info_detail.str();
 						log.log_info(inf_det);
-						memory_errors++;
 					}
 				}
 			} else if (val_output_2 == val_output_3) {

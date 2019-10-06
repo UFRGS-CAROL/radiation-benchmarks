@@ -74,17 +74,17 @@ clean:
 	
 	
 test:
-	 env LD_LIBRARY_PATH=/home/carol/cuda/cuda-toolkit/lib64 ./$(EXEC) --iterations 10
+	 ./$(EXEC) --iterations 10
 	
 testl2:
-	 env LD_LIBRARY_PATH=/home/carol/cuda/cuda-toolkit/lib64 ./$(EXEC)L2 --iterations 100 --memtotest L2
+	 ./$(EXEC)L2 --iterations 100 --memtotest L2
 
 testshared:
-	 env LD_LIBRARY_PATH=/home/carol/cuda/cuda-toolkit/lib64 ./$(EXEC) --iterations 10 --memtotest SHARED
+	 ./$(EXEC) --iterations 10 --memtotest SHARED
 	
 testregisters:
-	env LD_LIBRARY_PATH=/home/carol/cuda/cuda-toolkit/lib64 ./$(EXEC) --iterations 10 --memtotest REGISTERS	
+	./$(EXEC) --iterations 10 --memtotest REGISTERS	
 	
 testconstant:
-	env LD_LIBRARY_PATH=/home/carol/cuda/cuda-toolkit/lib64 ./$(EXEC) --iterations 10 --memtotest READONLY	
+	./$(EXEC) --iterations 10 --memtotest READONLY	
 	
