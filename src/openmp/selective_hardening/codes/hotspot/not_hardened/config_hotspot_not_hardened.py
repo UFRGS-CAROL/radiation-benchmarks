@@ -9,9 +9,9 @@ from common_config import discover_board, execute_and_write_json_to_file
 NUM_THREADS = 4
 MATRIX_ORDER = 1024
 ITER_SIZE = 512
-TEMP_MATRIX = "../temp_" + str(MATRIX_ORDER)
-POWER_MATRIX = "../power_" + str(MATRIX_ORDER)
-GOLD_MATRIX = "../gold_" + str(MATRIX_ORDER)
+TEMP_MATRIX = "/home/carol/radiation-benchmarks/src/openmp/selective_hardening/codes/hotspot/temp_" + str(MATRIX_ORDER)
+POWER_MATRIX = "/home/carol/radiation-benchmarks/src/openmp/selective_hardening/codes/hotspot/power_" + str(MATRIX_ORDER)
+GOLD_MATRIX = "/home/carol/radiation-benchmarks/src/openmp/selective_hardening/codes/hotspot/gold_" + str(MATRIX_ORDER)
 ITERATIONS = 100000
 
 def config(board, debug):
