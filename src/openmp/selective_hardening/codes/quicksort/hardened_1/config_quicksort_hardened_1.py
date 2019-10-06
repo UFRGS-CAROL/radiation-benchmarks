@@ -3,7 +3,7 @@
 import ConfigParser
 import sys
 
-sys.path.insert(0, '../../../../../include')
+sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 NUM_THREADS = 4

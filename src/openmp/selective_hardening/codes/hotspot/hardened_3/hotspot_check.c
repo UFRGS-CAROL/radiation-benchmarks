@@ -5,10 +5,10 @@
 #include <unistd.h>
 
 #ifdef LOGS
-#include "../../../../../include/log_helper.h"
+#include "/home/carol/radiation-benchmarks/src/include/log_helper.h"
 #endif /* LOGS */
 
-#include "../../../include/selective_hardening.h"
+#include "/home/carol/radiation-benchmarks/src/openmp/selective_hardening/include/selective_hardening.h"
 
 #define MAX_ERR_ITER_LOG 500
 

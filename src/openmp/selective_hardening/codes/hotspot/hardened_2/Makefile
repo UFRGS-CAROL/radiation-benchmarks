@@ -1,4 +1,4 @@
-SOURCES_CHECK=hotspot_check.c ../../../../../include/log_helper.c ../../../src/selective_hardening.c
+SOURCES_CHECK=hotspot_check.c /home/carol/radiation-benchmarks/src/include/log_helper.c /home/carol/radiation-benchmarks/src/openmp/selective_hardening/src/selective_hardening.c
 PRECISION = 32
 
 CC = gcc

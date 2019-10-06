@@ -2,7 +2,7 @@
 CC = gcc
 CC_FLAGS = -std=c99 -O0 -fopenmp
 
-SOURCES_CHECK=mergesort_check.c ../../../../../include/log_helper.c ../../../src/selective_hardening.c
+SOURCES_CHECK=mergesort_check.c /home/carol/radiation-benchmarks/src/include/log_helper.c /home/carol/radiation-benchmarks/src/openmp/selective_hardening/src/selective_hardening.c
 
 NAME_SUFFIX=_hardened_1
 

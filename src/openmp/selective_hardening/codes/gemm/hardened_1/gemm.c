@@ -71,7 +71,7 @@
 #include "type.h"
 #include "log_helper.h"
 
-#include "../../../include/selective_hardening.h"
+#include "/home/carol/radiation-benchmarks/src/openmp/selective_hardening/include/selective_hardening.h"
 
 #ifdef TIMING
 #include <sys/time.h>
