@@ -12,6 +12,8 @@
 #include "device_vector.h"
 #include "cuda_utils.h"
 
+#define __DEVICE_HOST_INLINE__ __device__ __host__ __forceinline__
+
 template<typename tested_type>
 struct THREE_VECTOR {
 	tested_type x, y, z;
@@ -21,12 +23,14 @@ template<typename tested_type>
 struct FOUR_VECTOR {
 	tested_type v, x, y, z;
 
-	inline bool operator==(const FOUR_VECTOR& rhs) {
+	__DEVICE_HOST_INLINE__
+	bool operator==(const FOUR_VECTOR& rhs) {
 		return (this->x == rhs.x) && (this->y == rhs.y) && (this->z == rhs.z)
 				&& (this->v == rhs.v);
 	}
 
-	inline bool operator!=(const FOUR_VECTOR& rhs) {
+	__DEVICE_HOST_INLINE__
+	bool operator!=(const FOUR_VECTOR& rhs) {
 		return !(*this == rhs);
 	}
 
@@ -35,7 +39,8 @@ struct FOUR_VECTOR {
 		return os;
 	}
 
-	__device__ __host__ FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<double>& rhs){
+	__DEVICE_HOST_INLINE__
+	FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<double>& rhs) {
 		this->v = rhs.v;
 		this->x = rhs.x;
 		this->y = rhs.y;
@@ -43,7 +48,8 @@ struct FOUR_VECTOR {
 		return *this;
 	}
 
-	__device__  __host__ FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<float>& rhs){
+	__DEVICE_HOST_INLINE__
+	FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<float>& rhs) {
 		this->v = rhs.v;
 		this->x = rhs.x;
 		this->y = rhs.y;

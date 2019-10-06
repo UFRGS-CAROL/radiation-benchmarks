@@ -82,22 +82,22 @@ __DEVICE_INLINE__ void check_bit_error(const FOUR_VECTOR<float>& lhs,
 	}
 }
 
-__DEVICE_INLINE__ void cast_four_vector(FOUR_VECTOR<float>& lhs,
-		FOUR_VECTOR<double>& rhs) {
-	lhs.v = rhs.v;
-	lhs.x = rhs.x;
-	lhs.y = rhs.y;
-	lhs.z = rhs.z;
-}
-
-template<typename real_t>
-__DEVICE_INLINE__ void cast_four_vector(FOUR_VECTOR<real_t>& lhs,
-		FOUR_VECTOR<real_t>& rhs) {
-	lhs.v = rhs.v;
-	lhs.x = rhs.x;
-	lhs.y = rhs.y;
-	lhs.z = rhs.z;
-}
+//__DEVICE_INLINE__ void cast_four_vector(FOUR_VECTOR<float>& lhs,
+//		FOUR_VECTOR<double>& rhs) {
+//	lhs.v = rhs.v;
+//	lhs.x = rhs.x;
+//	lhs.y = rhs.y;
+//	lhs.z = rhs.z;
+//}
+//
+//template<typename real_t>
+//__DEVICE_INLINE__ void cast_four_vector(FOUR_VECTOR<real_t>& lhs,
+//		FOUR_VECTOR<real_t>& rhs) {
+//	lhs.v = rhs.v;
+//	lhs.x = rhs.x;
+//	lhs.y = rhs.y;
+//	lhs.z = rhs.z;
+//}
 
 
 inline uint64_t get_dmr_error(){
