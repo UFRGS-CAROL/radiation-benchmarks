@@ -84,7 +84,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
 }
 
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
-__global__ void simple_wmma_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c, half_t *d, real_t *d_frag, 
+__global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d, real_t *d_frag, 
         int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
     // Leading dimensions. Packed with no transpositions.
     int lda = m_ld;
@@ -140,7 +140,7 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c
 
         __shared__ half_t Bs[BLOCK_SIZE][BLOCK_SIZE];
 
-        As[ty][tx] = a1[A + m_ld * ty + tx];
+        As[ty][tx] = a[A + m_ld * ty + tx];
         Bs[ty][tx] = b[B + n_ld * ty + tx];
 
         // Synchronize to make sure the matrices are loaded
@@ -372,10 +372,11 @@ template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typena
 void matrix_mult_tensor_dmr(half_t *A, half_t *B, int M, int N, int K, real_t *D, half_t *D_h, real_t alpha, real_t beta, real_t *C) {
     dim3 grid_dim;
     dim3 block_dim;
+ 
 
         //      // block_dim.x must be a multple of warpSize
         //      // 128x4 means we have 16 warps and a block computes a 64x64 output tile
     block_dim.x = WMMA_M; //128;
     block_dim.y = WMMA_N;
-    simple_wmma_gemm_DMR<THRESHOLD, COUNT><<<grid_dim,block_dim>>>(A, B, C, D, D_h, M, N, K, alpha, beta);
+    simple_wmma_gemm_DMR<THRESHOLD, COUNT><<<grid_dim,block_dim>>>(A, B, C, D_h, D, M, N, K, alpha, beta);
 }
