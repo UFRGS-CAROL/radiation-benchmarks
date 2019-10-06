@@ -38,7 +38,7 @@ def config(board, debug):
                 "make",
                 "./generateInput {}".format(str(INPUT_SIZE)),
                 "./merge_gen {} {} {}".format(str(INPUT_SIZE), str(NUM_THREADS), INPUT_FILE),
-                "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/",
+                "sudo mv -f /home/carol/radiation-benchmarks/src/openmp/selective_hardening/codes/mergesort/not_hardened/" + benchmark_bin + " " + bin_path + "/",
                 "make clean"]
     
     execute = []
