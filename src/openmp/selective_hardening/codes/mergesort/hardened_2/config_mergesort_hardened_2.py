@@ -8,8 +8,8 @@ from common_config import discover_board, execute_and_write_json_to_file
 
 NUM_THREADS = 4
 INPUT_SIZE = 1048576
-INPUT_FILE = "inputsort_" + str(INPUT_SIZE)
-GOLD_FILE = "gold_" + str(INPUT_SIZE)
+INPUT_FILE = "/home/carol/radiation-benchmarks/src/openmp/selective_hardening/codes/mergesort/hardened_2/inputsort_" + str(INPUT_SIZE)
+GOLD_FILE = "/home/carol/radiation-benchmarks/src/openmp/selective_hardening/codes/mergesort/hardened_2/gold_" + str(INPUT_SIZE)
 ITERATIONS = 100000
 
 def config(board, debug):
