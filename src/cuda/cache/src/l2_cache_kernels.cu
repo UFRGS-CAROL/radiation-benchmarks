@@ -107,6 +107,8 @@ bool L2Cache::call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
 		int64& false_hits) {
 
 	return this->check_output_errors((uint64*) (this->output_host_1.data()),
+			(uint64*) (this->output_host_2.data()),
+			(uint64*) (this->output_host_3.data()),
 			gold, log, hits, misses, false_hits, this->output_host_1.size());
 }
 
