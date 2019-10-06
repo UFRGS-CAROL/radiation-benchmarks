@@ -122,11 +122,12 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 
 	uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
 		uint32_t max_threshold = 0;
+		/*
 		real_t max_threshold_float = -4444;
 		auto max_before = max_threshold_float;
 		auto& fht = this->fv_cpu_ht[0][0];
 		auto& frt = fv_cpu_rt[0][0];
-
+		*/
 		for (uint32_t i = 0; i < fv_cpu_rt.size(); i++) {
 			auto& fv_rt_i = fv_cpu_rt[i];
 			auto& fv_ht_i = this->fv_cpu_ht[i];
@@ -139,6 +140,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 				diff_vector.push_back(max_threshold);
 				max_threshold = *std::max_element(diff_vector.begin(), diff_vector.end());
 
+				/*
 				auto fl_vet = {
 					std::fabs(fv_rt_ij.v - (real_t)fv_ht_ij.v),
 					std::fabs(fv_rt_ij.x - (real_t) fv_ht_ij.x),
@@ -151,14 +153,16 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 					max_before = max_threshold_float;
 					fht = fv_ht_ij;
 					frt = fv_rt_ij;
-				}
+				}*/
 			}
 		}
 
+		/*
 		std::cout << "\n\nMAX FLOAT DIFF " << max_threshold_float << std::endl;
 		std::cout << std::setprecision(10) << std::scientific << std::hex;
 		std::cout << fht << std::endl;
 		std::cout << frt << std::endl;
+		*/
 
 		return max_threshold;
 	}
