@@ -3,7 +3,7 @@
 import ConfigParser
 import sys
 
-sys.path.insert(0, '../../../../../include')
+sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 NUM_THREADS = 4
@@ -39,7 +39,7 @@ def config(board, debug):
                 "make clean",
                 "make",
                 "./hotspot_gen {} {} {} {} {} {} {}".format(str(MATRIX_ORDER), str(MATRIX_ORDER), str(ITER_SIZE), str(NUM_THREADS), TEMP_MATRIX, POWER_MATRIX, GOLD_MATRIX),
-                "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/",
+                "sudo mv -f /home/carol/radiation-benchmarks/src/openmp/selective_hardening/codes/hotspot/hardened_2/" + benchmark_bin + " " + bin_path + "/",
                 "make clean"]
 
     execute = []

@@ -6,7 +6,7 @@
 #include "omp.h"
 
 #ifdef LOGS
-#include "../../../../../include/log_helper.h"
+#include "/home/carol/radiation-benchmarks/src/include/log_helper.h"
 #endif
 
 #ifdef TIMING

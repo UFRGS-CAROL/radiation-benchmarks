@@ -3,7 +3,7 @@
 import ConfigParser
 import sys
 
-sys.path.insert(0, '../../../../../include')
+sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 NUM_THREADS = 4
@@ -39,7 +39,7 @@ def config(board, debug):
                 "make clean",
                 "make",
                 "./gemm_gen {} {} {} {} {} {}".format(str(NUM_THREADS), str(MATRIX_ORDER), str(TILE_SIZE), MATRIX_A, MATRIX_B, GOLD_MATRIX),
-                "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/",
+                "sudo mv -f /home/carol/radiation-benchmarks/src/openmp/selective_hardening/codes/gemm/not_hardened/" + benchmark_bin + " " + bin_path + "/",
                 "make clean"]
 
     execute = []

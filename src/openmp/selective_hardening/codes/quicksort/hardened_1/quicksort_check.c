@@ -6,10 +6,10 @@
 #include <omp.h>
 
 #ifdef LOGS
-#include "../../../../../include/log_helper.h"
+#include "/home/carol/radiation-benchmarks/src/include/log_helper.h"
 #endif
 
-#include "../../../include/selective_hardening.h"
+#include "/home/carol/radiation-benchmarks/src/openmp/selective_hardening/include/selective_hardening.h"
 
 #ifdef TIMING
 long long timing_get_time() {

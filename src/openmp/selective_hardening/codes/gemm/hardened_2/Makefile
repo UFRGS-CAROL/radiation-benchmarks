@@ -9,10 +9,10 @@ NAME_SUFFIX=_hardened_2
 #default is float
 CC_FLAGS = -std=c99 -O0 -DDEFAULT_INPUT_SIZE=$(DEFAULT_INPUT) -DPRECISION=32 -fopenmp -DBOFFSET=12
 
-SOURCES_CHECK = gemm.c ../../../src/selective_hardening.c
+SOURCES_CHECK = gemm.c /home/carol/radiation-benchmarks/src/openmp/selective_hardening/src/selective_hardening.c
 
-INCLUDE+= -I../../../../../include
-LIBRARY+= -L../../../../../include -lLogHelper -DLOGS
+INCLUDE+= -I/home/carol/radiation-benchmarks/src/include
+LIBRARY+= -L/home/carol/radiation-benchmarks/src/include -lLogHelper -DLOGS
 
 all: $(EXEC)_gen $(EXEC)_check $(EXEC)_err_inj $(EXEC)_timing 
 
