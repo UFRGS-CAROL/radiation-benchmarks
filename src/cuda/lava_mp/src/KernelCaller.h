@@ -156,6 +156,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 		}
 
 		std::cout << "\n\nMAX FLOAT DIFF " << max_threshold_float << std::endl;
+		std::cout << std::setprecision(10) << std::scientific << std::hex;
 		std::cout << fht << std::endl;
 		std::cout << frt << std::endl;
 
