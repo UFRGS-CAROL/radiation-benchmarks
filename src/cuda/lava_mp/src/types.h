@@ -35,7 +35,7 @@ struct FOUR_VECTOR {
 		return os;
 	}
 
-	__device__ FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<double>& rhs){
+	__device__ __host__ FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<double>& rhs){
 		this->v = rhs.v;
 		this->x = rhs.x;
 		this->y = rhs.y;
@@ -43,7 +43,7 @@ struct FOUR_VECTOR {
 		return *this;
 	}
 
-	__device__ FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<float>& rhs){
+	__device__  __host__ FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<float>& rhs){
 		this->v = rhs.v;
 		this->x = rhs.x;
 		this->y = rhs.y;
