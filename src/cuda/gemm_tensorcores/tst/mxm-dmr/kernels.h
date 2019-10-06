@@ -8,6 +8,13 @@
 #define WMMA_N 16
 #define WMMA_K 16
 
+#define C_LAYOUT wmma::mem_row_major
+
+
+#define WARP_SIZE 32
+
+using namespace nvcuda;
+
 #define HALF_ROUND_STYLE 1  // 1: nearest, -1: truncate (fastest, default)
 #include "half.hpp"
 using half_float::half;
