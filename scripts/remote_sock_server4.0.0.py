@@ -7,9 +7,6 @@ import os
 from datetime import datetime
 import requests
 import json
-
-import subprocess
-
 import remote_sock_parameters as par
 
 
@@ -71,17 +68,21 @@ def iceboxSwitch(portNumber, status, switchIP):
     expect "OK"
     send "quit\r"
     """
-
-    child = pexpect.spawn('telnet {} {}'.format(switchIP, 23))
-    child.expect('Icebox login:')
-    child.sendline('admin')
-    child.expect('Password:')
-    child.sendline('icebox')
-    child.expect('#')
-    child.sendline('power {} {}'.format(status.lower(), portNumber))
-    child.expect('OK')
-    child.sendline('quit')
-    return 0
+    child = None
+    try:
+        child = pexpect.spawn('telnet {} {}'.format(switchIP, 23))
+        child.expect('Icebox login:')
+        child.sendline('admin')
+        child.expect('Password:')
+        child.sendline('icebox')
+        child.expect('#')
+        child.sendline('power {} {}'.format(status.lower(), portNumber))
+        child.expect('OK')
+        child.sendline('quit')
+        return 0
+    except Exception as err:
+        print("EXCEPTION icebox: {}\n{}".format(str(err), str(child)))
+        return 1
 
 
 class Switch:
