@@ -10,20 +10,31 @@
 #include "Parameters.h"
 
 __global__ void test_read_only_kernel(
-		const __restrict__ uint64* constant_mem_array, uint64 *output_array,
-		int64 sleep_cycles) {
+		const __restrict__ uint64* constant_mem_array, uint64 *output_array, uint64 *output_array_aux,
+		int64 *hit_array, int64 *miss_array, int64 sleep_cycles) {
 
 	register uint32 tx = (blockIdx.x + blockIdx.y * gridDim.x)
 			* (blockDim.x * blockDim.y) + (threadIdx.y * blockDim.x)
 			+ threadIdx.x;
 
+	int64 miss, hit;
 	//ldg is a direct load to const memory
 	//first round
-	const uint64 first_round = __ldg(constant_mem_array + tx);
+	miss = clock64();
+	volatile uint64 first_round = __ldg(constant_mem_array + tx);
+	miss = clock64() - miss;
 
 	sleep_cuda(sleep_cycles);
 
-	output_array[tx] = first_round;
+	hit = clock64();
+	volatile uint64 second_round = __ldg(constant_mem_array + tx);
+	hit = clock64() - hit;
+
+	__syncthreads();
+	output_array[tx] = second_round;
+	hit_array[tx] = hit;
+	miss_array[tx] = miss;
+	output_array_aux[tx] = first_round;
 }
 
 void ReadOny::test(const uint64& mem) {
@@ -31,20 +42,26 @@ void ReadOny::test(const uint64& mem) {
 	std::fill(this->input_host_1.begin(), this->input_host_1.end(), mem);
 	rad::DeviceVector<uint64> input_device_1 = this->input_host_1;
 	rad::DeviceVector<uint64> output_device_1 = this->output_host_1;
+	rad::DeviceVector<uint64> output_device_aux = this->output_host_1;
+
+	rad::DeviceVector<int64> device_hit = this->hit_vector_host;
+	rad::DeviceVector<int64> device_miss = this->miss_vector_host;
 
 	switch (this->device) {
 	case K20:
 	case K40: {
 
 		test_read_only_kernel<<<block_size, threads_per_block>>>(
-				input_device_1.data(), output_device_1.data(), cycles);
+				input_device_1.data(), output_device_1.data(), output_device_aux.data(),
+				device_hit.data(), device_miss.data(), cycles);
 		break;
 	}
 
 	case XAVIER:
 	case TITANV: {
 		test_read_only_kernel<<<block_size, threads_per_block>>>(
-				input_device_1.data(), output_device_1.data(), cycles);
+				input_device_1.data(), output_device_1.data(), output_device_aux.data(),
+				device_hit.data(), device_miss.data(), cycles);
 		break;
 	}
 	}
@@ -54,6 +71,8 @@ void ReadOny::test(const uint64& mem) {
 	//Host arrays
 	//Copy back to the host
 	this->output_host_1 = output_device_1.to_vector();
+	this->hit_vector_host = device_hit.to_vector();
+	this->miss_vector_host = device_miss.to_vector();
 }
 
 ReadOny::ReadOny(const Parameters& parameters) :
@@ -92,6 +111,8 @@ ReadOny::ReadOny(const Parameters& parameters) :
 	// Each block with one thread using all read-only cache
 	this->input_host_1.resize(v_size);
 	this->output_host_1.resize(v_size);
+	this->hit_vector_host.resize(v_size);
+	this->miss_vector_host.resize(v_size);
 }
 
 bool ReadOny::call_checker(uint64& gold, Log& log, int64& hits, int64& misses,
