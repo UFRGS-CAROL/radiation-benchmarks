@@ -1,4 +1,4 @@
-#include "../../../include/log_helper.h"
+#include "../../include/log_helper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>     // uint32_t
@@ -7,12 +7,11 @@
 #include <time.h>       // Time
 #include <omp.h>        // OpenMP
 #include <sched.h>      // sched_getcpu
-#include "offload.h"    // omp_set_num_threads_target
 
 // Xeon Phi Configuration
-#define MIC_CORES       (56)            // Max. 56 Cores (+1 core runs de OS)
-#define MIC_THREADS     (1*MIC_CORES)   // Max. 4 Threads per Core.
-#define MAX_ERROR       32              // Max. number of errors per repetition
+#define NUM_CORES       (4)             // Max. 4 Cores, Ryzen 5 2400G
+#define NUM_THREADS     (2*NUM_CORES)   // Max. 2 Threads per Core, Ryzen 5 2400G
+#define MAX_ERROR       1024            // Max. number of errors per repetition
 #define LOG_SIZE        128             // Line size per error
 #define BUSY            20000000        // Repetitions in the busy wait
 
@@ -25,9 +24,6 @@
     #define DEBUG /*OFF*/
 #endif
 
-#ifdef ALL_DEBUG
-    __declspec(target(mic)) sched_getcpu();
-#endif
 
 // =============================================================================
 uint64_t string_to_uint64(char *string) {
@@ -54,22 +50,23 @@ int main (int argc, char *argv[]) {
     repetitions = string_to_uint64(argv[1]);
     size = atoi(argv[2]);
 
-    if (size % (MIC_THREADS * sizeof(uint32_t)) != 0) {
-        fprintf(stderr,"The array size needs divisible by %ld (#threads * element size).\n", MIC_THREADS * sizeof(uint32_t));
+    if (size % (NUM_THREADS * sizeof(uint32_t)) != 0) {
+        fprintf(stderr,"The array size needs divisible by %ld (#threads * element size).\n", NUM_THREADS * sizeof(uint32_t));
         exit(EXIT_FAILURE);
     }
 
     if (repetitions == 0)       repetitions -= 1;   // MAX UINT64_T = 18446744073709551615
-    omp_set_num_threads_target(TARGET_MIC, 0, MIC_THREADS);
+    //omp_set_num_threads_target(TARGET_MIC, 0, NUM_THREADS);
+    omp_set_num_threads(NUM_THREADS);
 
     char msg[LOG_SIZE];
     snprintf(msg, sizeof(msg),
             "Loop:%"PRIu64" Threads:%"PRIu32" Elem.Size:%"PRIu32"B ArraySize:%"PRIu32"KB SizePerThread:%"PRIu32"KB",
             repetitions,
-            MIC_THREADS,
+            NUM_THREADS,
             (uint32_t)sizeof(uint32_t),
             (uint32_t)(size / sizeof(uint32_t)),
-            (uint32_t)(size / 1024) / MIC_THREADS);
+            (uint32_t)(size / 1024) / NUM_THREADS);
     if (start_log_file("cache_mem", msg) != 0) {
         exit(EXIT_FAILURE);
     }
@@ -82,7 +79,7 @@ int main (int argc, char *argv[]) {
     uint32_t th_id = 0;
     uint64_t i = 0;
     uint32_t j = 0;
-    uint32_t slice = (size / sizeof(uint32_t)) / MIC_THREADS ;
+    uint32_t slice = (size / sizeof(uint32_t)) / NUM_THREADS ;
     uint32_t errors = 0;
 
     uint32_t *ptr_vector;
@@ -90,11 +87,7 @@ int main (int argc, char *argv[]) {
 
     uint32_t x;
     uint32_t y;
-    char log[MIC_THREADS][MAX_ERROR][LOG_SIZE];
-
-    #ifdef ALL_DEBUG
-        printf("Before offload (local processor): Thread %d, on cpu %d.\n", omp_get_thread_num(), sched_getcpu());
-    #endif
+    char log[NUM_THREADS][MAX_ERROR][LOG_SIZE];
 
     //==================================================================
     // Benchmark
@@ -102,7 +95,7 @@ int main (int argc, char *argv[]) {
 
         //======================================================================
         // Prepare the log
-        for (x = 0; x < MIC_THREADS; x++)
+        for (x = 0; x < NUM_THREADS; x++)
             for (y = 0; y < MAX_ERROR; y++)
                 log[x][y][0] = '\0';
 
@@ -110,69 +103,56 @@ int main (int argc, char *argv[]) {
 
         start_iteration();
 
-        //======================================================================
-        // Parallel region
-        #pragma offload target(mic:0) in(ptr_vector:length(size / sizeof(uint32_t)))  inout(log)
+        #pragma omp parallel for private(th_id, j) reduction(+:errors)
+        for(th_id = 0; th_id < NUM_THREADS; th_id++)
         {
-            #pragma omp parallel for private(th_id, j) reduction(+:errors)
-            for(th_id = 0; th_id < MIC_THREADS; th_id++)
-            {
-                asm volatile ("nop");
-                asm volatile ("nop");
+            asm volatile ("nop");
+            asm volatile ("nop");
 
-                #ifdef ALL_DEBUG
-                    if ((omp_get_thread_num()*4) + 1 != sched_getcpu()) {
-                        printf("ERROR After offload: Thread %d, on cpu %d.\n", omp_get_thread_num(), sched_getcpu());
-                        printf("Should be:  Thread %d, on cpu %d.\n", omp_get_thread_num(), (omp_get_thread_num() * 4)+1 );
-                        printf("Try to use:\n export MIC_ENV_PREFIX=PHI\n export PHI_KMP_AFFINITY='granularity=fine,scatter'\n");
-                    }
+            uint32_t ref_int = 0;
 
-                #endif
+            //==============================================================
+            // Initialize the variables with a new REFWORD
+            if ((i % 3) == 0)
+                asm volatile("movl $0x0, %0" : "=r" (ref_int));
+            else if ((i % 3) == 1)
+                asm volatile("movl $0xFFFFFFFF, %0" : "=r" (ref_int));
+            else
+                asm volatile("movl $0x55555555, %0" : "=r" (ref_int));
 
-                uint32_t ref_int = 0;
+            for (j = slice * th_id; j < slice * (th_id + 1); j++) {
+                ptr_vector[j] = ref_int;
+            }
 
-                //==============================================================
-                // Initialize the variables with a new REFWORD
-                if ((i % 3) == 0)
-                    asm volatile("movl $0x0, %0" : "=r" (ref_int));
-                else if ((i % 3) == 1)
-                    asm volatile("movl $0xFFFFFFFF, %0" : "=r" (ref_int));
-                else
-                    asm volatile("movl $0x55555555, %0" : "=r" (ref_int));
+            //==============================================================
+            // Busy wait
+            for(j = (repetitions == 0); j < BUSY; j++) {
+                asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
+                asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
+                asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
+                asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
+                asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
+            }
 
-                for (j = slice * th_id; j < slice * (th_id + 1); j++) {
-                    ptr_vector[j] = ref_int;
-                }
+            for (j = slice * th_id; j < slice * (th_id + 1); j++) {
+                DEBUG
 
-                //==============================================================
-                // Busy wait
-                for(j = (repetitions == 0); j < BUSY; j++) {
-                    asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
-                    asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
-                    asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
-                    asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
-                    asm volatile ("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
-                }
-
-                for (j = slice * th_id; j < slice * (th_id + 1); j++) {
-                    DEBUG
-
-                    if (ptr_vector[j] != ref_int) {
-                        snprintf(log[th_id][errors++], LOG_SIZE,
-                                 "IT:%"PRIu64" POS:%d TH:%d OP:MEM REF:0x%08x WAS:0x%08x", i, j, th_id, ref_int, ptr_vector[j]);
-                    }
-
+                if (ptr_vector[j] != ref_int) {
+                    snprintf(log[th_id][errors++], LOG_SIZE,
+                             "IT:%"PRIu64" POS:%d TH:%d OP:MEM REF:0x%08x WAS:0x%08x", i, j, th_id, ref_int, ptr_vector[j]);
                 }
 
             }
-            asm volatile ("nop");
-            asm volatile ("nop");
+
         }
+        asm volatile ("nop");
+        asm volatile ("nop");
+        
         end_iteration();
 
         //======================================================================
         // Write the log if exists
-        for (x = 0; x < MIC_THREADS; x++)
+        for (x = 0; x < NUM_THREADS; x++)
             for (y = 0; y < MAX_ERROR; y++)
                 if (log[x][y][0] != '\0')
                     log_error_detail(log[x][y]);
