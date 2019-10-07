@@ -10,25 +10,19 @@
 #include "utils.h"
 #include "SharedMemory.h"
 
-__constant__ __device__
-static uint64 volta_input[CACHE_LINE_SIZE_BY_INT64][2] =
-		{ //teste
-		{ 0xffffffffffffffff, 0x0000000000000000 }, { 0xffffffffffffffff,
-				0x0000000000000000 },
-				{ 0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 }, {
-						0xffffffffffffffff, 0x0000000000000000 } };
+__device__ __constant__
+static uint64 volta_input[2][CACHE_LINE_SIZE_BY_INT64] =
+		{ { 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff,
+				0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff,
+				0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff,
+				0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff,
+				0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff,
+				0xffffffffffffffff }, { 0x0000000000000000, 0x0000000000000000,
+				0x0000000000000000, 0x0000000000000000, 0x0000000000000000,
+				0x0000000000000000, 0x0000000000000000, 0x0000000000000000,
+				0x0000000000000000, 0x0000000000000000, 0x0000000000000000,
+				0x0000000000000000, 0x0000000000000000, 0x0000000000000000,
+				0x0000000000000000, 0x0000000000000000 } };
 
 template<const uint32 V_SIZE>
 __global__ void test_shared_memory_kernel(uint64 *output1, uint64 *output2,
