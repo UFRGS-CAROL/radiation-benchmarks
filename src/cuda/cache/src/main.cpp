@@ -19,7 +19,6 @@
 #include "SharedMemory.h"
 #include "RegisterFile.h"
 #include "ReadOnly.h"
-
 #include "utils.h"
 #include "Log.h"
 #include "Memory.h"
@@ -92,6 +91,7 @@ void setup_execute(Log& log, Parameters& test_parameter,
 				std::cout << "Iteration: " << iteration;
 				std::cout << " Time: " << end_it - start_it;
 				std::cout << " Errors: " << log.errors;
+				std::cout << " Info(memory errors): " << log.infos;
 				std::cout << " Hits: " << hits;
 				std::cout << " Misses: " << misses;
 				std::cout << " False hits: " << false_hits;
