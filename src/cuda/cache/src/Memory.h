@@ -99,7 +99,7 @@ struct Memory {
 			const T* v3, const T& val_gold, const uint64 i, Log& log) {
 		//For this case we don't need to check
 		if(this->device == K20 || this->device == K40){
-			return {true, v1[i]};
+			return {v1[i], true};
 		}
 
 		auto check_flag = true;
