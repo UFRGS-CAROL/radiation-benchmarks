@@ -1,6 +1,17 @@
+"""
+All parameters necessary to a radiation test
+no more magic numbers
+"""
 
-socketPort = 8080  # PORT the socket will listen to
-sleepTime = 5  # Time between checks
+
+# PORT the socket will listen to
+socketPort = 8080
+
+# Time between checks
+sleepTime = 5
+
+# Time between send a power switch command
+onOffTime = 10
 
 serverIP = "192.168.1.5"  # IP of the remote socket server (hardware watchdog)
 

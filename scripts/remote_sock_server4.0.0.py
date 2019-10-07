@@ -48,7 +48,9 @@ def lindySwitch(portNumber, status, switchIP):
     }
 
     try:
-        return requests.post(url, data=json.dumps(payload), headers=headers)
+        requestCode = requests.post(url, data=json.dumps(payload), headers=headers)
+        requestCode.raise_for_status()
+        return 0
     except requests.exceptions.RequestException as err:
         logMsg("Could not change Lindy IP switch status, portNumber: " + str(
             portNumber) + ", status" + status + ", switchIP:" + switchIP)
@@ -81,6 +83,8 @@ def iceboxSwitch(portNumber, status, switchIP):
         child.sendline('quit')
         return 0
     except Exception as err:
+        logMsg("Could not change Icebox IP switch status, portNumber: " + str(
+            portNumber) + ", status" + status + ", switchIP:" + switchIP)
         print("EXCEPTION icebox: {}\n{}".format(str(err), str(child)))
         return 1
 
@@ -151,7 +155,7 @@ class RebootMachine(threading.Thread):
         if setIPSwitch(port, "Off", switchIP) != 0:
             raise ValueError("setIPSwitch not working")
 
-        time.sleep(10)
+        time.sleep(par.onOffTime)
         if setIPSwitch(port, "On", switchIP) != 0:
             raise ValueError("setIPSwitch not working")
 
@@ -231,7 +235,7 @@ class handleMachines(threading.Thread):
 
     def run(self):
         print("\tStarting thread to check machine connections")
-        while 1:
+        while True:
             checkMachines()
             time.sleep(par.sleepTime)
 
