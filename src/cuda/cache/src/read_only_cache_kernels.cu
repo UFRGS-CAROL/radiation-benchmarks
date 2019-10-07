@@ -16,18 +16,17 @@ __global__ void test_read_only_kernel(
 	register uint32 tx = (blockIdx.x + blockIdx.y * gridDim.x)
 			* (blockDim.x * blockDim.y) + (threadIdx.y * blockDim.x)
 			+ threadIdx.x;
-
 	int64 miss, hit;
 	//ldg is a direct load to const memory
 	//first round
 	miss = clock64();
-	volatile uint64 first_round = __ldg(constant_mem_array + tx);
+	uint64 first_round = __ldg(constant_mem_array + tx);
 	miss = clock64() - miss;
 
 	sleep_cuda(sleep_cycles);
 
 	hit = clock64();
-	volatile uint64 second_round = __ldg(constant_mem_array + tx);
+	uint64 second_round = __ldg(constant_mem_array + tx);
 	hit = clock64() - hit;
 
 	__syncthreads();
