@@ -8,6 +8,13 @@
 #define WMMA_N 16
 #define WMMA_K 16
 
+#define C_LAYOUT wmma::mem_row_major
+
+
+#define WARP_SIZE 32
+
+using namespace nvcuda;
+
 #define HALF_ROUND_STYLE 1  // 1: nearest, -1: truncate (fastest, default)
 #include "half.hpp"
 using half_float::half;
@@ -44,6 +51,12 @@ __device__ __forceinline__ void axpy__(const double a, const double b, float &c)
 __device__ __forceinline__ void axpy__(const float a, const float b, __half &c) {
     c = __hfma(__float2half(a), __float2half(b), c);
 }
+
+__device__  __forceinline__ half axpy__(half a, half b, half acc) {
+  return __hfma(a, b, acc);
+}
+
+
 
 __device__ unsigned long long errors = 0;
 
@@ -84,7 +97,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
 }
 
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
-__global__ void simple_wmma_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c, half_t *d, real_t *d_frag, 
+__global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d, real_t *d_frag, 
         int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
     // Leading dimensions. Packed with no transpositions.
     int lda = m_ld;
@@ -140,7 +153,7 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c
 
         __shared__ half_t Bs[BLOCK_SIZE][BLOCK_SIZE];
 
-        As[ty][tx] = a1[A + m_ld * ty + tx];
+        As[ty][tx] = a[A + m_ld * ty + tx];
         Bs[ty][tx] = b[B + n_ld * ty + tx];
 
         // Synchronize to make sure the matrices are loaded
@@ -150,7 +163,7 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c
 
         for (int k = 0; k < BLOCK_SIZE; ++k) {
         
-            Csub = fma_dmr(As[ty][k], Bs[k][tx],Csub);
+            Csub = axpy__(As[ty][k], Bs[k][tx],Csub);
         }
 
         // Synchronize to make sure that the preceding
@@ -213,7 +226,10 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *a1, half_t *b, real_t *c
         // Store the output
         wmma::store_matrix_sync(d_frag + cCol + cRow * ldc, c_frag, ldc,
                 wmma::mem_row_major);
-        check_bit_error<THRESHOLD>(Csub, d_frag);    
+        
+
+
+        //check_bit_error<THRESHOLD>(Csub, d_frag);    
     }
 }
 
@@ -366,14 +382,14 @@ void matrix_mult_dmr(real_t *A, real_t *B, int M, int N, int K, real_t *D, half_
 }
 
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
-void matrix_mult_tensor_dmr(real_t *A, real_t *B, int M, int N, int K, real_t *D, half_t *D_h, real_t alpha, real_t beta, real_t *C) {
+void matrix_mult_tensor_dmr(half_t *A, half_t *B, int M, int N, int K, real_t *D, half_t *D_h, real_t alpha, real_t beta, real_t *C) {
     dim3 grid_dim;
     dim3 block_dim;
+ 
 
         //      // block_dim.x must be a multple of warpSize
         //      // 128x4 means we have 16 warps and a block computes a 64x64 output tile
     block_dim.x = WMMA_M; //128;
     block_dim.y = WMMA_N;
-
-    simple_wmma_gemm_DMR<THRESHOLD, COUNT><<<dimGrid,dimBlock>>>(D, D_h, C, A, B, alpha, beta, M, N);
+    simple_wmma_gemm_DMR<THRESHOLD, COUNT><<<grid_dim,block_dim>>>(A, B, C, D_h, D, M, N, K, alpha, beta);
 }
