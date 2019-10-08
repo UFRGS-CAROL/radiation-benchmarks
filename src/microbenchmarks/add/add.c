@@ -152,7 +152,7 @@ int main (int argc, char *argv[]) {
 
     char msg[LOG_SIZE];
     snprintf(msg, sizeof(msg), "Loop:%"PRIu64" Threads:%"PRIu32"", repetitions, NUM_THREADS);
-    if (start_log_file("scalar_and", msg) != 0) {
+    if (start_log_file("add", msg) != 0) {
         exit(EXIT_FAILURE);
     }
     set_max_errors_iter(MAX_ERROR);
