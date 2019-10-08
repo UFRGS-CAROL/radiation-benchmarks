@@ -11,7 +11,7 @@
 
 // Xeon Phi Configuration
 #define NUM_CORES       (4)            // Max. 56 Cores (+1 core runs de OS)
-#define NUM_THREADS     (2*NUM_CORES)   // Max. 4 Threads per Core.
+#define NUM_THREADS     (1*NUM_CORES)   // Max. 4 Threads per Core.
 #define MAX_ERROR       32              // Max. number of errors per repetition
 #define LOG_SIZE        128             // Line size per error
 #define BUSY            2000000          // Repetitions in the busy wait
@@ -27,20 +27,29 @@
 
 //======================================================================
 
-#define LOOP_MUL {\
-        value_int = ref_int3; \
-        asm volatile("imul $0x2, %0" : "+r" (value_int));\
-        asm volatile("imul $0x2, %0" : "+r" (value_int));\
-        asm volatile("imul $0x2, %0" : "+r" (value_int));\
-        asm volatile("imul $0x2, %0" : "+r" (value_int));\
-        asm volatile("imul $0x2, %0" : "+r" (value_int));\
-        asm volatile("imul $0x2, %0" : "+r" (value_int));\
-        asm volatile("imul $0x2, %0" : "+r" (value_int));\
-        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+#define LOOP_ADD {\
+        value_int = 0; \
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        \
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
+        asm volatile("addl %1, %0" : "+r" (value_int) : "r" (ref_int2));\
         \
         DEBUG \
-        if (value_int != (ref_int3 << 8)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int3 << 8), value_int); \
+        if (value_int != (ref_int2 << 4)) \
+            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:ADD REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int2 << 4), value_int); \
                 }
 
 
@@ -143,7 +152,7 @@ int main (int argc, char *argv[]) {
 
     char msg[LOG_SIZE];
     snprintf(msg, sizeof(msg), "Loop:%"PRIu64" Threads:%"PRIu32"", repetitions, NUM_THREADS);
-    if (start_log_file("mul", msg) != 0) {
+    if (start_log_file("add", msg) != 0) {
         exit(EXIT_FAILURE);
     }
     set_max_errors_iter(MAX_ERROR);
@@ -192,14 +201,14 @@ int main (int argc, char *argv[]) {
                 //==============================================================
                 // ADD
                     for(j = (repetitions == 0); j < BUSY; j++) {
-                        LOOP_MUL
-                        LOOP_MUL
-                        LOOP_MUL
-                        LOOP_MUL
-                        LOOP_MUL
-                        LOOP_MUL
-                        LOOP_MUL
-                        LOOP_MUL
+                        LOOP_ADD
+                        LOOP_ADD
+                        LOOP_ADD
+                        LOOP_ADD
+                        LOOP_ADD
+                        LOOP_ADD
+                        LOOP_ADD
+                        LOOP_ADD
                     }
 
 

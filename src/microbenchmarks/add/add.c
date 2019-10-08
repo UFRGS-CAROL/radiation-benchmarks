@@ -11,7 +11,7 @@
 
 // Xeon Phi Configuration
 #define NUM_CORES       (4)            // Max. 56 Cores (+1 core runs de OS)
-#define NUM_THREADS     (1*NUM_CORES)   // Max. 4 Threads per Core.
+#define NUM_THREADS     (2*NUM_CORES)   // Max. 4 Threads per Core.
 #define MAX_ERROR       32              // Max. number of errors per repetition
 #define LOG_SIZE        128             // Line size per error
 #define BUSY            2000000          // Repetitions in the busy wait
