@@ -24,13 +24,13 @@ struct FOUR_VECTOR {
 	tested_type v, x, y, z;
 
 	__DEVICE_HOST_INLINE__
-	bool operator==(const FOUR_VECTOR& rhs) {
+	bool operator==(const FOUR_VECTOR& rhs) const {
 		return (this->x == rhs.x) && (this->y == rhs.y) && (this->z == rhs.z)
 				&& (this->v == rhs.v);
 	}
 
 	__DEVICE_HOST_INLINE__
-	bool operator!=(const FOUR_VECTOR& rhs) {
+	bool operator!=(const FOUR_VECTOR& rhs) const {
 		return !(*this == rhs);
 	}
 
@@ -93,11 +93,13 @@ struct box_str {
 	int nn;
 	nei_str nei[26];
 
-	__host__ __device__ inline bool operator==(const box_str& rhs) {
+	__DEVICE_HOST_INLINE__
+	bool operator==(const box_str& rhs) {
 		return (this->x == rhs.x) && (this->y == rhs.y) && (this->z == rhs.z)
 				&& (this->number == rhs.number) && (this->offset == rhs.offset);
 	}
-	__host__ __device__ inline bool operator!=(const box_str& rhs) {
+	__DEVICE_HOST_INLINE__
+	bool operator!=(const box_str& rhs) {
 		return !(*this == rhs);
 	}
 };
