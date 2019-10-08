@@ -72,6 +72,7 @@ int main (int argc, char *argv[]) {
     }
 
     set_max_errors_iter(MAX_ERROR);
+    set_iter_interval_print(20);
 
 
     //==================================================================
