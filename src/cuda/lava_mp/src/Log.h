@@ -49,9 +49,9 @@ struct Log {
 	friend std::ostream& operator<<(std::ostream& os, Log& d) {
 		std::string file_name = "No log file name, build with the libraries";
 #ifdef LOGS
-		file_name = get_log_file_name();
+		file_name = std::string(::get_log_file_name());
 #endif
-		os << "Logfilename: " << file_name << std::endl;
+		os << "Log filename: " << file_name << std::endl;
 		os << "error_: " << d.error_ << std::endl;
 		os << "Info: " << d.info << std::endl;
 		os << "Test info: " << d.test_info << std::endl;
@@ -73,9 +73,9 @@ struct Log {
 #endif
 	}
 
-	void set_max_errors_iter(size_t max_error_s) {
+	void set_max_errors_iter(size_t max_errors) {
 #ifdef LOGS
-		::set_max_errors_iter(max_max_error_s);
+		::set_max_errors_iter(max_errors);
 #endif
 	}
 
@@ -110,7 +110,7 @@ struct Log {
 	void update_error_s() {
 		if (this->error_ != 0) {
 #ifdef LOGS
-			::log_error__count(this->error_);
+			::log_error_count(this->error_);
 #endif
 		}
 	}

@@ -2,13 +2,13 @@ CXX=g++
 CXXFLAGS= -std=c++11 -o3  -fPIC -pthread 
 EXEC=cuda_lava
 
-LOGS=0
+LOGS=1
 BUILDPROFILER=0
 OPERATIONNUM=1
 PRECISION=double
 DMR=dmrmixed
 DATA_DIR=../../../data/lava
-DEF_SIZE=20
+DEF_SIZE=23
 STREAMS=1
 CHARGES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_charges_$(DEF_SIZE)
 DISTANCES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_distances_$(DEF_SIZE)

@@ -178,17 +178,17 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 			//-----------------------------------------------------
 			while (wtx < NUMBER_PAR_PER_BOX) {
 
-//#pragma unroll COUNT
+#pragma unroll
 				for (j = 0; j < NUMBER_PAR_PER_BOX; j++) {
 
 					r2_rt =
 							rA_shared_rt[wtx].v
-									+ rB_shared_rt[j].v - DOT(rA_shared_rt[wtx], rB_shared_rt[j]);
+									+ rB_shared_rt[j].v- DOT(rA_shared_rt[wtx], rB_shared_rt[j]);
 
 					//DMR
 					r2_ht =
 							rA_shared_ht[wtx].v
-									+ rB_shared_ht[j].v - DOT(rA_shared_ht[wtx], rB_shared_ht[j]);
+									+ rB_shared_ht[j].v- DOT(rA_shared_ht[wtx], rB_shared_ht[j]);
 
 					u2_rt = a2_rt * r2_rt;
 
