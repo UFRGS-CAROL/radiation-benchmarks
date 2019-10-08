@@ -14,7 +14,7 @@
 #define NUM_THREADS     (1*NUM_CORES)   // Max. 4 Threads per Core.
 #define MAX_ERROR       32              // Max. number of errors per repetition
 #define LOG_SIZE        128             // Line size per error
-#define BUSY            900000          // Repetitions in the busy wait
+#define BUSY            2000000          // Repetitions in the busy wait
 
 //#define ALL_DEBUG
 #ifdef ALL_DEBUG
