@@ -42,26 +42,20 @@ int main(int argc, char *argv[]) {
 	//	CPU/MCPU VARIABLES
 	//=====================================================================
 	Parameters parameters(argc, argv);
-	Log log;
 
 	std::cout << parameters << std::endl;
-	auto test_precision_description = "float";
 
-	std::string test_info = std::string("type:") + test_precision_description
+	std::cout << "=================================" << std::endl;
+	std::string test_info = std::string("type:") + parameters.test_precision_description
 			+ "-precision streams:" + std::to_string(parameters.nstreams)
 			+ " boxes:" + std::to_string(parameters.boxes) + " block_size:"
 			+ std::to_string(NUMBER_THREADS);
 
-	std::string test_name = std::string("cuda_") + test_precision_description
+	std::string test_name = std::string("cuda_") + parameters.test_precision_description
 			+ "_lava";
 	std::cout << "=================================" << std::endl;
-	std::cout << test_precision_description << " " << test_name << std::endl;
-	std::cout << "=================================" << std::endl;
 
-	// timer
-	if (!parameters.generate) {
-		log = Log(test_name, test_info);
-	}
+	Log log(test_name, test_info);
 
 	log.set_max_errors_iter(
 	MAX_LOGGED_ERRORS_PER_STREAM * parameters.nstreams + 32);

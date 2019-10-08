@@ -12,21 +12,24 @@
 #include "common.h"
 
 struct Parameters {
-	int boxes;
-	std::string input_distances, input_charges, output_gold;
-	int iterations, fault_injection, nstreams;
-	bool verbose;
-	bool gpu_check;
-	bool generate;
+	std::string input_distances;
+	std::string input_charges;
+	std::string output_gold;
 	std::string test_precision_description;
 	std::string test_redundancy_description;
 
+	bool verbose;
+	bool gpu_check;
+	bool generate;
+	bool fault_injection;
+
+	int iterations;
+	int nstreams;
+	int block_check;
+	int boxes;
+
 	REDUNDANCY redundancy;
 	PRECISION precision;
-
-	int block_check;
-
-//	Parameters();
 
 	Parameters(int argc, char** argv);
 

@@ -62,7 +62,7 @@ void check_bit_error(const FOUR_VECTOR<real_t>& lhs,
 //			(abs__(lhs.x - rhs.x) > ZERO_DOUBLE) ||	//X
 //			(abs__(lhs.y - rhs.y) > ZERO_DOUBLE) ||	//Y
 //			(abs__(lhs.z - rhs.z) > ZERO_DOUBLE)) {	//Z
-	if (lhs != rhs){
+	if (lhs != rhs) {
 		atomicAdd(&errors, 1);
 	}
 }
@@ -70,32 +70,45 @@ void check_bit_error(const FOUR_VECTOR<real_t>& lhs,
 template<const uint32_t THRESHOLD> __DEVICE_INLINE__
 void check_bit_error(const FOUR_VECTOR<float>& lhs,
 		const FOUR_VECTOR<double>& rhs) {
+	float rhs_float_v = float(rhs.v);
+	float rhs_float_x = float(rhs.x);
+	float rhs_float_y = float(rhs.y);
+	float rhs_float_z = float(rhs.z);
 	//To int
-//	uint32_t rhs_data_v = __float_as_uint(float(rhs.v));
-//	uint32_t rhs_data_x = __float_as_uint(float(rhs.x));
-//	uint32_t rhs_data_y = __float_as_uint(float(rhs.y));
-//	uint32_t rhs_data_z = __float_as_uint(float(rhs.z));
+	uint32_t rhs_data_v = *(uint32_t*)(&rhs_float_v);
+	uint32_t rhs_data_x = *(uint32_t*)(&rhs_float_x);
+	uint32_t rhs_data_y = *(uint32_t*)(&rhs_float_y);
+	uint32_t rhs_data_z = *(uint32_t*)(&rhs_float_z);
+
+	uint32_t lhs_data_v = *(uint32_t*)(&lhs.v);
+	uint32_t lhs_data_x = *(uint32_t*)(&lhs.x);
+	uint32_t lhs_data_y = *(uint32_t*)(&lhs.y);
+	uint32_t lhs_data_z = *(uint32_t*)(&lhs.z);
+
+	uint32_t sub_res_v = SUB_ABS(lhs_data_v, rhs_data_v);
+	uint32_t sub_res_x = SUB_ABS(lhs_data_x, rhs_data_x);
+	uint32_t sub_res_y = SUB_ABS(lhs_data_y, rhs_data_y);
+	uint32_t sub_res_z = SUB_ABS(lhs_data_z, rhs_data_z);
+
+	if ((sub_res_v > THRESHOLD) || (sub_res_x > THRESHOLD)
+			|| (sub_res_y > THRESHOLD) || (sub_res_z > THRESHOLD)) {
+
+		atomicAdd(&errors, 1);
+//		auto max_all = sub_res_v;
+//		max_all = max(sub_res_x, max_all);
+//		max_all = max(sub_res_y, max_all);
+//		max_all = max(sub_res_z, max_all);
+//		printf("v %e x %e y %e z %e\n", lhs.v, lhs.x, lhs.y, lhs.z);
+//		printf("v %e x %e y %e z %e\n", rhs.v, rhs.x, rhs.y, rhs.z);
 //
-//	uint32_t lhs_data_v = __float_as_uint(lhs.v);
-//	uint32_t lhs_data_x = __float_as_uint(lhs.x);
-//	uint32_t lhs_data_y = __float_as_uint(lhs.y);
-//	uint32_t lhs_data_z = __float_as_uint(lhs.z);
-//
-//	uint32_t sub_res_v = SUB_ABS(lhs_data_v, rhs_data_v);
-//	uint32_t sub_res_x = SUB_ABS(lhs_data_x, rhs_data_x);
-//	uint32_t sub_res_y = SUB_ABS(lhs_data_y, rhs_data_y);
-//	uint32_t sub_res_z = SUB_ABS(lhs_data_z, rhs_data_z);
-//
-//	if ((sub_res_v > THRESHOLD) || (sub_res_x > THRESHOLD)
-//			|| (sub_res_y > THRESHOLD) || (sub_res_z > THRESHOLD)) {
+//		printf("MAX %d\n", max_all);
+	}
+//	if ((abs__(lhs.v - rhs.v) > ZERO_HALF) ||	//V
+//			(abs__(lhs.x - rhs.x) > ZERO_HALF) ||	//X
+//			(abs__(lhs.y - rhs.y) > ZERO_HALF) ||	//Y
+//			(abs__(lhs.z - rhs.z) > ZERO_HALF)) {	//Z
 //		atomicAdd(&errors, 1);
 //	}
-		if ((abs__(lhs.v - rhs.v) > ZERO_HALF) ||	//V
-				(abs__(lhs.x - rhs.x) > ZERO_HALF) ||	//X
-				(abs__(lhs.y - rhs.y) > ZERO_HALF) ||	//Y
-				(abs__(lhs.z - rhs.z) > ZERO_HALF)) {	//Z
-			atomicAdd(&errors, 1);
-		}
 }
 
 inline uint64_t get_dmr_error() {

@@ -20,15 +20,19 @@
  * the comparison method
  */
 //For 1 iteration
-#define THRESHOLD_1 5
+//5e-06
+#define THRESHOLD_1 2673
 
 //For 10 iterations
+//3e-05
 #define THRESHOLD_10 10
 
 //For 100 iterations
+//9e-05
 #define THRESHOLD_100 98
 
 //For MAX_LAVA iterations
+//4e-03
 #define THRESHOLD_MAX 500
 
 void setup_double(Parameters& parameters, Log& log) {

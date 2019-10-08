@@ -410,7 +410,8 @@ void setup_execution(Parameters& parameters, Log& log,
 			}
 
 			if (parameters.verbose)
-				std::cout << "Gold check time: " << rad::mysecond() - timestamp;
+				std::cout << "Gold check time: " << rad::mysecond() - timestamp
+						<< std::endl;
 		}
 
 		//================= PERF

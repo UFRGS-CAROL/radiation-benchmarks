@@ -39,7 +39,7 @@
 #endif
 
 #ifndef ZERO_HALF
-#define ZERO_HALF 4.166E-03
+#define ZERO_HALF 9E-04
 #endif
 
 static void __error(std::string err, const char* file, const int line) {
