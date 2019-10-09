@@ -7,7 +7,7 @@ sys.path.insert(0, '/home/carol/radiation-benchmarks/src/include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 ITERATIONS = 0 # zero means the max number possible
-NUM_THREADS = [8] # 8 threads for Ryzen, 4 Threads for Steamroller
+NUM_THREADS = 8 # 8 threads for Ryzen, 4 Threads for Steamroller
 def config(board, debug):
 
     benchmark_bin = "vmul_int"
