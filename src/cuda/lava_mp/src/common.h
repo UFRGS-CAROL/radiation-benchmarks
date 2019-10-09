@@ -29,6 +29,7 @@
 
 //Subtraction considering the signal
 #define SUB_ABS(lhs, rhs) ((lhs > rhs) ? (lhs - rhs) : (rhs - lhs))
+#define ABSF(lhs, rhs) (fabsf(lhs - rhs))
 
 #ifndef ZERO_FLOAT
 #define ZERO_FLOAT 2.2e-20

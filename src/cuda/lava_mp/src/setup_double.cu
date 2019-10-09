@@ -20,8 +20,8 @@
  * the comparison method
  */
 //For 1 iteration
-//5e-06
-#define THRESHOLD_1 2673
+//1e-05
+#define THRESHOLD_1 980151802
 
 //For 10 iterations
 //3e-05

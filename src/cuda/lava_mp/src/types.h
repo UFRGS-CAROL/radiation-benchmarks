@@ -12,6 +12,9 @@
 #include "device_vector.h"
 #include "cuda_utils.h"
 
+template<typename real_t>
+real_t abs__(real_t& lhs);
+
 #define __DEVICE_HOST_INLINE__ __device__ __host__ __forceinline__
 
 template<typename tested_type>
@@ -31,7 +34,13 @@ struct FOUR_VECTOR {
 
 	__DEVICE_HOST_INLINE__
 	bool operator!=(const FOUR_VECTOR& rhs) const {
-		return !(*this == rhs);
+		if ((abs__(lhs.v - rhs.v) > ZERO_DOUBLE) ||	//V
+				(abs__(lhs.x - rhs.x) > ZERO_DOUBLE) ||	//X
+				(abs__(lhs.y - rhs.y) > ZERO_DOUBLE) ||	//Y
+				(abs__(lhs.z - rhs.z) > ZERO_DOUBLE)) {	//Z
+			return true;
+		}
+		return false;
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const FOUR_VECTOR& lhs) {
