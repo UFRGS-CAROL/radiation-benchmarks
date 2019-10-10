@@ -64,13 +64,13 @@ clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
 	
-test:
+generate:
 	 ./$(EXEC) -size=$(SIZE) -generate -verbose -debug \
 	 		   -input=./input_$(SIZE) \
 	 		   -gold=./gold_$(SIZE) \
 	 		   -iterations=1 -noinputensurance
 	 		   	
-generate:
+test:
 	 ./$(EXEC) -size=$(SIZE) -verbose -debug \
 	 		   -input=./input_$(SIZE) \
 	 		   -gold=./gold_$(SIZE) \
