@@ -139,20 +139,20 @@ static __device__ void ringbufFree(qsortRingbuf *ringbuf, T *data) {
 // Replacement
 __device__ __forceinline__
 unsigned ballout_quicksort(unsigned greater) {
-#if __CUDA_ARCH__ < 600
-	return __ballot(greater);
-#else
+//#if __CUDA_ARCH__ < 600
+//	return __ballot(greater);
+//#else
 	return __ballot_sync(0xFFFFFFFF, greater);
-#endif
+//#endif
 }
 
 __device__ __forceinline__
 unsigned shift_quicksort(unsigned offset, int lane) {
-#if __CUDA_ARCH__ < 600
-	return __shfl((int) offset, lane);
-#else
+//#if __CUDA_ARCH__ < 600
+//	return __shfl((int) offset, lane);
+//#else
 	return __shfl_sync(0xFFFFFFFF, offset, lane);
-#endif
+//#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
