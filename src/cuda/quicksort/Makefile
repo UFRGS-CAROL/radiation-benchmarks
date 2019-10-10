@@ -4,6 +4,7 @@ EXEC=quicksort
 LOGS=1
 BUILDPROFILER=0
 DEBUG=0
+SIZE=134217728
 
 VPATH=./
 CUDAPATH=/usr/local/cuda
@@ -64,7 +65,13 @@ clean:
 	
 	
 test:
-	 ./$(EXEC) --iterations 10
-	
+	 ./$(EXEC) -size=$(SIZE) -generate -verbose -debug \
+	 		   -input=./input_$(SIZE) \
+	 		   -gold=./gold_$(SIZE) \
+	 		   -iterations=1 -noinputensurance
+	 		   	
 generate:
-	 ./$(EXEC) --iterations 10
+	 ./$(EXEC) -size=$(SIZE) -verbose -debug \
+	 		   -input=./input_$(SIZE) \
+	 		   -gold=./gold_$(SIZE) \
+	 		   -iterations=1 -noinputensurance
