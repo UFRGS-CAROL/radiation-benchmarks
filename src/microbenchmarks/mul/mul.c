@@ -9,9 +9,6 @@
 #include <omp.h>        // OpenMP
 #include <sched.h>      // sched_getcpu
 
-// Xeon Phi Configuration
-#define NUM_CORES       (4)            // Max. 56 Cores (+1 core runs de OS)
-#define NUM_THREADS     (2*NUM_CORES)   // Max. 4 Threads per Core.
 #define MAX_ERROR       32              // Max. number of errors per repetition
 #define LOG_SIZE        128             // Line size per error
 #define BUSY            2000000          // Repetitions in the busy wait
@@ -141,19 +138,21 @@ uint64_t string_to_uint64(char *string) {
 int main (int argc, char *argv[]) {
 
     uint64_t repetitions = 0;
+    int num_threads = 0;
 
-    if(argc != 2) {
-        fprintf(stderr,"Please provide the number of <repetitions> (0 for MAX).\n");
+    if(argc != 3) {
+        fprintf(stderr,"Please provide the number of <repetitions> (0 for MAX) and number of <threads>.\n");
         exit(EXIT_FAILURE);
     }
 
     repetitions = string_to_uint64(argv[1]);
+    num_threads = atoi(argv[2]);
     if (repetitions == 0)       repetitions -= 1;   // MAX UINT64_T = 18446744073709551615
-    //omp_set_num_threads_target(TARGET_MIC, 0, NUM_THREADS);
-    omp_set_num_threads(NUM_THREADS);
+    //omp_set_num_threads_target(TARGET_MIC, 0, num_threads);
+    omp_set_num_threads(num_threads);
 
     char msg[LOG_SIZE];
-    snprintf(msg, sizeof(msg), "Loop:%"PRIu64" Threads:%"PRIu32"", repetitions, NUM_THREADS);
+    snprintf(msg, sizeof(msg), "Loop:%"PRIu64" Threads:%"PRIu32"", repetitions, num_threads);
     if (start_log_file("mul", msg) != 0) {
         exit(EXIT_FAILURE);
     }
@@ -169,7 +168,7 @@ int main (int argc, char *argv[]) {
 
     uint32_t x;
     uint32_t y;
-    char log[NUM_THREADS][MAX_ERROR][LOG_SIZE];
+    char log[num_threads][MAX_ERROR][LOG_SIZE];
 
     //==================================================================
     // Benchmark
@@ -186,7 +185,7 @@ int main (int argc, char *argv[]) {
         //======================================================================P
         // Parallel region
             #pragma omp parallel for private(th_id, j) firstprivate(ref_int1, ref_int2, ref_int3) reduction(+:errors)
-            for(th_id = 0; th_id < NUM_THREADS; th_id++)
+            for(th_id = 0; th_id < num_threads; th_id++)
             {
                 asm volatile ("nop");
                 asm volatile ("nop");

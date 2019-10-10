@@ -38,7 +38,7 @@ def config(board, debug):
     exe = [None] * 3
     exe[0] = [bin_path + "/" + benchmark_bin]
     exe[1] = [str(ITERATIONS)]
-    exe[3] = [str(NUM_THREADS)]
+    exe[2] = [str(NUM_THREADS)]
     execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)  
