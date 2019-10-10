@@ -9,13 +9,29 @@
 #define THREE_VECTOR_H_
 
 #include <vector>
-#include "device_vector.h"
-#include "cuda_utils.h"
+#include "include/device_vector.h"
+#include "include/cuda_utils.h"
+
+/**
+ * ABS
+ */
+__DEVICE_HOST_INLINE__
+double abs__(double a) {
+	return fabs(a);
+}
+
+__DEVICE_HOST_INLINE__
+float abs__(float a) {
+	return fabsf(a);
+}
+
+__DEVICE_HOST_INLINE__
+half abs__(half a) {
+	return fabsf(a);
+}
 
 template<typename real_t>
 real_t abs__(real_t& lhs);
-
-#define __DEVICE_HOST_INLINE__ __device__ __host__ __forceinline__
 
 template<typename tested_type>
 struct THREE_VECTOR {
@@ -34,10 +50,10 @@ struct FOUR_VECTOR {
 
 	__DEVICE_HOST_INLINE__
 	bool operator!=(const FOUR_VECTOR& rhs) const {
-		if ((abs__(lhs.v - rhs.v) > ZERO_DOUBLE) ||	//V
-				(abs__(lhs.x - rhs.x) > ZERO_DOUBLE) ||	//X
-				(abs__(lhs.y - rhs.y) > ZERO_DOUBLE) ||	//Y
-				(abs__(lhs.z - rhs.z) > ZERO_DOUBLE)) {	//Z
+		if ((abs__(this->v - tested_type(rhs.v)) > ZERO_DOUBLE) ||	//V
+			(abs__(this->x - tested_type(rhs.x)) > ZERO_DOUBLE) ||	//X
+			(abs__(this->y - tested_type(rhs.y)) > ZERO_DOUBLE) ||	//Y
+			(abs__(this->z - tested_type(rhs.z)) > ZERO_DOUBLE)) {	//Z
 			return true;
 		}
 		return false;
@@ -50,19 +66,19 @@ struct FOUR_VECTOR {
 
 	__DEVICE_HOST_INLINE__
 	FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<double>& rhs) {
-		this->v = rhs.v;
-		this->x = rhs.x;
-		this->y = rhs.y;
-		this->z = rhs.z;
+		this->v = double(rhs.v);
+		this->x = double(rhs.x);
+		this->y = double(rhs.y);
+		this->z = double(rhs.z);
 		return *this;
 	}
 
 	__DEVICE_HOST_INLINE__
 	FOUR_VECTOR<tested_type>& operator=(const FOUR_VECTOR<float>& rhs) {
-		this->v = rhs.v;
-		this->x = rhs.x;
-		this->y = rhs.y;
-		this->z = rhs.z;
+		this->v = float(rhs.v);
+		this->x = float(rhs.x);
+		this->y = float(rhs.y);
+		this->z = float(rhs.z);
 		return *this;
 	}
 };

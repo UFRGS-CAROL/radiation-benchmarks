@@ -17,9 +17,10 @@
 // #if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
 template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t,
 		typename real_t>
-__global__ void kernel_gpu_cuda_block_check(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
-		box_str* d_box_gpu, FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
-		FOUR_VECTOR<real_t>* d_fv_gpu_rt, FOUR_VECTOR<half_t>* d_fv_gpu_ht) {
+__global__ void kernel_gpu_cuda_block_check(par_str<real_t> d_par_gpu,
+		dim_str d_dim_gpu, box_str* d_box_gpu, FOUR_VECTOR<real_t>* d_rv_gpu,
+		real_t* d_qv_gpu, FOUR_VECTOR<real_t>* d_fv_gpu_rt,
+		FOUR_VECTOR<half_t>* d_fv_gpu_ht) {
 
 	//---------------------------------------------------------------------
 	//	THREAD PARAMETERS
@@ -477,7 +478,6 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 					}
 					//-----------------------------------------------------
 
-
 					fs_rt = real_t(2.0) * vij_rt;
 
 					//DMR
@@ -505,25 +505,55 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 					//DMR
 					fxij_ht = fs_ht * d_ht.x;
 
+					//CHECK bit--------------------------------------------
+					if ((j % COUNT) == 0) {
+						check_bit_error<THRESHOLD>(fxij_ht, fxij_rt);
+					}
+					//-----------------------------------------------------
+
 					d_rt.y = rA_shared_rt[wtx].y - rB_shared_rt[j].y;
 
 					//DMR
 					d_ht.y = rA_shared_ht[wtx].y - rB_shared_ht[j].y;
+
+					//CHECK bit--------------------------------------------
+					if ((j % COUNT) == 0) {
+						check_bit_error<THRESHOLD>(d_ht.y, d_rt.y);
+					}
+					//-----------------------------------------------------
 
 					fyij_rt = fs_rt * d_rt.y;
 
 					//DMR
 					fyij_ht = fs_ht * d_ht.y;
 
+					//CHECK bit--------------------------------------------
+					if ((j % COUNT) == 0) {
+						check_bit_error<THRESHOLD>(fyij_ht, fyij_rt);
+					}
+					//-----------------------------------------------------
+
 					d_rt.z = rA_shared_rt[wtx].z - rB_shared_rt[j].z;
 
 					//DMR
 					d_ht.z = rA_shared_ht[wtx].z - rB_shared_ht[j].z;
 
+					//CHECK bit--------------------------------------------
+					if ((j % COUNT) == 0) {
+						check_bit_error<THRESHOLD>(d_ht.z, d_rt.z);
+					}
+					//-----------------------------------------------------
+
 					fzij_rt = fs_rt * d_rt.z;
 
 					//DMR
 					fzij_ht = fs_ht * d_ht.z;
+
+					//CHECK bit--------------------------------------------
+					if ((j % COUNT) == 0) {
+						check_bit_error<THRESHOLD>(fzij_ht, fzij_rt);
+					}
+					//-----------------------------------------------------
 
 					fA_rt[wtx].v += real_t(qB_shared_rt[j] * vij_rt);
 					fA_rt[wtx].x += real_t(qB_shared_rt[j] * fxij_rt);
@@ -540,7 +570,6 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 					//DMR CHECKING
 					if ((j % COUNT) == 0) {
 						check_bit_error<THRESHOLD>(fA_ht[wtx], fA_rt[wtx]);
-						fA_ht[wtx] = fA_rt[wtx];
 					}
 					//------------------------------------------------
 				}
@@ -563,6 +592,5 @@ __global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 		//------------------------------------------------------------------------------------------------------------------------------------------------------160
 	}
 }
-
 
 #endif /* DMR_KERNELS_H_ */

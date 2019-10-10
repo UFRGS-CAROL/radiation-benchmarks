@@ -10,6 +10,10 @@
 
 #include <unordered_map>
 
+#define __DEVICE_INLINE__ __device__ __forceinline__
+#define __DEVICE_HOST_INLINE__ __device__ __host__ __forceinline__
+
+
 /**
  =============================================================================
  DEFINE / INCLUDE

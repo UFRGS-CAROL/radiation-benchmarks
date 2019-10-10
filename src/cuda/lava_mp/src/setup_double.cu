@@ -20,20 +20,24 @@
  * the comparison method
  */
 //For 1 iteration
-//1e-05
-#define THRESHOLD_1 980151802
+//00000000 01001100 00000000 00000000
+#define THRESHOLD_1 4980736
+#define ONE_BLOCK 1
 
 //For 10 iterations
 //3e-05
-#define THRESHOLD_10 10
+#define THRESHOLD_12 131072
+#define TWELVE_BLOCK 12
 
 //For 100 iterations
 //9e-05
-#define THRESHOLD_100 98
+#define THRESHOLD_96 262144
+#define NINETY_BLOCK 96
 
 //For MAX_LAVA iterations
 //4e-03
-#define THRESHOLD_MAX 500
+#define THRESHOLD_MAX 393216
+#define MAX_BLOCK NUMBER_PAR_PER_BOX
 
 void setup_double(Parameters& parameters, Log& log) {
 
@@ -45,35 +49,35 @@ void setup_double(Parameters& parameters, Log& log) {
 	}
 	case DMR: {
 		switch (parameters.block_check) {
-		case 1: {
+		case ONE_BLOCK: {
 			//CASE FOR 1 Iteration-------------------
-			DMRKernelCaller<1, double> kc;
+			DMRKernelCaller<ONE_BLOCK, double> kc;
 			setup_execution(parameters, log, kc);
 
 			break;
 		}
 			//---------------------------------------
-		case 10: {
+		case TWELVE_BLOCK: {
 			//CASE FOR 10 Iterations-----------------
-			DMRKernelCaller<10, double> kc;
+			DMRKernelCaller<TWELVE_BLOCK, double> kc;
 			setup_execution(parameters, log, kc);
 
 			break;
 		}
 			//---------------------------------------
 
-		case 100: {
+		case NINETY_BLOCK: {
 			//CASE FOR 100 Iterations----------------
-			DMRKernelCaller<100, double> kc;
+			DMRKernelCaller<NINETY_BLOCK, double> kc;
 			setup_execution(parameters, log, kc);
 
 			break;
 		}
 			//---------------------------------------
 
-		case NUMBER_PAR_PER_BOX: {
+		case MAX_BLOCK: {
 			//CASE FOR 100 Iterations----------------
-			DMRKernelCaller<NUMBER_PAR_PER_BOX, double> kc;
+			DMRKernelCaller<MAX_BLOCK, double> kc;
 			setup_execution(parameters, log, kc);
 
 			break;
@@ -89,7 +93,7 @@ void setup_double(Parameters& parameters, Log& log) {
 	}
 	case DMRMIXED:
 		switch (parameters.block_check) {
-		case 1: {
+		case ONE_BLOCK: {
 			//CASE FOR 1 Iteration-------------------
 			DMRMixedKernelCaller<1, THRESHOLD_1, float, double> kc;
 			setup_execution(parameters, log, kc);
@@ -97,28 +101,27 @@ void setup_double(Parameters& parameters, Log& log) {
 			break;
 		}
 			//---------------------------------------
-		case 10: {
+		case TWELVE_BLOCK: {
 			//CASE FOR 10 Iterations-----------------
-			DMRMixedKernelCaller<10, THRESHOLD_10, float, double> kc;
+			DMRMixedKernelCaller<TWELVE_BLOCK, THRESHOLD_12, float, double> kc;
 			setup_execution(parameters, log, kc);
 
 			break;
 		}
 			//---------------------------------------
 
-		case 100: {
+		case NINETY_BLOCK: {
 			//CASE FOR 100 Iterations----------------
-			DMRMixedKernelCaller<100, THRESHOLD_100, float, double> kc;
+			DMRMixedKernelCaller<NINETY_BLOCK, THRESHOLD_96, float, double> kc;
 			setup_execution(parameters, log, kc);
 
 			break;
 		}
 			//---------------------------------------
 
-		case NUMBER_PAR_PER_BOX: {
+		case MAX_BLOCK: {
 			//CASE FOR 100 Iterations----------------
-			DMRMixedKernelCaller<NUMBER_PAR_PER_BOX, THRESHOLD_MAX, float,
-					double> kc;
+			DMRMixedKernelCaller<MAX_BLOCK, THRESHOLD_MAX, float, double> kc;
 			setup_execution(parameters, log, kc);
 
 			break;

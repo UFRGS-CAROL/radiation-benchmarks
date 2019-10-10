@@ -12,7 +12,7 @@
 #include <omp.h>
 #include <cuda_fp16.h>
 
-#include "cuda_utils.h"
+#include "include/cuda_utils.h"
 #include "Parameters.h"
 #include "Log.h"
 #include "types.h"
@@ -336,6 +336,7 @@ void setup_execution(Parameters& parameters, Log& log,
 			std::fill(it.begin(), it.end(), FOUR_VECTOR<real_t>());
 			d_fv_gpu[stream_idx].clear();
 		}
+
 		kernel_caller.clear_half_t();
 
 		if (parameters.verbose)
@@ -348,7 +349,7 @@ void setup_execution(Parameters& parameters, Log& log,
 
 		double kernel_time = rad::mysecond();
 		log.start_iteration();
-
+		std::cout << "DKDKDK\n";
 		// launch kernel - all boxes
 		for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
 				stream_idx++) {

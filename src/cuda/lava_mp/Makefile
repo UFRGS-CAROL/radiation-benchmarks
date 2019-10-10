@@ -24,7 +24,7 @@ NVCCFLAGS= -std=c++11 -O3 -Xptxas -v
 ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 #ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72] #XavierV
 #-I$(CUDAPATH)/samples/common/inc 
-INCLUDE= -I./src -I$(CUDAPATH)/include -I../../include -I../common/include
+INCLUDE= -I./src -I$(CUDAPATH)/include -I../../include -I../common
 
 OBJDIR=./obj/
 OBJ= setup_double.o Parameters.o cuda_lava.o 
@@ -71,7 +71,7 @@ mkdir:
 clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
-generate: $(EXEC)
+generate:
 	./$(EXEC) -boxes $(DEF_SIZE) -generate -streams $(STREAMS) \
 				-iterations 1 -verbose \
 				-input_distances $(DISTANCES_INPUT) \
@@ -79,7 +79,7 @@ generate: $(EXEC)
 				-output_gold $(GOLD) \
 				-opnum $(OPERATIONNUM) -precision $(PRECISION) -redundancy $(DMR)
 
-test: $(RUN_EXEC)
+test:
 	./$(EXEC) -boxes $(DEF_SIZE) -streams $(STREAMS) \
 				-iterations 10 -verbose \
 				-input_distances $(DISTANCES_INPUT) \
