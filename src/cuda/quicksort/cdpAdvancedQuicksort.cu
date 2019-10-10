@@ -869,6 +869,9 @@ int main(int argc, char *argv[]) {
 
 #ifdef BUILDPROFILER
 		auto str = std::string(get_log_file_name());
+		if(params->generate){
+			str = "/tmp/generate.log";
+		}
 		auto profiler_thread = std::make_shared<rad::OBJTYPE>(0, str);
 
 		//START PROFILER THREAD
