@@ -2,7 +2,7 @@ CXX=g++
 CXXFLAGS= -std=c++11 -O3  -Xcompiler -fPIC  -Xcompiler  -pthread
 EXEC=quicksort
 LOGS=1
-BUILDPROFILER=0
+BUILDPROFILER=1
 DEBUG=0
 SIZE=134217728
 
@@ -71,7 +71,7 @@ generate:
 	 		   -iterations=1 -noinputensurance
 	 		   	
 test:
-	 ./$(EXEC) -size=$(SIZE) -verbose -debug \
+	 ./$(EXEC) -size=$(SIZE) -verbose \
 	 		   -input=./input_$(SIZE) \
 	 		   -gold=./gold_$(SIZE) \
-	 		   -iterations=1 -noinputensurance
+	 		   -iterations=10 -noinputensurance

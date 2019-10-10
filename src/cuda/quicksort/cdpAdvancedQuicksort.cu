@@ -34,6 +34,22 @@
 #include "cuda_utils.h"
 #include "cdpQuicksort.h"
 
+#ifdef BUILDPROFILER
+#include "include/Profiler.h"
+#include "include/NVMLWrapper.h"
+
+#include <memory>
+
+#ifdef FORJETSON
+#include "include/JTX2Inst.h"
+#define OBJTYPE JTX2Inst
+#else
+#include "include/NVMLWrapper.h"
+#define OBJTYPE NVMLWrapper
+#endif // FORJETSON
+
+#endif
+
 int generate;
 
 #ifdef LOGS
@@ -850,6 +866,15 @@ int main(int argc, char *argv[]) {
 	char test_info[90];
 	snprintf(test_info, 90, "size:%d", params->size);
 	if (!(params->generate)) start_log_file(const_cast<char*>("cudaQuickSortCDP"), test_info);
+
+#ifdef BUILDPROFILER
+		auto str = get_log_file_name();
+		this->profiler_thread = std::make_shared<rad::OBJTYPE>(0, str);
+
+		//START PROFILER THREAD
+		profiler_thread->start_profile();
+#endif
+
 #endif
 
 	printf("Running qsort on %d elements, on %s\n", params->size,
@@ -864,6 +889,10 @@ int main(int argc, char *argv[]) {
 	// flushed before the application exits
 	rad::checkFrameworkErrors(cudaDeviceReset());
 #ifdef LOGS
+#ifdef BUILDPROFILER
+		profiler_thread->end_profile();
+#endif
+
 	end_log_file();
 #endif
 	exit(EXIT_SUCCESS);
