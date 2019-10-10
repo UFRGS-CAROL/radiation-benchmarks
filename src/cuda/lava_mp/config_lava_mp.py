@@ -15,6 +15,7 @@ PRECISIONS = ["double"]
 ITERATIONS = int(1e9)
 DATA_PATH_BASE = "lava"
 CHECK_BLOCK = [1, 12, 96, 192]
+BUILDPROFILER = 0
 
 
 def config(board, arith_type, redundancy, debug):
@@ -42,7 +43,7 @@ def config(board, arith_type, redundancy, debug):
                 "cd " + src_benchmark,
                 "make clean",
                 "make -C ../../include ",
-                "make -j 3",
+                "make -j 3 BUILDPROFILER={}".format(BUILDPROFILER),
                 "sudo rm -f " + data_path + "/{}*".format(DATA_PATH_BASE),
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
