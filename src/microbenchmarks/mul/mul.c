@@ -37,10 +37,21 @@
         asm volatile("imul $0x2, %0" : "+r" (value_int));\
         asm volatile("imul $0x2, %0" : "+r" (value_int));\
         asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
+        asm volatile("imul $0x2, %0" : "+r" (value_int));\
         \
         DEBUG \
-        if (value_int != (ref_int3 << 8)) \
-            snprintf(log[th_id][errors++], LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int3 << 8), value_int); \
+        if (value_int != (ref_int3 << 16)){ \
+            char err[LOG_SIZE];\
+            snprintf(err, LOG_SIZE, "IT:%"PRIu64" POS:%d TH:%d OP:MUL REF:0x%08x WAS:0x%08x", i, j, th_id, (ref_int3 << 8), value_int); \
+            errors++;\
+        }\
                 }
 
 
@@ -164,12 +175,6 @@ int main (int argc, char *argv[]) {
     // Benchmark
     for (i = 0; i < repetitions; i++) {
 
-        //======================================================================
-        // Prepare the log
-        for (x = 0; x < NUM_THREADS; x++)
-            for (y = 0; y < MAX_ERROR; y++)
-                log[x][y][0] = '\0';
-
         errors = 0;
 
         //==============================================================
@@ -208,12 +213,6 @@ int main (int argc, char *argv[]) {
             asm volatile ("nop");
         end_iteration();
 
-        //======================================================================
-        // Write the log if exists
-        for (x = 0; x < NUM_THREADS; x++)
-            for (y = 0; y < MAX_ERROR; y++)
-                if (log[x][y][0] != '\0')
-                    log_error_detail(log[x][y]);
 
         log_error_count(errors);
 
