@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS= -std=c++11 -O3  -Xcompiler -fPIC  -Xcompiler  -pthread
+CXXFLAGS= -std=c++11 -O3  -Xcompiler -fPIC  -Xcompiler  -pthread -Xcompiler -fopenmp
 EXEC=quicksort
 LOGS=1
 BUILDPROFILER=1
@@ -11,7 +11,7 @@ CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
 
-NVCCFLAGS= -std=c++11 -O3 -Xptxas -v -rdc=true
+NVCCFLAGS= -std=c++11 -O3 -Xptxas -v -rdc=true -Xcompiler -fopenmp
 
 
 ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
