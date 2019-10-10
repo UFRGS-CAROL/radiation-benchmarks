@@ -18,7 +18,7 @@ CHECK_BLOCK = [1, 12, 96, 192]
 BUILDPROFILER = 0
 
 
-def config(board, arith_type, redundancy, debug):
+def config(board, debug):
     benchmark_bin = "cuda_lava"
     print("Generating " + benchmark_bin + " for CUDA, board:" + board)
 
@@ -48,30 +48,33 @@ def config(board, arith_type, redundancy, debug):
                 "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"]
     execute = []
     for size in SIZES:
-        input_file = data_path + "/"
+        for arith_type in PRECISIONS:
+            input_file = data_path + "/"
 
-        gen = [None] * 11
-        gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
-                  bin_path + "/" + benchmark_bin + " "]
-        gen[1] = ['-boxes {}'.format(size[0])]
-        gen[2] = ['-streams {}'.format(size[1])]
+            gen = [None] * 11
+            gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
+                      bin_path + "/" + benchmark_bin + " "]
+            gen[1] = ['-boxes {}'.format(size[0])]
+            gen[2] = ['-streams {}'.format(size[1])]
+            gen[3] = ['-input_distances {}'.format(input_file + 'lava_distances_' + arith_type + '_' + str(size))]
+            gen[4] = ['-input_charges {}'.format(input_file + 'lava_charges_' + arith_type + '_' + str(size))]
+            gen[5] = ['-output_gold {}'.format(input_file + "lava_gold_" + arith_type + '_' + str(size))]
+            gen[6] = ['-iterations {}'.format(ITERATIONS)]
+            gen[7] = ['-redundancy none']
+            gen[8] = ['-precision {}'.format(arith_type)]
+            gen[9] = ['-verbose']
+            gen[10] = ['-generate']
 
-        gen[3] = ['-input_distances {}'.format(input_file + 'lava_distances_' + arith_type + '_' + str(size))]
-        gen[4] = ['-input_charges {}'.format(input_file + 'lava_charges_' + arith_type + '_' + str(size))]
-        gen[5] = ['-output_gold {}'.format(input_file + "lava_gold_" + arith_type + '_' + str(size))]
-        gen[6] = ['-iterations {}'.format(ITERATIONS)]
-        gen[7] = ['-redundancy {}'.format(redundancy)]
-        gen[8] = ['-precision {}'.format(arith_type)]
-        gen[9] = ['-verbose']
-        gen[10] = ['-generate']
+            for redundancy in REDUNDANCY:
+                for check in CHECK_BLOCK:
+                    # change mode and iterations for exe
+                    exe = copy.deepcopy(gen)
+                    exe[7] = ['-redundancy {}'.format(redundancy)]
+                    exe[9] = ['-opnum {}'.format(check)]
+                    exe.pop()
 
-        for check in CHECK_BLOCK:
-            # change mode and iterations for exe
-            exe = copy.deepcopy(gen)
-            del exe[-2:]
-
-            execute.append(' '.join(str(r) for v in exe for r in v))
-        generate.append(' '.join(str(r) for v in gen for r in v))
+                    execute.append(' '.join(str(r) for v in exe for r in v))
+                generate.append(' '.join(str(r) for v in gen for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 
@@ -86,7 +89,5 @@ if __name__ == "__main__":
         debug_mode = False
 
     board, _ = discover_board()
-    for p in PRECISIONS:
-        for r in REDUNDANCY:
-            config(board=board, arith_type=p, redundancy=r, debug=debug_mode)
+    config(board=board, debug=debug_mode)
     print("Multiple jsons may have been generated.")
