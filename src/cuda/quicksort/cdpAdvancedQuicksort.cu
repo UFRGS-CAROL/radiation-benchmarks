@@ -448,11 +448,11 @@ int dataRead(parameters_t *params) {
 	FILE *finput, *fgold;
 	if (finput = fopen(params->inputName, "rb")) { // READ INPUT
 		printf(
-				"Reading existing input %s (delete it to generate a new one) ...",
+				"Reading existing input %s (delete it to generate a new one) ...\n",
 				params->inputName);
 		double timer = mysecond();
-		auto fread_ret = fread(params->data, params->size * sizeof(unsigned), 1, finput);
-		if(fread_ret != params->size * sizeof(unsigned)){
+		auto fread_ret = fread(params->data, sizeof(unsigned), params->size, finput);
+		if(fread_ret != params->size){
 			printf("Fread different from the expected\n");
 			exit(EXIT_FAILURE);
 		}
@@ -518,8 +518,8 @@ int dataRead(parameters_t *params) {
 	if (!(params->generate)) {
 		if (!(fgold = fopen(params->goldName, "rb")))
 			fatal("Gold file not opened. Use -generate.\n");
-		auto fread_ret = fread(params->gold, params->size * sizeof(unsigned), 1, fgold);
-		if(fread_ret != params->size * sizeof(unsigned)){
+		auto fread_ret = fread(params->gold, sizeof(unsigned), params->size, fgold);
+		if(fread_ret != params->size){
 			printf("Fread different from the expected\n");
 			exit(EXIT_FAILURE);
 		}
