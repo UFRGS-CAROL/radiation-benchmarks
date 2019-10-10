@@ -67,7 +67,7 @@ clean:
 	
 	
 generate:
-	 ./$(EXEC) -size=$(SIZE) -generate -verbose -debug \
+	 ./$(EXEC) -size=$(SIZE) -generate -verbose \
 	 		   -input=./input_$(SIZE) \
 	 		   -gold=./gold_$(SIZE) \
 	 		   -iterations=1 -noinputensurance
