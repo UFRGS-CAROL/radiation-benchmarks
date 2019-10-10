@@ -221,7 +221,7 @@ __global__ void qsort_warp(unsigned *indata, unsigned *outdata,
 
 	if (gt_mask == 0) {
 		greater = (data >= pivot);
-		gt_mask = ballout_quicksort(greater);   // Must re-ballot for adjusted comparator
+		gt_mask = ballout_quicksort(greater); // Must re-ballot for adjusted comparator
 	}
 
 	unsigned int lt_mask = ballout_quicksort(!greater);
@@ -395,7 +395,7 @@ double run_quicksort_cdp(parameters_t *params, cudaStream_t stream) {
 	// This is the stack, for atomic tracking of each sort's status
 	qsortAtomicData *gpustack;
 	rad::checkFrameworkErrors(
-			cudaMalloc((void ** )&gpustack,
+			cudaMalloc((void **) &gpustack,
 					stacksize * sizeof(qsortAtomicData)));
 	rad::checkFrameworkErrors(cudaMemset(gpustack, 0, sizeof(qsortAtomicData))); // Only need set first entry to 0
 
@@ -403,7 +403,8 @@ double run_quicksort_cdp(parameters_t *params, cudaStream_t stream) {
 	// Initialise everything to where it needs to be.
 	qsortRingbuf buf;
 	qsortRingbuf *ringbuf;
-	rad::checkFrameworkErrors(cudaMalloc((void ** )&ringbuf, sizeof(qsortRingbuf)));
+	rad::checkFrameworkErrors(
+			cudaMalloc((void **) &ringbuf, sizeof(qsortRingbuf)));
 	buf.head = 1;           // We start with one allocation
 	buf.tail = 0;
 	buf.count = 0;
@@ -467,8 +468,9 @@ int dataRead(parameters_t *params) {
 				"Reading existing input %s (delete it to generate a new one) ...\n",
 				params->inputName);
 		double timer = mysecond();
-		auto fread_ret = fread(params->data, sizeof(unsigned), params->size, finput);
-		if(fread_ret != params->size){
+		auto fread_ret = fread(params->data, sizeof(unsigned), params->size,
+				finput);
+		if (fread_ret != params->size) {
 			printf("Fread different from the expected\n");
 			exit(EXIT_FAILURE);
 		}
@@ -534,8 +536,9 @@ int dataRead(parameters_t *params) {
 	if (!(params->generate)) {
 		if (!(fgold = fopen(params->goldName, "rb")))
 			fatal("Gold file not opened. Use -generate.\n");
-		auto fread_ret = fread(params->gold, sizeof(unsigned), params->size, fgold);
-		if(fread_ret != params->size){
+		auto fread_ret = fread(params->gold, sizeof(unsigned), params->size,
+				fgold);
+		if (fread_ret != params->size) {
 			printf("Fread different from the expected\n");
 			exit(EXIT_FAILURE);
 		}
@@ -687,10 +690,10 @@ int run_qsort(parameters_t *params) {
 
 		// Create and set up our test
 		rad::checkFrameworkErrors(
-				cudaMalloc((void ** )&(params->gpudata),
+				cudaMalloc((void **) &(params->gpudata),
 						size * sizeof(unsigned)));
 		rad::checkFrameworkErrors(
-				cudaMalloc((void ** )&(params->scratchdata),
+				cudaMalloc((void **) &(params->scratchdata),
 						size * sizeof(unsigned)));
 
 		rad::checkFrameworkErrors(
@@ -779,7 +782,7 @@ void getParams(int argc, char *argv[], parameters_t *params) {
 			|| checkCmdLineFlag(argc, (const char **) argv, "h")) {
 		usage(argc, argv);
 		printf("&&&& cdpAdvancedQuicksort WAIVED\n");
-		exit(EXIT_WAIVED);
+		exit (EXIT_WAIVED);
 	}
 
 	if (checkCmdLineFlag(argc, (const char **) argv, "size")) {
@@ -849,7 +852,8 @@ int main(int argc, char *argv[]) {
 	// Get device properties
 	int cuda_device = findCudaDevice(argc, (const char **) argv);
 	cudaDeviceProp properties;
-	rad::checkFrameworkErrors(cudaGetDeviceProperties(&properties, cuda_device));
+	rad::checkFrameworkErrors(
+			cudaGetDeviceProperties(&properties, cuda_device));
 	int cdpCapable = (properties.major == 3 && properties.minor >= 5)
 			|| properties.major >= 4;
 
@@ -859,7 +863,7 @@ int main(int argc, char *argv[]) {
 	if (!cdpCapable) {
 		printf(
 				"cdpAdvancedQuicksort requires SM 3.5 or higher to use CUDA Dynamic Parallelism.  Exiting...\n");
-		exit(EXIT_WAIVED);
+		exit (EXIT_WAIVED);
 	}
 
 #ifdef LOGS
@@ -868,14 +872,14 @@ int main(int argc, char *argv[]) {
 	if (!(params->generate)) start_log_file(const_cast<char*>("cudaQuickSortCDP"), test_info);
 
 #ifdef BUILDPROFILER
-		auto str = std::string(get_log_file_name());
-		if(params->generate){
-			str = "/tmp/generate.log";
-		}
-		auto profiler_thread = std::make_shared<rad::OBJTYPE>(0, str);
+	auto str = std::string(get_log_file_name());
+	if(params->generate) {
+		str = "/tmp/generate.log";
+	}
+	auto profiler_thread = std::make_shared<rad::OBJTYPE>(0, str);
 
-		//START PROFILER THREAD
-		profiler_thread->start_profile();
+	//START PROFILER THREAD
+	profiler_thread->start_profile();
 #endif
 
 #endif
@@ -893,10 +897,10 @@ int main(int argc, char *argv[]) {
 	rad::checkFrameworkErrors(cudaDeviceReset());
 #ifdef LOGS
 #ifdef BUILDPROFILER
-		profiler_thread->end_profile();
+	profiler_thread->end_profile();
 #endif
 
-	end_log_file();
+	if (!(params->generate)) end_log_file();
 #endif
 	exit(EXIT_SUCCESS);
 }
