@@ -55,7 +55,7 @@ def config(board, debug):
     for size in SIZES:
         input_file = data_path + "/"
 
-        gen = [None] * 7
+        gen = [None] * 8
         gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
                   bin_path + "/" + benchmark_bin + " "]
 
