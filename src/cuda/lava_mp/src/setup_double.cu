@@ -26,17 +26,17 @@
 
 //For 10 iterations
 //3e-05
-#define THRESHOLD_12 131072
+#define THRESHOLD_12 4194304
 #define TWELVE_BLOCK 12
 
 //For 100 iterations
 //9e-05
-#define THRESHOLD_96 262144
+#define THRESHOLD_96 4194304
 #define NINETY_BLOCK 96
 
 //For MAX_LAVA iterations
 //4e-03
-#define THRESHOLD_MAX 393216
+#define THRESHOLD_MAX 4194304
 #define MAX_BLOCK NUMBER_PAR_PER_BOX
 
 void setup_double(Parameters& parameters, Log& log) {
@@ -95,7 +95,7 @@ void setup_double(Parameters& parameters, Log& log) {
 		switch (parameters.block_check) {
 		case ONE_BLOCK: {
 			//CASE FOR 1 Iteration-------------------
-			DMRMixedKernelCaller<1, THRESHOLD_1, float, double> kc;
+			DMRMixedKernelCaller<ONE_BLOCK, THRESHOLD_1, float, double> kc;
 			setup_execution(parameters, log, kc);
 
 			break;

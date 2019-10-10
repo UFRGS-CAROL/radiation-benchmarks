@@ -8,14 +8,14 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-#Size and streams
+# Size and streams
 SIZES = [[23, 8]]
 REDUNDANCY = ["none", "dmr"]  # dmrmixed
 PRECISIONS = ["double"]
 ITERATIONS = int(1e9)
 DATA_PATH_BASE = "lava"
 CHECK_BLOCK = [1, 12, 96, 192]
-BUILDPROFILER = 0
+BUILDPROFILER = 1
 
 
 def config(board, debug):
@@ -29,7 +29,7 @@ def config(board, debug):
         install_dir = config.get('DEFAULT', 'installdir') + "/"
 
     except IOError as e:
-        raise ValueError("Configuration setup error: " + str(e))
+        raise IOError("Configuration setup error: " + str(e))
 
     data_path = install_dir + "data/" + DATA_PATH_BASE
     bin_path = install_dir + "bin"
@@ -56,14 +56,15 @@ def config(board, debug):
                       bin_path + "/" + benchmark_bin + " "]
             gen[1] = ['-boxes {}'.format(size[0])]
             gen[2] = ['-streams {}'.format(size[1])]
-            gen[3] = ['-input_distances {}'.format(input_file + 'lava_distances_' + arith_type + '_' + str(size))]
-            gen[4] = ['-input_charges {}'.format(input_file + 'lava_charges_' + arith_type + '_' + str(size))]
-            gen[5] = ['-output_gold {}'.format(input_file + "lava_gold_" + arith_type + '_' + str(size))]
+            gen[3] = ['-input_distances {}'.format(input_file + 'lava_distances_' + arith_type + '_' + str(size[0]))]
+            gen[4] = ['-input_charges {}'.format(input_file + 'lava_charges_' + arith_type + '_' + str(size[0]))]
+            gen[5] = ['-output_gold {}'.format(input_file + "lava_gold_" + arith_type + '_' + str(size[0]))]
             gen[6] = ['-iterations {}'.format(ITERATIONS)]
             gen[7] = ['-redundancy none']
             gen[8] = ['-precision {}'.format(arith_type)]
             gen[9] = ['-verbose']
             gen[10] = ['-generate']
+            generate.append(' '.join(str(r) for v in gen for r in v))
 
             for redundancy in REDUNDANCY:
                 for check in CHECK_BLOCK:
@@ -74,7 +75,6 @@ def config(board, debug):
                     exe.pop()
 
                     execute.append(' '.join(str(r) for v in exe for r in v))
-                generate.append(' '.join(str(r) for v in gen for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 

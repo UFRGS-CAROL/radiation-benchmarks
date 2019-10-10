@@ -349,7 +349,7 @@ void setup_execution(Parameters& parameters, Log& log,
 
 		double kernel_time = rad::mysecond();
 		log.start_iteration();
-		std::cout << "DKDKDK\n";
+
 		// launch kernel - all boxes
 		for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
 				stream_idx++) {
@@ -391,10 +391,12 @@ void setup_execution(Parameters& parameters, Log& log,
 			for (uint32_t stream_idx = 0; stream_idx < parameters.nstreams;
 					stream_idx++) {
 //				fv_cpu[stream_idx] = d_fv_gpu[stream_idx].to_vector();
-				reloadFlag = reloadFlag
-						|| kernel_caller.check_output_errors(parameters.verbose,
-								stream_idx, fv_cpu[stream_idx], fv_cpu_GOLD,
-								log);
+				auto error = kernel_caller.check_output_errors(
+						parameters.verbose, stream_idx, fv_cpu[stream_idx],
+						fv_cpu_GOLD, log);
+
+#pragma omp atomic
+				reloadFlag = reloadFlag || error;
 			}
 
 			if (reloadFlag) {
