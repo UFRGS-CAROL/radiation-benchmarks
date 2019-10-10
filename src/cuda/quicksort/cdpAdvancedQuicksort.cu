@@ -31,7 +31,7 @@
 #include <sys/time.h>
 #include <omp.h>
 
-#include "cuda_utils.h"
+#include "include/cuda_utils.h"
 #include "cdpQuicksort.h"
 
 #ifdef BUILDPROFILER
@@ -868,8 +868,8 @@ int main(int argc, char *argv[]) {
 	if (!(params->generate)) start_log_file(const_cast<char*>("cudaQuickSortCDP"), test_info);
 
 #ifdef BUILDPROFILER
-		auto str = get_log_file_name();
-		this->profiler_thread = std::make_shared<rad::OBJTYPE>(0, str);
+		auto str = std::string(get_log_file_name());
+		auto profiler_thread = std::make_shared<rad::OBJTYPE>(0, str);
 
 		//START PROFILER THREAD
 		profiler_thread->start_profile();
