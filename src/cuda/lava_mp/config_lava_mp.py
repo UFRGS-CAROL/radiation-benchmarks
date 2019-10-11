@@ -73,6 +73,7 @@ def config(board, debug):
                     exe[7] = ['-redundancy {}'.format(redundancy)]
                     exe[9] = ['-opnum 0']
                     exe.pop()
+                    execute.append(' '.join(str(r) for v in exe for r in v))
                 else:
                     for check in CHECK_BLOCK:
                         # change mode and iterations for exe
@@ -81,7 +82,7 @@ def config(board, debug):
                         exe[9] = ['-opnum {}'.format(check)]
                         exe.pop()
 
-                execute.append(' '.join(str(r) for v in exe for r in v))
+                        execute.append(' '.join(str(r) for v in exe for r in v))
 
     execute_and_write_json_to_file(execute, generate, install_dir, benchmark_bin, debug=debug)
 
