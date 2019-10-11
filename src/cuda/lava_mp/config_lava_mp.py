@@ -15,7 +15,7 @@ PRECISIONS = ["double"]
 ITERATIONS = int(1e9)
 DATA_PATH_BASE = "lava"
 CHECK_BLOCK = [1, 12, 96, 192]
-BUILDPROFILER = 1
+BUILDPROFILER = 0
 
 
 def config(board, debug):
