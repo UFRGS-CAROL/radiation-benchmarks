@@ -46,10 +46,14 @@ int main(int argc, char *argv[]) {
 	std::cout << parameters << std::endl;
 
 	std::cout << "=================================" << std::endl;
-	std::string test_info = std::string("type:") + parameters.test_precision_description
-			+ "-precision streams:" + std::to_string(parameters.nstreams)
-			+ " boxes:" + std::to_string(parameters.boxes) + " block_size:"
-			+ std::to_string(NUMBER_THREADS);
+	std::string test_info;
+
+	test_info = std::string("type:") + parameters.test_precision_description;
+	test_info += " streams:" + std::to_string(parameters.nstreams);
+	test_info += " boxes:" + std::to_string(parameters.boxes);
+	test_info += " block_size:" + std::to_string(NUMBER_THREADS);
+	test_info += " redundancy:" + parameters.test_redundancy_description;
+	test_info += " check_block:" + std::to_string(parameters.block_check);
 
 	std::string test_name = std::string("cuda_") + parameters.test_precision_description
 			+ "_lava";
