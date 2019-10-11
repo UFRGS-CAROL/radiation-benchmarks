@@ -9,7 +9,7 @@ sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
 # Size and streams
-SIZES = [[23, 8]]
+SIZES = [[23, 2]]
 REDUNDANCY = ["none", "dmr"]  # dmrmixed
 PRECISIONS = ["double"]
 ITERATIONS = int(1e9)
