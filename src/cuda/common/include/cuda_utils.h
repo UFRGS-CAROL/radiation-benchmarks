@@ -62,9 +62,9 @@ static void __checkCublasErrors(cublasStatus_t error, int line,
 #define checkCublasErrors(error) __checkCublasErrors(error, __LINE__, __FILE__)
 
 // This will output the proper error string when calling cudaGetLastError
-#define getLastCudaError(msg) __getLastCudaError (msg, __FILE__, __LINE__)
+#define checkLastCudaError(msg) __checkLastCudaError (msg, __FILE__, __LINE__)
 
-static void __getLastCudaError(const char *errorMessage, const char *file,
+static void __checkLastCudaError(const char *errorMessage, const char *file,
 		const int line) {
 	cudaError_t err = cudaGetLastError();
 
