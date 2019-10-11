@@ -9,11 +9,11 @@
  *
  */
 
-#include <helper_cuda.h>
+//#include <helper_cuda.h>
 #include <assert.h>
 #include "mergeSort_common.h"
 
-
+#include "include/cuda_utils.h"
 
 inline __device__ void Comparator(
     uint &keyA,
@@ -314,7 +314,7 @@ extern "C" void bitonicMergeElementaryIntervals(
             stride,
             N
         );
-        getLastCudaError("mergeElementaryIntervalsKernel<1> failed\n");
+        rad::getLastCudaError("mergeElementaryIntervalsKernel<1> failed\n");
     }
     else
     {
@@ -328,6 +328,6 @@ extern "C" void bitonicMergeElementaryIntervals(
             stride,
             N
         );
-        getLastCudaError("mergeElementaryIntervalsKernel<0> failed\n");
+        rad::getLastCudaError("mergeElementaryIntervalsKernel<0> failed\n");
     }
 }

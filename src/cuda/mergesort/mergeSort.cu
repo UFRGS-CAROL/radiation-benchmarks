@@ -23,10 +23,10 @@
 
 
 #include <assert.h>
-#include <helper_cuda.h>
+//#include <helper_cuda.h>
 #include "mergeSort_common.h"
 
-
+#include "include/cuda_utils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helper functions
@@ -176,12 +176,12 @@ static void mergeSortShared(
     if (sortDir)
     {
         mergeSortSharedKernel<1U><<<blockCount, threadCount>>>(d_DstKey, d_DstVal, d_SrcKey, d_SrcVal, arrayLength);
-        getLastCudaError("mergeSortShared<1><<<>>> failed\n");
+        rad::getLastCudaError("mergeSortShared<1><<<>>> failed\n");
     }
     else
     {
         mergeSortSharedKernel<0U><<<blockCount, threadCount>>>(d_DstKey, d_DstVal, d_SrcKey, d_SrcVal, arrayLength);
-        getLastCudaError("mergeSortShared<0><<<>>> failed\n");
+        rad::getLastCudaError("mergeSortShared<0><<<>>> failed\n");
     }
 }
 
@@ -251,12 +251,12 @@ static void generateSampleRanks(
     if (sortDir)
     {
         generateSampleRanksKernel<1U><<<iDivUp(threadCount, 256), 256>>>(d_RanksA, d_RanksB, d_SrcKey, stride, N, threadCount);
-        getLastCudaError("generateSampleRanksKernel<1U><<<>>> failed\n");
+        rad::getLastCudaError("generateSampleRanksKernel<1U><<<>>> failed\n");
     }
     else
     {
         generateSampleRanksKernel<0U><<<iDivUp(threadCount, 256), 256>>>(d_RanksA, d_RanksB, d_SrcKey, stride, N, threadCount);
-        getLastCudaError("generateSampleRanksKernel<0U><<<>>> failed\n");
+        rad::getLastCudaError("generateSampleRanksKernel<0U><<<>>> failed\n");
     }
 }
 
@@ -322,7 +322,7 @@ static void mergeRanksAndIndices(
         N,
         threadCount
     );
-    getLastCudaError("mergeRanksAndIndicesKernel(A)<<<>>> failed\n");
+    rad::getLastCudaError("mergeRanksAndIndicesKernel(A)<<<>>> failed\n");
 
     mergeRanksAndIndicesKernel<<<iDivUp(threadCount, 256), 256>>>(
         d_LimitsB,
@@ -331,7 +331,7 @@ static void mergeRanksAndIndices(
         N,
         threadCount
     );
-    getLastCudaError("mergeRanksAndIndicesKernel(B)<<<>>> failed\n");
+    rad::getLastCudaError("mergeRanksAndIndicesKernel(B)<<<>>> failed\n");
 }
 
 
@@ -496,7 +496,7 @@ static void mergeElementaryIntervals(
             stride,
             N
         );
-        getLastCudaError("mergeElementaryIntervalsKernel<1> failed\n");
+        rad::getLastCudaError("mergeElementaryIntervalsKernel<1> failed\n");
     }
     else
     {
@@ -510,7 +510,7 @@ static void mergeElementaryIntervals(
             stride,
             N
         );
-        getLastCudaError("mergeElementaryIntervalsKernel<0> failed\n");
+        rad::getLastCudaError("mergeElementaryIntervalsKernel<0> failed\n");
     }
 }
 
@@ -545,18 +545,18 @@ static const uint MAX_SAMPLE_COUNT = 1048576;
 
 extern "C" void initMergeSort(void)
 {
-    checkCudaErrors(cudaMalloc((void **)&d_RanksA,  MAX_SAMPLE_COUNT * sizeof(uint)));
-    checkCudaErrors(cudaMalloc((void **)&d_RanksB,  MAX_SAMPLE_COUNT * sizeof(uint)));
-    checkCudaErrors(cudaMalloc((void **)&d_LimitsA, MAX_SAMPLE_COUNT * sizeof(uint)));
-    checkCudaErrors(cudaMalloc((void **)&d_LimitsB, MAX_SAMPLE_COUNT * sizeof(uint)));
+    rad::checkFrameworkErrors(cudaMalloc((void **)&d_RanksA,  MAX_SAMPLE_COUNT * sizeof(uint)));
+    rad::checkFrameworkErrors(cudaMalloc((void **)&d_RanksB,  MAX_SAMPLE_COUNT * sizeof(uint)));
+    rad::checkFrameworkErrors(cudaMalloc((void **)&d_LimitsA, MAX_SAMPLE_COUNT * sizeof(uint)));
+    rad::checkFrameworkErrors(cudaMalloc((void **)&d_LimitsB, MAX_SAMPLE_COUNT * sizeof(uint)));
 }
 
 extern "C" void closeMergeSort(void)
 {
-    checkCudaErrors(cudaFree(d_RanksA));
-    checkCudaErrors(cudaFree(d_RanksB));
-    checkCudaErrors(cudaFree(d_LimitsB));
-    checkCudaErrors(cudaFree(d_LimitsA));
+    rad::checkFrameworkErrors(cudaFree(d_RanksA));
+    rad::checkFrameworkErrors(cudaFree(d_RanksB));
+    rad::checkFrameworkErrors(cudaFree(d_LimitsB));
+    rad::checkFrameworkErrors(cudaFree(d_LimitsA));
 }
 
 extern "C" void mergeSort(
@@ -611,8 +611,8 @@ extern "C" void mergeSort(
         if (lastSegmentElements <= stride)
         {
             //Last merge segment consists of a single array which just needs to be passed through
-            checkCudaErrors(cudaMemcpy(okey + (N - lastSegmentElements), ikey + (N - lastSegmentElements), lastSegmentElements * sizeof(uint), cudaMemcpyDeviceToDevice));
-            checkCudaErrors(cudaMemcpy(oval + (N - lastSegmentElements), ival + (N - lastSegmentElements), lastSegmentElements * sizeof(uint), cudaMemcpyDeviceToDevice));
+            rad::checkFrameworkErrors(cudaMemcpy(okey + (N - lastSegmentElements), ikey + (N - lastSegmentElements), lastSegmentElements * sizeof(uint), cudaMemcpyDeviceToDevice));
+            rad::checkFrameworkErrors(cudaMemcpy(oval + (N - lastSegmentElements), ival + (N - lastSegmentElements), lastSegmentElements * sizeof(uint), cudaMemcpyDeviceToDevice));
         }
 
         uint *t;
