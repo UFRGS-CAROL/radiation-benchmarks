@@ -2,12 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cuda_runtime.h>
-//#include "helper_string.h"
-//#include "helper_cuda.h"
-#include "mergeSort_common.h"
 #include <sys/time.h>
-
 #include <omp.h>
+
+
+//from cuda samples
+#include "helper_string.h"
+#include "helper_cuda.h"
+#include "mergeSort_common.h"
 
 #include "include/cuda_utils.h"
 
