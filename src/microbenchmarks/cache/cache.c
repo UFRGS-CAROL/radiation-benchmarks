@@ -158,7 +158,6 @@ int main (int argc, char *argv[]) {
         if (errors > 0) { //start new log file
 
             end_log_file();
-            sleep(1);
             snprintf(msg, sizeof(msg),
                     "Loop:%"PRIu64" Threads:%"PRIu32" Elem.Size:%"PRIu32"B ArraySize:%"PRIu32"KB SizePerThread:%"PRIu32"KB",
                     repetitions,
