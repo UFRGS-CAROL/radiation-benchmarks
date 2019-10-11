@@ -141,7 +141,7 @@ extern "C" void bitonicSortShared(
     assert((batchSize * arrayLength) % SHARED_SIZE_LIMIT == 0);
 
     bitonicSortSharedKernel<<<blockCount, threadCount>>>(d_DstKey, d_DstVal, d_SrcKey, d_SrcVal, arrayLength, sortDir);
-    rad::getLastCudaError("bitonicSortSharedKernel<<<>>> failed!\n");
+    rad::checkLastCudaError("bitonicSortSharedKernel<<<>>> failed!\n");
 }
 
 
@@ -314,7 +314,7 @@ extern "C" void bitonicMergeElementaryIntervals(
             stride,
             N
         );
-        rad::getLastCudaError("mergeElementaryIntervalsKernel<1> failed\n");
+        rad::checkLastCudaError("mergeElementaryIntervalsKernel<1> failed\n");
     }
     else
     {
@@ -328,6 +328,6 @@ extern "C" void bitonicMergeElementaryIntervals(
             stride,
             N
         );
-        rad::getLastCudaError("mergeElementaryIntervalsKernel<0> failed\n");
+        rad::checkLastCudaError("mergeElementaryIntervalsKernel<0> failed\n");
     }
 }

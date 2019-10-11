@@ -152,11 +152,11 @@ static void mergeSortShared(uint *d_DstKey, uint *d_DstVal, uint *d_SrcKey,
 	if (sortDir) {
 		mergeSortSharedKernel<1U> <<<blockCount, threadCount>>>(d_DstKey,
 				d_DstVal, d_SrcKey, d_SrcVal, arrayLength);
-		rad::getLastCudaError("mergeSortShared<1><<<>>> failed\n");
+		rad::checkLastCudaError("mergeSortShared<1><<<>>> failed\n");
 	} else {
 		mergeSortSharedKernel<0U> <<<blockCount, threadCount>>>(d_DstKey,
 				d_DstVal, d_SrcKey, d_SrcVal, arrayLength);
-		rad::getLastCudaError("mergeSortShared<0><<<>>> failed\n");
+		rad::checkLastCudaError("mergeSortShared<0><<<>>> failed\n");
 	}
 }
 
@@ -209,11 +209,11 @@ static void generateSampleRanks(uint *d_RanksA, uint *d_RanksB, uint *d_SrcKey,
 	if (sortDir) {
 		generateSampleRanksKernel<1U> <<<iDivUp(threadCount, 256), 256>>>(
 				d_RanksA, d_RanksB, d_SrcKey, stride, N, threadCount);
-		rad::getLastCudaError("generateSampleRanksKernel<1U><<<>>> failed\n");
+		rad::checkLastCudaError("generateSampleRanksKernel<1U><<<>>> failed\n");
 	} else {
 		generateSampleRanksKernel<0U> <<<iDivUp(threadCount, 256), 256>>>(
 				d_RanksA, d_RanksB, d_SrcKey, stride, N, threadCount);
-		rad::getLastCudaError("generateSampleRanksKernel<0U><<<>>> failed\n");
+		rad::checkLastCudaError("generateSampleRanksKernel<0U><<<>>> failed\n");
 	}
 }
 
@@ -263,11 +263,11 @@ static void mergeRanksAndIndices(uint *d_LimitsA, uint *d_LimitsB,
 
 	mergeRanksAndIndicesKernel<<<iDivUp(threadCount, 256), 256>>>(d_LimitsA,
 			d_RanksA, stride, N, threadCount);
-	rad::getLastCudaError("mergeRanksAndIndicesKernel(A)<<<>>> failed\n");
+	rad::checkLastCudaError("mergeRanksAndIndicesKernel(A)<<<>>> failed\n");
 
 	mergeRanksAndIndicesKernel<<<iDivUp(threadCount, 256), 256>>>(d_LimitsB,
 			d_RanksB, stride, N, threadCount);
-	rad::getLastCudaError("mergeRanksAndIndicesKernel(B)<<<>>> failed\n");
+	rad::checkLastCudaError("mergeRanksAndIndicesKernel(B)<<<>>> failed\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -391,12 +391,12 @@ static void mergeElementaryIntervals(uint *d_DstKey, uint *d_DstVal,
 		mergeElementaryIntervalsKernel<1U> <<<mergePairs, SAMPLE_STRIDE>>>(
 				d_DstKey, d_DstVal, d_SrcKey, d_SrcVal, d_LimitsA, d_LimitsB,
 				stride, N);
-		rad::getLastCudaError("mergeElementaryIntervalsKernel<1> failed\n");
+		rad::checkLastCudaError("mergeElementaryIntervalsKernel<1> failed\n");
 	} else {
 		mergeElementaryIntervalsKernel<0U> <<<mergePairs, SAMPLE_STRIDE>>>(
 				d_DstKey, d_DstVal, d_SrcKey, d_SrcVal, d_LimitsA, d_LimitsB,
 				stride, N);
-		rad::getLastCudaError("mergeElementaryIntervalsKernel<0> failed\n");
+		rad::checkLastCudaError("mergeElementaryIntervalsKernel<0> failed\n");
 	}
 }
 
