@@ -17,6 +17,24 @@ int generate;
 
 #ifdef LOGS
 #include "log_helper.h"
+
+#ifdef BUILDPROFILER
+#include "include/Profiler.h"
+#include "include/NVMLWrapper.h"
+
+#include <memory>
+#include <string>
+
+#ifdef FORJETSON
+#include "include/JTX2Inst.h"
+#define OBJTYPE JTX2Inst
+#else
+#include "include/NVMLWrapper.h"
+#define OBJTYPE NVMLWrapper
+#endif // FORJETSON
+
+#endif
+
 #endif
 
 typedef struct parameters_s {
@@ -176,7 +194,10 @@ void readData(parameters_t *params, const uint numValues) {
 		}
 
 		if (finput = fopen(params->inputName, "wb")) {
-			fwrite(newKeys, INPUTSIZE * sizeof(uint), 1, finput);
+			auto ret = fwrite(newKeys, sizeof(uint), INPUTSIZE, finput);
+			if(INPUTSIZE != ret){
+				fatal("Could not write the file\n");
+			}
 		} else {
 			printf("Could not write key input to file, proceeding anyway...\n");
 		}
@@ -196,8 +217,11 @@ void readData(parameters_t *params, const uint numValues) {
 
 	if (!(params->generate)) {
 		if (fgold = fopen(params->goldName, "rb")) {
-			fread(params->h_GoldKey, params->size * sizeof(uint), 1, fgold);
-			fread(params->h_GoldVal, params->size * sizeof(uint), 1, fgold);
+			auto ret = fread(params->h_GoldKey, sizeof(uint), params->size, fgold);
+			ret += fread(params->h_GoldVal, sizeof(uint), params->size, fgold);
+			if((ret/2) != params->size){
+				fatal("Could not read file");
+			}
 			fclose(fgold);
 		} else {
 			fatal("Could not open gold file. Use -generate");
@@ -417,7 +441,18 @@ int main(int argc, char **argv) {
 #ifdef LOGS
 	char test_info[90];
 	snprintf(test_info, 90, "size:%d", params->size);
-	if (!params->generate) start_log_file("cudaMergeSort", test_info);
+	if (!params->generate) start_log_file(const_cast<char*>("cudaMergeSort"), test_info);
+
+#ifdef BUILDPROFILER
+	auto str = std::string(get_log_file_name());
+	if(params->generate) {
+		str = "/tmp/generate.log";
+	}
+	auto profiler_thread = std::make_shared<rad::OBJTYPE>(0, str);
+
+	//START PROFILER THREAD
+	profiler_thread->start_profile();
+#endif
 #endif
 
 	params->h_SrcKey = (uint *) malloc(params->size * sizeof(uint));
@@ -551,6 +586,12 @@ int main(int argc, char **argv) {
 	// profiled. Calling cudaDeviceReset causes all profile data to be
 	// flushed before the application exits
 	cudaDeviceReset();
+#ifdef LOGS
+#ifdef BUILDPROFILER
+	profiler_thread->end_profile();
+#endif
 
+	if (!(params->generate)) end_log_file();
+#endif
 	exit(EXIT_SUCCESS);
 }
