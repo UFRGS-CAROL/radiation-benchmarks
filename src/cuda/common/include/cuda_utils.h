@@ -16,7 +16,7 @@
 #ifdef __cplusplus
 #include <chrono>
 #include <thread>
-#include <helper_cuda.h>
+//#include <helper_cuda.h>
 
 #endif //C++ compiler defined
 

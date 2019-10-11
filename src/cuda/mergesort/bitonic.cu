@@ -141,7 +141,7 @@ extern "C" void bitonicSortShared(
     assert((batchSize * arrayLength) % SHARED_SIZE_LIMIT == 0);
 
     bitonicSortSharedKernel<<<blockCount, threadCount>>>(d_DstKey, d_DstVal, d_SrcKey, d_SrcVal, arrayLength, sortDir);
-    getLastCudaError("bitonicSortSharedKernel<<<>>> failed!\n");
+    rad::getLastCudaError("bitonicSortSharedKernel<<<>>> failed!\n");
 }
 
 
