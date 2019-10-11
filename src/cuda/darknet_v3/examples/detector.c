@@ -705,6 +705,7 @@ void free_all_images(image **imgs, image** sized_images, int list_size,
 	free(sized_images);
 }
 
+#ifdef GPU
 cudaStream_t* init_multi_streams(int smx_size) {
 	cudaStream_t* stream_array = malloc(sizeof(cudaStream_t) * smx_size);
 	int smx;
@@ -724,6 +725,7 @@ void del_multi_streams(cudaStream_t* stream_array, int smx_size) {
 	}
 	free(stream_array);
 }
+#endif
 
 void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		char *filename, real_t thresh, real_t hier_thresh, char *outfile,
@@ -735,8 +737,10 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 			hier_thresh, filename, cfgfile, datacfg, "detector", weightfile);
 	int smx_redundancy = get_smx_redundancy(gold);
 
+#ifdef GPU
 	cudaStream_t *stream_array = init_multi_streams(smx_redundancy);
 	//--------------------------
+#endif
 	network** net_array = malloc(sizeof(network*) * smx_redundancy);
 
 	printf(
@@ -756,9 +760,11 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		network *net = load_network(cfgfile, weightfile, 0);
 		set_batch_network(net, 1);
 		//Set tensor cores on the net
-		net->use_tensor_cores = get_use_tensor_cores(gold);
 		net->smx_redundancy = smx_redundancy;
+#ifdef GPU
+		net->use_tensor_cores = get_use_tensor_cores(gold);
 		net->st = stream_array[inet];
+#endif
 		net_array[inet] = net;
 
 		//load images
@@ -845,7 +851,9 @@ void test_detector_radiation(char *datacfg, char *cfgfile, char *weightfile,
 		free_network(net_array[inet]);
 	}
 	free(net_array);
+#ifdef GPU
 	del_multi_streams(stream_array, smx_redundancy);
+#endif
 	destroy_detection_gold(gold);
 	free_all_images(image_array, sized_array, plist_size, smx_redundancy);
 	free(X_arr);

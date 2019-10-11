@@ -514,8 +514,14 @@ void network_predict_smx_red(network **net, real_t **input) {
 		net[i]->delta = 0;
 	}
 
+#ifdef GPU
 	forward_network_gpu_parallel(net);
-
+#else
+#pragma omp parallel for
+	for(int i = 0; i < smx_red; i++){
+		forward_network(net[i]);
+	}
+#endif
 	for (i = 0; i < smx_red; i++) {
 //		out[i] = net[i]->output;
 		*(net[i]) = orig_array[i];

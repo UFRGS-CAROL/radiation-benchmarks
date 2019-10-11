@@ -1,14 +1,16 @@
 GPU=1
 CUDNN=0
 OPENCV?=0
-OPENMP=0
+OPENMP=1
 DEBUG?=0
 REAL_TYPE?=float
 LOGS?=0
 OPENGEMM?=0
 BUILDPROFILER=1
 
-RADIATIONDIR=/home/carol/radiation-benchmarks/
+OPENBLAS=1
+
+RADIATIONDIR=/home/fernando/git_pesquisa/radiation-benchmarks/
 
 ARCH= -gencode arch=compute_35,code=sm_35
 #-gencode arch=compute_60,code=sm_60 \
@@ -74,6 +76,7 @@ ifeq ($(GPU), 1)
 COMMON+= -DGPU -I$(CUDAPATH)/include/
 CFLAGS+= -DGPU
 LDFLAGS+= -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
+OPENBLAS=0
 endif
 
 ifeq ($(CUDNN), 1) 
@@ -99,13 +102,19 @@ COMMON += -DOPENGEMM
 NVCCFLAGS += -DOPENGEMM
 endif
 
+ifeq ($(OPENBLAS), 1)
+CFLAGS+= -DOPENBLAS=1 
+COMMON+= -I/opt/OpenBLAS/include/ -L/opt/OpenBLAS/lib 
+LDFLAGS+= -lopenblas -lpthread -lgfortran 
+endif
+
 
 OBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o image.o activations.o \
 im2col.o col2im.o blas.o crop_layer.o dropout_layer.o maxpool_layer.o softmax_layer.o data.o matrix.o \
 network.o connected_layer.o cost_layer.o parser.o option_list.o detection_layer.o route_layer.o upsample_layer.o \
 box.o normalization_layer.o avgpool_layer.o layer.o local_layer.o shortcut_layer.o logistic_layer.o activation_layer.o \
 rnn_layer.o gru_layer.o crnn_layer.o demo.o batchnorm_layer.o region_layer.o reorg_layer.o tree.o  lstm_layer.o \
-l2norm_layer.o yolo_layer.o iseg_layer.o 
+l2norm_layer.o yolo_layer.o iseg_layer.o fread_cast.o
 
 # I removed those ones to save time
 # captcha.o lsd.o super.o art.o tag.o cifar.o go.o rnn.o segmenter.o regressor.o classifier.o coco.o nightmare.o instance-segmenter.o
@@ -126,7 +135,7 @@ all: obj backup results  $(EXEC)
 
 # $(SLIB) #$(ALIB
 $(EXEC): $(OBJS) $(EXECOBJ)  
-	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CC) $(COMMON)  $^ -o $@ $(LDFLAGS) $(CFLAGS)
 
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(CC) $(COMMON)  $(CFLAGS) -c $< -o $@
@@ -153,7 +162,7 @@ detector:
 	./$(EXEC) detector demo cfg/coco.data cfg/yolov3-spp.cfg data/yolov3-spp.weights data/output.avi
 
 demo:
-	./$(EXEC) detector test cfg/coco.data cfg/yolov3-spp.cfg data/yolov3-spp.weights data/dog.jpg
+	./$(EXEC) detector test cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights data/dog.jpg
 
 generate:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \

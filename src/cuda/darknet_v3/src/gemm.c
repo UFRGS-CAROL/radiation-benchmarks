@@ -7,6 +7,12 @@
 #include <string.h>
 #include <time.h>
 
+#include <omp.h>
+
+#ifdef OPENBLAS
+#include <cblas.h>
+#endif
+
 #ifdef OPENGEMM
 #include "gemm_kernels.h"
 #endif
@@ -133,12 +139,51 @@ void gemm_tt(int M, int N, int K, real_t ALPHA, real_t *A, int lda, real_t *B,
 void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 		int lda, real_t *B, int ldb, real_t BETA, real_t *C, int ldc) {
 	//printf("cpu: %d %d %d %d %d %f %d %d %f %d\n",TA, TB, M, N, K, ALPHA, lda, ldb, BETA, ldc);
+
+#ifdef OPENBLAS
+	/*
+	void cblas_sgemm 	( 	const CBLAS_LAYOUT  	layout,
+		const CBLAS_TRANSPOSE  	TransA,
+		const CBLAS_TRANSPOSE  	TransB,
+		const int  	M,
+		const int  	N,
+		const int  	K,
+		const float  	alpha,
+		const float *  	A,
+		const int  	lda,
+		const float *  	B,
+		const int  	ldb,
+		const float  	beta,
+		float *  	C,
+		const int  	ldc
+	)
+	 */
+	CBLAS_TRANSPOSE transa, transb;
+
+	if (!TA && !TB){
+		transa = CblasNoTrans;
+		transb = CblasNoTrans;
+	}else if (TA && !TB){
+		transa = CblasTrans;
+		transb = CblasNoTrans;
+	}else if (!TA && TB){
+		transa = CblasNoTrans;
+		transb = CblasTrans;
+	}else{
+		transa = CblasTrans;
+		transb = CblasTrans;
+	}
+	//	              0          1       2     3  4  5    6    7   8   9   10  11     12  13
+	cblas_sgemm(CblasRowMajor, transa, transb, M, N, K, ALPHA, A, lda, B, ldb, BETA,  C, ldc);
+#else
+
 	int i, j;
 	for (i = 0; i < M; ++i) {
 		for (j = 0; j < N; ++j) {
 			C[i * ldc + j] *= BETA;
 		}
 	}
+
 	if (!TA && !TB)
 		gemm_nn(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
 	else if (TA && !TB)
@@ -147,6 +192,7 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, real_t ALPHA, real_t *A,
 		gemm_nt(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
 	else
 		gemm_tt(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
+#endif
 }
 
 #ifdef GPU

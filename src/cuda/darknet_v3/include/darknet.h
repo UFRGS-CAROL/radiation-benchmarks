@@ -135,7 +135,11 @@ struct layer {
 	void (*update)(struct layer, update_args);
 	void (*forward_gpu)(struct layer, struct network);
 	void (*backward_gpu)(struct layer, struct network);
+#ifdef GPU
 	void (*update_gpu)(struct layer, update_args, cudaStream_t st);
+#else
+	void (*update_gpu)(struct layer, update_args);
+#endif
 	int batch_normalize;
 	int shortcut;
 	int batch;
@@ -507,8 +511,10 @@ typedef struct network {
 
 	unsigned char use_tensor_cores;
 	cudaStream_t st;
-	int smx_redundancy;
 #endif
+
+	int smx_redundancy;
+
 
 } network;
 

@@ -8,7 +8,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef GPU
 #include <cublas_v2.h>
+#endif
 
 #if REAL_TYPE == HALF
 
@@ -51,6 +53,9 @@ typedef real_t real_t_device;
 extern "C" {
 #endif
 
+/**
+ * Read a file for all precisions
+ */
 int fread_float_to_real_t(real_t* dst, size_t siz, size_t times, FILE* fp);
 
 #if REAL_TYPE == HALF
