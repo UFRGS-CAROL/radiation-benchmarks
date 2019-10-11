@@ -139,8 +139,11 @@ int main (int argc, char *argv[]) {
                 DEBUG
 
                 if (ptr_vector[j] != ref_int) {
-                    snprintf(log[th_id][errors++], LOG_SIZE,
+                    char err[LOG_SIZE];
+                    snprintf(err, LOG_SIZE,
                              "IT:%"PRIu64" POS:%d TH:%d OP:MEM REF:0x%08x WAS:0x%08x", i, j, th_id, ref_int, ptr_vector[j]);
+                    log_error_detail(err);
+                    errors++;
                 }
 
             }
@@ -151,14 +154,24 @@ int main (int argc, char *argv[]) {
         
         end_iteration();
 
-        //======================================================================
-        // Write the log if exists
-        for (x = 0; x < NUM_THREADS; x++)
-            for (y = 0; y < MAX_ERROR; y++)
-                if (log[x][y][0] != '\0')
-                    log_error_detail(log[x][y]);
-
         log_error_count(errors);
+        if (errors > 0) { //start new log file
+
+            end_log_file();
+            snprintf(msg, sizeof(msg),
+                    "Loop:%"PRIu64" Threads:%"PRIu32" Elem.Size:%"PRIu32"B ArraySize:%"PRIu32"KB SizePerThread:%"PRIu32"KB",
+                    repetitions,
+                    NUM_THREADS,
+                    (uint32_t)sizeof(uint32_t),
+                    (uint32_t)(size / sizeof(uint32_t)),
+                    (uint32_t)(size / 1024) / NUM_THREADS);
+            if (start_log_file("cache_mem", msg) != 0) {
+                exit(EXIT_FAILURE);
+            }
+
+            set_max_errors_iter(MAX_ERROR);
+            set_iter_interval_print(10);
+        }
 
     }
 
