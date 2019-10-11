@@ -420,6 +420,15 @@ int main(int argc, char **argv) {
 			printf("Errors: %d\n", errors);
 			read_input(A, B, inputA, inputB, order);
 			read_gold(gold, fileGold, order);
+#ifdef LOGS
+		    log_error_count(errors);
+	        end_log_file();
+	        snprintf(test_info, 300, "matrix_dim:%ld threads:%d block_size:%d block_offset:%d precision:%s",
+	        		order, nthread_input, block, BOFFSET, PRECISION_STR);
+	        char benchmark_name[100];
+	        snprintf(benchmark_name, 100, "openmp%sGEMM_SH_not_hardened", PRECISION_STR);
+	        start_log_file(benchmark_name, test_info);
+#endif
 		} else {
 			printf("Iteration %i\n", loop);
 		}

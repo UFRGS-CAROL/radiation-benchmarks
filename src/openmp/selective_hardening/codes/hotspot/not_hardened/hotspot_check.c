@@ -388,6 +388,13 @@ int main(int argc, char **argv)
 #endif /* LOGS */
             read_input(power, grid_rows, grid_cols, pfile);
             read_gold(gold, grid_rows, grid_cols, ofile);
+#ifdef LOGS
+            end_log_file();
+            snprintf(test_info, 100, "simIter:%d gridSize:%dx%d",sim_time, grid_rows, grid_cols);
+            start_log_file((char *)"openMPDHotspot_SH_not_hardened", test_info);
+            set_max_errors_iter(MAX_ERR_ITER_LOG);
+            set_iter_interval_print(10);
+#endif /* LOGS */
         }
         else
         {

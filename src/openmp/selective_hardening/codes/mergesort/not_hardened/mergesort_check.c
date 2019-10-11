@@ -183,6 +183,12 @@ int main(int argc, char** argv)
         if(errors > 0) {
             printf("Errors: %d\n",errors);
             readFileUnsigned(gold, goldFile, size);
+#ifdef LOGS
+            end_log_file();
+            set_iter_interval_print(10);
+            snprintf(test_info, 200, "size:%d omp_num_threads:%d", size, omp_num_threads);
+            start_log_file("openmpMergesort_SH_not_hardened", test_info);
+#endif
         } else {
             printf(".");
         }
