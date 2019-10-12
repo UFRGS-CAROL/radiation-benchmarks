@@ -77,6 +77,8 @@ COMMON+= -DGPU -I$(CUDAPATH)/include/
 CFLAGS+= -DGPU
 LDFLAGS+= -L$(CUDAPATH)/lib64 -lcudart -lcublas -lcurand
 OPENBLAS=0
+else
+BUILDPROFILER=0
 endif
 
 ifeq ($(CUDNN), 1) 
