@@ -13,6 +13,8 @@
 
 #define WARP_SIZE 32
 
+#define SUB_ABS(lhs, rhs) (lhs > rhs) ? (lhs - rhs) : (rhs - lhs)
+
 using namespace nvcuda;
 
 #define HALF_ROUND_STYLE 1  // 1: nearest, -1: truncate (fastest, default)
@@ -92,6 +94,10 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
     printf("THRESHOLD: %.20e \n", diff);
     const double zero = double(ZERO_DOUBLE);
     if (diff > zero) {
+        atomicAdd(&errors, 1);
+    }
+
+    if (SUB_ABS > THRESHOLD_uint32_t) {
         atomicAdd(&errors, 1);
     }
 }
