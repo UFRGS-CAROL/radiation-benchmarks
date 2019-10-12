@@ -21,17 +21,17 @@
  */
 //For 1 iteration
 //00000000 01001100 00000000 00000000
-#define THRESHOLD_1 4980736
+#define THRESHOLD_1 5111808
 #define ONE_BLOCK 1
 
 //For 10 iterations
 //3e-05
-#define THRESHOLD_12 4980736
+#define THRESHOLD_12 5111808
 #define TWELVE_BLOCK 12
 
 //For 100 iterations
 //9e-05
-#define THRESHOLD_96 4980736
+#define THRESHOLD_96 5111808
 #define NINETY_BLOCK 96
 
 //For MAX_LAVA iterations
