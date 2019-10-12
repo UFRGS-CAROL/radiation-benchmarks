@@ -10,11 +10,11 @@ from common_config import discover_board, execute_and_write_json_to_file
 
 # Size and streams
 SIZES = [[23, 2]]
-REDUNDANCY = ["none", "dmr"]  # dmrmixed
+REDUNDANCY = ["dmrmixed"]
 PRECISIONS = ["double"]
 ITERATIONS = int(1e9)
 DATA_PATH_BASE = "lava"
-CHECK_BLOCK = [1, 12, 96, 192]
+CHECK_BLOCK = [1, 12]
 BUILDPROFILER = 1
 
 
