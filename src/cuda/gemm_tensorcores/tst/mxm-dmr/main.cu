@@ -6,8 +6,8 @@
 #define CHECK_BLOCK 16
 #define THRESHOLD 1
 
-typedef half real_t;
-typedef half half_t;
+typedef double real_t;
+typedef float half_t;
 
 
 
@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 	m = n = k = 4096;
 
 	real_t alpha = 3.565075;
-	real_t beta = 1;
+	real_t beta = 3.565075;
 
 	real_t* host_a = (real_t*)calloc(m * k, sizeof(real_t));
 	real_t* host_b = (real_t*)calloc(k * n, sizeof(real_t));
@@ -46,9 +46,9 @@ int main(int argc, char **argv) {
 	cudaMemcpy(device_d, host_d, m * n * sizeof(real_t), cudaMemcpyHostToDevice);
 	cudaMemcpy(device_d_half, host_d_half, m * n * sizeof(half_t), cudaMemcpyHostToDevice);
 
-	//matrix_mult_dmr<THRESHOLD, CHECK_BLOCK, real_t, half_t>(device_a, device_b, m, n, k, device_d, device_d_half, alpha, beta, device_c);
+	matrix_mult_dmr<THRESHOLD, CHECK_BLOCK, real_t, half_t>(device_a, device_b, m, n, k, device_d, device_d_half, alpha, beta, device_c);
 
-	matrix_mult_tensor_dmr<THRESHOLD, CHECK_BLOCK, real_t, half_t>(device_a, device_b, m, n, k, device_d, device_d_half, alpha, beta, device_c);
+	//matrix_mult_tensor_dmr<THRESHOLD, CHECK_BLOCK, real_t, half_t>(device_a, device_b, m, n, k, device_d, device_d_half, alpha, beta, device_c);
 
 	
 	cudaMemcpy(host_d, device_d, m * n * sizeof(real_t), cudaMemcpyDeviceToHost);
