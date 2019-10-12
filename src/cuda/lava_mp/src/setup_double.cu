@@ -26,7 +26,7 @@
 
 //For 10 iterations
 //3e-05
-#define THRESHOLD_12 5242880
+#define THRESHOLD_12 8126464
 #define TWELVE_BLOCK 12
 
 //For 100 iterations
@@ -118,14 +118,14 @@ void setup_double(Parameters& parameters, Log& log) {
 //			break;
 //		}
 			//---------------------------------------
-
-		case MAX_BLOCK: {
-			//CASE FOR 100 Iterations----------------
-			DMRMixedKernelCaller<MAX_BLOCK, THRESHOLD_MAX, float, double> kc;
-			setup_execution(parameters, log, kc);
-
-			break;
-		}
+//
+//		case MAX_BLOCK: {
+//			//CASE FOR 100 Iterations----------------
+//			DMRMixedKernelCaller<MAX_BLOCK, THRESHOLD_MAX, float, double> kc;
+//			setup_execution(parameters, log, kc);
+//
+//			break;
+//		}
 			//---------------------------------------
 
 		default:
