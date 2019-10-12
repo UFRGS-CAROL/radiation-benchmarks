@@ -29,12 +29,12 @@ NVCC=/usr/local/cuda/bin/nvcc
 OPTS=-Ofast
 LDFLAGS= -lm -pthread -lstdc++ 
 COMMON= 
-CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas
+CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas -Wunused-function
 RAD_DIR=/home/carol/radiation-benchmarks
 
 
-
-INCLUDE=-I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I$(RAD_DIR)/src/cuda/common/include
+#-I/usr/local/cuda/samples/common/inc
+INCLUDE=-I/usr/local/cuda/include -I../common
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
@@ -58,7 +58,7 @@ NVCCFLAGS += -Xcompiler -fopenmp
 endif
 
 
-OBJ= main.o 
+OBJ= main.o setup_gemm_unhardened.o setup_gemm_dmr.o  #setup_gemm_dmr_mixed.o
 
 ifeq ($(SAFE_MALLOC), 1)
 CFLAGS+= -DSAFE_MALLOC

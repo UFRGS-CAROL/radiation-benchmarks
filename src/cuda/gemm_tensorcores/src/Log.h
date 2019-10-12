@@ -9,6 +9,8 @@
 #define LOG_H_
 #include <sys/time.h>
 #include <string>
+#include <iostream>
+#include "common.h"
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -31,6 +33,7 @@ public:
 	std::string dmr;
 	double alpha;
 	double beta;
+	uint32_t check_block;
 
 	Log(int argc, char** argv) :
 			alpha(1), beta(0) {
@@ -59,6 +62,9 @@ public:
 
 		this->use_tensor_cores = this->find_int_arg(argc, argv,
 				"--tensor_cores", 0);
+
+		this->check_block = this->find_int_arg(argc, argv, "--opnum", BLOCK_SIZE);
+
 
 		this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);
 

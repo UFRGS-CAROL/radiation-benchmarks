@@ -10,74 +10,12 @@
 
 #include <mma.h>
 #include <cuda_fp16.h>
+#include <assert.h>
+
+#include "device_functions.h"
+#include "common.h"
 
 using namespace nvcuda;
-
-#ifndef BLOCK_SIZE
-#define BLOCK_SIZE 32
-#endif
-// MMA matrix tile dimensions.
-
-#define M 16
-#define N 16
-#define K 16
-
-#define WMMA_M 16
-#define WMMA_N 16
-#define WMMA_K 16
-
-// GEMM configuration.
-
-#define M_TILES 256
-#define N_TILES 256
-#define K_TILES 256
-
-#define M_GLOBAL (M * M_TILES)
-#define N_GLOBAL (N * N_TILES)
-#define K_GLOBAL (K * K_TILES)
-
-#define BLOCK_ROW_WARPS 2
-#define BLOCK_COL_WARPS 4
-
-#define WARP_ROW_TILES 4
-#define WARP_COL_TILES 2
-
-#define BLOCK_ROW_TILES (WARP_ROW_TILES * BLOCK_ROW_WARPS)
-#define BLOCK_COL_TILES (WARP_COL_TILES * BLOCK_COL_WARPS)
-
-#if SHARED_MEMORY_LIMIT_64K
-// With only 64 Kb shared memory available, we can fit two 8-tile chunks of
-// the A and B matrix data, that are 16 * 16 * 8 * 8 * 2 = 32 Kb each
-// (i.e. two 8x8 arrays of tiles of 16x16 half-typed elements per CTA).
-// But we cannot account the 8 Kb total skew overhead, without which the performance
-// would be severely impacted. So we choose to reduce the chunk size in half,
-// i.e. the amount of A and B matrix data we cache in shared memory.
-// Accordingly, this doubles the number of outer iterations across the global K
-// dimension, which only slightly impacts the performance.
-#define CHUNK_K 4
-#else
-#define CHUNK_K 8
-#endif
-
-// The macro below is used to shift rows of the A matrix and columns of the B matrix
-// in shared memory to minimize possible bank conflicts.
-// Before performing the nvcuda::wmma::mma_sync operation, the warp must load the matrix
-// data using the nvcuda::wmma::load_matrix_sync operation. Although the memory access pattern
-// is not specified for that function, each lane in the warp can read one or multiple matrix
-// elements from different matrix rows or columns.
-// For shared memory, such access can result in bank conflicts if different rows / columns
-// of the matrix map to the same bank. By shifting each row and column by a few bytes, we
-// make sure that they map to different banks, thus reducing the number of possible bank
-// conflicts.
-// The number of 8 two-byte "half" elements is chosen as the minimum possible shift because
-// we must keep each row and column 128-bit aligned, as required by nvcuda::wmma::load_matrix_sync.
-#define SKEW_HALF 8
-// GPU configuration.
-
-#define WARP_SIZE 32
-
-#define WARPS_PER_BLOCK 8
-#define THREADS_PER_BLOCK (WARP_SIZE * WARPS_PER_BLOCK)
 
 template<class T>
 __global__ void hw_mxm_kernel(T* D, T *C, float *A, float *B, T alpha, T beta,
@@ -209,9 +147,8 @@ __global__ void sw_mxm_kernel(real_t *D, real_t *C, real_t *A, real_t *B,
 		// each thread computes one element
 		// of the block sub-matrix
 #pragma unroll
-
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			Csub += As[ty][k] * Bs[k][tx];
+			fma_dmr(As[ty][k], Bs[k][tx], Csub);
 		}
 
 		// Synchronize to make sure that the preceding
@@ -281,12 +218,10 @@ __global__ void sw_mxm_kernel(half *D, half *C, half *A, half *B, half alpha,
 		// of the block sub-matrix
 #pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; k += 2) {
-//			Csub += As[ty][k] * Bs[k][tx];
-
 			half2 a = __halves2half2(As[ty][k + 0], As[ty][k + 1]);
 			half2 b = __halves2half2(Bs[k + 0][tx], Bs[k + 1][tx]);
 
-			acc = __hfma2(a, b, acc);
+			fma_dmr(a, b, acc);
 		}
 
 		Csub += acc.x + acc.y;

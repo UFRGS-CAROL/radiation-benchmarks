@@ -8,42 +8,26 @@
 #ifndef GEMMBASE_H_
 #define GEMMBASE_H_
 
-#include <type_traits>
 #include <string>
 #include <cstdio>
 #include <iostream>
 #include <vector>
 
-// helper functions and utilities to work with CUDA
-#include <helper_cuda.h>
-#include <helper_functions.h>
-
 //CHECK FRAMEWORK ERRORS
-#include "cuda_utils.h"
+#include "include/cuda_utils.h"
 
 //DEVICE VECTOR
-#include "device_vector.h"
+#include "include/device_vector.h"
 
-//#include "kernels.h"
-#include "dmr_kernels.h"
+#include "common.h"
 
-std::ostream& operator<<(std::ostream& os, dim3 s) {
-	os << "x: " << s.x << " y: " << s.y << " z: " << s.z;
-	return os;
-}
-
-void exception(std::string msg, std::string file, int line) {
-	throw std::runtime_error(msg + " at " + file + ":" + std::to_string(line));
-}
-
-#define throw_line(msg) exception(msg, __FILE__, __LINE__)
-
-typedef enum {
-	NONDMRGEMM, DMRGEMM, DMRGEMMMIXED, NONDMRWMMA, DMRWMA
-} GEMMTYPE;
+//static std::ostream& operator<<(std::ostream& os, dim3 s) {
+//	os << "x: " << s.x << " y: " << s.y << " z: " << s.z;
+//	return os;
+//}
 
 //host_half, half, host_real_t, real_t
-template<class half_t, class real_t, class dmr_mixed_real_t>
+template<const uint32_t COUNT, const uint32_t THRESHOLD, class half_t, class real_t, class dmr_mixed_real_t>
 class GEMMBase {
 public:
 	GEMMBase(
@@ -172,9 +156,6 @@ protected:
 	dim3 grid_dim;
 
 	cudaDeviceProp deviceProp;
-
-	size_t shared_memory;
-
 };
 
 #endif /* GEMMBASE_H_ */

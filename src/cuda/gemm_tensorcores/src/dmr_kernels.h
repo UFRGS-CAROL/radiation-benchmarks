@@ -8,16 +8,11 @@
 #ifndef DMR_KERNELS_H_
 #define DMR_KERNELS_H_
 
-/**
- * Vamos comecar do zero
- * coloque aqui os codigos so dmr
- *
- */
-
-#include "nondmr_kernels.h"
 #include "device_functions.h"
+#include "common.h"
 
-template<class half_t, class real_t>
+template<const uint32_t COUNT, const uint32_t THRESHOLD, class half_t,
+		class real_t>
 __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 		real_t *A, real_t *B, real_t alpha, real_t beta, int wA, int wB) {
 	// Block index
@@ -48,7 +43,7 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 	real_t Csub = 0;
 
 	half_t Csub_half = 0;
-	double threshold = -2222;
+
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
 	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
@@ -73,30 +68,15 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 		// each thread computes one element
 		// of the block sub-matrix
 #pragma unroll
-
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-//			Csub += As[ty][k] * Bs[k][tx];
-//			Csub_half += half_t(As[ty][k]) * half_t(Bs[k][tx]);
+			half_t As_ht = half_t(As[ty][k]);
+			half_t Bs_ht = half_t(Bs[k][tx]);
 			fma_dmr(As[ty][k], Bs[k][tx], Csub);
-			fma_dmr(half_t(As[ty][k]), half_t(Bs[k][tx]), Csub_half);
+			fma_dmr(As_ht, Bs_ht, Csub_half);
 
-#if CHECKBLOCK == 1
-			check_relative_error(Csub_half, Csub);
-
-			double diff = fabs(double(Csub) - double(Csub_half));
-			threshold = fmax(threshold, diff);
-
-			Csub_half = half_t(Csub);
-//#elif CHECKBLOCK >= 1
-//			if((k % CHECKBLOCK) == 0) {
-//				check_relative_error(Csub_half, Csub);
-//
-//				double diff = fabs(double(Csub) - double(Csub_half));
-//				threshold = fmax(threshold, diff);
-//
-//				Csub_half = half_t(Csub);
-//			}
-#endif
+			if ((k % COUNT) == 0) {
+				check_relative_error<THRESHOLD>(Csub_half, Csub);
+			}
 
 		}
 
@@ -111,15 +91,8 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 	const half_t d_h = half_t(alpha) * Csub_half
 			+ half_t(beta) * half_t(C[index]);
 
-//#if CHECKBLOCK == 0
-//	check_relative_error(d_h, d_r);
-//	threshold = fabs(double(Csub) - double(Csub_half));
-//#endif
-
-	printf("%.20e\n", threshold);
-
-// Write the block sub-matrix to device memory;
-// each thread writes one element
+	// Write the block sub-matrix to device memory;
+	// each thread writes one element
 	D_r[index] = d_r;
 	D_h[index] = d_h;
 }

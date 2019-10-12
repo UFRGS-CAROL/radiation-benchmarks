@@ -28,7 +28,7 @@ struct CudaStream {
 };
 
 template<class half_t, class real_t>
-class GEMMWMMA: public GEMMBase<half_t, real_t, half_t> {
+class GEMMWMMA: public GEMMBase<0, 0, half_t, real_t, half_t> {
 public:
 
 	GEMMWMMA(
@@ -37,8 +37,8 @@ public:
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
 			real_t beta) :
-			GEMMBase<half_t, real_t, half_t>(host_a0, host_b0, host_c0, host_d0,
-					k, alpha, beta) {
+			GEMMBase<0, 0, half_t, real_t, half_t>(host_a0, host_b0, host_c0,
+					host_d0, k, alpha, beta) {
 
 	}
 
@@ -56,8 +56,9 @@ public:
 
 };
 
-template<class half_t, class real_t>
-class GEMMWMMAMIXED: public GEMMBase<half_t, real_t, half_t> {
+template<const uint32_t COUNT, const uint32_t THRESHOLD, class half_t,
+		class real_t>
+class GEMMWMMAMIXED: public GEMMBase<COUNT, THRESHOLD, half_t, real_t, half_t> {
 public:
 
 	GEMMWMMAMIXED(
@@ -66,8 +67,8 @@ public:
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
 			real_t beta) :
-			GEMMBase<half_t, real_t, half_t>(host_a0, host_b0, host_c0, host_d0,
-					k, alpha, beta) {
+			GEMMBase<COUNT, THRESHOLD, half_t, real_t, half_t>(host_a0, host_b0,
+					host_c0, host_d0, k, alpha, beta) {
 
 	}
 
@@ -85,8 +86,8 @@ public:
 
 };
 
-template<class real_t>
-class GEMMWMMADMR: public GEMMBase<real_t, real_t, real_t> {
+template<const uint32_t COUNT, class real_t>
+class GEMMWMMADMR: public GEMMBase<COUNT, 0, real_t, real_t, real_t> {
 public:
 	size_t shared_memory;
 	std::vector<CudaStream> two_streams;
@@ -99,8 +100,8 @@ public:
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
 			real_t beta) :
-			GEMMBase<real_t, real_t, real_t>(host_a0, host_b0, host_c0, host_d0,
-					k, alpha, beta) {
+			GEMMBase<COUNT, 0, real_t, real_t, real_t>(host_a0, host_b0,
+					host_c0, host_d0, k, alpha, beta) {
 		this->shared_memory = std::max(
 				sizeof(real_t) * (BLOCK_COL_TILES * M)
 						* (CHUNK_K * K + SKEW_HALF) * 2,
