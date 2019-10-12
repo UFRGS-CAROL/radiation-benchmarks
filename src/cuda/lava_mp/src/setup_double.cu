@@ -26,12 +26,12 @@
 
 //For 10 iterations
 //3e-05
-#define THRESHOLD_12 4194304
+#define THRESHOLD_12 4980736
 #define TWELVE_BLOCK 12
 
 //For 100 iterations
 //9e-05
-#define THRESHOLD_96 4194304
+#define THRESHOLD_96 4980736
 #define NINETY_BLOCK 96
 
 //For MAX_LAVA iterations
