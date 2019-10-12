@@ -1,4 +1,7 @@
 #include "setup_template.h"
+#include "GEMM.h"
+#include "Log.h"
+//#include "GEMMWMMA.h"
 
 template<class half_t, class real_t = half_t>
 void hardware_dmr_template(Log& log_obj) {
@@ -28,7 +31,7 @@ void software_dmr_template(Log& log_obj) {
 			real_t(log_obj.alpha), real_t(log_obj.beta));
 
 	//For the same type the threshold is also 0
-	setup_execute<COUNT, 0>(mt, log_obj, hd);
+	setup_execute(mt, log_obj, hd);
 }
 
 template<class real_t>
