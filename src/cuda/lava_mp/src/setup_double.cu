@@ -26,7 +26,7 @@
 
 //For 10 iterations
 //3e-05
-#define THRESHOLD_12 33554432
+#define THRESHOLD_12 50331648
 #define TWELVE_BLOCK 12
 
 //For 100 iterations
