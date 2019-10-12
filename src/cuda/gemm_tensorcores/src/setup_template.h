@@ -2,14 +2,13 @@
  * setup_template.h
  *
  *  Created on: 11/10/2019
- *      Author: fernando
+ *      Author: Fernando
  */
 
 #ifndef SETUP_TEMPLATE_H_
 #define SETUP_TEMPLATE_H_
 
-//#include <memory>
-#include <sstream>      // std::stringstream
+#include <sstream>
 #include <iostream>
 #include <iomanip>
 #include <limits>
@@ -19,14 +18,13 @@
 #endif
 
 #include "Log.h"
-#include "GEMM.h"
-#include "GEMMWMMA.h"
+#include "GEMMBase.h"
 #include "common.h"
 #include "HostVectors.h"
 
-//#include "device_functions.h"
+#include "device_functions.h"
 
-unsigned long long dmr_errors() {
+static unsigned long long dmr_errors() {
 	unsigned long long ret = 0;
 	rad::checkFrameworkErrors(
 			cudaMemcpyFromSymbol(&ret, errors, sizeof(unsigned long long), 0));
@@ -38,7 +36,7 @@ unsigned long long dmr_errors() {
 	return ret;
 }
 
-std::ostream& operator<<(std::ostream& os, const half& rhs) {
+static std::ostream& operator<<(std::ostream& os, const half& rhs) {
 	float temp = float(rhs);
 	os << temp;
 	return os;
@@ -55,16 +53,15 @@ template<const uint32_t THRESHOLD>
 bool equals(float& lhs, double& rhs) {
 	float rhs_float = float(rhs);
 
-	const uint32_t lhs_data = 0, rhs_data = 0;
-	memcpy((void*) &lhs_data, &lhs, sizeof(float));
-	memcpy((void*) &rhs_data, &rhs_float, sizeof(float));
+	const uint32_t lhs_data = reinterpret_cast<uint32_t&>(lhs);
+	const uint32_t rhs_data = reinterpret_cast<uint32_t&>(rhs_float);
 
 	return (SUB_ABS(lhs_data, rhs_data) <= THRESHOLD);
 }
 
 template<const uint32_t THRESHOLD, class half_t, class real_t>
 std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
-		std::vector<half_t>& d0, std::vector<real_t>& d1, Log& log) {
+		std::vector<real_t>& d1, std::vector<half_t>& d0, Log& log) {
 	int host_errors = 0;
 //	double threshold = -3222;
 #ifdef OMP
@@ -118,8 +115,10 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 	return res;
 }
 
-template<const uint32_t COUNT, const uint32_t THRESHOLD, class half_t, class real_t, class mixed_t>
-void setup_execute(GEMMBase<COUNT, THRESHOLD, half_t, real_t, mixed_t>& mult_enviroment,
+template<const uint32_t COUNT, const uint32_t THRESHOLD, class half_t,
+		class real_t, class mixed_t>
+void setup_execute(
+		GEMMBase<COUNT, THRESHOLD, half_t, real_t, mixed_t>& mult_enviroment,
 		Log& log_obj, HostVectors<half_t, real_t, mixed_t>& hd) {
 	cudaEvent_t start, stop;
 	float elapsedTime;
@@ -148,8 +147,8 @@ void setup_execute(GEMMBase<COUNT, THRESHOLD, half_t, real_t, mixed_t>& mult_env
 			double start, end;
 
 			start = log_obj.mysecond();
-			errors = check_output_errors_dmr<THRESHOLD>(hd.host_gold,
-					hd.host_matrix_smaller, hd.host_matrix_d, log_obj);
+			errors = check_output_errors_dmr<THRESHOLD, mixed_t, real_t>(hd.host_gold,
+					hd.host_matrix_d, hd.host_matrix_smaller, log_obj);
 			end = log_obj.mysecond();
 
 			std::cout << "Iteration: " << it << " dmr errors " << errors.first

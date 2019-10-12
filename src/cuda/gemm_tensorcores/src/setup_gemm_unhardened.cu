@@ -1,7 +1,8 @@
 
 
 #include "setup_template.h"
-
+#include "GEMM.h"
+//#include "GEMMWMMA.h"
 
 /**
  * For WMMA without hardening

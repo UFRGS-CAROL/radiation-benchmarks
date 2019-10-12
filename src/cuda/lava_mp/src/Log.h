@@ -14,6 +14,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <iostream>
 
 struct Log {
 	size_t error_;

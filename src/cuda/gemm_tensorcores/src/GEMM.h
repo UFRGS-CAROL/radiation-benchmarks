@@ -43,8 +43,7 @@ public:
 	}
 };
 
-template<const uint32_t COUNT, const uint32_t THRESHOLD, class half_t,
-		class real_t, class mixed_t>
+template<const uint32_t COUNT, const uint32_t THRESHOLD, class real_t, class mixed_t>
 class GEMMDMRMIXED: public GEMMBase<COUNT, THRESHOLD, real_t, real_t, mixed_t> {
 public:
 

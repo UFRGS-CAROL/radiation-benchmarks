@@ -26,12 +26,12 @@
 
 //For 10 iterations
 //3e-05
-#define THRESHOLD_12 4194304
+#define THRESHOLD_12 4980736
 #define TWELVE_BLOCK 12
 
 //For 100 iterations
 //9e-05
-#define THRESHOLD_96 4194304
+#define THRESHOLD_96 4980736
 #define NINETY_BLOCK 96
 
 //For MAX_LAVA iterations
@@ -46,7 +46,7 @@ void setup_double(Parameters& parameters, Log& log) {
 		UnhardenedKernelCaller<double> kc;
 		setup_execution(parameters, log, kc);
 		break;
-	}
+	}/*
 	case DMR: {
 		switch (parameters.block_check) {
 		case ONE_BLOCK: {
@@ -66,13 +66,13 @@ void setup_double(Parameters& parameters, Log& log) {
 		}
 			//---------------------------------------
 
-		case NINETY_BLOCK: {
-			//CASE FOR 100 Iterations----------------
-			DMRKernelCaller<NINETY_BLOCK, double> kc;
-			setup_execution(parameters, log, kc);
-
-			break;
-		}
+//		case NINETY_BLOCK: {
+//			//CASE FOR 100 Iterations----------------
+//			DMRKernelCaller<NINETY_BLOCK, double> kc;
+//			setup_execution(parameters, log, kc);
+//
+//			break;
+//		}
 			//---------------------------------------
 
 		case MAX_BLOCK: {
@@ -90,7 +90,7 @@ void setup_double(Parameters& parameters, Log& log) {
 							+ " operation check block not supported");
 		}
 		break;
-	}
+	}*/
 	case DMRMIXED:
 		switch (parameters.block_check) {
 		case ONE_BLOCK: {
@@ -109,14 +109,14 @@ void setup_double(Parameters& parameters, Log& log) {
 			break;
 		}
 			//---------------------------------------
-
-		case NINETY_BLOCK: {
-			//CASE FOR 100 Iterations----------------
-			DMRMixedKernelCaller<NINETY_BLOCK, THRESHOLD_96, float, double> kc;
-			setup_execution(parameters, log, kc);
-
-			break;
-		}
+//
+//		case NINETY_BLOCK: {
+//			//CASE FOR 100 Iterations----------------
+//			DMRMixedKernelCaller<NINETY_BLOCK, THRESHOLD_96, float, double> kc;
+//			setup_execution(parameters, log, kc);
+//
+//			break;
+//		}
 			//---------------------------------------
 
 		case MAX_BLOCK: {

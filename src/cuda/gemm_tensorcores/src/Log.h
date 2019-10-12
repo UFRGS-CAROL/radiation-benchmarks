@@ -10,7 +10,7 @@
 #include <sys/time.h>
 #include <string>
 #include <iostream>
-#include "common.h"
+//#include "common.h"
 
 #ifdef LOGS
 #include "log_helper.h"
@@ -63,7 +63,7 @@ public:
 		this->use_tensor_cores = this->find_int_arg(argc, argv,
 				"--tensor_cores", 0);
 
-		this->check_block = this->find_int_arg(argc, argv, "--opnum", BLOCK_SIZE);
+		this->check_block = this->find_int_arg(argc, argv, "--opnum", 32);
 
 
 		this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);

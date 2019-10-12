@@ -9,7 +9,6 @@
 #define GEMMBASE_H_
 
 #include <string>
-#include <cstdio>
 #include <iostream>
 #include <vector>
 
@@ -21,13 +20,8 @@
 
 #include "common.h"
 
-//static std::ostream& operator<<(std::ostream& os, dim3 s) {
-//	os << "x: " << s.x << " y: " << s.y << " z: " << s.z;
-//	return os;
-//}
-
-//host_half, half, host_real_t, real_t
-template<const uint32_t COUNT, const uint32_t THRESHOLD, class half_t, class real_t, class dmr_mixed_real_t>
+template<const uint32_t COUNT, const uint32_t THRESHOLD, class half_t,
+		class real_t, class dmr_mixed_real_t>
 class GEMMBase {
 public:
 	GEMMBase(
@@ -36,8 +30,7 @@ public:
 			const std::vector<real_t>&host_c0, // Matric C
 			const std::vector<real_t>& host_d0, size_t k, real_t alpha,
 			real_t beta) :
-			k(k), alpha(alpha), beta(beta), device_ptr_d0(
-					host_d0) // allocating D vectors
+			k(k), alpha(alpha), beta(beta), device_ptr_d0(host_d0) // allocating D vectors
 
 	{ //Alpha and Beta
 		if (this->k <= 0) {

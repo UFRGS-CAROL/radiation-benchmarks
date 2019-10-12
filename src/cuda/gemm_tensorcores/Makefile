@@ -4,8 +4,6 @@ DEBUG?=0
 LOGS?=1
 DEBUG_ON_TITAN?=0
 OMP?=1
-ZERO_FLOAT=1e-7
-ZERO_HALF=1e-1
 CHECKBLOCK=1
 
 SIZE?=4096 #6384 #8192 #4096 
@@ -33,7 +31,6 @@ CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas -Wunused-function
 RAD_DIR=/home/carol/radiation-benchmarks
 
 
-#-I/usr/local/cuda/samples/common/inc
 INCLUDE=-I/usr/local/cuda/include -I../common
 
 ifeq ($(DEBUG), 1) 
@@ -58,7 +55,7 @@ NVCCFLAGS += -Xcompiler -fopenmp
 endif
 
 
-OBJ= main.o setup_gemm_unhardened.o setup_gemm_dmr.o  #setup_gemm_dmr_mixed.o
+OBJ= main.o setup_gemm_unhardened.o setup_gemm_dmr.o setup_gemm_dmr_mixed.o
 
 ifeq ($(SAFE_MALLOC), 1)
 CFLAGS+= -DSAFE_MALLOC
@@ -74,9 +71,9 @@ ifeq ($(DEBUG_ON_TITAN), 1)
 CFLAGS+= -DDEBUG_ON_TITAN
 endif
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
-DEPS = $(wildcard ./*.h) Makefile
+DEPS = $(wildcard src/*.h) Makefile
 
-COMMON+= -DCHECKBLOCK=$(CHECKBLOCK) -DZERO_FLOAT=$(ZERO_FLOAT) -DZERO_HALF=$(ZERO_HALF)
+COMMON+= -DCHECKBLOCK=$(CHECKBLOCK)
 NVCCFLAGS+= -Xptxas -v
 
 all: obj $(TARGET)
