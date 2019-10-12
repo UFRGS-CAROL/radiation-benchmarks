@@ -42,11 +42,11 @@
 void setup_double(Parameters& parameters, Log& log) {
 
 	switch (parameters.redundancy) {
-	/*case NONE: {
+	case NONE: {
 		UnhardenedKernelCaller<double> kc;
 		setup_execution(parameters, log, kc);
 		break;
-	}
+	}/*
 	case DMR: {
 		switch (parameters.block_check) {
 		case ONE_BLOCK: {
