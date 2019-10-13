@@ -106,7 +106,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
     }
     
     
-    printf("THRESHOLD: %u \n", sub_res);
+    printf("THRESHOLD: %.20u \n", sub_res);
     const double zero = double(ZERO_DOUBLE);
     if (sub_res > zero) {
         atomicAdd(&errors, 1);
