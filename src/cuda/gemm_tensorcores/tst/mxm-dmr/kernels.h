@@ -92,7 +92,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
    
 
     const uint32_t lhs_data = __float_as_uint(lhs);
-    const uint32_t rhs_data = *(uint32_t*)(rhs);
+    const uint32_t rhs_data = *(uint32_t*)(&rhs);
     
     //__float_as_uint(rhs_data);
 
