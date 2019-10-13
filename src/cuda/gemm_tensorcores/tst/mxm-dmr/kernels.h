@@ -92,7 +92,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
    
 
     const uint32_t lhs_data = __float_as_uint(lhs);
-    const uint32_t rhs_data = __float_as_uint(*(uint32_t*)(&rhs));
+    const uint32_t rhs_data = (uint32_t*)(rhs);
     
     printf("Data rhs: %.20e \n", rhs_data);
 
