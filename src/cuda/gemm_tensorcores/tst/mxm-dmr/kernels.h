@@ -13,7 +13,7 @@
 
 #define WARP_SIZE 32
 
-#define SUB_ABS ((lhs, rhs) (lhs > rhs) ? (lhs - rhs) : (rhs - lhs))
+#define SUB_ABS ((lhs_data, rhs_data) (lhs_data > rhs_data) ? (lhs_data - rhs_data) : (rhs_data - lhs_data))
 
 using namespace nvcuda;
 
@@ -92,22 +92,23 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
    
 
     const uint32_t lhs_data = __float_as_uint(lhs);
-    const uint32_t rhs_data = (uint32_t)(rhs);
+    const uint32_t rhs_data = __float_as_uint((uint32_t)(rhs));
     
-   __float_as_uint(rhs_data); 
-   printf("Data rhs: %.20e \n", lhs);
+ 
+     //printf("Data rhs: %.20e \n", rhs);
 
-    //const double diff = fabs(lhs_data -rhs_data);
-    uint32_t sub_res;
+
+    /*uint32_t sub_res;
     if (lhs_data > rhs_data) {
         sub_res = lhs_data - rhs_data;
     } else {
         sub_res = rhs_data - lhs_data;
     }
+    */
 
-//    printf("THRESHOLD: %.20e \n", sub_res);
+    printf("THRESHOLD: %.20e \n", SUB_ABS);
     const double zero = double(ZERO_DOUBLE);
-    if (sub_res > zero) {
+    if (SUB_ABS > zero) {
         atomicAdd(&errors, 1);
     }
 
