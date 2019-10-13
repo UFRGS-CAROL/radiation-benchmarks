@@ -105,10 +105,10 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
         sub_res = rhs_data - lhs_data;
     }
     */
-
-    printf("THRESHOLD: %.20e \n", SUB_ABS);
+    uint32_t sub_res = SUB_ABS:
+    printf("THRESHOLD: %.20e \n", sub_res);
     const double zero = double(ZERO_DOUBLE);
-    if (SUB_ABS > zero) {
+    if (sub_res > zero) {
         atomicAdd(&errors, 1);
     }
 
