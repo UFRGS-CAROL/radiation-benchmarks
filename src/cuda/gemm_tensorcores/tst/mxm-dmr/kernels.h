@@ -94,8 +94,8 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
     const uint32_t lhs_data = *((uint32_t*)(&lhs));
     const uint32_t rhs_data = *((uint32_t*)(&rhs_float));
   
-    //printf( " lhs: %f  --- rhs : %f \n ", lhs, rhs);  
-    //printf("Data rhs: %u --- data lhs: %u \n", rhs_data, lhs_data);
+    printf( "lhs: %f  --- rhs : %lf \n ", lhs, rhs);  
+    printf("Data rhs: %u --- data lhs: %u \n", rhs_data, lhs_data);
 
 
     uint32_t sub_res;
