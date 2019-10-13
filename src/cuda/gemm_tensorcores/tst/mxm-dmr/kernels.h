@@ -120,10 +120,9 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
 
 }
 
-    // const uint32_t lhs_data = __float_as_uint(lhs);
-    // const uint32_t rhs_data = __float_as_uint(rhs);
 
-    // uint32_t sub_res = fabs(rhs_data -lhs_data);
+
+//TENSOR
 
 // template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
 // __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d, real_t *d_frag, 
