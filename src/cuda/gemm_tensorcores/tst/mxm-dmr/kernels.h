@@ -89,10 +89,10 @@ __device__ void check_bit_error(const float &lhs, const float &rhs) {
 
 template<const uint32_t THRESHOLD_uint32_t>
 __device__ __forceinline__ void check_bit_error(const float& lhs, const double& rhs) {
-   
+    float rhs_float = float(rhs);
 
-    const uint32_t lhs_data = __float_as_uint(lhs);
-    const uint32_t rhs_data = (uint32_t)__float_as_uint(rhs);
+    const uint32_t lhs_data = *((uint32_t*)(&lhs));
+    const uint32_t rhs_data = *((uint32_t*)(&rhs_float));
   
     //printf( " lhs: %f  --- rhs : %f \n ", lhs, rhs);  
     //printf("Data rhs: %u --- data lhs: %u \n", rhs_data, lhs_data);
@@ -108,7 +108,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
     
     printf("THRESHOLD: %.15u \n", sub_res);
     const double zero = double(ZERO_DOUBLE);
-    if (sub_res > zero) {
+    if (sub_res > THRESHOLD_uint32_t) {
         atomicAdd(&errors, 1);
     }
 
