@@ -96,7 +96,12 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
     
     __float_as_uint(rhs_data);
 
-     const double diff = fabs(lhs_data -rhs_data);
+    //const double diff = fabs(lhs_data -rhs_data);
+    if (lhs_data > rhs_data) {
+        sub_res = lhs_data - rhs_data;
+    } else {
+        sub_res = rhs_data - lhs_data;
+    }
 
     printf("THRESHOLD: %.20e \n", diff);
     const double zero = double(ZERO_DOUBLE);
