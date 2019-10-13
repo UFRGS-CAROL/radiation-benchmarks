@@ -95,8 +95,8 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
     const uint32_t lhs_data = *((uint32_t*)(&lhs));
     const uint32_t rhs_data = *((uint32_t*)(&rhs_float));
   
-    //printf( "lhs: %f  --- rhs : %lf \n ", lhs, rhs);  
-    printf("Data rhs: %u --- data lhs: %u \n", rhs_data, lhs_data);
+      
+    printf("lhs: %f  --- rhs : %lf --- Data lhs: %u --- data rhs: %u \n",lhs, rhs, lhs_data, rhs_data);
 
 
     uint32_t sub_res;
@@ -107,7 +107,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
     }
     
     
-    printf("THRESHOLD: %lu \n", sub_res);
+    //printf("THRESHOLD: %lu \n", sub_res);
     //const double zero = double(ZERO_DOUBLE);
     if (sub_res > THRESHOLD_uint32_t) {
         atomicAdd(&errors, 1);
@@ -359,7 +359,7 @@ __global__ void matrix_mult_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 //#if CHECKBLOCK == 1
             if ((k % COUNT) == 0)
             {
-            printf("A = %f \n B = %f \n" As[ty][k], Bs[k][tx]);     
+                
 
             check_bit_error<THRESHOLD>(Csub_half, Csub);    
             Csub_half = half_t(Csub);
