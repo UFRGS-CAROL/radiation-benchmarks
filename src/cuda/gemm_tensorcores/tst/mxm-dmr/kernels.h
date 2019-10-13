@@ -92,9 +92,10 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
    
 
     const uint32_t lhs_data = __float_as_uint(lhs);
-    const uint32_t rhs_data = (uint32_t*)(rhs);
+    const uint32_t rhs_data = (uint32_t)(rhs);
     
-    printf("Data rhs: %.20e \n", rhs_data);
+   __float_as_uint(rhs_data); 
+   printf("Data rhs: %.20e \n", lhs);
 
     //const double diff = fabs(lhs_data -rhs_data);
     uint32_t sub_res;
@@ -104,7 +105,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
         sub_res = rhs_data - lhs_data;
     }
 
-    //printf("THRESHOLD: %.20e \n", sub_res);
+//    printf("THRESHOLD: %.20e \n", sub_res);
     const double zero = double(ZERO_DOUBLE);
     if (sub_res > zero) {
         atomicAdd(&errors, 1);
