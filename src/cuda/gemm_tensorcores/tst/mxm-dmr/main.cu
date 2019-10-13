@@ -2,6 +2,7 @@
 #include <cassert>
 #include <vector>
 #include <iostream>
+#include <random>
 
 #define CHECK_BLOCK 16
 #define THRESHOLD 1
@@ -19,8 +20,12 @@ int main(int argc, char **argv) {
 	int k;
 	m = n = k = 4096;
 
-	real_t alpha = 4.565075;
-	real_t beta = 4.565075;
+	std::random_device rd; // obtain a random number from hardware
+    std::mt19937 eng(rd()); // seed the generator
+    std::uniform_int_distribution<> distr(-1000, 1000); 
+
+	real_t alpha = 1;
+	real_t beta = 1;
 
 	real_t* host_a = (real_t*)calloc(m * k, sizeof(real_t));
 	real_t* host_b = (real_t*)calloc(k * n, sizeof(real_t));
@@ -28,8 +33,8 @@ int main(int argc, char **argv) {
 	real_t* host_d = (real_t*)calloc(m * n, sizeof(real_t));
 	half_t* host_d_half = (half_t*)calloc(m * n, sizeof(half_t));
 
-	for (int i = 0; i < m * k; i++) host_a[i] = alpha;
-	for (int i = 0; i < m * k; i++) host_b[i] = beta;
+	for (int i = 0; i < m * k; i++) host_a[i] = distr(eng);
+	for (int i = 0; i < m * k; i++) host_b[i] = distr(eng);
 	for (int i = 0; i < m * k; i++) host_c[i] = 0;	
 
 	real_t *device_a, *device_b, *device_c, *device_d;
