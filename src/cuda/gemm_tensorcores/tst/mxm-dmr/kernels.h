@@ -26,7 +26,7 @@ using namespace half_float::literal;
 //typedef half_float::half half_t;
 typedef __half half_t_device;
 
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 1
 
 #ifndef ZERO_FLOAT
     #define ZERO_FLOAT 2.2e-20
@@ -89,14 +89,14 @@ __device__ void check_bit_error(const float &lhs, const float &rhs) {
 }
 
 template<const uint32_t THRESHOLD_uint32_t>
-__device__ __forceinline__ void check_bit_error(const float& lhs, const double& rhs) {
+__device__ __forceinline__ void check_bit_error(const double A, const double B, const float& lhs, const double& rhs) {
     float rhs_float = float(rhs);
 
     const uint32_t lhs_data = *((uint32_t*)(&lhs));
     const uint32_t rhs_data = *((uint32_t*)(&rhs_float));
   
     //printf( "lhs: %f  --- rhs : %lf \n ", lhs, rhs);  
-    printf("Data rhs: %u --- data lhs: %u \n", rhs_data, lhs_data);
+    printf("A= %f ---- B = %f ------- Data rhs: %u --- data lhs: %u \n", rhs_data, lhs_data);
 
 
     uint32_t sub_res;
@@ -359,7 +359,7 @@ __global__ void matrix_mult_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 //#if CHECKBLOCK == 1
             if ((k % COUNT) == 0)
             {
-            check_bit_error<THRESHOLD>(Csub_half, Csub);    
+            check_bit_error<THRESHOLD>(A, B, Csub_half, Csub);    
             Csub_half = half_t(Csub);
             }
            
