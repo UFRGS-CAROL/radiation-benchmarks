@@ -98,14 +98,14 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
      //printf("Data rhs: %.20e \n", rhs);
 
 
-    /*uint32_t sub_res;
+    uint32_t sub_res;
     if (lhs_data > rhs_data) {
         sub_res = lhs_data - rhs_data;
     } else {
         sub_res = rhs_data - lhs_data;
     }
-    */
-    uint32_t sub_res = SUB_ABS:
+    
+    
     printf("THRESHOLD: %.20e \n", sub_res);
     const double zero = double(ZERO_DOUBLE);
     if (sub_res > zero) {
