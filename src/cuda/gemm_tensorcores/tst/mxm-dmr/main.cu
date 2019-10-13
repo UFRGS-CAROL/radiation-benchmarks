@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
 	std::random_device rd; // obtain a random number from hardware
     std::mt19937 eng(rd()); // seed the generator
-    std::uniform_real_distribution<real_t> distr(-1000.00, 1000.00); 
+    std::uniform_real_distribution<real_t> distr(-10000.00, 10000.00); 
 
   	const real_t alpha = 1.1f;
   	const real_t beta = 1.2f;
@@ -36,6 +36,7 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < m * k; i++) host_a[i] = distr(eng);
 	for (int i = 0; i < m * k; i++) host_b[i] = distr(eng);
 	for (int i = 0; i < m * k; i++) host_c[i] = 0;	
+	printf("A = %f \n B = %f \n" host_a[0], host_b[0]);		
 
 	real_t *device_a, *device_b, *device_c, *device_d;
 	half_t *device_d_half;
