@@ -27,7 +27,7 @@ ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 INCLUDE= -I./src -I$(CUDAPATH)/include -I../../include -I../common
 
 OBJDIR=./obj/
-OBJ= setup_double.o Parameters.o cuda_lava.o 
+OBJ= setup_double.o  setup_float.o Parameters.o cuda_lava.o 
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g

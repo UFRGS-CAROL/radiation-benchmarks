@@ -39,11 +39,11 @@
 #define THRESHOLD_MAX 4194304
 #define MAX_BLOCK NUMBER_PAR_PER_BOX
 
-void setup_double(Parameters& parameters, Log& log) {
+void setup_float(Parameters& parameters, Log& log) {
 
 	switch (parameters.redundancy) {
 	case NONE: {
-		UnhardenedKernelCaller<double> kc;
+		UnhardenedKernelCaller<float> kc;
 		setup_execution(parameters, log, kc);
 		break;
 	}/*

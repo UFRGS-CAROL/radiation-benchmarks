@@ -29,7 +29,7 @@
 #include "Parameters.h"
 #include "Log.h"
 
-#include "setup_double.h"
+#include "setup.h"
 #include "common.h"
 
 //=============================================================================
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
 	switch (parameters.precision) {
 	case HALF:
 	case SINGLE:
-		error("Not implemented");
+		setup_float(parameters, log);
 		break;
 	case DOUBLE:
 		setup_double(parameters, log);
