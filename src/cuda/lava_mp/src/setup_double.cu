@@ -90,17 +90,17 @@ void setup_double(Parameters& parameters, Log& log) {
 							+ " operation check block not supported");
 		}
 		break;
-	}
+	}*/
 	case DMRMIXED:
 		switch (parameters.block_check) {
 		case ONE_BLOCK: {
 			//CASE FOR 1 Iteration-------------------
-			DMRMixedKernelCaller<ONE_BLOCK, THRESHOLD_1, float, double> kc;
+			DMRMixedKernelCaller<ONE_BLOCK, 0, float, double> kc;
 			setup_execution(parameters, log, kc);
 
 			break;
 		}
-			//---------------------------------------
+		/*	//---------------------------------------
 		case TWELVE_BLOCK: {
 			//CASE FOR 10 Iterations-----------------
 			DMRMixedKernelCaller<TWELVE_BLOCK, THRESHOLD_12, float, double> kc;
@@ -132,7 +132,7 @@ void setup_double(Parameters& parameters, Log& log) {
 			error(
 					std::to_string(parameters.block_check)
 							+ " operation check block not supported");
-		}
-		break;*/
+		*/}
+		break;
 	}
 }

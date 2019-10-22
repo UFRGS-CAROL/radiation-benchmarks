@@ -105,6 +105,20 @@ struct KernelCaller {
 			std::cout << "#";
 		}
 
+		//Test thresholds------------------------------------------------------------------------
+		uint32_t thresholds_host[12167];
+		rad::checkFrameworkErrors(
+				cudaMemcpyFromSymbol(thresholds_host, thresholds,
+						sizeof(uint32_t) * 12167, 0, cudaMemcpyDeviceToHost));
+		uint32_t minx = 8888;
+		uint32_t maxx = 0;
+		for(auto t : thresholds_host) {
+			minx = std::min(t, minx);
+			maxx = std::max(t, maxx);
+
+		}
+		std::cout << "MAX BLOCKS " << maxx << " MIN BLOCKS " << minx << std::endl;
+
 		return (host_errors == 0);
 	}
 
@@ -118,11 +132,6 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 	uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
 		uint32_t max_threshold = 0;
 
-//		real_t max_threshold_float = -4444;
-//		auto max_before = max_threshold_float;
-//		auto& fht = this->fv_cpu_ht[0][0];
-//		auto& frt = fv_cpu_rt[0][0];
-
 		for (uint32_t i = 0; i < fv_cpu_rt.size(); i++) {
 			auto& fv_rt_i = fv_cpu_rt[i];
 			auto& fv_ht_i = this->fv_cpu_ht[i];
@@ -134,51 +143,9 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 				auto diff_vector = this->get_4vector_diffs(fv_ht_ij, fv_rt_ij);
 				diff_vector.push_back(max_threshold);
 				max_threshold = *std::max_element(diff_vector.begin(), diff_vector.end());
-
-//				auto fl_vet = {
-//					std::fabs(fv_rt_ij.v - (real_t)fv_ht_ij.v),
-//					std::fabs(fv_rt_ij.x - (real_t) fv_ht_ij.x),
-//					std::fabs(fv_rt_ij.y - (real_t)fv_ht_ij.y),
-//					std::fabs(fv_rt_ij.z - (real_t)fv_ht_ij.z)
-//				};
-//
-//				max_threshold_float = *std::max_element(fl_vet.begin(), fl_vet.end());
-//				if(max_before < max_threshold_float) {
-//					max_before = max_threshold_float;
-//					fht = fv_ht_ij;
-//					frt = fv_rt_ij;
-//				}
 			}
 		}
 
-//		std::cout << "\n\nMAX FLOAT DIFF " << std::scientific << max_threshold_float << std::endl;
-//
-//		std::cout << fht << std::endl;
-//		std::cout << frt << std::endl;
-//
-//		float rhs_float_v = float(frt.v);
-//		float rhs_float_x = float(frt.x);
-//		float rhs_float_y = float(frt.y);
-//		float rhs_float_z = float(frt.z);
-//
-//		uint32_t rhs_data_v = reinterpret_cast<uint32_t&>(fht.v);
-//		uint32_t rhs_data_x = reinterpret_cast<uint32_t&>(fht.x);
-//		uint32_t rhs_data_y = reinterpret_cast<uint32_t&>(fht.y);
-//		uint32_t rhs_data_z = reinterpret_cast<uint32_t&>(fht.z);
-//
-//		uint32_t lhs_data_v = reinterpret_cast<uint32_t&>(rhs_float_v);
-//		uint32_t lhs_data_x = reinterpret_cast<uint32_t&>(rhs_float_x);
-//		uint32_t lhs_data_y = reinterpret_cast<uint32_t&>(rhs_float_y);
-//		uint32_t lhs_data_z = reinterpret_cast<uint32_t&>(rhs_float_z);
-//
-//		uint32_t sub_res_v = SUB_ABS(lhs_data_v, rhs_data_v);
-//		uint32_t sub_res_x = SUB_ABS(lhs_data_x, rhs_data_x);
-//		uint32_t sub_res_y = SUB_ABS(lhs_data_y, rhs_data_y);
-//		uint32_t sub_res_z = SUB_ABS(lhs_data_z, rhs_data_z);
-//
-//		std::cout << rhs_data_v << " " << rhs_data_x << " " << rhs_data_y << " " << rhs_data_z << std::endl;
-//		std::cout << lhs_data_v << " " << lhs_data_x << " " << lhs_data_y << " " << lhs_data_z << std::endl;
-//		std::cout << sub_res_v << " " << sub_res_x << " " << sub_res_y << " " << sub_res_z << std::endl;
 		return max_threshold;
 	}
 
@@ -294,11 +261,6 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 			}
 		}
 		return false;
-
-//		if ((sub_res_v > THRESHOLD) || (sub_res_x > THRESHOLD)
-//		|| (sub_res_y > THRESHOLD) || (sub_res_z > THRESHOLD)) {
-//			return true;
-//		}
 	}
 
 	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs) {
@@ -319,6 +281,8 @@ struct UnhardenedKernelCaller: public KernelCaller<0, 0, real_t, real_t> {
 			par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
+		std::cout << "BLOCKS " << blocks.x << " " << blocks.y << std::endl;
+
 		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(par_cpu, dim_cpu,
 				d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
 	}

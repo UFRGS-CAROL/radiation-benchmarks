@@ -34,6 +34,13 @@ struct File {
 		}
 		return true;
 	}
+
+	static bool exists(std::string& path) {
+		std::ifstream input(path);
+		auto exists = input.good();
+		input.close();
+		return exists;
+	}
 };
 
 #endif /* FILE_H_ */

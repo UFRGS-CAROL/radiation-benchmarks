@@ -24,6 +24,11 @@ template<typename real_t>
 void generateInput(dim_str dim_cpu, std::string& input_distances,
 		std::vector<FOUR_VECTOR<real_t>>& rv_cpu, std::string& input_charges,
 		std::vector<real_t>& qv_cpu) {
+
+	if (File<real_t>::exists(input_distances) && File<real_t>::exists(input_charges)){
+		return;
+	}
+
 	// random generator seed set to random value - time in this case
 	std::cout << ("Generating input...\n");
 
@@ -280,6 +285,8 @@ void setup_execution(Parameters& parameters, Log& log,
 	if (parameters.generate) {
 		generateInput(dim_cpu, parameters.input_distances, rv_cpu,
 				parameters.input_charges, qv_cpu);
+		readInput(dim_cpu, parameters.input_distances, rv_cpu,
+				parameters.input_charges, qv_cpu, parameters.fault_injection);
 	} else {
 		readInput(dim_cpu, parameters.input_distances, rv_cpu,
 				parameters.input_charges, qv_cpu, parameters.fault_injection);

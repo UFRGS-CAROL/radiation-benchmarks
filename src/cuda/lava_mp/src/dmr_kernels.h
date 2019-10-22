@@ -251,7 +251,6 @@ __global__ void kernel_gpu_cuda_block_check(par_str<real_t> d_par_gpu,
 					//DMR CHECKING
 					if ((j % COUNT) == 0) {
 						check_bit_error<THRESHOLD>(fA_ht[wtx], fA_rt[wtx]);
-						fA_ht[wtx] = fA_rt[wtx];
 					}
 					//------------------------------------------------
 				}
@@ -274,6 +273,7 @@ __global__ void kernel_gpu_cuda_block_check(par_str<real_t> d_par_gpu,
 		//------------------------------------------------------------------------------------------------------------------------------------------------------160
 	}
 }
+
 
 template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t,
 		typename real_t>

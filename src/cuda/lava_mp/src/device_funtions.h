@@ -13,6 +13,8 @@
 
 
 __device__ unsigned long long errors;
+__device__ uint32_t thresholds[12167] = {0};
+
 
 /**
  * EXP
@@ -73,7 +75,12 @@ void check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs) {
 //		printf("LHS %e %e %e %e\nRHS %e %e %e %e\n%u %u %u %u %u\n",
 //				lhs.v, lhs.x, lhs.y, lhs.z, rhs_float_v, rhs_float_x, rhs_float_y, rhs_float_z,
 //				sub_res_v, sub_res_x, sub_res_y, sub_res_z, THRESHOLD);
-
+		uint32_t m = 0;
+		m = max(m, sub_res_v);
+		m = max(m, sub_res_x);
+		m = max(m, sub_res_y);
+		m = max(m, sub_res_z);
+		atomicMax(thresholds + blockIdx.x, m);
 	}
 
 	lhs = rhs;
@@ -96,7 +103,9 @@ void check_bit_error(float& lhs, double& rhs) {
 
 	if (sub_res > THRESHOLD) {
 		atomicAdd(&errors, 1);
+//		atomicExch
 //		printf("%e %e\n", lhs, rhs);
+		atomicMax(thresholds + blockIdx.x, sub_res);
 	}
 	lhs = rhs_float;
 }
