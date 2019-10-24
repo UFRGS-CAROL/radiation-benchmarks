@@ -34,8 +34,8 @@ int main(int argc, char **argv) {
 	real_t* host_d = (real_t*)calloc(m * n, sizeof(real_t));
 	half_t* host_d_half = (half_t*)calloc(m * n, sizeof(half_t));
 
-	for (int i = 0; i < m * k; i++) host_a[i] = (half)(rand() % 3);
-	for (int i = 0; i < m * k; i++) host_b[i] = (half)(rand() % 3);
+	for (int i = 0; i < m * k; i++) host_a[i] = (half_t)(rand() % 3);
+	for (int i = 0; i < m * k; i++) host_b[i] = (half_t)(rand() % 3);
 	for (int i = 0; i < m * k; i++) host_c[i] = 0;	
 	
 	real_t *device_a, *device_b, *device_c, *device_d;
