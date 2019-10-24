@@ -139,9 +139,9 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d,
     int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
 
     // Declare the fragments
-    wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half_t,
+    wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half,
     wmma::row_major> a_frag;
-    wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half_t,
+    wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half,
     wmma::col_major> b_frag;
     wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> acc_frag;
     wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, real_t> c_frag;
