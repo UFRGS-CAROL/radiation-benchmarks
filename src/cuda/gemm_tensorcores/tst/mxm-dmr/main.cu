@@ -27,6 +27,9 @@ int main(int argc, char **argv) {
 	*/
   	const real_t alpha = 1.1f;
   	const real_t beta = 1.2f;
+  	std::random_device rd; // obtain a random number from hardware
+    std::mt19937 eng(rd()); // seed the generator
+    std::uniform_real_distribution<real_t> distr(-10000.00, 10000.00); 
 
 	real_t* host_a = (real_t*)calloc(m * k, sizeof(real_t));
 	real_t* host_b = (real_t*)calloc(k * n, sizeof(real_t));
