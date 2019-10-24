@@ -46,6 +46,7 @@ int main(int argc, char **argv) {
 	cudaMalloc((void**)&device_d, m * n * sizeof(real_t));
 	cudaMalloc((void**)&device_d_half, m * n * sizeof(half_t));
 
+
 	cudaMemcpy(device_a, host_a, m * k * sizeof(half_t), cudaMemcpyHostToDevice);
 	cudaMemcpy(device_b, host_b, k * n * sizeof(half_t), cudaMemcpyHostToDevice);
 	cudaMemcpy(device_c, host_c, m * n * sizeof(real_t), cudaMemcpyHostToDevice);

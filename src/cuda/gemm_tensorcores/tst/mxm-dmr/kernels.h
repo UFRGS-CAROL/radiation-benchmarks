@@ -41,6 +41,7 @@ typedef __half half_t_device;
 #endif
 
 
+
 __device__ __forceinline__ void axpy__(const double a, const double b, double &c) {
     c = __fma_rn(a, b, c);
 }
