@@ -21,7 +21,7 @@
  */
 //For 1 iteration
 //00000000 01001100 00000000 00000000
-#define THRESHOLD_1 5111808
+#define THRESHOLD_1 262272
 #define ONE_BLOCK 1
 
 //For 10 iterations
@@ -43,8 +43,8 @@ void setup_double(Parameters& parameters, Log& log) {
 
 	switch (parameters.redundancy) {
 	case NONE: {
-		UnhardenedKernelCaller<double> kc;
-		setup_execution(parameters, log, kc);
+//		UnhardenedKernelCaller<double> kc;
+//		setup_execution(parameters, log, kc);
 		break;
 	}/*
 	case DMR: {
@@ -95,7 +95,7 @@ void setup_double(Parameters& parameters, Log& log) {
 		switch (parameters.block_check) {
 		case ONE_BLOCK: {
 			//CASE FOR 1 Iteration-------------------
-			DMRMixedKernelCaller<ONE_BLOCK, 0, float, double> kc;
+			DMRMixedKernelCaller<ONE_BLOCK, THRESHOLD_1, float, double> kc;
 			setup_execution(parameters, log, kc);
 
 			break;

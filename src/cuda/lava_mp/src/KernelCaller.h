@@ -106,7 +106,7 @@ struct KernelCaller {
 		}
 
 		//Test thresholds------------------------------------------------------------------------
-		uint32_t thresholds_host[12167];
+		/*uint32_t thresholds_host[12167];
 		rad::checkFrameworkErrors(
 				cudaMemcpyFromSymbol(thresholds_host, thresholds,
 						sizeof(uint32_t) * 12167, 0, cudaMemcpyDeviceToHost));
@@ -118,7 +118,7 @@ struct KernelCaller {
 
 		}
 		std::cout << "MAX BLOCKS " << maxx << " MIN BLOCKS " << minx << std::endl;
-
+		*/
 		return (host_errors == 0);
 	}
 
