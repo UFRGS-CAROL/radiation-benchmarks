@@ -3,6 +3,8 @@
 #include <vector>
 #include <iostream>
 #include <random>
+#include <helper_cuda.h>
+#include <helper_functions.h>
 
 #define CHECK_BLOCK 32
 #define THRESHOLD 1
