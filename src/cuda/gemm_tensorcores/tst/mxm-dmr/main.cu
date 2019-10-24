@@ -20,10 +20,11 @@ int main(int argc, char **argv) {
 	int k;
 	m = n = k = 4096;
 
+	/*
 	std::random_device rd; // obtain a random number from hardware
     std::mt19937 eng(rd()); // seed the generator
     std::uniform_real_distribution<real_t> distr(-10000.00, 10000.00); 
-
+	*/
   	const real_t alpha = 1.1f;
   	const real_t beta = 1.2f;
 
@@ -33,8 +34,8 @@ int main(int argc, char **argv) {
 	real_t* host_d = (real_t*)calloc(m * n, sizeof(real_t));
 	half_t* host_d_half = (half_t*)calloc(m * n, sizeof(half_t));
 
-	for (int i = 0; i < m * k; i++) host_a[i] = distr(eng);
-	for (int i = 0; i < m * k; i++) host_b[i] = distr(eng);
+	for (int i = 0; i < m * k; i++) host_a[i] = (half)(rand() % 3);
+	for (int i = 0; i < m * k; i++) host_b[i] = (half)(rand() % 3);
 	for (int i = 0; i < m * k; i++) host_c[i] = 0;	
 	
 	real_t *device_a, *device_b, *device_c, *device_d;
