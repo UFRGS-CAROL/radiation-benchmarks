@@ -413,7 +413,7 @@ void matrix_mult_dmr(real_t *A, real_t *B, int M, int N, int K, real_t *D, half_
 }
 
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
-void matrix_mult_tensor_dmr(half_t *A, half_t *B, int M, int N, int K, real_t *D, half_t *D_h, real_t alpha, real_t beta, real_t *C) {
+void matrix_mult_tensor_dmr(half_t *A, half_t *B, int M, int N, int K, real_t *D, half_t *D_h, real_t alpha, real_t beta, real_t *C)  {
     dim3 grid_dim;
     dim3 block_dim;
  
