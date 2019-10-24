@@ -28,8 +28,8 @@ int main(int argc, char **argv) {
   	const real_t alpha = 1.1f;
   	const real_t beta = 1.2f;
 
-	real_t* host_a = (real_t*)calloc(m * k, sizeof(real_t));
-	real_t* host_b = (real_t*)calloc(k * n, sizeof(real_t));
+	half_t* host_a = (half_t*)calloc(m * k, sizeof(half_t));
+	half_t* host_b = (half_t*)calloc(k * n, sizeof(half_t));
 	real_t* host_c = (real_t*)calloc(m * n, sizeof(real_t));
 	real_t* host_d = (real_t*)calloc(m * n, sizeof(real_t));
 	half_t* host_d_half = (half_t*)calloc(m * n, sizeof(half_t));
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < m * k; i++) host_c[i] = 0;	
 	
 	real_t *device_c, *device_d;
-	half_t *device_a, *device_b, *device_d_half;
+	half_t  *device_a, *device_b, *device_d_half;
 	cudaMalloc((void**)&device_a, m * k * sizeof(half_t));
 	cudaMalloc((void**)&device_b, k * n * sizeof(half_t));
 	cudaMalloc((void**)&device_c, m * n * sizeof(real_t));
