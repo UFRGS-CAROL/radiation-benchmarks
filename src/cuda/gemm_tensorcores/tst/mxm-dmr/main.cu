@@ -81,8 +81,8 @@ int main(int argc, char **argv) {
   	checkCudaErrors(cudaEventElapsedTime(&milliseconds, start, stop));
 
   	printf("Time: %f ms\n", milliseconds);
-  	printf("TFLOPS: %.2f\n", static_cast<double>((static_cast<double>(M_GLOBAL) *
-                                                N_GLOBAL * K_GLOBAL * 2) /
+  	printf("TFLOPS: %.2f\n", static_cast<double>((static_cast<double>(m) *
+                                                n * k * 2) /
                                                (milliseconds / 1000.)) /
                                1e12);
 
