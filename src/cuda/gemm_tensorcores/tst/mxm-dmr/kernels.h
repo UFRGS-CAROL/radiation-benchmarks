@@ -395,7 +395,7 @@ __global__ void matrix_mult_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 
 
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
-__global__ void matrix_mult(real_t *D_r, half_t *D_h, real_t *C,
+__global__ void matrix_mult(real_t *D_r, real_t *C,
         real_t *A, real_t *B, real_t alpha, real_t beta, int wA, int wB) {
     // Block index
     int bx = blockIdx.x;
