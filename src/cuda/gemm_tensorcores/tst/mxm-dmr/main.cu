@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 	cudaMemcpy(host_d, device_d, m * n * sizeof(real_t), cudaMemcpyDeviceToHost);
 	cudaMemcpy(host_d_half, device_d_half, m * n * sizeof(half_t), cudaMemcpyDeviceToHost);
 
-	/*
+	
 	checkCudaErrors(cudaEventRecord(stop));
   	checkCudaErrors(cudaEventSynchronize(stop));
 
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
                                                 n * k * 2) /
                                                (milliseconds / 1000.)) /
                                1e12);
-	*/
+	
 
  //    std::cout << "FLOAT" << std::endl;
 	// for (int i = 0; i < 10; i++) {
