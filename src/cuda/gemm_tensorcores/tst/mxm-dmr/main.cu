@@ -38,8 +38,8 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < m * k; i++) host_b[i] = (half_t)(rand() % 3);
 	for (int i = 0; i < m * k; i++) host_c[i] = 0;	
 	
-	real_t *device_a, *device_b, *device_c, *device_d;
-	half_t *device_d_half;
+	real_t *device_c, *device_d;
+	half_t *device_a, *device_b, *device_d_half;
 	cudaMalloc((void**)&device_a, m * k * sizeof(half_t));
 	cudaMalloc((void**)&device_b, k * n * sizeof(half_t));
 	cudaMalloc((void**)&device_c, m * n * sizeof(real_t));
