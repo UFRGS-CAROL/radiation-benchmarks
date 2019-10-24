@@ -406,8 +406,7 @@ __global__ void matrix_mult_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 }
 
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t>
-__global__ void matrix_mul(real_t *D_r, real_t *C,
-        real_t *A, real_t *B, real_t alpha, real_t beta, int wA, int wB) {
+__global__ void matrix_mul(real_t *D_r, real_t *C, real_t *A, real_t *B, real_t alpha, real_t beta, int wA, int wB) {
     // Block index
     int bx = blockIdx.x;
     int by = blockIdx.y;
@@ -516,7 +515,7 @@ void matrix_mult_dmr(real_t *A, real_t *B, int M, int N, int K, real_t *D, half_
 }
 
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t>
-void matrix_mult(real_t *A, real_t *B, int M, int N, int K, real_t *D, real_t alpha, real_t beta, real_t *C) {
+void matrix_mul(real_t *A, real_t *B, int M, int N, int K, real_t *D, real_t alpha, real_t beta, real_t *C) {
     unsigned int grid_rows = (M + BLOCK_SIZE - 1) / BLOCK_SIZE;
     unsigned int grid_cols = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
     dim3 dimGrid(grid_cols, grid_rows);
