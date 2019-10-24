@@ -4,7 +4,7 @@
 #include <iostream>
 #include <random>
 
-#define CHECK_BLOCK 16
+#define CHECK_BLOCK 32
 #define THRESHOLD 1
 
 typedef double real_t;
