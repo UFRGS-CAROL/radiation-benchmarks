@@ -41,6 +41,7 @@ typedef __half half_t_device;
 #endif
 
 
+
 __device__ __forceinline__ void axpy__(const double a, const double b, double &c) {
     c = __fma_rn(a, b, c);
 }
@@ -106,7 +107,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
         sub_res = rhs_data - lhs_data;
     }
     
-     printf("lhs: %f  --- rhs : %lf --- Data lhs: %u --- data rhs: %u \n -- threshold: %lu",lhs, rhs, lhs_data, rhs_data, sub_res);
+     printf("lhs: %f  --- rhs : %lf --- Data lhs: %u --- data rhs: %u  -- threshold: %lu   \n",lhs, rhs, lhs_data, rhs_data, sub_res);
     //printf("THRESHOLD: %lu \n", sub_res);
     //const double zero = double(ZERO_DOUBLE);
     if (sub_res > THRESHOLD_uint32_t) {
