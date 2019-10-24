@@ -40,14 +40,14 @@ int main(int argc, char **argv) {
 	
 	real_t *device_a, *device_b, *device_c, *device_d;
 	half_t *device_d_half;
-	cudaMalloc((void**)&device_a, m * k * sizeof(real_t));
-	cudaMalloc((void**)&device_b, k * n * sizeof(real_t));
+	cudaMalloc((void**)&device_a, m * k * sizeof(half_t));
+	cudaMalloc((void**)&device_b, k * n * sizeof(half_t));
 	cudaMalloc((void**)&device_c, m * n * sizeof(real_t));
 	cudaMalloc((void**)&device_d, m * n * sizeof(real_t));
 	cudaMalloc((void**)&device_d_half, m * n * sizeof(half_t));
 
-	cudaMemcpy(device_a, host_a, m * k * sizeof(real_t), cudaMemcpyHostToDevice);
-	cudaMemcpy(device_b, host_b, k * n * sizeof(real_t), cudaMemcpyHostToDevice);
+	cudaMemcpy(device_a, host_a, m * k * sizeof(half_t), cudaMemcpyHostToDevice);
+	cudaMemcpy(device_b, host_b, k * n * sizeof(half_t), cudaMemcpyHostToDevice);
 	cudaMemcpy(device_c, host_c, m * n * sizeof(real_t), cudaMemcpyHostToDevice);
 	cudaMemcpy(device_d, host_d, m * n * sizeof(real_t), cudaMemcpyHostToDevice);
 	cudaMemcpy(device_d_half, host_d_half, m * n * sizeof(half_t), cudaMemcpyHostToDevice);
