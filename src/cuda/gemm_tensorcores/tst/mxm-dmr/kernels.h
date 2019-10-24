@@ -97,7 +97,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
     const uint32_t rhs_data = *((uint32_t*)(&rhs_float));
   
       
-    printf("lhs: %f  --- rhs : %lf --- Data lhs: %u --- data rhs: %u \n",lhs, rhs, lhs_data, rhs_data);
+    //printf("lhs: %f  --- rhs : %lf --- Data lhs: %u --- data rhs: %u \n",lhs, rhs, lhs_data, rhs_data);
 
 
     uint32_t sub_res;
@@ -107,7 +107,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
         sub_res = rhs_data - lhs_data;
     }
     
-     printf("lhs: %f  --- rhs : %lf --- Data lhs: %u --- data rhs: %u  -- threshold: %lu   \n",lhs, rhs, lhs_data, rhs_data, sub_res);
+     //printf("lhs: %f  --- rhs : %lf --- Data lhs: %u --- data rhs: %u  -- threshold: %lu   \n",lhs, rhs, lhs_data, rhs_data, sub_res);
     //printf("THRESHOLD: %lu \n", sub_res);
     //const double zero = double(ZERO_DOUBLE);
     if (sub_res > THRESHOLD_uint32_t) {
