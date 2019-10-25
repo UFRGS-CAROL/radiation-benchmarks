@@ -263,7 +263,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	}
 
 	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs) {
-		if ((std::fabs(lhs.v - rhs.v) > THRESHOLD) ||	//V
+		if ((std::fabs(lhs.v - rhs.v) > this->threshold_) ||	//V
 		(std::fabs(lhs.x - rhs.x) > this->threshold_) ||//X
 		(std::fabs(lhs.y - rhs.y) > this->threshold_) ||//Y
 		(std::fabs(lhs.z - rhs.z) > this->threshold_)) {	//Z
