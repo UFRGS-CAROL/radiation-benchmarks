@@ -11,10 +11,9 @@
 #include "cuda_fp16.h"
 #include "common.h"
 
-#define THRESHOLD_SIZE 8000
-
 __device__ unsigned long long errors;
-//__device__ uint32_t thresholds[THRESHOLD_SIZE] = { 0 };
+#define THRESHOLD_SIZE 12167
+__device__ uint32_t thresholds[THRESHOLD_SIZE] = { 0 };
 
 /**
  * EXP
@@ -44,10 +43,11 @@ void check_bit_error(float& lhs, double& rhs, const uint32_t threshold) {
 	uint32_t rhs_data = *((uint32_t*) (&rhs_float));
 	uint32_t lhs_data = *((uint32_t*) (&lhs));
 	uint32_t sub_res = SUB_ABS(lhs_data, rhs_data);
-	float float_threshold = *((float*) (&threshold));
-	if (fabs(lhs - rhs_float) > float_threshold) {
-		printf("LHS %e RHS %e U %e\n", lhs, rhs, fabs(lhs - rhs_float));
+
+	if (sub_res > threshold) {
+		//printf("LHS %e RHS %e U %u\n", lhs, rhs, sub_res);
 		atomicAdd(&errors, 1);
+		atomicMax(thresholds + blockIdx.x, sub_res);
 	}
 	lhs = rhs_float;
 }

@@ -105,19 +105,22 @@ struct KernelCaller {
 		}
 
 		//Test thresholds------------------------------------------------------------------------
-		/*uint32_t thresholds_host[12167];
+		uint32_t thresholds_host[THRESHOLD_SIZE];
 		rad::checkFrameworkErrors(
 				cudaMemcpyFromSymbol(thresholds_host, thresholds,
 						sizeof(uint32_t) * 12167, 0, cudaMemcpyDeviceToHost));
-		uint32_t minx = 8888;
-		uint32_t maxx = 0;
-		for(auto t : thresholds_host) {
-			minx = std::min(t, minx);
-			maxx = std::max(t, maxx);
 
+		std::ofstream output("./src/threshold.h");
+		output << "#ifndef THRESHOLD_H_\n";
+		output << "#define THRESHOLD_H_\n\n";
+		output << "__device__ uint32_t thresholds[THRESHOLD_SIZE] = { \n";
+
+
+		for(auto t : thresholds_host) {
+			output << t << ",\n";
 		}
-		std::cout << "MAX BLOCKS " << maxx << " MIN BLOCKS " << minx << std::endl;
-		*/
+
+		output << "};\n\n#endif\n";
 		return (host_errors == 0);
 	}
 
@@ -215,6 +218,8 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 	FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 	FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
+		std::cout << "BLOCKS " << blocks.x << " " << blocks.y << std::endl;
+
 		kernel_gpu_cuda_dmr<COUNT> <<<blocks, threads, 0, stream.stream>>>(
 		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
 		this->d_fv_gpu_ht[stream_idx].data(), this->threshold_);
@@ -280,7 +285,6 @@ struct UnhardenedKernelCaller: public KernelCaller<0, real_t, real_t> {
 			par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
-		std::cout << "BLOCKS " << blocks.x << " " << blocks.y << std::endl;
 
 		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu, dim_cpu,
 				d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
