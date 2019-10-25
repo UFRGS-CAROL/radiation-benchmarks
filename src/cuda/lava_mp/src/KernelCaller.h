@@ -17,10 +17,9 @@
 #include <iostream>		// std::cout
 #include <algorithm> 	// std::max_element
 
-template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t,
-		typename real_t>
+template<const uint32_t COUNT, typename half_t, typename real_t>
 struct KernelCaller {
-
+	const uint32_t threshold_;
 	//DMR
 	VectorOfDeviceVector<FOUR_VECTOR<half_t>> d_fv_gpu_ht;
 	std::vector<std::vector<FOUR_VECTOR<half_t>>>fv_cpu_ht;
@@ -41,7 +40,7 @@ struct KernelCaller {
 		return 0;
 	}
 
-	KernelCaller() {}
+	KernelCaller(const uint32_t threshold = 0) : threshold_(threshold) {}
 
 	virtual void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream,
 			par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
@@ -124,10 +123,10 @@ struct KernelCaller {
 
 };
 
-template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t,
-		typename real_t>
-struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
-		real_t> {
+template<const uint32_t COUNT, typename half_t, typename real_t>
+struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
+
+	DMRMixedKernelCaller(const uint32_t threshold) : KernelCaller<COUNT, half_t, real_t>(threshold) {}
 
 	uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
 		uint32_t max_threshold = 0;
@@ -216,9 +215,9 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 	par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 	FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 	FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
-		kernel_gpu_cuda<COUNT, THRESHOLD> <<<blocks, threads, 0, stream.stream>>>(
+		kernel_gpu_cuda_dmr<COUNT> <<<blocks, threads, 0, stream.stream>>>(
 		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
-		this->d_fv_gpu_ht[stream_idx].data());
+		this->d_fv_gpu_ht[stream_idx].data(), this->threshold_);
 	}
 
 	inline std::vector<uint32_t>
@@ -256,7 +255,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 		auto diff_vec = this->get_4vector_diffs(lhs, rhs);
 
 		for(auto it : diff_vec) {
-			if(it > THRESHOLD) {
+			if(it > this->threshold_) {
 				return true;
 			}
 		}
@@ -265,9 +264,9 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 
 	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs) {
 		if ((std::fabs(lhs.v - rhs.v) > THRESHOLD) ||	//V
-		(std::fabs(lhs.x - rhs.x) > THRESHOLD) ||//X
-		(std::fabs(lhs.y - rhs.y) > THRESHOLD) ||//Y
-		(std::fabs(lhs.z - rhs.z) > THRESHOLD)) {	//Z
+		(std::fabs(lhs.x - rhs.x) > this->threshold_) ||//X
+		(std::fabs(lhs.y - rhs.y) > this->threshold_) ||//Y
+		(std::fabs(lhs.z - rhs.z) > this->threshold_)) {	//Z
 			return true;
 		}
 		return false;
@@ -275,7 +274,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, THRESHOLD, half_t,
 };
 
 template<typename real_t>
-struct UnhardenedKernelCaller: public KernelCaller<0, 0, real_t, real_t> {
+struct UnhardenedKernelCaller: public KernelCaller<0, real_t, real_t> {
 
 	void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream,
 			par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
@@ -283,13 +282,9 @@ struct UnhardenedKernelCaller: public KernelCaller<0, 0, real_t, real_t> {
 			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
 		std::cout << "BLOCKS " << blocks.x << " " << blocks.y << std::endl;
 
-		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(par_cpu, dim_cpu,
+		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu, dim_cpu,
 				d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
 	}
-};
-
-template<const uint32_t COUNT, typename real_t>
-struct DMRKernelCaller: public DMRMixedKernelCaller<COUNT, 0, real_t, real_t> {
 };
 
 #endif /* KERNELCALLER_H_ */

@@ -95,7 +95,7 @@ void setup_double(Parameters& parameters, Log& log) {
 		switch (parameters.block_check) {
 		case ONE_BLOCK: {
 			//CASE FOR 1 Iteration-------------------
-			DMRMixedKernelCaller<ONE_BLOCK, THRESHOLD_1, float, double> kc;
+			DMRMixedKernelCaller<ONE_BLOCK, float, double> kc(THRESHOLD_1);
 			setup_execution(parameters, log, kc);
 
 			break;

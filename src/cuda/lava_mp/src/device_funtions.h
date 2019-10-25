@@ -38,32 +38,32 @@ double exp__(double lhs) {
 	return exp(lhs);
 }
 
-template<const uint32_t THRESHOLD> __DEVICE_INLINE__
-void check_bit_error(float& lhs, double& rhs) {
+__DEVICE_INLINE__
+void check_bit_error(float& lhs, double& rhs, const uint32_t threshold) {
 	float rhs_float = float(rhs);
 	uint32_t rhs_data = *((uint32_t*) (&rhs_float));
 	uint32_t lhs_data = *((uint32_t*) (&lhs));
 	uint32_t sub_res = SUB_ABS(lhs_data, rhs_data);
 
-	if (sub_res > THRESHOLD) {
+	if (sub_res > threshold) {
 		printf("LHS %e RHS %e U %u\n", lhs, rhs, sub_res);
 		atomicAdd(&errors, 1);
 	}
 	lhs = rhs_float;
 }
 
-template<const uint32_t THRESHOLD> __DEVICE_INLINE__
-void check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs) {
+__DEVICE_INLINE__
+void check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs, const uint32_t threshold) {
 	//CHECK each one of the coordinates
-	check_bit_error<THRESHOLD>(lhs.v, rhs.v);
-	check_bit_error<THRESHOLD>(lhs.x, rhs.x);
-	check_bit_error<THRESHOLD>(lhs.y, rhs.y);
-	check_bit_error<THRESHOLD>(lhs.z, rhs.z);
+	check_bit_error(lhs.v, rhs.v, threshold);
+	check_bit_error(lhs.x, rhs.x, threshold);
+	check_bit_error(lhs.y, rhs.y, threshold);
+	check_bit_error(lhs.z, rhs.z, threshold);
 	lhs = rhs;
 }
 
-template<const uint32_t THRESHOLD, typename real_t> __DEVICE_INLINE__
-void check_bit_error(real_t& lhs, real_t& rhs) {
+template<typename real_t> __DEVICE_INLINE__
+void check_bit_error(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
 	if (lhs != rhs) {
 		atomicAdd(&errors, 1);
 	}

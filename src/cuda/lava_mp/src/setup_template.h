@@ -163,10 +163,9 @@ void gpu_memory_unset(const Parameters& parameters,
 	}
 }
 
-template<const uint32_t COUNT, const uint32_t THRESHOLD, typename half_t,
-		typename real_t>
+template<const uint32_t COUNT, typename half_t, typename real_t>
 void setup_execution(Parameters& parameters, Log& log,
-		KernelCaller<COUNT, THRESHOLD, half_t, real_t>& kernel_caller) {
+		KernelCaller<COUNT, half_t, real_t>& kernel_caller) {
 	//=====================================================================
 	//	CPU/MCPU VARIABLES
 	//=====================================================================

@@ -16,7 +16,7 @@
 //-----------------------------------------------------------------------------
 // #if defined(PRECISION_DOUBLE) or defined(PRECISION_SINGLE)
 template<typename real_t>
-__global__ void kernel_gpu_cuda(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
+__global__ void kernel_gpu_cuda_nondmr(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 		box_str* d_box_gpu, FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 		FOUR_VECTOR<real_t>* d_fv_gpu) {
 
