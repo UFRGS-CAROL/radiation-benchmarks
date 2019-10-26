@@ -136,7 +136,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
 		rad::checkFrameworkErrors(
 				cudaMemcpyFromSymbol(thresholds_host.data(), thresholds,
-						sizeof(uint32_t) * 12167, 0, cudaMemcpyDeviceToHost));
+						sizeof(uint32_t) * THRESHOLD_SIZE, 0, cudaMemcpyDeviceToHost));
 		std::string path = "../../../data/threshold.data";
 		File<uint32_t>::write_to_file(path, thresholds_host);
 
@@ -211,6 +211,15 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 	FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
 		std::cout << "BLOCKS " << blocks.x << " " << blocks.y << std::endl;
+
+		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
+		std::string path = "../../../data/threshold.data";
+		File<uint32_t>::read_from_file(path, thresholds_host);
+
+
+		rad::checkFrameworkErrors(
+				cudaMemcpyToSymbol(thresholds, thresholds_host.data(), sizeof(uint32_t) * THRESHOLD_SIZE, 0, cudaMemcpyDeviceToHost));
+
 
 		kernel_gpu_cuda_dmr<COUNT> <<<blocks, threads, 0, stream.stream>>>(
 		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
