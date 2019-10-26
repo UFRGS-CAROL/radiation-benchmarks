@@ -14,7 +14,7 @@
 template<const uint32_t COUNT, typename half_t, typename real_t>
 __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu, dim_str d_dim_gpu,
 		box_str* d_box_gpu, FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
-		FOUR_VECTOR<real_t>* d_fv_gpu_rt, FOUR_VECTOR<half_t>* d_fv_gpu_ht, const uint32_t THRESHOLD) {
+		FOUR_VECTOR<real_t>* d_fv_gpu_rt, FOUR_VECTOR<half_t>* d_fv_gpu_ht, uint32_t THRESHOLD) {
 
 	//---------------------------------------------------------------------
 	//	THREAD PARAMETERS
@@ -23,7 +23,7 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu, dim_str d_dim_gpu
 	int bx = blockIdx.x;		 // get current horizontal block index (0-n)
 	int tx = threadIdx.x;		 // get current horizontal thread index (0-n)
 	int wtx = tx;
-
+	THRESHOLD = thresholds[blockIdx.x];
 	//---------------------------------------------------------------------
 	//	DO FOR THE NUMBER OF BOXES
 	//---------------------------------------------------------------------

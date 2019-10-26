@@ -37,6 +37,13 @@ struct KernelCaller {
 	}
 
 	virtual uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
+		//Test thresholds------------------------------------------------------------------------
+		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
+		rad::checkFrameworkErrors(
+				cudaMemcpyFromSymbol(thresholds_host.data(), thresholds,
+						sizeof(uint32_t) * 12167, 0, cudaMemcpyDeviceToHost));
+		std::string path = "../../../data/threshold.data";
+		File<uint32_t>::write_to_file(path, thresholds_host);
 		return 0;
 	}
 
@@ -104,23 +111,7 @@ struct KernelCaller {
 			std::cout << "#";
 		}
 
-		//Test thresholds------------------------------------------------------------------------
-		uint32_t thresholds_host[THRESHOLD_SIZE];
-		rad::checkFrameworkErrors(
-				cudaMemcpyFromSymbol(thresholds_host, thresholds,
-						sizeof(uint32_t) * 12167, 0, cudaMemcpyDeviceToHost));
 
-		std::ofstream output("./src/threshold.h");
-		output << "#ifndef THRESHOLD_H_\n";
-		output << "#define THRESHOLD_H_\n\n";
-		output << "__device__ uint32_t thresholds[THRESHOLD_SIZE] = { \n";
-
-
-		for(auto t : thresholds_host) {
-			output << t << ",\n";
-		}
-
-		output << "};\n\n#endif\n";
 		return (host_errors == 0);
 	}
 

@@ -45,7 +45,6 @@ void check_bit_error(float& lhs, double& rhs, const uint32_t threshold) {
 	uint32_t sub_res = SUB_ABS(lhs_data, rhs_data);
 
 	if (sub_res > threshold) {
-		//printf("LHS %e RHS %e U %u\n", lhs, rhs, sub_res);
 		atomicAdd(&errors, 1);
 		atomicMax(thresholds + blockIdx.x, sub_res);
 	}
