@@ -104,7 +104,6 @@ struct KernelCaller {
 			std::cout << "#";
 		}
 
-
 		return (host_errors == 0);
 	}
 
@@ -113,7 +112,18 @@ struct KernelCaller {
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 
-	DMRMixedKernelCaller(const uint32_t threshold) : KernelCaller<COUNT, half_t, real_t>(threshold) {}
+	DMRMixedKernelCaller(const uint32_t threshold) :
+			KernelCaller<COUNT, half_t, real_t>(threshold) {
+
+		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
+		std::string path =
+				"/home/carol/radiation-benchmarks/data/threshold.data";
+		File<uint32_t>::read_from_file(path, thresholds_host);
+		rad::checkFrameworkErrors(
+				cudaMemcpyToSymbol(thresholds, thresholds_host.data(),
+						sizeof(uint32_t) * THRESHOLD_SIZE, 0,
+						cudaMemcpyHostToDevice));
+	}
 
 	uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
 		uint32_t max_threshold = 0;
@@ -135,8 +145,8 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		//Test thresholds------------------------------------------------------------------------
 		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
 		rad::checkFrameworkErrors(
-				cudaMemcpyFromSymbol(thresholds_host.data(), thresholds,
-						sizeof(uint32_t) * THRESHOLD_SIZE, 0, cudaMemcpyDeviceToHost));
+		cudaMemcpyFromSymbol(thresholds_host.data(), thresholds,
+				sizeof(uint32_t) * THRESHOLD_SIZE, 0, cudaMemcpyDeviceToHost));
 		std::string path = "../../../data/threshold.data";
 		File<uint32_t>::write_to_file(path, thresholds_host);
 
@@ -212,15 +222,6 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
 		std::cout << "BLOCKS " << blocks.x << " " << blocks.y << std::endl;
 
-		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
-		std::string path = "../../../data/threshold.data";
-		File<uint32_t>::read_from_file(path, thresholds_host);
-
-
-		rad::checkFrameworkErrors(
-				cudaMemcpyToSymbol(thresholds, thresholds_host.data(), sizeof(uint32_t) * THRESHOLD_SIZE, 0, cudaMemcpyDeviceToHost));
-
-
 		kernel_gpu_cuda_dmr<COUNT> <<<blocks, threads, 0, stream.stream>>>(
 		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
 		this->d_fv_gpu_ht[stream_idx].data(), this->threshold_);
@@ -287,8 +288,8 @@ struct UnhardenedKernelCaller: public KernelCaller<0, real_t, real_t> {
 			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
 
-		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu, dim_cpu,
-				d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
+		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu,
+				dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
 	}
 };
 
