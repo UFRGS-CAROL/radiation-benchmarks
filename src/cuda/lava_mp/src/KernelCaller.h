@@ -115,18 +115,18 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	DMRMixedKernelCaller(const uint32_t threshold) :
 			KernelCaller<COUNT, half_t, real_t>(threshold) {
 
-		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
-		std::string path =
-				"/home/carol/radiation-benchmarks/data/threshold.data";
-		File<uint32_t>::read_from_file(path, thresholds_host);
-		rad::checkFrameworkErrors(
-				cudaMemcpyToSymbol(thresholds, thresholds_host.data(),
-						sizeof(uint32_t) * THRESHOLD_SIZE, 0,
-						cudaMemcpyHostToDevice));
+//		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
+//		std::string path =
+//				"/home/carol/radiation-benchmarks/data/threshold.data";
+//		File<uint32_t>::read_from_file(path, thresholds_host);
+//		rad::checkFrameworkErrors(
+//				cudaMemcpyToSymbol(thresholds, thresholds_host.data(),
+//						sizeof(uint32_t) * THRESHOLD_SIZE, 0,
+//						cudaMemcpyHostToDevice));
 	}
 
 	uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
-		uint32_t max_threshold = 0;
+		float max_threshold = -3333;
 
 		for (uint32_t i = 0; i < fv_cpu_rt.size(); i++) {
 			auto& fv_rt_i = fv_cpu_rt[i];
@@ -136,20 +136,27 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 				auto& fv_rt_ij = fv_rt_i[j];
 				auto& fv_ht_ij = fv_ht_i[j];
 
-				auto diff_vector = this->get_4vector_diffs(fv_ht_ij, fv_rt_ij);
+//				auto diff_vector = this->get_4vector_diffs(fv_ht_ij, fv_rt_ij);
+				auto diff_vector = std::vector<float>({
+					std::fabs((float)fv_rt_ij.v - fv_ht_ij.v),
+					std::fabs((float)fv_rt_ij.x - fv_ht_ij.x),
+					std::fabs((float)fv_rt_ij.y - fv_ht_ij.y),
+					std::fabs((float)fv_rt_ij.z - fv_ht_ij.z)
+				});
+
 				diff_vector.push_back(max_threshold);
 				max_threshold = *std::max_element(diff_vector.begin(), diff_vector.end());
 			}
 		}
 
 		//Test thresholds------------------------------------------------------------------------
-		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
-		rad::checkFrameworkErrors(
-		cudaMemcpyFromSymbol(thresholds_host.data(), thresholds,
-				sizeof(uint32_t) * THRESHOLD_SIZE, 0, cudaMemcpyDeviceToHost));
-		std::string path = "../../../data/threshold.data";
-		File<uint32_t>::write_to_file(path, thresholds_host);
-
+//		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
+//		rad::checkFrameworkErrors(
+//		cudaMemcpyFromSymbol(thresholds_host.data(), thresholds,
+//				sizeof(uint32_t) * THRESHOLD_SIZE, 0, cudaMemcpyDeviceToHost));
+//		std::string path = "../../../data/threshold.data";
+//		File<uint32_t>::write_to_file(path, thresholds_host);
+		std::cout << "MAX THRESHOLD INSIDE CLASS " << max_threshold << std::endl;
 		return max_threshold;
 	}
 

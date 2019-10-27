@@ -23,7 +23,7 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu, dim_str d_dim_gpu
 	int bx = blockIdx.x;		 // get current horizontal block index (0-n)
 	int tx = threadIdx.x;		 // get current horizontal thread index (0-n)
 	int wtx = tx;
-	//THRESHOLD = thresholds[blockIdx.x];
+
 	//---------------------------------------------------------------------
 	//	DO FOR THE NUMBER OF BOXES
 	//---------------------------------------------------------------------
