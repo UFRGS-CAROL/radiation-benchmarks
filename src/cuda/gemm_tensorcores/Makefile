@@ -89,23 +89,23 @@ generate_gemm:
 	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision double --dmr none
 	
 test_gemm_dmr_mixed:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr dmrmixed --iterations $(ITERATIONS)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr mixed --iterations $(ITERATIONS)
 
 test_gemm_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr dmr --iterations $(ITERATIONS)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr full --iterations $(ITERATIONS)
 	
 test_gemm_non_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr nondmr --iterations $(ITERATIONS)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr none --iterations $(ITERATIONS)
 
 
 # Tensor options
 generate_tensor:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision half --dmr nondmr --tensor_cores 1
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision half --dmr none --tensor_cores 1
 
 test_tensor_non_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision half --dmr nondmr --tensor_cores 1 --iterations $(ITERATIONS)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision half --dmr none --tensor_cores 1 --iterations $(ITERATIONS)
 	
 test_tensor_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision half --dmr dmr --tensor_cores 1 --iterations $(ITERATIONS)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision half --dmr mixed --tensor_cores 1 --iterations $(ITERATIONS)
 	
 	

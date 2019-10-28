@@ -22,7 +22,7 @@ Log::Log(int argc, char** argv) :
 
 	this->precision = this->find_char_arg(argc, argv, "--precision", "float");
 
-	this->dmr = this->find_char_arg(argc, argv, "--dmr", "nondmr");
+	this->dmr = this->find_char_arg(argc, argv, "--dmr", "none");
 
 	this->use_tensor_cores = this->find_int_arg(argc, argv, "--tensor_cores",
 			0);

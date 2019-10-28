@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
 	if (log.use_tensor_cores) {
 		throw_line("Not ready yet");
 	} else {
-		if (log.dmr == "nondmr") {
+		if (log.dmr == "none") {
 			setup_gemm_unhardened(log);
 		} else {
 			setup_gemm_dmr(log);

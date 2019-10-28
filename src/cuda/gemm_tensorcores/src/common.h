@@ -37,26 +37,18 @@
 //Threshold for one operation
 #define THRESHOLD_32 100
 
-
-
 static void exception(std::string msg, std::string file, int line) {
 	throw std::runtime_error(msg + " at " + file + ":" + std::to_string(line));
 }
 
 #define throw_line(msg) exception(msg, __FILE__, __LINE__)
 
-typedef enum {
-	NONDMRGEMM, DMRGEMM, DMRGEMMMIXED, NONDMRWMMA, DMRWMA
-} GEMMTYPE;
-
 #define WARP_SIZE 32
 
 #define WARPS_PER_BLOCK 8
 #define THREADS_PER_BLOCK (WARP_SIZE * WARPS_PER_BLOCK)
 
-
 // MMA matrix tile dimensions.
-
 #define M 16
 #define N 16
 #define K 16
