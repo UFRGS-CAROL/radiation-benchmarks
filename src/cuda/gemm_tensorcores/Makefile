@@ -92,7 +92,7 @@ test_gemm_dmr_mixed:
 	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr dmrmixed --iterations $(ITERATIONS)
 
 test_gemm_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr dmrmixed --iterations $(ITERATIONS)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr dmr --iterations $(ITERATIONS)
 	
 test_non_drm:
 	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr nondmr --iterations $(ITERATIONS)
