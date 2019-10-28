@@ -118,7 +118,7 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 			log_obj.size_matrices * log_obj.size_matrices);
 
 	std::cout << "Starting the setup process...\n";
-	std::cout << std::setprecision(3);
+	std::cout << std::setprecision(5) << std::fixed;
 	for (int it = 0; it < log_obj.iterations; it++) {
 		auto computation_time = rad::mysecond();
 
