@@ -55,24 +55,24 @@ void check_relative_error(volatile float& lhs, volatile double& rhs, const uint3
  * FMA DMR
  * ----------------------------------------
  */
+//
+//__DEVICE_FUNCTION_INLINE__
+//void fma__(const double& a, const double& b, double& acc) {
+//	acc = __fma_rn(a, b, acc);
+//}
+//
+//__DEVICE_FUNCTION_INLINE__
+//void fma__(const float& a, const float& b, float& acc) {
+//	acc = __fmaf_rn(a, b, acc);
+//}
 
 __DEVICE_FUNCTION_INLINE__
-void fma__(const double& a, const double& b, double& acc) {
-	acc = __fma_rn(a, b, acc);
-}
-
-__DEVICE_FUNCTION_INLINE__
-void fma__(const float& a, const float& b, float& acc) {
+void fma__(volatile float& a, volatile float& b, float& acc) {
 	acc = __fmaf_rn(a, b, acc);
 }
 
 __DEVICE_FUNCTION_INLINE__
-void fma__(const volatile float& a, const volatile float& b, volatile float& acc) {
-	acc = __fmaf_rn(a, b, acc);
-}
-
-__DEVICE_FUNCTION_INLINE__
-void fma__(const volatile double& a, const volatile double& b, volatile double& acc) {
+void fma__(volatile double& a, volatile double& b, volatile double& acc) {
 	acc = __fma_rn(a, b, acc);
 }
 

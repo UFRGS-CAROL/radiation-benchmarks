@@ -42,7 +42,7 @@ __global__ void matrix_mult_kernel( //Kernel hardening
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
 	real_t Csub = 0;
-	volatile half_t Csub_half = 0;
+	half_t Csub_half = 0;
 	//double threshold = -2222;
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
@@ -70,8 +70,8 @@ __global__ void matrix_mult_kernel( //Kernel hardening
 #pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
 			fma__(As[ty][k], Bs[k][tx], Csub);
-			volatile half_t a = half_t(As[ty][k]);
-			volatile half_t b = half_t(Bs[k][tx]);
+			half_t a = half_t(As[ty][k]);
+			half_t b = half_t(Bs[k][tx]);
 			fma__(a, b, Csub_half);
 
 			if ((k % COUNT) == 0) {

@@ -189,24 +189,24 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 }
 
 void setup_gemm_unhardened(Log& log) {
-	if (log.precision == "half") {
-		UnhardenedGemmCaller<half> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj);
-		return;
-	}
-
-	if (log.precision == "float" || log.precision == "single") {
-		UnhardenedGemmCaller<float> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj);
-		return;
-	}
+//	if (log.precision == "half") {
+//		UnhardenedGemmCaller<half> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj);
+//		return;
+//	}
+//
+//	if (log.precision == "float" || log.precision == "single") {
+//		UnhardenedGemmCaller<float> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj);
+//		return;
+//	}
 
 	if (log.precision == "double") {
-		UnhardenedGemmCaller<double> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj);
+//		UnhardenedGemmCaller<double> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj);
 		return;
 	}
 }
@@ -226,9 +226,9 @@ void setup_gemm_dmr(Log& log) {
 					log.size_matrices);
 			setup_execute(log, gemm_obj);
 		} else {
-			DMRGemmCaller<1, double> gemm_obj(log.size_matrices,
-					log.size_matrices);
-			setup_execute(log, gemm_obj);
+//			DMRGemmCaller<1, double> gemm_obj(log.size_matrices,
+//					log.size_matrices);
+//			setup_execute(log, gemm_obj);
 		}
 		return;
 	}
