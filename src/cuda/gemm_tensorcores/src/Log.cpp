@@ -47,7 +47,7 @@ Log::Log(int argc, char** argv) :
 
 	test_info += " use_tensorcores: " + std::to_string(this->use_tensor_cores);
 
-	test_info += " checkblock: " + std::to_string(CHECKBLOCK);
+	test_info += " checkblock: " + std::to_string(this->check_block);
 
 	std::string app = "gemm_tensor_cores_" + this->precision;
 	set_iter_interval_print(10);
