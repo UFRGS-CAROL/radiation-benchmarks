@@ -128,6 +128,8 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 				d_vector_device, d_vector_half_t_device, log_obj.alpha,
 				log_obj.beta, log_obj.size_matrices, log_obj.size_matrices,
 				threshold);
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		log_obj.end_iteration();
 		computation_time = rad::mysecond() - computation_time;
