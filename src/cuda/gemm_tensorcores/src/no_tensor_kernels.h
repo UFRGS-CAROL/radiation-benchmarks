@@ -8,10 +8,14 @@
 #ifndef NO_TENSOR_KERNELS_H_
 #define NO_TENSOR_KERNELS_H_
 
-template<const uint32_t COUNT, typename real_t, typename half_t>
-__global__ void matrix_mult_kernel(real_t *D_r, half_t *D_h, real_t *C,
-		real_t *A, real_t *B, real_t alpha, real_t beta, int wA, int wB,
-		uint32_t threshold) {
+template<const uint32_t COUNT, typename half_t, typename real_t>
+__global__ void matrix_mult_kernel( //Kernel hardening
+		real_t *A,   //A
+		real_t *B,   //B
+		real_t *C,   //C
+		real_t *D_r, //D
+		half_t *D_h, //D hardening
+		real_t alpha, real_t beta, int wA, int wB, const uint32_t threshold) {
 	// Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -66,12 +70,13 @@ __global__ void matrix_mult_kernel(real_t *D_r, half_t *D_h, real_t *C,
 #pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
 			fma__(As[ty][k], Bs[k][tx], Csub);
-			fma__(half_t(As[ty][k]), half_t(Bs[k][tx]), Csub_half);
+			half_t a = half_t(As[ty][k]);
+			half_t b = half_t(Bs[k][tx]);
+			fma__(a, b, Csub_half);
 
 			if ((k % COUNT) == 0) {
-				check_relative_error(Csub_half, Csub);
+				check_relative_error(Csub_half, Csub, threshold);
 			}
-
 		}
 
 		// Synchronize to make sure that the preceding
@@ -79,21 +84,22 @@ __global__ void matrix_mult_kernel(real_t *D_r, half_t *D_h, real_t *C,
 		// sub-matrices of A and B in the next iteration
 		__syncthreads();
 	}
+
+	// Write the block sub-matrix to device memory;
+	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
+	D_r[index] = alpha * Csub + beta * C[index];
+	D_h[index] = half_t(alpha) * Csub_half + half_t(beta) * half_t(C[index]);
 
-	const real_t d_r = alpha * Csub + beta * C[index];
-	const half_t d_h = half_t(alpha) * Csub_half
-			+ half_t(beta) * half_t(C[index]);
-
-// Write the block sub-matrix to device memory;
-// each thread writes one element
-	D_r[index] = d_r;
-	D_h[index] = d_h;
 }
 
 template<typename real_t>
-__global__ void matrix_mult_kernel(real_t *D_r, real_t *C, real_t *A,
-		real_t *B, real_t alpha, real_t beta, int wA, int wB) {
+__global__ void matrix_mult_kernel(	//Kernel without hardening
+		real_t *A,  //A
+		real_t *B,  //B
+		real_t *C,  //C
+		real_t *D,  //D
+		real_t alpha, real_t beta, int wA, int wB, const uint32_t threshold = 0) {
 	// Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -154,11 +160,11 @@ __global__ void matrix_mult_kernel(real_t *D_r, real_t *C, real_t *A,
 		// sub-matrices of A and B in the next iteration
 		__syncthreads();
 	}
-	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
 
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
-	D_r[index] = alpha * Csub + beta * C[index];
+	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
+	D[index] = alpha * Csub + beta * C[index];
 }
 
 #endif /* NO_TENSOR_KERNELS_H_ */

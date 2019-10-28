@@ -129,7 +129,7 @@ static std::ostream& operator<<(std::ostream& os, const half& rhs) {
 }
 
 template<typename real_t>
-bool equals(real_t& lhs, real_t& rhs) {
+bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
 	double lhs_double = double(lhs);
 	double rhs_double = double(rhs);
 	return (SUB_ABS(lhs_double, rhs_double) <= ZERO_DOUBLE);
@@ -151,7 +151,7 @@ bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 template<class half_t, class real_t>
 std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<real_t>& real_vector, std::vector<half_t>& half_vector,
-		Log& log) {
+		Log& log, const uint32_t threshold) {
 	int host_errors = 0;
 //	double threshold = -3222;
 #ifdef OMP
@@ -165,7 +165,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 //		threshold = std::fmax(threshold, fabs(half_precision - full_precision));
 
 		if (gold_value != full_precision
-				|| !equals(half_precision, full_precision)) {
+				|| !equals(half_precision, full_precision, threshold)) {
 #ifdef OMP
 #pragma omp critical
 			{
