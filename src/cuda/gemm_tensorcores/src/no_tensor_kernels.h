@@ -1,20 +1,16 @@
 /*
- * dmr_kernels.h
+ * no_tensor_kernels.h
  *
- *  Created on: Jul 20, 2019
+ *  Created on: 28/10/2019
  *      Author: fernando
  */
 
-#ifndef DMR_KERNELS_H_
-#define DMR_KERNELS_H_
+#ifndef NO_TENSOR_KERNELS_H_
+#define NO_TENSOR_KERNELS_H_
 
-#include "device_functions.h"
-#include "common.h"
-
-template<const uint32_t COUNT, const uint32_t THRESHOLD, class half_t,
-		class real_t>
-__global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
-		real_t *A, real_t *B, real_t alpha, real_t beta, int wA, int wB) {
+template<const uint32_t COUNT, typename real_t, typename half_t>
+__global__ void matrix_mult_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
+		real_t *A, real_t *B, real_t alpha, real_t beta, int wA, int wB, uint32_t threshold) {
 	// Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -41,9 +37,8 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
 	real_t Csub = 0;
-
 	half_t Csub_half = 0;
-
+	//double threshold = -2222;
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
 	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
@@ -67,15 +62,15 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 		// Multiply the two matrices together;
 		// each thread computes one element
 		// of the block sub-matrix
-#pragma unroll
+#pragma unroll COUNT
+
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			half_t As_ht = half_t(As[ty][k]);
-			half_t Bs_ht = half_t(Bs[k][tx]);
-			fma_dmr(As[ty][k], Bs[k][tx], Csub);
-			fma_dmr(As_ht, Bs_ht, Csub_half);
+			axpy__(As[ty][k], Bs[k][tx], Csub);
+			axpy__(half_t(As[ty][k]), half_t(Bs[k][tx]), Csub_half);
 
 			if ((k % COUNT) == 0) {
-				check_relative_error<THRESHOLD>(Csub_half, Csub);
+//				check_bit_error<THRESHOLD>(Csub_half, Csub);
+				Csub_half = half_t(Csub);
 			}
 
 		}
@@ -91,10 +86,10 @@ __global__ void sw_mxm_dmr_kernel(real_t *D_r, half_t *D_h, real_t *C,
 	const half_t d_h = half_t(alpha) * Csub_half
 			+ half_t(beta) * half_t(C[index]);
 
-	// Write the block sub-matrix to device memory;
-	// each thread writes one element
+// Write the block sub-matrix to device memory;
+// each thread writes one element
 	D_r[index] = d_r;
 	D_h[index] = d_h;
 }
 
-#endif /* DMR_KERNELS_H_ */
+#endif /* NO_TENSOR_KERNELS_H_ */

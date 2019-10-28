@@ -25,7 +25,7 @@
 #endif
 
 #ifndef ZERO_DOUBLE
-#define ZERO_DOUBLE 1e-20
+#define ZERO_DOUBLE 1e-50
 #endif
 
 //Threshold for one operation

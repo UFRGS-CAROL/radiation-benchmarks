@@ -18,7 +18,7 @@ ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 # ARCH=  -gencode arch=compute_52,code=compute_52
 
 VPATH=./src/
-TARGET=gemm_wmma
+TARGET=gemm
 OBJDIR=./obj/
 
 CC=gcc
@@ -55,7 +55,7 @@ NVCCFLAGS += -Xcompiler -fopenmp
 endif
 
 
-OBJ= main.o setup_gemm_unhardened.o setup_gemm_dmr.o setup_gemm_dmr_mixed.o
+OBJ= main.o setup_gemm.o Log.o #setup_tensor_cores.o
 
 ifeq ($(SAFE_MALLOC), 1)
 CFLAGS+= -DSAFE_MALLOC
