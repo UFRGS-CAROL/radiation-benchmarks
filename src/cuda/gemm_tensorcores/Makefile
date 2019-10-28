@@ -2,34 +2,28 @@ GPU?=1
 DEBUG?=0
 #for radiation setup
 LOGS?=1
-DEBUG_ON_TITAN?=0
 OMP?=1
 CHECKBLOCK=1
 
 SIZE?=4096 #6384 #8192 #4096 
 
-#
+# This is what I use, uncomment if you know your arch and want to specify
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
 #ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
 #ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
-# This is what I use, uncomment if you know your arch and want to specify
-# ARCH=  -gencode arch=compute_52,code=compute_52
-
 VPATH=./src/
 TARGET=gemm
 OBJDIR=./obj/
 
-CC=gcc
 CXX=g++
 NVCC=/usr/local/cuda/bin/nvcc 
-OPTS=-Ofast
+OPTS=-O3
 LDFLAGS= -lm -pthread -lstdc++ 
 COMMON= 
 CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas -Wunused-function
 RAD_DIR=/home/carol/radiation-benchmarks
-
 
 INCLUDE=-I/usr/local/cuda/include -I../common
 
@@ -51,38 +45,28 @@ endif
 
 ifeq ($(OMP), 1) 
 CFLAGS+= -DOMP -fopenmp
-NVCCFLAGS += -Xcompiler -fopenmp
+NVCCFLAGS += -Xcompiler -fopenmp -DOMP
 endif
 
 
 OBJ= main.o setup_gemm.o Log.o #setup_tensor_cores.o
 
-ifeq ($(SAFE_MALLOC), 1)
-CFLAGS+= -DSAFE_MALLOC
-endif
-
 ifeq ($(LOGS), 1)
 INCLUDE+=-I../../include/
-NVCCFLAGS+= -DLOGS=1
+NVCCFLAGS+= -DLOGS
+CFLAGS+= -DLOGS
 LDFLAGS+= -L../../include/ -lLogHelper -DLOGS=1
 endif
 
-ifeq ($(DEBUG_ON_TITAN), 1)
-CFLAGS+= -DDEBUG_ON_TITAN
-endif
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = $(wildcard src/*.h) Makefile
 
-COMMON+= -DCHECKBLOCK=$(CHECKBLOCK)
 NVCCFLAGS+= -Xptxas -v
 
 all: obj $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(COMMON) $(CFLAGS) $^ $(INCLUDE) -o $@  $(LDFLAGS)  
-
-$(OBJDIR)%.o: %.c $(DEPS)
-	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@  $(HELPFUL) $(LOGHELPER_LIB) $(LOGHELPER_INC)
 
 $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@ $(INCLUDE) 

@@ -119,7 +119,7 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 
 	std::cout << "Starting the setup process...\n";
 	for (int it = 0; it < log_obj.iterations; it++) {
-		double start_computation = rad::mysecond();
+		auto computation_time = rad::mysecond();
 
 		log_obj.start_iteration();
 
@@ -129,8 +129,8 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 				threshold);
 
 		log_obj.end_iteration();
-		double end_computation = rad::mysecond();
-		elapsed_time += end_computation - start_computation;
+		computation_time = rad::mysecond() - computation_time;
+		elapsed_time += computation_time;
 
 		double copy_time = rad::mysecond();
 		d_vector_host_half_t = d_vector_half_t_device.to_vector();
@@ -138,20 +138,18 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 		copy_time = rad::mysecond() - copy_time;
 
 		if (!log_obj.generate) {
-			double start, end;
 
-			start = rad::mysecond();
+			auto comparing_time = rad::mysecond();
 			auto errors = check_output_errors_dmr(gold_host,
 					d_vector_host_real_t, d_vector_host_half_t, log_obj,
 					threshold);
-			end = rad::mysecond();
+			comparing_time = rad::mysecond() - comparing_time;
 
-			std::cout << "Iteration: " << it << " dmr errors " << errors.first
-					<< " radiation errors " << errors.second
-					<< ". Time spent on computation "
-					<< end_computation - start_computation
-					<< "s. Time spent on comparing " << end - start << "s."
-					<< " Time spent on copying " << copy_time << "s."
+			std::cout << "Iteration: " << it << " dmr errors " << errors.first << ". "
+					<< "Radiation errors: " << errors.second << ". "
+					<< "Time spent on computation: " << computation_time << "s. "
+					<< "Time spent on comparing: " << comparing_time << "s. "
+					<< "Time spent on copying: " << copy_time << "s. "
 					<< std::endl;
 
 			//If errors != 0 reload matrices to gpu
