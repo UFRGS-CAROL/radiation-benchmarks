@@ -31,9 +31,9 @@ bool read_from_file(std::string& path, std::vector<T>& array) {
 	if (input.good()) {
 		input.read(CHAR_CAST(array.data()), array.size() * sizeof(T));
 		input.close();
-		return false;
+		return true;
 	}
-	return true;
+	return false;
 }
 
 template<typename T>
@@ -42,9 +42,9 @@ bool write_to_file(std::string& path, std::vector<T>& array) {
 	if (output.good()) {
 		output.write(CHAR_CAST(array.data()), array.size() * sizeof(T));
 		output.close();
-		return false;
+		return true;
 	}
-	return true;
+	return false;
 }
 
 bool exists(std::string& path) {
@@ -64,7 +64,7 @@ void write_gold(std::vector<half_t>& a_vector, std::vector<half_t>& b_vector,
 	result = result && write_to_file(c_file_path, c_vector);
 	result = result && write_to_file(d_file_path, d_vector);
 	if (result == false) {
-		throw_line("Some of the files could not be written\n");
+		throw_line("The gold files could not be written\n");
 	}
 }
 
