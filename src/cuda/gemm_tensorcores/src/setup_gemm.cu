@@ -28,9 +28,8 @@ struct UnhardenedGemmCaller: public GemmCaller<0, real_t, real_t> {
 			rad::DeviceVector<real_t>& b_dev, rad::DeviceVector<real_t>& c_dev,
 			rad::DeviceVector<real_t>& d_dev, real_t alpha, real_t beta, int wA,
 			int wB, const uint32_t threshold) {
-		matrix_mult_kernel<<<this->dim_grid, this->dim_block>>>(
-				d_dev.data(), c_dev.data(), a_dev.data(), b_dev.data(), alpha,
-				beta, wA, wB);
+		matrix_mult_kernel<<<this->dim_grid, this->dim_block>>>(d_dev.data(),
+				c_dev.data(), a_dev.data(), b_dev.data(), alpha, beta, wA, wB);
 	}
 
 	UnhardenedGemmCaller(uint32_t m, uint32_t n) :
@@ -46,15 +45,20 @@ struct DMRGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 			int wB, const uint32_t threshold) {
 
 	}
+
+	DMRGemmCaller(uint32_t m, uint32_t n) :
+			GemmCaller<COUNT, half_t, real_t>(m, n) {
+	}
 };
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
-void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env) {
+void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
+		const uint32_t threshold = 0) {
 	double elapsedTime = 0;
 
-	std::vector<real_t> a_vector_host(
+	std::vector<half_t> a_vector_host(
 			log_obj.size_matrices * log_obj.size_matrices);
-	std::vector<real_t> b_vector_host(
+	std::vector<half_t> b_vector_host(
 			log_obj.size_matrices * log_obj.size_matrices);
 	std::vector<real_t> c_vector_host(
 			log_obj.size_matrices * log_obj.size_matrices);
@@ -78,8 +82,8 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env) {
 				log_obj.c_input_path, log_obj.gold_inout_path);
 	}
 
-	rad::DeviceVector < real_t > a_vector_device(a_vector_host);
-	rad::DeviceVector < real_t > b_vector_device(b_vector_host);
+	rad::DeviceVector < half_t > a_vector_device(a_vector_host);
+	rad::DeviceVector < half_t > b_vector_device(b_vector_host);
 	rad::DeviceVector < real_t > c_vector_device(c_vector_host);
 	rad::DeviceVector < real_t > d_vector_device(d_vector_host);
 	rad::DeviceVector < half_t > d_vector_half_t_device(d_vector_half_t_host);
@@ -91,7 +95,8 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env) {
 		log_obj.start_iteration();
 
 		mult_env.gemm(a_vector_device, b_vector_device, c_vector_device,
-				d_vector_device, log_obj.alpha, log_obj.beta, log_obj.size_matrices, log_obj.size_matrices, 0);
+				d_vector_device, log_obj.alpha, log_obj.beta,
+				log_obj.size_matrices, log_obj.size_matrices, threshold);
 
 		log_obj.end_iteration();
 		double end_computation = rad::mysecond();
@@ -185,6 +190,13 @@ void setup_gemm_dmr(Log& log) {
 	}
 
 	if (log.precision == "double") {
+		if (log.dmr == "dmrmixed") {
+			DMRGemmCaller<1, float, double> gemm_obj(log.size_matrices,
+					log.size_matrices);
+			setup_execute(log, gemm_obj);
+		} else {
+
+		}
 		return;
 	}
 }
