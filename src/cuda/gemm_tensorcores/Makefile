@@ -6,6 +6,7 @@ OMP?=1
 CHECKBLOCK=1
 
 SIZE?=4096 #6384 #8192 #4096 
+ITERATIONS=10
 
 # This is what I use, uncomment if you know your arch and want to specify
 #ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
