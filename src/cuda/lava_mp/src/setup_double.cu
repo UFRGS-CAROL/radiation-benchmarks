@@ -21,7 +21,7 @@
  */
 //For 1 iteration
 //00000000 01001100 00000000 00000000
-#define THRESHOLD_1 0
+#define THRESHOLD_1 0x3A007358
 #define ONE_BLOCK 1
 
 //For 10 iterations

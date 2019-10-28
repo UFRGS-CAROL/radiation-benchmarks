@@ -137,15 +137,14 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 				auto& fv_ht_ij = fv_ht_i[j];
 
 //				auto diff_vector = this->get_4vector_diffs(fv_ht_ij, fv_rt_ij);
-				auto diff_vector = std::vector<float>({
-					std::fabs((float)fv_rt_ij.v - fv_ht_ij.v),
-					std::fabs((float)fv_rt_ij.x - fv_ht_ij.x),
-					std::fabs((float)fv_rt_ij.y - fv_ht_ij.y),
-					std::fabs((float)fv_rt_ij.z - fv_ht_ij.z)
-				});
+                max_threshold = std::max(std::fabs((float)fv_rt_ij.v - fv_ht_ij.v), max_threshold);
+                max_threshold = std::max(std::fabs((float)fv_rt_ij.x - fv_ht_ij.x), max_threshold);
+                max_threshold = std::max(std::fabs((float)fv_rt_ij.y - fv_ht_ij.y), max_threshold);
+                max_threshold = std::max(std::fabs((float)fv_rt_ij.z - fv_ht_ij.z), max_threshold);
 
-				diff_vector.push_back(max_threshold);
-				max_threshold = *std::max_element(diff_vector.begin(), diff_vector.end());
+//
+//				diff_vector.push_back(max_threshold);
+//				max_threshold = *std::max_element(diff_vector.begin(), diff_vector.end());
 			}
 		}
 

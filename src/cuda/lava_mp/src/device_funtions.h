@@ -48,7 +48,7 @@ void check_bit_error(float& lhs, double& rhs, const uint32_t threshold) {
 		atomicAdd(&errors, 1);
 //		atomicMax(thresholds + blockIdx.x, sub_res);
 	}*/
-	float diff = fabs(lhs - rhs);
+	float diff = abs__(lhs - rhs);
 	float thresh = *((float*) (&threshold));
 	if(diff > thresh){
 		atomicAdd(&errors, 1);
