@@ -73,13 +73,6 @@ void read_gold(std::vector<half_t>& a_vector, std::vector<half_t>& b_vector,
 		std::vector<real_t>& c_vector, std::vector<real_t>& d_vector,
 		std::string& a_file_path, std::string& b_file_path,
 		std::string& c_file_path, std::string& d_file_path) {
-
-	//Tests if files already exists
-	if (exists(a_file_path) && exists(b_file_path) && exists(c_file_path)
-			&& exists(d_file_path)) {
-		return;
-	}
-
 	auto result = read_from_file(a_file_path, a_vector);
 	result = result && read_from_file(b_file_path, b_vector);
 	result = result && read_from_file(c_file_path, c_vector);
