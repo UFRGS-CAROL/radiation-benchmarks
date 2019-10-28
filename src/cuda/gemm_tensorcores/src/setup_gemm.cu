@@ -83,7 +83,7 @@ struct DMRGemmCaller: public DMRMixedGemmCaller<COUNT, real_t, real_t> {
 template<const uint32_t COUNT, typename half_t, typename real_t>
 void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 		const uint32_t threshold = 0) {
-	double elapsedTime = 0;
+	double elapsed_time = 0;
 
 	std::vector<real_t> a_vector_host(
 			log_obj.size_matrices * log_obj.size_matrices);
@@ -130,14 +130,12 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 
 		log_obj.end_iteration();
 		double end_computation = rad::mysecond();
-		elapsedTime += end_computation - start_computation;
-
-		std::cout << "Elapsed time : " << elapsedTime << " %f ms\n";
+		elapsed_time += end_computation - start_computation;
 
 		double copy_time = rad::mysecond();
 		d_vector_host_half_t = d_vector_half_t_device.to_vector();
 		d_vector_host_real_t = d_vector_device.to_vector();
-		copy_time = copy_time - rad::mysecond();
+		copy_time = rad::mysecond() - copy_time;
 
 		if (!log_obj.generate) {
 			double start, end;
@@ -180,7 +178,7 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 
 	}
 
-	std::cout << "time : " << (elapsedTime / log_obj.iterations) << " s\n";
+	std::cout << "time : " << (elapsed_time / log_obj.iterations) << " s\n";
 	if (log_obj.generate) {
 		write_gold(a_vector_host, b_vector_host, c_vector_host,
 				d_vector_host_real_t, log_obj.a_input_path,
