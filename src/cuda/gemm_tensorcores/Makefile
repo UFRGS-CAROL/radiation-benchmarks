@@ -49,7 +49,7 @@ NVCCFLAGS += -Xcompiler -fopenmp -DOMP
 endif
 
 
-OBJ= main.o setup_gemm.o Log.o #setup_tensor_cores.o
+OBJ= main.o setup_gemm.o Log.o setup_tensor_cores.o
 
 ifeq ($(LOGS), 1)
 INCLUDE+=-I../../include/
@@ -83,21 +83,28 @@ obj:
 clean:
 	rm -rf $(OBJS) $(TARGET)
 
-generate:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision double --dmr dmrmixed
+# GEMM options
+generate_gemm:
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision double --dmr none
 	
-test_dmr_mixed:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr dmrmixed --iterations 1
+test_gemm_dmr_mixed:
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr dmrmixed --iterations $(ITERATIONS)
+
+test_gemm_dmr:
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr dmrmixed --iterations $(ITERATIONS)
 	
 test_non_drm:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr nondmr --iterations 10
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr nondmr --iterations $(ITERATIONS)
 
 
+# Tensor options
 generate_tensor:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision half --dmr dmr --tensor_cores 1
-	
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision half --dmr nondmr --tensor_cores 1
 
-test_tensor:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision half --dmr dmr --tensor_cores 1 --iterations 10
+test_tensor_non_dmr:
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision half --dmr nondmr --tensor_cores 1 --iterations $(ITERATIONS)
+	
+test_tensor_dmr:
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision half --dmr dmr --tensor_cores 1 --iterations $(ITERATIONS)
 	
 	

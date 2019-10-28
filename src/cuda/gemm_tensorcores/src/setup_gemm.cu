@@ -145,7 +145,7 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 					threshold);
 			comparing_time = rad::mysecond() - comparing_time;
 
-			std::cout << "Iteration: " << it << " dmr errors " << errors.first << ". "
+			std::cout << "Iteration: " << it << " DMR errors " << errors.first << ". "
 					<< "Radiation errors: " << errors.second << ". "
 					<< "Time spent on computation: " << computation_time << "s. "
 					<< "Time spent on comparing: " << comparing_time << "s. "
@@ -176,7 +176,7 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 
 	}
 
-	std::cout << "time : " << (elapsed_time / log_obj.iterations) << " s\n";
+	std::cout << "Elapsed time: " << (elapsed_time / log_obj.iterations) << " s\n";
 	if (log_obj.generate) {
 		write_gold(a_vector_host, b_vector_host, c_vector_host,
 				d_vector_host_real_t, log_obj.a_input_path,
