@@ -12,7 +12,7 @@
 #define BLOCK_SIZE 32
 #endif
 
-#define SUB_ABS(lhs, rhs) (lhs > rhs) ? (lhs - rhs) : (rhs - lhs)
+#define SUB_ABS(lhs, rhs) ((lhs > rhs) ? (lhs - rhs) : (rhs - lhs))
 
 #define ZERO_FULL 1e-13
 
@@ -29,7 +29,7 @@
 #endif
 
 //Threshold for one operation
-#define THRESHOLD_1 5
+#define THRESHOLD_1 2147483648
 
 //Threshold for 16 operation
 #define THRESHOLD_16 40

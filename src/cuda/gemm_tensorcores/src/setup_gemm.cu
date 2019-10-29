@@ -131,6 +131,13 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
+//		unsigned long long t;
+//		rad::checkFrameworkErrors(
+//				cudaMemcpyFromSymbol(&t, max_err, sizeof(uint32_t), 0,
+//						cudaMemcpyDeviceToHost));
+//
+//		std::cout << "Max threshold " << t << std::endl;
+
 		log_obj.end_iteration();
 		computation_time = rad::mysecond() - computation_time;
 		elapsed_time += computation_time;
@@ -148,11 +155,11 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 					threshold);
 			comparing_time = rad::mysecond() - comparing_time;
 
-			std::cout << "Iteration: " << it << " DMR errors " << errors.first << ". "
-					<< "Radiation errors: " << errors.second << ". "
-					<< "Time spent on computation: " << computation_time << "s. "
-					<< "Time spent on comparing: " << comparing_time << "s. "
-					<< "Time spent on copying: " << copy_time << "s. "
+			std::cout << "Iteration: " << it << " DMR errors " << errors.first
+					<< ". " << "Radiation errors: " << errors.second << ". "
+					<< "Time spent on computation: " << computation_time
+					<< "s. " << "Time spent on comparing: " << comparing_time
+					<< "s. " << "Time spent on copying: " << copy_time << "s. "
 					<< std::endl;
 
 			//If errors != 0 reload matrices to gpu
@@ -179,7 +186,8 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 
 	}
 
-	std::cout << "Elapsed time: " << (elapsed_time / log_obj.iterations) << " s\n";
+	std::cout << "Elapsed time: " << (elapsed_time / log_obj.iterations)
+			<< " s\n";
 	if (log_obj.generate) {
 		write_gold(a_vector_host, b_vector_host, c_vector_host,
 				d_vector_host_real_t, log_obj.a_input_path,
@@ -204,9 +212,9 @@ void setup_gemm_unhardened(Log& log) {
 //	}
 
 	if (log.precision == "double") {
-		UnhardenedGemmCaller<double> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj);
+//		UnhardenedGemmCaller<double> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj);
 		return;
 	}
 }
@@ -224,11 +232,11 @@ void setup_gemm_dmr(Log& log) {
 		if (log.dmr == "mixed") {
 			DMRMixedGemmCaller<1, float, double> gemm_obj(log.size_matrices,
 					log.size_matrices);
-			setup_execute(log, gemm_obj);
+			setup_execute(log, gemm_obj, THRESHOLD_1);
 		} else {
-			DMRGemmCaller<1, double> gemm_obj(log.size_matrices,
-					log.size_matrices);
-			setup_execute(log, gemm_obj);
+//			DMRGemmCaller<1, double> gemm_obj(log.size_matrices,
+//					log.size_matrices);
+//			setup_execute(log, gemm_obj);
 		}
 		return;
 	}

@@ -69,9 +69,10 @@ __global__ void matrix_mult_kernel( //Kernel hardening
 		// of the block sub-matrix
 #pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			fma__(As[ty][k], Bs[k][tx], Csub);
 			half_t a = half_t(As[ty][k]);
 			half_t b = half_t(Bs[k][tx]);
+
+			fma__(As[ty][k], Bs[k][tx], Csub);
 			fma__(a, b, Csub_half);
 
 			if ((k % COUNT) == 0) {
@@ -94,12 +95,14 @@ __global__ void matrix_mult_kernel( //Kernel hardening
 }
 
 template<typename real_t>
-__global__ void matrix_mult_kernel(	//Kernel without hardening
+__global__ void matrix_mult_kernel(
+		//Kernel without hardening
 		real_t *A,  //A
 		real_t *B,  //B
 		real_t *C,  //C
 		real_t *D,  //D
-		real_t alpha, real_t beta, int wA, int wB, const uint32_t threshold = 0) {
+		real_t alpha, real_t beta, int wA, int wB,
+		const uint32_t threshold = 0) {
 	// Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
