@@ -29,7 +29,7 @@
 #endif
 
 //Threshold for one operation
-#define THRESHOLD_1 2147483648
+#define THRESHOLD_1 0x398007F8
 
 //Threshold for 16 operation
 #define THRESHOLD_16 40

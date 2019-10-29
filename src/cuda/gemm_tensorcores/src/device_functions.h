@@ -53,7 +53,6 @@ void check_relative_error(float& lhs, double& rhs, const uint32_t threshold) {
 	const float thre = (*(float*)(&threshold));
 
 	if (diff > thre) {
-		printf("%e %e %e\n", lhs, rhs, fabs(lhs - rhs));
 		atomicAdd(&errors, 1);
 	}
 	lhs = rhs;
