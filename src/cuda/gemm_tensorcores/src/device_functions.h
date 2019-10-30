@@ -29,13 +29,8 @@ half abs__(half a) {
 	return fabsf(a);
 }
 
-__DEVICE_FUNCTION_INLINE__
-float cast(double a) {
-	return __double2float_rd(a);
-}
-
 template<typename real_t> __DEVICE_FUNCTION_INLINE__
-void check_relative_error(real_t& lhs, real_t& rhs, const uint32_t threshold) {
+void check_relative_error(real_t& lhs, real_t& rhs) {
 	real_t diff = abs__(lhs - rhs);
 
 	if (diff > real_t(ZERO_DOUBLE)) {
@@ -45,10 +40,19 @@ void check_relative_error(real_t& lhs, real_t& rhs, const uint32_t threshold) {
 }
 
 __DEVICE_FUNCTION_INLINE__
+void check_relative_error(float& lhs, double& rhs) {
+	const float diff = abs__(__fdividef(lhs, float(rhs)));
+	if (diff < MIN_PERCENTAGE && diff > HUNDRED_PERCENT) {
+		atomicAdd(&errors, 1);
+	}
+	lhs = rhs;
+}
+
+__DEVICE_FUNCTION_INLINE__
 void check_relative_error(float& lhs, double& rhs, const uint32_t threshold) {
 	const float rhs_as_float = float(rhs);
 	const float diff = fabs(lhs - rhs_as_float);
-	const float thre = (*(float*)(&threshold));
+	const float thre = (*(float*) (&threshold));
 
 	if (diff > thre) {
 		atomicAdd(&errors, 1);

@@ -76,7 +76,7 @@ __global__ void matrix_mult_kernel( //Kernel hardening
 			fma__(a, b, Csub_half);
 
 			if ((k % COUNT) == 0) {
-				check_relative_error(Csub_half, Csub, threshold);
+				check_relative_error(Csub_half, Csub);
 			}
 		}
 

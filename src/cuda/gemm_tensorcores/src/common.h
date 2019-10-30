@@ -28,6 +28,13 @@
 #define ZERO_DOUBLE 1e-50
 #endif
 
+// Eight percent
+#define MIN_PERCENTAGE 0.9f
+
+// Hundred percent
+#define HUNDRED_PERCENT 1.0f
+
+
 //Threshold for one operation
 #define THRESHOLD_1 0x398007F8
 
