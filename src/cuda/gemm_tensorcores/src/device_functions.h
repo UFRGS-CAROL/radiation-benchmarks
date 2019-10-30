@@ -67,7 +67,7 @@ void fma__(float& a, float& b, float& acc) {
 }
 
 __DEVICE_FUNCTION_INLINE__
-void fma__(double& a, double& b, double& acc) {
+void fma__(double& a, double& b, volatile double& acc) {
 	acc = __fma_rn(a, b, acc);
 }
 
