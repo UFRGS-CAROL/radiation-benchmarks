@@ -31,7 +31,7 @@ half abs__(half a) {
 
 __DEVICE_FUNCTION_INLINE__
 float cast(double a) {
-	return __double2float_rn(a);
+	return __double2float_rd(a);
 }
 
 template<typename real_t> __DEVICE_FUNCTION_INLINE__
@@ -46,9 +46,6 @@ void check_relative_error(real_t& lhs, real_t& rhs, const uint32_t threshold) {
 __DEVICE_FUNCTION_INLINE__
 void check_relative_error(float& lhs, double& rhs, const uint32_t threshold) {
 	const float rhs_as_float = float(rhs);
-//	const uint32_t rhs_data = __float_as_uint(rhs_as_float);
-//	const uint32_t lhs_data = __float_as_uint(lhs);
-//	const uint32_t diff2 = SUB_ABS(lhs_data, rhs_data);
 	const float diff = fabs(lhs - rhs_as_float);
 	const float thre = (*(float*)(&threshold));
 
