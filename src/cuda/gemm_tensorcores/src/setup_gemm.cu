@@ -6,6 +6,7 @@
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct GemmCaller {
+	static const bool duplicated = false;
 	dim3 dim_grid, dim_block;
 
 	virtual ~GemmCaller() = default;
@@ -28,6 +29,7 @@ struct GemmCaller {
 
 template<typename real_t>
 struct UnhardenedGemmCaller: public GemmCaller<0, real_t, real_t> {
+
 	void gemm(
 			rad::DeviceVector<real_t>& a_dev, 			//A matrix
 			rad::DeviceVector<real_t>& b_dev, 			//B matrix
@@ -51,6 +53,8 @@ struct UnhardenedGemmCaller: public GemmCaller<0, real_t, real_t> {
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
+	static const bool duplicated = true;
+
 	void gemm(
 			rad::DeviceVector<real_t>& a_dev, 			//A matrix
 			rad::DeviceVector<real_t>& b_dev, 			//B matrix
@@ -75,6 +79,8 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 
 template<const uint32_t COUNT, typename real_t>
 struct DMRGemmCaller: public DMRMixedGemmCaller<COUNT, real_t, real_t> {
+	static const bool duplicated = true;
+
 	DMRGemmCaller(uint32_t m, uint32_t n) :
 			DMRMixedGemmCaller<COUNT, real_t, real_t>(m, n) {
 	}
@@ -131,13 +137,6 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
-//		unsigned long long t;
-//		rad::checkFrameworkErrors(
-//				cudaMemcpyFromSymbol(&t, max_err, sizeof(uint32_t), 0,
-//						cudaMemcpyDeviceToHost));
-//
-//		std::cout << "Max threshold " << t << std::endl;
-
 		log_obj.end_iteration();
 		computation_time = rad::mysecond() - computation_time;
 		elapsed_time += computation_time;
@@ -150,7 +149,7 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 		if (!log_obj.generate) {
 
 			auto comparing_time = rad::mysecond();
-			auto errors = check_output_errors_dmr(gold_host,
+			auto errors = check_output_errors_dmr<mult_env.duplicated>(gold_host,
 					d_vector_host_real_t, d_vector_host_half_t, log_obj,
 					threshold);
 			comparing_time = rad::mysecond() - comparing_time;
