@@ -11,6 +11,7 @@
 #ifdef LOGS
 #include "log_helper.h"
 
+#ifdef BUILPROFILER
 #ifdef FORJETSON
 
 #include "include/JTX2Inst.h"
@@ -21,6 +22,7 @@
 #include "include/NVMLWrapper.h"
 #define OBJTYPE NVMLWrapper
 
+#endif
 #endif
 
 #endif
@@ -956,6 +958,7 @@ int main(int argc, char* argv[]) {
 
 	}
 
+#ifdef BUILPROFILER
 	std::string log_file_name(get_log_file_name());
 	if(generate) {
 		log_file_name = "/tmp/generate.log";
@@ -965,6 +968,7 @@ int main(int argc, char* argv[]) {
 
 //START PROFILER THREAD
 	profiler_thread->start_profile();
+#endif
 #endif
 //====================================
 
@@ -1206,8 +1210,10 @@ int main(int argc, char* argv[]) {
 //	free (C2);
 	free(GOLD);
 #ifdef LOGS
-	profiler_thread->end_profile();
 
+#ifdef BUILPROFILER
+	profiler_thread->end_profile();
+#endif
 	if (!generate)
 	end_log_file();
 #endif

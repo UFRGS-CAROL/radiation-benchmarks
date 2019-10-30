@@ -56,7 +56,7 @@ check-benchtype:
 
 $(EXEC): check-benchtype $(RUN_SOURCES)
 	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -O3 \
-			-std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC) -lNVMLWrapper -lnvidia-ml -lLogHelper
+			-std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC) -lLogHelper
 
 clean:
 	rm -rf $(EXEC_RADIX)* $(MATRIX_NAMES)
