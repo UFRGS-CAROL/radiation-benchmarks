@@ -69,8 +69,8 @@ __global__ void matrix_mult_kernel( //Kernel hardening
 		// of the block sub-matrix
 #pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			half_t a = cast(As[ty][k]);
-			half_t b = cast(Bs[k][tx]);
+			half_t a = half_t(As[ty][k]);
+			half_t b = half_t(Bs[k][tx]);
 
 			fma__(As[ty][k], Bs[k][tx], Csub);
 			fma__(a, b, Csub_half);

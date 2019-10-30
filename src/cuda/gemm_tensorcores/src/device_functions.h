@@ -37,6 +37,7 @@ float cast(double a) {
 template<typename real_t> __DEVICE_FUNCTION_INLINE__
 void check_relative_error(real_t& lhs, real_t& rhs, const uint32_t threshold) {
 	real_t diff = abs__(lhs - rhs);
+
 	if (diff > real_t(ZERO_DOUBLE)) {
 		atomicAdd(&errors, 1);
 	}
