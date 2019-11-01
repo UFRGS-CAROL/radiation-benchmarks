@@ -154,7 +154,7 @@ __global__ void matrix_mult_kernel_unhardened(//Kernel without hardening
 		// of the block sub-matrix
 #pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			fma_inline(As[ty][k], Bs[k][tx], Csub);
+			Csub = fma_inline(As[ty][k], Bs[k][tx], Csub);
 		}
 
 		// Synchronize to make sure that the preceding
