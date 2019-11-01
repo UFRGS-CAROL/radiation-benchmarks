@@ -30,7 +30,7 @@ half abs__(half a) {
 }
 
 template<typename real_t>  __DEVICE_INLINE__
-void check_relative_error(real_t lhs, real_t rhs) {
+void check_relative_error(real_t lhs, real_t rhs, const uint32_t threshold) {
 	real_t diff = abs__(lhs - rhs);
 
 	if (diff > real_t(ZERO_DOUBLE)) {
@@ -49,11 +49,11 @@ void check_relative_error(float lhs, double rhs) {
 
 __DEVICE_INLINE__
 void check_relative_error(float lhs, double rhs, const uint32_t threshold) {
-	const float rhs_as_float = float(rhs);
-	const float diff = fabs(lhs - rhs_as_float);
-	const float thre = (*(float*) (&threshold));
-
-	if (diff > thre) {
+	float rhs_as_float = float(rhs);
+	uint32_t l = __float_as_uint(lhs);
+	uint32_t r = __float_as_uint(rhs_as_float);
+	uint32_t diff = SUB_ABS(l, r);
+	if (diff > threshold) {
 		atomicAdd(&errors, 1);
 	}
 }
