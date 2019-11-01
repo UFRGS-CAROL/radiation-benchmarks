@@ -72,11 +72,12 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 			half_t a = half_t(As[ty][k]);
 			half_t b = half_t(Bs[k][tx]);
 
-			Csub_real += As[ty][k] * Bs[k][tx];
-			Csub_half += a * b;
+			Csub_real = fma_inline(As[ty][k], Bs[k][tx], Csub_real);
+			Csub_half = fma_inline(a, b, Csub_half);
 
 			if ((k % COUNT) == 0) {
 				check_relative_error(Csub_half, Csub_real);
+				//Csub_half = Csub_real;
 			}
 		}
 
