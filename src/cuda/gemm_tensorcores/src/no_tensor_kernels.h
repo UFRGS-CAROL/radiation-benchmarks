@@ -9,7 +9,7 @@
 #define NO_TENSOR_KERNELS_H_
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
-__global__ void matrix_mult_kernel( //Kernel hardening
+__global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		real_t *A,   //A
 		real_t *B,   //B
 		real_t *C,   //C
@@ -41,7 +41,7 @@ __global__ void matrix_mult_kernel( //Kernel hardening
 
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
-	real_t Csub = 0;
+	real_t Csub_real = 0;
 	half_t Csub_half = 0;
 	//double threshold = -2222;
 	// Loop over all the sub-matrices of A and B
@@ -72,11 +72,11 @@ __global__ void matrix_mult_kernel( //Kernel hardening
 			half_t a = half_t(As[ty][k]);
 			half_t b = half_t(Bs[k][tx]);
 
-			fma__(As[ty][k], Bs[k][tx], Csub);
-			fma__(a, b, Csub_half);
+			Csub_real += As[ty][k] * Bs[k][tx];
+			Csub_half += a * b;
 
 			if ((k % COUNT) == 0) {
-				check_relative_error(Csub_half, Csub);
+				check_relative_error(Csub_half, Csub_real);
 			}
 		}
 
@@ -89,20 +89,19 @@ __global__ void matrix_mult_kernel( //Kernel hardening
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-	D_r[index] = alpha * Csub + beta * C[index];
+	D_r[index] = alpha * Csub_real + beta * C[index];
 	D_h[index] = half_t(alpha) * Csub_half + half_t(beta) * half_t(C[index]);
 
 }
+/*
 
 template<typename real_t>
-__global__ void matrix_mult_kernel(
-		//Kernel without hardening
+__global__ void matrix_mult_kernel_unhardened(//Kernel without hardening
 		real_t *A,  //A
 		real_t *B,  //B
 		real_t *C,  //C
 		real_t *D,  //D
-		real_t alpha, real_t beta, int wA, int wB,
-		const uint32_t threshold = 0) {
+		real_t alpha, real_t beta, int wA, int wB) {
 	// Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -155,7 +154,7 @@ __global__ void matrix_mult_kernel(
 		// of the block sub-matrix
 #pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			fma__(As[ty][k], Bs[k][tx], Csub);
+			fma_inline(As[ty][k], Bs[k][tx], Csub);
 		}
 
 		// Synchronize to make sure that the preceding
@@ -169,5 +168,5 @@ __global__ void matrix_mult_kernel(
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
 	D[index] = alpha * Csub + beta * C[index];
 }
-
+*/
 #endif /* NO_TENSOR_KERNELS_H_ */
