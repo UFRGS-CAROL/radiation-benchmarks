@@ -77,7 +77,6 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 
 			if ((k % COUNT) == 0) {
 				check_relative_error(Csub_half, Csub_real);
-				//Csub_half = Csub_real;
 			}
 		}
 
@@ -94,7 +93,7 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 	D_h[index] = half_t(alpha) * Csub_half + half_t(beta) * half_t(C[index]);
 
 }
-/*
+
 
 template<typename real_t>
 __global__ void matrix_mult_kernel_unhardened(//Kernel without hardening
@@ -169,5 +168,5 @@ __global__ void matrix_mult_kernel_unhardened(//Kernel without hardening
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
 	D[index] = alpha * Csub + beta * C[index];
 }
-*/
+
 #endif /* NO_TENSOR_KERNELS_H_ */
