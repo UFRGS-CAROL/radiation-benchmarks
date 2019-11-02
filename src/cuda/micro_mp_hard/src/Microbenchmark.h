@@ -11,6 +11,7 @@
 #include <tuple>
 #include <sstream>
 #include <omp.h>
+#include <fstream>
 
 #include "device_vector.h"
 #include "Parameters.h"
