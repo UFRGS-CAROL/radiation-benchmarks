@@ -41,9 +41,9 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
-	real_t Csub_real = 0;
-	half_t Csub_half = 0;
-	//double threshold = -2222;
+	volatile real_t Csub_real = 0;
+	volatile half_t Csub_half = 0;
+
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
 	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
@@ -69,8 +69,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		// of the block sub-matrix
 #pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			half_t a = half_t(As[ty][k]);
-			half_t b = half_t(Bs[k][tx]);
+			volatile half_t a = half_t(As[ty][k]);
+			volatile half_t b = half_t(Bs[k][tx]);
 
 			Csub_real = fma_inline(As[ty][k], Bs[k][tx], Csub_real);
 			Csub_half = fma_inline(a, b, Csub_half);
@@ -89,9 +89,13 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-	D_r[index] = alpha * Csub_real + beta * C[index];
-	D_h[index] = half_t(alpha) * Csub_half + half_t(beta) * half_t(C[index]);
 
+	volatile real_t real_val = alpha * Csub_real + beta * C[index];
+	volatile half_t half_val = half_t(alpha) * Csub_half + half_t(beta) * half_t(C[index]);
+	D_r[index] = real_val;
+	D_h[index] = half_val;
+
+	check_relative_error(half_val, real_val, threshold);
 }
 
 

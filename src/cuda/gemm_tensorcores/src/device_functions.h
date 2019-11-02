@@ -38,14 +38,14 @@ void check_relative_error(real_t lhs, real_t rhs, const uint32_t threshold) {
 	}
 }
 
-__DEVICE_INLINE__
-void check_relative_error(float lhs, double rhs) {
-	const float diff = abs__(__fdividef(lhs, float(rhs)));
-	if (diff < MIN_PERCENTAGE && diff > HUNDRED_PERCENT) {
-		atomicAdd(&errors, 1);
-	}
-	lhs = rhs;
-}
+//__DEVICE_INLINE__
+//void check_relative_error(float lhs, double rhs) {
+//	const float diff = abs__(__fdividef(lhs, float(rhs)));
+//	if (diff < MIN_PERCENTAGE && diff > HUNDRED_PERCENT) {
+//		atomicAdd(&errors, 1);
+//	}
+//	lhs = rhs;
+//}
 
 __DEVICE_INLINE__
 void check_relative_error(float lhs, double rhs, const uint32_t threshold) {
