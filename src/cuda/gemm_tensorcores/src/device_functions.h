@@ -75,12 +75,16 @@ double fma_inline(double a, double b, double acc) {
 
 __DEVICE_INLINE__
 half fma_inline(half a, half b, half acc) {
+#if __CUDA_ARCH__ >= 600
 	return __hfma(a, b, acc);
+#else
+	return __fmaf_rn(float(a), float(b), float(acc));
+#endif
 }
 
-__DEVICE_INLINE__
-half2 fma_inline(half2 a, half2 b, half2 acc) {
-	return __hfma2(a, b, acc);
-}
+//__DEVICE_INLINE__
+//half2 fma_inline(half2 a, half2 b, half2 acc) {
+//	return __hfma2(a, b, acc);
+//}
 
 #endif /* DEVICE_FUNCTIONS_H_ */
