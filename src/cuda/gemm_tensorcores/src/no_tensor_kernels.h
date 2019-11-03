@@ -92,10 +92,11 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 
 	volatile real_t real_val = alpha * Csub_real + beta * C[index];
 	volatile half_t half_val = half_t(alpha) * Csub_half + half_t(beta) * half_t(C[index]);
+	check_relative_error(half_val, real_val, threshold);
+
 	D_r[index] = real_val;
 	D_h[index] = half_val;
 
-	check_relative_error(half_val, real_val, threshold);
 }
 
 
