@@ -17,7 +17,9 @@ struct GemmCaller {
 			rad::DeviceVector<real_t>& d_dev, 			//D matrix
 			rad::DeviceVector<half_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
-			const uint32_t threshold);
+			const uint32_t threshold){
+
+	}
 
 	GemmCaller(uint32_t m, uint32_t n) {
 		uint32_t grid_rows = (m + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -37,7 +39,7 @@ struct UnhardenedGemmCaller: public GemmCaller<0, real_t, real_t> {
 			rad::DeviceVector<real_t>& d_dev, 			//D matrix
 			rad::DeviceVector<real_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
-			const uint32_t threshold) {
+			const uint32_t threshold) override {
 		matrix_mult_kernel_unhardened<<<this->dim_grid, this->dim_block>>>( //call
 				a_dev.data(), //a
 				b_dev.data(), //b
@@ -62,7 +64,7 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 			rad::DeviceVector<real_t>& d_dev, 			//D matrix
 			rad::DeviceVector<half_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
-			const uint32_t threshold) {
+			const uint32_t threshold) override {
 		matrix_mult_kernel_dmr<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
 				a_dev.data(), 				//a
 				b_dev.data(), 				//b
@@ -149,9 +151,16 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 		if (!log_obj.generate) {
 
 			auto comparing_time = rad::mysecond();
-			auto errors = check_output_errors_dmr<mult_env.duplicated>(gold_host,
+			auto errors = std::pair<int, int>();
+			if(mult_env.duplicated){
+				errors = check_output_errors_dmr<true>(gold_host,
 					d_vector_host_real_t, d_vector_host_half_t, log_obj,
 					threshold);
+			}else{
+				errors = check_output_errors_dmr<false>(gold_host,
+					d_vector_host_real_t, d_vector_host_half_t, log_obj,
+					threshold);
+			}
 			comparing_time = rad::mysecond() - comparing_time;
 
 			std::cout << "Iteration: " << it << " DMR errors " << errors.first

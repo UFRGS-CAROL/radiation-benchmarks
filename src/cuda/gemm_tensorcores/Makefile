@@ -12,21 +12,23 @@ ITERATIONS=10
 ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
 #ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
 #ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+#ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
 VPATH=./src/
 TARGET=gemm
 OBJDIR=./obj/
 
-CXX=g++
-NVCC=/usr/local/cuda/bin/nvcc 
+CXX=g++-4.8 
+#g++
+CUDAPATH=/usr/local/cuda-7.0
+NVCC=$(CUDAPATH)/bin/nvcc 
 OPTS=-O3
 LDFLAGS= -lm -pthread -lstdc++ 
 COMMON= 
 CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas -Wunused-function
 RAD_DIR=/home/carol/radiation-benchmarks
 
-INCLUDE=-I/usr/local/cuda/include -I../common
+INCLUDE=-I$(CUDAPATH)/include -I../common
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
@@ -39,14 +41,13 @@ STDVERSION=--std=c++11
 COMMON+= $(STDVERSION)
 
 ifeq ($(GPU), 1) 
-COMMON+= -DGPU -I/usr/local/cuda/include/
+COMMON+= -DGPU -I$(CUDAPATH)/include/
 CFLAGS+= -DGPU
-LDFLAGS+= -L/usr/local/cuda/lib64 -lcudart -lcurand
+LDFLAGS+= -L$(CUDAPATH)/lib64 -lcudart -lcurand
 endif
 
 ifeq ($(OMP), 1) 
 CFLAGS+= -DOMP -fopenmp
-NVCCFLAGS += -Xcompiler -fopenmp -DOMP
 endif
 
 
@@ -73,7 +74,7 @@ $(OBJDIR)%.o: %.cpp $(DEPS)
 	$(CXX) $(COMMON) $(CFLAGS) -c $< -o $@ $(INCLUDE) 
 
 $(OBJDIR)%.o: %.cu $(DEPS)
-	$(NVCC) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" $(INCLUDE) -c $< -o $@ 
+	$(NVCC) -ccbin $(CXX) $(ARCH) $(COMMON) $(NVCCFLAGS) --compiler-options "$(CFLAGS)" $(INCLUDE) -c $< -o $@ 
 
 
 obj:

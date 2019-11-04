@@ -8,6 +8,8 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#include <stdexcept>
+
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 32
 #endif

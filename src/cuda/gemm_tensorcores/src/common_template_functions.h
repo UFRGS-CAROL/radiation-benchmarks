@@ -115,11 +115,13 @@ static unsigned long long dmr_errors() {
 	return ret;
 }
 
+#if __CUDA_ARCH__ > 600
 static std::ostream& operator<<(std::ostream& os, const half& rhs) {
 	float temp = float(rhs);
 	os << temp;
 	return os;
 }
+#endif
 
 template<typename real_t>
 bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
