@@ -20,7 +20,7 @@ OBJDIR=./obj/
 
 CXX=g++-4.8 
 #g++
-CUDAPATH=/usr/local/cuda-7.0
+CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc 
 OPTS=-O3
 LDFLAGS= -lm -pthread -lstdc++ 
