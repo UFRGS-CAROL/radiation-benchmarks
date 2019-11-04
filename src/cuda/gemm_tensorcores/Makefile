@@ -18,7 +18,7 @@ VPATH=./src/
 TARGET=gemm
 OBJDIR=./obj/
 
-CXX=g++-4.8 
+CXX=g++
 #g++
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc 
