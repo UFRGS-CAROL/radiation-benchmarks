@@ -1,5 +1,7 @@
 #include "Log.h"
 
+#include "common.h"
+
 Log::Log(int argc, char** argv) :
 		alpha(1), beta(0) {
 
@@ -17,8 +19,7 @@ Log::Log(int argc, char** argv) :
 			"./input_c.matrix");
 	this->gold_inout_path = this->find_char_arg(argc, argv, "--gold",
 			"./gold.matrix");
-	this->gold_inout_path_1 = this->find_char_arg(argc, argv, "--gold",
-			"./gold1.matrix");
+
 
 	this->precision = this->find_char_arg(argc, argv, "--precision", "float");
 
@@ -27,7 +28,7 @@ Log::Log(int argc, char** argv) :
 	this->use_tensor_cores = this->find_int_arg(argc, argv, "--tensor_cores",
 			0);
 
-	this->check_block = this->find_int_arg(argc, argv, "--opnum", 32);
+	this->check_block = this->find_int_arg(argc, argv, "--opnum", BLOCK_SIZE);
 
 	this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);
 

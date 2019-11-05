@@ -55,8 +55,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		// store the sub-matrix of B
 		__shared__ real_t Bs[BLOCK_SIZE][BLOCK_SIZE];
 
-		__shared__ half_t As_half[BLOCK_SIZE][BLOCK_SIZE];
-		__shared__ half_t Bs_half[BLOCK_SIZE][BLOCK_SIZE];
+//		__shared__ half_t As_half[BLOCK_SIZE][BLOCK_SIZE];
+//		__shared__ half_t Bs_half[BLOCK_SIZE][BLOCK_SIZE];
 
 
 		// Load the matrices from device memory
@@ -64,8 +64,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		// one element of each matrix
 		As[ty][tx] = A[a + wA * ty + tx];
 		Bs[ty][tx] = B[b + wB * ty + tx];
-		As_half[ty][tx] = half_t(A[a + wA * ty + tx]);
-		Bs_half[ty][tx] = half_t(B[b + wB * ty + tx]);
+//		As_half[ty][tx] = half_t(A[a + wA * ty + tx]);
+//		Bs_half[ty][tx] = half_t(B[b + wB * ty + tx]);
 
 		// Synchronize to make sure the matrices are loaded
 		__syncthreads();
@@ -75,11 +75,13 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		// of the block sub-matrix
 #pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-//			volatile half_t a = half_t(As[ty][k]);
-//			volatile half_t b = half_t(Bs[k][tx]);
+			volatile half_t a = half_t(As[ty][k]);
+			volatile half_t b = half_t(Bs[k][tx]);
 
 			Csub_real = fma_inline(As[ty][k], Bs[k][tx], Csub_real);
-			Csub_half = fma_inline(As_half[ty][tx], Bs_half[ty][tx], Csub_half);
+//			Csub_half = fma_inline(As_half[ty][k], Bs_half[k][tx], Csub_half);
+			Csub_half = fma_inline(a, b, Csub_half);
+
 
 			if ((k % COUNT) == 0) {
 				check_relative_error(Csub_half, Csub_real, threshold);
@@ -96,8 +98,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
 
-	volatile real_t real_val = alpha * Csub_real + beta * C[index];
-	volatile half_t half_val = half_t(alpha) * Csub_half + half_t(beta) * half_t(C[index]);
+	real_t real_val = alpha * Csub_real + beta * C[index];
+	half_t half_val = half_t(alpha) * Csub_half + half_t(beta) * half_t(C[index]);
 	check_relative_error(half_val, real_val, threshold);
 
 	D_r[index] = real_val;

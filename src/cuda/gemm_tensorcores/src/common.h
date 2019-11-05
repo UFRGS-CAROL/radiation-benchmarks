@@ -36,7 +36,6 @@
 // Hundred percent
 #define HUNDRED_PERCENT 1.0f
 
-
 //Threshold for one operation
 #define THRESHOLD_1 0x398007F8
 
@@ -46,9 +45,7 @@
 //Threshold for one operation
 #define THRESHOLD_32 100
 
-static void exception(std::string msg, std::string file, int line) {
-	throw std::runtime_error(msg + " at " + file + ":" + std::to_string(line));
-}
+void exception(std::string msg, std::string file, int line);
 
 #define throw_line(msg) exception(msg, __FILE__, __LINE__)
 
