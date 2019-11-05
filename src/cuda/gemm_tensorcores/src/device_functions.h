@@ -70,15 +70,20 @@ void check_relative_error(float lhs, double rhs, const uint32_t threshold) {
  * FMA DMR
  * ----------------------------------------
  */
-__DEVICE_INLINE__
-float fma_inline(float a, float b, float acc) {
-	return __fmaf_rn(a, b, acc);
+//__DEVICE_INLINE__
+//float fma_inline(float a, float b, float acc) {
+//	return __fmaf_rn(a, b, acc);
+//}
+//
+//__DEVICE_INLINE__
+//double fma_inline(double a, double b, double acc) {
+//	return __fma_rn(a, b, acc);
+//}
+template<typename real_t> __DEVICE_INLINE__
+real_t fma_inline(real_t a, real_t b, real_t acc) {
+	return (a * b + acc);
 }
 
-__DEVICE_INLINE__
-double fma_inline(double a, double b, double acc) {
-	return __fma_rn(a, b, acc);
-}
 
 #if __CUDA_ARCH__ >= 600
 __DEVICE_INLINE__

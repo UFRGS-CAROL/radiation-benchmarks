@@ -163,8 +163,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		}
 //		threshold = std::fmax(threshold, fabs(half_precision - full_precision));
 
-		if (gold_value != full_precision ||
-				half_precision != full_precision) {
+		if (gold_value != full_precision && half_precision != full_precision) {
 #ifdef OMP
 #pragma omp critical
 			{
