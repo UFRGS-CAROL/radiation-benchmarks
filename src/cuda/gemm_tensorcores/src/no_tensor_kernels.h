@@ -73,9 +73,9 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
 			volatile real_t ar = As[ty][k];
-			volatile real_t br = Bs[k][tx];
+			real_t br = Bs[k][tx];
 			volatile half_t ah = As[ty][k];
-			volatile half_t bh = Bs[k][tx];
+			half_t bh = Bs[k][tx];
 
 			Csub_real += ar * br;
 			Csub_half += ah * bh;
@@ -95,13 +95,12 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
 
-	volatile real_t real_val = alpha * Csub_real + beta * C[index];
-	volatile half_t half_val = half_t(alpha) * Csub_half + half_t(beta) * half_t(C[index]);
-	check_relative_error(half_val, real_val, threshold);
-
+	real_t real_val = alpha * Csub_real + beta * C[index];
+	half_t half_val = half_t(alpha) * Csub_half
+			+ half_t(beta) * half_t(C[index]);
 	D_r[index] = real_val;
 	D_h[index] = half_val;
-
+	check_relative_error(half_val, real_val, threshold);
 }
 
 template<typename real_t>
