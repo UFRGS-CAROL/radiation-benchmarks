@@ -6,7 +6,7 @@
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct GemmCaller {
-	const bool duplicated = false;
+	bool duplicated;
 	dim3 dim_grid, dim_block;
 
 	virtual ~GemmCaller() = default;
@@ -23,7 +23,7 @@ struct GemmCaller {
 
 	virtual std::vector<half_t> memcpy_half_t_mem(rad::DeviceVector<half_t>& d_dev_half_t);
 
-	GemmCaller(uint32_t m, uint32_t n) {
+	GemmCaller(uint32_t m, uint32_t n) : duplicated(false) {
 		uint32_t grid_rows = (m + BLOCK_SIZE - 1) / BLOCK_SIZE;
 		uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
 		this->dim_grid = dim3(grid_cols, grid_rows);
@@ -59,7 +59,6 @@ struct UnhardenedGemmCaller: public GemmCaller<0, real_t, real_t> {
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
-	const bool duplicated = true;
 
 	void gemm(rad::DeviceVector<real_t>& a_dev, 			//A matrix
 			rad::DeviceVector<real_t>& b_dev, 			//B matrix
@@ -79,6 +78,7 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 
 	DMRMixedGemmCaller(uint32_t m, uint32_t n) :
 			GemmCaller<COUNT, half_t, real_t>(m, n) {
+		this->duplicated = true;
 	}
 
 	std::vector<half_t> memcpy_half_t_mem(rad::DeviceVector<half_t>& d_dev_half_t){
