@@ -17,9 +17,11 @@ struct GemmCaller {
 			rad::DeviceVector<real_t>& d_dev, 			//D matrix
 			rad::DeviceVector<half_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
-			const uint32_t threshold){
+			const uint32_t threshold) {
 
 	}
+
+	virtual std::vector<half_t> memcpy_half_t_mem(rad::DeviceVector<half_t>& d_dev_half_t);
 
 	GemmCaller(uint32_t m, uint32_t n) {
 		uint32_t grid_rows = (m + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -32,14 +34,13 @@ struct GemmCaller {
 template<typename real_t>
 struct UnhardenedGemmCaller: public GemmCaller<0, real_t, real_t> {
 
-	void gemm(
-			rad::DeviceVector<real_t>& a_dev, 			//A matrix
+	void gemm(rad::DeviceVector<real_t>& a_dev, 			//A matrix
 			rad::DeviceVector<real_t>& b_dev, 			//B matrix
 			rad::DeviceVector<real_t>& c_dev, 			//C matrix
 			rad::DeviceVector<real_t>& d_dev, 			//D matrix
 			rad::DeviceVector<real_t>& d_dev_half_t,  	//D_Half matrix
-			real_t alpha, real_t beta, int wA, int wB,
-			const uint32_t threshold) override {
+			real_t alpha, real_t beta, int wA, int wB, const uint32_t threshold)
+					override {
 		matrix_mult_kernel_unhardened<<<this->dim_grid, this->dim_block>>>( //call
 				a_dev.data(), //a
 				b_dev.data(), //b
@@ -48,6 +49,9 @@ struct UnhardenedGemmCaller: public GemmCaller<0, real_t, real_t> {
 				alpha, beta, wA, wB);
 	}
 
+	std::vector<real_t> memcpy_half_t_mem(rad::DeviceVector<real_t>& d_dev_half_t){
+		return {};
+	}
 	UnhardenedGemmCaller(uint32_t m, uint32_t n) :
 			GemmCaller<0, real_t, real_t>(m, n) {
 	} //default constructor
@@ -57,14 +61,13 @@ template<const uint32_t COUNT, typename half_t, typename real_t>
 struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 	static const bool duplicated = true;
 
-	void gemm(
-			rad::DeviceVector<real_t>& a_dev, 			//A matrix
+	void gemm(rad::DeviceVector<real_t>& a_dev, 			//A matrix
 			rad::DeviceVector<real_t>& b_dev, 			//B matrix
 			rad::DeviceVector<real_t>& c_dev, 			//C matrix
 			rad::DeviceVector<real_t>& d_dev, 			//D matrix
 			rad::DeviceVector<half_t>& d_dev_half_t,  	//D_Half matrix
-			real_t alpha, real_t beta, int wA, int wB,
-			const uint32_t threshold) override {
+			real_t alpha, real_t beta, int wA, int wB, const uint32_t threshold)
+					override {
 		matrix_mult_kernel_dmr<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
 				a_dev.data(), 				//a
 				b_dev.data(), 				//b
@@ -76,6 +79,10 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 
 	DMRMixedGemmCaller(uint32_t m, uint32_t n) :
 			GemmCaller<COUNT, half_t, real_t>(m, n) {
+	}
+
+	std::vector<half_t> memcpy_half_t_mem(rad::DeviceVector<half_t>& d_dev_half_t){
+		return d_dev_half_t.to_vector();
 	}
 };
 
@@ -137,6 +144,7 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 				log_obj.beta, log_obj.size_matrices, log_obj.size_matrices,
 				threshold);
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 		log_obj.end_iteration();
@@ -144,7 +152,7 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 		elapsed_time += computation_time;
 
 		double copy_time = rad::mysecond();
-		d_vector_host_half_t = d_vector_half_t_device.to_vector();
+		d_vector_host_half_t = mult_env.memcpy_half_t_mem(d_vector_half_t_device);
 		d_vector_host_real_t = d_vector_device.to_vector();
 		copy_time = rad::mysecond() - copy_time;
 
@@ -152,15 +160,10 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 
 			auto comparing_time = rad::mysecond();
 			auto errors = std::pair<int, int>();
-			if(mult_env.duplicated){
-				errors = check_output_errors_dmr<true>(gold_host,
+			errors = check_output_errors_dmr<mult_env.duplicated>(gold_host,
 					d_vector_host_real_t, d_vector_host_half_t, log_obj,
 					threshold);
-			}else{
-				errors = check_output_errors_dmr<false>(gold_host,
-					d_vector_host_real_t, d_vector_host_half_t, log_obj,
-					threshold);
-			}
+
 			comparing_time = rad::mysecond() - comparing_time;
 
 			std::cout << "Iteration: " << it << " DMR errors " << errors.first
