@@ -43,8 +43,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
-	real_t Csub_real = 0;
-	half_t Csub_half = 0;
+	volatile real_t Csub_real = 0;
+	volatile half_t Csub_half = 0;
 
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
@@ -95,9 +95,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
 
-	real_t real_val = alpha * Csub_real + beta * C[index];
-	half_t half_val = half_t(alpha) * Csub_half
-			+ half_t(beta) * half_t(C[index]);
+	volatile real_t real_val = alpha * Csub_real + beta * C[index];
+	volatile half_t half_val = half_t(alpha) * Csub_half + half_t(beta) * half_t(C[index]);
 	check_relative_error(half_val, real_val, threshold);
 
 	D_r[index] = real_val;

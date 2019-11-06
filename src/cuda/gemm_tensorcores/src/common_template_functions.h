@@ -78,7 +78,7 @@ void read_gold(std::vector<half_t>& a_vector, std::vector<half_t>& b_vector,
 	result = result && read_from_file(c_file_path, c_vector);
 	result = result && read_from_file(d_file_path, d_vector);
 	if (result == false) {
-		throw_line("Some of the files could not be written\n");
+		throw_line("Some of the files could not be read\n");
 	}
 }
 
@@ -106,11 +106,13 @@ void generate_input_matrices(size_t matrix_size, std::vector<half_t>& a_vector,
 static unsigned long long dmr_errors() {
 	unsigned long long ret = 0;
 	rad::checkFrameworkErrors(
-			cudaMemcpyFromSymbol(&ret, errors, sizeof(unsigned long long), 0));
+			cudaMemcpyFromSymbol(&ret, errors, sizeof(unsigned long long), 0,
+					cudaMemcpyDeviceToHost));
 
 	unsigned long long tmp = 0;
 	rad::checkFrameworkErrors(
-			cudaMemcpyToSymbol(errors, &tmp, sizeof(unsigned long long), 0));
+			cudaMemcpyToSymbol(errors, &tmp, sizeof(unsigned long long), 0,
+					cudaMemcpyHostToDevice));
 
 	return ret;
 }
@@ -148,7 +150,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<real_t>& real_vector, std::vector<half_t>& half_vector,
 		Log& log, const uint32_t threshold) {
 	int host_errors = 0;
-//	double threshold = -3222;
+
 #ifdef OMP
 #pragma omp parallel for shared(host_errors)
 #endif
@@ -161,7 +163,6 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		} else {
 			half_precision = full_precision;
 		}
-//		threshold = std::fmax(threshold, fabs(half_precision - full_precision));
 
 		if (gold_value != full_precision && half_precision != full_precision) {
 #ifdef OMP
@@ -186,7 +187,6 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 #endif
 		}
 	}
-//	std::cout << "THRESHOLD 0 " << threshold << std::endl;
 
 	auto dmr_err = dmr_errors();
 	if (dmr_err != 0) {
