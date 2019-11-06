@@ -27,7 +27,7 @@
 #endif
 
 #ifndef ZERO_DOUBLE
-#define ZERO_DOUBLE 3.81469726562500000000e-06
+#define ZERO_DOUBLE 1.0e-15
 #endif
 
 // Eight percent

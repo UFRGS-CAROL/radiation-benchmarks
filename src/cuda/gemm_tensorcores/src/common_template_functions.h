@@ -127,11 +127,11 @@ static std::ostream& operator<<(std::ostream& os, const half& rhs) {
 
 template<typename real_t>
 bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
-	if(std::fabs(lhs - rhs) > ZERO_DOUBLE){
-		std::cout << std::setprecision(20) << std::scientific << std::fabs(lhs-rhs) << std::endl;
-		assert(0);
-	}
 	return (std::fabs(lhs - rhs) <= ZERO_DOUBLE);
+//	if (lhs != rhs){
+//		std::cout << std::setprecision(20) << std::scientific << std::fabs(lhs - rhs) << std::endl;
+//	}
+//	return lhs == rhs;
 }
 
 bool equals(float& lhs, double& rhs, const uint32_t threshold) {
