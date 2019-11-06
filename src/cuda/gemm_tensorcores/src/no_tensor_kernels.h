@@ -8,6 +8,8 @@
 #ifndef NO_TENSOR_KERNELS_H_
 #define NO_TENSOR_KERNELS_H_
 
+//__device__ volatile float t = 1;
+
 template<const uint32_t COUNT, typename half_t, typename real_t>
 __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		real_t *A,   //A
@@ -55,17 +57,11 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		// store the sub-matrix of B
 		__shared__ real_t Bs[BLOCK_SIZE][BLOCK_SIZE];
 
-//		__shared__ half_t As_half[BLOCK_SIZE][BLOCK_SIZE];
-//		__shared__ half_t Bs_half[BLOCK_SIZE][BLOCK_SIZE];
-
-
 		// Load the matrices from device memory
 		// to shared memory; each thread loads
 		// one element of each matrix
 		As[ty][tx] = A[a + wA * ty + tx];
 		Bs[ty][tx] = B[b + wB * ty + tx];
-//		As_half[ty][tx] = half_t(A[a + wA * ty + tx]);
-//		Bs_half[ty][tx] = half_t(B[b + wB * ty + tx]);
 
 		// Synchronize to make sure the matrices are loaded
 		__syncthreads();
@@ -74,14 +70,15 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		// each thread computes one element
 		// of the block sub-matrix
 #pragma unroll
+
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			half_t a = half_t(As[ty][k]);
-			half_t b = half_t(Bs[k][tx]);
+			volatile real_t ar = As[ty][k];
+			volatile real_t br = Bs[k][tx];
+			volatile half_t ah = As[ty][k];
+			volatile half_t bh = Bs[k][tx];
 
-			Csub_real = fma_inline(As[ty][k], Bs[k][tx], Csub_real);
-//			Csub_half = fma_inline(As_half[ty][k], Bs_half[k][tx], Csub_half);
-			Csub_half = fma_inline(a, b, Csub_half);
-
+			Csub_real += ar * br;
+			Csub_half += ah * bh;
 
 			if ((k % COUNT) == 0) {
 				check_relative_error(Csub_half, Csub_real, threshold);
@@ -99,7 +96,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
 
 	real_t real_val = alpha * Csub_real + beta * C[index];
-	half_t half_val = half_t(alpha) * Csub_half + half_t(beta) * half_t(C[index]);
+	half_t half_val = half_t(alpha) * Csub_half
+			+ half_t(beta) * half_t(C[index]);
 	check_relative_error(half_val, real_val, threshold);
 
 	D_r[index] = real_val;
@@ -107,9 +105,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 
 }
 
-
 template<typename real_t>
-__global__ void matrix_mult_kernel_unhardened(//Kernel without hardening
+__global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
 		real_t *A,  //A
 		real_t *B,  //B
 		real_t *C,  //C

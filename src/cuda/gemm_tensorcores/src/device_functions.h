@@ -33,33 +33,17 @@ half abs__(half a) {
 
 template<typename real_t>  __DEVICE_INLINE__
 void check_relative_error(real_t lhs, real_t rhs, const uint32_t threshold) {
-	real_t diff = abs__(lhs - rhs);
-
-	if (diff > real_t(ZERO_DOUBLE)) {
+	if (lhs != rhs) {
 		atomicAdd(&errors, 1);
 	}
 }
 
-//__DEVICE_INLINE__
-//void check_relative_error(float lhs, double rhs) {
-//	const float diff = abs__(__fdividef(lhs, float(rhs)));
-//	if (diff < MIN_PERCENTAGE && diff > HUNDRED_PERCENT) {
-//		atomicAdd(&errors, 1);
-//	}
-//	lhs = rhs;
-//}
-
 __DEVICE_INLINE__
 void check_relative_error(float lhs, double rhs, const uint32_t threshold) {
 	float rhs_as_float = float(rhs);
-#if __CUDA_ARCH__ > 600
-	uint32_t l = __float_as_uint(lhs);
-	uint32_t r = __float_as_uint(rhs_as_float);
-#else
 	uint32_t l = *(uint32_t*)(&lhs);
-        uint32_t r = *(uint32_t*)(&rhs_as_float);
-#endif
-	uint32_t diff = SUB_ABS(l, r);
+    uint32_t r = *(uint32_t*)(&rhs_as_float);
+    uint32_t diff = SUB_ABS(l, r);
 	if (diff > threshold) {
 		atomicAdd(&errors, 1);
 	}
