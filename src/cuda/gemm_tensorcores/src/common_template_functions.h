@@ -145,10 +145,11 @@ bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 	return (SUB_ABS(lhs_data, rhs_data) <= threshold);
 }
 
-template<bool DMR, class half_t, class real_t>
+
+template<class half_t, class real_t>
 std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<real_t>& real_vector, std::vector<half_t>& half_vector,
-		Log& log, const uint32_t threshold) {
+		Log& log, const uint32_t threshold, const bool dmr) {
 	int host_errors = 0;
 
 #ifdef OMP
@@ -158,7 +159,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		auto gold_value = gold[i];
 		auto full_precision = real_vector[i];
 		half_t half_precision;
-		if (DMR) {
+		if (dmr) {
 			half_precision = half_vector[i];
 		} else {
 			half_precision = full_precision;

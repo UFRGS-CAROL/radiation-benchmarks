@@ -6,7 +6,7 @@
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct GemmCaller {
-	static const bool duplicated = false;
+	const bool duplicated = false;
 	dim3 dim_grid, dim_block;
 
 	virtual ~GemmCaller() = default;
@@ -59,7 +59,7 @@ struct UnhardenedGemmCaller: public GemmCaller<0, real_t, real_t> {
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
-	static const bool duplicated = true;
+	const bool duplicated = true;
 
 	void gemm(rad::DeviceVector<real_t>& a_dev, 			//A matrix
 			rad::DeviceVector<real_t>& b_dev, 			//B matrix
@@ -88,8 +88,6 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 
 template<const uint32_t COUNT, typename real_t>
 struct DMRGemmCaller: public DMRMixedGemmCaller<COUNT, real_t, real_t> {
-	static const bool duplicated = true;
-
 	DMRGemmCaller(uint32_t m, uint32_t n) :
 			DMRMixedGemmCaller<COUNT, real_t, real_t>(m, n) {
 	}
@@ -160,9 +158,9 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 
 			auto comparing_time = rad::mysecond();
 			auto errors = std::pair<int, int>();
-			errors = check_output_errors_dmr<mult_env.duplicated>(gold_host,
+			errors = check_output_errors_dmr(gold_host,
 					d_vector_host_real_t, d_vector_host_half_t, log_obj,
-					threshold);
+					threshold, mult_env.duplicated);
 
 			comparing_time = rad::mysecond() - comparing_time;
 
