@@ -37,7 +37,7 @@
 #define HUNDRED_PERCENT 1.0f
 
 //Threshold for one operation
-#define THRESHOLD_1 0x398007F8
+#define THRESHOLD_1 2174239238
 
 //Threshold for 16 operation
 #define THRESHOLD_16 40
