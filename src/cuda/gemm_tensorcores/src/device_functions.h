@@ -39,7 +39,7 @@ void check_relative_error(real_t lhs, real_t rhs, const uint32_t threshold) {
 }
 
 __DEVICE_INLINE__
-void check_relative_error(float lhs, double rhs, const uint32_t threshold) {
+void check_relative_error(float& lhs, double rhs, const uint32_t threshold) {
 	float rhs_as_float = float(rhs);
 	uint32_t l = *(uint32_t*)(&lhs);
     uint32_t r = *(uint32_t*)(&rhs_as_float);
@@ -47,6 +47,7 @@ void check_relative_error(float lhs, double rhs, const uint32_t threshold) {
 	if (diff > threshold) {
 		atomicAdd(&errors, 1);
 	}
+	lhs = rhs_as_float;
 }
 
 /**
@@ -63,19 +64,19 @@ void check_relative_error(float lhs, double rhs, const uint32_t threshold) {
 //double fma_inline(double a, double b, double acc) {
 //	return __fma_rn(a, b, acc);
 //}
-template<typename real_t> __DEVICE_INLINE__
-real_t fma_inline(real_t a, real_t b, real_t acc) {
-	return (a * b + acc);
-}
-
-
-#if __CUDA_ARCH__ >= 600
-__DEVICE_INLINE__
-half fma_inline(half a, half b, half acc) {
-	return __hfma(a, b, acc);
-}
-#endif
-
+//template<typename real_t> __DEVICE_INLINE__
+//real_t fma_inline(real_t a, real_t b, real_t acc) {
+//	return (a * b + acc);
+//}
+//
+//
+//#if __CUDA_ARCH__ >= 600
+//__DEVICE_INLINE__
+//half fma_inline(half a, half b, half acc) {
+//	return __hfma(a, b, acc);
+//}
+//#endif
+//
 //__DEVICE_INLINE__
 //half2 fma_inline(half2 a, half2 b, half2 acc) {
 //	return __hfma2(a, b, acc);
