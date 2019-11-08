@@ -9,7 +9,7 @@
 #define CHECK_BLOCK 32
 #define THRESHOLD 1
 
-typedef half_t real_t;
+typedef half real_t;
 typedef float half_t;
 
 
