@@ -67,7 +67,7 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 			rad::DeviceVector<half_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB, const uint32_t threshold)
 					override {
-		matrix_mult_kernel_dmr<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
+		matrix_mult_kernel_dmr_mixed<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
 				a_dev.data(), 				//a
 				b_dev.data(), 				//b
 				c_dev.data(), 				//c
