@@ -27,8 +27,8 @@ int main(int argc, char **argv) {
     std::mt19937 eng(rd()); // seed the generator
     std::uniform_real_distribution<real_t> distr(-10000.00, 10000.00); 
 	*/
-  	// const real_t alpha = 1.1f;
-  	// const real_t beta = 1.2f;
+  	const real_t alpha = 1.1f;
+  	const real_t beta = 1.2f;
   	// std::random_device rd; // obtain a random number from hardware
    //  std::mt19937 eng(rd()); // seed the generator
    //  std::uniform_real_distribution<real_t> distr(0.0, 100.0); 
