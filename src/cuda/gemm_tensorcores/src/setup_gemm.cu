@@ -88,6 +88,24 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 
 template<const uint32_t COUNT, typename real_t>
 struct DMRGemmCaller: public DMRMixedGemmCaller<COUNT, real_t, real_t> {
+
+	void gemm(rad::DeviceVector<real_t>& a_dev, 			//A matrix
+			rad::DeviceVector<real_t>& b_dev, 			//B matrix
+			rad::DeviceVector<real_t>& c_dev, 			//C matrix
+			rad::DeviceVector<real_t>& d_dev, 			//D matrix
+			rad::DeviceVector<real_t>& d_dev_half_t,  	//D_Half matrix
+			real_t alpha, real_t beta, int wA, int wB, const uint32_t threshold)
+					override {
+		matrix_mult_kernel_dmr<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
+				a_dev.data(), 				//a
+				b_dev.data(), 				//b
+				c_dev.data(), 				//c
+				d_dev.data(), 				//d
+				d_dev_half_t.data(), 		//d hardening
+				alpha, beta, wA, wB, threshold);
+	}
+
+
 	DMRGemmCaller(uint32_t m, uint32_t n) :
 			DMRMixedGemmCaller<COUNT, real_t, real_t>(m, n) {
 	}
