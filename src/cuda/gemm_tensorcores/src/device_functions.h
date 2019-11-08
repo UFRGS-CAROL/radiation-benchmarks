@@ -33,7 +33,7 @@ half abs__(half a) {
 
 template<typename real_t> __DEVICE_INLINE__
 void check_relative_error(real_t lhs, real_t rhs) {
-	real_t diff = fabs(lhs - rhs);
+	real_t diff = abs__(lhs - rhs);
 	if (diff > ZERO_DOUBLE) {
 		atomicAdd(&errors, 1);
 	}
@@ -51,7 +51,7 @@ void check_relative_error(volatile float& lhs, double rhs) {
 //		atomicAdd(&errors, 1);
 //	}
 
-	float relative = __fdividef(lhs, rhs_as_float);
+	float relative = abs__(__fdividef(lhs, rhs_as_float));
 	if(relative < MIN_PERCENTAGE && relative > HUNDRED_PERCENT){
 		atomicAdd(&errors, 1);
 	}

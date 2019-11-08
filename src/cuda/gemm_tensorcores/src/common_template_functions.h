@@ -147,6 +147,11 @@ bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 	return (SUB_ABS(lhs_data, rhs_data) <= threshold);
 }
 
+bool equals(float& lhs, double& rhs) {
+	float relative = fabs(lhs / float(rhs));
+	return (relative < MIN_PERCENTAGE && relative > HUNDRED_PERCENT);
+}
+
 template<class half_t, class real_t>
 std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<real_t>& real_vector, std::vector<half_t>& half_vector,
@@ -166,8 +171,9 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			half_precision = full_precision;
 		}
 
-		if (!equals(gold_value, full_precision)
-				|| !equals(half_precision, full_precision, threshold)) {
+		if ((!equals(gold_value, full_precision)
+				&& !equals(half_precision, full_precision))
+				|| !equals(half_precision, full_precision)) {
 #ifdef OMP
 #pragma omp critical
 			{
