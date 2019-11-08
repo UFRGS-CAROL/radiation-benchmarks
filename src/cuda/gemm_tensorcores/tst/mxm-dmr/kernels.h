@@ -65,7 +65,7 @@ __device__  __forceinline__ half axpy__(half a, half b, half acc) {
 __device__ unsigned long long errors = 0;
 
 template<const uint32_t THRESHOLD_uint32_t>
-__device__ void check_bit_error(const __half &lhs, const float &rhs) {
+__device__ void check_bit_error(volatile const __half &lhs, const float &rhs) {
 	const uint32_t lhs_data = __half2uint_rn(lhs);
 	const uint32_t rhs_data = __float_as_uint(rhs);
 	uint32_t sub_res;
