@@ -32,21 +32,27 @@ half abs__(half a) {
 #endif
 
 template<typename real_t> __DEVICE_INLINE__
-void check_relative_error(real_t lhs, real_t rhs, const uint32_t threshold) {
+void check_relative_error(real_t lhs, real_t rhs) {
 	real_t diff = fabs(lhs - rhs);
 	if (diff > ZERO_DOUBLE) {
 		atomicAdd(&errors, 1);
 	}
 }
 
+
+
 __DEVICE_INLINE__
-void check_relative_error(volatile float& lhs, double rhs,
-		const uint32_t threshold) {
+void check_relative_error(volatile float& lhs, double rhs) {
 	float rhs_as_float = float(rhs);
-	uint32_t l = *(uint32_t*) (&lhs);
-	uint32_t r = *(uint32_t*) (&rhs_as_float);
-	uint32_t diff = SUB_ABS(l, r);
-	if (diff > threshold) {
+//	uint32_t l = *(uint32_t*) (&lhs);
+//	uint32_t r = *(uint32_t*) (&rhs_as_float);
+//	uint32_t diff = SUB_ABS(l, r);
+//	if (diff > threshold) {
+//		atomicAdd(&errors, 1);
+//	}
+
+	float relative = __fdividef(lhs, rhs_as_float);
+	if(relative < MIN_PERCENTAGE && relative > HUNDRED_PERCENT){
 		atomicAdd(&errors, 1);
 	}
 	lhs = rhs_as_float;
@@ -66,10 +72,10 @@ void check_relative_error(volatile float& lhs, double rhs,
 //double fma_inline(double a, double b, double acc) {
 //	return __fma_rn(a, b, acc);
 //}
-//template<typename real_t> __DEVICE_INLINE__
-//real_t fma_inline(real_t a, real_t b, real_t acc) {
-//	return (a * b + acc);
-//}
+template<typename real_t> __DEVICE_INLINE__
+void fma_inline(volatile real_t& a, volatile real_t& b, volatile real_t& acc) {
+	acc += a * b;
+}
 //
 //
 //#if __CUDA_ARCH__ >= 600
