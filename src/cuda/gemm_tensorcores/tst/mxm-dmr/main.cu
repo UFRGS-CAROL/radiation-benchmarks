@@ -43,6 +43,7 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < m * k; i++) host_b[i] = (real_t*)distr(eng);
 	for (int i = 0; i < m * k; i++) host_c[i] = 0;	
 	
+	
 	real_t *device_a, *device_b, *device_c, *device_d;
 	half_t  *device_d_half;
 	cudaMalloc((void**)&device_a, m * k * sizeof(real_t));
