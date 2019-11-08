@@ -137,7 +137,7 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
-	real_t Csub_real = 0;
+	volatile real_t Csub_real = 0;
 	half_t Csub_half = 0;
 
 	// Loop over all the sub-matrices of A and B
@@ -227,7 +227,7 @@ __global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
 
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
-	real_t Csub = 0;
+	volatile real_t Csub = 0;
 
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
