@@ -124,10 +124,8 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
 
 
 
-//TENSOR
-
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
-__global__ void simple_wmma_gemm_DMR(real_t *a, real_t *b, real_t *c, real_t *d, half_t *d_frag, 
+__global__ void simple_wmma_gemm_DMR(real_t *a, real_t *b, real_t *c, half_t *d, real_t *d_frag, 
         int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
     // Leading dimensions. Packed with no transpositions.
     int lda = m_ld;
