@@ -149,7 +149,7 @@ bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 
 bool equals(float& lhs, double& rhs) {
 	float relative = fabs(lhs / float(rhs));
-	return (relative < MIN_PERCENTAGE && relative > HUNDRED_PERCENT);
+	return (relative >= MIN_PERCENTAGE && relative <= HUNDRED_PERCENT);
 }
 
 template<class half_t, class real_t>

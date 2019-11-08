@@ -52,7 +52,7 @@ void check_relative_error(volatile float& lhs, double rhs) {
 //	}
 
 	float relative = abs__(__fdividef(lhs, rhs_as_float));
-	if(relative < MIN_PERCENTAGE && relative > HUNDRED_PERCENT){
+	if(relative < MIN_PERCENTAGE || relative > HUNDRED_PERCENT){
 		atomicAdd(&errors, 1);
 	}
 	lhs = rhs_as_float;
