@@ -127,7 +127,7 @@ __device__ __forceinline__ void check_bit_error(const float& lhs, const double& 
 //TENSOR
 
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
-__global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d, real_t *d_frag, 
+__global__ void simple_wmma_gemm_DMR(real_t *a, real_t *b, real_t *c, real_t *d, half_t *d_frag, 
         int m_ld, int n_ld, int k_ld, real_t alpha, real_t beta) {
     // Leading dimensions. Packed with no transpositions.
     int lda = m_ld;
@@ -259,7 +259,7 @@ __global__ void simple_wmma_gemm_DMR(half_t *a, half_t *b, real_t *c, half_t *d,
         
 
 
-        //check_bit_error<THRESHOLD>(Csub, d_frag);    
+        check_bit_error<THRESHOLD>(Csub, d_frag);    
     }
 }
 
@@ -524,7 +524,7 @@ void matrix_mul(real_t *A, real_t *B, int M, int N, int K, real_t *D, real_t alp
 }    
 
 template<const uint32_t THRESHOLD, const uint32_t COUNT, typename real_t, typename half_t>
-void matrix_mult_tensor_dmr(half_t *A, half_t *B, int M, int N, int K, real_t *D, half_t *D_h, real_t alpha, real_t beta, real_t *C)  {
+void matrix_mult_tensor_dmr(real_t *A, real_t *B, int M, int N, int K, real_t *D, half_t *D_h, real_t alpha, real_t beta, real_t *C)  {
     
     dim3 grid_dim;
     dim3 block_dim;
