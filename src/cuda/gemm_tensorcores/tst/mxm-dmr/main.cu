@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
   	const real_t beta = 1.2f;
   	std::random_device rd; // obtain a random number from hardware
     std::mt19937 eng(rd()); // seed the generator
-    std::uniform_real_distribution<half_t> distr(0, 100); 
+    std::uniform_real_distribution<real_t> distr(0.0, 100.0); 
 
 	real_t* host_a = (real_t*)calloc(m * k, sizeof(real_t));
 	real_t* host_b = (real_t*)calloc(k * n, sizeof(real_t));
@@ -39,11 +39,11 @@ int main(int argc, char **argv) {
 	real_t* host_d = (real_t*)calloc(m * n, sizeof(real_t));
 	half_t* host_d_half = (half_t*)calloc(m * n, sizeof(half_t));
 
-	for (int i = 0; i < m * k; i++) host_a[i] = (real_t*)distr(eng);
-	for (int i = 0; i < m * k; i++) host_b[i] = (real_t*)distr(eng);
+	for (int i = 0; i < m * k; i++) host_a[i] = distr(eng);
+	for (int i = 0; i < m * k; i++) host_b[i] = distr(eng);
 	for (int i = 0; i < m * k; i++) host_c[i] = 0;	
 	
-	
+
 	real_t *device_a, *device_b, *device_c, *device_d;
 	half_t  *device_d_half;
 	cudaMalloc((void**)&device_a, m * k * sizeof(real_t));
