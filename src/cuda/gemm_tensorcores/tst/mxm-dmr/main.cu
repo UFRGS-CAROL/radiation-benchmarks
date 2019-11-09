@@ -14,7 +14,7 @@ typedef float half_t;
 
 
 template<typename real_t>
-__host__ void init_host_matrices(real_t *a, real_t *b, real_t *c, int m, int n, int k) {
+__host__ void init_host_matrices(real_t *host_a, real_t *host_b, real_t *host_c, int m, int n, int k) {
 	for (int i = 0; i < m * k; i++) host_a[i] = (real_t)(rand() % 101);
 	for (int i = 0; i < m * k; i++) host_b[i] = (real_t)(rand() % 101);
 	for (int i = 0; i < m * k; i++) host_c[i] = (real_t)0;	
