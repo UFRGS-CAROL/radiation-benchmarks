@@ -257,7 +257,8 @@ __global__ void simple_wmma_gemm_DMR(real_t *a, real_t *b, real_t *c, half_t *d,
         
 
 
-        check_bit_error<THRESHOLD>(Csub, d_frag);    
+
+        //check_bit_error<THRESHOLD>(Csub, d_frag);    
     }
 }
 

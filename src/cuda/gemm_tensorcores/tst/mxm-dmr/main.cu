@@ -103,9 +103,8 @@ int main(int argc, char **argv) {
 	
 	for (int i = 0; i < m * k; i++){
 
-		std::cout << host_d[i] << " ";
+		printf(" \n",host_d[i] );
 		
-		std::cout << std::endl;
 	}
 	std::cout << "sw" << std::endl;
 	for (int i = 0; i < 10; i++) {
