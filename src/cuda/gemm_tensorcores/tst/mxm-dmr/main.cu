@@ -14,22 +14,10 @@ typedef float half_t;
 
 
 template<typename real_t>
-__host__ void init_host_matrices(real_t *a, real_t *b, real_t *c) {
-  for (int i = 0; i < M_GLOBAL; i++) {
-    for (int j = 0; j < K_GLOBAL; j++) {
-      a[i * K_GLOBAL + j] = (real_t)(rand() % 101);
-    }
-  }
-
-  for (int i = 0; i < N_GLOBAL; i++) {
-    for (int j = 0; j < K_GLOBAL; j++) {
-      b[i * K_GLOBAL + j] = (real_t)(rand() % 101);
-    }
-  }
-
-  for (int t = 0; t < M_GLOBAL * N_GLOBAL; t++) {
-    c[t] = 0;
-  }
+__host__ void init_host_matrices(real_t *a, real_t *b, real_t *c, int m, int n, int k) {
+	for (int i = 0; i < m * k; i++) host_a[i] = (real_t)(rand() % 101);
+	for (int i = 0; i < m * k; i++) host_b[i] = (real_t)(rand() % 101);
+	for (int i = 0; i < m * k; i++) host_c[i] = (real_t)0;	
 }
 
 
@@ -61,7 +49,7 @@ int main(int argc, char **argv) {
 	// for (int i = 0; i < m * k; i++) host_a[i] = (real_t)(rand() % 101);
 	// for (int i = 0; i < m * k; i++) host_b[i] = (real_t)(rand() % 101);
 	// for (int i = 0; i < m * k; i++) host_c[i] = (real_t)0;	
-	init_host_matrices (host_a, host_b, host_c);
+	init_host_matrices (host_a, host_b, host_c, m, n, k);
 
 	real_t *device_a, *device_b, *device_c, *device_d;
 	half_t  *device_d_half;
