@@ -100,10 +100,11 @@ int main(int argc, char **argv) {
 	
 
     std::cout << "tensor" << std::endl;
-	for (int i = 0; i < 10; i++) {
-		for (int j = 0; j < 10; j++) {
-			std::cout << host_d[i * m + j] << " ";
-		}
+	
+	for (int i = 0; i < m * k; i++){
+
+		std::cout << host_d[i] << " ";
+		
 		std::cout << std::endl;
 	}
 	std::cout << "sw" << std::endl;
