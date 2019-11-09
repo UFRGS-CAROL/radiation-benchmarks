@@ -99,20 +99,20 @@ int main(int argc, char **argv) {
                                1e12);
 	
 
- //    std::cout << "FLOAT" << std::endl;
-	// for (int i = 0; i < 10; i++) {
-	// 	for (int j = 0; j < 10; j++) {
-	// 		std::cout << host_d[i * m + j] << " ";
-	// 	}
-	// 	std::cout << std::endl;
-	// }
-	// std::cout << "HALF" << std::endl;
-	// for (int i = 0; i < 10; i++) {
-	// 	for (int j = 0; j < 10; j++) {
-	// 		std::cout << host_d_half[i * m + j] << " ";
-	// 	}
-	// 	std::cout << std::endl;
-	// }
+    std::cout << "tensor" << std::endl;
+	for (int i = 0; i < 10; i++) {
+		for (int j = 0; j < 10; j++) {
+			std::cout << host_d[i * m + j] << " ";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << "sw" << std::endl;
+	for (int i = 0; i < 10; i++) {
+		for (int j = 0; j < 10; j++) {
+			std::cout << host_d_half[i * m + j] << " ";
+		}
+		std::cout << std::endl;
+	}
     
 	return 0;
 }
