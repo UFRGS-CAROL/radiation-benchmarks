@@ -35,7 +35,7 @@
 
 // Hundred percent
 // I keep 10% in each direction 0.9 to 1.1
-#define HUNDRED_PERCENT 1.1f
+#define MAX_PERCENTAGE 1.1f
 
 //Threshold for one operation
 #define THRESHOLD_1 2174239238

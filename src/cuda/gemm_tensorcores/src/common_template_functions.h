@@ -22,8 +22,8 @@
 #endif
 
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
-#define GENERATOR_MAXABSVALUE 5.0
-#define GENERATOR_MINABSVALUE -5.0
+#define GENERATOR_MAXABSVALUE 1000
+#define GENERATOR_MINABSVALUE -GENERATOR_MAXABSVALUE
 
 template<typename T>
 bool read_from_file(std::string& path, std::vector<T>& array) {
@@ -128,10 +128,6 @@ static std::ostream& operator<<(std::ostream& os, const half& rhs) {
 template<typename real_t>
 bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
 	return (std::fabs(lhs - rhs) <= ZERO_DOUBLE);
-//	if (lhs != rhs){
-//		std::cout << std::setprecision(20) << std::scientific << std::fabs(lhs - rhs) << std::endl;
-//	}
-//	return lhs == rhs;
 }
 
 bool equals(float& lhs, double& rhs, const uint32_t threshold) {
@@ -149,7 +145,10 @@ bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 
 bool equals(float& lhs, double& rhs) {
 	float relative = fabs(lhs / float(rhs));
-	return (relative >= MIN_PERCENTAGE && relative <= HUNDRED_PERCENT);
+	if(!(relative >= MIN_PERCENTAGE && relative <= MAX_PERCENTAGE)){
+		std::cout << "Relative: " << relative << std::endl;
+	}
+	return (relative >= MIN_PERCENTAGE && relative <= MAX_PERCENTAGE);
 }
 
 template<class half_t, class real_t>
@@ -171,9 +170,9 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			half_precision = full_precision;
 		}
 
-		if ((!equals(gold_value, full_precision)
-				&& !equals(half_precision, full_precision))
-				|| !equals(half_precision, full_precision)) {
+		if (gold_value != full_precision || !equals(half_precision, full_precision))
+//				|| !equals(half_precision, full_precision))
+		{
 #ifdef OMP
 #pragma omp critical
 			{

@@ -137,12 +137,13 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
-	volatile real_t Csub_real = 0;
-	half_t Csub_half = 0;
+	 real_t Csub_real = 0;
+	 half_t Csub_half = 0;
 
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
 	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
+		Csub_half = Csub_real;
 		// Declaration of the shared memory array As used to
 		// store the sub-matrix of A
 		__shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
@@ -163,17 +164,13 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 		// Multiply the two matrices together;
 		// each thread computes one element
 		// of the block sub-matrix
-#pragma unroll
+//#pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
 			half_t ah = half_t(As[ty][k]);
 			half_t bh = half_t(Bs[k][tx]);
 
 			Csub_real += As[ty][k] * Bs[k][tx];
 			Csub_half += ah * bh;
-
-			if ((k % COUNT) == 0) {
-				check_relative_error(Csub_half, Csub_real);
-			}
 		}
 
 		// Synchronize to make sure that the preceding
@@ -185,14 +182,12 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-
 	real_t real_val = alpha * Csub_real + beta * C[index];
 	half_t half_val = half_t(alpha) * Csub_half	+ half_t(beta) * half_t(C[index]);
 
 	D_r[index] = real_val;
 	D_h[index] = half_val;
 	check_relative_error(half_val, real_val);
-
 }
 
 template<typename real_t>
@@ -227,7 +222,7 @@ __global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
 
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
-	volatile real_t Csub = 0;
+	real_t Csub = 0;
 
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
@@ -266,7 +261,7 @@ __global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-	D[index] = alpha * Csub + beta * C[index];
+	D[index] = Csub; // alpha * Csub + beta * C[index];
 }
 
 #endif /* NO_TENSOR_KERNELS_H_ */

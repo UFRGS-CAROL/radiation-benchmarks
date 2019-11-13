@@ -42,7 +42,7 @@ void check_relative_error(real_t lhs, real_t rhs) {
 
 
 __DEVICE_INLINE__
-void check_relative_error(float& lhs, double rhs) {
+void check_relative_error(float lhs, double rhs) {
 	float rhs_as_float = float(rhs);
 //	uint32_t l = *(uint32_t*) (&lhs);
 //	uint32_t r = *(uint32_t*) (&rhs_as_float);
@@ -52,10 +52,10 @@ void check_relative_error(float& lhs, double rhs) {
 //	}
 
 	float relative = abs__(__fdividef(lhs, rhs_as_float));
-	if(relative < MIN_PERCENTAGE || relative > HUNDRED_PERCENT){
+	if(relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE){
 		atomicAdd(&errors, 1);
 	}
-	lhs = rhs_as_float;
+	//lhs = rhs_as_float;
 }
 
 /**
