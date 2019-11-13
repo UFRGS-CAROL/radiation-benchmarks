@@ -10,7 +10,7 @@
 
 #include "common.h"
 
-#define __DEVICE_INLINE__  __device__ __forceinline__
+#define __DEVICE_INLINE__  __forceinline__  __device__
 
 __device__ unsigned long long errors = 0;
 
@@ -39,17 +39,9 @@ void check_relative_error(real_t lhs, real_t rhs) {
 	}
 }
 
-
-
 __DEVICE_INLINE__
 void check_relative_error(float lhs, double rhs) {
 	float rhs_as_float = float(rhs);
-//	uint32_t l = *(uint32_t*) (&lhs);
-//	uint32_t r = *(uint32_t*) (&rhs_as_float);
-//	uint32_t diff = SUB_ABS(l, r);
-//	if (diff > threshold) {
-//		atomicAdd(&errors, 1);
-//	}
 
 	float relative = abs__(__fdividef(lhs, rhs_as_float));
 	if(relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE){
@@ -72,10 +64,10 @@ void check_relative_error(float lhs, double rhs) {
 //double fma_inline(double a, double b, double acc) {
 //	return __fma_rn(a, b, acc);
 //}
-template<typename real_t> __DEVICE_INLINE__
-void fma_inline(volatile real_t& a, volatile real_t& b, volatile real_t& acc) {
-	acc += a * b;
-}
+//template<typename real_t> __DEVICE_INLINE__
+//void fma_inline(volatile real_t& a, volatile real_t& b, volatile real_t& acc) {
+//	acc += a * b;
+//}
 //
 //
 //#if __CUDA_ARCH__ >= 600
