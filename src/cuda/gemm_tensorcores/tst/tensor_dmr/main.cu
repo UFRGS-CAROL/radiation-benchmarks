@@ -389,7 +389,7 @@ int main(int argc, char **argv) {
 
   float *result_hD = NULL;
   half *result_hD_sw = NULL;
-  float *result_host = NULL;
+  //float *result_host = NULL;
 
 
 
@@ -485,10 +485,11 @@ int main(int argc, char **argv) {
   checkCudaErrors(cudaMemcpy(result_hD, D,
                              sizeof(float) * M_GLOBAL * N_GLOBAL,
                              cudaMemcpyDeviceToHost));
+  /*
   checkCudaErrors(cudaMemcpy(result_hD_sw, D_sw,
                              sizeof(half) * M_GLOBAL * N_GLOBAL,
                              cudaMemcpyDeviceToHost));
-
+  */
   
 
   checkCudaErrors(cudaEventRecord(stop));
