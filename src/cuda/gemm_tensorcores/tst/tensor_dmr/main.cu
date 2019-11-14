@@ -520,7 +520,8 @@ int main(int argc, char **argv) {
   printf("result_tensor = &d \n",result_hD[0]);
   printf("result_sw = &d \n",result_hD_sw[0]);
   free(result_hD);
-  free(result_host);
+  free(result_hD_sw);
+  //free(result_host);
 
 
   float milliseconds = 0;
