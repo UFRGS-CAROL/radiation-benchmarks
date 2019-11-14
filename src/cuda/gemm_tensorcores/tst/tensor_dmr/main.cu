@@ -468,7 +468,7 @@ int main(int argc, char **argv) {
 
   dim3 gridDim;
   dim3 blockDim;
-
+  /*
   // blockDim.x must be a multple of warpSize
   // 128x4 means we have 16 warps and a block computes a 64x64 output tile
   blockDim.x = 128;
@@ -477,19 +477,28 @@ int main(int argc, char **argv) {
   gridDim.x = (M_GLOBAL + (WMMA_M * blockDim.x / 32 - 1)) /
               (WMMA_M * blockDim.x / 32);
   gridDim.y = (N_GLOBAL + WMMA_N * blockDim.y - 1) / (WMMA_N * blockDim.y);
+  */
 
-  printf("Computing... using simple_wmma_gemm kernel\n");
+
+  //printf("Computing... using simple_wmma_gemm kernel\n");
+
+ 
+
+        //      // block_dim.x must be a multple of warpSize
+        //      // 128x4 means we have 16 warps and a block computes a 64x64 output tile
+  block_dim.x = WMMA_M; //128;
+  block_dim.y = WMMA_N;
   simple_wmma_gemm<<<gridDim, blockDim>>>(A, B, C, D, D_sw, M_GLOBAL, N_GLOBAL,
                                           K_GLOBAL, alpha, beta);
 
   checkCudaErrors(cudaMemcpy(result_hD, D,
                              sizeof(float) * M_GLOBAL * N_GLOBAL,
                              cudaMemcpyDeviceToHost));
-  /*
+  
   checkCudaErrors(cudaMemcpy(result_hD_sw, D_sw,
                              sizeof(half) * M_GLOBAL * N_GLOBAL,
                              cudaMemcpyDeviceToHost));
-  */
+  
   
 
   checkCudaErrors(cudaEventRecord(stop));
