@@ -273,7 +273,7 @@ __global__ void simple_wmma_gemm(half *a, half *b, float *c, float *d, half *d_s
 
   volatile half Csub = 0;
 
-  printf(" A = %f   --- B = %f \n", a[0], b[0]);
+  //printf(" A = %f   --- B = %f \n", a[0], b[0]);
   
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -433,6 +433,7 @@ int main(int argc, char **argv) {
   assert(((unsigned long long)D_sw) % 128 == 0);
 
   init_host_matrices(A_h, B_h, C_h);
+  printf(" a  = %f, b  = %f,  c  = %f \n", A_h[0], B_h[0], C_h[0]);
 
   printf("Preparing data for GPU...\n");
 
