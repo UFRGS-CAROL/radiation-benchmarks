@@ -80,6 +80,8 @@ __global__ void wmma_example(half *a, half *b, float *c, half d_sw, int M, int N
    int lda = M;
    int ldb = K;
    int ldc = M;
+   int m_ld =WMMA_M;
+   int n_ld =WMMA_N;
 
    // Tile using a 2D grid
    int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
@@ -117,16 +119,16 @@ __global__ void wmma_example(half *a, half *b, float *c, half d_sw, int M, int N
 
 
 
-    volatile half_t Csub = 0;
+    volatile half Csub = 0;
   
     // Loop over all the sub-matrices of A and B
     // required to compute the block sub-matrix
     for (int A = aBegin, B = bBegin; A <= aEnd;  A += aStep, B += bStep) {
     
 
-        __shared__ half_t As[BLOCK_SIZE][BLOCK_SIZE];
+        __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
 
-        __shared__ half_t Bs[BLOCK_SIZE][BLOCK_SIZE];
+        __shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
 
         As[ty][tx] = a[A + m_ld * ty + tx];
         Bs[ty][tx] = b[B + n_ld * ty + tx];
@@ -263,6 +265,7 @@ int main(int argc, char* argv[]) {
    
    cudaErrCheck(cudaMemcpy(c_cublas, c, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToDevice));
    cudaErrCheck(cudaMemcpy(c_wmma, c, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToDevice));
+   cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(half) * MATRIX_M * MATRIX_N));
 
    float alpha = 2.0f;
    float beta = 2.0f;
@@ -285,6 +288,7 @@ int main(int argc, char* argv[]) {
    */
    blockDim.x = WMMA_M; //128;
    blockDim.y = WMMA_N;
+
    printf("Running with wmma...\n");
    cudaErrCheck(cudaEventRecord(startWMMA));
    wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
