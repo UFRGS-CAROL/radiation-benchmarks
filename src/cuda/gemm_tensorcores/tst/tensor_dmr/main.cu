@@ -419,6 +419,8 @@ int main(int argc, char **argv) {
                              sizeof(float) * M_GLOBAL * N_GLOBAL));
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&D),
                              sizeof(float) * M_GLOBAL * N_GLOBAL));
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&D_sw),
+                             sizeof(half) * M_GLOBAL * N_GLOBAL));
 
   assert(((unsigned long long)A) % 128 == 0);
   assert(((unsigned long long)B) % 128 == 0);
