@@ -465,10 +465,10 @@ int main(int argc, char **argv) {
   checkCudaErrors(cudaEventCreate(&stop));
   checkCudaErrors(cudaEventRecord(start));
 
-
+  /*
   dim3 gridDim;
   dim3 blockDim;
-  /*
+  
   // blockDim.x must be a multple of warpSize
   // 128x4 means we have 16 warps and a block computes a 64x64 output tile
   blockDim.x = 128;
@@ -486,6 +486,9 @@ int main(int argc, char **argv) {
 
         //      // block_dim.x must be a multple of warpSize
         //      // 128x4 means we have 16 warps and a block computes a 64x64 output tile
+  dim3 grid_dim;
+  dim3 block_dim;
+ 
   block_dim.x = WMMA_M; //128;
   block_dim.y = WMMA_N;
   simple_wmma_gemm<<<gridDim, blockDim>>>(A, B, C, D, D_sw, M_GLOBAL, N_GLOBAL,
