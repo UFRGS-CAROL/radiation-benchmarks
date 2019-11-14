@@ -1,8 +1,10 @@
 #include "kernels.h"
 #include <cassert>
+#include <assert.h>
 #include <vector>
 #include <iostream>
 #include <random>
+#include <mma.h>
 #include <helper_cuda.h>
 #include <helper_functions.h>
 
@@ -24,13 +26,13 @@ __host__ void init_host_matrices(real_t *a, real_t *b, real_t *c, int m, int n, 
     	}
   	}
 
-  for (int i = 0; i < N_GLOBAL; i++) {
+  for (int i = 0; i < n; i++) {
     for (int j = 0; j < k; j++) {
       b[i * k + j] = (real_t)(rand() % 3);
     }
   }
 
-  for (int t = 0; t < m * N_GLOBAL; t++) {
+  for (int t = 0; t < m * n; t++) {
     c[t] = 0;
   }	
 }
