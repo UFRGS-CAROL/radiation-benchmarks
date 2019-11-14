@@ -234,7 +234,7 @@ int main(int argc, char* argv[]) {
 
    float *c_host_cublas;
    float *c_host_wmma;
-   float *d_fp16_host;
+   half *d_fp16_host;
    
    curandGenerator_t gen;
    cublasHandle_t cublasHandle;
