@@ -50,6 +50,9 @@ int main(int argc, char **argv) {
 	// for (int i = 0; i < m * k; i++) host_b[i] = (real_t)(rand() % 101);
 	// for (int i = 0; i < m * k; i++) host_c[i] = (real_t)0;	
 	init_host_matrices (host_a, host_b, host_c, m, n, k);
+	printf("host a = %f \n", host_a[1]);
+	printf("host b = %f \n", host_a[1]);
+	printf("host c = %f \n", host_a[1]);
 
 	real_t *device_a, *device_b, *device_c, *device_d;
 	half_t  *device_d_half;
