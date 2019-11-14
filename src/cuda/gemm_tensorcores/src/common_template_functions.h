@@ -144,10 +144,7 @@ bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 }
 
 bool equals(float& lhs, double& rhs) {
-	float relative = fabs(lhs / float(rhs));
-	if(!(relative >= MIN_PERCENTAGE && relative <= MAX_PERCENTAGE)){
-		std::cout << "Relative: " << relative << std::endl;
-	}
+	float relative(lhs / float(rhs));
 	return (relative >= MIN_PERCENTAGE && relative <= MAX_PERCENTAGE);
 }
 
@@ -155,10 +152,10 @@ template<class half_t, class real_t>
 std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<real_t>& real_vector, std::vector<half_t>& half_vector,
 		Log& log, const uint32_t threshold, const bool dmr) {
-	int host_errors = 0;
+	uint32_t host_errors = 0, host_detected = 0;
 
 #ifdef OMP
-#pragma omp parallel for shared(host_errors)
+#pragma omp parallel for shared(host_errors, host_detected)
 #endif
 	for (size_t i = 0; i < gold.size(); i++) {
 		auto gold_value = gold[i];
@@ -170,7 +167,8 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			half_precision = full_precision;
 		}
 
-		if (gold_value != full_precision || !equals(half_precision, full_precision))
+		bool dmr_not_equals = !equals(half_precision, full_precision);
+		if (gold_value != full_precision || dmr_not_equals)
 //				|| !equals(half_precision, full_precision))
 		{
 #ifdef OMP
@@ -190,6 +188,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 
 			log.log_error(error_detail.str());
 			host_errors++;
+			host_detected += (dmr_not_equals ? 1 : 0);
 #ifdef OMP
 		}
 #endif
@@ -200,6 +199,12 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 	if (dmr_err != 0) {
 		std::string error_detail;
 		error_detail = "detected_dmr_errors: " + std::to_string(dmr_err);
+		log.log_error(error_detail);
+	}
+
+	if (host_detected != 0) {
+		std::string error_detail;
+		error_detail = "host_detected_dmr_errors: " + std::to_string(host_detected);
 		log.log_error(error_detail);
 	}
 
