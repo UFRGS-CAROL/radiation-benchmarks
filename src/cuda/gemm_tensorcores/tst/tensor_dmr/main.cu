@@ -227,7 +227,7 @@ __device__  __forceinline__ half axpy__(half a, half b, half acc) {
 // designed for
 //       demonstration purposes only to show the CUDA WMMA API use without
 //       relying on availability of the shared memory.
-__global__ void simple_wmma_gemm(half *a, half *b, float *c, float *d, float *d_sw, int m_ld,
+__global__ void simple_wmma_gemm(half *a, half *b, float *c, float *d, half *d_sw, int m_ld,
                                  int n_ld, int k_ld, float alpha, float beta) {
   // Leading dimensions. Packed with no transpositions.
   int lda = m_ld;
@@ -385,13 +385,12 @@ int main(int argc, char **argv) {
   half *A_h = NULL;
   half *B_h = NULL;
   float *C_h = NULL;
-#if CPU_DEBUG
-  float *result_hD = NULL;
-  float *result_hD_sw = NULL;
 
+  float *result_hD = NULL;
+  half *result_hD_sw = NULL;
   float *result_host = NULL;
 
-#endif
+
 
   A_h = (half *)malloc(sizeof(half) * M_GLOBAL * K_GLOBAL);
   B_h = (half *)malloc(sizeof(half) * K_GLOBAL * N_GLOBAL);
@@ -399,7 +398,7 @@ int main(int argc, char **argv) {
 
 
   result_hD = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
-  result_hD_sw = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
+  result_hD_sw = (half *)malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
   result_host = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
 
 
@@ -407,7 +406,7 @@ int main(int argc, char **argv) {
   half *B = NULL;
   float *C = NULL;
   float *D = NULL;
-  float *D_sw = NULL;
+  half *D_sw = NULL;
 
   checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&A),
                              sizeof(half) * M_GLOBAL * K_GLOBAL));
