@@ -507,23 +507,21 @@ int main(int argc, char **argv) {
   checkCudaErrors(cudaEventRecord(stop));
   checkCudaErrors(cudaEventSynchronize(stop));
 
-#if CPU_DEBUG
   printf("Verifying correctness of the computations...\n");
 
-  memcpy(result_host, C_h, sizeof(float) * M_GLOBAL * N_GLOBAL);
 
-  matMultiplyOnHost(A_h, B_h, result_host, alpha, beta, M_GLOBAL, K_GLOBAL,
-                    K_GLOBAL, N_GLOBAL, M_GLOBAL, N_GLOBAL);
 
-  for (int i = 0; i < N_GLOBAL * M_GLOBAL; i++) {
-    if (fabs(result_hD[i] - result_host[i]) > 0.1f)
-      printf("mismatch i=%d result_hD=%f result_host=%f\n", i, result_hD[i],
-             result_host[i]);
-  }
-  printf("result_hD = &d \n",result_hD[0]);
+  // for (int i = 0; i < N_GLOBAL * M_GLOBAL; i++) {
+  //   if (fabs(result_hD[i] - result_host[i]) > 0.1f)
+  //     printf("mismatch i=%d result_hD=%f result_host=%f\n", i, result_hD[i],
+  //            result_host[i]);
+  // }
+
+  printf("result_tensor = &d \n",result_hD[0]);
+  printf("result_sw = &d \n",result_hD_sw[0]);
   free(result_hD);
   free(result_host);
-#endif
+
 
   float milliseconds = 0;
 
