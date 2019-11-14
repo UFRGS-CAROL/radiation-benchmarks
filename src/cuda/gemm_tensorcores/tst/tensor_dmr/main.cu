@@ -491,7 +491,7 @@ int main(int argc, char **argv) {
  
   block_dim.x = WMMA_M; //128;
   block_dim.y = WMMA_N;
-  simple_wmma_gemm<<<gridDim, blockDim>>>(A, B, C, D, D_sw, M_GLOBAL, N_GLOBAL,
+  simple_wmma_gemm<<<grid_dim, block_dim>>>(A, B, C, D, D_sw, M_GLOBAL, N_GLOBAL,
                                           K_GLOBAL, alpha, beta);
 
   checkCudaErrors(cudaMemcpy(result_hD, D,
