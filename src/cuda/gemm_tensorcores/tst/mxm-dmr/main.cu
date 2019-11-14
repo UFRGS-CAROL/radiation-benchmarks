@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
                                                (milliseconds / 1000.)) /
                                1e12);
 	
-
+  	/*
     std::cout << "tensor" << std::endl;
 	
 	for (int i = 0; i < m * k; i++){
@@ -113,6 +113,6 @@ int main(int argc, char **argv) {
 		}
 		std::cout << std::endl;
 	}
-    
+	*/    
 	return 0;
 }

@@ -204,7 +204,7 @@ __global__ void simple_wmma_gemm_DMR(real_t *a, real_t *b, real_t *c, half_t *d,
     // each thread writes one element
     int c_p = n_ld * BLOCK_SIZE * by + BLOCK_SIZE * bx;
     d[c_p + n_ld * ty + tx] = Csub;
- 
+    printf(" C sub =  %f \n",Csub);
 
     wmma::fill_fragment(acc_frag, 0.0f);
 
