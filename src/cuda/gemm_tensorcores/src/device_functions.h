@@ -14,41 +14,37 @@
 
 __device__ unsigned long long errors = 0;
 
-__DEVICE_INLINE__
-double abs__(double a) {
-	return fabs(a);
-}
-
-__DEVICE_INLINE__
-float abs__(float a) {
-	return fabsf(a);
-}
-
-#if __CUDA_ARCH__ > 600
-__DEVICE_INLINE__
-half abs__(half a) {
-	return fabsf(a);
-}
-#endif
-
 template<typename real_t> __DEVICE_INLINE__
 void check_relative_error(real_t lhs, real_t rhs) {
-	real_t diff = abs__(lhs - rhs);
-	if (diff > ZERO_DOUBLE) {
+	if (lhs != rhs) {
 		atomicAdd(&errors, 1);
 	}
 }
 
 __DEVICE_INLINE__
 void check_relative_error(float lhs, double rhs) {
-	float rhs_as_float = float(rhs);
-
-	float relative = abs__(__fdividef(lhs, rhs_as_float));
+	float relative = __fdividef(lhs, float(rhs));
 	if(relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE){
 		atomicAdd(&errors, 1);
 	}
-	//lhs = rhs_as_float;
 }
+
+//__DEVICE_INLINE__
+//double abs__(double a) {
+//	return fabs(a);
+//}
+//
+//__DEVICE_INLINE__
+//float abs__(float a) {
+//	return fabsf(a);
+//}
+//
+//#if __CUDA_ARCH__ > 600
+//__DEVICE_INLINE__
+//half abs__(half a) {
+//	return fabsf(a);
+//}
+//#endif
 
 /**
  * ----------------------------------------
