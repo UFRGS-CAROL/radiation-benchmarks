@@ -272,6 +272,8 @@ __global__ void simple_wmma_gemm(half *a, half *b, float *c, float *d, half *d_s
   int bStep  = BLOCK_SIZE * n_ld;
 
   volatile half Csub = 0;
+
+  std::cout << "A = " << a[0] << "B= " << b[0] << std::endl;
   
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
