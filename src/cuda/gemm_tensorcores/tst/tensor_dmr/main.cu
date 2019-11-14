@@ -90,6 +90,7 @@
 // GPU configuration.
 
 #define WARP_SIZE 32
+#define BLOCK_SIZE 32
 
 // MMA matrix tile dimensions.
 
@@ -436,7 +437,7 @@ int main(int argc, char **argv) {
   checkCudaErrors(cudaMemcpy(C, C_h, sizeof(float) * M_GLOBAL * N_GLOBAL,
                              cudaMemcpyHostToDevice));
   checkCudaErrors(cudaMemset(D, 0, sizeof(float) * M_GLOBAL * N_GLOBAL));
-  checkCudaErrors(cudaMemset(D_sw, 0, sizeof(float) * M_GLOBAL * N_GLOBAL));
+  checkCudaErrors(cudaMemset(D_sw, 0, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
   enum {
     // Compute the right amount of shared memory to request.
