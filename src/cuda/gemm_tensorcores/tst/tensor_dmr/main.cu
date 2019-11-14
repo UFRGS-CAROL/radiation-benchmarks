@@ -400,7 +400,7 @@ int main(int argc, char **argv) {
 
   result_hD = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
   result_hD_sw = (half *)malloc(sizeof(half) * M_GLOBAL * N_GLOBAL);
-  result_host = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
+  //result_host = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
 
 
   half *A = NULL;
