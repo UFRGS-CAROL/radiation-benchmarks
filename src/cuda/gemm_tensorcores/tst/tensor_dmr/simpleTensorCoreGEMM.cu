@@ -234,6 +234,7 @@ int main(int argc, char* argv[]) {
 
    float *c_host_cublas;
    float *c_host_wmma;
+   float *d_fp16_host;
    
    curandGenerator_t gen;
    cublasHandle_t cublasHandle;
@@ -334,6 +335,8 @@ int main(int argc, char* argv[]) {
    printf("\nChecking results...\n");
    cudaErrCheck(cudaMemcpy(c_host_wmma, c_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
    cudaErrCheck(cudaMemcpy(c_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+   cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
+
    
    // 0.01% relative tolerance. 1e-5 absolute tolerance.
    int errors = 0;
@@ -374,13 +377,17 @@ int main(int argc, char* argv[]) {
    cudaErrCheck(cudaFree(b_fp32));
    cudaErrCheck(cudaFree(a_fp16));
    cudaErrCheck(cudaFree(b_fp16));
+   cudaErrCheck(cudaFree(d_fp16));
 
    cudaErrCheck(cudaFree(c));
    cudaErrCheck(cudaFree(c_cublas));
    cudaErrCheck(cudaFree(c_wmma));
+
    
    free(c_host_cublas);
    free(c_host_wmma);
+   free(d_fp16_host);
+   
 
    cudaErrCheck(cudaDeviceReset());
    return 0;
