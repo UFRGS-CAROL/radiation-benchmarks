@@ -225,18 +225,41 @@ __global__ void simple_wmma_gemm(half *a, half *b, float *c, float *d, half *d_s
       b_frag;
   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c_frag;
+  // Block index
+  int bx = blockIdx.x;
+  int by = blockIdx.y;
+
+  // Thread index
+  int tx = threadIdx.x;
+  int ty = threadIdx.y;
+
+  // Index of the first sub-matrix of A processed by the block
+  int aBegin = m_ld * BLOCK_SIZE * by;
+
+  // Index of the last sub-matrix of A processed by the block
+  int aEnd   = aBegin + m_ld - 1;
 
 
-  volatile half_t Csub = 0;
+
+  // Step size used to iterate through the sub-matrices of A
+  int aStep  = BLOCK_SIZE;
+
+  // Index of the first sub-matrix of B processed by the block
+  int bBegin = BLOCK_SIZE * bx;
+
+  // Step size used to iterate through the sub-matrices of B
+  int bStep  = BLOCK_SIZE * n_ld;
+
+  volatile half Csub = 0;
   
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
   for (int A = aBegin, B = bBegin; A <= aEnd;  A += aStep, B += bStep) {
     
 
-      __shared__ half_t As[BLOCK_SIZE][BLOCK_SIZE];
+      __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
 
-      __shared__ half_t Bs[BLOCK_SIZE][BLOCK_SIZE];
+      __shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
 
       As[ty][tx] = a[A + m_ld * ty + tx];
       Bs[ty][tx] = b[B + n_ld * ty + tx];
