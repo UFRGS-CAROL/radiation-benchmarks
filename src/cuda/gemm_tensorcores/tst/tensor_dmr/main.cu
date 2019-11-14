@@ -305,6 +305,7 @@ __global__ void simple_wmma_gemm(half *a, half *b, float *c, float *d, half *d_s
     // each thread writes one element
   int c_p = n_ld * BLOCK_SIZE * by + BLOCK_SIZE * bx;
   d_sw[c_p + n_ld * ty + tx] = Csub;
+  printf("d_sw = %f \n", d_sw);
 
   wmma::fill_fragment(acc_frag, 0.0f);
 
@@ -517,8 +518,10 @@ int main(int argc, char **argv) {
   //            result_host[i]);
   // }
 
+  /*
   printf("result_tensor = %d \n",result_hD[0]);
   printf("result_sw = %d \n",result_hD_sw[0]);
+  */
   free(result_hD);
   free(result_hD_sw);
   //free(result_host);
