@@ -269,6 +269,7 @@ int main(int argc, char* argv[]) {
 
    c_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
    c_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+   d_fp16_host = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
 
    curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
    curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
