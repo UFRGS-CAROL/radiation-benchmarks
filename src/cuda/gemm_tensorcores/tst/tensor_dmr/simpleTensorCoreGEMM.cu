@@ -68,6 +68,26 @@ const int WMMA_M = 16;
 const int WMMA_N = 16;
 const int WMMA_K = 16;
 
+__device__ __forceinline__ void axpy__(const double a, const double b, double &c) {
+    c = __fma_rn(a, b, c);
+}
+__device__ __forceinline__ void axpy__(const float a, const float b, float &c) {
+    //printf("A = %f   -- B =  %f\n", a, b);
+    c = __fmaf_rn(a, b, c);
+}
+__device__ __forceinline__ void axpy__(const double a, const double b, float &c) {
+    c = __fmaf_rn(__double2float_rn(a), __double2float_rn(b), c);
+}
+__device__ __forceinline__ void axpy__(const float a, const float b, __half &c) {
+    c = __hfma(__float2half(a), __float2half(b), c);
+}
+
+__device__  __forceinline__ half axpy__(half a, half b, half acc) {
+  return __hfma(a, b, acc);
+}
+
+
+
 
 // Performs an MxNxK GEMM (C=alpha*A*B + beta*C) assuming:
 //  1) Matrices are packed in memory.
@@ -75,7 +95,7 @@ const int WMMA_K = 16;
 //  3) Neither A nor B are transposed.
 // Note: This is NOT a high performance example but is for demonstration purposes only
 //       For a high performance code please use the GEMM provided in cuBLAS.
-__global__ void wmma_example(half *a, half *b, float *c, half d_sw, int M, int N, int K, float alpha, float beta) {
+__global__ void wmma_example(half *a, half *b, float *c, half *d_sw, int M, int N, int K, float alpha, float beta) {
    // Leading dimensions. Packed with no transpositions.
    int lda = M;
    int ldb = K;
