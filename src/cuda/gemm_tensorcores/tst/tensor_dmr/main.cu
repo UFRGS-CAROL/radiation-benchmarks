@@ -166,6 +166,8 @@
 // nvcuda::wmma::load_matrix_sync.
 #define SKEW_HALF 8
 
+
+
 #define checkKernelErrors(expr)                             \
   do {                                                      \
     expr;                                                   \
@@ -198,6 +200,24 @@ __host__ void init_host_matrices(half *a, half *b, float *c) {
   }
 }
 
+__device__ __forceinline__ void axpy__(const double a, const double b, double &c) {
+    c = __fma_rn(a, b, c);
+}
+__device__ __forceinline__ void axpy__(const float a, const float b, float &c) {
+    //printf("A = %f   -- B =  %f\n", a, b);
+    c = __fmaf_rn(a, b, c);
+}
+__device__ __forceinline__ void axpy__(const double a, const double b, float &c) {
+    c = __fmaf_rn(__double2float_rn(a), __double2float_rn(b), c);
+}
+__device__ __forceinline__ void axpy__(const float a, const float b, __half &c) {
+    c = __hfma(__float2half(a), __float2half(b), c);
+}
+
+__device__  __forceinline__ half axpy__(half a, half b, half acc) {
+  return __hfma(a, b, acc);
+}
+
 
 // Performs an MxNxK GEMM (C=alpha*A*B + beta*C) assuming:
 //  1) Matrices are packed in memory.
@@ -207,7 +227,7 @@ __host__ void init_host_matrices(half *a, half *b, float *c) {
 // designed for
 //       demonstration purposes only to show the CUDA WMMA API use without
 //       relying on availability of the shared memory.
-__global__ void simple_wmma_gemm(half *a, half *b, float *c, float *d, half *d_sw, int m_ld,
+__global__ void simple_wmma_gemm(half *a, half *b, float *c, float *d, float *d_sw, int m_ld,
                                  int n_ld, int k_ld, float alpha, float beta) {
   // Leading dimensions. Packed with no transpositions.
   int lda = m_ld;
@@ -377,10 +397,11 @@ int main(int argc, char **argv) {
   B_h = (half *)malloc(sizeof(half) * K_GLOBAL * N_GLOBAL);
   C_h = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
 
-#if CPU_DEBUG
+
   result_hD = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
+  result_hD_sw = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
   result_host = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
-#endif
+
 
   half *A = NULL;
   half *B = NULL;
