@@ -289,7 +289,7 @@ int main(int argc, char* argv[]) {
    float *b_fp32;
    half *a_fp16;
    half *b_fp16;
-   half *d_fp16;
+   float *d_fp16;
 
    float *c;
    float *c_cublas;
@@ -297,7 +297,7 @@ int main(int argc, char* argv[]) {
 
    float *c_host_cublas;
    float *c_host_wmma;
-   half *d_fp16_host;
+   float *d_fp16_host;
    
    curandGenerator_t gen;
    cublasHandle_t cublasHandle;
@@ -332,7 +332,7 @@ int main(int argc, char* argv[]) {
 
    c_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
    c_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-   d_fp16_host = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
+   d_fp16_host = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
 
    curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
    curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
@@ -350,7 +350,7 @@ int main(int argc, char* argv[]) {
    
    cudaErrCheck(cudaMemcpy(c_cublas, c, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToDevice));
    cudaErrCheck(cudaMemcpy(c_wmma, c, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToDevice));
-   cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(half) * MATRIX_M * MATRIX_N));
+   cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(float) * MATRIX_M * MATRIX_N));
 
    float alpha = 2.0f;
    float beta = 2.0f;
