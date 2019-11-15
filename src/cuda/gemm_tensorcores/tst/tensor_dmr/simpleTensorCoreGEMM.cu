@@ -348,7 +348,7 @@ int main(int argc, char* argv[]) {
    cudaErrCheck(cudaMalloc((void**)&b_fp32, MATRIX_K * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMalloc((void**)&a_fp16, MATRIX_M * MATRIX_K * sizeof(half)));
    cudaErrCheck(cudaMalloc((void**)&b_fp16, MATRIX_K * MATRIX_N * sizeof(half)));
-   cudaErrCheck(cudaMalloc((void**)&d_fp16, MATRIX_K * MATRIX_N * sizeof(float)));
+   //cudaErrCheck(cudaMalloc((void**)&d_fp16, MATRIX_K * MATRIX_N * sizeof(float)));
 
    cudaErrCheck(cudaMalloc((void**)&c, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMalloc((void**)&c_cublas, MATRIX_M * MATRIX_N * sizeof(float)));
@@ -356,7 +356,7 @@ int main(int argc, char* argv[]) {
 
    c_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
    c_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-   d_fp16_host = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+   //d_fp16_host = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
 
    curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
    curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
@@ -436,7 +436,7 @@ int main(int argc, char* argv[]) {
    printf("\nChecking results...\n");
    cudaErrCheck(cudaMemcpy(c_host_wmma, c_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
    cudaErrCheck(cudaMemcpy(c_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
-   cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+   //cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
 
    
    // 0.01% relative tolerance. 1e-5 absolute tolerance.
@@ -444,7 +444,7 @@ int main(int argc, char* argv[]) {
    //for (int i = 0; i < MATRIX_M * MATRIX_N; i++) {
    for (int i = 0; i <  5; i++) {      
       float v1 = c_host_wmma[i];
-      float v2 = d_fp16_host[i];
+      //float v2 = d_fp16_host[i];
       float v3 = c_host_cublas[i];      
       printf("TENSOR = %f  | ------  MXM = %f ----- | CUBLAS = %f\n --------|", v1, v2, v3);
       /*
@@ -483,7 +483,7 @@ int main(int argc, char* argv[]) {
    cudaErrCheck(cudaFree(b_fp32));
    cudaErrCheck(cudaFree(a_fp16));
    cudaErrCheck(cudaFree(b_fp16));
-   cudaErrCheck(cudaFree(d_fp16));
+   //cudaErrCheck(cudaFree(d_fp16));
 
    cudaErrCheck(cudaFree(c));
    cudaErrCheck(cudaFree(c_cublas));
@@ -492,7 +492,7 @@ int main(int argc, char* argv[]) {
    
    free(c_host_cublas);
    free(c_host_wmma);
-   free(d_fp16_host);
+   //free(d_fp16_host);
    
 
    cudaErrCheck(cudaDeviceReset());
