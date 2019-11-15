@@ -82,7 +82,7 @@ __device__ __forceinline__ void axpy__(const float a, const float b, __half &c) 
     c = __hfma(__float2half(a), __float2half(b), c);
 }
 
-__device__  __forceinline__ half axpy__(half a, half b, float acc) {
+__device__  __forceinline__ float axpy__(half a, half b, float c) {
     c = __fmaf_rn(__half2float(a), __half2float(b), c);
 }
 
@@ -313,8 +313,8 @@ __global__ void convertFp32ToFp16 (half *out, float *in, int n) {
 }
 
 int main(int argc, char* argv[]) {
-   float *a_fp32;
-   float *b_fp32;
+   //float *a_fp32;
+   //float *b_fp32;
    half *a_fp16;
    half *b_fp16;
    float *d_fp16;
@@ -327,7 +327,7 @@ int main(int argc, char* argv[]) {
    float *c_host_wmma;
    float *d_fp16_host;
    
-   curandGenerator_t gen;
+   //curandGenerator_t gen;
    cublasHandle_t cublasHandle;
    
    cudaEvent_t startWMMA;
