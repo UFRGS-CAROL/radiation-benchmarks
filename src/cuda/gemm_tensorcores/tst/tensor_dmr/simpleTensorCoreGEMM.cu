@@ -94,7 +94,7 @@ __device__  __forceinline__ half axpy__(half a, half b, half acc) {
 // Note: This is NOT a high performance example but is for demonstration purposes only
 //       For a high performance code please use the GEMM provided in cuBLAS.
 
-__global__ void wmma_example(half *a, half *b, half *c, int M, int N, int K, float alpha, float beta) {
+__global__ void wmma_example(half *a, half *b, half *c, int M, int N, int K, half alpha, half beta) {
    // Leading dimensions. Packed with no transpositions.
    int lda = M;
    int ldb = K;
@@ -375,7 +375,7 @@ int main(int argc, char* argv[]) {
    convertFp32ToFp16 <<< (MATRIX_M * MATRIX_K + 255) / 256, 256 >>> (a_fp16, a_fp32, MATRIX_M * MATRIX_K);
    convertFp32ToFp16 <<< (MATRIX_K * MATRIX_N + 255) / 256, 256 >>> (b_fp16, b_fp32, MATRIX_K * MATRIX_N);
 
-   curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
+   //curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
    
    curandErrCheck(curandDestroyGenerator(gen));
    //cudaErrCheck(cudaMemset(a_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
@@ -385,8 +385,8 @@ int main(int argc, char* argv[]) {
    cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(half)));
    cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(half) * MATRIX_M * MATRIX_N));
 
-   float alpha = 1.0f;
-   float beta = 1.0f;
+   half alpha = 1.0f;
+   half beta = 1.0f;
 
 
    //printf("\nM = %d, N = %d, K = %d. alpha = %f, beta = %f, A = %f , B = %f \n", MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta, a_fp32[0], b_fp32[0]);
