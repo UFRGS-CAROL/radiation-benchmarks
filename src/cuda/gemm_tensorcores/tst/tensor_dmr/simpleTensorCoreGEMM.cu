@@ -382,7 +382,7 @@ int main(int argc, char* argv[]) {
    
    curandErrCheck(curandDestroyGenerator(gen));
    //cudaErrCheck(cudaMemset(a_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
-   /qcudaErrCheck(cudaMemset(b_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
+   //cudaErrCheck(cudaMemset(b_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
    
    cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
