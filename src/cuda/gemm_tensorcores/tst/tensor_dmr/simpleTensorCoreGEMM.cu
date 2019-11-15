@@ -60,7 +60,7 @@ using namespace nvcuda;
 #define MATRIX_N 16384
 #define MATRIX_K 16384
 
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 16
 
 
 // The only dimensions currently supported by WMMA
@@ -328,12 +328,18 @@ int main(int argc, char* argv[]) {
    
    cudaEvent_t startWMMA;
    cudaEvent_t stopWMMA;
-   
+
+   cudaEvent_t startMXM;
+   cudaEvent_t stopMXM;
+
    cudaEvent_t startcublas;
    cudaEvent_t stopcublas;
    
    cudaErrCheck(cudaEventCreate(&startWMMA));
    cudaErrCheck(cudaEventCreate(&stopWMMA));
+
+   cudaErrCheck(cudaEventCreate(&startMXM));
+   cudaErrCheck(cudaEventCreate(&stopMXM));
    
    cudaErrCheck(cudaEventCreate(&startcublas));
    cudaErrCheck(cudaEventCreate(&stopcublas));
@@ -403,15 +409,15 @@ int main(int argc, char* argv[]) {
 
    // MXM DIMENSIONS
    
-   //blockDim.x = WMMA_M; //128;
-   //blockDim.y = WMMA_N;
+   blockDim.x = WMMA_M; //128;
+   blockDim.y = WMMA_N;
 
    printf("Running with MXM thread dimensions...\n");
-   cudaErrCheck(cudaEventRecord(startWMMA));
+   cudaErrCheck(cudaEventRecord(startMXM));
    
    matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
    
-   cudaErrCheck(cudaEventRecord(stopWMMA));
+   cudaErrCheck(cudaEventRecord(stopMXM));
 
    
 
@@ -460,12 +466,17 @@ int main(int argc, char* argv[]) {
       printf("Results verified: cublas and WMMA agree.\n\n");
       float wmmaTime;
       float cublasTime;
+      float mxmTime;
       cudaErrCheck(cudaEventSynchronize(stopWMMA));
       cudaErrCheck(cudaEventSynchronize(stopcublas));
+      cudaErrCheck(cudaEventSynchronize(stopMXM));
+
       cudaErrCheck(cudaEventElapsedTime(&wmmaTime, startWMMA, stopWMMA));
       cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
+      cudaErrCheck(cudaEventElapsedTime(&mxmTime, startMXM, stopMXM));
       printf("wmma took %fms\n", wmmaTime);
       printf("cublas took %fms\n", cublasTime);
+      printf("mxm took %fms\n", mxmTime);
 
      
    }
