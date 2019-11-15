@@ -290,7 +290,7 @@ __global__ void matrix_mult(float *A, float *B, int M, int N, int K, float *C, f
 
    
       for (int i = 0; i < K; i++) {
-         axpy__((A[row * M + i]*alpha), B[col * N + i], (acc_real_t)*beta);
+         axpy__((A[row * M + i]*alpha), B[col * N + i], (acc_real_t*beta));
       }   
      
 
