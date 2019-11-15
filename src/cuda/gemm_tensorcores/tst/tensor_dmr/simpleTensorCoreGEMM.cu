@@ -376,11 +376,23 @@ int main(int argc, char* argv[]) {
    blockDim.y = WMMA_N;
    */
 
-   printf("Running with wmma...\n");
+   printf("Running with wmma thread dimensions...\n");
    cudaErrCheck(cudaEventRecord(startWMMA));
    wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
    //wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
    cudaErrCheck(cudaEventRecord(stopWMMA));
+
+   // MXM DIMENSIONS
+
+   blockDim.x = WMMA_M; //128;
+   blockDim.y = WMMA_N;
+
+   printf("Running with MXM thread dimensions...\n");
+   cudaErrCheck(cudaEventRecord(startWMMA));
+   wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+   
+   cudaErrCheck(cudaEventRecord(stopWMMA));
+
 
 
 
