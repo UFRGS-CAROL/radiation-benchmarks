@@ -382,7 +382,7 @@ int main(int argc, char* argv[]) {
    float beta = 2.0f;
 
 
-   printf("\nM = %d, N = %d, K = %d. alpha = %f, beta = %f, A = %f , B = %f \n", MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta, a_fp32[0], b_fp32[0]);
+   //printf("\nM = %d, N = %d, K = %d. alpha = %f, beta = %f, A = %f , B = %f \n", MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta, a_fp32[0], b_fp32[0]);
    
    // First: using WMMA
    dim3 gridDim;
