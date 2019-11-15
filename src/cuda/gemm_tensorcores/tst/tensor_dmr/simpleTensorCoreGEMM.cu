@@ -94,7 +94,7 @@ __device__  __forceinline__ half axpy__(half a, half b, half acc) {
 // Note: This is NOT a high performance example but is for demonstration purposes only
 //       For a high performance code please use the GEMM provided in cuBLAS.
 
-__global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, float alpha, float beta) {
+__global__ void wmma_example(half *a, half *b, half *c, int M, int N, int K, float alpha, float beta) {
    // Leading dimensions. Packed with no transpositions.
    int lda = M;
    int ldb = K;
@@ -107,8 +107,8 @@ __global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, fl
    // Declare the fragments
    wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> a_frag;
    wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> b_frag;
-   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
-   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c_frag;
+   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half> acc_frag;
+   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half> c_frag;
 
    wmma::fill_fragment(acc_frag, 0.0f);
 
@@ -158,6 +158,7 @@ __global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, fl
 //  3) Neither A nor B are transposed.
 // Note: This is NOT a high performance example but is for demonstration purposes only
 //       For a high performance code please use the GEMM provided in cuBLAS.
+/*
 __global__ void wmma_example_dmr(half *a, half *b, float *c, half *d_sw, int M, int N, int K, float alpha, float beta) {
    // Leading dimensions. Packed with no transpositions.
    int lda = M;
@@ -276,20 +277,20 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, half *d_sw, int M, 
       wmma::store_matrix_sync(c + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
    }
 }
+*/
 
-
-__global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
+__global__ void matrix_mult(half *A, half *B, int M, int N, int K, half *C) {
 
    int row = blockIdx.x * blockDim.x + threadIdx.x;
    int col = blockIdx.y * blockDim.y + threadIdx.y;
     
    if (row < M && col < N) {
-      register float acc_real_t = 0.0;
+      register half acc_real_t = 0.0;
        
 
    
       for (int i = 0; i < K; i++) {
-         axpy__(__half2float(A[row * M + i]), __half2float(B[col * N + i]), acc_real_t);
+         axpy__(A[row * M + i], B[col * N + i], acc_real_t);
       }   
      
 
@@ -313,15 +314,15 @@ int main(int argc, char* argv[]) {
    float *b_fp32;
    half *a_fp16;
    half *b_fp16;
-   float *d_fp16;
+   half *d_fp16;
 
-   float *c;
-   float *c_cublas;
-   float *c_wmma;
+   half *c;
+   half *c_cublas;
+   half *c_wmma;
 
-   float *c_host_cublas;
-   float *c_host_wmma;
-   float *d_fp16_host;
+   half *c_host_cublas;
+   half *c_host_wmma;
+   half *d_fp16_host;
    
    curandGenerator_t gen;
    cublasHandle_t cublasHandle;
@@ -354,15 +355,15 @@ int main(int argc, char* argv[]) {
    cudaErrCheck(cudaMalloc((void**)&b_fp32, MATRIX_K * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMalloc((void**)&a_fp16, MATRIX_M * MATRIX_K * sizeof(half)));
    cudaErrCheck(cudaMalloc((void**)&b_fp16, MATRIX_K * MATRIX_N * sizeof(half)));
-   cudaErrCheck(cudaMalloc((void**)&d_fp16, MATRIX_K * MATRIX_N * sizeof(float)));
+   cudaErrCheck(cudaMalloc((void**)&d_fp16, MATRIX_K * MATRIX_N * sizeof(half)));
 
-   cudaErrCheck(cudaMalloc((void**)&c, MATRIX_M * MATRIX_N * sizeof(float)));
-   cudaErrCheck(cudaMalloc((void**)&c_cublas, MATRIX_M * MATRIX_N * sizeof(float)));
-   cudaErrCheck(cudaMalloc((void**)&c_wmma, MATRIX_M * MATRIX_N * sizeof(float)));
+   cudaErrCheck(cudaMalloc((void**)&c, MATRIX_M * MATRIX_N * sizeof(half)));
+   cudaErrCheck(cudaMalloc((void**)&c_cublas, MATRIX_M * MATRIX_N * sizeof(half)));
+   cudaErrCheck(cudaMalloc((void**)&c_wmma, MATRIX_M * MATRIX_N * sizeof(half)));
 
-   c_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-   c_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-   d_fp16_host = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+   c_host_cublas = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
+   c_host_wmma = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
+   d_fp16_host = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
 
    curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
    curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
@@ -380,9 +381,9 @@ int main(int argc, char* argv[]) {
    //cudaErrCheck(cudaMemset(a_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
    //cudaErrCheck(cudaMemset(b_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
    
-   cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
-   cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
-   cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(float) * MATRIX_M * MATRIX_N));
+   cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(half)));
+   cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(half)));
+   cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(half) * MATRIX_M * MATRIX_N));
 
    float alpha = 1.0f;
    float beta = 1.0f;
@@ -440,9 +441,9 @@ int main(int argc, char* argv[]) {
 
    // Error checking
    printf("\nChecking results...\n");
-   cudaErrCheck(cudaMemcpy(c_host_wmma, c_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
-   cudaErrCheck(cudaMemcpy(c_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
-   cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+   cudaErrCheck(cudaMemcpy(c_host_wmma, c_wmma, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
+   cudaErrCheck(cudaMemcpy(c_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
+   cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
 
    
    // 0.01% relative tolerance. 1e-5 absolute tolerance.
