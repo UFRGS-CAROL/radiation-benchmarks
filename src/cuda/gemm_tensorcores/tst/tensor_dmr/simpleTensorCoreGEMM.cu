@@ -82,6 +82,9 @@ __device__ __forceinline__ void axpy__(const float a, const float b, __half &c) 
     c = __hfma(__float2half(a), __float2half(b), c);
 }
 
+__device__  __forceinline__ void axpy__(half a, half b, float acc) {
+  return __hfma(a, b, __float2half(acc));
+}
 __device__  __forceinline__ half axpy__(half a, half b, half acc) {
   return __hfma(a, b, acc);
 }
