@@ -290,7 +290,7 @@ __global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
 
    
       for (int i = 0; i < K; i++) {
-         axpy__((A[row * M + i]*alpha), B[col * N + i], (acc_real_t*beta));
+         axpy__(A[row * M + i], B[col * N + i], acc_real_t);
       }   
      
 
@@ -418,7 +418,7 @@ int main(int argc, char* argv[]) {
    printf("Running with MXM thread dimensions...\n");
    cudaErrCheck(cudaEventRecord(startMXM));
    
-   matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16, alpha, beta);
+   matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
    
    cudaErrCheck(cudaEventRecord(stopMXM));
 
