@@ -279,13 +279,13 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, half *d_sw, int M, 
 }
 */
 
-__global__ void matrix_mult(float *A, float *B, int M, int N, int K, float *C, float alpha, float beta) {
+__global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
 
    int row = blockIdx.x * blockDim.x + threadIdx.x;
    int col = blockIdx.y * blockDim.y + threadIdx.y;
     
    if (row < M && col < N) {
-      register float acc_real_t = 0.0;
+      register half acc_real_t = 0.0;
        
 
    
@@ -296,7 +296,7 @@ __global__ void matrix_mult(float *A, float *B, int M, int N, int K, float *C, f
 
    
 
-      C[row * M + col] = acc_real_t;
+      C[row * M + col] = __half2float(acc_real_t);
       
    }
 
@@ -418,7 +418,7 @@ int main(int argc, char* argv[]) {
    printf("Running with MXM thread dimensions...\n");
    cudaErrCheck(cudaEventRecord(startMXM));
    
-   matrix_mult<<< gridDim, blockDim >>> (a_fp32, b_fp32, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16, alpha, beta);
+   matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16, alpha, beta);
    
    cudaErrCheck(cudaEventRecord(stopMXM));
 
