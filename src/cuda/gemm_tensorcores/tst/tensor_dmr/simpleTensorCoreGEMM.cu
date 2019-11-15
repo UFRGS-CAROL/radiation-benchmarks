@@ -373,13 +373,13 @@ int main(int argc, char* argv[]) {
    blockDim.x = WMMA_M; //128;
    blockDim.y = WMMA_N;
 
-   printf("Running  mxm with MXM thread dimensions...\n");
+   printf("Running  dmr with MXM thread dimensions...\n");
    cudaErrCheck(cudaEventRecord(startMXM));
    
-   matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
+   //matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
    
    
-   //wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+   wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
    cudaErrCheck(cudaEventRecord(stopMXM));
  
    
