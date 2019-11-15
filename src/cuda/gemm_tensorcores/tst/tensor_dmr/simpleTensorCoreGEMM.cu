@@ -300,7 +300,7 @@ __global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
 
    
 
-      C[row * M + col] = (acc_real_t);
+      C[row * M + col] = acc_real_t;
       
    }
 
