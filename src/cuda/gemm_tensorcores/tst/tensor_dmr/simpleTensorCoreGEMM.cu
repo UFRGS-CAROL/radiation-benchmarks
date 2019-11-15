@@ -313,8 +313,8 @@ __global__ void convertFp32ToFp16 (half *out, float *in, int n) {
 }
 
 int main(int argc, char* argv[]) {
-   //float *a_fp32;
-   //float *b_fp32;
+   float *a_fp32;
+   float *b_fp32;
    half *a_fp16;
    half *b_fp16;
    float *d_fp16;
@@ -327,7 +327,7 @@ int main(int argc, char* argv[]) {
    float *c_host_wmma;
    float *d_fp16_host;
    
-   //curandGenerator_t gen;
+   curandGenerator_t gen;
    cublasHandle_t cublasHandle;
    
    cudaEvent_t startWMMA;
@@ -354,8 +354,8 @@ int main(int argc, char* argv[]) {
    // Use tensor cores
    cublasErrCheck(cublasSetMathMode(cublasHandle, CUBLAS_TENSOR_OP_MATH));
    
-   //cudaErrCheck(cudaMalloc((void**)&a_fp32, MATRIX_M * MATRIX_K * sizeof(float)));
-   //cudaErrCheck(cudaMalloc((void**)&b_fp32, MATRIX_K * MATRIX_N * sizeof(float)));
+   cudaErrCheck(cudaMalloc((void**)&a_fp32, MATRIX_M * MATRIX_K * sizeof(float)));
+   cudaErrCheck(cudaMalloc((void**)&b_fp32, MATRIX_K * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMalloc((void**)&a_fp16, MATRIX_M * MATRIX_K * sizeof(half)));
    cudaErrCheck(cudaMalloc((void**)&b_fp16, MATRIX_K * MATRIX_N * sizeof(half)));
    cudaErrCheck(cudaMalloc((void**)&d_fp16, MATRIX_K * MATRIX_N * sizeof(float)));
@@ -368,21 +368,21 @@ int main(int argc, char* argv[]) {
    c_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
    d_fp16_host = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
 
-   //curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
-   //curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
+   curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
+   curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
 
-   //curandErrCheck(curandGenerateUniform(gen, a_fp32, MATRIX_M * MATRIX_K));
-   //curandErrCheck(curandGenerateUniform(gen, b_fp32, MATRIX_K * MATRIX_N));
+   curandErrCheck(curandGenerateUniform(gen, a_fp32, MATRIX_M * MATRIX_K));
+   curandErrCheck(curandGenerateUniform(gen, b_fp32, MATRIX_K * MATRIX_N));
 
    // curand doesn't currently support fp16 so we generate in fp32 and convert to fp16.
-   //convertFp32ToFp16 <<< (MATRIX_M * MATRIX_K + 255) / 256, 256 >>> (a_fp16, a_fp32, MATRIX_M * MATRIX_K);
-   //convertFp32ToFp16 <<< (MATRIX_K * MATRIX_N + 255) / 256, 256 >>> (b_fp16, b_fp32, MATRIX_K * MATRIX_N);
+   convertFp32ToFp16 <<< (MATRIX_M * MATRIX_K + 255) / 256, 256 >>> (a_fp16, a_fp32, MATRIX_M * MATRIX_K);
+   convertFp32ToFp16 <<< (MATRIX_K * MATRIX_N + 255) / 256, 256 >>> (b_fp16, b_fp32, MATRIX_K * MATRIX_N);
 
-   //curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
+   curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
    
-   //curandErrCheck(curandDestroyGenerator(gen));
-   cudaErrCheck(cudaMemset(a_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
-   cudaErrCheck(cudaMemset(b_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
+   curandErrCheck(curandDestroyGenerator(gen));
+   //cudaErrCheck(cudaMemset(a_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
+   /qcudaErrCheck(cudaMemset(b_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
    
    cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
@@ -494,8 +494,8 @@ int main(int argc, char* argv[]) {
    cudaErrCheck(cudaEventDestroy(startcublas));             
    cudaErrCheck(cudaEventDestroy(stopcublas));
    
-   //cudaErrCheck(cudaFree(a_fp32));
-   //cudaErrCheck(cudaFree(b_fp32));
+   cudaErrCheck(cudaFree(a_fp32));
+   cudaErrCheck(cudaFree(b_fp32));
    cudaErrCheck(cudaFree(a_fp16));
    cudaErrCheck(cudaFree(b_fp16));
    cudaErrCheck(cudaFree(d_fp16));
