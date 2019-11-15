@@ -82,10 +82,6 @@ __device__ __forceinline__ void axpy__(const float a, const float b, __half &c) 
     c = __hfma(__float2half(a), __float2half(b), c);
 }
 
-__device__  __forceinline__ void axpy__(half a, half b, float c) {
-    c = __fmaf_rn(__half2float(a), __half2float(b), c);
-}
-
 __device__  __forceinline__ half axpy__(half a, half b, half acc) {
   return __hfma(a, b, acc);
 }
@@ -293,7 +289,7 @@ __global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
 
    
       for (int i = 0; i < K; i++) {
-         axpy__(A[row * M + i], B[col * N + i], acc_real_t);
+         axpy__(__half2float(A[row * M + i]), __half2float(B[col * N + i]), acc_real_t);
       }   
      
 
