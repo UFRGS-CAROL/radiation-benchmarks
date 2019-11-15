@@ -285,7 +285,7 @@ __global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
    int col = blockIdx.y * blockDim.y + threadIdx.y;
     
    if (row < M && col < N) {
-      register half acc_real_t = 0.0;
+      register float acc_real_t = 0.0;
        
 
    
@@ -296,7 +296,7 @@ __global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
 
    
 
-      C[row * M + col] = (float)(acc_real_t);
+      C[row * M + col] = (acc_real_t);
       
    }
 
