@@ -301,15 +301,17 @@ int main(int argc, char* argv[]) {
  
    // blockDim.x must be a multple of warpSize
    // 128x4 means we have 16 warps and a block computes a 64x64 output tile
-   /*
+   
    blockDim.x = 128;
    blockDim.y = 4;
 
    gridDim.x = (MATRIX_M + (WMMA_M * blockDim.x / 32 - 1)) / (WMMA_M * blockDim.x / 32);
    gridDim.y = (MATRIX_N + WMMA_N * blockDim.y - 1) / (WMMA_N * blockDim.y);
-   */
+   
+   /*
    blockDim.x = WMMA_M; //128;
    blockDim.y = WMMA_N;
+   */
 
    printf("Running with wmma...\n");
    cudaErrCheck(cudaEventRecord(startWMMA));
@@ -343,7 +345,7 @@ int main(int argc, char* argv[]) {
    int errors = 0;
    for (int i = 0; i < MATRIX_M * MATRIX_N; i++) {
       float v1 = c_host_wmma[i];
-      half v2 = d_fp16_host[i];
+      float v2 = d_fp16_host[i];
       printf("%f %f\n", v1, v2);
       /*
       if (v1 / v2 > 1.0001 || v2 / v1 > 1.0001 || abs(v1 - v2) > 1e-5) {
