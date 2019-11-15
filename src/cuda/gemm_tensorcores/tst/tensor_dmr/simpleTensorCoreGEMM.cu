@@ -344,10 +344,13 @@ int main(int argc, char* argv[]) {
    for (int i = 0; i < MATRIX_M * MATRIX_N; i++) {
       float v1 = c_host_wmma[i];
       half v2 = d_fp16_host[i];
+      printf("%f %f\n", v1, v2);
+      /*
       if (v1 / v2 > 1.0001 || v2 / v1 > 1.0001 || abs(v1 - v2) > 1e-5) {
          errors++;
          if (errors < 10) printf("%f %f\n", v1, v2);
       }
+      */
    }
    
    if (errors > 0) {
