@@ -352,7 +352,7 @@ int main(int argc, char* argv[]) {
  
    // blockDim.x must be a multple of warpSize
    // 128x4 means we have 16 warps and a block computes a 64x64 output tile
-   /*
+   
    blockDim.x = 128;
    blockDim.y = 4;
 
@@ -366,26 +366,26 @@ int main(int argc, char* argv[]) {
   //wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
    cudaErrCheck(cudaEventRecord(stopWMMA));
 
-   */
+   
 
    // MXM DIMENSIONS
    
    blockDim.x = WMMA_M; //128;
    blockDim.y = WMMA_N;
 
-   printf("Running with MXM thread dimensions...\n");
-   cudaErrCheck(cudaEventRecord(startMXM));
+   //printf("Running tensor_DMR with MXM thread dimensions...\n");
+   //cudaErrCheck(cudaEventRecord(startMXM));
    
    //matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
    
    
-   wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
-   cudaErrCheck(cudaEventRecord(stopMXM));
+   //wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+   //cudaErrCheck(cudaEventRecord(stopMXM));
  
    
 
 
-   
+   /*
    // Now using cuBLAS
    printf("Running with cuBLAS...\n");
    cudaErrCheck(cudaEventRecord(startcublas));
@@ -398,6 +398,8 @@ int main(int argc, char* argv[]) {
                 c_cublas, CUDA_R_32F, MATRIX_M,
                 CUDA_R_32F, CUBLAS_GEMM_DFALT_TENSOR_OP));
    cudaErrCheck(cudaEventRecord(stopcublas));
+   /*
+
 
    // Error checking
    printf("\nChecking results...\n");
