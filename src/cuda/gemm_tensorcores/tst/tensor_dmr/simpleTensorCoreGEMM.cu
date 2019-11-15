@@ -407,7 +407,8 @@ int main(int argc, char* argv[]) {
    
    // 0.01% relative tolerance. 1e-5 absolute tolerance.
    int errors = 0;
-   for (int i = 0; i < MATRIX_M * MATRIX_N; i++) {
+   //for (int i = 0; i < MATRIX_M * MATRIX_N; i++) {
+   for (int i = 0; i <  10; i++) {      
       float v1 = c_host_wmma[i];
       float v2 = d_fp16_host[i];
       printf("%f %f\n", v1, v2);
