@@ -313,7 +313,7 @@ int main(int argc, char* argv[]) {
    float *b_fp32;
    half *a_fp16;
    half *b_fp16;
-   float *d_fp16;
+   //float *d_fp16;
 
    float *c;
    float *c_cublas;
@@ -321,7 +321,7 @@ int main(int argc, char* argv[]) {
 
    float *c_host_cublas;
    float *c_host_wmma;
-   float *d_fp16_host;
+   //float *d_fp16_host;
    
    curandGenerator_t gen;
    cublasHandle_t cublasHandle;
@@ -446,7 +446,7 @@ int main(int argc, char* argv[]) {
       float v1 = c_host_wmma[i];
       //float v2 = d_fp16_host[i];
       float v3 = c_host_cublas[i];      
-      printf("TENSOR = %f  | ------  MXM = %f ----- | CUBLAS = %f\n --------|", v1, v2, v3);
+      printf("TENSOR = %f  | ------  MXM =  ----- | CUBLAS = %f\n --------|", v1, v3);
       /*
       if (v1 / v2 > 1.0001 || v2 / v1 > 1.0001 || abs(v1 - v2) > 1e-5) {
          errors++;
