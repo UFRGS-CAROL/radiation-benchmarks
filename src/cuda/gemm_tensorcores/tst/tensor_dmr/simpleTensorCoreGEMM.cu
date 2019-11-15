@@ -372,8 +372,8 @@ int main(int argc, char* argv[]) {
    
    curandErrCheck(curandDestroyGenerator(gen));
    
-   cudaErrCheck(cudaMemcpy(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToDevice));
-   cudaErrCheck(cudaMemcpy(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToDevice));
+   cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
+   cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(float) * MATRIX_M * MATRIX_N));
 
    float alpha = 2.0f;
