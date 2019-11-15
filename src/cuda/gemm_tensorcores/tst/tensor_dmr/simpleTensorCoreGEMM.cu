@@ -162,7 +162,6 @@ __global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, fl
 //  3) Neither A nor B are transposed.
 // Note: This is NOT a high performance example but is for demonstration purposes only
 //       For a high performance code please use the GEMM provided in cuBLAS.
-/*
 __global__ void wmma_example_dmr(half *a, half *b, float *c, half *d_sw, int M, int N, int K, float alpha, float beta) {
    // Leading dimensions. Packed with no transpositions.
    int lda = M;
@@ -281,7 +280,7 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, half *d_sw, int M, 
       wmma::store_matrix_sync(c + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
    }
 }
-*/
+
 
 __global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
 
@@ -514,4 +513,3 @@ int main(int argc, char* argv[]) {
    cudaErrCheck(cudaDeviceReset());
    return 0;
 }
-
