@@ -279,7 +279,7 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, half *d_sw, int M, 
 }
 */
 
-__global__ void matrix_mult(float *A, float *B, int M, int N, int K, float *C) {
+__global__ void matrix_mult(float *A, float *B, int M, int N, int K, float *C, float alpha, float beta) {
 
    int row = blockIdx.x * blockDim.x + threadIdx.x;
    int col = blockIdx.y * blockDim.y + threadIdx.y;
@@ -290,7 +290,7 @@ __global__ void matrix_mult(float *A, float *B, int M, int N, int K, float *C) {
 
    
       for (int i = 0; i < K; i++) {
-         axpy__(A[row * M + i], B[col * N + i], acc_real_t);
+         axpy__((A[row * M + i]*alpha), B[col * N + i], (acc_real_t)*beta);
       }   
      
 
