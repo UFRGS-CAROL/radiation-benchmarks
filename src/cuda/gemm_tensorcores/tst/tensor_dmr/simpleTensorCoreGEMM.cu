@@ -94,7 +94,7 @@ __device__  __forceinline__ half axpy__(half a, half b, half acc) {
 // Note: This is NOT a high performance example but is for demonstration purposes only
 //       For a high performance code please use the GEMM provided in cuBLAS.
 
-__global__ void wmma_example(half *a, half *b, half *c, int M, int N, int K, half alpha, half beta) {
+__global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, float alpha, float beta) {
    // Leading dimensions. Packed with no transpositions.
    int lda = M;
    int ldb = K;
@@ -107,8 +107,8 @@ __global__ void wmma_example(half *a, half *b, half *c, int M, int N, int K, hal
    // Declare the fragments
    wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> a_frag;
    wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> b_frag;
-   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half> acc_frag;
-   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half> c_frag;
+   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
+   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c_frag;
 
    wmma::fill_fragment(acc_frag, 0.0f);
 
@@ -279,13 +279,13 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, half *d_sw, int M, 
 }
 */
 
-__global__ void matrix_mult(half *A, half *B, int M, int N, int K, half *C) {
+__global__ void matrix_mult(float *A, float *B, int M, int N, int K, float *C) {
 
    int row = blockIdx.x * blockDim.x + threadIdx.x;
    int col = blockIdx.y * blockDim.y + threadIdx.y;
     
    if (row < M && col < N) {
-      register half acc_real_t = 0.0;
+      register float acc_real_t = 0.0;
        
 
    
@@ -314,15 +314,15 @@ int main(int argc, char* argv[]) {
    float *b_fp32;
    half *a_fp16;
    half *b_fp16;
-   half *d_fp16;
+   float *d_fp16;
 
-   half *c;
-   half *c_cublas;
-   half *c_wmma;
+   float *c;
+   float *c_cublas;
+   float *c_wmma;
 
-   half *c_host_cublas;
-   half *c_host_wmma;
-   half *d_fp16_host;
+   float *c_host_cublas;
+   float *c_host_wmma;
+   float *d_fp16_host;
    
    curandGenerator_t gen;
    cublasHandle_t cublasHandle;
@@ -355,15 +355,15 @@ int main(int argc, char* argv[]) {
    cudaErrCheck(cudaMalloc((void**)&b_fp32, MATRIX_K * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMalloc((void**)&a_fp16, MATRIX_M * MATRIX_K * sizeof(half)));
    cudaErrCheck(cudaMalloc((void**)&b_fp16, MATRIX_K * MATRIX_N * sizeof(half)));
-   cudaErrCheck(cudaMalloc((void**)&d_fp16, MATRIX_K * MATRIX_N * sizeof(half)));
+   cudaErrCheck(cudaMalloc((void**)&d_fp16, MATRIX_K * MATRIX_N * sizeof(float)));
 
-   cudaErrCheck(cudaMalloc((void**)&c, MATRIX_M * MATRIX_N * sizeof(half)));
-   cudaErrCheck(cudaMalloc((void**)&c_cublas, MATRIX_M * MATRIX_N * sizeof(half)));
-   cudaErrCheck(cudaMalloc((void**)&c_wmma, MATRIX_M * MATRIX_N * sizeof(half)));
+   cudaErrCheck(cudaMalloc((void**)&c, MATRIX_M * MATRIX_N * sizeof(float)));
+   cudaErrCheck(cudaMalloc((void**)&c_cublas, MATRIX_M * MATRIX_N * sizeof(float)));
+   cudaErrCheck(cudaMalloc((void**)&c_wmma, MATRIX_M * MATRIX_N * sizeof(float)));
 
-   c_host_cublas = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
-   c_host_wmma = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
-   d_fp16_host = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
+   c_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+   c_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+   d_fp16_host = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
 
    curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
    curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
@@ -375,18 +375,18 @@ int main(int argc, char* argv[]) {
    convertFp32ToFp16 <<< (MATRIX_M * MATRIX_K + 255) / 256, 256 >>> (a_fp16, a_fp32, MATRIX_M * MATRIX_K);
    convertFp32ToFp16 <<< (MATRIX_K * MATRIX_N + 255) / 256, 256 >>> (b_fp16, b_fp32, MATRIX_K * MATRIX_N);
 
-   //curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
+   curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
    
    curandErrCheck(curandDestroyGenerator(gen));
    //cudaErrCheck(cudaMemset(a_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
    //cudaErrCheck(cudaMemset(b_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
    
-   cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(half)));
-   cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(half)));
-   cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(half) * MATRIX_M * MATRIX_N));
+   cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
+   cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
+   cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(float) * MATRIX_M * MATRIX_N));
 
-   half alpha = 1.0f;
-   half beta = 1.0f;
+   float alpha = 1.0f;
+   float beta = 1.0f;
 
 
    //printf("\nM = %d, N = %d, K = %d. alpha = %f, beta = %f, A = %f , B = %f \n", MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta, a_fp32[0], b_fp32[0]);
@@ -418,7 +418,7 @@ int main(int argc, char* argv[]) {
    printf("Running with MXM thread dimensions...\n");
    cudaErrCheck(cudaEventRecord(startMXM));
    
-   matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
+   matrix_mult<<< gridDim, blockDim >>> (a_fp32, b_fp32, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
    
    cudaErrCheck(cudaEventRecord(stopMXM));
 
@@ -441,9 +441,9 @@ int main(int argc, char* argv[]) {
 
    // Error checking
    printf("\nChecking results...\n");
-   cudaErrCheck(cudaMemcpy(c_host_wmma, c_wmma, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
-   cudaErrCheck(cudaMemcpy(c_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
-   cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
+   cudaErrCheck(cudaMemcpy(c_host_wmma, c_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+   cudaErrCheck(cudaMemcpy(c_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+   cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
 
    
    // 0.01% relative tolerance. 1e-5 absolute tolerance.
