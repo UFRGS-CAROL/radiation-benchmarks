@@ -382,8 +382,8 @@ int main(int argc, char* argv[]) {
    cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(float) * MATRIX_M * MATRIX_N));
 
-   float alpha = 2.0f;
-   float beta = 2.0f;
+   float alpha = 1.0f;
+   float beta = 1.0f;
 
 
    //printf("\nM = %d, N = %d, K = %d. alpha = %f, beta = %f, A = %f , B = %f \n", MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta, a_fp32[0], b_fp32[0]);
