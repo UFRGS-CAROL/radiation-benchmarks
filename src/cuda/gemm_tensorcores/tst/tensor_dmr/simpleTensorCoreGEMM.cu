@@ -374,7 +374,7 @@ int main(int argc, char* argv[]) {
    
    cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
-   cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(float) * MATRIX_M * MATRIX_N));
+   //cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(float) * MATRIX_M * MATRIX_N));
 
    float alpha = 2.0f;
    float beta = 2.0f;
@@ -394,11 +394,6 @@ int main(int argc, char* argv[]) {
 
    gridDim.x = (MATRIX_M + (WMMA_M * blockDim.x / 32 - 1)) / (WMMA_M * blockDim.x / 32);
    gridDim.y = (MATRIX_N + WMMA_N * blockDim.y - 1) / (WMMA_N * blockDim.y);
-   
-   /*
-   blockDim.x = WMMA_M; //128;
-   blockDim.y = WMMA_N;
-   */
 
    printf("Running with wmma thread dimensions...\n");
    cudaErrCheck(cudaEventRecord(startWMMA));
@@ -407,7 +402,7 @@ int main(int argc, char* argv[]) {
    cudaErrCheck(cudaEventRecord(stopWMMA));
 
    // MXM DIMENSIONS
-
+   /*
    blockDim.x = WMMA_M; //128;
    blockDim.y = WMMA_N;
 
@@ -418,7 +413,7 @@ int main(int argc, char* argv[]) {
    
    cudaErrCheck(cudaEventRecord(stopWMMA));
 
-
+   */
 
 
    
