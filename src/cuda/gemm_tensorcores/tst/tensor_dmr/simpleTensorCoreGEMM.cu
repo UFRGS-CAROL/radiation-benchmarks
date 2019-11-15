@@ -72,7 +72,7 @@ __device__ __forceinline__ void axpy__(const double a, const double b, double &c
     c = __fma_rn(a, b, c);
 }
 __device__ __forceinline__ void axpy__(const float a, const float b, float &c) {
-    //printf("A = %f   -- B =  %f\n", a, b);
+    
     c = __fmaf_rn(a, b, c);
 }
 __device__ __forceinline__ void axpy__(const double a, const double b, float &c) {
@@ -80,6 +80,10 @@ __device__ __forceinline__ void axpy__(const double a, const double b, float &c)
 }
 __device__ __forceinline__ void axpy__(const float a, const float b, __half &c) {
     c = __hfma(__float2half(a), __float2half(b), c);
+}
+
+__device__  __forceinline__ half axpy__(half a, half b, float acc) {
+    c = __fmaf_rn(__half2float(a), __half2float(b), c);
 }
 
 __device__  __forceinline__ half axpy__(half a, half b, half acc) {
@@ -289,7 +293,7 @@ __global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
 
    
       for (int i = 0; i < K; i++) {
-         axpy__((float)A[row * M + i], (float)B[col * N + i], acc_real_t);
+         axpy__(A[row * M + i], B[col * N + i], acc_real_t);
       }   
      
 
@@ -350,8 +354,8 @@ int main(int argc, char* argv[]) {
    // Use tensor cores
    cublasErrCheck(cublasSetMathMode(cublasHandle, CUBLAS_TENSOR_OP_MATH));
    
-   cudaErrCheck(cudaMalloc((void**)&a_fp32, MATRIX_M * MATRIX_K * sizeof(float)));
-   cudaErrCheck(cudaMalloc((void**)&b_fp32, MATRIX_K * MATRIX_N * sizeof(float)));
+   //cudaErrCheck(cudaMalloc((void**)&a_fp32, MATRIX_M * MATRIX_K * sizeof(float)));
+   //cudaErrCheck(cudaMalloc((void**)&b_fp32, MATRIX_K * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMalloc((void**)&a_fp16, MATRIX_M * MATRIX_K * sizeof(half)));
    cudaErrCheck(cudaMalloc((void**)&b_fp16, MATRIX_K * MATRIX_N * sizeof(half)));
    cudaErrCheck(cudaMalloc((void**)&d_fp16, MATRIX_K * MATRIX_N * sizeof(float)));
@@ -364,19 +368,21 @@ int main(int argc, char* argv[]) {
    c_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
    d_fp16_host = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
 
-   curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
-   curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
+   //curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
+   //curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
 
-   curandErrCheck(curandGenerateUniform(gen, a_fp32, MATRIX_M * MATRIX_K));
-   curandErrCheck(curandGenerateUniform(gen, b_fp32, MATRIX_K * MATRIX_N));
+   //curandErrCheck(curandGenerateUniform(gen, a_fp32, MATRIX_M * MATRIX_K));
+   //curandErrCheck(curandGenerateUniform(gen, b_fp32, MATRIX_K * MATRIX_N));
 
    // curand doesn't currently support fp16 so we generate in fp32 and convert to fp16.
-   convertFp32ToFp16 <<< (MATRIX_M * MATRIX_K + 255) / 256, 256 >>> (a_fp16, a_fp32, MATRIX_M * MATRIX_K);
-   convertFp32ToFp16 <<< (MATRIX_K * MATRIX_N + 255) / 256, 256 >>> (b_fp16, b_fp32, MATRIX_K * MATRIX_N);
+   //convertFp32ToFp16 <<< (MATRIX_M * MATRIX_K + 255) / 256, 256 >>> (a_fp16, a_fp32, MATRIX_M * MATRIX_K);
+   //convertFp32ToFp16 <<< (MATRIX_K * MATRIX_N + 255) / 256, 256 >>> (b_fp16, b_fp32, MATRIX_K * MATRIX_N);
 
-   curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
+   //curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
    
-   curandErrCheck(curandDestroyGenerator(gen));
+   //curandErrCheck(curandDestroyGenerator(gen));
+   cudaErrCheck(cudaMemset(a_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
+   cudaErrCheck(cudaMemset(b_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
    
    cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
@@ -488,8 +494,8 @@ int main(int argc, char* argv[]) {
    cudaErrCheck(cudaEventDestroy(startcublas));             
    cudaErrCheck(cudaEventDestroy(stopcublas));
    
-   cudaErrCheck(cudaFree(a_fp32));
-   cudaErrCheck(cudaFree(b_fp32));
+   //cudaErrCheck(cudaFree(a_fp32));
+   //cudaErrCheck(cudaFree(b_fp32));
    cudaErrCheck(cudaFree(a_fp16));
    cudaErrCheck(cudaFree(b_fp16));
    cudaErrCheck(cudaFree(d_fp16));
