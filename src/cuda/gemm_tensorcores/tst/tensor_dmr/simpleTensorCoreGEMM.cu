@@ -398,7 +398,7 @@ int main(int argc, char* argv[]) {
                 c_cublas, CUDA_R_32F, MATRIX_M,
                 CUDA_R_32F, CUBLAS_GEMM_DFALT_TENSOR_OP));
    cudaErrCheck(cudaEventRecord(stopcublas));
-   /*
+   */
 
 
    // Error checking
