@@ -418,7 +418,7 @@ int main(int argc, char* argv[]) {
    printf("Running with MXM thread dimensions...\n");
    cudaErrCheck(cudaEventRecord(startMXM));
    
-   matrix_mult<<< gridDim, blockDim >>> (a_fp32, b_fp32, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
+   matrix_mult<<< gridDim, blockDim >>> (a_fp32, b_fp32, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16, alpha, beta);
    
    cudaErrCheck(cudaEventRecord(stopMXM));
 
