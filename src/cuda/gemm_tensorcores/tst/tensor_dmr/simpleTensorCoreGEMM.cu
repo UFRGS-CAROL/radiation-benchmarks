@@ -56,9 +56,9 @@ void curandErrCheck_(curandStatus_t stat, const char *file, int line) {
 using namespace nvcuda;
 
 // Must be multiples of 16 for wmma code to work
-#define MATRIX_M 16384
-#define MATRIX_N 16384
-#define MATRIX_K 16384
+#define MATRIX_M 4096 //16384
+#define MATRIX_N 4096 //16384
+#define MATRIX_K 4096 //16384
 
 #define BLOCK_SIZE 16
 
@@ -321,7 +321,7 @@ int main(int argc, char* argv[]) {
    c_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
    c_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
    d_fp16_host = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-
+   /*
    curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
    curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
 
@@ -335,7 +335,10 @@ int main(int argc, char* argv[]) {
    curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
    
    curandErrCheck(curandDestroyGenerator(gen));
-   
+   */
+   cudaErrCheck(cudaMemset(a_fp16, 2.0, MATRIX_M * MATRIX_N * sizeof(half)));
+   cudaErrCheck(cudaMemset(b_fp16, 2.0, MATRIX_M * MATRIX_N * sizeof(half)));
+
    cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(float) * MATRIX_M * MATRIX_N));
