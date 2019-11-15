@@ -277,6 +277,30 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, half *d_sw, int M, 
    }
 }
 
+
+__global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
+
+   int row = blockIdx.x * blockDim.x + threadIdx.x;
+   int col = blockIdx.y * blockDim.y + threadIdx.y;
+    
+   if (row < M && col < N) {
+      register float acc_real_t = 0.0;
+       
+
+   
+      for (int i = 0; i < K; i++) {
+         axpy__((float)A[row * M + i], (float)B[col * N + i], acc_real_t);
+      }   
+     
+
+   
+
+      C[row * M + col] = acc_real_t;
+      
+   }
+
+}
+
 __global__ void convertFp32ToFp16 (half *out, float *in, int n) {
    int idx = blockDim.x * blockIdx.x + threadIdx.x;
    if (idx < n) {
@@ -348,15 +372,15 @@ int main(int argc, char* argv[]) {
    
    curandErrCheck(curandDestroyGenerator(gen));
    
-   cudaErrCheck(cudaMemcpy(c_cublas, c, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToDevice));
-   cudaErrCheck(cudaMemcpy(c_wmma, c, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToDevice));
+   cudaErrCheck(cudaMemcpy(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToDevice));
+   cudaErrCheck(cudaMemcpy(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToDevice));
    cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(float) * MATRIX_M * MATRIX_N));
 
    float alpha = 2.0f;
    float beta = 2.0f;
 
 
-   printf("\nM = %d, N = %d, K = %d. alpha = %f, beta = %f\n\n", MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+   printf("\nM = %d, N = %d, K = %d. alpha = %f, beta = %f, A = %f , B = %f \n", MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta, a_fp32[0], b_fp32[0]);
    
    // First: using WMMA
    dim3 gridDim;
@@ -389,7 +413,8 @@ int main(int argc, char* argv[]) {
 
    printf("Running with MXM thread dimensions...\n");
    cudaErrCheck(cudaEventRecord(startWMMA));
-   wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+   
+   matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
    
    cudaErrCheck(cudaEventRecord(stopWMMA));
 
@@ -414,16 +439,17 @@ int main(int argc, char* argv[]) {
    printf("\nChecking results...\n");
    cudaErrCheck(cudaMemcpy(c_host_wmma, c_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
    cudaErrCheck(cudaMemcpy(c_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
-   cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
+   cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
 
    
    // 0.01% relative tolerance. 1e-5 absolute tolerance.
    int errors = 0;
    //for (int i = 0; i < MATRIX_M * MATRIX_N; i++) {
-   for (int i = 0; i <  10; i++) {      
+   for (int i = 0; i <  5; i++) {      
       float v1 = c_host_wmma[i];
       float v2 = d_fp16_host[i];
-      printf("%f %f\n", v1, v2);
+      float v3 = c_host_cublas[i];      
+      printf("TENSOR = %f  | ------  MXM = %f ----- | CUBLAS = %f\n --------|", v1, v2, v3);
       /*
       if (v1 / v2 > 1.0001 || v2 / v1 > 1.0001 || abs(v1 - v2) > 1e-5) {
          errors++;
