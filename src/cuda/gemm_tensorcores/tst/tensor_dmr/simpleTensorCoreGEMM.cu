@@ -72,7 +72,7 @@ __device__ __forceinline__ void axpy__(const double a, const double b, double &c
     c = __fma_rn(a, b, c);
 }
 __device__ __forceinline__ void axpy__(const float a, const float b, float &c) {
-    
+    //printf("A = %f   -- B =  %f\n", a, b);
     c = __fmaf_rn(a, b, c);
 }
 __device__ __forceinline__ void axpy__(const double a, const double b, float &c) {
@@ -80,10 +80,6 @@ __device__ __forceinline__ void axpy__(const double a, const double b, float &c)
 }
 __device__ __forceinline__ void axpy__(const float a, const float b, __half &c) {
     c = __hfma(__float2half(a), __float2half(b), c);
-}
-
-__device__  __forceinline__ void axpy__(half a, half b, float c) {
-    c = __fmaf_rn(__half2float(a), __half2float(b), c);
 }
 
 __device__  __forceinline__ half axpy__(half a, half b, half acc) {
@@ -293,7 +289,7 @@ __global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
 
    
       for (int i = 0; i < K; i++) {
-         axpy__(A[row * M + i], B[col * N + i], acc_real_t);
+         axpy__((float)A[row * M + i], (float)B[col * N + i], acc_real_t);
       }   
      
 
@@ -381,15 +377,13 @@ int main(int argc, char* argv[]) {
    curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
    
    curandErrCheck(curandDestroyGenerator(gen));
-   //cudaErrCheck(cudaMemset(a_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
-   //cudaErrCheck(cudaMemset(b_fp16, 1, MATRIX_M * MATRIX_N * sizeof(half)));
    
    cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(float) * MATRIX_M * MATRIX_N));
 
-   float alpha = 1.0f;
-   float beta = 1.0f;
+   float alpha = 2.0f;
+   float beta = 2.0f;
 
 
    //printf("\nM = %d, N = %d, K = %d. alpha = %f, beta = %f, A = %f , B = %f \n", MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta, a_fp32[0], b_fp32[0]);
