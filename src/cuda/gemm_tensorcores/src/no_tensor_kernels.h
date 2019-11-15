@@ -137,13 +137,14 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
-	 real_t Csub_real = 0;
-	 half_t Csub_half = 0;
+	real_t Csub_real = 0;
+	half_t Csub_half = 0;
 
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
 	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
-		Csub_half = Csub_real;
+//		Csub_half = Csub_real;
+
 		// Declaration of the shared memory array As used to
 		// store the sub-matrix of A
 		__shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
@@ -171,6 +172,8 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 
 			Csub_real += As[ty][k] * Bs[k][tx];
 			Csub_half += ah * bh;
+			if ((k % COUNT) == 0)
+				check_relative_error(Csub_real, Csub_half);
 		}
 
 		// Synchronize to make sure that the preceding
@@ -182,12 +185,19 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
+
+//	if(index == 23){
+//		Csub_real *= 0.7;
+//	}
+
 	real_t real_val = alpha * Csub_real + beta * C[index];
-	half_t half_val = half_t(alpha) * Csub_half	+ half_t(beta) * half_t(C[index]);
+	half_t half_val = half_t(alpha) * Csub_half
+			+ half_t(beta) * half_t(C[index]);
 
 	D_r[index] = real_val;
 	D_h[index] = half_val;
-	check_relative_error(half_val, real_val);
+//	check_relative_error(real_val, half_val);
+
 }
 
 template<typename real_t>

@@ -22,11 +22,13 @@ void check_relative_error(real_t lhs, real_t rhs) {
 }
 
 __DEVICE_INLINE__
-void check_relative_error(float lhs, double rhs) {
+void check_relative_error(float lhs, double &rhs) {
 	float relative = __fdividef(lhs, float(rhs));
 	if(relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE){
+		printf("%f %lf %f\n", lhs, rhs, relative);
 		atomicAdd(&errors, 1);
 	}
+	rhs = lhs;
 }
 
 //__DEVICE_INLINE__

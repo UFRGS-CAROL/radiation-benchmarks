@@ -31,7 +31,7 @@
 #endif
 
 // Ninety percent
-#define MIN_PERCENTAGE 0.85f
+#define MIN_PERCENTAGE 0.8f
 
 // Hundred percent
 // I keep 10% in each direction 0.9 to 1.1

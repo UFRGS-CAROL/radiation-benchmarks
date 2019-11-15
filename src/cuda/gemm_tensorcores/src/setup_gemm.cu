@@ -237,21 +237,18 @@ void setup_gemm_unhardened(Log& log) {
 //		UnhardenedGemmCaller<half> gemm_obj(log.size_matrices,
 //				log.size_matrices);
 //		setup_execute(log, gemm_obj);
-//		return;
 //	}
 //
 //	if (log.precision == "float" || log.precision == "single") {
 //		UnhardenedGemmCaller<float> gemm_obj(log.size_matrices,
 //				log.size_matrices);
 //		setup_execute(log, gemm_obj);
-//		return;
 //	}
 
 	if (log.precision == "double") {
-		UnhardenedGemmCaller<double> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj);
-		return;
+//		UnhardenedGemmCaller<double> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj);
 	}
 }
 
@@ -266,7 +263,7 @@ void setup_gemm_dmr(Log& log) {
 
 	if (log.precision == "double") {
 		if (log.dmr == "mixed") {
-			DMRMixedGemmCaller<1, float, double> gemm_obj(log.size_matrices,
+			DMRMixedGemmCaller<8, double, float> gemm_obj(log.size_matrices,
 					log.size_matrices);
 			setup_execute(log, gemm_obj, THRESHOLD_1);
 		} else {
