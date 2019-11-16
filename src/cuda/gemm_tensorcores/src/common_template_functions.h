@@ -148,11 +148,6 @@ bool equals(float& lhs, double& rhs) {
 	return (relative >= MIN_PERCENTAGE && relative <= MAX_PERCENTAGE);
 }
 
-bool equals(double& rhs, float& lhs) {
-	float relative(lhs / float(rhs));
-	return (relative >= MIN_PERCENTAGE && relative <= MAX_PERCENTAGE);
-}
-
 template<class half_t, class real_t>
 std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<real_t>& real_vector, std::vector<half_t>& half_vector,
