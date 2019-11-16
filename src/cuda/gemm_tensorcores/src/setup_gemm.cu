@@ -246,9 +246,9 @@ void setup_gemm_unhardened(Log& log) {
 //	}
 
 	if (log.precision == "double") {
-		UnhardenedGemmCaller<double> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj);
+//		UnhardenedGemmCaller<double> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj);
 	}
 }
 

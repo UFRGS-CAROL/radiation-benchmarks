@@ -88,7 +88,7 @@ void generate_input_matrices(size_t matrix_size, std::vector<half_t>& a_vector,
 
 	std::random_device rd; //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-	std::uniform_real_distribution<double> dis(GENERATOR_MINABSVALUE,
+	std::uniform_real_distribution<float> dis(GENERATOR_MINABSVALUE,
 	GENERATOR_MAXABSVALUE);
 
 	a_vector.resize(matrix_size * matrix_size);
