@@ -25,7 +25,7 @@ __DEVICE_INLINE__
 void check_relative_error(float lhs, double &rhs) {
 	float relative = __fdividef(lhs, float(rhs));
 	if(relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE){
-		printf("%f %lf %f\n", lhs, rhs, relative);
+//		printf("%f %lf %f\n", lhs, rhs, relative);
 		atomicAdd(&errors, 1);
 	}
 	rhs = lhs;

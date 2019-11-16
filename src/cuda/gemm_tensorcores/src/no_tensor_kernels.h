@@ -143,8 +143,6 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
 	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
-//		Csub_half = Csub_real;
-
 		// Declaration of the shared memory array As used to
 		// store the sub-matrix of A
 		__shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
@@ -173,7 +171,7 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 			Csub_real += As[ty][k] * Bs[k][tx];
 			Csub_half += ah * bh;
 			if ((k % COUNT) == 0)
-				check_relative_error(Csub_real, Csub_half);
+				check_relative_error(Csub_half, Csub_real);
 		}
 
 		// Synchronize to make sure that the preceding
@@ -196,7 +194,7 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 
 	D_r[index] = real_val;
 	D_h[index] = half_val;
-//	check_relative_error(real_val, half_val);
+	check_relative_error(half_val, real_val);
 
 }
 
