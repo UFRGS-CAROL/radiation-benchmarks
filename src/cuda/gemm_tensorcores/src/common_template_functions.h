@@ -23,7 +23,7 @@
 
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
 #define GENERATOR_MAXABSVALUE 1000
-#define GENERATOR_MINABSVALUE -GENERATOR_MAXABSVALUE
+#define GENERATOR_MINABSVALUE 0.1 //-GENERATOR_MAXABSVALUE
 
 template<typename T>
 bool read_from_file(std::string& path, std::vector<T>& array) {
@@ -88,7 +88,7 @@ void generate_input_matrices(size_t matrix_size, std::vector<half_t>& a_vector,
 
 	std::random_device rd; //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-	std::uniform_real_distribution<float> dis(GENERATOR_MINABSVALUE,
+	std::uniform_real_distribution<double> dis(GENERATOR_MINABSVALUE,
 	GENERATOR_MAXABSVALUE);
 
 	a_vector.resize(matrix_size * matrix_size);
@@ -201,12 +201,12 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		error_detail = "detected_dmr_errors: " + std::to_string(dmr_err);
 		log.log_error(error_detail);
 	}
-
-	if (host_detected != 0) {
-		std::string error_detail;
-		error_detail = "host_detected_errors: " + std::to_string(host_detected);
-		log.log_error(error_detail);
-	}
+//
+//	if (host_detected != 0) {
+//		std::string error_detail;
+//		error_detail = "host_detected_errors: " + std::to_string(host_detected);
+//		log.log_error(error_detail);
+//	}
 
 	log.update_error_count(host_errors);
 	if (host_errors != 0)
