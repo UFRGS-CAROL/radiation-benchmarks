@@ -22,7 +22,7 @@
 #endif
 
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
-#define GENERATOR_MAXABSVALUE 1000
+#define GENERATOR_MAXABSVALUE 100
 #define GENERATOR_MINABSVALUE 0.1 //-GENERATOR_MAXABSVALUE
 
 template<typename T>
