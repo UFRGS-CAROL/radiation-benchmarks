@@ -432,48 +432,48 @@ int main(int argc, char* argv[]) {
       printf("WMMA does not agree with cuBLAS! %d errors!\n", errors);
    }
    */
-   else {
-      //printf("Results verified: cublas and WMMA agree.\n\n");
-      float wmmaTime;
-      float cublasTime;
-      float mxmTime;
-      cudaErrCheck(cudaEventSynchronize(stopWMMA));
-      cudaErrCheck(cudaEventSynchronize(stopcublas));
-      cudaErrCheck(cudaEventSynchronize(stopMXM));
+   
+  //printf("Results verified: cublas and WMMA agree.\n\n");
+  float wmmaTime;
+  float cublasTime;
+  float mxmTime;
+  cudaErrCheck(cudaEventSynchronize(stopWMMA));
+  cudaErrCheck(cudaEventSynchronize(stopcublas));
+  cudaErrCheck(cudaEventSynchronize(stopMXM));
 
-      //cudaErrCheck(cudaEventElapsedTime(&wmmaTime, startWMMA, stopWMMA));
-      //cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
-      cudaErrCheck(cudaEventElapsedTime(&mxmTime, startMXM, stopMXM));
-      //printf("wmma took %fms\n", wmmaTime);
-      //printf("cublas took %fms\n", cublasTime);
-      printf("mxm took %fms\n", mxmTime);
+  //cudaErrCheck(cudaEventElapsedTime(&wmmaTime, startWMMA, stopWMMA));
+  //cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
+  cudaErrCheck(cudaEventElapsedTime(&mxmTime, startMXM, stopMXM));
+  //printf("wmma took %fms\n", wmmaTime);
+  //printf("cublas took %fms\n", cublasTime);
+  printf("mxm took %fms\n", mxmTime);
 
      
-   }
    
-   
-   cudaErrCheck(cudaEventDestroy(startWMMA));
-   cudaErrCheck(cudaEventDestroy(stopWMMA));
+ 
+ 
+ cudaErrCheck(cudaEventDestroy(startWMMA));
+ cudaErrCheck(cudaEventDestroy(stopWMMA));
 
-   cudaErrCheck(cudaEventDestroy(startcublas));             
-   cudaErrCheck(cudaEventDestroy(stopcublas));
-   
-   cudaErrCheck(cudaFree(a_fp32));
-   cudaErrCheck(cudaFree(b_fp32));
-   cudaErrCheck(cudaFree(a_fp16));
-   cudaErrCheck(cudaFree(b_fp16));
-   cudaErrCheck(cudaFree(d_fp16));
+ cudaErrCheck(cudaEventDestroy(startcublas));             
+ cudaErrCheck(cudaEventDestroy(stopcublas));
+ 
+ cudaErrCheck(cudaFree(a_fp32));
+ cudaErrCheck(cudaFree(b_fp32));
+ cudaErrCheck(cudaFree(a_fp16));
+ cudaErrCheck(cudaFree(b_fp16));
+ cudaErrCheck(cudaFree(d_fp16));
 
-   cudaErrCheck(cudaFree(c));
-   cudaErrCheck(cudaFree(c_cublas));
-   cudaErrCheck(cudaFree(c_wmma));
+ cudaErrCheck(cudaFree(c));
+ cudaErrCheck(cudaFree(c_cublas));
+ cudaErrCheck(cudaFree(c_wmma));
 
-   
-   free(c_host_cublas);
-   free(c_host_wmma);
-   free(d_fp16_host);
-   
+ 
+ free(c_host_cublas);
+ free(c_host_wmma);
+ free(d_fp16_host);
+ 
 
-   cudaErrCheck(cudaDeviceReset());
-   return 0;
+ cudaErrCheck(cudaDeviceReset());
+ return 0;
 }
