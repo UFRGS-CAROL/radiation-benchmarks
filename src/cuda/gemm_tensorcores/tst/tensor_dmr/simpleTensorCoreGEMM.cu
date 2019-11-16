@@ -164,8 +164,7 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M,
    int lda = M;
    int ldb = K;
    int ldc = M;
-   int m_ld =WMMA_M;
-   int n_ld =WMMA_N;
+ 
 
    // Tile using a 2D grid
    int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
@@ -279,7 +278,7 @@ int main(int argc, char* argv[]) {
   float *c_host_wmma;
   float *d_fp16_host;
   
-  curandGenerator_t gen;
+  //curandGenerator_t gen;
   cublasHandle_t cublasHandle;
   
   cudaEvent_t startWMMA;
@@ -332,8 +331,8 @@ int main(int argc, char* argv[]) {
    
    curandErrCheck(curandDestroyGenerator(gen));
    */
-  cudaErrCheck(cudaMemset(a_fp16, 10.0, MATRIX_M * MATRIX_N * sizeof(half)));
-  cudaErrCheck(cudaMemset(b_fp16, 10.0, MATRIX_M * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMemset(a_fp16, 100, MATRIX_M * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMemset(b_fp16, 100, MATRIX_M * MATRIX_N * sizeof(half)));
 
   cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
   cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
@@ -429,10 +428,10 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaEventSynchronize(stopMXM));
 
   //cudaErrCheck(cudaEventElapsedTime(&wmmaTime, startWMMA, stopWMMA));
-  //cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
+  cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
   cudaErrCheck(cudaEventElapsedTime(&mxmTime, startMXM, stopMXM));
   //printf("wmma took %fms\n", wmmaTime);
-  //printf("cublas took %fms\n", cublasTime);
+  printf("cublas took %fms\n", cublasTime);
   printf("mxm took %fms\n", mxmTime);
 
      
