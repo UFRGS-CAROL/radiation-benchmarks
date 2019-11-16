@@ -269,7 +269,7 @@ __global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-	D[index] = Csub; // alpha * Csub + beta * C[index];
+	D[index] = alpha * Csub + beta * C[index];
 }
 
 #endif /* NO_TENSOR_KERNELS_H_ */
