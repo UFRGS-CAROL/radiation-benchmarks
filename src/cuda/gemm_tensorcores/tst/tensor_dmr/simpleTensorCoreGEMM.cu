@@ -56,9 +56,9 @@ void curandErrCheck_(curandStatus_t stat, const char *file, int line) {
 using namespace nvcuda;
 
 // Must be multiples of 16 for wmma code to work
-#define MATRIX_M 16384
-#define MATRIX_N 16384
-#define MATRIX_K 16384
+#define MATRIX_M 4096 //16384
+#define MATRIX_N 4096 //16384
+#define MATRIX_K 4096 //16384
 
 #define BLOCK_SIZE 16
 
@@ -164,8 +164,7 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M,
    int lda = M;
    int ldb = K;
    int ldc = M;
-   int m_ld =WMMA_M;
-   int n_ld =WMMA_N;
+ 
 
    // Tile using a 2D grid
    int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
@@ -267,61 +266,57 @@ __global__ void convertFp32ToFp16 (half *out, float *in, int n) {
 }
 
 int main(int argc, char* argv[]) {
-   float *a_fp32;
-   float *b_fp32;
-   half *a_fp16;
-   half *b_fp16;
-   float *d_fp16;
+  float *a_fp32;
+  float *b_fp32;
+  half *a_fp16;
+  half *b_fp16;
+  float *d_fp16;
+  float *c;
+  float *c_cublas;
+  float *c_wmma;
+  float *c_host_cublas;
+  float *c_host_wmma;
+  float *d_fp16_host;
+  
+  //curandGenerator_t gen;
+  cublasHandle_t cublasHandle;
+  
+  cudaEvent_t startWMMA;
+  cudaEvent_t stopWMMA;
+  cudaEvent_t startMXM;
+  cudaEvent_t stopMXM;
 
-   float *c;
-   float *c_cublas;
-   float *c_wmma;
-
-   float *c_host_cublas;
-   float *c_host_wmma;
-   float *d_fp16_host;
+  cudaEvent_t startcublas;
+  cudaEvent_t stopcublas;
    
-   curandGenerator_t gen;
-   cublasHandle_t cublasHandle;
-   
-   cudaEvent_t startWMMA;
-   cudaEvent_t stopWMMA;
+  cudaErrCheck(cudaEventCreate(&startWMMA));
+  cudaErrCheck(cudaEventCreate(&stopWMMA));
 
-   cudaEvent_t startMXM;
-   cudaEvent_t stopMXM;
-
-   cudaEvent_t startcublas;
-   cudaEvent_t stopcublas;
-   
-   cudaErrCheck(cudaEventCreate(&startWMMA));
-   cudaErrCheck(cudaEventCreate(&stopWMMA));
-
-   cudaErrCheck(cudaEventCreate(&startMXM));
-   cudaErrCheck(cudaEventCreate(&stopMXM));
-   
-   cudaErrCheck(cudaEventCreate(&startcublas));
-   cudaErrCheck(cudaEventCreate(&stopcublas));
+  cudaErrCheck(cudaEventCreate(&startMXM));
+  cudaErrCheck(cudaEventCreate(&stopMXM));
+  
+  cudaErrCheck(cudaEventCreate(&startcublas));
+  cudaErrCheck(cudaEventCreate(&stopcublas));
    
    
-   cublasErrCheck(cublasCreate(&cublasHandle));
+  cublasErrCheck(cublasCreate(&cublasHandle));
    
-   // Use tensor cores
-   cublasErrCheck(cublasSetMathMode(cublasHandle, CUBLAS_TENSOR_OP_MATH));
-   
-   cudaErrCheck(cudaMalloc((void**)&a_fp32, MATRIX_M * MATRIX_K * sizeof(float)));
-   cudaErrCheck(cudaMalloc((void**)&b_fp32, MATRIX_K * MATRIX_N * sizeof(float)));
-   cudaErrCheck(cudaMalloc((void**)&a_fp16, MATRIX_M * MATRIX_K * sizeof(half)));
-   cudaErrCheck(cudaMalloc((void**)&b_fp16, MATRIX_K * MATRIX_N * sizeof(half)));
-   cudaErrCheck(cudaMalloc((void**)&d_fp16, MATRIX_K * MATRIX_N * sizeof(float)));
+  // Use tensor cores
+  cublasErrCheck(cublasSetMathMode(cublasHandle, CUBLAS_TENSOR_OP_MATH));
+  
+  cudaErrCheck(cudaMalloc((void**)&a_fp32, MATRIX_M * MATRIX_K * sizeof(float)));
+  cudaErrCheck(cudaMalloc((void**)&b_fp32, MATRIX_K * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMalloc((void**)&a_fp16, MATRIX_M * MATRIX_K * sizeof(half)));
+  cudaErrCheck(cudaMalloc((void**)&b_fp16, MATRIX_K * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMalloc((void**)&d_fp16, MATRIX_K * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMalloc((void**)&c, MATRIX_M * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMalloc((void**)&c_cublas, MATRIX_M * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMalloc((void**)&c_wmma, MATRIX_M * MATRIX_N * sizeof(float)));
 
-   cudaErrCheck(cudaMalloc((void**)&c, MATRIX_M * MATRIX_N * sizeof(float)));
-   cudaErrCheck(cudaMalloc((void**)&c_cublas, MATRIX_M * MATRIX_N * sizeof(float)));
-   cudaErrCheck(cudaMalloc((void**)&c_wmma, MATRIX_M * MATRIX_N * sizeof(float)));
-
-   c_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-   c_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-   d_fp16_host = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-
+  c_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+  c_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+  d_fp16_host = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+   /*
    curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
    curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
 
@@ -335,61 +330,67 @@ int main(int argc, char* argv[]) {
    curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
    
    curandErrCheck(curandDestroyGenerator(gen));
-   
-   cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
-   cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
-   cudaErrCheck(cudaMemset(d_fp16, 0, sizeof(float) * MATRIX_M * MATRIX_N));
+   */
+  cudaErrCheck(cudaMemset(a_fp16, 100.0f, MATRIX_M * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMemset(b_fp16, 100.0f, MATRIX_M * MATRIX_N * sizeof(half)));
 
-   float alpha = 1.0f;
-   float beta = 1.0f;
-
-
-   //printf("\nM = %d, N = %d, K = %d. alpha = %f, beta = %f, A = %f , B = %f \n", MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta, a_fp32[0], b_fp32[0]);
-   
-   // First: using WMMA
-   dim3 gridDim;
-   dim3 blockDim;
+  cudaErrCheck(cudaMemset(c_cublas, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMemset(c_wmma, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMemset(d_fp16, 0.0f, sizeof(float) * MATRIX_M * MATRIX_N));
  
-   // blockDim.x must be a multple of warpSize
-   // 128x4 means we have 16 warps and a block computes a 64x64 output tile
-   
-   blockDim.x = 128;
-   blockDim.y = 4;
+  float alpha = 1.0f;
+  float beta = 1.0f;
 
-   gridDim.x = (MATRIX_M + (WMMA_M * blockDim.x / 32 - 1)) / (WMMA_M * blockDim.x / 32);
-   gridDim.y = (MATRIX_N + WMMA_N * blockDim.y - 1) / (WMMA_N * blockDim.y);
 
    
-   printf("Running with wmma thread dimensions...\n");
-   cudaErrCheck(cudaEventRecord(startWMMA));
-   wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
-  //wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
-   cudaErrCheck(cudaEventRecord(stopWMMA));
+   
+  // WMMA TENSOR //
+  dim3 gridDim;
+  dim3 blockDim;
+ 
+  // blockDim.x must be a multple of warpSize
+  // 128x4 means we have 16 warps and a block computes a 64x64 output tile
+   
+  blockDim.x = 128;
+  blockDim.y = 4;
+
+  gridDim.x = (MATRIX_M + (WMMA_M * blockDim.x / 32 - 1)) / (WMMA_M * blockDim.x / 32);
+  gridDim.y = (MATRIX_N + WMMA_N * blockDim.y - 1) / (WMMA_N * blockDim.y);
+
+   
+  printf("Running with wmma thread dimensions...\n");
+  cudaErrCheck(cudaEventRecord(startWMMA));
+  wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+  
+  cudaErrCheck(cudaEventRecord(stopWMMA));
 
    
 
    // MXM DIMENSIONS
    
-   blockDim.x = WMMA_M; //128;
-   blockDim.y = WMMA_N;
-
-   //printf("Running tensor_DMR with MXM thread dimensions...\n");
-   //cudaErrCheck(cudaEventRecord(startMXM));
+  blockDim.x = WMMA_M; //128;
+  blockDim.y = WMMA_N;
+  printf("Running  mxm with MXM thread dimensions...\n");
    
-   //matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
+  //printf("Running  dmr with MXM thread dimensions...\n");
+  cudaErrCheck(cudaEventRecord(startMXM));
+   
+   // ---- MXM SW ----//
+  matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
    
    
-   //wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
-   //cudaErrCheck(cudaEventRecord(stopMXM));
+   // ---- DMR --- //
+  //wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+  cudaErrCheck(cudaEventRecord(stopMXM));
  
    
 
 
-   /*
-   // Now using cuBLAS
-   printf("Running with cuBLAS...\n");
-   cudaErrCheck(cudaEventRecord(startcublas));
-   cublasErrCheck(cublasGemmEx(cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N, 
+   
+  // Now using cuBLAS
+  printf("Running with cuBLAS...\n");
+  cudaErrCheck(cudaEventRecord(startcublas));
+  cublasErrCheck(cublasGemmEx(cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N, 
                 MATRIX_M, MATRIX_N, MATRIX_K, 
                 &alpha,
                 a_fp16, CUDA_R_16F, MATRIX_M,
@@ -397,78 +398,68 @@ int main(int argc, char* argv[]) {
                 &beta, 
                 c_cublas, CUDA_R_32F, MATRIX_M,
                 CUDA_R_32F, CUBLAS_GEMM_DFALT_TENSOR_OP));
-   cudaErrCheck(cudaEventRecord(stopcublas));
-   */
+  cudaErrCheck(cudaEventRecord(stopcublas));
+   
 
 
-   // Error checking
-   printf("\nChecking results...\n");
-   cudaErrCheck(cudaMemcpy(c_host_wmma, c_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
-   cudaErrCheck(cudaMemcpy(c_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
-   cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+  // Error checking
+  printf("\nChecking results...\n");
+  cudaErrCheck(cudaMemcpy(c_host_wmma, c_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+  cudaErrCheck(cudaMemcpy(c_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+  cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
 
    
-   // 0.01% relative tolerance. 1e-5 absolute tolerance.
-   int errors = 0;
-   //for (int i = 0; i < MATRIX_M * MATRIX_N; i++) {
-   for (int i = 0; i <  5; i++) {      
-      float v1 = c_host_wmma[i];
-      float v2 = d_fp16_host[i];
-      float v3 = c_host_cublas[i];      
-      printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS = %f\n --------|", v1, v2, v3);
-      /*
-      if (v1 / v2 > 1.0001 || v2 / v1 > 1.0001 || abs(v1 - v2) > 1e-5) {
-         errors++;
-         if (errors < 10) printf("%f %f\n", v1, v2);
-      }
-      */
-   }
-   
-   if (errors > 0) {
-      printf("WMMA does not agree with cuBLAS! %d errors!\n", errors);
-   }
-   else {
-      printf("Results verified: cublas and WMMA agree.\n\n");
-      float wmmaTime;
-      float cublasTime;
-      float mxmTime;
-      cudaErrCheck(cudaEventSynchronize(stopWMMA));
-      cudaErrCheck(cudaEventSynchronize(stopcublas));
-      cudaErrCheck(cudaEventSynchronize(stopMXM));
 
-      cudaErrCheck(cudaEventElapsedTime(&wmmaTime, startWMMA, stopWMMA));
-      cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
-      cudaErrCheck(cudaEventElapsedTime(&mxmTime, startMXM, stopMXM));
-      printf("wmma took %fms\n", wmmaTime);
-      printf("cublas took %fms\n", cublasTime);
-      printf("mxm took %fms\n", mxmTime);
+  
+  for (int i = 0; i <  20; i++) {      
+    float v1 = c_host_wmma[i];
+    float v2 = d_fp16_host[i];
+    float v3 = c_host_cublas[i];      
+    printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS = %f --------| \n", v1, v2, v3);
+
+  }
+   
+
+  float wmmaTime;
+  float cublasTime;
+  float mxmTime;
+  cudaErrCheck(cudaEventSynchronize(stopWMMA));
+  cudaErrCheck(cudaEventSynchronize(stopcublas));
+  cudaErrCheck(cudaEventSynchronize(stopMXM));
+
+  //cudaErrCheck(cudaEventElapsedTime(&wmmaTime, startWMMA, stopWMMA));
+  cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
+  cudaErrCheck(cudaEventElapsedTime(&mxmTime, startMXM, stopMXM));
+  //printf("wmma took %fms\n", wmmaTime);
+  printf("cublas took %fms\n", cublasTime);
+  printf("mxm took %fms\n", mxmTime);
 
      
-   }
    
-   
-   cudaErrCheck(cudaEventDestroy(startWMMA));
-   cudaErrCheck(cudaEventDestroy(stopWMMA));
+ 
+ 
+ cudaErrCheck(cudaEventDestroy(startWMMA));
+ cudaErrCheck(cudaEventDestroy(stopWMMA));
 
-   cudaErrCheck(cudaEventDestroy(startcublas));             
-   cudaErrCheck(cudaEventDestroy(stopcublas));
-   
-   cudaErrCheck(cudaFree(a_fp32));
-   cudaErrCheck(cudaFree(b_fp32));
-   cudaErrCheck(cudaFree(a_fp16));
-   cudaErrCheck(cudaFree(b_fp16));
-   cudaErrCheck(cudaFree(d_fp16));
+ cudaErrCheck(cudaEventDestroy(startcublas));             
+ cudaErrCheck(cudaEventDestroy(stopcublas));
+ 
+ cudaErrCheck(cudaFree(a_fp32));
+ cudaErrCheck(cudaFree(b_fp32));
+ cudaErrCheck(cudaFree(a_fp16));
+ cudaErrCheck(cudaFree(b_fp16));
+ cudaErrCheck(cudaFree(d_fp16));
 
-   cudaErrCheck(cudaFree(c));
-   cudaErrCheck(cudaFree(c_cublas));
-   cudaErrCheck(cudaFree(c_wmma));
+ cudaErrCheck(cudaFree(c));
+ cudaErrCheck(cudaFree(c_cublas));
+ cudaErrCheck(cudaFree(c_wmma));
 
-   
-   free(c_host_cublas);
-   free(c_host_wmma);
-   free(d_fp16_host);
-   
+ 
+ free(c_host_cublas);
+ free(c_host_wmma);
+ free(d_fp16_host);
+ 
 
-   cudaErrCheck(cudaDeviceReset());
-   return 0;
+ cudaErrCheck(cudaDeviceReset());
+ return 0;
 }
