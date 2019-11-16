@@ -5,6 +5,10 @@
 Log::Log(int argc, char** argv) :
 		alpha(1), beta(0) {
 
+	//getting alpha and beta
+	this->alpha = this->find_float_arg(argc, argv, "--alpha", 1);
+	this->beta = this->find_float_arg(argc, argv, "--beta", 0);
+
 	this->generate = this->find_int_arg(argc, argv, "--generate", 0);
 
 	this->size_matrices = this->find_int_arg(argc, argv, "--size", 1024);
@@ -49,6 +53,9 @@ Log::Log(int argc, char** argv) :
 	test_info += " use_tensorcores: " + std::to_string(this->use_tensor_cores);
 
 	test_info += " checkblock: " + std::to_string(this->check_block);
+
+	test_info += " alpha: " + std::to_string(this->alpha);
+	test_info += " beta: " + std::to_string(this->beta);
 
 	std::string app = "gemm_tensor_cores_" + this->precision;
 	set_iter_interval_print(10);
@@ -177,7 +184,7 @@ int Log::find_arg(int argc, char* argv[], std::string arg) {
 	return 0;
 }
 
-float Log::find_float_arg(int argc, char **argv, char *arg, float def) {
+float Log::find_float_arg(int argc, char **argv, std::string arg, float def) {
 	int i;
 	for (i = 0; i < argc - 1; ++i) {
 		if (!argv[i])

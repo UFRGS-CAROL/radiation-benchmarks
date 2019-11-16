@@ -110,7 +110,8 @@ struct DMRGemmCaller: public GemmCaller<COUNT, real_t, real_t> {
 				alpha, beta, wA, wB, threshold);
 	}
 
-	DMRGemmCaller(uint32_t m, uint32_t n) : GemmCaller<COUNT, real_t, real_t>(m, n) {
+	DMRGemmCaller(uint32_t m, uint32_t n) :
+			GemmCaller<COUNT, real_t, real_t>(m, n) {
 		this->duplicated = true;
 	}
 
@@ -168,10 +169,11 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 				d_vector_device, d_vector_half_t_device, log_obj.alpha,
 				log_obj.beta, log_obj.size_matrices, log_obj.size_matrices,
 				threshold);
-		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
-		rad::checkFrameworkErrors (cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
 
-log_obj		.end_iteration();
+		log_obj.end_iteration();
 		computation_time = rad::mysecond() - computation_time;
 		elapsed_time += computation_time;
 

@@ -60,7 +60,7 @@ private:
 			std::string def);
 
 	int find_arg(int argc, char* argv[], std::string arg);
-	float find_float_arg(int argc, char **argv, char *arg, float def);
+	float find_float_arg(int argc, char **argv, std::string arg, float def);
 };
 
 #endif /* LOG_H_ */

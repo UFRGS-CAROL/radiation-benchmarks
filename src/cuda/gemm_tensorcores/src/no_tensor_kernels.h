@@ -163,7 +163,7 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 		// Multiply the two matrices together;
 		// each thread computes one element
 		// of the block sub-matrix
-//#pragma unroll
+#pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
 			half_t ah = half_t(As[ty][k]);
 			half_t bh = half_t(Bs[k][tx]);
@@ -183,10 +183,6 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-
-//	if(index == 23){
-//		Csub_real *= 0.7;
-//	}
 
 	real_t real_val = alpha * Csub_real + beta * C[index];
 	half_t half_val = half_t(alpha) * Csub_half
