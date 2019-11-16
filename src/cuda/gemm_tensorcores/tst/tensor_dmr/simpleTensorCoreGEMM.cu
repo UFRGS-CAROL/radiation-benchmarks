@@ -336,8 +336,8 @@ int main(int argc, char* argv[]) {
    
    curandErrCheck(curandDestroyGenerator(gen));
    */
-   cudaErrCheck(cudaMemset(a_fp16, 1000, MATRIX_M * MATRIX_N * sizeof(half)));
-   cudaErrCheck(cudaMemset(b_fp16, 1000, MATRIX_M * MATRIX_N * sizeof(half)));
+   cudaErrCheck(cudaMemset(a_fp16, 10, MATRIX_M * MATRIX_N * sizeof(half)));
+   cudaErrCheck(cudaMemset(b_fp16, 10, MATRIX_M * MATRIX_N * sizeof(half)));
 
    cudaErrCheck(cudaMemset(c_cublas, 0, MATRIX_M * MATRIX_N * sizeof(float)));
    cudaErrCheck(cudaMemset(c_wmma, 0, MATRIX_M * MATRIX_N * sizeof(float)));
@@ -388,7 +388,7 @@ int main(int argc, char* argv[]) {
    
 
 
-   /*
+   
    // Now using cuBLAS
    printf("Running with cuBLAS...\n");
    cudaErrCheck(cudaEventRecord(startcublas));
@@ -401,7 +401,7 @@ int main(int argc, char* argv[]) {
                 c_cublas, CUDA_R_32F, MATRIX_M,
                 CUDA_R_32F, CUBLAS_GEMM_DFALT_TENSOR_OP));
    cudaErrCheck(cudaEventRecord(stopcublas));
-   */
+   
 
 
    // Error checking
@@ -414,7 +414,7 @@ int main(int argc, char* argv[]) {
    // 0.01% relative tolerance. 1e-5 absolute tolerance.
    int errors = 0;
    //for (int i = 0; i < MATRIX_M * MATRIX_N; i++) {
-   for (int i = 0; i <  5; i++) {      
+   for (int i = 0; i <  10; i++) {      
       float v1 = c_host_wmma[i];
       float v2 = d_fp16_host[i];
       float v3 = c_host_cublas[i];      
@@ -427,11 +427,13 @@ int main(int argc, char* argv[]) {
       */
    }
    
+   /*
    if (errors > 0) {
       printf("WMMA does not agree with cuBLAS! %d errors!\n", errors);
    }
+   */
    else {
-      printf("Results verified: cublas and WMMA agree.\n\n");
+      //printf("Results verified: cublas and WMMA agree.\n\n");
       float wmmaTime;
       float cublasTime;
       float mxmTime;
@@ -439,11 +441,11 @@ int main(int argc, char* argv[]) {
       cudaErrCheck(cudaEventSynchronize(stopcublas));
       cudaErrCheck(cudaEventSynchronize(stopMXM));
 
-      cudaErrCheck(cudaEventElapsedTime(&wmmaTime, startWMMA, stopWMMA));
-      cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
+      //cudaErrCheck(cudaEventElapsedTime(&wmmaTime, startWMMA, stopWMMA));
+      //cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
       cudaErrCheck(cudaEventElapsedTime(&mxmTime, startMXM, stopMXM));
-      printf("wmma took %fms\n", wmmaTime);
-      printf("cublas took %fms\n", cublasTime);
+      //printf("wmma took %fms\n", wmmaTime);
+      //printf("cublas took %fms\n", cublasTime);
       printf("mxm took %fms\n", mxmTime);
 
      
