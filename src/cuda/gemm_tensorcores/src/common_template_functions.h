@@ -22,7 +22,7 @@
 #endif
 
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
-#define GENERATOR_MAXABSVALUE 100
+#define GENERATOR_MAXABSVALUE 1000
 #define GENERATOR_MINABSVALUE 0.1 //-GENERATOR_MAXABSVALUE
 
 template<typename T>
@@ -152,10 +152,10 @@ template<class half_t, class real_t>
 std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<real_t>& real_vector, std::vector<half_t>& half_vector,
 		Log& log, const uint32_t threshold, const bool dmr) {
-	uint32_t host_errors = 0, host_detected = 0;
+	uint32_t host_errors = 0;
 
 #ifdef OMP
-#pragma omp parallel for shared(host_errors, host_detected)
+#pragma omp parallel for shared(host_errors)
 #endif
 	for (size_t i = 0; i < gold.size(); i++) {
 		auto gold_value = gold[i];
@@ -167,10 +167,9 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			half_precision = full_precision;
 		}
 
+		bool is_output_diff = !equals(gold_value, full_precision);
 		bool dmr_not_equals = !equals(half_precision, full_precision);
-		if (gold_value != full_precision || dmr_not_equals)
-//				|| !equals(half_precision, full_precision))
-		{
+		if (is_output_diff || dmr_not_equals) {
 #ifdef OMP
 #pragma omp critical
 			{
@@ -188,7 +187,6 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 
 			log.log_error(error_detail.str());
 			host_errors++;
-			host_detected += (dmr_not_equals ? 1 : 0);
 #ifdef OMP
 		}
 #endif
@@ -201,12 +199,6 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		error_detail = "detected_dmr_errors: " + std::to_string(dmr_err);
 		log.log_error(error_detail);
 	}
-//
-//	if (host_detected != 0) {
-//		std::string error_detail;
-//		error_detail = "host_detected_errors: " + std::to_string(host_detected);
-//		log.log_error(error_detail);
-//	}
 
 	log.update_error_count(host_errors);
 	if (host_errors != 0)
