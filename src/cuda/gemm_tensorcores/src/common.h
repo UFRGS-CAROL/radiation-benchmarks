@@ -38,7 +38,7 @@
 #define MAX_PERCENTAGE 1.15f
 
 //Threshold for one operation
-#define THRESHOLD_1 2174239238
+#define THRESHOLD_1 2
 
 //Threshold for 16 operation
 #define THRESHOLD_16 40
