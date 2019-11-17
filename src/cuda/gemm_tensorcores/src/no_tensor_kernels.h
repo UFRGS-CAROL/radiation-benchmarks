@@ -79,7 +79,7 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 			Csub_half += ar * br;
 
 			if ((k % COUNT) == 0) {
-				check_relative_error(Csub_half, Csub_real, threshold);
+				check_relative_error(Csub_half, Csub_real);
 			}
 		}
 
@@ -98,7 +98,7 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 
 	D_r[index] = real_val;
 	D_h[index] = half_val;
-	check_relative_error(half_val, real_val, threshold);
+	check_relative_error(half_val, real_val);
 }
 
 /**
@@ -171,7 +171,7 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 			Csub_real += As[ty][k] * Bs[k][tx];
 			Csub_half += ah * bh;
 			if ((k % COUNT) == 0)
-				check_relative_error(Csub_half, Csub_real);
+				check_relative_error(Csub_half, Csub_real, threshold);
 		}
 
 		// Synchronize to make sure that the preceding
@@ -193,7 +193,7 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 
 	D_r[index] = real_val;
 	D_h[index] = half_val;
-	check_relative_error(half_val, real_val);
+	check_relative_error(half_val, real_val, threshold);
 }
 
 template<typename real_t>
