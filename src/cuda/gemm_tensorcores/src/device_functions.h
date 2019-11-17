@@ -31,6 +31,21 @@ void check_relative_error(float &lhs, double rhs) {
 	lhs = rhs;
 }
 
+__DEVICE_INLINE__
+void check_relative_error(float &lhs, double rhs, uint32_t threshold) {
+	float rhs_as_float = float(rhs);
+	uint32_t lhs_data = *((uint32_t*)&lhs);
+	uint32_t rhs_data = *((uint32_t*)&rhs_as_float);
+
+	uint32_t diff = SUB_ABS(lhs_data, rhs_data);
+
+	if(diff > threshold){
+//		printf("%f %lf %f\n", lhs, rhs, relative);
+		atomicAdd(&errors, 1);
+	}
+	lhs = rhs_as_float;
+}
+
 //__DEVICE_INLINE__
 //double abs__(double a) {
 //	return fabs(a);
