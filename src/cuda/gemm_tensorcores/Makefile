@@ -89,16 +89,16 @@ clean:
 
 # GEMM options
 generate_gemm:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision double --dmr none --apha $(ALPHA) --beta $(BETA)
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision double --dmr none --alpha $(ALPHA) --beta $(BETA)
 	
 test_gemm_dmr_mixed:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr mixed --iterations $(ITERATIONS)  --apha $(ALPHA) --beta $(BETA)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr mixed --iterations $(ITERATIONS)  --alpha $(ALPHA) --beta $(BETA)
 
 test_gemm_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr full --iterations $(ITERATIONS)  --apha $(ALPHA) --beta $(BETA)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr full --iterations $(ITERATIONS)  --alpha $(ALPHA) --beta $(BETA)
 	
 test_gemm_non_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr none --iterations $(ITERATIONS)  --apha $(ALPHA) --beta $(BETA)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr none --iterations $(ITERATIONS)  --alpha $(ALPHA) --beta $(BETA)
 
 
 # Tensor options
