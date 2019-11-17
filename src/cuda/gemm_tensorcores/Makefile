@@ -5,6 +5,8 @@ LOGS?=1
 OMP?=1
 CHECKBLOCK=1
 
+ALPHA=0.9
+BETA=0.1
 SIZE?=4096 #6384 #8192 #4096 
 ITERATIONS=10
 
@@ -87,16 +89,16 @@ clean:
 
 # GEMM options
 generate_gemm:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision double --dmr none
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision double --dmr none --apha $(ALPHA) --beta $(BETA)
 	
 test_gemm_dmr_mixed:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr mixed --iterations $(ITERATIONS)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr mixed --iterations $(ITERATIONS)  --apha $(ALPHA) --beta $(BETA)
 
 test_gemm_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr full --iterations $(ITERATIONS)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr full --iterations $(ITERATIONS)  --apha $(ALPHA) --beta $(BETA)
 	
 test_gemm_non_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr none --iterations $(ITERATIONS)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr none --iterations $(ITERATIONS)  --apha $(ALPHA) --beta $(BETA)
 
 
 # Tensor options
