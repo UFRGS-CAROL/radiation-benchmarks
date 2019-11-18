@@ -167,8 +167,8 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			half_precision = full_precision;
 		}
 
-		bool is_output_diff = !equals(gold_value, full_precision);
-		bool dmr_not_equals = !equals(half_precision, full_precision);
+		bool is_output_diff = (gold_value != full_precision);
+		bool dmr_not_equals = !equals(half_precision, full_precision, threshold);
 		if (is_output_diff || dmr_not_equals) {
 #ifdef OMP
 #pragma omp critical

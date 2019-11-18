@@ -40,7 +40,7 @@ void check_relative_error(float &lhs, double rhs, uint32_t threshold) {
 	uint32_t diff = SUB_ABS(lhs_data, rhs_data);
 
 	if(diff > threshold){
-		printf("%u %u %u\n", lhs_data, rhs_data, diff);
+		//printf("%u %u %u\n", lhs_data, rhs_data, diff);
 		atomicAdd(&errors, 1);
 	}
 	lhs = rhs_as_float;
