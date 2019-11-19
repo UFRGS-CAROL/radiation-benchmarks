@@ -18,7 +18,7 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		real_t *C,   //C
 		real_t *D_r, //D
 		real_t *D_h, //D hardening
-		real_t alpha, real_t beta, int wA, int wB, const uint32_t threshold) {
+		real_t alpha, real_t beta, int wA, int wB) {
 	// Block index
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -92,7 +92,6 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-
 	volatile real_t real_val = alpha * Csub_real + beta * C[index];
 	volatile real_t half_val = alpha * Csub_half + beta * C[index];
 

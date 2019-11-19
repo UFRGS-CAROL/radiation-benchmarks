@@ -43,7 +43,7 @@ void check_relative_error(float &lhs, double rhs, uint32_t threshold) {
 		//printf("%u %u %u\n", lhs_data, rhs_data, diff);
 		atomicAdd(&errors, 1);
 	}
-	lhs = rhs_as_float;
+//	lhs = rhs_as_float;
 }
 
 //__DEVICE_INLINE__

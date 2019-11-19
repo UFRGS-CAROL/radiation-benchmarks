@@ -107,7 +107,7 @@ struct DMRGemmCaller: public GemmCaller<COUNT, real_t, real_t> {
 				c_dev.data(), 				//c
 				d_dev.data(), 				//d
 				d_dev_half_t.data(), 		//d hardening
-				alpha, beta, wA, wB, threshold);
+				alpha, beta, wA, wB);
 	}
 
 	DMRGemmCaller(uint32_t m, uint32_t n) :
@@ -169,11 +169,10 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 				d_vector_device, d_vector_half_t_device, log_obj.alpha,
 				log_obj.beta, log_obj.size_matrices, log_obj.size_matrices,
 				threshold);
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
+		rad::checkFrameworkErrors (cudaPeekAtLastError());
 
-		log_obj.end_iteration();
+log_obj		.end_iteration();
 		computation_time = rad::mysecond() - computation_time;
 		elapsed_time += computation_time;
 
@@ -269,9 +268,9 @@ void setup_gemm_dmr(Log& log) {
 					log.size_matrices);
 			setup_execute(log, gemm_obj, THRESHOLD_1);
 		} else {
-//			DMRGemmCaller<1, double> gemm_obj(log.size_matrices,
-//					log.size_matrices);
-//			setup_execute(log, gemm_obj);
+			DMRGemmCaller<1, double> gemm_obj(log.size_matrices,
+					log.size_matrices);
+			setup_execute(log, gemm_obj);
 		}
 		return;
 	}
