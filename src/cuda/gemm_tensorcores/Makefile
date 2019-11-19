@@ -7,10 +7,11 @@ CHECKBLOCK=1
 
 ALPHA=0.9
 BETA=0.1
-SIZE?=4096 #6384 #8192 #4096 
-ITERATIONS=1000
+SIZE?=4096
+#6384 #8192 #4096 
+ITERATIONS=10
 PRECISION=double
-OUTPUTPREFIX=$(PRECISION))_$(ALPHA)_$(BETA)_$(SIZE).matrix
+OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE).matrix
 
 # This is what I use, uncomment if you know your arch and want to specify
 #ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
@@ -92,7 +93,7 @@ clean:
 # GEMM options
 generate_gemm:
 	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 \
-			--precision double --dmr none \
+			--precision $(PRECISION) --dmr none \
 			--alpha $(ALPHA) --beta $(BETA) \
 			--input_a a_$(OUTPUTPREFIX) \
 			--input_b b_$(OUTPUTPREFIX) \
@@ -101,17 +102,27 @@ generate_gemm:
 	
 test_gemm_dmr_mixed:
 	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
-			--precision double --dmr mixed \
+			--precision $(PRECISION) --dmr mixed \
 			--iterations $(ITERATIONS)  \
 			--alpha $(ALPHA) --beta $(BETA)\
 			--input_a a_$(OUTPUTPREFIX) \
 			--input_b b_$(OUTPUTPREFIX) \
 			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX)			
+			--gold  g_$(OUTPUTPREFIX)		
+
+test_gemm_dmr_fp3fp64:
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
+			--precision $(PRECISION) --dmr fp32fp64 \
+			--iterations $(ITERATIONS)  \
+			--alpha $(ALPHA) --beta $(BETA)\
+			--input_a a_$(OUTPUTPREFIX) \
+			--input_b b_$(OUTPUTPREFIX) \
+			--input_c c_$(OUTPUTPREFIX) \
+			--gold  g_$(OUTPUTPREFIX)		
 
 test_gemm_dmr:
 	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
-			--precision double --dmr full \
+			--precision $(PRECISION) --dmr full \
 			--iterations $(ITERATIONS)  \
 			--alpha $(ALPHA) --beta $(BETA) \
 			--input_a a_$(OUTPUTPREFIX) \
@@ -121,7 +132,7 @@ test_gemm_dmr:
 			
 test_gemm_non_dmr:
 	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
-			--precision double --dmr none \
+			--precision $(PRECISION) --dmr none \
 			--iterations $(ITERATIONS)    \
 			--alpha $(ALPHA) --beta $(BETA)\
 			--input_a a_$(OUTPUTPREFIX) \

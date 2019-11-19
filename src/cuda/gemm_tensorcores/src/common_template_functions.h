@@ -23,7 +23,7 @@
 
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
 #define GENERATOR_MAXABSVALUE 1000
-#define GENERATOR_MINABSVALUE 0.1 //-GENERATOR_MAXABSVALUE
+#define GENERATOR_MINABSVALUE -GENERATOR_MAXABSVALUE
 
 template<typename T>
 bool read_from_file(std::string& path, std::vector<T>& array) {
@@ -90,6 +90,8 @@ void generate_input_matrices(size_t matrix_size, std::vector<half_t>& a_vector,
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 	std::uniform_real_distribution<double> dis(GENERATOR_MINABSVALUE,
 	GENERATOR_MAXABSVALUE);
+
+//	std::cout << "MIN " << GENERATOR_MINABSVALUE << " MAX " << GENERATOR_MAXABSVALUE << std::endl;
 
 	a_vector.resize(matrix_size * matrix_size);
 	b_vector.resize(matrix_size * matrix_size);

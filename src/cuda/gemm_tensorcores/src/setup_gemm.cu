@@ -240,11 +240,11 @@ void setup_gemm_unhardened(Log& log) {
 //		setup_execute(log, gemm_obj);
 //	}
 //
-//	if (log.precision == "float" || log.precision == "single") {
-//		UnhardenedGemmCaller<float> gemm_obj(log.size_matrices,
-//				log.size_matrices);
-//		setup_execute(log, gemm_obj);
-//	}
+	if (log.precision == "float" || log.precision == "single") {
+		UnhardenedGemmCaller<float> gemm_obj(log.size_matrices,
+				log.size_matrices);
+		setup_execute(log, gemm_obj);
+	}
 
 	if (log.precision == "double") {
 		UnhardenedGemmCaller<double> gemm_obj(log.size_matrices,
@@ -255,11 +255,14 @@ void setup_gemm_unhardened(Log& log) {
 
 void setup_gemm_dmr(Log& log) {
 	if (log.precision == "half") {
-		return;
 	}
 
 	if (log.precision == "float" || log.precision == "single") {
-		return;
+		if (log.dmr == "fp32fp64") {
+			DMRMixedGemmCaller<32, double, float> gemm_obj(log.size_matrices,
+					log.size_matrices);
+			setup_execute(log, gemm_obj, THRESHOLD_1);
+		}
 	}
 
 	if (log.precision == "double") {
@@ -267,18 +270,11 @@ void setup_gemm_dmr(Log& log) {
 			DMRMixedGemmCaller<32, float, double> gemm_obj(log.size_matrices,
 					log.size_matrices);
 			setup_execute(log, gemm_obj, THRESHOLD_1);
-		} else if (log.dmr == "full"){
+		} else if (log.dmr == "full") {
 			DMRGemmCaller<1, double> gemm_obj(log.size_matrices,
 					log.size_matrices);
 			setup_execute(log, gemm_obj);
-		} else {
-			DMRMixedGemmCaller<32, double, float> gemm_obj(log.size_matrices,
-					log.size_matrices);
-			setup_execute(log, gemm_obj, THRESHOLD_1);
 		}
-
-
-		return;
 	}
 }
 
