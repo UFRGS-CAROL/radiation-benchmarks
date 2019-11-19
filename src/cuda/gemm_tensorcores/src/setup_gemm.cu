@@ -264,14 +264,20 @@ void setup_gemm_dmr(Log& log) {
 
 	if (log.precision == "double") {
 		if (log.dmr == "mixed") {
-			DMRMixedGemmCaller<1, float, double> gemm_obj(log.size_matrices,
+			DMRMixedGemmCaller<32, float, double> gemm_obj(log.size_matrices,
 					log.size_matrices);
 			setup_execute(log, gemm_obj, THRESHOLD_1);
-		} else {
+		} else if (log.dmr == "full"){
 			DMRGemmCaller<1, double> gemm_obj(log.size_matrices,
 					log.size_matrices);
 			setup_execute(log, gemm_obj);
+		} else {
+			DMRMixedGemmCaller<32, double, float> gemm_obj(log.size_matrices,
+					log.size_matrices);
+			setup_execute(log, gemm_obj, THRESHOLD_1);
 		}
+
+
 		return;
 	}
 }

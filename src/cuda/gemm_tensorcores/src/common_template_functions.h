@@ -143,6 +143,19 @@ bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 	return (SUB_ABS(lhs_data, rhs_data) <= threshold);
 }
 
+bool equals(double& rhs, float& lhs, const uint32_t threshold) {
+	assert(sizeof(float) == sizeof(uint32_t));
+
+	float rhs_float = float(rhs);
+
+	uint32_t lhs_data;
+	uint32_t rhs_data;
+	memcpy(&lhs_data, &lhs, sizeof(uint32_t));
+	memcpy(&rhs_data, &rhs_float, sizeof(uint32_t));
+
+	return (SUB_ABS(lhs_data, rhs_data) <= threshold);
+}
+
 bool equals(float& lhs, double& rhs) {
 	float relative(lhs / float(rhs));
 	return (relative >= MIN_PERCENTAGE && relative <= MAX_PERCENTAGE);
@@ -161,14 +174,18 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		auto gold_value = gold[i];
 		auto full_precision = real_vector[i];
 		half_t half_precision;
+		bool is_output_diff;
+		bool dmr_not_equals = false;
 		if (dmr) {
 			half_precision = half_vector[i];
+			is_output_diff = (gold_value != full_precision
+					&& !equals(half_precision, full_precision, threshold));
+			dmr_not_equals = !equals(half_precision, full_precision, threshold);
 		} else {
 			half_precision = full_precision;
+			is_output_diff = gold_value != full_precision;
 		}
 
-		bool is_output_diff = (gold_value != full_precision);
-		bool dmr_not_equals = !equals(half_precision, full_precision, threshold);
 		if (is_output_diff || dmr_not_equals) {
 #ifdef OMP
 #pragma omp critical

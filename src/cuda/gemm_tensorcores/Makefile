@@ -8,7 +8,9 @@ CHECKBLOCK=1
 ALPHA=0.9
 BETA=0.1
 SIZE?=4096 #6384 #8192 #4096 
-ITERATIONS=10
+ITERATIONS=1000
+PRECISION=double
+OUTPUTPREFIX=$(PRECISION))_$(ALPHA)_$(BETA)_$(SIZE).matrix
 
 # This is what I use, uncomment if you know your arch and want to specify
 #ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
@@ -89,16 +91,43 @@ clean:
 
 # GEMM options
 generate_gemm:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision double --dmr none --alpha $(ALPHA) --beta $(BETA)
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 \
+			--precision double --dmr none \
+			--alpha $(ALPHA) --beta $(BETA) \
+			--input_a a_$(OUTPUTPREFIX) \
+			--input_b b_$(OUTPUTPREFIX) \
+			--input_c c_$(OUTPUTPREFIX) \
+			--gold  g_$(OUTPUTPREFIX)
 	
 test_gemm_dmr_mixed:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr mixed --iterations $(ITERATIONS)  --alpha $(ALPHA) --beta $(BETA)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
+			--precision double --dmr mixed \
+			--iterations $(ITERATIONS)  \
+			--alpha $(ALPHA) --beta $(BETA)\
+			--input_a a_$(OUTPUTPREFIX) \
+			--input_b b_$(OUTPUTPREFIX) \
+			--input_c c_$(OUTPUTPREFIX) \
+			--gold  g_$(OUTPUTPREFIX)			
 
 test_gemm_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr full --iterations $(ITERATIONS)  --alpha $(ALPHA) --beta $(BETA)
-	
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
+			--precision double --dmr full \
+			--iterations $(ITERATIONS)  \
+			--alpha $(ALPHA) --beta $(BETA) \
+			--input_a a_$(OUTPUTPREFIX) \
+			--input_b b_$(OUTPUTPREFIX) \
+			--input_c c_$(OUTPUTPREFIX) \
+			--gold  g_$(OUTPUTPREFIX)
+			
 test_gemm_non_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision double --dmr none --iterations $(ITERATIONS)  --alpha $(ALPHA) --beta $(BETA)
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
+			--precision double --dmr none \
+			--iterations $(ITERATIONS)    \
+			--alpha $(ALPHA) --beta $(BETA)\
+			--input_a a_$(OUTPUTPREFIX) \
+			--input_b b_$(OUTPUTPREFIX) \
+			--input_c c_$(OUTPUTPREFIX) \
+			--gold  g_$(OUTPUTPREFIX)
 
 
 # Tensor options
