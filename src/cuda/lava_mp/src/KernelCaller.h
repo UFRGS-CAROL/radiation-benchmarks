@@ -126,7 +126,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	}
 
 	uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
-		float max_threshold = -3333;
+		real_t max_threshold = -3333;
 
 		for (uint32_t i = 0; i < fv_cpu_rt.size(); i++) {
 			auto& fv_rt_i = fv_cpu_rt[i];
@@ -137,10 +137,10 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 				auto& fv_ht_ij = fv_ht_i[j];
 
 //				auto diff_vector = this->get_4vector_diffs(fv_ht_ij, fv_rt_ij);
-                max_threshold = std::max(std::fabs((float)fv_rt_ij.v - fv_ht_ij.v), max_threshold);
-                max_threshold = std::max(std::fabs((float)fv_rt_ij.x - fv_ht_ij.x), max_threshold);
-                max_threshold = std::max(std::fabs((float)fv_rt_ij.y - fv_ht_ij.y), max_threshold);
-                max_threshold = std::max(std::fabs((float)fv_rt_ij.z - fv_ht_ij.z), max_threshold);
+                max_threshold = std::max(std::fabs((real_t)fv_rt_ij.v - (real_t)fv_ht_ij.v), max_threshold);
+                max_threshold = std::max(std::fabs((real_t)fv_rt_ij.x - (real_t)fv_ht_ij.x), max_threshold);
+                max_threshold = std::max(std::fabs((real_t)fv_rt_ij.y - (real_t)fv_ht_ij.y), max_threshold);
+                max_threshold = std::max(std::fabs((real_t)fv_rt_ij.z - (real_t)fv_ht_ij.z), max_threshold);
 
 //
 //				diff_vector.push_back(max_threshold);
@@ -274,6 +274,18 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		}
 		return false;
 	}
+
+	bool check_bit_error(FOUR_VECTOR<double>& rhs, FOUR_VECTOR<float>& lhs) {
+		auto diff_vec = this->get_4vector_diffs(lhs, rhs);
+
+		for(auto it : diff_vec) {
+			if(it > this->threshold_) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs) {
 		if ((std::fabs(lhs.v - rhs.v) > this->threshold_) ||	//V

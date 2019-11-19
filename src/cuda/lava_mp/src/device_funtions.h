@@ -40,21 +40,21 @@ double exp__(double lhs) {
 __DEVICE_INLINE__
 void check_bit_error(float& lhs, double& rhs, const uint32_t threshold) {
 	float rhs_float = float(rhs);
-	/*uint32_t rhs_data = *((uint32_t*) (&rhs_float));
+	uint32_t rhs_data = *((uint32_t*) (&rhs_float));
 	uint32_t lhs_data = *((uint32_t*) (&lhs));
 	uint32_t sub_res = SUB_ABS(lhs_data, rhs_data);
 
 	if (sub_res > threshold) {
-		atomicAdd(&errors, 1);
-//		atomicMax(thresholds + blockIdx.x, sub_res);
-	}*/
-	float diff = abs__(lhs - rhs);
-	float thresh = *((float*) (&threshold));
-	if(diff > thresh){
+		printf("%f %lf %u %u\n", lhs, rhs, threshold, threshold);
 		atomicAdd(&errors, 1);
 	}
-	lhs = rhs_float;
 }
+
+__DEVICE_INLINE__
+void check_bit_error(double& rhs, float& lhs, const uint32_t threshold) {
+	check_bit_error(lhs, rhs, threshold);
+}
+
 
 __DEVICE_INLINE__
 void check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs, const uint32_t threshold) {
@@ -63,7 +63,12 @@ void check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs, const ui
 	check_bit_error(lhs.x, rhs.x, threshold);
 	check_bit_error(lhs.y, rhs.y, threshold);
 	check_bit_error(lhs.z, rhs.z, threshold);
-	lhs = rhs;
+}
+
+__DEVICE_INLINE__
+void check_bit_error(FOUR_VECTOR<double>& rhs, FOUR_VECTOR<float>& lhs, const uint32_t threshold) {
+	//CHECK each one of the coordinates
+	check_bit_error(lhs, rhs, threshold);
 }
 
 template<typename real_t> __DEVICE_INLINE__
