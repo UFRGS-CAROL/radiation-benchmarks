@@ -378,8 +378,11 @@ int main(int argc, char* argv[]) {
   //blockDim.y = WMMA_N;
   blockDim.x = 128;
   blockDim.y = 4;
-  
+
   //printf("Running  mxm with MXM thread dimensions...\n");
+ 
+
+
    
   //printf("Running  dmr with MXM thread dimensions...\n");
   cudaErrCheck(cudaEventRecord(startMXM));
