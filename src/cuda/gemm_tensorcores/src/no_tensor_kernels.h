@@ -169,8 +169,9 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 
 			Csub_real += As[ty][k] * Bs[k][tx];
 			Csub_half += ah * bh;
-			if ((k % COUNT) == 0)
+			if ((k % COUNT) == 0){
 				check_relative_error(Csub_half, Csub_real, threshold);
+			}
 		}
 
 		// Synchronize to make sure that the preceding
