@@ -175,11 +175,11 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M,
    wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> b_frag;
    wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
    wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c_frag;
-
+  /*
   int row = blockIdx.x * blockDim.x + threadIdx.x;
   int col = blockIdx.y * blockDim.y + threadIdx.y;
 
-  /*    
+      
   if (row < M && col < N) {
     register float acc_real_t = 0.0;
        
