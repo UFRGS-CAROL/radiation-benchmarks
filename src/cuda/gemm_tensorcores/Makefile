@@ -10,7 +10,7 @@ BETA=0.1
 SIZE?=4096
 #6384 #8192 #4096 
 ITERATIONS=10
-PRECISION=double
+PRECISION=single
 OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE).matrix
 
 # This is what I use, uncomment if you know your arch and want to specify
