@@ -152,6 +152,7 @@ __global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, fl
 
 
 
+
 // Performs an MxNxK GEMM (C=alpha*A*B + beta*C) assuming:
 //  1) Matrices are packed in memory.
 //  2) M, N and K are multiples of 16. 
@@ -373,8 +374,11 @@ int main(int argc, char* argv[]) {
 
    // MXM DIMENSIONS
    
-  blockDim.x = WMMA_M; //128;
-  blockDim.y = WMMA_N;
+  //blockDim.x = WMMA_M; //128;
+  //blockDim.y = WMMA_N;
+  blockDim.x = 128;
+  blockDim.y = 4;
+  
   //printf("Running  mxm with MXM thread dimensions...\n");
    
   //printf("Running  dmr with MXM thread dimensions...\n");
