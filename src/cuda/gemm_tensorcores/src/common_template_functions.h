@@ -47,7 +47,7 @@ bool write_to_file(std::string& path, std::vector<T>& array) {
 	return false;
 }
 
-bool exists(std::string& path) {
+static bool exists(std::string& path) {
 	std::ifstream input(path);
 	auto exists = input.good();
 	input.close();
@@ -120,19 +120,24 @@ static unsigned long long dmr_errors() {
 }
 
 #if __CUDA_ARCH__ > 600
-static std::ostream& operator<<(std::ostream& os, const half& rhs) {
+static std::ostream& operator<<(std::ostream& os, half &rhs) {
 	float temp = float(rhs);
 	os << temp;
 	return os;
 }
+
+static float fabs(half h) {
+	return fabs(float(h));
+}
+
 #endif
 
 template<typename real_t>
 bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
-	return (std::fabs(lhs - rhs) <= ZERO_DOUBLE);
+	return (fabs(lhs - rhs) <= ZERO_DOUBLE);
 }
 
-bool equals(float& lhs, double& rhs, const uint32_t threshold) {
+static bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 	assert(sizeof(float) == sizeof(uint32_t));
 
 	float rhs_float = float(rhs);
@@ -145,20 +150,24 @@ bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 	return (SUB_ABS(lhs_data, rhs_data) <= threshold);
 }
 
-bool equals(double& rhs, float& lhs, const uint32_t threshold) {
-	assert(sizeof(float) == sizeof(uint32_t));
+static bool equals(double& rhs, float& lhs, const uint32_t threshold) {
+	assert(sizeof(double) == sizeof(uint64_t));
 
-	float rhs_float = float(rhs);
+	double lhs_as_double = double(lhs);
 
-	uint32_t lhs_data;
-	uint32_t rhs_data;
-	memcpy(&lhs_data, &lhs, sizeof(uint32_t));
-	memcpy(&rhs_data, &rhs_float, sizeof(uint32_t));
-
-	return (SUB_ABS(lhs_data, rhs_data) <= threshold);
+	uint64_t lhs_data;
+	uint64_t rhs_data;
+	memcpy(&lhs_data, &lhs_as_double, sizeof(uint64_t));
+	memcpy(&rhs_data, &rhs, sizeof(uint64_t));
+	uint64_t ths = 13036232704;
+	uint64_t diff = SUB_ABS(lhs_data, rhs_data);
+	if (diff > ths) {
+		std::cout << rhs << " " << lhs << " " << diff << std::endl;
+	}
+	return (diff <= ths);
 }
 
-bool equals(float& lhs, double& rhs) {
+static bool equals(float& lhs, double& rhs) {
 	float relative(lhs / float(rhs));
 	return (relative >= MIN_PERCENTAGE && relative <= MAX_PERCENTAGE);
 }
@@ -174,7 +183,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 #endif
 	for (size_t i = 0; i < gold.size(); i++) {
 		auto gold_value = gold[i];
-		auto full_precision = real_vector[i];
+		real_t full_precision = real_vector[i];
 		half_t half_precision;
 		bool is_output_diff;
 		bool dmr_not_equals = false;
@@ -197,9 +206,10 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			std::stringstream error_detail("");
 			error_detail << std::setprecision(20) << std::scientific;
 			error_detail << "p: [" << int(floor(i / log.size_matrices)) << ", "
-					<< i % log.size_matrices << "], r: " << full_precision
-					<< ", e: " << gold_value << " smaller_precision: "
-					<< half_precision;
+					<< i % log.size_matrices << "], r: ";
+			error_detail << full_precision;
+			error_detail << ", e: " << gold_value
+					<< " smaller_precision: " << half_precision;
 
 			if (log.verbose && (host_errors < 10))
 				std::cout << error_detail.str() << std::endl;

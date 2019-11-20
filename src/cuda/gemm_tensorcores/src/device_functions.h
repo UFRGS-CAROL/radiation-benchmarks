@@ -48,14 +48,14 @@ void check_relative_error(float lhs, double rhs, uint32_t threshold) {
 
 __DEVICE_INLINE__
 void check_relative_error(double &rhs, float lhs, uint32_t threshold) {
-	float rhs_as_float = float(rhs);
-	uint32_t lhs_data = *((uint32_t*) &lhs);
-	uint32_t rhs_data = *((uint32_t*) &rhs_as_float);
+	double lhs_as_double = double(lhs);
+	uint64_t lhs_data = *((uint64_t*) &lhs_as_double);
+	uint64_t rhs_data = *((uint64_t*) &rhs);
 
-	uint32_t diff = SUB_ABS(lhs_data, rhs_data);
-
-	if (diff > threshold) {
-		printf("%lf %lf %u\n", lhs, rhs, diff);
+	uint64_t diff = SUB_ABS(lhs_data, rhs_data);
+	uint64_t ths = 13036232704;
+	if (diff > ths) {
+		printf("%lf %lf %llu %llu\n", lhs, rhs, diff, ths);
 		atomicAdd(&errors, 1);
 	}
 	rhs = lhs;
