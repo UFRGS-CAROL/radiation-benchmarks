@@ -178,7 +178,8 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M,
 
   int row = blockIdx.x * blockDim.x + threadIdx.x;
   int col = blockIdx.y * blockDim.y + threadIdx.y;
-    
+
+  /*    
   if (row < M && col < N) {
     register float acc_real_t = 0.0;
        
@@ -194,8 +195,8 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M,
     d_sw[row * M + col] = acc_real_t;
       
   }
-
-  /*
+  */
+  
   
    wmma::fill_fragment(acc_frag, 0.0f);
 
@@ -234,7 +235,8 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M,
       // Store the output
       wmma::store_matrix_sync(c + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
    }
-   */
+   
+
 }
 
 
