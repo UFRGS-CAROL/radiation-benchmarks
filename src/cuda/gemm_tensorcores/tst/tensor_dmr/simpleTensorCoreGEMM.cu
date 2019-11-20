@@ -195,7 +195,8 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M,
       
   }
 
-  __syncthreads();
+  /*
+  
    wmma::fill_fragment(acc_frag, 0.0f);
 
    // Loop over k
@@ -233,6 +234,7 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M,
       // Store the output
       wmma::store_matrix_sync(c + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
    }
+   */
 }
 
 
@@ -371,7 +373,7 @@ int main(int argc, char* argv[]) {
    
   blockDim.x = WMMA_M; //128;
   blockDim.y = WMMA_N;
-  printf("Running  mxm with MXM thread dimensions...\n");
+  //printf("Running  mxm with MXM thread dimensions...\n");
    
   //printf("Running  dmr with MXM thread dimensions...\n");
   cudaErrCheck(cudaEventRecord(startMXM));
@@ -381,6 +383,8 @@ int main(int argc, char* argv[]) {
    
    
    // ---- DMR --- //
+  printf("Running  mxm with MXM thread dimensions...\n");
+  
   wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   cudaErrCheck(cudaEventRecord(stopMXM));
  
