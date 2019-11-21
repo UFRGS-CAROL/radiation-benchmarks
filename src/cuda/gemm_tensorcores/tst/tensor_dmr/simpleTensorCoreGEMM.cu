@@ -459,8 +459,9 @@ int main(int argc, char* argv[]) {
   for (int i = 0; i <  20; i++) {      
     float v1 = d_host_wmma[i];
     float v2 = d_host_sw[i];
-    float v3 = d_host_cublas[i];      
-    printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS = %f --------| \n", v1, v2, v3);
+    float v3 = d_host_cublas[i]; 
+    float v4 = fabs(v1/v2);     
+    printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS = %f --------| RELATIVE = %f --------| \n", v1, v2, v3, v4);
 
   }
    
