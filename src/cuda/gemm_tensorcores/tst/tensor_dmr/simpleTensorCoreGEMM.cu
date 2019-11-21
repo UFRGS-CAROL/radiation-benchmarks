@@ -176,7 +176,7 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M,
    wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> b_frag;
    wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
    wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c_frag;
-  /*
+  /*  
   int row = blockIdx.x * blockDim.x + threadIdx.x;
   int col = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -197,6 +197,7 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M,
       
   }
   */
+  
   
   
    wmma::fill_fragment(acc_frag, 0.0f);
@@ -229,9 +230,20 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M,
       wmma::load_matrix_sync(c_frag, c + cRow + cCol * ldc, ldc, wmma::mem_col_major);
 
 
-      for(int i=0; i < c_frag.num_elements; i++) {
-         c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
+  for(int i=0; i < c_frag.num_elements; i++) {
+   
+    c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
+      
+      if (row < M && col < N) {
+        
+        register float acc_real_t = 0.0;
+        for (int i = 0; i < K; i++) {
+          axpy__((float)a[row * M + i], (float)b[col * N + i], acc_real_t);    
+        }   
+      
+        d_sw[row * M + col] = acc_real_t;
       }
+  }
 
       // Store the output
       wmma::store_matrix_sync(c + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
@@ -392,7 +404,7 @@ int main(int argc, char* argv[]) {
    
    
    // ---- DMR --- //
-  printf("Running  mxm with MXM thread dimensions...\n");
+  printf("Running  dmr with tensor thread dimensions...\n");
   
   wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   cudaErrCheck(cudaEventRecord(stopMXM));
