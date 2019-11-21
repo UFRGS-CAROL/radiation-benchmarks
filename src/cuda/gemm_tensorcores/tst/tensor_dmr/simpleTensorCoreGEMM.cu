@@ -215,7 +215,7 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, float 
     if (row < M && col < N) {
       
       register float acc_real_t = 0.0;
-      for (int internal = i; internal < WMM_K; internal++) {
+      for (int internal = i; internal < WMMA_N; internal++) {
         axpy__((float)a[row * M + internal], (float)b[col * N + internal], acc_real_t);    
       }   
       
@@ -444,7 +444,7 @@ int main(int argc, char* argv[]) {
 
   // Error checking
   printf("\nChecking results...\n");
-  cudaErrCheck(cudaMemcpy(c_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+  cudaErrCheck(cudaMemcpy(d_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
   cudaErrCheck(cudaMemcpy(d_host_sw, d_sw, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
   cudaErrCheck(cudaMemcpy(d_host_wmma, d_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
 
@@ -456,7 +456,7 @@ int main(int argc, char* argv[]) {
   for (int i = 0; i <  20; i++) {      
     float v1 = d_host_wmma[i];
     float v2 = d_host_sw[i];
-    float v3 = c_host_cublas[i];      
+    float v3 = d_host_cublas[i];      
     printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS = %f --------| \n", v1, v2, v3);
 
   }
@@ -498,8 +498,7 @@ int main(int argc, char* argv[]) {
  cudaErrCheck(cudaFree(c_wmma));
 
  
- free(c_host_cublas);
- free(c_host_wmma);
+ free(d_host_cublas);
  free(d_host_wmma);
  free(d_host_sw);
 
