@@ -160,94 +160,96 @@ __global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, fl
 // Note: This is NOT a high performance example but is for demonstration purposes only
 //       For a high performance code please use the GEMM provided in cuBLAS.
 
-__global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, int M, int N, int K, float alpha, float beta) {
-   // Leading dimensions. Packed with no transpositions.
-   int lda = M;
-   int ldb = K;
-   int ldc = M;
- 
 
-   // Tile using a 2D grid
-   int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
-   int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
- 
-   // Declare the fragments
-   wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> a_frag;
-   wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> b_frag;
-   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
-   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c_frag;
-    
+__global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, float *d_wmma, int M, int N, int K, float alpha, float beta) {
+
+  // Leading dimensions. Packed with no transpositions.
+  int lda = M;
+  int ldb = K;
+  int ldc = M;
+
+
+  // Tile using a 2D grid
+  int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
+  int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
+
+  // Declare the fragments
+  wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> a_frag;
+  wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> b_frag;
+  wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
+  wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c_frag;
+      
   int row = blockIdx.x * blockDim.x + threadIdx.x;
   int col = blockIdx.y * blockDim.y + threadIdx.y;
 
-  /*    
-  if (row < M && col < N) {
-    register float acc_real_t = 0.0;
+    /*    
+    if (row < M && col < N) {
+      register float acc_real_t = 0.0;
+         
+
+     
+      for (int i = 0; i < K; i++) {
+        axpy__((float)a[row * M + i], (float)b[col * N + i], acc_real_t);
+      }   
        
 
-   
-    for (int i = 0; i < K; i++) {
-      axpy__((float)a[row * M + i], (float)b[col * N + i], acc_real_t);
-    }   
      
 
-   
+      d_sw[row * M + col] = acc_real_t;
+        
+    }
+    */
+    
+    
+    
+  wmma::fill_fragment(acc_frag, 0.0f);
 
-    d_sw[row * M + col] = acc_real_t;
+    // Loop over k
+  for (int i = 0; i < K; i += WMMA_K) {
+    int aRow = warpM * WMMA_M;
+    int aCol = i;
+
+    int bRow = i;
+    int bCol = warpN * WMMA_N;
+
+    if (row < M && col < N) {
       
-  }
-  */
-  
-  
-  
-   wmma::fill_fragment(acc_frag, 0.0f);
+      register float acc_real_t = 0.0;
+      for (int internal = i; internal < WMM_K; internal++) {
+        axpy__((float)a[row * M + internal], (float)b[col * N + internal], acc_real_t);    
+      }   
+      
+      d_sw[row * M + col] = acc_real_t;
+    }
 
-   // Loop over k
-   for (int i = 0; i < K; i += WMMA_K) {
-      int aRow = warpM * WMMA_M;
-      int aCol = i;
-
-      int bRow = i;
-      int bCol = warpN * WMMA_N;
-
-      // Bounds checking
-      if (aRow < M && aCol < K && bRow < K && bCol < N) {
+    // Bounds checking
+    if (aRow < M && aCol < K && bRow < K && bCol < N) {
          // Load the inputs
-         wmma::load_matrix_sync(a_frag, a + aRow + aCol * lda, lda);
-         wmma::load_matrix_sync(b_frag, b + bRow + bCol * ldb, ldb);
- 
-         // Perform the matrix multiplication
-         wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
+      wmma::load_matrix_sync(a_frag, a + aRow + aCol * lda, lda);
+      wmma::load_matrix_sync(b_frag, b + bRow + bCol * ldb, ldb);
 
-      }
-   }
+         // Perform the matrix multiplication
+      wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
+
+    }
+}
 
    // Load in the current value of c, scale it by beta, and add this our result scaled by alpha
-   int cRow = warpM * WMMA_M;
-   int cCol = warpN * WMMA_N;
+int cRow = warpM * WMMA_M;
+int cCol = warpN * WMMA_N;
 
-   if (cRow < M && cCol < N) {
-      wmma::load_matrix_sync(c_frag, c + cRow + cCol * ldc, ldc, wmma::mem_col_major);
+if (cRow < M && cCol < N) {
+  wmma::load_matrix_sync(c_frag, c + cRow + cCol * ldc, ldc, wmma::mem_col_major);
 
 
   for(int i=0; i < c_frag.num_elements; i++) {
    
-    c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
-      
-      if (row < M && col < N) {
-        
-        register float acc_real_t = 0.0;
-        for (int i = 0; i < K; i++) {
-          axpy__((float)a[row * M + i], (float)b[col * N + i], acc_real_t);    
-        }   
-      
-        d_sw[row * M + col] = acc_real_t;
-      }
+    c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];      
   }
 
       // Store the output
-      wmma::store_matrix_sync(c + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
-   }
+  wmma::store_matrix_sync(d_wmma + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
+}
    
 
 }
@@ -288,13 +290,16 @@ int main(int argc, char* argv[]) {
   float *b_fp32;
   half *a_fp16;
   half *b_fp16;
-  float *d_fp16;
   float *c;
-  float *c_cublas;
   float *c_wmma;
-  float *c_host_cublas;
-  float *c_host_wmma;
-  float *d_fp16_host;
+  float *c_cublas;
+  float *d_wmma;
+  float *d_sw;  
+  float *d_host_cublas;
+  float *d_host_wmma;
+  float *d_host_sw;
+  
+
   
   //curandGenerator_t gen;
   cublasHandle_t cublasHandle;
@@ -326,14 +331,16 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaMalloc((void**)&b_fp32, MATRIX_K * MATRIX_N * sizeof(float)));
   cudaErrCheck(cudaMalloc((void**)&a_fp16, MATRIX_M * MATRIX_K * sizeof(half)));
   cudaErrCheck(cudaMalloc((void**)&b_fp16, MATRIX_K * MATRIX_N * sizeof(half)));
-  cudaErrCheck(cudaMalloc((void**)&d_fp16, MATRIX_K * MATRIX_N * sizeof(float)));
   cudaErrCheck(cudaMalloc((void**)&c, MATRIX_M * MATRIX_N * sizeof(float)));
   cudaErrCheck(cudaMalloc((void**)&c_cublas, MATRIX_M * MATRIX_N * sizeof(float)));
   cudaErrCheck(cudaMalloc((void**)&c_wmma, MATRIX_M * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMalloc((void**)&d_sw, MATRIX_K * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMalloc((void**)&d_wmma, MATRIX_K * MATRIX_N * sizeof(float)));
 
-  c_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-  c_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-  d_fp16_host = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+  d_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+  d_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+  d_host_sw = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+
    /*
    curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
    curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
@@ -349,12 +356,18 @@ int main(int argc, char* argv[]) {
    
    curandErrCheck(curandDestroyGenerator(gen));
    */
+
   cudaErrCheck(cudaMemset(a_fp16, 100.0f, MATRIX_M * MATRIX_N * sizeof(half)));
   cudaErrCheck(cudaMemset(b_fp16, 100.0f, MATRIX_M * MATRIX_N * sizeof(half)));
 
   cudaErrCheck(cudaMemset(c_cublas, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
   cudaErrCheck(cudaMemset(c_wmma, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
-  cudaErrCheck(cudaMemset(d_fp16, 0.0f, sizeof(float) * MATRIX_M * MATRIX_N));
+  
+  cudaErrCheck(cudaMemset(d_sw, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMemset(d_wmma, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
+
+
+
  
   float alpha = 1.0f;
   float beta = 1.0f;
@@ -362,6 +375,7 @@ int main(int argc, char* argv[]) {
 
    
    
+
   // WMMA TENSOR //
   dim3 gridDim;
   dim3 blockDim;
@@ -406,7 +420,7 @@ int main(int argc, char* argv[]) {
    // ---- DMR --- //
   printf("Running  dmr with tensor thread dimensions...\n");
   
-  wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_fp16, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+  wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_sw, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   cudaErrCheck(cudaEventRecord(stopMXM));
  
    
@@ -430,22 +444,24 @@ int main(int argc, char* argv[]) {
 
   // Error checking
   printf("\nChecking results...\n");
-  cudaErrCheck(cudaMemcpy(c_host_wmma, c_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
   cudaErrCheck(cudaMemcpy(c_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
-  cudaErrCheck(cudaMemcpy(d_fp16_host, d_fp16, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+  cudaErrCheck(cudaMemcpy(d_host_sw, d_sw, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+  cudaErrCheck(cudaMemcpy(d_host_wmma, d_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+
+  
 
    
 
   
   for (int i = 0; i <  20; i++) {      
-    float v1 = c_host_wmma[i];
-    float v2 = d_fp16_host[i];
+    float v1 = d_host_wmma[i];
+    float v2 = d_host_sw[i];
     float v3 = c_host_cublas[i];      
     printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS = %f --------| \n", v1, v2, v3);
 
   }
    
-
+  /*
   float wmmaTime;
   float cublasTime;
   float mxmTime;
@@ -459,7 +475,7 @@ int main(int argc, char* argv[]) {
   //printf("wmma took %fms\n", wmmaTime);
   printf("cublas took %fms\n", cublasTime);
   printf("mxm took %fms\n", mxmTime);
-
+  */
      
    
  
@@ -474,7 +490,8 @@ int main(int argc, char* argv[]) {
  cudaErrCheck(cudaFree(b_fp32));
  cudaErrCheck(cudaFree(a_fp16));
  cudaErrCheck(cudaFree(b_fp16));
- cudaErrCheck(cudaFree(d_fp16));
+ cudaErrCheck(cudaFree(d_wmma));
+ cudaErrCheck(cudaFree(d_sw));
 
  cudaErrCheck(cudaFree(c));
  cudaErrCheck(cudaFree(c_cublas));
@@ -483,8 +500,8 @@ int main(int argc, char* argv[]) {
  
  free(c_host_cublas);
  free(c_host_wmma);
- free(d_fp16_host);
- 
+ free(d_host_wmma);
+ free(d_host_sw);
 
  cudaErrCheck(cudaDeviceReset());
  return 0;
