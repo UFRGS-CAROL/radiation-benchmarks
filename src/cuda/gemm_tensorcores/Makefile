@@ -10,7 +10,7 @@ BETA=0.1
 SIZE?=4096
 #6384 #8192 #4096 
 ITERATIONS=10
-PRECISION=single
+PRECISION=double
 OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE).matrix
 
 # This is what I use, uncomment if you know your arch and want to specify
@@ -103,16 +103,6 @@ generate_gemm:
 test_gemm_dmr_mixed:
 	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
 			--precision $(PRECISION) --dmr mixed \
-			--iterations $(ITERATIONS)  \
-			--alpha $(ALPHA) --beta $(BETA)\
-			--input_a a_$(OUTPUTPREFIX) \
-			--input_b b_$(OUTPUTPREFIX) \
-			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX)		
-
-test_gemm_dmr_fp3fp64:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
-			--precision $(PRECISION) --dmr fp32fp64 \
 			--iterations $(ITERATIONS)  \
 			--alpha $(ALPHA) --beta $(BETA)\
 			--input_a a_$(OUTPUTPREFIX) \
