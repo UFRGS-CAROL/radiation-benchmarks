@@ -41,7 +41,7 @@
 #define THRESHOLD_1 26
 
 //Threshold for 16 operation
-#define THRESHOLD_16 40
+#define THRESHOLD_31 40
 
 //Threshold for one operation
 #define THRESHOLD_32 100
