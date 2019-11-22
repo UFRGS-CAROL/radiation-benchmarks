@@ -28,7 +28,7 @@ void check_relative_error(float &lhs, double rhs) {
 //		printf("%f %lf %f\n", lhs, rhs, relative);
 		atomicAdd(&errors, 1);
 	}
-	lhs = rhs;
+//	lhs = rhs;
 }
 
 __DEVICE_INLINE__
@@ -55,21 +55,6 @@ void check_relative_error(float lhs, int64_t rhs, uint32_t threshold) {
 		atomicAdd(&errors, 1);
 	}
 //	lhs = rhs_as_float;
-}
-
-__DEVICE_INLINE__
-void check_relative_error(double &rhs, float lhs, uint32_t threshold) {
-	double lhs_as_double = double(lhs);
-	uint64_t lhs_data = *((uint64_t*) &lhs_as_double);
-	uint64_t rhs_data = *((uint64_t*) &rhs);
-
-	uint64_t diff = SUB_ABS(lhs_data, rhs_data);
-	uint64_t ths = 13036232704;
-	if (diff > ths) {
-		printf("%lf %lf %llu %llu\n", lhs, rhs, diff, ths);
-		atomicAdd(&errors, 1);
-	}
-	rhs = lhs;
 }
 
 //__DEVICE_INLINE__

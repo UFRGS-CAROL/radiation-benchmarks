@@ -119,7 +119,6 @@ static unsigned long long dmr_errors() {
 	return ret;
 }
 
-#if __CUDA_ARCH__ > 600
 static std::ostream& operator<<(std::ostream& os, half &rhs) {
 	float temp = float(rhs);
 	os << temp;
@@ -129,8 +128,6 @@ static std::ostream& operator<<(std::ostream& os, half &rhs) {
 static float fabs(half h) {
 	return fabs(float(h));
 }
-
-#endif
 
 template<typename real_t>
 bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
@@ -150,30 +147,8 @@ static bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 	return (SUB_ABS(lhs_data, rhs_data) <= threshold);
 }
 
-static bool equals(double& rhs, float& lhs, const uint32_t threshold) {
-	assert(sizeof(double) == sizeof(uint64_t));
-
-	double lhs_as_double = double(lhs);
-
-	uint64_t lhs_data;
-	uint64_t rhs_data;
-	memcpy(&lhs_data, &lhs_as_double, sizeof(uint64_t));
-	memcpy(&rhs_data, &rhs, sizeof(uint64_t));
-	uint64_t ths = 13036232704;
-	uint64_t diff = SUB_ABS(lhs_data, rhs_data);
-	if (diff > ths) {
-		std::cout << rhs << " " << lhs << " " << diff << std::endl;
-	}
-	return (diff <= ths);
-}
-
 static bool equals(float& lhs, double& rhs) {
 	float relative(lhs / float(rhs));
-	return (relative >= MIN_PERCENTAGE && relative <= MAX_PERCENTAGE);
-}
-
-static bool equals(float& lhs, int64_t& rhs, const uint32_t threshold) {
-	float relative(ceil(rhs) / lhs);
 	return (relative >= MIN_PERCENTAGE && relative <= MAX_PERCENTAGE);
 }
 
@@ -213,8 +188,8 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			error_detail << "p: [" << int(floor(i / log.size_matrices)) << ", "
 					<< i % log.size_matrices << "], r: ";
 			error_detail << full_precision;
-			error_detail << ", e: " << gold_value
-					<< " smaller_precision: " << half_precision;
+			error_detail << ", e: " << gold_value << " smaller_precision: "
+					<< half_precision;
 
 			if (log.verbose && (host_errors < 10))
 				std::cout << error_detail.str() << std::endl;
