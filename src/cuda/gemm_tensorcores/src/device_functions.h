@@ -40,7 +40,18 @@ void check_relative_error(float lhs, double rhs, uint32_t threshold) {
 	uint32_t diff = SUB_ABS(lhs_data, rhs_data);
 
 	if (diff > threshold) {
-		printf("%lf %lf %u\n", lhs, rhs, diff);
+//		printf("%lf %lf %u\n", lhs, rhs, diff);
+		atomicAdd(&errors, 1);
+	}
+//	lhs = rhs_as_float;
+}
+
+__DEVICE_INLINE__
+void check_relative_error(float lhs, int64_t rhs, uint32_t threshold) {
+	float rhs_as_float = rhs;
+	float relative = __fdividef(rhs_as_float, lhs);
+	if (relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE) {
+//		printf("%f %lf %f\n", lhs, rhs, relative);
 		atomicAdd(&errors, 1);
 	}
 //	lhs = rhs_as_float;

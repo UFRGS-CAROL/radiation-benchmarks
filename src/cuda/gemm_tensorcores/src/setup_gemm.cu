@@ -259,7 +259,7 @@ void setup_gemm_dmr(Log& log) {
 
 	if (log.precision == "float" || log.precision == "single") {
 		if (log.dmr == "fp32fp64") {
-			DMRMixedGemmCaller<1, double, float> gemm_obj(log.size_matrices,
+			DMRMixedGemmCaller<1, float, int64_t> gemm_obj(log.size_matrices,
 					log.size_matrices);
 			setup_execute(log, gemm_obj, THRESHOLD_1);
 		}
