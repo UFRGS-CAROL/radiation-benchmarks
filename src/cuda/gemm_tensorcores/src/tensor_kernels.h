@@ -99,7 +99,7 @@ __global__ void matrix_mult_kernel_wmma_dmr(half_t *a, half_t *b, real_t *c,
 
 	nvcuda::wmma::fill_fragment(acc_frag, 0.0f);
 
-	real_t acc_sw = 0;
+	half_t acc_sw = 0;
 
 	// Loop over k
 	for (int i = 0; i < k; i += WMMA_K) {

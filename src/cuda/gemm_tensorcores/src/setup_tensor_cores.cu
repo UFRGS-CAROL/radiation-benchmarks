@@ -10,6 +10,34 @@ struct TensorCoresCaller {
 	dim3 dim_grid, dim_block;
 
 	virtual ~TensorCoresCaller() = default;
+	virtual void gemm(
+			rad::DeviceVector<half_t>& a_dev, 			//A matrix
+			rad::DeviceVector<half_t>& b_dev, 			//B matrix
+			rad::DeviceVector<real_t>& c_dev, 			//C matrix
+			rad::DeviceVector<real_t>& d_dev, 			//D matrix
+			rad::DeviceVector<real_t>& d_dev_half_t,  	//D_Half matrix
+			real_t alpha, real_t beta, int wA, int wB,
+			const uint32_t threshold) ;
+
+	virtual std::vector<real_t> memcpy_half_t_mem(
+			rad::DeviceVector<real_t>& d_dev_half_t);
+
+	TensorCoresCaller(uint32_t m, uint32_t n) :
+			duplicated(false) {
+
+		this->dim_block.x = 128;
+		this->dim_block.y = 4;
+
+		this->dim_grid.x = (m + (WMMA_M * this->dim_block.x / BLOCK_SIZE - 1))
+				/ (WMMA_M * this->dim_block.x / BLOCK_SIZE);
+		this->dim_grid.y = (n + WMMA_N * this->dim_block.y - 1)
+				/ (WMMA_N * this->dim_block.y);
+	}
+};
+
+template<typename half_t, typename real_t>
+struct UnhardenedTensorCoresCaller: public TensorCoresCaller<half_t, real_t> {
+
 	void gemm(
 			rad::DeviceVector<half_t>& a_dev, 			//A matrix
 			rad::DeviceVector<half_t>& b_dev, 			//B matrix
@@ -18,10 +46,10 @@ struct TensorCoresCaller {
 			rad::DeviceVector<real_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
 			const uint32_t threshold) {
-
 		matrix_mult_kernel_wmma_unhardened<<<this->dim_grid, this->dim_block>>>(
-				a_dev.data(), b_dev.data(), c_dev.data(), d_dev.data(), alpha, beta, wA, wB,
-				wA);
+				a_dev.data(), b_dev.data(), c_dev.data(), d_dev.data(), alpha,
+				beta, wA, wB, wA);
+
 	}
 
 	std::vector<real_t> memcpy_half_t_mem(
@@ -29,13 +57,9 @@ struct TensorCoresCaller {
 		return {};
 	}
 
-	TensorCoresCaller(uint32_t m, uint32_t n) :
-			duplicated(false) {
-		uint32_t grid_rows = (m + BLOCK_SIZE - 1) / BLOCK_SIZE;
-		uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-		this->dim_grid = dim3(grid_cols, grid_rows);
-		this->dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-	}
+	UnhardenedTensorCoresCaller(uint32_t m, uint32_t n) :
+			TensorCoresCaller<half_t, real_t>(m, n) {
+	} //default constructor
 };
 
 template<typename half_t, typename real_t>
@@ -49,12 +73,15 @@ struct DMRTensorCoresCaller: public TensorCoresCaller<half_t, real_t> {
 			rad::DeviceVector<real_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
 			const uint32_t threshold) {
+		matrix_mult_kernel_wmma_dmr<<<this->dim_grid, this->dim_block>>>(
+				a_dev.data(), b_dev.data(), c_dev.data(), d_dev.data(),
+				d_dev_half_t.data(), alpha, beta, wA, wB, wA);
 
 	}
 
 	std::vector<real_t> memcpy_half_t_mem(
 			rad::DeviceVector<real_t>& d_dev_half_t) {
-		return {};
+		return d_dev_half_t.to_vector();
 	}
 
 	DMRTensorCoresCaller(uint32_t m, uint32_t n) :
@@ -94,6 +121,7 @@ void setup_execute(Log& log_obj, TensorCoresCaller<half_t, real_t>& mult_env,
 	rad::DeviceVector<half_t> a_vector_device = a_vector_host;
 	rad::DeviceVector<half_t> b_vector_device = b_vector_host;
 	rad::DeviceVector<real_t> c_vector_device = c_vector_host;
+
 	rad::DeviceVector<real_t> d_vector_device(
 			log_obj.size_matrices * log_obj.size_matrices);
 	rad::DeviceVector<real_t> d_vector_half_t_device(
@@ -181,13 +209,13 @@ void setup_execute(Log& log_obj, TensorCoresCaller<half_t, real_t>& mult_env,
  */
 void setup_gemm_tensor_cores_unhardened(Log& log) {
 	if (log.precision == "half") {
-		TensorCoresCaller<half, half> gemm_obj(log.size_matrices,
+		UnhardenedTensorCoresCaller<half, half> gemm_obj(log.size_matrices,
 				log.size_matrices);
 		setup_execute(log, gemm_obj);
 	}
 
 	if (log.precision == "float" || log.precision == "single") {
-		TensorCoresCaller<half, float> gemm_obj(log.size_matrices,
+		UnhardenedTensorCoresCaller<half, float> gemm_obj(log.size_matrices,
 				log.size_matrices);
 		setup_execute(log, gemm_obj);
 	}
