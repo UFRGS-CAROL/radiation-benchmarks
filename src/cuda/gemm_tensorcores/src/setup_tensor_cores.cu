@@ -2,6 +2,7 @@
 #include "Log.h"
 #include "include/device_vector.h"
 #include "common_template_functions.h"
+#include "tensor_kernels.h"
 
 template<typename half_t, typename real_t>
 struct TensorCoresCaller {
@@ -18,6 +19,9 @@ struct TensorCoresCaller {
 			real_t alpha, real_t beta, int wA, int wB,
 			const uint32_t threshold) {
 
+		matrix_mult_kernel_wmma_unhardened<<<this->dim_grid, this->dim_block>>>(
+				a_dev.data(), b_dev.data(), c_dev.data(), d_dev.data(), alpha, beta, wA, wB,
+				wA);
 	}
 
 	std::vector<real_t> memcpy_half_t_mem(
