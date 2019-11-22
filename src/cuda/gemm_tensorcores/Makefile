@@ -143,12 +143,30 @@ test_gemm_non_dmr:
 
 # Tensor options
 generate_tensor:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 --precision half --dmr none --tensor_cores 1
+	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 \
+			--precision $(PRECISION) --dmr none --tensor_cores 1 \
+			--alpha $(ALPHA) --beta $(BETA) \
+			--input_a a_$(OUTPUTPREFIX) \
+			--input_b b_$(OUTPUTPREFIX) \
+			--input_c c_$(OUTPUTPREFIX) \
+			--gold  g_$(OUTPUTPREFIX)
 
 test_tensor_non_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision half --dmr none --tensor_cores 1 --iterations $(ITERATIONS)
+		./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
+			--precision $(PRECISION) --dmr none --tensor_cores 1 \
+			--iterations $(ITERATIONS)  \
+			--alpha $(ALPHA) --beta $(BETA)\
+			--input_a a_$(OUTPUTPREFIX) \
+			--input_b b_$(OUTPUTPREFIX) \
+			--input_c c_$(OUTPUTPREFIX) \
+			--gold  g_$(OUTPUTPREFIX)
 	
 test_tensor_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 --precision half --dmr mixed --tensor_cores 1 --iterations $(ITERATIONS)
-	
-	
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
+			--precision $(PRECISION) --dmr mixed --tensor_cores 1 \
+			--iterations $(ITERATIONS)  \
+			--alpha $(ALPHA) --beta $(BETA)\
+			--input_a a_$(OUTPUTPREFIX) \
+			--input_b b_$(OUTPUTPREFIX) \
+			--input_c c_$(OUTPUTPREFIX) \
+			--gold  g_$(OUTPUTPREFIX)
