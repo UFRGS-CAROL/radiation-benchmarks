@@ -360,8 +360,8 @@ int main(int argc, char* argv[]) {
    curandErrCheck(curandDestroyGenerator(gen));
    */
 
-  cudaErrCheck(cudaMemset(a_fp16, 1245.1245f, MATRIX_M * MATRIX_N * sizeof(half)));
-  cudaErrCheck(cudaMemset(b_fp16, 1245.1245f, MATRIX_M * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMemset(a_fp16, 6462.8195679, MATRIX_M * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMemset(b_fp16, 6462.8195679, MATRIX_M * MATRIX_N * sizeof(half)));
 
   cudaErrCheck(cudaMemset(c_cublas, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
   cudaErrCheck(cudaMemset(c_wmma, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
@@ -461,7 +461,7 @@ int main(int argc, char* argv[]) {
     float v2 = d_host_sw[i];
     float v3 = d_host_cublas[i]; 
     float v4 = fabs(v1/v2);     
-    printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS = %f --------| RELATIVE = %f --------| \n", v1, v2, v3, v4);
+    printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS = %f --------| RELATIVE = %.15f --------| \n", v1, v2, v3, v4);
 
   }
    
