@@ -135,8 +135,8 @@ int MatrixMultiply(int argc, char **argv,
 
     // Initialize host memory
     const half valB = 0.01f;
-    ConstantInit(h_A, size_A, 1.0f);
-    ConstantInit(h_B, size_B, 1.0f);
+    ConstantInit(h_A, size_A, 100.0f);
+    ConstantInit(h_B, size_B, 100.0f);
 
     // Allocate device memory
     half *d_A, *d_B, *d_C;
