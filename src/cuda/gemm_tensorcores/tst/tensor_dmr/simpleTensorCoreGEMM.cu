@@ -365,6 +365,8 @@ int main(int argc, char* argv[]) {
 
   init_host_matrices(a_host_fp16, b_host_fp16);
 
+  printf(" a == %f, b== %f \n",a_host_fp16[0],b_host_fp16[0]);
+
    /*
    curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
    curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
