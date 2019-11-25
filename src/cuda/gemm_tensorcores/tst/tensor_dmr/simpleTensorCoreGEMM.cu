@@ -288,28 +288,14 @@ __global__ void convertFp32ToFp16 (half *out, float *in, int n) {
    }
 }
 
-__host__ void init_host_matrices(half *a, half *b) {
-  for (int i = 0; i < WMMA_M; i++) {
-    for (int j = 0; j < WMMA_K; j++) {
-      a[i * WMMA_K + j] = (half)(rand() % 100);
-    }  
-  }
 
-  for (int i = 0; i < WMMA_N; i++) {
-    for (int j = 0; j < WMMA_K; j++) {
-      b[i * WMMA_K + j] = (half)(rand() % 100);
-      
-    }
-  }
-}
 
 int main(int argc, char* argv[]) {
   float *a_fp32;
   float *b_fp32;
   half *a_fp16;
   half *b_fp16;
-  half *a_host_fp16;
-  half *b_host_fp16;
+
   float *c;
   float *c_wmma;
   float *c_cublas;
@@ -321,7 +307,7 @@ int main(int argc, char* argv[]) {
   
 
   
-  //curandGenerator_t gen;
+  curandGenerator_t gen;
   cublasHandle_t cublasHandle;
   
   cudaEvent_t startWMMA;
@@ -363,30 +349,28 @@ int main(int argc, char* argv[]) {
   d_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
   d_host_sw = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
 
-  init_host_matrices(a_host_fp16, b_host_fp16);
-
-  printf(" a == %f, b== %f \n",a_host_fp16[0],b_host_fp16[0]);
-
-   /*
+  
+   
    curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
    curandErrCheck(curandSetPseudoRandomGeneratorSeed(gen, 1337ULL));
 
    curandErrCheck(curandGenerateUniform(gen, a_fp32, MATRIX_M * MATRIX_K));
    curandErrCheck(curandGenerateUniform(gen, b_fp32, MATRIX_K * MATRIX_N));
 
+   for (int i = 0; i < 10; ++i)
+   {
+     printf(" A = %f--|--- B = %f \n" , a_fp32[i], b_fp32[i]);
+   }
+   
    // curand doesn't currently support fp16 so we generate in fp32 and convert to fp16.
    convertFp32ToFp16 <<< (MATRIX_M * MATRIX_K + 255) / 256, 256 >>> (a_fp16, a_fp32, MATRIX_M * MATRIX_K);
    convertFp32ToFp16 <<< (MATRIX_K * MATRIX_N + 255) / 256, 256 >>> (b_fp16, b_fp32, MATRIX_K * MATRIX_N);
 
-   curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
+   //curandErrCheck(curandGenerateUniform(gen, c, MATRIX_M * MATRIX_N));
    
    curandErrCheck(curandDestroyGenerator(gen));
-   */
+   
 
-  cudaErrCheck(cudaMemcpy(a_fp16, a_host_fp16, sizeof(half) * MATRIX_M * MATRIX_N,
-                             cudaMemcpyHostToDevice));
-  cudaErrCheck(cudaMemcpy(b_fp16, b_host_fp16, sizeof(half) * MATRIX_M * MATRIX_N,
-                             cudaMemcpyHostToDevice));
 
   //cudaErrCheck(cudaMemset(a_fp16, 6462.8195679, MATRIX_M * MATRIX_N * sizeof(half)));
   //cudaErrCheck(cudaMemset(b_fp16, 6462.8195679, MATRIX_M * MATRIX_N * sizeof(half)));
@@ -529,8 +513,6 @@ int main(int argc, char* argv[]) {
  cudaErrCheck(cudaFree(c_cublas));
  cudaErrCheck(cudaFree(c_wmma));
 
- free(a_host_fp16);
- free(b_host_fp16);
  free(d_host_cublas);
  free(d_host_wmma);
  free(d_host_sw);
