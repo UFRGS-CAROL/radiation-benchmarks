@@ -343,8 +343,6 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaMalloc((void**)&d_sw, MATRIX_K * MATRIX_N * sizeof(float)));
   cudaErrCheck(cudaMalloc((void**)&d_wmma, MATRIX_K * MATRIX_N * sizeof(float)));
 
-  a_host_fp16 = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
-  b_host_fp16 = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
   d_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
   d_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
   d_host_sw = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
