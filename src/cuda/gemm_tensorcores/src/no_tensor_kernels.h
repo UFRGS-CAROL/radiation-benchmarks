@@ -8,7 +8,7 @@
 #ifndef NO_TENSOR_KERNELS_H_
 #define NO_TENSOR_KERNELS_H_
 
-__device__ double t = 1;
+__device__ double t = 1.000000000000000;
 
 /**
  * Full dmr code
@@ -77,9 +77,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 			real_t ar = As[ty][k];
 			real_t br = Bs[k][tx];
 
-			Csub += ar * br;
-			br *= t;
-			Csub_dmr += ar * br;
+			Csub = fma(ar, br, Csub);
+			Csub_dmr = fma(ar, br, Csub_dmr);
 
 //			if ((k % COUNT) == 0) {
 //				check_relative_error(Csub_half, Csub_real);
