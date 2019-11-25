@@ -355,10 +355,7 @@ int main(int argc, char* argv[]) {
    curandErrCheck(curandGenerateUniform(gen, a_fp32, MATRIX_M * MATRIX_K));
    curandErrCheck(curandGenerateUniform(gen, b_fp32, MATRIX_K * MATRIX_N));
 
-   for (int i = 0; i < 10; ++i)
-   {
-     printf(" A = %f--|--- B = %f \n" , a_fp32[i], b_fp32[i]);
-   }
+  
    
    // curand doesn't currently support fp16 so we generate in fp32 and convert to fp16.
    convertFp32ToFp16 <<< (MATRIX_M * MATRIX_K + 255) / 256, 256 >>> (a_fp16, a_fp32, MATRIX_M * MATRIX_K);
