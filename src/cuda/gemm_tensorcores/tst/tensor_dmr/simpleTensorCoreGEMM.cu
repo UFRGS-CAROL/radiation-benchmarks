@@ -167,7 +167,10 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, float 
   int lda = M;
   int ldb = K;
   int ldc = M;
-
+  for (int i = 0; i < 10; ++i)
+  {
+    printf(" A == %f ------ B == %f \n", a[i], b[i]);
+  }
 
   // Tile using a 2D grid
   int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
