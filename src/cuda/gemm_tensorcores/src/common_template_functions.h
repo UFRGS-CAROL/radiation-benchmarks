@@ -166,18 +166,22 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		real_t full_precision = real_vector[i];
 		half_t half_precision;
 		bool is_output_diff;
-		bool dmr_not_equals = false;
 		if (dmr) {
 			half_precision = half_vector[i];
-			is_output_diff = (gold_value != full_precision
-					&& !equals(half_precision, full_precision, threshold));
-			dmr_not_equals = !equals(half_precision, full_precision, threshold);
+
+			bool memory_is_equal = equals(half_precision, full_precision, threshold);
+
+			if(memory_is_equal){
+				log.log_info("dmr1_equals_dmr2");
+			}
+
+			is_output_diff = (gold_value != full_precision && !memory_is_equal);
 		} else {
 			half_precision = full_precision;
 			is_output_diff = gold_value != full_precision;
 		}
 
-		if (is_output_diff || dmr_not_equals) {
+		if (is_output_diff) {
 #ifdef OMP
 #pragma omp critical
 			{

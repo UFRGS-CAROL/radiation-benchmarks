@@ -8,6 +8,8 @@
 #ifndef NO_TENSOR_KERNELS_H_
 #define NO_TENSOR_KERNELS_H_
 
+__device__ double t = 1;
+
 /**
  * Full dmr code
  */
@@ -72,11 +74,11 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 		// of the block sub-matrix
 #pragma unroll
 		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			volatile real_t ar = As[ty][k];
-			volatile real_t br = Bs[k][tx];
+			real_t ar = As[ty][k];
+			real_t br = Bs[k][tx];
 
-			Csub_real += ar * br;
-			Csub_half += ar * br;
+			Csub_real += ar * br / t;
+			Csub_half += ar * br * t;
 
 			if ((k % COUNT) == 0) {
 				check_relative_error(Csub_half, Csub_real);
@@ -93,8 +95,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
 
-	volatile real_t real_val = alpha * Csub_real + beta * C[index];
-	volatile real_t half_val = alpha * Csub_half + beta * C[index];
+	real_t real_val = alpha * Csub_real + beta * C[index];
+	real_t half_val = alpha * Csub_half + beta * C[index];
 
 	D_r[index] = real_val;
 	D_h[index] = half_val;
