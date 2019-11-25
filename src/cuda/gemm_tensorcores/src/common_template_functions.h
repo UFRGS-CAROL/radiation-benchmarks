@@ -131,6 +131,10 @@ static float fabs(half h) {
 
 template<typename real_t>
 bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
+	if(fabs(lhs - rhs) > ZERO_DOUBLE){
+		std::cout << std::setprecision(20) ;
+		std::cout << fabs(lhs - rhs) << std::endl;
+	}
 	return (fabs(lhs - rhs) <= ZERO_DOUBLE);
 }
 
@@ -143,13 +147,8 @@ static bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 	uint32_t rhs_data;
 	memcpy(&lhs_data, &lhs, sizeof(uint32_t));
 	memcpy(&rhs_data, &rhs_float, sizeof(uint32_t));
-
-	return (SUB_ABS(lhs_data, rhs_data) <= threshold);
-}
-
-static bool equals(float& lhs, double& rhs) {
-	float relative(lhs / float(rhs));
-	return (relative >= MIN_PERCENTAGE && relative <= MAX_PERCENTAGE);
+	auto diff = SUB_ABS(lhs_data, rhs_data);
+	return (diff <= threshold);
 }
 
 template<class half_t, class real_t>
@@ -157,6 +156,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<real_t>& real_vector, std::vector<half_t>& half_vector,
 		Log& log, const uint32_t threshold, const bool dmr) {
 	uint32_t host_errors = 0;
+	uint32_t memory_errors = 0;
 
 #ifdef OMP
 #pragma omp parallel for shared(host_errors)
@@ -165,23 +165,18 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		auto gold_value = gold[i];
 		real_t full_precision = real_vector[i];
 		half_t half_precision;
-		bool is_output_diff;
+		bool dmr_equals = false;
+
 		if (dmr) {
 			half_precision = half_vector[i];
-
-			bool memory_is_equal = equals(half_precision, full_precision, threshold);
-
-			if(memory_is_equal){
-				log.log_info("dmr1_equals_dmr2");
-			}
-
-			is_output_diff = (gold_value != full_precision && !memory_is_equal);
+			dmr_equals = equals(half_precision, full_precision, threshold);
 		} else {
 			half_precision = full_precision;
-			is_output_diff = gold_value != full_precision;
 		}
 
-		if (is_output_diff) {
+		bool is_output_diff = !equals(gold_value, full_precision);
+
+		if (is_output_diff || !dmr_equals) {
 #ifdef OMP
 #pragma omp critical
 			{
@@ -195,11 +190,16 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			error_detail << ", e: " << gold_value << " smaller_precision: "
 					<< half_precision;
 
-			if (log.verbose && (host_errors < 10))
+			if (log.verbose && (host_errors < 10)){
 				std::cout << error_detail.str() << std::endl;
+
+				std::cout << is_output_diff << " " << !dmr_equals << std::endl;
+			}
 
 			log.log_error(error_detail.str());
 			host_errors++;
+			memory_errors += (is_output_diff && dmr_equals);
+
 #ifdef OMP
 		}
 #endif
@@ -211,6 +211,10 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::string error_detail;
 		error_detail = "detected_dmr_errors: " + std::to_string(dmr_err);
 		log.log_error(error_detail);
+	}
+
+	if(memory_errors != 0){
+		log.log_info("dmr1_equals_dmr2_detected");
 	}
 
 	log.update_error_count(host_errors);

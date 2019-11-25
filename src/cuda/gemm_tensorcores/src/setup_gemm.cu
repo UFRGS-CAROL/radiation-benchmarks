@@ -235,9 +235,9 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 
 void setup_gemm_unhardened(Log& log) {
 	if (log.precision == "half") {
-		UnhardenedGemmCaller<half> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj);
+//		UnhardenedGemmCaller<half> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj);
 	}
 //
 //	if (log.precision == "float" || log.precision == "single") {
@@ -247,9 +247,9 @@ void setup_gemm_unhardened(Log& log) {
 //	}
 //
 	if (log.precision == "double") {
-		UnhardenedGemmCaller<double> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj);
+//		UnhardenedGemmCaller<double> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj);
 	}
 }
 
@@ -267,24 +267,24 @@ void setup_gemm_dmr(Log& log) {
 		if (log.dmr == "mixed") {
 			switch (log.check_block) {
 			case 1: {
-				DMRMixedGemmCaller<1, float, double> gemm_obj(log.size_matrices,
-						log.size_matrices);
-				setup_execute(log, gemm_obj, THRESHOLD_1);
+//				DMRMixedGemmCaller<1, float, double> gemm_obj(log.size_matrices,
+//						log.size_matrices);
+//				setup_execute(log, gemm_obj, THRESHOLD_1);
 				break;
 
 			}
 			case 31: {
-				DMRMixedGemmCaller<31, float, double> gemm_obj(
-						log.size_matrices, log.size_matrices);
-				setup_execute(log, gemm_obj, THRESHOLD_1);
+//				DMRMixedGemmCaller<31, float, double> gemm_obj(
+//						log.size_matrices, log.size_matrices);
+//				setup_execute(log, gemm_obj, THRESHOLD_1);
 				break;
 
 			}
 			default: {
 				//The counter will never be 32, so it will check only at the end
-				DMRMixedGemmCaller<32, float, double> gemm_obj(
-						log.size_matrices, log.size_matrices);
-				setup_execute(log, gemm_obj, THRESHOLD_32);
+//				DMRMixedGemmCaller<32, float, double> gemm_obj(
+//						log.size_matrices, log.size_matrices);
+//				setup_execute(log, gemm_obj, THRESHOLD_32);
 				break;
 			}
 			}
