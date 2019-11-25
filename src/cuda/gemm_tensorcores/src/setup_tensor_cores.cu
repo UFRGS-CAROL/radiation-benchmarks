@@ -208,29 +208,29 @@ void setup_execute(Log& log_obj, TensorCoresCaller<half_t, real_t>& mult_env,
  * Setup for Tensor (GEMM)
  */
 void setup_gemm_tensor_cores_unhardened(Log& log) {
-	if (log.precision == "half") {
-		UnhardenedTensorCoresCaller<half, half> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj);
-	}
-
-	if (log.precision == "float" || log.precision == "single") {
-		UnhardenedTensorCoresCaller<half, float> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj);
-	}
+//	if (log.precision == "half") {
+//		UnhardenedTensorCoresCaller<half, half> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj);
+//	}
+//
+//	if (log.precision == "float" || log.precision == "single") {
+//		UnhardenedTensorCoresCaller<half, float> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj);
+//	}
 }
 void setup_gemm_tensor_cores_dmr(Log& log) {
-	if (log.precision == "half") {
-		DMRTensorCoresCaller<half, half> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj, THRESHOLD_1);
-	}
-
-	if (log.precision == "float" || log.precision == "single") {
-		DMRTensorCoresCaller<half, float> gemm_obj(log.size_matrices,
-				log.size_matrices);
-		setup_execute(log, gemm_obj, THRESHOLD_1);
-	}
+//	if (log.precision == "half") {
+//		DMRTensorCoresCaller<half, half> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj, THRESHOLD_1);
+//	}
+//
+//	if (log.precision == "float" || log.precision == "single") {
+//		DMRTensorCoresCaller<half, float> gemm_obj(log.size_matrices,
+//				log.size_matrices);
+//		setup_execute(log, gemm_obj, THRESHOLD_1);
+//	}
 }
 
