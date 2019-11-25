@@ -288,11 +288,28 @@ __global__ void convertFp32ToFp16 (half *out, float *in, int n) {
    }
 }
 
+__host__ void init_host_matrices(half *a, half *b) {
+  for (int i = 0; i < M_GLOBAL; i++) {
+    for (int j = 0; j < K_GLOBAL; j++) {
+      a[i * K_GLOBAL + j] = (half)(rand() % 100.0f);
+    }  
+  }
+
+  for (int i = 0; i < N_GLOBAL; i++) {
+    for (int j = 0; j < K_GLOBAL; j++) {
+      b[i * K_GLOBAL + j] = (half)(rand() % 100.0f);
+      
+    }
+  }
+}
+
 int main(int argc, char* argv[]) {
   float *a_fp32;
   float *b_fp32;
   half *a_fp16;
   half *b_fp16;
+  half *a_host_fp16;
+  half *b_host_fp16;
   float *c;
   float *c_wmma;
   float *c_cublas;
@@ -340,9 +357,13 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaMalloc((void**)&d_sw, MATRIX_K * MATRIX_N * sizeof(float)));
   cudaErrCheck(cudaMalloc((void**)&d_wmma, MATRIX_K * MATRIX_N * sizeof(float)));
 
+  a_host_fp16 = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
+  b_host_fp16 = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
   d_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
   d_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
   d_host_sw = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+
+  init_host_matrices(a_host_fp16, b_host_fp16);
 
    /*
    curandErrCheck(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
@@ -360,8 +381,13 @@ int main(int argc, char* argv[]) {
    curandErrCheck(curandDestroyGenerator(gen));
    */
 
-  cudaErrCheck(cudaMemset(a_fp16, 6462.8195679, MATRIX_M * MATRIX_N * sizeof(half)));
-  cudaErrCheck(cudaMemset(b_fp16, 6462.8195679, MATRIX_M * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMemcpy(a_fp16, a_host_fp16, sizeof(half) * MATRIX_M * MATRIX_N,
+                             cudaMemcpyHostToDevice));
+  cudaErrCheck(cudaMemcpy(b_fp16, b_host_fp16, sizeof(half) * MATRIX_M * MATRIX_N,
+                             cudaMemcpyHostToDevice));
+
+  //cudaErrCheck(cudaMemset(a_fp16, 6462.8195679, MATRIX_M * MATRIX_N * sizeof(half)));
+  //cudaErrCheck(cudaMemset(b_fp16, 6462.8195679, MATRIX_M * MATRIX_N * sizeof(half)));
 
   cudaErrCheck(cudaMemset(c_cublas, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
   cudaErrCheck(cudaMemset(c_wmma, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
@@ -460,7 +486,7 @@ int main(int argc, char* argv[]) {
     float v1 = d_host_wmma[i];
     float v2 = d_host_sw[i];
     float v3 = d_host_cublas[i]; 
-    float v4 = fabs(v1/v2);     
+    float v4 = fabs(v2/v1);     
     printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS = %f --------| RELATIVE = %.15f --------| \n", v1, v2, v3, v4);
 
   }
@@ -501,7 +527,8 @@ int main(int argc, char* argv[]) {
  cudaErrCheck(cudaFree(c_cublas));
  cudaErrCheck(cudaFree(c_wmma));
 
- 
+ free(a_host_fp16);
+ free(b_host_fp16);
  free(d_host_cublas);
  free(d_host_wmma);
  free(d_host_sw);
