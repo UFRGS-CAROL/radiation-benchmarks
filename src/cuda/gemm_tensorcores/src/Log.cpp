@@ -79,6 +79,7 @@ std::ostream& operator<<(std::ostream& os, const Log& log_obj) {
 	os << "Tensor cores: " << log_obj.use_tensor_cores << std::endl;
 	os << "Alpha: " << log_obj.alpha << std::endl;
 	os << "Beta: " << log_obj.beta << std::endl;
+	os << "DMR Block checking " << log_obj.check_block << std::endl;
 	os << "LOGFILENAME: " << ::get_log_file_name();
 	return os;
 }
