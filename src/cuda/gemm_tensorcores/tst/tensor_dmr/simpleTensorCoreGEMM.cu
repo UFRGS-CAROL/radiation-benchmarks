@@ -289,15 +289,15 @@ __global__ void convertFp32ToFp16 (half *out, float *in, int n) {
 }
 
 __host__ void init_host_matrices(half *a, half *b) {
-  for (int i = 0; i < M_GLOBAL; i++) {
-    for (int j = 0; j < K_GLOBAL; j++) {
-      a[i * K_GLOBAL + j] = (half)(rand() % 100.0f);
+  for (int i = 0; i < WMMA_M; i++) {
+    for (int j = 0; j < WMMA_K; j++) {
+      a[i * WMMA_K + j] = (half)(rand() % 100.0f);
     }  
   }
 
-  for (int i = 0; i < N_GLOBAL; i++) {
-    for (int j = 0; j < K_GLOBAL; j++) {
-      b[i * K_GLOBAL + j] = (half)(rand() % 100.0f);
+  for (int i = 0; i < WMMA_N; i++) {
+    for (int j = 0; j < WMMA_K; j++) {
+      b[i * WMMA_K + j] = (half)(rand() % 100.0f);
       
     }
   }
