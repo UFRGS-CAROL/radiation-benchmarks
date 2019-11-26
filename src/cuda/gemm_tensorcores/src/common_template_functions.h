@@ -131,11 +131,11 @@ static float fabs(half h) {
 
 template<typename real_t>
 bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
-	if(fabs(lhs - rhs) > ZERO_DOUBLE){
-		std::cout << std::setprecision(20) ;
-		std::cout << fabs(lhs - rhs) << std::endl;
-	}
-	return (fabs(lhs - rhs) <= ZERO_DOUBLE);
+//	if(fabs(lhs - rhs) > ZERO_DOUBLE){
+//		std::cout << std::setprecision(20) ;
+//		std::cout << fabs(lhs - rhs) << std::endl;
+//	}
+	return lhs != rhs; //(fabs(lhs - rhs) <= ZERO_DOUBLE);
 }
 
 static bool equals(float& lhs, double& rhs, const uint32_t threshold) {

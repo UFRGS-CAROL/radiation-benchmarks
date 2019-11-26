@@ -77,7 +77,7 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 			real_t ar = As[ty][k];
 			real_t br = Bs[k][tx];
 
-			Csub = ar * (br / t);
+			Csub += ar * (br / t);
 			Csub_dmr += ar * (br * t);
 
 //			if ((k % COUNT) == 0) {
