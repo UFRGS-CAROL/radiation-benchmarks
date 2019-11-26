@@ -77,21 +77,8 @@ __global__ void matrix_mult_kernel_dmr( //Kernel hardening
 			real_t ar = As[ty][k];
 			real_t br = Bs[k][tx];
 
-			Csub = fma(ar, br, Csub);
-//			Csub_dmr = fma(ar, br, Csub_dmr);
-
-//			if ((k % COUNT) == 0) {
-//				check_relative_error(Csub_half, Csub_real);
-//			}
-		}
-
-#pragma unroll
-		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			real_t ar = As[ty][k];
-			real_t br = Bs[k][tx];
-
-//			Csub = fma(ar, br, Csub);
-			Csub_dmr = fma(ar, br, Csub_dmr);
+			Csub = ar * (br / t);
+			Csub_dmr += ar * (br * t);
 
 //			if ((k % COUNT) == 0) {
 //				check_relative_error(Csub_half, Csub_real);
