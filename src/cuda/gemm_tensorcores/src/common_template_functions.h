@@ -165,7 +165,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		auto gold_value = gold[i];
 		real_t full_precision = real_vector[i];
 		half_t half_precision;
-		bool dmr_equals = false;
+		bool dmr_equals = true;
 
 		if (dmr) {
 			half_precision = half_vector[i];
