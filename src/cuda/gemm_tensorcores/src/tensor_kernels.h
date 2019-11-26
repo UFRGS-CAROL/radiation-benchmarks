@@ -15,7 +15,7 @@
 template<typename half_t, typename real_t>
 __global__ void matrix_mult_kernel_wmma_unhardened(half_t *a, half_t *b,
 		real_t *c, real_t *d, real_t alpha, real_t beta, int m, int n, int k) {
-	// Leading dimensions. Packed with no transpositions.
+	// Leading dimensions. Packed with no transposition.
 	int lda = m;
 	int ldb = n;
 	int ldc = m;
@@ -99,8 +99,6 @@ __global__ void matrix_mult_kernel_wmma_dmr(half_t *a, half_t *b, real_t *c,
 
 	nvcuda::wmma::fill_fragment(acc_frag, 0.0f);
 
-	half_t acc_sw = 0;
-
 	// Loop over k
 	for (int i = 0; i < k; i += WMMA_K) {
 		int aRow = warpM * WMMA_M;
@@ -117,12 +115,7 @@ __global__ void matrix_mult_kernel_wmma_dmr(half_t *a, half_t *b, real_t *c,
 
 			// Perform the matrix multiplication
 			nvcuda::wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
-#pragma unroll
-			for (int internal = 0; internal < WMMA_K; internal++) {
-				half_t a_it = a[aRow + aCol * lda + internal];
-				half_t b_it = a[aRow + aCol * lda + internal];
-				acc_sw += a_it * b_it;
-			}
+
 
 		}
 	}
@@ -134,6 +127,8 @@ __global__ void matrix_mult_kernel_wmma_dmr(half_t *a, half_t *b, real_t *c,
 	if (cRow < M && cCol < N) {
 		nvcuda::wmma::load_matrix_sync(c_frag, c + cRow + cCol * ldc, ldc,
 				nvcuda::wmma::mem_col_major);
+
+		half_t acc_sw = 0;
 
 		for (int i = 0; i < c_frag.num_elements; i++) {
 			c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];

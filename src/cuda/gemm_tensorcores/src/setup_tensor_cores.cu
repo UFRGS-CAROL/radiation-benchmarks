@@ -17,7 +17,7 @@ struct TensorCoresCaller {
 			rad::DeviceVector<real_t>& d_dev, 			//D matrix
 			rad::DeviceVector<real_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
-			const uint32_t threshold) ;
+			const uint32_t threshold);
 
 	virtual std::vector<real_t> memcpy_half_t_mem(
 			rad::DeviceVector<real_t>& d_dev_half_t);
@@ -49,7 +49,6 @@ struct UnhardenedTensorCoresCaller: public TensorCoresCaller<half_t, real_t> {
 		matrix_mult_kernel_wmma_unhardened<<<this->dim_grid, this->dim_block>>>(
 				a_dev.data(), b_dev.data(), c_dev.data(), d_dev.data(), alpha,
 				beta, wA, wB, wA);
-
 	}
 
 	std::vector<real_t> memcpy_half_t_mem(
@@ -59,6 +58,8 @@ struct UnhardenedTensorCoresCaller: public TensorCoresCaller<half_t, real_t> {
 
 	UnhardenedTensorCoresCaller(uint32_t m, uint32_t n) :
 			TensorCoresCaller<half_t, real_t>(m, n) {
+		std::cout << this->dim_block << std::endl;
+		std::cout << this->dim_grid << std::endl;
 	} //default constructor
 };
 
@@ -86,6 +87,7 @@ struct DMRTensorCoresCaller: public TensorCoresCaller<half_t, real_t> {
 
 	DMRTensorCoresCaller(uint32_t m, uint32_t n) :
 			TensorCoresCaller<half_t, real_t>(m, n) {
+		this->duplicated = true;
 	} //default constructor
 };
 
@@ -110,7 +112,7 @@ void setup_execute(Log& log_obj, TensorCoresCaller<half_t, real_t>& mult_env,
 	if (log_obj.generate) {
 		std::cout << "Generating input matrices\n";
 		generate_input_matrices(log_obj.size_matrices, a_vector_host,
-				b_vector_host, c_vector_host);
+				b_vector_host, c_vector_host, true);
 	} else {
 		std::cout << "Reading input matrices\n";
 		read_gold(a_vector_host, b_vector_host, c_vector_host, gold_host,
@@ -208,11 +210,11 @@ void setup_execute(Log& log_obj, TensorCoresCaller<half_t, real_t>& mult_env,
  * Setup for Tensor (GEMM)
  */
 void setup_gemm_tensor_cores_unhardened(Log& log) {
-//	if (log.precision == "half") {
-//		UnhardenedTensorCoresCaller<half, half> gemm_obj(log.size_matrices,
-//				log.size_matrices);
-//		setup_execute(log, gemm_obj);
-//	}
+	if (log.precision == "half") {
+		UnhardenedTensorCoresCaller<half, half> gemm_obj(log.size_matrices,
+				log.size_matrices);
+		setup_execute(log, gemm_obj);
+	}
 //
 //	if (log.precision == "float" || log.precision == "single") {
 //		UnhardenedTensorCoresCaller<half, float> gemm_obj(log.size_matrices,
@@ -221,11 +223,11 @@ void setup_gemm_tensor_cores_unhardened(Log& log) {
 //	}
 }
 void setup_gemm_tensor_cores_dmr(Log& log) {
-//	if (log.precision == "half") {
-//		DMRTensorCoresCaller<half, half> gemm_obj(log.size_matrices,
-//				log.size_matrices);
-//		setup_execute(log, gemm_obj, THRESHOLD_1);
-//	}
+	if (log.precision == "half") {
+		DMRTensorCoresCaller<half, half> gemm_obj(log.size_matrices,
+				log.size_matrices);
+		setup_execute(log, gemm_obj, THRESHOLD_1);
+	}
 //
 //	if (log.precision == "float" || log.precision == "single") {
 //		DMRTensorCoresCaller<half, float> gemm_obj(log.size_matrices,

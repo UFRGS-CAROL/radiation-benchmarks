@@ -56,6 +56,8 @@ struct UnhardenedGemmCaller: public GemmCaller<0, real_t, real_t> {
 	}
 	UnhardenedGemmCaller(uint32_t m, uint32_t n) :
 			GemmCaller<0, real_t, real_t>(m, n) {
+		std::cout << this->dim_block << std::endl;
+		std::cout << this->dim_grid << std::endl;
 	} //default constructor
 };
 

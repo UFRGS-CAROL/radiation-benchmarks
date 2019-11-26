@@ -22,8 +22,16 @@
 #endif
 
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
-#define GENERATOR_MAXABSVALUE 1000
-#define GENERATOR_MINABSVALUE 0 //-GENERATOR_MAXABSVALUE
+#define GENERATOR_MAXABSVALUE_GEMM 1000
+#define GENERATOR_MINABSVALUE_GEMM 0
+
+#define GENERATOR_MAXABSVALUE_TENSOR 10
+#define GENERATOR_MINABSVALUE_TENSOR -GENERATOR_MAXABSVALUE_TENSOR
+
+static std::ostream& operator<<(std::ostream& os, const dim3 d) {
+	os << d.x << " " << d.y << " " << d.z;
+	return os;
+}
 
 template<typename T>
 bool read_from_file(std::string& path, std::vector<T>& array) {
@@ -84,14 +92,18 @@ void read_gold(std::vector<half_t>& a_vector, std::vector<half_t>& b_vector,
 
 template<typename half_t, typename real_t>
 void generate_input_matrices(size_t matrix_size, std::vector<half_t>& a_vector,
-		std::vector<half_t>& b_vector, std::vector<real_t>& c_vector) {
+		std::vector<half_t>& b_vector, std::vector<real_t>& c_vector,
+		const bool tensor_input = false) {
 
 	std::random_device rd; //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-	std::uniform_real_distribution<double> dis(GENERATOR_MINABSVALUE,
-	GENERATOR_MAXABSVALUE);
-
-//	std::cout << "MIN " << GENERATOR_MINABSVALUE << " MAX " << GENERATOR_MAXABSVALUE << std::endl;
+	double min_val = GENERATOR_MINABSVALUE_GEMM;
+	double max_val = GENERATOR_MAXABSVALUE_GEMM;
+	if (tensor_input) {
+		min_val = GENERATOR_MINABSVALUE_TENSOR;
+		max_val = GENERATOR_MAXABSVALUE_TENSOR;
+	}
+	std::uniform_real_distribution<double> dis(min_val, max_val);
 
 	a_vector.resize(matrix_size * matrix_size);
 	b_vector.resize(matrix_size * matrix_size);
@@ -131,11 +143,11 @@ static float fabs(half h) {
 
 template<typename real_t>
 bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
-//	if(fabs(lhs - rhs) > ZERO_DOUBLE){
-//		std::cout << std::setprecision(20) ;
-//		std::cout << fabs(lhs - rhs) << std::endl;
-//	}
-	return lhs == rhs; //(fabs(lhs - rhs) <= ZERO_DOUBLE);
+	return lhs == rhs;
+}
+
+static bool equals(half& lhs, half& rhs, const uint32_t threshold = 0) {
+	return float(lhs) == float(rhs);
 }
 
 static bool equals(float& lhs, double& rhs, const uint32_t threshold) {
@@ -171,6 +183,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		if (dmr) {
 			half_precision = half_vector[i];
 			dmr_equals = equals(half_precision, full_precision, threshold);
+//			std::cout << half_precision << " " << full_precision << std::endl;
 		} else {
 			half_precision = full_precision;
 		}
@@ -191,7 +204,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 			error_detail << ", e: " << gold_value << " smaller_precision: "
 					<< half_precision;
 
-			if (log.verbose && (host_errors < 10)){
+			if (log.verbose && (host_errors < 10)) {
 				std::cout << error_detail.str() << std::endl;
 
 				std::cout << is_output_diff << " " << !dmr_equals << std::endl;
@@ -214,7 +227,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		log.log_error(error_detail);
 	}
 
-	if(memory_errors != 0){
+	if (memory_errors != 0) {
 		log.log_info("dmr1_equals_dmr2_detected");
 	}
 
