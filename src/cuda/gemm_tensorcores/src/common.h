@@ -38,13 +38,13 @@
 #define MAX_PERCENTAGE 1.15f
 
 //Threshold for one operation
-#define THRESHOLD_1 26
+#define THRESHOLD_1 0x7f
+#define ONE_OP_CHECK 1
 
-//Threshold for 16 operation
-#define THRESHOLD_31 40
+//Threshold at the end
+#define THRESHOLD_AT_END 0x7f
+#define AT_END_OP_CHECK 33
 
-//Threshold for one operation
-#define THRESHOLD_32 100
 
 void exception(std::string msg, std::string file, int line);
 

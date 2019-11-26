@@ -267,30 +267,23 @@ void setup_gemm_dmr(Log& log) {
 		if (log.dmr == "mixed") {
 			switch (log.check_block) {
 			case 1: {
-//				DMRMixedGemmCaller<1, float, double> gemm_obj(log.size_matrices,
-//						log.size_matrices);
-//				setup_execute(log, gemm_obj, THRESHOLD_1);
-				break;
-
-			}
-			case 31: {
-//				DMRMixedGemmCaller<31, float, double> gemm_obj(
-//						log.size_matrices, log.size_matrices);
-//				setup_execute(log, gemm_obj, THRESHOLD_1);
+				DMRMixedGemmCaller<ONE_OP_CHECK, float, double> gemm_obj(log.size_matrices,
+						log.size_matrices);
+				setup_execute(log, gemm_obj, THRESHOLD_1);
 				break;
 
 			}
 			default: {
 				//The counter will never be 32, so it will check only at the end
-//				DMRMixedGemmCaller<32, float, double> gemm_obj(
-//						log.size_matrices, log.size_matrices);
-//				setup_execute(log, gemm_obj, THRESHOLD_32);
+				DMRMixedGemmCaller<AT_END_OP_CHECK, float, double> gemm_obj(
+						log.size_matrices, log.size_matrices);
+				setup_execute(log, gemm_obj, THRESHOLD_AT_END);
 				break;
 			}
 			}
 
 		} else if (log.dmr == "full") {
-			DMRGemmCaller<32, double> gemm_obj(log.size_matrices,
+			DMRGemmCaller<AT_END_OP_CHECK, double> gemm_obj(log.size_matrices,
 					log.size_matrices);
 			setup_execute(log, gemm_obj);
 		}

@@ -23,7 +23,7 @@
 
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
 #define GENERATOR_MAXABSVALUE 1000
-#define GENERATOR_MINABSVALUE -GENERATOR_MAXABSVALUE
+#define GENERATOR_MINABSVALUE 0 //-GENERATOR_MAXABSVALUE
 
 template<typename T>
 bool read_from_file(std::string& path, std::vector<T>& array) {
@@ -148,6 +148,7 @@ static bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 	memcpy(&lhs_data, &lhs, sizeof(uint32_t));
 	memcpy(&rhs_data, &rhs_float, sizeof(uint32_t));
 	auto diff = SUB_ABS(lhs_data, rhs_data);
+
 	return (diff <= threshold);
 }
 
@@ -198,7 +199,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 
 			log.log_error(error_detail.str());
 			host_errors++;
-			memory_errors += (is_output_diff && dmr_equals);
+			memory_errors += (is_output_diff && dmr_equals && dmr);
 
 #ifdef OMP
 		}
