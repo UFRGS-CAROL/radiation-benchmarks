@@ -42,11 +42,12 @@
 void setup_float(Parameters& parameters, Log& log) {
 
 	switch (parameters.redundancy) {
-	case NONE: {
-		UnhardenedKernelCaller<float> kc;
-		setup_execution(parameters, log, kc);
-		break;
-	}/*
+//	case NONE: {
+//		UnhardenedKernelCaller<float> kc;
+//		setup_execution(parameters, log, kc);
+//		break;
+//	}
+	/*
 	case DMR: {
 		switch (parameters.block_check) {
 		case ONE_BLOCK: {
@@ -93,13 +94,13 @@ void setup_float(Parameters& parameters, Log& log) {
 	}*/
 	case DMRMIXED:
 		switch (parameters.block_check) {
-		case ONE_BLOCK: {
-			//CASE FOR 1 Iteration-------------------
-			DMRMixedKernelCaller<ONE_BLOCK, double, float> kc(THRESHOLD_1);
-			setup_execution(parameters, log, kc);
-
-			break;
-		}
+//		case ONE_BLOCK: {
+//			//CASE FOR 1 Iteration-------------------
+//			DMRMixedKernelCaller<ONE_BLOCK, double, float> kc(THRESHOLD_1);
+//			setup_execution(parameters, log, kc);
+//
+//			break;
+//		}
 			//---------------------------------------
 //		case TWELVE_BLOCK: {
 //			//CASE FOR 10 Iterations-----------------

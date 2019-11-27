@@ -20,78 +20,34 @@
  * the comparison method
  */
 //For 1 iteration
-//00000000 01001100 00000000 00000000
 #define THRESHOLD_1 0x3A007358
 #define ONE_BLOCK 1
 
-//For 10 iterations
-//3e-05
-#define THRESHOLD_12 67108864
-#define TWELVE_BLOCK 12
-
-//For 100 iterations
+//For NUMBER_PAR_PER_BOX iterations
 //9e-05
-#define THRESHOLD_96 5111808
-#define NINETY_BLOCK 96
+#define THRESHOLD_FULL_BLOCK 5111808
+#define FULL_BLOCK NUMBER_PAR_PER_BOX
 
-//For MAX_LAVA iterations
-//4e-03
+//For AT_THE_END iterations
 #define THRESHOLD_MAX 4194304
-#define MAX_BLOCK NUMBER_PAR_PER_BOX
+#define AT_THE_END_BLOCK NUMBER_PAR_PER_BOX + 2
 
 void setup_double(Parameters& parameters, Log& log) {
 
 	switch (parameters.redundancy) {
 	case NONE: {
-//		UnhardenedKernelCaller<double> kc;
-//		setup_execution(parameters, log, kc);
+		UnhardenedKernelCaller<double> kc;
+		setup_execution(parameters, log, kc);
 		break;
-	}/*
+	}
 	case DMR: {
-		switch (parameters.block_check) {
-		case ONE_BLOCK: {
-			//CASE FOR 1 Iteration-------------------
-			DMRKernelCaller<ONE_BLOCK, double> kc;
-			setup_execution(parameters, log, kc);
-
-			break;
-		}
-			//---------------------------------------
-		case TWELVE_BLOCK: {
-			//CASE FOR 10 Iterations-----------------
-			DMRKernelCaller<TWELVE_BLOCK, double> kc;
-			setup_execution(parameters, log, kc);
-
-			break;
-		}
-			//---------------------------------------
-
-//		case NINETY_BLOCK: {
-//			//CASE FOR 100 Iterations----------------
-//			DMRKernelCaller<NINETY_BLOCK, double> kc;
-//			setup_execution(parameters, log, kc);
-//
-//			break;
-//		}
-			//---------------------------------------
-
-		case MAX_BLOCK: {
-			//CASE FOR 100 Iterations----------------
-			DMRKernelCaller<MAX_BLOCK, double> kc;
-			setup_execution(parameters, log, kc);
-
-			break;
-		}
-			//---------------------------------------
-
-		default:
-			error(
-					std::to_string(parameters.block_check)
-							+ " operation check block not supported");
-		}
+		//CASE FOR 1 Iteration-------------------
+		DMRKernelCaller<double> kc;
+		setup_execution(parameters, log, kc);
 		break;
-	}*/
-	case DMRMIXED:
+
+	}
+	case DMRMIXED: {
 		switch (parameters.block_check) {
 		case ONE_BLOCK: {
 			//CASE FOR 1 Iteration-------------------
@@ -100,39 +56,25 @@ void setup_double(Parameters& parameters, Log& log) {
 
 			break;
 		}
-		/*	//---------------------------------------
-		case TWELVE_BLOCK: {
-			//CASE FOR 10 Iterations-----------------
-			DMRMixedKernelCaller<TWELVE_BLOCK, THRESHOLD_12, float, double> kc;
-			setup_execution(parameters, log, kc);
+			//---------------------------------------
 
+		case THRESHOLD_FULL_BLOCK: {
+			//CASE AT THE END Iterations----------------
+			DMRMixedKernelCaller<FULL_BLOCK, float, double> kc(
+			THRESHOLD_FULL_BLOCK);
+			setup_execution(parameters, log, kc);
 			break;
 		}
 			//---------------------------------------
-//
-//		case NINETY_BLOCK: {
-//			//CASE FOR 100 Iterations----------------
-//			DMRMixedKernelCaller<NINETY_BLOCK, THRESHOLD_96, float, double> kc;
-//			setup_execution(parameters, log, kc);
-//
-//			break;
-//		}
-			//---------------------------------------
-//
-//		case MAX_BLOCK: {
-//			//CASE FOR 100 Iterations----------------
-//			DMRMixedKernelCaller<MAX_BLOCK, THRESHOLD_MAX, float, double> kc;
-//			setup_execution(parameters, log, kc);
-//
-//			break;
-//		}
-			//---------------------------------------
 
 		default:
-			error(
-					std::to_string(parameters.block_check)
-							+ " operation check block not supported");
-		*/}
+			//CASE AT THE END Iterations----------------
+			DMRMixedKernelCaller<AT_THE_END_BLOCK, float, double> kc(
+			THRESHOLD_MAX);
+			setup_execution(parameters, log, kc);
+
+		}
 		break;
+	}
 	}
 }

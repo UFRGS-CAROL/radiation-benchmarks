@@ -24,21 +24,13 @@ struct KernelCaller {
 	VectorOfDeviceVector<FOUR_VECTOR<half_t>> d_fv_gpu_ht;
 	std::vector<std::vector<FOUR_VECTOR<half_t>>>fv_cpu_ht;
 
-	virtual ~KernelCaller() {}
+	virtual ~KernelCaller() = default; //{}
 
-	virtual void set_half_t_vectors(uint32_t nstreams, uint32_t element_per_stream) {
+	virtual void set_half_t_vectors(uint32_t nstreams, uint32_t element_per_stream) {}
+	virtual void sync_half_t() {}
+	virtual void clear_half_t() {}
 
-	}
-	virtual void sync_half_t() {
-
-	}
-	virtual void clear_half_t() {
-
-	}
-
-	virtual uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
-		return 0;
-	}
+	virtual uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {return 0;};
 
 	KernelCaller(const uint32_t threshold = 0) : threshold_(threshold) {}
 
@@ -135,27 +127,12 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 			for(uint32_t j = 0; j < fv_rt_i.size(); j++) {
 				auto& fv_rt_ij = fv_rt_i[j];
 				auto& fv_ht_ij = fv_ht_i[j];
-
-//				auto diff_vector = this->get_4vector_diffs(fv_ht_ij, fv_rt_ij);
-                max_threshold = std::max(std::fabs((real_t)fv_rt_ij.v - (real_t)fv_ht_ij.v), max_threshold);
-                max_threshold = std::max(std::fabs((real_t)fv_rt_ij.x - (real_t)fv_ht_ij.x), max_threshold);
-                max_threshold = std::max(std::fabs((real_t)fv_rt_ij.y - (real_t)fv_ht_ij.y), max_threshold);
-                max_threshold = std::max(std::fabs((real_t)fv_rt_ij.z - (real_t)fv_ht_ij.z), max_threshold);
-
-//
-//				diff_vector.push_back(max_threshold);
-//				max_threshold = *std::max_element(diff_vector.begin(), diff_vector.end());
+				max_threshold = std::max(std::fabs((real_t)fv_rt_ij.v - (real_t)fv_ht_ij.v), max_threshold);
+				max_threshold = std::max(std::fabs((real_t)fv_rt_ij.x - (real_t)fv_ht_ij.x), max_threshold);
+				max_threshold = std::max(std::fabs((real_t)fv_rt_ij.y - (real_t)fv_ht_ij.y), max_threshold);
+				max_threshold = std::max(std::fabs((real_t)fv_rt_ij.z - (real_t)fv_ht_ij.z), max_threshold);
 			}
 		}
-
-		//Test thresholds------------------------------------------------------------------------
-//		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
-//		rad::checkFrameworkErrors(
-//		cudaMemcpyFromSymbol(thresholds_host.data(), thresholds,
-//				sizeof(uint32_t) * THRESHOLD_SIZE, 0, cudaMemcpyDeviceToHost));
-//		std::string path = "../../../data/threshold.data";
-//		File<uint32_t>::write_to_file(path, thresholds_host);
-		std::cout << "MAX THRESHOLD INSIDE CLASS " << max_threshold << std::endl;
 		return max_threshold;
 	}
 
@@ -170,7 +147,6 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 			std::fill(this->fv_cpu_ht[i].begin(), this->fv_cpu_ht[i].end(), FOUR_VECTOR<half_t>());
 			this->d_fv_gpu_ht[i].clear();
 		}
-
 	}
 
 	void set_half_t_vectors(uint32_t nstreams, uint32_t element_per_stream) {
@@ -286,7 +262,6 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		return false;
 	}
 
-
 	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs) {
 		if ((std::fabs(lhs.v - rhs.v) > this->threshold_) ||	//V
 		(std::fabs(lhs.x - rhs.x) > this->threshold_) ||//X
@@ -308,6 +283,26 @@ struct UnhardenedKernelCaller: public KernelCaller<0, real_t, real_t> {
 
 		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu,
 				dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
+	}
+};
+
+template<typename real_t>
+struct DMRKernelCaller: public DMRMixedKernelCaller<NUMBER_PAR_PER_BOX + 2,
+		real_t, real_t> {
+
+	void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream,
+			par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
+			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
+			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
+
+		kernel_gpu_cuda_dmr<NUMBER_PAR_PER_BOX + 1> <<<blocks, threads, 0,
+				stream.stream>>>(par_cpu, dim_cpu, d_box_gpu, d_rv_gpu,
+				d_qv_gpu, d_fv_gpu, this->d_fv_gpu_ht[stream_idx].data(),
+				this->threshold_);
+	}
+
+	DMRKernelCaller() :
+			DMRMixedKernelCaller<NUMBER_PAR_PER_BOX + 2, real_t, real_t>(0) {
 	}
 };
 
