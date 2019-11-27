@@ -10,7 +10,7 @@ BETA=0.1
 SIZE?=4096
 #6384 #8192 #4096 
 ITERATIONS=10
-PRECISION=double
+PRECISION=half
 OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE).matrix
 
 # This is what I use, uncomment if you know your arch and want to specify
@@ -108,7 +108,8 @@ test_gemm_dmr_mixed:
 			--input_a a_$(OUTPUTPREFIX) \
 			--input_b b_$(OUTPUTPREFIX) \
 			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX)		
+			--gold  g_$(OUTPUTPREFIX)	\
+			--opnum $(CHECKBLOCK)	
 
 test_gemm_dmr:
 	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
@@ -118,8 +119,8 @@ test_gemm_dmr:
 			--input_a a_$(OUTPUTPREFIX) \
 			--input_b b_$(OUTPUTPREFIX) \
 			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX)
-			
+			--gold  g_$(OUTPUTPREFIX) 
+						
 test_gemm_non_dmr:
 	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
 			--precision $(PRECISION) --dmr none \

@@ -116,7 +116,6 @@ __global__ void matrix_mult_kernel_wmma_dmr(half_t *a, half_t *b, real_t *c,
 			// Perform the matrix multiplication
 			nvcuda::wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
 
-
 		}
 	}
 
@@ -133,6 +132,18 @@ __global__ void matrix_mult_kernel_wmma_dmr(half_t *a, half_t *b, real_t *c,
 		for (int i = 0; i < c_frag.num_elements; i++) {
 			c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
 		}
+
+		real_t acc_real_t = 0.0;
+		int row = blockIdx.x * blockDim.x + threadIdx.x;
+		int col = blockIdx.y * blockDim.y + threadIdx.y;
+		//for (int internal = i; internal < WMMA_N; internal++) {
+		//  axpy__((float)a[row * M + internal], (float)b[col * N + internal], acc_real_t);
+		for (int it = 0; it < K; it++) {
+
+			acc_real_t += a[row * M + it] * b[col * N + it];
+		}
+
+		d_dmr[row * M + col] = acc_real_t * alpha + beta * c[row * M + col];
 
 		// Store the output
 		nvcuda::wmma::store_matrix_sync(d + cRow + cCol * ldc, c_frag, ldc,
