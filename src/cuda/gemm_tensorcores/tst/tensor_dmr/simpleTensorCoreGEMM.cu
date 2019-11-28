@@ -150,17 +150,6 @@ __global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, fl
 }
 
 
-
-
-
-// Performs an MxNxK GEMM (C=alpha*A*B + beta*C) assuming:
-//  1) Matrices are packed in memory.
-//  2) M, N and K are multiples of 16. 
-//  3) Neither A nor B are transposed.
-// Note: This is NOT a high performance example but is for demonstration purposes only
-//       For a high performance code please use the GEMM provided in cuBLAS.
-
-
 __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, float *d_wmma, int M, int N, int K, float alpha, float beta) {
 
   // Leading dimensions. Packed with no transpositions.
@@ -182,7 +171,7 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, float 
   int row = blockIdx.x * blockDim.x + threadIdx.x;
   int col = blockIdx.y * blockDim.y + threadIdx.y;
 
-    /*    
+        
     if (row < M && col < N) {
       register float acc_real_t = 0.0;
          
@@ -198,7 +187,7 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, float 
       d_sw[row * M + col] = acc_real_t;
         
     }
-    */
+    
     
     
     
@@ -243,10 +232,10 @@ if (cRow < M && cCol < N) {
       //for (int internal = i; internal < WMMA_N; internal++) {
       //  axpy__((float)a[row * M + internal], (float)b[col * N + internal], acc_real_t);    
       for (int i = 0; i < K; i++) {
-        acc_real_t += (float)a[row * M + i] * (float)b[col * N + i];
+        acc_real_t += (float)a[aRow * M + i] * (float)b[bCol* N + i];
       }   
       
-      d_sw[row * M + col] = acc_real_t * alpha + beta * c[row * M + col];
+      d_sw[cRow * M + cCol] = acc_real_t * alpha + beta * c[cRow * M + cCol];
     }      
   }
 
@@ -256,6 +245,113 @@ if (cRow < M && cCol < N) {
    
 
 }
+
+
+
+
+// Performs an MxNxK GEMM (C=alpha*A*B + beta*C) assuming:
+//  1) Matrices are packed in memory.
+//  2) M, N and K are multiples of 16. 
+//  3) Neither A nor B are transposed.
+// Note: This is NOT a high performance example but is for demonstration purposes only
+//       For a high performance code please use the GEMM provided in cuBLAS.
+
+
+// __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, float *d_wmma, int M, int N, int K, float alpha, float beta) {
+
+//   // Leading dimensions. Packed with no transpositions.
+//   int lda = M;
+//   int ldb = K;
+//   int ldc = M;
+ 
+
+//   // Tile using a 2D grid
+//   int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
+//   int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
+
+//   // Declare the fragments
+//   wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> a_frag;
+//   wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> b_frag;
+//   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
+//   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c_frag;
+      
+//   int row = blockIdx.x * blockDim.x + threadIdx.x;
+//   int col = blockIdx.y * blockDim.y + threadIdx.y;
+
+        
+//     if (row < M && col < N) {
+//       register float acc_real_t = 0.0;
+         
+
+     
+//       for (int i = 0; i < K; i++) {
+//         axpy__((float)a[row * M + i], (float)b[col * N + i], acc_real_t);
+//       }   
+       
+
+     
+
+//       d_sw[row * M + col] = acc_real_t;
+        
+//     }
+    
+    
+    
+    
+//   wmma::fill_fragment(acc_frag, 0.0f);
+
+//     // Loop over k
+//   for (int i = 0; i < K; i += WMMA_K) {
+//     int aRow = warpM * WMMA_M;
+//     int aCol = i;
+
+//     int bRow = i;
+//     int bCol = warpN * WMMA_N;
+
+    
+//     // Bounds checking
+//     if (aRow < M && aCol < K && bRow < K && bCol < N) {
+//          // Load the inputs
+//       wmma::load_matrix_sync(a_frag, a + aRow + aCol * lda, lda);
+//       wmma::load_matrix_sync(b_frag, b + bRow + bCol * ldb, ldb);
+
+//          // Perform the matrix multiplication
+//       wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
+
+//     }
+// }
+
+//    // Load in the current value of c, scale it by beta, and add this our result scaled by alpha
+// int cRow = warpM * WMMA_M;
+// int cCol = warpN * WMMA_N;
+
+// if (cRow < M && cCol < N) {
+//   wmma::load_matrix_sync(c_frag, c + cRow + cCol * ldc, ldc, wmma::mem_col_major);
+
+
+//   for(int i=0; i < c_frag.num_elements; i++) {
+   
+//     c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
+//     if (row < M && col < N) {
+      
+//       register float acc_real_t = 0.0;
+
+//       //for (int internal = i; internal < WMMA_N; internal++) {
+//       //  axpy__((float)a[row * M + internal], (float)b[col * N + internal], acc_real_t);    
+//       for (int i = 0; i < K; i++) {
+//         acc_real_t += (float)a[row * M + i] * (float)b[col * N + i];
+//       }   
+      
+//       d_sw[row * M + col] = acc_real_t * alpha + beta * c[row * M + col];
+//     }      
+//   }
+
+//       // Store the output
+//   wmma::store_matrix_sync(d_wmma + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
+// }
+   
+
+// }
 
 
 __global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
