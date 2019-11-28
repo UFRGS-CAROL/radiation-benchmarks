@@ -167,8 +167,9 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		auto val_output = fv_cpu_rt[i];
 		auto val_output_ht = this->fv_cpu_ht[streamIdx][i];
 
-		if (val_gold != val_output
-		|| check_bit_error(val_output_ht, val_output)) {
+		if (val_gold != val_output || check_bit_error(val_output_ht, val_output)
+		)
+		{
 #pragma omp critical
 			{
 				host_errors++;
@@ -202,8 +203,6 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 	FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 	FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
-		std::cout << "BLOCKS " << blocks.x << " " << blocks.y << std::endl;
-
 		kernel_gpu_cuda_dmr<COUNT> <<<blocks, threads, 0, stream.stream>>>(
 		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
 		this->d_fv_gpu_ht[stream_idx].data(), this->threshold_);
@@ -256,6 +255,10 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 
 		for(auto it : diff_vec) {
 			if(it > this->threshold_) {
+//				std::cout << diff_vec[0] << std::endl;
+//				std::cout << diff_vec[1] << std::endl;
+//				std::cout << diff_vec[2] << std::endl;
+//				std::cout << diff_vec[3] << std::endl;
 				return true;
 			}
 		}
@@ -295,10 +298,16 @@ struct DMRKernelCaller: public DMRMixedKernelCaller<NUMBER_PAR_PER_BOX + 2,
 			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
 
-		kernel_gpu_cuda_dmr<NUMBER_PAR_PER_BOX + 1> <<<blocks, threads, 0,
-				stream.stream>>>(par_cpu, dim_cpu, d_box_gpu, d_rv_gpu,
-				d_qv_gpu, d_fv_gpu, this->d_fv_gpu_ht[stream_idx].data(),
-				this->threshold_);
+//		kernel_gpu_cuda_dmr<NUMBER_PAR_PER_BOX + 1> <<<blocks, threads, 0,
+//				stream.stream>>>(par_cpu, dim_cpu, d_box_gpu, d_rv_gpu,
+//				d_qv_gpu, d_fv_gpu, this->d_fv_gpu_ht[stream_idx].data(),
+//				this->threshold_);
+
+		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu,
+				dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
+		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu,
+				dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu,
+				this->d_fv_gpu_ht[stream_idx].data());
 	}
 
 	DMRKernelCaller() :

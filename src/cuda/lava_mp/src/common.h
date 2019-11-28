@@ -13,13 +13,11 @@
 #define __DEVICE_INLINE__ __device__ __forceinline__
 #define __DEVICE_HOST_INLINE__ __device__ __host__ __forceinline__
 
-
 // MIN percent
-#define MIN_PERCENTAGE 0.85f
+#define MIN_PERCENTAGE 0.99f
 
 // MAX percent
-#define MAX_PERCENTAGE 1.15f
-
+#define MAX_PERCENTAGE 1.001f
 
 /**
  =============================================================================
@@ -76,8 +74,7 @@ static std::unordered_map<std::string, REDUNDANCY> RED = {
 		//DMR
 		{ "dmr", DMR },
 		// DMRMIXED
-		{ "dmrmixed", DMRMIXED },
-		};
+		{ "dmrmixed", DMRMIXED }, };
 
 static std::unordered_map<std::string, PRECISION> PRE = {
 //HALF
