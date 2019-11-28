@@ -237,9 +237,9 @@ if (cRow < M && cCol < N) {
 
     // Loop over all the sub-matrices of A and B
     // required to compute the block sub-matrix
-    for (int a = aBegin, b = bBegin;
-            a <= aEnd;
-            a += aStep, b += bStep) {
+    for (int a_f = aBegin, b_f = bBegin;
+            a_f <= aEnd;
+            a_f += aStep, b_f += bStep) {
         // Declaration of the shared memory array As used to
         // store the sub-matrix of A
         __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
@@ -251,8 +251,8 @@ if (cRow < M && cCol < N) {
         // Load the matrices from device memory
         // to shared memory; each thread loads
         // one element of each matrix
-        As[ty][tx] = A[a + WMMA_N * ty + tx];
-        Bs[ty][tx] = B[b + WMMA_N * ty + tx];
+        As[ty][tx] = a[a_f + WMMA_N * ty + tx];
+        Bs[ty][tx] = b[b_f+ WMMA_N * ty + tx];
 
         // Synchronize to make sure the matrices are loaded
         __syncthreads();
@@ -275,7 +275,7 @@ if (cRow < M && cCol < N) {
     // Write the block sub-matrix to device memory;
     // each thread writes one element
     int c = WMMA_N * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-    C[c + WMMA_N * ty + tx] = Csub;
+    d_sw[c + WMMA_N * ty + tx] = Csub;
 
   }
 
