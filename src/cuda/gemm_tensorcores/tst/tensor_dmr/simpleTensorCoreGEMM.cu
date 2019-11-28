@@ -410,10 +410,10 @@ int main(int argc, char* argv[]) {
 
    // MXM DIMENSIONS
    
-  //blockDim.x = WMMA_M; //128;
-  //blockDim.y = WMMA_N;
-  blockDim.x = 128;
-  blockDim.y = 4;
+  blockDim.x = WMMA_M; //128;
+  blockDim.y = WMMA_N;
+  //blockDim.x = 128;
+  //blockDim.y = 4;
 
   //printf("Running  mxm with MXM thread dimensions...\n");
  
