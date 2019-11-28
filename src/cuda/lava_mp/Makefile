@@ -88,5 +88,18 @@ test:
 				-opnum $(OPERATIONNUM) -precision $(PRECISION) -redundancy $(DMR)
 				
 
+test_no_dmr:
+	./$(EXEC) -boxes $(DEF_SIZE) -streams $(STREAMS) \
+				-iterations 10 -verbose \
+				-input_distances $(DISTANCES_INPUT) \
+				-input_charges $(CHARGES_INPUT) \
+				-output_gold $(GOLD) \
+				-opnum $(OPERATIONNUM) -precision $(PRECISION) -redundancy none
 	
-	
+test_dmr_till_end:
+	./$(EXEC) -boxes $(DEF_SIZE) -streams $(STREAMS) \
+				-iterations 10 -verbose \
+				-input_distances $(DISTANCES_INPUT) \
+				-input_charges $(CHARGES_INPUT) \
+				-output_gold $(GOLD) -opnum 44444\
+				-opnum $(OPERATIONNUM) -precision $(PRECISION) -redundancy $(DMR)
