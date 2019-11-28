@@ -217,10 +217,10 @@ if (cRow < M && cCol < N) {
     int ty = threadIdx.y;
 
     // Index of the first sub-matrix of A processed by the block
-    int aBegin = WMMA_N * BLOCK_SIZE * by;
+    int aBegin = MATRIX_N * BLOCK_SIZE * by;
 
     // Index of the last sub-matrix of A processed by the block
-    int aEnd   = aBegin + WMMA_N - 1;
+    int aEnd   = aBegin + MATRIX_N - 1;
 
     // Step size used to iterate through the sub-matrices of A
     int aStep  = BLOCK_SIZE;
@@ -229,7 +229,7 @@ if (cRow < M && cCol < N) {
     int bBegin = BLOCK_SIZE * bx;
 
     // Step size used to iterate through the sub-matrices of B
-    int bStep  = BLOCK_SIZE * WMMA_N;
+    int bStep  = BLOCK_SIZE * MATRIX_N;
 
     // Csub is used to store the element of the block sub-matrix
     // that is computed by the thread
@@ -251,8 +251,8 @@ if (cRow < M && cCol < N) {
         // Load the matrices from device memory
         // to shared memory; each thread loads
         // one element of each matrix
-        As[ty][tx] = a[A + WMMA_N * ty + tx];
-        Bs[ty][tx] = b[B + WMMA_N * ty + tx];
+        As[ty][tx] = a[A + MATRIX_N * ty + tx];
+        Bs[ty][tx] = b[B + MATRIX_N * ty + tx];
 
         // Synchronize to make sure the matrices are loaded
         __syncthreads();
@@ -274,8 +274,8 @@ if (cRow < M && cCol < N) {
 
     // Write the block sub-matrix to device memory;
     // each thread writes one element
-    int c = WMMA_N * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-    d_sw[c + WMMA_N * ty + tx] = Csub;
+    int c = MATRIX_N * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+    d_sw[c + MATRIX_N * ty + tx] = Csub;
 
   }
 
