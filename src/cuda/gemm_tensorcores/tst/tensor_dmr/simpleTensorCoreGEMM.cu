@@ -243,10 +243,10 @@ if (cRow < M && cCol < N) {
       //for (int internal = i; internal < WMMA_N; internal++) {
       //  axpy__((float)a[row * M + internal], (float)b[col * N + internal], acc_real_t);    
       for (int i = 0; i < K; i++) {
-        axpy__(((float)a[row * M + i])*alpha), ((float)b[col * N + i]),((float)(acc_real_t*beta));
+        acc_real_t += a[row * M + i] * b[col * N + i];
       }   
       
-      d_sw[row * M + col] = acc_real_t;
+      d_sw[row * M + col] = acc_real_t * alpha + beta * c[row * M + col];
     }      
   }
 
