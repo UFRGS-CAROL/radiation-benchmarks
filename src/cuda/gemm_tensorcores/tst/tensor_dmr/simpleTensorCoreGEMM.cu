@@ -171,24 +171,7 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, float 
   int row = blockIdx.x * blockDim.x + threadIdx.x;
   int col = blockIdx.y * blockDim.y + threadIdx.y;
 
-        
-    if (row < M && col < N) {
-      register float acc_real_t = 0.0;
-         
-
      
-      for (int i = 0; i < K; i++) {
-        axpy__((float)a[row * M + i], (float)b[col * N + i], acc_real_t);
-      }   
-       
-
-     
-
-      d_sw[row * M + col] = acc_real_t;
-        
-    }
-    
-    
     
     
   wmma::fill_fragment(acc_frag, 0.0f);
@@ -232,6 +215,12 @@ if (cRow < M && cCol < N) {
       //for (int internal = i; internal < WMMA_N; internal++) {
       //  axpy__((float)a[row * M + internal], (float)b[col * N + internal], acc_real_t);    
       for (int i = 0; i < K; i++) {
+
+        int aRow = warpM * WMMA_M;
+        int aCol = i;
+
+        int bRow = i;
+        int bCol = warpN * WMMA_N;
         acc_real_t += (float)a[aRow * M + i] * (float)b[bCol* N + i];
       }   
       
