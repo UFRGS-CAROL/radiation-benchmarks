@@ -38,24 +38,29 @@ double exp__(double lhs) {
 }
 
 __DEVICE_INLINE__
-void check_bit_error(float& lhs, double& rhs, const uint32_t threshold) {
+void check_bit_error(float& lhs, double& rhs) {
 	float rhs_float = float(rhs);
-//	uint32_t rhs_data = *((uint32_t*) (&rhs_float));
-//	uint32_t lhs_data = *((uint32_t*) (&lhs));
-//	uint32_t sub_res = SUB_ABS(lhs_data, rhs_data);
 	float relative = __fdividef(lhs, rhs_float);
 
 	if (relative < MIN_PERCENTAGE && relative > MAX_PERCENTAGE) {
-		printf("%f %lf %u\n", lhs, rhs, threshold);
+//		printf("%f %lf %lf\n", lhs, rhs, relative);
+
 		atomicAdd(&errors, 1);
 	}
 }
 
 __DEVICE_INLINE__
-void check_bit_error(double& rhs, float& lhs, const uint32_t threshold) {
-	check_bit_error(lhs, rhs, threshold);
-}
+void check_bit_error(float& lhs, double& rhs, const uint32_t threshold) {
+	float rhs_float = float(rhs);
+	uint32_t rhs_data = *((uint32_t*) (&rhs_float));
+	uint32_t lhs_data = *((uint32_t*) (&lhs));
+	uint32_t sub_res = SUB_ABS(lhs_data, rhs_data);
 
+	if (sub_res > threshold) {
+//		printf("%f %lf %u\n", lhs, rhs, sub_res);
+		atomicAdd(&errors, 1);
+	}
+}
 
 __DEVICE_INLINE__
 void check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs, const uint32_t threshold) {
@@ -67,9 +72,12 @@ void check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs, const ui
 }
 
 __DEVICE_INLINE__
-void check_bit_error(FOUR_VECTOR<double>& rhs, FOUR_VECTOR<float>& lhs, const uint32_t threshold) {
+void check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs) {
 	//CHECK each one of the coordinates
-	check_bit_error(lhs, rhs, threshold);
+	check_bit_error(lhs.v, rhs.v);
+	check_bit_error(lhs.x, rhs.x);
+	check_bit_error(lhs.y, rhs.y);
+	check_bit_error(lhs.z, rhs.z);
 }
 
 template<typename real_t> __DEVICE_INLINE__
