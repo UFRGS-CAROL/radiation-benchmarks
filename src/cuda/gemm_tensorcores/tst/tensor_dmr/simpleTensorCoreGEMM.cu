@@ -195,11 +195,26 @@ __global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, float 
       wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
 
     }
+
+      if (row < M && col < N) {
+      
+      register float acc_real_t = 0.0;
+
+      //for (int internal = i; internal < WMMA_N; internal++) {
+      //  axpy__((float)a[row * M + internal], (float)b[col * N + internal], acc_real_t);    
+      for (int j = 0; j < K; j++) {
+
+        acc_real_t += (float)a[aRow * M + j] * (float)b[bCol* N + j];
+      }   
+      
+      
+    } 
 }
 
    // Load in the current value of c, scale it by beta, and add this our result scaled by alpha
 int cRow = warpM * WMMA_M;
 int cCol = warpN * WMMA_N;
+d_sw[cRow * M + cCol] = acc_real_t * alpha + beta * c[cRow * M + cCol];
 
 if (cRow < M && cCol < N) {
   wmma::load_matrix_sync(c_frag, c + cRow + cCol * ldc, ldc, wmma::mem_col_major);
@@ -208,75 +223,7 @@ if (cRow < M && cCol < N) {
   for(int i=0; i < c_frag.num_elements; i++) {
    
     c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
-        // Block index
-    int bx = blockIdx.x;
-    int by = blockIdx.y;
-
-    // Thread index
-    int tx = threadIdx.x;
-    int ty = threadIdx.y;
-
-    // Index of the first sub-matrix of A processed by the block
-    int aBegin = WMMA_N * BLOCK_SIZE * by;
-
-    // Index of the last sub-matrix of A processed by the block
-    int aEnd   = aBegin + WMMA_N - 1;
-
-    // Step size used to iterate through the sub-matrices of A
-    int aStep  = BLOCK_SIZE;
-
-    // Index of the first sub-matrix of B processed by the block
-    int bBegin = BLOCK_SIZE * bx;
-
-    // Step size used to iterate through the sub-matrices of B
-    int bStep  = BLOCK_SIZE * WMMA_N;
-
-    // Csub is used to store the element of the block sub-matrix
-    // that is computed by the thread
-    half Csub = 0;
-
-    // Loop over all the sub-matrices of A and B
-    // required to compute the block sub-matrix
-    for (int a_f = aBegin, b_f = bBegin;
-            a_f <= aEnd;
-            a_f += aStep, b_f += bStep) {
-        // Declaration of the shared memory array As used to
-        // store the sub-matrix of A
-        __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
-
-        // Declaration of the shared memory array Bs used to
-        // store the sub-matrix of B
-        __shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
-
-        // Load the matrices from device memory
-        // to shared memory; each thread loads
-        // one element of each matrix
-        As[ty][tx] = a[a_f + WMMA_N * ty + tx];
-        Bs[ty][tx] = b[b_f+ WMMA_N * ty + tx];
-
-        // Synchronize to make sure the matrices are loaded
-        __syncthreads();
-
-        // Multiply the two matrices together;
-        // each thread computes one element
-        // of the block sub-matrix
-#pragma unroll
-
-        for (int k = 0; k < BLOCK_SIZE; ++k) {
-            Csub += As[ty][k] * Bs[k][tx];
-        }
-
-        // Synchronize to make sure that the preceding
-        // computation is done before loading two new
-        // sub-matrices of A and B in the next iteration
-        __syncthreads();
-    }
-
-    // Write the block sub-matrix to device memory;
-    // each thread writes one element
-    int c = WMMA_N * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-    d_sw[c + WMMA_N * ty + tx] = Csub;
-
+     
   }
 
       // Store the output
