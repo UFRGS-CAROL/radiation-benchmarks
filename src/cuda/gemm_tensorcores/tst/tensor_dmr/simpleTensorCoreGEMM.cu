@@ -150,92 +150,6 @@ __global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, fl
 }
 
 
-__global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, float *d_wmma, int M, int N, int K, float alpha, float beta) {
-
-  // Leading dimensions. Packed with no transpositions.
-  int lda = M;
-  int ldb = K;
-  int ldc = M;
- 
-
-  // Tile using a 2D grid
-  int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
-  int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
-
-  // Declare the fragments
-  wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> a_frag;
-  wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> b_frag;
-  wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
-  wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c_frag;
-      
-  int row = blockIdx.x * blockDim.x + threadIdx.x;
-  int col = blockIdx.y * blockDim.y + threadIdx.y;
-
-     
-    
-    
-  wmma::fill_fragment(acc_frag, 0.0f);
-  register float acc_real_t = 0.0;
-    // Loop over k
-  for (int i = 0; i < K; i += WMMA_K) {
-    int aRow = warpM * WMMA_M;
-    int aCol = i;
-
-    int bRow = i;
-    int bCol = warpN * WMMA_N;
-
-    
-    // Bounds checking
-    if (aRow < M && aCol < K && bRow < K && bCol < N) {
-         // Load the inputs
-      wmma::load_matrix_sync(a_frag, a + aRow + aCol * lda, lda);
-      wmma::load_matrix_sync(b_frag, b + bRow + bCol * ldb, ldb);
-
-         // Perform the matrix multiplication
-      wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
-
-    }
-
-      if (row < M && col < N) {
-      
-      
-
-      //for (int internal = i; internal < WMMA_N; internal++) {
-      //  axpy__((float)a[row * M + internal], (float)b[col * N + internal], acc_real_t);    
-      for (int j = 0; j < K; j++) {
-
-        acc_real_t += (float)a[aRow * M + j] * (float)b[bCol* N + j];
-      }   
-      
-      
-    } 
-}
-
-   // Load in the current value of c, scale it by beta, and add this our result scaled by alpha
-int cRow = warpM * WMMA_M;
-int cCol = warpN * WMMA_N;
-d_sw[cRow * M + cCol] = acc_real_t * alpha + beta * c[cRow * M + cCol];
-
-if (cRow < M && cCol < N) {
-  wmma::load_matrix_sync(c_frag, c + cRow + cCol * ldc, ldc, wmma::mem_col_major);
-
-
-  for(int i=0; i < c_frag.num_elements; i++) {
-   
-    c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
-     
-  }
-
-      // Store the output
-  wmma::store_matrix_sync(d_wmma + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
-}
-   
-
-}
-
-
-
-
 // Performs an MxNxK GEMM (C=alpha*A*B + beta*C) assuming:
 //  1) Matrices are packed in memory.
 //  2) M, N and K are multiples of 16. 
@@ -341,28 +255,80 @@ if (cRow < M && cCol < N) {
 // }
 
 
-__global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
 
-   int row = blockIdx.x * blockDim.x + threadIdx.x;
-   int col = blockIdx.y * blockDim.y + threadIdx.y;
-    
-   if (row < M && col < N) {
-      register float acc_real_t = 0.0;
-       
+__global__ void matrix_mult(half *A, half *B, int N,
+    int M, float *C) {
+  // Block index
+  int bx = blockIdx.x;
+  int by = blockIdx.y;
 
-   
-      for (int i = 0; i < K; i++) {
-         axpy__((float)A[row * M + i], (float)B[col * N + i], acc_real_t);
-      }   
-     
+  // Thread index
+  int tx = threadIdx.x;
+  int ty = threadIdx.y;
 
-   
+  // Index of the first sub-matrix of A processed by the block
+  int aBegin = wA * BLOCK_SIZE * by;
 
-      C[row * M + col] = acc_real_t;
-      
-   }
+  // Index of the last sub-matrix of A processed by the block
+  int aEnd   = aBegin + wA - 1;
 
+  // Step size used to iterate through the sub-matrices of A
+  int aStep  = BLOCK_SIZE;
+
+  // Index of the first sub-matrix of B processed by the block
+  int bBegin = BLOCK_SIZE * bx;
+
+  // Step size used to iterate through the sub-matrices of B
+  int bStep  = BLOCK_SIZE * wB;
+
+  // Csub is used to store the element of the block sub-matrix
+  // that is computed by the thread
+  float Csub = 0;
+
+  // Loop over all the sub-matrices of A and B
+  // required to compute the block sub-matrix
+  for (int a = aBegin, b = bBegin;
+       a <= aEnd;
+       a += aStep, b += bStep) {
+    // Declaration of the shared memory array As used to
+    // store the sub-matrix of A
+    __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Declaration of the shared memory array Bs used to
+    // store the sub-matrix of B
+    __shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Load the matrices from device memory
+    // to shared memory; each thread loads
+    // one element of each matrix
+    As[ty][tx] = A[a + wA * ty + tx];
+    Bs[ty][tx] = B[b + wB * ty + tx];
+
+    // Synchronize to make sure the matrices are loaded
+    __syncthreads();
+
+    // Multiply the two matrices together;
+    // each thread computes one element
+    // of the block sub-matrix
+#pragma unroll
+
+    for (int k = 0; k < BLOCK_SIZE; ++k) {
+      Csub += (float)As[ty][k] * (float)Bs[k][tx];
+    }
+
+    // Synchronize to make sure that the preceding
+    // computation is done before loading two new
+    // sub-matrices of A and B in the next iteration
+    __syncthreads();
+  }
+
+  // Write the block sub-matrix to device memory;
+  // each thread writes one element
+  int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+  C[c + wB * ty + tx] = Csub;
 }
+
+
 
 __global__ void convertFp32ToFp16 (half *out, float *in, int n) {
    int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -507,13 +473,14 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaEventRecord(startMXM));
    
    // ---- MXM SW ----//
-  //matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
-   
+  matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_sw);
+  wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+  __syncthreads();
    
    // ---- DMR --- //
-  printf("Running  dmr with tensor thread dimensions...\n");
+  //printf("Running  dmr with tensor thread dimensions...\n");
   
-  wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_sw, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+  //wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_sw, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   cudaErrCheck(cudaEventRecord(stopMXM));
  
    
@@ -555,21 +522,21 @@ int main(int argc, char* argv[]) {
 
   }
    
-  /*
-  float wmmaTime;
-  float cublasTime;
+  
+  //float wmmaTime;
+  //float cublasTime;
   float mxmTime;
-  cudaErrCheck(cudaEventSynchronize(stopWMMA));
-  cudaErrCheck(cudaEventSynchronize(stopcublas));
+  //cudaErrCheck(cudaEventSynchronize(stopWMMA));
+  //cudaErrCheck(cudaEventSynchronize(stopcublas));
   cudaErrCheck(cudaEventSynchronize(stopMXM));
 
   //cudaErrCheck(cudaEventElapsedTime(&wmmaTime, startWMMA, stopWMMA));
-  cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
+  //cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
   cudaErrCheck(cudaEventElapsedTime(&mxmTime, startMXM, stopMXM));
   //printf("wmma took %fms\n", wmmaTime);
-  printf("cublas took %fms\n", cublasTime);
+  //printf("cublas took %fms\n", cublasTime);
   printf("mxm took %fms\n", mxmTime);
-  */
+  
      
    
  
