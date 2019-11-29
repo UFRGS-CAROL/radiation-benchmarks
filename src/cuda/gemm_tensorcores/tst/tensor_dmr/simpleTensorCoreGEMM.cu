@@ -256,8 +256,8 @@ __global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, fl
 
 
 
-__global__ void matrix_mult(half *A, half *B, int N,
-    int M, float *C) {
+__global__ void matrix_mult(half *A, half *B, int Wa,
+    int Wb, float *C) {
   // Block index
   int bx = blockIdx.x;
   int by = blockIdx.y;
@@ -473,7 +473,7 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaEventRecord(startMXM));
    
    // ---- MXM SW ----//
-  matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_sw);
+  matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw);
   wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   __syncthreads();
    
