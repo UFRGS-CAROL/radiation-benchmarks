@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <curand.h>
 #include <cublas_v2.h>
+#include <stdint.h>
 
 // Define some error checking macros.
 #define cudaErrCheck(stat) { cudaErrCheck_((stat), __FILE__, __LINE__); }
