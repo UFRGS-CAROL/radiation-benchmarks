@@ -256,8 +256,8 @@ __global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, fl
 
 
 
-__global__ void matrix_mult(half *A, half *B, int Wa,
-    int Wb, float *C) {
+__global__ void matrix_mult(half *A, half *B, int wA,
+    int wB, float *C) {
   // Block index
   int bx = blockIdx.x;
   int by = blockIdx.y;
