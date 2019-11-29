@@ -483,11 +483,8 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaEventRecord(startMXM));
    
    // ---- MXM SW ----//
-<<<<<<< HEAD
-  matrix_mult<<< dim_grid, dim_block >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw);
-=======
   matrix_mult<<< dim_grid, dim_block >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw, alpha, beta);
->>>>>>> bedeb5ca875362d257f847f0e6a0369e1c3ad101
+
   wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   cudaErrCheck(cudaDeviceSynchronize());
    
