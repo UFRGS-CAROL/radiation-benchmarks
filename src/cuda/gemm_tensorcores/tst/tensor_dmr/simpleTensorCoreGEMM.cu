@@ -438,6 +438,9 @@ int main(int argc, char* argv[]) {
   // WMMA TENSOR //
   dim3 gridDim;
   dim3 blockDim;
+
+  dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+  dim3 grid(WMMA_M/ threads.x, WMMA_N / threads.y);
  
   // blockDim.x must be a multple of warpSize
   // 128x4 means we have 16 warps and a block computes a 64x64 output tile
@@ -473,8 +476,8 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaEventRecord(startMXM));
    
    // ---- MXM SW ----//
-  //matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw);
-  wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+  matrix_mult<<< grid, threads >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw);
+  //wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   //cudaErrCheck(cudaDeviceSynchronize());
    
    // ---- DMR --- //
