@@ -449,11 +449,11 @@ int main(int argc, char* argv[]) {
   gridDim.y = (MATRIX_N + WMMA_N * blockDim.y - 1) / (WMMA_N * blockDim.y);
 
    
-  printf("Running with wmma thread dimensions...\n");
-  cudaErrCheck(cudaEventRecord(startWMMA));
+  //printf("Running with wmma thread dimensions...\n");
+  //cudaErrCheck(cudaEventRecord(startWMMA));
   //wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   
-  cudaErrCheck(cudaEventRecord(stopWMMA));
+  //cudaErrCheck(cudaEventRecord(stopWMMA));
 
    
 
@@ -475,7 +475,7 @@ int main(int argc, char* argv[]) {
    // ---- MXM SW ----//
   matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw);
   wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
-  cudaDeviceSynchronize();
+  cudaErrCheck(cudaDeviceSynchronize());
    
    // ---- DMR --- //
   //printf("Running  dmr with tensor thread dimensions...\n");
@@ -486,7 +486,7 @@ int main(int argc, char* argv[]) {
    
 
 
-   
+  /* 
   // Now using cuBLAS
   printf("Running with cuBLAS...\n");
   cudaErrCheck(cudaEventRecord(startcublas));
@@ -499,12 +499,12 @@ int main(int argc, char* argv[]) {
                 c_cublas, CUDA_R_32F, MATRIX_M,
                 CUDA_R_32F, CUBLAS_GEMM_DEFAULT));
   cudaErrCheck(cudaEventRecord(stopcublas));
-   
+  */ 
 
 
   // Error checking
   printf("\nChecking results...\n");
-  cudaErrCheck(cudaMemcpy(d_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+  //cudaErrCheck(cudaMemcpy(d_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
   cudaErrCheck(cudaMemcpy(d_host_sw, d_sw, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
   cudaErrCheck(cudaMemcpy(d_host_wmma, d_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
 
@@ -516,9 +516,9 @@ int main(int argc, char* argv[]) {
   for (int i = 0; i <  20; i++) {      
     float v1 = d_host_wmma[i];
     float v2 = d_host_sw[i];
-    float v3 = d_host_cublas[i]; 
+    //float v3 = d_host_cublas[i]; 
     float v4 = fabs(v2/v1);     
-    printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS = %f --------| RELATIVE = %.15f --------| \n", v1, v2, v3, v4);
+    printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS =  --------| RELATIVE = %.15f --------| \n", v1, v2, v4);
 
   }
    
