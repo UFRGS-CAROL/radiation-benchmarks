@@ -314,10 +314,9 @@ struct DMRKernelCaller: public DMRMixedKernelCaller<NUMBER_PAR_PER_BOX + 2,
 		 threads.x = NUMBER_THREADS;
 		 so the number of elements
 		 */
-		static uint32_t elements = blocks.x * NUMBER_PAR_PER_BOX * threads.x;
+		static uint32_t elements = blocks.x * threads.x;
 		static uint32_t thread_block = 1024;
-		static uint32_t thread_grid = ceil(
-				float(elements) / float(thread_block));
+		static uint32_t thread_grid = ceil(float(elements) / float(thread_block));
 
 		compare_two_outputs<<<thread_grid, thread_block, 0, stream.stream>>>(
 				d_fv_gpu, this->d_fv_gpu_ht[stream_idx].data());
