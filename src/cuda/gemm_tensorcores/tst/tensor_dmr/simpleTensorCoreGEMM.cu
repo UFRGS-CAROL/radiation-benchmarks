@@ -482,8 +482,8 @@ int main(int argc, char* argv[]) {
    
    // ---- MXM SW ----//
   matrix_mult<<< dim_grid, dim_block >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw);
-//  wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
-//  cudaErrCheck(cudaDeviceSynchronize());
+  wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+  cudaErrCheck(cudaDeviceSynchronize());
    
    // ---- DMR --- //
   //printf("Running  dmr with tensor thread dimensions...\n");
@@ -526,7 +526,7 @@ int main(int argc, char* argv[]) {
     float v2 = d_host_sw[i];
     //float v3 = d_host_cublas[i]; 
     float v4 = fabs(v2/v1);     
-    printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS =  --------| RELATIVE = %.15f --------| \n", v1, v2, v4);
+    printf("TENSOR = %f  | ------  MXM = %f  ----- | RELATIVE = %.15f --------| \n", v1, v2, v4);
 
   }
    
