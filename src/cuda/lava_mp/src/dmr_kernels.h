@@ -43,7 +43,6 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu,
 		int first_i;
 		FOUR_VECTOR<real_t> *rA;
 		FOUR_VECTOR<real_t> *fA;
-		FOUR_VECTOR<half_t> *fA_half;
 
 		__shared__ FOUR_VECTOR<real_t> rA_shared[200];
 
@@ -67,6 +66,13 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu,
 		real_t fzij;
 		THREE_VECTOR<real_t> d;
 
+		//DMR
+		half_t fxij_half, fyij_half, fzij_half;
+		FOUR_VECTOR<half_t> *fA_half;
+		THREE_VECTOR<half_t> d_half;
+		FOUR_VECTOR<half_t> rA_half, rB_half;
+		half_t r2_half_t;
+		half_t u2_half, vij_half, fs_half;
 		//-------------------------------------------------------------
 		//	Home box
 		//-------------------------------------------------------------
@@ -148,6 +154,26 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu,
 				acc_real = fA[wtx];
 				acc_half = acc_real;
 				for (j = 0; j < NUMBER_PAR_PER_BOX; j++) {
+					//----DMR----------
+					rA_half = rA_shared[wtx];
+					rB_half = rB_shared[j];
+
+					r2_half_t = rA_half.v + rB_half.v-
+					DOT(
+							rA_half,
+							rB_half
+					);
+					u2_half = a2_half * r2_half_t;
+					vij_half = exp__(-u2_half);
+					fs_half = half_t(2.0) * vij_half;
+					d_half.x = rA_half.x - rB_half.x;
+					fxij_half = fs_half * d_half.x;
+					d_half.y = rA_half.y - rB_half.y;
+					fyij_half = fs_half * d_half.y;
+					d_half.z = rA_half.z - rB_half.z;
+					fzij_half = fs_half * d_half.z;
+
+					//-----------------
 
 					r2 = rA_shared[wtx].v + rB_shared[j].v-
 					DOT(
@@ -155,67 +181,15 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu,
 							rB_shared[j]
 					);
 
-					//----DMR----------
-					FOUR_VECTOR<half_t> rA_half, rB_half;
-					rA_half = rA_shared[wtx];
-					rB_half = rB_shared[j];
-					half_t r2_half_t = rA_half.v + rB_half.v-
-					DOT(
-							rA_half,
-							rB_half
-					);
-					//-----------------
-
 					u2 = a2 * r2;
-					//----DMR----------
-					half_t u2_half = a2_half * r2_half_t;
-					//-----------------
-
 					vij = exp__(-u2);
-					//----DMR----------
-					half_t vij_half = exp__(-u2_half);
-					//-----------------
-
 					fs = real_t(2.0) * vij;
-					//----DMR----------
-					half_t fs_half = half_t(2.0) * vij_half;
-					//-----------------
-
-					//----DMR----------
-					THREE_VECTOR<half_t> d_half;
-					half_t fxij_half, fyij_half, fzij_half;
-					//-----------------
-
 					d.x = rA_shared[wtx].x - rB_shared[j].x;
-
-					//----DMR----------
-					d_half.x = rA_half.x - rB_half.x;
-					//-----------------
-
 					fxij = fs * d.x;
-					//----DMR----------
-					fxij_half = fs_half * d_half.x;
-					//-----------------
-
 					d.y = rA_shared[wtx].y - rB_shared[j].y;
-					//----DMR----------
-					d_half.y = rA_half.y - rB_half.y;
-					//-----------------
-
 					fyij = fs * d.y;
-					//----DMR----------
-					fyij_half = fs_half * d_half.y;
-					//-----------------
-
 					d.z = rA_shared[wtx].z - rB_shared[j].z;
-					//----DMR----------
-					d_half.z = rA_half.z - rB_half.z;
-					//-----------------
-
 					fzij = fs * d.z;
-					//----DMR----------
-					fzij_half = fs_half * d_half.z;
-					//-----------------
 
 					acc_real.v += (real_t) (qB_shared[j] * vij);
 					acc_real.x += (real_t) (qB_shared[j] * fxij);
@@ -243,9 +217,10 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu,
 			// reset work index
 			wtx = tx;
 
-			if(COUNT > NUMBER_PAR_PER_BOX){
-				for(int dmr_it = tx; dmr_it < NUMBER_PAR_PER_BOX; dmr_it += NUMBER_THREADS) {
-					check_bit_error(fA_half[wtx], fA[wtx], THRESHOLD);
+			if (COUNT > NUMBER_PAR_PER_BOX) {
+				for (int dmr_it = tx; dmr_it < NUMBER_PAR_PER_BOX; dmr_it +=
+				NUMBER_THREADS) {
+					check_bit_error(fA_half[dmr_it], fA[dmr_it], THRESHOLD);
 				}
 			}
 
@@ -262,6 +237,12 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu,
 		//------------------------------------------------------------------------------------------------------------------------------------------------------160
 	}
 
+}
+
+template<typename real_t>
+__global__ void compare_two_outputs(real_t* lhs, real_t* rhs) {
+	uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	check_bit_error(lhs[tid], rhs[tid]);
 }
 
 #endif /* DMR_KERNELS_H_ */

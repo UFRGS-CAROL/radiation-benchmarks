@@ -33,35 +33,20 @@
 #define AT_THE_END_BLOCK NUMBER_PAR_PER_BOX + 2
 
 void setup_double(Parameters& parameters, Log& log) {
-	switch (parameters.redundancy) {
-	case NONE: {
+	if (parameters.redundancy == NONE || parameters.generate) {
 		UnhardenedKernelCaller<double> kc;
 		setup_execution(parameters, log, kc);
-		break;
-	}
-	case DMR: {
+	} else if (parameters.redundancy == DMR) {
 		//CASE FOR 1 Iteration-------------------
 		DMRKernelCaller<double> kc;
 		setup_execution(parameters, log, kc);
-		break;
-
-	}
-	case DMRMIXED: {
+	} else if (parameters.redundancy == DMRMIXED) {
 		switch (parameters.block_check) {
 		case ONE_BLOCK: {
 			//CASE FOR 1 Iteration-------------------
 			DMRMixedKernelCaller<ONE_BLOCK, float, double> kc(THRESHOLD_1);
 			setup_execution(parameters, log, kc);
 
-			break;
-		}
-			//---------------------------------------
-
-		case THRESHOLD_FULL_BLOCK: {
-			//CASE AT THE END Iterations----------------
-//			DMRMixedKernelCaller<FULL_BLOCK, float, double> kc(
-//			THRESHOLD_FULL_BLOCK);
-//			setup_execution(parameters, log, kc);
 			break;
 		}
 			//---------------------------------------
@@ -73,7 +58,5 @@ void setup_double(Parameters& parameters, Log& log) {
 			setup_execution(parameters, log, kc);
 
 		}
-		break;
-	}
 	}
 }

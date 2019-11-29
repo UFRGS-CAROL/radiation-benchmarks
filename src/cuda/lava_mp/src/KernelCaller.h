@@ -308,6 +308,18 @@ struct DMRKernelCaller: public DMRMixedKernelCaller<NUMBER_PAR_PER_BOX + 2,
 		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu,
 				dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu,
 				this->d_fv_gpu_ht[stream_idx].data());
+		stream.sync();
+		/*
+		 * 	blocks.x = dim_cpu.number_boxes;
+		 threads.x = NUMBER_THREADS;
+		 so the number of elements
+		 */
+		static uint32_t elements = blocks.x * threads.x;
+		static uint32_t thread_block = 1024;
+		static uint32_t thread_grid = ceil(float(elements) / float(thread_block));
+
+		compare_two_outputs<<<thread_grid, thread_block, 0, stream.stream>>>(
+				d_fv_gpu, this->d_fv_gpu_ht[stream_idx].data());
 	}
 
 	DMRKernelCaller() :
