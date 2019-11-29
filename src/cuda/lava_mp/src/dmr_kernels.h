@@ -243,8 +243,9 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu,
 			// reset work index
 			wtx = tx;
 
-			if(COUNT > NUMBER_PAR_PER_BOX){
-				for(int dmr_it = tx; dmr_it < NUMBER_PAR_PER_BOX; dmr_it += NUMBER_THREADS) {
+			if (COUNT > NUMBER_PAR_PER_BOX) {
+				for (int dmr_it = tx; dmr_it < NUMBER_PAR_PER_BOX; dmr_it +=
+						NUMBER_THREADS) {
 					check_bit_error(fA_half[wtx], fA[wtx], THRESHOLD);
 				}
 			}
@@ -262,6 +263,12 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu,
 		//------------------------------------------------------------------------------------------------------------------------------------------------------160
 	}
 
+}
+
+template<typename real_t>
+__global__ void compare_two_outputs(real_t* lhs, real_t* rhs) {
+	uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	check_bit_error(lhs[tid], rhs[tid]);
 }
 
 #endif /* DMR_KERNELS_H_ */
