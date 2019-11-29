@@ -439,8 +439,12 @@ int main(int argc, char* argv[]) {
   dim3 gridDim;
   dim3 blockDim;
 
-  dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-  dim3 grid(WMMA_M/ threads.x, WMMA_N / threads.y);
+  dim3 dim_grid, dim_block;
+  
+  uint32_t grid_rows = (WMMA_M + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  uint32_t grid_cols = (WMMA_N + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  dim_grid = dim3(grid_cols, grid_rows);
+  dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
  
   // blockDim.x must be a multple of warpSize
   // 128x4 means we have 16 warps and a block computes a 64x64 output tile
@@ -476,7 +480,7 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaEventRecord(startMXM));
    
    // ---- MXM SW ----//
-  matrix_mult<<< grid, threads >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw);
+  matrix_mult<<< dim_grid, dim_block >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw);
 //  wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
 //  cudaErrCheck(cudaDeviceSynchronize());
    
