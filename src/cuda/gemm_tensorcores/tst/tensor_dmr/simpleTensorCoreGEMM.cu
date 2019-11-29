@@ -442,8 +442,8 @@ int main(int argc, char* argv[]) {
 
   dim3 dim_grid, dim_block;
   
-  uint32_t grid_rows = (WMMA_M + BLOCK_SIZE - 1) / BLOCK_SIZE;
-  uint32_t grid_cols = (WMMA_N + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  uint32_t grid_rows = (MATRIX_M + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  uint32_t grid_cols = (MATRIX_N + BLOCK_SIZE - 1) / BLOCK_SIZE;
   dim_grid = dim3(grid_cols, grid_rows);
   dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
  
