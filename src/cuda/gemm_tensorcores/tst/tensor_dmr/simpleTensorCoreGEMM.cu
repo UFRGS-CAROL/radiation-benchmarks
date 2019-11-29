@@ -258,7 +258,7 @@ __global__ void wmma_example(half *a, half *b, half *c, int M, int N, int K, hal
 
 
 __global__ void matrix_mult(half *A, half *B, int wA,
-    int wB, half *C) {
+    int wB, half *C, half alpha, half beta) {
   // Block index
   int bx = blockIdx.x;
   int by = blockIdx.y;
@@ -325,8 +325,10 @@ __global__ void matrix_mult(half *A, half *B, int wA,
 
   // Write the block sub-matrix to device memory;
   // each thread writes one element
-  int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-  C[c + wB * ty + tx] = Csub;
+  //int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+  const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
+  half half_val = alpha * Csub + beta * C[index];
+  C[index] = Csub;
 }
 
 
@@ -481,7 +483,11 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaEventRecord(startMXM));
    
    // ---- MXM SW ----//
+<<<<<<< HEAD
   matrix_mult<<< dim_grid, dim_block >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw);
+=======
+  matrix_mult<<< dim_grid, dim_block >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw, alpha, beta);
+>>>>>>> bedeb5ca875362d257f847f0e6a0369e1c3ad101
   wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   cudaErrCheck(cudaDeviceSynchronize());
    
