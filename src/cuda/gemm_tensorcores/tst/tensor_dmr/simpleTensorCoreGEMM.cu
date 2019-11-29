@@ -516,7 +516,7 @@ int main(int argc, char* argv[]) {
    
 
   
-  for (int i = 0; i <  20; i++) {      
+  for (int i = 0; i <  40; i++) {      
     float v1 = d_host_wmma[i];
     float v2 = d_host_sw[i];
     //float v3 = d_host_cublas[i]; 
