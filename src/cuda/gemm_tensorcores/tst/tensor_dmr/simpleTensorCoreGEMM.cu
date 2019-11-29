@@ -519,17 +519,14 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaMemcpy(d_host_sw, d_sw, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
   cudaErrCheck(cudaMemcpy(d_host_wmma, d_wmma, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
 
-  
 
-   
 
-  
-  for (int i = 0; i <  40; i++) {      
-    float v1 = d_host_wmma[i];
-    float v2 = d_host_sw[i];
+    for (int i = 0; i <  20; i++) {      
+    half v1 = d_host_wmma[i];
+    half v2 = d_host_sw[i];
     //float v3 = d_host_cublas[i]; 
-    float v4 = fabs(v2/v1);     
-    printf("TENSOR = %f  | ------  MXM = %f  ----- | RELATIVE = %.15f --------| \n", v1, v2, v4);
+    half v4 = fabs(v2/v1);     
+    printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS =  --------| RELATIVE = %.15f --------| \n", v1, v2, v4);
 
   }
    
