@@ -525,7 +525,7 @@ int main(int argc, char* argv[]) {
     half v1 = d_host_wmma[i];
     half v2 = d_host_sw[i];
     //float v3 = d_host_cublas[i]; 
-    half v4 = v2/v1;     
+    //half v4 = v2/v1;     
     printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS =  --------| RELATIVE = %.15f --------| \n", v1, v2, v4);
 
   }
