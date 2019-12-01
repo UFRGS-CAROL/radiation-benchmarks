@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <curand.h>
 #include <cublas_v2.h>
+#include <stdint.h>
 
 // Define some error checking macros.
 #define cudaErrCheck(stat) { cudaErrCheck_((stat), __FILE__, __LINE__); }
@@ -94,7 +95,7 @@ __device__  __forceinline__ half axpy__(half a, half b, half acc) {
 // Note: This is NOT a high performance example but is for demonstration purposes only
 //       For a high performance code please use the GEMM provided in cuBLAS.
 
-__global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, float alpha, float beta) {
+__global__ void wmma_example(half *a, half *b, half *c, int M, int N, int K, half alpha, half beta) {
    // Leading dimensions. Packed with no transpositions.
    int lda = M;
    int ldb = K;
@@ -107,8 +108,8 @@ __global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, fl
    // Declare the fragments
    wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> a_frag;
    wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> b_frag;
-   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
-   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c_frag;
+   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half> acc_frag;
+   wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half> c_frag;
 
    wmma::fill_fragment(acc_frag, 0.0f);
 
@@ -148,92 +149,6 @@ __global__ void wmma_example(half *a, half *b, float *c, int M, int N, int K, fl
       wmma::store_matrix_sync(c + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
    }
 }
-
-
-__global__ void wmma_example_dmr(half *a, half *b, float *c, float *d_sw, float *d_wmma, int M, int N, int K, float alpha, float beta) {
-
-  // Leading dimensions. Packed with no transpositions.
-  int lda = M;
-  int ldb = K;
-  int ldc = M;
- 
-
-  // Tile using a 2D grid
-  int warpM = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
-  int warpN = (blockIdx.y * blockDim.y + threadIdx.y);
-
-  // Declare the fragments
-  wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> a_frag;
-  wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, half, wmma::col_major> b_frag;
-  wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc_frag;
-  wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> c_frag;
-      
-  int row = blockIdx.x * blockDim.x + threadIdx.x;
-  int col = blockIdx.y * blockDim.y + threadIdx.y;
-
-     
-    
-    
-  wmma::fill_fragment(acc_frag, 0.0f);
-  register float acc_real_t = 0.0;
-    // Loop over k
-  for (int i = 0; i < K; i += WMMA_K) {
-    int aRow = warpM * WMMA_M;
-    int aCol = i;
-
-    int bRow = i;
-    int bCol = warpN * WMMA_N;
-
-    
-    // Bounds checking
-    if (aRow < M && aCol < K && bRow < K && bCol < N) {
-         // Load the inputs
-      wmma::load_matrix_sync(a_frag, a + aRow + aCol * lda, lda);
-      wmma::load_matrix_sync(b_frag, b + bRow + bCol * ldb, ldb);
-
-         // Perform the matrix multiplication
-      wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
-
-    }
-
-      if (row < M && col < N) {
-      
-      
-
-      //for (int internal = i; internal < WMMA_N; internal++) {
-      //  axpy__((float)a[row * M + internal], (float)b[col * N + internal], acc_real_t);    
-      for (int j = 0; j < K; j++) {
-
-        acc_real_t += (float)a[aRow * M + j] * (float)b[bCol* N + j];
-      }   
-      
-      
-    } 
-}
-
-   // Load in the current value of c, scale it by beta, and add this our result scaled by alpha
-int cRow = warpM * WMMA_M;
-int cCol = warpN * WMMA_N;
-d_sw[cRow * M + cCol] = acc_real_t * alpha + beta * c[cRow * M + cCol];
-
-if (cRow < M && cCol < N) {
-  wmma::load_matrix_sync(c_frag, c + cRow + cCol * ldc, ldc, wmma::mem_col_major);
-
-
-  for(int i=0; i < c_frag.num_elements; i++) {
-   
-    c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
-     
-  }
-
-      // Store the output
-  wmma::store_matrix_sync(d_wmma + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
-}
-   
-
-}
-
-
 
 
 // Performs an MxNxK GEMM (C=alpha*A*B + beta*C) assuming:
@@ -341,28 +256,82 @@ if (cRow < M && cCol < N) {
 // }
 
 
-__global__ void matrix_mult(half *A, half *B, int M, int N, int K, float *C) {
 
-   int row = blockIdx.x * blockDim.x + threadIdx.x;
-   int col = blockIdx.y * blockDim.y + threadIdx.y;
-    
-   if (row < M && col < N) {
-      register float acc_real_t = 0.0;
-       
+__global__ void matrix_mult(half *A, half *B, int wA,
+    int wB, half *C, half alpha, half beta) {
+  // Block index
+  int bx = blockIdx.x;
+  int by = blockIdx.y;
 
-   
-      for (int i = 0; i < K; i++) {
-         axpy__((float)A[row * M + i], (float)B[col * N + i], acc_real_t);
-      }   
-     
+  // Thread index
+  int tx = threadIdx.x;
+  int ty = threadIdx.y;
 
-   
+  // Index of the first sub-matrix of A processed by the block
+  int aBegin = wA * BLOCK_SIZE * by;
 
-      C[row * M + col] = acc_real_t;
-      
-   }
+  // Index of the last sub-matrix of A processed by the block
+  int aEnd   = aBegin + wA - 1;
 
+  // Step size used to iterate through the sub-matrices of A
+  int aStep  = BLOCK_SIZE;
+
+  // Index of the first sub-matrix of B processed by the block
+  int bBegin = BLOCK_SIZE * bx;
+
+  // Step size used to iterate through the sub-matrices of B
+  int bStep  = BLOCK_SIZE * wB;
+
+  // Csub is used to store the element of the block sub-matrix
+  // that is computed by the thread
+  half Csub = 0;
+
+  // Loop over all the sub-matrices of A and B
+  // required to compute the block sub-matrix
+  for (int a = aBegin, b = bBegin;
+       a <= aEnd;
+       a += aStep, b += bStep) {
+    // Declaration of the shared memory array As used to
+    // store the sub-matrix of A
+    __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Declaration of the shared memory array Bs used to
+    // store the sub-matrix of B
+    __shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Load the matrices from device memory
+    // to shared memory; each thread loads
+    // one element of each matrix
+    As[ty][tx] = A[a + wA * ty + tx];
+    Bs[ty][tx] = B[b + wB * ty + tx];
+
+    // Synchronize to make sure the matrices are loaded
+    __syncthreads();
+
+    // Multiply the two matrices together;
+    // each thread computes one element
+    // of the block sub-matrix
+#pragma unroll
+
+    for (int k = 0; k < BLOCK_SIZE; ++k) {
+      Csub += As[ty][k] * Bs[k][tx];
+    }
+
+    // Synchronize to make sure that the preceding
+    // computation is done before loading two new
+    // sub-matrices of A and B in the next iteration
+    __syncthreads();
+  }
+
+  // Write the block sub-matrix to device memory;
+  // each thread writes one element
+  //int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+  const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
+  half half_val = alpha * Csub + beta * C[index];
+  C[index] = Csub;
 }
+
+
 
 __global__ void convertFp32ToFp16 (half *out, float *in, int n) {
    int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -379,14 +348,14 @@ int main(int argc, char* argv[]) {
   half *a_fp16;
   half *b_fp16;
 
-  float *c;
-  float *c_wmma;
-  float *c_cublas;
-  float *d_wmma;
-  float *d_sw;  
-  float *d_host_cublas;
-  float *d_host_wmma;
-  float *d_host_sw;
+  half *c;
+  half *c_wmma;
+  half *c_cublas;
+  half *d_wmma;
+  half *d_sw;  
+  half *d_host_cublas;
+  half *d_host_wmma;
+  half *d_host_sw;
   
 
   
@@ -420,15 +389,15 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaMalloc((void**)&b_fp32, MATRIX_K * MATRIX_N * sizeof(float)));
   cudaErrCheck(cudaMalloc((void**)&a_fp16, MATRIX_M * MATRIX_K * sizeof(half)));
   cudaErrCheck(cudaMalloc((void**)&b_fp16, MATRIX_K * MATRIX_N * sizeof(half)));
-  cudaErrCheck(cudaMalloc((void**)&c, MATRIX_M * MATRIX_N * sizeof(float)));
-  cudaErrCheck(cudaMalloc((void**)&c_cublas, MATRIX_M * MATRIX_N * sizeof(float)));
-  cudaErrCheck(cudaMalloc((void**)&c_wmma, MATRIX_M * MATRIX_N * sizeof(float)));
-  cudaErrCheck(cudaMalloc((void**)&d_sw, MATRIX_K * MATRIX_N * sizeof(float)));
-  cudaErrCheck(cudaMalloc((void**)&d_wmma, MATRIX_K * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMalloc((void**)&c, MATRIX_M * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMalloc((void**)&c_cublas, MATRIX_M * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMalloc((void**)&c_wmma, MATRIX_M * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMalloc((void**)&d_sw, MATRIX_K * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMalloc((void**)&d_wmma, MATRIX_K * MATRIX_N * sizeof(half)));
 
-  d_host_cublas = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-  d_host_wmma = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
-  d_host_sw = (float*)malloc(MATRIX_M * MATRIX_N * sizeof(float));
+  d_host_cublas = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
+  d_host_wmma = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
+  d_host_sw = (half*)malloc(MATRIX_M * MATRIX_N * sizeof(half));
 
   
    
@@ -453,17 +422,17 @@ int main(int argc, char* argv[]) {
   //cudaErrCheck(cudaMemset(a_fp16, 6462.8195679, MATRIX_M * MATRIX_N * sizeof(half)));
   //cudaErrCheck(cudaMemset(b_fp16, 6462.8195679, MATRIX_M * MATRIX_N * sizeof(half)));
 
-  cudaErrCheck(cudaMemset(c_cublas, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
-  cudaErrCheck(cudaMemset(c_wmma, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMemset(c_cublas, 0.0f, MATRIX_M * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMemset(c_wmma, 0.0f, MATRIX_M * MATRIX_N * sizeof(half)));
   
-  cudaErrCheck(cudaMemset(d_sw, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
-  cudaErrCheck(cudaMemset(d_wmma, 0.0f, MATRIX_M * MATRIX_N * sizeof(float)));
+  cudaErrCheck(cudaMemset(d_sw, 0.0f, MATRIX_M * MATRIX_N * sizeof(half)));
+  cudaErrCheck(cudaMemset(d_wmma, 0.0f, MATRIX_M * MATRIX_N * sizeof(half)));
 
 
 
  
-  float alpha = 1.0f;
-  float beta = 1.0f;
+  half alpha = 1.0f;
+  half beta = 1.0f;
 
 
    
@@ -472,6 +441,13 @@ int main(int argc, char* argv[]) {
   // WMMA TENSOR //
   dim3 gridDim;
   dim3 blockDim;
+
+  dim3 dim_grid, dim_block;
+  
+  uint32_t grid_rows = (MATRIX_M + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  uint32_t grid_cols = (MATRIX_N + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  dim_grid = dim3(grid_cols, grid_rows);
+  dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
  
   // blockDim.x must be a multple of warpSize
   // 128x4 means we have 16 warps and a block computes a 64x64 output tile
@@ -483,11 +459,11 @@ int main(int argc, char* argv[]) {
   gridDim.y = (MATRIX_N + WMMA_N * blockDim.y - 1) / (WMMA_N * blockDim.y);
 
    
-  printf("Running with wmma thread dimensions...\n");
-  cudaErrCheck(cudaEventRecord(startWMMA));
+  //printf("Running with wmma thread dimensions...\n");
+  //cudaErrCheck(cudaEventRecord(startWMMA));
   //wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   
-  cudaErrCheck(cudaEventRecord(stopWMMA));
+  //cudaErrCheck(cudaEventRecord(stopWMMA));
 
    
 
@@ -507,19 +483,21 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaEventRecord(startMXM));
    
    // ---- MXM SW ----//
-  //matrix_mult<<< gridDim, blockDim >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, MATRIX_N, d_fp16);
-   
+  matrix_mult<<< dim_grid, dim_block >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw, alpha, beta);
+
+  wmma_example <<< gridDim, blockDim >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+  cudaErrCheck(cudaDeviceSynchronize());
    
    // ---- DMR --- //
-  printf("Running  dmr with tensor thread dimensions...\n");
+  //printf("Running  dmr with tensor thread dimensions...\n");
   
-  wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_sw, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+  //wmma_example_dmr <<< gridDim, blockDim >>> (a_fp16, b_fp16, c_wmma, d_sw, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   cudaErrCheck(cudaEventRecord(stopMXM));
  
    
 
 
-   
+  /* 
   // Now using cuBLAS
   printf("Running with cuBLAS...\n");
   cudaErrCheck(cudaEventRecord(startcublas));
@@ -532,44 +510,41 @@ int main(int argc, char* argv[]) {
                 c_cublas, CUDA_R_32F, MATRIX_M,
                 CUDA_R_32F, CUBLAS_GEMM_DEFAULT));
   cudaErrCheck(cudaEventRecord(stopcublas));
-   
+  */ 
 
 
   // Error checking
   printf("\nChecking results...\n");
-  cudaErrCheck(cudaMemcpy(d_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
-  cudaErrCheck(cudaMemcpy(d_host_sw, d_sw, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
-  cudaErrCheck(cudaMemcpy(d_host_wmma, d_wmma, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+  //cudaErrCheck(cudaMemcpy(d_host_cublas, c_cublas, MATRIX_M * MATRIX_N * sizeof(float), cudaMemcpyDeviceToHost));
+  cudaErrCheck(cudaMemcpy(d_host_sw, d_sw, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
+  cudaErrCheck(cudaMemcpy(d_host_wmma, d_wmma, MATRIX_M * MATRIX_N * sizeof(half), cudaMemcpyDeviceToHost));
 
-  
 
-   
 
-  
-  for (int i = 0; i <  20; i++) {      
-    float v1 = d_host_wmma[i];
-    float v2 = d_host_sw[i];
-    float v3 = d_host_cublas[i]; 
-    float v4 = fabs(v2/v1);     
-    printf("TENSOR = %f  | ------  MXM = %f  ----- | CUBLAS = %f --------| RELATIVE = %.15f --------| \n", v1, v2, v3, v4);
+    for (int i = 0; i <  20; i++) {      
+    half v1 = d_host_wmma[i];
+    half v2 = d_host_sw[i];
+    //float v3 = d_host_cublas[i]; 
+    //half v4 = v2/v1;     
+    printf("TENSOR = %f  | ------  MXM = %f  ----- | \n", v1, v2);
 
   }
    
-  /*
-  float wmmaTime;
-  float cublasTime;
+  
+  //float wmmaTime;
+  //float cublasTime;
   float mxmTime;
-  cudaErrCheck(cudaEventSynchronize(stopWMMA));
-  cudaErrCheck(cudaEventSynchronize(stopcublas));
+  //cudaErrCheck(cudaEventSynchronize(stopWMMA));
+  //cudaErrCheck(cudaEventSynchronize(stopcublas));
   cudaErrCheck(cudaEventSynchronize(stopMXM));
 
   //cudaErrCheck(cudaEventElapsedTime(&wmmaTime, startWMMA, stopWMMA));
-  cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
+  //cudaErrCheck(cudaEventElapsedTime(&cublasTime, startcublas, stopcublas));
   cudaErrCheck(cudaEventElapsedTime(&mxmTime, startMXM, stopMXM));
   //printf("wmma took %fms\n", wmmaTime);
-  printf("cublas took %fms\n", cublasTime);
+  //printf("cublas took %fms\n", cublasTime);
   printf("mxm took %fms\n", mxmTime);
-  */
+  
      
    
  
