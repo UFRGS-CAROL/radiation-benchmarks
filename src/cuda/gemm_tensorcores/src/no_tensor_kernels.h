@@ -273,4 +273,10 @@ __global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
 	D[index] = alpha * Csub + beta * C[index];
 }
 
+template<typename real_t>
+__global__ void compare_two_outputs(real_t* lhs, real_t* rhs) {
+	uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	check_relative_error(lhs[tid], rhs[tid]);
+}
+
 #endif /* NO_TENSOR_KERNELS_H_ */
