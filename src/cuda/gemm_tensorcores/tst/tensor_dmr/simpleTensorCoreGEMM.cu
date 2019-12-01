@@ -522,11 +522,11 @@ int main(int argc, char* argv[]) {
 
 
     for (int i = 0; i <  20; i++) {      
-    half v1 = d_host_wmma[i];
-    half v2 = d_host_sw[i];
+    float v1 = d_host_wmma[i];
+    float v2 = d_host_sw[i];
     //float v3 = d_host_cublas[i]; 
     //half v4 = v2/v1;     
-    printf("TENSOR = %f  | ------  MXM = %f  ----- | \n", v1, v2);
+    //printf("TENSOR = %f  | ------  MXM = %f  ----- | \n", v1, v2);
 
   }
    
