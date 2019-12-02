@@ -20,7 +20,7 @@ __device__ __forceinline__ float abs__(float a) {
 	return fabsf(a);
 }
 
-__device__         __forceinline__ half abs__(half a) {
+__device__          __forceinline__ half abs__(half a) {
 	return fabsf(a);
 }
 
@@ -165,7 +165,6 @@ __global__ void calculate_temp_unhardened(int iteration,  //number of iteration
 		temp_dst[index] = t_temp[ty][tx];
 	}
 }
-
 
 template<typename full, typename incomplete>
 __global__ void calculate_temp_dmr(int iteration,  //number of iteration
@@ -339,6 +338,40 @@ __global__ void calculate_temp_dmr(int iteration,  //number of iteration
 		temp_dst_incomplete[index] = t_temp_inc[ty][tx];
 	}
 
+}
+
+template<typename real_t>
+__global__ void compare_two_outputs(real_t* lhs, real_t* rhs,
+		int iteration, int grid_cols, int grid_rows, int border_cols,	int border_rows) {
+	int bx = blockIdx.x;
+	int by = blockIdx.y;
+	int tx = threadIdx.x;
+	int ty = threadIdx.y;
+
+	// calculate the small block size
+	int small_block_rows = BLOCK_SIZE - iteration * 2;    //EXPAND_RATE
+	int small_block_cols = BLOCK_SIZE - iteration * 2;    //EXPAND_RATE
+
+	// calculate the boundary for the block according to
+	// the boundary of its small block
+	int blkY = small_block_rows * by - border_rows;
+	int blkX = small_block_cols * bx - border_cols;
+//	int blkYmax = blkY + BLOCK_SIZE - 1;
+//	int blkXmax = blkX + BLOCK_SIZE - 1;
+
+	// calculate the global thread coordination
+	int yidx = blkY + ty;
+	int xidx = blkX + tx;
+
+	// load data if it is within the valid input range
+	int loadYidx = yidx, loadXidx = xidx;
+	int index = grid_cols * loadYidx + loadXidx;
+
+	if (IN_RANGE(loadYidx, 0, grid_rows - 1)
+			&& IN_RANGE(loadXidx, 0, grid_cols - 1)) {
+		compare(lhs[index], rhs[index]);
+
+	}
 }
 
 #endif /* NONE_KERNELS_H_ */

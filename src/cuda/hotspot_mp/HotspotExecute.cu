@@ -7,7 +7,6 @@
 
 #include <cuda_fp16.h>
 
-
 #include "HotspotExecute.h"
 #include "kernels.h"
 
@@ -21,17 +20,16 @@ unsigned long long copy_errors() {
 	unsigned long long errors_host = 0;
 	//Copy errors first
 	rad::checkFrameworkErrors(
-			cudaMemcpyFromSymbol((void*)&errors_host, errors,
+			cudaMemcpyFromSymbol((void*) &errors_host, errors,
 					sizeof(unsigned long long), 0));
 
 	unsigned long long temp = 0;
 	//Reset the errors variable
 	rad::checkFrameworkErrors(
-				cudaMemcpyToSymbol(errors, (void*)&temp,
-						sizeof(unsigned long long), 0));
+			cudaMemcpyToSymbol(errors, (void*) &temp,
+					sizeof(unsigned long long), 0));
 	return errors_host;
 }
-
 
 HotspotExecute::HotspotExecute(Parameters& setup_parameters, Log& log) :
 		setup_params(setup_parameters), log(log), flops(0) {
@@ -85,14 +83,39 @@ int HotspotExecute::compute_tran_temp(rad::DeviceVector<full>& power_array,
 					borderRows, Cap_, Rx_, Ry_, Rz_, step_, time_elapsed);
 			this->flops += col * row * MIN(num_iterations, sim_time - t) * 15;
 		}
-	} else {
+	} else if (this->setup_params.redundancy == DMRMIXED) {
 		for (int t = 0; t < sim_time; t += num_iterations) {
 			std::swap(src, dst);
-			calculate_temp_dmr<full, incomplete> <<<dimGrid, dimBlock, 0, stream>>>(
+			calculate_temp_dmr<<<dimGrid, dimBlock, 0, stream>>>(
 					MIN(num_iterations, sim_time - t), MatrixPower,
 					MatrixTemp[src], MatrixTemp[dst], MatrixTempIncomplete, col,
 					row, borderCols, borderRows, Cap_, Rx_, Ry_, Rz_, step_,
 					time_elapsed);
+			this->flops += col * row * MIN(num_iterations, sim_time - t) * 15;
+		}
+	} else if (this->setup_params.redundancy == DMR) {
+		for (int t = 0; t < sim_time; t += num_iterations) {
+			std::swap(src, dst);
+			calculate_temp_unhardened<<<dimGrid, dimBlock, 0, stream>>>(
+					MIN(num_iterations, sim_time - t), MatrixPower,
+					MatrixTemp[src], MatrixTemp[dst], col, row, borderCols,
+					borderRows, Cap_, Rx_, Ry_, Rz_, step_, time_elapsed);
+			calculate_temp_unhardened<<<dimGrid, dimBlock, 0, stream>>>(
+					MIN(num_iterations, sim_time - t), MatrixPower,
+					MatrixTemp[src], MatrixTempIncomplete, col, row, borderCols,
+					borderRows, Cap_, Rx_, Ry_, Rz_, step_, time_elapsed);
+			rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
+			int check_threads = BLOCK_SIZE * BLOCK_SIZE;
+			int check_grid = blockCols * blockRows;
+
+//			std::cout << "AQUI " << check_grid << " " << check_threads
+//					<< std::endl;
+			compare_two_outputs<<<check_grid, check_threads, 0, stream>>>(
+					MatrixTemp[dst], MatrixTempIncomplete,
+					MIN(num_iterations, sim_time - t), col, row, borderCols,
+					borderRows);
+			rad::checkFrameworkErrors(cudaStreamSynchronize(stream));
+
 			this->flops += col * row * MIN(num_iterations, sim_time - t) * 15;
 		}
 	}
@@ -143,8 +166,9 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 
 			hotspot_data.output_index[streamIdx] = compute_tran_temp<full,
 					incomplete>(power_array_stream, temp_array_input_stream,
-					temp_array_output_stream, output_incomplete, this->setup_params.grid_cols,
-					this->setup_params.grid_rows, this->setup_params.sim_time,
+					temp_array_output_stream, output_incomplete,
+					this->setup_params.grid_cols, this->setup_params.grid_rows,
+					this->setup_params.sim_time,
 					this->setup_params.pyramid_height, blockCols, blockRows,
 					borderCols, borderRows, hotspot_data.streams[streamIdx]);
 		}
@@ -160,7 +184,6 @@ void HotspotExecute::generic_execute(int blockCols, int blockRows,
 
 		auto dmr_errors = copy_errors();
 		hotspot_data.check_output_errors(dmr_errors);
-
 
 		copy_and_check_time = this->log.mysecond();
 
@@ -269,8 +292,8 @@ void HotspotExecute::run() {
 //			break;
 
 		case DOUBLE:
-			generic_execute<double, float>(blockCols, blockRows, borderCols,
-					borderRows);
+//			generic_execute<double, float>(blockCols, blockRows, borderCols,
+//					borderRows);
 			break;
 
 		}
