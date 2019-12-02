@@ -8,9 +8,7 @@
 #ifndef NONE_KERNELS_H_
 #define NONE_KERNELS_H_
 
-//#include "device_functions.h"
-
-#define BLOCK_SIZE 32
+#include "common.h"
 
 __device__ unsigned long long errors;
 
@@ -28,31 +26,21 @@ __device__         __forceinline__ half abs__(half a) {
 
 template<typename full>
 __device__ __forceinline__ void compare(const full lhs, const full rhs) {
-	const full diff = abs__(lhs - rhs);
-	const full zero = 0.0;
-	if (diff > zero) {
-		atomicAdd(&errors, 1);
-	}
-}
-
-__device__ __forceinline__ void compare(const float lhs, const half rhs) {
-	const float diff = abs__(lhs - float(rhs));
-	const float zero = float(ZERO_HALF);
-	if (diff > zero) {
+	if (lhs != rhs) {
 		atomicAdd(&errors, 1);
 	}
 }
 
 __device__ __forceinline__ void compare(const double lhs, const float rhs) {
-	const double diff = abs__(lhs - double(rhs));
-	const double zero = double(ZERO_FLOAT);
-	if (diff > zero) {
+	float lhs_as_float = float(lhs);
+	float relative = __fdividef(rhs, lhs_as_float);
+	if (relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE) {
 		atomicAdd(&errors, 1);
 	}
 }
 
 template<typename full>
-__global__ void calculate_temp(int iteration,  //number of iteration
+__global__ void calculate_temp_unhardened(int iteration,  //number of iteration
 		full* power,   //power input
 		full* temp_src,    //temperature input/output
 		full* temp_dst,    //temperature input/output
@@ -180,7 +168,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 
 
 template<typename full, typename incomplete>
-__global__ void calculate_temp(int iteration,  //number of iteration
+__global__ void calculate_temp_dmr(int iteration,  //number of iteration
 		full* power,   //power input
 		full* temp_src,    //temperature input/output
 		full* temp_dst,    //temperature input/output
@@ -331,7 +319,7 @@ __global__ void calculate_temp(int iteration,  //number of iteration
 #if CHECKBLOCK >= 1
 			if((iteration % CHECKBLOCK) == 0) {
 				compare(t_temp[ty][tx], t_temp_inc[ty][tx]);
-				t_temp_inc[ty][tx] = incomplete(t_temp[ty][tx]);
+//				t_temp_inc[ty][tx] = incomplete(t_temp[ty][tx]);
 			}
 #endif
 		}

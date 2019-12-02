@@ -17,7 +17,6 @@
 
 #include "device_vector.h"
 
-
 unsigned long long copy_errors() {
 	unsigned long long errors_host = 0;
 	//Copy errors first
@@ -80,7 +79,7 @@ int HotspotExecute::compute_tran_temp(rad::DeviceVector<full>& power_array,
 	if (this->setup_params.redundancy == NONE) {
 		for (int t = 0; t < sim_time; t += num_iterations) {
 			std::swap(src, dst);
-			calculate_temp<full> <<<dimGrid, dimBlock, 0, stream>>>(
+			calculate_temp_unhardened<full> <<<dimGrid, dimBlock, 0, stream>>>(
 					MIN(num_iterations, sim_time - t), MatrixPower,
 					MatrixTemp[src], MatrixTemp[dst], col, row, borderCols,
 					borderRows, Cap_, Rx_, Ry_, Rz_, step_, time_elapsed);
@@ -89,7 +88,7 @@ int HotspotExecute::compute_tran_temp(rad::DeviceVector<full>& power_array,
 	} else {
 		for (int t = 0; t < sim_time; t += num_iterations) {
 			std::swap(src, dst);
-			calculate_temp<full, incomplete> <<<dimGrid, dimBlock, 0, stream>>>(
+			calculate_temp_dmr<full, incomplete> <<<dimGrid, dimBlock, 0, stream>>>(
 					MIN(num_iterations, sim_time - t), MatrixPower,
 					MatrixTemp[src], MatrixTemp[dst], MatrixTempIncomplete, col,
 					row, borderCols, borderRows, Cap_, Rx_, Ry_, Rz_, step_,
@@ -243,16 +242,16 @@ void HotspotExecute::run() {
 	case NONE:
 	case DMR:
 		switch (this->setup_params.precision) {
-		case HALF:
-
-			generic_execute<half, half>(blockCols, blockRows, borderCols,
-					borderRows);
-			break;
-
-		case SINGLE:
-			generic_execute<float, float>(blockCols, blockRows, borderCols,
-					borderRows);
-			break;
+//		case HALF:
+//
+//			generic_execute<half, half>(blockCols, blockRows, borderCols,
+//					borderRows);
+//			break;
+//
+//		case SINGLE:
+//			generic_execute<float, float>(blockCols, blockRows, borderCols,
+//					borderRows);
+//			break;
 
 		case DOUBLE:
 			generic_execute<double, double>(blockCols, blockRows, borderCols,
@@ -264,10 +263,10 @@ void HotspotExecute::run() {
 
 	case DMRMIXED:
 		switch (this->setup_params.precision) {
-		case SINGLE:
-			generic_execute<float, half>(blockCols, blockRows, borderCols,
-					borderRows);
-			break;
+//		case SINGLE:
+//			generic_execute<float, half>(blockCols, blockRows, borderCols,
+//					borderRows);
+//			break;
 
 		case DOUBLE:
 			generic_execute<double, float>(blockCols, blockRows, borderCols,

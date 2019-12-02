@@ -13,7 +13,7 @@ CXX=g++
 NVCC=/usr/local/cuda/bin/nvcc
 
 ARCH= -gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
-ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]	# Jetson Xavier
+#ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72]	# Jetson Xavier
 
 NVCCFLAGS= $(ARCH) -Xptxas -v -std=c++11
 CXXFLAGS= -std=c++11 -fopenmp -O3
@@ -75,7 +75,7 @@ generate:
 		-input_temp=$(RADDIR)/data/hotspot/temp_1024 \
 		-input_power=$(RADDIR)/data/hotspot/power_1024 \
 		-gold_temp=./gold_1024 -streams=10 \
-		-redundancy=$(REDUNDANCY) -precision=$(PRECISION) \
+		-redundancy=none -precision=$(PRECISION) \
 		 -pyramid_height=$(PYRAMIDH)
 		
 test:

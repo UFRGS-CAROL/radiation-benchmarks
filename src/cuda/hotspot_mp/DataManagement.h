@@ -16,6 +16,8 @@
 #include "cuda_utils.h"
 #include "device_vector.h"
 
+#include "common.h"
+
 template<typename full, typename incomplete>
 struct DataManagement {
 	std::vector<std::vector<full>> matrix_temperature_input_host;
@@ -146,8 +148,7 @@ struct DataManagement {
 		}
 
 		size_t& host_errors = this->log.error_count;
-		size_t detected_errors = 0;
-		double max_t = -22222;
+		size_t host_dmr_errors = 0;
 		for (int stream = 0; stream < this->parameters.nstreams; stream++) {
 
 #pragma omp parallel for shared(host_errors)
@@ -160,10 +161,7 @@ struct DataManagement {
 					double valOutputIncomplete =
 							this->matrix_temperature_output_incomplete_host[stream][index];
 					bool isDiff = cmp(valOutput, valOutputIncomplete);
-					double diff = std::fabs(valOutput - valOutputIncomplete);
-					max_t = std::max(diff, max_t);
 
-					detected_errors += size_t(isDiff);
 					if (valGold != valOutput || !isDiff) {
 #pragma omp critical
 						{
@@ -176,22 +174,30 @@ struct DataManagement {
 							if (this->parameters.verbose && (host_errors < 10))
 								std::cout << error_detail << std::endl;
 
+							host_dmr_errors += (valGold != valOutput && !isDiff);
+
 						}
+
 					}
 				}
 			}
 		}
-//		std::ofstream of("test.txt", std::ofstream::out | std::ofstream::app);
-//
-//		 of << "BLOCK " << CHECKBLOCK << " MAX DIFF " << max_t << std::endl;
-//		 of.close();
 
 		if (dmr_errors != 0) {
 			std::string error_detail;
 			error_detail = "detected_dmr_errors: "
-					+ std::to_string(detected_errors);
+					+ std::to_string(dmr_errors);
 
 			this->log.log_error(error_detail);
+		}
+
+
+		if (host_dmr_errors != 0) {
+			std::string error_detail;
+			error_detail = "dmr1_equals_dmr2_detected: "
+					+ std::to_string(host_dmr_errors);
+
+			this->log.log_info(error_detail);
 		}
 
 		if (host_errors != 0) {
@@ -338,9 +344,10 @@ struct DataManagement {
 	}
 private:
 	bool cmp(const double lhs, const double rhs) {
-		const double diff = std::fabs(lhs - rhs);
-		const double zero = double(ZERO_FLOAT);
-		if (diff > zero) {
+//		const double diff = std::fabs(lhs - rhs);
+//		const double zero = double(ZERO_FLOAT);
+		double relative = lhs / rhs;
+		if (relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE) {
 			return false;
 		}
 		return true;
