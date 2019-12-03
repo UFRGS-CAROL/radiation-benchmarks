@@ -252,7 +252,7 @@ ALL_LDFLAGS += $(addprefix -Xlinker ,$(LDFLAGS))
 ALL_LDFLAGS += $(addprefix -Xlinker ,$(EXTRA_LDFLAGS))
 
 # Common includes and paths for CUDA
-INCLUDES  := -I../../Common -I../../common/inc
+INCLUDES  := -I../../Common -I../../common/inc -I./include -I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc -I$(RAD_DIR)/src/cuda/common/include
 LIBRARIES :=
 
 ################################################################################
