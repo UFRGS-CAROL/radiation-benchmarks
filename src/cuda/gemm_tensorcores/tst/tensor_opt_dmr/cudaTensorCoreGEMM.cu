@@ -559,7 +559,7 @@ int main(int argc, char **argv) {
 			st>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
 	M_GLOBAL);			
 
-	matrix_mult<<<gridDim, blockDim, SHMEM_SZ>>>(A, B, M_GLOBAL, M_GLOBAL, D, alpha, beta);
+	matrix_mult<<<gridDim, blockDim>>>(A, B, M_GLOBAL, M_GLOBAL, D, alpha, beta);
 
 	checkKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
