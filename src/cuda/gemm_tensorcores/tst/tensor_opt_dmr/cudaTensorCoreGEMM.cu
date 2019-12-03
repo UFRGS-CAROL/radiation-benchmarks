@@ -559,7 +559,7 @@ int main(int argc, char **argv) {
 
 	matrix_mult<<<dim_grid, dim_block, SHMEM_SZ>>>(A, B, M_GLOBAL, M_GLOBAL, D, alpha, beta);
 
-	c//heckKernelErrors(cudaStreamSynchronize(st));
+	//heckKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
 	checkKernelErrors(cudaDeviceSynchronize());
 
@@ -607,7 +607,7 @@ int main(int argc, char **argv) {
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(C)));
 	checkCudaErrors(cudaFree(reinterpret_cast<void *>(D)));
 
-	cudaStreamDestroy(st);
+	//cudaStreamDestroy(st);
 
 	return 0;
 }
