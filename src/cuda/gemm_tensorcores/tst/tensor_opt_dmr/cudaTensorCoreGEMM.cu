@@ -534,8 +534,8 @@ int main(int argc, char **argv) {
 
 	printf("Computing... using high performance kernel compute_gemm \n");
 
-	cudaStream_t st;
-	cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
+	//cudaStream_t st;
+	//cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
 	std::cout << BLOCK_SIZE << " " << M_GLOBAL << std::endl;
 	//dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	//dim3 grid( M_GLOBAL / threads.x, M_GLOBAL / threads.y);
@@ -554,13 +554,12 @@ int main(int argc, char **argv) {
 			cudaFuncSetAttribute(MatrixMulCUDA<half>,
 					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
-	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-			st>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
+	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
 	M_GLOBAL);			
 
 	matrix_mult<<<dim_grid, dim_block, SHMEM_SZ>>>(A, B, M_GLOBAL, M_GLOBAL, D, alpha, beta);
 
-	checkKernelErrors(cudaStreamSynchronize(st));
+	c//heckKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
 	checkKernelErrors(cudaDeviceSynchronize());
 
