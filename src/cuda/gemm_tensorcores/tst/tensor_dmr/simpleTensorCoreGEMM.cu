@@ -29,6 +29,9 @@
 #include <curand.h>
 #include <cublas_v2.h>
 #include <stdint.h>
+#include <helper_cuda.h>
+#include <helper_functions.h>
+
 
 // Define some error checking macros.
 #define cudaErrCheck(stat) { cudaErrCheck_((stat), __FILE__, __LINE__); }
@@ -158,6 +161,8 @@ __device__  __forceinline__ half axpy__(half a, half b, half acc) {
 
 __global__ void compute_gemm(const half *A, const half *B, const half *C,
     half *D, half alpha, half beta, int wA, int wB) {
+
+
   extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
   // Warp and lane identification.
