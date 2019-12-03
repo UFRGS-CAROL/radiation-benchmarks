@@ -479,15 +479,22 @@ int main(int argc, char* argv[]) {
   cudaStream_t stream1, stream2;
   cudaErrCheck(cudaStreamCreate(&stream1)); 
   cudaErrCheck(cudaStreamCreate(&stream2));
-   
+  int ite = 100; 
   //printf("Running  dmr with MXM thread dimensions...\n");
   cudaErrCheck(cudaEventRecord(startMXM));
-   
-   // ---- MXM SW ----//
- // matrix_mult<<< dim_grid, dim_block,0, stream1 >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw, alpha, beta);
 
-  wmma_example <<< gridDim, blockDim,0, stream2 >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
-  cudaErrCheck(cudaDeviceSynchronize());
+
+   for (int i = 0; i < ite; ++i)
+   {
+     // ---- MXM SW ----//
+    matrix_mult<<< dim_grid, dim_block,0, stream1 >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw, alpha, beta);
+
+    wmma_example <<< gridDim, blockDim,0, stream2 >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+
+    cudaErrCheck(cudaDeviceSynchronize());
+   }
+
+
    
    // ---- DMR --- //
   //printf("Running  dmr with tensor thread dimensions...\n");
