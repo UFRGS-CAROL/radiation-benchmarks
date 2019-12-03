@@ -61,7 +61,7 @@ using namespace nvcuda;
 #define MATRIX_N 4096 //16384
 #define MATRIX_K 4096 //16384
 
-#define BLOCK_SIZE 16
+#define BLOCK_SIZE 32
 
 
 // The only dimensions currently supported by WMMA
