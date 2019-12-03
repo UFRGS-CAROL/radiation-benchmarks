@@ -43,7 +43,7 @@
 
 //Threshold at the end
 #define THRESHOLD_AT_END 0x7f
-#define AT_END_OP_CHECK 33
+#define AT_END_OP_CHECK 34
 
 
 void exception(std::string msg, std::string file, int line);
