@@ -301,7 +301,7 @@ void setup_gemm_dmr(Log& log) {
 
 		if (log.dmr == "mixed") {
 			switch (log.check_block) {
-			case 1: {
+			case ONE_OP_CHECK: {
 				DMRMixedGemmCaller<ONE_OP_CHECK, float, double> gemm_obj(
 						log.size_matrices, log.size_matrices);
 				setup_execute(log, gemm_obj, THRESHOLD_1);
