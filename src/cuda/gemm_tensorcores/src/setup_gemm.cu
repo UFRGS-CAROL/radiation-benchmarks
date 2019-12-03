@@ -195,10 +195,8 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 				d_vector_device, d_vector_half_t_device, log_obj.alpha,
 				log_obj.beta, log_obj.size_matrices, log_obj.size_matrices,
 				threshold);
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
-		;
+		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
+		rad::checkFrameworkErrors (cudaPeekAtLastError());;
 
 		log_obj.end_iteration();
 		computation_time = rad::mysecond() - computation_time;
@@ -219,14 +217,19 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 					mult_env.duplicated);
 
 			comparing_time = rad::mysecond() - comparing_time;
-
-			std::cout << "Iteration: " << it << " DMR errors " << errors.first
-					<< ". " << "Radiation errors: " << errors.second << ". "
-					<< "Time spent on computation: " << computation_time
-					<< "s. " << "Time spent on comparing: " << comparing_time
-					<< "s. " << "Time spent on copying: " << copy_time << "s. "
-					<< std::endl;
-
+			if (log_obj.verbose) {
+				std::cout << "Iteration: " << it << " DMR errors "
+						<< errors.first << ". " << "Radiation errors: "
+						<< errors.second << ". "
+						<< "Time spent on computation: " << computation_time
+						<< "s. " << "Time spent on comparing: "
+						<< comparing_time << "s. " << "Time spent on copying: "
+						<< copy_time << "s. " << std::endl;
+			} else {
+				std::cout << "Iteration: " << it << " DMR errors "
+										<< errors.first << ". " << "Radiation errors: "
+										<< errors.second << ". " << std::endl;
+			}
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
 				read_gold(a_vector_host, b_vector_host, c_vector_host,
@@ -250,9 +253,13 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 		}
 
 	}
+	if (log_obj.verbose) {
 
 	std::cout << "Elapsed time: " << (elapsed_time / log_obj.iterations)
 			<< " s\n";
+	}else{
+		std::cout << "done.\n";
+	}
 	if (log_obj.generate) {
 		write_gold(a_vector_host, b_vector_host, c_vector_host,
 				d_vector_host_real_t, log_obj.a_input_path,

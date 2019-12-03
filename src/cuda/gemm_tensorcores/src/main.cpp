@@ -12,7 +12,8 @@ void usage(char **argv) {
 
 int main(int argc, char** argv) {
 	Log log(argc, argv);
-	std::cout << log << std::endl;
+	if (log.verbose)
+		std::cout << log << std::endl;
 
 	if (log.use_tensor_cores) {
 //		if (log.dmr == "none") {
