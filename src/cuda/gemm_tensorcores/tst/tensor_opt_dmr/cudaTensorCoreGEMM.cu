@@ -143,7 +143,7 @@ __global__ void MatrixMulCUDA(const T *A, const T *B, const T *C, T* D,
 
 }
 
-_global__ void matrix_mult(half *A, half *B, int wA,
+__global__ void matrix_mult(half *A, half *B, int wA,
     int wB, half *C, half alpha, half beta) {
   // Block index
   int bx = blockIdx.x;
