@@ -479,7 +479,7 @@ int main(int argc, char* argv[]) {
   cudaStream_t stream1, stream2;
   cudaErrCheck(cudaStreamCreate(&stream1)); 
   cudaErrCheck(cudaStreamCreate(&stream2));
-  int ite = 100; 
+  int ite = 10; 
   //printf("Running  dmr with MXM thread dimensions...\n");
   cudaErrCheck(cudaEventRecord(startMXM));
 
