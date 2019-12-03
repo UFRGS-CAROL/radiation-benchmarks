@@ -15,11 +15,11 @@ int main(int argc, char** argv) {
 	std::cout << log << std::endl;
 
 	if (log.use_tensor_cores) {
-		if (log.dmr == "none") {
-			setup_gemm_tensor_cores_unhardened(log);
-		} else {
-			setup_gemm_tensor_cores_dmr(log);
-		}
+//		if (log.dmr == "none") {
+//			setup_gemm_tensor_cores_unhardened(log);
+//		} else {
+//			setup_gemm_tensor_cores_dmr(log);
+//		}
 	} else {
 		if (log.dmr == "none") {
 			setup_gemm_unhardened(log);

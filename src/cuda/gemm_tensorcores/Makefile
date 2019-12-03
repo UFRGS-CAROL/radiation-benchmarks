@@ -56,7 +56,8 @@ CFLAGS+= -DOMP -fopenmp
 endif
 
 
-OBJ= main.o setup_gemm.o Log.o setup_tensor_cores.o common.o
+OBJ= main.o setup_gemm.o Log.o common.o
+#setup_tensor_cores.o
 
 ifeq ($(LOGS), 1)
 INCLUDE+=-I../../include/
