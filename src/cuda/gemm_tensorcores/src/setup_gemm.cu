@@ -17,10 +17,10 @@ struct GemmCaller {
 			rad::DeviceVector<real_t>& d_dev, 			//D matrix
 			rad::DeviceVector<half_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
-			const uint32_t threshold);
+			const uint32_t threshold) = 0;
 
 	virtual std::vector<half_t> memcpy_half_t_mem(
-			rad::DeviceVector<half_t>& d_dev_half_t);
+			rad::DeviceVector<half_t>& d_dev_half_t) = 0;
 
 	GemmCaller(uint32_t m, uint32_t n) :
 			duplicated(false) {
