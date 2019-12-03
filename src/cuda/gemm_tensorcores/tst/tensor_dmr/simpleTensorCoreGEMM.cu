@@ -484,9 +484,9 @@ int main(int argc, char* argv[]) {
   cudaErrCheck(cudaEventRecord(startMXM));
    
    // ---- MXM SW ----//
- // matrix_mult<<< dim_grid, dim_block,0, stream1 >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw, alpha, beta);
+  matrix_mult<<< dim_grid, dim_block,0, stream1 >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw, alpha, beta);
 
- wmma_example <<< gridDim, blockDim,0, stream2 >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
+  wmma_example <<< gridDim, blockDim,0, stream2 >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
   cudaErrCheck(cudaDeviceSynchronize());
    
    // ---- DMR --- //
@@ -527,7 +527,7 @@ int main(int argc, char* argv[]) {
     float v2 = d_host_sw[i];
     //float v3 = d_host_cublas[i]; 
     //half v4 = v2/v1;     
-    //printf("TENSOR = %f  | ------  MXM = %f  ----- | \n", v1, v2);
+    printf("TENSOR = %f  | ------  MXM = %f  ----- | \n", v1, v2);
 
   }
    
