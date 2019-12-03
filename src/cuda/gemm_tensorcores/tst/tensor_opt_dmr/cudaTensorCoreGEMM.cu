@@ -31,6 +31,10 @@
 #define WMMA_N 16
 #define WMMA_K 16
 
+#define MATRIX_M 4096 //16384
+#define MATRIX_N 4096 //16384
+#define MATRIX_K 4096 //16384
+
 // GEMM configuration.
 
 #define M_TILES 256
@@ -555,7 +559,7 @@ int main(int argc, char **argv) {
 			st>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
 	M_GLOBAL);			
 
-	matrix_mult<<<grid, threads, SHMEM_SZ>>>(A, B, M_GLOBAL, M_GLOBAL, D, alpha, beta);
+	matrix_mult<<<gridDim, blockDim, SHMEM_SZ>>>(A, B, M_GLOBAL, M_GLOBAL, D, alpha, beta);
 
 	checkKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
