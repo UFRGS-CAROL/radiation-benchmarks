@@ -778,18 +778,20 @@ int main(int argc, char* argv[]) {
   int ite = 10; 
   //printf("Running  dmr with MXM thread dimensions...\n");
   cudaErrCheck(cudaEventRecord(startMXM));
+
+
    for (int i = 0; i < ite; ++i)
    {
      // ---- MXM SW ----//
     matrix_mult<<< dim_grid, dim_block,0, stream1 >>> (a_fp16, b_fp16, MATRIX_M, MATRIX_N, d_sw, alpha, beta);
 
     //wmma_example <<< gridDim, blockDim,0, stream2 >>> (a_fp16, b_fp16, d_wmma, MATRIX_M, MATRIX_N, MATRIX_K, alpha, beta);
-
     compute_gemm <<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
       stream2>>> (A, B, C, d_wmma, alpha, beta, M_GLOBAL,  M_GLOBAL);
 
     cudaErrCheck(cudaDeviceSynchronize());
    }
+
 
    
    // ---- DMR --- //
