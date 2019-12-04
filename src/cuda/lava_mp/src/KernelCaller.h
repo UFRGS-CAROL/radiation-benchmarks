@@ -140,6 +140,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 				sizeof(uint32_t) * THRESHOLD_SIZE, 0,
 				cudaMemcpyDeviceToHost));
 		std::string path(THRESHOLD_PATH);
+
 		File<uint32_t>::write_to_file(path, this->thresholds_host);
 		return max_threshold;
 	}

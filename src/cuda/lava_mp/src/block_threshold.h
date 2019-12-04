@@ -8,8 +8,8 @@
 #ifndef BLOCK_THRESHOLD_H_
 #define BLOCK_THRESHOLD_H_
 
-//Assuming that max boxes will be 128
-#define THRESHOLD_SIZE 1 << 21 //IT Can be up to boxes * boxes * boxes
+//Assuming that max boxes will be 25
+#define THRESHOLD_SIZE 1 << 14 //IT Can be up to boxes * boxes * boxes
 
 #define THRESHOLD_PATH "/home/carol/radiation-benchmarks/data/lava/threshold.data"
 
