@@ -229,7 +229,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 	if (dmr_err != 0) {
 		std::string error_detail;
 		error_detail = "detected_dmr_errors: " + std::to_string(dmr_err);
-		log.log_error(error_detail);
+		log.log_info(error_detail);
 	}
 
 	if (memory_errors != 0) {
