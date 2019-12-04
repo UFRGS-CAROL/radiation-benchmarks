@@ -50,10 +50,10 @@ struct FOUR_VECTOR {
 
 	__DEVICE_HOST_INLINE__
 	bool operator!=(const FOUR_VECTOR& rhs) const {
-		if ((abs__(this->v - tested_type(rhs.v)) > ZERO_DOUBLE) ||	//V
-			(abs__(this->x - tested_type(rhs.x)) > ZERO_DOUBLE) ||	//X
-			(abs__(this->y - tested_type(rhs.y)) > ZERO_DOUBLE) ||	//Y
-			(abs__(this->z - tested_type(rhs.z)) > ZERO_DOUBLE)) {	//Z
+		if (((this->v != (rhs.v))) ||	//V
+			((this->x != (rhs.x))) ||	//X
+			((this->y != (rhs.y))) ||	//Y
+			((this->z != (rhs.z)))) {	//Z
 			return true;
 		}
 		return false;

@@ -204,7 +204,7 @@ __global__ void kernel_gpu_cuda_dmr(par_str<real_t> d_par_gpu,
 					acc_half.z += (qB_shared_half * fzij_half);
 
 					if (((j + 1) % COUNT) == 0) {
-						check_bit_error(acc_half, acc_real);
+						check_bit_error(acc_half, acc_real, THRESHOLD);
 					}
 				}
 				fA[wtx] = acc_real;
