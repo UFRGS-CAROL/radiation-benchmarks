@@ -25,10 +25,13 @@ float abs__(float a) {
 	return fabsf(a);
 }
 
+#if __CUDA_ARCH__ >= 600
 __DEVICE_HOST_INLINE__
 half abs__(half a) {
 	return fabsf(a);
 }
+
+#endif
 
 template<typename real_t>
 real_t abs__(real_t& lhs);

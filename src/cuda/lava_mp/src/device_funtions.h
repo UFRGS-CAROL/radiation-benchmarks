@@ -8,7 +8,10 @@
 #ifndef DEVICE_FUNTIONS_H_
 #define DEVICE_FUNTIONS_H_
 
-#include "cuda_fp16.h"
+#if __CUDA_ARCH__ >= 600
+#include <cuda_fp16.h>
+
+#endif
 #include "common.h"
 #include "block_threshold.h"
 
@@ -16,14 +19,12 @@ __device__ unsigned long long errors;
 /**
  * EXP
  */
+#if __CUDA_ARCH__ >= 600
 __DEVICE_INLINE__
 half exp__(half lhs) {
-#if __CUDA_ARCH__ >= 600
 	return hexp(lhs);
-#else
-	return expf(float(lhs));
-#endif
 }
+#endif
 
 __DEVICE_INLINE__
 float exp__(float lhs) {
