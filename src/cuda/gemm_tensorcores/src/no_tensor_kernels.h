@@ -351,9 +351,14 @@ __global__ void matrix_mult_kernel_dmr_stream(	//Kernel without hardening
 
 
 template<typename half_t, typename real_t>
-__global__ void compare_two_outputs(half_t* lhs, real_t* rhs) {
+__global__ void compare_two_outputs(half_t* lhs, real_t* rhs, const uint32_t threshold) {
+	uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	check_relative_error(lhs[tid], rhs[tid], threshold);
+}
+
+template<typename real_t>
+__global__ void compare_two_outputs(real_t* lhs, real_t* rhs) {
 	uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 	check_relative_error(lhs[tid], rhs[tid]);
 }
-
 #endif /* NO_TENSOR_KERNELS_H_ */

@@ -99,7 +99,7 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 		;
 		uint32_t thread_block = BLOCK_SIZE * BLOCK_SIZE;
 		uint32_t grid_block = (wA * wB) / thread_block;
-		compare_two_outputs<<<grid_block, thread_block>>>(d_dev_half_t.data(), d_dev.data());
+		compare_two_outputs<<<grid_block, thread_block>>>(d_dev_half_t.data(), d_dev.data(), threshold);
 
 	}
 
