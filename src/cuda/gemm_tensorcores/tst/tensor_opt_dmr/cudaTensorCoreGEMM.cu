@@ -557,10 +557,10 @@ int main(int argc, char **argv) {
 			cudaFuncSetAttribute(MatrixMulCUDA<half>,
 					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
-	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
-	M_GLOBAL);			
+	//compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
+	//M_GLOBAL);			
 
-	matrix_mult<<<dim_grid, dim_block>>>(A, B, M_GLOBAL, M_GLOBAL, D, alpha, beta);
+	matrix_mult<<<dim_grid, dim_block>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
 
 	//heckKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
