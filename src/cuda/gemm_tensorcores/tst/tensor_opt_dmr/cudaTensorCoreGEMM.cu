@@ -30,15 +30,15 @@
 #define WMMA_M 16
 #define WMMA_N 16
 #define WMMA_K 16
-#define MATRIX_M 4096 //16384
-#define MATRIX_N 4096 //16384
-#define MATRIX_K 4096 //16384
+#define MATRIX_M 1024 //16384
+#define MATRIX_N 1024 //16384
+#define MATRIX_K 1024 //16384
 
 // GEMM configuration.
 
-#define M_TILES 256	
-#define N_TILES 256
-#define K_TILES 256
+#define M_TILES 64	
+#define N_TILES 64
+#define K_TILES 64
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)
@@ -566,7 +566,7 @@ int main(int argc, char **argv) {
 
 	matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
 
-	checkKernelErrors(cudaStreamSynchronize(st));
+	//checkKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
 	checkKernelErrors(cudaDeviceSynchronize());
  	}
