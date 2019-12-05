@@ -12,12 +12,13 @@ SIZE?=4096
 ITERATIONS=10
 PRECISION=double
 OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE).matrix
+DMR=mixed
 
 # This is what I use, uncomment if you know your arch and want to specify
-ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
+#ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
 #ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
 #ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-#ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 
 VPATH=./src/
 TARGET=gemm
@@ -101,9 +102,9 @@ generate_gemm:
 			--input_c c_$(OUTPUTPREFIX) \
 			--gold  g_$(OUTPUTPREFIX)
 	
-test_gemm_dmr_mixed:
+test_gemm:
 	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
-			--precision $(PRECISION) --dmr mixed \
+			--precision $(PRECISION) --dmr $(DMR) \
 			--iterations $(ITERATIONS)  \
 			--alpha $(ALPHA) --beta $(BETA)\
 			--input_a a_$(OUTPUTPREFIX) \
