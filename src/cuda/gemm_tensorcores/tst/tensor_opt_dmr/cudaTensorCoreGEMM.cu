@@ -14,6 +14,9 @@
 // improve the performance of the computations on GPU.
 // Note that you need a GPU that can have more than 64 Kb of shared memory
 // per multiprocessor.
+#define M_GLOBAL (M * M_TILES)
+#define N_GLOBAL (N * N_TILES)
+#define K_GLOBAL (K * K_TILES)
 #define SHARED_MEMORY_LIMIT_64K 0
 #endif
 
@@ -36,13 +39,17 @@
 
 // GEMM configuration.
 
-#define M_TILES 128	
-#define N_TILES 128
-#define K_TILES 128
+#define M_TILES 256	
+#define N_TILES 256
+#define K_TILES 256
 
-#define M_GLOBAL (M * M_TILES)
-#define N_GLOBAL (N * N_TILES)
-#define K_GLOBAL (K * K_TILES)
+// #define M_GLOBAL (M * M_TILES)
+// #define N_GLOBAL (N * N_TILES)
+// #define K_GLOBAL (K * K_TILES)
+
+#define M_GLOBAL 2048
+#define N_GLOBAL 2048
+#define K_GLOBAL 2048
 
 #define C_LAYOUT nvcuda::wmma::mem_row_major
 
