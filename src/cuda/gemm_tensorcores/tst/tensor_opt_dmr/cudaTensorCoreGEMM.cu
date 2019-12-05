@@ -535,8 +535,8 @@ int main(int argc, char **argv) {
 	printf("Computing... using high performance kernel compute_gemm \n");
 
 	cudaStream_t stream1, stream2;
-  	cudaErrCheck(cudaStreamCreate(&stream1)); 
-  	cudaErrCheck(cudaStreamCreate(&stream2));
+  	checkCudaErrors(cudaStreamCreate(&stream1)); 
+  	checkCudaErrors(cudaStreamCreate(&stream2));
 
 	//cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
 	std::cout << BLOCK_SIZE << " " << M_GLOBAL << std::endl;
