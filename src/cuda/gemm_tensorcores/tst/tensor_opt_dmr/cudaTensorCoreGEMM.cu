@@ -14,7 +14,7 @@
 // improve the performance of the computations on GPU.
 // Note that you need a GPU that can have more than 64 Kb of shared memory
 // per multiprocessor.
-#define SHARED_MEMORY_LIMIT_64K 1
+#define SHARED_MEMORY_LIMIT_64K 0
 #endif
 
 // GPU configuration.
@@ -30,15 +30,15 @@
 #define WMMA_M 16
 #define WMMA_N 16
 #define WMMA_K 16
-#define MATRIX_M 2048 //16384
-#define MATRIX_N 2048 //16384
-#define MATRIX_K 2048 //16384
+#define MATRIX_M 4096 //16384
+#define MATRIX_N 4096 //16384
+#define MATRIX_K 4096 //16384
 
 // GEMM configuration.
 
-#define M_TILES 128	
-#define N_TILES 128
-#define K_TILES 128
+#define M_TILES 256	
+#define N_TILES 256
+#define K_TILES 256
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)
@@ -564,7 +564,7 @@ int main(int argc, char **argv) {
     M_GLOBAL);
 
 
-	//matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
+	matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
 
 	checkKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
