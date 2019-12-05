@@ -581,3 +581,5 @@ int main(int argc, char* argv[]) {
 
  cudaErrCheck(cudaDeviceReset());
  return 0;
+
+}
