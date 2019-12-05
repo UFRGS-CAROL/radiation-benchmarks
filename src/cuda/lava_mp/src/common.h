@@ -45,7 +45,7 @@
 #endif
 
 #ifndef ZERO_DOUBLE
-#define ZERO_DOUBLE 1.4e-40
+#define ZERO_DOUBLE 1.4e-60
 #endif
 
 #ifndef ZERO_HALF

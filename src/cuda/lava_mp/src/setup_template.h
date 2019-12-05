@@ -10,7 +10,11 @@
 
 #include <random>
 #include <omp.h>
+
+#if __CUDA_ARCH__ >= 600
 #include <cuda_fp16.h>
+
+#endif
 
 #include "include/cuda_utils.h"
 #include "Parameters.h"

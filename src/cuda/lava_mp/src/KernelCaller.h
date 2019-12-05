@@ -11,6 +11,7 @@
 #include "nondmr_kernels.h"
 #include "dmr_kernels.h"
 #include "types.h"
+#include "block_threshold.h"
 
 #include <iomanip>      // std::setprecision
 #include <sstream>      // std::stringstream
@@ -103,18 +104,17 @@ struct KernelCaller {
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
+	std::vector<uint32_t> thresholds_host;
 
 	DMRMixedKernelCaller(const uint32_t threshold) :
 			KernelCaller<COUNT, half_t, real_t>(threshold) {
-
-//		std::vector<uint32_t> thresholds_host(THRESHOLD_SIZE);
-//		std::string path =
-//				"/home/carol/radiation-benchmarks/data/threshold.data";
-//		File<uint32_t>::read_from_file(path, thresholds_host);
-//		rad::checkFrameworkErrors(
-//				cudaMemcpyToSymbol(thresholds, thresholds_host.data(),
-//						sizeof(uint32_t) * THRESHOLD_SIZE, 0,
-//						cudaMemcpyHostToDevice));
+		this->thresholds_host = std::vector<uint32_t>(THRESHOLD_SIZE, 0);
+		std::string path(THRESHOLD_PATH);
+		File<uint32_t>::read_from_file(path, thresholds_host);
+		rad::checkFrameworkErrors(
+				cudaMemcpyToSymbol(thresholds, thresholds_host.data(),
+						sizeof(uint32_t) * THRESHOLD_SIZE, 0,
+						cudaMemcpyHostToDevice));
 	}
 
 	uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
@@ -133,10 +133,20 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 				max_threshold = std::max(std::fabs((real_t)fv_rt_ij.z - (real_t)fv_ht_ij.z), max_threshold);
 			}
 		}
+
+		//Copy the block threshold back
+		rad::checkFrameworkErrors(
+		cudaMemcpyFromSymbol(this->thresholds_host.data(),thresholds,
+				sizeof(uint32_t) * THRESHOLD_SIZE, 0,
+				cudaMemcpyDeviceToHost));
+		std::string path(THRESHOLD_PATH);
+
+		File<uint32_t>::write_to_file(path, this->thresholds_host);
 		return max_threshold;
 	}
 
 	void sync_half_t() override {
+
 		for (uint32_t i = 0; i < this->d_fv_gpu_ht.size(); i++) {
 			this->fv_cpu_ht[i] = this->d_fv_gpu_ht[i].to_vector();
 		}
@@ -255,10 +265,6 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 
 		for(auto it : diff_vec) {
 			if(it > this->threshold_) {
-//				std::cout << diff_vec[0] << std::endl;
-//				std::cout << diff_vec[1] << std::endl;
-//				std::cout << diff_vec[2] << std::endl;
-//				std::cout << diff_vec[3] << std::endl;
 				return true;
 			}
 		}
@@ -316,7 +322,8 @@ struct DMRKernelCaller: public DMRMixedKernelCaller<NUMBER_PAR_PER_BOX + 2,
 		 */
 		static uint32_t elements = blocks.x * threads.x;
 		static uint32_t thread_block = 1024;
-		static uint32_t thread_grid = ceil(float(elements) / float(thread_block));
+		static uint32_t thread_grid = ceil(
+				float(elements) / float(thread_block));
 
 		compare_two_outputs<<<thread_grid, thread_block, 0, stream.stream>>>(
 				d_fv_gpu, this->d_fv_gpu_ht[stream_idx].data());

@@ -33,7 +33,7 @@
 #define AT_THE_END_BLOCK NUMBER_PAR_PER_BOX + 2
 
 void setup_double(Parameters& parameters, Log& log) {
-	if (parameters.redundancy == NONE || parameters.generate) {
+	if (parameters.redundancy == NONE) {
 		UnhardenedKernelCaller<double> kc;
 		setup_execution(parameters, log, kc);
 	} else if (parameters.redundancy == DMR) {
