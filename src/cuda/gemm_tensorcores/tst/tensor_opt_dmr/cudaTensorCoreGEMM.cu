@@ -536,8 +536,8 @@ int main(int argc, char **argv) {
 
 	cudaStream_t st;
 	cudaStream_t stream1, stream2;
-  	cudaErrCheck(cudaStreamCreate(&stream1)); 
-  	cudaErrCheck(cudaStreamCreate(&stream2));
+  	checkKernelErrors(cudaStreamCreate(&stream1)); 
+  	checkKernelErrors(cudaStreamCreate(&stream2));
 
 
 	//cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
