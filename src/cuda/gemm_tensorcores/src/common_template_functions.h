@@ -188,7 +188,6 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		if (dmr) {
 			half_precision = half_vector[i];
 			dmr_equals = equals(half_precision, full_precision, threshold);
-//			std::cout << half_precision << " " << full_precision << std::endl;
 		} else {
 			half_precision = full_precision;
 		}
