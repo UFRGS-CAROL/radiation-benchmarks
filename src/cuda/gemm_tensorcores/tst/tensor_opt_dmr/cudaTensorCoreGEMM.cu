@@ -535,9 +535,12 @@ int main(int argc, char **argv) {
 	printf("Computing... using high performance kernel compute_gemm \n");
 
 	cudaStream_t st;
+	cudaStream_t stream1, stream2;
+  	cudaErrCheck(cudaStreamCreate(&stream1)); 
+  	cudaErrCheck(cudaStreamCreate(&stream2));
 
 
-	cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
+	//cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
 	std::cout << BLOCK_SIZE << " " << M_GLOBAL << std::endl;
 	//dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
 	//dim3 grid( M_GLOBAL / threads.x, M_GLOBAL / threads.y);
@@ -556,11 +559,11 @@ int main(int argc, char **argv) {
 
  
 	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-			st>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
+			stream1>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
     M_GLOBAL);
 
 
-	matrix_mult<<<dim_grid, dim_block>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
+	matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
 
 	checkKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
