@@ -30,15 +30,15 @@
 #define WMMA_M 16
 #define WMMA_N 16
 #define WMMA_K 16
-#define MATRIX_M 1024 //16384
-#define MATRIX_N 1024 //16384
-#define MATRIX_K 1024 //16384
+#define MATRIX_M 2048 //16384
+#define MATRIX_N 2048 //16384
+#define MATRIX_K 2048 //16384
 
 // GEMM configuration.
 
-#define M_TILES 64	
-#define N_TILES 64
-#define K_TILES 64
+#define M_TILES 128	
+#define N_TILES 128
+#define K_TILES 128
 
 #define M_GLOBAL (M * M_TILES)
 #define N_GLOBAL (N * N_TILES)
