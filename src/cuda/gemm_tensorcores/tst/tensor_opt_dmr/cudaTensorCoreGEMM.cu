@@ -347,7 +347,7 @@ __global__ void compute_gemm(const half *A, const half *B, const half *C,
 			for (int i = 0;
 					i < ((WARP_SIZE / 2) / CHUNK_COPY_LINES_PER_WARP) * 2;
 					i++) {
-				// Copy 16 bytes at once in each lane.
+				// Copy 16 bytes dodasat once in each lane.
 				*((int4 *) &shmem[shmem_idx][0]
 						+ (laneId % CHUNK_COPY_LINE_LANES)) = *lane_ptr;
 
@@ -534,7 +534,10 @@ int main(int argc, char **argv) {
 
 	printf("Computing... using high performance kernel compute_gemm \n");
 
-	//cudaStream_t st;
+	cudaStream_t stream1, stream2;
+  	cudaErrCheck(cudaStreamCreate(&stream1)); 
+  	cudaErrCheck(cudaStreamCreate(&stream2));
+
 	//cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
 	std::cout << BLOCK_SIZE << " " << M_GLOBAL << std::endl;
 	//dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
@@ -554,10 +557,10 @@ int main(int argc, char **argv) {
 			cudaFuncSetAttribute(MatrixMulCUDA<half>,
 					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
 
-	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
+	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ, stream1>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
 	M_GLOBAL);			
 
-	matrix_mult<<<dim_grid, dim_block, SHMEM_SZ>>>(A, B, M_GLOBAL, M_GLOBAL, D, alpha, beta);
+	matrix_mult<<<dim_grid, dim_block, 0, stream2>>>(A, B, M_GLOBAL, M_GLOBAL, D, alpha, beta);
 
 	//heckKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
