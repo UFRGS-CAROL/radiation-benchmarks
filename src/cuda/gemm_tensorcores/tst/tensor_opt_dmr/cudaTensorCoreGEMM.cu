@@ -534,7 +534,7 @@ int main(int argc, char **argv) {
 
 	printf("Computing... using high performance kernel compute_gemm \n");
 
-	cudaStream_t stream1, stream2;
+	cudaStream_t st;
   	checkCudaErrors(cudaStreamCreate(&stream1)); 
   	checkCudaErrors(cudaStreamCreate(&stream2));
 
