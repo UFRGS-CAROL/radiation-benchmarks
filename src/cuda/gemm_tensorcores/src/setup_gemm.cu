@@ -72,13 +72,36 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 			rad::DeviceVector<half_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
 			const uint32_t threshold) {
-		matrix_mult_kernel_dmr_mixed<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
+//		matrix_mult_kernel_dmr_mixed<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
+//				a_dev.data(), 				//a
+//				b_dev.data(), 				//b
+//				c_dev.data(), 				//c
+//				d_dev.data(), 				//d
+//				d_dev_half_t.data(), 		//d hardening
+//				alpha, beta, wA, wB, threshold);
+		matrix_mult_kernel_test<<<this->dim_grid, this->dim_block>>>( //call
 				a_dev.data(), 				//a
 				b_dev.data(), 				//b
 				c_dev.data(), 				//c
 				d_dev.data(), 				//d
+				alpha, beta, wA, wB);
+
+		matrix_mult_kernel_test<<<this->dim_grid, this->dim_block>>>( //call
+				a_dev.data(), 				//a
+				b_dev.data(), 				//b
+				c_dev.data(), 				//c
 				d_dev_half_t.data(), 		//d hardening
-				alpha, beta, wA, wB, threshold);
+				half_t(alpha), half_t(beta), wA, wB);
+
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		;
+		uint32_t thread_block = BLOCK_SIZE * BLOCK_SIZE;
+		uint32_t grid_block = (wA * wB) / thread_block;
+		compare_two_outputs<<<grid_block, thread_block>>>(d_dev_half_t.data(),
+				d_dev.data(), threshold);
+
 	}
 
 	DMRMixedGemmCaller(uint32_t m, uint32_t n) :
@@ -110,7 +133,6 @@ struct DMRGemmCaller: public GemmCaller<COUNT, real_t, real_t> {
 				d_dev.data(), 				//d
 				d_dev_half_t.data(), 		//d hardening
 				alpha, beta, wA, wB);
-
 
 //		matrix_mult_kernel_unhardened<<<this->dim_grid, this->dim_block>>>( //call
 //				a_dev.data(), 				//a
@@ -195,8 +217,10 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 				d_vector_device, d_vector_half_t_device, log_obj.alpha,
 				log_obj.beta, log_obj.size_matrices, log_obj.size_matrices,
 				threshold);
-		rad::checkFrameworkErrors (cudaDeviceSynchronize());;
-		rad::checkFrameworkErrors (cudaPeekAtLastError());;
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		;
 
 		log_obj.end_iteration();
 		computation_time = rad::mysecond() - computation_time;
@@ -227,8 +251,8 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 						<< copy_time << "s. " << std::endl;
 			} else {
 				std::cout << "Iteration: " << it << " DMR errors "
-										<< errors.first << ". " << "Radiation errors: "
-										<< errors.second << ". " << std::endl;
+						<< errors.first << ". " << "Radiation errors: "
+						<< errors.second << ". " << std::endl;
 			}
 			//If errors != 0 reload matrices to gpu
 			if (errors.first != 0 || errors.second != 0) {
@@ -255,9 +279,9 @@ void setup_execute(Log& log_obj, GemmCaller<COUNT, half_t, real_t>& mult_env,
 	}
 	if (log_obj.verbose) {
 
-	std::cout << "Elapsed time: " << (elapsed_time / log_obj.iterations)
-			<< " s\n";
-	}else{
+		std::cout << "Elapsed time: " << (elapsed_time / log_obj.iterations)
+				<< " s\n";
+	} else {
 		std::cout << "done.\n";
 	}
 	if (log_obj.generate) {
