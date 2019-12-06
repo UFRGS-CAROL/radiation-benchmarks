@@ -79,37 +79,6 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 				d_dev.data(), 				//d
 				d_dev_half_t.data(), 		//d hardening
 				alpha, beta, wA, wB, threshold);
-//		cudaStream_t pStream1, pStream2;
-//		cudaStreamCreate (&pStream1);
-//		cudaStreamCreate (&pStream2);
-
-//		matrix_mult_kernel_test<<<this->dim_grid, this->dim_block, 0, pStream1>>>( //call
-//				a_dev.data(), 				//a
-//				b_dev.data(), 				//b
-//				c_dev.data(), 				//c
-//				d_dev.data(), 				//d
-//				alpha, beta, wA, wB);
-//
-//		matrix_mult_kernel_test<<<this->dim_grid, this->dim_block>>>( //call
-//				a_dev.data(), 				//a
-//				b_dev.data(), 				//b
-//				c_dev.data(), 				//c
-//				d_dev_half_t.data(), 		//d hardening
-//				half_t(alpha), half_t(beta), wA, wB);
-//
-////		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-//		cudaStreamSynchronize (pStream1);
-//		cudaStreamSynchronize (pStream2);
-//		;
-//		rad::checkFrameworkErrors(cudaPeekAtLastError());
-//		;
-//		uint32_t thread_block = BLOCK_SIZE * BLOCK_SIZE;
-//		uint32_t grid_block = (wA * wB) / thread_block;
-//		compare_two_outputs<<<grid_block, thread_block>>>(d_dev_half_t.data(),
-//				d_dev.data(), threshold);
-//
-//		cudaStreamDestroy (pStream1);
-//		cudaStreamDestroy (pStream2);
 
 	}
 
