@@ -72,44 +72,44 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 			rad::DeviceVector<half_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
 			const uint32_t threshold) {
-//		matrix_mult_kernel_dmr_mixed<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
-//				a_dev.data(), 				//a
-//				b_dev.data(), 				//b
-//				c_dev.data(), 				//c
-//				d_dev.data(), 				//d
-//				d_dev_half_t.data(), 		//d hardening
-//				alpha, beta, wA, wB, threshold);
-		cudaStream_t pStream1, pStream2;
-		cudaStreamCreate (&pStream1);
-		cudaStreamCreate (&pStream2);
-
-		matrix_mult_kernel_test<<<this->dim_grid, this->dim_block, 0, pStream1>>>( //call
+		matrix_mult_kernel_dmr_mixed<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
 				a_dev.data(), 				//a
 				b_dev.data(), 				//b
 				c_dev.data(), 				//c
 				d_dev.data(), 				//d
-				alpha, beta, wA, wB);
-
-		matrix_mult_kernel_test<<<this->dim_grid, this->dim_block>>>( //call
-				a_dev.data(), 				//a
-				b_dev.data(), 				//b
-				c_dev.data(), 				//c
 				d_dev_half_t.data(), 		//d hardening
-				half_t(alpha), half_t(beta), wA, wB);
+				alpha, beta, wA, wB, threshold);
+//		cudaStream_t pStream1, pStream2;
+//		cudaStreamCreate (&pStream1);
+//		cudaStreamCreate (&pStream2);
 
-//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		cudaStreamSynchronize (pStream1);
-		cudaStreamSynchronize (pStream2);
-		;
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
-		;
-		uint32_t thread_block = BLOCK_SIZE * BLOCK_SIZE;
-		uint32_t grid_block = (wA * wB) / thread_block;
-		compare_two_outputs<<<grid_block, thread_block>>>(d_dev_half_t.data(),
-				d_dev.data(), threshold);
-
-		cudaStreamDestroy (pStream1);
-		cudaStreamDestroy (pStream2);
+//		matrix_mult_kernel_test<<<this->dim_grid, this->dim_block, 0, pStream1>>>( //call
+//				a_dev.data(), 				//a
+//				b_dev.data(), 				//b
+//				c_dev.data(), 				//c
+//				d_dev.data(), 				//d
+//				alpha, beta, wA, wB);
+//
+//		matrix_mult_kernel_test<<<this->dim_grid, this->dim_block>>>( //call
+//				a_dev.data(), 				//a
+//				b_dev.data(), 				//b
+//				c_dev.data(), 				//c
+//				d_dev_half_t.data(), 		//d hardening
+//				half_t(alpha), half_t(beta), wA, wB);
+//
+////		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+//		cudaStreamSynchronize (pStream1);
+//		cudaStreamSynchronize (pStream2);
+//		;
+//		rad::checkFrameworkErrors(cudaPeekAtLastError());
+//		;
+//		uint32_t thread_block = BLOCK_SIZE * BLOCK_SIZE;
+//		uint32_t grid_block = (wA * wB) / thread_block;
+//		compare_two_outputs<<<grid_block, thread_block>>>(d_dev_half_t.data(),
+//				d_dev.data(), threshold);
+//
+//		cudaStreamDestroy (pStream1);
+//		cudaStreamDestroy (pStream2);
 
 	}
 
@@ -124,8 +124,8 @@ struct DMRMixedGemmCaller: public GemmCaller<COUNT, half_t, real_t> {
 	}
 };
 
-template<const uint32_t COUNT, typename real_t>
-struct DMRGemmCaller: public GemmCaller<COUNT, real_t, real_t> {
+template<typename real_t>
+struct DMRGemmCaller: public GemmCaller<0, real_t, real_t> {
 
 	void gemm(
 			rad::DeviceVector<real_t>& a_dev, 			//A matrix
@@ -135,40 +135,40 @@ struct DMRGemmCaller: public GemmCaller<COUNT, real_t, real_t> {
 			rad::DeviceVector<real_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
 			const uint32_t threshold) {
-		matrix_mult_kernel_dmr<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
-				a_dev.data(), 				//a
-				b_dev.data(), 				//b
-				c_dev.data(), 				//c
-				d_dev.data(), 				//d
-				d_dev_half_t.data(), 		//d hardening
-				alpha, beta, wA, wB);
-
-//		matrix_mult_kernel_unhardened<<<this->dim_grid, this->dim_block>>>( //call
+//		matrix_mult_kernel_dmr<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
 //				a_dev.data(), 				//a
 //				b_dev.data(), 				//b
 //				c_dev.data(), 				//c
 //				d_dev.data(), 				//d
+//				d_dev_half_t.data(), 		//d hardening
 //				alpha, beta, wA, wB);
-//		matrix_mult_kernel_unhardened<<<this->dim_grid, this->dim_block>>>( //call
-//				a_dev.data(), 				//a
-//				b_dev.data(), 				//b
-//				c_dev.data(), 				//c
-//				d_dev_half_t.data(), 				//d
-//				alpha, beta, wA, wB);
-//
-//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-//		;
-//		rad::checkFrameworkErrors(cudaPeekAtLastError());
-//		;
-//		uint32_t thread_block = BLOCK_SIZE * BLOCK_SIZE;
-//		uint32_t grid_block = (wA * wB) / thread_block;
-//		compare_two_outputs<<<grid_block, thread_block>>>(d_dev.data(),
-//				d_dev_half_t.data());
+
+		matrix_mult_kernel_unhardened<<<this->dim_grid, this->dim_block>>>( //call
+				a_dev.data(), 				//a
+				b_dev.data(), 				//b
+				c_dev.data(), 				//c
+				d_dev.data(), 				//d
+				alpha, beta, wA, wB);
+		matrix_mult_kernel_unhardened<<<this->dim_grid, this->dim_block>>>( //call
+				a_dev.data(), 				//a
+				b_dev.data(), 				//b
+				c_dev.data(), 				//c
+				d_dev_half_t.data(), 				//d
+				alpha, beta, wA, wB);
+
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		;
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		;
+		uint32_t thread_block = BLOCK_SIZE * BLOCK_SIZE;
+		uint32_t grid_block = (wA * wB) / thread_block;
+		compare_two_outputs<<<grid_block, thread_block>>>(d_dev.data(),
+				d_dev_half_t.data());
 
 	}
 
 	DMRGemmCaller(uint32_t m, uint32_t n) :
-			GemmCaller<COUNT, real_t, real_t>(m, n) {
+			GemmCaller<0, real_t, real_t>(m, n) {
 		this->duplicated = true;
 	}
 
@@ -351,7 +351,7 @@ void setup_gemm_dmr(Log& log) {
 			}
 
 		} else if (log.dmr == "full") {
-			DMRGemmCaller<AT_END_OP_CHECK, double> gemm_obj(log.size_matrices,
+			DMRGemmCaller<double> gemm_obj(log.size_matrices,
 					log.size_matrices);
 			setup_execute(log, gemm_obj);
 		}

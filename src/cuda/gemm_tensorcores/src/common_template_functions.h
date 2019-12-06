@@ -174,15 +174,15 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		std::vector<real_t>& real_vector, std::vector<half_t>& half_vector,
 		Log& log, const uint32_t threshold, const bool dmr) {
 	uint32_t host_errors = 0;
-	uint32_t memory_errors = 0;
+//	uint32_t memory_errors = 0;
 
 #ifdef OMP
-#pragma omp parallel for shared(host_errors, memory_errors)
+#pragma omp parallel for shared(host_errors)
 #endif
 	for (size_t i = 0; i < gold.size(); i++) {
 		auto gold_value = gold[i];
 		real_t full_precision = real_vector[i];
-		half_t half_precision = (dmr == true) ? half_vector[i] : real_vector[i];
+		half_t half_precision = half_vector[i]; //(dmr == true) ? half_vector[i] : real_vector[i];
 
 		//Check if DMR is OK
 		bool dmr_equals = equals(half_precision, full_precision, threshold);
@@ -212,9 +212,9 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 
 			log.log_error(error_detail.str());
 			host_errors++;
-			if(is_output_diff && dmr_equals && dmr){
-				memory_errors++;
-			}
+//			if(is_output_diff && dmr_equals && dmr){
+//				memory_errors++;
+//			}
 
 #ifdef OMP
 		}
@@ -229,9 +229,9 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 		log.log_info(error_detail);
 	}
 
-	if (memory_errors != 0) {
-		log.log_info("dmr1_equals_dmr2_detected");
-	}
+//	if (memory_errors != 0) {
+//		log.log_info("dmr1_equals_dmr2_detected");
+//	}
 
 	log.update_error_count(host_errors);
 	if (host_errors != 0)
