@@ -230,7 +230,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 	}
 
 	if (memory_errors != 0) {
-		//log.log_info("dmr1_equals_dmr2_detected");
+		log.log_info("dmr1_equals_dmr2_detected");
 	}
 
 	log.update_error_count(host_errors);

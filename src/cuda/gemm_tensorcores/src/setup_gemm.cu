@@ -103,36 +103,36 @@ struct DMRGemmCaller: public GemmCaller<COUNT, real_t, real_t> {
 			rad::DeviceVector<real_t>& d_dev_half_t,  	//D_Half matrix
 			real_t alpha, real_t beta, int wA, int wB,
 			const uint32_t threshold) {
-//		matrix_mult_kernel_dmr<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
-//				a_dev.data(), 				//a
-//				b_dev.data(), 				//b
-//				c_dev.data(), 				//c
-//				d_dev.data(), 				//d
-//				d_dev_half_t.data(), 		//d hardening
-//				alpha, beta, wA, wB);
-//
-
-		matrix_mult_kernel_unhardened<<<this->dim_grid, this->dim_block>>>( //call
+		matrix_mult_kernel_dmr<COUNT> <<<this->dim_grid, this->dim_block>>>( //call
 				a_dev.data(), 				//a
 				b_dev.data(), 				//b
 				c_dev.data(), 				//c
 				d_dev.data(), 				//d
-				alpha, beta, wA, wB);
-		matrix_mult_kernel_unhardened<<<this->dim_grid, this->dim_block>>>( //call
-				a_dev.data(), 				//a
-				b_dev.data(), 				//b
-				c_dev.data(), 				//c
-				d_dev_half_t.data(), 				//d
+				d_dev_half_t.data(), 		//d hardening
 				alpha, beta, wA, wB);
 
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
-		;
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
-		;
-		uint32_t thread_block = BLOCK_SIZE * BLOCK_SIZE;
-		uint32_t grid_block = (wA * wB) / thread_block;
-		compare_two_outputs<<<grid_block, thread_block>>>(d_dev.data(),
-				d_dev_half_t.data());
+
+//		matrix_mult_kernel_unhardened<<<this->dim_grid, this->dim_block>>>( //call
+//				a_dev.data(), 				//a
+//				b_dev.data(), 				//b
+//				c_dev.data(), 				//c
+//				d_dev.data(), 				//d
+//				alpha, beta, wA, wB);
+//		matrix_mult_kernel_unhardened<<<this->dim_grid, this->dim_block>>>( //call
+//				a_dev.data(), 				//a
+//				b_dev.data(), 				//b
+//				c_dev.data(), 				//c
+//				d_dev_half_t.data(), 				//d
+//				alpha, beta, wA, wB);
+//
+//		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+//		;
+//		rad::checkFrameworkErrors(cudaPeekAtLastError());
+//		;
+//		uint32_t thread_block = BLOCK_SIZE * BLOCK_SIZE;
+//		uint32_t grid_block = (wA * wB) / thread_block;
+//		compare_two_outputs<<<grid_block, thread_block>>>(d_dev.data(),
+//				d_dev_half_t.data());
 
 	}
 
