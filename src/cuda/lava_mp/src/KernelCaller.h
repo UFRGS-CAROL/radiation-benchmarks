@@ -260,25 +260,9 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		return false;
 	}
 
-	bool check_bit_error(FOUR_VECTOR<double>& rhs, FOUR_VECTOR<float>& lhs) {
-		auto diff_vec = this->get_4vector_diffs(lhs, rhs);
-
-		for(auto it : diff_vec) {
-			if(it > this->threshold_) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs) {
-		if ((std::fabs(lhs.v - rhs.v) > this->threshold_) ||	//V
-		(std::fabs(lhs.x - rhs.x) > this->threshold_) ||//X
-		(std::fabs(lhs.y - rhs.y) > this->threshold_) ||//Y
-		(std::fabs(lhs.z - rhs.z) > this->threshold_)) {	//Z
-			return true;
-		}
-		return false;
+		return (lhs != rhs);
 	}
 };
 
@@ -303,11 +287,6 @@ struct DMRKernelCaller: public DMRMixedKernelCaller<NUMBER_PAR_PER_BOX + 2,
 			par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
-
-//		kernel_gpu_cuda_dmr<NUMBER_PAR_PER_BOX + 1> <<<blocks, threads, 0,
-//				stream.stream>>>(par_cpu, dim_cpu, d_box_gpu, d_rv_gpu,
-//				d_qv_gpu, d_fv_gpu, this->d_fv_gpu_ht[stream_idx].data(),
-//				this->threshold_);
 
 		kernel_gpu_cuda_nondmr<<<blocks, threads, 0, stream.stream>>>(par_cpu,
 				dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
