@@ -11,7 +11,9 @@ CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
 #ARCH+= 	-gencode arch=compute_35,code=[sm_35,compute_35]	# Titan V | Tesla V100
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+#ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+ARCH+= 	-gencode arch=compute_72,code=[sm_72,compute_72]	# Titan V | Tesla V100
+
 NVCC_FLAGS= $(ARCH) -Xptxas -v
 NVIDIA_INC=/usr/local/cuda/include/
 NVIDIA_LIB=/usr/local/cuda/lib64/
