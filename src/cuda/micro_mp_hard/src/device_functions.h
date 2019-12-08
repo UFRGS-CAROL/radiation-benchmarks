@@ -31,7 +31,7 @@ __DEVICE__ void check_bit_error(const float& lhs, const double& rhs) {
 #else
 	float rhs_as_float = float(rhs);
 	float relative = __fdividef(lhs, rhs_as_float);
-	if(relative < MIN_PERCENTAGE && relative > MAX_PERCENTAGE) {
+	if(relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE) {
 		atomicAdd(&errors, 1);
 	}
 
