@@ -102,4 +102,7 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 #define MUL_UINT32_THRESHOLD_100000 98100
 #define FMA_UINT32_THRESHOLD_100000 24508
 
+#define MIN_PERCENTAGE 0.99999f
+#define MAX_PERCENTAGE 1.00001f
+
 #endif /* COMMON_H_ */

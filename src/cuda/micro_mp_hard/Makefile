@@ -3,14 +3,16 @@ LOGS=1
 DEBUG?=0
 MICRO=mul
 DMR=none
+ITERATIONS=10
 CHECK_BLOCK=$(OPS)
+BUILDRELATIVEERROR=0
 
 CC=g++
 CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 
-ARCH+= 	-gencode arch=compute_35,code=[sm_35,compute_35]	# Titan V | Tesla V100
-#ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+#ARCH+= 	-gencode arch=compute_35,code=[sm_35,compute_35]	# Titan V | Tesla V100
+ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
 NVCC_FLAGS= $(ARCH) -Xptxas -v
 NVIDIA_INC=/usr/local/cuda/include/
 NVIDIA_LIB=/usr/local/cuda/lib64/
@@ -31,7 +33,7 @@ SOURCES=./src/main.cu
 EXEC=./cuda_micro_mp_hardening
 
 FLAGS+=-I$(NVIDIA_INC) -I../common/include -L$(NVIDIA_LIB) -DOPS=$(OPS) 
-FLAGS+= -O3 -lLogHelper -std=c++11  $(NVCC_FLAGS)
+FLAGS+= -O3 -lLogHelper -std=c++11  $(NVCC_FLAGS) -DBUILDRELATIVEERROR=$(BUILDRELATIVEERROR)
 
 
 .PHONY: all test clean generate
@@ -62,5 +64,5 @@ test:
 			--inst $(MICRO)     \
 			--gold ./gold_$(MICRO).data \
 			--opnum $(CHECK_BLOCK) \
-			--verbose --iterations 10
+			--verbose --iterations $(ITERATIONS)
 

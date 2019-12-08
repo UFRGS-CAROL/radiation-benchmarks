@@ -14,24 +14,33 @@ __device__ unsigned long long errors = 0;
 
 template<const uint32 THRESHOLD_UINT32>
 __DEVICE__ void check_bit_error(const float& lhs, const double& rhs) {
+
+#if BUILDRELATIVEERROR == 0
 	const uint32 lhs_data = __float_as_uint(lhs);
 	const uint32 rhs_data = __float_as_uint(float(rhs));
 	uint32 sub_res;
-	if(lhs_data > rhs_data){
+	if (lhs_data > rhs_data) {
 		sub_res = lhs_data - rhs_data;
-	}else{
+	} else {
 		sub_res = rhs_data - lhs_data;
 	}
 
 	if (sub_res > THRESHOLD_UINT32) {
 		atomicAdd(&errors, 1);
 	}
+#else
+	float rhs_as_float = float(rhs);
+	float relative = __fdividef(lhs, rhs_as_float);
+	if(relative < MIN_PERCENTAGE && relative > MAX_PERCENTAGE) {
+		atomicAdd(&errors, 1);
+	}
+
+#endif
 }
 
-template<const uint32 THRESHOLD_UINT32>
-__DEVICE__ void check_bit_error(const double& lhs, const double& rhs) {
-	double diff = fabs(lhs - rhs);
-	if (diff > ZERO_DOUBLE) {
+template<const uint32 THRESHOLD_UINT32, typename real_t>
+__DEVICE__ void check_bit_error(real_t& lhs, real_t& rhs) {
+	if (lhs != rhs) {
 		atomicAdd(&errors, 1);
 	}
 }
@@ -95,73 +104,5 @@ __DEVICE__ half mul_dmr(half a, half b) {
 	return __hmul(a, b);
 }
 #endif
-
-//
-//__DEVICE__ double abs__(double a) {
-//	return fabs(a);
-//}
-//
-//__DEVICE__ float abs__(float a) {
-//	return fabsf(a);
-//}
-//
-//__DEVICE__ half abs__(half a) {
-//	return fabsf(a);
-//}
-//
-//__DEVICE__ void compare(const float lhs, const half rhs) {
-//	const float diff = abs__(lhs - float(rhs));
-//	const float zero = float(ZERO_HALF);
-//	if (diff > zero) {
-//		atomicAdd(&errors, 1);
-//	}
-//}
-//
-//__DEVICE__ void compare(const double lhs, const float rhs) {
-//	const double diff = abs__(lhs - double(rhs));
-//	const double zero = double(ZERO_FLOAT);
-//	if (diff > zero) {
-//		atomicAdd(&errors, 1);
-//	}
-//}
-//
-//template<typename T>
-//__DEVICE__ void compare(const T lhs, const T rhs) {
-//	const T diff = abs__(lhs - rhs);
-//	const T zero = T(ZERO_FULL);
-//	if (diff > zero) {
-//		atomicAdd(&errors, 1);
-//	}
-//}
-//
-//template<typename incomplete, typename full>
-//__DEVICE__ void check_relative_error(incomplete acc_incomplete,
-//		full acc_full) {
-//	compare(acc_full, acc_incomplete);
-//}
-//
-//template<typename T>
-//__DEVICE__ void cast(volatile T& lhs, const T& rhs) {
-//	lhs = rhs;
-//}
-
-/*
- * __float2half_rd  round-down mode
- * __float2half_rn round-to-nearest-even mode
- * __float2half_ru  round-up mode
- * __float2half_rz round-towards-zero mode
- */
-//__DEVICE__ void cast(volatile half& lhs, const float& rhs) {
-//	lhs = __float2half_rn(rhs);
-//}
-/*
- *__double2float_rd Convert a double to a float in round-down mode.
- *__double2float_rn Convert a double to a float in round-to-nearest-even mode.
- *__double2float_ru Convert a double to a float in round-up mode.
- *__double2float_rz Convert a double to a float in round-towards-zero mode.
- */
-//__DEVICE__ void cast(volatile float& lhs, const double& rhs) {
-//	lhs = __double2float_rn(rhs);
-//}
 
 #endif /* DEVICE_FUNCTIONS_H_ */
