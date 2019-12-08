@@ -177,6 +177,10 @@ int main(int argc, char* argv[]) {
 
 	std::cout << log << std::endl;
 	std::cout << parameters << std::endl;
+#if BUILDRELATIVEERROR != 0
+	std::cout << "Relative error used" << std::endl;
+#endif
+
 
 	switch (parameters.operation_num) {
 	case 1:
