@@ -102,10 +102,6 @@ std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 #define MUL_UINT32_THRESHOLD_100000 98100
 #define FMA_UINT32_THRESHOLD_100000 24508
 
-//Define the min and max percentage for relative error
-#define MIN_PERCENTAGE 1.000000f - float(RELATIVE_ERROR_VARIATION)
-#define MAX_PERCENTAGE 1.000000f + float(RELATIVE_ERROR_VARIATION)
-
 //Define OPS
 #define OPS 100000
 

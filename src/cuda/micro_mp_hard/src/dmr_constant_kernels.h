@@ -31,13 +31,13 @@ __global__ void microbenchmark_kernel_add(real_t* output_real_t_1,
 		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
 
 		if ((count % COUNT) == 0) {
-			check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
+			check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
 			acc_half_t = half_t(acc_real_t);
 		}
 	}
 
 	if (COUNT == OPS) {
-		check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
+		check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
 	}
 
 	const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -72,13 +72,13 @@ __global__ void microbenchmark_kernel_mul(real_t* output_real_t_1,
 		acc_half_t = mul_dmr(this_thread_input_half_t, acc_half_t);
 
 		if ((count % COUNT) == 0) {
-			check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
+			check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
 			acc_half_t = half_t(acc_real_t);
 		}
 	}
 
 	if (COUNT == OPS) {
-		check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
+		check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
 	}
 
 	const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -115,13 +115,13 @@ __global__ void microbenchmark_kernel_fma(real_t* output_real_t_1,
 				acc_half_t);
 
 		if ((count % COUNT) == 0) {
-			check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
+			check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
 			acc_half_t = half_t(acc_real_t);
 		}
 	}
 
 	if (COUNT == OPS) {
-		check_bit_error<THRESHOLD>(acc_half_t, acc_real_t);
+		check_bit_error<THRESHOLD, COUNT>(acc_half_t, acc_real_t);
 	}
 
 	const int thread_id = blockIdx.x * blockDim.x + threadIdx.x;

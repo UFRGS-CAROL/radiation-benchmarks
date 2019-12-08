@@ -177,10 +177,6 @@ int main(int argc, char* argv[]) {
 
 	std::cout << log << std::endl;
 	std::cout << parameters << std::endl;
-#if BUILDRELATIVEERROR != 0
-	std::cout << "Relative error allowed " << RELATIVE_ERROR_VARIATION << std::endl;
-#endif
-
 
 	switch (parameters.operation_num) {
 	case 1:

@@ -12,7 +12,7 @@
 
 __device__ unsigned long long errors = 0;
 
-template<const uint32 THRESHOLD_UINT32>
+template<const uint32 THRESHOLD_UINT32, const uint32 COUNT>
 __DEVICE__ void check_bit_error(const float& lhs, const double& rhs) {
 
 #if BUILDRELATIVEERROR == 0
@@ -31,7 +31,26 @@ __DEVICE__ void check_bit_error(const float& lhs, const double& rhs) {
 #else
 	float rhs_as_float = float(rhs);
 	float relative = __fdividef(lhs, rhs_as_float);
-	if(relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE) {
+
+
+#if COUNT == 1
+	constexpr float min_percentage = 1.0f - 1.0e-6;
+	constexpr float max_percentage = 1.0f - 1.0e-6;
+#elif COUNT == 10
+	constexpr float min_percentage = 1.0f - 1.0e-5;
+	constexpr float max_percentage = 1.0f - 1.0e-5;
+#elif COUNT == 100
+	constexpr float min_percentage = 1.0f - 1.0e-4;
+	constexpr float max_percentage = 1.0f - 1.0e-4;
+#elif COUNT == 1000
+	constexpr float min_percentage = 1.0f - 1.0e-3;
+	constexpr float max_percentage = 1.0f - 1.0e-3;
+#else
+	constexpr float min_percentage = 1.0f - 1.0e-2;
+	constexpr float max_percentage = 1.0f - 1.0e-2;
+#endif
+
+	if(relative < min_percentage || relative > max_percentage) {
 		atomicAdd(&errors, 1);
 	}
 
