@@ -32,9 +32,8 @@ __DEVICE__ void check_bit_error(const float& lhs, const double& rhs) {
 	float rhs_as_float = float(rhs);
 	float relative = __fdividef(lhs, rhs_as_float);
 
-
-	switch (COUNT){
-		case 1:{
+	switch (COUNT) {
+		case 1: {
 			constexpr float min_percentage = 1.0f - 1.0e-6;
 			constexpr float max_percentage = 1.0f + 1.0e-6;
 			if(relative < min_percentage || relative > max_percentage) {
@@ -42,7 +41,7 @@ __DEVICE__ void check_bit_error(const float& lhs, const double& rhs) {
 			}
 			return;
 		}
-		case 10:{
+		case 10: {
 			constexpr float min_percentage = 1.0f - 1.0e-5;
 			constexpr float max_percentage = 1.0f + 1.0e-5;
 			if(relative < min_percentage || relative > max_percentage) {
@@ -50,7 +49,7 @@ __DEVICE__ void check_bit_error(const float& lhs, const double& rhs) {
 			}
 			return;
 		}
-		case 100:{
+		case 100: {
 			constexpr float min_percentage = 1.0f - 1.0e-4;
 			constexpr float max_percentage = 1.0f + 1.0e-4;
 			if(relative < min_percentage || relative > max_percentage) {
@@ -58,7 +57,7 @@ __DEVICE__ void check_bit_error(const float& lhs, const double& rhs) {
 			}
 			return;
 		}
-		case 1000:{
+		case 1000: {
 			constexpr float min_percentage = 1.0f - 1.0e-3;
 			constexpr float max_percentage = 1.0f + 1.0e-3;
 			if(relative < min_percentage || relative > max_percentage) {
@@ -66,7 +65,7 @@ __DEVICE__ void check_bit_error(const float& lhs, const double& rhs) {
 			}
 			return;
 		}
-		default:{
+		case OPS: {
 			constexpr float min_percentage = 1.0f - 1.0e-2;
 			constexpr float max_percentage = 1.0f + 1.0e-2;
 			if(relative < min_percentage || relative > max_percentage) {
