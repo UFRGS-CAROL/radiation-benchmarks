@@ -1,10 +1,9 @@
-OPS?=100000
 LOGS=1
 DEBUG?=0
 MICRO=mul
 DMR=none
 ITERATIONS=10
-CHECK_BLOCK=$(OPS)
+CHECK_BLOCK=1
 BUILDRELATIVEERROR=0
 
 CC=g++
@@ -32,7 +31,7 @@ endif
 SOURCES=./src/main.cu
 EXEC=./cuda_micro_mp_hardening
 
-FLAGS+=-I$(NVIDIA_INC) -I../common/include -L$(NVIDIA_LIB) -DOPS=$(OPS) 
+FLAGS+=-I$(NVIDIA_INC) -I../common/include -L$(NVIDIA_LIB)
 FLAGS+= -O3 -lLogHelper -std=c++11  $(NVCC_FLAGS) -DBUILDRELATIVEERROR=$(BUILDRELATIVEERROR)
 
 
