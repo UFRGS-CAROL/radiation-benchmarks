@@ -63,6 +63,7 @@ int main(int argc, char *argv[]) {
 
 	log.set_max_errors_iter(
 	MAX_LOGGED_ERRORS_PER_STREAM * parameters.nstreams + 32);
+	std::cout << log << std::endl;
 
 #ifdef BUILDPROFILER
 
