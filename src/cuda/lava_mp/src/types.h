@@ -53,10 +53,10 @@ struct FOUR_VECTOR {
 
 	__DEVICE_HOST_INLINE__
 	bool operator!=(const FOUR_VECTOR& rhs) const {
-		if (((this->v != (rhs.v))) ||	//V
-			((this->x != (rhs.x))) ||	//X
-			((this->y != (rhs.y))) ||	//Y
-			((this->z != (rhs.z)))) {	//Z
+		if (this->v != rhs.v ||	//V
+				this->x != rhs.x ||	//X
+				this->y != rhs.y ||	//Y
+				this->z != rhs.z) {	//Z
 			return true;
 		}
 		return false;
