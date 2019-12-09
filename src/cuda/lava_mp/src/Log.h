@@ -52,11 +52,11 @@ struct Log {
 #ifdef LOGS
 		file_name = std::string(::get_log_file_name());
 #endif
-		os << "Log filename: " << file_name << std::endl;
+		os << "LOGFILENAME: " << file_name << std::endl;
 		os << "error_: " << d.error_ << std::endl;
 		os << "Info: " << d.info << std::endl;
 		os << "Test info: " << d.test_info << std::endl;
-		os << "Test name: " << d.test_name;
+		os << "Test name: " << d.test_name<< std::endl;
 		return os;
 	}
 
