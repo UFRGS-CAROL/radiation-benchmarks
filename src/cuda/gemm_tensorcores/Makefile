@@ -19,6 +19,8 @@ DMR=mixed
 #ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
 #ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+ARCH+= 	-gencode arch=compute_72,code=[sm_72,compute_72]	# Xavier
+
 
 VPATH=./src/
 TARGET=gemm
