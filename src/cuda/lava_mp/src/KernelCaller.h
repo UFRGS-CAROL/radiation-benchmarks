@@ -40,7 +40,7 @@ struct KernelCaller {
 			FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 			FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) = 0;
 
-	virtual void cmp(std::vector<FOUR_VECTOR<real_t>>& fv_cpu_rt, std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD,
+	virtual bool cmp(std::vector<FOUR_VECTOR<real_t>>& fv_cpu_rt, std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD,
 			Log& log, uint32_t streamIdx, bool verbose, uint32_t i, uint32_t& host_errors) {
 		auto val_gold = fv_cpu_GOLD[i];
 		auto val_output = fv_cpu_rt[i];
@@ -64,6 +64,8 @@ struct KernelCaller {
 				log.log_error_detail(error_detail.str());
 			}
 		}
+
+		return false;
 	}
 
 	// Returns true if no errors are found. False if otherwise.
@@ -73,17 +75,30 @@ struct KernelCaller {
 			std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD,
 			Log& log) {
 		uint32_t host_errors = 0;
-
+		uint32_t memory_errors = 0;
 		this->sync_half_t();
 
-#pragma omp parallel for shared(host_errors)
+#pragma omp parallel for shared(host_errors, memory_errors)
 		for (uint32_t i = 0; i < fv_cpu_GOLD.size(); i++) {
-			this->cmp(fv_cpu_rt, fv_cpu_GOLD, log, streamIdx, verbose, i, host_errors);
+			auto is_dmr_diff = this->cmp(fv_cpu_rt, fv_cpu_GOLD, log, streamIdx, verbose, i, host_errors);
+#pragma omp critical
+			{
+				memory_errors += is_dmr_diff;
+			}
 		}
 
 		auto dmr_errors = get_dmr_error();
 		if (dmr_errors != 0) {
 			std::string error_detail = "detected_dmr_errors: " + std::to_string(dmr_errors);
+			if (verbose) {
+				std::cout << error_detail << std::endl;
+			}
+			log.log_info_detail(error_detail);
+			log.update_infos(1);
+		}
+
+		if(memory_errors != 0){
+			std::string error_detail = "dmr1_equals_dmr2_detected: " + std::to_string(dmr_errors);
 			if (verbose) {
 				std::cout << error_detail << std::endl;
 			}
@@ -169,7 +184,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		}
 	}
 
-	void cmp(std::vector<FOUR_VECTOR<real_t>>& fv_cpu_rt,
+	bool cmp(std::vector<FOUR_VECTOR<real_t>>& fv_cpu_rt,
 	std::vector<FOUR_VECTOR<real_t>>& fv_cpu_GOLD, Log& log,
 	uint32_t streamIdx, bool verbose, uint32_t i, uint32_t& host_errors)
 	override {
@@ -177,9 +192,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		auto val_output = fv_cpu_rt[i];
 		auto val_output_ht = this->fv_cpu_ht[streamIdx][i];
 
-		if (val_gold != val_output || check_bit_error(val_output_ht, val_output)
-		)
-		{
+		if (val_gold != val_output) {
 #pragma omp critical
 			{
 				host_errors++;
@@ -207,6 +220,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 				log.log_error_detail(error_detail.str());
 			}
 		}
+		return check_bit_error(val_output_ht, val_output);
 	}
 
 	void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream,
@@ -259,7 +273,6 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		}
 		return false;
 	}
-
 
 	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs) {
 		return (lhs != rhs);

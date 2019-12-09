@@ -11,6 +11,7 @@
 //Assuming that max boxes will be 25
 #define THRESHOLD_SIZE 1 << 14 //IT Can be up to boxes * boxes * boxes
 
+// one day I will fix this, but not today
 #define THRESHOLD_PATH "/home/carol/radiation-benchmarks/data/lava/threshold.data"
 
 __device__ uint32_t thresholds[THRESHOLD_SIZE] = { 0 };
