@@ -25,7 +25,7 @@ __global__ void microbenchmark_kernel_add(real_t* output_real_t_1,
 
 	const register real_t this_thread_input_real_t = real_t(input_constant_add[threadIdx.x]);
 	const register half_t this_thread_input_half_t = half_t(this_thread_input_real_t);
-#pragma unroll COUNT
+//#pragma unroll COUNT
 	for (uint32 count = 0; count < OPS; count++) {
 		acc_real_t = add_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = add_dmr(this_thread_input_half_t, acc_half_t);
@@ -66,7 +66,7 @@ __global__ void microbenchmark_kernel_mul(real_t* output_real_t_1,
 	register real_t acc_real_t = this_thread_input_real_t;
 	register half_t acc_half_t = this_thread_input_half_t;
 
-#pragma unroll COUNT
+//#pragma unroll COUNT
 	for (uint32 count = 0; count < OPS; count++) {
 		acc_real_t = mul_dmr(this_thread_input_real_t, acc_real_t);
 		acc_half_t = mul_dmr(this_thread_input_half_t, acc_half_t);
@@ -107,7 +107,7 @@ __global__ void microbenchmark_kernel_fma(real_t* output_real_t_1,
 	const register half_t this_thread_input_half_t = half_t(
 			this_thread_input_real_t);
 
-#pragma unroll COUNT
+//#pragma unroll COUNT
 	for (uint32 count = 0; count < OPS; count++) {
 		acc_real_t = fma_dmr(this_thread_input_real_t, this_thread_input_real_t,
 				acc_real_t);
