@@ -13,6 +13,7 @@ STREAMS=1
 CHARGES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_charges_$(DEF_SIZE)
 DISTANCES_INPUT=$(DATA_DIR)/lava_$(PRECISION)_distances_$(DEF_SIZE)
 GOLD=$(DATA_DIR)/lava_$(PRECISION)_gold_$(DEF_SIZE)
+ITERATIONS=10
 
 
 VPATH=./src
@@ -81,7 +82,7 @@ generate:
 
 test:
 	./$(EXEC) -boxes $(DEF_SIZE) -streams $(STREAMS) \
-				-iterations 10 -verbose \
+				-iterations $(ITERATIONS) -verbose \
 				-input_distances $(DISTANCES_INPUT) \
 				-input_charges $(CHARGES_INPUT) \
 				-output_gold $(GOLD) \
