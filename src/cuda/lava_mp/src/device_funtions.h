@@ -37,21 +37,25 @@ double exp__(double lhs) {
 }
 
 __DEVICE_INLINE__
-void check_max_float(float lhs) {
-	float this_block_lower_threshold = atomicExch(
-			lower_relative_limit + blockIdx.x,
-			lower_relative_limit[blockIdx.x]);
-	float this_block_upper_threshold = atomicExch(
-			upper_relative_limit + blockIdx.x,
-			upper_relative_limit[blockIdx.x]);
+float atomicMin(float * addr, float value) {
+	float old;
+	old = (value >= 0) ?
+			__int_as_float(atomicMin((int *) addr, __float_as_int(value))) :
+			__uint_as_float(
+					atomicMax((unsigned int *) addr, __float_as_uint(value)));
 
-	if (lhs > this_block_upper_threshold) {
-		atomicExch(lower_relative_limit + blockIdx.x, lhs);
-	}
+	return old;
+}
 
-	if (lhs < this_block_lower_threshold) {
-		atomicExch(upper_relative_limit + blockIdx.x, lhs);
-	}
+__DEVICE_INLINE__
+float atomicMax(float * addr, float value) {
+	float old;
+	old = (value >= 0) ?
+			__int_as_float(atomicMax((int *) addr, __float_as_int(value))) :
+			__uint_as_float(
+					atomicMin((unsigned int *) addr, __float_as_uint(value)));
+
+	return old;
 }
 
 __DEVICE_INLINE__
@@ -61,7 +65,8 @@ void relative_error(float& lhs, double& rhs) {
 
 	if (relative < lower_relative_limit[blockIdx.x]
 			|| relative > upper_relative_limit[blockIdx.x]) {
-		check_max_float(relative);
+		atomicMax(lower_relative_limit + blockIdx.x, relative);
+		atomicExch(upper_relative_limit + blockIdx.x, relative);
 		atomicAdd(&errors, 1);
 	}
 }
