@@ -81,8 +81,11 @@ void uint_error(float& lhs, double& rhs, uint32_t& threshold) {
 	uint32_t rhs_data = *((uint32_t*) (&rhs_float));
 	uint32_t lhs_data = *((uint32_t*) (&lhs));
 	uint32_t sub_res = SUB_ABS(lhs_data, rhs_data);
-	if (sub_res > thresholds[blockIdx.x]) {
-//		atomicMax(thresholds + blockIdx.x, sub_res);
+
+	uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (sub_res > thresholds[tid]) {
+		atomicMax(thresholds + tid, sub_res);
 
 		atomicAdd(&errors, 1);
 	}
