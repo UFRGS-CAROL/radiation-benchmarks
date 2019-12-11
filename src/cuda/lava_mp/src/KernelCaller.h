@@ -97,7 +97,7 @@ struct KernelCaller {
 			log.update_infos(1);
 		}
 
-		if(memory_errors != 0){
+		if(memory_errors != 0) {
 			std::string error_detail = "dmr1_equals_dmr2_detected: " + std::to_string(dmr_errors);
 			if (verbose) {
 				std::cout << error_detail << std::endl;
@@ -119,10 +119,39 @@ struct KernelCaller {
 
 template<const uint32_t COUNT, typename half_t, typename real_t>
 struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
+#ifdef BUILDRELATIVEERROR
+	std::vector<float> thresholds_host;
+#else
 	std::vector<uint32_t> thresholds_host;
-
+#endif
 	DMRMixedKernelCaller(const uint32_t threshold) :
 			KernelCaller<COUNT, half_t, real_t>(threshold) {
+#ifdef BUILDRELATIVEERROR
+		this->thresholds_host = std::vector<float>(THRESHOLD_SIZE * 2);
+
+		//Store lower limits and upper limits after
+		std::fill(this->thresholds_host.begin(),
+				this->thresholds_host.begin() + THRESHOLD_SIZE, 9999);
+		std::fill(this->thresholds_host.begin() + THRESHOLD_SIZE,
+				this->thresholds_host.end(), -9999);
+
+		std::string path(THRESHOLD_PATH);
+		File<float>::read_from_file(path, thresholds_host);
+
+		//load lower limits
+		rad::checkFrameworkErrors(
+				cudaMemcpyToSymbol(lower_relative_limit, this->thresholds_host.data(),
+						sizeof(float) * THRESHOLD_SIZE, 0,
+						cudaMemcpyHostToDevice));
+
+		//load upper limits
+		rad::checkFrameworkErrors(
+				cudaMemcpyToSymbol(upper_relative_limit,
+						this->thresholds_host.data() + THRESHOLD_SIZE,
+						sizeof(float) * THRESHOLD_SIZE, 0,
+						cudaMemcpyHostToDevice));
+
+#else
 		this->thresholds_host = std::vector<uint32_t>(THRESHOLD_SIZE, 0);
 		std::string path(THRESHOLD_PATH);
 		File<uint32_t>::read_from_file(path, thresholds_host);
@@ -130,6 +159,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 				cudaMemcpyToSymbol(thresholds, thresholds_host.data(),
 						sizeof(uint32_t) * THRESHOLD_SIZE, 0,
 						cudaMemcpyHostToDevice));
+#endif
 	}
 
 	uint32_t get_max_threshold(std::vector<std::vector<FOUR_VECTOR<real_t>>>& fv_cpu_rt) {
@@ -149,6 +179,22 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 			}
 		}
 
+#ifdef BUILDRELATIVEERROR
+		//Copy the block lower limits
+		rad::checkFrameworkErrors(
+		cudaMemcpyFromSymbol(this->thresholds_host.data(), lower_relative_limit,
+				sizeof(float) * THRESHOLD_SIZE, 0,
+				cudaMemcpyDeviceToHost));
+		//upper limits
+		rad::checkFrameworkErrors(
+		cudaMemcpyFromSymbol(this->thresholds_host.data() + THRESHOLD_SIZE, upper_relative_limit,
+				sizeof(float) * THRESHOLD_SIZE, 0,
+				cudaMemcpyDeviceToHost));
+
+		std::string path(THRESHOLD_PATH);
+
+		File<float>::write_to_file(path, this->thresholds_host);
+#else
 		//Copy the block threshold back
 		rad::checkFrameworkErrors(
 		cudaMemcpyFromSymbol(this->thresholds_host.data(),thresholds,
@@ -157,6 +203,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		std::string path(THRESHOLD_PATH);
 
 		File<uint32_t>::write_to_file(path, this->thresholds_host);
+#endif
 		return max_threshold;
 	}
 
@@ -227,9 +274,18 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 	FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 	FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
-		kernel_gpu_cuda_dmr<COUNT> <<<blocks, threads, 0, stream.stream>>>(
-		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
-		this->d_fv_gpu_ht[stream_idx].data(), this->threshold_);
+//		kernel_gpu_cuda_dmr<COUNT> <<<blocks, threads, 0, stream.stream>>>(
+//		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
+//		this->d_fv_gpu_ht[stream_idx].data(), this->threshold_);
+		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(
+		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
+		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(
+		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu,
+		this->d_fv_gpu_ht[stream_idx].data());
+		stream.sync();
+
+		compare_two_outputs<<<blocks, threads, 0, stream.stream>>>
+		(this->d_fv_gpu_ht[stream_idx].data(), d_fv_gpu);
 	}
 
 	inline std::vector<uint32_t>

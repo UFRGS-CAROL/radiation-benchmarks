@@ -14,10 +14,10 @@
 #define __DEVICE_HOST_INLINE__ __device__ __host__ __forceinline__
 
 // MIN percent
-#define MIN_PERCENTAGE 0.55f //0.99f
+#define MIN_PERCENTAGE 0.8f //0.99f
 
 // MAX percent
-#define MAX_PERCENTAGE 1.45f //1.001f
+#define MAX_PERCENTAGE 1.2f
 
 /**
  =============================================================================

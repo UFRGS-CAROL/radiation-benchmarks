@@ -9,11 +9,16 @@
 #define BLOCK_THRESHOLD_H_
 
 //Assuming that max boxes will be 25
-#define THRESHOLD_SIZE 1 << 14 //IT Can be up to boxes * boxes * boxes
+#define THRESHOLD_SIZE int(1 << 14) //IT Can be up to boxes * boxes * boxes
 
 // one day I will fix this, but not today
 #define THRESHOLD_PATH "/home/carol/radiation-benchmarks/data/lava/threshold.data"
 
 __device__ uint32_t thresholds[THRESHOLD_SIZE] = { 0 };
+
+__device__ float lower_relative_limit[THRESHOLD_SIZE];
+__device__ float upper_relative_limit[THRESHOLD_SIZE];
+
+
 
 #endif /* BLOCK_THRESHOLD_H_ */

@@ -37,14 +37,34 @@ double exp__(double lhs) {
 }
 
 __DEVICE_INLINE__
+void check_max_float(float lhs) {
+	float this_block_lower_threshold = atomicExch(
+			lower_relative_limit + blockIdx.x,
+			lower_relative_limit[blockIdx.x]);
+	float this_block_upper_threshold = atomicExch(
+			upper_relative_limit + blockIdx.x,
+			upper_relative_limit[blockIdx.x]);
+
+	if (lhs > this_block_upper_threshold) {
+		atomicExch(lower_relative_limit + blockIdx.x, lhs);
+	}
+
+	if (lhs < this_block_lower_threshold) {
+		atomicExch(upper_relative_limit + blockIdx.x, lhs);
+	}
+}
+
+__DEVICE_INLINE__
 bool relative_error(float& lhs, double& rhs) {
 	float rhs_as_float = float(rhs);
 	float relative = __fdividef(lhs, rhs_as_float);
+
 	return (relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE);
 }
 
 __DEVICE_INLINE__
-bool uint_error(float& lhs, double& rhs, uint32_t& threshold, uint32_t& sub_res) {
+bool uint_error(float& lhs, double& rhs, uint32_t& threshold,
+		uint32_t& sub_res) {
 	float rhs_float = float(rhs);
 	uint32_t rhs_data = *((uint32_t*) (&rhs_float));
 	uint32_t lhs_data = *((uint32_t*) (&lhs));
