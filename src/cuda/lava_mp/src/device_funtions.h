@@ -82,6 +82,7 @@ void uint_error(float& lhs, double& rhs, uint32_t& threshold) {
 __DEVICE_INLINE__
 void check_bit_error(float& lhs, double& rhs, uint32_t threshold) {
 #ifdef BUILDRELATIVEERROR
+	relative_error(lhs, rhs);
 #else
 	uint_error(lhs, rhs, threshold);
 #endif
