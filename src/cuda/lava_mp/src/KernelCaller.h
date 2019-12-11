@@ -130,10 +130,8 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		this->thresholds_host = std::vector<float>(THRESHOLD_SIZE * 2);
 
 		//Store lower limits and upper limits after
-		std::fill(this->thresholds_host.begin(),
-				this->thresholds_host.begin() + THRESHOLD_SIZE, 9999);
-		std::fill(this->thresholds_host.begin() + THRESHOLD_SIZE,
-				this->thresholds_host.end(), -9999);
+		std::fill_n(this->thresholds_host.begin(), THRESHOLD_SIZE, 9999);
+		std::fill_n(this->thresholds_host.begin() + THRESHOLD_SIZE, THRESHOLD_SIZE, -9999);
 
 		std::string path(THRESHOLD_PATH);
 		File<float>::read_from_file(path, thresholds_host);
@@ -146,8 +144,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 
 		//load upper limits
 		rad::checkFrameworkErrors(
-				cudaMemcpyToSymbol(upper_relative_limit,
-						this->thresholds_host.data() + THRESHOLD_SIZE,
+				cudaMemcpyToSymbol(upper_relative_limit, this->thresholds_host.data() + THRESHOLD_SIZE,
 						sizeof(float) * THRESHOLD_SIZE, 0,
 						cudaMemcpyHostToDevice));
 

@@ -55,36 +55,36 @@ void check_max_float(float lhs) {
 }
 
 __DEVICE_INLINE__
-bool relative_error(float& lhs, double& rhs) {
+void relative_error(float& lhs, double& rhs) {
 	float rhs_as_float = float(rhs);
 	float relative = __fdividef(lhs, rhs_as_float);
 
-	return (relative < MIN_PERCENTAGE || relative > MAX_PERCENTAGE);
+	if (relative < lower_relative_limit[blockIdx.x]
+			|| relative > upper_relative_limit[blockIdx.x]) {
+		check_max_float(relative);
+		atomicAdd(&errors, 1);
+	}
 }
 
 __DEVICE_INLINE__
-bool uint_error(float& lhs, double& rhs, uint32_t& threshold,
-		uint32_t& sub_res) {
+void uint_error(float& lhs, double& rhs, uint32_t& threshold) {
 	float rhs_float = float(rhs);
 	uint32_t rhs_data = *((uint32_t*) (&rhs_float));
 	uint32_t lhs_data = *((uint32_t*) (&lhs));
-	sub_res = SUB_ABS(lhs_data, rhs_data);
-	return sub_res > threshold;
+	uint32_t sub_res = SUB_ABS(lhs_data, rhs_data);
+	if (sub_res > thresholds[blockIdx.x]) {
+//		atomicMax(thresholds + blockIdx.x, sub_res);
+
+		atomicAdd(&errors, 1);
+	}
 }
 
 __DEVICE_INLINE__
 void check_bit_error(float& lhs, double& rhs, uint32_t threshold) {
-
 #ifdef BUILDRELATIVEERROR
-	if (relative_error(lhs, rhs)) {
 #else
-	uint32_t sub_res;
-	if (uint_error(lhs, rhs, thresholds[blockIdx.x], sub_res)) {
-		atomicMax(thresholds + blockIdx.x, sub_res);
+	uint_error(lhs, rhs, threshold);
 #endif
-		printf("%f\n", __fdividef(lhs, float(rhs)));
-		atomicAdd(&errors, 1);
-	}
 }
 
 __DEVICE_INLINE__
