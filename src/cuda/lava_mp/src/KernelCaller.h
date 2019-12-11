@@ -127,11 +127,11 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	DMRMixedKernelCaller(const uint32_t threshold) :
 			KernelCaller<COUNT, half_t, real_t>(threshold) {
 #ifdef BUILDRELATIVEERROR
-		this->thresholds_host = std::vector<float>(THRESHOLD_SIZE * 2);
+		this->thresholds_host = std::vector<float>(THRESHOLD_SIZE_THREAD * 2);
 
 		//Store lower limits and upper limits after
-		std::fill_n(this->thresholds_host.begin(), THRESHOLD_SIZE, 9999);
-		std::fill_n(this->thresholds_host.begin() + THRESHOLD_SIZE, THRESHOLD_SIZE, -9999);
+		std::fill_n(this->thresholds_host.begin(), THRESHOLD_SIZE_THREAD, 9999);
+		std::fill_n(this->thresholds_host.begin() + THRESHOLD_SIZE_THREAD, THRESHOLD_SIZE_THREAD, -9999);
 
 		std::string path(THRESHOLD_PATH);
 		File<float>::read_from_file(path, thresholds_host);
@@ -139,13 +139,14 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		//load lower limits
 		rad::checkFrameworkErrors(
 				cudaMemcpyToSymbol(lower_relative_limit, this->thresholds_host.data(),
-						sizeof(float) * THRESHOLD_SIZE, 0,
+						sizeof(float) * THRESHOLD_SIZE_THREAD, 0,
 						cudaMemcpyHostToDevice));
 
 		//load upper limits
 		rad::checkFrameworkErrors(
-				cudaMemcpyToSymbol(upper_relative_limit, this->thresholds_host.data() + THRESHOLD_SIZE,
-						sizeof(float) * THRESHOLD_SIZE, 0,
+				cudaMemcpyToSymbol(upper_relative_limit,
+						this->thresholds_host.data() + THRESHOLD_SIZE_THREAD,
+						sizeof(float) * THRESHOLD_SIZE_THREAD, 0,
 						cudaMemcpyHostToDevice));
 
 #else
@@ -180,12 +181,12 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		//Copy the block lower limits
 		rad::checkFrameworkErrors(
 		cudaMemcpyFromSymbol(this->thresholds_host.data(), lower_relative_limit,
-				sizeof(float) * THRESHOLD_SIZE, 0,
+				sizeof(float) * THRESHOLD_SIZE_THREAD, 0,
 				cudaMemcpyDeviceToHost));
 		//upper limits
 		rad::checkFrameworkErrors(
-		cudaMemcpyFromSymbol(this->thresholds_host.data() + THRESHOLD_SIZE, upper_relative_limit,
-				sizeof(float) * THRESHOLD_SIZE, 0,
+		cudaMemcpyFromSymbol(this->thresholds_host.data() + THRESHOLD_SIZE_THREAD, upper_relative_limit,
+				sizeof(float) * THRESHOLD_SIZE_THREAD, 0,
 				cudaMemcpyDeviceToHost));
 
 		std::string path(THRESHOLD_PATH);

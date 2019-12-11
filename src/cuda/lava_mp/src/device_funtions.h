@@ -62,11 +62,15 @@ __DEVICE_INLINE__
 void relative_error(float& lhs, double& rhs) {
 	float rhs_as_float = float(rhs);
 	float relative = __fdividef(lhs, rhs_as_float);
+	uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 
-	if (relative < lower_relative_limit[blockIdx.x]
-			|| relative > upper_relative_limit[blockIdx.x]) {
-		atomicMax(lower_relative_limit + blockIdx.x, relative);
-		atomicExch(upper_relative_limit + blockIdx.x, relative);
+	if (relative < lower_relative_limit[tid]) {
+		lower_relative_limit[tid] = relative;
+		atomicAdd(&errors, 1);
+	}
+
+	if (relative > upper_relative_limit[tid]) {
+		upper_relative_limit[tid] = relative;
 		atomicAdd(&errors, 1);
 	}
 }
