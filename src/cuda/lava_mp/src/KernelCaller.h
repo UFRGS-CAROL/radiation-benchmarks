@@ -272,18 +272,18 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 	par_str<real_t>& par_cpu, dim_str& dim_cpu, box_str* d_box_gpu,
 	FOUR_VECTOR<real_t>* d_rv_gpu, real_t* d_qv_gpu,
 	FOUR_VECTOR<real_t>* d_fv_gpu, const uint32_t stream_idx) {
-//		kernel_gpu_cuda_dmr<COUNT> <<<blocks, threads, 0, stream.stream>>>(
-//		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
-//		this->d_fv_gpu_ht[stream_idx].data(), this->threshold_);
-		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(
-		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
-		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(
-		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu,
-		this->d_fv_gpu_ht[stream_idx].data());
-		stream.sync();
-
-		compare_two_outputs<<<blocks, threads, 0, stream.stream>>>
-		(this->d_fv_gpu_ht[stream_idx].data(), d_fv_gpu);
+		kernel_gpu_cuda_dmr<COUNT> <<<blocks, threads, 0, stream.stream>>>(
+		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu,
+		this->d_fv_gpu_ht[stream_idx].data(), this->threshold_);
+//		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(
+//		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu, d_fv_gpu);
+//		kernel_gpu_cuda<<<blocks, threads, 0, stream.stream>>>(
+//		par_cpu, dim_cpu, d_box_gpu, d_rv_gpu, d_qv_gpu,
+//		this->d_fv_gpu_ht[stream_idx].data());
+//		stream.sync();
+//
+//		compare_two_outputs<<<blocks, threads, 0, stream.stream>>>
+//		(this->d_fv_gpu_ht[stream_idx].data(), d_fv_gpu);
 	}
 
 	inline std::vector<uint32_t>

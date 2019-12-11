@@ -4,7 +4,7 @@ EXEC=cuda_lava
 
 LOGS=1
 BUILDPROFILER=0
-OPERATIONNUM=1
+OPERATIONNUM=34
 PRECISION=double
 DMR=dmrmixed
 DATA_DIR=../../../data/lava
