@@ -570,11 +570,11 @@ int main(int argc, char **argv) {
     M_GLOBAL);
 
 
-	matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
+	//matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
 
 	//checkKernelErrors(cudaStreamSynchronize(st));
-	checkKernelErrors(cudaPeekAtLastError());
-	checkKernelErrors(cudaDeviceSynchronize());
+	//checkKernelErrors(cudaPeekAtLastError());
+	//checkKernelErrors(cudaDeviceSynchronize());
  	}
 
 
