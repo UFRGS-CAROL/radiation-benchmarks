@@ -31,11 +31,19 @@
 #endif
 
 // Ninety percent
+<<<<<<< HEAD
 #define MIN_PERCENTAGE 0.95f
 
 // Hundred percent
 // I keep 10% in each direction 0.9 to 1.1
 #define MAX_PERCENTAGE 1.05f
+=======
+#define MIN_PERCENTAGE 0.99f
+
+// Hundred percent
+// I keep 10% in each direction 0.9 to 1.1
+#define MAX_PERCENTAGE 1.01f
+>>>>>>> debcf396e2c166bfd5ef1da674cfb208ec60d53c
 
 //Threshold for one operation
 #define THRESHOLD_1 0x7f
