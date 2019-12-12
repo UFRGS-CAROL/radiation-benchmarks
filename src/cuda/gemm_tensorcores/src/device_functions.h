@@ -43,13 +43,8 @@ void uint_error(float lhs, double rhs, uint32_t threshold) {
 }
 
 __DEVICE_INLINE__
-<<<<<<< HEAD
-void check_relative_error(float lhs, double rhs, uint32_t threshold){
-#ifdef BUILDRELATIVEERROR
-=======
 void check_relative_error(float lhs, double rhs, uint32_t threshold) {
-#ifdef BUILDRELATIVE
->>>>>>> debcf396e2c166bfd5ef1da674cfb208ec60d53c
+#ifdef BUILDRELATIVEERROR
 	relative_error(lhs, rhs);
 #else
 	uint_error(lhs, rhs, threshold);

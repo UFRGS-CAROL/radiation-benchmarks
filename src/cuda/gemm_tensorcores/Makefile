@@ -13,6 +13,7 @@ ITERATIONS=10
 PRECISION=double
 OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE).matrix
 DMR=mixed
+BUILDRELATIVEERROR=1
 
 # This is what I use, uncomment if you know your arch and want to specify
 #ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
@@ -41,6 +42,10 @@ INCLUDE=-I$(CUDAPATH)/include -I../common
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
 NVCCFLAGS+= -g -G -DDEBUG
+endif
+
+ifeq ($(BUILDRELATIVEERROR), 1)
+NVCCFLAGS+= -DBUILDRELATIVEERROR=1
 endif
 
 CFLAGS+=$(OPTS)
