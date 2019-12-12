@@ -264,7 +264,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 				}
 				log.log_error_detail(error_detail.str());
 
-				result = check_bit_error(val_output_ht, val_output);
+				result = check_bit_error(val_output_ht, val_output, val_gold, i);
 			}
 		}
 		return result;
@@ -331,9 +331,9 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		float max_relative = this->thresholds_host[i * 2];
 
 		if(((relative_v < min_relative || relative_v > max_relative) && gold.v != rhs.v) ||
-			((relative_x < min_relative || relative_x > max_relative) && gold.x != rhs.x) ||
-			((relative_y < min_relative || relative_y > max_relative) && gold.y != rhs.y) ||
-			((relative_z < min_relative || relative_z > max_relative) && gold.z != rhs.z)) {
+		((relative_x < min_relative || relative_x > max_relative) && gold.x != rhs.x) ||
+		((relative_y < min_relative || relative_y > max_relative) && gold.y != rhs.y) ||
+		((relative_z < min_relative || relative_z > max_relative) && gold.z != rhs.z)) {
 			return true;
 		}
 		return false;
@@ -347,7 +347,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 //		return false;
 	}
 
-	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs, FOUR_VECTOR<real_t>& gold) {
+	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs, FOUR_VECTOR<real_t>& gold, uint32_t i) {
 		if((lhs.v != rhs.v && gold.v != rhs.v) ||
 		(lhs.x != rhs.x && gold.x != rhs.x) ||
 		(lhs.y != rhs.y && gold.y != rhs.y) ||
