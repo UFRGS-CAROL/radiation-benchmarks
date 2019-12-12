@@ -236,7 +236,7 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		auto val_gold = fv_cpu_GOLD[i];
 		auto val_output = fv_cpu_rt[i];
 		auto val_output_ht = this->fv_cpu_ht[streamIdx][i];
-
+		bool result = false;
 		if (val_gold != val_output) {
 #pragma omp critical
 			{
@@ -263,9 +263,11 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 					std::cout << error_detail.str() << std::endl;
 				}
 				log.log_error_detail(error_detail.str());
+
+				result = check_bit_error(val_output_ht, val_output);
 			}
 		}
-		return check_bit_error(val_output_ht, val_output);
+		return result;
 	}
 
 	void kernel_call(dim3& blocks, dim3& threads, CudaStream& stream,
@@ -319,20 +321,49 @@ struct DMRMixedKernelCaller: public KernelCaller<COUNT, half_t, real_t> {
 		return {0, 0, 0, 0};
 	}
 
-	bool check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs) {
-		auto diff_vec = this->get_4vector_diffs(lhs, rhs);
+	bool check_bit_error(FOUR_VECTOR<float>& lhs, FOUR_VECTOR<double>& rhs, FOUR_VECTOR<double>& gold, uint32_t i) {
+		float relative_v = lhs.v / rhs.v;
+		float relative_x = lhs.x / rhs.x;
+		float relative_y = lhs.y / rhs.y;
+		float relative_z = lhs.z / rhs.z;
 
-		for(auto it : diff_vec) {
-			if(it > this->threshold_) {
-				return true;
-			}
+		float min_relative = this->thresholds_host[i];
+		float max_relative = this->thresholds_host[i * 2];
+
+		if(((relative_v < min_relative || relative_v > max_relative) && gold.v != rhs.v) ||
+			((relative_x < min_relative || relative_x > max_relative) && gold.x != rhs.x) ||
+			((relative_y < min_relative || relative_y > max_relative) && gold.y != rhs.y) ||
+			((relative_z < min_relative || relative_z > max_relative) && gold.z != rhs.z)) {
+			return true;
 		}
 		return false;
+//		auto diff_vec = this->get_4vector_diffs(lhs, rhs);
+//
+//		for(auto it : diff_vec) {
+//			if(it > this->threshold_) {
+//				return true;
+//			}
+//		}
+//		return false;
 	}
 
-	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs) {
-		return (lhs != rhs);
+	bool check_bit_error(FOUR_VECTOR<real_t>& lhs, FOUR_VECTOR<real_t>& rhs, FOUR_VECTOR<real_t>& gold) {
+		if((lhs.v != rhs.v && gold.v != rhs.v) ||
+		(lhs.x != rhs.x && gold.x != rhs.x) ||
+		(lhs.y != rhs.y && gold.y != rhs.y) ||
+		(lhs.z != rhs.z && gold.z != rhs.z)) {
+			return true;
+		}
+		return false;
+//		if (rhs->v != rhs.v &&	//V
+//				rhs->x != rhs.x &&	//X
+//				rhs->y != rhs.y &&	//Y
+//				rhs->z != rhs.z) {	//Z
+//			return false;
+//		}
+//		return true;
 	}
+
 };
 
 template<typename real_t>
