@@ -10,6 +10,7 @@
 
 #include "Microbenchmark.h"
 #include "dmr_constant_kernels.h"
+#include "none_kernels.h"
 #include "common.h"
 #include "Parameters.h"
 
@@ -289,6 +290,51 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 		std::cout << t << " " << z << std::endl;
 		return max_diff;
 	}
+};
+
+template<const uint32_t CHECK_BLOCK, typename real_t>
+struct DMRDWC: public DMRConstant<CHECK_BLOCK, real_t, real_t> {
+	void call_kernel() override {
+		//================== Device computation
+		switch (this->parameters_.micro) {
+		case ADD:
+			microbenchmark_kernel_add<<<this->parameters_.grid_size,
+					this->parameters_.block_size>>>(this->output_dev_1.data(),
+					this->output_dev_2.data(), this->output_dev_3.data());
+
+			microbenchmark_kernel_add<<<this->parameters_.grid_size,
+					this->parameters_.block_size>>>(
+					this->output_dev_1_lower.data(),
+					this->output_dev_2_lower.data(),
+					this->output_dev_3_lower.data());
+
+			break;
+		case MUL:
+			microbenchmark_kernel_mul<<<this->parameters_.grid_size,
+					this->parameters_.block_size>>>(this->output_dev_1.data(),
+					this->output_dev_2.data(), this->output_dev_3.data());
+			break;
+		case FMA:
+			microbenchmark_kernel_fma<<<this->parameters_.grid_size,
+					this->parameters_.block_size>>>(this->output_dev_1.data(),
+					this->output_dev_2.data(), this->output_dev_3.data());
+			break;
+		}
+
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		compare<<<this->parameters_.grid_size, this->parameters_.block_size>>>(
+				this->output_dev_1_lower.data(), this->output_dev_1.data());
+		compare<<<this->parameters_.grid_size, this->parameters_.block_size>>>(
+				this->output_dev_2_lower.data(), this->output_dev_2.data());
+		compare<<<this->parameters_.grid_size, this->parameters_.block_size>>>(
+				this->output_dev_3_lower.data(), this->output_dev_3.data());
+
+	}
+
+	DMRDWC(const Parameters& parameters, Log& log) :
+			DMRConstant<CHECK_BLOCK, real_t, real_t>(parameters, log) {
+	}
+	;
 };
 
 #endif /* DMRCONSTANT_H_ */

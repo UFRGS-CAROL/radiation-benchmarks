@@ -74,7 +74,7 @@ void test_radiation(Microbenchmark<CHECK_BLOCK, half_t, real_t>& micro_test) {
 
 	if (micro_test.parameters_.generate == true) {
 		micro_test.write_gold();
-		auto max_diff =  micro_test.get_max_threshold();
+		auto max_diff = micro_test.get_max_threshold();
 		std::cout << "MAX DIFF " << max_diff << std::endl;
 	}
 
@@ -127,8 +127,7 @@ void setup(Parameters& parameters, Log& log) {
 		}
 
 		if (parameters.precision == DOUBLE) {
-			DMRConstant<CHECK_BLOCK, double, double> micro_test(parameters,
-					log);
+			DMRDWC<CHECK_BLOCK, double> micro_test(parameters, log);
 			test_radiation<CHECK_BLOCK>(micro_test);
 		}
 	}
@@ -181,7 +180,6 @@ int main(int argc, char* argv[]) {
 	std::cout << "Relative error used" << std::endl;
 #endif
 
-
 	switch (parameters.operation_num) {
 	case 1:
 		setup<1>(parameters, log);
@@ -199,7 +197,9 @@ int main(int argc, char* argv[]) {
 		setup<OPS>(parameters, log);
 		break;
 	default:
-		std::string result = "OPERATION NUM = " + std::to_string(parameters.operation_num) + " OPTION NOT COVERED";
+		std::string result = "OPERATION NUM = "
+				+ std::to_string(parameters.operation_num)
+				+ " OPTION NOT COVERED";
 		fatalerror(result.c_str());
 	}
 
