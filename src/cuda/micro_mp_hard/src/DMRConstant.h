@@ -295,32 +295,29 @@ struct DMRConstant: public Microbenchmark<CHECK_BLOCK, half_t, real_t> {
 template<const uint32_t CHECK_BLOCK, typename real_t>
 struct DMRDWC: public DMRConstant<CHECK_BLOCK, real_t, real_t> {
 	void call_kernel() override {
+		void (*kernel)(real_t* output_real_t_1, real_t* output_real_t_2,
+				real_t* output_real_t_3);
 		//================== Device computation
 		switch (this->parameters_.micro) {
 		case ADD:
-			microbenchmark_kernel_add<<<this->parameters_.grid_size,
-					this->parameters_.block_size>>>(this->output_dev_1.data(),
-					this->output_dev_2.data(), this->output_dev_3.data());
-
-			microbenchmark_kernel_add<<<this->parameters_.grid_size,
-					this->parameters_.block_size>>>(
-					this->output_dev_1_lower.data(),
-					this->output_dev_2_lower.data(),
-					this->output_dev_3_lower.data());
-
+			kernel = &microbenchmark_kernel_add;
 			break;
 		case MUL:
-			microbenchmark_kernel_mul<<<this->parameters_.grid_size,
-					this->parameters_.block_size>>>(this->output_dev_1.data(),
-					this->output_dev_2.data(), this->output_dev_3.data());
+			kernel = &microbenchmark_kernel_mul;
 			break;
 		case FMA:
-			microbenchmark_kernel_fma<<<this->parameters_.grid_size,
-					this->parameters_.block_size>>>(this->output_dev_1.data(),
-					this->output_dev_2.data(), this->output_dev_3.data());
+			kernel = &microbenchmark_kernel_fma;
 			break;
 		}
 
+		kernel<<<this->parameters_.grid_size, this->parameters_.block_size>>>(
+				this->output_dev_1.data(), this->output_dev_2.data(),
+				this->output_dev_3.data());
+
+		kernel<<<this->parameters_.grid_size, this->parameters_.block_size>>>(
+				this->output_dev_1_lower.data(),
+				this->output_dev_2_lower.data(),
+				this->output_dev_3_lower.data());
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 		compare<<<this->parameters_.grid_size, this->parameters_.block_size>>>(
 				this->output_dev_1_lower.data(), this->output_dev_1.data());
