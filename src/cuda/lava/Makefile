@@ -66,6 +66,7 @@ NVCC_FLAGS+= -DPRECISION_$(UPPERCASED_PRECISION)
 
 DATA_DIR=.
 DEF_SIZE=23
+STREAMS=8
 DEF_CHARGES_INPUT=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_charges_$(DEF_SIZE)
 DEF_DISTANCES_INPUT=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_distances_$(DEF_SIZE)
 DEF_GOLD=$(DATA_DIR)/lava_$(LOWERCASED_PRECISION)_gold_$(DEF_SIZE)
@@ -79,7 +80,7 @@ clean:
 	rm -rf ./$(TARGET) $(DEF_CHARGES_INPUT) $(DEF_DISTANCES_INPUT) $(DEF_GOLD)
 
 generate: $(TARGET)
-	./$(TARGET) -boxes=$(DEF_SIZE) -generate -streams=5 -iterations=1 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
+	./$(TARGET) -boxes=$(DEF_SIZE) -generate -streams=$(STREAMS) -iterations=1 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
 
 test: $(RUN_EXEC) generate
-	./$(TARGET) -boxes=$(DEF_SIZE) -streams=5 -iterations=10 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
+	./$(TARGET) -boxes=$(DEF_SIZE) -streams=$(STREAMS) -iterations=10 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
