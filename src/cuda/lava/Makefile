@@ -3,7 +3,7 @@ CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 PRECISION?=single
 LOGS?=1
-USE_OMP?=1
+USE_OMP?=0
 BUILDPROFILER=0
 FORJETSON=0
 

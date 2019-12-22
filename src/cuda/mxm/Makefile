@@ -3,7 +3,7 @@ CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 PRECISION?=single
 FORJETSON=0
-
+USE_OMP?=0
 
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
@@ -36,6 +36,10 @@ NVCC_FLAGS += -L$(CUDAPATH)/lib64/stubs
 
 endif
 
+ifeq ($(USE_OMP), 1)
+NVCC_FLAGS+= -DUSE_OMP -Xcompiler " -fopenmp"
+endif
+
 SOURCES=./cuda_mxm.cu
 EXEC_RADIX=./cuda_mxm_
 EXEC=$(EXEC_RADIX)$(LOWERCASED_PRECISION)
@@ -56,7 +60,7 @@ check-benchtype:
 
 $(EXEC): check-benchtype $(RUN_SOURCES)
 	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -O3 \
-			-std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC) -lLogHelper
+			-std=c++11 $(NVCC_FLAGS) -Xcompiler " -O3" $(LOGS) $(SOURCES) -o $(EXEC) -lLogHelper
 
 clean:
 	rm -rf $(EXEC_RADIX)* $(MATRIX_NAMES)
