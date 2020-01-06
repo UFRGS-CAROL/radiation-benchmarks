@@ -65,7 +65,7 @@ $(EXEC): check-benchtype $(RUN_SOURCES)
 clean:
 	rm -rf $(EXEC_RADIX)* $(MATRIX_NAMES)
 
-generate: $(EXEC)
+generate:
 	$(EXEC) -generate -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD)
 
 test: 
