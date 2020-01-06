@@ -3,7 +3,7 @@ CUDAPATH=/usr/local/cuda
 NVCC=$(CUDAPATH)/bin/nvcc
 PRECISION?=single
 LOGS?=1
-USE_OMP?=1
+USE_OMP?=0
 BUILDPROFILER=0
 FORJETSON=0
 
@@ -82,5 +82,5 @@ clean:
 generate: $(TARGET)
 	./$(TARGET) -boxes=$(DEF_SIZE) -generate -streams=$(STREAMS) -iterations=1 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
 
-test: $(RUN_EXEC) generate
+test: 
 	./$(TARGET) -boxes=$(DEF_SIZE) -streams=$(STREAMS) -iterations=10 -verbose -input_distances=$(DEF_DISTANCES_INPUT) -input_charges=$(DEF_CHARGES_INPUT) -output_gold=$(DEF_GOLD)
