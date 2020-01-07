@@ -2,7 +2,7 @@ CXX=g++
 CXXFLAGS= -std=c++11 -O3  -Xcompiler -fPIC  -Xcompiler  -pthread -Xcompiler -fopenmp
 EXEC=quicksort
 LOGS=1
-BUILDPROFILER=1
+BUILDPROFILER=0
 DEBUG=0
 SIZE=134217728
 
