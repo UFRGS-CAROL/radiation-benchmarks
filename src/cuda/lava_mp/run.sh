@@ -2,8 +2,7 @@ set -e
 set -x
 
 make clean
-make -j4 BUILDRELATIVEERROR=1
-make generate
+make -j4 RELATIVEERROR=1
 
 for ck in 1 194;
 do
@@ -14,8 +13,7 @@ do
 done
 
 make clean
-make -j4 BUILDRELATIVEERROR=0
-make generate
+make -j4 RELATIVEERROR=0
 
 for ck in 1 194;
 do

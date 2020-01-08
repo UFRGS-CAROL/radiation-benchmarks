@@ -65,12 +65,12 @@ void relative_error(float& lhs, double& rhs) {
 	uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (relative < lower_relative_limit[tid]) {
-		lower_relative_limit[tid] = relative;
+		//lower_relative_limit[tid] = relative;
 		atomicAdd(&errors, 1);
 	}
 
 	if (relative > upper_relative_limit[tid]) {
-		upper_relative_limit[tid] = relative;
+		//upper_relative_limit[tid] = relative;
 		atomicAdd(&errors, 1);
 	}
 }
