@@ -4,17 +4,18 @@ set -x
 set -e
 
 make clean
-make
+make BUILDRELATIVEERROR=0
 
 for  m in add mul fma;
 do
     make generate MICRO=${m}
 
-    for b in 1 10 100 1000;
+    for b in 1 10 100 1000 100000;
     do
-        for h in dmrmixed; #none dmr dmrmixed;
+        for h in dmrmixed none dmr;
         do
-            make test DMR=${h} CHECK_BLOCK=${b} MICRO=${m}
+
+            make test DMR=${h} CHECK_BLOCK=${b} MICRO=${m} > ${h}_${b}_${m}_relative.csv
         done
     done
 done
