@@ -15,23 +15,20 @@
 
 #else
 
-#define BLOCK_SIZE 16
+#define BLOCK_SIZE 32 //16
 
 #endif
 
-__device__ int gpukerrors;
+typedef unsigned KErrorsType;
+
+__device__ KErrorsType gpukerrors;
 
 __global__ void needle_cuda_shared_2(int* referrence, int* matrix_cuda,
-
-int cols, int penalty, int i, int block_width);
-
+		int cols, int penalty, int i, int block_width);
 __global__ void needle_cuda_shared_1(int* referrence, int* matrix_cuda,
-
-int cols, int penalty, int i, int block_width);
-
+		int cols, int penalty, int i, int block_width);
 __global__ void GoldChkKernel(int *gk, int *ck, int n);
 
 #define GCHK_BLOCK_SIZE 32
-
 
 #endif
