@@ -29,7 +29,7 @@
 #endif
 
 // helper functions
-#include "helper_string.h"
+//#include "helper_string.h"
 #include "helper_cuda.h"
 
 #undef min

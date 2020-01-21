@@ -4,6 +4,7 @@ NVCC=$(CUDAPATH)/bin/nvcc
 PRECISION?=single
 FORJETSON=0
 USE_OMP?=0
+DEF_SIZE=8192
 
 LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
 
@@ -44,11 +45,9 @@ SOURCES=./cuda_mxm.cu
 EXEC_RADIX=./cuda_mxm_
 EXEC=$(EXEC_RADIX)$(LOWERCASED_PRECISION)
 
-DEF_SIZE=8192
-
 DEF_A_INPUT=./mxm_$(LOWERCASED_PRECISION)_A_8192.matrix
 DEF_B_INPUT=./mxm_$(LOWERCASED_PRECISION)_B_8192.matrix
-DEF_GOLD=./mxm_$(LOWERCASED_PRECISION)_GOLD_$(DEF_TEST_SIZE).matrix
+DEF_GOLD=./mxm_$(LOWERCASED_PRECISION)_GOLD_$(DEF_SIZE).matrix
 
 MATRIX_NAMES=$(DEF_A_INPUT) $(DEF_B_INPUT) $(DEF_GOLD) ./mxm*.matrix
 
@@ -69,4 +68,4 @@ generate:
 	$(EXEC) -generate -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD)
 
 test: 
-	$(EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=10 -verbose
+	$(EXEC) -size=$(DEF_SIZE) -input_a=$(DEF_A_INPUT) -input_b=$(DEF_B_INPUT) -gold=$(DEF_GOLD) -iterations=1 -verbose

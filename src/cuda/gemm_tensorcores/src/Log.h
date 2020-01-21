@@ -48,6 +48,7 @@ struct Log {
 	std::string dmr;
 	double alpha;
 	double beta;
+	bool use_cublas;
 	uint32_t check_block;
 
 private:
@@ -59,7 +60,7 @@ private:
 	std::string find_char_arg(int argc, char **argv, std::string arg,
 			std::string def);
 
-	int find_arg(int argc, char* argv[], std::string arg);
+	bool find_arg(int argc, char* argv[], std::string arg);
 	float find_float_arg(int argc, char **argv, std::string arg, float def);
 };
 
