@@ -90,7 +90,7 @@
 #define SHMEM_STRIDE (N * BLOCK_ROW_TILES)
 #define SHMEM_OFFSET (N * WARP_ROW_TILES)
 
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 16
 
 // The macro below is used to shift rows of the A matrix and columns of the B
 // matrix in shared memory to minimize possible bank conflicts. Before
@@ -578,9 +578,10 @@ int main(int argc, char **argv) {
  	}
 
 
-	checkCudaErrors(
-			cudaMemcpy(D_h, D, sizeof(half) * M_GLOBAL * N_GLOBAL,
-					cudaMemcpyDeviceToHost));
+//	checkCudaErrors(
+//			cudaMemcpy(D_h, D, sizeof(half) * M_GLOBAL * N_GLOBAL,
+//					cudaMemcpyDeviceToHost));
+
 	checkCudaErrors(
 			cudaMemcpy(dt, dtd, sizeof(half) * M_GLOBAL * N_GLOBAL,
 					cudaMemcpyDeviceToHost));
