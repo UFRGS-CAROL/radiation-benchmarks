@@ -22,8 +22,8 @@
 #endif
 
 #define CHAR_CAST(x) (reinterpret_cast<char*>(x))
-#define GENERATOR_MAXABSVALUE_GEMM 1000
-#define GENERATOR_MINABSVALUE_GEMM 0
+#define GENERATOR_MAXABSVALUE_GEMM 1 //000
+#define GENERATOR_MINABSVALUE_GEMM 1 //-GENERATOR_MAXABSVALUE_GEMM
 
 #define GENERATOR_MAXABSVALUE_TENSOR 10
 #define GENERATOR_MINABSVALUE_TENSOR -GENERATOR_MAXABSVALUE_TENSOR
@@ -183,6 +183,28 @@ static bool equals(float& lhs, double& rhs, const uint32_t threshold) {
 	auto diff = SUB_ABS(lhs_data, rhs_data);
 
 	return (diff <= threshold);
+}
+
+template<class t>
+void debug_mxm(std::vector<t>& a, std::vector<t>& b, std::vector<t> c,
+		std::vector<t>& c_gpu, float alpha, float beta, int n) {
+	for (auto i = 0; i < n; ++i) {
+		for (auto j = 0; j < n; ++j) {
+			t sum = 0;
+			for (auto k = 0; k < n; ++k) {
+				sum += a[i * n + k] * b[k * n + j];
+			}
+			c[i * n + j] = alpha * sum + c[i * n + j] * beta;
+		}
+
+	}
+
+	for (unsigned i = 0; i < c_gpu.size(); i++) {
+		if (fabs(c[i] - c_gpu[i]) > 1.0e-4) {
+			std::cout << "i: " << i << " CPU: " << c[i] << " GPU: " << c_gpu[i]
+					<< std::endl;
+		}
+	}
 }
 
 template<class half_t, class real_t>
