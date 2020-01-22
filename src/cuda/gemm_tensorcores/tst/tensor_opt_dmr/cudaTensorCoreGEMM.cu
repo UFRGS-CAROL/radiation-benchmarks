@@ -33,16 +33,16 @@
 
 // MMA matrix tile dimensions.
 
-#define M 16
-#define N 16
-#define K 16
+#define M 8
+#define N 8
+#define K 8
 
 #define WMMA_M 16
 #define WMMA_N 16
 #define WMMA_K 16
-#define MATRIX_M 4096 //2048 //16384
-#define MATRIX_N 4096 //2048 //16384
-#define MATRIX_K 4096 //2048 //16384
+#define MATRIX_M 2048//4096 //2048 //16384
+#define MATRIX_N 2048 //2048 //16384
+#define MATRIX_K 2048 //2048 //16384
 
 // GEMM configuration.
 
