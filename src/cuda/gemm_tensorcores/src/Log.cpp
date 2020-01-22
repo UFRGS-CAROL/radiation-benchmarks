@@ -71,6 +71,7 @@ Log::Log(int argc, char** argv) :
 }
 
 std::ostream& operator<<(std::ostream& os, const Log& log_obj) {
+	os << std::boolalpha;
 	os << "Generate: " << log_obj.generate << std::endl;
 	os << "A input path: " << log_obj.a_input_path << std::endl;
 	os << "B input path: " << log_obj.b_input_path << std::endl;
@@ -85,6 +86,7 @@ std::ostream& operator<<(std::ostream& os, const Log& log_obj) {
 	os << "Alpha: " << log_obj.alpha << std::endl;
 	os << "Beta: " << log_obj.beta << std::endl;
 	os << "DMR Block checking " << log_obj.check_block << std::endl;
+	os << "Use cuBLAS: " << log_obj.use_cublas << std::endl;
 	os << "LOGFILENAME: " << ::get_log_file_name();
 	return os;
 }

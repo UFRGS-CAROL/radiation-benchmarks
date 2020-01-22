@@ -11,8 +11,9 @@ ITERATIONS=10
 PRECISION=float
 CUBLAS=0
 TENSOR_CORES=0
-DMR=mixed
+DMR=none
 BUILDRELATIVEERROR=0
+CHECKBLOCK=1
 
 OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE)_cublas_$(CUBLAS)_tensor_$(TENSOR_CORES).matrix
 
@@ -123,10 +124,10 @@ test:
 	./$(TARGET) --size $(SIZE) --verbose \
 			--precision $(PRECISION) --dmr $(DMR) \
 			--iterations $(ITERATIONS)  \
-			--alpha $(ALPHA) --beta $(BETA)\
+			--alpha $(ALPHA) --beta $(BETA) \
 			--input_a a_$(OUTPUTPREFIX) \
 			--input_b b_$(OUTPUTPREFIX) \
 			--input_c c_$(OUTPUTPREFIX) \
 			--gold  g_$(OUTPUTPREFIX)	\
-			--opnum $(CHECKBLOCK) $(USECUBLAS)  $(USETENSORS)
+			--opnum $(CHECKBLOCK) $(USECUBLAS) $(USETENSORS)
 			
