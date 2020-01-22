@@ -5,22 +5,22 @@ LOGS?=1
 OMP?=1
 CHECKBLOCK=1
 
-ALPHA=0.9
-BETA=0.1
+ALPHA=1.0
+BETA=0.0
 SIZE?=4096
 #6384 #8192 #4096 
 ITERATIONS=10
-PRECISION=double
+PRECISION=float
 OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE).matrix
 DMR=mixed
 BUILDRELATIVEERROR=1
 
 # This is what I use, uncomment if you know your arch and want to specify
-#ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
+ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
 #ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
 #ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
 ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
-ARCH+= 	-gencode arch=compute_72,code=[sm_72,compute_72]	# Xavier
+#ARCH+= 	-gencode arch=compute_72,code=[sm_72,compute_72]	# Xavier
 
 
 VPATH=./src/
@@ -56,7 +56,7 @@ COMMON+= $(STDVERSION)
 ifeq ($(GPU), 1) 
 COMMON+= -DGPU -I$(CUDAPATH)/include/
 CFLAGS+= -DGPU
-LDFLAGS+= -L$(CUDAPATH)/lib64 -lcudart -lcurand
+LDFLAGS+= -L$(CUDAPATH)/lib64 -lcudart -lcurand -lcublas
 endif
 
 ifeq ($(OMP), 1) 
@@ -139,6 +139,16 @@ test_gemm_non_dmr:
 			--input_b b_$(OUTPUTPREFIX) \
 			--input_c c_$(OUTPUTPREFIX) \
 			--gold  g_$(OUTPUTPREFIX)
+			
+test_gemm_cublas:
+	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
+			--precision $(PRECISION) --dmr none \
+			--iterations $(ITERATIONS)    \
+			--alpha $(ALPHA) --beta $(BETA)\
+			--input_a a_$(OUTPUTPREFIX) \
+			--input_b b_$(OUTPUTPREFIX) \
+			--input_c c_$(OUTPUTPREFIX) \
+			--gold  g_$(OUTPUTPREFIX) --use_cublas
 
 
 # Tensor options

@@ -400,7 +400,7 @@ DetectionGold::~DetectionGold() {
 #endif
 #endif
 		this->app_log->end_log();
-		delete this->app_log;
+	//	delete this->app_log;
 	}
 
 }

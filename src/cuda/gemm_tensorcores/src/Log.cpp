@@ -8,6 +8,7 @@ Log::Log(int argc, char** argv) :
 	//getting alpha and beta
 	this->alpha = this->find_float_arg(argc, argv, "--alpha", 1);
 	this->beta = this->find_float_arg(argc, argv, "--beta", 0);
+	this->use_cublas = this->find_arg(argc, argv, "--use_cublas");
 
 	this->generate = this->find_int_arg(argc, argv, "--generate", 0);
 
@@ -172,17 +173,17 @@ std::string Log::find_char_arg(int argc, char **argv, std::string arg,
 	return def;
 }
 
-int Log::find_arg(int argc, char* argv[], std::string arg) {
+bool Log::find_arg(int argc, char* argv[], std::string arg) {
 	int i;
 	for (i = 0; i < argc; ++i) {
 		if (!argv[i])
 			continue;
 		if (std::string(argv[i]) == arg) {
 			del_arg(argc, argv, i);
-			return 1;
+			return true;
 		}
 	}
-	return 0;
+	return false;
 }
 
 float Log::find_float_arg(int argc, char **argv, std::string arg, float def) {

@@ -21,6 +21,8 @@ int main(int argc, char** argv) {
 //		} else {
 //			setup_gemm_tensor_cores_dmr(log);
 //		}
+	} else if (log.use_cublas){
+		setup_gemm_cublas(log);
 	} else {
 		if (log.dmr == "none") {
 			setup_gemm_unhardened(log);

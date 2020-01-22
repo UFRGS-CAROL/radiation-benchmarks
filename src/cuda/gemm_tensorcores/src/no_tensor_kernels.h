@@ -112,9 +112,8 @@ template<const uint32_t COUNT, typename half_t, typename real_t>
 __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 		real_t *A,   //A
 		real_t *B,   //B
-		real_t *C,   //C
-		real_t *D_r, //D
-		half_t *D_h, //D hardening
+		real_t *C_r,   //C
+		half_t *C_h, //D hardening
 		real_t alpha, real_t beta, int wA, int wB, const uint32_t threshold) {
 	// Block index
 	int bx = blockIdx.x;
@@ -191,14 +190,14 @@ __global__ void matrix_mult_kernel_dmr_mixed( //Kernel hardening
 
 	half_t half_alpha = half_t(alpha);
 	half_t half_beta = half_t(beta);
-	half_t half_C = half_t(C[index]);
+	half_t half_C = half_t(C_r[index]);
 
-	real_t real_val = alpha * Csub_real + beta * C[index];
+	real_t real_val = alpha * Csub_real + beta * C_r[index];
 	half_t half_val = half_alpha * Csub_half + half_beta * half_C;
 	check_relative_error(half_val, real_val, threshold);
 
-	D_r[index] = real_val;
-	D_h[index] = half_val;
+	C_r[index] = real_val;
+	C_h[index] = half_val;
 }
 
 template<typename real_t>
@@ -206,7 +205,6 @@ __global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
 		real_t *A,  //A
 		real_t *B,  //B
 		real_t *C,  //C
-		real_t *D,  //D
 		real_t alpha, real_t beta, int wA, int wB) {
 	// Block index
 	int bx = blockIdx.x;
@@ -272,81 +270,7 @@ __global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
 	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-	D[index] = alpha * Csub + beta * C[index];
-}
-
-template<typename half_t, typename real_t>
-__global__ void matrix_mult_kernel_test(	//Kernel without hardening
-		real_t *A,  //A
-		real_t *B,  //B
-		real_t *C,  //C
-		half_t *D,  //D
-		half_t alpha, half_t beta, int wA, int wB) {
-	// Block index
-	int bx = blockIdx.x;
-	int by = blockIdx.y;
-
-	// Thread index
-	int tx = threadIdx.x;
-	int ty = threadIdx.y;
-
-	// Index of the first sub-matrix of A processed by the block
-	int aBegin = wA * BLOCK_SIZE * by;
-
-	// Index of the last sub-matrix of A processed by the block
-	int aEnd = aBegin + wA - 1;
-
-	// Step size used to iterate through the sub-matrices of A
-	int aStep = BLOCK_SIZE;
-
-	// Index of the first sub-matrix of B processed by the block
-	int bBegin = BLOCK_SIZE * bx;
-
-	// Step size used to iterate through the sub-matrices of B
-	int bStep = BLOCK_SIZE * wB;
-
-	// Csub is used to store the element of the block sub-matrix
-	// that is computed by the thread
-	half_t Csub = 0;
-
-	// Loop over all the sub-matrices of A and B
-	// required to compute the block sub-matrix
-	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
-		// Declaration of the shared memory array As used to
-		// store the sub-matrix of A
-		__shared__ half_t As[BLOCK_SIZE][BLOCK_SIZE];
-
-		// Declaration of the shared memory array Bs used to
-		// store the sub-matrix of B
-		__shared__ half_t Bs[BLOCK_SIZE][BLOCK_SIZE];
-
-		// Load the matrices from device memory
-		// to shared memory; each thread loads
-		// one element of each matrix
-		As[ty][tx] = A[a + wA * ty + tx];
-		Bs[ty][tx] = B[b + wB * ty + tx];
-
-		// Synchronize to make sure the matrices are loaded
-		__syncthreads();
-
-		// Multiply the two matrices together;
-		// each thread computes one element
-		// of the block sub-matrix
-#pragma unroll
-		for (int k = 0; k < BLOCK_SIZE; ++k) {
-			Csub += As[ty][k] * Bs[k][tx];
-		}
-
-		// Synchronize to make sure that the preceding
-		// computation is done before loading two new
-		// sub-matrices of A and B in the next iteration
-		__syncthreads();
-	}
-
-	// Write the block sub-matrix to device memory;
-	// each thread writes one element
-	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-	D[index] = alpha * Csub + beta * C[index];
+	C[index] = alpha * Csub + beta * C[index];
 }
 
 template<typename half_t, typename real_t>

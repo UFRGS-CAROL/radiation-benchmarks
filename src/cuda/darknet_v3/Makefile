@@ -1,16 +1,16 @@
-GPU=0
+GPU=1
 CUDNN=0
 OPENCV?=0
 OPENMP=1
 DEBUG?=0
 REAL_TYPE?=float
-LOGS?=0
+LOGS?=1
 OPENGEMM?=0
-BUILDPROFILER=1
+BUILDPROFILER=0
 
 OPENBLAS=1
 
-RADIATIONDIR=/home/fernando/git_pesquisa/radiation-benchmarks/
+RADIATIONDIR=/home/carol/radiation-benchmarks/
 
 ARCH= -gencode arch=compute_35,code=sm_35
 #-gencode arch=compute_60,code=sm_60 \
@@ -169,9 +169,9 @@ demo:
 generate:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
 			../../../data/networks_img_list/caltech.pedestrians.100.txt \
-			-generate 1 -gold ./test.csv -tensor_cores 1
+			-generate 1 -gold ./test.csv -tensor_cores 0
 
 test:
 	./$(EXEC) detector test_radiation cfg/coco.data ../../../data/darknet/yolov3-spp.cfg ../../../data/darknet/yolov3-spp.weights \
 			../../../data/networks_img_list/caltech.pedestrians.100.txt \
-			-generate 0 -gold ./test.csv -iterations 2 -norm_coord 0 -tensor_cores 1 -smx_redundancy 1
+			-generate 0 -gold ./test.csv -iterations 2 -norm_coord 0 -tensor_cores 0 -smx_redundancy 1

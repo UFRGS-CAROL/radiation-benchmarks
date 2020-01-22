@@ -15,6 +15,7 @@ struct Log;
  */
 void setup_gemm_unhardened(Log& log);
 void setup_gemm_dmr(Log& log);
+void setup_gemm_cublas(Log& log);
 
 /**
  * Setup for Tensor (GEMM)

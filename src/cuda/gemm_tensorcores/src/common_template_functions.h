@@ -67,12 +67,21 @@ void write_gold(std::vector<half_t>& a_vector, std::vector<half_t>& b_vector,
 		std::vector<real_t>& c_vector, std::vector<real_t>& d_vector,
 		std::string& a_file_path, std::string& b_file_path,
 		std::string& c_file_path, std::string& d_file_path) {
-	auto result = write_to_file(a_file_path, a_vector);
-	result = result && write_to_file(b_file_path, b_vector);
-	result = result && write_to_file(c_file_path, c_vector);
-	result = result && write_to_file(d_file_path, d_vector);
-	if (result == false) {
-		throw_line("The gold files could not be written\n");
+
+	if (write_to_file(a_file_path, a_vector) == false) {
+		throw_line(a_file_path + " could not be written\n");
+	}
+
+	if (write_to_file(b_file_path, b_vector) == false) {
+		throw_line(b_file_path + " could not be written\n");
+	}
+
+	if (write_to_file(c_file_path, c_vector) == false) {
+		throw_line(c_file_path + " could not be written\n");
+	}
+
+	if (write_to_file(d_file_path, d_vector) == false) {
+		throw_line(d_file_path + " could not be written\n");
 	}
 }
 
@@ -81,12 +90,21 @@ void read_gold(std::vector<half_t>& a_vector, std::vector<half_t>& b_vector,
 		std::vector<real_t>& c_vector, std::vector<real_t>& d_vector,
 		std::string& a_file_path, std::string& b_file_path,
 		std::string& c_file_path, std::string& d_file_path) {
-	auto result = read_from_file(a_file_path, a_vector);
-	result = result && read_from_file(b_file_path, b_vector);
-	result = result && read_from_file(c_file_path, c_vector);
-	result = result && read_from_file(d_file_path, d_vector);
-	if (result == false) {
-		throw_line("Some of the files could not be read\n");
+
+	if (read_from_file(a_file_path, a_vector) == false) {
+		throw_line(a_file_path + " could not be read\n");
+	}
+
+	if (read_from_file(b_file_path, b_vector) == false) {
+		throw_line(b_file_path + " could not be read\n");
+	}
+
+	if (read_from_file(c_file_path, c_vector) == false) {
+		throw_line(c_file_path + " could not be read\n");
+	}
+
+	if (read_from_file(d_file_path, d_vector) == false) {
+		throw_line(d_file_path + " could not be read\n");
 	}
 }
 
@@ -130,8 +148,6 @@ static unsigned long long dmr_errors() {
 
 	return ret;
 }
-
-
 
 template<typename real_t>
 bool equals(real_t& lhs, real_t& rhs, const uint32_t threshold = 0) {
@@ -212,7 +228,7 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 
 			log.log_error(error_detail.str());
 			host_errors++;
-			if(is_output_diff && dmr_equals && dmr){
+			if (is_output_diff && dmr_equals && dmr) {
 				memory_errors++;
 			}
 
@@ -239,6 +255,5 @@ std::pair<int, int> check_output_errors_dmr(std::vector<real_t>& gold,
 
 	return {dmr_err, host_errors};
 }
-
 
 #endif /* COMMON_TEMPLATE_FUNCTIONS_H_ */

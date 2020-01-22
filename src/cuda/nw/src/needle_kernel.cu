@@ -18,7 +18,6 @@ __device__ __host__ int maximum(int a, int b, int c) {
 
 }
 
-__device__ int gpukerrors;
 __global__ void GoldChkKernel(int *gk, int *ck, int n) {
 	int tx = blockIdx.x * GCHK_BLOCK_SIZE + threadIdx.x;
 	int ty = blockIdx.y * GCHK_BLOCK_SIZE + threadIdx.y;
