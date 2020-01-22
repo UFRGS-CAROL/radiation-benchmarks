@@ -14,13 +14,14 @@
 // improve the performance of the computations on GPU.
 // Note that you need a GPU that can have more than 64 Kb of shared memory
 // per multiprocessor.
-// #define M_GLOBAL (M * M_TILES)
-// #define N_GLOBAL (N * N_TILES)
-// #define K_GLOBAL (K * K_TILES)
 
-#define M_GLOBAL 1024
-#define N_GLOBAL 1024
-#define K_GLOBAL 1024
+#define M_GLOBAL (M * M_TILES)
+#define N_GLOBAL (N * N_TILES)
+#define K_GLOBAL (K * K_TILES)
+
+// #define M_GLOBAL 1024
+// #define N_GLOBAL 1024
+// #define K_GLOBAL 1024
 
 
 #define SHARED_MEMORY_LIMIT_64K 0
@@ -32,16 +33,16 @@
 
 // MMA matrix tile dimensions.
 
-#define M 16
-#define N 16
-#define K 16
+#define M 8
+#define N 8
+#define K 8
 
 #define WMMA_M 16
 #define WMMA_N 16
 #define WMMA_K 16
-#define MATRIX_M 1024 //2048 //16384
-#define MATRIX_N 1024 //2048 //16384
-#define MATRIX_K 1024 //2048 //16384
+#define MATRIX_M 2048//4096 //2048 //16384
+#define MATRIX_N 2048 //2048 //16384
+#define MATRIX_K 2048 //2048 //16384
 
 // GEMM configuration.
 
