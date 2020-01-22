@@ -14,7 +14,7 @@
 #include "cublas_v2.h"
 
 // helper functions
-#include "helper_string.h"
+//#include "helper_string.h"
 #include "helper_cuda.h"
 
 #define DEFAULT_INPUT_SIZE 8192
