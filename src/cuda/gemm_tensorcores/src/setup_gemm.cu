@@ -75,6 +75,8 @@ struct CUBLASGemmCaller: public GemmCaller<0, real_t, real_t> {
 						wB, &beta, this->c_dev.data(), wB));
 	}
 
+#if __CUDA_ARCH__ >= 600 // more than titan
+
 	void gemm(half alpha, half beta, int wA, int wB,
 			const uint32_t threshold) {
 		rad::checkCublasErrors(
@@ -82,6 +84,7 @@ struct CUBLASGemmCaller: public GemmCaller<0, real_t, real_t> {
 						wA, &alpha, this->a_dev.data(), wA, this->b_dev.data(),
 						wB, &beta, this->c_dev.data(), wB));
 	}
+#endif
 
 	std::vector<real_t> memcpy_half_t_mem() {
 		return {};
@@ -99,9 +102,6 @@ struct CUBLASGemmCaller: public GemmCaller<0, real_t, real_t> {
 #else
 			throw_line("Tensor Cores cannot be used on CUDA_ARCH<7.0");
 #endif
-		} else {
-			rad::checkCublasErrors(
-					cublasSetMathMode(this->blas_handle, CUBLAS_DEFAULT_MATH));
 		}
 	} //default constructor
 };
