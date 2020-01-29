@@ -151,10 +151,7 @@
 #define SHMEM_STRIDE (N * BLOCK_ROW_TILES)
 #define SHMEM_OFFSET (N * WARP_ROW_TILES)
 
-#define BLOCK_SIZE 16
-
-=======
- The macro below is used to shift rows of the A matrix and columns of the B
+// The macro below is used to shift rows of the A matrix and columns of the B
 // matrix in shared memory to minimize possible bank conflicts. Before
 // performing the nvcuda::wmma::mma_sync operation, the warp must load the
 // matrix data using the nvcuda::wmma::load_matrix_sync operation. Although the
@@ -505,6 +502,14 @@ int main(int argc, char **argv) {
   printf("M: %d (%d x %d)\n", M_GLOBAL, M, M_TILES);
   printf("N: %d (%d x %d)\n", N_GLOBAL, N, N_TILES);
   printf("K: %d (%d x %d)\n", K_GLOBAL, K, K_TILES);
+
+  half *A_h = NULL;
+  half *B_h = NULL;
+  float *C_h = NULL;
+#if CPU_DEBUG
+  float *result_hD = NULL;
+  float *result_host = NULL;
+#endif
 
   A_h = (half *)malloc(sizeof(half) * M_GLOBAL * K_GLOBAL);
   B_h = (half *)malloc(sizeof(half) * K_GLOBAL * N_GLOBAL);
