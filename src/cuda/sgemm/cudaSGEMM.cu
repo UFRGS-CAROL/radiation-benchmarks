@@ -20,8 +20,8 @@
 // The timestamp is updated on every log_helper function call.
 
 // helper functions
-#include "helper_string.h"
-#include "helper_cuda.h"
+//#include "helper_string.h"
+//#include "helper_cuda.h"
 
 #undef min
 #define min( x, y ) ( (x) < (y) ? (x) : (y) )

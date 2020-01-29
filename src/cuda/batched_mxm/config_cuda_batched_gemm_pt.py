@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '../../include')
 from common_config import discover_board, execute_and_write_json_to_file
 
-SIZES = [128]
+SIZES = [112]
 STREAMS = 8192
 KERNELTYPE=[0, 1] # STATIC, PERSISTENT, GEMM
 ITERATIONS = int(1e9)
@@ -46,7 +46,7 @@ def config(board, debug):
         for_jetson = 1
         lib = ""
 
-    generate = ["sudo mkdir -p " + bin_path, 
+    generate = [" mkdir -p " + bin_path, 
                 "cd " + src_benchmark, 
                 "make clean", 
                 "make -C ../../include "]
@@ -55,8 +55,8 @@ def config(board, debug):
 
     generate.extend(["make BUILDPROFILER={} FORJETSON={} -j2".format(BUILPROFILER, for_jetson),
                 "mkdir -p " + data_path,
-                "sudo rm -f " + data_path + "/*" + benchmark_bin + "*",
-                "sudo mv -f ./" + benchmark_bin + " " + bin_path + "/"])
+                " rm -f " + data_path + "/*" + benchmark_bin + "*",
+                " mv -f ./" + benchmark_bin + " " + bin_path + "/"])
     execute = []
 
     # gen only for max size, defined on cuda_trip_mxm.cu
@@ -65,7 +65,7 @@ def config(board, debug):
             input_file = data_path + "/"
 
             gen = [None] * 8
-            gen[0] = ['sudo env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
+            gen[0] = [' env LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} ',
                       bin_path + "/" + benchmark_bin + " "]
             gen[1] = ['-size={}'.format(i)]
             gen[2] = ['-input_a={}A_pt_streams_{}_ktype_{}_size_{}.matrix'.format(input_file, STREAMS, k, i)]
