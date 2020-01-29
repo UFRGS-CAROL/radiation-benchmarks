@@ -19,9 +19,9 @@
 // #define N_GLOBAL (N * N_TILES)
 // #define K_GLOBAL (K * K_TILES)
 
-#define M_GLOBAL 1024
-#define N_GLOBAL 1024
-#define K_GLOBAL 1024
+#define M_GLOBAL 4096
+#define N_GLOBAL 4096
+#define K_GLOBAL 4096
 
 
 #define SHARED_MEMORY_LIMIT_64K 0
@@ -514,7 +514,7 @@ int main(int argc, char **argv) {
 	checkCudaErrors(cudaMemset(D, 0, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
 	checkCudaErrors(cudaMemset(dtd, 0, sizeof(half) * M_GLOBAL * N_GLOBAL));
-	
+
 	enum {
 		// Compute the right amount of shared memory to request.
 		// We need shared memory to hold per-CTA C and D matrix tiles, and to cache
