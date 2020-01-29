@@ -15,13 +15,13 @@
 // Note that you need a GPU that can have more than 64 Kb of shared memory
 // per multiprocessor.
 
-#define M_GLOBAL (M * M_TILES)
-#define N_GLOBAL (N * N_TILES)
-#define K_GLOBAL (K * K_TILES)
+// #define M_GLOBAL (M * M_TILES)
+// #define N_GLOBAL (N * N_TILES)
+// #define K_GLOBAL (K * K_TILES)
 
-// #define M_GLOBAL 1024
-// #define N_GLOBAL 1024
-// #define K_GLOBAL 1024
+#define M_GLOBAL 1024
+#define N_GLOBAL 1024
+#define K_GLOBAL 1024
 
 
 #define SHARED_MEMORY_LIMIT_64K 0
@@ -33,9 +33,9 @@
 
 // MMA matrix tile dimensions.
 
-#define M 8
-#define N 8
-#define K 8
+#define M 16
+#define N 16
+#define K 16
 
 #define WMMA_M 16
 #define WMMA_N 16
@@ -498,9 +498,9 @@ int main(int argc, char **argv) {
 	//INIT HOST
 	init_host_matrices(A_h, B_h, C_h);
 
-	checkCudaErrors(cudaMemset(dtd, 0, sizeof(half) * M_GLOBAL * N_GLOBAL));
+	
 
-	printf("Preparing data for GPU...\n");
+	// printf("Preparing data for GPU...\n");
 
 	checkCudaErrors(
 			cudaMemcpy(A, A_h, sizeof(half) * M_GLOBAL * K_GLOBAL,
@@ -513,6 +513,8 @@ int main(int argc, char **argv) {
 					cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemset(D, 0, sizeof(half) * M_GLOBAL * N_GLOBAL));
 
+	checkCudaErrors(cudaMemset(dtd, 0, sizeof(half) * M_GLOBAL * N_GLOBAL));
+	
 	enum {
 		// Compute the right amount of shared memory to request.
 		// We need shared memory to hold per-CTA C and D matrix tiles, and to cache
@@ -571,7 +573,7 @@ int main(int argc, char **argv) {
     M_GLOBAL);
 
 
-	//matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
+	// matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
 
 	//checkKernelErrors(cudaStreamSynchronize(st));
 	//checkKernelErrors(cudaPeekAtLastError());
@@ -593,8 +595,6 @@ int main(int argc, char **argv) {
 
 	// memcpy(result_host, C_h, sizeof(float) * M_GLOBAL * N_GLOBAL);
 
-	// matMultiplyOnHost(A_h, B_h, result_host, alpha, beta, M_GLOBAL, K_GLOBAL,
-	//                   K_GLOBAL, N_GLOBAL, M_GLOBAL, N_GLOBAL);
 
 	for (int i = 0; i < 10; i++) {
 		printf(" diff = %f, HW = %f, SW = %f \n",
