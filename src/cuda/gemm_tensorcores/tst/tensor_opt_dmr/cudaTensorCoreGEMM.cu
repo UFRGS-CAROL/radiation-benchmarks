@@ -541,7 +541,7 @@ int main(int argc, char **argv) {
 
 	printf("Computing... using high performance kernel compute_gemm \n");
 
-	cudaStream_t st;
+	// cudaStream_t st;
 	cudaStream_t stream1, stream2;
   	checkKernelErrors(cudaStreamCreate(&stream1)); 
   	checkKernelErrors(cudaStreamCreate(&stream2));
@@ -571,9 +571,9 @@ int main(int argc, char **argv) {
     M_GLOBAL);
 
 
-	// matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
+	 matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
 
-	//checkKernelErrors(cudaStreamSynchronize(st));
+	checkKernelErrors(cudaStreamSynchronize(st));
 	//checkKernelErrors(cudaPeekAtLastError());
 	//checkKernelErrors(cudaDeviceSynchronize());
  	}
