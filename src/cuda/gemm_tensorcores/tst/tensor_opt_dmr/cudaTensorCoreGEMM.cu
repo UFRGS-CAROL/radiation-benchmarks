@@ -107,9 +107,9 @@
 #define N_TILES 256
 #define K_TILES 256
 
-#define M_GLOBAL (M * M_TILES)
-#define N_GLOBAL (N * N_TILES)
-#define K_GLOBAL (K * K_TILES)
+#define M_GLOBAL 2048
+#define N_GLOBAL 2048
+#define K_GLOBAL 2048
 
 #define C_LAYOUT wmma::mem_row_major
 
