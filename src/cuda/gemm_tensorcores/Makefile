@@ -3,17 +3,20 @@ DEBUG?=0
 #for radiation setup
 LOGS?=1
 OMP?=1
-CHECKBLOCK=1
 
 ALPHA=1.0
 BETA=0.0
 SIZE?=4096
-#6384 #8192 #4096 
 ITERATIONS=10
 PRECISION=float
-OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE).matrix
-DMR=mixed
-BUILDRELATIVEERROR=1
+CUBLAS=0
+TENSOR_CORES=0
+DMR=none
+BUILDRELATIVEERROR=0
+CHECKBLOCK=1
+
+OUTPUTPREFIX=$(PRECISION)_$(ALPHA)_$(BETA)_$(SIZE)_cublas_$(CUBLAS)_tensor_$(TENSOR_CORES).matrix
+
 
 # This is what I use, uncomment if you know your arch and want to specify
 ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]		# Kepler
@@ -38,6 +41,14 @@ CFLAGS=-Wall -Wfatal-errors  -Wunknown-pragmas -Wunused-function
 RAD_DIR=/home/carol/radiation-benchmarks
 
 INCLUDE=-I$(CUDAPATH)/include -I../common
+
+ifeq ($(CUBLAS), 1)
+USECUBLAS= --use_cublas
+endif
+
+ifeq ($(TENSOR_CORES)), 1)
+USETENSORS= --tensor_cores
+endif
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g -DDEBUG
@@ -100,83 +111,23 @@ clean:
 	rm -rf $(OBJS) $(TARGET)
 
 # GEMM options
-generate_gemm:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 \
+generate:
+	./$(TARGET) --size $(SIZE) --generate --verbose \
 			--precision $(PRECISION) --dmr none \
 			--alpha $(ALPHA) --beta $(BETA) \
 			--input_a a_$(OUTPUTPREFIX) \
 			--input_b b_$(OUTPUTPREFIX) \
 			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX)
+			--gold  g_$(OUTPUTPREFIX) $(USECUBLAS) $(USETENSORS)
 	
-test_gemm:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
+test:
+	./$(TARGET) --size $(SIZE) --verbose \
 			--precision $(PRECISION) --dmr $(DMR) \
 			--iterations $(ITERATIONS)  \
-			--alpha $(ALPHA) --beta $(BETA)\
+			--alpha $(ALPHA) --beta $(BETA) \
 			--input_a a_$(OUTPUTPREFIX) \
 			--input_b b_$(OUTPUTPREFIX) \
 			--input_c c_$(OUTPUTPREFIX) \
 			--gold  g_$(OUTPUTPREFIX)	\
-			--opnum $(CHECKBLOCK)	
-
-test_gemm_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
-			--precision $(PRECISION) --dmr full \
-			--iterations $(ITERATIONS)  \
-			--alpha $(ALPHA) --beta $(BETA) \
-			--input_a a_$(OUTPUTPREFIX) \
-			--input_b b_$(OUTPUTPREFIX) \
-			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX) 
-						
-test_gemm_non_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
-			--precision $(PRECISION) --dmr none \
-			--iterations $(ITERATIONS)    \
-			--alpha $(ALPHA) --beta $(BETA)\
-			--input_a a_$(OUTPUTPREFIX) \
-			--input_b b_$(OUTPUTPREFIX) \
-			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX)
+			--opnum $(CHECKBLOCK) $(USECUBLAS) $(USETENSORS)
 			
-test_gemm_cublas:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
-			--precision $(PRECISION) --dmr none \
-			--iterations $(ITERATIONS)    \
-			--alpha $(ALPHA) --beta $(BETA)\
-			--input_a a_$(OUTPUTPREFIX) \
-			--input_b b_$(OUTPUTPREFIX) \
-			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX) --use_cublas
-
-
-# Tensor options
-generate_tensor:
-	./$(TARGET) --size $(SIZE) --generate 1 --verbose 1 \
-			--precision $(PRECISION) --dmr none --tensor_cores 1 \
-			--alpha $(ALPHA) --beta $(BETA) \
-			--input_a a_$(OUTPUTPREFIX) \
-			--input_b b_$(OUTPUTPREFIX) \
-			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX)
-
-test_tensor_non_dmr:
-		./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
-			--precision $(PRECISION) --dmr none --tensor_cores 1 \
-			--iterations $(ITERATIONS)  \
-			--alpha $(ALPHA) --beta $(BETA)\
-			--input_a a_$(OUTPUTPREFIX) \
-			--input_b b_$(OUTPUTPREFIX) \
-			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX)
-	
-test_tensor_dmr:
-	./$(TARGET) --size $(SIZE) --generate 0 --verbose 1 \
-			--precision $(PRECISION) --dmr mixed --tensor_cores 1 \
-			--iterations $(ITERATIONS)  \
-			--alpha $(ALPHA) --beta $(BETA)\
-			--input_a a_$(OUTPUTPREFIX) \
-			--input_b b_$(OUTPUTPREFIX) \
-			--input_c c_$(OUTPUTPREFIX) \
-			--gold  g_$(OUTPUTPREFIX)

@@ -76,4 +76,4 @@ test:
 	 ./$(EXEC) -size=$(SIZE) -verbose \
 	 		   -input=./input_$(SIZE) \
 	 		   -gold=./gold_$(SIZE) \
-	 		   -iterations=10 -noinputensurance
+	 		   -iterations=1 -noinputensurance

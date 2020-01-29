@@ -2,7 +2,7 @@ CXX=g++
 NVCC=/usr/local/cuda/bin/nvcc
 LOGS?=1
 USE_OMP?=1
-SAFE_MALLOC?=1
+SAFE_MALLOC?=0
 
 ARCH=  -gencode arch=compute_35,code=[sm_35,compute_35] 
 ARCH+= -gencode arch=compute_50,code=[sm_50,compute_50] 

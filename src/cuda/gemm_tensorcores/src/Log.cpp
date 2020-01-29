@@ -10,7 +10,7 @@ Log::Log(int argc, char** argv) :
 	this->beta = this->find_float_arg(argc, argv, "--beta", 0);
 	this->use_cublas = this->find_arg(argc, argv, "--use_cublas");
 
-	this->generate = this->find_int_arg(argc, argv, "--generate", 0);
+	this->generate = this->find_arg(argc, argv, "--generate");
 
 	this->size_matrices = this->find_int_arg(argc, argv, "--size", 1024);
 
@@ -30,14 +30,17 @@ Log::Log(int argc, char** argv) :
 
 	this->dmr = this->find_char_arg(argc, argv, "--dmr", "none");
 
-	this->use_tensor_cores = this->find_int_arg(argc, argv, "--tensor_cores",
-			0);
+	this->use_tensor_cores = this->find_arg(argc, argv, "--tensor_cores");
 
 	this->check_block = this->find_int_arg(argc, argv, "--opnum", BLOCK_SIZE);
 
-	this->verbose = this->find_int_arg(argc, argv, "--verbose", 0);
+	this->verbose = this->find_arg(argc, argv, "--verbose");
 
-	this->triplicated = this->find_int_arg(argc, argv, "--triplicated", 0);
+	this->triplicated = this->find_arg(argc, argv, "--triplicated");
+
+	if(this->generate){
+		this->iterations = 1;
+	}
 
 #ifdef LOGS
 	std::string test_info = std::string(" iterations: ")
@@ -57,6 +60,7 @@ Log::Log(int argc, char** argv) :
 
 	test_info += " alpha: " + std::to_string(this->alpha);
 	test_info += " beta: " + std::to_string(this->beta);
+	test_info += " use_cublas: " + std::to_string(this->use_cublas);
 
 	std::string app = "gemm_tensor_cores_" + this->precision;
 	set_iter_interval_print(10);
@@ -67,6 +71,7 @@ Log::Log(int argc, char** argv) :
 }
 
 std::ostream& operator<<(std::ostream& os, const Log& log_obj) {
+	os << std::boolalpha;
 	os << "Generate: " << log_obj.generate << std::endl;
 	os << "A input path: " << log_obj.a_input_path << std::endl;
 	os << "B input path: " << log_obj.b_input_path << std::endl;
@@ -81,6 +86,7 @@ std::ostream& operator<<(std::ostream& os, const Log& log_obj) {
 	os << "Alpha: " << log_obj.alpha << std::endl;
 	os << "Beta: " << log_obj.beta << std::endl;
 	os << "DMR Block checking " << log_obj.check_block << std::endl;
+	os << "Use cuBLAS: " << log_obj.use_cublas << std::endl;
 	os << "LOGFILENAME: " << ::get_log_file_name();
 	return os;
 }
