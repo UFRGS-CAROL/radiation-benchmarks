@@ -566,12 +566,12 @@ int main(int argc, char **argv) {
 
  	for (int i = 0; i < 15; ++i)
  	{
-	// compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-	// stream1>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
- //    M_GLOBAL);
+	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
+	stream1>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
+    M_GLOBAL);
 
 
-	 matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
+	 // matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
 
 	// checkKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
