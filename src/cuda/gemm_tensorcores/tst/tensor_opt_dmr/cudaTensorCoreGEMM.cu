@@ -43,9 +43,9 @@
 // GEMM configuration.
 
 
-#define M_TILES 256  // 128	
-#define N_TILES 256 // 128
-#define K_TILES 256 // 128
+#define M_TILES 128  // 128	
+#define N_TILES 128 // 128
+#define K_TILES 128 // 128
 // 
 
 #define C_LAYOUT nvcuda::wmma::mem_row_major
@@ -217,10 +217,9 @@ __global__ void matrix_mult(half *A, half *B, int wA,
 
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
- //    const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-	// C[index] = alpha * Csub + beta * C[index];
-	int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-    C[c + wB * ty + tx] = Csub;
+    const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
+	C[index] = alpha * Csub + beta * C[index];
+
 }
 
 
