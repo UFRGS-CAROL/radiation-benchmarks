@@ -214,8 +214,10 @@ __global__ void matrix_mult(half *A, half *B, int wA,
 
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
-	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-	C[index] = alpha * Csub + beta * C[index];
+	// const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
+	// C[index] = alpha * Csub + beta * C[index];
+ 	int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+    C[c + wB * ty + tx] = Csub;
 }
 
 
