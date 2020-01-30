@@ -38,16 +38,16 @@
 #define WMMA_N 16
 #define WMMA_K 16
 
-#define MATRIX_M 2048//4096 //2048 //16384
-#define MATRIX_N 2048 //2048 //16384
-#define MATRIX_K 2048 //2048 //16384
+#define MATRIX_M 4096//4096 //2048 //16384
+#define MATRIX_N 4096//2048 //16384
+#define MATRIX_K 4096 //2048 //16384
 
 // GEMM configuration.
 
-#define M_TILES 128	
-#define N_TILES 128
-#define K_TILES 128
-
+#define M_TILES 256  // 128	
+#define N_TILES 256 // 128
+#define K_TILES 256 // 128
+// 
 
 #define C_LAYOUT nvcuda::wmma::mem_row_major
 
@@ -571,7 +571,7 @@ int main(int argc, char **argv) {
     M_GLOBAL);
 
 
-	 // matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
+	matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
 
 	// checkKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
