@@ -123,7 +123,8 @@ __host__ void init_host_matrices(float *a, float *b, float *c) {
 	for (int t = 0; t < M_GLOBAL * N_GLOBAL; t++) {
 		a[t] = 1.0;
 		b[t] = 1.0;
-		c[t] = 1.0;
+		// c[t] = 1.0;
+		c[t] = 0.0;
 	}
 }
 
@@ -131,7 +132,8 @@ __host__ void init_host_matrices(half *a, half *b, half *c) {
 	for (int t = 0; t < M_GLOBAL * N_GLOBAL; t++) {
 		a[t] = 1.0;
 		b[t] = 1.0;
-		c[t] = 1.0;
+		// c[t] = 1.0;
+		c[t] = 0.0;
 	}
 }
 
@@ -569,7 +571,7 @@ int main(int argc, char **argv) {
 	// matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
 
  	matrix_mult<<<dim_grid, dim_block>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
-	
+
 	checkKernelErrors(cudaPeekAtLastError());
 	checkKernelErrors(cudaDeviceSynchronize());
  	}
