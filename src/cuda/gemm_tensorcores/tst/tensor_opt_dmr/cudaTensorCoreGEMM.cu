@@ -220,7 +220,7 @@ __global__ void matrix_mult(half *A, half *B, int wA,
   //int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
   const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
   half half_val = alpha * Csub + beta * C[index];
-  C[index] = Csub;
+  C[index] = half_val;
 }
 
 
