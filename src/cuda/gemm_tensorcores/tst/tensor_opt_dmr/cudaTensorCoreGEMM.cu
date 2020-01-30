@@ -215,10 +215,8 @@ __global__ void matrix_mult(half *A, half *B, int wA,
 
 	// Write the block sub-matrix to device memory;
 	// each thread writes one element
-	// const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-	// C[index] = alpha * Csub + beta * C[index];
- 	int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-    C[c + wB * ty + tx] = Csub;
+    const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
+	C[index] = alpha * Csub + beta * C[index];
 }
 
 
@@ -568,9 +566,10 @@ int main(int argc, char **argv) {
  //    M_GLOBAL);
 
 
-	matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
+	// matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
 
-	// checkKernelErrors(cudaStreamSynchronize(st));
+ 	matrix_mult<<<dim_grid, dim_block>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
+	
 	checkKernelErrors(cudaPeekAtLastError());
 	checkKernelErrors(cudaDeviceSynchronize());
  	}
