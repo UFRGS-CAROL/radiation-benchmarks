@@ -547,8 +547,8 @@ int main(int argc, char **argv) {
 
 	//cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
 	std::cout << BLOCK_SIZE << " " << M_GLOBAL << std::endl;
-	//dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-	//dim3 grid( M_GLOBAL / threads.x, M_GLOBAL / threads.y);
+	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
+	dim3 grid( M_GLOBAL / threads.x, M_GLOBAL / threads.y);
 
 	dim3 dim_grid, dim_block;
   
@@ -568,10 +568,11 @@ int main(int argc, char **argv) {
 	// stream1>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
  //    M_GLOBAL);
 
+ 	matrix_mult<<<grid, threads>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
 
 	// matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
 
- 	matrix_mult<<<dim_grid, dim_block>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
+ 	// matrix_mult<<<dim_grid, dim_block>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
 
 	checkKernelErrors(cudaPeekAtLastError());
 	checkKernelErrors(cudaDeviceSynchronize());
