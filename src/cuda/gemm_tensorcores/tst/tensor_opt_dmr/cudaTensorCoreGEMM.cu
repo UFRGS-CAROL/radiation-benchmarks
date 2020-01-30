@@ -176,18 +176,18 @@ __global__ void matrix_mult(half *A, half *B, int wA,
 
 	// Csub is used to store the element of the block sub-matrix
 	// that is computed by the thread
-	real_t Csub = 0;
+	half Csub = 0;
 
 	// Loop over all the sub-matrices of A and B
 	// required to compute the block sub-matrix
 	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
 		// Declaration of the shared memory array As used to
 		// store the sub-matrix of A
-		__shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
+		__shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
 
 		// Declaration of the shared memory array Bs used to
 		// store the sub-matrix of B
-		__shared__ real_t Bs[BLOCK_SIZE][BLOCK_SIZE];
+		__shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
 
 		// Load the matrices from device memory
 		// to shared memory; each thread loads
