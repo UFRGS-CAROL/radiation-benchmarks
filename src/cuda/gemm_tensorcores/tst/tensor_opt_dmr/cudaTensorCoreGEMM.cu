@@ -225,6 +225,7 @@ __global__ void matrix_mult(half *A, half *B, int wA,
 
 
 
+
 __global__ void compute_gemm(const half *A, const half *B, const half *C,
 		half *D, half alpha, half beta, int wA, int wB) {
 	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
@@ -564,9 +565,9 @@ int main(int argc, char **argv) {
 
  	for (int i = 0; i < 15; ++i)
  	{
-	// compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
-	// stream1>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
- //    M_GLOBAL);
+	compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK, SHMEM_SZ,
+	stream1>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
+    M_GLOBAL);
 
 
 	matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
