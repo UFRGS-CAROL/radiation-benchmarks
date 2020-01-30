@@ -42,9 +42,9 @@
 
 // GEMM configuration.
 
-#define M_TILES 256  // 128	
-#define N_TILES 256 // 128
-#define K_TILES 256 // 128
+#define M_TILES 128  // 128	
+#define N_TILES 128 // 128
+#define K_TILES 128 // 128
 // 
 
 #define C_LAYOUT nvcuda::wmma::mem_row_major
