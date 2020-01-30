@@ -38,9 +38,9 @@
 #define WMMA_N 16
 #define WMMA_K 16
 
-#define MATRIX_M 4096//4096 //2048 //16384
-#define MATRIX_N 4096//2048 //16384
-#define MATRIX_K 4096 //2048 //16384
+#define MATRIX_M 8192 //4096 //2048 //16384
+#define MATRIX_N 8192 //2048 //16384
+#define MATRIX_K 8192  //2048 //16384
 
 // GEMM configuration.
 
