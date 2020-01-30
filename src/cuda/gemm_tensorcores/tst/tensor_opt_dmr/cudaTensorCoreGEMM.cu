@@ -15,13 +15,13 @@
 // Note that you need a GPU that can have more than 64 Kb of shared memory
 // per multiprocessor.
 
-// #define M_GLOBAL (M * M_TILES)
-// #define N_GLOBAL (N * N_TILES)
-// #define K_GLOBAL (K * K_TILES)
+#define M_GLOBAL (M * M_TILES)
+#define N_GLOBAL (N * N_TILES)
+#define K_GLOBAL (K * K_TILES)
 
-#define M_GLOBAL 8192
-#define N_GLOBAL 8192
-#define K_GLOBAL 8192
+// #define M_GLOBAL 8192
+// #define N_GLOBAL 8192
+// #define K_GLOBAL 8192
 
 #define SHARED_MEMORY_LIMIT_64K 0
 #endif
@@ -151,76 +151,71 @@ __global__ void MatrixMulCUDA(const T *A, const T *B, const T *C, T* D,
 
 __global__ void matrix_mult(half *A, half *B, int wA,
     int wB, half *C, half alpha, half beta) {
-  // Block index
-  int bx = blockIdx.x;
-  int by = blockIdx.y;
+ 	// Block index
+	int bx = blockIdx.x;
+	int by = blockIdx.y;
 
-  // Thread index
-  int tx = threadIdx.x;
-  int ty = threadIdx.y;
+	// Thread index
+	int tx = threadIdx.x;
+	int ty = threadIdx.y;
 
-  // Index of the first sub-matrix of A processed by the block
-  int aBegin = wA * BLOCK_SIZE * by;
+	// Index of the first sub-matrix of A processed by the block
+	int aBegin = wA * BLOCK_SIZE * by;
 
-  // Index of the last sub-matrix of A processed by the block
-  int aEnd   = aBegin + wA - 1;
+	// Index of the last sub-matrix of A processed by the block
+	int aEnd = aBegin + wA - 1;
 
-  // Step size used to iterate through the sub-matrices of A
-  int aStep  = BLOCK_SIZE;
+	// Step size used to iterate through the sub-matrices of A
+	int aStep = BLOCK_SIZE;
 
-  // Index of the first sub-matrix of B processed by the block
-  int bBegin = BLOCK_SIZE * bx;
+	// Index of the first sub-matrix of B processed by the block
+	int bBegin = BLOCK_SIZE * bx;
 
-  // Step size used to iterate through the sub-matrices of B
-  int bStep  = BLOCK_SIZE * wB;
+	// Step size used to iterate through the sub-matrices of B
+	int bStep = BLOCK_SIZE * wB;
 
-  // Csub is used to store the element of the block sub-matrix
-  // that is computed by the thread
-  half Csub = 0;
+	// Csub is used to store the element of the block sub-matrix
+	// that is computed by the thread
+	real_t Csub = 0;
 
-  // Loop over all the sub-matrices of A and B
-  // required to compute the block sub-matrix
-  for (int a = aBegin, b = bBegin;
-       a <= aEnd;
-       a += aStep, b += bStep) {
-    // Declaration of the shared memory array As used to
-    // store the sub-matrix of A
-    __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
+	// Loop over all the sub-matrices of A and B
+	// required to compute the block sub-matrix
+	for (int a = aBegin, b = bBegin; a <= aEnd; a += aStep, b += bStep) {
+		// Declaration of the shared memory array As used to
+		// store the sub-matrix of A
+		__shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
 
-    // Declaration of the shared memory array Bs used to
-    // store the sub-matrix of B
-    __shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
+		// Declaration of the shared memory array Bs used to
+		// store the sub-matrix of B
+		__shared__ real_t Bs[BLOCK_SIZE][BLOCK_SIZE];
 
-    // Load the matrices from device memory
-    // to shared memory; each thread loads
-    // one element of each matrix
-    As[ty][tx] = A[a + wA * ty + tx];
-    Bs[ty][tx] = B[b + wB * ty + tx];
+		// Load the matrices from device memory
+		// to shared memory; each thread loads
+		// one element of each matrix
+		As[ty][tx] = A[a + wA * ty + tx];
+		Bs[ty][tx] = B[b + wB * ty + tx];
 
-    // Synchronize to make sure the matrices are loaded
-    __syncthreads();
+		// Synchronize to make sure the matrices are loaded
+		__syncthreads();
 
-    // Multiply the two matrices together;
-    // each thread computes one element
-    // of the block sub-matrix
+		// Multiply the two matrices together;
+		// each thread computes one element
+		// of the block sub-matrix
 #pragma unroll
+		for (int k = 0; k < BLOCK_SIZE; ++k) {
+			Csub += As[ty][k] * Bs[k][tx];
+		}
 
-    for (int k = 0; k < BLOCK_SIZE; ++k) {
-      Csub += As[ty][k] * Bs[k][tx];
-    }
+		// Synchronize to make sure that the preceding
+		// computation is done before loading two new
+		// sub-matrices of A and B in the next iteration
+		__syncthreads();
+	}
 
-    // Synchronize to make sure that the preceding
-    // computation is done before loading two new
-    // sub-matrices of A and B in the next iteration
-    __syncthreads();
-  }
-
-  // Write the block sub-matrix to device memory;
-  // each thread writes one element
-  //int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-  const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
-  half half_val = alpha * Csub + beta * C[index];
-  C[index] = half_val;
+	// Write the block sub-matrix to device memory;
+	// each thread writes one element
+	const int index = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx + wB * ty + tx;
+	C[index] = alpha * Csub + beta * C[index];
 }
 
 
