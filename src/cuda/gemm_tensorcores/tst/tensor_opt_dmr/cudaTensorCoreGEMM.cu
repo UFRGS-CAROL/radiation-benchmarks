@@ -38,9 +38,9 @@
 #define WMMA_N 16
 #define WMMA_K 16
 
-#define MATRIX_M 8192 //4096 //2048 //16384
-#define MATRIX_N 8192 //2048 //16384
-#define MATRIX_K 8192  //2048 //16384
+// #define MATRIX_M 8192 //4096 //2048 //16384
+// #define MATRIX_N 8192 //2048 //16384
+// #define MATRIX_K 8192  //2048 //16384
 
 // GEMM configuration.
 
@@ -554,8 +554,8 @@ int main(int argc, char **argv) {
 
 	dim3 dim_grid, dim_block;
   
-  	uint32_t grid_rows = (MATRIX_M + BLOCK_SIZE - 1) / BLOCK_SIZE;
-  	uint32_t grid_cols = (MATRIX_N + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  	uint32_t grid_rows = (M_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  	uint32_t grid_cols = (N_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
   	dim_grid = dim3(grid_cols, grid_rows);
   	dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
 
@@ -571,7 +571,7 @@ int main(int argc, char **argv) {
  //    M_GLOBAL);
 
 
-	matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, MATRIX_M, MATRIX_N, D, alpha, beta);
+	matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
 
 	// checkKernelErrors(cudaStreamSynchronize(st));
 	checkKernelErrors(cudaPeekAtLastError());
