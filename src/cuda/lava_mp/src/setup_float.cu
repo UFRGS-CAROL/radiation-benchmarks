@@ -40,100 +40,12 @@
 #define MAX_BLOCK NUMBER_PAR_PER_BOX
 
 void setup_float(Parameters& parameters, Log& log) {
-
-	switch (parameters.redundancy) {
-//	case NONE: {
-//		UnhardenedKernelCaller<float> kc;
-//		setup_execution(parameters, log, kc);
-//		break;
-//	}
-	/*
-	case DMR: {
-		switch (parameters.block_check) {
-		case ONE_BLOCK: {
-			//CASE FOR 1 Iteration-------------------
-			DMRKernelCaller<ONE_BLOCK, double> kc;
-			setup_execution(parameters, log, kc);
-
-			break;
-		}
-			//---------------------------------------
-		case TWELVE_BLOCK: {
-			//CASE FOR 10 Iterations-----------------
-			DMRKernelCaller<TWELVE_BLOCK, double> kc;
-			setup_execution(parameters, log, kc);
-
-			break;
-		}
-			//---------------------------------------
-
-//		case NINETY_BLOCK: {
-//			//CASE FOR 100 Iterations----------------
-//			DMRKernelCaller<NINETY_BLOCK, double> kc;
-//			setup_execution(parameters, log, kc);
-//
-//			break;
-//		}
-			//---------------------------------------
-
-		case MAX_BLOCK: {
-			//CASE FOR 100 Iterations----------------
-			DMRKernelCaller<MAX_BLOCK, double> kc;
-			setup_execution(parameters, log, kc);
-
-			break;
-		}
-			//---------------------------------------
-
-		default:
-			error(
-					std::to_string(parameters.block_check)
-							+ " operation check block not supported");
-		}
-		break;
-	}*/
-	case DMRMIXED:
-		switch (parameters.block_check) {
-//		case ONE_BLOCK: {
-//			//CASE FOR 1 Iteration-------------------
-//			DMRMixedKernelCaller<ONE_BLOCK, double, float> kc(THRESHOLD_1);
-//			setup_execution(parameters, log, kc);
-//
-//			break;
-//		}
-			//---------------------------------------
-//		case TWELVE_BLOCK: {
-//			//CASE FOR 10 Iterations-----------------
-//			DMRMixedKernelCaller<TWELVE_BLOCK, THRESHOLD_12, float, double> kc;
-//			setup_execution(parameters, log, kc);
-//
-//			break;
-//		}
-			//---------------------------------------
-//
-//		case NINETY_BLOCK: {
-//			//CASE FOR 100 Iterations----------------
-//			DMRMixedKernelCaller<NINETY_BLOCK, THRESHOLD_96, float, double> kc;
-//			setup_execution(parameters, log, kc);
-//
-//			break;
-//		}
-			//---------------------------------------
-//
-//		case MAX_BLOCK: {
-//			//CASE FOR 100 Iterations----------------
-//			DMRMixedKernelCaller<MAX_BLOCK, THRESHOLD_MAX, float, double> kc;
-//			setup_execution(parameters, log, kc);
-//
-//			break;
-//		}
-			//---------------------------------------
-
-		default:
-			error(
-					std::to_string(parameters.block_check)
-							+ " operation check block not supported");
-		}
-		break;
+	if (parameters.redundancy == NONE) {
+		UnhardenedKernelCaller<float> kc;
+		setup_execution(parameters, log, kc);
+	} else if (parameters.redundancy == DMR) {
+		error("DMR for float not ready yet");
+	} else if (parameters.redundancy == DMRMIXED) {
+		error("DMRMIXED for float not ready yet");
 	}
 }
