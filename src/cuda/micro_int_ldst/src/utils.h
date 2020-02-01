@@ -18,7 +18,7 @@ typedef enum {
 } MICROINSTRUCTION;
 
 
-const static std::unordered_map<std::string, MICROINSTRUCTION> mic = {
+ static std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 //ADD
 		{ "add", ADD_INT },
 		//MUL

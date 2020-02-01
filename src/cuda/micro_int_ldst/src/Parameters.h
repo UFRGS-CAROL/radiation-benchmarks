@@ -10,6 +10,8 @@
 
 #include <string>
 #include <iostream>
+//#include <cuda.h>
+#include <cuda_runtime.h>
 
 #include "utils.h"
 
@@ -24,12 +26,8 @@ struct Parameters {
 	int iterations;
 	bool verbose;
 	std::string instruction_str;
-	std::string precision_str;
-	std::string hardening_str;
 
 	bool generate;
-	bool nonconstant;
-
 	int grid_size;
 	int block_size;
 	int r_size;
@@ -39,7 +37,6 @@ struct Parameters {
 	std::string gold_file;
 	std::string input_file;
 	std::string device;
-	double min_random, max_random;
 
 	Parameters(int argc, char* argv[]);
 

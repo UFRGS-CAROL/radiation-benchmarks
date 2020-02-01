@@ -8,14 +8,11 @@
  ============================================================================
  */
 
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <helper_cuda.h>
-#include <cstring>
-#include <iomanip>
 
+#include <iostream>
 #include "utils.h"
-//#include "Log.h"
+#include "Log.h"
+#include "Parameters.h"
 
 //GET ECC DATA
 #ifdef BUILDPROFILER
@@ -105,6 +102,24 @@
 //}
 
 int main(int argc, char **argv) {
+	 //================== Set block and grid size for MxM kernel
+	 	Parameters parameters(argc, argv);
+
+	 	if (parameters.verbose) {
+	 		std::cout << "Get device Name: " << parameters.device << std::endl;
+	 	}
+	 //================== Init logs
+	 	std::string test_info = "";
+	 	test_info += " gridsize:" + std::to_string(parameters.grid_size);
+	 	test_info += " blocksize:" + std::to_string(parameters.block_size);
+	 	test_info += " type:" + parameters.instruction_str;
+	 	test_info += " kernel_type:non-persistent";
+	 	test_info += " checkblock:" + std::to_string(parameters.operation_num);
+	 	test_info += " numop:" + std::to_string(parameters.operation_num);
+
+	 	std::string test_name = std::string("cuda_micro-") + parameters.instruction_str;
+
+	 	Log log(test_name, test_info);
 
 	return 0;
 
