@@ -38,6 +38,10 @@ void setup_execute(Log& log, Parameters& test_parameter, MicroInt& micro_obj) {
 		//Start iteration
 		log.start_iteration();
 		micro_obj.execute_micro();
+
+		rad::checkFrameworkErrors(cudaPeekAtLastError());
+		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+
 		//end iteration
 		log.end_iteration();
 		double end_it = rad::mysecond();
