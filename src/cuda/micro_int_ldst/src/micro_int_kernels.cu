@@ -43,16 +43,16 @@ void MicroInt::execute_micro() {
 	switch (this->parameters.micro) {
 	case ADD_INT:
 		kernel = add_int_kernel;
-		return;
+		break;
 	case MUL_INT:
 		kernel = mul_int_kernel;
-		return;
+		break;
 	case MAD_INT:
 		kernel = mad_int_kernel;
-		return;
+		break;
 	case LDST:
 		kernel = ldst_int_kernel;
-		return;
+		break;
 	}
 
 	kernel<<<this->parameters.grid_size, this->parameters.block_size>>>(this->input_device.data(),
