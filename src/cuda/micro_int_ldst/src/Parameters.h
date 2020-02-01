@@ -16,14 +16,14 @@
 #include "utils.h"
 
 #ifndef OPS
-#define OPS 1000
+#define OPS 1000000
 #endif
 
 struct Parameters {
 
 	MICROINSTRUCTION micro;
 
-	int iterations;
+	size_t iterations;
 	bool verbose;
 	std::string instruction_str;
 

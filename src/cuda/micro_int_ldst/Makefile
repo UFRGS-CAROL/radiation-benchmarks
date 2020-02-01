@@ -18,7 +18,7 @@ ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
 
 OBJDIR=./obj/
-OBJ= main.o  utils.o Parameters.o Log.o #ld_st.o int.o
+OBJ= main.o  utils.o Parameters.o Log.o MicroInt.o micro_int_kernels.o 
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g
@@ -59,7 +59,7 @@ mkdir:
 	mkdir -p $(OBJDIR)
 
 clean:
-	rm -f $(OBJDIR)* $(EXEC) cudaCacheTestL2
+	rm -f $(OBJDIR)* $(EXEC)
 	
 	
 test:
