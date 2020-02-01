@@ -18,7 +18,7 @@ ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
 INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
 
 OBJDIR=./obj/
-OBJ= main.o  utils.o #ld_st.o int.o
+OBJ= main.o  utils.o Parameters.o #ld_st.o int.o
 
 ifeq ($(DEBUG), 1) 
 CXXFLAGS+=-O0 -g
