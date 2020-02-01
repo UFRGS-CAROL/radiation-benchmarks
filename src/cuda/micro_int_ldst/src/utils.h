@@ -13,6 +13,16 @@
 
 #define DEFAULT_INDEX -1;
 
+#ifndef WARP_SIZE
+#define WARP_SIZE 32
+#endif
+
+#ifndef WARP_PER_SM
+#define WAPR_PER_SM 4
+#endif
+
+#define MAX_THREAD_BLOCK WARP_SIZE * WARP_SIZE
+
 typedef enum {
 	ADD_INT, MUL_INT, MAD_INT, LDST
 } MICROINSTRUCTION;

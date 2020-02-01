@@ -29,10 +29,32 @@ __global__ void add_int_kernel(int32_t* defined_src, int32_t* dst) {
 	dst[thread_id] = output_register;
 }
 
-void MicroInt::select_micro() {
-	switch (this->micro) {
+__global__ void mul_int_kernel(int32_t* defined_src, int32_t* dst) {
+}
+
+__global__ void mad_int_kernel(int32_t* defined_src, int32_t* dst) {
+}
+
+__global__ void ldst_int_kernel(int32_t* defined_src, int32_t* dst) {
+}
+
+void MicroInt::execute_micro() {
+	void (*kernel)(int32_t*, int32_t*);
+	switch (this->parameters.micro) {
 	case ADD_INT:
-		add_int_kernel<<<this->grid, this->block>>>(this->input_device.data(),
-				this->output_device.data());
+		kernel = add_int_kernel;
+		return;
+	case MUL_INT:
+		kernel = mul_int_kernel;
+		return;
+	case MAD_INT:
+		kernel = mad_int_kernel;
+		return;
+	case LDST:
+		kernel = ldst_int_kernel;
+		return;
 	}
+
+	kernel<<<this->parameters.grid_size, this->parameters.block_size>>>(this->input_device.data(),
+					this->output_device.data());
 }

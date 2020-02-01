@@ -37,7 +37,7 @@ void setup_execute(Log& log, Parameters& test_parameter, MicroInt& micro_obj) {
 		double start_it = rad::mysecond();
 		//Start iteration
 		log.start_iteration();
-
+		micro_obj.execute_micro();
 		//end iteration
 		log.end_iteration();
 		double end_it = rad::mysecond();
@@ -91,6 +91,9 @@ int main(int argc, char **argv) {
 		std::cout << "Get device Name: " << parameters.device << std::endl;
 		std::cout << log << std::endl;
 	}
+
+	MicroInt micro_obj(parameters);
+	setup_execute(log, parameters, micro_obj);
 	return 0;
 
 }

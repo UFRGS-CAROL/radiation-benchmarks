@@ -28,9 +28,10 @@ struct Parameters {
 	std::string instruction_str;
 
 	bool generate;
-	int grid_size;
-	int block_size;
-	int r_size;
+	uint32_t grid_size;
+	uint32_t block_size;
+	uint32_t global_gpu_memory_bytes;
+	uint32_t array_size;
 
 	int operation_num;
 
@@ -40,7 +41,6 @@ struct Parameters {
 
 	Parameters(int argc, char* argv[]);
 
-	cudaDeviceProp get_device() ;
 	friend std::ostream& operator<<(std::ostream& os, const Parameters& p);
 private:
 	void del_arg(int argc, char **argv, int index);
@@ -48,10 +48,11 @@ private:
 	int find_int_arg(int argc, char **argv, std::string arg, int def);
 	float find_float_arg(int argc, char **argv, std::string arg, float def);
 	std::string find_char_arg(int argc, char **argv, std::string arg,
-			std::string def) ;
+			std::string def);
 
 	bool find_arg(int argc, char* argv[], std::string arg);
 
+	cudaDeviceProp get_device();
 };
 
 #endif /* PARAMETERS_H_ */
