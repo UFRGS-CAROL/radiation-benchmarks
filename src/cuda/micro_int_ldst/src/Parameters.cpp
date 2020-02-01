@@ -34,12 +34,14 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->block_size = MAX_THREAD_BLOCK;
 	this->grid_size = WAPR_PER_SM * dev_prop.multiProcessorCount;
 	this->global_gpu_memory_bytes = dev_prop.totalGlobalMem;
-	this->array_size = WAPR_PER_SM * dev_prop.multiProcessorCount * MAX_THREAD_BLOCK;
+	this->array_size = WAPR_PER_SM * dev_prop.multiProcessorCount
+			* MAX_THREAD_BLOCK;
 
-	if (this->micro == LDST){
+	if (this->micro == LDST) {
 		this->grid_size = dev_prop.multiProcessorCount;
 		//Input and output arrays
-		this->array_size = (this->global_gpu_memory_bytes / sizeof(int32_t)) / 2;
+		this->array_size = (this->global_gpu_memory_bytes / sizeof(int32_t))
+				/ 2;
 	}
 
 	if (dev_prop.warpSize != WARP_SIZE) {
@@ -71,7 +73,7 @@ cudaDeviceProp Parameters::get_device() {
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
-	os << "Precision " << p.instruction_str << std::endl;
+	os << "Micro type " << p.instruction_str << std::endl;
 	os << "Grid size = " << p.grid_size << std::endl;
 	os << "Block size = " << p.block_size << std::endl;
 	os << "Verbose: " << p.verbose << std::endl;
@@ -79,7 +81,8 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Gold file: " << p.gold_file << std::endl;
 	os << "Input file: " << p.input_file << std::endl;
 	os << "Generate: " << p.generate << std::endl;
-	os << "Number of operations per thread: " << p.operation_num;
+	os << "Number of operations per thread: " << p.operation_num << std::endl;
+	os << "Device " << p.device;
 
 	return os;
 }

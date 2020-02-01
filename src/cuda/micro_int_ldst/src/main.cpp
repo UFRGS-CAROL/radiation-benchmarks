@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 	Log log(test_name, test_info);
 
 	if (parameters.verbose) {
-		std::cout << "Get device Name: " << parameters.device << std::endl;
+		std::cout << parameters << std::endl;
 		std::cout << log << std::endl;
 	}
 
