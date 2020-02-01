@@ -104,10 +104,6 @@
 int main(int argc, char **argv) {
 	 //================== Set block and grid size for MxM kernel
 	 	Parameters parameters(argc, argv);
-
-	 	if (parameters.verbose) {
-	 		std::cout << "Get device Name: " << parameters.device << std::endl;
-	 	}
 	 //================== Init logs
 	 	std::string test_info = "";
 	 	test_info += " gridsize:" + std::to_string(parameters.grid_size);
@@ -121,6 +117,11 @@ int main(int argc, char **argv) {
 
 	 	Log log(test_name, test_info);
 
+
+	 	if (parameters.verbose) {
+	 		std::cout << "Get device Name: " << parameters.device << std::endl;
+	 		std::cout << log << std::endl;
+	 	}
 	return 0;
 
 }

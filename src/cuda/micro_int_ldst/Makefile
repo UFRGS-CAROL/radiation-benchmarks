@@ -63,5 +63,5 @@ clean:
 	
 	
 test:
-	 ./$(EXEC) --iterations 10
+	 ./$(EXEC) --iterations 10 --verbose
 	
