@@ -16,7 +16,7 @@
 #include "utils.h"
 
 #ifndef OPS
-#define OPS 1000000
+#define OPS 10000000
 #endif
 
 struct Parameters {
