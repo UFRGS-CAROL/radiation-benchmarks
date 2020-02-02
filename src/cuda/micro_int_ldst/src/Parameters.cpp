@@ -42,6 +42,8 @@ Parameters::Parameters(int argc, char* argv[]) {
 		//Input and output arrays
 		this->array_size = (this->global_gpu_memory_bytes / sizeof(int32_t))
 				/ 2;
+
+		this->operation_num = this->array_size / (this->grid_size * this->block_size) + 1;
 	}
 
 	if (dev_prop.warpSize != WARP_SIZE) {

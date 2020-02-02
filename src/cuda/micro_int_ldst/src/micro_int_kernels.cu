@@ -88,5 +88,5 @@ void MicroInt::execute_micro() {
 	}
 
 	kernel<<<this->parameters.grid_size, this->parameters.block_size>>>(
-			this->input_device.data(), this->output_device.data(), OPS);
+			this->input_device.data(), this->output_device.data(), this->parameters.operation_num);
 }
