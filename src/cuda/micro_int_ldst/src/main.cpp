@@ -34,7 +34,7 @@ void setup_execute(Log& log, Parameters& test_parameter, MicroInt& micro_obj) {
 		counter_thread.start_collecting_data();
 #endif
 
-		double start_it = rad::mysecond();
+		auto start_it = rad::mysecond();
 		//Start iteration
 		log.start_iteration();
 		micro_obj.execute_micro();
@@ -44,7 +44,7 @@ void setup_execute(Log& log, Parameters& test_parameter, MicroInt& micro_obj) {
 
 		//end iteration
 		log.end_iteration();
-		double end_it = rad::mysecond();
+		auto end_it = rad::mysecond();
 
 		//End collecting the data
 		//This thing must be done before device reset
@@ -58,19 +58,31 @@ void setup_execute(Log& log, Parameters& test_parameter, MicroInt& micro_obj) {
 		}
 #endif
 
+		//Copying from GPU
+		auto start_cpy = rad::mysecond();
+		auto end_cpy = rad::mysecond();
+
 		//Comparing the output
-		double start_cmp = rad::mysecond();
-		double end_cmp = rad::mysecond();
+		auto start_cmp = rad::mysecond();
+		auto errors = micro_obj.compare_output();
+		auto end_cmp = rad::mysecond();
 
 		//update errors
 		log.update_errors();
 		log.update_infos();
 
 		if (test_parameter.verbose) {
+			// PERF
+			auto kernel_time = end_it - start_it;
+			auto cmp_time = end_cmp - start_cmp;
+			auto copy_time = end_cpy - start_cpy;
 
+			std::cout << "Iteration " << iteration;
+			std::cout << " Time: " << kernel_time;
+			std::cout << " Comparison time: " << cmp_time;
+			std::cout << " Copy time: " << copy_time;
+			std::cout << " Output errors: " << errors << std::endl;
 		}
-		iteration++;
-
 	}
 }
 

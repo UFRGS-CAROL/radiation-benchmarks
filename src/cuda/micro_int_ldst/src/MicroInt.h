@@ -28,6 +28,7 @@ struct MicroInt {
 	virtual ~MicroInt() = default;
 
 	void execute_micro();
+	size_t compare_output();
 };
 
 #endif /* MICROINT_H_ */

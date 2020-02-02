@@ -24,3 +24,8 @@ MicroInt::MicroInt(Parameters& parameters) :
 	this->output_device.resize(this->parameters.array_size);
 	this->input_device = this->input_host;
 }
+
+
+size_t MicroInt::compare_output(){
+	return 0;
+}
