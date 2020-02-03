@@ -39,7 +39,7 @@ struct MicroInt {
 			this->grid_size = this->parameters.sm_count;
 			//Input and output arrays
 			this->array_size = this->parameters.global_gpu_memory_bytes
-					/ (sizeof(int_t) * 2);
+					/ (sizeof(int_t) * 3); //two arrays in the memory + safe space
 
 			this->operation_num = this->array_size
 					/ (this->grid_size * this->block_size);
@@ -78,16 +78,21 @@ struct MicroInt {
 		if (this->parameters.micro == LDST) {
 			this->input_host.resize(this->array_size);
 			uint32_t slice = this->array_size / temp_input.size();
+#pragma omp parallel for
 			for (uint32_t i = 0; i < this->array_size; i += slice) {
-				std::copy(temp_input.begin(), temp_input.end(),
-						this->input_host.begin() + i);
+				{
+					std::cout << i << std::endl;
+					std::copy(temp_input.begin(), temp_input.end(),
+							this->input_host.begin() + i);
+				}
 			}
 
 		} else {
 			this->input_host = temp_input;
 		}
 
-		std::cout << "INPUT SIZE <<<<< " << this->input_host.size() << std::endl;
+		std::cout << "INPUT SIZE <<<<< " << this->input_host.size()
+				<< std::endl;
 		std::cout << this->grid_size << " " << this->block_size << std::endl;
 	}
 
