@@ -13,7 +13,6 @@
 
 Parameters::Parameters(int argc, char* argv[]) {
 	this->iterations = find_int_arg(argc, argv, "--iterations", 10);
-	this->operation_num = find_int_arg(argc, argv, "--opnum", OPS);
 	this->gold_file = find_char_arg(argc, argv, "--gold", "./gold.data");
 	this->input_file = find_char_arg(argc, argv, "--input", "./input.data");
 	this->verbose = find_arg(argc, argv, "--verbose");
@@ -31,20 +30,8 @@ Parameters::Parameters(int argc, char* argv[]) {
 	//deviceProp.totalGlobalMem
 	//deviceProp.warpSize
 	//if it is ADD, MUL, or MAD use maximum allocation
-	this->block_size = MAX_THREAD_BLOCK;
-	this->grid_size = WAPR_PER_SM * dev_prop.multiProcessorCount;
+	this->sm_count = dev_prop.multiProcessorCount;
 	this->global_gpu_memory_bytes = dev_prop.totalGlobalMem;
-	this->array_size = WAPR_PER_SM * dev_prop.multiProcessorCount
-			* MAX_THREAD_BLOCK;
-
-	if (this->micro == LDST) {
-		this->grid_size = dev_prop.multiProcessorCount;
-		//Input and output arrays
-		this->array_size = (this->global_gpu_memory_bytes / sizeof(int32_t))
-				/ 2;
-
-		this->operation_num = this->array_size / (this->grid_size * this->block_size) + 1;
-	}
 
 	if (dev_prop.warpSize != WARP_SIZE) {
 		throw_line(
@@ -76,14 +63,14 @@ cudaDeviceProp Parameters::get_device() {
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Micro type " << p.instruction_str << std::endl;
-	os << "Grid size = " << p.grid_size << std::endl;
-	os << "Block size = " << p.block_size << std::endl;
+	os << "SM count = " << p.sm_count << std::endl;
+//	os << "Block size = " << p.block_size << std::endl;
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
 	os << "Gold file: " << p.gold_file << std::endl;
 	os << "Input file: " << p.input_file << std::endl;
 	os << "Generate: " << p.generate << std::endl;
-	os << "Number of operations per thread: " << p.operation_num << std::endl;
+//	os << "Number of operations per thread: " << p.operation_num << std::endl;
 	os << "Device " << p.device;
 
 	return os;

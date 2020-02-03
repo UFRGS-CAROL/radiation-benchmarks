@@ -10,25 +10,101 @@
 
 #include <vector>
 
+#include <random>
+#include <algorithm>
+#include <iterator>
+#include <iostream>
+#include <functional>
+
 #include "Parameters.h"
 #include "device_vector.h"
 #include "utils.h"
 
+template<typename int_t>
 struct MicroInt {
 	Parameters& parameters;
 
-	std::vector<int32_t> input_host;
-	std::vector<int32_t> output_host;
+	std::vector<int_t> input_host;
+	std::vector<int_t> output_host;
 
-	rad::DeviceVector<int32_t> input_device;
-	rad::DeviceVector<int32_t> output_device;
+	rad::DeviceVector<int_t> input_device;
+	rad::DeviceVector<int_t> output_device;
 
+	uint32_t array_size, grid_size, block_size, operation_num;
 
-	MicroInt(Parameters& parameters);
+	MicroInt(Parameters& parameters) :
+			parameters(parameters) {
+		//Setting input and output host and device
+		this->block_size = MAX_THREAD_BLOCK;
+
+		if (this->parameters.micro == LDST) {
+			this->grid_size = this->parameters.sm_count;
+			//Input and output arrays
+			this->array_size = (this->parameters.global_gpu_memory_bytes
+					/ sizeof(int_t)) / 2;
+
+			this->operation_num = this->array_size
+					/ (this->grid_size * this->block_size) + 1;
+
+			this->input_host.resize(this->array_size);
+
+		} else {
+			this->grid_size = WARP_PER_SM * this->parameters.sm_count;
+			this->array_size = WARP_PER_SM * this->parameters.sm_count
+					* MAX_THREAD_BLOCK;
+
+			this->operation_num = OPS;
+
+			this->input_host.resize(MAX_THREAD_BLOCK);
+		}
+
+		//Set the size of
+		this->output_host.resize(this->array_size);
+		this->output_device.resize(this->array_size);
+		this->input_device = this->input_host;
+
+		auto start_gen = rad::mysecond();
+		this->generate_input();
+		auto end_gen = rad::mysecond();
+
+		if (this->parameters.verbose) {
+			std::cout << "Input generation time: " << end_gen - start_gen
+					<< std::endl;
+		}
+	}
+
+	void generate_input() {
+		// First create an instance of an engine.
+		std::random_device rnd_device;
+		// Specify the engine and distribution.
+		std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
+		std::uniform_int_distribution<int_t> dist { 1, RANGE_INT_VAL };
+
+		auto gen = [&dist, &mersenne_engine]() {
+			return dist(mersenne_engine);
+		};
+
+		std::generate(std::begin(this->input_host), std::end(this->input_host),
+				gen);
+	}
+
 	virtual ~MicroInt() = default;
 
-	void execute_micro();
-	size_t compare_output();
+	size_t compare_output() {
+		return 0;
+	}
+	void copy_back_output() {
+
+	}
+
+	void execute_micro() {
+
+	}
 };
+
+template<>
+void MicroInt<int32_t>::execute_micro();
+template<>
+void MicroInt<int64_t>::execute_micro();
 
 #endif /* MICROINT_H_ */

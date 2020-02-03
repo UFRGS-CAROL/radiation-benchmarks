@@ -18,10 +18,12 @@
 #endif
 
 #ifndef WARP_PER_SM
-#define WAPR_PER_SM 4
+#define WARP_PER_SM 4
 #endif
 
 #define MAX_THREAD_BLOCK WARP_SIZE * WARP_SIZE
+
+#define RANGE_INT_VAL 100
 
 typedef enum {
 	ADD_INT, MUL_INT, MAD_INT, LDST
@@ -38,6 +40,7 @@ typedef enum {
 
 		{ "ldst", LDST},
 		};
+
 
 void __throw_line(std::string err, std::string line, std::string file);
 

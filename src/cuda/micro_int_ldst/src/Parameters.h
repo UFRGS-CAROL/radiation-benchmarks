@@ -28,13 +28,8 @@ struct Parameters {
 	std::string instruction_str;
 
 	bool generate;
-	uint32_t grid_size;
-	uint32_t block_size;
+	uint32_t sm_count;
 	uint32_t global_gpu_memory_bytes;
-	uint32_t array_size;
-
-	int operation_num;
-
 	std::string gold_file;
 	std::string input_file;
 	std::string device;

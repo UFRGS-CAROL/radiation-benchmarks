@@ -21,7 +21,9 @@
 #include "NVMLWrapper.h"
 #endif
 
-void setup_execute(Log& log, Parameters& test_parameter, MicroInt& micro_obj) {
+template<typename int_t>
+void setup_execute(Log& log, Parameters& test_parameter,
+		MicroInt<int_t>& micro_obj) {
 
 	// SETUP THE NVWL THREAD
 #ifdef BUILDPROFILER
@@ -86,17 +88,18 @@ void setup_execute(Log& log, Parameters& test_parameter, MicroInt& micro_obj) {
 	}
 }
 
-int main(int argc, char **argv) {
-	//================== Set block and grid size for MxM kernel
-	Parameters parameters(argc, argv);
+template<typename int_t>
+void setup(Parameters& parameters){
+	MicroInt<int_t> micro_obj(parameters);
+
 	//================== Init logs
 	std::string test_info = "";
-	test_info += " gridsize:" + std::to_string(parameters.grid_size);
-	test_info += " blocksize:" + std::to_string(parameters.block_size);
+	test_info += " gridsize:" + std::to_string(parameters.sm_count);
+	test_info += " blocksize:" + std::to_string(micro_obj.block_size);
 	test_info += " type:" + parameters.instruction_str;
 	test_info += " kernel_type:non-persistent";
-	test_info += " checkblock:" + std::to_string(parameters.operation_num);
-	test_info += " numop:" + std::to_string(parameters.operation_num);
+	test_info += " checkblock:" + std::to_string(micro_obj.operation_num);
+	test_info += " numop:" + std::to_string(micro_obj.operation_num);
 
 	std::string test_name = std::string("cuda_micro-")
 			+ parameters.instruction_str;
@@ -108,8 +111,14 @@ int main(int argc, char **argv) {
 		std::cout << log << std::endl;
 	}
 
-	MicroInt micro_obj(parameters);
 	setup_execute(log, parameters, micro_obj);
+}
+
+int main(int argc, char **argv) {
+	//================== Set block and grid size for MxM kernel
+	Parameters parameters(argc, argv);
+
+	setup<int32_t>(parameters);
 	return 0;
 
 }
