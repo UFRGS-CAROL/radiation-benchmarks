@@ -68,6 +68,9 @@ __global__ void mad_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 template<typename int_t>
 __global__ void ldst_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * op;
+	if((blockIdx.x * blockDim.x + threadIdx.x) > (80 * 1024) - 10){
+		printf("thread id %d %d %d\n", (blockIdx.x * blockDim.x + threadIdx.x), thread_id, op);
+	}
 	for (uint32_t i = 0; i < op; i++) {
 		dst[i + thread_id] = src[i + thread_id];
 	}

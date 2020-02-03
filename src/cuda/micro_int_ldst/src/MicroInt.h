@@ -11,10 +11,7 @@
 #include <vector>
 
 #include <random>
-#include <algorithm>
-#include <iterator>
 #include <iostream>
-#include <functional>
 
 #include "Parameters.h"
 #include "device_vector.h"
@@ -40,22 +37,16 @@ struct MicroInt {
 		if (this->parameters.micro == LDST) {
 			this->grid_size = this->parameters.sm_count;
 			//Input and output arrays
-			this->array_size = (this->parameters.global_gpu_memory_bytes
-					/ sizeof(int_t)) / 2;
+			this->array_size = this->parameters.global_gpu_memory_bytes
+					/ (sizeof(int_t) * 2);
 
 			this->operation_num = this->array_size
-					/ (this->grid_size * this->block_size) + 1;
-
-			this->input_host.resize(this->array_size);
-
+					/ (this->grid_size * this->block_size);
 		} else {
 			this->grid_size = WARP_PER_SM * this->parameters.sm_count;
 			this->array_size = WARP_PER_SM * this->parameters.sm_count
 					* MAX_THREAD_BLOCK;
-
 			this->operation_num = OPS;
-
-			this->input_host.resize(MAX_THREAD_BLOCK);
 		}
 
 		//Set the size of
@@ -79,13 +70,24 @@ struct MicroInt {
 		// Specify the engine and distribution.
 		std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
 		std::uniform_int_distribution<int_t> dist { 1, RANGE_INT_VAL };
+		std::vector<int_t> temp_input(MAX_THREAD_BLOCK);
+		for (auto& i : temp_input)
+			i = dist(mersenne_engine);
 
-		auto gen = [&dist, &mersenne_engine]() {
-			return dist(mersenne_engine);
-		};
+		if (this->parameters.micro == LDST) {
+			this->input_host.resize(this->array_size);
+			uint32_t slice = this->array_size / temp_input.size();
+			for (uint32_t i = 0; i < this->array_size; i += slice) {
+				std::copy(temp_input.begin(), temp_input.end(),
+						this->input_host.begin() + i);
+			}
 
-		std::generate(std::begin(this->input_host), std::end(this->input_host),
-				gen);
+		} else {
+			this->input_host = temp_input;
+		}
+
+		std::cout << "INPUT SIZE <<<<< " << this->input_host.size() << std::endl;
+		std::cout << this->grid_size << " " << this->block_size << std::endl;
 	}
 
 	virtual ~MicroInt() = default;

@@ -101,7 +101,7 @@ void setup(Parameters& parameters){
 	test_info += " checkblock:" + std::to_string(micro_obj.operation_num);
 	test_info += " numop:" + std::to_string(micro_obj.operation_num);
 
-	std::string test_name = std::string("cuda_micro-")
+	std::string test_name = std::string("cuda_micro-int-")
 			+ parameters.instruction_str;
 
 	Log log(test_name, test_info);

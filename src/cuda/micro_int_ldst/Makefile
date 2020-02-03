@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS= -std=c++11 -o3  -fPIC -pthread 
+CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
 EXEC=cudaMicroIntLDST
 LOGS=1
 BUILDPROFILER=0
