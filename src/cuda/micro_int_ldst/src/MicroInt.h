@@ -80,11 +80,8 @@ struct MicroInt {
 			uint32_t slice = this->array_size / temp_input.size();
 #pragma omp parallel for shared(slice)
 			for (uint32_t i = 0; i < this->array_size; i += slice) {
-
-				{
 					std::copy(temp_input.data(), temp_input.data() + temp_input.size(),
 							this->input_host.data() + i);
-				}
 			}
 
 		} else {
