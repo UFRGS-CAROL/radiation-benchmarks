@@ -87,10 +87,6 @@ struct MicroInt {
 		} else {
 			this->input_host = temp_input;
 		}
-
-		for(auto i = 0; i < 10; i++)
-			std::cout << this->input_host[this->input_host.size() / 2 + i] << std::endl;
-
 //		std::cout << "INPUT SIZE <<<<< " << this->input_host.size()
 //				<< std::endl;
 //		std::cout << this->grid_size << " " << this->block_size << std::endl;
