@@ -107,7 +107,6 @@ void setup(Parameters& parameters){
 	Log log(test_name, test_info);
 
 	if (parameters.verbose) {
-		std::cout << parameters << std::endl;
 		std::cout << log << std::endl;
 	}
 
@@ -117,7 +116,9 @@ void setup(Parameters& parameters){
 int main(int argc, char **argv) {
 	//================== Set block and grid size for MxM kernel
 	Parameters parameters(argc, argv);
-
+	if (parameters.verbose) {
+		std::cout << parameters << std::endl;
+	}
 	setup<int32_t>(parameters);
 	return 0;
 
