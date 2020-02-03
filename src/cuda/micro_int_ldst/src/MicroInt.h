@@ -78,19 +78,22 @@ struct MicroInt {
 		if (this->parameters.micro == LDST) {
 			this->input_host.resize(this->array_size);
 			uint32_t slice = this->array_size / temp_input.size();
-#pragma omp parallel for shared(slice)
+
 			for (uint32_t i = 0; i < this->array_size; i += slice) {
-					std::copy(temp_input.data(), temp_input.data() + temp_input.size(),
-							this->input_host.data() + i);
+					std::copy(temp_input.begin(), temp_input.end(),
+							this->input_host.begin() + i);
 			}
 
 		} else {
 			this->input_host = temp_input;
 		}
 
-		std::cout << "INPUT SIZE <<<<< " << this->input_host.size()
-				<< std::endl;
-		std::cout << this->grid_size << " " << this->block_size << std::endl;
+		for(auto i = 0; i < 10; i++)
+			std::cout << this->input_host[this->input_host.size() / 2 + i] << std::endl;
+
+//		std::cout << "INPUT SIZE <<<<< " << this->input_host.size()
+//				<< std::endl;
+//		std::cout << this->grid_size << " " << this->block_size << std::endl;
 	}
 
 	virtual ~MicroInt() = default;
