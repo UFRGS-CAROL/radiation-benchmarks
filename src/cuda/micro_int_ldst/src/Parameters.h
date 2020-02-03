@@ -29,7 +29,7 @@ struct Parameters {
 
 	bool generate;
 	uint32_t sm_count;
-	uint32_t global_gpu_memory_bytes;
+	size_t global_gpu_memory_bytes;
 	std::string gold_file;
 	std::string input_file;
 	std::string device;

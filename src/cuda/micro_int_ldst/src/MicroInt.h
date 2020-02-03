@@ -27,7 +27,8 @@ struct MicroInt {
 	rad::DeviceVector<int_t> input_device;
 	rad::DeviceVector<int_t> output_device;
 
-	uint32_t array_size, grid_size, block_size, operation_num;
+	uint32_t grid_size, block_size, operation_num;
+	size_t array_size;
 
 	MicroInt(Parameters& parameters) :
 			parameters(parameters) {
