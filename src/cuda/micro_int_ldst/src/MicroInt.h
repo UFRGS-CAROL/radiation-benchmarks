@@ -100,7 +100,7 @@ struct MicroInt {
 		return 0;
 	}
 	void copy_back_output() {
-		this->output_host = this->output_device.to_vector();
+		//this->output_host = this->output_device.to_vector();
 	}
 
 	void execute_micro() {
@@ -108,7 +108,7 @@ struct MicroInt {
 	}
 
 	void compare_on_gpu(){
-
+		this->compare_on_gpu();
 	}
 };
 
