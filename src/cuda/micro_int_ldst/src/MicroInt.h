@@ -49,14 +49,14 @@ struct MicroInt {
 			this->operation_num = OPS;
 		}
 
+		auto start_gen = rad::mysecond();
+		this->generate_input();
+		auto end_gen = rad::mysecond();
+
 		//Set the size of
 		this->output_host.resize(this->array_size);
 		this->output_device.resize(this->array_size);
 		this->input_device = this->input_host;
-
-		auto start_gen = rad::mysecond();
-		this->generate_input();
-		auto end_gen = rad::mysecond();
 
 		if (this->parameters.verbose) {
 			std::cout << "Input generation time: " << end_gen - start_gen
