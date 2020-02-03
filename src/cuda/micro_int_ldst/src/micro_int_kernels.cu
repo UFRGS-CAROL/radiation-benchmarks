@@ -75,6 +75,15 @@ __global__ void ldst_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 }
 
 template<typename int_t>
+__global__ void check_kernel(int_t* lhs, int_t* rhs) {
+	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (lhs[thread_id] != rhs[thread_id]) {
+		atomicAdd(&errors, 1);
+	}
+}
+
+template<typename int_t>
 void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
 		uint32_t grid_size, uint32_t block_size, uint32_t operation_num) {
 	void (*kernel)(int_t*, int_t*, uint32_t);
@@ -103,10 +112,23 @@ void MicroInt<int32_t>::execute_micro() {
 			this->operation_num);
 }
 
-template<>
-void MicroInt<int64_t>::execute_micro() {
-	execute_kernel(this->parameters.micro, this->input_device.data(),
-			this->output_device.data(), this->grid_size, this->block_size,
-			this->operation_num);
+//template<>
+//void MicroInt<int64_t>::execute_micro() {
+//	execute_kernel(this->parameters.micro, this->input_device.data(),
+//			this->output_device.data(), this->grid_size, this->block_size,
+//			this->operation_num);
+//}
+
+template<typename int_t>
+void call_checker(int_t* lhs, int_t* rhs, size_t array_size) {
+	auto grid = array_size / MAX_THREAD_BLOCK;
+	check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
+	rad::checkFrameworkErrors(cudaPeekAtLastError());
+	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 }
 
+template<>
+void MicroInt<int32_t>::compare_on_gpu() {
+	call_checker(this->output_device.data(), this->input_device.data(),
+			this->array_size);
+}

@@ -17,6 +17,8 @@
 #include "device_vector.h"
 #include "utils.h"
 
+__device__ static unsigned long long errors;
+
 template<typename int_t>
 struct MicroInt {
 	Parameters& parameters;
@@ -104,11 +106,15 @@ struct MicroInt {
 	void execute_micro() {
 
 	}
+
+	void compare_on_gpu(){
+
+	}
 };
 
 template<>
 void MicroInt<int32_t>::execute_micro();
 template<>
-void MicroInt<int64_t>::execute_micro();
+void MicroInt<int32_t>::compare_on_gpu();
 
 #endif /* MICROINT_H_ */
