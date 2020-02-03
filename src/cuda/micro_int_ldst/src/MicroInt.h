@@ -98,7 +98,7 @@ struct MicroInt {
 		return 0;
 	}
 	void copy_back_output() {
-
+		this->output_host = this->output_device.to_vector();
 	}
 
 	void execute_micro() {

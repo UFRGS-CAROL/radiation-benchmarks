@@ -62,6 +62,7 @@ void setup_execute(Log& log, Parameters& test_parameter,
 
 		//Copying from GPU
 		auto start_cpy = rad::mysecond();
+		micro_obj.copy_back_output();
 		auto end_cpy = rad::mysecond();
 
 		//Comparing the output
