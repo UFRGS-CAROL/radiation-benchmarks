@@ -13,13 +13,8 @@
 
 #define DEFAULT_INDEX -1;
 
-#ifndef WARP_SIZE
-#define WARP_SIZE 32
-#endif
-
-#ifndef WARP_PER_SM
-#define WARP_PER_SM 4
-#endif
+#define WARP_SIZE 32ull
+#define WARP_PER_SM 4ull
 
 #define MAX_THREAD_BLOCK WARP_SIZE * WARP_SIZE
 
