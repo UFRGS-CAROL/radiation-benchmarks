@@ -57,7 +57,7 @@ struct MicroInt {
 		auto end_gen = rad::mysecond();
 
 		//Set the size of
-		this->output_host.resize(this->array_size);
+//		this->output_host.resize(this->array_size);
 		this->output_device.resize(this->array_size);
 		this->input_device = this->input_host;
 
