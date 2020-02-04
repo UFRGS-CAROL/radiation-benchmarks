@@ -68,7 +68,7 @@ __global__ void mad_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 template<typename int_t>
 __global__ void ldst_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * op;
-	if(thread_id != 0)
+	if(thread_id > 2 * op)
 	for (uint32_t i = thread_id; i < thread_id + op; i++) {
 		dst[i] = src[i];
 	}
@@ -95,6 +95,14 @@ __global__ void check_kernel(int_t* lhs, int_t* rhs) {
 	}
 }
 
+template<typename int_t>
+__global__ void check_kernelt(int_t* lhs, int_t* rhs) {
+	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (lhs[thread_id] != rhs[thread_id]) {
+		atomicAdd(&errors, 1);
+	}
+}
 
 template<typename int_t>
 void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
@@ -134,6 +142,7 @@ size_t call_checker(int_t* lhs, int_t* rhs, size_t array_size) {
     std::cout << grid << " " << array_size << " " << MAX_THREAD_BLOCK << std::endl;
 
 	check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
+	check_kernelt<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
 
 	unsigned long long herrors = 0;
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
