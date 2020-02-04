@@ -130,7 +130,7 @@ void MicroInt<int32_t>::execute_micro() {
 template<typename int_t>
 size_t call_checker(int_t* lhs, int_t* rhs, size_t array_size) {
 
-	size_t grid = array_size / MAX_THREAD_BLOCK;
+	size_t grid = array_size / (MAX_THREAD_BLOCK);
     std::cout << grid << " " << array_size << " " << MAX_THREAD_BLOCK << std::endl;
 
 	check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
