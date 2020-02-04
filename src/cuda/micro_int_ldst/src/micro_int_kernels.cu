@@ -134,9 +134,13 @@ size_t call_checker(int_t* lhs, int_t* rhs, size_t array_size) {
     std::cout << grid << " " << array_size << " " << MAX_THREAD_BLOCK << std::endl;
 
 	check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
+
+	unsigned long long herrors = 0;
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
-	return 0;
+	rad::checkFrameworkErrors(cudaMemcpyFromSymbol(&herrors, errors, sizeof(unsigned long long)));
+
+	return herrors;
 }
 
 template<>
