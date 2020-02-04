@@ -97,7 +97,7 @@ struct MicroInt {
 	virtual ~MicroInt() = default;
 
 	size_t compare_output() {
-		return 0;
+		return this->compare_on_gpu();
 	}
 	void copy_back_output() {
 		//this->output_host = this->output_device.to_vector();
@@ -107,14 +107,14 @@ struct MicroInt {
 
 	}
 
-	void compare_on_gpu(){
-		this->compare_on_gpu();
+	size_t compare_on_gpu(){
+		return 0;
 	}
 };
 
 template<>
 void MicroInt<int32_t>::execute_micro();
 template<>
-void MicroInt<int32_t>::compare_on_gpu();
+size_t MicroInt<int32_t>::compare_on_gpu();
 
 #endif /* MICROINT_H_ */

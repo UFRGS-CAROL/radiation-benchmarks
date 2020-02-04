@@ -128,16 +128,17 @@ void MicroInt<int32_t>::execute_micro() {
 
 
 template<typename int_t>
-void call_checker(int_t* lhs, int_t* rhs, size_t array_size) {
+size_t call_checker(int_t* lhs, int_t* rhs, size_t array_size) {
 
 	size_t grid = array_size / MAX_THREAD_BLOCK;
 	check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
+	return 0;
 }
 
 template<>
-void MicroInt<int32_t>::compare_on_gpu() {
-	call_checker(this->output_device.data(), this->input_device.data(),
+size_t MicroInt<int32_t>::compare_on_gpu() {
+	return call_checker(this->output_device.data(), this->input_device.data(),
 			this->array_size);
 }
