@@ -69,8 +69,8 @@ template<typename int_t>
 __global__ void ldst_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * op;
 
-	for (uint32_t i = 0; i < op; i++) {
-		dst[i + thread_id] = src[i + thread_id];
+	for (uint32_t i = thread_id; i < thread_id + op; i++) {
+		dst[i] = src[i];
 	}
 }
 
@@ -78,10 +78,44 @@ template<typename int_t>
 __global__ void check_kernel(int_t* lhs, int_t* rhs) {
 	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
 
+	__shared__ unsigned long long shared_errors;
+	if(threadIdx.x == 0){
+		shared_errors = 0;
+	}
+
+	__syncthreads();
+
 	if (lhs[thread_id] != rhs[thread_id]) {
-		atomicAdd(&errors, 1);
+		atomicAdd(&shared_errors, 1);
+	}
+
+	__syncthreads();
+	if (threadIdx.x == 0 && shared_errors != 0) {
+		atomicAdd(&errors, shared_errors);
 	}
 }
+
+template<typename int_t>
+__global__ void check_kernel_shared(int_t* lhs, int_t* rhs) {
+	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+
+	__shared__ int_t lhs_shared[MAX_THREAD_BLOCK];
+	__shared__ int_t rhs_shared[MAX_THREAD_BLOCK];
+
+	lhs_shared[threadIdx.x] = lhs[thread_id];
+	rhs_shared[threadIdx.x] = rhs[thread_id];
+
+	__syncthreads();
+
+	if (threadIdx.x == 0) {
+		for (uint32_t i = 0; i < MAX_THREAD_BLOCK; i++) {
+			if (lhs_shared[i] != rhs_shared[i]) {
+				atomicAdd(&errors, 1);
+			}
+		}
+	}
+}
+
 
 template<typename int_t>
 void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
@@ -112,17 +146,11 @@ void MicroInt<int32_t>::execute_micro() {
 			this->operation_num);
 }
 
-//template<>
-//void MicroInt<int64_t>::execute_micro() {
-//	execute_kernel(this->parameters.micro, this->input_device.data(),
-//			this->output_device.data(), this->grid_size, this->block_size,
-//			this->operation_num);
-//}
-
 template<typename int_t>
 void call_checker(int_t* lhs, int_t* rhs, size_t array_size) {
 	auto grid = array_size / MAX_THREAD_BLOCK;
 	check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
+	check_kernel_shared<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
 }
