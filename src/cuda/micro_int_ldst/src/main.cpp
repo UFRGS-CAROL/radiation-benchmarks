@@ -91,21 +91,21 @@ void setup_execute(Log& log, Parameters& test_parameter,
 
 template<typename int_t>
 void setup(Parameters& parameters){
-	MicroInt<int_t> micro_obj(parameters);
 
 	//================== Init logs
 	std::string test_info = "";
 	test_info += " gridsize:" + std::to_string(parameters.sm_count);
-	test_info += " blocksize:" + std::to_string(micro_obj.block_size);
+//	test_info += " blocksize:" + std::to_string(micro_obj.block_size);
 	test_info += " type:" + parameters.instruction_str;
 	test_info += " kernel_type:non-persistent";
-	test_info += " checkblock:" + std::to_string(micro_obj.operation_num);
-	test_info += " numop:" + std::to_string(micro_obj.operation_num);
+//	test_info += " checkblock:" + std::to_string(micro_obj.operation_num);
+//	test_info += " numop:" + std::to_string(micro_obj.operation_num);
 
 	std::string test_name = std::string("cuda_micro-int-")
 			+ parameters.instruction_str;
 
 	Log log(test_name, test_info);
+	MicroInt<int_t> micro_obj(parameters, log);
 
 	if (parameters.verbose) {
 		std::cout << log << std::endl;

@@ -28,6 +28,7 @@ struct Parameters {
 	std::string instruction_str;
 
 	bool generate;
+	bool mem_compare_gpu;
 	uint32_t sm_count;
 	size_t global_gpu_memory_bytes;
 	std::string gold_file;

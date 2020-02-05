@@ -18,6 +18,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->verbose = find_arg(argc, argv, "--verbose");
 	this->instruction_str = find_char_arg(argc, argv, "--inst", "add");
 	this->generate = find_arg(argc, argv, "--generate");
+	this->mem_compare_gpu = find_arg(argc, argv, "--cmp_gpu");
 
 	this->micro = mic[this->instruction_str];
 
