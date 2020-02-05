@@ -68,40 +68,10 @@ __global__ void mad_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 template<typename int_t>
 __global__ void ldst_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * op;
-	if(thread_id > 2 * op)
-	for (uint32_t i = thread_id; i < thread_id + op; i++) {
-		dst[i] = src[i];
-	}
-}
-
-template<typename int_t>
-__global__ void check_kernel(int_t* lhs, int_t* rhs) {
-	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-
-	__shared__ unsigned long long shared_errors;
-	if(threadIdx.x == 0){
-		shared_errors = 0;
-	}
-
-	__syncthreads();
-
-	if (lhs[thread_id] != rhs[thread_id]) {
-		atomicAdd(&shared_errors, 1);
-	}
-
-	__syncthreads();
-	if (threadIdx.x == 0 && shared_errors != 0) {
-		atomicAdd(&errors, shared_errors);
-	}
-}
-
-template<typename int_t>
-__global__ void check_kernelt(int_t* lhs, int_t* rhs) {
-	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-
-	if (lhs[thread_id] != rhs[thread_id]) {
-		atomicAdd(&errors, 1);
-	}
+	if (thread_id > 1000 * op)
+		for (uint32_t i = thread_id; i < thread_id + op; i++) {
+			dst[i] = src[i];
+		}
 }
 
 template<typename int_t>
@@ -133,27 +103,44 @@ void MicroInt<int32_t>::execute_micro() {
 			this->operation_num);
 }
 
+template<typename int_t>
+__global__ void check_kernel_ldst(int_t* lhs, int_t* rhs) {
+	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (lhs[thread_id] != rhs[thread_id]) {
+		atomicAdd(&errors, 1);
+	}
+}
+
+template<typename int_t>
+__global__ void check_kernel_micro(int_t* lhs, int_t* rhs) {
+	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (lhs[thread_id] != rhs[threadIdx.x]) {
+		atomicAdd(&errors, 1);
+	}
+}
 
 
 template<typename int_t>
-size_t call_checker(int_t* lhs, int_t* rhs, size_t array_size) {
+size_t call_checker(int_t* lhs, int_t* rhs, size_t array_size, MICROINSTRUCTION& micro) {
 
 	size_t grid = array_size / (MAX_THREAD_BLOCK);
-    std::cout << grid << " " << array_size << " " << MAX_THREAD_BLOCK << std::endl;
-
-	check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
-	check_kernelt<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
-
+	if(micro == LDST){
+		check_kernel_ldst<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
+	}else{
+		check_kernel_micro<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
+	}
 	unsigned long long herrors = 0;
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
-	rad::checkFrameworkErrors(cudaMemcpyFromSymbol(&herrors, errors, sizeof(unsigned long long)));
-
+	rad::checkFrameworkErrors(
+			cudaMemcpyFromSymbol(&herrors, errors, sizeof(unsigned long long)));
 	return herrors;
 }
 
 template<>
 size_t MicroInt<int32_t>::compare_on_gpu() {
 	return call_checker(this->output_device.data(), this->input_device.data(),
-			this->array_size);
+			this->array_size, this->parameters.micro);
 }

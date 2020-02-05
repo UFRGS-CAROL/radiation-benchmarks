@@ -15,10 +15,6 @@
 
 #include "utils.h"
 
-#ifndef OPS
-#define OPS 10000000
-#endif
-
 struct Parameters {
 
 	MICROINSTRUCTION micro;

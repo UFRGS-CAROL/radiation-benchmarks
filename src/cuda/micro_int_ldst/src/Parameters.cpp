@@ -66,8 +66,12 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Micro type " << p.instruction_str << std::endl;
 	os << "SM count = " << p.sm_count << std::endl;
 	os << "Amount of global memory = "
-			<< float(p.global_gpu_memory_bytes) / 1073741824.0 << "GB (" << p.global_gpu_memory_bytes << ") bytes"
-			<< std::endl;
+			<< float(p.global_gpu_memory_bytes) / 1073741824.0 << "GB ("
+			<< p.global_gpu_memory_bytes << ") bytes" << std::endl;
+	os << "Amount of memory that will be used x2 = "
+			<< (float(p.global_gpu_memory_bytes)
+					/ float(p.micro == LDST ? SLICE_GPU_MEMORY : 1.0))
+					/ 1073741824.0 << "GB" << std::endl;
 //	os << "Block size = " << p.block_size << std::endl;
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;

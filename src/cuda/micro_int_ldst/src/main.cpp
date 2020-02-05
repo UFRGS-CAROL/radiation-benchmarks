@@ -9,6 +9,8 @@
  */
 
 #include <iostream>
+#include <iomanip>      // std::setprecision
+
 #include "utils.h"
 #include "Log.h"
 #include "Parameters.h"
@@ -81,37 +83,39 @@ void setup_execute(Log& log, Parameters& test_parameter,
 			auto copy_time = end_cpy - start_cpy;
 
 			std::cout << "Iteration " << iteration;
-			std::cout << " Time: " << kernel_time;
+			std::cout << " Kernel time: " << kernel_time;
+			std::cout << " Output errors: " << errors;
+			std::cout << " Wasted time (copy + compare): " << cmp_time + copy_time;
 			std::cout << " Comparison time: " << cmp_time;
-			std::cout << " Copy time: " << copy_time;
-			std::cout << " Output errors: " << errors << std::endl;
+			std::cout << " Copy time: " << copy_time << std::endl;
 		}
 	}
 }
 
 template<typename int_t>
 void setup(Parameters& parameters){
+	std::cout << std::setprecision(6) << std::setfill('0');
+	std::shared_ptr<Log> log_ptr;
 
+	MicroInt<int_t> micro_obj(parameters, *log_ptr);
 	//================== Init logs
 	std::string test_info = "";
-	test_info += " gridsize:" + std::to_string(parameters.sm_count);
-//	test_info += " blocksize:" + std::to_string(micro_obj.block_size);
+	test_info += " gridsize:" + std::to_string(micro_obj.grid_size);
+	test_info += " blocksize:" + std::to_string(micro_obj.block_size);
 	test_info += " type:" + parameters.instruction_str;
 	test_info += " kernel_type:non-persistent";
-//	test_info += " checkblock:" + std::to_string(micro_obj.operation_num);
-//	test_info += " numop:" + std::to_string(micro_obj.operation_num);
+	test_info += " numop:" + std::to_string(micro_obj.operation_num);
 
 	std::string test_name = std::string("cuda_micro-int-")
 			+ parameters.instruction_str;
 
-	Log log(test_name, test_info);
-	MicroInt<int_t> micro_obj(parameters, log);
+	log_ptr = std::make_shared<Log>(test_name, test_info);
 
 	if (parameters.verbose) {
-		std::cout << log << std::endl;
+		std::cout << *log_ptr << std::endl;
 	}
 
-	setup_execute(log, parameters, micro_obj);
+	setup_execute(*log_ptr, parameters, micro_obj);
 }
 
 int main(int argc, char **argv) {

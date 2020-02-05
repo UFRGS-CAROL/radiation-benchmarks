@@ -20,6 +20,17 @@
 
 #define RANGE_INT_VAL 100
 
+//2 means that all GPU RAM will be used,
+//3 - 66%, 4 - 50% and so on
+#define SLICE_GPU_MEMORY 8
+
+//availiable cores * THREAD_MULTIPLIER
+#define THREAD_MULTIPLIER 8
+
+#ifndef OPS
+#define OPS 10000000
+#endif
+
 typedef enum {
 	ADD_INT, MUL_INT, MAD_INT, LDST
 } MICROINSTRUCTION;
