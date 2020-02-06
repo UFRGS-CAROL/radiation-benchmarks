@@ -50,12 +50,17 @@
 #include <helper_functions.h>
 #include <helper_cuda.h>
 
+#define BLOCK_SIZE 32
+#define M_GLOBAL 4096 
+#define N_GLOBAL 4096
+
 /**
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
-    float *B, int wA,
+template<typename real_t>
+__global__ void MatrixMulCUDA(real_t *C, real_t *A,
+    real_t *B, int wA,
     int wB) {
   // Block index
   int bx = blockIdx.x;
@@ -82,7 +87,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-  float Csub = 0;
+  real_t Csub = 0;
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -91,11 +96,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
        a += aStep, b += bStep) {
     // Declaration of the shared memory array As used to
     // store the sub-matrix of A
-    __shared__ float As[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
 
     // Declaration of the shared memory array Bs used to
     // store the sub-matrix of B
-    __shared__ float Bs[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ real_t Bs[BLOCK_SIZE][BLOCK_SIZE];
 
     // Load the matrices from device memory
     // to shared memory; each thread loads
@@ -126,8 +131,8 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
   int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
   C[c + wB * ty + tx] = Csub;
 }
-
-void ConstantInit(float *data, int size, float val) {
+template<typename real_t>
+void ConstantInit(real_t *data, int size, real_t val) {
   for (int i = 0; i < size; ++i) {
     data[i] = val;
   }
@@ -136,29 +141,30 @@ void ConstantInit(float *data, int size, float val) {
 /**
  * Run a simple test of matrix multiplication using CUDA
  */
+template<typename real_t>
 int MatrixMultiply(int argc, char **argv,
                    int block_size, const dim3 &dimsA,
                    const dim3 &dimsB) {
   // Allocate host memory for matrices A and B
   unsigned int size_A = dimsA.x * dimsA.y;
-  unsigned int mem_size_A = sizeof(float) * size_A;
-  float *h_A = reinterpret_cast<float *>(malloc(mem_size_A));
+  unsigned int mem_size_A = sizeof(real_t) * size_A;
+  real_t *h_A = reinterpret_cast<real_t *>(malloc(mem_size_A));
   unsigned int size_B = dimsB.x * dimsB.y;
-  unsigned int mem_size_B = sizeof(float) * size_B;
-  float *h_B = reinterpret_cast<float *>(malloc(mem_size_B));
+  unsigned int mem_size_B = sizeof(real_t) * size_B;
+  real_t *h_B = reinterpret_cast<real_t *>(malloc(mem_size_B));
 
   // Initialize host memory
-  const float valB = 1.0f;
+  const real_t valB = 1.0f;
   ConstantInit(h_A, size_A, 1.0f);
   ConstantInit(h_B, size_B, valB);
 
   // Allocate device memory
-  float *d_A, *d_B, *d_C;
+  real_t *d_A, *d_B, *d_C;
 
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
-  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(float);
-  float *h_C = reinterpret_cast<float *>(malloc(mem_size_C));
+  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(real_t);
+  real_t *h_C = reinterpret_cast<real_t *>(malloc(mem_size_C));
 
   if (h_C == NULL) {
     fprintf(stderr, "Failed to allocate host matrix C!\n");
@@ -176,21 +182,22 @@ int MatrixMultiply(int argc, char **argv,
 
   checkCudaErrors(cudaMemcpy(d_B, h_B, mem_size_B, cudaMemcpyHostToDevice));
 
-  // Setup execution parameters
-  dim3 threads(block_size, block_size);
-  dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
+  dim3 dim_grid, dim_block;
+  
+  uint32_t grid_rows = (M_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  uint32_t grid_cols = (N_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  dim_grid = dim3(grid_cols, grid_rows);
+  dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
 
+  dim_grid, dim_block
   // Create and start timer
   printf("Computing result using CUDA Kernel...\n");
 
   // Performs warmup operation using matrixMul CUDA kernel
-  if (block_size == 16) {
-    MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_A, d_B,
+
+    MatrixMulCUDA<real_t> <<< dim_grid, dim_block >>>(d_C, d_A, d_B,
                                             dimsA.x, dimsB.x);
-  } else {
-    MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_A, d_B,
-                                            dimsA.x, dimsB.x);
-  }
+  
 
   printf("done\n");
 
@@ -206,18 +213,6 @@ int MatrixMultiply(int argc, char **argv,
   // Record the start event
   checkCudaErrors(cudaEventRecord(start, NULL));
 
-  // Execute the kernel
-  // int nIter = 300;
-
-  // for (int j = 0; j < nIter; j++) {
-  //   if (block_size == 16) {
-  //     MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_A, d_B,
-  //                                             dimsA.x, dimsB.x);
-  //   } else {
-  //     MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_A, d_B,
-  //                                             dimsA.x, dimsB.x);
-  //   }
-  // }
 
   // Record the stop event
   checkCudaErrors(cudaEventRecord(stop, NULL));
@@ -228,41 +223,19 @@ int MatrixMultiply(int argc, char **argv,
   float msecTotal = 0.0f;
   checkCudaErrors(cudaEventElapsedTime(&msecTotal, start, stop));
 
-  // Compute and print the performance
-  // float msecPerMatrixMul = msecTotal / nIter;
-  // double flopsPerMatrixMul = 2.0 * static_cast<double>(dimsA.x) *
-  //                            static_cast<double>(dimsA.y) *
-  //                            static_cast<double>(dimsB.x);
-  // double gigaFlops = (flopsPerMatrixMul * 1.0e-9f) /
-  //                    (msecPerMatrixMul / 1000.0f);
-  // printf(
-  //   "Performance= %.2f GFlop/s, Time= %.3f msec, Size= %.0f Ops," \
-  //   " WorkgroupSize= %u threads/block\n",
-  //   gigaFlops,
-  //   msecPerMatrixMul,
-  //   flopsPerMatrixMul,
-  //   threads.x * threads.y);
 
-  // Copy result from device to host
   checkCudaErrors(cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost));
 
   printf("Checking computed result for correctness: ");
-  // bool correct = true;
 
-  // test relative error by the formula
-  //     |<x, y>_cpu - <x,y>_gpu|/<|x|, |y|>  < eps
-  // double eps = 1.e-6;  // machine zero
 
   for (int i = 0; i < 10 ; i++) {
-
-
     
-      printf("result = %f \n", h_C[i]);
-      
+      printf("result = %f \n", h_C[i]);      
     
   }
 
-  // printf("%s\n", correct ? "Result = PASS" : "Result = FAIL");
+
 
   // Clean up memory
   free(h_A);
@@ -272,18 +245,10 @@ int MatrixMultiply(int argc, char **argv,
   checkCudaErrors(cudaFree(d_B));
   checkCudaErrors(cudaFree(d_C));
 
-  printf("\nNOTE: The CUDA Samples are not meant for performance"\
-         "measurements. Results may vary when GPU Boost is enabled.\n");
-
-
     return EXIT_SUCCESS;
 
 }
 
-
-/**
- * Program main
- */
 int main(int argc, char **argv) {
   printf("[Matrix Multiply Using CUDA] - Starting...\n");
 
@@ -304,8 +269,8 @@ int main(int argc, char **argv) {
 
   int block_size = 32;
 
-  dim3 dimsA(8192,8192);
-  dim3 dimsB(8192,8192);
+  dim3 dimsA(M_GLOBAL,N_GLOBAL);
+  dim3 dimsB(M_GLOBAL,N_GLOBAL);
 
   // width of Matrix A
   if (checkCmdLineFlag(argc, (const char **)argv, "wA")) {
@@ -336,7 +301,7 @@ int main(int argc, char **argv) {
   printf("MatrixA(%d,%d), MatrixB(%d,%d)\n", dimsA.x, dimsA.y,
          dimsB.x, dimsB.y);
 
-  int matrix_result = MatrixMultiply(argc, argv, block_size, dimsA, dimsB);
+  int matrix_result = MatrixMultiply<float>(argc, argv, block_size, dimsA, dimsB);
 
   exit(matrix_result);
 }
