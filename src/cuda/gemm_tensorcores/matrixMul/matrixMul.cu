@@ -189,7 +189,7 @@ int MatrixMultiply(int argc, char **argv,
   dim_grid = dim3(grid_cols, grid_rows);
   dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
 
-  dim_grid, dim_block
+ 
   // Create and start timer
   printf("Computing result using CUDA Kernel...\n");
 
