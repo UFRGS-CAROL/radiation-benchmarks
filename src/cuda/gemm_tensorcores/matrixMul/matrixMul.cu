@@ -160,7 +160,8 @@ int MatrixMultiply(int argc, char **argv,
   ConstantInit(h_B, size_B, val);
 
   // Allocate device memory
-  real_t *d_A, *d_B, *d_C;
+  real_t *d_A, *d_B ;  //*d_C;
+  float *d_C;
 
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
