@@ -256,10 +256,10 @@ int MatrixMultiply(int argc, char **argv,
   for (int i = 0; i < 10 ; i++) {
 
 
-    if (rel_err > eps) {
+    
       printf("result = %f", h_C[i]);
-      correct = false;
-    }
+      
+    
   }
 
   // printf("%s\n", correct ? "Result = PASS" : "Result = FAIL");
