@@ -618,6 +618,11 @@ int main(int argc, char **argv) {
 	
 
   matrix_mult_kernel_unhardened<<<dim_grid, dim_block>>>(A, B, D_sw, alpha, beta, M_GLOBAL, N_GLOBAL);
+  checkCudaErrors(cudaMemcpy(result_sw, D_sw,
+                           sizeof(half) * M_GLOBAL * N_GLOBAL,
+                           cudaMemcpyDeviceToHost));
+
+
   checkCudaErrors(cudaEventRecord(stop));
   checkCudaErrors(cudaEventSynchronize(stop));
 
