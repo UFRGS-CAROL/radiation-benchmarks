@@ -232,7 +232,7 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int i = 0; i < 10 ; i++) {
     
-      printf("result = %f \n", (double)h_C[i]);      
+      printf("result = %f \n", h_C[i]);      
     
   }
 
@@ -301,6 +301,7 @@ int main(int argc, char **argv) {
 
   printf("MatrixA(%d,%d), MatrixB(%d,%d)\n", dimsA.x, dimsA.y,
          dimsB.x, dimsB.y);
+
 
   int matrix_result = MatrixMultiply<float>(argc, argv, block_size, dimsA, dimsB);
 
