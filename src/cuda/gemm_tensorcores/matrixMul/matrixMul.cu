@@ -304,8 +304,8 @@ int main(int argc, char **argv) {
 
   int block_size = 32;
 
-  dim3 dimsA(4096);
-  dim3 dimsB(4096);
+  dim3 dimsA(4096,4096);
+  dim3 dimsB(4096,4096);
 
   // width of Matrix A
   if (checkCmdLineFlag(argc, (const char **)argv, "wA")) {
