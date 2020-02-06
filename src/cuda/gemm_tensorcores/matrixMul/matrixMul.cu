@@ -127,7 +127,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half2 *C, half2 *A, half
   C[c + wB * ty + tx] = Csub;
 }
 
-void ConstantInit(half *data, int size, half val) {
+void ConstantInit(half2 *data, int size, half2 val) {
   for (int i = 0; i < size; ++i) {
     data[i] = val;
   }
@@ -141,24 +141,24 @@ int MatrixMultiply(int argc, char **argv,
                    const dim3 &dimsB) {
   // Allocate host memory for matrices A and B
   unsigned int size_A = dimsA.x * dimsA.y;
-  unsigned int mem_size_A = sizeof(half) * size_A;
-  half *h_A = reinterpret_cast<half *>(malloc(mem_size_A));
+  unsigned int mem_size_A = sizeof(half2) * size_A;
+  half2 *h_A = reinterpret_cast<half2 *>(malloc(mem_size_A));
   unsigned int size_B = dimsB.x * dimsB.y;
-  unsigned int mem_size_B = sizeof(half) * size_B;
-  half *h_B = reinterpret_cast<half *>(malloc(mem_size_B));
+  unsigned int mem_size_B = sizeof(half2) * size_B;
+  half2 *h_B = reinterpret_cast<half2 *>(malloc(mem_size_B));
 
   // Initialize host memory
-  const half valB = 1.0;
+  const half2 valB = 1.0;
   ConstantInit(h_A, size_A, 1.0);
   ConstantInit(h_B, size_B, valB);
 
   // Allocate device memory
-  half *d_A, *d_B, *d_C;
+  half2 *d_A, *d_B, *d_C;
 
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
-  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(half);
-  half *h_C = reinterpret_cast<half *>(malloc(mem_size_C));
+  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(half2);
+  half2 *h_C = reinterpret_cast<half2 *>(malloc(mem_size_C));
 
   if (h_C == NULL) {
     fprintf(stderr, "Failed to allocate host matrix C!\n");
