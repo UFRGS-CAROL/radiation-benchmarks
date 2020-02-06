@@ -587,6 +587,15 @@ int main(int argc, char **argv) {
 
   cudaEvent_t start, stop;
 
+
+  dim3 dim_grid, dim_block;
+  
+  uint32_t grid_rows = (M_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  uint32_t grid_cols = (N_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  dim_grid = dim3(grid_cols, grid_rows);
+  dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+
+
   checkCudaErrors(cudaEventCreate(&start));
   checkCudaErrors(cudaEventCreate(&stop));
   checkCudaErrors(cudaEventRecord(start));
@@ -595,18 +604,20 @@ int main(int argc, char **argv) {
   // if (deviceProp.sharedMemPerMultiprocessor >= SHMEM_SZ) {
     printf("Computing... using high performance kernel compute_gemm \n");
 
-    checkCudaErrors(cudaFuncSetAttribute(
-        compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-    checkKernelErrors(
-        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                        SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
+    // checkCudaErrors(cudaFuncSetAttribute(
+    //     compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+    // checkKernelErrors(
+    //     (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+    //                     SHMEM_SZ>>>(A, B, C, D, alpha, beta)));
 
-    checkCudaErrors(cudaMemcpy(result_hD, D,
-                               sizeof(half) * M_GLOBAL * N_GLOBAL,
-                               cudaMemcpyDeviceToHost));
+    // checkCudaErrors(cudaMemcpy(result_hD, D,
+    //                            sizeof(half) * M_GLOBAL * N_GLOBAL,
+    //                            cudaMemcpyDeviceToHost));
 
 
+	
 
+  matrix_mult_kernel_unhardened<<<dim_grid, dim_block>>>(A, B, D_sw, alpha, beta, M_GLOBAL, N_GLOBAL);
   checkCudaErrors(cudaEventRecord(stop));
   checkCudaErrors(cudaEventSynchronize(stop));
 
