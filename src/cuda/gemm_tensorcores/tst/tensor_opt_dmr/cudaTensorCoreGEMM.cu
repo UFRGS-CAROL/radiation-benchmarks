@@ -111,6 +111,8 @@
 #define N_GLOBAL (N * N_TILES)
 #define K_GLOBAL (K * K_TILES)
 
+#define BLOCK_SIZE 32
+
 #define C_LAYOUT wmma::mem_row_major
 
 // Implementation constants.
@@ -180,7 +182,7 @@
 
 using namespace nvcuda;
 
-__host__ void init_host_matrices(half *a, half *b, float *c) {
+__host__ void init_host_matrices(half *a, half *b, half *c) {
   for (int i = 0; i < M_GLOBAL; i++) {
     for (int j = 0; j < K_GLOBAL; j++) {
       
@@ -196,9 +198,12 @@ __host__ void init_host_matrices(half *a, half *b, float *c) {
     }
   }
 
-  for (int t = 0; t < M_GLOBAL * N_GLOBAL; t++) {
-    
-    c[t] = 0.0;
+  for (int i = 0; i < N_GLOBAL; i++) {
+    for (int j = 0; j < K_GLOBAL; j++) {
+      
+      c[i * K_GLOBAL + j] = 1.0;
+
+    }
   }
 }
 
@@ -616,8 +621,8 @@ int main(int argc, char **argv) {
 
   for (int i = 0; i < 10; i++) {
    
-      printf("mismatch i=%d result_hD=%f result_sw=%f\n", i, result_hD[i],
-             result_sw[i]);
+      printf("mismatch i=%d result_hD=%f result_sw=%f\n", i, (double)result_hD[i],
+             (double)result_sw[i]);
   }
   // for (int i = 0; i < N_GLOBAL * M_GLOBAL; i++) {
   //   if (fabs(result_hD[i] - result_sw[i]) > 0.1f)
