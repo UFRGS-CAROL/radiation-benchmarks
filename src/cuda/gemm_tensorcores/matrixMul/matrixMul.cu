@@ -302,7 +302,7 @@ int main(int argc, char **argv) {
   printf("MatrixA(%d,%d), MatrixB(%d,%d)\n", dimsA.x, dimsA.y,
          dimsB.x, dimsB.y);
 
-  int matrix_result = MatrixMultiply<half>(argc, argv, block_size, dimsA, dimsB);
+  int matrix_result = MatrixMultiply<float>(argc, argv, block_size, dimsA, dimsB);
 
   exit(matrix_result);
 }
