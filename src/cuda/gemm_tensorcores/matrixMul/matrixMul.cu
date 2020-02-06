@@ -60,7 +60,7 @@
  * wA is A's width and wB is B's width
  */
 template<typename real_t>
-__global__ void MatrixMulCUDA(real_t *C, real_t *A,
+__global__ void MatrixMulCUDA(float *C, real_t *A,
     real_t *B, int wA,
     int wB) {
   // Block index
@@ -88,7 +88,7 @@ __global__ void MatrixMulCUDA(real_t *C, real_t *A,
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-  real_t Csub = 0;
+  float Csub = 0;
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -118,7 +118,7 @@ __global__ void MatrixMulCUDA(real_t *C, real_t *A,
 #pragma unroll
 
     for (int k = 0; k < BLOCK_SIZE; ++k) {
-      Csub += As[ty][k] * Bs[k][tx];
+      Csub += (float)As[ty][k] * (float)Bs[k][tx];
     }
 
     // Synchronize to make sure that the preceding
@@ -164,8 +164,8 @@ int MatrixMultiply(int argc, char **argv,
 
   // Allocate host matrix C
   dim3 dimsC(dimsB.x, dimsA.y, 1);
-  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(real_t);
-  real_t *h_C = reinterpret_cast<real_t *>(malloc(mem_size_C));
+  unsigned int mem_size_C = dimsC.x * dimsC.y * sizeof(float);
+  float *h_C = reinterpret_cast<float *>(malloc(mem_size_C));
 
   if (h_C == NULL) {
     fprintf(stderr, "Failed to allocate host matrix C!\n");
@@ -303,7 +303,7 @@ int main(int argc, char **argv) {
          dimsB.x, dimsB.y);
 
 
-  int matrix_result = MatrixMultiply<float>(argc, argv, block_size, dimsA, dimsB);
+  int matrix_result = MatrixMultiply<half>(argc, argv, block_size, dimsA, dimsB);
 
   exit(matrix_result);
 }
