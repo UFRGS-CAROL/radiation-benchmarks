@@ -54,9 +54,7 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half *C, half *A,
-    half *B, int wA,
-    int wB) {
+template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half *C, half *A, half *B, int wA, int wB) {
   // Block index
   int bx = blockIdx.x;
   int by = blockIdx.y;
