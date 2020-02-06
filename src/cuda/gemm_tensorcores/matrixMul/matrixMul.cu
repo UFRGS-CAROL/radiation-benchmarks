@@ -155,7 +155,7 @@ int MatrixMultiply(int argc, char **argv,
   real_t *h_B = reinterpret_cast<real_t *>(malloc(mem_size_B));
 
   // Initialize host memory
-  const real_t val = 1.0f;
+  const real_t val = 1;
   ConstantInit(h_A, size_A, val);
   ConstantInit(h_B, size_B, val);
 
