@@ -181,7 +181,7 @@ int MatrixMultiply(int argc, char **argv,
   // dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
 
   dim3 dim_grid, dim_block;
-  
+
   uint32_t grid_rows = (dimsA.x + block_size - 1) / block_size;
   uint32_t grid_cols = (dimsA.x + block_size - 1) / block_size;
   dim_grid = dim3(grid_cols, grid_rows);
@@ -311,8 +311,8 @@ int main(int argc, char **argv) {
 
   int block_size = 32;
 
-  dim3 dimsA(4096,4096);
-  dim3 dimsB(4096,4096);
+  dim3 dimsA(8192,8192);
+  dim3 dimsB(8192,8192);
 
   // width of Matrix A
   if (checkCmdLineFlag(argc, (const char **)argv, "wA")) {
