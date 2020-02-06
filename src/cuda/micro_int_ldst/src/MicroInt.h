@@ -30,13 +30,11 @@ struct MicroInt {
 	//mutex for host cmp
 	std::mutex thread_mutex;
 
-	std::vector<int_t> input_host;
+	std::vector<int_t> input_gold_host;
 	std::vector<int_t> output_host;
-	std::vector<int_t> gold_host;
 
 	rad::DeviceVector<int_t> input_device;
 	rad::DeviceVector<int_t> output_device;
-
 
 	uint32_t grid_size, block_size, operation_num;
 	size_t array_size;
@@ -49,10 +47,15 @@ struct MicroInt {
 
 		if (this->parameters.micro == LDST) {
 			//Array size is the amount of memory that will be evaluated
-			this->array_size = this->parameters.global_gpu_memory_bytes
-					/ (sizeof(int_t) * SLICE_GPU_MEMORY);
-			this->operation_num = this->array_size
-					/ (this->grid_size * this->block_size);
+			//2 GB memory
+			this->array_size = (1024ll * 1024ll * 1024ll) / sizeof(int_t);
+//					this->parameters.global_gpu_memory_bytes
+//					/ (sizeof(int_t) * SLICE_GPU_MEMORY);
+			this->operation_num = 64;
+//					this->array_size
+//					/ (this->grid_size * this->block_size);
+			std::cout << "ARRAY SIZE " << this->array_size << std::endl;
+			this->grid_size = this->array_size / (this->operation_num  * this->block_size);
 		} else {
 			//multiplies the grid size by the maximum number of warps per SM
 			this->grid_size *= WARP_PER_SM;
@@ -60,24 +63,26 @@ struct MicroInt {
 			this->operation_num = OPS;
 		}
 
-		if (this->parameters.verbose) {
-			std::cout << "Allocating memory and generating input" << std::endl;
-		}
 		auto start_gen = rad::mysecond();
 		this->generate_input();
 		auto end_gen = rad::mysecond();
 
 		if (this->parameters.verbose) {
-			std::cout << "Allocating memory for the output" << std::endl;
-		}
-
-		//Set the size of
-		this->output_device.resize(this->array_size);
-
-		if (this->parameters.verbose) {
 			std::cout << "Input generation time: " << end_gen - start_gen
 					<< std::endl;
 		}
+
+		start_gen = rad::mysecond();
+		//Set the size of
+		this->output_device.resize(this->array_size);
+		end_gen = rad::mysecond();
+
+
+		if (this->parameters.verbose) {
+			std::cout << "Output device allocation time: " << end_gen - start_gen
+					<< std::endl;
+		}
+
 	}
 
 	void generate_input() {
@@ -86,25 +91,12 @@ struct MicroInt {
 		// Specify the engine and distribution.
 		std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
 		std::uniform_int_distribution<int_t> dist { 1, RANGE_INT_VAL };
-		std::vector<int_t> temp_input(MAX_THREAD_BLOCK);
-		for (auto& i : temp_input)
+		this->input_gold_host.resize(MAX_THREAD_BLOCK);
+
+		for (auto& i : this->input_gold_host)
 			i = dist(mersenne_engine);
 
-		if (this->parameters.micro == LDST) {
-			this->input_host.resize(this->array_size);
-			uint32_t slice = this->array_size / temp_input.size();
-
-			for (uint32_t i = 0; i < this->array_size; i += slice) {
-				std::copy(temp_input.begin(), temp_input.end(),
-						this->input_host.begin() + i);
-			}
-
-		} else {
-			this->input_host = temp_input;
-		}
-//		std::cout << "INPUT SIZE <<<<< " << this->input_host.size()
-//				<< std::endl;
-//		std::cout << this->grid_size << " " << this->block_size << std::endl;
+		this->input_device = this->input_gold_host;
 	}
 
 	virtual ~MicroInt() = default;
@@ -132,37 +124,37 @@ struct MicroInt {
 		if (parameters.mem_compare_gpu) {
 			return this->compare_on_gpu();
 		}
-
-		//max num threads on host
-		//x8 threads is the number that fits
-		auto n_threads = std::thread::hardware_concurrency() * THREAD_MULTIPLIER;
-		size_t slice = this->array_size / n_threads;
-		std::vector<std::thread> thread_array;
-		std::vector<size_t> error_count_vector(n_threads, 0);
-		size_t rest_of_division = this->array_size % n_threads;
-
-		//the last thread will do slice + rest of the division
-		for (auto i = 0; i < n_threads - 1; i++) {
-			thread_array.push_back(
-					std::thread(&MicroInt::internal_host_memory_compare, this,
-							&this->input_host[i * slice],
-							&this->output_host[i * slice],
-							&error_count_vector[i], slice));
-		}
-
-		thread_array.push_back(
-				std::thread(&MicroInt::internal_host_memory_compare, this,
-						&this->input_host[(n_threads - 1) * slice],
-						&this->output_host[(n_threads - 1) * slice],
-						&error_count_vector[n_threads - 1],
-						slice + rest_of_division));
-
-		for (auto& t : thread_array) {
-			t.join();
-		}
-
-		return std::accumulate(error_count_vector.begin(),
-				error_count_vector.end(), 0);
+		return 0;
+//		//max num threads on host
+//		//x8 threads is the number that fits
+//		auto n_threads = std::thread::hardware_concurrency() * THREAD_MULTIPLIER;
+//		size_t slice = this->array_size / n_threads;
+//		std::vector<std::thread> thread_array;
+//		std::vector<size_t> error_count_vector(n_threads, 0);
+//		size_t rest_of_division = this->array_size % n_threads;
+//
+//		//the last thread will do slice + rest of the division
+//		for (auto i = 0; i < n_threads - 1; i++) {
+//			thread_array.push_back(
+//					std::thread(&MicroInt::internal_host_memory_compare, this,
+//							&this->input_gold_host[i * slice],
+//							&this->output_host[i * slice],
+//							&error_count_vector[i], slice));
+//		}
+//
+//		thread_array.push_back(
+//				std::thread(&MicroInt::internal_host_memory_compare, this,
+//						&this->input_gold_host[(n_threads - 1) * slice],
+//						&this->output_host[(n_threads - 1) * slice],
+//						&error_count_vector[n_threads - 1],
+//						slice + rest_of_division));
+//
+//		for (auto& t : thread_array) {
+//			t.join();
+//		}
+//
+//		return std::accumulate(error_count_vector.begin(),
+//				error_count_vector.end(), 0);
 	}
 
 	void internal_host_memory_compare(int_t* lhs_begin, int_t* rhs_begin,

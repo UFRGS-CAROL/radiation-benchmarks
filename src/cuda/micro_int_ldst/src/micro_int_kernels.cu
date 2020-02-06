@@ -7,7 +7,7 @@
 
 #include "Parameters.h"
 #include "MicroInt.h"
-
+//#include "ldst_kernel.h"
 /**
  * dst is the output of the kernel
  * defined_src is defined input that has max threadIdx size
@@ -68,10 +68,57 @@ __global__ void mad_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 template<typename int_t>
 __global__ void ldst_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * op;
-	if (thread_id > 1000 * op)
-		for (uint32_t i = thread_id; i < thread_id + op; i++) {
-			dst[i] = src[i];
-		}
+//	if (thread_id > 1000 * op)
+#pragma unroll
+	for (uint32_t i = thread_id; i < thread_id + op; i++) {
+		dst[i] = src[threadIdx.x];
+	}
+
+#pragma unroll
+	for (uint32_t i = thread_id + op, j = thread_id; i > (thread_id - op);
+			i--, j++) {
+		dst[i] = dst[j];
+	}
+
+#pragma unroll
+	for (uint32_t i = thread_id, j = thread_id + op; i < (thread_id + op);
+			i++, j--) {
+		dst[i] = dst[j];
+	}
+}
+
+__device__ uint32_t compiler_trap = 0;
+
+template<uint8_t UNROLL_MAX = 64, typename int_t> __forceinline__
+__device__ void ldst_same_direction_kernel(int_t *dst, int_t *src) {
+#pragma unroll UNROLL_MAX
+	for(uint32_t i = 0; i < UNROLL_MAX; i++){
+		dst[i] = src[i];
+	}
+}
+
+template<uint8_t UNROLL_MAX = 64, typename int_t> __forceinline__
+__device__ void ldst_other_direction_kernel(int_t *dst, int_t *src) {
+#pragma unroll UNROLL_MAX
+	for(uint32_t i = 0; i < UNROLL_MAX; i++){
+		dst[i] = src[UNROLL_MAX - i - 1];
+	}
+}
+
+template<uint8_t MAX_MOVEMENTS = 8, typename int_t>
+__global__ void ldst_int_const_kernel(int_t* src, int_t* dst, uint32_t op) {
+	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * op;
+#pragma unroll MAX_MOVEMENTS
+	for(uint32_t i = 0; i < MAX_MOVEMENTS; i++){
+		//copy to dst
+		ldst_same_direction_kernel(dst + thread_id, src);
+
+		//copy inverse
+		ldst_other_direction_kernel(dst + thread_id, dst + thread_id - compiler_trap);
+
+		//restore to dst
+		ldst_same_direction_kernel(dst + thread_id, dst + thread_id);
+	}
 }
 
 template<typename int_t>
@@ -89,9 +136,10 @@ void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
 		kernel = mad_int_kernel;
 		break;
 	case LDST:
-		kernel = ldst_int_kernel;
+		kernel = ldst_int_const_kernel; //ldst_int_kernel;
 		break;
 	}
+	std::cout << "GRID " << grid_size << " BLOCK " << block_size << std::endl;
 
 	kernel<<<grid_size, block_size>>>(input, output, operation_num);
 }
@@ -104,7 +152,7 @@ void MicroInt<int32_t>::execute_micro() {
 }
 
 template<typename int_t>
-__global__ void check_kernel_ldst(int_t* lhs, int_t* rhs) {
+__global__ void check_kernel(int_t* lhs, int_t* rhs) {
 	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (lhs[thread_id] != rhs[thread_id]) {
@@ -113,24 +161,12 @@ __global__ void check_kernel_ldst(int_t* lhs, int_t* rhs) {
 }
 
 template<typename int_t>
-__global__ void check_kernel_micro(int_t* lhs, int_t* rhs) {
-	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-
-	if (lhs[thread_id] != rhs[threadIdx.x]) {
-		atomicAdd(&errors, 1);
-	}
-}
-
-
-template<typename int_t>
-size_t call_checker(int_t* lhs, int_t* rhs, size_t array_size, MICROINSTRUCTION& micro) {
+size_t call_checker(int_t* lhs, int_t* rhs, size_t array_size,
+		MICROINSTRUCTION& micro) {
 
 	size_t grid = array_size / (MAX_THREAD_BLOCK);
-	if(micro == LDST){
-		check_kernel_ldst<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
-	}else{
-		check_kernel_micro<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
-	}
+	check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
+
 	unsigned long long herrors = 0;
 	rad::checkFrameworkErrors(cudaPeekAtLastError());
 	rad::checkFrameworkErrors(cudaDeviceSynchronize());
