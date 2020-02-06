@@ -281,7 +281,7 @@ __global__ void matrix_mult_kernel_unhardened(	//Kernel without hardening
 
 
 __global__ void compute_gemm(const half *A, const half *B, const half *C,
-		half *D, half alpha, half beta, int wA, int wB) {
+		half *D, half alpha, half beta) {
 	extern __shared__ half shmem[][CHUNK_K * K + SKEW_HALF];
 
 	// Warp and lane identification.
