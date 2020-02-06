@@ -232,7 +232,7 @@ int MatrixMultiply(int argc, char **argv,
 
   for (int i = 0; i < 10 ; i++) {
     
-      printf("result = %f \n", h_C[i]);      
+      printf("result = %f \n", (double)h_C[i]);      
     
   }
 
