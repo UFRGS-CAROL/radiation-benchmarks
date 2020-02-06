@@ -32,9 +32,11 @@ struct MicroInt {
 
 	std::vector<int_t> input_host;
 	std::vector<int_t> output_host;
+	std::vector<int_t> gold_host;
 
 	rad::DeviceVector<int_t> input_device;
 	rad::DeviceVector<int_t> output_device;
+
 
 	uint32_t grid_size, block_size, operation_num;
 	size_t array_size;
@@ -71,7 +73,6 @@ struct MicroInt {
 
 		//Set the size of
 		this->output_device.resize(this->array_size);
-		this->input_device = this->input_host;
 
 		if (this->parameters.verbose) {
 			std::cout << "Input generation time: " << end_gen - start_gen
