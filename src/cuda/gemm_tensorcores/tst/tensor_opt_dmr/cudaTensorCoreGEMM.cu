@@ -626,11 +626,17 @@ int main(int argc, char **argv) {
   matMultiplyOnHost(A_h, B_h, result_host, alpha, beta, M_GLOBAL, K_GLOBAL,
                     K_GLOBAL, N_GLOBAL, M_GLOBAL, N_GLOBAL);
 
-  for (int i = 0; i < N_GLOBAL * M_GLOBAL; i++) {
-    if (fabs(result_hD[i] - result_host[i]) > 0.1f)
+
+  for (int i = 0; i < 10; i++) {
+   
       printf("mismatch i=%d result_hD=%f result_host=%f\n", i, result_hD[i],
              result_host[i]);
   }
+  // for (int i = 0; i < N_GLOBAL * M_GLOBAL; i++) {
+  //   if (fabs(result_hD[i] - result_host[i]) > 0.1f)
+  //     printf("mismatch i=%d result_hD=%f result_host=%f\n", i, result_hD[i],
+  //            result_host[i]);
+  // }
   free(result_hD);
   free(result_host);
 
