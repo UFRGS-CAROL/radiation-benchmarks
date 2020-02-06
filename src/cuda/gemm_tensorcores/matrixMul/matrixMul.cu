@@ -82,7 +82,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half2 *C, half2 *A, half
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-  half2 Csub = 0;
+  half2 Csub = __float2half2_rn (0.0f);
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -148,8 +148,8 @@ int MatrixMultiply(int argc, char **argv,
   half2 *h_B = reinterpret_cast<half2 *>(malloc(mem_size_B));
 
   // Initialize host memory
-  const half2 valB = 1.0;
-  ConstantInit(h_A, size_A, 1.0);
+  const half2 valB = __float2half2_rn (1.0f);
+  ConstantInit(h_A, size_A, __float2half2_rn (1.0f));
   ConstantInit(h_B, size_B, valB);
 
   // Allocate device memory
@@ -257,7 +257,7 @@ int MatrixMultiply(int argc, char **argv,
 
 
     
-      printf("result = %f \n", (double)h_C[i]);
+      printf("result = %f \n", __high2float(h_C[i]));
       
     
   }
