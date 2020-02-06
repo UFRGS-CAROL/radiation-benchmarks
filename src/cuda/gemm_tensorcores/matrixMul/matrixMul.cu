@@ -56,7 +56,7 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half *C, half *A, half *B, int wA, int wB) {
+template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half2 *C, half2 *A, half2 *B, int wA, int wB) {
   // Block index
   int bx = blockIdx.x;
   int by = blockIdx.y;
@@ -82,7 +82,7 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half *C, half *A, half *
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-  half Csub = 0;
+  half2 Csub = 0;
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -91,11 +91,11 @@ template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(half *C, half *A, half *
        a += aStep, b += bStep) {
     // Declaration of the shared memory array As used to
     // store the sub-matrix of A
-    __shared__ half As[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ half2 As[BLOCK_SIZE][BLOCK_SIZE];
 
     // Declaration of the shared memory array Bs used to
     // store the sub-matrix of B
-    __shared__ half Bs[BLOCK_SIZE][BLOCK_SIZE];
+    __shared__ half2 Bs[BLOCK_SIZE][BLOCK_SIZE];
 
     // Load the matrices from device memory
     // to shared memory; each thread loads
