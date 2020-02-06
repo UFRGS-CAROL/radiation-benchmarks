@@ -43,9 +43,9 @@
 // GEMM configuration.
 
 
-#define M_TILES 128  // 128	
-#define N_TILES 128 // 128
-#define K_TILES 128 // 128
+#define M_TILES 256  // 128	
+#define N_TILES 256 // 128
+#define K_TILES 256 // 128
 // 
 
 #define C_LAYOUT nvcuda::wmma::mem_row_major
@@ -547,9 +547,7 @@ int main(int argc, char **argv) {
 
 	//cudaStreamCreateWithFlags(&st, cudaStreamNonBlocking);
 	std::cout << BLOCK_SIZE << " " << M_GLOBAL << std::endl;
-	dim3 threads(BLOCK_SIZE, BLOCK_SIZE);
-	dim3 grid( M_GLOBAL / threads.x, M_GLOBAL / threads.y);
-
+	
 	dim3 dim_grid, dim_block;
   
   	uint32_t grid_rows = (M_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -557,6 +555,14 @@ int main(int argc, char **argv) {
   	dim_grid = dim3(grid_cols, grid_rows);
   	dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
 
+
+
+ //  	uint32_t grid_rows = (m + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	// 	uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+	// 	this->dim_grid = dim3(grid_cols, grid_rows);
+	// 	this->dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+
+	// matrix mul <<this->dim_grid, this->dim_block>>
 	checkCudaErrors(
 			cudaFuncSetAttribute(compute_gemm,
 					cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
@@ -568,7 +574,7 @@ int main(int argc, char **argv) {
 	// stream1>>>(A, B, C, dtd, alpha, beta, M_GLOBAL,
  //    M_GLOBAL);
 
- 	matrix_mult<<<grid, threads>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
+ 	matrix_mult<<<dim_grid, dim_block>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
 
 	// matrix_mult<<<dim_grid, dim_block,0,stream2>>>(A, B, M_GLOBAL, N_GLOBAL, D, alpha, beta);
 
