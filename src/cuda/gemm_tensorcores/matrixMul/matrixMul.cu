@@ -177,18 +177,24 @@ int MatrixMultiply(int argc, char **argv,
   checkCudaErrors(cudaMemcpy(d_B, h_B, mem_size_B, cudaMemcpyHostToDevice));
 
   // Setup execution parameters
-  dim3 threads(block_size, block_size);
-  dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
+  // dim3 threads(block_size, block_size);
+  // dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
+
+
+  uint32_t grid_rows = (M_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  uint32_t grid_cols = (N_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  dim_grid = dim3(grid_cols, grid_rows);
+  dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
 
   // Create and start timer
   printf("Computing result using CUDA Kernel...\n");
 
   // Performs warmup operation using matrixMul CUDA kernel
   if (block_size == 16) {
-    MatrixMulCUDA<16> <<< grid, threads >>>(d_C, d_A, d_B,
+    MatrixMulCUDA<16> <<< dim_grid, dim_block >>>(d_C, d_A, d_B,
                                             dimsA.x, dimsB.x);
   } else {
-    MatrixMulCUDA<32> <<< grid, threads >>>(d_C, d_A, d_B,
+    MatrixMulCUDA<32> <<< dim_grid, dim_block >>>(d_C, d_A, d_B,
                                             dimsA.x, dimsB.x);
   }
 
