@@ -52,8 +52,8 @@
 #include <cuda_fp16.h>
 
 #define BLOCK_SIZE 32
-#define M_GLOBAL 4096 
-#define N_GLOBAL 4096
+#define M_GLOBAL 8192 
+#define N_GLOBAL 8192
 
 /**
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
