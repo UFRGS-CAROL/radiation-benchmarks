@@ -49,6 +49,7 @@
 // Helper functions and utilities to work with CUDA
 #include <helper_functions.h>
 #include <helper_cuda.h>
+#include <cuda_fp16.h>
 
 #define BLOCK_SIZE 32
 #define M_GLOBAL 4096 
