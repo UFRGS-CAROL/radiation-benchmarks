@@ -180,11 +180,12 @@ int MatrixMultiply(int argc, char **argv,
   // dim3 threads(block_size, block_size);
   // dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
 
-
-  uint32_t grid_rows = (M_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
-  uint32_t grid_cols = (N_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  dim3 dim_grid, dim_block;
+  
+  uint32_t grid_rows = (dimsA.x + block_size - 1) / block_size;
+  uint32_t grid_cols = (dimsA.x + block_size - 1) / block_size;
   dim_grid = dim3(grid_cols, grid_rows);
-  dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+  dim_block = dim3(block_size, block_size);
 
   // Create and start timer
   printf("Computing result using CUDA Kernel...\n");
