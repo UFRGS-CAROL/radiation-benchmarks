@@ -510,18 +510,18 @@ int main(int argc, char **argv) {
   half *A_h = NULL;
   half *B_h = NULL;
   float *C_h = NULL;
-#if CPU_DEBUG
+
   float *result_hD = NULL;
   float *result_host = NULL;
-#endif
+
 
   A_h = (half *)malloc(sizeof(half) * M_GLOBAL * K_GLOBAL);
   B_h = (half *)malloc(sizeof(half) * K_GLOBAL * N_GLOBAL);
   C_h = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
-#if CPU_DEBUG
+
   result_hD = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
   result_host = (float *)malloc(sizeof(float) * M_GLOBAL * N_GLOBAL);
-#endif
+
 
   half *A = NULL;
   half *B = NULL;
