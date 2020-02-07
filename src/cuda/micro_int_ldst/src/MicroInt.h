@@ -119,7 +119,7 @@ struct MicroInt {
 		}
 		//max num threads on host
 		//x8 threads is the number that fits
-		auto n_threads = std::thread::hardware_concurrency() * THREAD_MULTIPLIER;
+		auto n_threads = std::thread::hardware_concurrency();
 		size_t memory_slice_for_each_thread = this->array_size / n_threads;
 
 		if (memory_slice_for_each_thread % this->input_gold_host.size() != 0) {
@@ -137,8 +137,8 @@ struct MicroInt {
 		for (auto i = 0; i < n_threads; i++) {
 			thread_array.push_back(
 					std::thread(&MicroInt::internal_host_memory_compare, this,
-							this->input_gold_host.data(),
 							this->output_host.data()  + (i * memory_slice_for_each_thread),
+							std::ref(this->input_gold_host),
 							error_count_vector.data() + i, memory_slice_for_each_thread,
 							this->input_gold_host.size()));
 		}
@@ -151,7 +151,7 @@ struct MicroInt {
 				error_count_vector.end(), 0);
 	}
 
-	void internal_host_memory_compare(int_t* output_ptr, int_t* gold_ptr,
+	void internal_host_memory_compare(int_t* output_ptr, std::vector<int_t>& gold_ptr,
 			size_t* this_thread_error_count, size_t memory_slice_to_process, size_t gold_size) {
 
 		std::unique_lock<std::mutex> lock(this->thread_mutex, std::defer_lock);
