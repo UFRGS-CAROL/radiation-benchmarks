@@ -86,7 +86,7 @@ __global__ void MatrixMulCUDA(real_t *C, real_t *A,
   // Step size used to iterate through the sub-matrices of B
   int bStep  = BLOCK_SIZE * wB;
 
-  printf("a begin = %d , aEnd = %d, aStep =  %d, bBegin =  %d, bStep =  %d \n", aBegin, aEnd, aStep, bBegin, bStep);
+  
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
@@ -233,11 +233,11 @@ int MatrixMultiply(int argc, char **argv,
   printf("Checking computed result for correctness: ");
 
 
-  // for (int i = 0; i < 10 ; i++) {
+  for (int i = 0; i < 10 ; i++) {
     
-  //     printf("result = %f \n", (double)h_C[i]);      
+      printf("result = %f \n", (double)h_C[i]);      
     
-  // }
+  }
 
 
 
@@ -271,7 +271,7 @@ int main(int argc, char **argv) {
   // override the device ID based on input provided at the command line
   int dev = findCudaDevice(argc, (const char **)argv);
 
-  int block_size = 32;
+  int block_size = 16;
 
   dim3 dimsA(M_GLOBAL,N_GLOBAL);
   dim3 dimsB(M_GLOBAL,N_GLOBAL);
@@ -306,7 +306,7 @@ int main(int argc, char **argv) {
          dimsB.x, dimsB.y);
 
 
-  int matrix_result = MatrixMultiply<float>(argc, argv, block_size, dimsA, dimsB);
+  int matrix_result = MatrixMultiply<__half>(argc, argv, block_size, dimsA, dimsB);
 
   exit(matrix_result);
 }
