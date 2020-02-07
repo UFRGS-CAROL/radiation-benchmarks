@@ -304,7 +304,7 @@ int main(int argc, char **argv) {
          dimsB.x, dimsB.y);
 
 
-  int matrix_result = MatrixMultiply<half>(argc, argv, block_size, dimsA, dimsB);
+  int matrix_result = MatrixMultiply<__half>(argc, argv, block_size, dimsA, dimsB);
 
   exit(matrix_result);
 }
