@@ -86,6 +86,8 @@ __global__ void MatrixMulCUDA(real_t *C, real_t *A,
   // Step size used to iterate through the sub-matrices of B
   int bStep  = BLOCK_SIZE * wB;
 
+  printf("a begin = %d , aEnd = %d, aStep =  %d, bBegin =  %d, bStep =  %d \n", aBegin, aEnd, aStep, bBegin, bStep);
+
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
   real_t Csub = 0;
@@ -231,11 +233,11 @@ int MatrixMultiply(int argc, char **argv,
   printf("Checking computed result for correctness: ");
 
 
-  for (int i = 0; i < 10 ; i++) {
+  // for (int i = 0; i < 10 ; i++) {
     
-      printf("result = %f \n", (double)h_C[i]);      
+  //     printf("result = %f \n", (double)h_C[i]);      
     
-  }
+  // }
 
 
 
