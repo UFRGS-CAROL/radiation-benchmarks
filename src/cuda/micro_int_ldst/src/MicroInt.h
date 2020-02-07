@@ -20,6 +20,8 @@
 #include "device_vector.h"
 #include "utils.h"
 
+#include <omp.h>
+
 __device__ static unsigned long long errors;
 
 template<typename int_t>
@@ -121,22 +123,23 @@ struct MicroInt {
 		//x8 threads is the number that fits
 		auto n_threads = this->array_size / this->input_gold_host.size();
 		size_t slice = this->input_gold_host.size();
-		std::cout << "N THREADS " << n_threads << " SLICE " << slice << std::endl;
-		std::vector<std::thread> thread_array;
+//		std::cout << "N THREADS " << n_threads << " SLICE " << slice << std::endl;
+//		std::vector<std::thread> thread_array;
 		std::vector<size_t> error_count_vector(n_threads, 0);
 
 		//the last thread will do slice + rest of the division
-		for (auto i = 0; i < n_threads; i++) {
-			thread_array.push_back(
-					std::thread(&MicroInt::internal_host_memory_compare, this,
-							&this->input_gold_host[0],
-							&this->output_host[i * slice],
-							&error_count_vector[i], slice));
+#pragma omp parallel for
+		for (auto i = 0; i < this->array_size; i += slice) {
+//			thread_array.push_back(
+//					std::thread(&MicroInt::internal_host_memory_compare, this,
+			this->internal_host_memory_compare(&this->input_gold_host[0],
+					&this->output_host[i], &error_count_vector[i/slice],
+					slice);
 		}
 
-		for (auto& t : thread_array) {
-			t.join();
-		}
+//		for (auto& t : thread_array) {
+//			t.join();
+//		}
 
 		return std::accumulate(error_count_vector.begin(),
 				error_count_vector.end(), 0);
