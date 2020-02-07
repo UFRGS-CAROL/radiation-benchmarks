@@ -32,7 +32,7 @@
 
 //for load and store the OPS value is not used, then we use
 //max thread ld/st operation
-#define MAX_THREAD_LD_ST_OPERATIONS 8
+#define MAX_THREAD_LD_ST_OPERATIONS 2
 
 //availiable cores * THREAD_MULTIPLIER
 #define THREAD_MULTIPLIER 8

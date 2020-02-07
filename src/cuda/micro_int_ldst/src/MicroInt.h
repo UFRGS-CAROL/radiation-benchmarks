@@ -20,8 +20,6 @@
 #include "device_vector.h"
 #include "utils.h"
 
-#include <omp.h>
-
 __device__ static unsigned long long errors;
 
 template<typename int_t>
@@ -121,50 +119,66 @@ struct MicroInt {
 		}
 		//max num threads on host
 		//x8 threads is the number that fits
-		auto n_threads = this->array_size / this->input_gold_host.size();
-		size_t slice = this->input_gold_host.size();
-//		std::cout << "N THREADS " << n_threads << " SLICE " << slice << std::endl;
-//		std::vector<std::thread> thread_array;
+		auto n_threads = std::thread::hardware_concurrency() * THREAD_MULTIPLIER;
+		size_t memory_slice_for_each_thread = this->array_size / n_threads;
+
+		if (memory_slice_for_each_thread % this->input_gold_host.size() != 0) {
+			throw_line(
+					"Choose a number of threads that is multiple of "
+							+ std::to_string(this->input_gold_host.size()));
+		}
+
+		std::cout << "N THREADS " << n_threads << " SLICE "
+				<< memory_slice_for_each_thread << std::endl;
+		std::vector<std::thread> thread_array;
 		std::vector<size_t> error_count_vector(n_threads, 0);
 
 		//the last thread will do slice + rest of the division
-#pragma omp parallel for
-		for (auto i = 0; i < this->array_size; i += slice) {
-//			thread_array.push_back(
-//					std::thread(&MicroInt::internal_host_memory_compare, this,
-			this->internal_host_memory_compare(&this->input_gold_host[0],
-					&this->output_host[i], &error_count_vector[i/slice],
-					slice);
+		for (auto i = 0; i < n_threads; i++) {
+			thread_array.push_back(
+					std::thread(&MicroInt::internal_host_memory_compare, this,
+							this->input_gold_host.data(),
+							this->output_host.data()  + (i * memory_slice_for_each_thread),
+							error_count_vector.data() + i, memory_slice_for_each_thread,
+							this->input_gold_host.size()));
 		}
 
-//		for (auto& t : thread_array) {
-//			t.join();
-//		}
+		for (auto& t : thread_array) {
+			t.join();
+		}
 
 		return std::accumulate(error_count_vector.begin(),
 				error_count_vector.end(), 0);
 	}
 
 	void internal_host_memory_compare(int_t* output_ptr, int_t* gold_ptr,
-			size_t* this_thread_error_count, size_t gold_size) {
+			size_t* this_thread_error_count, size_t memory_slice_to_process, size_t gold_size) {
 
 		std::unique_lock<std::mutex> lock(this->thread_mutex, std::defer_lock);
-		for (size_t i = 0; i < gold_size; i++) {
-			auto output = output_ptr[i];
-			auto gold = gold_ptr[i];
-			if (output != gold) {
-//					std::string error_detail;
-//					error_detail = "position: " + std::to_string(i);
-//					error_detail += " e: " + std::to_string(lhs[i]);
-//					error_detail += " r: " + std::to_string(rhs[i]);
-//					std::cout << error_detail << std::endl;
-				*this_thread_error_count++;
 
-//					lock.lock();
-//					this->log.log_error_detail(error_detail);
-//					lock.unlock();
+		auto chunks = memory_slice_to_process / gold_size;
+
+		for(auto chunk_i = 0; chunk_i < chunks; chunk_i++){
+			auto output_chunk_i = output_ptr + gold_size * chunk_i;
+			for (size_t i = 0; i < gold_size; i++) {
+				auto output = output_chunk_i[i];
+				auto gold = gold_ptr[i];
+				if (output != gold) {
+	//					std::string error_detail;
+	//					error_detail = "position: " + std::to_string(i);
+	//					error_detail += " e: " + std::to_string(lhs[i]);
+	//					error_detail += " r: " + std::to_string(rhs[i]);
+	//					std::cout << error_detail << std::endl;
+					*this_thread_error_count++;
+
+	//					lock.lock();
+	//					this->log.log_error_detail(error_detail);
+	//					lock.unlock();
+				}
 			}
 		}
+
+
 
 	}
 
