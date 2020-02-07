@@ -68,25 +68,21 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Amount of global memory = "
 			<< float(p.global_gpu_memory_bytes) / 1073741824.0 << "GB ("
 			<< p.global_gpu_memory_bytes << ") bytes" << std::endl;
-	os << "Amount of memory that will be used x2 = ";
+	os << "Amount of memory that will be used = ";
 	if (p.micro == LDST) {
-		os
-				<< float(p.global_gpu_memory_bytes)
-						/ (SLICE_GPU_MEMORY * 1073741824.0) << "GB"
-				<< std::endl;
+		os << GPU_DDR_TEST_SIZE / float(1024 * 1024);
 	} else {
 		os
-				<< float(p.sm_count * WARP_PER_SM * MAX_THREAD_BLOCK
-						* sizeof(int32_t)) / float(1024 * 1024) << "MB" << std::endl;
+				<< float(
+						p.sm_count * WARP_PER_SM * MAX_THREAD_BLOCK
+								* sizeof(int32_t)) / float(1024 * 1024);
 	}
-
-//	os << "Block size = " << p.block_size << std::endl;
+	os << "MB" << std::endl;
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
 	os << "Gold file: " << p.gold_file << std::endl;
 	os << "Input file: " << p.input_file << std::endl;
 	os << "Generate: " << p.generate << std::endl;
-//	os << "Number of operations per thread: " << p.operation_num << std::endl;
 	os << "Device " << p.device;
 
 	return os;

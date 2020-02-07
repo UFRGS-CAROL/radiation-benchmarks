@@ -20,9 +20,19 @@
 
 #define RANGE_INT_VAL 100
 
-//2 means that all GPU RAM will be used,
-//3 - 66%, 4 - 50% and so on
-#define SLICE_GPU_MEMORY 8
+
+//The amount of memory that will be used
+//in the LDST test
+//Default is 1GB
+#define GPU_DDR_TEST_SIZE (1024ull * 1024ull * 1024ull)
+
+//Operations performed by each thread
+//Max tested that worked is 64
+#define MEM_OPERATION_NUM 64
+
+//for load and store the OPS value is not used, then we use
+//max thread ld/st operation
+#define MAX_THREAD_LD_ST_OPERATIONS 8
 
 //availiable cores * THREAD_MULTIPLIER
 #define THREAD_MULTIPLIER 8

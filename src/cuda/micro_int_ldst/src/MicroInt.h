@@ -41,24 +41,18 @@ struct MicroInt {
 
 	MicroInt(Parameters& parameters, Log& log) :
 			parameters(parameters), log(log) {
-		//Setting input and output host and device
+		//both benchmarks will use MAX_THREAD_BLOCK size
 		this->block_size = MAX_THREAD_BLOCK;
-		this->grid_size = this->parameters.sm_count;
 
 		if (this->parameters.micro == LDST) {
 			//Array size is the amount of memory that will be evaluated
-			//2 GB memory
-			this->array_size = (1024ll * 1024ll * 1024ll) / sizeof(int_t);
-//					this->parameters.global_gpu_memory_bytes
-//					/ (sizeof(int_t) * SLICE_GPU_MEMORY);
-			this->operation_num = 64;
-//					this->array_size
-//					/ (this->grid_size * this->block_size);
-			std::cout << "ARRAY SIZE " << this->array_size << std::endl;
-			this->grid_size = this->array_size / (this->operation_num  * this->block_size);
+			this->array_size = GPU_DDR_TEST_SIZE / sizeof(int_t);
+			this->operation_num = MEM_OPERATION_NUM;
+			this->grid_size = this->array_size
+					/ (this->operation_num * this->block_size);
 		} else {
 			//multiplies the grid size by the maximum number of warps per SM
-			this->grid_size *= WARP_PER_SM;
+			this->grid_size = this->parameters.sm_count * WARP_PER_SM;
 			this->array_size = this->grid_size * this->block_size;
 			this->operation_num = OPS;
 		}
@@ -77,10 +71,9 @@ struct MicroInt {
 		this->output_device.resize(this->array_size);
 		end_gen = rad::mysecond();
 
-
 		if (this->parameters.verbose) {
-			std::cout << "Output device allocation time: " << end_gen - start_gen
-					<< std::endl;
+			std::cout << "Output device allocation time: "
+					<< end_gen - start_gen << std::endl;
 		}
 
 	}
@@ -124,66 +117,52 @@ struct MicroInt {
 		if (parameters.mem_compare_gpu) {
 			return this->compare_on_gpu();
 		}
-		return 0;
-//		//max num threads on host
-//		//x8 threads is the number that fits
-//		auto n_threads = std::thread::hardware_concurrency() * THREAD_MULTIPLIER;
-//		size_t slice = this->array_size / n_threads;
-//		std::vector<std::thread> thread_array;
-//		std::vector<size_t> error_count_vector(n_threads, 0);
-//		size_t rest_of_division = this->array_size % n_threads;
-//
-//		//the last thread will do slice + rest of the division
-//		for (auto i = 0; i < n_threads - 1; i++) {
-//			thread_array.push_back(
-//					std::thread(&MicroInt::internal_host_memory_compare, this,
-//							&this->input_gold_host[i * slice],
-//							&this->output_host[i * slice],
-//							&error_count_vector[i], slice));
-//		}
-//
-//		thread_array.push_back(
-//				std::thread(&MicroInt::internal_host_memory_compare, this,
-//						&this->input_gold_host[(n_threads - 1) * slice],
-//						&this->output_host[(n_threads - 1) * slice],
-//						&error_count_vector[n_threads - 1],
-//						slice + rest_of_division));
-//
-//		for (auto& t : thread_array) {
-//			t.join();
-//		}
-//
-//		return std::accumulate(error_count_vector.begin(),
-//				error_count_vector.end(), 0);
+		//max num threads on host
+		//x8 threads is the number that fits
+		auto n_threads = this->array_size / this->input_gold_host.size();
+		size_t slice = this->input_gold_host.size();
+		std::cout << "N THREADS " << n_threads << " SLICE " << slice << std::endl;
+		std::vector<std::thread> thread_array;
+		std::vector<size_t> error_count_vector(n_threads, 0);
+
+		//the last thread will do slice + rest of the division
+		for (auto i = 0; i < n_threads; i++) {
+			thread_array.push_back(
+					std::thread(&MicroInt::internal_host_memory_compare, this,
+							&this->input_gold_host[0],
+							&this->output_host[i * slice],
+							&error_count_vector[i], slice));
+		}
+
+		for (auto& t : thread_array) {
+			t.join();
+		}
+
+		return std::accumulate(error_count_vector.begin(),
+				error_count_vector.end(), 0);
 	}
 
-	void internal_host_memory_compare(int_t* lhs_begin, int_t* rhs_begin,
-			size_t* this_thread_error_count, size_t slice) {
+	void internal_host_memory_compare(int_t* output_ptr, int_t* gold_ptr,
+			size_t* this_thread_error_count, size_t gold_size) {
 
 		std::unique_lock<std::mutex> lock(this->thread_mutex, std::defer_lock);
-
-		bool are_they_equal = std::equal(lhs_begin, lhs_begin + slice,
-				rhs_begin);
-		if (are_they_equal != true) {
-			for (size_t i = 0; i < slice; i++) {
-				auto lhs = lhs_begin + i;
-				auto rhs = rhs_begin + i;
-				if (lhs[i] != rhs[i]) {
+		for (size_t i = 0; i < gold_size; i++) {
+			auto output = output_ptr[i];
+			auto gold = gold_ptr[i];
+			if (output != gold) {
 //					std::string error_detail;
 //					error_detail = "position: " + std::to_string(i);
 //					error_detail += " e: " + std::to_string(lhs[i]);
 //					error_detail += " r: " + std::to_string(rhs[i]);
 //					std::cout << error_detail << std::endl;
-					*this_thread_error_count++;
+				*this_thread_error_count++;
 
 //					lock.lock();
 //					this->log.log_error_detail(error_detail);
 //					lock.unlock();
-				}
 			}
 		}
-//		std::cout << "THREAD " << std::this_thread::get_id() << std::endl;
-//		std::cout << "ERRORS " << *this_thread_error_count << std::endl;
+
 	}
 
 };
