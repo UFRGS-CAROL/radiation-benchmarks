@@ -20,22 +20,22 @@
 
 #define RANGE_INT_VAL 100
 
-
 //The amount of memory that will be used
 //in the LDST test
 //Default is 1GB
 #define GPU_DDR_TEST_SIZE (1024ull * 1024ull * 1024ull)
 
-//Operations performed by each thread
-//Max tested that worked is 64
-#define MEM_OPERATION_NUM 64
+//Max number of load/stores performed
+//each time
+#define MEM_OPERATION_NUM 64u
+
+//the size of the random input array
+//for load/store benchmark, and for arithmetic int
+#define DEFAULT_INPUT_ARRAY 1024u
 
 //for load and store the OPS value is not used, then we use
 //max thread ld/st operation
-#define MAX_THREAD_LD_ST_OPERATIONS 2
-
-//availiable cores * THREAD_MULTIPLIER
-#define THREAD_MULTIPLIER 8
+#define MAX_THREAD_LD_ST_OPERATIONS (DEFAULT_INPUT_ARRAY / MEM_OPERATION_NUM)
 
 #ifndef OPS
 #define OPS 10000000

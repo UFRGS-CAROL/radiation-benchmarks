@@ -65,17 +65,20 @@ cudaDeviceProp Parameters::get_device() {
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Micro type " << p.instruction_str << std::endl;
 	os << "SM count = " << p.sm_count << std::endl;
-	os << "Amount of global memory = "
-			<< float(p.global_gpu_memory_bytes) / 1073741824.0 << "GB ("
-			<< p.global_gpu_memory_bytes << ") bytes" << std::endl;
+	constexpr auto mb = 1 << 20;
+	constexpr auto gb = 1 << 30;
+
+	os << "Amount of global memory = " << float(p.global_gpu_memory_bytes) / gb
+			<< "GB (" << p.global_gpu_memory_bytes << ") bytes" << std::endl;
 	os << "Amount of memory that will be used = ";
+
 	if (p.micro == LDST) {
-		os << GPU_DDR_TEST_SIZE / float(1024 * 1024);
+		os << GPU_DDR_TEST_SIZE / mb;
 	} else {
 		os
 				<< float(
 						p.sm_count * WARP_PER_SM * MAX_THREAD_BLOCK
-								* sizeof(int32_t)) / float(1024 * 1024);
+								* sizeof(int32_t)) / mb;
 	}
 	os << "MB" << std::endl;
 	os << "Verbose: " << p.verbose << std::endl;

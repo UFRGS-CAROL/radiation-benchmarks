@@ -89,7 +89,7 @@ __global__ void ldst_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 
 __device__ uint32_t compiler_trap = 0;
 
-template<uint8_t UNROLL_MAX, typename int_t> __forceinline__
+template<uint32_t UNROLL_MAX, typename int_t> __forceinline__
 __device__ void ldst_same_direction_kernel(int_t *dst, int_t *src) {
 #pragma unroll UNROLL_MAX
 	for(uint32_t i = 0; i < UNROLL_MAX; i++){
@@ -97,7 +97,7 @@ __device__ void ldst_same_direction_kernel(int_t *dst, int_t *src) {
 	}
 }
 
-template<uint8_t UNROLL_MAX, typename int_t> __forceinline__
+template<uint32_t UNROLL_MAX, typename int_t> __forceinline__
 __device__ void ldst_other_direction_kernel(int_t *dst, int_t *src) {
 #pragma unroll UNROLL_MAX
 	for(uint32_t i = 0; i < UNROLL_MAX; i++){
@@ -105,20 +105,20 @@ __device__ void ldst_other_direction_kernel(int_t *dst, int_t *src) {
 	}
 }
 
-template<uint8_t MAX_MOVEMENTS, typename int_t>
+template<uint32_t MAX_MOVEMENTS, typename int_t>
 __global__ void ldst_int_const_kernel(int_t* src, int_t* dst, uint32_t op) {
-	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * op;
+	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * MAX_THREAD_LD_ST_OPERATIONS;
 
 #pragma unroll MAX_MOVEMENTS
 	for(uint32_t i = 0; i < MAX_MOVEMENTS; i++){
 		//copy to dst
-		ldst_same_direction_kernel<MEM_OPERATION_NUM>(dst + thread_id, src);
+		ldst_same_direction_kernel<MEM_OPERATION_NUM>(dst + thread_id, src + MEM_OPERATION_NUM * i);
 
 		//copy inverse
 		ldst_other_direction_kernel<MEM_OPERATION_NUM>(dst + thread_id, dst + thread_id - compiler_trap);
 
 		//restore to dst
-		ldst_same_direction_kernel<MEM_OPERATION_NUM>(dst + thread_id, dst + thread_id);
+		ldst_other_direction_kernel<MEM_OPERATION_NUM>(dst + thread_id, dst + thread_id);
 	}
 }
 
@@ -140,8 +140,6 @@ void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
 		kernel = ldst_int_const_kernel<MAX_THREAD_LD_ST_OPERATIONS>;
 		break;
 	}
-	std::cout << "GRID " << grid_size << " BLOCK " << block_size << std::endl;
-
 	kernel<<<grid_size, block_size>>>(input, output, operation_num);
 }
 
