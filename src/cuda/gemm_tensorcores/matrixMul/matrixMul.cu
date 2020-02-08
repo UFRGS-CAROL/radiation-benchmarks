@@ -63,75 +63,97 @@ template<typename real_t>
 __global__ void MatrixMulCUDA(real_t *C, real_t *A,
     real_t *B, int wA,
     int wB) {
-  // Block index
-  int bx = blockIdx.x;
-  int by = blockIdx.y;
+//   // Block index
+//   int bx = blockIdx.x;
+//   int by = blockIdx.y;
 
-  // Thread index
-  int tx = threadIdx.x;
-  int ty = threadIdx.y;
+//   // Thread index
+//   // int tx = threadIdx.x;
+//   // int ty = threadIdx.y;
 
-  // Index of the first sub-matrix of A processed by the block
-  int aBegin = wA * BLOCK_SIZE * by;
+//   // Index of the first sub-matrix of A processed by the block
+//   int aBegin = wA * BLOCK_SIZE * by;
 
-  // Index of the last sub-matrix of A processed by the block
-  int aEnd   = aBegin + wA - 1;
+//   // Index of the last sub-matrix of A processed by the block
+//   int aEnd   = aBegin + wA - 1;
 
-  // Step size used to iterate through the sub-matrices of A
-  int aStep  = BLOCK_SIZE;
+//   // Step size used to iterate through the sub-matrices of A
+//   int aStep  = BLOCK_SIZE;
 
-  // Index of the first sub-matrix of B processed by the block
-  int bBegin = BLOCK_SIZE * bx;
+//   // Index of the first sub-matrix of B processed by the block
+//   int bBegin = BLOCK_SIZE * bx;
 
-  // Step size used to iterate through the sub-matrices of B
-  int bStep  = BLOCK_SIZE * wB;
+//   // Step size used to iterate through the sub-matrices of B
+//   int bStep  = BLOCK_SIZE * wB;
 
-  // Csub is used to store the element of the block sub-matrix
-  // that is computed by the thread
-  real_t Csub = 0;
+  
 
-  // Loop over all the sub-matrices of A and B
-  // required to compute the block sub-matrix
-  for (int a = aBegin, b = bBegin;
-       a <= aEnd;
-       a += aStep, b += bStep) {
-    // Declaration of the shared memory array As used to
-    // store the sub-matrix of A
-    __shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
+//   // Csub is used to store the element of the block sub-matrix
+//   // that is computed by the thread
+//   real_t Csub = 0;
 
-    // Declaration of the shared memory array Bs used to
-    // store the sub-matrix of B
-    __shared__ real_t Bs[BLOCK_SIZE][BLOCK_SIZE];
+//   // Loop over all the sub-matrices of A and B
+//   // required to compute the block sub-matrix
+//   for (int a = aBegin, b = bBegin;
+//        a <= aEnd;
+//        a += aStep, b += bStep) {
+//     // Declaration of the shared memory array As used to
+//     // store the sub-matrix of A
+//     __shared__ real_t As[BLOCK_SIZE][BLOCK_SIZE];
 
-    // Load the matrices from device memory
-    // to shared memory; each thread loads
-    // one element of each matrix
-    As[ty][tx] = A[a + wA * ty + tx];
-    Bs[ty][tx] = B[b + wB * ty + tx];
+//     // Declaration of the shared memory array Bs used to
+//     // store the sub-matrix of B
+//     __shared__ real_t Bs[BLOCK_SIZE][BLOCK_SIZE];
 
-    // Synchronize to make sure the matrices are loaded
-    __syncthreads();
+//     // Load the matrices from device memory
+//     // to shared memory; each thread loads
+//     // one element of each matrix
+//     As[ty][tx] = A[a + wA * ty + tx];
+//     Bs[ty][tx] = B[b + wB * ty + tx];
 
-    // Multiply the two matrices together;
-    // each thread computes one element
-    // of the block sub-matrix
-#pragma unroll
+//     // Synchronize to make sure the matrices are loaded
+//     __syncthreads();
 
-    for (int k = 0; k < BLOCK_SIZE; ++k) {
-      Csub += As[ty][k] * Bs[k][tx];
-    }
+//     // Multiply the two matrices together;
+//     // each thread computes one element
+//     // of the block sub-matrix
+// // #pragma unroll
 
-    // Synchronize to make sure that the preceding
-    // computation is done before loading two new
-    // sub-matrices of A and B in the next iteration
-    __syncthreads();
+// //     for (int k = 0; k < BLOCK_SIZE; ++k) {
+
+// //       Csub += As[ty][k] * Bs[k][tx];
+    
+// //     }
+
+
+//     // Synchronize to make sure that the preceding
+//     // computation is done before loading two new
+//     // sub-matrices of A and B in the next iteration
+//     __syncthreads();
+//   }
+
+//   // Write the block sub-matrix to device memory;
+//   // each thread writes one element
+//   int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+//   C[c + wB * ty + tx] = Csub;
+
+
+  register int tx = (blockIdx.x * BLOCK_SIZE) / 2.0 + threadIdx.x;
+  register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+  register int k;
+
+  register real_t acc = __float2half_rn (0.0);
+  for (k = 0; k < N_GLOBAL; k++) {
+
+    acc = __hfma (( A[ty * N_GLOBAL + k] ), ( B[k * (N_GLOBAL / 2) + tx] ), acc);
+    // N_GLOBAL/2 is needed because we changed how we iterate d_B
   }
 
-  // Write the block sub-matrix to device memory;
-  // each thread writes one element
-  int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-  C[c + wB * ty + tx] = Csub;
+  ((real_t*)C)[ty * (N_GLOBAL / 2) + tx] = acc;
+
 }
+
+
 template<typename real_t>
 void ConstantInit(real_t *data, int size, real_t val) {
   for (int i = 0; i < size; ++i) {
@@ -155,7 +177,8 @@ int MatrixMultiply(int argc, char **argv,
   real_t *h_B = reinterpret_cast<real_t *>(malloc(mem_size_B));
 
   // Initialize host memory
-  const real_t val = 1.0;
+  const real_t val = (real_t)1.0f;
+
   ConstantInit(h_A, size_A, val);
   ConstantInit(h_B, size_B, val);
 
@@ -184,12 +207,17 @@ int MatrixMultiply(int argc, char **argv,
 
   checkCudaErrors(cudaMemcpy(d_B, h_B, mem_size_B, cudaMemcpyHostToDevice));
 
-  dim3 dim_grid, dim_block;
+  // dim3 dim_grid, dim_block;
   
-  uint32_t grid_rows = (M_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
-  uint32_t grid_cols = (N_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
-  dim_grid = dim3(grid_cols, grid_rows);
-  dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+  // uint32_t grid_rows = (M_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  // uint32_t grid_cols = (N_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  // dim_grid = dim3(grid_cols, grid_rows);
+  // dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+
+  int gridsize = M_GLOBAL / BLOCK_SIZE < 1 ? 1 : M_GLOBAL / BLOCK_SIZE;
+  int blocksize = M_GLOBAL / BLOCK_SIZE < 1 ? M_GLOBAL : BLOCK_SIZE;
+  dim3 dim_block(blocksize / 2.0, blocksize);
+  dim3 dim_grid(gridsize, gridsize);
 
  
   // Create and start timer
