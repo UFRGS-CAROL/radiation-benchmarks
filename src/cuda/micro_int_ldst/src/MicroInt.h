@@ -153,12 +153,12 @@ struct MicroInt {
 			auto output = output_ptr[i];
 			auto golden = this->input_gold_host[i];
 			if (output != golden) {
-				std::string error_detail;
-				error_detail = "array_position: " + std::to_string(i_ptr);
-				error_detail += " gold_position: " + std::to_string(i);
-				error_detail += " e: " + std::to_string(golden);
-				error_detail += " r: " + std::to_string(output);
-				std::cout << error_detail << std::endl;
+//				std::string error_detail;
+//				error_detail = "array_position: " + std::to_string(i_ptr);
+//				error_detail += " gold_position: " + std::to_string(i);
+//				error_detail += " e: " + std::to_string(golden);
+//				error_detail += " r: " + std::to_string(output);
+//				std::cout << error_detail << std::endl;
 				this_thread_error_count++;
 
 //				lock.lock();
