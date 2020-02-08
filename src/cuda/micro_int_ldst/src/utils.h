@@ -35,7 +35,7 @@
 
 //for load and store the OPS value is not used, then we use
 //max thread ld/st operation
-#define MAX_THREAD_LD_ST_OPERATIONS (DEFAULT_INPUT_ARRAY / MEM_OPERATION_NUM)
+#define MAX_THREAD_LD_ST_OPERATIONS 8 //(DEFAULT_INPUT_ARRAY / MEM_OPERATION_NUM)
 
 #ifndef OPS
 #define OPS 10000000

@@ -86,12 +86,21 @@ struct MicroInt {
 		// Specify the engine and distribution.
 		std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
 		std::uniform_int_distribution<int_t> dist { 1, RANGE_INT_VAL };
-		this->input_gold_host.resize(MAX_THREAD_BLOCK);
+		std::vector<int_t> random_vector(MAX_THREAD_BLOCK, 0);
 
-		for (auto& i : this->input_gold_host)
+		for (auto& i : random_vector)
 			i = dist(mersenne_engine);
 
-		this->input_device = this->input_gold_host;
+		if (this->parameters.micro == LDST) {
+			this->input_gold_host.resize(this->array_size);
+			for (auto begin = this->input_gold_host.begin();
+					begin != this->input_gold_host.end();
+					begin += random_vector.size()) {
+				std::copy(random_vector.begin(), random_vector.end(), begin);
+			}
+		} else {
+			this->input_device = this->input_gold_host = random_vector;
+		}
 	}
 
 	virtual ~MicroInt() = default;

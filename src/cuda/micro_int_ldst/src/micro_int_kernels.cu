@@ -107,18 +107,20 @@ __device__ void ldst_other_direction_kernel(int_t *dst, int_t *src) {
 
 template<uint32_t MAX_MOVEMENTS, typename int_t>
 __global__ void ldst_int_const_kernel(int_t* src, int_t* dst, uint32_t op) {
-	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * MAX_THREAD_LD_ST_OPERATIONS;
+	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * op;
+	int_t* dst_ptr = dst + thread_id;
+	int_t* src_ptr = src + thread_id;
 
 #pragma unroll MAX_MOVEMENTS
 	for(uint32_t i = 0; i < MAX_MOVEMENTS; i++){
 		//copy to dst
-		ldst_same_direction_kernel<MEM_OPERATION_NUM>(dst + thread_id, src + MEM_OPERATION_NUM * i);
+		ldst_same_direction_kernel<MEM_OPERATION_NUM>(dst_ptr, src_ptr);
 
 		//copy inverse
-		ldst_other_direction_kernel<MEM_OPERATION_NUM>(dst + thread_id, dst + thread_id - compiler_trap);
+		ldst_other_direction_kernel<MEM_OPERATION_NUM>(dst_ptr, dst_ptr - compiler_trap);
 
 		//restore to dst
-		ldst_other_direction_kernel<MEM_OPERATION_NUM>(dst + thread_id, dst + thread_id);
+		ldst_other_direction_kernel<MEM_OPERATION_NUM>(dst_ptr, dst_ptr);
 	}
 }
 
