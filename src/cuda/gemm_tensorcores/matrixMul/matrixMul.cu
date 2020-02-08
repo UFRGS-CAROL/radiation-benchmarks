@@ -122,7 +122,7 @@ __global__ void MatrixMulCUDA(real_t *C, real_t *A,
     for (int k = 0; k < BLOCK_SIZE; ++k) {
 
       // Csub += As[ty][k] * Bs[k][tx];
-     __hfma (As[ty][k], Bs[k][tx], Csub);
+    Csub =__hfma (As[ty][k], Bs[k][tx], Csub);
     }
 
     // Synchronize to make sure that the preceding
