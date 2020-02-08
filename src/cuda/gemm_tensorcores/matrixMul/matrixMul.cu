@@ -142,7 +142,7 @@ __global__ void MatrixMulCUDA(real_t *C, real_t *A,
   register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
   register int k;
 
-  register half2 acc = __float2half_rn (0.0);
+  register real_t acc = __float2half_rn (0.0);
   for (k = 0; k < N_GLOBAL; k++) {
 
     acc = __hfma (( A[ty * N_GLOBAL + k] ), ( B[k * (N_GLOBAL / 2) + tx] ), acc);
