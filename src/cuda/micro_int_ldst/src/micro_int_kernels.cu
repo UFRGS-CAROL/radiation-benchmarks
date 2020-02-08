@@ -65,28 +65,6 @@ __global__ void mad_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	dst[thread_id] = output;
 }
 
-template<typename int_t>
-__global__ void ldst_int_kernel(int_t* src, int_t* dst, uint32_t op) {
-	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * op;
-//	if (thread_id > 1000 * op)
-#pragma unroll
-	for (uint32_t i = thread_id; i < thread_id + op; i++) {
-		dst[i] = src[threadIdx.x];
-	}
-
-#pragma unroll
-	for (uint32_t i = thread_id + op, j = thread_id; i > (thread_id - op);
-			i--, j++) {
-		dst[i] = dst[j];
-	}
-
-#pragma unroll
-	for (uint32_t i = thread_id, j = thread_id + op; i < (thread_id + op);
-			i++, j--) {
-		dst[i] = dst[j];
-	}
-}
-
 __device__ uint32_t compiler_trap = 0;
 
 template<uint32_t UNROLL_MAX, typename int_t> __forceinline__
@@ -106,7 +84,7 @@ __device__ void ldst_other_direction_kernel(int_t *dst, int_t *src) {
 }
 
 template<uint32_t MAX_MOVEMENTS, typename int_t>
-__global__ void ldst_int_const_kernel(int_t* src, int_t* dst, uint32_t op) {
+__global__ void ldst_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	const uint32_t thread_id = (blockIdx.x * blockDim.x + threadIdx.x) * op;
 	int_t* dst_ptr = dst + thread_id;
 	int_t* src_ptr = src + thread_id;
@@ -139,7 +117,7 @@ void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
 		kernel = mad_int_kernel;
 		break;
 	case LDST:
-		kernel = ldst_int_const_kernel<MAX_THREAD_LD_ST_OPERATIONS>;
+		kernel = ldst_int_kernel<MAX_THREAD_LD_ST_OPERATIONS>;
 		break;
 	}
 	kernel<<<grid_size, block_size>>>(input, output, operation_num);

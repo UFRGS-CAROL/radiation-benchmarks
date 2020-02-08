@@ -31,8 +31,8 @@ struct MicroInt {
 
 	//mutex for host cmp
 	std::mutex thread_mutex;
-
-	std::vector<int_t> input_gold_host;
+	std::vector<int_t> gold_host;
+	std::vector<int_t> input_host;
 	std::vector<int_t> output_host;
 
 	rad::DeviceVector<int_t> input_device;
@@ -86,23 +86,23 @@ struct MicroInt {
 		// Specify the engine and distribution.
 		std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
 		std::uniform_int_distribution<int_t> dist { 1, RANGE_INT_VAL };
-		std::vector<int_t> random_vector(MAX_THREAD_BLOCK, 0);
+		this->gold_host.resize(MAX_THREAD_BLOCK, 0);
 
-		for (auto& i : random_vector)
+		for (auto& i : this->gold_host)
 			i = dist(mersenne_engine);
 
 		if (this->parameters.micro == LDST) {
-			this->input_gold_host.resize(this->array_size);
-			for (auto begin = this->input_gold_host.begin();
-					begin != this->input_gold_host.end();
-					begin += random_vector.size()) {
-				std::copy(random_vector.begin(), random_vector.end(), begin);
+			this->input_host.resize(this->array_size);
+			for (auto begin = this->input_host.begin(), end =
+					this->input_host.end(); begin < end;
+					begin += this->gold_host.size()) {
+				std::copy(this->gold_host.begin(), this->gold_host.end(), begin);
 			}
 		} else {
-			this->input_gold_host = random_vector;
+			this->input_host = this->gold_host;
 		}
 
-		this->input_device = this->input_gold_host;
+		this->input_device = this->input_host;
 	}
 
 	virtual ~MicroInt() = default;
@@ -131,7 +131,7 @@ struct MicroInt {
 			return this->compare_on_gpu();
 		}
 
-		auto gold_size = this->input_gold_host.size();
+		auto gold_size = this->input_host.size();
 		auto slices = this->array_size / gold_size;
 		std::vector<size_t> error_vector(slices, 0);
 		size_t i;
@@ -145,13 +145,13 @@ struct MicroInt {
 	}
 
 	size_t internal_host_memory_compare(size_t thread_id) {
-		size_t gold_size = this->input_gold_host.size();
+		size_t gold_size = this->gold_host.size();
 		auto i_ptr = thread_id * gold_size;
 		auto output_ptr = this->output_host.data() + i_ptr;
 		size_t this_thread_error_count = 0;
 		for (size_t i = 0; i < gold_size; i++) {
 			auto output = output_ptr[i];
-			auto golden = this->input_gold_host[i];
+			auto golden = this->gold_host[i];
 			if (output != golden) {
 //				std::string error_detail;
 //				error_detail = "array_position: " + std::to_string(i_ptr);
