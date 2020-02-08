@@ -142,10 +142,10 @@ __global__ void MatrixMulCUDA(real_t *C, real_t *A,
   register int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
   register int k;
 
-  register real_t acc = __float2half2_rn(0.0);
+  register half2 acc = (0.0);
   for (k = 0; k < N_GLOBAL; k++) {
 
-    acc = __hfma2( __half2half2( A[ty * N_GLOBAL + k] ), __half2half2( B[k * (N_GLOBAL / 2) + tx] ), acc);
+    acc = __hfma (( A[ty * N_GLOBAL + k] ), ( B[k * (N_GLOBAL / 2) + tx] ), acc);
     // N_GLOBAL/2 is needed because we changed how we iterate d_B
   }
 
@@ -207,7 +207,7 @@ int MatrixMultiply(int argc, char **argv,
 
   checkCudaErrors(cudaMemcpy(d_B, h_B, mem_size_B, cudaMemcpyHostToDevice));
 
-  dim3 dim_grid, dim_block;
+  // dim3 dim_grid, dim_block;
   
   // uint32_t grid_rows = (M_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
   // uint32_t grid_cols = (N_GLOBAL + BLOCK_SIZE - 1) / BLOCK_SIZE;
