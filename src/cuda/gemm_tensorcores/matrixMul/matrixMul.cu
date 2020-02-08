@@ -68,8 +68,11 @@ __global__ void MatrixMulCUDA(real_t *C, real_t *A,
   int by = blockIdx.y;
 
   // Thread index
-  int tx = threadIdx.x;
-  int ty = threadIdx.y;
+  // int tx = threadIdx.x;
+  // int ty = threadIdx.y;
+
+  int tx = (blockIdx.x * BLOCK_SIZE) / 2.0 + threadIdx.x;
+  int ty = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 
   // Index of the first sub-matrix of A processed by the block
   int aBegin = wA * BLOCK_SIZE * by;
@@ -276,7 +279,7 @@ int main(int argc, char **argv) {
   // override the device ID based on input provided at the command line
   int dev = findCudaDevice(argc, (const char **)argv);
 
-  int block_size = 16;
+  int block_size = 32;
 
   dim3 dimsA(M_GLOBAL,N_GLOBAL);
   dim3 dimsB(M_GLOBAL,N_GLOBAL);
