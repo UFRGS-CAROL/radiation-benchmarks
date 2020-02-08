@@ -99,8 +99,10 @@ struct MicroInt {
 				std::copy(random_vector.begin(), random_vector.end(), begin);
 			}
 		} else {
-			this->input_device = this->input_gold_host = random_vector;
+			this->input_gold_host = random_vector;
 		}
+
+		this->input_device = this->input_gold_host;
 	}
 
 	virtual ~MicroInt() = default;
