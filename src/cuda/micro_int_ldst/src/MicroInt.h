@@ -137,32 +137,28 @@ struct MicroInt {
 		std::vector<size_t> error_vector(slices, 0);
 		size_t i;
 
-#pragma omp parallel for shared(error_vector, i)
+//#pragma omp parallel for shared(error_vector, i)
 		for (i = 0; i < slices; i++) {
-			auto output_it = this->output_host.begin() + (i * gold_size);
-			error_vector[i] = this->internal_host_memory_compare(output_it);
+			auto i_ptr = i * gold_size;
+			error_vector[i] = this->internal_host_memory_compare(
+					this->output_host.data() + i_ptr, i_ptr);
 		}
 
 		return std::accumulate(error_vector.begin(), error_vector.end(), 0);
 	}
 
-	template<typename Iterator>
-	size_t internal_host_memory_compare(Iterator output_it) {
-//		size_t gold_size = this->gold_host.size();
-//		auto i_ptr = thread_id * gold_size;
-//		auto output_ptr = this->output_host.data() + i_ptr;
+	size_t internal_host_memory_compare(int_t* output_ptr, size_t i_ptr) {
 		size_t this_thread_error_count = 0;
-		for (auto gold_it = this->gold_host.begin(), end =
-				this->gold_host.end(); gold_it < end; gold_it++, output_it++) {
-//			auto output = output_it[i];
-//			auto golden = this->gold_host[i];
-			if ((*output_it) != (*gold_it)) {
-//				std::string error_detail;
-//				error_detail = "array_position: " + std::to_string(i_ptr);
-//				error_detail += " gold_position: " + std::to_string(i);
-//				error_detail += " e: " + std::to_string(golden);
-//				error_detail += " r: " + std::to_string(output);
-//				std::cout << error_detail << std::endl;
+		for (size_t i = 0; i < this->gold_host.size(); i++) {
+			auto output = output_ptr[i];
+			auto golden = this->gold_host[i];
+			if (output != golden) {
+				std::string error_detail;
+				error_detail = "array_position: " + std::to_string(i_ptr);
+				error_detail += " gold_position: " + std::to_string(i);
+				error_detail += " e: " + std::to_string(golden);
+				error_detail += " r: " + std::to_string(output);
+				std::cout << error_detail << std::endl;
 				this_thread_error_count++;
 
 //				lock.lock();
