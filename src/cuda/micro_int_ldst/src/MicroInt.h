@@ -96,7 +96,8 @@ struct MicroInt {
 			for (auto begin = this->input_host.begin(), end =
 					this->input_host.end(); begin < end;
 					begin += this->gold_host.size()) {
-				std::copy(this->gold_host.begin(), this->gold_host.end(), begin);
+				std::copy(this->gold_host.begin(), this->gold_host.end(),
+						begin);
 			}
 		} else {
 			this->input_host = this->gold_host;
@@ -137,22 +138,25 @@ struct MicroInt {
 		size_t i;
 
 #pragma omp parallel for shared(error_vector, i)
-		for (i = 0; i < 1; i++) {
-			error_vector[i] = this->internal_host_memory_compare(i);
+		for (i = 0; i < slices; i++) {
+			auto output_it = this->output_host.begin() + (i * gold_size);
+			error_vector[i] = this->internal_host_memory_compare(output_it);
 		}
 
 		return std::accumulate(error_vector.begin(), error_vector.end(), 0);
 	}
 
-	size_t internal_host_memory_compare(size_t thread_id) {
-		size_t gold_size = this->gold_host.size();
-		auto i_ptr = thread_id * gold_size;
-		auto output_ptr = this->output_host.data() + i_ptr;
+	template<typename Iterator>
+	size_t internal_host_memory_compare(Iterator output_it) {
+//		size_t gold_size = this->gold_host.size();
+//		auto i_ptr = thread_id * gold_size;
+//		auto output_ptr = this->output_host.data() + i_ptr;
 		size_t this_thread_error_count = 0;
-		for (size_t i = 0; i < gold_size; i++) {
-			auto output = output_ptr[i];
-			auto golden = this->gold_host[i];
-			if (output != golden) {
+		for (auto gold_it = this->gold_host.begin(), end =
+				this->gold_host.end(); gold_it < end; gold_it++, output_it++) {
+//			auto output = output_it[i];
+//			auto golden = this->gold_host[i];
+			if ((*output_it) != (*gold_it)) {
 //				std::string error_detail;
 //				error_detail = "array_position: " + std::to_string(i_ptr);
 //				error_detail += " gold_position: " + std::to_string(i);
