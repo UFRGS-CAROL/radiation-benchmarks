@@ -133,6 +133,8 @@ __global__ void MatrixMulCUDA(real_t *C, real_t *A,
   // each thread writes one element
   int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
   C[c + wB * ty + tx] = Csub;
+
+  printf(" Csub == %f \n", Csub );
 }
 template<typename real_t>
 void ConstantInit(real_t *data, int size, real_t val) {
