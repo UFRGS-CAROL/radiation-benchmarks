@@ -19,10 +19,11 @@ __global__ void add_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	int_t input = src[threadIdx.x];
 #pragma unroll
 	for (uint32_t i = 0; i < op; i++) {
-		output += input + output;
-		output -= input;
-		output += input;
-		output -= (input - output);
+		output = output + input;
+		output = output - input;
+		output = output + input;
+		output = output - input - output;
+		output = output + input;
 	}
 
 	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
