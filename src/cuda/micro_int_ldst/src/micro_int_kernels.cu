@@ -37,21 +37,21 @@ __global__ void add_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 }
 
 template<typename int_t>
-__global__ void mul_int_kernel(int_t* defined_src, int_t* dst, uint32_t op) {
+__global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 
-	int_t output_register = defined_src[threadIdx.x];
-	int_t input_register = defined_src[threadIdx.x];
+	int_t output = src[threadIdx.x];
+	int_t input = src[threadIdx.x];
 #pragma unroll
 	for (uint32_t i = 0; i < op; i++) {
-		output_register *= (input_register * 2);
-		output_register /= input_register;
-		output_register *= input_register;
-		output_register /= (input_register * 2);
+		output *= (input * 2);
+		output /= input;
+		output *= input;
+		output /= (input * 2);
 	}
 
 	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
 
-	dst[thread_id] = output_register;
+	dst[thread_id] = output;
 }
 
 template<typename int_t>

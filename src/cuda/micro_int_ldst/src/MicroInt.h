@@ -140,8 +140,8 @@ struct MicroInt {
 		std::vector<size_t> error_vector(slices, 0);
 		size_t i;
 
-//#pragma omp parallel for shared(error_vector, i)
-		for (i = 0; i < 1; i++) {
+#pragma omp parallel for shared(error_vector, i)
+		for (i = 0; i < slices; i++) {
 			auto i_ptr = i * gold_size;
 			error_vector[i] = this->internal_host_memory_compare(
 					this->output_host.data() + i_ptr, i_ptr);
