@@ -22,7 +22,7 @@ __global__ void add_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 		output += input + output;
 		output -= input;
 		output += input;
-		output -= input - output;
+		output -= (input - output);
 	}
 
 	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
