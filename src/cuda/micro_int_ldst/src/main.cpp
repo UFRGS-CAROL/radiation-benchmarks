@@ -79,11 +79,8 @@ void setup_execute(Log& log, Parameters& test_parameter,
 			std::cout << " Output errors: " << errors;
 			std::cout << " Wasted time (copy + compare + reset): "
 					<< wasted_time;
-
-			std::cout << std::fixed;
-			std::cout << std::setprecision(2);
 			std::cout << " Wasted time percentage: "
-					<< (wasted_time / kernel_time) * 100.0;
+					<< (wasted_time / kernel_time) * 100.0 << "%";
 			std::cout << " Comparison time: " << cmp_time;
 			std::cout << " Copy time: " << copy_time;
 			std::cout << " Reset time: " << reset_time << std::endl;
