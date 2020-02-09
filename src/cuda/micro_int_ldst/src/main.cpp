@@ -30,13 +30,12 @@ void setup_execute(Log& log, Parameters& test_parameter,
 	// SETUP THE NVWL THREAD
 #ifdef BUILDPROFILER
 	rad::NVMLWrapper counter_thread(DEVICE_INDEX);
+	//TODO
+	//Do the same of the other benchmarks
 #endif
 	for (size_t iteration = 0; iteration < test_parameter.iterations;
 			iteration++) {
-#ifdef BUILDPROFILER
-		//Start collecting data
-		counter_thread.start_collecting_data();
-#endif
+
 
 		auto start_it = rad::mysecond();
 		//Start iteration
@@ -49,18 +48,6 @@ void setup_execute(Log& log, Parameters& test_parameter,
 		//end iteration
 		log.end_iteration();
 		auto end_it = rad::mysecond();
-
-		//End collecting the data
-		//This thing must be done before device reset
-#ifdef BUILDPROFILER
-		counter_thread.end_collecting_data();
-
-		auto iteration_data = counter_thread.get_data_from_iteration();
-		for (auto info_line : iteration_data) {
-			log.log_info(info_line);
-			//std::cout << info_line << std::endl;
-		}
-#endif
 
 		//Copying from GPU
 		auto start_cpy = rad::mysecond();

@@ -160,14 +160,19 @@ struct MicroInt {
 				error_detail += " r: " + std::to_string(output);
 				std::cout << error_detail << std::endl;
 				this_thread_error_count++;
-
-//				lock.lock();
-//				this->log.log_error_detail(error_detail);
-//				lock.unlock();
+#pragma omp critical
+				{
+					this->log.log_error_detail(error_detail);
+				}
 			}
 		}
 		return this_thread_error_count;
 	}
+
+	void reset_output_device(){
+		this->output_device.clear();
+	}
+
 };
 
 template<>
