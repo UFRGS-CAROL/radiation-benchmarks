@@ -13,18 +13,11 @@
 
 Parameters::Parameters(int argc, char* argv[]) {
 	this->iterations = find_int_arg(argc, argv, "--iterations", 10);
-//	this->gold_file = find_char_arg(argc, argv, "--gold", "./gold.data");
-//	this->input_file = find_char_arg(argc, argv, "--input", "./input.data");
 	this->verbose = find_arg(argc, argv, "--verbose");
 	this->instruction_str = find_char_arg(argc, argv, "--inst", "add");
-//	this->generate = find_arg(argc, argv, "--generate");
-//	this->mem_compare_gpu = find_arg(argc, argv, "--cmp_gpu");
-
+	this->operation_num = find_int_arg(argc, argv, "--opnum", OPS);
 	this->micro = mic[this->instruction_str];
 
-//	if (this->generate) {
-//		this->iterations = 1;
-//	}
 
 	auto dev_prop = this->get_device();
 	this->device = dev_prop.name;

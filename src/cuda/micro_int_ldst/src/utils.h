@@ -37,9 +37,7 @@
 //max thread ld/st operation
 #define MAX_THREAD_LD_ST_OPERATIONS 16 //(DEFAULT_INPUT_ARRAY / MEM_OPERATION_NUM)
 
-#ifndef OPS
 #define OPS 10000000
-#endif
 
 typedef enum {
 	ADD_INT, MUL_INT, MAD_INT, LDST

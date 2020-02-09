@@ -8,7 +8,6 @@
 #include "Parameters.h"
 #include "MicroInt.h"
 
-
 __device__ int32_t compiler_trap_zero = 0;
 __device__ int32_t compiler_trap_one = 1;
 
@@ -75,7 +74,7 @@ __global__ void mad_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 template<uint32_t UNROLL_MAX, typename int_t> __forceinline__
 __device__ void ldst_same_direction_kernel(int_t *dst, int_t *src) {
 #pragma unroll UNROLL_MAX
-	for(uint32_t i = 0; i < UNROLL_MAX; i++){
+	for (uint32_t i = 0; i < UNROLL_MAX; i++) {
 		dst[i] = src[i];
 	}
 }
@@ -87,7 +86,7 @@ __global__ void ldst_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	int_t* src_ptr = src + thread_id;
 
 #pragma unroll MAX_MOVEMENTS
-	for(uint32_t i = 0; i < MAX_MOVEMENTS; i++){
+	for (uint32_t i = 0; i < MAX_MOVEMENTS; i++) {
 		//copy to dst
 		ldst_same_direction_kernel<MEM_OPERATION_NUM>(dst_ptr, src_ptr);
 	}
@@ -121,32 +120,37 @@ void MicroInt<int32_t>::execute_micro() {
 			this->operation_num);
 }
 
-template<typename int_t>
-__global__ void check_kernel(int_t* lhs, int_t* rhs) {
-	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+/**
+ *
+ * May be useful in the future
+ template<typename int_t>
+ __global__ void check_kernel(int_t* lhs, int_t* rhs) {
+ const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
 
-	if (lhs[thread_id] != rhs[thread_id]) {
-		atomicAdd(&errors, 1);
-	}
-}
+ if (lhs[thread_id] != rhs[thread_id]) {
+ atomicAdd(&errors, 1);
+ }
+ }
 
-template<typename int_t>
-size_t call_checker(int_t* lhs, int_t* rhs, size_t array_size,
-		MICROINSTRUCTION& micro) {
+ template<typename int_t>
+ size_t call_checker(int_t* lhs, int_t* rhs, size_t array_size,
+ MICROINSTRUCTION& micro) {
 
-	size_t grid = array_size / (MAX_THREAD_BLOCK);
-	check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
+ size_t grid = array_size / (MAX_THREAD_BLOCK);
+ check_kernel<<<grid, MAX_THREAD_BLOCK>>>(lhs, rhs);
 
-	unsigned long long herrors = 0;
-	rad::checkFrameworkErrors(cudaPeekAtLastError());
-	rad::checkFrameworkErrors(cudaDeviceSynchronize());
-	rad::checkFrameworkErrors(
-			cudaMemcpyFromSymbol(&herrors, errors, sizeof(unsigned long long)));
-	return herrors;
-}
+ unsigned long long herrors = 0;
+ rad::checkFrameworkErrors(cudaPeekAtLastError());
+ rad::checkFrameworkErrors(cudaDeviceSynchronize());
+ rad::checkFrameworkErrors(
+ cudaMemcpyFromSymbol(&herrors, errors, sizeof(unsigned long long)));
+ return herrors;
+ }
 
-template<>
-size_t MicroInt<int32_t>::compare_on_gpu() {
-	return call_checker(this->output_device.data(), this->input_device.data(),
-			this->array_size, this->parameters.micro);
-}
+ template<>
+ size_t MicroInt<int32_t>::compare_on_gpu() {
+ return call_checker(this->output_device.data(), this->input_device.data(),
+ this->array_size, this->parameters.micro);
+ }
+
+ */

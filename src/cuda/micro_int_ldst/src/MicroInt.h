@@ -12,9 +12,6 @@
 #include <random>
 #include <iostream>
 
-#include <thread>         // std::thread
-#include <mutex>          // std::mutex, std::unique_lock, std::defer_lock
-
 #include "Parameters.h"
 #include "Log.h"
 #include "device_vector.h"
@@ -29,17 +26,17 @@ struct MicroInt {
 	Parameters& parameters;
 	Log& log;
 
-	//mutex for host cmp
-	std::mutex thread_mutex;
+	size_t grid_size;
+	size_t block_size;
+	size_t operation_num;
+	size_t array_size;
+
 	std::vector<int_t> gold_host;
 	std::vector<int_t> input_host;
 	std::vector<int_t> output_host;
 
 	rad::DeviceVector<int_t> input_device;
 	rad::DeviceVector<int_t> output_device;
-
-	uint32_t grid_size, block_size, operation_num;
-	size_t array_size;
 
 	MicroInt(Parameters& parameters, Log& log) :
 			parameters(parameters), log(log) {
@@ -88,11 +85,8 @@ struct MicroInt {
 		std::uniform_int_distribution<int_t> dist { 1, RANGE_INT_VAL };
 		this->gold_host.resize(MAX_THREAD_BLOCK, 0);
 
-//		for (auto& i : this->gold_host)
-//			i = dist(mersenne_engine);
-		for (int i = 0; i < MAX_THREAD_BLOCK; i++) {
-			this->gold_host[i] = i + 1;
-		}
+		for (auto& i : this->gold_host)
+			i = dist(mersenne_engine);
 
 		if (this->parameters.micro == LDST) {
 			this->input_host.resize(this->array_size);
@@ -112,9 +106,7 @@ struct MicroInt {
 	virtual ~MicroInt() = default;
 
 	void copy_back_output() {
-//		if (this->parameters.mem_compare_gpu == false) {
 		this->output_device.to_vector(this->output_host);
-//		}
 	}
 
 	void execute_micro() {
@@ -131,16 +123,12 @@ struct MicroInt {
 	}
 
 	size_t compare_output() {
-//		if (parameters.mem_compare_gpu) {
-//			return this->compare_on_gpu();
-//		}
-
 		auto gold_size = this->gold_host.size();
 		auto slices = this->array_size / gold_size;
 		std::vector<size_t> error_vector(slices, 0);
 		size_t i;
 
-//#pragma omp parallel for shared(error_vector, i)
+#pragma omp parallel for shared(error_vector, i)
 		for (i = 0; i < slices; i++) {
 			auto i_ptr = i * gold_size;
 			error_vector[i] = this->internal_host_memory_compare(
@@ -180,7 +168,8 @@ struct MicroInt {
 
 template<>
 void MicroInt<int32_t>::execute_micro();
-template<>
-size_t MicroInt<int32_t>::compare_on_gpu();
+
+//template<>
+//size_t MicroInt<int32_t>::compare_on_gpu();
 
 #endif /* MICROINT_H_ */

@@ -18,18 +18,15 @@
 struct Parameters {
 
 	MICROINSTRUCTION micro;
-
-	size_t iterations;
-	bool verbose;
 	std::string instruction_str;
-
-//	bool generate;
-//	bool mem_compare_gpu;
-	uint32_t sm_count;
-	size_t global_gpu_memory_bytes;
-//	std::string gold_file;
-//	std::string input_file;
 	std::string device;
+
+	size_t sm_count;
+	size_t iterations;
+	size_t global_gpu_memory_bytes;
+	size_t operation_num;
+
+	bool verbose;
 
 	Parameters(int argc, char* argv[]);
 
