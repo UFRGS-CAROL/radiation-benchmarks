@@ -3,6 +3,8 @@ CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp
 EXEC=cudaMicroIntLDST
 LOGS=1
 BUILDPROFILER=0
+MICRO=ldst
+ITERATIONS=10
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -63,5 +65,5 @@ clean:
 	
 	
 test:
-	 ./$(EXEC) --iterations 10 --verbose
+	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose
 	
