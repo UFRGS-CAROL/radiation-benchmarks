@@ -7,7 +7,10 @@
 
 #include "Parameters.h"
 #include "MicroInt.h"
-//#include "ldst_kernel.h"
+
+
+__device__ int32_t compiler_trap = 0;
+
 /**
  * dst is the output of the kernel
  * defined_src is defined input that has max threadIdx size
@@ -23,7 +26,9 @@ __global__ void add_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 		output = output + output;
 		output = output - input;
 		output = output + input;
-		output = output - input - input - input;
+		output = output - input;
+		output += compiler_trap;
+		output = output - input - input;
 	}
 
 	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
