@@ -117,7 +117,7 @@ template<>
 void MicroInt<int32_t>::execute_micro() {
 	execute_kernel(this->parameters.micro, this->input_device.data(),
 			this->output_device.data(), this->grid_size, this->block_size,
-			this->operation_num);
+			this->parameters.operation_num);
 }
 
 /**

@@ -100,7 +100,7 @@ void setup(Parameters& parameters) {
 	test_info += " blocksize:" + std::to_string(micro_obj.block_size);
 	test_info += " type:" + parameters.instruction_str;
 	test_info += " kernel_type:non-persistent";
-	test_info += " numop:" + std::to_string(micro_obj.operation_num);
+	test_info += " numop:" + std::to_string(parameters.operation_num);
 
 	std::string test_name = std::string("cuda_micro-int-")
 			+ parameters.instruction_str;

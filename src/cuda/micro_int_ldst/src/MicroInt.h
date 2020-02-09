@@ -28,7 +28,6 @@ struct MicroInt {
 
 	size_t grid_size;
 	size_t block_size;
-	size_t operation_num;
 	size_t array_size;
 
 	std::vector<int_t> gold_host;
@@ -46,14 +45,13 @@ struct MicroInt {
 		if (this->parameters.micro == LDST) {
 			//Array size is the amount of memory that will be evaluated
 			this->array_size = GPU_DDR_TEST_SIZE / sizeof(int_t);
-			this->operation_num = MEM_OPERATION_NUM;
+			this->parameters.operation_num = MEM_OPERATION_NUM;
 			this->grid_size = this->array_size
-					/ (this->operation_num * this->block_size);
+					/ (this->parameters.operation_num * this->block_size);
 		} else {
 			//multiplies the grid size by the maximum number of warps per SM
 			this->grid_size = this->parameters.sm_count * WARP_PER_SM;
 			this->array_size = this->grid_size * this->block_size;
-			this->operation_num = OPS;
 		}
 
 		auto start_gen = rad::mysecond();

@@ -76,9 +76,6 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "MB" << std::endl;
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
-//	os << "Gold file: " << p.gold_file << std::endl;
-//	os << "Input file: " << p.input_file << std::endl;
-//	os << "Generate: " << p.generate << std::endl;
 	os << "Device " << p.device;
 
 	return os;

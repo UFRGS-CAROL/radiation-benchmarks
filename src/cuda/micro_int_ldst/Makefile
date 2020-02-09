@@ -5,6 +5,7 @@ LOGS=1
 BUILDPROFILER=0
 MICRO=ldst
 ITERATIONS=10
+OPNUM=10000
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -65,5 +66,5 @@ clean:
 	
 	
 test:
-	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose
+	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose --opnum $(OPNUM)
 	
