@@ -88,8 +88,11 @@ struct MicroInt {
 		std::uniform_int_distribution<int_t> dist { 1, RANGE_INT_VAL };
 		this->gold_host.resize(MAX_THREAD_BLOCK, 0);
 
-		for (auto& i : this->gold_host)
-			i = dist(mersenne_engine);
+//		for (auto& i : this->gold_host)
+//			i = dist(mersenne_engine);
+		for(int i = 0; i < MAX_THREAD_BLOCK; i++){
+			this->gold_host[i] = i;
+		}
 
 		if (this->parameters.micro == LDST) {
 			this->input_host.resize(this->array_size);
@@ -132,7 +135,7 @@ struct MicroInt {
 			return this->compare_on_gpu();
 		}
 
-		auto gold_size = this->input_host.size();
+		auto gold_size = this->gold_host.size();
 		auto slices = this->array_size / gold_size;
 		std::vector<size_t> error_vector(slices, 0);
 		size_t i;
