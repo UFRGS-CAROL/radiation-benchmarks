@@ -90,7 +90,7 @@ struct MicroInt {
 
 //		for (auto& i : this->gold_host)
 //			i = dist(mersenne_engine);
-		for(int i = 0; i < MAX_THREAD_BLOCK; i++){
+		for (int i = 0; i < MAX_THREAD_BLOCK; i++) {
 			this->gold_host[i] = i;
 		}
 
@@ -112,9 +112,9 @@ struct MicroInt {
 	virtual ~MicroInt() = default;
 
 	void copy_back_output() {
-		if (this->parameters.mem_compare_gpu == false) {
-			this->output_device.to_vector(this->output_host);
-		}
+//		if (this->parameters.mem_compare_gpu == false) {
+		this->output_device.to_vector(this->output_host);
+//		}
 	}
 
 	void execute_micro() {
@@ -131,9 +131,9 @@ struct MicroInt {
 	}
 
 	size_t compare_output() {
-		if (parameters.mem_compare_gpu) {
-			return this->compare_on_gpu();
-		}
+//		if (parameters.mem_compare_gpu) {
+//			return this->compare_on_gpu();
+//		}
 
 		auto gold_size = this->gold_host.size();
 		auto slices = this->array_size / gold_size;
@@ -172,7 +172,7 @@ struct MicroInt {
 		return this_thread_error_count;
 	}
 
-	void reset_output_device(){
+	void reset_output_device() {
 		this->output_device.clear();
 	}
 
