@@ -9,7 +9,8 @@
 #include "MicroInt.h"
 
 
-__device__ int32_t compiler_trap = 0;
+__device__ int32_t compiler_trap_zero = 0;
+__device__ int32_t compiler_trap_one = 1;
 
 /**
  * dst is the output of the kernel
@@ -27,7 +28,7 @@ __global__ void add_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 		output = output - input;
 		output = output + input;
 		output = output - input;
-		output += compiler_trap;
+		output += compiler_trap_zero;
 		output = output - input - input;
 	}
 

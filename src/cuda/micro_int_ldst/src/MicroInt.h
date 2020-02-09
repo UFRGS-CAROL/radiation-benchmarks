@@ -91,7 +91,7 @@ struct MicroInt {
 //		for (auto& i : this->gold_host)
 //			i = dist(mersenne_engine);
 		for (int i = 0; i < MAX_THREAD_BLOCK; i++) {
-			this->gold_host[i] = i;
+			this->gold_host[i] = i + 1;
 		}
 
 		if (this->parameters.micro == LDST) {
