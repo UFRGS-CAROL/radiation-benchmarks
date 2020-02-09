@@ -94,11 +94,11 @@ __global__ void ldst_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 		//copy to dst
 		ldst_same_direction_kernel<MEM_OPERATION_NUM>(dst_ptr, src_ptr);
 
-		//copy inverse
-		ldst_other_direction_kernel<MEM_OPERATION_NUM>(dst_ptr, dst_ptr - compiler_trap);
-
-		//restore to dst
-		ldst_other_direction_kernel<MEM_OPERATION_NUM>(dst_ptr, dst_ptr);
+//		//copy inverse
+//		ldst_other_direction_kernel<MEM_OPERATION_NUM>(dst_ptr, dst_ptr - compiler_trap);
+//
+//		//restore to dst
+//		ldst_other_direction_kernel<MEM_OPERATION_NUM>(dst_ptr, dst_ptr);
 	}
 }
 
