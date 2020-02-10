@@ -41,11 +41,11 @@ void setup_execute(Log& log, Parameters& test_parameter,
 		log.start_iteration();
 		micro_obj.execute_micro();
 
-		rad::checkFrameworkErrors(cudaPeekAtLastError());
-		rad::checkFrameworkErrors(cudaDeviceSynchronize());
+		rad::checkFrameworkErrors (cudaPeekAtLastError());rad
+		::checkFrameworkErrors (cudaDeviceSynchronize());
 
 		//end iteration
-		log.end_iteration();
+log		.end_iteration();
 		auto end_it = rad::mysecond();
 
 		//Copying from GPU
@@ -99,13 +99,18 @@ void setup(Parameters& parameters) {
 	test_info += " gridsize:" + std::to_string(micro_obj.grid_size);
 	test_info += " blocksize:" + std::to_string(micro_obj.block_size);
 	test_info += " type:" + parameters.instruction_str;
-	test_info += " kernel_type:non-persistent";
+
+	auto internal_iterations =
+			(parameters.micro == LDST) ?
+					std::to_string(MAX_THREAD_LD_ST_OPERATIONS) :
+					std::to_string(LOOPING_UNROLL);
+	test_info += " internal_iterations:" + internal_iterations;
 	test_info += " numop:" + std::to_string(parameters.operation_num);
 
 	std::string test_name = std::string("cuda_micro-int-")
 			+ parameters.instruction_str;
 
-	log_ptr = std::make_shared<Log>(test_name, test_info);
+	log_ptr = std::make_shared < Log > (test_name, test_info);
 
 	if (parameters.verbose) {
 		std::cout << *log_ptr << std::endl;

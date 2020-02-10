@@ -34,13 +34,16 @@ __global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 
 	int_t output = src[threadIdx.x];
 	int_t input = src[threadIdx.x];
+	volatile int_t multiplier = 1;
 
 #pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
-		output *= input * input;
-		output /= input;
-		output *= input;
-		output /= (input * input);
+		output = output * input * multiplier;
+		output = output / (input);
+//		output *= input * input;
+//		output /= input;
+//		output *= input;
+//		output /= (input * input);
 	}
 
 	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
