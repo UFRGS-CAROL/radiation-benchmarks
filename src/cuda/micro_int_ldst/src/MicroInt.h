@@ -139,8 +139,8 @@ struct MicroInt {
 	size_t internal_host_memory_compare(int_t* output_ptr, size_t i_ptr) {
 		size_t this_thread_error_count = 0;
 		for (size_t i = 0; i < this->gold_host.size(); i++) {
-			auto output = output_ptr[i];
-			auto golden = this->gold_host[i];
+			int_t output = output_ptr[i];
+			int_t golden = this->gold_host[i];
 			if (output != golden) {
 				std::string error_detail;
 				error_detail = "array_position: " + std::to_string(i_ptr);
