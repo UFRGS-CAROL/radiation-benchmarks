@@ -15,7 +15,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->iterations = find_int_arg(argc, argv, "--iterations", 10);
 	this->verbose = find_arg(argc, argv, "--verbose");
 	this->instruction_str = find_char_arg(argc, argv, "--inst", "add");
-	this->operation_num = find_int_arg(argc, argv, "--opnum", OPS);
+	this->operation_num = find_int_arg(argc, argv, "--opnum", LOOPING_UNROLL);
 	this->micro = mic[this->instruction_str];
 
 

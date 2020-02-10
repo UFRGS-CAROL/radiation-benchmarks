@@ -8,27 +8,20 @@
 #include "Parameters.h"
 #include "MicroInt.h"
 
-__device__ int32_t compiler_trap_zero = 0;
-__device__ int32_t compiler_trap_one = 1;
-
 /**
  * dst is the output of the kernel
  * defined_src is defined input that has max threadIdx size
  */
-template<typename int_t>
+template<uint32_t UNROLL_MAX, typename int_t>
 __global__ void add_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 
 	int_t output = src[threadIdx.x];
-	int_t input = src[threadIdx.x];
-#pragma unroll
+	volatile int_t input = src[threadIdx.x];
+
+#pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
 		output = output + input;
-		output = output + output;
 		output = output - input;
-		output = output + input;
-		output = output - input;
-		output += compiler_trap_zero;
-		output = output - input - input;
 	}
 
 	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -36,17 +29,18 @@ __global__ void add_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	dst[thread_id] = output;
 }
 
-template<typename int_t>
+template<uint32_t UNROLL_MAX, typename int_t>
 __global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 
 	int_t output = src[threadIdx.x];
 	int_t input = src[threadIdx.x];
-#pragma unroll
+
+#pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
-		output *= (input * 2);
+		output *= input * input;
 		output /= input;
 		output *= input;
-		output /= (input * 2);
+		output /= (input * input);
 	}
 
 	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -54,16 +48,16 @@ __global__ void mul_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	dst[thread_id] = output;
 }
 
-template<typename int_t>
+template<uint32_t UNROLL_MAX, typename int_t>
 __global__ void mad_int_kernel(int_t* src, int_t* dst, uint32_t op) {
 	int_t output = src[threadIdx.x];
 	int_t input = src[threadIdx.x];
-#pragma unroll
+	volatile int_t multiplier = 10;
+
+#pragma unroll UNROLL_MAX
 	for (uint32_t i = 0; i < op; i++) {
-		output += output * input * 2;
-		output -= output * input;
-		output += output * input;
-		output -= output * input * 2;
+		output += input * multiplier;
+		output -= input * multiplier;
 	}
 
 	const uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -98,13 +92,13 @@ void execute_kernel(MICROINSTRUCTION& micro, int_t* input, int_t* output,
 	void (*kernel)(int_t*, int_t*, uint32_t);
 	switch (micro) {
 	case ADD_INT:
-		kernel = add_int_kernel;
+		kernel = add_int_kernel<LOOPING_UNROLL>;
 		break;
 	case MUL_INT:
-		kernel = mul_int_kernel;
+		kernel = mul_int_kernel<LOOPING_UNROLL>;
 		break;
 	case MAD_INT:
-		kernel = mad_int_kernel;
+		kernel = mad_int_kernel<LOOPING_UNROLL>;
 		break;
 	case LDST:
 		kernel = ldst_int_kernel<MAX_THREAD_LD_ST_OPERATIONS>;

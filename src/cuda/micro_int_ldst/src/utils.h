@@ -35,9 +35,9 @@
 
 //for load and store the OPS value is not used, then we use
 //max thread ld/st operation
-#define MAX_THREAD_LD_ST_OPERATIONS 16 //(DEFAULT_INPUT_ARRAY / MEM_OPERATION_NUM)
+#define MAX_THREAD_LD_ST_OPERATIONS 16
 
-#define OPS 10000000
+#define LOOPING_UNROLL 200
 
 typedef enum {
 	ADD_INT, MUL_INT, MAD_INT, LDST

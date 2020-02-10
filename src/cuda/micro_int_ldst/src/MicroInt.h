@@ -64,7 +64,7 @@ struct MicroInt {
 		}
 
 		start_gen = rad::mysecond();
-		//Set the size of
+		//Set the output size
 		this->output_device.resize(this->array_size);
 		end_gen = rad::mysecond();
 
