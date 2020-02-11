@@ -27,6 +27,9 @@ struct Parameters {
 	size_t iterations;
 	size_t operation_num;
 
+	size_t grid_size;
+	size_t block_size;
+	size_t array_size;
 
 	bool verbose;
 	bool fast_math;

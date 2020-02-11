@@ -105,7 +105,7 @@ void setup_execute(Parameters& test_parameter, Micro<real_t>& micro_obj) {
 template<typename real_t>
 void setup(Parameters& parameters) {
 	std::cout << std::setprecision(6) << std::setfill('0');
-	std::shared_ptr<rad::Log> log_ptr;
+	std::shared_ptr < rad::Log > log_ptr;
 
 	Micro<real_t> micro_obj(parameters, log_ptr);
 
@@ -127,16 +127,17 @@ void setup(Parameters& parameters) {
 
 	//================== Init logs
 	std::string test_info = "";
-	test_info += " gridsize:" + std::to_string(micro_obj.grid_size);
-	test_info += " blocksize:" + std::to_string(micro_obj.block_size);
-	test_info += " type:" + parameters.instruction_str + "-" + parameters.precision;
+	test_info += " gridsize:" + std::to_string(parameters.grid_size);
+	test_info += " blocksize:" + std::to_string(parameters.block_size);
+	test_info += " type:" + parameters.instruction_str + "-"
+			+ parameters.precision_str;
 	test_info += " opnum:" + std::to_string(parameters.operation_num);
 	test_info += " fast_math:" + std::to_string(parameters.fast_math);
 
-	std::string test_name = std::string("cuda_micro-int-")
-			+ parameters.instruction_str;
+	std::string test_name = std::string("cuda_micro-")
+			+ parameters.instruction_str + "-" + parameters.precision_str;
 
-	log_ptr = std::make_shared<rad::Log>(test_name, test_info);
+	log_ptr = std::make_shared < rad::Log > (test_name, test_info);
 
 	if (parameters.verbose) {
 		std::cout << *log_ptr << std::endl;

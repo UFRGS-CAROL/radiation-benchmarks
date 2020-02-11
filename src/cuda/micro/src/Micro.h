@@ -56,26 +56,12 @@ struct Micro {
 	Parameters& parameters;
 	std::shared_ptr<rad::Log>& log;
 
-	size_t grid_size;
-	size_t block_size;
-	size_t array_size;
-
 	std::vector<real_t> gold_host;
-	std::vector<real_t> input_host;
 	std::vector<real_t> output_host;
-
-	rad::DeviceVector<real_t> input_device;
 	rad::DeviceVector<real_t> output_device;
 
 	Micro(Parameters& parameters, std::shared_ptr<rad::Log>& log) :
 			parameters(parameters), log(log) {
-		//both benchmarks will use MAX_THREAD_BLOCK size
-		this->block_size = MAX_THREAD_BLOCK;
-
-		//multiplies the grid size by the maximum number of warps per SM
-		this->grid_size = this->parameters.sm_count * WARP_PER_SM;
-		this->array_size = this->grid_size * this->block_size;
-
 		auto start_gen = rad::mysecond();
 		this->generate_input();
 		auto end_gen = rad::mysecond();
@@ -87,7 +73,7 @@ struct Micro {
 
 		start_gen = rad::mysecond();
 		//Set the output size
-		this->output_device.resize(this->array_size);
+		this->output_device.resize(this->parameters.array_size);
 		end_gen = rad::mysecond();
 
 		if (this->parameters.verbose) {
@@ -103,13 +89,10 @@ struct Micro {
 		// Specify the engine and distribution.
 		std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
 		std::uniform_int_distribution<real_t> dist { 1, RANGE_INT_VAL };
-		this->gold_host.resize(MAX_THREAD_BLOCK, 0);
+		this->gold_host.resize(parameters.block_size, 0);
 
 		for (auto& i : this->gold_host)
 			i = dist(mersenne_engine);
-
-		this->input_host = this->gold_host;
-		this->input_device = this->input_host;
 	}
 
 	virtual ~Micro() = default;
@@ -126,10 +109,11 @@ struct Micro {
 
 	size_t compare_output() {
 		auto gold_size = this->gold_host.size();
-		auto slices = this->array_size / gold_size;
+		auto slices = this->parameters.array_size / gold_size;
 		std::vector < size_t > error_vector(slices, 0);
 		size_t slice;
 		std::cout << "NUM OF SLICES " << slices << std::endl;
+
 #pragma omp parallel for shared(error_vector, slice)
 		for (slice = 0; slice < slices; slice++) {
 			auto i_ptr = slice * gold_size;

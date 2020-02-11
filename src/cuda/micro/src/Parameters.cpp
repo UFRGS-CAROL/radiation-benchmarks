@@ -31,13 +31,21 @@ Parameters::Parameters(int argc, char* argv[]) {
 						+ std::to_string(dev_prop.warpSize));
 	}
 
+
+	//both benchmarks will use MAX_THREAD_BLOCK size
+	this->block_size = MAX_THREAD_BLOCK;
+
+	//multiplies the grid size by the maximum number of warps per SM
+	this->grid_size = this->sm_count * WARP_PER_SM;
+	this->array_size = this->block_size * this->grid_size;
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << std::boolalpha;
-	os << "Micro type " << p.instruction_str << std::endl;
-	os << "Preicison " << p.precision_str << std::endl;
-	os << "SM count = " << p.sm_count << std::endl;
+	os << "Micro type: " << p.instruction_str << std::endl;
+	os << "Preicison: " << p.precision_str << std::endl;
+	os << "SM count; " << p.sm_count << std::endl;
+	os << "Grids x Blocks: " << p.grid_size << " x " << p.block_size << std::endl;
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
 	os << "Fast math: " << p.fast_math << std::endl;

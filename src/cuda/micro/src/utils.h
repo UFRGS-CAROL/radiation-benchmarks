@@ -21,7 +21,7 @@
 #define RANGE_INT_VAL 100
 
 #define OPS 10000
-#define LOOPING_UNROLL 200
+#define LOOPING_UNROLL 512
 
 typedef enum {
 	ADD, MUL, FMA, PYTHAGOREAN, EULER, LOG
