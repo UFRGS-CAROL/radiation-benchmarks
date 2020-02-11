@@ -1,70 +1,68 @@
-OPS?=1000000000
-PRECISION?=single
-DEBUG?=0
-TYPE=fma
+CXX=g++
+CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
+EXEC=cudaMicro
+LOGS=1
 BUILDPROFILER=0
+MICRO=ldst
+ITERATIONS=10
+OPNUM=1000000
 
-CC=g++
-NVCC=/usr/local/cuda/bin/nvcc
+VPATH=./src/
+CUDAPATH=/usr/local/cuda
+NVCC=$(CUDAPATH)/bin/nvcc
 
-LOWERCASED_TYPE=$(shell echo $(TYPE) | tr A-Z a-z)
-LOWERCASED_PRECISION=$(shell echo $(PRECISION) | tr A-Z a-z)
+NVCCFLAGS= -std=c++11 -O3 -Xptxas -v
 
-ifeq ($(LOWERCASED_PRECISION),half)
-ARCH= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
-else
-ARCH= 	-gencode arch=compute_35,code=[sm_35,compute_35]  	# Tesla K40
-ARCH+= 	-gencode arch=compute_53,code=[sm_53,compute_53]  	# Tegra X1
-ARCH+= 	-gencode arch=compute_60,code=[sm_60,compute_60]	# Tesla P100
-ARCH+= 	-gencode arch=compute_61,code=[sm_61,compute_61]	# Titan X | Titan Xp
-ARCH+= 	-gencode arch=compute_62,code=[sm_62,compute_62]	# Tegra X2
-ARCH+= 	-gencode arch=compute_70,code=[sm_70,compute_70]	# Titan V | Tesla V100
+ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
+ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
+#ARCH+= -gencode arch=compute_72,code=[sm_72,compute_72] #XavierV
+INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
+
+OBJDIR=./obj/
+OBJ=  micro_kernels.o main.o Parameters.o
+
+ifeq ($(DEBUG), 1) 
+CXXFLAGS+=-O0 -g
+NVCCFLAGS+= -g -G
 endif
 
-
-NVCC_FLAGS= $(ARCH) -Xptxas -v
-
-NVIDIA_INC=/usr/local/cuda/include/,./
-NVIDIA_LIB=/usr/local/cuda/lib64/
-LOGHELPER_INC=../../include/,../common
-LOGHELPER_LIB=../../include/,../common/lib
+ifeq ($(LOGS), 1)
+CXXFLAGS+= -DLOGS
+NVCCFLAGS+= -DLOGS
+LDFLAGS+= -L../../include  -lLogHelper
+endif
 
 ifeq ($(BUILDPROFILER), 1)
-
-NVCC_FLAGS+= -DBUILDPROFILER=1
-
-ifeq ($(FORJETSON), 1)
-NVCC_FLAGS += -DFORJETSON=1 -lJTX2Inst -li2c
-else
-NVCC_FLAGS += -L/usr/local/cuda/lib64/lib64/stubs -lnvidia-ml  -lNVMLWrapper
-
+CXXFLAGS+= -DBUILDPROFILER
+LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
 
-endif
 
-ifeq ($(DEBUG), 1)
-NVCC_FLAGS+= -g -G
-endif
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
 
-SOURCES=./cuda_micro.cu
-EXEC_RADIX=./cuda_micro-
-EXEC=$(EXEC_RADIX)$(LOWERCASED_TYPE)_$(LOWERCASED_PRECISION)
+OBJS = $(addprefix $(OBJDIR), $(OBJ))
+DEPS = $(wildcard src/*.h) Makefile
 
-all: $(EXEC)
 
-check-benchtype:
-	echo "syntax: make TYPE=<fma|add|mul> PRECISION=<double|half|single>"
-	test $(TYPE)
-	test $(PRECISION)
+all: mkdir $(EXEC)
 
-$(EXEC): check-benchtype $(RUN_SOURCES)
-	$(NVCC) -I$(NVIDIA_INC),$(LOGHELPER_INC) -L$(NVIDIA_LIB),$(LOGHELPER_LIB) -DOPS=$(OPS) -DLOGS -Dtest_precision_$(LOWERCASED_PRECISION) -Dtest_type_$(LOWERCASED_TYPE) -O3 -lLogHelper -std=c++11 -lcublas $(NVCC_FLAGS) -Xcompiler "-fopenmp -O3" $(LOGS) $(SOURCES) -o $(EXEC)
+
+$(EXEC): $(OBJS)  
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(INCLUDE)
+
+$(OBJDIR)%.o: %.cpp $(DEPS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
+	
+$(OBJDIR)%.o: %.cu $(DEPS)
+	$(NVCC) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
+
+mkdir:
+	mkdir -p $(OBJDIR)
 
 clean:
-	rm -rf $(EXEC_RADIX)*
-
-test: $(EXEC)
-	$(EXEC) -verbose -iterations=10
+	rm -f $(OBJDIR)* $(EXEC)
+	
+	
+test:
+	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose --opnum $(OPNUM)
+	
