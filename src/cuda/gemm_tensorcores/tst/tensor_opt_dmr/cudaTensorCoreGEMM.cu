@@ -413,7 +413,7 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
     C[index] = alpha * (Csub_h2.x + Csub_h2.y) + beta * C[index];
 }
 
-int main(){
+int main(int argc, char **argv){
     constexpr auto n = 1 << 12;
     constexpr auto size = n * n;
     std::cout << "Size " << n << " elements " << size << std::endl;
