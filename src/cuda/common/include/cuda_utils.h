@@ -74,11 +74,30 @@ static void __checkLastCudaError(const char *errorMessage, const char *file,
 				"%s(%i) : getLastCudaError() CUDA error : %s : (%d) %s.\n",
 				file, line, errorMessage, (int) err, cudaGetErrorString(err));
 #ifdef LOGS
-	log_error_detail((char *)errorDescription); end_log_file();
+		log_error_detail((char *)errorDescription); end_log_file();
 #endif
 		cudaDeviceReset();
-		exit(EXIT_FAILURE);
+		exit (EXIT_FAILURE);
 	}
+}
+
+static cudaDeviceProp get_device() {
+	//================== Retrieve and set the default CUDA device
+	cudaDeviceProp prop;
+	int count = 0, i;
+
+	checkFrameworkErrors(cudaGetDeviceCount(&count));
+	for (i = 0; i < count; i++) {
+		checkFrameworkErrors(cudaGetDeviceProperties(&prop, i));
+	}
+
+	int dev = 0;
+	int *ndevice = &dev;
+	checkFrameworkErrors(cudaGetDevice(ndevice));
+	checkFrameworkErrors(cudaSetDevice(0));
+	checkFrameworkErrors(cudaGetDeviceProperties(&prop, 0));
+
+	return prop;
 }
 
 #ifdef __cplusplus
@@ -103,7 +122,74 @@ static double mysecond() {
 	return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
 }
 
+static void del_arg(int argc, char **argv, int index) {
+	int i;
+	for (i = index; i < argc - 1; ++i)
+		argv[i] = argv[i + 1];
+	argv[i] = 0;
 }
+
+static int find_int_arg(int argc, char **argv, std::string arg, int def) {
+	int i;
+	for (i = 0; i < argc - 1; ++i) {
+		if (!argv[i])
+			continue;
+		if (std::string(argv[i]) == arg) {
+			def = atoi(argv[i + 1]);
+			del_arg(argc, argv, i);
+			del_arg(argc, argv, i);
+			break;
+		}
+	}
+	return def;
+}
+
+static float find_float_arg(int argc, char **argv, std::string arg, float def) {
+	for (int i = 0; i < argc - 1; ++i) {
+		if (!argv[i])
+			continue;
+		if (std::string(argv[i]) == arg) {
+			std::string to_convert(argv[i + 1]);
+
+			def = std::stof(to_convert);
+			del_arg(argc, argv, i);
+			del_arg(argc, argv, i);
+			break;
+		}
+	}
+	return def;
+}
+
+static std::string find_char_arg(int argc, char **argv, std::string arg,
+		std::string def) {
+	int i;
+	for (i = 0; i < argc - 1; ++i) {
+		if (!argv[i])
+			continue;
+		if (std::string(argv[i]) == arg) {
+			def = std::string(argv[i + 1]);
+			del_arg(argc, argv, i);
+			del_arg(argc, argv, i);
+			break;
+		}
+	}
+	return def;
+}
+
+static bool find_arg(int argc, char* argv[], std::string arg) {
+	int i;
+	for (i = 0; i < argc; ++i) {
+		if (!argv[i])
+			continue;
+		if (std::string(argv[i]) == arg) {
+			del_arg(argc, argv, i);
+			return true;
+		}
+	}
+	return false;
+}
+
+} //namespace radiation
 
 #endif  //C++ compiler defined
 

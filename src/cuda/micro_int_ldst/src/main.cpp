@@ -12,11 +12,11 @@
 #include <iomanip>      // std::setprecision
 
 #include "utils.h"
-#include "Log.h"
 #include "Parameters.h"
 #include "MicroInt.h"
 
 #include "cuda_utils.h"
+#include "generic_log.h"
 
 //GET ECC DATA
 #ifdef BUILDPROFILER
@@ -24,8 +24,7 @@
 #endif
 
 template<typename int_t>
-void setup_execute(Log& log, Parameters& test_parameter,
-		MicroInt<int_t>& micro_obj) {
+void setup_execute(Parameters& test_parameter, MicroInt<int_t>& micro_obj) {
 
 	// SETUP THE NVWL THREAD
 #ifdef BUILDPROFILER
@@ -38,14 +37,14 @@ void setup_execute(Log& log, Parameters& test_parameter,
 
 		auto start_it = rad::mysecond();
 		//Start iteration
-		log.start_iteration();
+		micro_obj.log->start_iteration();
 		micro_obj.execute_micro();
 
 		rad::checkFrameworkErrors(cudaPeekAtLastError());
 		rad::checkFrameworkErrors(cudaDeviceSynchronize());
 
 		//end iteration
-		log.end_iteration();
+		micro_obj.log->end_iteration();
 		auto end_it = rad::mysecond();
 
 		//Copying from GPU
@@ -56,15 +55,14 @@ void setup_execute(Log& log, Parameters& test_parameter,
 		//Comparing the output
 		auto start_cmp = rad::mysecond();
 		auto errors = micro_obj.compare_output();
+		//update errors
+		micro_obj.log->update_errors();
+		micro_obj.log->update_infos();
 		auto end_cmp = rad::mysecond();
 
 		auto start_reset_output = rad::mysecond();
 		micro_obj.reset_output_device();
 		auto end_reset_output = rad::mysecond();
-
-		//update errors
-		log.update_errors();
-		log.update_infos();
 
 		if (test_parameter.verbose) {
 			// PERF
@@ -91,9 +89,9 @@ void setup_execute(Log& log, Parameters& test_parameter,
 template<typename int_t>
 void setup(Parameters& parameters) {
 	std::cout << std::setprecision(6) << std::setfill('0');
-	std::shared_ptr<Log> log_ptr;
+	std::shared_ptr<rad::Log> log_ptr;
 
-	MicroInt<int_t> micro_obj(parameters, *log_ptr);
+	MicroInt<int_t> micro_obj(parameters, log_ptr);
 	//================== Init logs
 	std::string test_info = "";
 	test_info += " gridsize:" + std::to_string(micro_obj.grid_size);
@@ -110,13 +108,13 @@ void setup(Parameters& parameters) {
 	std::string test_name = std::string("cuda_micro-int-")
 			+ parameters.instruction_str;
 
-	log_ptr = std::make_shared<Log>(test_name, test_info);
+	log_ptr = std::make_shared<rad::Log>(test_name, test_info);
 
 	if (parameters.verbose) {
 		std::cout << *log_ptr << std::endl;
 	}
 
-	setup_execute(*log_ptr, parameters, micro_obj);
+	setup_execute(parameters, micro_obj);
 }
 
 int main(int argc, char **argv) {
