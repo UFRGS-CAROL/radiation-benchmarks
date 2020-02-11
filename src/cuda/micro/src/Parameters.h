@@ -23,10 +23,10 @@ struct Parameters {
 
 	size_t sm_count;
 	size_t iterations;
-	size_t global_gpu_memory_bytes;
 	size_t operation_num;
 
 	bool verbose;
+	bool fast_math;
 
 	Parameters(int argc, char* argv[]);
 
