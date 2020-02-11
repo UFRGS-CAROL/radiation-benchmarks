@@ -1,23 +1,37 @@
 /*
- * Log.cpp
+ * Log.h
  *
- *  Created on: Feb 1, 2020
+ *  Created on: 15/09/2019
  *      Author: fernando
  */
 
+#ifndef LOG_H_
+#define LOG_H_
+
+#ifdef LOGS
+#include "log_helper.h"
+#endif
+
+#include <string>
 #include <iostream>
 
-#include "Log.h"
+namespace rad {
 
-Log::Log(const Log& l) :
+struct Log {
+	uint64_t error;
+	uint64_t info;
+	std::string test_name;
+	std::string test_info;
+
+	Log(const Log& l) :
 			error(l.error), info(l.info) {
 	}
 
-Log::Log() :
+	Log() :
 			error(0), info(0) {
 	}
 
-Log::Log(std::string& test_name, std::string& test_info) :
+	Log(std::string& test_name, std::string& test_info) :
 			error(0), info(0), test_name(test_name), test_info(test_info) {
 #ifdef LOGS
 		start_log_file(const_cast<char*>(test_name.c_str()),
@@ -25,7 +39,7 @@ Log::Log(std::string& test_name, std::string& test_info) :
 #endif
 	}
 
-std::ostream& operator<<(std::ostream& os, Log& d) {
+	std::ostream& operator<<(std::ostream& os, Log& d) {
 		std::string file_name = "No log file name, build with the libraries";
 #ifdef LOGS
 		file_name = get_log_file_name();
@@ -38,27 +52,27 @@ std::ostream& operator<<(std::ostream& os, Log& d) {
 		return os;
 	}
 
-	Log::~Log() {
+	~Log() {
 #ifdef LOGS
 		::end_log_file();
 #endif
 	}
 
-	void Log::log_error_detail(std::string error_detail) {
+	void log_error_detail(std::string error_detail) {
 		this->error++;
 #ifdef LOGS
 		::log_error_detail(const_cast<char*>(error_detail.c_str()));
 #endif
 	}
 
-	void Log::log_info_detail(std::string info_detail) {
+	void log_info_detail(std::string info_detail) {
 		this->info++;
 #ifdef LOGS
 		::log_info_detail(const_cast<char*>(info_detail.c_str()));
 #endif
 	}
 
-	void Log::start_iteration() {
+	void start_iteration() {
 		this->error = 0;
 		this->info = 0;
 #ifdef LOGS
@@ -66,13 +80,13 @@ std::ostream& operator<<(std::ostream& os, Log& d) {
 #endif
 	}
 
-	void Log::end_iteration() {
+	void end_iteration() {
 #ifdef LOGS
 		::end_iteration();
 #endif
 	}
 
-	void Log::update_errors() {
+	void update_errors() {
 		if (this->error != 0) {
 #ifdef LOGS
 			::log_error_count(this->error);
@@ -80,7 +94,7 @@ std::ostream& operator<<(std::ostream& os, Log& d) {
 		}
 	}
 
-	void Log::update_infos() {
+	void update_infos() {
 		if (this->info != 0) {
 #ifdef LOGS
 			::log_info_count(this->info);
@@ -88,19 +102,8 @@ std::ostream& operator<<(std::ostream& os, Log& d) {
 		}
 	}
 
-	void update_errors(uint64_t errors) {
-		if (errors != 0) {
-#ifdef LOGS
-			::log_error_count(errors);
-#endif
-		}
-	}
+};
 
-	void update_infos(uint64_t infos) {
-		if (infos != 0) {
-#ifdef LOGS
-			::log_info_count(infos);
-#endif
-		}
-	}
+}
 
+#endif /* LOG_H_ */
