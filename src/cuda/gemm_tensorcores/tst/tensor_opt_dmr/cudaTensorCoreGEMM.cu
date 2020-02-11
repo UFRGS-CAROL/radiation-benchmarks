@@ -469,8 +469,5 @@ int main(){
     //         throw "Bad result\n";
     // }
     // std::cout << "Good result\n";
-    free(ah);
-    free(bh);
-    free(ch);
-    free(dh);
+  
 }
