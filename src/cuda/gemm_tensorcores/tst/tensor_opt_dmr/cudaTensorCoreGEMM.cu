@@ -472,10 +472,11 @@ int main(int argc, char **argv){
     
     cd.to_vector(ch);
     dd.to_vector(dh);
-    // for(auto i : ch){
-    //     if(float(i) != float(n))
-    //         throw "Bad result\n";
-    // }
-    // std::cout << "Good result\n";
+
+    for(auto i : ch){
+        if(float(i) != float(n))
+            throw "Bad result\n";
+    }
+    std::cout << "Good result\n";
   
 }
