@@ -130,8 +130,8 @@ void setup(Parameters& parameters) {
 	test_info += " gridsize:" + std::to_string(micro_obj.grid_size);
 	test_info += " blocksize:" + std::to_string(micro_obj.block_size);
 	test_info += " type:" + parameters.instruction_str + "-" + parameters.precision;
-	test_info += " fast_math:" + parameters.fast_math;
 	test_info += " opnum:" + std::to_string(parameters.operation_num);
+	test_info += " fast_math:" + std::to_string(parameters.fast_math);
 
 	std::string test_name = std::string("cuda_micro-int-")
 			+ parameters.instruction_str;
