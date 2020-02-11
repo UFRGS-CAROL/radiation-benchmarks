@@ -35,7 +35,7 @@
 
 //for load and store the OPS value is not used, then we use
 //max thread ld/st operation
-#define MAX_THREAD_LD_ST_OPERATIONS 4
+#define MAX_THREAD_LD_ST_OPERATIONS 16
 
 #define LOOPING_UNROLL 200
 

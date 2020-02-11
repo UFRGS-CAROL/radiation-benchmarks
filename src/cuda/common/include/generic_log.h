@@ -23,6 +23,19 @@ struct Log {
 	std::string test_name;
 	std::string test_info;
 
+	friend std::ostream& operator<<(std::ostream& os, Log& d) {
+		std::string file_name = "No log file name, build with the libraries";
+#ifdef LOGS
+		file_name = get_log_file_name();
+#endif
+		os << "LOGFILENAME: " << file_name << std::endl;
+		os << "Error: " << d.error << std::endl;
+		os << "Info: " << d.info << std::endl;
+		os << "Test info: " << d.test_info << std::endl;
+		os << "Test name: " << d.test_name;
+		return os;
+	}
+
 	Log(const Log& l) :
 			error(l.error), info(l.info) {
 	}
@@ -37,19 +50,6 @@ struct Log {
 		start_log_file(const_cast<char*>(test_name.c_str()),
 				const_cast<char*>(test_info.c_str()));
 #endif
-	}
-
-	std::ostream& operator<<(std::ostream& os, Log& d) {
-		std::string file_name = "No log file name, build with the libraries";
-#ifdef LOGS
-		file_name = get_log_file_name();
-#endif
-		os << "LOGFILENAME: " << file_name << std::endl;
-		os << "Error: " << d.error << std::endl;
-		os << "Info: " << d.info << std::endl;
-		os << "Test info: " << d.test_info << std::endl;
-		os << "Test name: " << d.test_name;
-		return os;
 	}
 
 	~Log() {

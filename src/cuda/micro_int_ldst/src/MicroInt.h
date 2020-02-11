@@ -13,7 +13,7 @@
 #include <iostream>
 
 #include "Parameters.h"
-#include "Log.h"
+#include "generic_log.h"
 #include "device_vector.h"
 #include "utils.h"
 
@@ -24,7 +24,7 @@ __device__ static unsigned long long errors;
 template<typename int_t>
 struct MicroInt {
 	Parameters& parameters;
-	Log& log;
+	std::shared_ptr<rad::Log>& log;
 
 	size_t grid_size;
 	size_t block_size;
@@ -37,7 +37,7 @@ struct MicroInt {
 	rad::DeviceVector<int_t> input_device;
 	rad::DeviceVector<int_t> output_device;
 
-	MicroInt(Parameters& parameters, Log& log) :
+	MicroInt(Parameters& parameters, std::shared_ptr<rad::Log>& log) :
 			parameters(parameters), log(log) {
 		//both benchmarks will use MAX_THREAD_BLOCK size
 		this->block_size = MAX_THREAD_BLOCK;
@@ -124,38 +124,33 @@ struct MicroInt {
 		auto gold_size = this->gold_host.size();
 		auto slices = this->array_size / gold_size;
 		std::vector<size_t> error_vector(slices, 0);
-		size_t i;
+		size_t slice;
+		std::cout << "NUM OF SLICES " << slices << std::endl;
+#pragma omp parallel for shared(error_vector, slice)
+		for (slice = 0; slice < slices; slice++) {
+			auto i_ptr = slice * gold_size;
+			int_t* output_ptr = this->output_host.data() + i_ptr;
 
-#pragma omp parallel for shared(error_vector, i)
-		for (i = 0; i < slices; i++) {
-			auto i_ptr = i * gold_size;
-			error_vector[i] = this->internal_host_memory_compare(
-					this->output_host.data() + i_ptr, i_ptr);
-		}
-
-		return std::accumulate(error_vector.begin(), error_vector.end(), 0);
-	}
-
-	size_t internal_host_memory_compare(int_t* output_ptr, size_t i_ptr) {
-		size_t this_thread_error_count = 0;
-		for (size_t i = 0; i < this->gold_host.size(); i++) {
-			int_t output = output_ptr[i];
-			int_t golden = this->gold_host[i];
-			if (output != golden) {
-				std::string error_detail;
-				error_detail = "array_position: " + std::to_string(i_ptr);
-				error_detail += " gold_position: " + std::to_string(i);
-				error_detail += " e: " + std::to_string(golden);
-				error_detail += " r: " + std::to_string(output);
-				std::cout << error_detail << std::endl;
-				this_thread_error_count++;
+			for (size_t i = 0; i < this->gold_host.size(); i++) {
+				int_t output = output_ptr[i];
+				int_t golden = this->gold_host[i];
+				if (output != golden) {
+					std::string error_detail;
+					error_detail = "array_position: " + std::to_string(i_ptr);
+					error_detail += " gold_position: " + std::to_string(i);
+					error_detail += " e: " + std::to_string(golden);
+					error_detail += " r: " + std::to_string(output);
+					std::cout << error_detail << std::endl;
+					error_vector[i]++;
 #pragma omp critical
-				{
-					this->log.log_error_detail(error_detail);
+					{
+						this->log->log_error_detail(error_detail);
+					}
 				}
 			}
 		}
-		return this_thread_error_count;
+
+		return std::accumulate(error_vector.begin(), error_vector.end(), 0);
 	}
 
 	void reset_output_device() {
