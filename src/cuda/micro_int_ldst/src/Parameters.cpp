@@ -21,8 +21,7 @@ Parameters::Parameters(int argc, char* argv[]) {
 
 	auto dev_prop = this->get_device();
 	this->device = dev_prop.name;
-	//deviceProp.totalGlobalMem
-	//deviceProp.warpSize
+
 	//if it is ADD, MUL, or MAD use maximum allocation
 	this->sm_count = dev_prop.multiProcessorCount;
 	this->global_gpu_memory_bytes = dev_prop.totalGlobalMem;
