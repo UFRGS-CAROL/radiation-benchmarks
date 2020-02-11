@@ -27,6 +27,11 @@ typedef enum {
 	ADD, MUL, FMA, PYTHAGOREAN, EULER, LOG
 } MICROINSTRUCTION;
 
+
+typedef enum {
+	HALF, SINGLE, DOUBLE
+} PRECISION;
+
 static std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 //ADD
 		{ "add", ADD },
@@ -43,6 +48,17 @@ static std::unordered_map<std::string, MICROINSTRUCTION> mic = {
 
 		//Log
 		{ "log", LOG }, };
+
+static std::unordered_map<std::string, PRECISION> pre = {
+//half
+		{ "half", HALF },
+		//float
+		{ "single", SINGLE },
+		{ "float", SINGLE },
+		//double
+		{ "double", DOUBLE },
+};
+
 
 static void __throw_line(std::string err, std::string line, std::string file){
     throw std::runtime_error("ERROR at " + file + ":" + line);

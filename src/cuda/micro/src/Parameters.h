@@ -18,12 +18,15 @@
 struct Parameters {
 
 	MICROINSTRUCTION micro;
+	PRECISION precision;
 	std::string instruction_str;
 	std::string device;
+	std::string precision_str;
 
 	size_t sm_count;
 	size_t iterations;
 	size_t operation_num;
+
 
 	bool verbose;
 	bool fast_math;

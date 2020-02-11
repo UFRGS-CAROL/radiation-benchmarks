@@ -15,6 +15,8 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->instruction_str = rad::find_char_arg(argc, argv, "--inst", "add");
 	this->operation_num = rad::find_int_arg(argc, argv, "--opnum", LOOPING_UNROLL);
 	this->micro = mic[this->instruction_str];
+	this->precision = pre[this->precision_str];
+
 	this->fast_math = rad::find_arg(argc, argv, "--fast_math");
 
 	auto dev_prop = rad::get_device();
@@ -32,13 +34,13 @@ Parameters::Parameters(int argc, char* argv[]) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Parameters& p) {
+	os << std::boolalpha;
 	os << "Micro type " << p.instruction_str << std::endl;
+	os << "Preicison " << p.precision_str << std::endl;
 	os << "SM count = " << p.sm_count << std::endl;
-	constexpr auto mb = 1 << 20;
-	constexpr auto gb = 1 << 30;
-
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
+	os << "Fast math: " << p.fast_math << std::endl;
 	os << "Device " << p.device;
 
 	return os;
