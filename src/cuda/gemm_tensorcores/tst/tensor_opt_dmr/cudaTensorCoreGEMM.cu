@@ -427,6 +427,7 @@ int main(){
   	checkKernelErrors(cudaStreamCreate(&stream1)); 
   	checkKernelErrors(cudaStreamCreate(&stream2));
 
+  	int dev = findCudaDevice(argc, (const char **) argv);
   	cudaDeviceProp deviceProp;
 	checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
