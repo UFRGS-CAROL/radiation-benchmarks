@@ -427,6 +427,9 @@ int main(){
   	checkKernelErrors(cudaStreamCreate(&stream1)); 
   	checkKernelErrors(cudaStreamCreate(&stream2));
 
+  	cudaDeviceProp deviceProp;
+	checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
+
     
     // uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     // uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
