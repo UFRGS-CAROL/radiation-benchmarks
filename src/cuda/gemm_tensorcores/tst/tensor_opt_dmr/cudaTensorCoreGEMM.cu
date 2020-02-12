@@ -423,26 +423,15 @@ int main(int argc, char **argv){
     rad::DeviceVector<half> cd = ch;
     rad::DeviceVector<half> dd = ch;
 
-   //  cudaStream_t stream1, stream2;
-  	// checkKernelErrors(cudaStreamCreate(&stream1)); 
-  	// checkKernelErrors(cudaStreamCreate(&stream2));
+   	cudaStream_t stream1, stream2;
+  	checkKernelErrors(cudaStreamCreate(&stream1)); 
+  	checkKernelErrors(cudaStreamCreate(&stream2));
 
   	int dev = findCudaDevice(argc, (const char **) argv);
   	cudaDeviceProp deviceProp;
 	checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
-    
-    uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    auto dim_grid = dim3(grid_cols, grid_rows);
-    auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-    matrix_mult_kernel_unhardened<<<dim_grid, dim_block>>>(ad.data(), bd.data(), cd.data(), half(1.0), half(0.0), n, n);
-    rad::checkFrameworkErrors(cudaDeviceSynchronize());
-    rad::checkFrameworkErrors(cudaPeekAtLastError());
-
-
-
-    enum {
+        enum {
     // Compute the right amount of shared memory to request.
     // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
     // per-CTA chunks
@@ -461,26 +450,29 @@ int main(int argc, char **argv){
         compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
     checkKernelErrors(
         (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                        SHMEM_SZ>>>(ad.data(), bd.data(), cd.data(), dd.data(), half(1.0), half(1.0))));
+                        SHMEM_SZ, stream1>>>(ad.data(), bd.data(), cd.data(), dd.data(), half(1.0), half(1.0))));
 
-   
-
-
-
-
+    uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    auto dim_grid = dim3(grid_cols, grid_rows);
+    auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream2>>>(ad.data(), bd.data(), cd.data(), half(1.0), half(0.0), n, n);
+    rad::checkFrameworkErrors(cudaDeviceSynchronize());
+    rad::checkFrameworkErrors(cudaPeekAtLastError());
 
     
     cd.to_vector(ch);
     dd.to_vector(dh);
 
-    // for (int i = 0; i < 10; ++i)
-    // {
-    // 	printf("sw  == %f || hw == %f \n", float(ch[i]), float(dh[i]));
-    // }
-    for(auto i : ch){
-        if(float(i) != float(n))
-            throw "Bad result\n";
+    for (int i = 0; i < 10; ++i)
+    {
+    	printf("sw  == %f || hw == %f \n", float(ch[i]), float(dh[i]));
+
     }
-    std::cout << "Good result\n";
+    // for(auto i : dh){
+    //     if(float(i) != float(n))
+    //         throw "Bad result\n";
+    // }
+    // std::cout << "Good result\n";
   
 }
