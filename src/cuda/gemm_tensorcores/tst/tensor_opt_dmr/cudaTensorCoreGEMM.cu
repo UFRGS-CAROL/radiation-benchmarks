@@ -432,36 +432,36 @@ int main(int argc, char **argv){
 	checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
     
-    // uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    // uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    // auto dim_grid = dim3(grid_cols, grid_rows);
-    // auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-    // matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream1>>>(ad.data(), bd.data(), cd.data(), half(1.0), half(0.0), n, n);
-    // rad::checkFrameworkErrors(cudaDeviceSynchronize());
-    // rad::checkFrameworkErrors(cudaPeekAtLastError());
+    uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    auto dim_grid = dim3(grid_cols, grid_rows);
+    auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream1>>>(ad.data(), bd.data(), cd.data(), half(1.0), half(0.0), n, n);
+    rad::checkFrameworkErrors(cudaDeviceSynchronize());
+    rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 
 
-    enum {
-    // Compute the right amount of shared memory to request.
-    // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
-    // per-CTA chunks
-    // of the A and B matrices. Therefore, the right amount to request is the
-    // maximum of those
-    // two numbers.
-    SHMEM_SZ = MAX(
-        sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
-        M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
-            (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
-    };
+    // enum {
+    // // Compute the right amount of shared memory to request.
+    // // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
+    // // per-CTA chunks
+    // // of the A and B matrices. Therefore, the right amount to request is the
+    // // maximum of those
+    // // two numbers.
+    // SHMEM_SZ = MAX(
+    //     sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
+    //     M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
+    //         (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
+    // };
 
 
 
-    checkCudaErrors(cudaFuncSetAttribute(
-        compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-    checkKernelErrors(
-        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                        SHMEM_SZ,stream2>>>(ad.data(), bd.data(), cd.data(), dd.data(), half(1.0), half(1.0))));
+    // checkCudaErrors(cudaFuncSetAttribute(
+    //     compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+    // checkKernelErrors(
+    //     (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+    //                     SHMEM_SZ,stream2>>>(ad.data(), bd.data(), cd.data(), dd.data(), half(1.0), half(1.0))));
 
    
 
@@ -475,7 +475,7 @@ int main(int argc, char **argv){
 
     for (int i = 0; i < 10; ++i)
     {
-    	printf("tensor  == %f \n", float(dh[i]) );
+    	printf("sw  == %f \n", float(ch[i]) );
     }
     // for(auto i : dh){
     //     if(float(i) != float(n))
