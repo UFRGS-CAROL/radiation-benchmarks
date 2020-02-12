@@ -473,14 +473,14 @@ int main(int argc, char **argv){
     cd.to_vector(ch);
     dd.to_vector(dh);
 
-    for (int i = 0; i < 10; ++i)
-    {
-    	printf("sw  == %f || hw == %f \n", float(ch[i]), float(dh[i]));
-    }
-    // for(auto i : dh){
-    //     if(float(i) != float(n))
-    //         throw "Bad result\n";
+    // for (int i = 0; i < 10; ++i)
+    // {
+    // 	printf("sw  == %f || hw == %f \n", float(ch[i]), float(dh[i]));
     // }
-    // std::cout << "Good result\n";
+    for(auto i : dh){
+        if(float(i) != float(n))
+            throw "Bad result\n";
+    }
+    std::cout << "Good result\n";
   
 }
