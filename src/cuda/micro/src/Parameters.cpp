@@ -13,7 +13,10 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->iterations = rad::find_int_arg(argc, argv, "--iterations", 10);
 	this->verbose = rad::find_arg(argc, argv, "--verbose");
 	this->instruction_str = rad::find_char_arg(argc, argv, "--inst", "add");
-	this->operation_num = rad::find_int_arg(argc, argv, "--opnum", LOOPING_UNROLL);
+	this->operation_num = rad::find_int_arg(argc, argv, "--opnum",
+			LOOPING_UNROLL);
+	this->precision_str = rad::find_char_arg(argc, argv, "--precision",
+			"float");
 	this->micro = mic[this->instruction_str];
 	this->precision = pre[this->precision_str];
 
@@ -31,7 +34,6 @@ Parameters::Parameters(int argc, char* argv[]) {
 						+ std::to_string(dev_prop.warpSize));
 	}
 
-
 	//both benchmarks will use MAX_THREAD_BLOCK size
 	this->block_size = MAX_THREAD_BLOCK;
 
@@ -45,7 +47,8 @@ std::ostream& operator<<(std::ostream& os, const Parameters& p) {
 	os << "Micro type: " << p.instruction_str << std::endl;
 	os << "Preicison: " << p.precision_str << std::endl;
 	os << "SM count; " << p.sm_count << std::endl;
-	os << "Grids x Blocks: " << p.grid_size << " x " << p.block_size << std::endl;
+	os << "Grids x Blocks: " << p.grid_size << " x " << p.block_size
+			<< std::endl;
 	os << "Verbose: " << p.verbose << std::endl;
 	os << "Iterations: " << p.iterations << std::endl;
 	os << "Fast math: " << p.fast_math << std::endl;

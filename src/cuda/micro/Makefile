@@ -3,9 +3,10 @@ CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp
 EXEC=cudaMicro
 LOGS=1
 BUILDPROFILER=0
-MICRO=ldst
+MICRO=pythagorean
 ITERATIONS=10
 OPNUM=1000000
+PRECISION=float
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -64,5 +65,5 @@ clean:
 	
 	
 test:
-	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose --opnum $(OPNUM)
+	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose --opnum $(OPNUM) $(PRECISION)
 	
