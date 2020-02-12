@@ -329,7 +329,7 @@ void runTest(int argc, char** argv) {
 			ea = 0;
 
 			auto mem_cpy_cmp_time = rad::mysecond();
-			output_itemsets = matrix_cuda.to_vector();
+			matrix_cuda.to_vector(output_itemsets);
 			KErrorsType kerrors = badass_memcmp(gold_itemsets, output_itemsets);
 			mem_cpy_cmp_time = rad::mysecond() - mem_cpy_cmp_time;
 			if (kerrors > 0) {
