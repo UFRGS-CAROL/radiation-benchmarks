@@ -457,11 +457,11 @@ int main(int argc, char **argv){
 
 
 
-    checkCudaErrors(cudaFuncSetAttribute(
-        compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-    checkKernelErrors(
-        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                        SHMEM_SZ,stream2>>>(ad.data(), bd.data(), cd.data(), dd.data(), half(1.0), half(1.0))));
+    // checkCudaErrors(cudaFuncSetAttribute(
+    //     compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+    // checkKernelErrors(
+    //     (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+    //                     SHMEM_SZ,stream2>>>(ad.data(), bd.data(), cd.data(), dd.data(), half(1.0), half(1.0))));
 
    
 
@@ -473,13 +473,10 @@ int main(int argc, char **argv){
     cd.to_vector(ch);
     dd.to_vector(dh);
 
-    for (auto it = ch.begin(); it != 10; it++) {
-    	std::cout << *it << std::endl;
-  	}
-    // for(auto i : ch){
-    //     if(float(i) != float(n))
-    //         throw "Bad result\n";
-    // }
-    // std::cout << "Good result\n";
+    for(auto i : ch){
+        if(float(i) != float(n))
+            throw "Bad result\n";
+    }
+    std::cout << "Good result\n";
   
 }
