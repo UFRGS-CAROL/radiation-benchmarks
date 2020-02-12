@@ -117,7 +117,7 @@ struct Micro {
 			golden = this->input_kernel.OUTPUT_R;
 			break;
 		case PYTHAGOREAN:
-			golden = this->parameters.operation_num;
+			golden = OPS;
 			break;
 		case EULER:
 			throw_line("Not ready yet")
