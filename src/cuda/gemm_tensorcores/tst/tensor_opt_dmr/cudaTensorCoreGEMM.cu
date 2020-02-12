@@ -432,13 +432,13 @@ int main(int argc, char **argv){
 	checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
     
-    uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    auto dim_grid = dim3(grid_cols, grid_rows);
-    auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
-    matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream1>>>(ad.data(), bd.data(), cd.data(), half(1.0), half(0.0), n, n);
-    rad::checkFrameworkErrors(cudaDeviceSynchronize());
-    rad::checkFrameworkErrors(cudaPeekAtLastError());
+    // uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    // uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    // auto dim_grid = dim3(grid_cols, grid_rows);
+    // auto dim_block = dim3(BLOCK_SIZE, BLOCK_SIZE);
+    // matrix_mult_kernel_unhardened<<<dim_grid, dim_block,0,stream1>>>(ad.data(), bd.data(), cd.data(), half(1.0), half(0.0), n, n);
+    // rad::checkFrameworkErrors(cudaDeviceSynchronize());
+    // rad::checkFrameworkErrors(cudaPeekAtLastError());
 
 
 
@@ -457,11 +457,11 @@ int main(int argc, char **argv){
 
 
 
-    // checkCudaErrors(cudaFuncSetAttribute(
-    //     compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-    // checkKernelErrors(
-    //     (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-    //                     SHMEM_SZ,stream2>>>(ad.data(), bd.data(), cd.data(), dd.data(), half(1.0), half(1.0))));
+    checkCudaErrors(cudaFuncSetAttribute(
+        compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+    checkKernelErrors(
+        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+                        SHMEM_SZ,stream2>>>(ad.data(), bd.data(), cd.data(), dd.data(), half(1.0), half(1.0))));
 
    
 
@@ -473,7 +473,7 @@ int main(int argc, char **argv){
     cd.to_vector(ch);
     dd.to_vector(dh);
 
-    for(auto i : ch){
+    for(auto i : dh){
         if(float(i) != float(n))
             throw "Bad result\n";
     }
