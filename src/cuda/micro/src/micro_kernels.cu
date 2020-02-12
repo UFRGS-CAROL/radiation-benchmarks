@@ -74,14 +74,14 @@ __global__ void micro_kernel_pythagorean(real_t *d_R0, real_t INPUT_A,
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
 __global__ void micro_kernel_euler(real_t *d_R0, real_t INPUT_A, real_t INPUT_B,
 		real_t OUTPUT_R) {
-	register real_t acc = 0;
+	register real_t acc = OUTPUT_R;
 	register real_t input_a = INPUT_A;
 
 #pragma unroll UNROLL_MAX
 	for (register uint32_t count = 0; count < (OPS / 4); count++) {
 		acc += euler<USEFASTMATH>(input_a);
 	}
-
+	acc -= (real_t(OPS));
 	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 }
 

@@ -114,10 +114,8 @@ struct Micro {
 		case ADD:
 		case MUL:
 		case FMA:
-			golden = this->input_kernel.OUTPUT_R;
-			break;
 		case PYTHAGOREAN:
-			golden = OPS;
+			golden = this->input_kernel.OUTPUT_R;
 			break;
 		case EULER:
 			throw_line("Not ready yet")
