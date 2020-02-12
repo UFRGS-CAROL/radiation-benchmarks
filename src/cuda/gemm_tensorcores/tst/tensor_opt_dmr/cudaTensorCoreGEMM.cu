@@ -473,10 +473,9 @@ int main(int argc, char **argv){
     cd.to_vector(ch);
     dd.to_vector(dh);
 
-    for (int i = 0; i < 10; ++i)
-    {
-    	printf(" sw= %f \n",ch[i]); 
-    }
+    for (auto it = ch.begin(); it != 10; it++) {
+    	std::cout << *it << std::endl;
+  	}
     // for(auto i : ch){
     //     if(float(i) != float(n))
     //         throw "Bad result\n";
