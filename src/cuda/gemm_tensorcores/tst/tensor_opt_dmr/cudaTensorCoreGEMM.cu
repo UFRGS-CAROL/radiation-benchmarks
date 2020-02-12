@@ -431,26 +431,26 @@ int main(int argc, char **argv){
   	cudaDeviceProp deviceProp;
 	checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
 
-        enum {
-    // Compute the right amount of shared memory to request.
-    // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
-    // per-CTA chunks
-    // of the A and B matrices. Therefore, the right amount to request is the
-    // maximum of those
-    // two numbers.
-    SHMEM_SZ = MAX(
-        sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
-        M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
-            (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
-    };
+    //     enum {
+    // // Compute the right amount of shared memory to request.
+    // // We need shared memory to hold per-CTA C and D matrix tiles, and to cache
+    // // per-CTA chunks
+    // // of the A and B matrices. Therefore, the right amount to request is the
+    // // maximum of those
+    // // two numbers.
+    // SHMEM_SZ = MAX(
+    //     sizeof(half) * (BLOCK_COL_TILES * M) * (CHUNK_K * K + SKEW_HALF) * 2,
+    //     M * (BLOCK_ROW_WARPS * WARP_ROW_TILES) * N *
+    //         (BLOCK_COL_WARPS * WARP_COL_TILES) * sizeof(half))
+    // };
 
 
 
-    checkCudaErrors(cudaFuncSetAttribute(
-        compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
-    checkKernelErrors(
-        (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
-                        SHMEM_SZ, stream1>>>(ad.data(), bd.data(), cd.data(), dd.data(), half(1.0), half(1.0))));
+    // checkCudaErrors(cudaFuncSetAttribute(
+    //     compute_gemm, cudaFuncAttributeMaxDynamicSharedMemorySize, SHMEM_SZ));
+    // checkKernelErrors(
+    //     (compute_gemm<<<deviceProp.multiProcessorCount, THREADS_PER_BLOCK,
+    //                     SHMEM_SZ, stream1>>>(ad.data(), bd.data(), cd.data(), dd.data(), half(1.0), half(1.0))));
 
     uint32_t grid_rows = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
     uint32_t grid_cols = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
