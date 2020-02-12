@@ -414,7 +414,7 @@ __global__ void matrix_mult_kernel_unhardened(  //Kernel without hardening
 }
 
 int main(int argc, char **argv){
-    constexpr auto n = 1 << 11;
+    constexpr auto n = M_GLOBAL;
     constexpr auto size = n * n;
     std::cout << "Size " << n << " elements " << size << std::endl;
     std::vector<half> ah(size, 1.0), bh(size, 1.0), ch(size, 0), dh(size, 0);
