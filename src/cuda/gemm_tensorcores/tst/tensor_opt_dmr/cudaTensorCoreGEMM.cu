@@ -477,7 +477,7 @@ int main(int argc, char **argv){
     // {
     // 	printf("sw  == %f || hw == %f \n", float(ch[i]), float(dh[i]));
     // }
-    for(auto i : dh){
+    for(auto i : ch){
         if(float(i) != float(n))
             throw "Bad result\n";
     }
