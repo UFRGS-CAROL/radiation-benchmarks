@@ -61,7 +61,7 @@ static std::unordered_map<std::string, PRECISION> pre = {
 
 
 static void __throw_line(std::string err, std::string line, std::string file){
-    throw std::runtime_error("ERROR at " + file + ":" + line);
+    throw std::runtime_error(err + "\nERROR at " + file + ":" + line);
 }
 
 

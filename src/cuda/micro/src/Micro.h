@@ -11,6 +11,8 @@
 #include <vector>
 #include <random>
 #include <iostream>
+#include <sstream>      // std::stringstream
+#include <iomanip> 	   // setprecision
 
 #include "Parameters.h"
 #include "generic_log.h"
@@ -134,15 +136,20 @@ struct Micro {
 //					if (verbose && (host_errors < 10))
 //						printf("%s\n", error_detail);
 
-				std::string error_detail = "";
-				error_detail += " p: [" + std::to_string(i);
-				error_detail += "], e: " + std::to_string(golden);
-				error_detail += ", r: " + std::to_string(output);
-				std::cout << error_detail << std::endl;
+				std::stringstream error_detail;
+
+				//20 is from old microbenchmarks precision
+				error_detail << " p: [" << i << "],";
+				error_detail << std::scientific << std::setprecision(20);
+				error_detail << " e: " << golden << ", r: " << output;
+
+				if(this->parameters.verbose && i < 10){
+					std::cout << error_detail.str() << std::endl;
+				}
 				errors++;
 #pragma omp critical
 				{
-					this->log->log_error_detail(error_detail);
+					this->log->log_error_detail(error_detail.str());
 				}
 			}
 		}

@@ -42,12 +42,6 @@
 template<typename real_t>
 void setup_execute(Parameters& test_parameter, Micro<real_t>& micro_obj) {
 
-	// SETUP THE NVWL THREAD
-#ifdef BUILDPROFILER
-	rad::NVMLWrapper counter_thread(DEVICE_INDEX);
-	//TODO
-	//Do the same of the other benchmarks
-#endif
 	for (size_t iteration = 0; iteration < test_parameter.iterations;
 			iteration++) {
 
@@ -109,21 +103,13 @@ void setup(Parameters& parameters) {
 
 	Micro<real_t> micro_obj(parameters, log_ptr);
 
-//#ifdef LOGS
-//	char test_info[250];
-//	char test_name[250];
-//	snprintf(test_info, 250, "ops:%d gridsize:%d blocksize:%d type:%s-%s-precision", OPS, gridsize, blocksize, test_type_description, test_precision_description);
-//	snprintf(test_name, 250, "cuda_%s_micro-%s", test_precision_description, test_type_description);
-//	start_log_file(test_name, test_info);
-//
-//#ifdef BUILDPROFILER
-//	std::string log_file_name(get_log_file_name());
-//	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
-//
-////START PROFILER THREAD
-//	profiler_thread->start_profile();
-//#endif
-//#endif
+#ifdef BUILDPROFILER
+	std::string log_file_name(get_log_file_name());
+	std::shared_ptr<rad::Profiler> profiler_thread = std::make_shared<rad::OBJTYPE>(0, log_file_name);
+
+//START PROFILER THREAD
+	profiler_thread->start_profile();
+#endif
 
 	//================== Init logs
 	std::string test_info = "";
@@ -144,6 +130,10 @@ void setup(Parameters& parameters) {
 	}
 
 	setup_execute(parameters, micro_obj);
+
+#ifdef BUILDPROFILER
+	profiler_thread->end_profile();
+#endif
 }
 
 int main(int argc, char **argv) {
@@ -152,15 +142,14 @@ int main(int argc, char **argv) {
 	if (parameters.verbose) {
 		std::cout << parameters << std::endl;
 	}
-	setup<float>(parameters);
 
-//#ifdef LOGS
-//#ifdef BUILDPROFILER
-//	profiler_thread->end_profile();
-//#endif
-//	end_log_file();
-//#endif
-	return 0;
-
+	switch (parameters.precision){
+	case SINGLE:
+		setup<float>(parameters);
+		return 0;
+	case HALF:
+	case DOUBLE:
+		throw_line("not implemented yet");
+	}
 }
 

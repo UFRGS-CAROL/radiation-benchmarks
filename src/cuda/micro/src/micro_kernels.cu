@@ -65,7 +65,7 @@ __global__ void micro_kernel_pythagorean(real_t *d_R0, real_t INPUT_A,
 	register real_t input_b = INPUT_B;
 
 #pragma unroll UNROLL_MAX
-	for (register uint32_t count = 0; count < (OPS / 4); count++) {
+	for (register uint32_t count = 0; count < OPS; count++) {
 		acc += pythagorean_identity<USEFASTMATH>(input_a, input_b);
 	}
 
