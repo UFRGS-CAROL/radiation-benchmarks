@@ -21,20 +21,20 @@
  * ----------------------------------------
  */
 template<bool USEFASTMATH>
-__DEVICE_INLINE__ double fma_inline(double a, double b, double acc) {
+__DEVICE_INLINE__ double fma_inline(double a, double b, double c) {
 #if USEFASTMATH == true
-	return __fma_rn(a, b, acc);
+	return __fma_rn(a, b, c);
 #else
-	return a * b + acc;
+	return a * b + c;
 #endif
 }
 
 template<bool USEFASTMATH>
-__DEVICE_INLINE__ float fma_inline(float a, float b, float acc) {
+__DEVICE_INLINE__ float fma_inline(float a, float b, float c) {
 #if USEFASTMATH == true
-	return __fmaf_rn(a, b, acc);
+	return __fmaf_rn(a, b, c);
 #else
-	return a * b + acc;
+	return a * b + c;
 #endif
 }
 
@@ -126,8 +126,8 @@ __DEVICE_INLINE__ double euler(double a) {
 
 #if __CUDA_ARCH__ >= 600
 
-__DEVICE_INLINE__ half2 fma_inline(half2 a, half2 b, half2 acc) {
-	return __hfma2(a, b, acc);
+__DEVICE_INLINE__ half2 fma_inline(half2 a, half2 b, half2 c) {
+	return __hfma2(a, b, c);
 }
 
 __DEVICE_INLINE__ half2 add_dmr(half2 a, half2 b) {

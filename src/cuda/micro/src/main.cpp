@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
 	if (parameters.verbose) {
 		std::cout << parameters << std::endl;
 	}
-	setup<int32_t>(parameters);
+	setup<float>(parameters);
 
 //#ifdef LOGS
 //#ifdef BUILDPROFILER

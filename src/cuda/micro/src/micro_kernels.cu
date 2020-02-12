@@ -94,13 +94,16 @@ void execute_kernel(MICROINSTRUCTION& micro, real_t* output, real_t input_a,
 	void (*kernel)(real_t*, real_t, real_t, real_t);
 	switch (micro) {
 	case ADD:
-		kernel = micro_kernel_add<LOOPING_UNROLL, USEFASTMATH>;
-		break;
+//		kernel = micro_kernel_add<LOOPING_UNROLL, USEFASTMATH>;
+//		break;
 	case MUL:
-		kernel = micro_kernel_mul<LOOPING_UNROLL, USEFASTMATH>;
-		break;
+//		kernel = micro_kernel_mul<LOOPING_UNROLL, USEFASTMATH>;
+//		break;
 	case FMA:
-		kernel = micro_kernel_fma<LOOPING_UNROLL, USEFASTMATH>;
+//		kernel = micro_kernel_fma<LOOPING_UNROLL, USEFASTMATH>;
+//		break;
+		throw_line("Not implemented yet")
+		;
 		break;
 	case PYTHAGOREAN:
 		kernel = micro_kernel_pythagorean<LOOPING_UNROLL, USEFASTMATH>;
@@ -116,11 +119,14 @@ template<>
 void Micro<float>::execute_micro() {
 	if (this->parameters.fast_math) {
 		execute_kernel<true>(this->parameters.micro, this->output_device.data(),
-				1.0f, 1.0f, 1.0f, this->parameters.grid_size,
+				this->input_kernel.INPUT_A, this->input_kernel.INPUT_B,
+				this->input_kernel.OUTPUT_R, this->parameters.grid_size,
 				this->parameters.block_size, this->parameters.operation_num);
 	} else {
-		execute_kernel<false>(this->parameters.micro, this->output_device.data(),
-				1.0f, 1.0f, 1.0f, this->parameters.grid_size,
-				this->parameters.block_size, this->parameters.operation_num);
+		execute_kernel<false>(this->parameters.micro,
+				this->output_device.data(), this->input_kernel.INPUT_A,
+				this->input_kernel.INPUT_B, this->input_kernel.OUTPUT_R,
+				this->parameters.grid_size, this->parameters.block_size,
+				this->parameters.operation_num);
 	}
 }
