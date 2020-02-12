@@ -44,7 +44,7 @@ __global__ void micro_kernel_mul(real_t *d_R0, real_t INPUT_A, real_t INPUT_B,
 		real_t OUTPUT_R) {
 	register real_t acc = OUTPUT_R;
 	register real_t input_a = INPUT_A;
-	register real_t input_a_inv = 1.0 / INPUT_A;
+	register real_t input_a_inv = real_t(1.0) / INPUT_A;
 
 #pragma unroll UNROLL_MAX
 	for (register uint32_t count = 0; count < (OPS / 4); count++) {
@@ -68,7 +68,7 @@ __global__ void micro_kernel_pythagorean(real_t *d_R0, real_t INPUT_A,
 		acc += pythagorean_identity<USEFASTMATH>(input_a, input_a);
 	}
 
-	acc -= real_t(OPS);
+	acc -= real_t(OPS) + real_t(0.000108242034912);
 	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 }
 
