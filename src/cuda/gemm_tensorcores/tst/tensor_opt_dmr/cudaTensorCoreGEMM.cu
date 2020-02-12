@@ -475,7 +475,7 @@ int main(int argc, char **argv){
 
     for (int i = 0; i < 10; ++i)
     {
-    	std::cout << "sw = " << ch[i] << std::end; 
+    	printf(" sw= %f \n",ch[i]); 
     }
     // for(auto i : ch){
     //     if(float(i) != float(n))
