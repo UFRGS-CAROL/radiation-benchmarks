@@ -47,9 +47,9 @@
 #define N_TILES 256
 #define K_TILES 256
 
-#define M_GLOBAL 8192 //(M * M_TILES)
-#define N_GLOBAL 8192 //(N * N_TILES)
-#define K_GLOBAL 8192 //(K * K_TILES)
+#define M_GLOBAL 2048 //(M * M_TILES)
+#define N_GLOBAL 2048 //(N * N_TILES)
+#define K_GLOBAL 2048 //(K * K_TILES)
 
 #define BLOCK_SIZE 32
 
