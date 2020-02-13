@@ -114,8 +114,11 @@ struct Micro {
 		case ADD:
 		case MUL:
 		case FMA:
-		case PYTHAGOREAN:
 			golden = this->input_kernel.OUTPUT_R;
+			break;
+		case PYTHAGOREAN:
+			golden = this->input_kernel.OUTPUT_R - real_t(0.000108242034912);
+
 			break;
 		case EULER:
 			throw_line("Not ready yet")
@@ -126,22 +129,13 @@ struct Micro {
 		for (size_t i = 0; i < this->output_host.size(); i++) {
 			real_t output = this->output_host[i];
 			if (output != golden) {
-
-//					char error_detail[150];
-//					snprintf(error_detail, 150,
-//							"p: [%d], r: %1.20e, e: %1.20e",
-//							i, (double)valOutput, (double)valGold);
-//					if (verbose && (host_errors < 10))
-//						printf("%s\n", error_detail);
-
 				std::stringstream error_detail;
-
-				//20 is from old microbenchmarks precision
+				//20 is from old micro-benchmarks precision
 				error_detail << " p: [" << i << "],";
 				error_detail << std::scientific << std::setprecision(20);
 				error_detail << " e: " << golden << ", r: " << output;
 
-				if(this->parameters.verbose && i < 10){
+				if (this->parameters.verbose && i < 10) {
 					std::cout << error_detail.str() << std::endl;
 				}
 				errors++;

@@ -68,7 +68,6 @@ __global__ void micro_kernel_pythagorean(real_t *d_R0, real_t INPUT_A,
 		acc += pythagorean_identity<USEFASTMATH>(input_a, input_a);
 	}
 
-	acc -= real_t(OPS) + real_t(0.000108242034912);
 	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
 }
 
