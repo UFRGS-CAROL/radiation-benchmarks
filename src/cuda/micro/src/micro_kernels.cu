@@ -58,7 +58,7 @@ __global__ void micro_kernel_pythagorean(real_t *d_R0, real_t input_a,
 		real_t input_b, real_t output_r, const uint32_t ops) {
 	real_t acc = 0;
 
-#pragma unroll
+//#pragma unroll
 	for (uint32_t count = 0; count < ops; count++) {
 		acc += pythagorean_identity<USEFASTMATH>(input_a, input_a);
 	}
@@ -71,9 +71,9 @@ __global__ void micro_kernel_euler(real_t *d_R0, real_t input_a, real_t input_b,
 		real_t output_r, const uint32_t ops) {
 	real_t acc = 0;
 
-#pragma unroll UNROLL_MAX
+//#pragma unroll UNROLL_MAX
 	for (uint32_t count = 0; count < ops; count++) {
-		acc += euler<USEFASTMATH>(input_a);
+		acc += euler<USEFASTMATH>(-output_r);
 	}
 
 	d_R0[blockIdx.x * blockDim.x + threadIdx.x] = acc;
@@ -105,6 +105,7 @@ void execute_kernel(MICROINSTRUCTION& micro, real_t* output, real_t input_a,
 		kernel = micro_kernel_euler<LOOPING_UNROLL, USEFASTMATH>;
 		break;
 	}
+
 	kernel<<<grid_size, block_size>>>(output, input_a, input_b, output_acc,
 			operation_num);
 }
@@ -116,6 +117,7 @@ void Micro<float>::execute_micro() {
 				this->input_kernel.INPUT_A, this->input_kernel.INPUT_B,
 				this->input_kernel.OUTPUT_R, this->parameters.grid_size,
 				this->parameters.block_size, this->parameters.operation_num);
+		std::cout << "Fast math\n";
 	} else {
 		execute_kernel<false>(this->parameters.micro,
 				this->output_device.data(), this->input_kernel.INPUT_A,

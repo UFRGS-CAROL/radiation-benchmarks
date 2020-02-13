@@ -20,22 +20,20 @@
  * FMA
  * ----------------------------------------
  */
-template<bool USEFASTMATH>
-__DEVICE_INLINE__ double fma_inline(double a, double b, double c) {
-#if USEFASTMATH == true
-	return __fma_rn(a, b, c);
-#else
+template<bool USEFASTMATH, typename real_t>
+__DEVICE_INLINE__ real_t fma_inline(real_t a, real_t b, real_t c) {
 	return a * b + c;
-#endif
 }
 
-template<bool USEFASTMATH>
-__DEVICE_INLINE__ float fma_inline(float a, float b, float c) {
-#if USEFASTMATH == true
+template<>
+__DEVICE_INLINE__ double fma_inline<true>(double a, double b, double c) {
+	return __fma_rn(a, b, c);
+
+}
+
+template<>
+__DEVICE_INLINE__ float fma_inline<true>(float a, float b, float c) {
 	return __fmaf_rn(a, b, c);
-#else
-	return a * b + c;
-#endif
 }
 
 /**
@@ -43,22 +41,19 @@ __DEVICE_INLINE__ float fma_inline(float a, float b, float c) {
  * ADD
  * ----------------------------------------
  */
-template<bool USEFASTMATH>
-__DEVICE_INLINE__ double add_inline(double a, double b) {
-#if USEFASTMATH == true
-	return __dadd_rn(a, b);
-#else
+template<bool USEFASTMATH, typename real_t>
+__DEVICE_INLINE__ real_t add_inline(real_t a, real_t b) {
 	return a + b;
-#endif
 }
 
-template<bool USEFASTMATH>
-__DEVICE_INLINE__ float add_inline(float a, float b) {
-#if USEFASTMATH == true
+template<>
+__DEVICE_INLINE__ double add_inline<true>(double a, double b) {
+	return __dadd_rn(a, b);
+}
+
+template<>
+__DEVICE_INLINE__ float add_inline<true>(float a, float b) {
 	return __fadd_rn(a, b);
-#else
-	return a + b;
-#endif
 }
 
 /**
@@ -66,22 +61,19 @@ __DEVICE_INLINE__ float add_inline(float a, float b) {
  * MUL
  * ----------------------------------------
  */
-template<bool USEFASTMATH>
-__DEVICE_INLINE__ double mul_inline(double a, double b) {
-#if USEFASTMATH == true
-	return __dmul_rn(a, b);
-#else
+template<bool USEFASTMATH, typename real_t>
+__DEVICE_INLINE__ real_t mul_inline(real_t a, real_t b) {
 	return a * b;
-#endif
 }
 
-template<bool USEFASTMATH>
-__DEVICE_INLINE__ float mul_inline(float a, float b) {
-#if USEFASTMATH == true
+template<>
+__DEVICE_INLINE__ double mul_inline<true>(double a, double b) {
+	return __dmul_rn(a, b);
+}
+
+template<>
+__DEVICE_INLINE__ float mul_inline<true>(float a, float b) {
 	return __fmul_rn(a, b);
-#else
-	return a * b;
-#endif
 }
 
 /**
@@ -89,18 +81,20 @@ __DEVICE_INLINE__ float mul_inline(float a, float b) {
  * PYTHAGOREAN IDENTITY
  * ----------------------------------------
  */
-template<bool USEFASTMATH>
-__DEVICE_INLINE__ float pythagorean_identity(float a, float b) {
-#if USEFASTMATH == true
-	return __powf(__sinf(a), 2.0f) + __powf(__cosf(b), 2.0f);
-#else
-	return powf(sinf(a), 2.0f) + powf(cosf(b), 2.0f);
-#endif
+
+template<bool USEFASTMATH, typename real_t>
+__DEVICE_INLINE__ real_t pythagorean_identity(real_t a, real_t b) {
+	return pow(sin(a), real_t(2.0)) + pow(cos(b), real_t(2.0));
 }
 
-template<bool USEFASTMATH>
-__DEVICE_INLINE__ double pythagorean_identity(double a, double b) {
-	return pow(sin(a), double(2.0)) + pow(cos(b), double(2.0));
+template<>
+__DEVICE_INLINE__ float pythagorean_identity<false>(float a, float b) {
+	return powf(sinf(a), 2.0f) + powf(cosf(b), 2.0f);
+}
+
+template<>
+__DEVICE_INLINE__ float pythagorean_identity<true>(float a, float b) {
+	return __powf(__sinf(a), 2.0f) + __powf(__cosf(b), 2.0f);
 }
 
 /**
@@ -108,35 +102,22 @@ __DEVICE_INLINE__ double pythagorean_identity(double a, double b) {
  * EULER
  * ----------------------------------------
  */
-template<bool USEFASTMATH>
-__DEVICE_INLINE__ float euler(float a) {
-#if USEFASTMATH == true
-	return __expf(a);
-#else
-	return expf(a);
-#endif
-}
-
-template<bool USEFASTMATH>
-__DEVICE_INLINE__ double euler(double a) {
+//double call
+template<bool USEFASTMATH, typename real_t>
+__DEVICE_INLINE__ real_t euler(real_t a) {
 	return exp(a);
 }
 
+template<>
+__DEVICE_INLINE__ float euler<false>(float a) {
+	return expf(a);
+}
+
+template<>
+__DEVICE_INLINE__ float euler<true>(float a) {
+	return __expf(a);
+}
+
 //HALF instructions
-
-#if __CUDA_ARCH__ >= 600
-
-__DEVICE_INLINE__ half2 fma_inline(half2 a, half2 b, half2 c) {
-	return __hfma2(a, b, c);
-}
-
-__DEVICE_INLINE__ half2 add_dmr(half2 a, half2 b) {
-	return __hadd2(a, b);
-}
-
-__DEVICE_INLINE__ half2 mul_dmr(half2 a, half2 b) {
-	return __hmul2(a, b);
-}
-#endif
 
 #endif /* DEVICE_FUNCTIONS_H_ */

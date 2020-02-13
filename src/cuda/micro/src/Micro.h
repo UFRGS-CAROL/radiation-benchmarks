@@ -30,7 +30,6 @@ struct Input<double> {
 	double INPUT_A = 1.1945305291614955E+103; // 0x5555555555555555
 	double INPUT_B = 3.7206620809969885E-103; // 0x2AAAAAAAAAAAAAAA
 	double OUTPUT_R = 4.444444444444444; //0x4011C71C71C71C71
-	const std::string test_precision_description = "double";
 };
 
 template<>
@@ -39,7 +38,6 @@ struct Input<float> {
 	float INPUT_A = 1.4660155E+13; // 0x55555555
 	float INPUT_B = 3.0316488E-13; // 0x2AAAAAAA
 	float OUTPUT_R = 4.444444; //0x408E38E3
-	const std::string test_precision_description = "single";
 };
 
 template<>
@@ -48,7 +46,6 @@ struct Input<half> {
 	half INPUT_A = 1.066E+2; // 0x56AA
 	half INPUT_B = 4.166E-2; // 0x2955
 	half OUTPUT_R = 4.44; // 0x4471
-	const std::string test_precision_description = "half";
 };
 
 template<typename real_t>
@@ -98,13 +95,17 @@ struct Micro {
 		case PYTHAGOREAN:
 			if(this->parameters.operation_num == 100000){
 				golden = real_t(9.99999921875000000000e+04);
+			}else if(this->parameters.operation_num == 1000000){
+				golden =  9.99999937500000000000e+05;
+			}else if(this->parameters.operation_num == 10000){
+				golden =  1.00000000000000000000e+04;
 			}else{
 				throw_line("Size not ready");
 			}
 			break;
 		case EULER:
-			throw_line("Not ready yet")
-			;
+			golden = 1.17200126953125000000e+04;
+			break;
 		}
 
 #pragma omp parallel for
