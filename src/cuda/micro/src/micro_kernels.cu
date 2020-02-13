@@ -2,16 +2,14 @@
 #include "device_functions.h"
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void micro_kernel_fma(real_t *d_R0, real_t INPUT_A, real_t INPUT_B,
-		real_t OUTPUT_R) {
-	register real_t acc = OUTPUT_R;
-	register real_t input_a = INPUT_A;
-	register real_t input_b = INPUT_B;
-	register real_t input_a_neg = -INPUT_A;
-	register real_t input_b_neg = -INPUT_B;
+__global__ void micro_kernel_fma(real_t *d_R0, real_t input_a, real_t input_b,
+		real_t output_r, const uint32_t ops) {
+	real_t acc = output_r;
+	real_t input_a_neg = -input_a;
+	real_t input_b_neg = -input_b;
 
 #pragma unroll UNROLL_MAX
-	for (register uint32_t count = 0; count < (OPS / 4); count++) {
+	for (uint32_t count = 0; count < ops; count++) {
 		acc = fma_inline<USEFASTMATH>(input_a, input_b, acc);
 		acc = fma_inline<USEFASTMATH>(input_a_neg, input_b, acc);
 		acc = fma_inline<USEFASTMATH>(input_a, input_b_neg, acc);
@@ -22,14 +20,13 @@ __global__ void micro_kernel_fma(real_t *d_R0, real_t INPUT_A, real_t INPUT_B,
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void micro_kernel_add(real_t *d_R0, real_t INPUT_A, real_t INPUT_B,
-		real_t OUTPUT_R) {
-	register real_t acc = OUTPUT_R;
-	register real_t input_a = OUTPUT_R;
-	register real_t input_a_neg = -OUTPUT_R;
+__global__ void micro_kernel_add(real_t *d_R0, real_t input_a, real_t input_b,
+		real_t output_r, const uint32_t ops) {
+	real_t acc = output_r;
+	real_t input_a_neg = -output_r;
 
 #pragma unroll UNROLL_MAX
-	for (register uint32_t count = 0; count < (OPS / 4); count++) {
+	for (uint32_t count = 0; count < ops; count++) {
 		acc = add_inline<USEFASTMATH>(acc, input_a);
 		acc = add_inline<USEFASTMATH>(acc, input_a_neg);
 		acc = add_inline<USEFASTMATH>(acc, input_a_neg);
@@ -40,14 +37,13 @@ __global__ void micro_kernel_add(real_t *d_R0, real_t INPUT_A, real_t INPUT_B,
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void micro_kernel_mul(real_t *d_R0, real_t INPUT_A, real_t INPUT_B,
-		real_t OUTPUT_R) {
-	register real_t acc = OUTPUT_R;
-	register real_t input_a = INPUT_A;
-	register real_t input_a_inv = real_t(1.0) / INPUT_A;
+__global__ void micro_kernel_mul(real_t *d_R0, real_t input_a, real_t input_b,
+		real_t output_r, const uint32_t ops) {
+	real_t acc = output_r;
+	real_t input_a_inv = real_t(1.0) / input_a;
 
 #pragma unroll UNROLL_MAX
-	for (register uint32_t count = 0; count < (OPS / 4); count++) {
+	for (uint32_t count = 0; count < ops; count++) {
 		acc = mul_inline<USEFASTMATH>(acc, input_a);
 		acc = mul_inline<USEFASTMATH>(acc, input_a_inv);
 		acc = mul_inline<USEFASTMATH>(acc, input_a_inv);
@@ -58,13 +54,12 @@ __global__ void micro_kernel_mul(real_t *d_R0, real_t INPUT_A, real_t INPUT_B,
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void micro_kernel_pythagorean(real_t *d_R0, real_t INPUT_A,
-		real_t INPUT_B, real_t OUTPUT_R) {
-	register real_t acc = OUTPUT_R;
-	register real_t input_a = INPUT_A;
+__global__ void micro_kernel_pythagorean(real_t *d_R0, real_t input_a,
+		real_t input_b, real_t output_r, const uint32_t ops) {
+	real_t acc = output_r;
 
 #pragma unroll UNROLL_MAX
-	for (register uint32_t count = 0; count < OPS; count++) {
+	for (uint32_t count = 0; count < ops; count++) {
 		acc += pythagorean_identity<USEFASTMATH>(input_a, input_a);
 	}
 
@@ -72,13 +67,12 @@ __global__ void micro_kernel_pythagorean(real_t *d_R0, real_t INPUT_A,
 }
 
 template<uint32_t UNROLL_MAX, bool USEFASTMATH, typename real_t>
-__global__ void micro_kernel_euler(real_t *d_R0, real_t INPUT_A, real_t INPUT_B,
-		real_t OUTPUT_R) {
-	register real_t acc = 0;
-	register real_t input_a = INPUT_A;
+__global__ void micro_kernel_euler(real_t *d_R0, real_t input_a, real_t input_b,
+		real_t output_r, const uint32_t ops) {
+	real_t acc = 0;
 
 #pragma unroll UNROLL_MAX
-	for (register uint32_t count = 0; count < (OPS / 4); count++) {
+	for (uint32_t count = 0; count < ops; count++) {
 		acc += euler<USEFASTMATH>(input_a);
 	}
 
@@ -88,19 +82,19 @@ __global__ void micro_kernel_euler(real_t *d_R0, real_t INPUT_A, real_t INPUT_B,
 template<bool USEFASTMATH, typename real_t>
 void execute_kernel(MICROINSTRUCTION& micro, real_t* output, real_t input_a,
 		real_t input_b, real_t output_acc, size_t grid_size, size_t block_size,
-		size_t operation_num) {
+		uint32_t operation_num) {
 
-	void (*kernel)(real_t*, real_t, real_t, real_t);
+	void (*kernel)(real_t*, real_t, real_t, real_t, uint32_t);
 	switch (micro) {
 	case ADD:
 //		kernel = micro_kernel_add<LOOPING_UNROLL, USEFASTMATH>;
-//		break;
+		break;
 	case MUL:
 //		kernel = micro_kernel_mul<LOOPING_UNROLL, USEFASTMATH>;
-//		break;
+		break;
 	case FMA:
 //		kernel = micro_kernel_fma<LOOPING_UNROLL, USEFASTMATH>;
-//		break;
+		break;
 		throw_line("Not implemented yet")
 		;
 		break;
@@ -111,7 +105,8 @@ void execute_kernel(MICROINSTRUCTION& micro, real_t* output, real_t input_a,
 		kernel = micro_kernel_euler<LOOPING_UNROLL, USEFASTMATH>;
 		break;
 	}
-	kernel<<<grid_size, block_size>>>(output, input_a, input_b, output_acc);
+	kernel<<<grid_size, block_size>>>(output, input_a, input_b, output_acc,
+			operation_num);
 }
 
 template<>

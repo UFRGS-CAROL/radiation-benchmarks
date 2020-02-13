@@ -117,7 +117,7 @@ struct Micro {
 			golden = this->input_kernel.OUTPUT_R;
 			break;
 		case PYTHAGOREAN:
-			golden = this->input_kernel.OUTPUT_R - real_t(0.000108242034912);
+			golden = real_t(OPS) + this->input_kernel.OUTPUT_R - real_t(0.000108242034912);
 
 			break;
 		case EULER:

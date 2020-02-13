@@ -23,9 +23,9 @@ struct Parameters {
 	std::string device;
 	std::string precision_str;
 
-	size_t sm_count;
-	size_t iterations;
-	size_t operation_num;
+	uint32_t sm_count;
+	uint32_t iterations;
+	uint32_t operation_num;
 
 	size_t grid_size;
 	size_t block_size;
