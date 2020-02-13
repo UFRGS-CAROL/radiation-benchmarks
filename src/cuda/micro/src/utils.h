@@ -20,7 +20,6 @@
 
 #define RANGE_INT_VAL 100
 
-#define OPS 10000
 #define LOOPING_UNROLL 512
 
 typedef enum {

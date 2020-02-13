@@ -62,15 +62,6 @@ struct Micro {
 
 	Micro(Parameters& parameters, std::shared_ptr<rad::Log>& log) :
 			parameters(parameters), log(log) {
-//		auto start_gen = rad::mysecond();
-//		this->generate_input();
-//		auto end_gen = rad::mysecond();
-//
-//		if (this->parameters.verbose) {
-//			std::cout << "Input generation time: " << end_gen - start_gen
-//					<< std::endl;
-//		}
-
 		auto start_gen = rad::mysecond();
 		//Set the output size
 		this->output_device.resize(this->parameters.array_size);
@@ -82,18 +73,6 @@ struct Micro {
 		}
 
 	}
-
-//	void generate_input() {
-//		// First create an instance of an engine.
-//		std::random_device rnd_device;
-//		// Specify the engine and distribution.
-//		std::mt19937 mersenne_engine { rnd_device() }; // Generates random integers
-//		std::uniform_int_distribution<real_t> dist { 1, RANGE_INT_VAL };
-//		this->gold_host.resize(parameters.block_size, 0);
-//
-//		for (auto& i : this->gold_host)
-//			i = dist(mersenne_engine);
-//	}
 
 	virtual ~Micro() = default;
 
@@ -117,8 +96,11 @@ struct Micro {
 			golden = this->input_kernel.OUTPUT_R;
 			break;
 		case PYTHAGOREAN:
-			golden = real_t(OPS) + this->input_kernel.OUTPUT_R - real_t(0.000108242034912);
-
+			if(this->parameters.operation_num == 100000){
+				golden = real_t(9.99999921875000000000e+04);
+			}else{
+				throw_line("Size not ready");
+			}
 			break;
 		case EULER:
 			throw_line("Not ready yet")
@@ -157,8 +139,5 @@ struct Micro {
 
 template<>
 void Micro<float>::execute_micro();
-
-//template<>
-//size_t MicroSpecial<int32_t>::compare_on_gpu();
 
 #endif /* MicroSpecial_H_ */
