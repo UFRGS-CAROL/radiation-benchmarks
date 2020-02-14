@@ -1,15 +1,7 @@
 #include <cuda.h>
 #include <stdio.h>
 
-#ifdef RD_WG_SIZE_0_0
-#define BLOCK_SIZE RD_WG_SIZE_0_0
-#elif defined(RD_WG_SIZE_0)
-#define BLOCK_SIZE RD_WG_SIZE_0
-#elif defined(RD_WG_SIZE)
-#define BLOCK_SIZE RD_WG_SIZE
-#else
-#define BLOCK_SIZE 16
-#endif
+#include "utils.h"
 
 __global__ void lud_diagonal(float *m, int matrix_dim, int offset) {
 	int i, j;
@@ -192,7 +184,7 @@ __global__ void lud_internal(float *m, int matrix_dim, int offset) {
 void lud_cuda(float *m, int matrix_dim) {
 	int i = 0;
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-	float *m_debug = (float*) malloc(matrix_dim * matrix_dim * sizeof(float));
+//	float *m_debug = (float*) malloc(matrix_dim * matrix_dim * sizeof(float));
 
 	for (i = 0; i < matrix_dim - BLOCK_SIZE; i += BLOCK_SIZE) {
 		lud_diagonal<<<1, BLOCK_SIZE>>>(m, matrix_dim, i);
