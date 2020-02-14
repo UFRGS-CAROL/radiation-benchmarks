@@ -1,44 +1,68 @@
-CC = gcc
-NVCC = nvcc
+CXX=g++
+CXXFLAGS= -std=c++11 -o3  -fPIC -fopenmp 
+EXEC=cudaLUD
+LOGS=1
+BUILDPROFILER=0
+ITERATIONS=10
 
-DEFS += \
-		-DGPU_TIMER \
-		$(SPACE)
-
-NVCCFLAGS += -I../common \
-			 -O3 \
-			 -use_fast_math \
-			 -arch=sm_70 \
-			 -lm \
-			 $(SPACE)
-
-CFLAGS += -I../common \
-					-I/usr/include/cuda \
-		  -O3 \
-		  -Wall \
-		  $(SPACE)
-
-# Add source files here
-EXECUTABLE  := lud_cuda
-# Cuda source files (compiled with cudacc)
-CUFILES     := lud_kernel.cu
-# C/C++ source files (compiled with gcc / c++)
-CCFILES     := lud.c lud_cuda.c ../common/common.c
-
-OBJS = ../common/common.o lud.o lud_kernel.o
-
-.PHONY: all clean 
-all : $(EXECUTABLE)
-
-.c.o : 
-	$(NVCC) $(KERNEL_DIM) $(NVCCFLAGS) $(DEFS) -o $@ -c $<
-
-%.o:	%.cu 
-	$(NVCC) $(KERNEL_DIM) $(NVCCFLAGS) $(DEFS) -o $@ -c $<
+VPATH=./src/
+CUDAPATH=/usr/local/cuda
+NVCC=$(CUDAPATH)/bin/nvcc
 
 
-$(EXECUTABLE) : $(OBJS)
-	$(NVCC) $(NVCCFLAGS) -o $@  $?
+NVCCFLAGS= -std=c++11 -O3 -Xptxas -v
+
+
+ARCH= -gencode arch=compute_35,code=[sm_35,compute_35] #Kepler
+ARCH+= -gencode arch=compute_70,code=[sm_70,compute_70] #Titan V
+
+INCLUDE= -I./src -I$(CUDAPATH)/include -I$(CUDAPATH)/samples/common/inc -I../../include -I../common/include
+
+OBJDIR=./obj/
+OBJ=  lud_kernel.o  main.o Parameters.o
+
+ifeq ($(DEBUG), 1) 
+CXXFLAGS+=-O0 -g
+NVCCFLAGS+= -g -G
+endif
+
+ifeq ($(LOGS), 1)
+CXXFLAGS+= -DLOGS
+NVCCFLAGS+= -DLOGS
+LDFLAGS+= -L../../include  -lLogHelper
+endif
+
+ifeq ($(BUILDPROFILER), 1)
+CXXFLAGS+= -DBUILDPROFILER
+LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
+endif
+
+
+LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
+
+OBJS = $(addprefix $(OBJDIR), $(OBJ))
+DEPS = $(wildcard src/*.h) Makefile
+
+
+all: mkdir $(EXEC)
+
+
+$(EXEC): $(OBJS)  
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(INCLUDE)
+
+$(OBJDIR)%.o: %.cpp $(DEPS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
+	
+$(OBJDIR)%.o: %.cu $(DEPS)
+	$(NVCC) $(ARCH) $(NVCCFLAGS) -c $< -o $@ $(INCLUDE) 
+
+mkdir:
+	mkdir -p $(OBJDIR)
 
 clean:
-	rm -f $(EXECUTABLE) $(OBJS) *.linkinfo
+	rm -f $(OBJDIR)* $(EXEC)
+	
+	
+test:
+	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose --opnum $(OPNUM)
+	
