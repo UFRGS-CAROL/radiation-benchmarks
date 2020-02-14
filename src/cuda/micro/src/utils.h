@@ -20,7 +20,7 @@
 
 #define RANGE_INT_VAL 100
 
-#define LOOPING_UNROLL 512
+#define LOOPING_UNROLL 256
 
 typedef enum {
 	ADD, MUL, FMA, PYTHAGOREAN, EULER, LOG
@@ -62,7 +62,6 @@ static std::unordered_map<std::string, PRECISION> pre = {
 static void __throw_line(std::string err, std::string line, std::string file){
     throw std::runtime_error(err + "\nERROR at " + file + ":" + line);
 }
-
 
 #define throw_line(err) __throw_line(std::string(err), std::to_string(__LINE__), std::string(__FILE__));
 

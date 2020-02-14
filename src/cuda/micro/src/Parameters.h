@@ -22,6 +22,7 @@ struct Parameters {
 	std::string instruction_str;
 	std::string device;
 	std::string precision_str;
+	std::string generate_output;
 
 	uint32_t sm_count;
 	uint32_t iterations;
@@ -32,6 +33,7 @@ struct Parameters {
 	size_t array_size;
 
 	bool verbose;
+	bool generate;
 	bool fast_math;
 
 	Parameters(int argc, char* argv[]);

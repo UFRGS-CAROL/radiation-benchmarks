@@ -14,9 +14,13 @@ Parameters::Parameters(int argc, char* argv[]) {
 	this->verbose = rad::find_arg(argc, argv, "--verbose");
 	this->instruction_str = rad::find_char_arg(argc, argv, "--inst", "add");
 	this->operation_num = rad::find_int_arg(argc, argv, "--opnum",
-			LOOPING_UNROLL);
+	LOOPING_UNROLL);
 	this->precision_str = rad::find_char_arg(argc, argv, "--precision",
 			"float");
+	this->generate_output = rad::find_char_arg(argc, argv, "--gold",
+			"./gold.data");
+	this->generate = rad::find_arg(argc, argv, "--generate");
+
 	this->micro = mic[this->instruction_str];
 	this->precision = pre[this->precision_str];
 

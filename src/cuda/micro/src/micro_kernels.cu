@@ -58,7 +58,7 @@ __global__ void micro_kernel_pythagorean(real_t *d_R0, real_t input_a,
 		real_t input_b, real_t output_r, const uint32_t ops) {
 	real_t acc = 0;
 
-//#pragma unroll
+#pragma unroll UNROLL_MAX
 	for (uint32_t count = 0; count < ops; count++) {
 		acc += pythagorean_identity<USEFASTMATH>(input_a, input_a);
 	}
@@ -71,7 +71,7 @@ __global__ void micro_kernel_euler(real_t *d_R0, real_t input_a, real_t input_b,
 		real_t output_r, const uint32_t ops) {
 	real_t acc = 0;
 
-//#pragma unroll UNROLL_MAX
+#pragma unroll UNROLL_MAX
 	for (uint32_t count = 0; count < ops; count++) {
 		acc += euler<USEFASTMATH>(-output_r);
 	}

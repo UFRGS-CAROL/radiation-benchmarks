@@ -13,6 +13,7 @@
 #include <iostream>
 #include <sstream>      // std::stringstream
 #include <iomanip> 	   // setprecision
+#include <fstream> 	   // file operations
 
 #include "Parameters.h"
 #include "generic_log.h"
@@ -53,6 +54,7 @@ struct Micro {
 	Parameters& parameters;
 	std::shared_ptr<rad::Log>& log;
 	Input<real_t> input_kernel;
+	real_t gold;
 
 	std::vector<real_t> output_host;
 	rad::DeviceVector<real_t> output_device;
@@ -67,6 +69,21 @@ struct Micro {
 		if (this->parameters.verbose) {
 			std::cout << "Output device allocation time: "
 					<< end_gen - start_gen << std::endl;
+		}
+
+		switch (this->parameters.micro) {
+		case ADD:
+		case MUL:
+		case FMA:
+			this->gold = this->input_kernel.OUTPUT_R;
+			break;
+		case PYTHAGOREAN:
+		case EULER:
+			if (this->parameters.generate == false) {
+				this->read_from_file(this->parameters.generate_output,
+						&(this->gold), 1);
+			}
+			break;
 		}
 
 	}
@@ -84,56 +101,67 @@ struct Micro {
 	}
 
 	size_t compare_output() {
-		real_t golden = 0;
 		size_t errors = 0;
-		switch (this->parameters.micro) {
-		case ADD:
-		case MUL:
-		case FMA:
-			golden = this->input_kernel.OUTPUT_R;
-			break;
-		case PYTHAGOREAN:
-			if(this->parameters.operation_num == 100000){
-				golden = real_t(9.99999921875000000000e+04);
-			}else if(this->parameters.operation_num == 1000000){
-				golden =  9.99999937500000000000e+05;
-			}else if(this->parameters.operation_num == 10000){
-				golden =  1.00000000000000000000e+04;
-			}else{
-				throw_line("Size not ready");
-			}
-			break;
-		case EULER:
-			golden = 1.17200126953125000000e+04;
-			break;
-		}
 
+		if (this->parameters.generate == false) {
 #pragma omp parallel for
-		for (size_t i = 0; i < this->output_host.size(); i++) {
-			real_t output = this->output_host[i];
-			if (output != golden) {
-				std::stringstream error_detail;
-				//20 is from old micro-benchmarks precision
-				error_detail << " p: [" << i << "],";
-				error_detail << std::scientific << std::setprecision(20);
-				error_detail << " e: " << golden << ", r: " << output;
+			for (size_t i = 0; i < this->output_host.size(); i++) {
+				real_t output = this->output_host[i];
+				if (output != this->gold) {
+					std::stringstream error_detail;
+					//20 is from old micro-benchmarks precision
+					error_detail << " p: [" << i << "],";
+					error_detail << std::scientific << std::setprecision(20);
+					error_detail << " e: " << this->gold << ", r: " << output;
 
-				if (this->parameters.verbose && i < 10) {
-					std::cout << error_detail.str() << std::endl;
-				}
-				errors++;
+					if (this->parameters.verbose && i < 10) {
+						std::cout << error_detail.str() << std::endl;
+					}
+					errors++;
 #pragma omp critical
-				{
-					this->log->log_error_detail(error_detail.str());
+					{
+						this->log->log_error_detail(error_detail.str());
+					}
 				}
 			}
+		} else {
+			//save only the first thread result
+			this->gold = this->output_host[0];
+			if (this->parameters.micro == EULER
+					|| this->parameters.micro == PYTHAGOREAN) {
+				this->write_to_file(this->parameters.generate_output,
+						&(this->gold), 1);
+			}
 		}
-
 		return errors;
 	}
 
 	void reset_output_device() {
 		this->output_device.clear();
+	}
+
+	static bool read_from_file(std::string& path, real_t* array,
+			uint32_t count) {
+		std::ifstream input(path, std::ios::binary);
+		if (input.good()) {
+			input.read(reinterpret_cast<char*>(array), count * sizeof(real_t));
+			input.close();
+			return false;
+		}
+		return true;
+	}
+
+	static bool write_to_file(std::string& path, real_t* array,
+			uint32_t count) {
+		std::ofstream output(path, std::ios::binary);
+		if (output.good()) {
+			output.write(reinterpret_cast<char*>(array),
+					count * sizeof(real_t));
+			output.close();
+
+			return false;
+		}
+		return true;
 	}
 
 };

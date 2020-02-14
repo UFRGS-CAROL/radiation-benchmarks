@@ -7,6 +7,7 @@ MICRO=pythagorean
 ITERATIONS=10
 OPNUM=100000
 PRECISION=float
+FASTMATH=0
 
 VPATH=./src/
 CUDAPATH=/usr/local/cuda
@@ -38,6 +39,9 @@ CXXFLAGS+= -DBUILDPROFILER
 LDFLAGS+= -L../common/lib -lNVMLWrapper -L$(CUDAPATH)/lib64/stubs -lnvidia-ml 
 endif
 
+ifeq ($(FASTMATH), 1)
+USEFASTMATH= --fast_math
+endif
 
 LDFLAGS+= -L$(CUDAPATH)/lib64  -lcudart  -lcurand
 
@@ -64,6 +68,17 @@ clean:
 	rm -f $(OBJDIR)* $(EXEC)
 	
 	
+generate:
+	./$(EXEC) --iterations $(ITERATIONS) --inst pythagorean --verbose  \
+			  --opnum $(OPNUM) --precision $(PRECISION) $(USEFASTMATH) \
+			  --generate --gold ./gold_pythagorean.data
+			  
+	./$(EXEC) --iterations $(ITERATIONS) --inst euler --verbose  \
+			  --opnum $(OPNUM) --precision $(PRECISION) $(USEFASTMATH) \
+			  --generate --gold ./gold_euler.data
+			  
 test:
-	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose --opnum $(OPNUM) $(PRECISION)
+	 ./$(EXEC) --iterations $(ITERATIONS) --inst $(MICRO) --verbose \
+	 		   --opnum $(OPNUM) --precision $(PRECISION) $(USEFASTMATH) \
+	 		   --gold ./gold_$(MICRO).data
 	
