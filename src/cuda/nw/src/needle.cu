@@ -131,23 +131,23 @@ void ReadArrayFromFile(std::vector<int>& input_itemsets,
 bool inline badass_memcmp(std::vector<int>& gold_vector,
 		std::vector<int>& found_vector) {
 	uint32_t n = gold_vector.size();
-	uint32_t numthreads = omp_get_max_threads() * 2;
+	uint32_t numthreads = omp_get_max_threads();
 	uint32_t chunk = ceil(float(n) / float(numthreads));
-	std::vector<uint32_t> reduction_array(numthreads);
+	static std::vector<uint32_t> reduction_array(numthreads);
 
 	int *gold = gold_vector.data();
 	int *found = found_vector.data();
 
-#pragma omp parallel default(shared) num_threads(numthreads)
+#pragma omp parallel default(shared)
 	{
 		uint32_t tid = omp_get_thread_num();
 		uint32_t i = tid * chunk;
 		reduction_array[tid] = std::equal(gold + i, gold + i + chunk,
 				found + i);
 	}
-	auto result = std::accumulate(reduction_array.begin(),
+	uint32_t result = std::accumulate(reduction_array.begin(),
 			reduction_array.end(), 0);
-	return (result != 0);
+	return (result != numthreads);
 
 }
 
@@ -340,25 +340,23 @@ void runTest(int argc, char** argv) {
 //								sizeof(int) * size, cudaMemcpyDeviceToHost));
 				for (int i = 0; (i < n) && (ea < N_ERRORS_LOG); i++) {
 					for (int j = 0; (j < n) && (ea < N_ERRORS_LOG); j++) {
-						if (output_itemsets[i + n * j]
-								!= gold_itemsets[i + n * j]) {
+						auto gold_ij = gold_itemsets[i * n + j];
+						auto output_ij = output_itemsets[i * n + j];
+						if (output_ij != gold_ij) {
 							ea++;
-//							char error_detail[200];
 							std::string error_detail = "";
 							error_detail += " p: [" + std::to_string(i) + ", "
 									+ std::to_string(j) + "],";
-							error_detail += " r: "
-									+ std::to_string(output_itemsets[i + n * j])
+							error_detail += " r: " + std::to_string(output_ij)
 									+ ",";
-							error_detail += " e: "
-									+ std::to_string(gold_itemsets[i + n * j])
+							error_detail += " e: " + std::to_string(gold_ij)
 									+ ",";
 							error_detail += " error: " + std::to_string(ea);
 
 //							sprintf(error_detail,
 //									" p: [%d, %d], r: %i, e: %i, error: %d", i,
-//									j, output_itemsets[i + n * j],
-//									gold_itemsets[i + n * j], ea);
+//									j, output_ij,
+//									gold_ij, ea);
 #ifdef LOGS
 							log_error_detail(CONST_CAST(error_detail.c_str()));
 							host_errors++;
