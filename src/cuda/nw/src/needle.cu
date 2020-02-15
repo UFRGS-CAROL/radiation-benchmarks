@@ -162,9 +162,7 @@ void usage(int argc, char **argv) {
 
 void runTest(int argc, char** argv) {
 	int max_rows, max_cols, penalty;
-//	const KErrorsType zero = 0;
 	int iterations = 1;
-	double timeG;
 	bool generate = false;
 	std::string array_path, gold_path;
 
@@ -251,16 +249,19 @@ void runTest(int argc, char** argv) {
 	for (int j = 1; j < max_cols; j++)
 		input_itemsets[j] = -j * penalty;
 
+	//Improve performance
+	const rad::DeviceVector<int> save_input_itemsets_cuda = input_itemsets;
+
 	for (int loop2 = 0; loop2 < iterations; loop2++) {
 		auto mem_cpy_time = rad::mysecond();
-		matrix_cuda = input_itemsets;
+		matrix_cuda = save_input_itemsets_cuda;
 		mem_cpy_time = rad::mysecond() - mem_cpy_time;
 
 		dim3 dimGrid;
 		dim3 dimBlock(BLOCK_SIZE, 1);
 		int block_width = (max_cols - 1) / BLOCK_SIZE;
 
-		timeG = rad::mysecond();
+		auto kernel_time = rad::mysecond();
 #ifdef LOGS
 		start_iteration();
 #endif
@@ -286,35 +287,10 @@ void runTest(int argc, char** argv) {
 #ifdef LOGS
 		end_iteration();
 #endif
-		timeG = rad::mysecond() - timeG;
-		total_time += timeG;
+		kernel_time = rad::mysecond() - kernel_time;
+		total_time += kernel_time;
 
-		//std::cout << "Done in " << timeG << "s.\n";
 		if (generate == false) {
-			/*			kerrors = 0;
-			 // Check errors on GPU...
-			 //std::cout << "Sending gold matrix to GPU...";
-			 timeG = rad::mysecond();
-			 //			referrence_cuda = gold_itemsets;
-			 // Using referrence just to avoid reallocation for gold
-			 rad::checkFrameworkErrors(
-			 cudaMemcpyToSymbol(gpukerrors, &zero, sizeof(KErrorsType)));
-			 timeG = rad::mysecond() - timeG;
-			 //std::cout << "Done in " << timeG << "s.\nRunning GoldChk...";
-			 timeG = rad::mysecond();
-
-			 GoldChkKernel<<<gchk_dimGrid, gchk_dimBlock>>>(
-			 gold_itemsets_cuda.data(), output_itemsets_cuda.data(), n);
-
-			 timeG = rad::mysecond() - timeG;
-			 rad::checkFrameworkErrors(cudaDeviceSynchronize());
-			 rad::checkFrameworkErrors((cudaPeekAtLastError()));
-			 rad::checkFrameworkErrors(
-			 cudaMemcpyFromSymbol(&kerrors, gpukerrors,
-			 sizeof(KErrorsType)));
-			 std::cout << "Done in " << timeG << "s.";
-			 output_itemsets = output_itemsets_cuda.to_vector();
-			 */
 			ea = 0;
 			uint32_t host_errors = 0;
 
@@ -329,21 +305,14 @@ void runTest(int argc, char** argv) {
 					<< std::endl;
 
 			if (is_equal) {
-//#ifdef LOGS
-////				sprintf(error_info, "Error detected! kerrors = %d" ,kerrors);
-//				std::string error_info = "Error detected! kerrors = " + std::to_string(kerrors);
-//				log_error_detail(CONST_CAST(error_info.c_str()));
-//#endif
-
-//				rad::checkFrameworkErrors(
-//						cudaMemcpy(output_itemsets, matrix_cuda,
-//								sizeof(int) * size, cudaMemcpyDeviceToHost));
 				for (int i = 0; (i < n) && (ea < N_ERRORS_LOG); i++) {
 					for (int j = 0; (j < n) && (ea < N_ERRORS_LOG); j++) {
 						auto gold_ij = gold_itemsets[i * n + j];
 						auto output_ij = output_itemsets[i * n + j];
 						if (output_ij != gold_ij) {
 							ea++;
+
+							//p: [%d, %d], r: %i, e: %i, error: %d"
 							std::string error_detail = "";
 							error_detail += " p: [" + std::to_string(i) + ", "
 									+ std::to_string(j) + "],";
@@ -353,10 +322,6 @@ void runTest(int argc, char** argv) {
 									+ ",";
 							error_detail += " error: " + std::to_string(ea);
 
-//							sprintf(error_detail,
-//									" p: [%d, %d], r: %i, e: %i, error: %d", i,
-//									j, output_ij,
-//									gold_ij, ea);
 #ifdef LOGS
 							log_error_detail(CONST_CAST(error_detail.c_str()));
 							host_errors++;
@@ -373,13 +338,19 @@ void runTest(int argc, char** argv) {
 			}
 
 			if (host_errors > 0 || (loop2 % 10 == 0)) {
+				auto wasted_time = copy_time + cmp_time + mem_cpy_time;
+				auto iteration_time = wasted_time + kernel_time;
+
 				std::cout << "iteration: " << loop2;
-				std::cout << " kernel time: " << timeG;
-				std::cout << " total time: " << total_time;
 				std::cout << " errors: " << host_errors;
-				std::cout << " matrix cuda set: " << mem_cpy_time;
-				std::cout << " cpy time: " << copy_time;
-				std::cout << " cmp time: " << cmp_time;
+				std::cout << " kernel time: " << kernel_time << "s.";
+				std::cout << " matrix set time: " << mem_cpy_time << "s.";
+				std::cout << " copy time: " << copy_time << "s.";
+				std::cout << " compare time: " << cmp_time << "s.";
+				std::cout << " ACC time: " << total_time << "s.";
+				std::cout << " iteration time: " << iteration_time << "s.";
+				std::cout << " wasted time: " << wasted_time << "s. ("
+						<< wasted_time / iteration_time << "%)";
 				std::cout << " total errors: " << t_ea << std::endl;
 			} else {
 				std::cout << "." << std::flush;
