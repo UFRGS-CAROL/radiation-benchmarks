@@ -301,8 +301,6 @@ void runTest(int argc, char** argv) {
 			auto cmp_time = rad::mysecond();
 			auto is_equal = badass_memcmp(gold_itemsets, output_itemsets);
 			cmp_time = rad::mysecond() - cmp_time;
-			std::cout << "BADASS TIME " << cmp_time << " is equal " << is_equal
-					<< std::endl;
 
 			if (is_equal) {
 				for (int i = 0; (i < n) && (ea < N_ERRORS_LOG); i++) {
