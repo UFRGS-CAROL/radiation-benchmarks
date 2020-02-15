@@ -179,8 +179,8 @@ int main(int argc, char* argv[]) {
 		if (parameters.generate) {
 			write_to_file(parameters.gold, input_host_array);
 		} else {
-			if (badass_memcmp(gold_array.data(), input_host_array.data(),
-					matrixSize)) {
+//			if (badass_memcmp(gold_array.data(), input_host_array.data(),
+//					matrixSize)) {
 				int host_errors = 0;
 				std::cout << "!";
 
@@ -204,9 +204,6 @@ int main(int argc, char* argv[]) {
 							{
 								log.log_error_detail(error_detail.str());
 								host_errors++;
-								//ea++;
-								//fprintf(file, "\n p: [%d, %d], r: %1.16e, e: %1.16e, error: %d\n", i, j, A[i + k * j], GOLD[i + k * j], t_ea);
-
 							}
 						}
 					}
@@ -225,7 +222,7 @@ int main(int argc, char* argv[]) {
 					output_device_array.resize(0);
 					output_device_array = SAVE_INPUT;
 				}
-			}
+//			}
 			input_device_array = output_device_array;
 		}
 		gold_check_time = rad::mysecond() - gold_check_time;
