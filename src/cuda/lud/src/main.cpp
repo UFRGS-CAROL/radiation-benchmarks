@@ -230,10 +230,6 @@ int main(int argc, char* argv[]) {
 
 		//====================================
 
-		//================== Console hearthbeat
-		std::cout << ".";
-		//}
-		//====================================
 		if (parameters.verbose) {
 			std::cout << "Device kernel time for iteration " << loop2 << " - "
 					<< kernel_time;
@@ -244,10 +240,11 @@ int main(int argc, char* argv[]) {
 					<< outputpersec;
 			std::cout << "\nIteration " << loop2 << " time: "
 					<< kernel_time + cuda_copy_time + gold_check_time
-					<< std::endl;
+					<< std::endl << std::endl;
 
 		}
-
+		//================== Console hearthbeat
+		std::cout << ".";
 	}
 
 	auto averageKernelTime = total_kernel_time / parameters.iterations;
