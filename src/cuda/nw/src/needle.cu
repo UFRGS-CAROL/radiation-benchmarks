@@ -142,36 +142,38 @@ void ReadArrayFromFile(std::vector<int>& input_itemsets,
 //}
 bool inline badass_memcmp(std::vector<int>& gold_vector,
 		std::vector<int>& found_vector) {
-	int result = 0;
-	uint32_t n = gold_vector.size();
-	uint32_t chunk = ceil(float(n) / float(omp_get_max_threads()));
-
-	int *gold = gold_vector.data();
-	int *found = found_vector.data();
-
-#pragma omp parallel for default(shared) schedule(static,chunk) reduction(+:result)
-	for (size_t i = 0; i < n; i++)
-		result = result + (gold[i] ^ found[i]);
-
-	return result != 0;
-	/*	uint32_t n = gold_vector.size();
-	 uint32_t numthreads = omp_get_max_threads();
-	 uint32_t chunk = ceil(float(n) / float(numthreads));
-	 static std::vector<uint32_t> reduction_array(numthreads);
+	/*int result = 0;
+	 uint32_t n = gold_vector.size();
+	 uint32_t chunk = ceil(float(n) / float(omp_get_max_threads()));
 
 	 int *gold = gold_vector.data();
 	 int *found = found_vector.data();
 
-	 #pragma omp parallel default(shared)
-	 {
-	 uint32_t tid = omp_get_thread_num();
-	 uint32_t i = tid * chunk;
-	 reduction_array[tid] = std::equal(gold + i, gold + i + chunk,
-	 found + i);
-	 }
-	 auto result = std::accumulate(reduction_array.begin(), reduction_array.end(), 0);
-	 return (result != 0);
+	 #pragma omp parallel for default(shared) schedule(static,chunk) reduction(+:result)
+	 for (size_t i = 0; i < n; i++)
+	 result = result + (gold[i] ^ found[i]);
+
+	 return result != 0;
 	 */
+	uint32_t n = gold_vector.size();
+	uint32_t numthreads = omp_get_max_threads();
+	uint32_t chunk = ceil(float(n) / float(numthreads));
+	static std::vector<uint32_t> reduction_array(numthreads);
+
+	int *gold = gold_vector.data();
+	int *found = found_vector.data();
+
+#pragma omp parallel default(shared)
+	{
+		uint32_t tid = omp_get_thread_num();
+		uint32_t i = tid * chunk;
+		reduction_array[tid] = std::equal(gold + i, gold + i + chunk,
+				found + i);
+	}
+	auto result = std::accumulate(reduction_array.begin(),
+			reduction_array.end(), 0);
+	return (result != 0);
+
 }
 
 void usage(int argc, char **argv) {
@@ -254,26 +256,8 @@ void runTest(int argc, char** argv) {
 	rad::DeviceVector<int> matrix_cuda = input_itemsets;
 	rad::DeviceVector<int> output_itemsets_cuda = output_itemsets;
 	rad::DeviceVector<int> gold_itemsets_cuda = gold_itemsets;
-//	int *referrence = (int *) malloc(max_rows * max_cols * sizeof(int));
-//	int *input_itemsets = (int *) malloc(max_rows * max_cols * sizeof(int));
-//	int *output_itemsets = (int *) malloc(max_rows * max_cols * sizeof(int));
-//	int *gold_itemsets = (int *) malloc(max_rows * max_cols * sizeof(int));
-//	int *matrix_cuda, *referrence_cuda;
-//	std::cout << "Allocating matrixes on GPU...";
-//	cudaMalloc((void**) &referrence_cuda, sizeof(int) * size);
-//	cudaMalloc((void**) &matrix_cuda, sizeof(int) * size);
-	//	if ((referrence_cuda == NULL) || (matrix_cuda == NULL)) {
-	//		std::cout << "error.\n";
-	//		exit(-3);
-	//	}
-//	std::cout << "Done\n";
 
-//	KErrorsType kerrors = 0;
-
-//	if (!input_itemsets)
-//		fprintf(stderr, "error: can not allocate memory");
-
-	std::cout << "Start Needleman-Wunsch" << std::endl;
+	std::cout << "Starting Needleman-Wunsch" << std::endl;
 
 	if (generate) {
 		GenerateInputFile(input_itemsets, array_path);
